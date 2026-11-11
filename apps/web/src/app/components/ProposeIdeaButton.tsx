@@ -44,6 +44,7 @@ type Attachment = {
 type DialogProps = {
   open: boolean;
   onClose: () => void;
+  title?: string;
 };
 
 class UnreadableAttachmentError extends Error {
@@ -98,7 +99,7 @@ function submitErrorMessage(err: unknown, t: Translate): string {
   return getErrorMessage(err, t('proposeIdea.submitError'));
 }
 
-export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
+export function ProposeIdeaDialog({ open, onClose, title: dialogTitle }: Readonly<DialogProps>) {
   const { t } = useTranslation();
   const location = useLocation();
   const [category, setCategory] = useState<IdeaSuggestionCategory>('idea');
@@ -238,7 +239,7 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
       size="sm"
       column
       bottomSheetOnMobile
-      title={t('proposeIdea.dialogTitle')}
+      title={dialogTitle ?? t('proposeIdea.dialogTitle')}
       titleId={titleId}
     >
       {status === 'success' ? (

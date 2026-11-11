@@ -5,7 +5,6 @@ import type { MyEventsListResponse, MyEventSummary } from '@/features/events/typ
 import { ApiError } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
-import type { MyEventsTab } from './MyEventsTabs';
 
 function isPendingEvent(ev: MyEventSummary): boolean {
   return normalizeMyEventLifecycle(ev.lifecycle) === 'pending';
@@ -25,11 +24,9 @@ function nextPageOffset(
 
 interface MyEventsListsOptions {
   enabled: boolean;
-  tab: MyEventsTab;
-  historySearchQuery: string;
 }
 
-export function useMyEventsLists({ enabled, tab, historySearchQuery }: MyEventsListsOptions) {
+export function useMyEventsLists({ enabled }: MyEventsListsOptions) {
   const queryClient = useQueryClient();
 
   const activeQuery = useInfiniteQuery({
@@ -42,12 +39,11 @@ export function useMyEventsLists({ enabled, tab, historySearchQuery }: MyEventsL
   });
 
   const historyQuery = useInfiniteQuery({
-    queryKey: queryKeys.myEvents.finished(historySearchQuery),
-    queryFn: ({ pageParam }: { pageParam: number }) =>
-      fetchMyEventsList('finished', pageParam, historySearchQuery || undefined),
+    queryKey: queryKeys.myEvents.finished(''),
+    queryFn: ({ pageParam }: { pageParam: number }) => fetchMyEventsList('finished', pageParam),
     initialPageParam: 0,
     getNextPageParam: nextPageOffset,
-    enabled: enabled && tab === 'history',
+    enabled,
     retry: false,
   });
 

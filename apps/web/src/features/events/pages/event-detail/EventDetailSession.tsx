@@ -16,12 +16,13 @@ import {
 import PageLayout from '@/shared/components/PageLayout';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { eventFrontendUrl, nightRecapFrontendUrl } from '@/features/events/api/eventsApi';
-import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
+import { useLocale, useTranslation } from '@/shared/i18n';
 import { useEventWheel } from '@/features/events/hooks/useEventWheel';
-import { eventCountdown, type EventCountdown } from '@/shared/utils/eventCountdown';
+import { isRatingOpen, unratedWinners } from '@/features/events/hooks/useRatingLink';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { eventCountdownLabel } from '@/features/events/utils/eventCountdownLabel';
 import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
 import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
-import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
@@ -54,12 +55,6 @@ type EventDetailSessionProps = {
 
 const COUNTDOWN_TICK_MS = 60_000;
 
-const COUNTDOWN_KEYS = {
-  imminent: 'events.detail.countdownImminent',
-  minutes: 'events.detail.countdownMinutes',
-  hours: 'events.detail.countdownHours',
-} as const satisfies Record<EventCountdown['unit'], TranslationKey>;
-
 function wheelSelection(wheel: ReturnType<typeof useEventWheel>): MovieCardSelection | undefined {
   if (wheel.manualMode) {
     return {
@@ -82,9 +77,26 @@ function wheelSelection(wheel: ReturnType<typeof useEventWheel>): MovieCardSelec
   return undefined;
 }
 
-function countdownParams(countdown: EventCountdown) {
-  if (countdown.unit === 'imminent') return undefined;
-  return { count: countdown.count };
+function useHeaderRating({
+  event,
+  participant,
+  winners,
+}: {
+  event: EventData;
+  participant: ParticipantRef | null;
+  winners: MovieData[];
+}) {
+  const { user } = useAuth();
+  const [requestId, setRequestId] = useState<string | null>(null);
+  const clear = useCallback(() => setRequestId(null), []);
+  const participantId = user ? (participant?.participantId ?? null) : null;
+  const next =
+    participantId && isRatingOpen(event) ? unratedWinners(winners, participantId)[0] : undefined;
+  return {
+    requestId,
+    clear,
+    rating: { canRate: !!next, onRate: () => setRequestId(next?.id ?? null) },
+  };
 }
 
 function isNightFull(maxParticipants: number | null, participantCount: number): boolean {
@@ -122,11 +134,7 @@ export default function EventDetailSession({
   const addMovieTriggerRef = useRef<HTMLButtonElement>(null);
   const moviesSectionRef = useRef<HTMLDivElement>(null);
   const [participantsOpen, setParticipantsOpen] = useState(false);
-  const participantsRef = useRef<HTMLDivElement>(null);
   const closeParticipants = useCallback(() => setParticipantsOpen(false), []);
-  useClickOutside(participantsRef, closeParticipants, participantsOpen, {
-    ignoreSelector: '[data-participants-toggle]',
-  });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [viewMode, setViewMode] = useState<MoviesViewMode>(readMoviesViewMode);
@@ -229,17 +237,18 @@ export default function EventDetailSession({
   let moviesCount = event.movieCount ?? 0;
   const moviesLoaded = moviesQuery.data !== undefined;
   if (moviesLoaded) moviesCount = movies.length;
-  const votersCount = event.votersCount ?? 0;
   const lifecycle = normalizeMyEventLifecycle(event.lifecycle);
-  const countdown = eventCountdown(event.date, event.time, nowMs);
-  const countdownLabel = countdown
-    ? t(COUNTDOWN_KEYS[countdown.unit], countdownParams(countdown))
-    : null;
+  const countdownLabel = eventCountdownLabel(event.date, event.time, nowMs, t);
   const canConfigure = !!event.isHost && !event.isFinished;
   const showWinnerStage = isWinnerStageShown(winnerMovies, wheel);
   const emptyStateCarriesAddMovie = moviesLoaded && movies.length === 0;
   const canAddMovie = !event.isFinished && !!participant && !emptyStateCarriesAddMovie;
   const isFull = isNightFull(maxParticipants, participantCount);
+  const headerRating = useHeaderRating({
+    event,
+    participant,
+    winners: showWinnerStage ? winnerMovies : [],
+  });
 
   return (
     <PageLayout className="page-event">
@@ -250,7 +259,7 @@ export default function EventDetailSession({
         moviesQuery={moviesQuery}
         lifecycle={lifecycle}
         countdownLabel={countdownLabel}
-        counts={{ participants: participantCount, movies: moviesCount, voters: votersCount }}
+        counts={{ participants: participantCount, movies: moviesCount }}
         dates={{ dateFormatted, timeFormatted, dateLabel }}
         share={{
           open: shareOpen,
@@ -267,10 +276,10 @@ export default function EventDetailSession({
           onClose: () => setSettingsOpen(false),
         }}
         participants={{
-          open: participantsOpen,
           count: participantCount,
-          onToggle: () => setParticipantsOpen((value) => !value),
+          onOpen: () => setParticipantsOpen(true),
         }}
+        rating={headerRating.rating}
         addMovie={{
           canAdd: canAddMovie,
           onOpen: () => setAddMovieOpen(true),
@@ -294,6 +303,8 @@ export default function EventDetailSession({
           participant={participant}
           refreshAll={refreshAll}
           holdRatingPrompt={wheel.isModalOpen}
+          ratingRequestId={headerRating.requestId}
+          onRatingRequestHandled={headerRating.clear}
         />
       ) : null}
       <EventDetailSessionBody
@@ -310,7 +321,7 @@ export default function EventDetailSession({
         wheel={wheel}
         participantsPanel={{
           open: participantsOpen,
-          ref: participantsRef,
+          onClose: closeParticipants,
           pendingRemovalId,
           removePending,
           canShowLeave,

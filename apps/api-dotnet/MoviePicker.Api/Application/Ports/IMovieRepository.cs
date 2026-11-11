@@ -17,6 +17,7 @@ public interface IMovieRepository
     Task<IReadOnlyList<Movie>> ListByIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default);
     Task<Movie?> GetByIdAndEventIdAsync(string movieId, string eventId, CancellationToken ct = default);
     Task<IReadOnlyList<Movie>> ListByEventIdAsync(string eventId, CancellationToken ct = default);
+    Task<IReadOnlyList<Movie>> ListByEventIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default);
     Task<bool> ExistsByEventAndTmdbIdAsync(string eventId, int tmdbId, MovieMediaType mediaType, CancellationToken ct = default);
     Task<bool> ExistsByEventAndTitleCaseInsensitiveAsync(string eventId, string title, string? year, CancellationToken ct = default);
     Task<int> CountByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default);

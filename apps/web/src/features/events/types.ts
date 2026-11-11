@@ -97,6 +97,22 @@ export interface MyEventSummary {
   hasWinnerToRate?: boolean;
 
   autoCloseAt?: string | null;
+
+  topMovies?: MyEventMoviePreview[];
+
+  participantsPreview?: MyEventParticipantPreview[];
+
+  hasVoted?: boolean;
+}
+
+export interface MyEventMoviePreview {
+  title: string;
+  posterPath?: string | null;
+}
+
+export interface MyEventParticipantPreview {
+  pseudo: string;
+  avatarId: string;
 }
 
 export interface MyEventWinnerMovie {

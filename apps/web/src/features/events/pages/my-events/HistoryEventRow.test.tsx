@@ -49,12 +49,12 @@ describe('HistoryEventRow', () => {
     auth.user = { userId: 'u1', ratingScale: 'five' };
   });
 
-  it('leads with the only winning movie and puts the night title under it', () => {
+  it('titles the card with the night and names its movie under it', () => {
     renderRow({ ...base, ...won });
 
-    expect(screen.getByRole('heading', { name: 'Parasite' })).toBeInTheDocument();
-    expect(screen.getByText('Ciné-club du mardi')).toBeInTheDocument();
-    expect(screen.queryByText('1')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Ciné-club du mardi' })).toBeInTheDocument();
+    expect(screen.getByText('Le film de la soirée')).toBeInTheDocument();
+    expect(screen.getByText('Parasite')).toBeInTheDocument();
   });
 
   it('names the first movie and counts the others when several movies won', () => {
@@ -67,10 +67,8 @@ describe('HistoryEventRow', () => {
       ],
     });
 
-    expect(screen.getByText('Parasite et 2 autres films')).toBeInTheDocument();
-    expect(
-      screen.getByRole('heading', { name: /Parasite, Whiplash et Perfect Days/ })
-    ).toBeInTheDocument();
+    expect(screen.getByText('Les 3 films de la soirée')).toBeInTheDocument();
+    expect(screen.getByText('Parasite et 2 autres')).toBeInTheDocument();
   });
 
   it('keeps the other movie in the singular', () => {
@@ -82,40 +80,32 @@ describe('HistoryEventRow', () => {
       ],
     });
 
-    expect(screen.getByText('Parasite et 1 autre film')).toBeInTheDocument();
+    expect(screen.getByText('Parasite et 1 autre')).toBeInTheDocument();
   });
 
-  it('puts the count on the thumbnail beyond one winner', () => {
-    renderRow({
-      ...base,
-      winnerMovies: [
-        { title: 'Parasite', posterPath: '/p.jpg' },
-        { title: 'Whiplash', posterPath: '/w.jpg' },
-      ],
-    });
-
-    expect(screen.getByText('2')).toBeInTheDocument();
-  });
-
-  it('garde une seule affiche, celle du premier film gagnant', () => {
+  it('stacks the posters of the first two winners, the first one in front', () => {
     renderRow({
       ...base,
       winnerMovies: [
         { title: 'Parasite', posterPath: '/premier.jpg' },
         { title: 'Whiplash', posterPath: '/second.jpg' },
+        { title: 'Perfect Days', posterPath: '/troisieme.jpg' },
       ],
     });
 
-    const posters = document.querySelectorAll('img');
-    expect(posters).toHaveLength(1);
-    expect(posters[0]!.getAttribute('src')).toContain('premier.jpg');
+    const images = document.querySelectorAll('img');
+    expect(images).toHaveLength(3);
+    expect(images[0]!.getAttribute('src')).toContain('premier.jpg');
+    expect(images[1]!.getAttribute('src')).toContain('premier.jpg');
+    expect(images[2]!.getAttribute('src')).toContain('second.jpg');
   });
 
-  it('carries the date and the host mark, without the counts', () => {
+  it('carries the date block and the host mark, without the counts', () => {
     renderRow({ ...base, ...won, maxParticipants: 8 });
 
-    expect(screen.getByText('2 sept.')).toBeInTheDocument();
-    expect(screen.getByTitle('Vous organisez cette soirée')).toBeInTheDocument();
+    expect(screen.getByText('sept.')).toBeInTheDocument();
+    expect(screen.getByText('mer.')).toBeInTheDocument();
+    expect(screen.getByTitle('Vous organisez cette soirée')).toHaveTextContent('Hôte');
     expect(screen.queryByText('6 / 8')).not.toBeInTheDocument();
     expect(screen.queryByText('8 films proposés')).not.toBeInTheDocument();
   });
@@ -126,23 +116,21 @@ describe('HistoryEventRow', () => {
     expect(screen.queryByTitle('Vous organisez cette soirée')).not.toBeInTheDocument();
   });
 
-  it('falls back to the night title and the no-movie state when the movie night has no winner', () => {
+  it('says the night ended without a movie when nothing won', () => {
     renderRow(base);
 
     expect(screen.getByRole('heading', { name: 'Ciné-club du mardi' })).toBeInTheDocument();
-    expect(screen.getByText(/terminée sans film/i)).toBeInTheDocument();
+    expect(screen.getByText('Terminée sans film choisi')).toBeInTheDocument();
+    expect(document.querySelectorAll('img')).toHaveLength(0);
   });
 
-  it('links the row to the event and keeps its menu', () => {
+  it('links the card to the event and keeps its menu beside it', () => {
     renderRow({ ...base, ...won }, { onDelete: () => undefined });
 
-    expect(screen.getByRole('link', { name: /Parasite/ })).toHaveAttribute(
-      'href',
-      ROUTES.eventDetail('soiree')
-    );
-    expect(
-      screen.getByRole('button', { name: 'Options pour Ciné-club du mardi' })
-    ).toBeInTheDocument();
+    const link = screen.getByRole('link', { name: /Ciné-club du mardi/ });
+    expect(link).toHaveAttribute('href', ROUTES.eventDetail('soiree'));
+    const menu = screen.getByRole('button', { name: 'Options pour Ciné-club du mardi' });
+    expect(link).not.toContainElement(menu);
   });
 
   it('shows the group average and the rating of the viewer', () => {

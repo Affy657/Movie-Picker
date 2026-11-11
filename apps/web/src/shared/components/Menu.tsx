@@ -8,7 +8,8 @@ import { hasDescenders } from './opticalNudge';
 import { buttonClass, buttonLabelClass } from './Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
-const ENABLED_ITEM_SELECTOR = '[role="menuitem"]:not([disabled])';
+const ENABLED_ITEM_SELECTOR =
+  '[role="menuitem"]:not([disabled]), [role="menuitemradio"]:not([disabled])';
 function nextItemIndex(key: string, current: number, count: number): number | null {
   switch (key) {
     case 'ArrowDown':
@@ -129,6 +130,7 @@ interface MenuItemProps {
   disabled?: boolean;
   ariaLabel?: string;
   title?: string;
+  trailing?: React.ReactNode;
   'aria-haspopup'?: 'dialog' | 'menu';
 }
 
@@ -149,6 +151,7 @@ export function MenuItem({
   disabled = false,
   ariaLabel,
   title,
+  trailing,
   'aria-haspopup': ariaHasPopup,
 }: Readonly<MenuItemProps>) {
   const className = clsx(
@@ -160,6 +163,7 @@ export function MenuItem({
     <>
       {icon}
       <span className={itemLabelClassName(children)}>{children}</span>
+      {trailing}
       {selected ? <Check size={ICON_SIZE.sm} aria-hidden className={styles.itemCheck} /> : null}
     </>
   );
@@ -209,5 +213,55 @@ export function MenuItem({
     >
       {content}
     </button>
+  );
+}
+
+export type MenuChoiceOption<T extends string> = {
+  value: T;
+  label: string;
+  content: React.ReactNode;
+};
+
+interface MenuChoiceRowProps<T extends string> {
+  label: string;
+  icon?: React.ReactNode;
+  options: ReadonlyArray<MenuChoiceOption<T>>;
+  value: T;
+  onChange: (value: T) => void;
+}
+
+export function MenuChoiceRow<T extends string>({
+  label,
+  icon,
+  options,
+  value,
+  onChange,
+}: Readonly<MenuChoiceRowProps<T>>) {
+  return (
+    <div role="group" aria-label={label} className={styles.choiceRow}>
+      {icon}
+      <span className={clsx(styles.itemLabel, styles.choiceLabel)} aria-hidden="true">
+        {label}
+      </span>
+      <span className={styles.choices}>
+        {options.map((option) => {
+          const checked = option.value === value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              role="menuitemradio"
+              aria-checked={checked}
+              aria-label={option.label}
+              title={option.label}
+              className={clsx(styles.choice, checked && styles.choiceChecked)}
+              onClick={() => onChange(option.value)}
+            >
+              {option.content}
+            </button>
+          );
+        })}
+      </span>
+    </div>
   );
 }

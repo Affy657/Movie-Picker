@@ -4,6 +4,7 @@ import EventParticipantsList from '@/features/events/components/EventParticipant
 import EventMoviesSection from '@/features/events/pages/event-detail/EventMoviesSection';
 import EventClosedWithoutMovieState from '@/features/events/pages/event-detail/EventClosedWithoutMovieState';
 import ViewModeToggle from '@/shared/components/ViewModeToggle';
+import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
 import { useTranslation } from '@/shared/i18n';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
@@ -16,7 +17,11 @@ import type {
   WheelApi,
 } from './eventDetailSessionTypes';
 
-function EventParticipantsPanel({
+function participantsCountText(count: number, max: number | null | undefined): string {
+  return typeof max === 'number' && max > 0 ? `${count} / ${max}` : String(count);
+}
+
+function EventParticipantsDialog({
   event,
   participant,
   panel,
@@ -25,10 +30,20 @@ function EventParticipantsPanel({
   participant: ParticipantRef | null;
   panel: ParticipantsPanelState;
 }>) {
+  const { t } = useTranslation();
   const hostCanInvite = !!event.isHost && !event.isFinished;
   const currentParticipantId = participant?.participantId ?? null;
   return (
-    <div ref={panel.ref}>
+    <ResponsiveDialog
+      open={panel.open}
+      onClose={panel.onClose}
+      title={t('events.participants.dialogTitle', {
+        count: participantsCountText(
+          event.participants?.length ?? 0,
+          event.config?.maxParticipants
+        ),
+      })}
+    >
       <EventParticipantsList
         participants={event.participants}
         currentParticipantId={currentParticipantId}
@@ -44,7 +59,7 @@ function EventParticipantsPanel({
           panel.pendingRemovalId === currentParticipantId
         }
       />
-    </div>
+    </ResponsiveDialog>
   );
 }
 
@@ -105,7 +120,11 @@ export default function EventDetailSessionBody({
   return (
     <>
       {participantsPanel.open ? (
-        <EventParticipantsPanel event={event} participant={participant} panel={participantsPanel} />
+        <EventParticipantsDialog
+          event={event}
+          participant={participant}
+          panel={participantsPanel}
+        />
       ) : null}
       {actionSuccess ? (
         <p

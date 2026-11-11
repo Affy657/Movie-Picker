@@ -42,6 +42,23 @@ public sealed class InMemoryMovieRepository : IMovieRepository
         }
     }
 
+    public Task<IReadOnlyList<Movie>> ListByEventIdsAsync(
+        IReadOnlyCollection<string> eventIds,
+        CancellationToken ct = default)
+    {
+        var movies = new List<Movie>();
+        foreach (var eventId in eventIds.Distinct())
+        {
+            if (!_byEventId.TryGetValue(eventId, out var list))
+                continue;
+            lock (list)
+            {
+                movies.AddRange(list.Take(EventConfig.MaxMoviesPerEventCap));
+            }
+        }
+        return Task.FromResult<IReadOnlyList<Movie>>(movies);
+    }
+
     public Task<bool> ExistsByEventAndTmdbIdAsync(
         string eventId,
         int tmdbId,

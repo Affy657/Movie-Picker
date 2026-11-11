@@ -1,26 +1,8 @@
-import { useMemo, useState } from 'react';
-import { Monitor, Moon, Sun, type LucideIcon } from 'lucide-react';
-import { useAuth } from '@/features/auth/contexts/AuthContext';
-import { useTheme } from '@/shared/contexts/ThemeContext';
-import type { UiThemePreference } from '@/shared/types/theme';
-import { useTranslation, type TranslationKey } from '@/shared/i18n';
-import { isUiThemePreference } from '@/shared/utils/uiThemePreference';
+import { useMemo } from 'react';
+import { useTranslation } from '@/shared/i18n';
 import SegmentedRadioGroup, { type SegmentedSize } from '@/shared/components/SegmentedRadioGroup';
 import { ICON_SIZE } from '@/shared/components/iconSize';
-
-const THEME_OPTIONS: readonly UiThemePreference[] = ['system', 'light', 'dark'];
-
-const LABEL_KEY: Record<UiThemePreference, TranslationKey> = {
-  system: 'theme.system',
-  light: 'theme.light',
-  dark: 'theme.dark',
-};
-
-const ICON: Record<UiThemePreference, LucideIcon> = {
-  system: Monitor,
-  light: Sun,
-  dark: Moon,
-};
+import { THEME_ICON, THEME_LABEL_KEY, THEME_OPTIONS, useUiThemeChoice } from './useUiThemeChoice';
 
 export default function ThemeToggle({
   className = '',
@@ -37,18 +19,16 @@ export default function ThemeToggle({
   size?: SegmentedSize;
   iconOnly?: boolean;
 }>) {
-  const { preference, setUiPreference } = useTheme();
-  const { user, patchProfile } = useAuth();
   const { t } = useTranslation();
-  const [error, setError] = useState<string | null>(null);
+  const { preference, commit, error } = useUiThemeChoice(onSaved);
 
   const options = useMemo(
     () =>
       THEME_OPTIONS.map((code) => {
-        const Icon = ICON[code];
+        const Icon = THEME_ICON[code];
         return {
           value: code,
-          label: t(LABEL_KEY[code]),
+          label: t(THEME_LABEL_KEY[code]),
           icon: iconOnly ? (
             <Icon size={ICON_SIZE.md} strokeWidth={2} aria-hidden focusable={false} />
           ) : null,
@@ -56,26 +36,6 @@ export default function ThemeToggle({
       }),
     [t, iconOnly]
   );
-
-  const commit = (value: UiThemePreference) => {
-    if (!isUiThemePreference(value)) return;
-    const prev = preference;
-    setError(null);
-    setUiPreference(value);
-    if (user) {
-      void patchProfile({ uiTheme: value })
-        .then(() => onSaved?.())
-        .catch(() => {
-          setUiPreference(prev);
-          setError(
-            t('auth.account.themeSaveError', {
-              theme: t(LABEL_KEY[value]),
-              previous: t(LABEL_KEY[prev]),
-            })
-          );
-        });
-    }
-  };
 
   return (
     <>

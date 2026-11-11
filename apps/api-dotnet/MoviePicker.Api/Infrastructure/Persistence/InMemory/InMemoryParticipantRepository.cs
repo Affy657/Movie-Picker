@@ -119,6 +119,18 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
         return Task.FromResult<IReadOnlyList<Participant>>(list);
     }
 
+    public Task<IReadOnlyList<Participant>> ListByEventIdsAsync(
+        IReadOnlyCollection<string> eventIds,
+        CancellationToken ct = default)
+    {
+        var wanted = eventIds.ToHashSet();
+        var list = _byId.Values
+            .Where(p => wanted.Contains(p.EventId))
+            .OrderBy(p => p.CreatedAt)
+            .ToList();
+        return Task.FromResult<IReadOnlyList<Participant>>(list);
+    }
+
     public Task<bool> DeleteAsync(string participantId, string eventId, CancellationToken ct = default)
     {
         if (!_byId.TryGetValue(participantId, out var p) || p.EventId != eventId)

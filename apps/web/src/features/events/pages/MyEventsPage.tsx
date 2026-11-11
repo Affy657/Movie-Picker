@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { CalendarPlus } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router';
+import { Link } from 'react-router';
 import EmptyState from '@/shared/components/EmptyState';
 import PageLayout from '@/shared/components/PageLayout';
 import MyEventsSkeleton from '@/features/events/pages/MyEventsSkeleton';
@@ -13,15 +13,11 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import ActiveEventsPanel from '@/features/events/pages/my-events/ActiveEventsPanel';
 import HistoryEventsPanel from '@/features/events/pages/my-events/HistoryEventsPanel';
 import MyEventsConfirmDialogs from '@/features/events/pages/my-events/MyEventsConfirmDialogs';
-import MyEventsTabs, { type MyEventsTab } from '@/features/events/pages/my-events/MyEventsTabs';
-import { useHistoryToolbar } from '@/features/events/pages/my-events/useHistoryToolbar';
 import { useMyEventsActions } from '@/features/events/pages/my-events/useMyEventsActions';
 import { useMyEventsLists } from '@/features/events/pages/my-events/useMyEventsLists';
 import styles from './MyEventsPage.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
-
-const HISTORY_SEARCH_DEBOUNCE_MS = 300;
 
 function MyEventsShell({ children }: Readonly<{ children: ReactNode }>) {
   const { t } = useTranslation();
@@ -78,27 +74,8 @@ export default function MyEventsPage() {
   const { t } = useTranslation();
   useNoindexPage(pageTitle(t('events.myEvents.title')), ROUTES.myEvents);
   const { user, isLoading: authLoading } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const tab: MyEventsTab = searchParams.get('tab') === 'history' ? 'history' : 'active';
-  const setTab = useCallback(
-    (next: MyEventsTab) => {
-      setSearchParams(next === 'history' ? { tab: 'history' } : {}, { replace: true });
-    },
-    [setSearchParams]
-  );
-
-  const [historySearchQuery, setHistorySearchQuery] = useState('');
   const actions = useMyEventsActions();
-  const lists = useMyEventsLists({ enabled: !authLoading && !!user, tab, historySearchQuery });
-
-  const historyToolbar = useHistoryToolbar({ events: lists.historyEvents });
-  useEffect(() => {
-    const id = setTimeout(
-      () => setHistorySearchQuery(historyToolbar.search.trim()),
-      HISTORY_SEARCH_DEBOUNCE_MS
-    );
-    return () => clearTimeout(id);
-  }, [historyToolbar.search]);
+  const lists = useMyEventsLists({ enabled: !authLoading && !!user });
 
   if (authLoading || lists.activeQuery.isLoading) {
     return (
@@ -121,36 +98,24 @@ export default function MyEventsPage() {
 
   return (
     <PageLayout className={styles.layout}>
-      <h1 className={styles.pageTitle}>{t('events.myEvents.title')}</h1>
+      <h1 className="visually-hidden">{t('events.myEvents.title')}</h1>
 
       {isGloballyEmpty ? (
         <MyEventsGloballyEmpty />
       ) : (
-        <>
-          <MyEventsTabs
-            tab={tab}
-            onChange={setTab}
-            totalActive={lists.totalActive}
-            totalFinished={lists.totalFinished}
+        <div className={styles.page}>
+          <ActiveEventsPanel
+            pendingEvents={lists.pendingEvents}
+            upcomingEvents={lists.upcomingEvents}
+            actions={actions}
           />
-          {tab === 'active' ? (
-            <ActiveEventsPanel
-              totalActive={lists.totalActive}
-              pendingEvents={lists.pendingEvents}
-              upcomingEvents={lists.upcomingEvents}
-              actions={actions}
-            />
-          ) : (
-            <HistoryEventsPanel
-              totalFinished={lists.totalFinished}
-              events={lists.historyEvents}
-              searchQuery={historySearchQuery}
-              query={lists.historyQuery}
-              toolbar={historyToolbar}
-              actions={actions}
-            />
-          )}
-        </>
+          <HistoryEventsPanel
+            totalFinished={lists.totalFinished}
+            events={lists.historyEvents}
+            query={lists.historyQuery}
+            actions={actions}
+          />
+        </div>
       )}
 
       <MyEventsConfirmDialogs actions={actions} historyEvents={lists.historyEvents} />

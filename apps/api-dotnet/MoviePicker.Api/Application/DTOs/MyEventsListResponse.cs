@@ -40,6 +40,28 @@ public sealed class MyEventSummaryDto
     public bool HasWinnerToRate { get; init; }
 
     public DateTimeOffset? AutoCloseAt { get; init; }
+
+    public IReadOnlyList<MyEventMoviePreviewDto> TopMovies { get; init; } =
+        Array.Empty<MyEventMoviePreviewDto>();
+
+    public IReadOnlyList<MyEventParticipantPreviewDto> ParticipantsPreview { get; init; } =
+        Array.Empty<MyEventParticipantPreviewDto>();
+
+    public bool HasVoted { get; init; }
+}
+
+public sealed class MyEventMoviePreviewDto
+{
+    public string Title { get; init; } = string.Empty;
+
+    public string? PosterPath { get; init; }
+}
+
+public sealed class MyEventParticipantPreviewDto
+{
+    public string Pseudo { get; init; } = string.Empty;
+
+    public string AvatarId { get; init; } = string.Empty;
 }
 
 public sealed class MyEventWinnerMovieDto

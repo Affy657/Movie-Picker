@@ -37,9 +37,15 @@ describe('eventCountdown', () => {
     });
   });
 
-  it('returns null beyond the 24 h window', () => {
-    expect(eventCountdown('2026-08-19', '19:00', START - 86_400_000)).toBeNull();
-    expect(eventCountdown('2026-08-19', '19:00', START - 3 * 86_400_000)).toBeNull();
+  it('counts days and hours beyond the 24 h window', () => {
+    expect(eventCountdown('2026-08-19', '19:00', START - 86_400_000)).toEqual({
+      unit: 'days',
+      count: 1,
+      hours: 0,
+    });
+    expect(
+      eventCountdown('2026-08-19', '19:00', START - 2 * 86_400_000 - 6 * 3_600_000 - 400_000)
+    ).toEqual({ unit: 'days', count: 2, hours: 6 });
   });
 
   it('affiche encore les heures juste sous les 24 h', () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
@@ -47,6 +47,7 @@ describe('UserMenu', () => {
   beforeAll(() => server.listen({ onUnhandledFrame: 'bypass' }));
   afterEach(() => {
     server.resetHandlers();
+    localStorage.clear();
     resetPwaInstallRuntime();
   });
   afterAll(() => server.close());
@@ -60,30 +61,45 @@ describe('UserMenu', () => {
     expect(screen.queryByRole('button', { name: /se déconnecter/i })).not.toBeInTheDocument();
   });
 
-  it('opens the menu and shows profile, account and sign out', async () => {
+  it('opens the menu with the public profile on top, then settings, preferences and links', async () => {
     const user = userEvent.setup();
     renderMenu();
 
     await user.click(screen.getByRole('button', { name: /menu du compte/i }));
 
-    expect(screen.getByText('Alice')).toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: /voir mon profil public/i })).toHaveAttribute(
-      'href',
-      '/u/alice'
-    );
+    const profile = screen.getByRole('menuitem', { name: /voir mon profil public/i });
+    expect(profile).toHaveAttribute('href', '/u/alice');
+    expect(profile).toHaveTextContent('Alice');
+    expect(profile).toHaveTextContent('@alice');
     expect(screen.getByRole('menuitem', { name: /paramètres/i })).toHaveAttribute(
       'href',
       '/settings'
+    );
+    expect(screen.getByRole('group', { name: /apparence/i })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: /langue/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /nouveautés/i })).toHaveAttribute(
+      'href',
+      '/nouveautes'
     );
     expect(screen.getByRole('menuitem', { name: /soutenir le projet/i })).toHaveAttribute(
       'href',
       '/soutenir'
     );
-    expect(screen.getByRole('menuitem', { name: /installer l['’]app/i })).toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: /se déconnecter/i })).toBeInTheDocument();
+    const labels = screen
+      .getAllByRole('menuitem')
+      .map((item) => item.getAttribute('aria-label') ?? item.textContent);
+    expect(labels).toEqual([
+      'Voir mon profil public',
+      'Paramètres',
+      'Nouveautés',
+      'Envoyer un retour',
+      'Installer l’app',
+      'Soutenir le projet',
+      'Se déconnecter',
+    ]);
   });
 
-  it('puts the focus on the first item when opening', async () => {
+  it('puts the focus on the profile when opening', async () => {
     const user = userEvent.setup();
     renderMenu();
 
@@ -94,13 +110,16 @@ describe('UserMenu', () => {
     );
   });
 
-  it("masque le lien profil quand l'utilisateur n'a pas de handle", async () => {
+  it('shows the name without a profile link when the user has no handle', async () => {
     const user = userEvent.setup();
     renderMenu({ ...baseUser, handle: '' });
 
     await user.click(screen.getByRole('button', { name: /menu du compte/i }));
 
-    expect(screen.queryByRole('link', { name: /voir mon profil public/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('menuitem', { name: /voir mon profil public/i })
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('Alice')).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: /paramètres/i })).toBeInTheDocument();
   });
 
@@ -113,7 +132,65 @@ describe('UserMenu', () => {
     expect(
       screen.queryByRole('menuitem', { name: /voir mon profil public/i })
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: /paramètres/i })).toBeInTheDocument();
+    expect(screen.getByText('Alice')).toBeInTheDocument();
+  });
+
+  it('changes the theme from the menu and keeps the menu open', async () => {
+    const user = userEvent.setup();
+    server.use(http.patch(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(baseUser)));
+    renderMenu();
+
+    await user.click(screen.getByRole('button', { name: /menu du compte/i }));
+    const appearance = screen.getByRole('group', { name: /apparence/i });
+    const dark = within(appearance).getByRole('menuitemradio', { name: /sombre/i });
+    expect(within(appearance).getByRole('menuitemradio', { name: /système/i })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
+
+    await user.click(dark);
+
+    expect(dark).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('menu', { name: /menu du compte/i })).toBeInTheDocument();
+  });
+
+  it('switches the language from the menu', async () => {
+    const user = userEvent.setup();
+    renderMenu();
+
+    await user.click(screen.getByRole('button', { name: /menu du compte/i }));
+    const language = screen.getByRole('group', { name: /langue/i });
+    expect(within(language).getByRole('menuitemradio', { name: 'Français' })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
+
+    await user.click(within(language).getByRole('menuitemradio', { name: 'English' }));
+
+    expect(await screen.findByRole('menu', { name: /account menu/i })).toBeInTheDocument();
+  });
+
+  it('marks Whats new as unread when a feature version shipped since the last visit', async () => {
+    const user = userEvent.setup();
+    localStorage.setItem('mp.release-notes-seen', '1.0.0');
+    renderMenu();
+
+    await user.click(screen.getByRole('button', { name: /menu du compte/i }));
+
+    expect(screen.getByRole('menuitem', { name: /nouveautés/i })).toHaveTextContent(/nouveau$/i);
+  });
+
+  it('opens the feedback dialog, which takes ideas as well as problems', async () => {
+    const user = userEvent.setup();
+    renderMenu();
+
+    await user.click(screen.getByRole('button', { name: /menu du compte/i }));
+    await user.click(screen.getByRole('menuitem', { name: /envoyer un retour/i }));
+
+    expect(screen.queryByRole('button', { name: /se déconnecter/i })).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /envoyer un retour/i })).toBeInTheDocument();
+    });
   });
 
   it('closes the menu with Escape and gives the focus back to the trigger', async () => {
@@ -130,19 +207,6 @@ describe('UserMenu', () => {
       expect(screen.queryByRole('button', { name: /se déconnecter/i })).not.toBeInTheDocument()
     );
     expect(trigger).toHaveFocus();
-  });
-
-  it('opens the "Suggest an idea" modal and keeps it open after the menu closes', async () => {
-    const user = userEvent.setup();
-    renderMenu();
-
-    await user.click(screen.getByRole('button', { name: /menu du compte/i }));
-    await user.click(screen.getByRole('menuitem', { name: /proposer une idée/i }));
-
-    expect(screen.queryByRole('button', { name: /se déconnecter/i })).not.toBeInTheDocument();
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /proposer une idée/i })).toBeInTheDocument();
-    });
   });
 
   it('ouvre le guide d’installation et ferme le menu', async () => {

@@ -26,6 +26,29 @@ function formatIsoDate(
   return new Intl.DateTimeFormat(LOCALE_TAG[locale], options).format(dt);
 }
 
+export type EventDateParts = {
+  weekday: string;
+  day: string;
+  month: string;
+};
+
+export function eventDateParts(isoDate: string, locale: LocaleCode): EventDateParts | null {
+  const parts = isoDate
+    .trim()
+    .split('-')
+    .map((p) => Number.parseInt(p, 10));
+  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return null;
+  const [y, m, d] = parts as [number, number, number];
+  const dt = new Date(y, m - 1, d);
+  if (Number.isNaN(dt.getTime())) return null;
+  const tag = LOCALE_TAG[locale];
+  return {
+    weekday: new Intl.DateTimeFormat(tag, { weekday: 'short' }).format(dt),
+    day: String(dt.getDate()),
+    month: new Intl.DateTimeFormat(tag, { month: 'short' }).format(dt),
+  };
+}
+
 export function formatMyEventsListDate(isoDate: string, locale: LocaleCode): string {
   return formatIsoDate(isoDate, locale, { weekday: 'short', month: 'short' }) ?? isoDate.trim();
 }

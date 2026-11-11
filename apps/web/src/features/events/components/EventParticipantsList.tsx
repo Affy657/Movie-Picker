@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import clsx from 'clsx';
 import { Link } from 'react-router';
-import { Check, Crown, Settings2, UserPlus, Users, X } from 'lucide-react';
+import { Check, Crown, Settings2, UserPlus, X } from 'lucide-react';
 import type { EventParticipantSummary } from '@/shared/types/event';
 import { useTranslation } from '@/shared/i18n';
 import Chip from '@/shared/components/Chip';
@@ -10,7 +10,6 @@ import Avatar from '@/shared/components/Avatar';
 import EmptyState from '@/shared/components/EmptyState';
 import styles from './EventParticipantsList.module.css';
 import Button from '@/shared/components/Button';
-import Card from '@/shared/components/Card';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type Props = {
@@ -48,58 +47,45 @@ export default function EventParticipantsList({
   if (!participants) return null;
 
   const hasCap = typeof maxParticipants === 'number' && maxParticipants > 0;
-  const countLabel = hasCap
-    ? `${participants.length} / ${maxParticipants}`
-    : String(participants.length);
   const isFull = hasCap && participants.length >= (maxParticipants ?? 0);
   const canManage = !!isHost && !!onRemoveParticipant && participants.length > 1;
 
   return (
-    <Card
-      as="section"
-      elevation="sm"
-      id="event-participants-panel"
-      className={styles.root}
-      aria-labelledby="participants-heading"
-      data-testid="event-participants"
-    >
-      <div className={styles.headerRow}>
-        <h2 id="participants-heading" className={styles.header}>
-          <Users aria-hidden size={ICON_SIZE.lg} className={styles.headerIcon} />
-          <span className={styles.headerLabel}>{t('events.participants.title')}</span>
-          <span className={styles.count}>({countLabel})</span>
-          {isFull && (
+    <div className={styles.root} data-testid="event-participants">
+      {isFull || canManage ? (
+        <div className={styles.headerRow}>
+          {isFull ? (
             <Chip tone="warning" size="sm" className={styles.fullBadge}>
               <span aria-hidden="true">{t('events.participants.fullBadge')}</span>
               <span className="visually-hidden">{t('events.participants.fullBadgeAria')}</span>
             </Chip>
+          ) : null}
+          {canManage && (
+            <Button
+              type="button"
+              size="sm"
+              className={styles.manageBtn}
+              onClick={() => setManaging((value) => !value)}
+              aria-pressed={managing}
+              data-testid="manage-participants-toggle"
+            >
+              {managing ? (
+                <>
+                  <Check aria-hidden size={ICON_SIZE.sm} />
+                  {t('events.participants.manageDone')}
+                </>
+              ) : (
+                <>
+                  <Settings2 aria-hidden size={ICON_SIZE.sm} />
+                  <span className={styles.manageBtnLabel}>
+                    {t('events.participants.manageAction')}
+                  </span>
+                </>
+              )}
+            </Button>
           )}
-        </h2>
-        {canManage && (
-          <Button
-            type="button"
-            size="sm"
-            className={styles.manageBtn}
-            onClick={() => setManaging((value) => !value)}
-            aria-pressed={managing}
-            data-testid="manage-participants-toggle"
-          >
-            {managing ? (
-              <>
-                <Check aria-hidden size={ICON_SIZE.sm} />
-                {t('events.participants.manageDone')}
-              </>
-            ) : (
-              <>
-                <Settings2 aria-hidden size={ICON_SIZE.sm} />
-                <span className={styles.manageBtnLabel}>
-                  {t('events.participants.manageAction')}
-                </span>
-              </>
-            )}
-          </Button>
-        )}
-      </div>
+        </div>
+      ) : null}
 
       {participants.length === 0 && !onInvite ? (
         <EmptyState
@@ -193,6 +179,6 @@ export default function EventParticipantsList({
           </Button>
         </div>
       )}
-    </Card>
+    </div>
   );
 }

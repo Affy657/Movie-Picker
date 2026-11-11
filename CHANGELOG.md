@@ -8,6 +8,20 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Apparence et langue se règlent depuis le menu du compte** : le menu s'ouvre sur votre profil public, regroupe idées et problèmes dans « Envoyer un retour » et signale les nouveautés que vous n'avez pas encore lues.
+
+### Changed
+
+- **Mes soirées tient sur une seule page** : les soirées à traiter, puis celles à venir, puis l'historique classé par mois. Chaque soirée à venir montre sa date, les trois films les mieux notés en affiches et ce qui vous attend (« À vous de voter », « Proposez le premier film »), chaque soirée passée son film, sa note et votre note.
+- **Le haut de la page d'une soirée est plus simple** : le retour et les boutons passent au-dessus du titre sur ordinateur, le thème au-dessus du titre, le compte à rebours en bout de ligne. « Proposer un film » devient l'action principale jusqu'au premier tirage, « Lancer la roue » et « Choisir moi-même » partagent un bouton, et retirer un gagnant, repartir de zéro ou clôturer sans film passent dans « Gérer le tirage ».
+- **La liste des participants s'ouvre dans une fenêtre** : au centre de l'écran sur ordinateur, depuis le bas sur téléphone.
+
+### Removed
+
+- **La recherche, les filtres, le tri et les statistiques de l'historique** : les statistiques restent sur votre profil.
+
 ## [1.8.0] - 2026-11-11
 
 ### Added

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import changelogSource from '../../../../../CHANGELOG.md?raw';
 import PageLayout from '@/shared/components/PageLayout';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
@@ -5,6 +6,7 @@ import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
+import { markReleaseNotesSeen } from '@/shared/releaseNotesSeen';
 import { parseChangelog, type InlinePart } from './releaseNotes/parseChangelog';
 import content from './ContentPage.module.css';
 import styles from './ReleaseNotesPage.module.css';
@@ -30,6 +32,7 @@ export default function ReleaseNotesPage() {
     description: t('releaseNotes.intro'),
     canonical: absoluteUrl(ROUTES.releaseNotes),
   });
+  useEffect(() => markReleaseNotesSeen(), []);
   const dateFormat = new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeZone: 'UTC' });
 
   return (
