@@ -36,7 +36,7 @@ Rien pour l'instant.
 
 1. `S` **Mesurer ce qui sert** : savoir combien de personnes notent un film, ouvrent un recap, piochent dans leur watchlist ou synchronisent Letterboxd, et à quelle étape décroche celui qui ouvre le lien d'une soirée, inscriptions comprises. Sans ces chiffres, le reste se trie à l'aveugle.
 2. `?` **Entrer dans une soirée depuis son lien** : aujourd'hui, environ une personne sur dix qui ouvre le lien d'une soirée finit par la rejoindre. Raccourcir le chemin du lien au compte puis à la soirée, à l'étape où la mesure montre qu'on décroche. Dépend de « Mesurer ce qui sert ».
-3. `M` **Un accueil qui dit ce que fait l'app** : proposer, voter, tirer à la roue et « Créer une soirée » visibles dès le premier écran, sur ordinateur comme sur téléphone, avec des cibles tactiles confortables. Trois pistes sont maquettées, à trancher.
+3. `M` **Un accueil qui ouvre sur vos soirées** : en haut d'Explorer, la recherche à côté de votre prochaine soirée, ou de la roue et « Créer une soirée » pour un visiteur, sur un fond d'affiches qui glisse lentement. Sur téléphone, la soirée tient en une carte compacte (maquette retenue : variante G).
 4. `S` **Description de soirée** : champ libre en complément du titre, à la création comme ensuite par l'hôte, affiché en tête de la page soirée pour dire à l'invité dans quoi il entre (thème, consignes, lieu).
 
 ---
@@ -62,6 +62,10 @@ Rien pour l'instant.
 
 ### Accueil, aide et contact
 
+- `M` **Affiches vivantes au survol** : au survol, une affiche grandit et montre titre, année, note et durée, avec Ma liste et Proposer à portée de clic ; un film de votre liste garde sa pastille. Plus de titre sous les affiches (maquette retenue : variante G).
+- `M` **Des sélections aux formes variées** : sur Explorer, chaque sélection prend sa forme : Pour vous en onglets, Tendances en top 10 numéroté, Au cinéma en grille à côté des Plus proposés en liste, plateformes et genres en puces. Maquetté (variante G).
+- `M` **Thèmes et sagas en éventails d'affiches** : les suggestions thématiques deviennent des éventails de trois affiches qui s'écartent au survol, et les sagas des piles d'affiches qui se déploient, sans cadre autour. Maquetté (variante G).
+- `S` **Recherche à portée sur téléphone** : une loupe apparaît dans l'en-tête dès que la barre de recherche d'Explorer sort de l'écran, et ouvre la recherche à sa place, sans remonter en haut de la page.
 - `M` **Onboarding pour nouveaux utilisateurs** : mini tour guidé ou écran de bienvenue à la première connexion, expliquant le concept (créer une soirée, voter, la roue).
 - `S` **FAQ / Centre d'aide** : page qui répond aux questions récurrentes (fonctionnement de la roue, invitation, votes), accessible depuis le pied de page.
 - `S` **Contact / Support** : formulaire ou adresse dédiée pour signaler un problème, distinct du bouton « Proposer une idée » réservé aux suggestions.
