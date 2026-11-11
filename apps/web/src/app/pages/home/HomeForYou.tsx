@@ -90,10 +90,40 @@ function PersonalRail({
   );
 }
 
-function tabLabel(tab: ForYouTab, seed: RecommendationSeed | null, t: Translate): string {
+function tabLabel(tab: ForYouTab, t: Translate): string {
   if (tab === 'watchlist') return t('showcase.sections.watchlistTitle');
   if (tab === 'friends') return t('showcase.sections.friendsTitle');
-  return t('showcase.sections.becauseYouLiked', { title: seed?.title ?? '' });
+  return t('showcase.sections.recommendedTab');
+}
+
+function rowHeader(
+  active: ForYouTab,
+  seed: RecommendationSeed | null,
+  recommendationCount: number,
+  t: Translate
+): { subtitle?: string; seeAllTo?: string; seeAllLabel?: string } {
+  if (active === 'watchlist') {
+    return { seeAllTo: ROUTES.watchlist, seeAllLabel: t('showcase.seeWatchlist') };
+  }
+  if (active !== 'recommendations' || !seed) return {};
+  return {
+    subtitle: seed.title
+      ? t('showcase.sections.becauseYouLiked', { title: seed.title })
+      : undefined,
+    seeAllTo:
+      recommendationCount > 0
+        ? ROUTES.showcaseRecommendations(seed.tmdbId, seed.mediaType)
+        : undefined,
+    seeAllLabel:
+      recommendationCount > 0
+        ? pluralizeCount(
+            recommendationCount,
+            'showcase.seeAllMoviesOne',
+            'showcase.seeAllMovies',
+            t
+          )
+        : undefined,
+  };
 }
 
 export default function HomeForYou({
@@ -129,30 +159,18 @@ export default function HomeForYou({
 
   const active = chosen && available.includes(chosen) ? chosen : first;
 
-  let seeAllTo: string | undefined;
-  let seeAllLabel: string | undefined;
-  if (active === 'watchlist') {
-    seeAllTo = ROUTES.watchlist;
-    seeAllLabel = t('showcase.seeWatchlist');
-  } else if (active === 'recommendations' && seed && recommendationCount > 0) {
-    seeAllTo = ROUTES.showcaseRecommendations(seed.tmdbId, seed.mediaType);
-    seeAllLabel = pluralizeCount(
-      recommendationCount,
-      'showcase.seeAllMoviesOne',
-      'showcase.seeAllMovies',
-      t
-    );
-  }
+  const header = rowHeader(active, seed, recommendationCount, t);
 
   return (
     <MoviePreviewRow
       heading={t('showcase.sections.forYouTitle')}
-      seeAllTo={seeAllTo}
-      seeAllLabel={seeAllLabel}
+      subtitle={header.subtitle}
+      seeAllTo={header.seeAllTo}
+      seeAllLabel={header.seeAllLabel}
       toolbar={
         <Tabs<ForYouTab>
           idBase={idBase}
-          tabs={available.map((key) => ({ key, label: tabLabel(key, seed, t) }))}
+          tabs={available.map((key) => ({ key, label: tabLabel(key, t) }))}
           active={active}
           onChange={setChosen}
           ariaLabel={t('showcase.forYouLabel')}

@@ -4,7 +4,6 @@
   margin-top: calc(var(--space-6) * -1);
   margin-inline: calc(50% - 50vw);
   padding: var(--space-12) calc(50vw - 50%) var(--space-10);
-  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .inner {

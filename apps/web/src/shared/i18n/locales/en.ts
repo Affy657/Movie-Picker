@@ -147,6 +147,7 @@ export const en: Locale = {
       watchlistTitle: 'In your list',
       friendsTitle: 'Your friends watched',
       forYouTitle: 'For you',
+      recommendedTab: 'Recommended',
       becauseYouLiked: 'Because you liked {{title}}',
     },
     themes: {

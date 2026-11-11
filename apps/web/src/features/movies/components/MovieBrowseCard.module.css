@@ -10,7 +10,21 @@
   gap: var(--space-1);
 }
 
+.posterIconAction {
+  flex: 0 0 auto;
+  border-radius: var(--radius-md);
+}
+
 .proposeAction {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
   flex: 1 1 auto;
+  gap: var(--space-1);
   min-width: 0;
+  min-height: var(--space-8);
+  height: var(--space-8);
+  padding: 0 var(--space-2);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0;
+  box-shadow: none;
 }

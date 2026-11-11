@@ -37,7 +37,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
         try
         {
             var items = await _cache.GetOrLoadCheckedAsync(
-                section.CacheKey,
+                CacheKeyFor(section),
                 CacheTtl(),
                 token => LoadSectionAsync(section, token),
                 section.IsSharedAcrossInstances,
@@ -51,6 +51,11 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
         }
     }
 
+    private string CacheKeyFor(SectionRequest section) =>
+        section.Section == MovieShowcaseSections.MostProposed
+            ? $"{section.CacheKey}:{_options.MostProposedMinEventCount}-{_options.MostProposedMinDistinctMovies}"
+            : section.CacheKey;
+
     public async Task<bool> RefreshAsync(MovieShowcaseQuery query, CancellationToken ct = default)
     {
         try
@@ -60,7 +65,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
                 return false;
 
             return await _cache.RefreshAsync(
-                section.CacheKey,
+                CacheKeyFor(section),
                 CacheTtl(),
                 token => LoadSectionAsync(section, token),
                 ct);
@@ -135,11 +140,11 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
     private async Task<IReadOnlyList<MovieShowcaseItemResponse>> LoadMostProposedAsync(CancellationToken ct)
     {
         var ranking = await _movies.ListMostProposedAsync(
-            MovieShowcaseCatalog.MostProposedMinEventCount,
+            _options.MostProposedMinEventCount,
             MovieShowcaseCatalog.MostProposedLimit,
             ct);
 
-        if (ranking.Count < MovieShowcaseCatalog.MostProposedMinDistinctMovies)
+        if (ranking.Count < _options.MostProposedMinDistinctMovies)
             return [];
 
         return ranking

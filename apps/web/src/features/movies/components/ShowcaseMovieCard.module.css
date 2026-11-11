@@ -195,7 +195,7 @@
 
 .rankNumeral {
   position: absolute;
-  bottom: calc(var(--space-2) * -1);
+  bottom: 0;
   left: 0;
   font-size: var(--font-size-7xl);
   font-weight: var(--font-weight-extrabold);
@@ -203,6 +203,7 @@
   letter-spacing: var(--tracking-tighter);
   color: transparent;
   -webkit-text-stroke: 2px var(--color-border);
+  overflow: clip;
   pointer-events: none;
   transition: -webkit-text-stroke-color var(--duration-slow) var(--ease-default);
 }

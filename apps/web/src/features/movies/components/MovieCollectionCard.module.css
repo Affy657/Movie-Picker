@@ -85,11 +85,11 @@
 }
 
 .stack {
-  --stack-step: var(--space-3);
+  --stack-step: var(--space-1-5);
 
   position: relative;
   display: block;
-  margin: var(--space-3) var(--space-6) var(--space-2) 0;
+  margin: var(--space-4) var(--space-5) var(--space-2) 0;
   aspect-ratio: 2 / 3;
 }
 
@@ -116,20 +116,20 @@
 
 .stackMiddle {
   z-index: var(--z-base);
-  transform: translate(var(--stack-step), calc(var(--stack-step) * -0.6)) rotate(3deg);
+  transform: translate(var(--stack-step), calc(var(--stack-step) * -0.6)) rotate(2deg);
 }
 
 .stackBack {
-  transform: translate(calc(var(--stack-step) * 2), calc(var(--stack-step) * -1.2)) rotate(6deg);
+  transform: translate(calc(var(--stack-step) * 2), calc(var(--stack-step) * -1.2)) rotate(4deg);
 }
 
 .stackLink:focus-visible .stack {
-  --stack-step: var(--space-6);
+  --stack-step: var(--space-3);
 }
 
 @media (hover: hover) {
   .stackLink:hover .stack {
-    --stack-step: var(--space-6);
+    --stack-step: var(--space-3);
   }
 
   .stackLink:hover .name {

@@ -145,6 +145,7 @@ export const fr = {
       watchlistTitle: 'Dans votre liste',
       friendsTitle: 'Vos amis ont vu',
       forYouTitle: 'Pour vous',
+      recommendedTab: 'Recommandés',
       becauseYouLiked: 'Parce que vous avez aimé {{title}}',
     },
     themes: {

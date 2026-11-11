@@ -151,6 +151,17 @@
   color: var(--color-bg);
 }
 
+@media (hover: hover) {
+  .chipTab:not(:disabled):hover {
+    border-color: var(--color-text-muted);
+  }
+
+  .chipTabActive:not(:disabled):hover {
+    border-color: var(--color-text);
+    color: var(--color-bg);
+  }
+}
+
 @media (hover: none) {
   .pillTab,
   .chipTab {

@@ -22,10 +22,11 @@
 
 .track {
   position: absolute;
-  top: -30%;
-  left: -6%;
+  top: -40%;
+  right: -15%;
+  left: -15%;
   display: grid;
-  grid-template-columns: repeat(10, 6.5rem);
+  grid-template-columns: repeat(auto-fill, 6.5rem);
   gap: var(--space-3);
   transform: rotate(-8deg);
   animation: wall-drift var(--duration-drift) var(--ease-linear) infinite alternate;
@@ -56,9 +57,10 @@
   }
 
   .track {
-    top: -10%;
-    left: -10%;
-    grid-template-columns: repeat(6, var(--space-16));
+    top: -15%;
+    right: -20%;
+    left: -20%;
+    grid-template-columns: repeat(auto-fill, var(--space-16));
     gap: var(--space-2);
     animation: none;
   }

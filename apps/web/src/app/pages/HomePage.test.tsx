@@ -460,9 +460,12 @@ describe('HomePage', () => {
     const tabs = within(section).getAllByRole('tab');
     expect(tabs.map((tab) => tab.textContent)).toEqual([
       'Dans votre liste',
-      'Parce que vous avez aimé Inception',
+      'Recommandés',
       'Vos amis ont vu',
     ]);
+    expect(
+      within(section).queryByText('Parce que vous avez aimé Inception')
+    ).not.toBeInTheDocument();
     expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
     const mineCard = within(section).getByText('Film de ma liste').closest('li');
     expect(mineCard).toHaveTextContent('2021');
@@ -477,6 +480,7 @@ describe('HomePage', () => {
 
     await userEvent.click(tabs[1] as HTMLElement);
     expect(await within(section).findByText('recommendations 1')).toBeInTheDocument();
+    expect(within(section).getByText('Parce que vous avez aimé Inception')).toBeInTheDocument();
   });
 
   it('signed-in with only a watchlist: Pour vous keeps that single tab', async () => {

@@ -119,6 +119,7 @@ function PosterLibraryActions({
         ariaLabel={inWatchlist ? t('watchlist.card.removeAction') : t('watchlist.card.addAction')}
         tone="onPoster"
         size="sm"
+        className={badgeStyles.posterIconAction}
         onClick={onToggleWatchlist}
       >
         {inWatchlist ? (

@@ -4,8 +4,8 @@ import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { posterImageSrc, posterSrcAtSize } from '@/shared/utils/posterUrl';
 import styles from './HomePosterWall.module.css';
 
-const WALL_TILES = 40;
-const WALL_TILES_MOBILE = 18;
+const WALL_TILES = 160;
+const WALL_TILES_MOBILE = 42;
 const WALL_POSTER_SIZE = 'w154';
 const IDLE_FALLBACK_MS = 200;
 
