@@ -134,9 +134,16 @@
 
 .facts {
   display: inline-flex;
-  gap: var(--space-3);
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-1) var(--space-3);
   font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
   color: var(--color-on-poster-fg-soft);
+}
+
+.providers {
+  margin-top: var(--space-1);
 }
 
 .score {

@@ -3,7 +3,9 @@ import confetti from 'canvas-confetti';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Disc3, Film, X } from 'lucide-react';
 import type { MovieData } from '@/shared/types/movie';
+import type { RatingScale } from '@/shared/types/theme';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
+import MovieFacts from '@/features/movies/components/MovieFacts';
 import { keepPunctuationAttached } from '@/shared/utils/keepPunctuationAttached';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import { useTranslation, type Translate } from '@/shared/i18n';
@@ -61,6 +63,7 @@ interface WheelModalProps {
   skipSpin?: boolean;
   winnerCount?: number;
   remainingDraws?: number;
+  ratingScale?: RatingScale;
 }
 
 export default function WheelModal({
@@ -78,6 +81,7 @@ export default function WheelModal({
   skipSpin = false,
   winnerCount = 1,
   remainingDraws = 0,
+  ratingScale,
 }: Readonly<WheelModalProps>) {
   const { t } = useTranslation();
   const drawIndex = Math.max(1, winnerCount - remainingDraws);
@@ -257,7 +261,7 @@ export default function WheelModal({
               )}
               <div className={styles.info}>
                 <p className={styles.winnerTitle}>{keepPunctuationAttached(winner.title)}</p>
-                {winner.year && <p className={styles.winnerYear}>{winner.year}</p>}
+                <MovieFacts movie={winner} scale={ratingScale} className={styles.winnerFacts} />
                 {providers.length > 0 && (
                   <div className={styles.providers}>
                     <WatchProviderChips

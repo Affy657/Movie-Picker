@@ -6,6 +6,8 @@ import Button, { buttonClass } from '@/shared/components/Button';
 import PosterBackdrop from '@/shared/components/PosterBackdrop';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { ProposerBadge } from '@/features/movies/components/movieCardParts';
+import MovieFacts from '@/features/movies/components/MovieFacts';
+import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import LazyMovieDetailsModal from '@/features/movies/components/LazyMovieDetailsModal';
 import MovieRatingDialog from '@/features/events/components/MovieRatingDialog';
 import { hasRated, unratedWinners } from '@/features/events/hooks/useRatingLink';
@@ -23,7 +25,6 @@ import type { RatingScale } from '@/shared/types/theme';
 import { averageOfRatings, formatRating } from '@/shared/utils/formatRating';
 import { formatShortDate } from '@/shared/utils/formatMyEventsListDate';
 import { daysUntilEventDate } from '@/shared/utils/formatRelativeEventDate';
-import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
 import { keepPunctuationAttached } from '@/shared/utils/keepPunctuationAttached';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
@@ -322,18 +323,13 @@ function WinnerBody({
   onDetails: () => void;
 }>) {
   const { t } = useTranslation();
-  const facts = [movie.year, formatRuntimeMinutes(movie.runtimeMinutes)].filter(Boolean);
   const rows = rating ? participantRatings(movie, rating) : [];
   return (
     <div className={styles.body}>
       <p className={styles.overline}>{heading}</p>
       <h2 className={styles.title}>{keepPunctuationAttached(movie.title)}</h2>
       <div className={styles.meta}>
-        <span className={styles.facts}>
-          {facts.map((fact) => (
-            <span key={fact}>{fact}</span>
-          ))}
-        </span>
+        <MovieFacts movie={movie} scale={scale} className={styles.facts} />
         <ProposerBadge
           avatarId={avatarId}
           pseudo={movie.proposerPseudo}
@@ -341,6 +337,12 @@ function WinnerBody({
           t={t}
         />
       </div>
+      <WatchProviderChips
+        providers={movie.watchProviders ?? []}
+        watchPageUrl={movie.tmdbWatchPageUrl}
+        maxVisible={4}
+        className={styles.providers}
+      />
       {showRating ? <ScoreLine movie={movie} scale={scale} /> : null}
       <div className={styles.actions}>
         {showRating && rating ? (

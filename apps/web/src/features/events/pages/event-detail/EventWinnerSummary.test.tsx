@@ -102,6 +102,62 @@ describe('EventWinnerSummary', () => {
     expect(screen.getByText('Alice')).toBeInTheDocument();
   });
 
+  it('gives the TMDB rating of the movie next to its year and runtime, on the reader scale', () => {
+    renderSummary(
+      <EventWinnerSummary
+        winners={[movie({ voteAverage: 7.6 })]}
+        isFinished={false}
+        rating={ratingContext({ scale: 'ten' })}
+      />
+    );
+    const card = screen.getByRole('region', { name: 'Ce soir, vous regardez' });
+    expect(within(card).getByTitle('Note moyenne TMDB (indicatif)')).toHaveTextContent('7,6/10');
+    expect(within(card).getByTitle('Durée du film')).toHaveTextContent('2h16');
+  });
+
+  it('shows where to stream the drawn movie', () => {
+    renderSummary(
+      <EventWinnerSummary
+        winners={[
+          movie({
+            watchProviders: [{ providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' }],
+          }),
+        ]}
+        isFinished={false}
+      />
+    );
+    const card = screen.getByRole('region', { name: 'Ce soir, vous regardez' });
+    expect(within(card).getByLabelText('Offres de visionnage indicatives')).toBeInTheDocument();
+    expect(within(card).getByText('Netflix')).toBeInTheDocument();
+  });
+
+  it('follows the selected movie for the streaming platforms of a night with several winners', async () => {
+    const user = userEvent.setup();
+    renderSummary(
+      <EventWinnerSummary
+        winners={[
+          movie({
+            id: 'm1',
+            title: 'Matrix',
+            watchProviders: [{ providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' }],
+          }),
+          movie({
+            id: 'm2',
+            title: 'Heat',
+            watchProviders: [
+              { providerId: 337, name: 'Disney Plus', logoPath: null, type: 'flatrate' },
+            ],
+          }),
+        ]}
+        isFinished={false}
+      />
+    );
+    expect(screen.getByText('Netflix')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Heat' }));
+    expect(screen.getByText('Disney Plus')).toBeInTheDocument();
+    expect(screen.queryByText('Netflix')).toBeNull();
+  });
+
   it('puts the given action in the heading row, next to the title', () => {
     renderSummary(
       <EventWinnerSummary

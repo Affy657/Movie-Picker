@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Changed
+
+- **Le film tiré au sort montre sa durée, sa note TMDB et où le regarder** : dans la fenêtre qui annonce le gagnant comme dans la carte du film en haut de la soirée, où les plateformes de streaming reviennent.
+
 ## [1.9.0] - 2026-11-11
 
 ### Added

@@ -176,6 +176,40 @@ describe('WheelModal', () => {
     expect(screen.getByText('2014')).toBeInTheDocument();
   });
 
+  it('gives the runtime and the TMDB rating of the drawn movie next to its year, on the reader scale', () => {
+    const drawn: MovieData = { ...baseMovie, runtimeMinutes: 169, voteAverage: 8.4 };
+    wrap(
+      <WheelModal
+        open
+        movies={[drawn]}
+        winnerIndex={0}
+        winner={drawn}
+        wheelKey={1}
+        onClose={vi.fn()}
+        ratingScale="ten"
+      />
+    );
+    fireEvent.click(screen.getByTestId('spin-done-trigger'));
+    expect(screen.getByTitle('Durée du film')).toHaveTextContent('2h49');
+    expect(screen.getByTitle('Note moyenne TMDB (indicatif)')).toHaveTextContent('8,4/10');
+  });
+
+  it('leaves out the facts TMDB does not know', () => {
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+      />
+    );
+    fireEvent.click(screen.getByTestId('spin-done-trigger'));
+    expect(screen.queryByTitle('Durée du film')).toBeNull();
+    expect(screen.queryByTitle('Note moyenne TMDB (indicatif)')).toBeNull();
+  });
+
   it('appelle onClose quand on clique sur le bouton de fermeture', () => {
     const onClose = vi.fn();
     wrap(
