@@ -165,6 +165,7 @@ public static class ServiceCollectionExtensions
     {
         opts.MongoDbUri = cfg["MONGODB_URI"] ?? string.Empty;
         ConfigureTmdbOptions(opts, cfg);
+        ConfigureShowcaseOptions(opts, cfg);
         ConfigurePosterOptions(opts, cfg);
 
         var webBase = cfg["PUBLIC_WEB_BASE_URL"];
@@ -223,6 +224,10 @@ public static class ServiceCollectionExtensions
             opts.TmdbHttpTimeoutSeconds = timeout;
         if (int.TryParse(cfg["TMDB_FAILURE_CACHE_MINUTES"], out var failTtl) && failTtl > 0)
             opts.TmdbFailureCacheMinutes = failTtl;
+    }
+
+    private static void ConfigureShowcaseOptions(MoviePickerOptions opts, IConfiguration cfg)
+    {
         if (int.TryParse(cfg["MOST_PROPOSED_MIN_EVENT_COUNT"], out var minEvents) && minEvents > 0)
             opts.MostProposedMinEventCount = minEvents;
         if (int.TryParse(cfg["MOST_PROPOSED_MIN_DISTINCT_MOVIES"], out var minMovies) && minMovies > 0)
