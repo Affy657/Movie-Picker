@@ -15,7 +15,7 @@ public sealed class HttpWebShellSource : IWebShellSource
     private readonly IMemoryCache _cache;
     private readonly MoviePickerOptions _options;
     private readonly ILogger<HttpWebShellSource> _logger;
-    private readonly object _gate = new();
+    private readonly Lock _gate = new();
     private Task<string?>? _inFlight;
 
     public HttpWebShellSource(

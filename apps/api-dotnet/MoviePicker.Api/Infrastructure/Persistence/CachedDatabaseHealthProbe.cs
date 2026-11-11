@@ -8,7 +8,7 @@ public sealed class CachedDatabaseHealthProbe : IDatabaseHealthProbe
 
     private readonly IDatabaseHealthProbe _inner;
     private readonly TimeProvider _clock;
-    private readonly object _gate = new();
+    private readonly Lock _gate = new();
     private DatabaseProbeResult? _lastResult;
     private DateTimeOffset _lastProbedAt;
     private Task<DatabaseProbeResult>? _inFlight;

@@ -7,7 +7,7 @@ public sealed class InMemoryMigrationHistoryRepository : IMigrationHistoryReposi
 {
     private readonly ConcurrentDictionary<string, DateTimeOffset> _applied = new();
     private readonly Dictionary<string, (string Holder, DateTimeOffset ExpiresAt)> _leases = new(StringComparer.Ordinal);
-    private readonly object _leaseGate = new();
+    private readonly Lock _leaseGate = new();
 
     public Task<bool> IsAppliedAsync(string migrationId, CancellationToken ct = default) =>
         Task.FromResult(_applied.ContainsKey(migrationId));
