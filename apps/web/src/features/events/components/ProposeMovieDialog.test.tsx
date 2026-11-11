@@ -229,7 +229,7 @@ describe('ProposeMovieDialog', () => {
     const results = screen.getByRole('list', { name: 'Résultats de la recherche' });
     const row = within(results).getAllByRole('listitem')[0]!;
     expect(row).toHaveTextContent('Proposé');
-    expect(screen.getByText('« Dune » est proposé à la soirée.')).toHaveAttribute('role', 'status');
+    expect(screen.getByText('« Dune » est proposé à la soirée.').tagName).toBe('OUTPUT');
     expect(screen.getByText('Vous avez proposé 1 film')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Terminé' })).toBeInTheDocument();
   });

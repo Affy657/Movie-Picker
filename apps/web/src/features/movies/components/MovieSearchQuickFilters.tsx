@@ -34,7 +34,7 @@ export default function MovieSearchQuickFilters({ filters, tmdbLanguage }: Reado
 
   return (
     <div className={styles.root}>
-      <div className={styles.row} role="group" aria-label={t('movies.search.quickFiltersAria')}>
+      <fieldset className={styles.row} aria-label={t('movies.search.quickFiltersAria')}>
         <Chip
           selected={filters.availabilityFilter === 'flatrate'}
           onClick={() => filters.toggleAvailability('flatrate')}
@@ -76,9 +76,9 @@ export default function MovieSearchQuickFilters({ filters, tmdbLanguage }: Reado
           {filters.selectedDecade ? `${filters.selectedDecade}s` : t('movies.search.quickDecade')}
           <ChevronDown className={styles.chevron} aria-hidden />
         </Chip>
-      </div>
+      </fieldset>
       {openGroup === 'genre' ? (
-        <div className={styles.group} role="group" aria-label={t('movies.search.quickGenre')}>
+        <fieldset className={styles.group} aria-label={t('movies.search.quickGenre')}>
           {MOVIE_GENRE_IDS.map((id) => (
             <Chip
               key={id}
@@ -89,10 +89,10 @@ export default function MovieSearchQuickFilters({ filters, tmdbLanguage }: Reado
               {genreLabel(id, tmdbLanguage)}
             </Chip>
           ))}
-        </div>
+        </fieldset>
       ) : null}
       {openGroup === 'decade' ? (
-        <div className={styles.group} role="group" aria-label={t('movies.search.quickDecade')}>
+        <fieldset className={styles.group} aria-label={t('movies.search.quickDecade')}>
           {DECADE_OPTIONS.map((decade) => (
             <Chip
               key={decade}
@@ -103,7 +103,7 @@ export default function MovieSearchQuickFilters({ filters, tmdbLanguage }: Reado
               {decade}s
             </Chip>
           ))}
-        </div>
+        </fieldset>
       ) : null}
     </div>
   );

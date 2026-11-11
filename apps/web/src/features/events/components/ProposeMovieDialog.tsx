@@ -270,9 +270,9 @@ export default function ProposeMovieDialog({
       {toast ? (
         <div className={styles.toast}>
           <Check size={ICON_SIZE.lg} aria-hidden className={styles.toastIcon} />
-          <span role="status" className={styles.toastText}>
+          <output className={styles.toastText}>
             {t('events.propose.toast', { title: toast.title })}
-          </span>
+          </output>
           <Button type="button" variant="ghost" className={styles.toastAction} onClick={undo}>
             {t('events.propose.undo')}
           </Button>
