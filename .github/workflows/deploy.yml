@@ -890,7 +890,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     needs: deploy-guard
-    if: inputs.stage == 'production'
+    if: >-
+      !cancelled()
+      && needs.deploy-guard.result == 'success'
+      && inputs.stage == 'production'
     permissions:
       contents: write
     steps:
