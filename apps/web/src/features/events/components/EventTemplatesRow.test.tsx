@@ -139,10 +139,10 @@ describe('EventTemplatesRow', () => {
     renderRow();
 
     await user.click(screen.getByRole('button', { name: 'Gérer' }));
-    expect(screen.getByRole('button', { name: /Renommer le template/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Renommer le modèle/ })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Terminé' }));
-    expect(screen.queryByRole('button', { name: /Renommer le template/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Renommer le modèle/ })).not.toBeInTheDocument();
   });
 
   it('renomme un template depuis sa ligne', async () => {
@@ -150,9 +150,9 @@ describe('EventTemplatesRow', () => {
     const { onRename } = renderRow();
 
     await user.click(screen.getByRole('button', { name: 'Gérer' }));
-    await user.click(screen.getByRole('button', { name: /Renommer le template/ }));
+    await user.click(screen.getByRole('button', { name: /Renommer le modèle/ }));
 
-    const field = screen.getByRole('textbox', { name: /Nom du template/ });
+    const field = screen.getByRole('textbox', { name: /Nom du modèle/ });
     expect(field).toHaveValue('Soirée horreur');
 
     await user.clear(field);
@@ -167,8 +167,8 @@ describe('EventTemplatesRow', () => {
     const { onRename } = renderRow();
 
     await user.click(screen.getByRole('button', { name: 'Gérer' }));
-    await user.click(screen.getByRole('button', { name: /Renommer le template/ }));
-    await user.clear(screen.getByRole('textbox', { name: /Nom du template/ }));
+    await user.click(screen.getByRole('button', { name: /Renommer le modèle/ }));
+    await user.clear(screen.getByRole('textbox', { name: /Nom du modèle/ }));
     await user.click(screen.getByRole('button', { name: 'Valider' }));
 
     expect(onRename).not.toHaveBeenCalled();
@@ -179,12 +179,12 @@ describe('EventTemplatesRow', () => {
     const { onRename } = renderRow();
 
     await user.click(screen.getByRole('button', { name: 'Gérer' }));
-    await user.click(screen.getByRole('button', { name: /Renommer le template/ }));
-    await user.type(screen.getByRole('textbox', { name: /Nom du template/ }), 'zzz');
+    await user.click(screen.getByRole('button', { name: /Renommer le modèle/ }));
+    await user.type(screen.getByRole('textbox', { name: /Nom du modèle/ }), 'zzz');
     await user.click(screen.getByRole('button', { name: 'Annuler' }));
 
     expect(onRename).not.toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: /Renommer le template/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Renommer le modèle/ })).toBeInTheDocument();
   });
 
   it('deletes a template after confirmation', async () => {
@@ -193,13 +193,13 @@ describe('EventTemplatesRow', () => {
 
     await user.click(screen.getByRole('button', { name: 'Gérer' }));
     await user.click(
-      screen.getByRole('button', { name: /Supprimer le template « Soirée horreur »/ })
+      screen.getByRole('button', { name: /Supprimer le modèle « Soirée horreur »/ })
     );
 
     expect(onDelete).not.toHaveBeenCalled();
-    expect(screen.getByText('Supprimer ce template ?')).toBeInTheDocument();
+    expect(screen.getByText('Supprimer ce modèle ?')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Supprimer le template' }));
+    await user.click(screen.getByRole('button', { name: 'Supprimer le modèle' }));
 
     expect(onDelete).toHaveBeenCalledWith(expect.objectContaining({ id: 't1' }));
   });
@@ -210,14 +210,12 @@ describe('EventTemplatesRow', () => {
 
     await user.click(screen.getByRole('button', { name: 'Gérer' }));
     await user.click(
-      screen.getByRole('button', { name: /Supprimer le template « Soirée horreur »/ })
+      screen.getByRole('button', { name: /Supprimer le modèle « Soirée horreur »/ })
     );
     await user.click(screen.getByRole('button', { name: 'Annuler' }));
 
     expect(onDelete).not.toHaveBeenCalled();
-    expect(screen.getByText('Supprimer ce template ?').closest('dialog')).not.toHaveAttribute(
-      'open'
-    );
+    expect(screen.getByText('Supprimer ce modèle ?').closest('dialog')).not.toHaveAttribute('open');
   });
 
   it('leaves the management mode when the last template disappears', () => {
@@ -245,7 +243,7 @@ describe('EventTemplatesRow', () => {
       </LocaleProvider>
     );
 
-    expect(screen.queryByText('Mes templates')).not.toBeInTheDocument();
+    expect(screen.queryByText('Mes modèles')).not.toBeInTheDocument();
   });
 
   it('n’affiche aucun compteur tant que rien ne le justifie', () => {
@@ -253,7 +251,7 @@ describe('EventTemplatesRow', () => {
       templates: [makeTemplate(), makeTemplate({ id: 't2', name: 'Ciné du dimanche' })],
     });
 
-    expect(screen.queryByText(/templates sur 5/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/modèles sur 5/)).not.toBeInTheDocument();
   });
 
   it('affiche le compteur en mode gestion', async () => {
@@ -264,6 +262,6 @@ describe('EventTemplatesRow', () => {
 
     await user.click(screen.getByRole('button', { name: 'Gérer' }));
 
-    expect(screen.getByText('2 templates sur 5.')).toBeInTheDocument();
+    expect(screen.getByText('2 modèles sur 5.')).toBeInTheDocument();
   });
 });

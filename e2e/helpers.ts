@@ -29,10 +29,17 @@ export async function fillCreateEventForm(
   title: string,
   date = '2030-12-20'
 ): Promise<void> {
-  await page.locator('#create-title').fill(title);
-  await page.locator('#create-date').fill(date);
-  await page.locator('#create-time').fill('20:30');
-  await page.getByRole('button', { name: /créer la soirée/i }).click();
+  const dialog = page.getByRole('dialog', { name: 'Nouvelle soirée' });
+  await dialog.getByRole('radio', { name: /autre date/i }).click();
+  await dialog.locator('#create-date').fill(date);
+  await dialog.getByRole('radio', { name: 'Autre', exact: true }).click();
+  await dialog.locator('#create-time').fill('20:30');
+  await dialog.locator('#create-title').fill(title);
+  await dialog.getByRole('button', { name: /créer la soirée/i }).click();
+  await page
+    .getByRole('dialog', { name: 'Soirée créée' })
+    .getByRole('button', { name: 'Ouvrir la soirée' })
+    .click();
 }
 
 export async function createEvent(page: Page, title: string, date?: string): Promise<string> {

@@ -983,12 +983,12 @@ describe('HostEventSettingsPanel', () => {
       await screen.findByRole('switch', { name: /limiter les votes par participant/i })
     );
     await user.clear(screen.getByLabelText(/^votes par participant$/i));
-    await user.click(await screen.findByRole('button', { name: /enregistrer en template/i }));
+    await user.click(await screen.findByRole('button', { name: /enregistrer comme modèle/i }));
 
     expect(
       await screen.findByText('Votes par participant : nombre entier à partir de 1.')
     ).toBeInTheDocument();
-    expect(screen.queryByLabelText('Nom du template')).toBeNull();
+    expect(screen.queryByLabelText('Nom du modèle')).toBeNull();
     expect(templateWrites).toBe(0);
   });
 
@@ -1013,10 +1013,10 @@ describe('HostEventSettingsPanel', () => {
     await user.click(await screen.findByRole('button', { name: 'Gérer' }));
 
     expect(
-      screen.getByRole('button', { name: /Renommer le template « Soirée horreur »/ })
+      screen.getByRole('button', { name: /Renommer le modèle « Soirée horreur »/ })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /Supprimer le template « Soirée horreur »/ })
+      screen.getByRole('button', { name: /Supprimer le modèle « Soirée horreur »/ })
     ).toBeInTheDocument();
   });
 
@@ -1046,10 +1046,8 @@ describe('HostEventSettingsPanel', () => {
     );
 
     await user.click(await screen.findByRole('button', { name: 'Gérer' }));
-    await user.click(
-      screen.getByRole('button', { name: /Renommer le template « Soirée horreur »/ })
-    );
-    const nameField = screen.getByRole('textbox', { name: /Nom du template/ });
+    await user.click(screen.getByRole('button', { name: /Renommer le modèle « Soirée horreur »/ }));
+    const nameField = screen.getByRole('textbox', { name: /Nom du modèle/ });
     await user.clear(nameField);
     await user.type(nameField, 'Soirée frissons');
     await user.click(screen.getByRole('button', { name: 'Valider' }));
@@ -1184,9 +1182,9 @@ describe('HostEventSettingsPanel', () => {
     const section = screen.getByTestId('event-templates-section');
     const chip = await screen.findByRole('button', { name: /Soirée horreur/ });
     expect(chip).toBeDisabled();
-    expect(section).toHaveTextContent(/les templates ne s’appliquent plus/i);
+    expect(section).toHaveTextContent(/les modèles ne s’appliquent plus/i);
     expect(screen.getByRole('button', { name: 'Gérer' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Enregistrer comme modèle' })).toBeEnabled();
 
     await user.click(chip);
     expect(patched).toBe(false);
@@ -1214,7 +1212,7 @@ describe('HostEventSettingsPanel', () => {
 
     expect(section).toContainElement(chip);
     expect(section).toContainElement(
-      screen.getByRole('button', { name: 'Enregistrer en template' })
+      screen.getByRole('button', { name: 'Enregistrer comme modèle' })
     );
 
     const lastSetting = screen.getByRole('radio', { name: /aléatoire strict/i });

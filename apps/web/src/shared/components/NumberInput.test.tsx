@@ -86,4 +86,36 @@ describe('NumberInput', () => {
     expect(minus).toBeDisabled();
     expect(plus).toBeDisabled();
   });
+
+  describe('with an unlimited value', () => {
+    const unlimited = { label: 'Sans limite', fallback: 3 };
+
+    it('names the empty value instead of leaving the field blank', () => {
+      const { input } = setup({ unlimited });
+
+      expect(input).toHaveAttribute('placeholder', 'Sans limite');
+    });
+
+    it('steps down from unlimited to the usual limit', async () => {
+      const { onChange, minus } = setup({ unlimited, min: 1, max: 15 });
+
+      await userEvent.click(minus);
+
+      expect(onChange).toHaveBeenCalledWith('3');
+    });
+
+    it('cannot go above unlimited', () => {
+      const { plus } = setup({ unlimited, min: 1, max: 15 });
+
+      expect(plus).toBeDisabled();
+    });
+
+    it('steps up from the cap to unlimited', async () => {
+      const { onChange, plus } = setup({ unlimited, value: '15', min: 1, max: 15 });
+
+      await userEvent.click(plus);
+
+      expect(onChange).toHaveBeenCalledWith('');
+    });
+  });
 });

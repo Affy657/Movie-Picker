@@ -15,8 +15,9 @@ import HistoryEventsPanel from '@/features/events/pages/my-events/HistoryEventsP
 import MyEventsConfirmDialogs from '@/features/events/pages/my-events/MyEventsConfirmDialogs';
 import { useMyEventsActions } from '@/features/events/pages/my-events/useMyEventsActions';
 import { useMyEventsLists } from '@/features/events/pages/my-events/useMyEventsLists';
+import { useOpenCreateEvent } from '@/features/events/components/create-event/createEventDialogContext';
 import styles from './MyEventsPage.module.css';
-import Button, { buttonClass } from '@/shared/components/Button';
+import Button from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
 function MyEventsShell({ children }: Readonly<{ children: ReactNode }>) {
@@ -56,15 +57,16 @@ function MyEventsLoadError({ error, onRetry }: Readonly<{ error: unknown; onRetr
 
 function MyEventsGloballyEmpty() {
   const { t } = useTranslation();
+  const openCreateEvent = useOpenCreateEvent();
   return (
     <EmptyState
       icon={<CalendarPlus size={ICON_SIZE['3xl']} aria-hidden />}
       title={t('events.myEvents.emptyTitle')}
       message={t('events.myEvents.emptyDescription')}
       actions={
-        <Link to={ROUTES.createEvent} className={buttonClass({ variant: 'primary' })}>
+        <Button variant="primary" onClick={() => openCreateEvent()}>
           {t('events.myEvents.createCta')}
-        </Link>
+        </Button>
       }
     />
   );

@@ -8,6 +8,15 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Créer une soirée sans quitter l'écran** : « Nouvelle soirée » n'est plus un onglet mais un bouton bleu dans l'en-tête (« Créer » dans la barre du bas sur téléphone), qui ouvre une fenêtre par-dessus la page. On y choisit le jour d'un clic (ce soir, demain, le week-end) et l'heure, le nom suit la date, l'ambiance se choisit en une puce, et les règles s'ouvrent dans leur propre fenêtre, sans perdre la saisie : on part des réglages par défaut, de votre dernière soirée ou de l'un de vos modèles, puis on ajuste chaque règle.
+- **Le lien à envoyer dès la création** : une fois la soirée créée, la fenêtre donne son lien à copier ou à partager, l'ajout au calendrier, et ouvre la soirée prête à proposer le premier film.
+
+### Changed
+
+- **Les « templates » s'appellent désormais des « modèles »**, à la création d'une soirée comme dans ses réglages.
+
 ## [1.11.0] - 2026-11-12
 
 ### Added

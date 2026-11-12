@@ -176,12 +176,16 @@ export function isSameTemplateConfig(a: TemplateConfigDraft, b: TemplateConfigDr
   );
 }
 
-export function suggestTemplateName(theme: string | null, taken: string[]): string {
+export function suggestTemplateName(
+  theme: string | null,
+  taken: string[],
+  numberedName: (index: number) => string
+): string {
   const takenLower = new Set(taken.map((name) => name.trim().toLowerCase()));
   const fromTheme = (theme ?? '').trim().slice(0, MAX_EVENT_TEMPLATE_NAME_LENGTH);
   if (fromTheme.length > 0 && !takenLower.has(fromTheme.toLowerCase())) return fromTheme;
 
   let index = 1;
-  while (takenLower.has(`template ${index}`)) index += 1;
-  return `Template ${index}`;
+  while (takenLower.has(numberedName(index).toLowerCase())) index += 1;
+  return numberedName(index);
 }

@@ -58,7 +58,11 @@ export default function EventTemplateSaveBar({
 
   const startNaming = () => {
     if (!draftCanBeSaved()) return;
-    setDraftName(suggestTemplateName(draft.theme, takenNames));
+    setDraftName(
+      suggestTemplateName(draft.theme, takenNames, (index) =>
+        t('events.settings.templates.numberedName', { index })
+      )
+    );
     setNaming(true);
   };
 

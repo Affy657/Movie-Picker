@@ -32,4 +32,22 @@ describe('EventCalendarMenu', () => {
     expect(screen.getByRole('menuitem', { name: 'Outlook' })).toHaveAttribute('target', '_blank');
     expect(screen.getByRole('menuitem', { name: 'Apple Calendar (.ics)' }).tagName).toBe('BUTTON');
   });
+
+  it('can show a labelled trigger instead of the icon', async () => {
+    const user = userEvent.setup();
+    render(
+      <LocaleProvider>
+        <EventCalendarMenu
+          title="Soirée horreur"
+          date="2026-10-31"
+          time="21:00"
+          triggerLabel="Calendrier"
+        />
+      </LocaleProvider>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Calendrier' }));
+
+    expect(screen.getByRole('menu', { name: 'Choisir un calendrier' })).toBeInTheDocument();
+  });
 });

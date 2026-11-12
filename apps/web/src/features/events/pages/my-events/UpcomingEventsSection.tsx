@@ -1,10 +1,9 @@
 import { CalendarPlus } from 'lucide-react';
-import { Link } from 'react-router';
-import { ROUTES } from '@/app/routes';
 import type { MyEventSummary } from '@/features/events/types';
 import { useTranslation } from '@/shared/i18n';
 import styles from '@/features/events/pages/MyEventsPage.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import { useOpenCreateEvent } from '@/features/events/components/create-event/createEventDialogContext';
 import UpcomingEventCard from './UpcomingEventCard';
 
 function canLeaveNight(event: MyEventSummary): boolean {
@@ -21,6 +20,7 @@ export default function UpcomingEventsSection({
   onLeave,
 }: Readonly<UpcomingEventsSectionProps>) {
   const { t } = useTranslation();
+  const openCreateEvent = useOpenCreateEvent();
 
   return (
     <section className={styles.section} aria-labelledby="my-events-upcoming-heading">
@@ -40,10 +40,10 @@ export default function UpcomingEventsSection({
           </li>
         ))}
         <li className={styles.item}>
-          <Link to={ROUTES.createEvent} className={styles.ghostCard}>
+          <button type="button" className={styles.ghostCard} onClick={() => openCreateEvent()}>
             <CalendarPlus aria-hidden size={ICON_SIZE['2xl']} />
             <span>{t('events.myEvents.createCta')}</span>
-          </Link>
+          </button>
         </li>
       </ul>
     </section>

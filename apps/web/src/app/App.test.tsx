@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
@@ -277,12 +278,20 @@ describe('App (routes)', () => {
         'href',
         '/login'
       );
+      expect(within(mobileNav).getByRole('link', { name: /^Créer$/i })).toHaveAttribute(
+        'href',
+        '/login?returnTo=%2Fnew'
+      );
       const desktopNav = navs.at(0);
       if (!desktopNav) throw new Error('Nav bureau introuvable');
       expect(within(desktopNav).getByRole('link', { name: /^Mes soirées$/i })).toHaveAttribute(
         'href',
         '/my-events'
       );
+      expect(
+        within(desktopNav).queryByRole('link', { name: /^Nouvelle soirée$/i })
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^Nouvelle soirée$/i })).not.toBeInTheDocument();
     });
 
     it('AppShell: on an auth page the mobile sign-in link keeps the pending returnTo', async () => {
@@ -399,19 +408,14 @@ describe('App (routes)', () => {
       expect(
         within(mobileNav).queryByRole('link', { name: /^Mes soirées$/i })
       ).not.toBeInTheDocument();
-      expect(within(mobileNav).getByRole('link', { name: /^Créer$/i })).toHaveAttribute(
-        'href',
-        '/new'
-      );
-      expect(
-        within(mobileNav).queryByRole('link', { name: /^Nouvelle soirée$/i })
-      ).not.toBeInTheDocument();
+      expect(within(mobileNav).getByRole('button', { name: /^Créer$/i })).toBeInTheDocument();
+      expect(within(mobileNav).queryByRole('link', { name: /^Créer$/i })).not.toBeInTheDocument();
       const desktopNav = navs.at(0);
       if (!desktopNav) throw new Error('Nav bureau introuvable');
-      expect(within(desktopNav).getByRole('link', { name: /^Nouvelle soirée$/i })).toHaveAttribute(
-        'href',
-        '/new'
-      );
+      expect(
+        within(desktopNav).queryByRole('link', { name: /^Nouvelle soirée$/i })
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^Nouvelle soirée$/i })).toBeInTheDocument();
       expect(within(desktopNav).getByRole('link', { name: /^Mes soirées$/i })).toHaveAttribute(
         'href',
         '/my-events'
@@ -422,11 +426,26 @@ describe('App (routes)', () => {
       const labels = within(mobileNav)
         .getAllByRole('link')
         .map((link) => link.textContent?.trim());
-      expect(labels).toEqual(['Explorer', 'Soirées', 'Créer', 'Ma liste', 'Profil']);
+      expect(labels).toEqual(['Explorer', 'Soirées', 'Ma liste', 'Profil']);
       expect(within(mobileNav).getByRole('link', { name: /^Profil$/i })).toHaveAttribute(
         'href',
         '/u/alice'
       );
+    });
+
+    it('AppShell opens the creation window over the current page from the header button', async () => {
+      const user = userEvent.setup();
+      server.use(
+        authedUserHandler,
+        http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
+      );
+      renderRoutes(['/my-events']);
+      await user.click(
+        await screen.findByRole('button', { name: /^Nouvelle soirée$/i }, { timeout: 20000 })
+      );
+
+      const dialog = await screen.findByRole('dialog', { name: 'Nouvelle soirée' });
+      expect(within(dialog).getByRole('button', { name: 'Créer la soirée' })).toBeInTheDocument();
     });
 
     it('AppShell points the mobile Profil tab to the settings while my profile is private', async () => {

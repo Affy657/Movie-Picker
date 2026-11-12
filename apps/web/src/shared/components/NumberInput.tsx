@@ -14,6 +14,7 @@ type NumberInputProps = {
   className?: string;
   invalid?: boolean;
   ariaDescribedBy?: string;
+  unlimited?: { label: string; fallback: number };
 };
 
 export default function NumberInput({
@@ -28,11 +29,18 @@ export default function NumberInput({
   className,
   invalid,
   ariaDescribedBy,
+  unlimited,
 }: Readonly<NumberInputProps>) {
   const { t } = useTranslation();
   const numVal = value === '' ? null : Number(value);
+  const isUnlimited = unlimited !== undefined && numVal === null;
+  const reachesUnlimited = unlimited !== undefined && max !== undefined && numVal === max;
 
   const decrement = () => {
+    if (isUnlimited) {
+      onChange(String(unlimited.fallback));
+      return;
+    }
     if (numVal === null) return;
     const next = numVal - step;
     if (min !== undefined && next < min) return;
@@ -40,14 +48,20 @@ export default function NumberInput({
   };
 
   const increment = () => {
+    if (reachesUnlimited) {
+      onChange('');
+      return;
+    }
     const base = numVal ?? (min ?? 1) - step;
     const next = base + step;
     if (max !== undefined && next > max) return;
     onChange(String(next));
   };
 
-  const canDecrement = !disabled && numVal !== null && (min === undefined || numVal > min);
-  const canIncrement = !disabled && (max === undefined || (numVal ?? 0) < max);
+  const canDecrement =
+    !disabled && (isUnlimited || (numVal !== null && (min === undefined || numVal > min)));
+  const canIncrement =
+    !disabled && !isUnlimited && (reachesUnlimited || max === undefined || (numVal ?? 0) < max);
 
   return (
     <div className={clsx(styles.wrap, invalid && styles.wrapInvalid, className)}>
@@ -70,7 +84,7 @@ export default function NumberInput({
         min={min}
         max={max}
         step={step}
-        placeholder={placeholder}
+        placeholder={unlimited ? unlimited.label : placeholder}
         disabled={disabled}
         inputMode="numeric"
         aria-invalid={invalid || undefined}

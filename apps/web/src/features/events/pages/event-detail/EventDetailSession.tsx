@@ -49,6 +49,7 @@ type EventDetailSessionProps = {
   setActionError: Dispatch<SetStateAction<string | null>>;
   refreshAll: () => void;
   connectionUnstable?: boolean;
+  proposeOnArrival?: boolean;
 };
 
 const COUNTDOWN_TICK_MS = 60_000;
@@ -95,6 +96,7 @@ export default function EventDetailSession({
   setActionError,
   refreshAll,
   connectionUnstable = false,
+  proposeOnArrival = false,
 }: Readonly<EventDetailSessionProps>) {
   const { t } = useTranslation();
   const { locale } = useLocale();
@@ -106,7 +108,7 @@ export default function EventDetailSession({
     setShareInitialTab(tab);
     setShareOpen(true);
   }, []);
-  const [addMovieOpen, setAddMovieOpen] = useState(false);
+  const [addMovieOpen, setAddMovieOpen] = useState(proposeOnArrival);
   const addMovieTriggerRef = useRef<HTMLButtonElement>(null);
   const moviesSectionRef = useRef<HTMLDivElement>(null);
   const [participantsOpen, setParticipantsOpen] = useState(false);
