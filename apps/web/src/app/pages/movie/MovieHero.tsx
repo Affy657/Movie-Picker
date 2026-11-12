@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import clsx from 'clsx';
 import { Film, Tv } from 'lucide-react';
 import type { MovieNights } from '@/features/movies/api/moviesApi';
+import { Skeleton } from '@/shared/components/Skeleton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
@@ -134,6 +135,20 @@ function Streaming({ view, t }: Readonly<{ view: MovieHeroView; t: Translate }>)
   );
 }
 
+function HeroTitle({ view, t }: Readonly<{ view: MovieHeroView; t: Translate }>) {
+  if (view.title || view.detailsLoaded) {
+    return <h1 className={styles.title}>{view.title}</h1>;
+  }
+  return (
+    <h1 className={styles.title}>
+      <span className="visually-hidden">
+        {t(view.isTv ? 'moviePage.loadingShow' : 'moviePage.loading')}
+      </span>
+      <Skeleton variant="text" width="60%" />
+    </h1>
+  );
+}
+
 function Poster({ view }: Readonly<{ view: MovieHeroView }>) {
   if (!view.posterSrc) {
     return (
@@ -181,7 +196,7 @@ export default function MovieHero({
         <div className={styles.grid}>
           <Poster view={view} />
           <div className={styles.heading}>
-            <h1 className={styles.title}>{view.title}</h1>
+            <HeroTitle view={view} t={t} />
             {view.originalTitle ? (
               <p className={styles.originalTitle}>
                 {t('moviePage.originalTitle', { title: view.originalTitle })}

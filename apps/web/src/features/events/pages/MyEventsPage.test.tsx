@@ -76,6 +76,15 @@ beforeAll(() => {
 });
 
 describe('MyEventsPage (MSW)', () => {
+  const server = setupServer();
+
+  beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
+  afterEach(() => {
+    server.resetHandlers();
+    clearGuestParticipantKeys();
+  });
+  afterAll(() => server.close());
+
   it('opens the creation window over the page from the empty state', async () => {
     const user = userEvent.setup();
     server.use(authMeHandler, myEventsHandler([], [], { active: 0, finished: 0 }));
@@ -95,15 +104,6 @@ describe('MyEventsPage (MSW)', () => {
 
     expect(await screen.findByRole('dialog', { name: 'Nouvelle soirée' })).toBeInTheDocument();
   });
-
-  const server = setupServer();
-
-  beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
-  afterEach(() => {
-    server.resetHandlers();
-    clearGuestParticipantKeys();
-  });
-  afterAll(() => server.close());
 
   it('lists what to handle, then the upcoming nights, then the history, on one page', async () => {
     server.use(

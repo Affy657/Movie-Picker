@@ -11,6 +11,10 @@ import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
+import { useHistoryEntryState } from '@/shared/hooks/useHistoryEntryState';
+import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
+import { randomIndex } from '@/shared/utils/random';
+import { MOVIE_PAGE_CHUNKS } from '@/app/routeChunks';
 import AddMoviePanel from '@/features/movies/components/AddMoviePanel';
 import ActiveFilterChips from '@/features/movies/components/ActiveFilterChips';
 import FilteredCollectionLayout, {
@@ -48,6 +52,7 @@ import ProposeToEventModal from '@/features/events/components/ProposeToEventModa
 import RandomPickDialog, {
   type RandomPickScope,
 } from '@/features/watchlist/components/RandomPickDialog';
+import type { PickIndex } from '@/features/watchlist/utils/randomPick';
 import { watchlistItemKey as itemKey } from '@/features/movies/utils/watchlistItemKey';
 import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
 import styles from './WatchlistPage.module.css';
@@ -139,6 +144,33 @@ interface RandomPick {
   scope: RandomPickScope;
 }
 
+interface OpenRandomPick {
+  keys: string[];
+  scope: RandomPickScope;
+  drawnKey: string | null;
+}
+
+function isOpenRandomPick(value: unknown): value is OpenRandomPick | null {
+  if (value === null) return true;
+  if (typeof value !== 'object') return false;
+  const { keys, scope, drawnKey } = value as Record<string, unknown>;
+  return (
+    Array.isArray(keys) &&
+    keys.every((key) => typeof key === 'string') &&
+    (scope === 'list' || scope === 'selection') &&
+    (drawnKey === null || typeof drawnKey === 'string')
+  );
+}
+
+function entryKey(entry: WatchlistEntry): string {
+  return itemKey(entry.tmdbId, entry.mediaType);
+}
+
+function firstDrawLandingOn(poolSize: number, drawnIndex: number): PickIndex {
+  if (drawnIndex < 0) return randomIndex;
+  return (length) => (length === poolSize ? drawnIndex : randomIndex(length));
+}
+
 function randomPickLabelKey(compact: boolean, isFiltered: boolean): TranslationKey {
   if (compact) return 'watchlist.randomPick.triggerShort';
   return isFiltered ? 'watchlist.randomPick.triggerSelection' : 'watchlist.randomPick.trigger';
@@ -210,19 +242,41 @@ export default function WatchlistPage() {
     [items, availabilityItems]
   );
 
-  const listedKeys = useMemo(
-    () => new Set(entries.map((entry) => itemKey(entry.tmdbId, entry.mediaType))),
+  const entriesByKey = useMemo(
+    () => new Map(entries.map((entry) => [entryKey(entry), entry])),
     [entries]
   );
 
   const [proposeTarget, setProposeTarget] = useState<WatchlistToggleItem | null>(null);
-  const [randomPick, setRandomPick] = useState<RandomPick | null>(null);
+  const [randomPick, setRandomPick] = useHistoryEntryState<OpenRandomPick | null>(
+    'watchlist.randomPick',
+    null,
+    isOpenRandomPick
+  );
   const { track } = useAnalytics();
   const openRandomPick = (pick: RandomPick) => {
     track('random_pick_opened', { scope: pick.scope, pool: pick.items.length });
-    setRandomPick(pick);
+    setRandomPick({ keys: pick.items.map(entryKey), scope: pick.scope, drawnKey: null });
   };
+  const randomPickItems = useMemo(
+    () =>
+      (randomPick?.keys ?? []).flatMap((key) => {
+        const entry = entriesByKey.get(key);
+        return entry ? [entry] : [];
+      }),
+    [randomPick?.keys, entriesByKey]
+  );
+  const drawnIndex = randomPickItems.findIndex((entry) => entryKey(entry) === randomPick?.drawnKey);
+  const randomPickIndex = useMemo(
+    () => firstDrawLandingOn(randomPickItems.length, drawnIndex),
+    [randomPickItems.length, drawnIndex]
+  );
   const openMoviePage = useOpenMoviePage();
+  const openDrawnMoviePage = (item: WatchlistEntry) => {
+    setRandomPick((current) => current && { ...current, drawnKey: entryKey(item) });
+    openMoviePage(item);
+  };
+  useIdlePrefetch(MOVIE_PAGE_CHUNKS);
   const [addPanelOpen, setAddPanelOpen] = useState(false);
   const [letterboxdModalOpen, setLetterboxdModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<MovieViewMode>(readStoredViewMode);
@@ -517,17 +571,16 @@ export default function WatchlistPage() {
         )}
       </section>
 
-      {randomPick && (
+      {randomPick && !isLoading && (
         <RandomPickDialog
           open={proposeTarget === null}
-          items={randomPick.items.filter((item) =>
-            listedKeys.has(itemKey(item.tmdbId, item.mediaType))
-          )}
+          items={randomPickItems}
           scope={randomPick.scope}
           ratingScale={user?.ratingScale}
           onClose={() => setRandomPick(null)}
           onPropose={setProposeTarget}
-          onOpenDetails={(item) => openMoviePage(item)}
+          onOpenDetails={openDrawnMoviePage}
+          pickIndex={randomPickIndex}
         />
       )}
 

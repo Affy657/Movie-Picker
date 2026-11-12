@@ -93,6 +93,12 @@ export interface UserWatchedMovieItem {
 
 export interface UserWatchedMoviesResponse {
   items: UserWatchedMovieItem[];
+  total?: number;
+}
+
+export interface UserWatchedMoviesPreview {
+  items: UserWatchedMovieItem[];
+  total: number;
 }
 
 export async function fetchUserWatchedMovies(
@@ -114,6 +120,16 @@ export async function fetchUserWatchedMovieItems(
 ): Promise<UserWatchedMovieItem[]> {
   const res = await fetchUserWatchedMovies(handle, WATCHED_MOVIES_TAKE, signal);
   return res.items;
+}
+
+export const PROFILE_WATCHED_PREVIEW_TAKE = 24;
+
+export async function fetchUserWatchedMoviesPreview(
+  handle: string,
+  signal?: AbortSignal
+): Promise<UserWatchedMoviesPreview> {
+  const res = await fetchUserWatchedMovies(handle, PROFILE_WATCHED_PREVIEW_TAKE, signal);
+  return { items: res.items, total: res.total ?? res.items.length };
 }
 
 export interface UserWatchlistItem {

@@ -4,7 +4,6 @@ import {
   useCallback,
   useId,
   useMemo,
-  useState,
   type ComponentProps,
   type ReactNode,
   type RefObject,
@@ -15,6 +14,8 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
+import { useHistoryEntryState } from '@/shared/hooks/useHistoryEntryState';
+import { MOVIE_PAGE_CHUNKS } from '@/app/routeChunks';
 import { setMovieWheelExclusion } from '@/features/movies/api/moviesApi';
 import { getErrorMessage } from '@/shared/api/apiError';
 import type { EventData } from '@/features/events/types';
@@ -22,11 +23,11 @@ import type { MovieData } from '@/shared/types/movie';
 import MovieList, { type MovieRowSortKey } from '@/features/movies/components/MovieList';
 import SortControl from '@/features/movies/components/SortControl';
 import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
-import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import EmptyState from '@/shared/components/EmptyState';
 import Button from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import EventActionErrorBanner from '@/features/events/pages/event-detail/EventActionErrorBanner';
+import VoteLimitDialog from '@/features/events/components/VoteLimitDialog';
 import { SkeletonScreen, Skeleton } from '@/shared/components/Skeleton';
 import { useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
@@ -37,7 +38,7 @@ import Chip from '@/shared/components/Chip';
 
 const loadProposeMovieDialog = () => import('@/features/events/components/ProposeMovieDialog');
 const ProposeMovieDialog = lazy(loadProposeMovieDialog);
-const ADD_MOVIE_CHUNKS = [loadProposeMovieDialog];
+const ADD_MOVIE_CHUNKS = [loadProposeMovieDialog, ...MOVIE_PAGE_CHUNKS];
 const TABLE_COLUMNS_MIN_WIDTH_QUERY = '(max-width: 63.9375rem)';
 
 function useMoviesLayout(viewMode: 'grid' | 'list') {
@@ -135,21 +136,38 @@ function emptyStateMessageKey(input: {
   return input.isFull ? 'movies.list.emptyVisitorFull' : 'movies.list.emptyVisitor';
 }
 
+const DEFAULT_MOVIE_SORT: { by: MovieRowSortKey; dir: 'asc' | 'desc' } = {
+  by: 'score',
+  dir: 'desc',
+};
+
+function isMovieSort(value: unknown): value is typeof DEFAULT_MOVIE_SORT {
+  if (typeof value !== 'object' || value === null) return false;
+  const { by, dir } = value as Record<string, unknown>;
+  return (
+    typeof by === 'string' &&
+    Object.hasOwn(DEFAULT_SORT_DIRECTION, by) &&
+    (dir === 'asc' || dir === 'desc')
+  );
+}
+
 function useMovieSort() {
-  const [sortBy, setSortBy] = useState<MovieRowSortKey>('score');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [sort, setSortState] = useHistoryEntryState(
+    'eventMovies.sort',
+    DEFAULT_MOVIE_SORT,
+    isMovieSort
+  );
   const setSort = useCallback(
     (key: MovieRowSortKey) => {
-      if (key === sortBy) {
-        setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-        return;
-      }
-      setSortBy(key);
-      setSortDir(DEFAULT_SORT_DIRECTION[key]);
+      setSortState((current) =>
+        current.by === key
+          ? { by: key, dir: current.dir === 'asc' ? 'desc' : 'asc' }
+          : { by: key, dir: DEFAULT_SORT_DIRECTION[key] }
+      );
     },
-    [sortBy]
+    [setSortState]
   );
-  return { sortBy, sortDir, setSort };
+  return { sortBy: sort.by, sortDir: sort.dir, setSort };
 }
 
 type SharedMovieListProps = Omit<
@@ -171,34 +189,6 @@ function voteQuotaFor(
 
 function wheelExclusionErrorKey(excluded: boolean) {
   return excluded ? 'movies.list.excludeFromWheelError' : 'movies.list.includeInWheelError';
-}
-
-function VoteLimitDialog({
-  open,
-  maxVotes,
-  onClose,
-}: Readonly<{ open: boolean; maxVotes: number | null; onClose: () => void }>) {
-  const { t } = useTranslation();
-  const max = maxVotes ?? 0;
-  return (
-    <ConfirmDialog
-      open={open}
-      title={t('movies.list.voteLimitReachedTitle')}
-      message={pluralizeCount(
-        max,
-        'movies.list.voteLimitReachedOne',
-        'movies.list.voteLimitReachedMany',
-        t,
-        { max }
-      )}
-      confirmLabel={t('movies.list.voteLimitReachedOk')}
-      confirmTone="default"
-      hideCancel
-      onConfirm={onClose}
-      onCancel={onClose}
-      testId="vote-limit-dialog"
-    />
-  );
 }
 
 function lockedVoteQuotaHint(

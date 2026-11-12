@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import clsx from 'clsx';
-import { useQuery } from '@tanstack/react-query';
 import { ROUTES } from '@/app/routes';
-import { queryKeys } from '@/shared/hooks/queryKeys';
+import InlineError from '@/shared/components/InlineError';
 import { useTranslation } from '@/shared/i18n';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
@@ -17,11 +16,8 @@ import {
 } from '@/features/watchlist/hooks/useWatchlistToggle';
 import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
 import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
-import {
-  WATCHED_MOVIES_TAKE,
-  fetchUserWatchedMovieItems,
-  type UserWatchedMovieItem,
-} from '@/features/profile/api/profileApi';
+import type { UserWatchedMovieItem } from '@/features/profile/api/profileApi';
+import { useProfileWatchedPreview } from '@/features/profile/hooks/useProfileWatchedPreview';
 import OwnerRatingBadge from '@/features/profile/components/OwnerRatingBadge';
 import ProfileFavoritesSection from '@/features/profile/components/ProfileFavoritesSection';
 import ProfileWatchlistPreview from '@/features/profile/components/ProfileWatchlistPreview';
@@ -59,10 +55,7 @@ export default function ProfileMoviesSection({
   watchlist = null,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const query = useQuery({
-    queryKey: queryKeys.profile.watchedMovies(handle, WATCHED_MOVIES_TAKE),
-    queryFn: ({ signal }) => fetchUserWatchedMovieItems(handle, signal),
-  });
+  const query = useProfileWatchedPreview(handle);
   const openMoviePage = useOpenMoviePage();
   const [proposeTarget, setProposeTarget] = useState<WatchlistToggleItem | null>(null);
   const { user } = useAuth();
@@ -79,11 +72,30 @@ export default function ProfileMoviesSection({
     propose: setProposeTarget,
   };
 
-  const items = query.data ?? [];
+  const items = query.data?.items ?? [];
   const watched = latestViewingOfEachTitle(items).slice(0, WATCHED_PREVIEW_COUNT);
   const showFavorites = favorites.length > 0 || isOwnProfile;
   const showWatchlist = !!watchlist && (isOwnProfile || watchlist.count > 0);
-  if (items.length === 0 && !showFavorites && !showWatchlist) return null;
+  const watchedFailed = query.isLoadingError;
+  if (items.length === 0 && !watchedFailed && !showFavorites && !showWatchlist) return null;
+
+  const watchlistInShelf = showWatchlist && !isMobile;
+  const watchlistPreview =
+    showWatchlist && watchlist ? (
+      <div className={styles.watchlistSlot}>
+        <ProfileWatchlistPreview
+          handle={handle}
+          count={watchlist.count}
+          isHidden={watchlist.isHidden}
+          isOwnProfile={isOwnProfile}
+          isMobile={isMobile}
+          wide={!showFavorites}
+          library={library}
+          ratingScale={user?.ratingScale}
+          onOpenDetails={(item) => openMoviePage(item)}
+        />
+      </div>
+    ) : null;
 
   return (
     <div className={styles.movies}>
@@ -93,8 +105,8 @@ export default function ProfileMoviesSection({
         </p>
       ) : null}
 
-      {showFavorites || showWatchlist ? (
-        <div className={clsx(styles.shelf, showFavorites && showWatchlist && styles.shelfSplit)}>
+      {showFavorites || watchlistInShelf ? (
+        <div className={clsx(styles.shelf, showFavorites && watchlistInShelf && styles.shelfSplit)}>
           {showFavorites && (
             <ProfileFavoritesSection
               favorites={favorites}
@@ -104,28 +116,22 @@ export default function ProfileMoviesSection({
               onOpenDetails={(item) => openMoviePage(item)}
             />
           )}
-          {showWatchlist && watchlist && (
-            <div className={styles.watchlistSlot}>
-              <ProfileWatchlistPreview
-                handle={handle}
-                count={watchlist.count}
-                isHidden={watchlist.isHidden}
-                isOwnProfile={isOwnProfile}
-                isMobile={isMobile}
-                wide={!showFavorites}
-                library={library}
-                ratingScale={user?.ratingScale}
-                onOpenDetails={(item) => openMoviePage(item)}
-              />
-            </div>
-          )}
+          {watchlistInShelf ? watchlistPreview : null}
         </div>
+      ) : null}
+
+      {watchedFailed ? (
+        <InlineError
+          message={t('profile.movies.previewLoadError')}
+          retryLabel={t('common.retry')}
+          onRetry={() => void query.refetch()}
+        />
       ) : null}
 
       {watched.length > 0 ? (
         <MoviePreviewRow
           heading={t('profile.movies.title')}
-          headingCount={items.length}
+          headingCount={query.data?.total}
           seeAllTo={ROUTES.profileMovies(handle)}
           seeAllLabel={t('profile.movies.seeAll')}
         >
@@ -155,6 +161,8 @@ export default function ProfileMoviesSection({
           </ul>
         </MoviePreviewRow>
       ) : null}
+
+      {watchlistInShelf ? null : watchlistPreview}
 
       {proposeTarget ? (
         <ProposeToEventModal open movie={proposeTarget} onClose={() => setProposeTarget(null)} />

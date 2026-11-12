@@ -4,7 +4,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
 import ProfileMoviesSection from './ProfileMoviesSection';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
@@ -400,6 +400,77 @@ describe('ProfileMoviesSection (MSW)', () => {
     expect(screen.queryByRole('heading', { name: 'Film 9', level: 3 })).not.toBeInTheDocument();
   });
 
+  it('asks the API for a small page of viewings, not the whole history', async () => {
+    const requestedTakes: Array<string | null> = [];
+    server.use(
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, ({ request }) => {
+        requestedTakes.push(new URL(request.url).searchParams.get('take'));
+        return HttpResponse.json({ items: [watched(949, 'Heat', '2026-05-01T00:00:00Z')] });
+      })
+    );
+
+    renderSection('alice');
+
+    await screen.findByRole('heading', { name: 'Films vus 1' });
+    expect(requestedTakes).toEqual(['24']);
+  });
+
+  it('counts every viewing from the total the API reports, beyond the page it sends', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+        HttpResponse.json({ items: [watched(949, 'Heat', '2026-05-01T00:00:00Z')], total: 250 })
+      )
+    );
+
+    renderSection('alice');
+
+    expect(await screen.findByRole('heading', { name: 'Films vus 250' })).toBeInTheDocument();
+  });
+
+  it('says the watched movies could not load and loads them again on demand', async () => {
+    let calls = 0;
+    server.use(
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () => {
+        calls += 1;
+        if (calls === 1) return HttpResponse.json({ error: 'Trop de requêtes' }, { status: 429 });
+        return HttpResponse.json({ items: [watched(949, 'Heat', '2026-05-01T00:00:00Z')] });
+      })
+    );
+    const user = userEvent.setup();
+
+    renderSection('alice');
+
+    expect(await screen.findByText('Les films vus n’ont pas pu être chargés.')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Réessayer' }));
+
+    expect(await screen.findByRole('heading', { name: 'Films vus 1' })).toBeInTheDocument();
+    expect(screen.queryByText('Les films vus n’ont pas pu être chargés.')).not.toBeInTheDocument();
+  });
+
+  it('on a phone, reads the favorites, then the watched movies, then the watchlist', async () => {
+    stubMatchMedia((query) => query.includes('767px'));
+    server.use(
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+        HttpResponse.json({ items: [watched(27205, 'Inception', '2026-06-01T00:00:00Z')] })
+      ),
+      http.get(`${TEST_API_V1}/users/alice/watchlist`, () =>
+        HttpResponse.json({ items: [], total: 1, hasMore: false })
+      )
+    );
+
+    renderSection('alice', [HEAT], { watchlist: { count: 1, isHidden: false } });
+
+    const favorites = await screen.findByRole('heading', { name: 'Ses favoris' });
+    const watchedRow = await screen.findByRole('heading', { name: 'Films vus 1' });
+    const watchlistRow = screen.getByRole('link', { name: /sa watchlist/i });
+    expect(
+      favorites.compareDocumentPosition(watchedRow) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(
+      watchedRow.compareDocumentPosition(watchlistRow) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+  });
+
   describe('watchlist preview', () => {
     const watchlistPage = http.get(`${TEST_API_V1}/users/alice/watchlist`, ({ request }) => {
       const take = new URL(request.url).searchParams.get('take');
@@ -436,6 +507,60 @@ describe('ProfileMoviesSection (MSW)', () => {
         'href',
         '/u/alice/watchlist'
       );
+    });
+
+    it('holds the place of the posters while the watchlist loads', async () => {
+      server.use(
+        http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+          HttpResponse.json({ items: [] })
+        ),
+        http.get(`${TEST_API_V1}/users/alice/watchlist`, async () => {
+          await delay('infinite');
+          return HttpResponse.json({ items: [], total: 12, hasMore: false });
+        })
+      );
+
+      renderSection('alice', [], { watchlist: { count: 12, isHidden: false } });
+
+      await screen.findByRole('heading', { name: 'Sa watchlist 12' });
+      expect(screen.getByRole('status')).toHaveTextContent('Chargement de la watchlist…');
+    });
+
+    it('says the watchlist could not load and loads it again on demand', async () => {
+      let calls = 0;
+      server.use(
+        http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+          HttpResponse.json({ items: [] })
+        ),
+        http.get(`${TEST_API_V1}/users/alice/watchlist`, () => {
+          calls += 1;
+          if (calls === 1) return HttpResponse.json({ error: 'Erreur' }, { status: 500 });
+          return HttpResponse.json({
+            items: [
+              {
+                tmdbId: 438631,
+                mediaType: 'movie',
+                title: 'Dune',
+                year: '2021',
+                posterPath: null,
+                genreIds: [878],
+                createdAt: '2026-06-01T00:00:00Z',
+              },
+            ],
+            total: 12,
+            hasMore: true,
+          });
+        })
+      );
+      const user = userEvent.setup();
+
+      renderSection('alice', [], { watchlist: { count: 12, isHidden: false } });
+
+      expect(await screen.findByText('La watchlist n’a pas pu être chargée.')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Réessayer' }));
+
+      expect(await screen.findByRole('heading', { name: 'Dune', level: 3 })).toBeInTheDocument();
+      expect(screen.queryByText('La watchlist n’a pas pu être chargée.')).not.toBeInTheDocument();
     });
 
     it('shows nothing to a visitor when the watchlist is empty', async () => {

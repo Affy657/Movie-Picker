@@ -23,9 +23,16 @@ public sealed partial class TmdbMovieSearch : ITmdbMovieSearch
     private const int MinPersonQueryLength = 3;
     private const double MinPersonPopularity = 1d;
 
+    private static readonly TimeSpan NotFoundCacheTtl = TimeSpan.FromMinutes(15);
+
     private sealed class TmdbUnavailableMarker
     {
         public static readonly TmdbUnavailableMarker Instance = new();
+    }
+
+    private sealed class TmdbNotFoundMarker
+    {
+        public static readonly TmdbNotFoundMarker Instance = new();
     }
 
     private sealed record PersonMatch(int Id, bool LeadsResults);

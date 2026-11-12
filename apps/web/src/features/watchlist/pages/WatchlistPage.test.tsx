@@ -1,13 +1,14 @@
 import { beforeAll, afterEach, afterAll, describe, expect, it, vi } from 'vitest';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, useLocation } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import WatchlistPage from '@/features/watchlist/pages/WatchlistPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubHoverCapability, stubMatchMedia } from '@/test-utils/matchMedia';
 import { createWatchlistHandlers, TEST_API_V1 } from '@/mocks/handlers';
+import { ROUTE_CHUNKS } from '@/app/routeChunks';
 
 const { track } = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock('@/shared/hooks/useAnalytics', () => ({
@@ -25,6 +26,28 @@ function renderPage(withLocation = false) {
       <MemoryRouter initialEntries={['/watchlist']}>
         <WatchlistPage />
         {withLocation ? <LocationProbe /> : null}
+      </MemoryRouter>
+    </AppTestProviders>
+  );
+}
+
+function FilmPageStub() {
+  const navigate = useNavigate();
+  return (
+    <button type="button" onClick={() => navigate(-1)}>
+      Retour
+    </button>
+  );
+}
+
+function renderPageWithFilmPage() {
+  return render(
+    <AppTestProviders>
+      <MemoryRouter initialEntries={['/watchlist']}>
+        <Routes>
+          <Route path="/watchlist" element={<WatchlistPage />} />
+          <Route path="/film/:movieRef" element={<FilmPageStub />} />
+        </Routes>
       </MemoryRouter>
     </AppTestProviders>
   );
@@ -155,8 +178,25 @@ describe('WatchlistPage (MSW)', () => {
     server.resetHandlers();
     vi.unstubAllGlobals();
     localStorage.removeItem('watchlist-view');
+    sessionStorage.clear();
   });
   afterAll(() => server.close());
+
+  it('loads the film page code while the browser is idle', async () => {
+    vi.stubGlobal('requestIdleCallback', (callback: () => void) => {
+      callback();
+      return 1;
+    });
+    vi.stubGlobal('cancelIdleCallback', vi.fn());
+    const loadMoviePage = vi.spyOn(ROUTE_CHUNKS, 'moviePage').mockResolvedValue({} as never);
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
+
+    renderPage();
+
+    expect(await screen.findByText(ITEM_A.title)).toBeInTheDocument();
+    expect(loadMoviePage).toHaveBeenCalled();
+    loadMoviePage.mockRestore();
+  });
 
   it('affiche un empty state quand la watchlist est vide', async () => {
     server.use(authedUserHandler, ...watchlistHandler([]));
@@ -770,6 +810,42 @@ describe('WatchlistPage (MSW)', () => {
       await user.click(within(dialog).getByRole('button', { name: 'Voir les détails' }));
 
       expect(screen.getByTestId('location')).toHaveTextContent('/film/200-ancien-mais-bien-note');
+    });
+
+    it('shows the same draw again when Back comes from the film page of the drawn title', async () => {
+      reduceMotion();
+      const items = [
+        ITEM_A,
+        ITEM_B,
+        { ...ITEM_A, tmdbId: 202, title: 'Troisième Titre' },
+        { ...ITEM_A, tmdbId: 203, title: 'Quatrième Titre' },
+      ];
+      server.use(authedUserHandler, ...watchlistHandler(items));
+      renderPageWithFilmPage();
+      const { user, dialog } = await openPick('Piocher un film');
+      const drawn = within(dialog).getByRole('heading', { level: 3 }).textContent ?? '';
+
+      await user.click(within(dialog).getByRole('button', { name: 'Voir les détails' }));
+      await user.click(await screen.findByRole('button', { name: 'Retour' }));
+
+      const back = await screen.findByRole('dialog', { name: 'Piocher un titre' });
+      expect(within(back).getByRole('heading', { level: 3 })).toHaveTextContent(drawn);
+      expect(within(back).getByText('Au hasard parmi les 4 titres de votre liste.')).toBeVisible();
+    });
+
+    it('does not reopen a draw closed before leaving the list', async () => {
+      reduceMotion();
+      server.use(authedUserHandler, ...watchlistHandler([ITEM_A, ITEM_B]));
+      renderPageWithFilmPage();
+      const { user, dialog } = await openPick('Piocher un film');
+      await user.click(within(dialog).getByRole('button', { name: 'Fermer' }));
+      await user.click(
+        await screen.findByRole('button', { name: /voir les détails de « ancien/i })
+      );
+      await user.click(await screen.findByRole('button', { name: 'Retour' }));
+
+      expect(await screen.findByText(ITEM_B.title)).toBeInTheDocument();
+      expect(screen.queryByRole('dialog', { name: 'Piocher un titre' })).not.toBeInTheDocument();
     });
 
     it('gives the focus back to the Pick button of the layout shown at closing time', async () => {

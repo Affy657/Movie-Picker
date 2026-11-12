@@ -87,8 +87,7 @@
   }
 
   .figures {
-    flex-wrap: nowrap;
-    overflow: hidden;
-    gap: var(--space-7);
+    gap: var(--space-4) var(--space-6);
+    padding: var(--space-4) 0;
   }
 }

@@ -56,18 +56,19 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
 
         var participants = await _participants.ListByUserIdAsync(userId, ParticipantsCap, ct);
         if (participants.Count == 0)
-            return new UserWatchedMoviesResponse { Items = [] };
+            return new UserWatchedMoviesResponse { Items = [], Total = 0 };
 
         var eventIds = participants.Select(p => p.EventId).Distinct().ToList();
         var events = await _events.ListByIdsAsync(eventIds, ct);
 
-        var qualifying = WatchedMoviesFacts.FinishedWinners(events, _clock.GetUtcNow())
+        var watched = WatchedMoviesFacts.FinishedWinners(events, _clock.GetUtcNow()).ToList();
+        var qualifying = watched
             .OrderByDescending(x => x.WatchedAt)
             .Take(effectiveTake)
             .ToList();
 
         if (qualifying.Count == 0)
-            return new UserWatchedMoviesResponse { Items = [] };
+            return new UserWatchedMoviesResponse { Items = [], Total = 0 };
 
         var winnerMovieIds = qualifying.Select(x => x.MovieId).Distinct().ToList();
         var moviesTask = _movies.ListByIdsAsync(winnerMovieIds, ct);
@@ -97,7 +98,8 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
 
         return new UserWatchedMoviesResponse
         {
-            Items = await WatchedMoviesFacts.WithTmdbFactsAsync(items, _tmdb, _options, ct)
+            Items = await WatchedMoviesFacts.WithTmdbFactsAsync(items, _tmdb, _options, ct),
+            Total = watched.Count,
         };
     }
 }

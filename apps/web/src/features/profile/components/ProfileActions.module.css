@@ -13,12 +13,6 @@
   white-space: nowrap;
 }
 
-.shareBtn {
-  flex: 0 0 auto;
-  width: var(--tap-target-min);
-  padding: 0;
-}
-
 @media (max-width: 47.9375rem) {
   .primary {
     flex: 1 1 auto;

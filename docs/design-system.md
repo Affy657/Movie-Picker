@@ -220,9 +220,9 @@ Une ligne de réglage : un titre, une description et un `Toggle` à droite, nomm
 
 Les boutons y prennent leurs tailles et tons de `Button`, la feuille n'en redéfinit aucun.
 
-### Fiche film depuis une liste
+### Page d'un film ou d'une série
 
-`features/watchlist/components/LibraryMovieDetails.tsx` ouvre `MovieDetailsModal` pour un titre d'une liste (Ma liste, accueil, listes publiques, profil). `useLibraryMovieDetails` lit la cible dans l'URL (`?film=<id>` ou `?serie=<id>`, en `replace`, sans reset du défilement) et garde en mémoire la graine passée à `open` (titre, affiche, plateformes) pour peindre la fiche avant sa requête ; un lien profond sans graine charge tout depuis l'API. La cible venant de l'URL, **une page ne monte qu'un seul `LibraryMovieDetails`** : un second lirait la même cible et ouvrirait une seconde fiche.
+`app/pages/movie/MoviePage.tsx` sert `/film/<id>-<titre>` et `/serie/<id>-<titre>` (`ROUTES.moviePage`), en `noindex`. Un titre d'une liste (accueil, Explorer, Ma liste, profil, soirée) l'ouvre par `useOpenMoviePage(seed, nightSlug?)`, qui empile une entrée d'historique portant l'état `{ fromApp: true, seed }` : la graine (titre, année, affiche, note, genres) peint le haut de la page avant la requête des détails, et le retour repasse par l'historique tant que `fromApp` est posé, sinon il mène à la soirée ou à l'accueil. Un lien profond sans graine montre des `Skeleton` à la place du titre et du synopsis, et garde Proposer, Ma liste et Partager désactivés tant que le titre n'est pas connu. Un échec de chargement avec graine garde la graine et propose de réessayer par `InlineError` ; sans graine, la page entière passe en `ErrorState`, avec un retour à l'accueil sur un 404. `?soiree=<slug>` ajoute `MovieNightBar` (vote, déjà vu, exclusion du tirage, retrait) à la place du bouton Proposer. Les anciens liens `?film=<id>` et `?serie=<id>` passent par `useLegacyMovieLinkRedirect`, monté dans `AppShell` : l'entrée courante devient la liste sans ce paramètre, puis la page du film est empilée, pour que Retour ramène à la liste.
 
 ### ChoiceGroup et ChoiceCard
 
@@ -287,6 +287,7 @@ Choix exclusif entre deux à cinq options courtes, `role="radiogroup"`, flèches
 | Prop | Type | Rôle |
 |---|---|---|
 | `value`, `onChange` | | requis |
+| `onSelect` | `(value) => void` | facultatif, appelé quand une option est activée, au clic ou par Entrée et Espace, jamais lors d'un déplacement par flèche : c'est là qu'on déplace le focus vers un champ que l'option révèle, comme `onSelect` de `ChoiceGroup` |
 | `id` | `string` | préfixe des identifiants des options |
 | `options` | `{ value, label, icon? }[]` | |
 | `ariaLabel` ou `ariaLabelledBy` | `string` | au moins l'un des deux, le typage refuse un groupe sans nom |

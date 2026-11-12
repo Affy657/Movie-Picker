@@ -9,6 +9,7 @@ import type {
 } from '@/features/movies/api/moviesApi';
 import Avatar from '@/shared/components/Avatar';
 import LinkButton from '@/shared/components/LinkButton';
+import { Skeleton, SkeletonScreen } from '@/shared/components/Skeleton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { useTranslation, type Translate, type TranslationKey } from '@/shared/i18n';
 import { crewGroups } from '@/app/pages/movie/moviePageFacts';
@@ -50,10 +51,31 @@ function Section({
   );
 }
 
+function SynopsisPlaceholder({ isTv }: Readonly<{ isTv: boolean }>) {
+  const { t } = useTranslation();
+  return (
+    <SkeletonScreen
+      label={t(isTv ? 'moviePage.loadingShow' : 'moviePage.loading')}
+      className={styles.overviewPending}
+    >
+      <Skeleton variant="text" />
+      <Skeleton variant="text" />
+      <Skeleton variant="text" width="60%" />
+    </SkeletonScreen>
+  );
+}
+
 export function MovieSynopsis({
   overview,
   tagline,
-}: Readonly<{ overview: string | null; tagline: string | null }>) {
+  isTv = false,
+  pending = false,
+}: Readonly<{
+  overview: string | null;
+  tagline: string | null;
+  isTv?: boolean;
+  pending?: boolean;
+}>) {
   const { t } = useTranslation();
   const textRef = useRef<HTMLParagraphElement>(null);
   const textId = useId();
@@ -71,9 +93,19 @@ export function MovieSynopsis({
     return () => observer.disconnect();
   }, [overview, expanded]);
 
+  if (pending && !overview) {
+    return (
+      <Section title={t('moviePage.synopsis')}>
+        <SynopsisPlaceholder isTv={isTv} />
+      </Section>
+    );
+  }
+
   return (
     <Section title={t('moviePage.synopsis')}>
-      {tagline ? <p className={styles.tagline}>« {tagline} »</p> : null}
+      {tagline ? (
+        <p className={styles.tagline}>{t('moviePage.taglineQuote', { tagline })}</p>
+      ) : null}
       {overview ? (
         <>
           <p
@@ -101,7 +133,9 @@ export function MovieSynopsis({
           ) : null}
         </>
       ) : (
-        <p className={styles.muted}>{t('moviePage.synopsisEmpty')}</p>
+        <p className={styles.muted}>
+          {t(isTv ? 'moviePage.synopsisEmptyShow' : 'moviePage.synopsisEmpty')}
+        </p>
       )}
     </Section>
   );

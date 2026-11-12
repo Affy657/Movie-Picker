@@ -1,4 +1,5 @@
-import { Link, useLocation, useParams } from 'react-router';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import { AlertCircle } from 'lucide-react';
 import { ROUTES } from '@/app/routes';
 import EventDetailSkeleton from '@/features/events/pages/event-detail/EventDetailSkeleton';
@@ -72,12 +73,34 @@ function EventUnavailableState({
 
 type ArrivalState = { configNotSaved?: boolean; openPropose?: boolean } | null;
 
+const ARRIVAL_FLAGS = new Set(['configNotSaved', 'openPropose']);
+
+function withoutArrivalFlags(state: object): object | null {
+  const kept = Object.entries(state).filter(([key]) => !ARRIVAL_FLAGS.has(key));
+  return kept.length > 0 ? Object.fromEntries(kept) : null;
+}
+
+function useArrivalOnce(): ArrivalState {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [arrival] = useState(() => location.state as ArrivalState);
+  const { pathname, search, hash, state } = location;
+
+  useEffect(() => {
+    if (state === null || typeof state !== 'object') return;
+    if (!Object.keys(state).some((key) => ARRIVAL_FLAGS.has(key))) return;
+    navigate({ pathname, search, hash }, { replace: true, state: withoutArrivalFlags(state) });
+  }, [pathname, search, hash, state, navigate]);
+
+  return arrival;
+}
+
 export default function EventDetail() {
   const { t } = useTranslation();
   const { slug: slugParam } = useParams<{ slug: string }>();
   const isMalformedSlug = slugParam !== undefined && !isWellFormedEventSlug(slugParam);
   const slug = isMalformedSlug ? undefined : slugParam;
-  const arrival = useLocation().state as ArrivalState;
+  const arrival = useArrivalOnce();
   const {
     hostToken,
     eventQuery,

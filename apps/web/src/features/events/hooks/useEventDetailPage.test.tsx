@@ -142,6 +142,27 @@ describe('useEventDetailPage', () => {
     );
   });
 
+  it('marks the nights of every film stale, so a film page shows the new seen mark', async () => {
+    serveEventNever();
+    const client = createTestQueryClient();
+    client.setQueryData(queryKeys.movies.nights(438631, 'movie'), { nights: [] });
+    client.setQueryData(queryKeys.movies.nights(1399, 'tv'), { nights: [] });
+    const { result } = renderHook(() => useEventDetailPage(slug), {
+      wrapper: ({ children }: Readonly<{ children: ReactNode }>) => (
+        <QueryClientWrapper client={client}>
+          <MemoryRouter initialEntries={[`/e/${slug}`]}>{children}</MemoryRouter>
+        </QueryClientWrapper>
+      ),
+    });
+
+    act(() => result.current.refreshAll());
+
+    expect(client.getQueryState(queryKeys.movies.nights(438631, 'movie'))?.isInvalidated).toBe(
+      true
+    );
+    expect(client.getQueryState(queryKeys.movies.nights(1399, 'tv'))?.isInvalidated).toBe(true);
+  });
+
   it('marks the recap of the night stale, so a new rating shows there', async () => {
     serveEventNever();
     const client = createTestQueryClient();

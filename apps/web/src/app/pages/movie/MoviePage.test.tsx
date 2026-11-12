@@ -1,7 +1,14 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
+import {
+  MemoryRouter,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+  type InitialEntry,
+} from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
@@ -9,7 +16,14 @@ import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
 import MoviePage from '@/app/pages/movie/MoviePage';
 
 vi.mock('@/features/events/components/MovieNightBar', () => ({
-  default: ({ slug }: { slug: string }) => <p>Barre de la soirée {slug}</p>,
+  default: ({ slug, onRemoved }: { slug: string; onRemoved: () => void }) => (
+    <div>
+      <p>Barre de la soirée {slug}</p>
+      <button type="button" onClick={onRemoved}>
+        Film retiré de la soirée
+      </button>
+    </div>
+  ),
 }));
 
 const LONG_OVERVIEW =
@@ -62,6 +76,16 @@ const detailsHandler = http.get(`${TEST_API_V1}/movies/tmdb/438631/details`, () 
   HttpResponse.json(dune)
 );
 
+const pendingDetailsHandler = http.get(`${TEST_API_V1}/movies/tmdb/438631/details`, async () => {
+  await new Promise(() => undefined);
+  return HttpResponse.json(dune);
+});
+
+const duneSeedEntry: InitialEntry = {
+  pathname: '/film/438631-dune',
+  state: { fromApp: true, seed: { tmdbId: 438631, mediaType: 'movie', title: 'Dune' } },
+};
+
 const showcaseHandler = http.get(`${TEST_API_V1}/movies/showcase`, ({ request }) => {
   const section = new URL(request.url).searchParams.get('section');
   const items =
@@ -109,16 +133,26 @@ function nightsHandler(body: object) {
 
 function LocationProbe() {
   const location = useLocation();
-  return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
+  const navigate = useNavigate();
+  return (
+    <>
+      <output data-testid="location">{`${location.pathname}${location.search}`}</output>
+      <button type="button" onClick={() => navigate(-1)}>
+        Page précédente du navigateur
+      </button>
+    </>
+  );
 }
 
-function renderPage(entry = '/film/438631-dune') {
+function renderPage(entries: InitialEntry | InitialEntry[] = '/film/438631-dune') {
+  const initialEntries = Array.isArray(entries) ? entries : [entries];
   return render(
     <AppTestProviders client={createTestQueryClient()}>
-      <MemoryRouter initialEntries={[entry]}>
+      <MemoryRouter initialEntries={initialEntries} initialIndex={initialEntries.length - 1}>
         <Routes>
           <Route path="/film/:movieRef" element={<MoviePage mediaType="movie" />} />
           <Route path="/serie/:movieRef" element={<MoviePage mediaType="tv" />} />
+          <Route path="*" element={null} />
         </Routes>
         <LocationProbe />
       </MemoryRouter>
@@ -265,6 +299,130 @@ describe('MoviePage', () => {
     renderPage();
 
     expect(await screen.findByText('Film introuvable')).toBeInTheDocument();
+    await waitFor(() => expect(document.title).toContain('Film introuvable'));
+    expect(screen.getByRole('link', { name: 'Retour à l’accueil' })).toHaveAttribute('href', '/');
+  });
+
+  it('speaks of a series when the series does not exist', async () => {
+    server.use(
+      authMeGuestHandler,
+      http.get(
+        `${TEST_API_V1}/movies/tmdb/1399/details`,
+        () => new HttpResponse(null, { status: 404 })
+      )
+    );
+    renderPage('/serie/1399');
+
+    expect(await screen.findByText('Série introuvable')).toBeInTheDocument();
+    expect(
+      screen.getByText('Cette série n’existe pas ou n’est plus disponible.')
+    ).toBeInTheDocument();
+    await waitFor(() => expect(document.title).toContain('Série introuvable'));
+  });
+
+  it('holds the title, the synopsis and the actions while a deep link loads', async () => {
+    server.use(
+      signedInHandler,
+      watchlistHandler,
+      pendingDetailsHandler,
+      showcaseHandler,
+      nightsHandler({})
+    );
+    renderPage();
+
+    expect(await screen.findByRole('button', { name: /ajouter à ma liste/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /proposer dans une soirée/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Partager' })).toBeDisabled();
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Chargement du film…' })
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Pas encore de synopsis pour ce film.')).toBeNull();
+  });
+
+  it('shows similar films without waiting for the details', async () => {
+    server.use(authMeGuestHandler, pendingDetailsHandler, showcaseHandler);
+    renderPage();
+
+    expect(await screen.findByRole('region', { name: 'Films similaires' })).toBeInTheDocument();
+  });
+
+  it('keeps the film it was opened with and offers to retry when its details fail', async () => {
+    let calls = 0;
+    server.use(
+      authMeGuestHandler,
+      showcaseHandler,
+      http.get(`${TEST_API_V1}/movies/tmdb/438631/details`, () => {
+        calls += 1;
+        return calls === 1 ? new HttpResponse(null, { status: 500 }) : HttpResponse.json(dune);
+      })
+    );
+    renderPage(duneSeedEntry);
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Dune' })).toBeInTheDocument();
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Impossible de charger ce film.');
+
+    await userEvent.click(within(alert).getByRole('button', { name: 'Réessayer' }));
+
+    expect(await screen.findByText(LONG_OVERVIEW)).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('says when the film could not be added to the list', async () => {
+    server.use(
+      signedInHandler,
+      watchlistHandler,
+      detailsHandler,
+      showcaseHandler,
+      nightsHandler({}),
+      http.post(`${TEST_API_V1}/watchlist`, () =>
+        HttpResponse.json({ message: 'Ajout refusé' }, { status: 400 })
+      )
+    );
+    renderPage();
+
+    await screen.findByRole('heading', { level: 1, name: 'Dune' });
+    await userEvent.click(await screen.findByRole('button', { name: /ajouter à ma liste/i }));
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+  });
+
+  it('steps back to the night after removing the film from it', async () => {
+    server.use(
+      signedInHandler,
+      watchlistHandler,
+      detailsHandler,
+      showcaseHandler,
+      nightsHandler({})
+    );
+    renderPage([
+      '/',
+      '/e/Ab3x',
+      { pathname: '/film/438631-dune', search: '?soiree=Ab3x', state: { fromApp: true } },
+    ]);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Film retiré de la soirée' }));
+    expect(screen.getByTestId('location')).toHaveTextContent('/e/Ab3x');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Page précédente du navigateur' }));
+    expect(screen.getByTestId('location')).toHaveTextContent(/^\/$/);
+  });
+
+  it('leaves the film for its night when it was opened from outside the app', async () => {
+    server.use(
+      signedInHandler,
+      watchlistHandler,
+      detailsHandler,
+      showcaseHandler,
+      nightsHandler({})
+    );
+    renderPage(['/', '/film/438631-dune?soiree=Ab3x']);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Film retiré de la soirée' }));
+    expect(screen.getByTestId('location')).toHaveTextContent('/e/Ab3x');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Page précédente du navigateur' }));
+    expect(screen.getByTestId('location')).toHaveTextContent(/^\/$/);
   });
 
   it('treats an address without an id as a missing page', () => {

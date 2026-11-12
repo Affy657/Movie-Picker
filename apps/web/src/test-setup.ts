@@ -89,6 +89,9 @@ localStorage.setItem('moviepicker-locale', 'fr');
 beforeEach(() => {
   localStorage.setItem('mp.session-hint', '1');
   localStorage.setItem('moviepicker-locale', 'fr');
+  for (const key of Object.keys(sessionStorage)) {
+    if (key.startsWith('mp.history-entry:')) sessionStorage.removeItem(key);
+  }
 });
 
 Object.defineProperty(window, 'matchMedia', {

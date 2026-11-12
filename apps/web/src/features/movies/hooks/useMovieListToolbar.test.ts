@@ -1,6 +1,7 @@
-import { StrictMode } from 'react';
-import { describe, expect, it } from 'vitest';
+import { createElement, StrictMode, type ReactNode } from 'react';
+import { afterEach, describe, expect, it } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { useMovieListToolbar, type MovieListItemLike } from './useMovieListToolbar';
 
 type WatchedItem = MovieListItemLike & { watchedAt: string };
@@ -41,15 +42,37 @@ const OPTIONS = {
   comparePrimary: compareWatchedAt,
 };
 
+function ListEntry({ children }: Readonly<{ children: ReactNode }>) {
+  return createElement(
+    MemoryRouter,
+    { initialEntries: [{ pathname: '/films/tendances', key: 'list-entry' }] },
+    children
+  );
+}
+
+function FreshEntry({ children }: Readonly<{ children: ReactNode }>) {
+  return createElement(MemoryRouter, { initialEntries: ['/films/tendances'] }, children);
+}
+
+function StrictListEntry({ children }: Readonly<{ children: ReactNode }>) {
+  return createElement(StrictMode, null, createElement(ListEntry, null, children));
+}
+
 function setup(items: WatchedItem[] = ITEMS) {
-  return renderHook(() => useMovieListToolbar({ items, ...OPTIONS }));
+  return renderHook(() => useMovieListToolbar({ items, ...OPTIONS }), { wrapper: ListEntry });
 }
 
 function setupStrict(items: WatchedItem[] = ITEMS) {
-  return renderHook(() => useMovieListToolbar({ items, ...OPTIONS }), { wrapper: StrictMode });
+  return renderHook(() => useMovieListToolbar({ items, ...OPTIONS }), {
+    wrapper: StrictListEntry,
+  });
 }
 
 describe('useMovieListToolbar', () => {
+  afterEach(() => {
+    sessionStorage.clear();
+  });
+
   it('sorts by watch date (default, descending)', () => {
     const { result } = setup();
     expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Beta', 'Gamma', 'Alpha']);
@@ -164,5 +187,45 @@ describe('useMovieListToolbar', () => {
     act(() => result.current.setSearch('Film 1'));
     expect(result.current.remainingCount).toBe(0);
     expect(result.current.revealedItems.length).toBeLessThanOrEqual(24);
+  });
+
+  it('gives the search, the sort, the filters and the revealed batch back when the list comes back on its entry', () => {
+    const many = Array.from({ length: 40 }, (_, i) =>
+      item({
+        title: `Film ${i}`,
+        year: String(1990 + (i % 20)),
+        genreIds: i % 2 === 0 ? [27] : [35],
+        watchedAt: `2026-01-${String((i % 28) + 1).padStart(2, '0')}T00:00:00Z`,
+      })
+    );
+    const first = setup(many);
+    act(() => first.result.current.toggleGenre(27));
+    act(() => first.result.current.setSortBy('title'));
+    act(() => first.result.current.setSearch('Film'));
+    act(() => first.result.current.revealMore());
+    const shownBefore = first.result.current.revealedItems.map((i) => i.title);
+    first.unmount();
+
+    const { result } = setup(many);
+
+    expect(result.current.selectedGenres).toEqual([27]);
+    expect(result.current.sortBy).toBe('title');
+    expect(result.current.sortDir).toBe('asc');
+    expect(result.current.search).toBe('Film');
+    expect(result.current.revealedItems.map((i) => i.title)).toEqual(shownBefore);
+    expect(result.current.remainingCount).toBe(0);
+  });
+
+  it('starts from the defaults on another entry', () => {
+    const first = setup();
+    act(() => first.result.current.toggleMediaType('tv'));
+    first.unmount();
+
+    const { result } = renderHook(() => useMovieListToolbar({ items: ITEMS, ...OPTIONS }), {
+      wrapper: FreshEntry,
+    });
+
+    expect(result.current.selectedMediaTypes).toEqual([]);
+    expect(result.current.visibleItems).toHaveLength(3);
   });
 });

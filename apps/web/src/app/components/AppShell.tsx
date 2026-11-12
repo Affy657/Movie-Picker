@@ -23,6 +23,7 @@ import { useLegacyMovieLinkRedirect } from './useLegacyMovieLinkRedirect';
 import styles from './AppShell.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import CreateEventDialogProvider from '@/features/events/components/create-event/CreateEventDialogProvider';
 import {
   loadCreateEventDialog,
@@ -108,7 +109,9 @@ function HeaderBrand({ label }: Readonly<{ label: string }>) {
       to={ROUTES.home}
       className={styles.brand}
       aria-label={label}
-      onPointerEnter={() => setClapping(true)}
+      onPointerEnter={(event) => {
+        if (event.pointerType === 'mouse') setClapping(true);
+      }}
     >
       <BrandMark
         animation={clapping ? 'once' : undefined}
@@ -131,6 +134,13 @@ function MobileNavItem({ to, end, label, Icon }: Readonly<NavItemDef>) {
 
 function preloadCreateEventDialog() {
   void loadCreateEventDialog();
+}
+
+const CREATE_EVENT_DIALOG_CHUNKS = [loadCreateEventDialog];
+
+function CreateEventDialogIdlePrefetch() {
+  useIdlePrefetch(CREATE_EVENT_DIALOG_CHUNKS);
+  return null;
 }
 
 function CreateEventHeaderButton({ label }: Readonly<{ label: string }>) {
@@ -348,6 +358,7 @@ export default function AppShell() {
         <InAppBrowserBanner />
         <MovedOriginBanner />
         <SignOutPendingNotice />
+        {user ? <CreateEventDialogIdlePrefetch /> : null}
       </div>
     </CreateEventDialogProvider>
   );

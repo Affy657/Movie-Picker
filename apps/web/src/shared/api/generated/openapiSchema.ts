@@ -8304,6 +8304,8 @@ export interface components {
         };
         UserWatchedMoviesResponse: {
             items?: components["schemas"]["UserWatchedMovieItem"][] | null;
+            /** Format: int32 */
+            total?: number | null;
         };
         VoteRequest: {
             participantId: string;

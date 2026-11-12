@@ -247,6 +247,11 @@
   white-space: nowrap;
 }
 
+.inviteActionsFrame {
+  position: relative;
+  width: 100%;
+}
+
 .inviteActions {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));

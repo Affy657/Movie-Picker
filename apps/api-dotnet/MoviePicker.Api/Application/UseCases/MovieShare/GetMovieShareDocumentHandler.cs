@@ -1,4 +1,3 @@
-using System.Globalization;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Shared;
@@ -11,7 +10,6 @@ public sealed class GetMovieShareDocumentHandler : IGetMovieShareDocumentHandler
 {
     public const int DescriptionMaxLength = 200;
 
-    private const int MaxTmdbIdDigits = 9;
     private const string Ellipsis = "…";
 
     private readonly ITmdbMovieSearch _tmdb;
@@ -48,7 +46,7 @@ public sealed class GetMovieShareDocumentHandler : IGetMovieShareDocumentHandler
 
     private async Task<TmdbMovieDetails?> FindAsync(string movieRef, MovieMediaType mediaType, CancellationToken ct)
     {
-        if (ParseTmdbId(movieRef) is not int tmdbId)
+        if (MovieSlug.TmdbIdOf(movieRef) is not int tmdbId)
             return null;
 
         try
@@ -60,21 +58,6 @@ public sealed class GetMovieShareDocumentHandler : IGetMovieShareDocumentHandler
         {
             return null;
         }
-    }
-
-    private static int? ParseTmdbId(string? movieRef)
-    {
-        if (string.IsNullOrEmpty(movieRef))
-            return null;
-
-        var dash = movieRef.IndexOf('-');
-        var digits = dash < 0 ? movieRef : movieRef[..dash];
-        return digits.Length is > 0 and <= MaxTmdbIdDigits
-            && digits.All(char.IsAsciiDigit)
-            && int.TryParse(digits, NumberStyles.None, CultureInfo.InvariantCulture, out var tmdbId)
-            && tmdbId > 0
-            ? tmdbId
-            : null;
     }
 
     private async Task<SharePreview> DescribeAsync(

@@ -2,7 +2,10 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.DependencyInjection;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Entities;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -81,6 +84,64 @@ public sealed class PublicProfileEndpointsTests : IClassFixture<MoviePickerAppli
         var movies = await res.Content.ReadFromJsonAsync<UserWatchedMoviesResponse>(JsonOptions);
         Assert.NotNull(movies);
         Assert.Empty(movies!.Items);
+    }
+
+    [Fact]
+    public async Task WatchedMovies_TakeBelowTheTotal_StillCountsEveryWatchedFilm()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Cinéphile Assidu");
+        var me = await GetMeAsync(client);
+        var past = new DateTimeOffset(2025, 3, 1, 12, 0, 0, TimeSpan.Zero);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+            var participants = scope.ServiceProvider.GetRequiredService<IParticipantRepository>();
+            var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+            for (var month = 1; month <= 3; month++)
+            {
+                var night = await events.AddAsync(new Event
+                {
+                    Title = $"Soirée vue {month}",
+                    Date = $"2025-0{month}-10",
+                    Time = "20:30",
+                    HostToken = Guid.NewGuid().ToString("N"),
+                    Slug = "watched-" + Guid.NewGuid().ToString("N")[..10],
+                    CreatedAt = past,
+                    UpdatedAt = past,
+                });
+                var viewer = await participants.AddAsync(new Participant
+                {
+                    EventId = night.Id,
+                    UserId = me.UserId,
+                    Pseudo = "Moi",
+                    CreatedAt = past,
+                    UpdatedAt = past,
+                });
+                var film = await movies.InsertAsync(new Movie
+                {
+                    EventId = night.Id,
+                    ParticipantId = viewer.Id,
+                    TmdbId = 27_200 + month,
+                    Title = $"Film vu {month}",
+                    Year = "2010",
+                    CreatedAt = past,
+                    UpdatedAt = past,
+                });
+                await events.UpdateAsync(night with
+                {
+                    Winners = [new EventWinner { MovieId = film.Id, Method = WinnerPickMethod.Wheel, PickedAt = past }],
+                    ClosedAt = past,
+                });
+            }
+        }
+
+        var watched = await _factory.CreateClient().GetFromJsonAsync<UserWatchedMoviesResponse>(
+            $"/api/v1/users/{me.Handle}/watched-movies?take=1",
+            JsonOptions);
+
+        Assert.NotNull(watched);
+        Assert.Equal("Film vu 3", Assert.Single(watched!.Items).Title);
+        Assert.Equal(3, watched.Total);
     }
 
     [Fact]

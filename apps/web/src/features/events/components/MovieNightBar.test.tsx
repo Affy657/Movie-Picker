@@ -56,6 +56,9 @@ function night(overrides: Partial<Night> = {}): Night {
     toggleSeen: vi.fn().mockResolvedValue(undefined),
     toggleWheel: vi.fn().mockResolvedValue(undefined),
     remove: vi.fn().mockResolvedValue(true),
+    voteLimitReached: false,
+    dismissVoteLimit: vi.fn(),
+    maxVotes: null,
     ...overrides,
   };
 }
@@ -171,5 +174,17 @@ describe('MovieNightBar', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Suppression impossible');
     await userEvent.click(screen.getByRole('button', { name: /fermer/i }));
     expect(state.clearActionError).toHaveBeenCalled();
+  });
+
+  it('says why a vote was refused once every vote is used', async () => {
+    const state = night({ voteLimitReached: true, maxVotes: 3 });
+    vi.mocked(useMovieNight).mockReturnValue(state);
+    renderBar();
+
+    const dialog = await screen.findByTestId('vote-limit-dialog');
+    expect(within(dialog).getByText('Limite de votes atteinte')).toBeInTheDocument();
+    expect(within(dialog).getByText(/3 votes/)).toBeInTheDocument();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Compris' }));
+    expect(state.dismissVoteLimit).toHaveBeenCalled();
   });
 });

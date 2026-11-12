@@ -91,6 +91,23 @@ describe('SegmentedRadioGroup', () => {
     expect(map).toHaveFocus();
   });
 
+  it('reports an activation through onSelect, not an arrow move', async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    setup({ onSelect });
+
+    screen.getByRole('radio', { name: 'Grille' }).focus();
+    await user.keyboard('{ArrowRight}');
+    expect(onSelect).not.toHaveBeenCalled();
+
+    screen.getByRole('radio', { name: 'Liste' }).focus();
+    await user.keyboard('{Enter}');
+    expect(onSelect).toHaveBeenLastCalledWith('list');
+
+    await user.click(screen.getByRole('radio', { name: 'Carte' }));
+    expect(onSelect).toHaveBeenLastCalledWith('map');
+  });
+
   it('keeps the label as the accessible name when an option shows its icon alone', () => {
     setup({ iconOnly: true });
     const grid = screen.getByRole('radio', { name: 'Grille' });

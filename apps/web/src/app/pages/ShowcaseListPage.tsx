@@ -5,6 +5,8 @@ import clsx from 'clsx';
 import PageLayout from '@/shared/components/PageLayout';
 import Button from '@/shared/components/Button';
 import { ROUTES } from '@/app/routes';
+import { MOVIE_PAGE_CHUNKS } from '@/app/routeChunks';
+import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useRecommendationSeed } from '@/app/pages/home/usePersonalRows';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
@@ -287,6 +289,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
   const hasHover = useHasHoverCapability();
   const filtersPanelId = useId();
   const recommendationSeed = useRecommendationSeed(isLoggedIn && variant === 'recommendations');
+  useIdlePrefetch(MOVIE_PAGE_CHUNKS);
 
   const searchQuery = (searchParams.get('q') ?? '').trim();
   const genreParam = Number(searchParams.get('genre'));

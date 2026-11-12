@@ -63,9 +63,7 @@ export default function CreateEventInvitation({
         </p>
         <p className={styles.readyLead}>{t('events.create.invitation.lead')}</p>
         {night.configNotSaved ? (
-          <p className={styles.configWarning} role="status">
-            {t('events.create.configNotSaved')}
-          </p>
+          <output className={styles.configWarning}>{t('events.create.configNotSaved')}</output>
         ) : null}
         <div className={styles.linkRow}>
           <Link2 size={ICON_SIZE.md} aria-hidden className={styles.linkIcon} />
@@ -79,25 +77,28 @@ export default function CreateEventInvitation({
             {copied ? t('events.create.invitation.copied') : t('events.create.invitation.copy')}
           </Button>
         </div>
-        <div className={styles.inviteActions}>
-          {canNativeShare ? (
-            <Button className={styles.inviteAction} onClick={() => void nativeShare()}>
-              <Share2 size={ICON_SIZE.md} aria-hidden />
-              {t('events.create.invitation.share')}
+        <div className={styles.inviteActionsFrame}>
+          <div className={styles.inviteActions}>
+            {canNativeShare ? (
+              <Button className={styles.inviteAction} onClick={() => void nativeShare()}>
+                <Share2 size={ICON_SIZE.md} aria-hidden />
+                {t('events.create.invitation.share')}
+              </Button>
+            ) : null}
+            <EventCalendarMenu
+              title={night.title}
+              date={night.date}
+              time={night.time}
+              url={night.url}
+              triggerLabel={t('events.create.invitation.calendar')}
+              triggerClassName={styles.inviteAction}
+              opensAboveRow
+            />
+            <Button className={styles.inviteAction} onClick={onPropose}>
+              <Plus size={ICON_SIZE.md} aria-hidden />
+              {t('events.create.invitation.propose')}
             </Button>
-          ) : null}
-          <EventCalendarMenu
-            title={night.title}
-            date={night.date}
-            time={night.time}
-            url={night.url}
-            triggerLabel={t('events.create.invitation.calendar')}
-            triggerClassName={styles.inviteAction}
-          />
-          <Button className={styles.inviteAction} onClick={onPropose}>
-            <Plus size={ICON_SIZE.md} aria-hidden />
-            {t('events.create.invitation.propose')}
-          </Button>
+          </div>
         </div>
       </div>
     </ResponsiveDialog>

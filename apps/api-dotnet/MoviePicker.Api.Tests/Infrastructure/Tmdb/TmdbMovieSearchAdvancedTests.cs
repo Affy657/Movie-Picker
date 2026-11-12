@@ -7,6 +7,7 @@ using Moq.Protected;
 using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Infrastructure.Caching;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Tmdb;
 using Xunit;
@@ -200,6 +201,38 @@ public sealed class TmdbMovieSearchAdvancedTests
         var result = await sut.GetDetailsAsync(999, MovieMediaType.Movie);
 
         Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetDetailsAsync_UnknownIdAskedAgain_ReachesTmdbOnce()
+    {
+        var handler = Handler(_ => new HttpResponseMessage(HttpStatusCode.NotFound));
+        using var boundedCache = new TmdbEntryCache();
+        var sut = new TmdbMovieSearch(
+            CreateHttpClient(handler.Object),
+            Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }),
+            boundedCache,
+            new InMemorySharedCache(),
+            new SingleFlight(),
+            NullLogger<TmdbMovieSearch>.Instance);
+
+        Assert.Null(await sut.GetDetailsAsync(999, MovieMediaType.Movie));
+        Assert.Null(await sut.GetDetailsAsync(999, MovieMediaType.Movie));
+
+        handler.Protected().Verify(
+            "SendAsync", Times.Once(), ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetDetailsAsync_UnknownMovie_DoesNotHideTheSeriesOfTheSameId()
+    {
+        var handler = Handler(req => req.RequestUri!.AbsolutePath.Contains("/tv/", StringComparison.Ordinal)
+            ? Json("""{"id":999,"name":"Une série"}""")
+            : new HttpResponseMessage(HttpStatusCode.NotFound));
+        var sut = CreateSut(CreateHttpClient(handler.Object));
+
+        Assert.Null(await sut.GetDetailsAsync(999, MovieMediaType.Movie));
+        Assert.Equal("Une série", (await sut.GetDetailsAsync(999, MovieMediaType.Tv))?.Title);
     }
 
     private static readonly string[] expected = new[] { "Drame", "Thriller" };

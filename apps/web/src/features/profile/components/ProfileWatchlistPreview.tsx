@@ -8,6 +8,7 @@ import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import Card from '@/shared/components/Card';
 import Chip from '@/shared/components/Chip';
+import InlineError from '@/shared/components/InlineError';
 import { buttonClass } from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import type { RatingScale } from '@/shared/types/theme';
@@ -16,6 +17,7 @@ import MovieBrowseCard, {
   type MovieLibraryActions,
 } from '@/features/movies/components/MovieBrowseCard';
 import PosterFan from '@/features/events/components/PosterFan';
+import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
 import {
   WATCHLIST_PREVIEW_TAKE,
   fetchUserWatchlistPreview,
@@ -94,6 +96,43 @@ export default function ProfileWatchlistPreview({
     );
   }
 
+  const gridClassName = clsx(styles.grid, wide && styles.gridWide);
+
+  function renderPosters() {
+    if (count === 0) return <p className={styles.empty}>{countLabel}</p>;
+    if (query.isLoadingError) {
+      return (
+        <InlineError
+          message={t('profile.watchlist.previewLoadError')}
+          retryLabel={t('common.retry')}
+          onRetry={() => void query.refetch()}
+        />
+      );
+    }
+    if (query.isPending) {
+      return (
+        <WatchlistSkeleton label={t('profile.watchlist.loading')} gridClassName={gridClassName} />
+      );
+    }
+    return (
+      <ul className={gridClassName}>
+        {items.map((item) => (
+          <MovieBrowseCard
+            key={`${item.mediaType}|${item.tmdbId}`}
+            item={item}
+            ratingScale={ratingScale}
+            hasHover={library.hasHover}
+            isLoggedIn={library.isLoggedIn}
+            inWatchlist={library.has(item)}
+            onToggleWatchlist={() => library.toggle(item)}
+            onProposeToEvent={() => library.propose(item)}
+            onOpenDetails={() => onOpenDetails(item)}
+          />
+        ))}
+      </ul>
+    );
+  }
+
   return (
     <MoviePreviewRow
       heading={heading}
@@ -102,25 +141,7 @@ export default function ProfileWatchlistPreview({
       seeAllLabel={t('profile.watchlist.seeAll')}
       toolbar={isHidden ? <HiddenNotice className={styles.toolbar} /> : undefined}
     >
-      {count === 0 ? (
-        <p className={styles.empty}>{countLabel}</p>
-      ) : (
-        <ul className={clsx(styles.grid, wide && styles.gridWide)}>
-          {items.map((item) => (
-            <MovieBrowseCard
-              key={`${item.mediaType}|${item.tmdbId}`}
-              item={item}
-              ratingScale={ratingScale}
-              hasHover={library.hasHover}
-              isLoggedIn={library.isLoggedIn}
-              inWatchlist={library.has(item)}
-              onToggleWatchlist={() => library.toggle(item)}
-              onProposeToEvent={() => library.propose(item)}
-              onOpenDetails={() => onOpenDetails(item)}
-            />
-          ))}
-        </ul>
-      )}
+      {renderPosters()}
     </MoviePreviewRow>
   );
 }

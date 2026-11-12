@@ -33,14 +33,19 @@ function capitalize(value: string): string {
   return value.charAt(0).toLocaleUpperCase() + value.slice(1);
 }
 
-function useFocusWhenOpened(open: boolean) {
+function useFocusOnActivation(shown: boolean) {
   const ref = useRef<HTMLInputElement>(null);
-  const wasOpen = useRef(open);
+  const focusWhenShown = useRef(false);
   useEffect(() => {
-    if (open && !wasOpen.current) ref.current?.focus();
-    wasOpen.current = open;
-  }, [open]);
-  return ref;
+    if (!shown || !focusWhenShown.current) return;
+    focusWhenShown.current = false;
+    ref.current?.focus();
+  }, [shown]);
+  const focus = () => {
+    if (ref.current) ref.current.focus();
+    else focusWhenShown.current = true;
+  };
+  return [ref, focus] as const;
 }
 
 export default function CreateEventWhen({
@@ -65,8 +70,8 @@ export default function CreateEventWhen({
   const dateIsShortcut = shortcuts.some((shortcut) => shortcut.date === date);
   const showDateField = otherDateChosen || !dateIsShortcut;
   const showTimeField = otherTimeChosen || !timeShortcuts.includes(time);
-  const dateInputRef = useFocusWhenOpened(otherDateChosen);
-  const timeInputRef = useFocusWhenOpened(otherTimeChosen);
+  const [dateInputRef, focusDateInput] = useFocusOnActivation(showDateField);
+  const [timeInputRef, focusTimeInput] = useFocusOnActivation(showTimeField);
 
   const weekday = new Intl.DateTimeFormat(locale, { weekday: 'long', timeZone: 'UTC' });
   const shortDay = new Intl.DateTimeFormat(locale, {
@@ -111,6 +116,9 @@ export default function CreateEventWhen({
           }
           setOtherDateChosen(false);
           onDateChange(value);
+        }}
+        onSelect={(value) => {
+          if (value === OTHER) focusDateInput();
         }}
         ariaLabelledBy={headingId}
         className={styles.dates}
@@ -167,6 +175,9 @@ export default function CreateEventWhen({
           }
           setOtherTimeChosen(false);
           onTimeChange(value);
+        }}
+        onSelect={(value) => {
+          if (value === OTHER) focusTimeInput();
         }}
         ariaLabelledBy={timeLabelId}
         className={styles.times}

@@ -22,13 +22,12 @@ import {
   ProfileNotFoundState,
 } from '@/features/profile/components/ProfileQueryStates';
 import {
-  WATCHED_MOVIES_TAKE,
   fetchPublicProfile,
-  fetchUserWatchedMovieItems,
   followUser,
   unfollowUser,
   type PublicProfile,
 } from '@/features/profile/api/profileApi';
+import { useProfileWatchedPreview } from '@/features/profile/hooks/useProfileWatchedPreview';
 import { invalidateFollowGraph } from '@/features/profile/lib/invalidateFollowGraph';
 import { fetchUserStats } from '@/features/events/api/userStatsApi';
 import styles from './ProfilePage.module.css';
@@ -95,12 +94,7 @@ export default function ProfilePage() {
     retry: false,
   });
 
-  const watchedQuery = useQuery({
-    queryKey: queryKeys.profile.watchedMovies(handle, WATCHED_MOVIES_TAKE),
-    queryFn: ({ signal }) => fetchUserWatchedMovieItems(handle ?? '', signal),
-    enabled: !!handle,
-    retry: false,
-  });
+  const watchedQuery = useProfileWatchedPreview(handle);
 
   const profile = profileQuery.data;
   const isOwnProfile = !!user && !!profile && user.handle === profile.handle;
@@ -207,7 +201,8 @@ export default function ProfilePage() {
         {stats && (
           <ProfileStatsSection
             stats={stats}
-            watchedCount={watchedQuery.data?.length}
+            watchedCount={watchedQuery.data?.total}
+            watchedPending={watchedQuery.isPending}
             watchedTo={ROUTES.profileMovies(profile.handle)}
           />
         )}

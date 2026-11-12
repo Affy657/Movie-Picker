@@ -24,14 +24,21 @@ public sealed partial class TmdbMovieSearch
         var cacheKey = $"tmdb-details:{typeSegment}:{tmdbId}";
         var ttl = TimeSpan.FromHours(Math.Clamp(_options.TmdbEnrichmentCacheHours, 1, 168));
 
-        if (_cache.TryGetValue(cacheKey, out object? boxed) && boxed is TmdbMovieDetails cached)
-            return cached;
+        if (_cache.TryGetValue(cacheKey, out object? boxed))
+        {
+            if (boxed is TmdbMovieDetails cached)
+                return cached;
+            if (boxed is TmdbNotFoundMarker)
+                return null;
+        }
 
         try
         {
             var fresh = await FetchDetailsUncachedAsync(tmdbId, mediaType, ct).ConfigureAwait(false);
-            if (fresh is not null)
-                _cache.Set(cacheKey, fresh, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl, Size = 1 });
+            _cache.Set<object>(
+                cacheKey,
+                fresh ?? (object)TmdbNotFoundMarker.Instance,
+                new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = fresh is null ? NotFoundCacheTtl : ttl, Size = 1 });
             return fresh;
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)

@@ -31,6 +31,10 @@ export const ROUTE_CHUNKS = {
 
 type RouteChunkName = keyof typeof ROUTE_CHUNKS;
 
+export const MOVIE_PAGE_CHUNKS: ReadonlyArray<() => Promise<unknown>> = [
+  () => ROUTE_CHUNKS.moviePage(),
+];
+
 const CHUNK_BY_PATH: ReadonlyMap<string, RouteChunkName> = new Map([
   [ROUTES.home, 'home'],
   [ROUTES.myEvents, 'myEvents'],

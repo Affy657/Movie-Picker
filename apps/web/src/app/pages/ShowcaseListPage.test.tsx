@@ -1,13 +1,14 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { stubHoverCapability } from '@/test-utils/matchMedia';
 import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
 import ShowcaseListPage, { type ShowcaseListVariant } from '@/app/pages/ShowcaseListPage';
+import { ROUTE_CHUNKS } from '@/app/routeChunks';
 
 const ACTION_GENRE = 28;
 const DRAMA_GENRE = 18;
@@ -76,6 +77,38 @@ function LocationProbe() {
   return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
 }
 
+function FilmPageStub() {
+  const navigate = useNavigate();
+  return (
+    <button type="button" onClick={() => navigate(-1)}>
+      Retour
+    </button>
+  );
+}
+
+const longShowcaseHandler = http.get(`${TEST_API_V1}/movies/showcase`, () =>
+  HttpResponse.json({
+    section: 'trending',
+    theme: null,
+    items: Array.from({ length: 30 }, (_, index) => item(index + 1, ACTION_GENRE)),
+    disclaimer: 'TMDB',
+    tmdbAttributionUrl: 'https://www.themoviedb.org/',
+  })
+);
+
+function renderPageWithFilmPage() {
+  return render(
+    <AppTestProviders client={createTestQueryClient()}>
+      <MemoryRouter initialEntries={['/films/tendances']}>
+        <Routes>
+          <Route path="/films/tendances" element={<ShowcaseListPage variant="trending" />} />
+          <Route path="/film/:movieRef" element={<FilmPageStub />} />
+        </Routes>
+      </MemoryRouter>
+    </AppTestProviders>
+  );
+}
+
 function renderPage(
   variant: ShowcaseListVariant,
   entry: string,
@@ -101,6 +134,8 @@ describe('ShowcaseListPage', () => {
   afterEach(() => {
     server.resetHandlers();
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    sessionStorage.clear();
   });
   afterAll(() => server.close());
 
@@ -366,5 +401,50 @@ describe('ShowcaseListPage', () => {
     await userEvent.click(screen.getByRole('button', { name: POSTER_FILM_1 }));
 
     expect(screen.getByTestId('location')).toHaveTextContent('/film/2001-film-1');
+  });
+
+  it('comes back from a film page on the same sort and the same revealed films', async () => {
+    const user = userEvent.setup();
+    server.use(authMeGuestHandler, longShowcaseHandler);
+    renderPageWithFilmPage();
+
+    await screen.findByText('Film 1');
+    await user.click(screen.getByRole('button', { name: /titre/i }));
+    await user.click(screen.getByRole('button', { name: /charger les 6 films restants/i }));
+    await user.click(screen.getByRole('button', { name: /voir les détails de « film 30 »/i }));
+    await user.click(await screen.findByRole('button', { name: 'Retour' }));
+
+    expect(await screen.findByText('Film 30')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /titre/i })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByRole('button', { name: /films restants/i })).not.toBeInTheDocument();
+  });
+
+  it('comes back from a film page with the search still typed', async () => {
+    const user = userEvent.setup();
+    server.use(authMeGuestHandler, showcaseHandler);
+    renderPageWithFilmPage();
+
+    await screen.findByText('Film 1');
+    await user.type(screen.getByLabelText(/filtrer dans cette liste/i), 'Film 3');
+    await user.click(screen.getByRole('button', { name: /voir les détails de « film 3 »/i }));
+    await user.click(await screen.findByRole('button', { name: 'Retour' }));
+
+    expect(await screen.findByLabelText(/filtrer dans cette liste/i)).toHaveValue('Film 3');
+    expect(screen.queryByText('Film 1')).not.toBeInTheDocument();
+  });
+
+  it('loads the film page code while the browser is idle', async () => {
+    vi.stubGlobal('requestIdleCallback', (callback: () => void) => {
+      callback();
+      return 1;
+    });
+    vi.stubGlobal('cancelIdleCallback', vi.fn());
+    const loadMoviePage = vi.spyOn(ROUTE_CHUNKS, 'moviePage').mockResolvedValue({} as never);
+    server.use(authMeGuestHandler, showcaseHandler);
+
+    renderPage('trending', '/films/tendances', '/films/tendances');
+
+    expect(await screen.findByText('Film 1')).toBeInTheDocument();
+    expect(loadMoviePage).toHaveBeenCalled();
   });
 });

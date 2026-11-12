@@ -5,6 +5,7 @@ import {
   fetchFollowers,
   fetchFollowing,
   fetchPublicProfile,
+  fetchUserWatchedMoviesPreview,
   fetchUserWatchlist,
   followUser,
   unfollowUser,
@@ -97,6 +98,28 @@ describe('profileApi', () => {
     expect(mockFetchApi).toHaveBeenNthCalledWith(2, '/users/bob/watchlist?skip=2&take=2', {
       signal: controller.signal,
     });
+  });
+
+  it('fetchUserWatchedMoviesPreview asks for a small page and keeps the total of every viewing', async () => {
+    const controller = new AbortController();
+    const inception = { tmdbId: 27205, title: 'Inception', watchedAt: '2026-06-01T00:00:00Z' };
+    mockFetchApi.mockResolvedValue({ items: [inception], total: 250 });
+
+    const preview = await fetchUserWatchedMoviesPreview('a b', controller.signal);
+
+    expect(mockFetchApi).toHaveBeenCalledWith('/users/a%20b/watched-movies?take=24', {
+      signal: controller.signal,
+    });
+    expect(preview).toEqual({ items: [inception], total: 250 });
+  });
+
+  it('fetchUserWatchedMoviesPreview counts the received viewings when the API sends no total', async () => {
+    const viewing = (tmdbId: number) => ({ tmdbId, watchedAt: '2026-06-01T00:00:00Z' });
+    mockFetchApi.mockResolvedValue({ items: [viewing(1), viewing(2), viewing(1)] });
+
+    const preview = await fetchUserWatchedMoviesPreview('bob');
+
+    expect(preview.total).toBe(3);
   });
 
   it('fetchUserStats forwards the abort signal', async () => {

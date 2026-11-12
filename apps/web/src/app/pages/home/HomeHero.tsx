@@ -78,11 +78,35 @@ function HomeSearch() {
   );
 }
 
-function CreateNightCard({ isMobile }: Readonly<{ isMobile: boolean }>) {
+function CreateNightCard({
+  isMobile,
+  onCreate,
+}: Readonly<{ isMobile: boolean; onCreate: (() => void) | null }>) {
   const { t } = useTranslation();
 
   if (isMobile) {
-    return (
+    const content = (
+      <>
+        <WheelGlyph className={styles.wheelSmall} />
+        <span className={styles.createText}>
+          <span className={styles.createTitle}>{t('home.createNight.title')}</span>
+          <span className={styles.createBody}>{t('home.createNight.bodyShort')}</span>
+        </span>
+        <ChevronRight size={ICON_SIZE.md} aria-hidden className={styles.createChevron} />
+      </>
+    );
+    return onCreate ? (
+      <Card
+        as="button"
+        type="button"
+        onClick={onCreate}
+        interactive
+        padding="none"
+        className={styles.createCompact}
+      >
+        {content}
+      </Card>
+    ) : (
       <Card
         as={Link}
         to={ROUTES.createEvent}
@@ -90,12 +114,7 @@ function CreateNightCard({ isMobile }: Readonly<{ isMobile: boolean }>) {
         padding="none"
         className={styles.createCompact}
       >
-        <WheelGlyph className={styles.wheelSmall} />
-        <span className={styles.createText}>
-          <span className={styles.createTitle}>{t('home.createNight.title')}</span>
-          <span className={styles.createBody}>{t('home.createNight.bodyShort')}</span>
-        </span>
-        <ChevronRight size={ICON_SIZE.md} aria-hidden className={styles.createChevron} />
+        {content}
       </Card>
     );
   }
@@ -107,9 +126,15 @@ function CreateNightCard({ isMobile }: Readonly<{ isMobile: boolean }>) {
         <p className={styles.createTitle}>{t('home.createNight.title')}</p>
         <p className={styles.createBody}>{t('home.createNight.body')}</p>
         <div className={styles.createActions}>
-          <Link to={ROUTES.createEvent} className={buttonClass({ variant: 'primary' })}>
-            {t('home.createNight.action')}
-          </Link>
+          {onCreate ? (
+            <Button variant="primary" onClick={onCreate}>
+              {t('home.createNight.action')}
+            </Button>
+          ) : (
+            <Link to={ROUTES.createEvent} className={buttonClass({ variant: 'primary' })}>
+              {t('home.createNight.action')}
+            </Link>
+          )}
           <Link to={ROUTES.howItWorks} className={styles.textLink}>
             {t('home.createNight.howItWorks')}
             <ChevronRight size={ICON_SIZE.sm} aria-hidden />
@@ -131,7 +156,9 @@ function NightPanel() {
     return <div className={styles.panelPlaceholder} aria-hidden="true" />;
   }
 
-  if (!next.event) return <CreateNightCard isMobile={isMobile} />;
+  if (!next.event) {
+    return <CreateNightCard isMobile={isMobile} onCreate={user ? () => openCreateEvent() : null} />;
+  }
 
   if (isMobile) {
     return <UpcomingEventCard event={next.event} eyebrow={t('home.nextEvent.title')} />;

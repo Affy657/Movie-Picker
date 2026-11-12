@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useCallback, useMemo, useState, type ReactNode } from 'react';
 import {
   CreateEventDialogContext,
   loadCreateEventDialog,
@@ -16,6 +16,10 @@ export default function CreateEventDialogProvider({ children }: Readonly<{ child
     setSession((current) => ({ id: (current?.id ?? 0) + 1, options }));
   }, []);
 
+  const dismiss = useCallback(() => setSession(null), []);
+
+  const controls = useMemo(() => ({ open, dismiss }), [open, dismiss]);
+
   const close = () => {
     const onClosed = session?.options.onClosed;
     setSession(null);
@@ -23,7 +27,7 @@ export default function CreateEventDialogProvider({ children }: Readonly<{ child
   };
 
   return (
-    <CreateEventDialogContext.Provider value={open}>
+    <CreateEventDialogContext.Provider value={controls}>
       {children}
       {session ? (
         <Suspense fallback={null}>

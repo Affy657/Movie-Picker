@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { useNavigate } from 'react-router';
 import clsx from 'clsx';
 import { SlidersHorizontal } from 'lucide-react';
@@ -61,7 +61,7 @@ type Step = 'form' | 'invitation';
 type RulesOrigin =
   | { kind: 'defaults' }
   | { kind: 'template' }
-  | { kind: 'night'; title: string; draft: TemplateConfigDraft | null };
+  | { kind: 'night'; slug: string; title: string; draft: TemplateConfigDraft | null };
 
 function withoutTheme(draft: TemplateConfigDraft): TemplateConfigDraft {
   return { ...draft, theme: null };
@@ -73,7 +73,7 @@ function sameRules(left: TemplateConfigDraft, right: TemplateConfigDraft): boole
 
 type RulesSummary =
   | { kind: 'template'; template: EventTemplateData }
-  | { kind: 'night'; title: string }
+  | { kind: 'night'; slug: string; title: string }
   | { kind: 'defaults' }
   | { kind: 'custom' };
 
@@ -90,7 +90,7 @@ function summarizeRules(
     return { kind: 'template', template: appliedTemplate };
   }
   if (origin.kind === 'night' && origin.draft !== null && sameRules(draft, origin.draft)) {
-    return { kind: 'night', title: origin.title };
+    return { kind: 'night', slug: origin.slug, title: origin.title };
   }
   if (sameRules(draft, buildTemplateDraft(defaultTemplateFields()))) return { kind: 'defaults' };
   return { kind: 'custom' };
@@ -118,6 +118,37 @@ function firstInvalidPart(errors: CreateEventFieldErrors): 'title' | 'when' | 'r
   if (errors.date || errors.time) return 'when';
   if (hasLimitError(errors)) return 'rules';
   return null;
+}
+
+function distinctNights(nights: ReadonlyArray<CreateEventReuse | null>): CreateEventReuse[] {
+  const listed: CreateEventReuse[] = [];
+  for (const night of nights) {
+    if (night && !listed.some((other) => other.slug === night.slug)) listed.push(night);
+  }
+  return listed;
+}
+
+function useCloseUnlessCreating(
+  creating: boolean,
+  onClose: () => void,
+  insideRef: RefObject<HTMLElement | null>
+): () => void {
+  useEffect(() => {
+    const dialog = insideRef.current?.closest('dialog');
+    if (!creating || !dialog) return;
+    const keepOpen = (event: Event) => event.preventDefault();
+    dialog.addEventListener('cancel', keepOpen);
+    return () => dialog.removeEventListener('cancel', keepOpen);
+  }, [creating, insideRef]);
+
+  return () => {
+    if (!creating) {
+      onClose();
+      return;
+    }
+    const dialog = insideRef.current?.closest('dialog');
+    if (dialog && !dialog.open) dialog.showModal();
+  };
 }
 
 function useLastHostedNight(enabled: boolean): CreateEventReuse | null {
@@ -199,6 +230,7 @@ export default function CreateEventDialog({
     forgetTemplate();
     setOrigin({
       kind: 'night',
+      slug: reuseTarget.slug,
       title: reuseTarget.title,
       draft: buildTemplateDraft(reusedFields),
     });
@@ -281,6 +313,7 @@ export default function CreateEventDialog({
     loading,
     error,
   } = useAsyncAction(createAction, t('events.create.fallbackError'));
+  const requestClose = useCloseUnlessCreating(loading, onClose, titleRef);
 
   const limitErrors = () =>
     validateEventLimits(
@@ -347,7 +380,7 @@ export default function CreateEventDialog({
     <>
       <ResponsiveDialog
         open={open}
-        onClose={onClose}
+        onClose={requestClose}
         title={t('events.create.title')}
         footer={
           <div className={styles.footer}>
@@ -431,7 +464,8 @@ export default function CreateEventDialog({
         onChange={updateFields}
         selected={rules.kind === 'custom' ? null : rules.kind}
         selectedTemplateId={rules.kind === 'template' ? rules.template.id : null}
-        lastNight={lastNight}
+        selectedNightSlug={rules.kind === 'night' ? rules.slug : null}
+        nights={distinctNights([reuse, lastNight])}
         templates={eventTemplates.templates}
         onChoose={chooseRules}
         canSaveTemplate={canSaveTemplate}

@@ -84,6 +84,18 @@ public sealed class InMemoryEventRepository : IEventRepository
     public Task<IReadOnlyList<Event>> ListAllByCreatorUserIdAsync(string creatorUserId, CancellationToken ct = default) =>
         ListByCreatorUserIdAsync(creatorUserId, int.MaxValue, ct);
 
+    public Task<IReadOnlyList<string>> ListIdsByCreatorUserIdAsync(string creatorUserId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(creatorUserId))
+            return Task.FromResult<IReadOnlyList<string>>(Array.Empty<string>());
+
+        IReadOnlyList<string> ids = _byId.Values
+            .Where(e => e.CreatorUserId == creatorUserId)
+            .Select(e => e.Id)
+            .ToList();
+        return Task.FromResult(ids);
+    }
+
     public Task<IReadOnlyList<Event>> ListByCreatorUserIdAsync(string creatorUserId, int limit, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(creatorUserId) || limit <= 0)

@@ -10,12 +10,23 @@ export type OpenCreateEventOptions = {
 
 export type OpenCreateEvent = (options?: OpenCreateEventOptions) => void;
 
-export const CreateEventDialogContext = createContext<OpenCreateEvent | null>(null);
+export type CreateEventDialogControls = {
+  open: OpenCreateEvent;
+  dismiss: () => void;
+};
+
+export const CreateEventDialogContext = createContext<CreateEventDialogControls | null>(null);
 
 export const loadCreateEventDialog = () => import('./CreateEventDialog');
 
+const ignoreDismiss = () => undefined;
+
 export function useOpenCreateEvent(): OpenCreateEvent {
-  const open = useContext(CreateEventDialogContext);
+  const controls = useContext(CreateEventDialogContext);
   const navigate = useNavigate();
-  return open ?? (() => navigate(ROUTES.createEvent));
+  return controls?.open ?? (() => navigate(ROUTES.createEvent));
+}
+
+export function useDismissCreateEvent(): () => void {
+  return useContext(CreateEventDialogContext)?.dismiss ?? ignoreDismiss;
 }

@@ -8,6 +8,7 @@ import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
 import { stubHoverCapability } from '@/test-utils/matchMedia';
 import HomePage from '@/app/pages/HomePage';
+import { ROUTE_CHUNKS } from '@/app/routeChunks';
 
 function showcaseItems(prefix: string, count: number) {
   return Array.from({ length: count }, (_, index) => ({
@@ -107,6 +108,18 @@ function LocationProbe() {
   return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
 }
 
+function renderHomeAt(entry: { pathname: string; key: string }) {
+  return render(
+    <AppTestProviders>
+      <MemoryRouter initialEntries={[entry]}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+        </Routes>
+      </MemoryRouter>
+    </AppTestProviders>
+  );
+}
+
 function renderPage(initialEntry = '/') {
   return render(
     <AppTestProviders>
@@ -127,8 +140,50 @@ describe('HomePage', () => {
   afterEach(() => {
     server.resetHandlers();
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    sessionStorage.clear();
   });
   afterAll(() => server.close());
+
+  it('comes back on the genre and the platform picked before leaving', async () => {
+    server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
+    const user = userEvent.setup();
+    const homeEntry = { pathname: '/', key: 'home-entry' };
+    const first = renderHomeAt(homeEntry);
+    const genres = await screen.findByRole('tablist', { name: /genre/i });
+    await user.click(within(genres).getByRole('tab', { name: 'Comédie' }));
+    const platforms = screen.getByRole('tablist', { name: /plateforme/i });
+    await user.click(within(platforms).getByRole('tab', { name: 'Disney+' }));
+    first.unmount();
+
+    renderHomeAt(homeEntry);
+
+    const genresAgain = await screen.findByRole('tablist', { name: /genre/i });
+    expect(within(genresAgain).getByRole('tab', { name: 'Comédie' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    expect(
+      within(screen.getByRole('tablist', { name: /plateforme/i })).getByRole('tab', {
+        name: 'Disney+',
+      })
+    ).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('loads the film page code while the browser is idle', async () => {
+    vi.stubGlobal('requestIdleCallback', (callback: () => void) => {
+      callback();
+      return 1;
+    });
+    vi.stubGlobal('cancelIdleCallback', vi.fn());
+    const loadMoviePage = vi.spyOn(ROUTE_CHUNKS, 'moviePage').mockResolvedValue({} as never);
+    server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
+
+    renderPage();
+
+    await screen.findByRole('tablist', { name: /genre/i });
+    expect(loadMoviePage).toHaveBeenCalled();
+  });
 
   const posterCard = async (title: string) =>
     (await screen.findByRole('heading', { name: title, level: 3 })).closest('li') as HTMLElement;
