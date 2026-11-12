@@ -8,11 +8,27 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Fixed
+
+- **En revenant de la page d'un film, la liste reprend là où vous étiez** : recherche, filtres, tri, films déjà chargés et position dans la page dans Explorer et les collections d'un profil, genre et plateforme choisis sur l'accueil, tri de la soirée, et tirage au hasard de votre liste.
+- **La page d'un film ou d'une série s'ouvre plus vite** depuis les listes et les soirées, affiche un état de chargement, garde ses boutons inactifs tant que le titre n'est pas connu, propose de réessayer si ses informations ne chargent pas et ramène à l'accueil quand le titre n'existe pas.
+- **Sur la page d'un film ouvert depuis une soirée, un vote refusé parce que tous vos votes sont posés vous l'explique**, et un ajout à votre liste qui échoue s'affiche au lieu de passer inaperçu.
+- **La rubrique « Dans vos soirées » d'une page de film se met à jour** après une proposition ou un film marqué comme vu.
+- **Le bouton Retour du navigateur se comporte comme attendu** : après avoir retiré un film d'une soirée depuis sa page, il ne ramène plus sur la même soirée, et les anciens liens vers un film s'ouvrent sans erreur puis ramènent à la liste d'où ils venaient.
+- **Les pages de séries parlent de série**, et la phrase d'accroche d'un film suit la ponctuation de la langue choisie.
+- **« Nouvelle soirée » ne crée plus de soirée en double** : fermer la fenêtre pendant la création ne la crée plus sans vous le dire, la fenêtre reste ouverte jusqu'au lien d'invitation, et son menu « Calendrier » s'affiche en entier.
+- **Recharger une soirée tout juste créée, ou y revenir depuis la page d'un film, ne rouvre plus « Proposer un film »** ni l'avertissement sur les options.
+- **« Créer une soirée » s'ouvre sur place depuis l'accueil**, l'annuler vous y laisse, et la fenêtre s'ouvre sans délai au premier appui sur téléphone. Le lien de création ouvert avec une session expirée n'affiche plus la fenêtre par-dessus la page de connexion.
+- **Au clavier, les flèches parcourent les jours et les heures de « Nouvelle soirée »** sans entrer dans le champ « Autre » ; Entrée ou Espace l'ouvre. En refaisant une soirée, la pastille mise en avant dans les règles est bien celle que vous refaites.
+- **Sur téléphone, toucher le logo ne déclenche plus son animation.**
+- **Le profil se charge plus vite et compte tous vos films vus**, au-delà de 200. La watchlist et les films vus y affichent un état de chargement et un bouton Réessayer quand ils n'ont pas pu être chargés.
+- **Sur téléphone, les chiffres d'un profil passent à la ligne** au lieu de défiler hors de l'écran, et sa watchlist se lit dans l'ordre où elle s'affiche.
+
 ## [1.12.0] - 2026-11-12
 
 ### Added
 
-- **Créer une soirée sans quitter l'écran** : « Nouvelle soirée » n'est plus un onglet mais un bouton bleu dans l'en-tête (« Créer » dans la barre du bas sur téléphone), qui ouvre une fenêtre par-dessus la page. On y choisit le jour d'un clic (ce soir, demain, le week-end) et l'heure, le nom suit la date, l'ambiance se choisit en une puce, et les règles s'ouvrent dans leur propre fenêtre, sans perdre la saisie : on part des réglages par défaut, de votre dernière soirée ou de l'un de vos modèles, puis on ajuste chaque règle.
+- **Créer une soirée sans quitter l'écran** : « Nouvelle soirée » n'est plus un onglet mais un bouton dans l'en-tête (« Créer » dans la barre du bas sur téléphone), qui ouvre une fenêtre par-dessus la page. On y choisit le jour d'un clic (ce soir, demain, le week-end) et l'heure, le nom suit la date, l'ambiance se choisit en une puce, et les règles s'ouvrent dans leur propre fenêtre, sans perdre la saisie : on part des réglages par défaut, de votre dernière soirée ou de l'un de vos modèles, puis on ajuste chaque règle.
 - **Le lien à envoyer dès la création** : une fois la soirée créée, la fenêtre donne son lien à copier ou à partager, l'ajout au calendrier, et ouvre la soirée prête à proposer le premier film.
 
 ### Changed
