@@ -25,15 +25,23 @@ const onTile = (scale) =>
   renderAppIconSvg({ scale, background: BRAND_COLORS.tile, clap: BRAND_COLORS.clapOnDark });
 
 const icons = [
-  { name: 'pwa-64x64.png', size: 64, svg: transparent },
-  { name: 'pwa-192x192.png', size: 192, svg: transparent },
-  { name: 'pwa-512x512.png', size: 512, svg: transparent },
-  { name: 'apple-touch-icon.png', size: 180, svg: onTile(0.8) },
-  { name: 'pwa-512x512-maskable.png', size: 512, svg: onTile(0.7) },
+  { name: 'clap-64x64.png', size: 64, svg: transparent },
+  { name: 'clap-192x192.png', size: 192, svg: transparent },
+  { name: 'clap-512x512.png', size: 512, svg: transparent },
+  { name: 'clap-apple-touch-icon.png', size: 180, svg: onTile(0.8) },
+  { name: 'clap-512x512-maskable.png', size: 512, svg: onTile(0.7) },
 ];
 
+const VIEW_BOX_WIDTH = /viewBox="\S+ \S+ (\S+) \S+"/;
+
+const viewBoxWidth = (svg) => {
+  const match = VIEW_BOX_WIDTH.exec(svg);
+  if (!match) throw new Error('The icon SVG has no viewBox.');
+  return Number(match[1]);
+};
+
 const rasterize = (svg, size) =>
-  sharp(Buffer.from(svg), { density: (72 * size) / 64 })
+  sharp(Buffer.from(svg), { density: (72 * size) / viewBoxWidth(svg) })
     .resize(size, size)
     .png();
 
