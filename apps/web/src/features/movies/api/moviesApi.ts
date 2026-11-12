@@ -111,9 +111,79 @@ export interface MovieDetails {
   episodeCount: number | null;
   watchProviders: WatchProviderOffer[];
   tmdbWatchPageUrl: string | null;
+  originalTitle: string | null;
+  originalLanguage: string | null;
+  productionCountries: string[];
+  budget: number | null;
+  voteCount: number | null;
+  certification: string | null;
+  collection: MovieCollectionRef | null;
+  directorId: number | null;
+  castMembers: MovieCastMember[];
+  crew: MovieCrewMember[];
+  videos: MovieVideo[];
 }
 
-interface RawMovieDetailsResponse {
+export interface MovieCollectionRef {
+  id: number;
+  name: string;
+}
+
+export interface MovieCastMember {
+  name: string;
+  character: string | null;
+  profilePath: string | null;
+}
+
+export type MovieCrewJob = 'director' | 'writer' | 'composer' | 'photography' | 'creator';
+
+export interface MovieCrewMember {
+  job: MovieCrewJob;
+  name: string;
+}
+
+export interface MovieVideo {
+  key: string;
+  name: string;
+  type: string;
+  language: string | null;
+}
+
+interface RawMovieDetailsPageFields {
+  originalTitle?: string | null;
+  originalLanguage?: string | null;
+  productionCountries?: string[] | null;
+  budget?: number | null;
+  voteCount?: number | null;
+  certification?: string | null;
+  collection?: MovieCollectionRef | null;
+  directorId?: number | null;
+  castMembers?: MovieCastMember[] | null;
+  crew?: MovieCrewMember[] | null;
+  videos?: MovieVideo[] | null;
+}
+
+function listOrEmpty<T>(value: T[] | null | undefined): T[] {
+  return Array.isArray(value) ? value : [];
+}
+
+function mapPageFields(raw: RawMovieDetailsPageFields) {
+  return {
+    originalTitle: raw.originalTitle ?? null,
+    originalLanguage: raw.originalLanguage ?? null,
+    productionCountries: listOrEmpty(raw.productionCountries),
+    budget: raw.budget ?? null,
+    voteCount: raw.voteCount ?? null,
+    certification: raw.certification ?? null,
+    collection: raw.collection ?? null,
+    directorId: raw.directorId ?? null,
+    castMembers: listOrEmpty(raw.castMembers),
+    crew: listOrEmpty(raw.crew),
+    videos: listOrEmpty(raw.videos),
+  };
+}
+
+interface RawMovieDetailsResponse extends RawMovieDetailsPageFields {
   tmdbId?: number;
   mediaType?: MovieMediaType;
   title?: string;
@@ -164,6 +234,52 @@ export async function fetchMovieDetails(
     episodeCount: raw.episodeCount ?? null,
     watchProviders: Array.isArray(raw.watchProviders) ? raw.watchProviders : [],
     tmdbWatchPageUrl: raw.tmdbWatchPageUrl ?? null,
+    ...mapPageFields(raw),
+  };
+}
+
+export interface MovieNight {
+  slug: string;
+  title: string;
+  date: string | null;
+  isWinner: boolean;
+  isFinished: boolean;
+  recapSlug: string | null;
+  proposerPseudo: string;
+}
+
+export interface MovieNightViewer {
+  pseudo: string;
+  avatarId: string | null;
+}
+
+export interface MovieNights {
+  nights: MovieNight[];
+  proposalCount: number;
+  winCount: number;
+  rating: { average: number; count: number } | null;
+  seenBy: MovieNightViewer[];
+  seenCount: number;
+}
+
+type RawMovieNights = Partial<{ [K in keyof MovieNights]: MovieNights[K] | null }>;
+
+export async function fetchMovieNights(
+  tmdbId: number,
+  opts?: { signal?: AbortSignal; mediaType?: MovieMediaType }
+): Promise<MovieNights> {
+  const qs: QueryString = opts?.mediaType ? `?mediaType=${opts.mediaType}` : '';
+  const raw = await fetchApi<RawMovieNights>(
+    `${apiPath('movies', 'tmdb', tmdbId, 'nights')}${qs}`,
+    opts?.signal ? { signal: opts.signal } : undefined
+  );
+  return {
+    nights: listOrEmpty(raw.nights),
+    proposalCount: raw.proposalCount ?? 0,
+    winCount: raw.winCount ?? 0,
+    rating: raw.rating ?? null,
+    seenBy: listOrEmpty(raw.seenBy),
+    seenCount: raw.seenCount ?? 0,
   };
 }
 

@@ -1,5 +1,41 @@
+import type { MovieMediaType } from '@/shared/types/movie';
+
 const EVENT_PREFIX = '/e';
 const RECAP_PREFIX = '/r';
+
+export const NIGHT_QUERY_PARAM = 'soiree';
+
+const MOVIE_SLUG_MAX_LENGTH = 60;
+
+const MOVIE_PAGE_PREFIX: Record<MovieMediaType, string> = { movie: '/film', tv: '/serie' };
+
+export interface MoviePageRef {
+  tmdbId: number;
+  mediaType?: MovieMediaType;
+  title?: string;
+}
+
+export function movieSlug(title: string): string {
+  const words = title
+    .normalize('NFD')
+    .replaceAll(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
+  return words.join('-').slice(0, MOVIE_SLUG_MAX_LENGTH).replace(/-$/, '');
+}
+
+export function parseMovieRef(movieRef: string | undefined): number | null {
+  const id = Number(/^\d+/.exec(movieRef ?? '')?.[0]);
+  return Number.isSafeInteger(id) && id > 0 ? id : null;
+}
+
+function moviePagePath({ tmdbId, mediaType = 'movie', title }: MoviePageRef, nightSlug?: string) {
+  const slug = title ? movieSlug(title) : '';
+  const ref = slug ? [tmdbId, slug].join('-') : String(tmdbId);
+  const path = `${MOVIE_PAGE_PREFIX[mediaType]}/${ref}`;
+  return nightSlug ? `${path}?${NIGHT_QUERY_PARAM}=${encodeURIComponent(nightSlug)}` : path;
+}
 
 export const RATE_QUERY_PARAM = 'rate';
 
@@ -54,6 +90,12 @@ export const ROUTES = {
   movieCollectionPattern: '/films/collection/:collectionId',
 
   movieCollection: (collectionId: number | string) => `/films/collection/${collectionId}`,
+
+  moviePagePattern: `${MOVIE_PAGE_PREFIX.movie}/:movieRef`,
+
+  showPagePattern: `${MOVIE_PAGE_PREFIX.tv}/:movieRef`,
+
+  moviePage: moviePagePath,
 
   movieSearchFor: (query: string) =>
     query.trim() ? `/films/recherche?q=${encodeURIComponent(query.trim())}` : '/films/recherche',

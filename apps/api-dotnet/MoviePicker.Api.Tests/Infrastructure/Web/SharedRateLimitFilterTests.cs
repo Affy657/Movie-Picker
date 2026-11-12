@@ -124,6 +124,8 @@ public sealed class SharedRateLimitFilterTests
     [Theory]
     [InlineData("?section=recommendations&seedTmdbId=603")]
     [InlineData("?section=trending&genreIds=18,35")]
+    [InlineData("?section=director&personId=525")]
+    [InlineData("?section=collection&collectionId=4242")]
     public async Task ShowcaseFreeKeyQuota_OverItsLimit_RefusesAFreeKey(string query)
     {
         var policy = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.MovieShowcaseFreeKeyHourlyPolicy)!.Value;
@@ -142,6 +144,7 @@ public sealed class SharedRateLimitFilterTests
     [Theory]
     [InlineData("?section=trending&genreIds=18")]
     [InlineData("?section=collections")]
+    [InlineData("?section=collection&collectionId=1241")]
     public async Task ShowcaseFreeKeyQuota_ClosedSection_IsNeitherCountedNorRefused(string query)
     {
         var context = BuildContext(new SharedRateLimitAttribute(RateLimitingExtensions.MovieShowcaseFreeKeyHourlyPolicy));

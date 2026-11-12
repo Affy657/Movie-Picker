@@ -32,6 +32,7 @@ public sealed class MoviesShowcaseController : ControllerBase
         [FromQuery] string? provider,
         [FromQuery] int? seedTmdbId,
         [FromQuery] MovieMediaType? seedMediaType,
+        [FromQuery] int? personId,
         [FromServices] IGetMovieShowcaseHandler handler,
         CancellationToken ct)
     {
@@ -42,7 +43,8 @@ public sealed class MoviesShowcaseController : ControllerBase
             collectionId,
             provider,
             seedTmdbId,
-            seedMediaType ?? MovieMediaType.Movie);
+            seedMediaType ?? MovieMediaType.Movie,
+            personId);
         var result = await handler.HandleAsync(query, ct);
         Response.Headers.CacheControl = PublicCacheControl;
         return Ok(result);

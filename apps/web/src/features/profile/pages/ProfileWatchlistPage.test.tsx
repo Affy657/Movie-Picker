@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import ProfileWatchlistPage from '@/features/profile/pages/ProfileWatchlistPage';
@@ -38,6 +38,11 @@ function watchlistItem(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
+}
+
 function renderPage(handle: string) {
   return render(
     <AppTestProviders>
@@ -47,6 +52,7 @@ function renderPage(handle: string) {
           <Route path="/u/:handle" element={<div data-testid="route-profile" />} />
           <Route path="/" element={<div data-testid="route-home" />} />
         </Routes>
+        <LocationProbe />
       </MemoryRouter>
     </AppTestProviders>
   );
@@ -66,9 +72,6 @@ describe('ProfileWatchlistPage (MSW)', () => {
         total: 3,
         hasMore: false,
       })
-    ),
-    http.get(`${TEST_API_V1}/movies/tmdb/:tmdbId/details`, () =>
-      HttpResponse.json({ tmdbId: 27205, title: 'Inception', overview: 'Un voleur de rêves.' })
     )
   );
 
@@ -111,7 +114,7 @@ describe('ProfileWatchlistPage (MSW)', () => {
     expect(screen.queryByText('Inception')).not.toBeInTheDocument();
   });
 
-  it('ouvre la fiche du film au clic sur une affiche', async () => {
+  it('opens the film page when clicking a poster', async () => {
     const user = userEvent.setup();
     renderPage('alice');
     await screen.findByText('Inception');
@@ -119,8 +122,7 @@ describe('ProfileWatchlistPage (MSW)', () => {
     expect(screen.queryByRole('button', { name: /plus d.actions/i })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /voir les détails de « inception »/i }));
 
-    expect(await screen.findByRole('heading', { name: 'Inception', level: 2 })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Ajouter à ma liste' })).not.toBeInTheDocument();
+    expect(screen.getByTestId('location')).toHaveTextContent('/film/27205-inception');
   });
 
   it('hover, logged in: the poster offers the watchlist toggle and Proposer', async () => {

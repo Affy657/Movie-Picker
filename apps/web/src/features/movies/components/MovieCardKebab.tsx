@@ -13,7 +13,6 @@ import {
   Trash2,
 } from 'lucide-react';
 import clsx from 'clsx';
-import type { MovieDetailsTabKey } from '@/features/movies/components/MovieDetailsModal';
 import { letterboxdUrl } from '@/features/movies/utils/movieExternalLinks';
 import type { MovieData } from '@/shared/types/movie';
 import type { MovieWheelExclusion } from '@/features/movies/types';
@@ -101,7 +100,7 @@ export function MovieCardKebab({
     isMine: boolean;
     canRemove: boolean;
     hasDetails: boolean;
-    openDetails: (tab?: MovieDetailsTabKey) => void;
+    openDetails: () => void;
   };
   slotClassName: string;
   isHost: boolean;
@@ -120,7 +119,7 @@ export function MovieCardKebab({
     onToggleWheelExclusion
   );
   const wheelExclusion = toggleExclusion ? { excluded, onToggle: toggleExclusion } : undefined;
-  const onViewDetails = card.hasDetails ? () => card.openDetails('event') : undefined;
+  const onViewDetails = card.hasDetails ? () => card.openDetails() : undefined;
   if (
     !kebabHasActions({
       tmdbId: movie.tmdbId,

@@ -156,6 +156,35 @@ public sealed partial class TmdbMovieSearch
         return list;
     }
 
+    public async Task<IReadOnlyList<TmdbSearchItem>> GetDirectedMoviesAsync(int personId, CancellationToken ct = default)
+    {
+        RequireCredentials();
+        var url = $"{ApiBase}/person/{personId}/movie_credits?language=fr-FR";
+
+        using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
+        if (res.StatusCode == System.Net.HttpStatusCode.NotFound)
+            return [];
+        res.EnsureSuccessStatusCode();
+
+        await using var stream = await res.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+        using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
+        if (ReadArray(doc.RootElement, "crew") is not { } crew)
+            return [];
+
+        return crew.EnumerateArray()
+            .Where(credit => credit.ValueKind == JsonValueKind.Object
+                && IsDirectingCredit(credit)
+                && ReadId(credit) is not null
+                && ReadText(credit, "poster_path") is not null)
+            .Select(credit => (VoteCount: ReadVoteCount(credit) ?? 0, Item: MapListItem(credit, MovieMediaType.Movie)))
+            .Where(entry => entry.Item is not null)
+            .DistinctBy(entry => entry.Item!.Id)
+            .OrderByDescending(entry => entry.VoteCount)
+            .Take(MaxResults)
+            .Select(entry => entry.Item!)
+            .ToList();
+    }
+
     private async Task<JsonDocument?> FetchCollectionRootAsync(int collectionId, CancellationToken ct)
     {
         RequireCredentials();

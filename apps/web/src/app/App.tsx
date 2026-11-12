@@ -46,6 +46,7 @@ const ProfilePage = lazy(ROUTE_CHUNKS.profile);
 const ProfileMoviesPage = lazy(ROUTE_CHUNKS.profileMovies);
 const ProfileWatchlistPage = lazy(ROUTE_CHUNKS.profileWatchlist);
 const NotFoundPage = lazy(ROUTE_CHUNKS.notFound);
+const MoviePage = lazy(ROUTE_CHUNKS.moviePage);
 
 function PageFallback() {
   const { t } = useTranslation();
@@ -86,6 +87,8 @@ export function AppRoutes() {
           path={ROUTES.movieCollectionPattern}
           element={<ShowcaseListPage variant="collection" />}
         />
+        <Route path={ROUTES.moviePagePattern} element={<MoviePage mediaType="movie" />} />
+        <Route path={ROUTES.showPagePattern} element={<MoviePage mediaType="tv" />} />
         <Route
           path={ROUTES.createEvent}
           element={

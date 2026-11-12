@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import ProfileMoviesPage from '@/features/profile/pages/ProfileMoviesPage';
@@ -34,6 +34,11 @@ function movieItem(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
+}
+
 function renderPage(handle: string) {
   return render(
     <AppTestProviders>
@@ -44,6 +49,7 @@ function renderPage(handle: string) {
           <Route path="/" element={<div data-testid="route-home" />} />
           <Route path="/settings" element={<div data-testid="route-settings" />} />
         </Routes>
+        <LocationProbe />
       </MemoryRouter>
     </AppTestProviders>
   );
@@ -60,9 +66,6 @@ describe('ProfileMoviesPage (MSW)', () => {
           movieItem({ title: 'Arrival', year: '2016' }),
         ],
       })
-    ),
-    http.get(`${TEST_API_V1}/movies/tmdb/:tmdbId/details`, () =>
-      HttpResponse.json({ tmdbId: 27205, title: 'Inception', overview: 'Un voleur de rêves.' })
     )
   );
 
@@ -99,7 +102,7 @@ describe('ProfileMoviesPage (MSW)', () => {
     expect(screen.queryByText('Inception')).not.toBeInTheDocument();
   });
 
-  it('opens the details modal when clicking a poster', async () => {
+  it('opens the film page when clicking a poster', async () => {
     const user = userEvent.setup();
     renderPage('alice');
     await screen.findByText('Inception');
@@ -107,9 +110,7 @@ describe('ProfileMoviesPage (MSW)', () => {
     expect(screen.queryByRole('button', { name: /plus d.actions/i })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /voir les détails de « inception »/i }));
 
-    expect(
-      await screen.findByRole('heading', { name: 'Inception', level: 2 }, { timeout: 20000 })
-    ).toBeInTheDocument();
+    expect(screen.getByTestId('location')).toHaveTextContent('/film/27205-inception');
   });
 
   it('hover, visitor: the poster offers no library action', async () => {

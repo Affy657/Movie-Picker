@@ -484,15 +484,20 @@ public sealed class GetMovieShowcaseHandlerTests
     [Theory]
     [InlineData(MovieShowcaseSections.Recommendations)]
     [InlineData(MovieShowcaseSections.Collection)]
+    [InlineData(MovieShowcaseSections.Director)]
     public async Task HandleAsync_SectionKeyedOnAnArbitraryId_StaysOutOfTheSharedCache(string section)
     {
         _tmdb.Setup(t => t.GetRecommendationsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(2));
         _tmdb.Setup(t => t.GetCollectionMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(2));
+        _tmdb.Setup(t => t.GetDirectedMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Items(2));
 
-        await Build().HandleAsync(new MovieShowcaseQuery(
-            section, CollectionId: MovieShowcaseCatalog.CollectionIds[0], SeedTmdbId: 4242));
+        var result = await Build().HandleAsync(new MovieShowcaseQuery(
+            section, CollectionId: MovieShowcaseCatalog.CollectionIds[0], SeedTmdbId: 4242, PersonId: 525));
+
+        Assert.Equal(2, result.Items.Count);
 
         _shared.Verify(
             c => c.TryGetAsync<IReadOnlyList<MovieShowcaseItemResponse>>(It.IsAny<string>(), It.IsAny<CancellationToken>()),
@@ -606,10 +611,21 @@ public sealed class GetMovieShowcaseHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_CollectionOutOfTheCatalog_IsRejectedBeforeReachingTmdb()
+    public async Task HandleAsync_CollectionOutOfTheCatalog_IsReadFromTmdb()
+    {
+        _tmdb.Setup(t => t.GetCollectionMoviesAsync(4242, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Items(3));
+
+        var result = await Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Collection, CollectionId: 4242));
+
+        Assert.Equal(3, result.Items.Count);
+    }
+
+    [Fact]
+    public async Task HandleAsync_CollectionBeyondAnyTmdbIdentifier_IsRejectedBeforeReachingTmdb()
     {
         var ex = await Assert.ThrowsAsync<BadRequestException>(
-            () => Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Collection, CollectionId: 4242)));
+            () => Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Collection, CollectionId: 2_000_000_000)));
 
         Assert.Equal(ErrorCodes.UnknownCollection, ex.Reason);
         _tmdb.Verify(t => t.GetCollectionMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -625,6 +641,76 @@ public sealed class GetMovieShowcaseHandlerTests
         _tmdb.Verify(
             t => t.GetRecommendationsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_Director_ListsTheFilmsOfThatPerson()
+    {
+        _tmdb.Setup(t => t.GetDirectedMoviesAsync(525, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Items(7, idBase: 27_205));
+
+        var result = await Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Director, PersonId: 525));
+
+        Assert.Equal(MovieShowcaseSections.Director, result.Section);
+        Assert.Equal(7, result.Items.Count);
+        Assert.Equal(27_205, result.Items[0].Id);
+        Assert.All(result.Items, item => Assert.Equal(MovieMediaType.Movie, item.MediaType));
+        Assert.Equal(120, result.Items[0].RuntimeMinutes);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TwoDirectors_DoNotShareAnEntry()
+    {
+        _tmdb.Setup(t => t.GetDirectedMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((int personId, CancellationToken _) => Items(1, idBase: personId));
+        var handler = Build();
+
+        var first = await handler.HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Director, PersonId: 525));
+        var second = await handler.HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Director, PersonId: 1_032));
+        var again = await handler.HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Director, PersonId: 525));
+
+        Assert.Equal(525, first.Items[0].Id);
+        Assert.Equal(1_032, second.Items[0].Id);
+        Assert.Equal(525, again.Items[0].Id);
+        _tmdb.Verify(t => t.GetDirectedMoviesAsync(525, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_DirectorTmdbDown_ThrowsServiceUnavailable()
+    {
+        _tmdb.Setup(t => t.GetDirectedMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("tmdb down"));
+
+        await Assert.ThrowsAsync<ServiceUnavailableException>(
+            () => Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Director, PersonId: 525)));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData(0)]
+    [InlineData(-3)]
+    [InlineData(MovieShowcaseCatalog.MaxSeedTmdbId + 1)]
+    public async Task HandleAsync_DirectorWithoutAPerson_IsRejectedBeforeReachingTmdb(int? personId)
+    {
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() => Build().HandleAsync(
+            new MovieShowcaseQuery(MovieShowcaseSections.Director, SeedTmdbId: 27_205, PersonId: personId)));
+
+        Assert.Equal(ErrorCodes.ReferenceMovieMissing, ex.Reason);
+        _tmdb.Verify(t => t.GetDirectedMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_APersonOnAnotherSection_ReusesTheSectionEntry()
+    {
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(MovieShowcaseCatalog.PagesPerSection, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Items(3));
+        var handler = Build();
+
+        await handler.HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending));
+        await handler.HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending, PersonId: 525));
+
+        _tmdb.Verify(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
+        _tmdb.Verify(t => t.GetDirectedMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

@@ -19,6 +19,7 @@ import ConsentBanner from './ConsentBanner';
 import InAppBrowserBanner from './InAppBrowserBanner';
 import MovedOriginBanner from './MovedOriginBanner';
 import SignOutPendingNotice from './SignOutPendingNotice';
+import { useLegacyMovieLinkRedirect } from './useLegacyMovieLinkRedirect';
 import styles from './AppShell.module.css';
 import { buttonClass } from '@/shared/components/Button';
 import { BrandMark } from '@/shared/brand/BrandMark';
@@ -166,6 +167,7 @@ export default function AppShell() {
   const { user, isLoading } = useAuth();
   const location = useLocation();
   useLetterboxdAutoSync();
+  useLegacyMovieLinkRedirect();
 
   const isAuthenticated = !!user;
   const ownProfilePath = user ? ownProfileDestination(user).path : null;

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import type { EventMoviesSectionProps } from '@/features/events/pages/event-detail/EventMoviesSection';
@@ -61,9 +61,13 @@ const MOVIE: MovieData = {
   runtimeMinutes: 136,
 };
 
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
+}
+
 function renderSection(
   props: {
-    initialEntry?: string;
     movies?: MovieData[];
     watchlistItems?: unknown[];
     event?: EventData;
@@ -75,11 +79,12 @@ function renderSection(
     onRequestRemove?: (movie: MovieData) => void;
     participant?: { participantId: string; pseudo: string } | null;
     onAddMovieOpenChange?: (open: boolean) => void;
+    withLocation?: boolean;
   } = {}
 ) {
   return render(
     <AppTestProviders>
-      <MemoryRouter initialEntries={[props.initialEntry ?? '/e/soiree-cine']}>
+      <MemoryRouter initialEntries={['/e/soiree-cine']}>
         <EventMoviesSection
           slug="soiree-cine"
           event={props.event ?? EVENT}
@@ -111,6 +116,7 @@ function renderSection(
           addMovieTriggerRef={{ current: null }}
           winnerMovieIds={props.winnerMovieIds}
         />
+        {props.withLocation ? <LocationProbe /> : null}
       </MemoryRouter>
     </AppTestProviders>
   );
@@ -282,15 +288,9 @@ describe('EventMoviesSection (MSW)', () => {
     expect(screen.queryByRole('menuitem', { name: /tirage/i })).not.toBeInTheDocument();
   });
 
-  it('without hover capability: no kebab, the poster still opens the details', async () => {
-    server.use(
-      authedUserHandler,
-      watchlistHandler([]),
-      http.get(`${TEST_API_V1}/movies/tmdb/42/details`, () =>
-        HttpResponse.json({ tmdbId: 42, watchProviders: [] })
-      )
-    );
-    renderSection();
+  it('without hover capability: no kebab, the poster still opens the film page', async () => {
+    server.use(authedUserHandler, watchlistHandler([]));
+    renderSection({ withLocation: true });
     const user = userEvent.setup();
 
     expect(await screen.findByRole('heading', { name: 'Matrix' })).toBeInTheDocument();
@@ -299,33 +299,7 @@ describe('EventMoviesSection (MSW)', () => {
     ).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /voir les détails de « matrix »/i }));
-    expect(await screen.findByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Ajouter à ma liste' })).toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Proposer dans une soirée' })
-    ).not.toBeInTheDocument();
-  });
-
-  it('a ?film address opens the details of that movie of the night, and closing clears it', async () => {
-    server.use(
-      authedUserHandler,
-      watchlistHandler([]),
-      http.get(`${TEST_API_V1}/movies/tmdb/42/details`, () =>
-        HttpResponse.json({ tmdbId: 42, title: 'Matrix', watchProviders: [] })
-      )
-    );
-    renderSection({ initialEntry: '/e/soiree-cine?film=42' });
-    const user = userEvent.setup();
-
-    const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByRole('heading', { name: 'Matrix', level: 2 })).toBeInTheDocument();
-    expect(within(dialog).getByRole('tab', { name: /la soirée/i })).toHaveAttribute(
-      'aria-selected',
-      'true'
-    );
-
-    await user.click(within(dialog).getByRole('button', { name: /fermer/i }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.getByTestId('location')).toHaveTextContent('/film/42-matrix?soiree=soiree-cine');
   });
 
   it('hover, host: the kebab lists the items in the unified order', async () => {

@@ -7,7 +7,7 @@ import {
   type ShowcaseTheme,
 } from '@/features/movies/api/showcaseApi';
 
-export type ShowcaseListVariant = ShowcaseSection | 'search';
+export type ShowcaseListVariant = Exclude<ShowcaseSection, 'director'> | 'search';
 
 export const THEME_LABEL_KEYS: Record<ShowcaseTheme, TranslationKey> = {
   frissons: 'showcase.themes.frissons',

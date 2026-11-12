@@ -14,8 +14,6 @@ import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import { loadMovieDetailsModal } from '@/features/movies/components/LazyMovieDetailsModal';
-import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { toCollectionToolbarProps } from '@/features/movies/components/FilteredCollectionLayout';
 import MovieListFilteredLayout from '@/features/movies/components/MovieListFilteredLayout';
 import {
@@ -29,12 +27,12 @@ import {
 import { fetchPublicProfile, type PublicProfile } from '@/features/profile/api/profileApi';
 import ProfileCollectionToolbar from '@/features/profile/components/ProfileCollectionToolbar';
 import MovieBrowseCard from '@/features/movies/components/MovieBrowseCard';
-import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
+import {
+  useWatchlistToggle,
+  type WatchlistToggleItem,
+} from '@/features/watchlist/hooks/useWatchlistToggle';
 import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
-import LibraryMovieDetails, {
-  useLibraryMovieDetails,
-  type LibraryMovieSeed,
-} from '@/features/watchlist/components/LibraryMovieDetails';
+import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
 import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
 import styles from './ProfileCollectionPage.module.css';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
@@ -85,8 +83,6 @@ function isNotFoundError(error: unknown): boolean {
   return ApiError.is(error) && error.code === 404;
 }
 
-const MOVIE_DETAILS_CHUNKS = [loadMovieDetailsModal];
-
 export default function ProfileCollectionPage<T extends MovieListItemLike>({
   handle,
   queryKey,
@@ -98,7 +94,6 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
   renderLeadingBadge,
 }: Readonly<ProfileCollectionPageProps<T>>) {
   const { t } = useTranslation();
-  useIdlePrefetch(MOVIE_DETAILS_CHUNKS);
   const { tmdbLanguage } = useLocale();
   const { user } = useAuth();
   const isLoggedIn = !!user;
@@ -138,8 +133,8 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
 
   const toolbar = useMovieListToolbar({ items, tmdbLanguage, mediaTypeLabels, comparePrimary });
 
-  const details = useLibraryMovieDetails();
-  const [proposeTarget, setProposeTarget] = useState<LibraryMovieSeed | null>(null);
+  const openMoviePage = useOpenMoviePage();
+  const [proposeTarget, setProposeTarget] = useState<WatchlistToggleItem | null>(null);
   const watchlist = useWatchlistToggle(isLoggedIn);
 
   usePageSeo(collectionSeo(profile, isNotFound, t, texts, canonicalPath));
@@ -229,7 +224,7 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
                 inWatchlist={watchlist.has(item)}
                 onToggleWatchlist={() => watchlist.toggle(item)}
                 onProposeToEvent={() => setProposeTarget(item)}
-                onOpenDetails={() => details.open(item)}
+                onOpenDetails={() => openMoviePage(item)}
                 leadingBadge={
                   renderLeadingBadge && handle ? renderLeadingBadge(item, handle) : undefined
                 }
@@ -248,14 +243,6 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
           )}
         </MovieListFilteredLayout>
       )}
-
-      <LibraryMovieDetails
-        target={details.target}
-        seed={details.seed}
-        watchlist={watchlist}
-        onPropose={setProposeTarget}
-        onClose={details.close}
-      />
 
       {proposeTarget && (
         <ProposeToEventModal

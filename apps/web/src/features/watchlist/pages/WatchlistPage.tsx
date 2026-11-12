@@ -18,15 +18,16 @@ import FilteredCollectionLayout, {
   FilteredEmptyState,
   toCollectionToolbarProps,
 } from '@/features/movies/components/FilteredCollectionLayout';
-import { loadMovieDetailsModal } from '@/features/movies/components/LazyMovieDetailsModal';
-import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import LetterboxdConnectModal from '@/features/letterboxd/components/LetterboxdConnectModal';
 import {
   useAddToWatchlist,
   useWatchlist,
   useWatchlistAvailability,
 } from '@/features/movies/hooks/useWatchlist';
-import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
+import {
+  useWatchlistToggle,
+  type WatchlistToggleItem,
+} from '@/features/watchlist/hooks/useWatchlistToggle';
 import type { WatchlistAvailabilityItem, WatchlistItem } from '@/features/movies/api/watchlistApi';
 import {
   useWatchlistToolbar,
@@ -48,10 +49,7 @@ import RandomPickDialog, {
   type RandomPickScope,
 } from '@/features/watchlist/components/RandomPickDialog';
 import { watchlistItemKey as itemKey } from '@/features/movies/utils/watchlistItemKey';
-import LibraryMovieDetails, {
-  useLibraryMovieDetails,
-  type LibraryMovieSeed,
-} from '@/features/watchlist/components/LibraryMovieDetails';
+import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
 import styles from './WatchlistPage.module.css';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import Button from '@/shared/components/Button';
@@ -194,11 +192,8 @@ function MobileLetterboxdButton({
   );
 }
 
-const MOVIE_DETAILS_CHUNKS = [loadMovieDetailsModal];
-
 export default function WatchlistPage() {
   const { t } = useTranslation();
-  useIdlePrefetch(MOVIE_DETAILS_CHUNKS);
   const { tmdbLanguage } = useLocale();
   const { user, isLoading: authLoading } = useAuth();
   useNoindexPage(pageTitle(t('watchlist.title')), ROUTES.watchlist);
@@ -220,20 +215,14 @@ export default function WatchlistPage() {
     [entries]
   );
 
-  const [proposeTarget, setProposeTarget] = useState<LibraryMovieSeed | null>(null);
+  const [proposeTarget, setProposeTarget] = useState<WatchlistToggleItem | null>(null);
   const [randomPick, setRandomPick] = useState<RandomPick | null>(null);
   const { track } = useAnalytics();
   const openRandomPick = (pick: RandomPick) => {
     track('random_pick_opened', { scope: pick.scope, pool: pick.items.length });
     setRandomPick(pick);
   };
-  const details = useLibraryMovieDetails();
-  const detailsEntry = details.target
-    ? entries.find(
-        (entry) =>
-          entry.tmdbId === details.target?.tmdbId && entry.mediaType === details.target.mediaType
-      )
-    : undefined;
+  const openMoviePage = useOpenMoviePage();
   const [addPanelOpen, setAddPanelOpen] = useState(false);
   const [letterboxdModalOpen, setLetterboxdModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<MovieViewMode>(readStoredViewMode);
@@ -328,8 +317,8 @@ export default function WatchlistPage() {
       eager={listView && index < 3}
       onToggleWatchlist={() => watchlistToggle.toggle(item)}
       onProposeToEvent={() => setProposeTarget(item)}
-      onOpenDetails={() => details.open(item)}
-      onOpenAvailability={() => details.open(item, 'availability')}
+      onOpenDetails={() => openMoviePage(item)}
+      onOpenAvailability={() => openMoviePage(item)}
       ratingScale={user?.ratingScale}
     />
   );
@@ -530,7 +519,7 @@ export default function WatchlistPage() {
 
       {randomPick && (
         <RandomPickDialog
-          open={proposeTarget === null && details.target === null}
+          open={proposeTarget === null}
           items={randomPick.items.filter((item) =>
             listedKeys.has(itemKey(item.tmdbId, item.mediaType))
           )}
@@ -538,7 +527,7 @@ export default function WatchlistPage() {
           ratingScale={user?.ratingScale}
           onClose={() => setRandomPick(null)}
           onPropose={setProposeTarget}
-          onOpenDetails={details.open}
+          onOpenDetails={(item) => openMoviePage(item)}
         />
       )}
 
@@ -549,15 +538,6 @@ export default function WatchlistPage() {
           onClose={() => setProposeTarget(null)}
         />
       )}
-
-      <LibraryMovieDetails
-        target={details.target}
-        seed={detailsEntry ?? details.seed}
-        initialTab={details.initialTab}
-        watchlist={watchlistToggle}
-        onPropose={setProposeTarget}
-        onClose={details.close}
-      />
 
       {letterboxdModalOpen && (
         <LetterboxdConnectModal open onClose={() => setLetterboxdModalOpen(false)} />

@@ -23,4 +23,42 @@ public sealed class MovieDetailsResponse
     public IReadOnlyList<WatchProviderOfferResponse> WatchProviders { get; init; } =
         Array.Empty<WatchProviderOfferResponse>();
     public string? TmdbWatchPageUrl { get; init; }
+    public string? OriginalTitle { get; init; }
+    public string? OriginalLanguage { get; init; }
+    public IReadOnlyList<string> ProductionCountries { get; init; } = Array.Empty<string>();
+    public long? Budget { get; init; }
+    public int? VoteCount { get; init; }
+    public string? Certification { get; init; }
+    public MovieDetailsCollectionResponse? Collection { get; init; }
+    public int? DirectorId { get; init; }
+    public IReadOnlyList<MovieCastMemberResponse> CastMembers { get; init; } = Array.Empty<MovieCastMemberResponse>();
+    public IReadOnlyList<MovieCrewMemberResponse> Crew { get; init; } = Array.Empty<MovieCrewMemberResponse>();
+    public IReadOnlyList<MovieVideoResponse> Videos { get; init; } = Array.Empty<MovieVideoResponse>();
+}
+
+public sealed class MovieDetailsCollectionResponse
+{
+    public int Id { get; init; }
+    public string Name { get; init; } = string.Empty;
+}
+
+public sealed class MovieCastMemberResponse
+{
+    public string Name { get; init; } = string.Empty;
+    public string? Character { get; init; }
+    public string? ProfilePath { get; init; }
+}
+
+public sealed class MovieCrewMemberResponse
+{
+    public string Job { get; init; } = string.Empty;
+    public string Name { get; init; } = string.Empty;
+}
+
+public sealed class MovieVideoResponse
+{
+    public string Key { get; init; } = string.Empty;
+    public string Name { get; init; } = string.Empty;
+    public string Type { get; init; } = string.Empty;
+    public string? Language { get; init; }
 }

@@ -10,7 +10,8 @@ export type ShowcaseSection =
   | 'theme'
   | 'collection'
   | 'provider'
-  | 'recommendations';
+  | 'recommendations'
+  | 'director';
 
 export const SHOWCASE_THEMES = [
   'frissons',
@@ -91,6 +92,7 @@ export interface ShowcaseQuery {
   provider?: ShowcaseProvider;
   seedTmdbId?: number;
   seedMediaType?: MovieMediaType;
+  personId?: number;
 }
 
 export function showcaseQueryKey(query: ShowcaseQuery): readonly unknown[] {
@@ -104,6 +106,7 @@ export function showcaseQueryKey(query: ShowcaseQuery): readonly unknown[] {
     query.provider ?? '',
     query.seedTmdbId ?? 0,
     query.seedMediaType ?? 'movie',
+    query.personId ?? 0,
   ] as const;
 }
 
@@ -118,6 +121,7 @@ export async function fetchMovieShowcase(
   if (query.provider) params.set('provider', query.provider);
   if (query.seedTmdbId != null) params.set('seedTmdbId', String(query.seedTmdbId));
   if (query.seedMediaType === 'tv') params.set('seedMediaType', 'tv');
+  if (query.personId != null) params.set('personId', String(query.personId));
 
   const raw = await fetchApi<ShowcaseListResponse>(
     `/movies/showcase?${params.toString()}`,

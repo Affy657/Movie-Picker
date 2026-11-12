@@ -11,6 +11,7 @@ public static class MovieShowcaseSections
     public const string Collection = "collection";
     public const string Provider = "provider";
     public const string Recommendations = "recommendations";
+    public const string Director = "director";
 }
 
 public static class MovieShowcaseCatalog

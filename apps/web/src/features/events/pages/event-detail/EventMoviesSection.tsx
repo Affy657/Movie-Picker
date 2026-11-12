@@ -15,7 +15,6 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
-import { loadMovieDetailsModal } from '@/features/movies/components/LazyMovieDetailsModal';
 import { setMovieWheelExclusion } from '@/features/movies/api/moviesApi';
 import { getErrorMessage } from '@/shared/api/apiError';
 import type { EventData } from '@/features/events/types';
@@ -38,7 +37,7 @@ import Chip from '@/shared/components/Chip';
 
 const loadProposeMovieDialog = () => import('@/features/events/components/ProposeMovieDialog');
 const ProposeMovieDialog = lazy(loadProposeMovieDialog);
-const ADD_MOVIE_CHUNKS = [loadProposeMovieDialog, loadMovieDetailsModal];
+const ADD_MOVIE_CHUNKS = [loadProposeMovieDialog];
 const TABLE_COLUMNS_MIN_WIDTH_QUERY = '(max-width: 63.9375rem)';
 
 function useMoviesLayout(viewMode: 'grid' | 'list') {
@@ -367,7 +366,6 @@ export default function EventMoviesSection({
     selection,
     winnerMovieIds,
     voteQuotaLockedHint,
-    participantCount: event.participants?.length ?? 0,
   };
 
   return (

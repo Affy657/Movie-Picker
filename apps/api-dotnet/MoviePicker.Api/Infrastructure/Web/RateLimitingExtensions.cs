@@ -53,6 +53,7 @@ public static class RateLimitingExtensions
     public const string EventViewPollPolicy = "event-view-poll";
     public const string RecapDocumentPolicy = "recap-document";
     public const string InvitationDocumentPolicy = "invitation-document";
+    public const string MovieDocumentPolicy = "movie-document";
     public const string NightRecapPolicy = "night-recap";
     public const string AvatarPhotoUploadPolicy = "avatar-photo-upload";
     public const string AvatarPhotosPolicy = "avatar-photos-get";
@@ -110,6 +111,7 @@ public static class RateLimitingExtensions
         new(RatingMutationPolicy, 60, 1),
         new(RecapDocumentPolicy, 120, 1, QuotaScope.Slug),
         new(InvitationDocumentPolicy, 120, 1, QuotaScope.Slug),
+        new(MovieDocumentPolicy, 120, 1, QuotaScope.Slug),
         new(NightRecapPolicy, 60, 1),
         new(AvatarPhotoUploadPolicy, 10, 60),
         new(AvatarPhotosPolicy, 300, 1)
@@ -243,12 +245,19 @@ internal static class ShowcaseFreeKey
     internal static bool IsRequestedBy(HttpRequest request)
     {
         var section = request.Query["section"].FirstOrDefault()?.Trim().ToLowerInvariant();
-        if (section == MovieShowcaseSections.Recommendations)
+        if (section is MovieShowcaseSections.Recommendations or MovieShowcaseSections.Director)
             return true;
+
+        if (section == MovieShowcaseSections.Collection)
+            return IsOffCatalogCollection(request.Query["collectionId"].FirstOrDefault());
 
         var isTrending = string.IsNullOrEmpty(section) || section == MovieShowcaseSections.Trending;
         return isTrending && request.Query["genreIds"].FirstOrDefault()?.Contains(',') == true;
     }
+
+    private static bool IsOffCatalogCollection(string? collectionId) =>
+        int.TryParse(collectionId, NumberStyles.None, CultureInfo.InvariantCulture, out var id)
+        && !MovieShowcaseCatalog.IsCatalogCollection(id);
 }
 
 internal static class ClientIpPartitionKey

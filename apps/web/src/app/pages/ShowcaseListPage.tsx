@@ -15,8 +15,6 @@ import { useLocale, useTranslation, type TranslationKey, type Translate } from '
 import { genreLabel } from '@/shared/utils/tmdbGenres';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import { loadMovieDetailsModal } from '@/features/movies/components/LazyMovieDetailsModal';
-import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import CollectionToolbar, {
   type CollectionToolbarLabels,
 } from '@/features/movies/components/CollectionToolbar';
@@ -42,12 +40,12 @@ import {
 } from '@/features/movies/showcaseSections';
 
 export type { ShowcaseListVariant };
-import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
+import {
+  useWatchlistToggle,
+  type WatchlistToggleItem,
+} from '@/features/watchlist/hooks/useWatchlistToggle';
 import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
-import LibraryMovieDetails, {
-  useLibraryMovieDetails,
-  type LibraryMovieSeed,
-} from '@/features/watchlist/components/LibraryMovieDetails';
+import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
 import ShowcaseListStates from './ShowcaseListStates';
 import type { MovieMediaType } from '@/shared/types/movie';
 import styles from './ShowcaseListPage.module.css';
@@ -273,11 +271,8 @@ function rankBadge(rank: number | null, t: Translate): ReactNode {
   );
 }
 
-const MOVIE_DETAILS_CHUNKS = [loadMovieDetailsModal];
-
 export default function ShowcaseListPage({ variant }: Readonly<Props>) {
   const { t } = useTranslation();
-  useIdlePrefetch(MOVIE_DETAILS_CHUNKS);
   const { tmdbLanguage } = useLocale();
   const { user } = useAuth();
   const params = useParams<{
@@ -353,8 +348,8 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
 
   const toolbar = useMovieListToolbar({ items, tmdbLanguage, mediaTypeLabels, comparePrimary });
 
-  const details = useLibraryMovieDetails();
-  const [proposeTarget, setProposeTarget] = useState<LibraryMovieSeed | null>(null);
+  const openMoviePage = useOpenMoviePage();
+  const [proposeTarget, setProposeTarget] = useState<WatchlistToggleItem | null>(null);
   const watchlist = useWatchlistToggle(isLoggedIn);
 
   const headingText = resolveHeading({
@@ -443,7 +438,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
                 isLoggedIn={isLoggedIn}
                 inWatchlist={watchlist.has(item)}
                 onToggleWatchlist={() => watchlist.toggle(item)}
-                onOpenDetails={() => details.open(item)}
+                onOpenDetails={() => openMoviePage(item)}
                 onProposeToEvent={() => setProposeTarget(item)}
                 ratingScale={user?.ratingScale}
                 leadingBadge={rankBadge(item.rank, t)}
@@ -462,14 +457,6 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
           )}
         </MovieListFilteredLayout>
       ) : null}
-
-      <LibraryMovieDetails
-        target={details.target}
-        seed={details.seed}
-        watchlist={watchlist}
-        onPropose={setProposeTarget}
-        onClose={details.close}
-      />
 
       {proposeTarget && (
         <ProposeToEventModal

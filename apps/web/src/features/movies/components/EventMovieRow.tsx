@@ -4,7 +4,6 @@ import clsx from 'clsx';
 import { AlertTriangle, RotateCcw, ThumbsDown, ThumbsUp } from 'lucide-react';
 import Chip from '@/shared/components/Chip';
 import {
-  CardModals,
   CardNote,
   CardProposerFooter,
   CardSelectionOverlay,
@@ -202,7 +201,6 @@ function EventMovieRowMobile({
   winnerRank,
   voteLockedHint,
   voteError,
-  participantCount,
 }: Readonly<EventMovieRowView>) {
   return (
     <Fragment>
@@ -225,7 +223,7 @@ function EventMovieRowMobile({
           <MovieTablePoster src={posterSrc} srcSet={posterSrcSet} eager={!!eager} />
           <PosterDetailsTrigger
             hasDetails={s.hasDetails}
-            onOpen={() => s.openDetails('event')}
+            onOpen={() => s.openDetails()}
             title={m.title}
             t={t}
           />
@@ -248,7 +246,7 @@ function EventMovieRowMobile({
               buyCount={buyCount}
               watchPageUrl={m.tmdbWatchPageUrl}
               maxVisible={1}
-              onMoreClick={() => s.openDetails('availability')}
+              onMoreClick={() => s.openDetails()}
               emptyLabel={emptyAvailabilityLabel}
               title={m.title}
               t={t}
@@ -307,18 +305,6 @@ function EventMovieRowMobile({
           triggerClassName={table.disclosure}
           t={t}
         />
-        <CardModals
-          s={s}
-          m={m}
-          isHost={isHost}
-          onVote={onVote}
-          onRemove={onRemove}
-          isInWatchlist={isInWatchlist}
-          onToggleWatchlist={onToggleWatchlist}
-          onToggleWheelExclusion={onToggleWheelExclusion}
-          avatarsByPseudo={participantAvatarsByPseudo}
-          participantCount={participantCount}
-        />
       </li>
       {voteError ? <VoteErrorBanner voteError={voteError} title={m.title} t={t} /> : null}
     </Fragment>
@@ -357,7 +343,6 @@ function EventMovieRowDesktop({
   voteLockedHint,
   rank,
   voteError,
-  participantCount,
 }: Readonly<EventMovieRowView>) {
   return (
     <Fragment>
@@ -385,7 +370,7 @@ function EventMovieRowDesktop({
           <MovieTablePoster src={posterSrc} srcSet={posterSrcSet} eager={!!eager} />
           <PosterDetailsTrigger
             hasDetails={s.hasDetails}
-            onOpen={() => s.openDetails('event')}
+            onOpen={() => s.openDetails()}
             title={m.title}
             t={t}
           />
@@ -429,7 +414,7 @@ function EventMovieRowDesktop({
             watchPageUrl={m.tmdbWatchPageUrl}
             maxVisible={2}
             chipMaxWidth="2.75rem"
-            onMoreClick={() => s.openDetails('availability')}
+            onMoreClick={() => s.openDetails()}
             emptyLabel={emptyAvailabilityLabel}
             title={m.title}
             t={t}
@@ -472,18 +457,6 @@ function EventMovieRowDesktop({
           onToggleWheelExclusion={onToggleWheelExclusion}
           t={t}
         />
-        <CardModals
-          s={s}
-          m={m}
-          isHost={isHost}
-          onVote={onVote}
-          onRemove={onRemove}
-          isInWatchlist={isInWatchlist}
-          onToggleWatchlist={onToggleWatchlist}
-          onToggleWheelExclusion={onToggleWheelExclusion}
-          avatarsByPseudo={participantAvatarsByPseudo}
-          participantCount={participantCount}
-        />
       </li>
       {voteError ? <VoteErrorBanner voteError={voteError} title={m.title} t={t} /> : null}
     </Fragment>
@@ -519,7 +492,6 @@ export const EventMovieRow = memo(function EventMovieRow({
   isMobile,
   rank,
   voteError,
-  participantCount,
 }: Readonly<EventMovieRowProps>) {
   const s = useMovieCardState({
     movie: m,
@@ -575,7 +547,6 @@ export const EventMovieRow = memo(function EventMovieRow({
       isMobile,
       rank,
       voteError,
-      participantCount,
     } as EventMovieRowProps),
     s,
     posterSrc,

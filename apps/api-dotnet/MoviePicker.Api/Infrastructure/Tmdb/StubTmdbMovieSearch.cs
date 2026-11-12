@@ -54,6 +54,49 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
     private static readonly string[] Genres = new[] { "Science-fiction", "Drame" };
     private static readonly int[] GenreIds = new[] { 878, 18 };
 
+    private const int StubDirectorId = 4_242;
+    private const int StubCollectionId = 1_241;
+    private static readonly string[] FilmCountries = ["US", "FR"];
+    private static readonly string[] SeriesCountries = ["US"];
+
+    private static readonly TmdbCastMember[] CastMembers =
+    [
+        new("Actrice Stub", "Héroïne Stub", null),
+        new("Acteur Stub", null, null),
+    ];
+
+    private static TmdbMovieDetailsExtras StubExtras(MovieMediaType mediaType) =>
+        mediaType == MovieMediaType.Tv
+            ? new TmdbMovieDetailsExtras(
+                "Stub E2E Series",
+                "en",
+                SeriesCountries,
+                null,
+                640,
+                "12",
+                null,
+                null,
+                CastMembers,
+                [new TmdbCrewCredit(TmdbCrewJobs.Creator, "Réalisateur Stub"), new TmdbCrewCredit(TmdbCrewJobs.Composer, "Compositeur Stub")],
+                [])
+            : new TmdbMovieDetailsExtras(
+                "Stub E2E Film",
+                "en",
+                FilmCountries,
+                42_000_000,
+                1_280,
+                "12",
+                new TmdbCollectionReference(StubCollectionId, $"Saga stub {StubCollectionId}"),
+                StubDirectorId,
+                CastMembers,
+                [
+                    new TmdbCrewCredit(TmdbCrewJobs.Director, "Réalisateur Stub"),
+                    new TmdbCrewCredit(TmdbCrewJobs.Writer, "Scénariste Stub"),
+                    new TmdbCrewCredit(TmdbCrewJobs.Composer, "Compositeur Stub"),
+                    new TmdbCrewCredit(TmdbCrewJobs.Photography, "Chef opérateur Stub"),
+                ],
+                []);
+
     public Task<TmdbMovieDetails?> GetDetailsAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct = default)
     {
         var details = new TmdbMovieDetails(
@@ -72,7 +115,8 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
             null,
             null,
             mediaType == MovieMediaType.Tv ? 2 : null,
-            mediaType == MovieMediaType.Tv ? 16 : null);
+            mediaType == MovieMediaType.Tv ? 16 : null,
+            StubExtras(mediaType));
         return Task.FromResult<TmdbMovieDetails?>(details);
     }
 
@@ -100,6 +144,9 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
 
     public Task<IReadOnlyList<TmdbSearchItem>> GetCollectionMoviesAsync(int collectionId, CancellationToken ct = default) =>
         Section(730_000 + collectionId, $"Saga stub {collectionId}", 1, itemCount: 4);
+
+    public Task<IReadOnlyList<TmdbSearchItem>> GetDirectedMoviesAsync(int personId, CancellationToken ct = default) =>
+        Section(750_000 + personId, $"Réalisation stub {personId}", 1, itemCount: 5);
 
     private static Task<IReadOnlyList<TmdbSearchItem>> Section(
         int idBase,

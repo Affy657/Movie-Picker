@@ -56,6 +56,7 @@ describe('buildContentSecurityPolicy', () => {
     expect(imgSrc).toContain(PROD_API);
     expect(imgSrc).toContain('https://image.tmdb.org');
     expect(imgSrc).toContain('https://api.dicebear.com');
+    expect(imgSrc).toContain('https://i.ytimg.com');
     expect(imgSrc).toContain('data:');
     expect(imgSrc).toContain('blob:');
   });
@@ -102,7 +103,7 @@ describe('buildContentSecurityPolicy', () => {
     expect(withoutOrigins).not.toContain('  ');
     expect(withoutOrigins.endsWith(' ')).toBe(false);
     expect(directive(withoutOrigins, 'img-src')).toBe(
-      "img-src 'self' data: blob: https://image.tmdb.org https://api.dicebear.com"
+      "img-src 'self' data: blob: https://image.tmdb.org https://api.dicebear.com https://i.ytimg.com"
     );
   });
 

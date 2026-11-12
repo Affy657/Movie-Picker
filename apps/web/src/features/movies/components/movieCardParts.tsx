@@ -1,17 +1,11 @@
-import { useCallback, useId, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Link } from 'react-router';
 import clsx from 'clsx';
 import { Bookmark, MessageSquarePlus, ThumbsDown, ThumbsUp, Trophy } from 'lucide-react';
 import { ROUTES } from '@/app/routes';
 import Avatar from '@/shared/components/Avatar';
 import Tooltip from '@/shared/components/Tooltip';
-import LazyMovieDetailsModal from '@/features/movies/components/LazyMovieDetailsModal';
-import type {
-  MovieDetailsEventContext,
-  MovieDetailsTabKey,
-} from '@/features/movies/components/MovieDetailsModal';
-import { useEverOpened } from '@/shared/hooks/useEverOpened';
-import { useMovieDetailsParam } from '@/features/movies/hooks/useMovieDetailsParam';
+import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
 import { ModeIcon } from '@/features/movies/components/WatchProviderChips';
 import type { MovieData } from '@/shared/types/movie';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
@@ -26,7 +20,6 @@ import styles from './movieCardParts.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export { CardKebab, MovieCardKebab } from './MovieCardKebab';
-import { deriveWheelToggle } from './MovieCardKebab';
 import { MovieNote } from './MovieNote';
 import { useLocale, type Translate } from '@/shared/i18n';
 
@@ -70,7 +63,6 @@ export interface MovieCardCommonProps {
   winnerRank?: number;
   voteLockedHint?: string;
   isMobile?: boolean;
-  participantCount?: number;
 }
 
 export function CardSelectionOverlay({
@@ -145,27 +137,27 @@ export function useMovieCardState({
   const mediaType = m.mediaType ?? 'movie';
 
   const [seenPending, setSeenPending] = useState(false);
-  const {
-    target: detailsTarget,
-    open: openDetailsParam,
-    close: closeDetails,
-  } = useMovieDetailsParam();
-  const [detailsInitialTab, setDetailsInitialTab] = useState<MovieDetailsTabKey>('event');
+  const openMoviePage = useOpenMoviePage();
   const [noteEditing, setNoteEditing] = useState(false);
-  const detailsPanelId = useId();
   const hasDetails = m.tmdbId > 0;
-  const detailsOpen =
-    hasDetails && detailsTarget?.tmdbId === m.tmdbId && detailsTarget.mediaType === mediaType;
   const showAddNote = canEditNote && !m.pitchNote && !noteEditing;
 
-  const openDetails = useCallback(
-    (tab: MovieDetailsTabKey = 'event') => {
-      if (!hasDetails) return;
-      setDetailsInitialTab(tab);
-      openDetailsParam(m.tmdbId, mediaType);
-    },
-    [hasDetails, openDetailsParam, m.tmdbId, mediaType]
-  );
+  const openDetails = useCallback(() => {
+    if (!hasDetails) return;
+    openMoviePage(
+      {
+        tmdbId: m.tmdbId,
+        mediaType,
+        title: m.title,
+        year: m.year,
+        posterPath: m.posterPath,
+        voteAverage: m.voteAverage,
+        runtimeMinutes: m.runtimeMinutes,
+        genreIds: m.genreIds,
+      },
+      slug
+    );
+  }, [hasDetails, openMoviePage, m, mediaType, slug]);
 
   const handleToggleSeen = async () => {
     if (!participantId || seenPending) return;
@@ -201,11 +193,7 @@ export function useMovieCardState({
     posterSrcSet,
     providers,
     seenPending,
-    detailsOpen,
-    closeDetails,
-    detailsInitialTab,
     openDetails,
-    detailsPanelId,
     hasDetails,
     noteEditing,
     setNoteEditing,
@@ -500,83 +488,5 @@ export function WatchlistBadge({
     >
       <Bookmark aria-hidden size={ICON_SIZE.xs} fill="currentColor" />
     </span>
-  );
-}
-
-export function CardModals({
-  s,
-  m,
-  isHost,
-  onVote,
-  onRemove,
-  isInWatchlist,
-  onToggleWatchlist,
-  onToggleWheelExclusion,
-  avatarsByPseudo,
-  participantCount,
-}: Readonly<{
-  s: ReturnType<typeof useMovieCardState>;
-  m: MovieData;
-  isHost: boolean;
-  onVote: (movieId: string, value: 1 | -1) => Promise<void>;
-  onRemove: (movie: MovieData) => void;
-  isInWatchlist?: boolean;
-  onToggleWatchlist?: (movie: MovieData) => void;
-  onToggleWheelExclusion?: (movie: MovieData) => void;
-  avatarsByPseudo?: Record<string, string>;
-  participantCount?: number;
-}>) {
-  const { excluded, toggleWatchlist, toggleExclusion } = deriveWheelToggle(
-    m,
-    onToggleWatchlist,
-    onToggleWheelExclusion
-  );
-  const detailsEverOpened = useEverOpened(s.detailsOpen);
-
-  const eventContext: MovieDetailsEventContext = {
-    movie: m,
-    canAct: s.canAct,
-    participantCount,
-    onVote: (value) => void onVote(m.id, value),
-    iMarkedSeen: s.iMarkedSeen,
-    seenPending: s.seenPending,
-    onToggleSeen: () => void s.handleToggleSeen(),
-    seenOthers: s.others,
-    seenOthersHint: s.othersHint,
-    avatarsByPseudo,
-    proposerAvatarId: s.proposerAvatarId,
-    isInWatchlist,
-    onToggleWatchlist: toggleWatchlist,
-    wheelExclusion: toggleExclusion ? { excluded, onToggle: toggleExclusion } : undefined,
-    canRemove: s.canRemove,
-    isMine: s.isMine,
-    isHost,
-    onRemove: () => {
-      s.closeDetails();
-      onRemove(m);
-    },
-  };
-
-  return (
-    <>
-      {s.hasDetails && detailsEverOpened && (
-        <LazyMovieDetailsModal
-          open={s.detailsOpen}
-          title={m.title}
-          year={m.year}
-          tmdbId={m.tmdbId}
-          mediaType={m.mediaType}
-          posterPath={m.posterPath}
-          voteAverage={m.voteAverage}
-          runtimeMinutes={m.runtimeMinutes}
-          ratingScale={s.ratingScale}
-          watchProviders={s.providers}
-          watchPageUrl={m.tmdbWatchPageUrl}
-          initialTab={s.detailsInitialTab}
-          eventContext={eventContext}
-          onClose={s.closeDetails}
-        />
-      )}
-    </>
   );
 }

@@ -8,6 +8,7 @@ import {
   deleteMoviePitchNote,
   fetchEventMovies,
   fetchMovieDetails,
+  fetchMovieNights,
   markMovieAsSeen,
   removeMovieFromEvent,
   searchMovies,
@@ -146,6 +147,100 @@ describe('fetchMovieDetails', () => {
     expect(mockFetchApi).toHaveBeenCalledWith('/movies/tmdb/5/details', undefined);
     expect(res.cast).toEqual(['A']);
     expect(res.genres).toEqual(['G']);
+  });
+
+  it('fills the page fields an older API leaves out', async () => {
+    mockFetchApi.mockResolvedValue({ tmdbId: 5, title: 'X' });
+
+    const res = await fetchMovieDetails(5);
+
+    expect(res).toMatchObject({
+      originalTitle: null,
+      originalLanguage: null,
+      productionCountries: [],
+      budget: null,
+      voteCount: null,
+      certification: null,
+      collection: null,
+      directorId: null,
+      castMembers: [],
+      crew: [],
+      videos: [],
+    });
+  });
+
+  it('keeps the page fields the API sends', async () => {
+    const castMembers = [{ name: 'Zendaya', character: 'Chani', profilePath: null }];
+    const crew = [{ job: 'composer', name: 'Hans Zimmer' }];
+    const videos = [{ key: 'abc', name: 'Bande-annonce', type: 'Trailer', language: 'fr' }];
+    mockFetchApi.mockResolvedValue({
+      tmdbId: 438631,
+      title: 'Dune',
+      originalTitle: 'Dune',
+      originalLanguage: 'en',
+      productionCountries: ['US', 'CA'],
+      budget: 165000000,
+      voteCount: 12000,
+      certification: 'U',
+      collection: { id: 726871, name: 'Dune' },
+      directorId: 137427,
+      castMembers,
+      crew,
+      videos,
+    });
+
+    const res = await fetchMovieDetails(438631);
+
+    expect(res).toMatchObject({
+      originalTitle: 'Dune',
+      originalLanguage: 'en',
+      productionCountries: ['US', 'CA'],
+      budget: 165000000,
+      voteCount: 12000,
+      certification: 'U',
+      collection: { id: 726871, name: 'Dune' },
+      directorId: 137427,
+      castMembers,
+      crew,
+      videos,
+    });
+  });
+});
+
+describe('fetchMovieNights', () => {
+  it('asks the nights of the signed in user for this film', async () => {
+    mockFetchApi.mockResolvedValue({
+      nights: [],
+      proposalCount: 0,
+      winCount: 0,
+      rating: null,
+      seenBy: [],
+      seenCount: 0,
+    });
+
+    const res = await fetchMovieNights(438631, { mediaType: 'movie' });
+
+    expect(mockFetchApi).toHaveBeenCalledWith(
+      '/movies/tmdb/438631/nights?mediaType=movie',
+      undefined
+    );
+    expect(res.proposalCount).toBe(0);
+  });
+
+  it('fills what an incomplete answer leaves out', async () => {
+    mockFetchApi.mockResolvedValue({});
+
+    const res = await fetchMovieNights(5);
+
+    expect(mockFetchApi).toHaveBeenCalledWith('/movies/tmdb/5/nights', undefined);
+    expect(res).toEqual({
+      nights: [],
+      proposalCount: 0,
+      winCount: 0,
+      rating: null,
+      seenBy: [],
+      seenCount: 0,
+    });
   });
 });
 

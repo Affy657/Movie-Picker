@@ -8,7 +8,7 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 import { ProposerBadge } from '@/features/movies/components/movieCardParts';
 import MovieFacts from '@/features/movies/components/MovieFacts';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
-import LazyMovieDetailsModal from '@/features/movies/components/LazyMovieDetailsModal';
+import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
 import MovieRatingDialog from '@/features/events/components/MovieRatingDialog';
 import { hasRated, unratedWinners } from '@/features/events/hooks/useRatingLink';
 import RatingNotes, {
@@ -52,6 +52,7 @@ type Props = {
   action?: ReactNode;
   renderRating?: (movie: MovieData) => ReactNode;
   scale?: RatingScale;
+  nightSlug?: string;
 };
 
 function participantRatings(movie: MovieData, context: WinnerRatingContext): ParticipantRating[] {
@@ -469,29 +470,6 @@ function SheetHost({
   );
 }
 
-function MovieDetails({
-  movie,
-  scale,
-  onClose,
-}: Readonly<{ movie: MovieData; scale: RatingScale; onClose: () => void }>) {
-  return (
-    <LazyMovieDetailsModal
-      open
-      tmdbId={movie.tmdbId}
-      mediaType={movie.mediaType}
-      title={movie.title}
-      year={movie.year}
-      posterPath={movie.posterPath}
-      voteAverage={movie.voteAverage}
-      runtimeMinutes={movie.runtimeMinutes}
-      ratingScale={scale}
-      watchProviders={movie.watchProviders}
-      watchPageUrl={movie.tmdbWatchPageUrl}
-      onClose={onClose}
-    />
-  );
-}
-
 function headingOf(
   count: number,
   isFinished: boolean,
@@ -513,11 +491,12 @@ export default function EventWinnerSummary({
   action,
   renderRating,
   scale: scaleProp,
+  nightSlug,
 }: Readonly<Props>) {
   const { t, locale } = useTranslation();
   const isMobile = useIsMobile();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
+  const openMoviePage = useOpenMoviePage();
   const sheet = useRatingSheet(winners, rating, setSelectedId);
   const showRating = ratingOpen ?? isFinished;
   const solo = isSoloNight(rating);
@@ -567,7 +546,21 @@ export default function EventWinnerSummary({
               scale={scale}
               action={action}
               onRate={() => sheet.open(selected.id)}
-              onDetails={() => setDetailsOpen(true)}
+              onDetails={() =>
+                openMoviePage(
+                  {
+                    tmdbId: selected.tmdbId,
+                    mediaType: selected.mediaType ?? 'movie',
+                    title: selected.title,
+                    year: selected.year,
+                    posterPath: selected.posterPath,
+                    voteAverage: selected.voteAverage,
+                    runtimeMinutes: selected.runtimeMinutes,
+                    genreIds: selected.genreIds,
+                  },
+                  nightSlug
+                )
+              }
             />
             {isMobile ? null : notes}
           </div>
@@ -580,9 +573,6 @@ export default function EventWinnerSummary({
       ) : null}
       {isMobile ? notes : null}
       <SheetHost winners={winners} rating={rating} scale={scale} sheet={sheet} />
-      {detailsOpen ? (
-        <MovieDetails movie={selected} scale={scale} onClose={() => setDetailsOpen(false)} />
-      ) : null}
     </>
   );
 }

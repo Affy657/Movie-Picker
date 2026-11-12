@@ -5,7 +5,6 @@ import { Film } from 'lucide-react';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import {
   MovieCardKebab,
-  CardModals,
   CardNote,
   CardProposerFooter,
   CardSelectionOverlay,
@@ -84,7 +83,6 @@ export const EventMovieCard = memo(function EventMovieCard({
   isWinner = false,
   winnerRank,
   voteLockedHint,
-  participantCount,
 }: MovieCardCommonProps) {
   const s = useMovieCardState({
     movie: m,
@@ -130,7 +128,7 @@ export const EventMovieCard = memo(function EventMovieCard({
         <ListPoster src={s.posterSrc} srcSet={s.posterSrcSet} eager={eager} />
         <PosterDetailsTrigger
           hasDetails={s.hasDetails}
-          onOpen={() => s.openDetails('event')}
+          onOpen={() => s.openDetails()}
           title={m.title}
           t={t}
         />
@@ -174,14 +172,14 @@ export const EventMovieCard = memo(function EventMovieCard({
                 className={styles.cardProviders}
                 watchPageUrl={m.tmdbWatchPageUrl}
                 maxVisible={3}
-                onMoreClick={() => s.openDetails('availability')}
+                onMoreClick={() => s.openDetails()}
               />
             )}
             {rentCount > 0 && (
               <PaidOfferChip
                 type="rent"
                 count={rentCount}
-                onClick={() => s.openDetails('availability')}
+                onClick={() => s.openDetails()}
                 ariaLabel={t('movies.watchProviders.alsoRentAria', {
                   count: rentCount,
                   title: m.title,
@@ -192,7 +190,7 @@ export const EventMovieCard = memo(function EventMovieCard({
               <PaidOfferChip
                 type="buy"
                 count={buyCount}
-                onClick={() => s.openDetails('availability')}
+                onClick={() => s.openDetails()}
                 ariaLabel={t('movies.watchProviders.alsoBuyAria', {
                   count: buyCount,
                   title: m.title,
@@ -241,19 +239,6 @@ export const EventMovieCard = memo(function EventMovieCard({
           </div>
         </div>
       </div>
-
-      <CardModals
-        s={s}
-        m={m}
-        isHost={isHost}
-        onVote={onVote}
-        onRemove={onRemove}
-        isInWatchlist={isInWatchlist}
-        onToggleWatchlist={onToggleWatchlist}
-        onToggleWheelExclusion={onToggleWheelExclusion}
-        avatarsByPseudo={participantAvatarsByPseudo}
-        participantCount={participantCount}
-      />
     </Card>
   );
 });

@@ -10,7 +10,8 @@ public sealed record MovieShowcaseQuery(
     int? CollectionId = null,
     string? Provider = null,
     int? SeedTmdbId = null,
-    MovieMediaType SeedMediaType = MovieMediaType.Movie);
+    MovieMediaType SeedMediaType = MovieMediaType.Movie,
+    int? PersonId = null);
 
 public interface IGetMovieShowcaseHandler
 {

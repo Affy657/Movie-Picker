@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import ProfilePage from '@/features/profile/pages/ProfilePage';
@@ -46,7 +46,12 @@ const ME_PROFILE = {
   isProfilePublic: true,
 };
 
-function renderProfile(handle: string, client?: QueryClient) {
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
+}
+
+function renderProfile(handle: string, client?: QueryClient, withLocation = false) {
   return render(
     <AppTestProviders client={client}>
       <MemoryRouter initialEntries={[`/u/${handle}`]}>
@@ -55,6 +60,7 @@ function renderProfile(handle: string, client?: QueryClient) {
           <Route path="/" element={<div data-testid="route-home" />} />
           <Route path="/settings" element={<div data-testid="route-settings" />} />
         </Routes>
+        {withLocation ? <LocationProbe /> : null}
       </MemoryRouter>
     </AppTestProviders>
   );
@@ -664,7 +670,7 @@ describe('ProfilePage (MSW)', () => {
       ).toBeTruthy();
     });
 
-    it('opens a single details dialog when favorites and watched movies are both shown', async () => {
+    it('opens the film page of a favorite shown beside the watched movies', async () => {
       const user = userEvent.setup();
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
@@ -685,18 +691,14 @@ describe('ProfilePage (MSW)', () => {
               },
             ],
           })
-        ),
-        http.get(`${TEST_API_V1}/movies/tmdb/:tmdbId/details`, () =>
-          HttpResponse.json({ tmdbId: 949, title: 'Heat', overview: 'Un braqueur et un flic.' })
         )
       );
 
-      renderProfile('alice');
+      renderProfile('alice', undefined, true);
       await screen.findByRole('heading', { name: /derniers films vus/i });
       await user.click(screen.getByRole('button', { name: /voir les détails de « heat »/i }));
 
-      await screen.findByRole('heading', { name: 'Heat', level: 2 });
-      expect(screen.getAllByRole('dialog')).toHaveLength(1);
+      expect(screen.getByTestId('location')).toHaveTextContent('/film/949-heat');
     });
 
     it('invites the owner to pick favorites on their own profile', async () => {

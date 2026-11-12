@@ -1,5 +1,47 @@
 import { describe, it, expect } from 'vitest';
-import { ROUTES, withReturnTo } from '@/app/routes';
+import { ROUTES, movieSlug, parseMovieRef, withReturnTo } from '@/app/routes';
+
+describe('movie page routes', () => {
+  it('gives each film and show a readable address built from its title', () => {
+    expect(ROUTES.moviePagePattern).toBe('/film/:movieRef');
+    expect(ROUTES.showPagePattern).toBe('/serie/:movieRef');
+    expect(ROUTES.moviePage({ tmdbId: 438631, mediaType: 'movie', title: 'Dune' })).toBe(
+      '/film/438631-dune'
+    );
+    expect(ROUTES.moviePage({ tmdbId: 1399, mediaType: 'tv', title: 'Game of Thrones' })).toBe(
+      '/serie/1399-game-of-thrones'
+    );
+  });
+
+  it('carries the night the film was opened from', () => {
+    expect(
+      ROUTES.moviePage({ tmdbId: 14306, mediaType: 'movie', title: 'Marley & moi' }, 'Ab3x')
+    ).toBe('/film/14306-marley-moi?soiree=Ab3x');
+  });
+
+  it('keeps the bare id when the title gives no usable slug', () => {
+    expect(ROUTES.moviePage({ tmdbId: 7, mediaType: 'movie', title: '!!!' })).toBe('/film/7');
+    expect(ROUTES.moviePage({ tmdbId: 7, mediaType: 'movie' })).toBe('/film/7');
+  });
+
+  it('folds accents and punctuation into a short slug', () => {
+    expect(movieSlug('Le Fabuleux Destin d’Amélie Poulain')).toBe(
+      'le-fabuleux-destin-d-amelie-poulain'
+    );
+    expect(movieSlug('Wildwood : La prophétie de la forêt')).toBe(
+      'wildwood-la-prophetie-de-la-foret'
+    );
+    expect(movieSlug('x'.repeat(120))).toHaveLength(60);
+  });
+
+  it('reads the TMDB id back from the address', () => {
+    expect(parseMovieRef('438631-dune')).toBe(438631);
+    expect(parseMovieRef('438631')).toBe(438631);
+    expect(parseMovieRef('dune')).toBeNull();
+    expect(parseMovieRef('0-dune')).toBeNull();
+    expect(parseMovieRef(undefined)).toBeNull();
+  });
+});
 
 describe('withReturnTo', () => {
   it('omits the returnTo parameter when the target is the root', () => {

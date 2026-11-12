@@ -75,6 +75,7 @@ export function buildContentSecurityPolicy(
     'blob:',
     'https://image.tmdb.org',
     'https://api.dicebear.com',
+    'https://i.ytimg.com',
     apiOrigin,
   ]
     .filter(Boolean)

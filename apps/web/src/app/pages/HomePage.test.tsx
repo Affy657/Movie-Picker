@@ -40,10 +40,6 @@ const collectionsHandler = http.get(`${TEST_API_V1}/movies/collections`, () =>
   })
 );
 
-const detailsHandler = http.get(`${TEST_API_V1}/movies/tmdb/:tmdbId/details`, () =>
-  HttpResponse.json({ tmdbId: 1000, title: 'trending 1', overview: 'Un synopsis.' })
-);
-
 const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
   HttpResponse.json({
     userId: 'u1',
@@ -108,7 +104,7 @@ const personalHandlers = [
 
 function LocationProbe() {
   const location = useLocation();
-  return <span data-testid="location">{`${location.pathname}${location.search}`}</span>;
+  return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
 }
 
 function renderPage(initialEntry = '/') {
@@ -117,8 +113,8 @@ function renderPage(initialEntry = '/') {
       <MemoryRouter initialEntries={[initialEntry]}>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/films/recherche" element={<LocationProbe />} />
         </Routes>
+        <LocationProbe />
       </MemoryRouter>
     </AppTestProviders>
   );
@@ -166,17 +162,15 @@ describe('HomePage', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders the unified card in the rails: the poster opens the details', async () => {
-    server.use(authMeGuestHandler, showcaseHandler, collectionsHandler, detailsHandler);
+  it('renders the unified card in the rails: the poster opens the film page', async () => {
+    server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
     renderPage();
 
     await userEvent.click(
       await screen.findByRole('button', { name: /voir les détails de « trending 1 »/i })
     );
 
-    expect(
-      await screen.findByRole('heading', { name: 'trending 1', level: 2 }, { timeout: 20000 })
-    ).toBeInTheDocument();
+    expect(screen.getByTestId('location')).toHaveTextContent('/film/1000-trending-1');
   });
 
   it('most proposed: a ranked list with the year, the genre and the night count', async () => {
@@ -213,9 +207,7 @@ describe('HomePage', () => {
     await userEvent.click(
       within(first).getByRole('button', { name: 'Voir les détails de « most-proposed 1 »' })
     );
-    expect(
-      await screen.findByRole('heading', { name: 'most-proposed 1', level: 2 })
-    ).toBeInTheDocument();
+    expect(screen.getByTestId('location')).toHaveTextContent('/film/1000-most-proposed-1');
   });
 
   it('trending: a numbered top 10 at most, following the genre chips', async () => {
@@ -247,32 +239,6 @@ describe('HomePage', () => {
 
     await userEvent.click(within(section).getByRole('tab', { name: 'Comédie' }));
     await waitFor(() => expect(genres).toContain('35'));
-  });
-
-  it('signed-in: the details modal offers the watchlist and the proposal', async () => {
-    server.use(
-      authedUserHandler,
-      showcaseHandler,
-      collectionsHandler,
-      detailsHandler,
-      ...personalHandlers,
-      http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
-    );
-    renderPage();
-
-    await userEvent.click(
-      await screen.findByRole('button', { name: /voir les détails de « trending 1 »/i })
-    );
-    await screen.findByRole('heading', { name: 'trending 1', level: 2 });
-    expect(screen.getByRole('button', { name: 'Ajouter à ma liste' })).toBeInTheDocument();
-
-    await userEvent.click(screen.getByRole('button', { name: 'Proposer dans une soirée' }));
-
-    expect(
-      await screen.findByText(/proposer «\s*trending 1\s*» dans une soirée/i)
-    ).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'trending 1', level: 2 })).not.toBeInTheDocument();
-    expect(await screen.findByText(/aucune soirée active/i)).toBeInTheDocument();
   });
 
   function watchlistAddRecorder() {
@@ -310,97 +276,31 @@ describe('HomePage', () => {
     );
   });
 
-  it('signed-in: adding from the details of a showcase card sends its genres', async () => {
+  it('hover, signed-in: adding a friends row card to the watchlist sends its genres', async () => {
+    stubHoverCapability();
     const added = watchlistAddRecorder();
     server.use(
       authedUserHandler,
       showcaseHandler,
       collectionsHandler,
-      detailsHandler,
       ...personalHandlers,
       added.handler
     );
     renderPage();
+    const user = userEvent.setup();
 
-    await userEvent.click(
-      await screen.findByRole('button', { name: /voir les détails de « trending 1 »/i })
+    await user.click(await screen.findByRole('tab', { name: 'Vos amis ont vu' }));
+    await user.click(
+      within(await posterCard("Film d'un ami")).getByRole('button', {
+        name: "Ajouter « Film d'un ami » à ma liste",
+      })
     );
-    await screen.findByRole('heading', { name: 'trending 1', level: 2 });
-    await userEvent.click(screen.getByRole('button', { name: 'Ajouter à ma liste' }));
-
-    await waitFor(() =>
-      expect(added.bodies).toEqual([
-        expect.objectContaining({ tmdbId: 1000, title: 'trending 1', genreIds: [18] }),
-      ])
-    );
-  });
-
-  it('signed-in: adding from the details of a friends row card sends its genres', async () => {
-    const added = watchlistAddRecorder();
-    server.use(
-      authedUserHandler,
-      showcaseHandler,
-      collectionsHandler,
-      detailsHandler,
-      ...personalHandlers,
-      added.handler
-    );
-    renderPage();
-
-    await userEvent.click(await screen.findByRole('tab', { name: 'Vos amis ont vu' }));
-    await userEvent.click(
-      await screen.findByRole('button', { name: /voir les détails de « film d'un ami »/i })
-    );
-    await screen.findByRole('heading', { name: "Film d'un ami", level: 2 });
-    await userEvent.click(screen.getByRole('button', { name: 'Ajouter à ma liste' }));
 
     await waitFor(() =>
       expect(added.bodies).toEqual([
         expect.objectContaining({ tmdbId: 502, title: "Film d'un ami", genreIds: [18] }),
       ])
     );
-  });
-
-  it('a ?film address opens the details from TMDB alone, even for a title outside the rails', async () => {
-    server.use(
-      authMeGuestHandler,
-      showcaseHandler,
-      collectionsHandler,
-      http.get(`${TEST_API_V1}/movies/tmdb/238/details`, () =>
-        HttpResponse.json({
-          tmdbId: 238,
-          title: 'Le Parrain',
-          releaseDate: '1972-03-14',
-          runtimeMinutes: 175,
-          voteAverage: 8.7,
-          genres: ['Drame', 'Crime'],
-          backdropPath: 'https://image.tmdb.org/t/p/w780/parrain-wide.jpg',
-        })
-      )
-    );
-    renderPage('/?film=238');
-
-    expect(
-      await screen.findByRole('heading', { name: 'Le Parrain', level: 2 })
-    ).toBeInTheDocument();
-    expect(screen.getByText('1972')).toBeInTheDocument();
-    expect(screen.getByText('2h55')).toBeInTheDocument();
-    expect(screen.getByRole('list', { name: 'Genres' })).toHaveTextContent('DrameCrime');
-  });
-
-  it('visitor: no library footer in the details modal', async () => {
-    server.use(authMeGuestHandler, showcaseHandler, collectionsHandler, detailsHandler);
-    renderPage();
-
-    await userEvent.click(
-      await screen.findByRole('button', { name: /voir les détails de « trending 1 »/i })
-    );
-    await screen.findByRole('heading', { name: 'trending 1', level: 2 });
-
-    expect(screen.queryByRole('button', { name: 'Ajouter à ma liste' })).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Proposer dans une soirée' })
-    ).not.toBeInTheDocument();
   });
 
   it('hover, signed-in: the showcase card offers the watchlist toggle and Proposer', async () => {

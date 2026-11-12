@@ -134,6 +134,49 @@ public sealed class MovieShowcaseEndpointTests : IClassFixture<MoviePickerApplic
         Assert.Equal("2016", item.Year);
     }
 
+    private static HttpResponseMessage NolanCreditsOnly(string pathAndQuery) =>
+        pathAndQuery.StartsWith("/3/person/525/movie_credits", StringComparison.Ordinal)
+            ? TmdbJson("""
+                {
+                  "crew": [
+                    { "id": 77, "title": "Memento", "release_date": "2000-10-11", "poster_path": "/memento.jpg", "vote_count": 15000, "job": "Director" },
+                    { "id": 27205, "title": "Inception", "release_date": "2010-07-15", "poster_path": "/inception.jpg", "vote_count": 37000, "job": "Director" },
+                    { "id": 11660, "title": "Following", "release_date": "1998-09-12", "poster_path": null, "vote_count": 1500, "job": "Director" },
+                    { "id": 155, "title": "The Dark Knight", "release_date": "2008-07-16", "poster_path": "/tdk.jpg", "vote_count": 33000, "job": "Screenplay" }
+                  ]
+                }
+                """)
+            : new HttpResponseMessage(HttpStatusCode.NotFound);
+
+    [Fact]
+    public async Task Showcase_Director_ListsTheFilmsThatPersonDirected_MostVotedFirst()
+    {
+        using var client = CreateClientOnTmdb(NolanCreditsOnly);
+
+        var res = await client.GetAsync("/api/v1/movies/showcase?section=director&personId=525");
+
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        var body = await res.Content.ReadFromJsonAsync<MovieShowcaseListResponse>(JsonOptions);
+        Assert.Equal("director", body!.Section);
+        Assert.Equal([27_205, 77], body.Items.Select(item => item.Id));
+        Assert.All(body.Items, item => Assert.Equal(MovieMediaType.Movie, item.MediaType));
+        Assert.Equal("Inception", body.Items[0].Title);
+        Assert.Equal("2010", body.Items[0].Year);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("&personId=0")]
+    [InlineData("&personId=abc")]
+    public async Task Showcase_DirectorWithoutAPerson_Answers400(string personQuery)
+    {
+        using var client = CreateClientOnTmdb(NolanCreditsOnly);
+
+        var res = await client.GetAsync($"/api/v1/movies/showcase?section=director{personQuery}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+    }
+
     [Fact]
     public async Task Showcase_RecommendationsForASeedTmdbDoesNotKnowAsAFilm_IsAnEmptyList()
     {
@@ -195,7 +238,7 @@ public sealed class MovieShowcaseEndpointTests : IClassFixture<MoviePickerApplic
 
     [Theory]
     [InlineData("?section=trending&genreIds=987654", "unknown_genre")]
-    [InlineData("?section=collection&collectionId=4242", "unknown_collection")]
+    [InlineData("?section=collection&collectionId=2000000000", "unknown_collection")]
     [InlineData("?section=recommendations&seedTmdbId=2000000000", "reference_movie_missing")]
     public async Task Showcase_KeyOutOfTheCatalog_ReturnsBadRequestWithItsCode(string query, string reason)
     {

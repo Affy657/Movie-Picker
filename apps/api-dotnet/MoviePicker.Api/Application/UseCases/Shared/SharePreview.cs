@@ -54,17 +54,25 @@ public static class SharePreviewContent
     public static string Film(Movie movie) =>
         string.IsNullOrWhiteSpace(movie.Year) ? movie.Title : $"{movie.Title} ({movie.Year})";
 
-    public static async Task<string> PosterOrAsync(
+    public static Task<string> PosterOrAsync(
         IPosterImageStore posters,
         Movie movie,
         string apiBase,
         string fallback,
+        CancellationToken ct) =>
+        PosterOrAsync(posters, movie.PosterPath, apiBase, fallback, ct);
+
+    public static async Task<string> PosterOrAsync(
+        IPosterImageStore posters,
+        string? posterPath,
+        string apiBase,
+        string fallback,
         CancellationToken ct)
     {
-        if (string.IsNullOrEmpty(movie.PosterPath))
+        if (string.IsNullOrEmpty(posterPath))
             return fallback;
 
-        var publicPath = await posters.ToStoredPosterPathAsync(movie.PosterPath, ct);
+        var publicPath = await posters.ToStoredPosterPathAsync(posterPath, ct);
         if (string.IsNullOrEmpty(publicPath) || !publicPath.StartsWith('/'))
             return fallback;
 

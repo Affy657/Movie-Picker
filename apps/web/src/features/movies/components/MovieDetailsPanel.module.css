@@ -21,7 +21,7 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: var(--details-label-width) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-1-5) var(--space-2-5);
   font-size: var(--font-size-xs);
 }
@@ -51,4 +51,3 @@
 .trailerRow {
   margin-top: var(--space-1);
 }
-

@@ -43,7 +43,6 @@ interface MovieListProps {
   onSetSort?: (key: MovieRowSortKey) => void;
   voteErrors?: Record<string, { message: string }>;
   onRetryVote?: (movieId: string) => void;
-  participantCount?: number;
   emptyState?: ReactNode;
 }
 
@@ -79,7 +78,6 @@ export default function MovieList({
   onSetSort,
   voteErrors,
   onRetryVote,
-  participantCount,
   emptyState = null,
 }: Readonly<MovieListProps>) {
   const { t } = useTranslation();
@@ -126,7 +124,6 @@ export default function MovieList({
     winnerRank: winnerRankOf(m.id),
     voteLockedHint: voteQuotaLockedHint && m.myVote == null ? voteQuotaLockedHint : undefined,
     isMobile,
-    participantCount,
     t,
   });
 
