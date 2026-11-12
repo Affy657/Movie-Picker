@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.11.0] - 2026-11-12
+
 ### Added
 
 - **Chaque film a sa propre page** : la fiche qui s'ouvrait en fenêtre devient une vraie page, avec son adresse à partager. On y trouve le synopsis en entier, les vidéos, la distribution avec photos et rôles, l'équipe, le titre original, le public, la langue, les pays, le budget, les plateformes avec leur nom, la note TMDB et celle de vos soirées. En dessous : la saga, les films du même réalisateur et les films similaires.
@@ -681,7 +683,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.10.1...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.11.0...HEAD
+[1.11.0]: https://github.com/Affy657/Movie-Picker/compare/v1.10.1...v1.11.0
 [1.10.1]: https://github.com/Affy657/Movie-Picker/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/Affy657/Movie-Picker/compare/v1.9.1...v1.10.0
 [1.9.1]: https://github.com/Affy657/Movie-Picker/compare/v1.9.0...v1.9.1
