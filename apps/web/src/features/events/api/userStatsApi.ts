@@ -16,6 +16,7 @@ export interface UserStats {
   moviesProposed: number;
   votesCast: number;
   winningProposals: number;
+  proposalsAverageRating?: number | null;
   moviesSeen: number;
   currentStreakWeeks: number;
   bestStreakWeeks: number;

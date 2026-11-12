@@ -122,6 +122,35 @@ export async function fetchUserWatchedMovieItems(
   return res.items;
 }
 
+export interface UserProposedMovieItem {
+  tmdbId: number;
+  title: string;
+  year: string;
+  posterPath: string | null;
+  voteAverage?: number | null;
+  runtimeMinutes?: number | null;
+  genreIds: number[];
+  mediaType: MovieMediaType;
+  lastProposedAt: string;
+  proposalCount: number;
+}
+
+export interface UserProposedMoviesResponse {
+  items: UserProposedMovieItem[];
+}
+
+export async function fetchUserProposedMovieItems(
+  handle: string,
+  winningOnly: boolean,
+  signal?: AbortSignal
+): Promise<UserProposedMovieItem[]> {
+  const res = await fetchApi<UserProposedMoviesResponse>(
+    `${apiPath('users', handle, 'proposed-movies')}?winningOnly=${winningOnly}`,
+    { signal }
+  );
+  return res.items;
+}
+
 export const PROFILE_WATCHED_PREVIEW_TAKE = 24;
 
 export async function fetchUserWatchedMoviesPreview(

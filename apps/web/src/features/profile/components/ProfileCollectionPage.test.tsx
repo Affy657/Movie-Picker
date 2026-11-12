@@ -36,7 +36,7 @@ const ITEMS: MovieListItemLike[] = ['Inception', 'Arrival', 'Interstellar'].map(
 const TEXTS: ProfileCollectionTexts = {
   pageTitle: (name) => `Films de ${name}`,
   seoDescription: () => 'Films',
-  subtitle: (count) => `${count} films`,
+  subtitle: (items) => `${items.length} films`,
   listAria: 'Films vus',
   loadError: 'Erreur',
   emptyTitle: 'Rien',

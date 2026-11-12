@@ -34,7 +34,7 @@ export default function ProfileMoviesPage() {
       pageTitle: (name) => t('profile.movies.pageTitle', { name }),
       seoDescription: (profile) =>
         t('profile.movies.seoDescription', { name: profile.displayName, handle: profile.handle }),
-      subtitle: (count) =>
+      subtitle: ({ length: count }) =>
         pluralizeCount(count, 'profile.movies.pageSubtitleOne', 'profile.movies.pageSubtitle', t, {
           count,
         }),

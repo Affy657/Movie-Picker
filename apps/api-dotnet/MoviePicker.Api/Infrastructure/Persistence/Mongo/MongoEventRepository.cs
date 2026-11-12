@@ -177,29 +177,6 @@ public sealed class MongoEventRepository : IEventRepository
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
     }
 
-    public async Task<int> CountByWinnerMovieIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
-    {
-        if (movieIds.Count == 0)
-            return 0;
-
-        var ids = movieIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
-        if (ids.Count == 0)
-            return 0;
-
-        var filter = Builders<EventDocument>.Filter.In("winners.movieId", ToObjectIds(ids));
-        var c = await _collection.CountDocumentsAsync(filter, cancellationToken: ct);
-        return (int)c;
-    }
-
-    private static IEnumerable<ObjectId> ToObjectIds(IEnumerable<string> ids)
-    {
-        foreach (var id in ids)
-        {
-            if (ObjectId.TryParse(id, out var parsed))
-                yield return parsed;
-        }
-    }
-
     public async Task<bool> DeleteAsync(string eventId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(eventId))

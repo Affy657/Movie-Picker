@@ -8,6 +8,15 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Les films proposés et les propositions gagnantes d'un profil s'ouvrent en liste** : sur le profil, toucher « films proposés » ou « propositions gagnantes » affiche les films concernés, chacun une seule fois avec le nombre de fois où il a été proposé ou a gagné, avec la recherche, les filtres et le tri des films vus.
+- **La note moyenne des propositions** rejoint les chiffres du profil : pour chaque film proposé qui a gagné une soirée, la moyenne des notes de toute la soirée, puis la moyenne de ces films. Elle s'affiche dès que trois de ces films sont notés et permet de voir qui propose les films les plus appréciés.
+
+### Fixed
+
+- **« Propositions gagnantes » compte chaque film gagnant** : une soirée qui retient deux de vos films compte désormais deux propositions gagnantes, et non une.
+
 ## [1.12.1] - 2026-11-12
 
 ### Fixed

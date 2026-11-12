@@ -64,14 +64,8 @@ internal static class WatchedMoviesFacts
         MoviePickerOptions options,
         CancellationToken ct)
     {
-        if (items.Count == 0 || !options.HasTmdbCredentials)
-            return items;
-
-        var region = string.IsNullOrWhiteSpace(options.TmdbWatchProvidersRegion)
-            ? "FR"
-            : options.TmdbWatchProvidersRegion.Trim().ToUpperInvariant();
-        var keys = items.Select(item => (item.TmdbId, item.MediaType)).Distinct().ToList();
-        var enrichments = await tmdb.GetEnrichmentsAsync(keys, region, ct);
+        var enrichments = await LoadEnrichmentsAsync(
+            items.Select(item => (item.TmdbId, item.MediaType)), tmdb, options, ct);
         if (enrichments.Count == 0)
             return items;
 
@@ -80,6 +74,22 @@ internal static class WatchedMoviesFacts
                 ? WithFacts(item, enrichment)
                 : item)
             .ToList();
+    }
+
+    public static async Task<IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>> LoadEnrichmentsAsync(
+        IEnumerable<(int TmdbId, MovieMediaType MediaType)> films,
+        ITmdbMovieSearch tmdb,
+        MoviePickerOptions options,
+        CancellationToken ct)
+    {
+        var keys = films.Distinct().ToList();
+        if (keys.Count == 0 || !options.HasTmdbCredentials)
+            return new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>();
+
+        var region = string.IsNullOrWhiteSpace(options.TmdbWatchProvidersRegion)
+            ? "FR"
+            : options.TmdbWatchProvidersRegion.Trim().ToUpperInvariant();
+        return await tmdb.GetEnrichmentsAsync(keys, region, ct);
     }
 
     private static DateTimeOffset WatchedAtOf(Event evt) =>

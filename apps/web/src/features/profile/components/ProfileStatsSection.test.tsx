@@ -27,7 +27,12 @@ const BUSY_STATS: UserStats = {
   votesCast: 58,
 };
 
-function renderSection(stats: UserStats, watchedCount?: number, watchedPending = false) {
+function renderSection(
+  stats: UserStats,
+  watchedCount?: number,
+  watchedPending = false,
+  proposalLinks: { proposalsTo?: string; winningProposalsTo?: string } = {}
+) {
   return render(
     <AppTestProviders>
       <MemoryRouter>
@@ -36,6 +41,7 @@ function renderSection(stats: UserStats, watchedCount?: number, watchedPending =
           watchedCount={watchedCount}
           watchedPending={watchedPending}
           watchedTo="/u/lea/films"
+          {...proposalLinks}
         />
       </MemoryRouter>
     </AppTestProviders>
@@ -73,6 +79,49 @@ describe('ProfileStatsSection', () => {
       'href',
       '/u/lea/films'
     );
+  });
+
+  it('leads from the proposals and the winning proposals figures to their lists', () => {
+    renderSection(BUSY_STATS, 26, false, {
+      proposalsTo: '/u/lea/propositions',
+      winningProposalsTo: '/u/lea/propositions-gagnantes',
+    });
+    expect(screen.getByRole('link', { name: /34\s*films proposés/i })).toHaveAttribute(
+      'href',
+      '/u/lea/propositions'
+    );
+    expect(screen.getByRole('link', { name: /7\s*propositions gagnantes/i })).toHaveAttribute(
+      'href',
+      '/u/lea/propositions-gagnantes'
+    );
+  });
+
+  it('keeps a proposals figure at zero as plain text, with no list to open', () => {
+    renderSection({ ...BUSY_STATS, winningProposals: 0 }, 26, false, {
+      proposalsTo: '/u/lea/propositions',
+      winningProposalsTo: '/u/lea/propositions-gagnantes',
+    });
+    expect(screen.getByText('propositions gagnantes').closest('a')).toBeNull();
+    expect(screen.getByRole('link', { name: /34\s*films proposés/i })).toBeInTheDocument();
+  });
+
+  it('shows the average rating of the proposals on the viewer scale, after the winning proposals', () => {
+    renderSection({ ...BUSY_STATS, proposalsAverageRating: 6.86 }, 26);
+    const figures = screen.getAllByRole('listitem').map((item) => item.textContent);
+    expect(figures).toEqual([
+      '26films vus',
+      '12soirées créées',
+      '1soirée rejointe',
+      '34films proposés',
+      '7propositions gagnantes',
+      '3,4/5note moyenne des propositions',
+      '58votes',
+    ]);
+  });
+
+  it('leaves the average rating out while too few proposals are rated', () => {
+    renderSection({ ...BUSY_STATS, proposalsAverageRating: null }, 26);
+    expect(screen.queryByText('note moyenne des propositions')).not.toBeInTheDocument();
   });
 
   it.each([

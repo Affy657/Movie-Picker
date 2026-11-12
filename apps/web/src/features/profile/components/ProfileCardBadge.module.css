@@ -1,0 +1,5 @@
+.badge {
+  gap: var(--space-1);
+  text-transform: none;
+  letter-spacing: var(--tracking-slight);
+}

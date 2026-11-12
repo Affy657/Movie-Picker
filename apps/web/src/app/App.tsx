@@ -44,6 +44,7 @@ const WatchlistPage = lazy(ROUTE_CHUNKS.watchlist);
 const NotificationsPage = lazy(ROUTE_CHUNKS.notifications);
 const ProfilePage = lazy(ROUTE_CHUNKS.profile);
 const ProfileMoviesPage = lazy(ROUTE_CHUNKS.profileMovies);
+const ProfileProposalsPage = lazy(ROUTE_CHUNKS.profileProposals);
 const ProfileWatchlistPage = lazy(ROUTE_CHUNKS.profileWatchlist);
 const NotFoundPage = lazy(ROUTE_CHUNKS.notFound);
 const MoviePage = lazy(ROUTE_CHUNKS.moviePage);
@@ -164,6 +165,11 @@ export function AppRoutes() {
         <Route path={ROUTES.eventDetailPattern} element={<EventDetail />} />
         <Route path={ROUTES.nightRecapPattern} element={<NightRecapPage />} />
         <Route path={ROUTES.profileMoviesPattern} element={<ProfileMoviesPage />} />
+        <Route path={ROUTES.profileProposalsPattern} element={<ProfileProposalsPage />} />
+        <Route
+          path={ROUTES.profileWinningProposalsPattern}
+          element={<ProfileProposalsPage winningOnly />}
+        />
         <Route path={ROUTES.profileWatchlistPattern} element={<ProfileWatchlistPage />} />
         <Route path={ROUTES.profilePattern} element={<ProfilePage />} />
         <Route path="*" element={<NotFoundPage />} />

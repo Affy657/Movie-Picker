@@ -26,4 +26,10 @@ public static class WinnerMovies
             .OfType<Movie>()
             .ToList();
     }
+
+    public static IReadOnlyList<Movie> AmongProposals(IEnumerable<Movie> proposals, IEnumerable<Event> events)
+    {
+        var winnerMovieIds = events.SelectMany(e => e.GetWinnerMovieIds()).ToHashSet();
+        return proposals.Where(m => winnerMovieIds.Contains(m.Id)).ToList();
+    }
 }

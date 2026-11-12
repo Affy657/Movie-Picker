@@ -121,6 +121,14 @@ export const ROUTES = {
 
   profileMovies: (handle: string) => `/u/${handle}/films`,
 
+  profileProposalsPattern: '/u/:handle/propositions',
+
+  profileProposals: (handle: string) => `/u/${handle}/propositions`,
+
+  profileWinningProposalsPattern: '/u/:handle/propositions-gagnantes',
+
+  profileWinningProposals: (handle: string) => `/u/${handle}/propositions-gagnantes`,
+
   profileWatchlistPattern: '/u/:handle/watchlist',
 
   profileWatchlist: (handle: string) => `/u/${handle}/watchlist`,
