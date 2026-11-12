@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.12.0] - 2026-11-12
+
 ### Added
 
 - **Créer une soirée sans quitter l'écran** : « Nouvelle soirée » n'est plus un onglet mais un bouton bleu dans l'en-tête (« Créer » dans la barre du bas sur téléphone), qui ouvre une fenêtre par-dessus la page. On y choisit le jour d'un clic (ce soir, demain, le week-end) et l'heure, le nom suit la date, l'ambiance se choisit en une puce, et les règles s'ouvrent dans leur propre fenêtre, sans perdre la saisie : on part des réglages par défaut, de votre dernière soirée ou de l'un de vos modèles, puis on ajuste chaque règle.
@@ -704,7 +706,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.11.2...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.12.0...HEAD
+[1.12.0]: https://github.com/Affy657/Movie-Picker/compare/v1.11.2...v1.12.0
 [1.11.2]: https://github.com/Affy657/Movie-Picker/compare/v1.11.1...v1.11.2
 [1.11.1]: https://github.com/Affy657/Movie-Picker/compare/v1.11.0...v1.11.1
 [1.11.0]: https://github.com/Affy657/Movie-Picker/compare/v1.10.1...v1.11.0
