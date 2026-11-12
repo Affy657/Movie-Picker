@@ -1,134 +1,94 @@
-.card {
-  display: flex;
-  flex-direction: column;
-  padding: var(--space-6);
+.header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-7);
+  padding: var(--space-6) 0 var(--space-7);
 }
 
 .avatar {
-  width: var(--space-24);
-  height: var(--space-24);
-  margin-bottom: var(--space-4);
+  width: 8rem;
+  height: 8rem;
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
 }
 
 .name {
-  width: 70%;
-  height: var(--space-6);
-}
-
-.handle {
-  width: 50%;
-  height: var(--space-4);
-  margin-top: var(--space-2);
-}
-
-.bioLine {
-  width: 100%;
-  height: var(--space-4);
-  margin-top: var(--space-3-5);
-}
-
-.bioLineShort {
-  width: 60%;
-  height: var(--space-4);
-  margin-top: var(--space-1-5);
-}
-
-.streakPill {
-  height: var(--space-12);
-  margin-top: var(--space-3);
-  border-radius: var(--radius-md);
-}
-
-.followRow {
-  display: flex;
-  gap: var(--space-2);
-  margin-top: var(--space-4);
-}
-
-.followCell {
-  flex: 1 1 0;
-  height: var(--tap-target-min);
-  border-radius: var(--radius-md);
-}
-
-.actionBtn {
-  height: var(--tap-target-min);
-  margin-top: var(--space-7);
-  border-radius: var(--radius-md);
-}
-
-.stats {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-}
-
-.heroGrid {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-3);
-}
-
-.heroCard {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3-5);
-  min-height: var(--space-20);
-  padding: var(--space-3-5) var(--space-4);
-}
-
-.heroIcon {
-  flex: 0 0 auto;
-  width: var(--space-10);
-  height: var(--space-10);
-}
-
-.heroText {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1-5);
-  min-width: 0;
-  width: 100%;
-}
-
-.heroValue {
   width: 40%;
+  height: var(--space-9);
+}
+
+.meta {
+  width: 30%;
+  height: var(--space-4);
+}
+
+.bio {
+  width: 70%;
+  height: var(--space-4);
+}
+
+.social {
+  width: 35%;
+  height: var(--space-4);
+}
+
+.action {
+  width: 8rem;
+  height: var(--tap-target-min);
+  border-radius: var(--radius-md);
+}
+
+.figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-12);
+  padding: var(--space-5) 0;
+  border-top: 1px solid var(--color-border-subtle);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.figureValue {
+  width: var(--space-10);
   height: var(--space-6);
 }
 
-.heroLabel {
-  width: 80%;
+.figureLabel {
+  width: var(--space-20);
   height: var(--space-3);
 }
 
-.panels {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4);
-}
+@media (max-width: 47.9375rem) {
+  .header {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-4);
+    padding: var(--space-2) 0 var(--space-5);
+  }
 
-.panel {
-  min-width: 0;
-  height: 9.5rem;
-  border-radius: var(--radius-lg);
-}
-
-@media (max-width: 63.9375rem) {
   .avatar {
     width: var(--space-20);
     height: var(--space-20);
   }
-}
 
-@media (max-width: 47.9375rem) {
-  .heroGrid {
-    grid-template-columns: repeat(2, 1fr);
+  .action {
+    grid-column: 1 / -1;
+    width: 100%;
   }
 
-  .panels {
-    grid-template-columns: minmax(0, 1fr);
+  .figures {
+    flex-wrap: nowrap;
+    overflow: hidden;
+    gap: var(--space-7);
   }
 }

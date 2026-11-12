@@ -63,7 +63,10 @@ function renderProfile(handle: string, client?: QueryClient) {
 describe('ProfilePage (MSW)', () => {
   const server = setupServer(
     http.get(`${TEST_API_V1}/users/:handle/stats`, () => HttpResponse.json(EMPTY_STATS)),
-    http.get(`${TEST_API_V1}/users/:handle/watched-movies`, () => HttpResponse.json({ items: [] }))
+    http.get(`${TEST_API_V1}/users/:handle/watched-movies`, () => HttpResponse.json({ items: [] })),
+    http.get(`${TEST_API_V1}/users/:handle/watchlist`, () =>
+      HttpResponse.json({ items: [], total: 0, hasMore: false })
+    )
   );
 
   beforeAll(() => server.listen({ onUnhandledFrame: 'warn' }));
@@ -353,7 +356,7 @@ describe('ProfilePage (MSW)', () => {
   });
 
   describe('watchlist', () => {
-    it('propose la watchlist d’un autre utilisateur avec son nombre de films', async () => {
+    it('shows a visitor the watchlist of someone else with its count and a way to the full list', async () => {
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
         http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE))
@@ -361,23 +364,10 @@ describe('ProfilePage (MSW)', () => {
 
       renderProfile('alice');
 
-      const link = await screen.findByRole('link', { name: /sa watchlist/i });
-      expect(link).toHaveAttribute('href', '/u/alice/watchlist');
-      expect(link).toHaveTextContent(/24 films à voir/i);
-    });
-
-    it('accorde le compteur au singulier', async () => {
-      server.use(
-        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-        http.get(`${TEST_API_V1}/users/alice`, () =>
-          HttpResponse.json({ ...ALICE_PROFILE, watchlistCount: 1 })
-        )
-      );
-
-      renderProfile('alice');
-
-      expect(await screen.findByRole('link', { name: /sa watchlist/i })).toHaveTextContent(
-        /1 film à voir/i
+      expect(await screen.findByRole('heading', { name: 'Sa watchlist 24' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /tout voir sa watchlist/i })).toHaveAttribute(
+        'href',
+        '/u/alice/watchlist'
       );
     });
 
@@ -395,6 +385,7 @@ describe('ProfilePage (MSW)', () => {
       renderProfile('alice');
 
       await screen.findByRole('heading', { name: 'Alice' });
+      expect(screen.queryByRole('heading', { name: /watchlist/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('link', { name: /watchlist/i })).not.toBeInTheDocument();
     });
 
@@ -414,9 +405,11 @@ describe('ProfilePage (MSW)', () => {
 
       renderProfile('moi');
 
-      const link = await screen.findByRole('link', { name: /ma watchlist/i });
-      expect(link).toHaveAttribute('href', '/watchlist');
-      expect(link).toHaveTextContent(/9 films à voir/i);
+      expect(await screen.findByRole('heading', { name: 'Ma watchlist 9' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /tout voir ma watchlist/i })).toHaveAttribute(
+        'href',
+        '/watchlist'
+      );
       expect(screen.queryByText(/masquée/i)).not.toBeInTheDocument();
     });
 
@@ -437,9 +430,8 @@ describe('ProfilePage (MSW)', () => {
 
       renderProfile('moi');
 
-      const link = await screen.findByRole('link', { name: /ma watchlist/i });
-      expect(link).toHaveAttribute('href', '/watchlist');
-      expect(link).toHaveTextContent(/masquée/i);
+      expect(await screen.findByRole('heading', { name: 'Ma watchlist' })).toBeInTheDocument();
+      expect(screen.getByText('Masquée')).toBeInTheDocument();
       expect(screen.getByRole('link', { name: /rendre visible/i })).toHaveAttribute(
         'href',
         '/settings/profil'
@@ -463,7 +455,7 @@ describe('ProfilePage (MSW)', () => {
 
       renderProfile('moi');
 
-      await screen.findByRole('link', { name: /ma watchlist/i });
+      await screen.findByRole('heading', { name: 'Ma watchlist 3' });
       expect(screen.queryByRole('link', { name: /rendre visible/i })).not.toBeInTheDocument();
     });
   });
@@ -566,8 +558,9 @@ describe('ProfilePage (MSW)', () => {
 
     expect(screen.getByText('4')).toBeInTheDocument();
     expect(screen.getByText(/soirées créées/i)).toBeInTheDocument();
-    expect(screen.getByText(/genres favoris/i)).toBeInTheDocument();
-    expect(screen.queryByText(/votes donnés/i)).not.toBeInTheDocument();
+    expect(screen.getByText('30')).toBeInTheDocument();
+    expect(screen.getByText('votes')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Genres préférés' })).toBeInTheDocument();
     expect(screen.queryByText(/films vus/i)).not.toBeInTheDocument();
   });
 
@@ -582,18 +575,19 @@ describe('ProfilePage (MSW)', () => {
 
     await screen.findByRole('heading', { name: 'Alice' });
 
-    await waitFor(() => {
-      expect(
-        screen.getByRole('region', { name: '3 semaines de suite, Record 5 semaines' })
-      ).toBeInTheDocument();
-    });
+    const streak = await screen.findByText(/^3 semaines de suite/);
+    expect(streak).toHaveTextContent('3 semaines de suite, Record 5 semaines');
   });
 
-  it("ne montre pas la flamme quand l'utilisateur n'a jamais eu de streak", async () => {
+  it('ne montre pas la flamme quand la série est éteinte, même avec un record', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
       http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
-      createUserStatsHandler('alice', { currentStreakWeeks: 0, bestStreakWeeks: 0 })
+      createUserStatsHandler('alice', {
+        eventsCreated: 1,
+        currentStreakWeeks: 0,
+        bestStreakWeeks: 4,
+      })
     );
 
     renderProfile('alice');
@@ -603,7 +597,8 @@ describe('ProfilePage (MSW)', () => {
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /statistiques/i })).toBeInTheDocument();
     });
-    expect(screen.queryByRole('group', { name: /semaine.*de suite/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/de suite/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/aucune série/i)).not.toBeInTheDocument();
   });
 
   it('hides the stats section when the stats endpoint fails', async () => {
@@ -655,7 +650,7 @@ describe('ProfilePage (MSW)', () => {
 
       const stats = await screen.findByRole('heading', { name: /statistiques/i });
       const favorites = await screen.findByRole('heading', { name: 'Ses favoris' });
-      const watched = await screen.findByRole('heading', { name: /derniers films vus/i });
+      const watched = await screen.findByRole('heading', { name: /^films vus/i });
       expect(
         stats.compareDocumentPosition(favorites) & Node.DOCUMENT_POSITION_FOLLOWING
       ).toBeTruthy();
@@ -692,7 +687,7 @@ describe('ProfilePage (MSW)', () => {
       );
 
       renderProfile('alice');
-      await screen.findByRole('heading', { name: /derniers films vus/i });
+      await screen.findByRole('heading', { name: /^films vus/i });
       await user.click(screen.getByRole('button', { name: /voir les détails de « heat »/i }));
 
       await screen.findByRole('heading', { name: 'Heat', level: 2 });

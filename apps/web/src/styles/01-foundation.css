@@ -220,13 +220,6 @@
   --color-wheel-pointer-stroke: var(--white);
   --color-wheel-pointer-shadow: rgba(0, 0, 0, 0.5);
 
-  --color-genre-0: oklch(0.72 0.13 255);
-  --color-genre-1: oklch(0.72 0.13 195);
-  --color-genre-2: oklch(0.72 0.13 155);
-  --color-genre-3: oklch(0.72 0.13 310);
-  --color-genre-4: oklch(0.72 0.13 65);
-  --color-genre-5: oklch(0.72 0.13 20);
-
   --color-fixed-white: var(--white);
   --color-toggle-thumb: var(--white);
   --color-on-dark: var(--slate-50);

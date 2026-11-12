@@ -26,36 +26,25 @@ describe('ActivityWeeks', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('rend un groupe et une cellule accessible pour une liste non vide', () => {
-    renderWeeks([{ date: '2026-01-01', count: 0 }]);
-    expect(screen.getByRole('group')).toBeInTheDocument();
-    expect(screen.getByRole('button')).toBeInTheDocument();
-  });
-
-  it('aggregates the days into one cell per week, each focusable with the keyboard', () => {
-    const points = days(new Array(21).fill(0), '2026-01-05');
-    renderWeeks(points);
-    const cells = screen.getAllByRole('button');
-    expect(cells).toHaveLength(3);
-    cells.forEach((cell) => expect(cell).toBeInstanceOf(HTMLButtonElement));
-  });
-
-  it('handles an invalid date without crashing (isNaN branch)', () => {
-    renderWeeks([{ date: 'pas-une-date', count: 3 }]);
-    expect(screen.getByRole('button')).toBeInTheDocument();
-  });
-
-  it('shows the total in the group label', () => {
+  it('draws the weeks as a single image named after the total, without a control per cell', () => {
     renderWeeks([
       { date: '2026-01-01', count: 2 },
       { date: '2026-01-02', count: 3 },
     ]);
-    expect(screen.getByRole('group', { name: /5 participation/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole('img', { name: /soirées par semaine.*5 au total/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
-  it('shows a legend with 4 levels', () => {
-    renderWeeks(days(new Array(7).fill(1), '2026-01-05'));
-    expect(document.querySelectorAll('[class*="legendSwatch"]')).toHaveLength(4);
+  it('aggregates the days into one cell per week', () => {
+    renderWeeks(days(new Array(21).fill(0), '2026-01-05'));
+    expect(document.querySelectorAll('[class*="weekCell"]')).toHaveLength(3);
+  });
+
+  it('handles an invalid date without crashing (isNaN branch)', () => {
+    renderWeeks([{ date: 'pas-une-date', count: 3 }]);
+    expect(document.querySelectorAll('[class*="weekCell"]')).toHaveLength(1);
   });
 
   it('shows a month marker for the first week', () => {

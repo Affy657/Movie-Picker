@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import ProfileStatsSection from './ProfileStatsSection';
 import type { UserStats } from '@/features/events/api/userStatsApi';
@@ -17,69 +18,65 @@ const EMPTY_STATS: UserStats = {
   dailyActivity: [],
 };
 
-function renderSection(stats: UserStats) {
+const BUSY_STATS: UserStats = {
+  ...EMPTY_STATS,
+  eventsCreated: 12,
+  eventsJoined: 1,
+  moviesProposed: 34,
+  winningProposals: 7,
+  votesCast: 58,
+};
+
+function renderSection(stats: UserStats, watchedCount?: number) {
   return render(
     <AppTestProviders>
-      <ProfileStatsSection stats={stats} />
+      <MemoryRouter>
+        <ProfileStatsSection stats={stats} watchedCount={watchedCount} watchedTo="/u/lea/films" />
+      </MemoryRouter>
     </AppTestProviders>
   );
 }
 
 describe('ProfileStatsSection', () => {
-  it('affiche le titre de section', () => {
-    renderSection(EMPTY_STATS);
-    expect(screen.getByRole('heading', { level: 2 })).toBeInTheDocument();
+  it('names the strip for assistive technologies without showing a title', () => {
+    renderSection(BUSY_STATS, 26);
+    expect(screen.getByRole('heading', { name: 'Statistiques' })).toHaveClass('visually-hidden');
   });
 
-  it('shows the empty state when every stat is 0, without the grid of zero counters', () => {
-    renderSection(EMPTY_STATS);
-    expect(screen.getByText(/aucune activité/i)).toBeInTheDocument();
-    expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
+  it('shows the empty state when every figure is 0, without a strip of zeros', () => {
+    renderSection(EMPTY_STATS, 0);
+    expect(screen.getByText('Aucune activité pour le moment.')).toBeInTheDocument();
+    expect(screen.queryByRole('list')).not.toBeInTheDocument();
   });
 
-  it('does not show the empty state when a counter is > 0', () => {
-    renderSection({ ...EMPTY_STATS, eventsCreated: 3 });
-    expect(screen.queryByText(/aucune activité/i)).toBeNull();
+  it('lines up the watched movies first, then the movie nights, the proposals and the votes', () => {
+    renderSection(BUSY_STATS, 26);
+    const figures = screen.getAllByRole('listitem').map((item) => item.textContent);
+    expect(figures).toEqual([
+      '26films vus',
+      '12soirées créées',
+      '1soirée rejointe',
+      '34films proposés',
+      '7propositions gagnantes',
+      '58votes',
+    ]);
   });
 
-  it('shows 4 entries in the counters grid', () => {
-    renderSection({ ...EMPTY_STATS, eventsCreated: 1 });
-    expect(screen.getAllByRole('listitem')).toHaveLength(4);
+  it('leads from the watched movies figure to the full list', () => {
+    renderSection(BUSY_STATS, 26);
+    expect(screen.getByRole('link', { name: /26\s*films vus/i })).toHaveAttribute(
+      'href',
+      '/u/lea/films'
+    );
   });
 
-  it('affiche la valeur du compteur eventsCreated', () => {
-    renderSection({ ...EMPTY_STATS, eventsCreated: 7 });
-    expect(screen.getByText('7')).toBeInTheDocument();
-  });
-
-  it('no longer shows the streak in the counters grid (moved to the streak chip)', () => {
-    renderSection({ ...EMPTY_STATS, currentStreakWeeks: 3, bestStreakWeeks: 5 });
-    expect(screen.queryByText(/meilleur streak/i)).toBeNull();
-  });
-
-  it('shows the activity panel when at least one day has count > 0', async () => {
-    renderSection({
-      ...EMPTY_STATS,
-      dailyActivity: [{ date: '2026-01-01', count: 2 }],
-    });
-    expect(await screen.findByText(/activité/i)).toBeInTheDocument();
-  });
-
-  it('affiche le panneau genres si favoriteGenres est non vide', async () => {
-    renderSection({
-      ...EMPTY_STATS,
-      favoriteGenres: [{ genreId: 28, count: 5 }],
-    });
-    await waitFor(() => {
-      expect(screen.getByText(/genres favoris/i)).toBeInTheDocument();
-    });
-  });
-
-  it('does not show the activity panel when every count is 0', () => {
-    renderSection({
-      ...EMPTY_STATS,
-      dailyActivity: [{ date: '2026-01-01', count: 0 }],
-    });
-    expect(screen.queryByText(/activité \(6 mois\)/i)).toBeNull();
+  it.each([
+    ['unknown yet', undefined],
+    ['zero', 0],
+  ])('leaves the watched movies figure out while their count is %s', (_label, count) => {
+    renderSection(BUSY_STATS, count);
+    expect(screen.getAllByRole('listitem')).toHaveLength(5);
+    expect(screen.queryByText('films vus')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 });

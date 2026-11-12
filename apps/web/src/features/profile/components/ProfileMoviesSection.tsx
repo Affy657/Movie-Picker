@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import clsx from 'clsx';
 import { useQuery } from '@tanstack/react-query';
 import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
-import MoviePreviewRow, { MoviePreviewRail } from '@/features/movies/components/MoviePreviewRow';
+import { useIsMobile } from '@/shared/hooks/useIsMobile';
+import MoviePreviewRow from '@/features/movies/components/MoviePreviewRow';
 import MovieBrowseCard, {
   type MovieLibraryActions,
 } from '@/features/movies/components/MovieBrowseCard';
@@ -15,101 +17,149 @@ import LibraryMovieDetails, {
   useLibraryMovieDetails,
   type LibraryMovieSeed,
 } from '@/features/watchlist/components/LibraryMovieDetails';
-import { fetchUserWatchedMovies } from '@/features/profile/api/profileApi';
+import {
+  WATCHED_MOVIES_TAKE,
+  fetchUserWatchedMovieItems,
+  type UserWatchedMovieItem,
+} from '@/features/profile/api/profileApi';
 import OwnerRatingBadge from '@/features/profile/components/OwnerRatingBadge';
 import ProfileFavoritesSection from '@/features/profile/components/ProfileFavoritesSection';
+import ProfileWatchlistPreview from '@/features/profile/components/ProfileWatchlistPreview';
 import type { FavoriteTitle } from '@/shared/types/movie';
-import Card from '@/shared/components/Card';
+import styles from './ProfileMoviesSection.module.css';
 
-const PREVIEW_TAKE = 6;
+const WATCHED_PREVIEW_COUNT = 8;
+
+interface WatchlistSummary {
+  count: number;
+  isHidden: boolean;
+}
 
 interface Props {
   handle: string;
   favorites?: readonly FavoriteTitle[];
   isOwnProfile?: boolean;
+  watchlist?: WatchlistSummary | null;
+}
+
+function latestViewingOfEachTitle(items: readonly UserWatchedMovieItem[]): UserWatchedMovieItem[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = `${item.mediaType}|${item.tmdbId}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 export default function ProfileMoviesSection({
   handle,
   favorites = [],
   isOwnProfile = false,
+  watchlist = null,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const query = useQuery({
-    queryKey: queryKeys.profile.watchedMovies(handle, PREVIEW_TAKE),
-    queryFn: ({ signal }) => fetchUserWatchedMovies(handle, PREVIEW_TAKE, signal),
+    queryKey: queryKeys.profile.watchedMovies(handle, WATCHED_MOVIES_TAKE),
+    queryFn: ({ signal }) => fetchUserWatchedMovieItems(handle, signal),
   });
   const details = useLibraryMovieDetails();
   const [proposeTarget, setProposeTarget] = useState<LibraryMovieSeed | null>(null);
   const { user } = useAuth();
   const isLoggedIn = !!user;
   const hasHover = useHasHoverCapability();
-  const watchlist = useWatchlistToggle(isLoggedIn);
+  const isMobile = useIsMobile();
+  const watchlistToggle = useWatchlistToggle(isLoggedIn);
 
   const library: MovieLibraryActions = {
     hasHover,
     isLoggedIn,
-    has: watchlist.has,
-    toggle: watchlist.toggle,
+    has: watchlistToggle.has,
+    toggle: watchlistToggle.toggle,
     propose: setProposeTarget,
   };
 
-  const items = query.data?.items ?? [];
-  if (items.length === 0 && favorites.length === 0 && !isOwnProfile) return null;
+  const items = query.data ?? [];
+  const watched = latestViewingOfEachTitle(items).slice(0, WATCHED_PREVIEW_COUNT);
+  const showFavorites = favorites.length > 0 || isOwnProfile;
+  const showWatchlist = !!watchlist && (isOwnProfile || watchlist.count > 0);
+  if (items.length === 0 && !showFavorites && !showWatchlist) return null;
 
   return (
-    <>
-      {watchlist.error ? (
+    <div className={styles.movies}>
+      {watchlistToggle.error ? (
         <p className="error" role="alert">
-          {watchlist.error}
+          {watchlistToggle.error}
         </p>
       ) : null}
-      <ProfileFavoritesSection
-        favorites={favorites}
-        isOwnProfile={isOwnProfile}
-        library={library}
-        ratingScale={user?.ratingScale}
-        onOpenDetails={details.open}
-      />
-      {items.length > 0 ? (
-        <Card padding="lg" radius="lg">
-          <MoviePreviewRow
-            heading={t('profile.movies.title')}
-            seeAllTo={ROUTES.profileMovies(handle)}
-            seeAllLabel={t('profile.movies.seeAll')}
-          >
-            <MoviePreviewRail itemCount={items.length}>
-              {items.map((item) => (
-                <MovieBrowseCard
-                  key={`${item.tmdbId}|${item.mediaType}|${item.watchedAt}`}
-                  item={item}
-                  ratingScale={user?.ratingScale}
-                  hasHover={hasHover}
-                  isLoggedIn={isLoggedIn}
-                  inWatchlist={watchlist.has(item)}
-                  onToggleWatchlist={() => watchlist.toggle(item)}
-                  onProposeToEvent={() => setProposeTarget(item)}
-                  onOpenDetails={() => details.open(item)}
-                  leadingBadge={
-                    item.myRating != null ? (
-                      <OwnerRatingBadge
-                        handle={handle}
-                        value={item.myRating}
-                        scale={user?.ratingScale ?? 'five'}
-                      />
-                    ) : undefined
-                  }
-                />
-              ))}
-            </MoviePreviewRail>
-          </MoviePreviewRow>
-        </Card>
+
+      {showFavorites || showWatchlist ? (
+        <div className={clsx(styles.shelf, showFavorites && showWatchlist && styles.shelfSplit)}>
+          {showFavorites && (
+            <ProfileFavoritesSection
+              favorites={favorites}
+              isOwnProfile={isOwnProfile}
+              library={library}
+              ratingScale={user?.ratingScale}
+              onOpenDetails={details.open}
+            />
+          )}
+          {showWatchlist && watchlist && (
+            <div className={styles.watchlistSlot}>
+              <ProfileWatchlistPreview
+                handle={handle}
+                count={watchlist.count}
+                isHidden={watchlist.isHidden}
+                isOwnProfile={isOwnProfile}
+                isMobile={isMobile}
+                wide={!showFavorites}
+                library={library}
+                ratingScale={user?.ratingScale}
+                onOpenDetails={details.open}
+              />
+            </div>
+          )}
+        </div>
+      ) : null}
+
+      {watched.length > 0 ? (
+        <MoviePreviewRow
+          heading={t('profile.movies.title')}
+          headingCount={items.length}
+          seeAllTo={ROUTES.profileMovies(handle)}
+          seeAllLabel={t('profile.movies.seeAll')}
+        >
+          <ul className={styles.watchedGrid}>
+            {watched.map((item) => (
+              <MovieBrowseCard
+                key={`${item.tmdbId}|${item.mediaType}|${item.watchedAt}`}
+                item={item}
+                ratingScale={user?.ratingScale}
+                hasHover={hasHover}
+                isLoggedIn={isLoggedIn}
+                inWatchlist={watchlistToggle.has(item)}
+                onToggleWatchlist={() => watchlistToggle.toggle(item)}
+                onProposeToEvent={() => setProposeTarget(item)}
+                onOpenDetails={() => details.open(item)}
+                leadingBadge={
+                  item.myRating != null ? (
+                    <OwnerRatingBadge
+                      handle={handle}
+                      value={item.myRating}
+                      scale={user?.ratingScale ?? 'five'}
+                    />
+                  ) : undefined
+                }
+              />
+            ))}
+          </ul>
+        </MoviePreviewRow>
       ) : null}
 
       <LibraryMovieDetails
         target={details.target}
         seed={details.seed}
-        watchlist={watchlist}
+        watchlist={watchlistToggle}
         onPropose={setProposeTarget}
         onClose={details.close}
       />
@@ -117,6 +167,6 @@ export default function ProfileMoviesSection({
       {proposeTarget ? (
         <ProposeToEventModal open movie={proposeTarget} onClose={() => setProposeTarget(null)} />
       ) : null}
-    </>
+    </div>
   );
 }

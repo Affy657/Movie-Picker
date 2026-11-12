@@ -79,6 +79,7 @@ export function MoviePreviewRail({ size = 'sm', itemCount, label, children }: Re
 interface RowProps {
   heading: string;
   headingLevel?: 2 | 3;
+  headingCount?: number;
   subtitle?: string;
   seeAllTo?: string;
   seeAllLabel?: string;
@@ -90,6 +91,7 @@ interface RowProps {
 export default function MoviePreviewRow({
   heading,
   headingLevel = 2,
+  headingCount,
   subtitle,
   seeAllTo,
   seeAllLabel,
@@ -107,6 +109,12 @@ export default function MoviePreviewRow({
         <div className={styles.headings}>
           <Heading id={headingId} className={styles.heading}>
             {heading}
+            {headingCount === undefined ? null : (
+              <>
+                {' '}
+                <span className={styles.headingCount}>{headingCount}</span>
+              </>
+            )}
           </Heading>
           {subtitle ? <p className={styles.subtitle}>{subtitle}</p> : null}
         </div>

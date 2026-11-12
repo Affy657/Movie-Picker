@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import GenresBar from './GenresBar';
 
@@ -22,45 +22,35 @@ describe('GenresBar', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('affiche les chips et la barre pour des genres avec des comptes positifs', () => {
+  it('lists each genre in the order received, with its name and its count', () => {
     renderBar([
-      { genreId: 28, count: 5 },
-      { genreId: 12, count: 3 },
+      { genreId: 878, count: 21 },
+      { genreId: 53, count: 18 },
     ]);
-    expect(screen.getByRole('img')).toBeInTheDocument();
+    const rows = screen.getAllByRole('listitem');
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toHaveTextContent(/science-fiction\s*21/i);
+    expect(rows[1]).toHaveTextContent(/thriller\s*18/i);
   });
 
-  it('affiche le label pour un genreId connu', () => {
-    renderBar([{ genreId: 28, count: 4 }]);
-    expect(screen.getByRole('img', { hidden: false })).toBeInTheDocument();
-  });
-
-  it('boucle la palette pour plus de 6 genres', () => {
-    const genres = Array.from({ length: 8 }, (_, i) => ({ genreId: i + 1, count: i + 1 }));
-    renderBar(genres);
-    expect(screen.getAllByRole('listitem')).toHaveLength(8);
-  });
-
-  it('colours each genre from the --color-genre-* tokens, looping after the sixth', () => {
-    const genres = Array.from({ length: 7 }, (_, i) => ({ genreId: i + 1, count: i + 1 }));
-    const { container } = renderBar(genres);
-    const segments = [...container.querySelectorAll<HTMLElement>('[role="img"] > span')];
-    expect(segments.map((segment) => segment.style.background)).toEqual([
-      'var(--color-genre-0)',
-      'var(--color-genre-1)',
-      'var(--color-genre-2)',
-      'var(--color-genre-3)',
-      'var(--color-genre-4)',
-      'var(--color-genre-5)',
-      'var(--color-genre-0)',
-    ]);
-  });
-
-  it('shows the cumulative total of the displayed genres', () => {
+  it('sizes each bar against the most proposed genre', () => {
     renderBar([
-      { genreId: 28, count: 5 },
-      { genreId: 12, count: 3 },
+      { genreId: 878, count: 20 },
+      { genreId: 53, count: 5 },
     ]);
-    expect(screen.getByText(/top 6 des genres, sur 8 occurrences cumulées/i)).toBeInTheDocument();
+    const [first, second] = screen.getAllByRole('listitem');
+    const fill = (row: HTMLElement) =>
+      row.querySelector<HTMLElement>('[class*="genreFill"]')?.style.width;
+    expect(fill(first!)).toBe('100%');
+    expect(fill(second!)).toBe('25%');
+  });
+
+  it('keeps a genre whose count is zero out of the list', () => {
+    renderBar([
+      { genreId: 878, count: 3 },
+      { genreId: 53, count: 0 },
+    ]);
+    const list = screen.getByRole('list');
+    expect(within(list).getAllByRole('listitem')).toHaveLength(1);
   });
 });

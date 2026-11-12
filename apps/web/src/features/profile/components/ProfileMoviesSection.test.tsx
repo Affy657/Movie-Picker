@@ -1,3 +1,4 @@
+import type { ComponentProps } from 'react';
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -7,7 +8,7 @@ import { http, HttpResponse } from 'msw';
 import ProfileMoviesSection from './ProfileMoviesSection';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
-import { stubHoverCapability } from '@/test-utils/matchMedia';
+import { stubHoverCapability, stubMatchMedia } from '@/test-utils/matchMedia';
 import type { FavoriteTitle } from '@/shared/types/movie';
 
 const HEAT: FavoriteTitle = {
@@ -18,14 +19,30 @@ const HEAT: FavoriteTitle = {
   posterPath: null,
 };
 
-function renderSection(handle: string, favorites: FavoriteTitle[] = []) {
+function renderSection(
+  handle: string,
+  favorites: FavoriteTitle[] = [],
+  extra: Partial<ComponentProps<typeof ProfileMoviesSection>> = {}
+) {
   return render(
     <AppTestProviders>
       <MemoryRouter>
-        <ProfileMoviesSection handle={handle} favorites={favorites} />
+        <ProfileMoviesSection handle={handle} favorites={favorites} {...extra} />
       </MemoryRouter>
     </AppTestProviders>
   );
+}
+
+function watched(tmdbId: number, title: string, watchedAt: string) {
+  return {
+    tmdbId,
+    title,
+    year: '2010',
+    posterPath: null,
+    genreIds: [],
+    mediaType: 'movie',
+    watchedAt,
+  };
 }
 
 describe('ProfileMoviesSection (MSW)', () => {
@@ -88,7 +105,7 @@ describe('ProfileMoviesSection (MSW)', () => {
     renderSection('alice', [HEAT]);
 
     expect(await screen.findByRole('heading', { name: 'Ses favoris' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: /derniers films vus/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /^films vus/i })).not.toBeInTheDocument();
   });
 
   it('says so when adding a favorite to the watchlist fails', async () => {
@@ -139,7 +156,7 @@ describe('ProfileMoviesSection (MSW)', () => {
 
     renderSection('alice');
 
-    expect(await screen.findByRole('heading', { name: /derniers films vus/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Films vus 2' })).toBeInTheDocument();
     expect(screen.getByText('Inception')).toBeInTheDocument();
     expect(screen.getByText('Interstellar')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /tout voir/i })).toHaveAttribute(
@@ -388,5 +405,148 @@ describe('ProfileMoviesSection (MSW)', () => {
     renderSection('bob');
 
     expect(await screen.findByText('Sans affiche')).toBeInTheDocument();
+  });
+
+  it('shows each title once, at its latest viewing, while the count keeps every viewing', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+        HttpResponse.json({
+          items: [
+            watched(27205, 'Inception', '2026-06-01T00:00:00Z'),
+            watched(949, 'Heat', '2026-05-01T00:00:00Z'),
+            watched(27205, 'Inception', '2026-04-01T00:00:00Z'),
+          ],
+        })
+      )
+    );
+
+    renderSection('alice');
+
+    expect(await screen.findByRole('heading', { name: 'Films vus 3' })).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { name: 'Inception', level: 3 })).toHaveLength(1);
+    expect(screen.getByRole('heading', { name: 'Heat', level: 3 })).toBeInTheDocument();
+  });
+
+  it('keeps the preview to eight titles and leaves the rest to the full list', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+        HttpResponse.json({
+          items: Array.from({ length: 10 }, (_, i) =>
+            watched(i + 1, `Film ${i + 1}`, `2026-06-${String(20 - i).padStart(2, '0')}T00:00:00Z`)
+          ),
+        })
+      )
+    );
+
+    renderSection('alice');
+
+    expect(await screen.findByRole('heading', { name: 'Films vus 10' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Film 8', level: 3 })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Film 9', level: 3 })).not.toBeInTheDocument();
+  });
+
+  describe('watchlist preview', () => {
+    const watchlistPage = http.get(`${TEST_API_V1}/users/alice/watchlist`, ({ request }) => {
+      const take = new URL(request.url).searchParams.get('take');
+      return HttpResponse.json({
+        items: [
+          {
+            tmdbId: 438631,
+            mediaType: 'movie',
+            title: 'Dune',
+            year: '2021',
+            posterPath: null,
+            genreIds: [878],
+            createdAt: '2026-06-01T00:00:00Z',
+          },
+        ],
+        total: 12,
+        hasMore: take !== null,
+      });
+    });
+
+    it('shows a visitor the latest titles of the watchlist with its count and a way to the full list', async () => {
+      server.use(
+        http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+          HttpResponse.json({ items: [] })
+        ),
+        watchlistPage
+      );
+
+      renderSection('alice', [], { watchlist: { count: 12, isHidden: false } });
+
+      expect(await screen.findByRole('heading', { name: 'Sa watchlist 12' })).toBeInTheDocument();
+      expect(await screen.findByRole('heading', { name: 'Dune', level: 3 })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /tout voir sa watchlist/i })).toHaveAttribute(
+        'href',
+        '/u/alice/watchlist'
+      );
+    });
+
+    it('shows nothing to a visitor when the watchlist is empty', async () => {
+      server.use(
+        http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+          HttpResponse.json({ items: [watched(949, 'Heat', '2026-05-01T00:00:00Z')] })
+        )
+      );
+
+      renderSection('alice', [], { watchlist: { count: 0, isHidden: false } });
+
+      await screen.findByRole('heading', { name: 'Films vus 1' });
+      expect(screen.queryByRole('heading', { name: /watchlist/i })).not.toBeInTheDocument();
+    });
+
+    it('flags my hidden watchlist and leads to the setting that shows it', async () => {
+      server.use(
+        http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+          HttpResponse.json({ items: [] })
+        ),
+        watchlistPage
+      );
+
+      renderSection('alice', [], { isOwnProfile: true, watchlist: { count: 12, isHidden: true } });
+
+      expect(await screen.findByRole('heading', { name: 'Ma watchlist 12' })).toBeInTheDocument();
+      expect(screen.getByText('Masquée')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Rendre visible' })).toHaveAttribute(
+        'href',
+        '/settings/profil'
+      );
+      expect(screen.getByRole('link', { name: /tout voir ma watchlist/i })).toHaveAttribute(
+        'href',
+        '/watchlist'
+      );
+    });
+
+    it('turns into a single row with a fan of posters on a phone', async () => {
+      stubMatchMedia((query) => query.includes('767px'));
+      server.use(
+        http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+          HttpResponse.json({ items: [] })
+        ),
+        watchlistPage
+      );
+
+      renderSection('alice', [], { watchlist: { count: 1, isHidden: false } });
+
+      const row = await screen.findByRole('link', { name: /sa watchlist/i });
+      expect(row).toHaveAttribute('href', '/u/alice/watchlist');
+      expect(row).toHaveTextContent('1 film à voir');
+      expect(screen.queryByRole('heading', { name: /sa watchlist/i })).not.toBeInTheDocument();
+    });
+
+    it('tells me my watchlist is empty instead of hiding it from me', async () => {
+      server.use(
+        http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+          HttpResponse.json({ items: [] })
+        )
+      );
+
+      renderSection('alice', [], { isOwnProfile: true, watchlist: { count: 0, isHidden: false } });
+
+      expect(await screen.findByRole('heading', { name: 'Ma watchlist' })).toBeInTheDocument();
+      expect(screen.getByText('Aucun film à voir')).toBeInTheDocument();
+      expect(screen.queryByText('Masquée')).not.toBeInTheDocument();
+    });
   });
 });

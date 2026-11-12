@@ -11,7 +11,8 @@ import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
-import ProfileIdentityCard from '@/features/profile/components/ProfileIdentityCard';
+import ProfileHeader from '@/features/profile/components/ProfileHeader';
+import ProfileStatsSection from '@/features/profile/components/ProfileStatsSection';
 import ProfileActions from '@/features/profile/components/ProfileActions';
 import ProfilePageSkeleton, {
   ProfileStatsSkeleton,
@@ -21,7 +22,9 @@ import {
   ProfileNotFoundState,
 } from '@/features/profile/components/ProfileQueryStates';
 import {
+  WATCHED_MOVIES_TAKE,
   fetchPublicProfile,
+  fetchUserWatchedMovieItems,
   followUser,
   unfollowUser,
   type PublicProfile,
@@ -32,9 +35,11 @@ import styles from './ProfilePage.module.css';
 import InlineError from '@/shared/components/InlineError';
 
 const FollowListModal = lazy(() => import('@/features/profile/components/FollowListModal'));
-const ProfileStatsSection = lazy(() => import('@/features/profile/components/ProfileStatsSection'));
 const ProfileMoviesSection = lazy(
   () => import('@/features/profile/components/ProfileMoviesSection')
+);
+const ProfileActivitySection = lazy(
+  () => import('@/features/profile/components/ProfileActivitySection')
 );
 
 function formatMemberSince(iso: string, locale: string): string {
@@ -86,6 +91,13 @@ export default function ProfilePage() {
   const statsQuery = useQuery({
     queryKey: queryKeys.profile.stats(handle),
     queryFn: ({ signal }) => fetchUserStats(handle ?? '', signal),
+    enabled: !!handle,
+    retry: false,
+  });
+
+  const watchedQuery = useQuery({
+    queryKey: queryKeys.profile.watchedMovies(handle, WATCHED_MOVIES_TAKE),
+    queryFn: ({ signal }) => fetchUserWatchedMovieItems(handle ?? '', signal),
     enabled: !!handle,
     retry: false,
   });
@@ -148,64 +160,72 @@ export default function ProfilePage() {
   const followPending = followMutation.isPending || unfollowMutation.isPending;
   const stats = statsQuery.data;
   const streak =
-    stats && (stats.currentStreakWeeks > 0 || stats.bestStreakWeeks > 0)
+    stats && stats.currentStreakWeeks > 0
       ? { weeks: stats.currentStreakWeeks, bestWeeks: stats.bestStreakWeeks }
+      : null;
+  const watchlistCount = profile.watchlistCount ?? 0;
+  const watchlist =
+    isOwnProfile || profile.watchlistCount != null
+      ? { count: watchlistCount, isHidden: isOwnProfile && !profile.isWatchlistPublic }
       : null;
 
   return (
     <PageLayout className={styles.layout}>
-      <div className={styles.grid}>
-        <aside className={styles.rail} aria-labelledby="profile-heading">
-          <ProfileIdentityCard
-            profile={profile}
-            memberSince={memberSince}
-            streak={streak}
+      <ProfileHeader
+        profile={profile}
+        memberSince={memberSince}
+        streak={streak}
+        onOpenFollowModal={setFollowModal}
+      >
+        <ProfileActions
+          profile={profile}
+          isOwnProfile={isOwnProfile}
+          isLoggedIn={!!user}
+          followPending={followPending}
+          memberSinceLabel={t('profile.memberSince', { date: memberSince })}
+          onFollow={() => followMutation.mutate()}
+          onUnfollow={() => unfollowMutation.mutate()}
+        />
+        {followError && (
+          <p className="error" role="alert">
+            {followError}
+          </p>
+        )}
+      </ProfileHeader>
+
+      <div className={styles.content}>
+        {statsQuery.isPending && <ProfileStatsSkeleton />}
+
+        {statsQuery.isError && (
+          <InlineError
+            message={t('profile.stats.loadError')}
+            retryLabel={t('profile.stats.retry')}
+            onRetry={() => void statsQuery.refetch()}
+          />
+        )}
+
+        {stats && (
+          <ProfileStatsSection
+            stats={stats}
+            watchedCount={watchedQuery.data?.length}
+            watchedTo={ROUTES.profileMovies(profile.handle)}
+          />
+        )}
+
+        <Suspense fallback={null}>
+          <ProfileMoviesSection
+            handle={profile.handle}
+            favorites={profile.favorites ?? []}
             isOwnProfile={isOwnProfile}
-            onOpenFollowModal={setFollowModal}
-          >
-            <ProfileActions
-              profile={profile}
-              isOwnProfile={isOwnProfile}
-              isLoggedIn={!!user}
-              followPending={followPending}
-              memberSinceLabel={t('profile.memberSince', { date: memberSince })}
-              onFollow={() => followMutation.mutate()}
-              onUnfollow={() => unfollowMutation.mutate()}
-            />
+            watchlist={watchlist}
+          />
+        </Suspense>
 
-            {followError && (
-              <p className="error" role="alert">
-                {followError}
-              </p>
-            )}
-          </ProfileIdentityCard>
-        </aside>
-
-        <div className={styles.content}>
-          {statsQuery.isPending && <ProfileStatsSkeleton />}
-
-          {statsQuery.isError && (
-            <InlineError
-              message={t('profile.stats.loadError')}
-              retryLabel={t('profile.stats.retry')}
-              onRetry={() => void statsQuery.refetch()}
-            />
-          )}
-
-          {statsQuery.data && (
-            <Suspense fallback={<ProfileStatsSkeleton />}>
-              <ProfileStatsSection stats={statsQuery.data} />
-            </Suspense>
-          )}
-
+        {stats && (
           <Suspense fallback={null}>
-            <ProfileMoviesSection
-              handle={profile.handle}
-              favorites={profile.favorites ?? []}
-              isOwnProfile={isOwnProfile}
-            />
+            <ProfileActivitySection stats={stats} />
           </Suspense>
-        </div>
+        )}
       </div>
 
       {followModal !== null && (
