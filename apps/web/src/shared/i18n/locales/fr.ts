@@ -1124,6 +1124,8 @@ export const fr = {
         remainingMany: 'Encore {{count}} films à tirer.',
         closeButton: "C'est parti !",
         finishHereButton: 'Terminer ici',
+      limitReachedOne: 'Limite atteinte : 1 film proposé par personne',
+      limitReachedMany: 'Limite atteinte : {{count}} films proposés par personne',
       },
     },
     lifecycle: {

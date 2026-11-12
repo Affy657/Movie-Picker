@@ -11,6 +11,10 @@ type ParticipantRef = { participantId: string; pseudo: string };
 export type VoteValue = 1 | -1;
 export type VoteErrors = Record<string, { message: string; value: VoteValue }>;
 
+function isVoteLimitFailure(error: unknown): boolean {
+  return ApiError.is(error) && error.reason === API_ERROR_REASONS.voteLimitReached;
+}
+
 interface EventMovieVotingInput {
   slug: string;
   participant: ParticipantRef | null;
@@ -44,7 +48,7 @@ export function useEventMovieVoting({
 
   const reportVoteFailure = useCallback(
     (movieId: string, value: VoteValue, error: unknown) => {
-      if (ApiError.is(error) && error.reason === API_ERROR_REASONS.voteLimitReached) {
+      if (isVoteLimitFailure(error)) {
         setVoteLimitReached(true);
         refreshAll();
         return;
@@ -59,6 +63,21 @@ export function useEventMovieVoting({
     [layout, refreshAll, setActionError, t]
   );
 
+  const sendVote = useCallback(
+    async (participantId: string, movieId: string, value: VoteValue) => {
+      const current = movies.find((m) => m.id === movieId)?.myVote ?? null;
+      if (current === value) {
+        await clearMovieVote(slug, movieId, participantId);
+        track('vote_cast', { value, cleared: true });
+      } else {
+        await voteMovie(slug, movieId, participantId, value);
+        track('vote_cast', { value });
+      }
+      refreshAll();
+    },
+    [slug, movies, refreshAll, track]
+  );
+
   const handleVote = useCallback(
     async (movieId: string, value: VoteValue) => {
       if (!participant) {
@@ -67,30 +86,29 @@ export function useEventMovieVoting({
       }
       setActionError(null);
       clearVoteError(movieId);
-      const current = movies.find((m) => m.id === movieId)?.myVote ?? null;
       try {
-        if (current === value) {
-          await clearMovieVote(slug, movieId, participant.participantId);
-          track('vote_cast', { value, cleared: true });
-        } else {
-          await voteMovie(slug, movieId, participant.participantId, value);
-          track('vote_cast', { value });
-        }
-        refreshAll();
+        await sendVote(participant.participantId, movieId, value);
       } catch (e) {
         reportVoteFailure(movieId, value, e);
       }
     },
-    [
-      slug,
-      participant,
-      movies,
-      setActionError,
-      refreshAll,
-      track,
-      clearVoteError,
-      reportVoteFailure,
-    ]
+    [participant, setActionError, clearVoteError, sendVote, reportVoteFailure]
+  );
+
+  const submitVote = useCallback(
+    async (movieId: string, value: VoteValue) => {
+      if (!participant) {
+        promptToJoinEvent();
+        return;
+      }
+      try {
+        await sendVote(participant.participantId, movieId, value);
+      } catch (e) {
+        if (isVoteLimitFailure(e)) refreshAll();
+        throw e;
+      }
+    },
+    [participant, sendVote, refreshAll]
   );
 
   const handleRetryVote = useCallback(
@@ -104,5 +122,12 @@ export function useEventMovieVoting({
 
   const dismissVoteLimit = useCallback(() => setVoteLimitReached(false), []);
 
-  return { voteErrors, voteLimitReached, dismissVoteLimit, handleVote, handleRetryVote };
+  return {
+    voteErrors,
+    voteLimitReached,
+    dismissVoteLimit,
+    handleVote,
+    handleRetryVote,
+    submitVote,
+  };
 }

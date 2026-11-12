@@ -1108,6 +1108,8 @@ export const en: Locale = {
         closeButton: "Let's watch!",
         finishHereButton: 'Stop here',
       },
+      limitReachedOne: 'Limit reached: 1 movie per person',
+      limitReachedMany: 'Limit reached: {{count}} movies per person',
     },
     lifecycle: {
       startsIn: 'Starts in',

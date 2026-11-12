@@ -247,8 +247,14 @@ export default function EventMoviesSection({
   const sectionHeadingId = useId();
   const { sortBy, sortDir, setSort: handleSetSort } = useMovieSort();
   const { isInWatchlist, toggleWatchlist } = useEventWatchlistToggle(!!user, setActionError);
-  const { voteErrors, voteLimitReached, dismissVoteLimit, handleVote, handleRetryVote } =
-    useEventMovieVoting({ slug, participant, movies, layout, setActionError, refreshAll });
+  const {
+    voteErrors,
+    voteLimitReached,
+    dismissVoteLimit,
+    handleVote,
+    handleRetryVote,
+    submitVote,
+  } = useEventMovieVoting({ slug, participant, movies, layout, setActionError, refreshAll });
   const maxVotes = event.config?.maxVotesPerParticipant ?? null;
   const votesUsed = useMemo(() => movies.filter((m) => m.myVote != null).length, [movies]);
   const voteQuota = voteQuotaFor(maxVotes, !!participant, isFinished, votesUsed);
@@ -379,7 +385,9 @@ export default function EventMoviesSection({
             participant={participant}
             movies={movies}
             onChanged={refreshAll}
-            onVote={(movieId, value) => void handleVote(movieId, value)}
+            onVote={submitVote}
+            allowSeries={!!event.config?.allowSeries}
+            maxProposals={event.config?.maxProposalsPerParticipant ?? null}
           />
         </Suspense>
       )}

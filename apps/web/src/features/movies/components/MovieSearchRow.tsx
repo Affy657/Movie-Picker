@@ -17,7 +17,7 @@ type Props = {
   status?: ReactNode;
   showAvailability?: boolean;
   ratingScale?: RatingScale;
-  onOpen?: () => void;
+  onOpen?: (trigger: HTMLElement) => void;
 };
 
 export default function MovieSearchRow({
@@ -58,7 +58,7 @@ export default function MovieSearchRow({
           <button
             type="button"
             className={styles.titleButton}
-            onClick={onOpen}
+            onClick={(e) => onOpen(e.currentTarget)}
             aria-label={t('movies.search.openDetailsAria', { title: item.title })}
           >
             {title}

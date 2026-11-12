@@ -31,8 +31,7 @@ public sealed class MovieSearchItemResponse
 
     public int? RuntimeMinutes { get; init; }
 
-    public IReadOnlyList<WatchProviderOfferResponse> WatchProviders { get; init; } =
-        Array.Empty<WatchProviderOfferResponse>();
+    public IReadOnlyList<WatchProviderOfferResponse>? WatchProviders { get; init; }
 
     public string? TmdbWatchPageUrl { get; init; }
 

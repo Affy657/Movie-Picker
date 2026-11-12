@@ -28,7 +28,7 @@ export interface MovieSearchItem {
   posterPath: string | null;
   voteAverage?: number | null;
   runtimeMinutes?: number | null;
-  watchProviders?: WatchProviderOffer[];
+  watchProviders?: WatchProviderOffer[] | null;
   tmdbWatchPageUrl?: string | null;
   genreIds?: number[];
 }

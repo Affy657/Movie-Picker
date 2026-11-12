@@ -7,14 +7,17 @@ function within(value: number | null | undefined, min?: number, max?: number): b
   return max === undefined || value <= max;
 }
 
+export function mayBeAvailableAs(item: MovieSearchItem, availability?: string): boolean {
+  if (!availability || item.watchProviders == null) return true;
+  return item.watchProviders.some((p) => p.type === availability);
+}
+
 export function matchesSearchFilters(
   item: MovieSearchItem,
   filters: MovieSearchFilters,
   availability?: string
 ): boolean {
-  if (availability && !(item.watchProviders ?? []).some((p) => p.type === availability)) {
-    return false;
-  }
+  if (!mayBeAvailableAs(item, availability)) return false;
   const genres = filters.genreIds ?? [];
   if (genres.length > 0 && !(item.genreIds ?? []).some((id) => genres.includes(id))) {
     return false;

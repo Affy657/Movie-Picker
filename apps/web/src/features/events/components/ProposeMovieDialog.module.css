@@ -106,7 +106,6 @@ dialog.modal {
 .footer {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
   flex: 0 0 auto;
   width: 100%;
   padding: var(--space-3) var(--space-6);
@@ -138,6 +137,12 @@ dialog.modal {
   color: var(--color-text);
 }
 
+.limit {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+}
+
 .footerText .attribution {
   margin: 0;
   text-align: left;
@@ -145,22 +150,37 @@ dialog.modal {
   color: var(--color-text-muted);
 }
 
-.toast {
+.notice {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+}
+
+.noticeSuccess,
+.noticeError {
+  margin-bottom: var(--space-3);
   padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3-5);
   border: 1px solid var(--color-success-border);
   border-radius: var(--radius-md);
   background: var(--color-success-bg);
 }
 
-.toastIcon {
+.noticeError {
+  padding: var(--space-2-5) var(--space-3-5);
+  border-color: var(--color-error-border);
+  background: var(--color-error-bg);
+}
+
+.noticeIcon {
   flex-shrink: 0;
   color: var(--color-success);
 }
 
-.toastText {
+.noticeError .noticeIcon {
+  color: var(--color-error);
+}
+
+.noticeText {
   flex: 1 1 auto;
   min-width: 0;
   font-size: var(--font-size-sm);
@@ -168,7 +188,17 @@ dialog.modal {
   color: var(--color-text);
 }
 
-.toastAction {
+.noticeText > output,
+.noticeText > p {
+  display: block;
+  margin: 0;
+}
+
+.noticeError .noticeText {
+  color: var(--color-error);
+}
+
+.noticeAction {
   flex-shrink: 0;
 }
 
@@ -294,32 +324,18 @@ dialog.modal {
   gap: var(--space-2);
 }
 
-.pitchLabel {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-bold);
-}
-
 .pitchOptional {
   font-weight: var(--font-weight-regular);
   color: var(--color-text-subtle);
 }
 
-.pitchInput {
-  width: 100%;
-  min-height: var(--space-20);
-  padding: var(--space-3) var(--space-3-5);
-  border: 1px solid var(--color-border-field);
-  border-radius: var(--radius-md);
-  background: var(--color-input-bg);
-  color: var(--color-text);
-  font: inherit;
-  font-size: var(--font-size-sm);
-  resize: vertical;
+.pitchForm .pitchField {
+  margin-bottom: 0;
 }
 
-.pitchInput:focus-visible {
-  outline: var(--outline-focus);
-  outline-offset: var(--outline-offset);
+.pitchForm .pitchInput {
+  min-height: var(--space-20);
+  resize: vertical;
 }
 
 .previewAdd {
