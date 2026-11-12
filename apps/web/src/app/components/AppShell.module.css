@@ -190,6 +190,24 @@
   letter-spacing: var(--tracking-slight);
 }
 
+.navMobile .navCreate {
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.createButton {
+  flex-shrink: 0;
+}
+
+@media (max-width: 47.9375rem) {
+  .createButton {
+    display: none;
+  }
+}
+
 .navDesktop .navLink {
   flex: none;
   min-height: auto;
@@ -203,6 +221,11 @@
   .navLink:hover {
     color: var(--color-primary-text);
     background: var(--color-primary-tint);
+  }
+
+  .navMobile .navCreate:hover {
+    color: var(--color-primary-contrast);
+    background: var(--color-primary-hover);
   }
 }
 

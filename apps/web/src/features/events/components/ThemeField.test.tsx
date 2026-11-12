@@ -15,6 +15,7 @@ function renderField(
     emoji: string;
     text: string;
     disabled: boolean;
+    showPresets: boolean;
   }> = {}
 ) {
   const onEmojiChange = vi.fn();
@@ -27,11 +28,21 @@ function renderField(
         onEmojiChange={onEmojiChange}
         onTextChange={onTextChange}
         disabled={overrides.disabled}
+        showPresets={overrides.showPresets}
       />
     </LocaleProvider>
   );
   return { onEmojiChange, onTextChange };
 }
+
+describe('ThemeField presets', () => {
+  it('leaves the suggested themes out when its host already shows them', () => {
+    renderField({ showPresets: false });
+
+    expect(screen.queryByRole('group', { name: 'Thèmes suggérés' })).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox')).toBeInTheDocument();
+  });
+});
 
 describe('parseTheme', () => {
   it('returns empty for an empty string', () => {

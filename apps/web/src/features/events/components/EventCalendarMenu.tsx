@@ -1,4 +1,5 @@
 import { CalendarPlus, Download, ExternalLink } from 'lucide-react';
+import Button from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
 import { MenuItem, MenuPanel } from '@/shared/components/Menu';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -19,6 +20,8 @@ type EventCalendarMenuProps = {
   date: string;
   time: string;
   url?: string;
+  triggerLabel?: string;
+  triggerClassName?: string;
 };
 
 export default function EventCalendarMenu({
@@ -26,6 +29,8 @@ export default function EventCalendarMenu({
   date,
   time,
   url,
+  triggerLabel,
+  triggerClassName,
 }: Readonly<EventCalendarMenuProps>) {
   const { t } = useTranslation();
   const menu = useMenuState();
@@ -56,9 +61,16 @@ export default function EventCalendarMenu({
 
   return (
     <div className={styles.container} ref={menu.containerRef}>
-      <IconButton {...menu.triggerProps} size="lg" ariaLabel={t('events.calendar.addButton')}>
-        <CalendarPlus size={ICON_SIZE.md} aria-hidden />
-      </IconButton>
+      {triggerLabel ? (
+        <Button {...menu.triggerProps} className={triggerClassName}>
+          <CalendarPlus size={ICON_SIZE.md} aria-hidden />
+          {triggerLabel}
+        </Button>
+      ) : (
+        <IconButton {...menu.triggerProps} size="lg" ariaLabel={t('events.calendar.addButton')}>
+          <CalendarPlus size={ICON_SIZE.md} aria-hidden />
+        </IconButton>
+      )}
 
       {menu.open ? (
         <MenuPanel

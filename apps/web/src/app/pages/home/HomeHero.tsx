@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type RefObject, type SubmitEvent } from 'react';
 import { Link } from 'react-router';
 import { ChevronRight, Plus } from 'lucide-react';
-import { buttonClass } from '@/shared/components/Button';
+import Button, { buttonClass } from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
 import SearchField from '@/shared/components/SearchField';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -10,6 +10,7 @@ import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import UpcomingEventCard from '@/features/events/pages/my-events/UpcomingEventCard';
+import { useOpenCreateEvent } from '@/features/events/components/create-event/createEventDialogContext';
 import HomePosterWall from './HomePosterWall';
 import WheelGlyph from './WheelGlyph';
 import { useNextEvent } from './useNextEvent';
@@ -121,6 +122,7 @@ function CreateNightCard({ isMobile }: Readonly<{ isMobile: boolean }>) {
 
 function NightPanel() {
   const { t } = useTranslation();
+  const openCreateEvent = useOpenCreateEvent();
   const { user, isLoading } = useAuth();
   const isMobile = useIsMobile();
   const next = useNextEvent(!!user);
@@ -145,13 +147,10 @@ function NightPanel() {
         </Link>
       </div>
       <UpcomingEventCard event={next.event} />
-      <Link
-        to={ROUTES.createEvent}
-        className={buttonClass({ variant: 'secondary', fullWidth: true })}
-      >
+      <Button variant="secondary" fullWidth onClick={() => openCreateEvent()}>
         <Plus size={ICON_SIZE.sm} aria-hidden />
         {t('home.nextEvent.createAnother')}
-      </Link>
+      </Button>
     </div>
   );
 }

@@ -21,7 +21,13 @@ import MovedOriginBanner from './MovedOriginBanner';
 import SignOutPendingNotice from './SignOutPendingNotice';
 import { useLegacyMovieLinkRedirect } from './useLegacyMovieLinkRedirect';
 import styles from './AppShell.module.css';
-import { buttonClass } from '@/shared/components/Button';
+import Button, { buttonClass } from '@/shared/components/Button';
+import { ICON_SIZE } from '@/shared/components/iconSize';
+import CreateEventDialogProvider from '@/features/events/components/create-event/CreateEventDialogProvider';
+import {
+  loadCreateEventDialog,
+  useOpenCreateEvent,
+} from '@/features/events/components/create-event/createEventDialogContext';
 import { BrandMark } from '@/shared/brand/BrandMark';
 import { BrandWordmark } from '@/shared/brand/BrandWordmark';
 
@@ -49,12 +55,6 @@ const NAV_ITEMS: ReadonlyArray<NavItemSpec> = [
     labelKey: 'nav.myEvents',
     mobileLabelKey: 'nav.myEventsShort',
     Icon: CalendarDays,
-  },
-  {
-    to: ROUTES.createEvent,
-    labelKey: 'nav.createEvent',
-    mobileLabelKey: 'nav.createEventShort',
-    Icon: Plus,
   },
   {
     to: ROUTES.watchlist,
@@ -129,6 +129,61 @@ function MobileNavItem({ to, end, label, Icon }: Readonly<NavItemDef>) {
   );
 }
 
+function preloadCreateEventDialog() {
+  void loadCreateEventDialog();
+}
+
+function CreateEventHeaderButton({ label }: Readonly<{ label: string }>) {
+  const openCreateEvent = useOpenCreateEvent();
+  return (
+    <Button
+      variant="primary"
+      size="sm"
+      className={styles.createButton}
+      onClick={() => openCreateEvent()}
+      onPointerEnter={preloadCreateEventDialog}
+      onFocus={preloadCreateEventDialog}
+    >
+      <Plus size={ICON_SIZE.sm} aria-hidden />
+      {label}
+    </Button>
+  );
+}
+
+function MobileCreateItem({
+  signedIn,
+  label,
+  returnTo,
+}: Readonly<{ signedIn: boolean; label: string; returnTo: string }>) {
+  const openCreateEvent = useOpenCreateEvent();
+  const content = (
+    <>
+      <Plus className={styles.navIcon} aria-hidden="true" focusable="false" />
+      <span className={styles.navMobileLabel}>{label}</span>
+    </>
+  );
+  if (!signedIn) {
+    return (
+      <Link
+        to={withReturnTo(ROUTES.login, returnTo)}
+        className={clsx(styles.navLink, styles.navCreate)}
+      >
+        {content}
+      </Link>
+    );
+  }
+  return (
+    <button
+      type="button"
+      className={clsx(styles.navLink, styles.navCreate)}
+      onClick={() => openCreateEvent()}
+      onPointerEnter={preloadCreateEventDialog}
+    >
+      {content}
+    </button>
+  );
+}
+
 function HeaderNavActions({
   isLoading,
   isAuthenticated,
@@ -151,6 +206,7 @@ function HeaderNavActions({
   if (user) {
     return (
       <div className={styles.navActions}>
+        <CreateEventHeaderButton label={t('nav.createEvent')} />
         <InboxBell />
         <UserMenu user={user} />
       </div>
@@ -219,7 +275,8 @@ export default function AppShell() {
       }
     : { to: withReturnTo(ROUTES.login, returnTo), label: t('nav.signInShort'), Icon: LogIn };
 
-  const mobileItems: NavItemDef[] = [exploreItem, ...compactItems, accountItem];
+  const mobileItemsBeforeCreate = [exploreItem, ...compactItems.slice(0, 1)];
+  const mobileItemsAfterCreate = [...compactItems.slice(1), accountItem];
 
   const desktopItems: (NavItemDef & { wideOnly?: boolean })[] = isAuthenticated
     ? [exploreItem, ...items]
@@ -234,50 +291,64 @@ export default function AppShell() {
       ];
 
   return (
-    <div className={styles.root}>
-      <a href="#main-content" className={styles.skipLink}>
-        {t('nav.skipToMain')}
-      </a>
-      <header className={styles.header}>
-        <div className={styles.headerInner}>
-          <HeaderBrand label={t('nav.brandLabel')} />
-          <nav
-            className={clsx(styles.navDesktop, isLandingRoute && styles.navLanding)}
-            aria-label={t('nav.navLabel')}
-          >
-            {isLandingRoute
-              ? LANDING_NAV_ITEMS.map((item) => (
-                  <LandingNavItem key={item.anchor} anchor={item.anchor} label={t(item.labelKey)} />
-                ))
-              : desktopItems.map((item) => <DesktopNavItem key={item.to} {...item} />)}
-          </nav>
-          <HeaderSearch />
-          <HeaderNavActions
-            isLoading={isLoading}
-            isAuthenticated={isAuthenticated}
-            isOnAuthRoute={isOnAuthRoute}
-            user={user}
-            returnTo={returnTo}
-            t={t}
-          />
+    <CreateEventDialogProvider>
+      <div className={styles.root}>
+        <a href="#main-content" className={styles.skipLink}>
+          {t('nav.skipToMain')}
+        </a>
+        <header className={styles.header}>
+          <div className={styles.headerInner}>
+            <HeaderBrand label={t('nav.brandLabel')} />
+            <nav
+              className={clsx(styles.navDesktop, isLandingRoute && styles.navLanding)}
+              aria-label={t('nav.navLabel')}
+            >
+              {isLandingRoute
+                ? LANDING_NAV_ITEMS.map((item) => (
+                    <LandingNavItem
+                      key={item.anchor}
+                      anchor={item.anchor}
+                      label={t(item.labelKey)}
+                    />
+                  ))
+                : desktopItems.map((item) => <DesktopNavItem key={item.to} {...item} />)}
+            </nav>
+            <HeaderSearch />
+            <HeaderNavActions
+              isLoading={isLoading}
+              isAuthenticated={isAuthenticated}
+              isOnAuthRoute={isOnAuthRoute}
+              user={user}
+              returnTo={returnTo}
+              t={t}
+            />
+          </div>
+        </header>
+        <div className={styles.content}>
+          <Outlet />
         </div>
-      </header>
-      <div className={styles.content}>
-        <Outlet />
+        <Footer clearMobileNav={!isLandingRoute} />
+        {isLandingRoute ? null : (
+          <nav className={styles.navMobile} aria-label={t('nav.navLabel')}>
+            {mobileItemsBeforeCreate.map((item) => (
+              <MobileNavItem key={item.to} {...item} />
+            ))}
+            <MobileCreateItem
+              signedIn={isAuthenticated}
+              label={t('nav.createEventShort')}
+              returnTo={ROUTES.createEvent}
+            />
+            {mobileItemsAfterCreate.map((item) => (
+              <MobileNavItem key={item.to} {...item} />
+            ))}
+          </nav>
+        )}
+        <PwaAutoUpdate />
+        <ConsentBanner />
+        <InAppBrowserBanner />
+        <MovedOriginBanner />
+        <SignOutPendingNotice />
       </div>
-      <Footer clearMobileNav={!isLandingRoute} />
-      {isLandingRoute ? null : (
-        <nav className={styles.navMobile} aria-label={t('nav.navLabel')}>
-          {mobileItems.map((item) => (
-            <MobileNavItem key={item.to} {...item} />
-          ))}
-        </nav>
-      )}
-      <PwaAutoUpdate />
-      <ConsentBanner />
-      <InAppBrowserBanner />
-      <MovedOriginBanner />
-      <SignOutPendingNotice />
-    </div>
+    </CreateEventDialogProvider>
   );
 }

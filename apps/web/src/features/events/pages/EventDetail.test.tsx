@@ -524,6 +524,13 @@ describe('EventDetail (MSW)', () => {
     await waitFor(() => expect(hostHeaders).toEqual(['host-token']));
   });
 
+  it('opens the proposal window straight away when arriving from the creation', async () => {
+    setStoredParticipant(slug, 'p-msw-host', 'Hôte');
+    renderEventDetail(`/e/${slug}?host=host-token`, undefined, { openPropose: true });
+
+    expect(await screen.findByRole('dialog', { name: 'Proposer un film' })).toBeInTheDocument();
+  });
+
   describe('participant removal flow (host)', () => {
     function setupHostJoined() {
       setStoredParticipant(slug, 'p-msw-host', 'Hôte');

@@ -187,7 +187,7 @@ Le bandeau d'information flottant : `title`, `description`, `placement` `top` (d
 
 ### FormPageShell
 
-La page d'un formulaire seul : `back` (`to`, `label`) rend le `BackLink`, puis une `Card` `lg` élevée avec sa barre `--gradient-accent`, le `<h1>` (`title`, `pageTitle`) et `description`, puis les enfants. C'est la connexion, l'inscription, le mot de passe oublié et sa réinitialisation, et la création de soirée.
+La page d'un formulaire seul : `back` (`to`, `label`) rend le `BackLink`, puis une `Card` `lg` élevée avec sa barre `--gradient-accent`, le `<h1>` (`title`, `pageTitle`) et `description`, puis les enfants. C'est la connexion, l'inscription, le mot de passe oublié et sa réinitialisation. La création de soirée, elle, est une fenêtre (`CreateEventDialog` sur `ResponsiveDialog`), ouverte depuis l'en-tête, la barre du bas ou l'adresse `/new`.
 
 ### InlineError
 
@@ -199,7 +199,7 @@ Câble `label`, `hint`, `error` et `aria-describedby` autour d'un champ rendu pa
 
 Le skin de champ est la classe globale `.input` de `02-forms-and-content.css` : bordure `--color-border-field`, corps `--font-size-md`, survol, `:focus` en `--ring-focus`, `:disabled` en `--opacity-disabled`. `SearchField` et `NumberInput` la portent, ils n'en redessinent rien.
 
-`NumberInput` (`value` chaîne, `min`, `max`, `step`, `placeholder`, `invalid`, `disabled`, `ariaDescribedBy`), `SearchField` (`type="search"`, `placeholder`, `ariaLabel`, `ariaDescribedBy`, `iconSize` dans `ICON_SIZE`, `disabled`, icône décorative) et `Toggle` (`role="switch"`, `checked`, `onChange(checked)`, `ariaLabel` ou `ariaLabelledBy`) s'y insèrent.
+`NumberInput` (`value` chaîne, `min`, `max`, `step`, `placeholder`, `invalid`, `disabled`, `ariaDescribedBy`, et `unlimited` (`label`, `fallback`) pour une limite facultative : la valeur vide s'affiche « Sans limite », se place au-dessus de `max`, et « − » la ramène à `fallback`), `SearchField` (`type="search"`, `placeholder`, `ariaLabel`, `ariaDescribedBy`, `iconSize` dans `ICON_SIZE`, `disabled`, icône décorative) et `Toggle` (`role="switch"`, `checked`, `onChange(checked)`, `ariaLabel` ou `ariaLabelledBy`) s'y insèrent.
 
 ### ToggleRow
 

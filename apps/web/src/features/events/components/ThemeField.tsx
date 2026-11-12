@@ -108,6 +108,7 @@ type ThemeFieldProps = {
   onTextChange: (t: string) => void;
   disabled?: boolean;
   textInputId?: string;
+  showPresets?: boolean;
 };
 
 export default function ThemeField({
@@ -117,6 +118,7 @@ export default function ThemeField({
   onTextChange,
   disabled,
   textInputId,
+  showPresets = true,
 }: Readonly<ThemeFieldProps>) {
   const { t } = useTranslation();
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -212,7 +214,7 @@ export default function ThemeField({
           disabled={disabled}
         />
       </div>
-      {!disabled && (
+      {!disabled && showPresets && (
         <fieldset className={styles.presets}>
           <legend className="visually-hidden">{t('events.settings.themePresetsLegend')}</legend>
           {(presetsExpanded ? THEME_PRESETS : THEME_PRESETS.slice(0, PRESETS_VISIBLE)).map((p) => {

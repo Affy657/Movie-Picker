@@ -334,28 +334,30 @@ describe('limitFieldOnEnable', () => {
 });
 
 describe('suggestTemplateName', () => {
+  const numbered = (index: number) => `Template ${index}`;
+
   it('proposes the theme when there is one', () => {
-    expect(suggestTemplateName('🎃 Halloween', [])).toBe('🎃 Halloween');
+    expect(suggestTemplateName('🎃 Halloween', [], numbered)).toBe('🎃 Halloween');
   });
 
   it('falls back to a numbered name without a theme', () => {
-    expect(suggestTemplateName(null, [])).toBe('Template 1');
+    expect(suggestTemplateName(null, [], numbered)).toBe('Template 1');
   });
 
   it('skips numbers already taken', () => {
-    expect(suggestTemplateName(null, ['Template 1', 'Template 2'])).toBe('Template 3');
+    expect(suggestTemplateName(null, ['Template 1', 'Template 2'], numbered)).toBe('Template 3');
   });
 
   it('falls back to a numbered name when the theme is already taken', () => {
-    expect(suggestTemplateName('🎃 Halloween', ['🎃 Halloween'])).toBe('Template 1');
+    expect(suggestTemplateName('🎃 Halloween', ['🎃 Halloween'], numbered)).toBe('Template 1');
   });
 
   it('ignores case when checking what is taken', () => {
-    expect(suggestTemplateName('Halloween', ['HALLOWEEN'])).toBe('Template 1');
+    expect(suggestTemplateName('Halloween', ['HALLOWEEN'], numbered)).toBe('Template 1');
   });
 
   it('truncates a theme longer than the allowed name', () => {
-    const name = suggestTemplateName('a'.repeat(80), []);
+    const name = suggestTemplateName('a'.repeat(80), [], numbered);
 
     expect(name).toHaveLength(60);
   });

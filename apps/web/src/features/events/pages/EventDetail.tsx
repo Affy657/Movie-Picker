@@ -70,7 +70,7 @@ function EventUnavailableState({
   );
 }
 
-type ArrivalState = { configNotSaved?: boolean } | null;
+type ArrivalState = { configNotSaved?: boolean; openPropose?: boolean } | null;
 
 export default function EventDetail() {
   const { t } = useTranslation();
@@ -153,6 +153,7 @@ export default function EventDetail() {
       setActionError={setActionError}
       refreshAll={refreshAll}
       connectionUnstable={isShowingStaleData}
+      proposeOnArrival={arrival?.openPropose === true}
     />
   );
 }

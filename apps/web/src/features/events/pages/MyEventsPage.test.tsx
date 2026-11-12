@@ -1,9 +1,11 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import MyEventsPage from '@/features/events/pages/MyEventsPage';
+import CreateEventDialogProvider from '@/features/events/components/create-event/CreateEventDialogProvider';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
@@ -74,6 +76,26 @@ beforeAll(() => {
 });
 
 describe('MyEventsPage (MSW)', () => {
+  it('opens the creation window over the page from the empty state', async () => {
+    const user = userEvent.setup();
+    server.use(authMeHandler, myEventsHandler([], [], { active: 0, finished: 0 }));
+    render(
+      <AppTestProviders>
+        <MemoryRouter initialEntries={['/my-events']}>
+          <CreateEventDialogProvider>
+            <Routes>
+              <Route path="/my-events" element={<MyEventsPage />} />
+            </Routes>
+          </CreateEventDialogProvider>
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Créer une soirée' }));
+
+    expect(await screen.findByRole('dialog', { name: 'Nouvelle soirée' })).toBeInTheDocument();
+  });
+
   const server = setupServer();
 
   beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));

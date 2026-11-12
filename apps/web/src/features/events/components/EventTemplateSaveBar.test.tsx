@@ -64,13 +64,13 @@ describe('EventTemplateSaveBar', () => {
   it('propose d’enregistrer la configuration', () => {
     renderBar();
 
-    expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Enregistrer comme modèle' })).toBeInTheDocument();
   });
 
   it('keeps the same label on the movie night page, only the advice changes', () => {
     renderBar({ variant: 'event' });
 
-    expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Enregistrer comme modèle' })).toBeInTheDocument();
     expect(screen.getByText('Cette configuration marche bien ?')).toBeInTheDocument();
   });
 
@@ -78,9 +78,9 @@ describe('EventTemplateSaveBar', () => {
     const user = userEvent.setup();
     const { onSave } = renderBar();
 
-    await user.click(screen.getByRole('button', { name: 'Enregistrer en template' }));
+    await user.click(screen.getByRole('button', { name: 'Enregistrer comme modèle' }));
 
-    const field = screen.getByRole('textbox', { name: /Nom du template/ });
+    const field = screen.getByRole('textbox', { name: /Nom du modèle/ });
     expect(field).toHaveValue('🎃 Halloween');
 
     await user.click(screen.getByRole('button', { name: 'Valider' }));
@@ -92,17 +92,17 @@ describe('EventTemplateSaveBar', () => {
     const user = userEvent.setup();
     renderBar({ draft: { ...draft, theme: null } });
 
-    await user.click(screen.getByRole('button', { name: 'Enregistrer en template' }));
+    await user.click(screen.getByRole('button', { name: 'Enregistrer comme modèle' }));
 
-    expect(screen.getByRole('textbox', { name: /Nom du template/ })).toHaveValue('Template 1');
+    expect(screen.getByRole('textbox', { name: /Nom du modèle/ })).toHaveValue('Modèle 1');
   });
 
   it('n’enregistre pas un nom vide', async () => {
     const user = userEvent.setup();
     const { onSave } = renderBar();
 
-    await user.click(screen.getByRole('button', { name: 'Enregistrer en template' }));
-    await user.clear(screen.getByRole('textbox', { name: /Nom du template/ }));
+    await user.click(screen.getByRole('button', { name: 'Enregistrer comme modèle' }));
+    await user.clear(screen.getByRole('textbox', { name: /Nom du modèle/ }));
     await user.click(screen.getByRole('button', { name: 'Valider' }));
 
     expect(onSave).not.toHaveBeenCalled();
@@ -112,27 +112,27 @@ describe('EventTemplateSaveBar', () => {
     const user = userEvent.setup();
     const { onSave } = renderBar();
 
-    await user.click(screen.getByRole('button', { name: 'Enregistrer en template' }));
+    await user.click(screen.getByRole('button', { name: 'Enregistrer comme modèle' }));
     await user.click(screen.getByRole('button', { name: 'Annuler' }));
 
     expect(onSave).not.toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Enregistrer comme modèle' })).toBeInTheDocument();
   });
 
   it('drops the naming on Escape without closing the settings dialog around it', async () => {
     const user = userEvent.setup();
     const { onSave } = renderBar();
 
-    await user.click(screen.getByRole('button', { name: 'Enregistrer en template' }));
+    await user.click(screen.getByRole('button', { name: 'Enregistrer comme modèle' }));
     const dialogKeepsOpen = !fireEvent.keyDown(
-      screen.getByRole('textbox', { name: /Nom du template/ }),
+      screen.getByRole('textbox', { name: /Nom du modèle/ }),
       { key: 'Escape' }
     );
 
     expect(dialogKeepsOpen).toBe(true);
     expect(onSave).not.toHaveBeenCalled();
-    expect(screen.queryByRole('textbox', { name: /Nom du template/ })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: /Nom du modèle/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Enregistrer comme modèle' })).toBeInTheDocument();
   });
 
   it('disables saving at the cap', () => {
@@ -142,15 +142,15 @@ describe('EventTemplateSaveBar', () => {
       ),
     });
 
-    expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Enregistrer comme modèle' })).toBeDisabled();
   });
 
   it('refuses a duplicate while the applied template is unchanged', () => {
     renderBar({ templates: [makeTemplate()], appliedTemplate: makeTemplate() });
 
     expect(screen.queryByRole('button', { name: 'Mettre à jour' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeDisabled();
-    expect(screen.getByText('Identique au template « Soirée horreur ».')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Enregistrer comme modèle' })).toBeDisabled();
+    expect(screen.getByText('Identique au modèle « Soirée horreur ».')).toBeInTheDocument();
   });
 
   it('offers the update when the applied configuration has changed', async () => {
@@ -181,16 +181,16 @@ describe('EventTemplateSaveBar', () => {
     await user.click(screen.getByRole('button', { name: 'Enregistrer comme nouveau' }));
     await user.click(screen.getByRole('button', { name: 'Valider' }));
 
-    expect(onSave).toHaveBeenCalledWith('Template 1');
+    expect(onSave).toHaveBeenCalledWith('Modèle 1');
   });
 
   it('offers a free name when the theme is already taken', async () => {
     const user = userEvent.setup();
     renderBar({ templates: [makeTemplate({ name: '🎃 Halloween' })] });
 
-    await user.click(screen.getByRole('button', { name: 'Enregistrer en template' }));
+    await user.click(screen.getByRole('button', { name: 'Enregistrer comme modèle' }));
 
-    expect(screen.getByRole('textbox', { name: /Nom du template/ })).toHaveValue('Template 1');
+    expect(screen.getByRole('textbox', { name: /Nom du modèle/ })).toHaveValue('Modèle 1');
   });
 
   it('confirms the save once the template is created', () => {
@@ -202,7 +202,7 @@ describe('EventTemplateSaveBar', () => {
   it('does not offer to save again the configuration that was just saved', () => {
     renderBar({ templates: [makeTemplate()], lastSaved: makeTemplate() });
 
-    expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Enregistrer comme modèle' })).toBeDisabled();
   });
 
   it('removes the confirmation as soon as the configuration changes', () => {
@@ -213,14 +213,14 @@ describe('EventTemplateSaveBar', () => {
     });
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Enregistrer en template' })).not.toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Enregistrer comme modèle' })).not.toBeDisabled();
   });
 
   it('does not ask again when the applied template is unchanged', () => {
     renderBar({ variant: 'event', templates: [makeTemplate()], appliedTemplate: makeTemplate() });
 
     expect(screen.queryByText('Cette configuration marche bien ?')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Enregistrer comme modèle' })).toBeDisabled();
   });
 
   it('asks as long as no template is applied', () => {

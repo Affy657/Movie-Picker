@@ -83,7 +83,11 @@
   padding: var(--space-4);
   border: 2px dashed var(--color-border);
   border-radius: var(--radius-md);
+  width: 100%;
+  background: transparent;
   color: var(--color-text-muted);
+  font-family: inherit;
+  cursor: pointer;
   text-decoration: none;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-bold);

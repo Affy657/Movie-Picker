@@ -165,10 +165,7 @@ describe('HomeHero', () => {
     expect(within(card).getByText('À vous de voter')).toBeInTheDocument();
     expect(screen.queryByText('Plus tard')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Mes soirées' })).toHaveAttribute('href', '/my-events');
-    expect(screen.getByRole('link', { name: 'Créer une autre soirée' })).toHaveAttribute(
-      'href',
-      '/new'
-    );
+    expect(screen.getByRole('button', { name: 'Créer une autre soirée' })).toBeInTheDocument();
     expect(screen.queryByText('Vous n’arrivez pas à choisir ?')).not.toBeInTheDocument();
   });
 
@@ -183,7 +180,9 @@ describe('HomeHero', () => {
 
     const card = (await screen.findByText('Soirée chez Léa')).closest('a') as HTMLElement;
     expect(within(card).getByText('Votre prochaine soirée')).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Créer une autre soirée' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Créer une autre soirée' })
+    ).not.toBeInTheDocument();
   });
 
   it('visitor on a phone: one link to create a night, with the short line', async () => {
