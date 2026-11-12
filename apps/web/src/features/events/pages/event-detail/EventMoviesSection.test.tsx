@@ -15,6 +15,7 @@ import EventMoviesSection from '@/features/events/pages/event-detail/EventMovies
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubHoverCapability, stubMatchMedia } from '@/test-utils/matchMedia';
 import { TEST_API_V1 } from '@/mocks/handlers';
+import { ROUTE_CHUNKS } from '@/app/routeChunks';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 
@@ -130,6 +131,7 @@ describe('EventMoviesSection (MSW)', () => {
   afterEach(() => {
     server.resetHandlers();
     vi.unstubAllGlobals();
+    sessionStorage.clear();
   });
   afterAll(() => server.close());
 
@@ -342,6 +344,37 @@ describe('EventMoviesSection (MSW)', () => {
 
     expect(screen.getByText(/chargement des films/i)).toBeInTheDocument();
     expect(screen.getByText('Vote impossible')).toBeInTheDocument();
+  });
+
+  it('comes back from a film page on the sort picked for the night', async () => {
+    server.use(authedUserHandler, watchlistHandler([]));
+    const second: MovieData = { ...MOVIE, id: 'm2', title: 'Inception', score: 4 };
+    const user = userEvent.setup();
+    const first = renderSection({ movies: [MOVIE, second], viewMode: 'grid' });
+    await user.click(screen.getByRole('button', { name: /^durée$/i }));
+    first.unmount();
+
+    renderSection({ movies: [MOVIE, second], viewMode: 'grid' });
+
+    expect(screen.getByRole('button', { name: /^durée$/i })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+  });
+
+  it('loads the film page code while the browser is idle', async () => {
+    vi.stubGlobal('requestIdleCallback', (callback: () => void) => {
+      callback();
+      return 1;
+    });
+    vi.stubGlobal('cancelIdleCallback', vi.fn());
+    const loadMoviePage = vi.spyOn(ROUTE_CHUNKS, 'moviePage').mockResolvedValue({} as never);
+    server.use(authedUserHandler, watchlistHandler([]));
+
+    renderSection();
+
+    await waitFor(() => expect(loadMoviePage).toHaveBeenCalled());
+    loadMoviePage.mockRestore();
   });
 
   it('permet de trier en vue grille', async () => {

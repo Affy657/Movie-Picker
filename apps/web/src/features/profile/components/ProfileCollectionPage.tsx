@@ -5,6 +5,8 @@ import PageLayout from '@/shared/components/PageLayout';
 import EmptyState from '@/shared/components/EmptyState';
 import Avatar from '@/shared/components/Avatar';
 import { ROUTES } from '@/app/routes';
+import { MOVIE_PAGE_CHUNKS } from '@/app/routeChunks';
+import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { ApiError } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
@@ -134,6 +136,7 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
   const toolbar = useMovieListToolbar({ items, tmdbLanguage, mediaTypeLabels, comparePrimary });
 
   const openMoviePage = useOpenMoviePage();
+  useIdlePrefetch(MOVIE_PAGE_CHUNKS);
   const [proposeTarget, setProposeTarget] = useState<WatchlistToggleItem | null>(null);
   const watchlist = useWatchlistToggle(isLoggedIn);
 

@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { useHistoryEntryState } from '@/shared/hooks/useHistoryEntryState';
 import { genreLabel, sharesAnyGenre } from '@/shared/utils/tmdbGenres';
 import { DECADE_OPTIONS } from '@/features/movies/components/movieSearchFilterOptions';
 import type { MovieMediaType } from '@/shared/types/movie';
@@ -24,6 +25,10 @@ const DEFAULT_DIRECTION: Record<MovieListSortKey, SortDirection> = {
 };
 
 const INITIAL_REVEAL_COUNT = 24;
+
+const DEFAULT_SORT: { by: MovieListSortKey; dir: SortDirection } = { by: 'primary', dir: 'desc' };
+
+const INITIAL_REVEAL = { criteria: '', count: INITIAL_REVEAL_COUNT };
 
 interface FilterState {
   genres: number[];
@@ -73,55 +78,69 @@ export function useMovieListToolbar<T extends MovieListItemLike>({
   mediaTypeLabels,
   comparePrimary,
 }: UseMovieListToolbarOptions<T>) {
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useHistoryEntryState('movieList.search', '');
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [sort, setSort] = useState<{ by: MovieListSortKey; dir: SortDirection }>({
-    by: 'primary',
-    dir: 'desc',
-  });
-  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
-  const [revealCount, setRevealCount] = useState(INITIAL_REVEAL_COUNT);
+  const [sort, setSort] = useHistoryEntryState('movieList.sort', DEFAULT_SORT);
+  const [filters, setFilters] = useHistoryEntryState('movieList.filters', DEFAULT_FILTERS);
+  const [reveal, setReveal] = useHistoryEntryState('movieList.reveal', INITIAL_REVEAL);
   const sortBy = sort.by;
   const sortDir = sort.dir;
 
-  const setSortBy = useCallback((key: MovieListSortKey) => {
-    setSort((prev) =>
-      prev.by === key
-        ? { by: key, dir: prev.dir === 'asc' ? 'desc' : 'asc' }
-        : { by: key, dir: DEFAULT_DIRECTION[key] }
-    );
-  }, []);
+  const setSortBy = useCallback(
+    (key: MovieListSortKey) => {
+      setSort((prev) =>
+        prev.by === key
+          ? { by: key, dir: prev.dir === 'asc' ? 'desc' : 'asc' }
+          : { by: key, dir: DEFAULT_DIRECTION[key] }
+      );
+    },
+    [setSort]
+  );
 
-  const toggleGenre = useCallback((id: number) => {
-    setFilters((prev) => ({
-      ...prev,
-      genres: prev.genres.includes(id) ? prev.genres.filter((g) => g !== id) : [...prev.genres, id],
-    }));
-  }, []);
+  const toggleGenre = useCallback(
+    (id: number) => {
+      setFilters((prev) => ({
+        ...prev,
+        genres: prev.genres.includes(id)
+          ? prev.genres.filter((g) => g !== id)
+          : [...prev.genres, id],
+      }));
+    },
+    [setFilters]
+  );
 
-  const removeGenre = useCallback((id: number) => {
-    setFilters((prev) => ({ ...prev, genres: prev.genres.filter((g) => g !== id) }));
-  }, []);
+  const removeGenre = useCallback(
+    (id: number) => {
+      setFilters((prev) => ({ ...prev, genres: prev.genres.filter((g) => g !== id) }));
+    },
+    [setFilters]
+  );
 
-  const toggleMediaType = useCallback((mediaType: MovieMediaType) => {
-    setFilters((prev) => ({
-      ...prev,
-      mediaTypes: prev.mediaTypes.includes(mediaType)
-        ? prev.mediaTypes.filter((m) => m !== mediaType)
-        : [...prev.mediaTypes, mediaType],
-    }));
-  }, []);
+  const toggleMediaType = useCallback(
+    (mediaType: MovieMediaType) => {
+      setFilters((prev) => ({
+        ...prev,
+        mediaTypes: prev.mediaTypes.includes(mediaType)
+          ? prev.mediaTypes.filter((m) => m !== mediaType)
+          : [...prev.mediaTypes, mediaType],
+      }));
+    },
+    [setFilters]
+  );
 
-  const toggleDecade = useCallback((decade: string) => {
-    setFilters((prev) => ({ ...prev, decade: prev.decade === decade ? undefined : decade }));
-  }, []);
+  const toggleDecade = useCallback(
+    (decade: string) => {
+      setFilters((prev) => ({ ...prev, decade: prev.decade === decade ? undefined : decade }));
+    },
+    [setFilters]
+  );
 
-  const clearAllFilters = useCallback(() => setFilters(DEFAULT_FILTERS), []);
+  const clearAllFilters = useCallback(() => setFilters(DEFAULT_FILTERS), [setFilters]);
 
   const resetAll = useCallback(() => {
     setSearch('');
     clearAllFilters();
-  }, [clearAllFilters]);
+  }, [setSearch, clearAllFilters]);
 
   const hasActiveFilters = useMemo(
     () => filters.genres.length > 0 || filters.mediaTypes.length > 0 || filters.decade != null,
@@ -154,7 +173,7 @@ export function useMovieListToolbar<T extends MovieListItemLike>({
       });
     }
     return chips;
-  }, [filters, tmdbLanguage, mediaTypeLabels, removeGenre, toggleMediaType]);
+  }, [filters, tmdbLanguage, mediaTypeLabels, removeGenre, toggleMediaType, setFilters]);
 
   const visibleItems = useMemo(() => {
     const filtered = items.filter(
@@ -170,9 +189,8 @@ export function useMovieListToolbar<T extends MovieListItemLike>({
     return sortDir === 'desc' ? sorted.reverse() : sorted;
   }, [items, filters, search, sortBy, sortDir, comparePrimary]);
 
-  useEffect(() => {
-    setRevealCount(INITIAL_REVEAL_COUNT);
-  }, [search, filters, sortBy, sortDir]);
+  const revealCriteria = JSON.stringify([search, filters, sortBy, sortDir]);
+  const revealCount = reveal.criteria === revealCriteria ? reveal.count : INITIAL_REVEAL_COUNT;
 
   const revealedItems = useMemo(
     () => visibleItems.slice(0, revealCount),
@@ -182,8 +200,8 @@ export function useMovieListToolbar<T extends MovieListItemLike>({
   const remainingCount = Math.max(0, visibleItems.length - revealedItems.length);
 
   const revealMore = useCallback(() => {
-    setRevealCount((prev) => prev + visibleItems.length);
-  }, [visibleItems.length]);
+    setReveal({ criteria: revealCriteria, count: revealCount + visibleItems.length });
+  }, [setReveal, revealCriteria, revealCount, visibleItems.length]);
 
   return {
     search,

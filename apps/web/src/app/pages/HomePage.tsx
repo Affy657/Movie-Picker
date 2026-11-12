@@ -5,10 +5,14 @@ import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { genreLabel } from '@/shared/utils/tmdbGenres';
 import { ROUTES } from '@/app/routes';
+import { MOVIE_PAGE_CHUNKS } from '@/app/routeChunks';
+import { useHistoryEntryState } from '@/shared/hooks/useHistoryEntryState';
+import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import type { MovieLibraryActions } from '@/features/movies/components/MovieBrowseCard';
 import type { ShowcaseItem, ShowcaseProvider } from '@/features/movies/api/showcaseApi';
 import {
+  isShowcaseProvider,
   PROVIDER_KEYS,
   PROVIDER_LABEL_KEYS,
   TRENDING_GENRE_IDS,
@@ -38,6 +42,14 @@ type GenreTabKey = 'all' | `${number}`;
 
 const FIRST_RAIL_EAGER_COUNT = 3;
 
+function isGenreTabKey(value: unknown): value is GenreTabKey {
+  return value === 'all' || TRENDING_GENRE_IDS.some((id) => String(id) === value);
+}
+
+function isProviderTab(value: unknown): value is ShowcaseProvider {
+  return typeof value === 'string' && isShowcaseProvider(value);
+}
+
 type HomeRail = 'forYou' | 'trending';
 
 function resolveFirstRail(personalRowsPending: boolean, hasPersonal: boolean): HomeRail | null {
@@ -53,9 +65,14 @@ export default function HomePage() {
   const { t } = useTranslation();
   const { locale } = useLocale();
   const { user } = useAuth();
-  const [genreTab, setGenreTab] = useState<GenreTabKey>('all');
-  const [providerTab, setProviderTab] = useState<ShowcaseProvider>(PROVIDER_KEYS[0]);
+  const [genreTab, setGenreTab] = useHistoryEntryState('home.genreTab', 'all', isGenreTabKey);
+  const [providerTab, setProviderTab] = useHistoryEntryState(
+    'home.providerTab',
+    PROVIDER_KEYS[0],
+    isProviderTab
+  );
   const openMoviePage = useOpenMoviePage();
+  useIdlePrefetch(MOVIE_PAGE_CHUNKS);
   const [proposeTarget, setProposeTarget] = useState<WatchlistToggleItem | null>(null);
 
   usePageSeo({
