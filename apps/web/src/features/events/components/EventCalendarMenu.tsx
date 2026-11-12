@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { CalendarPlus, Download, ExternalLink } from 'lucide-react';
 import Button from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
@@ -22,6 +23,7 @@ type EventCalendarMenuProps = {
   url?: string;
   triggerLabel?: string;
   triggerClassName?: string;
+  opensAboveRow?: boolean;
 };
 
 export default function EventCalendarMenu({
@@ -31,6 +33,7 @@ export default function EventCalendarMenu({
   url,
   triggerLabel,
   triggerClassName,
+  opensAboveRow = false,
 }: Readonly<EventCalendarMenuProps>) {
   const { t } = useTranslation();
   const menu = useMenuState();
@@ -60,7 +63,10 @@ export default function EventCalendarMenu({
   const externalIcon = <ExternalLink className={styles.icon} size={ICON_SIZE.md} aria-hidden />;
 
   return (
-    <div className={styles.container} ref={menu.containerRef}>
+    <div
+      className={clsx(styles.container, opensAboveRow && styles.containerInRow)}
+      ref={menu.containerRef}
+    >
       {triggerLabel ? (
         <Button {...menu.triggerProps} className={triggerClassName}>
           <CalendarPlus size={ICON_SIZE.md} aria-hidden />
@@ -75,8 +81,9 @@ export default function EventCalendarMenu({
       {menu.open ? (
         <MenuPanel
           {...menu.panelProps}
+          style={opensAboveRow ? undefined : menu.panelProps.style}
           ariaLabel={t('events.calendar.menuLabel')}
-          className={styles.panel}
+          className={clsx(styles.panel, opensAboveRow && styles.panelAboveRow)}
         >
           <MenuItem href={googleHref} external icon={externalIcon} onClick={menu.close}>
             {t('events.calendar.google')}

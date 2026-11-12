@@ -31,6 +31,7 @@ export default function SegmentedRadioGroup<T extends string>({
   options,
   value,
   onChange,
+  onSelect,
   ariaLabel,
   ariaLabelledBy,
   className = '',
@@ -43,6 +44,7 @@ export default function SegmentedRadioGroup<T extends string>({
     options: readonly SegmentedOption<T>[];
     value: T;
     onChange: (value: T) => void;
+    onSelect?: (value: T) => void;
     className?: string;
     id?: string;
     size?: SegmentedSize;
@@ -94,7 +96,10 @@ export default function SegmentedRadioGroup<T extends string>({
               showIconAlone && styles.optionIcon,
               selected && styles.optionSelected
             )}
-            onClick={() => onChange(opt.value)}
+            onClick={() => {
+              onChange(opt.value);
+              onSelect?.(opt.value);
+            }}
             onKeyDown={(e) => handleKey(e, idx)}
           >
             {opt.icon}

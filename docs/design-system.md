@@ -287,6 +287,7 @@ Choix exclusif entre deux à cinq options courtes, `role="radiogroup"`, flèches
 | Prop | Type | Rôle |
 |---|---|---|
 | `value`, `onChange` | | requis |
+| `onSelect` | `(value) => void` | facultatif, appelé quand une option est activée, au clic ou par Entrée et Espace, jamais lors d'un déplacement par flèche : c'est là qu'on déplace le focus vers un champ que l'option révèle, comme `onSelect` de `ChoiceGroup` |
 | `id` | `string` | préfixe des identifiants des options |
 | `options` | `{ value, label, icon? }[]` | |
 | `ariaLabel` ou `ariaLabelledBy` | `string` | au moins l'un des deux, le typage refuse un groupe sans nom |

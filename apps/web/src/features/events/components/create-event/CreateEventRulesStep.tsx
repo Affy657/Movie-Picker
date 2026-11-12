@@ -24,7 +24,8 @@ type CreateEventRulesStepProps = {
   onChange: (patch: Partial<TemplateFormFields>) => void;
   selected: RulesChoice['kind'] | null;
   selectedTemplateId: string | null;
-  lastNight: { slug: string; title: string } | null;
+  selectedNightSlug: string | null;
+  nights: ReadonlyArray<{ slug: string; title: string }>;
   templates: EventTemplateData[];
   onChoose: (choice: RulesChoice) => void;
   canSaveTemplate: boolean;
@@ -41,7 +42,8 @@ export default function CreateEventRulesStep({
   onChange,
   selected,
   selectedTemplateId,
-  lastNight,
+  selectedNightSlug,
+  nights,
   templates,
   onChoose,
   canSaveTemplate,
@@ -94,16 +96,17 @@ export default function CreateEventRulesStep({
           >
             {t('events.create.rules.defaultsItem')}
           </Chip>
-          {lastNight ? (
+          {nights.map((night) => (
             <Chip
+              key={night.slug}
               size="md"
               icon={RotateCcw}
-              selected={selected === 'night'}
-              onClick={() => onChoose({ kind: 'night', ...lastNight })}
+              selected={selected === 'night' && selectedNightSlug === night.slug}
+              onClick={() => onChoose({ kind: 'night', slug: night.slug, title: night.title })}
             >
-              {t('events.create.rules.likeItem', { title: lastNight.title })}
+              {t('events.create.rules.likeItem', { title: night.title })}
             </Chip>
-          ) : null}
+          ))}
           {templates.map((template) => (
             <Chip
               key={template.id}

@@ -102,17 +102,35 @@ describe('App (routes)', () => {
       const mark = brand.querySelector('svg')!;
       expect(mark).not.toHaveClass(brandStyles.animated!);
 
-      fireEvent.pointerEnter(brand);
+      fireEvent.pointerEnter(brand, { pointerType: 'mouse' });
       expect(mark).toHaveClass(brandStyles.animated!, brandStyles.once!);
 
-      fireEvent.pointerEnter(brand);
+      fireEvent.pointerEnter(brand, { pointerType: 'mouse' });
       expect(mark).toHaveClass(brandStyles.once!);
 
       fireEvent.animationEnd(mark.querySelector(`.${brandStyles.bar}`)!);
       expect(mark).not.toHaveClass(brandStyles.animated!);
 
-      fireEvent.pointerEnter(brand);
+      fireEvent.pointerEnter(brand, { pointerType: 'mouse' });
       expect(mark).toHaveClass(brandStyles.once!);
+    });
+
+    it('AppShell: a tap on the brand leaves the header clap still', async () => {
+      server.use(authMeGuestHandler);
+      renderRoutes(['/decouvrir']);
+      await screen.findByRole(
+        'heading',
+        { name: /choisissez le film de la soirée/i, level: 1 },
+        { timeout: 20000 }
+      );
+      const brand = within(screen.getByRole('banner')).getByRole('link', {
+        name: 'Movie Picker, accueil',
+      });
+      const mark = brand.querySelector('svg')!;
+
+      fireEvent.pointerEnter(brand, { pointerType: 'touch' });
+
+      expect(mark).not.toHaveClass(brandStyles.animated!);
     });
 
     it("route / affiche la home d'exploration, plus la landing", async () => {

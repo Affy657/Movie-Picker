@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
+import { CreateEventDialogContext } from '@/features/events/components/create-event/createEventDialogContext';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import type { MyEventSummary } from '@/features/events/types';
@@ -62,11 +64,15 @@ function eventsHandler(events: MyEventSummary[]) {
   );
 }
 
+const openCreateEvent = vi.fn();
+
 function renderHero() {
   return render(
     <AppTestProviders>
       <MemoryRouter>
-        <HomeHero />
+        <CreateEventDialogContext.Provider value={{ open: openCreateEvent, dismiss: vi.fn() }}>
+          <HomeHero />
+        </CreateEventDialogContext.Provider>
       </MemoryRouter>
     </AppTestProviders>
   );
@@ -74,12 +80,23 @@ function renderHero() {
 
 async function expectCreateNightBlock() {
   expect(await screen.findByText('Vous n’arrivez pas à choisir ?')).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'Créer une soirée' })).toHaveAttribute('href', '/new');
   expect(screen.getByRole('link', { name: 'Comment ça marche' })).toHaveAttribute(
     'href',
     '/decouvrir'
   );
   expect(screen.queryByText('Votre prochaine soirée')).not.toBeInTheDocument();
+}
+
+async function expectVisitorCreateLink() {
+  await expectCreateNightBlock();
+  expect(screen.getByRole('link', { name: 'Créer une soirée' })).toHaveAttribute('href', '/new');
+}
+
+async function expectCreateWindowButton() {
+  await expectCreateNightBlock();
+  expect(screen.queryByRole('link', { name: 'Créer une soirée' })).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: 'Créer une soirée' }));
+  expect(openCreateEvent).toHaveBeenCalledTimes(1);
 }
 
 describe('HomeHero', () => {
@@ -89,6 +106,7 @@ describe('HomeHero', () => {
   afterEach(() => {
     server.resetHandlers();
     vi.unstubAllGlobals();
+    openCreateEvent.mockReset();
   });
   afterAll(() => server.close());
 
@@ -113,7 +131,7 @@ describe('HomeHero', () => {
     server.use(authMeGuestHandler, trendingHandler);
     renderHero();
 
-    await expectCreateNightBlock();
+    await expectVisitorCreateLink();
     expect(screen.getByText(/chacun propose un film, tout le monde vote/i)).toBeInTheDocument();
   });
 
@@ -121,7 +139,7 @@ describe('HomeHero', () => {
     server.use(authedUserHandler, trendingHandler, eventsHandler([]));
     renderHero();
 
-    await expectCreateNightBlock();
+    await expectCreateWindowButton();
   });
 
   it('signed in with a pending night only: the create block', async () => {
@@ -132,7 +150,7 @@ describe('HomeHero', () => {
     );
     renderHero();
 
-    await expectCreateNightBlock();
+    await expectCreateWindowButton();
     expect(screen.queryByText('En suspens')).not.toBeInTheDocument();
   });
 
@@ -144,7 +162,7 @@ describe('HomeHero', () => {
     );
     renderHero();
 
-    await expectCreateNightBlock();
+    await expectCreateWindowButton();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
@@ -193,6 +211,20 @@ describe('HomeHero', () => {
     const link = await screen.findByRole('link', { name: /vous n’arrivez pas à choisir/i });
     expect(link).toHaveAttribute('href', '/new');
     expect(within(link).getByText('Créez une soirée, la roue tranche.')).toBeInTheDocument();
+  });
+
+  it('signed in on a phone: the compact card opens the creation window in place', async () => {
+    stubMatchMedia((query) => query.includes('max-width'));
+    server.use(authedUserHandler, trendingHandler, eventsHandler([]));
+    renderHero();
+
+    const card = await screen.findByRole('button', { name: /vous n’arrivez pas à choisir/i });
+    expect(within(card).getByText('Créez une soirée, la roue tranche.')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: /vous n’arrivez pas à choisir/i })
+    ).not.toBeInTheDocument();
+    await userEvent.click(card);
+    expect(openCreateEvent).toHaveBeenCalledTimes(1);
   });
 
   it('paints a decorative wall of small trending posters, hidden from screen readers', async () => {

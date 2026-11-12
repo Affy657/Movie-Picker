@@ -148,6 +148,35 @@ async function openRules(user: ReturnType<typeof userEvent.setup>) {
   return screen.findByRole('dialog', { name: 'Règles de la soirée' });
 }
 
+function formDialog(): HTMLDialogElement {
+  return screen.getByRole('dialog', { name: 'Nouvelle soirée' }) as HTMLDialogElement;
+}
+
+function pressEscape(target: HTMLDialogElement) {
+  const cancel = new Event('cancel', { cancelable: true });
+  target.dispatchEvent(cancel);
+  if (!cancel.defaultPrevented) target.close();
+}
+
+function clickBackdrop(target: HTMLDialogElement) {
+  vi.spyOn(target, 'getBoundingClientRect').mockReturnValue(
+    DOMRect.fromRect({ x: 100, y: 100, width: 300, height: 300 })
+  );
+  fireEvent.pointerDown(target, { clientX: 20, clientY: 20 });
+  fireEvent.click(target, { clientX: 20, clientY: 20 });
+}
+
+function holdCreation(): () => void {
+  let finish: (value: unknown) => void = () => undefined;
+  routeApi({
+    create: () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+  });
+  return () => finish({ slug: 'abc', shareUrl: '/e/abc' });
+}
+
 describe('CreateEventDialog', () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['Date'] });
@@ -241,6 +270,54 @@ describe('CreateEventDialog', () => {
       await user.click(screen.getByRole('radio', { name: /autre date/i }));
 
       expect(screen.getByLabelText('Date')).toHaveFocus();
+    });
+
+    it('moves the focus into the time field it reveals', async () => {
+      const user = userEvent.setup();
+      renderDialog();
+
+      await user.click(screen.getByRole('radio', { name: 'Autre' }));
+
+      expect(screen.getByLabelText('Heure')).toHaveFocus();
+    });
+
+    it('keeps the focus on the days when the arrows reach « Autre date »', async () => {
+      const user = userEvent.setup();
+      renderDialog();
+
+      screen.getByRole('radio', { name: /dimanche/i }).focus();
+      await user.keyboard('{ArrowRight}');
+
+      const other = screen.getByRole('radio', { name: /autre date/i });
+      expect(other).toBeChecked();
+      expect(screen.getByLabelText('Date')).toBeInTheDocument();
+      expect(other).toHaveFocus();
+      await user.keyboard('{ArrowLeft}');
+      expect(screen.getByRole('radio', { name: /dimanche/i })).toHaveFocus();
+    });
+
+    it('enters the date field once « Autre date » is activated from the keyboard', async () => {
+      const user = userEvent.setup();
+      renderDialog();
+
+      screen.getByRole('radio', { name: /dimanche/i }).focus();
+      await user.keyboard('{ArrowRight}');
+      await user.keyboard('{Enter}');
+
+      expect(screen.getByLabelText('Date')).toHaveFocus();
+    });
+
+    it('keeps the focus on the hours when the arrows reach « Autre »', async () => {
+      const user = userEvent.setup();
+      renderDialog();
+
+      screen.getByRole('radio', { name: '21:00' }).focus();
+      await user.keyboard('{ArrowRight}');
+
+      const other = screen.getByRole('radio', { name: 'Autre' });
+      expect(other).toBeChecked();
+      expect(screen.getByLabelText('Heure')).toBeInTheDocument();
+      expect(other).toHaveFocus();
     });
 
     it('shows the chosen day on « Autre date »', async () => {
@@ -448,6 +525,51 @@ describe('CreateEventDialog', () => {
       const [first, second] = createBodies();
       expect(second!.clientRequestId).not.toBe(first!.clientRequestId);
     });
+
+    it('stays open while the night is being created, then hands over its link', async () => {
+      const user = userEvent.setup();
+      const finishCreation = holdCreation();
+      renderDialog();
+      const form = formDialog();
+
+      await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
+      await waitFor(() => expect(createBodies()).toHaveLength(1));
+      pressEscape(form);
+      await user.click(within(form).getByRole('button', { name: 'Fermer' }));
+      clickBackdrop(form);
+
+      expect(onClose).not.toHaveBeenCalled();
+      expect(form).toHaveAttribute('open');
+      finishCreation();
+      expect(await screen.findByRole('heading', { name: 'Soirée créée' })).toBeInTheDocument();
+      expect(createBodies()).toHaveLength(1);
+    });
+
+    it('shows the window again when the browser closes it during the creation', async () => {
+      const user = userEvent.setup();
+      holdCreation();
+      renderDialog();
+      const form = formDialog();
+
+      await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
+      await waitFor(() => expect(createBodies()).toHaveLength(1));
+      form.close();
+
+      expect(onClose).not.toHaveBeenCalled();
+      expect(form).toHaveAttribute('open');
+    });
+
+    it('closes on Escape again once the creation failed', async () => {
+      const user = userEvent.setup();
+      routeApi({ create: () => Promise.reject(new Error('Serveur indisponible')) });
+      renderDialog();
+
+      await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
+      await screen.findByRole('alert');
+      pressEscape(formDialog());
+
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('rules', () => {
@@ -572,6 +694,43 @@ describe('CreateEventDialog', () => {
       ).toBeInTheDocument();
     });
 
+    it('highlights the night being redone, not the last night hosted', async () => {
+      const user = userEvent.setup();
+      routeApi({ pastNights: [PAST_NIGHT], reusedConfig: { maxParticipants: 6 } });
+      renderDialog({ reuse: { slug: 'old', title: 'Soirée du 31 octobre' } });
+
+      await screen.findByRole('button', { name: 'Règles : comme « Soirée du 31 octobre »' });
+      const rules = await openRules(user);
+
+      expect(
+        within(rules).getByRole('button', { name: /comme « soirée du 31 octobre »/i })
+      ).toHaveAttribute('aria-pressed', 'true');
+      expect(
+        await within(rules).findByRole('button', { name: /comme « ciné-club du mercredi »/i })
+      ).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    it('moves the highlight to the last night hosted once it is picked', async () => {
+      const user = userEvent.setup();
+      routeApi({ pastNights: [PAST_NIGHT], reusedConfig: { maxParticipants: 6 } });
+      renderDialog({ reuse: { slug: 'old', title: 'Soirée du 31 octobre' } });
+
+      await screen.findByRole('button', { name: 'Règles : comme « Soirée du 31 octobre »' });
+      const rules = await openRules(user);
+      await user.click(
+        await within(rules).findByRole('button', { name: /comme « ciné-club du mercredi »/i })
+      );
+
+      await waitFor(() =>
+        expect(
+          within(rules).getByRole('button', { name: /comme « ciné-club du mercredi »/i })
+        ).toHaveAttribute('aria-pressed', 'true')
+      );
+      expect(
+        within(rules).getByRole('button', { name: /comme « soirée du 31 octobre »/i })
+      ).toHaveAttribute('aria-pressed', 'false');
+    });
+
     it('steps a limit down from unlimited to the usual cap and sends it', async () => {
       const user = userEvent.setup();
       renderDialog();
@@ -688,7 +847,9 @@ describe('CreateEventDialog', () => {
 
       await createNight(user);
 
-      expect(screen.getByText(/ses options n’ont pas été enregistrées/)).toBeInTheDocument();
+      const warning = screen.getByRole('status');
+      expect(warning).toHaveTextContent(/ses options n’ont pas été enregistrées/);
+      expect(warning.tagName).toBe('OUTPUT');
     });
   });
 });

@@ -1,7 +1,14 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
+import {
+  MemoryRouter,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+  type NavigateFunction,
+} from 'react-router';
 import { setupServer } from 'msw/node';
 import EventDetail from '@/features/events/pages/EventDetail';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
@@ -529,6 +536,48 @@ describe('EventDetail (MSW)', () => {
     renderEventDetail(`/e/${slug}?host=host-token`, undefined, { openPropose: true });
 
     expect(await screen.findByRole('dialog', { name: 'Proposer un film' })).toBeInTheDocument();
+  });
+
+  it('plays the arrival from the creation once: coming back to the night replays nothing', async () => {
+    setStoredParticipant(slug, 'p-msw-host', 'Hôte');
+    let navigateTo: NavigateFunction = () => undefined;
+    function Navigator() {
+      navigateTo = useNavigate();
+      return <output data-testid="location-state">{JSON.stringify(useLocation().state)}</output>;
+    }
+    render(
+      <AppTestProviders>
+        <MemoryRouter
+          initialEntries={[
+            {
+              pathname: `/e/${slug}`,
+              search: '?host=host-token',
+              state: { openPropose: true, configNotSaved: true, justCreated: true },
+            },
+          ]}
+        >
+          <Routes>
+            <Route path="/e/:slug" element={<EventDetail />} />
+            <Route path="/film" element={<div data-testid="route-film" />} />
+          </Routes>
+          <Navigator />
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+
+    expect(await screen.findByRole('dialog', { name: 'Proposer un film' })).toBeInTheDocument();
+    expect(screen.getByText(/ses options n’ont pas été enregistrées/)).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByTestId('location-state')).toHaveTextContent('{"justCreated":true}')
+    );
+
+    act(() => navigateTo('/film'));
+    await screen.findByTestId('route-film');
+    act(() => navigateTo(-1));
+
+    expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Proposer un film' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/ses options n’ont pas été enregistrées/)).not.toBeInTheDocument();
   });
 
   describe('participant removal flow (host)', () => {
