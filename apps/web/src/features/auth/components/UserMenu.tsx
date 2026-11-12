@@ -84,11 +84,11 @@ function ProfileHeader({ user, onClose }: Readonly<{ user: UserProfile; onClose:
     <MenuItem
       to={ownProfile.path}
       icon={avatar}
-      ariaLabel={t('profile.settings.viewMyProfile')}
       trailing={menuIcon(ChevronRight)}
       onClick={onClose}
     >
       <ProfileSummary user={user} />
+      <span className="visually-hidden">{t('profile.settings.viewMyProfile')}</span>
     </MenuItem>
   );
 }

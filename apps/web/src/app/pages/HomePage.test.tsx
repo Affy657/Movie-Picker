@@ -590,6 +590,73 @@ describe('HomePage', () => {
     expect(within(cinema).getAllByRole('heading', { level: 3 })).toHaveLength(8);
   });
 
+  it('keeps the most proposed slot while it loads, with now playing already in its grid', async () => {
+    let releaseMostProposed: () => void = () => undefined;
+    const mostProposedGate = new Promise<void>((resolve) => {
+      releaseMostProposed = resolve;
+    });
+    server.use(
+      authMeGuestHandler,
+      collectionsHandler,
+      http.get(`${TEST_API_V1}/movies/showcase`, async ({ request }) => {
+        const section = new URL(request.url).searchParams.get('section') ?? 'trending';
+        if (section === 'most-proposed') await mostProposedGate;
+        return HttpResponse.json({
+          section,
+          theme: null,
+          items: showcaseItems(section, 8),
+          disclaimer: '',
+          tmdbAttributionUrl: '',
+        });
+      })
+    );
+    renderPage();
+
+    const cinema = (
+      await screen.findByRole('heading', { name: /actuellement au cinéma/i, level: 2 })
+    ).closest('section') as HTMLElement;
+    await within(cinema).findByRole('heading', { name: 'now-playing 1', level: 3 });
+    expect(within(cinema).queryByTestId('movie-preview-rail')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Les plus proposés', level: 2 })
+    ).toBeInTheDocument();
+    releaseMostProposed();
+  });
+
+  it('reports a failed most proposed ranking with a retry instead of dropping the row', async () => {
+    let mostProposedFails = true;
+    server.use(
+      authMeGuestHandler,
+      collectionsHandler,
+      http.get(`${TEST_API_V1}/movies/showcase`, ({ request }) => {
+        const section = new URL(request.url).searchParams.get('section') ?? 'trending';
+        if (section === 'most-proposed' && mostProposedFails) {
+          return HttpResponse.json({}, { status: 500 });
+        }
+        return HttpResponse.json({
+          section,
+          theme: null,
+          items: showcaseItems(section, 3),
+          disclaimer: '',
+          tmdbAttributionUrl: '',
+        });
+      })
+    );
+    renderPage();
+
+    const mostProposed = (
+      await screen.findByRole('heading', { name: 'Les plus proposés', level: 2 })
+    ).closest('section') as HTMLElement;
+    expect(
+      await within(mostProposed).findByText('Cette sélection est momentanément indisponible.')
+    ).toBeInTheDocument();
+
+    mostProposedFails = false;
+    await userEvent.click(within(mostProposed).getByRole('button', { name: 'Réessayer' }));
+
+    expect(await within(mostProposed).findByText('most-proposed 1')).toBeInTheDocument();
+  });
+
   it('affiche les pastilles de genre en onglets', async () => {
     server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
     renderPage();

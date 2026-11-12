@@ -18,15 +18,23 @@ import SearchExamples from './SearchExamples';
 import { setHomeSearchHidden } from './homeSearchVisibility';
 import styles from './HomeHero.module.css';
 
+function coveredTopPx(element: Element): number {
+  return Number.parseFloat(getComputedStyle(element).scrollMarginTop) || 0;
+}
+
 function useReportSearchVisibility(form: RefObject<HTMLFormElement | null>) {
   useEffect(() => {
     const element = form.current;
     if (!element || typeof IntersectionObserver === 'undefined') return;
-    const observer = new IntersectionObserver((entries) => {
-      const entry = entries.at(-1);
-      if (!entry) return;
-      setHomeSearchHidden(!entry.isIntersecting && entry.boundingClientRect.top < 0);
-    });
+    const coveredTop = coveredTopPx(element);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries.at(-1);
+        if (!entry) return;
+        setHomeSearchHidden(!entry.isIntersecting && entry.boundingClientRect.top < coveredTop);
+      },
+      { rootMargin: `-${coveredTop}px 0px 0px 0px` }
+    );
     observer.observe(element);
     return () => {
       observer.disconnect();
@@ -150,7 +158,7 @@ function NightPanel() {
 
 export default function HomeHero() {
   return (
-    <section className={styles.hero}>
+    <div className={styles.hero}>
       <HomePosterWall />
       <div className={styles.inner}>
         <HomeSearch />
@@ -158,6 +166,6 @@ export default function HomeHero() {
           <NightPanel />
         </div>
       </div>
-    </section>
+    </div>
   );
 }
