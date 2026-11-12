@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import ProfileMoviesSection from './ProfileMoviesSection';
@@ -18,11 +18,17 @@ const HEAT: FavoriteTitle = {
   posterPath: null,
 };
 
-function renderSection(handle: string, favorites: FavoriteTitle[] = []) {
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
+}
+
+function renderSection(handle: string, favorites: FavoriteTitle[] = [], withLocation = false) {
   return render(
     <AppTestProviders>
       <MemoryRouter>
         <ProfileMoviesSection handle={handle} favorites={favorites} />
+        {withLocation ? <LocationProbe /> : null}
       </MemoryRouter>
     </AppTestProviders>
   );
@@ -30,10 +36,7 @@ function renderSection(handle: string, favorites: FavoriteTitle[] = []) {
 
 describe('ProfileMoviesSection (MSW)', () => {
   const server = setupServer(
-    http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-    http.get(`${TEST_API_V1}/movies/tmdb/:tmdbId/details`, () =>
-      HttpResponse.json({ tmdbId: 27205, title: 'Inception', overview: 'Un voleur de rêves.' })
-    )
+    http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 }))
   );
 
   beforeAll(() => server.listen({ onUnhandledFrame: 'warn' }));
@@ -92,6 +95,7 @@ describe('ProfileMoviesSection (MSW)', () => {
   });
 
   it('says so when adding a favorite to the watchlist fails', async () => {
+    stubHoverCapability();
     server.use(
       authedBobHandler,
       http.get(`${TEST_API_V1}/watchlist`, () => HttpResponse.json({ items: [] })),
@@ -103,8 +107,7 @@ describe('ProfileMoviesSection (MSW)', () => {
     const user = userEvent.setup();
 
     renderSection('alice', [HEAT]);
-    await user.click(await screen.findByRole('button', { name: /voir les détails de « heat »/i }));
-    await user.click(await screen.findByRole('button', { name: 'Ajouter à ma liste' }));
+    await user.click(await screen.findByRole('button', { name: 'Ajouter « Heat » à ma liste' }));
 
     expect(await screen.findByText('Ajout impossible')).toHaveAttribute('role', 'alert');
   });
@@ -249,7 +252,7 @@ describe('ProfileMoviesSection (MSW)', () => {
     expect(screen.getByText('2h28')).toBeInTheDocument();
   });
 
-  it('clicking a poster opens the details modal', async () => {
+  it('clicking a poster opens the film page', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
         HttpResponse.json({
@@ -268,63 +271,14 @@ describe('ProfileMoviesSection (MSW)', () => {
       )
     );
 
-    renderSection('alice');
+    renderSection('alice', [], true);
     const user = userEvent.setup();
 
     await user.click(
       await screen.findByRole('button', { name: /voir les détails de « inception »/i })
     );
 
-    expect(await screen.findByRole('heading', { name: 'Inception', level: 2 })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Ajouter à ma liste' })).not.toBeInTheDocument();
-  });
-
-  it('logged in, the details modal carries the library actions and hands over to the propose modal', async () => {
-    server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u1',
-          displayName: 'Bob',
-          emailMasked: 'b***@test.local',
-          uiTheme: 'system',
-          accentColor: 'default',
-          ratingScale: 'ten',
-        })
-      ),
-      http.get(`${TEST_API_V1}/watchlist`, () => HttpResponse.json({ items: [] })),
-      http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] })),
-      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-        HttpResponse.json({
-          items: [
-            {
-              tmdbId: 27205,
-              title: 'Inception',
-              year: '2010',
-              posterPath: null,
-              genreIds: [28],
-              mediaType: 'movie',
-              watchedAt: '2026-06-01T00:00:00Z',
-            },
-          ],
-        })
-      )
-    );
-
-    renderSection('alice');
-    const user = userEvent.setup();
-
-    await user.click(
-      await screen.findByRole('button', { name: /voir les détails de « inception »/i })
-    );
-    await screen.findByRole('heading', { name: 'Inception', level: 2 });
-
-    expect(await screen.findByRole('button', { name: 'Ajouter à ma liste' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Proposer dans une soirée' }));
-
-    expect(
-      await screen.findByText(/proposer «\s*inception\s*» dans une soirée/i)
-    ).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Inception', level: 2 })).not.toBeInTheDocument();
+    expect(screen.getByTestId('location')).toHaveTextContent('/film/27205-inception');
   });
 
   it('hover, logged in: the poster offers the library actions and opens the propose modal', async () => {

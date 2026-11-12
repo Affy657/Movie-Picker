@@ -4,6 +4,7 @@ export const ROUTE_CHUNKS = {
   home: () => import('@/app/pages/HomePage'),
   showcaseList: () => import('@/app/pages/ShowcaseListPage'),
   movieCollections: () => import('@/app/pages/MovieCollectionsPage'),
+  moviePage: () => import('@/app/pages/movie/MoviePage'),
   landing: () => import('@/app/pages/LandingPage'),
   createEvent: () => import('@/features/events/pages/CreateEvent'),
   eventDetail: () => import('@/features/events/pages/EventDetail'),

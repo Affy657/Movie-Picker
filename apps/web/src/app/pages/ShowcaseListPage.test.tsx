@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
@@ -71,6 +71,11 @@ const lastWatchedInceptionHandler = http.get(`${TEST_API_V1}/users/me/watched-mo
   })
 );
 
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
+}
+
 function renderPage(
   variant: ShowcaseListVariant,
   entry: string,
@@ -83,6 +88,7 @@ function renderPage(
         <Routes>
           <Route path={path} element={<ShowcaseListPage variant={variant} />} />
         </Routes>
+        <LocationProbe />
       </MemoryRouter>
     </AppTestProviders>
   );
@@ -350,7 +356,7 @@ describe('ShowcaseListPage', () => {
     ]);
   });
 
-  it('touch, logged in: no kebab, the poster opens the details with the library footer', async () => {
+  it('touch, logged in: no kebab, the poster opens the film page', async () => {
     server.use(authedUserHandler, emptyWatchlistHandler, showcaseHandler);
     renderPage('trending', '/films/tendances', '/films/tendances');
 
@@ -359,22 +365,6 @@ describe('ShowcaseListPage', () => {
 
     await userEvent.click(screen.getByRole('button', { name: POSTER_FILM_1 }));
 
-    expect(await screen.findByRole('heading', { name: 'Film 1', level: 2 })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Ajouter à ma liste' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Proposer dans une soirée' })).toBeInTheDocument();
-  });
-
-  it('touch, visitor: the details modal has no library footer', async () => {
-    server.use(authMeGuestHandler, showcaseHandler);
-    renderPage('trending', '/films/tendances', '/films/tendances');
-
-    await screen.findByText('Film 1');
-    await userEvent.click(screen.getByRole('button', { name: POSTER_FILM_1 }));
-
-    expect(await screen.findByRole('heading', { name: 'Film 1', level: 2 })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Ajouter à ma liste' })).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Proposer dans une soirée' })
-    ).not.toBeInTheDocument();
+    expect(screen.getByTestId('location')).toHaveTextContent('/film/2001-film-1');
   });
 });

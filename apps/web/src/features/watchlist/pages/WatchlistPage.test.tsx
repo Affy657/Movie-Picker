@@ -1,7 +1,7 @@
 import { beforeAll, afterEach, afterAll, describe, expect, it, vi } from 'vitest';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import WatchlistPage from '@/features/watchlist/pages/WatchlistPage';
@@ -14,11 +14,17 @@ vi.mock('@/shared/hooks/useAnalytics', () => ({
   useAnalytics: () => ({ track }),
 }));
 
-function renderPage() {
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
+}
+
+function renderPage(withLocation = false) {
   return render(
     <AppTestProviders>
       <MemoryRouter initialEntries={['/watchlist']}>
         <WatchlistPage />
+        {withLocation ? <LocationProbe /> : null}
       </MemoryRouter>
     </AppTestProviders>
   );
@@ -64,23 +70,6 @@ const POSTER_A = /voir les détails de « ancien mais bien noté »/i;
 function watchlistHandler(items: unknown[], availability: unknown[] = []) {
   return createWatchlistHandlers(items, availability);
 }
-
-const detailsHandler = http.get(`${TEST_API_V1}/movies/tmdb/200/details`, () =>
-  HttpResponse.json({
-    tmdbId: 200,
-    title: 'Ancien Mais Bien Noté',
-    overview: 'Un synopsis de test.',
-    tagline: null,
-    director: 'Une Réalisatrice',
-    cast: ['Acteur A'],
-    runtimeMinutes: 90,
-    genres: ['Drame'],
-    releaseDate: '2000-01-01',
-    trailerUrl: null,
-    watchProviders: [{ providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' }],
-    tmdbWatchPageUrl: 'https://www.themoviedb.org/movie/200/watch',
-  })
-);
 
 function proposeHandlers(onProposed: (body: Record<string, unknown>) => void) {
   return [
@@ -386,20 +375,16 @@ describe('WatchlistPage (MSW)', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows the details of a movie from the poster', async () => {
-    server.use(authedUserHandler, ...watchlistHandler([ITEM_A]), detailsHandler);
+  it('opens the film page of a movie from the poster', async () => {
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
 
-    renderPage();
+    renderPage(true);
     const user = userEvent.setup();
 
     await screen.findByText('Ancien Mais Bien Noté');
     await user.click(screen.getByRole('button', { name: POSTER_A }));
 
-    expect(await screen.findByText('Une Réalisatrice')).toBeInTheDocument();
-    expect(screen.getByText(/un synopsis de test/i)).toBeInTheDocument();
-
-    await user.click(screen.getByRole('tab', { name: /où regarder/i }));
-    expect(await screen.findByText('Netflix')).toBeInTheDocument();
+    expect(screen.getByTestId('location')).toHaveTextContent('/film/200-ancien-mais-bien-note');
   });
 
   it('touch: mounts no kebab, the poster trigger opens the details', async () => {
@@ -410,61 +395,6 @@ describe('WatchlistPage (MSW)', () => {
     await screen.findByText('Ancien Mais Bien Noté');
     expect(screen.queryByRole('button', { name: /plus d.actions/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: POSTER_A })).toBeInTheDocument();
-  });
-
-  it('touch: proposes from the details modal footer, after the details dialog closed', async () => {
-    let proposedBody: Record<string, unknown> | null = null;
-    server.use(
-      authedUserHandler,
-      ...watchlistHandler([ITEM_A]),
-      detailsHandler,
-      ...proposeHandlers((body) => {
-        proposedBody = body;
-      })
-    );
-
-    renderPage();
-    const user = userEvent.setup();
-
-    await screen.findByText('Ancien Mais Bien Noté');
-    await user.click(screen.getByRole('button', { name: POSTER_A }));
-    await screen.findByRole('heading', { name: 'Ancien Mais Bien Noté', level: 2 });
-
-    await user.click(screen.getByRole('button', { name: 'Proposer dans une soirée' }));
-
-    await screen.findByText(/proposer «\s*ancien mais bien noté\s*» dans une soirée/i);
-    expect(
-      screen.queryByRole('heading', { name: 'Ancien Mais Bien Noté', level: 2 })
-    ).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: /chez moi/i }));
-
-    await waitFor(() => expect(proposedBody).not.toBeNull());
-    expect(proposedBody).toMatchObject({ tmdbId: 200, participantId: 'p1' });
-    expect(await screen.findByText(/^proposé$/i)).toBeInTheDocument();
-  });
-
-  it('touch: the details modal footer removes the movie from the watchlist', async () => {
-    let removeCalled = false;
-    server.use(
-      authedUserHandler,
-      ...watchlistHandler([ITEM_A]),
-      detailsHandler,
-      removeHandler(() => {
-        removeCalled = true;
-      })
-    );
-
-    renderPage();
-    const user = userEvent.setup();
-
-    await screen.findByText('Ancien Mais Bien Noté');
-    await user.click(screen.getByRole('button', { name: POSTER_A }));
-    await screen.findByRole('heading', { name: 'Ancien Mais Bien Noté', level: 2 });
-
-    await user.click(screen.getByRole('button', { name: 'Retirer de ma liste' }));
-
-    await waitFor(() => expect(removeCalled).toBe(true));
   });
 
   it('hover: proposes from the poster through the modal', async () => {
@@ -492,38 +422,6 @@ describe('WatchlistPage (MSW)', () => {
     await waitFor(() => expect(proposedBody).not.toBeNull());
     expect(proposedBody).toMatchObject({ tmdbId: 200, participantId: 'p1' });
     expect(await screen.findByText(/^proposé$/i)).toBeInTheDocument();
-  });
-
-  it('hover: closing the propose modal reached from the details footer lands the focus back on the poster', async () => {
-    stubHoverCapability();
-    server.use(
-      authedUserHandler,
-      ...watchlistHandler([ITEM_A]),
-      detailsHandler,
-      ...proposeHandlers(() => {})
-    );
-
-    renderPage();
-    const user = userEvent.setup();
-
-    await screen.findByText('Ancien Mais Bien Noté');
-    await user.click(screen.getByRole('button', { name: POSTER_A }));
-    await screen.findByRole('heading', { name: 'Ancien Mais Bien Noté', level: 2 });
-
-    await user.click(screen.getByRole('button', { name: 'Proposer dans une soirée' }));
-    await screen.findByText(/proposer «\s*ancien mais bien noté\s*» dans une soirée/i);
-    expect(
-      screen.queryByRole('heading', { name: 'Ancien Mais Bien Noté', level: 2 })
-    ).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: /fermer/i }));
-
-    await waitFor(() =>
-      expect(
-        screen.queryByText(/proposer «\s*ancien mais bien noté\s*» dans une soirée/i)
-      ).not.toBeInTheDocument()
-    );
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: POSTER_A }));
   });
 
   it('hover, list view: the kebab keeps every action', async () => {
@@ -614,7 +512,7 @@ describe('WatchlistPage (MSW)', () => {
       })
     );
 
-    renderPage();
+    renderPage(true);
     const user = userEvent.setup();
 
     const list = await screen.findByRole('list', { name: /films de ma liste/i });
@@ -631,11 +529,7 @@ describe('WatchlistPage (MSW)', () => {
     expect(within(list).getByText('2h05')).toBeInTheDocument();
 
     await user.click(within(list).getByRole('button', { name: /2 autres offres/i }));
-    const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByRole('tab', { name: /où regarder/i })).toHaveAttribute(
-      'aria-selected',
-      'true'
-    );
+    expect(screen.getByTestId('location')).toHaveTextContent('/film/200-ancien-mais-bien-note');
   });
 
   it('list view: a partial availability keeps the missing rows on their skeleton and asks again until complete', async () => {
@@ -866,63 +760,16 @@ describe('WatchlistPage (MSW)', () => {
       expect(screen.queryByRole('button', { name: /piocher/i })).not.toBeInTheDocument();
     });
 
-    it('opens the details of the drawn title', async () => {
+    it('opens the film page of the drawn title', async () => {
       reduceMotion();
-      server.use(authedUserHandler, ...watchlistHandler([ITEM_A]), detailsHandler);
-      renderPage();
+      server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
+      renderPage(true);
 
       const { user, dialog } = await openPick('Piocher un film');
       expect(within(dialog).getByText('Le seul titre de votre liste.')).toBeVisible();
       await user.click(within(dialog).getByRole('button', { name: 'Voir les détails' }));
 
-      expect(
-        await screen.findByRole('heading', { name: ITEM_A.title, level: 2 })
-      ).toBeInTheDocument();
-      expect(screen.queryByRole('dialog', { name: 'Piocher un titre' })).not.toBeInTheDocument();
-    });
-
-    it('comes back to the same draw once the details are closed', async () => {
-      reduceMotion();
-      server.use(authedUserHandler, ...watchlistHandler([ITEM_A]), detailsHandler);
-      renderPage();
-      const { user, dialog } = await openPick('Piocher un film');
-      await user.click(within(dialog).getByRole('button', { name: 'Voir les détails' }));
-      const heading = await screen.findByRole('heading', { name: ITEM_A.title, level: 2 });
-      const details = heading.closest('dialog');
-      expect(details).not.toBeNull();
-
-      await user.click(within(details as HTMLElement).getByRole('button', { name: 'Fermer' }));
-
-      const back = await screen.findByRole('dialog', { name: 'Piocher un titre' });
-      expect(within(back).getByRole('heading', { level: 3 })).toHaveTextContent(ITEM_A.title);
-    });
-
-    it('does not come back to a draw whose title was removed from its details', async () => {
-      reduceMotion();
-      server.use(
-        authedUserHandler,
-        ...watchlistHandler([ITEM_A]),
-        detailsHandler,
-        removeHandler(() => server.use(...watchlistHandler([])))
-      );
-      renderPage();
-      const { user, dialog } = await openPick('Piocher un film');
-      await user.click(within(dialog).getByRole('button', { name: 'Voir les détails' }));
-      await screen.findByRole('heading', { name: ITEM_A.title, level: 2 });
-
-      const details = screen
-        .getByRole('heading', { name: ITEM_A.title, level: 2 })
-        .closest('dialog');
-      await user.click(screen.getByRole('button', { name: 'Retirer de ma liste' }));
-      await waitFor(() =>
-        expect(screen.queryByRole('button', { name: /piocher/i })).not.toBeInTheDocument()
-      );
-      await user.click(within(details as HTMLElement).getByRole('button', { name: 'Fermer' }));
-
-      await waitFor(() =>
-        expect(screen.queryByRole('heading', { name: ITEM_A.title, level: 2 })).toBeNull()
-      );
-      expect(screen.queryByRole('dialog', { name: 'Piocher un titre' })).not.toBeInTheDocument();
+      expect(screen.getByTestId('location')).toHaveTextContent('/film/200-ancien-mais-bien-note');
     });
 
     it('gives the focus back to the Pick button of the layout shown at closing time', async () => {

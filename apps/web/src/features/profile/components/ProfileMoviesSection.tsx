@@ -9,12 +9,12 @@ import MovieBrowseCard, {
   type MovieLibraryActions,
 } from '@/features/movies/components/MovieBrowseCard';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
+import {
+  useWatchlistToggle,
+  type WatchlistToggleItem,
+} from '@/features/watchlist/hooks/useWatchlistToggle';
 import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
-import LibraryMovieDetails, {
-  useLibraryMovieDetails,
-  type LibraryMovieSeed,
-} from '@/features/watchlist/components/LibraryMovieDetails';
+import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
 import { fetchUserWatchedMovies } from '@/features/profile/api/profileApi';
 import OwnerRatingBadge from '@/features/profile/components/OwnerRatingBadge';
 import ProfileFavoritesSection from '@/features/profile/components/ProfileFavoritesSection';
@@ -39,8 +39,8 @@ export default function ProfileMoviesSection({
     queryKey: queryKeys.profile.watchedMovies(handle, PREVIEW_TAKE),
     queryFn: ({ signal }) => fetchUserWatchedMovies(handle, PREVIEW_TAKE, signal),
   });
-  const details = useLibraryMovieDetails();
-  const [proposeTarget, setProposeTarget] = useState<LibraryMovieSeed | null>(null);
+  const openMoviePage = useOpenMoviePage();
+  const [proposeTarget, setProposeTarget] = useState<WatchlistToggleItem | null>(null);
   const { user } = useAuth();
   const isLoggedIn = !!user;
   const hasHover = useHasHoverCapability();
@@ -69,7 +69,7 @@ export default function ProfileMoviesSection({
         isOwnProfile={isOwnProfile}
         library={library}
         ratingScale={user?.ratingScale}
-        onOpenDetails={details.open}
+        onOpenDetails={(item) => openMoviePage(item)}
       />
       {items.length > 0 ? (
         <Card padding="lg" radius="lg">
@@ -89,7 +89,7 @@ export default function ProfileMoviesSection({
                   inWatchlist={watchlist.has(item)}
                   onToggleWatchlist={() => watchlist.toggle(item)}
                   onProposeToEvent={() => setProposeTarget(item)}
-                  onOpenDetails={() => details.open(item)}
+                  onOpenDetails={() => openMoviePage(item)}
                   leadingBadge={
                     item.myRating != null ? (
                       <OwnerRatingBadge
@@ -105,14 +105,6 @@ export default function ProfileMoviesSection({
           </MoviePreviewRow>
         </Card>
       ) : null}
-
-      <LibraryMovieDetails
-        target={details.target}
-        seed={details.seed}
-        watchlist={watchlist}
-        onPropose={setProposeTarget}
-        onClose={details.close}
-      />
 
       {proposeTarget ? (
         <ProposeToEventModal open movie={proposeTarget} onClose={() => setProposeTarget(null)} />

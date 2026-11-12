@@ -8,6 +8,12 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Chaque film a sa propre page** : la fiche qui s'ouvrait en fenêtre devient une vraie page, avec son adresse à partager. On y trouve le synopsis en entier, les vidéos, la distribution avec photos et rôles, l'équipe, le titre original, le public, la langue, les pays, le budget, les plateformes avec leur nom, la note TMDB et celle de vos soirées. En dessous : la saga, les films du même réalisateur et les films similaires.
+- **Le film dans vos soirées** : la page dit dans combien de vos soirées il a été proposé, s'il a gagné, la note donnée après la séance et qui l'a déjà vu.
+- **Depuis une soirée, la page garde la soirée sous la main** : une barre en haut montre qui a proposé le film et son score, avec Pour, Contre et « Déjà vu » ; « Exclure du tirage » et « Retirer » sont dans le menu « … ». Sur téléphone, le vote passe dans une barre en bas de l'écran, à portée de pouce.
+
 ## [1.10.1] - 2026-11-12
 
 ### Changed

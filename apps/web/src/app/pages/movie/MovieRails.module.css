@@ -1,0 +1,9 @@
+.rails {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+}
+
+.rail {
+  min-width: 0;
+}

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, useLocation } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import MovieList from '@/features/movies/components/MovieList';
 import type { MovieData, WatchProviderOffer } from '@/shared/types/movie';
@@ -8,21 +8,18 @@ import { LocaleProvider } from '@/shared/i18n';
 import { QueryClientWrapper } from '@/test-utils/queryWrapper';
 import { stubHoverCapability } from '@/test-utils/matchMedia';
 
-const renderDetailsModal = vi.fn();
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
+}
 
-vi.mock('@/features/movies/components/MovieDetailsModal', () => ({
-  default: ({ open, initialTab }: { open: boolean; initialTab?: string }) => {
-    renderDetailsModal();
-    return open ? <div data-testid="details-modal-open" data-tab={initialTab} /> : null;
-  },
-}));
-
-function renderWithLocale(ui: React.ReactElement) {
+function renderWithLocale(ui: React.ReactElement, withLocation = false) {
   return render(
     <MemoryRouter>
       <QueryClientWrapper>
         <LocaleProvider>{ui}</LocaleProvider>
       </QueryClientWrapper>
+      {withLocation ? <LocationProbe /> : null}
     </MemoryRouter>
   );
 }
@@ -82,19 +79,17 @@ function baseProps() {
 describe('MovieList', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it('does not mount the movie details modal before its first opening', async () => {
-    renderDetailsModal.mockClear();
+  it('opens the film page, with its night, from the rental chip', async () => {
     renderWithLocale(
       <MovieList
         movies={[{ ...movies[0]!, watchProviders: mixedProviders }]}
         {...baseProps()}
         viewMode="grid"
-      />
+      />,
+      true
     );
-    expect(renderDetailsModal).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole('button', { name: /Location/ }));
-    expect(await screen.findByTestId('details-modal-open')).toBeInTheDocument();
-    expect(renderDetailsModal).toHaveBeenCalled();
+    expect(screen.getByTestId('location')).toHaveTextContent('/film/1-inception?soiree=s');
   });
 
   it('renders the empty state handed by its owner when the list is empty', () => {
@@ -381,7 +376,8 @@ describe('MovieList', () => {
           {...baseProps()}
           isMobile
           viewMode="list"
-        />
+        />,
+        true
       );
       const chevron = screen.getByRole('button', { name: /plus d’actions/i });
       expect(chevron).toHaveAttribute('aria-haspopup', 'menu');
@@ -389,7 +385,7 @@ describe('MovieList', () => {
       const items = screen.getAllByRole('menuitem').map((item) => item.textContent);
       expect(items[0]).toBe('Voir les détails');
       await user.click(screen.getByRole('menuitem', { name: 'Voir les détails' }));
-      expect(screen.getByTestId('details-modal-open')).toHaveAttribute('data-tab', 'event');
+      expect(screen.getByTestId('location')).toHaveTextContent('/film/27205-inception?soiree=s');
     });
   });
 
@@ -480,22 +476,20 @@ describe('MovieList', () => {
       expect(screen.queryByRole('button', { name: /Achat/ })).not.toBeInTheDocument();
     });
 
-    it('grid view: separates rental and purchase from flatrate in two distinct chips that open the modal', async () => {
+    it('grid view: separates rental and purchase from flatrate in two distinct chips that open the film page', async () => {
       renderWithLocale(
         <MovieList
           movies={[{ ...movies[0]!, watchProviders: mixedProviders }]}
           {...baseProps()}
           viewMode="grid"
-        />
+        />,
+        true
       );
       expect(screen.getByText('Netflix')).toBeInTheDocument();
       const rentBtn = screen.getByRole('button', { name: /Location/ });
       const buyBtn = screen.getByRole('button', { name: /Achat/ });
-      expect(screen.queryByTestId('details-modal-open')).not.toBeInTheDocument();
       await userEvent.click(rentBtn);
-      const modal = await screen.findByTestId('details-modal-open');
-      expect(modal).toBeInTheDocument();
-      expect(modal).toHaveAttribute('data-tab', 'availability');
+      expect(screen.getByTestId('location')).toHaveTextContent('/film/1-inception?soiree=s');
       expect(buyBtn).toBeInTheDocument();
     });
 

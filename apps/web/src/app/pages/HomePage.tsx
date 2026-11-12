@@ -5,8 +5,6 @@ import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { genreLabel } from '@/shared/utils/tmdbGenres';
 import { ROUTES } from '@/app/routes';
-import { loadMovieDetailsModal } from '@/features/movies/components/LazyMovieDetailsModal';
-import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import type { MovieLibraryActions } from '@/features/movies/components/MovieBrowseCard';
 import type { ShowcaseItem, ShowcaseProvider } from '@/features/movies/api/showcaseApi';
@@ -16,12 +14,12 @@ import {
   TRENDING_GENRE_IDS,
 } from '@/features/movies/showcaseSections';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
+import {
+  useWatchlistToggle,
+  type WatchlistToggleItem,
+} from '@/features/watchlist/hooks/useWatchlistToggle';
 import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
-import LibraryMovieDetails, {
-  useLibraryMovieDetails,
-  type LibraryMovieSeed,
-} from '@/features/watchlist/components/LibraryMovieDetails';
+import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
 import HomeHero from './home/HomeHero';
 import HomeShowcaseRow from './home/HomeShowcaseRow';
 import HomeCollectionsRow from './home/HomeCollectionsRow';
@@ -38,7 +36,6 @@ import styles from './HomePage.module.css';
 
 type GenreTabKey = 'all' | `${number}`;
 
-const MOVIE_DETAILS_CHUNKS = [loadMovieDetailsModal];
 const FIRST_RAIL_EAGER_COUNT = 3;
 
 type HomeRail = 'forYou' | 'trending';
@@ -54,13 +51,12 @@ function eagerCountFor(rail: HomeRail, firstRail: HomeRail | null): number {
 
 export default function HomePage() {
   const { t } = useTranslation();
-  useIdlePrefetch(MOVIE_DETAILS_CHUNKS);
   const { locale } = useLocale();
   const { user } = useAuth();
   const [genreTab, setGenreTab] = useState<GenreTabKey>('all');
   const [providerTab, setProviderTab] = useState<ShowcaseProvider>(PROVIDER_KEYS[0]);
-  const details = useLibraryMovieDetails();
-  const [proposeTarget, setProposeTarget] = useState<LibraryMovieSeed | null>(null);
+  const openMoviePage = useOpenMoviePage();
+  const [proposeTarget, setProposeTarget] = useState<WatchlistToggleItem | null>(null);
 
   usePageSeo({
     title: t('home.seoTitle'),
@@ -104,7 +100,7 @@ export default function HomePage() {
   );
 
   const openPersonalDetails = (item: PersonalRowItem) =>
-    details.open({
+    openMoviePage({
       tmdbId: item.tmdbId,
       mediaType: item.mediaType ?? 'movie',
       title: item.title,
@@ -120,7 +116,7 @@ export default function HomePage() {
   const showMostProposed = !(mostProposed.isSuccess && mostProposed.data.items.length === 0);
 
   const openDetails = (item: ShowcaseItem) =>
-    details.open({
+    openMoviePage({
       tmdbId: item.id,
       mediaType: item.mediaType ?? 'movie',
       title: item.title,
@@ -197,14 +193,6 @@ export default function HomePage() {
       </div>
       <HomeThemeFans />
       <HomeCollectionsRow />
-
-      <LibraryMovieDetails
-        target={details.target}
-        seed={details.seed}
-        watchlist={watchlist}
-        onPropose={setProposeTarget}
-        onClose={details.close}
-      />
 
       {proposeTarget ? (
         <ProposeToEventModal open movie={proposeTarget} onClose={() => setProposeTarget(null)} />

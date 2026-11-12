@@ -58,6 +58,17 @@ describe('useMovieDetails', () => {
       episodeCount: null,
       watchProviders: [],
       tmdbWatchPageUrl: null,
+      originalTitle: null,
+      originalLanguage: null,
+      productionCountries: [],
+      budget: null,
+      voteCount: null,
+      certification: null,
+      collection: null,
+      directorId: null,
+      castMembers: [],
+      crew: [],
+      videos: [],
     });
 
     const { result } = renderHook(() => useMovieDetails(27205, true, 'movie'), {

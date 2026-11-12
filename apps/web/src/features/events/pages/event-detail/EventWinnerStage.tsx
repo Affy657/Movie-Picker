@@ -94,6 +94,7 @@ export default function EventWinnerStage({
       date={event.date}
       participantAvatars={participantAvatars}
       rating={rating}
+      nightSlug={event.slug}
       action={
         event.isFinished && event.recapSlug ? (
           <Link
