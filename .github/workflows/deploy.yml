@@ -885,6 +885,12 @@ jobs:
   # users run. A deployment whose version is already published (a dependency update, a fix with
   # nothing user-visible) publishes nothing. The only job with `contents: write`: it installs
   # nothing from the lockfile, Node alone reads the changelog, and it holds no cloud identity.
+  # Every version merged since the last published one is tagged on the deployed commit, the one
+  # that first brought it to users: the `GITHUB_TOKEN` can never hold the Workflows permission
+  # that GitHub requires to tag a commit whose `.github/workflows/` differs from the default
+  # branch, which an older `chore(release)` commit usually does (HTTP 403 on 2026-11-12). The
+  # deployed commit is the head of master when the run starts; a deployment overtaken by a
+  # workflow change on master fails here, and the next production deployment publishes.
   publish-release:
     name: 🏷️ Tag and publish the version production serves
     runs-on: ubuntu-24.04
@@ -900,7 +906,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          fetch-depth: 0
       - name: Publish the deployed version and every version merged since the last one
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -918,18 +923,11 @@ jobs:
             if gh release view "$tag" >/dev/null 2>&1; then
               continue
             fi
+            latest=false
             if [ "$version" = "$current" ]; then
-              target="$GITHUB_SHA"
               latest=true
-            else
-              target="$(git log -1 --format=%H --grep "^chore(release): ${version//./\\.}\$" "$GITHUB_SHA")"
-              latest=false
-            fi
-            if [ -z "$target" ]; then
-              echo "::error::No chore(release): $version commit in the history of $GITHUB_SHA."
-              exit 1
             fi
             node scripts/release.mjs notes "$version" > "$RUNNER_TEMP/notes.md"
-            gh release create "$tag" --target "$target" --title "$tag" --notes-file "$RUNNER_TEMP/notes.md" --latest="$latest"
-            echo "Published $tag on $target."
+            gh release create "$tag" --target "$GITHUB_SHA" --title "$tag" --notes-file "$RUNNER_TEMP/notes.md" --latest="$latest"
+            echo "Published $tag on $GITHUB_SHA."
           done
