@@ -142,4 +142,17 @@ public sealed class InMemorySeenMarkRepository : ISeenMarkRepository
         IReadOnlyList<SeenMark> result = _byKey.Values.Where(s => set.Contains(s.ParticipantId)).ToList();
         return Task.FromResult(result);
     }
+
+    public Task<IReadOnlyList<SeenMark>> ListByEventAndMovieIdsAsync(
+        IReadOnlyCollection<string> eventIds,
+        IReadOnlyCollection<string> movieIds,
+        CancellationToken ct = default)
+    {
+        var events = eventIds.ToHashSet(StringComparer.Ordinal);
+        var movies = movieIds.ToHashSet(StringComparer.Ordinal);
+        IReadOnlyList<SeenMark> result = _byKey.Values
+            .Where(s => events.Contains(s.EventId) && movies.Contains(s.MovieId))
+            .ToList();
+        return Task.FromResult(result);
+    }
 }

@@ -9,6 +9,7 @@ using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Controllers;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Web;
 using Xunit;
 
@@ -126,6 +127,8 @@ public sealed class SharedRateLimitFilterTests
     [InlineData("?section=trending&genreIds=18,35")]
     [InlineData("?section=director&personId=525")]
     [InlineData("?section=collection&collectionId=4242")]
+    [InlineData("?section=collection&collectionId=%2B31")]
+    [InlineData("?section=collection&collectionId=0x1F")]
     public async Task ShowcaseFreeKeyQuota_OverItsLimit_RefusesAFreeKey(string query)
     {
         var policy = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.MovieShowcaseFreeKeyHourlyPolicy)!.Value;
@@ -157,6 +160,58 @@ public sealed class SharedRateLimitFilterTests
         _counters.Verify(
             c => c.IncrementAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    [Theory]
+    [InlineData(nameof(MovieShareDocumentController.GetFilm))]
+    [InlineData(nameof(MovieShareDocumentController.GetSeries))]
+    public async Task MovieDocument_DistinctMoviesPastTheRouteCeiling_AreRefused(string action)
+    {
+        var ceiling = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.MovieDocumentCeilingPolicy)!.Value;
+        var attributes = typeof(MovieShareDocumentController).GetMethod(action)!
+            .GetCustomAttributes(typeof(SharedRateLimitAttribute), inherit: false);
+        var filter = new SharedRateLimitFilter(
+            new InMemoryRateLimitCounterStore(new FakeTimeProvider(Now)),
+            new FakeTimeProvider(Now),
+            new FakeHostEnvironment { EnvironmentName = Environments.Production },
+            NullLogger<SharedRateLimitFilter>.Instance);
+
+        var served = 0;
+        for (var tmdbId = 1; tmdbId <= ceiling.PermitLimit + 1; tmdbId++)
+        {
+            var context = BuildContext(attributes);
+            context.HttpContext.Request.RouteValues["slug"] = $"{tmdbId}-x";
+            var (next, wasCalled) = TrackedNext();
+            await filter.OnActionExecutionAsync(context, next);
+            if (wasCalled())
+                served++;
+        }
+
+        Assert.Equal(ceiling.PermitLimit, served);
+    }
+
+    [Fact]
+    public async Task MovieDocument_OneMovieUnderTwoTitles_CountsInOneBucket()
+    {
+        var policy = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.MovieDocumentPolicy)!.Value;
+        var filter = new SharedRateLimitFilter(
+            new InMemoryRateLimitCounterStore(new FakeTimeProvider(Now)),
+            new FakeTimeProvider(Now),
+            new FakeHostEnvironment { EnvironmentName = Environments.Production },
+            NullLogger<SharedRateLimitFilter>.Instance);
+
+        var served = 0;
+        for (var attempt = 0; attempt <= policy.PermitLimit; attempt++)
+        {
+            var context = BuildContext(new SharedRateLimitAttribute(policy.Name));
+            context.HttpContext.Request.RouteValues["slug"] = $"27205-titre-{attempt}";
+            var (next, wasCalled) = TrackedNext();
+            await filter.OnActionExecutionAsync(context, next);
+            if (wasCalled())
+                served++;
+        }
+
+        Assert.Equal(policy.PermitLimit, served);
     }
 
     [Fact]

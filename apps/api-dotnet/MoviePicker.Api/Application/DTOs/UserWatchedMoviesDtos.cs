@@ -5,6 +5,7 @@ namespace MoviePicker.Api.Application.DTOs;
 public sealed class UserWatchedMoviesResponse
 {
     public IReadOnlyList<UserWatchedMovieItem> Items { get; init; } = [];
+    public int? Total { get; init; }
 }
 
 public sealed class UserWatchedMovieItem

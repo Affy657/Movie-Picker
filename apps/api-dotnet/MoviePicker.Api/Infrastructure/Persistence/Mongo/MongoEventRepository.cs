@@ -127,6 +127,17 @@ public sealed class MongoEventRepository : IEventRepository
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
     }
 
+    public async Task<IReadOnlyList<string>> ListIdsByCreatorUserIdAsync(string creatorUserId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(creatorUserId))
+            return [];
+
+        return await _collection
+            .Find(x => x.CreatorUserId == creatorUserId)
+            .Project(x => x.Id)
+            .ToListAsync(ct);
+    }
+
     public async Task<IReadOnlyList<Event>> ListByCreatorUserIdAsync(string creatorUserId, int limit, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(creatorUserId) || limit <= 0)

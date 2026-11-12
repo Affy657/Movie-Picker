@@ -287,6 +287,49 @@ public sealed class GetUserWatchedMoviesHandlerTests
         var res = await handler.HandleAsync("alice", 500);
 
         Assert.Equal(200, res.Items.Count);
+        Assert.Equal(250, res.Total);
+    }
+
+    [Fact]
+    public async Task Total_CountsEveryViewingBeyondTheTake_WithoutLoadingTheirMovies()
+    {
+        var handler = Build();
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
+        _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Part("p1", "A"), Part("p2", "B"), Part("p3", "C"), Part("p4", "D"), Part("p5", "E") });
+        _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                Evt("A", date: "2026-01-01", winnerMovieId: "m-first"),
+                Evt("B", date: "2026-03-01", winnerMovieId: "m-again"),
+                Evt("C", date: "2026-05-01", winnerMovieId: "m-again"),
+                Evt("D", date: NightAfterNow, winnerMovieId: "m-upcoming"),
+                Evt("E", date: "2026-04-01", winnerMovieId: null),
+            });
+        var loadedMovieIds = new List<string>();
+        _movies.Setup(m => m.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .Callback((IReadOnlyCollection<string> ids, CancellationToken _) => loadedMovieIds.AddRange(ids))
+            .ReturnsAsync((IReadOnlyCollection<string> ids, CancellationToken _) => ids.Select(id => Mov(id)).ToList());
+
+        var res = await handler.HandleAsync("alice", 1);
+
+        Assert.Single(res.Items);
+        Assert.Equal(3, res.Total);
+        Assert.Equal(["m-again"], loadedMovieIds);
+    }
+
+    [Fact]
+    public async Task Total_IsZero_WhenNothingWasWatched()
+    {
+        var handler = Build();
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
+
+        Assert.Equal(0, (await handler.HandleAsync("alice", 6)).Total);
+        _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Part("p1", "A") });
+        _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Evt("A", winnerMovieId: null) });
+        Assert.Equal(0, (await handler.HandleAsync("alice", 6)).Total);
     }
 
     [Fact]

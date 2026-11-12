@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
+using MoviePicker.Api.Application.UseCases.MovieShare;
 using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Infrastructure.Web;
@@ -54,11 +55,13 @@ public static class RateLimitingExtensions
     public const string RecapDocumentPolicy = "recap-document";
     public const string InvitationDocumentPolicy = "invitation-document";
     public const string MovieDocumentPolicy = "movie-document";
+    public const string MovieDocumentCeilingPolicy = "movie-document-ceiling";
     public const string NightRecapPolicy = "night-recap";
     public const string AvatarPhotoUploadPolicy = "avatar-photo-upload";
     public const string AvatarPhotosPolicy = "avatar-photos-get";
 
     private const string ProxiedPartition = "proxied";
+    private const string EndpointPartition = "endpoint";
     private const string FreeKeyPartitionPrefix = "free-key:";
 
     public const int MovieShowcaseFreeKeyPermitLimit = 30;
@@ -112,6 +115,7 @@ public static class RateLimitingExtensions
         new(RecapDocumentPolicy, 120, 1, QuotaScope.Slug),
         new(InvitationDocumentPolicy, 120, 1, QuotaScope.Slug),
         new(MovieDocumentPolicy, 120, 1, QuotaScope.Slug),
+        new(MovieDocumentCeilingPolicy, 600, 1, QuotaScope.Endpoint),
         new(NightRecapPolicy, 60, 1),
         new(AvatarPhotoUploadPolicy, 10, 60),
         new(AvatarPhotosPolicy, 300, 1)
@@ -176,7 +180,9 @@ public static class RateLimitingExtensions
     internal static string PartitionKeyFor(HttpContext httpContext, PolicySpec spec) => spec.Scope switch
     {
         QuotaScope.Address => AddressPartitionKey(httpContext),
+        QuotaScope.Slug when spec.Name == MovieDocumentPolicy => RouteMoviePartitionKey.Get(httpContext),
         QuotaScope.Slug => RouteSlugPartitionKey.Get(httpContext) ?? AddressPartitionKey(httpContext),
+        QuotaScope.Endpoint => EndpointPartition,
         _ => PartitionKeyFor(httpContext)
     };
 
@@ -233,7 +239,8 @@ public static class RateLimitingExtensions
     {
         Account,
         Address,
-        Slug
+        Slug,
+        Endpoint
     }
 
     internal readonly record struct PolicySpec(string Name, int PermitLimit, int WindowMinutes, QuotaScope Scope = QuotaScope.Account);
@@ -256,8 +263,8 @@ internal static class ShowcaseFreeKey
     }
 
     private static bool IsOffCatalogCollection(string? collectionId) =>
-        int.TryParse(collectionId, NumberStyles.None, CultureInfo.InvariantCulture, out var id)
-        && !MovieShowcaseCatalog.IsCatalogCollection(id);
+        !(int.TryParse(collectionId, NumberStyles.None, CultureInfo.InvariantCulture, out var id)
+            && MovieShowcaseCatalog.IsCatalogCollection(id));
 }
 
 internal static class ClientIpPartitionKey
@@ -289,6 +296,14 @@ internal static class RouteSlugPartitionKey
         var slug = httpContext.Request.RouteValues["slug"]?.ToString();
         return string.IsNullOrWhiteSpace(slug) ? null : $"slug:{slug}";
     }
+}
+
+internal static class RouteMoviePartitionKey
+{
+    internal static string Get(HttpContext httpContext) =>
+        MovieSlug.TmdbIdOf(httpContext.Request.RouteValues["slug"]?.ToString()) is int tmdbId
+            ? $"movie:{tmdbId.ToString(CultureInfo.InvariantCulture)}"
+            : "movie:invalid";
 }
 
 internal static class UserOrIpPartitionKey

@@ -1,3 +1,5 @@
+using Moq;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.MovieNights;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
@@ -275,6 +277,62 @@ public sealed class GetMovieNightsHandlerTests
 
         Assert.Equal(8, result.SeenBy.Count);
         Assert.Equal(11, result.SeenCount);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ReadsOnlyTheNightsAndSeenMarksOfThatFilm()
+    {
+        var withFilm = await NightAsync("Avec le film", Me);
+        var withoutFilm = await NightAsync("Sans le film", Me);
+        var joinedWithoutFilm = await NightAsync("Rejointe sans le film", Friend);
+        var me = await JoinAsync(withFilm, "Moi", Me);
+        var film = await ProposeAsync(withFilm, me);
+        await SeenAsync(film, me);
+        await SeenAsync(await ProposeAsync(withFilm, me, tmdbId: 603), me);
+        var meElsewhere = await JoinAsync(withoutFilm, "Moi", Me);
+        await SeenAsync(await ProposeAsync(withoutFilm, meElsewhere, tmdbId: 603), meElsewhere);
+        await ProposeAsync(joinedWithoutFilm, await JoinAsync(joinedWithoutFilm, "Moi", Me), tmdbId: 155);
+        var loadedNightIds = new List<string>();
+        var events = new Mock<IEventRepository>(MockBehavior.Strict);
+        events.Setup(r => r.ListIdsByCreatorUserIdAsync(Me, It.IsAny<CancellationToken>()))
+            .Returns((string userId, CancellationToken ct) => _events.ListIdsByCreatorUserIdAsync(userId, ct));
+        events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .Callback((IReadOnlyCollection<string> ids, CancellationToken _) => loadedNightIds.AddRange(ids))
+            .Returns((IReadOnlyCollection<string> ids, CancellationToken ct) => _events.ListByIdsAsync(ids, ct));
+        var readMovieIds = new List<string>();
+        var seenMarks = new Mock<ISeenMarkRepository>(MockBehavior.Strict);
+        seenMarks.Setup(r => r.ListByEventAndMovieIdsAsync(
+                It.IsAny<IReadOnlyCollection<string>>(),
+                It.IsAny<IReadOnlyCollection<string>>(),
+                It.IsAny<CancellationToken>()))
+            .Callback((IReadOnlyCollection<string> _, IReadOnlyCollection<string> movieIds, CancellationToken _) =>
+                readMovieIds.AddRange(movieIds))
+            .Returns((IReadOnlyCollection<string> eventIds, IReadOnlyCollection<string> movieIds, CancellationToken ct) =>
+                _seenMarks.ListByEventAndMovieIdsAsync(eventIds, movieIds, ct));
+        var sut = new GetMovieNightsHandler(
+            events.Object, _participants, _movies, _ratings, seenMarks.Object, _users, new FixedClock(Now));
+
+        var result = await sut.HandleAsync(Me, Inception, MovieMediaType.Movie);
+
+        Assert.Equal([withFilm.Id], loadedNightIds);
+        Assert.Equal([film.Id], readMovieIds);
+        Assert.Equal("Avec le film", Assert.Single(result.Nights).Title);
+        Assert.Equal(1, result.SeenCount);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ProposalLeftInADeletedNight_IsIgnored()
+    {
+        var kept = await NightAsync("Gardée", Me);
+        var deleted = await NightAsync("Supprimée", Friend);
+        await ProposeAsync(kept, await JoinAsync(kept, "Moi", Me));
+        await ProposeAsync(deleted, await JoinAsync(deleted, "Moi", Me));
+        await _events.DeleteAsync(deleted.Id);
+
+        var result = await CreateSut().HandleAsync(Me, Inception, MovieMediaType.Movie);
+
+        Assert.Equal("Gardée", Assert.Single(result.Nights).Title);
+        Assert.Equal(1, result.ProposalCount);
     }
 
     [Fact]

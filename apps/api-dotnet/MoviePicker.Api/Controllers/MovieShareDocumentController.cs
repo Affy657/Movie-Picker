@@ -15,6 +15,7 @@ public sealed class MovieShareDocumentController : ControllerBase
     [HttpGet("film/{slug}")]
     [AllowAnonymous]
     [EnableRateLimiting(RateLimitingExtensions.MovieDocumentPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.MovieDocumentCeilingPolicy)]
     [SharedRateLimit(RateLimitingExtensions.MovieDocumentPolicy)]
     [Produces("text/html")]
     public async Task<IActionResult> GetFilm(
@@ -26,6 +27,7 @@ public sealed class MovieShareDocumentController : ControllerBase
     [HttpGet("serie/{slug}")]
     [AllowAnonymous]
     [EnableRateLimiting(RateLimitingExtensions.MovieDocumentPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.MovieDocumentCeilingPolicy)]
     [SharedRateLimit(RateLimitingExtensions.MovieDocumentPolicy)]
     [Produces("text/html")]
     public async Task<IActionResult> GetSeries(

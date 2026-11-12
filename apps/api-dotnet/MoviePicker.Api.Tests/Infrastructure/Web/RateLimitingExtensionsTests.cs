@@ -176,6 +176,11 @@ public sealed class RateLimitingExtensionsTests
     [InlineData("?genreIds=28,35")]
     [InlineData("?section=director&personId=525")]
     [InlineData("?section=Director&personId=525")]
+    [InlineData("?section=collection&collectionId=31")]
+    [InlineData("?section=collection&collectionId=%2B31")]
+    [InlineData("?section=collection&collectionId=%2031")]
+    [InlineData("?section=collection&collectionId=0x1F")]
+    [InlineData("?section=collection&collectionId=%231F")]
     public void CreatePartition_ShowcaseOnAFreeKey_GetsItsOwnLowerQuota(string query)
     {
         var partition = ShowcasePartition(query);
@@ -383,6 +388,54 @@ public sealed class RateLimitingExtensionsTests
 
         Assert.Equal("slug:7fKq2p", partition.PartitionKey);
         Assert.Equal("slug:7fKq2p", RateLimitingExtensions.PartitionKeyFor(http, spec));
+    }
+
+    private static DefaultHttpContext MovieDocumentRequest(string slug, string address = "192.0.2.8")
+    {
+        var http = From(address);
+        http.Request.RouteValues["slug"] = slug;
+        return http;
+    }
+
+    [Theory]
+    [InlineData("27205-inception", "27205-x")]
+    [InlineData("27205", "27205-un-tout-autre-titre")]
+    public void CreatePartition_MovieDocument_TwoSuffixesOfOneId_ShareOneBucket(string first, string second)
+    {
+        var spec = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.MovieDocumentPolicy)!.Value;
+
+        var firstPartition = RateLimitingExtensions.CreatePartition(MovieDocumentRequest(first), spec);
+        var secondPartition = RateLimitingExtensions.CreatePartition(MovieDocumentRequest(second, "198.51.100.2"), spec);
+
+        Assert.Equal("movie:27205", firstPartition.PartitionKey);
+        Assert.Equal(firstPartition.PartitionKey, secondPartition.PartitionKey);
+        Assert.Equal("movie:27205", RateLimitingExtensions.PartitionKeyFor(MovieDocumentRequest(second), spec));
+    }
+
+    [Theory]
+    [InlineData("inception")]
+    [InlineData("-27205")]
+    [InlineData("0-x")]
+    [InlineData("1234567890-x")]
+    [InlineData("+27205-x")]
+    public void CreatePartition_MovieDocument_UnreadableId_SharesOneBucket(string slug)
+    {
+        var spec = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.MovieDocumentPolicy)!.Value;
+
+        Assert.Equal("movie:invalid", RateLimitingExtensions.CreatePartition(MovieDocumentRequest(slug), spec).PartitionKey);
+    }
+
+    [Fact]
+    public void MovieDocumentCeiling_CountsEveryMovieFromEveryAddressInOneBucket()
+    {
+        var spec = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.MovieDocumentCeilingPolicy)!.Value;
+
+        var inception = RateLimitingExtensions.PartitionKeyFor(MovieDocumentRequest("27205-inception"), spec);
+        var other = RateLimitingExtensions.PartitionKeyFor(MovieDocumentRequest("603-matrix", "198.51.100.2"), spec);
+
+        Assert.Equal(inception, other);
+        Assert.Equal(RateLimitingExtensions.QuotaScope.Endpoint, spec.Scope);
+        Assert.True(spec.PermitLimit > RateLimitingExtensions.FindPolicy(RateLimitingExtensions.MovieDocumentPolicy)!.Value.PermitLimit);
     }
 
     [Fact]

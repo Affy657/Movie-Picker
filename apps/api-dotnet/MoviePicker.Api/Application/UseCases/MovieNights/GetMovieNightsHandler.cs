@@ -45,18 +45,13 @@ public sealed class GetMovieNightsHandler : IGetMovieNightsHandler
         if (tmdbId <= 0)
             return new MovieNightsResponse();
 
-        var myNights = await ListMyNightsAsync(userId, ct);
-        if (myNights.Count == 0)
+        var (proposals, myNights) = await FindProposalsInMyNightsAsync(userId, tmdbId, mediaType, ct);
+        if (proposals.Count == 0)
             return new MovieNightsResponse();
 
-        var proposals = await _movies.ListByEventIdsAndTmdbIdAsync(myNights.Keys.ToList(), tmdbId, mediaType, ct);
         var proposalByEventId = proposals
-            .Where(movie => myNights.ContainsKey(movie.EventId))
             .GroupBy(movie => movie.EventId)
             .ToDictionary(group => group.Key, group => group.OrderBy(movie => movie.CreatedAt).First());
-        if (proposalByEventId.Count == 0)
-            return new MovieNightsResponse();
-
         var eventIds = proposalByEventId.Keys.ToList();
         var proposalIds = proposals.Select(movie => movie.Id).ToHashSet(StringComparer.Ordinal);
         var participantsTask = _participants.ListByEventIdsAsync(eventIds, ct);
@@ -67,7 +62,7 @@ public sealed class GetMovieNightsHandler : IGetMovieNightsHandler
 
         var utcNow = _clock.GetUtcNow();
         var nights = eventIds.ConvertAll(id => myNights[id]);
-        var viewers = await ListViewersAsync(participants, participantById, proposalIds, ct);
+        var viewers = await ListViewersAsync(eventIds, participants, participantById, proposalIds, ct);
 
         return new MovieNightsResponse
         {
@@ -85,23 +80,42 @@ public sealed class GetMovieNightsHandler : IGetMovieNightsHandler
         };
     }
 
-    private async Task<Dictionary<string, Event>> ListMyNightsAsync(string userId, CancellationToken ct)
+    private async Task<(List<Movie> Proposals, Dictionary<string, Event> Nights)> FindProposalsInMyNightsAsync(
+        string userId,
+        int tmdbId,
+        MovieMediaType mediaType,
+        CancellationToken ct)
     {
-        var createdTask = _events.ListAllByCreatorUserIdAsync(userId, ct);
+        var myNightIds = await ListMyNightIdsAsync(userId, ct);
+        if (myNightIds.Count == 0)
+            return ([], []);
+
+        var proposals = (await _movies.ListByEventIdsAndTmdbIdAsync(myNightIds.ToList(), tmdbId, mediaType, ct))
+            .Where(movie => myNightIds.Contains(movie.EventId))
+            .ToList();
+        if (proposals.Count == 0)
+            return ([], []);
+
+        var nights = (await _events.ListByIdsAsync(proposals.Select(movie => movie.EventId).Distinct().ToList(), ct))
+            .DistinctBy(night => night.Id)
+            .ToDictionary(night => night.Id, StringComparer.Ordinal);
+        return (proposals.Where(movie => nights.ContainsKey(movie.EventId)).ToList(), nights);
+    }
+
+    private async Task<HashSet<string>> ListMyNightIdsAsync(string userId, CancellationToken ct)
+    {
+        var createdIdsTask = _events.ListIdsByCreatorUserIdAsync(userId, ct);
         var joinedIdsTask = _participants.ListDistinctEventIdsByUserIdAsync(userId, ct);
-        await Task.WhenAll(createdTask, joinedIdsTask);
+        await Task.WhenAll(createdIdsTask, joinedIdsTask);
 
-        var nights = (await createdTask).DistinctBy(night => night.Id).ToDictionary(night => night.Id, StringComparer.Ordinal);
-        var onlyJoinedIds = (await joinedIdsTask).Where(id => !nights.ContainsKey(id)).Distinct().ToList();
-        if (onlyJoinedIds.Count == 0)
-            return nights;
-
-        foreach (var joined in await _events.ListByIdsAsync(onlyJoinedIds, ct))
-            nights.TryAdd(joined.Id, joined);
-        return nights;
+        var ids = (await createdIdsTask).ToHashSet(StringComparer.Ordinal);
+        ids.UnionWith(await joinedIdsTask);
+        ids.RemoveWhere(string.IsNullOrWhiteSpace);
+        return ids;
     }
 
     private async Task<List<Participant>> ListViewersAsync(
+        List<string> eventIds,
         IReadOnlyList<Participant> participants,
         Dictionary<string, Participant> participantById,
         HashSet<string> proposalIds,
@@ -110,7 +124,7 @@ public sealed class GetMovieNightsHandler : IGetMovieNightsHandler
         if (participants.Count == 0)
             return [];
 
-        var marks = await _seenMarks.ListByParticipantIdsAsync(participantById.Keys.ToList(), ct);
+        var marks = await _seenMarks.ListByEventAndMovieIdsAsync(eventIds, proposalIds, ct);
         return marks
             .Where(mark => proposalIds.Contains(mark.MovieId) && participantById.ContainsKey(mark.ParticipantId))
             .OrderBy(mark => mark.CreatedAt)

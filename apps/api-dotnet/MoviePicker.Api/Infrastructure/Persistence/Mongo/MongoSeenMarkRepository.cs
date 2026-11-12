@@ -166,4 +166,21 @@ public sealed class MongoSeenMarkRepository : ISeenMarkRepository
         var docs = await _collection.Find(filter).ToListAsync(ct);
         return docs.ConvertAll(SeenMarkMapper.ToDomain);
     }
+
+    public async Task<IReadOnlyList<SeenMark>> ListByEventAndMovieIdsAsync(
+        IReadOnlyCollection<string> eventIds,
+        IReadOnlyCollection<string> movieIds,
+        CancellationToken ct = default)
+    {
+        var events = eventIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
+        var movies = movieIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
+        if (events.Count == 0 || movies.Count == 0)
+            return [];
+
+        var filter = Builders<SeenMarkDocument>.Filter.And(
+            Builders<SeenMarkDocument>.Filter.In(x => x.EventId, events),
+            Builders<SeenMarkDocument>.Filter.In(x => x.MovieId, movies));
+        var docs = await _collection.Find(filter).ToListAsync(ct);
+        return docs.ConvertAll(SeenMarkMapper.ToDomain);
+    }
 }

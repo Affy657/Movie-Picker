@@ -12,6 +12,9 @@ namespace MoviePicker.Api.Tests.Controllers;
 
 public sealed class MovieShareDocumentControllerTests
 {
+    private static readonly string[] SharedDocumentPolicies =
+        [RateLimitingExtensions.MovieDocumentPolicy, RateLimitingExtensions.MovieDocumentCeilingPolicy];
+
     private readonly Mock<IGetMovieShareDocumentHandler> _handler = new();
     private readonly MovieShareDocumentController _sut = new MovieShareDocumentController().WithContext();
 
@@ -64,14 +67,17 @@ public sealed class MovieShareDocumentControllerTests
     [Theory]
     [InlineData(nameof(MovieShareDocumentController.GetFilm))]
     [InlineData(nameof(MovieShareDocumentController.GetSeries))]
-    public void Documents_AreRateLimitedPerReferenceLikeTheInvitation(string action)
+    public void Documents_AreRateLimitedPerMovieUnderOneRouteCeiling(string action)
     {
         var method = typeof(MovieShareDocumentController).GetMethod(action)!;
 
         var rateLimit = Assert.Single(method.GetCustomAttributes(typeof(EnableRateLimitingAttribute), inherit: true));
         Assert.Equal(RateLimitingExtensions.MovieDocumentPolicy, ((EnableRateLimitingAttribute)rateLimit).PolicyName);
-        var shared = Assert.Single(method.GetCustomAttributes(typeof(SharedRateLimitAttribute), inherit: true));
-        Assert.Equal(RateLimitingExtensions.MovieDocumentPolicy, ((SharedRateLimitAttribute)shared).PolicyName);
+        var shared = method.GetCustomAttributes(typeof(SharedRateLimitAttribute), inherit: true)
+            .Cast<SharedRateLimitAttribute>()
+            .Select(attribute => attribute.PolicyName)
+            .Order(StringComparer.Ordinal);
+        Assert.Equal(SharedDocumentPolicies, shared);
         var spec = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.MovieDocumentPolicy)!.Value;
         var invitation = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.InvitationDocumentPolicy)!.Value;
         Assert.Equal((invitation.PermitLimit, invitation.WindowMinutes, invitation.Scope), (spec.PermitLimit, spec.WindowMinutes, spec.Scope));

@@ -687,6 +687,49 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task ListIdsByCreatorUserId_ReturnsTheIdsOfThatCreatorOnly()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var creator = ObjectId.GenerateNewId().ToString();
+        var first = await events.AddAsync(NewEvent("Soirée A") with { CreatorUserId = creator });
+        var second = await events.AddAsync(NewEvent("Soirée B") with { CreatorUserId = creator });
+        await events.AddAsync(NewEvent("Soirée d'un autre") with { CreatorUserId = ObjectId.GenerateNewId().ToString() });
+
+        var ids = await events.ListIdsByCreatorUserIdAsync(creator);
+
+        Assert.Equal(new[] { first.Id, second.Id }.Order(StringComparer.Ordinal), ids.Order(StringComparer.Ordinal));
+        Assert.Empty(await events.ListIdsByCreatorUserIdAsync(" "));
+    }
+
+    [Fact]
+    public async Task ListSeenMarksByEventAndMovieIds_KeepsTheGivenMoviesOfTheGivenNights()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var seenMarks = scope.ServiceProvider.GetRequiredService<ISeenMarkRepository>();
+        var night = ObjectId.GenerateNewId().ToString();
+        var otherNight = ObjectId.GenerateNewId().ToString();
+        var unlistedNight = ObjectId.GenerateNewId().ToString();
+        var film = ObjectId.GenerateNewId().ToString();
+        var filmAgain = ObjectId.GenerateNewId().ToString();
+        var otherFilm = ObjectId.GenerateNewId().ToString();
+        var viewer = ObjectId.GenerateNewId().ToString();
+        var otherViewer = ObjectId.GenerateNewId().ToString();
+        var seen = await seenMarks.AddAsync(new SeenMark { EventId = night, MovieId = film, ParticipantId = viewer });
+        var seenAgain = await seenMarks.AddAsync(new SeenMark { EventId = otherNight, MovieId = filmAgain, ParticipantId = otherViewer });
+        await seenMarks.AddAsync(new SeenMark { EventId = night, MovieId = otherFilm, ParticipantId = viewer });
+        await seenMarks.AddAsync(new SeenMark { EventId = unlistedNight, MovieId = film, ParticipantId = otherViewer });
+
+        var marks = await seenMarks.ListByEventAndMovieIdsAsync([night, otherNight], [film, filmAgain]);
+
+        Assert.Equal(
+            new[] { seen.Id, seenAgain.Id }.Order(StringComparer.Ordinal),
+            marks.Select(mark => mark.Id).Order(StringComparer.Ordinal));
+        Assert.Empty(await seenMarks.ListByEventAndMovieIdsAsync([], [film]));
+        Assert.Empty(await seenMarks.ListByEventAndMovieIdsAsync([night], []));
+    }
+
+    [Fact]
     public async Task CascadeDeletes_OnlyRemoveTheListedMovies()
     {
         using var scope = _factory.Services.CreateScope();
