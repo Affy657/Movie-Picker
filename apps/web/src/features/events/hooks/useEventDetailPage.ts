@@ -14,6 +14,8 @@ import { useEvent } from '@/features/events/hooks/useEvent';
 import { useMovies } from '@/features/movies/hooks/useMovies';
 import { useEventLive } from '@/features/events/hooks/useEventLive';
 
+const MOVIE_NIGHTS_KEY = [...queryKeys.movies.all, 'nights'] as const;
+
 function isParticipantGone(participantId: string, event: EventData | null, slug: string): boolean {
   if (event?.slug !== slug || !event.participants) return false;
   return !event.participants.some((p) => p.id === participantId);
@@ -92,6 +94,7 @@ export function useEventDetailPage(
     queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
     queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
     queryClient.invalidateQueries({ queryKey: queryKeys.profile.watchedMoviesAll });
+    queryClient.invalidateQueries({ queryKey: MOVIE_NIGHTS_KEY });
     if (recapSlug) {
       queryClient.invalidateQueries({ queryKey: queryKeys.event.recap(recapSlug) });
     }

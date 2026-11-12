@@ -12,6 +12,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { ROUTES } from '@/app/routes';
+import VoteLimitDialog from '@/features/events/components/VoteLimitDialog';
 import { useMovieNight, type MovieNightTarget } from '@/features/events/hooks/useMovieNight';
 import EventActionErrorBanner from '@/features/events/pages/event-detail/EventActionErrorBanner';
 import Avatar from '@/shared/components/Avatar';
@@ -291,6 +292,11 @@ export default function MovieNightBar({
             if (removed) onRemoved();
           });
         }}
+      />
+      <VoteLimitDialog
+        open={night.voteLimitReached}
+        maxVotes={night.maxVotes}
+        onClose={night.dismissVoteLimit}
       />
     </>
   );

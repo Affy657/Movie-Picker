@@ -37,6 +37,9 @@ export function useProposeMovieToEvent() {
       queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
       queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
       queryClient.invalidateQueries({ queryKey: queryKeys.event.detailForAnyHostToken(slug) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.movies.nights(movie.tmdbId, movie.mediaType),
+      });
     },
     [t, queryClient]
   );

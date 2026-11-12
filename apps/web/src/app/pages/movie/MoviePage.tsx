@@ -1,14 +1,15 @@
 import { useCallback, useState } from 'react';
 import clsx from 'clsx';
-import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { Bookmark, BookmarkCheck, Film, PlayCircle, Plus, Share2 } from 'lucide-react';
+import type { UseQueryResult } from '@tanstack/react-query';
 import { NIGHT_QUERY_PARAM, ROUTES, parseMovieRef } from '@/app/routes';
 import NotFoundPage from '@/app/pages/NotFoundPage';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import MovieNightBar from '@/features/events/components/MovieNightBar';
 import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
 import type { ProposableMovie } from '@/features/events/hooks/useProposeMovieToEvent';
-import type { MovieVideo } from '@/features/movies/api/moviesApi';
+import type { MovieDetails, MovieVideo } from '@/features/movies/api/moviesApi';
 import type {
   MovieBrowseCardItem,
   MovieLibraryActions,
@@ -24,16 +25,17 @@ import {
 import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
 import { ApiError } from '@/shared/api/apiError';
 import BackLink from '@/shared/components/BackLink';
-import Button from '@/shared/components/Button';
+import Button, { buttonClass } from '@/shared/components/Button';
 import ErrorState from '@/shared/components/ErrorState';
 import IconButton from '@/shared/components/IconButton';
+import InlineError from '@/shared/components/InlineError';
 import PageLayout from '@/shared/components/PageLayout';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
 import { useShareAction } from '@/shared/hooks/useShareAction';
-import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
+import { useLocale, useTranslation, type Translate, type TranslationKey } from '@/shared/i18n';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
 import type { MovieMediaType } from '@/shared/types/movie';
 import MovieHero, { type MovieHeroView } from '@/app/pages/movie/MovieHero';
@@ -54,6 +56,32 @@ import {
   youtubeWatchUrl,
 } from '@/app/pages/movie/movieView';
 import styles from './MoviePage.module.css';
+
+interface MoviePageCopy {
+  loading: TranslationKey;
+  notFoundTitle: TranslationKey;
+  notFoundMessage: TranslationKey;
+  loadError: TranslationKey;
+}
+
+const PAGE_COPY: Record<MovieMediaType, MoviePageCopy> = {
+  movie: {
+    loading: 'moviePage.loading',
+    notFoundTitle: 'moviePage.notFoundTitle',
+    notFoundMessage: 'moviePage.notFoundMessage',
+    loadError: 'moviePage.loadError',
+  },
+  tv: {
+    loading: 'moviePage.loadingShow',
+    notFoundTitle: 'moviePage.notFoundTitleShow',
+    notFoundMessage: 'moviePage.notFoundMessageShow',
+    loadError: 'moviePage.loadErrorShow',
+  },
+};
+
+function isNotFound(error: unknown): boolean {
+  return ApiError.is(error) && error.code === 404;
+}
 
 interface HeroActionsProps {
   view: MovieHeroView;
@@ -86,10 +114,11 @@ function HeroActions({
     t('moviePage.shareText', { title: view.title }),
     'movie'
   );
+  const titleUnknown = !view.title;
   return (
     <>
       {signedIn && !fromNight ? (
-        <Button variant="primary" onClick={onPropose}>
+        <Button variant="primary" disabled={titleUnknown} onClick={onPropose}>
           <Plus aria-hidden size={ICON_SIZE.md} />
           {t('moviePage.propose')}
         </Button>
@@ -104,6 +133,7 @@ function HeroActions({
         <Button
           variant={inWatchlist ? 'soft' : 'secondary'}
           aria-pressed={inWatchlist}
+          disabled={titleUnknown}
           onClick={onToggleWatchlist}
         >
           {inWatchlist ? (
@@ -116,6 +146,7 @@ function HeroActions({
       ) : null}
       <IconButton
         ariaLabel={share.copied ? t('share.copied') : t('moviePage.share')}
+        disabled={titleUnknown}
         onClick={() => void share.nativeShare()}
       >
         <Share2 aria-hidden size={ICON_SIZE.md} />
@@ -124,32 +155,85 @@ function HeroActions({
   );
 }
 
-function useMoviePageBack(fromApp: boolean, nightSlug: string | null) {
+function useMoviePageNavigation(fromApp: boolean, nightSlug: string | null) {
   const navigate = useNavigate();
-  return useCallback(() => {
+  const goBack = useCallback(() => {
     if (fromApp) {
       navigate(-1);
       return;
     }
     navigate(nightSlug ? ROUTES.eventDetail(nightSlug) : ROUTES.home);
   }, [fromApp, navigate, nightSlug]);
+  const leaveNight = useCallback(() => {
+    if (fromApp) {
+      navigate(-1);
+      return;
+    }
+    if (nightSlug) navigate(ROUTES.eventDetail(nightSlug), { replace: true });
+  }, [fromApp, navigate, nightSlug]);
+  return { goBack, leaveNight };
 }
 
-function MovieLoadError({ error, onRetry }: Readonly<{ error: unknown; onRetry: () => void }>) {
+function MovieLoadError({
+  error,
+  copy,
+  onRetry,
+}: Readonly<{ error: unknown; copy: MoviePageCopy; onRetry: () => void }>) {
   const { t } = useTranslation();
-  const notFound = ApiError.is(error) && error.code === 404;
+  if (isNotFound(error)) {
+    return (
+      <ErrorState
+        icon={<Film size={ICON_SIZE['4xl']} />}
+        title={t(copy.notFoundTitle)}
+        message={t(copy.notFoundMessage)}
+        actions={
+          <Link to={ROUTES.home} className={buttonClass({ variant: 'primary' })}>
+            {t('errors.backHome')}
+          </Link>
+        }
+      />
+    );
+  }
   return (
     <ErrorState
       icon={<Film size={ICON_SIZE['4xl']} />}
-      title={notFound ? t('moviePage.notFoundTitle') : t('moviePage.loadError')}
-      message={notFound ? t('moviePage.notFoundMessage') : ''}
+      title={t(copy.loadError)}
+      message=""
       actions={
-        notFound ? undefined : (
-          <Button variant="primary" onClick={onRetry}>
-            {t('moviePage.retry')}
-          </Button>
-        )
+        <Button variant="primary" onClick={onRetry}>
+          {t('moviePage.retry')}
+        </Button>
       }
+    />
+  );
+}
+
+function MovieSynopsisBlock({
+  detailsQuery,
+  mediaType,
+  copy,
+}: Readonly<{
+  detailsQuery: UseQueryResult<MovieDetails>;
+  mediaType: MovieMediaType;
+  copy: MoviePageCopy;
+}>) {
+  const { t } = useTranslation();
+  const details = detailsQuery.data;
+  if (detailsQuery.isError && !details) {
+    return (
+      <InlineError
+        message={t(copy.loadError)}
+        retryLabel={t('moviePage.retry')}
+        onRetry={() => void detailsQuery.refetch()}
+      />
+    );
+  }
+  return (
+    <MovieSynopsis
+      overview={details?.overview ?? null}
+      tagline={details?.tagline ?? null}
+      isTv={mediaType === 'tv'}
+      pending={detailsQuery.isPending}
     />
   );
 }
@@ -167,6 +251,19 @@ function seedOfItem(item: MovieBrowseCardItem): MoviePageSeed {
   };
 }
 
+function seoTitleOf(
+  detailsQuery: UseQueryResult<MovieDetails>,
+  failedWithoutSeed: boolean,
+  documentTitle: string,
+  copy: MoviePageCopy,
+  t: Translate
+): string {
+  if (failedWithoutSeed) {
+    return t(isNotFound(detailsQuery.error) ? copy.notFoundTitle : copy.loadError);
+  }
+  return documentTitle || t(copy.loading);
+}
+
 function MoviePageContent({
   tmdbId,
   mediaType,
@@ -175,7 +272,6 @@ function MoviePageContent({
   const { tmdbLanguage } = useLocale();
   const { user, isLoading: authPending } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
   const openMoviePage = useOpenMoviePage();
   const [params] = useSearchParams();
   const nightSlug = params.get(NIGHT_QUERY_PARAM);
@@ -183,6 +279,7 @@ function MoviePageContent({
   const seed = pageState?.seed?.tmdbId === tmdbId ? pageState.seed : undefined;
   const signedIn = !!user;
   const scale = user?.ratingScale ?? 'five';
+  const copy = PAGE_COPY[mediaType];
 
   const detailsQuery = useMovieDetails(tmdbId, true, mediaType);
   const details = detailsQuery.data;
@@ -199,16 +296,19 @@ function MoviePageContent({
   const canonicalPath = ROUTES.moviePage({ tmdbId, mediaType, title: title || undefined });
   const videos = videosOf(details);
   const item = libraryItemOf({ tmdbId, mediaType, details, seed, view });
+  const failedWithoutSeed = detailsQuery.isError && !seed;
 
   usePageSeo({
-    title: pageTitle(documentTitleOf(title, year) || t('moviePage.loading')),
+    title: pageTitle(
+      seoTitleOf(detailsQuery, failedWithoutSeed, documentTitleOf(title, year), copy, t)
+    ),
     description: details?.overview ?? undefined,
     canonical: absoluteUrl(canonicalPath),
     image: view.backdropSrc ?? undefined,
     noindex: true,
   });
 
-  const goBack = useMoviePageBack(!!pageState?.fromApp, nightSlug);
+  const { goBack, leaveNight } = useMoviePageNavigation(!!pageState?.fromApp, nightSlug);
 
   const library: MovieLibraryActions = {
     hasHover,
@@ -218,9 +318,13 @@ function MoviePageContent({
     propose: (target) => setProposeTarget(target),
   };
 
-  if (detailsQuery.isError && !seed) {
+  if (failedWithoutSeed) {
     return (
-      <MovieLoadError error={detailsQuery.error} onRetry={() => void detailsQuery.refetch()} />
+      <MovieLoadError
+        error={detailsQuery.error}
+        copy={copy}
+        onRetry={() => void detailsQuery.refetch()}
+      />
     );
   }
 
@@ -232,7 +336,7 @@ function MoviePageContent({
           tmdbId={tmdbId}
           mediaType={mediaType}
           onBack={goBack}
-          onRemoved={() => navigate(ROUTES.eventDetail(nightSlug), { replace: true })}
+          onRemoved={leaveNight}
         />
       ) : null}
       <PageLayout className={clsx(styles.page, nightSlug && styles.withDock)}>
@@ -257,12 +361,14 @@ function MoviePageContent({
           }
         />
         <div className={styles.content}>
+          {watchlist.error ? (
+            <p className="error" role="alert">
+              {watchlist.error}
+            </p>
+          ) : null}
           <div className={styles.body}>
             <div className={styles.main}>
-              <MovieSynopsis
-                overview={details?.overview ?? null}
-                tagline={details?.tagline ?? null}
-              />
+              <MovieSynopsisBlock detailsQuery={detailsQuery} mediaType={mediaType} copy={copy} />
               <MovieVideos videos={videos} onPlay={setPlaying} />
               <MovieCast cast={castOf(details)} />
               <MovieCrew crew={crewOf(details, mediaType)} />
@@ -279,15 +385,13 @@ function MoviePageContent({
               <MovieLinksCard tmdbId={tmdbId} mediaType={mediaType} title={title} year={year} />
             </aside>
           </div>
-          {details ? (
-            <MovieRails
-              current={{ tmdbId, mediaType }}
-              collection={details.collection}
-              director={directorOf(details)}
-              library={library}
-              onSelect={(next) => openMoviePage(seedOfItem(next))}
-            />
-          ) : null}
+          <MovieRails
+            current={{ tmdbId, mediaType }}
+            collection={details?.collection ?? null}
+            director={directorOf(details)}
+            library={library}
+            onSelect={(next) => openMoviePage(seedOfItem(next))}
+          />
           <p className={styles.attribution}>{t('moviePage.attribution')}</p>
         </div>
       </PageLayout>

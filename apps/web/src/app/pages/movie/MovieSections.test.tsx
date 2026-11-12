@@ -48,6 +48,32 @@ describe('MovieSynopsis', () => {
 
     expect(screen.getByText('Pas encore de synopsis pour ce film.')).toBeInTheDocument();
   });
+
+  it('speaks of a series when a series has no synopsis yet', () => {
+    renderWithLocale(<MovieSynopsis overview={null} tagline={null} isTv />);
+
+    expect(screen.getByText('Pas encore de synopsis pour cette série.')).toBeInTheDocument();
+  });
+
+  it('holds the place of the synopsis while it loads, instead of saying there is none', () => {
+    renderWithLocale(<MovieSynopsis overview={null} tagline={null} pending />);
+
+    expect(screen.getByRole('status')).toHaveTextContent('Chargement du film…');
+    expect(screen.queryByText('Pas encore de synopsis pour ce film.')).toBeNull();
+  });
+
+  it('quotes the tagline the way the language does', async () => {
+    localStorage.setItem('moviepicker-locale', 'en');
+    try {
+      renderWithLocale(
+        <MovieSynopsis overview={OVERVIEW} tagline="Every forest keeps its secrets." />
+      );
+
+      expect(await screen.findByText('“Every forest keeps its secrets.”')).toBeInTheDocument();
+    } finally {
+      localStorage.removeItem('moviepicker-locale');
+    }
+  });
 });
 
 describe('MovieVideos', () => {

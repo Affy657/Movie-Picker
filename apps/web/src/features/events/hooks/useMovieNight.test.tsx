@@ -117,6 +117,22 @@ describe('useMovieNight', () => {
     expect(handleVote).toHaveBeenCalledWith('m1', 1);
   });
 
+  it('passes on a vote refused because every vote is used, with the night limit', () => {
+    const dismissVoteLimit = vi.fn();
+    vi.mocked(useEventMovieVoting).mockReturnValue({
+      handleVote,
+      voteLimitReached: true,
+      dismissVoteLimit,
+    } as unknown as ReturnType<typeof useEventMovieVoting>);
+    page({ event: { config: { maxVotesPerParticipant: 3 } } as Partial<EventData> });
+    const { result } = renderNight();
+
+    expect(result.current.voteLimitReached).toBe(true);
+    expect(result.current.maxVotes).toBe(3);
+    act(() => result.current.dismissVoteLimit());
+    expect(dismissVoteLimit).toHaveBeenCalled();
+  });
+
   it('marks and unmarks the film as seen', async () => {
     page();
     const { result, rerender } = renderNight();
