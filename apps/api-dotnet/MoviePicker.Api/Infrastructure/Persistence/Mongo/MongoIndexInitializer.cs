@@ -127,10 +127,8 @@ public sealed class MongoIndexInitializer : IHostedService
                 Unique = true,
                 PartialFilterExpression = Builders<EventDocument>.Filter.Exists(x => x.CreationRequestId, true)
             });
-        var byWinner = new CreateIndexModel<EventDocument>(
-            Builders<EventDocument>.IndexKeys.Ascending("winners.movieId"),
-            new CreateIndexOptions { Name = "events_winners_movieId" });
-        plan.Create("events", slug, recapSlug, creator, recurrence, startAt, creationRequest, byWinner);
+        plan.Create("events", slug, recapSlug, creator, recurrence, startAt, creationRequest);
+        plan.DropIfExists<EventDocument>("events", "events_winners_movieId");
     }
 
     private static void EnsureMovieIndexes(MongoIndexPlan plan)

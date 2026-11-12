@@ -3,14 +3,16 @@ import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { TranslationKey } from '@/shared/i18n/t';
 import { Skeleton } from '@/shared/components/Skeleton';
+import type { RatingScale } from '@/shared/types/theme';
+import { formatRating } from '@/shared/utils/formatRating';
 import type { UserStats } from '@/features/events/api/userStatsApi';
 import styles from './ProfileStatsSection.module.css';
 
 interface Figure {
   key: string;
   value: number;
-  one: TranslationKey;
-  many: TranslationKey;
+  label: string;
+  display?: string;
   to?: string;
 }
 
@@ -19,6 +21,9 @@ interface Props {
   watchedCount?: number;
   watchedPending?: boolean;
   watchedTo: string;
+  proposalsTo?: string;
+  winningProposalsTo?: string;
+  ratingScale?: RatingScale;
 }
 
 export default function ProfileStatsSection({
@@ -26,51 +31,76 @@ export default function ProfileStatsSection({
   watchedCount,
   watchedPending = false,
   watchedTo,
+  proposalsTo,
+  winningProposalsTo,
+  ratingScale = 'five',
 }: Readonly<Props>) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+
+  const counted = (
+    key: string,
+    value: number,
+    one: TranslationKey,
+    many: TranslationKey,
+    to?: string
+  ): Figure => ({ key, value, label: pluralizeCount(value, one, many, t), to });
 
   const figures: Figure[] = [
     ...(watchedCount
       ? [
-          {
-            key: 'watched',
-            value: watchedCount,
-            one: 'profile.stats.figures.watchedOne',
-            many: 'profile.stats.figures.watched',
-            to: watchedTo,
-          } satisfies Figure,
+          counted(
+            'watched',
+            watchedCount,
+            'profile.stats.figures.watchedOne',
+            'profile.stats.figures.watched',
+            watchedTo
+          ),
         ]
       : []),
-    {
-      key: 'eventsCreated',
-      value: stats.eventsCreated,
-      one: 'profile.stats.figures.eventsCreatedOne',
-      many: 'profile.stats.figures.eventsCreated',
-    },
-    {
-      key: 'eventsJoined',
-      value: stats.eventsJoined,
-      one: 'profile.stats.figures.eventsJoinedOne',
-      many: 'profile.stats.figures.eventsJoined',
-    },
-    {
-      key: 'moviesProposed',
-      value: stats.moviesProposed,
-      one: 'profile.stats.figures.moviesProposedOne',
-      many: 'profile.stats.figures.moviesProposed',
-    },
-    {
-      key: 'winningProposals',
-      value: stats.winningProposals,
-      one: 'profile.stats.figures.winningProposalsOne',
-      many: 'profile.stats.figures.winningProposals',
-    },
-    {
-      key: 'votes',
-      value: stats.votesCast,
-      one: 'profile.stats.figures.votesOne',
-      many: 'profile.stats.figures.votes',
-    },
+    counted(
+      'eventsCreated',
+      stats.eventsCreated,
+      'profile.stats.figures.eventsCreatedOne',
+      'profile.stats.figures.eventsCreated'
+    ),
+    counted(
+      'eventsJoined',
+      stats.eventsJoined,
+      'profile.stats.figures.eventsJoinedOne',
+      'profile.stats.figures.eventsJoined'
+    ),
+    counted(
+      'moviesProposed',
+      stats.moviesProposed,
+      'profile.stats.figures.moviesProposedOne',
+      'profile.stats.figures.moviesProposed',
+      proposalsTo
+    ),
+    counted(
+      'winningProposals',
+      stats.winningProposals,
+      'profile.stats.figures.winningProposalsOne',
+      'profile.stats.figures.winningProposals',
+      winningProposalsTo
+    ),
+    ...(stats.proposalsAverageRating == null
+      ? []
+      : [
+          {
+            key: 'proposalsAverageRating',
+            value: stats.proposalsAverageRating,
+            label: t('profile.stats.figures.proposalsAverageRating'),
+            display: formatRating(stats.proposalsAverageRating, ratingScale, locale, {
+              decimals: 1,
+            }),
+          },
+        ]),
+    counted(
+      'votes',
+      stats.votesCast,
+      'profile.stats.figures.votesOne',
+      'profile.stats.figures.votes'
+    ),
   ];
 
   const hasAnyData = figures.some((figure) => figure.value > 0);
@@ -94,16 +124,15 @@ export default function ProfileStatsSection({
             </li>
           )}
           {figures.map((figure) => {
-            const label = pluralizeCount(figure.value, figure.one, figure.many, t);
             const content = (
               <>
-                <span className={styles.value}>{figure.value}</span>
-                <span className={styles.label}>{label}</span>
+                <span className={styles.value}>{figure.display ?? figure.value}</span>
+                <span className={styles.label}>{figure.label}</span>
               </>
             );
             return (
               <li key={figure.key} className={styles.figure}>
-                {figure.to ? (
+                {figure.to && figure.value > 0 ? (
                   <Link to={figure.to} className={styles.figureLink}>
                     {content}
                   </Link>

@@ -17,6 +17,8 @@ export const queryKeys = {
     watchedMoviesAll: ['profile', 'watchedMovies'] as const,
     watchedMovies: (handle: string | undefined, take: number) =>
       ['profile', 'watchedMovies', handle ?? '$pending', take] as const,
+    proposedMovies: (handle: string | undefined, winningOnly: boolean) =>
+      ['profile', 'proposedMovies', handle ?? '$pending', winningOnly] as const,
     watchlistOf: (handle: string) => ['profile', 'watchlist', handle] as const,
     watchlist: (handle: string | undefined, take: number) =>
       ['profile', 'watchlist', handle ?? '$pending', take] as const,

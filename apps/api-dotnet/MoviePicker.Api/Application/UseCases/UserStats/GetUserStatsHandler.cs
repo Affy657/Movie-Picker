@@ -2,6 +2,7 @@ using System.Globalization;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Profile;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.UseCases.UserStats;
@@ -12,6 +13,7 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
     private const int ParticipantsCap = 500;
     private const int FavoriteGenresTop = 6;
     private const int ActivityWeeks = 26;
+    private const int MinRatedProposalsForAverage = 3;
     private const string IsoDateFormat = "yyyy-MM-dd";
 
     private readonly IUserRepository _users;
@@ -20,6 +22,7 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
     private readonly IMovieRepository _movies;
     private readonly IVoteRepository _votes;
     private readonly ISeenMarkRepository _seenMarks;
+    private readonly IMovieRatingRepository _ratings;
     private readonly TimeProvider _clock;
 
     public GetUserStatsHandler(
@@ -29,6 +32,7 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
         IMovieRepository movies,
         IVoteRepository votes,
         ISeenMarkRepository seenMarks,
+        IMovieRatingRepository ratings,
         TimeProvider clock)
     {
         _users = users;
@@ -37,6 +41,7 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
         _movies = movies;
         _votes = votes;
         _seenMarks = seenMarks;
+        _ratings = ratings;
         _clock = clock;
     }
 
@@ -89,8 +94,8 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
         await Task.WhenAll(proposedMoviesTask, votesTask, seenTask);
 
         var proposedMovies = proposedMoviesTask.Result;
-        var userMovieIds = proposedMovies.Select(m => m.Id).ToList();
-        var winningProposals = await _events.CountByWinnerMovieIdsAsync(userMovieIds, ct);
+        var winningProposals = WinnerMovies.AmongProposals(proposedMovies, participantEvents);
+        var proposalsAverageRating = await AverageRatingOfAsync(winningProposals, ct);
 
         var favoriteGenres = proposedMovies
             .SelectMany(m => m.GenreIds)
@@ -107,13 +112,32 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
             EventsJoined = eventsJoined,
             MoviesProposed = proposedMovies.Count,
             VotesCast = votesTask.Result,
-            WinningProposals = winningProposals,
+            WinningProposals = winningProposals.Count,
+            ProposalsAverageRating = proposalsAverageRating,
             MoviesSeen = seenTask.Result,
             CurrentStreakWeeks = currentStreakWeeks,
             BestStreakWeeks = bestStreakWeeks,
             FavoriteGenres = favoriteGenres,
             DailyActivity = dailyActivity
         };
+    }
+
+    private async Task<double?> AverageRatingOfAsync(IReadOnlyList<Movie> winningProposals, CancellationToken ct)
+    {
+        if (winningProposals.Count < MinRatedProposalsForAverage)
+            return null;
+
+        var winningIds = winningProposals.Select(m => m.Id).ToHashSet();
+        var ratings = await _ratings.ListByEventIdsAsync(winningProposals.Select(m => m.EventId).Distinct().ToList(), ct);
+        var averagePerProposal = ratings
+            .Where(r => winningIds.Contains(r.MovieId))
+            .GroupBy(r => r.MovieId)
+            .Select(g => g.Average(r => r.Value))
+            .ToList();
+
+        return averagePerProposal.Count < MinRatedProposalsForAverage
+            ? null
+            : Math.Round(averagePerProposal.Average(), 2);
     }
 
     private List<DailyActivityPoint> BuildDailyActivity(IReadOnlyList<string> eventDates)

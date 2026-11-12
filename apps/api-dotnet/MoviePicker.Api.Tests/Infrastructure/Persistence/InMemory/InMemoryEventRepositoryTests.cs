@@ -115,18 +115,6 @@ public sealed class InMemoryEventRepositoryTests
     }
 
     [Fact]
-    public async Task CountByWinnerMovieIdsAsync_CountsMatches()
-    {
-        await _repo.AddAsync(Mk(slug: "a", winnerMovieId: "mov1"));
-        await _repo.AddAsync(Mk(slug: "b", winnerMovieId: "mov1"));
-        await _repo.AddAsync(Mk(slug: "c", winnerMovieId: null));
-
-        Assert.Equal(0, await _repo.CountByWinnerMovieIdsAsync([]));
-        Assert.Equal(0, await _repo.CountByWinnerMovieIdsAsync(["  "]));
-        Assert.Equal(2, await _repo.CountByWinnerMovieIdsAsync(["mov1"]));
-    }
-
-    [Fact]
     public async Task DeleteAsync_RemovesAndClearsSlug()
     {
         var created = await _repo.AddAsync(Mk(slug: "soiree"));

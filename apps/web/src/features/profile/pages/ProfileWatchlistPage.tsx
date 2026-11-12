@@ -35,7 +35,7 @@ export default function ProfileWatchlistPage() {
           name: profile.displayName,
           handle: profile.handle,
         }),
-      subtitle: (count) =>
+      subtitle: ({ length: count }) =>
         pluralizeCount(count, 'profile.watchlist.countOne', 'profile.watchlist.count', t),
       listAria: t('profile.watchlist.listAria'),
       loadError: t('profile.watchlist.loadError'),

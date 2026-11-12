@@ -25,6 +25,7 @@ export const ROUTE_CHUNKS = {
   notifications: () => import('@/features/notifications/pages/NotificationsPage'),
   profile: () => import('@/features/profile/pages/ProfilePage'),
   profileMovies: () => import('@/features/profile/pages/ProfileMoviesPage'),
+  profileProposals: () => import('@/features/profile/pages/ProfileProposalsPage'),
   profileWatchlist: () => import('@/features/profile/pages/ProfileWatchlistPage'),
   notFound: () => import('@/app/pages/NotFoundPage'),
 };

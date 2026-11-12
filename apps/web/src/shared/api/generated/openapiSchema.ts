@@ -5851,6 +5851,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/{handle}/proposed-movies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    winningOnly?: boolean;
+                };
+                header?: never;
+                path: {
+                    handle: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["UserProposedMoviesResponse"];
+                        "application/json": components["schemas"]["UserProposedMoviesResponse"];
+                        "text/json": components["schemas"]["UserProposedMoviesResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/{handle}/watchlist": {
         parameters: {
             query?: never;
@@ -8265,6 +8335,26 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
         };
+        UserProposedMovieItem: {
+            /** Format: int32 */
+            tmdbId?: number;
+            title?: string | null;
+            year?: string | null;
+            posterPath?: string | null;
+            /** Format: double */
+            voteAverage?: number | null;
+            /** Format: int32 */
+            runtimeMinutes?: number | null;
+            genreIds?: number[] | null;
+            mediaType?: components["schemas"]["MovieMediaType"];
+            /** Format: date-time */
+            lastProposedAt?: string;
+            /** Format: int32 */
+            proposalCount?: number;
+        };
+        UserProposedMoviesResponse: {
+            items?: components["schemas"]["UserProposedMovieItem"][] | null;
+        };
         UserStatsResponse: {
             /** Format: int32 */
             eventsCreated?: number;
@@ -8276,6 +8366,8 @@ export interface components {
             votesCast?: number;
             /** Format: int32 */
             winningProposals?: number;
+            /** Format: double */
+            proposalsAverageRating?: number | null;
             /** Format: int32 */
             moviesSeen?: number;
             /** Format: int32 */

@@ -43,10 +43,10 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 import BackLink from '@/shared/components/BackLink';
 import InlineError from '@/shared/components/InlineError';
 
-export interface ProfileCollectionTexts {
+export interface ProfileCollectionTexts<T = MovieListItemLike> {
   pageTitle: (name: string) => string;
   seoDescription: (profile: PublicProfile) => string;
-  subtitle: (count: number) => string;
+  subtitle: (items: readonly T[]) => string;
   listAria: string;
   loadError: string;
   emptyTitle: string;
@@ -62,7 +62,7 @@ interface ProfileCollectionPageProps<T extends MovieListItemLike> {
   comparePrimary: (a: T, b: T) => number;
   itemKey: (item: T) => string;
   canonicalPath: (handle: string) => string;
-  texts: ProfileCollectionTexts;
+  texts: ProfileCollectionTexts<T>;
   renderLeadingBadge?: (item: T, handle: string) => ReactNode;
 }
 
@@ -70,7 +70,7 @@ function collectionSeo(
   profile: PublicProfile | undefined,
   isNotFound: boolean,
   t: Translate,
-  texts: ProfileCollectionTexts,
+  texts: Pick<ProfileCollectionTexts, 'pageTitle' | 'seoDescription'>,
   canonicalPath: (handle: string) => string
 ) {
   if (!profile) return { title: pageTitle(t('profile.loading')), noindex: isNotFound };
@@ -169,7 +169,7 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
         <Avatar avatarId={profile.avatarId} pseudo={profile.displayName} size="lg" />
         <div className={styles.headerText}>
           <h1 className={styles.pageTitle}>{texts.pageTitle(profile.displayName)}</h1>
-          <p className={styles.pageSubtitle}>{texts.subtitle(totalCount)}</p>
+          <p className={styles.pageSubtitle}>{texts.subtitle(items)}</p>
         </div>
       </div>
 

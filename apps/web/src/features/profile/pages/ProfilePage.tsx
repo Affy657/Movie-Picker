@@ -204,6 +204,9 @@ export default function ProfilePage() {
             watchedCount={watchedQuery.data?.total}
             watchedPending={watchedQuery.isPending}
             watchedTo={ROUTES.profileMovies(profile.handle)}
+            proposalsTo={ROUTES.profileProposals(profile.handle)}
+            winningProposalsTo={ROUTES.profileWinningProposals(profile.handle)}
+            ratingScale={user?.ratingScale}
           />
         )}
 

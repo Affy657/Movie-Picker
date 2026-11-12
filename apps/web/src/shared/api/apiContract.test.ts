@@ -32,7 +32,11 @@ import type { MovieSearchListResponse } from '@/features/movies/api/moviesApi';
 import type { UserProfile } from '@/features/auth/types';
 import type { EventConfigData } from '@/shared/types/event';
 import type { FavoriteTitle, MovieRating, WatchProviderOffer } from '@/shared/types/movie';
-import type { UserWatchedMovieItem } from '@/features/profile/api/profileApi';
+import type {
+  UserProposedMovieItem,
+  UserProposedMoviesResponse,
+  UserWatchedMovieItem,
+} from '@/features/profile/api/profileApi';
 
 export type ApiSchemas = components['schemas'];
 
@@ -62,6 +66,8 @@ const frontTypesMatchTheOpenApiContract: [
   ServedBy<WatchProviderOffer, ApiSchemas['WatchProviderOfferResponse']>,
   ServedBy<MovieRating, ApiSchemas['MovieRatingResponse']>,
   ServedBy<UserWatchedMovieItem, ApiSchemas['UserWatchedMovieItem']>,
+  ServedBy<UserProposedMovieItem, ApiSchemas['UserProposedMovieItem']>,
+  ServedBy<UserProposedMoviesResponse, ApiSchemas['UserProposedMoviesResponse']>,
   ServedBy<FavoriteTitle, ApiSchemas['FavoriteTitleResponse']>,
   ServedBy<FavoriteListResponse, ApiSchemas['FavoriteListResponse']>,
   ServedBy<RawEventData, ApiSchemas['EventDetailResponse']>,
@@ -71,6 +77,8 @@ const frontTypesMatchTheOpenApiContract: [
   ServedBy<RawWinnerMovie, ApiSchemas['WinnerMovieResponse']>,
   ServedBy<EventTemplateData, ApiSchemas['EventTemplateResponse']>,
 ] = [
+  true,
+  true,
   true,
   true,
   true,

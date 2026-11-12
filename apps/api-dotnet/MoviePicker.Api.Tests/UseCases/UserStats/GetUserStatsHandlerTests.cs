@@ -22,6 +22,7 @@ public sealed class GetUserStatsHandlerTests
     private readonly Mock<IMovieRepository> _movies = new();
     private readonly Mock<IVoteRepository> _votes = new();
     private readonly Mock<ISeenMarkRepository> _seen = new();
+    private readonly Mock<IMovieRatingRepository> _ratings = new();
     private const string NightAfterNow = "2026-12-01";
 
     private readonly DateTimeOffset _now = new(2026, 6, 15, 0, 0, 0, TimeSpan.Zero);
@@ -85,14 +86,14 @@ public sealed class GetUserStatsHandlerTests
             .ReturnsAsync(Array.Empty<Event>());
         _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Event>());
-        _events.Setup(r => r.CountByWinnerMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(0);
         _movies.Setup(r => r.ListByParticipantIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Movie>());
         _votes.Setup(r => r.CountByParticipantIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
         _seen.Setup(r => r.CountByParticipantIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
+        _ratings.Setup(r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<MovieRating>());
         return new GetUserStatsHandler(
             _users.Object,
             _participants.Object,
@@ -100,6 +101,7 @@ public sealed class GetUserStatsHandlerTests
             _movies.Object,
             _votes.Object,
             _seen.Object,
+            _ratings.Object,
             new FixedTimeProvider(_now));
     }
 
@@ -157,12 +159,11 @@ public sealed class GetUserStatsHandlerTests
         _events.Setup(r => r.ListByCreatorUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Evt("A") });
         _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { Evt("A", "2026-06-01"), Evt("B", "2026-05-01") });
+            .ReturnsAsync(new[] { Evt("A", "2026-06-01", winnerMovieId: "m1"), Evt("B", "2026-05-01", winnerMovieId: "someone-else") });
         _movies.Setup(r => r.ListByParticipantIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Mov("m1", "p1", 28, 878), Mov("m2", "p1", 28), Mov("m3", "p2") });
         _votes.Setup(r => r.CountByParticipantIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(5);
         _seen.Setup(r => r.CountByParticipantIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(2);
-        _events.Setup(r => r.CountByWinnerMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
         var res = await handler.HandleAsync("alice");
 
@@ -181,6 +182,102 @@ public sealed class GetUserStatsHandlerTests
 
         Assert.Equal(1, res.DailyActivity.Single(p => p.Date == "2026-06-01").Count);
         Assert.Equal(1, res.DailyActivity.Single(p => p.Date == "2026-05-01").Count);
+    }
+
+    [Fact]
+    public async Task WinningProposals_CountsEachWinningProposal_EvenWhenOneNightCrownsSeveral()
+    {
+        var handler = Build();
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
+        _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Part("p1", "A", DateTimeOffset.UtcNow), Part("p2", "B", DateTimeOffset.UtcNow) });
+        _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                Evt("A", "2026-06-01") with { Winners = TestWinners.Won("m1", "m2") },
+                Evt("B", "2026-05-01", winnerMovieId: "m3"),
+            });
+        _movies.Setup(r => r.ListByParticipantIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Mov("m1", "p1"), Mov("m2", "p1"), Mov("m3", "p2"), Mov("m4", "p2") });
+
+        var res = await handler.HandleAsync("alice");
+
+        Assert.Equal(4, res.MoviesProposed);
+        Assert.Equal(3, res.WinningProposals);
+    }
+
+    private static MovieRating Rating(string eventId, string movieId, string participantId, int value) => new()
+    {
+        Id = $"{movieId}-{participantId}",
+        EventId = eventId,
+        MovieId = movieId,
+        ParticipantId = participantId,
+        Value = value,
+    };
+
+    private void GivenWinningProposals(params (string EventId, string MovieId)[] wins)
+    {
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
+        _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(wins.Select(w => Part($"p-{w.EventId}", w.EventId, DateTimeOffset.UtcNow)).ToArray());
+        _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(wins.Select(w => Evt(w.EventId, "2026-06-01", winnerMovieId: w.MovieId)).ToArray());
+        _movies.Setup(r => r.ListByParticipantIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(wins.Select(w => Mov(w.MovieId, $"p-{w.EventId}") with { EventId = w.EventId }).ToArray());
+    }
+
+    [Fact]
+    public async Task ProposalsAverageRating_AveragesEachWinningFilmsOwnAverage_ProposersRatingIncluded()
+    {
+        var handler = Build();
+        GivenWinningProposals(("A", "m1"), ("B", "m2"), ("C", "m3"));
+        _ratings.Setup(r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                Rating("A", "m1", "p-A", 10),
+                Rating("A", "m1", "friend", 10),
+                Rating("A", "m1", "other", 10),
+                Rating("B", "m2", "p-B", 1),
+                Rating("B", "m2", "friend", 1),
+                Rating("C", "m3", "friend", 6),
+            });
+
+        var res = await handler.HandleAsync("alice");
+
+        Assert.Equal(5.67, res.ProposalsAverageRating);
+    }
+
+    [Fact]
+    public async Task ProposalsAverageRating_IgnoresTheRatingsOfAnotherWinnerOfTheSameNight()
+    {
+        var handler = Build();
+        GivenWinningProposals(("A", "m1"), ("B", "m2"), ("C", "m3"));
+        _ratings.Setup(r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                Rating("A", "m1", "friend", 8),
+                Rating("A", "someone-elses-winner", "friend", 1),
+                Rating("B", "m2", "friend", 8),
+                Rating("C", "m3", "friend", 8),
+            });
+
+        var res = await handler.HandleAsync("alice");
+
+        Assert.Equal(8, res.ProposalsAverageRating);
+    }
+
+    [Fact]
+    public async Task ProposalsAverageRating_StaysHiddenUntilThreeWinningProposalsAreRated()
+    {
+        var handler = Build();
+        GivenWinningProposals(("A", "m1"), ("B", "m2"), ("C", "m3"));
+        _ratings.Setup(r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Rating("A", "m1", "friend", 10), Rating("B", "m2", "friend", 9) });
+
+        var res = await handler.HandleAsync("alice");
+
+        Assert.Equal(3, res.WinningProposals);
+        Assert.Null(res.ProposalsAverageRating);
     }
 
     [Fact]
