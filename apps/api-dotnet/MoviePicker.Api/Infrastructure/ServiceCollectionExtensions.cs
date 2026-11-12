@@ -231,7 +231,7 @@ public static class ServiceCollectionExtensions
         if (int.TryParse(cfg["MOST_PROPOSED_MIN_EVENT_COUNT"], out var minEvents) && minEvents > 0)
             opts.MostProposedMinEventCount = minEvents;
         if (int.TryParse(cfg["MOST_PROPOSED_MIN_DISTINCT_MOVIES"], out var minMovies) && minMovies > 0)
-            opts.MostProposedMinDistinctMovies = minMovies;
+            opts.MostProposedMinDistinctMovies = Math.Min(minMovies, MovieShowcaseCatalog.MostProposedLimit);
     }
 
     private static void ConfigurePosterOptions(MoviePickerOptions opts, IConfiguration cfg)

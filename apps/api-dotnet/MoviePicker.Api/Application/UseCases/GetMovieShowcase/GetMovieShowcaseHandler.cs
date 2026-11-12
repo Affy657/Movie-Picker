@@ -90,7 +90,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
             var rows = await FetchTmdbSectionAsync(section, ct);
             return await WithRuntimesAsync(rows.Select(MapItem).ToList(), ct);
         }
-        catch (HttpRequestException)
+        catch (Exception ex) when (ex is HttpRequestException or System.Text.Json.JsonException)
         {
             throw Errors.ShowcaseUnavailable();
         }
