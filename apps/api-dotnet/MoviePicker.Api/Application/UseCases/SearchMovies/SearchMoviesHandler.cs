@@ -78,7 +78,7 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
         var items = new List<MovieSearchItemResponse>(rows.Count);
         foreach (var row in rows)
         {
-            IReadOnlyList<WatchProviderOfferResponse> providers = Array.Empty<WatchProviderOfferResponse>();
+            IReadOnlyList<WatchProviderOfferResponse>? providers = null;
             string? watchPage = null;
             double? vote = row.VoteAverage;
             int? runtime = null;

@@ -42,6 +42,13 @@
 
 .panel {
   width: 18rem;
+  max-height: calc(100dvh - var(--header-height) - env(safe-area-inset-top, 0px) - var(--space-4));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.panel > * {
+  flex-shrink: 0;
 }
 
 .header {

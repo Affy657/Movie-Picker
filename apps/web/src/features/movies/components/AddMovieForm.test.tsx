@@ -578,8 +578,141 @@ describe('AddMovieForm (MSW)', () => {
     expect(await screen.findByText('Rien à faire')).toBeInTheDocument();
     expect(screen.getByText('Déjà là')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Ajouter « Film Test »' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Voir la fiche de « Film Test »' }));
-    expect(onOpenItem).toHaveBeenCalledWith(expect.objectContaining({ id: 100 }));
+    const titleButton = screen.getByRole('button', { name: 'Voir la fiche de « Film Test »' });
+    await user.click(titleButton);
+    expect(onOpenItem).toHaveBeenCalledWith(expect.objectContaining({ id: 100 }), titleButton);
+  });
+
+  it('keeps the focus on the row of a flat result after an addition, without scrolling back up to the field', async () => {
+    const focus = vi.spyOn(HTMLElement.prototype, 'focus');
+    const user = userEvent.setup();
+    renderWithLocale(
+      <AddMovieForm onAddItem={onAddItem} onAdded={onAdded} flatResults onOpenItem={vi.fn()} />
+    );
+    const input = screen.getByRole('searchbox', { name: 'Chercher un film' });
+    await user.type(input, 'Inception');
+    await user.click(await screen.findByRole('button', { name: 'Ajouter « Film Test »' }));
+
+    await waitFor(() => expect(onAdded).toHaveBeenCalled());
+    expect(screen.getByRole('button', { name: 'Voir la fiche de « Film Test »' })).toHaveFocus();
+    expect(input).not.toHaveFocus();
+    expect(focus).toHaveBeenLastCalledWith({ preventScroll: true });
+    focus.mockRestore();
+  });
+
+  it('hands an addition failure to the caller instead of showing it above the results', async () => {
+    const onAddError = vi.fn();
+    const failingAdd = vi.fn(() =>
+      Promise.reject(new Error('Limite de 3 proposition(s) par participant atteinte.'))
+    );
+    const user = userEvent.setup();
+    renderWithLocale(
+      <AddMovieForm onAddItem={failingAdd} onAdded={onAdded} onAddError={onAddError} />
+    );
+    await user.type(screen.getByRole('searchbox', { name: 'Chercher un film' }), 'Inception');
+    await user.click(await screen.findByRole('button', { name: 'Ajouter « Film Test »' }));
+
+    await waitFor(() =>
+      expect(onAddError).toHaveBeenLastCalledWith(
+        'Limite de 3 proposition(s) par participant atteinte.'
+      )
+    );
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('greys the add buttons out when the caller says no addition is possible any more', async () => {
+    const user = userEvent.setup();
+    renderWithLocale(<AddMovieForm onAddItem={onAddItem} onAdded={onAdded} addDisabled />);
+    await user.type(screen.getByRole('searchbox', { name: 'Chercher un film' }), 'Inception');
+
+    expect(await screen.findByRole('button', { name: 'Ajouter « Film Test »' })).toBeDisabled();
+  });
+
+  it('says nothing about streaming for a result whose offers were not looked up, and keeps it under the streaming filter', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/movies/search`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: 100,
+              title: 'Film Non Vérifié',
+              year: '2024',
+              posterPath: null,
+              watchProviders: null,
+              tmdbWatchPageUrl: null,
+            },
+            {
+              id: 101,
+              title: 'Film Hors Streaming',
+              year: '2023',
+              posterPath: null,
+              watchProviders: [],
+              tmdbWatchPageUrl: null,
+            },
+          ],
+          watchProvidersRegion: 'FR',
+          disclaimer: '',
+          tmdbAttributionUrl: 'https://www.themoviedb.org/',
+        })
+      )
+    );
+    const user = userEvent.setup();
+    renderWithLocale(<AddMovieForm onAddItem={onAddItem} onAdded={onAdded} quickFilters />);
+    await user.type(screen.getByRole('searchbox', { name: 'Chercher un film' }), 'Film');
+
+    const list = await screen.findByRole('list', { name: 'Résultats de la recherche' });
+    const rows = within(list).getAllByRole('listitem');
+    expect(rows[0]).toHaveTextContent('Film Non Vérifié');
+    expect(rows[0]).not.toHaveTextContent(/streaming/i);
+    expect(rows[1]).toHaveTextContent('Pas en streaming');
+
+    await user.click(screen.getByRole('button', { name: 'En streaming' }));
+
+    const kept = within(
+      screen.getByRole('list', { name: 'Résultats de la recherche' })
+    ).getAllByRole('listitem');
+    expect(kept).toHaveLength(1);
+    expect(kept[0]).toHaveTextContent('Film Non Vérifié');
+  });
+
+  it('announces how many results stay on screen once the streaming filter hides some', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/movies/search`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: 100,
+              title: 'Film Abonnement',
+              year: '2024',
+              posterPath: null,
+              watchProviders: [
+                { providerId: 1, name: 'Netflix', logoPath: null, type: 'flatrate' },
+              ],
+              tmdbWatchPageUrl: null,
+            },
+            {
+              id: 101,
+              title: 'Film Location Seule',
+              year: '2023',
+              posterPath: null,
+              watchProviders: [{ providerId: 5, name: 'Louer Là', logoPath: null, type: 'rent' }],
+              tmdbWatchPageUrl: null,
+            },
+          ],
+          watchProvidersRegion: 'FR',
+          disclaimer: '',
+          tmdbAttributionUrl: 'https://www.themoviedb.org/',
+        })
+      )
+    );
+    const user = userEvent.setup();
+    renderWithLocale(<AddMovieForm onAddItem={onAddItem} onAdded={onAdded} quickFilters />);
+    await user.type(screen.getByRole('searchbox', { name: 'Chercher un film' }), 'Film');
+    expect(await screen.findByText('2 résultat(s)')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'En streaming' }));
+
+    expect(screen.getByText('1 résultat(s)')).toBeInTheDocument();
   });
 
   it('shows the suggestions while nothing is typed and filters them without searching', async () => {

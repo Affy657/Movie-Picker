@@ -684,6 +684,37 @@ public sealed class ListMyEventsHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_ActiveScope_KeepsEachNightPreviewOnItsOwnNight()
+    {
+        GivenCreatedNights(UpcomingNight("e1"), UpcomingNight("e2"));
+        var start = DateTimeOffset.Parse("2026-06-01T00:00:00Z");
+        _movieRepo
+            .Setup(r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                ProposedMovie("e2", "dune", start),
+                ProposedMovie("e1", "alien", start.AddMinutes(1)),
+                ProposedMovie("e2", "heat", start.AddMinutes(2)),
+            ]);
+        _participantRepo
+            .Setup(r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                Joined("e2", "p2", "Nico", start),
+                Joined("e1", "p1", "Léa", start.AddMinutes(1)),
+            ]);
+
+        var result = await _sut.HandleAsync("u1", MyEventListScope.Active, limit: 10, offset: 0, q: null);
+
+        var first = result.Events.Single(e => e.Id == "e1");
+        var second = result.Events.Single(e => e.Id == "e2");
+        Assert.Equal(["alien"], first.TopMovies.Select(m => m.Title));
+        Assert.Equal(["dune", "heat"], second.TopMovies.Select(m => m.Title));
+        Assert.Equal(["Léa"], first.ParticipantsPreview.Select(p => p.Pseudo));
+        Assert.Equal(["Nico"], second.ParticipantsPreview.Select(p => p.Pseudo));
+    }
+
+    [Fact]
     public async Task HandleAsync_FinishedScope_ReadsNoPreview()
     {
         GivenCreatedNights(FinishedNight("e1", "m1"));

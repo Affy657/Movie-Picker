@@ -26,7 +26,7 @@ export function eventCountdownLabel(
 ): string | null {
   const countdown = eventCountdown(date, time, nowMs);
   if (!countdown) return null;
-  if (countdown.unit === 'days' && (daysOnly || countdown.count >= DAYS_WITHOUT_HOURS))
-    return t('events.detail.countdownDaysOnly', { count: countdown.count });
+  if (countdown.unit === 'days' && (daysOnly || countdown.calendarDays >= DAYS_WITHOUT_HOURS))
+    return t('events.detail.countdownDaysOnly', { count: countdown.calendarDays });
   return t(COUNTDOWN_KEYS[countdown.unit], countdownParams(countdown));
 }

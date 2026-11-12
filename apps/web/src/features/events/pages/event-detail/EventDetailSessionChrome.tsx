@@ -6,7 +6,7 @@ import EventMoviesLoadError from '@/features/events/pages/event-detail/EventMovi
 import EventPendingBanner from '@/features/events/components/EventPendingBanner';
 import EventConnectionBanner from '@/features/events/components/EventConnectionBanner';
 import EventWheelActions from '@/features/events/components/EventWheelActions';
-import { eventHeaderActions } from '@/features/events/lib/eventHeaderActions';
+import { eventHeaderActions, hasHeaderActions } from '@/features/events/lib/eventHeaderActions';
 import { getEligibleFollows } from '@/features/events/api/eventsApi';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
@@ -174,6 +174,7 @@ export default function EventDetailSessionChrome({
     canReset: wheel.showReset,
     canCloseWithoutMovie: settings.canConfigure && lifecycle === 'pending',
   });
+  const showActions = hasHeaderActions(plan) || wheel.manualMode || wheel.removalMode;
   return (
     <>
       <EventDetailHeader
@@ -193,14 +194,16 @@ export default function EventDetailSessionChrome({
         onOpenShare={share.url ? () => share.onOpen('link') : undefined}
         onOpenSettings={settings.canConfigure ? settings.onOpen : undefined}
         actions={
-          <EventWheelActions
-            wheel={wheel}
-            plan={plan}
-            onAddMovie={addMovie.onOpen}
-            addMovieTriggerRef={addMovie.triggerRef}
-            onRequestReset={onRequestResetWheel}
-            onRequestCloseWithoutMovie={onRequestCloseWithoutMovie}
-          />
+          showActions ? (
+            <EventWheelActions
+              wheel={wheel}
+              plan={plan}
+              onAddMovie={addMovie.onOpen}
+              addMovieTriggerRef={addMovie.triggerRef}
+              onRequestReset={onRequestResetWheel}
+              onRequestCloseWithoutMovie={onRequestCloseWithoutMovie}
+            />
+          ) : undefined
         }
         viewMode={viewToggleInHeader ? viewMode : undefined}
         onViewModeChange={viewToggleInHeader ? onViewModeChange : undefined}

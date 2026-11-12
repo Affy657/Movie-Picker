@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -9,6 +10,7 @@ const APP_VERSION_SOURCE = fileURLToPath(
 const UNRELEASED_HEADING = '## [Non publié]\n';
 const APP_VERSION_PATTERN = /APP_VERSION = '(\d+\.\d+\.\d+)'/;
 const UNRELEASED_LINK_PATTERN = /^\[Non publié\]: (\S+)\/compare\/v(\d+\.\d+\.\d+)\.\.\.HEAD$/m;
+const RELEASE_HEADING_PATTERN = /^## \[(\d+\.\d+\.\d+)\] - /;
 
 function entriesUnder(body, heading) {
   const lines = body.split('\n');
@@ -34,6 +36,31 @@ export function nextVersion(current, bump) {
   if (bump === 'major') return `${major + 1}.0.0`;
   if (bump === 'minor') return `${major}.${minor + 1}.0`;
   return `${major}.${minor}.${patch + 1}`;
+}
+
+export function freeVersion(current, bump, isPublished) {
+  let version = nextVersion(current, bump);
+  while (isPublished(version)) version = nextVersion(version, bump);
+  return version;
+}
+
+export function compareVersions(left, right) {
+  const a = left.split('.').map(Number);
+  const b = right.split('.').map(Number);
+  return a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+}
+
+export function versionsAfter(changelog, published) {
+  return changelog
+    .split('\n')
+    .map((line) => RELEASE_HEADING_PATTERN.exec(line)?.[1])
+    .filter((version) => version !== undefined && compareVersions(version, published) > 0)
+    .sort(compareVersions);
+}
+
+export function commandOf(args) {
+  const [command, argument] = args.filter((arg) => arg !== '--');
+  return [command, argument];
 }
 
 export function unreleasedSection(changelog) {
@@ -90,6 +117,19 @@ function parisDate() {
   return new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Paris' });
 }
 
+function tagPublished(version) {
+  try {
+    return (
+      execFileSync('git', ['ls-remote', '--tags', 'origin', `refs/tags/v${version}`], {
+        encoding: 'utf8',
+      }).trim() !== ''
+    );
+  } catch {
+    console.warn(`Could not read the tags of origin: v${version} is not checked against them.`);
+    return false;
+  }
+}
+
 function prepare(forceMajor) {
   const changelog = readFileSync(CHANGELOG, 'utf8');
   const bump = bumpFor(unreleasedSection(changelog));
@@ -99,7 +139,7 @@ function prepare(forceMajor) {
   }
   const previous = currentVersion();
   const kind = forceMajor ? 'major' : bump;
-  const version = nextVersion(previous, kind);
+  const version = freeVersion(previous, kind, tagPublished);
   writeFileSync(CHANGELOG, releaseChangelog(changelog, { previous, version, date: parisDate() }));
   writeFileSync(
     APP_VERSION_SOURCE,
@@ -111,15 +151,21 @@ function prepare(forceMajor) {
 }
 
 function main() {
-  const [command, argument] = process.argv.slice(2);
+  const [command, argument] = commandOf(process.argv.slice(2));
   if (command === 'current') {
     console.log(currentVersion());
+  } else if (command === 'since' && argument) {
+    for (const version of versionsAfter(readFileSync(CHANGELOG, 'utf8'), argument)) {
+      console.log(version);
+    }
   } else if (command === 'notes') {
     console.log(releaseNotes(readFileSync(CHANGELOG, 'utf8'), argument ?? currentVersion()));
   } else if (command === undefined || command === '--major') {
     prepare(command === '--major');
   } else {
-    console.error('Usage: node scripts/release.mjs [--major] | current | notes [version]');
+    console.error(
+      'Usage: node scripts/release.mjs [--major] | current | since <version> | notes [version]'
+    );
     process.exitCode = 1;
   }
 }

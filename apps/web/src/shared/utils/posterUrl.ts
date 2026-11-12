@@ -15,11 +15,19 @@ export function tmdbPosterSrcForListDisplay(url: string | undefined): string | u
   }
 }
 
-const SIZED_POSTER_SEGMENT = /\/(t\/p|posters\/tmdb)\/(w\d+|original)\//i;
+const TMDB_SIZED_POSTER_SEGMENT = /\/t\/p\/(w\d+|original)\//i;
 
 export function posterSrcAtSize(url: string | undefined, size: string): string | undefined {
   if (!url) return undefined;
-  return url.replace(SIZED_POSTER_SEGMENT, (_, prefix: string) => `/${prefix}/${size}/`);
+  try {
+    const u = new URL(url);
+    if (u.protocol !== 'https:' || u.hostname !== 'image.tmdb.org') return url;
+    if (!TMDB_SIZED_POSTER_SEGMENT.test(u.pathname)) return url;
+    u.pathname = u.pathname.replace(TMDB_SIZED_POSTER_SEGMENT, `/t/p/${size}/`);
+    return u.toString();
+  } catch {
+    return url;
+  }
 }
 
 export function posterImageSrc(posterPath: string | null | undefined): string | undefined {

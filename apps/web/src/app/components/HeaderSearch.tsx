@@ -58,6 +58,7 @@ export default function HeaderSearch() {
         className={styles.loupe}
         onClick={() => setOpen(true)}
         aria-expanded={open}
+        tabIndex={open ? -1 : undefined}
       >
         <Search size={ICON_SIZE.lg} aria-hidden />
       </IconButton>

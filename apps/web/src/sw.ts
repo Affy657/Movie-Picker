@@ -88,8 +88,8 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: '/icons/pwa-192x192.png',
-      badge: '/icons/pwa-64x64.png',
+      icon: '/icons/clap-192x192.png',
+      badge: '/icons/clap-64x64.png',
       tag: data.tag,
       data: data.url ? { url: data.url } : undefined,
     })

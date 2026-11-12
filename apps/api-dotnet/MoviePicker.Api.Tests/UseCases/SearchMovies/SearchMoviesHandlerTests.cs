@@ -81,7 +81,7 @@ public sealed class SearchMoviesHandlerTests
         Assert.Equal("Inception", item.Title);
         Assert.Equal(8.4, item.VoteAverage);
         Assert.Null(item.RuntimeMinutes);
-        Assert.Empty(item.WatchProviders);
+        Assert.Null(item.WatchProviders);
         Assert.Empty(item.GenreIds);
         Assert.Equal("FR", result.WatchProvidersRegion);
         Assert.False(string.IsNullOrEmpty(result.Disclaimer));
@@ -131,9 +131,40 @@ public sealed class SearchMoviesHandlerTests
         Assert.Equal(7.9, item.VoteAverage);
         Assert.Equal(148, item.RuntimeMinutes);
         Assert.Equal("https://tmdb/watch", item.TmdbWatchPageUrl);
+        Assert.NotNull(item.WatchProviders);
         var provider = Assert.Single(item.WatchProviders);
         Assert.Equal("Netflix", provider.Name);
         Assert.Equal("flatrate", provider.Type);
+    }
+
+    [Fact]
+    public async Task HandleAsync_RowsNotLookedUp_LeaveTheirProvidersUnknownInsteadOfEmpty()
+    {
+        _tmdb.Setup(t => t.SearchAsync("dune", true, It.IsAny<IReadOnlyList<int>?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                new TmdbSearchItem(1, MovieMediaType.Movie, "NowhereToStream", "2021", "/p.jpg"),
+                new TmdbSearchItem(2, MovieMediaType.Movie, "LookupFailed", "1984", "/p.jpg"),
+                new TmdbSearchItem(3, MovieMediaType.Movie, "BeyondTheLookups", "2000", "/p.jpg"),
+            ]);
+        GivenEnrichments(
+            (1, new TmdbMovieEnrichment(null, [], null, 155)),
+            (2, null));
+        var sut = Build(new MoviePickerOptions { TmdbApiKey = "key", TmdbSearchMaxWatchProviderLookups = 2 });
+
+        var result = await sut.HandleAsync("dune", SeriesEventSlug);
+
+        Assert.Collection(
+            result.Items,
+            known =>
+            {
+                Assert.NotNull(known.WatchProviders);
+                Assert.Empty(known.WatchProviders);
+            },
+            failed => Assert.Null(failed.WatchProviders),
+            skipped => Assert.Null(skipped.WatchProviders));
     }
 
     [Fact]

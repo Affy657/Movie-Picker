@@ -20,7 +20,10 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useSearchHistory } from '@/features/movies/hooks/useSearchHistory';
 import { SEARCH_MIN_CHARS, useMovieSearch } from '@/features/movies/hooks/useMovieSearch';
 import { useMovieSearchFilters } from '@/features/movies/hooks/useMovieSearchFilters';
-import { matchesSearchFilters } from '@/features/movies/utils/matchesSearchFilters';
+import {
+  matchesSearchFilters,
+  mayBeAvailableAs,
+} from '@/features/movies/utils/matchesSearchFilters';
 import MovieSearchFiltersPanel from '@/features/movies/components/MovieSearchFiltersPanel';
 import MovieSearchQuickFilters from '@/features/movies/components/MovieSearchQuickFilters';
 import MovieSearchRow from '@/features/movies/components/MovieSearchRow';
@@ -58,6 +61,8 @@ export interface AddMovieFormProps {
   onAddItem: (item: MovieSearchItem) => Promise<void>;
   onAdded: (item: MovieSearchItem) => void;
   disabled?: boolean;
+  addDisabled?: boolean;
+  onAddError?: (message: string | null) => void;
   isItemAlreadyAdded?: (item: MovieSearchItem) => boolean;
   alreadyAddedLabel?: string;
   alreadyAddedHint?: string;
@@ -75,7 +80,7 @@ export interface AddMovieFormProps {
   hideAttribution?: boolean;
   suggestions?: { title: string; items: MovieSearchItem[]; action?: ReactNode };
   renderItemAside?: (item: MovieSearchItem) => MovieSearchItemAside | undefined;
-  onOpenItem?: (item: MovieSearchItem) => void;
+  onOpenItem?: (item: MovieSearchItem, trigger: HTMLElement) => void;
 }
 
 export default function AddMovieForm({
@@ -83,6 +88,8 @@ export default function AddMovieForm({
   onAddItem,
   onAdded,
   disabled,
+  addDisabled = false,
+  onAddError,
   isItemAlreadyAdded,
   alreadyAddedLabel,
   alreadyAddedHint,
@@ -166,7 +173,6 @@ export default function AddMovieForm({
   useEffect(() => setAddError(null), [searchKey]);
 
   const error = addError ?? searchFailureMessage(failure, t);
-  const a11ySearchStatus = searchStatusLabel({ searching, answered, count: results.length }, t);
 
   const searchAllowed = trimmedForSearch.length >= SEARCH_MIN_CHARS || apiFiltersAlone;
 
@@ -189,13 +195,12 @@ export default function AddMovieForm({
   const focusHistoryItem = useHistoryFocus(containerRef, showHistory, setHistoryDismissed);
 
   const displayedResults = useMemo(
-    () =>
-      filters.availabilityFilter
-        ? results.filter((r) =>
-            r.watchProviders?.some((p) => p.type === filters.availabilityFilter)
-          )
-        : results,
+    () => results.filter((r) => mayBeAvailableAs(r, filters.availabilityFilter)),
     [results, filters.availabilityFilter]
+  );
+  const a11ySearchStatus = searchStatusLabel(
+    { searching, answered, count: displayedResults.length },
+    t
   );
 
   const shownSuggestions = useMemo(
@@ -212,16 +217,26 @@ export default function AddMovieForm({
   }, []);
   useFocusLeave(containerRef, !disabled, leaveSearch);
 
-  const addMovie = async (item: MovieSearchItem) => {
-    setAddError(null);
+  const reportAddError = (message: string | null) => {
+    if (onAddError) onAddError(message);
+    else setAddError(message);
+  };
+
+  const addMovie = async (item: MovieSearchItem, trigger: HTMLElement) => {
+    const row = trigger.closest('li');
+    reportAddError(null);
     setAdding(true);
     try {
       await onAddItem(item);
       onAdded(item);
       setHistoryDismissed(true);
-      searchInputRef.current?.focus();
+      focusAfterAddition({
+        input: searchInputRef.current,
+        rowTitle: flatResults && onOpenItem ? row?.querySelector('button') : null,
+        stayInPlace: flatResults,
+      });
     } catch (err) {
-      setAddError(getErrorMessage(err, addErrorLabel ?? t('movies.search.addError')));
+      reportAddError(getErrorMessage(err, addErrorLabel ?? t('movies.search.addError')));
     } finally {
       setAdding(false);
     }
@@ -265,13 +280,13 @@ export default function AddMovieForm({
             <AddAction
               item={item}
               alreadyAdded={isItemAlreadyAdded?.(item) ?? false}
-              adding={adding}
+              blocked={adding || addDisabled}
               onAdd={addMovie}
               labels={addActionLabels}
             />
           )
         }
-        onOpen={onOpenItem ? () => onOpenItem(item) : undefined}
+        onOpen={onOpenItem ? (trigger) => onOpenItem(item, trigger) : undefined}
       />
     );
   };
@@ -462,17 +477,33 @@ function addActionLabelsFor(
   };
 }
 
+function focusAfterAddition({
+  input,
+  rowTitle,
+  stayInPlace,
+}: Readonly<{
+  input: HTMLInputElement | null;
+  rowTitle: HTMLElement | null | undefined;
+  stayInPlace: boolean;
+}>) {
+  if (!stayInPlace) {
+    input?.focus();
+    return;
+  }
+  (rowTitle ?? input)?.focus({ preventScroll: true });
+}
+
 function AddAction({
   item,
   alreadyAdded,
-  adding,
+  blocked,
   onAdd,
   labels,
 }: Readonly<{
   item: MovieSearchItem;
   alreadyAdded: boolean;
-  adding: boolean;
-  onAdd: (item: MovieSearchItem) => void;
+  blocked: boolean;
+  onAdd: (item: MovieSearchItem, trigger: HTMLElement) => void;
   labels: AddActionLabels;
 }>) {
   if (alreadyAdded) {
@@ -488,8 +519,8 @@ function AddAction({
       type="button"
       variant="secondary"
       className={styles.addButton}
-      onClick={() => onAdd(item)}
-      disabled={adding}
+      onClick={(e) => onAdd(item, e.currentTarget)}
+      disabled={blocked}
       aria-label={labels.aria(item.title)}
     >
       <Plus size={ICON_SIZE.md} aria-hidden />

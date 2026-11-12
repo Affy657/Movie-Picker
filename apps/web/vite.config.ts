@@ -356,22 +356,22 @@ export default defineConfig(({ mode }) => {
           prefer_related_applications: false,
           icons: [
             {
-              src: '/icons/pwa-64x64.png',
+              src: '/icons/clap-64x64.png',
               sizes: '64x64',
               type: 'image/png',
             },
             {
-              src: '/icons/pwa-192x192.png',
+              src: '/icons/clap-192x192.png',
               sizes: '192x192',
               type: 'image/png',
             },
             {
-              src: '/icons/pwa-512x512.png',
+              src: '/icons/clap-512x512.png',
               sizes: '512x512',
               type: 'image/png',
             },
             {
-              src: '/icons/pwa-512x512-maskable.png',
+              src: '/icons/clap-512x512-maskable.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable',

@@ -26,14 +26,24 @@ describe('prefetchHomeShowcase', () => {
       showcaseQueryKey({ section: 'provider', provider: PROVIDER_KEYS[0] }),
       showcaseQueryKey({ section: 'trending', genreIds: undefined }),
       showcaseQueryKey({ section: 'now-playing' }),
-      showcaseQueryKey({ section: 'theme', theme: THEME_KEYS[0] }),
       showcaseQueryKey({ section: 'most-proposed' }),
+      ['movies', 'showcase', 'themes'],
       ['movies', 'collections'],
     ];
     for (const key of keys) {
       expect(client.getQueryState(key)?.fetchStatus, key.join('/')).toBe('fetching');
     }
-    expect(HOME_SHOWCASE_QUERIES).toHaveLength(5);
+    expect(HOME_SHOWCASE_QUERIES).toHaveLength(4);
+  });
+
+  it('no longer warms up a single theme selection the home does not show', () => {
+    const client = createTestQueryClient();
+
+    prefetchHomeShowcase(client);
+
+    for (const theme of THEME_KEYS) {
+      expect(client.getQueryState(showcaseQueryKey({ section: 'theme', theme }))).toBeUndefined();
+    }
   });
 });
 

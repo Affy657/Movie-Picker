@@ -140,7 +140,7 @@ export default function HistoryEventRow({
         <EventDateBlock date={event.date} />
         <span className={styles.divider} aria-hidden="true" />
         <span className={styles.main}>
-          <h3 className={styles.title}>{event.title}</h3>
+          <h4 className={styles.title}>{event.title}</h4>
           <span className="visually-hidden">
             {formatEventDateLong(event.date, event.time, locale, t('events.detail.dateTimeJoiner'))}
           </span>

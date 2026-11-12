@@ -101,11 +101,11 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1-5);
+  max-width: 100%;
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);
-  line-height: var(--leading-none);
+  line-height: var(--leading-tight);
   color: var(--color-primary-text);
-  white-space: nowrap;
 }
 
 .actionIcon {

@@ -33,6 +33,7 @@
 .searchForm {
   display: flex;
   margin-top: var(--space-1);
+  scroll-margin-top: calc(var(--header-height) + env(safe-area-inset-top, 0px));
 }
 
 .searchField {

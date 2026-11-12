@@ -101,6 +101,14 @@ describe('HomeHero', () => {
     expect(screen.getByRole('search')).toBeInTheDocument();
   });
 
+  it('keeps its h1 out of any sectioning element, so it keeps the size of the start shell title', () => {
+    server.use(authMeGuestHandler, trendingHandler);
+    renderHero();
+
+    const title = screen.getByRole('heading', { name: /on regarde ce soir/i, level: 1 });
+    expect(title.closest('article, aside, nav, section')).toBeNull();
+  });
+
   it('visitor: offers to create a night with the wheel', async () => {
     server.use(authMeGuestHandler, trendingHandler);
     renderHero();
@@ -251,5 +259,50 @@ describe('HomeHero', () => {
     }
     render(<After />);
     expect(afterUnmount).toBe(false);
+  });
+
+  it('counts its search as hidden as soon as the sticky header covers it', () => {
+    let notify: (entries: Partial<IntersectionObserverEntry>[]) => void = () => undefined;
+    let observerOptions: IntersectionObserverInit | undefined;
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        constructor(
+          callback: (entries: Partial<IntersectionObserverEntry>[]) => void,
+          options?: IntersectionObserverInit
+        ) {
+          notify = callback;
+          observerOptions = options;
+        }
+        observe() {}
+        disconnect() {}
+      }
+    );
+    const computedStyle = globalThis.getComputedStyle.bind(globalThis);
+    vi.stubGlobal('getComputedStyle', (element: Element, pseudo?: string | null) =>
+      element instanceof HTMLFormElement
+        ? ({ scrollMarginTop: '57px' } as CSSStyleDeclaration)
+        : computedStyle(element, pseudo)
+    );
+    let hidden = false;
+    function Probe() {
+      hidden = useHomeSearchHidden();
+      return null;
+    }
+    server.use(authMeGuestHandler, trendingHandler);
+    render(
+      <AppTestProviders>
+        <MemoryRouter>
+          <HomeHero />
+          <Probe />
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+
+    expect(observerOptions?.rootMargin).toBe('-57px 0px 0px 0px');
+    act(() => notify([{ isIntersecting: false, boundingClientRect: { top: 8 } as DOMRect }]));
+    expect(hidden).toBe(true);
+    act(() => notify([{ isIntersecting: true, boundingClientRect: { top: 30 } as DOMRect }]));
+    expect(hidden).toBe(false);
   });
 });

@@ -4,6 +4,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Infrastructure;
 using MoviePicker.Api.Infrastructure.BackgroundServices;
@@ -251,6 +252,17 @@ public sealed class ServiceCollectionExtensionsBranchTests
 
         Assert.Equal(expectedEventCount, options.MostProposedMinEventCount);
         Assert.Equal(expectedDistinctMovies, options.MostProposedMinDistinctMovies);
+    }
+
+    [Fact]
+    public void MostProposedDistinctMoviesFloor_NeverExceedsTheRankingSize()
+    {
+        var options = OptionsFrom(new Dictionary<string, string?>
+        {
+            ["MOST_PROPOSED_MIN_DISTINCT_MOVIES"] = "150",
+        });
+
+        Assert.Equal(MovieShowcaseCatalog.MostProposedLimit, options.MostProposedMinDistinctMovies);
     }
 
     [Theory]

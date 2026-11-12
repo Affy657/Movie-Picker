@@ -150,6 +150,16 @@ public sealed class GetMovieShowcaseHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_TmdbAnswersUnreadableBody_ThrowsServiceUnavailable()
+    {
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new System.Text.Json.JsonException("not json"));
+
+        await Assert.ThrowsAsync<ServiceUnavailableException>(
+            () => Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending)));
+    }
+
+    [Fact]
     public async Task HandleAsync_LoadOutlivingItsBudget_AnswersServiceUnavailable()
     {
         _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))

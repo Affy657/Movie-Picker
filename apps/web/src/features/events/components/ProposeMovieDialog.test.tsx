@@ -7,6 +7,7 @@ import { QueryClientWrapper } from '@/test-utils/queryWrapper';
 import type { MovieData } from '@/shared/types/movie';
 import type { MovieSearchItem } from '@/features/movies/api/moviesApi';
 import ProposeMovieDialog from '@/features/events/components/ProposeMovieDialog';
+import styles from '@/features/events/components/ProposeMovieDialog.module.css';
 
 const api = vi.hoisted(() => ({
   searchMovies: vi.fn(),
@@ -31,6 +32,16 @@ vi.mock('@/shared/hooks/useAnalytics', () => ({
 vi.mock('@/features/movies/hooks/useWatchlist', () => ({
   useWatchlist: () => ({
     data: [
+      {
+        tmdbId: 1920,
+        mediaType: 'tv',
+        title: 'Twin Peaks',
+        year: '1990',
+        posterPath: null,
+        voteAverage: 8.6,
+        runtimeMinutes: null,
+        createdAt: '2026-11-05T10:00:00Z',
+      },
       {
         tmdbId: 501,
         mediaType: 'movie',
@@ -95,6 +106,25 @@ const JAWS: MovieSearchItem = {
 
 const MARLEY: MovieSearchItem = { ...JAWS, id: 14306, title: 'Marley & moi', year: '2008' };
 
+const DUNE_DETAILS = {
+  tmdbId: 438631,
+  title: 'Dune',
+  overview: 'Paul Atreides suit sa famille sur Arrakis.',
+  tagline: null,
+  director: null,
+  cast: [],
+  runtimeMinutes: 155,
+  genres: ['Science-fiction'],
+  releaseDate: null,
+  voteAverage: 7.8,
+  posterPath: null,
+  backdropPath: null,
+  seasonCount: null,
+  episodeCount: null,
+  watchProviders: [],
+  tmdbWatchPageUrl: null,
+};
+
 function movie(overrides: Partial<MovieData>): MovieData {
   return {
     id: 'm-x',
@@ -144,7 +174,7 @@ function renderDialog(overrides: Partial<Parameters<typeof ProposeMovieDialog>[0
     participant: { participantId: 'p-me', pseudo: 'Sofia' },
     movies: NIGHT_MOVIES,
     onChanged: vi.fn(),
-    onVote: vi.fn(),
+    onVote: vi.fn(() => Promise.resolve()),
     ...overrides,
   };
   render(
@@ -271,24 +301,7 @@ describe('ProposeMovieDialog', () => {
   });
 
   it('opens a preview from the title and proposes with a word to convince', async () => {
-    api.fetchMovieDetails.mockResolvedValue({
-      tmdbId: 438631,
-      title: 'Dune',
-      overview: 'Paul Atreides suit sa famille sur Arrakis.',
-      tagline: null,
-      director: null,
-      cast: [],
-      runtimeMinutes: 155,
-      genres: ['Science-fiction'],
-      releaseDate: null,
-      voteAverage: 7.8,
-      posterPath: null,
-      backdropPath: null,
-      seasonCount: null,
-      episodeCount: null,
-      watchProviders: [],
-      tmdbWatchPageUrl: null,
-    });
+    api.fetchMovieDetails.mockResolvedValue(DUNE_DETAILS);
     const user = userEvent.setup();
     renderDialog();
     await search(user, 'dune');
@@ -298,7 +311,9 @@ describe('ProposeMovieDialog', () => {
     expect(
       await screen.findByText('Paul Atreides suit sa famille sur Arrakis.')
     ).toBeInTheDocument();
-    await user.type(screen.getByLabelText(/Un mot pour convaincre/), 'Le désert en grand écran');
+    const pitch = screen.getByLabelText(/Un mot pour convaincre/);
+    expect(pitch).toHaveClass('input');
+    await user.type(pitch, 'Le désert en grand écran');
     await user.click(screen.getByRole('button', { name: 'Proposer à la soirée' }));
 
     await waitFor(() =>
@@ -317,5 +332,164 @@ describe('ProposeMovieDialog', () => {
     await user.click(screen.getAllByRole('button', { name: 'Fermer' }).at(-1)!);
 
     expect(props.onClose).toHaveBeenCalled();
+  });
+
+  it('leaves the series of my watchlist out when the night only takes movies', () => {
+    renderDialog();
+
+    const list = screen.getByRole('list', { name: 'Dans ma liste' });
+    expect(list).not.toHaveTextContent('Twin Peaks');
+  });
+
+  it('offers the series of my watchlist when the night takes them', () => {
+    renderDialog({ allowSeries: true });
+
+    const rows = within(screen.getByRole('list', { name: 'Dans ma liste' })).getAllByRole(
+      'listitem'
+    );
+    expect(rows).toHaveLength(3);
+    expect(rows[0]).toHaveTextContent('Twin Peaks');
+  });
+
+  it('keeps the confirmation zone mounted in the footer before it has anything to say', async () => {
+    const user = userEvent.setup();
+    renderDialog();
+    const live = document.querySelector(`.${styles.footer} output`);
+    expect(live).not.toBeNull();
+    expect(live).toBeEmptyDOMElement();
+    await search(user, 'dune');
+
+    await user.click(await screen.findByRole('button', { name: 'Proposer « Dune »' }));
+
+    await waitFor(() => expect(live).toHaveTextContent('« Dune » est proposé à la soirée.'));
+    expect(live).toBeInTheDocument();
+  });
+
+  it('shows a failed proposal in the footer, in place of the confirmation', async () => {
+    api.addMovieToEvent.mockRejectedValueOnce(
+      new Error('Limite de 3 proposition(s) par participant atteinte.')
+    );
+    const user = userEvent.setup();
+    renderDialog();
+    await search(user, 'dune');
+
+    await user.click(await screen.findByRole('button', { name: 'Proposer « Dune »' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Limite de 3 proposition(s) par participant atteinte.'
+      )
+    );
+    expect(screen.getByRole('alert').closest(`.${styles.footer}`)).not.toBeNull();
+    expect(screen.queryByText(/est proposé à la soirée/)).not.toBeInTheDocument();
+  });
+
+  it('shows a failed undo in the footer', async () => {
+    api.removeMovieFromEvent.mockRejectedValueOnce(new Error('Réseau indisponible'));
+    const user = userEvent.setup();
+    renderDialog();
+    await search(user, 'dune');
+    await user.click(await screen.findByRole('button', { name: 'Proposer « Dune »' }));
+
+    await user.click(await screen.findByRole('button', { name: 'Annuler' }));
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Réseau indisponible'));
+    expect(screen.getByRole('alert').closest(`.${styles.footer}`)).not.toBeNull();
+  });
+
+  it('greys the proposals out once I reached the limit of the night', () => {
+    renderDialog({ maxProposals: 1 });
+
+    expect(screen.getByRole('button', { name: 'Proposer « Past Lives »' })).toBeDisabled();
+    expect(screen.getByText('Limite atteinte : 1 film proposé par personne')).toBeInTheDocument();
+  });
+
+  it('shows a vote in progress on its button, then a failed vote in the footer', async () => {
+    let failVote: (reason: unknown) => void = () => undefined;
+    const onVote = vi.fn(
+      () =>
+        new Promise<void>((_, reject) => {
+          failVote = reject;
+        })
+    );
+    const user = userEvent.setup();
+    renderDialog({ onVote });
+    await search(user, 'dents');
+    const results = await screen.findByRole('list', { name: 'Résultats de la recherche' });
+    const jaws = within(results).getAllByRole('listitem')[0]!;
+    const vote = within(jaws).getByRole('button', { name: 'Voter pour « Les Dents de la mer »' });
+
+    await user.click(vote);
+
+    expect(vote).toHaveAttribute('aria-busy', 'true');
+    failVote(new Error('La roue a déjà été lancée : les votes sont figés.'));
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'La roue a déjà été lancée : les votes sont figés.'
+      )
+    );
+    expect(screen.getByRole('alert').closest(`.${styles.footer}`)).not.toBeNull();
+    expect(vote).not.toHaveAttribute('aria-busy');
+  });
+
+  it('names a vote I already cast like any vote and lets the pressed state tell it', async () => {
+    const user = userEvent.setup();
+    renderDialog({
+      movies: [
+        movie({ id: 'm-jaws', tmdbId: 578, title: 'Les Dents de la mer', myVote: 1 }),
+        ...NIGHT_MOVIES.slice(1),
+      ],
+    });
+    await search(user, 'dents');
+    const results = await screen.findByRole('list', { name: 'Résultats de la recherche' });
+    const jaws = within(results).getAllByRole('listitem')[0]!;
+
+    const vote = within(jaws).getByRole('button', { name: 'Voter pour « Les Dents de la mer »' });
+    expect(vote).toHaveAttribute('aria-pressed', 'true');
+    expect(vote).toHaveTextContent('Voté');
+  });
+
+  it('takes the streaming offers of the preview from the movie details when the search did not look them up', async () => {
+    let answerDetails: (details: unknown) => void = () => undefined;
+    api.fetchMovieDetails.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          answerDetails = resolve;
+        })
+    );
+    api.searchMovies.mockResolvedValue(searchResponse([{ ...DUNE, watchProviders: null }]));
+    const user = userEvent.setup();
+    renderDialog();
+    await search(user, 'dune');
+
+    await user.click(await screen.findByRole('button', { name: 'Voir la fiche de « Dune »' }));
+
+    expect(screen.queryByText('Pas en streaming pour l’instant.')).not.toBeInTheDocument();
+    answerDetails({
+      ...DUNE_DETAILS,
+      watchProviders: [{ providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' }],
+    });
+    expect(await screen.findByRole('img', { name: /Netflix/ })).toBeInTheDocument();
+    expect(screen.queryByText('Pas en streaming pour l’instant.')).not.toBeInTheDocument();
+  });
+
+  it('opens the preview at its top with the focus on its title, and comes back where I was', async () => {
+    api.fetchMovieDetails.mockResolvedValue(DUNE_DETAILS);
+    const user = userEvent.setup();
+    renderDialog();
+    await search(user, 'dune');
+    const scroller = document.querySelector<HTMLElement>(`.${styles.scroll}`)!;
+    const opener = await screen.findByRole('button', { name: 'Voir la fiche de « Dune »' });
+    scroller.scrollTop = 240;
+
+    await user.click(opener);
+
+    expect(await screen.findByRole('heading', { name: 'Dune' })).toHaveFocus();
+    expect(scroller.scrollTop).toBe(0);
+
+    await user.click(screen.getByRole('button', { name: 'Retour' }));
+
+    expect(scroller.scrollTop).toBe(240);
+    expect(opener).toHaveFocus();
   });
 });

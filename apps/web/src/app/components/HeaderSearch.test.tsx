@@ -112,6 +112,27 @@ describe('HeaderSearch', () => {
     expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
   });
 
+  it('keeps the covered loupe out of the tab order while the search is open', async () => {
+    stubMatchMedia((query) => query.includes('max-width'));
+    render(
+      <LocaleProvider>
+        <MemoryRouter initialEntries={['/']}>
+          <button type="button">Logo</button>
+          <HeaderSearch />
+        </MemoryRouter>
+      </LocaleProvider>
+    );
+    act(() => setHomeSearchHidden(true));
+    await userEvent.click(loupe() as HTMLElement);
+    expect(screen.getByRole('searchbox', { name: 'Chercher un film' })).toHaveFocus();
+
+    await userEvent.tab({ shift: true });
+
+    expect(screen.getByRole('button', { name: 'Logo' })).toHaveFocus();
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+    expect(loupe()).not.toHaveAttribute('tabindex');
+  });
+
   it('closes when the focus leaves the search', async () => {
     stubMatchMedia((query) => query.includes('max-width'));
     render(

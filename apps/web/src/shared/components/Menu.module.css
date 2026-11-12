@@ -120,7 +120,7 @@
 .choices {
   display: inline-flex;
   flex-shrink: 0;
-  gap: var(--space-0-5);
+  gap: var(--space-3);
   padding: var(--space-0-5);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-pill);

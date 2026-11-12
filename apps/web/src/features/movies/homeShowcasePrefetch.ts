@@ -6,16 +6,16 @@ import {
   SHOWCASE_STALE_TIME,
   fetchMovieCollections,
   fetchMovieShowcase,
+  fetchShowcaseThemes,
   showcaseQueryKey,
   type ShowcaseQuery,
 } from '@/features/movies/api/showcaseApi';
-import { PROVIDER_KEYS, THEME_KEYS } from '@/features/movies/showcaseSections';
+import { PROVIDER_KEYS } from '@/features/movies/showcaseSections';
 
 export const HOME_SHOWCASE_QUERIES: ReadonlyArray<ShowcaseQuery> = [
   { section: 'provider', provider: PROVIDER_KEYS[0] },
   { section: 'trending' },
   { section: 'now-playing' },
-  { section: 'theme', theme: THEME_KEYS[0] },
   { section: 'most-proposed' },
 ];
 
@@ -27,6 +27,11 @@ export function prefetchHomeShowcase(queryClient: QueryClient): void {
       staleTime: SHOWCASE_STALE_TIME,
     });
   }
+  void queryClient.prefetchQuery({
+    queryKey: ['movies', 'showcase', 'themes'] as const,
+    queryFn: ({ signal }) => fetchShowcaseThemes(signal),
+    staleTime: SHOWCASE_STALE_TIME,
+  });
   void queryClient.prefetchQuery({
     queryKey: ['movies', 'collections'] as const,
     queryFn: ({ signal }) => fetchMovieCollections(signal),

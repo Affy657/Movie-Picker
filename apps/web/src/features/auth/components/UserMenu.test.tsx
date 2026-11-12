@@ -71,6 +71,7 @@ describe('UserMenu', () => {
     expect(profile).toHaveAttribute('href', '/u/alice');
     expect(profile).toHaveTextContent('Alice');
     expect(profile).toHaveTextContent('@alice');
+    expect(screen.getAllByRole('menuitem')[0]).toBe(profile);
     expect(screen.getByRole('menuitem', { name: /paramètres/i })).toHaveAttribute(
       'href',
       '/settings'
@@ -87,9 +88,9 @@ describe('UserMenu', () => {
     );
     const labels = screen
       .getAllByRole('menuitem')
+      .slice(1)
       .map((item) => item.getAttribute('aria-label') ?? item.textContent);
     expect(labels).toEqual([
-      'Voir mon profil public',
       'Paramètres',
       'Nouveautés',
       'Envoyer un retour',
@@ -97,6 +98,19 @@ describe('UserMenu', () => {
       'Soutenir le projet',
       'Se déconnecter',
     ]);
+  });
+
+  it('names the profile entry by its visible name and handle first', async () => {
+    const user = userEvent.setup();
+    renderMenu();
+
+    await user.click(screen.getByRole('button', { name: /menu du compte/i }));
+
+    const profile = screen.getByRole('menuitem', { name: /voir mon profil public/i });
+    expect(profile).not.toHaveAttribute('aria-label');
+    expect(profile).toHaveAccessibleName(
+      /^Alice\s*@alice, profil public\s*Voir mon profil public$/
+    );
   });
 
   it('puts the focus on the profile when opening', async () => {

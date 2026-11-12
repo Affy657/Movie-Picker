@@ -58,8 +58,24 @@ function SelectionBar({ wheel, t }: Readonly<{ wheel: EventWheelState; t: Transl
   );
 }
 
-function ActionLabel({ children, dense }: Readonly<{ children: ReactNode; dense: boolean }>) {
-  return <span className={clsx(styles.label, dense && styles.denseLabel)}>{children}</span>;
+type LabelFit = 'shown' | 'tablet' | 'dense';
+
+function secondaryLabelFit(dense: boolean): LabelFit {
+  return dense ? 'dense' : 'tablet';
+}
+
+function ActionLabel({ children, fit }: Readonly<{ children: ReactNode; fit: LabelFit }>) {
+  return (
+    <span
+      className={clsx(
+        styles.label,
+        fit === 'dense' && styles.denseLabel,
+        fit === 'tablet' && styles.tabletLabel
+      )}
+    >
+      {children}
+    </span>
+  );
 }
 
 function ManageMenu({
@@ -87,10 +103,10 @@ function ManageMenu({
         variant={menu.open ? 'soft' : 'secondary'}
         className={styles.action}
         disabled={wheel.loading}
-        title={dense ? label : undefined}
+        title={label}
       >
         <SlidersHorizontal size={ICON_SIZE.md} aria-hidden />
-        <ActionLabel dense={dense}>{label}</ActionLabel>
+        <ActionLabel fit={secondaryLabelFit(dense)}>{label}</ActionLabel>
         <ChevronDown size={ICON_SIZE.sm} aria-hidden className={styles.menuChevron} />
       </Button>
       {menu.open ? (
@@ -156,6 +172,7 @@ function DrawSplitButton({
     'events.wheel.remainingDrawsMany',
     t
   );
+  const countTitle = showCount ? remaining : undefined;
   const disabled = wheel.loading || wheel.spinDisabled;
   const otherWays = t('events.wheel.otherWaysLabel');
 
@@ -170,13 +187,13 @@ function DrawSplitButton({
         className={clsx(styles.action, styles.splitMain)}
         onClick={wheel.launch}
         disabled={disabled}
-        title={wheel.spinDisabledHint ?? (showCount ? remaining : undefined)}
+        title={wheel.spinDisabledHint ?? (primary ? countTitle : drawLabel)}
         aria-label={showCount ? `${drawLabel}, ${remaining}` : undefined}
       >
         <Disc3 size={ICON_SIZE.md} aria-hidden />
-        <span className={styles.label}>
+        <ActionLabel fit={primary ? 'shown' : 'tablet'}>
           {wheel.loading ? t('events.wheel.spinning') : drawLabel}
-        </span>
+        </ActionLabel>
         {showCount ? (
           <span className={styles.spinCount} aria-hidden>
             <span>{wheel.remainingDraws}</span>
@@ -262,7 +279,6 @@ function AddMovieButton({
   t: Translate;
 }>) {
   const primary = weight === 'primary';
-  const iconOnly = dense && !primary;
   const label = t('movies.search.label');
   return (
     <Button
@@ -271,10 +287,10 @@ function AddMovieButton({
       variant={primary ? 'primary' : 'secondary'}
       className={clsx(styles.action, primary && styles.grow)}
       onClick={onAddMovie}
-      title={iconOnly ? label : undefined}
+      title={primary ? undefined : label}
     >
       <Plus size={ICON_SIZE.md} aria-hidden />
-      <ActionLabel dense={iconOnly}>{label}</ActionLabel>
+      <ActionLabel fit={primary ? 'shown' : secondaryLabelFit(dense)}>{label}</ActionLabel>
     </Button>
   );
 }

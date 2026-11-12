@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-090`.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-091`.
 5. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
 7. **Contraintes** (ce qui casse en silence si on y touche) et **Impasses** (essayé, mesuré, sans gain), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
@@ -508,6 +508,17 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - verify: `grep -n "PublishableAppVersionPattern = new" apps/api-dotnet/MoviePicker.Api/Application/UseCases/IdeaSuggestions/CreateIdeaSuggestionHandler.cs`
 - fix: une regex générée (`[GeneratedRegex]`, comme les autres motifs du dépôt sous `SYSLIB1045`) ou un contrôle sans regex de la forme `x.y.z`, et un délai qui laisse de la marge à une machine chargée
 - fini-quand: plus de regex interprétée à 100 ms dans ce handler, et la suite API passe sous charge
+
+## DEBT-090 les aperçus de Mes soirées lisent tous les films et tous les participants de chaque soirée de la page
+
+- state: differe
+- declencheur: une soirée active à plus d'une centaine de films ou de participants, ou une latence p95 de `GET /me/events?scope=active` qui monte
+- impact: pour garder trois affiches et quatre pseudos par soirée, `ListMyEventsHandler.LoadPreviewsAsync` charge tous les films et tous les participants des soirées de la page, puis agrège les votes sur tous ces films. Au plafond (1 000 films, 500 participants, `limit` à 100), une requête lit 100 000 films. `scope=active` sert aussi l'accueil (`useNextEvent`) et la fenêtre « Proposer un film » (`useEligibleEventsForPropose`), qui n'affichent pas ces aperçus. Négligeable au volume mesuré le 2026-11-10.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/ListMyEvents/ListMyEventsHandler.cs` (`LoadPreviewsAsync`), `MongoMovieRepository.ListByEventIdsAsync`, `MongoParticipantRepository.ListByEventIdsAsync`
+- verify: `grep -n "_participantRepository.ListByEventIdsAsync(eventIds" apps/api-dotnet/MoviePicker.Api/Application/UseCases/ListMyEvents/ListMyEventsHandler.cs` ; encore ouvert tant que la liste complète est lue
+- fix: participants par agrégation `$match` / `$sort createdAt` / `$group` avec `$firstN: 4` (les participations du lecteur par `ListByUserIdAsync`, index `userId`) ; films projetés sur `_id`, `eventId`, `title`, `posterPath`, `createdAt` ; un paramètre `previews=false` pour les deux appelants qui ne les montrent pas
+- piege: l'adaptateur InMemory doit suivre la même forme, et `test:api:mongo` est le seul à exécuter l'agrégation
+- fini-quand: la lecture d'une page de Mes soirées ne dépend plus du nombre de films ni de participants des soirées
 
 ---
 

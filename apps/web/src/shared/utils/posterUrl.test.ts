@@ -85,10 +85,19 @@ describe('tmdbPosterSrcSetForList', () => {
 });
 
 describe('posterSrcAtSize', () => {
-  it('asks the API relay for another size', () => {
+  it('leaves an API relay poster at w500, the only size the relay serves', () => {
     expect(
       posterSrcAtSize('https://api.movie-picker.fr/api/v1/posters/tmdb/w500/abc.jpg', 'w154')
-    ).toBe('https://api.movie-picker.fr/api/v1/posters/tmdb/w154/abc.jpg');
+    ).toBe('https://api.movie-picker.fr/api/v1/posters/tmdb/w500/abc.jpg');
+  });
+
+  it('only rewrites the size of a poster served by image.tmdb.org', () => {
+    expect(posterSrcAtSize('https://example.com/t/p/w500/abc.jpg', 'w154')).toBe(
+      'https://example.com/t/p/w500/abc.jpg'
+    );
+    expect(posterSrcAtSize('http://image.tmdb.org/t/p/w500/abc.jpg', 'w154')).toBe(
+      'http://image.tmdb.org/t/p/w500/abc.jpg'
+    );
   });
 
   it('asks TMDB for another size', () => {
