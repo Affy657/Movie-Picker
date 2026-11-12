@@ -9,7 +9,7 @@ import type { LocaleCode } from '@/shared/i18n/locales';
 import type { WatchProviderOffer } from '@/shared/types/movie';
 import type { RatingScale } from '@/shared/types/theme';
 import { safeTmdbWatchUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
-import { isSafeTmdbLogoUrl, tmdbLogoSrcForUi } from '@/shared/utils/tmdbLogo';
+import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import { countLabel, scoreParts, type Audience } from '@/app/pages/movie/moviePageFacts';
 import styles from './MovieHero.module.css';
 
@@ -103,16 +103,6 @@ function Scores({
   );
 }
 
-function ProviderChip({ provider }: Readonly<{ provider: WatchProviderOffer }>) {
-  const logo = isSafeTmdbLogoUrl(provider.logoPath) ? tmdbLogoSrcForUi(provider.logoPath) : null;
-  return (
-    <>
-      {logo ? <img src={logo} alt="" className={styles.providerLogo} loading="lazy" /> : null}
-      {provider.name}
-    </>
-  );
-}
-
 function Streaming({ view, t }: Readonly<{ view: MovieHeroView; t: Translate }>) {
   if (!view.detailsLoaded && view.providers.length === 0) return null;
   const href = safeTmdbWatchUrl(view.watchPageUrl);
@@ -123,26 +113,11 @@ function Streaming({ view, t }: Readonly<{ view: MovieHeroView; t: Translate }>)
       {flatrate.length > 0 ? (
         <>
           <span className={styles.streamingLabel}>{t('moviePage.streamingOn')}</span>
-          <ul className={styles.providers}>
-            {flatrate.map((provider) => (
-              <li key={provider.providerId}>
-                {href ? (
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className={styles.provider}
-                  >
-                    <ProviderChip provider={provider} />
-                  </a>
-                ) : (
-                  <span className={styles.provider}>
-                    <ProviderChip provider={provider} />
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
+          <WatchProviderChips
+            providers={flatrate}
+            watchPageUrl={view.watchPageUrl}
+            showTypeIcon={false}
+          />
         </>
       ) : (
         <span className={styles.notStreaming}>
