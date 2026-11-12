@@ -40,7 +40,7 @@ public sealed class CloudRunJsonConsoleFormatterTests
             scopes,
             output);
 
-        return JsonDocument.Parse(output.ToString()).RootElement.Clone();
+        return JsonElement.Parse(output.ToString());
     }
 
     [Theory]

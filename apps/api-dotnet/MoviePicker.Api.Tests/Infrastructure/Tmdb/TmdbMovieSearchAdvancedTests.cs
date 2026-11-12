@@ -277,7 +277,7 @@ public sealed class TmdbMovieSearchAdvancedTests
         {
             var query = System.Web.HttpUtility.ParseQueryString(request.RequestUri!.Query);
             var requested = (query["include_video_language"] ?? "fr").Split(',');
-            var kept = System.Text.Json.JsonDocument.Parse(videos).RootElement.EnumerateArray()
+            var kept = System.Text.Json.JsonElement.Parse(videos).EnumerateArray()
                 .Where(video => requested.Contains(
                     video.GetProperty("iso_639_1").GetString() ?? "null",
                     StringComparer.Ordinal))

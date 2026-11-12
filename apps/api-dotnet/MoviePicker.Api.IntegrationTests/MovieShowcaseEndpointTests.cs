@@ -247,7 +247,7 @@ public sealed class MovieShowcaseEndpointTests : IClassFixture<MoviePickerApplic
         var res = await anon.GetAsync($"/api/v1/movies/showcase{query}");
 
         Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
-        var body = System.Text.Json.JsonDocument.Parse(await res.Content.ReadAsStringAsync()).RootElement;
+        var body = System.Text.Json.JsonElement.Parse(await res.Content.ReadAsStringAsync());
         Assert.Equal(reason, body.GetProperty("reason").GetString());
     }
 

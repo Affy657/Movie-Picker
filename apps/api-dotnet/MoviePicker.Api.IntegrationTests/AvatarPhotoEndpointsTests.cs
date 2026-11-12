@@ -90,7 +90,7 @@ public sealed class AvatarPhotoEndpointsTests : IClassFixture<MoviePickerApplica
         var response = await client.PutAsJsonAsync(Route, Upload(ImageHeaders.Png(64, 64)), Json);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement;
+        var body = JsonElement.Parse(await response.Content.ReadAsStringAsync());
         Assert.Equal(ErrorCodes.AvatarPhotoInvalid, body.GetProperty("reason").GetString());
     }
 
@@ -180,7 +180,7 @@ public sealed class AvatarPhotoEndpointsTests : IClassFixture<MoviePickerApplica
         var response = await client.PatchAsJsonAsync("/api/v1/auth/me", new { useAvatarPhoto = true }, Json);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement;
+        var body = JsonElement.Parse(await response.Content.ReadAsStringAsync());
         Assert.Equal(ErrorCodes.AvatarPhotoNotFound, body.GetProperty("reason").GetString());
     }
 
@@ -195,7 +195,7 @@ public sealed class AvatarPhotoEndpointsTests : IClassFixture<MoviePickerApplica
         var publicProfile = await _factory.CreateClient().GetFromJsonAsync<PublicProfileResponse>($"/api/v1/users/{me!.Handle}", Json);
         Assert.Equal(photoAvatarId, publicProfile!.AvatarId);
 
-        var search = JsonDocument.Parse(await viewer.GetStringAsync($"/api/v1/users/search?q={Uri.EscapeDataString(me.Handle)}")).RootElement;
+        var search = JsonElement.Parse(await viewer.GetStringAsync($"/api/v1/users/search?q={Uri.EscapeDataString(me.Handle)}"));
         Assert.Contains(
             search.GetProperty("items").EnumerateArray(),
             item => item.GetProperty("handle").GetString() == me.Handle

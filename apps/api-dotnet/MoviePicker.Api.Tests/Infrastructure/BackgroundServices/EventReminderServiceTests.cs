@@ -32,8 +32,7 @@ public sealed class EventReminderServiceTests
 
     private async Task AwaitFirstPass()
     {
-        var completed = await Task.WhenAny(_ran.Task, Task.Delay(SignalTimeout));
-        Assert.Same(_ran.Task, completed);
+        await _ran.Task.WaitAsync(SignalTimeout);
     }
 
     [Fact]

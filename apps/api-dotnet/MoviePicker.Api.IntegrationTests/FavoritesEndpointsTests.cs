@@ -111,7 +111,7 @@ public sealed class FavoritesEndpointsTests : IClassFixture<MoviePickerApplicati
         var response = await client.PostAsJsonAsync(Route, Payload(4, "Quatre"), Json);
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
-        var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement;
+        var body = JsonElement.Parse(await response.Content.ReadAsStringAsync());
         Assert.Equal(ErrorCodes.FavoritesLimitReached, body.GetProperty("reason").GetString());
         Assert.Equal(["Un", "Deux", "Trois"], (await MeAsync(client)).Favorites.Select(f => f.Title));
     }

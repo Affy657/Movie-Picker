@@ -76,7 +76,7 @@ public sealed class ErrorContractTests : IClassFixture<MoviePickerApplicationFac
     public ErrorContractTests(MoviePickerApplicationFactory factory) => _factory = factory;
 
     private static async Task<JsonElement> ReadErrorAsync(HttpResponseMessage response) =>
-        JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement.Clone();
+        JsonElement.Parse(await response.Content.ReadAsStringAsync());
 
     [Fact]
     public async Task InvalidBody_AnswersInTheApiErrorFormatWithAStableCode()

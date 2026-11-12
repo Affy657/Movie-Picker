@@ -24,7 +24,7 @@ public sealed class ErrorEnvelopeAndCorrelationIdTests : IClassFixture<MoviePick
         Assert.True(res.Headers.TryGetValues("X-Request-Id", out var ids));
         Assert.Equal("client-req-abc-01", ids.First());
 
-        var json = JsonDocument.Parse(await res.Content.ReadAsStringAsync()).RootElement;
+        var json = JsonElement.Parse(await res.Content.ReadAsStringAsync());
         Assert.Equal("Resource not found", json.GetProperty("error").GetString());
         Assert.Equal(ErrorCodes.NotFound, json.GetProperty("reason").GetString());
         Assert.Equal(404, json.GetProperty("code").GetInt32());
@@ -40,7 +40,7 @@ public sealed class ErrorEnvelopeAndCorrelationIdTests : IClassFixture<MoviePick
         var headerId = headerIds.First();
         Assert.False(string.IsNullOrEmpty(headerId));
 
-        var json = JsonDocument.Parse(await res.Content.ReadAsStringAsync()).RootElement;
+        var json = JsonElement.Parse(await res.Content.ReadAsStringAsync());
         Assert.Equal("Movie night not found", json.GetProperty("error").GetString());
         Assert.Equal(ErrorCodes.EventNotFound, json.GetProperty("reason").GetString());
         Assert.Equal(404, json.GetProperty("code").GetInt32());
