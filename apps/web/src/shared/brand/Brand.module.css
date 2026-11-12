@@ -34,6 +34,12 @@
   animation: clap-spark var(--duration-clap) var(--ease-default) infinite;
 }
 
+.once .bar,
+.once .body,
+.once .spark {
+  animation-iteration-count: 1;
+}
+
 @keyframes clap-bar {
   0% {
     transform: rotate(-11deg);

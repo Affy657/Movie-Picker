@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import type { ComponentType, SVGProps } from 'react';
+import { useState, type ComponentType, type SVGProps } from 'react';
 import { Bookmark, CalendarDays, Compass, HelpCircle, LogIn, Plus, UserRound } from 'lucide-react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { useTranslation, type TranslationKey, type Translate } from '@/shared/i18n';
@@ -98,6 +98,25 @@ function LandingNavItem({ anchor, label }: Readonly<{ anchor: string; label: str
     <a href={`#${anchor}`} className={styles.navLink}>
       {label}
     </a>
+  );
+}
+
+function HeaderBrand({ label }: Readonly<{ label: string }>) {
+  const [clapping, setClapping] = useState(false);
+  return (
+    <Link
+      to={ROUTES.home}
+      className={styles.brand}
+      aria-label={label}
+      onPointerEnter={() => setClapping(true)}
+    >
+      <BrandMark
+        animation={clapping ? 'once' : undefined}
+        onAnimationEnd={() => setClapping(false)}
+        className={styles.brandLogo}
+      />
+      <BrandWordmark className={styles.brandName} />
+    </Link>
   );
 }
 
@@ -221,10 +240,7 @@ export default function AppShell() {
       </a>
       <header className={styles.header}>
         <div className={styles.headerInner}>
-          <Link to={ROUTES.home} className={styles.brand} aria-label={t('nav.brandLabel')}>
-            <BrandMark className={styles.brandLogo} />
-            <BrandWordmark className={styles.brandName} />
-          </Link>
+          <HeaderBrand label={t('nav.brandLabel')} />
           <nav
             className={clsx(styles.navDesktop, isLandingRoute && styles.navLanding)}
             aria-label={t('nav.navLabel')}

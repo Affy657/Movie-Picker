@@ -8,7 +8,7 @@ type BrandLoaderProps = {
 export function BrandLoader({ label }: BrandLoaderProps) {
   return (
     <output className={styles.loader}>
-      <BrandMark animated className={styles.loaderMark} />
+      <BrandMark animation="loop" className={styles.loaderMark} />
       <span className="visually-hidden">{label}</span>
     </output>
   );
