@@ -106,6 +106,16 @@ export async function fetchUserWatchedMovies(
   );
 }
 
+export const WATCHED_MOVIES_TAKE = 200;
+
+export async function fetchUserWatchedMovieItems(
+  handle: string,
+  signal?: AbortSignal
+): Promise<UserWatchedMovieItem[]> {
+  const res = await fetchUserWatchedMovies(handle, WATCHED_MOVIES_TAKE, signal);
+  return res.items;
+}
+
 export interface UserWatchlistItem {
   tmdbId: number;
   mediaType: MovieMediaType;
@@ -136,6 +146,19 @@ export async function fetchUserWatchlist(
     )
   );
   return items.map((item) => ({ ...item, genreIds: item.genreIds ?? [] }));
+}
+
+export const WATCHLIST_PREVIEW_TAKE = 6;
+
+export async function fetchUserWatchlistPreview(
+  handle: string,
+  signal?: AbortSignal
+): Promise<UserWatchlistItem[]> {
+  const page = await fetchApi<UserWatchlistResponse>(
+    `/users/${encodeURIComponent(handle)}/watchlist?skip=0&take=${WATCHLIST_PREVIEW_TAKE}`,
+    { signal }
+  );
+  return page.items.map((item) => ({ ...item, genreIds: item.genreIds ?? [] }));
 }
 
 export async function fetchMyWatchedMovies(

@@ -116,12 +116,14 @@ export default function ProfileActions({
         </Button>
       )}
 
-      <div className={styles.shareGroup}>
-        <Button type="button" className={styles.shareBtn} onClick={() => setShareOpen(true)}>
-          <Share2 size={ICON_SIZE.sm} aria-hidden />
-          {t('share.trigger')}
-        </Button>
-      </div>
+      <Button
+        type="button"
+        className={styles.shareBtn}
+        aria-label={t('share.trigger')}
+        onClick={() => setShareOpen(true)}
+      >
+        <Share2 size={ICON_SIZE.md} aria-hidden />
+      </Button>
 
       <ShareDialog
         open={shareOpen}

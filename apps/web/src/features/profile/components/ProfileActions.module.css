@@ -1,8 +1,7 @@
 .actions {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: var(--space-2);
-  margin-top: var(--space-2);
 }
 
 .primary {
@@ -10,23 +9,21 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-1-5);
-  width: 100%;
   line-height: var(--leading-none);
-}
-
-.shareGroup {
-  display: flex;
-  gap: var(--space-2);
+  white-space: nowrap;
 }
 
 .shareBtn {
-  flex: 1 1 0;
-  min-width: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-1-5);
-  line-height: var(--leading-none);
+  flex: 0 0 auto;
+  width: var(--tap-target-min);
+  padding: 0;
+}
+
+@media (max-width: 47.9375rem) {
+  .primary {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
 }
 
 .btnLabel {

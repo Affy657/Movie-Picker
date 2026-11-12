@@ -5,7 +5,8 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import {
-  fetchUserWatchedMovies,
+  WATCHED_MOVIES_TAKE,
+  fetchUserWatchedMovieItems,
   type UserWatchedMovieItem,
 } from '@/features/profile/api/profileApi';
 import ProfileCollectionPage, {
@@ -13,13 +14,6 @@ import ProfileCollectionPage, {
 } from '@/features/profile/components/ProfileCollectionPage';
 import OwnerRatingBadge from '@/features/profile/components/OwnerRatingBadge';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-
-const MOVIES_TAKE = 200;
-
-async function fetchItems(handle: string, signal: AbortSignal): Promise<UserWatchedMovieItem[]> {
-  const res = await fetchUserWatchedMovies(handle, MOVIES_TAKE, signal);
-  return res.items;
-}
 
 function compareWatchedAt(a: UserWatchedMovieItem, b: UserWatchedMovieItem): number {
   return a.watchedAt.localeCompare(b.watchedAt);
@@ -57,8 +51,8 @@ export default function ProfileMoviesPage() {
   return (
     <ProfileCollectionPage
       handle={handle}
-      queryKey={queryKeys.profile.watchedMovies(handle, MOVIES_TAKE)}
-      fetchItems={fetchItems}
+      queryKey={queryKeys.profile.watchedMovies(handle, WATCHED_MOVIES_TAKE)}
+      fetchItems={fetchUserWatchedMovieItems}
       comparePrimary={compareWatchedAt}
       itemKey={watchedKey}
       canonicalPath={ROUTES.profileMovies}

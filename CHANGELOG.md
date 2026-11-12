@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Changed
+
+- **Le profil public montre d'abord les films** : l'identité et le bouton Suivre en tête, une ligne de chiffres (films vus, soirées, propositions, votes), puis les favoris en grand à côté de la watchlist en affiches et les films vus, chacun une seule fois. Les soirées des six derniers mois et les genres préférés ferment la page, et la flamme n'apparaît que pendant une série en cours.
+
 ## [1.11.0] - 2026-11-12
 
 ### Added

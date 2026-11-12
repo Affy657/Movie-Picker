@@ -13,24 +13,17 @@ interface Props {
 export default function ProfileStreakFlame({ weeks, bestWeeks }: Readonly<Props>) {
   const { t } = useTranslation();
   const gradientId = `streak-flame-${useId().replaceAll(':', '')}`;
-  const isLit = weeks > 0;
-  const showRecord = bestWeeks > weeks;
+
+  if (weeks <= 0) return null;
 
   const weekLabelKey = weeks === 1 ? 'profile.streak.weekLabel' : 'profile.streak.weeksLabel';
-  const currentLabel = isLit ? `${weeks} ${t(weekLabelKey)}` : t('profile.streak.broken');
-
   const recordLabel = t(
     bestWeeks === 1 ? 'profile.streak.recordWeek' : 'profile.streak.recordWeeks',
     { count: String(bestWeeks) }
   );
 
-  const ariaLabel = showRecord ? `${currentLabel}, ${recordLabel}` : currentLabel;
-
   return (
-    <section
-      className={isLit ? styles.streak : `${styles.streak} ${styles.out}`}
-      aria-label={ariaLabel}
-    >
+    <p className={styles.streak}>
       <svg className={styles.flame} viewBox="0 0 64 80" aria-hidden focusable="false">
         <defs>
           <linearGradient id={gradientId} x1="0" y1="1" x2="0" y2="0">
@@ -41,10 +34,10 @@ export default function ProfileStreakFlame({ weeks, bestWeeks }: Readonly<Props>
         </defs>
         <path d={FLAME_PATH} fill={`url(#${gradientId})`} />
       </svg>
-      <span className={styles.textStack} aria-hidden>
-        <span className={styles.current}>{currentLabel}</span>
-        {showRecord && <span className={styles.record}>{recordLabel}</span>}
+      <span className={styles.label}>
+        {weeks} {t(weekLabelKey)}
+        {bestWeeks > weeks && <span className="visually-hidden">, {recordLabel}</span>}
       </span>
-    </section>
+    </p>
   );
 }

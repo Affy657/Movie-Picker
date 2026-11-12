@@ -28,8 +28,7 @@ Tous dans `apps/web/src/styles/01-foundation.css`, sauf ceux propres à la page 
 | Teintes de surface | `--color-surface-hover` (6 %), `-hover-strong` (10 %), `-active` (12 %), `-sunken`, `-translucent`, `--color-bg-tint`, `--color-bg-translucent`, `--color-bg-scrim` (80 %), `--color-bg-veil` (35 %) | remplacent tout `color-mix()` maison sur le texte, le fond ou la surface |
 | Sur affiche | `--color-on-poster-*` | texte, bordures et voiles posés sur une image sombre |
 | Roue | `--color-wheel-0` à `-11` (segments), `--color-wheel-label`, `-label-shadow`, `-divider`, `-hub`, `-hub-stroke`, `-hub-shadow`, `-pointer`, `-pointer-stroke`, `-pointer-shadow` | le canvas les lit par `readCssToken` (`shared/utils/cssToken.ts`) au moment de dessiner, les confettis et la démo de la page d'accueil aussi |
-| Genres | `--color-genre-0` à `-5` | les segments de la barre des genres du profil, lus depuis le TypeScript par leur nom |
-| Série | `--color-streak`, `-soft`, `-bg`, `-border`, `--color-streak-flame-base`, `-middle`, `-tip` | la flamme du profil |
+| Série | `--color-streak`, `-soft`, `-bg`, `-border`, `-fg`, `--color-streak-flame-base`, `-middle`, `-tip` | la pastille de série du profil, visible seulement quand la série est en cours |
 | Pastilles d'accent | `--color-accent-swatch-*` | la couleur d'aperçu de chaque accent dans le sélecteur, indépendante de l'accent actif |
 | Dégradés | `--gradient-accent` (barre d'accent des cartes de formulaire), `--gradient-hero` (fonds sombres de la page d'accueil et de `/tech`) | |
 | Profondeur | `--z-below` à `--z-skip-link` | jamais un nombre, ni en CSS ni dans un objet `style` |
