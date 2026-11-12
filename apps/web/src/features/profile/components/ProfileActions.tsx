@@ -8,6 +8,7 @@ import { absoluteUrl } from '@/shared/seo/siteMeta';
 import type { PublicProfile } from '@/features/profile/api/profileApi';
 import styles from './ProfileActions.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
+import IconButton from '@/shared/components/IconButton';
 import clsx from 'clsx';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
@@ -116,14 +117,14 @@ export default function ProfileActions({
         </Button>
       )}
 
-      <Button
-        type="button"
-        className={styles.shareBtn}
-        aria-label={t('share.trigger')}
+      <IconButton
+        size="lg"
+        ariaLabel={t('share.trigger')}
+        aria-haspopup="dialog"
         onClick={() => setShareOpen(true)}
       >
         <Share2 size={ICON_SIZE.md} aria-hidden />
-      </Button>
+      </IconButton>
 
       <ShareDialog
         open={shareOpen}

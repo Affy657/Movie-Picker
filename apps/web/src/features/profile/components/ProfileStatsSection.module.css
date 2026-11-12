@@ -61,6 +61,14 @@
   white-space: nowrap;
 }
 
+.pendingValue {
+  width: var(--space-10);
+}
+
+.pendingLabel {
+  width: var(--space-14);
+}
+
 .empty {
   margin: 0;
   padding: var(--space-4) 0;
@@ -69,16 +77,9 @@
 }
 
 @media (max-width: 47.9375rem) {
-  .stats {
-    margin-right: calc(var(--space-4) * -1);
-  }
-
   .figures {
-    flex-wrap: nowrap;
-    gap: var(--space-7);
-    padding: var(--space-4) var(--space-4) var(--space-4) 0;
-    overflow-x: auto;
-    scrollbar-width: none;
+    gap: var(--space-4) var(--space-6);
+    padding: var(--space-4) 0;
   }
 
   .value {

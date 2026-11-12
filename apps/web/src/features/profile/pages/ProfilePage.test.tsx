@@ -94,6 +94,62 @@ describe('ProfilePage (MSW)', () => {
     expect(screen.getByRole('button', { name: /^partager$/i })).toBeInTheDocument();
   });
 
+  it('groups the identity of the person in a region named after them', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE))
+    );
+
+    renderProfile('alice');
+
+    const heading = await screen.findByRole('heading', { name: 'Alice', level: 1 });
+    expect(screen.getByRole('region', { name: 'Alice' })).toContainElement(heading);
+  });
+
+  it('offers Share as an icon button that names itself and says it opens a dialog', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE))
+    );
+
+    renderProfile('alice');
+
+    const share = await screen.findByRole('button', { name: /^partager$/i });
+    expect(share).toHaveAttribute('title', 'Partager');
+    expect(share).toHaveAttribute('aria-haspopup', 'dialog');
+  });
+
+  it('counts the watched movies figure from the total of every viewing', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      createUserStatsHandler('alice', { eventsCreated: 4 }),
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              tmdbId: 27205,
+              title: 'Inception',
+              year: '2010',
+              posterPath: null,
+              genreIds: [],
+              mediaType: 'movie',
+              watchedAt: '2026-06-01T00:00:00Z',
+            },
+          ],
+          total: 250,
+        })
+      )
+    );
+
+    renderProfile('alice');
+
+    expect(await screen.findByRole('link', { name: /250\s*films vus/i })).toHaveAttribute(
+      'href',
+      '/u/alice/films'
+    );
+  });
+
   it('affiche un squelette pendant le chargement du profil', () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),

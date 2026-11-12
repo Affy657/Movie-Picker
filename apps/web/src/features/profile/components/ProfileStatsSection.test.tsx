@@ -27,11 +27,16 @@ const BUSY_STATS: UserStats = {
   votesCast: 58,
 };
 
-function renderSection(stats: UserStats, watchedCount?: number) {
+function renderSection(stats: UserStats, watchedCount?: number, watchedPending = false) {
   return render(
     <AppTestProviders>
       <MemoryRouter>
-        <ProfileStatsSection stats={stats} watchedCount={watchedCount} watchedTo="/u/lea/films" />
+        <ProfileStatsSection
+          stats={stats}
+          watchedCount={watchedCount}
+          watchedPending={watchedPending}
+          watchedTo="/u/lea/films"
+        />
       </MemoryRouter>
     </AppTestProviders>
   );
@@ -71,12 +76,21 @@ describe('ProfileStatsSection', () => {
   });
 
   it.each([
-    ['unknown yet', undefined],
+    ['unavailable', undefined],
     ['zero', 0],
   ])('leaves the watched movies figure out while their count is %s', (_label, count) => {
     renderSection(BUSY_STATS, count);
-    expect(screen.getAllByRole('listitem')).toHaveLength(5);
+    expect(screen.getAllByRole('listitem', { hidden: true })).toHaveLength(5);
     expect(screen.queryByText('films vus')).not.toBeInTheDocument();
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  });
+
+  it('keeps the first place for the watched movies figure while their count loads', () => {
+    renderSection(BUSY_STATS, undefined, true);
+    const places = screen.getAllByRole('listitem', { hidden: true });
+    expect(places).toHaveLength(6);
+    expect(places[0]).toHaveAttribute('aria-hidden', 'true');
+    expect(places[0]).toHaveTextContent('');
+    expect(places[1]).toHaveTextContent('12soirées créées');
   });
 });

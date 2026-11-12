@@ -31,7 +31,7 @@ export default function ProfileHeader({
   const { t } = useTranslation();
 
   return (
-    <header className={styles.header} aria-labelledby="profile-heading">
+    <section className={styles.header} aria-labelledby="profile-heading">
       <Avatar
         avatarId={profile.avatarId}
         pseudo={profile.displayName}
@@ -78,6 +78,6 @@ export default function ProfileHeader({
       </div>
 
       <div className={styles.actions}>{children}</div>
-    </header>
+    </section>
   );
 }

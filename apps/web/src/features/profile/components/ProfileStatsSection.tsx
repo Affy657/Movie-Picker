@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { TranslationKey } from '@/shared/i18n/t';
+import { Skeleton } from '@/shared/components/Skeleton';
 import type { UserStats } from '@/features/events/api/userStatsApi';
 import styles from './ProfileStatsSection.module.css';
 
@@ -16,10 +17,16 @@ interface Figure {
 interface Props {
   stats: UserStats;
   watchedCount?: number;
+  watchedPending?: boolean;
   watchedTo: string;
 }
 
-export default function ProfileStatsSection({ stats, watchedCount, watchedTo }: Readonly<Props>) {
+export default function ProfileStatsSection({
+  stats,
+  watchedCount,
+  watchedPending = false,
+  watchedTo,
+}: Readonly<Props>) {
   const { t } = useTranslation();
 
   const figures: Figure[] = [
@@ -76,6 +83,16 @@ export default function ProfileStatsSection({ stats, watchedCount, watchedTo }: 
 
       {hasAnyData ? (
         <ul className={styles.figures}>
+          {watchedPending && (
+            <li className={styles.figure} aria-hidden="true">
+              <span className={styles.value}>
+                <Skeleton variant="text" className={styles.pendingValue} />
+              </span>
+              <span className={styles.label}>
+                <Skeleton variant="text" className={styles.pendingLabel} />
+              </span>
+            </li>
+          )}
           {figures.map((figure) => {
             const label = pluralizeCount(figure.value, figure.one, figure.many, t);
             const content = (
