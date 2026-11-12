@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.11.2] - 2026-11-12
+
 ### Changed
 
 - **Le clap du logo claque au survol** : en haut de chaque page, passer la souris sur le logo fait s'ouvrir et se refermer le clap, une fois, comme pendant un chargement.
@@ -693,7 +695,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.11.1...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.11.2...HEAD
+[1.11.2]: https://github.com/Affy657/Movie-Picker/compare/v1.11.1...v1.11.2
 [1.11.1]: https://github.com/Affy657/Movie-Picker/compare/v1.11.0...v1.11.1
 [1.11.0]: https://github.com/Affy657/Movie-Picker/compare/v1.10.1...v1.11.0
 [1.10.1]: https://github.com/Affy657/Movie-Picker/compare/v1.10.0...v1.10.1
