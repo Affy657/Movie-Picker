@@ -104,4 +104,79 @@ public sealed class GetMovieDetailsHandlerTests
 
         await Assert.ThrowsAsync<ServiceUnavailableException>(() => Build(tmdb).HandleAsync(42, MovieMediaType.Movie));
     }
+
+    private static readonly string[] ProductionCountries = ["GB", "US"];
+
+    private static Mock<ITmdbMovieSearch> TmdbAnswering(TmdbMovieDetailsExtras? extras)
+    {
+        var tmdb = new Mock<ITmdbMovieSearch>();
+        tmdb.Setup(t => t.GetDetailsAsync(27205, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TmdbMovieDetails(
+                27205, "Inception", null, null, "Christopher Nolan", Cast, 148, Genres, GenreIds, "2010-07-16",
+                Extras: extras));
+        return tmdb;
+    }
+
+    [Fact]
+    public async Task HandleAsync_TmdbReturnsTheFilmPageFacts_MapsThemNextToTheModalFields()
+    {
+        var tmdb = TmdbAnswering(new TmdbMovieDetailsExtras(
+            OriginalTitle: "Inception",
+            OriginalLanguage: "en",
+            ProductionCountries: ProductionCountries,
+            Budget: 160_000_000,
+            VoteCount: 37_112,
+            Certification: "12",
+            Collection: new TmdbCollectionReference(1_241, "Inception, la saga"),
+            DirectorId: 525,
+            CastMembers: [new TmdbCastMember("Leonardo DiCaprio", "Cobb", "https://image.tmdb.org/t/p/w185/leo.jpg"), new TmdbCastMember("Elliot Page", null, null)],
+            Crew: [new TmdbCrewCredit(TmdbCrewJobs.Director, "Christopher Nolan"), new TmdbCrewCredit(TmdbCrewJobs.Composer, "Hans Zimmer")],
+            Videos: [new TmdbVideo("abc", "Bande-annonce VF", "Trailer", "fr"), new TmdbVideo("def", "Clip", "Clip", null)]));
+
+        var result = await Build(tmdb).HandleAsync(27205, MovieMediaType.Movie);
+
+        Assert.NotNull(result);
+        Assert.Equal("Christopher Nolan", result!.Director);
+        Assert.Equal(Cast, result.Cast);
+        Assert.Equal("Inception", result.OriginalTitle);
+        Assert.Equal("en", result.OriginalLanguage);
+        Assert.Equal(ProductionCountries, result.ProductionCountries);
+        Assert.Equal(160_000_000L, result.Budget);
+        Assert.Equal(37_112, result.VoteCount);
+        Assert.Equal("12", result.Certification);
+        Assert.Equal(1_241, result.Collection!.Id);
+        Assert.Equal("Inception, la saga", result.Collection.Name);
+        Assert.Equal(525, result.DirectorId);
+        Assert.Equal(2, result.CastMembers.Count);
+        Assert.Equal("Leonardo DiCaprio", result.CastMembers[0].Name);
+        Assert.Equal("Cobb", result.CastMembers[0].Character);
+        Assert.Equal("https://image.tmdb.org/t/p/w185/leo.jpg", result.CastMembers[0].ProfilePath);
+        Assert.Null(result.CastMembers[1].Character);
+        Assert.Null(result.CastMembers[1].ProfilePath);
+        Assert.Equal(
+            [(TmdbCrewJobs.Director, "Christopher Nolan"), (TmdbCrewJobs.Composer, "Hans Zimmer")],
+            result.Crew.Select(member => (member.Job, member.Name)));
+        Assert.Equal(2, result.Videos.Count);
+        Assert.Equal(("abc", "Bande-annonce VF", "Trailer", "fr"), (result.Videos[0].Key, result.Videos[0].Name, result.Videos[0].Type, result.Videos[0].Language));
+        Assert.Null(result.Videos[1].Language);
+    }
+
+    [Fact]
+    public async Task HandleAsync_DetailsWithoutFilmPageFacts_AnswersEmptyListsAndNulls()
+    {
+        var result = await Build(TmdbAnswering(null)).HandleAsync(27205, MovieMediaType.Movie);
+
+        Assert.NotNull(result);
+        Assert.Null(result!.OriginalTitle);
+        Assert.Null(result.OriginalLanguage);
+        Assert.Empty(result.ProductionCountries);
+        Assert.Null(result.Budget);
+        Assert.Null(result.VoteCount);
+        Assert.Null(result.Certification);
+        Assert.Null(result.Collection);
+        Assert.Null(result.DirectorId);
+        Assert.Empty(result.CastMembers);
+        Assert.Empty(result.Crew);
+        Assert.Empty(result.Videos);
+    }
 }

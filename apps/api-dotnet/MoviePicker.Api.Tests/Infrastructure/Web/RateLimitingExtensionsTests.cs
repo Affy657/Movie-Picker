@@ -174,6 +174,8 @@ public sealed class RateLimitingExtensionsTests
     [InlineData("?section=recommendations&section=trending&seedTmdbId=27205")]
     [InlineData("?section=trending&genreIds=28,35")]
     [InlineData("?genreIds=28,35")]
+    [InlineData("?section=director&personId=525")]
+    [InlineData("?section=Director&personId=525")]
     public void CreatePartition_ShowcaseOnAFreeKey_GetsItsOwnLowerQuota(string query)
     {
         var partition = ShowcasePartition(query);

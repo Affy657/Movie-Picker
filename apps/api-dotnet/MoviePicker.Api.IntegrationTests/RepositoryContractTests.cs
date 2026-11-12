@@ -757,6 +757,51 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal(ErrorCodes.MovieAlreadyProposed, ex.Reason);
     }
 
+    [Fact]
+    public async Task MoviesOfATitle_AreListedFromTheGivenNightsOnly_AndOnlyForThatMediaType()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var tmdbId = Random.Shared.Next(40_000_000, 50_000_000);
+        var (first, firstParticipant) = await NewEventWithParticipantAsync(scope.ServiceProvider, "Première");
+        var (second, secondParticipant) = await NewEventWithParticipantAsync(scope.ServiceProvider, "Seconde");
+        var (elsewhere, elsewhereParticipant) = await NewEventWithParticipantAsync(scope.ServiceProvider, "Ailleurs");
+        var inFirst = await movies.InsertAsync(NewMovie(first.Id, firstParticipant.Id, tmdbId, "Le film"));
+        await movies.InsertAsync(NewMovie(first.Id, firstParticipant.Id, tmdbId + 1, "Un autre"));
+        var inSecond = await movies.InsertAsync(NewMovie(second.Id, secondParticipant.Id, tmdbId, "Le film"));
+        await movies.InsertAsync(NewMovie(second.Id, secondParticipant.Id, tmdbId, "La série") with { MediaType = MovieMediaType.Tv });
+        await movies.InsertAsync(NewMovie(elsewhere.Id, elsewhereParticipant.Id, tmdbId, "Le film"));
+
+        var listed = await movies.ListByEventIdsAndTmdbIdAsync([first.Id, second.Id], tmdbId, MovieMediaType.Movie);
+
+        Assert.Equal(new[] { inFirst.Id, inSecond.Id }.Order(), listed.Select(movie => movie.Id).Order());
+        Assert.All(listed, movie => Assert.Equal(MovieMediaType.Movie, movie.MediaType));
+        Assert.Empty(await movies.ListByEventIdsAndTmdbIdAsync([], tmdbId, MovieMediaType.Movie));
+        var series = Assert.Single(await movies.ListByEventIdsAndTmdbIdAsync([first.Id, second.Id], tmdbId, MovieMediaType.Tv));
+        Assert.Equal("La série", series.Title);
+    }
+
+    [MongoFact]
+    public async Task MoviesOfATitle_IncludeAFilmStoredBeforeSeriesSupport()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var tmdbId = Random.Shared.Next(50_000_000, 60_000_000);
+        var (evt, participant) = await NewEventWithParticipantAsync(scope.ServiceProvider, "Legacy");
+        var legacy = await movies.InsertAsync(NewMovie(evt.Id, participant.Id, tmdbId, "Legacy film"));
+        await UnsetRawFieldAsync("movies", legacy.Id, "mediaType");
+        var (seriesEvent, seriesParticipant) = await NewEventWithParticipantAsync(scope.ServiceProvider, "Legacy series");
+        var series = await movies.InsertAsync(
+            NewMovie(seriesEvent.Id, seriesParticipant.Id, tmdbId, "Legacy series") with { MediaType = MovieMediaType.Tv });
+        await SetRawFieldAsync("movies", series.Id, "mediaType", " TV ");
+
+        var films = await movies.ListByEventIdsAndTmdbIdAsync([evt.Id, seriesEvent.Id], tmdbId, MovieMediaType.Movie);
+        var seriesList = await movies.ListByEventIdsAndTmdbIdAsync([evt.Id, seriesEvent.Id], tmdbId, MovieMediaType.Tv);
+
+        Assert.Equal(legacy.Id, Assert.Single(films).Id);
+        Assert.Equal(series.Id, Assert.Single(seriesList).Id);
+    }
+
     [MongoFact]
     public async Task MostProposed_CountsAFilmStoredBeforeSeriesSupportWithTheSameFilm()
     {

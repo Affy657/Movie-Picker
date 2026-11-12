@@ -59,6 +59,25 @@ public sealed class InMemoryMovieRepository : IMovieRepository
         return Task.FromResult<IReadOnlyList<Movie>>(movies);
     }
 
+    public Task<IReadOnlyList<Movie>> ListByEventIdsAndTmdbIdAsync(
+        IReadOnlyCollection<string> eventIds,
+        int tmdbId,
+        MovieMediaType mediaType,
+        CancellationToken ct = default)
+    {
+        var movies = new List<Movie>();
+        foreach (var eventId in eventIds.Distinct())
+        {
+            if (!_byEventId.TryGetValue(eventId, out var list))
+                continue;
+            lock (list)
+            {
+                movies.AddRange(list.Where(m => m.TmdbId == tmdbId && m.MediaType == mediaType));
+            }
+        }
+        return Task.FromResult<IReadOnlyList<Movie>>(movies);
+    }
+
     public Task<bool> ExistsByEventAndTmdbIdAsync(
         string eventId,
         int tmdbId,

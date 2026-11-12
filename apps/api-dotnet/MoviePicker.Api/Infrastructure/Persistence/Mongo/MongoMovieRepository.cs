@@ -73,6 +73,22 @@ public sealed class MongoMovieRepository : IMovieRepository
         return list.ConvertAll(MovieMapper.ToDomain);
     }
 
+    public async Task<IReadOnlyList<Movie>> ListByEventIdsAndTmdbIdAsync(
+        IReadOnlyCollection<string> eventIds,
+        int tmdbId,
+        MovieMediaType mediaType,
+        CancellationToken ct = default)
+    {
+        if (eventIds.Count == 0)
+            return [];
+
+        var filter = Builders<MovieDocument>.Filter.And(
+            Builders<MovieDocument>.Filter.In(x => x.EventId, eventIds.Distinct()),
+            Builders<MovieDocument>.Filter.Eq(x => x.TmdbId, tmdbId));
+        var docs = await _collection.Find(filter).SortBy(x => x.Id).ToListAsync(ct);
+        return docs.ConvertAll(MovieMapper.ToDomain).FindAll(movie => movie.MediaType == mediaType);
+    }
+
     public async Task<bool> ExistsByEventAndTmdbIdAsync(
         string eventId,
         int tmdbId,

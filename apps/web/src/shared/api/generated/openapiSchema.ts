@@ -4057,6 +4057,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/movies/tmdb/{tmdbId}/nights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    mediaType?: components["schemas"]["MovieMediaType"];
+                };
+                header?: never;
+                path: {
+                    tmdbId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MovieNightsResponse"];
+                        "application/json": components["schemas"]["MovieNightsResponse"];
+                        "text/json": components["schemas"]["MovieNightsResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/": {
         parameters: {
             query?: never;
@@ -4257,6 +4327,7 @@ export interface paths {
                     provider?: string;
                     seedTmdbId?: number;
                     seedMediaType?: components["schemas"]["MovieMediaType"];
+                    personId?: number;
                 };
                 header?: never;
                 path?: never;
@@ -7647,6 +7718,11 @@ export interface components {
         MarkAsSeenRequest: {
             participantId: string;
         };
+        MovieCastMemberResponse: {
+            name?: string | null;
+            character?: string | null;
+            profilePath?: string | null;
+        };
         MovieCollectionListResponse: {
             items?: components["schemas"]["MovieCollectionResponse"][] | null;
             disclaimer?: string | null;
@@ -7661,6 +7737,15 @@ export interface components {
             /** Format: int32 */
             movieCount?: number;
             previewPosterPaths?: string[] | null;
+        };
+        MovieCrewMemberResponse: {
+            job?: string | null;
+            name?: string | null;
+        };
+        MovieDetailsCollectionResponse: {
+            /** Format: int32 */
+            id?: number;
+            name?: string | null;
         };
         MovieDetailsResponse: {
             /** Format: int32 */
@@ -7686,9 +7771,53 @@ export interface components {
             episodeCount?: number | null;
             watchProviders?: components["schemas"]["WatchProviderOfferResponse"][] | null;
             tmdbWatchPageUrl?: string | null;
+            originalTitle?: string | null;
+            originalLanguage?: string | null;
+            productionCountries?: string[] | null;
+            /** Format: int64 */
+            budget?: number | null;
+            /** Format: int32 */
+            voteCount?: number | null;
+            certification?: string | null;
+            collection?: components["schemas"]["MovieDetailsCollectionResponse"];
+            /** Format: int32 */
+            directorId?: number | null;
+            castMembers?: components["schemas"]["MovieCastMemberResponse"][] | null;
+            crew?: components["schemas"]["MovieCrewMemberResponse"][] | null;
+            videos?: components["schemas"]["MovieVideoResponse"][] | null;
         };
         /** @enum {string} */
         MovieMediaType: "movie" | "tv";
+        MovieNightResponse: {
+            slug?: string | null;
+            title?: string | null;
+            date?: string | null;
+            isWinner?: boolean;
+            isFinished?: boolean;
+            recapSlug?: string | null;
+            proposerPseudo?: string | null;
+        };
+        MovieNightViewerResponse: {
+            pseudo?: string | null;
+            avatarId?: string | null;
+        };
+        MovieNightsRatingResponse: {
+            /** Format: double */
+            average?: number;
+            /** Format: int32 */
+            count?: number;
+        };
+        MovieNightsResponse: {
+            nights?: components["schemas"]["MovieNightResponse"][] | null;
+            /** Format: int32 */
+            proposalCount?: number;
+            /** Format: int32 */
+            winCount?: number;
+            rating?: components["schemas"]["MovieNightsRatingResponse"];
+            seenBy?: components["schemas"]["MovieNightViewerResponse"][] | null;
+            /** Format: int32 */
+            seenCount?: number;
+        };
         MovieRatingResponse: {
             participantId?: string | null;
             /** Format: int32 */
@@ -7751,6 +7880,12 @@ export interface components {
         MovieShowcaseThemeResponse: {
             theme?: string | null;
             posters?: components["schemas"]["MovieShowcasePosterResponse"][] | null;
+        };
+        MovieVideoResponse: {
+            key?: string | null;
+            name?: string | null;
+            type?: string | null;
+            language?: string | null;
         };
         MovieWithScoreResponse: {
             _id?: string | null;

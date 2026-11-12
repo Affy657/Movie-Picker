@@ -203,6 +203,7 @@ public sealed class TmdbMovieSearchTests
         await sut.GetRecommendationsAsync(550, MovieMediaType.Movie);
         await sut.GetRecommendationsAsync(1399, MovieMediaType.Tv);
         await sut.GetCollectionAsync(10);
+        await sut.GetDirectedMoviesAsync(525);
         await sut.GetDetailsAsync(550, MovieMediaType.Movie);
         await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR");
 
@@ -259,6 +260,91 @@ public sealed class TmdbMovieSearchTests
         var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
 
         await Assert.ThrowsAsync<HttpRequestException>(() => sut.GetRecommendationsAsync(550, MovieMediaType.Movie));
+    }
+
+    private static readonly int[] NolanFilmsMostVotedFirst = [11, 10, 13];
+
+    [Fact]
+    public async Task GetDirectedMoviesAsync_ListsTheFilmsThePersonDirected_MostVotedFirst()
+    {
+        var requested = new System.Collections.Concurrent.ConcurrentBag<Uri>();
+        var credits = """
+            {
+              "cast": [{ "id": 1, "title": "Caméo", "poster_path": "/cameo.jpg", "vote_count": 99999 }],
+              "crew": [
+                { "id": 10, "title": "Memento", "release_date": "2000-10-11", "poster_path": "/memento.jpg", "vote_count": 15000, "job": "Director" },
+                { "id": 11, "title": "Inception", "release_date": "2010-07-15", "poster_path": "/inception.jpg", "vote_count": 37000, "job": "Director", "genre_ids": [28] },
+                { "id": 11, "title": "Inception", "release_date": "2010-07-15", "poster_path": "/inception.jpg", "vote_count": 37000, "job": "Screenplay" },
+                { "id": 12, "title": "Doodlebug", "release_date": "1997-01-01", "poster_path": null, "vote_count": 500, "job": "Director" },
+                { "id": 13, "title": "Following", "release_date": "1998-09-12", "poster_path": "/following.jpg", "vote_count": 1500, "job": "Director" },
+                { "id": 11, "title": "Inception", "release_date": "2010-07-15", "poster_path": "/inception.jpg", "vote_count": 37000, "job": "Director" },
+                { "id": 14, "title": "Produit", "release_date": "2014-01-01", "poster_path": "/produced.jpg", "vote_count": 50000, "job": "Producer" }
+              ]
+            }
+            """;
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Returns<HttpRequestMessage, CancellationToken>((req, _) =>
+            {
+                requested.Add(req.RequestUri!);
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(credits) });
+            });
+        var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
+
+        var films = await sut.GetDirectedMoviesAsync(525);
+
+        Assert.Equal(NolanFilmsMostVotedFirst, films.Select(film => film.Id));
+        Assert.All(films, film => Assert.Equal(MovieMediaType.Movie, film.MediaType));
+        var inception = films[0];
+        Assert.Equal("Inception", inception.Title);
+        Assert.Equal("2010", inception.Year);
+        Assert.Equal("https://image.tmdb.org/t/p/w154/inception.jpg", inception.PosterPath);
+        var url = Assert.Single(requested);
+        Assert.Equal("/3/person/525/movie_credits", url.AbsolutePath);
+        Assert.Contains("language=fr-FR", url.Query, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task GetDirectedMoviesAsync_ProlificDirector_KeepsTheTwentyMostVotedFilms()
+    {
+        var crew = string.Join(",", Enumerable.Range(1, 25).Select(i =>
+            $$"""{ "id": {{i}}, "title": "Film {{i}}", "poster_path": "/{{i}}.jpg", "vote_count": {{i * 10}}, "job": "Director" }"""));
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(() => new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent($$"""{"crew":[{{crew}}]}""") });
+        var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
+
+        var films = await sut.GetDirectedMoviesAsync(525);
+
+        Assert.Equal(20, films.Count);
+        Assert.Equal(25, films[0].Id);
+        Assert.Equal(6, films[^1].Id);
+    }
+
+    [Fact]
+    public async Task GetDirectedMoviesAsync_PersonUnknownToTmdb_IsAnEmptyList()
+    {
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(() => new HttpResponseMessage(HttpStatusCode.NotFound));
+        var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
+
+        Assert.Empty(await sut.GetDirectedMoviesAsync(525));
+    }
+
+    [Fact]
+    public async Task GetDirectedMoviesAsync_TmdbDown_StillThrows()
+    {
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(() => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
+        var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => sut.GetDirectedMoviesAsync(525));
     }
 
     [Fact]

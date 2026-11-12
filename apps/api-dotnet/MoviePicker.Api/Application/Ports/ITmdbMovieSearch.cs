@@ -37,7 +37,38 @@ public sealed record TmdbMovieDetails(
     string? PosterUrl = null,
     string? BackdropUrl = null,
     int? SeasonCount = null,
-    int? EpisodeCount = null);
+    int? EpisodeCount = null,
+    TmdbMovieDetailsExtras? Extras = null);
+
+public sealed record TmdbMovieDetailsExtras(
+    string? OriginalTitle,
+    string? OriginalLanguage,
+    IReadOnlyList<string> ProductionCountries,
+    long? Budget,
+    int? VoteCount,
+    string? Certification,
+    TmdbCollectionReference? Collection,
+    int? DirectorId,
+    IReadOnlyList<TmdbCastMember> CastMembers,
+    IReadOnlyList<TmdbCrewCredit> Crew,
+    IReadOnlyList<TmdbVideo> Videos);
+
+public sealed record TmdbCollectionReference(int Id, string Name);
+
+public sealed record TmdbCastMember(string Name, string? Character, string? ProfileUrl);
+
+public sealed record TmdbCrewCredit(string Job, string Name);
+
+public sealed record TmdbVideo(string Key, string Name, string Type, string? Language);
+
+public static class TmdbCrewJobs
+{
+    public const string Creator = "creator";
+    public const string Director = "director";
+    public const string Writer = "writer";
+    public const string Composer = "composer";
+    public const string Photography = "photography";
+}
 
 public sealed record TmdbDiscoveryCriteria(
     IReadOnlyList<int>? GenreIds = null,
@@ -105,4 +136,6 @@ public interface ITmdbMovieSearch
     Task<TmdbCollectionSummary?> GetCollectionAsync(int collectionId, CancellationToken ct = default);
 
     Task<IReadOnlyList<TmdbSearchItem>> GetCollectionMoviesAsync(int collectionId, CancellationToken ct = default);
+
+    Task<IReadOnlyList<TmdbSearchItem>> GetDirectedMoviesAsync(int personId, CancellationToken ct = default);
 }

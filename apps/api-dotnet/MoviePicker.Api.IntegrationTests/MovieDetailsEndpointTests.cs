@@ -62,6 +62,80 @@ public sealed class MovieDetailsEndpointTests : IClassFixture<MoviePickerApplica
     }
 
     [Fact]
+    public async Task GetDetails_FilmPageFacts_AreServedNextToTheModalFields()
+    {
+        var fake = new FakeTmdb
+        {
+            Details = new TmdbMovieDetails(
+                27205, "Inception", null, null, "Christopher Nolan", Cast, 148, Genres, GenreIds, "2010-07-16",
+                TrailerUrl: "https://www.youtube.com/watch?v=abc",
+                Extras: new TmdbMovieDetailsExtras(
+                    OriginalTitle: "Inception",
+                    OriginalLanguage: "en",
+                    ProductionCountries: ["GB", "US"],
+                    Budget: 160_000_000,
+                    VoteCount: 37_112,
+                    Certification: "12",
+                    Collection: new TmdbCollectionReference(1_241, "Inception, la saga"),
+                    DirectorId: 525,
+                    CastMembers: [new TmdbCastMember("Leonardo DiCaprio", null, "https://image.tmdb.org/t/p/w185/leo.jpg")],
+                    Crew: [new TmdbCrewCredit(TmdbCrewJobs.Writer, "Christopher Nolan")],
+                    Videos: [new TmdbVideo("abc", "Bande-annonce VF", "Trailer", "fr")]))
+        };
+        using var client = CreateClientWith(fake);
+
+        var res = await client.GetAsync("/api/v1/movies/tmdb/27205/details?mediaType=movie");
+
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        var body = await res.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+        Assert.Equal("Christopher Nolan", body.GetProperty("director").GetString());
+        Assert.Equal("https://www.youtube.com/watch?v=abc", body.GetProperty("trailerUrl").GetString());
+        Assert.Equal(2, body.GetProperty("cast").GetArrayLength());
+        Assert.Equal("Inception", body.GetProperty("originalTitle").GetString());
+        Assert.Equal("en", body.GetProperty("originalLanguage").GetString());
+        Assert.Equal("GB,US", string.Join(",", body.GetProperty("productionCountries").EnumerateArray().Select(c => c.GetString())));
+        Assert.Equal(160_000_000L, body.GetProperty("budget").GetInt64());
+        Assert.Equal(37_112, body.GetProperty("voteCount").GetInt32());
+        Assert.Equal("12", body.GetProperty("certification").GetString());
+        Assert.Equal(1_241, body.GetProperty("collection").GetProperty("id").GetInt32());
+        Assert.Equal("Inception, la saga", body.GetProperty("collection").GetProperty("name").GetString());
+        Assert.Equal(525, body.GetProperty("directorId").GetInt32());
+        var castMember = Assert.Single(body.GetProperty("castMembers").EnumerateArray());
+        Assert.Equal("Leonardo DiCaprio", castMember.GetProperty("name").GetString());
+        Assert.Equal(JsonValueKind.Null, castMember.GetProperty("character").ValueKind);
+        Assert.Equal("https://image.tmdb.org/t/p/w185/leo.jpg", castMember.GetProperty("profilePath").GetString());
+        var crewMember = Assert.Single(body.GetProperty("crew").EnumerateArray());
+        Assert.Equal("writer", crewMember.GetProperty("job").GetString());
+        Assert.Equal("Christopher Nolan", crewMember.GetProperty("name").GetString());
+        var video = Assert.Single(body.GetProperty("videos").EnumerateArray());
+        Assert.Equal("abc", video.GetProperty("key").GetString());
+        Assert.Equal("Bande-annonce VF", video.GetProperty("name").GetString());
+        Assert.Equal("Trailer", video.GetProperty("type").GetString());
+        Assert.Equal("fr", video.GetProperty("language").GetString());
+    }
+
+    [Fact]
+    public async Task GetDetails_DetailsWithoutFilmPageFacts_ServeEmptyListsAndNulls()
+    {
+        var fake = new FakeTmdb
+        {
+            Details = new TmdbMovieDetails(42, "Sans extras", null, null, null, [], null, [], [], null)
+        };
+        using var client = CreateClientWith(fake);
+
+        var res = await client.GetAsync("/api/v1/movies/tmdb/42/details");
+
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        var body = await res.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+        Assert.Equal(0, body.GetProperty("castMembers").GetArrayLength());
+        Assert.Equal(0, body.GetProperty("crew").GetArrayLength());
+        Assert.Equal(0, body.GetProperty("videos").GetArrayLength());
+        Assert.Equal(0, body.GetProperty("productionCountries").GetArrayLength());
+        Assert.Equal(JsonValueKind.Null, body.GetProperty("collection").ValueKind);
+        Assert.Equal(JsonValueKind.Null, body.GetProperty("certification").ValueKind);
+    }
+
+    [Fact]
     public async Task GetDetails_UnknownId_Returns404()
     {
         var fake = new FakeTmdb { Details = null };
@@ -159,6 +233,9 @@ public sealed class MovieDetailsEndpointTests : IClassFixture<MoviePickerApplica
             => Task.FromResult<IReadOnlyList<TmdbSearchItem>>(Array.Empty<TmdbSearchItem>());
 
         public Task<IReadOnlyList<TmdbSearchItem>> GetRecommendationsAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<TmdbSearchItem>>(Array.Empty<TmdbSearchItem>());
+
+        public Task<IReadOnlyList<TmdbSearchItem>> GetDirectedMoviesAsync(int personId, CancellationToken ct = default)
             => Task.FromResult<IReadOnlyList<TmdbSearchItem>>(Array.Empty<TmdbSearchItem>());
     }
 }

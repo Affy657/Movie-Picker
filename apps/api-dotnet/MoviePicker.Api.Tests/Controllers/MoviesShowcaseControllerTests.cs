@@ -31,9 +31,10 @@ public sealed class MoviesShowcaseControllerTests
         int? collectionId = null,
         string? provider = null,
         int? seedTmdbId = null,
-        MovieMediaType? seedMediaType = null) =>
+        MovieMediaType? seedMediaType = null,
+        int? personId = null) =>
         _controller.GetShowcase(
-            section, theme, genreIds, collectionId, provider, seedTmdbId, seedMediaType, _showcase.Object, CancellationToken.None);
+            section, theme, genreIds, collectionId, provider, seedTmdbId, seedMediaType, personId, _showcase.Object, CancellationToken.None);
 
     [Fact]
     public async Task GetShowcase_WithoutSection_FallsBackToTrending()
@@ -58,7 +59,8 @@ public sealed class MoviesShowcaseControllerTests
             collectionId: 10,
             provider: "netflix",
             seedTmdbId: 27_205,
-            seedMediaType: MovieMediaType.Tv);
+            seedMediaType: MovieMediaType.Tv,
+            personId: 525);
 
         Assert.Equal(MovieShowcaseSections.Theme, _captured!.Section);
         Assert.Equal("frissons", _captured.Theme);
@@ -66,6 +68,7 @@ public sealed class MoviesShowcaseControllerTests
         Assert.Equal("netflix", _captured.Provider);
         Assert.Equal(27_205, _captured.SeedTmdbId);
         Assert.Equal(MovieMediaType.Tv, _captured.SeedMediaType);
+        Assert.Equal(525, _captured.PersonId);
     }
 
     [Theory]
