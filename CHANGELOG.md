@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.11.1] - 2026-11-12
+
 ### Changed
 
 - **Le profil public montre d'abord les films** : l'identité et le bouton Suivre en tête, une ligne de chiffres (films vus, soirées, propositions, votes), puis les favoris en grand à côté de la watchlist en affiches et les films vus, chacun une seule fois. Les soirées des six derniers mois et les genres préférés ferment la page, et la flamme n'apparaît que pendant une série en cours.
@@ -687,7 +689,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.11.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.11.1...HEAD
+[1.11.1]: https://github.com/Affy657/Movie-Picker/compare/v1.11.0...v1.11.1
 [1.11.0]: https://github.com/Affy657/Movie-Picker/compare/v1.10.1...v1.11.0
 [1.10.1]: https://github.com/Affy657/Movie-Picker/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/Affy657/Movie-Picker/compare/v1.9.1...v1.10.0
