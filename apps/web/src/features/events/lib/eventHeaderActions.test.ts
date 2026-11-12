@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { eventHeaderActions, type EventHeaderActionsInput } from './eventHeaderActions';
+import {
+  eventHeaderActions,
+  hasHeaderActions,
+  type EventHeaderActionsInput,
+} from './eventHeaderActions';
 
 const host: EventHeaderActionsInput = {
   isHost: true,
@@ -103,5 +107,43 @@ describe('eventHeaderActions', () => {
         remainingDraws: 0,
       })
     ).toEqual({ addMovie: null, draw: null, manage: null, chosen: false });
+  });
+
+  it('leaves the header without an action bar when the plan offers nothing', () => {
+    const finishedForAGuest = eventHeaderActions({
+      ...guest,
+      isFinished: true,
+      lifecycle: 'finished',
+      canAddMovie: false,
+      noMovie: true,
+    });
+    expect(hasHeaderActions(finishedForAGuest)).toBe(false);
+  });
+
+  it('keeps the action bar as soon as one action is planned', () => {
+    expect(hasHeaderActions(eventHeaderActions(guest))).toBe(true);
+    expect(hasHeaderActions(eventHeaderActions({ ...host, noMovie: true }))).toBe(true);
+    expect(
+      hasHeaderActions(
+        eventHeaderActions({
+          ...host,
+          canAddMovie: false,
+          hasWinner: true,
+          remainingDraws: 0,
+        })
+      )
+    ).toBe(true);
+    expect(
+      hasHeaderActions(
+        eventHeaderActions({
+          ...host,
+          isFinished: true,
+          lifecycle: 'finished',
+          canAddMovie: false,
+          canSpin: false,
+          canReset: true,
+        })
+      )
+    ).toBe(true);
   });
 });

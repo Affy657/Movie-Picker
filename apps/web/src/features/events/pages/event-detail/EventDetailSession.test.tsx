@@ -96,7 +96,15 @@ function serveSignedInAlice() {
   );
 }
 
-function SessionUnderTest({ event }: Readonly<{ event: EventData }>) {
+type SessionViewer = { participantId: string; pseudo: string } | null;
+
+const ALICE: SessionViewer = { participantId: 'p1', pseudo: 'Alice' };
+
+function SessionUnderTest({
+  event,
+  movies = [MOVIE],
+  participant = ALICE,
+}: Readonly<{ event: EventData; movies?: MovieData[]; participant?: SessionViewer }>) {
   return (
     <EventDetailSession
       slug="soiree"
@@ -108,12 +116,12 @@ function SessionUnderTest({ event }: Readonly<{ event: EventData }>) {
           isError: false,
           isSuccess: true,
           error: null,
-          data: [MOVIE],
+          data: movies,
           refetch: () => Promise.resolve() as never,
         } as unknown as UseQueryResult<MovieData[]>
       }
-      movies={[MOVIE]}
-      participant={{ participantId: 'p1', pseudo: 'Alice' }}
+      movies={movies}
+      participant={participant}
       setParticipant={() => undefined}
       actionError={null}
       setActionError={() => undefined}
@@ -122,12 +130,15 @@ function SessionUnderTest({ event }: Readonly<{ event: EventData }>) {
   );
 }
 
-function renderSession(event: EventData) {
+function renderSession(
+  event: EventData,
+  viewer: { movies?: MovieData[]; participant?: SessionViewer } = {}
+) {
   const client = createTestQueryClient();
   const ui = (current: EventData) => (
     <AppTestProviders client={client}>
       <MemoryRouter>
-        <SessionUnderTest event={current} />
+        <SessionUnderTest event={current} {...viewer} />
       </MemoryRouter>
     </AppTestProviders>
   );
@@ -198,5 +209,31 @@ describe('EventDetailSession: the chosen movie and the wheel', () => {
     await waitFor(() =>
       expect(screen.getByRole('dialog', { name: 'Noter ce film' })).toBeInTheDocument()
     );
+  });
+
+  it('lays no empty action bar over the page when nothing is left to do', () => {
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
+      configurable: true,
+      get: () => 17,
+    });
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      }
+    );
+    try {
+      renderSession(
+        { ...EVENT, isFinished: true, lifecycle: 'finished', myParticipant: undefined },
+        { movies: [], participant: null }
+      );
+
+      expect(document.documentElement.style.getPropertyValue('--event-wheel-bar-height')).toBe('');
+    } finally {
+      vi.unstubAllGlobals();
+      delete (HTMLElement.prototype as { offsetHeight?: number }).offsetHeight;
+      document.documentElement.style.removeProperty('--event-wheel-bar-height');
+    }
   });
 });

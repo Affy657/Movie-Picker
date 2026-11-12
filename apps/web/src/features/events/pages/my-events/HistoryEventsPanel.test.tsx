@@ -75,6 +75,18 @@ describe('HistoryEventsPanel', () => {
     expect(screen.getByRole('region', { name: /juillet 2026/i })).toHaveTextContent('1 soirée');
   });
 
+  it('nests the night titles under their month heading', () => {
+    renderPanel();
+
+    const august = screen.getByRole('region', { name: /août 2026/i });
+    expect(within(august).getByRole('heading', { level: 3 })).toHaveTextContent(/août 2026/i);
+    expect(
+      within(august)
+        .getAllByRole('heading', { level: 4 })
+        .map((heading) => heading.textContent)
+    ).toEqual(['Soirée a', 'Soirée b']);
+  });
+
   it('offers no search, filter nor sort', () => {
     renderPanel();
 

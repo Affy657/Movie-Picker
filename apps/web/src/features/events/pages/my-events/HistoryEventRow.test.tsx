@@ -52,7 +52,9 @@ describe('HistoryEventRow', () => {
   it('titles the card with the night and names its movie under it', () => {
     renderRow({ ...base, ...won });
 
-    expect(screen.getByRole('heading', { name: 'Ciné-club du mardi' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Ciné-club du mardi', level: 4 })
+    ).toBeInTheDocument();
     expect(screen.getByText('Le film de la soirée')).toBeInTheDocument();
     expect(screen.getByText('Parasite')).toBeInTheDocument();
   });
@@ -119,7 +121,9 @@ describe('HistoryEventRow', () => {
   it('says the night ended without a movie when nothing won', () => {
     renderRow(base);
 
-    expect(screen.getByRole('heading', { name: 'Ciné-club du mardi' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Ciné-club du mardi', level: 4 })
+    ).toBeInTheDocument();
     expect(screen.getByText('Terminée sans film choisi')).toBeInTheDocument();
     expect(document.querySelectorAll('img')).toHaveLength(0);
   });

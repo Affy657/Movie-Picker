@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import type { MyEventSummary } from '@/features/events/types';
 import { LocaleProvider } from '@/shared/i18n';
+import { eventScheduledStartUtcMs } from '@/shared/utils/eventScheduled';
 import UpcomingEventCard, { upcomingCardPosters } from './UpcomingEventCard';
 
 const base: MyEventSummary = {
@@ -56,6 +57,18 @@ describe('UpcomingEventCard', () => {
     expect(within(link).getByText(/vendredi 16 nov/i)).toBeInTheDocument();
     expect(within(link).getByText('Commence dans')).toHaveTextContent(/Commence dans \d+ j/);
     expect(within(link).getByText('+2')).toBeInTheDocument();
+  });
+
+  it('counts the days to the night on the Paris calendar', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(eventScheduledStartUtcMs({ date: '2026-11-12', time: '21:00' })!);
+    try {
+      renderCard({ ...base, date: '2026-11-14', time: '20:00' });
+
+      expect(screen.getByText('Commence dans')).toHaveTextContent('Commence dans 2 j');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('blurs the first poster behind the card and fans out the posters in list order', () => {

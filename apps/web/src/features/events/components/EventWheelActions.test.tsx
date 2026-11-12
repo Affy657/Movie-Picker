@@ -107,6 +107,23 @@ describe('EventWheelActions', () => {
     ]);
   });
 
+  it('names every secondary action in a tooltip, since tablets show its icon only', () => {
+    renderActions(wheelState());
+    expect(screen.getByRole('button', { name: 'Lancer la roue' })).toHaveAttribute(
+      'title',
+      'Lancer la roue'
+    );
+    expect(screen.getByRole('button', { name: 'Proposer un film' })).not.toHaveAttribute('title');
+  });
+
+  it('names the secondary proposal in a tooltip once the draw leads', () => {
+    renderActions(wheelState(), { lifecycle: 'pending' });
+    expect(screen.getByRole('button', { name: 'Proposer un film' })).toHaveAttribute(
+      'title',
+      'Proposer un film'
+    );
+  });
+
   it('opens the manual pick from the arrow of the wheel button', async () => {
     const enterManualMode = vi.fn();
     renderActions(wheelState({ enterManualMode }));

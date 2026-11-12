@@ -45,6 +45,10 @@ function drawManagement(input: EventHeaderActionsInput): DrawManagement | null {
   return Object.values(management).some(Boolean) ? management : null;
 }
 
+export function hasHeaderActions(plan: EventHeaderActionsPlan): boolean {
+  return !!plan.addMovie || !!plan.draw || !!plan.manage || plan.chosen;
+}
+
 export function eventHeaderActions(input: EventHeaderActionsInput): EventHeaderActionsPlan {
   const draw = drawWeight(input);
   const allDrawn = input.hasWinner && input.remainingDraws === 0;

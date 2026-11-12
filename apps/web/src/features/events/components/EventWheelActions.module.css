@@ -124,7 +124,39 @@
   flex-shrink: 0;
 }
 
+@media (max-width: 63.9375rem) {
+  .denseLabel,
+  .tabletLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .action:has(> .denseLabel) .menuChevron {
+    display: none;
+  }
+}
+
+@media (min-width: 48rem) and (max-width: 63.9375rem) {
+  .action:has(> .tabletLabel) .menuChevron {
+    display: none;
+  }
+}
+
 @media (max-width: 47.9375rem) {
+  .tabletLabel {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    clip-path: none;
+  }
+
   .action {
     padding-left: var(--space-3);
     padding-right: var(--space-3);
@@ -144,21 +176,6 @@
   .split.grow .splitMain {
     flex: 1 1 auto;
     min-width: 0;
-  }
-
-  .denseLabel {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-
-  .action:has(> .denseLabel) .menuChevron {
-    display: none;
   }
 
   .selectionBar {

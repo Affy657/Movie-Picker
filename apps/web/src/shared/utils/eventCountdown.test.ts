@@ -42,10 +42,31 @@ describe('eventCountdown', () => {
       unit: 'days',
       count: 1,
       hours: 0,
+      calendarDays: 1,
     });
     expect(
       eventCountdown('2026-08-19', '19:00', START - 2 * 86_400_000 - 6 * 3_600_000 - 400_000)
-    ).toEqual({ unit: 'days', count: 2, hours: 6 });
+    ).toEqual({ unit: 'days', count: 2, hours: 6, calendarDays: 2 });
+  });
+
+  it('counts the calendar days of Paris, not slices of 24 h', () => {
+    const thursdayNight = eventScheduledStartUtcMs({ date: '2026-11-12', time: '21:00' })!;
+    expect(eventCountdown('2026-11-14', '20:00', thursdayNight)).toEqual({
+      unit: 'days',
+      count: 1,
+      hours: 23,
+      calendarDays: 2,
+    });
+  });
+
+  it('keeps a whole day across the autumn clock change', () => {
+    const saturdayNight = eventScheduledStartUtcMs({ date: '2026-10-24', time: '20:00' })!;
+    expect(eventCountdown('2026-10-25', '20:00', saturdayNight)).toEqual({
+      unit: 'days',
+      count: 1,
+      hours: 0,
+      calendarDays: 1,
+    });
   });
 
   it('affiche encore les heures juste sous les 24 h', () => {
