@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.12.1] - 2026-11-12
+
 ### Fixed
 
 - **En revenant de la page d'un film, la liste reprend là où vous étiez** : recherche, filtres, tri, films déjà chargés et position dans la page dans Explorer et les collections d'un profil, genre et plateforme choisis sur l'accueil, tri de la soirée, et tirage au hasard de votre liste.
@@ -722,7 +724,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.12.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.12.1...HEAD
+[1.12.1]: https://github.com/Affy657/Movie-Picker/compare/v1.12.0...v1.12.1
 [1.12.0]: https://github.com/Affy657/Movie-Picker/compare/v1.11.2...v1.12.0
 [1.11.2]: https://github.com/Affy657/Movie-Picker/compare/v1.11.1...v1.11.2
 [1.11.1]: https://github.com/Affy657/Movie-Picker/compare/v1.11.0...v1.11.1
