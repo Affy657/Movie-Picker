@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.13.0] - 2026-11-13
+
 ### Added
 
 - **Les films proposés et les propositions gagnantes d'un profil s'ouvrent en liste** : sur le profil, toucher « films proposés » ou « propositions gagnantes » affiche les films concernés, chacun une seule fois avec le nombre de fois où il a été proposé ou a gagné, avec la recherche, les filtres et le tri des films vus.
@@ -733,7 +735,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.12.1...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.13.0...HEAD
+[1.13.0]: https://github.com/Affy657/Movie-Picker/compare/v1.12.1...v1.13.0
 [1.12.1]: https://github.com/Affy657/Movie-Picker/compare/v1.12.0...v1.12.1
 [1.12.0]: https://github.com/Affy657/Movie-Picker/compare/v1.11.2...v1.12.0
 [1.11.2]: https://github.com/Affy657/Movie-Picker/compare/v1.11.1...v1.11.2
