@@ -897,18 +897,36 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Publish the release of the deployed version
+          fetch-depth: 0
+      - name: Publish the deployed version and every version merged since the last one
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: |
           set -eo pipefail
-          version="$(node scripts/release.mjs current)"
-          tag="v$version"
-          if gh release view "$tag" >/dev/null 2>&1; then
-            echo "$tag is already published: this deployment carries no new version."
+          current="$(node scripts/release.mjs current)"
+          if gh release view "v$current" >/dev/null 2>&1; then
+            echo "v$current is already published: this deployment carries no new version."
             exit 0
           fi
-          node scripts/release.mjs notes "$version" > "$RUNNER_TEMP/notes.md"
-          gh release create "$tag" --target "$GITHUB_SHA" --title "$tag" --notes-file "$RUNNER_TEMP/notes.md" --latest
-          echo "Published $tag on $GITHUB_SHA."
+          last="$(gh release view --json tagName --jq .tagName)"
+          for version in $(node scripts/release.mjs since "${last#v}"); do
+            tag="v$version"
+            if gh release view "$tag" >/dev/null 2>&1; then
+              continue
+            fi
+            if [ "$version" = "$current" ]; then
+              target="$GITHUB_SHA"
+              latest=true
+            else
+              target="$(git log -1 --format=%H --grep "^chore(release): ${version//./\\.}\$" "$GITHUB_SHA")"
+              latest=false
+            fi
+            if [ -z "$target" ]; then
+              echo "::error::No chore(release): $version commit in the history of $GITHUB_SHA."
+              exit 1
+            fi
+            node scripts/release.mjs notes "$version" > "$RUNNER_TEMP/notes.md"
+            gh release create "$tag" --target "$target" --title "$tag" --notes-file "$RUNNER_TEMP/notes.md" --latest="$latest"
+            echo "Published $tag on $target."
+          done

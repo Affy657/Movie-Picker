@@ -101,12 +101,13 @@ git -C C:/dev/movie-picker/.claude/worktrees/auto-maintenance fetch origin
 git -C C:/dev/movie-picker/.claude/worktrees/auto-maintenance switch -c integrate/auto-maintenance-<AAAA-MM-JJ> origin/master
 git -C C:/dev/movie-picker/.claude/worktrees/auto-maintenance merge --no-ff auto-maintenance/<AAAA-MM-JJ>
 pnpm --dir C:/dev/movie-picker/.claude/worktrees/auto-maintenance run release
+git -C C:/dev/movie-picker/.claude/worktrees/auto-maintenance commit -am "chore(release): X.Y.Z"
 git -C C:/dev/movie-picker/.claude/worktrees/auto-maintenance push origin HEAD:master
 ```
 
-`release` ne fait quelque chose que si `## [Non publié]` de `CHANGELOG.md` liste un changement : un correctif que l'utilisateur peut constater (erreur Sentry ou GCP corrigée, bug d'affichage) y ajoute sa ligne sous `Fixed` ou `Security`, au format des lignes voisines ; une montée de dépendance, une issue Sonar ou une retouche de CI n'y vont pas. S'il annonce une version, la committer (`chore(release): X.Y.Z`) avant le push ; le tag et la release GitHub naissent au déploiement en production.
+`release` ne fait quelque chose que si `## [Non publié]` de `CHANGELOG.md` liste un changement : un correctif que l'utilisateur peut constater (erreur Sentry ou GCP corrigée, bug d'affichage) y ajoute sa ligne sous `Fixed` ou `Security`, au format des lignes voisines ; une montée de dépendance, une issue Sonar ou une retouche de CI n'y vont pas. S'il annonce une version, la committer (`chore(release): X.Y.Z`, la ligne `commit` du bloc ci-dessus) avant le push ; s'il n'en annonce aucune, sauter cette ligne. Le tag et la release GitHub naissent au déploiement en production.
 
-Refus (`cannot lock ref`, non fast-forward) : une autre session a poussé pendant le hook. `git fetch`, nouvelle branche d'intégration, repousser, trois tentatives au plus.
+Refus (`cannot lock ref`, non fast-forward) : une autre session a poussé pendant le hook. `git fetch`, nouvelle branche d'intégration, relancer `release` (jamais deux commits de release empilés ni une version calculée sur l'ancien master), repousser, trois tentatives au plus.
 
 Attendre la fin du run `ci-cd.yml` du SHA poussé (`gh run watch <id> --exit-status` en arrière-plan, une trentaine de minutes). Rouge à cause de la passe : `git revert` des commits de la passe, poussé de la même façon, et notification.
 

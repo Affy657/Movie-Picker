@@ -2,10 +2,13 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   bumpFor,
+  commandOf,
+  freeVersion,
   nextVersion,
   releaseChangelog,
   releaseNotes,
   unreleasedSection,
+  versionsAfter,
   withAppVersion,
 } from './release.mjs';
 
@@ -68,6 +71,26 @@ describe('release bump', () => {
   it('refuses a version that is not x.y.z', () => {
     assert.throws(() => nextVersion('1.7', 'patch'), /1\.7/);
   });
+
+  it('skips a version whose tag is already published, after a reverted release', () => {
+    const published = new Set(['1.11.0']);
+    assert.equal(
+      freeVersion('1.10.1', 'minor', (version) => published.has(version)),
+      '1.12.0'
+    );
+    assert.equal(
+      freeVersion('1.10.1', 'patch', () => false),
+      '1.10.2'
+    );
+  });
+});
+
+describe('release command line', () => {
+  it('ignores the separator pnpm forwards before the arguments', () => {
+    assert.deepEqual(commandOf(['--', '--major']), ['--major', undefined]);
+    assert.deepEqual(commandOf(['notes', '1.7.0']), ['notes', '1.7.0']);
+    assert.deepEqual(commandOf([]), [undefined, undefined]);
+  });
 });
 
 describe('release changelog', () => {
@@ -122,6 +145,21 @@ describe('release changelog', () => {
     const text = changelog(FIXES_ONLY);
     assert.equal(releaseNotes(text, '1.7.0'), '### Added\n\n- **Rating** : rate the movie.');
     assert.equal(releaseNotes(text, '1.6.0'), '### Fixed\n\n- **Wheel** : spins again.');
+  });
+
+  it('lists the versions released after the last published one, oldest first', () => {
+    const text = [
+      '## [Non publié]',
+      '',
+      '## [1.10.0] - 2026-11-12',
+      '## [1.9.1] - 2026-11-11',
+      '## [1.9.0] - 2026-11-11',
+      '## [1.7.10] - 2026-11-11',
+      '## [1.7.0] - 2026-11-06',
+      '## [1.6.0] - 2026-09-12',
+    ].join('\n');
+    assert.deepEqual(versionsAfter(text, '1.7.0'), ['1.7.10', '1.9.0', '1.9.1', '1.10.0']);
+    assert.deepEqual(versionsAfter(text, '1.10.0'), []);
   });
 
   it('refuses to extract the notes of a version the changelog does not list', () => {
