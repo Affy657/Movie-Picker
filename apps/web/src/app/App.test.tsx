@@ -1,11 +1,12 @@
 import { Suspense } from 'react';
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { AppRoutes } from '@/app/App';
+import brandStyles from '@/shared/brand/Brand.module.css';
 import {
   authMeGuestHandler,
   createEventDetailHandlers,
@@ -84,6 +85,33 @@ describe('App (routes)', () => {
         within(banner).queryByRole('link', { name: /^mes soirées$/i })
       ).not.toBeInTheDocument();
       expect(screen.getAllByRole('navigation', { name: /navigation principale/i })).toHaveLength(1);
+    });
+
+    it('AppShell: the header clap plays once when the pointer enters the brand, and again on the next visit', async () => {
+      server.use(authMeGuestHandler);
+      renderRoutes(['/decouvrir']);
+      await screen.findByRole(
+        'heading',
+        { name: /choisissez le film de la soirée/i, level: 1 },
+        { timeout: 20000 }
+      );
+      const brand = within(screen.getByRole('banner')).getByRole('link', {
+        name: 'Movie Picker, accueil',
+      });
+      const mark = brand.querySelector('svg')!;
+      expect(mark).not.toHaveClass(brandStyles.animated!);
+
+      fireEvent.pointerEnter(brand);
+      expect(mark).toHaveClass(brandStyles.animated!, brandStyles.once!);
+
+      fireEvent.pointerEnter(brand);
+      expect(mark).toHaveClass(brandStyles.once!);
+
+      fireEvent.animationEnd(mark.querySelector(`.${brandStyles.bar}`)!);
+      expect(mark).not.toHaveClass(brandStyles.animated!);
+
+      fireEvent.pointerEnter(brand);
+      expect(mark).toHaveClass(brandStyles.once!);
     });
 
     it("route / affiche la home d'exploration, plus la landing", async () => {

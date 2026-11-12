@@ -1,8 +1,28 @@
 import '@testing-library/jest-dom/vitest';
-import { configure } from '@testing-library/react';
 import { beforeEach, vi } from 'vitest';
 import { loadLocale } from '@/shared/i18n';
 
+if (!('AnimationEvent' in window)) {
+  class AnimationEventStub extends Event {
+    readonly animationName: string;
+    readonly elapsedTime: number;
+    readonly pseudoElement: string;
+
+    constructor(type: string, init: AnimationEventInit = {}) {
+      super(type, init);
+      this.animationName = init.animationName ?? '';
+      this.elapsedTime = init.elapsedTime ?? 0;
+      this.pseudoElement = init.pseudoElement ?? '';
+    }
+  }
+  Object.defineProperty(window, 'AnimationEvent', {
+    writable: true,
+    configurable: true,
+    value: AnimationEventStub,
+  });
+}
+
+const { configure } = await import('@testing-library/react');
 configure({ asyncUtilTimeout: 10000 });
 
 await loadLocale('fr');

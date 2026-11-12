@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
 
 import { BrandLoader } from '@/shared/brand/BrandLoader';
 import { BrandMark } from '@/shared/brand/BrandMark';
@@ -41,9 +41,22 @@ describe('BrandMark', () => {
     expect(svg).not.toHaveClass(styles.animated!);
     expect(container.querySelector(`.${styles.spark}`)).toBeNull();
 
-    rerender(<BrandMark animated />);
+    rerender(<BrandMark animation="loop" />);
     expect(svg).toHaveClass(styles.animated!);
+    expect(svg).not.toHaveClass(styles.once!);
     expect(container.querySelector(`.${styles.spark}`)).not.toBeNull();
+  });
+
+  it('plays a single clap and reports when it is over', () => {
+    const onAnimationEnd = vi.fn();
+    const { container } = render(<BrandMark animation="once" onAnimationEnd={onAnimationEnd} />);
+    const svg = container.querySelector('svg')!;
+
+    expect(svg).toHaveClass(styles.animated!, styles.once!);
+    expect(container.querySelector(`.${styles.spark}`)).not.toBeNull();
+
+    fireEvent.animationEnd(container.querySelector(`.${styles.bar}`)!);
+    expect(onAnimationEnd).toHaveBeenCalled();
   });
 });
 

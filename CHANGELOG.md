@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Changed
+
+- **Le clap du logo claque au survol** : en haut de chaque page, passer la souris sur le logo fait s'ouvrir et se refermer le clap, une fois, comme pendant un chargement.
+
 ## [1.11.1] - 2026-11-12
 
 ### Changed
