@@ -135,6 +135,10 @@ function startApiStub(port) {
       );
       return;
     }
+    if (urlPath === '/api/v1/movies/showcase/themes') {
+      res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ items: [] }));
+      return;
+    }
     if (urlPath === '/api/v1/movies/collections') {
       res.writeHead(200, { 'Content-Type': 'application/json' }).end(
         JSON.stringify({
