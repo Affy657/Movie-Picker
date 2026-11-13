@@ -12,7 +12,7 @@ import {
 import ProfileCollectionPage, {
   type ProfileCollectionTexts,
 } from '@/features/profile/components/ProfileCollectionPage';
-import ProfileCardBadge from '@/features/profile/components/ProfileCardBadge';
+import { ProfileCardBadge } from '@/features/profile/components/OwnerRatingBadge';
 
 type ProposalsNamespace = 'proposals' | 'winningProposals';
 
