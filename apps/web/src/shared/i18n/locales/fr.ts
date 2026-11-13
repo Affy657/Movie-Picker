@@ -2676,8 +2676,6 @@ export const fr = {
       nextHint:
         "Une surface qu'on ne sait pas mesurer se mesure avant d'être enrichie : c'est pour cela que la mesure ouvre la liste.",
       nextItem1: 'Mesurer ce qui sert',
-      nextItem2: 'Entrer dans une soirée depuis son lien',
-      nextItem3: 'Description de soirée',
       v2When: 'Sans date annoncée',
       v2What: 'V2',
       v2Detail:

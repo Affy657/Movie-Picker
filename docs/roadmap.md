@@ -35,8 +35,6 @@ Rien pour l'instant.
 ## ⏭️ Prochainement
 
 1. `S` **Mesurer ce qui sert** : savoir combien de personnes notent un film, ouvrent un recap, piochent dans leur watchlist ou synchronisent Letterboxd, et à quelle étape décroche celui qui ouvre le lien d'une soirée, inscriptions comprises. Sans ces chiffres, le reste se trie à l'aveugle.
-2. `?` **Entrer dans une soirée depuis son lien** : aujourd'hui, environ une personne sur dix qui ouvre le lien d'une soirée finit par la rejoindre. Raccourcir le chemin du lien au compte puis à la soirée, à l'étape où la mesure montre qu'on décroche. Dépend de « Mesurer ce qui sert ».
-3. `S` **Description de soirée** : champ libre en complément du titre, à la création comme ensuite par l'hôte, affiché en tête de la page soirée pour dire à l'invité dans quoi il entre (thème, consignes, lieu).
 
 ---
 
@@ -117,4 +115,4 @@ Rien pour l'instant.
 
 ## 🗄️ Rejetée
 
-Rien pour l'instant.
+- `S` **Description de soirée** : champ libre en complément du titre, à la création comme ensuite par l'hôte, affiché en tête de la page soirée pour dire à l'invité dans quoi il entre (thème, consignes, lieu). Écartée : la fenêtre de création garde le moins de champs possible, et le titre et le thème disent déjà à l'invité dans quoi il entre.

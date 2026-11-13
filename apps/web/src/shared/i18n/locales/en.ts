@@ -2636,8 +2636,6 @@ export const en: Locale = {
       nextHint:
         'A surface that cannot be measured gets measured before it gets extended, which is why measurement opens the list.',
       nextItem1: 'Measure what gets used',
-      nextItem2: 'Join a night from its link',
-      nextItem3: 'Night description',
       v2When: 'No date announced',
       v2What: 'V2',
       v2Detail:
