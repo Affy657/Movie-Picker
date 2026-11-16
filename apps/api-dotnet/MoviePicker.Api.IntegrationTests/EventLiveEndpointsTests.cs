@@ -98,7 +98,8 @@ public sealed class EventLiveEndpointsTests : IClassFixture<MoviePickerApplicati
             new { participantId, value = 1 });
         vote.EnsureSuccessStatusCode();
 
-        await stream.WaitForAsync("changed");
+        var changed = await stream.WaitForAsync("changed");
+        Assert.Contains("\"stamp\"", changed.Data);
     }
 
     [Fact]
@@ -110,7 +111,10 @@ public sealed class EventLiveEndpointsTests : IClassFixture<MoviePickerApplicati
 
         using var hostStream = await ServerSentEventReader.OpenAsync(host, $"/api/v1/events/{slug}/stream");
 
-        await watcher.WaitForAsync("presence", data => ListsParticipant(data, hostParticipantId, proposing: false));
+        var presence = await watcher.WaitForAsync(
+            "presence",
+            data => ListsParticipant(data, hostParticipantId, proposing: false));
+        Assert.True(ListsParticipant(presence.Data, hostParticipantId, proposing: false));
     }
 
     [Fact]

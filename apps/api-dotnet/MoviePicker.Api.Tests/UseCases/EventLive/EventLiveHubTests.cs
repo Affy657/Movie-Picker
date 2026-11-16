@@ -191,7 +191,8 @@ public sealed class EventLiveHubTests : IAsyncLifetime
 
         using var second = _sut.Subscribe(_event.Id, _event.Slug);
 
-        await NextAsync<EventPresenceSignal>(second);
+        var presence = await NextAsync<EventPresenceSignal>(second);
+        Assert.Empty(presence.Participants);
     }
 
     [Fact]

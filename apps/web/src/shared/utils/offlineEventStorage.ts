@@ -56,8 +56,7 @@ export function saveLastEventSnapshot(snapshot: LastEventSnapshot): void {
 
 export function readLastEventSnapshot(slug: string): LastEventSnapshot | null {
   const stored = readJson(SNAPSHOT_KEY) as LastEventSnapshot | null;
-  if (!stored || stored.slug !== slug || !stored.event || !Array.isArray(stored.movies))
-    return null;
+  if (stored?.slug !== slug || !stored.event || !Array.isArray(stored.movies)) return null;
   return stored;
 }
 

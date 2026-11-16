@@ -6,6 +6,8 @@ namespace MoviePicker.Api.Infrastructure.Persistence.InMemory;
 public sealed class InMemorySavedListRepository : ISavedListRepository
 {
     private readonly Dictionary<string, SavedList> _store = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, long> _saveOrder = new(StringComparer.Ordinal);
+    private long _saves;
     private readonly Lock _gate = new();
 
     public Task<IReadOnlyList<SavedList>> ListByOwnerAsync(string ownerId, CancellationToken ct = default)
@@ -17,6 +19,7 @@ public sealed class InMemorySavedListRepository : ISavedListRepository
                 .. _store.Values
                     .Where(list => list.OwnerId == ownerId)
                     .OrderByDescending(list => list.CreatedAt)
+                    .ThenByDescending(list => _saveOrder.GetValueOrDefault(list.Id))
             ];
             return Task.FromResult(lists);
         }
@@ -49,6 +52,7 @@ public sealed class InMemorySavedListRepository : ISavedListRepository
 
             var stored = list with { Id = Guid.NewGuid().ToString("N") };
             _store[stored.Id] = stored;
+            _saveOrder[stored.Id] = ++_saves;
             return Task.FromResult(stored);
         }
     }
@@ -85,7 +89,12 @@ public sealed class InMemorySavedListRepository : ISavedListRepository
     public Task<bool> DeleteAsync(string ownerId, string savedListId, CancellationToken ct = default)
     {
         lock (_gate)
-            return Task.FromResult(Owned(ownerId, savedListId) is not null && _store.Remove(savedListId));
+        {
+            var removed = Owned(ownerId, savedListId) is not null && _store.Remove(savedListId);
+            if (removed)
+                _saveOrder.Remove(savedListId);
+            return Task.FromResult(removed);
+        }
     }
 
     public Task<long> DeleteAllForOwnerAsync(string ownerId, CancellationToken ct = default)
@@ -93,7 +102,11 @@ public sealed class InMemorySavedListRepository : ISavedListRepository
         lock (_gate)
         {
             var owned = _store.Values.Where(list => list.OwnerId == ownerId).Select(list => list.Id).ToList();
-            owned.ForEach(id => _store.Remove(id));
+            owned.ForEach(id =>
+            {
+                _store.Remove(id);
+                _saveOrder.Remove(id);
+            });
             return Task.FromResult((long)owned.Count);
         }
     }

@@ -32,6 +32,7 @@ public sealed class MongoSavedListRepository : ISavedListRepository
         var docs = await _collection
             .Find(Filter.Eq(x => x.OwnerId, ownerId))
             .SortByDescending(x => x.CreatedAt)
+            .ThenByDescending(x => x.Id)
             .ToListAsync(ct);
         return docs.ConvertAll(ToDomain);
     }

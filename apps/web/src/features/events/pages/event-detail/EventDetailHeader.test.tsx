@@ -60,6 +60,16 @@ const baseProps: EventDetailHeaderProps = {
 };
 
 describe('EventDetailHeader', () => {
+  beforeEach(() => {
+    localStorage.setItem('moviepicker-locale', 'fr');
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    delete (HTMLElement.prototype as { offsetHeight?: number }).offsetHeight;
+    document.documentElement.style.removeProperty('--event-sticky-bar-height');
+  });
+
   it('says how many participants are online', () => {
     stubDesktopViewport(false);
     stubResizeObserver(0);
@@ -74,16 +84,6 @@ describe('EventDetailHeader', () => {
     renderHeader(<EventDetailHeader {...baseProps} onlineCount={0} />);
 
     expect(screen.queryByText(/en ligne/)).not.toBeInTheDocument();
-  });
-
-  beforeEach(() => {
-    localStorage.setItem('moviepicker-locale', 'fr');
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
-    delete (HTMLElement.prototype as { offsetHeight?: number }).offsetHeight;
-    document.documentElement.style.removeProperty('--event-sticky-bar-height');
   });
 
   it('publishes the sticky bar height on the root so the page can scroll below it', () => {

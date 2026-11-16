@@ -1996,6 +1996,22 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task SavedLists_SavedInTheSameInstant_ListTheLatestSaveFirst()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var saved = scope.ServiceProvider.GetRequiredService<ISavedListRepository>();
+        var ownerId = ObjectId.GenerateNewId().ToString();
+        var sameInstant = Now.AddMilliseconds(456);
+
+        foreach (var sourceId in new[] { "1", "2", "3", "4" })
+            await saved.AddIfAbsentAsync(NewSavedList(ownerId, ListSourceType.TmdbCollection, sourceId, sameInstant));
+
+        var listed = await saved.ListByOwnerAsync(ownerId);
+
+        Assert.Equal(["4", "3", "2", "1"], listed.Select(list => list.SourceId));
+    }
+
+    [Fact]
     public async Task SavedLists_CountDeleteAndDeleteByOwner_OnlyTouchTheOwnersLists()
     {
         using var scope = _factory.Services.CreateScope();
