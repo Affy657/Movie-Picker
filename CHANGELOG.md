@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.14.0] - 2026-11-16
+
 ### Added
 
 - **Ma liste devient Mes listes** : vous y créez, renommez et supprimez vos propres listes à côté d'« À voir », et un film s'ajoute à n'importe laquelle depuis sa page.
@@ -744,7 +746,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.13.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.14.0...HEAD
+[1.14.0]: https://github.com/Affy657/Movie-Picker/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/Affy657/Movie-Picker/compare/v1.12.1...v1.13.0
 [1.12.1]: https://github.com/Affy657/Movie-Picker/compare/v1.12.0...v1.12.1
 [1.12.0]: https://github.com/Affy657/Movie-Picker/compare/v1.11.2...v1.12.0
