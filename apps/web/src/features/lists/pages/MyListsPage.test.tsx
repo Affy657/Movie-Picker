@@ -12,6 +12,7 @@ import {
   createWatchedHandlers,
   createWatchlistHandlers,
   TEST_API_V1,
+  type MockList,
   type MockSavedList,
   type MockWatchedMovie,
 } from '@/mocks/handlers';
@@ -49,7 +50,7 @@ const WATCHED: MockWatchedMovie[] = [
   { tmdbId: 11, title: 'Brazil', posterPath: '/brazil.jpg', source: 'elsewhere' },
 ];
 
-const LISTS = [
+const LISTS: MockList[] = [
   {
     id: 'l1',
     name: 'Halloween',
@@ -63,6 +64,24 @@ const LISTS = [
     updatedAt: '2026-11-01T00:00:00Z',
   },
   { id: 'l3', name: 'Ghibli', items: [], updatedAt: '2026-09-01T00:00:00Z' },
+];
+
+const SEVEN_LISTS: MockList[] = [
+  ...LISTS,
+  { id: 'l4', name: 'Westerns', items: [film(30, 'Rio Bravo')], updatedAt: '2026-08-01T00:00:00Z' },
+  {
+    id: 'l5',
+    name: 'Comédies',
+    items: [film(31, 'Tootsie'), film(32, 'Big')],
+    updatedAt: '2026-07-01T00:00:00Z',
+  },
+  { id: 'l6', name: 'Anime', items: [], updatedAt: '2026-06-01T00:00:00Z' },
+  {
+    id: 'l7',
+    name: 'Polars',
+    items: [{ ...film(33, 'Heat'), isWatched: true }],
+    updatedAt: '2026-05-01T00:00:00Z',
+  },
 ];
 
 const HARRY_POTTER: MockSavedList = {
@@ -89,11 +108,25 @@ const FRISSONS: MockSavedList = {
 
 const FRISSONS_LABEL = "Frissons d'automne";
 
-function fullServer(saved: MockSavedList[] = []) {
+const KOREAN: MockSavedList = {
+  id: 's3',
+  sourceType: 'memberList',
+  sourceId: 'l9',
+  name: 'Ciné coréen',
+  creator: { handle: 'alice2', displayName: 'Alice Martin', avatarId: null },
+  createdAt: '2026-11-12T00:00:00Z',
+  items: [film(500, 'Old Boy', '/oldboy.jpg')],
+};
+
+const ALICE = { userId: 'u1', handle: 'alice', displayName: 'Alice', avatarId: null };
+const LEA = { userId: 'u2', handle: 'lea', displayName: 'Léa Moreau', avatarId: null };
+const TOM = { userId: 'u3', handle: 'tom', displayName: 'Tom', avatarId: null };
+
+function fullServer(saved: MockSavedList[] = [], lists: MockList[] = LISTS) {
   return [
     authedUser(),
     ...createWatchlistHandlers(WATCHLIST),
-    ...createListsHandlers(LISTS),
+    ...createListsHandlers(lists),
     ...createWatchedHandlers(WATCHED),
     ...createSavedListsHandlers(saved),
   ];
@@ -118,15 +151,24 @@ function renderPage() {
   );
 }
 
-async function cardNames(gridName = 'Mes listes') {
-  const grid = await screen.findByRole('list', { name: gridName });
-  return within(grid)
+async function rowNames(section: string) {
+  const list = await screen.findByRole('list', { name: section });
+  return within(list)
     .getAllByRole('link')
-    .map((link) => link.querySelector('[class*="name"]')?.textContent);
+    .map((link) => link.querySelector('[class*="rowNameText"]')?.textContent);
 }
 
-function withPercentSpace(text: string | null | undefined) {
-  return (text ?? '').replaceAll(/\p{Zs}/gu, ' ');
+function rowOf(section: string, name: RegExp) {
+  return within(screen.getByRole('list', { name: section })).getByRole('link', { name });
+}
+
+async function chooseSort(
+  user: ReturnType<typeof userEvent.setup>,
+  current: string,
+  option: string
+) {
+  await user.click(screen.getByRole('button', { name: `Trier : ${current}` }));
+  await user.click(await screen.findByRole('menuitem', { name: option }));
 }
 
 describe('MyListsPage', () => {
@@ -139,7 +181,7 @@ describe('MyListsPage', () => {
   });
   afterAll(() => server.close());
 
-  it('counts every list, À voir and Films vus included, and shows them first then the latest updated', async () => {
+  it('puts À voir and Films vus first as shortcuts, then one row per list, the latest updated first', async () => {
     server.use(...fullServer());
 
     renderPage();
@@ -147,56 +189,48 @@ describe('MyListsPage', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Mes listes' })
     ).toBeInTheDocument();
-    expect(await screen.findByText('5 listes')).toBeInTheDocument();
-    expect(await cardNames()).toEqual([
-      'À voir',
-      'Films vus',
-      'Films cultes',
-      'Halloween',
-      'Ghibli',
-    ]);
-
-    const grid = screen.getByRole('list', { name: 'Mes listes' });
-    const watchlist = within(grid).getByRole('link', { name: /à voir/i });
+    const watchlist = await screen.findByRole('link', { name: /à voir/i });
     expect(watchlist).toHaveAttribute('href', '/watchlist');
     expect(within(watchlist).getByText('2 titres à voir')).toBeInTheDocument();
-    expect(within(grid).getByRole('link', { name: /halloween/i })).toHaveAttribute(
-      'href',
-      '/listes/l1'
-    );
-    expect(within(grid).getByText('1 film')).toBeInTheDocument();
-    expect(within(grid).getByText('3 films')).toBeInTheDocument();
-    expect(within(grid).getByText('Vide')).toBeInTheDocument();
-    expect(within(grid).queryByText('Letterboxd')).toBeNull();
-  });
-
-  it('opens Films vus from its card, which counts the watched films', async () => {
-    server.use(...fullServer());
-
-    renderPage();
-
-    const grid = await screen.findByRole('list', { name: 'Mes listes' });
-    const watched = await within(grid).findByRole('link', { name: /films vus/i });
+    const watched = screen.getByRole('link', { name: /films vus/i });
     expect(watched).toHaveAttribute('href', '/listes/films-vus');
     expect(within(watched).getByText('2 films vus')).toBeInTheDocument();
+
+    expect(await rowNames('Vos listes')).toEqual(['Films cultes', 'Halloween', 'Ghibli']);
+    expect(screen.getByRole('heading', { level: 2, name: /^Vos listes/ })).toHaveTextContent('3');
+    expect(rowOf('Vos listes', /halloween/i)).toHaveAttribute('href', '/listes/l1');
+    expect(screen.queryByText(/^\d+ listes/)).toBeNull();
   });
 
-  it('shows how much of each created list is watched, never on the system lists nor an empty list', async () => {
+  it('says how many films of each list are watched, with a bar under its posters only once one is', async () => {
     server.use(...fullServer());
 
     renderPage();
 
-    const grid = await screen.findByRole('list', { name: 'Mes listes' });
-    const halloween = await within(grid).findByRole('link', { name: /halloween/i });
-    const cultes = within(grid).getByRole('link', { name: /films cultes/i });
-    expect(withPercentSpace(halloween.textContent)).toContain('100 % vus');
-    expect(withPercentSpace(cultes.textContent)).toContain('33 % vus');
-    for (const name of [/ghibli/i, /à voir/i, /films vus/i]) {
-      expect(within(grid).getByRole('link', { name }).textContent).not.toContain('%');
-    }
+    await screen.findByRole('list', { name: 'Vos listes' });
+    const halloween = rowOf('Vos listes', /halloween/i);
+    const cultes = rowOf('Vos listes', /films cultes/i);
+    const ghibli = rowOf('Vos listes', /ghibli/i);
+    expect(within(halloween).getByText('1 film, 1 vu')).toBeInTheDocument();
+    expect(within(cultes).getByText('3 films, 1 vu')).toBeInTheDocument();
+    expect(
+      within(ghibli).getByText('Vide, ajoutez des films depuis leur fiche')
+    ).toBeInTheDocument();
+    expect(halloween.querySelector('[class*="progress"]')).not.toBeNull();
+    expect(ghibli.querySelector('[class*="progress"]')).toBeNull();
   });
 
-  it('tags À voir with Letterboxd once the account syncs with it', async () => {
+  it('marks a public list as such', async () => {
+    server.use(...fullServer([], [{ ...LISTS[0]!, isPublic: true }, LISTS[1]!]));
+
+    renderPage();
+
+    await screen.findByRole('list', { name: 'Vos listes' });
+    expect(within(rowOf('Vos listes', /halloween/i)).getByText('Publique')).toBeInTheDocument();
+    expect(rowOf('Vos listes', /films cultes/i).textContent).not.toContain('Publique');
+  });
+
+  it('says on À voir and Films vus that they sync with Letterboxd', async () => {
     server.use(
       authedUser({ letterboxdUsername: 'alice_lb' }),
       ...createWatchlistHandlers(WATCHLIST),
@@ -208,86 +242,41 @@ describe('MyListsPage', () => {
     renderPage();
 
     const watchlist = await screen.findByRole('link', { name: /à voir/i });
-    expect(within(watchlist).getByText('Letterboxd')).toBeInTheDocument();
+    expect(within(watchlist).getByText('Synchronisée avec Letterboxd')).toBeInTheDocument();
     expect(
-      within(screen.getByRole('link', { name: /films vus/i })).getByText('Letterboxd')
+      within(screen.getByRole('link', { name: /films vus/i })).getByText(
+        'Synchronisée avec Letterboxd'
+      )
     ).toBeInTheDocument();
   });
 
   it.each([
     { off: 'letterboxdSyncWatchlist', untagged: /à voir/i, tagged: /films vus/i },
     { off: 'letterboxdSyncWatched', untagged: /films vus/i, tagged: /à voir/i },
-  ])('drops the Letterboxd tag of a list once $off is off', async ({ off, untagged, tagged }) => {
-    server.use(
-      authedUser({ letterboxdUsername: 'alice_lb', [off]: false }),
-      ...createWatchlistHandlers(WATCHLIST),
-      ...createListsHandlers(LISTS),
-      ...createWatchedHandlers(WATCHED),
-      ...createSavedListsHandlers()
-    );
+  ])(
+    'drops the Letterboxd line of a shortcut once $off is off',
+    async ({ off, untagged, tagged }) => {
+      server.use(
+        authedUser({ letterboxdUsername: 'alice_lb', [off]: false }),
+        ...createWatchlistHandlers(WATCHLIST),
+        ...createListsHandlers(LISTS),
+        ...createWatchedHandlers(WATCHED),
+        ...createSavedListsHandlers()
+      );
 
-    renderPage();
+      renderPage();
 
-    const taggedCard = await screen.findByRole('link', { name: tagged });
-    expect(within(taggedCard).getByText('Letterboxd')).toBeInTheDocument();
-    expect(
-      within(screen.getByRole('link', { name: untagged })).queryByText('Letterboxd')
-    ).toBeNull();
-  });
+      const taggedCard = await screen.findByRole('link', { name: tagged });
+      expect(within(taggedCard).getByText('Synchronisée avec Letterboxd')).toBeInTheDocument();
+      expect(
+        within(screen.getByRole('link', { name: untagged })).queryByText(
+          'Synchronisée avec Letterboxd'
+        )
+      ).toBeNull();
+    }
+  );
 
-  it('sorts by name, by number of films and by progress, the system lists staying first', async () => {
-    server.use(...fullServer());
-    const user = userEvent.setup();
-    renderPage();
-    await screen.findByText('5 listes');
-
-    await user.click(screen.getByRole('button', { name: 'Nom' }));
-    expect(await cardNames()).toEqual([
-      'À voir',
-      'Films vus',
-      'Films cultes',
-      'Ghibli',
-      'Halloween',
-    ]);
-
-    await user.click(screen.getByRole('button', { name: 'Nombre de films' }));
-    expect(await cardNames()).toEqual([
-      'À voir',
-      'Films vus',
-      'Films cultes',
-      'Halloween',
-      'Ghibli',
-    ]);
-
-    await user.click(screen.getByRole('button', { name: 'Avancée' }));
-    expect(await cardNames()).toEqual([
-      'À voir',
-      'Films vus',
-      'Halloween',
-      'Films cultes',
-      'Ghibli',
-    ]);
-  });
-
-  it('searches the lists by name, Films vus included', async () => {
-    server.use(...fullServer());
-    const user = userEvent.setup();
-    renderPage();
-    await screen.findByText('5 listes');
-    const search = screen.getByRole('searchbox', { name: 'Rechercher une liste' });
-
-    await user.type(search, 'hallo');
-
-    await waitFor(async () => expect(await cardNames()).toEqual(['Halloween']));
-    expect(screen.getByText('1 sur 5')).toBeInTheDocument();
-
-    await user.clear(search);
-    await user.type(search, 'vus');
-
-    await waitFor(async () => expect(await cardNames()).toEqual(['Films vus']));
-  });
-
-  it('invites to create a first list when there are only the system lists', async () => {
+  it('welcomes a new account with a single create button, no tools and no empty section', async () => {
     server.use(
       authedUser(),
       ...createWatchlistHandlers([]),
@@ -298,25 +287,111 @@ describe('MyListsPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    expect(await screen.findByText('2 listes')).toBeInTheDocument();
-    expect(await cardNames()).toEqual(['À voir', 'Films vus']);
-    expect(screen.getByText('Aucun film vu')).toBeInTheDocument();
+    const watchlist = await screen.findByRole('link', { name: /à voir/i });
+    expect(within(watchlist).getByText('Vide')).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('link', { name: /films vus/i })).getByText('Vide')
+    ).toBeInTheDocument();
     expect(
       screen.getByText(
         'Rangez vos films à votre façon : une liste pour Halloween, une pour les classiques à rattraper.'
       )
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Trouver des sagas et des sélections' })
+    ).toHaveAttribute('href', '/films/collections');
+    expect(screen.queryByRole('searchbox')).toBeNull();
+    expect(screen.queryByRole('heading', { level: 2 })).toBeNull();
+    expect(screen.getAllByRole('button', { name: /liste/i })).toHaveLength(1);
 
-    await user.click(screen.getByRole('button', { name: 'Créer une liste' }));
+    await user.click(screen.getByRole('button', { name: 'Nouvelle liste' }));
 
     expect(await screen.findByRole('heading', { name: 'Nouvelle liste' })).toBeInTheDocument();
+  });
+
+  it('keeps search and sort away below seven lists', async () => {
+    server.use(...fullServer([HARRY_POTTER]));
+
+    renderPage();
+
+    await screen.findByRole('list', { name: 'Vos listes' });
+    expect(screen.queryByRole('searchbox')).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Trier/ })).toBeNull();
+  });
+
+  it('searches the lists by name from seven lists, the shortcuts staying in place', async () => {
+    server.use(...fullServer([HARRY_POTTER], SEVEN_LISTS));
+    const user = userEvent.setup();
+    renderPage();
+    const search = await screen.findByRole('searchbox', { name: 'Rechercher une liste' });
+
+    await user.type(search, 'hallo');
+
+    await waitFor(async () => expect(await rowNames('Vos listes')).toEqual(['Halloween']));
+    expect(screen.queryByRole('list', { name: 'Enregistrées' })).toBeNull();
+    expect(screen.getByRole('link', { name: /à voir/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /films vus/i })).toBeInTheDocument();
+
+    await user.clear(search);
+    await user.type(search, 'zombies');
+
+    expect(await screen.findByText('Aucune liste ne s’appelle « zombies »')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'La recherche porte sur le nom des listes, pas sur les films qu’elles contiennent.'
+      )
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Effacer la recherche' }));
+
+    expect(search).toHaveValue('');
+    expect(await rowNames('Vos listes')).toHaveLength(7);
+  });
+
+  it('sorts each section by the chosen criterion, in the chosen order', async () => {
+    server.use(...fullServer([HARRY_POTTER, FRISSONS], SEVEN_LISTS));
+    const user = userEvent.setup();
+    renderPage();
+    expect(await rowNames('Vos listes')).toEqual([
+      'Films cultes',
+      'Halloween',
+      'Ghibli',
+      'Westerns',
+      'Comédies',
+      'Anime',
+      'Polars',
+    ]);
+    expect(await rowNames('Enregistrées')).toEqual([FRISSONS_LABEL, 'Harry Potter']);
+
+    await chooseSort(user, 'Récentes', 'Nom');
+
+    expect(await rowNames('Vos listes')).toEqual([
+      'Anime',
+      'Comédies',
+      'Films cultes',
+      'Ghibli',
+      'Halloween',
+      'Polars',
+      'Westerns',
+    ]);
+    expect(await rowNames('Enregistrées')).toEqual([FRISSONS_LABEL, 'Harry Potter']);
+
+    await chooseSort(user, 'Nom', 'De Z à A');
+
+    expect((await rowNames('Vos listes'))[0]).toBe('Westerns');
+    expect(await rowNames('Enregistrées')).toEqual(['Harry Potter', FRISSONS_LABEL]);
+
+    await chooseSort(user, 'Nom', 'Avancée');
+
+    expect((await rowNames('Vos listes')).slice(0, 2)).toEqual(['Halloween', 'Polars']);
+    expect(await rowNames('Enregistrées')).toEqual(['Harry Potter', FRISSONS_LABEL]);
   });
 
   it('opens the new list once created', async () => {
     server.use(...fullServer());
     const user = userEvent.setup();
     renderPage();
-    await screen.findByText('5 listes');
+    await screen.findByRole('list', { name: 'Vos listes' });
 
     await user.click(screen.getByRole('button', { name: 'Nouvelle liste' }));
     await user.type(await screen.findByRole('textbox', { name: 'Nom de la liste' }), 'Marathon');
@@ -326,12 +401,12 @@ describe('MyListsPage', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('/listes/l4');
   });
 
-  it('shortens the create button on a phone', async () => {
+  it('keeps the full create label on a phone', async () => {
     stubMatchMedia(true);
     server.use(...fullServer());
     renderPage();
 
-    expect(await screen.findByRole('button', { name: 'Nouvelle' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Nouvelle liste' })).toBeInTheDocument();
   });
 
   it('offers to try again when the lists do not load', async () => {
@@ -353,100 +428,96 @@ describe('MyListsPage', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Réessayer' }));
 
-    expect(await screen.findByText('2 listes')).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: /à voir/i })).toBeInTheDocument();
+  });
+
+  describe('shared lists', () => {
+    it('files a list I joined under Partagées avec vous, with the people I fill it with', async () => {
+      server.use(
+        ...fullServer(
+          [],
+          [
+            ...LISTS,
+            {
+              id: 'l4',
+              name: 'Ciné du dimanche',
+              items: [film(20, 'Past Lives')],
+              role: 'member',
+              owner: LEA,
+              memberCount: 2,
+              memberPreview: [LEA, ALICE],
+              updatedAt: '2026-08-01T00:00:00Z',
+            },
+          ]
+        )
+      );
+      renderPage();
+
+      expect(await rowNames('Partagées avec vous')).toEqual(['Ciné du dimanche']);
+      expect(await rowNames('Vos listes')).not.toContain('Ciné du dimanche');
+      const joined = rowOf('Partagées avec vous', /ciné du dimanche/i);
+      expect(joined).toHaveAttribute('href', '/listes/l4');
+      expect(within(joined).getByText('Avec Léa')).toBeInTheDocument();
+    });
+
+    it('says with whom I share one of my lists', async () => {
+      server.use(
+        ...fullServer(
+          [],
+          [{ ...LISTS[0]!, memberCount: 3, memberPreview: [ALICE, LEA, TOM] }, LISTS[1]!]
+        )
+      );
+      renderPage();
+
+      await screen.findByRole('list', { name: 'Vos listes' });
+      expect(
+        within(rowOf('Vos listes', /halloween/i)).getByText('Avec Léa et Tom')
+      ).toBeInTheDocument();
+      expect(rowOf('Vos listes', /films cultes/i).textContent).not.toContain('Avec');
+      expect(screen.queryByRole('list', { name: 'Partagées avec vous' })).toBeNull();
+    });
   });
 
   describe('saved lists', () => {
-    it('files the saved lists on their own floor, counted once under the title', async () => {
+    it('files the saved lists under Enregistrées, each saying where it comes from', async () => {
       server.use(...fullServer([HARRY_POTTER, FRISSONS]));
 
       renderPage();
 
-      expect(await screen.findByText('7 listes, dont 2 enregistrées')).toBeInTheDocument();
-      expect(screen.getByRole('heading', { level: 2, name: 'Mes listes' })).toBeInTheDocument();
+      expect(await rowNames('Enregistrées')).toEqual([FRISSONS_LABEL, 'Harry Potter']);
+      expect(screen.getByRole('heading', { level: 2, name: /^Enregistrées/ })).toHaveTextContent(
+        '2'
+      );
       expect(
-        screen.getByRole('heading', { level: 2, name: 'Listes enregistrées' })
-      ).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: 'Parcourir les sagas' })).toHaveAttribute(
-        'href',
-        '/films/collections'
-      );
-      expect(await cardNames()).toEqual([
-        'À voir',
-        'Films vus',
-        'Films cultes',
-        'Halloween',
-        'Ghibli',
-      ]);
-      expect(await cardNames('Listes enregistrées')).toEqual([FRISSONS_LABEL, 'Harry Potter']);
-
-      const saved = screen.getByRole('list', { name: 'Listes enregistrées' });
-      const harryPotter = within(saved).getByRole('link', { name: /harry potter/i });
+        screen.getByRole('link', { name: 'Trouver des sagas et des sélections' })
+      ).toHaveAttribute('href', '/films/collections');
+      const harryPotter = rowOf('Enregistrées', /harry potter/i);
       expect(harryPotter).toHaveAttribute('href', '/listes/enregistrees/s1');
-      expect(within(harryPotter).getByText('3 films')).toBeInTheDocument();
-      expect(withPercentSpace(harryPotter.textContent)).toContain('67 % vus');
+      expect(within(harryPotter).getByText('3 films, 2 vus')).toBeInTheDocument();
       expect(within(harryPotter).getByText('Saga')).toBeInTheDocument();
-      const frissons = within(saved).getByRole('link', { name: /frissons/i });
-      expect(within(frissons).getByText('Explorer')).toBeInTheDocument();
+      expect(
+        within(rowOf('Enregistrées', /frissons/i)).getByText('Sélection d’Explorer')
+      ).toBeInTheDocument();
     });
 
-    it('counts a single saved list in the singular', async () => {
-      server.use(...fullServer([HARRY_POTTER]));
-
-      renderPage();
-
-      expect(await screen.findByText('6 listes, dont 1 enregistrée')).toBeInTheDocument();
-    });
-
-    it('searches both floors and hides a floor without any match', async () => {
-      server.use(...fullServer([HARRY_POTTER, FRISSONS]));
-      const user = userEvent.setup();
-      renderPage();
-      await screen.findByText('7 listes, dont 2 enregistrées');
-      const search = screen.getByRole('searchbox', { name: 'Rechercher une liste' });
-
-      await user.type(search, 'harry');
-
-      await waitFor(async () =>
-        expect(await cardNames('Listes enregistrées')).toEqual(['Harry Potter'])
-      );
-      expect(screen.queryByRole('list', { name: 'Mes listes' })).toBeNull();
-      expect(screen.getByText('1 sur 7')).toBeInTheDocument();
-
-      await user.clear(search);
-      await user.type(search, 'hallo');
-
-      await waitFor(async () => expect(await cardNames()).toEqual(['Halloween']));
-      expect(screen.queryByRole('list', { name: 'Listes enregistrées' })).toBeNull();
-      expect(screen.queryByRole('heading', { name: 'Listes enregistrées' })).toBeNull();
-    });
-
-    it('sorts the saved lists with the same criteria, progress included', async () => {
-      server.use(...fullServer([HARRY_POTTER, FRISSONS]));
-      const user = userEvent.setup();
-      renderPage();
-      await screen.findByText('7 listes, dont 2 enregistrées');
-
-      await user.click(screen.getByRole('button', { name: 'Avancée' }));
-      expect(await cardNames('Listes enregistrées')).toEqual(['Harry Potter', FRISSONS_LABEL]);
-
-      await user.click(screen.getByRole('button', { name: 'Nom' }));
-      expect(await cardNames('Listes enregistrées')).toEqual([FRISSONS_LABEL, 'Harry Potter']);
-    });
-
-    it('reminds where to save a saga while none is saved', async () => {
+    it('hides the section while no list is saved', async () => {
       server.use(...fullServer());
 
       renderPage();
 
-      expect(await screen.findByText('5 listes')).toBeInTheDocument();
-      expect(
-        screen.getByRole('heading', { level: 2, name: 'Listes enregistrées' })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText('Enregistrez une saga ou une sélection d’Explorer pour la suivre ici.')
-      ).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: 'Parcourir les sagas' })).toBeInTheDocument();
+      await screen.findByRole('list', { name: 'Vos listes' });
+      expect(screen.queryByRole('heading', { name: /enregistrées/i })).toBeNull();
+    });
+
+    it('says by whom a saved list of a member was made', async () => {
+      server.use(...fullServer([KOREAN]));
+
+      renderPage();
+
+      await screen.findByRole('list', { name: 'Enregistrées' });
+      const card = rowOf('Enregistrées', /ciné coréen/i);
+      expect(within(card).getByText('Par Alice')).toBeInTheDocument();
+      expect(within(card).getByText('1 film')).toBeInTheDocument();
     });
 
     it('says a saved list is unavailable rather than empty', async () => {
@@ -454,50 +525,29 @@ describe('MyListsPage', () => {
 
       renderPage();
 
-      const saved = await screen.findByRole('list', { name: 'Listes enregistrées' });
-      const card = within(saved).getByRole('link', { name: /harry potter/i });
+      await screen.findByRole('list', { name: 'Enregistrées' });
+      const card = rowOf('Enregistrées', /harry potter/i);
       expect(within(card).getByText('Indisponible pour le moment')).toBeInTheDocument();
-      expect(within(card).queryByText('Vide')).toBeNull();
+      expect(within(card).queryByText(/^Vide/)).toBeNull();
     });
 
-    const KOREAN: MockSavedList = {
-      id: 's3',
-      sourceType: 'memberList',
-      sourceId: 'l9',
-      name: 'Ciné coréen',
-      creator: { handle: 'alice2', displayName: 'Alice Martin', avatarId: null },
-      createdAt: '2026-11-12T00:00:00Z',
-      items: [film(500, 'Old Boy', '/oldboy.jpg')],
-    };
-
-    it('tags the saved list of a member with the name of its creator, elision included', async () => {
-      server.use(...fullServer([KOREAN]));
-
-      renderPage();
-
-      const saved = await screen.findByRole('list', { name: 'Listes enregistrées' });
-      const card = within(saved).getByRole('link', { name: /ciné coréen/i });
-      expect(within(card).getByText('Liste d’Alice')).toBeInTheDocument();
-      expect(within(card).getByText('1 film')).toBeInTheDocument();
-    });
-
-    it('says on its card that the creator made the list private, and offers to keep a copy', async () => {
+    it('turns a list its creator made private into a line atop Enregistrées, and offers to keep a copy', async () => {
       server.use(
         ...fullServer([
+          HARRY_POTTER,
           { ...KOREAN, unavailable: true, unavailableReason: 'private', copyAvailable: true },
         ])
       );
       const user = userEvent.setup();
       renderPage();
 
-      const saved = await screen.findByRole('list', { name: 'Listes enregistrées' });
-      const card = within(saved).getByRole('link', { name: /ciné coréen/i });
-      expect(within(card).getByText('Alice a rendu cette liste privée')).toBeInTheDocument();
-      expect(
-        within(saved).getByRole('button', { name: 'Ne plus enregistrer' })
-      ).toBeInTheDocument();
+      expect(await rowNames('Enregistrées')).toEqual(['Harry Potter']);
+      expect(await screen.findByText(/n’est plus visible/)).toHaveTextContent(
+        'Ciné coréen n’est plus visible : Alice l’a rendue privée.'
+      );
+      expect(screen.getByRole('button', { name: 'Ne plus enregistrer' })).toBeInTheDocument();
 
-      await user.click(within(saved).getByRole('button', { name: 'Garder une copie' }));
+      await user.click(screen.getByRole('button', { name: 'Garder une copie' }));
       const dialog = await screen.findByRole('dialog', { name: 'Copier dans une nouvelle liste' });
       expect(within(dialog).getByRole('textbox', { name: 'Nom de la liste' })).toHaveValue(
         'Ciné coréen'
@@ -524,18 +574,16 @@ describe('MyListsPage', () => {
       const user = userEvent.setup();
       renderPage();
 
-      const saved = await screen.findByRole('list', { name: 'Listes enregistrées' });
-      const card = within(saved).getByRole('link', { name: /liste supprimée/i });
-      expect(within(card).getByText('Cette liste a été supprimée')).toBeInTheDocument();
-      expect(within(saved).queryByRole('button', { name: 'Garder une copie' })).toBeNull();
-
-      await user.click(within(saved).getByRole('button', { name: 'Ne plus enregistrer' }));
-
       expect(
-        await screen.findByText(
-          'Enregistrez une saga ou une sélection d’Explorer pour la suivre ici.'
-        )
+        await screen.findByText('Une liste que vous suiviez a été supprimée.')
       ).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Garder une copie' })).toBeNull();
+
+      await user.click(screen.getByRole('button', { name: 'Ne plus enregistrer' }));
+
+      await waitFor(() =>
+        expect(screen.queryByRole('heading', { name: /enregistrées/i })).toBeNull()
+      );
     });
 
     it('keeps the created lists when the saved ones do not load, and offers to try again', async () => {
@@ -550,74 +598,14 @@ describe('MyListsPage', () => {
       const user = userEvent.setup();
       renderPage();
 
-      expect(await screen.findByText('5 listes')).toBeInTheDocument();
-      expect(await cardNames()).toHaveLength(5);
+      expect(await rowNames('Vos listes')).toHaveLength(3);
       expect(
         screen.getByText('Impossible de charger vos listes enregistrées.')
       ).toBeInTheDocument();
 
       await user.click(screen.getByRole('button', { name: 'Réessayer' }));
 
-      expect(await screen.findByText('6 listes, dont 1 enregistrée')).toBeInTheDocument();
-    });
-  });
-
-  describe('shared lists', () => {
-    const ALICE = { userId: 'u1', handle: 'alice', displayName: 'Alice', avatarId: null };
-    const LEA = { userId: 'u2', handle: 'lea', displayName: 'Léa Moreau', avatarId: null };
-    const TOM = { userId: 'u3', handle: 'tom', displayName: 'Tom', avatarId: null };
-
-    it('files a list I joined among Mes listes, under the name of its creator', async () => {
-      server.use(
-        authedUser(),
-        ...createWatchlistHandlers(WATCHLIST),
-        ...createListsHandlers([
-          ...LISTS,
-          {
-            id: 'l4',
-            name: 'Ciné du dimanche',
-            items: [film(20, 'Past Lives')],
-            role: 'member',
-            owner: LEA,
-            memberCount: 2,
-            memberPreview: [LEA, ALICE],
-            updatedAt: '2026-08-01T00:00:00Z',
-          },
-        ]),
-        ...createWatchedHandlers(WATCHED),
-        ...createSavedListsHandlers([])
-      );
-      renderPage();
-
-      expect(await cardNames()).toContain('Ciné du dimanche');
-      const grid = screen.getByRole('list', { name: 'Mes listes' });
-      const joined = within(grid).getByRole('link', { name: /ciné du dimanche/i });
-      expect(joined).toHaveAttribute('href', '/listes/l4');
-      expect(within(joined).getByText('Liste de Léa')).toBeInTheDocument();
-      expect(within(grid).getByRole('link', { name: /halloween/i }).textContent).not.toContain(
-        'Liste de'
-      );
-    });
-
-    it('shows the faces of the people I share one of my lists with', async () => {
-      server.use(
-        authedUser(),
-        ...createWatchlistHandlers(WATCHLIST),
-        ...createListsHandlers([
-          { ...LISTS[0]!, memberCount: 3, memberPreview: [ALICE, LEA, TOM] },
-          LISTS[1]!,
-        ]),
-        ...createWatchedHandlers(WATCHED),
-        ...createSavedListsHandlers([])
-      );
-      renderPage();
-
-      const grid = await screen.findByRole('list', { name: 'Mes listes' });
-      const halloween = await within(grid).findByRole('link', { name: /halloween/i });
-      expect(within(halloween).getByText('Avec Léa et Tom')).toBeInTheDocument();
-      expect(within(grid).getByRole('link', { name: /films cultes/i }).textContent).not.toContain(
-        'Avec'
-      );
+      expect(await rowNames('Enregistrées')).toEqual(['Harry Potter']);
     });
   });
 });

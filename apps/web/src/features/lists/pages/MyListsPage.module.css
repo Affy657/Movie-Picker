@@ -8,17 +8,9 @@
 
 .pageHeader {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
   gap: var(--space-3) var(--space-4);
-}
-
-.pageTitleGroup {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  min-width: 0;
 }
 
 .pageTitle {
@@ -26,47 +18,165 @@
   margin: 0;
 }
 
-.pageSubtitle {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-subtle);
-}
-
-.floor {
-  display: flex;
-  flex-direction: column;
+.shortcuts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-4);
 }
 
-.floorHead {
+.shortcut {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-3) var(--space-4) var(--space-3) var(--space-3-5);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.shortcutText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.shortcutName {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-extrabold);
+  line-height: var(--leading-tight);
+}
+
+.shortcutIcon {
+  display: inline-flex;
+  color: var(--color-primary-text);
+}
+
+.shortcutCount {
+  font-size: var(--font-size-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-text-muted);
+}
+
+.shortcutSync {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  font-size: var(--font-size-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-muted);
+}
+
+.shortcutSyncIcon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--color-success);
+}
+
+.shortcutChevron {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: var(--color-text-muted);
+}
+
+.tools {
   display: flex;
   align-items: center;
   gap: var(--space-3);
 }
 
-.floorTitle {
-  composes: sectionLabel from '@/shared/components/typography.module.css';
+.search {
+  flex: 0 1 var(--container-xs);
+  min-width: 0;
+  margin-right: auto;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.sectionTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2-5);
   margin: 0;
-  font-size: var(--font-size-2xs);
-  line-height: var(--leading-none);
-  color: var(--color-text-subtle);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-extrabold);
+  line-height: var(--leading-tight);
+}
+
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: var(--space-10);
+}
+
+.who {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.floorRule {
-  flex: 1;
-  height: 1px;
-  background: var(--color-border-subtle);
-}
-
-.floorHint {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  line-height: var(--leading-comfortable);
+.whoIcon {
+  flex: 0 0 auto;
   color: var(--color-text-muted);
 }
 
-.firstListHint {
+.publicMark {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+}
+
+.notice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3-5);
+  padding: var(--space-3) var(--space-3-5);
+}
+
+.noticeIcon {
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+}
+
+.noticeText {
+  flex: 1;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--leading-normal);
+  color: var(--color-text-muted);
+}
+
+.noticeText strong {
+  color: var(--color-text);
+  font-weight: var(--font-weight-bold);
+}
+
+.noticeActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.welcome {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -74,17 +184,67 @@
   max-width: var(--container-md);
 }
 
-.firstListText {
+.welcomeText {
   margin: 0;
   font-size: var(--font-size-sm);
   line-height: var(--leading-comfortable);
-  color: var(--color-text-muted);
+  color: var(--color-text);
 }
 
-.companions {
+.shortcutSkeleton {
+  height: var(--space-24);
+  border-radius: var(--radius-md);
+}
+
+.rowSkeleton {
   display: flex;
-  flex-basis: 100%;
-  min-width: 0;
-  font-size: var(--font-size-2xs);
-  color: var(--color-text-muted);
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2-5) 0;
+}
+
+.rowSkeletonPoster {
+  width: var(--space-12);
+}
+
+@media (min-width: 48rem) {
+  .rows {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 39.9375rem) {
+  .shortcuts {
+    gap: var(--space-2-5);
+  }
+
+  .shortcut {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2-5);
+    padding: var(--space-3);
+  }
+
+  .shortcutName {
+    font-size: var(--font-size-md);
+  }
+
+  .shortcutCount {
+    font-size: var(--font-size-xs);
+  }
+
+  .sectionTitle {
+    font-size: var(--font-size-lg);
+  }
+
+  .notice {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-2-5) var(--space-3);
+  }
+
+  .noticeActions {
+    grid-column: 2;
+  }
 }
