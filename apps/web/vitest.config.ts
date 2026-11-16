@@ -21,14 +21,10 @@ export default defineConfig({
     globals: true,
     include: ['src/**/*.test.{ts,tsx}'],
     css: { include: [/src\/styles\/01-foundation\.css/] },
-    setupFiles: ['src/test-setup.ts'],
+    setupFiles: ['vitest.vm-globals.ts', 'src/test-setup.ts'],
     testTimeout: 25000,
     hookTimeout: 25000,
-    pool: 'forks',
-    forks: {
-      maxForks: 2,
-      minForks: 1,
-    },
+    pool: 'vmForks',
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],

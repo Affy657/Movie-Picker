@@ -24,6 +24,8 @@ dotnet_diagnostic.CA1822.severity = warning
 dotnet_diagnostic.CA1859.severity = warning
 dotnet_diagnostic.CA1861.severity = warning
 dotnet_diagnostic.SYSLIB1045.severity = warning
+dotnet_diagnostic.CA2026.severity = warning
+dotnet_diagnostic.CA2027.severity = warning
 
 # LoggerMessage source-gen : hors périmètre MVP ; évite bruit CA1848/CA1873 sur middleware
 dotnet_diagnostic.CA1848.severity = none

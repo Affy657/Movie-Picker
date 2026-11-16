@@ -46,14 +46,14 @@ rtk gh pr merge <n> --repo Affy657/Movie-Picker --merge
 
 ## Scores Lighthouse réels
 
-Le job vit dans `deploy.yml` depuis le 2026-09-10, et le déploiement est manuel : le dernier rapport n'est pas celui du dernier master, c'est celui de la dernière livraison. La rétention de l'artefact `lighthouse-reports` est de 7 jours, donc au-delà d'une semaine sans déploiement il n'y a **rien** à télécharger. Le noter dans le rapport plutôt que de conclure au vert.
+Le job vit dans `deploy.yml` depuis le 2026-09-10, et le déploiement est manuel : le dernier rapport n'est pas celui du dernier master, c'est celui de la dernière livraison. La porte tourne sur sept runners à la fois (`LH_SHARD`), un artefact `lighthouse-reports-<n>` par runner, retenus 7 jours, donc au-delà d'une semaine sans déploiement il n'y a **rien** à télécharger. Le noter dans le rapport plutôt que de conclure au vert.
 
 ```bash
 RUN=$(rtk gh run list --workflow=deploy.yml --repo Affy657/Movie-Picker --limit 1 --json databaseId --jq '.[0].databaseId')
-rtk gh run download "$RUN" --repo Affy657/Movie-Picker --name lighthouse-reports --dir "${TMPDIR:-/tmp}/lh"
+rtk gh run download "$RUN" --repo Affy657/Movie-Picker --pattern 'lighthouse-reports-*' --dir "${TMPDIR:-/tmp}/lh"
 ```
 
-Un fichier `report-<slug>.json` par page. Lire `categories.performance.score`, `categories.accessibility.score`, `categories["best-practices"].score`, `categories.seo.score` (valeurs de 0 à 1, les seuils de [configs/lighthouse-budgets.json](../../../../configs/lighthouse-budgets.json) sont sur 100).
+Un fichier `lighthouse-reports-<n>/report-<slug>.json` par page, deux pages par runner. Lire `categories.performance.score`, `categories.accessibility.score`, `categories["best-practices"].score`, `categories.seo.score` (valeurs de 0 à 1, les seuils de [configs/lighthouse-budgets.json](../../../../configs/lighthouse-budgets.json) sont sur 100).
 
 Ce qui déclenche une alerte dans le rapport :
 

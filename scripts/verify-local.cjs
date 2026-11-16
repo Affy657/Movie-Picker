@@ -139,13 +139,26 @@ const dotnetLane = () =>
       ]),
     () =>
       Promise.all([
-        run('dotnet format (verify)', 'dotnet', [
-          'format',
-          'apps/api-dotnet/MoviePicker.slnx',
-          '--verify-no-changes',
-          '--no-restore',
-          '--verbosity',
-          'minimal',
+        sequence([
+          () =>
+            run('dotnet format whitespace (verify)', 'dotnet', [
+              'format',
+              'whitespace',
+              'apps/api-dotnet/MoviePicker.slnx',
+              '--verify-no-changes',
+              '--verbosity',
+              'minimal',
+            ]),
+          () =>
+            run('dotnet format style (verify)', 'dotnet', [
+              'format',
+              'style',
+              'apps/api-dotnet/MoviePicker.slnx',
+              '--verify-no-changes',
+              '--no-restore',
+              '--verbosity',
+              'minimal',
+            ]),
         ]),
         sequence([
           () =>

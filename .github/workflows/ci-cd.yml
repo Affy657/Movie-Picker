@@ -292,8 +292,14 @@ jobs:
       - uses: ./.github/actions/setup-dotnet-cache
       - name: Restore API .NET
         run: dotnet restore apps/api-dotnet/MoviePicker.slnx
-      - name: dotnet format (verify, roadmap § 31)
-        run: dotnet format apps/api-dotnet/MoviePicker.slnx --verify-no-changes --verbosity minimal
+      # Whitespace and charset, then the code style (the order of the usings lives there, not in
+      # `whitespace`). The analyser pass of the full `dotnet format` is left out: it replays the
+      # analysers the build below already runs with `-warnaserror`, for more than half the time.
+      - name: dotnet format whitespace + style (verify, roadmap § 31)
+        run: |
+          set -eo pipefail
+          dotnet format whitespace apps/api-dotnet/MoviePicker.slnx --verify-no-changes --verbosity minimal
+          dotnet format style apps/api-dotnet/MoviePicker.slnx --verify-no-changes --no-restore --verbosity minimal
       - name: Build API .NET (warnings → errors)
         run: dotnet build apps/api-dotnet/MoviePicker.slnx -c Release --no-restore -warnaserror
       - name: Export OpenAPI (artifact, roadmap § 32)
@@ -583,16 +589,21 @@ jobs:
   # A manual run on another branch is analysed as a named Sonar branch (`sonar.branch.name`).
   # Without that parameter, an analysis pushed from a branch would overwrite master's, which
   # SonarCloud takes as the main branch by default.
+  # It no longer waits for `test-api`: the job builds the solution anyway (the Roslyn analysers
+  # run during that build), and the unit tests replayed on that build take seconds, where waiting
+  # for `test-api` held the whole analysis behind its setup, its build and its integration tests.
+  # `test-api` keeps its coverage gate; this job only needs the report.
   sonar:
     name: 📊 SonarCloud (analysis + coverage, blocking Quality Gate)
-    needs: [changes, test-web, test-api]
+    needs: [changes, test-web]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     if: >-
       always() &&
       github.event.pull_request.head.repo.fork != true &&
       github.actor != 'dependabot[bot]' &&
-      (needs.test-web.result == 'success' || needs.test-api.result == 'success')
+      needs.changes.result == 'success' &&
+      (needs.test-web.result == 'success' || needs.test-web.result == 'skipped')
     permissions:
       contents: read
       pull-requests: read
@@ -626,22 +637,13 @@ jobs:
         run: |
           pnpm install --frozen-lockfile --ignore-scripts
           pnpm run test:coverage --filter=web
-      # Same logic as for the web app: the test-api job already produced this report, replaying it
-      # here cost a minute on the critical path of the run. The OpenCover report carries absolute
-      # paths, identical from one runner to another, so Sonar reads it without rewriting.
-      - name: "API coverage: download artifact (if test-api ran)"
-        if: needs.test-api.result == 'success'
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          name: coverage-api-unit
-          path: coverage-unit
       - name: Install SonarScanner for .NET
         run: |
           dotnet tool install --global dotnet-sonarscanner --version "$SONARSCANNER_VERSION"
           echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
       # The `dotnet build` must stay between begin and end, that is where the Sonar Roslyn
-      # analysers run. The tests only serve the coverage: they are replayed only when the test-api
-      # artifact is missing.
+      # analysers run. The unit tests only serve the coverage: they run on that very build, with
+      # the settings of `test-api`, so the report is the one `test-api` gates.
       - name: SonarCloud analysis (begin + build + Quality Gate)
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -650,7 +652,6 @@ jobs:
           PR_HEAD: ${{ github.head_ref }}
           PR_BASE: ${{ github.base_ref }}
           REF_NAME: ${{ github.ref_name }}
-          API_COVERAGE_DOWNLOADED: ${{ needs.test-api.result == 'success' }}
           MONGODB_URI: ""
         run: |
           set -eo pipefail
@@ -685,12 +686,10 @@ jobs:
             /d:sonar.qualitygate.timeout=300 \
             "${REFARGS[@]}"
           dotnet build apps/api-dotnet/MoviePicker.slnx -c Debug
-          if [ "$API_COVERAGE_DOWNLOADED" != "true" ]; then
-            dotnet test apps/api-dotnet/MoviePicker.Api.Tests/MoviePicker.Api.Tests.csproj -c Debug --no-build \
-              --collect:"XPlat Code Coverage" \
-              --settings apps/api-dotnet/coverlet.runsettings \
-              --results-directory coverage-unit
-          fi
+          dotnet test apps/api-dotnet/MoviePicker.Api.Tests/MoviePicker.Api.Tests.csproj -c Debug --no-build \
+            --collect:"XPlat Code Coverage" \
+            --settings apps/api-dotnet/coverlet.runsettings \
+            --results-directory coverage-unit
           dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
       # The Quality Gate only judges new code, and an issue accepted in the SonarCloud UI leaves
       # it: this step holds the whole branch to zero open, accepted or dismissed issues, zero

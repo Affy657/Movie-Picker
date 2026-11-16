@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { reviewCategory } from './lighthouse-budget.mjs';
+import { reviewCategory, selectPages } from './lighthouse-budget.mjs';
 
 function run(category, score) {
   return { categories: { [category]: score === undefined ? undefined : { score } } };
@@ -53,5 +53,37 @@ describe('reviewCategory', () => {
     const lhrs = [run('seo', null), run('seo', 0.97)];
 
     assert.deepEqual(reviewCategory(lhrs, 'seo', { min: 95 }), { score: 97, failure: null });
+  });
+});
+
+describe('selectPages', () => {
+  const pages = ['home', 'donate', 'profile', 'login', 'register'].map((slug) => ({ slug }));
+  const slugsOf = (selected) => selected.map((page) => page.slug);
+
+  it('keeps every page without a filter', () => {
+    assert.deepEqual(slugsOf(selectPages(pages)), [
+      'home',
+      'donate',
+      'profile',
+      'login',
+      'register',
+    ]);
+  });
+
+  it('narrows to the listed slugs', () => {
+    assert.deepEqual(slugsOf(selectPages(pages, { only: 'login, home' })), ['home', 'login']);
+  });
+
+  it('spreads the pages over the shards without losing or repeating one', () => {
+    const shards = [1, 2, 3].map((index) => slugsOf(selectPages(pages, { shard: `${index}/3` })));
+
+    assert.deepEqual(shards, [['home', 'login'], ['donate', 'register'], ['profile']]);
+    assert.deepEqual(shards.flat().sort(), slugsOf(pages).sort());
+  });
+
+  it('refuses a shard that cannot exist', () => {
+    for (const shard of ['0/3', '4/3', '1/0', 'two/3', '1']) {
+      assert.throws(() => selectPages(pages, { shard }), /LH_SHARD/);
+    }
   });
 });
