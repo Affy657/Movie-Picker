@@ -13,6 +13,37 @@ const participants: EventParticipantSummary[] = [
 ];
 
 describe('EventParticipantsList', () => {
+  it('marks who is online and who is proposing a movie', () => {
+    render(
+      <AppTestProviders>
+        <EventParticipantsList
+          participants={participants}
+          currentParticipantId="p-me"
+          onlineIds={new Set(['p-creator', 'p-other'])}
+          proposingIds={new Set(['p-other'])}
+        />
+      </AppTestProviders>
+    );
+
+    const host = screen.getByTestId('participant-p-creator');
+    const me = screen.getByTestId('participant-p-me');
+    const bob = screen.getByTestId('participant-p-other');
+    expect(host).toHaveTextContent('en ligne');
+    expect(me).not.toHaveTextContent('en ligne');
+    expect(bob).toHaveTextContent('propose un film…');
+    expect(host).not.toHaveTextContent('propose un film…');
+  });
+
+  it('shows no presence marker while presence is unknown', () => {
+    render(
+      <AppTestProviders>
+        <EventParticipantsList participants={participants} currentParticipantId="p-me" />
+      </AppTestProviders>
+    );
+
+    expect(screen.queryByText('en ligne')).not.toBeInTheDocument();
+  });
+
   it('shows the participants and the host badge', () => {
     render(
       <AppTestProviders>

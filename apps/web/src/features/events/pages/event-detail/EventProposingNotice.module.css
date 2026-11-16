@@ -1,0 +1,8 @@
+.root {
+  display: flex;
+  margin-block: var(--space-2);
+}
+
+.root:empty {
+  display: none;
+}

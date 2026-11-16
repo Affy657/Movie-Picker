@@ -5,6 +5,7 @@ import { Bookmark, MessageSquarePlus, ThumbsDown, ThumbsUp, Trophy } from 'lucid
 import { ROUTES } from '@/app/routes';
 import Avatar from '@/shared/components/Avatar';
 import Tooltip from '@/shared/components/Tooltip';
+import StatusDot from '@/shared/components/StatusDot';
 import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
 import { ModeIcon } from '@/features/movies/components/WatchProviderChips';
 import type { MovieData } from '@/shared/types/movie';
@@ -251,6 +252,16 @@ export function VoteBar({
         <ThumbsDown aria-hidden size={ICON_SIZE.md} />
         <span className={styles.voteCount}>{m.down}</span>
       </button>
+      {m.pendingVote ? (
+        <span
+          className={styles.votePending}
+          role="img"
+          aria-label={t('movies.list.votePendingAria')}
+          title={t('movies.list.votePendingAria')}
+        >
+          <StatusDot pulsing />
+        </span>
+      ) : null}
     </div>
   );
 }

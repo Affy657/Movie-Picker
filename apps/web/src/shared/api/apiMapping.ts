@@ -1,7 +1,7 @@
 import type { EventData, EventParticipantSummary } from '@/shared/types/event';
 import type { MovieData, ParticipantData } from '@/shared/types/movie';
 
-type RawMovieData = Omit<MovieData, 'id' | 'participantId'> & {
+type RawMovieData = Omit<MovieData, 'id' | 'participantId' | 'pendingVote'> & {
   _id: string;
   participantId: string | { _id: string; pseudo: string };
 };

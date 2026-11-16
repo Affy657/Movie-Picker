@@ -15,6 +15,7 @@ import EventDetailSession from '@/features/events/pages/event-detail/EventDetail
 import Button, { buttonClass } from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { ApiError } from '@/shared/api/apiError';
+import { useOnlineStatus } from '@/shared/hooks/useOnlineStatus';
 
 function getDocumentTitle(
   slug: string | undefined,
@@ -112,8 +113,12 @@ export default function EventDetail() {
     actionError,
     setActionError,
     refreshAll,
+    livePresence,
+    offlineVoteOutcome,
+    dismissOfflineVoteOutcome,
   } = useEventDetailPage(slug, arrival?.configNotSaved ? t('events.create.configNotSaved') : null);
 
+  const online = useOnlineStatus();
   const isNetworkPaused = eventQuery.isPending && eventQuery.fetchStatus === 'paused';
   const isLoadingEvent = !isMalformedSlug && eventQuery.isPending && !isNetworkPaused;
   const isEventGone = ApiError.is(eventQuery.error) && eventQuery.error.code === 404;
@@ -177,6 +182,10 @@ export default function EventDetail() {
       refreshAll={refreshAll}
       connectionUnstable={isShowingStaleData}
       proposeOnArrival={arrival?.openPropose === true}
+      livePresence={livePresence}
+      offline={!online}
+      offlineVoteOutcome={offlineVoteOutcome}
+      onDismissOfflineVoteOutcome={dismissOfflineVoteOutcome}
     />
   );
 }

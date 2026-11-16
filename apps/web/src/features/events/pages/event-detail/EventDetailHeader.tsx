@@ -7,6 +7,8 @@ import EventLifecyclePill from '@/shared/components/EventLifecyclePill';
 import { useEventBack } from './useEventBack';
 import ViewModeToggle from '@/shared/components/ViewModeToggle';
 import AvatarStack from '@/shared/components/AvatarStack';
+import StatusDot from '@/shared/components/StatusDot';
+import { onlineCountLabel } from '@/features/events/utils/presenceLabels';
 import type { EventParticipantSummary, MyEventLifecycle } from '@/shared/types/event';
 import { useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
@@ -157,6 +159,8 @@ export type EventDetailHeaderProps = {
 
   onOpenParticipants: () => void;
 
+  onlineCount?: number;
+
   onOpenShare?: () => void;
 
   onOpenSettings?: () => void;
@@ -249,6 +253,7 @@ export default function EventDetailHeader({
   participantCount,
   moviesCount,
   onOpenParticipants,
+  onlineCount = 0,
   onOpenShare,
   onOpenSettings,
   actions,
@@ -358,6 +363,12 @@ export default function EventDetailHeader({
           onOpen={onOpenParticipants}
           testId="participants-toggle"
         />
+        {onlineCount > 0 ? (
+          <span className={styles.online} data-testid="participants-online">
+            <StatusDot />
+            <span className={styles.onlineLabel}>{onlineCountLabel(onlineCount, t)}</span>
+          </span>
+        ) : null}
         <span className={styles.stats}>
           <span className={styles.sep} aria-hidden />
           <span>{moviesLabel}</span>

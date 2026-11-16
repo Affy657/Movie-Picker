@@ -60,6 +60,22 @@ const baseProps: EventDetailHeaderProps = {
 };
 
 describe('EventDetailHeader', () => {
+  it('says how many participants are online', () => {
+    stubDesktopViewport(false);
+    stubResizeObserver(0);
+    renderHeader(<EventDetailHeader {...baseProps} onlineCount={2} />);
+
+    expect(screen.getByText('2 en ligne')).toBeInTheDocument();
+  });
+
+  it('says nothing about who is online while nobody else is', () => {
+    stubDesktopViewport(false);
+    stubResizeObserver(0);
+    renderHeader(<EventDetailHeader {...baseProps} onlineCount={0} />);
+
+    expect(screen.queryByText(/en ligne/)).not.toBeInTheDocument();
+  });
+
   beforeEach(() => {
     localStorage.setItem('moviepicker-locale', 'fr');
   });

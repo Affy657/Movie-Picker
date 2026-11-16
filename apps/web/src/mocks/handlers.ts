@@ -76,6 +76,7 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
     http.get(`${V1}/events/${slug}/movies`, () =>
       HttpResponse.json([] satisfies Schemas['MovieWithScoreResponse'][])
     ),
+    http.put(`${V1}/events/${slug}/presence`, () => new HttpResponse(null, { status: 204 })),
   ];
 }
 

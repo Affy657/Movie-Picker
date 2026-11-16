@@ -75,6 +75,7 @@ public sealed class MongoIndexInitializer : IHostedService
         EnsureSharedCacheIndexes(plan);
         EnsurePosterCacheIndexes(plan);
         EnsureAvatarPhotoIndexes(plan);
+        EnsureEventPresenceIndexes(plan);
         return plan;
     }
 
@@ -384,6 +385,17 @@ public sealed class MongoIndexInitializer : IHostedService
             Builders<AvatarPhotoBlobDocument>.IndexKeys.Ascending(x => x.UserId),
             new CreateIndexOptions { Name = "avatar_photos_userId" });
         plan.Create(MongoAvatarPhotoRepository.CollectionName, userId);
+    }
+
+    private static void EnsureEventPresenceIndexes(MongoIndexPlan plan)
+    {
+        var byEvent = new CreateIndexModel<EventPresenceDocument>(
+            Builders<EventPresenceDocument>.IndexKeys.Ascending(x => x.EventId).Ascending(x => x.ParticipantId),
+            new CreateIndexOptions { Name = "event_presence_eventId_participantId" });
+        var ttl = new CreateIndexModel<EventPresenceDocument>(
+            Builders<EventPresenceDocument>.IndexKeys.Ascending(x => x.ExpiresAt),
+            new CreateIndexOptions { Name = "event_presence_expiresAt_ttl", ExpireAfter = TimeSpan.Zero });
+        plan.Create(MongoEventPresenceRepository.CollectionName, byEvent, ttl);
     }
 
     private static void EnsureKofiWebhookLogIndexes(MongoIndexPlan plan)

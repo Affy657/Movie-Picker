@@ -132,6 +132,7 @@
 }
 
 .votes {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: var(--space-0-5);
@@ -169,6 +170,15 @@
 .voteBtn:focus-visible {
   outline: var(--outline-focus);
   outline-offset: var(--outline-offset);
+}
+
+.votePending {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: inline-flex;
+  color: var(--color-warning);
+  pointer-events: none;
 }
 
 .votesLocked .voteBtn:disabled {

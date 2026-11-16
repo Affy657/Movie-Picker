@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router';
-import { useQueryClient } from '@tanstack/react-query';
+import { onlineManager, useQueryClient } from '@tanstack/react-query';
 import {
   getStoredHostToken,
   getStoredParticipant,
@@ -13,6 +13,15 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useEvent } from '@/features/events/hooks/useEvent';
 import { useMovies } from '@/features/movies/hooks/useMovies';
 import { useEventLive } from '@/features/events/hooks/useEventLive';
+import { useEventLiveStream } from '@/features/events/hooks/useEventLiveStream';
+import {
+  forgetLastEventSnapshot,
+  readLastEventSnapshot,
+  saveLastEventSnapshot,
+} from '@/shared/utils/offlineEventStorage';
+import { ApiError } from '@/shared/api/apiError';
+import { applyQueuedVotes, useQueuedVotes } from '@/features/events/offline/queuedVotes';
+import { useOfflineVoteReplay } from '@/features/events/offline/useOfflineVoteReplay';
 
 const MOVIE_NIGHTS_KEY = [...queryKeys.movies.all, 'nights'] as const;
 
@@ -44,7 +53,12 @@ export function useEventDetailPage(
     );
   }, [slug, hostFromUrl, searchParams, location.hash, location.state, navigate]);
 
-  const eventQuery = useEvent(slug, hostToken);
+  const offlineCopy = useMemo(
+    () => (slug && !onlineManager.isOnline() ? readLastEventSnapshot(slug) : null),
+    [slug]
+  );
+  const [liveConnected, setLiveConnected] = useState(false);
+  const eventQuery = useEvent(slug, hostToken, { live: !liveConnected, offlineCopy });
   const event = eventQuery.data ?? null;
 
   const moviesQueryEnabled = !!slug;
@@ -56,10 +70,43 @@ export function useEventDetailPage(
 
   const moviesQuery = useMovies(slug, {
     enabled: moviesQueryEnabled,
-    refetchInterval: moviesRefetchInterval,
+    refetchInterval: liveConnected ? false : moviesRefetchInterval,
     participantId: participant?.participantId ?? null,
+    offlineCopy,
   });
-  const movies = moviesQuery.data ?? [];
+  const queuedVotes = useQueuedVotes(slug);
+  const serverMovies = moviesQuery.data;
+  const participantId = participant?.participantId ?? null;
+  const movies = useMemo(
+    () => applyQueuedVotes(serverMovies ?? [], queuedVotes, participantId),
+    [serverMovies, queuedVotes, participantId]
+  );
+
+  const refreshLive = useCallback(() => {
+    if (!slug) return;
+    queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
+  }, [slug, hostToken, queryClient]);
+  const live = useEventLiveStream({
+    slug,
+    enabled: !!event && !event.isFinished,
+    onChanged: refreshLive,
+  });
+  useEffect(() => {
+    setLiveConnected(live.connected);
+  }, [live.connected]);
+
+  const freshEvent = eventQuery.isFetchedAfterMount ? eventQuery.data : undefined;
+  const freshMovies = moviesQuery.isFetchedAfterMount ? moviesQuery.data : undefined;
+  useEffect(() => {
+    if (!slug || !freshEvent || !freshMovies || freshEvent.slug !== slug) return;
+    saveLastEventSnapshot({ slug, savedAt: Date.now(), event: freshEvent, movies: freshMovies });
+  }, [slug, freshEvent, freshMovies]);
+
+  const eventGone = ApiError.is(eventQuery.error) && eventQuery.error.code === 404;
+  useEffect(() => {
+    if (slug && eventGone) forgetLastEventSnapshot(slug);
+  }, [slug, eventGone]);
   const [actionError, setActionError] = useState<string | null>(initialActionError);
 
   useEffect(() => {
@@ -100,6 +147,8 @@ export function useEventDetailPage(
     }
   }, [slug, hostToken, recapSlug, queryClient]);
 
+  const offlineVotes = useOfflineVoteReplay({ slug, onReplayed: refreshAll });
+
   return {
     slug,
     hostToken,
@@ -112,5 +161,9 @@ export function useEventDetailPage(
     actionError,
     setActionError,
     refreshAll,
+    liveConnected: live.connected,
+    livePresence: live.presence,
+    offlineVoteOutcome: offlineVotes.outcome,
+    dismissOfflineVoteOutcome: offlineVotes.dismiss,
   };
 }

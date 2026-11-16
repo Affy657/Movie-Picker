@@ -7,6 +7,7 @@ import { useTranslation } from '@/shared/i18n';
 import Chip from '@/shared/components/Chip';
 import { ROUTES } from '@/app/routes';
 import Avatar from '@/shared/components/Avatar';
+import StatusDot from '@/shared/components/StatusDot';
 import EmptyState from '@/shared/components/EmptyState';
 import styles from './EventParticipantsList.module.css';
 import Button from '@/shared/components/Button';
@@ -29,6 +30,10 @@ type Props = {
   onLeave?: () => void;
 
   leaveDisabled?: boolean;
+
+  onlineIds?: ReadonlySet<string>;
+
+  proposingIds?: ReadonlySet<string>;
 };
 
 export default function EventParticipantsList({
@@ -41,6 +46,8 @@ export default function EventParticipantsList({
   onInvite,
   onLeave,
   leaveDisabled,
+  onlineIds,
+  proposingIds,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [managing, setManaging] = useState(false);
@@ -100,10 +107,22 @@ export default function EventParticipantsList({
             const isCreator = !!p.isCreator;
             const canHostRemove = !!isHost && !!onRemoveParticipant && !isCreator && !isMe;
             const isPending = pendingRemovalId === p.id;
+            const isProposing = proposingIds?.has(p.id) ?? false;
+            const isOnline = isProposing || (onlineIds?.has(p.id) ?? false);
             const identity = (
               <>
                 <Avatar avatarId={p.avatarId} pseudo={p.pseudo} size="xs" />
                 <span className={styles.chipLabel}>{p.pseudo}</span>
+                {isOnline ? (
+                  <span className={clsx(styles.presence, isProposing && styles.presenceProposing)}>
+                    <StatusDot pulsing={isProposing} />
+                    <span className={isProposing ? styles.presenceLabel : 'visually-hidden'}>
+                      {t(
+                        isProposing ? 'events.participants.proposing' : 'events.participants.online'
+                      )}
+                    </span>
+                  </span>
+                ) : null}
               </>
             );
 

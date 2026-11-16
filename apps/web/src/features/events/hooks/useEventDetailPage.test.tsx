@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { MemoryRouter, useLocation, type InitialEntry } from 'react-router';
 import { http, HttpResponse } from 'msw';
@@ -13,6 +13,11 @@ import {
   setStoredParticipant,
 } from '@/shared/utils/eventIdentityStorage';
 import { useEventDetailPage } from '@/features/events/hooks/useEventDetailPage';
+import { onlineManager, type QueryClient } from '@tanstack/react-query';
+import { FakeEventSource } from '@/test-utils/fakeEventSource';
+import { readLastEventSnapshot, saveLastEventSnapshot } from '@/shared/utils/offlineEventStorage';
+import type { EventData } from '@/shared/types/event';
+import type { MovieData } from '@/shared/types/movie';
 
 const slug = 'soiree-perf';
 
@@ -181,6 +186,159 @@ describe('useEventDetailPage', () => {
 
     expect(client.getQueryState(queryKeys.event.recap('recap-perf'))?.isInvalidated).toBe(true);
     expect(client.getQueryState(queryKeys.event.recap('recap-other'))?.isInvalidated).toBe(false);
+  });
+
+  describe('live stream and offline copy', () => {
+    beforeEach(() => {
+      FakeEventSource.install();
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+      onlineManager.setOnline(true);
+    });
+
+    function renderWithClient(client: QueryClient) {
+      return renderHook(() => useEventDetailPage(slug), {
+        wrapper: ({ children }: Readonly<{ children: ReactNode }>) => (
+          <QueryClientWrapper client={client}>
+            <MemoryRouter initialEntries={[`/e/${slug}`]}>{children}</MemoryRouter>
+          </QueryClientWrapper>
+        ),
+      });
+    }
+
+    function eventPollingInterval(client: QueryClient): unknown {
+      const query = client.getQueryCache().find({ queryKey: queryKeys.event.detail(slug, null) });
+      const interval = query?.observers[0]?.options.refetchInterval;
+      return typeof interval === 'function' ? interval(query as never) : interval;
+    }
+
+    function serveCountedEvent(counts: { event: number; movies: number }): void {
+      server.use(
+        http.get(`${TEST_API_V1}/events/slug/${slug}`, () => {
+          counts.event += 1;
+          return HttpResponse.json({
+            _id: 'evt-counted',
+            title: 'Comptée',
+            date: '2030-12-15',
+            time: '21:00',
+            slug,
+            isFinished: false,
+            lifecycle: 'live',
+            winners: [],
+            participants: [],
+          });
+        }),
+        http.get(`${TEST_API_V1}/events/${slug}/movies`, () => {
+          counts.movies += 1;
+          return HttpResponse.json([]);
+        })
+      );
+    }
+
+    it('stops polling the movie night while the live stream is connected', async () => {
+      server.use(...createEventDetailHandlers({ slug }));
+      const client = createTestQueryClient();
+      const { result } = renderWithClient(client);
+      await waitFor(() => expect(result.current.event).not.toBeNull());
+      expect(eventPollingInterval(client)).toBeGreaterThan(0);
+
+      act(() => FakeEventSource.latest().emit('ready'));
+
+      await waitFor(() => expect(result.current.liveConnected).toBe(true));
+      expect(eventPollingInterval(client)).toBe(false);
+    });
+
+    it('reloads the movie night and its movies when the stream reports a change', async () => {
+      const counts = { event: 0, movies: 0 };
+      serveCountedEvent(counts);
+      const { result } = renderWithClient(createTestQueryClient());
+      await waitFor(() => expect(result.current.event).not.toBeNull());
+      act(() => FakeEventSource.latest().emit('ready'));
+      await waitFor(() => expect(result.current.liveConnected).toBe(true));
+      await waitFor(() => expect(counts.event).toBe(2));
+      await waitFor(() => expect(counts.movies).toBe(2));
+      const before = { ...counts };
+
+      act(() => FakeEventSource.latest().emit('changed', { stamp: '3.1' }));
+
+      await waitFor(() => expect(counts.event).toBeGreaterThan(before.event));
+      await waitFor(() => expect(counts.movies).toBeGreaterThan(before.movies));
+    });
+
+    it('exposes who is online on the movie night', async () => {
+      server.use(...createEventDetailHandlers({ slug }));
+      const { result } = renderWithClient(createTestQueryClient());
+      await waitFor(() => expect(result.current.event).not.toBeNull());
+
+      act(() =>
+        FakeEventSource.latest().emit('presence', {
+          participants: [{ participantId: 'p-msw-alice', proposing: true }],
+        })
+      );
+
+      expect(result.current.livePresence).toEqual([
+        { participantId: 'p-msw-alice', proposing: true },
+      ]);
+    });
+
+    it('keeps a copy of the last movie night viewed', async () => {
+      server.use(...createEventDetailHandlers({ slug, title: 'Copie à garder' }));
+      const { result } = renderWithClient(createTestQueryClient());
+
+      await waitFor(() => expect(result.current.moviesQuery.isSuccess).toBe(true));
+      await waitFor(() => expect(readLastEventSnapshot(slug)?.event.title).toBe('Copie à garder'));
+      expect(readLastEventSnapshot(slug)?.movies).toEqual([]);
+    });
+
+    it('opens the saved copy when the network is down', async () => {
+      saveLastEventSnapshot({
+        slug,
+        savedAt: Date.now() - 60_000,
+        event: {
+          id: 'evt-copy',
+          slug,
+          title: 'Copie hors ligne',
+          date: '2030-12-15',
+          time: '21:00',
+        } as EventData,
+        movies: [{ id: 'mov-copy', title: 'Alien', score: 1, myVote: 1 }] as MovieData[],
+      });
+      serveEventNever();
+      onlineManager.setOnline(false);
+
+      const { result } = renderWithClient(createTestQueryClient());
+
+      expect(result.current.event?.title).toBe('Copie hors ligne');
+      expect(result.current.movies.map((movie) => movie.id)).toEqual(['mov-copy']);
+    });
+
+    it('forgets the saved copy of a movie night that no longer exists', async () => {
+      saveLastEventSnapshot({
+        slug,
+        savedAt: Date.now() - 60_000,
+        event: {
+          id: 'evt-copy',
+          slug,
+          title: 'Copie',
+          date: '2030-12-15',
+          time: '21:00',
+        } as EventData,
+        movies: [],
+      });
+      server.use(
+        http.get(`${TEST_API_V1}/events/slug/${slug}`, () =>
+          HttpResponse.json({ error: 'gone' }, { status: 404 })
+        ),
+        http.get(`${TEST_API_V1}/events/${slug}/movies`, () => HttpResponse.json([]))
+      );
+
+      const { result } = renderWithClient(createTestQueryClient());
+
+      await waitFor(() => expect(result.current.eventQuery.isError).toBe(true));
+      expect(readLastEventSnapshot(slug)).toBeNull();
+    });
   });
 
   it('keeps the fragment and the navigation state when it moves a legacy host token into the session', async () => {

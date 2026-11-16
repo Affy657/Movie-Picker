@@ -54,6 +54,8 @@ function EventParticipantsDialog({
         onRemoveParticipant={panel.canRemove ? panel.onRemove : undefined}
         onInvite={hostCanInvite ? panel.onInviteFriends : undefined}
         onLeave={panel.canShowLeave ? panel.onLeave : undefined}
+        onlineIds={panel.onlineIds}
+        proposingIds={panel.proposingIds}
         leaveDisabled={
           panel.isConnectedSelf &&
           panel.removePending &&
@@ -172,6 +174,7 @@ export default function EventDetailSessionBody({
           addMovieTriggerRef={moviesSection.addMovieTriggerRef}
           winnerMovieIds={wheel.winnerIds}
           isFull={moviesSection.isFull}
+          offline={moviesSection.offline}
           wheelLocked={moviesSection.wheelLocked}
         />
       </div>

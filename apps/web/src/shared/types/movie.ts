@@ -41,6 +41,8 @@ export interface MovieData {
   down: number;
 
   myVote?: 1 | -1 | null;
+
+  pendingVote?: boolean;
   voteAverage?: number | null;
   watchProviders?: WatchProviderOffer[];
   tmdbWatchPageUrl?: string | null;

@@ -125,6 +125,7 @@ export type EventMoviesSectionProps = {
   addMovieTriggerRef: RefObject<HTMLButtonElement | null>;
   winnerMovieIds?: string[];
   isFull?: boolean;
+  offline?: boolean;
   wheelLocked?: boolean;
 };
 
@@ -225,6 +226,7 @@ export default function EventMoviesSection({
   addMovieTriggerRef,
   winnerMovieIds,
   isFull = false,
+  offline = false,
   wheelLocked = false,
 }: Readonly<EventMoviesSectionProps>) {
   const isFinished = !!event.isFinished;
@@ -313,7 +315,7 @@ export default function EventMoviesSection({
 
   const moviesLoaded = moviesQuery.data !== undefined;
   const showSortControl = moviesLoaded && (layout === 'grid' || compactRows) && movies.length > 1;
-  const canAddFromEmptyState = !!participant && !addMovieOpen;
+  const canAddFromEmptyState = !!participant && !addMovieOpen && !offline;
   const emptyState = isFinished ? null : (
     <EmptyState
       icon={<Film size={ICON_SIZE['3xl']} aria-hidden />}

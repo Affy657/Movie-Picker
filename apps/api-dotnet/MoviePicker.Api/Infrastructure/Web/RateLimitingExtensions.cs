@@ -52,6 +52,8 @@ public static class RateLimitingExtensions
     public const string AuthLogoutPolicy = "auth-logout";
     public const string HealthReadyPolicy = "health-ready";
     public const string EventViewPollPolicy = "event-view-poll";
+    public const string EventStreamPolicy = "event-stream";
+    public const string EventPresencePolicy = "event-presence";
     public const string RecapDocumentPolicy = "recap-document";
     public const string InvitationDocumentPolicy = "invitation-document";
     public const string MovieDocumentPolicy = "movie-document";
@@ -111,6 +113,8 @@ public static class RateLimitingExtensions
         new(AuthLogoutPolicy, 30, 1),
         new(HealthReadyPolicy, 30, 1, QuotaScope.Address),
         new(EventViewPollPolicy, 600, 1),
+        new(EventStreamPolicy, 60, 1),
+        new(EventPresencePolicy, 60, 1),
         new(RatingMutationPolicy, 60, 1),
         new(RecapDocumentPolicy, 120, 1, QuotaScope.Slug),
         new(InvitationDocumentPolicy, 120, 1, QuotaScope.Slug),

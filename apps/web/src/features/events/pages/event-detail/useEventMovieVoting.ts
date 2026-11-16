@@ -1,4 +1,6 @@
 import { useCallback, useState } from 'react';
+import { onlineManager } from '@tanstack/react-query';
+import { hasQueuedVote, queueVote } from '@/shared/utils/offlineEventStorage';
 import { clearMovieVote, voteMovie } from '@/features/movies/api/moviesApi';
 import { API_ERROR_REASONS, ApiError, getErrorMessage } from '@/shared/api/apiError';
 import { promptToJoinEvent } from '@/features/events/joinPrompt';
@@ -10,6 +12,10 @@ type ParticipantRef = { participantId: string; pseudo: string };
 
 export type VoteValue = 1 | -1;
 export type VoteErrors = Record<string, { message: string; value: VoteValue }>;
+
+function neverReachedServer(error: unknown): boolean {
+  return ApiError.is(error) && error.code === 0;
+}
 
 function isVoteLimitFailure(error: unknown): boolean {
   return ApiError.is(error) && error.reason === API_ERROR_REASONS.voteLimitReached;
@@ -78,6 +84,20 @@ export function useEventMovieVoting({
     [slug, movies, refreshAll, track]
   );
 
+  const queueForLater = useCallback(
+    (participantId: string, movieId: string, value: VoteValue) => {
+      const current = movies.find((m) => m.id === movieId)?.myVote ?? null;
+      queueVote({
+        slug,
+        movieId,
+        participantId,
+        value: current === value ? 0 : value,
+        queuedAt: Date.now(),
+      });
+    },
+    [slug, movies]
+  );
+
   const handleVote = useCallback(
     async (movieId: string, value: VoteValue) => {
       if (!participant) {
@@ -86,13 +106,26 @@ export function useEventMovieVoting({
       }
       setActionError(null);
       clearVoteError(movieId);
+      const waitingBehindQueue = hasQueuedVote({
+        slug,
+        movieId,
+        participantId: participant.participantId,
+      });
+      if (!onlineManager.isOnline() || waitingBehindQueue) {
+        queueForLater(participant.participantId, movieId, value);
+        return;
+      }
       try {
         await sendVote(participant.participantId, movieId, value);
       } catch (e) {
+        if (neverReachedServer(e)) {
+          queueForLater(participant.participantId, movieId, value);
+          return;
+        }
         reportVoteFailure(movieId, value, e);
       }
     },
-    [participant, setActionError, clearVoteError, sendVote, reportVoteFailure]
+    [slug, participant, setActionError, clearVoteError, sendVote, reportVoteFailure, queueForLater]
   );
 
   const submitVote = useCallback(
