@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import clsx from 'clsx';
-import { Layers } from 'lucide-react';
+import { ChevronRight, Layers } from 'lucide-react';
 import styles from './MovieCollectionCard.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import Card from '@/shared/components/Card';
+import PosterFan from '@/features/movies/components/PosterFan';
 
 const STACK_SLOTS = [styles.stackFront, styles.stackMiddle, styles.stackBack];
 
@@ -16,7 +17,10 @@ interface Props {
   stackSrcs?: readonly string[];
   badgeIcon?: ReactNode;
   extra?: ReactNode;
-  footer?: ReactNode;
+  layout?: 'stack' | 'row';
+  progress?: number | null;
+  nameSuffix?: ReactNode;
+  emptyIcon?: ReactNode;
 }
 
 interface CollectionStackProps {
@@ -26,7 +30,49 @@ interface CollectionStackProps {
   srcs: readonly string[];
   badgeIcon?: ReactNode;
   extra?: ReactNode;
-  footer?: ReactNode;
+}
+
+interface CollectionRowProps {
+  to: string;
+  name: string;
+  movieCountLabel: string;
+  srcs: readonly string[];
+  extra?: ReactNode;
+  progress?: number | null;
+  nameSuffix?: ReactNode;
+  emptyIcon?: ReactNode;
+}
+
+function CollectionRow({
+  to,
+  name,
+  movieCountLabel,
+  srcs,
+  extra,
+  progress,
+  nameSuffix,
+  emptyIcon,
+}: Readonly<CollectionRowProps>) {
+  return (
+    <li className={styles.rowItem}>
+      <Link to={to} className={styles.row}>
+        <PosterFan
+          srcs={srcs}
+          progress={progress}
+          emptyIcon={emptyIcon ?? <Layers size={ICON_SIZE.lg} />}
+        />
+        <span className={styles.rowText}>
+          <span className={styles.rowName}>
+            <span className={styles.rowNameText}>{name}</span>
+            {nameSuffix}
+          </span>
+          <span className={styles.rowCount}>{movieCountLabel}</span>
+          {extra ? <span className={styles.rowExtra}>{extra}</span> : null}
+        </span>
+        <ChevronRight className={styles.rowChevron} size={ICON_SIZE.lg} aria-hidden />
+      </Link>
+    </li>
+  );
 }
 
 function CollectionStack({
@@ -36,7 +82,6 @@ function CollectionStack({
   srcs,
   badgeIcon,
   extra,
-  footer,
 }: Readonly<CollectionStackProps>) {
   return (
     <li className={styles.card}>
@@ -68,7 +113,6 @@ function CollectionStack({
         <span className={styles.count}>{movieCountLabel}</span>
         {extra ? <span className={styles.extra}>{extra}</span> : null}
       </Link>
-      {footer ? <div className={styles.footer}>{footer}</div> : null}
     </li>
   );
 }
@@ -81,8 +125,25 @@ export default function MovieCollectionCard({
   stackSrcs,
   badgeIcon,
   extra,
-  footer,
+  layout = 'stack',
+  progress,
+  nameSuffix,
+  emptyIcon,
 }: Readonly<Props>) {
+  if (stackSrcs && layout === 'row') {
+    return (
+      <CollectionRow
+        to={to}
+        name={name}
+        movieCountLabel={movieCountLabel}
+        srcs={stackSrcs}
+        extra={extra}
+        progress={progress}
+        nameSuffix={nameSuffix}
+        emptyIcon={emptyIcon}
+      />
+    );
+  }
   if (stackSrcs) {
     return (
       <CollectionStack
@@ -92,7 +153,6 @@ export default function MovieCollectionCard({
         srcs={stackSrcs}
         badgeIcon={badgeIcon}
         extra={extra}
-        footer={footer}
       />
     );
   }

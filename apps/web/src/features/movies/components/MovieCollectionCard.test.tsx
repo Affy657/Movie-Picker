@@ -46,11 +46,39 @@ describe('MovieCollectionCard', () => {
     expect(within(link).getByText('Letterboxd')).toBeInTheDocument();
   });
 
-  it('keeps the actions of the card out of its link', () => {
-    renderCard({ footer: <button type="button">Ne plus enregistrer</button> });
+  describe('as a row', () => {
+    it('links a fan of posters, the name, the count and a line under it', () => {
+      renderCard({
+        layout: 'row',
+        stackSrcs: ['/a.jpg', '/b.jpg', '/c.jpg'],
+        nameSuffix: <span>Publique</span>,
+        extra: <span>Avec Léa</span>,
+      });
 
-    const button = screen.getByRole('button', { name: 'Ne plus enregistrer' });
-    expect(screen.getByRole('link')).not.toContainElement(button);
-    expect(screen.getByRole('listitem')).toContainElement(button);
+      const link = screen.getByRole('link', { name: /halloween/i });
+      expect(link).toHaveAttribute('href', '/listes/l1');
+      expect(link.querySelectorAll('img')).toHaveLength(3);
+      expect(within(link).getByText('8 films')).toBeInTheDocument();
+      expect(within(link).getByText('Publique')).toBeInTheDocument();
+      expect(within(link).getByText('Avec Léa')).toBeInTheDocument();
+    });
+
+    it('draws the progress under the front poster only once a film is watched', () => {
+      const { unmount } = renderCard({ layout: 'row', progress: 40 });
+
+      expect(screen.getByRole('link').querySelector('[class*="progress"]')).not.toBeNull();
+      unmount();
+
+      renderCard({ layout: 'row', progress: null });
+      expect(screen.getByRole('link').querySelector('[class*="progress"]')).toBeNull();
+    });
+
+    it('shows the empty icon in place of the posters of an empty list', () => {
+      renderCard({ layout: 'row', stackSrcs: [], emptyIcon: <svg data-testid="empty" /> });
+
+      const link = screen.getByRole('link');
+      expect(link.querySelectorAll('img')).toHaveLength(0);
+      expect(within(link).getByTestId('empty')).toBeInTheDocument();
+    });
   });
 });

@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Changed
+
+- **Mes listes se lit d'un coup d'œil** : À voir et Films vus en raccourcis en tête, puis une liste par ligne, rangées en trois sections (Vos listes, Partagées avec vous, Enregistrées), chacune avec son nombre de films vus, avec qui vous la remplissez ou d'où elle vient. Recherche et tri n'apparaissent qu'à partir de sept listes, et le sens du tri se choisit dans le menu.
+
 ## [1.15.0] - 2026-11-16
 
 ### Added

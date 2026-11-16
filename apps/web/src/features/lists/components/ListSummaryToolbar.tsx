@@ -7,7 +7,7 @@ import {
   type ListSortKey,
 } from '@/features/lists/utils/listSummaries';
 
-const SORT_LABEL_KEYS: Record<ListSortKey, TranslationKey> = {
+export const SORT_LABEL_KEYS: Record<ListSortKey, TranslationKey> = {
   recent: 'lists.summary.sortRecent',
   name: 'lists.summary.sortName',
   size: 'lists.summary.sortSize',
@@ -28,6 +28,11 @@ export function useListSummaryFilters() {
     setSortDir(DEFAULT_LIST_SORT_DIRECTION[key]);
   };
 
+  const selectSort = (key: ListSortKey) => {
+    setSortBy(key);
+    setSortDir(DEFAULT_LIST_SORT_DIRECTION[key]);
+  };
+
   const clearAll = () => {
     setSearch('');
     setSortBy('recent');
@@ -39,13 +44,15 @@ export function useListSummaryFilters() {
     setSearch,
     sortBy,
     sortDir,
+    setSortDir,
     changeSort,
+    selectSort,
     clearAll,
     isFiltered: search.trim().length > 0,
   };
 }
 
-type ListSummaryFilters = ReturnType<typeof useListSummaryFilters>;
+export type ListSummaryFilters = ReturnType<typeof useListSummaryFilters>;
 
 export default function ListSummaryToolbar({
   filters,
