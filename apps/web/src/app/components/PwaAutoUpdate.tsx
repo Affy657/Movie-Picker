@@ -3,7 +3,11 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 
 const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
 
-export default function PwaAutoUpdate() {
+const reloadCurrentPage = () => globalThis.location.reload();
+
+export default function PwaAutoUpdate({
+  reloadPage = reloadCurrentPage,
+}: Readonly<{ reloadPage?: () => void }>) {
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
   const mountedRef = useRef(false);
   const pendingRegistrationRef = useRef<ServiceWorkerRegistration | null>(null);
@@ -54,7 +58,6 @@ export default function PwaAutoUpdate() {
 
     const container = navigator.serviceWorker;
     let applied = false;
-    const reloadPage = () => globalThis.location.reload();
     container?.addEventListener('controllerchange', reloadPage);
 
     const applyWhenHidden = () => {
@@ -71,7 +74,7 @@ export default function PwaAutoUpdate() {
       document.removeEventListener('visibilitychange', applyWhenHidden);
       container?.removeEventListener('controllerchange', reloadPage);
     };
-  }, [needRefresh, updateServiceWorker]);
+  }, [needRefresh, updateServiceWorker, reloadPage]);
 
   return null;
 }

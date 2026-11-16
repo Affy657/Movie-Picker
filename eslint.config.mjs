@@ -57,5 +57,12 @@ export default defineConfig(
       'apps/web/src/shared/i18n/locales/*.ts',
       'apps/web/src/**/generated/**',
     ],
+  },
+  {
+    files: ['apps/web/src/**/*.test.{ts,tsx}'],
+    plugins: { sonarjs },
+    rules: {
+      'sonarjs/hooks-before-test-cases': 'error',
+    },
   }
 );

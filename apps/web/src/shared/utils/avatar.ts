@@ -56,10 +56,12 @@ export function isAvatarPhotoId(avatarId: string | null | undefined): avatarId i
   return typeof avatarId === 'string' && avatarId.startsWith(AVATAR_PHOTO_PREFIX);
 }
 
+export const DICEBEAR_ORIGIN = 'https://api.dicebear.com';
+
 export function avatarUrl(avatarId: string): string {
   if (isAvatarPhotoId(avatarId)) {
     return apiUrl(apiPath('avatars', avatarId.slice(AVATAR_PHOTO_PREFIX.length)));
   }
   const style = EMOJI_SET.has(avatarId) ? 'fun-emoji' : 'bottts-neutral';
-  return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(avatarId)}&radius=50`;
+  return `${DICEBEAR_ORIGIN}/9.x/${style}/svg?seed=${encodeURIComponent(avatarId)}&radius=50`;
 }

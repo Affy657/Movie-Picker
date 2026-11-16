@@ -238,14 +238,23 @@ jobs:
   # does not depend on the stage (a local build, `scripts/lighthouse-run.mjs`), and a front reaches
   # production only once the staging served it, which this gate decided (header).
   # Trade-off: a performance regression is no longer seen at push time but at deployment time.
+  # Seven runners, two pages each (`LH_SHARD`, every seventh page of `scripts/lighthouse-run.mjs`):
+  # the 14 pages times 5 passes took 8 min 30 one after the other on a single runner, the whole
+  # critical path of a staging deployment. Each page still gets its 5 passes on one runner, alone
+  # on its CPU, so the measurement is the same; only the wall clock changes. A page added to the
+  # script lands in a shard by itself. The matrix result is `success` only when every shard is.
   lighthouse:
-    name: 💡 Lighthouse web (blocking thresholds)
+    name: 💡 Lighthouse web (shard ${{ matrix.shard }}/7)
     needs: verify-ci
     if: inputs.stage == 'staging' && (inputs.target == 'all' || inputs.target == 'front')
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -261,10 +270,11 @@ jobs:
       - run: pnpm run lighthouse
         env:
           LH_RUNS: 5
+          LH_SHARD: ${{ matrix.shard }}/7
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:
-          name: lighthouse-reports
+          name: lighthouse-reports-${{ matrix.shard }}
           path: artifacts/lighthouse
           if-no-files-found: warn
           retention-days: 7
@@ -693,18 +703,12 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     # Same reasoning as `deploy-api`: the long list of gates is replaced by `verify-ci`, which
-    # requires all of them on the target commit. Lighthouse is the only gate that runs in this
-    # workflow, on the staging stage alone (header): the condition requires its success there and
-    # accepts its skip on production, where `verify-ci` has required the staging to serve this
-    # very front. `!cancelled()` rather than a bare `needs:`, because a bare one would skip this
-    # job behind the skipped Lighthouse of production; every outcome that matters is spelled out
-    # here, nothing propagates silently, and the final guard reads the result anyway.
-    needs: [verify-ci, lighthouse]
-    if: >-
-      !cancelled()
-      && needs.verify-ci.result == 'success'
-      && (inputs.target == 'all' || inputs.target == 'front')
-      && (needs.lighthouse.result == 'success' || (inputs.stage == 'production' && needs.lighthouse.result == 'skipped'))
+    # requires all of them on the target commit. The build no longer waits for Lighthouse: it runs
+    # next to it, and the gate is held where it matters, by `deploy-front`, which publishes nothing
+    # unless Lighthouse passed. Building early publishes nothing; it only takes a minute off the
+    # critical path of the staging.
+    needs: verify-ci
+    if: inputs.target == 'all' || inputs.target == 'front'
     environment: ${{ inputs.stage }}
     permissions:
       contents: read
@@ -764,11 +768,15 @@ jobs:
     # keep serving the web app already published (rule in AGENTS.md). On a `front` target the API
     # is skipped, and `verify-ci` has checked that its lane did not change since the release the
     # stage serves.
-    needs: [build-front, deploy-api]
+    # Lighthouse is the only gate that runs in this workflow, on the staging stage alone (header):
+    # the condition requires its success there and accepts its skip on production, where
+    # `verify-ci` has required the staging to serve this very front.
+    needs: [build-front, deploy-api, lighthouse]
     if: >-
       !cancelled()
       && needs.build-front.result == 'success'
       && (needs.deploy-api.result == 'success' || (inputs.target == 'front' && needs.deploy-api.result == 'skipped'))
+      && (needs.lighthouse.result == 'success' || (inputs.stage == 'production' && needs.lighthouse.result == 'skipped'))
     environment: ${{ inputs.stage }}
     permissions:
       contents: read

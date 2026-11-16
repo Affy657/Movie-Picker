@@ -37,6 +37,7 @@ export default function ProfileHeader({
         pseudo={profile.displayName}
         size="xl"
         className={styles.avatar}
+        priority
       />
 
       <div className={styles.identity}>

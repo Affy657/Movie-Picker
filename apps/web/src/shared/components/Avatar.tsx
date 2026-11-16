@@ -9,6 +9,7 @@ interface AvatarProps {
   pseudo?: string;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
+  priority?: boolean;
 }
 
 const SIZE_PX: Record<NonNullable<AvatarProps['size']>, number> = {
@@ -24,6 +25,7 @@ export default function Avatar({
   pseudo,
   size = 'md',
   className,
+  priority = false,
 }: Readonly<AvatarProps>) {
   const px = SIZE_PX[size];
   const [failedAvatarId, setFailedAvatarId] = useState<string | null>(null);
@@ -56,7 +58,8 @@ export default function Avatar({
       width={px}
       height={px}
       className={clsx(styles.avatar, styles[size], className)}
-      loading="lazy"
+      loading={priority ? 'eager' : 'lazy'}
+      fetchPriority={priority ? 'high' : undefined}
       decoding="async"
       onError={() => setFailedAvatarId(avatarId)}
     />

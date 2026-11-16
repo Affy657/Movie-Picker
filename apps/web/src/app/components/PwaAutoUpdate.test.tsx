@@ -26,10 +26,14 @@ function setupHook(needRefresh: boolean): () => RegisteredCallback | undefined {
   return () => captured;
 }
 
-async function renderWithRegistration(update: ReturnType<typeof vi.fn>, needRefresh = false) {
+async function renderWithRegistration(
+  update: ReturnType<typeof vi.fn>,
+  needRefresh = false,
+  reloadPage?: () => void
+) {
   const getCallback = setupHook(needRefresh);
   const registration = { installing: null, update } as unknown as ServiceWorkerRegistration;
-  const view = render(<PwaAutoUpdate />);
+  const view = render(<PwaAutoUpdate reloadPage={reloadPage} />);
   await act(async () => {
     getCallback()?.('sw.js', registration);
   });
@@ -38,12 +42,6 @@ async function renderWithRegistration(update: ReturnType<typeof vi.fn>, needRefr
 
 function stubVisibility(state: DocumentVisibilityState) {
   return vi.spyOn(document, 'visibilityState', 'get').mockReturnValue(state);
-}
-
-function stubLocationReload() {
-  const reload = vi.fn();
-  vi.stubGlobal('location', { ...globalThis.location, reload });
-  return reload;
 }
 
 let restoreServiceWorker: (() => void) | null = null;
@@ -74,7 +72,6 @@ describe('PwaAutoUpdate', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
-    vi.unstubAllGlobals();
     restoreServiceWorker?.();
     restoreServiceWorker = null;
   });
@@ -193,8 +190,12 @@ describe('PwaAutoUpdate', () => {
     it('reloads even when another tab triggered the update, without ever going to the background itself', async () => {
       stubVisibility('visible');
       const container = stubServiceWorkerContainer();
-      const reload = stubLocationReload();
-      const { unmount } = await renderWithRegistration(vi.fn().mockResolvedValue(undefined), true);
+      const reload = vi.fn();
+      const { unmount } = await renderWithRegistration(
+        vi.fn().mockResolvedValue(undefined),
+        true,
+        reload
+      );
 
       expect(mockUpdateSW).not.toHaveBeenCalled();
 

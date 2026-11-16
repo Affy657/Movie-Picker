@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import lighthouse, { generateReport } from 'lighthouse';
 import { launch as launchChrome } from 'chrome-launcher';
 
-import { median, reviewCategory } from './lighthouse-budget.mjs';
+import { median, reviewCategory, selectPages } from './lighthouse-budget.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
@@ -337,11 +337,14 @@ try {
 
   const RUNS = Number(process.env.LH_RUNS || 3);
 
-  const only = (process.env.LH_ONLY || '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const selected = only.length > 0 ? URLS.filter((u) => only.includes(u.slug)) : URLS;
+  const selected = selectPages(URLS, {
+    only: process.env.LH_ONLY ?? '',
+    shard: process.env.LH_SHARD ?? '',
+  });
+  if (selected.length === 0) {
+    throw new Error('No page selected: check LH_ONLY and LH_SHARD, an empty shard proves nothing.');
+  }
+  console.log(`Pages measured: ${selected.map((u) => u.slug).join(', ')}`);
 
   try {
     for (const { path: pth, slug, indexable, skipPerformance } of selected) {

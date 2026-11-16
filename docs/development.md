@@ -134,12 +134,14 @@ Tous se lancent à la racine du dépôt.
 | `pnpm run check:terraform` | `terraform fmt -check` puis `validate` sur chaque module racine de `infra/terraform/`, par Docker |
 | `pnpm run terraform -- <commande>` | Terraform depuis son image épinglée, bucket d'état et jeton GCP fournis par l'enveloppe, voir `infra/README.md` |
 | `pnpm format`, `pnpm format:check` | Prettier |
-| `pnpm run format:dotnet`, `pnpm run format:dotnet:check` | Style C#, après `dotnet restore` |
+| `pnpm run format:dotnet`, `pnpm run format:dotnet:check` | Style C#, après `dotnet restore` ; la vérification joue les passes `whitespace` et `style`, les analyseurs étant ceux du build |
 | `pnpm test`, `pnpm run test:coverage` | Tests front, Vitest |
+| `pnpm run test:changed` | Tests front touchés par le diff depuis `origin/master`, la boucle d'avant push |
 | `pnpm run test:api:mongo` | Tests d'intégration API contre une vraie MongoDB |
 | `pnpm run test:api:mutation` | Passe Stryker.NET, rapport dans `artifacts/stryker` |
 | `pnpm run test:e2e`, `pnpm run test:e2e:ci` | Playwright, la seconde forme construisant le front avec un stub TMDB |
 | `pnpm run test:e2e:mongo` | Le seul parcours critique, sur base réelle |
+| `pnpm run test:e2e:local` | La suite Playwright depuis le poste, serveurs de dev allumés : API de test en Release sur 5010, front construit contre elle, `--mongo` pour le parcours critique sur base réelle |
 | `pnpm run openapi:export`, `pnpm run openapi:types:check` | Contrat OpenAPI et dérive des types |
 | `pnpm --filter web prerender` | Prérendu des routes publiques indexables, à lancer après un build |
 | `pnpm run lighthouse` | Lighthouse sur le build, demande Node 22+ et Chrome |
