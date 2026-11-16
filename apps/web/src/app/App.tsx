@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, type ReactNode } from 'react';
+import { Suspense, useState, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router';
 import { Bookmark, CalendarPlus, Eye, Inbox } from 'lucide-react';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -16,45 +16,46 @@ import SessionGate from '@/app/components/SessionGate';
 import ScrollToTop from '@/app/components/ScrollToTop';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
-import { ROUTE_CHUNKS } from '@/app/routeChunks';
+import { routeLazy } from '@/app/routeChunks';
 import { useHomeShowcasePrefetch } from '@/features/movies/homeShowcasePrefetch';
+import { usePublicProfilePrefetch } from '@/features/profile/publicProfilePrefetch';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { BrandLoader } from '@/shared/brand/BrandLoader';
 
-const HomePage = lazy(ROUTE_CHUNKS.home);
-const ShowcaseListPage = lazy(ROUTE_CHUNKS.showcaseList);
-const MovieCollectionsPage = lazy(ROUTE_CHUNKS.movieCollections);
-const LandingPage = lazy(ROUTE_CHUNKS.landing);
-const CreateEvent = lazy(ROUTE_CHUNKS.createEvent);
-const EventDetail = lazy(ROUTE_CHUNKS.eventDetail);
-const NightRecapPage = lazy(ROUTE_CHUNKS.nightRecap);
-const LoginPage = lazy(ROUTE_CHUNKS.login);
-const RegisterPage = lazy(ROUTE_CHUNKS.register);
-const ForgotPasswordPage = lazy(ROUTE_CHUNKS.forgotPassword);
-const ResetPasswordPage = lazy(ROUTE_CHUNKS.resetPassword);
-const OAuthCallbackPage = lazy(ROUTE_CHUNKS.oauthCallback);
-const AccountPage = lazy(ROUTE_CHUNKS.account);
-const LegalNoticePage = lazy(ROUTE_CHUNKS.legalNotice);
-const PrivacyPolicyPage = lazy(ROUTE_CHUNKS.privacyPolicy);
-const DonatePage = lazy(ROUTE_CHUNKS.donate);
-const TechPage = lazy(ROUTE_CHUNKS.tech);
-const ReleaseNotesPage = lazy(ROUTE_CHUNKS.releaseNotes);
-const MyEventsPage = lazy(ROUTE_CHUNKS.myEvents);
-const WatchlistPage = lazy(ROUTE_CHUNKS.watchlist);
-const MyListsPage = lazy(ROUTE_CHUNKS.lists);
-const MovieListPage = lazy(ROUTE_CHUNKS.movieList);
-const SavedListPage = lazy(ROUTE_CHUNKS.savedList);
-const JoinListPage = lazy(ROUTE_CHUNKS.joinList);
-const MemberListsPage = lazy(ROUTE_CHUNKS.memberLists);
-const PublicListPage = lazy(ROUTE_CHUNKS.publicList);
-const WatchedMoviesPage = lazy(ROUTE_CHUNKS.watchedMovies);
-const NotificationsPage = lazy(ROUTE_CHUNKS.notifications);
-const ProfilePage = lazy(ROUTE_CHUNKS.profile);
-const ProfileMoviesPage = lazy(ROUTE_CHUNKS.profileMovies);
-const ProfileProposalsPage = lazy(ROUTE_CHUNKS.profileProposals);
-const ProfileWatchlistPage = lazy(ROUTE_CHUNKS.profileWatchlist);
-const NotFoundPage = lazy(ROUTE_CHUNKS.notFound);
-const MoviePage = lazy(ROUTE_CHUNKS.moviePage);
+const HomePage = routeLazy('home');
+const ShowcaseListPage = routeLazy('showcaseList');
+const MovieCollectionsPage = routeLazy('movieCollections');
+const LandingPage = routeLazy('landing');
+const CreateEvent = routeLazy('createEvent');
+const EventDetail = routeLazy('eventDetail');
+const NightRecapPage = routeLazy('nightRecap');
+const LoginPage = routeLazy('login');
+const RegisterPage = routeLazy('register');
+const ForgotPasswordPage = routeLazy('forgotPassword');
+const ResetPasswordPage = routeLazy('resetPassword');
+const OAuthCallbackPage = routeLazy('oauthCallback');
+const AccountPage = routeLazy('account');
+const LegalNoticePage = routeLazy('legalNotice');
+const PrivacyPolicyPage = routeLazy('privacyPolicy');
+const DonatePage = routeLazy('donate');
+const TechPage = routeLazy('tech');
+const ReleaseNotesPage = routeLazy('releaseNotes');
+const MyEventsPage = routeLazy('myEvents');
+const WatchlistPage = routeLazy('watchlist');
+const MyListsPage = routeLazy('lists');
+const MovieListPage = routeLazy('movieList');
+const SavedListPage = routeLazy('savedList');
+const JoinListPage = routeLazy('joinList');
+const MemberListsPage = routeLazy('memberLists');
+const PublicListPage = routeLazy('publicList');
+const WatchedMoviesPage = routeLazy('watchedMovies');
+const NotificationsPage = routeLazy('notifications');
+const ProfilePage = routeLazy('profile');
+const ProfileMoviesPage = routeLazy('profileMovies');
+const ProfileProposalsPage = routeLazy('profileProposals');
+const ProfileWatchlistPage = routeLazy('profileWatchlist');
+const NotFoundPage = routeLazy('notFound');
+const MoviePage = routeLazy('moviePage');
 
 function PageFallback() {
   const { t } = useTranslation();
@@ -246,6 +247,7 @@ export function AppRoutes() {
 export function AppRoutesWithErrorBoundary() {
   const location = useLocation();
   useHomeShowcasePrefetch();
+  usePublicProfilePrefetch();
   return (
     <>
       <ScrollToTop />

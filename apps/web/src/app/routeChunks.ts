@@ -1,3 +1,5 @@
+import { createElement, lazy, useState, type ComponentType } from 'react';
+import { matchRoutes } from 'react-router';
 import { ROUTES } from '@/app/routes';
 
 export const ROUTE_CHUNKS = {
@@ -77,4 +79,91 @@ export function routeIntentHandlers(path: string): {
 
 export function resetPreloadedRoutesForTests(): void {
   preloaded.clear();
+}
+
+type RouteChunkPage<N extends RouteChunkName> = Awaited<
+  ReturnType<(typeof ROUTE_CHUNKS)[N]>
+>['default'];
+type LoadedPage = ComponentType<Record<string, unknown>>;
+
+const loadedPages = new Map<RouteChunkName, LoadedPage>();
+
+function loadRouteChunk(name: RouteChunkName): Promise<{ default: LoadedPage }> {
+  return ROUTE_CHUNKS[name]().then((module) => {
+    const page = module.default as unknown as LoadedPage;
+    loadedPages.set(name, page);
+    return { default: page };
+  });
+}
+
+export function routeLazy<N extends RouteChunkName>(name: N): RouteChunkPage<N> {
+  const Lazy = lazy(() => loadRouteChunk(name));
+  function RouteChunk(props: Record<string, unknown>) {
+    const [Page] = useState<LoadedPage>(() => loadedPages.get(name) ?? Lazy);
+    return createElement(Page, props);
+  }
+  return RouteChunk as unknown as RouteChunkPage<N>;
+}
+
+const ROUTE_CHUNK_BY_PATTERN: ReadonlyArray<{ path: string; chunk: RouteChunkName }> = [
+  { path: ROUTES.home, chunk: 'home' },
+  { path: ROUTES.howItWorks, chunk: 'landing' },
+  { path: ROUTES.movieSearch, chunk: 'showcaseList' },
+  { path: ROUTES.movieCollections, chunk: 'movieCollections' },
+  { path: ROUTES.showcaseTrending, chunk: 'showcaseList' },
+  { path: ROUTES.showcaseNowPlaying, chunk: 'showcaseList' },
+  { path: ROUTES.showcaseMostProposed, chunk: 'showcaseList' },
+  { path: ROUTES.showcaseProviderPattern, chunk: 'showcaseList' },
+  { path: ROUTES.showcaseRecommendationsPattern, chunk: 'showcaseList' },
+  { path: ROUTES.showcaseThemePattern, chunk: 'showcaseList' },
+  { path: ROUTES.movieCollectionPattern, chunk: 'showcaseList' },
+  { path: ROUTES.moviePagePattern, chunk: 'moviePage' },
+  { path: ROUTES.showPagePattern, chunk: 'moviePage' },
+  { path: ROUTES.createEvent, chunk: 'createEvent' },
+  { path: ROUTES.login, chunk: 'login' },
+  { path: ROUTES.register, chunk: 'register' },
+  { path: ROUTES.forgotPassword, chunk: 'forgotPassword' },
+  { path: ROUTES.resetPassword, chunk: 'resetPassword' },
+  { path: ROUTES.oauthCallback, chunk: 'oauthCallback' },
+  { path: ROUTES.legalNotice, chunk: 'legalNotice' },
+  { path: ROUTES.privacyPolicy, chunk: 'privacyPolicy' },
+  { path: ROUTES.donate, chunk: 'donate' },
+  { path: ROUTES.tech, chunk: 'tech' },
+  { path: ROUTES.releaseNotes, chunk: 'releaseNotes' },
+  { path: `${ROUTES.account}/*`, chunk: 'account' },
+  { path: ROUTES.myEvents, chunk: 'myEvents' },
+  { path: ROUTES.watchlist, chunk: 'watchlist' },
+  { path: ROUTES.lists, chunk: 'lists' },
+  { path: ROUTES.watchedMovies, chunk: 'watchedMovies' },
+  { path: ROUTES.listPattern, chunk: 'movieList' },
+  { path: ROUTES.savedListPattern, chunk: 'savedList' },
+  { path: ROUTES.joinListPattern, chunk: 'joinList' },
+  { path: ROUTES.notifications, chunk: 'notifications' },
+  { path: ROUTES.eventDetailPattern, chunk: 'eventDetail' },
+  { path: ROUTES.nightRecapPattern, chunk: 'nightRecap' },
+  { path: ROUTES.profileMoviesPattern, chunk: 'profileMovies' },
+  { path: ROUTES.profileProposalsPattern, chunk: 'profileProposals' },
+  { path: ROUTES.profileWinningProposalsPattern, chunk: 'profileProposals' },
+  { path: ROUTES.profileWatchlistPattern, chunk: 'profileWatchlist' },
+  { path: ROUTES.profileListsPattern, chunk: 'memberLists' },
+  { path: ROUTES.publicListPattern, chunk: 'publicList' },
+  { path: ROUTES.profilePattern, chunk: 'profile' },
+  { path: '*', chunk: 'notFound' },
+];
+
+export function routeChunkForPath(pathname: string): RouteChunkName | undefined {
+  return matchRoutes([...ROUTE_CHUNK_BY_PATTERN], pathname)?.[0]?.route.chunk;
+}
+
+export function preloadStartupRoute(pathname: string): Promise<void> {
+  const name = routeChunkForPath(pathname);
+  if (!name || name === 'home') return Promise.resolve();
+  return loadRouteChunk(name).then(
+    () => undefined,
+    () => undefined
+  );
+}
+
+export function resetLoadedRouteModulesForTests(): void {
+  loadedPages.clear();
 }

@@ -241,7 +241,7 @@ function computeMetrics(previous) {
   const routerMajor = dependencyMajor('react-router');
   const queryMajor = dependencyMajor('@tanstack/react-query');
 
-  const lazyRoutes = countMatches(join(repoRoot, 'apps/web/src/app/App.tsx'), /lazy\(/g);
+  const lazyRoutes = countMatches(join(repoRoot, 'apps/web/src/app/App.tsx'), /routeLazy\(/g);
 
   const contractResponses = countMatches(
     join(repoRoot, 'apps/web/src/shared/api/generated/openapiSchema.ts'),

@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Changed
+
+- **Les pages s'affichent plus vite à l'ouverture du site** : la page demandée se charge en même temps que l'application au lieu de l'attendre, et la photo d'un profil arrive en priorité. Le bandeau des cookies apparaît d'un léger glissement, sans fondu.
+
 ## [1.15.0] - 2026-11-16
 
 ### Added

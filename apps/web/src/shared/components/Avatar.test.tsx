@@ -14,6 +14,15 @@ describe('Avatar', () => {
     expect(img).toHaveAttribute('aria-hidden', 'true');
     expect(img).toHaveAttribute('width', '56');
     expect(img).toHaveAttribute('loading', 'lazy');
+    expect(img).not.toHaveAttribute('fetchpriority');
+  });
+
+  it('loads a priority avatar at once and ahead of the other images', () => {
+    const { container } = render(<Avatar avatarId="cat-3" size="xl" priority />);
+
+    const img = container.querySelector('img');
+    expect(img).toHaveAttribute('loading', 'eager');
+    expect(img).toHaveAttribute('fetchpriority', 'high');
   });
 
   it('shows a profile photo served by the API', () => {
