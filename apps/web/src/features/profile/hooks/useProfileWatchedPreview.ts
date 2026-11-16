@@ -5,10 +5,10 @@ import {
   fetchUserWatchedMoviesPreview,
 } from '@/features/profile/api/profileApi';
 
-export function useProfileWatchedPreview(handle: string | undefined) {
+export function useProfileWatchedPreview(handle: string | undefined, enabled = true) {
   return useQuery({
     queryKey: queryKeys.profile.watchedMovies(handle, PROFILE_WATCHED_PREVIEW_TAKE),
     queryFn: ({ signal }) => fetchUserWatchedMoviesPreview(handle ?? '', signal),
-    enabled: !!handle,
+    enabled: !!handle && enabled,
   });
 }

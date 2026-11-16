@@ -150,6 +150,158 @@ describe('ProfilePage (MSW)', () => {
     );
   });
 
+  it('counts the public lists as a figure that opens them, in blue like the other links', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      createUserStatsHandler('alice', { eventsCreated: 4, publicListCount: 4 })
+    );
+
+    renderProfile('alice');
+
+    expect(await screen.findByRole('link', { name: /4\s*listes créées/i })).toHaveAttribute(
+      'href',
+      '/u/alice/listes'
+    );
+  });
+
+  it('names a single public list in the singular', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      createUserStatsHandler('alice', { eventsCreated: 4, publicListCount: 1 })
+    );
+
+    renderProfile('alice');
+
+    expect(await screen.findByRole('link', { name: /1\s*liste créée/i })).toBeInTheDocument();
+  });
+
+  it('leaves the lists figure out while no list is public', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      createUserStatsHandler('alice', { eventsCreated: 4, publicListCount: 0 })
+    );
+
+    renderProfile('alice');
+
+    expect(await screen.findByText(/soirées créées/i)).toBeInTheDocument();
+    expect(screen.queryByText(/listes? créées?/i)).toBeNull();
+  });
+
+  it('keeps hidden watched films out of the figures and out of the page', async () => {
+    let asked = false;
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () =>
+        HttpResponse.json({ ...ALICE_PROFILE, isWatchedPublic: false })
+      ),
+      createUserStatsHandler('alice', { eventsCreated: 4 }),
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () => {
+        asked = true;
+        return HttpResponse.json({ error: 'hidden', reason: 'watched_not_found' }, { status: 404 });
+      })
+    );
+
+    renderProfile('alice');
+
+    expect(await screen.findByText(/soirées créées/i)).toBeInTheDocument();
+    await waitFor(() => expect(asked).toBe(true));
+    expect(screen.queryByText(/films vus/i)).toBeNull();
+    expect(screen.queryByText('Les films vus n’ont pas pu être chargés.')).toBeNull();
+  });
+
+  it('asks for the last watched films without waiting for the profile', async () => {
+    let asked = false;
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () => new Promise<never>(() => undefined)),
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () => {
+        asked = true;
+        return HttpResponse.json({ items: [], total: 0 });
+      })
+    );
+
+    renderProfile('alice');
+
+    await waitFor(() => expect(asked).toBe(true));
+  });
+
+  it('flags on my profile that my watched films are hidden, and leads to the setting', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+      http.get(`${TEST_API_V1}/users/moi`, () =>
+        HttpResponse.json({
+          ...ALICE_PROFILE,
+          handle: 'moi',
+          displayName: 'Moi',
+          isWatchedPublic: false,
+        })
+      ),
+      http.get(`${TEST_API_V1}/users/moi/watched-movies`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              tmdbId: 27205,
+              title: 'Inception',
+              year: '2010',
+              posterPath: null,
+              genreIds: [],
+              mediaType: 'movie',
+              watchedAt: '2026-06-01T00:00:00Z',
+            },
+          ],
+          total: 1,
+        })
+      )
+    );
+
+    renderProfile('moi');
+
+    expect(await screen.findByRole('heading', { name: 'Films vus 1' })).toBeInTheDocument();
+    expect(screen.getByText('Masqués')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Rendre visible' })).toHaveAttribute(
+      'href',
+      '/listes/films-vus'
+    );
+  });
+
+  it('still shows me my own watched films when I keep them hidden', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+      http.get(`${TEST_API_V1}/users/moi`, () =>
+        HttpResponse.json({
+          ...ALICE_PROFILE,
+          handle: 'moi',
+          displayName: 'Moi',
+          isWatchedPublic: false,
+        })
+      ),
+      createUserStatsHandler('moi', { eventsCreated: 4 }),
+      http.get(`${TEST_API_V1}/users/moi/watched-movies`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              tmdbId: 27205,
+              title: 'Inception',
+              year: '2010',
+              posterPath: null,
+              genreIds: [],
+              mediaType: 'movie',
+              watchedAt: '2026-06-01T00:00:00Z',
+            },
+          ],
+          total: 12,
+        })
+      )
+    );
+
+    renderProfile('moi');
+
+    expect(await screen.findByRole('link', { name: /12\s*films vus/i })).toBeInTheDocument();
+  });
+
   it('affiche un squelette pendant le chargement du profil', () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
@@ -496,7 +648,7 @@ describe('ProfilePage (MSW)', () => {
       expect(screen.getByText('Masquée')).toBeInTheDocument();
       expect(screen.getByRole('link', { name: /rendre visible/i })).toHaveAttribute(
         'href',
-        '/settings/profil'
+        '/watchlist'
       );
     });
 

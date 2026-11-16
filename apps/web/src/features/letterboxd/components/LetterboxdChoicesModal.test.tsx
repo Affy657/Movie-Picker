@@ -5,7 +5,7 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import LetterboxdChoicesModal from './LetterboxdChoicesModal';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
-import { TEST_API_V1 } from '@/mocks/handlers';
+import { createLetterboxdConfirmHandler, TEST_API_V1 } from '@/mocks/handlers';
 import type { LetterboxdPendingChoice } from '@/features/letterboxd/api/letterboxdApi';
 
 const ONE_CHOICE: LetterboxdPendingChoice[] = [
@@ -55,6 +55,28 @@ const TWO_CHOICES: LetterboxdPendingChoice[] = [
     ],
   },
 ];
+
+const WATCHED_CHOICE: LetterboxdPendingChoice = {
+  rowIndex: 5000,
+  title: 'Alien',
+  year: '1979',
+  letterboxdSlug: 'alien',
+  target: 'watched',
+  rating: 8,
+  watchedOn: '2019-10-12',
+  candidates: [
+    {
+      tmdbId: 348,
+      mediaType: 'movie',
+      title: 'Alien, le huitième passager',
+      year: '1979',
+      posterPath: null,
+      voteAverage: 8.1,
+      genreIds: [27, 878],
+      runtimeMinutes: 117,
+    },
+  ],
+};
 
 function renderModal(
   choices: LetterboxdPendingChoice[] = ONE_CHOICE,
@@ -116,7 +138,13 @@ describe('LetterboxdChoicesModal (MSW)', () => {
     );
 
     const onConfirmed = (result: { added: number; alreadyPresent: number }) => {
-      expect(result).toEqual({ added: 1, alreadyPresent: 0, pendingReconciliationCount: 0 });
+      expect(result).toEqual({
+        added: 1,
+        alreadyPresent: 0,
+        watchedAdded: 0,
+        watchedAlreadyPresent: 0,
+        pendingReconciliationCount: 0,
+      });
     };
     renderModal(ONE_CHOICE, onConfirmed);
 
@@ -137,6 +165,7 @@ describe('LetterboxdChoicesModal (MSW)', () => {
             letterboxdSlug: 'midnight-mass-2021',
           },
         ],
+        watchedSelections: [],
         remainingUnresolvedCount: 0,
       })
     );
@@ -190,6 +219,7 @@ describe('LetterboxdChoicesModal (MSW)', () => {
             letterboxdSlug: 'spider-man-1977',
           },
         ],
+        watchedSelections: [],
         remainingUnresolvedCount: 1,
       })
     );
@@ -232,6 +262,69 @@ describe('LetterboxdChoicesModal (MSW)', () => {
     }
   );
 
+  it('tells a title for À voir from a film vu, with the date and rating of the film vu', async () => {
+    const user = userEvent.setup();
+    renderModal([...ONE_CHOICE, WATCHED_CHOICE]);
+
+    expect(screen.getByText('À voir')).toBeInTheDocument();
+    expect(screen.queryByText('Films vus')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Passer' }));
+
+    expect(screen.getByText('Films vus')).toBeInTheDocument();
+    expect(screen.getByText('Vu le 12 oct. 2019, noté 4/5')).toBeInTheDocument();
+  });
+
+  it.each([
+    { what: 'a date only', rating: null, watchedOn: '2019-10-12', shown: 'Vu le 12 oct. 2019' },
+    { what: 'a rating only', rating: 7, watchedOn: null, shown: 'Noté 3,5/5' },
+  ])('describes a film vu with $what', ({ rating, watchedOn, shown }) => {
+    renderModal([{ ...WATCHED_CHOICE, rating, watchedOn }]);
+
+    expect(screen.getByText(shown)).toBeInTheDocument();
+  });
+
+  it('sends a confirmed film vu apart, with its rating and date', async () => {
+    const user = userEvent.setup();
+    let received: unknown;
+    server.use(
+      createLetterboxdConfirmHandler(
+        (body) => {
+          received = body;
+        },
+        { watchedAdded: 1 }
+      )
+    );
+
+    renderModal([...ONE_CHOICE, WATCHED_CHOICE]);
+
+    await user.click(screen.getByRole('button', { name: 'Passer' }));
+    await user.click(screen.getByRole('radio', { name: /Alien, le huitième passager/ }));
+    await user.click(screen.getByRole('button', { name: 'Confirmer et terminer' }));
+
+    await waitFor(() =>
+      expect(received).toEqual({
+        selections: [],
+        watchedSelections: [
+          {
+            tmdbId: 348,
+            mediaType: 'movie',
+            title: 'Alien, le huitième passager',
+            year: '1979',
+            posterPath: null,
+            voteAverage: 8.1,
+            runtimeMinutes: 117,
+            genreIds: [27, 878],
+            letterboxdSlug: 'alien',
+            rating: 8,
+            watchedOn: '2019-10-12',
+          },
+        ],
+        remainingUnresolvedCount: 1,
+      })
+    );
+  });
+
   it('allows deciding later by sending only the titles already settled', async () => {
     const user = userEvent.setup();
     let received: unknown;
@@ -247,7 +340,13 @@ describe('LetterboxdChoicesModal (MSW)', () => {
       result: { added: number; alreadyPresent: number },
       unresolved: LetterboxdPendingChoice[]
     ) => {
-      expect(result).toEqual({ added: 1, alreadyPresent: 0, pendingReconciliationCount: 1 });
+      expect(result).toEqual({
+        added: 1,
+        alreadyPresent: 0,
+        watchedAdded: 0,
+        watchedAlreadyPresent: 0,
+        pendingReconciliationCount: 1,
+      });
       expect(unresolved.map((c) => c.title)).toEqual(['Spider-Man']);
     };
     renderModal(TWO_CHOICES, onConfirmed);
@@ -269,6 +368,7 @@ describe('LetterboxdChoicesModal (MSW)', () => {
             letterboxdSlug: 'midnight-mass-2021',
           },
         ],
+        watchedSelections: [],
         remainingUnresolvedCount: 1,
       })
     );

@@ -11,9 +11,14 @@ internal static class WatchedMoviesFacts
     public static IEnumerable<(string MovieId, DateTimeOffset WatchedAt)> FinishedWinners(
         IEnumerable<Event> events,
         DateTimeOffset now) =>
+        FinishedWinnerNights(events, now).Select(x => (x.MovieId, x.WatchedAt));
+
+    public static IEnumerable<(Event Night, string MovieId, DateTimeOffset WatchedAt)> FinishedWinnerNights(
+        IEnumerable<Event> events,
+        DateTimeOffset now) =>
         events
             .Where(e => e.HasWinner && e.IsFinished(now))
-            .SelectMany(e => e.GetWinnerMovieIds().Select(id => (MovieId: id, WatchedAt: WatchedAtOf(e))));
+            .SelectMany(e => e.GetWinnerMovieIds().Select(id => (Night: e, MovieId: id, WatchedAt: WatchedAtOf(e))));
 
     public static async Task<UserWatchedMoviesResponse> ToResponseAsync(
         IReadOnlyList<(string MovieId, DateTimeOffset WatchedAt)> watched,
@@ -65,12 +70,14 @@ internal static class WatchedMoviesFacts
         CancellationToken ct)
     {
         var enrichments = await LoadEnrichmentsAsync(
-            items.Select(item => (item.TmdbId, item.MediaType)), tmdb, options, ct);
+            items.Where(NeedsTmdbFacts).Select(item => (item.TmdbId, item.MediaType)), tmdb, options, ct);
         if (enrichments.Count == 0)
             return items;
 
         return items
-            .Select(item => enrichments.TryGetValue((item.TmdbId, item.MediaType), out var enrichment) && enrichment is not null
+            .Select(item => NeedsTmdbFacts(item)
+                && enrichments.TryGetValue((item.TmdbId, item.MediaType), out var enrichment)
+                && enrichment is not null
                 ? WithFacts(item, enrichment)
                 : item)
             .ToList();
@@ -92,6 +99,8 @@ internal static class WatchedMoviesFacts
         return await tmdb.GetEnrichmentsAsync(keys, region, ct);
     }
 
+    private static bool NeedsTmdbFacts(UserWatchedMovieItem item) => item.Source == WatchedSource.Night;
+
     private static DateTimeOffset WatchedAtOf(Event evt) =>
         EventSchedule.TryGetStartUtc(evt.Date, evt.Time, out var start) ? start : evt.ClosedAt ?? evt.UpdatedAt;
 
@@ -107,5 +116,6 @@ internal static class WatchedMoviesFacts
         MediaType = item.MediaType,
         WatchedAt = item.WatchedAt,
         MyRating = item.MyRating,
+        Source = item.Source,
     };
 }

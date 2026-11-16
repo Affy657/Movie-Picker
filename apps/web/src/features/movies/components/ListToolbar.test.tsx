@@ -50,4 +50,18 @@ describe('ListToolbar', () => {
     expect(screen.getByRole('searchbox', { name: 'Rechercher' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Filtres' })).toBeInTheDocument();
   });
+
+  it('puts a control of its own between the filters and the sort', () => {
+    renderToolbar({
+      onToggleFilters: () => undefined,
+      filtersLabel: 'Filtres',
+      beforeSort: <button type="button">Tous</button>,
+    });
+
+    const filters = screen.getByRole('button', { name: 'Filtres' });
+    const own = screen.getByRole('button', { name: 'Tous' });
+    const sort = screen.getByRole('toolbar', { name: 'Trier par' });
+    expect(filters.compareDocumentPosition(own) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(own.compareDocumentPosition(sort) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
 });

@@ -35,7 +35,7 @@ public sealed class CloudRunJsonConsoleFormatter : ConsoleFormatter
         IExternalScopeProvider? scopeProvider,
         TextWriter textWriter)
     {
-        var message = logEntry.Formatter(logEntry.State, logEntry.Exception);
+        var message = SensitiveQueryRedaction.RedactPath(logEntry.Formatter(logEntry.State, logEntry.Exception));
         if (logEntry.Exception is null && message is null)
             return;
 
@@ -52,7 +52,7 @@ public sealed class CloudRunJsonConsoleFormatter : ConsoleFormatter
             writer.WriteString("Category", logEntry.Category);
             writer.WriteString("Message", message);
             if (logEntry.Exception is not null)
-                writer.WriteString("Exception", logEntry.Exception.ToString());
+                writer.WriteString("Exception", SensitiveQueryRedaction.RedactPath(logEntry.Exception.ToString()));
             WriteState(writer, logEntry.State, message);
             if (options.IncludeScopes && scopeProvider is not null)
                 WriteScopes(writer, scopeProvider);
@@ -84,14 +84,14 @@ public sealed class CloudRunJsonConsoleFormatter : ConsoleFormatter
                 if (scope is IEnumerable<KeyValuePair<string, object?>> scopePairs)
                 {
                     jsonWriter.WriteStartObject();
-                    jsonWriter.WriteString("Message", scope.ToString());
+                    jsonWriter.WriteString("Message", SensitiveQueryRedaction.RedactPath(scope.ToString()));
                     foreach (var pair in scopePairs)
                         WriteItem(jsonWriter, pair);
                     jsonWriter.WriteEndObject();
                 }
                 else
                 {
-                    jsonWriter.WriteStringValue(Convert.ToString(scope, CultureInfo.InvariantCulture));
+                    jsonWriter.WriteStringValue(SensitiveQueryRedaction.RedactPath(Convert.ToString(scope, CultureInfo.InvariantCulture)));
                 }
             },
             writer);
@@ -121,7 +121,7 @@ public sealed class CloudRunJsonConsoleFormatter : ConsoleFormatter
                 writer.WriteString(item.Key, dateTime.ToString("O", CultureInfo.InvariantCulture));
                 break;
             default:
-                writer.WriteString(item.Key, Convert.ToString(item.Value, CultureInfo.InvariantCulture));
+                writer.WriteString(item.Key, SensitiveQueryRedaction.RedactPath(Convert.ToString(item.Value, CultureInfo.InvariantCulture)));
                 break;
         }
     }

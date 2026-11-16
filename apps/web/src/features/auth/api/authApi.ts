@@ -91,13 +91,17 @@ export interface ProfilePatch {
   uiTheme?: UiThemePreference;
   accentColor?: AccentColor;
   ratingScale?: RatingScale;
+  dimWatched?: boolean;
   avatarId?: string;
   useAvatarPhoto?: boolean;
   handle?: string;
   bio?: string | null;
   isProfilePublic?: boolean;
   isWatchlistPublic?: boolean;
+  isWatchedPublic?: boolean;
   letterboxdUsername?: string | null;
+  letterboxdSyncWatchlist?: boolean;
+  letterboxdSyncWatched?: boolean;
 }
 
 function withProfileDefaults(profile: UserProfile): UserProfile {

@@ -79,6 +79,55 @@ public sealed class UserDocumentMapperMappingTests
         Assert.Equal(RatingScale.Ten, back.RatingScale);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void DimWatched_RoundTripsThroughDocument(bool dimWatched)
+    {
+        var user = new User
+        {
+            Id = "1",
+            Email = "a@b.c",
+            PasswordHash = "x",
+            DisplayName = "n",
+            DimWatched = dimWatched,
+            CreatedAt = new DateTimeOffset(Utc),
+            UpdatedAt = new DateTimeOffset(Utc)
+        };
+
+        var doc = UserDocumentMapper.ToDocument(user);
+
+        Assert.Equal(dimWatched, doc.DimWatched);
+        Assert.Equal(dimWatched, UserDocumentMapper.ToDomain(doc).DimWatched);
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(false, false)]
+    public void LetterboxdSyncTogglesAndCounts_RoundTripThroughDocument(bool syncWatchlist, bool syncWatched)
+    {
+        var user = new User
+        {
+            Id = "1",
+            Email = "a@b.c",
+            PasswordHash = "x",
+            DisplayName = "n",
+            LetterboxdSyncWatchlist = syncWatchlist,
+            LetterboxdSyncWatched = syncWatched,
+            LetterboxdWatchlistCount = 12,
+            LetterboxdWatchedCount = 340,
+            CreatedAt = new DateTimeOffset(Utc),
+            UpdatedAt = new DateTimeOffset(Utc)
+        };
+
+        var back = UserDocumentMapper.ToDomain(UserDocumentMapper.ToDocument(user));
+
+        Assert.Equal(
+            (syncWatchlist, syncWatched, 12, 340),
+            (back.LetterboxdSyncWatchlist, back.LetterboxdSyncWatched, back.LetterboxdWatchlistCount, back.LetterboxdWatchedCount));
+    }
+
     [Fact]
     public void ToDomain_NullableFieldsAbsent_AppliesDefaults()
     {
@@ -99,9 +148,14 @@ public sealed class UserDocumentMapperMappingTests
         Assert.Null(user.Bio);
         Assert.True(user.IsProfilePublic);
         Assert.True(user.IsWatchlistPublic);
+        Assert.True(user.IsWatchedPublic);
         Assert.Equal(string.Empty, user.AvatarId);
         Assert.Equal(AccentColor.Default, user.AccentColor);
         Assert.Equal(RatingScale.Five, user.RatingScale);
+        Assert.False(user.DimWatched);
+        Assert.True(user.LetterboxdSyncWatchlist);
+        Assert.False(user.LetterboxdSyncWatched);
+        Assert.Equal((0, 0), (user.LetterboxdWatchlistCount, user.LetterboxdWatchedCount));
         Assert.True(user.NotifiesOn(UserNotificationType.ParticipantJoined));
         Assert.True(user.NotifiesOn(UserNotificationType.EventReminder1h));
         Assert.True(user.NotifiesOn(UserNotificationType.EventReminder24h));
@@ -131,6 +185,7 @@ public sealed class UserDocumentMapperMappingTests
             NotifyOnNewFollower = false,
             IsProfilePublic = false,
             IsWatchlistPublic = false,
+            IsWatchedPublic = false,
             CreatedAt = Utc,
             UpdatedAt = Utc
         };
@@ -139,6 +194,7 @@ public sealed class UserDocumentMapperMappingTests
 
         Assert.False(user.IsProfilePublic);
         Assert.False(user.IsWatchlistPublic);
+        Assert.False(user.IsWatchedPublic);
         Assert.False(user.NotifiesOn(UserNotificationType.ParticipantJoined));
         Assert.False(user.NotifiesOn(UserNotificationType.NewFollower));
     }
@@ -158,6 +214,7 @@ public sealed class UserDocumentMapperMappingTests
             AccentColor = AccentColor.Default,
             IsProfilePublic = false,
             IsWatchlistPublic = false,
+            IsWatchedPublic = false,
             CreatedAt = new DateTimeOffset(Utc),
             UpdatedAt = new DateTimeOffset(Utc)
         };
@@ -170,6 +227,7 @@ public sealed class UserDocumentMapperMappingTests
         Assert.Null(doc.AccentColor);
         Assert.False(doc.IsProfilePublic);
         Assert.False(doc.IsWatchlistPublic);
+        Assert.False(doc.IsWatchedPublic);
     }
 
     [Fact]

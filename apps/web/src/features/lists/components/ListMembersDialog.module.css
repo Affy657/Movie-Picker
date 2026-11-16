@@ -1,0 +1,142 @@
+.help {
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-size-sm);
+  line-height: var(--leading-comfortable);
+  color: var(--color-text-muted);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.section + .section {
+  margin-top: var(--space-5);
+}
+
+.sectionLabel {
+  composes: sectionLabel from '@/shared/components/typography.module.css';
+  margin: 0;
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-muted);
+}
+
+.rows,
+.results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.results {
+  max-height: 18rem;
+  overflow-y: auto;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap-target-min);
+  padding: var(--space-1-5) 0;
+}
+
+.rowText {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--space-0-5);
+  min-width: 0;
+}
+
+.rowName {
+  overflow: hidden;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowDetail {
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-muted);
+}
+
+.rowAction {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.rowTag {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+}
+
+.status {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  padding: var(--space-3);
+  color: var(--color-text-muted);
+}
+
+.hint {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  line-height: var(--leading-comfortable);
+  color: var(--color-text-muted);
+}
+
+.notice {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--leading-comfortable);
+  color: var(--color-warning);
+}
+
+.linkField {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border-field);
+  border-radius: var(--radius-md);
+  background: var(--color-input-bg);
+}
+
+.linkField:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: var(--ring-focus);
+}
+
+.linkInput {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-overflow: ellipsis;
+}
+
+.linkInput:focus {
+  outline: none;
+}
+
+@media (pointer: coarse) {
+  .linkInput {
+    font-size: var(--font-size-md);
+  }
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+}

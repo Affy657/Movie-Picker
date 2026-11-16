@@ -23,11 +23,12 @@ public sealed class GetUserStatsHandlerTests
     private readonly Mock<IVoteRepository> _votes = new();
     private readonly Mock<ISeenMarkRepository> _seen = new();
     private readonly Mock<IMovieRatingRepository> _ratings = new();
+    private readonly Mock<IMovieListRepository> _lists = new();
     private const string NightAfterNow = "2026-12-01";
 
     private readonly DateTimeOffset _now = new(2026, 6, 15, 0, 0, 0, TimeSpan.Zero);
 
-    private static User PublicUser(bool isPublic = true) => new()
+    private static User PublicUser(bool isPublic = true, bool isWatchedPublic = true) => new()
     {
         Id = "u1",
         Email = "a@b.co",
@@ -36,6 +37,7 @@ public sealed class GetUserStatsHandlerTests
         Handle = "alice",
         AvatarId = "alpha",
         IsProfilePublic = isPublic,
+        IsWatchedPublic = isWatchedPublic,
         CreatedAt = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero),
         UpdatedAt = DateTimeOffset.UtcNow
     };
@@ -102,7 +104,59 @@ public sealed class GetUserStatsHandlerTests
             _votes.Object,
             _seen.Object,
             _ratings.Object,
+            _lists.Object,
             new FixedTimeProvider(_now));
+    }
+
+    private void AliceTookPartInANightAndSawTwoFilms(bool isWatchedPublic)
+    {
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(PublicUser(isWatchedPublic: isWatchedPublic));
+        _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([Part("p1", "A", new DateTimeOffset(2026, 5, 20, 0, 0, 0, TimeSpan.Zero))]);
+        _seen.Setup(r => r.CountByParticipantIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(2);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task PublicListCount_IsTheNumberOfPublicListsTheMemberCreated_WithOrWithoutNights(bool tookPartInANight)
+    {
+        var handler = Build();
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
+        if (tookPartInANight)
+            AliceTookPartInANightAndSawTwoFilms(isWatchedPublic: true);
+        _lists.Setup(r => r.CountPublicByOwnerAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(3);
+
+        var res = await handler.HandleAsync("alice");
+
+        Assert.Equal(3, res.PublicListCount);
+    }
+
+    [Fact]
+    public async Task PrivateProfile_ThrowsNotFound_BeforeCountingItsPublicLists()
+    {
+        var handler = Build();
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser(isPublic: false));
+
+        await Assert.ThrowsAsync<NotFoundException>(() => handler.HandleAsync("alice"));
+
+        _lists.Verify(r => r.CountPublicByOwnerAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData(null, 0)]
+    [InlineData("stranger", 0)]
+    [InlineData("u1", 2)]
+    public async Task MoviesSeen_OfAMemberHidingTheirWatchedFilms_IsOnlyCountedForThemself(string? viewerId, int expected)
+    {
+        var handler = Build();
+        AliceTookPartInANightAndSawTwoFilms(isWatchedPublic: false);
+
+        var res = await handler.HandleAsync("alice", viewerId);
+
+        Assert.Equal(expected, res.MoviesSeen);
     }
 
     [Fact]

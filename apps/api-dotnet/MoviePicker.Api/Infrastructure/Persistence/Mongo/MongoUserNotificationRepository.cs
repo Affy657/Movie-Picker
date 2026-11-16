@@ -28,6 +28,8 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
             EventSlug = notification.EventSlug,
             EventTitle = notification.EventTitle,
             MovieTitle = notification.MovieTitle,
+            ListId = notification.ListId,
+            ListName = notification.ListName,
             IsRead = false,
             IsWithheld = notification.IsWithheld,
             CreatedAt = notification.CreatedAt.UtcDateTime
@@ -56,6 +58,8 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
             EventSlug = d.EventSlug,
             EventTitle = d.EventTitle,
             MovieTitle = d.MovieTitle,
+            ListId = d.ListId,
+            ListName = d.ListName,
             IsRead = d.IsRead,
             CreatedAt = new DateTimeOffset(d.CreatedAt, TimeSpan.Zero)
         });
@@ -167,6 +171,26 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
         if (string.IsNullOrWhiteSpace(eventId))
             return 0;
         var res = await _collection.DeleteManyAsync(x => x.EventId == eventId, ct);
+        return res.IsAcknowledged ? res.DeletedCount : 0;
+    }
+
+    public async Task<long> DeleteByListAsync(string listId, string? userId = null, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(listId))
+            return 0;
+        var filter = Builders<UserNotificationDocument>.Filter.Eq(x => x.ListId, listId);
+        if (userId is not null)
+            filter &= Builders<UserNotificationDocument>.Filter.Eq(x => x.UserId, userId);
+        var res = await _collection.DeleteManyAsync(filter, ct);
+        return res.IsAcknowledged ? res.DeletedCount : 0;
+    }
+
+    public async Task<long> DeleteByListsAsync(IReadOnlyCollection<string> listIds, CancellationToken ct = default)
+    {
+        var ids = listIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct(StringComparer.Ordinal).ToList();
+        if (ids.Count == 0)
+            return 0;
+        var res = await _collection.DeleteManyAsync(Builders<UserNotificationDocument>.Filter.In(x => x.ListId, ids), ct);
         return res.IsAcknowledged ? res.DeletedCount : 0;
     }
 }

@@ -29,11 +29,13 @@ export function LibraryMovieRowHeader<K extends string>({
   sortBy,
   sortDir,
   onSetSort,
+  contributorLabel,
 }: Readonly<{
   sorts: LibraryMovieRowSorts<K>;
   sortBy: K;
   sortDir: 'asc' | 'desc';
   onSetSort: (key: K) => void;
+  contributorLabel?: string;
 }>) {
   const single = (sort?: MovieTableSort<K>) => (sort ? [sort] : []);
   const columns: MovieTableColumn<K>[] = [
@@ -42,6 +44,7 @@ export function LibraryMovieRowHeader<K extends string>({
     { id: 'vote', sorts: single(sorts.vote), align: 'end' },
     { id: 'runtime', sorts: single(sorts.runtime), align: 'end' },
     { id: 'year', sorts: single(sorts.year), align: 'end' },
+    ...(contributorLabel ? [{ id: 'contributor', label: contributorLabel, inset: true }] : []),
     { id: 'availability', sorts: single(sorts.availability), inset: true },
     { id: 'actions' },
   ];
@@ -51,7 +54,7 @@ export function LibraryMovieRowHeader<K extends string>({
       sortBy={sortBy}
       sortDir={sortDir}
       onSetSort={onSetSort}
-      gridClassName={styles.rowGrid}
+      gridClassName={contributorLabel ? styles.rowGridWithContributor : styles.rowGrid}
     />
   );
 }
@@ -70,6 +73,9 @@ interface LibraryMovieRowProps {
   isMobile?: boolean;
   onOpenDetails: () => void;
   kebab?: ReactNode;
+  dimmed?: boolean;
+  contributor?: ReactNode;
+  withContributor?: boolean;
 }
 
 function LibraryRowMeta({ badge, genres }: Readonly<{ badge?: ReactNode; genres: string[] }>) {
@@ -86,17 +92,20 @@ function MobileFacts({
   runtimeLabel,
   voteLabel,
   availability,
+  contributor,
 }: Readonly<{
   year?: string;
   runtimeLabel: string | null;
   voteLabel: string | null;
   availability?: ReactNode;
+  contributor?: ReactNode;
 }>) {
   return (
     <div className={table.mobileFacts}>
       {year ? <span>{year}</span> : null}
       {runtimeLabel ? <span>{runtimeLabel}</span> : null}
       {voteLabel ? <span>{voteLabel}</span> : null}
+      {contributor ? <span>{contributor}</span> : null}
       {availability ? <span className={styles.aboveTrigger}>{availability}</span> : null}
     </div>
   );
@@ -116,6 +125,9 @@ export default function LibraryMovieRow({
   isMobile = false,
   onOpenDetails,
   kebab,
+  dimmed = false,
+  contributor,
+  withContributor = false,
 }: Readonly<LibraryMovieRowProps>) {
   const { t, locale } = useTranslation();
   const posterSrc = posterImageSrc(posterPath);
@@ -129,7 +141,9 @@ export default function LibraryMovieRow({
       type="button"
       className={styles.rowTrigger}
       onClick={onOpenDetails}
-      aria-label={t('movies.card.openDetailsAria', { title })}
+      aria-label={t(dimmed ? 'movies.card.openDetailsSeenAria' : 'movies.card.openDetailsAria', {
+        title,
+      })}
     />
   );
   const heading = (
@@ -141,7 +155,7 @@ export default function LibraryMovieRow({
 
   if (isMobile) {
     return (
-      <li className={table.mobileRow}>
+      <li className={clsx(table.mobileRow, dimmed && styles.dimmed)}>
         {trigger}
         <div className={table.mobilePosterCol}>
           <MovieTablePoster src={posterSrc} srcSet={posterSrcSet} eager={eager} />
@@ -153,6 +167,7 @@ export default function LibraryMovieRow({
             runtimeLabel={runtimeLabel}
             voteLabel={voteLabel}
             availability={availability}
+            contributor={contributor}
           />
           {meta ? <div className={clsx(table.metaRow, styles.mobileMeta)}>{meta}</div> : null}
         </div>
@@ -164,7 +179,14 @@ export default function LibraryMovieRow({
   }
 
   return (
-    <li className={clsx(table.row, styles.rowGrid, styles.rowHoverable)}>
+    <li
+      className={clsx(
+        table.row,
+        withContributor ? styles.rowGridWithContributor : styles.rowGrid,
+        styles.rowHoverable,
+        dimmed && styles.dimmed
+      )}
+    >
       {trigger}
       <div className={table.posterCol}>
         <MovieTablePoster src={posterSrc} srcSet={posterSrcSet} eager={eager} />
@@ -176,6 +198,7 @@ export default function LibraryMovieRow({
       <span className={table.cellEnd}>{voteLabel}</span>
       <span className={table.cellEnd}>{runtimeLabel}</span>
       <span className={table.cellEnd}>{year}</span>
+      {withContributor ? <div className={styles.contributorCol}>{contributor}</div> : null}
       <div className={clsx(table.availabilityCol, styles.aboveTrigger)}>{availability}</div>
       <div className={clsx(table.kebabCol, styles.aboveTrigger)}>{kebab}</div>
     </li>

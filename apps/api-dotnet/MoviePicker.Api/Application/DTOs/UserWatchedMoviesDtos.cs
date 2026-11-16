@@ -20,4 +20,5 @@ public sealed class UserWatchedMovieItem
     public MovieMediaType MediaType { get; init; } = MovieMediaType.Movie;
     public DateTimeOffset WatchedAt { get; init; }
     public int? MyRating { get; init; }
+    public WatchedSource Source { get; init; } = WatchedSource.Night;
 }

@@ -240,36 +240,19 @@ describe('AccountProfilePage (MSW)', () => {
     expect(patchBody!.isProfilePublic).toBe(false);
   });
 
-  it('pre-fills the watchlist visibility and saves it when the toggle changes', async () => {
-    const user = userEvent.setup();
-    let patchBody: Record<string, unknown> | null = null;
-    server.use(
-      http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
-        patchBody = (await request.json()) as Record<string, unknown>;
-        return HttpResponse.json({ ...baseUser, isWatchlistPublic: false });
-      })
-    );
-
+  it('leaves the visibility of À voir to the ⋯ menu of the list, not to the settings', async () => {
     renderProfile();
     await screen.findByDisplayValue('Alice');
 
-    const toggle = screen.getByRole('switch', { name: /watchlist visible sur mon profil/i });
-    expect(toggle).toHaveAttribute('aria-checked', 'true');
-    expect(toggle).toBeEnabled();
-    expect(screen.getByText(/movie-picker\.fr\/u\/alice\/watchlist/i)).toBeInTheDocument();
-
-    await user.click(toggle);
-
-    await waitFor(() => expect(patchBody).not.toBeNull());
-    expect(patchBody!.isWatchlistPublic).toBe(false);
-    expect(patchBody!.isProfilePublic).toBe(true);
+    expect(screen.queryByRole('switch', { name: /watchlist/i })).toBeNull();
+    expect(screen.queryByText(/movie-picker\.fr\/u\/alice\/watchlist/i)).toBeNull();
   });
 
   it('refreshes my cached public profile after a save', async () => {
     const user = userEvent.setup();
     server.use(
       http.patch(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({ ...baseUser, isWatchlistPublic: false })
+        HttpResponse.json({ ...baseUser, isProfilePublic: false })
       )
     );
     const client = createTestQueryClient();
@@ -278,27 +261,11 @@ describe('AccountProfilePage (MSW)', () => {
     renderProfile(client);
     await screen.findByDisplayValue('Alice');
 
-    await user.click(screen.getByRole('switch', { name: /watchlist visible sur mon profil/i }));
+    await user.click(screen.getByRole('switch', { name: /profil public/i }));
 
     await waitFor(() =>
       expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.profile.publicAll })
     );
-  });
-
-  it('greys out the watchlist setting while the profile is private', async () => {
-    server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({ ...baseUser, isProfilePublic: false })
-      )
-    );
-
-    renderProfile();
-    await screen.findByDisplayValue('Alice');
-
-    const toggle = screen.getByRole('switch', { name: /watchlist visible sur mon profil/i });
-    expect(toggle).toBeDisabled();
-    expect(toggle).toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByText(/la watchlist reste masquée/i)).toBeInTheDocument();
   });
 
   it('refuse un pseudo vide', async () => {

@@ -111,6 +111,33 @@ public sealed class GetUserProfileHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_ReturnsTheLetterboxdSyncTogglesAndLinkedCounts()
+    {
+        var user = new User
+        {
+            Id = "id1",
+            Email = "bob@example.com",
+            PasswordHash = "h",
+            DisplayName = "Bob",
+            LetterboxdUsername = "cinephile",
+            LetterboxdSyncWatchlist = false,
+            LetterboxdWatchlistCount = 14,
+            LetterboxdWatchedCount = 230,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("id1", It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var handler = new GetUserProfileHandler(users.Object);
+
+        var res = await handler.HandleAsync("id1");
+
+        Assert.Equal(
+            (false, true, 14, 230),
+            (res.LetterboxdSyncWatchlist, res.LetterboxdSyncWatched, res.LetterboxdWatchlistCount, res.LetterboxdWatchedCount));
+    }
+
+    [Fact]
     public async Task HandleAsync_NoPasswordWithLinkedIdentities_ReturnsHasPasswordFalseAndProviders()
     {
         var user = new User
@@ -175,6 +202,30 @@ public sealed class GetUserProfileHandlerTests
         var res = await handler.HandleAsync("id1");
 
         Assert.False(res.IsWatchlistPublic);
+        Assert.True(res.IsWatchedPublic);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ReturnsTheWatchedVisibility()
+    {
+        var user = new User
+        {
+            Id = "id1",
+            Email = "bob@example.com",
+            PasswordHash = "h",
+            DisplayName = "Bob",
+            IsWatchedPublic = false,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("id1", It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var handler = new GetUserProfileHandler(users.Object);
+
+        var res = await handler.HandleAsync("id1");
+
+        Assert.False(res.IsWatchedPublic);
+        Assert.True(res.IsWatchlistPublic);
     }
 
     [Fact]

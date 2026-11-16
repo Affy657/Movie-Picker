@@ -51,7 +51,7 @@
   color: var(--color-text);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
-  line-height: var(--leading-snug);
+  line-height: var(--leading-normal);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -112,6 +112,37 @@
 
 .stackFront {
   z-index: var(--z-raised);
+}
+
+.stackBadge {
+  position: absolute;
+  top: var(--space-1-5);
+  left: var(--space-1-5);
+  z-index: var(--z-raised-above);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-6);
+  height: var(--space-6);
+  border-radius: var(--radius-sm);
+  background: var(--color-on-poster-scrim-strong);
+  color: var(--color-on-poster-fg);
+  pointer-events: none;
+}
+
+.extra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
 }
 
 .stackMiddle {

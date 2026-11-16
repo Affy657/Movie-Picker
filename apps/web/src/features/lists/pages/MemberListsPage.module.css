@@ -1,0 +1,7 @@
+.layout {
+  --page-max-width: var(--container-3xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  overflow-anchor: none;
+}

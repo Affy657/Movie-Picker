@@ -12,7 +12,11 @@ public static class UnhandledExceptionResponse
             context.RequestServices
                 .GetRequiredService<ILoggerFactory>()
                 .CreateLogger(typeof(UnhandledExceptionResponse))
-                .LogError(error, "Unhandled exception on {Method} {Path}", context.Request.Method, context.Request.Path.Value);
+                .LogError(
+                    error,
+                    "Unhandled exception on {Method} {Path}",
+                    context.Request.Method,
+                    SensitiveQueryRedaction.RedactPath(context.Request.Path.Value));
         }
 
         context.Response.StatusCode = StatusCodes.Status500InternalServerError;

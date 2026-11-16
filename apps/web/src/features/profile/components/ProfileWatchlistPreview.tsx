@@ -7,9 +7,7 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import Card from '@/shared/components/Card';
-import Chip from '@/shared/components/Chip';
 import InlineError from '@/shared/components/InlineError';
-import { buttonClass } from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import type { RatingScale } from '@/shared/types/theme';
 import MoviePreviewRow from '@/features/movies/components/MoviePreviewRow';
@@ -23,6 +21,7 @@ import {
   fetchUserWatchlistPreview,
   type UserWatchlistItem,
 } from '@/features/profile/api/profileApi';
+import ProfileHiddenNotice from '@/features/profile/components/ProfileHiddenNotice';
 import styles from './ProfileWatchlistPreview.module.css';
 
 interface Props {
@@ -40,17 +39,11 @@ interface Props {
 function HiddenNotice({ className }: Readonly<{ className?: string }>) {
   const { t } = useTranslation();
   return (
-    <div className={clsx(styles.hidden, className)}>
-      <Chip tone="warning" size="sm">
-        {t('profile.watchlist.hidden')}
-      </Chip>
-      <Link
-        to={ROUTES.accountProfile}
-        className={buttonClass({ variant: 'ghost', size: 'sm', className: styles.makeVisible })}
-      >
-        {t('profile.watchlist.makeVisible')}
-      </Link>
-    </div>
+    <ProfileHiddenNotice
+      label={t('profile.watchlist.hidden')}
+      to={ROUTES.watchlist}
+      className={className}
+    />
   );
 }
 

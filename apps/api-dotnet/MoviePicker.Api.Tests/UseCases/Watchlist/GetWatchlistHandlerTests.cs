@@ -23,7 +23,7 @@ public sealed class GetWatchlistHandlerTests
             .ReturnsAsync((IReadOnlyList<WatchlistItem>)Array.Empty<WatchlistItem>());
         _watchlist.Setup(w => w.CountByUserIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(0);
 
-        var result = await _sut.HandleAsync("u1");
+        var result = await _sut.HandleAsync("u1", includeLetterboxd: true);
 
         Assert.Empty(result.Items);
     }
@@ -50,7 +50,7 @@ public sealed class GetWatchlistHandlerTests
             .ReturnsAsync((IReadOnlyList<WatchlistItem>)items);
         _watchlist.Setup(w => w.CountByUserIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(items.Count);
 
-        var result = await _sut.HandleAsync("u1");
+        var result = await _sut.HandleAsync("u1", includeLetterboxd: true);
 
         var response = Assert.Single(result.Items);
         Assert.Equal(42, response.TmdbId);
@@ -71,7 +71,7 @@ public sealed class GetWatchlistHandlerTests
             ]);
         _watchlist.Setup(w => w.CountByUserIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(7);
 
-        var result = await _sut.HandleAsync("u1", 0, 2);
+        var result = await _sut.HandleAsync("u1", includeLetterboxd: true, 0, 2);
 
         Assert.Equal(2, result.Items.Count);
         Assert.Equal(7, result.Total);
@@ -85,10 +85,29 @@ public sealed class GetWatchlistHandlerTests
             .ReturnsAsync((IReadOnlyList<WatchlistItem>)Array.Empty<WatchlistItem>());
         _watchlist.Setup(w => w.CountByUserIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(0);
 
-        await _sut.HandleAsync("u1", 10, 5000);
+        await _sut.HandleAsync("u1", includeLetterboxd: true, 10, 5000);
 
         _watchlist.Verify(
             w => w.ListPageByUserIdAsync("u1", 10, 500, It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(false, false)]
+    public async Task HandleAsync_SaysWhichItemsAreOnTheLetterboxdWatchlist_OnlyWhenAsked(bool includeLetterboxd, bool onLetterboxd)
+    {
+        var items = new List<WatchlistItem>
+        {
+            new() { Id = "1", UserId = "u1", TmdbId = 42, Title = "Matrix", LetterboxdSlug = "the-matrix" },
+            new() { Id = "2", UserId = "u1", TmdbId = 43, Title = "Akira" }
+        };
+        _watchlist.Setup(w => w.ListPageByUserIdAsync("u1", 0, 500, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<WatchlistItem>)items);
+        _watchlist.Setup(w => w.CountByUserIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(items.Count);
+
+        var result = await _sut.HandleAsync("u1", includeLetterboxd);
+
+        Assert.Equal([(42, onLetterboxd), (43, false)], result.Items.Select(item => (item.TmdbId, item.OnLetterboxd)));
     }
 }

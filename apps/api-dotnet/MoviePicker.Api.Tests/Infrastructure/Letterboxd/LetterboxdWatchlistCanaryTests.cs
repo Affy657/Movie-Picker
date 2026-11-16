@@ -31,4 +31,19 @@ public sealed class LetterboxdWatchlistCanaryTests
         Assert.True(snapshot.IsComplete, $"the watchlist of {username} could not be read completely");
         Assert.NotEmpty(snapshot.Films);
     }
+
+    [CanaryFact]
+    public async Task TheLiveWatchedFilmsMarkup_IsStillReadByTheRealClient()
+    {
+        var username = Environment.GetEnvironmentVariable(CanaryFactAttribute.UsernameVariable)!;
+        using var http = new HttpClient();
+        LetterboxdWatchlistClient.ConfigureHttpClient(http);
+        var sut = new LetterboxdWatchlistClient(http, NullLogger<LetterboxdWatchlistClient>.Instance);
+
+        var snapshot = await sut.GetWatchedFilmsAsync(username);
+
+        Assert.True(snapshot.IsComplete, $"the watched films of {username} could not be read completely");
+        Assert.NotEmpty(snapshot.Films);
+        Assert.Contains(snapshot.Films, film => film.Rating is not null);
+    }
 }

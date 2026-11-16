@@ -225,7 +225,7 @@ Toute suite d'écritures qui doit être tout-ou-rien passe par `IUnitOfWork.Exec
 
 **Plafond posé dans un handler.** Il passe par `ISharedQuota` : neutralisé en Development, sujet haché, ouvert si le compteur tombe. `[SharedRateLimit]` peut se cumuler sur une même action. Les fenêtres fixes laissent passer le double d'un plafond à la bascule : un plafond n'est pas une garantie exacte.
 
-**Jeton d'hôte.** Le front l'envoie dans l'en-tête `X-Host-Token` (`withHostToken` dans `apps/web/src/shared/api/client.ts`). `HostTokenAccessor` accepte encore `?host=` pour les clients en cache, et `SensitiveQueryRedaction` le masque dans les logs HTTP et dans Sentry : ne jamais logger une query string brute.
+**Jeton d'hôte.** Le front l'envoie dans l'en-tête `X-Host-Token` (`withHostToken` dans `apps/web/src/shared/api/client.ts`). `HostTokenAccessor` accepte encore `?host=` pour les clients en cache, et `SensitiveQueryRedaction` le masque dans les logs HTTP et dans Sentry : ne jamais logger une query string brute. Le jeton d'invitation à une liste passe dans le chemin (`/lists/join/{token}` côté API, `/l/{token}/rejoindre` côté front) : `SensitiveQueryRedaction.RedactPath` et `redactSensitiveUrl` le masquent dans les journaux Cloud Run, Sentry et PostHog. Toute nouvelle route qui porte un secret dans son chemin s'ajoute à ces deux fonctions.
 
 ## Stack
 

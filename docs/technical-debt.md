@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-091`.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-095`.
 5. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
 7. **Contraintes** (ce qui casse en silence si on y touche) et **Impasses** (essayé, mesuré, sans gain), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
@@ -520,6 +520,43 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - fix: participants par agrégation `$match` / `$sort createdAt` / `$group` avec `$firstN: 4` (les participations du lecteur par `ListByUserIdAsync`, index `userId`) ; films projetés sur `_id`, `eventId`, `title`, `posterPath`, `createdAt` ; un paramètre `previews=false` pour les deux appelants qui ne les montrent pas
 - piege: l'adaptateur InMemory doit suivre la même forme, et `test:api:mongo` est le seul à exécuter l'agrégation
 - fini-quand: la lecture d'une page de Mes soirées ne dépend plus du nombre de films ni de participants des soirées
+
+## DEBT-091 le cadre des pages de liste vit dans `watchlist` et ne connaît que `WatchlistEntry`
+
+- state: agent
+- impact: Mes listes, Films vus, les listes enregistrées et publiques importent leur cadre de page depuis `features/watchlist`, typé sur `WatchlistEntry`. Chaque page reconstruit donc une table par clé pour relire ses propres champs (films vus, « ajouté par », origine et note des films vus), câble à la main « Griser les vus » (`useDimWatched`, options de la barre, `isWatched`, erreur), et la colonne « ajouté par » passe par deux booléens séparés entre l'en-tête et les lignes, avec la grille CSS recopiée. Chaque nouveau champ par film ajoute une table de plus, et une page qui oublie l'erreur de « Griser les vus » la masque.
+- ou: `apps/web/src/features/watchlist/components/ListMoviesPage.tsx`, `features/watchlist/hooks/useWatchlistToolbar.ts`, `features/lists/pages/*ListPage.tsx`, `features/watched/pages/WatchedMoviesPage.tsx`, `app/pages/ShowcaseListPage.tsx`, `features/movies/components/LibraryMovieRow.tsx` et son `.module.css`
+- verify: `grep -n "items: WatchlistEntry\[\]" apps/web/src/features/watchlist/components/ListMoviesPage.tsx`
+- fix: `ListMoviesPage<T extends WatchlistEntry>`, `useWatchlistToolbar<T>` et leurs callbacks génériques ; la page porte « Griser les vus » dès qu'elle reçoit `isWatched` ; la table définit ses colonnes une fois ; le cadre part dans un module neutre dont dépendent `watchlist`, `watched` et `lists` (règles de `scripts/check-architecture.mjs` à suivre)
+- fini-quand: plus de table par clé dans les pages de liste, et `lists` comme `watched` n'importent plus rien de `watchlist`
+
+## DEBT-092 le rapport de synchronisation Letterboxd double chaque champ par liste
+
+- state: agent
+- impact: À voir et Films vus partagent un rapport à plat, chaque champ en deux exemplaires (`WatchedAdded` à côté d'`Added`, etc.) dans l'API et le front. La liste concernée se retrouve par trois chemins différents : un code d'erreur par liste, un préfixe `watched:` sur les clés de choix et un décalage de lignes `FirstRowIndex`. Le bilan est dessiné deux fois (`LetterboxdConnectModal`, `LetterboxdImportSection`), l'union des listes est déclarée deux fois (`LetterboxdSyncTarget`, `LetterboxdImportTarget`), et les préférences de synchronisation vivent dans `features/auth`. Une troisième liste ou un nouveau chiffre touche une dizaine de fichiers. La date et l'erreur de dernière synchronisation restent communes aux deux listes, si bien qu'un échec des seuls films vus relance les deux.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/DTOs/LetterboxdImportDtos.cs`, `UseCases/LetterboxdImport/LetterboxdWatchlistSynchronizer.cs`, `SyncLetterboxdWatchlistHandler.cs`, `apps/web/src/features/letterboxd/api/letterboxdApi.ts`, `features/letterboxd/utils/syncReport.ts`, `features/auth/utils/letterboxdSync.ts`
+- verify: `grep -n "public int WatchedAdded" apps/api-dotnet/MoviePicker.Api/Application/DTOs/LetterboxdImportDtos.cs`
+- fix: un résultat par liste `{ target, added, removed, unmatchedTitles, pendingChoices, totalOnLetterboxd, totalTruncated, incomplete, lastSyncAt, error }`, en gardant les champs à plat d'À voir le temps qu'un ancien front tourne encore ; le front boucle sur les listes ; `letterboxdSync.ts` rejoint `features/letterboxd`
+- piege: la forme change le contrat OpenAPI, régénérer `openapiSchema.ts`
+- fini-quand: plus aucun champ `Watched*` dans le rapport, et la date de synchronisation est tenue par liste
+
+## DEBT-093 le menu ⋮ des cartes porte les règles de retrait d'une soirée, simulées pour les listes
+
+- state: agent
+- impact: pour offrir « Retirer de la liste », `MovieBrowseCard` passe `isMine` et `isHost={false}` à `MovieCardKebab` avec des libellés de remplacement, et le composant partagé de `features/movies` prend par défaut un libellé de `lists`. Chaque nouveau contexte de retrait ajoute des props et des surcharges.
+- ou: `apps/web/src/features/movies/components/MovieBrowseCard.tsx`, `MovieCardKebab.tsx`, `features/watchlist/components/ListMoviesPage.tsx`
+- verify: `grep -n "isHost={false}" apps/web/src/features/movies/components/MovieBrowseCard.tsx`
+- fix: `MovieCardKebab` reçoit `remove?: { label, ariaLabel, title?, onSelect }` ; la carte de soirée y met ses règles d'hôte et de proposant, `ListMoviesPage` ses libellés de liste
+- fini-quand: `MovieCardKebab` ne connaît plus ni hôte simulé ni libellé de liste
+
+## DEBT-094 `ListSourceTitle` recopie `SavedListTitle`
+
+- state: agent
+- impact: les deux types portent les mêmes huit champs, reliés par deux fonctions de copie ; chaque nouveau fait sur un titre s'ajoute aux deux et aux copies. Même schéma pour les six DTO de personne (pseudo, nom affiché, avatar) des listes.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/SavedLists/ListSourceContent.cs`, `Domain/Entities/SavedList.cs`, `Application/DTOs/*List*Dtos.cs`
+- verify: `grep -n "public sealed record ListSourceTitle" apps/api-dotnet/MoviePicker.Api/Application/UseCases/SavedLists/ListSourceContent.cs`
+- fix: `SavedListTitle` partout, avec `Key`, `From(MovieListItem)` et `ToListItem` en extensions ; un seul DTO de personne réutilisé
+- fini-quand: plus de `ListSourceTitle`
 
 ---
 

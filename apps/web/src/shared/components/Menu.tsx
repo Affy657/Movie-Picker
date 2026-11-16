@@ -8,8 +8,11 @@ import { hasDescenders } from './opticalNudge';
 import { buttonClass, buttonLabelClass } from './Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
-const ENABLED_ITEM_SELECTOR =
-  '[role="menuitem"]:not([disabled]), [role="menuitemradio"]:not([disabled])';
+const ENABLED_ITEM_SELECTOR = [
+  '[role="menuitem"]:not([disabled])',
+  '[role="menuitemradio"]:not([disabled])',
+  '[role="menuitemcheckbox"]:not([disabled])',
+].join(', ');
 function nextItemIndex(key: string, current: number, count: number): number | null {
   switch (key) {
     case 'ArrowDown':
@@ -41,11 +44,12 @@ function moveMenuFocus(panel: HTMLElement, event: KeyboardEvent<HTMLElement>): v
 type MenuPanelProps = Omit<HTMLAttributes<HTMLDivElement>, 'role' | 'aria-label'> & {
   ariaLabel: string;
   anchored?: boolean;
+  embedded?: boolean;
   children: React.ReactNode;
 };
 
 export const MenuPanel = forwardRef<HTMLDivElement, MenuPanelProps>(function MenuPanel(
-  { ariaLabel, anchored = true, className, onKeyDown, children, ...rest },
+  { ariaLabel, anchored = true, embedded = false, className, onKeyDown, children, ...rest },
   ref
 ) {
   return (
@@ -55,7 +59,12 @@ export const MenuPanel = forwardRef<HTMLDivElement, MenuPanelProps>(function Men
       role="menu"
       aria-label={ariaLabel}
       tabIndex={-1}
-      className={clsx(styles.panel, anchored && styles.anchored, className)}
+      className={clsx(
+        styles.panel,
+        anchored && styles.anchored,
+        embedded && styles.embedded,
+        className
+      )}
       onKeyDown={(event) => {
         onKeyDown?.(event);
         moveMenuFocus(event.currentTarget, event);
@@ -212,6 +221,41 @@ export function MenuItem({
       title={title}
     >
       {content}
+    </button>
+  );
+}
+
+interface MenuCheckboxItemProps {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  children: React.ReactNode;
+  description?: React.ReactNode;
+  disabled?: boolean;
+}
+
+export function MenuCheckboxItem({
+  checked,
+  onChange,
+  children,
+  description,
+  disabled = false,
+}: Readonly<MenuCheckboxItemProps>) {
+  return (
+    <button
+      type="button"
+      role="menuitemcheckbox"
+      aria-checked={checked}
+      className={clsx(styles.item, styles.checkboxItem)}
+      onClick={() => onChange(!checked)}
+      disabled={disabled}
+    >
+      <span className={clsx(styles.checkbox, checked && styles.checkboxChecked)} aria-hidden>
+        {checked ? <Check size={ICON_SIZE.xs} /> : null}
+      </span>
+      <span className={styles.checkboxText}>
+        <span className={styles.checkboxLabel}>{children}</span>
+        {description ? <span className={styles.checkboxDescription}>{description}</span> : null}
+      </span>
     </button>
   );
 }

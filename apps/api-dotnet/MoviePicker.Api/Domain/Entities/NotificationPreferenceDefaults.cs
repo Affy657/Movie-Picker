@@ -18,6 +18,7 @@ public static class NotificationPreferenceDefaults
             [UserNotificationType.LetterboxdReconciliationPending] = true,
             [UserNotificationType.EventDateChanged] = true,
             [UserNotificationType.RatingReminder] = true,
+            [UserNotificationType.ListInvitation] = true,
         };
 
     public static bool For(UserNotificationType type)

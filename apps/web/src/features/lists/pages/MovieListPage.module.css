@@ -1,0 +1,8 @@
+.membersPill {
+  --avatar-stack-ring: var(--color-primary-soft);
+  padding-left: var(--space-1);
+}
+
+.membersFaces {
+  flex: 0 0 auto;
+}

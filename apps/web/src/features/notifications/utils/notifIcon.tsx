@@ -6,6 +6,7 @@ import {
   Clock,
   Film,
   Hourglass,
+  ListPlus,
   Mail,
   MousePointerClick,
   RefreshCw,
@@ -39,6 +40,8 @@ export function notifIcon(type: string, size = ICON_SIZE.lg): ReactNode {
       return <CalendarClock size={size} aria-hidden />;
     case 'eventinvitation':
       return <Mail size={size} aria-hidden />;
+    case 'listinvitation':
+      return <ListPlus size={size} aria-hidden />;
     case 'eventpending':
       return <Hourglass size={size} aria-hidden />;
     case 'letterboxdreconciliationpending':

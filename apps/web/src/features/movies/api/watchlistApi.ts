@@ -11,6 +11,7 @@ export interface WatchlistItem {
   runtimeMinutes?: number | null;
   genreIds?: number[];
   createdAt: string;
+  onLetterboxd?: boolean;
 }
 
 export interface WatchlistResponse {

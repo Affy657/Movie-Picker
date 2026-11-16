@@ -22,7 +22,15 @@ import {
   useOpenMoviePage,
   type MoviePageSeed,
 } from '@/features/movies/hooks/useOpenMoviePage';
-import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
+import {
+  useWatchlistToggle,
+  type WatchlistToggleItem,
+} from '@/features/watchlist/hooks/useWatchlistToggle';
+import AddToListMenu from '@/features/lists/components/AddToListMenu';
+import type { WatchedStatus } from '@/features/watched/api/watchedApi';
+import WatchedRating, { hasWatchedRating } from '@/features/watched/components/WatchedRating';
+import WatchedToggle from '@/features/watched/components/WatchedToggle';
+import { useWatchedTitle } from '@/features/watched/hooks/useWatched';
 import { ApiError } from '@/shared/api/apiError';
 import BackLink from '@/shared/components/BackLink';
 import Button, { buttonClass } from '@/shared/components/Button';
@@ -33,6 +41,7 @@ import PageLayout from '@/shared/components/PageLayout';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
+import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
 import { useShareAction } from '@/shared/hooks/useShareAction';
 import { useLocale, useTranslation, type Translate, type TranslationKey } from '@/shared/i18n';
@@ -85,9 +94,11 @@ function isNotFound(error: unknown): boolean {
 
 interface HeroActionsProps {
   view: MovieHeroView;
+  item: WatchlistToggleItem;
   signedIn: boolean;
   fromNight: boolean;
   inWatchlist: boolean;
+  watched: { status: WatchedStatus | undefined; pending: boolean; toggle: () => void };
   trailer: MovieVideo | undefined;
   shareUrl: string;
   onPropose: () => void;
@@ -98,9 +109,11 @@ interface HeroActionsProps {
 
 function HeroActions({
   view,
+  item,
   signedIn,
   fromNight,
   inWatchlist,
+  watched,
   trailer,
   shareUrl,
   onPropose,
@@ -108,6 +121,7 @@ function HeroActions({
   onPlay,
   t,
 }: Readonly<HeroActionsProps>) {
+  const isMobile = useIsMobile();
   const share = useShareAction(
     shareUrl,
     view.title,
@@ -115,43 +129,127 @@ function HeroActions({
     'movie'
   );
   const titleUnknown = !view.title;
+  const propose =
+    signedIn && !fromNight ? (
+      <Button variant="primary" fullWidth={isMobile} disabled={titleUnknown} onClick={onPropose}>
+        <Plus aria-hidden size={ICON_SIZE.md} />
+        {t('moviePage.propose')}
+      </Button>
+    ) : null;
+  const trailerButton = trailer ? (
+    <Button className={styles.trailer} onClick={() => onPlay(trailer)}>
+      <PlayCircle aria-hidden size={ICON_SIZE.md} />
+      {t('moviePage.trailer')}
+    </Button>
+  ) : null;
+  const shareButton = (
+    <IconButton
+      ariaLabel={share.copied ? t('share.copied') : t('moviePage.share')}
+      disabled={titleUnknown}
+      onClick={() => void share.nativeShare()}
+    >
+      <Share2 aria-hidden size={ICON_SIZE.md} />
+    </IconButton>
+  );
+  const memberActions = signedIn ? (
+    <MemberActions
+      item={item}
+      inWatchlist={inWatchlist}
+      watched={watched}
+      disabled={titleUnknown}
+      isMobile={isMobile}
+      onToggleWatchlist={onToggleWatchlist}
+      t={t}
+    />
+  ) : null;
+
+  if (isMobile) {
+    return (
+      <>
+        {propose}
+        {memberActions}
+        <div className={styles.actionRow}>
+          {trailerButton}
+          {shareButton}
+        </div>
+      </>
+    );
+  }
   return (
     <>
-      {signedIn && !fromNight ? (
-        <Button variant="primary" disabled={titleUnknown} onClick={onPropose}>
-          <Plus aria-hidden size={ICON_SIZE.md} />
-          {t('moviePage.propose')}
-        </Button>
-      ) : null}
-      {trailer ? (
-        <Button onClick={() => onPlay(trailer)}>
-          <PlayCircle aria-hidden size={ICON_SIZE.md} />
-          {t('moviePage.trailer')}
-        </Button>
-      ) : null}
-      {signedIn ? (
-        <Button
-          variant={inWatchlist ? 'soft' : 'secondary'}
-          aria-pressed={inWatchlist}
-          disabled={titleUnknown}
-          onClick={onToggleWatchlist}
-        >
-          {inWatchlist ? (
-            <BookmarkCheck aria-hidden size={ICON_SIZE.md} />
-          ) : (
-            <Bookmark aria-hidden size={ICON_SIZE.md} />
-          )}
-          {inWatchlist ? t('moviePage.inWatchlist') : t('moviePage.addToWatchlist')}
-        </Button>
-      ) : null}
-      <IconButton
-        ariaLabel={share.copied ? t('share.copied') : t('moviePage.share')}
-        disabled={titleUnknown}
-        onClick={() => void share.nativeShare()}
-      >
-        <Share2 aria-hidden size={ICON_SIZE.md} />
-      </IconButton>
+      <div className={styles.actionRow}>
+        {propose}
+        {trailerButton}
+        {shareButton}
+      </div>
+      {memberActions}
     </>
+  );
+}
+
+function MemberActions({
+  item,
+  inWatchlist,
+  watched,
+  disabled,
+  isMobile,
+  onToggleWatchlist,
+  t,
+}: Readonly<{
+  item: WatchlistToggleItem;
+  inWatchlist: boolean;
+  watched: HeroActionsProps['watched'];
+  disabled: boolean;
+  isMobile: boolean;
+  onToggleWatchlist: () => void;
+  t: Translate;
+}>) {
+  const pairItem = isMobile ? styles.pairItem : undefined;
+  const watchlistToggle = (
+    <Button
+      variant={inWatchlist ? 'soft' : 'secondary'}
+      fullWidth={isMobile}
+      className={pairItem}
+      aria-pressed={inWatchlist}
+      disabled={disabled}
+      onClick={onToggleWatchlist}
+    >
+      {inWatchlist ? (
+        <BookmarkCheck aria-hidden size={ICON_SIZE.md} />
+      ) : (
+        <Bookmark aria-hidden size={ICON_SIZE.md} />
+      )}
+      {t('moviePage.watchlistToggle')}
+    </Button>
+  );
+  const watchedToggle = (
+    <WatchedToggle
+      status={watched.status}
+      disabled={disabled || watched.pending}
+      fullWidth={isMobile}
+      className={pairItem}
+      onToggle={watched.toggle}
+    />
+  );
+  const lists = <AddToListMenu item={item} disabled={disabled} fullWidth={isMobile} />;
+
+  if (isMobile) {
+    return (
+      <>
+        <div className={styles.actionRow}>
+          {watchlistToggle}
+          {watchedToggle}
+        </div>
+        {lists}
+      </>
+    );
+  }
+  return (
+    <div className={styles.actionRow}>
+      {lists}
+      {watchlistToggle}
+      {watchedToggle}
+    </div>
   );
 }
 
@@ -296,6 +394,7 @@ function MoviePageContent({
   const canonicalPath = ROUTES.moviePage({ tmdbId, mediaType, title: title || undefined });
   const videos = videosOf(details);
   const item = libraryItemOf({ tmdbId, mediaType, details, seed, view });
+  const watched = useWatchedTitle(item, signedIn);
   const failedWithoutSeed = detailsQuery.isError && !seed;
 
   usePageSeo({
@@ -344,13 +443,29 @@ function MoviePageContent({
           view={view}
           nights={nightsQuery.data}
           scale={scale}
+          personalScore={
+            hasWatchedRating(watched.status)
+              ? {
+                  label: t('watched.rating.label'),
+                  content: (
+                    <WatchedRating status={watched.status} scale={scale} onRate={watched.rate} />
+                  ),
+                }
+              : null
+          }
           topLink={nightSlug ? null : <BackLink onClick={goBack}>{t('moviePage.back')}</BackLink>}
           actions={
             <HeroActions
               view={view}
+              item={item}
               signedIn={signedIn}
               fromNight={!!nightSlug}
               inWatchlist={watchlist.has(item)}
+              watched={{
+                status: watched.status,
+                pending: watched.isPending,
+                toggle: watched.toggle,
+              }}
               trailer={videos[0]}
               shareUrl={absoluteUrl(canonicalPath)}
               onPropose={() => setProposeTarget(item)}
@@ -361,9 +476,9 @@ function MoviePageContent({
           }
         />
         <div className={styles.content}>
-          {watchlist.error ? (
+          {watchlist.error || watched.error ? (
             <p className="error" role="alert">
-              {watchlist.error}
+              {watchlist.error ?? watched.error}
             </p>
           ) : null}
           <div className={styles.body}>

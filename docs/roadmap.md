@@ -68,11 +68,7 @@ Rien pour l'instant.
 
 ### Bibliothèque de films
 
-- `L` **Import des films vus depuis Letterboxd** : reprendre les films déjà vus d'un compte Letterboxd avec la note posée sur chacun, qui alimentent le marqueur « déjà vu » et les notes Movie Picker. Complète la synchronisation de la watchlist.
-- `S` **Écart watchlist Movie Picker / Letterboxd** : pour les comptes synchronisés, badge sur les films de la liste « À voir » absents de la watchlist Letterboxd, typiquement ceux ajoutés depuis une soirée.
-- `L` **Mes listes** : la page Ma liste devient Mes listes, où chacun crée, renomme et supprime ses propres listes de films à côté de la liste « À voir », chacune visible sur le profil ou privée. Un film s'ajoute à n'importe quelle liste depuis sa fiche.
-- `L` **Listes collaboratives** : le créateur d'une liste y invite d'autres personnes, qui peuvent y ajouter et en retirer des films, et chaque film affiche qui l'a ajouté. Pensée pour la liste « à voir ensemble » d'un couple ou d'une bande. Dépend de Mes listes.
-- `L` **Listes intelligentes** : une liste qui se remplit toute seule dans tout le catalogue TMDB à partir de règles combinées (genres, décennie, note, durée, acteurs, réalisateur, plateformes) et se met à jour d'elle-même. Dépend de Mes listes.
+- `L` **Listes intelligentes** : une liste qui se remplit toute seule dans tout le catalogue TMDB à partir de règles combinées (genres, décennie, note, durée, acteurs, réalisateur, plateformes) et se met à jour d'elle-même, à enregistrer dans Mes listes comme une saga.
 
 ### Fiches films
 

@@ -56,7 +56,7 @@ public sealed class GetFollowedWatchedMoviesHandler : IGetFollowedWatchedMoviesH
             return empty;
 
         var followed = await _users.ListByIdsAsync(followingIds, ct);
-        var publicIds = followed.Where(u => u.IsProfilePublic).Select(u => u.Id).ToList();
+        var publicIds = followed.Where(u => u.IsProfilePublic && u.IsWatchedPublic).Select(u => u.Id).ToList();
         if (publicIds.Count == 0)
             return empty;
 

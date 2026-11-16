@@ -1,20 +1,15 @@
 import { useId, useMemo, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Film } from 'lucide-react';
+import { Film, Lock } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import EmptyState from '@/shared/components/EmptyState';
-import Avatar from '@/shared/components/Avatar';
-import { ROUTES } from '@/app/routes';
 import { MOVIE_PAGE_CHUNKS } from '@/app/routeChunks';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { ApiError } from '@/shared/api/apiError';
-import { queryKeys } from '@/shared/hooks/queryKeys';
-import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
-import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
-import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
+import { useLocale, useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { toCollectionToolbarProps } from '@/features/movies/components/FilteredCollectionLayout';
 import MovieListFilteredLayout from '@/features/movies/components/MovieListFilteredLayout';
@@ -26,7 +21,10 @@ import {
   ProfileLoadErrorState,
   ProfileNotFoundState,
 } from '@/features/profile/components/ProfileQueryStates';
-import { fetchPublicProfile, type PublicProfile } from '@/features/profile/api/profileApi';
+import type { PublicProfile } from '@/features/profile/api/profileApi';
+import ProfileCollectionHeader from '@/features/profile/components/ProfileCollectionHeader';
+import { usePublicProfile } from '@/features/profile/hooks/usePublicProfile';
+import { profileCollectionSeo } from '@/features/profile/utils/profileCollectionSeo';
 import ProfileCollectionToolbar from '@/features/profile/components/ProfileCollectionToolbar';
 import MovieBrowseCard from '@/features/movies/components/MovieBrowseCard';
 import {
@@ -40,7 +38,6 @@ import styles from './ProfileCollectionPage.module.css';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import Button from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
-import BackLink from '@/shared/components/BackLink';
 import InlineError from '@/shared/components/InlineError';
 
 export interface ProfileCollectionTexts<T = MovieListItemLike> {
@@ -64,21 +61,7 @@ interface ProfileCollectionPageProps<T extends MovieListItemLike> {
   canonicalPath: (handle: string) => string;
   texts: ProfileCollectionTexts<T>;
   renderLeadingBadge?: (item: T, handle: string) => ReactNode;
-}
-
-function collectionSeo(
-  profile: PublicProfile | undefined,
-  isNotFound: boolean,
-  t: Translate,
-  texts: Pick<ProfileCollectionTexts, 'pageTitle' | 'seoDescription'>,
-  canonicalPath: (handle: string) => string
-) {
-  if (!profile) return { title: pageTitle(t('profile.loading')), noindex: isNotFound };
-  return {
-    title: pageTitle(texts.pageTitle(profile.displayName)),
-    description: texts.seoDescription(profile),
-    canonical: absoluteUrl(canonicalPath(profile.handle)),
-  };
+  hidden?: { reason: string; message: string };
 }
 
 function isNotFoundError(error: unknown): boolean {
@@ -94,6 +77,7 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
   canonicalPath,
   texts,
   renderLeadingBadge,
+  hidden,
 }: Readonly<ProfileCollectionPageProps<T>>) {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
@@ -103,12 +87,7 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
   const hasHover = useHasHoverCapability();
   const filtersPanelId = useId();
 
-  const profileQuery = useQuery({
-    queryKey: queryKeys.profile.public(handle),
-    queryFn: () => fetchPublicProfile(handle ?? ''),
-    enabled: !!handle,
-    retry: false,
-  });
+  const profileQuery = usePublicProfile(handle);
 
   const itemsQuery = useQuery({
     queryKey,
@@ -118,10 +97,13 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
   });
 
   const profile = profileQuery.data;
+  const itemsHidden =
+    !!hidden && ApiError.is(itemsQuery.error) && itemsQuery.error.reason === hidden.reason;
+  const itemsFailed = itemsQuery.isError && !itemsHidden;
   const isNotFound =
     !handle ||
     (profileQuery.isError && isNotFoundError(profileQuery.error)) ||
-    (itemsQuery.isError && isNotFoundError(itemsQuery.error));
+    (itemsFailed && isNotFoundError(itemsQuery.error));
 
   const items = useMemo(() => itemsQuery.data ?? [], [itemsQuery.data]);
 
@@ -140,7 +122,7 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
   const [proposeTarget, setProposeTarget] = useState<WatchlistToggleItem | null>(null);
   const watchlist = useWatchlistToggle(isLoggedIn);
 
-  usePageSeo(collectionSeo(profile, isNotFound, t, texts, canonicalPath));
+  usePageSeo(profileCollectionSeo(profile, isNotFound, t, texts, canonicalPath));
 
   if (profileQuery.isPending && handle) {
     return (
@@ -163,15 +145,11 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
 
   return (
     <PageLayout className={styles.layout}>
-      <BackLink to={ROUTES.profile(profile.handle)}>{t('profile.movies.backLink')}</BackLink>
-
-      <div className={styles.headerRow}>
-        <Avatar avatarId={profile.avatarId} pseudo={profile.displayName} size="lg" />
-        <div className={styles.headerText}>
-          <h1 className={styles.pageTitle}>{texts.pageTitle(profile.displayName)}</h1>
-          <p className={styles.pageSubtitle}>{texts.subtitle(items)}</p>
-        </div>
-      </div>
+      <ProfileCollectionHeader
+        profile={profile}
+        title={texts.pageTitle(profile.displayName)}
+        subtitle={itemsHidden ? null : texts.subtitle(items)}
+      />
 
       <h2 className="visually-hidden">{texts.listAria}</h2>
 
@@ -184,7 +162,10 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
       {itemsQuery.isPending && (
         <WatchlistSkeleton label={t('profile.loading')} gridClassName={styles.grid} />
       )}
-      {!itemsQuery.isPending && itemsQuery.isError && (
+      {itemsHidden && hidden ? (
+        <EmptyState icon={<Lock aria-hidden size={ICON_SIZE['3xl']} />} message={hidden.message} />
+      ) : null}
+      {!itemsQuery.isPending && itemsFailed && (
         <InlineError
           message={texts.loadError}
           retryLabel={t('profile.stats.retry')}

@@ -31,7 +31,7 @@ public sealed class WatchlistController : ControllerBase
         if (string.IsNullOrEmpty(userId))
             return Unauthorized();
 
-        var result = await handler.HandleAsync(userId, skip, take, ct);
+        var result = await handler.HandleAsync(userId, includeLetterboxd: true, skip, take, ct);
         return Ok(result);
     }
 

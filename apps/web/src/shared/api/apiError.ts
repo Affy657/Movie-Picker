@@ -2,10 +2,13 @@ export const API_ERROR_REASONS = {
   voteLimitReached: 'vote-limit-reached',
   invalidResetToken: 'invalid_reset_token',
   letterboxdWatchlistIncomplete: 'letterboxd_watchlist_incomplete',
+  letterboxdWatchedIncomplete: 'letterboxd_watched_incomplete',
   favoritesLimitReached: 'favorites_limit_reached',
   letterboxdSyncUnavailable: 'letterboxd_sync_unavailable',
   letterboxdSyncFailed: 'letterboxd_sync_failed',
   ratingNotFound: 'rating_not_found',
+  watchedNotFound: 'watched_not_found',
+  listNameTaken: 'list_name_taken',
 } as const;
 
 export class ApiError extends Error {
@@ -29,6 +32,10 @@ export class ApiError extends Error {
   static is(e: unknown): e is ApiError {
     return e instanceof ApiError;
   }
+}
+
+export function isNotFoundError(error: unknown): boolean {
+  return ApiError.is(error) && error.code === 404;
 }
 
 export function getErrorMessage(e: unknown, fallback = 'Une erreur est survenue.'): string {

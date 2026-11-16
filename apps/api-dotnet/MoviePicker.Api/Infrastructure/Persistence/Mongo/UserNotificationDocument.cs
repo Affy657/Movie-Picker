@@ -40,6 +40,14 @@ public sealed class UserNotificationDocument
     [BsonIgnoreIfNull]
     public string? EventTitle { get; set; }
 
+    [BsonElement("listId")]
+    [BsonIgnoreIfNull]
+    public string? ListId { get; set; }
+
+    [BsonElement("listName")]
+    [BsonIgnoreIfNull]
+    public string? ListName { get; set; }
+
     [BsonElement("movieTitle")]
     [BsonIgnoreIfNull]
     public string? MovieTitle { get; set; }

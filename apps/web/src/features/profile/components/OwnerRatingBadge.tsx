@@ -26,12 +26,16 @@ export default function OwnerRatingBadge({
   handle,
   value,
   scale,
-}: Readonly<{ handle: string; value: number; scale: RatingScale }>) {
+}: Readonly<{ handle?: string; value: number; scale: RatingScale }>) {
   const { t, locale } = useTranslation();
   const text = formatRating(value, scale, locale);
   return (
     <ProfileCardBadge
-      description={t('profile.movies.ownerRating', { handle, value: text })}
+      description={
+        handle
+          ? t('profile.movies.ownerRating', { handle, value: text })
+          : t('profile.movies.ownRating', { value: text })
+      }
       icon={<Star size={ICON_SIZE.xs} aria-hidden className={styles.star} />}
     >
       {text}

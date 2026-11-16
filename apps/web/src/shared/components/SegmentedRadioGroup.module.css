@@ -81,6 +81,13 @@
   border-radius: var(--radius-pill);
 }
 
+.optionWithIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1-5);
+}
+
 .optionIcon.optionSelected {
   color: var(--color-primary-text);
 }

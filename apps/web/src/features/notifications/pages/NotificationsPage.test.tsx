@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import NotificationsPage from '@/features/notifications/pages/NotificationsPage';
@@ -20,6 +20,47 @@ function renderPage() {
 }
 
 const base = { actorAvatarId: '', isRead: false, createdAt: '2026-06-03T10:00:00Z' };
+
+const LIST_INVITATION = {
+  ...base,
+  id: 'li',
+  type: 'listinvitation',
+  actorHandle: 'lea',
+  actorDisplayName: 'Léa',
+  listId: 'l9',
+  listName: 'Ciné du dimanche',
+  listInvitationPending: true,
+};
+
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="location">{location.pathname}</output>;
+}
+
+function renderInbox() {
+  return render(
+    <AppTestProviders>
+      <MemoryRouter initialEntries={['/notifications']}>
+        <Routes>
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/listes/:listId" element={<p>Page de la liste</p>} />
+        </Routes>
+        <LocationProbe />
+      </MemoryRouter>
+    </AppTestProviders>
+  );
+}
+
+function serveInbox(items: Record<string, unknown>[]) {
+  return http.get(`${TEST_API_V1}/notifications/inbox`, () =>
+    HttpResponse.json({ items, unreadCount: items.length, hasMore: false })
+  );
+}
+
+const ignoreRead = http.post(
+  `${TEST_API_V1}/notifications/inbox/:id/read`,
+  () => new HttpResponse(null, { status: 204 })
+);
 
 const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
   HttpResponse.json({
@@ -231,6 +272,119 @@ describe('NotificationsPage (MSW)', () => {
     await screen.findByText(/Soiree Annulee/);
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Soiree Annulee/ })).toBeInTheDocument();
+  });
+
+  describe('invitation to a list', () => {
+    it('says who invites to which list, with Accepter and Refuser while it waits', async () => {
+      server.use(authedUserHandler, serveInbox([LIST_INVITATION]));
+      renderInbox();
+
+      expect(
+        await screen.findByText(
+          (_, element) =>
+            element?.tagName === 'P' &&
+            element.textContent === 'Léa vous invite à rejoindre la liste « Ciné du dimanche »'
+        )
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Accepter l’invitation à « Ciné du dimanche »' })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Refuser l’invitation à « Ciné du dimanche »' })
+      ).toBeInTheDocument();
+    });
+
+    it('accepts, marks it read and opens the list', async () => {
+      let accepted = false;
+      let markedId: string | null = null;
+      server.use(
+        authedUserHandler,
+        serveInbox([LIST_INVITATION]),
+        http.post(`${TEST_API_V1}/lists/l9/invitation/accept`, () => {
+          accepted = true;
+          return HttpResponse.json({ id: 'l9', name: 'Ciné du dimanche' });
+        }),
+        http.post(`${TEST_API_V1}/notifications/inbox/:id/read`, ({ params }) => {
+          markedId = params.id as string;
+          return new HttpResponse(null, { status: 204 });
+        })
+      );
+      const user = userEvent.setup();
+      renderInbox();
+
+      await user.click(
+        await screen.findByRole('button', { name: 'Accepter l’invitation à « Ciné du dimanche »' })
+      );
+
+      expect(await screen.findByText('Page de la liste')).toBeInTheDocument();
+      expect(screen.getByTestId('location')).toHaveTextContent('/listes/l9');
+      expect(accepted).toBe(true);
+      expect(markedId).toBe('li');
+    });
+
+    it('declines and takes the answers away', async () => {
+      let declined = false;
+      server.use(
+        authedUserHandler,
+        serveInbox([LIST_INVITATION]),
+        ignoreRead,
+        http.post(`${TEST_API_V1}/lists/l9/invitation/decline`, () => {
+          declined = true;
+          return new HttpResponse(null, { status: 204 });
+        })
+      );
+      const user = userEvent.setup();
+      renderInbox();
+
+      await user.click(
+        await screen.findByRole('button', { name: 'Refuser l’invitation à « Ciné du dimanche »' })
+      );
+
+      await waitFor(() =>
+        expect(screen.queryByRole('button', { name: /accepter l’invitation/i })).toBeNull()
+      );
+      expect(declined).toBe(true);
+      expect(screen.getByTestId('location')).toHaveTextContent('/notifications');
+    });
+
+    it('says why an answer failed', async () => {
+      server.use(
+        authedUserHandler,
+        serveInbox([LIST_INVITATION]),
+        http.post(`${TEST_API_V1}/lists/l9/invitation/accept`, () =>
+          HttpResponse.json(
+            {
+              error: 'list_invitation_not_found',
+              code: 404,
+              reason: 'list_invitation_not_found',
+            },
+            { status: 404 }
+          )
+        )
+      );
+      const user = userEvent.setup();
+      renderInbox();
+
+      await user.click(
+        await screen.findByRole('button', { name: 'Accepter l’invitation à « Ciné du dimanche »' })
+      );
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'Cette invitation n’est plus valable.'
+      );
+    });
+
+    it('leads to Mes listes once answered, without the answers', async () => {
+      server.use(
+        authedUserHandler,
+        serveInbox([{ ...LIST_INVITATION, listInvitationPending: false, isRead: true }])
+      );
+      renderInbox();
+
+      const link = await screen.findByRole('link', { name: /ciné du dimanche/i });
+      expect(link).toHaveAttribute('href', ROUTES.lists);
+      expect(screen.queryByRole('button', { name: /accepter/i })).toBeNull();
+    });
   });
 
   it("le bouton 'tout marquer comme lu' appelle l'API read-all", async () => {

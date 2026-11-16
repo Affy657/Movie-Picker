@@ -3,7 +3,6 @@ import InlineError from '@/shared/components/InlineError';
 import { Skeleton, SkeletonScreen } from '@/shared/components/Skeleton';
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
-import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
 import { ROUTES } from '@/app/routes';
 import MoviePreviewRow, { MoviePreviewRail } from '@/features/movies/components/MoviePreviewRow';
 import MovieCollectionCard from '@/features/movies/components/MovieCollectionCard';
@@ -11,18 +10,14 @@ import { useMovieCollections } from '@/features/movies/hooks/useMovieShowcase';
 import { RAIL_PREVIEW_COUNT } from './HomeShowcaseRow';
 import styles from './HomeShowcaseRow.module.css';
 import { collectionDisplayName } from '@/features/movies/utils/collectionName';
+import { posterStackSources } from '@/features/movies/utils/posterStack';
 import type { MovieCollection } from '@/features/movies/api/showcaseApi';
 
 const SKELETON_CARDS = 6;
-const STACK_SIZE = 3;
 
 function stackSources(collection: MovieCollection): string[] {
   const previews = collection.previewPosterPaths ?? [];
-  const paths = previews.length > 0 ? previews : [collection.posterPath];
-  return paths
-    .slice(0, STACK_SIZE)
-    .map((path) => tmdbPosterSrcForListDisplay(posterImageSrc(path)))
-    .filter((src): src is string => src != null);
+  return posterStackSources(previews.length > 0 ? previews : [collection.posterPath]);
 }
 const COLLECTION_CARD_HEIGHT = 102;
 

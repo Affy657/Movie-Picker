@@ -55,6 +55,7 @@ public sealed class UserProfileResponse
     public UiThemePreference UiTheme { get; init; }
     public AccentColor AccentColor { get; init; }
     public RatingScale RatingScale { get; init; }
+    public bool DimWatched { get; init; }
     public string AvatarId { get; init; } = string.Empty;
     public string? AvatarPhotoId { get; init; }
     public string GeneratedAvatarId { get; init; } = string.Empty;
@@ -62,10 +63,15 @@ public sealed class UserProfileResponse
     public string? Bio { get; init; }
     public bool IsProfilePublic { get; init; } = true;
     public bool IsWatchlistPublic { get; init; } = true;
+    public bool IsWatchedPublic { get; init; } = true;
     public string? LetterboxdUsername { get; init; }
     public DateTimeOffset? LetterboxdLastSyncAt { get; init; }
     public string? LetterboxdLastSyncError { get; init; }
     public int LetterboxdPendingReconciliationCount { get; init; }
+    public bool LetterboxdSyncWatchlist { get; init; } = true;
+    public bool LetterboxdSyncWatched { get; init; } = true;
+    public int LetterboxdWatchlistCount { get; init; }
+    public int LetterboxdWatchedCount { get; init; }
     public bool HasPassword { get; init; } = true;
     public IReadOnlyList<string> LinkedProviders { get; init; } = Array.Empty<string>();
     public IReadOnlyList<FavoriteTitleResponse> Favorites { get; init; } = [];
@@ -88,6 +94,8 @@ public sealed class PatchUserProfileRequest
     [RegularExpression("^(five|ten)$", ErrorMessage = "ratingScale must be five or ten")]
     public string? RatingScale { get; init; }
 
+    public bool? DimWatched { get; init; }
+
     [RegularExpression(
         "^(alpha|beta|bolt|byte|crux|delta|flux|forge|gamma|jolt|kilo|laser|dex|sigma|droid|theta|chip|vibe|cute|wink|hero|halo|grin|cool|keen|jazz|fizz|zest|bold|epic|bask|nod|glow|zoom|snap|luxe)$",
         ErrorMessage = "avatarId is invalid")]
@@ -104,8 +112,14 @@ public sealed class PatchUserProfileRequest
 
     public bool? IsWatchlistPublic { get; init; }
 
+    public bool? IsWatchedPublic { get; init; }
+
     [MaxLength(40, ErrorMessage = "Letterboxd username is too long")]
     public string? LetterboxdUsername { get; init; }
+
+    public bool? LetterboxdSyncWatchlist { get; init; }
+
+    public bool? LetterboxdSyncWatched { get; init; }
 }
 
 public sealed class ChangePasswordRequest

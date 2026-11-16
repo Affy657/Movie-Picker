@@ -1,0 +1,37 @@
+.root {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2-5);
+  min-width: 0;
+}
+
+.track {
+  flex: 1 1 auto;
+  min-width: var(--space-12);
+  height: var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-hover-strong);
+  overflow: hidden;
+}
+
+.fill {
+  display: block;
+  width: var(--progress-value);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-success);
+}
+
+.label {
+  flex: 0 0 auto;
+  font-size: var(--font-size-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.label strong {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}

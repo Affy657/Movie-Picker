@@ -1,0 +1,32 @@
+.container {
+  position: relative;
+  display: inline-flex;
+}
+
+.panel {
+  width: 18rem;
+}
+
+.status {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  padding: var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.error {
+  margin: 0;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-error);
+}
+
+.empty {
+  margin: 0;
+  padding: var(--space-1) var(--space-2) var(--space-2);
+  font-size: var(--font-size-sm);
+  line-height: var(--leading-comfortable);
+  color: var(--color-text-muted);
+}

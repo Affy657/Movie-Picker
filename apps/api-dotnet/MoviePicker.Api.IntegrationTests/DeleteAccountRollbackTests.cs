@@ -46,7 +46,10 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         string EventId,
         string EventSlug,
         string ParticipantId,
-        string PhotoKey);
+        string PhotoKey,
+        string JoinedListId,
+        string InvitingListId,
+        string SavedByAFollowerId);
 
     private static async Task<Fixture> SeedAsync(IServiceProvider services)
     {
@@ -140,6 +143,65 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
             CreatedAt = now
         });
 
+        var movieLists = services.GetRequiredService<IMovieListRepository>();
+        var ownList = await movieLists.AddAsync(new MovieList
+        {
+            OwnerId = user.Id,
+            Name = "Films cultes",
+            IsPublic = true,
+            Items = [new MovieListItem { TmdbId = 550, Title = "Fight Club", Year = "1999", AddedAt = now }],
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+        var keptByAFollower = await services.GetRequiredService<ISavedListRepository>().AddIfAbsentAsync(new SavedList
+        {
+            OwnerId = followed.Id,
+            SourceType = ListSourceType.MemberList,
+            SourceId = ownList.Id,
+            SourceOwnerId = user.Id,
+            Name = "Films cultes",
+            CreatedAt = now,
+            Snapshot = [new SavedListTitle { TmdbId = 550, Title = "Fight Club", Year = "1999" }]
+        });
+        var joinedList = await movieLists.AddAsync(new MovieList
+        {
+            OwnerId = followed.Id,
+            Name = "Ciné du dimanche",
+            Items = [new MovieListItem { TmdbId = 680, Title = "Pulp Fiction", Year = "1994", AddedAt = now, AddedByUserId = user.Id }],
+            Members = [new MovieListMember(user.Id, now)],
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+        var invitingList = await movieLists.AddAsync(new MovieList
+        {
+            OwnerId = followed.Id,
+            Name = "Nanars",
+            Invitations = [new MovieListInvitation(user.Id, now)],
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+
+        await services.GetRequiredService<IWatchedTitleRepository>().AddIfAbsentAsync(new WatchedTitle
+        {
+            OwnerId = user.Id,
+            TmdbId = 603,
+            Title = "Matrix",
+            Year = "1999",
+            WatchedAt = now,
+            Rating = 8,
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+
+        await services.GetRequiredService<ISavedListRepository>().AddIfAbsentAsync(new SavedList
+        {
+            OwnerId = user.Id,
+            SourceType = ListSourceType.TmdbCollection,
+            SourceId = "1241",
+            Name = "Harry Potter - Saga",
+            CreatedAt = now
+        });
+
         var photoKey = AvatarPhoto.NewKey();
         await photos.SaveAsync(new StoredAvatarPhoto
         {
@@ -150,7 +212,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
             CreatedAt = now
         });
 
-        return new Fixture(user.Id, followed.Id, evt.Id, evt.Slug, participant.Id, photoKey);
+        return new Fixture(user.Id, followed.Id, evt.Id, evt.Slug, participant.Id, photoKey, joinedList.Id, invitingList.Id, keptByAFollower.Id);
     }
 
     private static DeleteAccountHandler BuildHandlerFailingOnResetTokens(IServiceProvider services) =>
@@ -163,6 +225,9 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
             services.GetRequiredService<IPushSubscriptionRepository>(),
             services.GetRequiredService<IFollowRepository>(),
             services.GetRequiredService<IWatchlistRepository>(),
+            services.GetRequiredService<IMovieListRepository>(),
+            services.GetRequiredService<IWatchedTitleRepository>(),
+            services.GetRequiredService<ISavedListRepository>(),
             new ThrowingResetTokenRepository(),
             services.GetRequiredService<IAvatarPhotoRepository>(),
             services.GetRequiredService<IAuthSessionInvalidator>(),
@@ -204,6 +269,13 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         Assert.NotEmpty(await pushSubscriptions.ListByUserIdAsync(fixture.UserId));
         Assert.True(await follows.IsFollowingAsync(fixture.UserId, fixture.FollowedUserId));
         Assert.NotEmpty(await watchlist.ListByUserIdAsync(fixture.UserId));
+        Assert.NotEmpty(await services.GetRequiredService<IMovieListRepository>().ListByOwnerAsync(fixture.UserId));
+        Assert.Equal([fixture.JoinedListId], (await services.GetRequiredService<IMovieListRepository>().ListJoinedAsync(fixture.UserId)).Select(list => list.Id));
+        Assert.Equal([fixture.InvitingListId], (await services.GetRequiredService<IMovieListRepository>().ListInvitingAsync(fixture.UserId)).Select(list => list.Id));
+        Assert.NotEmpty(await services.GetRequiredService<IWatchedTitleRepository>().ListByOwnerAsync(fixture.UserId));
+        Assert.NotEmpty(await services.GetRequiredService<ISavedListRepository>().ListByOwnerAsync(fixture.UserId));
+        var keptByAFollower = (await services.GetRequiredService<ISavedListRepository>().GetAsync(fixture.FollowedUserId, fixture.SavedByAFollowerId))!;
+        Assert.Equal(("Films cultes", 1), (keptByAFollower.Name, keptByAFollower.Snapshot.Count));
         Assert.NotNull(await services.GetRequiredService<IAvatarPhotoRepository>().GetByKeyAsync(fixture.PhotoKey));
     }
 
@@ -231,6 +303,18 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         Assert.Empty(await pushSubscriptions.ListByUserIdAsync(fixture.UserId));
         Assert.False(await follows.IsFollowingAsync(fixture.UserId, fixture.FollowedUserId));
         Assert.Empty(await watchlist.ListByUserIdAsync(fixture.UserId));
+        var movieLists = services.GetRequiredService<IMovieListRepository>();
+        Assert.Empty(await movieLists.ListByOwnerAsync(fixture.UserId));
+        Assert.Empty(await movieLists.ListJoinedAsync(fixture.UserId));
+        Assert.Empty(await movieLists.ListInvitingAsync(fixture.UserId));
+        var kept = (await movieLists.FindAsync(fixture.JoinedListId))!;
+        Assert.Equal(fixture.UserId, Assert.Single(kept.Items).AddedByUserId);
+        Assert.Empty((await movieLists.FindAsync(fixture.InvitingListId))!.Invitations);
+        Assert.Empty(await services.GetRequiredService<IWatchedTitleRepository>().ListByOwnerAsync(fixture.UserId));
+        Assert.Empty(await services.GetRequiredService<ISavedListRepository>().ListByOwnerAsync(fixture.UserId));
+        var forgotten = (await services.GetRequiredService<ISavedListRepository>().GetAsync(fixture.FollowedUserId, fixture.SavedByAFollowerId))!;
+        Assert.Equal(string.Empty, forgotten.Name);
+        Assert.Empty(forgotten.Snapshot);
         Assert.Null(await services.GetRequiredService<IAvatarPhotoRepository>().GetByKeyAsync(fixture.PhotoKey));
 
         var evt = await events.GetByIdOrSlugAsync(fixture.EventSlug);

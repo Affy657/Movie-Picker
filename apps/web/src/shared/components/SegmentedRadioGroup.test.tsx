@@ -108,6 +108,24 @@ describe('SegmentedRadioGroup', () => {
     expect(onSelect).toHaveBeenLastCalledWith('map');
   });
 
+  it('takes the text that explains the choice as its accessible description', () => {
+    render(
+      <>
+        <SegmentedRadioGroup
+          options={OPTIONS}
+          value="grid"
+          onChange={vi.fn()}
+          ariaLabel="Affichage"
+          ariaDescribedBy="display-hint"
+        />
+        <p id="display-hint">Les affiches côte à côte.</p>
+      </>
+    );
+    expect(screen.getByRole('radiogroup', { name: 'Affichage' })).toHaveAccessibleDescription(
+      'Les affiches côte à côte.'
+    );
+  });
+
   it('keeps the label as the accessible name when an option shows its icon alone', () => {
     setup({ iconOnly: true });
     const grid = screen.getByRole('radio', { name: 'Grille' });

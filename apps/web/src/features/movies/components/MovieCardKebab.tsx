@@ -34,6 +34,8 @@ export interface CardKebabProps {
   isHost: boolean;
   canRemove: boolean;
   onRemove: () => void;
+  removeLabel?: string;
+  removeAriaLabel?: string;
   inWatchlist?: boolean;
   onToggleWatchlist?: () => void;
   onProposeToEvent?: () => void;
@@ -182,6 +184,8 @@ export function CardKebab({
   isHost,
   canRemove,
   onRemove,
+  removeLabel,
+  removeAriaLabel,
   inWatchlist,
   onToggleWatchlist,
   onProposeToEvent,
@@ -269,9 +273,10 @@ export function CardKebab({
     setOpen((v) => !v);
   };
 
-  const removeAria = isMine
+  const defaultRemoveAria = isMine
     ? `${t('movies.list.removeButton')} ${title}`
     : t('movies.list.removeAsHostAria', { title });
+  const removeAria = removeAriaLabel ?? defaultRemoveAria;
 
   const lbUrl = letterboxdUrl(tmdbId, mediaType, title);
 
@@ -375,7 +380,7 @@ export function CardKebab({
                 ariaLabel={removeAria}
                 title={!isMine && isHost ? t('movies.list.removeAsHostTitle') : undefined}
               >
-                {t('movies.list.removeButton')}
+                {removeLabel ?? t('movies.list.removeButton')}
               </MenuItem>
             )}
           </MenuPanel>,

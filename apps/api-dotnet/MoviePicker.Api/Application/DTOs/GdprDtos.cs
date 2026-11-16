@@ -11,6 +11,11 @@ public sealed record UserDataExportResponse
     public IReadOnlyList<ExportedParticipation> Participations { get; init; } = Array.Empty<ExportedParticipation>();
     public IReadOnlyList<ExportedPushSubscription> PushSubscriptions { get; init; } = Array.Empty<ExportedPushSubscription>();
     public IReadOnlyList<ExportedWatchlistItem> Watchlist { get; init; } = Array.Empty<ExportedWatchlistItem>();
+    public IReadOnlyList<ExportedMovieList> MovieLists { get; init; } = Array.Empty<ExportedMovieList>();
+    public IReadOnlyList<ExportedJoinedMovieList> JoinedMovieLists { get; init; } = Array.Empty<ExportedJoinedMovieList>();
+    public IReadOnlyList<ExportedListInvitation> PendingListInvitations { get; init; } = Array.Empty<ExportedListInvitation>();
+    public IReadOnlyList<ExportedSavedList> SavedLists { get; init; } = Array.Empty<ExportedSavedList>();
+    public IReadOnlyList<ExportedWatchedTitle> WatchedTitles { get; init; } = Array.Empty<ExportedWatchedTitle>();
     public IReadOnlyList<ExportedFavorite> Favorites { get; init; } = Array.Empty<ExportedFavorite>();
     public ExportedAvatarPhoto? AvatarPhoto { get; init; }
 }
@@ -32,6 +37,7 @@ public sealed record ExportedProfile
     public string? Bio { get; init; }
     public bool IsProfilePublic { get; init; }
     public bool IsWatchlistPublic { get; init; }
+    public bool IsWatchedPublic { get; init; }
     public string UiTheme { get; init; } = string.Empty;
     public string AccentColor { get; init; } = string.Empty;
     public string AvatarId { get; init; } = string.Empty;
@@ -41,7 +47,10 @@ public sealed record ExportedProfile
         new Dictionary<string, bool>();
     public DateTimeOffset? SupporterSince { get; init; }
     public string RatingScale { get; init; } = string.Empty;
+    public bool DimWatched { get; init; }
     public string? LetterboxdUsername { get; init; }
+    public bool LetterboxdSyncWatchlist { get; init; }
+    public bool LetterboxdSyncWatched { get; init; }
     public IReadOnlyList<ExportedEventTemplate> EventTemplates { get; init; } = Array.Empty<ExportedEventTemplate>();
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
@@ -61,6 +70,7 @@ public sealed record ExportedNotification
     public string? ActorDisplayName { get; init; }
     public string? EventTitle { get; init; }
     public string? MovieTitle { get; init; }
+    public string? ListName { get; init; }
     public bool IsRead { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
 }
@@ -145,5 +155,62 @@ public sealed record ExportedWatchlistItem
     public string MediaType { get; init; } = string.Empty;
     public string Title { get; init; } = string.Empty;
     public string Year { get; init; } = string.Empty;
+    public string? LetterboxdSlug { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
+}
+
+public sealed record ExportedMovieList
+{
+    public string Name { get; init; } = string.Empty;
+    public string? Description { get; init; }
+    public bool IsPublic { get; init; }
+    public DateTimeOffset CreatedAt { get; init; }
+    public DateTimeOffset UpdatedAt { get; init; }
+    public IReadOnlyList<ExportedMovieListItem> Items { get; init; } = Array.Empty<ExportedMovieListItem>();
+}
+
+public sealed record ExportedMovieListItem
+{
+    public int TmdbId { get; init; }
+    public string MediaType { get; init; } = string.Empty;
+    public string Title { get; init; } = string.Empty;
+    public string Year { get; init; } = string.Empty;
+    public DateTimeOffset AddedAt { get; init; }
+}
+
+public sealed record ExportedSavedList
+{
+    public string SourceType { get; init; } = string.Empty;
+    public string SourceId { get; init; } = string.Empty;
+    public string Name { get; init; } = string.Empty;
+    public DateTimeOffset CreatedAt { get; init; }
+}
+
+public sealed record ExportedWatchedTitle
+{
+    public int TmdbId { get; init; }
+    public string MediaType { get; init; } = string.Empty;
+    public string Title { get; init; } = string.Empty;
+    public string Year { get; init; } = string.Empty;
+    public DateTimeOffset WatchedAt { get; init; }
+    public int? Rating { get; init; }
+    public string? RatingOrigin { get; init; }
+    public string Origin { get; init; } = string.Empty;
+    public string? LetterboxdSlug { get; init; }
+}
+
+public sealed record ExportedJoinedMovieList
+{
+    public string ListId { get; init; } = string.Empty;
+    public string Name { get; init; } = string.Empty;
+    public string OwnerDisplayName { get; init; } = string.Empty;
+    public DateTimeOffset JoinedAt { get; init; }
+}
+
+public sealed record ExportedListInvitation
+{
+    public string ListId { get; init; } = string.Empty;
+    public string Name { get; init; } = string.Empty;
+    public string OwnerDisplayName { get; init; } = string.Empty;
+    public DateTimeOffset InvitedAt { get; init; }
 }

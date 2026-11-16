@@ -62,7 +62,7 @@ public sealed class GetFollowedWatchedMoviesHandlerTests
         UpdatedAt = DateTimeOffset.UtcNow
     };
 
-    private static User Usr(string id, bool isPublic = true) => new()
+    private static User Usr(string id, bool isPublic = true, bool isWatchedPublic = true) => new()
     {
         Id = id,
         Email = $"{id}@test.local",
@@ -71,6 +71,7 @@ public sealed class GetFollowedWatchedMoviesHandlerTests
         Handle = id,
         AvatarId = "alpha",
         IsProfilePublic = isPublic,
+        IsWatchedPublic = isWatchedPublic,
         CreatedAt = DateTimeOffset.UtcNow,
         UpdatedAt = DateTimeOffset.UtcNow
     };
@@ -298,6 +299,25 @@ public sealed class GetFollowedWatchedMoviesHandlerTests
             .ReturnsAsync(["secret"]);
         _users.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([Usr("secret", isPublic: false)]);
+
+        var result = await Build().HandleAsync("me", 20);
+
+        Assert.Empty(result.Items);
+        _participants.Verify(
+            r => r.ListByUserIdsAsync(
+                It.IsAny<IReadOnlyCollection<string>>(),
+                It.IsAny<int>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task FollowedPeopleHidingTheirWatchedFilms_AreExcluded()
+    {
+        _follows.Setup(r => r.GetFollowingIdsAsync("me", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(["discreet"]);
+        _users.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([Usr("discreet", isWatchedPublic: false)]);
 
         var result = await Build().HandleAsync("me", 20);
 

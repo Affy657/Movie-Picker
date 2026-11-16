@@ -9,11 +9,13 @@ public sealed class GetInboxHandler : IGetInboxHandler
 {
     private readonly IUserNotificationRepository _notifications;
     private readonly IUserRepository _users;
+    private readonly IMovieListRepository _lists;
 
-    public GetInboxHandler(IUserNotificationRepository notifications, IUserRepository users)
+    public GetInboxHandler(IUserNotificationRepository notifications, IUserRepository users, IMovieListRepository lists)
     {
         _notifications = notifications;
         _users = users;
+        _lists = lists;
     }
 
     private const int DefaultPageSize = 30;
@@ -28,8 +30,13 @@ public sealed class GetInboxHandler : IGetInboxHandler
         var hasMore = page.Count > pageSize;
         var items = hasMore ? page.Take(pageSize).ToList() : page;
 
-        var unreadCount = await _notifications.GetUnreadCountAsync(userId, ct);
-        var actors = await ResolveActorsAsync(items, ct);
+        var unreadCountTask = _notifications.GetUnreadCountAsync(userId, ct);
+        var actorsTask = ResolveActorsAsync(items, ct);
+        var pendingListsTask = PendingListInvitationsAsync(userId, items, ct);
+        await Task.WhenAll(unreadCountTask, actorsTask, pendingListsTask);
+        var unreadCount = await unreadCountTask;
+        var actors = await actorsTask;
+        var pendingLists = await pendingListsTask;
 
         return new NotificationInboxResponse
         {
@@ -43,6 +50,11 @@ public sealed class GetInboxHandler : IGetInboxHandler
                 EventSlug = n.EventSlug,
                 EventTitle = n.EventTitle,
                 MovieTitle = n.MovieTitle,
+                ListId = n.ListId,
+                ListName = n.ListName,
+                ListInvitationPending = n.Type == UserNotificationType.ListInvitation
+                    && n.ListId is { } listId
+                    && pendingLists.Contains(listId),
                 IsRead = n.IsRead,
                 CreatedAt = n.CreatedAt
             }).ToList(),
@@ -53,6 +65,22 @@ public sealed class GetInboxHandler : IGetInboxHandler
 
     private static UserCard? ActorOf(UserNotification notification, Dictionary<string, UserCard> actors) =>
         notification.ActorHandle is { } handle ? actors.GetValueOrDefault(HandlePolicy.Normalize(handle)) : null;
+
+    private async Task<IReadOnlySet<string>> PendingListInvitationsAsync(
+        string userId,
+        IEnumerable<UserNotification> items,
+        CancellationToken ct)
+    {
+        var listIds = items
+            .Where(n => n.Type == UserNotificationType.ListInvitation)
+            .Select(n => n.ListId)
+            .OfType<string>()
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        return listIds.Count == 0
+            ? new HashSet<string>(StringComparer.Ordinal)
+            : await _lists.ListPendingInvitationIdsAsync(userId, listIds, ct);
+    }
 
     private async Task<Dictionary<string, UserCard>> ResolveActorsAsync(
         IEnumerable<UserNotification> items,

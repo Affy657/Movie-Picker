@@ -4,6 +4,18 @@
     var(--table-col-year) var(--table-col-availability) var(--table-col-kebab);
 }
 
+.rowGridWithContributor {
+  grid-template-columns:
+    var(--table-col-poster) minmax(0, 1fr) var(--table-col-vote) var(--table-col-runtime)
+    var(--table-col-year) var(--table-col-contributor) var(--table-col-availability)
+    var(--table-col-kebab);
+}
+
+.contributorCol {
+  min-width: 0;
+  padding-left: var(--space-4);
+}
+
 @media (hover: hover) {
   .rowHoverable:hover {
     background: var(--color-surface-hover);
@@ -55,4 +67,13 @@
 .availabilitySkeletonChip {
   width: var(--space-7);
   height: var(--space-7);
+}
+
+.dimmed img {
+  filter: grayscale(1);
+  opacity: var(--opacity-muted);
+}
+
+.dimmed h3 {
+  color: var(--color-text-muted);
 }

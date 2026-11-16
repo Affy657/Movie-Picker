@@ -20,8 +20,15 @@ public static class ErrorCodes
     public const string MovieNotAWinner = "movie_not_a_winner";
     public const string ParticipantNotFound = "participant_not_found";
     public const string WatchlistNotFound = "watchlist_not_found";
+    public const string WatchedNotFound = "watched_not_found";
     public const string SeenMarkNotFound = "seen_mark_not_found";
     public const string EventTemplateNotFound = "event_template_not_found";
+    public const string ListNotFound = "list_not_found";
+    public const string ListInvitationNotFound = "list_invitation_not_found";
+    public const string ListInviteLinkInvalid = "list_invite_link_invalid";
+    public const string SavedListNotFound = "saved_list_not_found";
+    public const string ListSourceNotFound = "list_source_not_found";
+    public const string WatchedTitleNotFound = "watched_title_not_found";
     public const string OAuthProviderNotLinked = "oauth_provider_not_linked";
 
     public const string EventFinished = "event_finished";
@@ -47,6 +54,16 @@ public static class ErrorCodes
     public const string EventTemplateNameTaken = "event_template_name_taken";
     public const string EventTemplateLimitReached = "event_template_limit_reached";
     public const string FavoritesLimitReached = "favorites_limit_reached";
+    public const string ListNameTaken = "list_name_taken";
+    public const string ListLimitReached = "list_limit_reached";
+    public const string ListFull = "list_full";
+    public const string ListMembersLimitReached = "list_members_limit_reached";
+    public const string ListAlreadyMember = "list_already_member";
+    public const string ListInvitationAlreadySent = "list_invitation_already_sent";
+    public const string ListOwnerCannotLeave = "list_owner_cannot_leave";
+    public const string SavedListLimitReached = "saved_list_limit_reached";
+    public const string ListAlreadyYours = "list_already_yours";
+    public const string SavedListCopyUnavailable = "saved_list_copy_unavailable";
     public const string InviteEventFinished = "invite_event_finished";
     public const string AlreadyParticipant = "already_participant";
     public const string InvitationAlreadySent = "invitation_already_sent";
@@ -67,6 +84,7 @@ public static class ErrorCodes
     public const string CreatorOnlyDelete = "creator_only_delete";
     public const string HostOnlyInvite = "host_only_invite";
     public const string HostOnlyList = "host_only_list";
+    public const string ListOwnerOnly = "list_owner_only";
     public const string HostOrSelfOnly = "host_or_self_only";
     public const string SeenMarkOwnOnly = "seen_mark_own_only";
     public const string SeenMarkOwnParticipationOnly = "seen_mark_own_participation_only";
@@ -106,6 +124,7 @@ public static class ErrorCodes
     public const string LetterboxdSyncFailed = "letterboxd_sync_failed";
     public const string LetterboxdSyncUnavailable = "letterboxd_sync_unavailable";
     public const string LetterboxdWatchlistIncomplete = "letterboxd_watchlist_incomplete";
+    public const string LetterboxdWatchedIncomplete = "letterboxd_watched_incomplete";
     public const string InvalidDateFormat = "invalid_date_format";
     public const string InvalidTimeFormat = "invalid_time_format";
     public const string ThemeColorOutOfRange = "theme_color_out_of_range";
@@ -122,6 +141,7 @@ public static class ErrorCodes
     public const string UnknownTheme = "unknown_theme";
     public const string UnknownGenre = "unknown_genre";
     public const string UnknownCollection = "unknown_collection";
+    public const string ListSourceNotSavable = "list_source_not_savable";
     public const string TooManyAttachments = "too_many_attachments";
     public const string AttachmentContentInvalid = "attachment_content_invalid";
     public const string AttachmentContentMismatch = "attachment_content_mismatch";
@@ -146,6 +166,7 @@ public static class ErrorCodes
 
     public const string MovieDetailsUnavailable = "movie_details_unavailable";
     public const string ShowcaseUnavailable = "showcase_unavailable";
+    public const string ListSourceUnavailable = "list_source_unavailable";
     public const string SearchUnavailable = "search_unavailable";
     public const string SuggestionUnavailable = "suggestion_unavailable";
 }

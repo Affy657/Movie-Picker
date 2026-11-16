@@ -8,6 +8,15 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Ma liste devient Mes listes** : vous y créez, renommez et supprimez vos propres listes à côté d'« À voir », et un film s'ajoute à n'importe laquelle depuis sa page.
+- **Les films vus ont leur liste** : « Je l'ai vu » et votre note sur la page d'un film, la liste « Films vus » dans Mes listes, la part déjà vue de chaque liste et l'option pour griser les films vus.
+- **Letterboxd remplit aussi vos films vus**, avec la date et la note de chaque film, et « À voir » signale les films absents de votre watchlist Letterboxd. Si votre compte était déjà relié, cette synchronisation reste coupée tant que vous ne l'activez pas dans Compte, Intégrations.
+- **Une saga, une sélection d'Explorer ou la liste publique d'un membre s'enregistre dans Mes listes**, reste à jour avec sa source et se copie en liste à vous.
+- **Les listes se partagent à plusieurs** : invitez des comptes que vous suivez ou partagez un lien, les membres ajoutent et retirent des films, et chaque film affiche qui l'a ajouté.
+- **Les listes deviennent publiques ou privées** : votre profil affiche vos listes publiques et ouvre leur page, et vous choisissez si vos films vus y sont visibles.
+
 ## [1.13.0] - 2026-11-13
 
 ### Added

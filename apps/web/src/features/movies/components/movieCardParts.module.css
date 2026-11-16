@@ -116,6 +116,36 @@
   text-overflow: ellipsis;
 }
 
+.contributorBadge {
+  position: absolute;
+  right: var(--space-1-5);
+  bottom: var(--space-1-5);
+  z-index: var(--z-raised);
+  display: inline-flex;
+  border-radius: var(--radius-pill);
+}
+
+.contributorAvatar {
+  box-shadow: 0 0 0 2px var(--color-on-poster-surface-ring);
+}
+
+.contributorCell {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  min-width: 0;
+  max-width: 100%;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.contributorName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .watchlistBadge {
   position: absolute;
   top: var(--space-1-5);

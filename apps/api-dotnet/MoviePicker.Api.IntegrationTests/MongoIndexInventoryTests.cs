@@ -69,10 +69,21 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         new("watchlist", "watchlist_userId_tmdbId_mediaType_unique", Unique: true),
         new("watchlist", "watchlist_userId_createdAt"),
 
+        new("movie_lists", "movie_lists_ownerId_normalizedName_unique", Unique: true),
+        new("movie_lists", "movie_lists_members_userId"),
+        new("movie_lists", "movie_lists_invitations_userId"),
+        new("movie_lists", "movie_lists_inviteLink_token_unique", Unique: true),
+
+        new("watched_titles", "watched_titles_ownerId_tmdbId_mediaType_unique", Unique: true),
+
+        new("saved_lists", "saved_lists_ownerId_sourceType_sourceId_unique", Unique: true),
+        new("saved_lists", "saved_lists_sourceOwnerId"),
+
         new("user_notifications", "user_notifications_userId_createdAt"),
         new("user_notifications", "user_notifications_userId_isRead"),
         new("user_notifications", "user_notifications_eventId"),
         new("user_notifications", "user_notifications_actorHandle"),
+        new("user_notifications", "user_notifications_listId"),
         new("user_notifications", "user_notifications_createdAt_ttl", ExpireAfterSeconds: NinetyDays),
 
         new("push_dedup_markers", "push_dedup_markers_channel_unique", Unique: true),

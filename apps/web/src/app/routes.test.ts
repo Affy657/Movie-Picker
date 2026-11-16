@@ -75,4 +75,33 @@ describe('ROUTES', () => {
     expect(ROUTES.eventDetailRating('7fKq2p')).toBe('/e/7fKq2p?rate');
     expect(ROUTES.eventDetailRating('7fKq2p', 'abc123')).toBe('/e/7fKq2p?rate=abc123');
   });
+
+  it('files each created list under Mes listes', () => {
+    expect(ROUTES.lists).toBe('/listes');
+    expect(ROUTES.listPattern).toBe('/listes/:listId');
+    expect(ROUTES.list('6650c1f2a9')).toBe('/listes/6650c1f2a9');
+  });
+
+  it('files the watched films under Mes listes', () => {
+    expect(ROUTES.watchedMovies).toBe('/listes/films-vus');
+  });
+
+  it('gives a list invitation link a short address of its own, outside Mes listes', () => {
+    expect(ROUTES.joinListPattern).toBe('/l/:token/rejoindre');
+    expect(ROUTES.joinList('7xK2pQ')).toBe('/l/7xK2pQ/rejoindre');
+    expect(ROUTES.joinList('a/b')).toBe('/l/a%2Fb/rejoindre');
+  });
+
+  it('files the public lists of a member under the profile', () => {
+    expect(ROUTES.profileListsPattern).toBe('/u/:handle/listes');
+    expect(ROUTES.profileLists('lea')).toBe('/u/lea/listes');
+    expect(ROUTES.publicListPattern).toBe('/u/:handle/listes/:listId');
+    expect(ROUTES.publicList('lea', 'l1')).toBe('/u/lea/listes/l1');
+    expect(ROUTES.publicList('lea', 'a/b')).toBe('/u/lea/listes/a%2Fb');
+  });
+
+  it('files each saved list under Mes listes, apart from the created ones', () => {
+    expect(ROUTES.savedListPattern).toBe('/listes/enregistrees/:savedListId');
+    expect(ROUTES.savedList('s1')).toBe('/listes/enregistrees/s1');
+  });
 });

@@ -67,6 +67,10 @@
     display: contents;
   }
 
+  .slotDivider {
+    display: none;
+  }
+
   .resultCount {
     flex: 1 0 100%;
     flex-direction: column;

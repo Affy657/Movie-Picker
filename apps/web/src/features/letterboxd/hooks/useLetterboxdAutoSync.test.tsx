@@ -4,7 +4,7 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { queryKeys } from '@/shared/hooks/queryKeys';
-import { TEST_API_V1 } from '@/mocks/handlers';
+import { createLetterboxdSyncHandler, TEST_API_V1 } from '@/mocks/handlers';
 import { useLetterboxdAutoSync } from './useLetterboxdAutoSync';
 
 function meBody(letterboxdUsername: string | null, userId = 'u-acc') {
@@ -110,6 +110,52 @@ describe('useLetterboxdAutoSync', () => {
       )
     );
 
+    const client = createTestQueryClient();
+    const invalidateSpy = vi.spyOn(client, 'invalidateQueries');
+
+    renderProbe(client);
+
+    await waitFor(() =>
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.notifications.inbox })
+    );
+  });
+
+  it('refreshes Films vus, the lists and the film pages when Letterboxd changed the films vus', async () => {
+    server.use(meHandler('affy657'), createLetterboxdSyncHandler({ watchedAdded: 2 }));
+    const client = createTestQueryClient();
+    const invalidateSpy = vi.spyOn(client, 'invalidateQueries');
+
+    renderProbe(client);
+
+    await waitFor(() =>
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.watched.all })
+    );
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.lists.all });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.watchlist.list });
+  });
+
+  it('leaves Films vus alone when Letterboxd changed none of them', async () => {
+    server.use(meHandler('affy657'), createLetterboxdSyncHandler({ added: 1 }));
+    const client = createTestQueryClient();
+    const invalidateSpy = vi.spyOn(client, 'invalidateQueries');
+
+    renderProbe(client);
+
+    await waitFor(() =>
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.watchlist.list })
+    );
+    expect(invalidateSpy).not.toHaveBeenCalledWith({ queryKey: queryKeys.watched.all });
+  });
+
+  it('invalidates the notifications when films vus are to be reconciled', async () => {
+    server.use(
+      meHandler('affy657'),
+      createLetterboxdSyncHandler({
+        watchedPendingChoices: [
+          { rowIndex: 5000, title: 'Alien', year: '1979', target: 'watched', candidates: [] },
+        ],
+      })
+    );
     const client = createTestQueryClient();
     const invalidateSpy = vi.spyOn(client, 'invalidateQueries');
 

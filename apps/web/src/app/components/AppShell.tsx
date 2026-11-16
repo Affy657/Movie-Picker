@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useState, type ComponentType, type SVGProps } from 'react';
+import { useState, type ComponentType, type ReactNode, type SVGProps } from 'react';
 import { Bookmark, CalendarDays, Compass, HelpCircle, LogIn, Plus, UserRound } from 'lucide-react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { useTranslation, type TranslationKey, type Translate } from '@/shared/i18n';
@@ -41,6 +41,7 @@ type IconComponent = ComponentType<SVGProps<SVGSVGElement>>;
 type NavItemDef = {
   to: string;
   end?: boolean;
+  activeOn?: readonly string[];
   label: string;
   Icon: IconComponent;
 };
@@ -58,9 +59,10 @@ const NAV_ITEMS: ReadonlyArray<NavItemSpec> = [
     Icon: CalendarDays,
   },
   {
-    to: ROUTES.watchlist,
-    labelKey: 'nav.watchlist',
-    mobileLabelKey: 'nav.watchlistShort',
+    to: ROUTES.lists,
+    activeOn: [ROUTES.watchlist],
+    labelKey: 'nav.lists',
+    mobileLabelKey: 'nav.listsShort',
     Icon: Bookmark,
   },
 ];
@@ -73,24 +75,62 @@ const LANDING_NAV_ITEMS: ReadonlyArray<{ anchor: string; labelKey: TranslationKe
 ];
 
 function toNavItem(spec: NavItemSpec, label: string): NavItemDef {
-  return { to: spec.to, end: spec.end, label, Icon: spec.Icon };
+  return { to: spec.to, end: spec.end, activeOn: spec.activeOn, label, Icon: spec.Icon };
+}
+
+function isUnder(pathname: string, path: string): boolean {
+  return pathname === path || pathname.startsWith(`${path}/`);
+}
+
+function NavItemLink({
+  to,
+  end,
+  activeOn,
+  className,
+  children,
+}: Readonly<{
+  to: string;
+  end?: boolean;
+  activeOn?: readonly string[];
+  className: (state: { isActive: boolean }) => string;
+  children: ReactNode;
+}>) {
+  const { pathname } = useLocation();
+  if (activeOn?.some((path) => isUnder(pathname, path))) {
+    return (
+      <Link
+        to={to}
+        aria-current="page"
+        className={className({ isActive: true })}
+        {...routeIntentHandlers(to)}
+      >
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <NavLink to={to} end={end} className={className} {...routeIntentHandlers(to)}>
+      {children}
+    </NavLink>
+  );
 }
 
 function DesktopNavItem({
   to,
   end,
+  activeOn,
   label,
   wideOnly,
 }: Readonly<Omit<NavItemDef, 'Icon'> & { wideOnly?: boolean }>) {
   return (
-    <NavLink
+    <NavItemLink
       to={to}
       end={end}
+      activeOn={activeOn}
       className={(state) => clsx(navLinkClass(state), wideOnly && styles.navLinkWideOnly)}
-      {...routeIntentHandlers(to)}
     >
       {label}
-    </NavLink>
+    </NavItemLink>
   );
 }
 
@@ -123,12 +163,12 @@ function HeaderBrand({ label }: Readonly<{ label: string }>) {
   );
 }
 
-function MobileNavItem({ to, end, label, Icon }: Readonly<NavItemDef>) {
+function MobileNavItem({ to, end, activeOn, label, Icon }: Readonly<NavItemDef>) {
   return (
-    <NavLink to={to} end={end} className={navLinkClass} {...routeIntentHandlers(to)}>
+    <NavItemLink to={to} end={end} activeOn={activeOn} className={navLinkClass}>
       <Icon className={styles.navIcon} aria-hidden="true" focusable="false" />
       <span className={styles.navMobileLabel}>{label}</span>
-    </NavLink>
+    </NavItemLink>
   );
 }
 

@@ -10,6 +10,8 @@ const PRIVATE_ROUTES = [
   ROUTES.account,
   ROUTES.myEvents,
   ROUTES.watchlist,
+  ROUTES.lists,
+  ROUTES.watchedMovies,
   ROUTES.notifications,
   ROUTES.login,
   ROUTES.register,
@@ -37,6 +39,19 @@ describe('PRERENDERED_ROUTES', () => {
 
   it('leaves the home page out of the prerendering', () => {
     expect(PRERENDERED_ROUTES).not.toContain(ROUTES.home);
+  });
+
+  it('leaves the list invitation page out of the prerendering, its address carries a token', () => {
+    expect(PRERENDERED_ROUTES).not.toContain(ROUTES.joinListPattern);
+    expect(Object.keys(PRERENDERED_ROUTE_CHUNKS)).not.toContain(ROUTES.joinListPattern);
+    expect(PRERENDERED_FOR_FIRST_PAINT_ONLY).not.toContain(ROUTES.joinListPattern);
+  });
+
+  it('leaves the public lists of a member out of the prerendering, like the films they watched', () => {
+    for (const route of [ROUTES.profileListsPattern, ROUTES.publicListPattern]) {
+      expect(PRERENDERED_ROUTES).not.toContain(route);
+      expect(Object.keys(PRERENDERED_ROUTE_CHUNKS)).not.toContain(route);
+    }
   });
 
   it('prerenders the public film lists, which share the showcase chunk', () => {

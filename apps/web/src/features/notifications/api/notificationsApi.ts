@@ -9,6 +9,7 @@ export type NotificationTypeKey =
   | 'eventreminder1h'
   | 'eventreminder24h'
   | 'eventinvitation'
+  | 'listinvitation'
   | 'eventpending'
   | 'moviepickedmanually'
   | 'letterboxdreconciliationpending'
@@ -33,6 +34,9 @@ export interface UserNotificationItem {
   eventSlug: string | null;
   eventTitle: string | null;
   movieTitle: string | null;
+  listId?: string | null;
+  listName?: string | null;
+  listInvitationPending?: boolean;
   isRead: boolean;
   createdAt: string;
 }
@@ -62,6 +66,14 @@ export async function markAllNotificationsRead(): Promise<void> {
 
 export async function markNotificationRead(id: string): Promise<void> {
   await fetchApi(apiPath('notifications', 'inbox', id, 'read'), { method: 'POST' });
+}
+
+export async function acceptListInvitation(listId: string): Promise<void> {
+  await fetchApi(apiPath('lists', listId, 'invitation', 'accept'), { method: 'POST' });
+}
+
+export async function declineListInvitation(listId: string): Promise<void> {
+  await fetchApi(apiPath('lists', listId, 'invitation', 'decline'), { method: 'POST' });
 }
 
 export async function fetchVapidPublicKey(): Promise<string> {

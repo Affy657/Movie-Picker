@@ -64,6 +64,69 @@ public sealed class SentryBeforeSendTests
         Assert.Equal("host=***&x=1", prepared.Request.QueryString);
     }
 
+    [Fact]
+    public void Prepare_MasksTheInviteTokenInTheRequestUrlTheTransactionNameAndTheTags()
+    {
+        var sentryEvent = new SentryEvent(new InvalidOperationException("boom"))
+        {
+            Request = new SentryRequest { Url = "https://api.test/api/v1/lists/join/SECRET-TOKEN" },
+            TransactionName = "POST /api/v1/lists/join/SECRET-TOKEN"
+        };
+        sentryEvent.SetTag("RequestPath", "/api/v1/lists/join/SECRET-TOKEN");
+        sentryEvent.SetTag("route.action", "Join");
+
+        var prepared = SentryBeforeSend.Prepare(sentryEvent);
+
+        Assert.NotNull(prepared);
+        Assert.Equal("https://api.test/api/v1/lists/join/***", prepared!.Request.Url);
+        Assert.Equal("POST /api/v1/lists/join/***", prepared.TransactionName);
+        Assert.Equal("/api/v1/lists/join/***", prepared.Tags["RequestPath"]);
+        Assert.Equal("Join", prepared.Tags["route.action"]);
+    }
+
+    [Fact]
+    public void PrepareTransaction_MasksTheInviteTokenInItsNameUrlAndTags()
+    {
+        var transaction = new SentryTransaction("POST /api/v1/lists/join/SECRET-TOKEN", "http.server")
+        {
+            Request = new SentryRequest { Url = "https://api.test/api/v1/lists/join/SECRET-TOKEN" }
+        };
+        transaction.SetTag("RequestPath", "/api/v1/lists/join/SECRET-TOKEN");
+
+        var prepared = SentryBeforeSend.PrepareTransaction(transaction);
+
+        Assert.Equal("POST /api/v1/lists/join/***", prepared.Name);
+        Assert.Equal("https://api.test/api/v1/lists/join/***", prepared.Request.Url);
+        Assert.Equal("/api/v1/lists/join/***", prepared.Tags["RequestPath"]);
+    }
+
+    [Fact]
+    public void RedactBreadcrumb_MasksTheInviteTokenOfAListJoinUrl()
+    {
+        var breadcrumb = new Breadcrumb(
+            "POST https://api.test/api/v1/lists/join/SECRET-TOKEN",
+            "http",
+            new Dictionary<string, string> { ["url"] = "https://api.test/api/v1/lists/join/SECRET-TOKEN", ["method"] = "POST" },
+            "http");
+
+        var redacted = SentryBeforeSend.RedactBreadcrumb(breadcrumb, new SentryHint());
+
+        Assert.NotNull(redacted);
+        Assert.Equal("https://api.test/api/v1/lists/join/***", redacted!.Data!["url"]);
+        Assert.Equal("POST https://api.test/api/v1/lists/join/***", redacted.Message);
+        Assert.Equal("POST", redacted.Data["method"]);
+    }
+
+    [Fact]
+    public void RedactBreadcrumb_WithoutUrlData_StillMasksTheInviteTokenOfItsMessage()
+    {
+        var breadcrumb = new Breadcrumb("Request starting POST /api/v1/lists/join/SECRET-TOKEN", "default");
+
+        var redacted = SentryBeforeSend.RedactBreadcrumb(breadcrumb, new SentryHint());
+
+        Assert.Equal("Request starting POST /api/v1/lists/join/***", redacted!.Message);
+    }
+
     [Theory]
     [InlineData("X-Host-Token", "X-Forwarded-For")]
     [InlineData("x-host-token", "x-forwarded-for")]

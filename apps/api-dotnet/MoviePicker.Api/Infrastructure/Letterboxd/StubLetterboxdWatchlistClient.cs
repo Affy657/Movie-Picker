@@ -12,11 +12,19 @@ public sealed class StubLetterboxdWatchlistClient : ILetterboxdWatchlistClient
         new("titre-ambigu-e2e", "Titre ambigu E2E", "2022"),
     ];
 
-    public Task<LetterboxdWatchlistSnapshot> GetWatchlistAsync(string username, CancellationToken ct = default)
-    {
-        if (string.Equals(username, UnreachableUsername, StringComparison.OrdinalIgnoreCase))
-            return Task.FromResult(LetterboxdWatchlistSnapshot.Failed());
+    private static readonly LetterboxdFilm[] WatchedFilms =
+    [
+        new("film-e2e-stub", "Film E2E Stub", "2024", Rating: 8, WatchedOn: new DateOnly(2026, 11, 1)),
+    ];
 
-        return Task.FromResult(new LetterboxdWatchlistSnapshot(Films, IsComplete: true));
-    }
+    public Task<LetterboxdFilmsSnapshot> GetWatchlistAsync(string username, CancellationToken ct = default) =>
+        Task.FromResult(Read(username, Films));
+
+    public Task<LetterboxdFilmsSnapshot> GetWatchedFilmsAsync(string username, CancellationToken ct = default) =>
+        Task.FromResult(Read(username, WatchedFilms));
+
+    private static LetterboxdFilmsSnapshot Read(string username, LetterboxdFilm[] films) =>
+        string.Equals(username, UnreachableUsername, StringComparison.OrdinalIgnoreCase)
+            ? LetterboxdFilmsSnapshot.Failed()
+            : new LetterboxdFilmsSnapshot(films, IsComplete: true);
 }

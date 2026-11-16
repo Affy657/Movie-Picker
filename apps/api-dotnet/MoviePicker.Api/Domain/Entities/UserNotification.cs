@@ -15,6 +15,7 @@ public enum UserNotificationType
     LetterboxdReconciliationPending = 11,
     EventDateChanged = 12,
     RatingReminder = 13,
+    ListInvitation = 14,
 }
 
 public sealed record UserNotification
@@ -29,6 +30,8 @@ public sealed record UserNotification
     public string? EventSlug { get; init; }
     public string? EventTitle { get; init; }
     public string? MovieTitle { get; init; }
+    public string? ListId { get; init; }
+    public string? ListName { get; init; }
     public bool IsRead { get; init; }
     public bool IsWithheld { get; init; }
     public DateTimeOffset CreatedAt { get; init; }

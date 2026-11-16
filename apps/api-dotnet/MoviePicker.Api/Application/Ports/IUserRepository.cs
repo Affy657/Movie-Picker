@@ -4,7 +4,7 @@ namespace MoviePicker.Api.Application.Ports;
 
 public sealed record PublicProfileRef(string Handle, DateTimeOffset UpdatedAt);
 
-public sealed record UserCard(string Id, string AvatarId, string? Handle, bool IsProfilePublic);
+public sealed record UserCard(string Id, string AvatarId, string? Handle, bool IsProfilePublic, string DisplayName = "");
 
 public interface IUserRepository
 {
@@ -31,6 +31,11 @@ public interface IUserRepository
         string userId,
         int pendingCount,
         IReadOnlyList<string> pendingChoiceKeys,
+        CancellationToken ct = default);
+    Task SetLetterboxdLinkedCountsAsync(
+        string userId,
+        int watchlistCount,
+        int watchedCount,
         CancellationToken ct = default);
     Task<bool> MarkSupporterAsync(string userId, DateTimeOffset since, CancellationToken ct = default);
     Task<bool> AddEventTemplateAsync(

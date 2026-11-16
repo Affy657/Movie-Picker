@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { Inbox } from 'lucide-react';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Avatar from '@/shared/components/Avatar';
@@ -18,6 +18,8 @@ import { getErrorMessage } from '@/shared/api/apiError';
 import { renderWithBold } from '@/shared/utils/renderWithBold';
 import { formatRelativeTime } from '@/shared/utils/formatRelativeTime';
 import {
+  acceptListInvitation,
+  declineListInvitation,
   fetchNotificationInbox,
   markAllNotificationsRead,
   markNotificationRead,
@@ -41,9 +43,26 @@ function withoutRepeatedIds(items: UserNotificationItem[]): UserNotificationItem
   });
 }
 
+interface ListInvitationAnswer {
+  item: UserNotificationItem;
+  accept: boolean;
+}
+
+type AnswerListInvitation = (answer: ListInvitationAnswer) => void;
+
+function awaitsListAnswer(item: UserNotificationItem, answered: ReadonlySet<string>): boolean {
+  return (
+    item.type === 'listinvitation' &&
+    !!item.listInvitationPending &&
+    !!item.listId &&
+    !answered.has(item.id)
+  );
+}
+
 function notifDestination(item: UserNotificationItem): string | null {
   if (item.type === 'newfollower')
     return item.actorHandle ? ROUTES.profile(item.actorHandle) : null;
+  if (item.type === 'listinvitation') return ROUTES.lists;
   if (item.type === 'eventdeleted') return null;
   if (item.type === 'letterboxdreconciliationpending') return ROUTES.accountIntegrations;
   if (!item.eventSlug) return null;
@@ -86,6 +105,7 @@ const NOTIFICATION_TEXT_KEYS = {
     grouped: 'notifications.eventReminder24hGroupedText',
   },
   eventinvitation: { plain: 'notifications.eventInvitationText' },
+  listinvitation: { plain: 'notifications.listInvitationText' },
   eventpending: {
     plain: 'notifications.eventPendingText',
     grouped: 'notifications.eventPendingGroupedText',
@@ -111,7 +131,43 @@ function notifText(item: UserNotificationItem, t: Translate, withinEventGroup = 
     name: item.actorDisplayName ?? '',
     movie: item.movieTitle ?? '',
     eventTitle: item.eventTitle ?? '',
+    listName: item.listName ?? '',
   });
+}
+
+function ListInvitationAnswers({
+  item,
+  t,
+  pending,
+  onAnswer,
+}: Readonly<{
+  item: UserNotificationItem;
+  t: Translate;
+  pending: boolean;
+  onAnswer: AnswerListInvitation;
+}>) {
+  const listName = item.listName ?? '';
+  return (
+    <span className={styles.itemAnswers}>
+      <Button
+        size="sm"
+        variant="primary"
+        disabled={pending}
+        aria-label={t('notifications.listInvitationAcceptAria', { listName })}
+        onClick={() => onAnswer({ item, accept: true })}
+      >
+        {t('notifications.listInvitationAccept')}
+      </Button>
+      <Button
+        size="sm"
+        disabled={pending}
+        aria-label={t('notifications.listInvitationDeclineAria', { listName })}
+        onClick={() => onAnswer({ item, accept: false })}
+      >
+        {t('notifications.listInvitationDecline')}
+      </Button>
+    </span>
+  );
 }
 
 function NotifRow({
@@ -119,12 +175,14 @@ function NotifRow({
   t,
   locale,
   onRead,
+  answers,
   withinEventGroup = false,
 }: Readonly<{
   item: UserNotificationItem;
   t: Translate;
   locale: LocaleCode;
   onRead: (id: string) => void;
+  answers?: InboxAnswers;
   withinEventGroup?: boolean;
 }>) {
   const to = notifDestination(item);
@@ -154,6 +212,20 @@ function NotifRow({
     if (!item.isRead) onRead(item.id);
   };
 
+  if (answers && awaitsListAnswer(item, answers.answered)) {
+    return (
+      <div className={`${rowClassName} ${styles.itemWithAnswers}`}>
+        {content}
+        <ListInvitationAnswers
+          item={item}
+          t={t}
+          pending={answers.pendingId === item.id}
+          onAnswer={answers.onAnswer}
+        />
+      </div>
+    );
+  }
+
   if (to) {
     return (
       <Link to={to} className={rowClassName} onClick={handleClick}>
@@ -169,16 +241,24 @@ function NotifRow({
   );
 }
 
+interface InboxAnswers {
+  answered: ReadonlySet<string>;
+  pendingId: string | null;
+  onAnswer: AnswerListInvitation;
+}
+
 function NotifCard({
   group,
   t,
   locale,
   onRead,
+  answers,
 }: Readonly<{
   group: InboxGroup;
   t: Translate;
   locale: LocaleCode;
   onRead: (id: string) => void;
+  answers: InboxAnswers;
 }>) {
   const [expanded, setExpanded] = useState(false);
 
@@ -189,7 +269,7 @@ function NotifCard({
     };
     return (
       <Card padding="none" elevation="sm" className={styles.card}>
-        <NotifRow item={group.item} t={t} locale={locale} onRead={readSingle} />
+        <NotifRow item={group.item} t={t} locale={locale} onRead={readSingle} answers={answers} />
       </Card>
     );
   }
@@ -225,12 +305,14 @@ function InboxList({
   t,
   locale,
   onRead,
+  answers,
 }: Readonly<{
   groups: InboxGroup[];
   loading: boolean;
   t: Translate;
   locale: LocaleCode;
   onRead: (id: string) => void;
+  answers: InboxAnswers;
 }>) {
   if (groups.length === 0 && !loading) {
     return (
@@ -250,6 +332,7 @@ function InboxList({
           t={t}
           locale={locale}
           onRead={onRead}
+          answers={answers}
         />
       ))}
     </div>
@@ -262,7 +345,9 @@ export default function NotificationsPage() {
   useNoindexPage(pageTitle(t('notifications.inboxTitle')), ROUTES.notifications);
   const { user, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [actionError, setActionError] = useState<string | null>(null);
+  const [answered, setAnswered] = useState<ReadonlySet<string>>(() => new Set());
 
   const inboxQuery = useInfiniteQuery({
     queryKey: queryKeys.notifications.inboxPaged,
@@ -297,6 +382,27 @@ export default function NotificationsPage() {
     },
     onError: (err) => setActionError(getErrorMessage(err, t('notifications.markOneReadError'))),
   });
+
+  const answerMutation = useMutation({
+    mutationFn: ({ item, accept }: ListInvitationAnswer) => {
+      const listId = item.listId ?? '';
+      return accept ? acceptListInvitation(listId) : declineListInvitation(listId);
+    },
+    onSuccess: (_result, { item, accept }) => {
+      setActionError(null);
+      setAnswered((current) => new Set(current).add(item.id));
+      if (!item.isRead) markOneMutation.mutate(item.id);
+      invalidateInbox();
+      void queryClient.invalidateQueries({ queryKey: queryKeys.lists.all });
+      if (accept && item.listId) navigate(ROUTES.list(item.listId));
+    },
+    onError: (err) => setActionError(getErrorMessage(err, t('notifications.listInvitationError'))),
+  });
+  const answers: InboxAnswers = {
+    answered,
+    pendingId: answerMutation.isPending ? (answerMutation.variables?.item.id ?? null) : null,
+    onAnswer: (answer) => answerMutation.mutate(answer),
+  };
 
   const items = useMemo(
     () => withoutRepeatedIds(inboxQuery.data?.pages.flatMap((p) => p.items) ?? []),
@@ -350,6 +456,7 @@ export default function NotificationsPage() {
           t={t}
           locale={locale}
           onRead={handleRead}
+          answers={answers}
         />
       )}
 

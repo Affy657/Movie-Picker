@@ -4,5 +4,5 @@ namespace MoviePicker.Api.Application.UseCases.UserStats;
 
 public interface IGetUserStatsHandler
 {
-    Task<UserStatsResponse> HandleAsync(string handle, CancellationToken ct = default);
+    Task<UserStatsResponse> HandleAsync(string handle, string? currentUserId = null, CancellationToken ct = default);
 }

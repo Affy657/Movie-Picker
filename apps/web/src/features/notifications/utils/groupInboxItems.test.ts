@@ -57,6 +57,17 @@ describe('groupInboxItems', () => {
     expect(groups).toHaveLength(3);
   });
 
+  it('never groups two invitations to lists', () => {
+    const items = [
+      item({ id: 'a', type: 'listinvitation', listId: 'l1', listName: 'Halloween' }),
+      item({ id: 'b', type: 'listinvitation', listId: 'l1', listName: 'Halloween' }),
+    ];
+
+    const groups = groupInboxItems(items);
+
+    expect(groups.map((group) => group.kind)).toEqual(['single', 'single']);
+  });
+
   it('orders groups and singles by most recent activity, descending', () => {
     const items = [
       item({ id: 'old-single', createdAt: '2026-01-01T00:00:00Z', eventSlug: null }),

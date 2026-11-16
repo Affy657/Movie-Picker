@@ -5,7 +5,11 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import LetterboxdConnectModal from './LetterboxdConnectModal';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
-import { TEST_API_V1 } from '@/mocks/handlers';
+import {
+  createLetterboxdConfirmHandler,
+  createLetterboxdSyncHandler,
+  TEST_API_V1,
+} from '@/mocks/handlers';
 
 function renderModal() {
   return render(
@@ -85,7 +89,9 @@ describe('LetterboxdConnectModal (MSW)', () => {
     await user.type(screen.getByLabelText('Pseudo Letterboxd'), 'affy657');
     await user.click(screen.getByRole('button', { name: 'Connecter et importer' }));
 
-    expect(await screen.findByText('3 titres ajoutés à votre liste')).toBeInTheDocument();
+    expect(
+      await screen.findByText('À voir : 3 film(s) ajouté(s), 0 retiré(s).')
+    ).toBeInTheDocument();
     expect(screen.queryByText(/introuvable/)).not.toBeInTheDocument();
     expect(screen.queryByText(/laissé/)).not.toBeInTheDocument();
   });
@@ -168,7 +174,139 @@ describe('LetterboxdConnectModal (MSW)', () => {
     expect(undecidedList).not.toBeNull();
     expect(undecidedList).not.toHaveTextContent('Unfindable Movie');
 
-    expect(await screen.findByText('2 titres ajoutés à votre liste')).toBeInTheDocument();
+    expect(
+      await screen.findByText('À voir : 2 film(s) ajouté(s), 0 retiré(s).')
+    ).toBeInTheDocument();
     expect(screen.getByText('1 titre confirmé à la main')).toBeInTheDocument();
+  });
+
+  async function connect(user: ReturnType<typeof userEvent.setup>) {
+    await user.type(screen.getByLabelText('Pseudo Letterboxd'), 'affy657');
+    await user.click(screen.getByRole('button', { name: 'Connecter et importer' }));
+  }
+
+  it('reports the films vus of an account with nothing to watch', async () => {
+    const user = userEvent.setup();
+    server.use(
+      authedUserHandler,
+      patchMeHandler(),
+      createLetterboxdSyncHandler({
+        added: 0,
+        watchedAdded: 42,
+        watchedUnmatchedTitles: ['Court Oublié (1981)'],
+      })
+    );
+
+    renderModal();
+    await connect(user);
+
+    expect(
+      await screen.findByText('Films vus : 42 film(s) ajouté(s), 0 retiré(s).')
+    ).toBeInTheDocument();
+    expect(screen.getByText('À voir : 0 film(s) ajouté(s), 0 retiré(s).')).toBeInTheDocument();
+    expect(screen.getByText('1 titre introuvable sur TMDB')).toBeInTheDocument();
+    expect(screen.getByText('Court Oublié (1981)')).toBeInTheDocument();
+  });
+
+  it('says the watchlist could not be read, and keeps what Films vus brought', async () => {
+    const user = userEvent.setup();
+    server.use(
+      authedUserHandler,
+      patchMeHandler(),
+      createLetterboxdSyncHandler({
+        error: 'letterboxd_watchlist_incomplete',
+        watchedAdded: 5,
+      })
+    );
+
+    renderModal();
+    await connect(user);
+
+    expect(
+      await screen.findByText(
+        /Watchlist Letterboxd inaccessible\. Vérifiez l'orthographe du pseudo/
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText('Films vus : 5 film(s) ajouté(s), 0 retiré(s).')).toBeInTheDocument();
+    expect(screen.queryByText(/^À voir :/)).not.toBeInTheDocument();
+  });
+
+  it('counts the films vus confirmed by hand with the others', async () => {
+    const user = userEvent.setup();
+    server.use(
+      authedUserHandler,
+      patchMeHandler(),
+      createLetterboxdSyncHandler({
+        watchedPendingChoices: [
+          {
+            rowIndex: 5000,
+            title: 'Alien',
+            year: '1979',
+            letterboxdSlug: 'alien',
+            target: 'watched',
+            rating: 8,
+            watchedOn: '2019-10-12',
+            candidates: [
+              {
+                tmdbId: 348,
+                mediaType: 'movie',
+                title: 'Alien, le huitième passager',
+                year: '1979',
+                posterPath: null,
+              },
+            ],
+          },
+        ],
+      }),
+      createLetterboxdConfirmHandler(undefined, { added: 0, watchedAdded: 1 })
+    );
+
+    renderModal();
+    await connect(user);
+
+    await user.click(await screen.findByRole('radio', { name: /Alien, le huitième passager/ }));
+    await user.click(screen.getByRole('button', { name: /Confirmer et terminer/ }));
+
+    expect(await screen.findByText('1 titre confirmé à la main')).toBeInTheDocument();
+  });
+
+  it('also asks about the films vus Letterboxd could not match with certainty', async () => {
+    const user = userEvent.setup();
+    server.use(
+      authedUserHandler,
+      patchMeHandler(),
+      createLetterboxdSyncHandler({
+        watchedPendingChoices: [
+          {
+            rowIndex: 5000,
+            title: 'Alien',
+            year: '1979',
+            letterboxdSlug: 'alien',
+            target: 'watched',
+            rating: 8,
+            watchedOn: '2019-10-12',
+            candidates: [
+              {
+                tmdbId: 348,
+                mediaType: 'movie',
+                title: 'Alien, le huitième passager',
+                year: '1979',
+                posterPath: null,
+              },
+            ],
+          },
+        ],
+      })
+    );
+
+    renderModal();
+
+    await user.type(screen.getByLabelText('Pseudo Letterboxd'), 'affy657');
+    await user.click(screen.getByRole('button', { name: 'Connecter et importer' }));
+
+    expect(
+      await screen.findByRole('radio', { name: /Alien, le huitième passager/ })
+    ).toBeInTheDocument();
+    expect(screen.getByText('Films vus')).toBeInTheDocument();
   });
 });

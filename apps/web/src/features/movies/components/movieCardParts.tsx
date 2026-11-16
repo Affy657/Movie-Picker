@@ -475,6 +475,38 @@ export function WinnerRibbon({
   );
 }
 
+export interface MovieContributor {
+  avatarId: string | null;
+  pseudo: string;
+  name: string;
+  label: string;
+}
+
+export function ContributorBadge({ contributor }: Readonly<{ contributor: MovieContributor }>) {
+  return (
+    <span className={styles.contributorBadge} role="img" aria-label={contributor.label}>
+      <Avatar
+        avatarId={contributor.avatarId}
+        pseudo={contributor.pseudo}
+        size="xs"
+        className={styles.contributorAvatar}
+      />
+    </span>
+  );
+}
+
+export function ContributorCell({ contributor }: Readonly<{ contributor: MovieContributor }>) {
+  return (
+    <span className={styles.contributorCell}>
+      <Avatar avatarId={contributor.avatarId} pseudo={contributor.pseudo} size="xs" />
+      <span className={styles.contributorName} aria-hidden="true">
+        {contributor.name}
+      </span>
+      <span className="visually-hidden">{contributor.label}</span>
+    </span>
+  );
+}
+
 export function WatchlistBadge({
   inWatchlist,
   t,

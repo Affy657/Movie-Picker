@@ -1,0 +1,97 @@
+.layout {
+  --page-max-width: var(--container-sm);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+  text-align: center;
+}
+
+.posters {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.poster {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-20);
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-poster-placeholder);
+  box-shadow: var(--shadow-md);
+  color: var(--color-text-muted);
+}
+
+.posterSkeleton {
+  width: var(--space-20);
+}
+
+.overline {
+  composes: overline from '@/shared/components/typography.module.css';
+  margin: 0;
+  font-size: var(--font-size-2xs);
+  color: var(--color-primary-text);
+}
+
+.title {
+  composes: pageTitle from '@/shared/components/typography.module.css';
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.count {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-subtle);
+}
+
+.inviter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.message {
+  margin: var(--space-2) 0 0;
+  max-width: var(--container-xs);
+  font-size: var(--font-size-sm);
+  line-height: var(--leading-comfortable);
+  color: var(--color-text-muted);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.full {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: var(--space-3);
+}
+
+.fullTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+}

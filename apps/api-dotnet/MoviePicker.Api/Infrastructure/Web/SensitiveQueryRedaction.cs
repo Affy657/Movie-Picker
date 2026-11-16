@@ -1,8 +1,9 @@
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace MoviePicker.Api.Infrastructure.Web;
 
-public static class SensitiveQueryRedaction
+public static partial class SensitiveQueryRedaction
 {
     public const string Mask = "***";
 
@@ -40,6 +41,9 @@ public static class SensitiveQueryRedaction
         return builder.ToString();
     }
 
+    public static string? RedactPath(string? path) =>
+        string.IsNullOrEmpty(path) ? path : InviteTokenSegment().Replace(path, "${route}" + Mask);
+
     public static string? RedactUrl(string? url)
     {
         if (string.IsNullOrEmpty(url))
@@ -47,11 +51,14 @@ public static class SensitiveQueryRedaction
 
         var questionMark = url.IndexOf('?');
         if (questionMark < 0)
-            return url;
+            return RedactPath(url);
 
-        return url[..questionMark] + RedactQueryString(url[questionMark..]);
+        return RedactPath(url[..questionMark]) + RedactQueryString(url[questionMark..]);
     }
 
     private static bool IsSensitive(string key) =>
         SensitiveKeys.Any(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
+
+    [GeneratedRegex(@"(?<route>/lists/join/)[^/?#\s]+", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex InviteTokenSegment();
 }

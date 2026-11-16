@@ -37,13 +37,17 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             && request.UiTheme is null
             && request.AccentColor is null
             && request.RatingScale is null
+            && request.DimWatched is null
             && request.AvatarId is null
             && request.UseAvatarPhoto is null
             && request.Handle is null
             && request.Bio is null
             && request.IsProfilePublic is null
             && request.IsWatchlistPublic is null
-            && request.LetterboxdUsername is null;
+            && request.IsWatchedPublic is null
+            && request.LetterboxdUsername is null
+            && request.LetterboxdSyncWatchlist is null
+            && request.LetterboxdSyncWatched is null;
 
         if (nothingToUpdate)
             return UserProfileMapping.ToResponse(user);
@@ -123,17 +127,21 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             UiTheme = theme,
             AccentColor = accent,
             RatingScale = ratingScale,
+            DimWatched = request.DimWatched ?? user.DimWatched,
             AvatarId = avatarId,
             AvatarPhoto = avatarPhoto,
             Handle = handle,
             Bio = bio,
             IsProfilePublic = isProfilePublic,
             IsWatchlistPublic = isWatchlistPublic,
+            IsWatchedPublic = request.IsWatchedPublic ?? user.IsWatchedPublic,
             LetterboxdUsername = letterboxdUsername,
             LetterboxdLastSyncAt = letterboxdChanged ? null : user.LetterboxdLastSyncAt,
             LetterboxdLastSyncError = letterboxdChanged ? null : user.LetterboxdLastSyncError,
             LetterboxdPendingReconciliationCount = letterboxdChanged ? 0 : user.LetterboxdPendingReconciliationCount,
             LetterboxdPendingChoiceKeys = letterboxdChanged ? null : user.LetterboxdPendingChoiceKeys,
+            LetterboxdSyncWatchlist = request.LetterboxdSyncWatchlist ?? user.LetterboxdSyncWatchlist,
+            LetterboxdSyncWatched = request.LetterboxdSyncWatched ?? user.LetterboxdSyncWatched,
             UpdatedAt = _clock.GetUtcNow()
         };
     }

@@ -6,7 +6,7 @@ import { MemoryRouter, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
 import { delay, http, HttpResponse } from 'msw';
 import ProfileMoviesSection from './ProfileMoviesSection';
-import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import { stubHoverCapability, stubMatchMedia } from '@/test-utils/matchMedia';
 import type { FavoriteTitle } from '@/shared/types/movie';
@@ -447,6 +447,52 @@ describe('ProfileMoviesSection (MSW)', () => {
     expect(screen.queryByText('Les films vus n’ont pas pu être chargés.')).not.toBeInTheDocument();
   });
 
+  it('flags my hidden watched films and leads to the setting that shows them', async () => {
+    server.use(inceptionHandler);
+
+    renderSection('alice', [], { isOwnProfile: true, watchedHidden: true });
+
+    expect(await screen.findByRole('heading', { name: 'Films vus 1' })).toBeInTheDocument();
+    expect(screen.getByText('Masqués')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Rendre visible' })).toHaveAttribute(
+      'href',
+      '/listes/films-vus'
+    );
+  });
+
+  it('does not flag watched films that everybody can see', async () => {
+    server.use(inceptionHandler);
+
+    renderSection('alice', [], { isOwnProfile: true });
+
+    await screen.findByRole('heading', { name: 'Films vus 1' });
+    expect(screen.queryByText('Masqués')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Rendre visible' })).not.toBeInTheDocument();
+  });
+
+  it('keeps a failed read of hidden watched films out of the page', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+        HttpResponse.json({ reason: 'watched_not_found', error: 'hidden' }, { status: 404 })
+      )
+    );
+    const client = createTestQueryClient();
+    const section = (watchedVisible: boolean) => (
+      <AppTestProviders client={client}>
+        <MemoryRouter>
+          <ProfileMoviesSection handle="alice" favorites={[HEAT]} watchedVisible={watchedVisible} />
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+    const { rerender } = render(section(true));
+    expect(await screen.findByText('Les films vus n’ont pas pu être chargés.')).toBeInTheDocument();
+
+    rerender(section(false));
+
+    expect(screen.getByText('Heat')).toBeInTheDocument();
+    expect(screen.queryByText('Les films vus n’ont pas pu être chargés.')).not.toBeInTheDocument();
+  });
+
   it('on a phone, reads the favorites, then the watched movies, then the watchlist', async () => {
     stubMatchMedia((query) => query.includes('767px'));
     server.use(
@@ -590,7 +636,7 @@ describe('ProfileMoviesSection (MSW)', () => {
       expect(screen.getByText('Masquée')).toBeInTheDocument();
       expect(screen.getByRole('link', { name: 'Rendre visible' })).toHaveAttribute(
         'href',
-        '/settings/profil'
+        '/watchlist'
       );
       expect(screen.getByRole('link', { name: /tout voir ma watchlist/i })).toHaveAttribute(
         'href',

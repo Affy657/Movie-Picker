@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import clsx from 'clsx';
 import { Layers } from 'lucide-react';
@@ -13,6 +14,19 @@ interface Props {
   movieCountLabel: string;
   posterSrc?: string;
   stackSrcs?: readonly string[];
+  badgeIcon?: ReactNode;
+  extra?: ReactNode;
+  footer?: ReactNode;
+}
+
+interface CollectionStackProps {
+  to: string;
+  name: string;
+  movieCountLabel: string;
+  srcs: readonly string[];
+  badgeIcon?: ReactNode;
+  extra?: ReactNode;
+  footer?: ReactNode;
 }
 
 function CollectionStack({
@@ -20,11 +34,19 @@ function CollectionStack({
   name,
   movieCountLabel,
   srcs,
-}: Readonly<{ to: string; name: string; movieCountLabel: string; srcs: readonly string[] }>) {
+  badgeIcon,
+  extra,
+  footer,
+}: Readonly<CollectionStackProps>) {
   return (
     <li className={styles.card}>
       <Link to={to} className={styles.stackLink}>
         <span className={styles.stack} data-count={srcs.length}>
+          {badgeIcon ? (
+            <span className={styles.stackBadge} aria-hidden>
+              {badgeIcon}
+            </span>
+          ) : null}
           {srcs.length === 0 ? (
             <span className={clsx(styles.stackPoster, styles.stackFront)} aria-hidden>
               <Layers size={ICON_SIZE.xl} />
@@ -44,7 +66,9 @@ function CollectionStack({
         </span>
         <span className={styles.name}>{name}</span>
         <span className={styles.count}>{movieCountLabel}</span>
+        {extra ? <span className={styles.extra}>{extra}</span> : null}
       </Link>
+      {footer ? <div className={styles.footer}>{footer}</div> : null}
     </li>
   );
 }
@@ -55,10 +79,21 @@ export default function MovieCollectionCard({
   movieCountLabel,
   posterSrc,
   stackSrcs,
+  badgeIcon,
+  extra,
+  footer,
 }: Readonly<Props>) {
   if (stackSrcs) {
     return (
-      <CollectionStack to={to} name={name} movieCountLabel={movieCountLabel} srcs={stackSrcs} />
+      <CollectionStack
+        to={to}
+        name={name}
+        movieCountLabel={movieCountLabel}
+        srcs={stackSrcs}
+        badgeIcon={badgeIcon}
+        extra={extra}
+        footer={footer}
+      />
     );
   }
   return (

@@ -1,6 +1,9 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Moq;
 using MoviePicker.Api.Infrastructure.Web;
 using MoviePicker.Api.Tests.Logging;
 using Xunit;
@@ -101,6 +104,53 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
         Assert.Contains("?state=***&code=***&scope=email", entry.Message);
     }
 
+    [Theory]
+    [InlineData("GET")]
+    [InlineData("POST")]
+    public async Task InvokeAsync_MasksTheInviteTokenOfAListJoinPath(string method)
+    {
+        var logger = new CapturingLogger<StructuredHttpRequestLoggingMiddleware>();
+        var ctx = new DefaultHttpContext();
+        ctx.Request.Method = method;
+        ctx.Request.Path = "/api/v1/lists/join/SECRET-INVITE-TOKEN";
+        var mw = new StructuredHttpRequestLoggingMiddleware(_ => Task.CompletedTask, logger);
+
+        await mw.InvokeAsync(ctx);
+
+        var entry = Assert.Single(logger.Entries);
+        Assert.DoesNotContain("SECRET-INVITE-TOKEN", entry.Message);
+        Assert.Contains($"HTTP {method} /api/v1/lists/join/*** ", entry.Message);
+        Assert.DoesNotContain(
+            Assert.Single(logger.States),
+            pair => Convert.ToString(pair.Value, System.Globalization.CultureInfo.InvariantCulture)?.Contains("SECRET", StringComparison.Ordinal) == true);
+    }
+
+    [Fact]
+    public async Task UnhandledExceptionResponse_LogsThePathWithoutTheInviteToken()
+    {
+        var logger = new CapturingLogger<StructuredHttpRequestLoggingMiddleware>();
+        var loggers = new Mock<ILoggerFactory>();
+        loggers.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(logger);
+        var ctx = new DefaultHttpContext
+        {
+            RequestServices = new ServiceCollection().AddSingleton(loggers.Object).BuildServiceProvider()
+        };
+        ctx.Request.Method = "POST";
+        ctx.Request.Path = "/api/v1/lists/join/SECRET-INVITE-TOKEN";
+        ctx.Features.Set<IExceptionHandlerFeature>(new ExceptionHandlerFeature
+        {
+            Error = new InvalidOperationException("boom"),
+            Path = ctx.Request.Path
+        });
+
+        await UnhandledExceptionResponse.WriteAsync(ctx);
+
+        var entry = Assert.Single(logger.Entries);
+        Assert.Equal(LogLevel.Error, entry.Level);
+        Assert.DoesNotContain("SECRET-INVITE-TOKEN", entry.Message);
+        Assert.Contains("/api/v1/lists/join/***", entry.Message);
+    }
+
     [Fact]
     public async Task InvokeAsync_StillLogs_WhenNextThrows()
     {
@@ -151,5 +201,30 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
     public void SensitiveQueryRedaction_MasksEverySecretBearingKey(string query, string expected)
     {
         Assert.Equal(expected, SensitiveQueryRedaction.RedactQueryString(query));
+    }
+
+    [Theory]
+    [InlineData("/api/v1/lists/join/SECRET", "/api/v1/lists/join/***")]
+    [InlineData("/api/v1/Lists/Join/SECRET", "/api/v1/Lists/Join/***")]
+    [InlineData("/api/v1/lists/join/SECRET/", "/api/v1/lists/join/***/")]
+    [InlineData("RequestPath:/api/v1/lists/join/SECRET RequestId:0HN1", "RequestPath:/api/v1/lists/join/*** RequestId:0HN1")]
+    [InlineData("/api/v1/lists/join/", "/api/v1/lists/join/")]
+    [InlineData("/api/v1/lists/66f0a1/members", "/api/v1/lists/66f0a1/members")]
+    [InlineData("", "")]
+    [InlineData(null, null)]
+    public void SensitiveQueryRedaction_MasksTheInviteTokenOfAListJoinPath(string? path, string? expected)
+    {
+        Assert.Equal(expected, SensitiveQueryRedaction.RedactPath(path));
+    }
+
+    [Fact]
+    public void SensitiveQueryRedaction_RedactUrl_MasksTheInviteTokenAndTheSecretQueryKeys()
+    {
+        Assert.Equal(
+            "https://api.test/api/v1/lists/join/***?token=***&x=1",
+            SensitiveQueryRedaction.RedactUrl("https://api.test/api/v1/lists/join/SECRET?token=SECRET&x=1"));
+        Assert.Equal(
+            "https://api.test/api/v1/lists/join/***",
+            SensitiveQueryRedaction.RedactUrl("https://api.test/api/v1/lists/join/SECRET"));
     }
 }

@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.SavedLists;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -19,6 +20,9 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
     private readonly IMovieRatingRepository _ratings;
     private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly IWatchlistRepository _watchlist;
+    private readonly IMovieListRepository _movieLists;
+    private readonly IWatchedTitleRepository _watchedTitles;
+    private readonly ISavedListRepository _savedLists;
     private readonly IAvatarPhotoRepository _avatarPhotos;
     private readonly IMovieRepository _movies;
     private readonly TimeProvider _clock;
@@ -34,6 +38,9 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         IMovieRatingRepository ratings,
         IPushSubscriptionRepository pushSubscriptions,
         IWatchlistRepository watchlist,
+        IMovieListRepository movieLists,
+        IWatchedTitleRepository watchedTitles,
+        ISavedListRepository savedLists,
         IAvatarPhotoRepository avatarPhotos,
         IMovieRepository movies,
         TimeProvider clock)
@@ -48,6 +55,9 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         _ratings = ratings;
         _pushSubscriptions = pushSubscriptions;
         _watchlist = watchlist;
+        _movieLists = movieLists;
+        _watchedTitles = watchedTitles;
+        _savedLists = savedLists;
         _avatarPhotos = avatarPhotos;
         _movies = movies;
         _clock = clock;
@@ -78,6 +88,12 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         var eventTitleById = participationEvents.ToDictionary(e => e.Id, e => e.Title);
 
         var watchlist = await _watchlist.ListByUserIdAsync(userId, MaxItems, ct);
+        var movieLists = await _movieLists.ListByOwnerAsync(userId, ct);
+        var joinedLists = await _movieLists.ListJoinedAsync(userId, ct);
+        var invitingLists = await _movieLists.ListInvitingAsync(userId, ct);
+        var listOwnerNames = await ListOwnerNamesAsync(joinedLists.Concat(invitingLists), ct);
+        var watchedTitles = await _watchedTitles.ListByOwnerAsync(userId, ct);
+        var savedLists = await _savedLists.ListByOwnerAsync(userId, ct);
         var avatarPhoto = await ExportAvatarPhotoAsync(user, ct);
 
         var votesByParticipant = votes
@@ -114,9 +130,40 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
                 .Select(s => new ExportedPushSubscription { Endpoint = s.Endpoint, CreatedAt = s.CreatedAt })
                 .ToList(),
             Watchlist = watchlist.Select(MapWatchlistItem).ToList(),
+            MovieLists = movieLists.Select(MapMovieList).ToList(),
+            JoinedMovieLists = joinedLists
+                .Select(list => new ExportedJoinedMovieList
+                {
+                    ListId = list.Id,
+                    Name = list.Name,
+                    OwnerDisplayName = listOwnerNames.GetValueOrDefault(list.OwnerId, string.Empty),
+                    JoinedAt = list.Members.First(member => member.UserId == userId).JoinedAt
+                })
+                .ToList(),
+            PendingListInvitations = invitingLists
+                .Select(list => new ExportedListInvitation
+                {
+                    ListId = list.Id,
+                    Name = list.Name,
+                    OwnerDisplayName = listOwnerNames.GetValueOrDefault(list.OwnerId, string.Empty),
+                    InvitedAt = list.Invitations.First(invitation => invitation.UserId == userId).InvitedAt
+                })
+                .ToList(),
+            SavedLists = savedLists.Select(MapSavedList).ToList(),
+            WatchedTitles = watchedTitles.Select(MapWatchedTitle).ToList(),
             Favorites = user.Favorites.Select(MapFavorite).ToList(),
             AvatarPhoto = avatarPhoto
         };
+    }
+
+    private async Task<Dictionary<string, string>> ListOwnerNamesAsync(IEnumerable<MovieList> lists, CancellationToken ct)
+    {
+        var ownerIds = lists.Select(list => list.OwnerId).Distinct(StringComparer.Ordinal).ToList();
+        if (ownerIds.Count == 0)
+            return new Dictionary<string, string>(StringComparer.Ordinal);
+        return (await _users.ListCardsByIdsAsync(ownerIds, ct))
+            .DistinctBy(card => card.Id, StringComparer.Ordinal)
+            .ToDictionary(card => card.Id, card => card.DisplayName, StringComparer.Ordinal);
     }
 
     private static string MediaTypeName(MovieMediaType mediaType) => mediaType == MovieMediaType.Tv ? "tv" : "movie";
@@ -127,8 +174,52 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         MediaType = MediaTypeName(item.MediaType),
         Title = item.Title,
         Year = item.Year,
+        LetterboxdSlug = item.LetterboxdSlug,
         CreatedAt = item.CreatedAt
     };
+
+    private static ExportedMovieList MapMovieList(MovieList list) => new()
+    {
+        Name = list.Name,
+        Description = list.Description,
+        IsPublic = list.IsPublic,
+        CreatedAt = list.CreatedAt,
+        UpdatedAt = list.UpdatedAt,
+        Items = list.Items
+            .Select(item => new ExportedMovieListItem
+            {
+                TmdbId = item.TmdbId,
+                MediaType = MediaTypeName(item.MediaType),
+                Title = item.Title,
+                Year = item.Year,
+                AddedAt = item.AddedAt
+            })
+            .ToList()
+    };
+
+    private static ExportedSavedList MapSavedList(SavedList list) => new()
+    {
+        SourceType = ListSourceNames.Of(list.SourceType),
+        SourceId = list.SourceId,
+        Name = list.Name,
+        CreatedAt = list.CreatedAt
+    };
+
+    private static ExportedWatchedTitle MapWatchedTitle(WatchedTitle title) => new()
+    {
+        TmdbId = title.TmdbId,
+        MediaType = MediaTypeName(title.MediaType),
+        Title = title.Title,
+        Year = title.Year,
+        WatchedAt = title.WatchedAt,
+        Rating = title.Rating,
+        RatingOrigin = title.Rating is null ? null : OriginName(title.RatingOrigin ?? WatchedOrigin.Manual),
+        Origin = OriginName(title.Origin),
+        LetterboxdSlug = title.LetterboxdSlug
+    };
+
+    private static string OriginName(WatchedOrigin origin) =>
+        origin == WatchedOrigin.Letterboxd ? "letterboxd" : "manual";
 
     private static ExportedFavorite MapFavorite(FavoriteTitle favorite) => new()
     {
@@ -163,6 +254,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         Bio = user.Bio,
         IsProfilePublic = user.IsProfilePublic,
         IsWatchlistPublic = user.IsWatchlistPublic,
+        IsWatchedPublic = user.IsWatchedPublic,
         UiTheme = user.UiTheme.ToString(),
         AccentColor = user.AccentColor.ToString(),
         AvatarId = user.AvatarId,
@@ -172,7 +264,10 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
             .ToDictionary(kv => kv.Key.ToString().ToLowerInvariant(), kv => kv.Value),
         SupporterSince = user.SupporterSince,
         RatingScale = user.RatingScale.ToString(),
+        DimWatched = user.DimWatched,
         LetterboxdUsername = user.LetterboxdUsername,
+        LetterboxdSyncWatchlist = user.LetterboxdSyncWatchlist,
+        LetterboxdSyncWatched = user.LetterboxdSyncWatched,
         EventTemplates = user.EventTemplates
             .Select(t => new ExportedEventTemplate { Name = t.Name, Theme = t.Config.Theme, CreatedAt = t.CreatedAt })
             .ToList(),
@@ -187,6 +282,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         ActorDisplayName = n.ActorDisplayName,
         EventTitle = n.EventTitle,
         MovieTitle = n.MovieTitle,
+        ListName = n.ListName,
         IsRead = n.IsRead,
         CreatedAt = n.CreatedAt
     };

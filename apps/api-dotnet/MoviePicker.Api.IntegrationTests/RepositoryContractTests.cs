@@ -106,6 +106,37 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task MovieTitles_ListOnlyTheTitleOfEachRequestedProposal()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var eventId = ObjectId.GenerateNewId().ToString();
+        var inserted = new List<Movie>();
+        foreach (var (tmdbId, mediaType) in new[] { (603, MovieMediaType.Movie), (1399, MovieMediaType.Tv), (680, MovieMediaType.Movie) })
+        {
+            inserted.Add(await movies.InsertAsync(new Movie
+            {
+                EventId = eventId,
+                ParticipantId = ObjectId.GenerateNewId().ToString(),
+                TmdbId = tmdbId,
+                MediaType = mediaType,
+                Title = $"Film {tmdbId}",
+                Year = "2001",
+                CreatedAt = Now,
+                UpdatedAt = Now
+            }));
+        }
+
+        var titles = await movies.ListTitlesByIdsAsync(
+            [inserted[0].Id, inserted[1].Id, inserted[1].Id, ObjectId.GenerateNewId().ToString(), " "]);
+
+        Assert.Equal(
+            [new MovieListTitle(603, MovieMediaType.Movie), new MovieListTitle(1399, MovieMediaType.Tv)],
+            titles.OrderBy(title => title.TmdbId));
+        Assert.Empty(await movies.ListTitlesByIdsAsync([]));
+    }
+
+    [Fact]
     public async Task EventLookup_ResolvesTheSlug_ButNeverTheEventId()
     {
         using var scope = _factory.Services.CreateScope();
@@ -188,6 +219,65 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task ListInvitationNotifications_KeepTheirList_AndAreDeletedByList()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var notifications = scope.ServiceProvider.GetRequiredService<IUserNotificationRepository>();
+        var lea = ObjectId.GenerateNewId().ToString();
+        var sam = ObjectId.GenerateNewId().ToString();
+        var listId = ObjectId.GenerateNewId().ToString();
+        var otherListId = ObjectId.GenerateNewId().ToString();
+        UserNotification Invitation(string userId, string list) => new()
+        {
+            UserId = userId,
+            Type = UserNotificationType.ListInvitation,
+            ListId = list,
+            ListName = "Halloween",
+            CreatedAt = Now
+        };
+        await notifications.AddAsync(Invitation(lea, listId));
+        await notifications.AddAsync(Invitation(sam, listId));
+        await notifications.AddAsync(Invitation(sam, otherListId));
+
+        var stored = Assert.Single(await notifications.ListByUserIdAsync(lea));
+        Assert.Equal((listId, "Halloween"), (stored.ListId, stored.ListName));
+
+        Assert.Equal(1, await notifications.DeleteByListAsync(listId, sam));
+        Assert.Equal([otherListId], (await notifications.ListByUserIdAsync(sam)).Select(n => n.ListId));
+        Assert.Equal(1, await notifications.DeleteByListAsync(listId));
+        Assert.Empty(await notifications.ListByUserIdAsync(lea));
+        Assert.Single(await notifications.ListByUserIdAsync(sam));
+    }
+
+    [Fact]
+    public async Task ListInvitationNotifications_OfSeveralLists_AreDeletedTogether()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var notifications = scope.ServiceProvider.GetRequiredService<IUserNotificationRepository>();
+        var lea = ObjectId.GenerateNewId().ToString();
+        var sam = ObjectId.GenerateNewId().ToString();
+        var first = ObjectId.GenerateNewId().ToString();
+        var second = ObjectId.GenerateNewId().ToString();
+        var kept = ObjectId.GenerateNewId().ToString();
+        UserNotification Invitation(string userId, string list) => new()
+        {
+            UserId = userId,
+            Type = UserNotificationType.ListInvitation,
+            ListId = list,
+            ListName = "Halloween",
+            CreatedAt = Now
+        };
+        await notifications.AddAsync(Invitation(lea, first));
+        await notifications.AddAsync(Invitation(sam, second));
+        await notifications.AddAsync(Invitation(sam, kept));
+
+        Assert.Equal(2, await notifications.DeleteByListsAsync([first, second]));
+        Assert.Empty(await notifications.ListByUserIdAsync(lea));
+        Assert.Equal([kept], (await notifications.ListByUserIdAsync(sam)).Select(n => n.ListId));
+        Assert.Equal(0, await notifications.DeleteByListsAsync([]));
+    }
+
+    [Fact]
     public async Task WithheldNotification_StaysOutOfTheInboxButCountsAsSent()
     {
         using var scope = _factory.Services.CreateScope();
@@ -258,6 +348,41 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal(["dune-part-two", "solaris"], stored.LetterboxdPendingChoiceKeys);
         Assert.Equal("lbx_user", stored.LetterboxdUsername);
         Assert.True(stored.Version > created.Version);
+    }
+
+    [Fact]
+    public async Task LetterboxdSyncTogglesAndLinkedCounts_AreStoredWithoutTouchingTheRest()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var created = await users.AddAsync(NewUser("lbt") with { LetterboxdUsername = "lbt_user" });
+
+        var updated = await users.UpdateAsync(created with { LetterboxdSyncWatched = false });
+        await users.SetLetterboxdLinkedCountsAsync(created.Id, 6, 42);
+
+        var stored = await users.GetByIdAsync(created.Id);
+        Assert.NotNull(stored);
+        Assert.Equal((true, true), (created.LetterboxdSyncWatchlist, created.LetterboxdSyncWatched));
+        Assert.Equal(
+            (true, false, 6, 42, "lbt_user"),
+            (stored.LetterboxdSyncWatchlist, stored.LetterboxdSyncWatched, stored.LetterboxdWatchlistCount, stored.LetterboxdWatchedCount, stored.LetterboxdUsername));
+        Assert.True(stored.Version > updated.Version);
+    }
+
+    [MongoFact]
+    public async Task WatchedDefaults_MissingFromAnOlderDocument_KeepTheVisibilityAndLeaveTheWatchedSyncOff()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var database = scope.ServiceProvider.GetRequiredService<IMongoDatabase>();
+        var created = await users.AddAsync(NewUser("lbo") with { LetterboxdSyncWatchlist = false, LetterboxdSyncWatched = true, IsWatchedPublic = false });
+
+        await database.GetCollection<BsonDocument>("users").UpdateOneAsync(
+            new BsonDocument("_id", ObjectId.Parse(created.Id)),
+            new BsonDocument("$unset", new BsonDocument { { "letterboxdSyncWatchlist", "" }, { "letterboxdSyncWatched", "" }, { "isWatchedPublic", "" } }));
+        var stored = await users.GetByIdAsync(created.Id);
+
+        Assert.Equal((true, false, true), (stored!.LetterboxdSyncWatchlist, stored.LetterboxdSyncWatched, stored.IsWatchedPublic));
     }
 
     [Fact]
@@ -1602,6 +1727,447 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.False(await dedup.WasClaimedSinceAsync(userId, UserNotificationType.EventReminder24h, key, channel, before));
     }
 
+    private static WatchedTitle NewWatchedTitle(
+        string ownerId,
+        int tmdbId,
+        DateTimeOffset watchedAt,
+        MovieMediaType mediaType = MovieMediaType.Movie) => new()
+        {
+            OwnerId = ownerId,
+            TmdbId = tmdbId,
+            MediaType = mediaType,
+            Title = $"Film {tmdbId}",
+            Year = "1999",
+            WatchedAt = watchedAt,
+            CreatedAt = watchedAt,
+            UpdatedAt = watchedAt
+        };
+
+    [Fact]
+    public async Task WatchedTitles_ListTheTitlesOfTheirOwner_WithoutTheRestOfTheEntry()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var watched = scope.ServiceProvider.GetRequiredService<IWatchedTitleRepository>();
+        var ownerId = ObjectId.GenerateNewId().ToString();
+        var otherId = ObjectId.GenerateNewId().ToString();
+        await watched.AddIfAbsentAsync(NewWatchedTitle(ownerId, 1920, Now));
+        await watched.AddIfAbsentAsync(NewWatchedTitle(ownerId, 1920, Now, MovieMediaType.Tv));
+        await watched.AddIfAbsentAsync(NewWatchedTitle(otherId, 603, Now));
+
+        var titles = await watched.ListTitlesByOwnerAsync(ownerId);
+
+        Assert.Equal(
+            [new MovieListTitle(1920, MovieMediaType.Movie), new MovieListTitle(1920, MovieMediaType.Tv)],
+            titles.OrderBy(title => title.MediaType));
+        Assert.Empty(await watched.ListTitlesByOwnerAsync(ObjectId.GenerateNewId().ToString()));
+    }
+
+    [Fact]
+    public async Task WatchedTitles_RoundTripEveryFact_AndKeepTheFirstEntryOfATitle()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var watched = scope.ServiceProvider.GetRequiredService<IWatchedTitleRepository>();
+        var ownerId = ObjectId.GenerateNewId().ToString();
+        var watchedAt = Now.AddMilliseconds(123);
+
+        var first = await watched.AddIfAbsentAsync(new WatchedTitle
+        {
+            OwnerId = ownerId,
+            TmdbId = 603,
+            Title = "Matrix",
+            Year = "1999",
+            PosterPath = "/api/v1/posters/tmdb/w500/matrix.jpg",
+            VoteAverage = 8.2,
+            RuntimeMinutes = 136,
+            GenreIds = [28, 878],
+            WatchedAt = watchedAt,
+            Rating = 9,
+            CreatedAt = watchedAt,
+            UpdatedAt = watchedAt
+        });
+        var again = await watched.AddIfAbsentAsync(NewWatchedTitle(ownerId, 603, Now.AddDays(1)));
+        var stored = await watched.GetAsync(ownerId, 603, MovieMediaType.Movie);
+
+        Assert.False(string.IsNullOrEmpty(first.Id));
+        Assert.Equal((first.Id, watchedAt, 9), (again.Id, again.WatchedAt, again.Rating));
+        Assert.NotNull(stored);
+        Assert.Equal(
+            (ownerId, "Matrix", "1999", "/api/v1/posters/tmdb/w500/matrix.jpg", (double?)8.2, (int?)136, watchedAt, (int?)9, watchedAt, watchedAt),
+            (stored!.OwnerId, stored.Title, stored.Year, stored.PosterPath, stored.VoteAverage, stored.RuntimeMinutes, stored.WatchedAt, stored.Rating, stored.CreatedAt, stored.UpdatedAt));
+        Assert.Equal([28, 878], stored.GenreIds);
+        Assert.Null(await watched.GetAsync(ownerId, 603, MovieMediaType.Tv));
+    }
+
+    [Fact]
+    public async Task WatchedTitles_ListTheOwnersLatestFirst_RateRemoveAndDeleteByOwner()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var watched = scope.ServiceProvider.GetRequiredService<IWatchedTitleRepository>();
+        var ownerId = ObjectId.GenerateNewId().ToString();
+        var otherId = ObjectId.GenerateNewId().ToString();
+        await watched.AddIfAbsentAsync(NewWatchedTitle(ownerId, 1, Now.AddDays(-3)));
+        await watched.AddIfAbsentAsync(NewWatchedTitle(ownerId, 2, Now));
+        await watched.AddIfAbsentAsync(NewWatchedTitle(ownerId, 2, Now.AddDays(-1), MovieMediaType.Tv));
+        await watched.AddIfAbsentAsync(NewWatchedTitle(otherId, 1, Now));
+
+        var listed = await watched.ListByOwnerAsync(ownerId);
+        var rated = await watched.SetRatingAsync(ownerId, 1, MovieMediaType.Movie, 7, Now.AddHours(1));
+        var cleared = await watched.SetRatingAsync(ownerId, 1, MovieMediaType.Movie, null, Now.AddHours(2));
+        var missing = await watched.SetRatingAsync(ownerId, 1, MovieMediaType.Tv, 7, Now);
+        var removed = await watched.RemoveAsync(ownerId, 2, MovieMediaType.Tv);
+        var removedAgain = await watched.RemoveAsync(ownerId, 2, MovieMediaType.Tv);
+        var deleted = await watched.DeleteAllForOwnerAsync(ownerId);
+
+        Assert.Equal(
+            [(2, MovieMediaType.Movie), (2, MovieMediaType.Tv), (1, MovieMediaType.Movie)],
+            listed.Select(title => (title.TmdbId, title.MediaType)));
+        Assert.Equal((7, Now.AddHours(1), Now.AddDays(-3)), (rated!.Rating, rated.UpdatedAt, rated.WatchedAt));
+        Assert.Null(cleared!.Rating);
+        Assert.Null(missing);
+        Assert.True(removed);
+        Assert.False(removedAgain);
+        Assert.Equal(2, deleted);
+        Assert.Empty(await watched.ListByOwnerAsync(ownerId));
+        Assert.Single(await watched.ListByOwnerAsync(otherId));
+    }
+
+    [Fact]
+    public async Task WatchedTitles_KeepTheirLetterboxdOrigin_AndLetterboxdOnlyRatesOrRemovesWhatItBrought()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var watched = scope.ServiceProvider.GetRequiredService<IWatchedTitleRepository>();
+        var ownerId = ObjectId.GenerateNewId().ToString();
+        await watched.AddIfAbsentAsync(NewWatchedTitle(ownerId, 603, Now) with
+        {
+            Origin = WatchedOrigin.Letterboxd,
+            LetterboxdSlug = "the-matrix",
+            Rating = 8,
+            RatingOrigin = WatchedOrigin.Letterboxd
+        });
+        await watched.AddIfAbsentAsync(NewWatchedTitle(ownerId, 680, Now) with { Rating = 7 });
+        await watched.AddIfAbsentAsync(NewWatchedTitle(ownerId, 78, Now));
+        await watched.AddIfAbsentAsync(NewWatchedTitle(ObjectId.GenerateNewId().ToString(), 603, Now) with { Origin = WatchedOrigin.Letterboxd });
+
+        var fromLetterboxd = await watched.GetAsync(ownerId, 603, MovieMediaType.Movie);
+        var unlabelledRating = await watched.ApplyLetterboxdRatingAsync(ownerId, 680, MovieMediaType.Movie, 2, Now.AddHours(1));
+        var manual = await watched.SetRatingAsync(ownerId, 78, MovieMediaType.Movie, 9, Now.AddHours(1));
+        var overManual = await watched.ApplyLetterboxdRatingAsync(ownerId, 78, MovieMediaType.Movie, 2, Now.AddHours(2));
+        var overLetterboxd = await watched.ApplyLetterboxdRatingAsync(ownerId, 603, MovieMediaType.Movie, 10, Now.AddHours(2));
+        var linked = await watched.LinkLetterboxdAsync(ownerId, 78, MovieMediaType.Movie, "blade-runner");
+        var count = await watched.CountFromLetterboxdAsync(ownerId);
+        var manualId = (await watched.GetAsync(ownerId, 78, MovieMediaType.Movie))!.Id;
+        var removedManual = await watched.RemoveFromLetterboxdAsync(ownerId, [manualId]);
+        var removedLetterboxd = await watched.RemoveFromLetterboxdAsync(ownerId, [fromLetterboxd!.Id]);
+        var manualAfter = await watched.GetAsync(ownerId, 78, MovieMediaType.Movie);
+
+        Assert.Equal(
+            (WatchedOrigin.Letterboxd, "the-matrix", (int?)8, (WatchedOrigin?)WatchedOrigin.Letterboxd),
+            (fromLetterboxd!.Origin, fromLetterboxd.LetterboxdSlug, fromLetterboxd.Rating, fromLetterboxd.RatingOrigin));
+        Assert.False(unlabelledRating);
+        Assert.Equal((9, (WatchedOrigin?)WatchedOrigin.Manual), (manual!.Rating, manual.RatingOrigin));
+        Assert.False(overManual);
+        Assert.True(overLetterboxd);
+        Assert.True(linked);
+        Assert.Equal(1, count);
+        Assert.Equal(0, removedManual);
+        Assert.Equal(1, removedLetterboxd);
+        Assert.Equal(
+            (WatchedOrigin.Manual, "blade-runner", (int?)9, (WatchedOrigin?)WatchedOrigin.Manual),
+            (manualAfter!.Origin, manualAfter.LetterboxdSlug, manualAfter.Rating, manualAfter.RatingOrigin));
+        Assert.Equal((int?)7, (await watched.GetAsync(ownerId, 680, MovieMediaType.Movie))!.Rating);
+    }
+
+    [MongoFact]
+    public async Task WatchedTitles_AnOlderDocumentWithoutOrigins_IsManualAndKeepsItsRating()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var watched = scope.ServiceProvider.GetRequiredService<IWatchedTitleRepository>();
+        var database = scope.ServiceProvider.GetRequiredService<IMongoDatabase>();
+        var ownerId = ObjectId.GenerateNewId().ToString();
+        await database.GetCollection<BsonDocument>("watched_titles").InsertOneAsync(new BsonDocument
+        {
+            { "ownerId", ObjectId.Parse(ownerId) },
+            { "tmdbId", 603 },
+            { "mediaType", "movie" },
+            { "title", "Matrix" },
+            { "year", "1999" },
+            { "watchedAt", Now.UtcDateTime },
+            { "rating", 8 },
+            { "createdAt", Now.UtcDateTime },
+            { "updatedAt", Now.UtcDateTime }
+        });
+
+        var stored = await watched.GetAsync(ownerId, 603, MovieMediaType.Movie);
+        var applied = await watched.ApplyLetterboxdRatingAsync(ownerId, 603, MovieMediaType.Movie, 2, Now.AddHours(1));
+
+        Assert.Equal((WatchedOrigin.Manual, (string?)null, (WatchedOrigin?)null), (stored!.Origin, stored.LetterboxdSlug, stored.RatingOrigin));
+        Assert.False(stored.LetterboxdMayRate);
+        Assert.False(applied);
+        Assert.Equal(0, await watched.RemoveFromLetterboxdAsync(ownerId, [stored!.Id]));
+        Assert.Equal(0, await watched.CountFromLetterboxdAsync(ownerId));
+    }
+
+    [Fact]
+    public async Task WatchedTitles_RemoveFromLetterboxdInOneGo_OnlyTheOwnersEntriesThatCameFromLetterboxd()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var watched = scope.ServiceProvider.GetRequiredService<IWatchedTitleRepository>();
+        var ownerId = ObjectId.GenerateNewId().ToString();
+        var otherId = ObjectId.GenerateNewId().ToString();
+        var matrix = await watched.AddIfAbsentAsync(NewWatchedTitle(ownerId, 603, Now) with { Origin = WatchedOrigin.Letterboxd, LetterboxdSlug = "the-matrix" });
+        var akira = await watched.AddIfAbsentAsync(NewWatchedTitle(ownerId, 149, Now) with { Origin = WatchedOrigin.Letterboxd, LetterboxdSlug = "akira" });
+        var kept = await watched.AddIfAbsentAsync(NewWatchedTitle(ownerId, 1, Now) with { Origin = WatchedOrigin.Letterboxd, LetterboxdSlug = "one" });
+        var manual = await watched.AddIfAbsentAsync(NewWatchedTitle(ownerId, 680, Now) with { LetterboxdSlug = "pulp-fiction" });
+        var someoneElses = await watched.AddIfAbsentAsync(NewWatchedTitle(otherId, 603, Now) with { Origin = WatchedOrigin.Letterboxd });
+
+        var removed = await watched.RemoveFromLetterboxdAsync(
+            ownerId,
+            [matrix.Id, akira.Id, manual.Id, someoneElses.Id, ObjectId.GenerateNewId().ToString(), "not-an-id"]);
+        var nothing = await watched.RemoveFromLetterboxdAsync(ownerId, []);
+
+        Assert.Equal(2, removed);
+        Assert.Equal(0, nothing);
+        Assert.Equal(
+            [kept.TmdbId, manual.TmdbId],
+            (await watched.ListByOwnerAsync(ownerId)).Select(title => title.TmdbId).Order());
+        Assert.Single(await watched.ListByOwnerAsync(otherId));
+    }
+
+    [Fact]
+    public async Task WatchlistItems_CountOnlyTheOwnersItemsLinkedToLetterboxd()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var watchlist = scope.ServiceProvider.GetRequiredService<IWatchlistRepository>();
+        var userId = ObjectId.GenerateNewId().ToString();
+        await watchlist.AddAsync(NewWatchlistItem(userId, 1, null, null) with { LetterboxdSlug = "one" });
+        await watchlist.AddAsync(NewWatchlistItem(userId, 2, null, null));
+        await watchlist.AddAsync(NewWatchlistItem(userId, 3, null, null));
+        await watchlist.SetLetterboxdSlugAsync(userId, 3, MovieMediaType.Movie, "three");
+        await watchlist.AddAsync(NewWatchlistItem(ObjectId.GenerateNewId().ToString(), 1, null, null) with { LetterboxdSlug = "one" });
+
+        Assert.Equal(2, await watchlist.CountLinkedToLetterboxdAsync(userId));
+    }
+
+    private static SavedList NewSavedList(
+        string ownerId,
+        ListSourceType sourceType,
+        string sourceId,
+        DateTimeOffset createdAt,
+        string name = "Harry Potter - Saga") => new()
+        {
+            OwnerId = ownerId,
+            SourceType = sourceType,
+            SourceId = sourceId,
+            Name = name,
+            CreatedAt = createdAt
+        };
+
+    [Fact]
+    public async Task SavedLists_RoundTrip_ListTheOwnersNewestFirst_AndKeepTheFirstSaveOfASource()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var saved = scope.ServiceProvider.GetRequiredService<ISavedListRepository>();
+        var ownerId = ObjectId.GenerateNewId().ToString();
+        var otherId = ObjectId.GenerateNewId().ToString();
+        var savedAt = Now.AddMilliseconds(123);
+
+        var saga = await saved.AddIfAbsentAsync(NewSavedList(ownerId, ListSourceType.TmdbCollection, "1241", savedAt));
+        await saved.AddIfAbsentAsync(NewSavedList(ownerId, ListSourceType.ExplorerTheme, "frissons", Now.AddHours(1), "frissons"));
+        await saved.AddIfAbsentAsync(NewSavedList(ownerId, ListSourceType.ExplorerTheme, "1241", Now.AddHours(-1), "1241"));
+        await saved.AddIfAbsentAsync(NewSavedList(otherId, ListSourceType.TmdbCollection, "1241", Now.AddHours(2)));
+        var again = await saved.AddIfAbsentAsync(NewSavedList(ownerId, ListSourceType.TmdbCollection, "1241", Now.AddDays(1), "Autre nom"));
+
+        var listed = await saved.ListByOwnerAsync(ownerId);
+        var stored = await saved.GetAsync(ownerId, saga.Id);
+        var found = await saved.FindBySourceAsync(ownerId, new ListSource(ListSourceType.TmdbCollection, "1241"));
+
+        Assert.False(string.IsNullOrEmpty(saga.Id));
+        Assert.Equal((saga.Id, savedAt, "Harry Potter - Saga"), (again.Id, again.CreatedAt, again.Name));
+        Assert.Equal(
+            [(ListSourceType.ExplorerTheme, "frissons"), (ListSourceType.TmdbCollection, "1241"), (ListSourceType.ExplorerTheme, "1241")],
+            listed.Select(list => (list.SourceType, list.SourceId)));
+        Assert.NotNull(stored);
+        Assert.Equal(
+            (saga.Id, ownerId, ListSourceType.TmdbCollection, "1241", "Harry Potter - Saga", savedAt),
+            (stored!.Id, stored.OwnerId, stored.SourceType, stored.SourceId, stored.Name, stored.CreatedAt));
+        Assert.Equal(saga.Id, found?.Id);
+        Assert.Null(await saved.FindBySourceAsync(ownerId, new ListSource(ListSourceType.TmdbCollection, "10")));
+        Assert.Null(await saved.GetAsync(otherId, saga.Id));
+    }
+
+    [Fact]
+    public async Task SavedLists_CountDeleteAndDeleteByOwner_OnlyTouchTheOwnersLists()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var saved = scope.ServiceProvider.GetRequiredService<ISavedListRepository>();
+        var ownerId = ObjectId.GenerateNewId().ToString();
+        var otherId = ObjectId.GenerateNewId().ToString();
+        var saga = await saved.AddIfAbsentAsync(NewSavedList(ownerId, ListSourceType.TmdbCollection, "1241", Now));
+        await saved.AddIfAbsentAsync(NewSavedList(ownerId, ListSourceType.ExplorerTheme, "frissons", Now, "frissons"));
+        var foreign = await saved.AddIfAbsentAsync(NewSavedList(otherId, ListSourceType.TmdbCollection, "1241", Now));
+
+        var counted = await saved.CountByOwnerAsync(ownerId);
+        var deletedByAStranger = await saved.DeleteAsync(ownerId, foreign.Id);
+        var deleted = await saved.DeleteAsync(ownerId, saga.Id);
+        var deletedAgain = await saved.DeleteAsync(ownerId, saga.Id);
+        var deletedByOwner = await saved.DeleteAllForOwnerAsync(ownerId);
+
+        Assert.Equal(2, counted);
+        Assert.False(deletedByAStranger);
+        Assert.True(deleted);
+        Assert.False(deletedAgain);
+        Assert.Equal(1, deletedByOwner);
+        Assert.Equal(0, await saved.CountByOwnerAsync(ownerId));
+        Assert.Single(await saved.ListByOwnerAsync(otherId));
+    }
+
+    [Fact]
+    public async Task MovieLists_KeepTheirVisibility_ListAndCountThePublicOnesOfACreator()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var lists = scope.ServiceProvider.GetRequiredService<IMovieListRepository>();
+        var ownerId = ObjectId.GenerateNewId().ToString();
+        var otherId = ObjectId.GenerateNewId().ToString();
+        var older = await lists.AddAsync(new MovieList
+        {
+            OwnerId = ownerId,
+            Name = "Coréen",
+            Description = "Séoul",
+            IsPublic = true,
+            Items = [new MovieListItem { TmdbId = 670, Title = "Old Boy", Year = "2003", PosterPath = "/p.jpg", AddedAt = Now }],
+            CreatedAt = Now,
+            UpdatedAt = Now
+        });
+        var hidden = await lists.AddAsync(new MovieList { OwnerId = ownerId, Name = "Pour plus tard", CreatedAt = Now, UpdatedAt = Now.AddHours(2) });
+        var newer = await lists.AddAsync(new MovieList { OwnerId = ownerId, Name = "Hitchcock", IsPublic = true, CreatedAt = Now, UpdatedAt = Now.AddHours(1) });
+        await lists.AddAsync(new MovieList { OwnerId = otherId, Name = "Autre", IsPublic = true, CreatedAt = Now, UpdatedAt = Now });
+
+        var summaries = await lists.ListPublicSummariesAsync(ownerId);
+        var counted = await lists.CountPublicByOwnerAsync(ownerId);
+        var mine = await lists.ListSummariesAsync(ownerId);
+        var shown = await lists.UpdateDetailsAsync(ownerId, hidden.Id, "Pour plus tard", null, isPublic: true, Now.AddHours(3));
+        var countedAfter = await lists.CountPublicByOwnerAsync(ownerId);
+
+        Assert.True(older.IsPublic);
+        Assert.True((await lists.FindAsync(older.Id))!.IsPublic);
+        Assert.True((await lists.FindAsync(hidden.Id))!.IsPublic);
+        Assert.Equal([newer.Id, older.Id], summaries.Select(summary => summary.Id));
+        var korean = summaries[1];
+        Assert.Equal(("Coréen", "Séoul", true, 1, 1), (korean.Name, korean.Description, korean.IsPublic, korean.ItemCount, korean.MemberCount));
+        Assert.Equal(["/p.jpg"], korean.PosterPaths);
+        Assert.Equal([new MovieListTitle(670, MovieMediaType.Movie)], korean.Titles);
+        Assert.Equal(2, counted);
+        Assert.True(shown!.IsPublic);
+        Assert.Equal(3, countedAfter);
+        Assert.Equal(
+            [(hidden.Id, false), (newer.Id, true), (older.Id, true)],
+            mine.Select(summary => (summary.Id, summary.IsPublic)));
+        Assert.Empty(await lists.ListPublicSummariesAsync("not-an-id"));
+        Assert.Equal(0, await lists.CountPublicByOwnerAsync("not-an-id"));
+    }
+
+    [Fact]
+    public async Task SavedMemberLists_KeepTheirSnapshot_AndRefreshItWithTheirName()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var saved = scope.ServiceProvider.GetRequiredService<ISavedListRepository>();
+        var ownerId = ObjectId.GenerateNewId().ToString();
+        var listId = ObjectId.GenerateNewId().ToString();
+        var creatorId = ObjectId.GenerateNewId().ToString();
+        SavedListTitle psycho = new()
+        {
+            TmdbId = 539,
+            Title = "Psychose",
+            Year = "1960",
+            PosterPath = "/psycho.jpg",
+            VoteAverage = 8.4,
+            RuntimeMinutes = 109,
+            GenreIds = [27, 53]
+        };
+        SavedListTitle series = new() { TmdbId = 1920, MediaType = MovieMediaType.Tv, Title = "Twin Peaks", Year = "1990" };
+
+        var stored = await saved.AddIfAbsentAsync(new SavedList
+        {
+            OwnerId = ownerId,
+            SourceType = ListSourceType.MemberList,
+            SourceId = listId,
+            SourceOwnerId = creatorId,
+            Name = "Hitchcock",
+            CreatedAt = Now,
+            Snapshot = [psycho]
+        });
+        var read = await saved.GetAsync(ownerId, stored.Id);
+        var found = await saved.FindBySourceAsync(ownerId, new ListSource(ListSourceType.MemberList, listId));
+        var byAStranger = await saved.RefreshSnapshotAsync(ObjectId.GenerateNewId().ToString(), stored.Id, creatorId, "Volée", []);
+        var malformed = await saved.RefreshSnapshotAsync(ownerId, "not-an-id", creatorId, "Volée", []);
+        var refreshed = await saved.RefreshSnapshotAsync(ownerId, stored.Id, creatorId, "Tout Hitchcock", [series, psycho]);
+        var afterRefresh = await saved.GetAsync(ownerId, stored.Id);
+        var emptied = await saved.RefreshSnapshotAsync(ownerId, stored.Id, creatorId, "Tout Hitchcock", []);
+        var afterEmptying = await saved.GetAsync(ownerId, stored.Id);
+
+        Assert.Equal(
+            (ListSourceType.MemberList, listId, creatorId, "Hitchcock"),
+            (read!.SourceType, read.SourceId, read.SourceOwnerId, read.Name));
+        Assert.True(Assert.Single(read.Snapshot).SameFactsAs(psycho));
+        Assert.Equal(stored.Id, found?.Id);
+        Assert.False(byAStranger);
+        Assert.False(malformed);
+        Assert.True(refreshed);
+        Assert.Equal("Tout Hitchcock", afterRefresh!.Name);
+        Assert.Equal(2, afterRefresh.Snapshot.Count);
+        Assert.True(afterRefresh.Snapshot[0].SameFactsAs(series));
+        Assert.True(afterRefresh.Snapshot[1].SameFactsAs(psycho));
+        Assert.True(emptied);
+        Assert.Empty(afterEmptying!.Snapshot);
+    }
+
+    [Fact]
+    public async Task SavedMemberLists_OfACreatorWhoLeft_LoseTheirNameAndTheirFilms_ForEveryOwner_AndStayForgotten()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var saved = scope.ServiceProvider.GetRequiredService<ISavedListRepository>();
+        var leaving = ObjectId.GenerateNewId().ToString();
+        var staying = ObjectId.GenerateNewId().ToString();
+        var gone = ObjectId.GenerateNewId().ToString();
+        var deletedBefore = ObjectId.GenerateNewId().ToString();
+        var kept = ObjectId.GenerateNewId().ToString();
+        var firstOwner = ObjectId.GenerateNewId().ToString();
+        var secondOwner = ObjectId.GenerateNewId().ToString();
+        SavedListTitle psycho = new() { TmdbId = 539, Title = "Psychose", Year = "1960" };
+        SavedList Saved(string ownerId, ListSourceType type, string sourceId, string? creatorId) => new()
+        {
+            OwnerId = ownerId,
+            SourceType = type,
+            SourceId = sourceId,
+            SourceOwnerId = creatorId,
+            Name = "Gardée",
+            CreatedAt = Now,
+            Snapshot = [psycho]
+        };
+        var first = await saved.AddIfAbsentAsync(Saved(firstOwner, ListSourceType.MemberList, gone, leaving));
+        var second = await saved.AddIfAbsentAsync(Saved(secondOwner, ListSourceType.MemberList, deletedBefore, leaving));
+        var other = await saved.AddIfAbsentAsync(Saved(firstOwner, ListSourceType.MemberList, kept, staying));
+        var saga = await saved.AddIfAbsentAsync(Saved(firstOwner, ListSourceType.TmdbCollection, gone, null));
+
+        var forgotten = await saved.ForgetListsOfCreatorAsync(leaving);
+        var refreshedAfterwards = await saved.RefreshSnapshotAsync(firstOwner, first.Id, leaving, "Gardée", [psycho]);
+
+        Assert.Equal(2, forgotten);
+        Assert.False(refreshedAfterwards);
+        foreach (var (ownerId, id) in new[] { (firstOwner, first.Id), (secondOwner, second.Id) })
+        {
+            var stored = (await saved.GetAsync(ownerId, id))!;
+            Assert.Equal((string.Empty, 0, (string?)null), (stored.Name, stored.Snapshot.Count, stored.SourceOwnerId));
+        }
+
+        var untouched = (await saved.GetAsync(firstOwner, other.Id))!;
+        Assert.Equal(("Gardée", 1, staying), (untouched.Name, untouched.Snapshot.Count, untouched.SourceOwnerId));
+        var sagaAfter = (await saved.GetAsync(firstOwner, saga.Id))!;
+        Assert.Equal(("Gardée", 1, (string?)null), (sagaAfter.Name, sagaAfter.Snapshot.Count, sagaAfter.SourceOwnerId));
+        Assert.Equal(0, await saved.ForgetListsOfCreatorAsync(leaving));
+        Assert.Equal(0, await saved.ForgetListsOfCreatorAsync("not-an-id"));
+    }
+
     [Theory]
     [InlineData("not-an-id")]
     [InlineData("zzzzzzzzzzzzzzzzzzzzzzzz")]
@@ -1617,5 +2183,8 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Null(await movies.GetByIdAndEventIdAsync(malformedId, eventId));
         Assert.Null(await participants.FindByIdAndEventIdAsync(malformedId, eventId));
         await notifications.MarkReadAsync(ObjectId.GenerateNewId().ToString(), malformedId);
+        var savedLists = scope.ServiceProvider.GetRequiredService<ISavedListRepository>();
+        Assert.Null(await savedLists.GetAsync(eventId, malformedId));
+        Assert.False(await savedLists.DeleteAsync(eventId, malformedId));
     }
 }

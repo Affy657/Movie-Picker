@@ -35,6 +35,55 @@ describe('redactSensitiveUrl', () => {
     expect(redactSensitiveUrl('/x?to+ken=abc&token%20=abc')).toBe('/x?to+ken=abc&token%20=abc');
   });
 
+  it('masks the list invitation token in the path of the join page, relative or absolute', () => {
+    expect(redactSensitiveUrl('/l/7xK2pQ/rejoindre')).toBe(`/l/${REDACTED_QUERY_VALUE}/rejoindre`);
+    expect(redactSensitiveUrl('https://www.movie-picker.fr/L/7xK2pQ/rejoindre?lang=fr#top')).toBe(
+      `https://www.movie-picker.fr/L/${REDACTED_QUERY_VALUE}/rejoindre?lang=fr#top`
+    );
+    expect(redactSensitiveUrl('/l/7xK2pQ')).toBe(`/l/${REDACTED_QUERY_VALUE}`);
+  });
+
+  it('masks the list invitation token in the API route of the preview and of the join', () => {
+    expect(redactSensitiveUrl('https://api.movie-picker.fr/api/v1/lists/join/7xK2pQ')).toBe(
+      `https://api.movie-picker.fr/api/v1/lists/join/${REDACTED_QUERY_VALUE}`
+    );
+    expect(redactSensitiveUrl('POST /api/v1/lists/join/7xK2pQ?x=1')).toBe(
+      `POST /api/v1/lists/join/${REDACTED_QUERY_VALUE}?x=1`
+    );
+    expect(redactSensitiveUrl('GET https://api.movie-picker.fr/api/v1/lists/join/7xK2pQ')).toBe(
+      `GET https://api.movie-picker.fr/api/v1/lists/join/${REDACTED_QUERY_VALUE}`
+    );
+  });
+
+  it('masks a returnTo that leads back to a token, and keeps the others', () => {
+    expect(redactSensitiveUrl('/login?returnTo=%2Fl%2F7xK2pQ%2Frejoindre')).toBe(
+      `/login?returnTo=${REDACTED_QUERY_VALUE}`
+    );
+    expect(
+      redactSensitiveUrl(
+        'https://api.movie-picker.fr/api/v1/auth/oauth/google/start?returnTo=%2Freset%3Ftoken%3Dabc'
+      )
+    ).toBe(
+      `https://api.movie-picker.fr/api/v1/auth/oauth/google/start?returnTo=${REDACTED_QUERY_VALUE}`
+    );
+    expect(
+      redactSensitiveUrl('/register?returnTo=%2Flogin%3FreturnTo%3D%252Fl%252F7xK2pQ%252Frejoindre')
+    ).toBe(`/register?returnTo=${REDACTED_QUERY_VALUE}`);
+    expect(redactSensitiveUrl('/login?returnTo=%2Flistes%2Fl1')).toBe(
+      '/login?returnTo=%2Flistes%2Fl1'
+    );
+  });
+
+  it('leaves the paths that only look like an invitation untouched', () => {
+    expect(redactSensitiveUrl('/listes/l1')).toBe('/listes/l1');
+    expect(redactSensitiveUrl('/u/lea/listes/l1')).toBe('/u/lea/listes/l1');
+    expect(redactSensitiveUrl('https://image.tmdb.org/t/p/w500/l/abc.jpg')).toBe(
+      'https://image.tmdb.org/t/p/w500/l/abc.jpg'
+    );
+    expect(redactSensitiveUrl('/api/v1/lists/l1/members')).toBe('/api/v1/lists/l1/members');
+    expect(redactSensitiveUrl('Ciné l/abc')).toBe('Ciné l/abc');
+  });
+
   it('returns a URL without query string, or without sensitive key, as is', () => {
     expect(redactSensitiveUrl('https://www.movie-picker.fr/e/Ab3dE_9xYz')).toBe(
       'https://www.movie-picker.fr/e/Ab3dE_9xYz'

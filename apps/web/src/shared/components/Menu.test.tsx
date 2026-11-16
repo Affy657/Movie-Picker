@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
-import Menu, { MenuItem, MenuLabel, MenuPanel, MenuSeparator } from './Menu';
+import Menu, { MenuCheckboxItem, MenuItem, MenuLabel, MenuPanel, MenuSeparator } from './Menu';
 
 describe('Menu', () => {
   it("n'affiche pas le panneau tant qu'il n'est pas ouvert", () => {
@@ -289,5 +289,62 @@ describe('MenuSeparator', () => {
   it('renders as a separator', () => {
     render(<MenuSeparator />);
     expect(screen.getByRole('separator')).toBeInTheDocument();
+  });
+});
+
+describe('MenuCheckboxItem', () => {
+  it('is a checkbox item that reports the opposite state when activated', async () => {
+    const onChange = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <MenuPanel ariaLabel="Listes">
+        <MenuCheckboxItem checked={false} onChange={onChange} description="8 films">
+          Halloween
+        </MenuCheckboxItem>
+        <MenuCheckboxItem checked onChange={vi.fn()}>
+          Ghibli
+        </MenuCheckboxItem>
+      </MenuPanel>
+    );
+
+    const halloween = screen.getByRole('menuitemcheckbox', { name: /halloween/i });
+    expect(halloween).toHaveAttribute('aria-checked', 'false');
+    expect(halloween).toHaveTextContent('8 films');
+    expect(screen.getByRole('menuitemcheckbox', { name: 'Ghibli' })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
+
+    await user.click(halloween);
+
+    expect(onChange).toHaveBeenCalledWith(true);
+  });
+
+  it('takes part in the arrow navigation of its menu', async () => {
+    const user = userEvent.setup();
+    render(
+      <MenuPanel ariaLabel="Listes">
+        <MenuCheckboxItem checked={false} onChange={vi.fn()}>
+          Halloween
+        </MenuCheckboxItem>
+        <MenuItem>Nouvelle liste</MenuItem>
+      </MenuPanel>
+    );
+
+    screen.getByRole('menuitemcheckbox', { name: 'Halloween' }).focus();
+    await user.keyboard('{ArrowDown}');
+
+    expect(screen.getByRole('menuitem', { name: 'Nouvelle liste' })).toHaveFocus();
+  });
+});
+
+describe('MenuPanel embedded', () => {
+  it('drops the floating surface to sit inside another one', () => {
+    render(
+      <MenuPanel ariaLabel="Listes" anchored={false} embedded>
+        x
+      </MenuPanel>
+    );
+    expect(screen.getByRole('menu').className).toMatch(/embedded/);
   });
 });

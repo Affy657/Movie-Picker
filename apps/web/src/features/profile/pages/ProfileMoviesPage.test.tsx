@@ -135,6 +135,29 @@ describe('ProfileMoviesPage (MSW)', () => {
     expect(await screen.findByText(/ce profil n'existe pas/i)).toBeInTheDocument();
   });
 
+  it('tells a visitor the watched films are not public, with nothing to retry', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/users/:handle`, () =>
+        HttpResponse.json({ ...ALICE_PROFILE, isWatchedPublic: false })
+      ),
+      http.get(`${TEST_API_V1}/users/:handle/watched-movies`, () =>
+        HttpResponse.json(
+          { code: 404, reason: 'watched_not_found', error: 'Watched films not found' },
+          { status: 404 }
+        )
+      )
+    );
+    renderPage('alice');
+
+    expect(
+      await screen.findByText('Les films vus de ce membre ne sont pas publics.')
+    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /les films vus par alice/i })).toBeInTheDocument();
+    expect(screen.queryByText(/ce profil n'existe pas/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Réessayer' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/0 film vu/i)).not.toBeInTheDocument();
+  });
+
   it('takes me to my settings instead of a 404 when my own profile is private', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>

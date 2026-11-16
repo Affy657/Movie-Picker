@@ -25,6 +25,8 @@ type ChipBaseProps = {
   tone?: ChipTone;
   size?: ChipSize;
   icon?: ComponentType<SVGProps<SVGSVGElement>>;
+  leading?: ReactNode;
+  trailingIcon?: ComponentType<SVGProps<SVGSVGElement>>;
   dashed?: boolean;
   dot?: boolean | 'pulsing';
   className?: string;
@@ -83,11 +85,20 @@ type ChipLinkProps = {
 type ChipProps = ChipBaseProps &
   (ChipLabelProps | ChipActionProps | ChipRemovableProps | ChipLinkProps);
 
+function ChipIcon({ icon: Icon }: Readonly<{ icon?: ChipBaseProps['icon'] }>) {
+  if (!Icon) return null;
+  return (
+    <Icon className={styles.icon} width={ICON_SIZE.xs} height={ICON_SIZE.xs} aria-hidden="true" />
+  );
+}
+
 export default function Chip(props: Readonly<ChipProps>) {
   const {
     tone = 'default',
     size = 'md',
     icon: Icon,
+    leading,
+    trailingIcon: TrailingIcon,
     dashed = false,
     dot = false,
     className,
@@ -108,16 +119,11 @@ export default function Chip(props: Readonly<ChipProps>) {
 
   const content = (
     <>
+      {leading}
       {dot ? <StatusDot pulsing={dot === 'pulsing'} /> : null}
-      {Icon ? (
-        <Icon
-          className={styles.icon}
-          width={ICON_SIZE.xs}
-          height={ICON_SIZE.xs}
-          aria-hidden="true"
-        />
-      ) : null}
+      <ChipIcon icon={Icon} />
       <span className={styles.text}>{children}</span>
+      <ChipIcon icon={TrailingIcon} />
       {props.onRemove === undefined ? null : (
         <button
           type="button"

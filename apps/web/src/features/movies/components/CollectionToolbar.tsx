@@ -31,6 +31,7 @@ type CollectionToolbarProps<TSortKey extends string> = {
   onClearAll: () => void;
   isMobile: boolean;
   hideSort?: boolean;
+  beforeSort?: ReactNode;
   trailing?: ReactNode;
   labels: CollectionToolbarLabels;
 };
@@ -65,6 +66,7 @@ export default function CollectionToolbar<TSortKey extends string>({
       onClearAll={rest.onClearAll}
       isMobile={rest.isMobile}
       hideSort={rest.hideSort}
+      beforeSort={rest.beforeSort}
       trailing={rest.trailing}
     />
   );

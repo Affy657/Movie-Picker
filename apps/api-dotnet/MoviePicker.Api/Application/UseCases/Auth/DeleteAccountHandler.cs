@@ -18,6 +18,9 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
     private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly IFollowRepository _follows;
     private readonly IWatchlistRepository _watchlist;
+    private readonly IMovieListRepository _movieLists;
+    private readonly IWatchedTitleRepository _watchedTitles;
+    private readonly ISavedListRepository _savedLists;
     private readonly IPasswordResetTokenRepository _resetTokens;
     private readonly IAvatarPhotoRepository _avatarPhotos;
     private readonly IAuthSessionInvalidator _sessionInvalidator;
@@ -33,6 +36,9 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         IPushSubscriptionRepository pushSubscriptions,
         IFollowRepository follows,
         IWatchlistRepository watchlist,
+        IMovieListRepository movieLists,
+        IWatchedTitleRepository watchedTitles,
+        ISavedListRepository savedLists,
         IPasswordResetTokenRepository resetTokens,
         IAvatarPhotoRepository avatarPhotos,
         IAuthSessionInvalidator sessionInvalidator,
@@ -47,6 +53,9 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         _pushSubscriptions = pushSubscriptions;
         _follows = follows;
         _watchlist = watchlist;
+        _movieLists = movieLists;
+        _watchedTitles = watchedTitles;
+        _savedLists = savedLists;
         _resetTokens = resetTokens;
         _avatarPhotos = avatarPhotos;
         _sessionInvalidator = sessionInvalidator;
@@ -103,6 +112,11 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
                 await _pushSubscriptions.DeleteByUserIdAsync(userId, token);
                 await _follows.DeleteAllForUserAsync(userId, token);
                 await _watchlist.DeleteAllForUserAsync(userId, token);
+                await WithdrawTheListsOfAsync(userId, token);
+                await _movieLists.DeleteAllForOwnerAsync(userId, token);
+                await _movieLists.RemoveFromOthersListsAsync(userId, token);
+                await _watchedTitles.DeleteAllForOwnerAsync(userId, token);
+                await _savedLists.DeleteAllForOwnerAsync(userId, token);
                 await _resetTokens.DeleteByUserIdAsync(userId, token);
                 await _avatarPhotos.DeleteByUserIdAsync(userId, token);
                 await _users.DeleteAsync(userId, token);
@@ -114,6 +128,13 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         _logger.LogInformation(
             "DeleteAccount: success for {EmailMasked} (userId={UserId}, anonymizedEvents={Events}, anonymizedParticipations={Participations})",
             EmailMasking.Mask(user.Email), userId, anonymizedEvents, anonymizedParticipations);
+    }
+
+    private async Task WithdrawTheListsOfAsync(string userId, CancellationToken ct)
+    {
+        var listIds = (await _movieLists.ListByOwnerAsync(userId, ct)).Select(list => list.Id).ToList();
+        await _notifications.DeleteByListsAsync(listIds, ct);
+        await _savedLists.ForgetListsOfCreatorAsync(userId, ct);
     }
 
     private async Task MarkJoinedEventsChangedAsync(IReadOnlyList<string> joinedEventIds, CancellationToken ct)

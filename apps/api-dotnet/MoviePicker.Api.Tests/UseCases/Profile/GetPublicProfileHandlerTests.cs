@@ -12,7 +12,8 @@ public sealed class GetPublicProfileHandlerTests
     private static User User(
         bool isPublic,
         DateTimeOffset? supporterSince = null,
-        bool isWatchlistPublic = true) => new()
+        bool isWatchlistPublic = true,
+        bool isWatchedPublic = true) => new()
         {
             Id = "u1",
             Email = "secret@private.co",
@@ -23,6 +24,7 @@ public sealed class GetPublicProfileHandlerTests
             AvatarId = "alpha",
             IsProfilePublic = isPublic,
             IsWatchlistPublic = isWatchlistPublic,
+            IsWatchedPublic = isWatchedPublic,
             SupporterSince = supporterSince,
             CreatedAt = new DateTimeOffset(2024, 3, 1, 0, 0, 0, TimeSpan.Zero),
             UpdatedAt = DateTimeOffset.UtcNow
@@ -105,6 +107,21 @@ public sealed class GetPublicProfileHandlerTests
         Assert.False(res.IsWatchlistPublic);
         Assert.Null(res.WatchlistCount);
         watchlist.Verify(x => x.CountByUserIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task HandleAsync_TellsWhetherTheWatchedFilmsArePublic(bool isWatchedPublic)
+    {
+        var (users, _, handler) = Build(WatchlistWith(0));
+        users.Setup(x => x.GetByHandleAsync("alice", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(User(true, isWatchedPublic: isWatchedPublic));
+
+        var res = await handler.HandleAsync("alice");
+
+        Assert.Equal(isWatchedPublic, res.IsWatchedPublic);
+        Assert.True(res.IsWatchlistPublic);
     }
 
     [Fact]

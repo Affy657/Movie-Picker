@@ -58,6 +58,7 @@ function scrubRequest(request: ErrorEvent['request']): void {
 export function prepareEvent(event: ErrorEvent): ErrorEvent | null {
   if (shouldDropSentryEvent(event)) return null;
   delete event.user;
+  if (event.transaction) event.transaction = redactSensitiveUrl(event.transaction);
   scrubRequest(event.request);
   return event;
 }
@@ -69,6 +70,7 @@ export function prepareSpan(span: StreamedSpan): StreamedSpan {
 }
 
 export function prepareBreadcrumb(breadcrumb: Breadcrumb): Breadcrumb {
+  if (breadcrumb.message) breadcrumb.message = redactSensitiveUrl(breadcrumb.message);
   redactStringValues(breadcrumb.data);
   return breadcrumb;
 }

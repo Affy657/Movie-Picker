@@ -139,4 +139,26 @@ describe('Chip', () => {
     expect(saved?.className).not.toContain(dotStyles.pulsing);
     expect(screen.getByTestId('pending').querySelector(`.${dotStyles.pulsing}`)).not.toBeNull();
   });
+
+  it('leads with any decoration and ends with an icon, outside the nudged text', () => {
+    render(
+      <Chip
+        onClick={() => undefined}
+        leading={<span data-testid="faces" />}
+        trailingIcon={(props) => <svg data-testid="chevron" {...props} />}
+      >
+        Avec Léa et Tom
+      </Chip>
+    );
+
+    const chip = screen.getByRole('button', { name: 'Avec Léa et Tom' });
+    const text = chip.querySelector(`.${styles.text}`);
+    const faces = screen.getByTestId('faces');
+    const chevron = screen.getByTestId('chevron');
+    expect(text?.contains(faces)).toBe(false);
+    expect(text?.contains(chevron)).toBe(false);
+    expect(chip.firstElementChild).toBe(faces);
+    expect(chip.lastElementChild).toBe(chevron);
+    expect(chevron).toHaveAttribute('aria-hidden', 'true');
+  });
 });

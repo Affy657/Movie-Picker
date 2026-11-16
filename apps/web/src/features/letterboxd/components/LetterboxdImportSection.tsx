@@ -5,18 +5,28 @@ import { AlertTriangle, Check, RefreshCw, TriangleAlert, X } from 'lucide-react'
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation, type Translate, type TranslationKey } from '@/shared/i18n';
-import { API_ERROR_REASONS } from '@/shared/api/apiError';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { invalidateWatchlist } from '@/features/movies/hooks/useWatchlist';
+import { invalidateWatched } from '@/features/movies/hooks/invalidateWatched';
 import InfoBubble from '@/shared/components/InfoBubble';
+import ToggleRow from '@/shared/components/ToggleRow';
 import {
   syncLetterboxd,
   type LetterboxdConfirmResult,
   type LetterboxdPendingChoice,
   type LetterboxdSyncReport,
 } from '@/features/letterboxd/api/letterboxdApi';
+import { useLetterboxdSyncTargets } from '@/features/letterboxd/hooks/useLetterboxdSyncTargets';
+import {
+  pendingChoicesOf,
+  reportedLists,
+  syncErrorMessage,
+  unmatchedTitlesOf,
+  watchedChanged,
+} from '@/features/letterboxd/utils/syncReport';
 import type { UserProfile } from '@/features/auth/types';
+import { letterboxdSyncEnabled } from '@/features/auth/utils/letterboxdSync';
 import LetterboxdChoicesModal from './LetterboxdChoicesModal';
 import sharedStyles from '@/shared/components/SettingsSection.module.css';
 import styles from './LetterboxdImportSection.module.css';
@@ -30,16 +40,157 @@ function formatSyncDate(iso: string, locale: string): string {
   return new Date(iso).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' });
 }
 
-const STORED_SYNC_ERROR_KEYS: Record<string, TranslationKey> = {
-  [API_ERROR_REASONS.letterboxdWatchlistIncomplete]: 'apiErrors.letterboxd_watchlist_incomplete',
-  [API_ERROR_REASONS.letterboxdSyncUnavailable]: 'apiErrors.letterboxd_sync_unavailable',
-  [API_ERROR_REASONS.letterboxdSyncFailed]: 'apiErrors.letterboxd_sync_failed',
+type SkippedReason = 'deferred' | 'bothOff';
+
+const SKIPPED_MESSAGE_KEYS: Record<SkippedReason, TranslationKey> = {
+  deferred: 'auth.account.letterboxd.syncDeferred',
+  bothOff: 'auth.account.letterboxd.syncBothOff',
 };
 
-function translateStoredSyncError(stored: string | null, t: Translate): string | null {
-  if (stored === null) return null;
-  const key = STORED_SYNC_ERROR_KEYS[stored];
-  return key ? t(key) : stored;
+function countedDescription(
+  count: number,
+  keys: { none: TranslationKey; one: TranslationKey; many: TranslationKey },
+  t: Translate
+): string {
+  if (count === 0) return t(keys.none);
+  return pluralizeCount(count, keys.one, keys.many, t);
+}
+
+function SyncTargets({ user }: Readonly<{ user: UserProfile }>) {
+  const { t } = useTranslation();
+  const targets = useLetterboxdSyncTargets();
+  return (
+    <div className={styles.syncTargets}>
+      <ToggleRow
+        className={styles.syncTarget}
+        title={t('watchlist.title')}
+        description={countedDescription(
+          user.letterboxdWatchlistCount ?? 0,
+          {
+            none: 'auth.account.letterboxd.syncWatchlistDescriptionNone',
+            one: 'auth.account.letterboxd.syncWatchlistDescriptionOne',
+            many: 'auth.account.letterboxd.syncWatchlistDescription',
+          },
+          t
+        )}
+        checked={targets.watchlist}
+        onChange={(checked) => targets.change('watchlist', checked)}
+      />
+      <ToggleRow
+        className={styles.syncTarget}
+        title={t('watched.title')}
+        description={countedDescription(
+          user.letterboxdWatchedCount ?? 0,
+          {
+            none: 'auth.account.letterboxd.syncWatchedDescriptionNone',
+            one: 'auth.account.letterboxd.syncWatchedDescriptionOne',
+            many: 'auth.account.letterboxd.syncWatchedDescription',
+          },
+          t
+        )}
+        checked={targets.watched}
+        onChange={(checked) => targets.change('watched', checked)}
+      />
+      {targets.error && (
+        <p className="error" role="alert">
+          {targets.error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function ReportChangesRow({ text }: Readonly<{ text: string }>) {
+  return (
+    <span className={styles.reportRow}>
+      <span className={styles.reportIconOk}>
+        <Check size={ICON_SIZE.sm} aria-hidden />
+      </span>
+      <span>{text}</span>
+    </span>
+  );
+}
+
+function SyncReportCard({
+  user,
+  report,
+  pendingCount,
+  onOpenChoices,
+}: Readonly<{
+  user: UserProfile;
+  report: LetterboxdSyncReport;
+  pendingCount: number;
+  onOpenChoices: () => void;
+}>) {
+  const { t } = useTranslation();
+  const lists = reportedLists(report, user);
+  const unmatchedTitles = unmatchedTitlesOf(report);
+  const truncated = report.totalTruncated + report.watchedTotalTruncated;
+
+  return (
+    <Card
+      padding="none"
+      surface="sunken"
+      className={styles.report}
+      role="status"
+      aria-live="polite"
+    >
+      {lists.watchlist && (
+        <ReportChangesRow
+          text={t('auth.account.letterboxd.reportChanges', {
+            added: String(report.added),
+            removed: String(report.removed),
+          })}
+        />
+      )}
+
+      {lists.watched && (
+        <ReportChangesRow
+          text={t('auth.account.letterboxd.reportWatchedChanges', {
+            added: String(report.watchedAdded),
+            removed: String(report.watchedRemoved),
+          })}
+        />
+      )}
+
+      {pendingCount > 0 && (
+        <LinkButton size="sm" className={styles.reportAction} onClick={onOpenChoices}>
+          {t('auth.account.letterboxd.reportPending', { count: String(pendingCount) })}
+        </LinkButton>
+      )}
+
+      {unmatchedTitles.length > 0 && (
+        <details className={styles.unmatched}>
+          <summary>
+            {t('auth.account.letterboxd.reportUnmatched', {
+              count: String(unmatchedTitles.length),
+            })}
+          </summary>
+          <ul className={styles.unmatchedList}>
+            {unmatchedTitles.map((title) => (
+              <li key={title}>{title}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+
+      {truncated > 0 && (
+        <p className={styles.reportLine}>
+          {t('auth.account.letterboxd.reportTruncated', { count: String(truncated) })}
+        </p>
+      )}
+    </Card>
+  );
+}
+
+function confirmedMessage(result: LetterboxdConfirmResult, t: Translate): string {
+  if (result.watchedAdded === 0) {
+    return t('auth.account.letterboxd.choicesApplied', { added: String(result.added) });
+  }
+  return t('auth.account.letterboxd.choicesAppliedWithWatched', {
+    added: String(result.added),
+    watched: String(result.watchedAdded),
+  });
 }
 
 export default function LetterboxdImportSection() {
@@ -53,9 +204,10 @@ export default function LetterboxdImportSection() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [report, setReport] = useState<LetterboxdSyncReport | null>(null);
+  const [pendingChoices, setPendingChoices] = useState<LetterboxdPendingChoice[]>([]);
   const [choicesOpen, setChoicesOpen] = useState(false);
   const [confirmResult, setConfirmResult] = useState<LetterboxdConfirmResult | null>(null);
-  const [syncDeferred, setSyncDeferred] = useState(false);
+  const [skippedReason, setSkippedReason] = useState<SkippedReason | null>(null);
 
   useEffect(() => {
     if (editing) inputRef.current?.focus();
@@ -99,7 +251,8 @@ export default function LetterboxdImportSection() {
   const syncAction = useCallback(async () => {
     const result = await syncLetterboxd(true);
     await queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
-    void invalidateWatchlist(queryClient);
+    if (watchedChanged(result)) void invalidateWatched(queryClient);
+    else void invalidateWatchlist(queryClient);
     return result;
   }, [queryClient]);
 
@@ -114,15 +267,19 @@ export default function LetterboxdImportSection() {
     clearSyncError();
     setConfirmResult(null);
     setReport(null);
-    setSyncDeferred(false);
+    setSkippedReason(null);
+    const bothOff =
+      !letterboxdSyncEnabled(user, 'watchlist') && !letterboxdSyncEnabled(user, 'watched');
     const result = await runSync();
     if (!result) return;
     if (result.skipped) {
-      setSyncDeferred(true);
+      setSkippedReason(bothOff ? 'bothOff' : 'deferred');
       return;
     }
+    const pending = pendingChoicesOf(result);
     setReport(result);
-    setChoicesOpen(result.pendingChoices.length > 0);
+    setPendingChoices(pending);
+    setChoicesOpen(pending.length > 0);
   };
 
   const handleConfirmed = (
@@ -130,7 +287,7 @@ export default function LetterboxdImportSection() {
     unresolved: LetterboxdPendingChoice[]
   ) => {
     setChoicesOpen(false);
-    setReport((prev) => (prev ? { ...prev, pendingChoices: unresolved } : prev));
+    setPendingChoices(unresolved);
     setConfirmResult(result);
     queryClient.setQueryData(queryKeys.auth.me, (prev: UserProfile | null | undefined) =>
       prev
@@ -140,14 +297,15 @@ export default function LetterboxdImportSection() {
           }
         : prev
     );
-    void invalidateWatchlist(queryClient);
+    if (result.watchedAdded > 0) void invalidateWatched(queryClient);
+    else void invalidateWatchlist(queryClient);
     void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
   };
 
   if (!user) return null;
 
   const connected = Boolean(savedUsername);
-  const lastSyncError = translateStoredSyncError(user.letterboxdLastSyncError, t);
+  const lastSyncError = syncErrorMessage(report ? report.error : user.letterboxdLastSyncError, t);
   const lastSyncAt = user.letterboxdLastSyncAt;
   const showInput = editing || !connected;
 
@@ -251,6 +409,8 @@ export default function LetterboxdImportSection() {
         )}
       </div>
 
+      {connected && <SyncTargets user={user} />}
+
       {connected && !report && !confirmResult && user.letterboxdPendingReconciliationCount > 0 && (
         <output className={sharedStyles.attention}>
           <TriangleAlert size={ICON_SIZE.md} aria-hidden />
@@ -316,79 +476,31 @@ export default function LetterboxdImportSection() {
         </p>
       )}
 
-      {syncDeferred && (
+      {skippedReason && (
         <p className="hint" role="status" aria-live="polite">
-          {t('auth.account.letterboxd.syncDeferred')}
+          {t(SKIPPED_MESSAGE_KEYS[skippedReason])}
         </p>
       )}
 
       {report && !syncError && (
-        <Card
-          padding="none"
-          surface="sunken"
-          className={styles.report}
-          role="status"
-          aria-live="polite"
-        >
-          <span className={styles.reportRow}>
-            <span className={styles.reportIconOk}>
-              <Check size={ICON_SIZE.sm} aria-hidden />
-            </span>
-            <span>
-              {t('auth.account.letterboxd.reportChanges', {
-                added: String(report.added),
-                removed: String(report.removed),
-              })}
-            </span>
-          </span>
-
-          {report.pendingChoices.length > 0 && (
-            <LinkButton
-              size="sm"
-              className={styles.reportAction}
-              onClick={() => setChoicesOpen(true)}
-            >
-              {t('auth.account.letterboxd.reportPending', {
-                count: String(report.pendingChoices.length),
-              })}
-            </LinkButton>
-          )}
-
-          {report.unmatchedTitles.length > 0 && (
-            <details className={styles.unmatched}>
-              <summary>
-                {t('auth.account.letterboxd.reportUnmatched', {
-                  count: String(report.unmatchedTitles.length),
-                })}
-              </summary>
-              <ul className={styles.unmatchedList}>
-                {report.unmatchedTitles.map((title) => (
-                  <li key={title}>{title}</li>
-                ))}
-              </ul>
-            </details>
-          )}
-
-          {report.totalTruncated > 0 && (
-            <p className={styles.reportLine}>
-              {t('auth.account.letterboxd.reportTruncated', {
-                count: String(report.totalTruncated),
-              })}
-            </p>
-          )}
-        </Card>
+        <SyncReportCard
+          user={user}
+          report={report}
+          pendingCount={pendingChoices.length}
+          onOpenChoices={() => setChoicesOpen(true)}
+        />
       )}
 
       {confirmResult && (
         <p className="hint" role="status" aria-live="polite">
-          {t('auth.account.letterboxd.choicesApplied', { added: String(confirmResult.added) })}
+          {confirmedMessage(confirmResult, t)}
         </p>
       )}
 
-      {choicesOpen && report && report.pendingChoices.length > 0 && (
+      {choicesOpen && pendingChoices.length > 0 && (
         <LetterboxdChoicesModal
           open
-          choices={report.pendingChoices}
+          choices={pendingChoices}
           onClose={() => setChoicesOpen(false)}
           onConfirmed={handleConfirmed}
         />

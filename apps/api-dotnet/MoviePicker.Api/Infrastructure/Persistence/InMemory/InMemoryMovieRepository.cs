@@ -25,6 +25,18 @@ public sealed class InMemoryMovieRepository : IMovieRepository
         return Task.FromResult<IReadOnlyList<Movie>>(list);
     }
 
+    public Task<IReadOnlyList<MovieListTitle>> ListTitlesByIdsAsync(
+        IReadOnlyCollection<string> movieIds,
+        CancellationToken ct = default)
+    {
+        var ids = movieIds.Where(id => !string.IsNullOrWhiteSpace(id)).ToHashSet();
+        IReadOnlyList<MovieListTitle> titles =
+        [
+            .. _byId.Values.Where(m => ids.Contains(m.Id)).Select(m => new MovieListTitle(m.TmdbId, m.MediaType))
+        ];
+        return Task.FromResult(titles);
+    }
+
     public Task<Movie?> GetByIdAndEventIdAsync(string movieId, string eventId, CancellationToken ct = default)
     {
         if (_byId.TryGetValue(movieId, out var m) && m.EventId == eventId)
