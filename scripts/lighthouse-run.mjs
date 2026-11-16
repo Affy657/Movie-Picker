@@ -218,6 +218,12 @@ function startApiStub(port) {
       );
       return;
     }
+    if (/^\/api\/v1\/events\/[^/]+\/stream$/.test(urlPath)) {
+      res
+        .writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' })
+        .end('retry: 600000\n\nevent: ready\ndata: {}\n\n');
+      return;
+    }
     if (/^\/api\/v1\/events\/[^/]+\/movies$/.test(urlPath)) {
       res.writeHead(200, { 'Content-Type': 'application/json' }).end('[]');
       return;

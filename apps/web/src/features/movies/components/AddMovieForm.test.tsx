@@ -391,9 +391,11 @@ describe('AddMovieForm (MSW)', () => {
     const input = screen.getByRole('searchbox', { name: 'Chercher un film' });
     await user.click(input);
     await user.keyboard('{ArrowDown}');
-    expect(screen.getByRole('button', { name: /Rechercher.*inception/i })).toHaveFocus();
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /Rechercher.*inception/i })).toHaveFocus()
+    );
     await user.keyboard('{ArrowDown}{Enter}');
-    expect(input).toHaveFocus();
+    await waitFor(() => expect(input).toHaveFocus());
     expect(input).toHaveValue('matrix');
     expect(await screen.findByText(/film test/i, {}, { timeout: 3000 })).toBeInTheDocument();
     expect(screen.queryByText(/recherches r/i)).not.toBeInTheDocument();
@@ -409,9 +411,11 @@ describe('AddMovieForm (MSW)', () => {
     await user.keyboard('{Escape}');
     expect(screen.queryByText(/recherches r/i)).not.toBeInTheDocument();
     await user.keyboard('{ArrowDown}');
-    expect(screen.getByRole('button', { name: /Rechercher.*inception/i })).toHaveFocus();
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /Rechercher.*inception/i })).toHaveFocus()
+    );
     await user.keyboard('{Escape}');
-    expect(input).toHaveFocus();
+    await waitFor(() => expect(input).toHaveFocus());
     expect(screen.queryByText(/recherches r/i)).not.toBeInTheDocument();
     await user.keyboard('x{Backspace}');
     expect(screen.getByText(/recherches r/i)).toBeInTheDocument();
