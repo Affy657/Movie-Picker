@@ -1,5 +1,5 @@
 import { ROUTES } from '@/app/routes';
-import { fetchApi, apiPath, withHostToken } from '@/shared/api/client';
+import { fetchApi, apiPath, apiUrl, withHostToken } from '@/shared/api/client';
 import {
   mapEventData,
   mapParticipantData,
@@ -225,6 +225,17 @@ export type DeleteEventResponse = {
 
 export async function deleteEvent(idOrSlug: string): Promise<DeleteEventResponse> {
   return fetchApi<DeleteEventResponse>(apiPath('events', idOrSlug), { method: 'DELETE' });
+}
+
+export function eventStreamUrl(slug: string): string {
+  return apiUrl(apiPath('events', slug, 'stream'));
+}
+
+export async function setEventPresence(slug: string, proposing: boolean): Promise<void> {
+  await fetchApi(apiPath('events', slug, 'presence'), {
+    method: 'PUT',
+    body: JSON.stringify({ proposing }),
+  });
 }
 
 export function eventFrontendUrl(slug: string): string {

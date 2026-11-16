@@ -50,11 +50,7 @@ Rien pour l'instant.
 - `L` **Co-hôte** : l'hôte désigne un ou plusieurs participants comme co-hôtes, avec les mêmes droits que lui (lancer la roue, expulser un participant, modifier les paramètres) sauf supprimer la soirée.
 - `M` **Soirée à distance synchronisée** : une fois le film gagnant désigné, la page soirée guide l'hôte pour lancer une session de visionnage synchronisé avec une extension existante (Teleparty, Scener…) et en partage le lien aux participants.
 - `S` **Noter aussi sur Letterboxd ou IMDb** : depuis la note d'un film vu, un bouton ouvre la fiche du film sur Letterboxd ou IMDb pour y reporter sa note.
-- `L` **Synchronisation temps réel** : remplacer le rafraîchissement périodique par une connexion temps réel ; propositions, votes et arrivées de participants apparaissent sans délai perceptible.
-- `M` **Présence sur la page soirée** : avatars des participants actuellement connectés et signal « en train de proposer un film ». Dépend de la synchronisation temps réel.
-- `L` **Chat de soirée** : panneau de discussion en temps réel sur la page soirée, latéral sur ordinateur et en onglet sur mobile, pour remplacer les mini-commentaires par film par un seul espace d'échange. Dépend de la synchronisation temps réel.
-- `M` **Consultation hors-ligne de la dernière soirée** : la dernière soirée vue reste lisible sans réseau, avec une bannière « Données en cache, reconnexion en cours ». Lecture seule : les actions attendent le retour du réseau.
-- `L` **Reprise des actions faites hors-ligne** : file d'attente des votes et propositions passés sans réseau, rejoués et arbitrés à la reconnexion. Dépend de la synchronisation temps réel et de la consultation hors-ligne.
+- `L` **Chat de soirée** : panneau de discussion en temps réel sur la page soirée, latéral sur ordinateur et en onglet sur mobile, pour remplacer les mini-commentaires par film par un seul espace d'échange.
 - `XL` **Mode Battle / Tournoi** : alternative à la roue, l'hôte lance un tournoi en duels ; deux films s'affrontent, les participants votent, et le gagnant passe au tour suivant jusqu'au champion.
 
 ### Accueil, aide et contact
@@ -83,7 +79,7 @@ Rien pour l'instant.
 - `S` **Statistique : note moyenne des films gagnants** : dans les statistiques du profil public, la moyenne des notes TMDB des films gagnants des soirées auxquelles l'utilisateur a participé.
 - `L` **Badges / achievements** : quatre badges (Organisateur, Cinéphile, Faiseur de rois, Juré assidu), dont le code de calcul a été supprimé ; à concevoir avec un design abouti et réimplémenter.
 - `L` **Fil d'actualité** : un fil qui rassemble l'activité des comptes suivis (soirées créées et terminées, films notés, listes publiées) et les soirées publiques à venir. Il prolonge la rangée « Vos amis ont vu » de l'accueil, limitée aux films vus.
-- `L` **Soirée publique** : une soirée que l'hôte rend publique apparaît sur une page de découverte, et n'importe quel compte peut la rejoindre. L'hôte peut bannir un participant, qui ne peut alors plus revenir par le lien. Dépend de la synchronisation temps réel.
+- `L` **Soirée publique** : une soirée que l'hôte rend publique apparaît sur une page de découverte, et n'importe quel compte peut la rejoindre. L'hôte peut bannir un participant, qui ne peut alors plus revenir par le lien.
 - `XL` **Messages privés** : messagerie directe entre deux utilisateurs qui se suivent mutuellement, accessible depuis le profil public ou la liste de follows, pour organiser une soirée en dehors d'une soirée existante.
 
 ### Compte et sécurité

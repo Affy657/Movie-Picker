@@ -5,6 +5,7 @@ import EventDetailHeader from '@/features/events/pages/event-detail/EventDetailH
 import EventMoviesLoadError from '@/features/events/pages/event-detail/EventMoviesLoadError';
 import EventPendingBanner from '@/features/events/components/EventPendingBanner';
 import EventConnectionBanner from '@/features/events/components/EventConnectionBanner';
+import EventProposingNotice from '@/features/events/pages/event-detail/EventProposingNotice';
 import EventWheelActions from '@/features/events/components/EventWheelActions';
 import { eventHeaderActions, hasHeaderActions } from '@/features/events/lib/eventHeaderActions';
 import { getEligibleFollows } from '@/features/events/api/eventsApi';
@@ -27,6 +28,16 @@ import type {
   ShareOverlay,
   WheelApi,
 } from './eventDetailSessionTypes';
+
+function EventConnectionBanners({
+  offline,
+  unstable,
+  onRetry,
+}: Readonly<{ offline: boolean; unstable: boolean; onRetry: () => void }>) {
+  if (offline) return <EventConnectionBanner variant="offline" />;
+  if (unstable) return <EventConnectionBanner onRetry={onRetry} />;
+  return null;
+}
 
 function EventDetailSessionOverlays({
   slug,
@@ -138,6 +149,9 @@ export default function EventDetailSessionChrome({
   viewToggleInHeader,
   connectionUnstable,
   onRetryConnection,
+  offline,
+  onlineCount,
+  proposerNames,
 }: Readonly<{
   slug: string;
   hostToken: string | null;
@@ -160,6 +174,9 @@ export default function EventDetailSessionChrome({
   viewToggleInHeader: boolean;
   connectionUnstable: boolean;
   onRetryConnection: () => void;
+  offline: boolean;
+  onlineCount: number;
+  proposerNames: readonly string[];
 }>) {
   const plan = eventHeaderActions({
     isHost: !!event.isHost,
@@ -174,7 +191,8 @@ export default function EventDetailSessionChrome({
     canReset: wheel.showReset,
     canCloseWithoutMovie: settings.canConfigure && lifecycle === 'pending',
   });
-  const showActions = hasHeaderActions(plan) || wheel.manualMode || wheel.removalMode;
+  const wheelSelecting = wheel.manualMode || wheel.removalMode;
+  const showActions = !offline && (hasHeaderActions(plan) || wheelSelecting);
   return (
     <>
       <EventDetailHeader
@@ -191,6 +209,7 @@ export default function EventDetailSessionChrome({
         participantCount={counts.participants}
         moviesCount={counts.movies}
         onOpenParticipants={participants.onOpen}
+        onlineCount={onlineCount}
         onOpenShare={share.url ? () => share.onOpen('link') : undefined}
         onOpenSettings={settings.canConfigure ? settings.onOpen : undefined}
         actions={
@@ -208,7 +227,12 @@ export default function EventDetailSessionChrome({
         viewMode={viewToggleInHeader ? viewMode : undefined}
         onViewModeChange={viewToggleInHeader ? onViewModeChange : undefined}
       />
-      {connectionUnstable ? <EventConnectionBanner onRetry={onRetryConnection} /> : null}
+      <EventConnectionBanners
+        offline={offline}
+        unstable={connectionUnstable}
+        onRetry={onRetryConnection}
+      />
+      <EventProposingNotice names={proposerNames} />
       {lifecycle === 'pending' ? <EventPendingBanner isHost={!!event.isHost} /> : null}
       <EventDetailSessionOverlays
         slug={slug}

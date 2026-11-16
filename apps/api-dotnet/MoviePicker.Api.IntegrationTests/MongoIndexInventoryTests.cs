@@ -97,6 +97,9 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
 
         new("avatar_photos", "avatar_photos_userId"),
 
+        new("event_presence", "event_presence_eventId_participantId"),
+        new("event_presence", "event_presence_expiresAt_ttl", ExpireAfterSeconds: 0),
+
         new("kofi_webhook_log", "kofi_webhook_log_receivedAt_ttl", ExpireAfterSeconds: OneYear)
     ];
 

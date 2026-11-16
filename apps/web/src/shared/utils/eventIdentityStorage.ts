@@ -1,3 +1,5 @@
+import { clearOfflineEventData } from '@/shared/utils/offlineEventStorage';
+
 const PARTICIPANT_KEY = 'moviepicker_participant_';
 
 export function getStoredParticipant(
@@ -48,6 +50,7 @@ export function clearStoredHostToken(slug: string): void {
 }
 
 export function clearStoredEventIdentities(): void {
+  clearOfflineEventData();
   try {
     const identityKeys: string[] = [];
     for (let index = 0; index < sessionStorage.length; index++) {

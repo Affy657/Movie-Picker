@@ -66,6 +66,7 @@ if (!string.IsNullOrWhiteSpace(sentryDsn))
 builder.Services.AddResponseCompression(options =>
 {
     options.EnableForHttps = true;
+    options.ExcludedMimeTypes = [EventStreamResult.ContentType];
     options.Providers.Add<BrotliCompressionProvider>();
     options.Providers.Add<GzipCompressionProvider>();
 });

@@ -15,6 +15,14 @@ import {
 } from '@/shared/utils/formatMyEventsListDate';
 import PageLayout from '@/shared/components/PageLayout';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import Notice from '@/shared/components/Notice';
+import type { LivePresence } from '@/features/events/hooks/useEventLiveStream';
+import { useProposingPresence } from '@/features/events/hooks/useProposingPresence';
+import { presenceView } from '@/features/events/utils/presenceView';
+import {
+  offlineVoteReport,
+  type OfflineVoteOutcome,
+} from '@/features/events/offline/useOfflineVoteReplay';
 import { eventFrontendUrl, nightRecapFrontendUrl } from '@/features/events/api/eventsApi';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useEventWheel } from '@/features/events/hooks/useEventWheel';
@@ -50,6 +58,10 @@ type EventDetailSessionProps = {
   refreshAll: () => void;
   connectionUnstable?: boolean;
   proposeOnArrival?: boolean;
+  livePresence?: LivePresence[] | null;
+  offline?: boolean;
+  offlineVoteOutcome?: OfflineVoteOutcome | null;
+  onDismissOfflineVoteOutcome?: () => void;
 };
 
 const COUNTDOWN_TICK_MS = 60_000;
@@ -76,6 +88,29 @@ function wheelSelection(wheel: ReturnType<typeof useEventWheel>): MovieCardSelec
   return undefined;
 }
 
+function sessionCapabilities(input: {
+  event: EventData;
+  participant: ParticipantRef | null;
+  offline: boolean;
+  wheelLocked: boolean;
+  moviesShownEmpty: boolean;
+}) {
+  const { event, participant, wheelLocked, moviesShownEmpty } = input;
+  const reachable = !input.offline;
+  const open = !event.isFinished;
+  const mine = participant
+    ? event.participants?.find((p) => p.id === participant.participantId)
+    : undefined;
+  const participantsLocked = !open || wheelLocked;
+  return {
+    needsJoin: open && !participant && reachable,
+    canShowLeave: !participantsLocked && !!participant && !mine?.isCreator && reachable,
+    canRemoveParticipants: !participantsLocked && reachable,
+    canConfigure: !!event.isHost && open && reachable,
+    canAddMovie: open && !!participant && !moviesShownEmpty && reachable,
+  };
+}
+
 function isNightFull(maxParticipants: number | null, participantCount: number): boolean {
   return (
     typeof maxParticipants === 'number' &&
@@ -97,6 +132,10 @@ export default function EventDetailSession({
   refreshAll,
   connectionUnstable = false,
   proposeOnArrival = false,
+  livePresence = null,
+  offline = false,
+  offlineVoteOutcome = null,
+  onDismissOfflineVoteOutcome,
 }: Readonly<EventDetailSessionProps>) {
   const { t } = useTranslation();
   const { locale } = useLocale();
@@ -195,15 +234,7 @@ export default function EventDetailSession({
     event.isFinished && firstWinnerId && event.recapSlug ? { winners: winnerMovies } : null;
   const shareUrl =
     recap && event.recapSlug ? nightRecapFrontendUrl(event.recapSlug) : eventFrontendUrl(slug);
-  const needsJoin = !event.isFinished && !participant;
   const maxParticipants = event.config?.maxParticipants ?? null;
-  const myParticipantSummary =
-    participant && event.participants
-      ? event.participants.find((p) => p.id === participant.participantId)
-      : null;
-  const isCreatorSelf = !!myParticipantSummary?.isCreator;
-  const participantsLocked = !!event.isFinished || wheel.wheelLocked;
-  const canShowLeave = !participantsLocked && !!participant && !isCreatorSelf;
 
   const participantCount = event.participantCount ?? event.participants?.length ?? 0;
   let moviesCount = event.movieCount ?? 0;
@@ -211,11 +242,26 @@ export default function EventDetailSession({
   if (moviesLoaded) moviesCount = movies.length;
   const lifecycle = normalizeMyEventLifecycle(event.lifecycle);
   const countdownLabel = eventCountdownLabel(event.date, event.time, nowMs, t);
-  const canConfigure = !!event.isHost && !event.isFinished;
   const showWinnerStage = isWinnerStageShown(winnerMovies, wheel);
-  const emptyStateCarriesAddMovie = moviesLoaded && movies.length === 0;
-  const canAddMovie = !event.isFinished && !!participant && !emptyStateCarriesAddMovie;
+  const { needsJoin, canShowLeave, canRemoveParticipants, canConfigure, canAddMovie } =
+    sessionCapabilities({
+      event,
+      participant,
+      offline,
+      wheelLocked: wheel.wheelLocked,
+      moviesShownEmpty: moviesLoaded && movies.length === 0,
+    });
   const isFull = isNightFull(maxParticipants, participantCount);
+  const presence = presenceView(
+    event.participants,
+    livePresence,
+    participant?.participantId ?? null
+  );
+  const voteReport = offlineVoteReport(offlineVoteOutcome, t);
+  useProposingPresence({
+    slug,
+    active: addMovieOpen && !!participant && !event.isFinished,
+  });
 
   return (
     <PageLayout className="page-event">
@@ -260,6 +306,9 @@ export default function EventDetailSession({
         viewToggleInHeader={!showWinnerStage}
         connectionUnstable={connectionUnstable}
         onRetryConnection={refreshAll}
+        offline={offline}
+        onlineCount={presence.onlineCount}
+        proposerNames={presence.proposerNames}
       />
       {showWinnerStage ? (
         <EventWinnerStage
@@ -289,7 +338,9 @@ export default function EventDetailSession({
           pendingRemovalId,
           removePending,
           canShowLeave,
-          canRemove: !participantsLocked,
+          canRemove: canRemoveParticipants,
+          onlineIds: presence.onlineIds,
+          proposingIds: presence.proposingIds,
           isConnectedSelf,
           onRemove: handleRemoveParticipant,
           onInviteFriends: () => openShare('friends'),
@@ -305,11 +356,19 @@ export default function EventDetailSession({
           onAddMovieOpenChange: setAddMovieOpen,
           addMovieTriggerRef,
           isFull,
+          offline,
           wheelLocked: wheel.wheelLocked,
           onRequestRemove: handleRequestRemoveMovie,
           onRequestRemoveNote: handleRequestRemoveNote,
         }}
       />
+      {voteReport ? (
+        <Notice
+          title={t('events.detail.offlineVotesTitle')}
+          description={voteReport.message}
+          onClose={onDismissOfflineVoteOutcome}
+        />
+      ) : null}
       <ConfirmDialog
         open={confirmDialogContent !== null}
         title={confirmDialogContent?.title ?? ''}

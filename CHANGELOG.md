@@ -8,6 +8,13 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **La page d'une soirée se met à jour en direct** : propositions, votes et arrivées de participants s'affichent en une à deux secondes, sans recharger la page.
+- **Qui est là, qui propose** : la page d'une soirée indique combien de participants sont en ligne, les marque d'un point vert dans la liste des participants et affiche « Alice propose un film… » pendant que quelqu'un cherche un film à proposer.
+- **La dernière soirée ouverte reste lisible sans réseau** : sans connexion, elle s'affiche avec ses films et ses votes sous la bannière « Données en cache, reconnexion en cours. ». Proposer un film, lancer la roue ou régler la soirée attendent le retour du réseau.
+- **Les votes faits sans réseau partent tout seuls** : un vote posé hors ligne s'affiche aussitôt, marqué en attente, puis part au retour de la connexion. Un vote que la soirée refuse entre-temps est signalé avec sa raison.
+
 ## [1.14.0] - 2026-11-16
 
 ### Added

@@ -272,6 +272,24 @@ describe('MovieList', () => {
       expect(screen.getAllByRole('button', { name: /Marquer « déjà vu »/ })).toHaveLength(2);
     });
 
+    it.each(['list', 'grid'] as const)(
+      'marks a vote that waits for the network as pending, in %s view',
+      (viewMode) => {
+        renderWithLocale(
+          <MovieList
+            movies={[{ ...movies[0]!, myVote: 1, pendingVote: true }, movies[1]!]}
+            {...baseProps()}
+            participantId="p0"
+            participantPseudo="Alice"
+            onVote={vi.fn()}
+            viewMode={viewMode}
+          />
+        );
+
+        expect(screen.getAllByRole('img', { name: 'Vote en attente du réseau' })).toHaveLength(1);
+      }
+    );
+
     it('hides the vote buttons and shows a read-only tally when the movie night is over', () => {
       renderWithLocale(
         <MovieList

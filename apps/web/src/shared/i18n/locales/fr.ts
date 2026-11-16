@@ -825,6 +825,8 @@ export const fr = {
       manageAction: 'Gérer',
       manageDone: 'Terminer',
       inviteAction: 'Inviter',
+      online: 'en ligne',
+      proposing: 'propose un film…',
     },
     detail: {
       loading: 'Chargement\u2026',
@@ -850,6 +852,20 @@ export const fr = {
       unstableKicker: 'Connexion instable',
       unstableText: 'Les dernières modifications de la soirée n’ont pas pu être chargées.',
       unstableMeta: 'La page se remet à jour d’elle-même dès que le serveur répond.',
+      offlineKicker: 'Hors ligne',
+      offlineText: 'Données en cache, reconnexion en cours.',
+      offlineMeta: 'Les votes partent au retour du réseau, le reste attend la connexion.',
+      onlineCountOne: '1 en ligne',
+      onlineCount: '{{count}} en ligne',
+      proposingOne: '{{pseudo}} propose un film…',
+      proposingTwo: '{{first}} et {{second}} proposent un film…',
+      proposingMany: '{{count}} participants proposent un film…',
+      offlineVotesTitle: 'Votes faits hors ligne',
+      offlineVotesSavedOne: 'Votre vote fait hors ligne a été enregistré.',
+      offlineVotesSaved: 'Vos {{count}} votes faits hors ligne ont été enregistrés.',
+      offlineVotesRefusedOne: "Un vote fait hors ligne n'a pas pu être enregistré : {{reason}}",
+      offlineVotesRefused:
+        "{{count}} votes faits hors ligne n'ont pas pu être enregistrés : {{reason}}",
     },
     myEvents: {
       title: 'Mes soirées',
@@ -1346,6 +1362,7 @@ export const fr = {
       voteDown: 'Voter contre',
       voteUpRemoveAria: 'Retirer mon vote pour « {{title}} »',
       voteDownRemoveAria: 'Retirer mon vote contre « {{title}} »',
+      votePendingAria: 'Vote en attente du réseau',
       voteError: 'Vote impossible',
       voteErrorRow: 'Votre vote n’a pas été enregistré. Vérifiez votre connexion.',
       retryVoteAction: 'Réessayer',
@@ -3112,9 +3129,10 @@ export const fr = {
       loadingHint:
         "Le premier écran n'emporte pas le reste de l'application, et les paquets de dépendances restent en cache du navigateur d'une version à la suivante.",
       offline: 'Hors ligne',
-      offlineValue: 'Installable, coquille et vitrine en cache ; une soirée demande le réseau.',
+      offlineValue:
+        'Installable, coquille et vitrine en cache ; la dernière soirée ouverte reste lisible et ses votes attendent le réseau.',
       offlineHint:
-        "Le service worker garde la coquille de l'app et la vitrine du catalogue pour démarrer vite ; sans réseau, une soirée affiche une erreur au lieu d'un chargement sans fin.",
+        "Le service worker garde la coquille de l'app et la vitrine du catalogue pour démarrer vite ; la dernière soirée ouverte est gardée sur l'appareil, et un vote fait sans réseau part tout seul au retour de la connexion.",
       languages: 'Langues',
       languagesValue: 'Français et anglais, bascule sans rechargement.',
       languagesHint:

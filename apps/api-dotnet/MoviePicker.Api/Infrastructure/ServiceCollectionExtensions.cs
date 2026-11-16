@@ -8,6 +8,7 @@ using MoviePicker.Api.Application.Avatars;
 using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
+using MoviePicker.Api.Application.UseCases.EventLive;
 using MoviePicker.Api.Application.UseCases.FinishedEvents;
 using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using MoviePicker.Api.Application.UseCases.LetterboxdImport;
@@ -132,6 +133,9 @@ public static class ServiceCollectionExtensions
         });
 
         RegisterHandlers(services);
+        services.AddOptions<EventLiveOptions>();
+        services.AddSingleton<IEventLiveFeed, EventLiveHub>();
+        services.AddSingleton<EventStreamGate>();
 
         services.AddScoped<SharedRateLimitFilter>();
         services.AddScoped<ISharedQuota, CounterSharedQuota>();
@@ -312,6 +316,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IMigrationHistoryRepository, InMemoryMigrationHistoryRepository>();
             services.AddSingleton<IUnitOfWork, InMemoryUnitOfWork>();
             services.AddSingleton<ISharedCache, InMemorySharedCache>();
+            services.AddSingleton<IEventPresenceRepository, InMemoryEventPresenceRepository>();
             return;
         }
 
@@ -363,6 +368,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IKofiWebhookLogRepository, MongoKofiWebhookLogRepository>();
         services.AddScoped<INotificationDedupRepository, MongoNotificationDedupRepository>();
         services.AddScoped<IRateLimitCounterStore, MongoRateLimitCounterStore>();
+        services.AddScoped<IEventPresenceRepository, MongoEventPresenceRepository>();
         services.AddSingleton<MongoDatabaseHealthProbe>();
         services.AddSingleton<IDatabaseHealthProbe>(sp => new CachedDatabaseHealthProbe(
             sp.GetRequiredService<MongoDatabaseHealthProbe>(),

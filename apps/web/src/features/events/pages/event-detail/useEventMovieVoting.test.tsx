@@ -1,4 +1,6 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { onlineManager } from '@tanstack/react-query';
+import { queueVote, readQueuedVotes } from '@/shared/utils/offlineEventStorage';
 import type { ReactNode } from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { LocaleProvider } from '@/shared/i18n';
@@ -37,7 +39,7 @@ function wrapper({ children }: Readonly<{ children: ReactNode }>) {
   return <LocaleProvider>{children}</LocaleProvider>;
 }
 
-function renderVoting() {
+function renderVoting(movies: MovieData[] = [MOVIE]) {
   const setActionError = vi.fn();
   const refreshAll = vi.fn();
   const { result } = renderHook(
@@ -45,7 +47,7 @@ function renderVoting() {
       useEventMovieVoting({
         slug: 'cine-club',
         participant: { participantId: 'p-me', pseudo: 'Sofia' },
-        movies: [MOVIE],
+        movies,
         layout: 'grid',
         setActionError,
         refreshAll,
@@ -59,6 +61,73 @@ describe('useEventMovieVoting', () => {
   beforeEach(() => {
     api.voteMovie.mockReset();
     api.clearMovieVote.mockReset();
+  });
+
+  afterEach(() => {
+    onlineManager.setOnline(true);
+  });
+
+  it('queues a vote cast offline instead of calling the API', async () => {
+    onlineManager.setOnline(false);
+    const { result, setActionError } = renderVoting();
+
+    await act(async () => {
+      await result.current.handleVote('m1', 1);
+    });
+
+    expect(api.voteMovie).not.toHaveBeenCalled();
+    expect(setActionError).not.toHaveBeenCalledWith(expect.any(String));
+    expect(readQueuedVotes('cine-club')).toEqual([
+      expect.objectContaining({ movieId: 'm1', participantId: 'p-me', value: 1 }),
+    ]);
+  });
+
+  it('queues the withdrawal of a vote already shown, offline', async () => {
+    onlineManager.setOnline(false);
+    const { result } = renderVoting([{ ...MOVIE, myVote: -1 }]);
+
+    await act(async () => {
+      await result.current.handleVote('m1', -1);
+    });
+
+    expect(readQueuedVotes('cine-club')).toEqual([expect.objectContaining({ value: 0 })]);
+  });
+
+  it('sends a vote behind the one still waiting for the same movie, never before it', async () => {
+    queueVote({ slug: 'cine-club', movieId: 'm1', participantId: 'p-me', value: 1, queuedAt: 1 });
+    const { result } = renderVoting([{ ...MOVIE, myVote: 1 }]);
+
+    await act(async () => {
+      await result.current.handleVote('m1', 1);
+    });
+
+    expect(api.voteMovie).not.toHaveBeenCalled();
+    expect(api.clearMovieVote).not.toHaveBeenCalled();
+    expect(readQueuedVotes('cine-club')).toEqual([expect.objectContaining({ value: 0 })]);
+  });
+
+  it('queues a vote whose request never reached the server', async () => {
+    api.voteMovie.mockRejectedValue(new ApiError('Network down', { code: 0 }));
+    const { result, setActionError } = renderVoting();
+
+    await act(async () => {
+      await result.current.handleVote('m1', 1);
+    });
+
+    expect(setActionError).not.toHaveBeenCalledWith(expect.any(String));
+    expect(readQueuedVotes('cine-club')).toEqual([expect.objectContaining({ value: 1 })]);
+  });
+
+  it('still reports a vote the server refused, without queueing it', async () => {
+    api.voteMovie.mockRejectedValue(new ApiError('Soirée terminée', { code: 409 }));
+    const { result, setActionError } = renderVoting();
+
+    await act(async () => {
+      await result.current.handleVote('m1', 1);
+    });
+
+    expect(setActionError).toHaveBeenCalledWith('Soirée terminée');
+    expect(readQueuedVotes('cine-club')).toEqual([]);
   });
 
   it('hands a failed vote back to the caller that waits for it, without the page banner', async () => {

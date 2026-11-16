@@ -817,6 +817,8 @@ export const en: Locale = {
       manageAction: 'Manage',
       manageDone: 'Done',
       inviteAction: 'Invite',
+      online: 'online',
+      proposing: 'proposing a movie…',
     },
     detail: {
       loading: 'Loading\u2026',
@@ -841,6 +843,20 @@ export const en: Locale = {
       unstableKicker: 'Unstable connection',
       unstableText: 'The latest changes to this movie night could not be loaded.',
       unstableMeta: 'The page updates itself as soon as the server answers.',
+      offlineKicker: 'Offline',
+      offlineText: 'Cached data, reconnecting.',
+      offlineMeta:
+        'Votes are sent once you are back online, everything else waits for the connection.',
+      onlineCountOne: '1 online',
+      onlineCount: '{{count}} online',
+      proposingOne: '{{pseudo}} is proposing a movie…',
+      proposingTwo: '{{first}} and {{second}} are proposing a movie…',
+      proposingMany: '{{count}} participants are proposing a movie…',
+      offlineVotesTitle: 'Offline votes',
+      offlineVotesSavedOne: 'Your offline vote was saved.',
+      offlineVotesSaved: 'Your {{count}} offline votes were saved.',
+      offlineVotesRefusedOne: 'An offline vote could not be saved: {{reason}}',
+      offlineVotesRefused: '{{count}} offline votes could not be saved: {{reason}}',
     },
     myEvents: {
       title: 'My events',
@@ -1330,6 +1346,7 @@ export const en: Locale = {
       voteDown: 'Vote down',
       voteUpRemoveAria: 'Remove my upvote for "{{title}}"',
       voteDownRemoveAria: 'Remove my downvote for "{{title}}"',
+      votePendingAria: 'Vote waiting for the network',
       voteError: 'Vote failed',
       voteErrorRow: 'Your vote was not saved. Check your connection.',
       retryVoteAction: 'Retry',
@@ -3067,9 +3084,10 @@ export const en: Locale = {
       loadingHint:
         'The first screen does not carry the rest of the application, and the dependency bundles stay in the browser cache from one version to the next.',
       offline: 'Offline',
-      offlineValue: 'Installable, shell and showcase cached; a movie night needs the network.',
+      offlineValue:
+        'Installable, shell and showcase cached; the last movie night opened stays readable and its votes wait for the network.',
       offlineHint:
-        'The service worker keeps the app shell and the catalogue showcase for a fast start; offline, a movie night shows an error instead of loading forever.',
+        'The service worker keeps the app shell and the catalogue showcase for a fast start; the last movie night opened is kept on the device, and a vote cast offline is sent by itself once the connection is back.',
       languages: 'Languages',
       languagesValue: 'French and English, switched without reloading.',
       languagesHint:

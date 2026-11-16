@@ -80,9 +80,12 @@ export type ParticipantsPanelState = {
   onRemove: (participantId: string, pseudo: string) => void;
   onInviteFriends: () => void;
   onLeave: () => void;
+  onlineIds?: ReadonlySet<string>;
+  proposingIds?: ReadonlySet<string>;
 };
 
 export type MoviesSectionState = {
+  offline?: boolean;
   ref: RefObject<HTMLDivElement | null>;
   viewMode: MoviesViewMode;
   titled: boolean;
