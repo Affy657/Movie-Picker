@@ -108,7 +108,7 @@ export function routeLazy<N extends RouteChunkName>(name: N): RouteChunkPage<N> 
     useEffect(() => {
       if (Page) return;
       let mounted = true;
-      startupPages.get(name)?.then((loaded) => {
+      void startupPages.get(name)?.then((loaded) => {
         if (mounted) setPage(() => loaded ?? Lazy);
       });
       return () => {
