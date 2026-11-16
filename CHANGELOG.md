@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.15.2] - 2026-11-16
+
 ### Changed
 
 - **Mes listes se lit d'un coup d'œil** : À voir et Films vus en raccourcis en tête, puis une liste par ligne, rangées en trois sections (Vos listes, Partagées avec vous, Enregistrées), chacune avec son nombre de films vus, avec qui vous la remplissez ou d'où elle vient. Recherche et tri n'apparaissent qu'à partir de sept listes, et le sens du tri se choisit dans le menu.
@@ -765,7 +767,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.15.1...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.15.2...HEAD
+[1.15.2]: https://github.com/Affy657/Movie-Picker/compare/v1.15.1...v1.15.2
 [1.15.1]: https://github.com/Affy657/Movie-Picker/compare/v1.15.0...v1.15.1
 [1.15.0]: https://github.com/Affy657/Movie-Picker/compare/v1.14.0...v1.15.0
 [1.14.0]: https://github.com/Affy657/Movie-Picker/compare/v1.13.0...v1.14.0
