@@ -22,7 +22,8 @@ public sealed class GetMovieListInvitePreviewHandler : IGetMovieListInvitePrevie
         var list = await MovieListInviteLinks.FindActiveAsync(_lists, token, _clock.GetUtcNow(), ct)
             ?? throw Errors.MovieListInviteLinkInvalid();
         var role = viewerId is null ? null : list.RoleOf(viewerId);
-        var owner = (await _users.ListCardsByIdsAsync([list.OwnerId], ct)).FirstOrDefault();
+        var owners = await _users.ListCardsByIdsAsync([list.OwnerId], ct);
+        var owner = owners.Count > 0 ? owners[0] : null;
         var keptSeat = viewerId is not null && list.IsInvited(viewerId);
 
         return new MovieListInvitePreviewResponse

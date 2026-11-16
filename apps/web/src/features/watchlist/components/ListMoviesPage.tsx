@@ -217,7 +217,7 @@ function ListAddPanel({
   labels: ListMoviesLabels;
   fallbackTitle: string;
   onAddItem: AddMovieFormProps['onAddItem'];
-  isItemAlreadyAdded?: AddMovieFormProps['isItemAlreadyAdded'];
+  isItemAlreadyAdded?: NonNullable<AddMovieFormProps['isItemAlreadyAdded']>;
 }>) {
   const { t } = useTranslation();
   return (

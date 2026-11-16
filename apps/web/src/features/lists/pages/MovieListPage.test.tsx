@@ -191,7 +191,7 @@ describe('MovieListPage', () => {
     ]);
     await user.click(screen.getByRole('menuitem', { name: 'Copier le lien' }));
 
-    expect((await screen.findByText('Lien copié')).closest('[role="status"]')).not.toBeNull();
+    expect((await screen.findByText('Lien copié')).closest('output')).not.toBeNull();
     expect(await navigator.clipboard.readText()).toBe(
       'https://www.movie-picker.fr/u/alice/listes/l1'
     );

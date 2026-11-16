@@ -19,6 +19,7 @@ public sealed class MongoMovieListRepository : IMovieListRepository
 
     public const string InviteTokenIndexName = "movie_lists_inviteLink_token_unique";
 
+    private const string OwnerIdField = "ownerId";
     private const string MemberUserIdField = "members.userId";
     private const string InvitationUserIdField = "invitations.userId";
     private const string InviteTokenField = "inviteLink.token";
@@ -38,7 +39,7 @@ public sealed class MongoMovieListRepository : IMovieListRepository
         var user = ObjectId.Parse(userId);
         var admitting = new BsonDocument("$or", new BsonArray
         {
-            new BsonDocument("ownerId", user),
+            new BsonDocument(OwnerIdField, user),
             new BsonDocument(MemberUserIdField, user)
         });
         return SummariesAsync(admitting, ct);
@@ -46,7 +47,7 @@ public sealed class MongoMovieListRepository : IMovieListRepository
 
     public Task<IReadOnlyList<MovieListSummary>> ListPublicSummariesAsync(string ownerId, CancellationToken ct = default) =>
         MongoObjectIds.IsValid(ownerId)
-            ? SummariesAsync(new BsonDocument { { "ownerId", ObjectId.Parse(ownerId) }, { "isPublic", true } }, ct)
+            ? SummariesAsync(new BsonDocument { { OwnerIdField, ObjectId.Parse(ownerId) }, { "isPublic", true } }, ct)
             : Task.FromResult<IReadOnlyList<MovieListSummary>>([]);
 
     public Task<long> CountPublicByOwnerAsync(string ownerId, CancellationToken ct = default) =>
@@ -62,7 +63,7 @@ public sealed class MongoMovieListRepository : IMovieListRepository
             new("$sort", new BsonDocument("updatedAt", -1)),
             new("$project", new BsonDocument
             {
-                { "ownerId", 1 },
+                { OwnerIdField, 1 },
                 { "name", 1 },
                 { "description", 1 },
                 { "isPublic", new BsonDocument("$eq", new BsonArray { "$isPublic", true }) },
@@ -410,11 +411,11 @@ public sealed class MongoMovieListRepository : IMovieListRepository
             return null;
 
         var user = ObjectId.Parse(userId);
-        return byId & (Filter.Eq("ownerId", user) | Filter.Eq(MemberUserIdField, user));
+        return byId & (Filter.Eq(OwnerIdField, user) | Filter.Eq(MemberUserIdField, user));
     }
 
     private static FilterDefinition<MovieListDocument> Outsider(ObjectId user) =>
-        Filter.Ne("ownerId", user) & Filter.Ne(MemberUserIdField, user);
+        Filter.Ne(OwnerIdField, user) & Filter.Ne(MemberUserIdField, user);
 
     private static FilterDefinition<MovieListDocument> SeatsLeft(int maxSeats)
     {

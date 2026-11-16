@@ -227,7 +227,7 @@ describe('PublicListPage', () => {
     await user.click(await screen.findByRole('button', { name: 'Actions de la liste' }));
     await user.click(screen.getByRole('menuitem', { name: 'Copier le lien' }));
 
-    expect((await screen.findByText('Lien copié')).closest('[role="status"]')).not.toBeNull();
+    expect((await screen.findByText('Lien copié')).closest('output')).not.toBeNull();
     expect(await navigator.clipboard.readText()).toBe(
       'https://www.movie-picker.fr/u/lea/listes/l1'
     );

@@ -157,21 +157,25 @@ public sealed class ListSourceReaderTests
         Assert.Equal(5, content.Titles.Count);
     }
 
-    public static TheoryData<Exception> SourceFailures() => new()
+    private static Exception SourceFailure(string kind) => kind switch
     {
-        Errors.ShowcaseUnavailable(),
-        Errors.UnknownTheme(),
-        new HttpRequestException("TMDB down"),
-        new TaskCanceledException("TMDB timed out"),
-        new TimeoutException("TMDB stalled")
+        "unavailable" => Errors.ShowcaseUnavailable(),
+        "unknownTheme" => Errors.UnknownTheme(),
+        "http" => new HttpRequestException("TMDB down"),
+        "cancelled" => new TaskCanceledException("TMDB timed out"),
+        _ => new TimeoutException("TMDB stalled"),
     };
 
     [Theory]
-    [MemberData(nameof(SourceFailures))]
-    public async Task Read_ASourceThatFails_IsUnavailable(Exception failure)
+    [InlineData("unavailable")]
+    [InlineData("unknownTheme")]
+    [InlineData("http")]
+    [InlineData("cancelled")]
+    [InlineData("timeout")]
+    public async Task Read_ASourceThatFails_IsUnavailable(string kind)
     {
         _kit.SagaHas(HarryPotter, HarryPotterName);
-        _kit.SagaFails(HarryPotter, failure);
+        _kit.SagaFails(HarryPotter, SourceFailure(kind));
 
         var content = await _kit.Reader().ReadAsync(Saga);
 

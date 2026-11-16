@@ -182,7 +182,7 @@ export default function ListFormDialog({
   const nameError = nameTaken ? t('lists.form.nameTaken', { name: trimmedName }) : undefined;
   const canSubmit = trimmedName.length > 0 && !nameTaken && !pending;
 
-  const save = async () => {
+  const save = () => {
     const trimmedDescription = description.trim();
     if (mode === 'edit' && list) {
       return updateList.mutateAsync({

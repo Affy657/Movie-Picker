@@ -4,7 +4,7 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 [BsonIgnoreExtraElements]
-public sealed class WatchedTitleDocument
+public sealed class WatchedTitleDocument : TitleFactsDocument
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
@@ -13,34 +13,6 @@ public sealed class WatchedTitleDocument
     [BsonElement("ownerId")]
     [BsonRepresentation(BsonType.ObjectId)]
     public string OwnerId { get; set; } = string.Empty;
-
-    [BsonElement("tmdbId")]
-    public int TmdbId { get; set; }
-
-    [BsonElement("mediaType")]
-    public string MediaType { get; set; } = MovieMapper.StoredMovieMediaType;
-
-    [BsonElement("title")]
-    public string Title { get; set; } = string.Empty;
-
-    [BsonElement("year")]
-    public string Year { get; set; } = string.Empty;
-
-    [BsonElement("posterPath")]
-    [BsonIgnoreIfNull]
-    public string? PosterPath { get; set; }
-
-    [BsonElement("voteAverage")]
-    [BsonIgnoreIfNull]
-    public double? VoteAverage { get; set; }
-
-    [BsonElement("runtimeMinutes")]
-    [BsonIgnoreIfNull]
-    public int? RuntimeMinutes { get; set; }
-
-    [BsonElement("genreIds")]
-    [BsonIgnoreIfNull]
-    public List<int>? GenreIds { get; set; }
 
     [BsonElement("watchedAt")]
     public DateTime WatchedAt { get; set; }

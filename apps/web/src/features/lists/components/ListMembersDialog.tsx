@@ -348,10 +348,10 @@ function InviteSection({
   let body: ReactNode;
   if (invitable.isPending) {
     body = (
-      <p className={styles.status} role="status">
+      <output className={styles.status}>
         <Spinner />
         <span className="visually-hidden">{t('lists.members.inviteLoading')}</span>
-      </p>
+      </output>
     );
   } else if (invitable.isError) {
     body = (
@@ -499,10 +499,10 @@ function MembersBody({
 
   if (members.isPending) {
     return (
-      <p className={styles.status} role="status">
+      <output className={styles.status}>
         <Spinner />
         <span className="visually-hidden">{t('lists.members.loading')}</span>
-      </p>
+      </output>
     );
   }
   if (members.isError) {

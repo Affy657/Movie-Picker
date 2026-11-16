@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ComponentProps, type ReactNode } from 'react';
 import { Clapperboard, Eye } from 'lucide-react';
 import SegmentedRadioGroup from '@/shared/components/SegmentedRadioGroup';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -60,6 +60,15 @@ function WatchedBadges({
       ) : null}
     </>
   );
+}
+
+type ListMoviesCard = ComponentProps<typeof ListMoviesPage>['card'];
+
+function watchedBadgesSlot(
+  movieOf: (entry: WatchlistEntry) => WatchedMovie | undefined,
+  scale: RatingScale
+): ListMoviesCard['leadingBadge'] {
+  return (entry) => <WatchedBadges movie={movieOf(entry)} scale={scale} />;
 }
 
 function SourceFilter({
@@ -169,7 +178,7 @@ export default function WatchedMoviesPage() {
         inWatchlist: (entry) => watchlistToggle.has(entry),
         showListBadge: false,
         onToggleWatchlist: (entry) => watchlistToggle.toggle(entry),
-        leadingBadge: (entry) => <WatchedBadges movie={movieOf(entry)} scale={scale} />,
+        leadingBadge: watchedBadgesSlot(movieOf, scale),
         canRemove: (entry) => movieOf(entry)?.source === 'elsewhere',
         removeLabels: {
           label: t('watched.page.remove'),

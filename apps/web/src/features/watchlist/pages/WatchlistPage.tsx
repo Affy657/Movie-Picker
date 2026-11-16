@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ComponentProps } from 'react';
 import { Bookmark, Import } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -76,6 +76,13 @@ function LetterboxdButton({
   );
 }
 
+type ListMoviesHeader = NonNullable<ComponentProps<typeof ListMoviesPage>['header']>;
+
+function letterboxdButtonSlot(connected: boolean, onOpen: () => void): ListMoviesHeader['leading'] {
+  return ({ isMobile, hasItems }) =>
+    connected ? null : <LetterboxdButton isMobile={isMobile} iconOnly={hasItems} onOpen={onOpen} />;
+}
+
 export default function WatchlistPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -151,14 +158,9 @@ export default function WatchlistPage() {
         menu: visibility.ready ? (
           <CollectionVisibilityMenu isPublic={visibility.isPublic} onChange={visibility.change} />
         ) : null,
-        leading: ({ isMobile, hasItems }) =>
-          user?.letterboxdUsername ? null : (
-            <LetterboxdButton
-              isMobile={isMobile}
-              iconOnly={hasItems}
-              onOpen={() => setLetterboxdModalOpen(true)}
-            />
-          ),
+        leading: letterboxdButtonSlot(!!user?.letterboxdUsername, () =>
+          setLetterboxdModalOpen(true)
+        ),
       }}
       card={{
         inWatchlist: () => true,

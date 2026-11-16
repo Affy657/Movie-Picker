@@ -86,10 +86,10 @@ function MenuStatus({
 }>) {
   if (isLoading) {
     return (
-      <p className={styles.status} role="status">
+      <output className={styles.status}>
         <Spinner />
         <span className="visually-hidden">{t('lists.addTo.loading')}</span>
-      </p>
+      </output>
     );
   }
   if (isError) {

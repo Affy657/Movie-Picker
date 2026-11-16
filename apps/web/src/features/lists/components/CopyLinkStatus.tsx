@@ -6,12 +6,12 @@ import styles from './CopyLinkStatus.module.css';
 export default function CopyLinkStatus({ copied }: Readonly<{ copied: boolean }>) {
   const { t } = useTranslation();
   return (
-    <span role="status" className={styles.status}>
+    <output className={styles.status}>
       {copied ? (
         <Chip size="sm" tone="success" icon={Check}>
           {t('lists.page.linkCopied')}
         </Chip>
       ) : null}
-    </span>
+    </output>
   );
 }

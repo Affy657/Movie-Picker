@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ComponentProps, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { BookmarkX, CloudOff, Compass, Copy, Layers, UserRound } from 'lucide-react';
 import Button from '@/shared/components/Button';
@@ -97,6 +97,19 @@ function GoneListActions({
       </Button>
     </>
   );
+}
+
+type ListMoviesHeader = NonNullable<ComponentProps<typeof ListMoviesPage>['header']>;
+
+function unsaveButtonSlot(
+  list: SavedListDetail | undefined,
+  unsaving: boolean,
+  onUnsave: () => void
+): ListMoviesHeader['leading'] {
+  return ({ isMobile }) =>
+    list ? (
+      <SavedToggleButton saved compact={isMobile} disabled={unsaving} onClick={onUnsave} />
+    ) : null;
 }
 
 function emptyTexts(list: SavedListDetail | undefined, t: Translate): ListEmptyTexts {
@@ -206,15 +219,7 @@ export default function SavedListPage() {
       header={{
         overline: list ? savedListOverline(list, t) : undefined,
         stackedOnMobile: true,
-        leading: ({ isMobile }) =>
-          list ? (
-            <SavedToggleButton
-              saved
-              compact={isMobile}
-              disabled={unsave.isPending}
-              onClick={() => void stopSaving()}
-            />
-          ) : null,
+        leading: unsaveButtonSlot(list, unsave.isPending, () => void stopSaving()),
         progress:
           items.length > 0 ? <ListProgress watched={watchedCount} total={items.length} /> : null,
         menu: list ? (

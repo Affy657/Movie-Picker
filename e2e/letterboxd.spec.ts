@@ -29,7 +29,7 @@ test.describe('Letterboxd import', () => {
 
     const doneDialog = page.getByRole('dialog', { name: /import terminé/i });
     await expect(doneDialog).toBeVisible({ timeout: 30_000 });
-    await expect(doneDialog.getByText('1 titre ajouté à votre liste')).toBeVisible();
+    await expect(doneDialog.getByText('À voir : 1 film(s) ajouté(s), 0 retiré(s).')).toBeVisible();
     await expect(doneDialog.getByText('1 titre confirmé à la main')).toBeVisible();
     await doneDialog.getByRole('button', { name: /voir ma liste/i }).click();
     await expect(doneDialog).toBeHidden();

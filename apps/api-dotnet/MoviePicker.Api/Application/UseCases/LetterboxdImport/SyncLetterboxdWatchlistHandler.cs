@@ -60,7 +60,7 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
             return Skipped();
 
         var now = _clock.GetUtcNow();
-        if (user.LetterboxdLastSyncAt is { } last && now - last < IntervalFor(user, force))
+        if (IsTooSoon(user, force, now))
             return Skipped();
 
         if (force && !await _quota.TryConsumeAsync(
@@ -75,9 +75,7 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
             await _users.SetLetterboxdSyncStatusAsync(userId, now, outcome.Error, ct);
             if (!force)
                 return Skipped();
-            if (outcome.Error == ErrorCodes.LetterboxdSyncUnavailable)
-                throw Errors.LetterboxdSyncUnavailable();
-            throw Errors.LetterboxdSyncFailed(outcome.Error);
+            throw SyncFailure(outcome.Error);
         }
 
         if (outcome.Error is not null)
@@ -124,6 +122,14 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
             WatchedTotalTruncated = outcome.WatchedTotalTruncated
         };
     }
+
+    private static bool IsTooSoon(User user, bool force, DateTimeOffset now) =>
+        user.LetterboxdLastSyncAt is { } last && now - last < IntervalFor(user, force);
+
+    private static MoviePickerException SyncFailure(string? error) =>
+        error == ErrorCodes.LetterboxdSyncUnavailable
+            ? Errors.LetterboxdSyncUnavailable()
+            : Errors.LetterboxdSyncFailed(error);
 
     private static TimeSpan IntervalFor(User user, bool force)
     {
