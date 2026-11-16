@@ -1,6 +1,8 @@
-import { createElement, lazy, useState, type ComponentType } from 'react';
+import { createElement, lazy, useEffect, useState, type ComponentType } from 'react';
 import { matchRoutes } from 'react-router';
+import PageFallback from '@/app/components/PageFallback';
 import { ROUTES } from '@/app/routes';
+import { hasSessionHint } from '@/features/auth/session-hint';
 
 export const ROUTE_CHUNKS = {
   home: () => import('@/app/pages/HomePage'),
@@ -87,6 +89,7 @@ type RouteChunkPage<N extends RouteChunkName> = Awaited<
 type LoadedPage = ComponentType<Record<string, unknown>>;
 
 const loadedPages = new Map<RouteChunkName, LoadedPage>();
+const startupPages = new Map<RouteChunkName, Promise<LoadedPage | undefined>>();
 
 function loadRouteChunk(name: RouteChunkName): Promise<{ default: LoadedPage }> {
   return ROUTE_CHUNKS[name]().then((module) => {
@@ -99,13 +102,28 @@ function loadRouteChunk(name: RouteChunkName): Promise<{ default: LoadedPage }> 
 export function routeLazy<N extends RouteChunkName>(name: N): RouteChunkPage<N> {
   const Lazy = lazy(() => loadRouteChunk(name));
   function RouteChunk(props: Record<string, unknown>) {
-    const [Page] = useState<LoadedPage>(() => loadedPages.get(name) ?? Lazy);
+    const [Page, setPage] = useState<LoadedPage | undefined>(
+      () => loadedPages.get(name) ?? (startupPages.has(name) ? undefined : Lazy)
+    );
+    useEffect(() => {
+      if (Page) return;
+      let mounted = true;
+      startupPages.get(name)?.then((loaded) => {
+        if (mounted) setPage(() => loaded ?? Lazy);
+      });
+      return () => {
+        mounted = false;
+      };
+    }, [Page]);
+    if (!Page) return createElement(PageFallback);
     return createElement(Page, props);
   }
   return RouteChunk as unknown as RouteChunkPage<N>;
 }
 
-const ROUTE_CHUNK_BY_PATTERN: ReadonlyArray<{ path: string; chunk: RouteChunkName }> = [
+type RouteChunkEntry = { path: string; chunk: RouteChunkName; signedIn?: boolean };
+
+const ROUTE_CHUNK_BY_PATTERN: ReadonlyArray<RouteChunkEntry> = [
   { path: ROUTES.home, chunk: 'home' },
   { path: ROUTES.howItWorks, chunk: 'landing' },
   { path: ROUTES.movieSearch, chunk: 'showcaseList' },
@@ -119,7 +137,7 @@ const ROUTE_CHUNK_BY_PATTERN: ReadonlyArray<{ path: string; chunk: RouteChunkNam
   { path: ROUTES.movieCollectionPattern, chunk: 'showcaseList' },
   { path: ROUTES.moviePagePattern, chunk: 'moviePage' },
   { path: ROUTES.showPagePattern, chunk: 'moviePage' },
-  { path: ROUTES.createEvent, chunk: 'createEvent' },
+  { path: ROUTES.createEvent, chunk: 'createEvent', signedIn: true },
   { path: ROUTES.login, chunk: 'login' },
   { path: ROUTES.register, chunk: 'register' },
   { path: ROUTES.forgotPassword, chunk: 'forgotPassword' },
@@ -131,14 +149,14 @@ const ROUTE_CHUNK_BY_PATTERN: ReadonlyArray<{ path: string; chunk: RouteChunkNam
   { path: ROUTES.tech, chunk: 'tech' },
   { path: ROUTES.releaseNotes, chunk: 'releaseNotes' },
   { path: `${ROUTES.account}/*`, chunk: 'account' },
-  { path: ROUTES.myEvents, chunk: 'myEvents' },
-  { path: ROUTES.watchlist, chunk: 'watchlist' },
-  { path: ROUTES.lists, chunk: 'lists' },
-  { path: ROUTES.watchedMovies, chunk: 'watchedMovies' },
-  { path: ROUTES.listPattern, chunk: 'movieList' },
-  { path: ROUTES.savedListPattern, chunk: 'savedList' },
+  { path: ROUTES.myEvents, chunk: 'myEvents', signedIn: true },
+  { path: ROUTES.watchlist, chunk: 'watchlist', signedIn: true },
+  { path: ROUTES.lists, chunk: 'lists', signedIn: true },
+  { path: ROUTES.watchedMovies, chunk: 'watchedMovies', signedIn: true },
+  { path: ROUTES.listPattern, chunk: 'movieList', signedIn: true },
+  { path: ROUTES.savedListPattern, chunk: 'savedList', signedIn: true },
   { path: ROUTES.joinListPattern, chunk: 'joinList' },
-  { path: ROUTES.notifications, chunk: 'notifications' },
+  { path: ROUTES.notifications, chunk: 'notifications', signedIn: true },
   { path: ROUTES.eventDetailPattern, chunk: 'eventDetail' },
   { path: ROUTES.nightRecapPattern, chunk: 'nightRecap' },
   { path: ROUTES.profileMoviesPattern, chunk: 'profileMovies' },
@@ -151,19 +169,29 @@ const ROUTE_CHUNK_BY_PATTERN: ReadonlyArray<{ path: string; chunk: RouteChunkNam
   { path: '*', chunk: 'notFound' },
 ];
 
-export function routeChunkForPath(pathname: string): RouteChunkName | undefined {
-  return matchRoutes([...ROUTE_CHUNK_BY_PATTERN], pathname)?.[0]?.route.chunk;
+function routeEntryForPath(pathname: string): RouteChunkEntry | undefined {
+  return matchRoutes([...ROUTE_CHUNK_BY_PATTERN], pathname)?.[0]?.route;
 }
 
-export function preloadStartupRoute(pathname: string): Promise<void> {
-  const name = routeChunkForPath(pathname);
-  if (!name || name === 'home') return Promise.resolve();
-  return loadRouteChunk(name).then(
-    () => undefined,
-    () => undefined
+export function routeChunkForPath(pathname: string): RouteChunkName | undefined {
+  return routeEntryForPath(pathname)?.chunk;
+}
+
+export function preloadStartupRoute(pathname: string): void {
+  const entry = routeEntryForPath(pathname);
+  if (!entry || entry.chunk === 'home') return;
+  if (entry.signedIn && !hasSessionHint()) return;
+  if (loadedPages.has(entry.chunk) || startupPages.has(entry.chunk)) return;
+  startupPages.set(
+    entry.chunk,
+    loadRouteChunk(entry.chunk).then(
+      ({ default: page }) => page,
+      () => undefined
+    )
   );
 }
 
 export function resetLoadedRouteModulesForTests(): void {
   loadedPages.clear();
+  startupPages.clear();
 }

@@ -29,11 +29,11 @@ function hideSplash(): void {
 
 async function mountApp(): Promise<void> {
   const translationsReady = loadLocale(preferredLocale());
-  const startupRouteReady = import('@/app/routeChunks').then(({ preloadStartupRoute }) =>
+  const startupRouteRequested = import('@/app/routeChunks').then(({ preloadStartupRoute }) =>
     preloadStartupRoute(window.location.pathname)
   );
   const { default: App } = await import('@/app/App');
-  await Promise.all([translationsReady, startupRouteReady]);
+  await Promise.all([translationsReady, startupRouteRequested]);
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <App />

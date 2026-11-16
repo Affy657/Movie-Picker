@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ROUTES } from '@/app/routes';
 import {
+  clearSessionHint,
+  resetSessionHintMemoryForTests,
+  setSessionHint,
+} from '@/features/auth/session-hint';
+import {
   ROUTE_CHUNKS,
   preloadRouteChunk,
   preloadStartupRoute,
@@ -103,29 +108,55 @@ describe('preloadStartupRoute', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     resetLoadedRouteModulesForTests();
+    clearSessionHint();
+    resetSessionHintMemoryForTests();
   });
 
-  it('loads the page the application opens on before the first render', async () => {
+  it('starts loading the page the application opens on, once', () => {
     const load = vi
       .spyOn(ROUTE_CHUNKS, 'profile')
       .mockResolvedValue({ default: () => null } as never);
 
-    await preloadStartupRoute('/u/alice');
+    preloadStartupRoute('/u/alice');
+    preloadStartupRoute('/u/alice');
 
     expect(load).toHaveBeenCalledTimes(1);
   });
 
-  it('leaves the home alone, its first paint comes from the document', async () => {
+  it('leaves the home alone, its first paint comes from the document', () => {
     const load = vi.spyOn(ROUTE_CHUNKS, 'home').mockResolvedValue({ default: () => null } as never);
 
-    await preloadStartupRoute('/');
+    preloadStartupRoute('/');
 
     expect(load).not.toHaveBeenCalled();
   });
 
-  it('never blocks the start when the chunk does not load', async () => {
+  it('skips a page behind an account without a session hint, the visitor only gets the sign-in prompt', () => {
+    clearSessionHint();
+    const load = vi
+      .spyOn(ROUTE_CHUNKS, 'watchlist')
+      .mockResolvedValue({ default: () => null } as never);
+
+    preloadStartupRoute('/watchlist');
+
+    expect(load).not.toHaveBeenCalled();
+  });
+
+  it('loads a page behind an account when a session is hinted', () => {
+    setSessionHint();
+    const load = vi
+      .spyOn(ROUTE_CHUNKS, 'watchlist')
+      .mockResolvedValue({ default: () => null } as never);
+
+    preloadStartupRoute('/watchlist');
+
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+
+  it('swallows a chunk that does not load', async () => {
     vi.spyOn(ROUTE_CHUNKS, 'login').mockRejectedValue(new Error('offline'));
 
-    await expect(preloadStartupRoute('/login')).resolves.toBeUndefined();
+    expect(() => preloadStartupRoute('/login')).not.toThrow();
+    await new Promise((resolve) => setTimeout(resolve, 0));
   });
 });

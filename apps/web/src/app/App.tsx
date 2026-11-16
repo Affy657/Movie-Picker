@@ -5,7 +5,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { createAppQueryClient } from '@/app/appQueryClient';
 import { ThemeProvider } from '@/shared/contexts/ThemeContext';
 import { ConsentProvider } from '@/shared/contexts/ConsentContext';
-import { useTranslation, LocaleProvider } from '@/shared/i18n';
+import { LocaleProvider } from '@/shared/i18n';
 import { AuthProvider } from '@/features/auth/contexts/AuthContext';
 import UserThemeSync from '@/app/components/UserThemeSync';
 import AnalyticsSync from '@/app/components/AnalyticsSync';
@@ -14,13 +14,12 @@ import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
 import AppShell from '@/app/components/AppShell';
 import SessionGate from '@/app/components/SessionGate';
 import ScrollToTop from '@/app/components/ScrollToTop';
-import PageLayout from '@/shared/components/PageLayout';
+import PageFallback from '@/app/components/PageFallback';
 import { ROUTES } from '@/app/routes';
 import { routeLazy } from '@/app/routeChunks';
 import { useHomeShowcasePrefetch } from '@/features/movies/homeShowcasePrefetch';
 import { usePublicProfilePrefetch } from '@/features/profile/publicProfilePrefetch';
 import { ICON_SIZE } from '@/shared/components/iconSize';
-import { BrandLoader } from '@/shared/brand/BrandLoader';
 
 const HomePage = routeLazy('home');
 const ShowcaseListPage = routeLazy('showcaseList');
@@ -56,15 +55,6 @@ const ProfileProposalsPage = routeLazy('profileProposals');
 const ProfileWatchlistPage = routeLazy('profileWatchlist');
 const NotFoundPage = routeLazy('notFound');
 const MoviePage = routeLazy('moviePage');
-
-function PageFallback() {
-  const { t } = useTranslation();
-  return (
-    <PageLayout>
-      <BrandLoader label={t('common.loading')} />
-    </PageLayout>
-  );
-}
 
 function ListRoute({ children }: Readonly<{ children: ReactNode }>) {
   const { pathname } = useLocation();

@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
+import { LocaleProvider } from '@/shared/i18n';
 import {
   ROUTE_CHUNKS,
   preloadStartupRoute,
@@ -10,10 +11,16 @@ import {
 
 function renderInSuspense(Page: () => React.ReactNode) {
   return render(
-    <Suspense fallback={<p>chargement</p>}>
-      <Page />
-    </Suspense>
+    <LocaleProvider>
+      <Suspense fallback={<p>chargement</p>}>
+        <Page />
+      </Suspense>
+    </LocaleProvider>
   );
+}
+
+function settle(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
 describe('routeLazy', () => {
@@ -22,14 +29,45 @@ describe('routeLazy', () => {
     resetLoadedRouteModulesForTests();
   });
 
-  it('renders a page loaded before the first render at once, without the fallback', async () => {
+  it('renders a page already loaded at once, without any fallback', async () => {
     vi.spyOn(ROUTE_CHUNKS, 'donate').mockResolvedValue({ default: () => <p>soutenir</p> } as never);
-    await preloadStartupRoute('/soutenir');
+    preloadStartupRoute('/soutenir');
+    await settle();
 
     renderInSuspense(routeLazy('donate') as () => React.ReactNode);
 
     expect(screen.getByText('soutenir')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
     expect(screen.queryByText('chargement')).not.toBeInTheDocument();
+  });
+
+  it('keeps the startup page out of Suspense, so the layout around it paints before it loads', async () => {
+    let resolveChunk!: (module: unknown) => void;
+    vi.spyOn(ROUTE_CHUNKS, 'donate').mockReturnValue(
+      new Promise((resolve) => {
+        resolveChunk = resolve;
+      }) as never
+    );
+    preloadStartupRoute('/soutenir');
+
+    renderInSuspense(routeLazy('donate') as () => React.ReactNode);
+
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.queryByText('chargement')).not.toBeInTheDocument();
+    await act(async () => resolveChunk({ default: () => <p>soutenir</p> }));
+    expect(screen.getByText('soutenir')).toBeInTheDocument();
+    expect(screen.queryByText('chargement')).not.toBeInTheDocument();
+  });
+
+  it('falls back to lazy loading when the startup page did not load', async () => {
+    vi.spyOn(ROUTE_CHUNKS, 'donate')
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValue({ default: () => <p>soutenir</p> } as never);
+    preloadStartupRoute('/soutenir');
+
+    renderInSuspense(routeLazy('donate') as () => React.ReactNode);
+
+    expect(await screen.findByText('soutenir')).toBeInTheDocument();
   });
 
   it('loads any other page lazily behind the fallback', async () => {
