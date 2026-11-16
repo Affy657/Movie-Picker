@@ -38,7 +38,7 @@ export default function HostEventDangerZone({
       clearStoredHostToken(slug);
       queryClient.removeQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
       await queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
-      navigate(ROUTES.myEvents);
+      void navigate(ROUTES.myEvents);
     },
     onError: (e) => {
       setDeleteError(getErrorMessage(e, t('events.danger.deleteError')));

@@ -77,7 +77,7 @@ export function useMyEventsActions() {
     (slug: string) => {
       const stored = getStoredParticipant(slug);
       if (!stored) {
-        navigate(ROUTES.eventDetail(slug));
+        void navigate(ROUTES.eventDetail(slug));
         return;
       }
       setLeaveError(null);
@@ -88,7 +88,9 @@ export function useMyEventsActions() {
 
   const handleReuseEvent = useCallback(
     (slug: string, title: string) => {
-      navigate(ROUTES.createEvent, { state: { reuseEventSlug: slug, reuseEventTitle: title } });
+      void navigate(ROUTES.createEvent, {
+        state: { reuseEventSlug: slug, reuseEventTitle: title },
+      });
     },
     [navigate]
   );

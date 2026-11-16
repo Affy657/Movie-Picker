@@ -257,17 +257,17 @@ function useMoviePageNavigation(fromApp: boolean, nightSlug: string | null) {
   const navigate = useNavigate();
   const goBack = useCallback(() => {
     if (fromApp) {
-      navigate(-1);
+      void navigate(-1);
       return;
     }
-    navigate(nightSlug ? ROUTES.eventDetail(nightSlug) : ROUTES.home);
+    void navigate(nightSlug ? ROUTES.eventDetail(nightSlug) : ROUTES.home);
   }, [fromApp, navigate, nightSlug]);
   const leaveNight = useCallback(() => {
     if (fromApp) {
-      navigate(-1);
+      void navigate(-1);
       return;
     }
-    if (nightSlug) navigate(ROUTES.eventDetail(nightSlug), { replace: true });
+    if (nightSlug) void navigate(ROUTES.eventDetail(nightSlug), { replace: true });
   }, [fromApp, navigate, nightSlug]);
   return { goBack, leaveNight };
 }

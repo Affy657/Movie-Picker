@@ -46,8 +46,8 @@ export function useLegacyMovieLinkRedirect(): void {
     const params = new URLSearchParams(search);
     const target = readLegacyMovieTarget(params);
     if (!target) return;
-    navigate({ pathname, search: searchWithoutLegacyParams(params), hash }, { replace: true });
+    void navigate({ pathname, search: searchWithoutLegacyParams(params), hash }, { replace: true });
     const state: MoviePageLocationState = { fromApp: true };
-    navigate(ROUTES.moviePage(target, nightSlugOf(pathname)), { state });
+    void navigate(ROUTES.moviePage(target, nightSlugOf(pathname)), { state });
   }, [pathname, search, hash, navigate]);
 }

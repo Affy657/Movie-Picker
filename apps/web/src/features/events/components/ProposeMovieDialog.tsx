@@ -5,9 +5,9 @@ import {
   useMemo,
   useRef,
   useState,
-  type FormEvent,
   type ReactNode,
   type RefObject,
+  type SubmitEvent,
 } from 'react';
 import clsx from 'clsx';
 import { Link } from 'react-router';
@@ -507,7 +507,7 @@ function MoviePreview({
   const offers = item.watchProviders == null ? details.data : item;
   const genres = details.data?.genres.join(', ');
 
-  const submit = async (e: FormEvent) => {
+  const submit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setBusy(true);
     setError(null);

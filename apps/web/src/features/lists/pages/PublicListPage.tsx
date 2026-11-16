@@ -166,7 +166,7 @@ function PublicListCopyDialog({
       onClose={onClose}
       onSaved={(created) => {
         onClose();
-        navigate(ROUTES.list(created.id));
+        void navigate(ROUTES.list(created.id));
       }}
     />
   );

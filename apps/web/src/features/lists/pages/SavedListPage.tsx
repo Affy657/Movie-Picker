@@ -172,7 +172,7 @@ export default function SavedListPage() {
     setActionError(null);
     try {
       await unsave.mutateAsync(list.id);
-      navigate(ROUTES.lists, { replace: true });
+      void navigate(ROUTES.lists, { replace: true });
     } catch (error) {
       setActionError(getErrorMessage(error, t('lists.saved.unsaveError')));
     }
@@ -246,7 +246,7 @@ export default function SavedListPage() {
           onClose={() => setCopyOpen(false)}
           onSaved={(created) => {
             setCopyOpen(false);
-            navigate(ROUTES.list(created.id));
+            void navigate(ROUTES.list(created.id));
           }}
         />
       ) : null}

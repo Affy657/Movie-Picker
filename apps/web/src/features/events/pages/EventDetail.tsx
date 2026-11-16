@@ -89,7 +89,7 @@ function useArrivalOnce(): ArrivalState {
   useEffect(() => {
     if (state === null || typeof state !== 'object') return;
     if (!Object.keys(state).some((key) => ARRIVAL_FLAGS.has(key))) return;
-    navigate({ pathname, search, hash }, { replace: true, state: withoutArrivalFlags(state) });
+    void navigate({ pathname, search, hash }, { replace: true, state: withoutArrivalFlags(state) });
   }, [pathname, search, hash, state, navigate]);
 
   return arrival;

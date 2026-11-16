@@ -29,7 +29,7 @@ export default function RegisterPage() {
 
   const registerAction = useCallback(async () => {
     await register(email.trim(), password, displayName.trim());
-    navigate(returnTo, { replace: true });
+    void navigate(returnTo, { replace: true });
   }, [email, password, displayName, register, navigate, returnTo]);
 
   const {

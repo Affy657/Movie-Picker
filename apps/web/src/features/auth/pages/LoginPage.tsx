@@ -40,7 +40,7 @@ export default function LoginPage() {
       } else {
         await login(email.trim(), password);
       }
-      navigate(returnTo, { replace: true });
+      void navigate(returnTo, { replace: true });
     },
     [email, password, login, navigate, returnTo]
   );

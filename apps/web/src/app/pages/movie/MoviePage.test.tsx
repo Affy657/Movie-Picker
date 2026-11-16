@@ -206,9 +206,9 @@ describe('MoviePage', () => {
     server.use(authMeGuestHandler, detailsHandler, showcaseHandler);
     renderPage();
 
-    expect(await screen.findByRole('heading', { level: 1, name: 'Dune' })).toBeInTheDocument();
+    const title = await screen.findByRole('heading', { level: 1, name: 'Dune' });
     expect(screen.queryByText(/titre original/i)).not.toBeInTheDocument();
-    expect(screen.getByText('2021')).toBeInTheDocument();
+    expect(within(title.closest('header')!).getByText('2021')).toBeInTheDocument();
     expect(screen.getAllByText('Tous publics')).toHaveLength(2);
     expect(screen.getByText('12 000 votes')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /max/i })).toHaveAttribute(

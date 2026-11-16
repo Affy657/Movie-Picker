@@ -39,7 +39,7 @@ export function useEventDetailPage(
     if (getStoredHostToken(slug) !== hostFromUrl) return;
     const withoutHost = new URLSearchParams(searchParams);
     withoutHost.delete('host');
-    navigate(
+    void navigate(
       { search: `?${withoutHost.toString()}`, hash: location.hash },
       { replace: true, state: location.state }
     );

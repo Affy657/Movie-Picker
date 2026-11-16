@@ -37,7 +37,7 @@ export default function OAuthCallbackPage() {
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.me }),
       queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list }),
     ]).finally(() => {
-      navigate(returnTo, { replace: true });
+      void navigate(returnTo, { replace: true });
     });
   }, [navigate, params, queryClient, track]);
 

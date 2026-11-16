@@ -394,7 +394,7 @@ export default function NotificationsPage() {
       if (!item.isRead) markOneMutation.mutate(item.id);
       invalidateInbox();
       void queryClient.invalidateQueries({ queryKey: queryKeys.lists.all });
-      if (accept && item.listId) navigate(ROUTES.list(item.listId));
+      if (accept && item.listId) void navigate(ROUTES.list(item.listId));
     },
     onError: (err) => setActionError(getErrorMessage(err, t('notifications.listInvitationError'))),
   });

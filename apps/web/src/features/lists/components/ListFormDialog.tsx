@@ -1,4 +1,4 @@
-import { useId, useMemo, useState, type FormEvent } from 'react';
+import { useId, useMemo, useState, type SubmitEvent } from 'react';
 import { Link } from 'react-router';
 import { Globe, Lock } from 'lucide-react';
 import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
@@ -206,7 +206,7 @@ export default function ListFormDialog({
     });
   };
 
-  const handleSubmit = async (event: FormEvent) => {
+  const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!canSubmit) return;
     setFormError(null);

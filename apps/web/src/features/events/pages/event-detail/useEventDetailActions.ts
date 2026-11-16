@@ -201,7 +201,7 @@ export function useEventDetailActions({
         onSuccess: () => {
           removeStoredParticipant(slug);
           setParticipant(null);
-          navigate(ROUTES.myEvents);
+          void navigate(ROUTES.myEvents);
         },
         onError: (err) => {
           setActionError(getErrorMessage(err, t('events.participants.leaveError')));

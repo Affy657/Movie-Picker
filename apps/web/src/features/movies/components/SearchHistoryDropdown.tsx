@@ -41,7 +41,7 @@ export default function SearchHistoryDropdown({
   const focusedIndex = () => {
     const list = listRef.current;
     const row = document.activeElement?.closest('li');
-    if (!list || !row || row.parentElement !== list) return -1;
+    if (!list || row?.parentElement !== list) return -1;
     return Array.from(list.children).indexOf(row);
   };
   const focusIsInside = () => listRef.current?.contains(document.activeElement) ?? false;

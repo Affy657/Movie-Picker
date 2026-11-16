@@ -253,7 +253,7 @@ function MovieListDialogs({
     try {
       await action;
       onClose();
-      navigate(ROUTES.lists, { replace: true });
+      void navigate(ROUTES.lists, { replace: true });
     } catch (error) {
       onClose();
       onError(getErrorMessage(error, fallback));

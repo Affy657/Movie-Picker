@@ -69,7 +69,7 @@ function PasswordRow({ user }: Readonly<{ user: UserProfile }>) {
     redirectTimerRef.current = globalThis.setTimeout(() => {
       redirectTimerRef.current = undefined;
       void endSession();
-      navigate(ROUTES.login, { replace: true });
+      void navigate(ROUTES.login, { replace: true });
     }, POST_PASSWORD_CHANGE_REDIRECT_MS);
   }, [user.hasPassword, currentPassword, newPassword, endSession, navigate]);
 
@@ -313,7 +313,7 @@ function DeleteAccountZone({ hasPassword }: Readonly<{ hasPassword: boolean }>) 
   const deleteAction = useCallback(async () => {
     await deleteAccount(hasPassword ? { password: value } : { confirmation: value });
     await endSession();
-    navigate(ROUTES.home, { replace: true });
+    void navigate(ROUTES.home, { replace: true });
   }, [hasPassword, value, endSession, navigate]);
 
   const {

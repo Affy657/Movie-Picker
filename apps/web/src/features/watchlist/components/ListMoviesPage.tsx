@@ -742,11 +742,11 @@ export default function ListMoviesPage({
                   )
                 }
               >
-                {toolbar.visibleItems.map(renderItem)}
+                {toolbar.visibleItems.map((item, index) => renderItem(item, index))}
               </MovieTable>
             ) : (
               <ul className={styles.grid} aria-label={labels.listAria}>
-                {toolbar.visibleItems.map(renderItem)}
+                {toolbar.visibleItems.map((item, index) => renderItem(item, index))}
               </ul>
             )}
           </FilteredCollectionLayout>

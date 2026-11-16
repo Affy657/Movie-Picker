@@ -34,7 +34,7 @@ export function useOpenMoviePage() {
   return useCallback(
     (seed: MoviePageSeed, nightSlug?: string) => {
       const state: MoviePageLocationState = { fromApp: true, seed };
-      navigate(ROUTES.moviePage(seed, nightSlug), { state });
+      void navigate(ROUTES.moviePage(seed, nightSlug), { state });
     },
     [navigate]
   );

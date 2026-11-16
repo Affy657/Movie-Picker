@@ -85,7 +85,7 @@ type ChipLinkProps = {
 type ChipProps = ChipBaseProps &
   (ChipLabelProps | ChipActionProps | ChipRemovableProps | ChipLinkProps);
 
-function ChipIcon({ icon: Icon }: Readonly<{ icon?: ChipBaseProps['icon'] }>) {
+function ChipIcon({ icon: Icon }: Readonly<{ icon: ChipBaseProps['icon'] }>) {
   if (!Icon) return null;
   return (
     <Icon className={styles.icon} width={ICON_SIZE.xs} height={ICON_SIZE.xs} aria-hidden="true" />

@@ -357,7 +357,7 @@ export default function CreateEventDialog({
   const openNight = (state?: { openPropose: true }) => {
     if (!created) return;
     onClose();
-    navigate(ROUTES.eventDetail(created.slug), state ? { state } : undefined);
+    void navigate(ROUTES.eventDetail(created.slug), state ? { state } : undefined);
   };
 
   const pastDateHint = isPastEventDateTime(date, time, new Date())

@@ -564,7 +564,7 @@ export default function MyListsPage() {
           onClose={() => setCreateOpen(false)}
           onSaved={(list) => {
             setCreateOpen(false);
-            navigate(ROUTES.list(list.id));
+            void navigate(ROUTES.list(list.id));
           }}
         />
       ) : null}
@@ -580,7 +580,7 @@ export default function MyListsPage() {
           onClose={() => setCopied(null)}
           onSaved={(list) => {
             setCopied(null);
-            navigate(ROUTES.list(list.id));
+            void navigate(ROUTES.list(list.id));
           }}
         />
       ) : null}
