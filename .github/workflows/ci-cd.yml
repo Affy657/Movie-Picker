@@ -403,10 +403,20 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup-web
+      # One download per shard, by name: a single download by `pattern` with `merge-multiple` fetched
+      # the three files in 6 seconds, then held the step for 3 minutes before handing over
+      # (run 43901639979), where a download by name takes 1 to 2 seconds.
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
-          pattern: web-tests-blob-*
-          merge-multiple: true
+          name: web-tests-blob-1
+          path: apps/web/.vitest/blob
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: web-tests-blob-2
+          path: apps/web/.vitest/blob
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: web-tests-blob-3
           path: apps/web/.vitest/blob
       - name: Merge the shards, coverage thresholds on the whole suite
         run: pnpm --filter web exec vitest run --merge-reports .vitest/blob --coverage --reporter=dot
