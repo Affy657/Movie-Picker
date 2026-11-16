@@ -508,7 +508,7 @@ describe('accessibility (axe)', () => {
           <p>jamais rendu</p>
         </SessionGate>
       );
-      await screen.findByRole('heading', { name: /^ma liste$/i, level: 1 });
+      await screen.findByRole('heading', { name: /^à voir$/i, level: 1 });
       await assertNoViolations(container, queryClient);
     });
 

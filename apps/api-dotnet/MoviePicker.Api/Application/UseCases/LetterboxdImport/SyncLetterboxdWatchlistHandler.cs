@@ -16,9 +16,12 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
     private static readonly TimeSpan RetryIntervalAfterFailure = TimeSpan.FromHours(1);
     private static readonly TimeSpan ForcedSyncQuotaWindow = TimeSpan.FromHours(1);
 
+    private const string WatchedChoiceKeyPrefix = "watched:";
+
     private readonly IUserRepository _users;
     private readonly IUserNotificationRepository _notifications;
     private readonly LetterboxdWatchlistSynchronizer _synchronizer;
+    private readonly LetterboxdLinkedCounter _linkedCounter;
     private readonly ISharedQuota _quota;
     private readonly TimeProvider _clock;
 
@@ -26,12 +29,14 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
         IUserRepository users,
         IUserNotificationRepository notifications,
         LetterboxdWatchlistSynchronizer synchronizer,
+        LetterboxdLinkedCounter linkedCounter,
         ISharedQuota quota,
         TimeProvider clock)
     {
         _users = users;
         _notifications = notifications;
         _synchronizer = synchronizer;
+        _linkedCounter = linkedCounter;
         _quota = quota;
         _clock = clock;
     }
@@ -50,6 +55,9 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
                 return Skipped();
             throw Errors.LetterboxdUsernameMissing();
         }
+
+        if (!user.LetterboxdSyncWatchlist && !user.LetterboxdSyncWatched)
+            return Skipped();
 
         var now = _clock.GetUtcNow();
         if (user.LetterboxdLastSyncAt is { } last && now - last < IntervalFor(user, force))
@@ -72,10 +80,21 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
             throw Errors.LetterboxdSyncFailed(outcome.Error);
         }
 
-        var pendingChoiceKeys = outcome.PendingChoices.Select(PendingChoiceKey).Distinct(StringComparer.Ordinal).ToList();
-        await _users.RecordLetterboxdPendingChoicesAsync(userId, outcome.PendingChoices.Count, pendingChoiceKeys, ct);
+        if (outcome.Error is not null)
+            await _users.SetLetterboxdSyncStatusAsync(userId, now, outcome.Error, ct);
 
-        if (!force && HasPendingChoiceNotYetReported(user, outcome.PendingChoices.Count, pendingChoiceKeys)
+        var pendingChoices = outcome.PendingChoices.Concat(outcome.WatchedPendingChoices).ToList();
+        var keptKeys = KeysOfTheUnreadList(user, outcome.Error);
+        var pendingChoiceKeys = pendingChoices
+            .Select(PendingChoiceKey)
+            .Concat(keptKeys)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        var pendingCount = pendingChoices.Count + keptKeys.Count;
+        await _users.RecordLetterboxdPendingChoicesAsync(userId, pendingCount, pendingChoiceKeys, ct);
+        await _linkedCounter.RefreshAsync(userId, ct);
+
+        if (!force && HasPendingChoiceNotYetReported(user, pendingCount, pendingChoiceKeys)
             && user.NotifiesOn(UserNotificationType.LetterboxdReconciliationPending))
         {
             await _notifications.AddAsync(new UserNotification
@@ -90,12 +109,19 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
         return new LetterboxdSyncResponse
         {
             Skipped = false,
+            Error = outcome.Error,
             Added = outcome.Added,
             Removed = outcome.Removed,
             UnmatchedTitles = outcome.UnmatchedTitles,
             PendingChoices = outcome.PendingChoices,
             TotalOnLetterboxd = outcome.TotalOnLetterboxd,
-            TotalTruncated = outcome.TotalTruncated
+            TotalTruncated = outcome.TotalTruncated,
+            WatchedAdded = outcome.WatchedAdded,
+            WatchedRemoved = outcome.WatchedRemoved,
+            WatchedUnmatchedTitles = outcome.WatchedUnmatchedTitles,
+            WatchedPendingChoices = outcome.WatchedPendingChoices,
+            WatchedTotalOnLetterboxd = outcome.WatchedTotalOnLetterboxd,
+            WatchedTotalTruncated = outcome.WatchedTotalTruncated
         };
     }
 
@@ -123,8 +149,24 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
         }
     }
 
-    private static string PendingChoiceKey(LetterboxdImportRowResponse choice) =>
-        string.IsNullOrEmpty(choice.LetterboxdSlug) ? $"{choice.Title}|{choice.Year}" : choice.LetterboxdSlug;
+    private static string PendingChoiceKey(LetterboxdImportRowResponse choice)
+    {
+        var film = string.IsNullOrEmpty(choice.LetterboxdSlug) ? $"{choice.Title}|{choice.Year}" : choice.LetterboxdSlug;
+        return choice.Target == LetterboxdImportTarget.Watched ? WatchedChoiceKeyPrefix + film : film;
+    }
+
+    private static List<string> KeysOfTheUnreadList(User user, string? error)
+    {
+        var reported = user.LetterboxdPendingChoiceKeys ?? [];
+        return error switch
+        {
+            ErrorCodes.LetterboxdWatchedIncomplete => reported.Where(IsWatchedKey).ToList(),
+            ErrorCodes.LetterboxdWatchlistIncomplete => reported.Where(key => !IsWatchedKey(key)).ToList(),
+            _ => []
+        };
+    }
+
+    private static bool IsWatchedKey(string key) => key.StartsWith(WatchedChoiceKeyPrefix, StringComparison.Ordinal);
 
     private static bool HasPendingChoiceNotYetReported(User user, int pendingCount, List<string> pendingChoiceKeys)
     {

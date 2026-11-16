@@ -3,7 +3,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { invalidateWatchlist } from '@/features/movies/hooks/useWatchlist';
+import { invalidateWatched } from '@/features/movies/hooks/invalidateWatched';
 import { syncLetterboxd } from '@/features/letterboxd/api/letterboxdApi';
+import { pendingChoicesOf, watchedChanged } from '@/features/letterboxd/utils/syncReport';
 
 export function useLetterboxdAutoSync(): void {
   const { user } = useAuth();
@@ -25,8 +27,9 @@ export function useLetterboxdAutoSync(): void {
       .then((report) => {
         if (report.skipped) return;
         void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
-        if (report.added > 0 || report.removed > 0) void invalidateWatchlist(queryClient);
-        if (report.pendingChoices.length > 0)
+        if (watchedChanged(report)) void invalidateWatched(queryClient);
+        else if (report.added > 0 || report.removed > 0) void invalidateWatchlist(queryClient);
+        if (pendingChoicesOf(report).length > 0)
           void queryClient.invalidateQueries({ queryKey: queryKeys.notifications.inbox });
       })
       .catch(() => undefined);

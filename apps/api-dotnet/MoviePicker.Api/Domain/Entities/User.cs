@@ -53,9 +53,11 @@ public sealed record User
     public string? Bio { get; init; }
     public bool IsProfilePublic { get; init; } = true;
     public bool IsWatchlistPublic { get; init; } = true;
+    public bool IsWatchedPublic { get; init; } = true;
     public UiThemePreference UiTheme { get; init; } = UiThemePreference.System;
     public AccentColor AccentColor { get; init; } = AccentColor.Default;
     public RatingScale RatingScale { get; init; } = RatingScale.Five;
+    public bool DimWatched { get; init; }
     public string AvatarId { get; init; } = string.Empty;
     public AvatarPhoto? AvatarPhoto { get; init; }
     public string DisplayedAvatarId => AvatarPhoto.DisplayedAvatarIdOf(AvatarId, AvatarPhoto);
@@ -69,6 +71,10 @@ public sealed record User
     public string? LetterboxdLastSyncError { get; init; }
     public int LetterboxdPendingReconciliationCount { get; init; }
     public IReadOnlyList<string>? LetterboxdPendingChoiceKeys { get; init; }
+    public bool LetterboxdSyncWatchlist { get; init; } = true;
+    public bool LetterboxdSyncWatched { get; init; } = true;
+    public int LetterboxdWatchlistCount { get; init; }
+    public int LetterboxdWatchedCount { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
     public long Version { get; init; }

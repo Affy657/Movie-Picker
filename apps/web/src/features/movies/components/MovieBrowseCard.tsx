@@ -5,7 +5,13 @@ import LibraryMovieRow from '@/features/movies/components/LibraryMovieRow';
 import styles from '@/features/movies/components/ShowcaseMovieCard.module.css';
 import rowStyles from '@/features/movies/components/LibraryMovieRow.module.css';
 import { MovieTableAvailability } from '@/features/movies/components/MovieTable';
-import { CardKebab, WatchlistBadge } from '@/features/movies/components/movieCardParts';
+import {
+  CardKebab,
+  ContributorBadge,
+  ContributorCell,
+  WatchlistBadge,
+  type MovieContributor,
+} from '@/features/movies/components/movieCardParts';
 import { Bookmark, BookmarkCheck, Plus } from 'lucide-react';
 import Button from '@/shared/components/Button';
 import Chip from '@/shared/components/Chip';
@@ -55,12 +61,18 @@ interface MovieBrowseCardProps {
   onProposeToEvent: () => void;
   onOpenDetails: () => void;
   onOpenAvailability?: () => void;
+  onRemoveFromList?: () => void;
+  removeLabel?: string;
+  removeAriaLabel?: string;
+  dimmed?: boolean;
   leadingBadge?: ReactNode;
   ratingScale?: RatingScale;
   meta?: ReactNode;
   eager?: boolean;
   rank?: number;
   showListBadge?: boolean;
+  contributor?: MovieContributor | null;
+  withContributor?: boolean;
 }
 
 function RowAvailability({
@@ -163,8 +175,14 @@ function BrowseMovieRow({
   onProposeToEvent,
   onOpenDetails,
   onOpenAvailability,
+  onRemoveFromList,
+  removeLabel,
+  removeAriaLabel,
+  dimmed,
   ratingScale,
   eager,
+  contributor,
+  withContributor,
 }: Readonly<MovieBrowseCardProps>) {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
@@ -175,10 +193,14 @@ function BrowseMovieRow({
         title={item.title}
         tmdbId={item.tmdbId}
         mediaType={item.mediaType}
-        isMine={false}
+        isMine={!!onRemoveFromList}
         isHost={false}
-        canRemove={false}
-        onRemove={() => undefined}
+        canRemove={!!onRemoveFromList}
+        onRemove={onRemoveFromList ?? (() => undefined)}
+        removeLabel={removeLabel ?? t('lists.page.removeFromList')}
+        removeAriaLabel={
+          removeAriaLabel ?? t('lists.page.removeFromListFor', { title: item.title })
+        }
         inWatchlist={isLoggedIn ? inWatchlist : undefined}
         onToggleWatchlist={isLoggedIn ? onToggleWatchlist : undefined}
         onProposeToEvent={isLoggedIn ? onProposeToEvent : undefined}
@@ -218,6 +240,9 @@ function BrowseMovieRow({
       isMobile={isMobile}
       onOpenDetails={onOpenDetails}
       kebab={kebab}
+      dimmed={dimmed}
+      withContributor={withContributor}
+      contributor={contributor ? <ContributorCell contributor={contributor} /> : undefined}
     />
   );
 }
@@ -236,10 +261,13 @@ function BrowseMoviePoster({
   eager,
   rank,
   showListBadge = true,
+  dimmed,
+  contributor,
 }: Readonly<MovieBrowseCardProps>) {
   const { t } = useTranslation();
   const isTv = item.mediaType === 'tv';
   const hasBadges = isTv || leadingBadge != null;
+  const showWatchlistBadge = showListBadge && isLoggedIn && inWatchlist;
 
   return (
     <ShowcaseMovieCard
@@ -253,6 +281,7 @@ function BrowseMoviePoster({
       eager={eager}
       rank={rank}
       rankLabel={rank != null ? t('showcase.rank', { rank }) : undefined}
+      dimmed={dimmed}
       onOpenDetails={onOpenDetails}
       badges={
         hasBadges && (
@@ -267,8 +296,11 @@ function BrowseMoviePoster({
         )
       }
       cornerBadge={
-        showListBadge && isLoggedIn && inWatchlist ? (
-          <WatchlistBadge inWatchlist t={t} />
+        showWatchlistBadge || contributor ? (
+          <>
+            <WatchlistBadge inWatchlist={showWatchlistBadge} t={t} />
+            {contributor ? <ContributorBadge contributor={contributor} /> : null}
+          </>
         ) : undefined
       }
       actions={

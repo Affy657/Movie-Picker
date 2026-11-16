@@ -65,7 +65,8 @@ public sealed class UsersController : ControllerBase
         [FromServices] IGetUserStatsHandler handler,
         CancellationToken ct)
     {
-        var stats = await handler.HandleAsync(handle, ct);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var stats = await handler.HandleAsync(handle, currentUserId, ct);
         return Ok(stats);
     }
 
@@ -81,7 +82,8 @@ public sealed class UsersController : ControllerBase
         [FromServices] IGetUserWatchedMoviesHandler handler,
         CancellationToken ct)
     {
-        var result = await handler.HandleAsync(handle, take, ct);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var result = await handler.HandleAsync(handle, currentUserId, take, ct);
         return Ok(result);
     }
 

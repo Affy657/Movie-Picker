@@ -47,7 +47,14 @@ import {
   type WatchlistToggleItem,
 } from '@/features/watchlist/hooks/useWatchlistToggle';
 import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
+import DimWatchedControl from '@/features/watchlist/components/DimWatchedControl';
 import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
+import { useDimWatched } from '@/features/watched/hooks/useDimWatched';
+import { useWatchedKeys } from '@/features/watched/hooks/useWatched';
+import type { SavedListSource } from '@/features/lists/api/savedListsApi';
+import ListProgress from '@/features/lists/components/ListProgress';
+import SavedToggleButton from '@/features/lists/components/SavedToggleButton';
+import { useSavedListToggle } from '@/features/lists/hooks/useSavedLists';
 import ShowcaseListStates from './ShowcaseListStates';
 import type { MovieMediaType } from '@/shared/types/movie';
 import styles from './ShowcaseListPage.module.css';
@@ -132,6 +139,17 @@ function buildShowcaseQuery(
   if (variant === 'collection') return { section: 'collection', collectionId };
   if (variant === 'trending' && genreId) return { section: 'trending', genreIds: [genreId] };
   return { section: variant as ShowcaseSection };
+}
+
+function savedListSourceOf(
+  variant: Props['variant'],
+  { themeKey, collectionId }: ShowcaseRouteSelection
+): SavedListSource | null {
+  if (variant === 'theme' && themeKey) return { sourceType: 'explorerTheme', sourceId: themeKey };
+  if (variant === 'collection' && collectionId != null && Number.isSafeInteger(collectionId)) {
+    return { sourceType: 'tmdbCollection', sourceId: String(collectionId) };
+  }
+  return null;
 }
 
 function isShowcaseQueryEnabled(
@@ -315,6 +333,15 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
     () => buildShowcaseQuery(variant, routeSelection),
     [variant, routeSelection]
   );
+  const savedListSource = useMemo(
+    () => savedListSourceOf(variant, routeSelection),
+    [variant, routeSelection]
+  );
+  const tracksSavedList = isLoggedIn && savedListSource !== null;
+  const savedToggle = useSavedListToggle(savedListSource, isLoggedIn);
+  const watchedKeys = useWatchedKeys(tracksSavedList);
+  const dim = useDimWatched();
+  const dimWatched = tracksSavedList && dim.enabled;
 
   const isSearch = variant === 'search';
   const showcaseEnabled = isShowcaseQueryEnabled(variant, routeSelection);
@@ -383,21 +410,39 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
   const activeFilterCount = toolbar.activeFilterChips.length;
   const totalCount = items.length;
   const hasResults = queryEnabled && !source.isError && totalCount > 0;
+  const actionError = watchlist.error ?? savedToggle.error ?? dim.error;
 
   return (
     <PageLayout className={styles.layout}>
       <BackLink to={ROUTES.home}>{t('showcase.backToHome')}</BackLink>
 
-      <div className={styles.headerText}>
-        <h1 className={styles.pageTitle}>{headingText}</h1>
-        <p className={styles.pageSubtitle}>{subtitleText}</p>
+      <div className={styles.header}>
+        <div className={styles.headerText}>
+          <h1 className={styles.pageTitle}>{headingText}</h1>
+          <p className={styles.pageSubtitle}>{subtitleText}</p>
+          {tracksSavedList && watchedKeys.ready && totalCount > 0 ? (
+            <ListProgress
+              className={styles.progress}
+              watched={watchedKeys.countAmong(items)}
+              total={totalCount}
+            />
+          ) : null}
+        </div>
+        {tracksSavedList ? (
+          <SavedToggleButton
+            saved={savedToggle.saved}
+            compact={isMobile}
+            disabled={savedToggle.isLoading}
+            onClick={savedToggle.toggle}
+          />
+        ) : null}
       </div>
 
       <h2 className="visually-hidden">{t('showcase.sectionsHeading')}</h2>
 
-      {watchlist.error ? (
+      {actionError ? (
         <p className="error" role="alert">
-          {watchlist.error}
+          {actionError}
         </p>
       ) : null}
 
@@ -425,6 +470,15 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
                 { key: 'year', label: t('profile.movies.toolbar.sortYear') },
               ]}
               labels={showcaseToolbarLabels(toolbar, t)}
+              trailing={
+                tracksSavedList ? (
+                  <DimWatchedControl
+                    enabled={dim.enabled}
+                    onChange={dim.change}
+                    isMobile={isMobile}
+                  />
+                ) : undefined
+              }
             />
           }
           filters={toolbar}
@@ -445,6 +499,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
                 onProposeToEvent={() => setProposeTarget(item)}
                 ratingScale={user?.ratingScale}
                 leadingBadge={rankBadge(item.rank, t)}
+                dimmed={dimWatched && watchedKeys.has(item)}
               />
             ))}
           </ul>

@@ -3,7 +3,7 @@ import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useMenuFocus } from '@/shared/hooks/useMenuFocus';
 import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
 
-export function useMenuState() {
+export function useMenuState(options?: { align?: 'left' | 'right' }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -14,7 +14,7 @@ export function useMenuState() {
   const toggle = useCallback(() => setOpen((value) => !value), []);
   useClickOutside(containerRef, close, open, { closeOnFocusLeave: true });
   useMenuFocus(open, panelRef, triggerRef);
-  const fitLeft = useMenuHorizontalFit(open, containerRef, panelRef);
+  const fitLeft = useMenuHorizontalFit(open, containerRef, panelRef, options?.align);
 
   return {
     open,

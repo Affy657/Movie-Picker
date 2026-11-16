@@ -37,6 +37,7 @@ export interface MovieTableSort<K extends string> {
 
 export interface MovieTableColumn<K extends string> {
   id: string;
+  label?: string;
   sorts?: MovieTableSort<K>[];
   align?: 'start' | 'end' | 'center';
   inset?: boolean;
@@ -67,6 +68,21 @@ export function MovieTableHeader<K extends string>({
     <div className={clsx(styles.headerRow, gridClassName)}>
       {columns.map((column) => {
         const sorts = column.sorts ?? [];
+        if (sorts.length === 0 && column.label) {
+          return (
+            <span
+              key={column.id}
+              className={clsx(
+                styles.colHeaderCell,
+                styles.colHeaderLabel,
+                ALIGN_CLASS[column.align ?? 'start'],
+                column.inset && styles.colHeaderInset
+              )}
+            >
+              {column.label}
+            </span>
+          );
+        }
         if (sorts.length === 0) return <span key={column.id} />;
         return (
           <span

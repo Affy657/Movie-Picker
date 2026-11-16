@@ -12,6 +12,7 @@ import type { EventData } from '@/shared/types/event';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useEvent } from '@/features/events/hooks/useEvent';
 import { useMovies } from '@/features/movies/hooks/useMovies';
+import { invalidateWatched } from '@/features/movies/hooks/invalidateWatched';
 import { useEventLive } from '@/features/events/hooks/useEventLive';
 
 const MOVIE_NIGHTS_KEY = [...queryKeys.movies.all, 'nights'] as const;
@@ -93,7 +94,7 @@ export function useEventDetailPage(
     queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
     queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
     queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
-    queryClient.invalidateQueries({ queryKey: queryKeys.profile.watchedMoviesAll });
+    void invalidateWatched(queryClient);
     queryClient.invalidateQueries({ queryKey: MOVIE_NIGHTS_KEY });
     if (recapSlug) {
       queryClient.invalidateQueries({ queryKey: queryKeys.event.recap(recapSlug) });

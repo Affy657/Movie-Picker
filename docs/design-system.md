@@ -119,6 +119,8 @@ Pastille, badge, filtre ou étiquette d'état. Quatre formes, exclusives : une �
 | `tone` | `default` / `primary` / `success` / `warning` / `pending` / `danger` / `muted` | `default` |
 | `size` | `sm` / `md` | `md` |
 | `icon` | composant Lucide | |
+| `leading` | `ReactNode` | un dessin posé avant le texte, hors du décalage optique : la pile d'avatars de la pastille des membres d'une liste |
+| `trailingIcon` | composant Lucide | une icône après le texte, décorative (`aria-hidden`) : le chevron d'une pastille qui ouvre une fenêtre |
 | `dot` | `boolean` / `'pulsing'` | un `StatusDot` devant le texte, qui pulse pour un état en cours (enregistrement) |
 | `dashed` | `boolean` | bordure pointillée : une place à prendre (inviter), une étape à venir |
 | `onClick`, `selected`, `ariaLabel`, `disabled` | | forme action ; `selected` pose le style plein et `aria-pressed`, laissé `undefined` le bouton est une action, pas un interrupteur |
@@ -126,7 +128,7 @@ Pastille, badge, filtre ou étiquette d'état. Quatre formes, exclusives : une �
 | `href`, `external`, `ariaLabel` | | forme lien : un `<Link>` du routeur pour une route de l'application, un `<a>` qui ouvre un nouvel onglet avec `rel="noopener noreferrer"` quand `external` est posé |
 | `data-testid` | `string` | |
 
-Chaque forme refuse au typage les props des autres (une étiquette ne prend ni `ariaLabel` ni `selected` : un nom accessible sur un `<span>` n'est pas lu, le texte masqué visuellement le remplace). Les tons sémantiques consomment les rôles (`--color-success-bg`…) ; `pending` garde son jeton propre `--color-badge-pending-*`. Le centrage optique du texte est intégré (`--text-optical-nudge`).
+Chaque forme refuse au typage les props des autres (une étiquette ne prend ni `ariaLabel` ni `selected` : un nom accessible sur un `<span>` n'est pas lu, le texte masqué visuellement le remplace). Les tons sémantiques consomment les rôles (`--color-success-bg`…) ; `pending` garde son jeton propre `--color-badge-pending-*`. Le centrage optique du texte est intégré (`--text-optical-nudge`). Seul le texte est décalé : `leading`, `icon` et `trailingIcon` restent centrés par `align-items: center`.
 
 ### StatusDot
 
@@ -203,7 +205,7 @@ Le skin de champ est la classe globale `.input` de `02-forms-and-content.css` : 
 
 ### ToggleRow
 
-Une ligne de réglage : un titre, une description et un `Toggle` à droite, nommé par le titre (`aria-labelledby`). `title`, `description`, `checked`, `onChange(checked)`, `disabled`. C'est la ligne « Autoriser les séries » ou « Limiter les votes » des paramètres de soirée.
+Une ligne de réglage : un titre, une description et un `Toggle` à droite, nommé par le titre (`aria-labelledby`). `title`, `description`, `checked`, `onChange(checked)`, `disabled`. C'est la ligne « Autoriser les séries » ou « Limiter les votes » des paramètres de soirée, et les interrupteurs « À voir » et « Films vus » de la carte Letterboxd des réglages.
 
 ### Section de réglages
 
@@ -215,14 +217,14 @@ Une ligne de réglage : un titre, une description et un `Toggle` à droite, nomm
 | `card`, `cardTitle` | groupe de réglages, rendu par `<Card padding="none" elevation="sm">` avec la classe ; `cardTitle` est le libellé en capitales du groupe |
 | `field` | un champ (`Field`) séparé du précédent par un trait |
 | `row`, `rowMain`, `rowLabel`, `rowSub`, `rowIcon`, `rowFlush`, `rowSubFlush`, `noDivider` | une ligne libellé + sous-titre, icône facultative à gauche, action (`Button`, lien, `Toggle`) poussée à droite |
-| `attention`, `attentionText` | bandeau d'alerte `--color-warning-*` dans un groupe, son action est un `Button size="sm" tone="warning"` |
+| `attention`, `attentionText` | bandeau d'alerte `--color-warning-*` dans un groupe, son action est un `Button size="sm" tone="warning"` ; c'est aussi, hors des réglages, le bandeau de « À voir » qui compte les films absents de la watchlist Letterboxd |
 | `dangerZone` | bloc `--color-error-*` des actions irréversibles, en bas de page |
 
 Les boutons y prennent leurs tailles et tons de `Button`, la feuille n'en redéfinit aucun.
 
 ### Page d'un film ou d'une série
 
-`app/pages/movie/MoviePage.tsx` sert `/film/<id>-<titre>` et `/serie/<id>-<titre>` (`ROUTES.moviePage`), en `noindex`. Un titre d'une liste (accueil, Explorer, Ma liste, profil, soirée) l'ouvre par `useOpenMoviePage(seed, nightSlug?)`, qui empile une entrée d'historique portant l'état `{ fromApp: true, seed }` : la graine (titre, année, affiche, note, genres) peint le haut de la page avant la requête des détails, et le retour repasse par l'historique tant que `fromApp` est posé, sinon il mène à la soirée ou à l'accueil. Un lien profond sans graine montre des `Skeleton` à la place du titre et du synopsis, et garde Proposer, Ma liste et Partager désactivés tant que le titre n'est pas connu. Un échec de chargement avec graine garde la graine et propose de réessayer par `InlineError` ; sans graine, la page entière passe en `ErrorState`, avec un retour à l'accueil sur un 404. `?soiree=<slug>` ajoute `MovieNightBar` (vote, déjà vu, exclusion du tirage, retrait) à la place du bouton Proposer. Les anciens liens `?film=<id>` et `?serie=<id>` passent par `useLegacyMovieLinkRedirect`, monté dans `AppShell` : l'entrée courante devient la liste sans ce paramètre, puis la page du film est empilée, pour que Retour ramène à la liste.
+`app/pages/movie/MoviePage.tsx` sert `/film/<id>-<titre>` et `/serie/<id>-<titre>` (`ROUTES.moviePage`), en `noindex`. Un titre d'une liste (accueil, Explorer, Ma liste, profil, soirée) l'ouvre par `useOpenMoviePage(seed, nightSlug?)`, qui empile une entrée d'historique portant l'état `{ fromApp: true, seed }` : la graine (titre, année, affiche, note, genres) peint le haut de la page avant la requête des détails, et le retour repasse par l'historique tant que `fromApp` est posé, sinon il mène à la soirée ou à l'accueil. Un lien profond sans graine montre des `Skeleton` à la place du titre et du synopsis, et garde Proposer, À voir, Je l'ai vu, les listes et Partager désactivés tant que le titre n'est pas connu. Connecté, « Je l'ai vu » (`WatchedToggle` de `features/watched`) suit « À voir » : il devient « Vu » (`soft`, `aria-pressed`) pour un film vu ailleurs, qu'un clic retire aussitôt, et cède la place au texte « Vu en soirée le 12 oct. », lien vers la soirée, pour un film vu en soirée ; « Votre note » (`WatchedRating`) se pose alors à côté de la note TMDB, modifiable pour un film vu ailleurs, en lecture seule pour la note de soirée. Un échec de chargement avec graine garde la graine et propose de réessayer par `InlineError` ; sans graine, la page entière passe en `ErrorState`, avec un retour à l'accueil sur un 404. `?soiree=<slug>` ajoute `MovieNightBar` (vote, déjà vu, exclusion du tirage, retrait) à la place du bouton Proposer. Les anciens liens `?film=<id>` et `?serie=<id>` passent par `useLegacyMovieLinkRedirect`, monté dans `AppShell` : l'entrée courante devient la liste sans ce paramètre, puis la page du film est empilée, pour que Retour ramène à la liste.
 
 ### ChoiceGroup et ChoiceCard
 
@@ -243,12 +245,13 @@ Chaque carte est un `<button role="radio" aria-checked>`. C'est le mode de roue,
 
 ### Menu
 
-`Menu` rend un déclencheur et son panneau : `triggerLabel`, `triggerIcon`, `triggerClassName`, `panelAriaLabel`, `panelClassName`, enfants sous forme de fonction `(close) => …`. Le déclencheur est un `Button` `sm` `secondary` qui passe en `soft` tant que le panneau est ouvert. Un déclencheur sur mesure (avatar, bouton à icône) garde le même comportement avec `useMenuState()` puis `MenuPanel {...menu.panelProps}` : c'est le menu du compte, celui de l'agenda et celui des cartes de soirée (`IconButton` `lg` `round` qui reçoit `{...menu.triggerProps}`). Échap ferme et rend le focus au déclencheur, focus visible en contour interne (`--outline-offset-inset`). Tab parcourt les entrées, et le focus qui sort du panneau le ferme en restant là où Tab l'a mené, sans revenir au déclencheur : c'est l'option `closeOnFocusLeave` de `useClickOutside`, posée par `useMenuState`, à passer aussi à un menu qui garde son état local, avec tous ses éléments dans `refs` quand un portail les sépare.
+`Menu` rend un déclencheur et son panneau : `triggerLabel`, `triggerIcon`, `triggerClassName`, `panelAriaLabel`, `panelClassName`, enfants sous forme de fonction `(close) => …`. Le déclencheur est un `Button` `sm` `secondary` qui passe en `soft` tant que le panneau est ouvert. Un déclencheur sur mesure (avatar, bouton à icône) garde le même comportement avec `useMenuState()` puis `MenuPanel {...menu.panelProps}` : c'est le menu du compte, celui de l'agenda et celui des cartes de soirée (`IconButton` `lg` `round` qui reçoit `{...menu.triggerProps}`). `useMenuState({ align: 'left' })` aligne le panneau sur le bord gauche du déclencheur au lieu du bord droit (le menu « Ajouter à une liste » de la fiche film, premier bouton de sa ligne). Échap ferme et rend le focus au déclencheur, focus visible en contour interne (`--outline-offset-inset`). Tab parcourt les entrées, et le focus qui sort du panneau le ferme en restant là où Tab l'a mené, sans revenir au déclencheur : c'est l'option `closeOnFocusLeave` de `useClickOutside`, posée par `useMenuState`, à passer aussi à un menu qui garde son état local, avec tous ses éléments dans `refs` quand un portail les sépare.
 
 | Brique | Props | Rôle |
 |---|---|---|
-| `MenuPanel` | `ariaLabel`, `anchored`, attributs natifs de `<div>` | porte lui-même les flèches, Home et End entre ses `menuitem` et `menuitemradio` non désactivés ; `anchored={false}` retire l'ancrage sous le déclencheur, pour un panneau porté par un portail ou posé en `fixed` (le menu des cartes film), qui garde son état d'ouverture local |
+| `MenuPanel` | `ariaLabel`, `anchored`, `embedded`, attributs natifs de `<div>` | porte lui-même les flèches, Home et End entre ses `menuitem`, `menuitemradio` et `menuitemcheckbox` non désactivés ; `anchored={false}` retire l'ancrage sous le déclencheur, pour un panneau porté par un portail ou posé en `fixed` (le menu des cartes film), qui garde son état d'ouverture local ; `embedded` retire en plus la surface flottante (fond, bordure, ombre, marge) pour poser le menu dans une autre surface, la feuille des listes sur téléphone |
 | `MenuItem` | `icon`, `href` (lien externe, `external` ouvre un nouvel onglet avec `rel="noopener noreferrer"`), `to` (route interne, rend un `<Link>`), `selected`, `tone` `default` / `danger`, `disabled`, `ariaLabel`, `title`, `aria-haspopup`, `trailing` (contenu en bout de ligne : pastille, chevron) | `disabled` rend un `<button disabled>` même avec `href` ou `to` ; `ariaLabel` et `title` quand le nom accessible diffère du texte ; `aria-haspopup` quand l'entrée ouvre une boîte de dialogue ; un libellé sans jambage est nudgé comme des petites capitales (`--text-optical-nudge-caps`, `hasDescenders` de `shared/components/opticalNudge.ts`) |
+| `MenuCheckboxItem` | `checked`, `onChange(checked)`, `description`, `disabled` | entrée à case (`menuitemcheckbox`, `aria-checked`) avec une seconde ligne facultative ; cocher ne ferme pas le menu, chaque case agit tout de suite (les listes de la fiche film) |
 | `MenuLabel`, `MenuSeparator` | | titre de groupe et séparateur |
 | `MenuChoiceRow` | `label`, `icon`, `options` (`value`, `label`, `content`), `value`, `onChange` | ligne de réglage dans un menu : un `group` nommé par `label` et ses `menuitemradio` en segments ; un choix ne ferme pas le menu (thème et langue du menu du compte) |
 
@@ -282,7 +285,7 @@ Toute liste d'onglets du produit passe par là, y compris deux onglets dans une 
 
 ### SegmentedRadioGroup
 
-Choix exclusif entre deux à cinq options courtes, `role="radiogroup"`, flèches, Home et End, qui déplacent la sélection et le focus ensemble, seule l'option cochée est tabulable. C'est le sélecteur de thème, d'échelle de note et de mode de roue.
+Choix exclusif entre deux à cinq options courtes, `role="radiogroup"`, flèches, Home et End, qui déplacent la sélection et le focus ensemble, seule l'option cochée est tabulable. C'est le sélecteur de thème, d'échelle de note, de mode de roue et de visibilité d'une liste.
 
 | Prop | Type | Rôle |
 |---|---|---|
@@ -291,13 +294,14 @@ Choix exclusif entre deux à cinq options courtes, `role="radiogroup"`, flèches
 | `id` | `string` | préfixe des identifiants des options |
 | `options` | `{ value, label, icon? }[]` | |
 | `ariaLabel` ou `ariaLabelledBy` | `string` | au moins l'un des deux, le typage refuse un groupe sans nom |
+| `ariaDescribedBy` | `string` | facultatif, l'identifiant de la phrase qui dit ce que change l'option cochée (la visibilité d'une liste) |
 | `size` | `md` / `sm` | |
 | `iconOnly` | `boolean` | le libellé devient `aria-label` |
 | `disabled` | `boolean` | toutes les options, `--opacity-disabled`, clavier inerte |
 
 ### StarRating
 
-Cinq étoiles à demi-pas pour noter un film vu, valeur entière sur 10 (`1` à `10`, une demi-étoile vaut un point), `role="group"`. Un tap donne l'étoile pleine, un second tap sur la même étoile la passe en demie ; à la souris, la moitié gauche de l'étoile prévisualise et choisit la demie ; les flèches déplacent d'une demi-étoile, bornées à 1 et 10. La valeur s'affiche à côté par `formatRating` (`shared/utils/formatRating.ts`), dans l'échelle du lecteur (`3,5/5` ou `7/10`) et sa langue.
+Cinq étoiles à demi-pas pour noter un film vu, valeur entière sur 10 (`1` à `10`, une demi-étoile vaut un point), `role="group"`. C'est la fenêtre de notation d'une soirée et « Votre note » de la fiche d'un film vu ailleurs. Un tap donne l'étoile pleine, un second tap sur la même étoile la passe en demie ; à la souris, la moitié gauche de l'étoile prévisualise et choisit la demie ; les flèches déplacent d'une demi-étoile, bornées à 1 et 10. La valeur s'affiche à côté par `formatRating` (`shared/utils/formatRating.ts`), dans l'échelle du lecteur (`3,5/5` ou `7/10`) et sa langue.
 
 | Prop | Type | Rôle |
 |---|---|---|
@@ -305,6 +309,11 @@ Cinq étoiles à demi-pas pour noter un film vu, valeur entière sur 10 (`1` à 
 | `ariaLabel` | `string` | nom du groupe |
 | `starLabel` | `(stars: number) => string` | nom de chaque bouton |
 | `size` | `md` / `lg` | `lg` (fenêtre de notation) porte des cellules de 44 px, `md` étend sa zone tactile |
+| `readOnly` | `true` | une note qu'on lit sans la changer (la note de soirée sur la fiche d'un film) : un seul `role="img"` nommé par `ariaLabel`, cinq étoiles dessinées sans bouton ; `onChange` et `starLabel` disparaissent du typage |
+
+### ProgressBar
+
+La barre d'avancée fine suivie de son libellé : `value` (de 0 à 100, bornée), `label` (le texte visible à droite, un `<strong>` y passe en gras à la couleur du texte), `className` (la largeur que l'appelant lui donne). La piste (`--space-1` de haut, `--color-surface-hover-strong`) est décorative (`aria-hidden`) : le libellé dit tout, aucun lecteur d'écran ne lit deux fois la même part. Le remplissage `--color-success` prend sa largeur de `--progress-value`, posé en `style` par le composant. C'est l'avancée d'une liste créée ou enregistrée, sur sa carte de Mes listes (« 65 % vus ») et sous son titre (« 5 sur 8 vus, **63 %** », `ListProgress` de `features/lists`), et celle d'une saga ou d'une sélection d'Explorer pour un membre connecté, comptée sur ses Films vus (`useWatchedKeys`).
 
 ### Tooltip et InfoBubble
 
@@ -329,6 +338,8 @@ Cinq étoiles à demi-pas pour noter un film vu, valeur entière sur 10 (`1` à 
 - `Avatar` : `avatarId`, `pseudo`, `size` `xs` / `sm` / `md` / `lg` / `xl` (`--avatar-*`). L'identifiant désigne un robot ou un emoji DiceBear, ou une photo de profil (`photo:<clé>`, servie par `/api/v1/avatars/<clé>`). Sans identifiant, ou quand l'image ne répond plus (photo supprimée, compte supprimé), initiales sur l'une des huit couleurs `--color-avatar-*`, choisie par le pseudo ; sans pseudo, pastille vide. Toujours décoratif (`aria-hidden`), le nom est porté par le texte voisin. Les tailles sont déclarées en `:where()` : un module qui doit redimensionner un avatar pose `width` et `height` sur sa propre classe, sans `!important`.
 - `PosterBackdrop` : `posterPath`, `direction` `down` / `side`, `glow`, `className`. Affiche en fond avec son voile, toujours décorative (`aria-hidden`), le voile seul quand il n'y a pas d'affiche. Avec `glow`, l'affiche devient un halo flouté sans voile qui fond vers la gauche, derrière le contenu (`--z-below`, le parent pose `isolation: isolate`), à l'opacité `--opacity-poster-glow` (plus basse en clair) : ce sont les cartes de Mes soirées ; rien n'est rendu sans affiche.
 - `AvatarStack` : `people` (`{ key, avatarId, pseudo }`), `max` (3), `hidden` quand la liste n'est qu'un échantillon, `size` `xs` / `sm`, `ariaLabel`. Avatars chevauchés d'un quart, anneau `--avatar-stack-ring` (le fond de page par défaut, la surface ou l'anneau d'affiche via une classe), pastille « +N » pour le reste. Décoratif sans `ariaLabel`, `role="img"` avec.
+- Membres d'une liste à plusieurs (`features/lists/`) : sous la description, une `Chip` `primary` `sm` en forme action, la pile d'avatars en `leading` (anneau `--avatar-stack-ring` posé sur `--color-primary-soft` par la classe de la page) et `ChevronRight` en `trailingIcon`, qui ouvre la fenêtre Membres. Sur chaque affiche, l'avatar de la personne qui a ajouté le film en bas à droite (`ContributorBadge` de `movieCardParts`, `role="img"`, « Ajouté par Léa »), qui s'efface au survol comme le badge À voir ; en vue tableau, une colonne « Ajouté par » (`LibraryMovieRowHeader` `contributorLabel`, colonne d'en-tête non triable `label` de `MovieTableHeader`) le remplace. Dans la fenêtre Membres, retirer quelqu'un se confirme sur sa ligne : le premier appui arme le bouton (« Confirmer », `soft` `danger`, le même élément garde le focus), un bouton « Garder » apparaît devant, et la ligne dit ce qui arrive ; pas de `ConfirmDialog` empilé sur une fenêtre déjà ouverte.
+- Listes publiques (`features/lists/`) : la visibilité se choisit dans `ListFormDialog` (création et modification) par un `SegmentedRadioGroup` `sm` Privée (cadenas) ou Publique (globe), suivi d'une phrase `hint` qui dit ce que change l'option cochée et que le groupe porte en `ariaDescribedBy`. Une liste publique à moi porte une `Chip` `muted` `sm` « Publique » avec le globe, sous son titre. « Copier le lien » d'un menu ⋯ confirme la copie par `CopyLinkStatus` : une région `role="status"` posée à gauche du bouton ⋯, qui montre une `Chip` `success` « Lien copié » deux secondes. « À voir » et « Films vus » règlent leur visibilité dans leur menu ⋯ (`CollectionVisibilityMenu` de `features/watchlist`, `ListActionsMenu` avec une seule entrée « Rendre publique » ou « Rendre privée »), en optimiste avec retour arrière. Sur la carte d'une liste enregistrée dont la source a disparu, les actions (« Garder une copie », « Ne plus enregistrer ») sont des `LinkButton` `sm` passés en `footer` de `MovieCollectionCard`, hors de son lien.
 - `EventLifecyclePill` : `lifecycle` `upcoming` / `live` / `pending` / `finished`, `label`, `detail`, `variant` `pill` (cadre et fond) ou `text` (texte coloré et icône sans cadre, ligne d'infos de la soirée et cartes de Mes soirées) ; seul `live` pulse (`StatusDot pulsing`). Consomme `--color-badge-*`, comme `Chip` `pending`.
 - `ViewModeToggle` : barre d'outils grille / liste, `aria-pressed` sur le mode courant, boutons de 28 px à zone tactile étendue.
 - `InstallPwaDialog` : `open`, `mode` `ios` / `in_app` / `generic`, `onClose` ; le guide d'ajout à l'écran d'accueil qu'ouvre `usePwaInstallClick`, depuis le pied de page, le menu du compte et la section notifications.

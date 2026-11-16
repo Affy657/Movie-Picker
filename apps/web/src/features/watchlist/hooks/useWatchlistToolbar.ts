@@ -18,10 +18,11 @@ export interface WatchlistEntry extends WatchlistItem {
 }
 
 export type WatchlistSortKey =
-  'createdAt' | 'title' | 'voteAverage' | 'duration' | 'year' | 'availability';
+  'relevance' | 'createdAt' | 'title' | 'voteAverage' | 'duration' | 'year' | 'availability';
 export type SortDirection = 'asc' | 'desc';
 
 const SORT_KEYS = new Set<WatchlistSortKey>([
+  'relevance',
   'createdAt',
   'title',
   'voteAverage',
@@ -31,6 +32,7 @@ const SORT_KEYS = new Set<WatchlistSortKey>([
 ]);
 
 const DEFAULT_DIRECTION: Record<WatchlistSortKey, SortDirection> = {
+  relevance: 'asc',
   createdAt: 'desc',
   title: 'asc',
   voteAverage: 'desc',
@@ -59,16 +61,26 @@ const DEFAULT_STATE: PersistedState = {
   runtimeRange: [RUNTIME_MIN_MINUTES, RUNTIME_MAX_MINUTES],
 };
 
-function storageKey(userId: string): string {
-  return `moviepicker_watchlist_toolbar_${userId}`;
+export type ToolbarStorageScope = 'watchlist' | 'list' | 'watched' | 'savedList' | 'publicList';
+
+function storageKey(scope: ToolbarStorageScope, userId: string): string {
+  return `moviepicker_${scope}_toolbar_${userId}`;
 }
 
-function readPersisted(userId: string): PersistedState {
-  const raw = safeLocalStorageGet(storageKey(userId));
-  if (!raw) return DEFAULT_STATE;
+function defaultStateFor(sortBy: WatchlistSortKey): PersistedState {
+  return { ...DEFAULT_STATE, sortBy, sortDir: DEFAULT_DIRECTION[sortBy] };
+}
+
+function readPersisted(
+  scope: ToolbarStorageScope,
+  userId: string,
+  defaults: PersistedState
+): PersistedState {
+  const raw = safeLocalStorageGet(storageKey(scope, userId));
+  if (!raw) return defaults;
   try {
     const parsed = JSON.parse(raw);
-    if (typeof parsed !== 'object' || parsed === null) return DEFAULT_STATE;
+    if (typeof parsed !== 'object' || parsed === null) return defaults;
     const p = parsed as Partial<Record<keyof PersistedState, unknown>>;
     const runtimeRange =
       Array.isArray(p.runtimeRange) &&
@@ -79,8 +91,8 @@ function readPersisted(userId: string): PersistedState {
     return {
       sortBy: SORT_KEYS.has(p.sortBy as WatchlistSortKey)
         ? (p.sortBy as WatchlistSortKey)
-        : DEFAULT_STATE.sortBy,
-      sortDir: p.sortDir === 'asc' || p.sortDir === 'desc' ? p.sortDir : DEFAULT_STATE.sortDir,
+        : defaults.sortBy,
+      sortDir: p.sortDir === 'asc' || p.sortDir === 'desc' ? p.sortDir : defaults.sortDir,
       genres: Array.isArray(p.genres)
         ? p.genres.filter((g) => typeof g === 'number')
         : DEFAULT_STATE.genres,
@@ -92,16 +104,23 @@ function readPersisted(userId: string): PersistedState {
       runtimeRange,
     };
   } catch {
-    return DEFAULT_STATE;
+    return defaults;
   }
 }
 
-function writePersisted(userId: string, state: PersistedState) {
-  safeLocalStorageSet(storageKey(userId), JSON.stringify(state));
+function writePersisted(scope: ToolbarStorageScope, userId: string, state: PersistedState) {
+  safeLocalStorageSet(storageKey(scope, userId), JSON.stringify(state));
 }
 
-function compareItems(a: WatchlistEntry, b: WatchlistEntry, sortBy: WatchlistSortKey): number {
+function compareItems(
+  a: WatchlistEntry,
+  b: WatchlistEntry,
+  sortBy: WatchlistSortKey,
+  positionOf: (item: WatchlistEntry) => number
+): number {
   switch (sortBy) {
+    case 'relevance':
+      return positionOf(a) - positionOf(b);
     case 'title':
       return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' });
     case 'voteAverage': {
@@ -158,12 +177,21 @@ export interface ActiveToolbarChip {
   onRemove: () => void;
 }
 
+export interface ToolbarExtraFilter {
+  matches: (item: WatchlistEntry) => boolean;
+  active: boolean;
+  reset: () => void;
+}
+
 interface UseWatchlistToolbarOptions {
   items: WatchlistEntry[];
   userId: string | undefined;
   tmdbLanguage: string;
   ratingScale?: RatingScale;
   mediaTypeLabels: Record<MovieMediaType, string>;
+  storageScope?: ToolbarStorageScope;
+  extraFilter?: ToolbarExtraFilter;
+  defaultSortBy?: WatchlistSortKey;
 }
 
 export function useWatchlistToolbar({
@@ -172,24 +200,28 @@ export function useWatchlistToolbar({
   tmdbLanguage,
   ratingScale,
   mediaTypeLabels,
+  storageScope = 'watchlist',
+  extraFilter,
+  defaultSortBy = 'createdAt',
 }: UseWatchlistToolbarOptions) {
+  const defaults = useMemo(() => defaultStateFor(defaultSortBy), [defaultSortBy]);
   const [search, setSearch] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [state, setState] = useState<PersistedState>(DEFAULT_STATE);
+  const [state, setState] = useState<PersistedState>(defaults);
   const skipNextWriteRef = useRef(true);
 
   useEffect(() => {
     skipNextWriteRef.current = true;
-    setState(userId ? readPersisted(userId) : DEFAULT_STATE);
-  }, [userId]);
+    setState(userId ? readPersisted(storageScope, userId, defaults) : defaults);
+  }, [storageScope, userId, defaults]);
 
   useEffect(() => {
     if (skipNextWriteRef.current) {
       skipNextWriteRef.current = false;
       return;
     }
-    if (userId) writePersisted(userId, state);
-  }, [userId, state]);
+    if (userId) writePersisted(storageScope, userId, state);
+  }, [storageScope, userId, state]);
 
   const setSortBy = useCallback((key: WatchlistSortKey) => {
     setState((prev) =>
@@ -245,7 +277,8 @@ export function useWatchlistToolbar({
   const resetAll = useCallback(() => {
     setSearch('');
     clearAllFilters();
-  }, [clearAllFilters]);
+    extraFilter?.reset();
+  }, [clearAllFilters, extraFilter]);
 
   const hasActiveFilters = useMemo(
     () =>
@@ -258,7 +291,7 @@ export function useWatchlistToolbar({
     [state]
   );
 
-  const isFiltered = hasActiveFilters || search.trim() !== '';
+  const isFiltered = hasActiveFilters || search.trim() !== '' || !!extraFilter?.active;
 
   const activeFilterChips = useMemo<ActiveToolbarChip[]>(() => {
     const chips: ActiveToolbarChip[] = [];
@@ -316,11 +349,16 @@ export function useWatchlistToolbar({
 
   const visibleItems = useMemo(() => {
     const filtered = items.filter(
-      (item) => itemMatchesFilters(item, state) && itemMatchesSearch(item, search)
+      (item) =>
+        itemMatchesFilters(item, state) &&
+        itemMatchesSearch(item, search) &&
+        (extraFilter?.matches(item) ?? true)
     );
-    const sorted = [...filtered].sort((a, b) => compareItems(a, b, state.sortBy));
+    const positions = new Map(items.map((item, index) => [item, index]));
+    const positionOf = (item: WatchlistEntry) => positions.get(item) ?? 0;
+    const sorted = [...filtered].sort((a, b) => compareItems(a, b, state.sortBy, positionOf));
     return state.sortDir === 'desc' ? sorted.reverse() : sorted;
-  }, [items, state, search]);
+  }, [items, state, search, extraFilter]);
 
   return {
     search,

@@ -27,6 +27,7 @@ public sealed class GetInboxHandlerTests
 {
     private readonly Mock<IUserNotificationRepository> _notifications = new();
     private readonly Mock<IUserRepository> _users = new();
+    private readonly Mock<IMovieListRepository> _lists = new();
     private readonly GetInboxHandler _sut;
 
     private static readonly UserCard Bob = new("bob-id", "avatar-1", "bob", IsProfilePublic: true);
@@ -38,7 +39,43 @@ public sealed class GetInboxHandlerTests
         _users.Setup(u => u.ListCardsByHandlesAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyCollection<string> handles, CancellationToken _) =>
                 new[] { Bob, Hidden }.Where(card => handles.Any(h => h.Trim().Equals(card.Handle, StringComparison.OrdinalIgnoreCase))).ToList());
-        _sut = new GetInboxHandler(_notifications.Object, _users.Object);
+        _sut = new GetInboxHandler(_notifications.Object, _users.Object, _lists.Object);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AListInvitation_CarriesItsList_AndOffersAnAnswerOnlyWhileItIsPending()
+    {
+        _notifications.Setup(n => n.ListByUserIdAsync("u1", 31, 0, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                new UserNotification { Id = "n1", UserId = "u1", Type = UserNotificationType.ListInvitation, ActorHandle = "bob", ListId = "l1", ListName = "Halloween" },
+                new UserNotification { Id = "n2", UserId = "u1", Type = UserNotificationType.ListInvitation, ActorHandle = "bob", ListId = "l2", ListName = "Nanars" },
+                new UserNotification { Id = "n3", UserId = "u1", Type = UserNotificationType.NewFollower, ActorHandle = "bob" }
+            ]);
+        _lists.Setup(l => l.ListPendingInvitationIdsAsync("u1", It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new HashSet<string> { "l2" });
+
+        var result = await _sut.HandleAsync("u1", limit: null, offset: null);
+
+        Assert.Equal(["listinvitation", "listinvitation", "newfollower"], result.Items.Select(i => i.Type));
+        Assert.Equal([("l1", "Halloween", false), ("l2", "Nanars", true), (null, null, false)], result.Items.Select(i => (i.ListId, i.ListName, i.ListInvitationPending)));
+        _lists.Verify(
+            l => l.ListPendingInvitationIdsAsync(
+                "u1",
+                It.Is<IReadOnlyCollection<string>>(ids => ids.Count == 2 && ids.Contains("l1") && ids.Contains("l2")),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_APageWithoutListInvitations_ReadsNoList()
+    {
+        _notifications.Setup(n => n.ListByUserIdAsync("u1", 31, 0, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new UserNotification { Id = "n1", UserId = "u1", Type = UserNotificationType.EventPending }]);
+
+        await _sut.HandleAsync("u1", limit: null, offset: null);
+
+        _lists.VerifyNoOtherCalls();
     }
 
     [Fact]

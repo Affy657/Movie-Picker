@@ -142,6 +142,29 @@ describe('useEventDetailPage', () => {
     );
   });
 
+  it('marks my watched films stale, so Films vus and a film page show the new night rating', async () => {
+    serveEventNever();
+    const client = createTestQueryClient();
+    client.setQueryData(queryKeys.watched.movies, { items: [], total: 0 });
+    client.setQueryData(queryKeys.watched.status(438631, 'movie'), { status: 'night' });
+    client.setQueryData(queryKeys.me.watchedMovies(500), { items: [] });
+    const { result } = renderHook(() => useEventDetailPage(slug), {
+      wrapper: ({ children }: Readonly<{ children: ReactNode }>) => (
+        <QueryClientWrapper client={client}>
+          <MemoryRouter initialEntries={[`/e/${slug}`]}>{children}</MemoryRouter>
+        </QueryClientWrapper>
+      ),
+    });
+
+    act(() => result.current.refreshAll());
+
+    expect(client.getQueryState(queryKeys.watched.movies)?.isInvalidated).toBe(true);
+    expect(client.getQueryState(queryKeys.watched.status(438631, 'movie'))?.isInvalidated).toBe(
+      true
+    );
+    expect(client.getQueryState(queryKeys.me.watchedMovies(500))?.isInvalidated).toBe(true);
+  });
+
   it('marks the nights of every film stale, so a film page shows the new seen mark', async () => {
     serveEventNever();
     const client = createTestQueryClient();

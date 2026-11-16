@@ -2,8 +2,8 @@ using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.Posters;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
-using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.Watchlist;
 
@@ -31,8 +31,8 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
 
     public async Task<WatchlistItemResponse> HandleAsync(string userId, AddWatchlistItemRequest request, CancellationToken ct = default)
     {
-        var poster = await ResolvePosterAsync(request.PosterPath, ct);
-        var details = await FetchDetailsBestEffortAsync(request.TmdbId, request.MediaType, ct);
+        var poster = await TmdbPosterPathResolver.ResolveAsync(_posterImageStore, request.PosterPath, ct);
+        var details = await TmdbTitleFacts.FetchDetailsBestEffortAsync(_tmdb, _logger, request.TmdbId, request.MediaType, ct);
 
         var item = new WatchlistItem
         {
@@ -44,11 +44,11 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
             Year = request.Year,
             PosterPath = poster,
             VoteAverage = request.VoteAverage ?? details?.VoteAverage,
-            RuntimeMinutes = KnownRuntime(request.RuntimeMinutes) ?? KnownRuntime(details?.Runtime) ?? request.RuntimeMinutes,
+            RuntimeMinutes = TmdbTitleFacts.RuntimeMinutes(request.RuntimeMinutes, details),
             LetterboxdSlug = string.IsNullOrWhiteSpace(request.LetterboxdSlug)
                 ? null
                 : request.LetterboxdSlug.Trim(),
-            GenreIds = details?.GenreIds ?? SearchResultGenres(request.GenreIds),
+            GenreIds = TmdbTitleFacts.GenreIds(request.GenreIds, details),
             CreatedAt = _clock.GetUtcNow()
         };
 
@@ -57,39 +57,9 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
         {
             var existing = await _watchlist.GetOneAsync(userId, request.TmdbId, request.MediaType, ct);
             if (existing is not null)
-                return WatchlistItemResponse.FromDomain(existing);
+                return WatchlistItemResponse.FromDomain(existing, includeLetterboxd: true);
         }
 
-        return WatchlistItemResponse.FromDomain(item);
-    }
-
-    private async Task<string?> ResolvePosterAsync(string? posterPath, CancellationToken ct)
-    {
-        var poster = string.IsNullOrWhiteSpace(posterPath) ? null : posterPath.Trim();
-        if (poster is not null && !TmdbPosterUrlNormalizer.IsAcceptedPosterReference(poster))
-            throw Errors.InvalidPosterPath();
-
-        return await _posterImageStore.ToStoredPosterPathAsync(poster, ct);
-    }
-
-    private static int? KnownRuntime(int? runtimeMinutes) => runtimeMinutes is > 0 ? runtimeMinutes : null;
-
-    private static List<int> SearchResultGenres(IReadOnlyList<int>? genreIds) =>
-        genreIds is null ? [] : genreIds.Where(id => id > 0).Distinct().ToList();
-
-    private async Task<TmdbMovieDetails?> FetchDetailsBestEffortAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct)
-    {
-        try
-        {
-            return await _tmdb.GetDetailsAsync(tmdbId, mediaType, ct);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(
-                ex,
-                "TMDB details lookup failed for {TmdbId}, item added to the watchlist with the genres of its search result and without facts",
-                tmdbId);
-            return null;
-        }
+        return WatchlistItemResponse.FromDomain(item, includeLetterboxd: true);
     }
 }

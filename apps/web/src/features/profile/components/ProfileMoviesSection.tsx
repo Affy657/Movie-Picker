@@ -20,8 +20,10 @@ import type { UserWatchedMovieItem } from '@/features/profile/api/profileApi';
 import { useProfileWatchedPreview } from '@/features/profile/hooks/useProfileWatchedPreview';
 import OwnerRatingBadge from '@/features/profile/components/OwnerRatingBadge';
 import ProfileFavoritesSection from '@/features/profile/components/ProfileFavoritesSection';
+import ProfileHiddenNotice from '@/features/profile/components/ProfileHiddenNotice';
 import ProfileWatchlistPreview from '@/features/profile/components/ProfileWatchlistPreview';
 import type { FavoriteTitle } from '@/shared/types/movie';
+import type { RatingScale } from '@/shared/types/theme';
 import styles from './ProfileMoviesSection.module.css';
 
 const WATCHED_PREVIEW_COUNT = 8;
@@ -35,6 +37,8 @@ interface Props {
   handle: string;
   favorites?: readonly FavoriteTitle[];
   isOwnProfile?: boolean;
+  watchedVisible?: boolean;
+  watchedHidden?: boolean;
   watchlist?: WatchlistSummary | null;
 }
 
@@ -48,14 +52,90 @@ function latestViewingOfEachTitle(items: readonly UserWatchedMovieItem[]): UserW
   });
 }
 
+const NO_WATCHED: readonly UserWatchedMovieItem[] = [];
+
+function useVisibleWatchedPreview(handle: string, visible: boolean) {
+  const query = useProfileWatchedPreview(handle, visible);
+  return {
+    items: (visible && query.data?.items) || NO_WATCHED,
+    total: query.data?.total,
+    failed: visible && query.isLoadingError,
+    retry: () => void query.refetch(),
+  };
+}
+
+function WatchedPreviewRow({
+  handle,
+  items,
+  total,
+  hidden,
+  library,
+  ratingScale,
+  onOpenDetails,
+}: Readonly<{
+  handle: string;
+  items: readonly UserWatchedMovieItem[];
+  total: number | undefined;
+  hidden: boolean;
+  library: MovieLibraryActions;
+  ratingScale: RatingScale | undefined;
+  onOpenDetails: (item: UserWatchedMovieItem) => void;
+}>) {
+  const { t } = useTranslation();
+  return (
+    <MoviePreviewRow
+      heading={t('profile.movies.title')}
+      headingCount={total}
+      seeAllTo={ROUTES.profileMovies(handle)}
+      seeAllLabel={t('profile.movies.seeAll')}
+      toolbar={
+        hidden ? (
+          <ProfileHiddenNotice
+            label={t('profile.movies.hidden')}
+            to={ROUTES.watchedMovies}
+            className={styles.hiddenNotice}
+          />
+        ) : undefined
+      }
+    >
+      <ul className={styles.watchedGrid}>
+        {items.map((item) => (
+          <MovieBrowseCard
+            key={`${item.tmdbId}|${item.mediaType}|${item.watchedAt}`}
+            item={item}
+            ratingScale={ratingScale}
+            hasHover={library.hasHover}
+            isLoggedIn={library.isLoggedIn}
+            inWatchlist={library.has(item)}
+            onToggleWatchlist={() => library.toggle(item)}
+            onProposeToEvent={() => library.propose(item)}
+            onOpenDetails={() => onOpenDetails(item)}
+            leadingBadge={
+              item.myRating != null ? (
+                <OwnerRatingBadge
+                  handle={handle}
+                  value={item.myRating}
+                  scale={ratingScale ?? 'five'}
+                />
+              ) : undefined
+            }
+          />
+        ))}
+      </ul>
+    </MoviePreviewRow>
+  );
+}
+
 export default function ProfileMoviesSection({
   handle,
   favorites = [],
   isOwnProfile = false,
+  watchedVisible = true,
+  watchedHidden = false,
   watchlist = null,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const query = useProfileWatchedPreview(handle);
+  const preview = useVisibleWatchedPreview(handle, watchedVisible);
   const openMoviePage = useOpenMoviePage();
   const [proposeTarget, setProposeTarget] = useState<WatchlistToggleItem | null>(null);
   const { user } = useAuth();
@@ -72,11 +152,10 @@ export default function ProfileMoviesSection({
     propose: setProposeTarget,
   };
 
-  const items = query.data?.items ?? [];
+  const { items, total, failed: watchedFailed, retry } = preview;
   const watched = latestViewingOfEachTitle(items).slice(0, WATCHED_PREVIEW_COUNT);
   const showFavorites = favorites.length > 0 || isOwnProfile;
   const showWatchlist = !!watchlist && (isOwnProfile || watchlist.count > 0);
-  const watchedFailed = query.isLoadingError;
   if (items.length === 0 && !watchedFailed && !showFavorites && !showWatchlist) return null;
 
   const watchlistInShelf = showWatchlist && !isMobile;
@@ -124,42 +203,20 @@ export default function ProfileMoviesSection({
         <InlineError
           message={t('profile.movies.previewLoadError')}
           retryLabel={t('common.retry')}
-          onRetry={() => void query.refetch()}
+          onRetry={retry}
         />
       ) : null}
 
       {watched.length > 0 ? (
-        <MoviePreviewRow
-          heading={t('profile.movies.title')}
-          headingCount={query.data?.total}
-          seeAllTo={ROUTES.profileMovies(handle)}
-          seeAllLabel={t('profile.movies.seeAll')}
-        >
-          <ul className={styles.watchedGrid}>
-            {watched.map((item) => (
-              <MovieBrowseCard
-                key={`${item.tmdbId}|${item.mediaType}|${item.watchedAt}`}
-                item={item}
-                ratingScale={user?.ratingScale}
-                hasHover={hasHover}
-                isLoggedIn={isLoggedIn}
-                inWatchlist={watchlistToggle.has(item)}
-                onToggleWatchlist={() => watchlistToggle.toggle(item)}
-                onProposeToEvent={() => setProposeTarget(item)}
-                onOpenDetails={() => openMoviePage(item)}
-                leadingBadge={
-                  item.myRating != null ? (
-                    <OwnerRatingBadge
-                      handle={handle}
-                      value={item.myRating}
-                      scale={user?.ratingScale ?? 'five'}
-                    />
-                  ) : undefined
-                }
-              />
-            ))}
-          </ul>
-        </MoviePreviewRow>
+        <WatchedPreviewRow
+          handle={handle}
+          items={watched}
+          total={total}
+          hidden={watchedHidden}
+          library={library}
+          ratingScale={user?.ratingScale}
+          onOpenDetails={(item) => openMoviePage(item)}
+        />
       ) : null}
 
       {watchlistInShelf ? null : watchlistPreview}

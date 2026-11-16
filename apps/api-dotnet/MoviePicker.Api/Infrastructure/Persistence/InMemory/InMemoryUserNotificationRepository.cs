@@ -141,4 +141,20 @@ public sealed class InMemoryUserNotificationRepository : IUserNotificationReposi
 
         return Task.FromResult(count);
     }
+
+    public Task<long> DeleteByListAsync(string listId, string? userId = null, CancellationToken ct = default)
+    {
+        var removed = _store
+            .Where(entry => entry.Value.ListId == listId && (userId is null || entry.Value.UserId == userId))
+            .Count(entry => _store.TryRemove(entry.Key, out _));
+        return Task.FromResult((long)removed);
+    }
+
+    public Task<long> DeleteByListsAsync(IReadOnlyCollection<string> listIds, CancellationToken ct = default)
+    {
+        var removed = _store
+            .Where(entry => entry.Value.ListId is { } listId && listIds.Contains(listId))
+            .Count(entry => _store.TryRemove(entry.Key, out _));
+        return Task.FromResult((long)removed);
+    }
 }

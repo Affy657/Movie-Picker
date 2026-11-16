@@ -11,6 +11,7 @@ export const queryKeys = {
     followersAll: ['profile', 'followers'] as const,
     followers: (handle: string | undefined) =>
       ['profile', 'followers', handle ?? '$pending'] as const,
+    statsAll: ['profile', 'stats'] as const,
     stats: (handle: string | undefined) => ['profile', 'stats', handle ?? '$pending'] as const,
     userSearches: ['profile', 'user-search'] as const,
     userSearch: (query: string) => ['profile', 'user-search', query] as const,
@@ -19,6 +20,7 @@ export const queryKeys = {
       ['profile', 'watchedMovies', handle ?? '$pending', take] as const,
     proposedMovies: (handle: string | undefined, winningOnly: boolean) =>
       ['profile', 'proposedMovies', handle ?? '$pending', winningOnly] as const,
+    watchlistAll: ['profile', 'watchlist'] as const,
     watchlistOf: (handle: string) => ['profile', 'watchlist', handle] as const,
     watchlist: (handle: string | undefined, take: number) =>
       ['profile', 'watchlist', handle ?? '$pending', take] as const,
@@ -73,10 +75,39 @@ export const queryKeys = {
     followingWatchedMoviesAll: ['users', 'me', 'following-watched-movies'] as const,
     followingWatchedMovies: (take: number) =>
       ['users', 'me', 'following-watched-movies', take] as const,
+    watchedMoviesAll: ['users', 'me', 'watched-movies'] as const,
     watchedMovies: (take: number) => ['users', 'me', 'watched-movies', take] as const,
+  },
+  watched: {
+    all: ['watched'] as const,
+    movies: ['watched', 'movies'] as const,
+    status: (tmdbId: number, mediaType: string) =>
+      ['watched', 'status', tmdbId, mediaType] as const,
   },
   watchlist: {
     list: ['watchlist', 'list'] as const,
     availability: ['watchlist', 'availability'] as const,
+  },
+  lists: {
+    all: ['lists'] as const,
+    mine: ['lists', 'mine'] as const,
+    containingAll: ['lists', 'containing'] as const,
+    containing: (tmdbId: number, mediaType: string) =>
+      ['lists', 'containing', tmdbId, mediaType] as const,
+    detail: (id: string | undefined) => ['lists', 'detail', id ?? '$pending'] as const,
+    members: (id: string) => ['lists', 'members', id] as const,
+    invitable: (id: string) => ['lists', 'invitable', id] as const,
+    invitePreview: (token: string, viewerId: string | null) =>
+      ['lists', 'invite', token, viewerId ?? '$anonymous'] as const,
+    savedAll: ['lists', 'saved'] as const,
+    savedMine: ['lists', 'saved', 'mine'] as const,
+    savedBySource: (sourceType: string, sourceId: string) =>
+      ['lists', 'saved', 'source', sourceType, sourceId] as const,
+    savedDetail: (id: string | undefined) =>
+      ['lists', 'saved', 'detail', id ?? '$pending'] as const,
+    publicOf: (handle: string | undefined) =>
+      ['lists', 'public', handle ?? '$pending', 'summaries'] as const,
+    publicDetail: (handle: string | undefined, listId: string | undefined) =>
+      ['lists', 'public', handle ?? '$pending', 'detail', listId ?? '$pending'] as const,
   },
 } as const;

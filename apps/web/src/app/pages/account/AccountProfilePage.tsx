@@ -21,7 +21,6 @@ type ProfileDraft = {
   displayName: string;
   bio: string;
   isPublic: boolean;
-  isWatchlistPublic: boolean;
 };
 
 function draftOf(user: UserProfile): ProfileDraft {
@@ -29,17 +28,11 @@ function draftOf(user: UserProfile): ProfileDraft {
     displayName: user.displayName,
     bio: user.bio ?? '',
     isPublic: user.isProfilePublic ?? true,
-    isWatchlistPublic: user.isWatchlistPublic ?? true,
   };
 }
 
 function sameDraft(a: ProfileDraft, b: ProfileDraft): boolean {
-  return (
-    a.displayName === b.displayName &&
-    a.bio === b.bio &&
-    a.isPublic === b.isPublic &&
-    a.isWatchlistPublic === b.isWatchlistPublic
-  );
+  return a.displayName === b.displayName && a.bio === b.bio && a.isPublic === b.isPublic;
 }
 
 function unlessEdited<T>(draftValue: T, serverValue: T, incomingValue: T): T {
@@ -55,11 +48,6 @@ function keepUnsavedEdits(
     displayName: unlessEdited(draft.displayName, server.displayName, incoming.displayName),
     bio: unlessEdited(draft.bio, server.bio, incoming.bio),
     isPublic: unlessEdited(draft.isPublic, server.isPublic, incoming.isPublic),
-    isWatchlistPublic: unlessEdited(
-      draft.isWatchlistPublic,
-      server.isWatchlistPublic,
-      incoming.isWatchlistPublic
-    ),
   };
 }
 
@@ -108,8 +96,7 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
     const bioChanged = bioTrimmed !== server.bio.trim();
     const nameChanged = trimmedName !== server.displayName;
     const publicChanged = sent.isPublic !== server.isPublic;
-    const watchlistChanged = sent.isWatchlistPublic !== server.isWatchlistPublic;
-    if (!nameChanged && !bioChanged && !publicChanged && !watchlistChanged) return;
+    if (!nameChanged && !bioChanged && !publicChanged) return;
     if (savingRef.current) {
       pendingRetryRef.current = true;
       return;
@@ -122,7 +109,6 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
         displayName: trimmedName,
         ...(bioChanged ? { bio: bioTrimmed } : {}),
         isProfilePublic: sent.isPublic,
-        isWatchlistPublic: sent.isWatchlistPublic,
       });
       serverDraftRef.current = draftOf(updated);
       if (sameDraft(draftRef.current, sent)) replaceDraft(serverDraftRef.current);
@@ -143,12 +129,11 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
     timerRef.current = globalThis.setTimeout(() => void flush(), AUTOSAVE_DELAY_MS);
   };
 
-  const { displayName, bio, isPublic, isWatchlistPublic } = draft;
+  const { displayName, bio, isPublic } = draft;
   const bioCharsLeft = BIO_MAX_LENGTH - bio.length;
   const showBioHint = bioCharsLeft <= BIO_HINT_THRESHOLD;
   const errorMsg = pseudoError ?? saveError;
   const profileUrl = user.handle ? `movie-picker.fr${ROUTES.profile(user.handle)}` : '';
-  const watchlistUrl = user.handle ? `movie-picker.fr${ROUTES.profileWatchlist(user.handle)}` : '';
 
   return (
     <>
@@ -227,26 +212,6 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
             ariaLabel={t('profile.settings.visibilityLabel')}
             onChange={(checked) => {
               editDraft({ isPublic: checked });
-              void flush();
-            }}
-          />
-        </div>
-
-        <div className={styles.row}>
-          <div className={styles.rowMain}>
-            <p className={styles.rowLabel}>{t('profile.settings.watchlistVisibilityLabel')}</p>
-            <p className={styles.rowSub}>
-              {isPublic
-                ? t('profile.settings.watchlistVisibilityHint', { url: watchlistUrl })
-                : t('profile.settings.watchlistVisibilityPrivateHint')}
-            </p>
-          </div>
-          <Toggle
-            checked={isWatchlistPublic}
-            disabled={!isPublic}
-            ariaLabel={t('profile.settings.watchlistVisibilityLabel')}
-            onChange={(checked) => {
-              editDraft({ isWatchlistPublic: checked });
               void flush();
             }}
           />

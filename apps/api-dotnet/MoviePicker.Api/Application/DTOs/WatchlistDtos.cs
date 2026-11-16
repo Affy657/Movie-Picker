@@ -3,7 +3,7 @@ using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.DTOs;
 
-public sealed class AddWatchlistItemRequest : TmdbTitleRequest
+public sealed class AddWatchlistItemRequest : TmdbTitleRequest, ITmdbTitleFactsRequest
 {
     public double? VoteAverage { get; init; }
 
@@ -27,8 +27,9 @@ public sealed class WatchlistItemResponse
     public int? RuntimeMinutes { get; init; }
     public IReadOnlyList<int> GenreIds { get; init; } = [];
     public DateTimeOffset CreatedAt { get; init; }
+    public bool OnLetterboxd { get; init; }
 
-    public static WatchlistItemResponse FromDomain(WatchlistItem item) => new()
+    public static WatchlistItemResponse FromDomain(WatchlistItem item, bool includeLetterboxd) => new()
     {
         TmdbId = item.TmdbId,
         MediaType = item.MediaType,
@@ -38,7 +39,8 @@ public sealed class WatchlistItemResponse
         VoteAverage = item.VoteAverage,
         RuntimeMinutes = item.RuntimeMinutes,
         GenreIds = item.GenreIds,
-        CreatedAt = item.CreatedAt
+        CreatedAt = item.CreatedAt,
+        OnLetterboxd = includeLetterboxd && !string.IsNullOrEmpty(item.LetterboxdSlug)
     };
 }
 

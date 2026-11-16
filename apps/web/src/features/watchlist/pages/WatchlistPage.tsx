@@ -1,65 +1,32 @@
-import { useId, useMemo, useRef, useState } from 'react';
-import { Bookmark, Dices, Import, Plus } from 'lucide-react';
-import PageLayout from '@/shared/components/PageLayout';
-import EmptyState from '@/shared/components/EmptyState';
-import { useLocale, useTranslation, type Translate, type TranslationKey } from '@/shared/i18n';
+import { useMemo, useState } from 'react';
+import { Bookmark, Import } from 'lucide-react';
+import { useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { syncsWithLetterboxd } from '@/features/auth/utils/letterboxdSync';
 import { ROUTES } from '@/app/routes';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
-import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
-import { useIsMobile } from '@/shared/hooks/useIsMobile';
-import { useAnalytics } from '@/shared/hooks/useAnalytics';
-import { useClickOutside } from '@/shared/hooks/useClickOutside';
-import { useHistoryEntryState } from '@/shared/hooks/useHistoryEntryState';
-import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
-import { randomIndex } from '@/shared/utils/random';
-import { MOVIE_PAGE_CHUNKS } from '@/app/routeChunks';
-import AddMoviePanel from '@/features/movies/components/AddMoviePanel';
-import ActiveFilterChips from '@/features/movies/components/ActiveFilterChips';
-import FilteredCollectionLayout, {
-  FilterSheet,
-  FilteredEmptyState,
-  toCollectionToolbarProps,
-} from '@/features/movies/components/FilteredCollectionLayout';
+import Button from '@/shared/components/Button';
+import IconButton from '@/shared/components/IconButton';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 import LetterboxdConnectModal from '@/features/letterboxd/components/LetterboxdConnectModal';
 import {
   useAddToWatchlist,
   useWatchlist,
   useWatchlistAvailability,
 } from '@/features/movies/hooks/useWatchlist';
-import {
-  useWatchlistToggle,
-  type WatchlistToggleItem,
-} from '@/features/watchlist/hooks/useWatchlistToggle';
 import type { WatchlistAvailabilityItem, WatchlistItem } from '@/features/movies/api/watchlistApi';
-import {
-  useWatchlistToolbar,
-  type WatchlistEntry,
-} from '@/features/watchlist/hooks/useWatchlistToolbar';
-import WatchlistToolbar, {
-  watchlistRowSorts,
-} from '@/features/watchlist/components/WatchlistToolbar';
-import MovieListFiltersPanel from '@/features/movies/components/MovieListFiltersPanel';
-import MovieBrowseCard, {
-  type MovieAvailability,
-} from '@/features/movies/components/MovieBrowseCard';
-import { LibraryMovieRowHeader } from '@/features/movies/components/LibraryMovieRow';
-import { MovieTable } from '@/features/movies/components/MovieTable';
-import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
-import ViewModeToggle, { type MovieViewMode } from '@/shared/components/ViewModeToggle';
-import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
-import RandomPickDialog, {
-  type RandomPickScope,
-} from '@/features/watchlist/components/RandomPickDialog';
-import type { PickIndex } from '@/features/watchlist/utils/randomPick';
 import { watchlistItemKey as itemKey } from '@/features/movies/utils/watchlistItemKey';
-import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
-import styles from './WatchlistPage.module.css';
-import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
-import Button from '@/shared/components/Button';
-import IconButton from '@/shared/components/IconButton';
-import { ICON_SIZE } from '@/shared/components/iconSize';
+import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
+import { useCollectionVisibility } from '@/features/watchlist/hooks/useCollectionVisibility';
+import CollectionVisibilityMenu from '@/features/watchlist/components/CollectionVisibilityMenu';
+import type {
+  ToolbarExtraFilter,
+  WatchlistEntry,
+} from '@/features/watchlist/hooks/useWatchlistToolbar';
+import ListMoviesPage from '@/features/watchlist/components/ListMoviesPage';
+import LetterboxdGapBanner from '@/features/watchlist/components/LetterboxdGapBanner';
+import { watchlistCountLabel } from '@/features/watchlist/utils/watchlistCount';
 
 function mergeAvailability(
   items: WatchlistItem[],
@@ -80,135 +47,20 @@ function mergeAvailability(
   });
 }
 
-const VIEW_MODE_STORAGE_KEY = 'watchlist-view';
-
-function readStoredViewMode(): MovieViewMode {
-  try {
-    return localStorage.getItem(VIEW_MODE_STORAGE_KEY) === 'list' ? 'list' : 'grid';
-  } catch {
-    return 'grid';
-  }
-}
-
-function persistViewMode(mode: MovieViewMode) {
-  try {
-    localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
-  } catch {
-    return;
-  }
-}
-
-function watchlistSubtitle(count: number, t: Translate) {
-  if (count === 1) return t('watchlist.header.subtitleOne', { count: 1 });
-  return t('watchlist.header.subtitle', { count });
-}
-
-function WatchlistFiltersPanel({
-  panelId,
-  tmdbLanguage,
-  labels,
-  ratingScale,
-  toolbar,
+function LetterboxdButton({
   isMobile,
-}: Readonly<{
-  panelId: string;
-  tmdbLanguage: string;
-  labels: Parameters<typeof MovieListFiltersPanel>[0]['labels'];
-  ratingScale: Parameters<typeof MovieListFiltersPanel>[0]['ratingScale'];
-  toolbar: ReturnType<typeof useWatchlistToolbar>;
-  isMobile: boolean;
-}>) {
-  return (
-    <MovieListFiltersPanel
-      panelId={panelId}
-      tmdbLanguage={tmdbLanguage}
-      labels={labels}
-      ratingScale={ratingScale}
-      selectedGenres={toolbar.selectedGenres}
-      onToggleGenre={toolbar.toggleGenre}
-      selectedMediaTypes={toolbar.selectedMediaTypes}
-      onToggleMediaType={toolbar.toggleMediaType}
-      selectedDecade={toolbar.selectedDecade}
-      onToggleDecade={toolbar.toggleDecade}
-      voteMin={toolbar.voteMin}
-      onToggleVoteMin={toolbar.toggleVoteMin}
-      runtimeRange={toolbar.runtimeRange}
-      onChangeRuntimeRange={toolbar.changeRuntimeRange}
-      onReset={isMobile ? undefined : toolbar.clearAllFilters}
-    />
-  );
-}
-
-interface RandomPick {
-  items: WatchlistEntry[];
-  scope: RandomPickScope;
-}
-
-interface OpenRandomPick {
-  keys: string[];
-  scope: RandomPickScope;
-  drawnKey: string | null;
-}
-
-function isOpenRandomPick(value: unknown): value is OpenRandomPick | null {
-  if (value === null) return true;
-  if (typeof value !== 'object') return false;
-  const { keys, scope, drawnKey } = value as Record<string, unknown>;
-  return (
-    Array.isArray(keys) &&
-    keys.every((key) => typeof key === 'string') &&
-    (scope === 'list' || scope === 'selection') &&
-    (drawnKey === null || typeof drawnKey === 'string')
-  );
-}
-
-function entryKey(entry: WatchlistEntry): string {
-  return itemKey(entry.tmdbId, entry.mediaType);
-}
-
-function firstDrawLandingOn(poolSize: number, drawnIndex: number): PickIndex {
-  if (drawnIndex < 0) return randomIndex;
-  return (length) => (length === poolSize ? drawnIndex : randomIndex(length));
-}
-
-function randomPickLabelKey(compact: boolean, isFiltered: boolean): TranslationKey {
-  if (compact) return 'watchlist.randomPick.triggerShort';
-  return isFiltered ? 'watchlist.randomPick.triggerSelection' : 'watchlist.randomPick.trigger';
-}
-
-function RandomPickButton({
-  toolbar,
-  compact,
-  onOpen,
-}: Readonly<{
-  toolbar: ReturnType<typeof useWatchlistToolbar>;
-  compact: boolean;
-  onOpen: (pick: RandomPick) => void;
-}>) {
-  const { t } = useTranslation();
-  if (toolbar.visibleItems.length === 0) return null;
-  return (
-    <Button
-      type="button"
-      size={compact ? 'sm' : 'md'}
-      onClick={() =>
-        onOpen({
-          items: toolbar.visibleItems,
-          scope: toolbar.isFiltered ? 'selection' : 'list',
-        })
-      }
-    >
-      <Dices size={ICON_SIZE.md} aria-hidden />
-      <span>{t(randomPickLabelKey(compact, toolbar.isFiltered))}</span>
-    </Button>
-  );
-}
-
-function MobileLetterboxdButton({
   iconOnly,
   onOpen,
-}: Readonly<{ iconOnly: boolean; onOpen: () => void }>) {
+}: Readonly<{ isMobile: boolean; iconOnly: boolean; onOpen: () => void }>) {
   const { t } = useTranslation();
+  if (!isMobile) {
+    return (
+      <Button type="button" variant="ghost" onClick={onOpen}>
+        <Import size={ICON_SIZE.md} aria-hidden />
+        <span>{t('watchlist.letterboxdCta')}</span>
+      </Button>
+    );
+  }
   if (iconOnly) {
     return (
       <IconButton ariaLabel={t('watchlist.letterboxdCta')} onClick={onOpen}>
@@ -226,12 +78,8 @@ function MobileLetterboxdButton({
 
 export default function WatchlistPage() {
   const { t } = useTranslation();
-  const { tmdbLanguage } = useLocale();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user } = useAuth();
   useNoindexPage(pageTitle(t('watchlist.title')), ROUTES.watchlist);
-  const hasHover = useHasHoverCapability();
-  const isMobile = useIsMobile();
-  const filtersPanelId = useId();
 
   const { data: items = [], isLoading, isError } = useWatchlist({ enabled: !!user });
   const availabilityQuery = useWatchlistAvailability({ enabled: !!user && items.length > 0 });
@@ -241,360 +89,100 @@ export default function WatchlistPage() {
     () => mergeAvailability(items, availabilityItems),
     [items, availabilityItems]
   );
-
-  const entriesByKey = useMemo(
-    () => new Map(entries.map((entry) => [entryKey(entry), entry])),
-    [entries]
-  );
-
-  const [proposeTarget, setProposeTarget] = useState<WatchlistToggleItem | null>(null);
-  const [randomPick, setRandomPick] = useHistoryEntryState<OpenRandomPick | null>(
-    'watchlist.randomPick',
-    null,
-    isOpenRandomPick
-  );
-  const { track } = useAnalytics();
-  const openRandomPick = (pick: RandomPick) => {
-    track('random_pick_opened', { scope: pick.scope, pool: pick.items.length });
-    setRandomPick({ keys: pick.items.map(entryKey), scope: pick.scope, drawnKey: null });
-  };
-  const randomPickItems = useMemo(
-    () =>
-      (randomPick?.keys ?? []).flatMap((key) => {
-        const entry = entriesByKey.get(key);
-        return entry ? [entry] : [];
-      }),
-    [randomPick?.keys, entriesByKey]
-  );
-  const drawnIndex = randomPickItems.findIndex((entry) => entryKey(entry) === randomPick?.drawnKey);
-  const randomPickIndex = useMemo(
-    () => firstDrawLandingOn(randomPickItems.length, drawnIndex),
-    [randomPickItems.length, drawnIndex]
-  );
-  const openMoviePage = useOpenMoviePage();
-  const openDrawnMoviePage = (item: WatchlistEntry) => {
-    setRandomPick((current) => current && { ...current, drawnKey: entryKey(item) });
-    openMoviePage(item);
-  };
-  useIdlePrefetch(MOVIE_PAGE_CHUNKS);
-  const [addPanelOpen, setAddPanelOpen] = useState(false);
   const [letterboxdModalOpen, setLetterboxdModalOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<MovieViewMode>(readStoredViewMode);
-  const changeViewMode = (mode: MovieViewMode) => {
-    setViewMode(mode);
-    persistViewMode(mode);
-  };
-  const addButtonRef = useRef<HTMLButtonElement>(null);
-  const filtersPanelRef = useRef<HTMLDivElement>(null);
-
-  const mediaTypeLabels = useMemo(
-    () => ({
-      movie: t('watchlist.toolbar.filterTypeMovie'),
-      tv: t('watchlist.toolbar.filterTypeTv'),
-    }),
-    [t]
-  );
-
-  const filtersLabels = useMemo(
-    () => ({
-      genre: t('watchlist.toolbar.filterGenre'),
-      type: t('watchlist.toolbar.filterType'),
-      typeMovie: t('watchlist.toolbar.filterTypeMovie'),
-      typeTv: t('watchlist.toolbar.filterTypeTv'),
-      decade: t('watchlist.toolbar.filterDecade'),
-      voteMin: t('watchlist.toolbar.filterVoteMin'),
-      duration: t('watchlist.toolbar.filterDuration'),
-      durationMinAria: t('movies.search.durationMinAria'),
-      durationMaxAria: t('movies.search.durationMaxAria'),
-      resetAll: t('watchlist.toolbar.filtersResetAll'),
-    }),
-    [t]
-  );
-
-  const toolbar = useWatchlistToolbar({
-    items: entries,
-    userId: user?.userId,
-    tmdbLanguage,
-    ratingScale: user?.ratingScale,
-    mediaTypeLabels,
-  });
-  useClickOutside(
-    filtersPanelRef,
-    () => toolbar.setFiltersOpen(false),
-    toolbar.filtersOpen && !isMobile,
-    { ignoreSelector: '[data-filters-toggle]' }
-  );
 
   const addMutation = useAddToWatchlist();
   const watchlistToggle = useWatchlistToggle(!!user);
+  const visibility = useCollectionVisibility('isWatchlistPublic');
 
   const inWatchlistKeys = useMemo(
     () => new Set(items.map((i) => itemKey(i.tmdbId, i.mediaType))),
     [items]
   );
 
-  const activeFilterCount = toolbar.activeFilterChips.length;
-  const filtersPanel = (
-    <WatchlistFiltersPanel
-      panelId={filtersPanelId}
-      tmdbLanguage={tmdbLanguage}
-      labels={filtersLabels}
-      ratingScale={user?.ratingScale}
-      toolbar={toolbar}
-      isMobile={isMobile}
-    />
+  const syncedWithLetterboxd = syncsWithLetterboxd(user, 'watchlist');
+  const missingOnLetterboxd = syncedWithLetterboxd
+    ? items.filter((item) => item.onLetterboxd === false).length
+    : 0;
+  const [missingOnly, setMissingOnly] = useState(false);
+  const showingMissing = missingOnly && missingOnLetterboxd > 0;
+  const missingFilter = useMemo<ToolbarExtraFilter>(
+    () => ({
+      matches: (entry) => !showingMissing || entry.onLetterboxd === false,
+      active: showingMissing,
+      reset: () => setMissingOnly(false),
+    }),
+    [showingMissing]
   );
-  const subtitle = watchlistSubtitle(items.length, t);
-  const openAddPanel = () => setAddPanelOpen(true);
-  const listView = viewMode === 'list';
-  const availabilityOf = (entry: WatchlistEntry): MovieAvailability | undefined => {
-    if (entry.watchProviders) {
-      return {
-        status: 'ready',
-        providers: entry.watchProviders,
-        watchPageUrl: entry.tmdbWatchPageUrl ?? null,
-      };
-    }
-    return availabilityPending ? { status: 'pending' } : undefined;
-  };
-  const renderItem = (item: WatchlistEntry, index: number) => (
-    <MovieBrowseCard
-      key={itemKey(item.tmdbId, item.mediaType)}
-      item={item}
-      layout={listView ? 'row' : 'grid'}
-      isMobile={isMobile}
-      availability={listView ? availabilityOf(item) : undefined}
-      hasHover={hasHover}
-      isLoggedIn={!!user}
-      inWatchlist
-      showListBadge={false}
-      eager={listView && index < 3}
-      onToggleWatchlist={() => watchlistToggle.toggle(item)}
-      onProposeToEvent={() => setProposeTarget(item)}
-      onOpenDetails={() => openMoviePage(item)}
-      onOpenAvailability={() => openMoviePage(item)}
-      ratingScale={user?.ratingScale}
-    />
-  );
-
-  if (authLoading) {
-    return (
-      <PageLayout className={styles.layout}>
-        <h1 className="visually-hidden">{t('watchlist.title')}</h1>
-        <WatchlistSkeleton label={t('watchlist.loadingDetail')} gridClassName={styles.grid} />
-      </PageLayout>
-    );
-  }
 
   return (
-    <PageLayout className={styles.layout}>
-      <div className={styles.headerBlock}>
-        <div className={styles.pageHeader}>
-          <div className={styles.pageTitleGroup}>
-            <h1 className={styles.pageTitle}>{t('watchlist.title')}</h1>
-            <p className={styles.pageSubtitle}>{subtitle}</p>
-          </div>
-
-          {isMobile ? (
-            <div className={styles.headerActionsMobile}>
-              {!user?.letterboxdUsername && (
-                <MobileLetterboxdButton
-                  iconOnly={entries.length > 0}
-                  onOpen={() => setLetterboxdModalOpen(true)}
-                />
-              )}
-              <RandomPickButton toolbar={toolbar} compact onOpen={openRandomPick} />
-              <Button
-                type="button"
-                ref={addButtonRef}
-                variant="primary"
-                size="sm"
-                onClick={openAddPanel}
-              >
-                <Plus size={ICON_SIZE.md} aria-hidden />
-                <span>{t('watchlist.addPanel.triggerShort')}</span>
-              </Button>
-            </div>
-          ) : (
-            <div className={styles.headerActions}>
-              {!user?.letterboxdUsername && (
-                <Button type="button" variant="ghost" onClick={() => setLetterboxdModalOpen(true)}>
-                  <Import size={ICON_SIZE.md} aria-hidden />
-                  <span>{t('watchlist.letterboxdCta')}</span>
-                </Button>
-              )}
-              <RandomPickButton toolbar={toolbar} compact={false} onOpen={openRandomPick} />
-              <Button type="button" ref={addButtonRef} variant="primary" onClick={openAddPanel}>
-                <Plus size={ICON_SIZE.md} aria-hidden />
-                <span>{t('watchlist.addPanel.trigger')}</span>
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className={addPanelOpen ? styles.addPanelOpenWrap : undefined}>
-        <AddMoviePanel
-          open={addPanelOpen}
-          onOpenChange={setAddPanelOpen}
-          hideTrigger
-          returnFocusRef={addButtonRef}
-          triggerLabel={t('watchlist.addPanel.trigger')}
-          panelTitle={t('watchlist.addPanel.title')}
-          onAdded={() => undefined}
-          onAddItem={async (item) => {
-            await addMutation.mutateAsync({
-              tmdbId: item.id,
-              mediaType: item.mediaType,
-              title: item.title,
-              year: item.year,
-              posterPath: item.posterPath,
-              voteAverage: item.voteAverage,
-              runtimeMinutes: item.runtimeMinutes,
-              genreIds: item.genreIds,
-            });
-          }}
-          isItemAlreadyAdded={(item) => inWatchlistKeys.has(itemKey(item.id, item.mediaType))}
-          alreadyAddedLabel={t('watchlist.search.alreadyAdded')}
-          alreadyAddedHint={t('watchlist.search.alreadyAdded')}
-          addErrorLabel={t('watchlist.addError')}
-          searchPlaceholder={t('watchlist.search.placeholder')}
-          searchAriaLabel={t('watchlist.search.label')}
-          searchWrapClassName={styles.searchFixedWidth}
-          showWatchProviders={false}
-        />
-      </div>
-
-      <section className="section">
-        <h2 className="visually-hidden">{t('watchlist.listAria')}</h2>
-
-        {watchlistToggle.error ? (
-          <p className="error" role="alert">
-            {watchlistToggle.error}
-          </p>
-        ) : null}
-
-        {isLoading && (
-          <WatchlistSkeleton label={t('watchlist.loadingDetail')} gridClassName={styles.grid} />
-        )}
-        {!isLoading && isError && (
-          <p className="error" role="alert">
-            {t('watchlist.loadError')}
-          </p>
-        )}
-        {!isLoading && !isError && items.length === 0 && (
-          <EmptyState
-            icon={<Bookmark aria-hidden size={ICON_SIZE['3xl']} />}
-            title={t('watchlist.empty.title')}
-            message={t('watchlist.empty.message')}
-          />
-        )}
-        {!isLoading && !isError && items.length > 0 && (
-          <FilteredCollectionLayout
-            toolbar={
-              <WatchlistToolbar
-                {...toCollectionToolbarProps(toolbar, {
-                  filtersPanelId,
-                  activeFilterCount,
-                  isMobile,
-                })}
-                hideSort={listView && !isMobile}
-                trailing={<ViewModeToggle value={viewMode} onChange={changeViewMode} />}
-              />
-            }
-            desktopFilters={
-              toolbar.filtersOpen && !isMobile ? (
-                <div ref={filtersPanelRef}>{filtersPanel}</div>
-              ) : null
-            }
-            chips={
-              activeFilterCount > 0 ? (
-                <ActiveFilterChips
-                  chips={toolbar.activeFilterChips}
-                  groupAriaLabel={t('watchlist.filter.toggleAria')}
-                  removeAriaLabel={t('watchlist.toolbar.removeFilterAria')}
-                />
-              ) : null
-            }
-            mobileSheet={
-              isMobile ? (
-                <FilterSheet
-                  open={toolbar.filtersOpen}
-                  title={t('watchlist.toolbar.filtersSheetTitle')}
-                  onClose={() => toolbar.setFiltersOpen(false)}
-                  resetLabel={t('watchlist.toolbar.filtersReset')}
-                  applyLabel={pluralizeCount(
-                    toolbar.visibleCount,
-                    'watchlist.toolbar.filtersApplyOne',
-                    'watchlist.toolbar.filtersApply',
-                    t
-                  )}
-                  onReset={toolbar.clearAllFilters}
-                >
-                  {filtersPanel}
-                </FilterSheet>
-              ) : null
-            }
-            emptyFiltered={
-              toolbar.visibleItems.length === 0 ? (
-                <FilteredEmptyState
-                  title={t('watchlist.toolbar.emptyTitle')}
-                  message={t('watchlist.toolbar.emptyMessage')}
-                  resetLabel={t('watchlist.toolbar.filtersResetAll')}
-                  onReset={toolbar.resetAll}
-                />
-              ) : null
-            }
-          >
-            {listView ? (
-              <MovieTable
-                listLabel={t('watchlist.listAria')}
-                header={
-                  isMobile ? null : (
-                    <LibraryMovieRowHeader
-                      sorts={watchlistRowSorts(t)}
-                      sortBy={toolbar.sortBy}
-                      sortDir={toolbar.sortDir}
-                      onSetSort={toolbar.setSortBy}
-                    />
-                  )
-                }
-              >
-                {toolbar.visibleItems.map(renderItem)}
-              </MovieTable>
-            ) : (
-              <ul className={styles.grid} aria-label={t('watchlist.listAria')}>
-                {toolbar.visibleItems.map(renderItem)}
-              </ul>
-            )}
-          </FilteredCollectionLayout>
-        )}
-      </section>
-
-      {randomPick && !isLoading && (
-        <RandomPickDialog
-          open={proposeTarget === null}
-          items={randomPickItems}
-          scope={randomPick.scope}
-          ratingScale={user?.ratingScale}
-          onClose={() => setRandomPick(null)}
-          onPropose={setProposeTarget}
-          onOpenDetails={openDrawnMoviePage}
-          pickIndex={randomPickIndex}
-        />
-      )}
-
-      {proposeTarget && (
-        <ProposeToEventModal
-          open={!!proposeTarget}
-          movie={proposeTarget}
-          onClose={() => setProposeTarget(null)}
-        />
-      )}
-
+    <ListMoviesPage
+      title={t('watchlist.title')}
+      subtitle={watchlistCountLabel(items.length, t)}
+      items={entries}
+      isLoading={isLoading}
+      isError={isError}
+      availabilityPending={availabilityPending}
+      storageScope="watchlist"
+      randomPickHistoryKey="watchlist.randomPick"
+      emptyIcon={<Bookmark aria-hidden size={ICON_SIZE['3xl']} />}
+      labels={{
+        listAria: t('watchlist.listAria'),
+        loading: t('watchlist.loadingDetail'),
+        loadError: t('watchlist.loadError'),
+        addPanelTitle: t('watchlist.addPanel.title'),
+        emptyTitle: t('watchlist.empty.title'),
+        emptyMessage: t('watchlist.empty.message'),
+      }}
+      toolbarOptions={{
+        scopeFilter: missingFilter,
+        banner:
+          missingOnLetterboxd > 0 ? (
+            <LetterboxdGapBanner
+              count={missingOnLetterboxd}
+              showing={showingMissing}
+              onShow={() => setMissingOnly(true)}
+              onShowAll={() => setMissingOnly(false)}
+            />
+          ) : null,
+      }}
+      header={{
+        letterboxdSynced: syncedWithLetterboxd,
+        menu: visibility.ready ? (
+          <CollectionVisibilityMenu isPublic={visibility.isPublic} onChange={visibility.change} />
+        ) : null,
+        leading: ({ isMobile, hasItems }) =>
+          user?.letterboxdUsername ? null : (
+            <LetterboxdButton
+              isMobile={isMobile}
+              iconOnly={hasItems}
+              onOpen={() => setLetterboxdModalOpen(true)}
+            />
+          ),
+      }}
+      card={{
+        inWatchlist: () => true,
+        showListBadge: false,
+        onToggleWatchlist: (entry) => watchlistToggle.toggle(entry),
+        error: visibility.error ?? watchlistToggle.error,
+      }}
+      onAddItem={async (item) => {
+        await addMutation.mutateAsync({
+          tmdbId: item.id,
+          mediaType: item.mediaType,
+          title: item.title,
+          year: item.year,
+          posterPath: item.posterPath,
+          voteAverage: item.voteAverage,
+          runtimeMinutes: item.runtimeMinutes,
+          genreIds: item.genreIds,
+        });
+      }}
+      isItemAlreadyAdded={(item) => inWatchlistKeys.has(itemKey(item.id, item.mediaType))}
+    >
       {letterboxdModalOpen && (
         <LetterboxdConnectModal open onClose={() => setLetterboxdModalOpen(false)} />
       )}
-    </PageLayout>
+    </ListMoviesPage>
   );
 }

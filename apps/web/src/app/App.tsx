@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router';
-import { Bookmark, CalendarPlus, Inbox } from 'lucide-react';
+import { Bookmark, CalendarPlus, Eye, Inbox } from 'lucide-react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { createAppQueryClient } from '@/app/appQueryClient';
 import { ThemeProvider } from '@/shared/contexts/ThemeContext';
@@ -41,6 +41,13 @@ const TechPage = lazy(ROUTE_CHUNKS.tech);
 const ReleaseNotesPage = lazy(ROUTE_CHUNKS.releaseNotes);
 const MyEventsPage = lazy(ROUTE_CHUNKS.myEvents);
 const WatchlistPage = lazy(ROUTE_CHUNKS.watchlist);
+const MyListsPage = lazy(ROUTE_CHUNKS.lists);
+const MovieListPage = lazy(ROUTE_CHUNKS.movieList);
+const SavedListPage = lazy(ROUTE_CHUNKS.savedList);
+const JoinListPage = lazy(ROUTE_CHUNKS.joinList);
+const MemberListsPage = lazy(ROUTE_CHUNKS.memberLists);
+const PublicListPage = lazy(ROUTE_CHUNKS.publicList);
+const WatchedMoviesPage = lazy(ROUTE_CHUNKS.watchedMovies);
 const NotificationsPage = lazy(ROUTE_CHUNKS.notifications);
 const ProfilePage = lazy(ROUTE_CHUNKS.profile);
 const ProfileMoviesPage = lazy(ROUTE_CHUNKS.profileMovies);
@@ -55,6 +62,22 @@ function PageFallback() {
     <PageLayout>
       <BrandLoader label={t('common.loading')} />
     </PageLayout>
+  );
+}
+
+function ListRoute({ children }: Readonly<{ children: ReactNode }>) {
+  const { pathname } = useLocation();
+  return (
+    <SessionGate
+      icon={<Bookmark aria-hidden size={ICON_SIZE['3xl']} />}
+      headingKey="lists.title"
+      titleKey="lists.signedOutTitle"
+      messageKey="lists.signedOutMessage"
+      returnTo={pathname}
+      maxWidth="var(--container-lg)"
+    >
+      {children}
+    </SessionGate>
   );
 }
 
@@ -149,6 +172,46 @@ export function AppRoutes() {
           }
         />
         <Route
+          path={ROUTES.lists}
+          element={
+            <ListRoute>
+              <MyListsPage />
+            </ListRoute>
+          }
+        />
+        <Route
+          path={ROUTES.watchedMovies}
+          element={
+            <SessionGate
+              icon={<Eye aria-hidden size={ICON_SIZE['3xl']} />}
+              headingKey="watched.title"
+              titleKey="lists.signedOutTitle"
+              messageKey="lists.signedOutMessage"
+              returnTo={ROUTES.watchedMovies}
+              maxWidth="var(--container-lg)"
+            >
+              <WatchedMoviesPage />
+            </SessionGate>
+          }
+        />
+        <Route
+          path={ROUTES.listPattern}
+          element={
+            <ListRoute>
+              <MovieListPage />
+            </ListRoute>
+          }
+        />
+        <Route
+          path={ROUTES.savedListPattern}
+          element={
+            <ListRoute>
+              <SavedListPage />
+            </ListRoute>
+          }
+        />
+        <Route path={ROUTES.joinListPattern} element={<JoinListPage />} />
+        <Route
           path={ROUTES.notifications}
           element={
             <SessionGate
@@ -171,6 +234,8 @@ export function AppRoutes() {
           element={<ProfileProposalsPage winningOnly />}
         />
         <Route path={ROUTES.profileWatchlistPattern} element={<ProfileWatchlistPage />} />
+        <Route path={ROUTES.profileListsPattern} element={<MemberListsPage />} />
+        <Route path={ROUTES.publicListPattern} element={<PublicListPage />} />
         <Route path={ROUTES.profilePattern} element={<ProfilePage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

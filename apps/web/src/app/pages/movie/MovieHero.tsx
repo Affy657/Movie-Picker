@@ -31,10 +31,16 @@ export interface MovieHeroView {
   detailsLoaded: boolean;
 }
 
+export interface PersonalScore {
+  label: string;
+  content: ReactNode;
+}
+
 interface MovieHeroProps {
   view: MovieHeroView;
   nights: MovieNights | undefined;
   scale: RatingScale;
+  personalScore?: PersonalScore | null;
   topLink: ReactNode;
   actions: ReactNode;
 }
@@ -74,18 +80,20 @@ function Scores({
   view,
   nights,
   scale,
+  personal,
   locale,
   t,
 }: Readonly<{
   view: MovieHeroView;
   nights: MovieNights | undefined;
   scale: RatingScale;
+  personal: PersonalScore | null | undefined;
   locale: LocaleCode;
   t: Translate;
 }>) {
   const tmdb = scoreParts(view.voteAverage, scale, locale);
   const mine = scoreParts(nights?.rating?.average, scale, locale);
-  if (!tmdb && !mine) return null;
+  if (!tmdb && !mine && !personal) return null;
   const votes = view.voteCount
     ? pluralizeCount(view.voteCount, 'moviePage.votesOne', 'moviePage.votesMany', t, {
         count: countLabel(view.voteCount, locale),
@@ -99,6 +107,12 @@ function Scores({
       {tmdb ? <Score value={tmdb} label={t('moviePage.scoreTmdb')} detail={votes} /> : null}
       {mine ? (
         <Score value={mine} label={t('moviePage.scoreNights')} detail={ratings} highlight />
+      ) : null}
+      {personal ? (
+        <div className={styles.personalScore}>
+          <dt className={styles.scoreLabel}>{personal.label}</dt>
+          <dd className={styles.personalValue}>{personal.content}</dd>
+        </div>
       ) : null}
     </dl>
   );
@@ -173,6 +187,7 @@ export default function MovieHero({
   view,
   nights,
   scale,
+  personalScore,
   topLink,
   actions,
 }: Readonly<MovieHeroProps>) {
@@ -215,7 +230,14 @@ export default function MovieHero({
             {view.genres.length > 0 ? (
               <p className={styles.genres}>{view.genres.join(', ')}</p>
             ) : null}
-            <Scores view={view} nights={nights} scale={scale} locale={locale} t={t} />
+            <Scores
+              view={view}
+              nights={nights}
+              scale={scale}
+              personal={personalScore}
+              locale={locale}
+              t={t}
+            />
             <Streaming view={view} t={t} />
             <div className={styles.actions}>{actions}</div>
           </div>

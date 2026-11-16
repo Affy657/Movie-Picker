@@ -20,4 +20,7 @@ public static class PublicProfileGuard
 
     public static bool CanSeeWatchlist(User user, string? currentUserId) =>
         user.IsWatchlistPublic || currentUserId == user.Id;
+
+    public static bool CanSeeWatched(User user, string? currentUserId) =>
+        user.IsWatchedPublic || currentUserId == user.Id;
 }

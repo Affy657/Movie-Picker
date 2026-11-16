@@ -42,6 +42,11 @@ public sealed class MongoWatchlistRepository : IWatchlistRepository
     public Task<long> CountByUserIdAsync(string userId, CancellationToken ct = default) =>
         _collection.CountDocumentsAsync(x => x.UserId == userId, cancellationToken: ct);
 
+    public Task<long> CountLinkedToLetterboxdAsync(string userId, CancellationToken ct = default) =>
+        _collection.CountDocumentsAsync(
+            x => x.UserId == userId && x.LetterboxdSlug != null && x.LetterboxdSlug != string.Empty,
+            cancellationToken: ct);
+
     public async Task<WatchlistItem?> GetOneAsync(string userId, int tmdbId, MovieMediaType mediaType, CancellationToken ct = default)
     {
         var mediaTypeValue = MovieMapper.MediaTypeToString(mediaType);

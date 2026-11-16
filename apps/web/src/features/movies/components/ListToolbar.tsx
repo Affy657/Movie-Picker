@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import clsx from 'clsx';
 import { SlidersHorizontal } from 'lucide-react';
 import SearchField from '@/shared/components/SearchField';
 import SortControl, { type SortOption } from '@/features/movies/components/SortControl';
@@ -36,6 +37,7 @@ export interface ListToolbarProps<TSortKey extends string> {
   onClearAll: () => void;
   isMobile: boolean;
   hideSort?: boolean;
+  beforeSort?: ReactNode;
   trailing?: ReactNode;
 }
 
@@ -64,8 +66,10 @@ export default function ListToolbar<TSortKey extends string>({
   onClearAll,
   isMobile,
   hideSort = false,
+  beforeSort,
   trailing,
 }: Readonly<ListToolbarProps<TSortKey>>) {
+  const divider = <span className={styles.divider} aria-hidden="true" />;
   return (
     <Card padding="none" elevation="sm" className={styles.toolbar}>
       <SearchField
@@ -93,7 +97,16 @@ export default function ListToolbar<TSortKey extends string>({
               {activeFilterCount > 0 && <CountBadge value={activeFilterCount} aria-hidden="true" />}
             </Button>
 
-            {hideSort ? null : <span className={styles.divider} aria-hidden="true" />}
+            {beforeSort || !hideSort ? divider : null}
+          </>
+        ) : null}
+
+        {beforeSort ? (
+          <>
+            {beforeSort}
+            {hideSort ? null : (
+              <span className={clsx(styles.divider, styles.slotDivider)} aria-hidden="true" />
+            )}
           </>
         ) : null}
 

@@ -24,6 +24,71 @@ describe('token redaction', () => {
     expect(prepared?.request?.query_string).toBe('token=***&lang=fr');
   });
 
+  it('masks the list invitation token of the page and of the route an error is reported from', () => {
+    const event = {
+      type: undefined,
+      transaction: '/l/7xK2pQ/rejoindre',
+      request: { url: 'https://www.movie-picker.fr/l/7xK2pQ/rejoindre' },
+    } as ErrorEvent;
+
+    const prepared = prepareEvent(event);
+
+    expect(prepared?.transaction).toBe('/l/***/rejoindre');
+    expect(prepared?.request?.url).toBe('https://www.movie-picker.fr/l/***/rejoindre');
+  });
+
+  it('masks the list invitation token of the page load span and of the join request span', () => {
+    const pageLoad = {
+      name: '/l/7xK2pQ/rejoindre',
+      is_segment: true,
+      attributes: {
+        'sentry.segment.name': '/l/7xK2pQ/rejoindre',
+        'url.full': 'https://www.movie-picker.fr/l/7xK2pQ/rejoindre',
+      },
+    } as unknown as Parameters<typeof prepareSpan>[0];
+    const join = {
+      name: 'POST https://api.movie-picker.fr/api/v1/lists/join/7xK2pQ',
+      is_segment: false,
+      attributes: { 'url.full': 'https://api.movie-picker.fr/api/v1/lists/join/7xK2pQ' },
+    } as unknown as Parameters<typeof prepareSpan>[0];
+
+    expect(prepareSpan(pageLoad)).toMatchObject({
+      name: '/l/***/rejoindre',
+      attributes: {
+        'sentry.segment.name': '/l/***/rejoindre',
+        'url.full': 'https://www.movie-picker.fr/l/***/rejoindre',
+      },
+    });
+    expect(prepareSpan(join)).toMatchObject({
+      name: 'POST https://api.movie-picker.fr/api/v1/lists/join/***',
+      attributes: { 'url.full': 'https://api.movie-picker.fr/api/v1/lists/join/***' },
+    });
+  });
+
+  it('masks the list invitation token of the navigation and request breadcrumbs', () => {
+    const navigation: Breadcrumb = {
+      category: 'navigation',
+      data: { from: '/l/7xK2pQ/rejoindre', to: '/login?returnTo=%2Fl%2F7xK2pQ%2Frejoindre' },
+    };
+    const request: Breadcrumb = {
+      category: 'fetch',
+      type: 'http',
+      message: 'GET https://api.movie-picker.fr/api/v1/lists/join/7xK2pQ',
+      data: { method: 'GET', url: 'https://api.movie-picker.fr/api/v1/lists/join/7xK2pQ' },
+    };
+
+    expect(prepareBreadcrumb(navigation).data).toEqual({
+      from: '/l/***/rejoindre',
+      to: '/login?returnTo=***',
+    });
+    const prepared = prepareBreadcrumb(request);
+    expect(prepared.message).toBe('GET https://api.movie-picker.fr/api/v1/lists/join/***');
+    expect(prepared.data).toEqual({
+      method: 'GET',
+      url: 'https://api.movie-picker.fr/api/v1/lists/join/***',
+    });
+  });
+
   it('masks the tokens of a streamed span name and of its string attributes', () => {
     const span = {
       name: '/reset?token=abc123',

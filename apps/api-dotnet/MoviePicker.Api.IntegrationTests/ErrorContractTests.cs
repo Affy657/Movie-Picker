@@ -98,6 +98,7 @@ public sealed class ErrorContractTests : IClassFixture<MoviePickerApplicationFac
     [Theory]
     [InlineData("PATCH", "/api/v1/notifications/preferences", """{"preferences":[null]}""")]
     [InlineData("POST", "/api/v1/letterboxd/confirm", """{"selections":[null]}""")]
+    [InlineData("POST", "/api/v1/letterboxd/confirm", """{"selections":[],"watchedSelections":[null]}""")]
     [InlineData("POST", "/api/v1/idea-suggestions", """{"category":"idea","title":"Titre","description":"Description valide","attachments":[null]}""")]
     public async Task EmptyItemInARequestList_AnswersValidationFailedInsteadOfAServerError(string method, string path, string json)
     {

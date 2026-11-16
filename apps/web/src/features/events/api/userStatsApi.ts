@@ -18,6 +18,7 @@ export interface UserStats {
   winningProposals: number;
   proposalsAverageRating?: number | null;
   moviesSeen: number;
+  publicListCount?: number;
   currentStreakWeeks: number;
   bestStreakWeeks: number;
   favoriteGenres: GenreCount[];

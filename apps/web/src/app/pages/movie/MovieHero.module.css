@@ -196,6 +196,23 @@
   white-space: nowrap;
 }
 
+.personalScore {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.personalScore .scoreLabel {
+  white-space: nowrap;
+}
+
+.personalValue {
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
 .streaming {
   display: flex;
   flex-wrap: wrap;
@@ -225,8 +242,8 @@
 
 .actions {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   gap: var(--space-2);
 }
 
@@ -286,8 +303,8 @@
     align-items: stretch;
   }
 
-  .actions > :first-child {
-    flex: 1 1 100%;
+  .actions {
+    align-items: stretch;
   }
 }
 

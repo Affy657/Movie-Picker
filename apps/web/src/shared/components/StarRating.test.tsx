@@ -128,4 +128,16 @@ describe('StarRating', () => {
     await userEvent.keyboard('{ArrowUp}');
     expect(atMax).not.toHaveBeenCalled();
   });
+
+  it('draws a rating it cannot change as one image, without any button', () => {
+    render(<StarRating readOnly value={7} ariaLabel="Votre note de soirée : 7/10" />);
+
+    const stars = screen.getByRole('img', { name: 'Votre note de soirée : 7/10' });
+    expect(screen.queryAllByRole('button')).toEqual([]);
+    expect(
+      Array.from(stars.querySelectorAll('[data-fill]')).map((star) =>
+        star.getAttribute('data-fill')
+      )
+    ).toEqual(['full', 'full', 'full', 'half', 'empty']);
+  });
 });

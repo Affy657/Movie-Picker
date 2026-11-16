@@ -1,0 +1,138 @@
+using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.MovieLists;
+using MoviePicker.Api.Application.UseCases.Shared;
+using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
+
+namespace MoviePicker.Api.Application.UseCases.MovieListMembers;
+
+public sealed class InviteToMovieListHandler : IInviteToMovieListHandler
+{
+    public const string PairQuotaScope = "list-invite-pair";
+    public const int MaxInvitationsPerPairPerDay = 5;
+
+    private static readonly TimeSpan PairQuotaWindow = TimeSpan.FromHours(24);
+
+    private readonly IMovieListRepository _lists;
+    private readonly IFollowRepository _follows;
+    private readonly IUserRepository _users;
+    private readonly IUserNotificationRepository _notifications;
+    private readonly IPushSubscriptionRepository _pushSubscriptions;
+    private readonly IPushNotificationSender _pushSender;
+    private readonly ISharedQuota _quota;
+    private readonly TimeProvider _clock;
+
+    public InviteToMovieListHandler(
+        IMovieListRepository lists,
+        IFollowRepository follows,
+        IUserRepository users,
+        IUserNotificationRepository notifications,
+        IPushSubscriptionRepository pushSubscriptions,
+        IPushNotificationSender pushSender,
+        ISharedQuota quota,
+        TimeProvider clock)
+    {
+        _lists = lists;
+        _follows = follows;
+        _users = users;
+        _notifications = notifications;
+        _pushSubscriptions = pushSubscriptions;
+        _pushSender = pushSender;
+        _quota = quota;
+        _clock = clock;
+    }
+
+    public async Task<MovieListPendingInvitationResponse> HandleAsync(
+        string userId,
+        string listId,
+        InviteToMovieListRequest request,
+        CancellationToken ct = default)
+    {
+        var list = await MovieListPolicy.RequireOwnerAsync(_lists, userId, listId, ct);
+        var targetId = request.UserId.Trim();
+        EnsureInvitable(list, targetId);
+        if (!await _follows.IsFollowingAsync(userId, targetId, ct))
+            throw Errors.InviteOnlyFollowed();
+        if (list.IsFull)
+            throw Errors.MovieListMembersLimitReached(MovieList.MaxMembers);
+        if (!await _quota.TryConsumeAsync(
+                PairQuotaScope, $"{userId}|{targetId}", MaxInvitationsPerPairPerDay, PairQuotaWindow, ct))
+            throw Errors.InvitationLimitReached();
+
+        var target = await _users.GetByIdAsync(targetId, ct);
+        var owner = await _users.GetByIdAsync(userId, ct);
+        var invitation = new MovieListInvitation(targetId, _clock.StorageNow());
+        if (!await _lists.AddInvitationAsync(list.Id, invitation, MovieList.MaxMembers, ct))
+            throw await WhyRefusedAsync(list.Id, targetId, ct);
+
+        await NotifyAsync(list, owner, target, targetId, ct);
+
+        return new MovieListPendingInvitationResponse
+        {
+            UserId = targetId,
+            Handle = PublicHandleResolver.Resolve(target),
+            DisplayName = target?.DisplayName ?? string.Empty,
+            AvatarId = target?.DisplayedAvatarId ?? string.Empty,
+            InvitedAt = invitation.InvitedAt
+        };
+    }
+
+    private static void EnsureInvitable(MovieList list, string targetId)
+    {
+        if (list.RoleOf(targetId) is not null)
+            throw Errors.MovieListAlreadyMember();
+        if (list.IsInvited(targetId))
+            throw Errors.MovieListInvitationAlreadySent();
+    }
+
+    private async Task<Exception> WhyRefusedAsync(string listId, string targetId, CancellationToken ct)
+    {
+        var current = await _lists.FindAsync(listId, ct);
+        if (current is null)
+            return Errors.MovieListNotFound();
+        if (current.RoleOf(targetId) is not null)
+            return Errors.MovieListAlreadyMember();
+        if (current.IsInvited(targetId))
+            return Errors.MovieListInvitationAlreadySent();
+        return current.IsFull ? Errors.MovieListMembersLimitReached(MovieList.MaxMembers) : Errors.ConcurrentUpdate();
+    }
+
+    private async Task NotifyAsync(MovieList list, User? owner, User? target, string targetId, CancellationToken ct)
+    {
+        var withheld = target is not null && !target.NotifiesOn(UserNotificationType.ListInvitation);
+        try
+        {
+            await _notifications.DeleteByListAsync(list.Id, targetId, ct);
+            await _notifications.AddAsync(new UserNotification
+            {
+                UserId = targetId,
+                Type = UserNotificationType.ListInvitation,
+                ActorHandle = owner?.Handle,
+                ActorDisplayName = owner?.DisplayName,
+                ActorAvatarId = owner?.DisplayedAvatarId,
+                ListId = list.Id,
+                ListName = list.Name,
+                IsRead = false,
+                IsWithheld = withheld,
+                CreatedAt = _clock.GetUtcNow()
+            }, ct);
+        }
+        catch (Exception)
+        {
+            await _lists.RemoveInvitationAsync(list.Id, targetId, CancellationToken.None);
+            throw;
+        }
+
+        if (target is null || withheld)
+            return;
+
+        var subscriptions = await _pushSubscriptions.ListByUserIdAsync(targetId, ct);
+        var message = new PushMessage(
+            Title: "Invitation reçue ! 💌",
+            Body: $"{owner?.DisplayName} vous invite à rejoindre la liste {list.Name}",
+            Tag: $"list-invite-{list.Id}",
+            Url: "/notifications");
+        await PushFanOut.SendToAllAsync(_pushSender, subscriptions, message, ct);
+    }
+}

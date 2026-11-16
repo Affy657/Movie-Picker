@@ -22,3 +22,22 @@ public abstract class TmdbTitleRequest
     [MaxLength(500)]
     public string? PosterPath { get; init; }
 }
+
+public interface ITmdbTitleFactsRequest
+{
+    int TmdbId { get; }
+
+    MovieMediaType MediaType { get; }
+
+    string Title { get; }
+
+    string Year { get; }
+
+    string? PosterPath { get; }
+
+    double? VoteAverage { get; }
+
+    int? RuntimeMinutes { get; }
+
+    IReadOnlyList<int>? GenreIds { get; }
+}

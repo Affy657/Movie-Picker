@@ -23,6 +23,7 @@ interface Props {
   watchedTo: string;
   proposalsTo?: string;
   winningProposalsTo?: string;
+  listsTo?: string;
   ratingScale?: RatingScale;
 }
 
@@ -33,6 +34,7 @@ export default function ProfileStatsSection({
   watchedTo,
   proposalsTo,
   winningProposalsTo,
+  listsTo,
   ratingScale = 'five',
 }: Readonly<Props>) {
   const { t, locale } = useTranslation();
@@ -101,6 +103,17 @@ export default function ProfileStatsSection({
       'profile.stats.figures.votesOne',
       'profile.stats.figures.votes'
     ),
+    ...(stats.publicListCount
+      ? [
+          counted(
+            'publicLists',
+            stats.publicListCount,
+            'profile.stats.figures.publicListsOne',
+            'profile.stats.figures.publicLists',
+            listsTo
+          ),
+        ]
+      : []),
   ];
 
   const hasAnyData = figures.some((figure) => figure.value > 0);

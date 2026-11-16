@@ -101,6 +101,27 @@ describe('useWatchlistToolbar', () => {
     expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Gamma', 'Alpha', 'Beta']);
   });
 
+  it('keeps the order of the source by relevance, the default of a saved list, and reverses it on demand', () => {
+    const { result } = renderHook(() =>
+      useWatchlistToolbar({
+        items: ITEMS,
+        userId: 'u1',
+        tmdbLanguage: 'fr',
+        mediaTypeLabels: MEDIA_TYPE_LABELS,
+        storageScope: 'savedList',
+        defaultSortBy: 'relevance',
+      })
+    );
+
+    expect(result.current.sortBy).toBe('relevance');
+    expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Alpha', 'Beta', 'Gamma']);
+
+    act(() => result.current.setSortBy('relevance'));
+    expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Gamma', 'Beta', 'Alpha']);
+
+    expect(setup().result.current.sortBy).toBe('createdAt');
+  });
+
   it('filters by genre while tolerating items without a genre', () => {
     const { result } = setup();
     act(() => result.current.toggleGenre(12));
@@ -181,5 +202,56 @@ describe('useWatchlistToolbar', () => {
     const second = setup();
     expect(second.result.current.sortBy).toBe('title');
     expect(second.result.current.selectedGenres).toEqual([12]);
+  });
+
+  it('keeps the sort and filters of the created lists apart from the watchlist ones', () => {
+    const watchlist = setup();
+    act(() => watchlist.result.current.setSortBy('title'));
+
+    const createdList = renderHook(() =>
+      useWatchlistToolbar({
+        items: ITEMS,
+        userId: 'u1',
+        tmdbLanguage: 'fr',
+        mediaTypeLabels: MEDIA_TYPE_LABELS,
+        storageScope: 'list',
+      })
+    );
+    expect(createdList.result.current.sortBy).toBe('createdAt');
+    act(() => createdList.result.current.setSortBy('duration'));
+
+    expect(setup().result.current.sortBy).toBe('title');
+  });
+
+  it('narrows the films by an extra filter, counted as a filter and reset with the others', () => {
+    let onlyMovies = true;
+    let resets = 0;
+    const { result, rerender } = renderHook(() =>
+      useWatchlistToolbar({
+        items: ITEMS,
+        userId: 'u1',
+        tmdbLanguage: 'fr',
+        mediaTypeLabels: MEDIA_TYPE_LABELS,
+        storageScope: 'watched',
+        extraFilter: {
+          matches: (entry) => !onlyMovies || entry.mediaType === 'movie',
+          active: onlyMovies,
+          reset: () => {
+            resets += 1;
+          },
+        },
+      })
+    );
+
+    expect(result.current.visibleItems.map((entry) => entry.title)).toEqual(['Gamma', 'Alpha']);
+    expect(result.current.isFiltered).toBe(true);
+
+    act(() => result.current.resetAll());
+    expect(resets).toBe(1);
+
+    onlyMovies = false;
+    rerender();
+    expect(result.current.visibleCount).toBe(3);
+    expect(result.current.isFiltered).toBe(false);
   });
 });

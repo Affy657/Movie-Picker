@@ -43,6 +43,10 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public bool? IsWatchlistPublic { get; set; }
 
+    [BsonElement("isWatchedPublic")]
+    [BsonIgnoreIfNull]
+    public bool? IsWatchedPublic { get; set; }
+
     [BsonElement("uiTheme")]
     public string UiTheme { get; set; } = "system";
 
@@ -52,6 +56,10 @@ public sealed class UserDocument
 
     [BsonElement("ratingScale")]
     public string RatingScale { get; set; } = "five";
+
+    [BsonElement("dimWatched")]
+    [BsonIgnoreIfDefault]
+    public bool DimWatched { get; set; }
 
     [BsonElement("avatarId")]
     [BsonIgnoreIfNull]
@@ -108,6 +116,22 @@ public sealed class UserDocument
     [BsonElement("letterboxdPendingChoiceKeys")]
     [BsonIgnoreIfNull]
     public List<string>? LetterboxdPendingChoiceKeys { get; set; }
+
+    [BsonElement("letterboxdSyncWatchlist")]
+    [BsonIgnoreIfNull]
+    public bool? LetterboxdSyncWatchlist { get; set; }
+
+    [BsonElement("letterboxdSyncWatched")]
+    [BsonIgnoreIfNull]
+    public bool? LetterboxdSyncWatched { get; set; }
+
+    [BsonElement("letterboxdWatchlistCount")]
+    [BsonIgnoreIfDefault]
+    public int LetterboxdWatchlistCount { get; set; }
+
+    [BsonElement("letterboxdWatchedCount")]
+    [BsonIgnoreIfDefault]
+    public int LetterboxdWatchedCount { get; set; }
 
     [BsonElement("notificationPreferences")]
     [BsonIgnoreIfNull]

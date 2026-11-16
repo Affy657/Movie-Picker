@@ -31,7 +31,7 @@ public sealed class WatchlistControllerTests
         _currentUser.Setup(c => c.GetUserId()).Returns("u1");
         var handler = new Mock<IGetWatchlistHandler>();
         var response = new WatchlistResponse { Items = [] };
-        handler.Setup(h => h.HandleAsync("u1", 0, null, It.IsAny<CancellationToken>())).ReturnsAsync(response);
+        handler.Setup(h => h.HandleAsync("u1", true, 0, null, It.IsAny<CancellationToken>())).ReturnsAsync(response);
 
         var result = await _sut.Get(0, null, handler.Object, _currentUser.Object, CancellationToken.None);
 

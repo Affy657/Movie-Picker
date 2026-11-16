@@ -34,6 +34,7 @@ const PREF_LABEL_KEYS: Readonly<Record<NotificationTypeKey, TranslationKey>> = {
   eventreminder24h: 'notifications.prefEventReminder24h',
   ratingreminder: 'notifications.prefRatingReminder',
   eventinvitation: 'notifications.prefEventInvitation',
+  listinvitation: 'notifications.prefListInvitation',
   newfollower: 'notifications.prefNewFollower',
   letterboxdreconciliationpending: 'notifications.prefLetterboxdReconciliationPending',
 };
@@ -62,7 +63,7 @@ const PREF_GROUPS: readonly PrefGroup[] = [
   },
   {
     legendKey: 'notifications.groupSocial',
-    types: ['eventinvitation', 'newfollower', 'letterboxdreconciliationpending'],
+    types: ['eventinvitation', 'listinvitation', 'newfollower', 'letterboxdreconciliationpending'],
   },
 ];
 

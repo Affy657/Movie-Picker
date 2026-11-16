@@ -12,7 +12,14 @@ import {
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
-import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
+import {
+  authMeGuestHandler,
+  createListsHandlers,
+  createWatchedHandlers,
+  TEST_API_V1,
+  type MockWatchedMovie,
+} from '@/mocks/handlers';
+import { stubMatchMedia } from '@/test-utils/matchMedia';
 import MoviePage from '@/app/pages/movie/MoviePage';
 
 vi.mock('@/features/events/components/MovieNightBar', () => ({
@@ -131,6 +138,34 @@ function nightsHandler(body: object) {
   return http.get(`${TEST_API_V1}/movies/tmdb/438631/nights`, () => HttpResponse.json(body));
 }
 
+const DUNE_SEEN_ELSEWHERE: MockWatchedMovie = {
+  tmdbId: 438631,
+  title: 'Dune',
+  year: '2021',
+  source: 'elsewhere',
+  myRating: 8,
+};
+
+function signedInWith(watched: MockWatchedMovie[] = []) {
+  return [
+    signedInHandler,
+    watchlistHandler,
+    detailsHandler,
+    showcaseHandler,
+    nightsHandler({}),
+    ...createListsHandlers(),
+    ...createWatchedHandlers(watched),
+  ];
+}
+
+function inDocumentOrder(elements: HTMLElement[]): boolean {
+  return elements.every(
+    (element, index) =>
+      index === 0 ||
+      !!(elements[index - 1]!.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING)
+  );
+}
+
 function LocationProbe() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -223,6 +258,7 @@ describe('MoviePage', () => {
       `/login?returnTo=${encodeURIComponent('/film/438631-dune')}`
     );
     expect(screen.queryByRole('button', { name: /proposer dans une soirée/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Je l’ai vu' })).toBeNull();
   });
 
   it('tells a signed in member how the film did in their nights', async () => {
@@ -270,7 +306,200 @@ describe('MoviePage', () => {
     expect(within(nights).getByText('Vu par Léa, Hugo et 2 autres')).toBeInTheDocument();
     expect(screen.getByText('Vos soirées')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /proposer dans une soirée/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /ajouter à ma liste/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'À voir' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: /ajouter à une liste/i })).toBeInTheDocument();
+  });
+
+  it('adds the film to a created list from the lists menu next to À voir', async () => {
+    server.use(
+      signedInHandler,
+      watchlistHandler,
+      detailsHandler,
+      showcaseHandler,
+      nightsHandler({}),
+      ...createListsHandlers([{ id: 'l1', name: 'Science-fiction' }])
+    );
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole('button', { name: /ajouter à une liste/i }));
+    await user.click(await screen.findByRole('menuitemcheckbox', { name: /science-fiction/i }));
+
+    expect(await screen.findByRole('button', { name: /dans 1 liste/i })).toBeInTheDocument();
+  });
+
+  it('orders the actions for a phone: propose, À voir and seen, lists, then trailer and share', async () => {
+    stubMatchMedia((query) => query.includes('max-width'));
+    server.use(...signedInWith());
+    renderPage();
+
+    await screen.findByRole('button', { name: /ajouter à une liste/i });
+    await screen.findByRole('button', { name: 'Je l’ai vu' });
+    const buttons = [
+      /proposer dans une soirée/i,
+      /^à voir$/i,
+      /^je l’ai vu$/i,
+      /ajouter à une liste/i,
+      /^bande-annonce$/i,
+      /^partager$/i,
+    ].map((name) => screen.getByRole('button', { name }));
+    expect(inDocumentOrder(buttons)).toBe(true);
+    vi.unstubAllGlobals();
+  });
+
+  it('orders the actions for a computer: propose, trailer, share, then lists, À voir and seen', async () => {
+    server.use(...signedInWith());
+    renderPage();
+
+    await screen.findByRole('button', { name: 'Je l’ai vu' });
+    const buttons = [
+      /proposer dans une soirée/i,
+      /^bande-annonce$/i,
+      /^partager$/i,
+      /ajouter à une liste/i,
+      /^à voir$/i,
+      /^je l’ai vu$/i,
+    ].map((name) => screen.getByRole('button', { name }));
+    expect(inDocumentOrder(buttons)).toBe(true);
+  });
+
+  it('marks the film seen elsewhere, the button turning to Vu and the rating showing up', async () => {
+    let marked: Record<string, unknown> | null = null;
+    const statusNow = () => ({
+      status: marked ? 'elsewhere' : 'none',
+      watchedAt: marked ? '2026-11-13T10:00:00Z' : null,
+      rating: null,
+      nightSlug: null,
+      nightTitle: null,
+    });
+    server.use(
+      http.post(`${TEST_API_V1}/watched`, async ({ request }) => {
+        marked = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(statusNow());
+      }),
+      http.get(`${TEST_API_V1}/watched/:tmdbId`, () => HttpResponse.json(statusNow())),
+      ...signedInWith()
+    );
+    const user = userEvent.setup();
+    renderPage();
+
+    const seen = await screen.findByRole('button', { name: 'Je l’ai vu' });
+    expect(seen).not.toHaveAttribute('aria-pressed');
+    expect(screen.queryByText('Votre note')).toBeNull();
+
+    await user.click(seen);
+
+    expect(await screen.findByRole('button', { name: 'Vu' })).not.toHaveAttribute('aria-pressed');
+    expect(screen.getByRole('group', { name: 'Votre note' })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(marked).toMatchObject({ tmdbId: 438631, mediaType: 'movie', title: 'Dune' })
+    );
+  });
+
+  it('takes back the seen elsewhere mark at once from Vu', async () => {
+    server.use(
+      http.delete(`${TEST_API_V1}/watched/:tmdbId`, () => new Promise<never>(() => undefined)),
+      ...signedInWith([DUNE_SEEN_ELSEWHERE])
+    );
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole('button', { name: 'Vu' }));
+
+    expect(await screen.findByRole('button', { name: 'Je l’ai vu' })).not.toHaveAttribute(
+      'aria-pressed'
+    );
+    expect(screen.queryByRole('group', { name: 'Votre note' })).toBeNull();
+  });
+
+  it('rates a film seen elsewhere next to the TMDB score, in the scale of the reader', async () => {
+    let rated: unknown = null;
+    const statusNow = () => ({
+      status: 'elsewhere',
+      watchedAt: '2026-11-01T20:00:00Z',
+      rating: rated ? 6 : 8,
+      nightSlug: null,
+      nightTitle: null,
+    });
+    server.use(
+      http.put(`${TEST_API_V1}/watched/:tmdbId/rating`, async ({ request }) => {
+        rated = await request.json();
+        return HttpResponse.json(statusNow());
+      }),
+      http.get(`${TEST_API_V1}/watched/:tmdbId`, () => HttpResponse.json(statusNow())),
+      ...signedInWith([DUNE_SEEN_ELSEWHERE])
+    );
+    const user = userEvent.setup();
+    renderPage();
+
+    const stars = await screen.findByRole('group', { name: 'Votre note' });
+    expect(screen.getByText('8/10')).toBeInTheDocument();
+
+    await user.click(within(stars).getByRole('button', { name: 'Noter 3 étoiles' }));
+
+    await waitFor(() => expect(rated).toEqual({ value: 6 }));
+    expect(await screen.findByText('6/10')).toBeInTheDocument();
+  });
+
+  it('clears the rating of a film seen elsewhere, the way a night rating is cleared', async () => {
+    let cleared: unknown = null;
+    const statusNow = () => ({
+      status: 'elsewhere',
+      watchedAt: '2026-11-01T20:00:00Z',
+      rating: cleared ? null : 8,
+      nightSlug: null,
+      nightTitle: null,
+    });
+    server.use(
+      http.put(`${TEST_API_V1}/watched/:tmdbId/rating`, async ({ request }) => {
+        cleared = await request.json();
+        return HttpResponse.json(statusNow());
+      }),
+      http.get(`${TEST_API_V1}/watched/:tmdbId`, () => HttpResponse.json(statusNow())),
+      ...signedInWith([DUNE_SEEN_ELSEWHERE])
+    );
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(await screen.findByText('8/10')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Effacer' }));
+
+    await waitFor(() => expect(cleared).toEqual({ value: null }));
+    await waitFor(() => expect(screen.queryByText('8/10')).toBeNull());
+    expect(screen.queryByRole('button', { name: 'Effacer' })).toBeNull();
+    expect(screen.getByRole('group', { name: 'Votre note' })).toBeInTheDocument();
+  });
+
+  it('offers no way to clear a rating that was never given', async () => {
+    server.use(...signedInWith([{ ...DUNE_SEEN_ELSEWHERE, myRating: null }]));
+    renderPage();
+
+    expect(await screen.findByRole('group', { name: 'Votre note' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Effacer' })).toBeNull();
+  });
+
+  it('tells a film seen at a night instead of the button, its night rating read only', async () => {
+    server.use(
+      ...signedInWith([
+        {
+          tmdbId: 438631,
+          title: 'Dune',
+          source: 'night',
+          myRating: 8,
+          watchedAt: '2026-10-12T20:00:00Z',
+          nightSlug: 'Ab3x',
+          nightTitle: 'Ciné-club',
+        },
+      ])
+    );
+    renderPage();
+
+    const night = await screen.findByRole('link', { name: /^vu en soirée le 12 oct\./i });
+    expect(night).toHaveAttribute('href', '/e/Ab3x');
+    expect(screen.queryByRole('button', { name: /^(vu|je l’ai vu)$/i })).toBeNull();
+    expect(screen.queryByRole('group', { name: 'Votre note' })).toBeNull();
+    expect(screen.getByRole('img', { name: 'Votre note de soirée : 8/10' })).toBeInTheDocument();
   });
 
   it('opens the night bar instead of the propose button when coming from a night', async () => {
@@ -326,11 +555,14 @@ describe('MoviePage', () => {
       watchlistHandler,
       pendingDetailsHandler,
       showcaseHandler,
-      nightsHandler({})
+      nightsHandler({}),
+      ...createWatchedHandlers()
     );
     renderPage();
 
-    expect(await screen.findByRole('button', { name: /ajouter à ma liste/i })).toBeDisabled();
+    expect(await screen.findByRole('button', { name: 'À voir' })).toBeDisabled();
+    expect(await screen.findByRole('button', { name: 'Je l’ai vu' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /ajouter à une liste/i })).toBeDisabled();
     expect(screen.getByRole('button', { name: /proposer dans une soirée/i })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Partager' })).toBeDisabled();
     expect(
@@ -382,7 +614,7 @@ describe('MoviePage', () => {
     renderPage();
 
     await screen.findByRole('heading', { level: 1, name: 'Dune' });
-    await userEvent.click(await screen.findByRole('button', { name: /ajouter à ma liste/i }));
+    await userEvent.click(await screen.findByRole('button', { name: 'À voir' }));
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
   });

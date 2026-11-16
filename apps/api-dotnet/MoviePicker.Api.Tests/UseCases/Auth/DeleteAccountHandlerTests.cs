@@ -23,6 +23,9 @@ public sealed class DeleteAccountHandlerTests
         public InMemoryPushSubscriptionRepository Push { get; } = new();
         public InMemoryFollowRepository Follows { get; } = new();
         public InMemoryWatchlistRepository Watchlist { get; } = new();
+        public InMemoryMovieListRepository MovieLists { get; } = new();
+        public InMemoryWatchedTitleRepository WatchedTitles { get; } = new();
+        public InMemorySavedListRepository SavedLists { get; } = new();
         public InMemoryPasswordResetTokenRepository ResetTokens { get; } = new();
         public InMemoryVoteRepository Votes { get; } = new();
         public InMemorySeenMarkRepository SeenMarks { get; } = new();
@@ -40,6 +43,9 @@ public sealed class DeleteAccountHandlerTests
                 Push,
                 Follows,
                 Watchlist,
+                MovieLists,
+                WatchedTitles,
+                SavedLists,
                 ResetTokens,
                 AvatarPhotos,
                 Sessions.Object,
@@ -257,6 +263,161 @@ public sealed class DeleteAccountHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_DeletesEveryListOfTheUser_AndOnlyThem()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        var now = DateTimeOffset.UtcNow;
+        await f.MovieLists.AddAsync(new MovieList { OwnerId = user.Id, Name = "Films cultes", CreatedAt = now, UpdatedAt = now });
+        await f.MovieLists.AddAsync(new MovieList { OwnerId = user.Id, Name = "Halloween", CreatedAt = now, UpdatedAt = now });
+        await f.MovieLists.AddAsync(new MovieList { OwnerId = "other-1", Name = "Films cultes", CreatedAt = now, UpdatedAt = now });
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
+
+        Assert.Empty(await f.MovieLists.ListByOwnerAsync(user.Id));
+        Assert.Single(await f.MovieLists.ListByOwnerAsync("other-1"));
+    }
+
+    [Fact]
+    public async Task HandleAsync_PurgesTheInvitationsSentFromTheListsOfTheUser_AndOnlyThem()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        var now = DateTimeOffset.UtcNow;
+        var own = await f.MovieLists.AddAsync(new MovieList { OwnerId = user.Id, Name = "Halloween", CreatedAt = now, UpdatedAt = now });
+        var foreign = await f.MovieLists.AddAsync(new MovieList { OwnerId = "other-1", Name = "Nanars", CreatedAt = now, UpdatedAt = now });
+        UserNotification Invitation(string invitee, string listId) => new()
+        {
+            UserId = invitee,
+            Type = UserNotificationType.ListInvitation,
+            ListId = listId,
+            ListName = "Liste",
+            CreatedAt = now
+        };
+        await f.Notifications.AddAsync(Invitation("invitee-1", own.Id));
+        await f.Notifications.AddAsync(Invitation("invitee-2", own.Id));
+        await f.Notifications.AddAsync(Invitation("invitee-1", foreign.Id));
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
+
+        Assert.Equal([foreign.Id], (await f.Notifications.ListByUserIdAsync("invitee-1")).Select(n => n.ListId));
+        Assert.Empty(await f.Notifications.ListByUserIdAsync("invitee-2"));
+    }
+
+    [Fact]
+    public async Task HandleAsync_LeavesTheListsOfOthers_AndTheirTitlesStayWithoutAnAuthor()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        var now = DateTimeOffset.UtcNow;
+        var joined = await f.MovieLists.AddAsync(new MovieList { OwnerId = "other-1", Name = "Ciné du dimanche", CreatedAt = now, UpdatedAt = now });
+        await f.MovieLists.AddInvitationAsync(joined.Id, new MovieListInvitation(user.Id, now), MovieList.MaxMembers);
+        await f.MovieLists.AcceptInvitationAsync(joined.Id, new MovieListMember(user.Id, now));
+        await f.MovieLists.AddItemAsync(user.Id, joined.Id, new MovieListItem { TmdbId = 603, Title = "Matrix", AddedAt = now, AddedByUserId = user.Id }, MovieList.MaxItems);
+        var inviting = await f.MovieLists.AddAsync(new MovieList { OwnerId = "other-1", Name = "Nanars", CreatedAt = now, UpdatedAt = now });
+        await f.MovieLists.AddInvitationAsync(inviting.Id, new MovieListInvitation(user.Id, now), MovieList.MaxMembers);
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
+
+        var kept = (await f.MovieLists.FindAsync(joined.Id))!;
+        Assert.Empty(kept.Members);
+        Assert.Equal(603, Assert.Single(kept.Items).TmdbId);
+        Assert.Empty((await f.MovieLists.FindAsync(inviting.Id))!.Invitations);
+    }
+
+    [Fact]
+    public async Task HandleAsync_DeletesEverySavedListOfTheUser_AndOnlyThem()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        var now = DateTimeOffset.UtcNow;
+        await f.SavedLists.AddIfAbsentAsync(new SavedList { OwnerId = user.Id, SourceType = ListSourceType.TmdbCollection, SourceId = "1241", CreatedAt = now });
+        await f.SavedLists.AddIfAbsentAsync(new SavedList { OwnerId = user.Id, SourceType = ListSourceType.ExplorerTheme, SourceId = "frissons", CreatedAt = now });
+        await f.SavedLists.AddIfAbsentAsync(new SavedList { OwnerId = "other-1", SourceType = ListSourceType.TmdbCollection, SourceId = "1241", CreatedAt = now });
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
+
+        Assert.Empty(await f.SavedLists.ListByOwnerAsync(user.Id));
+        Assert.Single(await f.SavedLists.ListByOwnerAsync("other-1"));
+    }
+
+    [Fact]
+    public async Task HandleAsync_ForgetsWhatOthersKeptOfTheListsOfTheUser_AndNothingElse()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        var now = DateTimeOffset.UtcNow;
+        var own = await f.MovieLists.AddAsync(new MovieList { OwnerId = user.Id, Name = "Hitchcock", IsPublic = true, CreatedAt = now, UpdatedAt = now });
+        var foreign = await f.MovieLists.AddAsync(new MovieList { OwnerId = "other-2", Name = "Coréen", IsPublic = true, CreatedAt = now, UpdatedAt = now });
+        SavedListTitle psycho = new() { TmdbId = 539, Title = "Psychose", Year = "1960" };
+        var keptOfTheUser = await f.SavedLists.AddIfAbsentAsync(new SavedList
+        {
+            OwnerId = "other-1",
+            SourceType = ListSourceType.MemberList,
+            SourceId = own.Id,
+            SourceOwnerId = user.Id,
+            Name = "Hitchcock",
+            CreatedAt = now,
+            Snapshot = [psycho]
+        });
+        var keptOfADeletedListOfTheUser = await f.SavedLists.AddIfAbsentAsync(new SavedList
+        {
+            OwnerId = "other-3",
+            SourceType = ListSourceType.MemberList,
+            SourceId = "deleted-before",
+            SourceOwnerId = user.Id,
+            Name = "Kubrick",
+            CreatedAt = now,
+            Snapshot = [psycho]
+        });
+        var keptOfSomeoneElse = await f.SavedLists.AddIfAbsentAsync(new SavedList
+        {
+            OwnerId = "other-1",
+            SourceType = ListSourceType.MemberList,
+            SourceId = foreign.Id,
+            SourceOwnerId = "other-2",
+            Name = "Coréen",
+            CreatedAt = now,
+            Snapshot = [psycho]
+        });
+        var saga = await f.SavedLists.AddIfAbsentAsync(new SavedList
+        {
+            OwnerId = "other-1",
+            SourceType = ListSourceType.TmdbCollection,
+            SourceId = own.Id,
+            Name = "Harry Potter - Saga",
+            CreatedAt = now
+        });
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
+
+        var forgotten = (await f.SavedLists.GetAsync("other-1", keptOfTheUser.Id))!;
+        Assert.Equal(string.Empty, forgotten.Name);
+        Assert.Empty(forgotten.Snapshot);
+        var forgottenAlthoughDeletedBefore = (await f.SavedLists.GetAsync("other-3", keptOfADeletedListOfTheUser.Id))!;
+        Assert.Equal((string.Empty, 0), (forgottenAlthoughDeletedBefore.Name, forgottenAlthoughDeletedBefore.Snapshot.Count));
+        var untouched = (await f.SavedLists.GetAsync("other-1", keptOfSomeoneElse.Id))!;
+        Assert.Equal(("Coréen", 1), (untouched.Name, untouched.Snapshot.Count));
+        Assert.Equal("Harry Potter - Saga", (await f.SavedLists.GetAsync("other-1", saga.Id))!.Name);
+        Assert.NotNull(await f.MovieLists.FindAsync(foreign.Id));
+    }
+
+    [Fact]
+    public async Task HandleAsync_DeletesEveryTitleTheUserWatchedElsewhere_AndOnlyThem()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        await f.WatchedTitles.AddIfAbsentAsync(new WatchedTitle { OwnerId = user.Id, TmdbId = 603, Title = "Matrix" });
+        await f.WatchedTitles.AddIfAbsentAsync(new WatchedTitle { OwnerId = user.Id, TmdbId = 680, Title = "Pulp Fiction", Rating = 9 });
+        await f.WatchedTitles.AddIfAbsentAsync(new WatchedTitle { OwnerId = "other-1", TmdbId = 603, Title = "Matrix" });
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
+
+        Assert.Empty(await f.WatchedTitles.ListByOwnerAsync(user.Id));
+        Assert.Single(await f.WatchedTitles.ListByOwnerAsync("other-1"));
+    }
+
+    [Fact]
     public async Task HandleAsync_AnonymizesTheDeletedActorInOtherUsersNotifications()
     {
         var f = new Fixture();
@@ -325,6 +486,9 @@ public sealed class DeleteAccountHandlerTests
             f.Push,
             f.Follows,
             f.Watchlist,
+            f.MovieLists,
+            f.WatchedTitles,
+            f.SavedLists,
             f.ResetTokens,
             f.AvatarPhotos,
             f.Sessions.Object,

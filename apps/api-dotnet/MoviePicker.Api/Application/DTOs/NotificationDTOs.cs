@@ -56,6 +56,9 @@ public sealed record UserNotificationItem
     public string? EventSlug { get; init; }
     public string? EventTitle { get; init; }
     public string? MovieTitle { get; init; }
+    public string? ListId { get; init; }
+    public string? ListName { get; init; }
+    public bool ListInvitationPending { get; init; }
     public bool IsRead { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
 }

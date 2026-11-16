@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
@@ -31,13 +31,13 @@ const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
   })
 );
 
-function renderShell() {
+function renderShell(path = '/') {
   return render(
     <AppTestProviders>
-      <MemoryRouter initialEntries={['/']}>
+      <MemoryRouter initialEntries={[path]}>
         <Routes>
           <Route element={<AppShell />}>
-            <Route path="/" element={<p>Page</p>} />
+            <Route path="*" element={<p>Page</p>} />
           </Route>
         </Routes>
       </MemoryRouter>
@@ -83,4 +83,20 @@ describe('AppShell', () => {
 
     expect(loadDialog).not.toHaveBeenCalled();
   });
+
+  it.each(['/listes', '/listes/l1', '/watchlist'])(
+    'leads to Mes listes and keeps it active on %s',
+    async (path) => {
+      server.use(authedUserHandler);
+      renderShell(path);
+
+      await screen.findByRole('button', { name: /menu du compte/i }, { timeout: 20000 });
+      const navs = screen.getAllByRole('navigation', { name: 'Navigation principale' });
+      for (const nav of navs) {
+        const link = within(nav).getByRole('link', { name: 'Mes listes' });
+        expect(link).toHaveAttribute('href', '/listes');
+        expect(link).toHaveAttribute('aria-current', 'page');
+      }
+    }
+  );
 });

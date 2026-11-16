@@ -85,7 +85,7 @@ public sealed class InMemoryUserRepositoryTests
         var cards = await _repo.ListCardsByHandlesAsync(["ALICE", " alice ", "bob", "nobody", "  "]);
 
         Assert.Equal(
-            [new UserCard(alice.Id, "avatar-1", "alice", true), new UserCard(bob.Id, string.Empty, "bob", false)],
+            [new UserCard(alice.Id, "avatar-1", "alice", true, alice.DisplayName), new UserCard(bob.Id, string.Empty, "bob", false, bob.DisplayName)],
             cards.OrderBy(card => card.Handle, StringComparer.Ordinal));
         Assert.Empty(await _repo.ListCardsByHandlesAsync([]));
     }
@@ -214,19 +214,21 @@ public sealed class InMemoryUserRepositoryTests
     }
 
     [Fact]
-    public async Task UpdateAsync_PreservesSupporterSinceAndAvatarId()
+    public async Task UpdateAsync_PreservesSupporterSinceAvatarIdAndDimWatched()
     {
         var since = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        var created = await _repo.AddAsync(Mk() with { SupporterSince = since, AvatarId = "bolt" });
+        var created = await _repo.AddAsync(Mk() with { SupporterSince = since, AvatarId = "bolt", DimWatched = true });
 
         var updated = await _repo.UpdateAsync(created with { DisplayName = "Alice renamed" });
 
         Assert.Equal(since, updated.SupporterSince);
         Assert.Equal("bolt", updated.AvatarId);
+        Assert.True(updated.DimWatched);
 
         var reloaded = await _repo.GetByIdAsync(created.Id);
         Assert.Equal(since, reloaded!.SupporterSince);
         Assert.Equal("bolt", reloaded.AvatarId);
+        Assert.True(reloaded.DimWatched);
     }
 
     [Fact]
@@ -314,6 +316,38 @@ public sealed class InMemoryUserRepositoryTests
         var created = await _repo.AddAsync(Mk() with { LetterboxdUsername = "dave_v" });
 
         Assert.Equal("dave_v", created.LetterboxdUsername);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_KeepsTheLetterboxdSyncTogglesAndCounts()
+    {
+        var created = await _repo.AddAsync(Mk() with
+        {
+            LetterboxdSyncWatchlist = false,
+            LetterboxdSyncWatched = false,
+            LetterboxdWatchlistCount = 4,
+            LetterboxdWatchedCount = 9
+        });
+
+        await _repo.UpdateAsync(created with { DisplayName = "Alice renamed" });
+        var reloaded = await _repo.GetByIdAsync(created.Id);
+
+        Assert.Equal(
+            (false, false, 4, 9),
+            (reloaded!.LetterboxdSyncWatchlist, reloaded.LetterboxdSyncWatched, reloaded.LetterboxdWatchlistCount, reloaded.LetterboxdWatchedCount));
+    }
+
+    [Fact]
+    public async Task SetLetterboxdLinkedCountsAsync_StoresBothCountsAndBumpsTheVersion()
+    {
+        var created = await _repo.AddAsync(Mk() with { LetterboxdUsername = "dave_v" });
+
+        await _repo.SetLetterboxdLinkedCountsAsync(created.Id, 7, 120);
+        var reloaded = await _repo.GetByIdAsync(created.Id);
+
+        Assert.Equal((7, 120), (reloaded!.LetterboxdWatchlistCount, reloaded.LetterboxdWatchedCount));
+        Assert.Equal(created.Version + 1, reloaded.Version);
+        Assert.Equal("dave_v", reloaded.LetterboxdUsername);
     }
 
     [Fact]
@@ -632,6 +666,7 @@ public sealed class InMemoryUserRepositoryTests
     {
         "letterboxdSyncStatus" => _repo.SetLetterboxdSyncStatusAsync(userId, TemplateNow.AddSeconds(write), null),
         "letterboxdPendingCount" => _repo.SetLetterboxdPendingReconciliationCountAsync(userId, write),
+        "letterboxdLinkedCounts" => _repo.SetLetterboxdLinkedCountsAsync(userId, write, write),
         "addTemplate" => _repo.AddEventTemplateAsync(userId, Template($"t{write}", "Ajout"), int.MaxValue, TemplateNow),
         _ => _repo.ReplaceEventTemplateAsync(userId, Template("t0", $"Remplacement {write}"), TemplateNow),
     };
@@ -639,6 +674,7 @@ public sealed class InMemoryUserRepositoryTests
     [Theory]
     [InlineData("letterboxdSyncStatus")]
     [InlineData("letterboxdPendingCount")]
+    [InlineData("letterboxdLinkedCounts")]
     [InlineData("addTemplate")]
     [InlineData("replaceTemplate")]
     public async Task TargetedWrites_RacingADelete_NeverBringTheUserBack(string writer)
@@ -681,6 +717,7 @@ public sealed class InMemoryUserRepositoryTests
     [Theory]
     [InlineData("letterboxdSyncStatus")]
     [InlineData("letterboxdPendingCount")]
+    [InlineData("letterboxdLinkedCounts")]
     [InlineData("addTemplate")]
     [InlineData("replaceTemplate")]
     public async Task TargetedWrites_RacingHandleChanges_NeverRollBackAChange(string writer)

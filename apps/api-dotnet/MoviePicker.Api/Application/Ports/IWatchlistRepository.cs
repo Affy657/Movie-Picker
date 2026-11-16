@@ -14,6 +14,8 @@ public interface IWatchlistRepository
 
     Task<long> CountByUserIdAsync(string userId, CancellationToken ct = default);
 
+    Task<long> CountLinkedToLetterboxdAsync(string userId, CancellationToken ct = default);
+
     Task<WatchlistItem?> GetOneAsync(string userId, int tmdbId, MovieMediaType mediaType, CancellationToken ct = default);
 
     Task<bool> AddAsync(WatchlistItem item, CancellationToken ct = default);

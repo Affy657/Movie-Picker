@@ -27,7 +27,7 @@ public sealed class StructuredHttpRequestLoggingMiddleware(
             logger.LogInformation(
                 "HTTP {HttpMethod} {Path}{QueryString} → {StatusCode} en {ElapsedMs} ms ({Endpoint}) [kind={ApiRouteKind}, caller={Caller}]",
                 SingleLine(context.Request.Method),
-                SingleLine(context.Request.Path.Value),
+                SingleLine(SensitiveQueryRedaction.RedactPath(context.Request.Path.Value)),
                 SingleLine(SensitiveQueryRedaction.RedactQueryString(context.Request.QueryString.Value)),
                 failed && !context.Response.HasStarted ? StatusCodes.Status500InternalServerError : context.Response.StatusCode,
                 sw.ElapsedMilliseconds,

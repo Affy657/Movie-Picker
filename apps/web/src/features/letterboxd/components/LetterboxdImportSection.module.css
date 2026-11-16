@@ -1,5 +1,6 @@
 .connectionRow {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
   min-height: var(--tap-target-min);
@@ -19,6 +20,8 @@
 }
 
 .usernameValue {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text);
@@ -67,6 +70,17 @@
 
 .syncBtn {
   flex-shrink: 0;
+}
+
+.syncTargets {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: var(--space-1);
+}
+
+.syncTarget {
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--color-border-subtle);
 }
 
 .report {

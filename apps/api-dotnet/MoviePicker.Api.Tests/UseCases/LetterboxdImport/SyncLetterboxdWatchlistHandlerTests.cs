@@ -1,10 +1,13 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.LetterboxdImport;
+using MoviePicker.Api.Application.UseCases.MovieLists;
 using MoviePicker.Api.Application.UseCases.Watchlist;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Web;
 using MoviePicker.Api.Tests.Builders;
 using Xunit;
@@ -23,7 +26,7 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
     }
 
     private const string UserId = "u1";
-    private const string Username = "affy657";
+    private const string Username = "cinephile";
 
     private static readonly DateTimeOffset Now = new(2026, 8, 10, 12, 0, 0, TimeSpan.Zero);
 
@@ -36,6 +39,8 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
     private readonly Mock<IParticipantRepository> _participants = new();
     private readonly Mock<IEventRepository> _events = new();
     private readonly Mock<IMovieRepository> _movies = new();
+    private readonly Mock<IPosterImageStore> _posters = new();
+    private readonly InMemoryWatchedTitleRepository _watched = new();
     private readonly RecordingSharedQuota _quota = new();
     private readonly SyncLetterboxdWatchlistHandler _sut;
 
@@ -47,29 +52,67 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
             .ReturnsAsync((IReadOnlyList<WatchlistItem>)[]);
         _letterboxd
             .Setup(l => l.GetWatchlistAsync(Username, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new LetterboxdWatchlistSnapshot([], true));
+            .ReturnsAsync(new LetterboxdFilmsSnapshot([], true));
+        GivenWatchedOnLetterboxd(new LetterboxdFilmsSnapshot([], true));
         _participants
             .Setup(p => p.ListDistinctEventIdsByUserIdAsync(UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<string>)[]);
 
         var synchronizer = new LetterboxdWatchlistSynchronizer(
             _watchlist.Object,
+            _watched,
             _letterboxd.Object,
             _tmdb.Object,
             _addToWatchlist.Object,
             _participants.Object,
             _events.Object,
             _movies.Object,
+            new LetterboxdWatchedSynchronizer(
+                _watched,
+                _tmdb.Object,
+                new LetterboxdWatchedWriter(
+                    _watched,
+                    _watchlist.Object,
+                    new MovieListItemFactory(_posters.Object, _tmdb.Object, NullLogger<MovieListItemFactory>.Instance),
+                    new FixedClock(Now)),
+                NullLogger<LetterboxdWatchedSynchronizer>.Instance),
+            LetterboxdSyncBudget.Within(RequestTimeoutPolicies.LongRunningBudget),
             NullLogger<LetterboxdWatchlistSynchronizer>.Instance);
         _sut = new SyncLetterboxdWatchlistHandler(
-            _users.Object, _notifications.Object, synchronizer, _quota, new FixedClock(Now));
+            _users.Object,
+            _notifications.Object,
+            synchronizer,
+            new LetterboxdLinkedCounter(_users.Object, _watchlist.Object, _watched),
+            _quota,
+            new FixedClock(Now));
     }
+
+    private void GivenWatchedOnLetterboxd(LetterboxdFilmsSnapshot snapshot) =>
+        _letterboxd
+            .Setup(l => l.GetWatchedFilmsAsync(Username, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(snapshot);
+
+    private void GivenAmbiguousWatchedFilm()
+    {
+        GivenAmbiguousLetterboxdFilm();
+        _letterboxd
+            .Setup(l => l.GetWatchlistAsync(Username, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new LetterboxdFilmsSnapshot([], true));
+        GivenWatchedOnLetterboxd(new LetterboxdFilmsSnapshot(
+            [new LetterboxdFilm("dune-part-two", "Dune : Deuxième partie", "2024", Rating: 9)], true));
+    }
+
+    private void VerifyPendingKeysRecorded(params string[] keys) =>
+        _users.Verify(
+            u => u.RecordLetterboxdPendingChoicesAsync(
+                UserId, keys.Length, It.Is<IReadOnlyList<string>>(stored => stored.SequenceEqual(keys)), It.IsAny<CancellationToken>()),
+            Times.Once);
 
     private void GivenAmbiguousLetterboxdFilm()
     {
         _letterboxd
             .Setup(l => l.GetWatchlistAsync(Username, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new LetterboxdWatchlistSnapshot(
+            .ReturnsAsync(new LetterboxdFilmsSnapshot(
                 [new LetterboxdFilm("dune-part-two", "Dune : Deuxième partie", "2024")], true));
         _tmdb
             .Setup(t => t.SearchTitlesAsync(
@@ -90,7 +133,9 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
         DateTimeOffset? lastSyncAt,
         string? lastSyncError = null,
         int pendingReconciliationCount = 0,
-        IReadOnlyList<string>? pendingChoiceKeys = null) =>
+        IReadOnlyList<string>? pendingChoiceKeys = null,
+        bool syncWatchlist = true,
+        bool syncWatched = true) =>
         _users
             .Setup(u => u.GetByIdAsync(UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User
@@ -101,14 +146,16 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
                 LetterboxdLastSyncAt = lastSyncAt,
                 LetterboxdLastSyncError = lastSyncError,
                 LetterboxdPendingReconciliationCount = pendingReconciliationCount,
-                LetterboxdPendingChoiceKeys = pendingChoiceKeys
+                LetterboxdPendingChoiceKeys = pendingChoiceKeys,
+                LetterboxdSyncWatchlist = syncWatchlist,
+                LetterboxdSyncWatched = syncWatched
             });
 
     private void GivenTmdbTimesOut()
     {
         _letterboxd
             .Setup(l => l.GetWatchlistAsync(Username, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new LetterboxdWatchlistSnapshot(
+            .ReturnsAsync(new LetterboxdFilmsSnapshot(
                 [new LetterboxdFilm("the-polar-express", "The Polar Express", "2004")], true));
         _tmdb
             .Setup(t => t.SearchTitlesAsync(
@@ -266,9 +313,10 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
     [Fact]
     public async Task HandleAsync_UnreadableWatchlist_RecordsTheErrorAndThrowsWhenForced()
     {
+        GivenUser(Username, null, syncWatched: false);
         _letterboxd
             .Setup(l => l.GetWatchlistAsync(Username, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(LetterboxdWatchlistSnapshot.Failed());
+            .ReturnsAsync(LetterboxdFilmsSnapshot.Failed());
 
         await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(UserId, force: true));
 
@@ -282,9 +330,10 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
     [Fact]
     public async Task HandleAsync_UnreadableWatchlist_IsSkippedSilentlyWhenNotForced()
     {
+        GivenUser(Username, null, syncWatched: false);
         _letterboxd
             .Setup(l => l.GetWatchlistAsync(Username, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(LetterboxdWatchlistSnapshot.Failed());
+            .ReturnsAsync(LetterboxdFilmsSnapshot.Failed());
 
         var result = await _sut.HandleAsync(UserId, force: false);
 
@@ -445,5 +494,154 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
 
         Assert.True(result.Skipped);
         VerifyLetterboxdRead(Times.Never());
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task HandleAsync_BothListsSwitchedOff_IsSkippedWithoutReadingLetterboxd(bool force)
+    {
+        GivenUser(Username, null, syncWatchlist: false, syncWatched: false);
+
+        var result = await _sut.HandleAsync(UserId, force);
+
+        Assert.True(result.Skipped);
+        _letterboxd.Verify(l => l.GetWatchlistAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _letterboxd.Verify(l => l.GetWatchedFilmsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _users.Verify(
+            u => u.SetLetterboxdSyncStatusAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        Assert.Empty(_quota.Calls);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AmbiguousWatchedFilm_IsRememberedUnderAWatchedKeyAndNotified()
+    {
+        GivenAmbiguousWatchedFilm();
+
+        var result = await _sut.HandleAsync(UserId, force: false);
+
+        Assert.Empty(result.PendingChoices);
+        var choice = Assert.Single(result.WatchedPendingChoices);
+        Assert.Equal((LetterboxdImportTarget.Watched, (int?)9), (choice.Target, choice.Rating));
+        VerifyPendingKeysRecorded("watched:dune-part-two");
+        _notifications.Verify(
+            n => n.AddAsync(
+                It.Is<UserNotification>(x => x.Type == UserNotificationType.LetterboxdReconciliationPending),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_KeyStoredWithoutTarget_StillMeansTheWatchlist()
+    {
+        GivenUser(Username, Now.AddDays(-2), pendingReconciliationCount: 1, pendingChoiceKeys: ["dune-part-two"]);
+        GivenAmbiguousWatchedFilm();
+
+        await _sut.HandleAsync(UserId, force: false);
+
+        _notifications.Verify(
+            n => n.AddAsync(
+                It.Is<UserNotification>(x => x.Type == UserNotificationType.LetterboxdReconciliationPending),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AmbiguousFilmOnBothLists_KeepsOneKeyPerList()
+    {
+        GivenAmbiguousLetterboxdFilm();
+        GivenWatchedOnLetterboxd(new LetterboxdFilmsSnapshot(
+            [new LetterboxdFilm("dune-part-two", "Dune : Deuxième partie", "2024")], true));
+
+        var result = await _sut.HandleAsync(UserId, force: true);
+
+        Assert.Equal((1, 1), (result.PendingChoices.Count, result.WatchedPendingChoices.Count));
+        VerifyPendingKeysRecorded("dune-part-two", "watched:dune-part-two");
+    }
+
+    [Fact]
+    public async Task HandleAsync_Success_RecordsTheTitlesLinkedToLetterboxd_AndReportsTheWatchedFilms()
+    {
+        await _watched.AddIfAbsentAsync(new WatchedTitle { OwnerId = UserId, TmdbId = 1, Origin = WatchedOrigin.Letterboxd, LetterboxdSlug = "one" });
+        _watchlist
+            .Setup(w => w.CountLinkedToLetterboxdAsync(UserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(3);
+        GivenWatchedOnLetterboxd(new LetterboxdFilmsSnapshot(
+            [new LetterboxdFilm("one", "One", "2001"), new LetterboxdFilm("akira", "Akira", "1988", Rating: 10)], true));
+        _tmdb
+            .Setup(t => t.SearchTitlesAsync("Akira", true, It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<TmdbSearchItem>)[new TmdbSearchItem(149, MovieMediaType.Movie, "Akira", "1988", null, 8.0, "Akira")]);
+
+        var result = await _sut.HandleAsync(UserId, force: true);
+
+        Assert.Equal((1, 0, 2), (result.WatchedAdded, result.WatchedRemoved, result.WatchedTotalOnLetterboxd));
+        _users.Verify(u => u.SetLetterboxdLinkedCountsAsync(UserId, 3, 2, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_UnreadableWatchedFilms_SyncsTheWatchlist_AndRecordsTheWatchedError()
+    {
+        GivenWatchedOnLetterboxd(LetterboxdFilmsSnapshot.Failed());
+
+        var result = await _sut.HandleAsync(UserId, force: true);
+
+        Assert.False(result.Skipped);
+        Assert.Equal(ErrorCodes.LetterboxdWatchedIncomplete, result.Error);
+        VerifyStatusRecorded(ErrorCodes.LetterboxdWatchedIncomplete);
+        _users.Verify(u => u.SetLetterboxdLinkedCountsAsync(UserId, 0, 0, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_UnreadableWatchlist_SyncsTheWatchedFilms_AndRecordsTheWatchlistError()
+    {
+        _letterboxd
+            .Setup(l => l.GetWatchlistAsync(Username, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(LetterboxdFilmsSnapshot.Failed());
+
+        var result = await _sut.HandleAsync(UserId, force: true);
+
+        Assert.False(result.Skipped);
+        Assert.Equal(ErrorCodes.LetterboxdWatchlistIncomplete, result.Error);
+        VerifyStatusRecorded(ErrorCodes.LetterboxdWatchlistIncomplete);
+    }
+
+    [Fact]
+    public async Task HandleAsync_BothListsUnreadable_RecordsTheWatchlistErrorAndThrowsWhenForced()
+    {
+        _letterboxd
+            .Setup(l => l.GetWatchlistAsync(Username, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(LetterboxdFilmsSnapshot.Failed());
+        GivenWatchedOnLetterboxd(LetterboxdFilmsSnapshot.Failed());
+
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(UserId, force: true));
+
+        Assert.Equal(ErrorCodes.LetterboxdWatchlistIncomplete, ex.Reason);
+        VerifyStatusRecorded(ErrorCodes.LetterboxdWatchlistIncomplete);
+    }
+
+    [Fact]
+    public async Task HandleAsync_UnreadableWatchedFilms_KeepsTheirPendingChoicesAlreadyReported()
+    {
+        GivenUser(Username, Now.AddDays(-2), pendingReconciliationCount: 3, pendingChoiceKeys: ["old-watchlist-choice", "watched:solaris", "watched:stalker"]);
+        GivenAmbiguousLetterboxdFilm();
+        GivenWatchedOnLetterboxd(LetterboxdFilmsSnapshot.Failed());
+
+        await _sut.HandleAsync(UserId, force: true);
+
+        VerifyPendingKeysRecorded("dune-part-two", "watched:solaris", "watched:stalker");
+    }
+
+    [Fact]
+    public async Task HandleAsync_UnreadableWatchlist_KeepsItsPendingChoicesAlreadyReported()
+    {
+        GivenUser(Username, Now.AddDays(-2), pendingReconciliationCount: 2, pendingChoiceKeys: ["dune-part-two", "watched:solaris"]);
+        _letterboxd
+            .Setup(l => l.GetWatchlistAsync(Username, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(LetterboxdFilmsSnapshot.Failed());
+
+        await _sut.HandleAsync(UserId, force: true);
+
+        VerifyPendingKeysRecorded("dune-part-two");
     }
 }

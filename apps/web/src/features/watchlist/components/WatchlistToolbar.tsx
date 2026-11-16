@@ -9,6 +9,7 @@ import type {
 } from '@/features/watchlist/hooks/useWatchlistToolbar';
 
 const SORT_LABEL_KEYS: Record<WatchlistSortKey, TranslationKey> = {
+  relevance: 'showcase.toolbar.sortRelevance',
   createdAt: 'watchlist.toolbar.sortAddedAt',
   title: 'watchlist.toolbar.sortTitle',
   voteAverage: 'watchlist.toolbar.sortVoteAverage',
@@ -17,21 +18,51 @@ const SORT_LABEL_KEYS: Record<WatchlistSortKey, TranslationKey> = {
   availability: 'movies.watchProviders.columnLabel',
 };
 
-function sortOption(key: WatchlistSortKey, t: Translate): SortOption<WatchlistSortKey> {
-  return { key, label: t(SORT_LABEL_KEYS[key]) };
+export interface WatchlistSortConfig {
+  keys: readonly WatchlistSortKey[];
+  labels?: Partial<Record<WatchlistSortKey, string>>;
+  defaultKey?: WatchlistSortKey;
 }
 
-export function watchlistSortOptions(t: Translate): SortOption<WatchlistSortKey>[] {
-  return (Object.keys(SORT_LABEL_KEYS) as WatchlistSortKey[]).map((key) => sortOption(key, t));
+const OPT_IN_SORTS: ReadonlySet<WatchlistSortKey> = new Set(['relevance']);
+
+function allows(key: WatchlistSortKey, withAvailability: boolean, config?: WatchlistSortConfig) {
+  if (key === 'availability' && !withAvailability) return false;
+  if (!config) return !OPT_IN_SORTS.has(key);
+  return config.keys.includes(key);
 }
 
-export function watchlistRowSorts(t: Translate): LibraryMovieRowSorts<WatchlistSortKey> {
+function sortOption(
+  key: WatchlistSortKey,
+  t: Translate,
+  config?: WatchlistSortConfig
+): SortOption<WatchlistSortKey> {
+  return { key, label: config?.labels?.[key] ?? t(SORT_LABEL_KEYS[key]) };
+}
+
+export function watchlistSortOptions(
+  t: Translate,
+  withAvailability = true,
+  config?: WatchlistSortConfig
+): SortOption<WatchlistSortKey>[] {
+  return (Object.keys(SORT_LABEL_KEYS) as WatchlistSortKey[])
+    .filter((key) => allows(key, withAvailability, config))
+    .map((key) => sortOption(key, t, config));
+}
+
+export function watchlistRowSorts(
+  t: Translate,
+  withAvailability = true,
+  config?: WatchlistSortConfig
+): LibraryMovieRowSorts<WatchlistSortKey> {
+  const sortFor = (key: WatchlistSortKey) =>
+    allows(key, withAvailability, config) ? sortOption(key, t, config) : undefined;
   return {
-    title: [sortOption('createdAt', t), sortOption('title', t)],
-    vote: sortOption('voteAverage', t),
-    runtime: sortOption('duration', t),
-    year: sortOption('year', t),
-    availability: sortOption('availability', t),
+    title: (['relevance', 'createdAt', 'title'] as const).flatMap((key) => sortFor(key) ?? []),
+    vote: sortFor('voteAverage'),
+    runtime: sortFor('duration'),
+    year: sortFor('year'),
+    availability: sortFor('availability'),
   };
 }
 
@@ -51,18 +82,29 @@ interface WatchlistToolbarProps {
   onClearAll: () => void;
   isMobile: boolean;
   hideSort?: boolean;
+  beforeSort?: ReactNode;
   trailing?: ReactNode;
+  withAvailability?: boolean;
+  sorts?: WatchlistSortConfig;
+  searchLabel?: string;
+  searchPlaceholder?: string;
 }
 
-export default function WatchlistToolbar(props: Readonly<WatchlistToolbarProps>) {
+export default function WatchlistToolbar({
+  withAvailability = true,
+  sorts,
+  searchLabel,
+  searchPlaceholder,
+  ...props
+}: Readonly<WatchlistToolbarProps>) {
   const { t } = useTranslation();
   return (
     <CollectionToolbar
       {...props}
-      sortOptions={watchlistSortOptions(t)}
+      sortOptions={watchlistSortOptions(t, withAvailability, sorts)}
       labels={{
-        searchLabel: t('watchlist.toolbar.searchLabel'),
-        searchPlaceholder: t('watchlist.toolbar.searchPlaceholder'),
+        searchLabel: searchLabel ?? t('watchlist.toolbar.searchLabel'),
+        searchPlaceholder: searchPlaceholder ?? t('watchlist.toolbar.searchPlaceholder'),
         filtersToggleAriaLabel: t('watchlist.toolbar.filtersToggleAria'),
         filtersLabel: t('watchlist.toolbar.filtersLabel'),
         sortLabel: t('watchlist.toolbar.sortLabel'),

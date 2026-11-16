@@ -24,6 +24,7 @@ interface ShowcaseMovieCardProps {
   actions?: ReactNode;
   rank?: number;
   rankLabel?: string;
+  dimmed?: boolean;
   className?: string;
 }
 
@@ -42,6 +43,7 @@ export default function ShowcaseMovieCard({
   actions,
   rank,
   rankLabel,
+  dimmed = false,
   className,
 }: Readonly<ShowcaseMovieCardProps>) {
   const { t, locale } = useTranslation();
@@ -56,7 +58,9 @@ export default function ShowcaseMovieCard({
         type="button"
         className={styles.cardTrigger}
         onClick={onOpenDetails}
-        aria-label={t('movies.card.openDetailsAria', { title })}
+        aria-label={t(dimmed ? 'movies.card.openDetailsSeenAria' : 'movies.card.openDetailsAria', {
+          title,
+        })}
       />
 
       <div className={styles.posterRegion}>
@@ -99,7 +103,7 @@ export default function ShowcaseMovieCard({
   if (rank != null) {
     return (
       <li
-        className={clsx(styles.card, styles.ranked, className)}
+        className={clsx(styles.card, styles.ranked, dimmed && styles.dimmed, className)}
         data-no-poster={posterSrc ? undefined : true}
       >
         <span className={styles.rankNumeral} aria-hidden>
@@ -112,7 +116,10 @@ export default function ShowcaseMovieCard({
   }
 
   return (
-    <li className={clsx(styles.card, className)} data-no-poster={posterSrc ? undefined : true}>
+    <li
+      className={clsx(styles.card, dimmed && styles.dimmed, className)}
+      data-no-poster={posterSrc ? undefined : true}
+    >
       {body}
     </li>
   );

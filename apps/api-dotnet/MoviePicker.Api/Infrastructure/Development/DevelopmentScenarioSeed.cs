@@ -16,10 +16,15 @@ using MoviePicker.Api.Application.UseCases.Favorites;
 using MoviePicker.Api.Application.UseCases.Follow;
 using MoviePicker.Api.Application.UseCases.JoinEvent;
 using MoviePicker.Api.Application.UseCases.LaunchWheel;
+using MoviePicker.Api.Application.UseCases.LetterboxdImport;
+using MoviePicker.Api.Application.UseCases.MovieListMembers;
+using MoviePicker.Api.Application.UseCases.MovieLists;
 using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Application.UseCases.RecurringEvents;
+using MoviePicker.Api.Application.UseCases.SavedLists;
 using MoviePicker.Api.Application.UseCases.SeenMarks;
 using MoviePicker.Api.Application.UseCases.VoteMovie;
+using MoviePicker.Api.Application.UseCases.Watched;
 using MoviePicker.Api.Application.UseCases.Watchlist;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
@@ -31,6 +36,14 @@ internal sealed record DevelopmentSeedActors(User Dev, User Alice, User Bob, Use
 internal static class DevelopmentScenarioSeed
 {
     private const string ScenarioPrefix = "Scénario seed — ";
+
+    internal const string SharedHalloweenName = "Halloween";
+    internal const string DevPublicListName = "Films cultes";
+    internal const string AliceKoreanListName = "Ciné coréen";
+    internal const string AliceHitchcockListName = "Hitchcock en entier";
+    internal const string AlicePrivateListName = "Pour plus tard";
+    internal const string AliceSundayListName = "Ciné du dimanche";
+    internal const string BobPendingListName = "Nanars du vendredi";
 
     internal const string ScenarioMultiTitle = ScenarioPrefix + "Soirée multi-participants";
     internal const string ScenarioWheelTitle = ScenarioPrefix + "Roue et clôture";
@@ -70,6 +83,12 @@ internal static class DevelopmentScenarioSeed
             await RunStepAsync(logger, "follows", () => TrySeedFollowsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "watchlists", () => TrySeedWatchlistsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "favoris", () => TrySeedFavoritesAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "movie lists", () => TrySeedMovieListsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "shared lists", () => TrySeedSharedListsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "public lists", () => TrySeedPublicListsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "watched elsewhere", () => TrySeedWatchedElsewhereAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "saved lists", () => TrySeedSavedListsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "letterboxd", () => TrySeedLetterboxdAsync(sp, actors, logger, ct)).ConfigureAwait(false);
 
             await RunStepAsync(logger, "multi-participants", () => TrySeedMultiParticipantScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "wheel and closing", () => TrySeedWheelAndCloseScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
@@ -288,6 +307,395 @@ internal static class DevelopmentScenarioSeed
         }
 
         logger.LogInformation("DevelopmentSeed: watchlists (Alice public, 5 films; Bob hidden, 2 films; dev, 3 films; Zoé public, 2 films).");
+    }
+
+    private static async Task TrySeedMovieListsAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var lists = sp.GetRequiredService<IMovieListRepository>();
+        var create = sp.GetRequiredService<ICreateMovieListHandler>();
+        var addItem = sp.GetRequiredService<IAddMovieListItemHandler>();
+
+        (string Name, string? Description, (int TmdbId, string Title, string Year)[] Titles)[] devLists =
+        [
+            ("Ghibli", null, []),
+            (SharedHalloweenName, "Pour la soirée du 31 octobre",
+            [
+                (694, "The Shining", "1980"),
+                (539, "Psycho", "1960"),
+                (948, "Halloween", "1978"),
+                (9552, "The Exorcist", "1973"),
+                (4232, "Scream", "1996"),
+                (419430, "Get Out", "2017"),
+                (493922, "Hereditary", "2018")
+            ]),
+            (DevPublicListName, "Les classiques à revoir sans fin",
+            [
+                (238, "The Godfather", "1972"),
+                (680, "Pulp Fiction", "1994"),
+                (550, "Fight Club", "1999"),
+                (603, "Matrix", "1999"),
+                (78, "Blade Runner", "1982"),
+                (105, "Back to the Future", "1985"),
+                (194, "Le Fabuleux Destin d'Amélie Poulain", "2001"),
+                (406, "La Haine", "1995")
+            ])
+        ];
+
+        var existing = (await lists.ListByOwnerAsync(actors.Dev.Id, ct).ConfigureAwait(false))
+            .Select(list => list.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var created = 0;
+        foreach (var (name, description, titles) in devLists.Where(list => !existing.Contains(list.Name)))
+        {
+            var list = await create
+                .HandleAsync(actors.Dev.Id, new CreateMovieListRequest { Name = name, Description = description }, ct)
+                .ConfigureAwait(false);
+            User[] authors = [actors.Dev];
+            if (name == SharedHalloweenName)
+            {
+                authors = [actors.Dev, actors.Alice, actors.Bob];
+                await ShareListAsync(sp, list.Id, actors.Dev, [actors.Alice, actors.Bob], ct).ConfigureAwait(false);
+            }
+
+            for (var index = 0; index < titles.Length; index++)
+            {
+                var (tmdbId, title, year) = titles[index];
+                await addItem
+                    .HandleAsync(
+                        authors[index % authors.Length].Id,
+                        list.Id,
+                        new AddWatchlistItemRequest { TmdbId = tmdbId, Title = title, Year = year },
+                        ct)
+                    .ConfigureAwait(false);
+            }
+
+            created++;
+        }
+
+        logger.LogInformation("DevelopmentSeed: movie lists for dev (Films cultes 8, Halloween 7 shared with Alice and Bob, Ghibli empty, {Created} created).", created);
+    }
+
+    private static async Task TrySeedSharedListsAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var lists = sp.GetRequiredService<IMovieListRepository>();
+
+        var halloween = (await lists.ListByOwnerAsync(actors.Dev.Id, ct).ConfigureAwait(false))
+            .FirstOrDefault(list => list.Name == SharedHalloweenName);
+        if (halloween is not null)
+        {
+            var missing = new[] { actors.Alice, actors.Bob }.Where(member => halloween.RoleOf(member.Id) is null).ToArray();
+            await ShareListAsync(sp, halloween.Id, actors.Dev, missing, ct).ConfigureAwait(false);
+        }
+
+        await SeedOthersListAsync(
+            sp,
+            new SeededOthersList(
+                actors.Alice,
+                AliceSundayListName,
+                "Un film par semaine, chacun son tour",
+                [
+                    (actors.Alice, 13, "Forrest Gump", "1994"),
+                    (actors.Dev, 155, "The Dark Knight", "2008"),
+                    (actors.Alice, 129, "Le Voyage de Chihiro", "2001"),
+                    (actors.Dev, 497, "The Green Mile", "1999")
+                ],
+                Member: actors.Dev),
+            ct).ConfigureAwait(false);
+
+        await SeedOthersListAsync(
+            sp,
+            new SeededOthersList(
+                actors.Bob,
+                BobPendingListName,
+                "Les pires films, à voir ensemble",
+                [
+                    (actors.Bob, 17473, "The Room", "2003"),
+                    (actors.Bob, 205321, "Sharknado", "2013"),
+                    (actors.Bob, 5491, "Battlefield Earth", "2000")
+                ],
+                PendingInvitee: actors.Dev),
+            ct).ConfigureAwait(false);
+
+        logger.LogInformation(
+            "DevelopmentSeed: shared lists (Halloween with Alice and Bob, dev member of \"{Sunday}\", invitation from Bob to \"{Pending}\").",
+            AliceSundayListName,
+            BobPendingListName);
+    }
+
+    private static async Task TrySeedPublicListsAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var lists = sp.GetRequiredService<IMovieListRepository>();
+        var cult = (await lists.ListByOwnerAsync(actors.Dev.Id, ct).ConfigureAwait(false))
+            .FirstOrDefault(list => list.Name == DevPublicListName);
+        if (cult is { IsPublic: false })
+        {
+            await lists
+                .UpdateDetailsAsync(actors.Dev.Id, cult.Id, cult.Name, cult.Description, isPublic: true, cult.UpdatedAt, ct)
+                .ConfigureAwait(false);
+        }
+
+        await SeedOthersListAsync(
+            sp,
+            new SeededOthersList(
+                actors.Alice,
+                AliceKoreanListName,
+                "Thrillers, drames et tout ce qui vient de Séoul",
+                [
+                    (actors.Alice, 496243, "Parasite", "2019"),
+                    (actors.Alice, 670, "Old Boy", "2003"),
+                    (actors.Alice, 11423, "Memories of Murder", "2003"),
+                    (actors.Alice, 290098, "Mademoiselle", "2016"),
+                    (actors.Alice, 396535, "Dernier train pour Busan", "2016")
+                ],
+                IsPublic: true),
+            ct).ConfigureAwait(false);
+
+        await SeedOthersListAsync(
+            sp,
+            new SeededOthersList(
+                actors.Alice,
+                AliceHitchcockListName,
+                "Tout Hitchcock, des muets aux derniers",
+                [
+                    (actors.Alice, 539, "Psychose", "1960"),
+                    (actors.Alice, 426, "Sueurs froides", "1958"),
+                    (actors.Alice, 567, "Fenêtre sur cour", "1954"),
+                    (actors.Alice, 213, "La Mort aux trousses", "1959"),
+                    (actors.Alice, 571, "Les Oiseaux", "1963")
+                ],
+                IsPublic: true),
+            ct).ConfigureAwait(false);
+
+        await SeedOthersListAsync(
+            sp,
+            new SeededOthersList(
+                actors.Alice,
+                AlicePrivateListName,
+                "Rien que pour moi",
+                [
+                    (actors.Alice, 438631, "Dune", "2021"),
+                    (actors.Alice, 329865, "Premier Contact", "2016"),
+                    (actors.Alice, 152601, "Her", "2013")
+                ]),
+            ct).ConfigureAwait(false);
+
+        logger.LogInformation(
+            "DevelopmentSeed: public lists (dev's \"{Cult}\", Alice's \"{Korean}\" and \"{Hitchcock}\", her private \"{Private}\").",
+            DevPublicListName,
+            AliceKoreanListName,
+            AliceHitchcockListName,
+            AlicePrivateListName);
+    }
+
+    private sealed record SeededOthersList(
+        User Owner,
+        string Name,
+        string Description,
+        (User Author, int TmdbId, string Title, string Year)[] Titles,
+        User? Member = null,
+        User? PendingInvitee = null,
+        bool IsPublic = false);
+
+    private static async Task SeedOthersListAsync(IServiceProvider sp, SeededOthersList seeded, CancellationToken ct)
+    {
+        var lists = sp.GetRequiredService<IMovieListRepository>();
+        if ((await lists.ListByOwnerAsync(seeded.Owner.Id, ct).ConfigureAwait(false)).Any(list => list.Name == seeded.Name))
+            return;
+
+        var created = await sp.GetRequiredService<ICreateMovieListHandler>()
+            .HandleAsync(
+                seeded.Owner.Id,
+                new CreateMovieListRequest { Name = seeded.Name, Description = seeded.Description, IsPublic = seeded.IsPublic },
+                ct)
+            .ConfigureAwait(false);
+        if (seeded.Member is not null)
+            await ShareListAsync(sp, created.Id, seeded.Owner, [seeded.Member], ct).ConfigureAwait(false);
+
+        var addItem = sp.GetRequiredService<IAddMovieListItemHandler>();
+        foreach (var (author, tmdbId, title, year) in seeded.Titles)
+        {
+            await addItem
+                .HandleAsync(author.Id, created.Id, new AddWatchlistItemRequest { TmdbId = tmdbId, Title = title, Year = year }, ct)
+                .ConfigureAwait(false);
+        }
+
+        if (seeded.PendingInvitee is not null)
+        {
+            await sp.GetRequiredService<IInviteToMovieListHandler>()
+                .HandleAsync(seeded.Owner.Id, created.Id, new InviteToMovieListRequest { UserId = seeded.PendingInvitee.Id }, ct)
+                .ConfigureAwait(false);
+        }
+    }
+
+    private static async Task ShareListAsync(
+        IServiceProvider sp,
+        string listId,
+        User owner,
+        IReadOnlyList<User> members,
+        CancellationToken ct)
+    {
+        var invite = sp.GetRequiredService<IInviteToMovieListHandler>();
+        var accept = sp.GetRequiredService<IAcceptMovieListInvitationHandler>();
+        foreach (var member in members)
+        {
+            await invite
+                .HandleAsync(owner.Id, listId, new InviteToMovieListRequest { UserId = member.Id }, ct)
+                .ConfigureAwait(false);
+            await accept.HandleAsync(member.Id, listId, ct).ConfigureAwait(false);
+        }
+    }
+
+    private static async Task TrySeedWatchedElsewhereAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var mark = sp.GetRequiredService<IMarkWatchedHandler>();
+
+        (int TmdbId, string Title, string Year, int? Rating)[] devTitles =
+        [
+            (694, "The Shining", "1980", 9),
+            (539, "Psycho", "1960", null),
+            (948, "Halloween", "1978", 6),
+            (419430, "Get Out", "2017", null),
+            (238, "The Godfather", "1972", 10),
+            (680, "Pulp Fiction", "1994", null),
+            (406, "La Haine", "1995", 8)
+        ];
+        foreach (var (tmdbId, title, year, rating) in devTitles)
+        {
+            await mark
+                .HandleAsync(actors.Dev.Id, new MarkWatchedRequest { TmdbId = tmdbId, Title = title, Year = year, Rating = rating }, ct)
+                .ConfigureAwait(false);
+        }
+
+        logger.LogInformation("DevelopmentSeed: titles watched elsewhere for dev (4 of Halloween, 3 of Films cultes, 4 rated).");
+    }
+
+    private static async Task TrySeedSavedListsAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var saved = sp.GetRequiredService<ISavedListRepository>();
+        var mark = sp.GetRequiredService<IMarkWatchedHandler>();
+        var savedAt = sp.GetRequiredService<TimeProvider>().StorageNow();
+
+        (ListSourceType Type, string SourceId, string Name, DateTimeOffset CreatedAt)[] devSources =
+        [
+            (ListSourceType.TmdbCollection, "1241", "Harry Potter - Saga", savedAt.AddMinutes(-1)),
+            (ListSourceType.ExplorerTheme, "indetronables", "indetronables", savedAt)
+        ];
+        foreach (var (type, sourceId, name, createdAt) in devSources)
+        {
+            await saved
+                .AddIfAbsentAsync(
+                    new SavedList { OwnerId = actors.Dev.Id, SourceType = type, SourceId = sourceId, Name = name, CreatedAt = createdAt },
+                    ct)
+                .ConfigureAwait(false);
+        }
+
+        (int TmdbId, string Title, string Year)[] harryPotterWatched =
+        [
+            (671, "Harry Potter à l'école des sorciers", "2001"),
+            (672, "Harry Potter et la Chambre des secrets", "2002"),
+            (673, "Harry Potter et le Prisonnier d'Azkaban", "2004")
+        ];
+        foreach (var (tmdbId, title, year) in harryPotterWatched)
+        {
+            await mark
+                .HandleAsync(actors.Dev.Id, new MarkWatchedRequest { TmdbId = tmdbId, Title = title, Year = year }, ct)
+                .ConfigureAwait(false);
+        }
+
+        var hitchcock = (await sp.GetRequiredService<IMovieListRepository>().ListByOwnerAsync(actors.Alice.Id, ct).ConfigureAwait(false))
+            .FirstOrDefault(list => list.Name == AliceHitchcockListName);
+        if (hitchcock is not null)
+        {
+            var saving = await sp.GetRequiredService<ISaveListHandler>()
+                .HandleAsync(actors.Dev.Id, new SaveListRequest { SourceType = ListSourceNames.MemberList, SourceId = hitchcock.Id }, ct)
+                .ConfigureAwait(false);
+            await sp.GetRequiredService<IGetSavedListHandler>()
+                .HandleAsync(actors.Dev.Id, saving.Summary.Id, ct)
+                .ConfigureAwait(false);
+        }
+
+        logger.LogInformation(
+            "DevelopmentSeed: saved lists for dev (Harry Potter saga with 3 films watched, the indetronables selection, Alice's \"{Hitchcock}\"), the first two read from TMDB.",
+            AliceHitchcockListName);
+    }
+
+    private static async Task TrySeedLetterboxdAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        const string username = "moviepicker_dev_letterboxd";
+        var profile = sp.GetRequiredService<IPatchUserProfileHandler>();
+        var users = sp.GetRequiredService<IUserRepository>();
+        var watchlist = sp.GetRequiredService<IWatchlistRepository>();
+        var writer = sp.GetRequiredService<LetterboxdWatchedWriter>();
+        var counter = sp.GetRequiredService<LetterboxdLinkedCounter>();
+        var clock = sp.GetRequiredService<TimeProvider>();
+
+        await profile
+            .HandleAsync(
+                actors.Dev.Id,
+                new PatchUserProfileRequest { LetterboxdUsername = username, LetterboxdSyncWatchlist = true, LetterboxdSyncWatched = true },
+                ct)
+            .ConfigureAwait(false);
+
+        (int TmdbId, string Title, string Year, string Slug, int? Rating, DateOnly? WatchedOn)[] watchedOnLetterboxd =
+        [
+            (157336, "Interstellar", "2014", "interstellar", 9, new DateOnly(2026, 11, 8)),
+            (27205, "Inception", "2010", "inception", 8, new DateOnly(2026, 10, 30)),
+            (129, "Le Voyage de Chihiro", "2001", "spirited-away", 10, null),
+            (496243, "Parasite", "2019", "parasite-2019", 9, null),
+            (545611, "Everything Everywhere All at Once", "2022", "everything-everywhere-all-at-once", null, new DateOnly(2026, 9, 14)),
+            (406, "La Haine", "1995", "la-haine", 5, null)
+        ];
+        foreach (var (tmdbId, title, year, slug, rating, watchedOn) in watchedOnLetterboxd)
+        {
+            await writer
+                .WriteAsync(
+                    actors.Dev.Id,
+                    new LetterboxdWatchedSelectionRequest
+                    {
+                        TmdbId = tmdbId,
+                        Title = title,
+                        Year = year,
+                        LetterboxdSlug = slug,
+                        Rating = rating,
+                        WatchedOn = watchedOn
+                    },
+                    keepOnWatchlist: true,
+                    ct)
+                .ConfigureAwait(false);
+        }
+
+        await watchlist.SetLetterboxdSlugAsync(actors.Dev.Id, 693134, MovieMediaType.Movie, "dune-part-two", ct).ConfigureAwait(false);
+        await watchlist.SetLetterboxdSlugAsync(actors.Dev.Id, 1022789, MovieMediaType.Movie, "inside-out-2", ct).ConfigureAwait(false);
+        await users.SetLetterboxdSyncStatusAsync(actors.Dev.Id, clock.GetUtcNow(), null, ct).ConfigureAwait(false);
+        await counter.RefreshAsync(actors.Dev.Id, ct).ConfigureAwait(false);
+
+        logger.LogInformation(
+            "DevelopmentSeed: Letterboxd account {Username} for dev (5 films watched on Letterboxd, La Haine linked, Oppenheimer to watch outside Letterboxd).",
+            username);
     }
 
     private static async Task TrySeedFavoritesAsync(

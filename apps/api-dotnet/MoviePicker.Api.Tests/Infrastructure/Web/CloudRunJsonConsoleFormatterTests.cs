@@ -86,4 +86,55 @@ public sealed class CloudRunJsonConsoleFormatterTests
 
         Assert.Equal("req-9", entry.GetProperty("Scopes")[0].GetProperty("RequestId").GetString());
     }
+
+    [Fact]
+    public void Write_MasksTheInviteTokenOfAListJoinPath_InTheMessageTheStateAndTheRequestScope()
+    {
+        const string path = "/api/v1/lists/join/SECRET-TOKEN";
+        var formatter = new CloudRunJsonConsoleFormatter(new FixedOptions(new JsonConsoleFormatterOptions { IncludeScopes = true }));
+        var scopes = new LoggerExternalScopeProvider();
+        using var _ = scopes.Push(new HostingLikeRequestScope(path));
+        IReadOnlyList<KeyValuePair<string, object?>> state =
+        [
+            new("Path", path),
+            new("{OriginalFormat}", "Unhandled exception on {Path}")
+        ];
+        using var output = new StringWriter();
+
+        formatter.Write(
+            new LogEntry<IReadOnlyList<KeyValuePair<string, object?>>>(
+                LogLevel.Error,
+                "MoviePicker.Api.Infrastructure.Web.UnhandledExceptionResponse",
+                new EventId(0),
+                state,
+                new InvalidOperationException($"Failed on {path}"),
+                (_, _) => $"Unhandled exception on {path}"),
+            scopes,
+            output);
+
+        var written = output.ToString();
+        Assert.DoesNotContain("SECRET-TOKEN", written);
+        var entry = JsonElement.Parse(written);
+        Assert.Equal("Unhandled exception on /api/v1/lists/join/***", entry.GetProperty("Message").GetString());
+        Assert.Equal("/api/v1/lists/join/***", entry.GetProperty("State").GetProperty("Path").GetString());
+        var scope = entry.GetProperty("Scopes")[0];
+        Assert.Equal("/api/v1/lists/join/***", scope.GetProperty("RequestPath").GetString());
+        Assert.Equal("RequestPath:/api/v1/lists/join/*** RequestId:0HN1", scope.GetProperty("Message").GetString());
+    }
+
+    private sealed class HostingLikeRequestScope(string path) : IReadOnlyList<KeyValuePair<string, object?>>
+    {
+        private readonly KeyValuePair<string, object?>[] _pairs = [new("RequestId", "0HN1"), new("RequestPath", path)];
+
+        public int Count => _pairs.Length;
+
+        public KeyValuePair<string, object?> this[int index] => _pairs[index];
+
+        public IEnumerator<KeyValuePair<string, object?>> GetEnumerator() =>
+            ((IEnumerable<KeyValuePair<string, object?>>)_pairs).GetEnumerator();
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public override string ToString() => $"RequestPath:{path} RequestId:0HN1";
+    }
 }

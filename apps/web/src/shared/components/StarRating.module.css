@@ -85,3 +85,12 @@
     transition: none;
   }
 }
+
+.cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--star-cell);
+  height: var(--star-cell);
+  color: var(--star-color);
+}

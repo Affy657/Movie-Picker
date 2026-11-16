@@ -198,6 +198,16 @@ describe('WatchlistPage (MSW)', () => {
     loadMoviePage.mockRestore();
   });
 
+  it('titles the page À voir under a link back to Mes listes', async () => {
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
+
+    renderPage();
+
+    expect(await screen.findByText('1 titre à voir')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'À voir' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Mes listes' })).toHaveAttribute('href', '/listes');
+  });
+
   it('affiche un empty state quand la watchlist est vide', async () => {
     server.use(authedUserHandler, ...watchlistHandler([]));
 
@@ -693,6 +703,129 @@ describe('WatchlistPage (MSW)', () => {
     );
   });
 
+  describe('synced with Letterboxd', () => {
+    function letterboxdUser(extra: Record<string, unknown> = {}) {
+      return http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u1',
+          displayName: 'Alice',
+          emailMasked: 'a***@test.local',
+          uiTheme: 'system',
+          accentColor: 'default',
+          ratingScale: 'ten',
+          letterboxdUsername: 'alice_lb',
+          ...extra,
+        })
+      );
+    }
+
+    const ITEM_C = { ...ITEM_B, tmdbId: 202, title: 'Ajouté En Soirée', onLetterboxd: false };
+
+    async function shownTitles() {
+      const list = await screen.findByRole('list', { name: /films de ma liste/i });
+      return within(list)
+        .getAllByRole('heading', { level: 3 })
+        .map((heading) => heading.textContent);
+    }
+
+    it('says under the title that the list is synced with Letterboxd', async () => {
+      server.use(letterboxdUser(), ...watchlistHandler([ITEM_A]));
+
+      renderPage();
+
+      expect(await screen.findByText('Synchronisée avec Letterboxd')).toBeInTheDocument();
+    });
+
+    it('shows the one film missing from the Letterboxd watchlist, then everything again', async () => {
+      const user = userEvent.setup();
+      server.use(
+        letterboxdUser(),
+        ...watchlistHandler([
+          { ...ITEM_A, onLetterboxd: true },
+          { ...ITEM_B, onLetterboxd: false },
+        ])
+      );
+
+      renderPage();
+
+      expect(
+        await screen.findByText(
+          '1 film n’est pas dans votre watchlist Letterboxd, sans doute ajouté depuis une soirée.'
+        )
+      ).toBeInTheDocument();
+      await waitFor(async () => expect(await shownTitles()).toHaveLength(2));
+
+      await user.click(screen.getByRole('button', { name: 'Voir lequel' }));
+
+      await waitFor(async () => expect(await shownTitles()).toEqual([ITEM_B.title]));
+      expect(screen.getByText('1 sur 2')).toBeInTheDocument();
+      expect(
+        screen.getByText('Seul le film absent de votre watchlist Letterboxd est affiché.')
+      ).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Tout afficher' }));
+
+      await waitFor(async () => expect(await shownTitles()).toHaveLength(2));
+      expect(screen.getByRole('button', { name: 'Voir lequel' })).toBeInTheDocument();
+    });
+
+    it('counts several missing films and lets the toolbar clear the selection too', async () => {
+      const user = userEvent.setup();
+      server.use(
+        letterboxdUser(),
+        ...watchlistHandler([
+          { ...ITEM_A, onLetterboxd: true },
+          { ...ITEM_B, onLetterboxd: false },
+          ITEM_C,
+        ])
+      );
+
+      renderPage();
+
+      expect(
+        await screen.findByText(
+          '2 films ne sont pas dans votre watchlist Letterboxd, sans doute ajoutés depuis une soirée.'
+        )
+      ).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Voir lesquels' }));
+
+      await waitFor(async () => expect(await shownTitles()).toHaveLength(2));
+      expect(
+        screen.getByText('Seuls les 2 films absents de votre watchlist Letterboxd sont affichés.')
+      ).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: /tout effacer/i }));
+
+      await waitFor(async () => expect(await shownTitles()).toHaveLength(3));
+    });
+
+    it.each([
+      { why: 'the watchlist sync is off', extra: { letterboxdSyncWatchlist: false } },
+      { why: 'no Letterboxd username is saved', extra: { letterboxdUsername: null } },
+    ])('flags no missing film when $why', async ({ extra }) => {
+      server.use(letterboxdUser(extra), ...watchlistHandler([{ ...ITEM_A, onLetterboxd: false }]));
+
+      renderPage();
+
+      await screen.findByText(ITEM_A.title);
+      expect(screen.queryByText(/pas dans votre watchlist Letterboxd/)).not.toBeInTheDocument();
+      expect(screen.queryByText('Synchronisée avec Letterboxd')).not.toBeInTheDocument();
+    });
+
+    it('flags nothing when every film is on the Letterboxd watchlist', async () => {
+      server.use(
+        letterboxdUser(),
+        ...watchlistHandler([{ ...ITEM_A, onLetterboxd: true }, ITEM_B])
+      );
+
+      renderPage();
+
+      await screen.findByText('Synchronisée avec Letterboxd');
+      expect(screen.queryByText(/pas dans votre watchlist Letterboxd/)).not.toBeInTheDocument();
+    });
+  });
+
   describe('random pick', () => {
     const reduceMotion = () => stubMatchMedia((query) => query.includes('reduce'));
 
@@ -885,6 +1018,68 @@ describe('WatchlistPage (MSW)', () => {
       expect(pickBtn.parentElement).toBe(
         screen.getByRole('button', { name: 'Ajouter' }).parentElement
       );
+    });
+  });
+
+  describe('visibility', () => {
+    function userWith(extra: Record<string, unknown>) {
+      return http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u1',
+          displayName: 'Alice',
+          emailMasked: 'a***@test.local',
+          uiTheme: 'system',
+          accentColor: 'default',
+          ratingScale: 'ten',
+          handle: 'alice',
+          isProfilePublic: true,
+          ...extra,
+        })
+      );
+    }
+
+    it('makes the watchlist private from the ⋯ menu, through the account', async () => {
+      let body: unknown = null;
+      server.use(
+        userWith({ isWatchlistPublic: true }),
+        ...watchlistHandler([ITEM_A]),
+        http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
+          body = await request.json();
+          return HttpResponse.json({
+            userId: 'u1',
+            displayName: 'Alice',
+            isWatchlistPublic: false,
+          });
+        })
+      );
+      const user = userEvent.setup();
+      renderPage();
+
+      await user.click(await screen.findByRole('button', { name: 'Actions de la liste' }));
+      await user.click(screen.getByRole('menuitem', { name: 'Rendre privée' }));
+
+      await waitFor(() => expect(body).toEqual({ isWatchlistPublic: false }));
+      await user.click(screen.getByRole('button', { name: 'Actions de la liste' }));
+      expect(screen.getByRole('menuitem', { name: 'Rendre publique' })).toBeInTheDocument();
+    });
+
+    it('turns the setting back and says so when the account refuses the change', async () => {
+      server.use(
+        userWith({ isWatchlistPublic: false }),
+        ...watchlistHandler([ITEM_A]),
+        http.patch(`${TEST_API_V1}/auth/me`, () =>
+          HttpResponse.json({ error: 'boom' }, { status: 500 })
+        )
+      );
+      const user = userEvent.setup();
+      renderPage();
+
+      await user.click(await screen.findByRole('button', { name: 'Actions de la liste' }));
+      await user.click(screen.getByRole('menuitem', { name: 'Rendre publique' }));
+
+      expect(await screen.findByText('La visibilité n’a pas pu être changée.')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Actions de la liste' }));
+      expect(screen.getByRole('menuitem', { name: 'Rendre publique' })).toBeInTheDocument();
     });
   });
 });

@@ -17,4 +17,6 @@ public interface IUserNotificationRepository
     Task<long> AnonymizeActorAsync(string actorHandle, string anonymizedName, CancellationToken ct = default);
     Task<long> RenameActorHandleAsync(string previousHandle, string newHandle, CancellationToken ct = default);
     Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default);
+    Task<long> DeleteByListAsync(string listId, string? userId = null, CancellationToken ct = default);
+    Task<long> DeleteByListsAsync(IReadOnlyCollection<string> listIds, CancellationToken ct = default);
 }

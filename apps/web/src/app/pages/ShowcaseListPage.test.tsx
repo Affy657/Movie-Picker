@@ -6,7 +6,12 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { stubHoverCapability } from '@/test-utils/matchMedia';
-import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
+import {
+  authMeGuestHandler,
+  createSavedListsHandlers,
+  createWatchedHandlers,
+  TEST_API_V1,
+} from '@/mocks/handlers';
 import ShowcaseListPage, { type ShowcaseListVariant } from '@/app/pages/ShowcaseListPage';
 import { ROUTE_CHUNKS } from '@/app/routeChunks';
 
@@ -446,5 +451,142 @@ describe('ShowcaseListPage', () => {
 
     expect(await screen.findByText('Film 1')).toBeInTheDocument();
     expect(loadMoviePage).toHaveBeenCalled();
+  });
+
+  describe('saving a saga or a selection in Mes listes', () => {
+    const collectionsHandler = http.get(`${TEST_API_V1}/movies/collections`, () =>
+      HttpResponse.json({
+        items: [{ id: 1241, name: 'Harry Potter - Saga', posterPath: null, movieCount: 3 }],
+        disclaimer: 'TMDB',
+        tmdbAttributionUrl: 'https://www.themoviedb.org/',
+      })
+    );
+    const HARRY_POTTER = {
+      id: 's1',
+      sourceType: 'tmdbCollection' as const,
+      sourceId: '1241',
+      name: 'Harry Potter',
+    };
+
+    function renderCollection() {
+      return renderPage('collection', '/films/collection/1241', '/films/collection/:collectionId');
+    }
+
+    it('saves the saga from its header, then stops saving it, for a member', async () => {
+      let saved: unknown = null;
+      server.use(
+        authedUserHandler,
+        emptyWatchlistHandler,
+        showcaseHandler,
+        collectionsHandler,
+        http.post(`${TEST_API_V1}/saved-lists`, async ({ request }) => {
+          saved = await request.clone().json();
+        }),
+        ...createSavedListsHandlers([], [HARRY_POTTER]),
+        ...createWatchedHandlers()
+      );
+      const user = userEvent.setup();
+      renderCollection();
+
+      const save = await screen.findByRole('button', { name: 'Enregistrer dans Mes listes' });
+      await waitFor(() => expect(save).toBeEnabled());
+      expect(save).not.toHaveAttribute('aria-pressed');
+
+      await user.click(save);
+
+      const savedButton = await screen.findByRole('button', { name: 'Enregistrée' });
+      expect(savedButton).not.toHaveAttribute('aria-pressed');
+      await waitFor(() =>
+        expect(saved).toEqual({ sourceType: 'tmdbCollection', sourceId: '1241' })
+      );
+
+      await user.click(savedButton);
+
+      expect(
+        await screen.findByRole('button', { name: 'Enregistrer dans Mes listes' })
+      ).not.toHaveAttribute('aria-pressed');
+    });
+
+    it('shows a selection already saved as Enregistrée', async () => {
+      server.use(
+        authedUserHandler,
+        emptyWatchlistHandler,
+        showcaseHandler,
+        ...createSavedListsHandlers([
+          { id: 's2', sourceType: 'explorerTheme', sourceId: 'frissons', name: 'frissons' },
+        ]),
+        ...createWatchedHandlers()
+      );
+      renderPage('theme', '/films/theme/frissons', '/films/theme/:theme');
+
+      expect(await screen.findByRole('button', { name: 'Enregistrée' })).not.toHaveAttribute(
+        'aria-pressed'
+      );
+    });
+
+    it('offers no saving to a visitor', async () => {
+      server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
+      renderCollection();
+
+      await screen.findByText('Film 1');
+      expect(screen.queryByRole('button', { name: /enregistr/i })).toBeNull();
+      expect(screen.queryByRole('switch', { name: 'Griser les vus' })).toBeNull();
+    });
+
+    it('offers no saving, progress nor dimming on the other sections', async () => {
+      server.use(
+        authedUserHandler,
+        emptyWatchlistHandler,
+        showcaseHandler,
+        ...createWatchedHandlers([{ tmdbId: 2001, title: 'Film 1', source: 'night' }])
+      );
+      renderPage('trending', '/films/tendances', '/films/tendances');
+
+      await screen.findByText('Film 1');
+      expect(screen.queryByRole('button', { name: /enregistr/i })).toBeNull();
+      expect(screen.queryByText(/sur 3 vu/)).toBeNull();
+      expect(screen.queryByRole('switch', { name: 'Griser les vus' })).toBeNull();
+    });
+
+    it('shows how much of the saga the member has watched and dims the watched films', async () => {
+      server.use(
+        authedUserHandler,
+        emptyWatchlistHandler,
+        showcaseHandler,
+        collectionsHandler,
+        http.patch(`${TEST_API_V1}/auth/me`, () =>
+          HttpResponse.json({
+            userId: 'u1',
+            displayName: 'Alice',
+            emailMasked: 'a***@test.local',
+            uiTheme: 'system',
+            accentColor: 'default',
+            ratingScale: 'ten',
+            dimWatched: true,
+          })
+        ),
+        ...createSavedListsHandlers(),
+        ...createWatchedHandlers([{ tmdbId: 2001, title: 'Film 1', source: 'night' }])
+      );
+      const user = userEvent.setup();
+      renderCollection();
+
+      expect(
+        await screen.findByText(
+          (_, element) =>
+            element?.lastElementChild?.tagName === 'STRONG' &&
+            (element.textContent ?? '').replaceAll(/\p{Zs}/gu, ' ') === '1 sur 3 vu, 33 %'
+        )
+      ).toBeInTheDocument();
+
+      await user.click(screen.getByRole('switch', { name: 'Griser les vus' }));
+
+      expect(
+        await screen.findByRole('button', { name: 'Voir les détails de « Film 1 », déjà vu' })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Voir les détails de « Film 2 »' })
+      ).toBeInTheDocument();
+    });
   });
 });

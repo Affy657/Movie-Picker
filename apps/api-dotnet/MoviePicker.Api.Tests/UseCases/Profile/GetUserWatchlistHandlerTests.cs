@@ -44,7 +44,9 @@ public sealed class GetUserWatchlistHandlerTests
             Total = 1,
             HasMore = false
         };
-        _watchlist.Setup(x => x.HandleAsync("u1", 10, 20, It.IsAny<CancellationToken>())).ReturnsAsync(page);
+        _watchlist
+            .Setup(x => x.HandleAsync("u1", It.IsAny<bool>(), 10, 20, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(page);
         return page;
     }
 
@@ -67,7 +69,7 @@ public sealed class GetUserWatchlistHandlerTests
         await Assert.ThrowsAsync<NotFoundException>(
             () => _sut.HandleAsync("alice", currentUserId: "u2", skip: 0, take: null));
         _watchlist.Verify(
-            x => x.HandleAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
+            x => x.HandleAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<int>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -99,5 +101,20 @@ public sealed class GetUserWatchlistHandlerTests
 
         await Assert.ThrowsAsync<NotFoundException>(
             () => _sut.HandleAsync("ghost", currentUserId: null, skip: 0, take: null));
+    }
+
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData("u2", false)]
+    [InlineData("u1", true)]
+    public async Task HandleAsync_OnlyTheOwnerLearnsWhichTitlesComeFromLetterboxd(string? currentUserId, bool includeLetterboxd)
+    {
+        HasUser(Alice());
+
+        await _sut.HandleAsync("alice", currentUserId, skip: 0, take: null);
+
+        _watchlist.Verify(
+            x => x.HandleAsync("u1", includeLetterboxd, 0, null, It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 }

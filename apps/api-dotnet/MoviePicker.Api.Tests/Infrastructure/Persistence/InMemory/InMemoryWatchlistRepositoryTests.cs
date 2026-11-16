@@ -275,4 +275,15 @@ public sealed class InMemoryWatchlistRepositoryTests
 
         Assert.Empty(missing);
     }
+
+    [Fact]
+    public async Task CountLinkedToLetterboxdAsync_CountsTheUsersItemsWithASlug()
+    {
+        await _sut.AddAsync(Item(tmdbId: 1) with { LetterboxdSlug = "one" });
+        await _sut.AddAsync(Item(tmdbId: 2) with { LetterboxdSlug = "two" });
+        await _sut.AddAsync(Item(tmdbId: 3));
+        await _sut.AddAsync(Item(userId: "u2", tmdbId: 1) with { LetterboxdSlug = "one" });
+
+        Assert.Equal(2, await _sut.CountLinkedToLetterboxdAsync("u1"));
+    }
 }

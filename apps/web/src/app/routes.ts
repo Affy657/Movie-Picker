@@ -58,6 +58,14 @@ export const ROUTES = {
   accountSecurity: '/settings/securite',
   myEvents: '/my-events',
   watchlist: '/watchlist',
+  lists: '/listes',
+  watchedMovies: '/listes/films-vus',
+  listPattern: '/listes/:listId',
+  list: (listId: string) => `/listes/${encodeURIComponent(listId)}`,
+  savedListPattern: '/listes/enregistrees/:savedListId',
+  savedList: (savedListId: string) => `/listes/enregistrees/${encodeURIComponent(savedListId)}`,
+  joinListPattern: '/l/:token/rejoindre',
+  joinList: (token: string) => `/l/${encodeURIComponent(token)}/rejoindre`,
   legalNotice: '/mentions-legales',
   privacyPolicy: '/politique-de-confidentialite',
   donate: '/soutenir',
@@ -132,6 +140,15 @@ export const ROUTES = {
   profileWatchlistPattern: '/u/:handle/watchlist',
 
   profileWatchlist: (handle: string) => `/u/${handle}/watchlist`,
+
+  profileListsPattern: '/u/:handle/listes',
+
+  profileLists: (handle: string) => `/u/${handle}/listes`,
+
+  publicListPattern: '/u/:handle/listes/:listId',
+
+  publicList: (handle: string, listId: string) =>
+    `/u/${handle}/listes/${encodeURIComponent(listId)}`,
 } as const;
 
 export function withReturnTo(path: string, returnTo: string): string {

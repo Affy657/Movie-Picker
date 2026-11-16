@@ -6,6 +6,7 @@ import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { invalidateWatchlist } from '@/features/movies/hooks/useWatchlist';
+import { invalidateWatched } from '@/features/movies/hooks/invalidateWatched';
 import InfoBubble from '@/shared/components/InfoBubble';
 import {
   syncLetterboxd,
@@ -13,6 +14,13 @@ import {
   type LetterboxdPendingChoice,
   type LetterboxdSyncReport,
 } from '@/features/letterboxd/api/letterboxdApi';
+import {
+  pendingChoicesOf,
+  reportedLists,
+  syncErrorMessage,
+  unmatchedTitlesOf,
+  watchedChanged,
+} from '@/features/letterboxd/utils/syncReport';
 import type { UserProfile } from '@/features/auth/types';
 import LetterboxdChoicesModal from './LetterboxdChoicesModal';
 import styles from './LetterboxdConnectModal.module.css';
@@ -47,7 +55,8 @@ function ConnectFormModal({
     await patchProfile({ letterboxdUsername: username.trim() });
     const result = await syncLetterboxd(true);
     await queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
-    void invalidateWatchlist(queryClient);
+    if (watchedChanged(result)) void invalidateWatched(queryClient);
+    else void invalidateWatchlist(queryClient);
     return result;
   }, [patchProfile, queryClient, username]);
 
@@ -168,21 +177,34 @@ function ConnectFormModal({
   );
 }
 
+function ReportChangesRow({ text }: Readonly<{ text: string }>) {
+  return (
+    <span className={styles.reportRow}>
+      <span className={styles.reportIconOk}>
+        <Check size={ICON_SIZE.sm} aria-hidden />
+      </span>
+      <span>{text}</span>
+    </span>
+  );
+}
+
 function DoneModal({
   onClose,
-  addedCount,
+  report,
   confirmedCount,
-  unmatchedTitles,
   undecidedTitles,
 }: Readonly<{
   onClose: () => void;
-  addedCount: number;
+  report: LetterboxdSyncReport;
   confirmedCount: number;
-  unmatchedTitles: string[];
   undecidedTitles: string[];
 }>) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const titleId = useId();
+  const lists = reportedLists(report, user);
+  const syncError = syncErrorMessage(report.error, t);
+  const unmatchedTitles = unmatchedTitlesOf(report);
   const unmatchedCount = unmatchedTitles.length;
   const undecidedCount = undecidedTitles.length;
 
@@ -197,17 +219,29 @@ function DoneModal({
     >
       <div className={styles.body}>
         <Card padding="none" surface="sunken" className={styles.report}>
-          {addedCount > 0 && (
+          {syncError && (
             <span className={styles.reportRow}>
-              <span className={styles.reportIconOk}>
-                <Check size={ICON_SIZE.sm} aria-hidden />
+              <span className={styles.reportIcon}>
+                <TriangleAlert size={ICON_SIZE.sm} aria-hidden />
               </span>
-              <span>
-                {addedCount === 1
-                  ? t('auth.account.letterboxd.doneAddedOne')
-                  : t('auth.account.letterboxd.doneAdded', { count: addedCount })}
-              </span>
+              <span>{syncError}</span>
             </span>
+          )}
+          {lists.watchlist && (
+            <ReportChangesRow
+              text={t('auth.account.letterboxd.reportChanges', {
+                added: String(report.added),
+                removed: String(report.removed),
+              })}
+            />
+          )}
+          {lists.watched && (
+            <ReportChangesRow
+              text={t('auth.account.letterboxd.reportWatchedChanges', {
+                added: String(report.watchedAdded),
+                removed: String(report.watchedRemoved),
+              })}
+            />
           )}
           {confirmedCount > 0 && (
             <span className={styles.reportRow}>
@@ -302,7 +336,7 @@ export default function LetterboxdConnectModal({
 
   const handleConnected = (result: LetterboxdSyncReport) => {
     setReport(result);
-    setStep(result.pendingChoices.length > 0 ? 'arbitrate' : 'done');
+    setStep(pendingChoicesOf(result).length > 0 ? 'arbitrate' : 'done');
   };
 
   const handleArbitrationConfirmed = (
@@ -320,7 +354,8 @@ export default function LetterboxdConnectModal({
           }
         : prev
     );
-    void invalidateWatchlist(queryClient);
+    if (result.watchedAdded > 0) void invalidateWatched(queryClient);
+    else void invalidateWatchlist(queryClient);
     void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
   };
 
@@ -328,20 +363,20 @@ export default function LetterboxdConnectModal({
     return <ConnectFormModal onClose={onClose} onConnected={handleConnected} />;
   }
 
-  if (step === 'arbitrate' && report) {
+  if (!report) return null;
+
+  if (step === 'arbitrate') {
     return (
       <LetterboxdChoicesModal
         open
-        choices={report.pendingChoices}
+        choices={pendingChoicesOf(report)}
         onClose={onClose}
         onConfirmed={handleArbitrationConfirmed}
       />
     );
   }
 
-  const addedCount = report?.added ?? 0;
-  const confirmedCount = confirmResult?.added ?? 0;
-  const unmatchedTitles = report?.unmatchedTitles ?? [];
+  const confirmedCount = (confirmResult?.added ?? 0) + (confirmResult?.watchedAdded ?? 0);
   const undecidedTitles = unresolvedChoices.map((choice) =>
     choice.year ? `${choice.title} (${choice.year})` : choice.title
   );
@@ -349,9 +384,8 @@ export default function LetterboxdConnectModal({
   return (
     <DoneModal
       onClose={onClose}
-      addedCount={addedCount}
+      report={report}
       confirmedCount={confirmedCount}
-      unmatchedTitles={unmatchedTitles}
       undecidedTitles={undecidedTitles}
     />
   );

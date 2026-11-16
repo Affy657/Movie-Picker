@@ -74,6 +74,7 @@ const allPrefs: NotificationPreferences = {
     { type: 'eventreminder1h', enabled: true },
     { type: 'eventreminder24h', enabled: true },
     { type: 'eventinvitation', enabled: true },
+    { type: 'listinvitation', enabled: true },
     { type: 'newfollower', enabled: true },
     { type: 'eventpending', enabled: true },
     { type: 'letterboxdreconciliationpending', enabled: true },
@@ -114,7 +115,7 @@ describe('NotificationsSection', () => {
       await screen.findByRole('switch', { name: 'notifications.prefNewFollower' })
     ).toBeInTheDocument();
     expect(mockFetchPrefs).toHaveBeenCalled();
-    expect(screen.getAllByRole('switch')).toHaveLength(13);
+    expect(screen.getAllByRole('switch')).toHaveLength(14);
   });
 
   it('on an iPhone in Safari, points to the home screen and opens the install guide', async () => {
@@ -154,7 +155,25 @@ describe('NotificationsSection', () => {
     expect(screen.queryByRole('button', { name: 'pwaInstall.trigger' })).not.toBeInTheDocument();
   });
 
-  it('loads and renders the 13 preference toggles even when not subscribed to push', async () => {
+  it('lists the invitation to a list among the social preferences, after the night one', async () => {
+    mockUsePush.mockReturnValue(pushState({ subscribed: false }));
+
+    render(<NotificationsSection />);
+
+    const listInvitation = await screen.findByRole('switch', {
+      name: 'notifications.prefListInvitation',
+    });
+    const group = listInvitation.closest('fieldset');
+    expect(group).toHaveTextContent('notifications.groupSocial');
+    const names = [...(group?.querySelectorAll('[role="switch"]') ?? [])].map(
+      (toggle) => document.getElementById(toggle.getAttribute('aria-labelledby') ?? '')?.textContent
+    );
+    expect(names.indexOf('notifications.prefListInvitation')).toBe(
+      names.indexOf('notifications.prefEventInvitation') + 1
+    );
+  });
+
+  it('loads and renders the 14 preference toggles even when not subscribed to push', async () => {
     mockUsePush.mockReturnValue(pushState({ subscribed: false }));
     mockFetchPrefs.mockResolvedValue(allPrefs);
 
@@ -167,7 +186,7 @@ describe('NotificationsSection', () => {
     expect(
       screen.getByRole('switch', { name: 'notifications.prefRatingReminder' })
     ).toBeInTheDocument();
-    expect(screen.getAllByRole('switch')).toHaveLength(14);
+    expect(screen.getAllByRole('switch')).toHaveLength(15);
   });
 
   it('shows the push error message', () => {

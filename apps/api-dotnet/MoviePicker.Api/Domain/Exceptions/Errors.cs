@@ -26,6 +26,9 @@ public static class Errors
     public static NotFoundException WatchlistNotFound() =>
         new("Watchlist not found", ErrorCodes.WatchlistNotFound);
 
+    public static NotFoundException WatchedNotFound() =>
+        new("Watched films not found", ErrorCodes.WatchedNotFound);
+
     public static NotFoundException SeenMarkNotFound() =>
         new("Seen mark not found", ErrorCodes.SeenMarkNotFound);
 
@@ -34,6 +37,24 @@ public static class Errors
 
     public static NotFoundException EventTemplateNotFound() =>
         new("Movie night template not found", ErrorCodes.EventTemplateNotFound);
+
+    public static NotFoundException MovieListNotFound() =>
+        new("List not found", ErrorCodes.ListNotFound);
+
+    public static NotFoundException MovieListInvitationNotFound() =>
+        new("No pending invitation to this list", ErrorCodes.ListInvitationNotFound);
+
+    public static NotFoundException MovieListInviteLinkInvalid() =>
+        new("This invitation link is unknown, expired or disabled", ErrorCodes.ListInviteLinkInvalid);
+
+    public static NotFoundException SavedListNotFound() =>
+        new("Saved list not found", ErrorCodes.SavedListNotFound);
+
+    public static NotFoundException ListSourceNotFound() =>
+        new("This saga, selection or list does not exist or is not public", ErrorCodes.ListSourceNotFound);
+
+    public static NotFoundException WatchedTitleNotFound() =>
+        new("This title is not marked as watched elsewhere", ErrorCodes.WatchedTitleNotFound);
 
     public static NotFoundException AvatarPhotoNotFound() =>
         new("No profile photo to use", ErrorCodes.AvatarPhotoNotFound);
@@ -113,6 +134,36 @@ public static class Errors
     public static ConflictException FavoritesLimitReached(int max) =>
         new($"You already have {max} favorites, remove one to add another", ErrorCodes.FavoritesLimitReached, Params(("max", max)));
 
+    public static ConflictException MovieListNameTaken(string name) =>
+        new($"A list named \"{name}\" already exists", ErrorCodes.ListNameTaken, Params(("name", name)));
+
+    public static ConflictException MovieListLimitReached(int max) =>
+        new($"You reached the limit of {max} lists, delete one to create another", ErrorCodes.ListLimitReached, Params(("max", max)));
+
+    public static ConflictException MovieListFull(int max) =>
+        new($"This list already holds {max} titles, remove one to add another", ErrorCodes.ListFull, Params(("max", max)));
+
+    public static ConflictException MovieListMembersLimitReached(int max) =>
+        new($"This list already gathers {max} people, pending invitations included", ErrorCodes.ListMembersLimitReached, Params(("max", max)));
+
+    public static ConflictException MovieListAlreadyMember() =>
+        new("This user already belongs to the list", ErrorCodes.ListAlreadyMember);
+
+    public static ConflictException MovieListInvitationAlreadySent() =>
+        new("An invitation to this list is already pending for this user", ErrorCodes.ListInvitationAlreadySent);
+
+    public static ConflictException MovieListOwnerCannotLeave() =>
+        new("The creator of a list cannot leave it, delete it instead", ErrorCodes.ListOwnerCannotLeave);
+
+    public static ConflictException SavedListLimitReached(int max) =>
+        new($"You already saved {max} lists, remove one to save another", ErrorCodes.SavedListLimitReached, Params(("max", max)));
+
+    public static ConflictException ListAlreadyYours() =>
+        new("This list is already one of your lists", ErrorCodes.ListAlreadyYours);
+
+    public static ConflictException SavedListCopyUnavailable() =>
+        new("This list is no longer available and none of its films were kept, so it cannot be copied", ErrorCodes.SavedListCopyUnavailable);
+
     public static ConflictException InviteEventFinished() =>
         new("Cannot invite, the movie night is over", ErrorCodes.InviteEventFinished);
 
@@ -175,6 +226,9 @@ public static class Errors
 
     public static ForbiddenException HostOnlyList() =>
         new("Only the host can view this list", ErrorCodes.HostOnlyList);
+
+    public static ForbiddenException MovieListOwnerOnly() =>
+        new("Reserved to the creator of the list", ErrorCodes.ListOwnerOnly);
 
     public static ForbiddenException HostOrSelfOnly() =>
         new("Reserved to the host or to the participant themselves", ErrorCodes.HostOrSelfOnly);
@@ -308,6 +362,15 @@ public static class Errors
     public static BadRequestException EventTemplateNameTooLong(int max) =>
         new($"Template name cannot exceed {max} characters", ErrorCodes.EventTemplateNameTooLong, Params(("max", max)));
 
+    public static BadRequestException MovieListNameRequired() =>
+        new("List name cannot be empty", ErrorCodes.ValidationFailed);
+
+    public static BadRequestException MovieListNameTooLong(int max) =>
+        new($"List name cannot exceed {max} characters", ErrorCodes.ValidationFailed, Params(("max", max)));
+
+    public static BadRequestException MovieListDescriptionTooLong(int max) =>
+        new($"List description cannot exceed {max} characters", ErrorCodes.ValidationFailed, Params(("max", max)));
+
     public static BadRequestException SelfFollow() =>
         new("You cannot follow yourself", ErrorCodes.SelfFollow);
 
@@ -331,6 +394,9 @@ public static class Errors
 
     public static BadRequestException UnknownCollection() =>
         new("Unknown collection", ErrorCodes.UnknownCollection);
+
+    public static BadRequestException ListSourceNotSavable() =>
+        new("Only a saga, an Explorer selection or the public list of a member can be saved", ErrorCodes.ListSourceNotSavable);
 
     public static BadRequestException TooManyAttachments(int max) =>
         new($"Too many attachments (maximum {max})", ErrorCodes.TooManyAttachments, Params(("max", max)));
@@ -394,6 +460,9 @@ public static class Errors
 
     public static ServiceUnavailableException ShowcaseUnavailable() =>
         new("Movie selections temporarily unavailable", ErrorCodes.ShowcaseUnavailable);
+
+    public static ServiceUnavailableException ListSourceUnavailable() =>
+        new("This saga or selection cannot be read right now", ErrorCodes.ListSourceUnavailable);
 
     public static ServiceUnavailableException SearchUnavailable() =>
         new("Movie search temporarily unavailable", ErrorCodes.SearchUnavailable);

@@ -5,6 +5,8 @@ import type { ComponentProps } from 'react';
 import MovieBrowseCard, {
   type MovieBrowseCardItem,
 } from '@/features/movies/components/MovieBrowseCard';
+import showcaseStyles from '@/features/movies/components/ShowcaseMovieCard.module.css';
+import rowStyles from '@/features/movies/components/LibraryMovieRow.module.css';
 import { LocaleProvider } from '@/shared/i18n';
 
 type CardProps = ComponentProps<typeof MovieBrowseCard>;
@@ -123,6 +125,28 @@ describe('MovieBrowseCard', () => {
     expect(screen.getByRole('listitem')).toBeInTheDocument();
   });
 
+  it('row layout in a created list: the kebab takes the movie out of that list', async () => {
+    const user = userEvent.setup();
+    const onRemoveFromList = vi.fn();
+    renderCard({ layout: 'row', hasHover: true, isLoggedIn: true, onRemoveFromList });
+
+    await user.click(kebabTrigger());
+    const remove = screen.getByRole('menuitem', { name: 'Retirer « Dune » de la liste' });
+    expect(remove).toHaveTextContent('Retirer de la liste');
+    await user.click(remove);
+
+    expect(onRemoveFromList).toHaveBeenCalledTimes(1);
+  });
+
+  it('row layout outside a created list: the kebab offers no removal', async () => {
+    const user = userEvent.setup();
+    renderCard({ layout: 'row', hasHover: true, isLoggedIn: true });
+
+    await user.click(kebabTrigger());
+
+    expect(screen.queryByRole('menuitem', { name: /retirer « dune » de la liste/i })).toBeNull();
+  });
+
   it('row layout on mobile: no kebab even with hover, the row still opens the details', async () => {
     const handlers = renderCard({
       layout: 'row',
@@ -160,6 +184,52 @@ describe('MovieBrowseCard', () => {
     renderCard();
 
     expect(screen.queryByText('Série')).toBeNull();
+  });
+
+  it('dims a watched poster, which still opens the film, keeps its badges and says it is watched', async () => {
+    const handlers = renderCard({
+      dimmed: true,
+      isLoggedIn: true,
+      inWatchlist: true,
+      leadingBadge: <span>8/10</span>,
+    });
+
+    const trigger = screen.getByRole('button', {
+      name: 'Voir les détails de « Dune », déjà vu',
+    });
+    expect(screen.getByRole('listitem').className).toContain(showcaseStyles.dimmed);
+    expect(screen.getByText('8/10')).toBeInTheDocument();
+    expect(screen.getByLabelText('Déjà dans votre liste')).toBeInTheDocument();
+
+    await userEvent.click(trigger);
+    expect(handlers.onOpenDetails).toHaveBeenCalledTimes(1);
+  });
+
+  it('dims a watched row and says it is watched', () => {
+    renderCard({ layout: 'row', dimmed: true });
+
+    expect(
+      screen.getByRole('button', { name: 'Voir les détails de « Dune », déjà vu' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('listitem').className).toContain(rowStyles.dimmed);
+  });
+
+  it('row layout names the removal after the collection it leaves', async () => {
+    const user = userEvent.setup();
+    renderCard({
+      layout: 'row',
+      hasHover: true,
+      isLoggedIn: true,
+      onRemoveFromList: vi.fn(),
+      removeLabel: 'Retirer des films vus',
+      removeAriaLabel: 'Retirer « Dune » des films vus',
+    });
+
+    await user.click(kebabTrigger());
+
+    expect(
+      screen.getByRole('menuitem', { name: 'Retirer « Dune » des films vus' })
+    ).toHaveTextContent('Retirer des films vus');
   });
 
   it('names the watchlist toggle after the movie', () => {

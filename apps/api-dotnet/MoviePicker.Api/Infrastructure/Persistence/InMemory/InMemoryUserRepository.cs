@@ -41,7 +41,8 @@ public sealed class InMemoryUserRepository : IUserRepository
         return Task.FromResult(cards);
     }
 
-    private static UserCard ToCard(User user) => new(user.Id, user.DisplayedAvatarId, user.Handle, user.IsProfilePublic);
+    private static UserCard ToCard(User user) =>
+        new(user.Id, user.DisplayedAvatarId, user.Handle, user.IsProfilePublic, user.DisplayName);
 
     public Task<User?> GetByEmailAsync(string email, CancellationToken ct = default)
     {
@@ -135,6 +136,21 @@ public sealed class InMemoryUserRepository : IUserRepository
         {
             LetterboxdPendingReconciliationCount = pendingCount,
             LetterboxdPendingChoiceKeys = [.. pendingChoiceKeys],
+            Version = user.Version + 1
+        });
+        return Task.CompletedTask;
+    }
+
+    public Task SetLetterboxdLinkedCountsAsync(
+        string userId,
+        int watchlistCount,
+        int watchedCount,
+        CancellationToken ct = default)
+    {
+        _byId.SwapIfPresent(userId, user => user with
+        {
+            LetterboxdWatchlistCount = watchlistCount,
+            LetterboxdWatchedCount = watchedCount,
             Version = user.Version + 1
         });
         return Task.CompletedTask;
@@ -332,9 +348,11 @@ public sealed class InMemoryUserRepository : IUserRepository
             Bio = user.Bio,
             IsProfilePublic = user.IsProfilePublic,
             IsWatchlistPublic = user.IsWatchlistPublic,
+            IsWatchedPublic = user.IsWatchedPublic,
             UiTheme = user.UiTheme,
             AccentColor = user.AccentColor,
             RatingScale = user.RatingScale,
+            DimWatched = user.DimWatched,
             AvatarId = user.AvatarId,
             AvatarPhoto = user.AvatarPhoto,
             NotificationPreferences = user.NotificationPreferences,
@@ -346,6 +364,10 @@ public sealed class InMemoryUserRepository : IUserRepository
             LetterboxdLastSyncError = user.LetterboxdLastSyncError,
             LetterboxdPendingReconciliationCount = user.LetterboxdPendingReconciliationCount,
             LetterboxdPendingChoiceKeys = user.LetterboxdPendingChoiceKeys,
+            LetterboxdSyncWatchlist = user.LetterboxdSyncWatchlist,
+            LetterboxdSyncWatched = user.LetterboxdSyncWatched,
+            LetterboxdWatchlistCount = user.LetterboxdWatchlistCount,
+            LetterboxdWatchedCount = user.LetterboxdWatchedCount,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt,
             Version = user.Version

@@ -27,6 +27,6 @@ public sealed class GetUserWatchlistHandler : IGetUserWatchlistHandler
         if (!PublicProfileGuard.CanSeeWatchlist(user, currentUserId))
             throw Errors.WatchlistNotFound();
 
-        return await _watchlist.HandleAsync(user.Id, skip, take, ct);
+        return await _watchlist.HandleAsync(user.Id, includeLetterboxd: currentUserId == user.Id, skip, take, ct);
     }
 }

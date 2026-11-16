@@ -1,21 +1,28 @@
 import { useId, useState } from 'react';
 import clsx from 'clsx';
+import { Bookmark, Eye } from 'lucide-react';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import type { TranslationKey } from '@/shared/i18n';
 import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
+import { formatShortDate } from '@/shared/utils/formatMyEventsListDate';
+import { formatRating } from '@/shared/utils/formatRating';
 import { metaGenresLabel, movieMetaLine } from '@/shared/utils/movieMetaLine';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
 import {
   confirmLetterboxdChoices,
   type LetterboxdCandidate,
   type LetterboxdConfirmResult,
   type LetterboxdPendingChoice,
   type LetterboxdSelection,
+  type LetterboxdWatchedSelection,
 } from '@/features/letterboxd/api/letterboxdApi';
+import { isWatchedChoice } from '@/features/letterboxd/utils/syncReport';
 import styles from './LetterboxdChoicesModal.module.css';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
+import Chip from '@/shared/components/Chip';
 import { ChoiceCard, ChoiceGroup } from '@/shared/components/ChoiceCard';
 import LinkButton from '@/shared/components/LinkButton';
 
@@ -28,7 +35,17 @@ interface LetterboxdChoicesModalProps {
 
 type Answer = { candidate: LetterboxdCandidate } | 'skip';
 
+type Answers = Record<string, Answer | undefined>;
+
 const SKIP_VALUE = 'skip';
+
+function choiceKey(choice: LetterboxdPendingChoice): string {
+  return `${choice.target ?? 'watchlist'}:${choice.rowIndex}`;
+}
+
+function chosenCandidate(answer: Answer | undefined): LetterboxdCandidate | null {
+  return answer && answer !== 'skip' ? answer.candidate : null;
+}
 
 function choiceValueOf(answer: Answer | undefined): string | null {
   if (answer === 'skip') return SKIP_VALUE;
@@ -61,6 +78,43 @@ function toSelection(
   };
 }
 
+function toWatchedSelection(
+  candidate: LetterboxdCandidate,
+  choice: LetterboxdPendingChoice
+): LetterboxdWatchedSelection {
+  return {
+    ...toSelection(candidate, choice.letterboxdSlug),
+    runtimeMinutes: candidate.runtimeMinutes,
+    rating: choice.rating ?? null,
+    watchedOn: choice.watchedOn ?? null,
+  };
+}
+
+function WatchedDetails({ choice }: Readonly<{ choice: LetterboxdPendingChoice }>) {
+  const { t, locale } = useTranslation();
+  const scale = useAuth().user?.ratingScale ?? 'five';
+  const date = choice.watchedOn ? formatShortDate(choice.watchedOn, locale) : null;
+  const rating = choice.rating == null ? null : formatRating(choice.rating, scale, locale);
+  let text: string | null = null;
+  if (date && rating) text = t('auth.account.letterboxd.choicesWatchedOnRated', { date, rating });
+  else if (date) text = t('auth.account.letterboxd.choicesWatchedOn', { date });
+  else if (rating) text = t('auth.account.letterboxd.choicesRated', { rating });
+  return text ? <span className={styles.targetDetail}>{text}</span> : null;
+}
+
+function ChoiceTarget({ choice }: Readonly<{ choice: LetterboxdPendingChoice }>) {
+  const { t } = useTranslation();
+  const watched = isWatchedChoice(choice);
+  return (
+    <p className={styles.target}>
+      <Chip size="sm" icon={watched ? Eye : Bookmark}>
+        {watched ? t('watched.title') : t('watchlist.title')}
+      </Chip>
+      {watched ? <WatchedDetails choice={choice} /> : null}
+    </p>
+  );
+}
+
 export default function LetterboxdChoicesModal({
   open,
   choices,
@@ -72,28 +126,29 @@ export default function LetterboxdChoicesModal({
   const titleId = useId();
 
   const [index, setIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, Answer | undefined>>({});
+  const [answers, setAnswers] = useState<Answers>({});
 
   const total = choices.length;
   const current = choices[index];
   const isLast = index === total - 1;
-  const currentAnswer = current ? answers[current.rowIndex] : undefined;
+  const currentAnswer = current ? answers[choiceKey(current)] : undefined;
 
-  const confirmAction = async (finalAnswers: Record<number, Answer | undefined>) => {
-    const selections = choices
-      .map((choice) => {
-        const answer = finalAnswers[choice.rowIndex];
-        return answer && answer !== 'skip'
-          ? toSelection(answer.candidate, choice.letterboxdSlug)
-          : null;
-      })
-      .filter((s): s is LetterboxdSelection => s !== null);
-    const stillPending = choices.filter((choice) => {
-      const answer = finalAnswers[choice.rowIndex];
-      return !answer || answer === 'skip';
-    });
+  const confirmAction = async (finalAnswers: Answers) => {
+    const selections: LetterboxdSelection[] = [];
+    const watchedSelections: LetterboxdWatchedSelection[] = [];
+    const stillPending: LetterboxdPendingChoice[] = [];
+    for (const choice of choices) {
+      const candidate = chosenCandidate(finalAnswers[choiceKey(choice)]);
+      if (!candidate) stillPending.push(choice);
+      else if (isWatchedChoice(choice))
+        watchedSelections.push(toWatchedSelection(candidate, choice));
+      else selections.push(toSelection(candidate, choice.letterboxdSlug));
+    }
 
-    onConfirmed(await confirmLetterboxdChoices(selections, stillPending.length), stillPending);
+    onConfirmed(
+      await confirmLetterboxdChoices(selections, watchedSelections, stillPending.length),
+      stillPending
+    );
   };
 
   const {
@@ -104,8 +159,10 @@ export default function LetterboxdChoicesModal({
 
   if (!current) return null;
 
+  const currentKey = choiceKey(current);
+
   const goToNext = (answerOverride?: Answer) => {
-    const next = { ...answers, [current.rowIndex]: answerOverride ?? currentAnswer };
+    const next = { ...answers, [currentKey]: answerOverride ?? currentAnswer };
     setAnswers(next);
     if (isLast) {
       void runConfirm(next);
@@ -115,9 +172,9 @@ export default function LetterboxdChoicesModal({
   };
 
   const selectCandidate = (candidate: LetterboxdCandidate) =>
-    setAnswers((prev) => ({ ...prev, [current.rowIndex]: { candidate } }));
+    setAnswers((prev) => ({ ...prev, [currentKey]: { candidate } }));
 
-  const selectNone = () => setAnswers((prev) => ({ ...prev, [current.rowIndex]: 'skip' }));
+  const selectNone = () => setAnswers((prev) => ({ ...prev, [currentKey]: 'skip' }));
 
   const choiceValue = choiceValueOf(currentAnswer);
 
@@ -148,7 +205,7 @@ export default function LetterboxdChoicesModal({
         <span className={styles.progressDots} aria-hidden="true">
           {choices.map((choice, i) => (
             <span
-              key={choice.rowIndex}
+              key={choiceKey(choice)}
               className={clsx(
                 styles.progressDot,
                 i < index && styles.progressDotDone,
@@ -167,6 +224,8 @@ export default function LetterboxdChoicesModal({
         <strong>{current.title}</strong>
         <span>{t('auth.account.letterboxd.choicesAskedFrom', { year: current.year })}</span>
       </p>
+
+      <ChoiceTarget choice={current} />
 
       {confirmError && (
         <p className={styles.error} role="alert">

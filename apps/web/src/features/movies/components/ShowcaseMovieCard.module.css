@@ -55,6 +55,12 @@
   color: var(--color-placeholder);
 }
 
+.dimmed .posterImg,
+.dimmed .posterPlaceholder {
+  filter: grayscale(1);
+  opacity: var(--opacity-muted);
+}
+
 .cornerSlot {
   position: absolute;
   inset: 0;

@@ -20,6 +20,10 @@
   min-width: 0;
 }
 
+.hiddenNotice {
+  margin-top: calc(var(--space-1) * -1);
+}
+
 .watchedGrid {
   list-style: none;
   margin: 0;

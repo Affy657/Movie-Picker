@@ -165,6 +165,83 @@ public sealed class PatchUserProfileHandlerTests
             Times.Once);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task HandleAsync_DimWatchedAlone_IsSavedAndAnswered(bool dimWatched)
+    {
+        var (handler, users) = HandlerFor(User() with { DimWatched = !dimWatched });
+
+        var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { DimWatched = dimWatched });
+
+        Assert.Equal(dimWatched, res.DimWatched);
+        users.Verify(
+            x => x.UpdateAsync(It.Is<User>(y => y.DimWatched == dimWatched), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Theory]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    public async Task HandleAsync_LetterboxdSyncToggles_AreSavedWithoutResettingTheSyncState(bool syncWatchlist, bool syncWatched)
+    {
+        var lastSync = new DateTimeOffset(2026, 11, 12, 8, 0, 0, TimeSpan.Zero);
+        var (handler, users) = HandlerFor(User() with
+        {
+            LetterboxdUsername = "cinephile",
+            LetterboxdLastSyncAt = lastSync,
+            LetterboxdPendingReconciliationCount = 2,
+            LetterboxdWatchlistCount = 5,
+            LetterboxdWatchedCount = 40
+        });
+
+        var res = await handler.HandleAsync("u1", new PatchUserProfileRequest
+        {
+            LetterboxdSyncWatchlist = syncWatchlist,
+            LetterboxdSyncWatched = syncWatched
+        });
+
+        Assert.Equal((syncWatchlist, syncWatched), (res.LetterboxdSyncWatchlist, res.LetterboxdSyncWatched));
+        Assert.Equal((lastSync, 2, 5, 40), (res.LetterboxdLastSyncAt, res.LetterboxdPendingReconciliationCount, res.LetterboxdWatchlistCount, res.LetterboxdWatchedCount));
+        users.Verify(
+            x => x.UpdateAsync(
+                It.Is<User>(y => y.LetterboxdSyncWatchlist == syncWatchlist && y.LetterboxdSyncWatched == syncWatched),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_PatchWithoutLetterboxdSyncToggles_KeepsThem()
+    {
+        var (handler, _) = HandlerFor(User() with { LetterboxdSyncWatchlist = false, LetterboxdSyncWatched = false });
+
+        var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { Bio = "Cinéphile" });
+
+        Assert.False(res.LetterboxdSyncWatchlist);
+        Assert.False(res.LetterboxdSyncWatched);
+    }
+
+    [Fact]
+    public async Task HandleAsync_NewUser_SyncsBothLetterboxdListsByDefault()
+    {
+        var (handler, _) = HandlerFor(User());
+
+        var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { LetterboxdUsername = "cinephile" });
+
+        Assert.True(res.LetterboxdSyncWatchlist);
+        Assert.True(res.LetterboxdSyncWatched);
+    }
+
+    [Fact]
+    public async Task HandleAsync_PatchWithoutDimWatched_KeepsIt()
+    {
+        var (handler, _) = HandlerFor(User() with { DimWatched = true });
+
+        var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { Bio = "Cinéphile" });
+
+        Assert.True(res.DimWatched);
+    }
+
     [Fact]
     public async Task HandleAsync_UpdatesHandle_WhenAvailable()
     {
@@ -279,6 +356,45 @@ public sealed class PatchUserProfileHandlerTests
                 It.Is<User>(y => !y.IsWatchlistPublic && y.IsProfilePublic),
                 It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TogglesWatchedVisibility_AloneOfTheOtherSettings()
+    {
+        var u = User();
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(u);
+        users
+            .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User x, CancellationToken _) => x);
+        var handler = Handler(users.Object);
+
+        var hidden = await handler.HandleAsync("u1", new PatchUserProfileRequest { IsWatchedPublic = false });
+
+        Assert.False(hidden.IsWatchedPublic);
+        Assert.True(hidden.IsWatchlistPublic);
+        Assert.True(hidden.IsProfilePublic);
+        users.Verify(
+            x => x.UpdateAsync(
+                It.Is<User>(y => !y.IsWatchedPublic && y.IsWatchlistPublic && y.IsProfilePublic),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_LeavesTheWatchedVisibility_WhenAnotherSettingChanges()
+    {
+        var u = User() with { IsWatchedPublic = false };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(u);
+        users
+            .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User x, CancellationToken _) => x);
+        var handler = Handler(users.Object);
+
+        var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { IsWatchlistPublic = false });
+
+        Assert.False(res.IsWatchedPublic);
     }
 
     [Fact]

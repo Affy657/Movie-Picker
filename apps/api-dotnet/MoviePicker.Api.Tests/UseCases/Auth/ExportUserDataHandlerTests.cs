@@ -30,6 +30,9 @@ public sealed class ExportUserDataHandlerTests
         public InMemoryMovieRatingRepository Ratings { get; } = new();
         public InMemoryPushSubscriptionRepository Push { get; } = new();
         public InMemoryWatchlistRepository Watchlist { get; } = new();
+        public InMemoryMovieListRepository MovieLists { get; } = new();
+        public InMemoryWatchedTitleRepository WatchedTitles { get; } = new();
+        public InMemorySavedListRepository SavedLists { get; } = new();
         public InMemoryAvatarPhotoRepository AvatarPhotos { get; } = new();
         public InMemoryMovieRepository Movies { get; } = new();
 
@@ -45,6 +48,9 @@ public sealed class ExportUserDataHandlerTests
                 Ratings,
                 Push,
                 Watchlist,
+                MovieLists,
+                WatchedTitles,
+                SavedLists,
                 AvatarPhotos,
                 Movies,
                 new FakeTimeProvider(TestEpoch));
@@ -194,6 +200,231 @@ public sealed class ExportUserDataHandlerTests
         Assert.Equal(
             [(603, "movie", "Matrix", "1999"), (1920, "tv", "Twin Peaks", "1990")],
             export.Favorites.Select(x => (x.TmdbId, x.MediaType, x.Title, x.Year)));
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public async Task HandleAsync_ExportsTheVisibilityOfTheWatchlistAndOfTheWatchedFilms(bool watchlist, bool watched)
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User
+        {
+            Email = "neo@example.com",
+            DisplayName = "Neo",
+            Handle = "neo",
+            IsWatchlistPublic = watchlist,
+            IsWatchedPublic = watched
+        });
+
+        var export = await f.CreateHandler().HandleAsync(user.Id);
+
+        Assert.Equal((watchlist, watched), (export.Profile.IsWatchlistPublic, export.Profile.IsWatchedPublic));
+    }
+
+    [Fact]
+    public async Task HandleAsync_ExportsTheListsWithTheirTitles()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User { Email = "neo@example.com", DisplayName = "Neo", Handle = "neo" });
+        await f.MovieLists.AddAsync(new MovieList
+        {
+            OwnerId = user.Id,
+            Name = "Films cultes",
+            Description = "Les incontournables",
+            IsPublic = true,
+            Items =
+            [
+                new MovieListItem { TmdbId = 603, Title = "Matrix", Year = "1999", PosterPath = "/p.jpg", AddedAt = TestEpoch.AddDays(-3) },
+                new MovieListItem { TmdbId = 1920, MediaType = MovieMediaType.Tv, Title = "Twin Peaks", Year = "1990", AddedAt = TestEpoch.AddDays(-2) }
+            ],
+            CreatedAt = TestEpoch.AddDays(-4),
+            UpdatedAt = TestEpoch.AddDays(-2)
+        });
+        await f.MovieLists.AddAsync(new MovieList { OwnerId = "someone-else", Name = "Pas à moi" });
+
+        var export = await f.CreateHandler().HandleAsync(user.Id);
+
+        var list = Assert.Single(export.MovieLists);
+        Assert.Equal("Films cultes", list.Name);
+        Assert.Equal("Les incontournables", list.Description);
+        Assert.True(list.IsPublic);
+        Assert.Equal(TestEpoch.AddDays(-4), list.CreatedAt);
+        Assert.Equal(TestEpoch.AddDays(-2), list.UpdatedAt);
+        Assert.Equal(
+            [(603, "movie", "Matrix", "1999", TestEpoch.AddDays(-3)), (1920, "tv", "Twin Peaks", "1990", TestEpoch.AddDays(-2))],
+            list.Items.Select(x => (x.TmdbId, x.MediaType, x.Title, x.Year, x.AddedAt)));
+    }
+
+    [Fact]
+    public async Task HandleAsync_ExportsTheListsJoined_AndTheInvitationsWaitingForAnAnswer()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User { Email = "neo@example.com", DisplayName = "Neo", Handle = "neo" });
+        var lea = await f.Users.AddAsync(new User { Email = "lea@example.com", DisplayName = "Léa", Handle = "lea" });
+        var joined = await f.MovieLists.AddAsync(new MovieList { OwnerId = lea.Id, Name = "Ciné du dimanche" });
+        await f.MovieLists.AddInvitationAsync(joined.Id, new MovieListInvitation(user.Id, TestEpoch.AddDays(-6)), MovieList.MaxMembers);
+        await f.MovieLists.AcceptInvitationAsync(joined.Id, new MovieListMember(user.Id, TestEpoch.AddDays(-5)));
+        var pending = await f.MovieLists.AddAsync(new MovieList { OwnerId = lea.Id, Name = "Nanars" });
+        await f.MovieLists.AddInvitationAsync(pending.Id, new MovieListInvitation(user.Id, TestEpoch.AddDays(-1)), MovieList.MaxMembers);
+        await f.MovieLists.AddAsync(new MovieList { OwnerId = lea.Id, Name = "Sans Neo" });
+
+        var export = await f.CreateHandler().HandleAsync(user.Id);
+
+        Assert.Empty(export.MovieLists);
+        var member = Assert.Single(export.JoinedMovieLists);
+        Assert.Equal((joined.Id, "Ciné du dimanche", "Léa", TestEpoch.AddDays(-5)), (member.ListId, member.Name, member.OwnerDisplayName, member.JoinedAt));
+        var invitation = Assert.Single(export.PendingListInvitations);
+        Assert.Equal((pending.Id, "Nanars", "Léa", TestEpoch.AddDays(-1)), (invitation.ListId, invitation.Name, invitation.OwnerDisplayName, invitation.InvitedAt));
+    }
+
+    [Fact]
+    public async Task HandleAsync_ExportsTheListOfAListInvitationNotice()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User { Email = "neo@example.com", DisplayName = "Neo", Handle = "neo" });
+        await f.Notifications.AddAsync(new UserNotification
+        {
+            UserId = user.Id,
+            Type = UserNotificationType.ListInvitation,
+            ActorDisplayName = "Léa",
+            ListId = "l1",
+            ListName = "Nanars",
+            CreatedAt = TestEpoch
+        });
+
+        var export = await f.CreateHandler().HandleAsync(user.Id);
+
+        Assert.Equal("Nanars", Assert.Single(export.Notifications).ListName);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ExportsTheSavedListsAsTheReferenceOfTheirSource()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User { Email = "neo@example.com", DisplayName = "Neo", Handle = "neo" });
+        await f.SavedLists.AddIfAbsentAsync(new SavedList
+        {
+            OwnerId = user.Id,
+            SourceType = ListSourceType.TmdbCollection,
+            SourceId = "1241",
+            Name = "Harry Potter - Saga",
+            CreatedAt = TestEpoch.AddDays(-2)
+        });
+        await f.SavedLists.AddIfAbsentAsync(new SavedList
+        {
+            OwnerId = user.Id,
+            SourceType = ListSourceType.ExplorerTheme,
+            SourceId = "frissons",
+            Name = "frissons",
+            CreatedAt = TestEpoch.AddDays(-1)
+        });
+        await f.SavedLists.AddIfAbsentAsync(new SavedList
+        {
+            OwnerId = user.Id,
+            SourceType = ListSourceType.MemberList,
+            SourceId = "abc123",
+            Name = "Hitchcock",
+            CreatedAt = TestEpoch
+        });
+        await f.SavedLists.AddIfAbsentAsync(new SavedList { OwnerId = "someone-else", SourceType = ListSourceType.TmdbCollection, SourceId = "10" });
+
+        var export = await f.CreateHandler().HandleAsync(user.Id);
+
+        Assert.Equal(
+            [
+                ("memberList", "abc123", "Hitchcock", TestEpoch),
+                ("explorerTheme", "frissons", "frissons", TestEpoch.AddDays(-1)),
+                ("tmdbCollection", "1241", "Harry Potter - Saga", TestEpoch.AddDays(-2))
+            ],
+            export.SavedLists.Select(x => (x.SourceType, x.SourceId, x.Name, x.CreatedAt)));
+    }
+
+    [Fact]
+    public async Task HandleAsync_ExportsTheTitlesWatchedElsewhere_AndTheDimWatchedPreference()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User { Email = "neo@example.com", DisplayName = "Neo", Handle = "neo", DimWatched = true });
+        await f.WatchedTitles.AddIfAbsentAsync(new WatchedTitle
+        {
+            OwnerId = user.Id,
+            TmdbId = 603,
+            Title = "Matrix",
+            Year = "1999",
+            WatchedAt = TestEpoch.AddDays(-3),
+            Rating = 8
+        });
+        await f.WatchedTitles.AddIfAbsentAsync(new WatchedTitle
+        {
+            OwnerId = user.Id,
+            TmdbId = 1920,
+            MediaType = MovieMediaType.Tv,
+            Title = "Twin Peaks",
+            Year = "1990",
+            WatchedAt = TestEpoch.AddDays(-1)
+        });
+        await f.WatchedTitles.AddIfAbsentAsync(new WatchedTitle { OwnerId = "someone-else", TmdbId = 680, Title = "Pulp Fiction" });
+
+        var export = await f.CreateHandler().HandleAsync(user.Id);
+
+        Assert.True(export.Profile.DimWatched);
+        Assert.Equal(
+            [(1920, "tv", "Twin Peaks", "1990", TestEpoch.AddDays(-1), (int?)null), (603, "movie", "Matrix", "1999", TestEpoch.AddDays(-3), (int?)8)],
+            export.WatchedTitles.Select(x => (x.TmdbId, x.MediaType, x.Title, x.Year, x.WatchedAt, x.Rating)));
+    }
+
+    [Fact]
+    public async Task HandleAsync_ExportsTheLetterboxdSyncTogglesAndWhereEachWatchedTitleAndRatingComesFrom()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User
+        {
+            Email = "neo@example.com",
+            DisplayName = "Neo",
+            Handle = "neo",
+            LetterboxdUsername = "neo_lb",
+            LetterboxdSyncWatchlist = false,
+            LetterboxdSyncWatched = true
+        });
+        await f.WatchedTitles.AddIfAbsentAsync(new WatchedTitle
+        {
+            OwnerId = user.Id,
+            TmdbId = 603,
+            Title = "Matrix",
+            Year = "1999",
+            WatchedAt = TestEpoch.AddDays(-3),
+            Rating = 9,
+            RatingOrigin = WatchedOrigin.Letterboxd,
+            Origin = WatchedOrigin.Letterboxd,
+            LetterboxdSlug = "the-matrix"
+        });
+        await f.WatchedTitles.AddIfAbsentAsync(new WatchedTitle
+        {
+            OwnerId = user.Id,
+            TmdbId = 680,
+            Title = "Pulp Fiction",
+            Year = "1994",
+            WatchedAt = TestEpoch.AddDays(-1),
+            Rating = 7,
+            RatingOrigin = WatchedOrigin.Manual
+        });
+        await f.Watchlist.AddAsync(new WatchlistItem
+        {
+            UserId = user.Id,
+            TmdbId = 78,
+            Title = "Blade Runner",
+            Year = "1982",
+            LetterboxdSlug = "blade-runner",
+            CreatedAt = TestEpoch
+        });
+
+        var export = await f.CreateHandler().HandleAsync(user.Id);
+
+        Assert.Equal((false, true), (export.Profile.LetterboxdSyncWatchlist, export.Profile.LetterboxdSyncWatched));
+        Assert.Equal(
+            [(680, "manual", (string?)null, (string?)"manual"), (603, "letterboxd", "the-matrix", "letterboxd")],
+            export.WatchedTitles.Select(x => (x.TmdbId, x.Origin, x.LetterboxdSlug, x.RatingOrigin)));
+        Assert.Equal("blade-runner", Assert.Single(export.Watchlist).LetterboxdSlug);
     }
 
     [Fact]

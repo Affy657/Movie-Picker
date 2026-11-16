@@ -55,13 +55,15 @@ public sealed class MongoUserRepository : IUserRepository
             .Include(x => x.AvatarId)
             .Include(x => x.AvatarPhoto)
             .Include(x => x.Handle)
-            .Include(x => x.IsProfilePublic);
+            .Include(x => x.IsProfilePublic)
+            .Include(x => x.DisplayName);
         var docs = await _collection.Find(filter).Project<UserDocument>(card).ToListAsync(ct);
         return docs.ConvertAll(d => new UserCard(
             d.Id,
             AvatarPhoto.DisplayedAvatarIdOf(d.AvatarId ?? string.Empty, UserDocumentMapper.ToAvatarPhotoDomain(d.AvatarPhoto)),
             d.Handle,
-            d.IsProfilePublic ?? true));
+            d.IsProfilePublic ?? true,
+            d.DisplayName));
     }
 
     public async Task<User?> GetByEmailAsync(string email, CancellationToken ct = default)
@@ -184,6 +186,19 @@ public sealed class MongoUserRepository : IUserRepository
         var update = Builders<UserDocument>.Update
             .Set(x => x.LetterboxdPendingReconciliationCount, pendingCount)
             .Set(x => x.LetterboxdPendingChoiceKeys, pendingChoiceKeys.ToList())
+            .Inc(x => x.Version, 1);
+        await _collection.UpdateOneAsync(x => x.Id == userId, update, cancellationToken: ct);
+    }
+
+    public async Task SetLetterboxdLinkedCountsAsync(
+        string userId,
+        int watchlistCount,
+        int watchedCount,
+        CancellationToken ct = default)
+    {
+        var update = Builders<UserDocument>.Update
+            .Set(x => x.LetterboxdWatchlistCount, watchlistCount)
+            .Set(x => x.LetterboxdWatchedCount, watchedCount)
             .Inc(x => x.Version, 1);
         await _collection.UpdateOneAsync(x => x.Id == userId, update, cancellationToken: ct);
     }

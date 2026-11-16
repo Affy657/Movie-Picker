@@ -253,6 +253,30 @@ describe('redactCapturedUrls', () => {
     });
   });
 
+  it('masks the list invitation token in the page view, its path, its referrer and the person', () => {
+    const event = {
+      uuid: 'u5',
+      event: '$pageview',
+      properties: {
+        $current_url: 'https://www.movie-picker.fr/l/7xK2pQ/rejoindre',
+        $pathname: '/l/7xK2pQ/rejoindre',
+        $referrer: 'https://www.movie-picker.fr/login?returnTo=%2Fl%2F7xK2pQ%2Frejoindre',
+        page: '/l/7xK2pQ/rejoindre',
+      },
+      $set_once: { $initial_pathname: '/l/7xK2pQ/rejoindre' },
+    } as CaptureResult;
+
+    const redacted = redactCapturedUrls(event);
+
+    expect(redacted?.properties).toEqual({
+      $current_url: 'https://www.movie-picker.fr/l/***/rejoindre',
+      $pathname: '/l/***/rejoindre',
+      $referrer: 'https://www.movie-picker.fr/login?returnTo=***',
+      page: '/l/***/rejoindre',
+    });
+    expect(redacted?.$set_once).toEqual({ $initial_pathname: '/l/***/rejoindre' });
+  });
+
   it('masks the tokens of the URLs nested in objects and arrays, web vitals included', () => {
     const event = {
       uuid: 'u2',

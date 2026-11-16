@@ -21,13 +21,9 @@ import {
   ProfileLoadErrorState,
   ProfileNotFoundState,
 } from '@/features/profile/components/ProfileQueryStates';
-import {
-  fetchPublicProfile,
-  followUser,
-  unfollowUser,
-  type PublicProfile,
-} from '@/features/profile/api/profileApi';
+import { followUser, unfollowUser, type PublicProfile } from '@/features/profile/api/profileApi';
 import { useProfileWatchedPreview } from '@/features/profile/hooks/useProfileWatchedPreview';
+import { usePublicProfile } from '@/features/profile/hooks/usePublicProfile';
 import { invalidateFollowGraph } from '@/features/profile/lib/invalidateFollowGraph';
 import { fetchUserStats } from '@/features/events/api/userStatsApi';
 import styles from './ProfilePage.module.css';
@@ -80,12 +76,7 @@ export default function ProfilePage() {
   const [followModal, setFollowModal] = useState<FollowTab | null>(null);
   const [followError, setFollowError] = useState<string | null>(null);
 
-  const profileQuery = useQuery({
-    queryKey: queryKeys.profile.public(handle),
-    queryFn: () => fetchPublicProfile(handle ?? ''),
-    enabled: !!handle,
-    retry: false,
-  });
+  const profileQuery = usePublicProfile(handle);
 
   const statsQuery = useQuery({
     queryKey: queryKeys.profile.stats(handle),
@@ -94,10 +85,11 @@ export default function ProfilePage() {
     retry: false,
   });
 
-  const watchedQuery = useProfileWatchedPreview(handle);
-
   const profile = profileQuery.data;
   const isOwnProfile = !!user && !!profile && user.handle === profile.handle;
+  const watchedHiddenFromVisitor = !!profile && !isOwnProfile && profile.isWatchedPublic === false;
+  const watchedVisible = !!profile && !watchedHiddenFromVisitor;
+  const watchedQuery = useProfileWatchedPreview(handle, !watchedHiddenFromVisitor);
   const isNotFound =
     !handle ||
     (profileQuery.isError && ApiError.is(profileQuery.error) && profileQuery.error.code === 404);
@@ -201,11 +193,12 @@ export default function ProfilePage() {
         {stats && (
           <ProfileStatsSection
             stats={stats}
-            watchedCount={watchedQuery.data?.total}
-            watchedPending={watchedQuery.isPending}
+            watchedCount={watchedVisible ? watchedQuery.data?.total : undefined}
+            watchedPending={watchedVisible && watchedQuery.isPending}
             watchedTo={ROUTES.profileMovies(profile.handle)}
             proposalsTo={ROUTES.profileProposals(profile.handle)}
             winningProposalsTo={ROUTES.profileWinningProposals(profile.handle)}
+            listsTo={ROUTES.profileLists(profile.handle)}
             ratingScale={user?.ratingScale}
           />
         )}
@@ -215,6 +208,8 @@ export default function ProfilePage() {
             handle={profile.handle}
             favorites={profile.favorites ?? []}
             isOwnProfile={isOwnProfile}
+            watchedVisible={watchedVisible}
+            watchedHidden={isOwnProfile && profile.isWatchedPublic === false}
             watchlist={watchlist}
           />
         </Suspense>

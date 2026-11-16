@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using MongoDB.Bson;
 using MoviePicker.Api.Application.Avatars;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
@@ -101,6 +102,51 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
         Assert.Equal(ErrorCodes.HandleTaken, conflict.Reason);
     }
 
+    private static MovieList NewMovieList(string ownerId, string name) => new()
+    {
+        OwnerId = ownerId,
+        Name = name,
+        CreatedAt = DateTimeOffset.UtcNow,
+        UpdatedAt = DateTimeOffset.UtcNow
+    };
+
+    private async Task<T> WithMovieListsAsync<T>(Func<IMovieListRepository, Task<T>> body)
+    {
+        using var scope = _factory.Services.CreateScope();
+        return await body(scope.ServiceProvider.GetRequiredService<IMovieListRepository>());
+    }
+
+    [MongoFact]
+    public async Task InsertingTheSameListNameKeyTwiceForAnOwner_IsRejectedAsListNameTaken()
+    {
+        var ownerId = ObjectId.GenerateNewId().ToString();
+        await WithMovieListsAsync(lists => lists.AddAsync(NewMovieList(ownerId, "Été 2026")));
+
+        var conflict = await Assert.ThrowsAsync<ConflictException>(() =>
+            WithMovieListsAsync(lists => lists.AddAsync(NewMovieList(ownerId, "  ete   2026 "))));
+        var otherOwner = await WithMovieListsAsync(lists =>
+            lists.AddAsync(NewMovieList(ObjectId.GenerateNewId().ToString(), "Été 2026")));
+
+        Assert.Equal(ErrorCodes.ListNameTaken, conflict.Reason);
+        Assert.Equal("Été 2026", otherOwner.Name);
+    }
+
+    [MongoFact]
+    public async Task RenamingAListTowardsANameKeyItsOwnerHolds_IsRejectedAsListNameTaken()
+    {
+        var ownerId = ObjectId.GenerateNewId().ToString();
+        await WithMovieListsAsync(lists => lists.AddAsync(NewMovieList(ownerId, "Halloween")));
+        var mover = await WithMovieListsAsync(lists => lists.AddAsync(NewMovieList(ownerId, "Films cultes")));
+
+        var conflict = await Assert.ThrowsAsync<ConflictException>(() =>
+            WithMovieListsAsync(lists => lists.UpdateDetailsAsync(ownerId, mover.Id, "HALLOWEEN", null, isPublic: false, DateTimeOffset.UtcNow)));
+        var sameKey = await WithMovieListsAsync(lists =>
+            lists.UpdateDetailsAsync(ownerId, mover.Id, "films CULTES", null, isPublic: false, DateTimeOffset.UtcNow));
+
+        Assert.Equal(ErrorCodes.ListNameTaken, conflict.Reason);
+        Assert.Equal("films CULTES", sameKey!.Name);
+    }
+
     private sealed class NoPhotoImporter : IOAuthProfilePhotoImporter
     {
         public Task<User> ImportAsync(User user, ExternalLoginInfo info, string? accessToken, CancellationToken ct = default) =>
@@ -137,6 +183,9 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
             IReadOnlyList<string> pendingChoiceKeys,
             CancellationToken ct = default) =>
             inner.RecordLetterboxdPendingChoicesAsync(userId, pendingCount, pendingChoiceKeys, ct);
+
+        public Task SetLetterboxdLinkedCountsAsync(string userId, int watchlistCount, int watchedCount, CancellationToken ct = default) =>
+            inner.SetLetterboxdLinkedCountsAsync(userId, watchlistCount, watchedCount, ct);
         public Task<bool> MarkSupporterAsync(string userId, DateTimeOffset since, CancellationToken ct = default) => inner.MarkSupporterAsync(userId, since, ct);
         public Task<bool> AddEventTemplateAsync(string userId, EventTemplate template, int maxPerUser, DateTimeOffset now, CancellationToken ct = default) =>
             inner.AddEventTemplateAsync(userId, template, maxPerUser, now, ct);

@@ -6,10 +6,24 @@
   overflow-anchor: none;
 }
 
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-4);
+}
+
 .headerText {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+  min-width: 0;
+}
+
+.progress {
+  max-width: var(--container-xs);
+  margin-top: var(--space-2);
 }
 
 .pageTitle {

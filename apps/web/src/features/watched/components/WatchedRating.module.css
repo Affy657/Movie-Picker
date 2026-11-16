@@ -1,0 +1,14 @@
+.rating {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+}
+
+.value {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-extrabold);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+  white-space: nowrap;
+}

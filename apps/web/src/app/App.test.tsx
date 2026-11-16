@@ -11,6 +11,8 @@ import brandStyles from '@/shared/brand/Brand.module.css';
 import {
   authMeGuestHandler,
   createEventDetailHandlers,
+  createListJoinHandlers,
+  createPublicListsHandlers,
   createUserStatsHandler,
   TEST_API_V1,
 } from '@/mocks/handlers';
@@ -172,6 +174,10 @@ describe('App (routes)', () => {
       ['/new', '%2Fnew'],
       ['/my-events', '%2Fmy-events'],
       ['/watchlist', '%2Fwatchlist'],
+      ['/listes', '%2Flistes'],
+      ['/listes/l1', '%2Flistes%2Fl1'],
+      ['/listes/films-vus', '%2Flistes%2Ffilms-vus'],
+      ['/listes/enregistrees/s1', '%2Flistes%2Fenregistrees%2Fs1'],
       ['/notifications', '%2Fnotifications'],
     ])(
       'route %s reste accessible sans compte, avec un CTA de connexion (returnTo=%s)',
@@ -192,6 +198,43 @@ describe('App (routes)', () => {
         expect(screen.queryByRole('heading', { name: /^connexion$/i })).not.toBeInTheDocument();
       }
     );
+
+    it('the list invitation link shows the list to a visitor, with a sign-in that comes back', async () => {
+      server.use(
+        authMeGuestHandler,
+        ...createListJoinHandlers('7xK2pQ', {
+          name: 'Ciné du dimanche',
+          owner: { handle: 'lea', displayName: 'Léa', avatarId: null },
+          itemCount: 3,
+          posterPaths: [],
+          isFull: false,
+          listId: null,
+        })
+      );
+      renderRoutes(['/l/7xK2pQ/rejoindre']);
+
+      expect(
+        await screen.findByRole(
+          'heading',
+          { level: 1, name: 'Ciné du dimanche' },
+          { timeout: 20000 }
+        )
+      ).toBeInTheDocument();
+      const main = screen.getByRole('main');
+      expect(within(main).getByRole('link', { name: /^se connecter$/i })).toHaveAttribute(
+        'href',
+        '/login?returnTo=%2Fl%2F7xK2pQ%2Frejoindre'
+      );
+    });
+
+    it('the watched films route names its own page, not a created list', async () => {
+      server.use(authMeGuestHandler);
+      renderRoutes(['/listes/films-vus']);
+
+      expect(
+        await screen.findByRole('heading', { level: 1, name: 'Films vus' }, { timeout: 20000 })
+      ).toBeInTheDocument();
+    });
 
     it('the /settings route shows the visitor preferences with a sign-in CTA', async () => {
       server.use(authMeGuestHandler);
@@ -304,6 +347,55 @@ describe('App (routes)', () => {
       expect(screen.queryByRole('heading', { name: /^connexion$/i })).not.toBeInTheDocument();
     });
 
+    it('the public lists of a member /u/:handle/listes stay readable without an account', async () => {
+      server.use(
+        authMeGuestHandler,
+        http.get(`${TEST_API_V1}/users/alice`, () =>
+          HttpResponse.json({
+            handle: 'alice',
+            displayName: 'Alice',
+            avatarId: 'alpha',
+            bio: null,
+            memberSince: '2024-03-15T00:00:00Z',
+            followingCount: 0,
+            followersCount: 0,
+            isSupporter: false,
+            isFollowedByMe: null,
+          })
+        ),
+        ...createPublicListsHandlers(
+          { handle: 'alice', displayName: 'Alice', avatarId: null },
+          [{ id: 'l1', name: 'Ciné coréen' }],
+          { viewerSignedIn: false }
+        )
+      );
+      renderRoutes(['/u/alice/listes']);
+      expect(
+        await screen.findByRole(
+          'heading',
+          { name: 'Les listes d’Alice', level: 1 },
+          { timeout: 20000 }
+        )
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: /^connexion$/i })).not.toBeInTheDocument();
+    });
+
+    it('a public list /u/:handle/listes/:listId stays readable without an account', async () => {
+      server.use(
+        authMeGuestHandler,
+        ...createPublicListsHandlers(
+          { handle: 'alice', displayName: 'Alice', avatarId: null },
+          [{ id: 'l1', name: 'Ciné coréen' }],
+          { viewerSignedIn: false }
+        )
+      );
+      renderRoutes(['/u/alice/listes/l1']);
+      expect(
+        await screen.findByRole('heading', { name: 'Ciné coréen', level: 1 }, { timeout: 20000 })
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: /^connexion$/i })).not.toBeInTheDocument();
+    });
+
     it('AppShell: the main navigation is exposed to signed-out visitors', async () => {
       server.use(authMeGuestHandler);
       renderRoutes(['/']);
@@ -319,7 +411,7 @@ describe('App (routes)', () => {
       const labels = within(mobileNav)
         .getAllByRole('link')
         .map((link) => link.textContent?.trim());
-      expect(labels).toEqual(['Explorer', 'Soirées', 'Créer', 'Ma liste', 'Connexion']);
+      expect(labels).toEqual(['Explorer', 'Soirées', 'Créer', 'Mes listes', 'Connexion']);
       expect(within(mobileNav).getByRole('link', { name: /^Connexion$/i })).toHaveAttribute(
         'href',
         '/login'
@@ -472,7 +564,7 @@ describe('App (routes)', () => {
       const labels = within(mobileNav)
         .getAllByRole('link')
         .map((link) => link.textContent?.trim());
-      expect(labels).toEqual(['Explorer', 'Soirées', 'Ma liste', 'Profil']);
+      expect(labels).toEqual(['Explorer', 'Soirées', 'Mes listes', 'Profil']);
       expect(within(mobileNav).getByRole('link', { name: /^Profil$/i })).toHaveAttribute(
         'href',
         '/u/alice'

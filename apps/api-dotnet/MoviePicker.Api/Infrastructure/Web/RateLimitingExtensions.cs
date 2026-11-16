@@ -41,6 +41,13 @@ public static class RateLimitingExtensions
     public const string InviteUserPolicy = "invite-user";
     public const string WatchlistReadPolicy = "watchlist-read";
     public const string WatchlistMutationPolicy = "watchlist-mutation";
+    public const string MovieListReadPolicy = "movie-list-read";
+    public const string MovieListMutationPolicy = "movie-list-mutation";
+    public const string MovieListJoinPolicy = "movie-list-join";
+    public const string SavedListReadPolicy = "saved-list-read";
+    public const string SavedListMutationPolicy = "saved-list-mutation";
+    public const string WatchedReadPolicy = "watched-read";
+    public const string WatchedMutationPolicy = "watched-mutation";
     public const string LetterboxdImportPolicy = "letterboxd-import";
     public const string KofiWebhookPolicy = "kofi-webhook";
     public const string IdeaSuggestionPolicy = "idea-suggestion";
@@ -100,6 +107,13 @@ public static class RateLimitingExtensions
         new(InviteUserPolicy, 60, 1),
         new(WatchlistReadPolicy, 120, 1),
         new(WatchlistMutationPolicy, 60, 1),
+        new(MovieListReadPolicy, 120, 1),
+        new(MovieListMutationPolicy, 60, 1),
+        new(MovieListJoinPolicy, 30, 1),
+        new(SavedListReadPolicy, 120, 1),
+        new(SavedListMutationPolicy, 60, 1),
+        new(WatchedReadPolicy, 120, 1),
+        new(WatchedMutationPolicy, 60, 1),
         new(LetterboxdImportPolicy, 10, 1),
         new(KofiWebhookPolicy, 20, 1, QuotaScope.Address),
         new(IdeaSuggestionPolicy, 10, 60),

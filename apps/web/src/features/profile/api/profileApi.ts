@@ -14,6 +14,7 @@ export interface PublicProfile {
   isFollowedByMe: boolean | null;
   isWatchlistPublic: boolean;
   watchlistCount: number | null;
+  isWatchedPublic?: boolean;
   favorites?: FavoriteTitle[];
 }
 

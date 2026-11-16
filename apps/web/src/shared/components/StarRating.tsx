@@ -6,16 +6,28 @@ import styles from './StarRating.module.css';
 
 type StarFill = 'full' | 'half' | 'empty';
 
-type StarRatingProps = {
+type StarRatingSize = 'md' | 'lg' | 'xl';
+
+type EditableStarRatingProps = {
   value: number | null;
   onChange: (value: number) => void;
-  size?: 'md' | 'lg' | 'xl';
+  size?: StarRatingSize;
   ariaLabel: string;
   starLabel: (stars: number) => string;
   className?: string;
 };
 
-const SIZE_CLASS: Record<NonNullable<StarRatingProps['size']>, string | undefined> = {
+type ReadOnlyStarRatingProps = {
+  readOnly: true;
+  value: number | null;
+  size?: StarRatingSize;
+  ariaLabel: string;
+  className?: string;
+};
+
+type StarRatingProps = (EditableStarRatingProps & { readOnly?: false }) | ReadOnlyStarRatingProps;
+
+const SIZE_CLASS: Record<StarRatingSize, string | undefined> = {
   md: undefined,
   lg: styles.lg,
   xl: styles.xl,
@@ -48,14 +60,50 @@ function tenthsUnderPointer(event: MouseEvent<HTMLButtonElement>, star: number):
   return onLeftHalf ? star * 2 - 1 : star * 2;
 }
 
-export default function StarRating({
+function StarGlyph({ fill }: Readonly<{ fill: StarFill }>) {
+  return (
+    <span className={styles.glyph} aria-hidden="true">
+      <Star className={styles.outline} />
+      <Star
+        className={clsx(
+          styles.fill,
+          fill === 'half' && styles.half,
+          fill === 'empty' && styles.hidden
+        )}
+      />
+    </span>
+  );
+}
+
+function ReadOnlyStarRating({
+  value,
+  size = 'md',
+  ariaLabel,
+  className,
+}: Readonly<ReadOnlyStarRatingProps>) {
+  return (
+    <span
+      role="img"
+      aria-label={ariaLabel}
+      className={clsx(styles.root, SIZE_CLASS[size], className)}
+    >
+      {STARS.map((star) => (
+        <span key={star} className={styles.cell} data-fill={fillOf(value ?? 0, star)}>
+          <StarGlyph fill={fillOf(value ?? 0, star)} />
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function EditableStarRating({
   value,
   onChange,
   size = 'md',
   ariaLabel,
   starLabel,
   className,
-}: Readonly<StarRatingProps>) {
+}: Readonly<EditableStarRatingProps>) {
   const [preview, setPreview] = useState<number | null>(null);
   const shown = preview ?? value ?? 0;
 
@@ -98,19 +146,15 @@ export default function StarRating({
               if (hasFinePointer()) setPreview(tenthsUnderPointer(event, star));
             }}
           >
-            <span className={styles.glyph} aria-hidden="true">
-              <Star className={styles.outline} />
-              <Star
-                className={clsx(
-                  styles.fill,
-                  fill === 'half' && styles.half,
-                  fill === 'empty' && styles.hidden
-                )}
-              />
-            </span>
+            <StarGlyph fill={fill} />
           </button>
         );
       })}
     </fieldset>
   );
+}
+
+export default function StarRating(props: Readonly<StarRatingProps>) {
+  if (props.readOnly) return <ReadOnlyStarRating {...props} />;
+  return <EditableStarRating {...props} />;
 }

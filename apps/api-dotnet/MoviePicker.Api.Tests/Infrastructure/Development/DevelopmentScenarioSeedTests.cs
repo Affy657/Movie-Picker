@@ -10,6 +10,8 @@ using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.EventTemplates;
+using MoviePicker.Api.Application.UseCases.MovieLists;
+using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Application.UseCases.SearchUsers;
 using MoviePicker.Api.Application.UseCases.VoteMovie;
 using MoviePicker.Api.Configuration;
@@ -89,6 +91,7 @@ public sealed class SeededDevelopmentFixture : IAsyncLifetime
             .Build();
         var services = new ServiceCollection();
         services.AddSingleton<IConfiguration>(configuration);
+        services.AddSingleton<IHostEnvironment>(new DevelopmentEnv());
         services.AddLogging(builder => builder.AddProvider(Logs));
         services.AddMoviePicker(configuration, new DevelopmentEnv());
         Provider = services.BuildServiceProvider();
@@ -290,6 +293,152 @@ public sealed class DevelopmentScenarioSeedTests(SeededDevelopmentFixture fixtur
     }
 
     [Fact]
+    public async Task MovieLists_DevHasCultFilmsHalloweenAndAnEmptyGhibli()
+    {
+        var dev = await fixture.UserAsync(Dev);
+
+        var lists = await fixture.Provider.GetRequiredService<IMovieListRepository>().ListByOwnerAsync(dev.Id);
+
+        Assert.Equal(["Films cultes", "Ghibli", "Halloween"], lists.Select(list => list.Name).Order(StringComparer.Ordinal));
+        Assert.InRange(lists.Single(list => list.Name == "Films cultes").Items.Count, 6, 8);
+        Assert.InRange(lists.Single(list => list.Name == "Halloween").Items.Count, 5, 8);
+        Assert.Empty(lists.Single(list => list.Name == "Ghibli").Items);
+        Assert.All(lists.SelectMany(list => list.Items), item => Assert.True(item.TmdbId > 0));
+    }
+
+    [Fact]
+    public async Task SharedLists_HalloweenIsSharedWithAliceAndBob_WhoAddedSomeOfItsTitles()
+    {
+        var dev = await fixture.UserAsync(Dev);
+        var alice = await fixture.UserAsync(Alice);
+        var bob = await fixture.UserAsync(Bob);
+
+        var halloween = (await fixture.Provider.GetRequiredService<IMovieListRepository>().ListByOwnerAsync(dev.Id))
+            .Single(list => list.Name == "Halloween");
+
+        Assert.Equal([alice.Id, bob.Id], halloween.Members.Select(member => member.UserId));
+        Assert.Equal(
+            new[] { dev.Id, alice.Id, bob.Id }.Order(StringComparer.Ordinal),
+            halloween.Items.Select(halloween.AuthorOf).Distinct().Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public async Task SharedLists_DevJoinedAlicesSundayList_AndHasAPendingInvitationFromBob()
+    {
+        var dev = await fixture.UserAsync(Dev);
+        var alice = await fixture.UserAsync(Alice);
+        var bob = await fixture.UserAsync(Bob);
+        var lists = fixture.Provider.GetRequiredService<IMovieListRepository>();
+
+        var sunday = Assert.Single(await lists.ListJoinedAsync(dev.Id));
+        var pending = Assert.Single(await lists.ListInvitingAsync(dev.Id));
+        var inbox = await fixture.Provider.GetRequiredService<IGetInboxHandler>().HandleAsync(dev.Id, limit: 100, offset: null);
+        var summaries = (await fixture.Provider.GetRequiredService<IListMovieListsHandler>().HandleAsync(dev.Id, null)).Items;
+
+        Assert.Equal(("Ciné du dimanche", alice.Id), (sunday.Name, sunday.OwnerId));
+        Assert.Contains(sunday.Items, item => sunday.AuthorOf(item) == dev.Id);
+        Assert.Contains(sunday.Items, item => sunday.AuthorOf(item) == alice.Id);
+        Assert.Equal(bob.Id, pending.OwnerId);
+        Assert.NotEmpty(pending.Items);
+        var notice = Assert.Single(inbox.Items, item => item.Type == "listinvitation" && item.ListId == pending.Id);
+        Assert.True(notice.ListInvitationPending);
+        Assert.Equal(pending.Name, notice.ListName);
+        Assert.Equal(MovieListRole.Member, summaries.Single(summary => summary.Id == sunday.Id).Role);
+        Assert.DoesNotContain(summaries, summary => summary.Id == pending.Id);
+    }
+
+    [Fact]
+    public async Task WatchedElsewhere_DevSawPartOfHisLists_WithAndWithoutARating()
+    {
+        var dev = await fixture.UserAsync(Dev);
+
+        var watched = await fixture.Provider.GetRequiredService<IWatchedTitleRepository>().ListByOwnerAsync(dev.Id);
+        var lists = (await fixture.Provider.GetRequiredService<IListMovieListsHandler>().HandleAsync(dev.Id, null)).Items;
+
+        Assert.Equal(10, watched.Count(title => title.Origin == WatchedOrigin.Manual));
+        Assert.Contains(watched, title => title.Rating is not null);
+        Assert.Contains(watched, title => title.Rating is null);
+        Assert.Equal(4, lists.Single(list => list.Name == "Halloween").WatchedCount);
+        Assert.InRange(lists.Single(list => list.Name == "Films cultes").WatchedCount, 3, 7);
+        Assert.Equal(0, lists.Single(list => list.Name == "Ghibli").WatchedCount);
+    }
+
+    [Fact]
+    public async Task SavedLists_DevSavedTheHarryPotterSagaASelectionAndAlicesHitchcockList_AndWatchedPartOfTheSaga()
+    {
+        var dev = await fixture.UserAsync(Dev);
+        var alice = await fixture.UserAsync(Alice);
+        var hitchcock = (await fixture.Provider.GetRequiredService<IMovieListRepository>().ListByOwnerAsync(alice.Id))
+            .Single(list => list.Name == "Hitchcock en entier");
+
+        var saved = await fixture.Provider.GetRequiredService<ISavedListRepository>().ListByOwnerAsync(dev.Id);
+        var watched = await fixture.Provider.GetRequiredService<IWatchedTitleRepository>().ListByOwnerAsync(dev.Id);
+
+        Assert.Equal(
+            [
+                (ListSourceType.MemberList, hitchcock.Id, "Hitchcock en entier"),
+                (ListSourceType.ExplorerTheme, "indetronables", "indetronables"),
+                (ListSourceType.TmdbCollection, "1241", "Harry Potter - Saga")
+            ],
+            saved.Select(list => (list.SourceType, list.SourceId, list.Name)));
+        Assert.Equal(
+            hitchcock.Items.Select(item => item.TmdbId),
+            saved[0].Snapshot.Select(title => title.TmdbId));
+        Assert.Equal(3, watched.Count(title => title.TmdbId is 671 or 672 or 673));
+    }
+
+    [Fact]
+    public async Task PublicLists_DevSharesHisCultFilms_AliceTwoListsAndKeepsAThirdPrivate()
+    {
+        var dev = await fixture.UserAsync(Dev);
+        var alice = await fixture.UserAsync(Alice);
+        var lists = fixture.Provider.GetRequiredService<IMovieListRepository>();
+
+        var devPublic = await lists.ListPublicSummariesAsync(dev.Id);
+        var alicePublic = await lists.ListPublicSummariesAsync(alice.Id);
+        var aliceOwn = await lists.ListByOwnerAsync(alice.Id);
+        var devSees = await fixture.Provider.GetRequiredService<IListMovieListsHandler>().HandleAsync(dev.Id, null);
+
+        Assert.Equal(["Films cultes"], devPublic.Select(list => list.Name));
+        Assert.Equal(
+            ["Ciné coréen", "Hitchcock en entier"],
+            alicePublic.Select(list => list.Name).Order(StringComparer.Ordinal));
+        Assert.All(alicePublic, list => Assert.InRange(list.ItemCount, 4, 5));
+        var kept = Assert.Single(aliceOwn, list => list.Name == "Pour plus tard");
+        Assert.False(kept.IsPublic);
+        Assert.NotEmpty(kept.Items);
+        Assert.True(alice.IsProfilePublic);
+        Assert.Equal(2, await lists.CountPublicByOwnerAsync(alice.Id));
+        Assert.False(devSees.Items.Single(list => list.Name == "Ciné du dimanche").IsPublic);
+    }
+
+    [Fact]
+    public async Task Letterboxd_DevLooksSynchronized_WithFilmsWatchedOnLetterboxdAndATitleToWatchOutsideIt()
+    {
+        var dev = await fixture.UserAsync(Dev);
+
+        var watched = await fixture.Provider.GetRequiredService<IWatchedTitleRepository>().ListByOwnerAsync(dev.Id);
+        var toWatch = await fixture.Provider.GetRequiredService<IWatchlistRepository>().ListByUserIdAsync(dev.Id);
+
+        var fromLetterboxd = watched.Where(title => title.Origin == WatchedOrigin.Letterboxd).ToList();
+        Assert.False(string.IsNullOrEmpty(dev.LetterboxdUsername));
+        Assert.True(dev.LetterboxdSyncWatchlist);
+        Assert.True(dev.LetterboxdSyncWatched);
+        Assert.NotNull(dev.LetterboxdLastSyncAt);
+        Assert.Null(dev.LetterboxdLastSyncError);
+        Assert.InRange(fromLetterboxd.Count, 3, 10);
+        Assert.All(fromLetterboxd, title => Assert.False(string.IsNullOrEmpty(title.LetterboxdSlug)));
+        Assert.Contains(fromLetterboxd, title => title.RatingOrigin == WatchedOrigin.Letterboxd);
+        Assert.Contains(fromLetterboxd, title => title.Rating is null);
+        Assert.Contains(watched, title => title.Origin == WatchedOrigin.Manual && title.LetterboxdSlug is not null);
+        Assert.Contains(toWatch, item => item.LetterboxdSlug is null);
+        Assert.Contains(toWatch, item => item.LetterboxdSlug is not null);
+        Assert.Equal(
+            (toWatch.Count(item => item.LetterboxdSlug is not null), fromLetterboxd.Count),
+            (dev.LetterboxdWatchlistCount, dev.LetterboxdWatchedCount));
+    }
+
+    [Fact]
     public async Task Favorites_AliceShowsThreeWithASeries_ZoeOne_DevNone()
     {
         var alice = await fixture.UserAsync(Alice);
@@ -313,11 +462,41 @@ public sealed class DevelopmentScenarioSeedTests(SeededDevelopmentFixture fixtur
         var bob = await fixture.UserAsync(Bob);
         var before = await CountEventsAsync(events, dev.Id, alice.Id, bob.Id);
         var templatesBefore = (await templates.HandleAsync(dev.Id)).Items.Count;
+        var movieLists = fixture.Provider.GetRequiredService<IMovieListRepository>();
+        var listsBefore = await movieLists.ListByOwnerAsync(dev.Id);
+        var aliceListsBefore = await movieLists.ListByOwnerAsync(alice.Id);
+        var watchedTitles = fixture.Provider.GetRequiredService<IWatchedTitleRepository>();
+        var watchedBefore = await watchedTitles.ListByOwnerAsync(dev.Id);
+        var savedLists = fixture.Provider.GetRequiredService<ISavedListRepository>();
+        var savedBefore = await savedLists.ListByOwnerAsync(dev.Id);
+        var joinedBefore = await movieLists.ListJoinedAsync(dev.Id);
+        var invitingBefore = await movieLists.ListInvitingAsync(dev.Id);
 
         await fixture.RunSeedAsync();
 
         Assert.Equal(before, await CountEventsAsync(events, dev.Id, alice.Id, bob.Id));
         Assert.Equal(templatesBefore, (await templates.HandleAsync(dev.Id)).Items.Count);
+        Assert.Equal(
+            listsBefore.Select(list => (list.Name, list.Items.Count)),
+            (await movieLists.ListByOwnerAsync(dev.Id)).Select(list => (list.Name, list.Items.Count)));
+        Assert.Equal(
+            watchedBefore.Select(title => (title.TmdbId, title.WatchedAt, title.Rating)),
+            (await watchedTitles.ListByOwnerAsync(dev.Id)).Select(title => (title.TmdbId, title.WatchedAt, title.Rating)));
+        Assert.Equal(
+            listsBefore.Select(list => (list.Name, list.Members.Count, list.Invitations.Count)),
+            (await movieLists.ListByOwnerAsync(dev.Id)).Select(list => (list.Name, list.Members.Count, list.Invitations.Count)));
+        Assert.Equal(
+            joinedBefore.Select(list => (list.Id, list.Items.Count)),
+            (await movieLists.ListJoinedAsync(dev.Id)).Select(list => (list.Id, list.Items.Count)));
+        Assert.Equal(
+            invitingBefore.Select(list => list.Id),
+            (await movieLists.ListInvitingAsync(dev.Id)).Select(list => list.Id));
+        Assert.Equal(
+            savedBefore.Select(list => (list.Id, list.SourceId, list.CreatedAt)),
+            (await savedLists.ListByOwnerAsync(dev.Id)).Select(list => (list.Id, list.SourceId, list.CreatedAt)));
+        Assert.Equal(
+            aliceListsBefore.Select(list => (list.Id, list.Items.Count, list.IsPublic)),
+            (await movieLists.ListByOwnerAsync(alice.Id)).Select(list => (list.Id, list.Items.Count, list.IsPublic)));
         Assert.Empty(fixture.SeedProblems());
     }
 

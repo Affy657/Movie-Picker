@@ -1,0 +1,8 @@
+.status {
+  display: inline-flex;
+  align-items: center;
+}
+
+.status:not(:empty) {
+  margin-right: var(--space-2);
+}

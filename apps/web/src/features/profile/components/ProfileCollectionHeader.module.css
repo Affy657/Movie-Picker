@@ -1,0 +1,24 @@
+.headerRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3-5);
+}
+
+.headerText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.pageTitle {
+  composes: pageTitle from '@/shared/components/typography.module.css';
+  margin: 0;
+  font-size: clamp(var(--font-size-xl), 3vw, var(--font-size-3xl));
+}
+
+.pageSubtitle {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-subtle);
+}

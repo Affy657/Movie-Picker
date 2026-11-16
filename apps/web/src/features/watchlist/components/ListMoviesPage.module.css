@@ -16,6 +16,7 @@
 .headerBlock {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: var(--space-2-5);
   margin-bottom: var(--space-5);
 }
@@ -26,6 +27,12 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--space-3) var(--space-4);
+  align-self: stretch;
+}
+
+.pageHeaderStacked {
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .pageTitleGroup {
@@ -35,9 +42,20 @@
   min-width: 0;
 }
 
+.overline {
+  composes: overline from '@/shared/components/typography.module.css';
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  margin: 0;
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-muted);
+}
+
 .pageTitle {
   composes: pageTitle from '@/shared/components/typography.module.css';
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .pageSubtitle {
@@ -58,6 +76,38 @@
   align-items: center;
   gap: var(--space-2);
   flex-shrink: 0;
+}
+
+.headerActionsStacked {
+  display: flex;
+}
+
+.headerMenu {
+  display: inline-flex;
+}
+
+.headerActionsStacked .headerMenu {
+  margin-left: auto;
+}
+
+.description {
+  max-width: var(--container-xl);
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.progress {
+  align-self: stretch;
+  max-width: var(--container-xs);
+}
+
+.trailingGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 .addPanelOpenWrap {

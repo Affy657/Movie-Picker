@@ -11,9 +11,13 @@ using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
 using MoviePicker.Api.Application.UseCases.FinishedEvents;
 using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using MoviePicker.Api.Application.UseCases.LetterboxdImport;
+using MoviePicker.Api.Application.UseCases.MovieLists;
 using MoviePicker.Api.Application.UseCases.Notifications;
+using MoviePicker.Api.Application.UseCases.PublicLists;
 using MoviePicker.Api.Application.UseCases.RecurringEvents;
+using MoviePicker.Api.Application.UseCases.SavedLists;
 using MoviePicker.Api.Application.UseCases.Shared;
+using MoviePicker.Api.Application.UseCases.UserMovies;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.BackgroundServices;
@@ -297,6 +301,9 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IPushSubscriptionRepository, InMemoryPushSubscriptionRepository>();
             services.AddSingleton<IFollowRepository, InMemoryFollowRepository>();
             services.AddSingleton<IWatchlistRepository, InMemoryWatchlistRepository>();
+            services.AddSingleton<IMovieListRepository, InMemoryMovieListRepository>();
+            services.AddSingleton<IWatchedTitleRepository, InMemoryWatchedTitleRepository>();
+            services.AddSingleton<ISavedListRepository, InMemorySavedListRepository>();
             services.AddSingleton<IUserNotificationRepository, InMemoryUserNotificationRepository>();
             services.AddSingleton<IKofiWebhookLogRepository, InMemoryKofiWebhookLogRepository>();
             services.AddSingleton<INotificationDedupRepository, InMemoryNotificationDedupRepository>();
@@ -349,6 +356,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPushSubscriptionRepository, MongoPushSubscriptionRepository>();
         services.AddScoped<IFollowRepository, MongoFollowRepository>();
         services.AddScoped<IWatchlistRepository, MongoWatchlistRepository>();
+        services.AddScoped<IMovieListRepository, MongoMovieListRepository>();
+        services.AddScoped<IWatchedTitleRepository, MongoWatchedTitleRepository>();
+        services.AddScoped<ISavedListRepository, MongoSavedListRepository>();
         services.AddScoped<IUserNotificationRepository, MongoUserNotificationRepository>();
         services.AddScoped<IKofiWebhookLogRepository, MongoKofiWebhookLogRepository>();
         services.AddScoped<INotificationDedupRepository, MongoNotificationDedupRepository>();
@@ -421,7 +431,15 @@ public static class ServiceCollectionExtensions
 
     private static void RegisterHandlers(IServiceCollection services)
     {
+        services.AddSingleton(LetterboxdSyncBudget.Within(RequestTimeoutPolicies.LongRunningBudget));
         services.AddScoped<LetterboxdWatchlistSynchronizer>();
+        services.AddScoped<LetterboxdWatchedSynchronizer>();
+        services.AddScoped<LetterboxdWatchedWriter>();
+        services.AddScoped<LetterboxdLinkedCounter>();
+        services.AddScoped<MovieListItemFactory>();
+        services.AddScoped<WatchedHistoryReader>();
+        services.AddScoped<ListSourceReader>();
+        services.AddScoped<PublicListReader>();
         services.AddScoped<AvatarPhotoWriter>();
         services.AddScoped<IOAuthProfilePhotoImporter, OAuthProfilePhotoImporter>();
         services.AddScoped<EventAudienceNotifier>();

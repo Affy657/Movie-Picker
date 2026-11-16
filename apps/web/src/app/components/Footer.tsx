@@ -144,8 +144,8 @@ export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>
               </Link>
             </li>
             <li>
-              <Link to={ROUTES.watchlist} className={styles.colLink}>
-                {t('nav.watchlist')}
+              <Link to={ROUTES.lists} className={styles.colLink}>
+                {t('nav.lists')}
               </Link>
             </li>
             <li>

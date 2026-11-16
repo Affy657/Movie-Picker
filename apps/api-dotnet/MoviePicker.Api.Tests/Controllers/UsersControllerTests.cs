@@ -58,7 +58,33 @@ public sealed class UsersControllerTests
         var result = await Controller(null).GetUserStats("cinephile", handler.Object, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
-        handler.Verify(h => h.HandleAsync("cinephile", It.IsAny<CancellationToken>()), Times.Once);
+        handler.Verify(h => h.HandleAsync("cinephile", null, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetUserStats_ForwardsTheViewer()
+    {
+        var handler = new Mock<IGetUserStatsHandler>();
+
+        await Controller("u1").GetUserStats("cinephile", handler.Object, CancellationToken.None);
+
+        handler.Verify(h => h.HandleAsync("cinephile", "u1", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("u1")]
+    public async Task GetUserWatchedMovies_ForwardsHandleViewerAndTake(string? viewerId)
+    {
+        var handler = new Mock<IGetUserWatchedMoviesHandler>();
+        var response = new UserWatchedMoviesResponse { Items = [] };
+        handler
+            .Setup(h => h.HandleAsync("cinephile", viewerId, 12, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
+
+        var result = await Controller(viewerId).GetUserWatchedMovies("cinephile", 12, handler.Object, CancellationToken.None);
+
+        Assert.Same(response, Assert.IsType<OkObjectResult>(result).Value);
     }
 
     [Fact]
@@ -160,7 +186,7 @@ public sealed class UsersControllerTests
             .GetMyWatchedMovies(6, handler.Object, Accessor("u1").Object, CancellationToken.None);
 
         handler.Verify(
-            h => h.HandleAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()),
+            h => h.HandleAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 

@@ -10,6 +10,7 @@
   --table-col-seen: 150px;
   --table-col-score: calc(var(--space-16) + var(--space-2));
   --table-col-kebab: var(--tap-target-min);
+  --table-col-contributor: 140px;
 }
 
 .rows {
@@ -83,6 +84,12 @@
 
 .colHeaderBtnActive {
   color: var(--color-primary-text);
+}
+
+.colHeaderLabel {
+  composes: sectionLabel from '@/shared/components/typography.module.css';
+  color: var(--color-text-subtle);
+  font-size: var(--font-size-2xs);
 }
 
 .row {

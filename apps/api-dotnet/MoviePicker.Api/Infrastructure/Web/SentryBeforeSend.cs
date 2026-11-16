@@ -42,6 +42,13 @@ internal static partial class SentryBeforeSend
         request.QueryString = SensitiveQueryRedaction.RedactQueryString(request.QueryString);
         foreach (var headerName in request.Headers.Keys.Where(IsNotAllowedHeader).ToList())
             request.Headers.Remove(headerName);
+        eventLike.TransactionName = SensitiveQueryRedaction.RedactPath(eventLike.TransactionName);
+        foreach (var (name, value) in eventLike.Tags.ToList())
+        {
+            var redacted = SensitiveQueryRedaction.RedactPath(value);
+            if (!string.Equals(redacted, value, StringComparison.Ordinal))
+                eventLike.SetTag(name, redacted!);
+        }
     }
 
     private static bool IsNotAllowedHeader(string headerName) => !AllowedHeaderNames.Contains(headerName);
@@ -65,16 +72,20 @@ internal static partial class SentryBeforeSend
 
     internal static Breadcrumb? RedactBreadcrumb(Breadcrumb breadcrumb, SentryHint hint)
     {
-        if (breadcrumb.Data is null || !breadcrumb.Data.TryGetValue("url", out var url))
-            return breadcrumb;
-
+        var url = breadcrumb.Data is not null && breadcrumb.Data.TryGetValue("url", out var dataUrl) ? dataUrl : null;
         var redactedUrl = SensitiveQueryRedaction.RedactUrl(url);
-        if (string.Equals(redactedUrl, url, StringComparison.Ordinal))
+        var message = breadcrumb.Message;
+        if (url is not null && message is not null)
+            message = message.Replace(url, redactedUrl, StringComparison.Ordinal);
+        message = SensitiveQueryRedaction.RedactPath(message);
+        if (string.Equals(redactedUrl, url, StringComparison.Ordinal)
+            && string.Equals(message, breadcrumb.Message, StringComparison.Ordinal))
             return breadcrumb;
 
-        var data = new Dictionary<string, string>(breadcrumb.Data) { ["url"] = redactedUrl! };
-        var message = breadcrumb.Message?.Replace(url, redactedUrl, StringComparison.Ordinal) ?? string.Empty;
-        return new Breadcrumb(message, breadcrumb.Type ?? "default", data, breadcrumb.Category, breadcrumb.Level);
+        var data = breadcrumb.Data is null || url is null
+            ? breadcrumb.Data
+            : new Dictionary<string, string>(breadcrumb.Data) { ["url"] = redactedUrl! };
+        return new Breadcrumb(message ?? string.Empty, breadcrumb.Type ?? "default", data, breadcrumb.Category, breadcrumb.Level);
     }
 
     internal static double SampleTrace(string? transactionName)

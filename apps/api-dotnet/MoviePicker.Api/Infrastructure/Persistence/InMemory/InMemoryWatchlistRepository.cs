@@ -40,6 +40,9 @@ public sealed class InMemoryWatchlistRepository : IWatchlistRepository
     public Task<long> CountByUserIdAsync(string userId, CancellationToken ct = default) =>
         Task.FromResult(_store.Values.LongCount(x => x.UserId == userId));
 
+    public Task<long> CountLinkedToLetterboxdAsync(string userId, CancellationToken ct = default) =>
+        Task.FromResult(_store.Values.LongCount(x => x.UserId == userId && !string.IsNullOrEmpty(x.LetterboxdSlug)));
+
     public Task<WatchlistItem?> GetOneAsync(string userId, int tmdbId, MovieMediaType mediaType, CancellationToken ct = default)
     {
         _store.TryGetValue(Key(userId, tmdbId, mediaType), out var item);

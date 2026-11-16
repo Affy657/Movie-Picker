@@ -18,6 +18,7 @@ public sealed class GetWatchlistHandler : IGetWatchlistHandler
 
     public async Task<WatchlistResponse> HandleAsync(
         string userId,
+        bool includeLetterboxd,
         int skip = 0,
         int? take = null,
         CancellationToken ct = default)
@@ -30,7 +31,7 @@ public sealed class GetWatchlistHandler : IGetWatchlistHandler
 
         return new WatchlistResponse
         {
-            Items = items.Select(WatchlistItemResponse.FromDomain).ToList(),
+            Items = items.Select(item => WatchlistItemResponse.FromDomain(item, includeLetterboxd)).ToList(),
             Total = total,
             HasMore = effectiveSkip + items.Count < total
         };

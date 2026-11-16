@@ -35,6 +35,37 @@ public sealed class InMemoryUserNotificationRepositoryTests
     }
 
     [Fact]
+    public async Task DeleteByListAsync_RemovesTheListNotices_ForOneRecipientOrForAll()
+    {
+        await _repo.AddAsync(Mk() with { Type = UserNotificationType.ListInvitation, ListId = "l1", ListName = "Halloween" });
+        await _repo.AddAsync(Mk(userId: "u2") with { Type = UserNotificationType.ListInvitation, ListId = "l1" });
+        await _repo.AddAsync(Mk(userId: "u2") with { Type = UserNotificationType.ListInvitation, ListId = "l2" });
+        await _repo.AddAsync(Mk(userId: "u2"));
+
+        Assert.Equal(1, await _repo.DeleteByListAsync("l1", "u2"));
+        Assert.Equal("Halloween", Assert.Single(await _repo.ListByUserIdAsync("u1")).ListName);
+        Assert.Equal(1, await _repo.DeleteByListAsync("l1"));
+        Assert.Empty(await _repo.ListByUserIdAsync("u1"));
+        Assert.Equal(2, (await _repo.ListByUserIdAsync("u2")).Count);
+    }
+
+    [Fact]
+    public async Task DeleteByListsAsync_RemovesTheNoticesOfEveryGivenList_ForAllRecipients()
+    {
+        await _repo.AddAsync(Mk() with { Type = UserNotificationType.ListInvitation, ListId = "l1" });
+        await _repo.AddAsync(Mk(userId: "u2") with { Type = UserNotificationType.ListInvitation, ListId = "l2" });
+        await _repo.AddAsync(Mk(userId: "u2") with { Type = UserNotificationType.ListInvitation, ListId = "l3" });
+        await _repo.AddAsync(Mk(userId: "u2"));
+
+        Assert.Equal(2, await _repo.DeleteByListsAsync(["l1", "l2", "absent"]));
+        Assert.Empty(await _repo.ListByUserIdAsync("u1"));
+        Assert.Equal(
+            ["l3", null],
+            (await _repo.ListByUserIdAsync("u2")).Select(n => n.ListId).OrderBy(id => id is null));
+        Assert.Equal(0, await _repo.DeleteByListsAsync([]));
+    }
+
+    [Fact]
     public async Task ListByUserIdAsync_RespectsLimit()
     {
         await _repo.AddAsync(Mk());

@@ -23,6 +23,7 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
     private readonly IVoteRepository _votes;
     private readonly ISeenMarkRepository _seenMarks;
     private readonly IMovieRatingRepository _ratings;
+    private readonly IMovieListRepository _lists;
     private readonly TimeProvider _clock;
 
     public GetUserStatsHandler(
@@ -33,6 +34,7 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
         IVoteRepository votes,
         ISeenMarkRepository seenMarks,
         IMovieRatingRepository ratings,
+        IMovieListRepository lists,
         TimeProvider clock)
     {
         _users = users;
@@ -42,14 +44,22 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
         _votes = votes;
         _seenMarks = seenMarks;
         _ratings = ratings;
+        _lists = lists;
         _clock = clock;
     }
 
-    public async Task<UserStatsResponse> HandleAsync(string handle, CancellationToken ct = default)
+    public async Task<UserStatsResponse> HandleAsync(
+        string handle,
+        string? currentUserId = null,
+        CancellationToken ct = default)
     {
         var user = await PublicProfileGuard.RequirePublicUserAsync(_users, handle, ct);
+        var publicListCountTask = _lists.CountPublicByOwnerAsync(user.Id, ct);
+        var participantsTask = _participants.ListByUserIdAsync(user.Id, ParticipantsCap, ct);
+        await Task.WhenAll(publicListCountTask, participantsTask);
+        var publicListCount = (int)await publicListCountTask;
 
-        var participants = await _participants.ListByUserIdAsync(user.Id, ParticipantsCap, ct);
+        var participants = await participantsTask;
         var participantIds = participants.Select(p => p.Id).ToList();
 
         var participantEventIds = participants.Select(p => p.EventId).Distinct().ToList();
@@ -82,6 +92,7 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
             {
                 EventsCreated = createdEvents.Count,
                 EventsJoined = eventsJoined,
+                PublicListCount = publicListCount,
                 CurrentStreakWeeks = currentStreakWeeks,
                 BestStreakWeeks = bestStreakWeeks,
                 DailyActivity = dailyActivity
@@ -114,7 +125,8 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
             VotesCast = votesTask.Result,
             WinningProposals = winningProposals.Count,
             ProposalsAverageRating = proposalsAverageRating,
-            MoviesSeen = seenTask.Result,
+            MoviesSeen = PublicProfileGuard.CanSeeWatched(user, currentUserId) ? seenTask.Result : 0,
+            PublicListCount = publicListCount,
             CurrentStreakWeeks = currentStreakWeeks,
             BestStreakWeeks = bestStreakWeeks,
             FavoriteGenres = favoriteGenres,
