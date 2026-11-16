@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.15.1] - 2026-11-16
+
 ### Changed
 
 - **Les pages s'affichent plus vite à l'ouverture du site** : la page demandée se charge en même temps que l'application au lieu de l'attendre, et la photo d'un profil arrive en priorité. Le bandeau des cookies apparaît d'un léger glissement, sans fondu.
@@ -759,7 +761,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.15.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.15.1...HEAD
+[1.15.1]: https://github.com/Affy657/Movie-Picker/compare/v1.15.0...v1.15.1
 [1.15.0]: https://github.com/Affy657/Movie-Picker/compare/v1.14.0...v1.15.0
 [1.14.0]: https://github.com/Affy657/Movie-Picker/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/Affy657/Movie-Picker/compare/v1.12.1...v1.13.0
