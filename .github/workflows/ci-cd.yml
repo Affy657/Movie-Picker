@@ -13,7 +13,7 @@
 # was never validated. The filter stays useful on PRs, where nothing deploys; on
 # master, minutes are free since the repository went public, and the conclusion of a run must
 # hold for the whole tree, not just the diff of the commit.
-#   - Web lane: lint-web, test-web.
+#   - Web lane: lint-web, test-web-shard (three runners) then test-web (merge + thresholds).
 #   - API lane: lint-api, test-api, test-api-mongo.
 #   - Infra lane: lint-terraform (fmt + validate on `infra/terraform/`).
 #   - Cross-cutting: gitleaks (always), lint-workflows (always), npm/NuGet audit,
@@ -356,12 +356,46 @@ jobs:
             exit 1
           fi
 
-  test-web:
-    name: 🧪 Web tests + coverage
+  # The web suite on three runners at once: on a single 4-vCPU runner it took 3 min 45, the whole
+  # first half of the critical path (Sonar waits for its coverage). Each shard writes a blob report
+  # holding its results and its coverage, with no threshold (`VITEST_COVERAGE_SHARD`, a third of
+  # the files cannot reach them); `test-web` merges the three and applies the thresholds to the
+  # whole, exactly what one run did.
+  test-web-shard:
+    name: 🧪 Web tests (shard ${{ matrix.shard }}/3)
     needs: changes
     if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-web
+      - name: Vitest shard with coverage (blob report)
+        env:
+          VITEST_COVERAGE_SHARD: "1"
+          SHARD: ${{ matrix.shard }}
+        run: pnpm --filter web exec vitest run --coverage --shard="$SHARD/3" --reporter=dot --reporter=blob
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: web-tests-blob-${{ matrix.shard }}
+          path: apps/web/.vitest/blob
+          if-no-files-found: error
+          retention-days: 1
+
+  test-web:
+    name: 🧪 Web tests + coverage
+    needs: [changes, test-web-shard]
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     permissions:
       contents: read
     steps:
@@ -369,13 +403,13 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup-web
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
-          path: .turbo
-          key: turbo-testweb-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            turbo-testweb-${{ runner.os }}-
-      - run: pnpm run test:coverage --filter=web
+          pattern: web-tests-blob-*
+          merge-multiple: true
+          path: apps/web/.vitest/blob
+      - name: Merge the shards, coverage thresholds on the whole suite
+        run: pnpm --filter web exec vitest run --merge-reports .vitest/blob --coverage --reporter=dot
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: coverage-web

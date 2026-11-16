@@ -39,6 +39,7 @@ pnpm-debug.log*
 
 # Testing
 coverage/
+.vitest/
 coverage-unit/
 coverage-mongo/
 .nyc_output/

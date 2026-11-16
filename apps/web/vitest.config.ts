@@ -2,6 +2,8 @@ import path from 'node:path';
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
+const coverageShard = process.env.VITEST_COVERAGE_SHARD === '1';
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -27,7 +29,7 @@ export default defineConfig({
     pool: 'vmForks',
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'html', 'lcov'],
+      reporter: coverageShard ? ['text-summary'] : ['text', 'html', 'lcov'],
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
         'src/**/*.test.{ts,tsx}',
@@ -38,12 +40,14 @@ export default defineConfig({
         'src/shared/analytics/**',
         'src/features/events/components/SpinningWheel.tsx',
       ],
-      thresholds: {
-        statements: 84,
-        lines: 86,
-        functions: 81,
-        branches: 77,
-      },
+      thresholds: coverageShard
+        ? undefined
+        : {
+            statements: 84,
+            lines: 86,
+            functions: 81,
+            branches: 77,
+          },
     },
   },
 });
