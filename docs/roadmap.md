@@ -35,6 +35,16 @@ Rien pour l'instant.
 ## ⏭️ Prochainement
 
 1. `S` **Mesurer ce qui sert** : savoir combien de personnes notent un film, ouvrent un recap, piochent dans leur watchlist ou synchronisent Letterboxd, et à quelle étape décroche celui qui ouvre le lien d'une soirée, inscriptions comprises. Sans ces chiffres, le reste se trie à l'aveugle.
+2. `M` **Bannière de profil** : chacun choisit une image affichée en bandeau en tête de son profil public, au-dessus de l'avatar et du pseudo, pour donner sa couleur à sa page.
+3. `M` **Films de mes soirées** : une liste de tous les films proposés dans les soirées auxquelles on a participé, quel que soit leur proposant, pour retrouver un film croisé un soir sans se rappeler de quelle soirée il venait.
+4. `M` **Films vus sur Movie Picker** : les films vus en soirée sur Movie Picker ont leur propre liste, à part de « Films vus », qui mélange aussi Letterboxd et les films marqués à la main.
+5. `S` **Favori depuis la page d'un film** : un bouton de la page d'un film l'ajoute aux favoris du profil ou l'en retire ; quand les trois places sont prises, on choisit lequel remplacer.
+6. `L` **Plateformes de streaming par compte** : chacun renseigne dans son profil ses abonnements, et une soirée marque disponible un film présent sur la plateforme d'au moins un participant. Un panneau de la soirée liste les plateformes retenues, à cocher ou décocher à la main.
+7. `L` **Groupes d'amis** : un groupe persistant de comptes, réutilisable d'une soirée à l'autre, qui s'invite en un clic dans une soirée et rassemble sur sa page tout ce qui concerne ses membres.
+8. `M` **Classement d'un groupe** : les membres d'un groupe classés selon la note moyenne des films qu'ils ont proposés, pour savoir qui propose les meilleurs films. Dépend des groupes d'amis.
+9. `M` **Soirées d'un groupe** : la page d'un groupe affiche les soirées organisées par ses membres, que chacun rejoint directement depuis Movie Picker sans attendre qu'on lui partage le lien. Dépend des groupes d'amis.
+10. `M` **Déjà vu automatique en soirée** : dans une soirée, un film qui figure dans les films vus d'un participant est marqué « Déjà vu » pour lui, sans qu'il ait à le faire.
+11. `M` **Une seule présentation des listes** : la page des sagas et la page d'une saga reprennent l'allure de Mes listes et de la page d'une liste, pour que toutes les listes, les siennes comme celles enregistrées, se lisent de la même façon.
 
 ---
 
@@ -42,7 +52,6 @@ Rien pour l'instant.
 
 ### La soirée, du vote à la note
 
-- `L` **Plateformes streaming par compte** : chaque utilisateur renseigne ses abonnements dans ses paramètres, et la page d'une soirée affiche les plateformes communes à tous les participants. Les films peuvent être filtrés à celles-ci.
 - `L` **Sondage de disponibilité** : avant de créer une soirée, l'hôte propose plusieurs créneaux à ses follows et chacun coche ses disponibilités. L'hôte retient le créneau final, qui crée la soirée.
 - `L` **Thème imposé par l'hôte** : contrainte de proposition posée par l'hôte (genre, décennie, acteur, réalisateur ou classification d'âge maximale) ; les films qui ne la respectent pas sont refusés avec un message explicite, et la contrainte s'affiche en bannière sur la page soirée.
 - `M` **Proposition de film anonyme** : option de soirée activable par l'hôte ; le nom du proposant n'est plus affiché sur les cartes de films tant que la roue n'a pas été lancée, pour éviter les votes d'affinité plutôt que de goût.
@@ -74,7 +83,6 @@ Rien pour l'instant.
 
 ### Profil et social
 
-- `L` **Cercles d'amis** : groupes persistants d'utilisateurs réutilisables d'une soirée à l'autre ; invitation en un clic de tout le cercle.
 - `M` **Compatibilité ciné** : score de compatibilité avec un ami, calculé sur les films « déjà vu » et les notes en commun.
 - `S` **Statistique : note moyenne des films gagnants** : dans les statistiques du profil public, la moyenne des notes TMDB des films gagnants des soirées auxquelles l'utilisateur a participé.
 - `L` **Badges / achievements** : quatre badges (Organisateur, Cinéphile, Faiseur de rois, Juré assidu), dont le code de calcul a été supprimé ; à concevoir avec un design abouti et réimplémenter.
