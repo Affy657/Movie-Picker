@@ -9,7 +9,7 @@ Le backlog du projet, en flux continu : ce qui est en cours, ce qui vient ensuit
 - **Flux continu** : aucune version planifiée, aucun lot. Chaque entrée se livre seule, sur une branche courte fusionnée dans `master` et mise en production le jour où elle est prête, avec sa propre version calculée à partir du CHANGELOG (voir `AGENTS.md`). Une entrée livrée sort de ce fichier.
 - **Statuts** : la section porte le statut de ses entrées.
   - 🚧 **En cours** : une partie est déjà en ligne et la suite est engagée, typiquement les tranches restantes d'une entrée découpée. Deux entrées au plus : on finit avant d'ouvrir.
-  - ⏭️ **Prochainement** : les entrées à prendre ensuite, numérotées dans l'ordre où elles se prennent. Cinq au plus : au-delà, ce n'est plus un ordre mais une liste de souhaits.
+  - ⏭️ **Prochainement** : les entrées à prendre ensuite, numérotées dans l'ordre où elles se prennent. Pas de plafond : la liste reste triée, et la première entrée est toujours la prochaine prise.
   - 💡 **Backlog** : tout le reste, rangé par thème, l'entrée la plus utile en tête de chaque thème. Ni date ni promesse.
   - ⏸️ **En pause** : commencée ou décidée, puis suspendue volontairement. L'entrée dit pourquoi et ce qui la relancerait.
   - 🗄️ **Rejetée** : une idée qui ne semble plus pertinente au vu de ce que l'application est devenue, mise de côté plutôt que supprimée. L'entrée garde sa description et dit en fin de ligne pourquoi elle a été écartée ; elle ne revient que sur décision explicite.
@@ -43,7 +43,7 @@ Rien pour l'instant.
 7. `L` **Groupes d'amis** : un groupe persistant de comptes, réutilisable d'une soirée à l'autre, qui s'invite en un clic dans une soirée et rassemble sur sa page tout ce qui concerne ses membres.
 8. `M` **Classement d'un groupe** : les membres d'un groupe classés selon la note moyenne des films qu'ils ont proposés, pour savoir qui propose les meilleurs films. Dépend des groupes d'amis.
 9. `M` **Soirées d'un groupe** : la page d'un groupe affiche les soirées organisées par ses membres, que chacun rejoint directement depuis Movie Picker sans attendre qu'on lui partage le lien. Dépend des groupes d'amis.
-10. `M` **Déjà vu automatique en soirée** : dans une soirée, un film qui figure dans les films vus d'un participant est marqué « Déjà vu » pour lui, sans qu'il ait à le faire.
+10. `M` **Déjà vu automatique en soirée** : dans une soirée, un film qui figure dans les films vus d'un participant est marqué « Déjà vu » pour lui, sans qu'il ait à le faire. Seulement pour qui a rendu ses films vus visibles, pour ne rien dévoiler d'une liste privée.
 11. `M` **Une seule présentation des listes** : la page des sagas et la page d'une saga reprennent l'allure de Mes listes et de la page d'une liste, pour que toutes les listes, les siennes comme celles enregistrées, se lisent de la même façon.
 
 ---
