@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router';
 import { QueryClientWrapper } from '@/test-utils/queryWrapper';
 import { LocaleProvider } from '@/shared/i18n';
 import CreateEventDialog from './CreateEventDialog';
@@ -117,6 +117,16 @@ function LocationProbe() {
 
 const onClose = vi.fn();
 
+let goTo: (path: string) => void = () => undefined;
+
+function NavigatorProbe() {
+  const navigate = useNavigate();
+  goTo = (path) => {
+    void navigate(path);
+  };
+  return null;
+}
+
 function renderDialog(props: Partial<Parameters<typeof CreateEventDialog>[0]> = {}) {
   return render(
     <QueryClientWrapper>
@@ -129,6 +139,7 @@ function renderDialog(props: Partial<Parameters<typeof CreateEventDialog>[0]> = 
                 <>
                   <CreateEventDialog open onClose={onClose} {...props} />
                   <LocationProbe />
+                  <NavigatorProbe />
                 </>
               }
             />
@@ -411,6 +422,32 @@ describe('CreateEventDialog', () => {
       expect(screen.queryByRole('textbox', { name: 'Thème' })).not.toBeInTheDocument();
       await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
       await waitFor(() => expect(configBody().theme).toBe(''));
+    });
+  });
+
+  describe('page change', () => {
+    it('closes the form when the page changes behind it', async () => {
+      renderDialog();
+      expect(formDialog()).toBeInTheDocument();
+
+      act(() => goTo('/explorer'));
+
+      await waitFor(() => expect(onClose).toHaveBeenCalled());
+    });
+
+    it('stays open while the night is created and until its link is handed over', async () => {
+      const user = userEvent.setup();
+      const finish = holdCreation();
+      renderDialog();
+
+      await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
+      act(() => goTo('/explorer'));
+      expect(onClose).not.toHaveBeenCalled();
+
+      await act(async () => finish());
+      expect(await screen.findByRole('dialog', { name: 'Soirée créée' })).toBeInTheDocument();
+      act(() => goTo('/mes-soirees'));
+      expect(onClose).not.toHaveBeenCalled();
     });
   });
 
