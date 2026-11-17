@@ -8,12 +8,14 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 interface PendingEventsSectionProps {
   events: MyEventSummary[];
   onCloseWithoutMovie: (slug: string) => void;
+  onFinishNight: (slug: string) => void;
   closingSlug: string | null;
 }
 
 export default function PendingEventsSection({
   events,
   onCloseWithoutMovie,
+  onFinishNight,
   closingSlug,
 }: Readonly<PendingEventsSectionProps>) {
   const { t } = useTranslation();
@@ -32,6 +34,7 @@ export default function PendingEventsSection({
             key={ev.id}
             event={ev}
             onCloseWithoutMovie={ev.isCreator ? () => onCloseWithoutMovie(ev.slug) : undefined}
+            onFinishNight={ev.isCreator ? () => onFinishNight(ev.slug) : undefined}
             closing={closingSlug === ev.slug}
           />
         ))}

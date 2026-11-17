@@ -61,6 +61,40 @@ describe('PendingEventCard', () => {
     expect(screen.getByRole('button', { name: 'Clôturer sans film' })).toBeInTheDocument();
   });
 
+  it('on a night with films drawn and more to draw, offers the next draw and to end it', () => {
+    const onFinishNight = vi.fn();
+    render(
+      <MemoryRouter>
+        <LocaleProvider>
+          <PendingEventCard
+            event={{
+              ...pending,
+              winnerMovies: [
+                { title: 'Matrix', posterPath: null },
+                { title: 'Alien', posterPath: null },
+              ],
+            }}
+            onCloseWithoutMovie={() => {}}
+            onFinishNight={onFinishNight}
+          />
+        </LocaleProvider>
+      </MemoryRouter>
+    );
+
+    expect(
+      screen.getByText(
+        '2 films sont tirés, il en reste à tirer : tirez le suivant ou terminez la soirée.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Tirer un film de plus' })).toHaveAttribute(
+      'href',
+      '/e/cine-club'
+    );
+    expect(screen.queryByRole('button', { name: 'Clôturer sans film' })).not.toBeInTheDocument();
+    screen.getByRole('button', { name: 'Terminer la soirée' }).click();
+    expect(onFinishNight).toHaveBeenCalledOnce();
+  });
+
   it('on mobile, shortens the closing notice and the countdown so each line holds', () => {
     vi.mocked(useIsMobile).mockReturnValue(true);
     renderCard();
