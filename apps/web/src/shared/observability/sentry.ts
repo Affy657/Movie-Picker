@@ -109,7 +109,10 @@ async function loadAndInit(dsn: string): Promise<void> {
 export function initSentry(): Promise<void> {
   const dsn = import.meta.env.VITE_SENTRY_DSN;
   if (api || !dsn || !import.meta.env.PROD) return Promise.resolve();
-  loading ??= loadAndInit(dsn);
+  loading ??= loadAndInit(dsn).catch((error: unknown) => {
+    loading = null;
+    throw error;
+  });
   return loading;
 }
 
@@ -146,9 +149,7 @@ function whenUserInteractsOrAfter(delayMs: number, callback: () => void): void {
 
 export function scheduleSentryStart(): void {
   const start = (): void => {
-    initSentry().catch(() => {
-      loading = null;
-    });
+    initSentry().catch(() => undefined);
   };
   whenPageIsLoaded(() =>
     whenUserInteractsOrAfter(START_DELAY_AFTER_LOAD_MS, () => whenMainThreadIsIdle(start))
