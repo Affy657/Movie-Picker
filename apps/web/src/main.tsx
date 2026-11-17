@@ -3,12 +3,11 @@ import { createRoot } from 'react-dom/client';
 import { startPwaInstallRuntime } from '@/shared/hooks/usePwaInstall';
 import { showBootFailure } from '@/shared/pwa/bootFailure';
 import { captureMovedOriginMarker } from '@/shared/pwa/movedOrigin';
-import { reloadOnStaleBuild } from '@/shared/pwa/staleBuildReload';
+import { reloadIfStaleBuild } from '@/shared/pwa/staleBuildReload';
 import { captureException, scheduleSentryStart } from '@/shared/observability/sentry';
 import { loadLocale, preferredLocale } from '@/shared/i18n';
 import './index.css';
 
-reloadOnStaleBuild();
 startPwaInstallRuntime();
 captureMovedOriginMarker(window.location, (url) =>
   window.history.replaceState(window.history.state, '', url)
@@ -51,6 +50,7 @@ function boot(): void {
     .catch((error: unknown) => {
       captureException(error);
       showBootFailure(document.getElementById('root'), preferredLocale());
+      reloadIfStaleBuild(error);
     })
     .finally(() => {
       hideSplash();

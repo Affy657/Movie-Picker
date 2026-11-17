@@ -4,12 +4,13 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
 import { LocaleProvider } from '@/shared/i18n';
-import { reloadForFreshBuild } from '@/shared/pwa/staleBuildReload';
+import { reloadForFreshBuild, reloadIfStaleBuild } from '@/shared/pwa/staleBuildReload';
 import type { ReactNode } from 'react';
 
 vi.mock('@/shared/pwa/staleBuildReload', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/shared/pwa/staleBuildReload')>()),
   reloadForFreshBuild: vi.fn(),
+  reloadIfStaleBuild: vi.fn(),
 }));
 
 function Bomb({ fail }: { fail: boolean }) {
@@ -52,6 +53,22 @@ describe('ErrorBoundary', () => {
     );
     await user.click(screen.getByRole('button', { name: /réessayer/i }));
     expect(screen.getByText(/tout va bien/i)).toBeInTheDocument();
+  });
+
+  it('asks for a reload as soon as the chunk of the page is gone', () => {
+    vi.mocked(reloadIfStaleBuild).mockClear();
+    const missing = new TypeError('Failed to fetch dynamically imported module: /assets/Page.js');
+    function MissingChunk(): never {
+      throw missing;
+    }
+
+    render(
+      <BoundaryHarness>
+        <MissingChunk />
+      </BoundaryHarness>
+    );
+
+    expect(reloadIfStaleBuild).toHaveBeenCalledWith(missing);
   });
 
   it('reloads on a failed chunk, React.lazy would only rethrow the same rejection', async () => {
