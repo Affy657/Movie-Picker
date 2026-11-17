@@ -7,9 +7,12 @@
  *
  *   node scripts/rollback-front-firebase.mjs --site <site-id> [--commit <sha>]
  *
- * Without `--commit`, the target is the version released before the one currently served. The
- * chosen commit is written to `GITHUB_OUTPUT` (`sha`) when the pipeline runs it, so that the
- * Sentry deploy is recorded on the release of origin. The choice itself is pure and tested by
+ * Without `--commit`, the target is the deployed version created last before the one currently
+ * served. Creation time, not release time: a rollback is itself a release, so after a first one
+ * the version it just stepped back from sits right under the head of the list, and a second run
+ * (to step back further, or a rerun) took it and served it again with a green run. The chosen
+ * commit is written to `GITHUB_OUTPUT` (`sha`) when the pipeline runs it, so that the Sentry
+ * deploy is recorded on the release of origin. The choice itself is pure and tested by
  * `scripts/rollback-front-firebase.test.mjs`.
  */
 import { appendFileSync } from 'node:fs';
@@ -36,7 +39,7 @@ function gcloud(args) {
   return result.status === 0 ? result.stdout.trim() : '';
 }
 
-export function pickRollbackTarget(deployed, currentVersion, commit) {
+export function pickRollbackTarget(deployed, served, commit) {
   if (commit) {
     const matches = deployed.filter((r) => r.commit.startsWith(commit));
     const commits = new Set(matches.map((r) => r.commit));
@@ -47,11 +50,22 @@ export function pickRollbackTarget(deployed, currentVersion, commit) {
     }
     return { target: matches[0] };
   }
-  const target = deployed.find((r) => r.version !== currentVersion);
-  if (!target) {
+  const servedCreated = Date.parse(served?.created ?? '');
+  if (Number.isNaN(servedCreated)) {
     return {
       error:
-        'Only one deployed version has ever been released, the one being served: nothing older to serve. Give a commit or redeploy.',
+        'The served release names no version with a creation time: which deployed version is older cannot be told. Give a --commit.',
+    };
+  }
+  const target = deployed
+    .filter((r) => r.version !== served.version && Date.parse(r.created) < servedCreated)
+    .reduce(
+      (best, r) => (!best || Date.parse(r.created) > Date.parse(best.created) ? r : best),
+      null
+    );
+  if (!target) {
+    return {
+      error: `No deployed version was created before ${served.version}, the one being served: nothing older to serve. Give a --commit or redeploy.`,
     };
   }
   return { target };
@@ -91,17 +105,26 @@ async function main() {
     .map((release) => ({
       time: release.releaseTime,
       version: release.version.name,
+      created: release.version.createTime ?? '',
       commit: release.version.labels.commit,
       run: release.version.labels.run_id ?? '',
     }));
   if (deployed.length === 0)
     fail('No release of a version labelled by deploy.yml: nothing to serve again.');
 
-  console.log('Releases of deployed versions (most recent first):');
+  console.log(
+    'Releases of deployed versions (most recent first, with the creation of the version):'
+  );
   for (const r of deployed)
-    console.log(`  ${r.time}  ${r.commit.slice(0, 8)}  run ${r.run}  ${r.version}`);
+    console.log(
+      `  ${r.time}  ${r.commit.slice(0, 8)}  run ${r.run}  ${r.version}  created ${r.created}`
+    );
 
-  const { target, error } = pickRollbackTarget(deployed, releases[0]?.version?.name, commit);
+  const served = {
+    version: releases[0]?.version?.name,
+    created: releases[0]?.version?.createTime ?? '',
+  };
+  const { target, error } = pickRollbackTarget(deployed, served, commit);
   if (error) fail(error);
 
   const release = await call(
