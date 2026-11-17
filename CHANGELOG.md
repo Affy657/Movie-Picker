@@ -10,7 +10,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Changed
 
-- **Une soirée à plusieurs films reste ouverte jusqu'au dernier tirage** : passé l'heure de la soirée, l'hôte peut encore tirer les films suivants, la soirée n'est plus annoncée en suspens quand un film est déjà choisi, et « Terminer la soirée » la clôt avec les films déjà tirés. Le film tiré compte comme vu dès la fin de la soirée.
+- **Une soirée à plusieurs films reste ouverte jusqu'au dernier tirage** : passé l'heure de la soirée, l'hôte peut encore tirer les films suivants, la soirée n'est plus annoncée en suspens quand un film est déjà choisi, et « Terminer la soirée », sur la soirée ou dans À traiter de Mes soirées, la clôt avec les films déjà tirés. Le film tiré compte comme vu dès la fin de la soirée.
 - **Vos propositions gagnantes suivent la confidentialité de vos films vus** : quand vos films vus sont privés, les autres membres ne voient plus vos propositions gagnantes, ni leur nombre, ni leur note moyenne.
 - **Un film ajouté à une liste ou marqué comme vu prend le titre, l'année, la note et la durée de TMDB**, y compris les films vus importés depuis Letterboxd.
 
