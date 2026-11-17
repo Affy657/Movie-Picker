@@ -23,6 +23,9 @@ public sealed class MongoMovieListRepository : IMovieListRepository
     private const string MemberUserIdField = "members.userId";
     private const string InvitationUserIdField = "invitations.userId";
     private const string InviteTokenField = "inviteLink.token";
+    private const string FilterOperator = "$filter";
+    private const string InputField = "input";
+    private const string IfNullOperator = "$ifNull";
 
     private static readonly FilterDefinitionBuilder<MovieListDocument> Filter = Builders<MovieListDocument>.Filter;
     private static readonly UpdateDefinitionBuilder<MovieListDocument> Update = Builders<MovieListDocument>.Update;
@@ -423,9 +426,9 @@ public sealed class MongoMovieListRepository : IMovieListRepository
 
     private static FilterDefinition<MovieListDocument> SeatsLeft(int maxSeats, DateTimeOffset now)
     {
-        var pendingInvitations = new BsonDocument("$filter", new BsonDocument
+        var pendingInvitations = new BsonDocument(FilterOperator, new BsonDocument
         {
-            { "input", new BsonDocument("$ifNull", new BsonArray { "$invitations", new BsonArray() }) },
+            { InputField, new BsonDocument(IfNullOperator, new BsonArray { "$invitations", new BsonArray() }) },
             { "as", "invitation" },
             { "cond", new BsonDocument("$gt", new BsonArray { "$$invitation.invitedAt", LatestLapsedAt(now) }) }
         });
@@ -456,9 +459,9 @@ public sealed class MongoMovieListRepository : IMovieListRepository
 
     private static UpdateDefinition<MovieListDocument> ReplacingInvitationOf(ObjectId user, MovieListInvitation invitation)
     {
-        var otherInvitations = new BsonDocument("$filter", new BsonDocument
+        var otherInvitations = new BsonDocument(FilterOperator, new BsonDocument
         {
-            { "input", new BsonDocument("$ifNull", new BsonArray { "$invitations", new BsonArray() }) },
+            { InputField, new BsonDocument(IfNullOperator, new BsonArray { "$invitations", new BsonArray() }) },
             { "as", "invitation" },
             { "cond", new BsonDocument("$ne", new BsonArray { "$$invitation.userId", user }) }
         });
@@ -472,7 +475,7 @@ public sealed class MongoMovieListRepository : IMovieListRepository
     }
 
     private static BsonDocument SizeOf(string field) =>
-        new("$size", new BsonDocument("$ifNull", new BsonArray { "$" + field, new BsonArray() }));
+        new("$size", new BsonDocument(IfNullOperator, new BsonArray { "$" + field, new BsonArray() }));
 
     private static UpdateDefinition<MovieListDocument> PullInvitation(string userId) =>
         Update.PullFilter(x => x.Invitations, invitation => invitation.UserId == userId);
@@ -482,9 +485,9 @@ public sealed class MongoMovieListRepository : IMovieListRepository
 
     private static UpdateDefinition<MovieListDocument> WithoutMember(ObjectId user, bool disableInviteLink)
     {
-        var otherMembers = new BsonDocument("$filter", new BsonDocument
+        var otherMembers = new BsonDocument(FilterOperator, new BsonDocument
         {
-            { "input", "$members" },
+            { InputField, "$members" },
             { "as", "member" },
             { "cond", new BsonDocument("$ne", new BsonArray { "$$member.userId", user }) }
         });
@@ -517,16 +520,16 @@ public sealed class MongoMovieListRepository : IMovieListRepository
             new BsonArray { "$ownerId" },
             new BsonDocument("$slice", new BsonArray
             {
-                new BsonDocument("$ifNull", new BsonArray { "$members.userId", new BsonArray() }),
+                new BsonDocument(IfNullOperator, new BsonArray { "$members.userId", new BsonArray() }),
                 MovieList.MemberPreviewCount - 1
             })
         });
 
     private static BsonDocument RecentPostersExpression()
     {
-        var withPoster = new BsonDocument("$filter", new BsonDocument
+        var withPoster = new BsonDocument(FilterOperator, new BsonDocument
         {
-            { "input", "$items.posterPath" },
+            { InputField, "$items.posterPath" },
             { "as", "poster" },
             { "cond", new BsonDocument("$gt", new BsonArray { "$$poster", string.Empty }) }
         });
@@ -540,7 +543,7 @@ public sealed class MongoMovieListRepository : IMovieListRepository
     private static BsonDocument TitlesExpression() =>
         new("$map", new BsonDocument
         {
-            { "input", "$items" },
+            { InputField, "$items" },
             { "as", "item" },
             { "in", new BsonDocument { { "tmdbId", "$$item.tmdbId" }, { "mediaType", "$$item.mediaType" } } }
         });
