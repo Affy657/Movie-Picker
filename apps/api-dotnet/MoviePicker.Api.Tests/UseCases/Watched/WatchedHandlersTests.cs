@@ -88,6 +88,7 @@ public sealed class MarkWatchedHandlerTests
         _kit.Tmdb
             .Setup(t => t.GetDetailsAsync(550, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TmdbMovieDetails(550, "Fight Club", null, null, null, [], 139, [], DetailGenres, "1999-10-15", VoteAverage: 8.4));
+        await _kit.AccountAsync(Me);
 
         await _kit.MarkHandler().HandleAsync(
             Me,
