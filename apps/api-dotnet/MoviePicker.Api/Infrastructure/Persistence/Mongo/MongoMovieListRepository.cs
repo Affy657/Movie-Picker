@@ -111,13 +111,14 @@ public sealed class MongoMovieListRepository : IMovieListRepository
     public async Task<IReadOnlySet<string>> ListPendingInvitationIdsAsync(
         string userId,
         IReadOnlyCollection<string> listIds,
+        DateTimeOffset now,
         CancellationToken ct = default)
     {
         var validIds = listIds.Where(MongoObjectIds.IsValid).Distinct(StringComparer.Ordinal).ToList();
         if (validIds.Count == 0 || !MongoObjectIds.IsValid(userId))
             return new HashSet<string>(StringComparer.Ordinal);
 
-        var filter = Filter.In(x => x.Id, validIds) & Filter.Eq(InvitationUserIdField, ObjectId.Parse(userId));
+        var filter = Filter.In(x => x.Id, validIds) & PendingInvitationOf(ObjectId.Parse(userId), now);
         var ids = await _collection.Find(filter).Project(x => x.Id).ToListAsync(ct);
         return ids.ToHashSet(StringComparer.Ordinal);
     }
@@ -284,8 +285,11 @@ public sealed class MongoMovieListRepository : IMovieListRepository
             return Task.FromResult(false);
 
         var user = ObjectId.Parse(invitation.UserId);
-        var filter = byId & Outsider(user) & Filter.Ne(InvitationUserIdField, user) & SeatsLeft(maxSeats);
-        return ModifyAsync(filter, Update.Push(x => x.Invitations, ToDocument(invitation)), ct);
+        var filter = byId
+            & Outsider(user)
+            & NoPendingInvitationOf(user, invitation.InvitedAt)
+            & SeatsLeft(maxSeats, invitation.InvitedAt);
+        return ModifyAsync(filter, ReplacingInvitationOf(user, invitation), ct);
     }
 
     public Task<bool> RemoveInvitationAsync(string listId, string userId, CancellationToken ct = default)
@@ -304,7 +308,7 @@ public sealed class MongoMovieListRepository : IMovieListRepository
 
         var user = ObjectId.Parse(member.UserId);
         var update = Update.Combine(PullInvitation(member.UserId), Update.Push(x => x.Members, ToDocument(member)));
-        return ModifyAsync(byId & Filter.Eq(InvitationUserIdField, user), update, ct);
+        return ModifyAsync(byId & PendingInvitationOf(user, member.JoinedAt), update, ct);
     }
 
     public Task<bool> JoinByInviteTokenAsync(
@@ -322,7 +326,7 @@ public sealed class MongoMovieListRepository : IMovieListRepository
             & Filter.Eq("inviteLink.disabled", false)
             & Filter.Gt("inviteLink.expiresAt", now.UtcDateTime)
             & Outsider(user)
-            & (Filter.Eq(InvitationUserIdField, user) | SeatsLeft(maxSeats));
+            & (PendingInvitationOf(user, now) | SeatsLeft(maxSeats, now));
         var update = Update.Combine(PullInvitation(member.UserId), Update.Push(x => x.Members, ToDocument(member)));
         return ModifyAsync(filter, update, ct);
     }
@@ -417,10 +421,54 @@ public sealed class MongoMovieListRepository : IMovieListRepository
     private static FilterDefinition<MovieListDocument> Outsider(ObjectId user) =>
         Filter.Ne(OwnerIdField, user) & Filter.Ne(MemberUserIdField, user);
 
-    private static FilterDefinition<MovieListDocument> SeatsLeft(int maxSeats)
+    private static FilterDefinition<MovieListDocument> SeatsLeft(int maxSeats, DateTimeOffset now)
     {
-        var seatsTaken = new BsonDocument("$add", new BsonArray { 1, SizeOf("members"), SizeOf("invitations") });
+        var pendingInvitations = new BsonDocument("$filter", new BsonDocument
+        {
+            { "input", new BsonDocument("$ifNull", new BsonArray { "$invitations", new BsonArray() }) },
+            { "as", "invitation" },
+            { "cond", new BsonDocument("$gt", new BsonArray { "$$invitation.invitedAt", LatestLapsedAt(now) }) }
+        });
+        var seatsTaken = new BsonDocument("$add", new BsonArray
+        {
+            1,
+            SizeOf("members"),
+            new BsonDocument("$size", pendingInvitations)
+        });
         return new BsonDocument("$expr", new BsonDocument("$lt", new BsonArray { seatsTaken, maxSeats }));
+    }
+
+    private static BsonDocument PendingInvitationMatch(ObjectId user, DateTimeOffset now) =>
+        new("$elemMatch", new BsonDocument
+        {
+            { "userId", user },
+            { "invitedAt", new BsonDocument("$gt", LatestLapsedAt(now)) }
+        });
+
+    private static FilterDefinition<MovieListDocument> PendingInvitationOf(ObjectId user, DateTimeOffset now) =>
+        new BsonDocument("invitations", PendingInvitationMatch(user, now));
+
+    private static FilterDefinition<MovieListDocument> NoPendingInvitationOf(ObjectId user, DateTimeOffset now) =>
+        new BsonDocument("invitations", new BsonDocument("$not", PendingInvitationMatch(user, now)));
+
+    private static BsonDateTime LatestLapsedAt(DateTimeOffset now) =>
+        new(MovieListInvitation.LatestLapsedAt(now).UtcDateTime);
+
+    private static UpdateDefinition<MovieListDocument> ReplacingInvitationOf(ObjectId user, MovieListInvitation invitation)
+    {
+        var otherInvitations = new BsonDocument("$filter", new BsonDocument
+        {
+            { "input", new BsonDocument("$ifNull", new BsonArray { "$invitations", new BsonArray() }) },
+            { "as", "invitation" },
+            { "cond", new BsonDocument("$ne", new BsonArray { "$$invitation.userId", user }) }
+        });
+        var invitations = new BsonDocument("$concatArrays", new BsonArray
+        {
+            otherInvitations,
+            new BsonArray { ToDocument(invitation).ToBsonDocument() }
+        });
+        BsonDocument[] stages = [new("$set", new BsonDocument("invitations", invitations))];
+        return Update.Pipeline(PipelineDefinition<MovieListDocument, MovieListDocument>.Create(stages));
     }
 
     private static BsonDocument SizeOf(string field) =>

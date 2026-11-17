@@ -32,6 +32,8 @@ internal sealed class WatchedTestKit
 
     public InMemoryWatchlistRepository Watchlist { get; } = new();
 
+    public InMemoryUserRepository Users { get; } = new();
+
     public InMemoryParticipantRepository Participants { get; } = new();
 
     public InMemoryEventRepository Events { get; } = new();
@@ -50,7 +52,13 @@ internal sealed class WatchedTestKit
 
     public MovieListItemFactory Facts => new(Posters.Object, Tmdb.Object, NullLogger<MovieListItemFactory>.Instance);
 
-    public MarkWatchedHandler MarkHandler() => new(Watched, Watchlist, Facts, History, Clock);
+    public MarkWatchedHandler MarkHandler() => new(Watched, Watchlist, Users, Facts, History, Clock);
+
+    public async Task AccountAsync(string id)
+    {
+        if (await Users.GetByIdAsync(id) is null)
+            await Users.AddAsync(new User { Id = id, Email = $"{id}@test.local", CreatedAt = Start, UpdatedAt = Start });
+    }
 
     public GetWatchedStatusHandler StatusHandler() => new(History);
 
@@ -58,12 +66,15 @@ internal sealed class WatchedTestKit
 
     public UnmarkWatchedHandler UnmarkHandler() => new(Watched);
 
-    public Task<WatchedStatusResponse> MarkAsync(
+    public async Task<WatchedStatusResponse> MarkAsync(
         int tmdbId,
         int? rating = null,
         MovieMediaType mediaType = MovieMediaType.Movie,
-        string owner = Me) =>
-        MarkHandler().HandleAsync(owner, Title(tmdbId, rating: rating, mediaType: mediaType));
+        string owner = Me)
+    {
+        await AccountAsync(owner);
+        return await MarkHandler().HandleAsync(owner, Title(tmdbId, rating: rating, mediaType: mediaType));
+    }
 
     public Task<WatchedStatusResponse> StatusAsync(
         int tmdbId,

@@ -34,9 +34,12 @@ public sealed record MovieList
 
     public int MemberCount => Members.Count + 1;
 
-    public int SeatsTaken => MemberCount + Invitations.Count;
+    public IEnumerable<MovieListInvitation> PendingInvitations(DateTimeOffset now) =>
+        Invitations.Where(invitation => invitation.IsPending(now));
 
-    public bool IsFull => SeatsTaken >= MaxMembers;
+    public int SeatsTaken(DateTimeOffset now) => MemberCount + PendingInvitations(now).Count();
+
+    public bool IsFull(DateTimeOffset now) => SeatsTaken(now) >= MaxMembers;
 
     public MovieListRole? RoleOf(string userId)
     {
@@ -45,7 +48,10 @@ public sealed record MovieList
         return Members.Any(member => member.UserId == userId) ? MovieListRole.Member : null;
     }
 
-    public bool IsInvited(string userId) => Invitations.Any(invitation => invitation.UserId == userId);
+    public bool IsInvited(string userId, DateTimeOffset now) =>
+        PendingInvitations(now).Any(invitation => invitation.UserId == userId);
+
+    public bool HoldsInvitationOf(string userId) => Invitations.Any(invitation => invitation.UserId == userId);
 
     public string AuthorOf(MovieListItem item) =>
         string.IsNullOrEmpty(item.AddedByUserId) ? OwnerId : item.AddedByUserId;

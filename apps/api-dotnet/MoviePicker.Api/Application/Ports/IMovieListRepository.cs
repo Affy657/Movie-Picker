@@ -19,6 +19,7 @@ public interface IMovieListRepository
     Task<IReadOnlySet<string>> ListPendingInvitationIdsAsync(
         string userId,
         IReadOnlyCollection<string> listIds,
+        DateTimeOffset now,
         CancellationToken ct = default);
 
     Task<long> CountByOwnerAsync(string ownerId, CancellationToken ct = default);

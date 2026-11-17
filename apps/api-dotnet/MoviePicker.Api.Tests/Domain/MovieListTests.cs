@@ -93,8 +93,8 @@ public sealed class MovieListTests
         Assert.Equal(MovieListRole.Member, list.RoleOf("sam"));
         Assert.Null(list.RoleOf("zoe"));
         Assert.Null(list.RoleOf("stranger"));
-        Assert.True(list.IsInvited("zoe"));
-        Assert.False(list.IsInvited("sam"));
+        Assert.True(list.IsInvited("zoe", InvitedAt));
+        Assert.False(list.IsInvited("sam", InvitedAt));
     }
 
     [Fact]
@@ -112,8 +112,8 @@ public sealed class MovieListTests
         var list = Shared(members: ["lea", "sam"], invited: ["zoe"]);
 
         Assert.Equal(3, list.MemberCount);
-        Assert.Equal(4, list.SeatsTaken);
-        Assert.False(list.IsFull);
+        Assert.Equal(4, list.SeatsTaken(InvitedAt));
+        Assert.False(list.IsFull(InvitedAt));
     }
 
     [Fact]
@@ -122,9 +122,28 @@ public sealed class MovieListTests
         var members = Enumerable.Range(1, 15).Select(index => $"m{index}").ToArray();
         var invited = Enumerable.Range(1, 4).Select(index => $"i{index}").ToArray();
 
-        Assert.False(Shared(members: members, invited: invited[..3]).IsFull);
-        Assert.True(Shared(members: members, invited: invited).IsFull);
-        Assert.Equal(MovieList.MaxMembers, Shared(members: members, invited: invited).SeatsTaken);
+        Assert.False(Shared(members: members, invited: invited[..3]).IsFull(InvitedAt));
+        Assert.True(Shared(members: members, invited: invited).IsFull(InvitedAt));
+        Assert.Equal(MovieList.MaxMembers, Shared(members: members, invited: invited).SeatsTaken(InvitedAt));
+    }
+
+    [Fact]
+    public void AnInvitation_LapsesWithItsNotification_AndThenNeitherHoldsASeatNorCountsAsInvited()
+    {
+        var members = Enumerable.Range(1, 15).Select(index => $"m{index}").ToArray();
+        var invited = Enumerable.Range(1, 4).Select(index => $"i{index}").ToArray();
+        var list = Shared(members: members, invited: invited);
+        var lastPendingMoment = InvitedAt + UserNotification.Lifetime - TimeSpan.FromMilliseconds(1);
+        var lapsed = InvitedAt + UserNotification.Lifetime;
+
+        Assert.Equal(TimeSpan.FromDays(90), MovieListInvitation.Lifetime);
+        Assert.True(list.IsInvited("i1", lastPendingMoment));
+        Assert.True(list.IsFull(lastPendingMoment));
+        Assert.False(list.IsInvited("i1", lapsed));
+        Assert.False(list.IsFull(lapsed));
+        Assert.Equal(16, list.SeatsTaken(lapsed));
+        Assert.Empty(list.PendingInvitations(lapsed));
+        Assert.Equal(invited, list.PendingInvitations(lastPendingMoment).Select(invitation => invitation.UserId));
     }
 
     [Fact]
@@ -157,16 +176,15 @@ public sealed class MovieListTests
         Assert.False(Shared().AcceptsInviteToken("token", now));
     }
 
-    private static MovieList Shared(string[]? members = null, string[]? invited = null)
-    {
-        var at = new DateTimeOffset(2026, 11, 1, 20, 0, 0, TimeSpan.Zero);
-        return new MovieList
+    private static readonly DateTimeOffset InvitedAt = new(2026, 11, 1, 20, 0, 0, TimeSpan.Zero);
+
+    private static MovieList Shared(string[]? members = null, string[]? invited = null) =>
+        new()
         {
             OwnerId = "owner",
-            Members = [.. (members ?? []).Select((id, index) => new MovieListMember(id, at.AddMinutes(index)))],
-            Invitations = [.. (invited ?? []).Select(id => new MovieListInvitation(id, at))]
+            Members = [.. (members ?? []).Select((id, index) => new MovieListMember(id, InvitedAt.AddMinutes(index)))],
+            Invitations = [.. (invited ?? []).Select(id => new MovieListInvitation(id, InvitedAt))]
         };
-    }
 
     private static MovieListItem Item(int tmdbId, string? poster) =>
         new() { TmdbId = tmdbId, Title = $"Film {tmdbId}", PosterPath = poster };

@@ -1,6 +1,7 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.MovieLists;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Application.UseCases.UserMovies;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -12,13 +13,20 @@ public sealed class SaveListHandler : ISaveListHandler
     private readonly ISavedListRepository _saved;
     private readonly ListSourceReader _sources;
     private readonly WatchedHistoryReader _history;
+    private readonly IUserRepository _users;
     private readonly TimeProvider _clock;
 
-    public SaveListHandler(ISavedListRepository saved, ListSourceReader sources, WatchedHistoryReader history, TimeProvider clock)
+    public SaveListHandler(
+        ISavedListRepository saved,
+        ListSourceReader sources,
+        WatchedHistoryReader history,
+        IUserRepository users,
+        TimeProvider clock)
     {
         _saved = saved;
         _sources = sources;
         _history = history;
+        _users = users;
         _clock = clock;
     }
 
@@ -35,6 +43,7 @@ public sealed class SaveListHandler : ISaveListHandler
             throw Errors.SavedListLimitReached(SavedList.MaxPerOwner);
 
         var fallbackName = memberList?.Name ?? await _sources.RequireFallbackNameAsync(source, ct);
+        await _users.RequireAccountAsync(userId, ct);
         var stored = await _saved.AddIfAbsentAsync(
             new SavedList
             {

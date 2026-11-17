@@ -20,6 +20,8 @@ public enum UserNotificationType
 
 public sealed record UserNotification
 {
+    public static readonly TimeSpan Lifetime = TimeSpan.FromDays(90);
+
     public string Id { get; init; } = string.Empty;
     public string UserId { get; init; } = string.Empty;
     public UserNotificationType Type { get; init; }

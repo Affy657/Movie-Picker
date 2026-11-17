@@ -37,9 +37,10 @@ public sealed class AcceptMovieListInvitationHandler : IAcceptMovieListInvitatio
 
     private async Task<MovieList> AcceptAsync(MovieList list, string userId, CancellationToken ct)
     {
-        if (!list.IsInvited(userId))
+        var now = _clock.StorageNow();
+        if (!list.IsInvited(userId, now))
             throw Errors.MovieListInvitationNotFound();
-        await _lists.AcceptInvitationAsync(list.Id, new MovieListMember(userId, _clock.StorageNow()), ct);
+        await _lists.AcceptInvitationAsync(list.Id, new MovieListMember(userId, now), ct);
         return await _lists.GetAsync(userId, list.Id, ct) ?? throw Errors.MovieListInvitationNotFound();
     }
 }

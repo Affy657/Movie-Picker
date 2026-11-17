@@ -9,8 +9,11 @@ public sealed class MovieListVisibilityTests
 {
     private readonly MovieListTestKit _kit = new();
 
-    private Task<MovieListSummaryResponse> CreateAsync(string name, bool? isPublic) =>
-        _kit.CreateHandler().HandleAsync(Owner, new CreateMovieListRequest { Name = name, IsPublic = isPublic });
+    private async Task<MovieListSummaryResponse> CreateAsync(string name, bool? isPublic)
+    {
+        await _kit.AccountAsync(Owner);
+        return await _kit.CreateHandler().HandleAsync(Owner, new CreateMovieListRequest { Name = name, IsPublic = isPublic });
+    }
 
     private Task<MovieListSummaryResponse> UpdateAsync(string listId, bool? isPublic, string userId = Owner) =>
         _kit.UpdateHandler().HandleAsync(userId, listId, new UpdateMovieListRequest { Name = "Films cultes", IsPublic = isPublic });

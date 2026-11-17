@@ -22,6 +22,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
     private static readonly int[] AnimationSciFiGenreIds = [16, 878];
 
     private readonly Mock<IWatchlistRepository> _watchlist = new();
+    private readonly Mock<IUserRepository> _users = new();
     private readonly Mock<ILetterboxdWatchlistClient> _letterboxd = new();
     private readonly Mock<ITmdbMovieSearch> _tmdb = new();
     private readonly Mock<IAddToWatchlistHandler> _addToWatchlist = new();
@@ -34,6 +35,9 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
     public LetterboxdWatchlistSynchronizerTests()
     {
+        _users
+            .Setup(u => u.GetByIdAsync(UserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(TheUser());
         _watchlist
             .Setup(w => w.RemoveAsync(
                 It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
@@ -70,7 +74,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
         return new LetterboxdWatchedSynchronizer(
             watched,
             _tmdb.Object,
-            new LetterboxdWatchedWriter(watched, watchlist, facts, TimeProvider.System),
+            new LetterboxdWatchedWriter(watched, watchlist, _users.Object, facts, TimeProvider.System),
             NullLogger<LetterboxdWatchedSynchronizer>.Instance);
     }
 
@@ -295,7 +299,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
             watchlist,
             _watched,
             new AddToWatchlistHandler(
-                watchlist, posters.Object, TimeProvider.System, _tmdb.Object, NullLogger<AddToWatchlistHandler>.Instance));
+                watchlist, _users.Object, posters.Object, TimeProvider.System, _tmdb.Object, NullLogger<AddToWatchlistHandler>.Instance));
 
         var outcome = await sut.SyncAsync(TheUser());
 
@@ -444,6 +448,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
     {
         var kit = new WatchedTestKit();
         await kit.Watchlist.AddAsync(Item(5255, "Le Pôle express", null));
+        await kit.AccountAsync(UserId);
         await kit.MarkHandler().HandleAsync(UserId, WatchedTestKit.Title(5255));
         GivenLetterboxd(true, new LetterboxdFilm("the-polar-express", "The Polar Express", "2004"));
         GivenTmdbResults(
@@ -453,7 +458,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
             kit.Watchlist,
             kit.Watched,
             new AddToWatchlistHandler(
-                kit.Watchlist, _posters.Object, TimeProvider.System, _tmdb.Object, NullLogger<AddToWatchlistHandler>.Instance));
+                kit.Watchlist, kit.Users, _posters.Object, TimeProvider.System, _tmdb.Object, NullLogger<AddToWatchlistHandler>.Instance));
 
         var outcome = await sut.SyncAsync(TheUser() with { LetterboxdSyncWatched = false });
 

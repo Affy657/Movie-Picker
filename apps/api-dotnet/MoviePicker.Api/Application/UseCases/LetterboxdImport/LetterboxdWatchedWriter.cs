@@ -1,6 +1,7 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.MovieLists;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.UseCases.LetterboxdImport;
@@ -13,17 +14,20 @@ public sealed class LetterboxdWatchedWriter
 
     private readonly IWatchedTitleRepository _watched;
     private readonly IWatchlistRepository _watchlist;
+    private readonly IUserRepository _users;
     private readonly MovieListItemFactory _facts;
     private readonly TimeProvider _clock;
 
     public LetterboxdWatchedWriter(
         IWatchedTitleRepository watched,
         IWatchlistRepository watchlist,
+        IUserRepository users,
         MovieListItemFactory facts,
         TimeProvider clock)
     {
         _watched = watched;
         _watchlist = watchlist;
+        _users = users;
         _facts = facts;
         _clock = clock;
     }
@@ -79,6 +83,7 @@ public sealed class LetterboxdWatchedWriter
             selection.Rating,
             WatchedAt(selection.WatchedOn, now),
             now);
+        await _users.RequireAccountAsync(userId, ct);
         await _watched.AddIfAbsentAsync(entry with { LetterboxdSlug = slug }, ct);
 
         var removedFromWatchlist = !keepOnWatchlist

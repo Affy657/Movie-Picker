@@ -102,7 +102,7 @@ public static class RateLimitingExtensions
         new(NoteMutationPolicy, 60, 1),
         new(RemoveParticipantPolicy, 40, 1),
         new(DeleteEventPolicy, 10, 1),
-        new(PostersPolicy, 300, 1),
+        new(PostersPolicy, 3_000, 1, QuotaScope.Address),
         new(PublicProfilePolicy, 120, 1),
         new(SearchUsersPolicy, 40, 1),
         new(FollowMutationPolicy, 60, 1),
@@ -211,15 +211,21 @@ public static class RateLimitingExtensions
             PartitionedRateLimiter.Create<HttpContext, string>(CreateAddressCeilingPartition),
             PartitionedRateLimiter.Create<HttpContext, string>(CreateGlobalPartition));
 
-    internal static RateLimitPartition<string> CreateAddressCeilingPartition(HttpContext httpContext) =>
-        IsProxied(httpContext)
+    internal static RateLimitPartition<string> CreateAddressCeilingPartition(HttpContext httpContext)
+    {
+        if (IsPoster(httpContext))
+            return RateLimitPartition.GetNoLimiter(PostersPolicy);
+        return IsProxied(httpContext)
             ? RateLimitPartition.GetNoLimiter(ProxiedPartition)
             : BuildFixedWindow(AddressPartitionKey(httpContext), AddressCeilingPerMinute, 1);
+    }
 
     internal static RateLimitPartition<string> CreateGlobalPartition(HttpContext httpContext)
     {
         if (IsPolledEventView(httpContext))
             return RateLimitPartition.GetNoLimiter(EventViewPollPolicy);
+        if (IsPoster(httpContext))
+            return RateLimitPartition.GetNoLimiter(PostersPolicy);
         return IsProxied(httpContext)
             ? RateLimitPartition.GetNoLimiter(ProxiedPartition)
             : BuildFixedWindow(PartitionKeyFor(httpContext), GlobalPermitLimitPerMinute, 1);
@@ -229,6 +235,8 @@ public static class RateLimitingExtensions
         httpContext.GetEndpoint()?.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName;
 
     private static bool IsPolledEventView(HttpContext httpContext) => PolicyNameOf(httpContext) == EventViewPollPolicy;
+
+    private static bool IsPoster(HttpContext httpContext) => PolicyNameOf(httpContext) == PostersPolicy;
 
     private static bool IsProxied(HttpContext httpContext) =>
         PolicyNameOf(httpContext) is { } policyName && FindPolicy(policyName) is { Scope: QuotaScope.Slug };

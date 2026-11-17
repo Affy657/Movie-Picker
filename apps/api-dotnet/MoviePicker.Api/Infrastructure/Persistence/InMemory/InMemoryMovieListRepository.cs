@@ -48,17 +48,18 @@ public sealed class InMemoryMovieListRepository : IMovieListRepository
         Select(list => list.RoleOf(userId) == MovieListRole.Member);
 
     public Task<IReadOnlyList<MovieList>> ListInvitingAsync(string userId, CancellationToken ct = default) =>
-        Select(list => list.IsInvited(userId));
+        Select(list => list.HoldsInvitationOf(userId));
 
     public Task<IReadOnlySet<string>> ListPendingInvitationIdsAsync(
         string userId,
         IReadOnlyCollection<string> listIds,
+        DateTimeOffset now,
         CancellationToken ct = default)
     {
         lock (_gate)
         {
             IReadOnlySet<string> pending = listIds
-                .Where(id => _store.TryGetValue(id, out var list) && list.IsInvited(userId))
+                .Where(id => _store.TryGetValue(id, out var list) && list.IsInvited(userId, now))
                 .ToHashSet(StringComparer.Ordinal);
             return Task.FromResult(pending);
         }
@@ -205,19 +206,21 @@ public sealed class InMemoryMovieListRepository : IMovieListRepository
         CancellationToken ct = default) =>
         Change(
             listId,
-            list => list.RoleOf(invitation.UserId) is null && !list.IsInvited(invitation.UserId) && list.SeatsTaken < maxSeats,
-            list => list with { Invitations = [.. list.Invitations, invitation] });
+            list => list.RoleOf(invitation.UserId) is null
+                && !list.IsInvited(invitation.UserId, invitation.InvitedAt)
+                && list.SeatsTaken(invitation.InvitedAt) < maxSeats,
+            list => WithInvitation(list, invitation));
 
     public Task<bool> RemoveInvitationAsync(string listId, string userId, CancellationToken ct = default) =>
         Change(
             listId,
-            list => list.IsInvited(userId),
+            list => list.HoldsInvitationOf(userId),
             list => WithoutInvitation(list, userId));
 
     public Task<bool> AcceptInvitationAsync(string listId, MovieListMember member, CancellationToken ct = default) =>
         Change(
             listId,
-            list => list.IsInvited(member.UserId),
+            list => list.IsInvited(member.UserId, member.JoinedAt),
             list => WithoutInvitation(list, member.UserId) with { Members = [.. list.Members, member] });
 
     public Task<bool> JoinByInviteTokenAsync(
@@ -232,7 +235,7 @@ public sealed class InMemoryMovieListRepository : IMovieListRepository
             if (ByToken(token) is not { } list
                 || !list.AcceptsInviteToken(token, now)
                 || list.RoleOf(member.UserId) is not null
-                || (!list.IsInvited(member.UserId) && list.SeatsTaken >= maxSeats))
+                || (!list.IsInvited(member.UserId, now) && list.SeatsTaken(now) >= maxSeats))
                 return Task.FromResult(false);
 
             _store[list.Id] = WithoutInvitation(list, member.UserId) with { Members = [.. list.Members, member] };
@@ -267,7 +270,7 @@ public sealed class InMemoryMovieListRepository : IMovieListRepository
         lock (_gate)
         {
             var touched = _store.Values
-                .Where(list => list.RoleOf(userId) == MovieListRole.Member || list.IsInvited(userId))
+                .Where(list => list.RoleOf(userId) == MovieListRole.Member || list.HoldsInvitationOf(userId))
                 .ToList();
             foreach (var list in touched)
                 _store[list.Id] = WithoutMember(WithoutInvitation(list, userId), userId);
@@ -298,6 +301,12 @@ public sealed class InMemoryMovieListRepository : IMovieListRepository
 
     private static MovieList WithoutInvitation(MovieList list, string userId) =>
         list with { Invitations = [.. list.Invitations.Where(invitation => invitation.UserId != userId)] };
+
+    private static MovieList WithInvitation(MovieList list, MovieListInvitation invitation)
+    {
+        var others = WithoutInvitation(list, invitation.UserId);
+        return others with { Invitations = [.. others.Invitations, invitation] };
+    }
 
     private static MovieList WithoutMember(MovieList list, string userId) =>
         list with { Members = [.. list.Members.Where(member => member.UserId != userId)] };
