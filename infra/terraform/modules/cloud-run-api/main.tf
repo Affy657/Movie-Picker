@@ -81,6 +81,18 @@ resource "google_cloud_run_v2_service_iam_member" "public" {
   member   = "allUsers"
 }
 
+resource "google_logging_project_exclusion" "secret_urls" {
+  project     = var.project_id
+  name        = "${var.name}-secret-urls"
+  description = "Keeps out of the _Default bucket the request log entries Cloud Run itself writes for ${var.name} with a secret in the URL: a list invitation token in /lists/join/, in a returnTo of the OAuth start, or an event host token. The API masks them in its own logs, Cloud Run logs the URL as it came."
+  filter = join(" AND ", [
+    "log_id(\"run.googleapis.com/requests\")",
+    "resource.type=\"cloud_run_revision\"",
+    "resource.labels.service_name=\"${google_cloud_run_v2_service.this.name}\"",
+    "(httpRequest.requestUrl:\"/lists/join/\" OR httpRequest.requestUrl:\"returnTo=%2Fl%2F\" OR httpRequest.requestUrl:\"host=\" OR httpRequest.requestUrl:\"host%3D\")",
+  ])
+}
+
 resource "google_cloud_run_domain_mapping" "this" {
   count = var.domain == null ? 0 : 1
 

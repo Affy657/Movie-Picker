@@ -219,7 +219,7 @@ resource "google_project_iam_custom_role" "plan_iam_viewer" {
   project     = var.project_id
   role_id     = local.plan_iam_viewer_role_id
   title       = "Viewer for a Terraform plan (IAM, logging configuration)"
-  description = "Reads the service accounts, custom roles and IAM policies of the project, its service accounts and its image repository, plus the log bucket and sink infra/terraform describes: what a plan refreshes, without the object listing and log reading of roles/iam.securityReviewer and roles/logging.viewer."
+  description = "Reads the service accounts, custom roles and IAM policies of the project, its service accounts and its image repository, plus the log bucket, sink and exclusions infra/terraform describes: what a plan refreshes, without the object listing and log reading of roles/iam.securityReviewer and roles/logging.viewer."
   permissions = [
     "artifactregistry.repositories.getIamPolicy",
     "iam.roles.get",
@@ -228,6 +228,7 @@ resource "google_project_iam_custom_role" "plan_iam_viewer" {
     "iam.serviceAccounts.getIamPolicy",
     "iam.serviceAccounts.list",
     "logging.buckets.get",
+    "logging.exclusions.get",
     "logging.sinks.get",
     "resourcemanager.projects.getIamPolicy",
   ]
