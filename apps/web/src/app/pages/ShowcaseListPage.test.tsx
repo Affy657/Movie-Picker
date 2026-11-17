@@ -1,7 +1,14 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router';
+import {
+  MemoryRouter,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+  type InitialEntry,
+} from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
@@ -116,7 +123,7 @@ function renderPageWithFilmPage() {
 
 function renderPage(
   variant: ShowcaseListVariant,
-  entry: string,
+  entry: InitialEntry,
   path: string,
   client = createTestQueryClient()
 ) {
@@ -314,15 +321,18 @@ describe('ShowcaseListPage', () => {
     );
     renderPage('recommendations', '/films/similaires/27205', '/films/similaires/:seedTmdbId');
 
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Parce que vous avez aimé' })
+    ).toBeInTheDocument();
     expect(await screen.findByText('Inception')).toBeInTheDocument();
   });
 
   it.each([
-    ['another film', '/films/similaires/603'],
-    ['the series sharing its id', '/films/similaires/27205?type=tv'],
+    ['another film', '/films/similaires/603', 'Films similaires'],
+    ['the series sharing its id', '/films/similaires/27205?type=tv', 'Séries similaires'],
   ])(
-    'keeps the generic subtitle when the link seeds %s rather than the latest watched title',
-    async (_seed, entry) => {
+    'titles the page neutrally when the link seeds %s rather than the latest watched title',
+    async (_seed, entry, heading) => {
       const client = createTestQueryClient();
       server.use(
         authedUserHandler,
@@ -344,9 +354,52 @@ describe('ShowcaseListPage', () => {
       await act(async () => {});
 
       expect(screen.queryByText('Inception')).not.toBeInTheDocument();
-      expect(screen.getByText('À partir de votre dernière soirée')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1, name: heading })).toBeInTheDocument();
+      expect(screen.getByText('Des titres dans le même esprit')).toBeInTheDocument();
     }
   );
+
+  it('never speaks of a last night to a visitor who follows a deep link', async () => {
+    server.use(authMeGuestHandler, showcaseHandler);
+    renderPage('recommendations', '/films/similaires/603', '/films/similaires/:seedTmdbId');
+
+    await screen.findByText('Film 1');
+    expect(screen.getByRole('heading', { level: 1, name: 'Films similaires' })).toBeInTheDocument();
+    expect(screen.queryByText('Parce que vous avez aimé')).not.toBeInTheDocument();
+    expect(screen.queryByText('À partir de votre dernière soirée')).not.toBeInTheDocument();
+  });
+
+  it('names the title the similar ones start from when the film page passes it', async () => {
+    server.use(authMeGuestHandler, showcaseHandler);
+    renderPage(
+      'recommendations',
+      { pathname: '/films/similaires/1399', search: '?type=tv', state: { seedTitle: 'Arcane' } },
+      '/films/similaires/:seedTmdbId'
+    );
+
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Séries similaires à Arcane' })
+    ).toBeInTheDocument();
+    expect(await screen.findByText('Film 1')).toBeInTheDocument();
+  });
+
+  it('titles a saga missing from the catalog with the name the film page passes', async () => {
+    server.use(
+      authMeGuestHandler,
+      showcaseHandler,
+      http.get(`${TEST_API_V1}/movies/collections`, () =>
+        HttpResponse.json({ items: [], disclaimer: 'TMDB', tmdbAttributionUrl: '' })
+      )
+    );
+    renderPage(
+      'collection',
+      { pathname: '/films/collection/726871', state: { collectionName: 'La saga Dune' } },
+      '/films/collection/:collectionId'
+    );
+
+    expect(screen.getByRole('heading', { level: 1, name: 'La saga Dune' })).toBeInTheDocument();
+    expect(await screen.findByText('Film 1')).toBeInTheDocument();
+  });
 
   it('affiche le rang sur le classement communautaire', async () => {
     server.use(
