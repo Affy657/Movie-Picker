@@ -23,6 +23,7 @@ interface Props {
   watchedTo: string;
   proposalsTo?: string;
   winningProposalsTo?: string;
+  winningProposalsHidden?: boolean;
   listsTo?: string;
   ratingScale?: RatingScale;
 }
@@ -34,6 +35,7 @@ export default function ProfileStatsSection({
   watchedTo,
   proposalsTo,
   winningProposalsTo,
+  winningProposalsHidden = false,
   listsTo,
   ratingScale = 'five',
 }: Readonly<Props>) {
@@ -78,14 +80,18 @@ export default function ProfileStatsSection({
       'profile.stats.figures.moviesProposed',
       proposalsTo
     ),
-    counted(
-      'winningProposals',
-      stats.winningProposals,
-      'profile.stats.figures.winningProposalsOne',
-      'profile.stats.figures.winningProposals',
-      winningProposalsTo
-    ),
-    ...(stats.proposalsAverageRating == null
+    ...(winningProposalsHidden
+      ? []
+      : [
+          counted(
+            'winningProposals',
+            stats.winningProposals,
+            'profile.stats.figures.winningProposalsOne',
+            'profile.stats.figures.winningProposals',
+            winningProposalsTo
+          ),
+        ]),
+    ...(winningProposalsHidden || stats.proposalsAverageRating == null
       ? []
       : [
           {

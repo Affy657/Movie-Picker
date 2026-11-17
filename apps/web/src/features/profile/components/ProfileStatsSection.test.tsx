@@ -31,7 +31,11 @@ function renderSection(
   stats: UserStats,
   watchedCount?: number,
   watchedPending = false,
-  proposalLinks: { proposalsTo?: string; winningProposalsTo?: string } = {}
+  proposalLinks: {
+    proposalsTo?: string;
+    winningProposalsTo?: string;
+    winningProposalsHidden?: boolean;
+  } = {}
 ) {
   return render(
     <AppTestProviders>
@@ -115,6 +119,21 @@ describe('ProfileStatsSection', () => {
       '34films proposés',
       '7propositions gagnantes',
       '3,4/5note moyenne des propositions',
+      '58votes',
+    ]);
+  });
+
+  it('leaves the winning proposals and their average rating out when they are hidden', () => {
+    renderSection({ ...BUSY_STATS, proposalsAverageRating: 6.86 }, undefined, false, {
+      proposalsTo: '/u/lea/propositions',
+      winningProposalsTo: '/u/lea/propositions-gagnantes',
+      winningProposalsHidden: true,
+    });
+    const figures = screen.getAllByRole('listitem').map((item) => item.textContent);
+    expect(figures).toEqual([
+      '12soirées créées',
+      '1soirée rejointe',
+      '34films proposés',
       '58votes',
     ]);
   });

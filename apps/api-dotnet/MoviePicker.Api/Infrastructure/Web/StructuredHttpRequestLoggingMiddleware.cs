@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using MoviePicker.Api.Application.UseCases.Shared;
 
 namespace MoviePicker.Api.Infrastructure.Web;
 
@@ -26,9 +27,9 @@ public sealed class StructuredHttpRequestLoggingMiddleware(
             var routeKind = ObservabilityRouteKind.ForPath(context.Request.Path);
             logger.LogInformation(
                 "HTTP {HttpMethod} {Path}{QueryString} → {StatusCode} en {ElapsedMs} ms ({Endpoint}) [kind={ApiRouteKind}, caller={Caller}]",
-                SingleLine(context.Request.Method),
-                SingleLine(SensitiveQueryRedaction.RedactPath(context.Request.Path.Value)),
-                SingleLine(SensitiveQueryRedaction.RedactQueryString(context.Request.QueryString.Value)),
+                LogText.SingleLine(context.Request.Method),
+                LogText.SingleLine(SensitiveQueryRedaction.RedactPath(context.Request.Path.Value)),
+                LogText.SingleLine(SensitiveQueryRedaction.RedactQueryString(context.Request.QueryString.Value)),
                 failed && !context.Response.HasStarted ? StatusCodes.Status500InternalServerError : context.Response.StatusCode,
                 sw.ElapsedMilliseconds,
                 endpoint ?? "n/a",
@@ -36,6 +37,4 @@ public sealed class StructuredHttpRequestLoggingMiddleware(
                 context.User.Identity?.IsAuthenticated == true ? "account" : "anonymous");
         }
     }
-
-    private static string SingleLine(string? value) => (value ?? string.Empty).ReplaceLineEndings(" ");
 }

@@ -99,7 +99,8 @@ public sealed class UsersController : ControllerBase
         [FromServices] IGetUserProposedMoviesHandler handler,
         CancellationToken ct)
     {
-        var result = await handler.HandleAsync(handle, winningOnly, ct);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var result = await handler.HandleAsync(handle, currentUserId, winningOnly, ct);
         return Ok(result);
     }
 

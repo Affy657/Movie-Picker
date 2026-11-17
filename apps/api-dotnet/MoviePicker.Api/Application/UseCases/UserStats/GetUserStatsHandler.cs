@@ -105,7 +105,10 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
         await Task.WhenAll(proposedMoviesTask, votesTask, seenTask);
 
         var proposedMovies = proposedMoviesTask.Result;
-        var winningProposals = WinnerMovies.AmongProposals(proposedMovies, participantEvents);
+        var canSeeWatched = PublicProfileGuard.CanSeeWatched(user, currentUserId);
+        IReadOnlyList<Movie> winningProposals = canSeeWatched
+            ? WinnerMovies.AmongProposals(proposedMovies, participantEvents)
+            : [];
         var proposalsAverageRating = await AverageRatingOfAsync(winningProposals, ct);
 
         var favoriteGenres = proposedMovies
@@ -125,7 +128,7 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
             VotesCast = votesTask.Result,
             WinningProposals = winningProposals.Count,
             ProposalsAverageRating = proposalsAverageRating,
-            MoviesSeen = PublicProfileGuard.CanSeeWatched(user, currentUserId) ? seenTask.Result : 0,
+            MoviesSeen = canSeeWatched ? seenTask.Result : 0,
             PublicListCount = publicListCount,
             CurrentStreakWeeks = currentStreakWeeks,
             BestStreakWeeks = bestStreakWeeks,

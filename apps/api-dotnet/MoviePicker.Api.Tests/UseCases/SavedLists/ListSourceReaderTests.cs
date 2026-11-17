@@ -3,6 +3,7 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.SavedLists;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Tests.Logging;
 using Xunit;
 using static MoviePicker.Api.Tests.UseCases.SavedLists.SavedListTestKit;
 
@@ -155,6 +156,20 @@ public sealed class ListSourceReaderTests
         Assert.True(content.IsAvailable);
         Assert.Null(content.Name);
         Assert.Equal(5, content.Titles.Count);
+    }
+
+    [Fact]
+    public async Task Read_ASourceThatFails_LogsItsIdWithoutLineBreakNorControlCharacter()
+    {
+        var logger = new CapturingLogger<ListSourceReader>();
+        var forged = new ListSource(ListSourceType.ExplorerTheme, "frissons\r\nforged\u001b[31m");
+
+        var content = await _kit.Reader(logger: logger).ReadAsync(forged);
+
+        Assert.False(content.IsAvailable);
+        var entry = Assert.Single(logger.Entries);
+        Assert.DoesNotContain(entry.Message, char.IsControl);
+        Assert.Contains("frissons forged [31m", entry.Message);
     }
 
     private static Exception SourceFailure(string kind) => kind switch

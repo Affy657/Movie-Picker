@@ -70,6 +70,23 @@ public sealed class MarkWatchedHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_StoresTheTitleYearAndFactsOfTmdb_NotThoseTheClientSent()
+    {
+        _kit.Tmdb
+            .Setup(t => t.GetDetailsAsync(550, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TmdbMovieDetails(550, "Fight Club", null, null, null, [], 139, [], DetailGenres, "1999-10-15", VoteAverage: 8.4));
+
+        await _kit.MarkHandler().HandleAsync(
+            Me,
+            new MarkWatchedRequest { TmdbId = 550, Title = "Faux titre", Year = "1066", RuntimeMinutes = 1, VoteAverage = 0.5 });
+
+        var stored = await _kit.Watched.GetAsync(Me, 550, MovieMediaType.Movie);
+        Assert.Equal(
+            ("Fight Club", "1999", (double?)8.4, (int?)139),
+            (stored!.Title, stored.Year, stored.VoteAverage, stored.RuntimeMinutes));
+    }
+
+    [Fact]
     public async Task HandleAsync_AlreadyWatchedElsewhere_KeepsTheDate_AndTakesANewRating()
     {
         var first = await _kit.MarkAsync(603, rating: 4);

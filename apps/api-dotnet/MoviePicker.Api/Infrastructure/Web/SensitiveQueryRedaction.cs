@@ -7,6 +7,8 @@ public static partial class SensitiveQueryRedaction
 {
     public const string Mask = "***";
 
+    private const string ReturnToKey = "returnTo";
+
     private static readonly string[] SensitiveKeys = ["host", "token", "api_key", "code", "state"];
 
     public static string RedactQueryString(string? queryString)
@@ -32,7 +34,7 @@ public static partial class SensitiveQueryRedaction
 
             var separator = pair.IndexOf('=');
             var key = separator < 0 ? pair : pair[..separator];
-            if (separator >= 0 && IsSensitive(key))
+            if (separator >= 0 && IsSensitive(DecodeQueryComponent(key), pair[(separator + 1)..]))
                 builder.Append(key).Append('=').Append(Mask);
             else
                 builder.Append(pair);
@@ -56,9 +58,21 @@ public static partial class SensitiveQueryRedaction
         return RedactPath(url[..questionMark]) + RedactQueryString(url[questionMark..]);
     }
 
-    private static bool IsSensitive(string key) =>
-        SensitiveKeys.Any(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
+    private static bool IsSensitive(string key, string encodedValue) =>
+        SensitiveKeys.Any(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase))
+        || (string.Equals(ReturnToKey, key, StringComparison.OrdinalIgnoreCase) && LeadsToASecret(encodedValue));
 
-    [GeneratedRegex(@"(?<route>/lists/join/)[^/?#\s]+", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static bool LeadsToASecret(string encodedValue)
+    {
+        var value = DecodeQueryComponent(encodedValue);
+        return !string.Equals(RedactUrl(value), value, StringComparison.Ordinal);
+    }
+
+    private static string DecodeQueryComponent(string component) =>
+        Uri.UnescapeDataString(component.Replace('+', ' '));
+
+    [GeneratedRegex(
+        @"(?<route>/lists/join/|(?<![^\s""'=:(,<])/l/|(?<=://[^/?#\s""']+)/l/)[^/?#&\s""']+",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex InviteTokenSegment();
 }

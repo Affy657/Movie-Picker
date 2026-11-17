@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.Caching;
@@ -67,7 +68,7 @@ internal sealed class SavedListTestKit
         }
     }
 
-    public ListSourceReader Reader(PublicListReader? publicLists = null) => new(
+    public ListSourceReader Reader(PublicListReader? publicLists = null, ILogger<ListSourceReader>? logger = null) => new(
         Showcase.Object,
         Tmdb.Object,
         MovieLists.Posters.Object,
@@ -75,7 +76,7 @@ internal sealed class SavedListTestKit
         Microsoft.Extensions.Options.Options.Create(Options),
         publicLists ?? PublicLists(),
         Saved,
-        NullLogger<ListSourceReader>.Instance);
+        logger ?? NullLogger<ListSourceReader>.Instance);
 
     public PublicListReader PublicLists() => new(MovieLists.Lists, MovieLists.Users);
 

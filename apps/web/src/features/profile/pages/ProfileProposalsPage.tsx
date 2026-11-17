@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
 import { ROUTES } from '@/app/routes';
+import { API_ERROR_REASONS } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
@@ -83,6 +84,14 @@ export default function ProfileProposalsPage({
       itemKey={proposalKey}
       canonicalPath={winningOnly ? ROUTES.profileWinningProposals : ROUTES.profileProposals}
       texts={texts}
+      hidden={
+        winningOnly
+          ? {
+              reason: API_ERROR_REASONS.watchedNotFound,
+              message: t('profile.winningProposals.hiddenMessage'),
+            }
+          : undefined
+      }
       renderLeadingBadge={(item, ownerHandle) =>
         item.proposalCount > 1 ? (
           <ProfileCardBadge
