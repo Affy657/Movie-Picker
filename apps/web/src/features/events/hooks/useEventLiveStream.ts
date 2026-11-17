@@ -16,6 +16,7 @@ export type LivePresence = { participantId: string; proposing: boolean };
 export type UseEventLiveStreamInput = {
   slug: string | undefined;
   enabled: boolean;
+  participantId?: string | null;
   onChanged: () => void;
 };
 
@@ -41,7 +42,12 @@ function supportsEventSource(): boolean {
   return typeof globalThis.EventSource === 'function';
 }
 
-export function useEventLiveStream({ slug, enabled, onChanged }: UseEventLiveStreamInput): {
+export function useEventLiveStream({
+  slug,
+  enabled,
+  participantId = null,
+  onChanged,
+}: UseEventLiveStreamInput): {
   connected: boolean;
   presence: LivePresence[] | null;
 } {
@@ -68,6 +74,8 @@ export function useEventLiveStream({ slug, enabled, onChanged }: UseEventLiveStr
       lastMessageAt = Date.now();
     };
     const reopenAfter = (delayMs: number): void => {
+      globalThis.clearInterval(watchdog);
+      globalThis.clearTimeout(reopenTimer);
       source.close();
       setConnected(false);
       reopenTimer = globalThis.setTimeout(() => setAttempt((value) => value + 1), delayMs);
@@ -96,7 +104,6 @@ export function useEventLiveStream({ slug, enabled, onChanged }: UseEventLiveStr
 
     const watchdog = globalThis.setInterval(() => {
       if (Date.now() - lastMessageAt < EVENT_STREAM_STALE_AFTER_MS) return;
-      globalThis.clearInterval(watchdog);
       reopenAfter(EVENT_STREAM_RECONNECT_DELAY_MS);
     }, EVENT_STREAM_WATCHDOG_MS);
 
@@ -107,7 +114,7 @@ export function useEventLiveStream({ slug, enabled, onChanged }: UseEventLiveStr
       setConnected(false);
       setPresence(null);
     };
-  }, [active, slug, attempt]);
+  }, [active, slug, participantId, attempt]);
 
   return { connected: active && connected, presence: active ? presence : null };
 }

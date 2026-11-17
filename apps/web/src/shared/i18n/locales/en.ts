@@ -802,6 +802,7 @@ export const en: Locale = {
       removeAction: 'Remove',
       removeAriaLabel: 'Remove {{pseudo}} from the event',
       viewProfileAriaLabel: "View {{pseudo}}'s profile",
+      viewProfilePresenceAriaLabel: "View {{pseudo}}'s profile, {{presence}}",
       inviteAriaLabel: 'Invite friends',
       removeConfirmTitle: 'Remove a participant',
       removeConfirm:

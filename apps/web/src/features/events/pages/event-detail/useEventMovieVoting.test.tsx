@@ -95,7 +95,20 @@ describe('useEventMovieVoting', () => {
 
   it('sends a vote behind the one still waiting for the same movie, never before it', async () => {
     queueVote({ slug: 'cine-club', movieId: 'm1', participantId: 'p-me', value: 1, queuedAt: 1 });
-    const { result } = renderVoting([{ ...MOVIE, myVote: 1 }]);
+    const { result } = renderVoting([{ ...MOVIE, myVote: 1, pendingVote: true }]);
+
+    await act(async () => {
+      await result.current.handleVote('m1', -1);
+    });
+
+    expect(api.voteMovie).not.toHaveBeenCalled();
+    expect(api.clearMovieVote).not.toHaveBeenCalled();
+    expect(readQueuedVotes('cine-club')).toEqual([expect.objectContaining({ value: -1 })]);
+  });
+
+  it('keeps a waiting vote tapped again, and queues it anew instead of withdrawing it', async () => {
+    queueVote({ slug: 'cine-club', movieId: 'm1', participantId: 'p-me', value: 1, queuedAt: 1 });
+    const { result } = renderVoting([{ ...MOVIE, myVote: 1, pendingVote: true }]);
 
     await act(async () => {
       await result.current.handleVote('m1', 1);
@@ -103,7 +116,21 @@ describe('useEventMovieVoting', () => {
 
     expect(api.voteMovie).not.toHaveBeenCalled();
     expect(api.clearMovieVote).not.toHaveBeenCalled();
-    expect(readQueuedVotes('cine-club')).toEqual([expect.objectContaining({ value: 0 })]);
+    const [requeued] = readQueuedVotes('cine-club');
+    expect(requeued).toEqual(expect.objectContaining({ value: 1 }));
+    expect(requeued?.queuedAt).toBeGreaterThan(1);
+  });
+
+  it('keeps a waiting vote tapped again while offline', async () => {
+    onlineManager.setOnline(false);
+    queueVote({ slug: 'cine-club', movieId: 'm1', participantId: 'p-me', value: -1, queuedAt: 1 });
+    const { result } = renderVoting([{ ...MOVIE, myVote: -1, pendingVote: true }]);
+
+    await act(async () => {
+      await result.current.handleVote('m1', -1);
+    });
+
+    expect(readQueuedVotes('cine-club')).toEqual([expect.objectContaining({ value: -1 })]);
   });
 
   it('queues a vote whose request never reached the server', async () => {

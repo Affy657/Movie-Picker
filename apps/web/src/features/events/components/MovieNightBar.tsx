@@ -14,12 +14,14 @@ import {
 import { ROUTES } from '@/app/routes';
 import VoteLimitDialog from '@/features/events/components/VoteLimitDialog';
 import { useMovieNight, type MovieNightTarget } from '@/features/events/hooks/useMovieNight';
+import { offlineVoteReport } from '@/features/events/offline/useOfflineVoteReplay';
 import EventActionErrorBanner from '@/features/events/pages/event-detail/EventActionErrorBanner';
 import Avatar from '@/shared/components/Avatar';
 import Button from '@/shared/components/Button';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import IconButton from '@/shared/components/IconButton';
 import { MenuItem, MenuPanel } from '@/shared/components/Menu';
+import Notice from '@/shared/components/Notice';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useMenuState } from '@/shared/hooks/useMenuState';
@@ -246,6 +248,7 @@ export default function MovieNightBar({
   const night = useMovieNight({ slug, tmdbId, mediaType });
   const [confirmRemove, setConfirmRemove] = useState(false);
   const title = night.event?.title ?? '';
+  const offlineVotes = offlineVoteReport(night.offlineVoteOutcome, t);
   const actions = (
     <NightActions
       night={night}
@@ -272,6 +275,13 @@ export default function MovieNightBar({
         <div className={styles.error}>
           <EventActionErrorBanner message={night.actionError} onDismiss={night.clearActionError} />
         </div>
+      ) : null}
+      {offlineVotes ? (
+        <Notice
+          title={t('events.detail.offlineVotesTitle')}
+          description={offlineVotes.message}
+          onClose={night.dismissOfflineVoteOutcome}
+        />
       ) : null}
       <ConfirmDialog
         open={confirmRemove}
