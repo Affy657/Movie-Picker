@@ -158,6 +158,22 @@ public sealed class GetEventRecapDocumentHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_NightOverWithADrawLeft_SaysTheDrawnFilmWasSeen()
+    {
+        var evt = Night("abc", "Soirée du vendredi", "m1") with { Config = new EventConfig { WinnerCount = 2 } };
+        GivenNight(evt);
+        GivenWinner(evt, "m1", "Heat", "1995");
+        _participants.Setup(r => r.CountByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
+        var document = await CreateSut(new DateTimeOffset(2026, 9, 19, 12, 0, 0, TimeSpan.Zero))
+            .HandleAsync("abc", "https://api.example", default);
+
+        Assert.Equal(
+            "On a vu Heat (1995) le vendredi 18 septembre 2026, avec 1 participant.",
+            Meta(document.Html, "og:description"));
+    }
+
+    [Fact]
     public async Task HandleAsync_WinnerWithoutRating_DescribesTheNightWithoutAnAverage()
     {
         var evt = Night("abc", "Soirée du vendredi", "m1");

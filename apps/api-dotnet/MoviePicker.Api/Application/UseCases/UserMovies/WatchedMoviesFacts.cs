@@ -17,7 +17,7 @@ internal static class WatchedMoviesFacts
         IEnumerable<Event> events,
         DateTimeOffset now) =>
         events
-            .Where(e => e.HasWinner && e.IsFinished(now))
+            .Where(e => e.HasWinner && e.IsOver(now))
             .SelectMany(e => e.GetWinnerMovieIds().Select(id => (Night: e, MovieId: id, WatchedAt: WatchedAtOf(e))));
 
     public static async Task<UserWatchedMoviesResponse> ToResponseAsync(

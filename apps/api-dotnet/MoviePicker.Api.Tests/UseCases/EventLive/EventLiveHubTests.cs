@@ -195,6 +195,39 @@ public sealed class EventLiveHubTests : IAsyncLifetime
         Assert.Empty(presence.Participants);
     }
 
+    private sealed class AdjustableClock(DateTimeOffset start) : TimeProvider
+    {
+        private long _ticks = start.UtcTicks;
+
+        public override DateTimeOffset GetUtcNow() => new(Interlocked.Read(ref _ticks), TimeSpan.Zero);
+
+        public void Advance(TimeSpan by) => Interlocked.Add(ref _ticks, by.Ticks);
+    }
+
+    [Fact]
+    public async Task Poll_WhenTheClockCarriesTheNightPastItsPhase_SignalsChangedWithoutAnyWrite()
+    {
+        var oneHourFiftyNineIn = new DateTimeOffset(2026, 11, 14, 20, 59, 0, TimeSpan.Zero);
+        var clock = new AdjustableClock(oneHourFiftyNineIn);
+        var drawn = await _events.AddAsync(new EventEntityBuilder().WithId("evt-drawn").WithSlug("soiree-tiree").Build() with
+        {
+            Date = "2026-11-14",
+            Time = "20:00",
+            Winners = TestWinners.Won("mov-1")
+        });
+        var hub = new EventLiveHub(
+            _services.GetRequiredService<IServiceScopeFactory>(),
+            clock,
+            Options.Create(new EventLiveOptions { PollInterval = TimeSpan.FromMilliseconds(20) }),
+            NullLogger<EventLiveHub>.Instance);
+        using var subscription = hub.Subscribe(drawn.Id, drawn.Slug);
+        await NextAsync<EventPresenceSignal>(subscription);
+
+        clock.Advance(TimeSpan.FromMinutes(2));
+
+        await NextAsync<EventChangedSignal>(subscription);
+    }
+
     [Fact]
     public async Task Poll_RepositoryFailure_KeepsPolling()
     {

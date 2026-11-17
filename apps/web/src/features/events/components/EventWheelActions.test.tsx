@@ -63,6 +63,7 @@ function planFor(wheel: EventWheelState, overrides: Partial<EventHeaderActionsIn
     canRemoveWinner: wheel.showRemoveWinner,
     canReset: wheel.showReset,
     canCloseWithoutMovie: false,
+    canFinishNight: false,
     ...overrides,
   });
 }
@@ -71,6 +72,7 @@ type Handlers = {
   onAddMovie: () => void;
   onRequestReset: () => void;
   onRequestCloseWithoutMovie: () => void;
+  onRequestFinishNight: () => void;
 };
 
 function renderActions(
@@ -81,6 +83,7 @@ function renderActions(
     onAddMovie: vi.fn(),
     onRequestReset: vi.fn(),
     onRequestCloseWithoutMovie: vi.fn(),
+    onRequestFinishNight: vi.fn(),
   };
   render(
     <LocaleProvider>
@@ -272,6 +275,19 @@ describe('EventWheelActions', () => {
     expect(onRequestCloseWithoutMovie).toHaveBeenCalledOnce();
   });
 
+  it('finishes a pending night that already has a film from the draw menu', async () => {
+    const { onRequestFinishNight } = renderActions(
+      wheelState({ winnerIds: ['m1'], remainingDraws: 1, showRemoveWinner: true, showReset: true }),
+      { lifecycle: 'pending', canFinishNight: true }
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Gérer le tirage' }));
+    expect(screen.queryByRole('menuitem', { name: 'Clôturer sans film' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Terminer la soirée' }));
+
+    expect(onRequestFinishNight).toHaveBeenCalledOnce();
+  });
+
   it('leaves rating to the movie card during the night', () => {
     renderActions(
       wheelState({ winnerIds: ['m1'], remainingDraws: 0, showRemoveWinner: true, showReset: true }),
@@ -315,6 +331,7 @@ describe('EventWheelActions', () => {
           plan={planFor(wheel, { canAddMovie: false })}
           onRequestReset={vi.fn()}
           onRequestCloseWithoutMovie={vi.fn()}
+          onRequestFinishNight={vi.fn()}
         />
       </LocaleProvider>
     );

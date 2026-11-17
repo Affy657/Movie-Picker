@@ -1101,6 +1101,11 @@ export const en: Locale = {
       closeWithoutMovieConfirmMessage:
         'The event "{{title}}" will be closed without a movie. This action is final.',
       closeWithoutMovieConfirmAction: 'Close without a movie',
+      finishNightButton: 'End the event',
+      finishNightConfirmTitle: 'End the event?',
+      finishNightConfirmMessage:
+        'The event "{{title}}" ends with the movies already drawn, without drawing the next ones. This action is final.',
+      finishNightConfirmAction: 'End the event',
       resetButton: 'Start over',
       resetConfirmTitle: 'Start over?',
       resetConfirmMessage:

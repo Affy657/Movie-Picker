@@ -3,6 +3,7 @@ import { act, renderHook } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
 import type { ReactNode } from 'react';
 import {
+  isRatingOpen,
   isRecentNight,
   ratingLinkTarget,
   useRatingLink,
@@ -163,6 +164,18 @@ function daysAgo(days: number): string {
     String(day.getDate()).padStart(2, '0'),
   ].join('-');
 }
+
+describe('isRatingOpen', () => {
+  it('opens the rating of the drawn films once the night has started, a draw left or not', () => {
+    expect(isRatingOpen({ lifecycle: 'live' })).toBe(true);
+    expect(isRatingOpen({ lifecycle: 'pending' })).toBe(true);
+    expect(isRatingOpen({ lifecycle: 'finished', isFinished: true })).toBe(true);
+  });
+
+  it('keeps it closed before the night', () => {
+    expect(isRatingOpen({ lifecycle: 'upcoming' })).toBe(false);
+  });
+});
 
 describe('isRecentNight', () => {
   it('counts a night of the last seven days as recent', () => {

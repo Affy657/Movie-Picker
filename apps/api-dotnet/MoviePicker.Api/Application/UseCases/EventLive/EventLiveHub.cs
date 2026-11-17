@@ -99,10 +99,11 @@ public sealed class EventLiveHub : IEventLiveFeed
             var presenceRepository = scope.ServiceProvider.GetRequiredService<IEventPresenceRepository>();
 
             var evt = await events.GetByIdOrSlugAsync(watch.Slug, ct);
-            var stamp = evt is null ? GoneStamp : $"{evt.WriteSeq}.{evt.Version}";
+            var now = _clock.GetUtcNow();
+            var stamp = evt is null ? GoneStamp : Stamp(evt, now);
             var presence = evt is null
                 ? []
-                : await presenceRepository.ListActiveAsync(watch.EventId, _clock.GetUtcNow(), ct);
+                : await presenceRepository.ListActiveAsync(watch.EventId, now, ct);
 
             Publish(watch, stamp, presence);
         }
@@ -137,6 +138,9 @@ public sealed class EventLiveHub : IEventLiveFeed
             }
         }
     }
+
+    private static string Stamp(Event evt, DateTimeOffset now) =>
+        $"{evt.WriteSeq}.{evt.Version}.{evt.Lifecycle(now)}.{(evt.IsRatingOpen(now) ? "rating" : "closed")}";
 
     private static string PresenceKey(IReadOnlyList<ParticipantPresence> presence) =>
         string.Join(

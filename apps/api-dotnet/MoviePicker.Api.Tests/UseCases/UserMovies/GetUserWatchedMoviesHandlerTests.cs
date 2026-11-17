@@ -250,6 +250,20 @@ public sealed class GetUserWatchedMoviesHandlerTests
     }
 
     [Fact]
+    public async Task NightOverWithADrawLeft_CountsItsDrawnFilmAsWatched()
+    {
+        var handler = Build();
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
+        var lastNight = Evt("A", date: "2026-06-14", winnerMovieId: "m1") with { Config = new EventConfig { WinnerCount = 2 } };
+        ParticipatesIn(lastNight);
+        WinnerMoviesAre(Mov("m1", tmdbId: 10));
+
+        var res = await handler.HandleAsync("alice", null, 6);
+
+        Assert.Equal(10, Assert.Single(res.Items).TmdbId);
+    }
+
+    [Fact]
     public async Task ReturnsWinnerMovies_MostRecentEventFirst()
     {
         var handler = Build();

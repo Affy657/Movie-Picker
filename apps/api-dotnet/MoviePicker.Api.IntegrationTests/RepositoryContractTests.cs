@@ -731,6 +731,26 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task ListAwaitingWatchlistCleanup_NightWithADrawLeft_WaitsForItsLastDrawOrItsEnd()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var marker = Guid.NewGuid().ToString("N")[..8];
+        var twoWinners = new EventConfig { WinnerCount = 2 };
+        EventWinner Pick() => new() { MovieId = ObjectId.GenerateNewId().ToString(), Method = WinnerPickMethod.Wheel, PickedAt = Now };
+        await events.AddAsync(NewEvent("one-of-two-" + marker) with { Config = twoWinners, Winners = [Pick()], Date = "2026-09-15", Time = "11:00" });
+        var bothDrawn = await events.AddAsync(NewEvent("two-of-two-" + marker) with { Config = twoWinners, Winners = [Pick(), Pick()], Date = "2026-09-15", Time = "11:00" });
+        var autoClosed = await events.AddAsync(NewEvent("auto-" + marker) with { Config = twoWinners, Winners = [Pick()], Date = "2020-01-01" });
+        var closed = await events.AddAsync(NewEvent("closed-" + marker) with { Config = twoWinners, Winners = [Pick()], Date = "2026-09-15", Time = "11:00", ClosedAt = Now });
+
+        var found = await events.ListAwaitingWatchlistCleanupAsync(Now, 1000);
+
+        var mine = found.Where(e => e.Title.EndsWith(marker, StringComparison.Ordinal)).Select(e => e.Id).ToHashSet();
+        HashSet<string> expected = [bothDrawn.Id, autoClosed.Id, closed.Id];
+        Assert.Equal(expected, mine);
+    }
+
+    [Fact]
     public async Task ListOpenWithUnannouncedWheelPick_KeepsTheNightsOwingAnAnnouncement_HoweverFarAhead()
     {
         using var scope = _factory.Services.CreateScope();

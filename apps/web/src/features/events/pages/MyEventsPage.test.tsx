@@ -204,6 +204,46 @@ describe('MyEventsPage (MSW)', () => {
     expect(document.title).toBe(pageTitle('Mes soirées'));
   });
 
+  it('keeps a pending night that already has its first film out of what to handle', async () => {
+    server.use(
+      authMeHandler,
+      myEventsHandler(
+        [
+          {
+            id: 'p2',
+            slug: 'deux-films',
+            title: 'Soirée à deux films',
+            date: '2020-01-01',
+            time: '20:00',
+            createdAt: '2019-01-01T00:00:00Z',
+            updatedAt: '2020-01-02T00:00:00Z',
+            isCreator: true,
+            isParticipant: true,
+            lifecycle: 'pending',
+            participantCount: 2,
+            movieCount: 3,
+            autoCloseAt: '2099-01-01T00:00:00Z',
+            winnerMovies: [{ title: 'Matrix', posterPath: null }],
+          },
+        ],
+        [],
+        { active: 1, finished: 0 }
+      )
+    );
+
+    renderMyEvents();
+
+    const night = await screen.findByRole(
+      'link',
+      { name: /Soirée à deux films/i },
+      { timeout: 5000 }
+    );
+    expect(night).toHaveAttribute('href', '/e/deux-films');
+    expect(screen.queryByRole('heading', { name: /à traiter/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/aucun film n'a été choisi/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /clôturer sans film/i })).not.toBeInTheDocument();
+  });
+
   it('offers no leave on a joined night whose wheel already picked a movie', async () => {
     const joinedNight = {
       slug: 'autre',

@@ -10,7 +10,7 @@ const PROMPTED_MAX = 100;
 const RECENT_NIGHT_DAYS = 7;
 
 export function isRatingOpen(event: { isFinished?: boolean; lifecycle?: string }): boolean {
-  return !!event.isFinished || event.lifecycle === 'live';
+  return !!event.isFinished || event.lifecycle === 'live' || event.lifecycle === 'pending';
 }
 
 export function isRecentNight(date: string | null | undefined): boolean {

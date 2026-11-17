@@ -93,6 +93,51 @@ public sealed class EventTests
     }
 
     [Fact]
+    public void Lifecycle_AfterPendingDelay_OneOfTwoWinnersDrawn_StaysPending()
+    {
+        var evt = TwoWinnerNight(Winner("m1"));
+        var threeHoursIn = new DateTimeOffset(2026, 6, 30, 21, 0, 0, TimeSpan.Zero);
+
+        Assert.Equal(EventLifecycle.Pending, evt.Lifecycle(threeHoursIn));
+        Assert.False(evt.IsFinished(threeHoursIn));
+    }
+
+    [Fact]
+    public void Lifecycle_AfterPendingDelay_EveryWinnerDrawn_Finished()
+    {
+        var evt = TwoWinnerNight(Winner("m1"), Winner("m2"));
+        var threeHoursIn = new DateTimeOffset(2026, 6, 30, 21, 0, 0, TimeSpan.Zero);
+
+        Assert.Equal(EventLifecycle.Finished, evt.Lifecycle(threeHoursIn));
+    }
+
+    [Fact]
+    public void Lifecycle_PastAutoCloseDelay_OneOfTwoWinnersDrawn_FinishedByGuardRail()
+    {
+        var evt = TwoWinnerNight(Winner("m1"));
+        var pendingAt = new DateTimeOffset(2026, 6, 30, 20, 0, 0, TimeSpan.Zero);
+
+        Assert.Equal(EventLifecycle.Pending, evt.Lifecycle(pendingAt.AddDays(7).AddMinutes(-1)));
+        Assert.Equal(EventLifecycle.Finished, evt.Lifecycle(pendingAt.AddDays(7)));
+    }
+
+    [Fact]
+    public void Lifecycle_OneOfTwoWinnersDrawn_ClosedByTheHost_Finished()
+    {
+        var evt = TwoWinnerNight(Winner("m1")) with { ClosedAt = new DateTimeOffset(2026, 6, 30, 20, 30, 0, TimeSpan.Zero) };
+        var threeHoursIn = new DateTimeOffset(2026, 6, 30, 21, 0, 0, TimeSpan.Zero);
+
+        Assert.Equal(EventLifecycle.Finished, evt.Lifecycle(threeHoursIn));
+    }
+
+    private static Event TwoWinnerNight(params EventWinner[] winners) =>
+        WithSchedule("2026-06-30", "20:00") with
+        {
+            Config = new EventConfig { WinnerCount = 2 },
+            Winners = winners
+        };
+
+    [Fact]
     public void Lifecycle_WinnerChosenBeforePendingDelay_StaysLive()
     {
         var evt = WithSchedule("2026-06-30", "20:00", winnerMovieId: "m1");
@@ -167,6 +212,36 @@ public sealed class EventTests
         var nextDay = new DateTimeOffset(2026, 7, 1, 10, 0, 0, TimeSpan.Zero);
 
         Assert.True(evt.IsRatingOpen(nextDay));
+    }
+
+    [Fact]
+    public void IsRatingOpen_PendingWithADrawnWinner_True()
+    {
+        var evt = TwoWinnerNight(Winner("m1"));
+        var threeHoursIn = new DateTimeOffset(2026, 6, 30, 21, 0, 0, TimeSpan.Zero);
+
+        Assert.True(evt.IsRatingOpen(threeHoursIn));
+    }
+
+    [Fact]
+    public void IsRatingOpen_PendingWithoutWinner_False()
+    {
+        var evt = TwoWinnerNight();
+        var threeHoursIn = new DateTimeOffset(2026, 6, 30, 21, 0, 0, TimeSpan.Zero);
+
+        Assert.False(evt.IsRatingOpen(threeHoursIn));
+    }
+
+    [Theory]
+    [InlineData(19, false)]
+    [InlineData(20, false)]
+    [InlineData(21, true)]
+    public void IsOver_OnceThePendingDelayHasPassed_WhateverIsLeftToDraw(int utcHour, bool expected)
+    {
+        var evt = TwoWinnerNight(Winner("m1"));
+        var now = new DateTimeOffset(2026, 6, 30, utcHour, 0, 0, TimeSpan.Zero).AddMinutes(-1);
+
+        Assert.Equal(expected, evt.IsOver(now));
     }
 
     [Fact]
