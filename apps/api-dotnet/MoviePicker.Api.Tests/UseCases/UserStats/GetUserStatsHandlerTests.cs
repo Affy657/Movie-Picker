@@ -379,6 +379,21 @@ public sealed class GetUserStatsHandlerTests
     }
 
     [Fact]
+    public async Task Streak_CountsANightOverWithADrawLeft()
+    {
+        var handler = Build();
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
+        var parts = new[] { Part("p1", "A", DateTimeOffset.UtcNow) };
+        _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(parts);
+        _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Evt("A", "2026-06-14", winnerMovieId: "m1") with { Config = new EventConfig { WinnerCount = 2 } } });
+
+        var res = await handler.HandleAsync("alice");
+
+        Assert.Equal(1, res.BestStreakWeeks);
+    }
+
+    [Fact]
     public async Task Streak_ExcludesFinishedEventsWithoutWinner()
     {
         var handler = Build();
