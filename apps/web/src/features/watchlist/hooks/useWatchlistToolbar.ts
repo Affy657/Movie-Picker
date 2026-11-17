@@ -8,6 +8,7 @@ import {
   voteMinLabel,
 } from '@/features/movies/components/movieSearchFilterOptions';
 import { safeLocalStorageGet, safeLocalStorageSet } from '@/shared/utils/safeStorage';
+import { useHistoryEntryState } from '@/shared/hooks/useHistoryEntryState';
 import type { RatingScale } from '@/shared/types/theme';
 import type { MovieMediaType, WatchProviderOffer } from '@/shared/types/movie';
 import type { WatchlistItem } from '@/features/movies/api/watchlistApi';
@@ -205,7 +206,7 @@ export function useWatchlistToolbar({
   defaultSortBy = 'createdAt',
 }: UseWatchlistToolbarOptions) {
   const defaults = useMemo(() => defaultStateFor(defaultSortBy), [defaultSortBy]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useHistoryEntryState('watchlistToolbar.search', '');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [state, setState] = useState<PersistedState>(defaults);
   const skipNextWriteRef = useRef(true);
@@ -278,7 +279,7 @@ export function useWatchlistToolbar({
     setSearch('');
     clearAllFilters();
     extraFilter?.reset();
-  }, [clearAllFilters, extraFilter]);
+  }, [setSearch, clearAllFilters, extraFilter]);
 
   const hasActiveFilters = useMemo(
     () =>

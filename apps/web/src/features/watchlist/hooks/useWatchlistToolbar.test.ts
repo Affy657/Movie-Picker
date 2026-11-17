@@ -1,9 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { createElement, type ReactNode } from 'react';
+import { MemoryRouter } from 'react-router';
 import { renderHook, act } from '@testing-library/react';
 import { useWatchlistToolbar, type WatchlistEntry } from './useWatchlistToolbar';
 import type { WatchlistItem } from '@/features/movies/api/watchlistApi';
 
 const MEDIA_TYPE_LABELS = { movie: 'Films', tv: 'Séries' };
+
+function inRouter({ children }: Readonly<{ children: ReactNode }>) {
+  return createElement(MemoryRouter, null, children);
+}
 
 function item(overrides: Partial<WatchlistItem>): WatchlistItem {
   return {
@@ -41,14 +47,16 @@ const ITEMS: WatchlistItem[] = [
 ];
 
 function setup(items: WatchlistEntry[] = ITEMS) {
-  return renderHook(() =>
-    useWatchlistToolbar({
-      items,
-      userId: 'u1',
-      tmdbLanguage: 'fr',
-      ratingScale: 'ten',
-      mediaTypeLabels: MEDIA_TYPE_LABELS,
-    })
+  return renderHook(
+    () =>
+      useWatchlistToolbar({
+        items,
+        userId: 'u1',
+        tmdbLanguage: 'fr',
+        ratingScale: 'ten',
+        mediaTypeLabels: MEDIA_TYPE_LABELS,
+      }),
+    { wrapper: inRouter }
   );
 }
 
@@ -102,15 +110,17 @@ describe('useWatchlistToolbar', () => {
   });
 
   it('keeps the order of the source by relevance, the default of a saved list, and reverses it on demand', () => {
-    const { result } = renderHook(() =>
-      useWatchlistToolbar({
-        items: ITEMS,
-        userId: 'u1',
-        tmdbLanguage: 'fr',
-        mediaTypeLabels: MEDIA_TYPE_LABELS,
-        storageScope: 'savedList',
-        defaultSortBy: 'relevance',
-      })
+    const { result } = renderHook(
+      () =>
+        useWatchlistToolbar({
+          items: ITEMS,
+          userId: 'u1',
+          tmdbLanguage: 'fr',
+          mediaTypeLabels: MEDIA_TYPE_LABELS,
+          storageScope: 'savedList',
+          defaultSortBy: 'relevance',
+        }),
+      { wrapper: inRouter }
     );
 
     expect(result.current.sortBy).toBe('relevance');
@@ -208,14 +218,16 @@ describe('useWatchlistToolbar', () => {
     const watchlist = setup();
     act(() => watchlist.result.current.setSortBy('title'));
 
-    const createdList = renderHook(() =>
-      useWatchlistToolbar({
-        items: ITEMS,
-        userId: 'u1',
-        tmdbLanguage: 'fr',
-        mediaTypeLabels: MEDIA_TYPE_LABELS,
-        storageScope: 'list',
-      })
+    const createdList = renderHook(
+      () =>
+        useWatchlistToolbar({
+          items: ITEMS,
+          userId: 'u1',
+          tmdbLanguage: 'fr',
+          mediaTypeLabels: MEDIA_TYPE_LABELS,
+          storageScope: 'list',
+        }),
+      { wrapper: inRouter }
     );
     expect(createdList.result.current.sortBy).toBe('createdAt');
     act(() => createdList.result.current.setSortBy('duration'));
@@ -226,21 +238,23 @@ describe('useWatchlistToolbar', () => {
   it('narrows the films by an extra filter, counted as a filter and reset with the others', () => {
     let onlyMovies = true;
     let resets = 0;
-    const { result, rerender } = renderHook(() =>
-      useWatchlistToolbar({
-        items: ITEMS,
-        userId: 'u1',
-        tmdbLanguage: 'fr',
-        mediaTypeLabels: MEDIA_TYPE_LABELS,
-        storageScope: 'watched',
-        extraFilter: {
-          matches: (entry) => !onlyMovies || entry.mediaType === 'movie',
-          active: onlyMovies,
-          reset: () => {
-            resets += 1;
+    const { result, rerender } = renderHook(
+      () =>
+        useWatchlistToolbar({
+          items: ITEMS,
+          userId: 'u1',
+          tmdbLanguage: 'fr',
+          mediaTypeLabels: MEDIA_TYPE_LABELS,
+          storageScope: 'watched',
+          extraFilter: {
+            matches: (entry) => !onlyMovies || entry.mediaType === 'movie',
+            active: onlyMovies,
+            reset: () => {
+              resets += 1;
+            },
           },
-        },
-      })
+        }),
+      { wrapper: inRouter }
     );
 
     expect(result.current.visibleItems.map((entry) => entry.title)).toEqual(['Gamma', 'Alpha']);
