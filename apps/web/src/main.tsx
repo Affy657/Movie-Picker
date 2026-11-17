@@ -27,13 +27,18 @@ function hideSplash(): void {
   setTimeout(removeSplash, SPLASH_REMOVAL_FALLBACK_MS);
 }
 
+function isPrerenderedDocument(): boolean {
+  return document.getElementById('splash') === null;
+}
+
 async function mountApp(): Promise<void> {
   const translationsReady = loadLocale(preferredLocale());
-  const startupRouteRequested = import('@/app/routeChunks').then(({ preloadStartupRoute }) =>
-    preloadStartupRoute(window.location.pathname)
-  );
+  const renderableStartupRoute = import('@/app/routeChunks').then(({ preloadStartupRoute }) => {
+    const startupPageLoaded = preloadStartupRoute(window.location.pathname);
+    return isPrerenderedDocument() ? startupPageLoaded : undefined;
+  });
   const { default: App } = await import('@/app/App');
-  await Promise.all([translationsReady, startupRouteRequested]);
+  await Promise.all([translationsReady, renderableStartupRoute]);
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <App />
