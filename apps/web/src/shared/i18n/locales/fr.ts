@@ -2093,7 +2093,7 @@ export const fr = {
     movie_not_in_event: 'Film introuvable dans cette soirée',
     movie_not_a_winner: 'Ce film ne fait pas partie des gagnants de la soirée',
     participant_not_found: 'Participant introuvable',
-    watchlist_not_found: 'Watchlist introuvable',
+    watchlist_not_found: 'La watchlist de ce membre n’est pas publique.',
     watched_not_found: 'Les films vus de ce membre ne sont pas publics.',
     list_not_found: 'Cette liste n’existe plus.',
     list_name_taken: 'Vous avez déjà une liste nommée « {{name}} ». Choisissez un autre nom.',

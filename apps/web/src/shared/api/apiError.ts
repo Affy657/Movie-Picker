@@ -8,6 +8,7 @@ export const API_ERROR_REASONS = {
   letterboxdSyncFailed: 'letterboxd_sync_failed',
   ratingNotFound: 'rating_not_found',
   watchedNotFound: 'watched_not_found',
+  watchlistNotFound: 'watchlist_not_found',
   listNameTaken: 'list_name_taken',
 } as const;
 

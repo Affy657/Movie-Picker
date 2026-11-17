@@ -167,7 +167,30 @@ describe('ProfileWatchlistPage (MSW)', () => {
     expect(await screen.findByText(/aucun film à voir pour le moment/i)).toBeInTheDocument();
   });
 
-  it('shows not found when the watchlist is hidden or the profile private', async () => {
+  it('tells a visitor the watchlist is not public, with nothing to retry', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/users/:handle`, () =>
+        HttpResponse.json({ ...ALICE_PROFILE, isWatchlistPublic: false, watchlistCount: null })
+      ),
+      http.get(`${TEST_API_V1}/users/:handle/watchlist`, () =>
+        HttpResponse.json(
+          { code: 404, reason: 'watchlist_not_found', error: 'Watchlist not found' },
+          { status: 404 }
+        )
+      )
+    );
+    renderPage('alice');
+
+    expect(
+      await screen.findByText('La watchlist de ce membre n’est pas publique.')
+    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /la watchlist de alice/i })).toBeInTheDocument();
+    expect(screen.queryByText(/ce profil n'existe pas/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Réessayer' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/0 film à voir/i)).not.toBeInTheDocument();
+  });
+
+  it('shows not found when the watchlist answers a bare 404', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/:handle/watchlist`, () =>
         HttpResponse.json({ code: 'NOT_FOUND', message: 'Introuvable' }, { status: 404 })

@@ -2068,7 +2068,7 @@ export const en: Locale = {
     movie_not_in_event: 'Movie not found in this movie night',
     movie_not_a_winner: 'This movie is not one of the winners of the movie night',
     participant_not_found: 'Participant not found',
-    watchlist_not_found: 'Watchlist not found',
+    watchlist_not_found: 'The watchlist of this member is not public.',
     watched_not_found: 'The watched films of this member are not public.',
     list_not_found: 'This list no longer exists.',
     list_name_taken: 'You already have a list named “{{name}}”. Choose another name.',
