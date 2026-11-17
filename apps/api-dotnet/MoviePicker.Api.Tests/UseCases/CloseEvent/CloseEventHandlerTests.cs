@@ -112,6 +112,48 @@ public sealed class CloseEventHandlerTests
         Assert.NotNull(captured.ClosedAt);
     }
 
+    private sealed class FixedClock(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
+    }
+
+    [Fact]
+    public async Task HandleAsync_PendingNightWithADrawLeft_FinishesItKeepingTheDrawnFilm()
+    {
+        var threeHoursAfterTheStart = new DateTimeOffset(2026, 11, 14, 22, 0, 0, TimeSpan.Zero);
+        var evt = ActiveEvent() with
+        {
+            Date = "2026-11-14",
+            Time = "20:00",
+            Config = new EventConfig { WinnerCount = 2 },
+            Winners = TestWinners.Won("mov1")
+        };
+        Assert.Equal(EventLifecycle.Pending, evt.Lifecycle(threeHoursAfterTheStart));
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
+        Event? captured = null;
+        _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .Callback<Event, CancellationToken>((e, _) => captured = e)
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+        var sut = new CloseEventHandler(
+            _eventRepo.Object,
+            _hostTokenAccessor.Object,
+            _currentUser.Object,
+            _watchlistCleanup.Object,
+            _recurringEvents.Object,
+            NullLogger<CloseEventHandler>.Instance,
+            new FixedClock(threeHoursAfterTheStart));
+
+        await sut.HandleAsync("evt1");
+
+        Assert.NotNull(captured);
+        Assert.Equal(["mov1"], captured.GetWinnerMovieIds());
+        Assert.Equal(EventLifecycle.Finished, captured.Lifecycle(threeHoursAfterTheStart));
+        _watchlistCleanup.Verify(
+            w => w.RunForEventAsync(It.Is<Event>(e => e.ClosedAt == threeHoursAfterTheStart), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
     [Fact]
     public async Task HandleAsync_CreatorWithoutHostToken_Succeeds()
     {

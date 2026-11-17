@@ -20,6 +20,7 @@ export type ConfirmState =
   | { kind: 'removeMovie'; movieId: string; movieTitle: string; voteCount: number }
   | { kind: 'removeNote'; movieId: string; movieTitle: string }
   | { kind: 'closeWithoutMovie' }
+  | { kind: 'finishNight' }
   | null;
 
 export type ConfirmBusyByKind = Record<NonNullable<ConfirmState>['kind'], boolean>;

@@ -14,12 +14,14 @@ export type EventHeaderActionsInput = {
   canRemoveWinner: boolean;
   canReset: boolean;
   canCloseWithoutMovie: boolean;
+  canFinishNight: boolean;
 };
 
 export type DrawManagement = {
   removeWinner: boolean;
   reset: boolean;
   closeWithoutMovie: boolean;
+  finishNight: boolean;
 };
 
 export type EventHeaderActionsPlan = {
@@ -41,6 +43,7 @@ function drawManagement(input: EventHeaderActionsInput): DrawManagement | null {
     removeWinner: input.canRemoveWinner,
     reset: input.canReset,
     closeWithoutMovie: input.canCloseWithoutMovie,
+    finishNight: input.canFinishNight,
   };
   return Object.values(management).some(Boolean) ? management : null;
 }

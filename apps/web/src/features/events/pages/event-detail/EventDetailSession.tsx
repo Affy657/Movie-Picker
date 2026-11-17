@@ -204,6 +204,7 @@ export default function EventDetailSession({
     handleLeaveEvent,
     requestResetWheel,
     requestCloseWithoutMovie,
+    requestFinishNight,
   } = useEventDetailActions({
     slug,
     hostToken,
@@ -301,6 +302,7 @@ export default function EventDetailSession({
         wheel={wheel}
         onRequestResetWheel={requestResetWheel}
         onRequestCloseWithoutMovie={requestCloseWithoutMovie}
+        onRequestFinishNight={requestFinishNight}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
         viewToggleInHeader={!showWinnerStage}

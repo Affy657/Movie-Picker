@@ -1114,6 +1114,11 @@ export const fr = {
       closeWithoutMovieConfirmMessage:
         'La soirée « {{title}} » sera clôturée sans film. Cette action est définitive.',
       closeWithoutMovieConfirmAction: 'Clôturer sans film',
+      finishNightButton: 'Terminer la soirée',
+      finishNightConfirmTitle: 'Terminer la soirée ?',
+      finishNightConfirmMessage:
+        'La soirée « {{title}} » se termine avec les films déjà tirés, sans tirer les suivants. Cette action est définitive.',
+      finishNightConfirmAction: 'Terminer la soirée',
       resetButton: 'Repartir de zéro',
       resetConfirmTitle: 'Repartir de zéro\u00a0?',
       resetConfirmMessage:

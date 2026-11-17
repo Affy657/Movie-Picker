@@ -144,6 +144,7 @@ export default function EventDetailSessionChrome({
   wheel,
   onRequestResetWheel,
   onRequestCloseWithoutMovie,
+  onRequestFinishNight,
   viewMode,
   onViewModeChange,
   viewToggleInHeader,
@@ -169,6 +170,7 @@ export default function EventDetailSessionChrome({
   wheel: WheelApi;
   onRequestResetWheel: () => void;
   onRequestCloseWithoutMovie: () => void;
+  onRequestFinishNight: () => void;
   viewMode: MoviesViewMode;
   onViewModeChange: (mode: MoviesViewMode) => void;
   viewToggleInHeader: boolean;
@@ -178,7 +180,9 @@ export default function EventDetailSessionChrome({
   onlineCount: number;
   proposerNames: readonly string[];
 }>) {
-  const pendingWithoutFilm = lifecycle === 'pending' && (event.winners?.length ?? 0) === 0;
+  const pending = lifecycle === 'pending';
+  const hasDrawnFilm = (event.winners?.length ?? 0) > 0;
+  const pendingWithoutFilm = pending && !hasDrawnFilm;
   const plan = eventHeaderActions({
     isHost: !!event.isHost,
     isFinished: !!event.isFinished,
@@ -191,6 +195,7 @@ export default function EventDetailSessionChrome({
     canRemoveWinner: wheel.showRemoveWinner,
     canReset: wheel.showReset,
     canCloseWithoutMovie: settings.canConfigure && pendingWithoutFilm,
+    canFinishNight: settings.canConfigure && pending && hasDrawnFilm,
   });
   const wheelSelecting = wheel.manualMode || wheel.removalMode;
   const showActions = !offline && (hasHeaderActions(plan) || wheelSelecting);
@@ -222,6 +227,7 @@ export default function EventDetailSessionChrome({
               addMovieTriggerRef={addMovie.triggerRef}
               onRequestReset={onRequestResetWheel}
               onRequestCloseWithoutMovie={onRequestCloseWithoutMovie}
+              onRequestFinishNight={onRequestFinishNight}
             />
           ) : undefined
         }

@@ -524,6 +524,28 @@ describe('EventDetail (MSW)', () => {
         screen.queryByRole('menuitem', { name: 'Clôturer sans film' })
       ).not.toBeInTheDocument();
     });
+
+    it('finishes the night with the film already drawn once the host confirms', async () => {
+      const user = userEvent.setup();
+      servePartlyDrawnNight();
+      let closed = 0;
+      server.use(
+        http.post(`${TEST_API_V1}/events/${slug}/close`, () => {
+          closed += 1;
+          return HttpResponse.json({ message: 'closed' });
+        })
+      );
+      renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
+
+      await user.click(await screen.findByRole('button', { name: 'Gérer le tirage' }));
+      await user.click(screen.getByRole('menuitem', { name: 'Terminer la soirée' }));
+      const dialog = await screen.findByRole('dialog', { name: /^terminer la soirée/i });
+      expect(within(dialog).getByText(/films déjà tirés/i)).toBeInTheDocument();
+      expect(closed).toBe(0);
+      await user.click(within(dialog).getByRole('button', { name: 'Terminer la soirée' }));
+
+      await waitFor(() => expect(closed).toBe(1));
+    });
   });
 
   it('shows the movies error and Retry when loading the movies fails', async () => {

@@ -17,6 +17,7 @@ const host: EventHeaderActionsInput = {
   canRemoveWinner: false,
   canReset: false,
   canCloseWithoutMovie: false,
+  canFinishNight: false,
 };
 
 const guest: EventHeaderActionsInput = { ...host, isHost: false, canSpin: false };
@@ -48,7 +49,12 @@ describe('eventHeaderActions', () => {
     });
     expect(plan.draw).toBe('primary');
     expect(plan.addMovie).toBe('secondary');
-    expect(plan.manage).toEqual({ removeWinner: true, reset: true, closeWithoutMovie: false });
+    expect(plan.manage).toEqual({
+      removeWinner: true,
+      reset: true,
+      closeWithoutMovie: false,
+      finishNight: false,
+    });
   });
 
   it('shows the movie as chosen without a main action once every draw is done', () => {
@@ -79,7 +85,31 @@ describe('eventHeaderActions', () => {
     const plan = eventHeaderActions({ ...host, lifecycle: 'pending', canCloseWithoutMovie: true });
     expect(plan.draw).toBe('primary');
     expect(plan.addMovie).toBe('secondary');
-    expect(plan.manage).toEqual({ removeWinner: false, reset: false, closeWithoutMovie: true });
+    expect(plan.manage).toEqual({
+      removeWinner: false,
+      reset: false,
+      closeWithoutMovie: true,
+      finishNight: false,
+    });
+  });
+
+  it('offers to finish a pending night that already has a film, next to its next draw', () => {
+    const plan = eventHeaderActions({
+      ...host,
+      lifecycle: 'pending',
+      hasWinner: true,
+      remainingDraws: 1,
+      canRemoveWinner: true,
+      canReset: true,
+      canFinishNight: true,
+    });
+    expect(plan.draw).toBe('primary');
+    expect(plan.manage).toEqual({
+      removeWinner: true,
+      reset: true,
+      closeWithoutMovie: false,
+      finishNight: true,
+    });
   });
 
   it('keeps the movie shown as chosen during the night and leaves rating to the movie card', () => {

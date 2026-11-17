@@ -89,7 +89,7 @@ export function useEventDetailActions({
       deleteMoviePitchNote(slug, movieId, participant?.participantId ?? null, hostToken),
   });
 
-  const closeWithoutMovieMutation = useMutation({
+  const closeNightMutation = useMutation({
     mutationFn: () => postEventClose(slug, hostToken),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
@@ -105,7 +105,7 @@ export function useEventDetailActions({
   const removeParticipant = removeParticipantMutation.mutate;
   const removeMovie = removeMovieMutation.mutate;
   const removeNote = removeNoteMutation.mutate;
-  const closeWithoutMovie = closeWithoutMovieMutation.mutate;
+  const closeNight = closeNightMutation.mutate;
   const resetWheel = wheel.reset;
 
   const handleRemoveParticipant = useCallback((participantId: string, pseudo: string) => {
@@ -227,10 +227,10 @@ export function useEventDetailActions({
     }
   }, [resetWheelRequested, wheel.loading]);
 
-  const confirmCloseWithoutMovie = useCallback(() => {
+  const confirmCloseNight = useCallback(() => {
     setActionError(null);
-    closeWithoutMovie();
-  }, [closeWithoutMovie, setActionError]);
+    closeNight();
+  }, [closeNight, setActionError]);
 
   const confirmBusyByKind: ConfirmBusyByKind = useMemo(
     () => ({
@@ -239,14 +239,15 @@ export function useEventDetailActions({
       resetWheel: wheel.loading,
       removeMovie: removeMovieMutation.isPending,
       removeNote: removeNoteMutation.isPending,
-      closeWithoutMovie: closeWithoutMovieMutation.isPending,
+      closeWithoutMovie: closeNightMutation.isPending,
+      finishNight: closeNightMutation.isPending,
     }),
     [
       removeParticipantMutation.isPending,
       wheel.loading,
       removeMovieMutation.isPending,
       removeNoteMutation.isPending,
-      closeWithoutMovieMutation.isPending,
+      closeNightMutation.isPending,
     ]
   );
 
@@ -261,7 +262,7 @@ export function useEventDetailActions({
         confirmResetWheel,
         confirmRemoveMovie,
         confirmRemoveNote,
-        confirmCloseWithoutMovie,
+        confirmCloseNight,
         busyByKind: confirmBusyByKind,
       }),
     [
@@ -273,7 +274,7 @@ export function useEventDetailActions({
       confirmResetWheel,
       confirmRemoveMovie,
       confirmRemoveNote,
-      confirmCloseWithoutMovie,
+      confirmCloseNight,
       confirmBusyByKind,
     ]
   );
@@ -283,6 +284,7 @@ export function useEventDetailActions({
     () => setConfirmState({ kind: 'closeWithoutMovie' }),
     []
   );
+  const requestFinishNight = useCallback(() => setConfirmState({ kind: 'finishNight' }), []);
 
   return {
     confirmDialogContent,
@@ -296,5 +298,6 @@ export function useEventDetailActions({
     handleLeaveEvent,
     requestResetWheel,
     requestCloseWithoutMovie,
+    requestFinishNight,
   };
 }

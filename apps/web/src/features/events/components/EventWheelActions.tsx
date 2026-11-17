@@ -5,6 +5,7 @@ import {
   CircleMinus,
   CircleX,
   Disc3,
+  Flag,
   MousePointerClick,
   Plus,
   RotateCcw,
@@ -32,6 +33,7 @@ type EventWheelActionsProps = {
   addMovieTriggerRef?: RefObject<HTMLButtonElement | null>;
   onRequestReset: () => void;
   onRequestCloseWithoutMovie: () => void;
+  onRequestFinishNight: () => void;
 };
 
 function SelectionBar({ wheel, t }: Readonly<{ wheel: EventWheelState; t: Translate }>) {
@@ -84,6 +86,7 @@ function ManageMenu({
   dense,
   onRequestReset,
   onRequestCloseWithoutMovie,
+  onRequestFinishNight,
   t,
 }: Readonly<{
   wheel: EventWheelState;
@@ -91,6 +94,7 @@ function ManageMenu({
   dense: boolean;
   onRequestReset: () => void;
   onRequestCloseWithoutMovie: () => void;
+  onRequestFinishNight: () => void;
   t: Translate;
 }>) {
   const menu = useMenuState();
@@ -146,6 +150,18 @@ function ManageMenu({
               }}
             >
               {t('events.wheel.closeWithoutMovieButton')}
+            </MenuItem>
+          ) : null}
+          {manage.finishNight ? (
+            <MenuItem
+              icon={<Flag size={ICON_SIZE.sm} aria-hidden />}
+              aria-haspopup="dialog"
+              onClick={() => {
+                menu.close();
+                onRequestFinishNight();
+              }}
+            >
+              {t('events.wheel.finishNightButton')}
             </MenuItem>
           ) : null}
         </MenuPanel>
@@ -333,7 +349,7 @@ function weightedActions(
 }
 
 export default function EventWheelActions(props: Readonly<EventWheelActionsProps>) {
-  const { wheel, plan, onRequestReset, onRequestCloseWithoutMovie } = props;
+  const { wheel, plan, onRequestReset, onRequestCloseWithoutMovie, onRequestFinishNight } = props;
   const { t } = useTranslation();
   if (wheel.manualMode || wheel.removalMode) return <SelectionBar wheel={wheel} t={t} />;
 
@@ -352,6 +368,7 @@ export default function EventWheelActions(props: Readonly<EventWheelActionsProps
           dense={dense}
           onRequestReset={onRequestReset}
           onRequestCloseWithoutMovie={onRequestCloseWithoutMovie}
+          onRequestFinishNight={onRequestFinishNight}
           t={t}
         />
       ) : null}
