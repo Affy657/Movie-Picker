@@ -36,8 +36,11 @@ async function mountApp(): Promise<void> {
     const startupPageLoaded = preloadStartupRoute(window.location.pathname);
     return isPrerenderedDocument() ? startupPageLoaded : undefined;
   });
-  const { default: App } = await import('@/app/App');
-  await Promise.all([translationsReady, renderableStartupRoute]);
+  const [{ default: App }] = await Promise.all([
+    import('@/app/App'),
+    translationsReady,
+    renderableStartupRoute,
+  ]);
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <App />
