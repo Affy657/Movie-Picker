@@ -14,18 +14,18 @@ function reloadedRecently(now: number): boolean {
   return last > 0 && now - last < RELOAD_COOLDOWN_MS;
 }
 
-export function reloadOnStaleBuild(
-  page: EventTarget = window,
+export function reloadIfStaleBuild(
+  error: unknown,
   reload: () => void = () => window.location.reload(),
   now: () => number = Date.now,
   isOnline: () => boolean = () => navigator.onLine
-): void {
-  page.addEventListener('vite:preloadError', () => {
-    const at = now();
-    if (!isOnline() || reloadedRecently(at)) return;
-    if (!safeSessionStorageSet(STALE_BUILD_RELOAD_KEY, String(at))) return;
-    reload();
-  });
+): boolean {
+  if (!isChunkLoadError(error)) return false;
+  const at = now();
+  if (!isOnline() || reloadedRecently(at)) return false;
+  if (!safeSessionStorageSet(STALE_BUILD_RELOAD_KEY, String(at))) return false;
+  reload();
+  return true;
 }
 
 export function reloadForFreshBuild(

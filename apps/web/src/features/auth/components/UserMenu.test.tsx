@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterEach, afterAll, onTestFinished, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
@@ -30,6 +30,29 @@ const baseUser: UserProfile = {
   hasPassword: true,
   linkedProviders: [],
 };
+
+function emulateDialogFocusRestoration() {
+  const focusedBeforeOpening = new WeakMap<HTMLDialogElement, Element | null>();
+  const showModal = vi
+    .spyOn(HTMLDialogElement.prototype, 'showModal')
+    .mockImplementation(function showModal(this: HTMLDialogElement) {
+      focusedBeforeOpening.set(this, document.activeElement);
+      this.setAttribute('open', '');
+      this.querySelector<HTMLElement>('button, input, textarea, select, a[href]')?.focus();
+    });
+  const close = vi.spyOn(HTMLDialogElement.prototype, 'close').mockImplementation(function close(
+    this: HTMLDialogElement
+  ) {
+    this.removeAttribute('open');
+    const previous = focusedBeforeOpening.get(this);
+    if (previous instanceof HTMLElement) previous.focus();
+    this.dispatchEvent(new Event('close'));
+  });
+  onTestFinished(() => {
+    showModal.mockRestore();
+    close.mockRestore();
+  });
+}
 
 function renderMenu(user: UserProfile = baseUser) {
   return render(
@@ -222,6 +245,32 @@ describe('UserMenu', () => {
     );
     expect(trigger).toHaveFocus();
   });
+
+  it.each([
+    ['feedback', /envoyer un retour/i, /envoyer un retour/i],
+    ['install guide', /installer l['’]app/i, /installer movie picker/i],
+  ])(
+    'gives the focus back to the account button once the %s window closes, with the keyboard',
+    async (_window, entryName, headingName) => {
+      emulateDialogFocusRestoration();
+      const user = userEvent.setup();
+      renderMenu();
+      const trigger = screen.getByRole('button', { name: /menu du compte/i });
+
+      trigger.focus();
+      await user.keyboard('{Enter}');
+      screen.getByRole('menuitem', { name: entryName }).focus();
+      await user.keyboard('{Enter}');
+      const dialog = (await screen.findByRole('heading', { name: headingName })).closest('dialog')!;
+      within(dialog)
+        .getAllByRole('button', { name: /fermer/i })[0]!
+        .focus();
+      await user.keyboard('{Enter}');
+
+      await waitFor(() => expect(dialog).not.toBeInTheDocument());
+      expect(trigger).toHaveFocus();
+    }
+  );
 
   it('ouvre le guide d’installation et ferme le menu', async () => {
     const user = userEvent.setup();

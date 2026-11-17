@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useState, type ComponentType, type ReactNode, type SVGProps } from 'react';
+import { Suspense, useState, type ComponentType, type ReactNode, type SVGProps } from 'react';
 import { Bookmark, CalendarDays, Compass, HelpCircle, LogIn, Plus, UserRound } from 'lucide-react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { useTranslation, type TranslationKey, type Translate } from '@/shared/i18n';
@@ -13,6 +13,7 @@ import { LANDING_ANCHORS } from '@/app/pages/landing/anchors';
 import UserMenu from '@/features/auth/components/UserMenu';
 import InboxBell from '@/features/notifications/components/InboxBell';
 import Footer from './Footer';
+import PageFallback from './PageFallback';
 import HeaderSearch from './HeaderSearch';
 import PwaAutoUpdate from './PwaAutoUpdate';
 import ConsentBanner from './ConsentBanner';
@@ -22,6 +23,7 @@ import SignOutPendingNotice from './SignOutPendingNotice';
 import { useLegacyMovieLinkRedirect } from './useLegacyMovieLinkRedirect';
 import styles from './AppShell.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
+import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import CreateEventDialogProvider from '@/features/events/components/create-event/CreateEventDialogProvider';
@@ -375,7 +377,11 @@ export default function AppShell() {
           </div>
         </header>
         <div className={styles.content}>
-          <Outlet />
+          <ErrorBoundary key={location.pathname}>
+            <Suspense fallback={<PageFallback />}>
+              <Outlet />
+            </Suspense>
+          </ErrorBoundary>
         </div>
         <Footer clearMobileNav={!isLandingRoute} />
         {isLandingRoute ? null : (
