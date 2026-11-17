@@ -144,59 +144,18 @@ jobs:
       # rating and runtime for a morning. The reverse breaks the same way when the API drops a
       # field. `all` says nothing about the other lane; `front` or `api` is accepted only when
       # nothing of the other lane changed between the release the stage serves and this commit,
-      # compared by GitHub, no checkout needed. The way out is always `all`.
+      # compared by GitHub, no checkout needed. The way out is always `all`. The same guard keeps
+      # an API rollback from leaving the web app behind (`rollback.yml`).
       - name: Refuse a partial target that leaves the other lane behind
         if: inputs.target != 'all'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TARGET: ${{ inputs.target }}
-          STAGE: ${{ inputs.stage }}
-        run: |
-          set -eo pipefail
-          if [ "$STAGE" = "production" ]; then
-            api_url="$PRODUCTION_API_URL"; web_url="$PRODUCTION_WEB_URL"
-          else
-            api_url="$STAGING_API_URL"; web_url="$STAGING_WEB_URL"
-          fi
-          if [ "$TARGET" = "front" ]; then
-            other="API"; lane="apps/api-dotnet/"
-            body="$RUNNER_TEMP/other-ready.json"
-            curl -sS --retry 5 --retry-all-errors --retry-delay 5 --max-time 60 -o "$body" "$api_url/health/ready" || true
-            served="$(jq -r '.release // ""' "$body" 2>/dev/null || true)"
-          else
-            other="web app"; lane="apps/web/"
-            page="$RUNNER_TEMP/other-index.html"
-            curl -sS --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 -o "$page" "$web_url/" || true
-            served="$(grep -oE '<meta name="release" content="[0-9a-f]{40}"' "$page" 2>/dev/null | grep -oE '[0-9a-f]{40}' | head -1 || true)"
-          fi
-          if ! printf '%s' "$served" | grep -qE '^[0-9a-f]{40}$'; then
-            echo "::error::The $STAGE $other reports no release: whether this $TARGET fits it cannot be checked. Deploy target=all."
-            exit 1
-          fi
-          if [ "$served" = "$GITHUB_SHA" ]; then
-            echo "The $STAGE $other already serves $GITHUB_SHA: $TARGET alone fits it."
-            exit 0
-          fi
-          # `compare` lists at most 300 files, on its first page only, and does not say it stopped:
-          # `--paginate` walks the commits, not the files. On v1.6.0...v1.7.0 it listed 300 files
-          # of 1,661, none under apps/web/ where 853 had changed. So a full list clears a partial
-          # target, a list that reached the cap refuses it.
-          if ! compared="$(gh api "repos/$GITHUB_REPOSITORY/compare/${served}...${GITHUB_SHA}?per_page=1" \
-              --jq "{listed: (.files // [] | length), lane: ([.files[]? | .filename | select(startswith(\"$lane\"))] | length)}")"; then
-            echo "::error::GitHub could not compare $served (the release the $STAGE $other serves) with $GITHUB_SHA. Deploy target=all."
-            exit 1
-          fi
-          listed="$(printf '%s' "$compared" | jq -r '.listed')"
-          changed="$(printf '%s' "$compared" | jq -r '.lane')"
-          if [ "$listed" -ge 300 ]; then
-            echo "::error::GitHub stops listing at 300 changed files and reached it between $served and $GITHUB_SHA: whether $lane changed cannot be told. Deploy target=all."
-            exit 1
-          fi
-          if [ "$changed" != "0" ]; then
-            echo "::error::$changed file(s) under $lane changed between $served, the release the $STAGE $other serves, and $GITHUB_SHA: a $TARGET alone would leave the $STAGE $other behind. Deploy target=all."
-            exit 1
-          fi
-          echo "Nothing under $lane changed since the $STAGE $other release $served: $TARGET alone fits it."
+        uses: ./.github/actions/require-lane-unchanged
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          served-lane: ${{ inputs.target == 'front' && 'api' || 'web' }}
+          served-url: ${{ inputs.target == 'front' && (inputs.stage == 'production' && env.PRODUCTION_API_URL || env.STAGING_API_URL) || (inputs.stage == 'production' && env.PRODUCTION_WEB_URL || env.STAGING_WEB_URL) }}
+          head: ${{ github.sha }}
+          path: ${{ inputs.target == 'front' && 'apps/api-dotnet/' || 'apps/web/' }}
+          remedy: "A partial target must not leave the other lane of the stage behind: deploy target=all."
       # Read on the public addresses, as a user would: the API reports the SHA it was built from
       # in `/health/ready`, the web app writes it in a `<meta name="release">` of its index.html
       # (`apps/web/vite.config.ts`). A staging that serves another commit, or nothing, refuses

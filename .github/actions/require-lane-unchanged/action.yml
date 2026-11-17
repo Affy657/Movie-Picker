@@ -1,0 +1,101 @@
+name: "Require a lane unchanged against the served release"
+description: "Reads the release a lane of a stage serves on its public address (the API reports it in /health/ready, the web app in a <meta name=\"release\"> of its index.html), then refuses the run when anything under a directory changed between that release and another commit, compared by GitHub without a checkout. Exactly one of base and head is given, the served release stands for the other. Shared by the partial-target guard of deploy.yml and the API rollback of rollback.yml, so that neither leaves the two lanes of a stage built from incompatible commits; needs `contents: read`."
+inputs:
+  github-token:
+    description: "Token that reads the commits of the repository"
+    required: true
+  served-lane:
+    description: "Lane whose served release is read: api or web"
+    required: true
+  served-url:
+    description: "Public address of that lane on the stage (the API base URL, or the web app origin)"
+    required: true
+  base:
+    description: "Commit the comparison starts from; empty for the served release"
+    required: false
+    default: ""
+  head:
+    description: "Commit the comparison ends at; empty for the served release"
+    required: false
+    default: ""
+  path:
+    description: "Directory whose changes between base and head refuse the run (apps/api-dotnet/, apps/web/)"
+    required: true
+  remedy:
+    description: "Sentence closing every refusal: the way out for the person who triggered the run"
+    required: true
+runs:
+  using: composite
+  steps:
+    # `compare` lists at most 300 files, on its first page only, and does not say it stopped:
+    # `--paginate` walks the commits, not the files. On v1.6.0...v1.7.0 it listed 300 files of
+    # 1,661, none under apps/web/ where 853 had changed. So a full list clears the run, a list that
+    # reached the cap refuses it. A release that cannot be read refuses it too: a missing answer is
+    # never a green light.
+    - name: Compare the lane with the served release
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        SERVED_LANE: ${{ inputs.served-lane }}
+        SERVED_URL: ${{ inputs.served-url }}
+        BASE: ${{ inputs.base }}
+        HEAD: ${{ inputs.head }}
+        LANE_PATH: ${{ inputs.path }}
+        REMEDY: ${{ inputs.remedy }}
+      run: |
+        set -eo pipefail
+        if [ -n "$BASE" ] && [ -n "$HEAD" ]; then
+          echo "::error::Give base or head, not both: the served release stands for the other one."
+          exit 1
+        fi
+        if [ -z "$BASE" ] && [ -z "$HEAD" ]; then
+          echo "::error::Give base or head: the served release stands for the other one only."
+          exit 1
+        fi
+        case "$SERVED_LANE" in
+          api)
+            body="$RUNNER_TEMP/served-ready.json"
+            curl -sS --retry 5 --retry-all-errors --retry-delay 5 --max-time 60 -o "$body" "${SERVED_URL%/}/health/ready" || true
+            served="$(jq -r '.release // ""' "$body" 2>/dev/null || true)"
+            ;;
+          web)
+            page="$RUNNER_TEMP/served-index.html"
+            curl -sS --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 -o "$page" "${SERVED_URL%/}/" || true
+            served="$(grep -oE '<meta name="release" content="[0-9a-f]{40}"' "$page" 2>/dev/null | grep -oE '[0-9a-f]{40}' | head -1 || true)"
+            ;;
+          *)
+            echo "::error::served-lane takes api or web, not '$SERVED_LANE'."
+            exit 1
+            ;;
+        esac
+        if ! printf '%s' "$served" | grep -qE '^[0-9a-f]{40}$'; then
+          echo "::error::$SERVED_URL reports no release: whether $LANE_PATH changed against it cannot be checked. $REMEDY"
+          exit 1
+        fi
+        echo "$SERVED_URL serves release $served."
+        base="${BASE:-$served}"
+        head="${HEAD:-$served}"
+        if ! printf '%s' "$base" | grep -qE '^[0-9a-f]{40}$' || ! printf '%s' "$head" | grep -qE '^[0-9a-f]{40}$'; then
+          echo "::error::Comparing '$base' with '$head' needs two full commit SHAs: whether $LANE_PATH changed between them cannot be checked. $REMEDY"
+          exit 1
+        fi
+        if [ "$base" = "$head" ]; then
+          echo "$base on both sides: nothing under $LANE_PATH can have changed."
+          exit 0
+        fi
+        if ! compared="$(gh api "repos/$GITHUB_REPOSITORY/compare/${base}...${head}?per_page=1" \
+            --jq "{listed: (.files // [] | length), lane: ([.files[]? | .filename | select(startswith(\"$LANE_PATH\"))] | length)}")"; then
+          echo "::error::GitHub could not compare $base with $head. $REMEDY"
+          exit 1
+        fi
+        listed="$(printf '%s' "$compared" | jq -r '.listed')"
+        changed="$(printf '%s' "$compared" | jq -r '.lane')"
+        if [ "$listed" -ge 300 ]; then
+          echo "::error::GitHub stops listing at 300 changed files and reached it between $base and $head: whether $LANE_PATH changed cannot be told. $REMEDY"
+          exit 1
+        fi
+        if [ "$changed" != "0" ]; then
+          echo "::error::$changed file(s) under $LANE_PATH changed between $base and $head. $REMEDY"
+          exit 1
+        fi
+        echo "Nothing under $LANE_PATH changed between $base and $head."
