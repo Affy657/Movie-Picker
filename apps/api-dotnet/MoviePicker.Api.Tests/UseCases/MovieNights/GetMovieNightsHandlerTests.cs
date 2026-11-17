@@ -222,6 +222,8 @@ public sealed class GetMovieNightsHandlerTests
         var other = await ProposeAsync(first, me, tmdbId: 603);
         var meAgain = await JoinAsync(second, "Moi", Me);
         var filmAgain = await ProposeAsync(second, meAgain);
+        await _events.UpdateAsync(first with { Winners = TestWinners.Won(film.Id, other.Id) });
+        await WonByAsync(second, filmAgain);
         await RateAsync(film, me, 7);
         await RateAsync(film, friend, 8);
         await RateAsync(other, friend, 1);
@@ -232,6 +234,22 @@ public sealed class GetMovieNightsHandlerTests
         Assert.NotNull(result.Rating);
         Assert.Equal(7.7, result.Rating!.Average);
         Assert.Equal(3, result.Rating.Count);
+    }
+
+    [Fact]
+    public async Task HandleAsync_RatingOfAProposalNoLongerAmongItsNightWinners_IsLeftOut()
+    {
+        var night = await NightAsync("Une", Me, closedAt: Now.AddDays(-40));
+        var me = await JoinAsync(night, "Moi", Me);
+        var film = await ProposeAsync(night, me);
+        var keptWinner = await ProposeAsync(night, me, tmdbId: 603);
+        await WonByAsync(night, keptWinner);
+        await RateAsync(film, me, 9);
+        await RateAsync(keptWinner, me, 6);
+
+        var result = await CreateSut().HandleAsync(Me, Inception, MovieMediaType.Movie);
+
+        Assert.Null(result.Rating);
     }
 
     [Fact]

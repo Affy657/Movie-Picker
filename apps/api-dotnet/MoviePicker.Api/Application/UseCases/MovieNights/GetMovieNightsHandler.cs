@@ -63,6 +63,10 @@ public sealed class GetMovieNightsHandler : IGetMovieNightsHandler
         var utcNow = _clock.GetUtcNow();
         var nights = eventIds.ConvertAll(id => myNights[id]);
         var viewers = await ListViewersAsync(eventIds, participants, participantById, proposalIds, ct);
+        var drawnProposalIds = nights
+            .SelectMany(night => night.GetWinnerMovieIds())
+            .Where(proposalIds.Contains)
+            .ToHashSet(StringComparer.Ordinal);
 
         return new MovieNightsResponse
         {
@@ -74,7 +78,7 @@ public sealed class GetMovieNightsHandler : IGetMovieNightsHandler
                 .ToList(),
             ProposalCount = nights.Count,
             WinCount = nights.Count(night => IsWonByTheTitle(night, proposalIds)),
-            Rating = Rate((await ratingsTask).Where(rating => proposalIds.Contains(rating.MovieId)).ToList()),
+            Rating = Rate((await ratingsTask).Where(rating => drawnProposalIds.Contains(rating.MovieId)).ToList()),
             SeenBy = await DescribeViewersAsync(viewers.Take(MaxViewers).ToList(), ct),
             SeenCount = viewers.Count,
         };
