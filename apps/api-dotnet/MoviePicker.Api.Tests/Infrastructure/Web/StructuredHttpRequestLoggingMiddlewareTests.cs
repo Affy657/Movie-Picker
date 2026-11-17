@@ -68,6 +68,23 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
     }
 
     [Fact]
+    public async Task InvokeAsync_ReplacesTheControlCharactersOfThePathAndQuery()
+    {
+        var logger = new CapturingLogger<StructuredHttpRequestLoggingMiddleware>();
+        var ctx = new DefaultHttpContext();
+        ctx.Request.Method = "GET";
+        ctx.Request.Path = "/api/v1/movies\u001b[31m";
+        ctx.Request.QueryString = new QueryString("?q=a\tb");
+        var mw = new StructuredHttpRequestLoggingMiddleware(_ => Task.CompletedTask, logger);
+
+        await mw.InvokeAsync(ctx);
+
+        var entry = Assert.Single(logger.Entries);
+        Assert.DoesNotContain(entry.Message, char.IsControl);
+        Assert.Contains("HTTP GET /api/v1/movies [31m?q=a b", entry.Message);
+    }
+
+    [Fact]
     public async Task InvokeAsync_RedactsHostTokenInQueryString()
     {
         var logger = new CapturingLogger<StructuredHttpRequestLoggingMiddleware>();
@@ -169,6 +186,31 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
         Assert.Equal(LogLevel.Error, entry.Level);
         Assert.DoesNotContain("SECRET-INVITE-TOKEN", entry.Message);
         Assert.Contains("/api/v1/lists/join/***", entry.Message);
+    }
+
+    [Fact]
+    public async Task UnhandledExceptionResponse_LogsTheMethodAndPathWithoutLineBreakNorControlCharacter()
+    {
+        var logger = new CapturingLogger<StructuredHttpRequestLoggingMiddleware>();
+        var loggers = new Mock<ILoggerFactory>();
+        loggers.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(logger);
+        var ctx = new DefaultHttpContext
+        {
+            RequestServices = new ServiceCollection().AddSingleton(loggers.Object).BuildServiceProvider()
+        };
+        ctx.Request.Method = "POST\r\nforged";
+        ctx.Request.Path = "/api/v1/movies\n\u001b[31mforged";
+        ctx.Features.Set<IExceptionHandlerFeature>(new ExceptionHandlerFeature
+        {
+            Error = new InvalidOperationException("boom"),
+            Path = ctx.Request.Path
+        });
+
+        await UnhandledExceptionResponse.WriteAsync(ctx);
+
+        var entry = Assert.Single(logger.Entries);
+        Assert.DoesNotContain(entry.Message, char.IsControl);
+        Assert.Equal("Unhandled exception on POST forged /api/v1/movies  [31mforged", entry.Message);
     }
 
     [Fact]
