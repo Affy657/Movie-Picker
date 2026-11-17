@@ -26,9 +26,9 @@
 # Security hardening:
 #   - Actions pinned by commit SHA (anti supply-chain); the # vX comment lets Dependabot propose updates.
 #   - Docker images (.NET base, gitleaks, MongoDB) pinned by sha256 digest. The tools that no
-#     Dependabot ecosystem follows (gitleaks image, actionlint and zizmor binaries, SonarScanner,
-#     the MongoDB image) are listed by `scripts/check-tool-versions.mjs`, run during the weekly
-#     maintenance pass.
+#     Dependabot ecosystem follows (gitleaks image, actionlint, zizmor and Trivy binaries,
+#     SonarScanner, the MongoDB image) are listed by `scripts/check-tool-versions.mjs`, run during
+#     the weekly maintenance pass.
 #   - Least-privilege permissions (deny by default); checkout with persist-credentials: false.
 #   - Secrets passed through env: (never interpolated directly into a run: block).
 #   - Blocking SonarCloud Quality Gate: a red QG fails the job, hence forbids the deployment.
@@ -327,16 +327,35 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: npm audit (Trivy; pnpm audit unavailable since the npm endpoint was removed on 2026-07-15, see pnpm/pnpm#11265)
+      # Same split as the image gate of `deploy.yml`, because `ignore-unfixed` applies to every
+      # severity of a step: a HIGH blocks once a fix is published, a CRITICAL blocks with or
+      # without one. The binary and the database do not come from the GHA cache, which the jobs
+      # running the code of the lockfile can write: a poisoned entry would blind this gate.
+      - uses: ./.github/actions/install-trivy
+        if: needs.changes.outputs.web == 'true'
+      - name: npm audit (Trivy, HIGH with a fix; pnpm audit unavailable since the npm endpoint was removed on 2026-07-15, see pnpm/pnpm#11265)
         if: needs.changes.outputs.web == 'true'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: fs
           scan-ref: pnpm-lock.yaml
           scanners: vuln
-          severity: HIGH,CRITICAL
+          severity: HIGH
           exit-code: "1"
           ignore-unfixed: true
+          cache: false
+          skip-setup-trivy: true
+      - name: npm audit (Trivy, every CRITICAL)
+        if: needs.changes.outputs.web == 'true'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: pnpm-lock.yaml
+          scanners: vuln
+          severity: CRITICAL
+          exit-code: "1"
+          cache: false
+          skip-setup-trivy: true
       - uses: ./.github/actions/setup-dotnet-cache
         if: needs.changes.outputs.api == 'true'
       - name: Restore API .NET (for the NuGet audit)
