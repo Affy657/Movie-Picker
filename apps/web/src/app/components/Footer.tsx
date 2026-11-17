@@ -9,6 +9,7 @@ import { usePwaInstallClick } from '@/shared/hooks/usePwaInstall';
 import ProposeIdeaButton from './ProposeIdeaButton';
 import SupportReportButton from './SupportReportButton';
 import InstallPwaDialog from '@/shared/components/InstallPwaDialog';
+import { useCloseOnPageChange } from './useCloseOnPageChange';
 import ConsentDialog from '@/shared/components/ConsentDialog';
 import LanguageSelector from './LanguageSelector';
 import ThemeToggle from './ThemeToggle';
@@ -70,6 +71,10 @@ export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>
     closeGuide: closeInstallGuide,
   } = usePwaInstallClick('footer');
   const [consentDialogOpen, setConsentDialogOpen] = useState(false);
+  useCloseOnPageChange(() => {
+    closeInstallGuide();
+    setConsentDialogOpen(false);
+  });
 
   return (
     <footer

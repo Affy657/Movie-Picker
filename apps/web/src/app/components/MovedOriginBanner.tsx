@@ -6,6 +6,7 @@ import { shouldOfferSystemBrowser } from './InAppBrowserBanner';
 import Notice from '@/shared/components/Notice';
 import Button from '@/shared/components/Button';
 import InstallPwaDialog from '@/shared/components/InstallPwaDialog';
+import { useCloseOnPageChange } from './useCloseOnPageChange';
 
 function shouldShowNotice(): boolean {
   return isMovedOriginNoticePending() && !shouldOfferSystemBrowser();
@@ -15,6 +16,7 @@ export default function MovedOriginBanner() {
   const { t } = useTranslation();
   const [visible, setVisible] = useState(shouldShowNotice);
   const install = usePwaInstallClick('moved_origin');
+  useCloseOnPageChange(install.closeGuide);
 
   useEffect(() => {
     if (!visible || install.shouldShow) return;

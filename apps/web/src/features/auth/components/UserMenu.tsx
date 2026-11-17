@@ -22,6 +22,7 @@ import {
 } from '@/shared/components/Menu';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { ProposeIdeaDialog } from '@/app/components/ProposeIdeaButton';
+import { useCloseOnPageChange } from '@/app/components/useCloseOnPageChange';
 import {
   THEME_ICON,
   THEME_LABEL_KEY,
@@ -239,6 +240,10 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
     onClick: onInstallClick,
     closeGuide: closeInstallGuide,
   } = usePwaInstallClick('user_menu');
+  useCloseOnPageChange(() => {
+    setFeedbackDialogOpen(false);
+    closeInstallGuide();
+  });
 
   const logoutAction = useCallback(() => logout(), [logout]);
   const {
