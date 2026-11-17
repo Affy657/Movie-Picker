@@ -7,7 +7,9 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
 
 function isPendingEvent(ev: MyEventSummary): boolean {
-  return normalizeMyEventLifecycle(ev.lifecycle) === 'pending';
+  return (
+    normalizeMyEventLifecycle(ev.lifecycle) === 'pending' && (ev.winnerMovies?.length ?? 0) === 0
+  );
 }
 
 export function flattenEvents(pages: MyEventsListResponse[] | undefined): MyEventSummary[] {

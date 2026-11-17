@@ -178,6 +178,7 @@ export default function EventDetailSessionChrome({
   onlineCount: number;
   proposerNames: readonly string[];
 }>) {
+  const pendingWithoutFilm = lifecycle === 'pending' && (event.winners?.length ?? 0) === 0;
   const plan = eventHeaderActions({
     isHost: !!event.isHost,
     isFinished: !!event.isFinished,
@@ -189,7 +190,7 @@ export default function EventDetailSessionChrome({
     remainingDraws: wheel.remainingDraws,
     canRemoveWinner: wheel.showRemoveWinner,
     canReset: wheel.showReset,
-    canCloseWithoutMovie: settings.canConfigure && lifecycle === 'pending',
+    canCloseWithoutMovie: settings.canConfigure && pendingWithoutFilm,
   });
   const wheelSelecting = wheel.manualMode || wheel.removalMode;
   const showActions = !offline && (hasHeaderActions(plan) || wheelSelecting);
@@ -233,7 +234,7 @@ export default function EventDetailSessionChrome({
         onRetry={onRetryConnection}
       />
       <EventProposingNotice names={proposerNames} />
-      {lifecycle === 'pending' ? <EventPendingBanner isHost={!!event.isHost} /> : null}
+      {pendingWithoutFilm ? <EventPendingBanner isHost={!!event.isHost} /> : null}
       <EventDetailSessionOverlays
         slug={slug}
         hostToken={hostToken}

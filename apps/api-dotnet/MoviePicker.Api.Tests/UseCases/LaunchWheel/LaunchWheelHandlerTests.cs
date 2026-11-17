@@ -237,6 +237,52 @@ public sealed class LaunchWheelHandlerTests
         }
     }
 
+    private sealed class FixedClock(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
+    }
+
+    [Fact]
+    public async Task HandleAsync_TwoWinnerNightPendingAfterItsFirstDraw_DrawsTheSecondFilm()
+    {
+        var threeHoursAfterTheStart = new DateTimeOffset(2026, 11, 14, 22, 0, 0, TimeSpan.Zero);
+        var evt = ActiveEvent() with
+        {
+            Date = "2026-11-14",
+            Time = "20:00",
+            Config = new EventConfig { WinnerCount = 2 },
+            Winners = TestWinners.Won("mov1")
+        };
+        var movies = new List<Movie>
+        {
+            new() { Id = "mov1", EventId = evt.Id, ParticipantId = "p1", TmdbId = 1, Title = "First Pick", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
+            new() { Id = "mov2", EventId = evt.Id, ParticipantId = "p2", TmdbId = 2, Title = "Second Pick", Year = "2021", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
+        };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
+        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movies);
+        Event? captured = null;
+        _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .Callback<Event, CancellationToken>((e, _) => captured = e)
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+        var sut = new LaunchWheelHandler(
+            _eventRepo.Object,
+            _movieRepo.Object,
+            _voteRepo.Object,
+            _hostTokenAccessor.Object,
+            _currentUserAccessor.Object,
+            _posterStore.Object,
+            NullLogger<LaunchWheelHandler>.Instance,
+            new FixedClock(threeHoursAfterTheStart));
+
+        var result = await sut.HandleAsync("evt1");
+
+        Assert.Equal("mov2", result.Winner.Id);
+        Assert.NotNull(captured);
+        Assert.Equal(["mov1", "mov2"], captured.GetWinnerMovieIds());
+        Assert.True(captured.IsFinished(threeHoursAfterTheStart));
+    }
+
     [Fact]
     public async Task HandleAsync_CreatorWithoutHostToken_Succeeds()
     {

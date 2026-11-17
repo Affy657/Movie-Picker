@@ -282,6 +282,22 @@ public sealed class RatingReminderPassTests
     }
 
     [Fact]
+    public async Task RunAsync_NightStillPendingAfterItsFirstOfTwoDraws_RemindsTheDrawnFilm()
+    {
+        GivenNights(FinishedNight("e1", "2026-03-09", "m1") with { Config = new EventConfig { WinnerCount = 2 } });
+        GivenWinners("e1", ("m1", "Inception"));
+        GivenParticipants("e1", ("p1", "u1"));
+        GivenUsers(Member("u1"));
+
+        var result = await CreatePass().RunAsync();
+
+        Assert.Equal(new RatingReminderPassResult(1, 1), result);
+        _notifications.Verify(
+            n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "u1" && u.MovieTitle == "Inception"), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task RunAsync_NightClosedByTheHost_IsReminded()
     {
         GivenNights(FinishedNight("e1", "2026-03-08", "m1") with { ClosedAt = TenInParis.AddHours(-1) });

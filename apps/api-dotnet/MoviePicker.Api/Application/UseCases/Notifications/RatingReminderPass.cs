@@ -61,7 +61,7 @@ public sealed class RatingReminderPass : IRatingReminderPass
             todayStartUtc,
             ct);
         var finishedNights = candidates
-            .Where(e => e.HasWinner && e.IsFinished(now))
+            .Where(e => e.HasWinner && e.IsOver(now))
             .ToList();
 
         if (finishedNights.Count == 0)

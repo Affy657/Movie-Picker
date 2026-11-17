@@ -289,7 +289,7 @@ public sealed class EventReminderPass : IEventReminderPass
         CancellationToken ct)
     {
         var pendingEvents = openEvents
-            .Where(e => !string.IsNullOrEmpty(e.CreatorUserId) && e.Lifecycle(now) == EventLifecycle.Pending)
+            .Where(e => !string.IsNullOrEmpty(e.CreatorUserId) && !e.HasWinner && e.Lifecycle(now) == EventLifecycle.Pending)
             .ToList();
 
         if (pendingEvents.Count == 0)
