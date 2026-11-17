@@ -22,6 +22,7 @@ import {
 } from '@/shared/components/Menu';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { ProposeIdeaDialog } from '@/app/components/ProposeIdeaButton';
+import { useCloseOnPageChange } from '@/app/components/useCloseOnPageChange';
 import {
   THEME_ICON,
   THEME_LABEL_KEY,
@@ -150,6 +151,7 @@ type UserMenuPanelProps = {
   user: UserProfile;
   panelProps: Omit<ComponentProps<typeof MenuPanel>, 'ariaLabel' | 'children'>;
   onClose: () => void;
+  onHandOverToDialog: () => void;
   onOpenFeedback: () => void;
   install: { show: boolean; mode: string | null; onClick: () => Promise<void> | void };
   logout: { run: () => Promise<unknown>; loading: boolean; error: string | null };
@@ -159,6 +161,7 @@ function UserMenuPanel({
   user,
   panelProps,
   onClose,
+  onHandOverToDialog,
   onOpenFeedback,
   install,
   logout,
@@ -189,7 +192,7 @@ function UserMenuPanel({
         icon={menuIcon(MessageSquare)}
         aria-haspopup="dialog"
         onClick={() => {
-          onClose();
+          onHandOverToDialog();
           onOpenFeedback();
         }}
       >
@@ -200,7 +203,7 @@ function UserMenuPanel({
           icon={menuIcon(Download)}
           aria-haspopup={install.mode === 'native' ? undefined : 'dialog'}
           onClick={() => {
-            onClose();
+            onHandOverToDialog();
             void install.onClick();
           }}
         >
@@ -237,6 +240,10 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
     onClick: onInstallClick,
     closeGuide: closeInstallGuide,
   } = usePwaInstallClick('user_menu');
+  useCloseOnPageChange(() => {
+    setFeedbackDialogOpen(false);
+    closeInstallGuide();
+  });
 
   const logoutAction = useCallback(() => logout(), [logout]);
   const {
@@ -244,6 +251,11 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
     loading: loggingOut,
     error: logoutError,
   } = useAsyncAction(logoutAction, t('auth.logout.fallbackError'));
+
+  const closeMenuOnTrigger = () => {
+    menu.close();
+    menu.triggerProps.ref.current?.focus();
+  };
 
   return (
     <div ref={menu.containerRef} className={styles.container}>
@@ -267,6 +279,7 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
           user={user}
           panelProps={menu.panelProps}
           onClose={menu.close}
+          onHandOverToDialog={closeMenuOnTrigger}
           onOpenFeedback={() => setFeedbackDialogOpen(true)}
           install={{ show: showInstall, mode: installMode, onClick: onInstallClick }}
           logout={{ run: runLogout, loading: loggingOut, error: logoutError }}

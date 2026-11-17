@@ -8,6 +8,8 @@ public abstract class MovieListMembershipContract
 {
     protected static readonly DateTimeOffset Now = new(2026, 11, 13, 20, 0, 0, TimeSpan.Zero);
 
+    private static readonly DateTimeOffset Lapsed = Now.AddDays(-90);
+
     private const int Seats = MovieList.MaxMembers;
 
     protected abstract IMovieListRepository Lists { get; }
@@ -144,6 +146,53 @@ public abstract class MovieListMembershipContract
         Assert.False(await Lists.AddInvitationAsync("nope", new MovieListInvitation(NewUserId(), Now), Seats));
 
         Assert.Equal(2, (await Lists.FindAsync(list.Id))!.Invitations.Count);
+    }
+
+    [Fact]
+    public async Task AddInvitation_ALapsedInvitation_HoldsNoSeat_AndCanBeSentAgain()
+    {
+        var owner = NewUserId();
+        var invitee = NewUserId();
+        var list = await CreateAsync(owner, "Partagée");
+        Assert.True(await Lists.AddInvitationAsync(list.Id, new MovieListInvitation(invitee, Lapsed), Seats));
+        foreach (var unanswered in Enumerable.Range(0, Seats - 2).Select(_ => NewUserId()))
+            Assert.True(await Lists.AddInvitationAsync(list.Id, new MovieListInvitation(unanswered, Lapsed), Seats));
+
+        Assert.True(await Lists.AddInvitationAsync(list.Id, new MovieListInvitation(invitee, Now), Seats));
+        Assert.False(await Lists.AddInvitationAsync(list.Id, new MovieListInvitation(invitee, Now), Seats));
+        Assert.True(await Lists.AddInvitationAsync(list.Id, new MovieListInvitation(NewUserId(), Now), Seats));
+
+        var stored = (await Lists.FindAsync(list.Id))!;
+        Assert.Equal(Now, Assert.Single(stored.Invitations, invitation => invitation.UserId == invitee).InvitedAt);
+        Assert.Equal(Seats, stored.Invitations.Count);
+    }
+
+    [Fact]
+    public async Task AcceptInvitation_OfALapsedInvitation_IsRefused()
+    {
+        var owner = NewUserId();
+        var invitee = NewUserId();
+        var list = await CreateAsync(owner, "Partagée");
+        await Lists.AddInvitationAsync(list.Id, new MovieListInvitation(invitee, Lapsed), Seats);
+
+        Assert.False(await Lists.AcceptInvitationAsync(list.Id, new MovieListMember(invitee, Now)));
+
+        Assert.Empty((await Lists.FindAsync(list.Id))!.Members);
+    }
+
+    [Fact]
+    public async Task JoinByInviteToken_LapsedInvitationsHoldNoSeat()
+    {
+        var owner = NewUserId();
+        var list = await CreateAsync(owner, "Partagée");
+        var link = new MovieListInviteLink(Guid.NewGuid().ToString("N"), Now.AddDays(7), Disabled: false);
+        await Lists.SetInviteLinkAsync(owner, list.Id, link);
+        await Lists.AddInvitationAsync(list.Id, new MovieListInvitation(NewUserId(), Lapsed), maxSeats: 2);
+        var newcomer = NewUserId();
+
+        Assert.True(await Lists.JoinByInviteTokenAsync(link.Token, new MovieListMember(newcomer, Now), Now, maxSeats: 2));
+
+        Assert.Equal([newcomer], (await Lists.FindAsync(list.Id))!.Members.Select(m => m.UserId));
     }
 
     [Fact]
@@ -316,14 +365,16 @@ public abstract class MovieListMembershipContract
         var joined = await SharedAsync(lea, "Rejointe", me);
         var inviting = await CreateAsync(lea, "En attente");
         var unrelated = await CreateAsync(lea, "Sans moi");
+        var lapsed = await CreateAsync(lea, "Oubliée", Now.AddHours(-1));
         await Lists.AddInvitationAsync(inviting.Id, new MovieListInvitation(me, Now), Seats);
+        await Lists.AddInvitationAsync(lapsed.Id, new MovieListInvitation(me, Lapsed), Seats);
 
         Assert.Equal([joined.Id], (await Lists.ListJoinedAsync(me)).Select(list => list.Id));
-        Assert.Equal([inviting.Id], (await Lists.ListInvitingAsync(me)).Select(list => list.Id));
+        Assert.Equal([inviting.Id, lapsed.Id], (await Lists.ListInvitingAsync(me)).Select(list => list.Id));
         Assert.Equal(
             [inviting.Id],
-            await Lists.ListPendingInvitationIdsAsync(me, [joined.Id, inviting.Id, unrelated.Id, "nope"]));
-        Assert.Empty(await Lists.ListPendingInvitationIdsAsync(me, []));
+            await Lists.ListPendingInvitationIdsAsync(me, [joined.Id, inviting.Id, unrelated.Id, lapsed.Id, "nope"], Now));
+        Assert.Empty(await Lists.ListPendingInvitationIdsAsync(me, [], Now));
     }
 
     [Fact]

@@ -85,6 +85,47 @@ public sealed class SentryBeforeSendTests
     }
 
     [Fact]
+    public void Prepare_MasksTheInviteTokenCarriedByAReturnTo()
+    {
+        const string query = "?returnTo=%2Fl%2FSECRET%2Frejoindre";
+        var sentryEvent = new SentryEvent(new InvalidOperationException("boom"))
+        {
+            Request = new SentryRequest
+            {
+                Url = "https://api.test/api/v1/auth/oauth/google/start" + query,
+                QueryString = query
+            },
+            TransactionName = "GET /api/v1/auth/oauth/{provider}/start"
+        };
+        sentryEvent.SetTag("Referer", "https://movie-picker.fr/l/SECRET/rejoindre");
+
+        var prepared = SentryBeforeSend.Prepare(sentryEvent);
+
+        Assert.NotNull(prepared);
+        Assert.Equal("https://api.test/api/v1/auth/oauth/google/start?returnTo=***", prepared!.Request.Url);
+        Assert.Equal("?returnTo=***", prepared.Request.QueryString);
+        Assert.Equal("https://movie-picker.fr/l/***/rejoindre", prepared.Tags["Referer"]);
+        Assert.DoesNotContain(prepared.Tags.Values, value => value.Contains("SECRET", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void RedactBreadcrumb_MasksTheInviteTokenCarriedByAReturnTo()
+    {
+        const string url = "https://api.test/api/v1/auth/oauth/google/start?returnTo=%2Fl%2FSECRET%2Frejoindre";
+        var breadcrumb = new Breadcrumb(
+            "GET " + url,
+            "http",
+            new Dictionary<string, string> { ["url"] = url, ["method"] = "GET" },
+            "http");
+
+        var redacted = SentryBeforeSend.RedactBreadcrumb(breadcrumb, new SentryHint());
+
+        Assert.NotNull(redacted);
+        Assert.Equal("https://api.test/api/v1/auth/oauth/google/start?returnTo=***", redacted!.Data!["url"]);
+        Assert.DoesNotContain("SECRET", redacted.Message);
+    }
+
+    [Fact]
     public void PrepareTransaction_MasksTheInviteTokenInItsNameUrlAndTags()
     {
         var transaction = new SentryTransaction("POST /api/v1/lists/join/SECRET-TOKEN", "http.server")

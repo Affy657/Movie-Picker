@@ -89,7 +89,7 @@ export default function EventWinnerStage({
   return (
     <EventWinnerSummary
       winners={winners}
-      isFinished={!!event.isFinished}
+      isFinished={!!event.isFinished || event.lifecycle === 'pending'}
       ratingOpen={isRatingOpen(event)}
       date={event.date}
       participantAvatars={participantAvatars}

@@ -43,7 +43,7 @@ public sealed record Event
             return EventLifecycle.Finished;
 
         if (utcNow >= pendingAt)
-            return HasWinner ? EventLifecycle.Finished : EventLifecycle.Pending;
+            return RemainingWinnerSlots == 0 ? EventLifecycle.Finished : EventLifecycle.Pending;
 
         if (utcNow >= startUtc)
             return EventLifecycle.Live;
@@ -54,7 +54,10 @@ public sealed record Event
     public bool IsFinished(DateTimeOffset utcNow) => Lifecycle(utcNow) == EventLifecycle.Finished;
 
     public bool IsRatingOpen(DateTimeOffset utcNow) =>
-        HasWinner && Lifecycle(utcNow) is EventLifecycle.Live or EventLifecycle.Finished;
+        HasWinner && Lifecycle(utcNow) is not EventLifecycle.Upcoming;
+
+    public bool IsOver(DateTimeOffset utcNow) =>
+        Lifecycle(utcNow) is EventLifecycle.Pending or EventLifecycle.Finished;
 
     public bool HasWinner => Winners.Count > 0;
 

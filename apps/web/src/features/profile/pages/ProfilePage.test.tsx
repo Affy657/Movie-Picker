@@ -212,6 +212,35 @@ describe('ProfilePage (MSW)', () => {
     expect(screen.queryByText('Les films vus n’ont pas pu être chargés.')).toBeNull();
   });
 
+  it('leaves the winning proposals out of the figures when the watched films are hidden', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () =>
+        HttpResponse.json({ ...ALICE_PROFILE, isWatchedPublic: false })
+      ),
+      createUserStatsHandler('alice', { eventsCreated: 4, moviesProposed: 9, winningProposals: 0 })
+    );
+
+    renderProfile('alice');
+
+    expect(await screen.findByRole('link', { name: /9\s*films proposés/i })).toBeInTheDocument();
+    expect(screen.queryByText(/propositions? gagnantes?/i)).toBeNull();
+  });
+
+  it('shows the winning proposals of a member whose watched films are public', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      createUserStatsHandler('alice', { eventsCreated: 4, moviesProposed: 9, winningProposals: 3 })
+    );
+
+    renderProfile('alice');
+
+    expect(
+      await screen.findByRole('link', { name: /3\s*propositions gagnantes/i })
+    ).toHaveAttribute('href', '/u/alice/propositions-gagnantes');
+  });
+
   it('asks for the last watched films without waiting for the profile', async () => {
     let asked = false;
     server.use(

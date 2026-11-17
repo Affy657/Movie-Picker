@@ -25,6 +25,7 @@ public sealed class MarkWatchedHandlerTests
         _kit.Clock.Advance(TimeSpan.FromTicks(1_234_567));
         var expected = AtStoragePrecision(_kit.Clock.Now);
         var poster = "https://image.tmdb.org/t/p/w500/matrix.jpg";
+        await _kit.AccountAsync(Me);
 
         var status = await _kit.MarkHandler().HandleAsync(
             Me,
@@ -41,6 +42,18 @@ public sealed class MarkWatchedHandlerTests
             ("Film 603", "1999", (string?)poster, (double?)8.2, (int?)136, expected, (int?)8, expected, expected),
             (stored!.Title, stored.Year, stored.PosterPath, stored.VoteAverage, stored.RuntimeMinutes, stored.WatchedAt, stored.Rating, stored.CreatedAt, stored.UpdatedAt));
         Assert.Equal([878, 28], stored.GenreIds);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ReplayedForADeletedAccount_WritesNothing()
+    {
+        await _kit.AccountAsync(Me);
+        await _kit.Users.DeleteAsync(Me);
+
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _kit.MarkHandler().HandleAsync(Me, Title(603)));
+
+        Assert.Equal(ErrorCodes.UserNotFound, ex.Reason);
+        Assert.Empty(await _kit.Watched.ListByOwnerAsync(Me));
     }
 
     [Fact]
@@ -67,6 +80,24 @@ public sealed class MarkWatchedHandlerTests
         var stored = await _kit.Watched.GetAsync(Me, 603, MovieMediaType.Movie);
         Assert.Equal(((int?)136, (double?)8.2), (stored!.RuntimeMinutes, stored.VoteAverage));
         Assert.Equal(DetailGenres, stored.GenreIds);
+    }
+
+    [Fact]
+    public async Task HandleAsync_StoresTheTitleYearAndFactsOfTmdb_NotThoseTheClientSent()
+    {
+        _kit.Tmdb
+            .Setup(t => t.GetDetailsAsync(550, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TmdbMovieDetails(550, "Fight Club", null, null, null, [], 139, [], DetailGenres, "1999-10-15", VoteAverage: 8.4));
+        await _kit.AccountAsync(Me);
+
+        await _kit.MarkHandler().HandleAsync(
+            Me,
+            new MarkWatchedRequest { TmdbId = 550, Title = "Faux titre", Year = "1066", RuntimeMinutes = 1, VoteAverage = 0.5 });
+
+        var stored = await _kit.Watched.GetAsync(Me, 550, MovieMediaType.Movie);
+        Assert.Equal(
+            ("Fight Club", "1999", (double?)8.4, (int?)139),
+            (stored!.Title, stored.Year, stored.VoteAverage, stored.RuntimeMinutes));
     }
 
     [Fact]

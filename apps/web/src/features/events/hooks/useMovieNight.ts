@@ -109,6 +109,8 @@ export function useMovieNight({ slug, tmdbId, mediaType }: MovieNightTarget) {
     clearActionError: () => setActionError(null),
     voteLimitReached: voting.voteLimitReached,
     dismissVoteLimit: voting.dismissVoteLimit,
+    offlineVoteOutcome: page.offlineVoteOutcome,
+    dismissOfflineVoteOutcome: page.dismissOfflineVoteOutcome,
     maxVotes: event?.config?.maxVotesPerParticipant ?? null,
     canAct,
     canRemove,

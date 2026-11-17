@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Diagnostics;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Infrastructure.Web;
@@ -15,8 +16,8 @@ public static class UnhandledExceptionResponse
                 .LogError(
                     error,
                     "Unhandled exception on {Method} {Path}",
-                    context.Request.Method,
-                    SensitiveQueryRedaction.RedactPath(context.Request.Path.Value));
+                    LogText.SingleLine(context.Request.Method),
+                    LogText.SingleLine(SensitiveQueryRedaction.RedactPath(context.Request.Path.Value)));
         }
 
         context.Response.StatusCode = StatusCodes.Status500InternalServerError;

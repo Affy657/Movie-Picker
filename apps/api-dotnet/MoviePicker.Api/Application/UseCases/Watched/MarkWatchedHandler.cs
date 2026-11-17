@@ -1,6 +1,7 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.MovieLists;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Application.UseCases.UserMovies;
 using MoviePicker.Api.Domain.Entities;
 
@@ -10,6 +11,7 @@ public sealed class MarkWatchedHandler : IMarkWatchedHandler
 {
     private readonly IWatchedTitleRepository _watched;
     private readonly IWatchlistRepository _watchlist;
+    private readonly IUserRepository _users;
     private readonly MovieListItemFactory _facts;
     private readonly WatchedHistoryReader _history;
     private readonly TimeProvider _clock;
@@ -17,12 +19,14 @@ public sealed class MarkWatchedHandler : IMarkWatchedHandler
     public MarkWatchedHandler(
         IWatchedTitleRepository watched,
         IWatchlistRepository watchlist,
+        IUserRepository users,
         MovieListItemFactory facts,
         WatchedHistoryReader history,
         TimeProvider clock)
     {
         _watched = watched;
         _watchlist = watchlist;
+        _users = users;
         _facts = facts;
         _history = history;
         _clock = clock;
@@ -36,12 +40,18 @@ public sealed class MarkWatchedHandler : IMarkWatchedHandler
         var rating = WatchedRating.Require(request.Rating);
         var existing = await _watched.GetAsync(userId, request.TmdbId, request.MediaType, ct);
         if (existing is null)
-            await _watched.AddIfAbsentAsync(await NewEntryAsync(userId, request, rating, ct), ct);
+            await AddAsync(await NewEntryAsync(userId, request, rating, ct), ct);
         else if (rating is not null && rating != existing.Rating)
             await _watched.SetRatingAsync(userId, request.TmdbId, request.MediaType, rating, _clock.StorageNow(), ct);
 
         await _watchlist.RemoveAsync(userId, request.TmdbId, request.MediaType, ct);
         return await _history.ReadStatusAsync(userId, request.TmdbId, request.MediaType, ct);
+    }
+
+    private async Task AddAsync(WatchedTitle entry, CancellationToken ct)
+    {
+        await _users.RequireAccountAsync(entry.OwnerId, ct);
+        await _watched.AddIfAbsentAsync(entry, ct);
     }
 
     private async Task<WatchedTitle> NewEntryAsync(

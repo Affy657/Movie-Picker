@@ -153,10 +153,30 @@ describe('preloadStartupRoute', () => {
     expect(load).toHaveBeenCalledTimes(1);
   });
 
-  it('swallows a chunk that does not load', async () => {
+  it('settles once the page has loaded, so a prerendered document can wait for it', async () => {
+    let resolveChunk!: (module: unknown) => void;
+    vi.spyOn(ROUTE_CHUNKS, 'donate').mockReturnValue(
+      new Promise((resolve) => {
+        resolveChunk = resolve;
+      }) as never
+    );
+    let settled = false;
+
+    const loaded = preloadStartupRoute('/soutenir').then(() => {
+      settled = true;
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(settled).toBe(false);
+    resolveChunk({ default: () => null });
+    await loaded;
+
+    expect(settled).toBe(true);
+    await expect(preloadStartupRoute('/soutenir')).resolves.toBeUndefined();
+  });
+
+  it('swallows a chunk that does not load, and settles all the same', async () => {
     vi.spyOn(ROUTE_CHUNKS, 'login').mockRejectedValue(new Error('offline'));
 
-    expect(() => preloadStartupRoute('/login')).not.toThrow();
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await expect(preloadStartupRoute('/login')).resolves.toBeUndefined();
   });
 });

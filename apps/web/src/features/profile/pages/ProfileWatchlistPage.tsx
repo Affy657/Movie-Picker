@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
 import { ROUTES } from '@/app/routes';
+import { API_ERROR_REASONS } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
@@ -56,6 +57,10 @@ export default function ProfileWatchlistPage() {
       itemKey={watchlistItemKey}
       canonicalPath={ROUTES.profileWatchlist}
       texts={texts}
+      hidden={{
+        reason: API_ERROR_REASONS.watchlistNotFound,
+        message: t('apiErrors.watchlist_not_found'),
+      }}
     />
   );
 }

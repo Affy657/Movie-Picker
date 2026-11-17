@@ -19,6 +19,7 @@ import { blobToBase64 } from '@/shared/utils/blobToBase64';
 import Dropdown from '@/shared/components/Dropdown';
 import { createIdeaSuggestion, type IdeaSuggestionCategory } from '@/shared/api/ideaSuggestionsApi';
 import styles from './ProposeIdeaButton.module.css';
+import { useCloseOnPageChange } from './useCloseOnPageChange';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import clsx from 'clsx';
@@ -388,6 +389,7 @@ type ButtonProps = {
 export default function ProposeIdeaButton({ className, children }: Readonly<ButtonProps>) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  useCloseOnPageChange(() => setOpen(false));
 
   return (
     <>

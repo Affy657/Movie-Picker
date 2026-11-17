@@ -235,13 +235,12 @@ export function AppRoutes() {
 }
 
 export function AppRoutesWithErrorBoundary() {
-  const location = useLocation();
   useHomeShowcasePrefetch();
   usePublicProfilePrefetch();
   return (
     <>
       <ScrollToTop />
-      <ErrorBoundary key={location.pathname}>
+      <ErrorBoundary>
         <Suspense fallback={<PageFallback />}>
           <AppRoutes />
         </Suspense>

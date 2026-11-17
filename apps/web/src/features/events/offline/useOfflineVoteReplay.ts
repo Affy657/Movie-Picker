@@ -15,6 +15,14 @@ export type OfflineVoteReport = { message: string; tone: 'success' | 'warning' }
 
 export type OfflineVoteOutcome = { saved: number; refused: number; reason: string | null };
 
+export const OFFLINE_VOTE_RETRY_BASE_MS = 2_000;
+
+export const OFFLINE_VOTE_RETRY_MAX_MS = 60_000;
+
+function retryDelayMs(interruptions: number): number {
+  return Math.min(OFFLINE_VOTE_RETRY_BASE_MS * 2 ** (interruptions - 1), OFFLINE_VOTE_RETRY_MAX_MS);
+}
+
 async function send(vote: QueuedVote): Promise<void> {
   if (vote.value === 0) {
     await clearMovieVote(vote.slug, vote.movieId, vote.participantId);
@@ -89,14 +97,17 @@ export function offlineVoteReport(
 export function useOfflineVoteReplay({
   slug,
   onReplayed,
+  serverReachedAt = 0,
 }: {
   slug: string | undefined;
   onReplayed: () => void;
+  serverReachedAt?: number;
 }): { outcome: OfflineVoteOutcome | null; dismiss: () => void } {
   const online = useOnlineStatus();
   const queued = useQueuedVotes(slug);
   const [outcome, setOutcome] = useState<OfflineVoteOutcome | null>(null);
   const [round, setRound] = useState(0);
+  const [interruptions, setInterruptions] = useState(0);
   const replaying = useRef(false);
   const onReplayedRef = useRef(onReplayed);
 
@@ -105,20 +116,36 @@ export function useOfflineVoteReplay({
   }, [onReplayed]);
 
   useEffect(() => {
+    if (interruptions === 0) return;
+    const timer = globalThis.setTimeout(
+      () => setRound((value) => value + 1),
+      retryDelayMs(interruptions)
+    );
+    return () => globalThis.clearTimeout(timer);
+  }, [interruptions]);
+
+  useEffect(() => {
     if (!online || queued.length === 0 || replaying.current) return;
     replaying.current = true;
     void replay(queued)
       .then(({ outcome: result, interrupted }) => {
         replaying.current = false;
-        if (result.saved + result.refused === 0) return;
-        onReplayedRef.current();
-        setOutcome((previous) => mergeOutcomes(previous, result));
-        if (!interrupted) setRound((value) => value + 1);
+        const handled = result.saved + result.refused > 0;
+        if (handled) {
+          onReplayedRef.current();
+          setOutcome((previous) => mergeOutcomes(previous, result));
+        }
+        if (interrupted) {
+          setInterruptions((value) => value + 1);
+          return;
+        }
+        setInterruptions(0);
+        if (handled) setRound((value) => value + 1);
       })
       .catch(() => {
         replaying.current = false;
       });
-  }, [online, queued, round]);
+  }, [online, queued, round, serverReachedAt]);
 
   const dismiss = useCallback(() => setOutcome(null), []);
 

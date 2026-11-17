@@ -110,4 +110,31 @@ describe('ProfileProposalsPage', () => {
     expect(within(list).queryByText('Midsommar')).not.toBeInTheDocument();
     expect(requestedWinningOnly).toEqual(['true']);
   });
+
+  it('says the winning proposals are private when the member hides their watched films', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/users/:handle`, () =>
+        HttpResponse.json({ ...ALICE_PROFILE, isWatchedPublic: false })
+      ),
+      http.get(`${TEST_API_V1}/users/:handle/proposed-movies`, () =>
+        HttpResponse.json(
+          { code: 404, reason: 'watched_not_found', error: 'Watched films not found' },
+          { status: 404 }
+        )
+      )
+    );
+
+    renderAt('/u/alice/propositions-gagnantes');
+
+    expect(
+      await screen.findByText(
+        'Ce membre garde ses films vus privés, ses propositions gagnantes le sont donc aussi.'
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Les propositions gagnantes de Alice' })
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/introuvable/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('list', { name: 'Propositions gagnantes' })).not.toBeInTheDocument();
+  });
 });

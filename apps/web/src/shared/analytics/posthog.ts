@@ -184,7 +184,9 @@ async function doInit(): Promise<void> {
 
 export function initPostHog(): Promise<void> {
   if (initialized) return Promise.resolve();
-  initPromise ??= doInit();
+  initPromise ??= doInit().catch(() => {
+    initPromise = null;
+  });
   return initPromise;
 }
 

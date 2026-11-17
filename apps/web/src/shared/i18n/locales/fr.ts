@@ -140,7 +140,11 @@ export const fr = {
       providerTitle: 'Ce soir en streaming',
       providerSubtitle: 'Disponible sur votre abonnement',
       recommendationsTitle: 'Parce que vous avez aimé',
-      recommendationsSubtitle: 'À partir de votre dernière soirée',
+      similarMoviesTitle: 'Films similaires',
+      similarShowsTitle: 'Séries similaires',
+      similarMoviesTo: 'Films similaires à {{title}}',
+      similarShowsTo: 'Séries similaires à {{title}}',
+      similarSubtitle: 'Des titres dans le même esprit',
       watchlistTitle: 'Dans votre liste',
       friendsTitle: 'Vos amis ont vu',
       forYouTitle: 'Pour vous',
@@ -810,6 +814,7 @@ export const fr = {
       removeAction: 'Retirer',
       removeAriaLabel: 'Retirer {{pseudo}} de la soirée',
       viewProfileAriaLabel: 'Voir le profil de {{pseudo}}',
+      viewProfilePresenceAriaLabel: 'Voir le profil de {{pseudo}}, {{presence}}',
       inviteAriaLabel: 'Inviter des amis',
       removeConfirmTitle: 'Retirer un participant',
       removeConfirm:
@@ -1114,6 +1119,11 @@ export const fr = {
       closeWithoutMovieConfirmMessage:
         'La soirée « {{title}} » sera clôturée sans film. Cette action est définitive.',
       closeWithoutMovieConfirmAction: 'Clôturer sans film',
+      finishNightButton: 'Terminer la soirée',
+      finishNightConfirmTitle: 'Terminer la soirée ?',
+      finishNightConfirmMessage:
+        'La soirée « {{title}} » se termine avec les films déjà tirés, sans tirer les suivants. Cette action est définitive.',
+      finishNightConfirmAction: 'Terminer la soirée',
       resetButton: 'Repartir de zéro',
       resetConfirmTitle: 'Repartir de zéro\u00a0?',
       resetConfirmMessage:
@@ -1303,6 +1313,14 @@ export const fr = {
       participantText: "L'heure de la soirée est passée, aucun film n'a encore été choisi.",
       participantMeta:
         "Vous pouvez encore voter et proposer des films en attendant que l'hôte décide.",
+      hostTextWithFilmOne:
+        'Un film est tiré, il en reste à tirer : tirez le suivant ou terminez la soirée.',
+      hostTextWithFilmMany:
+        '{{count}} films sont tirés, il en reste à tirer : tirez le suivant ou terminez la soirée.',
+      participantTextWithFilmOne:
+        "Un film est tiré, il en reste à tirer : l'hôte peut tirer le suivant ou terminer la soirée.",
+      participantTextWithFilmMany:
+        "{{count}} films sont tirés, il en reste à tirer : l'hôte peut tirer le suivant ou terminer la soirée.",
     },
   },
 
@@ -2093,7 +2111,7 @@ export const fr = {
     movie_not_in_event: 'Film introuvable dans cette soirée',
     movie_not_a_winner: 'Ce film ne fait pas partie des gagnants de la soirée',
     participant_not_found: 'Participant introuvable',
-    watchlist_not_found: 'Watchlist introuvable',
+    watchlist_not_found: 'La watchlist de ce membre n’est pas publique.',
     watched_not_found: 'Les films vus de ce membre ne sont pas publics.',
     list_not_found: 'Cette liste n’existe plus.',
     list_name_taken: 'Vous avez déjà une liste nommée « {{name}} ». Choisissez un autre nom.',
@@ -2754,6 +2772,8 @@ export const fr = {
       emptyMessage: "Aucun film proposé par cette personne n'a encore gagné de soirée.",
       searchLabel: 'Rechercher parmi les propositions gagnantes',
       timesDescription: 'Proposé par @{{handle}}, gagnant {{count}} fois',
+      hiddenMessage:
+        'Ce membre garde ses films vus privés, ses propositions gagnantes le sont donc aussi.',
     },
     streak: {
       weekLabel: 'semaine de suite',

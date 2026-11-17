@@ -142,7 +142,11 @@ export const en: Locale = {
       providerTitle: 'Streaming tonight',
       providerSubtitle: 'Available on your subscription',
       recommendationsTitle: 'Because you liked',
-      recommendationsSubtitle: 'Based on your last movie night',
+      similarMoviesTitle: 'Similar movies',
+      similarShowsTitle: 'Similar shows',
+      similarMoviesTo: 'Movies similar to {{title}}',
+      similarShowsTo: 'Shows similar to {{title}}',
+      similarSubtitle: 'Titles in the same vein',
       watchlistTitle: 'In your list',
       friendsTitle: 'Your friends watched',
       forYouTitle: 'For you',
@@ -802,6 +806,7 @@ export const en: Locale = {
       removeAction: 'Remove',
       removeAriaLabel: 'Remove {{pseudo}} from the event',
       viewProfileAriaLabel: "View {{pseudo}}'s profile",
+      viewProfilePresenceAriaLabel: "View {{pseudo}}'s profile, {{presence}}",
       inviteAriaLabel: 'Invite friends',
       removeConfirmTitle: 'Remove a participant',
       removeConfirm:
@@ -1100,6 +1105,11 @@ export const en: Locale = {
       closeWithoutMovieConfirmMessage:
         'The event "{{title}}" will be closed without a movie. This action is final.',
       closeWithoutMovieConfirmAction: 'Close without a movie',
+      finishNightButton: 'End the event',
+      finishNightConfirmTitle: 'End the event?',
+      finishNightConfirmMessage:
+        'The event "{{title}}" ends with the movies already drawn, without drawing the next ones. This action is final.',
+      finishNightConfirmAction: 'End the event',
       resetButton: 'Start over',
       resetConfirmTitle: 'Start over?',
       resetConfirmMessage:
@@ -1288,6 +1298,14 @@ export const en: Locale = {
       hostMeta: 'Without action on your side, the event closes automatically in 7 days.',
       participantText: 'The event time has passed, no movie has been picked yet.',
       participantMeta: 'You can still vote and suggest movies while the host decides.',
+      hostTextWithFilmOne:
+        'One movie is drawn and more are left to draw: draw the next one or end the event.',
+      hostTextWithFilmMany:
+        '{{count}} movies are drawn and more are left to draw: draw the next one or end the event.',
+      participantTextWithFilmOne:
+        'One movie is drawn and more are left to draw: the host can draw the next one or end the event.',
+      participantTextWithFilmMany:
+        '{{count}} movies are drawn and more are left to draw: the host can draw the next one or end the event.',
     },
   },
 
@@ -2068,7 +2086,7 @@ export const en: Locale = {
     movie_not_in_event: 'Movie not found in this movie night',
     movie_not_a_winner: 'This movie is not one of the winners of the movie night',
     participant_not_found: 'Participant not found',
-    watchlist_not_found: 'Watchlist not found',
+    watchlist_not_found: 'The watchlist of this member is not public.',
     watched_not_found: 'The watched films of this member are not public.',
     list_not_found: 'This list no longer exists.',
     list_name_taken: 'You already have a list named “{{name}}”. Choose another name.',
@@ -2711,6 +2729,8 @@ export const en: Locale = {
       emptyMessage: 'None of the movies this person proposed has won a night yet.',
       searchLabel: 'Search among winning proposals',
       timesDescription: 'Proposed by @{{handle}}, won {{count}} times',
+      hiddenMessage:
+        'This member keeps their watched films private, so their winning proposals are private too.',
     },
     streak: {
       weekLabel: 'week in a row',

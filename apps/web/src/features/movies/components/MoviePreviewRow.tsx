@@ -82,6 +82,7 @@ interface RowProps {
   headingCount?: number;
   subtitle?: string;
   seeAllTo?: string;
+  seeAllState?: unknown;
   seeAllLabel?: string;
   toolbar?: ReactNode;
   className?: string;
@@ -94,6 +95,7 @@ export default function MoviePreviewRow({
   headingCount,
   subtitle,
   seeAllTo,
+  seeAllState,
   seeAllLabel,
   toolbar,
   className,
@@ -122,6 +124,7 @@ export default function MoviePreviewRow({
           <Link
             id={seeAllId}
             to={seeAllTo}
+            state={seeAllState}
             className={styles.seeAllLink}
             aria-labelledby={`${seeAllId} ${headingId}`}
           >

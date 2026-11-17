@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Application.UseCases.UserMovies;
 using MoviePicker.Api.Domain.Entities;
 
@@ -41,6 +42,7 @@ public sealed class CreateMovieListHandler : ICreateMovieListHandler
         var firstItem = request.FirstItem is null
             ? null
             : await _items.CreateAsync(request.FirstItem, now, ct) with { AddedByUserId = userId };
+        await _users.RequireAccountAsync(userId, ct);
         var created = await _lists.AddAsync(
             new MovieList
             {

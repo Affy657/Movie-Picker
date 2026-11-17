@@ -12,6 +12,7 @@ namespace MoviePicker.Api.IntegrationTests;
 public sealed class RateLimitingTests
 {
     private const string LimitedEnvironment = "Staging";
+    private const int LargestListPosters = 1_000;
 
     private static Task<IHost> StartServerAsync(string environmentName, string policy) =>
         new HostBuilder()
@@ -53,6 +54,41 @@ public sealed class RateLimitingTests
 
         Assert.Equal(HttpStatusCode.TooManyRequests, rejected.StatusCode);
         Assert.True(rejected.Headers.Contains("Retry-After"));
+    }
+
+    [Fact]
+    public async Task PostersPolicy_ServesTheLargestListWhole_AfterTheClientSpentItsGlobalBudget()
+    {
+        using var host = await StartServerAsync(LimitedEnvironment, RateLimitingExtensions.PostersPolicy);
+        var client = host.GetTestClient();
+        for (var i = 0; i < RateLimitingExtensions.GlobalPermitLimitPerMinute; i++)
+            await client.GetAsync("/unlimited");
+
+        for (var i = 0; i < LargestListPosters; i++)
+        {
+            var poster = await client.GetAsync("/limited");
+            Assert.Equal(HttpStatusCode.OK, poster.StatusCode);
+        }
+    }
+
+    [Fact]
+    public async Task PostersPolicy_StillCapsOneClient_OnItsOwnBudget()
+    {
+        using var host = await StartServerAsync(LimitedEnvironment, RateLimitingExtensions.PostersPolicy);
+        var client = host.GetTestClient();
+        var budget = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.PostersPolicy)!.Value.PermitLimit;
+
+        for (var i = 0; i < budget; i++)
+        {
+            var poster = await client.GetAsync("/limited");
+            Assert.Equal(HttpStatusCode.OK, poster.StatusCode);
+        }
+
+        var rejected = await client.GetAsync("/limited");
+        var other = await client.GetAsync("/unlimited");
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, rejected.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, other.StatusCode);
     }
 
     [Fact]

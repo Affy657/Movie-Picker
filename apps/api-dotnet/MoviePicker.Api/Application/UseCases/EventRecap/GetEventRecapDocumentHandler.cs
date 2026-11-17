@@ -76,16 +76,16 @@ public sealed class GetEventRecapDocumentHandler : IGetEventRecapDocumentHandler
             canonical,
             fallbackUrl,
             title,
-            BuildDescription(evt, first, ratings, participantCount, evt.IsFinished(_clock.GetUtcNow())),
+            BuildDescription(evt, first, ratings, participantCount, evt.IsOver(_clock.GetUtcNow())),
             image,
             image == fallbackImage ? SharePreview.SiteName : $"Affiche de {first.Title}");
     }
 
-    private static string BuildDescription(Event evt, Movie movie, List<int> ratings, int participantCount, bool finished)
+    private static string BuildDescription(Event evt, Movie movie, List<int> ratings, int participantCount, bool nightOver)
     {
         var film = SharePreviewContent.Film(movie);
         var day = SharePreviewContent.Day(evt.Date);
-        if (!finished)
+        if (!nightOver)
             return $"Au programme : {film} le {day}, avec {Participants(participantCount)}.";
         if (ratings.Count == 0)
             return $"On a vu {film} le {day}, avec {Participants(participantCount)}.";

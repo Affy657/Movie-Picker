@@ -109,6 +109,15 @@ export default function EventParticipantsList({
             const isPending = pendingRemovalId === p.id;
             const isProposing = proposingIds?.has(p.id) ?? false;
             const isOnline = isProposing || (onlineIds?.has(p.id) ?? false);
+            const presenceLabel = t(
+              isProposing ? 'events.participants.proposing' : 'events.participants.online'
+            );
+            const profileLinkLabel = isOnline
+              ? t('events.participants.viewProfilePresenceAriaLabel', {
+                  pseudo: p.pseudo,
+                  presence: presenceLabel,
+                })
+              : t('events.participants.viewProfileAriaLabel', { pseudo: p.pseudo });
             const identity = (
               <>
                 <Avatar avatarId={p.avatarId} pseudo={p.pseudo} size="xs" />
@@ -117,9 +126,7 @@ export default function EventParticipantsList({
                   <span className={clsx(styles.presence, isProposing && styles.presenceProposing)}>
                     <StatusDot pulsing={isProposing} />
                     <span className={isProposing ? styles.presenceLabel : 'visually-hidden'}>
-                      {t(
-                        isProposing ? 'events.participants.proposing' : 'events.participants.online'
-                      )}
+                      {presenceLabel}
                     </span>
                   </span>
                 ) : null}
@@ -136,7 +143,7 @@ export default function EventParticipantsList({
                   <Link
                     to={ROUTES.profile(p.handle)}
                     className={styles.profileLink}
-                    aria-label={t('events.participants.viewProfileAriaLabel', { pseudo: p.pseudo })}
+                    aria-label={profileLinkLabel}
                   >
                     {identity}
                   </Link>

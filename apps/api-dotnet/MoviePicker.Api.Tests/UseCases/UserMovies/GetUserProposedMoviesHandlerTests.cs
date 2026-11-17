@@ -104,7 +104,7 @@ public sealed class GetUserProposedMoviesHandlerTests
         var handler = Build();
         _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(Alice(isPublic: false));
 
-        await Assert.ThrowsAsync<NotFoundException>(() => handler.HandleAsync("alice", winningOnly: false));
+        await Assert.ThrowsAsync<NotFoundException>(() => handler.HandleAsync("alice", currentUserId: null, winningOnly: false));
     }
 
     [Fact]
@@ -112,7 +112,7 @@ public sealed class GetUserProposedMoviesHandlerTests
     {
         var handler = Build();
 
-        var res = await handler.HandleAsync("alice", winningOnly: false);
+        var res = await handler.HandleAsync("alice", currentUserId: null, winningOnly: false);
 
         Assert.Empty(res.Items);
     }
@@ -129,7 +129,7 @@ public sealed class GetUserProposedMoviesHandlerTests
                 Proposal("m3", "e3", "p3", tmdbId: 25237, daysAfterDay1: 14),
             ]);
 
-        var res = await handler.HandleAsync("alice", winningOnly: false);
+        var res = await handler.HandleAsync("alice", currentUserId: null, winningOnly: false);
 
         Assert.Equal(3, res.Items.Sum(i => i.ProposalCount));
         Assert.Equal(2, res.Items.Count);
@@ -150,7 +150,7 @@ public sealed class GetUserProposedMoviesHandlerTests
                 Proposal("m3", "e2", "p2", tmdbId: 1, daysAfterDay1: 9),
             ]);
 
-        var res = await handler.HandleAsync("alice", winningOnly: false);
+        var res = await handler.HandleAsync("alice", currentUserId: null, winningOnly: false);
 
         Assert.Equal([1, 2], res.Items.Select(i => i.TmdbId));
     }
@@ -168,11 +168,63 @@ public sealed class GetUserProposedMoviesHandlerTests
             ],
             events: [Evt("e1", winnerMovieId: "m1"), Evt("e2", winnerMovieId: "other"), Evt("e3", winnerMovieId: "m3")]);
 
-        var res = await handler.HandleAsync("alice", winningOnly: true);
+        var res = await handler.HandleAsync("alice", currentUserId: null, winningOnly: true);
 
         Assert.Equal(2, res.Items.Sum(i => i.ProposalCount));
         Assert.Equal([25237, 530385], res.Items.Select(i => i.TmdbId));
         Assert.All(res.Items, i => Assert.Equal(1, i.ProposalCount));
+    }
+
+    private GetUserProposedMoviesHandler BuildWithThreeNightsAndTwoWins()
+    {
+        var handler = Build(
+            participants: [Part("p1", "e1"), Part("p2", "e2"), Part("p3", "e3")],
+            proposals:
+            [
+                Proposal("m1", "e1", "p1", tmdbId: 530385, daysAfterDay1: 0),
+                Proposal("m2", "e2", "p2", tmdbId: 530385, daysAfterDay1: 7),
+                Proposal("m3", "e3", "p3", tmdbId: 25237, daysAfterDay1: 14),
+            ],
+            events: [Evt("e1", winnerMovieId: "m1"), Evt("e2", winnerMovieId: "other"), Evt("e3", winnerMovieId: "m3")]);
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Alice() with { IsWatchedPublic = false });
+        return handler;
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("stranger")]
+    public async Task WinningOnly_OfAMemberHidingTheirWatchedFilms_IsRefusedToEveryoneElse(string? viewerId)
+    {
+        var handler = BuildWithThreeNightsAndTwoWins();
+
+        var ex = await Assert.ThrowsAsync<NotFoundException>(
+            () => handler.HandleAsync("alice", viewerId, winningOnly: true));
+
+        Assert.Equal(ErrorCodes.WatchedNotFound, ex.Reason);
+        _movies.Verify(
+            r => r.ListByParticipantIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task WinningOnly_OfAMemberHidingTheirWatchedFilms_StaysVisibleToThemself()
+    {
+        var handler = BuildWithThreeNightsAndTwoWins();
+
+        var res = await handler.HandleAsync("alice", currentUserId: "u1", winningOnly: true);
+
+        Assert.Equal([25237, 530385], res.Items.Select(i => i.TmdbId));
+    }
+
+    [Fact]
+    public async Task AllProposals_OfAMemberHidingTheirWatchedFilms_StayPublic()
+    {
+        var handler = BuildWithThreeNightsAndTwoWins();
+
+        var res = await handler.HandleAsync("alice", currentUserId: "stranger", winningOnly: false);
+
+        Assert.Equal(3, res.Items.Sum(i => i.ProposalCount));
     }
 
     [Fact]
@@ -190,7 +242,7 @@ public sealed class GetUserProposedMoviesHandlerTests
                 [(7345, MovieMediaType.Movie)] = new TmdbMovieEnrichment(8.1, [], null, 158)
             });
 
-        var res = await handler.HandleAsync("alice", winningOnly: false);
+        var res = await handler.HandleAsync("alice", currentUserId: null, winningOnly: false);
 
         var item = Assert.Single(res.Items);
         Assert.Equal(8.1, item.VoteAverage);

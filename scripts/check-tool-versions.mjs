@@ -149,9 +149,17 @@ const tools = [
     ],
     latest: () => dockerHubDigest('library/mongo', '8'),
   },
+  // The binary the workflows install (`skip-setup-trivy` on every `trivy-action` step) and the
+  // image of the local gate: the default version of the action is never used.
   {
-    name: 'trivy (local gate)',
-    pins: [{ file: 'scripts/verify-local.cjs', pattern: /aquasec\/trivy:([^@']+)@/ }],
+    name: 'trivy',
+    pins: [
+      {
+        file: '.github/actions/install-trivy/action.yml',
+        pattern: /AQUA_TRIVY_VERSION: "([^"]+)"/,
+      },
+      { file: 'scripts/verify-local.cjs', pattern: /aquasec\/trivy:([^@']+)@/ },
+    ],
     latest: () => latestGithubRelease('aquasecurity/trivy'),
   },
   // The providers are Dependabot's (terraform ecosystem); the binary is pinned in four places,

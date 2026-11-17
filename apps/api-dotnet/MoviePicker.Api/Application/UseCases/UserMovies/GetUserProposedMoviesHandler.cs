@@ -5,6 +5,7 @@ using MoviePicker.Api.Application.UseCases.Profile;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.UserMovies;
 
@@ -35,9 +36,15 @@ public sealed class GetUserProposedMoviesHandler : IGetUserProposedMoviesHandler
         _options = options.Value;
     }
 
-    public async Task<UserProposedMoviesResponse> HandleAsync(string handle, bool winningOnly, CancellationToken ct = default)
+    public async Task<UserProposedMoviesResponse> HandleAsync(
+        string handle,
+        string? currentUserId,
+        bool winningOnly,
+        CancellationToken ct = default)
     {
         var user = await PublicProfileGuard.RequirePublicUserAsync(_users, handle, ct);
+        if (winningOnly && !PublicProfileGuard.CanSeeWatched(user, currentUserId))
+            throw Errors.WatchedNotFound();
 
         var participants = await _participants.ListByUserIdAsync(user.Id, ParticipantsCap, ct);
         if (participants.Count == 0)

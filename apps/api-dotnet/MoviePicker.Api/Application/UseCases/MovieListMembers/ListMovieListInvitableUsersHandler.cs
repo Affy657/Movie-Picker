@@ -10,12 +10,18 @@ public sealed class ListMovieListInvitableUsersHandler : IListMovieListInvitable
     private readonly IMovieListRepository _lists;
     private readonly IFollowRepository _follows;
     private readonly IUserRepository _users;
+    private readonly TimeProvider _clock;
 
-    public ListMovieListInvitableUsersHandler(IMovieListRepository lists, IFollowRepository follows, IUserRepository users)
+    public ListMovieListInvitableUsersHandler(
+        IMovieListRepository lists,
+        IFollowRepository follows,
+        IUserRepository users,
+        TimeProvider clock)
     {
         _lists = lists;
         _follows = follows;
         _users = users;
+        _clock = clock;
     }
 
     public async Task<MovieListInvitableUsersResponse> HandleAsync(
@@ -26,8 +32,9 @@ public sealed class ListMovieListInvitableUsersHandler : IListMovieListInvitable
     {
         var list = await MovieListPolicy.RequireOwnerAsync(_lists, userId, listId, ct);
         var followingIds = await _follows.GetFollowingIdsAsync(userId, ct: ct);
+        var now = _clock.GetUtcNow();
         var candidates = followingIds
-            .Where(id => list.RoleOf(id) is null && !list.IsInvited(id))
+            .Where(id => list.RoleOf(id) is null && !list.IsInvited(id, now))
             .ToList();
         if (candidates.Count == 0)
             return new MovieListInvitableUsersResponse();

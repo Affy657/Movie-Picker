@@ -51,10 +51,11 @@ public sealed class InviteToMovieListHandler : IInviteToMovieListHandler
     {
         var list = await MovieListPolicy.RequireOwnerAsync(_lists, userId, listId, ct);
         var targetId = request.UserId.Trim();
-        EnsureInvitable(list, targetId);
+        var now = _clock.StorageNow();
+        EnsureInvitable(list, targetId, now);
         if (!await _follows.IsFollowingAsync(userId, targetId, ct))
             throw Errors.InviteOnlyFollowed();
-        if (list.IsFull)
+        if (list.IsFull(now))
             throw Errors.MovieListMembersLimitReached(MovieList.MaxMembers);
         if (!await _quota.TryConsumeAsync(
                 PairQuotaScope, $"{userId}|{targetId}", MaxInvitationsPerPairPerDay, PairQuotaWindow, ct))
@@ -62,9 +63,9 @@ public sealed class InviteToMovieListHandler : IInviteToMovieListHandler
 
         var target = await _users.GetByIdAsync(targetId, ct);
         var owner = await _users.GetByIdAsync(userId, ct);
-        var invitation = new MovieListInvitation(targetId, _clock.StorageNow());
+        var invitation = new MovieListInvitation(targetId, now);
         if (!await _lists.AddInvitationAsync(list.Id, invitation, MovieList.MaxMembers, ct))
-            throw await WhyRefusedAsync(list.Id, targetId, ct);
+            throw await WhyRefusedAsync(list.Id, targetId, now, ct);
 
         await NotifyAsync(list, owner, target, targetId, ct);
 
@@ -78,24 +79,24 @@ public sealed class InviteToMovieListHandler : IInviteToMovieListHandler
         };
     }
 
-    private static void EnsureInvitable(MovieList list, string targetId)
+    private static void EnsureInvitable(MovieList list, string targetId, DateTimeOffset now)
     {
         if (list.RoleOf(targetId) is not null)
             throw Errors.MovieListAlreadyMember();
-        if (list.IsInvited(targetId))
+        if (list.IsInvited(targetId, now))
             throw Errors.MovieListInvitationAlreadySent();
     }
 
-    private async Task<Exception> WhyRefusedAsync(string listId, string targetId, CancellationToken ct)
+    private async Task<Exception> WhyRefusedAsync(string listId, string targetId, DateTimeOffset now, CancellationToken ct)
     {
         var current = await _lists.FindAsync(listId, ct);
         if (current is null)
             return Errors.MovieListNotFound();
         if (current.RoleOf(targetId) is not null)
             return Errors.MovieListAlreadyMember();
-        if (current.IsInvited(targetId))
+        if (current.IsInvited(targetId, now))
             return Errors.MovieListInvitationAlreadySent();
-        return current.IsFull ? Errors.MovieListMembersLimitReached(MovieList.MaxMembers) : Errors.ConcurrentUpdate();
+        return current.IsFull(now) ? Errors.MovieListMembersLimitReached(MovieList.MaxMembers) : Errors.ConcurrentUpdate();
     }
 
     private async Task NotifyAsync(MovieList list, User? owner, User? target, string targetId, CancellationToken ct)

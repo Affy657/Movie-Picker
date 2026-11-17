@@ -397,7 +397,7 @@ describe('useEventWheel: pending movie night', () => {
     vi.clearAllMocks();
   });
 
-  it('treats the first draw as the last one, since the server finishes the night on it', async () => {
+  it('keeps every configured draw, since the server leaves the night open until the last one', async () => {
     const { result } = renderHook(
       () =>
         useEventWheel({
@@ -409,15 +409,40 @@ describe('useEventWheel: pending movie night', () => {
         }),
       { wrapper }
     );
-    expect(result.current.remainingDraws).toBe(1);
+    expect(result.current.remainingDraws).toBe(3);
 
     act(() => result.current.launch());
     await waitFor(() => expect(result.current.spinWinner?.id).toBe('mov1'));
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    expect(result.current.remainingDraws).toBe(0);
-    expect(result.current.winnerCount).toBe(1);
-    expect(result.current.canRelaunchFromModal).toBe(false);
+    expect(result.current.remainingDraws).toBe(2);
+    expect(result.current.winnerCount).toBe(3);
+    expect(result.current.canRelaunchFromModal).toBe(true);
+  });
+
+  it('offers the next draw on a night already showing its first film', () => {
+    const oneDrawn = {
+      ...pendingNight,
+      winners: [{ movieId: 'mov1', pickMethod: 'wheel', pickedAt: '2026-01-01T20:00:00Z' }],
+      config: { winnerCount: 2 },
+    } as unknown as EventData;
+
+    const { result } = renderHook(
+      () =>
+        useEventWheel({
+          slug: 'soiree',
+          event: oneDrawn,
+          movies: [winner, second],
+          hostToken: 'ht1',
+          onWheelDone: () => {},
+        }),
+      { wrapper }
+    );
+
+    expect(result.current.winnerIds).toEqual(['mov1']);
+    expect(result.current.remainingDraws).toBe(1);
+    expect(result.current.canSpin).toBe(true);
+    expect(result.current.spinDisabled).toBe(false);
   });
 });
 

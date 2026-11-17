@@ -103,3 +103,41 @@ describe('ConsentProvider actions', () => {
     expect(localStorage.getItem(KEY)).toBeNull();
   });
 });
+
+describe('ConsentProvider across tabs', () => {
+  function storedInAnotherTab(key: string, value: string | null, storageArea: Storage) {
+    if (value === null) storageArea.removeItem(key);
+    else storageArea.setItem(key, value);
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key, newValue: value, storageArea }));
+    });
+  }
+
+  it('follows a refusal made in another tab', () => {
+    localStorage.setItem(KEY, JSON.stringify({ decided: true, analytics: true }));
+    const { result } = mount();
+
+    storedInAnotherTab(KEY, JSON.stringify({ decided: true, analytics: false }), localStorage);
+
+    expect(result.current).toMatchObject({ decided: true, analytics: false });
+  });
+
+  it('follows an approval made in another tab', () => {
+    const { result } = mount();
+
+    storedInAnotherTab(KEY, JSON.stringify({ decided: true, analytics: true }), localStorage);
+
+    expect(result.current).toMatchObject({ decided: true, analytics: true });
+  });
+
+  it('ignores the other keys and the tab storage', () => {
+    localStorage.setItem(KEY, JSON.stringify({ decided: true, analytics: true }));
+    const { result } = mount();
+
+    localStorage.setItem(KEY, JSON.stringify({ decided: true, analytics: false }));
+    storedInAnotherTab('moviepicker-locale', 'en', localStorage);
+    storedInAnotherTab(KEY, JSON.stringify({ decided: true, analytics: false }), sessionStorage);
+
+    expect(result.current).toMatchObject({ decided: true, analytics: true });
+  });
+});

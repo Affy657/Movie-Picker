@@ -17,6 +17,10 @@ public sealed class MovieListsEndpointsTests : IClassFixture<MoviePickerApplicat
 
     private const string TmdbPoster = "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg";
 
+    private const string StubTmdbTitle = "Film E2E Stub";
+
+    private const string StubTmdbYear = "2024";
+
     private static readonly JsonSerializerOptions Json = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -204,11 +208,11 @@ public sealed class MovieListsEndpointsTests : IClassFixture<MoviePickerApplicat
         Assert.Equal("Films cultes", body.GetProperty("name").GetString());
         Assert.Equal("Les incontournables", body.GetProperty("description").GetString());
         var items = body.GetProperty("items").EnumerateArray().ToList();
-        Assert.Equal(["Pulp Fiction", "Matrix"], items.Select(item => item.GetProperty("title").GetString()));
+        Assert.Equal([680, 603], items.Select(item => item.GetProperty("tmdbId").GetInt32()));
         var matrix = items[1];
-        Assert.Equal(603, matrix.GetProperty("tmdbId").GetInt32());
+        Assert.Equal(StubTmdbTitle, matrix.GetProperty("title").GetString());
         Assert.Equal("movie", matrix.GetProperty("mediaType").GetString());
-        Assert.Equal("1999", matrix.GetProperty("year").GetString());
+        Assert.Equal(StubTmdbYear, matrix.GetProperty("year").GetString());
         Assert.EndsWith("f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg", matrix.GetProperty("posterPath").GetString());
         Assert.Equal(JsonValueKind.Array, matrix.GetProperty("genreIds").ValueKind);
         Assert.True(matrix.TryGetProperty("voteAverage", out _));
@@ -325,8 +329,8 @@ public sealed class MovieListsEndpointsTests : IClassFixture<MoviePickerApplicat
         Assert.Equal(HttpStatusCode.OK, second.StatusCode);
         var created = await first.Content.ReadFromJsonAsync<MovieListItemResponse>(Json);
         var existing = await second.Content.ReadFromJsonAsync<MovieListItemResponse>(Json);
-        Assert.Equal("Matrix", created!.Title);
-        Assert.Equal("Matrix", existing!.Title);
+        Assert.Equal(StubTmdbTitle, created!.Title);
+        Assert.Equal(StubTmdbTitle, existing!.Title);
         Assert.Equal(created.CreatedAt, existing.CreatedAt);
         var stored = await client.GetFromJsonAsync<MovieListResponse>($"{Route}/{list.Id}", Json);
         Assert.Single(stored!.Items);
@@ -372,7 +376,7 @@ public sealed class MovieListsEndpointsTests : IClassFixture<MoviePickerApplicat
         var item = Assert.Single(list.GetProperty("items").EnumerateArray().ToList());
         Assert.Equal(603, item.GetProperty("tmdbId").GetInt32());
         Assert.Equal("movie", item.GetProperty("mediaType").GetString());
-        Assert.Equal("Matrix", item.GetProperty("title").GetString());
+        Assert.Equal(StubTmdbTitle, item.GetProperty("title").GetString());
         Assert.True(item.TryGetProperty("addedAt", out _));
     }
 

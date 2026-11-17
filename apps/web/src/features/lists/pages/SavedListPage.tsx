@@ -206,6 +206,7 @@ export default function SavedListPage() {
       isLoading={listQuery.isPending}
       isError={listQuery.isError}
       storageScope="savedList"
+      storageListId={savedListId}
       randomPickHistoryKey="savedList.randomPick"
       emptyIcon={
         unavailable ? (

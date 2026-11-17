@@ -144,6 +144,7 @@ export default function EventDetailSessionChrome({
   wheel,
   onRequestResetWheel,
   onRequestCloseWithoutMovie,
+  onRequestFinishNight,
   viewMode,
   onViewModeChange,
   viewToggleInHeader,
@@ -169,6 +170,7 @@ export default function EventDetailSessionChrome({
   wheel: WheelApi;
   onRequestResetWheel: () => void;
   onRequestCloseWithoutMovie: () => void;
+  onRequestFinishNight: () => void;
   viewMode: MoviesViewMode;
   onViewModeChange: (mode: MoviesViewMode) => void;
   viewToggleInHeader: boolean;
@@ -178,6 +180,9 @@ export default function EventDetailSessionChrome({
   onlineCount: number;
   proposerNames: readonly string[];
 }>) {
+  const pending = lifecycle === 'pending';
+  const hasDrawnFilm = (event.winners?.length ?? 0) > 0;
+  const pendingWithoutFilm = pending && !hasDrawnFilm;
   const plan = eventHeaderActions({
     isHost: !!event.isHost,
     isFinished: !!event.isFinished,
@@ -189,7 +194,8 @@ export default function EventDetailSessionChrome({
     remainingDraws: wheel.remainingDraws,
     canRemoveWinner: wheel.showRemoveWinner,
     canReset: wheel.showReset,
-    canCloseWithoutMovie: settings.canConfigure && lifecycle === 'pending',
+    canCloseWithoutMovie: settings.canConfigure && pendingWithoutFilm,
+    canFinishNight: settings.canConfigure && pending && hasDrawnFilm,
   });
   const wheelSelecting = wheel.manualMode || wheel.removalMode;
   const showActions = !offline && (hasHeaderActions(plan) || wheelSelecting);
@@ -221,6 +227,7 @@ export default function EventDetailSessionChrome({
               addMovieTriggerRef={addMovie.triggerRef}
               onRequestReset={onRequestResetWheel}
               onRequestCloseWithoutMovie={onRequestCloseWithoutMovie}
+              onRequestFinishNight={onRequestFinishNight}
             />
           ) : undefined
         }
@@ -233,7 +240,7 @@ export default function EventDetailSessionChrome({
         onRetry={onRetryConnection}
       />
       <EventProposingNotice names={proposerNames} />
-      {lifecycle === 'pending' ? <EventPendingBanner isHost={!!event.isHost} /> : null}
+      {pendingWithoutFilm ? <EventPendingBanner isHost={!!event.isHost} /> : null}
       <EventDetailSessionOverlays
         slug={slug}
         hostToken={hostToken}

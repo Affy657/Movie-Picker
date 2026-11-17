@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
@@ -385,6 +385,42 @@ describe('MyListsPage', () => {
 
     expect((await rowNames('Vos listes')).slice(0, 2)).toEqual(['Halloween', 'Polars']);
     expect(await rowNames('Enregistrées')).toEqual(['Harry Potter', FRISSONS_LABEL]);
+  });
+
+  it('keeps the search and the sort when Back comes from a list', async () => {
+    server.use(...fullServer([HARRY_POTTER], SEVEN_LISTS));
+    function ListPageStub() {
+      const navigate = useNavigate();
+      return (
+        <button type="button" onClick={() => navigate(-1)}>
+          Retour
+        </button>
+      );
+    }
+    const user = userEvent.setup();
+    render(
+      <AppTestProviders>
+        <MemoryRouter initialEntries={['/listes']}>
+          <Routes>
+            <Route path="/listes" element={<MyListsPage />} />
+            <Route path="/listes/:listId" element={<ListPageStub />} />
+          </Routes>
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+    const search = await screen.findByRole('searchbox', { name: 'Rechercher une liste' });
+    await chooseSort(user, 'Récentes', 'Nom');
+    await user.type(search, 'o');
+    await waitFor(async () =>
+      expect(await rowNames('Vos listes')).toEqual(['Comédies', 'Halloween', 'Polars'])
+    );
+
+    await user.click(rowOf('Vos listes', /halloween/i));
+    await user.click(await screen.findByRole('button', { name: 'Retour' }));
+
+    expect(await screen.findByRole('searchbox', { name: 'Rechercher une liste' })).toHaveValue('o');
+    expect(screen.getByRole('button', { name: 'Trier : Nom' })).toBeInTheDocument();
+    expect(await rowNames('Vos listes')).toEqual(['Comédies', 'Halloween', 'Polars']);
   });
 
   it('opens the new list once created', async () => {

@@ -139,6 +139,19 @@ public sealed class FinishedEventWatchlistPassTests
     }
 
     [Fact]
+    public async Task RunForEventAsync_PendingWithADrawLeft_WaitsForTheLastDraw()
+    {
+        GivenWinnerAndParticipants(new Participant { Id = "p1", EventId = "evt1", Pseudo = "Alice", UserId = "u1" });
+        var oneOfTwoDrawn = FinishedWithWinner() with { Config = new EventConfig { WinnerCount = 2 } };
+
+        var cleaned = await _sut.RunForEventAsync(oneOfTwoDrawn);
+
+        Assert.False(cleaned);
+        VerifyNoWatchlistTouched();
+        VerifyNotStamped();
+    }
+
+    [Fact]
     public async Task RunForEventAsync_NoWinner_NeverLooksAtWatchlists()
     {
         var cleaned = await _sut.RunForEventAsync(FinishedWithWinner() with { Winners = [] });

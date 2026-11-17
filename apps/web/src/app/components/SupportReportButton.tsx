@@ -10,6 +10,7 @@ import {
 } from '@/shared/support/supportMailto';
 import Modal from '@/shared/components/Modal';
 import styles from './SupportReportButton.module.css';
+import { useCloseOnPageChange } from './useCloseOnPageChange';
 import Button, { buttonClass } from '@/shared/components/Button';
 
 type CopyState = 'idle' | 'copied' | 'failed';
@@ -23,6 +24,7 @@ export default function SupportReportButton({ className }: Readonly<Props>) {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [copyState, setCopyState] = useState<CopyState>('idle');
+  useCloseOnPageChange(() => setOpen(false));
   const titleId = useId();
   const reportId = useId();
 

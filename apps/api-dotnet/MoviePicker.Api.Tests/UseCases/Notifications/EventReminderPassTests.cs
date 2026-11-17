@@ -739,6 +739,27 @@ public sealed class EventReminderPassTests
     }
 
     [Fact]
+    public async Task RunAsync_NightStillPendingAfterItsFirstOfTwoDraws_DoesNotTellTheHostNoFilmWasChosen()
+    {
+        var started = Now - EventSchedule.PendingDelay - TimeSpan.FromHours(1);
+        GivenOpenEvents(EventStartingAt("e1", started) with
+        {
+            Config = new EventConfig { WinnerCount = 2 },
+            Winners = TestWinners.Won("m1")
+        });
+        _users.Setup(r => r.GetByIdAsync("host", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Subscriber("host"));
+
+        var result = await CreatePass().RunAsync();
+
+        Assert.Equal(0, result.PendingEvents);
+        VerifyInboxAdded("host", UserNotificationType.EventPending, Times.Never());
+        _sender.Verify(
+            s => s.SendAsync(It.IsAny<PushSubscription>(), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
     public async Task RunAsync_PendingEventWithoutCreator_IsIgnored()
     {
         var started = Now - EventSchedule.PendingDelay - TimeSpan.FromHours(1);

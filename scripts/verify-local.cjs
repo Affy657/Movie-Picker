@@ -230,34 +230,39 @@ const dockerLane = () =>
         '1',
         '/repo',
       ]),
-    // `--timeout 15m` only widens Trivy's internal deadline: the 113 MB database download dies on
-    // `context deadline exceeded` after the default 5 minutes on a slow link (2026-09-14).
     () =>
-      run(
-        'npm audit (Trivy fs; pnpm audit unavailable since 2026-07-15, see pnpm/pnpm#11265)',
-        'docker',
-        [
-          'run',
-          '--rm',
-          '-v',
-          './pnpm-lock.yaml:/repo/pnpm-lock.yaml:ro',
-          '-v',
-          'trivy-cache:/root/.cache/trivy',
-          'aquasec/trivy:0.76.2@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb',
-          'fs',
-          '--scanners',
-          'vuln',
-          '--severity',
-          'HIGH,CRITICAL',
-          '--exit-code',
-          '1',
-          '--ignore-unfixed',
-          '--timeout',
-          '15m',
-          '/repo/pnpm-lock.yaml',
-        ]
+      npmAudit(
+        'npm audit (Trivy fs, HIGH with a fix; pnpm audit unavailable since 2026-07-15, see pnpm/pnpm#11265)',
+        ['--severity', 'HIGH', '--ignore-unfixed']
       ),
+    () => npmAudit('npm audit (Trivy fs, every CRITICAL)', ['--severity', 'CRITICAL']),
   ]);
+
+// The split of the CI `audit` job: `--ignore-unfixed` applies to every severity of a run, so a
+// CRITICAL without a published fix needs its own. `--timeout 15m` only widens Trivy's internal
+// deadline: the 113 MB database download dies on `context deadline exceeded` after the default
+// 5 minutes on a slow link (2026-09-14). The second run reads the database the first one left in
+// the volume.
+function npmAudit(label, severityArgs) {
+  return run(label, 'docker', [
+    'run',
+    '--rm',
+    '-v',
+    './pnpm-lock.yaml:/repo/pnpm-lock.yaml:ro',
+    '-v',
+    'trivy-cache:/root/.cache/trivy',
+    'aquasec/trivy:0.76.2@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb',
+    'fs',
+    '--scanners',
+    'vuln',
+    ...severityArgs,
+    '--exit-code',
+    '1',
+    '--timeout',
+    '15m',
+    '/repo/pnpm-lock.yaml',
+  ]);
+}
 
 function printTimings() {
   const width = Math.max(...timings.map((t) => t.title.length));

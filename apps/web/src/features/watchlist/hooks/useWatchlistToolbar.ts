@@ -8,6 +8,7 @@ import {
   voteMinLabel,
 } from '@/features/movies/components/movieSearchFilterOptions';
 import { safeLocalStorageGet, safeLocalStorageSet } from '@/shared/utils/safeStorage';
+import { useHistoryEntryState } from '@/shared/hooks/useHistoryEntryState';
 import type { RatingScale } from '@/shared/types/theme';
 import type { MovieMediaType, WatchProviderOffer } from '@/shared/types/movie';
 import type { WatchlistItem } from '@/features/movies/api/watchlistApi';
@@ -63,20 +64,17 @@ const DEFAULT_STATE: PersistedState = {
 
 export type ToolbarStorageScope = 'watchlist' | 'list' | 'watched' | 'savedList' | 'publicList';
 
-function storageKey(scope: ToolbarStorageScope, userId: string): string {
-  return `moviepicker_${scope}_toolbar_${userId}`;
+function storageKey(scope: ToolbarStorageScope, userId: string, listId?: string): string {
+  const owner = listId ? `${scope}_${listId}` : scope;
+  return `moviepicker_${owner}_toolbar_${userId}`;
 }
 
 function defaultStateFor(sortBy: WatchlistSortKey): PersistedState {
   return { ...DEFAULT_STATE, sortBy, sortDir: DEFAULT_DIRECTION[sortBy] };
 }
 
-function readPersisted(
-  scope: ToolbarStorageScope,
-  userId: string,
-  defaults: PersistedState
-): PersistedState {
-  const raw = safeLocalStorageGet(storageKey(scope, userId));
+function readPersisted(key: string, defaults: PersistedState): PersistedState {
+  const raw = safeLocalStorageGet(key);
   if (!raw) return defaults;
   try {
     const parsed = JSON.parse(raw);
@@ -108,8 +106,8 @@ function readPersisted(
   }
 }
 
-function writePersisted(scope: ToolbarStorageScope, userId: string, state: PersistedState) {
-  safeLocalStorageSet(storageKey(scope, userId), JSON.stringify(state));
+function writePersisted(key: string, state: PersistedState) {
+  safeLocalStorageSet(key, JSON.stringify(state));
 }
 
 function compareItems(
@@ -190,6 +188,7 @@ interface UseWatchlistToolbarOptions {
   ratingScale?: RatingScale;
   mediaTypeLabels: Record<MovieMediaType, string>;
   storageScope?: ToolbarStorageScope;
+  storageListId?: string;
   extraFilter?: ToolbarExtraFilter;
   defaultSortBy?: WatchlistSortKey;
 }
@@ -201,27 +200,29 @@ export function useWatchlistToolbar({
   ratingScale,
   mediaTypeLabels,
   storageScope = 'watchlist',
+  storageListId,
   extraFilter,
   defaultSortBy = 'createdAt',
 }: UseWatchlistToolbarOptions) {
   const defaults = useMemo(() => defaultStateFor(defaultSortBy), [defaultSortBy]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useHistoryEntryState('watchlistToolbar.search', '');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [state, setState] = useState<PersistedState>(defaults);
   const skipNextWriteRef = useRef(true);
+  const persistedKey = userId ? storageKey(storageScope, userId, storageListId) : null;
 
   useEffect(() => {
     skipNextWriteRef.current = true;
-    setState(userId ? readPersisted(storageScope, userId, defaults) : defaults);
-  }, [storageScope, userId, defaults]);
+    setState(persistedKey ? readPersisted(persistedKey, defaults) : defaults);
+  }, [persistedKey, defaults]);
 
   useEffect(() => {
     if (skipNextWriteRef.current) {
       skipNextWriteRef.current = false;
       return;
     }
-    if (userId) writePersisted(storageScope, userId, state);
-  }, [storageScope, userId, state]);
+    if (persistedKey) writePersisted(persistedKey, state);
+  }, [persistedKey, state]);
 
   const setSortBy = useCallback((key: WatchlistSortKey) => {
     setState((prev) =>
@@ -278,7 +279,7 @@ export function useWatchlistToolbar({
     setSearch('');
     clearAllFilters();
     extraFilter?.reset();
-  }, [clearAllFilters, extraFilter]);
+  }, [setSearch, clearAllFilters, extraFilter]);
 
   const hasActiveFilters = useMemo(
     () =>

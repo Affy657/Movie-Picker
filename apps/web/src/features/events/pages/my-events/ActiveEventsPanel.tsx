@@ -15,6 +15,7 @@ export default function ActiveEventsPanel({
   actions,
 }: Readonly<ActiveEventsPanelProps>) {
   const closingSlug = actions.closeMutation.isPending ? (actions.confirmClose?.slug ?? null) : null;
+  const titleOf = (slug: string) => pendingEvents.find((e) => e.slug === slug)?.title ?? '';
 
   return (
     <>
@@ -30,10 +31,8 @@ export default function ActiveEventsPanel({
       ) : null}
       <PendingEventsSection
         events={pendingEvents}
-        onCloseWithoutMovie={(slug) => {
-          const title = pendingEvents.find((e) => e.slug === slug)?.title ?? '';
-          actions.handleCloseWithoutMovie(slug, title);
-        }}
+        onCloseWithoutMovie={(slug) => actions.handleCloseWithoutMovie(slug, titleOf(slug))}
+        onFinishNight={(slug) => actions.handleFinishNight(slug, titleOf(slug))}
         closingSlug={closingSlug}
       />
       <UpcomingEventsSection events={upcomingEvents} onLeave={actions.handleLeaveEvent} />

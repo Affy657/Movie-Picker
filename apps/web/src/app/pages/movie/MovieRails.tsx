@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import { ROUTES } from '@/app/routes';
+import type { ShowcaseListArrival } from '@/app/pages/showcaseListState';
 import type { MovieCollectionRef } from '@/features/movies/api/moviesApi';
 import type { ShowcaseItem, ShowcaseQuery } from '@/features/movies/api/showcaseApi';
 import MovieBrowseCard, {
@@ -8,6 +9,7 @@ import MovieBrowseCard, {
 } from '@/features/movies/components/MovieBrowseCard';
 import MoviePreviewRow, { MoviePreviewRail } from '@/features/movies/components/MoviePreviewRow';
 import showcaseStyles from '@/features/movies/components/ShowcaseMovieCard.module.css';
+import { useMovieDetails } from '@/features/movies/hooks/useMovieDetails';
 import { useMovieShowcase } from '@/features/movies/hooks/useMovieShowcase';
 import { useTranslation } from '@/shared/i18n';
 import type { MovieMediaType } from '@/shared/types/movie';
@@ -19,6 +21,7 @@ interface RailProps {
   heading: string;
   query: ShowcaseQuery;
   seeAllTo?: string;
+  seeAllState?: ShowcaseListArrival;
   seeAllLabel?: string;
   current: { tmdbId: number; mediaType: MovieMediaType };
   markCurrent?: boolean;
@@ -47,6 +50,7 @@ function MovieRail({
   heading,
   query,
   seeAllTo,
+  seeAllState,
   seeAllLabel,
   current,
   markCurrent = false,
@@ -64,6 +68,7 @@ function MovieRail({
     <MoviePreviewRow
       heading={heading}
       seeAllTo={seeAllTo}
+      seeAllState={seeAllState}
       seeAllLabel={seeAllLabel}
       className={styles.rail}
     >
@@ -107,6 +112,7 @@ export default function MovieRails({
 }>) {
   const { t } = useTranslation();
   const isTv = current.mediaType === 'tv';
+  const currentTitle = useMovieDetails(current.tmdbId, true, current.mediaType).data?.title;
   return (
     <div className={styles.rails}>
       {collection ? (
@@ -114,6 +120,7 @@ export default function MovieRails({
           heading={collection.name}
           query={{ section: 'collection', collectionId: collection.id }}
           seeAllTo={ROUTES.movieCollection(collection.id)}
+          seeAllState={{ collectionName: collection.name }}
           seeAllLabel={t('moviePage.sagaSeeAll')}
           current={current}
           markCurrent
@@ -138,6 +145,7 @@ export default function MovieRails({
           seedMediaType: current.mediaType,
         }}
         seeAllTo={ROUTES.showcaseRecommendations(current.tmdbId, current.mediaType)}
+        seeAllState={{ seedTitle: currentTitle }}
         seeAllLabel={t('moviePage.similarSeeAll')}
         current={current}
         library={library}

@@ -439,6 +439,115 @@ describe('EventDetail (MSW)', () => {
     });
   });
 
+  describe('pending movie night with one film drawn out of two (host)', () => {
+    const token = 'host-secret-token';
+
+    function lastNight(): string {
+      const day = new Date();
+      day.setDate(day.getDate() - 1);
+      return [
+        day.getFullYear(),
+        String(day.getMonth() + 1).padStart(2, '0'),
+        String(day.getDate()).padStart(2, '0'),
+      ].join('-');
+    }
+
+    function proposed(id: string, title: string, tmdbId: number) {
+      return {
+        _id: id,
+        eventId: 'evt-msw',
+        participantId: 'p-msw-host',
+        tmdbId,
+        mediaType: 'movie',
+        title,
+        year: '1999',
+        posterPath: null,
+        proposerPseudo: 'Hôte',
+        score: 0,
+        up: 0,
+        down: 0,
+        ratings: [],
+      };
+    }
+
+    function servePartlyDrawnNight() {
+      server.use(
+        http.get(`${TEST_API_V1}/events/slug/${slug}`, () =>
+          HttpResponse.json({
+            _id: 'evt-msw',
+            title: 'Soirée à deux films',
+            date: lastNight(),
+            time: '21:00',
+            slug,
+            isHost: true,
+            isFinished: false,
+            lifecycle: 'pending',
+            winners: [{ movieId: 'm-win', pickMethod: 'wheel', pickedAt: '2026-01-01T20:00:00Z' }],
+            participantCount: 1,
+            movieCount: 2,
+            participants: [{ _id: 'p-msw-host', pseudo: 'Hôte', isCreator: true }],
+            config: {
+              theme: null,
+              maxProposalsPerParticipant: null,
+              maxParticipants: null,
+              wheelMode: 'strictRandom',
+              winnerCount: 2,
+            },
+          })
+        ),
+        http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
+          HttpResponse.json([proposed('m-win', 'Matrix', 42), proposed('m-next', 'Alien', 43)])
+        ),
+        http.put(
+          `${TEST_API_V1}/events/${slug}/presence`,
+          () => new HttpResponse(null, { status: 204 })
+        ),
+        http.get(`${TEST_API_V1}/events/${slug}/invitations/eligible-follows`, () =>
+          HttpResponse.json({ follows: [] })
+        )
+      );
+    }
+
+    it('shows the drawn film and the next draw, without the notice of a night with no film', async () => {
+      const user = userEvent.setup();
+      servePartlyDrawnNight();
+      renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
+
+      const stage = await screen.findByRole('region', { name: 'Le film de la soirée' });
+      expect(within(stage).getAllByText('Matrix').length).toBeGreaterThan(0);
+      expect(screen.getByRole('button', { name: /tirer un film de plus/i })).toBeEnabled();
+      expect(screen.queryByRole('status', { name: /en suspens/i })).not.toBeInTheDocument();
+      expect(screen.queryByText(/aucun film n'a été choisi/i)).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Gérer le tirage' }));
+      expect(
+        screen.queryByRole('menuitem', { name: 'Clôturer sans film' })
+      ).not.toBeInTheDocument();
+    });
+
+    it('finishes the night with the film already drawn once the host confirms', async () => {
+      const user = userEvent.setup();
+      servePartlyDrawnNight();
+      let closed = 0;
+      server.use(
+        http.post(`${TEST_API_V1}/events/${slug}/close`, () => {
+          closed += 1;
+          return HttpResponse.json({ message: 'closed' });
+        })
+      );
+      renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
+
+      await user.click(await screen.findByRole('button', { name: 'Gérer le tirage' }));
+      await user.click(screen.getByRole('menuitem', { name: 'Terminer la soirée' }));
+      const dialog = await screen.findByRole('dialog', { name: /^terminer la soirée/i });
+      expect(within(dialog).getByText(/films déjà tirés/i)).toBeInTheDocument();
+      expect(closed).toBe(0);
+      await user.click(within(dialog).getByRole('button', { name: 'Terminer la soirée' }));
+
+      await waitFor(() => expect(closed).toBe(1));
+    });
+  });
+
   it('shows the movies error and Retry when loading the movies fails', async () => {
     server.use(
       http.get(`${TEST_API_V1}/events/:slug/movies`, () =>

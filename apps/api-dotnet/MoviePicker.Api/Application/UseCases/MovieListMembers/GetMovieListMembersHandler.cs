@@ -22,9 +22,14 @@ public sealed class GetMovieListMembersHandler : IGetMovieListMembersHandler
     {
         var list = await MovieListPolicy.RequireAsync(_lists, userId, listId, ct);
         var ownerView = list.OwnerId == userId;
-        IEnumerable<string> visible = [list.OwnerId, .. list.Members.Select(member => member.UserId)];
-        if (ownerView)
-            visible = visible.Concat(list.Invitations.Select(invitation => invitation.UserId));
+        var now = _clock.GetUtcNow();
+        List<MovieListInvitation> pending = ownerView ? [.. list.PendingInvitations(now)] : [];
+        IEnumerable<string> visible =
+        [
+            list.OwnerId,
+            .. list.Members.Select(member => member.UserId),
+            .. pending.Select(invitation => invitation.UserId)
+        ];
         var people = await MovieListPeople.LoadAsync(_users, visible, ct);
 
         return new MovieListMembersResponse
@@ -34,8 +39,8 @@ public sealed class GetMovieListMembersHandler : IGetMovieListMembersHandler
                 Member(people, list.OwnerId, list.CreatedAt, isOwner: true),
                 .. list.Members.Select(member => Member(people, member.UserId, member.JoinedAt, isOwner: false))
             ],
-            Invitations = ownerView ? [.. list.Invitations.Select(invitation => Pending(people, invitation))] : null,
-            InviteLink = ownerView && list.InviteLink is { } link ? MovieListInviteLinkResponse.From(link, _clock.GetUtcNow()) : null
+            Invitations = ownerView ? [.. pending.Select(invitation => Pending(people, invitation))] : null,
+            InviteLink = ownerView && list.InviteLink is { } link ? MovieListInviteLinkResponse.From(link, now) : null
         };
     }
 

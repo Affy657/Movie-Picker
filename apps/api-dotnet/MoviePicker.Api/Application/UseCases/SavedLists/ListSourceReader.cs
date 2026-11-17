@@ -7,6 +7,7 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using MoviePicker.Api.Application.UseCases.PublicLists;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -97,7 +98,7 @@ public sealed class ListSourceReader
         }
         catch (Exception ex) when (IsSourceFailure(ex, ct))
         {
-            _logger.LogWarning(ex, "Saga {CollectionId} could not be checked before being saved", source.Id);
+            _logger.LogWarning(ex, "Saga {CollectionId} could not be checked before being saved", LogText.SingleLine(source.Id));
             throw Errors.ListSourceUnavailable();
         }
 
@@ -117,7 +118,11 @@ public sealed class ListSourceReader
         }
         catch (Exception ex) when (IsSourceFailure(ex, ct))
         {
-            _logger.LogWarning(ex, "List source {SourceType} {SourceId} could not be read", source.Type, source.Id);
+            _logger.LogWarning(
+                ex,
+                "List source {SourceType} {SourceId} could not be read",
+                source.Type,
+                LogText.SingleLine(source.Id));
             return ListSourceContent.Unavailable;
         }
 
@@ -190,7 +195,7 @@ public sealed class ListSourceReader
         }
         catch (Exception ex) when (IsSourceFailure(ex, ct))
         {
-            _logger.LogWarning(ex, "Name of the saga {CollectionId} could not be read", source.Id);
+            _logger.LogWarning(ex, "Name of the saga {CollectionId} could not be read", LogText.SingleLine(source.Id));
             return null;
         }
     }

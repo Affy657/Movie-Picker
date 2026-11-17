@@ -6,6 +6,7 @@ import { ApiError } from '@/shared/api/apiError';
 import { LocaleProvider, t as translate, type Translate } from '@/shared/i18n';
 import { queueVote, readQueuedVotes } from '@/shared/utils/offlineEventStorage';
 import {
+  OFFLINE_VOTE_RETRY_BASE_MS,
   offlineVoteReport,
   useOfflineVoteReplay,
 } from '@/features/events/offline/useOfflineVoteReplay';
@@ -34,7 +35,92 @@ describe('useOfflineVoteReplay', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     onlineManager.setOnline(true);
+  });
+
+  async function flush(ms = 0): Promise<void> {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(ms);
+    });
+  }
+
+  it('tries again a little later when the request fails while the browser still says online', async () => {
+    vi.useFakeTimers();
+    queue('m1', 1);
+    api.voteMovie
+      .mockRejectedValueOnce(new ApiError('Network down', { code: 0 }))
+      .mockResolvedValue(undefined);
+    const { result } = renderHook(
+      () => useOfflineVoteReplay({ slug: 'cine-club', onReplayed: vi.fn() }),
+      { wrapper }
+    );
+    await flush();
+    expect(api.voteMovie).toHaveBeenCalledTimes(1);
+    expect(readQueuedVotes('cine-club')).toHaveLength(1);
+
+    await flush(OFFLINE_VOTE_RETRY_BASE_MS);
+
+    expect(api.voteMovie).toHaveBeenCalledTimes(2);
+    expect(readQueuedVotes('cine-club')).toEqual([]);
+    expect(offlineVoteReport(result.current.outcome, t)?.message).toBe(
+      'Votre vote fait hors ligne a été enregistré.'
+    );
+  });
+
+  it('waits longer after each failed attempt', async () => {
+    vi.useFakeTimers();
+    queue('m1', 1);
+    api.voteMovie.mockRejectedValue(new ApiError('Network down', { code: 0 }));
+    renderHook(() => useOfflineVoteReplay({ slug: 'cine-club', onReplayed: vi.fn() }), {
+      wrapper,
+    });
+    await flush();
+    await flush(OFFLINE_VOTE_RETRY_BASE_MS);
+    expect(api.voteMovie).toHaveBeenCalledTimes(2);
+
+    await flush(OFFLINE_VOTE_RETRY_BASE_MS);
+    expect(api.voteMovie).toHaveBeenCalledTimes(2);
+
+    await flush(OFFLINE_VOTE_RETRY_BASE_MS);
+    expect(api.voteMovie).toHaveBeenCalledTimes(3);
+  });
+
+  it('tries again at once when the server answers again', async () => {
+    vi.useFakeTimers();
+    queue('m1', 1);
+    api.voteMovie
+      .mockRejectedValueOnce(new ApiError('Network down', { code: 0 }))
+      .mockResolvedValue(undefined);
+    const { rerender } = renderHook(
+      ({ serverReachedAt }: { serverReachedAt: number }) =>
+        useOfflineVoteReplay({ slug: 'cine-club', onReplayed: vi.fn(), serverReachedAt }),
+      { wrapper, initialProps: { serverReachedAt: 1 } }
+    );
+    await flush();
+    expect(api.voteMovie).toHaveBeenCalledTimes(1);
+
+    rerender({ serverReachedAt: 2 });
+    await flush();
+
+    expect(api.voteMovie).toHaveBeenCalledTimes(2);
+    expect(readQueuedVotes('cine-club')).toEqual([]);
+  });
+
+  it('stops trying once unmounted', async () => {
+    vi.useFakeTimers();
+    queue('m1', 1);
+    api.voteMovie.mockRejectedValue(new ApiError('Network down', { code: 0 }));
+    const { unmount } = renderHook(
+      () => useOfflineVoteReplay({ slug: 'cine-club', onReplayed: vi.fn() }),
+      { wrapper }
+    );
+    await flush();
+
+    unmount();
+    await flush(OFFLINE_VOTE_RETRY_BASE_MS * 64);
+
+    expect(api.voteMovie).toHaveBeenCalledTimes(1);
   });
 
   it('waits for the network before sending anything', () => {

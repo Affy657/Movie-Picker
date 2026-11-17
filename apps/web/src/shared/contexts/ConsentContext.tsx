@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 
 const CONSENT_STORAGE_KEY = 'moviepicker-consent';
 
@@ -45,6 +53,16 @@ function persist(prefs: ConsentPrefs): void {
 
 export function ConsentProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [prefs, setPrefs] = useState<ConsentPrefs>(() => readStored());
+
+  useEffect(() => {
+    const followOtherTabs = (event: StorageEvent): void => {
+      if (event.storageArea !== localStorage) return;
+      if (event.key !== null && event.key !== CONSENT_STORAGE_KEY) return;
+      setPrefs(readStored());
+    };
+    window.addEventListener('storage', followOtherTabs);
+    return () => window.removeEventListener('storage', followOtherTabs);
+  }, []);
 
   const acceptAll = useCallback(() => {
     const next = { decided: true, analytics: true };

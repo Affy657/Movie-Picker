@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.MovieLists;
 using MoviePicker.Api.Domain.Entities;
@@ -145,7 +146,7 @@ public sealed class AddMovieListItemHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_KeepsTheFactsAndThePosterOfTheRequest()
+    public async Task HandleAsync_PrefersTheTmdbFacts_ButKeepsThePosterOfTheRequest()
     {
         _kit.Tmdb
             .Setup(t => t.GetDetailsAsync(603, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
@@ -154,9 +155,51 @@ public sealed class AddMovieListItemHandlerTests
 
         var added = await _kit.AddAsync(list.Id, Title(603, Poster(603), runtimeMinutes: 136, voteAverage: 8.3));
 
-        Assert.Equal(136, added.Item.RuntimeMinutes);
-        Assert.Equal(8.3, added.Item.VoteAverage);
+        Assert.Equal(150, added.Item.RuntimeMinutes);
+        Assert.Equal(7.0, added.Item.VoteAverage);
         Assert.Equal(Poster(603), added.Item.PosterPath);
+    }
+
+    [Fact]
+    public async Task HandleAsync_StoresTheTitleYearRatingAndRuntimeOfTmdb_NotThoseTheClientSent()
+    {
+        _kit.Tmdb
+            .Setup(t => t.GetDetailsAsync(550, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TmdbMovieDetails(550, "Fight Club", null, null, null, [], 139, [], [18], "1999-10-15", VoteAverage: 8.4));
+        var list = await _kit.CreateAsync("Films cultes");
+        var forged = new AddWatchlistItemRequest { TmdbId = 550, Title = "Faux titre", Year = "1066", RuntimeMinutes = 1, VoteAverage = 0.5 };
+
+        var added = await _kit.AddAsync(list.Id, forged);
+
+        var stored = (await StoredAsync(list.Id)).Items.Single();
+        Assert.Equal(("Fight Club", "1999", (double?)8.4, (int?)139), (stored.Title, stored.Year, stored.VoteAverage, stored.RuntimeMinutes));
+        Assert.Equal("Fight Club", added.Item.Title);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TmdbWithoutReleaseDateNorFacts_FallsBackOnTheRequest()
+    {
+        _kit.Tmdb
+            .Setup(t => t.GetDetailsAsync(550, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TmdbMovieDetails(550, " ", null, null, null, [], null, [], [18], null));
+        var list = await _kit.CreateAsync("Films cultes");
+
+        var added = await _kit.AddAsync(list.Id, Title(550, title: " Fight Club ", runtimeMinutes: 139, voteAverage: 8.4));
+
+        Assert.Equal(("Fight Club", "1999", (double?)8.4, (int?)139), (added.Item.Title, added.Item.Year, added.Item.VoteAverage, added.Item.RuntimeMinutes));
+    }
+
+    [Fact]
+    public async Task HandleAsync_TmdbDown_KeepsTheTitleYearAndFactsOfTheRequest()
+    {
+        _kit.Tmdb
+            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("TMDB unavailable"));
+        var list = await _kit.CreateAsync("Films cultes");
+
+        var added = await _kit.AddAsync(list.Id, Title(550, title: "Fight Club", runtimeMinutes: 139, voteAverage: 8.4));
+
+        Assert.Equal(("Fight Club", "1999", (double?)8.4, (int?)139), (added.Item.Title, added.Item.Year, added.Item.VoteAverage, added.Item.RuntimeMinutes));
     }
 
     [Fact]

@@ -14,6 +14,7 @@ import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
 import { setStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 import { formatEventTitleDate } from '@/shared/utils/formatMyEventsListDate';
 import { ROUTES } from '@/app/routes';
+import { useCloseOnPageChange } from '@/app/components/useCloseOnPageChange';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import {
   createEvent as createEventApi,
@@ -314,6 +315,9 @@ export default function CreateEventDialog({
     error,
   } = useAsyncAction(createAction, t('events.create.fallbackError'));
   const requestClose = useCloseUnlessCreating(loading, onClose, titleRef);
+  useCloseOnPageChange(() => {
+    if (!loading && step !== 'invitation') onClose();
+  });
 
   const limitErrors = () =>
     validateEventLimits(

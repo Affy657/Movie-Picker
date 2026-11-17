@@ -334,6 +334,27 @@ public sealed class GetUserStatsHandlerTests
         Assert.Null(res.ProposalsAverageRating);
     }
 
+    [Theory]
+    [InlineData(null, 0, null)]
+    [InlineData("stranger", 0, null)]
+    [InlineData("u1", 3, 8.0)]
+    public async Task WinningProposals_OfAMemberHidingTheirWatchedFilms_AreOnlyShownToThemself(
+        string? viewerId, int expectedWins, double? expectedAverage)
+    {
+        var handler = Build();
+        GivenWinningProposals(("A", "m1"), ("B", "m2"), ("C", "m3"));
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(PublicUser(isWatchedPublic: false));
+        _ratings.Setup(r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Rating("A", "m1", "friend", 8), Rating("B", "m2", "friend", 8), Rating("C", "m3", "friend", 8) });
+
+        var res = await handler.HandleAsync("alice", viewerId);
+
+        Assert.Equal(expectedWins, res.WinningProposals);
+        Assert.Equal(expectedAverage, res.ProposalsAverageRating);
+        Assert.Equal(3, res.MoviesProposed);
+    }
+
     [Fact]
     public async Task DailyActivity_DropsParticipationsOutsideWindow()
     {
@@ -376,6 +397,21 @@ public sealed class GetUserStatsHandlerTests
 
         Assert.Equal(0, res.CurrentStreakWeeks);
         Assert.Equal(0, res.BestStreakWeeks);
+    }
+
+    [Fact]
+    public async Task Streak_CountsANightOverWithADrawLeft()
+    {
+        var handler = Build();
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
+        var parts = new[] { Part("p1", "A", DateTimeOffset.UtcNow) };
+        _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(parts);
+        _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Evt("A", "2026-06-14", winnerMovieId: "m1") with { Config = new EventConfig { WinnerCount = 2 } } });
+
+        var res = await handler.HandleAsync("alice");
+
+        Assert.Equal(1, res.BestStreakWeeks);
     }
 
     [Fact]

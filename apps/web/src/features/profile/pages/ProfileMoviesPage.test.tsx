@@ -200,4 +200,40 @@ describe('ProfileMoviesPage (MSW)', () => {
 
     expect(await screen.findByText('Film 0')).toBeInTheDocument();
   });
+
+  describe('a long watched history', () => {
+    function watchedHistory(total: number) {
+      const history = Array.from({ length: total }, (_, index) =>
+        movieItem({
+          tmdbId: 10_000 + index,
+          title: `Titre ${String(index + 1).padStart(4, '0')}`,
+          watchedAt: new Date(Date.UTC(2026, 0, 1) - index * 86_400_000).toISOString(),
+        })
+      );
+      return http.get(`${TEST_API_V1}/users/:handle/watched-movies`, ({ request }) => {
+        const take = Number(new URL(request.url).searchParams.get('take'));
+        return HttpResponse.json({ items: history.slice(0, take), total });
+      });
+    }
+
+    it('counts and lists every watched film, the oldest one included', async () => {
+      server.use(watchedHistory(250));
+      const user = userEvent.setup();
+      renderPage('alice');
+
+      expect(await screen.findByText('250 films vus')).toBeInTheDocument();
+      await user.type(
+        screen.getByRole('searchbox', { name: /rechercher parmi les films/i }),
+        'Titre 0250'
+      );
+      expect(await screen.findByText('Titre 0250')).toBeInTheDocument();
+    });
+
+    it('counts every watched film even beyond what one page can list', async () => {
+      server.use(watchedHistory(1_200));
+      renderPage('alice');
+
+      expect(await screen.findByText('1200 films vus')).toBeInTheDocument();
+    });
+  });
 });

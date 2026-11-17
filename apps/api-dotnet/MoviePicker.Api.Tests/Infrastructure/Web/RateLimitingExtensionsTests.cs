@@ -356,6 +356,29 @@ public sealed class RateLimitingExtensionsTests
         Assert.NotNull(RateLimitingExtensions.FindPolicy(RateLimitingExtensions.EventViewPollPolicy));
     }
 
+    [Fact]
+    public void PostersPolicy_CountsEveryAccountBehindOneAddress_OutsideTheSharedCeilings()
+    {
+        var spec = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.PostersPolicy)!.Value;
+        var alice = SignedIn("alice", "203.0.113.7");
+        alice.SetEndpoint(new Endpoint(
+            _ => Task.CompletedTask,
+            new EndpointMetadataCollection(new EnableRateLimitingAttribute(RateLimitingExtensions.PostersPolicy)),
+            "poster"));
+
+        Assert.Equal(
+            RateLimitingExtensions.CreatePartition(alice, spec).PartitionKey,
+            RateLimitingExtensions.CreatePartition(SignedIn("bob", "203.0.113.7"), spec).PartitionKey);
+        Assert.NotEqual(
+            RateLimitingExtensions.CreatePartition(alice, spec).PartitionKey,
+            RateLimitingExtensions.CreatePartition(SignedIn("alice", "198.51.100.2"), spec).PartitionKey);
+        using var ceiling = Limiter(RateLimitingExtensions.CreateAddressCeilingPartition(alice));
+        using var global = Limiter(RateLimitingExtensions.CreateGlobalPartition(alice));
+        Assert.All(
+            Enumerable.Range(0, RateLimitingExtensions.AddressCeilingPerMinute + 1),
+            _ => Assert.True(ceiling.AttemptAcquire().IsAcquired && global.AttemptAcquire().IsAcquired));
+    }
+
     [Theory]
     [InlineData(typeof(EventsController), nameof(EventsController.GetBySlug))]
     [InlineData(typeof(EventMoviesController), nameof(EventMoviesController.List))]

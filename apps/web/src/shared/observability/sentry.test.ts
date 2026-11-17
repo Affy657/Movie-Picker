@@ -238,10 +238,33 @@ describe('initSentry', () => {
     const sentry = await import('./sentry');
 
     sentry.scheduleSentryStart();
+    window.dispatchEvent(new Event('pointerdown'));
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     vi.unstubAllGlobals();
     await expect(sentry.initSentry()).rejects.toThrow();
+  });
+
+  it('loads the SDK again on the next call after a failed load', async () => {
+    const init = vi.fn();
+    let attempts = 0;
+    vi.doMock('@sentry/react', () => {
+      attempts++;
+      if (attempts === 1) {
+        throw new TypeError('Failed to fetch dynamically imported module: /assets/sentry.js');
+      }
+      return {
+        init,
+        captureException: vi.fn(),
+        browserTracingIntegration: () => ({ name: 'BrowserTracing' }),
+      };
+    });
+    const sentry = await import('./sentry');
+
+    await expect(sentry.initSentry()).rejects.toThrow();
+    await sentry.initSentry();
+
+    expect(init).toHaveBeenCalledTimes(1);
   });
 
   it("instrumente la navigation sans envelopper les routes de l'application", async () => {

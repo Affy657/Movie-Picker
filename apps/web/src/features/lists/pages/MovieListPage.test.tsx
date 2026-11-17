@@ -210,6 +210,30 @@ describe('MovieListPage', () => {
     ).toEqual(['Ajout', 'Titre', 'Note', 'Durée', 'Sortie']);
   });
 
+  it('keeps the sort chosen on a list to that list', async () => {
+    const items = [film(1, 'Zodiac', { createdAt: '2026-02-01T00:00:00Z' }), film(2, 'Alien')];
+    server.use(
+      ...useServer([
+        { id: 'l1', name: 'Halloween', items },
+        { id: 'l2', name: 'Noël', items },
+      ])
+    );
+    const firstTitle = async (name: string) =>
+      within(await screen.findByRole('list', { name: `Films de « ${name} »` })).getAllByRole(
+        'listitem'
+      )[0]?.textContent;
+    const user = userEvent.setup();
+    const halloween = renderPage('/listes/l1');
+    expect(await firstTitle('Halloween')).toContain('Zodiac');
+
+    await user.click(screen.getByRole('button', { name: 'Titre' }));
+    await waitFor(async () => expect(await firstTitle('Halloween')).toContain('Alien'));
+    halloween.unmount();
+    renderPage('/listes/l2');
+
+    expect(await firstTitle('Noël')).toContain('Zodiac');
+  });
+
   it('says so when the list holds no film', async () => {
     server.use(...useServer([{ id: 'l1', name: 'Ghibli' }]));
 

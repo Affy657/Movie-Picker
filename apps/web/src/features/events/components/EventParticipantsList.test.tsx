@@ -140,6 +140,37 @@ describe('EventParticipantsList', () => {
     expect(link).toHaveAttribute('href', '/u/alice');
   });
 
+  it('names the presence of a participant inside the link to the profile', () => {
+    render(
+      <AppTestProviders>
+        <MemoryRouter>
+          <EventParticipantsList
+            participants={[
+              { id: 'p1', pseudo: 'Alice', handle: 'alice' },
+              { id: 'p2', pseudo: 'Bob', handle: 'bob' },
+              { id: 'p3', pseudo: 'Chloé', handle: 'chloe' },
+            ]}
+            currentParticipantId={null}
+            onlineIds={new Set(['p1', 'p2'])}
+            proposingIds={new Set(['p2'])}
+          />
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+
+    expect(screen.getByRole('link', { name: 'Voir le profil de Alice, en ligne' })).toHaveAttribute(
+      'href',
+      '/u/alice'
+    );
+    expect(
+      screen.getByRole('link', { name: 'Voir le profil de Bob, propose un film…' })
+    ).toHaveAttribute('href', '/u/bob');
+    expect(screen.getByRole('link', { name: 'Voir le profil de Chloé' })).toHaveAttribute(
+      'href',
+      '/u/chloe'
+    );
+  });
+
   it('ne rend pas de lien profil pour un participant sans handle', () => {
     render(
       <AppTestProviders>

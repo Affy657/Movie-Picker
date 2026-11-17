@@ -1,6 +1,8 @@
 # Web rollback (Firebase Hosting): serves again a version `deploy-front` already built.
 #   - Manually triggered (workflow_dispatch).
-#   - Empty `commit` input → the version released before the one currently served.
+#   - Empty `commit` input → the deployed version created last before the one currently served,
+#     so that a second run steps back once more instead of serving again the version a first
+#     rollback just left.
 #   - No gate replayed and nothing uploaded: the version went through the whole chain when it was
 #     deployed, and Hosting still holds its files. That only holds for versions created by a
 #     `deploy.yml` run, which `scripts/publish-front-firebase.mjs` labels with their commit and run
@@ -27,7 +29,7 @@ on:
           - production
           - staging
       commit:
-        description: "SHA of the deployed commit to serve again, 7+ characters (empty = previous version)"
+        description: "SHA of the deployed commit to serve again, 7+ characters (empty = the version deployed before the served one)"
         required: false
         type: string
 

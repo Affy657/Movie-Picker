@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router';
 import MovedOriginBanner from '@/app/components/MovedOriginBanner';
 import { LocaleProvider } from '@/shared/i18n';
 import { usePwaInstallClick } from '@/shared/hooks/usePwaInstall';
@@ -33,7 +34,9 @@ const installState = (overrides: Partial<ReturnType<typeof usePwaInstallClick>> 
 function renderBanner() {
   return render(
     <LocaleProvider>
-      <MovedOriginBanner />
+      <MemoryRouter>
+        <MovedOriginBanner />
+      </MemoryRouter>
     </LocaleProvider>
   );
 }

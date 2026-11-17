@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-095`.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-096`.
 5. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
 7. **Contraintes** (ce qui casse en silence si on y touche) et **Impasses** (essayé, mesuré, sans gain), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
@@ -45,7 +45,7 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - ou: `apps/api-dotnet/MoviePicker.Api/Controllers/PostersController.cs`
 - verify: `grep -n 'return File(' apps/api-dotnet/MoviePicker.Api/Controllers/PostersController.cs` ; encore ouvert tant que la ligne sort
 - fix: stockage objet plus CDN devant
-- piege: `Cache-Control: public,max-age=86400,immutable` et l'ETag sont posés, le trafic est déjà amorti côté navigateur : le coût restant est la sortie réseau, pas le nombre de requêtes. `poster_cache` est la seule courbe de croissance de la base (31,5 Mo sur 32,3 le 2026-09-15, ~56 Ko par affiche) ; l'index TTL `poster_cache_expiresAtUtc_ttl` (30 jours glissants) borne sa taille au nombre d'affiches vues dans le mois. Ce n'est plus qu'un cache depuis le 2026-09-23 : l'adresse d'une affiche porte le chemin TMDB validé (`/api/v1/posters/tmdb/<taille>/<fichier>`), et l'ancienne forme `/api/v1/posters/<sha256>`, qui dépendait d'un document de `poster_cache` et disparaissait avec lui, est réécrite par la migration `RewriteLegacyPosterPathsMigration`. Vider la collection ne coûte qu'un nouveau téléchargement depuis TMDB.
+- piege: `Cache-Control: public,max-age=86400,immutable` et l'ETag sont posés, le trafic est déjà amorti côté navigateur : le coût restant est la sortie réseau, pas le nombre de requêtes. `poster_cache` est la seule courbe de croissance de la base (31,5 Mo sur 32,3 le 2026-09-15, ~56 Ko par affiche) ; l'index TTL `poster_cache_expiresAtUtc_ttl` (30 jours glissants) borne sa taille au nombre d'affiches vues dans le mois. Ce n'est plus qu'un cache depuis le 2026-09-23 : l'adresse d'une affiche porte le chemin TMDB validé (`/api/v1/posters/tmdb/<taille>/<fichier>`), et l'ancienne forme `/api/v1/posters/<sha256>`, qui dépendait d'un document de `poster_cache` et disparaissait avec lui, est réécrite par la migration `RewriteLegacyPosterPathsMigration`. Vider la collection ne coûte qu'un nouveau téléchargement depuis TMDB. Depuis le 2026-11-17, les affiches ont leur propre budget (`posters-get`, 3 000 par minute et par adresse) et sortent du limiteur global et du plafond par adresse : une liste de 1 000 films se parcourt sans 429 (164 affiches refusées en production le jour même, sur une liste de 460 films). Ne pas les remettre dans les compteurs partagés.
 
 ## DEBT-008 le sondage de repli à 3,5 s fixe encore le plafond de la base quand le flux manque
 
@@ -143,7 +143,7 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - verify: `grep -c "Scheduled passes: Cloud Scheduler" .github/workflows/deploy.yml` ; encore ouvert tant que la commande rend autre chose que 0
 - fix: en un seul lot : décrire les cinq jobs en Terraform (`google_cloud_scheduler_job`, `http_target` avec `oidc_token { service_account_email, audience }`, schedules `*/30 * * * *`, `15 3 * * *`, `45 3 * * *`, `20 */5 * * *` et `0 10 * * *`, fuseau `Europe/Paris`, `attempt_deadline` 300 s, `retry_config { retry_count = 3, min_backoff_duration = "30s", max_backoff_duration = "300s" }`, comme `deploy.yml` les pose, URI `<URL run.app du service>/api/v1/scheduler/<passe>`) et les importer (`pnpm run terraform -- import 'google_cloud_scheduler_job.<nom>' projects/<PROJET_GCP>/locations/europe-west1/jobs/<job>`, geste qui écrit l'état : à faire avec l'accord de l'utilisateur, puis `apply` par `infra.yml`) ; retirer l'étape de `deploy.yml`, `roles/cloudscheduler.admin` et le `serviceAccountUser` sur le planificateur de `module.ci`. Le secret se détruit en dernier, à partir du 2026-10-21 (voir `piege`) : `pnpm run terraform -- state rm 'module.api_secrets.google_secret_manager_secret_iam_member.accessor["SCHEDULER_TOKEN"]'`, idem pour `google_secret_manager_secret.this["SCHEDULER_TOKEN"]`, `gcloud secrets delete SCHEDULER_TOKEN`, retrait de `api_secret_names`.
 - fini-quand: `SCHEDULER_TOKEN` n'existe plus dans Secret Manager, ni dans `main.tf`, les jobs sont dans l'état Terraform, `deploy.yml` ne les crée plus et `plan` est vide
-- piege: une révision antérieure au 2026-09-21 ramenée par `rollback.yml` monte encore `SCHEDULER_TOKEN:latest` et attend l'en-tête : le secret doit survivre tant qu'une telle révision est dans le dépôt d'images (30 jours), et les jobs, qui n'envoient plus l'en-tête, recevraient de toute façon un 401 d'une telle révision. L'audience attendue est `VITE_API_URL` sans barre finale (`SCHEDULER_OIDC_AUDIENCE`), pas l'URL `run.app` que les jobs appellent. Le service est en `--allow-unauthenticated`, la vérification du jeton se fait dans l'API, pas par IAM Cloud Run ; le webhook Ko-fi reste sur son jeton, Ko-fi ne signe pas.
+- piege: une révision antérieure au 2026-09-21 ramenée par `rollback.yml` monte encore `SCHEDULER_TOKEN:latest` et attend l'en-tête : le secret doit survivre tant qu'une telle révision est dans le dépôt d'images (30 jours), et les jobs, qui n'envoient plus l'en-tête, recevraient de toute façon un 401 d'une telle révision. L'audience attendue est `VITE_API_URL` sans barre finale (`SCHEDULER_OIDC_AUDIENCE`), pas l'URL `run.app` que les jobs appellent. Le service est public (`allUsers` en `run.invoker`, tenu par Terraform dans le module `cloud-run-api`, plus par `deploy.yml`), la vérification du jeton se fait dans l'API, pas par IAM Cloud Run ; le webhook Ko-fi reste sur son jeton, Ko-fi ne signe pas.
 
 ## DEBT-038 la synchronisation Letterboxd lit du HTML par expression régulière, sans canari
 
@@ -430,7 +430,7 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 
 - state: differe
 - declencheur: un favori au titre fantaisiste vu sur un profil public
-- impact: `POST /api/v1/users/me/favorites` enregistre `title` et `year` tels quels ; seuls l'identifiant TMDB et l'affiche sont contrôlés. Un appel forgé à la main affiche n'importe quel texte (500 caractères au plus) sous « Ses favoris » pour tous les visiteurs, et la fiche ouverte au clic est celle de l'identifiant, pas du titre affiché. La watchlist fait la même confiance au client.
+- impact: `POST /api/v1/users/me/favorites` enregistre `title` et `year` tels quels ; seuls l'identifiant TMDB et l'affiche sont contrôlés. Un appel forgé à la main affiche n'importe quel texte (500 caractères au plus) sous « Ses favoris » pour tous les visiteurs, et la fiche ouverte au clic est celle de l'identifiant, pas du titre affiché. La watchlist fait la même confiance au client. Les listes et les films vus prennent le titre, l'année, la note et la durée de TMDB depuis le 2026-11-17 (`MovieListItemFactory`) : restent les favoris et la watchlist.
 - ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Favorites/AddFavoriteHandler.cs`
 - verify: `grep -c "ITmdbMovieSearch" apps/api-dotnet/MoviePicker.Api/Application/UseCases/Favorites/AddFavoriteHandler.cs` ; encore ouvert tant que la commande rend `0`
 - fix: relire titre, année et affiche chez TMDB par l'identifiant et le type, en ignorant ceux du client
@@ -555,6 +555,16 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - verify: `grep -n "public sealed record ListSourceTitle" apps/api-dotnet/MoviePicker.Api/Application/UseCases/SavedLists/ListSourceContent.cs`
 - fix: `SavedListTitle` partout, avec `Key`, `From(MovieListItem)` et `ToListItem` en extensions ; un seul DTO de personne réutilisé
 - fini-quand: plus de `ListSourceTitle`
+
+## DEBT-095 la page des films vus d'un profil ne liste que les 1 000 premiers
+
+- state: differe
+- declencheur: un membre dépasse 1 000 films vus (la synchronisation Letterboxd en ajoute jusqu'à 300 par passage)
+- impact: `GET /users/{handle}/watched-movies` n'a pas de `skip` ; le front demande le plafond de l'API (`MaxTake`, 1 000) et tire le compte de `total`. Au-delà, la page annonce le bon nombre mais n'en liste que 1 000, et la recherche ne trouve pas les autres.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/UserMovies/GetUserWatchedMoviesHandler.cs`, `apps/web/src/features/profile/api/profileApi.ts`
+- verify: `grep -c "skip" apps/api-dotnet/MoviePicker.Api/Application/UseCases/UserMovies/GetUserWatchedMoviesHandler.cs` ; encore ouvert tant que la commande rend `0`
+- fix: pagination `skip`/`take` côté API, chargement page par page derrière « Afficher plus » côté front
+- fini-quand: le millième et unième film d'un profil s'affiche
 
 ---
 
@@ -683,12 +693,15 @@ Pool de 20 connexions par instance (`DefaultMaxConnectionPoolSize`, `ServiceColl
 
 `AuthTicketCache` (`Infrastructure/Web/CachedAuthTicketStore.cs`) garde chaque ticket 30 s en mémoire d'instance, et `MongoAuthSessionInvalidator` n'invalide que l'instance qui traite la révocation. « Déconnecter partout », un changement de mot de passe ou la suppression du compte laissent donc au plus 30 s sur les autres instances : accepté, et hors périmètre dans `SECURITY.md`. Ne pas allonger le TTL (la fenêtre suit) ni le supprimer (retour à une lecture Mongo par requête) ; si la fenêtre devient inacceptable, un compteur de génération par utilisateur dans `ISharedCache`, au prix d'un aller-retour par requête authentifiée.
 
+Les créations de documents d'un compte relisent le compte juste avant d'écrire (`AccountPresence`, depuis le 2026-11-17) : la fenêtre ne recrée plus de liste, de film vu, de film à voir ni de liste enregistrée après une suppression de compte. Restent hors de cette relecture : suivre un compte (`FollowUserHandler` écrit avant de relire), l'abonnement push (`SubscribePushHandler`), rejoindre une soirée et voter.
+
 ## C15 le prérendu sert l'indexation et le premier rendu, et deux choses le rendent muet
 
 `apps/web/scripts/prerender.mjs` (règles dans `AGENTS.md`) ne touche jamais le réseau : `fetch` y reste en attente, une page qui interroge l'API (`/films/tendances`, `/films/au-cinema`, `/films/les-plus-proposes`, `/films/collections`) livre son en-tête, son `<h1>` et son état de chargement ; prérendre les données rendrait le build dépendant de l'API de production. Une route `noindex` n'en tire que le premier rendu et le déclare dans `PRERENDERED_FOR_FIRST_PAINT_ONLY` (`/mentions-legales`, `/politique-de-confidentialite`) ; le prérendu renforce leur `noindex`, la coquille SPA ne portant aucune balise `robots`.
 
 1. **Le document prérendu porte les styles de sa route en ligne**, lus dans `dist/route-assets.json` (C4), concaténés de la coquille à la page. Sans eux le contenu peint sans styles, se remet en page à l'arrivée du chunk et Chrome retient ce second rendu comme LCP (`/soutenir`, `elementRenderDelay` de 585 ms sur un document complet). En feuille liée : 1 point perdu sur `donate` et `privacy`.
 2. **`scripts/lighthouse-run.mjs` réécrit ces routes vers leur fichier prérendu**, parce que Hosting sert chaque route prérendue comme un fichier à part (`<route>/index.html`, déposé par `scripts/publish-front-firebase.mjs`, la coquille ne répondant aux autres chemins que par le repli `**` de `infra/firebase-hosting.json`) ; sans la réécriture, `serve` rend la coquille et la porte mesure une page que personne ne reçoit. `serve-handler` applique ses réécritures en cascade, donc le repli est écrit en négation (`!/prerendered/**`) et `--single` n'est pas passé, il insère son propre `**` en tête.
+3. **Un document prérendu attend sa page avant `render()`** : `mountApp` attend `preloadStartupRoute` quand le document n'a pas de `#splash`, sinon `createRoot` remplace le contenu prérendu par le chargeur puis repeint la page (titre absent 40 à 60 ms sur fibre, environ 0,5 s sur réseau mobile, mesuré en production le 2026-11-17). La coquille ne l'attend pas, sa bannière cookies étant l'élément LCP (`2e3998173`). L'absence de `#splash` est ce qui distingue les deux cas : `prerender.mjs` doit continuer à le retirer.
 
 `prerender.mjs` pose `moviepicker-consent` avec `decided: true` et l'indice de session, pour que ni la bannière ni les actions invité ne soient figées dans le HTML. `/r/` et les routes prérendues restent hors du repli hors ligne du service worker : Hosting sert leur document propre, le repli ne joue que sur un échec réseau.
 
@@ -707,6 +720,10 @@ Dans `scripts/verify-local.cjs`, la voie docker monte le dépôt en lecture (`-v
 L'image `mongo` a `HOME=/data/db`. `docker exec <conteneur> mongosh` y écrit `.mongodb/mongosh/` pendant que le script de démarrage du conteneur fait son `chown` récursif sur `/data/db` : si un fichier disparaît entre la liste et le `chown`, le script sort en erreur et le conteneur meurt (`chown: cannot access '/data/db/.mongodb/mongosh/...lock'`). Vu le 2026-11-09 sur le job E2E de `ci-cd.yml`, vert une fois rejoué.
 
 Toute sonde `mongosh` lancée par `docker exec` dans les workflows passe donc `-e HOME=/tmp` (`ci-cd.yml`, `backup-mongo.yml`). Une nouvelle sonde sans ce réglage refait la course, une fois sur quelques dizaines.
+
+## C18 la coquille reste montée d'une page à l'autre
+
+L'`ErrorBoundary` à clé `pathname` et le `Suspense` des pages vivent dans `AppShell`, autour de l'`<Outlet />`. Remonter la clé au-dessus d'`AppShell` démonte toute l'application à chaque navigation : synchronisation Letterboxd relancée à chaque page (des 429 en production le 2026-11-16 et le 17), service worker réenregistré, en-tête effacé derrière le chargeur. Un état tenu par la coquille (dialogues compris) survit donc à une navigation : ce qui doit se fermer au changement de page le fait explicitement.
 
 ---
 

@@ -19,12 +19,13 @@ public sealed class GetMovieListInvitePreviewHandler : IGetMovieListInvitePrevie
 
     public async Task<MovieListInvitePreviewResponse> HandleAsync(string? viewerId, string token, CancellationToken ct = default)
     {
-        var list = await MovieListInviteLinks.FindActiveAsync(_lists, token, _clock.GetUtcNow(), ct)
+        var now = _clock.GetUtcNow();
+        var list = await MovieListInviteLinks.FindActiveAsync(_lists, token, now, ct)
             ?? throw Errors.MovieListInviteLinkInvalid();
         var role = viewerId is null ? null : list.RoleOf(viewerId);
         var owners = await _users.ListCardsByIdsAsync([list.OwnerId], ct);
         var owner = owners.Count > 0 ? owners[0] : null;
-        var keptSeat = viewerId is not null && list.IsInvited(viewerId);
+        var keptSeat = viewerId is not null && list.IsInvited(viewerId, now);
 
         return new MovieListInvitePreviewResponse
         {
@@ -37,7 +38,7 @@ public sealed class GetMovieListInvitePreviewHandler : IGetMovieListInvitePrevie
             },
             ItemCount = list.Items.Count,
             PosterPaths = list.RecentPosterPaths(),
-            IsFull = role is null && !keptSeat && list.IsFull,
+            IsFull = role is null && !keptSeat && list.IsFull(now),
             Role = role,
             ListId = role is null ? null : list.Id
         };

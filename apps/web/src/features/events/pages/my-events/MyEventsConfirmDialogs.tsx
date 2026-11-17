@@ -27,6 +27,8 @@ export default function MyEventsConfirmDialogs({
     setLeaveError,
     setCloseError,
   } = actions;
+  const finishing = confirmClose?.keepsDrawnFilms === true;
+  const closeTitle = confirmClose?.title ?? '';
 
   return (
     <>
@@ -62,11 +64,21 @@ export default function MyEventsConfirmDialogs({
       />
       <ConfirmDialog
         open={confirmClose !== null}
-        title={t('events.wheel.closeWithoutMovieConfirmTitle')}
-        message={t('events.wheel.closeWithoutMovieConfirmMessage', {
-          title: confirmClose?.title ?? '',
-        })}
-        confirmLabel={t('events.wheel.closeWithoutMovieConfirmAction')}
+        title={
+          finishing
+            ? t('events.wheel.finishNightConfirmTitle')
+            : t('events.wheel.closeWithoutMovieConfirmTitle')
+        }
+        message={
+          finishing
+            ? t('events.wheel.finishNightConfirmMessage', { title: closeTitle })
+            : t('events.wheel.closeWithoutMovieConfirmMessage', { title: closeTitle })
+        }
+        confirmLabel={
+          finishing
+            ? t('events.wheel.finishNightConfirmAction')
+            : t('events.wheel.closeWithoutMovieConfirmAction')
+        }
         loading={closeMutation.isPending}
         onConfirm={() => {
           if (confirmClose) closeMutation.mutate(confirmClose.slug);

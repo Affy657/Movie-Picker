@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Posters;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
@@ -388,7 +389,7 @@ public sealed class MongoIndexInitializer : IHostedService
             });
         var ttl = new CreateIndexModel<UserNotificationDocument>(
             Builders<UserNotificationDocument>.IndexKeys.Ascending(x => x.CreatedAt),
-            new CreateIndexOptions { Name = "user_notifications_createdAt_ttl", ExpireAfter = TimeSpan.FromDays(90) });
+            new CreateIndexOptions { Name = "user_notifications_createdAt_ttl", ExpireAfter = UserNotification.Lifetime });
         plan.Create("user_notifications", byUser, unread, byEvent, byActor, byList, ttl);
     }
 

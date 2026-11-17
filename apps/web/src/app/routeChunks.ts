@@ -177,18 +177,20 @@ export function routeChunkForPath(pathname: string): RouteChunkName | undefined 
   return routeEntryForPath(pathname)?.chunk;
 }
 
-export function preloadStartupRoute(pathname: string): void {
+export function preloadStartupRoute(pathname: string): Promise<void> {
   const entry = routeEntryForPath(pathname);
-  if (!entry || entry.chunk === 'home') return;
-  if (entry.signedIn && !hasSessionHint()) return;
-  if (loadedPages.has(entry.chunk) || startupPages.has(entry.chunk)) return;
-  startupPages.set(
-    entry.chunk,
-    loadRouteChunk(entry.chunk).then(
+  if (!entry || entry.chunk === 'home') return Promise.resolve();
+  if (entry.signedIn && !hasSessionHint()) return Promise.resolve();
+  if (loadedPages.has(entry.chunk)) return Promise.resolve();
+  let startupPage = startupPages.get(entry.chunk);
+  if (!startupPage) {
+    startupPage = loadRouteChunk(entry.chunk).then(
       ({ default: page }) => page,
       () => undefined
-    )
-  );
+    );
+    startupPages.set(entry.chunk, startupPage);
+  }
+  return startupPage.then(() => undefined);
 }
 
 export function resetLoadedRouteModulesForTests(): void {

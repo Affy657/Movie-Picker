@@ -1,5 +1,5 @@
 import { useCallback, useId, useMemo, useState, type ReactNode } from 'react';
-import { useParams, useSearchParams } from 'react-router';
+import { useLocation, useParams, useSearchParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import PageLayout from '@/shared/components/PageLayout';
@@ -56,6 +56,7 @@ import ListProgress from '@/features/lists/components/ListProgress';
 import SavedToggleButton from '@/features/lists/components/SavedToggleButton';
 import { useSavedListToggle } from '@/features/lists/hooks/useSavedLists';
 import ShowcaseListStates from './ShowcaseListStates';
+import { readShowcaseListArrival } from './showcaseListState';
 import type { MovieMediaType } from '@/shared/types/movie';
 import styles from './ShowcaseListPage.module.css';
 import { collectionDisplayName } from '@/features/movies/utils/collectionName';
@@ -81,7 +82,7 @@ const TITLE_KEYS: Record<ShowcaseListVariant, TranslationKey> = {
   theme: 'showcase.sections.themeTitle',
   collection: 'showcase.sections.collectionsTitle',
   provider: 'showcase.sections.providerTitle',
-  recommendations: 'showcase.sections.recommendationsTitle',
+  recommendations: 'showcase.sections.similarMoviesTitle',
   search: 'showcase.sections.searchTitle',
 };
 
@@ -92,7 +93,7 @@ const SUBTITLE_KEYS: Record<ShowcaseListVariant, TranslationKey> = {
   theme: 'showcase.sections.themeSubtitle',
   collection: 'showcase.sections.collectionsSubtitle',
   provider: 'showcase.sections.providerSubtitle',
-  recommendations: 'showcase.sections.recommendationsSubtitle',
+  recommendations: 'showcase.sections.similarSubtitle',
   search: 'showcase.sections.searchSubtitle',
 };
 
@@ -213,12 +214,32 @@ function toShowcaseListItems(rows: readonly ShowcaseRow[]): ShowcaseListItem[] {
   }));
 }
 
+type RecommendationsSeed = {
+  personalTitle: string | undefined;
+  arrivalTitle: string | undefined;
+  isTv: boolean;
+};
+
+function recommendationsHeading(
+  { personalTitle, arrivalTitle, isTv }: RecommendationsSeed,
+  t: Translate
+): string {
+  if (personalTitle) return t('showcase.sections.recommendationsTitle');
+  if (arrivalTitle) {
+    return t(isTv ? 'showcase.sections.similarShowsTo' : 'showcase.sections.similarMoviesTo', {
+      title: arrivalTitle,
+    });
+  }
+  return t(isTv ? 'showcase.sections.similarShowsTitle' : 'showcase.sections.similarMoviesTitle');
+}
+
 function resolveHeading({
   variant,
   searchQuery,
   themeKey,
   providerKey,
   collectionName,
+  recommendationsSeed,
   t,
 }: Readonly<{
   variant: ShowcaseListVariant;
@@ -226,6 +247,7 @@ function resolveHeading({
   themeKey: ShowcaseTheme | undefined;
   providerKey: ShowcaseProvider | undefined;
   collectionName: string | undefined;
+  recommendationsSeed: RecommendationsSeed;
   t: Translate;
 }>): string {
   if (variant === 'search' && searchQuery)
@@ -233,6 +255,7 @@ function resolveHeading({
   if (variant === 'theme' && themeKey) return t(THEME_LABEL_KEYS[themeKey]);
   if (variant === 'provider' && providerKey) return t(PROVIDER_LABEL_KEYS[providerKey]);
   if (variant === 'collection' && collectionName) return collectionDisplayName(collectionName);
+  if (variant === 'recommendations') return recommendationsHeading(recommendationsSeed, t);
   return t(TITLE_KEYS[variant]);
 }
 
@@ -302,6 +325,8 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
     seedTmdbId?: string;
   }>();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const arrival = readShowcaseListArrival(location.state);
   const isLoggedIn = !!user;
   const isMobile = useIsMobile();
   const hasHover = useHasHoverCapability();
@@ -350,7 +375,8 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
 
   const showcase = useMovieShowcase(showcaseQuery, showcaseEnabled);
   const collections = useMovieCollections(variant === 'collection');
-  const collectionName = collections.data?.items.find((row) => row.id === collectionId)?.name;
+  const collectionName =
+    arrival.collectionName ?? collections.data?.items.find((row) => row.id === collectionId)?.name;
 
   const search = useQuery({
     queryKey: ['movies', 'search-page', searchQuery] as const,
@@ -382,12 +408,19 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
   const [proposeTarget, setProposeTarget] = useState<WatchlistToggleItem | null>(null);
   const watchlist = useWatchlistToggle(isLoggedIn);
 
+  const personalSeedTitle = seedTitleForRoute(recommendationSeed, routeSelection);
+
   const headingText = resolveHeading({
     variant,
     searchQuery,
     themeKey,
     providerKey,
     collectionName,
+    recommendationsSeed: {
+      personalTitle: personalSeedTitle,
+      arrivalTitle: arrival.seedTitle,
+      isTv: routeSelection.seedMediaType === 'tv',
+    },
     t,
   });
 
@@ -395,7 +428,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
     variant,
     genreId,
     tmdbLanguage,
-    seedTitle: seedTitleForRoute(recommendationSeed, routeSelection),
+    seedTitle: personalSeedTitle,
     t,
   });
 

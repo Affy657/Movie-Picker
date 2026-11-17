@@ -202,6 +202,30 @@ describe('initPostHog', () => {
     );
   });
 
+  it('catches a failed load quietly, and loads again on the next call', async () => {
+    vi.stubEnv('PROD', true);
+    vi.stubEnv('VITE_POSTHOG_KEY', 'phc_test');
+    vi.stubGlobal('requestIdleCallback', (callback: () => void) => {
+      callback();
+      return 1;
+    });
+    const init = vi.fn();
+    let attempts = 0;
+    vi.doMock('posthog-js', () => {
+      attempts++;
+      if (attempts === 1) {
+        throw new TypeError('Failed to fetch dynamically imported module: /assets/posthog.js');
+      }
+      return { default: { ...createStub(), init } };
+    });
+
+    await expect(initPostHog()).resolves.toBeUndefined();
+    expect(init).not.toHaveBeenCalled();
+
+    await initPostHog();
+    expect(init).toHaveBeenCalledTimes(1);
+  });
+
   it('keeps nothing in the browser as long as consent is not given', async () => {
     vi.stubEnv('PROD', true);
     vi.stubEnv('VITE_POSTHOG_KEY', 'phc_test');

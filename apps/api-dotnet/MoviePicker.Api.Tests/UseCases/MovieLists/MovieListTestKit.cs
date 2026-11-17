@@ -80,7 +80,7 @@ internal sealed class MovieListTestKit
 
     public GetMovieListMembersHandler MembersHandler() => new(Lists, Users, Clock);
 
-    public ListMovieListInvitableUsersHandler InvitableHandler() => new(Lists, Follows, Users);
+    public ListMovieListInvitableUsersHandler InvitableHandler() => new(Lists, Follows, Users, Clock);
 
     public InviteToMovieListHandler InviteHandler() =>
         new(Lists, Follows, Users, Notifications, PushSubscriptions, Push.Object, Quota, Clock);
@@ -146,12 +146,23 @@ internal sealed class MovieListTestKit
 
     public RemoveMovieListItemHandler RemoveItemHandler() => new(Lists, Clock);
 
-    public Task<MovieListSummaryResponse> CreateAsync(
+    public async Task<MovieListSummaryResponse> CreateAsync(
         string name,
         string owner = Owner,
         string? description = null,
-        AddWatchlistItemRequest? firstItem = null) =>
-        CreateHandler().HandleAsync(owner, new CreateMovieListRequest { Name = name, Description = description, FirstItem = firstItem });
+        AddWatchlistItemRequest? firstItem = null)
+    {
+        await AccountAsync(owner);
+        return await CreateHandler().HandleAsync(
+            owner,
+            new CreateMovieListRequest { Name = name, Description = description, FirstItem = firstItem });
+    }
+
+    public async Task AccountAsync(string id)
+    {
+        if (await Users.GetByIdAsync(id) is null)
+            await Users.AddAsync(new User { Id = id, Email = $"{id}@test.local", CreatedAt = Start, UpdatedAt = Start });
+    }
 
     public Task<MovieListItemAddition> AddAsync(string listId, AddWatchlistItemRequest title, string owner = Owner) =>
         AddItemHandler().HandleAsync(owner, listId, title);

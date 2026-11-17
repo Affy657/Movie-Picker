@@ -40,10 +40,15 @@ import Button from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import InlineError from '@/shared/components/InlineError';
 
+export interface CountedCollection<T> {
+  items: T[];
+  total: number;
+}
+
 export interface ProfileCollectionTexts<T = MovieListItemLike> {
   pageTitle: (name: string) => string;
   seoDescription: (profile: PublicProfile) => string;
-  subtitle: (items: readonly T[]) => string;
+  subtitle: (items: readonly T[], total: number) => string;
   listAria: string;
   loadError: string;
   emptyTitle: string;
@@ -55,7 +60,7 @@ export interface ProfileCollectionTexts<T = MovieListItemLike> {
 interface ProfileCollectionPageProps<T extends MovieListItemLike> {
   handle: string | undefined;
   queryKey: readonly unknown[];
-  fetchItems: (handle: string, signal: AbortSignal) => Promise<T[]>;
+  fetchItems: (handle: string, signal: AbortSignal) => Promise<T[] | CountedCollection<T>>;
   comparePrimary: (a: T, b: T) => number;
   itemKey: (item: T) => string;
   canonicalPath: (handle: string) => string;
@@ -66,6 +71,10 @@ interface ProfileCollectionPageProps<T extends MovieListItemLike> {
 
 function isNotFoundError(error: unknown): boolean {
   return ApiError.is(error) && error.code === 404;
+}
+
+function counted<T>(fetched: T[] | CountedCollection<T>): CountedCollection<T> {
+  return Array.isArray(fetched) ? { items: fetched, total: fetched.length } : fetched;
 }
 
 export default function ProfileCollectionPage<T extends MovieListItemLike>({
@@ -91,7 +100,7 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
 
   const itemsQuery = useQuery({
     queryKey,
-    queryFn: ({ signal }) => fetchItems(handle ?? '', signal),
+    queryFn: async ({ signal }) => counted(await fetchItems(handle ?? '', signal)),
     enabled: !!handle,
     retry: false,
   });
@@ -105,7 +114,8 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
     (profileQuery.isError && isNotFoundError(profileQuery.error)) ||
     (itemsFailed && isNotFoundError(itemsQuery.error));
 
-  const items = useMemo(() => itemsQuery.data ?? [], [itemsQuery.data]);
+  const items = useMemo(() => itemsQuery.data?.items ?? [], [itemsQuery.data]);
+  const itemsTotal = itemsQuery.data?.total ?? 0;
 
   const mediaTypeLabels = useMemo(
     () => ({
@@ -148,7 +158,7 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
       <ProfileCollectionHeader
         profile={profile}
         title={texts.pageTitle(profile.displayName)}
-        subtitle={itemsHidden ? null : texts.subtitle(items)}
+        subtitle={itemsHidden ? null : texts.subtitle(items, itemsTotal)}
       />
 
       <h2 className="visually-hidden">{texts.listAria}</h2>

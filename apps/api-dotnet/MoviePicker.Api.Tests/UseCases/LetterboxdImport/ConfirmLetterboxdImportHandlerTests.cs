@@ -44,7 +44,7 @@ public sealed class ConfirmLetterboxdImportHandlerTests
             _watchlist.Object,
             _addToWatchlist.Object,
             _users.Object,
-            new LetterboxdWatchedWriter(_watched, _watchlist.Object, facts, _clock),
+            new LetterboxdWatchedWriter(_watched, _watchlist.Object, _users.Object, facts, _clock),
             new LetterboxdLinkedCounter(_users.Object, _watchlist.Object, _watched));
     }
 
