@@ -184,12 +184,11 @@ describe('App (routes)', () => {
       async (path, encodedReturnTo) => {
         server.use(authMeGuestHandler);
         renderRoutes([path]);
-        const main = await waitFor(() => screen.getByRole('main'), { timeout: 20000 });
-        const loginLink = await within(main).findByRole(
-          'link',
-          { name: /^se connecter$/i },
+        const loginLink = await waitFor(
+          () => within(screen.getByRole('main')).getByRole('link', { name: /^se connecter$/i }),
           { timeout: 20000 }
         );
+        const main = screen.getByRole('main');
         expect(loginLink).toHaveAttribute('href', `/login?returnTo=${encodedReturnTo}`);
         expect(within(main).getByRole('link', { name: /^créer un compte$/i })).toHaveAttribute(
           'href',
