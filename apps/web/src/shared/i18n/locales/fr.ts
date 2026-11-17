@@ -810,6 +810,7 @@ export const fr = {
       removeAction: 'Retirer',
       removeAriaLabel: 'Retirer {{pseudo}} de la soirée',
       viewProfileAriaLabel: 'Voir le profil de {{pseudo}}',
+      viewProfilePresenceAriaLabel: 'Voir le profil de {{pseudo}}, {{presence}}',
       inviteAriaLabel: 'Inviter des amis',
       removeConfirmTitle: 'Retirer un participant',
       removeConfirm:
