@@ -87,6 +87,23 @@ public sealed class UsersControllerTests
         Assert.Same(response, Assert.IsType<OkObjectResult>(result).Value);
     }
 
+    [Theory]
+    [InlineData(null, true)]
+    [InlineData("u1", true)]
+    [InlineData("u1", false)]
+    public async Task GetUserProposedMovies_ForwardsHandleViewerAndFilter(string? viewerId, bool winningOnly)
+    {
+        var handler = new Mock<IGetUserProposedMoviesHandler>();
+        var response = new UserProposedMoviesResponse { Items = [] };
+        handler
+            .Setup(h => h.HandleAsync("cinephile", viewerId, winningOnly, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
+
+        var result = await Controller(viewerId).GetUserProposedMovies("cinephile", winningOnly, handler.Object, CancellationToken.None);
+
+        Assert.Same(response, Assert.IsType<OkObjectResult>(result).Value);
+    }
+
     [Fact]
     public async Task Follow_Authenticated_ReturnsNoContent()
     {

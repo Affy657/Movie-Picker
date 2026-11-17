@@ -2754,6 +2754,8 @@ export const fr = {
       emptyMessage: "Aucun film proposé par cette personne n'a encore gagné de soirée.",
       searchLabel: 'Rechercher parmi les propositions gagnantes',
       timesDescription: 'Proposé par @{{handle}}, gagnant {{count}} fois',
+      hiddenMessage:
+        'Ce membre garde ses films vus privés, ses propositions gagnantes le sont donc aussi.',
     },
     streak: {
       weekLabel: 'semaine de suite',

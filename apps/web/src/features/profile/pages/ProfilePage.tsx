@@ -198,6 +198,7 @@ export default function ProfilePage() {
             watchedTo={ROUTES.profileMovies(profile.handle)}
             proposalsTo={ROUTES.profileProposals(profile.handle)}
             winningProposalsTo={ROUTES.profileWinningProposals(profile.handle)}
+            winningProposalsHidden={watchedHiddenFromVisitor}
             listsTo={ROUTES.profileLists(profile.handle)}
             ratingScale={user?.ratingScale}
           />

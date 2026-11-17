@@ -2711,6 +2711,8 @@ export const en: Locale = {
       emptyMessage: 'None of the movies this person proposed has won a night yet.',
       searchLabel: 'Search among winning proposals',
       timesDescription: 'Proposed by @{{handle}}, won {{count}} times',
+      hiddenMessage:
+        'This member keeps their watched films private, so their winning proposals are private too.',
     },
     streak: {
       weekLabel: 'week in a row',

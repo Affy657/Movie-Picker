@@ -334,6 +334,27 @@ public sealed class GetUserStatsHandlerTests
         Assert.Null(res.ProposalsAverageRating);
     }
 
+    [Theory]
+    [InlineData(null, 0, null)]
+    [InlineData("stranger", 0, null)]
+    [InlineData("u1", 3, 8.0)]
+    public async Task WinningProposals_OfAMemberHidingTheirWatchedFilms_AreOnlyShownToThemself(
+        string? viewerId, int expectedWins, double? expectedAverage)
+    {
+        var handler = Build();
+        GivenWinningProposals(("A", "m1"), ("B", "m2"), ("C", "m3"));
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(PublicUser(isWatchedPublic: false));
+        _ratings.Setup(r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Rating("A", "m1", "friend", 8), Rating("B", "m2", "friend", 8), Rating("C", "m3", "friend", 8) });
+
+        var res = await handler.HandleAsync("alice", viewerId);
+
+        Assert.Equal(expectedWins, res.WinningProposals);
+        Assert.Equal(expectedAverage, res.ProposalsAverageRating);
+        Assert.Equal(3, res.MoviesProposed);
+    }
+
     [Fact]
     public async Task DailyActivity_DropsParticipationsOutsideWindow()
     {
