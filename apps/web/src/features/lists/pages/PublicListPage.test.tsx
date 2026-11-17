@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
@@ -16,6 +16,7 @@ import {
   type MockListCreator,
   type MockPublicList,
 } from '@/mocks/handlers';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
 import PublicListPage from './PublicListPage';
 
 const LEA: MockListCreator = { handle: 'lea', displayName: 'Léa Moreau', avatarId: null };
@@ -330,6 +331,54 @@ describe('PublicListPage', () => {
     expect(await navigator.clipboard.readText()).toBe(
       'https://www.movie-picker.fr/u/lea/listes/l1'
     );
+  });
+
+  it('shows the progress of a visitor as soon as she signs in with her password', async () => {
+    const twoFilms = (godfatherWatched: boolean): MockPublicList => ({
+      id: 'l1',
+      name: 'Les classiques à voir',
+      items: [film(238, 'Le Parrain', '1972', godfatherWatched), film(15, 'Citizen Kane', '1941')],
+    });
+    server.use(
+      authMeGuestHandler,
+      ...createPublicListsHandlers(LEA, [twoFilms(false)], { viewerSignedIn: false })
+    );
+    let login: ReturnType<typeof useAuth>['login'] | undefined;
+    function ExposeLogin() {
+      login = useAuth().login;
+      return null;
+    }
+    render(
+      <AppTestProviders>
+        <MemoryRouter initialEntries={['/u/lea/listes/l1']}>
+          <Routes>
+            <Route path="/u/:handle/listes/:listId" element={<PublicListPage />} />
+          </Routes>
+          <ExposeLogin />
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+    expect(await screen.findByRole('list', { name: /films de/i })).toBeInTheDocument();
+    server.use(
+      signedIn,
+      http.post(`${TEST_API_V1}/auth/login`, () => HttpResponse.json({})),
+      ...createWatchlistHandlers([]),
+      ...createListsHandlers([]),
+      ...createSavedListsHandlers([]),
+      ...createPublicListsHandlers(LEA, [twoFilms(true)])
+    );
+
+    await act(async () => {
+      await login!('alice@test.local', 'secret');
+    });
+
+    expect(
+      await screen.findByText(
+        (_, element) =>
+          withPercentSpace(element?.textContent) === '1 sur 2 vu, 50 %' &&
+          element?.lastElementChild?.tagName === 'STRONG'
+      )
+    ).toBeInTheDocument();
   });
 
   it('says clearly when the list is private or does not exist', async () => {

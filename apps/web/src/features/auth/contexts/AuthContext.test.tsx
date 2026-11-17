@@ -358,6 +358,70 @@ describe('AuthProvider sign in', () => {
 
     expect(client.getQueryState(nightKey)?.isInvalidated).toBe(true);
   });
+
+  describe('from a visitor session', () => {
+    const publicListKey = queryKeys.lists.publicDetail('lea', 'l1');
+
+    afterEach(() => {
+      sessionStorage.clear();
+    });
+
+    async function renderVisitor(client: QueryClient) {
+      vi.mocked(fetchAuthMeForSession).mockResolvedValueOnce(null);
+      let auth: ReturnType<typeof useAuth> | undefined;
+      function ExposeAuth() {
+        auth = useAuth();
+        return null;
+      }
+      render(
+        <QueryClientProvider client={client}>
+          <AuthProvider>
+            <ExposeAuth />
+          </AuthProvider>
+        </QueryClientProvider>
+      );
+      await waitFor(() => expect(auth?.isLoading).toBe(false));
+      expect(auth?.user).toBeNull();
+      return () => auth!;
+    }
+
+    it('forgets what the pages computed for the visitor, but keeps her night identities', async () => {
+      const client = new QueryClient();
+      const auth = await renderVisitor(client);
+      client.setQueryData(publicListKey, { id: 'l1', watchedCount: null });
+      setStoredParticipant('soiree', 'p1', 'Alice');
+
+      await act(async () => {
+        await auth().login('a@test.local', 'secret');
+      });
+
+      await waitFor(() => expect(auth().user?.userId).toBe('u1'));
+      await waitFor(() => expect(client.getQueryData(publicListKey)).toBeUndefined());
+      expect(getStoredParticipant('soiree')).not.toBeNull();
+    });
+
+    it('keeps what was loaded while the session was still being checked', async () => {
+      const client = new QueryClient();
+      client.setQueryData(publicListKey, { id: 'l1', watchedCount: 1 });
+      let user: UserProfile | null | undefined;
+      render(
+        <QueryClientProvider client={client}>
+          <AuthProvider>
+            <ExposeUser
+              onUser={(value) => {
+                user = value;
+              }}
+            />
+          </AuthProvider>
+        </QueryClientProvider>
+      );
+
+      await waitFor(() => expect(user?.userId).toBe('u1'));
+      await act(async () => {});
+
+      expect(client.getQueryData(publicListKey)).toEqual({ id: 'l1', watchedCount: 1 });
+    });
+  });
 });
 
 describe('AuthProvider session end', () => {

@@ -72,7 +72,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   }, [queryClient]);
 
   const {
-    data: user = null,
+    data: sessionUser,
     isLoading,
     isError: authCheckFailed,
     refetch: refetchSession,
@@ -83,6 +83,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     retry: 2,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
   });
+  const user = sessionUser ?? null;
 
   const retryAuthCheck = useCallback(() => {
     void refetchSession();
@@ -96,19 +97,20 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     [queryClient]
   );
 
-  const signedInUserId = user?.userId ?? null;
-  const lastSignedInUserIdRef = useRef(signedInUserId);
+  const sessionUserId = sessionUser === undefined ? undefined : (sessionUser?.userId ?? null);
+  const lastSessionUserIdRef = useRef(sessionUserId);
 
   useEffect(() => {
-    const previousUserId = lastSignedInUserIdRef.current;
-    lastSignedInUserIdRef.current = signedInUserId;
-    if (previousUserId === null || previousUserId === signedInUserId) return;
-    clearStoredEventIdentities();
+    const previousUserId = lastSessionUserIdRef.current;
+    lastSessionUserIdRef.current = sessionUserId;
+    const sessionStillUnknown = previousUserId === undefined || sessionUserId === undefined;
+    if (sessionStillUnknown || previousUserId === sessionUserId) return;
+    if (previousUserId !== null) clearStoredEventIdentities();
     void resetAccountQueries();
-  }, [signedInUserId, resetAccountQueries]);
+  }, [sessionUserId, resetAccountQueries]);
 
   const endSession = useCallback(async () => {
-    lastSignedInUserIdRef.current = null;
+    lastSessionUserIdRef.current = null;
     clearStoredEventIdentities();
     queryClient.setQueryData(queryKeys.auth.me, null);
     await signedOutStateRendered();
