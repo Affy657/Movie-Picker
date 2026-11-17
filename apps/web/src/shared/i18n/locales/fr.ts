@@ -1313,6 +1313,14 @@ export const fr = {
       participantText: "L'heure de la soirée est passée, aucun film n'a encore été choisi.",
       participantMeta:
         "Vous pouvez encore voter et proposer des films en attendant que l'hôte décide.",
+      hostTextWithFilmOne:
+        'Un film est tiré, il en reste à tirer : tirez le suivant ou terminez la soirée.',
+      hostTextWithFilmMany:
+        '{{count}} films sont tirés, il en reste à tirer : tirez le suivant ou terminez la soirée.',
+      participantTextWithFilmOne:
+        "Un film est tiré, il en reste à tirer : l'hôte peut tirer le suivant ou terminer la soirée.",
+      participantTextWithFilmMany:
+        "{{count}} films sont tirés, il en reste à tirer : l'hôte peut tirer le suivant ou terminer la soirée.",
     },
   },
 

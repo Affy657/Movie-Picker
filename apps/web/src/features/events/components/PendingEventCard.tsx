@@ -9,7 +9,8 @@ import {
 import EventDateChip from '@/features/events/components/EventDateChip';
 import { formatRelativeTime } from '@/shared/utils/formatRelativeTime';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
-import { useLocale, useTranslation } from '@/shared/i18n';
+import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { ROUTES } from '@/app/routes';
 import type { MyEventSummary } from '@/features/events/types';
 import Card from '@/shared/components/Card';
@@ -20,17 +21,40 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 interface PendingEventCardProps {
   event: MyEventSummary;
   onCloseWithoutMovie?: () => void;
+  onFinishNight?: () => void;
   closing?: boolean;
+}
+
+function pendingDescription(event: MyEventSummary, drawnCount: number, t: Translate): string {
+  if (drawnCount === 0) {
+    return t(event.isCreator ? 'events.pending.hostText' : 'events.pending.participantText');
+  }
+  return event.isCreator
+    ? pluralizeCount(
+        drawnCount,
+        'events.pending.hostTextWithFilmOne',
+        'events.pending.hostTextWithFilmMany',
+        t
+      )
+    : pluralizeCount(
+        drawnCount,
+        'events.pending.participantTextWithFilmOne',
+        'events.pending.participantTextWithFilmMany',
+        t
+      );
 }
 
 export default function PendingEventCard({
   event,
   onCloseWithoutMovie,
+  onFinishNight,
   closing = false,
 }: Readonly<PendingEventCardProps>) {
   const { t } = useTranslation();
   const { locale } = useLocale();
   const compact = useIsMobile();
+  const drawnCount = event.winnerMovies?.length ?? 0;
+  const onClose = drawnCount > 0 ? onFinishNight : onCloseWithoutMovie;
 
   return (
     <Card as="article" padding="none" elevation="sm" className={styles.card}>
@@ -56,9 +80,7 @@ export default function PendingEventCard({
         <div className={styles.body}>
           <h3 className={styles.title}>{event.title}</h3>
           {event.theme ? <span className={styles.theme}>{event.theme}</span> : null}
-          <p className={styles.description}>
-            {t(event.isCreator ? 'events.pending.hostText' : 'events.pending.participantText')}
-          </p>
+          <p className={styles.description}>{pendingDescription(event, drawnCount, t)}</p>
         </div>
       </div>
 
@@ -79,16 +101,15 @@ export default function PendingEventCard({
                 to={ROUTES.eventDetail(event.slug)}
                 className={buttonClass({ variant: 'primary' })}
               >
-                {t('events.myEvents.pendingChooseMovieAction')}
+                {drawnCount > 0
+                  ? t('events.wheel.drawOneMoreButton')
+                  : t('events.myEvents.pendingChooseMovieAction')}
               </Link>
-              {onCloseWithoutMovie ? (
-                <Button
-                  type="button"
-
-                  onClick={onCloseWithoutMovie}
-                  disabled={closing}
-                >
-                  {t('events.wheel.closeWithoutMovieButton')}
+              {onClose ? (
+                <Button type="button" onClick={onClose} disabled={closing}>
+                  {drawnCount > 0
+                    ? t('events.wheel.finishNightButton')
+                    : t('events.wheel.closeWithoutMovieButton')}
                 </Button>
               ) : null}
             </>

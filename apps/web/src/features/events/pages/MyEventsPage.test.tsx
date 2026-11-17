@@ -204,9 +204,15 @@ describe('MyEventsPage (MSW)', () => {
     expect(document.title).toBe(pageTitle('Mes soirées'));
   });
 
-  it('keeps a pending night that already has its first film out of what to handle', async () => {
+  it('lists a pending night with a film drawn in what to handle, and ends it keeping the film', async () => {
+    const user = userEvent.setup();
+    let closed = 0;
     server.use(
       authMeHandler,
+      http.post(`${TEST_API_V1}/events/deux-films/close`, () => {
+        closed += 1;
+        return HttpResponse.json({ message: 'closed' });
+      }),
       myEventsHandler(
         [
           {
@@ -233,15 +239,27 @@ describe('MyEventsPage (MSW)', () => {
 
     renderMyEvents();
 
-    const night = await screen.findByRole(
-      'link',
-      { name: /Soirée à deux films/i },
-      { timeout: 5000 }
+    const toHandle = await screen.findByRole('region', { name: /à traiter/i }, { timeout: 5000 });
+    expect(within(toHandle).getByText('Soirée à deux films')).toBeInTheDocument();
+    expect(
+      within(toHandle).getByText(/un film est tiré, il en reste à tirer/i)
+    ).toBeInTheDocument();
+    expect(within(toHandle).queryByText(/aucun film n'a été choisi/i)).not.toBeInTheDocument();
+    expect(within(toHandle).getByRole('link', { name: 'Tirer un film de plus' })).toHaveAttribute(
+      'href',
+      '/e/deux-films'
     );
-    expect(night).toHaveAttribute('href', '/e/deux-films');
-    expect(screen.queryByRole('heading', { name: /à traiter/i })).not.toBeInTheDocument();
-    expect(screen.queryByText(/aucun film n'a été choisi/i)).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /clôturer sans film/i })).not.toBeInTheDocument();
+    expect(
+      within(toHandle).queryByRole('button', { name: /clôturer sans film/i })
+    ).not.toBeInTheDocument();
+
+    await user.click(within(toHandle).getByRole('button', { name: 'Terminer la soirée' }));
+    const dialog = await screen.findByRole('dialog', { name: /^terminer la soirée/i });
+    expect(within(dialog).getByText(/films déjà tirés/i)).toBeInTheDocument();
+    expect(closed).toBe(0);
+    await user.click(within(dialog).getByRole('button', { name: 'Terminer la soirée' }));
+
+    await waitFor(() => expect(closed).toBe(1));
   });
 
   it('offers no leave on a joined night whose wheel already picked a movie', async () => {

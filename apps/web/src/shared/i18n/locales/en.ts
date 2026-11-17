@@ -1298,6 +1298,14 @@ export const en: Locale = {
       hostMeta: 'Without action on your side, the event closes automatically in 7 days.',
       participantText: 'The event time has passed, no movie has been picked yet.',
       participantMeta: 'You can still vote and suggest movies while the host decides.',
+      hostTextWithFilmOne:
+        'One movie is drawn and more are left to draw: draw the next one or end the event.',
+      hostTextWithFilmMany:
+        '{{count}} movies are drawn and more are left to draw: draw the next one or end the event.',
+      participantTextWithFilmOne:
+        'One movie is drawn and more are left to draw: the host can draw the next one or end the event.',
+      participantTextWithFilmMany:
+        '{{count}} movies are drawn and more are left to draw: the host can draw the next one or end the event.',
     },
   },
 

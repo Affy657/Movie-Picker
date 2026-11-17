@@ -23,7 +23,11 @@ export function useMyEventsActions() {
   const [confirmLeave, setConfirmLeave] = useState<{ slug: string; participantId: string } | null>(
     null
   );
-  const [confirmClose, setConfirmClose] = useState<{ slug: string; title: string } | null>(null);
+  const [confirmClose, setConfirmClose] = useState<{
+    slug: string;
+    title: string;
+    keepsDrawnFilms: boolean;
+  } | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [leaveError, setLeaveError] = useState<string | null>(null);
   const [closeError, setCloseError] = useState<string | null>(null);
@@ -102,7 +106,12 @@ export function useMyEventsActions() {
 
   const handleCloseWithoutMovie = useCallback((slug: string, title: string) => {
     setCloseError(null);
-    setConfirmClose({ slug, title });
+    setConfirmClose({ slug, title, keepsDrawnFilms: false });
+  }, []);
+
+  const handleFinishNight = useCallback((slug: string, title: string) => {
+    setCloseError(null);
+    setConfirmClose({ slug, title, keepsDrawnFilms: true });
   }, []);
 
   return {
@@ -122,6 +131,7 @@ export function useMyEventsActions() {
     handleReuseEvent,
     handleDeleteEvent,
     handleCloseWithoutMovie,
+    handleFinishNight,
     setDeleteError,
     setLeaveError,
     setCloseError,
