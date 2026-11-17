@@ -50,6 +50,9 @@ jobs:
       # Same split as the image gate of `deploy.yml`: a HIGH blocks only once a fix is published,
       # a CRITICAL blocks with or without one. With `ignore-unfixed` on both, a CRITICAL without a
       # fix only showed up at deployment, possibly between the staging and production.
+      # Same binary as that gate too, pinned and checksum verified, and no GHA cache: the jobs
+      # running the code of the lockfile can write it, and a poisoned entry would blind this scan.
+      - uses: ./.github/actions/install-trivy
       - name: Filesystem scan (Trivy, HIGH with a fix; vulnerable npm + NuGet deps in lockfiles; replaces pnpm audit since the npm endpoint was removed on 2026-07-15, see pnpm/pnpm#11265)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -58,7 +61,8 @@ jobs:
           severity: HIGH
           exit-code: "1"
           ignore-unfixed: true
-          cache: true
+          cache: false
+          skip-setup-trivy: true
       - name: Filesystem scan (Trivy, every CRITICAL)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -66,7 +70,8 @@ jobs:
           scan-ref: .
           severity: CRITICAL
           exit-code: "1"
-          cache: true
+          cache: false
+          skip-setup-trivy: true
       - name: Runtime base image of the API, as the Dockerfile pins it
         id: base-image
         run: |
@@ -87,7 +92,8 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
           vuln-type: os,library
-          cache: true
+          cache: false
+          skip-setup-trivy: true
       - name: Runtime base image scan (Trivy, every CRITICAL)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -96,7 +102,8 @@ jobs:
           severity: CRITICAL
           exit-code: "1"
           vuln-type: os,library
-          cache: true
+          cache: false
+          skip-setup-trivy: true
       - name: Terraform misconfiguration scan (Trivy)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -104,7 +111,8 @@ jobs:
           scan-ref: infra/terraform
           severity: HIGH,CRITICAL
           exit-code: "1"
-          cache: true
+          cache: false
+          skip-setup-trivy: true
 
   letterboxd-canary:
     name: 🐤 Letterboxd markup canary

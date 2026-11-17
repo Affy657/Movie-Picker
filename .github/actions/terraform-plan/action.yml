@@ -1,5 +1,5 @@
 name: "Terraform init, plan and apply"
-description: "Installs the pinned Terraform, initialises one root module of infra/terraform/environments/ on its remote state and plans it. The plan text is left in $RUNNER_TEMP/plan.txt, its public form (refresh lines dropped, project id, project number and state bucket replaced by placeholders) in $RUNNER_TEMP/plan.public.txt, and two outputs tell the caller what it holds: the exit code of -detailed-exitcode, and the number of resources the plan would create, change or destroy, which an output-only refresh leaves at zero. With summary, the public form goes to the job summary; with apply, the saved plan is applied when it holds changes. Shared by the pull request plan, the master plan, the master apply and the weekly drift check of infra.yml."
+description: "Installs the pinned Terraform, initialises one root module of infra/terraform/environments/ on its remote state and plans it. The plan text is left in $RUNNER_TEMP/plan.txt and never printed, its public form (refresh lines dropped, project id, project number and state bucket replaced by placeholders) in $RUNNER_TEMP/plan.public.txt and in the log, and two outputs tell the caller what it holds: the exit code of -detailed-exitcode, and the number of resources the plan would create, change or destroy, which an output-only refresh leaves at zero. With summary, the public form goes to the job summary; with apply, the saved plan is applied when it holds changes. Shared by the pull request plan, the master plan, the master apply and the weekly drift check of infra.yml."
 inputs:
   root:
     description: "Root module to plan, relative to the repository (infra/terraform/environments/<name>)"
@@ -63,9 +63,12 @@ runs:
         mkdir -p "$TF_PLUGIN_CACHE_DIR"
         terraform -chdir="$TERRAFORM_ROOT" init -input=false -lockfile=readonly -no-color -backend-config="bucket=$TF_STATE_BUCKET"
     # `-detailed-exitcode`: 0 nothing to change, 2 changes, 1 error. The plan text is kept whatever
-    # the outcome, an error is worth reading too. The composite shell is `bash -eo pipefail`: the
-    # code is caught on the pipeline, which `-e` would otherwise end on a 2, and `tee` does not
-    # hide it (without pipefail an apply was once silently skipped behind a green job).
+    # the outcome, an error is worth reading too. It goes to the file only, never to the log: the
+    # logs of this public repository are readable by anyone, and the runner masks the secrets but
+    # not the project number the resource names carry (the federation pool among them). The next
+    # step prints the public form instead. The code is caught on the command, which `-e` would
+    # otherwise end on a 2 (an apply was once silently skipped behind a green job when a pipe hid
+    # it).
     # The plan is always saved: its JSON form is what counts the resources it touches, since a 2
     # also comes from a plan that only refreshes output values (a domain whose state Hosting
     # reports differently, for instance), which is nothing to approve or to apply.
@@ -86,7 +89,7 @@ runs:
         if [ -n "$ALERT_SMS_NUMBER" ]; then export TF_VAR_alert_sms_number="$ALERT_SMS_NUMBER"; fi
         export TF_PLUGIN_CACHE_DIR="$HOME/.terraform.d/plugin-cache"
         code=0
-        terraform -chdir="$TERRAFORM_ROOT" plan -input=false -no-color -detailed-exitcode "-lock=$LOCK" -out=plan.tfplan 2>&1 | tee "$RUNNER_TEMP/plan.txt" || code=$?
+        terraform -chdir="$TERRAFORM_ROOT" plan -input=false -no-color -detailed-exitcode "-lock=$LOCK" -out=plan.tfplan > "$RUNNER_TEMP/plan.txt" 2>&1 || code=$?
         echo "exitcode=$code" >> "$GITHUB_OUTPUT"
         changes=0
         if [ "$code" = "2" ]; then
@@ -96,10 +99,12 @@ runs:
         echo "resource_changes=$changes" >> "$GITHUB_OUTPUT"
         echo "Resources to create, change or destroy: $changes"
         test "$code" != "1"
-    # The public form of the plan, the one a comment or a summary may show: the repository names
-    # no project, no project number and no bucket, and the runner masks the secrets in the logs and
-    # in the summaries but knows nothing of the project number, which the resource names carry.
-    # Written whatever the exit code, an error is worth reading too.
+    # The public form of the plan, the one a comment, a summary or the log may show: the repository
+    # names no project, no project number and no bucket, and the runner masks the secrets in the
+    # logs and in the summaries but knows nothing of the project number, which the resource names
+    # carry. Each number the plan shows after `projects/` is replaced wherever it appears, and
+    # masked for the rest of the job, the apply included. Written and printed whatever the exit
+    # code, an error is worth reading too.
     - name: Public form of the plan
       if: always() && steps.plan.outcome != 'skipped'
       shell: bash
@@ -107,9 +112,15 @@ runs:
         GCP_PROJECT_ID: ${{ inputs.project-id }}
         TF_STATE_BUCKET: ${{ inputs.state-bucket }}
       run: |
+        numbers=()
+        while IFS= read -r number; do
+          echo "::add-mask::$number"
+          numbers+=(-e "s#$number#<NUMERO_PROJET>#g")
+        done < <(grep -oE 'projects/[0-9]{6,}' "$RUNNER_TEMP/plan.txt" | cut -d/ -f2 | sort -u || true)
         grep -v -E 'Refreshing state\.\.\.|^[a-z_.]+: (Reading\.\.\.|Read complete)' "$RUNNER_TEMP/plan.txt" \
-          | sed -e "s#$GCP_PROJECT_ID#<PROJET_GCP>#g" -e "s#$TF_STATE_BUCKET#<BUCKET_TFSTATE>#g" -e 's#projects/[0-9]\{6,\}#projects/<NUMERO_PROJET>#g' \
+          | sed -e "s#$GCP_PROJECT_ID#<PROJET_GCP>#g" -e "s#$TF_STATE_BUCKET#<BUCKET_TFSTATE>#g" -e 's#projects/[0-9]\{6,\}#projects/<NUMERO_PROJET>#g' "${numbers[@]}" \
           > "$RUNNER_TEMP/plan.public.txt" || true
+        cat "$RUNNER_TEMP/plan.public.txt"
     - name: Plan summary
       if: always() && inputs.summary == 'true' && steps.plan.outcome != 'skipped'
       shell: bash
@@ -143,7 +154,9 @@ runs:
       shell: bash
       env:
         TERRAFORM_ROOT: ${{ inputs.root }}
-      run: terraform -chdir="$TERRAFORM_ROOT" apply -input=false -no-color plan.tfplan
+      run: |
+        terraform -chdir="$TERRAFORM_ROOT" apply -input=false -no-color plan.tfplan 2>&1 \
+          | sed -e 's#projects/[0-9]\{6,\}#projects/<NUMERO_PROJET>#g'
     - name: Nothing to apply
       if: inputs.apply == 'true' && steps.plan.outputs.exitcode == '0'
       shell: bash
