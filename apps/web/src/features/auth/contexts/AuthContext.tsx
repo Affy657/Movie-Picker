@@ -120,7 +120,10 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       await postAuthLogin(email, password);
       await invalidateSession();
     },
-    onSuccess: () => track('user_logged_in'),
+    onSuccess: () => {
+      setSignOutPending(false);
+      track('user_logged_in');
+    },
   });
 
   const registerMutation = useMutation({
@@ -136,7 +139,10 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       await postAuthRegister(email, password, displayName);
       await invalidateSession();
     },
-    onSuccess: () => track('user_signed_up'),
+    onSuccess: () => {
+      setSignOutPending(false);
+      track('user_signed_up');
+    },
   });
 
   useEffect(() => {

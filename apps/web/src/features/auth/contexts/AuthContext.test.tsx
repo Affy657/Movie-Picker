@@ -257,6 +257,30 @@ describe('AuthProvider unconfirmed sign-out', () => {
 
     expect(postAuthLogout).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ['signing in', (auth: ReturnType<typeof useAuth>) => auth.login('a@test.local', 'secret')],
+    [
+      'signing up',
+      (auth: ReturnType<typeof useAuth>) => auth.register('a@test.local', 'secret', 'Alice'),
+    ],
+  ])('drops the pending sign-out notice once %s again', async (_case, signIn) => {
+    markSignOutPending();
+    vi.mocked(fetchAuthMeForSession).mockResolvedValue(null);
+    vi.mocked(postAuthLogout).mockRejectedValueOnce(offline);
+    const auth = await renderAuth();
+    await waitFor(() => expect(postAuthLogout).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(auth().isLoading).toBe(false));
+    expect(auth().signOutPending).toBe(true);
+    vi.mocked(fetchAuthMeForSession).mockResolvedValue({ userId: 'u1' } as UserProfile);
+
+    await act(async () => {
+      await signIn(auth());
+    });
+
+    await waitFor(() => expect(auth().user?.userId).toBe('u1'));
+    expect(auth().signOutPending).toBe(false);
+  });
 });
 
 describe('AuthProvider in several tabs', () => {
