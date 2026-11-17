@@ -225,7 +225,8 @@ public sealed class EventLiveHubTests : IAsyncLifetime
 
         clock.Advance(TimeSpan.FromMinutes(2));
 
-        await NextAsync<EventChangedSignal>(subscription);
+        var changed = await NextAsync<EventChangedSignal>(subscription);
+        Assert.Contains(nameof(EventLifecycle.Finished), changed.Stamp);
     }
 
     [Fact]
