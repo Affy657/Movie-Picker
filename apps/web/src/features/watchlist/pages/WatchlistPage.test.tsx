@@ -272,6 +272,24 @@ describe('WatchlistPage (MSW)', () => {
     await waitFor(() => expect(titlesInOrder()).toHaveLength(2));
   });
 
+  it('keeps the search and the films it retained when Back comes from a film page', async () => {
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A, ITEM_B]));
+    const user = userEvent.setup();
+    renderPageWithFilmPage();
+    await screen.findByText(ITEM_B.title);
+
+    await user.type(screen.getByRole('searchbox', { name: /rechercher dans ma liste/i }), 'Ancien');
+    await waitFor(() => expect(screen.queryByText(ITEM_B.title)).not.toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: POSTER_A }));
+    await user.click(await screen.findByRole('button', { name: 'Retour' }));
+
+    expect(await screen.findByRole('searchbox', { name: /rechercher dans ma liste/i })).toHaveValue(
+      'Ancien'
+    );
+    expect(await screen.findByText(ITEM_A.title)).toBeInTheDocument();
+    expect(screen.queryByText(ITEM_B.title)).not.toBeInTheDocument();
+  });
+
   it('shows no result when the search matches nothing, with a reset button', async () => {
     server.use(authedUserHandler, ...watchlistHandler([ITEM_A, ITEM_B]));
 

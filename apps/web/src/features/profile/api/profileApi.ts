@@ -97,7 +97,7 @@ export interface UserWatchedMoviesResponse {
   total?: number;
 }
 
-export interface UserWatchedMoviesPreview {
+export interface CountedUserWatchedMovies {
   items: UserWatchedMovieItem[];
   total: number;
 }
@@ -113,14 +113,22 @@ export async function fetchUserWatchedMovies(
   );
 }
 
-export const WATCHED_MOVIES_TAKE = 200;
+async function fetchCountedUserWatchedMovies(
+  handle: string,
+  take: number,
+  signal?: AbortSignal
+): Promise<CountedUserWatchedMovies> {
+  const res = await fetchUserWatchedMovies(handle, take, signal);
+  return { items: res.items, total: res.total ?? res.items.length };
+}
 
-export async function fetchUserWatchedMovieItems(
+export const WATCHED_MOVIES_TAKE = 1000;
+
+export function fetchUserWatchedMovieCollection(
   handle: string,
   signal?: AbortSignal
-): Promise<UserWatchedMovieItem[]> {
-  const res = await fetchUserWatchedMovies(handle, WATCHED_MOVIES_TAKE, signal);
-  return res.items;
+): Promise<CountedUserWatchedMovies> {
+  return fetchCountedUserWatchedMovies(handle, WATCHED_MOVIES_TAKE, signal);
 }
 
 export interface UserProposedMovieItem {
@@ -154,12 +162,11 @@ export async function fetchUserProposedMovieItems(
 
 export const PROFILE_WATCHED_PREVIEW_TAKE = 24;
 
-export async function fetchUserWatchedMoviesPreview(
+export function fetchUserWatchedMoviesPreview(
   handle: string,
   signal?: AbortSignal
-): Promise<UserWatchedMoviesPreview> {
-  const res = await fetchUserWatchedMovies(handle, PROFILE_WATCHED_PREVIEW_TAKE, signal);
-  return { items: res.items, total: res.total ?? res.items.length };
+): Promise<CountedUserWatchedMovies> {
+  return fetchCountedUserWatchedMovies(handle, PROFILE_WATCHED_PREVIEW_TAKE, signal);
 }
 
 export interface UserWatchlistItem {

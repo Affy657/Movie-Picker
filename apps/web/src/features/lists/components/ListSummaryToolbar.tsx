@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
+import { useHistoryEntryState } from '@/shared/hooks/useHistoryEntryState';
 import ListToolbar from '@/features/movies/components/ListToolbar';
 import {
   DEFAULT_LIST_SORT_DIRECTION,
@@ -14,36 +14,53 @@ export const SORT_LABEL_KEYS: Record<ListSortKey, TranslationKey> = {
   progress: 'lists.summary.sortProgress',
 };
 
+interface ListSummarySort {
+  by: ListSortKey;
+  dir: ListSortDirection;
+}
+
+const DEFAULT_SORT: ListSummarySort = { by: 'recent', dir: DEFAULT_LIST_SORT_DIRECTION.recent };
+
+function defaultSortOf(key: ListSortKey): ListSummarySort {
+  return { by: key, dir: DEFAULT_LIST_SORT_DIRECTION[key] };
+}
+
+function isListSummarySort(value: unknown): value is ListSummarySort {
+  if (typeof value !== 'object' || value === null) return false;
+  const { by, dir } = value as Record<string, unknown>;
+  return (
+    typeof by === 'string' &&
+    Object.hasOwn(DEFAULT_LIST_SORT_DIRECTION, by) &&
+    (dir === 'asc' || dir === 'desc')
+  );
+}
+
 export function useListSummaryFilters() {
-  const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState<ListSortKey>('recent');
-  const [sortDir, setSortDir] = useState<ListSortDirection>(DEFAULT_LIST_SORT_DIRECTION.recent);
+  const [search, setSearch] = useHistoryEntryState('listSummary.search', '');
+  const [sort, setSort] = useHistoryEntryState('listSummary.sort', DEFAULT_SORT, isListSummarySort);
 
   const changeSort = (key: ListSortKey) => {
-    if (key === sortBy) {
-      setSortDir((current) => (current === 'asc' ? 'desc' : 'asc'));
-      return;
-    }
-    setSortBy(key);
-    setSortDir(DEFAULT_LIST_SORT_DIRECTION[key]);
+    setSort((current) =>
+      current.by === key
+        ? { by: key, dir: current.dir === 'asc' ? 'desc' : 'asc' }
+        : defaultSortOf(key)
+    );
   };
 
-  const selectSort = (key: ListSortKey) => {
-    setSortBy(key);
-    setSortDir(DEFAULT_LIST_SORT_DIRECTION[key]);
-  };
+  const selectSort = (key: ListSortKey) => setSort(defaultSortOf(key));
+
+  const setSortDir = (dir: ListSortDirection) => setSort((current) => ({ ...current, dir }));
 
   const clearAll = () => {
     setSearch('');
-    setSortBy('recent');
-    setSortDir(DEFAULT_LIST_SORT_DIRECTION.recent);
+    setSort(DEFAULT_SORT);
   };
 
   return {
     search,
     setSearch,
-    sortBy,
-    sortDir,
+    sortBy: sort.by,
+    sortDir: sort.dir,
     setSortDir,
     changeSort,
     selectSort,

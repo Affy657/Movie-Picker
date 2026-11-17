@@ -412,6 +412,7 @@ interface ListMoviesPageProps {
   isError: boolean;
   availabilityPending?: boolean;
   storageScope: ToolbarStorageScope;
+  storageListId?: string;
   randomPickHistoryKey?: string;
   labels: ListMoviesLabels;
   emptyIcon: ReactNode;
@@ -433,6 +434,7 @@ export default function ListMoviesPage({
   isError,
   availabilityPending,
   storageScope,
+  storageListId,
   randomPickHistoryKey,
   labels,
   emptyIcon,
@@ -526,6 +528,7 @@ export default function ListMoviesPage({
     ratingScale: user?.ratingScale,
     mediaTypeLabels,
     storageScope,
+    storageListId,
     extraFilter: toolbarOptions?.scopeFilter,
     defaultSortBy: toolbarOptions?.sorts?.defaultKey,
   });
