@@ -2,6 +2,7 @@ using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Tests.UseCases.MovieLists;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.Notifications;
@@ -33,13 +34,14 @@ public sealed class GetInboxHandlerTests
     private static readonly UserCard Bob = new("bob-id", "avatar-1", "bob", IsProfilePublic: true);
     private static readonly UserCard Hidden = new("hidden-id", "avatar-2", "hidden", IsProfilePublic: false);
     private static readonly string[] DistinctActorsOfThePage = ["hidden", "bob", "Bob ", "gone"];
+    private static readonly DateTimeOffset Now = new(2026, 11, 17, 18, 0, 0, TimeSpan.Zero);
 
     public GetInboxHandlerTests()
     {
         _users.Setup(u => u.ListCardsByHandlesAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyCollection<string> handles, CancellationToken _) =>
                 new[] { Bob, Hidden }.Where(card => handles.Any(h => h.Trim().Equals(card.Handle, StringComparison.OrdinalIgnoreCase))).ToList());
-        _sut = new GetInboxHandler(_notifications.Object, _users.Object, _lists.Object);
+        _sut = new GetInboxHandler(_notifications.Object, _users.Object, _lists.Object, new SteppingClock(Now));
     }
 
     [Fact]
@@ -52,7 +54,7 @@ public sealed class GetInboxHandlerTests
                 new UserNotification { Id = "n2", UserId = "u1", Type = UserNotificationType.ListInvitation, ActorHandle = "bob", ListId = "l2", ListName = "Nanars" },
                 new UserNotification { Id = "n3", UserId = "u1", Type = UserNotificationType.NewFollower, ActorHandle = "bob" }
             ]);
-        _lists.Setup(l => l.ListPendingInvitationIdsAsync("u1", It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+        _lists.Setup(l => l.ListPendingInvitationIdsAsync("u1", It.IsAny<IReadOnlyCollection<string>>(), Now, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new HashSet<string> { "l2" });
 
         var result = await _sut.HandleAsync("u1", limit: null, offset: null);
@@ -63,6 +65,7 @@ public sealed class GetInboxHandlerTests
             l => l.ListPendingInvitationIdsAsync(
                 "u1",
                 It.Is<IReadOnlyCollection<string>>(ids => ids.Count == 2 && ids.Contains("l1") && ids.Contains("l2")),
+                Now,
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }

@@ -30,6 +30,18 @@ public sealed class GetMovieListMembersHandlerTests : MovieListMembershipTestBas
     }
 
     [Fact]
+    public async Task HandleAsync_TheOwner_NoLongerSeesAnInvitationPastItsLifetime()
+    {
+        var list = await SharedListAsync();
+        await Kit.InviteAsync(list.Id, Invitee);
+        Kit.Clock.Advance(MovieListInvitation.Lifetime);
+
+        var members = await Kit.MembersHandler().HandleAsync(Owner, list.Id);
+
+        Assert.Empty(members.Invitations!);
+    }
+
+    [Fact]
     public async Task HandleAsync_AMember_SeesTheMembersOnly()
     {
         var list = await SharedListAsync(Member);
@@ -177,6 +189,19 @@ public sealed class ListMovieListInvitableUsersHandlerTests : MovieListMembershi
         Assert.Equal(["follow-1", "follow-2"], invitable.Users.Select(user => user.UserId).Order(StringComparer.Ordinal));
         var ana = invitable.Users.Single(user => user.UserId == "follow-1");
         Assert.Equal(("follow1", "Ana Lopez", "avatar-follow-1"), (ana.Handle, ana.DisplayName, ana.AvatarId));
+    }
+
+    [Fact]
+    public async Task HandleAsync_OffersAgainAnInviteeWhoseInvitationLapsed()
+    {
+        var list = await SharedListAsync();
+        await Kit.InviteAsync(list.Id, Invitee);
+        await Kit.Follows.FollowAsync(Owner, Invitee);
+        Kit.Clock.Advance(MovieListInvitation.Lifetime);
+
+        var invitable = await Kit.InvitableHandler().HandleAsync(Owner, list.Id, null);
+
+        Assert.Equal([Invitee], invitable.Users.Select(user => user.UserId));
     }
 
     [Theory]

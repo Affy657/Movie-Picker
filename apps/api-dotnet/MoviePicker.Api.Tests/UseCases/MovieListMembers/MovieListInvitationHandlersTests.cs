@@ -31,7 +31,7 @@ public sealed class InviteToMovieListHandlerTests : MovieListMembershipTestBase
         var invitation = await InviteAsync(list.Id, Invitee);
 
         Assert.Equal((Invitee, "Zoé", "invitee1", Start), (invitation.UserId, invitation.DisplayName, invitation.Handle, invitation.InvitedAt));
-        Assert.True((await Kit.Lists.FindAsync(list.Id))!.IsInvited(Invitee));
+        Assert.True((await Kit.Lists.FindAsync(list.Id))!.IsInvited(Invitee, Kit.Clock.Now));
         var notice = Assert.Single(await Kit.Notifications.ListByUserIdAsync(Invitee));
         Assert.Equal(UserNotificationType.ListInvitation, notice.Type);
         Assert.Equal((list.Id, "Halloween"), (notice.ListId, notice.ListName));
@@ -62,7 +62,7 @@ public sealed class InviteToMovieListHandlerTests : MovieListMembershipTestBase
         await InviteAsync(list.Id, Invitee);
 
         Assert.Empty(await Kit.Notifications.ListByUserIdAsync(Invitee));
-        Assert.True((await Kit.Lists.FindAsync(list.Id))!.IsInvited(Invitee));
+        Assert.True((await Kit.Lists.FindAsync(list.Id))!.IsInvited(Invitee, Kit.Clock.Now));
         Kit.Push.Verify(p => p.SendAsync(It.IsAny<PushSubscription>(), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -153,7 +153,24 @@ public sealed class InviteToMovieListHandlerTests : MovieListMembershipTestBase
 
         await InviteAsync(list.Id, Invitee);
 
-        Assert.Equal(MovieList.MaxMembers, (await Kit.Lists.FindAsync(list.Id))!.SeatsTaken);
+        Assert.Equal(MovieList.MaxMembers, (await Kit.Lists.FindAsync(list.Id))!.SeatsTaken(Kit.Clock.Now));
+    }
+
+    [Fact]
+    public async Task HandleAsync_AnInvitationUnansweredPastItsLifetime_CanBeSentAgain_AndHoldsNoSeat()
+    {
+        var list = await SharedListAsync(Member);
+        await FillAsync(list.Id, 17);
+        await Kit.Follows.FollowAsync(Owner, Invitee);
+        await InviteAsync(list.Id, Invitee);
+        Kit.Clock.Advance(MovieListInvitation.Lifetime);
+
+        var again = await InviteAsync(list.Id, Invitee);
+
+        Assert.Equal(Kit.Clock.Now, again.InvitedAt);
+        var stored = (await Kit.Lists.FindAsync(list.Id))!;
+        Assert.Equal(Kit.Clock.Now, Assert.Single(stored.Invitations).InvitedAt);
+        Assert.Single(await Kit.Notifications.ListByUserIdAsync(Invitee));
     }
 
     [Fact]
@@ -232,7 +249,7 @@ public sealed class CancelMovieListInvitationHandlerTests : MovieListMembershipT
         var ex = await Assert.ThrowsAsync<ForbiddenException>(() => Kit.CancelInvitationHandler().HandleAsync(Member, list.Id, Invitee));
 
         Assert.Equal(ErrorCodes.ListOwnerOnly, ex.Reason);
-        Assert.True((await Kit.Lists.FindAsync(list.Id))!.IsInvited(Invitee));
+        Assert.True((await Kit.Lists.FindAsync(list.Id))!.IsInvited(Invitee, Kit.Clock.Now));
     }
 }
 
@@ -276,6 +293,19 @@ public sealed class AcceptMovieListInvitationHandlerTests : MovieListMembershipT
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => Kit.AcceptHandler().HandleAsync(caller, list.Id));
 
         Assert.Equal(ErrorCodes.ListInvitationNotFound, ex.Reason);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AnInvitationPastItsLifetime_IsNotFound()
+    {
+        var list = await SharedListAsync();
+        await Kit.InviteAsync(list.Id, Invitee);
+        Kit.Clock.Advance(MovieListInvitation.Lifetime);
+
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() => Kit.AcceptHandler().HandleAsync(Invitee, list.Id));
+
+        Assert.Equal(ErrorCodes.ListInvitationNotFound, ex.Reason);
+        Assert.Empty((await Kit.Lists.FindAsync(list.Id))!.Members);
     }
 
     [Fact]

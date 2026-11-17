@@ -42,7 +42,7 @@ public sealed class JoinMovieListHandler : IJoinMovieListHandler
             return await AnswerAsync(current, userId, joined: false, ct);
         if (current is null || !current.AcceptsInviteToken(token, now))
             throw Errors.MovieListInviteLinkInvalid();
-        throw current.IsFull && !current.IsInvited(userId)
+        throw current.IsFull(now) && !current.IsInvited(userId, now)
             ? Errors.MovieListMembersLimitReached(MovieList.MaxMembers)
             : Errors.ConcurrentUpdate();
     }

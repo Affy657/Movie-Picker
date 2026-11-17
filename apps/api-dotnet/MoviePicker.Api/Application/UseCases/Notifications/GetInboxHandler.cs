@@ -10,12 +10,18 @@ public sealed class GetInboxHandler : IGetInboxHandler
     private readonly IUserNotificationRepository _notifications;
     private readonly IUserRepository _users;
     private readonly IMovieListRepository _lists;
+    private readonly TimeProvider _clock;
 
-    public GetInboxHandler(IUserNotificationRepository notifications, IUserRepository users, IMovieListRepository lists)
+    public GetInboxHandler(
+        IUserNotificationRepository notifications,
+        IUserRepository users,
+        IMovieListRepository lists,
+        TimeProvider clock)
     {
         _notifications = notifications;
         _users = users;
         _lists = lists;
+        _clock = clock;
     }
 
     private const int DefaultPageSize = 30;
@@ -79,7 +85,7 @@ public sealed class GetInboxHandler : IGetInboxHandler
             .ToList();
         return listIds.Count == 0
             ? new HashSet<string>(StringComparer.Ordinal)
-            : await _lists.ListPendingInvitationIdsAsync(userId, listIds, ct);
+            : await _lists.ListPendingInvitationIdsAsync(userId, listIds, _clock.GetUtcNow(), ct);
     }
 
     private async Task<Dictionary<string, UserCard>> ResolveActorsAsync(

@@ -80,7 +80,7 @@ internal sealed class MovieListTestKit
 
     public GetMovieListMembersHandler MembersHandler() => new(Lists, Users, Clock);
 
-    public ListMovieListInvitableUsersHandler InvitableHandler() => new(Lists, Follows, Users);
+    public ListMovieListInvitableUsersHandler InvitableHandler() => new(Lists, Follows, Users, Clock);
 
     public InviteToMovieListHandler InviteHandler() =>
         new(Lists, Follows, Users, Notifications, PushSubscriptions, Push.Object, Quota, Clock);
