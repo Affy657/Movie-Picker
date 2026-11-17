@@ -7,6 +7,7 @@ import type { MovieData } from '@/shared/types/movie';
 import { useMovieNight } from '@/features/events/hooks/useMovieNight';
 import { useEventDetailPage } from '@/features/events/hooks/useEventDetailPage';
 import { useEventMovieVoting } from '@/features/events/pages/event-detail/useEventMovieVoting';
+import type { OfflineVoteOutcome } from '@/features/events/offline/useOfflineVoteReplay';
 import {
   markMovieAsSeen,
   removeMovieFromEvent,
@@ -43,9 +44,15 @@ const film: MovieData = {
 const handleVote = vi.fn();
 const refreshAll = vi.fn();
 const setActionError = vi.fn();
+const dismissOfflineVoteOutcome = vi.fn();
 
 function page(
-  overrides: { event?: Partial<EventData>; movies?: MovieData[]; mine?: boolean } = {}
+  overrides: {
+    event?: Partial<EventData>;
+    movies?: MovieData[];
+    mine?: boolean;
+    offlineVoteOutcome?: OfflineVoteOutcome;
+  } = {}
 ) {
   vi.mocked(useEventDetailPage).mockReturnValue({
     event: { id: 'e1', title: 'Ciné-club', slug: 'Ab3x', isHost: false, ...overrides.event },
@@ -57,6 +64,8 @@ function page(
     actionError: null,
     eventQuery: { isSuccess: true },
     moviesQuery: { isSuccess: true },
+    offlineVoteOutcome: overrides.offlineVoteOutcome ?? null,
+    dismissOfflineVoteOutcome,
   } as unknown as ReturnType<typeof useEventDetailPage>);
 }
 
@@ -115,6 +124,16 @@ describe('useMovieNight', () => {
     act(() => result.current.vote(1));
 
     expect(handleVote).toHaveBeenCalledWith('m1', 1);
+  });
+
+  it('passes on what became of the votes cast offline, and lets the bar dismiss it', () => {
+    const outcome = { saved: 0, refused: 1, reason: 'Soirée terminée.' };
+    page({ offlineVoteOutcome: outcome });
+    const { result } = renderNight();
+
+    expect(result.current.offlineVoteOutcome).toEqual(outcome);
+    act(() => result.current.dismissOfflineVoteOutcome());
+    expect(dismissOfflineVoteOutcome).toHaveBeenCalled();
   });
 
   it('passes on a vote refused because every vote is used, with the night limit', () => {

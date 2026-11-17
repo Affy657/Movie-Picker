@@ -59,6 +59,8 @@ function night(overrides: Partial<Night> = {}): Night {
     voteLimitReached: false,
     dismissVoteLimit: vi.fn(),
     maxVotes: null,
+    offlineVoteOutcome: null,
+    dismissOfflineVoteOutcome: vi.fn(),
     ...overrides,
   };
 }
@@ -111,6 +113,33 @@ describe('MovieNightBar', () => {
     expect(state.vote).toHaveBeenCalledWith(-1);
     await userEvent.click(screen.getByRole('button', { name: /déjà vu/i }));
     expect(state.toggleSeen).toHaveBeenCalled();
+  });
+
+  it('says when a vote cast offline was refused, and lets the reader close it', async () => {
+    const dismissOfflineVoteOutcome = vi.fn();
+    vi.mocked(useMovieNight).mockReturnValue(
+      night({
+        offlineVoteOutcome: { saved: 0, refused: 1, reason: 'Soirée terminée. Lecture seule.' },
+        dismissOfflineVoteOutcome,
+      })
+    );
+    renderBar();
+
+    const notice = screen.getByRole('region', { name: 'Votes faits hors ligne' });
+    expect(
+      within(notice).getByText(
+        "Un vote fait hors ligne n'a pas pu être enregistré : Soirée terminée. Lecture seule."
+      )
+    ).toBeInTheDocument();
+    await userEvent.click(within(notice).getByRole('button', { name: 'Fermer' }));
+    expect(dismissOfflineVoteOutcome).toHaveBeenCalled();
+  });
+
+  it('says nothing about offline votes when there is nothing to report', () => {
+    vi.mocked(useMovieNight).mockReturnValue(night());
+    renderBar();
+
+    expect(screen.queryByRole('region', { name: 'Votes faits hors ligne' })).toBeNull();
   });
 
   it('offers to join the night to a visitor who is not part of it', () => {
