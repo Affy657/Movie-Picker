@@ -8,6 +8,38 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Changed
+
+- **Une soirée à plusieurs films reste ouverte jusqu'au dernier tirage** : passé l'heure de la soirée, l'hôte peut encore tirer les films suivants, la soirée n'est plus annoncée en suspens quand un film est déjà choisi, et « Terminer la soirée » la clôt avec les films déjà tirés. Le film tiré compte comme vu dès la fin de la soirée.
+- **Vos propositions gagnantes suivent la confidentialité de vos films vus** : quand vos films vus sont privés, les autres membres ne voient plus vos propositions gagnantes, ni leur nombre, ni leur note moyenne.
+- **Un film ajouté à une liste ou marqué comme vu prend le titre, l'année, la note et la durée de TMDB**, y compris les films vus importés depuis Letterboxd.
+
+### Fixed
+
+- **L'en-tête reste en place d'une page à l'autre** : changer de page ne cache plus l'en-tête, le pied et la barre du bas derrière le chargeur, et la synchronisation Letterboxd ne repart plus à chaque page.
+- **Les pages publiques ne clignotent plus à l'ouverture** : sur Soutenir, Comment ça marche ou les sélections de films, le titre ne disparaît plus un instant derrière le chargeur.
+- **Les affiches d'une longue liste s'affichent toutes**, au lieu de rester vides au-delà de la trois-centième.
+- **Pendant une soirée, le passage à en cours, terminée ou en suspens et l'ouverture des notes s'affichent tout de suite**, sans plusieurs minutes de retard.
+- **Un vote fait sur un réseau faible part dès que la connexion répond de nouveau**, et retoucher un vote en attente ne l'annule plus. Sur la page d'un film, un vote fait hors ligne puis refusé par la soirée est signalé.
+- **Relancée sans réseau, l'application ouvre la dernière soirée consultée** sous la bannière « Données en cache, reconnexion en cours. », au lieu d'une page d'erreur.
+- **Un invité qui vient de rejoindre une soirée apparaît tout de suite en ligne** pour les autres, et VoiceOver annonce qui est en ligne ou propose un film dans la liste des participants.
+- **La note moyenne de la page d'un film ne compte plus les notes d'un film retiré des gagnants** de sa soirée.
+- **La page des films vus d'un profil affiche et compte tous ses films**, au lieu de s'arrêter à 200.
+- **Après une connexion par mot de passe, les listes publiques et les profils montrent tout de suite votre progression et vos abonnements**, et l'avis de déconnexion en attente disparaît.
+- **La recherche d'une liste, ainsi que la recherche et le tri de Mes listes, sont conservés au retour de la page d'un film**, et le tri et les filtres choisis sur une liste ne s'appliquent plus à vos autres listes.
+- **Une watchlist rendue privée indique qu'elle n'est pas publique**, au lieu de « Ce profil n'existe pas ».
+- **Depuis la page d'un film, « Voir la saga » et « Tout voir » affichent le nom de la saga ou « Films similaires à » suivi du titre**, au lieu d'un titre générique.
+- **Une invitation à une liste restée sans réponse expire au bout de 90 jours** : elle libère sa place et l'hôte peut la renvoyer.
+- **Un réseau faible ne recharge plus la page en pleine saisie** : seul l'échec de la page demandée déclenche le rechargement qui suit une mise à jour.
+- **Sur iPhone, le bas des fenêtres qui s'ouvrent depuis le bas de l'écran ne passe plus sous la barre d'accueil.**
+- **Au clavier, fermer « Envoyer un retour » ou le guide d'installation rend le focus au menu du compte.**
+
+### Security
+
+- **Les liens d'invitation à une liste ne sont plus conservés dans les journaux du serveur.**
+- **Après la suppression d'un compte, plus rien n'est recréé à son nom**, ni par une session encore ouverte ni par une synchronisation Letterboxd en cours.
+- **Refuser la mesure d'audience vaut pour tous les onglets ouverts**, sans avoir à les recharger.
+
 ## [1.15.2] - 2026-11-16
 
 ### Changed
