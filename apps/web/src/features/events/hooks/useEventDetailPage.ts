@@ -54,13 +54,26 @@ export function useEventDetailPage(
     );
   }, [slug, hostFromUrl, searchParams, location.hash, location.state, navigate]);
 
+  const [unreachableSlug, setUnreachableSlug] = useState<string | null>(null);
   const offlineCopy = useMemo(
-    () => (slug && !onlineManager.isOnline() ? readLastEventSnapshot(slug) : null),
-    [slug]
+    () =>
+      slug && (unreachableSlug === slug || !onlineManager.isOnline())
+        ? readLastEventSnapshot(slug)
+        : null,
+    [slug, unreachableSlug]
   );
   const [liveConnected, setLiveConnected] = useState(false);
   const eventQuery = useEvent(slug, hostToken, { live: !liveConnected, offlineCopy });
   const event = eventQuery.data ?? null;
+  const eventUnreachable =
+    eventQuery.data === undefined && ApiError.is(eventQuery.error) && eventQuery.error.code === 0;
+  useEffect(() => {
+    if (slug && eventUnreachable) setUnreachableSlug(slug);
+  }, [slug, eventUnreachable]);
+  const showingOfflineCopy =
+    offlineCopy !== null &&
+    eventQuery.data !== undefined &&
+    eventQuery.dataUpdatedAt === offlineCopy.savedAt;
 
   const moviesQueryEnabled = !!slug;
   const { moviesRefetchInterval } = useEventLive(event ?? undefined, { moviesQueryEnabled });
@@ -98,8 +111,15 @@ export function useEventDetailPage(
     setLiveConnected(live.connected);
   }, [live.connected]);
 
-  const freshEvent = eventQuery.isFetchedAfterMount ? eventQuery.data : undefined;
-  const freshMovies = moviesQuery.isFetchedAfterMount ? moviesQuery.data : undefined;
+  const copySavedAt = offlineCopy?.savedAt;
+  const freshEvent =
+    eventQuery.isFetchedAfterMount && eventQuery.dataUpdatedAt !== copySavedAt
+      ? eventQuery.data
+      : undefined;
+  const freshMovies =
+    moviesQuery.isFetchedAfterMount && moviesQuery.dataUpdatedAt !== copySavedAt
+      ? moviesQuery.data
+      : undefined;
   useEffect(() => {
     if (!slug || !freshEvent || !freshMovies || freshEvent.slug !== slug) return;
     saveLastEventSnapshot({ slug, savedAt: Date.now(), event: freshEvent, movies: freshMovies });
@@ -169,6 +189,7 @@ export function useEventDetailPage(
     refreshAll,
     liveConnected: live.connected,
     livePresence: live.presence,
+    showingOfflineCopy,
     offlineVoteOutcome: offlineVotes.outcome,
     dismissOfflineVoteOutcome: offlineVotes.dismiss,
   };

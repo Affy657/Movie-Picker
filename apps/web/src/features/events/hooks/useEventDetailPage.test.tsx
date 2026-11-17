@@ -382,6 +382,67 @@ describe('useEventDetailPage', () => {
       expect(result.current.movies.map((movie) => movie.id)).toEqual(['mov-copy']);
     });
 
+    function saveCopy(savedAt: number): void {
+      saveLastEventSnapshot({
+        slug,
+        savedAt,
+        event: {
+          id: 'evt-copy',
+          slug,
+          title: 'Copie hors ligne',
+          date: '2030-12-15',
+          time: '21:00',
+        } as EventData,
+        movies: [{ id: 'mov-copy', title: 'Alien', score: 1, myVote: 1 }] as MovieData[],
+      });
+    }
+
+    function serveNetworkDown(): void {
+      server.use(
+        http.get(`${TEST_API_V1}/events/slug/${slug}`, () => HttpResponse.error()),
+        http.get(`${TEST_API_V1}/events/${slug}/movies`, () => HttpResponse.error())
+      );
+    }
+
+    it('opens the saved copy when the request never reaches the server, though the browser says online', async () => {
+      const savedAt = Date.now() - 60_000;
+      saveCopy(savedAt);
+      serveNetworkDown();
+
+      const { result } = renderWithClient(createTestQueryClient());
+
+      await waitFor(() => expect(result.current.event?.title).toBe('Copie hors ligne'));
+      await waitFor(() =>
+        expect(result.current.movies.map((movie) => movie.id)).toEqual(['mov-copy'])
+      );
+      expect(result.current.showingOfflineCopy).toBe(true);
+      expect(readLastEventSnapshot(slug)?.savedAt).toBe(savedAt);
+    });
+
+    it('leaves the saved copy once the server answers again', async () => {
+      saveCopy(Date.now() - 60_000);
+      serveNetworkDown();
+      const { result } = renderWithClient(createTestQueryClient());
+      await waitFor(() => expect(result.current.showingOfflineCopy).toBe(true));
+
+      server.use(...createEventDetailHandlers({ slug, title: 'De retour' }));
+      act(() => result.current.refreshAll());
+
+      await waitFor(() => expect(result.current.event?.title).toBe('De retour'));
+      expect(result.current.showingOfflineCopy).toBe(false);
+      await waitFor(() => expect(readLastEventSnapshot(slug)?.event.title).toBe('De retour'));
+    });
+
+    it('shows the error when the request never reaches the server and no copy was saved', async () => {
+      serveNetworkDown();
+
+      const { result } = renderWithClient(createTestQueryClient());
+
+      await waitFor(() => expect(result.current.eventQuery.isError).toBe(true));
+      expect(result.current.event).toBeNull();
+      expect(result.current.showingOfflineCopy).toBe(false);
+    });
+
     it('forgets the saved copy of a movie night that no longer exists', async () => {
       saveLastEventSnapshot({
         slug,
