@@ -91,6 +91,7 @@ export function useEventDetailPage(
   const live = useEventLiveStream({
     slug,
     enabled: !!event && !event.isFinished,
+    participantId,
     onChanged: refreshLive,
   });
   useEffect(() => {

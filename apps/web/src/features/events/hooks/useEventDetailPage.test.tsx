@@ -311,6 +311,17 @@ describe('useEventDetailPage', () => {
       ]);
     });
 
+    it('reopens the live stream once a guest joins, so the others see them online', async () => {
+      server.use(...createEventDetailHandlers({ slug }));
+      const { result } = renderWithClient(createTestQueryClient());
+      await waitFor(() => expect(result.current.event).not.toBeNull());
+      const opened = FakeEventSource.instances.length;
+
+      act(() => result.current.setParticipant({ participantId: 'p-msw-chloe', pseudo: 'Chloé' }));
+
+      expect(FakeEventSource.instances).toHaveLength(opened + 1);
+    });
+
     it('sends a vote left waiting as soon as the live stream brings the server back', async () => {
       setStoredParticipant(slug, 'p-msw-bob', 'Bob');
       queueVote({ slug, movieId: 'm-1', participantId: 'p-msw-bob', value: 1, queuedAt: 1 });

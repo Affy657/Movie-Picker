@@ -150,6 +150,38 @@ describe('useEventLiveStream', () => {
     expect(FakeEventSource.instances).toHaveLength(2);
   });
 
+  it('reopens once, only after the pause the server asked for, when the stream is refused', () => {
+    vi.useFakeTimers();
+    renderHook(() => useEventLiveStream({ slug: 'soiree', enabled: true, onChanged: vi.fn() }));
+
+    act(() => latest().fail(FakeEventSource.CLOSED));
+    act(() => vi.advanceTimersByTime(EVENT_STREAM_REOPEN_AFTER_FAILURE_MS - 3_000));
+    expect(FakeEventSource.instances).toHaveLength(1);
+
+    act(() => vi.advanceTimersByTime(3_000));
+    expect(FakeEventSource.instances).toHaveLength(2);
+
+    act(() => vi.advanceTimersByTime(EVENT_STREAM_STALE_AFTER_MS - 1_000));
+    expect(FakeEventSource.instances).toHaveLength(2);
+  });
+
+  it('reopens the stream when the participant changes, so the server sees who just joined', () => {
+    const { rerender } = renderHook(
+      ({ participantId }: { participantId: string | null }) =>
+        useEventLiveStream({ slug: 'soiree', enabled: true, participantId, onChanged: vi.fn() }),
+      { initialProps: { participantId: null as string | null } }
+    );
+    const first = latest();
+
+    rerender({ participantId: 'p-new' });
+
+    expect(first.closed).toBe(true);
+    expect(FakeEventSource.instances).toHaveLength(2);
+
+    rerender({ participantId: 'p-new' });
+    expect(FakeEventSource.instances).toHaveLength(2);
+  });
+
   it('closes while the tab is hidden and reopens when it comes back', () => {
     const { result } = renderHook(() =>
       useEventLiveStream({ slug: 'soiree', enabled: true, onChanged: vi.fn() })
