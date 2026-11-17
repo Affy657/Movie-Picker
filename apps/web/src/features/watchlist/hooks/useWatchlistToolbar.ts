@@ -64,20 +64,17 @@ const DEFAULT_STATE: PersistedState = {
 
 export type ToolbarStorageScope = 'watchlist' | 'list' | 'watched' | 'savedList' | 'publicList';
 
-function storageKey(scope: ToolbarStorageScope, userId: string): string {
-  return `moviepicker_${scope}_toolbar_${userId}`;
+function storageKey(scope: ToolbarStorageScope, userId: string, listId?: string): string {
+  const owner = listId ? `${scope}_${listId}` : scope;
+  return `moviepicker_${owner}_toolbar_${userId}`;
 }
 
 function defaultStateFor(sortBy: WatchlistSortKey): PersistedState {
   return { ...DEFAULT_STATE, sortBy, sortDir: DEFAULT_DIRECTION[sortBy] };
 }
 
-function readPersisted(
-  scope: ToolbarStorageScope,
-  userId: string,
-  defaults: PersistedState
-): PersistedState {
-  const raw = safeLocalStorageGet(storageKey(scope, userId));
+function readPersisted(key: string, defaults: PersistedState): PersistedState {
+  const raw = safeLocalStorageGet(key);
   if (!raw) return defaults;
   try {
     const parsed = JSON.parse(raw);
@@ -109,8 +106,8 @@ function readPersisted(
   }
 }
 
-function writePersisted(scope: ToolbarStorageScope, userId: string, state: PersistedState) {
-  safeLocalStorageSet(storageKey(scope, userId), JSON.stringify(state));
+function writePersisted(key: string, state: PersistedState) {
+  safeLocalStorageSet(key, JSON.stringify(state));
 }
 
 function compareItems(
@@ -191,6 +188,7 @@ interface UseWatchlistToolbarOptions {
   ratingScale?: RatingScale;
   mediaTypeLabels: Record<MovieMediaType, string>;
   storageScope?: ToolbarStorageScope;
+  storageListId?: string;
   extraFilter?: ToolbarExtraFilter;
   defaultSortBy?: WatchlistSortKey;
 }
@@ -202,6 +200,7 @@ export function useWatchlistToolbar({
   ratingScale,
   mediaTypeLabels,
   storageScope = 'watchlist',
+  storageListId,
   extraFilter,
   defaultSortBy = 'createdAt',
 }: UseWatchlistToolbarOptions) {
@@ -210,19 +209,20 @@ export function useWatchlistToolbar({
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [state, setState] = useState<PersistedState>(defaults);
   const skipNextWriteRef = useRef(true);
+  const persistedKey = userId ? storageKey(storageScope, userId, storageListId) : null;
 
   useEffect(() => {
     skipNextWriteRef.current = true;
-    setState(userId ? readPersisted(storageScope, userId, defaults) : defaults);
-  }, [storageScope, userId, defaults]);
+    setState(persistedKey ? readPersisted(persistedKey, defaults) : defaults);
+  }, [persistedKey, defaults]);
 
   useEffect(() => {
     if (skipNextWriteRef.current) {
       skipNextWriteRef.current = false;
       return;
     }
-    if (userId) writePersisted(storageScope, userId, state);
-  }, [storageScope, userId, state]);
+    if (persistedKey) writePersisted(persistedKey, state);
+  }, [persistedKey, state]);
 
   const setSortBy = useCallback((key: WatchlistSortKey) => {
     setState((prev) =>

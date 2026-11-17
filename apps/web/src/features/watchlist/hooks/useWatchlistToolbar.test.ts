@@ -235,6 +235,36 @@ describe('useWatchlistToolbar', () => {
     expect(setup().result.current.sortBy).toBe('title');
   });
 
+  it.each(['list', 'savedList', 'publicList'] as const)(
+    'keeps the sort and filters of each %s apart from the other lists of that kind',
+    (storageScope) => {
+      const renderList = (storageListId: string) =>
+        renderHook(
+          () =>
+            useWatchlistToolbar({
+              items: ITEMS,
+              userId: 'u1',
+              tmdbLanguage: 'fr',
+              mediaTypeLabels: MEDIA_TYPE_LABELS,
+              storageScope,
+              storageListId,
+            }),
+          { wrapper: inRouter }
+        );
+      const first = renderList('l1');
+      act(() => {
+        first.result.current.setSortBy('title');
+        first.result.current.toggleGenre(12);
+      });
+
+      const second = renderList('l2');
+
+      expect(second.result.current.sortBy).toBe('createdAt');
+      expect(second.result.current.selectedGenres).toEqual([]);
+      expect(renderList('l1').result.current.selectedGenres).toEqual([12]);
+    }
+  );
+
   it('narrows the films by an extra filter, counted as a filter and reset with the others', () => {
     let onlyMovies = true;
     let resets = 0;

@@ -289,6 +289,7 @@ export default function PublicListPage() {
       isLoading={listQuery.isPending}
       isError={false}
       storageScope="publicList"
+      storageListId={listId}
       emptyIcon={<Rows3 aria-hidden size={ICON_SIZE['3xl']} />}
       labels={listPageLabels(
         name ?? '',
