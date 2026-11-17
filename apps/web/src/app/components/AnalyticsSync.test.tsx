@@ -152,4 +152,25 @@ describe('AnalyticsSync', () => {
     const lastOptOut = Math.max(0, ...vi.mocked(optOut).mock.invocationCallOrder);
     expect(lastOptOut).toBeGreaterThan(lastOptIn);
   });
+
+  it('stops PostHog when the visitor refuses in another tab', async () => {
+    grantConsent();
+    useAuth.mockReturnValue({ user: null, isLoading: false });
+    renderSync();
+    await vi.waitFor(() => expect(optIn).toHaveBeenCalled());
+
+    const refused = JSON.stringify({ decided: true, analytics: false });
+    localStorage.setItem(CONSENT_KEY, refused);
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: CONSENT_KEY,
+          newValue: refused,
+          storageArea: localStorage,
+        })
+      );
+    });
+
+    expect(optOut).toHaveBeenCalled();
+  });
 });
