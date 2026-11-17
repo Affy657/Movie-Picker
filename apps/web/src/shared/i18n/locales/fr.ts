@@ -3115,6 +3115,16 @@ export const fr = {
       nextHint:
         "Une surface qu'on ne sait pas mesurer se mesure avant d'être enrichie : c'est pour cela que la mesure ouvre la liste.",
       nextItem1: 'Mesurer ce qui sert',
+      nextItem2: 'Bannière de profil',
+      nextItem3: 'Films de mes soirées',
+      nextItem4: 'Films vus sur Movie Picker',
+      nextItem5: "Favori depuis la page d'un film",
+      nextItem6: 'Plateformes de streaming par compte',
+      nextItem7: "Groupes d'amis",
+      nextItem8: "Classement d'un groupe",
+      nextItem9: "Soirées d'un groupe",
+      nextItem10: 'Déjà vu automatique en soirée',
+      nextItem11: 'Une seule présentation des listes',
       v2When: 'Sans date annoncée',
       v2What: 'V2',
       v2Detail:

@@ -3069,6 +3069,16 @@ export const en: Locale = {
       nextHint:
         'A surface that cannot be measured gets measured before it gets extended, which is why measurement opens the list.',
       nextItem1: 'Measure what gets used',
+      nextItem2: 'Profile banner',
+      nextItem3: 'Films from my nights',
+      nextItem4: 'Watched on Movie Picker',
+      nextItem5: 'Favorite from a film page',
+      nextItem6: 'Streaming services per account',
+      nextItem7: 'Friend groups',
+      nextItem8: 'Group leaderboard',
+      nextItem9: 'Group nights',
+      nextItem10: 'Automatic "already seen" in a night',
+      nextItem11: 'One look for every list',
       v2When: 'No date announced',
       v2What: 'V2',
       v2Detail:
