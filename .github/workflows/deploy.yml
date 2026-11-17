@@ -509,11 +509,15 @@ jobs:
           # --set-env-vars dict parsing treats ':' and ',' specially; ^##^ sets an alternate delimiter (gcloud topic escaping).
           # PUBLIC_WEB_BASE_URL is the first allowed origin, the web app of this stage: the API
           # reads its shell there for the night recaps and writes its links (recap, password reset).
+          # No `--allow-unauthenticated`: the public `run.invoker` binding of `allUsers` is held by
+          # Terraform (module `cloud-run-api`), and the flag made every deployment call
+          # `setIamPolicy`, which this identity is refused (43 audit errors in 14 days, noise that
+          # would hide a real alert). Never `--no-allow-unauthenticated` either: it removes the
+          # binding and takes the API offline.
           gcloud run deploy "$CLOUD_RUN_SERVICE_NAME" \
             --image "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${GCP_ARTIFACT_REPO}/api@${IMAGE_DIGEST}" \
             --region "$GCP_REGION" \
             --platform managed \
-            --allow-unauthenticated \
             --service-account "$RUNTIME_SA" \
             --cpu-boost \
             --no-traffic \
