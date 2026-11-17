@@ -148,7 +148,11 @@ export function useEventDetailPage(
     }
   }, [slug, hostToken, recapSlug, queryClient]);
 
-  const offlineVotes = useOfflineVoteReplay({ slug, onReplayed: refreshAll });
+  const offlineVotes = useOfflineVoteReplay({
+    slug,
+    onReplayed: refreshAll,
+    serverReachedAt: Math.max(eventQuery.dataUpdatedAt, moviesQuery.dataUpdatedAt),
+  });
 
   return {
     slug,

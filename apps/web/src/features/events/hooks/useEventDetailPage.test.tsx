@@ -15,7 +15,12 @@ import {
 import { useEventDetailPage } from '@/features/events/hooks/useEventDetailPage';
 import { onlineManager, type QueryClient } from '@tanstack/react-query';
 import { FakeEventSource } from '@/test-utils/fakeEventSource';
-import { readLastEventSnapshot, saveLastEventSnapshot } from '@/shared/utils/offlineEventStorage';
+import {
+  queueVote,
+  readLastEventSnapshot,
+  readQueuedVotes,
+  saveLastEventSnapshot,
+} from '@/shared/utils/offlineEventStorage';
 import type { EventData } from '@/shared/types/event';
 import type { MovieData } from '@/shared/types/movie';
 
@@ -304,6 +309,35 @@ describe('useEventDetailPage', () => {
       expect(result.current.livePresence).toEqual([
         { participantId: 'p-msw-alice', proposing: true },
       ]);
+    });
+
+    it('sends a vote left waiting as soon as the live stream brings the server back', async () => {
+      setStoredParticipant(slug, 'p-msw-bob', 'Bob');
+      queueVote({ slug, movieId: 'm-1', participantId: 'p-msw-bob', value: 1, queuedAt: 1 });
+      const network = { down: true, attempts: 0 };
+      const sent: unknown[] = [];
+      server.use(
+        ...createEventDetailHandlers({ slug }),
+        http.post(`${TEST_API_V1}/events/${slug}/movies/:movieId/vote`, async ({ request }) => {
+          network.attempts += 1;
+          if (network.down) return HttpResponse.error();
+          sent.push(await request.json());
+          return HttpResponse.json({ ok: true });
+        })
+      );
+      const { result } = renderWithClient(createTestQueryClient());
+      await waitFor(() => expect(result.current.moviesQuery.isSuccess).toBe(true));
+      await waitFor(() => expect(network.attempts).toBeGreaterThan(0));
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      expect(readQueuedVotes(slug)).toHaveLength(1);
+
+      network.down = false;
+      act(() => FakeEventSource.latest().emit('ready'));
+
+      await waitFor(() => expect(sent).toEqual([{ participantId: 'p-msw-bob', value: 1 }]), {
+        timeout: 1_000,
+      });
+      expect(readQueuedVotes(slug)).toEqual([]);
     });
 
     it('keeps a copy of the last movie night viewed', async () => {

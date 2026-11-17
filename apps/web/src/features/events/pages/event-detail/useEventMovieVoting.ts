@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { onlineManager } from '@tanstack/react-query';
-import { hasQueuedVote, queueVote } from '@/shared/utils/offlineEventStorage';
+import { hasQueuedVote, latestQueuedVote, queueVote } from '@/shared/utils/offlineEventStorage';
 import { clearMovieVote, voteMovie } from '@/features/movies/api/moviesApi';
 import { API_ERROR_REASONS, ApiError, getErrorMessage } from '@/shared/api/apiError';
 import { promptToJoinEvent } from '@/features/events/joinPrompt';
@@ -87,11 +87,13 @@ export function useEventMovieVoting({
   const queueForLater = useCallback(
     (participantId: string, movieId: string, value: VoteValue) => {
       const current = movies.find((m) => m.id === movieId)?.myVote ?? null;
+      const waiting = latestQueuedVote({ slug, movieId, participantId });
+      const withdraws = current === value && waiting?.value !== value;
       queueVote({
         slug,
         movieId,
         participantId,
-        value: current === value ? 0 : value,
+        value: withdraws ? 0 : value,
         queuedAt: Date.now(),
       });
     },
