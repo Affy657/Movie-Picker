@@ -9,6 +9,8 @@ namespace MoviePicker.Api.Application.UseCases.MovieLists;
 
 public sealed class MovieListItemFactory
 {
+    private const int YearLength = 4;
+
     private readonly IPosterImageStore _posters;
     private readonly ITmdbMovieSearch _tmdb;
     private readonly ILogger<MovieListItemFactory> _logger;
@@ -32,13 +34,20 @@ public sealed class MovieListItemFactory
         {
             TmdbId = request.TmdbId,
             MediaType = request.MediaType,
-            Title = request.Title.Trim(),
-            Year = request.Year,
+            Title = string.IsNullOrWhiteSpace(details?.Title) ? request.Title.Trim() : details.Title.Trim(),
+            Year = ReleaseYear(details?.ReleaseDate) ?? request.Year,
             PosterPath = requestedPoster ?? await _posters.ToStoredPosterPathAsync(details?.PosterUrl, ct),
-            VoteAverage = request.VoteAverage ?? details?.VoteAverage,
-            RuntimeMinutes = TmdbTitleFacts.RuntimeMinutes(request.RuntimeMinutes, details),
+            VoteAverage = details?.VoteAverage ?? request.VoteAverage,
+            RuntimeMinutes = details?.Runtime is > 0
+                ? details.Runtime
+                : TmdbTitleFacts.RuntimeMinutes(request.RuntimeMinutes, details),
             GenreIds = TmdbTitleFacts.GenreIds(request.GenreIds, details),
             AddedAt = addedAt
         };
     }
+
+    private static string? ReleaseYear(string? releaseDate) =>
+        releaseDate is { Length: >= YearLength } && releaseDate[..YearLength].All(char.IsAsciiDigit)
+            ? releaseDate[..YearLength]
+            : null;
 }

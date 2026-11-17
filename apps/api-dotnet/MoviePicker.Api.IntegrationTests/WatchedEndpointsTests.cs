@@ -15,6 +15,8 @@ public sealed class WatchedEndpointsTests : IClassFixture<MoviePickerApplication
 {
     private const string Route = "/api/v1/watched";
 
+    private const string StubTmdbTitle = "Film E2E Stub";
+
     private static readonly JsonSerializerOptions Json = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -300,7 +302,7 @@ public sealed class WatchedEndpointsTests : IClassFixture<MoviePickerApplication
         var watched = Assert.Single(export.GetProperty("watchedTitles").EnumerateArray().ToList());
         Assert.Equal(603, watched.GetProperty("tmdbId").GetInt32());
         Assert.Equal("movie", watched.GetProperty("mediaType").GetString());
-        Assert.Equal("Matrix", watched.GetProperty("title").GetString());
+        Assert.Equal(StubTmdbTitle, watched.GetProperty("title").GetString());
         Assert.Equal(8, watched.GetProperty("rating").GetInt32());
         Assert.True(watched.TryGetProperty("watchedAt", out _));
     }
