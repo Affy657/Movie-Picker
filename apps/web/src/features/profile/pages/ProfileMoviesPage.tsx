@@ -7,7 +7,7 @@ import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import {
   WATCHED_MOVIES_TAKE,
-  fetchUserWatchedMovieItems,
+  fetchUserWatchedMovieCollection,
   type UserWatchedMovieItem,
 } from '@/features/profile/api/profileApi';
 import ProfileCollectionPage, {
@@ -35,7 +35,7 @@ export default function ProfileMoviesPage() {
       pageTitle: (name) => t('profile.movies.pageTitle', { name }),
       seoDescription: (profile) =>
         t('profile.movies.seoDescription', { name: profile.displayName, handle: profile.handle }),
-      subtitle: ({ length: count }) =>
+      subtitle: (_items, count) =>
         pluralizeCount(count, 'profile.movies.pageSubtitleOne', 'profile.movies.pageSubtitle', t, {
           count,
         }),
@@ -53,7 +53,7 @@ export default function ProfileMoviesPage() {
     <ProfileCollectionPage
       handle={handle}
       queryKey={queryKeys.profile.watchedMovies(handle, WATCHED_MOVIES_TAKE)}
-      fetchItems={fetchUserWatchedMovieItems}
+      fetchItems={fetchUserWatchedMovieCollection}
       comparePrimary={compareWatchedAt}
       itemKey={watchedKey}
       canonicalPath={ROUTES.profileMovies}
