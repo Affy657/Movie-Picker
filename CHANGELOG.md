@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.15.3] - 2026-11-18
+
 ### Changed
 
 - **Une soirée à plusieurs films reste ouverte jusqu'au dernier tirage** : passé l'heure de la soirée, l'hôte peut encore tirer les films suivants, la soirée n'est plus annoncée en suspens quand un film est déjà choisi, et « Terminer la soirée », sur la soirée ou dans À traiter de Mes soirées, la clôt avec les films déjà tirés. Le film tiré compte comme vu dès la fin de la soirée.
@@ -799,7 +801,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.15.2...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.15.3...HEAD
+[1.15.3]: https://github.com/Affy657/Movie-Picker/compare/v1.15.2...v1.15.3
 [1.15.2]: https://github.com/Affy657/Movie-Picker/compare/v1.15.1...v1.15.2
 [1.15.1]: https://github.com/Affy657/Movie-Picker/compare/v1.15.0...v1.15.1
 [1.15.0]: https://github.com/Affy657/Movie-Picker/compare/v1.14.0...v1.15.0
