@@ -15,6 +15,7 @@ public sealed class AddToWatchlistHandlerTests
     private static readonly int[] GenreIds = [28, 878];
 
     private readonly Mock<IWatchlistRepository> _watchlist = new();
+    private readonly Mock<IUserRepository> _users = new();
     private readonly Mock<IPosterImageStore> _posterImageStore = new();
     private readonly Mock<ITmdbMovieSearch> _tmdb = new();
     private readonly AddToWatchlistHandler _sut;
@@ -26,8 +27,12 @@ public sealed class AddToWatchlistHandlerTests
         _tmdb
             .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TmdbMovieDetails?)null);
+        _users
+            .Setup(u => u.GetByIdAsync(UserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = UserId });
         _sut = new AddToWatchlistHandler(
             _watchlist.Object,
+            _users.Object,
             _posterImageStore.Object,
             TimeProvider.System,
             _tmdb.Object,

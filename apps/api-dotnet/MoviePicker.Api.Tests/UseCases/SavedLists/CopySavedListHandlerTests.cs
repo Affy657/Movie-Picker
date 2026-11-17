@@ -38,6 +38,19 @@ public sealed class CopySavedListHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_ReplayedForADeletedAccount_CreatesNoList()
+    {
+        _kit.SagaHas(HarryPotter, HarryPotterName, HarryPotterFilms());
+        var saved = await _kit.SaveSagaAsync();
+        await _kit.MovieLists.Users.DeleteAsync(Owner);
+
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() => CopyAsync(saved.Id, "Ma saga"));
+
+        Assert.Equal(ErrorCodes.UserNotFound, ex.Reason);
+        Assert.Empty(await _kit.MovieLists.Lists.ListByOwnerAsync(Owner));
+    }
+
+    [Fact]
     public async Task HandleAsync_TheCopyIsFrozen_WhileTheSavedListKeepsFollowingTheSource()
     {
         _kit.SagaHas(HarryPotter, HarryPotterName, HarryPotterFilms());

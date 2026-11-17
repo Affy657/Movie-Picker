@@ -33,7 +33,11 @@ public sealed class LetterboxdWatchedSynchronizerTests
             .Setup(t => t.SearchTitlesAsync(It.IsAny<string>(), true, It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<TmdbSearchItem>)[]);
         var facts = new MovieListItemFactory(_posters.Object, _tmdb.Object, NullLogger<MovieListItemFactory>.Instance);
-        var writer = new LetterboxdWatchedWriter(_watched, _watchlist, facts, _clock);
+        var users = new Mock<IUserRepository>();
+        users
+            .Setup(u => u.GetByIdAsync(UserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = UserId });
+        var writer = new LetterboxdWatchedWriter(_watched, _watchlist, users.Object, facts, _clock);
         _sut = new LetterboxdWatchedSynchronizer(
             _watched,
             _tmdb.Object,

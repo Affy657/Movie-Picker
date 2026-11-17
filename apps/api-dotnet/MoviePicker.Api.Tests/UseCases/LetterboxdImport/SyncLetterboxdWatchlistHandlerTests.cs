@@ -73,6 +73,7 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
                 new LetterboxdWatchedWriter(
                     _watched,
                     _watchlist.Object,
+                    _users.Object,
                     new MovieListItemFactory(_posters.Object, _tmdb.Object, NullLogger<MovieListItemFactory>.Instance),
                     new FixedClock(Now)),
                 NullLogger<LetterboxdWatchedSynchronizer>.Instance),
@@ -577,6 +578,60 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
 
         Assert.Equal((1, 0, 2), (result.WatchedAdded, result.WatchedRemoved, result.WatchedTotalOnLetterboxd));
         _users.Verify(u => u.SetLetterboxdLinkedCountsAsync(UserId, 3, 2, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AccountDeletedWhileTheSyncRuns_WritesNoFurtherFilm()
+    {
+        var deleted = GivenAccountDeletedOnWatchedFilmsRead(
+            new LetterboxdFilmsSnapshot([new LetterboxdFilm("akira", "Akira", "1988", Rating: 10)], true));
+        _tmdb
+            .Setup(t => t.SearchTitlesAsync("Akira", true, It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<TmdbSearchItem>)[new TmdbSearchItem(149, MovieMediaType.Movie, "Akira", "1988", null, 8.0, "Akira")]);
+
+        var refusal = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(UserId, force: true));
+
+        Assert.True(deleted());
+        Assert.Equal(ErrorCodes.UserNotFound, refusal.Reason);
+        Assert.Empty(await _watched.ListByOwnerAsync(UserId));
+        _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AccountDeletedWhileTheSyncRuns_LeavesNoReconciliationNotification()
+    {
+        GivenAmbiguousLetterboxdFilm();
+        var deleted = GivenAccountDeletedOnWatchedFilmsRead(new LetterboxdFilmsSnapshot([], true));
+
+        var refusal = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(UserId, force: false));
+
+        Assert.True(deleted());
+        Assert.Equal(ErrorCodes.UserNotFound, refusal.Reason);
+        _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    private Func<bool> GivenAccountDeletedOnWatchedFilmsRead(LetterboxdFilmsSnapshot watched)
+    {
+        var deleted = false;
+        var account = new User
+        {
+            Id = UserId,
+            Email = "a@b.c",
+            LetterboxdUsername = Username,
+            LetterboxdSyncWatchlist = true,
+            LetterboxdSyncWatched = true
+        };
+        _users
+            .Setup(u => u.GetByIdAsync(UserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => deleted ? null : account);
+        _letterboxd
+            .Setup(l => l.GetWatchedFilmsAsync(Username, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() =>
+            {
+                deleted = true;
+                return watched;
+            });
+        return () => deleted;
     }
 
     [Fact]

@@ -10,6 +10,7 @@ namespace MoviePicker.Api.Application.UseCases.Watchlist;
 public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
 {
     private readonly IWatchlistRepository _watchlist;
+    private readonly IUserRepository _users;
     private readonly IPosterImageStore _posterImageStore;
     private readonly TimeProvider _clock;
     private readonly ITmdbMovieSearch _tmdb;
@@ -17,12 +18,14 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
 
     public AddToWatchlistHandler(
         IWatchlistRepository watchlist,
+        IUserRepository users,
         IPosterImageStore posterImageStore,
         TimeProvider clock,
         ITmdbMovieSearch tmdb,
         ILogger<AddToWatchlistHandler> logger)
     {
         _watchlist = watchlist;
+        _users = users;
         _posterImageStore = posterImageStore;
         _clock = clock;
         _tmdb = tmdb;
@@ -52,6 +55,7 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
             CreatedAt = _clock.GetUtcNow()
         };
 
+        await _users.RequireAccountAsync(userId, ct);
         var inserted = await _watchlist.AddAsync(item, ct);
         if (!inserted)
         {

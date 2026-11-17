@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -95,6 +96,7 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
         if (!force && HasPendingChoiceNotYetReported(user, pendingCount, pendingChoiceKeys)
             && user.NotifiesOn(UserNotificationType.LetterboxdReconciliationPending))
         {
+            await _users.RequireAccountAsync(userId, ct);
             await _notifications.AddAsync(new UserNotification
             {
                 UserId = userId,

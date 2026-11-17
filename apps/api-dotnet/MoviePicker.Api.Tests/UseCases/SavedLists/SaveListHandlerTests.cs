@@ -17,6 +17,7 @@ public sealed class SaveListHandlerTests
         await _kit.WatchElsewhereAsync(671);
         await _kit.WatchElsewhereAsync(673);
         _kit.Clock.Advance(TimeSpan.FromTicks(4_321));
+        await _kit.MovieLists.AccountAsync(Owner);
 
         var saving = await _kit.SaveHandler().HandleAsync(Owner, Request(ListSourceType.TmdbCollection, "1241"));
 

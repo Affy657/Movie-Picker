@@ -87,7 +87,7 @@ internal sealed class SavedListTestKit
 
     public ListSavedListsHandler ListHandler() => new(Saved, Reader(), History);
 
-    public SaveListHandler SaveHandler() => new(Saved, Reader(), History, Clock);
+    public SaveListHandler SaveHandler() => new(Saved, Reader(), History, MovieLists.Users, Clock);
 
     public GetSavedListHandler GetHandler() => new(Saved, Reader(), History);
 
@@ -127,8 +127,11 @@ internal sealed class SavedListTestKit
     public void VerifySourceReads(Times times) =>
         Showcase.Verify(s => s.HandleAsync(It.IsAny<MovieShowcaseQuery>(), It.IsAny<CancellationToken>()), times);
 
-    public async Task<SavedListSummaryResponse> SaveAsync(ListSourceType type, string sourceId, string owner = Owner) =>
-        (await SaveHandler().HandleAsync(owner, Request(type, sourceId))).Summary;
+    public async Task<SavedListSummaryResponse> SaveAsync(ListSourceType type, string sourceId, string owner = Owner)
+    {
+        await MovieLists.AccountAsync(owner);
+        return (await SaveHandler().HandleAsync(owner, Request(type, sourceId))).Summary;
+    }
 
     public Task<SavedListSummaryResponse> SaveSagaAsync(string owner = Owner) =>
         SaveAsync(ListSourceType.TmdbCollection, HarryPotter.ToString(System.Globalization.CultureInfo.InvariantCulture), owner);

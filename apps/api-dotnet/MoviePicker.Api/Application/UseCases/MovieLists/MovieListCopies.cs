@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Application.UseCases.UserMovies;
 using MoviePicker.Api.Domain.Entities;
 
@@ -17,6 +18,7 @@ public static class MovieListCopies
         DateTimeOffset now,
         CancellationToken ct)
     {
+        await users.RequireAccountAsync(userId, ct);
         var created = await lists.AddAsync(
             new MovieList
             {
