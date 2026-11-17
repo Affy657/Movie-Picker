@@ -1,0 +1,28 @@
+name: "Install the pinned Trivy"
+description: "Downloads the Trivy release pinned below from its GitHub release page, checks the archive against its SHA-256 and installs the binary in /usr/local/bin, for aquasecurity/trivy-action called with skip-setup-trivy and cache false. Without it the action installs its own default version through setup-trivy and restores both that binary and the vulnerability database from the GHA cache, which every job running the code of the lockfile can write: a poisoned entry would blind the CVE gate, or run its own binary next to the cloud credentials of the image job. scripts/check-tool-versions.mjs compares this version with the local gate of scripts/verify-local.cjs."
+runs:
+  using: composite
+  steps:
+    # Installed in a directory already in the PATH rather than added through GITHUB_PATH, which a
+    # composite action is not meant to write. The check after it refuses a runner image that would
+    # ship another trivy earlier in the PATH.
+    - name: Install Trivy (pinned version, checksum verified)
+      shell: bash
+      env:
+        AQUA_TRIVY_VERSION: "0.76.2"
+        AQUA_TRIVY_LINUX_64BIT_ARCHIVE_SHA256: "bc0fc726e017b8927a62b2d3531d7a84ee01769daf5c99ed866dced54089fdbf"
+      run: |
+        set -eo pipefail
+        archive="$RUNNER_TEMP/trivy.tgz"
+        curl -sSfL --retry 3 --retry-all-errors -o "$archive" \
+          "https://github.com/aquasecurity/trivy/releases/download/v${AQUA_TRIVY_VERSION}/trivy_${AQUA_TRIVY_VERSION}_Linux-64bit.tar.gz"
+        echo "${AQUA_TRIVY_LINUX_64BIT_ARCHIVE_SHA256}  $archive" | sha256sum -c -
+        tar xzf "$archive" -C "$RUNNER_TEMP" trivy
+        sudo install -m 0755 "$RUNNER_TEMP/trivy" /usr/local/bin/trivy
+        rm -f "$archive" "$RUNNER_TEMP/trivy"
+        resolved="$(command -v trivy)"
+        if [ "$resolved" != /usr/local/bin/trivy ]; then
+          echo "::error::The PATH resolves trivy to $resolved, not to the pinned binary in /usr/local/bin."
+          exit 1
+        fi
+        trivy --version

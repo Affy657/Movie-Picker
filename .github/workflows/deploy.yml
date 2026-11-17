@@ -304,6 +304,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # The Trivy steps below run with the GCP credentials and the Docker daemon, right before the
+      # push: their binary is the pinned one, checksum verified, and neither it nor the
+      # vulnerability database comes from the GHA cache (`skip-setup-trivy`, `cache: false`), the
+      # same cache the buildx layers were taken out of.
+      - uses: ./.github/actions/install-trivy
       - uses: ./.github/actions/gcloud-auth
         with:
           workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -343,7 +348,8 @@ jobs:
           severity: HIGH
           ignore-unfixed: true
           vuln-type: os,library
-          cache: true
+          cache: false
+          skip-setup-trivy: true
       - name: Scan Docker image (Trivy, every CRITICAL)
         if: inputs.stage == 'staging'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
@@ -353,7 +359,8 @@ jobs:
           exit-code: '1'
           severity: CRITICAL
           vuln-type: os,library
-          cache: true
+          cache: false
+          skip-setup-trivy: true
       # The digest is read after the push and is the deployment target: a tag stays rewritable, a
       # digest names exactly the bytes Trivy just scanned.
       - name: Tag & push image
@@ -386,7 +393,8 @@ jobs:
           image-ref: movie-picker-api
           format: cyclonedx
           output: sbom.cdx.json
-          cache: true
+          cache: false
+          skip-setup-trivy: true
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: inputs.stage == 'staging'
         with:
@@ -441,7 +449,8 @@ jobs:
           severity: HIGH
           ignore-unfixed: true
           vuln-type: os,library
-          cache: true
+          cache: false
+          skip-setup-trivy: true
       - name: Scan the resolved image again (Trivy, every CRITICAL)
         if: inputs.stage == 'production'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
@@ -451,7 +460,8 @@ jobs:
           exit-code: '1'
           severity: CRITICAL
           vuln-type: os,library
-          cache: true
+          cache: false
+          skip-setup-trivy: true
 
   deploy-api:
     name: 🚀 Deploy API → Cloud Run
