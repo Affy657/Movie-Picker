@@ -114,6 +114,7 @@ export default function EventDetail() {
     setActionError,
     refreshAll,
     livePresence,
+    showingOfflineCopy,
     offlineVoteOutcome,
     dismissOfflineVoteOutcome,
   } = useEventDetailPage(slug, arrival?.configNotSaved ? t('events.create.configNotSaved') : null);
@@ -183,7 +184,7 @@ export default function EventDetail() {
       connectionUnstable={isShowingStaleData}
       proposeOnArrival={arrival?.openPropose === true}
       livePresence={livePresence}
-      offline={!online}
+      offline={!online || showingOfflineCopy}
       offlineVoteOutcome={offlineVoteOutcome}
       onDismissOfflineVoteOutcome={dismissOfflineVoteOutcome}
     />

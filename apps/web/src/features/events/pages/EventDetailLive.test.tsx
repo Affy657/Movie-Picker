@@ -144,6 +144,19 @@ describe('EventDetail, live and offline', () => {
     expect(screen.queryByRole('button', { name: /proposer un film/i })).not.toBeInTheDocument();
   });
 
+  it('reopens the last night viewed with the cached-data banner when the request never reaches the server, though the browser says online', async () => {
+    await visitOnlineThenLeave();
+    server.use(
+      http.get(`${TEST_API_V1}/events/slug/${slug}`, () => HttpResponse.error()),
+      http.get(`${TEST_API_V1}/events/${slug}/movies`, () => HttpResponse.error())
+    );
+
+    renderNight();
+
+    expect(await screen.findByRole('heading', { name: 'Alien' })).toBeInTheDocument();
+    expect(await screen.findByText('Données en cache, reconnexion en cours.')).toBeInTheDocument();
+  });
+
   it('keeps a vote cast offline pending, then sends it once back online and says so', async () => {
     const user = userEvent.setup();
     await visitOnlineThenLeave();
