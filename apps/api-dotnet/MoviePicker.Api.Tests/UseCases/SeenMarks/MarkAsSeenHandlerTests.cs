@@ -214,8 +214,8 @@ public sealed class MarkAsSeenHandlerTests
         var seenMarks = new InMemorySeenMarkRepository();
         var sut = new MarkAsSeenHandler(_eventRepo.Object, _movieRepo.Object, _participantRepo.Object, seenMarks, _unitOfWork, TimeProvider.System);
 
-        var first = await sut.HandleAsync("evt1", "mov1", new MarkAsSeenRequest { ParticipantId = participant.Id });
-        var second = await sut.HandleAsync("evt1", "mov1", new MarkAsSeenRequest { ParticipantId = participant.Id });
+        var first = await sut.HandleAsync(OwnerUserId, "evt1", "mov1", new MarkAsSeenRequest { ParticipantId = participant.Id });
+        var second = await sut.HandleAsync(OwnerUserId, "evt1", "mov1", new MarkAsSeenRequest { ParticipantId = participant.Id });
 
         Assert.Equal(first.Id, second.Id);
         Assert.Equal(first.Id, Assert.Single(await seenMarks.ListByParticipantIdsAsync([participant.Id])).Id);
