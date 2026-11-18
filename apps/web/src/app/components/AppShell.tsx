@@ -10,7 +10,7 @@ import { withReturnTo, ROUTES } from '@/app/routes';
 import { safeReturnTo } from '@/shared/utils/returnTo';
 import { routeIntentHandlers } from '@/app/routeChunks';
 import { LANDING_ANCHORS } from '@/app/pages/landing/anchors';
-import UserMenu from '@/features/auth/components/UserMenu';
+import UserMenu from './UserMenu';
 import InboxBell from '@/features/notifications/components/InboxBell';
 import Footer from './Footer';
 import PageFallback from './PageFallback';

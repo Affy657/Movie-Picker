@@ -1,6 +1,7 @@
 import { createElement, lazy, useEffect, useState, type ComponentType } from 'react';
 import { matchRoutes } from 'react-router';
 import PageFallback from '@/app/components/PageFallback';
+import { MOVIE_PAGE_CHUNK } from '@/app/moviePageChunk';
 import { ROUTES } from '@/app/routes';
 import { hasSessionHint } from '@/features/auth/session-hint';
 
@@ -8,7 +9,7 @@ export const ROUTE_CHUNKS = {
   home: () => import('@/app/pages/HomePage'),
   showcaseList: () => import('@/app/pages/ShowcaseListPage'),
   movieCollections: () => import('@/app/pages/MovieCollectionsPage'),
-  moviePage: () => import('@/app/pages/movie/MoviePage'),
+  moviePage: () => MOVIE_PAGE_CHUNK.load(),
   landing: () => import('@/app/pages/LandingPage'),
   createEvent: () => import('@/features/events/pages/CreateEvent'),
   eventDetail: () => import('@/features/events/pages/EventDetail'),
@@ -42,10 +43,6 @@ export const ROUTE_CHUNKS = {
 };
 
 type RouteChunkName = keyof typeof ROUTE_CHUNKS;
-
-export const MOVIE_PAGE_CHUNKS: ReadonlyArray<() => Promise<unknown>> = [
-  () => ROUTE_CHUNKS.moviePage(),
-];
 
 const CHUNK_BY_PATH: ReadonlyMap<string, RouteChunkName> = new Map([
   [ROUTES.home, 'home'],

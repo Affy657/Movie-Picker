@@ -5,7 +5,7 @@ import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { genreLabel } from '@/shared/utils/tmdbGenres';
 import { ROUTES } from '@/app/routes';
-import { MOVIE_PAGE_CHUNKS } from '@/app/routeChunks';
+import { MOVIE_PAGE_CHUNKS } from '@/app/moviePageChunk';
 import { useHistoryEntryState } from '@/shared/hooks/useHistoryEntryState';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';

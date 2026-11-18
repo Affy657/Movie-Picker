@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
-import UserMenu from '@/features/auth/components/UserMenu';
+import UserMenu from '@/app/components/UserMenu';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import { queryKeys } from '@/shared/hooks/queryKeys';

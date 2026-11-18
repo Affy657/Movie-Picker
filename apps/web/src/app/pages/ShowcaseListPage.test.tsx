@@ -20,7 +20,7 @@ import {
   TEST_API_V1,
 } from '@/mocks/handlers';
 import ShowcaseListPage, { type ShowcaseListVariant } from '@/app/pages/ShowcaseListPage';
-import { ROUTE_CHUNKS } from '@/app/routeChunks';
+import { MOVIE_PAGE_CHUNK } from '@/app/moviePageChunk';
 
 const ACTION_GENRE = 28;
 const DRAMA_GENRE = 18;
@@ -497,7 +497,7 @@ describe('ShowcaseListPage', () => {
       return 1;
     });
     vi.stubGlobal('cancelIdleCallback', vi.fn());
-    const loadMoviePage = vi.spyOn(ROUTE_CHUNKS, 'moviePage').mockResolvedValue({} as never);
+    const loadMoviePage = vi.spyOn(MOVIE_PAGE_CHUNK, 'load').mockResolvedValue({} as never);
     server.use(authMeGuestHandler, showcaseHandler);
 
     renderPage('trending', '/films/tendances', '/films/tendances');

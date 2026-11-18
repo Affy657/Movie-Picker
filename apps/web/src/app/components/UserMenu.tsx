@@ -21,14 +21,9 @@ import {
   type MenuChoiceOption,
 } from '@/shared/components/Menu';
 import { ICON_SIZE } from '@/shared/components/iconSize';
-import { ProposeIdeaDialog } from '@/app/components/ProposeIdeaButton';
-import { useCloseOnPageChange } from '@/app/components/useCloseOnPageChange';
-import {
-  THEME_ICON,
-  THEME_LABEL_KEY,
-  THEME_OPTIONS,
-  useUiThemeChoice,
-} from '@/app/components/useUiThemeChoice';
+import { ProposeIdeaDialog } from './ProposeIdeaButton';
+import { useCloseOnPageChange } from '@/shared/hooks/useCloseOnPageChange';
+import { THEME_ICON, THEME_LABEL_KEY, THEME_OPTIONS, useUiThemeChoice } from './useUiThemeChoice';
 import { ROUTES } from '@/app/routes';
 import {
   useLocale,
