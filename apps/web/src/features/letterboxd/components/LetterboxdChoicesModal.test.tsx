@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
@@ -8,6 +8,9 @@ import modalStyles from '@/shared/components/Modal.module.css';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { createLetterboxdConfirmHandler, TEST_API_V1 } from '@/mocks/handlers';
 import type { LetterboxdPendingChoice } from '@/features/letterboxd/api/letterboxdApi';
+
+const { track } = vi.hoisted(() => ({ track: vi.fn() }));
+vi.mock('@/shared/hooks/useAnalytics', () => ({ useAnalytics: () => ({ track }) }));
 
 const ONE_CHOICE: LetterboxdPendingChoice[] = [
   {
@@ -200,6 +203,7 @@ describe('LetterboxdChoicesModal (MSW)', () => {
         remainingUnresolvedCount: 0,
       })
     );
+    expect(track).toHaveBeenCalledWith('letterboxd_choices_confirmed', { selected: 1, pending: 0 });
   });
 
   it('permet de refuser explicitement un titre via « aucun de ces films »', async () => {

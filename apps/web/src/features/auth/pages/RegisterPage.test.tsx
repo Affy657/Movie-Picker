@@ -70,6 +70,43 @@ describe('RegisterPage (MSW)', () => {
     });
   });
 
+  it('tells the server where the new account was heading', async () => {
+    const user = userEvent.setup();
+    let body: unknown;
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        sessionActive
+          ? HttpResponse.json({
+              userId: 'u-reg',
+              displayName: 'Sam',
+              emailMasked: 's***@test.local',
+            })
+          : HttpResponse.json({ error: '401' }, { status: 401 })
+      ),
+      http.post(`${TEST_API_V1}/auth/register`, async ({ request }) => {
+        body = await request.json();
+        sessionActive = true;
+        return HttpResponse.json({}, { status: 201 });
+      })
+    );
+
+    renderRegister('/register?returnTo=%2Fe%2Fsoiree');
+
+    await user.type(screen.getByLabelText(/^pseudo$/i), 'Sam');
+    await user.type(screen.getByLabelText(/^e-mail$/i), 'sam@test.local');
+    await user.type(screen.getByLabelText(/^mot de passe$/i), 'abcd1234');
+    await user.click(screen.getByRole('button', { name: /créer mon compte/i }));
+
+    await waitFor(() =>
+      expect(body).toEqual({
+        email: 'sam@test.local',
+        password: 'abcd1234',
+        displayName: 'Sam',
+        returnTo: '/e/soiree',
+      })
+    );
+  });
+
   it('n’appelle pas l’API si le mot de passe ne contient pas de chiffre', async () => {
     const user = userEvent.setup();
     let registerPosts = 0;

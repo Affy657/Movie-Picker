@@ -2,6 +2,8 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Profile;
 using MoviePicker.Api.Application.UseCases.Shared;
+using MoviePicker.Api.Application.UseCases.UsageCounts;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -12,17 +14,20 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
     private readonly IUserRepository _users;
     private readonly IUserNotificationRepository _notifications;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IUsageRecorder _usage;
     private readonly TimeProvider _clock;
 
     public PatchUserProfileHandler(
         IUserRepository users,
         IUserNotificationRepository notifications,
         IUnitOfWork unitOfWork,
+        IUsageRecorder usage,
         TimeProvider clock)
     {
         _users = users;
         _notifications = notifications;
         _unitOfWork = unitOfWork;
+        _usage = usage;
         _clock = clock;
     }
 
@@ -65,7 +70,15 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
         {
             throw Errors.HandleTaken();
         }
+        await CountLetterboxdLinkAsync(user, saved, ct);
         return UserProfileMapping.ToResponse(saved);
+    }
+
+    private async Task CountLetterboxdLinkAsync(User before, User after, CancellationToken ct)
+    {
+        if (string.Equals(before.LetterboxdUsername, after.LetterboxdUsername, StringComparison.OrdinalIgnoreCase))
+            return;
+        await _usage.RecordAsync(UsageCount.LetterboxdLinked(after.LetterboxdUsername is not null), ct);
     }
 
     private async Task<User> SaveWithNewHandleAsync(User updated, string previousHandle, CancellationToken ct)

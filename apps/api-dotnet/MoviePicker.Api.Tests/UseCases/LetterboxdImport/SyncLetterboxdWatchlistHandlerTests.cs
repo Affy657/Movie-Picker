@@ -4,7 +4,9 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.LetterboxdImport;
 using MoviePicker.Api.Application.UseCases.MovieLists;
+using MoviePicker.Api.Application.UseCases.UsageCounts;
 using MoviePicker.Api.Application.UseCases.Watchlist;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
@@ -42,6 +44,7 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
     private readonly Mock<IPosterImageStore> _posters = new();
     private readonly InMemoryWatchedTitleRepository _watched = new();
     private readonly RecordingSharedQuota _quota = new();
+    private readonly Mock<IUsageRecorder> _usage = new();
     private readonly SyncLetterboxdWatchlistHandler _sut;
 
     public SyncLetterboxdWatchlistHandlerTests()
@@ -85,6 +88,7 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
             synchronizer,
             new LetterboxdLinkedCounter(_users.Object, _watchlist.Object, _watched),
             _quota,
+            _usage.Object,
             new FixedClock(Now));
     }
 
@@ -698,5 +702,42 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
         await _sut.HandleAsync(UserId, force: true);
 
         VerifyPendingKeysRecorded("dune-part-two");
+    }
+
+    [Theory]
+    [InlineData(true, "manual")]
+    [InlineData(false, "auto")]
+    public async Task HandleAsync_SyncThatRan_IsCountedAsManualOrAutomatic(bool force, string variant)
+    {
+        await _sut.HandleAsync(UserId, force);
+
+        _usage.Verify(
+            x => x.RecordAsync(
+                It.Is<UsageCount>(c => c.Metric == UsageCount.LetterboxdSyncedMetric && c.Variant == variant),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_SkippedSync_IsNotCounted()
+    {
+        GivenUser(Username, Now.AddHours(-5));
+
+        await _sut.HandleAsync(UserId, force: false);
+
+        _usage.Verify(x => x.RecordAsync(It.IsAny<UsageCount>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_FailedSync_IsNotCounted()
+    {
+        GivenUser(Username, null, syncWatched: false);
+        _letterboxd
+            .Setup(l => l.GetWatchlistAsync(Username, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(LetterboxdFilmsSnapshot.Failed());
+
+        await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(UserId, force: true));
+
+        _usage.Verify(x => x.RecordAsync(It.IsAny<UsageCount>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

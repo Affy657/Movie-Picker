@@ -1,6 +1,8 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Shared;
+using MoviePicker.Api.Application.UseCases.UsageCounts;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -24,6 +26,7 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
     private readonly LetterboxdWatchlistSynchronizer _synchronizer;
     private readonly LetterboxdLinkedCounter _linkedCounter;
     private readonly ISharedQuota _quota;
+    private readonly IUsageRecorder _usage;
     private readonly TimeProvider _clock;
 
     public SyncLetterboxdWatchlistHandler(
@@ -32,6 +35,7 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
         LetterboxdWatchlistSynchronizer synchronizer,
         LetterboxdLinkedCounter linkedCounter,
         ISharedQuota quota,
+        IUsageRecorder usage,
         TimeProvider clock)
     {
         _users = users;
@@ -39,6 +43,7 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
         _synchronizer = synchronizer;
         _linkedCounter = linkedCounter;
         _quota = quota;
+        _usage = usage;
         _clock = clock;
     }
 
@@ -78,6 +83,8 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
                 return Skipped();
             throw SyncFailure(outcome.Error);
         }
+
+        await _usage.RecordAsync(UsageCount.LetterboxdSynced(force), ct);
 
         if (outcome.Error is not null)
             await _users.SetLetterboxdSyncStatusAsync(userId, now, outcome.Error, ct);

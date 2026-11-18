@@ -45,6 +45,11 @@ public sealed class AnonymousMutatingEndpointsTests
         "SchedulerController.RunRecurringEvents"
     ];
 
+    private static readonly string[] AnonymousAudienceCounts =
+    [
+        "UsageCountsController.Report"
+    ];
+
     private static bool AcceptsAnonymousCallers(MethodInfo action)
     {
         var controller = action.DeclaringType!;
@@ -73,6 +78,7 @@ public sealed class AnonymousMutatingEndpointsTests
         var declared = PublicAccountActions
             .Concat(HostTokenActions)
             .Concat(SignedMachineCallbacks)
+            .Concat(AnonymousAudienceCounts)
             .OrderBy(name => name, StringComparer.Ordinal);
         Assert.Equal(declared, anonymous);
     }

@@ -2,7 +2,12 @@ import { act, render, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider, useAuth } from '@/features/auth/contexts/AuthContext';
-import { fetchAuthMeForSession, postAuthLogout } from '@/features/auth/api/authApi';
+import {
+  fetchAuthMeForSession,
+  postAuthLogin,
+  postAuthLogout,
+  postAuthRegister,
+} from '@/features/auth/api/authApi';
 import {
   clearPendingSignOut,
   hasPendingSignOut,
@@ -24,7 +29,8 @@ vi.mock('@/features/auth/api/authApi', () => ({
 vi.mock('@/shared/utils/browserPushSubscription', () => ({
   dropBrowserPushSubscription: vi.fn(async () => undefined),
 }));
-vi.mock('@/shared/hooks/useAnalytics', () => ({ useAnalytics: () => ({ track: vi.fn() }) }));
+const { track } = vi.hoisted(() => ({ track: vi.fn() }));
+vi.mock('@/shared/hooks/useAnalytics', () => ({ useAnalytics: () => ({ track }) }));
 
 type Logout = () => Promise<void>;
 
@@ -507,5 +513,61 @@ describe('AuthProvider session end', () => {
     expect(auth().user).toBeNull();
     expect(client.getQueryData(accountDataKey)).toBeUndefined();
     expect(getStoredParticipant('soiree-u1')).toBeNull();
+  });
+});
+
+describe('AuthProvider sign-in measure', () => {
+  async function renderAuthProvider(): Promise<() => ReturnType<typeof useAuth>> {
+    let auth: ReturnType<typeof useAuth> | undefined;
+    function ExposeAuth() {
+      auth = useAuth();
+      return null;
+    }
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <AuthProvider>
+          <ExposeAuth />
+        </AuthProvider>
+      </QueryClientProvider>
+    );
+    await waitFor(() => expect(auth).toBeDefined());
+    return () => auth!;
+  }
+
+  beforeEach(() => {
+    track.mockClear();
+    vi.mocked(fetchAuthMeForSession).mockResolvedValue({ userId: 'u1' } as UserProfile);
+  });
+
+  it('tells the server and the measure where a new account was heading', async () => {
+    const auth = await renderAuthProvider();
+
+    await act(async () => {
+      await auth().register('a@test.local', 'secret1', 'Alice', '/e/soiree');
+    });
+
+    expect(postAuthRegister).toHaveBeenCalledWith('a@test.local', 'secret1', 'Alice', '/e/soiree');
+    expect(track).toHaveBeenCalledWith('user_signed_up', { method: 'email', origin: 'event' });
+  });
+
+  it('tells the server and the measure where a returning account was heading', async () => {
+    const auth = await renderAuthProvider();
+
+    await act(async () => {
+      await auth().login('a@test.local', 'secret1', '/r/recap');
+    });
+
+    expect(postAuthLogin).toHaveBeenCalledWith('a@test.local', 'secret1', '/r/recap');
+    expect(track).toHaveBeenCalledWith('user_logged_in', { method: 'email', origin: 'recap' });
+  });
+
+  it('reads a sign-in without destination as coming from elsewhere', async () => {
+    const auth = await renderAuthProvider();
+
+    await act(async () => {
+      await auth().login('a@test.local', 'secret1');
+    });
+
+    expect(track).toHaveBeenCalledWith('user_logged_in', { method: 'email', origin: 'other' });
   });
 });

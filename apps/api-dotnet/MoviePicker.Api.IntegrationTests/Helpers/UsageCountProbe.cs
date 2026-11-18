@@ -1,0 +1,28 @@
+using System.Globalization;
+using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Driver;
+using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
+using MoviePicker.Api.Infrastructure.Persistence.Mongo;
+
+namespace MoviePicker.Api.IntegrationTests.Helpers;
+
+public static class UsageCountProbe
+{
+    public static async Task<long> ReadTodayAsync(MoviePickerApplicationFactory factory, string metric, string variant)
+    {
+        using var scope = factory.Services.CreateScope();
+        var day = UsageCount.DayOf(scope.ServiceProvider.GetRequiredService<TimeProvider>().GetUtcNow());
+        var repository = scope.ServiceProvider.GetRequiredService<IUsageCountRepository>();
+        if (repository is InMemoryUsageCountRepository memory)
+            return memory.CountOf(day, metric, variant);
+
+        var id = $"{day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}|{metric}|{variant}";
+        var stored = await scope.ServiceProvider.GetRequiredService<IMongoDatabase>()
+            .GetCollection<UsageCountDocument>(MongoUsageCountRepository.CollectionName)
+            .Find(document => document.Id == id)
+            .FirstOrDefaultAsync();
+        return stored?.Count ?? 0;
+    }
+}

@@ -127,7 +127,7 @@ export default function WatchlistPage() {
       isError={isError}
       availabilityPending={availabilityPending}
       storageScope="watchlist"
-      randomPickHistoryKey="watchlist.randomPick"
+      randomPick={{ historyKey: 'watchlist.randomPick', source: 'watchlist' }}
       emptyIcon={<Bookmark aria-hidden size={ICON_SIZE['3xl']} />}
       labels={{
         listAria: t('watchlist.listAria'),

@@ -428,6 +428,9 @@ public static class Errors
     public static BadRequestException UnknownNotificationType(string type) =>
         new($"Unknown notification type: \"{type}\"", ErrorCodes.UnknownNotificationType, Params(("type", type)));
 
+    public static BadRequestException UnknownUsageCount() =>
+        new("Unknown usage count", ErrorCodes.UnknownUsageCount);
+
     public static BadRequestException NotificationEnabledRequired(string type) =>
         new($"\"enabled\" is required for the type \"{type}\"", ErrorCodes.NotificationEnabledRequired, Params(("type", type)));
 

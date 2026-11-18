@@ -20,6 +20,9 @@ public sealed class RegisterRequest
     [Required(ErrorMessage = "Display name is required")]
     [MaxLength(80)]
     public string DisplayName { get; init; } = string.Empty;
+
+    [MaxLength(2048)]
+    public string? ReturnTo { get; init; }
 }
 
 public sealed class RegisterResponse
@@ -37,6 +40,9 @@ public sealed class LoginRequest
 
     [Required(ErrorMessage = "Password is required")]
     public string Password { get; init; } = string.Empty;
+
+    [MaxLength(2048)]
+    public string? ReturnTo { get; init; }
 }
 
 public sealed class LoginResponse

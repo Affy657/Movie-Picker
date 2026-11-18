@@ -1,9 +1,11 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Moq;
 using MoviePicker.Api.Application.Avatars;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Application.UseCases.AvatarPhotos;
+using MoviePicker.Api.Application.UseCases.UsageCounts;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -33,7 +35,7 @@ public sealed class AvatarPhotoHandlersTests
         var writer = new AvatarPhotoWriter(_users, _photos, new InMemoryUnitOfWork(), clock, Options.Create(_options), _writerLogs);
         _upload = new UploadAvatarPhotoHandler(writer);
         _delete = new DeleteAvatarPhotoHandler(writer);
-        _patch = new PatchUserProfileHandler(_users, new InMemoryUserNotificationRepository(), new InMemoryUnitOfWork(), clock);
+        _patch = new PatchUserProfileHandler(_users, new InMemoryUserNotificationRepository(), new InMemoryUnitOfWork(), Mock.Of<IUsageRecorder>(), clock);
     }
 
     private async Task<User> UserAsync(string avatarId = "bolt") =>

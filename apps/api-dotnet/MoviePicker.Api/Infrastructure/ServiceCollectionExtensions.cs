@@ -19,6 +19,7 @@ using MoviePicker.Api.Application.UseCases.PublicLists;
 using MoviePicker.Api.Application.UseCases.RecurringEvents;
 using MoviePicker.Api.Application.UseCases.SavedLists;
 using MoviePicker.Api.Application.UseCases.Shared;
+using MoviePicker.Api.Application.UseCases.UsageCounts;
 using MoviePicker.Api.Application.UseCases.UserMovies;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
@@ -312,6 +313,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<ISavedListRepository, InMemorySavedListRepository>();
             services.AddSingleton<IUserNotificationRepository, InMemoryUserNotificationRepository>();
             services.AddSingleton<IKofiWebhookLogRepository, InMemoryKofiWebhookLogRepository>();
+            services.AddSingleton<IUsageCountRepository, InMemoryUsageCountRepository>();
             services.AddSingleton<INotificationDedupRepository, InMemoryNotificationDedupRepository>();
             services.AddSingleton<IRateLimitCounterStore, InMemoryRateLimitCounterStore>();
             services.AddSingleton<IDatabaseHealthProbe, InMemoryDatabaseHealthProbe>();
@@ -368,6 +370,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISavedListRepository, MongoSavedListRepository>();
         services.AddScoped<IUserNotificationRepository, MongoUserNotificationRepository>();
         services.AddScoped<IKofiWebhookLogRepository, MongoKofiWebhookLogRepository>();
+        services.AddScoped<IUsageCountRepository, MongoUsageCountRepository>();
         services.AddScoped<INotificationDedupRepository, MongoNotificationDedupRepository>();
         services.AddScoped<IRateLimitCounterStore, MongoRateLimitCounterStore>();
         services.AddScoped<IEventPresenceRepository, MongoEventPresenceRepository>();
@@ -451,6 +454,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<AvatarPhotoWriter>();
         services.AddScoped<IOAuthProfilePhotoImporter, OAuthProfilePhotoImporter>();
         services.AddScoped<EventAudienceNotifier>();
+        services.AddScoped<IUsageRecorder, UsageRecorder>();
         services.AddScoped<IWinnerAnnouncer, WinnerAnnouncer>();
         services.AddScoped<IWheelWinnerAnnouncement, WheelWinnerAnnouncement>();
 

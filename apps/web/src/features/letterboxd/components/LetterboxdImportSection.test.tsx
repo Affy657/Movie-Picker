@@ -14,6 +14,9 @@ import {
 } from '@/mocks/handlers';
 import type { components } from '@/shared/api/generated/openapiSchema';
 
+const { track } = vi.hoisted(() => ({ track: vi.fn() }));
+vi.mock('@/shared/hooks/useAnalytics', () => ({ useAnalytics: () => ({ track }) }));
+
 function renderAccount(client = createTestQueryClient()) {
   return render(
     <AppTestProviders client={client}>
@@ -162,6 +165,7 @@ describe('LetterboxdImportSection (MSW)', () => {
     expect(
       await screen.findByText('Ajoutez votre pseudo pour activer la synchronisation.')
     ).toBeInTheDocument();
+    expect(track).toHaveBeenCalledWith('letterboxd_disconnected');
   });
 
   it('annule la modification du pseudo sans envoyer de PATCH', async () => {
@@ -229,6 +233,11 @@ describe('LetterboxdImportSection (MSW)', () => {
     expect(
       screen.queryByRole('heading', { name: 'Choisir les bonnes correspondances' })
     ).not.toBeInTheDocument();
+    expect(track).toHaveBeenCalledWith('letterboxd_synced', {
+      mode: 'manual',
+      changed: true,
+      pendingChoices: 0,
+    });
   });
 
   it('says to come back later instead of reporting zero changes when the server skips the sync', async () => {

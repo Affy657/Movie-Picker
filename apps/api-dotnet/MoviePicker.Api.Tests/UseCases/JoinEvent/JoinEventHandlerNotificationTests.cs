@@ -43,7 +43,7 @@ public sealed class JoinEventHandlerNotificationTests
 
         _sut = new JoinEventHandler(
             _eventRepo.Object, _participantRepo.Object, _userRepo.Object, _pushSubRepo.Object,
-            _pushSender.Object, _notifications.Object, new RecordingUnitOfWork(), NullLogger<JoinEventHandler>.Instance,
+            _pushSender.Object, _notifications.Object, Mock.Of<MoviePicker.Api.Application.UseCases.UsageCounts.IUsageRecorder>(), new RecordingUnitOfWork(), NullLogger<JoinEventHandler>.Instance,
             TimeProvider.System);
     }
 
@@ -101,7 +101,7 @@ public sealed class JoinEventHandlerNotificationTests
 
         await _sut.HandleAsync("evt2", new JoinEventRequest { Pseudo = "Joiner" }, "joiner");
 
-        _userRepo.Verify(r => r.GetByIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _userRepo.Verify(r => r.GetByIdAsync(It.Is<string>(id => id != "joiner"), It.IsAny<CancellationToken>()), Times.Never);
         _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

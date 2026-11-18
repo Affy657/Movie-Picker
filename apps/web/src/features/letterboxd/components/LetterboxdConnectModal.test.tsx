@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterEach, afterAll, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
@@ -12,6 +12,9 @@ import {
   createLetterboxdSyncHandler,
   TEST_API_V1,
 } from '@/mocks/handlers';
+
+const { track } = vi.hoisted(() => ({ track: vi.fn() }));
+vi.mock('@/shared/hooks/useAnalytics', () => ({ useAnalytics: () => ({ track }) }));
 
 function renderModal() {
   return render(
@@ -120,6 +123,7 @@ describe('LetterboxdConnectModal (MSW)', () => {
     await user.click(screen.getByRole('button', { name: 'Connecter et importer' }));
 
     const summary = await screen.findByText('À voir : 3 film(s) ajouté(s), 0 retiré(s).');
+    expect(track).toHaveBeenCalledWith('letterboxd_connected');
     expect(screen.queryByText(/introuvable/)).not.toBeInTheDocument();
     expect(screen.queryByText(/laissé/)).not.toBeInTheDocument();
 

@@ -6,6 +6,7 @@ import { joinEvent } from '@/features/events/api/eventsApi';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
+import type { JoinPromptCta } from '@/shared/analytics/usageCounts';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { setStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 import { useTranslation } from '@/shared/i18n';
@@ -64,6 +65,8 @@ export default function JoinForm({
       : t('events.join.full');
 
   const returnTo = ROUTES.eventDetail(slug);
+  const trackPromptClick = (cta: JoinPromptCta) =>
+    track('join_prompt_clicked', { cta }, { oncePerTab: `join_prompt_clicked:${slug}:${cta}` });
 
   let body: ReactNode;
   if (isFull) {
@@ -96,10 +99,15 @@ export default function JoinForm({
           <Link
             to={withReturnTo(ROUTES.login, returnTo)}
             className={buttonClass({ variant: 'primary' })}
+            onClick={() => trackPromptClick('login')}
           >
             {t('home.ctaLogin')}
           </Link>
-          <Link to={withReturnTo(ROUTES.register, returnTo)} className={buttonClass()}>
+          <Link
+            to={withReturnTo(ROUTES.register, returnTo)}
+            className={buttonClass()}
+            onClick={() => trackPromptClick('register')}
+          >
             {t('home.ctaRegister')}
           </Link>
         </nav>

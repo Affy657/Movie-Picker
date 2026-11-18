@@ -3,6 +3,8 @@ using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.JoinEvent;
+using MoviePicker.Api.Application.UseCases.UsageCounts;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Tests.Builders;
@@ -14,6 +16,8 @@ public sealed class JoinEventHandlerTests
 {
     private readonly Mock<IEventRepository> _eventRepo;
     private readonly Mock<IParticipantRepository> _participantRepo;
+    private readonly Mock<IUserRepository> _users = new();
+    private readonly Mock<IUsageRecorder> _usage = new();
     private readonly JoinEventHandler _sut;
 
     private static Event ActiveEvent() => new()
@@ -39,10 +43,11 @@ public sealed class JoinEventHandlerTests
         _sut = new JoinEventHandler(
             _eventRepo.Object,
             _participantRepo.Object,
-            new Mock<IUserRepository>().Object,
+            _users.Object,
             new Mock<IPushSubscriptionRepository>().Object,
             new Mock<IPushNotificationSender>().Object,
             Mock.Of<IUserNotificationRepository>(),
+            _usage.Object,
             _unitOfWork,
             Mock.Of<ILogger<JoinEventHandler>>(),
             TimeProvider.System);
@@ -327,5 +332,51 @@ public sealed class JoinEventHandlerTests
         Assert.NotNull(captured);
         Assert.Equal("u99", captured.UserId);
         Assert.Equal("Zed", captured.Pseudo);
+    }
+
+    [Theory]
+    [InlineData(2, "new_account")]
+    [InlineData(72, "existing_account")]
+    public async Task HandleAsync_NewParticipant_CountsTheArrivalByAccountAge(int accountAgeHours, string variant)
+    {
+        var evt = ActiveEvent();
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _users.Setup(r => r.GetByIdAsync("u1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = "u1", CreatedAt = DateTimeOffset.UtcNow.AddHours(-accountAgeHours) });
+        GivenInsertEchoesTheParticipant();
+
+        await _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Alice" }, "u1");
+
+        _usage.Verify(
+            x => x.RecordAsync(
+                It.Is<UsageCount>(c => c.Metric == UsageCount.EventJoinedMetric && c.Variant == variant),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AlreadyJoined_CountsNoArrival()
+    {
+        var evt = ActiveEvent();
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _participantRepo.Setup(r => r.FindByEventAndUserIdAsync(evt.Id, "u1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Existing("p1", "Alice", "u1"));
+
+        await _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Alice" }, "u1");
+
+        _usage.Verify(x => x.RecordAsync(It.IsAny<UsageCount>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_EventFull_CountsNoArrival()
+    {
+        var evt = ActiveEvent() with { Config = new EventConfig { MaxParticipants = 1 } };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _participantRepo.Setup(r => r.CountByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
+        await Assert.ThrowsAsync<ConflictException>(
+            () => _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Alice" }, "u1"));
+
+        _usage.Verify(x => x.RecordAsync(It.IsAny<UsageCount>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

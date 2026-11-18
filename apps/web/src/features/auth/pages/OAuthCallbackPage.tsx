@@ -9,6 +9,7 @@ import { setSessionHint } from '@/features/auth/session-hint';
 import { safeReturnTo } from '@/shared/utils/returnTo';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
+import { entryOriginOf } from '@/shared/analytics/entryOrigin';
 import { useTranslation } from '@/shared/i18n';
 
 export default function OAuthCallbackPage() {
@@ -30,7 +31,10 @@ export default function OAuthCallbackPage() {
 
     setSessionHint();
     if (provider && (event === 'signup' || event === 'login')) {
-      track(event === 'signup' ? 'user_signed_up' : 'user_logged_in', { method: provider });
+      track(event === 'signup' ? 'user_signed_up' : 'user_logged_in', {
+        method: provider,
+        origin: entryOriginOf(returnTo),
+      });
     }
 
     void Promise.all([

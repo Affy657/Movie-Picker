@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { AlertTriangle, Check, RefreshCw, TriangleAlert, X } from 'lucide-react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
+import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { useTranslation, type Translate, type TranslationKey } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { queryKeys } from '@/shared/hooks/queryKeys';
@@ -22,6 +23,7 @@ import {
   pendingChoicesOf,
   reportedLists,
   syncErrorMessage,
+  syncMeasureOf,
   unmatchedTitlesOf,
   watchedChanged,
 } from '@/features/letterboxd/utils/syncReport';
@@ -196,6 +198,7 @@ function confirmedMessage(result: LetterboxdConfirmResult, t: Translate): string
 export default function LetterboxdImportSection() {
   const { t, locale } = useTranslation();
   const { user, patchProfile } = useAuth();
+  const { track } = useAnalytics();
   const queryClient = useQueryClient();
 
   const savedUsername = user?.letterboxdUsername ?? null;
@@ -235,9 +238,10 @@ export default function LetterboxdImportSection() {
 
   const disconnectAction = useCallback(async () => {
     await patchProfile({ letterboxdUsername: '' });
+    track('letterboxd_disconnected');
     setReport(null);
     setConfirmResult(null);
-  }, [patchProfile]);
+  }, [patchProfile, track]);
 
   const {
     run: runDisconnect,
@@ -276,6 +280,7 @@ export default function LetterboxdImportSection() {
       setSkippedReason(bothOff ? 'bothOff' : 'deferred');
       return;
     }
+    track('letterboxd_synced', { mode: 'manual', ...syncMeasureOf(result) });
     const pending = pendingChoicesOf(result);
     setReport(result);
     setPendingChoices(pending);

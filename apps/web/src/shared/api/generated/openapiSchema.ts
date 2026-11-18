@@ -7629,6 +7629,72 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/usage-counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReportUsageCountRequest"];
+                    "text/json": components["schemas"]["ReportUsageCountRequest"];
+                    "application/*+json": components["schemas"]["ReportUsageCountRequest"];
+                };
+            };
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/search": {
         parameters: {
             query?: never;
@@ -10175,6 +10241,7 @@ export interface components {
             /** Format: email */
             email: string;
             password: string;
+            returnTo?: string | null;
         };
         LoginResponse: {
             userId: string;
@@ -10779,6 +10846,7 @@ export interface components {
             email: string;
             password: string;
             displayName: string;
+            returnTo?: string | null;
         };
         RegisterResponse: {
             userId: string;
@@ -10790,6 +10858,10 @@ export interface components {
             message: string;
             /** Format: int32 */
             removedMovies: number;
+        };
+        ReportUsageCountRequest: {
+            metric: string;
+            variant: string;
         };
         ResetWheelResponse: {
             message: string;

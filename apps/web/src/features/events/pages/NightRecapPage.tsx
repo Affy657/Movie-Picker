@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useParams } from 'react-router';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
 import { ApiError } from '@/shared/api/apiError';
@@ -25,12 +26,17 @@ function isNotFound(error: unknown): boolean {
 
 function useRecapViewCount(slug: string | undefined, winnerCount: number): void {
   const { track } = useAnalytics();
+  const { user, isLoading } = useAuth();
   const countedSlug = useRef<string | null>(null);
   useEffect(() => {
-    if (!slug || winnerCount === 0 || countedSlug.current === slug) return;
+    if (!slug || winnerCount === 0 || isLoading || countedSlug.current === slug) return;
     countedSlug.current = slug;
-    track('recap_viewed', { winners: winnerCount });
-  }, [slug, winnerCount, track]);
+    track(
+      'recap_viewed',
+      { viewer: user ? 'account' : 'visitor', winners: winnerCount },
+      { oncePerTab: `recap_viewed:${slug}` }
+    );
+  }, [slug, winnerCount, isLoading, user, track]);
 }
 
 export default function NightRecapPage() {

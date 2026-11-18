@@ -864,6 +864,7 @@ describe('WatchlistPage (MSW)', () => {
       const { user, dialog } = await openPick('Piocher un film');
 
       expect(track).toHaveBeenCalledExactlyOnceWith('random_pick_opened', {
+        source: 'watchlist',
         scope: 'list',
         pool: 2,
       });
