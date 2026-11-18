@@ -140,13 +140,7 @@ const tools = [
   },
   {
     name: 'mongo image (tag 8)',
-    pins: [
-      { file: '.github/workflows/ci-cd.yml', pattern: /MONGO_IMAGE: "mongo:8@(sha256:[0-9a-f]+)"/ },
-      {
-        file: '.github/workflows/backup-mongo.yml',
-        pattern: /MONGO_IMAGE: "mongo:8@(sha256:[0-9a-f]+)"/,
-      },
-    ],
+    pins: [{ file: 'scripts/mongo-replica-set.mjs', pattern: /'mongo:8@(sha256:[0-9a-f]+)'/ }],
     latest: () => dockerHubDigest('library/mongo', '8'),
   },
   // The binary the workflows install (`skip-setup-trivy` on every `trivy-action` step) and the

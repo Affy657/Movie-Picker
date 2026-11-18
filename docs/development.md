@@ -179,15 +179,11 @@ pnpm exec playwright install chromium   # une seule fois
 pnpm run test:e2e:ci
 ```
 
-`pnpm run test:api:mongo` crée son conteneur MongoDB à la volée et une base jetable par classe de
-test. Au tout premier lancement, l'initialisation du replica set part parfois avant que mongod soit
-prêt, ce qui laisse un conteneur debout sans replica set et fait échouer toutes les relances. Le
-réparer une fois puis relancer :
-
-```bash
-docker exec movie-picker-mongo-test mongosh --quiet \
-  --eval 'rs.initiate({_id:"rs0",members:[{_id:0,host:"127.0.0.1:27017"}]})'
-```
+`pnpm run test:api:mongo` utilise le conteneur `movie-picker-mongo-test` (port 27018,
+`MONGO_TEST_PORT` pour un autre) : `scripts/mongo-replica-set.mjs` le démarre au besoin avec l'image
+épinglée, le recrée s'il est arrêté ou tourne sur une autre image, initialise le replica set s'il ne
+l'est pas et attend qu'il accepte les écritures. Chaque classe de test d'intégration y prend une base
+jetable.
 
 ## Structure du dépôt
 

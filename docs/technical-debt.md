@@ -719,7 +719,7 @@ Dans `scripts/verify-local.cjs`, la voie docker monte le dépôt en lecture (`-v
 
 L'image `mongo` a `HOME=/data/db`. `docker exec <conteneur> mongosh` y écrit `.mongodb/mongosh/` pendant que le script de démarrage du conteneur fait son `chown` récursif sur `/data/db` : si un fichier disparaît entre la liste et le `chown`, le script sort en erreur et le conteneur meurt (`chown: cannot access '/data/db/.mongodb/mongosh/...lock'`). Vu le 2026-11-09 sur le job E2E de `ci-cd.yml`, vert une fois rejoué.
 
-Toute sonde `mongosh` lancée par `docker exec` dans les workflows passe donc `-e HOME=/tmp` (`ci-cd.yml`, `backup-mongo.yml`). Une nouvelle sonde sans ce réglage refait la course, une fois sur quelques dizaines.
+Toute sonde `mongosh` lancée par `docker exec` passe donc `-e HOME=/tmp` : `mongosh()` de `scripts/mongo-replica-set.mjs`, qui démarre tous les conteneurs de test (CI, sauvegarde, poste), et l'étape de vérification de `backup-mongo.yml`. Une nouvelle sonde sans ce réglage refait la course, une fois sur quelques dizaines.
 
 ## C18 la coquille reste montée d'une page à l'autre
 

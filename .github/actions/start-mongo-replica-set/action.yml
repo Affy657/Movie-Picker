@@ -1,0 +1,24 @@
+name: "Start MongoDB as a replica set"
+description: "Starts the pinned MongoDB image as a single-member replica set rs0 (the only topology where the IUnitOfWork transactions run), waits until it accepts writes and prints the kernel, the Docker version and the container logs if it dies. Runs scripts/mongo-replica-set.mjs, the same code pnpm run test:api:mongo starts the workstation container with, where the image pin, GLIBC_TUNABLES and the HOME=/tmp of every mongosh probe live. Needs the repository checked out and node in the PATH."
+inputs:
+  container-name:
+    description: "Name of the container, recreated when it already exists with another image or port"
+    required: true
+  port:
+    description: "Host port mapped to the 27017 of the container"
+    required: false
+    default: "27017"
+  image:
+    description: "Image reference pinned by digest; empty keeps the pin of scripts/mongo-replica-set.mjs"
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Start MongoDB (replica set rs0)
+      shell: bash
+      env:
+        CONTAINER_NAME: ${{ inputs.container-name }}
+        HOST_PORT: ${{ inputs.port }}
+        IMAGE: ${{ inputs.image }}
+      run: node "$GITHUB_WORKSPACE/scripts/mongo-replica-set.mjs" --container "$CONTAINER_NAME" --port "$HOST_PORT" --image "$IMAGE"
