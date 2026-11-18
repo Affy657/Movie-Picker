@@ -7,6 +7,17 @@ async function box(locator: Locator) {
   return rect;
 }
 
+async function settled(locator: Locator) {
+  await locator.evaluate((element) =>
+    Promise.all(
+      element
+        .getAnimations({ subtree: true })
+        .filter((animation) => animation.effect?.getComputedTiming().iterations !== Infinity)
+        .map((animation) => animation.finished)
+    )
+  );
+}
+
 async function stickyBottom(page: Page): Promise<number> {
   return page.evaluate(() => {
     const bar = document.querySelector<HTMLElement>('[data-event-sticky-bar]');
@@ -28,6 +39,7 @@ test.describe('Event page layout', () => {
     const dialog = page.getByRole('dialog', { name: /proposer un film/i });
     const search = dialog.getByRole('searchbox', { name: /chercher un film/i });
     await expect(search).toBeVisible({ timeout: 15_000 });
+    await settled(dialog);
 
     const searchBox = await box(search);
 
