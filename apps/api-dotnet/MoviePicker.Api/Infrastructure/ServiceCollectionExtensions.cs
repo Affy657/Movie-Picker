@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -90,6 +91,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IHostTokenAccessor, HostTokenAccessor>();
         services.AddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
         services.AddScoped<IClientAddressAccessor, ClientAddressAccessor>();
+        services.AddSingleton<IClientErrorFactory, ApiErrorClientErrorFactory>();
 
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();

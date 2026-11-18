@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -22,7 +23,7 @@ public sealed class CurrentUserIdBindingTests : IClassFixture<MoviePickerApplica
     [InlineData("/api/v1/watchlist")]
     [InlineData("/api/v1/auth/me")]
     [InlineData("/api/v1/lists")]
-    public async Task ASignedInIdentityWithoutAnId_IsAnsweredWithTheProblem401OfUnauthorized(string route)
+    public async Task ASignedInIdentityWithoutAnId_IsAnsweredWithTheApiError401OfAnAnonymousCaller(string route)
     {
         var client = _factory.WithWebHostBuilder(b => b.ConfigureTestServices(services =>
             services.AddSingleton<IStartupFilter, IdentityWithoutIdStartupFilter>())).CreateClient();
@@ -30,10 +31,11 @@ public sealed class CurrentUserIdBindingTests : IClassFixture<MoviePickerApplica
         var res = await client.GetAsync(route);
 
         Assert.Equal(HttpStatusCode.Unauthorized, res.StatusCode);
-        Assert.Equal("application/problem+json", res.Content.Headers.ContentType?.MediaType);
+        Assert.Equal("application/json", res.Content.Headers.ContentType?.MediaType);
         using var body = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
-        Assert.Equal(401, body.RootElement.GetProperty("status").GetInt32());
-        Assert.Equal("Unauthorized", body.RootElement.GetProperty("title").GetString());
+        Assert.Equal(401, body.RootElement.GetProperty("code").GetInt32());
+        Assert.Equal(ErrorCodes.Unauthorized, body.RootElement.GetProperty("reason").GetString());
+        Assert.Equal("Authentication required", body.RootElement.GetProperty("error").GetString());
     }
 
     private sealed class IdentityWithoutIdStartupFilter : IStartupFilter

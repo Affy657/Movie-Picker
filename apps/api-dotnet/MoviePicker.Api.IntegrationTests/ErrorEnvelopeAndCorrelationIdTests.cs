@@ -31,6 +31,24 @@ public sealed class ErrorEnvelopeAndCorrelationIdTests : IClassFixture<MoviePick
         Assert.Equal("client-req-abc-01", json.GetProperty("requestId").GetString());
     }
 
+    [Theory]
+    [InlineData("/api/v1/posters/not-a-hex-key")]
+    [InlineData("/api/v1/avatars/not-a-key")]
+    public async Task ControllerNotFound_404_WithoutABody_UsesTheSameEnvelope(string route)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, route);
+        request.Headers.Add("X-Request-Id", "client-req-bare-404");
+        var res = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
+        Assert.Equal("application/json", res.Content.Headers.ContentType?.MediaType);
+        var json = JsonElement.Parse(await res.Content.ReadAsStringAsync());
+        Assert.Equal("Resource not found", json.GetProperty("error").GetString());
+        Assert.Equal(ErrorCodes.NotFound, json.GetProperty("reason").GetString());
+        Assert.Equal(404, json.GetProperty("code").GetInt32());
+        Assert.Equal("client-req-bare-404", json.GetProperty("requestId").GetString());
+    }
+
     [Fact]
     public async Task BusinessNotFound_404_ExceptionFilter_UsesSameEnvelope_WithGeneratedRequestId()
     {
