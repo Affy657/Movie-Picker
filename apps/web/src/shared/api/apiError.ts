@@ -1,3 +1,5 @@
+import type { Locale } from '@/shared/i18n/locales';
+
 export const API_ERROR_REASONS = {
   voteLimitReached: 'vote-limit-reached',
   invalidResetToken: 'invalid_reset_token',
@@ -10,7 +12,7 @@ export const API_ERROR_REASONS = {
   watchedNotFound: 'watched_not_found',
   watchlistNotFound: 'watchlist_not_found',
   listNameTaken: 'list_name_taken',
-} as const;
+} as const satisfies Record<string, keyof Locale['apiErrors']>;
 
 export class ApiError extends Error {
   readonly code?: number;

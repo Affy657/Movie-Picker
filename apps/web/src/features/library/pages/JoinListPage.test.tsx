@@ -20,7 +20,7 @@ const authedAlice = http.get(`${TEST_API_V1}/auth/me`, () =>
 
 const PREVIEW = {
   name: 'Ciné du dimanche',
-  owner: { handle: 'lea', displayName: 'Léa Moreau', avatarId: null },
+  owner: { displayName: 'Léa Moreau', avatarId: '' },
   itemCount: 14,
   posterPaths: ['/a.jpg', '/b.jpg'],
   isFull: false,

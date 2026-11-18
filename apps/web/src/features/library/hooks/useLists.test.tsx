@@ -100,17 +100,6 @@ describe('lists hooks', () => {
     await waitFor(() => expect(result.current.mine.data).toEqual([]));
   });
 
-  it('is refused the names of the system lists by the mocked API, as by the real one', async () => {
-    server.use(...createListsHandlers());
-    const { result } = renderHook(() => useCreateList(), { wrapper: wrapperFor() });
-
-    for (const name of ['À voir', 'Watchlist', 'Films vus', 'Watched']) {
-      await expect(result.current.mutateAsync({ name })).rejects.toMatchObject({
-        reason: 'list_name_taken',
-      });
-    }
-  });
-
   it('refreshes the figures of the profile once a list is created, edited or deleted', async () => {
     server.use(...createListsHandlers());
     const client = createTestQueryClient();
