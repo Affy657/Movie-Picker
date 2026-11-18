@@ -9,7 +9,7 @@ public sealed partial class ServerCopyTests
 {
     private const string TitlePlaceholder = "Dune";
 
-    [GeneratedRegex(@"(^|[\s«(])(tu|Tu|toi|Toi|Ton|tes|Rejoins|Rejoins-la|Connecte-toi|Indique|Demande)(?=[\s.,!?'’»)]|$)")]
+    [GeneratedRegex(@"(^|[\s«(])(tu|Tu|te|Te|toi|Toi|ton|Ton|ta|Ta|tes|Tes|Rejoins|Rejoins-la|Connecte-toi|Indique|Demande)(?=[\s.,!?'’»)]|$)")]
     private static partial Regex Tutoiement();
 
     public static TheoryData<string, string> FrenchTexts()

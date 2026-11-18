@@ -50,7 +50,7 @@ describe('locale parity', () => {
 
   it('the French locale uses the formal "vous" everywhere', () => {
     const tutoiement =
-      /(^|[\s«(])(tu|Tu|toi|Toi|Ton|tes|Rejoins|Rejoins-la|Connecte-toi|Indique|Demande)(?=[\s.,!?'’»)]|$)/u;
+      /(^|[\s«(])(tu|Tu|te|Te|toi|Toi|ton|Ton|ta|Ta|tes|Tes|Rejoins|Rejoins-la|Connecte-toi|Indique|Demande)(?=[\s.,!?'’»)]|$)/u;
     const familiar = frEntries
       .filter(([, value]) => typeof value === 'string' && tutoiement.test(value))
       .map(([key]) => key);
