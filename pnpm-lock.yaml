@@ -172,7 +172,7 @@ importers:
         specifier: ^5.0.4
         version: 5.0.4(vitest@5.0.4)
       browserslist:
-        specifier: ^4.29.4
+        specifier: '>=4.28.7'
         version: 4.29.4
       jsdom:
         specifier: ^30.1.1
