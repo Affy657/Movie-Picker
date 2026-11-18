@@ -14,6 +14,13 @@
     "generate:og": "node scripts/generate-og-image.mjs",
     "generate:tech-metrics": "node scripts/generate-tech-metrics.mjs"
   },
+  "browserslist": [
+    "ios_saf >= 15.4",
+    "safari >= 15.4",
+    "chrome >= 111",
+    "edge >= 111",
+    "firefox >= 114"
+  ],
   "dependencies": {
     "@fontsource/overpass": "^5.3.0",
     "@fontsource/overpass-mono": "^5.3.0",
@@ -39,6 +46,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
     "@vitest/coverage-v8": "^5.0.4",
+    "browserslist": "^4.29.4",
     "jsdom": "^30.1.1",
     "msw": "^3.0.1",
     "sharp": "^0.35.5",

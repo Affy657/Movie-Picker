@@ -204,7 +204,7 @@ export default function FollowListModal({
 
   if (isMobile) {
     return (
-      <Sheet open title={t('profile.follow.sheetTitle')} onClose={onClose} className={styles.sheet}>
+      <Sheet open title={t('profile.follow.listTitle')} onClose={onClose} className={styles.sheet}>
         {tabs}
         {panel}
       </Sheet>

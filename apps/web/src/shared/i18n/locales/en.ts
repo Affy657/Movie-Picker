@@ -2556,7 +2556,6 @@ export const en: Locale = {
       followingCount: '{{count}} following',
       followersCount: '{{count}} followers',
       listTitle: 'Follow list',
-      sheetTitle: 'Follow list',
       isMeBadge: 'You',
       empty: 'Nobody here yet.',
       loadError: 'Could not load this list.',

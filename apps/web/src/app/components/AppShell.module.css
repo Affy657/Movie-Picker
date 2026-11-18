@@ -20,7 +20,7 @@
 }
 
 .root {
-  min-height: 100dvh;
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
 }
@@ -29,7 +29,7 @@
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
-  min-height: calc(100dvh - var(--header-height));
+  min-height: calc(100svh - var(--header-height));
   min-width: 0;
   width: 100%;
 }
@@ -61,6 +61,8 @@
   gap: var(--space-3);
   width: 100%;
   padding: 0 var(--space-5) 0 var(--space-4);
+  padding-left: max(var(--space-4), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--space-5), env(safe-area-inset-right, 0px));
   min-height: var(--header-height);
   box-sizing: border-box;
 }

@@ -1,23 +1,13 @@
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-  type RefObject,
-} from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { ChevronUp, MoreHorizontal } from 'lucide-react';
 import clsx from 'clsx';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
-import { fitMenuVertically, type MenuPlacement } from '@/shared/hooks/useMenuVerticalFit';
+import { fixedPopoverStyle, useFixedPopover } from '@/shared/hooks/useFixedPopover';
 import { t as translate, SUPPORTED_LOCALES, useTranslation } from '@/shared/i18n';
 import Chip from '@/shared/components/Chip';
 import Sheet from '@/shared/components/Sheet';
 import { ChoiceCard, ChoiceGroup } from '@/shared/components/ChoiceCard';
-import { MENU_ANCHOR_GAP_PX, MENU_VIEWPORT_MARGIN_PX } from '@/shared/components/menuGeometry';
 import styles from './ThemeField.module.css';
 
 export const THEME_EMOJIS = [
@@ -109,72 +99,6 @@ export function parseTheme(s: string | null | undefined): { emoji: string; text:
   const raw = (s ?? '').trim();
   const emoji = leadingEmojiOf(raw);
   return { emoji, text: raw.slice(emoji.length).trim() };
-}
-
-type PopoverPosition = {
-  top: number;
-  left: number;
-  maxHeight: number | null;
-  placement: MenuPlacement;
-};
-
-function popoverPositionFor(trigger: HTMLElement, panel: HTMLElement): PopoverPosition {
-  const anchor = trigger.getBoundingClientRect();
-  const left = Math.max(
-    MENU_VIEWPORT_MARGIN_PX,
-    Math.min(anchor.left, globalThis.innerWidth - panel.offsetWidth - MENU_VIEWPORT_MARGIN_PX)
-  );
-  const contentHeight = panel.scrollHeight;
-  const { placement, maxHeight } = fitMenuVertically(anchor, contentHeight, globalThis.innerHeight);
-  const top =
-    placement === 'top'
-      ? Math.max(
-          MENU_VIEWPORT_MARGIN_PX,
-          anchor.top - MENU_ANCHOR_GAP_PX - (maxHeight ?? contentHeight)
-        )
-      : anchor.bottom + MENU_ANCHOR_GAP_PX;
-  return { top, left, maxHeight, placement };
-}
-
-function popoverStyle(position: PopoverPosition | null): CSSProperties | undefined {
-  if (position === null) return undefined;
-  const { top, left, maxHeight } = position;
-  return maxHeight === null ? { top, left } : { top, left, maxHeight };
-}
-
-function useFixedPopover(
-  open: boolean,
-  triggerRef: RefObject<HTMLElement | null>,
-  panelRef: RefObject<HTMLElement | null>
-): PopoverPosition | null {
-  const [position, setPosition] = useState<PopoverPosition | null>(null);
-
-  const place = useCallback(() => {
-    const trigger = triggerRef.current;
-    const panel = panelRef.current;
-    if (!trigger || !panel) return;
-    setPosition(popoverPositionFor(trigger, panel));
-  }, [triggerRef, panelRef]);
-
-  useLayoutEffect(() => {
-    if (!open) {
-      setPosition(null);
-      return;
-    }
-    place();
-  }, [open, place]);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    globalThis.addEventListener('resize', place);
-    globalThis.addEventListener('scroll', place, true);
-    return () => {
-      globalThis.removeEventListener('resize', place);
-      globalThis.removeEventListener('scroll', place, true);
-    };
-  }, [open, place]);
-
-  return position;
 }
 
 type ThemeFieldProps = {
@@ -271,7 +195,7 @@ export default function ThemeField({
               ref={emojiGridRef}
               className={styles.emojiPopover}
               data-placement={position?.placement}
-              style={popoverStyle(position)}
+              style={fixedPopoverStyle(position)}
             >
               {emojiGrid}
             </div>

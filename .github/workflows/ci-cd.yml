@@ -484,8 +484,8 @@ jobs:
         with:
           container-name: mongo-e2e
           port: "27017"
-      - name: Install the Playwright browser
-        run: pnpm exec playwright install --with-deps chromium
+      - name: Install the Playwright browsers (Chromium, and WebKit for the iPhone layouts)
+        run: pnpm exec playwright install --with-deps chromium webkit
       - name: E2E tests (web build + API on MongoDB + Playwright)
         run: pnpm run test:e2e:ci
         env:

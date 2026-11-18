@@ -4,6 +4,7 @@
   width: 1em;
   height: 1em;
   border-radius: 50%;
+  border: 2px solid var(--color-surface-active);
   border: 2px solid color-mix(in srgb, currentColor 35%, transparent);
   border-top-color: currentColor;
   animation: spin var(--duration-spin) var(--ease-linear) infinite;

@@ -121,6 +121,7 @@
 
 @media (hover: hover) {
   .remove:hover {
+    background: var(--color-surface-hover-strong);
     background: color-mix(in srgb, currentColor 18%, transparent);
   }
 }

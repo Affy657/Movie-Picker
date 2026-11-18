@@ -4,6 +4,12 @@ import { join } from 'node:path';
 import { LAYER_RULES, apiLayerViolations } from './architecture/apiLayers.mjs';
 import { APPLICATION_DIR, writeSeqViolations } from './architecture/apiWriteSeq.mjs';
 import { commentViolations } from './architecture/comments.mjs';
+import {
+  backdropTokenViolations,
+  browserSupportViolations,
+  jsApiViolations,
+  readSafariFloor,
+} from './architecture/browserSupport.mjs';
 import { FOUNDATION } from './architecture/cssSyntax.mjs';
 import { designTokenViolations } from './architecture/cssValues.mjs';
 import {
@@ -24,7 +30,7 @@ import {
   modalViolations,
   tapTargetViolations,
 } from './architecture/primitives.mjs';
-import { readTexts, rel, root, walk, webSrc } from './architecture/sources.mjs';
+import { isTestFile, readTexts, rel, root, walk, webSrc } from './architecture/sources.mjs';
 import { undeclaredTokenViolations } from './architecture/tokenDeclarations.mjs';
 import {
   AVATAR_TSX,
@@ -75,10 +81,19 @@ function collectViolations(sources) {
   eachFile(scripts, featureLayerViolations);
   eachFile(scripts, appLayerViolations);
   violations.push(...importCycleViolations(scripts));
+  const floor = readSafariFloor(root);
   eachPath(sheets, (path, text) => [
     ...designTokenViolations(path, text),
     ...backdropViolations(path, text),
+    ...browserSupportViolations(path, text, floor),
   ]);
+  eachPath(scripts, (path, text) => (isTestFile(path) ? [] : jsApiViolations(path, text, floor)));
+  violations.push(
+    ...backdropTokenViolations(
+      new Map([...sheets].map(([file, text]) => [rel(file), text])),
+      foundation
+    )
+  );
   violations.push(...undeclaredTokenViolations(sheets, scripts, indexHtml));
   eachPath(components, modalViolations);
   eachPath(components, ariaRoleViolations);
@@ -113,7 +128,7 @@ function main() {
     process.exit(1);
   }
   console.log(
-    'Architecture: no violation (comments, API layers, writeSeq of the event view, shared/ as a leaf, feature layers, app/ above features and shared, import cycles through import() included, design system tokens, colours in TypeScript, hover and reduced motion, icon, avatar and size scales, Modal, Button and ARIA primitives, tap targets, dead CSS classes, :global targets and tokens).'
+    'Architecture: no violation (comments, API layers, writeSeq of the event view, shared/ as a leaf, feature layers, app/ above features and shared, import cycles through import() included, design system tokens, CSS and browser APIs the oldest supported Safari knows, tokens read by ::backdrop, colours in TypeScript, hover and reduced motion, icon, avatar and size scales, Modal, Button and ARIA primitives, tap targets, dead CSS classes, :global targets and tokens).'
   );
   if (cssModulesExcluded.length > 0)
     console.log(

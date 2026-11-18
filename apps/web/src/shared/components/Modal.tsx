@@ -49,7 +49,6 @@ type ModalProps = ModalNaming & {
   padded?: boolean;
   column?: boolean;
   anchoredTop?: boolean;
-  bottomSheetOnMobile?: boolean;
   strongBackdrop?: boolean;
   closeAriaLabel?: string;
   className?: string;
@@ -72,7 +71,6 @@ export default function Modal({
   padded = false,
   column = false,
   anchoredTop = false,
-  bottomSheetOnMobile = false,
   strongBackdrop = false,
   closeAriaLabel,
   className,
@@ -97,7 +95,6 @@ export default function Modal({
         padded && styles.padded,
         column && styles.column,
         anchoredTop && styles.anchoredTop,
-        bottomSheetOnMobile && styles.bottomSheet,
         strongBackdrop && styles.strongBackdrop,
         className
       )}

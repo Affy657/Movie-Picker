@@ -9,6 +9,7 @@ interface ResponsiveDialogProps {
   detail?: ReactNode;
   onClose: () => void;
   footer?: ReactNode;
+  ariaDescribedBy?: string;
   size?: ModalSize;
   sheetSize?: SheetSize;
   className?: string;
@@ -21,6 +22,7 @@ export default function ResponsiveDialog({
   detail,
   onClose,
   footer,
+  ariaDescribedBy,
   size = 'sm',
   sheetSize = 'md',
   className,
@@ -37,6 +39,7 @@ export default function ResponsiveDialog({
         size={sheetSize}
         onClose={onClose}
         footer={footer}
+        ariaDescribedBy={ariaDescribedBy}
         className={className}
       >
         {children}
@@ -52,6 +55,7 @@ export default function ResponsiveDialog({
       column
       title={title}
       titleDetail={detail}
+      ariaDescribedBy={ariaDescribedBy}
       className={className}
     >
       <ModalBody>{children}</ModalBody>

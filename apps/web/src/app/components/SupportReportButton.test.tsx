@@ -4,6 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import SupportReportButton from '@/app/components/SupportReportButton';
 import modalStyles from '@/shared/components/Modal.module.css';
+import sheetStyles from '@/shared/components/Sheet.module.css';
+import { stubMatchMedia } from '@/test-utils/matchMedia';
 import { LocaleProvider } from '@/shared/i18n';
 import { SUPPORT_EMAIL } from '@/shared/support/supportMailto';
 import { copyTextToClipboard } from '@/shared/utils/copyTextToClipboard';
@@ -37,6 +39,7 @@ describe('SupportReportButton', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it('the dialog is closed at first', () => {
@@ -136,6 +139,17 @@ describe('SupportReportButton', () => {
     expect(actions).not.toBeNull();
     expect(actions?.lastElementChild).toBe(mailLink);
     expect(actions).toContainElement(screen.getByRole('button', { name: /copier le message/i }));
+  });
+
+  it('opens as a sheet with a drag handle on a phone', async () => {
+    stubMatchMedia((query) => query.includes('max-width'));
+    renderButton();
+    await openDialog();
+
+    const dialog = await screen.findByRole('dialog', { name: /signaler un problème/i });
+    expect(dialog).toHaveClass(sheetStyles.dialog!);
+    expect(dialog).toHaveAccessibleDescription(/envoyez-nous le message ci-dessous/i);
+    expect(screen.getByRole('link', { name: /ouvrir/i })).toBeInTheDocument();
   });
 
   it('describes the dialog with its intro', async () => {

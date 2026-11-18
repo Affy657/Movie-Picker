@@ -312,6 +312,7 @@
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-wide);
   border-radius: var(--radius-xs);
+  background: var(--color-surface-hover-strong);
   background: color-mix(in srgb, currentColor 15%, transparent);
   line-height: var(--leading-comfortable);
 }

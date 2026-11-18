@@ -13,6 +13,10 @@ export default defineConfig({
         __dirname,
         'src/__mocks__/virtual-pwa-register-react.ts'
       ),
+      'virtual:color-mix-fallback.css': path.resolve(
+        __dirname,
+        'src/__mocks__/virtual-color-mix-fallback.css'
+      ),
     },
   },
   test: {
@@ -21,7 +25,7 @@ export default defineConfig({
     },
     environment: 'jsdom',
     globals: true,
-    include: ['src/**/*.test.{ts,tsx}'],
+    include: ['src/**/*.test.{ts,tsx}', 'tooling/**/*.test.ts'],
     css: { include: [/src\/styles\/01-foundation\.css/] },
     setupFiles: ['vitest.vm-globals.ts', 'src/test-setup.ts'],
     testTimeout: 25000,

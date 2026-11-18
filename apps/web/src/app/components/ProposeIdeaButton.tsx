@@ -20,7 +20,8 @@ import Dropdown from '@/shared/components/Dropdown';
 import { createIdeaSuggestion, type IdeaSuggestionCategory } from '@/shared/api/ideaSuggestionsApi';
 import styles from './ProposeIdeaButton.module.css';
 import { useCloseOnPageChange } from '@/shared/hooks/useCloseOnPageChange';
-import Modal, { ModalActions, ModalBody, ModalFooter } from '@/shared/components/Modal';
+import { ModalActions } from '@/shared/components/Modal';
+import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
 import Button from '@/shared/components/Button';
 import clsx from 'clsx';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -113,7 +114,7 @@ export function ProposeIdeaDialog({ open, onClose, title: dialogTitle }: Readonl
   attachmentsRef.current = attachments;
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
-  const titleId = useId();
+  const formId = useId();
   const categoryFieldId = useId();
   const titleFieldId = useId();
   const descriptionFieldId = useId();
@@ -233,159 +234,151 @@ export function ProposeIdeaDialog({ open, onClose, title: dialogTitle }: Readonl
     }
   };
 
+  const footer =
+    status === 'success' ? (
+      <ModalActions>
+        <Button type="button" variant="primary" onClick={onClose}>
+          {t('common.close')}
+        </Button>
+      </ModalActions>
+    ) : (
+      <ModalActions>
+        <Button type="submit" form={formId} variant="primary" loading={status === 'submitting'}>
+          {status === 'submitting' ? t('proposeIdea.submitting') : t('proposeIdea.submit')}
+        </Button>
+      </ModalActions>
+    );
+
   return (
-    <Modal
+    <ResponsiveDialog
       open={open}
       onClose={onClose}
-      size="sm"
-      column
-      bottomSheetOnMobile
+      sheetSize="lg"
       title={dialogTitle ?? t('proposeIdea.dialogTitle')}
-      titleId={titleId}
+      footer={footer}
     >
       {status === 'success' ? (
-        <>
-          <ModalBody>
-            <p className={styles.successMessage} role="status" aria-live="polite">
-              {t('proposeIdea.successMessage')}
-            </p>
-          </ModalBody>
-          <ModalFooter>
-            <ModalActions>
-              <Button type="button" variant="primary" onClick={onClose}>
-                {t('common.close')}
-              </Button>
-            </ModalActions>
-          </ModalFooter>
-        </>
+        <p className={styles.successMessage} role="status" aria-live="polite">
+          {t('proposeIdea.successMessage')}
+        </p>
       ) : (
-        <form className={styles.form} onSubmit={(e) => void handleSubmit(e)}>
-          <ModalBody>
-            <Field label={t('proposeIdea.categoryLabel')} htmlFor={categoryFieldId}>
-              {({ id, labelId }) => (
-                <Dropdown
-                  id={id}
-                  ariaLabelledBy={labelId}
-                  value={category}
-                  options={categoryOptions}
-                  onChange={setCategory}
-                  className={styles.categoryDropdown}
-                />
-              )}
-            </Field>
-
-            <Field label={t('proposeIdea.titleLabel')} htmlFor={titleFieldId}>
-              {({ id }) => (
-                <input
-                  id={id}
-                  type="text"
-                  className="input"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  maxLength={TITLE_MAX_LENGTH}
-                  required
-                />
-              )}
-            </Field>
-
-            <Field
-              label={t('proposeIdea.descriptionLabel')}
-              htmlFor={descriptionFieldId}
-              hint={t('proposeIdea.descriptionHint', {
-                count: String(DESCRIPTION_MAX_LENGTH - description.length),
-              })}
-              className={styles.descriptionField}
-            >
-              {({ id, describedBy }) => (
-                <textarea
-                  id={id}
-                  className={`input ${styles.descriptionInput}`}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  onPaste={handlePaste}
-                  maxLength={DESCRIPTION_MAX_LENGTH}
-                  rows={5}
-                  required
-                  aria-describedby={describedBy}
-                />
-              )}
-            </Field>
-
-            <fieldset className={styles.attachmentsSection}>
-              <legend className={clsx('label', styles.attachmentsLegend)}>
-                {t('proposeIdea.attachmentsLabel')}
-              </legend>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept={ACCEPTED_ATTACHMENT_TYPES.join(',')}
-                multiple
-                hidden
-                onChange={handleFileInputChange}
+        <form id={formId} onSubmit={(e) => void handleSubmit(e)}>
+          <Field label={t('proposeIdea.categoryLabel')} htmlFor={categoryFieldId}>
+            {({ id, labelId }) => (
+              <Dropdown
+                id={id}
+                ariaLabelledBy={labelId}
+                value={category}
+                options={categoryOptions}
+                onChange={setCategory}
+                className={styles.categoryDropdown}
               />
-              <div
-                className={clsx(styles.dropZone, isDraggingOver && styles.dropZoneActive)}
-                onDragOver={(e) => e.preventDefault()}
-                onDragEnter={handleDragEnter}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
+            )}
+          </Field>
+
+          <Field label={t('proposeIdea.titleLabel')} htmlFor={titleFieldId}>
+            {({ id }) => (
+              <input
+                id={id}
+                type="text"
+                className="input"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                maxLength={TITLE_MAX_LENGTH}
+                required
+              />
+            )}
+          </Field>
+
+          <Field
+            label={t('proposeIdea.descriptionLabel')}
+            htmlFor={descriptionFieldId}
+            hint={t('proposeIdea.descriptionHint', {
+              count: String(DESCRIPTION_MAX_LENGTH - description.length),
+            })}
+            className={styles.descriptionField}
+          >
+            {({ id, describedBy }) => (
+              <textarea
+                id={id}
+                className={`input ${styles.descriptionInput}`}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                onPaste={handlePaste}
+                maxLength={DESCRIPTION_MAX_LENGTH}
+                rows={5}
+                required
+                aria-describedby={describedBy}
+              />
+            )}
+          </Field>
+
+          <fieldset className={styles.attachmentsSection}>
+            <legend className={clsx('label', styles.attachmentsLegend)}>
+              {t('proposeIdea.attachmentsLabel')}
+            </legend>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={ACCEPTED_ATTACHMENT_TYPES.join(',')}
+              multiple
+              hidden
+              onChange={handleFileInputChange}
+            />
+            <div
+              className={clsx(styles.dropZone, isDraggingOver && styles.dropZoneActive)}
+              onDragOver={(e) => e.preventDefault()}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <Button
+                type="button"
+
+                onClick={() => fileInputRef.current?.click()}
+                disabled={attachments.length >= MAX_ATTACHMENTS}
               >
-                <Button
-                  type="button"
-
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={attachments.length >= MAX_ATTACHMENTS}
-                >
-                  <ImagePlus size={ICON_SIZE.md} aria-hidden />
-                  {t('proposeIdea.attachmentsAddButton')}
-                </Button>
-                <p className={`hint ${styles.attachmentsHint}`}>
-                  {t('proposeIdea.attachmentsDropHint', { max: MAX_ATTACHMENTS })}
-                </p>
-                {attachments.length > 0 ? (
-                  <div className={styles.thumbnails}>
-                    {attachments.map((a, index) => (
-                      <div key={a.id} className={styles.thumbnail}>
-                        <img src={a.previewUrl} alt="" className={styles.thumbnailImage} />
-                        <button
-                          type="button"
-                          className={styles.thumbnailRemove}
-                          onClick={() => removeAttachment(a.id)}
-                          aria-label={`${t('proposeIdea.attachmentsRemove')} ${index + 1}`}
-                        >
-                          <X size={ICON_SIZE.xs} aria-hidden />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-              {attachmentError ? (
-                <p className={`error ${styles.attachmentsError}`} role="alert">
-                  {attachmentError}
-                </p>
+                <ImagePlus size={ICON_SIZE.md} aria-hidden />
+                {t('proposeIdea.attachmentsAddButton')}
+              </Button>
+              <p className={`hint ${styles.attachmentsHint}`}>
+                {t('proposeIdea.attachmentsDropHint', { max: MAX_ATTACHMENTS })}
+              </p>
+              {attachments.length > 0 ? (
+                <div className={styles.thumbnails}>
+                  {attachments.map((a, index) => (
+                    <div key={a.id} className={styles.thumbnail}>
+                      <img src={a.previewUrl} alt="" className={styles.thumbnailImage} />
+                      <button
+                        type="button"
+                        className={styles.thumbnailRemove}
+                        onClick={() => removeAttachment(a.id)}
+                        aria-label={`${t('proposeIdea.attachmentsRemove')} ${index + 1}`}
+                      >
+                        <X size={ICON_SIZE.xs} aria-hidden />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               ) : null}
-            </fieldset>
-
-            <p className="hint">{t('proposeIdea.publicNotice')}</p>
-
-            {error ? (
-              <p className="error" role="alert">
-                {error}
+            </div>
+            {attachmentError ? (
+              <p className={`error ${styles.attachmentsError}`} role="alert">
+                {attachmentError}
               </p>
             ) : null}
-          </ModalBody>
+          </fieldset>
 
-          <ModalFooter>
-            <ModalActions>
-              <Button type="submit" variant="primary" loading={status === 'submitting'}>
-                {status === 'submitting' ? t('proposeIdea.submitting') : t('proposeIdea.submit')}
-              </Button>
-            </ModalActions>
-          </ModalFooter>
+          <p className="hint">{t('proposeIdea.publicNotice')}</p>
+
+          {error ? (
+            <p className="error" role="alert">
+              {error}
+            </p>
+          ) : null}
         </form>
       )}
-    </Modal>
+    </ResponsiveDialog>
   );
 }
 
