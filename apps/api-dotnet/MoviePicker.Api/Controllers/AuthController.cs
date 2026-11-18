@@ -16,7 +16,9 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Application.UseCases.Auth.OAuth;
 using MoviePicker.Api.Application.UseCases.Auth.PasswordReset;
+using MoviePicker.Api.Application.UseCases.UsageCounts;
 using MoviePicker.Api.Configuration;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Web;
 
@@ -78,11 +80,13 @@ public sealed class AuthController : ControllerBase
     public async Task<IActionResult> Register(
         [FromBody] RegisterRequest request,
         [FromServices] IRegisterUserHandler handler,
+        [FromServices] IUsageRecorder usage,
         [FromServices] TimeProvider clock,
         CancellationToken ct)
     {
         var result = await handler.HandleAsync(request, ct);
         await SignInAsync(result.UserId, result.DisplayName, clock);
+        await usage.RecordAsync(UsageCount.SignedUp(UsageCount.EmailMethod, request.ReturnTo), ct);
         return CreatedAtAction(nameof(Me), null, result);
     }
 
@@ -96,11 +100,13 @@ public sealed class AuthController : ControllerBase
     public async Task<IActionResult> Login(
         [FromBody] LoginRequest request,
         [FromServices] ILoginUserHandler handler,
+        [FromServices] IUsageRecorder usage,
         [FromServices] TimeProvider clock,
         CancellationToken ct)
     {
         var result = await handler.HandleAsync(request, ct);
         await SignInAsync(result.UserId, result.DisplayName, clock);
+        await usage.RecordAsync(UsageCount.LoggedIn(UsageCount.EmailMethod, request.ReturnTo), ct);
         return Ok(result);
     }
 
@@ -165,6 +171,7 @@ public sealed class AuthController : ControllerBase
         string provider,
         [FromServices] IOAuthLoginHandler loginHandler,
         [FromServices] IOAuthLinkHandler linkHandler,
+        [FromServices] IUsageRecorder usage,
         [FromServices] OAuthProviderCatalog catalog,
         [FromServices] IOptions<MoviePickerOptions> options,
         [FromServices] TimeProvider clock,
@@ -228,6 +235,11 @@ public sealed class AuthController : ControllerBase
         }
 
         await SignInAsync(loginOutcome.User.Id, loginOutcome.User.DisplayName, clock);
+        await usage.RecordAsync(
+            loginOutcome.IsNewAccount
+                ? UsageCount.SignedUp(knownProvider, returnTo)
+                : UsageCount.LoggedIn(knownProvider, returnTo),
+            ct);
 
         return Redirect(BuildFrontUrl(
             webBase,

@@ -3,6 +3,7 @@ using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Auth;
+using MoviePicker.Api.Application.UseCases.UsageCounts;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
@@ -15,7 +16,7 @@ public sealed class PatchUserProfileHandlerTests
     private static PatchUserProfileHandler Handler(
         IUserRepository users,
         IUserNotificationRepository? notifications = null) =>
-        new(users, notifications ?? new InMemoryUserNotificationRepository(), new InMemoryUnitOfWork(), TimeProvider.System);
+        new(users, notifications ?? new InMemoryUserNotificationRepository(), new InMemoryUnitOfWork(), Mock.Of<IUsageRecorder>(), TimeProvider.System);
 
     private static User User(string id = "u1") =>
         new()

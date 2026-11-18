@@ -13,6 +13,7 @@ import { useLocale, useTranslation, type Translate, type TranslationKey } from '
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
+import type { RandomPickSource } from '@/shared/analytics/usageCounts';
 import { useHistoryEntryState } from '@/shared/hooks/useHistoryEntryState';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { randomIndex } from '@/shared/utils/random';
@@ -368,7 +369,7 @@ interface ListMoviesPageProps<T extends LibraryEntry> {
   availabilityPending?: boolean;
   storageScope: ToolbarStorageScope;
   storageListId?: string;
-  randomPickHistoryKey?: string;
+  randomPick?: { historyKey: string; source: RandomPickSource };
   labels: ListMoviesLabels;
   emptyIcon: ReactNode;
   emptyActions?: ReactNode;
@@ -389,7 +390,7 @@ export default function ListMoviesPage<T extends LibraryEntry>({
   availabilityPending,
   storageScope,
   storageListId,
-  randomPickHistoryKey,
+  randomPick: randomPickOptions,
   labels,
   emptyIcon,
   emptyActions,
@@ -413,13 +414,13 @@ export default function ListMoviesPage<T extends LibraryEntry>({
 
   const [proposeTarget, setProposeTarget] = useState<WatchlistToggleItem | null>(null);
   const [randomPick, setRandomPick] = useHistoryEntryState<OpenRandomPick | null>(
-    randomPickHistoryKey ?? NO_RANDOM_PICK_KEY,
+    randomPickOptions?.historyKey ?? NO_RANDOM_PICK_KEY,
     null,
     isOpenRandomPick
   );
   const { track } = useAnalytics();
-  const openRandomPick = (pick: RandomPick) => {
-    track('random_pick_opened', { scope: pick.scope, pool: pick.items.length });
+  const openRandomPick = (pick: RandomPick, source: RandomPickSource) => {
+    track('random_pick_opened', { source, scope: pick.scope, pool: pick.items.length });
     setRandomPick({ keys: pick.items.map(entryKey), scope: pick.scope, drawnKey: null });
   };
   const randomPickItems = useMemo(
@@ -534,8 +535,12 @@ export default function ListMoviesPage<T extends LibraryEntry>({
         slots={header}
         actions={
           <>
-            {randomPickHistoryKey ? (
-              <RandomPickButton toolbar={toolbar} compact={isMobile} onOpen={openRandomPick} />
+            {randomPickOptions ? (
+              <RandomPickButton
+                toolbar={toolbar}
+                compact={isMobile}
+                onOpen={(pick) => openRandomPick(pick, randomPickOptions.source)}
+              />
             ) : null}
             {onAddItem ? (
               <AddButton

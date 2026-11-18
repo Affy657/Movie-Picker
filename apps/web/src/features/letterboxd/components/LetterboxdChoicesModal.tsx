@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 import clsx from 'clsx';
 import { Bookmark, Eye } from 'lucide-react';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
+import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import type { TranslationKey } from '@/shared/i18n';
 import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
@@ -115,6 +116,7 @@ export default function LetterboxdChoicesModal({
 }: Readonly<LetterboxdChoicesModalProps>) {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
+  const { track } = useAnalytics();
   const titleId = useId();
 
   const [index, setIndex] = useState(0);
@@ -137,10 +139,16 @@ export default function LetterboxdChoicesModal({
       else selections.push(toSelection(candidate, choice.letterboxdSlug));
     }
 
-    onConfirmed(
-      await confirmLetterboxdChoices(selections, watchedSelections, stillPending.length),
-      stillPending
+    const result = await confirmLetterboxdChoices(
+      selections,
+      watchedSelections,
+      stillPending.length
     );
+    track('letterboxd_choices_confirmed', {
+      selected: selections.length + watchedSelections.length,
+      pending: stillPending.length,
+    });
+    onConfirmed(result, stillPending);
   };
 
   const {

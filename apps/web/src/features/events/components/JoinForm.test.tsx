@@ -77,6 +77,29 @@ describe('JoinForm', () => {
     expect(screen.queryByRole('button', { name: /rejoindre/i })).not.toBeInTheDocument();
   });
 
+  it.each([
+    [/se connecter/i, 'login'],
+    [/créer un compte/i, 'register'],
+  ])('signed out: following %s counts the step once for this night', async (name, cta) => {
+    mockFetchApi.mockImplementation(async (path: string) => {
+      if (path === '/usage-counts') return undefined;
+      return guestAuthImpl(path);
+    });
+    const user = userEvent.setup();
+    renderForm(<JoinForm slug="soiree" onJoined={onJoined} />);
+    const link = await screen.findByRole('link', { name });
+
+    await user.click(link);
+    await user.click(link);
+
+    const counts = mockFetchApi.mock.calls.filter(([path]) => path === '/usage-counts');
+    expect(counts).toHaveLength(1);
+    expect(JSON.parse((counts[0]?.[1] as { body: string }).body)).toEqual({
+      metric: 'join_prompt_clicked',
+      variant: cta,
+    });
+  });
+
   it('signed in: no pseudo field, Join sends the account displayName', async () => {
     const user = userEvent.setup();
     mockFetchApi.mockImplementation(async (path: string) => {

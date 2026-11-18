@@ -328,7 +328,7 @@ export default function MovieListPage() {
       isError={listQuery.isError}
       storageScope="list"
       storageListId={listId}
-      randomPickHistoryKey="list.randomPick"
+      randomPick={{ historyKey: 'list.randomPick', source: 'list' }}
       emptyIcon={<Rows3 aria-hidden size={ICON_SIZE['3xl']} />}
       labels={{
         ...listPageLabels(

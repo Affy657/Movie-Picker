@@ -33,10 +33,20 @@ export async function fetchAuthProfile(): Promise<UserProfile> {
   };
 }
 
-export async function postAuthLogin(email: string, password: string): Promise<void> {
+const RETURN_TO_MAX_LENGTH = 2048;
+
+function boundedReturnTo(returnTo: string | undefined): string | undefined {
+  return returnTo?.slice(0, RETURN_TO_MAX_LENGTH);
+}
+
+export async function postAuthLogin(
+  email: string,
+  password: string,
+  returnTo?: string
+): Promise<void> {
   await fetchApi('/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, returnTo: boundedReturnTo(returnTo) }),
   });
   setSessionHint();
 }
@@ -44,11 +54,12 @@ export async function postAuthLogin(email: string, password: string): Promise<vo
 export async function postAuthRegister(
   email: string,
   password: string,
-  displayName: string
+  displayName: string,
+  returnTo?: string
 ): Promise<void> {
   await fetchApi('/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ email, password, displayName }),
+    body: JSON.stringify({ email, password, displayName, returnTo: boundedReturnTo(returnTo) }),
   });
   setSessionHint();
 }

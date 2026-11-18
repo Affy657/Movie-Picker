@@ -1,6 +1,8 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.UsageCounts;
 using MoviePicker.Api.Application.UseCases.Watchlist;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.LetterboxdImport;
@@ -14,19 +16,22 @@ public sealed class ConfirmLetterboxdImportHandler : IConfirmLetterboxdImportHan
     private readonly IUserRepository _users;
     private readonly LetterboxdWatchedWriter _watchedWriter;
     private readonly LetterboxdLinkedCounter _linkedCounter;
+    private readonly IUsageRecorder _usage;
 
     public ConfirmLetterboxdImportHandler(
         IWatchlistRepository watchlist,
         IAddToWatchlistHandler addToWatchlist,
         IUserRepository users,
         LetterboxdWatchedWriter watchedWriter,
-        LetterboxdLinkedCounter linkedCounter)
+        LetterboxdLinkedCounter linkedCounter,
+        IUsageRecorder usage)
     {
         _watchlist = watchlist;
         _addToWatchlist = addToWatchlist;
         _users = users;
         _watchedWriter = watchedWriter;
         _linkedCounter = linkedCounter;
+        _usage = usage;
     }
 
     public async Task<LetterboxdImportConfirmResponse> HandleAsync(
@@ -48,6 +53,8 @@ public sealed class ConfirmLetterboxdImportHandler : IConfirmLetterboxdImportHan
             ct);
         if (request.Selections.Count + watchedSelections.Count > 0)
             await _linkedCounter.RefreshAsync(userId, ct);
+        await _usage.RecordAsync(
+            UsageCount.LetterboxdChoicesConfirmed(request.Selections.Count + watchedSelections.Count), ct);
 
         return new LetterboxdImportConfirmResponse
         {

@@ -433,7 +433,29 @@ describe('NightRecapPage (MSW)', () => {
     renderRecap();
 
     expect(await screen.findByRole('heading', { name: 'Soirée du vendredi' })).toBeInTheDocument();
-    expect(track).toHaveBeenCalledExactlyOnceWith('recap_viewed', { winners: 1 });
+    expect(track).toHaveBeenCalledExactlyOnceWith(
+      'recap_viewed',
+      { viewer: 'visitor', winners: 1 },
+      { oncePerTab: `recap_viewed:${slug}` }
+    );
+  });
+
+  it('counts the view of a signed-in reader as an account view', async () => {
+    track.mockClear();
+    setSessionHint();
+    server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME)));
+    serveNight();
+
+    renderRecap();
+
+    expect(await screen.findByRole('heading', { name: 'Soirée du vendredi' })).toBeInTheDocument();
+    await vi.waitFor(() =>
+      expect(track).toHaveBeenCalledExactlyOnceWith(
+        'recap_viewed',
+        { viewer: 'account', winners: 1 },
+        { oncePerTab: `recap_viewed:${slug}` }
+      )
+    );
   });
 
   it('offers to retry after a failure, and recovers', async () => {

@@ -67,6 +67,37 @@ describe('LoginPage (MSW)', () => {
     });
   });
 
+  it('tells the server where the account was heading', async () => {
+    const user = userEvent.setup();
+    let body: unknown;
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        sessionActive
+          ? HttpResponse.json({
+              userId: 'u-login',
+              displayName: 'Lee',
+              emailMasked: 'l***@test.local',
+            })
+          : HttpResponse.json({ error: '401' }, { status: 401 })
+      ),
+      http.post(`${TEST_API_V1}/auth/login`, async ({ request }) => {
+        body = await request.json();
+        sessionActive = true;
+        return HttpResponse.json({});
+      })
+    );
+
+    renderLogin('/login?returnTo=%2Fe%2Fsoiree');
+
+    await user.type(screen.getByLabelText(/^e-mail$/i), 'lee@test.local');
+    await user.type(screen.getByLabelText(/^mot de passe$/i), 'abcd1234');
+    await user.click(screen.getByRole('button', { name: /^se connecter$/i }));
+
+    await waitFor(() =>
+      expect(body).toEqual({ email: 'lee@test.local', password: 'abcd1234', returnTo: '/e/soiree' })
+    );
+  });
+
   it('en dev : bouton compte dev et connexion sans saisie', async () => {
     expect(import.meta.env.DEV).toBe(true);
     const user = userEvent.setup();

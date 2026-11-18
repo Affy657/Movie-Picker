@@ -3,7 +3,7 @@ import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import { SUPPORT_EMAIL } from '@/shared/support/supportMailto';
-import { LEGAL_LAST_UPDATED } from '@/app/pages/legalMeta';
+import { PRIVACY_LAST_UPDATED } from '@/app/pages/legalMeta';
 
 export default function PrivacyPolicyPage() {
   const { t } = useTranslation();
@@ -11,7 +11,7 @@ export default function PrivacyPolicyPage() {
     <LegalContentPage
       heading={t('legal.privacyTitle')}
       intro={t('legal.privacyIntro')}
-      updatedAt={LEGAL_LAST_UPDATED}
+      updatedAt={PRIVACY_LAST_UPDATED}
       canonical={absoluteUrl(ROUTES.privacyPolicy)}
       sections={[
         {

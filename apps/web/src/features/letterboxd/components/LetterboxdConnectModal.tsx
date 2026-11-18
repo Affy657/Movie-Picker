@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Check, Clock, Eye, Import, TriangleAlert } from 'lucide-react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
+import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { useTranslation } from '@/shared/i18n';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { invalidateWatchlist } from '@/features/movies/hooks/useWatchlist';
@@ -42,6 +43,7 @@ function ConnectFormModal({
 }: Readonly<{ onClose: () => void; onConnected: (report: LetterboxdSyncReport) => void }>) {
   const { t } = useTranslation();
   const { patchProfile } = useAuth();
+  const { track } = useAnalytics();
   const queryClient = useQueryClient();
   const titleId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -53,12 +55,13 @@ function ConnectFormModal({
 
   const connectAction = useCallback(async () => {
     await patchProfile({ letterboxdUsername: username.trim() });
+    track('letterboxd_connected');
     const result = await syncLetterboxd(true);
     await queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
     if (watchedChanged(result)) void invalidateWatched(queryClient);
     else void invalidateWatchlist(queryClient);
     return result;
-  }, [patchProfile, queryClient, username]);
+  }, [patchProfile, queryClient, username, track]);
 
   const {
     run: runConnect,

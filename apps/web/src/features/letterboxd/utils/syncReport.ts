@@ -15,6 +15,16 @@ export function watchedChanged(report: LetterboxdSyncReport): boolean {
   return report.watchedAdded > 0 || report.watchedRemoved > 0;
 }
 
+export function syncMeasureOf(report: LetterboxdSyncReport): {
+  changed: boolean;
+  pendingChoices: number;
+} {
+  return {
+    changed: report.added > 0 || report.removed > 0 || watchedChanged(report),
+    pendingChoices: pendingChoicesOf(report).length,
+  };
+}
+
 export function isWatchedChoice(choice: LetterboxdPendingChoice): boolean {
   return choice.target === 'watched';
 }

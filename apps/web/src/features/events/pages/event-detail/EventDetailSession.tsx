@@ -44,6 +44,7 @@ import type {
   RecapShare,
   ShareTab,
 } from './eventDetailSessionTypes';
+import { useEventLinkOpenedCount } from '@/features/events/hooks/useEventLinkOpenedCount';
 
 type EventDetailSessionProps = {
   slug: string;
@@ -253,6 +254,7 @@ export default function EventDetailSession({
       moviesShownEmpty: moviesLoaded && movies.length === 0,
     });
   const isFull = isNightFull(maxParticipants, participantCount);
+  useEventLinkOpenedCount({ slug, event, participant, isFull });
   const presence = presenceView(
     event.participants,
     livePresence,

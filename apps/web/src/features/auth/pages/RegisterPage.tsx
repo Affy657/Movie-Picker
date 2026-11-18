@@ -28,7 +28,7 @@ export default function RegisterPage() {
   const [rulesError, setRulesError] = useState<string | null>(null);
 
   const registerAction = useCallback(async () => {
-    await register(email.trim(), password, displayName.trim());
+    await register(email.trim(), password, displayName.trim(), returnTo);
     void navigate(returnTo, { replace: true });
   }, [email, password, displayName, register, navigate, returnTo]);
 

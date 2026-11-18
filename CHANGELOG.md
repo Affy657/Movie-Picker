@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Des totaux anonymes pour savoir ce qui sert vraiment** : Movie Picker compte lui-même, par jour, sans cookie ni identifiant, quelques étapes (ouverture du lien d'une soirée, inscription, arrivée dans une soirée, ouverture d'un recap, pioche, synchronisation Letterboxd), pour voir où décroche une personne invitée. Si vous refusez la mesure d'audience, votre navigateur n'envoie plus ceux qui partent de lui ; la politique de confidentialité détaille le tout.
+
 ## [1.15.5] - 2026-11-18
 
 ### Changed

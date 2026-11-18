@@ -12,8 +12,11 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Application.UseCases.Auth.OAuth;
 using MoviePicker.Api.Application.UseCases.Auth.PasswordReset;
+using MoviePicker.Api.Application.UseCases.UsageCounts;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Controllers;
+using MoviePicker.Api.Domain;
+using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Web;
 using Xunit;
@@ -65,7 +68,7 @@ public sealed class AuthControllerTests
     private static IOptions<MoviePickerOptions> Options() =>
         Microsoft.Extensions.Options.Options.Create(new MoviePickerOptions { PublicWebBaseUrl = WebBase });
 
-    private static Mock<IAuthenticationService> ExternalSignIn(string? ticketProvider = OAuthProviders.Google)
+    private static Mock<IAuthenticationService> ExternalSignIn(string? ticketProvider = OAuthProviders.Google, string? returnTo = null)
     {
         var authentication = new Mock<IAuthenticationService>();
         var external = new ClaimsPrincipal(new ClaimsIdentity(
@@ -74,6 +77,8 @@ public sealed class AuthControllerTests
         var ticket = new AuthenticationProperties();
         if (ticketProvider is not null)
             ticket.Items[AuthController.ProviderItemKey] = ticketProvider;
+        if (returnTo is not null)
+            ticket.Items["returnTo"] = returnTo;
         authentication
             .Setup(a => a.AuthenticateAsync(It.IsAny<HttpContext>(), AuthConstants.ExternalCookieScheme))
             .ReturnsAsync(AuthenticateResult.Success(
@@ -95,6 +100,7 @@ public sealed class AuthControllerTests
             "google",
             new Mock<IOAuthLoginHandler>().Object,
             linkHandler,
+            Mock.Of<IUsageRecorder>(),
             GoogleEnabled(),
             Options(),
             Clock,
@@ -108,7 +114,7 @@ public sealed class AuthControllerTests
         handler.Setup(h => h.HandleAsync(It.IsAny<RegisterRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new RegisterResponse { UserId = "u1", DisplayName = "Neo" });
 
-        var result = await Controller(null).Register(null!, handler.Object, Clock, CancellationToken.None);
+        var result = await Controller(null).Register(new RegisterRequest(), handler.Object, Mock.Of<IUsageRecorder>(), Clock, CancellationToken.None);
 
         var created = Assert.IsType<CreatedAtActionResult>(result);
         Assert.Equal(nameof(AuthController.Me), created.ActionName);
@@ -121,7 +127,7 @@ public sealed class AuthControllerTests
         handler.Setup(h => h.HandleAsync(It.IsAny<LoginRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new LoginResponse { UserId = "u1", DisplayName = "Neo" });
 
-        var result = await Controller(null).Login(null!, handler.Object, Clock, CancellationToken.None);
+        var result = await Controller(null).Login(new LoginRequest(), handler.Object, Mock.Of<IUsageRecorder>(), Clock, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
     }
@@ -144,11 +150,114 @@ public sealed class AuthControllerTests
             .Returns(Task.CompletedTask);
         var controller = new AuthController().WithContext(authentication: authentication.Object);
 
-        await controller.Login(null!, handler.Object, Clock, CancellationToken.None);
+        await controller.Login(new LoginRequest(), handler.Object, Mock.Of<IUsageRecorder>(), Clock, CancellationToken.None);
 
         Assert.NotNull(signedIn);
         Assert.True(RecentAuthentication.IsRecent(signedIn, Now + RecentAuthentication.Window));
         Assert.False(RecentAuthentication.IsRecent(signedIn, Now + RecentAuthentication.Window + TimeSpan.FromSeconds(1)));
+    }
+
+    private static void VerifyCounted(Mock<IUsageRecorder> usage, string metric, string variant) =>
+        usage.Verify(
+            x => x.RecordAsync(
+                It.Is<UsageCount>(c => c.Metric == metric && c.Variant == variant),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+    [Theory]
+    [InlineData("/e/abc123", "email.event")]
+    [InlineData("/l/token/rejoindre", "email.list")]
+    [InlineData(null, "email.other")]
+    public async Task Register_CountsTheSignUpWithWhereTheAccountWasHeading(string? returnTo, string variant)
+    {
+        var handler = new Mock<IRegisterUserHandler>();
+        handler.Setup(h => h.HandleAsync(It.IsAny<RegisterRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new RegisterResponse { UserId = "u1", DisplayName = "Neo" });
+        var usage = new Mock<IUsageRecorder>();
+
+        await Controller(null).Register(
+            new RegisterRequest { ReturnTo = returnTo }, handler.Object, usage.Object, Clock, CancellationToken.None);
+
+        VerifyCounted(usage, UsageCount.UserSignedUpMetric, variant);
+    }
+
+    [Fact]
+    public async Task Register_Refused_CountsNothing()
+    {
+        var handler = new Mock<IRegisterUserHandler>();
+        handler.Setup(h => h.HandleAsync(It.IsAny<RegisterRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(Errors.EmailTaken());
+        var usage = new Mock<IUsageRecorder>();
+
+        await Assert.ThrowsAsync<ConflictException>(() => Controller(null).Register(
+            new RegisterRequest { ReturnTo = "/e/abc123" }, handler.Object, usage.Object, Clock, CancellationToken.None));
+
+        usage.Verify(x => x.RecordAsync(It.IsAny<UsageCount>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Login_CountsTheSignInWithWhereTheAccountWasHeading()
+    {
+        var handler = new Mock<ILoginUserHandler>();
+        handler.Setup(h => h.HandleAsync(It.IsAny<LoginRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new LoginResponse { UserId = "u1", DisplayName = "Neo" });
+        var usage = new Mock<IUsageRecorder>();
+
+        await Controller(null).Login(
+            new LoginRequest { ReturnTo = "/r/recap1" }, handler.Object, usage.Object, Clock, CancellationToken.None);
+
+        VerifyCounted(usage, UsageCount.UserLoggedInMetric, "email.recap");
+    }
+
+    [Theory]
+    [InlineData(true, "user_signed_up")]
+    [InlineData(false, "user_logged_in")]
+    public async Task OAuthCallback_SignIn_CountsTheProviderAndWhereTheAccountWasHeading(bool newAccount, string metric)
+    {
+        var loginHandler = new Mock<IOAuthLoginHandler>();
+        loginHandler
+            .Setup(h => h.HandleAsync(It.IsAny<ExternalLoginInfo>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OAuthOutcome
+            {
+                Kind = OAuthOutcomeKind.SignedIn,
+                User = new User { Id = "u9", DisplayName = "Neo" },
+                IsNewAccount = newAccount
+            });
+        var usage = new Mock<IUsageRecorder>();
+
+        await new AuthController()
+            .WithContext(authentication: ExternalSignIn(OAuthProviders.GitHub, "/e/abc123").Object)
+            .OAuthCallback(
+                OAuthProviders.GitHub,
+                loginHandler.Object,
+                new Mock<IOAuthLinkHandler>().Object,
+                usage.Object,
+                GoogleAndGitHubEnabled(),
+                Options(),
+                Clock,
+                NullLogger<AuthController>.Instance,
+                CancellationToken.None);
+
+        VerifyCounted(usage, metric, "github.event");
+    }
+
+    [Fact]
+    public async Task OAuthCallback_LinkToTheSignedInAccount_CountsNoSignIn()
+    {
+        var usage = new Mock<IUsageRecorder>();
+
+        await SessionController(Now.AddMinutes(-2), ExternalSignIn().Object).OAuthCallback(
+            "google",
+            new Mock<IOAuthLoginHandler>().Object,
+            LinkHandler(OAuthOutcomeKind.Linked).Object,
+            usage.Object,
+            GoogleEnabled(),
+            Options(),
+            Clock,
+            NullLogger<AuthController>.Instance,
+            CancellationToken.None);
+
+        usage.Verify(x => x.RecordAsync(It.IsAny<UsageCount>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -270,6 +379,7 @@ public sealed class AuthControllerTests
                 routeProvider,
                 loginHandler.Object,
                 linkHandler.Object,
+                Mock.Of<IUsageRecorder>(),
                 GoogleAndGitHubEnabled(),
                 Options(),
                 Clock,
@@ -322,6 +432,7 @@ public sealed class AuthControllerTests
             "google",
             loginHandler,
             new Mock<IOAuthLinkHandler>().Object,
+            Mock.Of<IUsageRecorder>(),
             GoogleEnabled(),
             Options(),
             Clock,

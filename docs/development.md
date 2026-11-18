@@ -150,6 +150,7 @@ Tous se lancent à la racine du dépôt.
 | `pnpm --filter web prerender` | Prérendu des routes publiques indexables, à lancer après un build |
 | `pnpm run lighthouse` | Lighthouse sur le build, demande Node 22+ et Chrome |
 | `pnpm run capture:screenshots` | Captures du README, sur l'application lancée en local |
+| `pnpm run usage [-- --days 30 \| --since AAAA-MM-JJ] [--db <base>] [--json]` | Ce qui sert sur une période de jours de Paris : l'entonnoir du lien d'une soirée, lu dans les totaux anonymes que l'API tient par jour (`usage_counts`), et l'usage des fonctionnalités, lu dans la base (notes, recaps, pioches, « À voir », Letterboxd). Lecture seule, par l'image MongoDB épinglée dans Docker ; l'URI vient de `MONGODB_URI` ou du secret du même nom par gcloud. Le tableau de bord PostHog « Ce qui sert » montre le détail des visiteurs qui acceptent la mesure |
 | `pnpm run verify:local` | La chaîne complète, quatorze étapes en trois voies concurrentes puis la suite front seule, durées affichées en fin de run ; chaque porte qu'elle partage avec la CI y passe par le même `pnpm run` |
 
 ## Captures du README

@@ -209,7 +209,7 @@ export default function SavedListPage() {
       isError={listQuery.isError}
       storageScope="savedList"
       storageListId={savedListId}
-      randomPickHistoryKey="savedList.randomPick"
+      randomPick={{ historyKey: 'savedList.randomPick', source: 'saved_list' }}
       emptyIcon={
         unavailable ? (
           <CloudOff aria-hidden size={ICON_SIZE['3xl']} />

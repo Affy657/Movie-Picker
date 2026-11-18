@@ -3,6 +3,7 @@ using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Auth;
+using MoviePicker.Api.Application.UseCases.UsageCounts;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
@@ -454,7 +455,7 @@ public sealed class DeleteAccountHandlerTests
             ActorAvatarId = "fox",
             CreatedAt = DateTimeOffset.UtcNow
         });
-        var renaming = new PatchUserProfileHandler(f.Users, f.Notifications, new InMemoryUnitOfWork(), TimeProvider.System);
+        var renaming = new PatchUserProfileHandler(f.Users, f.Notifications, new InMemoryUnitOfWork(), Mock.Of<IUsageRecorder>(), TimeProvider.System);
         await renaming.HandleAsync(user.Id, new PatchUserProfileRequest { Handle = "neo_apres" });
 
         await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);

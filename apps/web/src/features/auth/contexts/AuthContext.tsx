@@ -28,6 +28,7 @@ import { clearStoredEventIdentities } from '@/shared/utils/eventIdentityStorage'
 import { dropBrowserPushSubscription } from '@/shared/utils/browserPushSubscription';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
+import { entryOriginOf } from '@/shared/analytics/entryOrigin';
 import { applyUpdatedProfile } from '@/features/auth/utils/profileCache';
 import type { UserProfile } from '@/features/auth/types';
 
@@ -37,12 +38,27 @@ type AuthContextValue = {
   authCheckFailed: boolean;
   signOutPending: boolean;
   retryAuthCheck: () => void;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, displayName: string) => Promise<void>;
+  login: (email: string, password: string, returnTo?: string) => Promise<void>;
+  register: (
+    email: string,
+    password: string,
+    displayName: string,
+    returnTo?: string
+  ) => Promise<void>;
   logout: () => Promise<void>;
   endSession: () => Promise<void>;
   patchProfile: (patch: ProfilePatch) => Promise<UserProfile>;
 };
+
+interface EmailSignIn {
+  email: string;
+  password: string;
+  returnTo?: string;
+}
+
+interface EmailSignUp extends EmailSignIn {
+  displayName: string;
+}
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -118,32 +134,24 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   }, [queryClient, resetAccountQueries]);
 
   const loginMutation = useMutation({
-    mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      await postAuthLogin(email, password);
+    mutationFn: async ({ email, password, returnTo }: EmailSignIn) => {
+      await postAuthLogin(email, password, returnTo);
       await invalidateSession();
     },
-    onSuccess: () => {
+    onSuccess: (_result, { returnTo }) => {
       setSignOutPending(false);
-      track('user_logged_in');
+      track('user_logged_in', { method: 'email', origin: entryOriginOf(returnTo) });
     },
   });
 
   const registerMutation = useMutation({
-    mutationFn: async ({
-      email,
-      password,
-      displayName,
-    }: {
-      email: string;
-      password: string;
-      displayName: string;
-    }) => {
-      await postAuthRegister(email, password, displayName);
+    mutationFn: async ({ email, password, displayName, returnTo }: EmailSignUp) => {
+      await postAuthRegister(email, password, displayName, returnTo);
       await invalidateSession();
     },
-    onSuccess: () => {
+    onSuccess: (_result, { returnTo }) => {
       setSignOutPending(false);
-      track('user_signed_up');
+      track('user_signed_up', { method: 'email', origin: entryOriginOf(returnTo) });
     },
   });
 
@@ -203,13 +211,14 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   });
 
   const login = useCallback(
-    (email: string, password: string) => loginMutation.mutateAsync({ email, password }),
+    (email: string, password: string, returnTo?: string) =>
+      loginMutation.mutateAsync({ email, password, returnTo }),
     [loginMutation]
   );
 
   const register = useCallback(
-    (email: string, password: string, displayName: string) =>
-      registerMutation.mutateAsync({ email, password, displayName }),
+    (email: string, password: string, displayName: string, returnTo?: string) =>
+      registerMutation.mutateAsync({ email, password, displayName, returnTo }),
     [registerMutation]
   );
 

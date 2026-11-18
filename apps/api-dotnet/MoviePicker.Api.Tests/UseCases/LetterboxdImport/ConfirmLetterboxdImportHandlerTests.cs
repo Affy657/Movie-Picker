@@ -4,7 +4,9 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.LetterboxdImport;
 using MoviePicker.Api.Application.UseCases.MovieLists;
+using MoviePicker.Api.Application.UseCases.UsageCounts;
 using MoviePicker.Api.Application.UseCases.Watchlist;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
@@ -24,6 +26,7 @@ public sealed class ConfirmLetterboxdImportHandlerTests
     private readonly Mock<IPosterImageStore> _posters = new();
     private readonly InMemoryWatchedTitleRepository _watched = new();
     private readonly SteppingClock _clock = new(new DateTimeOffset(2026, 11, 13, 20, 0, 0, TimeSpan.Zero));
+    private readonly Mock<IUsageRecorder> _usage = new();
     private readonly ConfirmLetterboxdImportHandler _sut;
 
     public ConfirmLetterboxdImportHandlerTests()
@@ -45,7 +48,8 @@ public sealed class ConfirmLetterboxdImportHandlerTests
             _addToWatchlist.Object,
             _users.Object,
             new LetterboxdWatchedWriter(_watched, _watchlist.Object, _users.Object, facts, _clock),
-            new LetterboxdLinkedCounter(_users.Object, _watchlist.Object, _watched));
+            new LetterboxdLinkedCounter(_users.Object, _watchlist.Object, _watched),
+            _usage.Object);
     }
 
     private static LetterboxdWatchedSelectionRequest WatchedSelection(
@@ -373,5 +377,40 @@ public sealed class ConfirmLetterboxdImportHandlerTests
             new LetterboxdImportConfirmRequest { WatchedSelections = [WatchedSelection(603, "the-matrix")] });
 
         _users.Verify(u => u.SetLetterboxdLinkedCountsAsync(UserId, 5, 1, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithSelections_CountsAConfirmation()
+    {
+        await _sut.HandleAsync(UserId, new LetterboxdImportConfirmRequest { Selections = [Selection(42)] });
+
+        _usage.Verify(
+            x => x.RecordAsync(
+                It.Is<UsageCount>(c => c.Metric == UsageCount.LetterboxdChoicesConfirmedMetric && c.Variant == "selected"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithoutSelection_CountsADismissal()
+    {
+        await _sut.HandleAsync(UserId, new LetterboxdImportConfirmRequest { Selections = [], RemainingUnresolvedCount = 0 });
+
+        _usage.Verify(
+            x => x.RecordAsync(
+                It.Is<UsageCount>(c => c.Metric == UsageCount.LetterboxdChoicesConfirmedMetric && c.Variant == "none"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_RefusedRequest_IsNotCounted()
+    {
+        var selections = Enumerable.Range(0, LetterboxdImportLimits.MaxRows + 1).Select(i => Selection(i)).ToList();
+
+        await Assert.ThrowsAsync<BadRequestException>(
+            () => _sut.HandleAsync(UserId, new LetterboxdImportConfirmRequest { Selections = selections }));
+
+        _usage.Verify(x => x.RecordAsync(It.IsAny<UsageCount>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

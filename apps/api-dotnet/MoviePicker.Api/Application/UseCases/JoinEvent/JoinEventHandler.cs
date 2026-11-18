@@ -3,6 +3,8 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Application.UseCases.Shared;
+using MoviePicker.Api.Application.UseCases.UsageCounts;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -19,6 +21,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
     private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly IPushNotificationSender _pushSender;
     private readonly IUserNotificationRepository _notifications;
+    private readonly IUsageRecorder _usage;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<JoinEventHandler> _logger;
     private readonly TimeProvider _clock;
@@ -30,6 +33,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
         IPushSubscriptionRepository pushSubscriptions,
         IPushNotificationSender pushSender,
         IUserNotificationRepository notifications,
+        IUsageRecorder usage,
         IUnitOfWork unitOfWork,
         ILogger<JoinEventHandler> logger,
         TimeProvider clock)
@@ -40,6 +44,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
         _pushSubscriptions = pushSubscriptions;
         _pushSender = pushSender;
         _notifications = notifications;
+        _usage = usage;
         _unitOfWork = unitOfWork;
         _logger = logger;
         _clock = clock;
@@ -68,6 +73,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
             {
                 var created = await InsertAsync(idOrSlug, evt, NewParticipant(evt.Id, pseudo, userId), ct);
                 await NotifyHostAsync(evt, created.Pseudo, userId, CancellationToken.None);
+                await CountArrivalAsync(evt, userId);
                 return new JoinEventResult
                 {
                     Participant = ParticipantResponse.FromDomain(created),
@@ -151,6 +157,20 @@ public sealed class JoinEventHandler : IJoinEventHandler
             },
             ct);
         return inserted;
+    }
+
+    private async Task CountArrivalAsync(Event evt, string joinerUserId)
+    {
+        try
+        {
+            var joiner = await _userRepository.GetByIdAsync(joinerUserId, CancellationToken.None);
+            if (joiner is not null)
+                await _usage.RecordAsync(UsageCount.EventJoined(joiner.CreatedAt, _clock.GetUtcNow()), CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Arrival count failed for movie night {EventId}", evt.Id);
+        }
     }
 
     private async Task NotifyHostAsync(Event evt, string joinerPseudo, string joinerUserId, CancellationToken ct)

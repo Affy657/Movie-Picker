@@ -152,6 +152,7 @@ public static class ErrorCodes
     public const string NothingLeftToDraw = "nothing_left_to_draw";
     public const string TooManySelections = "too_many_selections";
     public const string UnknownNotificationType = "unknown_notification_type";
+    public const string UnknownUsageCount = "unknown_usage_count";
     public const string NotificationEnabledRequired = "notification_enabled_required";
     public const string InvalidPushEndpoint = "invalid_push_endpoint";
     public const string PitchNoteTooLong = "pitch_note_too_long";

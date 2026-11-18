@@ -36,9 +36,9 @@ export default function LoginPage() {
   const loginAction = useCallback(
     async (mode: LoginSubmitMode) => {
       if (mode === 'devQuick') {
-        await login(DEV_QUICK_LOGIN_EMAIL, DEV_QUICK_LOGIN_PASSWORD);
+        await login(DEV_QUICK_LOGIN_EMAIL, DEV_QUICK_LOGIN_PASSWORD, returnTo);
       } else {
-        await login(email.trim(), password);
+        await login(email.trim(), password, returnTo);
       }
       void navigate(returnTo, { replace: true });
     },

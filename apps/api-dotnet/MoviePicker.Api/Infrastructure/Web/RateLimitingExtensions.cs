@@ -68,6 +68,7 @@ public static class RateLimitingExtensions
     public const string NightRecapPolicy = "night-recap";
     public const string AvatarPhotoUploadPolicy = "avatar-photo-upload";
     public const string AvatarPhotosPolicy = "avatar-photos-get";
+    public const string UsageCountPolicy = "usage-count";
 
     private const string ProxiedPartition = "proxied";
     private const string EndpointPartition = "endpoint";
@@ -136,7 +137,8 @@ public static class RateLimitingExtensions
         new(MovieDocumentCeilingPolicy, 600, 1, QuotaScope.Endpoint),
         new(NightRecapPolicy, 60, 1),
         new(AvatarPhotoUploadPolicy, 10, 60),
-        new(AvatarPhotosPolicy, 300, 1)
+        new(AvatarPhotosPolicy, 300, 1),
+        new(UsageCountPolicy, 60, 1, QuotaScope.Address)
     ];
 
     public static IServiceCollection AddMoviePickerRateLimiter(

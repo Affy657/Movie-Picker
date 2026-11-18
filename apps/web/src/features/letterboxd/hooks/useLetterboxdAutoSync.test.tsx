@@ -7,6 +7,9 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { createLetterboxdSyncHandler, TEST_API_V1 } from '@/mocks/handlers';
 import { useLetterboxdAutoSync } from './useLetterboxdAutoSync';
 
+const { track } = vi.hoisted(() => ({ track: vi.fn() }));
+vi.mock('@/shared/hooks/useAnalytics', () => ({ useAnalytics: () => ({ track }) }));
+
 function meBody(letterboxdUsername: string | null, userId = 'u-acc') {
   return {
     userId,
@@ -84,6 +87,13 @@ describe('useLetterboxdAutoSync', () => {
 
     await waitFor(() => expect(calls).toBe(1));
     expect(sawForceFalse).toBe(true);
+    await waitFor(() =>
+      expect(track).toHaveBeenCalledWith('letterboxd_synced', {
+        mode: 'auto',
+        changed: false,
+        pendingChoices: 0,
+      })
+    );
   });
 
   it('invalidates the notifications when films are to be reconciled', async () => {

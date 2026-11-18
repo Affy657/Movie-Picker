@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { postAuthLogout } from '@/features/auth/api/authApi';
+import { postAuthLogin, postAuthLogout, postAuthRegister } from '@/features/auth/api/authApi';
 import { hasSessionHint, setSessionHint } from '@/features/auth/session-hint';
 import { ApiError } from '@/shared/api/apiError';
 
@@ -100,4 +100,35 @@ describe('postAuthLogout', () => {
       expect(hasSessionHint()).toBe(true);
     }
   );
+});
+
+describe('sign-in and sign-up destination', () => {
+  beforeEach(() => {
+    mockFetchApi.mockReset();
+    mockFetchApi.mockResolvedValue(undefined);
+  });
+
+  function bodyOf(path: string): { returnTo?: string } {
+    const [, init] = mockFetchApi.mock.calls.find(([called]) => called === path)!;
+    return JSON.parse((init as { body: string }).body) as { returnTo?: string };
+  }
+
+  it('keeps an overlong destination within what the server accepts, its start intact', async () => {
+    const overlong = `/e/soiree?${'x'.repeat(3000)}`;
+
+    await postAuthRegister('a@test.local', 'secret1', 'Alice', overlong);
+    await postAuthLogin('a@test.local', 'secret1', overlong);
+
+    for (const path of ['/auth/register', '/auth/login']) {
+      const { returnTo } = bodyOf(path);
+      expect(returnTo).toHaveLength(2048);
+      expect(returnTo?.startsWith('/e/soiree?')).toBe(true);
+    }
+  });
+
+  it('sends no destination when there is none', async () => {
+    await postAuthLogin('a@test.local', 'secret1');
+
+    expect(bodyOf('/auth/login')).not.toHaveProperty('returnTo');
+  });
 });
