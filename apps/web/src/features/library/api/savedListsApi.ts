@@ -1,40 +1,18 @@
 import { apiPath, fetchApi } from '@/shared/api/client';
-import type { ListCreator, MovieListDetail, MovieListItem } from '@/features/library/api/listsApi';
+import type { ApiSchemas } from '@/shared/api/contract';
+import type { MovieListDetail } from '@/features/library/api/listsApi';
 
-export type SavedListSourceType = 'tmdbCollection' | 'explorerTheme' | 'memberList';
+export type SavedListSourceType = ApiSchemas['ListSourceType'];
 
-type SavedListUnavailableReason = 'private' | 'deleted';
+export type SavedListSummary = ApiSchemas['SavedListSummaryResponse'];
 
-export interface SavedListSource {
-  sourceType: SavedListSourceType;
-  sourceId: string;
-}
+export type SavedListSource = Pick<SavedListSummary, 'sourceType' | 'sourceId'>;
 
-export interface SavedListSummary extends SavedListSource {
-  id: string;
-  name: string | null;
-  description?: string | null;
-  creator?: ListCreator | null;
-  itemCount: number;
-  posterPaths: string[];
-  watchedCount: number;
-  createdAt: string;
-  unavailable: boolean;
-  unavailableReason?: SavedListUnavailableReason | null;
-  copyAvailable?: boolean;
-}
+export type SavedListDetail = ApiSchemas['SavedListResponse'];
 
-export interface SavedListDetail extends SavedListSummary {
-  items: MovieListItem[];
-}
+export type CopySavedListBody = ApiSchemas['CopySavedListRequest'];
 
-export interface CopySavedListBody {
-  name: string;
-}
-
-interface SavedListsResponse {
-  items?: SavedListSummary[] | null;
-}
+type SavedListsResponse = ApiSchemas['SavedListsResponse'];
 
 function itemsOf(response: SavedListsResponse | null): SavedListSummary[] {
   return Array.isArray(response?.items) ? response.items : [];

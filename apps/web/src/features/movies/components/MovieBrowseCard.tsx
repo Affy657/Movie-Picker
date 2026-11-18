@@ -63,7 +63,6 @@ interface MovieBrowseCardProps {
   rank?: number;
   showListBadge?: boolean;
   contributor?: MovieContributor | null;
-  withContributor?: boolean;
 }
 
 function RowAvailability({
@@ -173,7 +172,6 @@ function BrowseMovieRow({
   ratingScale,
   eager,
   contributor,
-  withContributor,
 }: Readonly<MovieBrowseCardProps>) {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
@@ -234,8 +232,11 @@ function BrowseMovieRow({
       onOpenDetails={onOpenDetails}
       kebab={kebab}
       dimmed={dimmed}
-      withContributor={withContributor}
-      contributor={contributor ? <ContributorCell contributor={contributor} /> : undefined}
+      contributor={
+        contributor === undefined
+          ? undefined
+          : contributor && <ContributorCell contributor={contributor} />
+      }
     />
   );
 }

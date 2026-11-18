@@ -9,6 +9,7 @@ import StatusDot from '@/shared/components/StatusDot';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
 import type { MovieData } from '@/shared/types/movie';
+import { toTitleSummary } from '@/shared/utils/titleSummary';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
 import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
 import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
@@ -158,7 +159,6 @@ export function useMovieCardState({
   const posterSrc = posterImageSrc(m.posterPath);
   const posterSrcSet = tmdbPosterSrcSetForList(posterSrc);
   const providers = m.watchProviders ?? [];
-  const mediaType = m.mediaType ?? 'movie';
 
   const openMoviePage = useOpenMoviePage();
   const [noteEditing, setNoteEditing] = useState(false);
@@ -167,20 +167,8 @@ export function useMovieCardState({
 
   const openDetails = useCallback(() => {
     if (!hasDetails) return;
-    openMoviePage(
-      {
-        tmdbId: m.tmdbId,
-        mediaType,
-        title: m.title,
-        year: m.year,
-        posterPath: m.posterPath,
-        voteAverage: m.voteAverage,
-        runtimeMinutes: m.runtimeMinutes,
-        genreIds: m.genreIds,
-      },
-      slug
-    );
-  }, [hasDetails, openMoviePage, m, mediaType, slug]);
+    openMoviePage(toTitleSummary(m), slug);
+  }, [hasDetails, openMoviePage, m, slug]);
 
   return {
     isMine: actions.isMine,

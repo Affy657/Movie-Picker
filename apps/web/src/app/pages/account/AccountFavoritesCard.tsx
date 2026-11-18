@@ -17,6 +17,7 @@ import type { MovieSearchItem } from '@/features/movies/api/moviesApi';
 import { addFavorite, FAVORITES_MAX, removeFavorite } from '@/features/profile/api/profileApi';
 import type { UserProfile } from '@/features/auth/types';
 import type { FavoriteTitle } from '@/shared/types/movie';
+import { toTitleSummary } from '@/shared/utils/titleSummary';
 import settings from '@/shared/components/SettingsSection.module.css';
 import styles from './AccountFavoritesCard.module.css';
 
@@ -30,13 +31,8 @@ interface Props {
 }
 
 function toFavorite(item: MovieSearchItem): FavoriteTitle {
-  return {
-    tmdbId: item.id,
-    mediaType: item.mediaType ?? 'movie',
-    title: item.title,
-    year: item.year,
-    posterPath: item.posterPath,
-  };
+  const { tmdbId, mediaType, title, year, posterPath } = toTitleSummary(item);
+  return { tmdbId, mediaType, title, year, posterPath };
 }
 
 function sameTitle(a: FavoriteTitle, b: FavoriteTitle): boolean {

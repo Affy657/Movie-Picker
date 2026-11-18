@@ -5,6 +5,7 @@ import HistoryEventRow from '@/features/events/pages/my-events/HistoryEventRow';
 import type { MyEventSummary } from '@/features/events/types';
 import { LocaleProvider } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
+import { buildMyEventSummary } from '@/test-utils/myEventSummary';
 
 const auth = vi.hoisted(() => ({
   user: { userId: 'u1', ratingScale: 'five' } as { userId: string; ratingScale: string } | null,
@@ -14,7 +15,7 @@ vi.mock('@/features/auth/contexts/AuthContext', () => ({
   useAuth: () => ({ user: auth.user }),
 }));
 
-const base: MyEventSummary = {
+const base = buildMyEventSummary({
   id: 'e1',
   slug: 'soiree',
   title: 'Ciné-club du mardi',
@@ -28,7 +29,7 @@ const base: MyEventSummary = {
   participantCount: 6,
   movieCount: 8,
   winnerMovies: [],
-};
+});
 
 const won: Pick<MyEventSummary, 'winnerMovies'> = {
   winnerMovies: [{ title: 'Parasite', posterPath: '/p.jpg' }],

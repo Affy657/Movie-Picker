@@ -1,29 +1,11 @@
 import { apiPath, fetchApi } from '@/shared/api/client';
+import type { ApiSchemas } from '@/shared/api/contract';
 
-export interface GenreCount {
-  genreId: number;
-  count: number;
-}
+export type GenreCount = ApiSchemas['GenreCount'];
 
-export interface DailyActivityPoint {
-  date: string;
-  count: number;
-}
+export type DailyActivityPoint = ApiSchemas['DailyActivityPoint'];
 
-export interface UserStats {
-  eventsCreated: number;
-  eventsJoined: number;
-  moviesProposed: number;
-  votesCast: number;
-  winningProposals: number;
-  proposalsAverageRating?: number | null;
-  moviesSeen: number;
-  publicListCount?: number;
-  currentStreakWeeks: number;
-  bestStreakWeeks: number;
-  favoriteGenres: GenreCount[];
-  dailyActivity: DailyActivityPoint[];
-}
+export type UserStats = ApiSchemas['UserStatsResponse'];
 
 export async function fetchUserStats(handle: string, signal?: AbortSignal): Promise<UserStats> {
   return fetchApi<UserStats>(apiPath('users', handle, 'stats'), { signal });

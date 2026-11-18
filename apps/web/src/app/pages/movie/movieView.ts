@@ -8,7 +8,7 @@ import type { MoviePageSeed } from '@/features/movies/hooks/useOpenMoviePage';
 import type { Translate } from '@/shared/i18n';
 import type { LocaleCode } from '@/shared/i18n/locales';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
-import type { MovieMediaType } from '@/shared/types/movie';
+import type { MovieMediaType, TitleSummary } from '@/shared/types/movie';
 import { formatReleaseDate, yearFromDate } from '@/shared/utils/formatReleaseDate';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
@@ -160,7 +160,7 @@ export function libraryItemOf({
   details: MovieDetails | undefined;
   seed: MoviePageSeed | undefined;
   view: MovieHeroView;
-}) {
+}): TitleSummary {
   return {
     tmdbId,
     mediaType,

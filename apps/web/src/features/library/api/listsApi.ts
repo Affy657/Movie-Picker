@@ -1,56 +1,21 @@
 import { apiPath, fetchApi } from '@/shared/api/client';
+import type { ApiSchemas } from '@/shared/api/contract';
 import type { MovieMediaType } from '@/shared/types/movie';
-import type { AddWatchlistItemBody, WatchlistItem } from '@/features/movies/api/watchlistApi';
+import type { AddWatchlistItemBody } from '@/features/movies/api/watchlistApi';
 
-export type MovieListRole = 'owner' | 'member';
+export type MovieListPerson = ApiSchemas['MovieListPersonResponse'];
 
-export interface MovieListPerson {
-  userId: string;
-  handle: string | null;
-  displayName: string;
-  avatarId: string | null;
-}
+export type ListCreator = ApiSchemas['ListCreatorResponse'];
 
-export interface ListCreator {
-  handle: string;
-  displayName: string;
-  avatarId: string | null;
-}
+export type MovieListSummary = ApiSchemas['MovieListSummaryResponse'];
 
-export interface MovieListAudience {
-  role?: MovieListRole;
-  owner?: MovieListPerson;
-  memberCount?: number;
-  memberPreview?: MovieListPerson[];
-}
+export type MovieListAudience = Partial<
+  Pick<MovieListSummary, 'role' | 'owner' | 'memberCount' | 'memberPreview'>
+>;
 
-export interface MovieListSummary extends MovieListAudience {
-  id: string;
-  name: string;
-  description: string | null;
-  itemCount: number;
-  posterPaths: string[];
-  createdAt: string;
-  updatedAt: string;
-  containsMovie: boolean;
-  watchedCount?: number;
-  isPublic?: boolean;
-}
+export type MovieListItem = ApiSchemas['MovieListItemResponse'];
 
-export interface MovieListItem extends WatchlistItem {
-  isWatched?: boolean;
-  addedBy?: MovieListPerson | null;
-}
-
-export interface MovieListDetail extends MovieListAudience {
-  id: string;
-  name: string;
-  description: string | null;
-  createdAt: string;
-  updatedAt: string;
-  isPublic?: boolean;
-  items: MovieListItem[];
-}
+export type MovieListDetail = ApiSchemas['MovieListResponse'];
 
 export type MovieListItemBody = AddWatchlistItemBody;
 
@@ -59,22 +24,11 @@ export interface MovieListRef {
   mediaType: MovieMediaType;
 }
 
-export interface CreateListBody {
-  name: string;
-  description?: string | null;
-  isPublic?: boolean;
-  firstItem?: MovieListItemBody;
-}
+export type CreateListBody = ApiSchemas['CreateMovieListRequest'];
 
-export interface UpdateListBody {
-  name: string;
-  description?: string | null;
-  isPublic?: boolean;
-}
+export type UpdateListBody = ApiSchemas['UpdateMovieListRequest'];
 
-interface MovieListsResponse {
-  items?: MovieListSummary[] | null;
-}
+type MovieListsResponse = ApiSchemas['MovieListsResponse'];
 
 export async function fetchMyLists(
   containing?: MovieListRef,

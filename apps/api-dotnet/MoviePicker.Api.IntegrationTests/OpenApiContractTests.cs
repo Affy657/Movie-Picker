@@ -125,29 +125,43 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
         || property.GetCustomAttribute<RequiredMemberAttribute>() is not null;
 
     [Fact]
-    public async Task ResponseSchemas_RequireEveryPropertyTheServerAlwaysWritesWithAValue()
+    public async Task ResponseSchemas_RequireEveryPropertyTheServerAlwaysWrites()
     {
         using var contract = await ContractAsync();
         var schemas = Schemas(contract);
         var requestSchemas = RequestSchemas(contract);
+        var exportSchemas = ReachableSchemas(schemas, ["UserDataExportResponse"]);
 
-        var optionalButNeverNull = (
+        var optionalThoughAlwaysWritten = (
             from schema in schemas.EnumerateObject()
-            where !requestSchemas.Contains(schema.Name) && schema.Value.TryGetProperty("properties", out _)
+            where !requestSchemas.Contains(schema.Name)
+                  && !exportSchemas.Contains(schema.Name)
+                  && schema.Name != "ApiErrorResponse"
+                  && schema.Value.TryGetProperty("properties", out _)
             let required = RequiredOf(schema.Value)
             from property in schema.Value.GetProperty("properties").EnumerateObject()
-            where !IsNullable(property.Value) && !required.Contains(property.Name)
+            where !required.Contains(property.Name)
             select $"{schema.Name}.{property.Name}").ToList();
 
-        Assert.Empty(optionalButNeverNull);
+        Assert.Empty(optionalThoughAlwaysWritten);
         var myParticipant = schemas.GetProperty("EventDetailResponse").GetProperty("properties").GetProperty("myParticipant");
         Assert.True(IsNullable(myParticipant));
         Assert.Equal("ParticipantResponse", Assert.Single(SchemaRefs(myParticipant)));
+        Assert.Contains("myParticipant", RequiredOf(schemas.GetProperty("EventDetailResponse")));
+        Assert.Contains("actorHandle", RequiredOf(schemas.GetProperty("UserNotificationItem")));
+        Assert.Contains("myVote", RequiredOf(schemas.GetProperty("MovieWithScoreResponse")));
         Assert.Contains("eventsCreated", RequiredOf(schemas.GetProperty("UserStatsResponse")));
-        Assert.Contains("slug", RequiredOf(schemas.GetProperty("EventDetailResponse")));
-        Assert.Contains("status", RequiredOf(schemas.GetProperty("WatchedStatusResponse")));
-        Assert.DoesNotContain("actorHandle", RequiredOf(schemas.GetProperty("UserNotificationItem")));
-        Assert.DoesNotContain("myVote", RequiredOf(schemas.GetProperty("MovieWithScoreResponse")));
+    }
+
+    [Fact]
+    public async Task ExportSchema_LeavesOptionalTheNullsTheExportOmits()
+    {
+        using var contract = await ContractAsync();
+        var export = Schemas(contract).GetProperty("UserDataExportResponse");
+
+        Assert.Contains("exportedAt", RequiredOf(export));
+        Assert.DoesNotContain("avatarPhoto", RequiredOf(export));
+        Assert.True(IsNullable(export.GetProperty("properties").GetProperty("avatarPhoto")));
     }
 
     [Fact]

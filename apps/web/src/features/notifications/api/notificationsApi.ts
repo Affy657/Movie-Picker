@@ -1,55 +1,17 @@
 import { apiPath, fetchApi } from '@/shared/api/client';
+import type { ApiSchemas } from '@/shared/api/contract';
 
-export type NotificationTypeKey =
-  | 'newfollower'
-  | 'movieadded'
-  | 'moviepicked'
-  | 'participantjoined'
-  | 'eventdeleted'
-  | 'eventreminder1h'
-  | 'eventreminder24h'
-  | 'eventinvitation'
-  | 'listinvitation'
-  | 'eventpending'
-  | 'moviepickedmanually'
-  | 'letterboxdreconciliationpending'
-  | 'eventdatechanged'
-  | 'ratingreminder';
+export type NotificationTypePreference = ApiSchemas['NotificationTypePreference'];
 
-export interface NotificationTypePreference {
-  type: NotificationTypeKey;
-  enabled: boolean;
-}
+export type NotificationTypeKey = NotificationTypePreference['type'];
 
-export interface NotificationPreferences {
-  preferences: NotificationTypePreference[];
-}
+export type NotificationPreferences = ApiSchemas['NotificationPreferencesResponse'];
 
-export interface UserNotificationItem {
-  id: string;
-  type: string;
-  actorHandle: string | null;
-  actorDisplayName: string | null;
-  actorAvatarId: string | null;
-  eventSlug: string | null;
-  eventTitle: string | null;
-  movieTitle: string | null;
-  listId?: string | null;
-  listName?: string | null;
-  listInvitationPending?: boolean;
-  isRead: boolean;
-  createdAt: string;
-}
+export type UserNotificationItem = ApiSchemas['UserNotificationItem'];
 
-export interface NotificationInbox {
-  items: UserNotificationItem[];
-  unreadCount: number;
-  hasMore: boolean;
-}
+export type NotificationInbox = ApiSchemas['NotificationInboxResponse'];
 
-export interface NotificationUnreadCount {
-  unreadCount: number;
-}
+export type NotificationUnreadCount = ApiSchemas['NotificationUnreadCountResponse'];
 
 export async function fetchNotificationUnreadCount(): Promise<NotificationUnreadCount> {
   return fetchApi<NotificationUnreadCount>('/notifications/inbox/unread-count');

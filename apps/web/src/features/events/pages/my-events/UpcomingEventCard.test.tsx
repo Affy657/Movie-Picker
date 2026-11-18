@@ -6,8 +6,9 @@ import type { MyEventSummary } from '@/features/events/types';
 import { LocaleProvider } from '@/shared/i18n';
 import { eventScheduledStartUtcMs } from '@/shared/utils/eventScheduled';
 import UpcomingEventCard, { upcomingCardPosters } from './UpcomingEventCard';
+import { buildMyEventSummary } from '@/test-utils/myEventSummary';
 
-const base: MyEventSummary = {
+const base = buildMyEventSummary({
   id: 'e1',
   slug: 'chez-lea',
   title: 'Soirée chez Léa',
@@ -33,7 +34,7 @@ const base: MyEventSummary = {
     { pseudo: 'Inès', avatarId: '' },
     { pseudo: 'Sam', avatarId: '' },
   ],
-};
+});
 
 function renderCard(event: MyEventSummary, onLeave?: () => void) {
   return render(

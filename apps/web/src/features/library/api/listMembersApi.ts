@@ -1,61 +1,25 @@
 import { apiPath, fetchApi } from '@/shared/api/client';
 import { ROUTES } from '@/app/routes';
-import type {
-  MovieListPerson,
-  MovieListRole,
-  MovieListSummary,
-} from '@/features/library/api/listsApi';
+import type { ApiSchemas } from '@/shared/api/contract';
+import type { MovieListSummary } from '@/features/library/api/listsApi';
 
-export interface MovieListMember extends MovieListPerson {
-  isOwner: boolean;
-  joinedAt: string;
-}
+export type MovieListMember = ApiSchemas['MovieListMemberResponse'];
 
-export interface MovieListPendingInvitation extends MovieListPerson {
-  invitedAt: string;
-}
+export type MovieListPendingInvitation = ApiSchemas['MovieListPendingInvitationResponse'];
 
-export interface MovieListInviteLink {
-  token: string;
-  expiresAt: string;
-  active: boolean;
-}
+export type MovieListInviteLink = ApiSchemas['MovieListInviteLinkResponse'];
 
-export interface MovieListMembers {
-  maxMembers: number;
-  members: MovieListMember[];
+type MovieListMembersResponse = ApiSchemas['MovieListMembersResponse'];
+
+export type MovieListMembers = Omit<MovieListMembersResponse, 'invitations'> & {
   invitations: MovieListPendingInvitation[];
-  inviteLink: MovieListInviteLink | null;
-}
+};
 
-export type MovieListInvitableUser = MovieListPerson;
+export type MovieListInvitableUser = ApiSchemas['MovieListInvitableUserResponse'];
 
-export interface MovieListInviter {
-  handle: string | null;
-  displayName: string;
-  avatarId: string | null;
-}
+export type MovieListInvitePreview = ApiSchemas['MovieListInvitePreviewResponse'];
 
-export interface MovieListInvitePreview {
-  name: string;
-  owner: MovieListInviter;
-  itemCount: number;
-  posterPaths: string[];
-  isFull: boolean;
-  role: MovieListRole | null;
-  listId: string | null;
-}
-
-interface MovieListMembersResponse {
-  maxMembers: number;
-  members?: MovieListMember[] | null;
-  invitations?: MovieListPendingInvitation[] | null;
-  inviteLink?: MovieListInviteLink | null;
-}
-
-interface MovieListInvitableUsersResponse {
-  users?: MovieListInvitableUser[] | null;
-}
+type MovieListInvitableUsersResponse = ApiSchemas['MovieListInvitableUsersResponse'];
 
 export async function fetchListMembers(
   id: string,

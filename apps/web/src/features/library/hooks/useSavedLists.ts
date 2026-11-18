@@ -63,11 +63,15 @@ function pendingSummary(source: SavedListSource): SavedListSummary {
     ...source,
     id: '',
     name: '',
+    description: null,
+    creator: null,
     itemCount: 0,
     posterPaths: [],
     watchedCount: 0,
     createdAt: new Date().toISOString(),
     unavailable: false,
+    unavailableReason: null,
+    copyAvailable: false,
   };
 }
 

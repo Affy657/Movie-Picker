@@ -30,6 +30,7 @@ import { getErrorMessage } from '@/shared/api/apiError';
 import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
 import { safeTmdbWatchUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
 import type { MovieData, MovieMediaType } from '@/shared/types/movie';
+import { toTitleSummary } from '@/shared/utils/titleSummary';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
 import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
 import Button from '@/shared/components/Button';
@@ -92,11 +93,11 @@ function useWatchlistSuggestions(enabled: boolean, allowSeries: boolean): MovieS
           title: item.title,
           year: item.year,
           posterPath: item.posterPath,
-          voteAverage: item.voteAverage ?? offer?.voteAverage,
-          runtimeMinutes: item.runtimeMinutes ?? offer?.runtimeMinutes,
+          voteAverage: item.voteAverage ?? offer?.voteAverage ?? null,
+          runtimeMinutes: item.runtimeMinutes ?? offer?.runtimeMinutes ?? null,
           genreIds: item.genreIds,
-          watchProviders: offer?.watchProviders,
-          tmdbWatchPageUrl: offer?.tmdbWatchPageUrl,
+          watchProviders: offer?.watchProviders ?? null,
+          tmdbWatchPageUrl: offer?.tmdbWatchPageUrl ?? null,
         };
       });
   }, [watchlist.data, availability.data, allowSeries]);
@@ -179,18 +180,10 @@ export default function ProposeMovieDialog({
   const propose = useCallback(
     async (item: MovieSearchItem, pitchNote?: string) => {
       setError(null);
-      const created = await proposeToEvent(
-        slug,
-        {
-          tmdbId: item.id,
-          mediaType: item.mediaType ?? 'movie',
-          title: item.title,
-          year: item.year,
-          posterPath: item.posterPath,
-          genreIds: item.genreIds,
-        },
-        { participantId: participant.participantId, pitchNote }
-      );
+      const created = await proposeToEvent(slug, toTitleSummary(item), {
+        participantId: participant.participantId,
+        pitchNote,
+      });
       track('movie_added', { mediaType: item.mediaType });
       const entry = { key: keyOf(item.id, item.mediaType), id: created.id, title: item.title };
       setProposed((prev) => [...prev.filter((p) => p.key !== entry.key), entry]);

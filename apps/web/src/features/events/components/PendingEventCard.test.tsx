@@ -3,12 +3,12 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { LocaleProvider } from '@/shared/i18n';
 import PendingEventCard from '@/features/events/components/PendingEventCard';
-import type { MyEventSummary } from '@/features/events/types';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
+import { buildMyEventSummary } from '@/test-utils/myEventSummary';
 
 vi.mock('@/shared/hooks/useIsMobile', () => ({ useIsMobile: vi.fn(() => false) }));
 
-const pending: MyEventSummary = {
+const pending = buildMyEventSummary({
   id: 'e1',
   slug: 'cine-club',
   title: 'Ciné-club hebdomadaire',
@@ -24,7 +24,7 @@ const pending: MyEventSummary = {
   movieCount: 4,
   theme: 'Un classique par semaine',
   autoCloseAt: '2026-06-19T12:00:00Z',
-};
+});
 
 function renderCard() {
   return render(

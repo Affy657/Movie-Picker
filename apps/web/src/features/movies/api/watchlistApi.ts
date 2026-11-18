@@ -1,21 +1,10 @@
 import { apiPath, fetchApi } from '@/shared/api/client';
-import type {
-  AddTitleBody,
-  MovieMediaType,
-  TitleSummary,
-  WatchProviderOffer,
-} from '@/shared/types/movie';
+import type { ApiSchemas } from '@/shared/api/contract';
+import type { AddTitleBody, MovieMediaType } from '@/shared/types/movie';
 
-export interface WatchlistItem extends TitleSummary {
-  createdAt: string;
-  onLetterboxd?: boolean;
-}
+export type WatchlistItem = ApiSchemas['WatchlistItemResponse'];
 
-export interface WatchlistResponse {
-  items: WatchlistItem[];
-  total?: number;
-  hasMore?: boolean;
-}
+export type WatchlistResponse = ApiSchemas['WatchlistResponse'];
 
 interface WatchlistPage<T> {
   items?: T[] | null;
@@ -39,19 +28,9 @@ export async function readAllWatchlistPages<T>(
   return items;
 }
 
-export interface WatchlistAvailabilityItem {
-  tmdbId: number;
-  mediaType: MovieMediaType;
-  watchProviders: WatchProviderOffer[];
-  tmdbWatchPageUrl: string | null;
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
-}
+export type WatchlistAvailabilityItem = ApiSchemas['WatchlistAvailabilityItemResponse'];
 
-export interface WatchlistAvailabilityResponse {
-  items: WatchlistAvailabilityItem[];
-  partial: boolean;
-}
+export type WatchlistAvailabilityResponse = ApiSchemas['WatchlistAvailabilityResponse'];
 
 export type AddWatchlistItemBody = AddTitleBody;
 

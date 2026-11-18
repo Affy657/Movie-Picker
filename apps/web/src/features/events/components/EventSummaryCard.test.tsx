@@ -9,11 +9,12 @@ import {
 } from '@/features/events/components/EventSummaryCard';
 import type { MyEventSummary } from '@/features/events/types';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
+import { buildMyEventSummary } from '@/test-utils/myEventSummary';
 
 vi.mock('@/shared/hooks/useIsMobile', () => ({ useIsMobile: vi.fn(() => false) }));
 
 function event(overrides: Partial<MyEventSummary> = {}): MyEventSummary {
-  return {
+  return buildMyEventSummary({
     id: 'e1',
     slug: 'soiree',
     title: 'Ciné-club du mercredi',
@@ -29,7 +30,7 @@ function event(overrides: Partial<MyEventSummary> = {}): MyEventSummary {
     movieCount: 5,
     theme: 'Halloween',
     ...overrides,
-  };
+  });
 }
 
 function renderCard(ev: MyEventSummary) {

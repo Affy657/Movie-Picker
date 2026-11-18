@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { getErrorMessage } from '@/shared/api/apiError';
 import type { MovieData } from '@/shared/types/movie';
+import { toAddTitleBody } from '@/shared/utils/titleSummary';
 import {
   useAddToWatchlist,
   useRemoveFromWatchlist,
@@ -39,16 +40,7 @@ export function useEventWatchlistToggle(
         removeFromWatchlist({ tmdbId: m.tmdbId, mediaType: m.mediaType });
         return;
       }
-      addToWatchlist({
-        tmdbId: m.tmdbId,
-        mediaType: m.mediaType,
-        title: m.title,
-        year: m.year,
-        posterPath: m.posterPath,
-        voteAverage: m.voteAverage,
-        runtimeMinutes: m.runtimeMinutes,
-        genreIds: m.genreIds,
-      });
+      addToWatchlist(toAddTitleBody(m));
     },
     [watchlistKeys, addToWatchlist, removeFromWatchlist, setActionError]
   );

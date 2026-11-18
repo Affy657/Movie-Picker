@@ -1,4 +1,5 @@
 import { apiPath, apiUrl, fetchApi, SLOW_REQUEST_TIMEOUT_MS } from '@/shared/api/client';
+import type { ApiSchemas } from '@/shared/api/contract';
 import { blobToBase64 } from '@/shared/utils/blobToBase64';
 import { downloadBlob } from '@/shared/utils/downloadBlob';
 import { ApiError } from '@/shared/api/apiError';
@@ -72,7 +73,7 @@ export async function postAuthLogout(): Promise<void> {
 }
 
 export async function fetchOAuthProviders(): Promise<string[]> {
-  const res = await fetchApi<{ providers: string[] }>('/auth/oauth/providers');
+  const res = await fetchApi<ApiSchemas['OAuthProvidersResponse']>('/auth/oauth/providers');
   return res.providers;
 }
 
@@ -154,9 +155,7 @@ export async function postPasswordResetRequest(email: string, locale: string): P
   });
 }
 
-export interface PasswordResetConfirmResponse {
-  message: string;
-}
+export type PasswordResetConfirmResponse = ApiSchemas['PasswordResetConfirmResponse'];
 
 export async function postPasswordResetConfirm(
   token: string,

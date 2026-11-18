@@ -16,7 +16,7 @@ const fr: Translate = (key, vars) => t(key, vars, 'fr');
 const en: Translate = (key, vars) => t(key, vars, 'en');
 
 function person(userId: string, displayName: string): MovieListPerson {
-  return { userId, handle: userId, displayName, avatarId: null };
+  return { userId, handle: userId, displayName, avatarId: '' };
 }
 
 const ALICE = person('u1', 'Alice Martin');

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { letterboxdUrl } from '@/features/movies/utils/movieExternalLinks';
-import type { MovieData } from '@/shared/types/movie';
+import type { MovieData, MovieMediaType } from '@/shared/types/movie';
 import type { MovieWheelExclusion } from '@/features/movies/types';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
@@ -36,7 +36,7 @@ export interface CardKebabRemoveAction {
 export interface CardKebabProps {
   title: string;
   tmdbId: number;
-  mediaType?: 'movie' | 'tv';
+  mediaType?: MovieMediaType;
   remove?: CardKebabRemoveAction;
   inWatchlist?: boolean;
   onToggleWatchlist?: () => void;
