@@ -1,10 +1,14 @@
 name: "Setup web (pnpm + Node)"
-description: "Installs pnpm, Node (pnpm store cache) and the monorepo dependencies (frozen lockfile)."
+description: "Installs pnpm, Node (pnpm store cache) and the monorepo dependencies (frozen lockfile). With install-dependencies false, only pnpm and Node, without the store cache: enough for the gates that run a pinned Docker image through `pnpm run`, and nothing of the lockfile lands in the working tree they scan."
 inputs:
   node-version:
     description: "Node version"
     required: false
     default: "22"
+  install-dependencies:
+    description: "true to restore the pnpm store and install node_modules, false for pnpm and Node alone"
+    required: false
+    default: "true"
 runs:
   using: composite
   steps:
@@ -12,6 +16,7 @@ runs:
     - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v6
       with:
         node-version: ${{ inputs.node-version }}
-        cache: pnpm
-    - run: pnpm install --frozen-lockfile --ignore-scripts
+        cache: ${{ inputs.install-dependencies == 'true' && 'pnpm' || '' }}
+    - if: inputs.install-dependencies == 'true'
+      run: pnpm install --frozen-lockfile --ignore-scripts
       shell: bash

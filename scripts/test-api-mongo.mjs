@@ -1,60 +1,29 @@
 #!/usr/bin/env node
-import { execFileSync, spawnSync } from 'node:child_process';
+/**
+ * The API integration suite against a real MongoDB replica set, with its coverage and the gate of
+ * `scripts/check-mongo-coverage.mjs` on the Mongo adapters. The same entry point on the
+ * workstation, in `verify:local` and in the CI `test-api` job: the container is the one of
+ * `scripts/mongo-replica-set.mjs` (`movie-picker-mongo-test`, port `MONGO_TEST_PORT`, 27018 by
+ * default), started or reused, and every test class gets its own disposable database.
+ */
+import { spawnSync } from 'node:child_process';
 import { rmSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { startWorkstationMongo } from './mongo-replica-set.mjs';
 
-const root = resolve(import.meta.dirname, '..');
-const container = 'movie-picker-mongo-test';
-const port = process.env.MONGO_TEST_PORT ?? '27018';
-// No `shell: true` on Windows: cmd.exe strips the inner quotes of --eval, which breaks the
-// rs.initiate mongosh script. The executable is targeted directly.
-const onWindows = process.platform === 'win32';
-const dockerBin = onWindows ? 'docker.exe' : 'docker';
-const dotnetBin = onWindows ? 'dotnet.exe' : 'dotnet';
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const dotnetBin = process.platform === 'win32' ? 'dotnet.exe' : 'dotnet';
+const coverageDirectory = 'coverage-mongo';
 
-const docker = (args, options = {}) =>
-  execFileSync(dockerBin, args, { stdio: options.quiet ? 'pipe' : 'inherit', ...options });
-
-const alreadyRunning = () =>
-  docker(['ps', '--filter', `name=${container}`, '--format', '{{.Names}}'], { quiet: true })
-    .toString()
-    .includes(container);
-
-if (!alreadyRunning()) {
-  docker(['rm', '-f', container], { quiet: true, stdio: 'pipe' });
-  docker([
-    'run',
-    '-d',
-    '--name',
-    container,
-    '-p',
-    `${port}:27017`,
-    'mongo:8',
-    '--replSet',
-    'rs0',
-    '--bind_ip_all',
-  ]);
-  for (let attempt = 0; attempt < 30; attempt++) {
-    try {
-      docker(['exec', container, 'mongosh', '--quiet', '--eval', 'db.runCommand({ ping: 1 }).ok'], {
-        quiet: true,
-      });
-      break;
-    } catch {
-      execFileSync(process.execPath, ['-e', 'setTimeout(() => {}, 1000)']);
-    }
-  }
-  docker([
-    'exec',
-    container,
-    'mongosh',
-    '--quiet',
-    '--eval',
-    'try { rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "127.0.0.1:27017" }] }) } catch (e) { print(e.codeName) }',
-  ]);
+let mongoUri;
+try {
+  mongoUri = await startWorkstationMongo();
+} catch (error) {
+  console.error(`::error::${error.message}`);
+  process.exit(1);
 }
 
-const coverageDirectory = 'coverage-mongo';
 rmSync(resolve(root, coverageDirectory), { recursive: true, force: true });
 
 const result = spawnSync(
@@ -73,11 +42,7 @@ const result = spawnSync(
   {
     cwd: root,
     stdio: 'inherit',
-    env: {
-      ...process.env,
-      MONGODB_URI: '',
-      MONGODB_TEST_URI: `mongodb://127.0.0.1:${port}/?directConnection=true`,
-    },
+    env: { ...process.env, MONGODB_URI: '', MONGODB_TEST_URI: mongoUri },
   }
 );
 

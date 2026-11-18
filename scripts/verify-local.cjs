@@ -1,8 +1,11 @@
 /**
- * Local verification aligned with the CI **lint** + **test-web** + **test-api** jobs
- * (.github/workflows/ci-cd.yml). Run from the repository root after `pnpm install`, with the
- * .NET SDK installed. Docker (running daemon) is required for the workflows, Terraform, gitleaks
- * and npm audit steps (Trivy filesystem scan, see commit 26c9163).
+ * Local verification aligned with the CI jobs of `.github/workflows/ci-cd.yml` but the E2E suite
+ * and Sonar: every gate the CI shares with the workstation is called through the same
+ * `pnpm run` entry point (`check:static`, `format:dotnet:check`, `test:api:mongo`,
+ * `openapi:*`, `check:workflows`, `check:terraform`, `check:secrets`, `check:audit`), so the
+ * list of what a gate runs lives in one place. Run from the repository root after
+ * `pnpm install`, with the .NET SDK installed. Docker (running daemon) is required for the
+ * MongoDB of the integration suite and for the whole docker lane.
  *
  * Every gate but the Vitest suite runs in three concurrent lanes (node, dotnet, docker): the
  * gates are independent and the sequential chain cost 11 minutes at rest, 17 under load
@@ -112,19 +115,16 @@ async function sequence(steps) {
 }
 
 const nodeLane = () =>
-  sequence([
-    () => run('Architecture rules', 'node', ['scripts/check-architecture.mjs']),
-    () => run('Script tests', 'pnpm', ['run', 'test:scripts']),
-    () => run('pnpm lint (turbo)', 'pnpm', ['run', 'lint']),
-    () => run('ESLint', 'pnpm', ['run', 'lint:eslint']),
-    () => run('Prettier check', 'pnpm', ['run', 'format:check']),
-    () => run('Unused code (knip)', 'pnpm', ['run', 'check:unused']),
+  run('Static gates (architecture, script tests, tsc, ESLint, Prettier, knip)', 'pnpm', [
+    'run',
+    'check:static',
   ]);
 
-// Format, tests and the OpenAPI export all read the Release build: they only start once it is
-// done, then run side by side. Tests reuse that build (`--no-build`): the API has no
-// `#if DEBUG` nor `Debug.Assert`, so the Debug configuration the CI uses would only rebuild the
-// same code a second time.
+// Format, unit tests and the OpenAPI export all read the Release build: they only start once it
+// is done, then run side by side. Unit tests reuse that build (`--no-build`): the API has no
+// `#if DEBUG` nor `Debug.Assert`, so the Debug configuration would only rebuild the same code a
+// second time. The integration suite runs on MongoDB through `test:api:mongo`, as the CI
+// `test-api` job does, Debug build and Mongo adapters coverage gate included.
 const dotnetLane = () =>
   sequence([
     () => run('dotnet restore', 'dotnet', ['restore', 'apps/api-dotnet/MoviePicker.slnx']),
@@ -139,27 +139,7 @@ const dotnetLane = () =>
       ]),
     () =>
       Promise.all([
-        sequence([
-          () =>
-            run('dotnet format whitespace (verify)', 'dotnet', [
-              'format',
-              'whitespace',
-              'apps/api-dotnet/MoviePicker.slnx',
-              '--verify-no-changes',
-              '--verbosity',
-              'minimal',
-            ]),
-          () =>
-            run('dotnet format style (verify)', 'dotnet', [
-              'format',
-              'style',
-              'apps/api-dotnet/MoviePicker.slnx',
-              '--verify-no-changes',
-              '--no-restore',
-              '--verbosity',
-              'minimal',
-            ]),
-        ]),
+        run('dotnet format whitespace + style (verify)', 'pnpm', ['run', 'format:dotnet:check']),
         sequence([
           () =>
             run(
@@ -177,92 +157,40 @@ const dotnetLane = () =>
               { env: envMongoEmpty }
             ),
           () =>
-            run(
-              'API integration tests',
-              'dotnet',
-              [
-                'test',
-                'apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj',
-                '-c',
-                'Release',
-                '--no-build',
-                '--verbosity',
-                'normal',
-              ],
-              { env: envMongoEmpty }
-            ),
+            run('API integration tests on MongoDB + coverage gate', 'pnpm', [
+              'run',
+              'test:api:mongo',
+            ]),
         ]),
         sequence([
           () =>
-            run('OpenAPI export (SKIP_OPENAPI_BUILD)', 'node', ['scripts/export-openapi.cjs'], {
+            run('OpenAPI export (SKIP_OPENAPI_BUILD)', 'pnpm', ['run', 'openapi:export'], {
               env: {
                 ...process.env,
                 SKIP_OPENAPI_BUILD: '1',
                 ASPNETCORE_ENVIRONMENT: 'Development',
               },
             }),
-          () => run('OpenAPI types (contract drift)', 'node', ['scripts/check-openapi-types.mjs']),
+          () => run('OpenAPI types (contract drift)', 'pnpm', ['run', 'openapi:types:check']),
         ]),
       ]),
   ]);
 
-// Same image and same `dir` mode as the CI `gitleaks` job: this gate scans the working tree, not
-// the history. Without it locally, a secret-shaped string is only discovered in CI, and that
-// happened on 2026-09-10: the `curl-auth-user` rule fires on `curl -u "$TOKEN:"` even when the
-// value is a variable name. Keep the digest aligned with `.github/workflows/ci-cd.yml`.
+// The same scripts as the CI `gitleaks`, `lint-workflows`, `lint-terraform` and `audit` jobs,
+// each running its tool from an image pinned by digest. Gitleaks goes first: it reads the whole
+// tree, and the dotnet lane only starts rewriting `coverage-mongo/` and the Debug build minutes
+// later (docs/technical-debt.md, C16).
 const dockerLane = () =>
   sequence([
+    () => run('Secrets (Gitleaks, working tree)', 'pnpm', ['run', 'check:secrets']),
+    () => run('Workflows (actionlint + shellcheck + zizmor)', 'pnpm', ['run', 'check:workflows']),
+    () => run('Terraform (fmt + validate)', 'pnpm', ['run', 'check:terraform']),
     () =>
-      run('Workflows (actionlint + shellcheck + zizmor)', 'node', ['scripts/check-workflows.mjs']),
-    () => run('Terraform (fmt + validate)', 'node', ['scripts/check-terraform.mjs']),
-    () =>
-      run('Secrets (Gitleaks, working tree)', 'docker', [
+      run('npm audit (Trivy, HIGH with a fix, then every CRITICAL)', 'pnpm', [
         'run',
-        '--rm',
-        '-v',
-        '.:/repo:ro',
-        'ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f',
-        'dir',
-        '--no-banner',
-        '--redact',
-        '--verbose',
-        '--exit-code',
-        '1',
-        '/repo',
+        'check:audit',
       ]),
-    () =>
-      npmAudit(
-        'npm audit (Trivy fs, HIGH with a fix; pnpm audit unavailable since 2026-07-15, see pnpm/pnpm#11265)',
-        ['--severity', 'HIGH', '--ignore-unfixed']
-      ),
-    () => npmAudit('npm audit (Trivy fs, every CRITICAL)', ['--severity', 'CRITICAL']),
   ]);
-
-// The split of the CI `audit` job: `--ignore-unfixed` applies to every severity of a run, so a
-// CRITICAL without a published fix needs its own. `--timeout 15m` only widens Trivy's internal
-// deadline: the 113 MB database download dies on `context deadline exceeded` after the default
-// 5 minutes on a slow link (2026-09-14). The second run reads the database the first one left in
-// the volume.
-function npmAudit(label, severityArgs) {
-  return run(label, 'docker', [
-    'run',
-    '--rm',
-    '-v',
-    './pnpm-lock.yaml:/repo/pnpm-lock.yaml:ro',
-    '-v',
-    'trivy-cache:/root/.cache/trivy',
-    'aquasec/trivy:0.76.2@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb',
-    'fs',
-    '--scanners',
-    'vuln',
-    ...severityArgs,
-    '--exit-code',
-    '1',
-    '--timeout',
-    '15m',
-    '/repo/pnpm-lock.yaml',
-  ]);
-}
 
 function printTimings() {
   const width = Math.max(...timings.map((t) => t.title.length));

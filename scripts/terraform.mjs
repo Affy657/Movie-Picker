@@ -1,7 +1,7 @@
 /**
  * Runs the pinned Terraform through Docker, from the repository root. Nothing installed on the
  * machine decides which Terraform runs: the image below does, and `scripts/check-tool-versions.mjs`
- * keeps its tag aligned with `TERRAFORM_VERSION` in `.github/workflows/ci-cd.yml` and with
+ * keeps its tag aligned with `TERRAFORM_VERSION` in `.github/workflows/infra.yml` and with
  * `required_version` in every root module of `infra/terraform/environments/`.
  *
  *   pnpm run terraform -- init

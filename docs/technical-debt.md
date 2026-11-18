@@ -601,7 +601,7 @@ Publié sciemment, ne pas y revenir comme si c'était un oubli :
 1. Le courriel personnel de l'auteur est l'adresse de 916 commits sur 1 003. Réécrire l'historique changerait tous les SHA et casserait les liens des PR pour une adresse déjà publiée. `user.email` est posé en `noreply` en local sur ce dépôt ; un clone neuf hérite de la configuration globale, à reposer.
 2. `archive/docs/_ynov/` (consigne de module) est publié. Le dossier du titre (`archive/docs/RNCP/`, livrables notés et slides) a été retiré de l'arbre le 2026-09-22 et exporté en PDF hors dépôt : il reste lisible dans l'historique, ce qui est sans conséquence, l'audit ci-dessus n'y a trouvé aucune donnée personnelle.
 3. Les branches distantes sont visibles : `master`, `feedback-attachments` (où `GitHubIssueClient` publie les captures jointes aux signalements, lisibles via `raw.githubusercontent.com`) et les branches Dependabot de passage. Les branches de worktree restent locales.
-4. Les journaux et artefacts des runs Actions sont publics. Aucun `set -x` ni `echo` de secret dans les workflows ; `playwright-traces` et `playwright-traces-mongo` (corps de requêtes et cookies) n'existent que sur un run rouge et vivent 7 jours, `sbom-api` (`deploy.yml`, étape de recette) 30 jours. Ne pas allonger ces rétentions.
+4. Les journaux et artefacts des runs Actions sont publics. Aucun `set -x` ni `echo` de secret dans les workflows ; `playwright-traces` (corps de requêtes et cookies) n'existe que sur un run rouge et vit 7 jours, `sbom-api` (`deploy.yml`, étape de recette) 30 jours. Ne pas allonger ces rétentions.
 
 Traité le 2026-09-10, ne pas refaire : identifiants d'infrastructure remplacés par des gabarits `<COMME_CECI>` (table dans `infra/README.md`) ; aucune contribution externe sans geste de l'auteur (`CONTRIBUTING.md`, licence, jobs d'entrée de `ci-cd.yml` conditionnés par `head.repo.fork != true`, ce qui n'est qu'un confort : la vraie barrière est l'approbation `all_external_contributors` ci-dessous, et `rollback-front.yml` ne republie que les archives d'un run de `deploy.yml` sur `master`) ; `SECURITY.md` détourne les failles vers un canal privé.
 
@@ -701,7 +701,7 @@ Dans `scripts/verify-local.cjs`, la voie docker monte le dépôt en lecture (`-v
 
 L'image `mongo` a `HOME=/data/db`. `docker exec <conteneur> mongosh` y écrit `.mongodb/mongosh/` pendant que le script de démarrage du conteneur fait son `chown` récursif sur `/data/db` : si un fichier disparaît entre la liste et le `chown`, le script sort en erreur et le conteneur meurt (`chown: cannot access '/data/db/.mongodb/mongosh/...lock'`). Vu le 2026-11-09 sur le job E2E de `ci-cd.yml`, vert une fois rejoué.
 
-Toute sonde `mongosh` lancée par `docker exec` dans les workflows passe donc `-e HOME=/tmp` (`ci-cd.yml`, `backup-mongo.yml`). Une nouvelle sonde sans ce réglage refait la course, une fois sur quelques dizaines.
+Toute sonde `mongosh` lancée par `docker exec` passe donc `-e HOME=/tmp` : `mongosh()` de `scripts/mongo-replica-set.mjs`, qui démarre tous les conteneurs de test (CI, sauvegarde, poste), et l'étape de vérification de `backup-mongo.yml`. Une nouvelle sonde sans ce réglage refait la course, une fois sur quelques dizaines.
 
 ## C18 la coquille reste montée d'une page à l'autre
 

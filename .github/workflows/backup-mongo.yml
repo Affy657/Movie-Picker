@@ -64,10 +64,6 @@ concurrency:
 env:
   MDB_TOOLS_VERSION: "100.20.1"
   MDB_TOOLS_SHA256: "20f43dcaa37f5a4841ac5a91da685a488a5ebbd81113c018e25a6b544cc350ea"
-  # Pinned by digest: this instance receives a full copy of the production database. Same digest
-  # as the MongoDB of the CI test jobs (`ci-cd.yml`), `scripts/check-tool-versions.mjs` keeps
-  # both on the digest `mongo:8` currently resolves to.
-  MONGO_IMAGE: "mongo:8@sha256:0f64db83d5926400d1cbcbaf35fbf2b0dfa6a4eaa71e04a26481a38cd803b27b"
 
 jobs:
   backup:
@@ -182,6 +178,17 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "Uploaded to the pending area: $PENDING"
 
+      # Replica set as in production: the only topology where IUnitOfWork transactions work,
+      # hence the only one proving that the restore gives a database the API can really run on.
+      # The image is the one the CI tests run against, pinned by digest in
+      # `scripts/mongo-replica-set.mjs`: this instance receives a full copy of the production
+      # database. A MongoDB that never starts fails the step, and the archive is removed below.
+      - name: Start the verification MongoDB
+        uses: ./.github/actions/start-mongo-replica-set
+        with:
+          container-name: mongo-verify
+          port: "27017"
+
       # What sets a backup apart from a file: the proof that it can be read back. The copy under
       # test is the one read back from Cloud Storage, not the one left on the runner, otherwise a
       # truncated upload would pass the verification unseen.
@@ -192,46 +199,11 @@ jobs:
           DB_NAME: ${{ steps.dump.outputs.db_name }}
         run: |
           set -eo pipefail
-          print_mongo_diagnostics() {
-            uname -r
-            docker version --format '{{.Server.Version}}'
-            docker inspect -f '{{.State.Status}} {{.State.ExitCode}} {{.State.OOMKilled}} {{.State.Error}}' mongo-verify
-            docker logs --tail 80 mongo-verify
-          }
           FETCHED="$RUNNER_TEMP/readback.archive.gz"
           gcloud storage cp "$PENDING" "$FETCHED"
           FETCHED_SIZE="$(stat -c%s "$FETCHED")"
           if [ "$FETCHED_SIZE" != "$EXPECTED_SIZE" ]; then
             echo "::error::Object read back is ${FETCHED_SIZE} bytes against ${EXPECTED_SIZE} uploaded: incomplete upload."
-            exit 1
-          fi
-          # Replica set as in production: the only topology where IUnitOfWork transactions work,
-          # hence the only one proving that the restore gives a database the API can really run on.
-          docker run -d --name mongo-verify -p 27017:27017 -e GLIBC_TUNABLES=glibc.pthread.rseq=1 "$MONGO_IMAGE" --replSet rs0 --bind_ip_all
-          READY=0
-          for _ in $(seq 1 30); do
-            if docker exec -e HOME=/tmp mongo-verify mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' >/dev/null 2>&1; then
-              READY=1; break
-            fi
-            sleep 2
-          done
-          if [ "$READY" != "1" ]; then
-            echo "::error::The verification MongoDB never answered: the archive cannot be validated."
-            print_mongo_diagnostics
-            exit 1
-          fi
-          docker exec -e HOME=/tmp mongo-verify mongosh --quiet --eval \
-            'rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "127.0.0.1:27017" }] })'
-          PRIMARY=0
-          for _ in $(seq 1 30); do
-            if [ "$(docker exec -e HOME=/tmp mongo-verify mongosh --quiet --eval 'db.hello().isWritablePrimary')" = "true" ]; then
-              PRIMARY=1; break
-            fi
-            sleep 2
-          done
-          if [ "$PRIMARY" != "1" ]; then
-            echo "::error::The verification replica set never became primary."
-            print_mongo_diagnostics
             exit 1
           fi
           mongorestore --uri="mongodb://127.0.0.1:27017/?directConnection=true" --archive="$FETCHED" --gzip 2>&1 | sed -nE '/\t(Failed:|error )/p'

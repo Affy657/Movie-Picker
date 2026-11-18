@@ -13,22 +13,28 @@
 # was never validated. The filter stays useful on PRs, where nothing deploys; on
 # master, minutes are free since the repository went public, and the conclusion of a run must
 # hold for the whole tree, not just the diff of the commit.
-#   - Web lane: lint-web, test-web-shard (three runners) then test-web (merge + thresholds).
-#   - API lane: lint-api, test-api, test-api-mongo.
+#   - Web lane: lint-web (`pnpm run check:static`), test-web-shard (three runners) then test-web
+#     (merge + thresholds).
+#   - API lane: lint-api, test-api (unit tests, then the integration suite on a real MongoDB).
 #   - Infra lane: lint-terraform (fmt + validate on `infra/terraform/`).
 #   - Cross-cutting: gitleaks (always), lint-workflows (always), npm/NuGet audit,
 #     sonar (global analysis + blocking Quality Gate).
-#   - E2E Playwright: blocking job + local run.
+#   - E2E Playwright on a real MongoDB: blocking job + local run.
 #   - Lighthouse is no longer here: it weighed 9 of the 27 minutes of a master run for a
 #     measurement only a deployment consumed; it moved to `deploy.yml` without losing any of its
 #     blocking power.
 #
+# The gates the workstation also runs are called through the same `pnpm run` entry points
+# (`check:static`, `check:workflows`, `check:terraform`, `check:secrets`, `check:audit`,
+# `test:api:mongo`), Docker being available on the runners: each tool is pinned once, in the
+# script that runs it, and the CI cannot drift from what `verify:local` checks.
+#
 # Security hardening:
 #   - Actions pinned by commit SHA (anti supply-chain); the # vX comment lets Dependabot propose updates.
-#   - Docker images (.NET base, gitleaks, MongoDB) pinned by sha256 digest. The tools that no
-#     Dependabot ecosystem follows (gitleaks image, actionlint, zizmor and Trivy binaries,
-#     SonarScanner, the MongoDB image) are listed by `scripts/check-tool-versions.mjs`, run during
-#     the weekly maintenance pass.
+#   - Docker images (gitleaks, actionlint, zizmor, Terraform, Trivy, MongoDB) pinned by sha256
+#     digest in the gate scripts. The tools that no Dependabot ecosystem follows (those images,
+#     SonarScanner) are listed by `scripts/check-tool-versions.mjs`, run during the weekly
+#     maintenance pass.
 #   - Least-privilege permissions (deny by default); checkout with persist-credentials: false.
 #   - Secrets passed through env: (never interpolated directly into a run: block).
 #   - Blocking SonarCloud Quality Gate: a red QG fails the job, hence forbids the deployment.
@@ -59,21 +65,7 @@ concurrency:
 
 env:
   NODE_VERSION: "22"
-  ACTIONLINT_VERSION: "1.7.12"
-  ACTIONLINT_SHA256: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
-  ZIZMOR_VERSION: "1.32.0"
-  ZIZMOR_SHA256: "bb110cc765eca9cd7efb2e284a956be5974c60027b0970f16397d86208a9957b"
-  GITLEAKS_IMAGE: "ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f"
   SONARSCANNER_VERSION: "11.3.0"
-  # Same Terraform as `scripts/terraform.mjs` (image tag) and as `required_version` in the root
-  # modules of `infra/terraform/environments/`: `scripts/check-tool-versions.mjs` compares the three.
-  TERRAFORM_VERSION: "1.16.5"
-  # `mongo:8` resolved on 2026-10-22 (8.3.13). A floating tag would let a MongoDB release change
-  # what the transaction and index tests run against without any commit saying so. MongoDB 8
-  # refuses to start on the Linux 6.19+ kernels of the runners while TCMalloc owns rseq
-  # (SERVER-121912): `GLIBC_TUNABLES=glibc.pthread.rseq=1` on each `docker run` hands rseq to
-  # glibc until a fixed TCMalloc ships.
-  MONGO_IMAGE: "mongo:8@sha256:0f64db83d5926400d1cbcbaf35fbf2b0dfa6a4eaa71e04a26481a38cd803b27b"
 
 jobs:
   # Solo project: no external contribution is accepted, the licence forbids it and
@@ -140,8 +132,13 @@ jobs:
               - '.github/actions/**'
             infra:
               - 'infra/terraform/**'
+              - 'scripts/terraform.mjs'
+              - 'scripts/check-terraform.mjs'
               - '.github/workflows/ci-cd.yml'
+              - '.github/actions/setup-web/**'
 
+  # The working tree as checked out, never the history (`scripts/check-secrets.mjs`). pnpm and Node
+  # only, no `node_modules`: the scan reads the same tree as before the gate moved into the script.
   gitleaks:
     name: 🔑 Secret scan (Gitleaks)
     runs-on: ubuntu-24.04
@@ -153,28 +150,27 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-web
+        with:
+          install-dependencies: "false"
       - name: Scan working tree
-        run: |
-          docker run --rm -v "${PWD}:/repo:ro" \
-            "$GITLEAKS_IMAGE" \
-            dir --no-banner --redact --verbose --exit-code 1 /repo
+        run: pnpm run check:secrets
 
   # Workflows are large YAML and bash files that neither check:architecture, nor ESLint, nor
   # Prettier look at: the chain guarding the code was itself guarded by nothing. The gate covers
   # the whole `.github/workflows/`, hence `deploy.yml` too, and it is unconditional like gitleaks:
   # a red master run forbids the deployment.
   #   - actionlint: syntax errors, invalid ${{ }} expressions, inconsistent permissions. It
-  #     delegates `run:` blocks to shellcheck, preinstalled on GitHub runners. It only reads
-  #     workflows, not composite actions.
+  #     delegates `run:` blocks to the shellcheck its image ships. It only reads workflows, not
+  #     composite actions.
   #   - zizmor: security audit of the workflows **and of the composite actions** in
   #     `.github/actions/`, where the web smoke tests, the health probes and the GCP authentication now
   #     live. `medium` threshold: the repository is at 0 medium and 0 high, so the gate is green
   #     today and only catches serious findings (injection from an untrusted context, exposed
   #     secrets). Going down to `low` would mean handling 9 cosmetic findings. `--offline` so that
   #     the gate does not depend on the GitHub API.
-  # `scripts/check-workflows.mjs` replays both tools locally in `verify:local`, through Docker.
-  # The versions on both sides must stay aligned: changing one here without the other makes a
-  # local gate green on what the CI refuses.
+  # Both run from the images pinned by digest in `scripts/check-workflows.mjs`, the script
+  # `verify:local` runs too: one version of each tool, whichever machine checks.
   lint-workflows:
     name: 🧹 Lint workflows (actionlint + zizmor)
     runs-on: ubuntu-24.04
@@ -186,32 +182,22 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: actionlint (+ shellcheck on run blocks)
-        run: |
-          set -eo pipefail
-          curl -sSL --retry 3 --retry-all-errors -o "$RUNNER_TEMP/actionlint.tgz" \
-            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
-          echo "${ACTIONLINT_SHA256}  $RUNNER_TEMP/actionlint.tgz" | sha256sum -c -
-          tar xzf "$RUNNER_TEMP/actionlint.tgz" -C "$RUNNER_TEMP" actionlint
-          "$RUNNER_TEMP/actionlint" -color
-      - name: zizmor (security audit, medium threshold)
-        run: |
-          set -eo pipefail
-          curl -sSL --retry 3 --retry-all-errors -o "$RUNNER_TEMP/zizmor.tgz" \
-            "https://github.com/zizmorcore/zizmor/releases/download/v${ZIZMOR_VERSION}/zizmor-x86_64-unknown-linux-gnu.tar.gz"
-          echo "${ZIZMOR_SHA256}  $RUNNER_TEMP/zizmor.tgz" | sha256sum -c -
-          tar xzf "$RUNNER_TEMP/zizmor.tgz" -C "$RUNNER_TEMP" zizmor
-          "$RUNNER_TEMP/zizmor" --offline --no-progress --min-severity medium --format plain .github/
+      - uses: ./.github/actions/setup-web
+        with:
+          install-dependencies: "false"
+      - name: actionlint (+ shellcheck on run blocks), then zizmor (medium threshold)
+        run: pnpm run check:workflows
 
   # The infrastructure description (`infra/terraform/`, roadmap Terraform lots) is read by nothing
   # else in this workflow: without this job a malformed or invalid root module would only be
   # discovered at the next `plan`. `fmt -check` on the whole tree, then `init -backend=false` and
-  # `validate` on every root module of `infra/terraform/environments/`, discovered by glob so that
-  # a second environment cannot be forgotten. `-lockfile=readonly`: a provider bumped in
+  # `validate` on every root module of `infra/terraform/environments/`, discovered by listing so
+  # that a second environment cannot be forgotten. `-lockfile=readonly`: a provider bumped in
   # `versions.tf` without its checksums in `.terraform.lock.hcl` fails here rather than letting two
   # machines validate against two provider builds. No backend, no credentials: the job never
-  # reaches GCP. `scripts/check-terraform.mjs` replays it locally in `verify:local`, through the
-  # Docker image pinned in `scripts/terraform.mjs`, at the version of `TERRAFORM_VERSION`.
+  # reaches GCP. `scripts/check-terraform.mjs`, the script of `verify:local`, through the image
+  # pinned in `scripts/terraform.mjs`; the providers are downloaded once per run into a Docker
+  # volume, no GHA cache.
   lint-terraform:
     name: 🧹 Lint Terraform (fmt + validate)
     needs: changes
@@ -220,38 +206,20 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
-    env:
-      TF_IN_AUTOMATION: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+      - uses: ./.github/actions/setup-web
         with:
-          terraform_version: ${{ env.TERRAFORM_VERSION }}
-          terraform_wrapper: false
-      - name: Provider cache directory
-        run: |
-          mkdir -p "$HOME/.terraform.d/plugin-cache"
-          echo "TF_PLUGIN_CACHE_DIR=$HOME/.terraform.d/plugin-cache" >> "$GITHUB_ENV"
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.terraform.d/plugin-cache
-          key: terraform-providers-${{ runner.os }}-${{ hashFiles('infra/terraform/**/.terraform.lock.hcl') }}
-      - name: terraform fmt
-        run: terraform fmt -check -diff -recursive infra/terraform
-      - name: terraform validate (every root module)
-        run: |
-          set -eo pipefail
-          for root in infra/terraform/environments/*/; do
-            echo "::group::${root}"
-            terraform -chdir="$root" init -backend=false -input=false -lockfile=readonly -no-color
-            terraform -chdir="$root" validate -no-color
-            echo "::endgroup::"
-          done
+          install-dependencies: "false"
+      - name: terraform fmt, then init + validate on every root module
+        run: pnpm run check:terraform
 
+  # `check:static` is the one list of the static gates: architecture rules, script tests, `tsc`,
+  # ESLint, Prettier, knip. The pre-push hook and `verify:local` run the same script.
   lint-web:
-    name: 🧹 Lint web (tsc + eslint + prettier)
+    name: 🧹 Static gates (architecture, tsc, eslint, prettier, knip)
     needs: changes
     if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-24.04
@@ -269,12 +237,7 @@ jobs:
           key: turbo-lintweb-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
             turbo-lintweb-${{ runner.os }}-
-      - run: pnpm run check:architecture
-      - run: pnpm run test:scripts
-      - run: pnpm run lint
-      - run: pnpm run lint:eslint
-      - run: pnpm run format:check
-      - run: pnpm run check:unused
+      - run: pnpm run check:static
 
   lint-api:
     name: 🧹 Lint API .NET (format + build + OpenAPI)
@@ -296,10 +259,7 @@ jobs:
       # `whitespace`). The analyser pass of the full `dotnet format` is left out: it replays the
       # analysers the build below already runs with `-warnaserror`, for more than half the time.
       - name: dotnet format whitespace + style (verify, roadmap § 31)
-        run: |
-          set -eo pipefail
-          dotnet format whitespace apps/api-dotnet/MoviePicker.slnx --verify-no-changes --verbosity minimal
-          dotnet format style apps/api-dotnet/MoviePicker.slnx --verify-no-changes --no-restore --verbosity minimal
+        run: pnpm run format:dotnet:check
       - name: Build API .NET (warnings → errors)
         run: dotnet build apps/api-dotnet/MoviePicker.slnx -c Release --no-restore -warnaserror
       - name: Export OpenAPI (artifact, roadmap § 32)
@@ -328,34 +288,17 @@ jobs:
         with:
           persist-credentials: false
       # Same split as the image gate of `deploy.yml`, because `ignore-unfixed` applies to every
-      # severity of a step: a HIGH blocks once a fix is published, a CRITICAL blocks with or
-      # without one. The binary and the database do not come from the GHA cache, which the jobs
+      # severity of a pass: a HIGH blocks once a fix is published, a CRITICAL blocks with or
+      # without one. `scripts/check-audit.mjs`, the script of `verify:local`: Trivy from its image
+      # pinned by digest, its database in a Docker volume, never in the GHA cache, which the jobs
       # running the code of the lockfile can write: a poisoned entry would blind this gate.
-      - uses: ./.github/actions/install-trivy
+      - uses: ./.github/actions/setup-web
         if: needs.changes.outputs.web == 'true'
-      - name: npm audit (Trivy, HIGH with a fix; pnpm audit unavailable since the npm endpoint was removed on 2026-07-15, see pnpm/pnpm#11265)
-        if: needs.changes.outputs.web == 'true'
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          scan-type: fs
-          scan-ref: pnpm-lock.yaml
-          scanners: vuln
-          severity: HIGH
-          exit-code: "1"
-          ignore-unfixed: true
-          cache: false
-          skip-setup-trivy: true
-      - name: npm audit (Trivy, every CRITICAL)
+          install-dependencies: "false"
+      - name: npm audit (Trivy on pnpm-lock.yaml, HIGH with a fix, then every CRITICAL)
         if: needs.changes.outputs.web == 'true'
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          scan-type: fs
-          scan-ref: pnpm-lock.yaml
-          scanners: vuln
-          severity: CRITICAL
-          exit-code: "1"
-          cache: false
-          skip-setup-trivy: true
+        run: pnpm run check:audit
       - uses: ./.github/actions/setup-dotnet-cache
         if: needs.changes.outputs.api == 'true'
       - name: Restore API .NET (for the NuGet audit)
@@ -446,18 +389,32 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+  # Unit tests, then the integration suite on a real MongoDB replica set: the in-memory store no
+  # longer stands in for the database in any job that reproduces production (audit B4, step 1;
+  # the in-memory adapters keep their unit tests, and the store stays registered for a
+  # workstation without MongoDB). Two reports, two gates:
+  #   - the unit report (`coverlet.runsettings`, the Mongo adapters excluded since only a real
+  #     database runs them) carries the API gate below, and is the one `sonar` regenerates;
+  #   - `pnpm run test:api:mongo`, the workstation entry point, starts the container through
+  #     `scripts/mongo-replica-set.mjs`, collects its own report
+  #     (`coverlet.integration.runsettings`) and holds the `Infrastructure.Persistence.Mongo`
+  #     namespace to its thresholds (`scripts/check-mongo-coverage.mjs`): without that gate the
+  #     only layer that runs solely in production would be measured nowhere.
   test-api:
-    name: 🧪 API .NET tests + coverage
+    name: 🧪 API .NET tests (unit, then integration on MongoDB) + coverage
     needs: changes
     if: needs.changes.outputs.api == 'true'
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-web
+        with:
+          install-dependencies: "false"
       - uses: ./.github/actions/setup-dotnet-cache
       - name: Unit tests + coverage
         run: |
@@ -489,70 +446,14 @@ jobs:
             fail=1
           fi
           exit $fail
-      - name: Integration tests
-        run: dotnet test apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj -c Debug --verbosity normal
-        env:
-          MONGODB_URI: ""
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: coverage-api-unit
           path: coverage-unit
           if-no-files-found: warn
           retention-days: 7
-
-  test-api-mongo:
-    name: 🧪 API .NET tests on real MongoDB
-    needs: changes
-    if: needs.changes.outputs.api == 'true'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/setup-dotnet-cache
-      - name: Start MongoDB as a replica set (transactions)
-        run: |
-          set -eo pipefail
-          docker run -d --name mongo-it -p 27017:27017 -e GLIBC_TUNABLES=glibc.pthread.rseq=1 "$MONGO_IMAGE" --replSet rs0 --bind_ip_all
-          for _ in $(seq 1 30); do
-            if docker exec -e HOME=/tmp mongo-it mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' >/dev/null 2>&1; then
-              break
-            fi
-            sleep 2
-          done
-          if [ "$(docker inspect -f '{{.State.Running}}' mongo-it)" != "true" ]; then
-            uname -r
-            docker version --format '{{.Server.Version}}'
-            docker inspect -f '{{.State.ExitCode}} {{.State.OOMKilled}} {{.State.Error}}' mongo-it
-            docker logs --tail 80 mongo-it
-            exit 1
-          fi
-          docker exec -e HOME=/tmp mongo-it mongosh --quiet --eval 'rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "127.0.0.1:27017" }] })'
-          for _ in $(seq 1 30); do
-            if [ "$(docker exec -e HOME=/tmp mongo-it mongosh --quiet --eval 'db.hello().isWritablePrimary')" = "true" ]; then
-              break
-            fi
-            sleep 2
-          done
-      - name: Integration tests on MongoDB + coverage
-        run: |
-          set -eo pipefail
-          dotnet test apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj \
-            -c Debug --verbosity normal \
-            --collect:"XPlat Code Coverage" \
-            --settings apps/api-dotnet/coverlet.integration.runsettings \
-            --results-directory ./coverage-mongo
-        env:
-          MONGODB_URI: ""
-          MONGODB_TEST_URI: mongodb://127.0.0.1:27017/?directConnection=true
-      # The Mongo adapters are excluded from the test-api job report: they only run on a real
-      # database. Without this gate, the only layer that runs solely in production would be
-      # measured nowhere.
-      - name: Mongo adapters coverage gate
-        run: node scripts/check-mongo-coverage.mjs coverage-mongo
+      - name: Integration tests on MongoDB + Mongo adapters coverage gate
+        run: pnpm run test:api:mongo
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:
@@ -561,38 +462,12 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+  # The whole Playwright suite on the full stack that runs in production: real browser, API wired
+  # to a real MongoDB replica set started by the composite action (the code of
+  # `scripts/mongo-replica-set.mjs`), dedicated database (the Development guard refuses the
+  # `moviepicker` one). `pnpm run test:e2e:local` plays the same suite on the same engine.
   e2e:
-    name: 🎭 E2E Playwright (blocking)
-    needs: changes
-    if: needs.changes.outputs.web == 'true' || needs.changes.outputs.api == 'true' || needs.changes.outputs.e2e == 'true'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/setup-web
-      - uses: ./.github/actions/setup-dotnet-cache
-      - name: Install the Playwright browser
-        run: pnpm exec playwright install --with-deps chromium
-      - name: E2E tests (web build + API stub + Playwright)
-        run: pnpm run test:e2e:ci
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        if: always()
-        with:
-          name: playwright-traces
-          path: test-results
-          # Playwright only writes test-results/ on failure/retry; empty on a green run is normal.
-          if-no-files-found: ignore
-          retention-days: 7
-
-  e2e-mongo:
-    # The only job running the full stack: real browser + API wired to a real MongoDB. The e2e job
-    # runs on the in-memory database, test-api-mongo runs without a browser: without this one, the
-    # combination that runs in production is reproduced nowhere before the deployment.
-    name: 🎭 E2E critical path on real MongoDB (blocking)
+    name: 🎭 E2E Playwright on MongoDB (blocking)
     needs: changes
     if: needs.changes.outputs.web == 'true' || needs.changes.outputs.api == 'true' || needs.changes.outputs.e2e == 'true'
     runs-on: ubuntu-24.04
@@ -605,42 +480,22 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup-web
       - uses: ./.github/actions/setup-dotnet-cache
-      - name: Start MongoDB as a replica set (transactions)
-        run: |
-          set -eo pipefail
-          docker run -d --name mongo-e2e -p 27017:27017 -e GLIBC_TUNABLES=glibc.pthread.rseq=1 "$MONGO_IMAGE" --replSet rs0 --bind_ip_all
-          for _ in $(seq 1 30); do
-            if docker exec -e HOME=/tmp mongo-e2e mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' >/dev/null 2>&1; then
-              break
-            fi
-            sleep 2
-          done
-          if [ "$(docker inspect -f '{{.State.Running}}' mongo-e2e)" != "true" ]; then
-            uname -r
-            docker version --format '{{.Server.Version}}'
-            docker inspect -f '{{.State.ExitCode}} {{.State.OOMKilled}} {{.State.Error}}' mongo-e2e
-            docker logs --tail 80 mongo-e2e
-            exit 1
-          fi
-          docker exec -e HOME=/tmp mongo-e2e mongosh --quiet --eval 'rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "127.0.0.1:27017" }] })'
-          for _ in $(seq 1 30); do
-            if [ "$(docker exec -e HOME=/tmp mongo-e2e mongosh --quiet --eval 'db.hello().isWritablePrimary')" = "true" ]; then
-              break
-            fi
-            sleep 2
-          done
+      - uses: ./.github/actions/start-mongo-replica-set
+        with:
+          container-name: mongo-e2e
+          port: "27017"
       - name: Install the Playwright browser
         run: pnpm exec playwright install --with-deps chromium
-      - name: Critical path (web build + API on MongoDB + Playwright)
-        run: pnpm run test:e2e:mongo
+      - name: E2E tests (web build + API on MongoDB + Playwright)
+        run: pnpm run test:e2e:ci
         env:
-          # Dedicated database: the Development guard refuses the 'moviepicker' database.
           E2E_MONGODB_URI: mongodb://127.0.0.1:27017/moviepicker_e2e?directConnection=true
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:
-          name: playwright-traces-mongo
+          name: playwright-traces
           path: test-results
+          # Playwright only writes test-results/ on failure/retry; empty on a green run is normal.
           if-no-files-found: ignore
           retention-days: 7
 

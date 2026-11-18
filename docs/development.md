@@ -8,9 +8,9 @@ respecter en écrivant du code sont dans [`AGENTS.md`](../AGENTS.md).
 
 - **Node.js** 20.19+, 22.13+ ou 24+, et **pnpm** 10.
 - **SDK .NET 10** pour l'API.
-- **Docker**, pour les tests d'intégration contre MongoDB, pour la voie docker de `verify:local`
-  (lint des workflows, Terraform, Gitleaks, Trivy) et pour lancer Terraform, qui n'est pas installé
-  sur le poste (voir [`infra/README.md`](../infra/README.md)).
+- **Docker**, pour les tests d'intégration et la suite e2e contre MongoDB, pour la voie docker de
+  `verify:local` (Gitleaks, lint des workflows, Terraform, Trivy) et pour lancer Terraform, qui
+  n'est pas installé sur le poste (voir [`infra/README.md`](../infra/README.md)).
 
 MongoDB n'est pas un prérequis : sans configuration l'API tourne en mémoire, la section suivante dit
 quand et comment brancher une vraie base.
@@ -127,26 +127,28 @@ Tous se lancent à la racine du dépôt.
 | --- | --- |
 | `pnpm dev:full`, `pnpm dev:web`, `pnpm dev:api-dotnet` | Démarrage local |
 | `pnpm build` | Build du front par Turbo |
-| `pnpm lint`, `pnpm run lint:eslint` | Types et règles côté front |
-| `pnpm run check:architecture` | Règles d'architecture, aussi jouées au pre-push |
-| `pnpm run check:unused` | Fichiers, exports et dépendances inutilisés (knip), joué par `verify:local` et le job `lint-web` |
-| `pnpm run check:workflows` | actionlint (+ shellcheck) et zizmor sur `.github/workflows/`, par Docker |
-| `pnpm run check:terraform` | `terraform fmt -check` puis `validate` sur chaque module racine de `infra/terraform/`, par Docker |
+| `pnpm lint`, `pnpm run lint:eslint` | Types puis règles ESLint côté front ; la seconde forme ne joue que les règles |
+| `pnpm run check:static` | Toutes les portes statiques : architecture, tests des scripts, `pnpm lint`, Prettier, knip ; c'est le hook pre-push, le job `lint-web` et la voie node de `verify:local` |
+| `pnpm run check:architecture` | Règles d'architecture |
+| `pnpm run check:unused` | Fichiers, exports et dépendances inutilisés (knip) |
+| `pnpm run check:workflows` | actionlint (+ shellcheck) et zizmor sur `.github/`, par Docker, joué tel quel par le job `lint-workflows` |
+| `pnpm run check:terraform` | `terraform fmt -check` puis `validate` sur chaque module racine de `infra/terraform/`, par Docker, joué tel quel par le job `lint-terraform` |
+| `pnpm run check:secrets` | Gitleaks sur l'arbre de travail, par Docker, joué tel quel par le job `gitleaks` |
+| `pnpm run check:audit` | Trivy sur `pnpm-lock.yaml` (HIGH avec correctif, puis tout CRITICAL), par Docker, joué tel quel par le job `audit` |
 | `pnpm run terraform -- <commande>` | Terraform depuis son image épinglée, bucket d'état et jeton GCP fournis par l'enveloppe, voir `infra/README.md` |
 | `pnpm format`, `pnpm format:check` | Prettier |
 | `pnpm run format:dotnet`, `pnpm run format:dotnet:check` | Style C#, après `dotnet restore` ; la vérification joue les passes `whitespace` et `style`, les analyseurs étant ceux du build |
 | `pnpm test`, `pnpm run test:coverage` | Tests front, Vitest |
 | `pnpm run test:changed` | Tests front touchés par le diff depuis `origin/master`, la boucle d'avant push |
-| `pnpm run test:api:mongo` | Tests d'intégration API contre une vraie MongoDB |
+| `pnpm run test:api:mongo` | Tests d'intégration API contre une vraie MongoDB, avec la porte de couverture des adaptateurs Mongo ; joué tel quel par le job `test-api` |
 | `pnpm run test:api:mutation` | Passe Stryker.NET, rapport dans `artifacts/stryker` |
-| `pnpm run test:e2e`, `pnpm run test:e2e:ci` | Playwright, la seconde forme construisant le front avec un stub TMDB |
-| `pnpm run test:e2e:mongo` | Le seul parcours critique, sur base réelle |
-| `pnpm run test:e2e:local` | La suite Playwright depuis le poste, serveurs de dev allumés : API de test en Release sur 5010, front construit contre elle, `--mongo` pour le parcours critique sur base réelle |
+| `pnpm run test:e2e`, `pnpm run test:e2e:ci` | Playwright, la seconde forme construisant le front avec un stub TMDB ; l'API tourne sur la base de `E2E_MONGODB_URI` quand elle est posée (le job `e2e`), en mémoire sinon |
+| `pnpm run test:e2e:local` | La suite Playwright depuis le poste, serveurs de dev allumés : API de test en Release sur 5010, sur MongoDB (le conteneur de test sur 27018, base `moviepicker_e2e` vidée à chaque run, ou `E2E_MONGODB_URI`), front construit contre elle ; `--in-memory` pour la base en mémoire |
 | `pnpm run openapi:export`, `pnpm run openapi:types:check` | Contrat OpenAPI et dérive des types |
 | `pnpm --filter web prerender` | Prérendu des routes publiques indexables, à lancer après un build |
 | `pnpm run lighthouse` | Lighthouse sur le build, demande Node 22+ et Chrome |
 | `pnpm run capture:screenshots` | Captures du README, sur l'application lancée en local |
-| `pnpm run verify:local` | La chaîne complète, dix-sept étapes en trois voies concurrentes puis la suite front seule, durées affichées en fin de run |
+| `pnpm run verify:local` | La chaîne complète, quatorze étapes en trois voies concurrentes puis la suite front seule, durées affichées en fin de run ; chaque porte qu'elle partage avec la CI y passe par le même `pnpm run` |
 
 ## Captures du README
 
@@ -179,15 +181,11 @@ pnpm exec playwright install chromium   # une seule fois
 pnpm run test:e2e:ci
 ```
 
-`pnpm run test:api:mongo` crée son conteneur MongoDB à la volée et une base jetable par classe de
-test. Au tout premier lancement, l'initialisation du replica set part parfois avant que mongod soit
-prêt, ce qui laisse un conteneur debout sans replica set et fait échouer toutes les relances. Le
-réparer une fois puis relancer :
-
-```bash
-docker exec movie-picker-mongo-test mongosh --quiet \
-  --eval 'rs.initiate({_id:"rs0",members:[{_id:0,host:"127.0.0.1:27017"}]})'
-```
+`pnpm run test:api:mongo` et `pnpm run test:e2e:local` partagent le conteneur
+`movie-picker-mongo-test` (port 27018, `MONGO_TEST_PORT` pour un autre) : `scripts/mongo-replica-set.mjs`
+le démarre au besoin avec l'image épinglée, le recrée s'il est arrêté ou tourne sur une autre image,
+initialise le replica set s'il ne l'est pas et attend qu'il accepte les écritures. Chaque classe de
+test d'intégration y prend une base jetable.
 
 ## Structure du dépôt
 
