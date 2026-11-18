@@ -69,3 +69,59 @@ describe('API layers', () => {
     assert.equal(apiLayerViolations('Controllers', controller, forbidden).length, 1);
   });
 });
+
+describe('implicit usings of the Web SDK', () => {
+  const application = 'apps/api-dotnet/MoviePicker.Api/Application/Probe.cs';
+  const domain = 'apps/api-dotnet/MoviePicker.Api/Domain/Probe.cs';
+  const namesIn = (found) => found.map((violation) => violation.split(' ')[1]);
+
+  it('refuses an ASP.NET Core type reached without any using', () => {
+    const text = [
+      'public sealed class Probe(IHttpContextAccessor accessor)',
+      '{',
+      '    public IResult Run(IFormFile file) => Results.Ok(StatusCodes.Status200OK);',
+      '}',
+    ].join('\n');
+
+    assert.deepEqual(namesIn(apiLayerViolations('Application', application, text)), [
+      'IHttpContextAccessor',
+      'IFormFile',
+      'IResult',
+      'Results',
+      'StatusCodes',
+    ]);
+    assert.equal(apiLayerViolations('Domain', domain, text).length, 5);
+  });
+
+  it('refuses a logger or a configuration in the domain, not in the application layer', () => {
+    const text =
+      'public sealed class Probe(ILogger<Probe> logger, IConfiguration configuration) { }';
+
+    assert.deepEqual(namesIn(apiLayerViolations('Domain', domain, text)), [
+      'IConfiguration',
+      'ILogger',
+    ]);
+    assert.deepEqual(apiLayerViolations('Application', application, text), []);
+  });
+
+  it('ignores a longer name, a member access, a string and a property named like a static class', () => {
+    const text = [
+      'public sealed record Probe(IMyHttpContextFactory Factory, string HttpContextKey, IReadOnlyList<int> Results)',
+      '{',
+      '    public int Status => response.StatusCodes;',
+      '    public string Describe() => "HttpContext is not reachable here";',
+      '    public int Count() => Results is null ? 0 : 1;',
+      '}',
+    ].join('\n');
+
+    assert.deepEqual(apiLayerViolations('Application', application, text), []);
+  });
+
+  it('leaves the web framework to the controllers', () => {
+    const controller = 'apps/api-dotnet/MoviePicker.Api/Controllers/ProbeController.cs';
+    const text =
+      'public IActionResult Get() => StatusCode(StatusCodes.Status204NoContent, HttpContext.TraceIdentifier);';
+
+    assert.deepEqual(apiLayerViolations('Controllers', controller, text), []);
+  });
+});

@@ -30,6 +30,104 @@ export const LAYER_RULES = [
   },
 ];
 
+export const WEB_SDK_IMPLICIT_TYPES = {
+  'Microsoft.AspNetCore.Builder': [
+    'WebApplication',
+    'WebApplicationBuilder',
+    'IApplicationBuilder',
+    'IEndpointConventionBuilder',
+    'RouteHandlerBuilder',
+  ],
+  'Microsoft.AspNetCore.Hosting': ['IWebHostEnvironment', 'IWebHostBuilder'],
+  'Microsoft.AspNetCore.Http': [
+    'HttpContext',
+    'HttpRequest',
+    'HttpResponse',
+    'IHttpContextAccessor',
+    'HttpContextAccessor',
+    'DefaultHttpContext',
+    'IFormFile',
+    'IFormFileCollection',
+    'IFormCollection',
+    'FormFile',
+    'IHeaderDictionary',
+    'HeaderDictionary',
+    'IQueryCollection',
+    'IRequestCookieCollection',
+    'IResponseCookies',
+    'CookieOptions',
+    'SameSiteMode',
+    'PathString',
+    'QueryString',
+    'HostString',
+    'ISession',
+    'WebSocketManager',
+    'RequestDelegate',
+    'IMiddleware',
+    'IResult',
+    'IStatusCodeHttpResult',
+    'IValueHttpResult',
+    'IEndpointFilter',
+    'EndpointFilterInvocationContext',
+    'IProblemDetailsService',
+    'HttpValidationProblemDetails',
+    'BadHttpRequestException',
+    'Results',
+    'TypedResults',
+    'StatusCodes',
+    'HttpMethods',
+  ],
+  'Microsoft.AspNetCore.Routing': [
+    'IEndpointRouteBuilder',
+    'RouteGroupBuilder',
+    'LinkGenerator',
+    'RouteValueDictionary',
+    'RouteData',
+  ],
+  'Microsoft.Extensions.Configuration': [
+    'IConfiguration',
+    'IConfigurationSection',
+    'IConfigurationRoot',
+  ],
+  'Microsoft.Extensions.DependencyInjection': [
+    'IServiceCollection',
+    'IServiceScopeFactory',
+    'IServiceScope',
+    'ServiceLifetime',
+    'ActivatorUtilities',
+  ],
+  'Microsoft.Extensions.Hosting': [
+    'IHostEnvironment',
+    'IHostedService',
+    'BackgroundService',
+    'IHostApplicationLifetime',
+    'IHostBuilder',
+    'Environments',
+  ],
+  'Microsoft.Extensions.Logging': ['ILogger', 'ILoggerFactory', 'LogLevel', 'LoggerMessage'],
+  Sentry: [
+    'SentrySdk',
+    'ISentryClient',
+    'SentryId',
+    'SentryLevel',
+    'SentryEvent',
+    'SentryOptions',
+    'Breadcrumb',
+    'BreadcrumbLevel',
+    'ITransactionTracer',
+  ],
+};
+
+const STATIC_CLASSES = new Set([
+  'Results',
+  'TypedResults',
+  'StatusCodes',
+  'HttpMethods',
+  'Environments',
+  'SentrySdk',
+  'ActivatorUtilities',
+]);
+
 function usingsIn(text) {
   return [...text.matchAll(USING_RE), ...text.matchAll(USING_ALIAS_RE)].map((m) => m[1]);
 }
@@ -46,15 +144,32 @@ function layerBreaks(rule, ns) {
   return rule.allow ? !rule.allow.some((re) => re.test(ns)) : rule.forbid.some((re) => re.test(ns));
 }
 
+function implicitTypeUsage(name) {
+  const tail = STATIC_CLASSES.has(name) ? String.raw`\s*\.` : String.raw`(?!\w)`;
+  return new RegExp(String.raw`(?<![\w.])${name}${tail}`);
+}
+
+function implicitTypesIn(rule, code) {
+  return Object.entries(WEB_SDK_IMPLICIT_TYPES)
+    .filter(([ns]) => layerBreaks(rule, ns))
+    .flatMap(([ns, names]) =>
+      names.filter((name) => implicitTypeUsage(name).test(code)).map((name) => [ns, name])
+    );
+}
+
 export function apiLayerViolations(layer, path, text) {
   const rule = LAYER_RULES.find((candidate) => candidate.layer === layer);
   const code = codeOf(text);
   const usings = usingsIn(text)
     .filter((ns) => layerBreaks(rule, ns))
     .map((ns) => `${path}: using ${ns}, ${rule.message}`);
-  if (!rule.forbid) return usings;
+  const implicit = implicitTypesIn(rule, code).map(
+    ([ns, name]) =>
+      `${path}: ${name} comes from ${ns} through the implicit usings of the Web SDK, ${rule.message}`
+  );
+  if (!rule.forbid) return [...usings, ...implicit];
   const qualified = qualifiedNamesIn(code)
     .filter((name) => layerBreaks(rule, name))
     .map((name) => `${path}: ${name}, ${rule.message}`);
-  return [...usings, ...qualified];
+  return [...usings, ...qualified, ...implicit];
 }
