@@ -24,7 +24,7 @@
     "terraform": "node scripts/terraform.mjs",
     "check:tools": "node scripts/check-tool-versions.mjs",
     "check:iam": "node scripts/check-iam.mjs",
-    "test:scripts": "node --test scripts/*.test.mjs",
+    "test:scripts": "node --test scripts/*.test.mjs scripts/architecture/*.test.mjs",
     "release": "node scripts/release.mjs",
     "check:sonar": "node scripts/check-sonar.mjs",
     "check:unused": "knip",

@@ -114,7 +114,7 @@ async function sequence(steps) {
 const nodeLane = () =>
   sequence([
     () => run('Architecture rules', 'node', ['scripts/check-architecture.mjs']),
-    () => run('Script tests', 'node', ['--test', 'scripts/*.test.mjs']),
+    () => run('Script tests', 'pnpm', ['run', 'test:scripts']),
     () => run('pnpm lint (turbo)', 'pnpm', ['run', 'lint']),
     () => run('ESLint', 'pnpm', ['run', 'lint:eslint']),
     () => run('Prettier check', 'pnpm', ['run', 'format:check']),
