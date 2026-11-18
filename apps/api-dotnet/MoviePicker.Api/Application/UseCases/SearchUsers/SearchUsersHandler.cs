@@ -36,13 +36,9 @@ public sealed class SearchUsersHandler : ISearchUsersHandler
         var items = found
             .OrderByDescending(user => MatchesFromStart(user, normalized))
             .ThenBy(user => user.DisplayName, StringComparer.CurrentCultureIgnoreCase)
-            .Select(user => new FollowUserItem
-            {
-                Handle = user.Handle,
-                DisplayName = user.DisplayName,
-                AvatarId = user.DisplayedAvatarId,
-                IsFollowedByMe = followingSet is null ? null : followingSet.Contains(user.Id)
-            })
+            .Select(user => FollowUserItem.From(
+                DisplayedPerson.From(user),
+                followingSet is null ? null : followingSet.Contains(user.Id)))
             .ToList();
 
         return new FollowListResponse { Items = items };

@@ -143,18 +143,16 @@ public sealed class GetMovieNightsHandler : IGetMovieNightsHandler
         CancellationToken ct)
     {
         var userIds = shown.Select(p => p.UserId).OfType<string>().Where(id => id.Length > 0).Distinct().ToList();
-        var avatarByUserId = userIds.Count == 0
-            ? new Dictionary<string, string>(StringComparer.Ordinal)
+        var cardByUserId = userIds.Count == 0
+            ? new Dictionary<string, UserCard>(StringComparer.Ordinal)
             : (await _users.ListCardsByIdsAsync(userIds, ct))
                 .DistinctBy(card => card.Id)
-                .ToDictionary(card => card.Id, card => card.AvatarId, StringComparer.Ordinal);
+                .ToDictionary(card => card.Id, StringComparer.Ordinal);
 
         return shown.ConvertAll(p => new MovieNightViewerResponse
         {
             Pseudo = p.Pseudo,
-            AvatarId = p.UserId is not null && avatarByUserId.TryGetValue(p.UserId, out var avatarId) && avatarId.Length > 0
-                ? avatarId
-                : null,
+            AvatarId = DisplayedPerson.LinkedTo(p, cardByUserId)?.AvatarId is { Length: > 0 } avatarId ? avatarId : null,
         });
     }
 

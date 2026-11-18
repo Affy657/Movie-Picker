@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -101,16 +102,13 @@ public sealed class InviteUserHandler : IInviteUserHandler
             {
                 UserId = targetUserId,
                 Type = UserNotificationType.EventInvitation,
-                ActorHandle = actor?.Handle,
-                ActorDisplayName = actor?.DisplayName,
-                ActorAvatarId = actor?.DisplayedAvatarId,
                 EventId = evt.Id,
                 EventSlug = evt.Slug,
                 EventTitle = evt.Title,
                 IsRead = false,
                 IsWithheld = withheld,
                 CreatedAt = _clock.GetUtcNow()
-            }, ct);
+            }.WithActor(actor), ct);
         }
         catch (Exception)
         {

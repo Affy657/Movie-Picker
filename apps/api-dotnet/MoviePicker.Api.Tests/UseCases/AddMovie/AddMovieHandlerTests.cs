@@ -1,8 +1,10 @@
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AddMovie;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Tests.Builders;
@@ -88,7 +90,8 @@ public sealed class AddMovieHandlerTests
             _tmdb.Object,
             _unitOfWork,
             NullLogger<AddMovieHandler>.Instance,
-            TimeProvider.System);
+            TimeProvider.System,
+            Options.Create(new MoviePickerOptions()));
     }
 
     [Fact]

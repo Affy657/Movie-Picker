@@ -15,7 +15,7 @@ public sealed class MyEventPreviews
     private readonly Dictionary<string, List<Participant>> _participantsByEvent;
     private readonly IReadOnlyDictionary<string, VoteScoreAggregate> _scores;
     private readonly HashSet<string> _votedEventIds;
-    private readonly Dictionary<string, string> _avatarByUserId;
+    private readonly Dictionary<string, UserCard> _cardByUserId;
 
     public MyEventPreviews(
         IReadOnlyList<Movie> movies,
@@ -28,9 +28,9 @@ public sealed class MyEventPreviews
         _participantsByEvent = PreviewedParticipants(participants);
         _scores = scores;
         _votedEventIds = viewerVotes.Select(v => v.EventId).ToHashSet();
-        _avatarByUserId = userCards
+        _cardByUserId = userCards
             .GroupBy(c => c.Id)
-            .ToDictionary(g => g.Key, g => g.First().AvatarId);
+            .ToDictionary(g => g.Key, g => g.First());
     }
 
     public static Dictionary<string, List<Participant>> PreviewedParticipants(IReadOnlyList<Participant> participants) =>
@@ -54,9 +54,7 @@ public sealed class MyEventPreviews
             ? previewed.ConvertAll(p => new MyEventParticipantPreviewDto
             {
                 Pseudo = p.Pseudo,
-                AvatarId = p.UserId is not null && _avatarByUserId.TryGetValue(p.UserId, out var avatarId)
-                    ? avatarId
-                    : string.Empty,
+                AvatarId = DisplayedPerson.LinkedTo(p, _cardByUserId)?.AvatarId ?? string.Empty,
             })
             : [];
 

@@ -1,4 +1,6 @@
+using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Application.UseCases.Profile;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
@@ -69,12 +71,9 @@ public sealed class FollowUserHandler : IFollowUserHandler
         {
             UserId = target.Id,
             Type = UserNotificationType.NewFollower,
-            ActorHandle = follower.Handle,
-            ActorDisplayName = follower.DisplayName,
-            ActorAvatarId = follower.DisplayedAvatarId,
             IsRead = false,
             CreatedAt = _clock.GetUtcNow()
-        };
+        }.WithActor(follower);
         try
         {
             await _notifications.AddAsync(notification, ct);
@@ -89,7 +88,7 @@ public sealed class FollowUserHandler : IFollowUserHandler
         var subs = await _pushSubscriptions.ListByUserIdAsync(target.Id, ct);
         var message = ServerCopy.Push.NewFollower(follower.DisplayName).ToMessage(
             tag: "new-follower",
-            url: PublicHandleResolver.Resolve(follower) is { } publicHandle ? FrontRoutes.Profile(publicHandle) : FrontRoutes.Notifications);
+            url: DisplayedPerson.From(follower).PublicHandle is { } publicHandle ? FrontRoutes.Profile(publicHandle) : FrontRoutes.Notifications);
         await PushFanOut.SendToAllAsync(_pushSender, subs, message, ct);
     }
 }

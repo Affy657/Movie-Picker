@@ -54,13 +54,7 @@ public sealed class ListMovieListInvitableUsersHandler : IListMovieListInvitable
                     .Where(card => search.Length == 0
                         || UserSearchPolicy.Contains(card.DisplayName, search)
                         || UserSearchPolicy.Contains(card.Handle, search))
-                    .Select(card => new MovieListInvitableUserResponse
-                    {
-                        UserId = card.Id,
-                        Handle = card.Handle ?? string.Empty,
-                        DisplayName = card.DisplayName,
-                        AvatarId = card.AvatarId
-                    })
+                    .Select(card => MovieListInvitableUserResponse.From(DisplayedPerson.From(card)))
             ]
         };
     }

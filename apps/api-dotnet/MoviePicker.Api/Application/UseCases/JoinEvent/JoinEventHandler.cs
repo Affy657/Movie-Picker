@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -179,15 +180,12 @@ public sealed class JoinEventHandler : IJoinEventHandler
             {
                 UserId = evt.CreatorUserId,
                 Type = UserNotificationType.ParticipantJoined,
-                ActorHandle = joiner?.Handle,
-                ActorDisplayName = joiner?.DisplayName,
-                ActorAvatarId = joiner?.DisplayedAvatarId,
                 EventId = evt.Id,
                 EventSlug = evt.Slug,
                 EventTitle = evt.Title,
                 IsRead = false,
                 CreatedAt = _clock.GetUtcNow()
-            }, ct);
+            }.WithActor(joiner), ct);
         }
         catch (Exception ex)
         {

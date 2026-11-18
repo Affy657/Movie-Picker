@@ -1,6 +1,7 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.MovieLists;
+using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -69,14 +70,9 @@ public sealed class InviteToMovieListHandler : IInviteToMovieListHandler
 
         await NotifyAsync(list, owner, target, targetId, ct);
 
-        return new MovieListPendingInvitationResponse
-        {
-            UserId = targetId,
-            Handle = PublicHandleResolver.Resolve(target),
-            DisplayName = target?.DisplayName ?? string.Empty,
-            AvatarId = target?.DisplayedAvatarId ?? string.Empty,
-            InvitedAt = invitation.InvitedAt
-        };
+        return MovieListPendingInvitationResponse.From(
+            target is null ? DisplayedPerson.Unknown(targetId) : DisplayedPerson.From(target),
+            invitation.InvitedAt);
     }
 
     private static void EnsureInvitable(MovieList list, string targetId, DateTimeOffset now)
@@ -109,15 +105,12 @@ public sealed class InviteToMovieListHandler : IInviteToMovieListHandler
             {
                 UserId = targetId,
                 Type = UserNotificationType.ListInvitation,
-                ActorHandle = owner?.Handle,
-                ActorDisplayName = owner?.DisplayName,
-                ActorAvatarId = owner?.DisplayedAvatarId,
                 ListId = list.Id,
                 ListName = list.Name,
                 IsRead = false,
                 IsWithheld = withheld,
                 CreatedAt = _clock.GetUtcNow()
-            }, ct);
+            }.WithActor(owner), ct);
         }
         catch (Exception)
         {

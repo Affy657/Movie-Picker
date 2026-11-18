@@ -30,12 +30,7 @@ public sealed class GetMovieListInvitePreviewHandler : IGetMovieListInvitePrevie
         return new MovieListInvitePreviewResponse
         {
             Name = list.Name,
-            Owner = new MovieListInviterResponse
-            {
-                Handle = PublicHandleResolver.Resolve(owner),
-                DisplayName = owner?.DisplayName ?? string.Empty,
-                AvatarId = owner?.AvatarId ?? string.Empty
-            },
+            Owner = MovieListInviterResponse.From(owner is null ? DisplayedPerson.Unknown(list.OwnerId) : DisplayedPerson.From(owner)),
             ItemCount = list.Items.Count,
             PosterPaths = list.RecentPosterPaths(),
             IsFull = role is null && !keptSeat && list.IsFull(now),

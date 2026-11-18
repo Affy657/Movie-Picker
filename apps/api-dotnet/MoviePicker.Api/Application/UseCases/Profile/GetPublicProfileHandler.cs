@@ -27,12 +27,13 @@ public sealed class GetPublicProfileHandler : IGetPublicProfileHandler
         var watchlistCountTask = WatchlistCountAsync(user, currentUserId, ct);
         await Task.WhenAll(countsTask, followedByMeTask, watchlistCountTask);
         var (followingCount, followersCount) = await countsTask;
+        var person = DisplayedPerson.From(user);
 
         return new PublicProfileResponse
         {
-            Handle = user.Handle,
-            DisplayName = user.DisplayName,
-            AvatarId = user.DisplayedAvatarId,
+            Handle = person.Handle,
+            DisplayName = person.DisplayName,
+            AvatarId = person.AvatarId,
             Bio = user.Bio,
             MemberSince = user.CreatedAt,
             FollowingCount = followingCount,

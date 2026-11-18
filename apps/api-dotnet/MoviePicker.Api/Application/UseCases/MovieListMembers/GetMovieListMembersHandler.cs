@@ -36,38 +36,14 @@ public sealed class GetMovieListMembersHandler : IGetMovieListMembersHandler
         {
             Members =
             [
-                Member(people, list.OwnerId, list.CreatedAt, isOwner: true),
-                .. list.Members.Select(member => Member(people, member.UserId, member.JoinedAt, isOwner: false))
+                MovieListMemberResponse.From(people.PersonOf(list.OwnerId), isOwner: true, list.CreatedAt),
+                .. list.Members.Select(member => MovieListMemberResponse.From(people.PersonOf(member.UserId), isOwner: false, member.JoinedAt))
             ],
-            Invitations = ownerView ? [.. pending.Select(invitation => Pending(people, invitation))] : null,
+            Invitations = ownerView
+                ? [.. pending.Select(invitation => MovieListPendingInvitationResponse.From(people.PersonOf(invitation.UserId), invitation.InvitedAt))]
+                : null,
             InviteLink = ownerView && list.InviteLink is { } link ? MovieListInviteLinkResponse.From(link, now) : null
         };
     }
 
-    private static MovieListMemberResponse Member(MovieListPeople people, string userId, DateTimeOffset joinedAt, bool isOwner)
-    {
-        var person = people.Find(userId) ?? new MovieListPersonResponse { UserId = userId };
-        return new MovieListMemberResponse
-        {
-            UserId = userId,
-            Handle = person.Handle,
-            DisplayName = person.DisplayName,
-            AvatarId = person.AvatarId,
-            IsOwner = isOwner,
-            JoinedAt = joinedAt
-        };
-    }
-
-    private static MovieListPendingInvitationResponse Pending(MovieListPeople people, MovieListInvitation invitation)
-    {
-        var person = people.Find(invitation.UserId) ?? new MovieListPersonResponse { UserId = invitation.UserId };
-        return new MovieListPendingInvitationResponse
-        {
-            UserId = invitation.UserId,
-            Handle = person.Handle,
-            DisplayName = person.DisplayName,
-            AvatarId = person.AvatarId,
-            InvitedAt = invitation.InvitedAt
-        };
-    }
 }
