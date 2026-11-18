@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.16.0] - 2026-11-18
+
 ### Added
 
 - **Des totaux anonymes pour savoir ce qui sert vraiment** : Movie Picker compte lui-même, par jour, sans cookie ni identifiant, quelques étapes (ouverture du lien d'une soirée, inscription, arrivée dans une soirée, ouverture d'un recap, pioche, synchronisation Letterboxd), pour voir où décroche une personne invitée. Si vous refusez la mesure d'audience, votre navigateur n'envoie plus ceux qui partent de lui ; la politique de confidentialité détaille le tout.
@@ -832,7 +834,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.15.5...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.16.0...HEAD
+[1.16.0]: https://github.com/Affy657/Movie-Picker/compare/v1.15.5...v1.16.0
 [1.15.5]: https://github.com/Affy657/Movie-Picker/compare/v1.15.4...v1.15.5
 [1.15.4]: https://github.com/Affy657/Movie-Picker/compare/v1.15.3...v1.15.4
 [1.15.3]: https://github.com/Affy657/Movie-Picker/compare/v1.15.2...v1.15.3
