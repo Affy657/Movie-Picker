@@ -126,7 +126,7 @@ public sealed class InviteUserHandler : IInviteUserHandler
                 Title: "Invitation reçue ! 💌",
                 Body: $"{actor?.DisplayName} vous invite à rejoindre {evt.Title}",
                 Tag: $"invite-{evt.Id}",
-                Url: $"/e/{evt.Slug}"
+                Url: FrontRoutes.EventDetail(evt.Slug)
             );
             await PushFanOut.SendToAllAsync(_pushSender, subs, message, ct);
         }

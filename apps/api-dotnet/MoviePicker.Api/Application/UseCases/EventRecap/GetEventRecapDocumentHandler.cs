@@ -50,8 +50,8 @@ public sealed class GetEventRecapDocumentHandler : IGetEventRecapDocumentHandler
 
     private async Task<SharePreview> DescribeAsync(Event evt, string webBase, string apiBase, CancellationToken ct)
     {
-        var canonical = $"{webBase}/r/{evt.RecapSlug}";
-        var fallbackUrl = $"{webBase}/";
+        var canonical = webBase + FrontRoutes.NightRecap(evt.RecapSlug ?? string.Empty);
+        var fallbackUrl = webBase + FrontRoutes.Home;
         var title = $"{evt.Title}, le recap";
         var fallbackImage = SharePreview.SiteImage(webBase);
         IReadOnlyList<Movie> winners = evt.HasWinner ? await WinnerMovies.ListAsync(_movies, evt, ct) : [];

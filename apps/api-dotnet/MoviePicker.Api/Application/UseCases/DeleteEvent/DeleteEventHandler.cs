@@ -152,5 +152,5 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
             Title: "Soirée annulée 😢",
             Body: $"{evt.Title} a été annulée.",
             Tag: $"event-deleted-{evt.Id}",
-            Url: "/"));
+            Url: FrontRoutes.Home));
 }

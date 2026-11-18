@@ -172,7 +172,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
                     Title: "Ça s'anime !",
                     Body: $"{joinerPseudo} vient de rejoindre {evt.Title} ! 🎉",
                     Tag: $"join-{evt.Id}",
-                    Url: $"/e/{evt.Slug}"
+                    Url: FrontRoutes.EventDetail(evt.Slug)
                 );
 
                 await PushFanOut.SendToAllAsync(_pushSender, subscriptions, message, ct);

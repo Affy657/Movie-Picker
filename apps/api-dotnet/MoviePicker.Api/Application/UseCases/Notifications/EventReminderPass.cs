@@ -210,7 +210,7 @@ public sealed class EventReminderPass : IEventReminderPass
             Title: pushTitle,
             Body: pushBody,
             Tag: $"reminder-{window.NotifType}-{evt.Id}",
-            Url: $"/e/{evt.Slug}",
+            Url: FrontRoutes.EventDetail(evt.Slug),
             TimeToLive: occurrence.StartUtc - now);
         foreach (var user in notifiableUsers)
         {
@@ -314,7 +314,7 @@ public sealed class EventReminderPass : IEventReminderPass
             Title: "Soirée en suspens 😅",
             Body: $"{evt.Title} s'est terminée sans qu'aucun film n'ait été choisi… on se rattrape la prochaine fois ?",
             Tag: $"pending-{evt.Id}",
-            Url: $"/e/{evt.Slug}");
+            Url: FrontRoutes.EventDetail(evt.Slug));
         if (!EventSchedule.TryGetStartUtc(evt.Date, evt.Time, out var startUtc))
             return;
 

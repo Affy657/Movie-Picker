@@ -133,7 +133,7 @@ public sealed class InviteToMovieListHandler : IInviteToMovieListHandler
             Title: "Invitation reçue ! 💌",
             Body: $"{owner?.DisplayName} vous invite à rejoindre la liste {list.Name}",
             Tag: $"list-invite-{list.Id}",
-            Url: "/notifications");
+            Url: FrontRoutes.Notifications);
         await PushFanOut.SendToAllAsync(_pushSender, subscriptions, message, ct);
     }
 }

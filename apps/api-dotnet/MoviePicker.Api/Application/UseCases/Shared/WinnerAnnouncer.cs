@@ -36,7 +36,7 @@ public sealed class WinnerAnnouncer : IWinnerAnnouncer
                 Title: method == WinnerPickMethod.Manual ? "🎬 Film choisi par l'hôte !" : "🎡 Film tiré au sort !",
                 Body: PushBody(evt, winnerTitle),
                 Tag: $"wheel-{evt.Id}",
-                Url: $"/e/{evt.Slug}"));
+                Url: FrontRoutes.EventDetail(evt.Slug)));
 
         return _audience.NotifyParticipantsAsync(message, ct: ct);
     }

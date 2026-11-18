@@ -22,8 +22,8 @@ public sealed record SharePreview(
     public const string SiteName = "Movie Picker";
 
     public static SharePreview Generic(string webBase) => new(
-        $"{webBase}/",
-        $"{webBase}/",
+        webBase + FrontRoutes.Home,
+        webBase + FrontRoutes.Home,
         SiteName,
         "Choisissez votre prochain film ensemble : chacun propose, tout le monde vote, la roue tranche.",
         SiteImage(webBase));

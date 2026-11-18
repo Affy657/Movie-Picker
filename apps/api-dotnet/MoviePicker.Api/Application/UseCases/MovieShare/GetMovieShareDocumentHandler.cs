@@ -68,9 +68,8 @@ public sealed class GetMovieShareDocumentHandler : IGetMovieShareDocumentHandler
         string apiBase,
         CancellationToken ct)
     {
-        var section = mediaType == MovieMediaType.Tv ? "serie" : "film";
-        var canonical = $"{webBase}/{section}/{Uri.EscapeDataString(movieRef)}";
-        var fallbackUrl = $"{webBase}/";
+        var canonical = webBase + FrontRoutes.MoviePage(mediaType, movieRef);
+        var fallbackUrl = webBase + FrontRoutes.Home;
         var title = TitleWithYear(details);
         var description = Describe(details.Overview, mediaType);
 

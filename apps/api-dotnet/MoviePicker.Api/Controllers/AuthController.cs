@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
+using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Application.UseCases.Auth.OAuth;
@@ -118,9 +119,9 @@ public sealed class AuthController : ControllerBase
         return NoContent();
     }
 
-    private const string FrontLoginPath = "/login";
-    private const string FrontIntegrationsPath = "/settings/integrations";
-    private const string FrontCallbackPath = "/auth/callback";
+    private const string FrontLoginPath = FrontRoutes.Login;
+    private const string FrontIntegrationsPath = FrontRoutes.AccountIntegrations;
+    private const string FrontCallbackPath = FrontRoutes.OAuthCallback;
     private const string ReturnToItemKey = "returnTo";
     internal const string ProviderItemKey = "oauthProvider";
     private const string OauthErrorQueryKey = "oauthError";

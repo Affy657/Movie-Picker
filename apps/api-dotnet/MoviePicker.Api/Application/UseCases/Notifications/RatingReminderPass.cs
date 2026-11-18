@@ -158,7 +158,7 @@ public sealed class RatingReminderPass : IRatingReminderPass
             Title: "Alors, ce film ? ⭐",
             Body: $"{movie.Title}, vu pendant {evt.Title} : donne-lui ta note !",
             Tag: $"rating-reminder-{evt.Id}",
-            Url: $"/e/{evt.Slug}?rate"
+            Url: FrontRoutes.EventRating(evt.Slug)
         );
         var inApp = new UserNotification
         {

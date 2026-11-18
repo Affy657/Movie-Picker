@@ -112,7 +112,7 @@ public sealed class RequestPasswordResetHandler : IRequestPasswordResetHandler
         var saved = await _tokens.AddAsync(token, ct);
 
         var baseUrl = _options.PublicWebBaseUrl?.TrimEnd('/') ?? "";
-        var resetUrl = new Uri($"{baseUrl}/reset?token={Uri.EscapeDataString(plain)}");
+        var resetUrl = new Uri(baseUrl + FrontRoutes.ResetWithToken(plain));
         var emailMessage = PasswordResetEmailFactory.Build(user.Email, resetUrl, request.Locale);
 
         try

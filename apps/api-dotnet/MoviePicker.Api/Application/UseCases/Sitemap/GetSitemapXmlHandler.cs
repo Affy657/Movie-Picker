@@ -22,14 +22,14 @@ public sealed class GetSitemapXmlHandler : IGetSitemapXmlHandler
 
     private static readonly StaticPage[] StaticPages =
     [
-        new("/", Daily, "1.0"),
-        new("/decouvrir", Monthly, "0.8"),
-        new("/films/tendances", Daily, "0.8"),
-        new("/films/au-cinema", Weekly, "0.8"),
-        new("/films/les-plus-proposes", Weekly, "0.7"),
-        new("/films/collections", Monthly, "0.6"),
-        new("/tech", Monthly, "0.5"),
-        new("/soutenir", Monthly, "0.3"),
+        new(FrontRoutes.Home, Daily, "1.0"),
+        new(FrontRoutes.HowItWorks, Monthly, "0.8"),
+        new(FrontRoutes.ShowcaseTrending, Daily, "0.8"),
+        new(FrontRoutes.ShowcaseNowPlaying, Weekly, "0.8"),
+        new(FrontRoutes.ShowcaseMostProposed, Weekly, "0.7"),
+        new(FrontRoutes.MovieCollections, Monthly, "0.6"),
+        new(FrontRoutes.Tech, Monthly, "0.5"),
+        new(FrontRoutes.Donate, Monthly, "0.3"),
     ];
 
     private static readonly int MaxProfileUrls = SitemapUrlLimit - StaticPages.Length;
@@ -72,7 +72,7 @@ public sealed class GetSitemapXmlHandler : IGetSitemapXmlHandler
             AppendUrl(sb, $"{webBase}{page.Path}", page.ChangesDaily ? today : null, page.ChangeFrequency, page.Priority);
         foreach (var profile in profiles)
         {
-            var loc = $"{webBase}/u/{Uri.EscapeDataString(profile.Handle)}";
+            var loc = webBase + FrontRoutes.Profile(profile.Handle);
             AppendUrl(sb, loc, profile.UpdatedAt, Weekly, "0.6");
         }
         sb.Append("</urlset>\n");

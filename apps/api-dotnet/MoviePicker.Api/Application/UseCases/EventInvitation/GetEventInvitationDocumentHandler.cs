@@ -41,9 +41,9 @@ public sealed class GetEventInvitationDocumentHandler : IGetEventInvitationDocum
 
     private async Task<SharePreview> DescribeAsync(Event evt, string webBase, string apiBase, CancellationToken ct)
     {
-        var path = $"/e/{evt.Slug}";
+        var path = FrontRoutes.EventDetail(evt.Slug);
         var canonical = $"{webBase}{path}";
-        var fallbackUrl = $"{webBase}/login?returnTo={Uri.EscapeDataString(path)}";
+        var fallbackUrl = webBase + FrontRoutes.LoginReturningTo(path);
         var siteImage = SharePreview.SiteImage(webBase);
         if (!(evt.Config ?? EventConfig.SavedWithoutSettings).RichSharePreview)
         {

@@ -196,5 +196,5 @@ public sealed class AddMovieHandler : IAddMovieHandler
             Title: "Un film de plus au menu 🍿",
             Body: $"{movieTitle} a été ajouté à la soirée {evt.Title}",
             Tag: $"movie-add-{evt.Id}",
-            Url: $"/e/{evt.Slug}"));
+            Url: FrontRoutes.EventDetail(evt.Slug)));
 }
