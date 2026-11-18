@@ -13,7 +13,8 @@
 # was never validated. The filter stays useful on PRs, where nothing deploys; on
 # master, minutes are free since the repository went public, and the conclusion of a run must
 # hold for the whole tree, not just the diff of the commit.
-#   - Web lane: lint-web, test-web-shard (three runners) then test-web (merge + thresholds).
+#   - Web lane: lint-web (`pnpm run check:static`), test-web-shard (three runners) then test-web
+#     (merge + thresholds).
 #   - API lane: lint-api, test-api (unit tests, then the integration suite on a real MongoDB).
 #   - Infra lane: lint-terraform (fmt + validate on `infra/terraform/`).
 #   - Cross-cutting: gitleaks (always), lint-workflows (always), npm/NuGet audit,
@@ -244,8 +245,10 @@ jobs:
             echo "::endgroup::"
           done
 
+  # `check:static` is the one list of the static gates: architecture rules, script tests, `tsc`,
+  # ESLint, Prettier, knip. The pre-push hook and `verify:local` run the same script.
   lint-web:
-    name: 🧹 Lint web (tsc + eslint + prettier)
+    name: 🧹 Static gates (architecture, tsc, eslint, prettier, knip)
     needs: changes
     if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-24.04
@@ -263,12 +266,7 @@ jobs:
           key: turbo-lintweb-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
             turbo-lintweb-${{ runner.os }}-
-      - run: pnpm run check:architecture
-      - run: pnpm run test:scripts
-      - run: pnpm run lint
-      - run: pnpm run lint:eslint
-      - run: pnpm run format:check
-      - run: pnpm run check:unused
+      - run: pnpm run check:static
 
   lint-api:
     name: 🧹 Lint API .NET (format + build + OpenAPI)

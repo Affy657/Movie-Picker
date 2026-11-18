@@ -112,13 +112,9 @@ async function sequence(steps) {
 }
 
 const nodeLane = () =>
-  sequence([
-    () => run('Architecture rules', 'node', ['scripts/check-architecture.mjs']),
-    () => run('Script tests', 'node', ['--test', 'scripts/*.test.mjs']),
-    () => run('pnpm lint (turbo)', 'pnpm', ['run', 'lint']),
-    () => run('ESLint', 'pnpm', ['run', 'lint:eslint']),
-    () => run('Prettier check', 'pnpm', ['run', 'format:check']),
-    () => run('Unused code (knip)', 'pnpm', ['run', 'check:unused']),
+  run('Static gates (architecture, script tests, tsc, ESLint, Prettier, knip)', 'pnpm', [
+    'run',
+    'check:static',
   ]);
 
 // Format, unit tests and the OpenAPI export all read the Release build: they only start once it
