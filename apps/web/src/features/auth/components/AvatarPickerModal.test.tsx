@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AvatarPickerModal from '@/features/auth/components/AvatarPickerModal';
+import modalStyles from '@/shared/components/Modal.module.css';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { ApiError } from '@/shared/api/apiError';
 import {
@@ -99,6 +100,20 @@ describe('AvatarPickerModal, photo tab', () => {
       screen.getByText('Faites glisser la photo pour la placer dans le cercle.')
     ).toBeInTheDocument();
     expect(screen.getByRole('slider', { name: 'Zoom' })).toBeInTheDocument();
+  });
+
+  it('lets the crop step scroll under its title on a short screen', async () => {
+    renderPicker();
+
+    await choose(jpeg());
+    await screen.findByRole('heading', { name: 'Recadrer la photo' });
+
+    expect(screen.getByRole('dialog', { name: 'Recadrer la photo' })).toHaveClass(
+      modalStyles.column!
+    );
+    const body = screen.getByRole('slider', { name: 'Zoom' }).closest(`.${modalStyles.body}`);
+    expect(body).not.toBeNull();
+    expect(body).not.toContainElement(screen.getByRole('heading', { name: 'Recadrer la photo' }));
   });
 
   it('refuses a file over 10 MB before reading it', async () => {

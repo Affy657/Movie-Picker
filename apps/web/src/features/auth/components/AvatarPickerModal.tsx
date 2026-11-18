@@ -3,7 +3,7 @@ import { Check } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import { BOTTTS_IDS, EMOJI_IDS, avatarUrl, isAvatarPhotoId } from '@/shared/utils/avatar';
 import { ApiError } from '@/shared/api/apiError';
-import Modal from '@/shared/components/Modal';
+import Modal, { ModalBody } from '@/shared/components/Modal';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { TabPanel, Tabs } from '@/shared/components/Tabs';
 import { ChoiceCard, ChoiceGroup } from '@/shared/components/ChoiceCard';
@@ -192,10 +192,11 @@ export default function AvatarPickerModal({
       open={open}
       onClose={cropPhoto ? closeCrop : handleClose}
       size="sm"
+      column
       title={cropPhoto ? t('auth.account.avatarPhotoCropTitle') : t('auth.account.avatarLabel')}
       titleId={titleId}
     >
-      <div className={styles.body}>
+      <ModalBody>
         {cropPhoto ? (
           <AvatarPhotoCropper
             photo={cropPhoto}
@@ -286,7 +287,7 @@ export default function AvatarPickerModal({
           onCancel={() => setConfirmingDelete(false)}
           testId="avatar-photo-delete"
         />
-      </div>
+      </ModalBody>
     </Modal>
   );
 }

@@ -113,17 +113,9 @@
   min-height: var(--tap-target-min);
 }
 
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2-5);
-  width: 100%;
-}
-
-.actions > * {
-  flex: 1 0 auto;
-}
-
-.actionsStacked {
-  flex-direction: column-reverse;
+@media (max-width: 47.9375rem) {
+  div.actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
 }

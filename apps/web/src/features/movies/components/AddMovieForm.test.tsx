@@ -401,6 +401,19 @@ describe('AddMovieForm (MSW)', () => {
     expect(screen.queryByText(/recherches r/i)).not.toBeInTheDocument();
   });
 
+  it('gives the focus back to the filters toggle when Escape closes the filters panel', async () => {
+    const user = userEvent.setup();
+    renderWithLocale(<AddMovieForm onAddItem={onAddItem} onAdded={onAdded} />);
+
+    const toggle = screen.getByRole('button', { name: /filtres avancés/i });
+    await user.click(toggle);
+    screen.getByRole('slider', { name: 'Durée maximum' }).focus();
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByRole('slider', { name: 'Durée maximum' })).not.toBeInTheDocument();
+    expect(toggle).toHaveFocus();
+  });
+
   it('Escape hides the history until the field is left or edited', async () => {
     localStorage.setItem(HISTORY_KEY, JSON.stringify(['inception']));
     const user = userEvent.setup();

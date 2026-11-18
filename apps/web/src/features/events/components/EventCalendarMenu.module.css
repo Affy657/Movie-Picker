@@ -8,19 +8,7 @@
   position: static;
 }
 
-.panel {
-  width: 15rem;
-}
-
 .panelAboveRow {
-  top: auto;
-  bottom: calc(100% + var(--space-1-5));
   left: 0;
   right: 0;
-  width: auto;
-}
-
-.icon {
-  flex-shrink: 0;
-  color: var(--color-text-muted);
 }

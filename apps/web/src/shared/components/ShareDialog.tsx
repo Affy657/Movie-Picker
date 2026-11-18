@@ -3,13 +3,11 @@ import clsx from 'clsx';
 import { Check, Download, Link2, Share2 } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
 import QrCode from '@/shared/components/QrCode';
-import Sheet from '@/shared/components/Sheet';
 import { Tabs, TabPanel, type TabDef } from '@/shared/components/Tabs';
-import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useShareAction } from '@/shared/hooks/useShareAction';
 import { downloadQrPng } from '@/shared/utils/downloadQrPng';
 import { useTranslation } from '@/shared/i18n';
-import Modal from './Modal';
+import ResponsiveDialog from './ResponsiveDialog';
 import styles from './ShareDialog.module.css';
 import Button from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -173,8 +171,6 @@ export default function ShareDialog({
   extraTab,
 }: Readonly<ShareDialogProps>) {
   const { t } = useTranslation();
-  const isMobile = useIsMobile();
-  const titleId = useId();
   const tabsIdBase = useId();
   const [tab, setTab] = useState<string>('link');
 
@@ -226,31 +222,21 @@ export default function ShareDialog({
     linkPanel
   );
 
-  if (isMobile) {
-    return (
-      <Sheet open={open} title={title} onClose={onClose} size={extraTab ? 'lg' : 'md'}>
-        {tabsBar}
-        {panels}
-      </Sheet>
-    );
-  }
-
   return (
-    <Modal
+    <ResponsiveDialog
       open={open}
       onClose={onClose}
-      size="xs"
-      column
       title={title}
-      titleId={titleId}
+      size="xs"
+      sheetSize={extraTab ? 'lg' : 'md'}
       className={clsx(extraTab && styles.dialogWithTabs)}
     >
-      {open && (
+      {open ? (
         <>
           {tabsBar}
-          <div className={styles.body}>{panels}</div>
+          {panels}
         </>
-      )}
-    </Modal>
+      ) : null}
+    </ResponsiveDialog>
   );
 }

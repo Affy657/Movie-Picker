@@ -20,7 +20,7 @@ import Dropdown from '@/shared/components/Dropdown';
 import { createIdeaSuggestion, type IdeaSuggestionCategory } from '@/shared/api/ideaSuggestionsApi';
 import styles from './ProposeIdeaButton.module.css';
 import { useCloseOnPageChange } from './useCloseOnPageChange';
-import Modal from '@/shared/components/Modal';
+import Modal, { ModalActions, ModalBody, ModalFooter } from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import clsx from 'clsx';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -244,17 +244,23 @@ export function ProposeIdeaDialog({ open, onClose, title: dialogTitle }: Readonl
       titleId={titleId}
     >
       {status === 'success' ? (
-        <div className={styles.successState}>
-          <p className={styles.successMessage} role="status" aria-live="polite">
-            {t('proposeIdea.successMessage')}
-          </p>
-          <Button type="button" variant="primary" onClick={onClose}>
-            {t('common.close')}
-          </Button>
-        </div>
+        <>
+          <ModalBody>
+            <p className={styles.successMessage} role="status" aria-live="polite">
+              {t('proposeIdea.successMessage')}
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <ModalActions>
+              <Button type="button" variant="primary" onClick={onClose}>
+                {t('common.close')}
+              </Button>
+            </ModalActions>
+          </ModalFooter>
+        </>
       ) : (
         <form className={styles.form} onSubmit={(e) => void handleSubmit(e)}>
-          <div className={styles.body}>
+          <ModalBody>
             <Field label={t('proposeIdea.categoryLabel')} htmlFor={categoryFieldId}>
               {({ id, labelId }) => (
                 <Dropdown
@@ -368,13 +374,15 @@ export function ProposeIdeaDialog({ open, onClose, title: dialogTitle }: Readonl
                 {error}
               </p>
             ) : null}
-          </div>
+          </ModalBody>
 
-          <div className={styles.actions}>
-            <Button type="submit" variant="primary" loading={status === 'submitting'}>
-              {status === 'submitting' ? t('proposeIdea.submitting') : t('proposeIdea.submit')}
-            </Button>
-          </div>
+          <ModalFooter>
+            <ModalActions>
+              <Button type="submit" variant="primary" loading={status === 'submitting'}>
+                {status === 'submitting' ? t('proposeIdea.submitting') : t('proposeIdea.submit')}
+              </Button>
+            </ModalActions>
+          </ModalFooter>
         </form>
       )}
     </Modal>

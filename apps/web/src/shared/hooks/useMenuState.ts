@@ -2,7 +2,10 @@ import { useCallback, useId, useRef, useState, type CSSProperties } from 'react'
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useMenuFocus } from '@/shared/hooks/useMenuFocus';
 import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
-import { useMenuVerticalFit } from '@/shared/hooks/useMenuVerticalFit';
+import {
+  useMenuVerticalFit,
+  type MenuPlacementPreference,
+} from '@/shared/hooks/useMenuVerticalFit';
 
 function panelStyle(left: number | null, maxHeight: number | null): CSSProperties | undefined {
   if (left === null && maxHeight === null) return undefined;
@@ -12,7 +15,10 @@ function panelStyle(left: number | null, maxHeight: number | null): CSSPropertie
   };
 }
 
-export function useMenuState(options?: { align?: 'left' | 'right' }) {
+export function useMenuState(options?: {
+  align?: 'left' | 'right';
+  placement?: MenuPlacementPreference;
+}) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -28,7 +34,12 @@ export function useMenuState(options?: { align?: 'left' | 'right' }) {
   useClickOutside(containerRef, dismiss, open, { closeOnFocusLeave: true });
   useMenuFocus(open, panelRef, triggerRef);
   const fitLeft = useMenuHorizontalFit(open, containerRef, panelRef, options?.align);
-  const { placement, maxHeight } = useMenuVerticalFit(open, containerRef, panelRef);
+  const { placement, maxHeight } = useMenuVerticalFit(
+    open,
+    containerRef,
+    panelRef,
+    options?.placement
+  );
 
   return {
     open,

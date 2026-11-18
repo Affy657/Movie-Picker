@@ -83,6 +83,7 @@ function MovieListActionsMenu({
           {member ? null : (
             <MenuItem
               icon={<Pencil aria-hidden size={ICON_SIZE.sm} />}
+              aria-haspopup="dialog"
               onClick={pick(() => onOpen('edit'))}
             >
               {t('lists.page.edit')}
@@ -95,6 +96,7 @@ function MovieListActionsMenu({
           ) : null}
           <MenuItem
             icon={<Users aria-hidden size={ICON_SIZE.sm} />}
+            aria-haspopup="dialog"
             onClick={pick(() => onOpen('members'))}
           >
             {t('lists.members.open')}
@@ -109,6 +111,7 @@ function MovieListActionsMenu({
                 <Trash2 aria-hidden size={ICON_SIZE.sm} />
               )
             }
+            aria-haspopup="dialog"
             onClick={pick(() => onOpen(member ? 'leave' : 'delete'))}
           >
             {member ? t('lists.leave.action') : t('lists.page.delete')}

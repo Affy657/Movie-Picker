@@ -4,6 +4,7 @@ import { CalendarPlus, Clock, Dices, Film, Star } from 'lucide-react';
 import Button from '@/shared/components/Button';
 import Chip from '@/shared/components/Chip';
 import LinkButton from '@/shared/components/LinkButton';
+import { ModalActions } from '@/shared/components/Modal';
 import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
 import { Skeleton } from '@/shared/components/Skeleton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -108,13 +109,11 @@ function DrawnFacts({
 
 function PickActions({
   shuffling,
-  stacked,
   canDrawAgain,
   onDrawAgain,
   onPropose,
 }: Readonly<{
   shuffling: boolean;
-  stacked: boolean;
   canDrawAgain: boolean;
   onDrawAgain: () => void;
   onPropose: () => void;
@@ -122,7 +121,7 @@ function PickActions({
   const { t } = useTranslation();
   const inactive = shuffling || undefined;
   return (
-    <div className={clsx(styles.actions, stacked && styles.actionsStacked)}>
+    <ModalActions className={styles.actions}>
       {canDrawAgain ? (
         <Button aria-disabled={inactive} onClick={onDrawAgain}>
           <Dices size={ICON_SIZE.md} aria-hidden />
@@ -133,7 +132,7 @@ function PickActions({
         <CalendarPlus size={ICON_SIZE.md} aria-hidden />
         {t('watchlist.card.proposeAction')}
       </Button>
-    </div>
+    </ModalActions>
   );
 }
 
@@ -202,7 +201,6 @@ export default function RandomPickDialog({
   const actions = (
     <PickActions
       shuffling={shuffling}
-      stacked={isMobile}
       canDrawAgain={canDrawAgain}
       onDrawAgain={drawAgain}
       onPropose={() => onPropose(drawn)}

@@ -227,7 +227,7 @@
 
   .panel {
     margin-top: calc(var(--radius-lg) * -1);
-    padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   }
 }

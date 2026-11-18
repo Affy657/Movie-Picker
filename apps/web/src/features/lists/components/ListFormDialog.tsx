@@ -1,6 +1,7 @@
 import { useId, useMemo, useState, type SubmitEvent } from 'react';
 import { Link } from 'react-router';
 import { Globe, Lock } from 'lucide-react';
+import { ModalActions } from '@/shared/components/Modal';
 import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
 import Field from '@/shared/components/Field';
 import Button from '@/shared/components/Button';
@@ -232,7 +233,7 @@ export default function ListFormDialog({
       title={title}
       onClose={onClose}
       footer={
-        <div className={styles.actions}>
+        <ModalActions>
           <Button type="button" onClick={onClose}>
             {t('lists.form.cancel')}
           </Button>
@@ -245,7 +246,7 @@ export default function ListFormDialog({
           >
             {t(SUBMIT_LABEL_KEYS[mode])}
           </Button>
-        </div>
+        </ModalActions>
       }
     >
       <form id={formId} className={styles.form} onSubmit={(event) => void handleSubmit(event)}>

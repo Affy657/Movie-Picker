@@ -20,7 +20,7 @@ import Avatar from '@/shared/components/Avatar';
 import Button from '@/shared/components/Button';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import IconButton from '@/shared/components/IconButton';
-import { MenuItem, MenuPanel } from '@/shared/components/Menu';
+import { MenuItem, MenuPanel, MenuSeparator } from '@/shared/components/Menu';
 import Notice from '@/shared/components/Notice';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
@@ -125,15 +125,42 @@ function SeenToggle({
   );
 }
 
+function WheelToggleItem({
+  movie,
+  onPick,
+  t,
+}: Readonly<{ movie: MovieData; onPick: () => void; t: Translate }>) {
+  const excluded = !!movie.excludedFromWheel;
+  return (
+    <MenuItem
+      icon={
+        excluded ? (
+          <RotateCcw size={ICON_SIZE.sm} aria-hidden />
+        ) : (
+          <Disc3 size={ICON_SIZE.sm} aria-hidden />
+        )
+      }
+      onClick={onPick}
+    >
+      {t(excluded ? 'movies.list.includeInWheelAction' : 'movies.list.excludeFromWheelAction')}
+    </MenuItem>
+  );
+}
+
 function MoreActions({
   night,
+  docked,
   onRequestRemove,
   t,
-}: Readonly<{ night: Night; onRequestRemove: () => void; t: Translate }>) {
-  const menu = useMenuState();
+}: Readonly<{ night: Night; docked: boolean; onRequestRemove: () => void; t: Translate }>) {
+  const menu = useMenuState({ placement: docked ? 'top' : 'auto' });
   const movie = night.movie;
   if (!movie || (!night.canToggleWheel && !night.canRemove)) return null;
   const label = t('moviePage.night.moreActions');
+  const pick = (action: () => void) => () => {
+    menu.close();
+    action();
+  };
   return (
     <div ref={menu.containerRef} className={styles.menu}>
       <IconButton {...menu.triggerProps} ariaLabel={label} showTitle={false}>
@@ -142,34 +169,15 @@ function MoreActions({
       {menu.open ? (
         <MenuPanel {...menu.panelProps} ariaLabel={label}>
           {night.canToggleWheel ? (
-            <MenuItem
-              icon={
-                movie.excludedFromWheel ? (
-                  <RotateCcw size={ICON_SIZE.sm} aria-hidden />
-                ) : (
-                  <Disc3 size={ICON_SIZE.sm} aria-hidden />
-                )
-              }
-              onClick={() => {
-                menu.close();
-                void night.toggleWheel();
-              }}
-            >
-              {t(
-                movie.excludedFromWheel
-                  ? 'movies.list.includeInWheelAction'
-                  : 'movies.list.excludeFromWheelAction'
-              )}
-            </MenuItem>
+            <WheelToggleItem movie={movie} onPick={pick(() => void night.toggleWheel())} t={t} />
           ) : null}
+          {night.canToggleWheel && night.canRemove ? <MenuSeparator /> : null}
           {night.canRemove ? (
             <MenuItem
               tone="danger"
               icon={<Trash2 size={ICON_SIZE.sm} aria-hidden />}
-              onClick={() => {
-                menu.close();
-                onRequestRemove();
-              }}
+              aria-haspopup="dialog"
+              onClick={pick(onRequestRemove)}
             >
               {t('movies.list.removeButton')}
             </MenuItem>
@@ -209,7 +217,7 @@ function NightActions({
           {t('moviePage.night.join')}
         </Link>
       ) : null}
-      <MoreActions night={night} onRequestRemove={onRequestRemove} t={t} />
+      <MoreActions night={night} docked={compact} onRequestRemove={onRequestRemove} t={t} />
     </div>
   );
 }

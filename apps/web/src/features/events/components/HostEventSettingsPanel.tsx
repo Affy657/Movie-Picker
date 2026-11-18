@@ -1,6 +1,6 @@
-import { useId, useMemo, useRef } from 'react';
+import { useId, useMemo } from 'react';
 import clsx from 'clsx';
-import { Lock, Settings, X } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import HostEventDateField from './HostEventDateField';
 import HostEventThemeField from './HostEventThemeField';
 import WheelModeField from './WheelModeField';
@@ -14,15 +14,12 @@ import NumberInput from '@/shared/components/NumberInput';
 import Field from '@/shared/components/Field';
 import ToggleRow from '@/shared/components/ToggleRow';
 import SegmentedRadioGroup from '@/shared/components/SegmentedRadioGroup';
-import { useSheetDrag } from '@/shared/hooks/useSheetDrag';
-import dragStyles from '@/shared/components/SheetDrag.module.css';
-import Modal from '@/shared/components/Modal';
+import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
 import styles from './HostEventSettingsPanel.module.css';
 import templatesStyles from './EventTemplatesSection.module.css';
 import type { EventData } from '@/features/events/types';
 import { MAX_WINNERS_PER_EVENT } from '@/features/events/types';
 import { useTranslation } from '@/shared/i18n';
-import IconButton from '@/shared/components/IconButton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import Chip, { type ChipTone } from '@/shared/components/Chip';
 
@@ -107,12 +104,8 @@ export default function HostEventSettingsPanel({
     isConnectedCreator,
   } = useHostEventSettingsDraft({ slug, hostToken, event, open });
 
-  const titleId = useId();
   const themeCollapseId = useId();
   const wheelModeLabelId = useId();
-
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const dragBind = useSheetDrag(dialogRef, onClose, open);
 
   const recurrenceOptions = useMemo(
     () => [
@@ -126,294 +119,278 @@ export default function HostEventSettingsPanel({
   const saveStatusLabel = t(SAVE_STATUS_LABEL_KEYS[saveState]);
 
   return (
-    <Modal
+    <ResponsiveDialog
       open={open}
       onClose={onClose}
       size="md"
-      surface="borderless"
-      bottomSheetOnMobile
-      column
-      ariaLabelledBy={titleId}
-      dialogRef={dialogRef}
-      className={clsx(styles.dialog, dragStyles.surface)}
+      sheetSize="lg"
+      title={t('events.settings.title')}
+      detail={
+        <Chip
+          size="sm"
+          tone={SAVE_STATUS_TONE[saveState]}
+          dot={saveState === 'pending' ? 'pulsing' : true}
+          className={styles.saveStatus}
+        >
+          {saveStatusLabel}
+        </Chip>
+      }
     >
-      <div className={dragStyles.grab} {...dragBind}>
-        <span className={clsx(dragStyles.handle, dragStyles.handleMobileOnly)} aria-hidden="true" />
-        <div className={styles.panelHead}>
-          <Settings size={ICON_SIZE.lg} aria-hidden className={styles.summaryIcon} />
-          <h2 id={titleId} className={styles.panelTitle}>
-            {t('events.settings.title')}
-          </h2>
-          <Chip
-            size="sm"
-            tone={SAVE_STATUS_TONE[saveState]}
-            dot={saveState === 'pending' ? 'pulsing' : true}
-            className={styles.saveStatus}
-          >
-            {saveStatusLabel}
-          </Chip>
-          <IconButton size="sm" ariaLabel={t('common.close')} onClick={onClose}>
-            <X size={ICON_SIZE.md} aria-hidden />
-          </IconButton>
-        </div>
-      </div>
-      <div className={styles.dialogBody}>
-        {configLocked ? (
-          <output className={styles.lockBanner}>
-            <Lock size={ICON_SIZE.sm} aria-hidden />
-            <span className={styles.lockBannerLabel}>{t('events.settings.configLockedHint')}</span>
-          </output>
-        ) : null}
-        {saveError && (
-          <p className="error" role="alert">
-            {saveError}
-          </p>
-        )}
-        <form className={`form ${styles.form}`}>
-          <div className={styles.section}>
-            <fieldset className={styles.lockable} disabled={configLocked}>
-              <Field
-                label={t('events.settings.titleLabel')}
-                htmlFor="host-cfg-title"
-                error={fieldErrors.title}
-                className={styles.field}
-              >
-                {({ id, describedBy, invalid }) => (
-                  <input
-                    id={id}
-                    className="input"
-                    type="text"
-                    value={eventTitle}
-                    onChange={(e) => {
-                      setEventTitle(e.target.value);
-                      scheduleAutoSave();
-                    }}
-                    maxLength={200}
-                    placeholder={t('events.settings.titlePlaceholder')}
-                    aria-invalid={invalid || undefined}
-                    aria-describedby={describedBy}
-                  />
-                )}
-              </Field>
-
-              <HostEventDateField
-                value={eventDateLocal}
-                error={fieldErrors.date}
-                relativeDateLabel={relativeDateLabel}
-                showNotifyRow={dateWasEdited && !fieldErrors.date}
-                notifyDateChange={notifyDateChange}
-                onValueChange={setEventDateLocal}
-                onCommit={commitEventDate}
-                onNotifyChange={setNotifyDateChange}
-              />
-
-              <HostEventThemeField
-                emoji={themeEmoji}
-                text={themeText}
-                preview={themePreview}
-                open={themeOpen}
-                collapseId={themeCollapseId}
-                onToggle={() => setThemeOpen((v) => !v)}
-                onEmojiChange={(v) => {
-                  setThemeEmoji(v);
-                  scheduleAutoSave();
-                }}
-                onTextChange={(v) => {
-                  setThemeText(v);
-                  scheduleAutoSave();
-                }}
-                onClear={() => {
-                  setThemeEmoji('');
-                  setThemeText('');
-                  scheduleAutoSave();
-                }}
-              />
-            </fieldset>
-          </div>
-
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>{t('events.settings.sectionParticipants')}</h3>
-
-            <fieldset className={styles.lockable} disabled={configLocked}>
-              <EventLimitFields
-                idPrefix="host-cfg"
-                disabled={configLocked}
-                rowClassName={styles.field}
-                limits={{
-                  participants: {
-                    enabled: participantLimitEnabled,
-                    value: maxParticipants,
-                    error: fieldErrors.maxParticipants,
-                    hint: maxParticipantsHint,
-                    onEnabledChange: toggleParticipantLimit,
-                    onValueChange: (v) => {
-                      setMaxParticipants(v);
-                      scheduleAutoSave();
-                    },
-                  },
-                  proposals: {
-                    enabled: proposalLimitEnabled,
-                    value: maxProp,
-                    error: fieldErrors.maxProposals,
-                    onEnabledChange: toggleProposalLimit,
-                    onValueChange: (v) => {
-                      setMaxProp(v);
-                      scheduleAutoSave();
-                    },
-                  },
-                }}
-              />
-
-              <div className={styles.field}>
-                <ToggleRow
-                  title={t('events.settings.allowSeriesLabel')}
-                  description={t('events.settings.allowSeriesDesc')}
-                  checked={allowSeries}
-                  onChange={() => {
-                    setAllowSeries((v) => !v);
-                    scheduleAutoSave(true);
-                  }}
-                />
-              </div>
-            </fieldset>
-          </div>
-
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>{t('events.settings.sectionDraw')}</h3>
-
-            <fieldset className={styles.lockable} disabled={configLocked}>
-              <EventLimitFields
-                idPrefix="host-cfg"
-                disabled={configLocked}
-                rowClassName={styles.field}
-                limits={{
-                  votes: {
-                    enabled: voteLimitEnabled,
-                    value: maxVotes,
-                    error: fieldErrors.maxVotes,
-                    onEnabledChange: (enabled) => {
-                      setVoteLimitEnabled(enabled);
-                      scheduleAutoSave(true);
-                    },
-                    onValueChange: (v) => {
-                      setMaxVotes(v);
-                      scheduleAutoSave();
-                    },
-                  },
-                }}
-              />
-
-              <div className={styles.field}>
-                <span className="label" id={wheelModeLabelId}>
-                  {t('events.settings.wheelModeLabel')}
-                </span>
-                <WheelModeField
-                  value={wheelMode}
-                  labelId={wheelModeLabelId}
-                  onChange={(mode) => {
-                    setWheelMode(mode);
-                    scheduleAutoSave(true);
-                  }}
-                />
-              </div>
-            </fieldset>
-
+      {configLocked ? (
+        <output className={styles.lockBanner}>
+          <Lock size={ICON_SIZE.sm} aria-hidden />
+          <span className={styles.lockBannerLabel}>{t('events.settings.configLockedHint')}</span>
+        </output>
+      ) : null}
+      {saveError && (
+        <p className="error" role="alert">
+          {saveError}
+        </p>
+      )}
+      <form className={`form ${styles.form}`}>
+        <div className={styles.section}>
+          <fieldset className={styles.lockable} disabled={configLocked}>
             <Field
-              label={t('events.settings.winnerCountLabel')}
-              htmlFor="host-cfg-winner-count"
-              error={fieldErrors.winnerCount}
-              hint={
-                fieldErrors.winnerCount
-                  ? undefined
-                  : t('events.settings.winnerCountHint', { max: MAX_WINNERS_PER_EVENT })
-              }
-              className={clsx(styles.field, styles.counterField)}
+              label={t('events.settings.titleLabel')}
+              htmlFor="host-cfg-title"
+              error={fieldErrors.title}
+              className={styles.field}
             >
               {({ id, describedBy, invalid }) => (
-                <NumberInput
+                <input
                   id={id}
-                  value={winnerCount}
-                  onChange={(v) => {
-                    setWinnerCount(v);
+                  className="input"
+                  type="text"
+                  value={eventTitle}
+                  onChange={(e) => {
+                    setEventTitle(e.target.value);
                     scheduleAutoSave();
                   }}
-                  min={Math.max(1, drawnWinnerCount)}
-                  max={MAX_WINNERS_PER_EVENT}
-                  invalid={invalid}
-                  ariaDescribedBy={describedBy}
+                  maxLength={200}
+                  placeholder={t('events.settings.titlePlaceholder')}
+                  aria-invalid={invalid || undefined}
+                  aria-describedby={describedBy}
                 />
               )}
             </Field>
-          </div>
 
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>{t('events.settings.sectionAfter')}</h3>
+            <HostEventDateField
+              value={eventDateLocal}
+              error={fieldErrors.date}
+              relativeDateLabel={relativeDateLabel}
+              showNotifyRow={dateWasEdited && !fieldErrors.date}
+              notifyDateChange={notifyDateChange}
+              onValueChange={setEventDateLocal}
+              onCommit={commitEventDate}
+              onNotifyChange={setNotifyDateChange}
+            />
+
+            <HostEventThemeField
+              emoji={themeEmoji}
+              text={themeText}
+              preview={themePreview}
+              open={themeOpen}
+              collapseId={themeCollapseId}
+              onToggle={() => setThemeOpen((v) => !v)}
+              onEmojiChange={(v) => {
+                setThemeEmoji(v);
+                scheduleAutoSave();
+              }}
+              onTextChange={(v) => {
+                setThemeText(v);
+                scheduleAutoSave();
+              }}
+              onClear={() => {
+                setThemeEmoji('');
+                setThemeText('');
+                scheduleAutoSave();
+              }}
+            />
+          </fieldset>
+        </div>
+
+        <div className={styles.section}>
+          <h3 className={styles.sectionTitle}>{t('events.settings.sectionParticipants')}</h3>
+
+          <fieldset className={styles.lockable} disabled={configLocked}>
+            <EventLimitFields
+              idPrefix="host-cfg"
+              disabled={configLocked}
+              rowClassName={styles.field}
+              limits={{
+                participants: {
+                  enabled: participantLimitEnabled,
+                  value: maxParticipants,
+                  error: fieldErrors.maxParticipants,
+                  hint: maxParticipantsHint,
+                  onEnabledChange: toggleParticipantLimit,
+                  onValueChange: (v) => {
+                    setMaxParticipants(v);
+                    scheduleAutoSave();
+                  },
+                },
+                proposals: {
+                  enabled: proposalLimitEnabled,
+                  value: maxProp,
+                  error: fieldErrors.maxProposals,
+                  onEnabledChange: toggleProposalLimit,
+                  onValueChange: (v) => {
+                    setMaxProp(v);
+                    scheduleAutoSave();
+                  },
+                },
+              }}
+            />
 
             <div className={styles.field}>
               <ToggleRow
-                title={t('events.settings.recurrenceLabel')}
-                description={t('events.settings.recurrenceDesc')}
-                checked={recurrence !== null}
-                disabled={recurrenceLocked}
+                title={t('events.settings.allowSeriesLabel')}
+                description={t('events.settings.allowSeriesDesc')}
+                checked={allowSeries}
                 onChange={() => {
-                  setRecurrence((v) => (v === null ? 'weekly' : null));
+                  setAllowSeries((v) => !v);
                   scheduleAutoSave(true);
                 }}
               />
-              {recurrence !== null && !recurrenceLocked && (
-                <div className={styles.recurrenceRhythm}>
-                  <SegmentedRadioGroup
-                    className={styles.recurrenceSegments}
-                    options={recurrenceOptions}
-                    value={recurrence}
-                    size="sm"
-                    ariaLabel={t('events.settings.recurrenceGroupLabel')}
-                    onChange={(value) => {
-                      setRecurrence(value);
-                      scheduleAutoSave(true);
-                    }}
-                  />
-                  <p className="hint">{t('events.settings.recurrenceShareHint')}</p>
-                </div>
-              )}
-              {recurrenceLocked && (
-                <p className="hint">{t('events.settings.recurrenceLockedHint')}</p>
-              )}
             </div>
-          </div>
+          </fieldset>
+        </div>
 
-          {isConnectedCreator && (
-            <section className={templatesStyles.section} data-testid="event-templates-section">
-              <EventTemplatesRow
-                className={templatesStyles.row}
-                templates={eventTemplates.templates}
-                appliedTemplate={eventTemplates.matchingTemplate}
-                disabled={eventTemplates.isBusy}
-                applyLockedHint={configLocked ? t('events.settings.templates.lockedHint') : null}
-                onApply={eventTemplates.apply}
-                onRename={eventTemplates.rename}
-                onDelete={eventTemplates.remove}
+        <div className={styles.section}>
+          <h3 className={styles.sectionTitle}>{t('events.settings.sectionDraw')}</h3>
+
+          <fieldset className={styles.lockable} disabled={configLocked}>
+            <EventLimitFields
+              idPrefix="host-cfg"
+              disabled={configLocked}
+              rowClassName={styles.field}
+              limits={{
+                votes: {
+                  enabled: voteLimitEnabled,
+                  value: maxVotes,
+                  error: fieldErrors.maxVotes,
+                  onEnabledChange: (enabled) => {
+                    setVoteLimitEnabled(enabled);
+                    scheduleAutoSave(true);
+                  },
+                  onValueChange: (v) => {
+                    setMaxVotes(v);
+                    scheduleAutoSave();
+                  },
+                },
+              }}
+            />
+
+            <div className={styles.field}>
+              <span className="label" id={wheelModeLabelId}>
+                {t('events.settings.wheelModeLabel')}
+              </span>
+              <WheelModeField
+                value={wheelMode}
+                labelId={wheelModeLabelId}
+                onChange={(mode) => {
+                  setWheelMode(mode);
+                  scheduleAutoSave(true);
+                }}
               />
-              <EventTemplateSaveBar
-                className={templatesStyles.saveBar}
-                variant="event"
-                draft={templateDraft}
-                templates={eventTemplates.templates}
-                appliedTemplate={eventTemplates.appliedTemplate}
-                lastSaved={eventTemplates.lastSaved}
-                disabled={eventTemplates.isBusy}
-                onBeforeSave={templateLimitsAreValid}
-                onSave={eventTemplates.saveAs}
-                onUpdate={eventTemplates.updateApplied}
+            </div>
+          </fieldset>
+
+          <Field
+            label={t('events.settings.winnerCountLabel')}
+            htmlFor="host-cfg-winner-count"
+            error={fieldErrors.winnerCount}
+            hint={
+              fieldErrors.winnerCount
+                ? undefined
+                : t('events.settings.winnerCountHint', { max: MAX_WINNERS_PER_EVENT })
+            }
+            className={clsx(styles.field, styles.counterField)}
+          >
+            {({ id, describedBy, invalid }) => (
+              <NumberInput
+                id={id}
+                value={winnerCount}
+                onChange={(v) => {
+                  setWinnerCount(v);
+                  scheduleAutoSave();
+                }}
+                min={Math.max(1, drawnWinnerCount)}
+                max={MAX_WINNERS_PER_EVENT}
+                invalid={invalid}
+                ariaDescribedBy={describedBy}
               />
-            </section>
-          )}
-        </form>
+            )}
+          </Field>
+        </div>
+
+        <div className={styles.section}>
+          <h3 className={styles.sectionTitle}>{t('events.settings.sectionAfter')}</h3>
+
+          <div className={styles.field}>
+            <ToggleRow
+              title={t('events.settings.recurrenceLabel')}
+              description={t('events.settings.recurrenceDesc')}
+              checked={recurrence !== null}
+              disabled={recurrenceLocked}
+              onChange={() => {
+                setRecurrence((v) => (v === null ? 'weekly' : null));
+                scheduleAutoSave(true);
+              }}
+            />
+            {recurrence !== null && !recurrenceLocked && (
+              <div className={styles.recurrenceRhythm}>
+                <SegmentedRadioGroup
+                  className={styles.recurrenceSegments}
+                  options={recurrenceOptions}
+                  value={recurrence}
+                  size="sm"
+                  ariaLabel={t('events.settings.recurrenceGroupLabel')}
+                  onChange={(value) => {
+                    setRecurrence(value);
+                    scheduleAutoSave(true);
+                  }}
+                />
+                <p className="hint">{t('events.settings.recurrenceShareHint')}</p>
+              </div>
+            )}
+            {recurrenceLocked && (
+              <p className="hint">{t('events.settings.recurrenceLockedHint')}</p>
+            )}
+          </div>
+        </div>
 
         {isConnectedCreator && (
-          <HostEventDangerZone slug={slug} hostToken={hostToken} eventTitle={event.title} />
+          <section className={templatesStyles.section} data-testid="event-templates-section">
+            <EventTemplatesRow
+              className={templatesStyles.row}
+              templates={eventTemplates.templates}
+              appliedTemplate={eventTemplates.matchingTemplate}
+              disabled={eventTemplates.isBusy}
+              applyLockedHint={configLocked ? t('events.settings.templates.lockedHint') : null}
+              onApply={eventTemplates.apply}
+              onRename={eventTemplates.rename}
+              onDelete={eventTemplates.remove}
+            />
+            <EventTemplateSaveBar
+              className={templatesStyles.saveBar}
+              variant="event"
+              draft={templateDraft}
+              templates={eventTemplates.templates}
+              appliedTemplate={eventTemplates.appliedTemplate}
+              lastSaved={eventTemplates.lastSaved}
+              disabled={eventTemplates.isBusy}
+              onBeforeSave={templateLimitsAreValid}
+              onSave={eventTemplates.saveAs}
+              onUpdate={eventTemplates.updateApplied}
+            />
+          </section>
         )}
-      </div>
-    </Modal>
+      </form>
+
+      {isConnectedCreator && (
+        <HostEventDangerZone slug={slug} hostToken={hostToken} eventTitle={event.title} />
+      )}
+    </ResponsiveDialog>
   );
 }

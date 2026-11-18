@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LocaleProvider } from '@/shared/i18n';
 import EventCalendarMenu from './EventCalendarMenu';
+import buttonStyles from '@/shared/components/Button.module.css';
 import styles from './EventCalendarMenu.module.css';
 
 describe('EventCalendarMenu', () => {
@@ -47,9 +48,13 @@ describe('EventCalendarMenu', () => {
       </LocaleProvider>
     );
 
-    await user.click(screen.getByRole('button', { name: 'Calendrier' }));
+    const trigger = screen.getByRole('button', { name: 'Calendrier' });
+    expect(trigger.className).not.toContain(buttonStyles.soft);
+
+    await user.click(trigger);
 
     expect(screen.getByRole('menu', { name: 'Choisir un calendrier' })).toBeInTheDocument();
+    expect(trigger.className).toContain(buttonStyles.soft);
   });
 
   it('opens above the row that holds it when asked, so a scrolling dialog cannot clip it', async () => {
@@ -70,6 +75,7 @@ describe('EventCalendarMenu', () => {
 
     const menu = screen.getByRole('menu', { name: 'Choisir un calendrier' });
     expect(menu).toHaveClass(styles.panelAboveRow!);
+    expect(menu).toHaveAttribute('data-placement', 'top');
     expect(menu.parentElement).toHaveClass(styles.containerInRow!);
     expect(menu.style.left).toBe('');
   });

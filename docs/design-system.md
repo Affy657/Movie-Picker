@@ -98,6 +98,8 @@ Bouton à icône seule. `ariaLabel` est obligatoire et devient `aria-label` et, 
 | `expandHitArea` | `boolean` | `true`, compose `expanded` de `tapTarget.module.css` : 44 px de zone tactile sans changer le dessin |
 | `loading` | `boolean` | `false`, remplace l'icône par le spinner |
 
+Avec `aria-expanded="true"` (le déclencheur d'un menu ouvert), le bouton prend le fond et la couleur du `Button` `soft`, sauf en `onPoster`.
+
 ### LinkButton
 
 Un `<button>` qui ressemble à un lien, pour une action secondaire dans une phrase. `size` : `sm` / `md` (défaut, comme `Button`). `linkButtonClass()` donne son dessin à un `<a>` (la bande-annonce externe). Sa zone tactile est étendue à 44 px autour du texte, son libellé est centré comme celui de `Button`.
@@ -150,7 +152,7 @@ Surface de contenu. `as` change l'élément et type ses props : `<Card as={Link}
 | `surface` | `default` / `sunken` | `default` ; `sunken` pose `--color-surface-sunken`, un encart dans une surface (statistique, rapport, étapes, ligne de modèles) |
 | `interactive` | `boolean` | survol et focus visibles, pour une carte cliquable |
 
-`Modal` et `Dropdown` composent `Card` (`elevationLg`). Une surface de carte locale (soirée en attente, carte film en liste, groupe de réglages, table des films) rend `<Card padding="none" elevation="sm" as=…>` avec sa classe, elle ne redessine ni le fond ni la bordure.
+`Modal` compose `Card` (`elevationLg`). Les panneaux flottants (`MenuPanel`, la liste de `Dropdown`, `InfoBubble`, le sélecteur d'emoji de `ThemeField`, l'historique de recherche) composent `surface` de `shared/components/popover.module.css`, qui pose la même carte élevée, la couche `--z-popover` pour passer au-dessus des barres fixes et de la barre du bas, et une entrée en fondu de `--duration-base` (`popoverEnter`, retirée sous `prefers-reduced-motion`) ; seul `Tooltip` reste sur `--z-tooltip`. Une surface de carte locale (soirée en attente, carte film en liste, groupe de réglages, table des films) rend `<Card padding="none" elevation="sm" as=…>` avec sa classe, elle ne redessine ni le fond ni la bordure.
 
 ### Modal
 
@@ -162,26 +164,36 @@ Seul endroit du projet où `<dialog>` et `::backdrop` sont écrits. Fermeture pa
 | `title` (+ `titleId`, `titleDetail`), ou `ariaLabelledBy`, ou `ariaLabel` | | exactement un des trois nommages, le typage refuse les autres combinaisons et un titre vide (`title` est un texte ou un élément) ; `title` rend la barre de titre `DialogTitleBar`, `titleDetail` s'affiche sous le titre (la progression d'un parcours) |
 | `ariaDescribedBy` | `string` | |
 | `size` | `xs` / `sm` / `md` / `lg` / `2xl` | `--container-<size>`, `sm` par défaut |
-| `surface` | `surface` / `bare` / `media` / `borderless` | `media` pour une bande-annonce |
+| `surface` | `surface` / `bare` / `media` / `borderless` | `media` pour une bande-annonce, qui pose aussi `on-dark` : titre et croix restent lisibles en thème clair |
 | `padded`, `column`, `anchoredTop`, `bottomSheetOnMobile`, `strongBackdrop` | `boolean` | |
 | `closeAriaLabel` | `string` | nom du bouton de fermeture, « Fermer » par défaut |
 
-`data-testid` se pose sur le `<dialog>`, `dialogRef` en donne la référence à l'appelant. Une modale à titre passe par `title`, jamais par une barre de titre recopiée dans ses enfants.
+`data-testid` se pose sur le `<dialog>`, `dialogRef` en donne la référence à l'appelant. Une modale à titre passe par `title`, jamais par une barre de titre recopiée dans ses enfants. La fenêtre entre en fondu avec un léger glissement (`dialogEnter`, voile en `backdropEnter`), retirés sous `prefers-reduced-motion` ; la `Sheet` garde sa propre entrée. À l'ouverture, `showModal()` donne le focus au premier élément focalisable, la croix d'une modale à titre ; un descendant marqué `data-autofocus` le prend à sa place (l'`autoFocus` de React tombe avant `showModal()`, quand le `<dialog>` est encore fermé, et ne sert à rien ici).
+
+Trois briques donnent à toutes les modales le même corps et le même pied, exportées par `Modal.tsx` :
+
+| Brique | Rôle |
+|---|---|
+| `ModalBody` | corps qui défile entre la barre de titre et le pied (`flex: 1 1 auto; min-height: 0`), marges `--space-4` `--space-5` `--space-5` ; avec `column` dès que le contenu peut dépasser l'écran |
+| `ModalFooter` | pied hors du défilement, filet `--color-border-subtle` au-dessus, marges `--space-3` `--space-5`, sans fond propre ; sur une modale `bottomSheetOnMobile`, le dernier bloc porte la marge de sécurité du bas |
+| `ModalActions` | la rangée de boutons : alignée à droite, `--space-2-5` entre les boutons, retour à la ligne si la place manque, boutons étirés à parts égales sous 48 rem ; Annuler (`secondary`) à gauche, l'action principale à droite, tous en taille `md`, `ghost` réservé à une troisième action (« Passer », « Plus tard ») |
+
+Ont leur propre en-tête, et seulement eux : les dialogues d'alerte sans croix (`ConfirmDialog`, `ConsentDialog`, titre `--font-size-xl`) et les dialogues sur affiche (`WheelModal`, `MovieRatingDialog`), dont la croix reste un `IconButton` à icône `lg` comme celle de `DialogTitleBar`.
 
 Dialogues déjà câblés dessus :
 
-- `ConfirmDialog` : `title`, `message`, `onConfirm`, `onCancel`, `confirmLabel`, `cancelLabel`, `confirmTone` `danger` par défaut ou `default` pour une confirmation non destructive, `loading` met le bouton en chargement, `hideCancel` pour un accusé de lecture, `testId`.
+- `ConfirmDialog` : `title`, `message`, `onConfirm`, `onCancel`, `confirmLabel`, `cancelLabel`, `confirmTone` `danger` par défaut ou `default` pour une confirmation non destructive, `loading` met le bouton en chargement (Annuler reste actif), `hideCancel` pour un accusé de lecture, `testId`. Le focus d'ouverture va sur Annuler quand l'action est destructive, pour qu'Entrée ne confirme pas une suppression, et sur Confirmer sinon.
 - `ShareDialog` : `title`, `url`, `qrHint`, `fileSlug` (nom du PNG téléchargé), `preview` (`avatarId`, `name`, `meta`), `analyticsSurface` `event` / `profile` (analytics), `shareText`, `initialTab`, `extraTab` pour un onglet propre à l'appelant.
 - `ConsentDialog` : `open`, `onClose` ; la modale de consentement lit et écrit `useConsent()` elle-même.
 - `DialogTitleBar` (`titleId`, `title`, `detail`, `onClose`, `closeAriaLabel`).
 
 ### Sheet
 
-Feuille ancrée en bas, glissable : le geste est `useSheetDrag` (`shared/hooks/`), `SheetDrag.module.css` porte la surface, la poignée et les animations d'entrée (`sheetEnter`, `sheetBackdropEnter`, retirées sous `prefers-reduced-motion`). `open`, `title`, `onClose`, `footer`, `size` `md` / `lg`. Sa croix est un `IconButton`. Son corps pose `overscroll-behavior: contain` : arrivé en butée, le geste ne passe pas à la page.
+Feuille ancrée en bas, glissable : le geste est `useSheetDrag` (`shared/hooks/`), `SheetDrag.module.css` porte la surface, la poignée et les animations d'entrée (`sheetEnter`, `sheetBackdropEnter`, retirées sous `prefers-reduced-motion`). `open`, `title`, `detail` (ligne sous le titre), `onClose`, `footer`, `size` `md` / `lg`. Sa croix est un `IconButton` à icône `lg`, comme celle de `DialogTitleBar`. La poignée ne se montre que sous 48 rem, là où le geste existe. Son corps prend toute la hauteur libre (`flex: 1 1 auto; min-height: 0`), donc le pied reste en bas même quand le contenu est court, et pose `overscroll-behavior: contain` : arrivé en butée, le geste ne passe pas à la page. Le pied est une rangée `space-between` : une rangée d'actions qui doit occuper toute la largeur passe par `ModalActions`.
 
 ### ResponsiveDialog
 
-Le dialogue qui est une `Sheet` sur téléphone et une `Modal` `sm` en colonne sur grand écran, avec le même contenu : `open`, `title`, `onClose`, `footer`. Sur grand écran, le corps défile entre la barre de titre et le pied, que sépare un filet, et sans `footer` il n'y a pas de pied. C'est la note d'un film vu et la pioche dans la watchlist. Un dialogue dont l'en-tête change d'un format à l'autre (onglets à la place du titre, taille `xs`) garde sa propre bascule.
+Le dialogue qui est une `Sheet` sur téléphone et une `Modal` en colonne sur grand écran, avec le même contenu : `open`, `title`, `detail` (sous le titre dans les deux formats), `onClose`, `footer`, `size` (la taille de la `Modal`, `sm` par défaut), `sheetSize` (`md` par défaut), `className`. Sur grand écran, le corps et le pied sont `ModalBody` et `ModalFooter`, et sans `footer` il n'y a pas de pied. C'est la création de soirée, la création et les membres d'une liste, la pioche dans la watchlist et la proposition d'un film. Seul un dialogue dont l'en-tête change d'un format à l'autre (des onglets à la place du titre) garde sa propre bascule.
 
 ### Notice
 
@@ -245,19 +257,21 @@ Chaque carte est un `<button role="radio" aria-checked>`. C'est le mode de roue,
 
 ### Menu
 
-`Menu` rend un déclencheur et son panneau : `triggerLabel`, `triggerIcon`, `triggerClassName`, `panelAriaLabel`, `panelClassName`, enfants sous forme de fonction `(close) => …`. Le déclencheur est un `Button` `sm` `secondary` qui passe en `soft` tant que le panneau est ouvert. Un déclencheur sur mesure (avatar, bouton à icône) garde le même comportement avec `useMenuState()` puis `MenuPanel {...menu.panelProps}` : c'est le menu du compte, celui de l'agenda et celui des cartes de soirée (`IconButton` `lg` `round` qui reçoit `{...menu.triggerProps}`). `useMenuState({ align: 'left' })` aligne le panneau sur le bord gauche du déclencheur au lieu du bord droit (le menu « Ajouter à une liste » de la fiche film, premier bouton de sa ligne). Échap ferme et rend le focus au déclencheur, focus visible en contour interne (`--outline-offset-inset`). Tab parcourt les entrées, et le focus qui sort du panneau le ferme en restant là où Tab l'a mené, sans revenir au déclencheur : c'est l'option `closeOnFocusLeave` de `useClickOutside`, posée par `useMenuState`, à passer aussi à un menu qui garde son état local, avec tous ses éléments dans `refs` quand un portail les sépare.
+`Menu` rend un déclencheur et son panneau : `triggerLabel`, `triggerIcon`, `triggerClassName`, `panelAriaLabel`, `panelClassName`, enfants sous forme de fonction `(close) => …`. Le déclencheur est un `Button` `sm` `secondary` suivi d'un chevron, qui passe en `soft` tant que le panneau est ouvert ; `align` aligne le panneau comme `useMenuState`. Un déclencheur sur mesure (avatar, bouton à icône) garde le même comportement avec `useMenuState()` puis `MenuPanel {...menu.panelProps}` : c'est le menu du compte, celui de l'agenda et celui des cartes de soirée (`IconButton` `lg` `round` qui reçoit `{...menu.triggerProps}`). `useMenuState({ align: 'left' })` aligne le panneau sur le bord gauche du déclencheur au lieu du bord droit (le menu « Ajouter à une liste » de la fiche film, premier bouton de sa ligne). Échap ferme et rend le focus au déclencheur, focus visible en contour interne (`--outline-offset-inset`) ; `close()`, appelé par une entrée, le rend aussi, ce qui le laisse au déclencheur quand l'entrée ouvre une boîte de dialogue puis qu'elle se ferme. Le panneau s'ouvre sous son déclencheur, ou au-dessus quand la place manque en bas (`data-placement="top"`), et sa hauteur se plafonne à la place disponible, avec défilement (`useMenuVerticalFit`) : aucun menu ne recopie ce retournement. Le calcul ne voit que l'écran : un menu posé dans une barre fixée en bas sur téléphone (la barre de soirée, les actions du tirage) ou dans une rangée au pied d'une modale qui défile (l'agenda de l'invitation) demande `useMenuState({ placement: 'top' })`, qui l'ouvre toujours au-dessus. Un bouton à icône qui ouvre un menu prend l'état `soft` tant que `aria-expanded` est vrai, comme un `Button` déclencheur.
+
+Règles communes à tous les menus : une entrée qui ouvre une boîte de dialogue porte `aria-haspopup="dialog"` ; les entrées destructives (`tone="danger"`) viennent en dernier, après un `MenuSeparator` ; un choix exclusif (un tri, son sens) est un `MenuItem` avec `selected`. Le ⋯ d'une carte ou d'une ligne est `MoreVertical` dans un `IconButton` `lg` `round` ; celui d'une page ou d'une barre est `MoreHorizontal` dans un `IconButton` carré à la taille de ses voisins ; le bouton de 28 px posé sur l'affiche d'une carte film est la seule exception. Tab parcourt les entrées, et le focus qui sort du panneau le ferme en restant là où Tab l'a mené, sans revenir au déclencheur : c'est l'option `closeOnFocusLeave` de `useClickOutside`, posée par `useMenuState`, à passer aussi à un menu qui garde son état local, avec tous ses éléments dans `refs` quand un portail les sépare.
 
 | Brique | Props | Rôle |
 |---|---|---|
 | `MenuPanel` | `ariaLabel`, `anchored`, `embedded`, attributs natifs de `<div>` | porte lui-même les flèches, Home et End entre ses `menuitem`, `menuitemradio` et `menuitemcheckbox` non désactivés ; `anchored={false}` retire l'ancrage sous le déclencheur, pour un panneau porté par un portail ou posé en `fixed` (le menu des cartes film), qui garde son état d'ouverture local ; `embedded` retire en plus la surface flottante (fond, bordure, ombre, marge) pour poser le menu dans une autre surface, la feuille des listes sur téléphone |
-| `MenuItem` | `icon`, `href` (lien externe, `external` ouvre un nouvel onglet avec `rel="noopener noreferrer"`), `to` (route interne, rend un `<Link>`), `selected`, `tone` `default` / `danger`, `disabled`, `ariaLabel`, `title`, `aria-haspopup`, `trailing` (contenu en bout de ligne : pastille, chevron) | `disabled` rend un `<button disabled>` même avec `href` ou `to` ; `ariaLabel` et `title` quand le nom accessible diffère du texte ; `aria-haspopup` quand l'entrée ouvre une boîte de dialogue ; un libellé sans jambage est nudgé comme des petites capitales (`--text-optical-nudge-caps`, `hasDescenders` de `shared/components/opticalNudge.ts`) |
+| `MenuItem` | `icon` (posé dans un emplacement qui le dessine en `--icon-md` et `--color-text-muted`, à la couleur du libellé sur une entrée choisie ou destructive), `href` (lien externe, `external` ouvre un nouvel onglet avec `rel="noopener noreferrer"`), `to` (route interne, rend un `<Link>`), `selected`, `tone` `default` / `danger`, `disabled`, `ariaLabel`, `title`, `aria-haspopup`, `trailing` (contenu en bout de ligne : pastille, chevron) | `selected` (même `false`) en fait un `menuitemradio` avec `aria-checked`, pour qu'un lecteur d'écran dise le choix en cours ; `disabled` rend un `<button disabled>` même avec `href` ou `to` ; `ariaLabel` et `title` quand le nom accessible diffère du texte ; `aria-haspopup` quand l'entrée ouvre une boîte de dialogue ; un libellé sans jambage est nudgé comme des petites capitales (`--text-optical-nudge-caps`, `hasDescenders` de `shared/components/opticalNudge.ts`) |
 | `MenuCheckboxItem` | `checked`, `onChange(checked)`, `description`, `disabled` | entrée à case (`menuitemcheckbox`, `aria-checked`) avec une seconde ligne facultative ; cocher ne ferme pas le menu, chaque case agit tout de suite (les listes de la fiche film) |
 | `MenuLabel`, `MenuSeparator` | | titre de groupe et séparateur |
 | `MenuChoiceRow` | `label`, `icon`, `options` (`value`, `label`, `content`), `value`, `onChange` | ligne de réglage dans un menu : un `group` nommé par `label` et ses `menuitemradio` en segments ; un choix ne ferme pas le menu (thème et langue du menu du compte) |
 
 ### Dropdown
 
-Liste déroulante maison avec `role="listbox"`. Le déclencheur est nommé par le libellé suivi de la valeur choisie (« Langue Français »), la liste ouverte par le libellé seul ; `ariaLabel` ou `ariaLabelledBy` est requis. Tab ferme la liste sans rien choisir, le focus reste là où Tab l'a mené ; Échap ferme et rend le focus au déclencheur.
+Liste déroulante maison avec `role="listbox"`. Le déclencheur est nommé par le libellé suivi de la valeur choisie (« Langue Français »), la liste ouverte par le libellé seul ; `ariaLabel` ou `ariaLabelledBy` est requis. Tab ferme la liste sans rien choisir, le focus reste là où Tab l'a mené ; Échap ferme et rend le focus au déclencheur. Ses options font 44 px de haut comme les entrées d'un menu, avec les mêmes couleurs : option active en `--color-surface-hover`, option choisie en `--color-primary-soft` avec sa coche `sm`.
 
 | Prop | Type | Rôle |
 |---|---|---|
@@ -320,7 +334,7 @@ La barre d'avancée fine suivie de son libellé : `value` (de 0 à 100, bornée)
 | Composant | Props | Rôle |
 |---|---|---|
 | `Tooltip` | `label` (le texte de la bulle), `placement` `top` / `bottom` / `left` / `right`, `delayMs`, `focusable`, `disabled` (ne rend pas la bulle) | apparaît au survol et au focus, jamais seul vecteur d'une information |
-| `InfoBubble` | `label` (titre visible du panneau et nom du bouton d'aide), contenu en enfants | l'aide contextuelle d'un champ ou d'un réglage ; le panneau se place par `menuGeometry.ts` (320 px au plus, 8 px du bord), se ferme par son `LinkButton`, Échap ou un clic dehors ; le bouton Fermer et Échap rendent le focus au bouton d'aide |
+| `InfoBubble` | `label` (titre visible du panneau et nom du bouton d'aide), contenu en enfants | l'aide contextuelle d'un champ ou d'un réglage ; le panneau, sur la surface des panneaux flottants, se place par `menuGeometry.ts` (320 px au plus, 8 px du bord), se ferme par son `LinkButton`, Échap ou un clic dehors ; le bouton Fermer et Échap rendent le focus au bouton d'aide |
 
 ### États de page
 

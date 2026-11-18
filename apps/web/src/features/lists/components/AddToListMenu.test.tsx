@@ -153,7 +153,9 @@ describe('AddToListMenu', () => {
     renderMenu();
 
     await user.click(await screen.findByRole('button', { name: /dans 1 liste/i }));
-    await user.click(screen.getByRole('menuitem', { name: 'Nouvelle liste' }));
+    const newList = screen.getByRole('menuitem', { name: 'Nouvelle liste' });
+    expect(newList).toHaveAttribute('aria-haspopup', 'dialog');
+    await user.click(newList);
     expect(screen.queryByRole('menu')).toBeNull();
     expect(await screen.findByText('Dune : deuxième partie y sera ajouté.')).toBeInTheDocument();
     await user.type(screen.getByRole('textbox', { name: 'Nom de la liste' }), 'Villeneuve');
@@ -195,7 +197,9 @@ describe('AddToListMenu', () => {
     expect(
       screen.getByText('Rangez vos films par thème, par envie ou par occasion.')
     ).toBeInTheDocument();
-    await user.click(screen.getByRole('menuitem', { name: 'Créer une liste' }));
+    const createFirst = screen.getByRole('menuitem', { name: 'Créer une liste' });
+    expect(createFirst).toHaveAttribute('aria-haspopup', 'dialog');
+    await user.click(createFirst);
     expect(await screen.findByRole('button', { name: 'Créer et ajouter' })).toBeInTheDocument();
   });
 
@@ -257,6 +261,10 @@ describe('AddToListMenu', () => {
 
     await user.click(await screen.findByRole('button', { name: /dans 1 liste/i }));
     const sheet = await screen.findByRole('dialog', { name: 'Ajouter à une liste' });
+    expect(within(sheet).getByRole('menuitem', { name: 'Nouvelle liste' })).toHaveAttribute(
+      'aria-haspopup',
+      'dialog'
+    );
     await user.click(within(sheet).getByRole('menuitemcheckbox', { name: /ghibli/i }));
     expect(await screen.findByRole('button', { name: /dans 2 listes/i })).toBeInTheDocument();
 

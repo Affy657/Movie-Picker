@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { act, render, screen, fireEvent } from '@testing-library/react';
 import type { MovieData } from '@/shared/types/movie';
 import { LocaleProvider } from '@/shared/i18n';
+import buttonStyles from '@/shared/components/Button.module.css';
 import WheelModal, { confettiPalettes } from './WheelModal';
 
 vi.mock('canvas-confetti', () => ({
@@ -283,7 +284,9 @@ describe('WheelModal', () => {
     expect(screen.getByText(/encore 2 films à tirer/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /c'est parti/i })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /terminer ici/i }));
+    const finishHere = screen.getByRole('button', { name: /terminer ici/i });
+    expect(finishHere).not.toHaveClass(buttonStyles.ghost!);
+    fireEvent.click(finishHere);
     expect(onClose).toHaveBeenCalledOnce();
 
     fireEvent.click(screen.getByRole('button', { name: /tirer le suivant/i }));
@@ -421,6 +424,34 @@ describe('WheelModal', () => {
       </LocaleProvider>
     );
     expect(screen.getByText(/tirage en cours/i)).toBeInTheDocument();
+  });
+
+  it('names each wheel after its own title, even with two on the page', () => {
+    wrap(
+      <>
+        <WheelModal
+          open
+          movies={movies}
+          winnerIndex={0}
+          winner={baseMovie}
+          wheelKey={1}
+          onClose={vi.fn()}
+        />
+        <WheelModal
+          open
+          movies={movies}
+          winnerIndex={0}
+          winner={baseMovie}
+          wheelKey={1}
+          onClose={vi.fn()}
+          skipSpin
+        />
+      </>
+    );
+
+    const [spinning, revealed] = Array.from(document.querySelectorAll('dialog'));
+    expect(spinning).toHaveAccessibleName(/tirage en cours/i);
+    expect(revealed).toHaveAccessibleName(/choisi par l.hôte/i);
   });
 
   it('skipSpin: reveals the winner straight away with the "picked by the host" title', () => {

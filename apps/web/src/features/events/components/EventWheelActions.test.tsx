@@ -1,9 +1,10 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { afterEach, describe, it, expect, vi } from 'vitest';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import EventWheelActions from '@/features/events/components/EventWheelActions';
 import type { EventWheelState } from '@/features/events/hooks/useEventWheel';
 import { LocaleProvider } from '@/shared/i18n';
+import { stubMatchMedia } from '@/test-utils/matchMedia';
 import {
   eventHeaderActions,
   type EventHeaderActionsInput,
@@ -99,7 +100,75 @@ function buttonNames(): string[] {
     .map((button) => button.getAttribute('aria-label') ?? button.textContent ?? '');
 }
 
+const itemsAndSeparators = (menu: HTMLElement) =>
+  Array.from(menu.children).map((child) => (child.tagName === 'HR' ? '---' : child.textContent));
+
 describe('EventWheelActions', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('lists the neutral draw actions first, then the destructive ones behind a separator', async () => {
+    renderActions(wheelState({ winnerIds: ['m1'], showRemoveWinner: true, showReset: true }), {
+      lifecycle: 'pending',
+      canCloseWithoutMovie: true,
+      canFinishNight: true,
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Gérer le tirage' }));
+
+    const menu = screen.getByRole('menu', { name: 'Gérer le tirage' });
+    expect(itemsAndSeparators(menu)).toEqual([
+      'Retirer un gagnant',
+      'Terminer la soirée',
+      '---',
+      'Repartir de zéro',
+      'Clôturer sans film',
+    ]);
+    expect(within(menu).getByRole('menuitem', { name: 'Retirer un gagnant' })).not.toHaveAttribute(
+      'aria-haspopup'
+    );
+  });
+
+  it('draws no separator when the draw menu holds only destructive actions', async () => {
+    renderActions(wheelState({ winnerIds: ['m1'], showReset: true }));
+
+    await userEvent.click(screen.getByRole('button', { name: 'Gérer le tirage' }));
+
+    expect(itemsAndSeparators(screen.getByRole('menu', { name: 'Gérer le tirage' }))).toEqual([
+      'Repartir de zéro',
+    ]);
+  });
+
+  it('opens its menus upwards on a phone, from the bar docked above the navigation', async () => {
+    stubMatchMedia((query) => query.includes('max-width: 767px'));
+    renderActions(wheelState({ winnerIds: ['m1'], remainingDraws: 1, showReset: true }), {
+      lifecycle: 'pending',
+      canFinishNight: true,
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Gérer le tirage' }));
+    expect(screen.getByRole('menu', { name: 'Gérer le tirage' })).toHaveAttribute(
+      'data-placement',
+      'top'
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Autre façon de choisir le film' }));
+    expect(screen.getByRole('menu', { name: 'Autre façon de choisir le film' })).toHaveAttribute(
+      'data-placement',
+      'top'
+    );
+  });
+
+  it('opens its menus below their button on a larger screen', async () => {
+    renderActions(wheelState({ winnerIds: ['m1'], showReset: true }));
+
+    await userEvent.click(screen.getByRole('button', { name: 'Gérer le tirage' }));
+
+    expect(screen.getByRole('menu', { name: 'Gérer le tirage' })).toHaveAttribute(
+      'data-placement',
+      'bottom'
+    );
+  });
+
   it('offers to propose first, then the wheel, before any draw', () => {
     renderActions(wheelState());
 

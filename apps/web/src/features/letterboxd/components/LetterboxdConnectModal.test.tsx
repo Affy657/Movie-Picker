@@ -4,6 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import LetterboxdConnectModal from './LetterboxdConnectModal';
+import buttonStyles from '@/shared/components/Button.module.css';
+import modalStyles from '@/shared/components/Modal.module.css';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import {
   createLetterboxdConfirmHandler,
@@ -66,6 +68,34 @@ describe('LetterboxdConnectModal (MSW)', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
+  it('names the dialog by its title alone, the help staying one tap away', () => {
+    server.use(authedUserHandler);
+
+    renderModal();
+
+    const title = screen.getByRole('heading', { level: 2 });
+    expect(title).toHaveTextContent(/^Importer depuis Letterboxd$/);
+    expect(title).not.toContainElement(screen.getByRole('button', { name: 'Comment ça marche' }));
+  });
+
+  it('keeps cancel and connect in a footer below the scrolling form', () => {
+    server.use(authedUserHandler);
+
+    renderModal();
+
+    const body = screen.getByLabelText('Pseudo Letterboxd').closest(`.${modalStyles.body}`);
+    expect(body).not.toBeNull();
+
+    const cancel = screen.getByRole('button', { name: 'Annuler' });
+    const connect = screen.getByRole('button', { name: 'Connecter et importer' });
+    expect(body).not.toContainElement(connect);
+    const actions = connect.closest(`.${modalStyles.actions}`);
+    expect(actions?.parentElement).toHaveClass(modalStyles.footer!);
+    expect(actions?.firstElementChild).toBe(cancel);
+    expect(actions?.lastElementChild).toBe(connect);
+    expect(cancel).not.toHaveClass(buttonStyles.ghost!);
+  });
+
   it('connecte puis affiche le bilan directement quand rien n’est ambigu', async () => {
     const user = userEvent.setup();
     server.use(
@@ -89,11 +119,17 @@ describe('LetterboxdConnectModal (MSW)', () => {
     await user.type(screen.getByLabelText('Pseudo Letterboxd'), 'affy657');
     await user.click(screen.getByRole('button', { name: 'Connecter et importer' }));
 
-    expect(
-      await screen.findByText('À voir : 3 film(s) ajouté(s), 0 retiré(s).')
-    ).toBeInTheDocument();
+    const summary = await screen.findByText('À voir : 3 film(s) ajouté(s), 0 retiré(s).');
     expect(screen.queryByText(/introuvable/)).not.toBeInTheDocument();
     expect(screen.queryByText(/laissé/)).not.toBeInTheDocument();
+
+    const body = summary.closest(`.${modalStyles.body}`);
+    expect(body).not.toBeNull();
+    const seeList = screen.getByRole('button', { name: 'Voir ma liste' });
+    expect(body).not.toContainElement(seeList);
+    expect(seeList.closest(`.${modalStyles.actions}`)?.parentElement).toHaveClass(
+      modalStyles.footer!
+    );
   });
 
   it('tells the titles not found on TMDB apart from the titles left pending', async () => {

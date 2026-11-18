@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { LocaleProvider } from '@/shared/i18n';
+import titleBarStyles from '@/shared/components/DialogTitleBar.module.css';
 import TrailerModal from './TrailerModal';
 
 function wrap(ui: ReactNode) {
@@ -15,6 +16,14 @@ describe('TrailerModal', () => {
     wrap(<TrailerModal open movieTitle="Inception" trailerUrl={YT_URL} onClose={vi.fn()} />);
     expect(screen.getByText('Inception')).toBeInTheDocument();
     expect(document.querySelector('iframe')).toBeInTheDocument();
+  });
+
+  it('titles the trailer with the shared title bar, light on the dark media surface', () => {
+    wrap(<TrailerModal open movieTitle="Inception" trailerUrl={YT_URL} onClose={vi.fn()} />);
+
+    const dialog = screen.getByRole('dialog', { name: 'Inception' });
+    expect(dialog).toHaveClass('on-dark');
+    expect(screen.getByRole('heading', { name: 'Inception' })).toHaveClass(titleBarStyles.title!);
   });
 
   it('ne rend pas le contenu si trailerUrl est null', () => {

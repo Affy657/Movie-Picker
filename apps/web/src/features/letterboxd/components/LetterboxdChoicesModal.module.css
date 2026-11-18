@@ -19,17 +19,14 @@
   background: var(--color-primary);
 }
 
-@media (hover: hover) {
-}
-
 .intro {
-  margin: var(--space-1-5) var(--space-5) 0;
+  margin: 0;
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
 }
 
 .error {
-  margin: var(--space-2) var(--space-5) 0;
+  margin: var(--space-2) 0 0;
   color: var(--color-error);
   font-size: var(--font-size-sm);
 }
@@ -38,7 +35,7 @@
   display: flex;
   align-items: baseline;
   gap: var(--space-1-5);
-  margin: var(--space-2-5) var(--space-5) 0;
+  margin: var(--space-2-5) 0 0;
   padding: var(--space-2-5) var(--space-3);
   border-radius: var(--radius-md);
   background: var(--color-input-bg);
@@ -61,7 +58,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
-  margin: var(--space-2) var(--space-5) 0;
+  margin: var(--space-2) 0 0;
 }
 
 .targetDetail {
@@ -70,8 +67,7 @@
 }
 
 .list {
-  padding: var(--space-3) var(--space-5) var(--space-5);
-  overflow-y: auto;
+  margin-top: var(--space-3);
 }
 
 .choiceThumb {
@@ -91,15 +87,13 @@
 }
 
 .footer {
-  display: flex;
-  align-items: center;
+  composes: footer from '@/shared/components/Modal.module.css';
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-5) var(--space-5);
-  border-top: 1px solid var(--color-border);
 }
 
 .footerActions {
-  display: flex;
-  gap: var(--space-2);
+  composes: actions from '@/shared/components/Modal.module.css';
+  flex: 1 1 auto;
+  width: auto;
 }

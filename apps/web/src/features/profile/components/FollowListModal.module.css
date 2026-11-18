@@ -4,7 +4,7 @@
   justify-content: space-between;
   gap: var(--space-3);
   padding: 0 var(--space-2) 0 var(--space-4);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border-subtle);
   flex-shrink: 0;
 }
 
@@ -40,7 +40,7 @@
   background: var(--color-search-highlight-bg);
   color: var(--color-search-highlight-text);
   border-radius: var(--radius-sm);
-  padding: 0 0.1em;
+  padding: 0 var(--space-0-5);
 }
 
 .list {
@@ -129,4 +129,12 @@
 
 .meBadge {
   flex-shrink: 0;
+}
+
+.sheet .searchRow,
+.sheet .item,
+.sheet .placeholder,
+.sheet .privateNote,
+.sheet .loadError {
+  padding-inline: 0;
 }

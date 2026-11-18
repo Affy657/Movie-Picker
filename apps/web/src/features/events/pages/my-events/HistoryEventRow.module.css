@@ -196,6 +196,10 @@
   transform: translateY(-50%);
 }
 
+.menu:has([aria-expanded='true']) {
+  z-index: var(--z-popover);
+}
+
 @media (max-width: 47.9375rem) {
   .card {
     gap: var(--space-3);

@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { LocaleProvider } from '@/shared/i18n';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
 import type { WatchlistEntry } from '@/features/watchlist/hooks/useWatchlistToolbar';
+import modalStyles from '@/shared/components/Modal.module.css';
 import RandomPickDialog from './RandomPickDialog';
 
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
@@ -68,6 +69,15 @@ describe('RandomPickDialog, reduced motion', () => {
       'aria-disabled',
       'true'
     );
+  });
+
+  it('lays its two actions in the shared dialog actions row', () => {
+    renderDialog();
+
+    const again = screen.getByRole('button', { name: 'Piocher un autre' });
+    const propose = screen.getByRole('button', { name: 'Proposer dans une soirée' });
+    expect(propose.parentElement).toHaveClass(modalStyles.actions!);
+    expect(again.parentElement).toBe(propose.parentElement);
   });
 
   it('names the dialog after a title rather than a movie, since it can draw a series', () => {

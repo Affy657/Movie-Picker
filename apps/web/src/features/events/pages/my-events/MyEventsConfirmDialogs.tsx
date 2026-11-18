@@ -79,6 +79,7 @@ export default function MyEventsConfirmDialogs({
             ? t('events.wheel.finishNightConfirmAction')
             : t('events.wheel.closeWithoutMovieConfirmAction')
         }
+        confirmTone={finishing ? 'default' : 'danger'}
         loading={closeMutation.isPending}
         onConfirm={() => {
           if (confirmClose) closeMutation.mutate(confirmClose.slug);

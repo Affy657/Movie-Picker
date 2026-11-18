@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type SubmitEvent } from 'react';
+import { useEffect, useId, useRef, useState, type SubmitEvent } from 'react';
 import { useLocation } from 'react-router';
 import { Search, X } from 'lucide-react';
 import IconButton from '@/shared/components/IconButton';
@@ -23,6 +23,7 @@ export default function HeaderSearch() {
   const [term, setTerm] = useState('');
   const loupeRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLFormElement>(null);
+  const panelId = useId();
   const available = isMobile && pathname === ROUTES.home && searchHidden;
 
   useClickOutside([panelRef, loupeRef], () => setOpen(false), open, {
@@ -58,12 +59,13 @@ export default function HeaderSearch() {
         className={styles.loupe}
         onClick={() => setOpen(true)}
         aria-expanded={open}
+        aria-controls={open ? panelId : undefined}
         tabIndex={open ? -1 : undefined}
       >
         <Search size={ICON_SIZE.lg} aria-hidden />
       </IconButton>
       {open ? (
-        <form ref={panelRef} role="search" className={styles.panel} onSubmit={submit}>
+        <form ref={panelRef} id={panelId} role="search" className={styles.panel} onSubmit={submit}>
           <div className={styles.fieldRow}>
             <label className="visually-hidden" htmlFor="header-search">
               {t('home.searchLabel')}

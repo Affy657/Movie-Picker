@@ -9,6 +9,7 @@ import FilteredCollectionLayout, {
   FilterSheet,
   FilteredEmptyState,
 } from './FilteredCollectionLayout';
+import { filtersToggleFor } from './ListToolbar';
 import MovieListFiltersPanel from './MovieListFiltersPanel';
 
 export interface MovieListFilters {
@@ -45,9 +46,11 @@ export default function MovieListFilteredLayout({
 }: Readonly<MovieListFilteredLayoutProps>) {
   const { t } = useTranslation();
   const panelRef = useRef<HTMLDivElement>(null);
+  const filtersToggle = useMemo(() => filtersToggleFor(filtersPanelId), [filtersPanelId]);
   const desktopPanelOpen = filters.filtersOpen && !isMobile;
   useClickOutside(panelRef, () => filters.setFiltersOpen(false), desktopPanelOpen, {
     ignoreSelector: '[data-filters-toggle]',
+    returnFocusTo: filtersToggle,
   });
 
   const labels = useMemo(
@@ -65,6 +68,7 @@ export default function MovieListFilteredLayout({
   const panel = (
     <MovieListFiltersPanel
       panelId={filtersPanelId}
+      flat={isMobile}
       tmdbLanguage={tmdbLanguage}
       labels={labels}
       selectedGenres={filters.selectedGenres}

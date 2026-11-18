@@ -3,6 +3,8 @@ import { MENU_ANCHOR_GAP_PX, MENU_VIEWPORT_MARGIN_PX } from '@/shared/components
 
 export type MenuPlacement = 'bottom' | 'top';
 
+export type MenuPlacementPreference = 'auto' | 'top';
+
 export type MenuVerticalFit = {
   placement: MenuPlacement;
   maxHeight: number | null;
@@ -13,10 +15,14 @@ const FITS_BELOW: MenuVerticalFit = { placement: 'bottom', maxHeight: null };
 export function fitMenuVertically(
   anchor: Pick<DOMRect, 'top' | 'bottom'>,
   panelHeight: number,
-  viewportHeight: number
+  viewportHeight: number,
+  preference: MenuPlacementPreference = 'auto'
 ): MenuVerticalFit {
   const roomBelow = viewportHeight - anchor.bottom - MENU_ANCHOR_GAP_PX - MENU_VIEWPORT_MARGIN_PX;
   const roomAbove = anchor.top - MENU_ANCHOR_GAP_PX - MENU_VIEWPORT_MARGIN_PX;
+  if (preference === 'top') {
+    return { placement: 'top', maxHeight: panelHeight <= roomAbove ? null : roomAbove };
+  }
   if (panelHeight <= roomBelow) return FITS_BELOW;
   if (roomAbove > roomBelow) {
     return { placement: 'top', maxHeight: panelHeight <= roomAbove ? null : roomAbove };
@@ -31,7 +37,8 @@ function sameFit(a: MenuVerticalFit, b: MenuVerticalFit): boolean {
 export function useMenuVerticalFit(
   open: boolean,
   anchorRef: RefObject<HTMLElement | null>,
-  panelRef: RefObject<HTMLElement | null>
+  panelRef: RefObject<HTMLElement | null>,
+  preference: MenuPlacementPreference = 'auto'
 ): MenuVerticalFit {
   const [fit, setFit] = useState<MenuVerticalFit>(FITS_BELOW);
 
@@ -48,7 +55,8 @@ export function useMenuVerticalFit(
       const next = fitMenuVertically(
         anchor.getBoundingClientRect(),
         panel.scrollHeight,
-        globalThis.innerHeight
+        globalThis.innerHeight,
+        preference
       );
       setFit((current) => (sameFit(current, next) ? current : next));
     };
@@ -62,7 +70,7 @@ export function useMenuVerticalFit(
       globalThis.removeEventListener('resize', compute);
       observer?.disconnect();
     };
-  }, [open, anchorRef, panelRef]);
+  }, [open, anchorRef, panelRef, preference]);
 
   return fit;
 }

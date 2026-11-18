@@ -1,13 +1,23 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type RefObject,
+} from 'react';
 import { ChevronUp, MoreHorizontal } from 'lucide-react';
 import clsx from 'clsx';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
-import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
-import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
+import { useIsMobile } from '@/shared/hooks/useIsMobile';
+import { fitMenuVertically, type MenuPlacement } from '@/shared/hooks/useMenuVerticalFit';
 import { t as translate, SUPPORTED_LOCALES, useTranslation } from '@/shared/i18n';
 import Chip from '@/shared/components/Chip';
 import Sheet from '@/shared/components/Sheet';
 import { ChoiceCard, ChoiceGroup } from '@/shared/components/ChoiceCard';
+import { MENU_ANCHOR_GAP_PX, MENU_VIEWPORT_MARGIN_PX } from '@/shared/components/menuGeometry';
 import styles from './ThemeField.module.css';
 
 export const THEME_EMOJIS = [
@@ -101,6 +111,72 @@ export function parseTheme(s: string | null | undefined): { emoji: string; text:
   return { emoji, text: raw.slice(emoji.length).trim() };
 }
 
+type PopoverPosition = {
+  top: number;
+  left: number;
+  maxHeight: number | null;
+  placement: MenuPlacement;
+};
+
+function popoverPositionFor(trigger: HTMLElement, panel: HTMLElement): PopoverPosition {
+  const anchor = trigger.getBoundingClientRect();
+  const left = Math.max(
+    MENU_VIEWPORT_MARGIN_PX,
+    Math.min(anchor.left, globalThis.innerWidth - panel.offsetWidth - MENU_VIEWPORT_MARGIN_PX)
+  );
+  const contentHeight = panel.scrollHeight;
+  const { placement, maxHeight } = fitMenuVertically(anchor, contentHeight, globalThis.innerHeight);
+  const top =
+    placement === 'top'
+      ? Math.max(
+          MENU_VIEWPORT_MARGIN_PX,
+          anchor.top - MENU_ANCHOR_GAP_PX - (maxHeight ?? contentHeight)
+        )
+      : anchor.bottom + MENU_ANCHOR_GAP_PX;
+  return { top, left, maxHeight, placement };
+}
+
+function popoverStyle(position: PopoverPosition | null): CSSProperties | undefined {
+  if (position === null) return undefined;
+  const { top, left, maxHeight } = position;
+  return maxHeight === null ? { top, left } : { top, left, maxHeight };
+}
+
+function useFixedPopover(
+  open: boolean,
+  triggerRef: RefObject<HTMLElement | null>,
+  panelRef: RefObject<HTMLElement | null>
+): PopoverPosition | null {
+  const [position, setPosition] = useState<PopoverPosition | null>(null);
+
+  const place = useCallback(() => {
+    const trigger = triggerRef.current;
+    const panel = panelRef.current;
+    if (!trigger || !panel) return;
+    setPosition(popoverPositionFor(trigger, panel));
+  }, [triggerRef, panelRef]);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setPosition(null);
+      return;
+    }
+    place();
+  }, [open, place]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    globalThis.addEventListener('resize', place);
+    globalThis.addEventListener('scroll', place, true);
+    return () => {
+      globalThis.removeEventListener('resize', place);
+      globalThis.removeEventListener('scroll', place, true);
+    };
+  }, [open, place]);
+
+  return position;
+}
+
 type ThemeFieldProps = {
   emoji: string;
   text: string;
@@ -127,11 +203,13 @@ export default function ThemeField({
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
   const emojiGridRef = useRef<HTMLDivElement>(null);
   const gridId = useId();
-  const touchScreen = useMediaQuery('(pointer: coarse)');
-  const fitLeft = useMenuHorizontalFit(pickerOpen && !touchScreen, pickerRef, emojiGridRef, 'left');
+  const isMobile = useIsMobile();
+  const popoverOpen = pickerOpen && !isMobile;
+  const position = useFixedPopover(popoverOpen, emojiButtonRef, emojiGridRef);
 
-  useClickOutside(pickerRef, () => setPickerOpen(false), pickerOpen && !touchScreen, {
+  useClickOutside(pickerRef, () => setPickerOpen(false), popoverOpen, {
     returnFocusTo: emojiButtonRef,
+    closeOnFocusLeave: true,
   });
 
   useEffect(() => {
@@ -139,14 +217,19 @@ export default function ThemeField({
     emojiGridRef.current?.querySelector<HTMLElement>('[role="radio"][tabindex="0"]')?.focus();
   }, [pickerOpen]);
 
+  const closeAfterPick = () => {
+    setPickerOpen(false);
+    emojiButtonRef.current?.focus();
+  };
+
   const emojiGrid = (
     <ChoiceGroup
       id={gridId}
       value={emoji}
       onChange={onEmojiChange}
-      onSelect={() => setPickerOpen(false)}
+      onSelect={closeAfterPick}
       ariaLabel={t('events.settings.emojiListLabel')}
-      className={clsx(styles.emojiGrid, touchScreen && styles.emojiGridSheet)}
+      className={clsx(styles.emojiGrid, isMobile && styles.emojiGridSheet)}
     >
       <ChoiceCard
         value=""
@@ -178,21 +261,22 @@ export default function ThemeField({
             disabled={disabled}
             aria-label={t('events.settings.emojiPickerLabel')}
             aria-expanded={pickerOpen}
-            aria-haspopup={touchScreen ? 'dialog' : undefined}
+            aria-haspopup={isMobile ? 'dialog' : undefined}
             aria-controls={pickerOpen ? gridId : undefined}
           >
             {emoji || '🎬'}
           </button>
-          {pickerOpen && !touchScreen && (
+          {popoverOpen && (
             <div
               ref={emojiGridRef}
               className={styles.emojiPopover}
-              style={fitLeft !== null ? { left: fitLeft } : undefined}
+              data-placement={position?.placement}
+              style={popoverStyle(position)}
             >
               {emojiGrid}
             </div>
           )}
-          {touchScreen && (
+          {isMobile && (
             <Sheet
               open={pickerOpen}
               title={t('events.settings.emojiPickerLabel')}

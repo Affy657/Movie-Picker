@@ -169,6 +169,82 @@ describe('CardKebab', () => {
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
+  it('points its trigger at the open panel', async () => {
+    renderKebab({ onViewDetails: () => {} });
+    const trigger = screen.getByRole('button', { name: /plus d’actions/i });
+    expect(trigger).not.toHaveAttribute('aria-controls');
+
+    await userEvent.setup().click(trigger);
+
+    const menu = screen.getByRole('menu', { name: /plus d’actions/i });
+    expect(menu.id).not.toBe('');
+    expect(trigger).toHaveAttribute('aria-controls', menu.id);
+  });
+
+  it('says which actions open a dialog', async () => {
+    await openKebab({
+      onViewDetails: () => {},
+      onToggleWatchlist: () => {},
+      onProposeToEvent: () => {},
+      canRemove: true,
+      removeOpensDialog: true,
+    });
+
+    expect(screen.getByRole('menuitem', { name: 'Proposer dans une soirée' })).toHaveAttribute(
+      'aria-haspopup',
+      'dialog'
+    );
+    expect(screen.getByRole('menuitem', { name: 'Retirer Dune' })).toHaveAttribute(
+      'aria-haspopup',
+      'dialog'
+    );
+    expect(screen.getByRole('menuitem', { name: 'Voir les détails' })).not.toHaveAttribute(
+      'aria-haspopup'
+    );
+    expect(screen.getByRole('menuitem', { name: 'Ajouter à ma liste' })).not.toHaveAttribute(
+      'aria-haspopup'
+    );
+  });
+
+  it('removes without announcing a dialog when the removal asks for no confirmation', async () => {
+    await openKebab({ canRemove: true });
+
+    expect(screen.getByRole('menuitem', { name: 'Retirer Dune' })).not.toHaveAttribute(
+      'aria-haspopup'
+    );
+  });
+
+  describe('while the page scrolls', () => {
+    afterEach(() => {
+      Reflect.deleteProperty(document, 'elementFromPoint');
+    });
+
+    function stubHitTest(hit: () => Element | null) {
+      Object.defineProperty(document, 'elementFromPoint', { configurable: true, value: hit });
+    }
+
+    it('closes once its trigger is hidden, under a bar or out of the screen', async () => {
+      await openKebab({ onViewDetails: () => {} });
+      const header = document.createElement('header');
+      document.body.append(header);
+      stubHitTest(() => header);
+
+      fireEvent.scroll(window);
+
+      expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+      header.remove();
+    });
+
+    it('stays open and follows its trigger while the trigger is still in sight', async () => {
+      await openKebab({ onViewDetails: () => {} });
+      stubHitTest(() => screen.getByRole('button', { name: /plus d’actions/i }));
+
+      fireEvent.scroll(window);
+
+      expect(screen.getByRole('menu')).toBeInTheDocument();
+    });
+  });
+
   it('closes the menu before running an action', async () => {
     const onViewDetails = vi.fn();
     const user = await openKebab({ onViewDetails });
@@ -227,6 +303,22 @@ describe('MovieCardKebab (event adapter, hover gate)', () => {
       </LocaleProvider>
     );
     expect(screen.queryByRole('button', { name: /plus d’actions/i })).toBeNull();
+  });
+
+  it('announces the confirmation that the removal of a film from the night opens', async () => {
+    stubHoverCapability();
+    render(
+      <LocaleProvider>
+        <EventHarness onToggleWatchlist={() => {}} />
+      </LocaleProvider>
+    );
+
+    await userEvent.setup().click(screen.getByRole('button', { name: /plus d’actions/i }));
+
+    expect(screen.getByRole('menuitem', { name: /retirer inception/i })).toHaveAttribute(
+      'aria-haspopup',
+      'dialog'
+    );
   });
 
   it('mounts the kebab on a hover-capable device', () => {

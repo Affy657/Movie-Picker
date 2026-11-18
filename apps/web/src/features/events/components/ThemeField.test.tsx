@@ -178,13 +178,65 @@ describe('ThemeField', () => {
     expect(opener).toHaveAttribute('aria-controls', grid.id);
   });
 
-  describe('on a touch screen', () => {
+  it('gives the focus back to the emoji button once an emoji is picked', async () => {
+    const user = userEvent.setup();
+    renderField();
+
+    const opener = screen.getByRole('button', { name: 'Choisir un emoji' });
+    await user.click(opener);
+    await user.click(screen.getByRole('radio', { name: '🎃' }));
+
+    expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
+    expect(opener).toHaveFocus();
+  });
+
+  it('closes the picker when the focus leaves it', async () => {
+    const user = userEvent.setup();
+    renderField();
+
+    await user.click(screen.getByRole('button', { name: 'Choisir un emoji' }));
+    expect(screen.getByRole('radiogroup')).toBeInTheDocument();
+    fireEvent.focusIn(screen.getByRole('textbox'));
+
+    expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
+  });
+
+  describe('placement', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('opens above its button, inside the viewport, when the room below runs out', async () => {
+      vi.spyOn(globalThis, 'innerHeight', 'get').mockReturnValue(600);
+      vi.spyOn(globalThis, 'innerWidth', 'get').mockReturnValue(1024);
+      vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(338);
+      vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(292);
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+        this: HTMLElement
+      ) {
+        const isOpener = this.getAttribute('aria-label') === 'Choisir un emoji';
+        return DOMRect.fromRect(
+          isOpener ? { x: 900, y: 500, width: 44, height: 44 } : { x: 0, y: 0, width: 0, height: 0 }
+        );
+      });
+      const user = userEvent.setup();
+      renderField();
+
+      await user.click(screen.getByRole('button', { name: 'Choisir un emoji' }));
+      const popover = screen.getByRole('radiogroup', { name: 'Emojis' }).parentElement!;
+
+      expect(popover).toHaveAttribute('data-placement', 'top');
+      expect(popover).toHaveStyle({ top: '156px', left: '724px' });
+    });
+  });
+
+  describe('on a phone', () => {
     afterEach(() => {
       vi.unstubAllGlobals();
     });
 
     it('opens the emojis in a bottom sheet instead of a popover', async () => {
-      stubMatchMedia((query) => query.includes('pointer: coarse'));
+      stubMatchMedia((query) => query.includes('max-width'));
       const user = userEvent.setup();
       const { onEmojiChange } = renderField();
 
@@ -195,6 +247,17 @@ describe('ThemeField', () => {
 
       expect(onEmojiChange).toHaveBeenCalledWith('🎃');
       expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
+    });
+
+    it('keeps the popover on a tablet, whose touch screen is wide enough for it', async () => {
+      stubMatchMedia((query) => query.includes('pointer: coarse'));
+      const user = userEvent.setup();
+      renderField();
+
+      await user.click(screen.getByRole('button', { name: 'Choisir un emoji' }));
+
+      expect(screen.getByRole('radiogroup', { name: 'Emojis' })).toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 

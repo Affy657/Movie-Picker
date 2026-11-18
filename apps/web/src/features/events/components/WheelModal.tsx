@@ -1,6 +1,5 @@
-import clsx from 'clsx';
 import confetti from 'canvas-confetti';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Disc3, Film, X } from 'lucide-react';
 import type { MovieData } from '@/shared/types/movie';
 import type { RatingScale } from '@/shared/types/theme';
@@ -84,6 +83,7 @@ export default function WheelModal({
   ratingScale,
 }: Readonly<WheelModalProps>) {
   const { t } = useTranslation();
+  const titleId = useId();
   const drawIndex = Math.max(1, winnerCount - remainingDraws);
   const title = revealTitle(skipSpin, winnerCount, { index: drawIndex, total: winnerCount }, t);
   const remainingLabel =
@@ -217,9 +217,9 @@ export default function WheelModal({
         size="md"
         surface={animDone ? 'media' : 'bare'}
         strongBackdrop
-        ariaLabelledBy="wheel-modal-title"
+        ariaLabelledBy={titleId}
         dialogRef={dialogRef}
-        className={animDone ? clsx('on-dark', styles.dialogDone) : undefined}
+        className={animDone ? styles.dialogDone : undefined}
       >
         <output className="visually-hidden">
           {animDone ? t('events.wheel.modal.winnerAnnouncement', { title: winner.title }) : null}
@@ -233,7 +233,7 @@ export default function WheelModal({
               winnerIndex={winnerIndex}
               onDone={handleWheelDone}
             />
-            <p className={styles.spinLabel} id="wheel-modal-title">
+            <p className={styles.spinLabel} id={titleId}>
               {t('events.wheel.modal.spinningTitle')}
             </p>
           </div>
@@ -243,11 +243,11 @@ export default function WheelModal({
           <div className={styles.reveal}>
             <PosterBackdrop posterPath={winner.posterPath} />
             <div className={styles.header}>
-              <h2 id="wheel-modal-title" className={styles.title}>
+              <h2 id={titleId} className={styles.title}>
                 {title}
               </h2>
               <IconButton tone="onPoster" ariaLabel={t('common.close')} onClick={onClose}>
-                <X size={ICON_SIZE.xl} />
+                <X aria-hidden size={ICON_SIZE.lg} />
               </IconButton>
             </div>
 
@@ -285,7 +285,7 @@ export default function WheelModal({
             <div className={styles.footer}>
               {onRelaunch ? (
                 <>
-                  <Button type="button" variant="ghost" onClick={onClose}>
+                  <Button type="button" onClick={onClose}>
                     {t('events.wheel.modal.finishHereButton')}
                   </Button>
                   <Button

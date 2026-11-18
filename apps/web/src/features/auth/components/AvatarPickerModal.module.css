@@ -1,7 +1,3 @@
-.body {
-  padding: var(--space-3) var(--space-5) var(--space-5);
-}
-
 .tabs {
   margin-bottom: var(--space-4);
 }
@@ -18,7 +14,7 @@
 
 .img {
   display: block;
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
   width: var(--space-12);
   height: var(--space-12);
 }
@@ -47,6 +43,6 @@
   right: var(--space-0-5);
   background: var(--color-primary);
   color: var(--color-primary-contrast);
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
   padding: var(--space-0-5);
 }

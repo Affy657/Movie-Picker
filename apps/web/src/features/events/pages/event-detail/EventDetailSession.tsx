@@ -376,6 +376,7 @@ export default function EventDetailSession({
         title={confirmDialogContent?.title ?? ''}
         message={confirmDialogContent?.message ?? ''}
         confirmLabel={confirmDialogContent?.confirmLabel ?? ''}
+        confirmTone={confirmDialogContent?.confirmTone}
         loading={confirmDialogContent?.loading ?? false}
         onConfirm={confirmDialogContent?.onConfirm ?? closeConfirm}
         onCancel={closeConfirm}

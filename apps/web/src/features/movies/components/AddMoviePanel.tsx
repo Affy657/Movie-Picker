@@ -65,7 +65,7 @@ export default function AddMoviePanel({
           <div className={styles.panelHead}>
             <h3 className={styles.panelTitle}>{panelTitle}</h3>
             <IconButton ariaLabel={t('common.close')} onClick={close}>
-              <X size={ICON_SIZE.md} aria-hidden />
+              <X size={ICON_SIZE.lg} aria-hidden />
             </IconButton>
           </div>
           <AddMovieForm {...formProps} />

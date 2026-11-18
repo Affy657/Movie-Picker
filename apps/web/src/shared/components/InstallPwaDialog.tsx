@@ -3,7 +3,7 @@ import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useCopyFeedback } from '@/shared/hooks/useCopyFeedback';
 import type { PwaInstallGuideMode } from '@/shared/pwa/pwaInstall';
 import styles from './InstallPwaDialog.module.css';
-import Modal from '@/shared/components/Modal';
+import Modal, { ModalActions, ModalBody, ModalFooter } from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 
 const GUIDE_COPY: Record<
@@ -48,6 +48,7 @@ type InstallPwaDialogProps = {
 export default function InstallPwaDialog({ open, mode, onClose }: Readonly<InstallPwaDialogProps>) {
   const { t } = useTranslation();
   const titleId = useId();
+  const introId = useId();
   const { copied, copy } = useCopyFeedback();
 
   const copyKeys = GUIDE_COPY[mode];
@@ -56,9 +57,19 @@ export default function InstallPwaDialog({ open, mode, onClose }: Readonly<Insta
   const steps = copyKeys.steps.map((key) => t(key));
 
   return (
-    <Modal open={open} onClose={onClose} size="xs" title={title} titleId={titleId}>
-      <div className={styles.inner}>
-        <p className={styles.intro}>{intro}</p>
+    <Modal
+      open={open}
+      onClose={onClose}
+      size="xs"
+      column
+      title={title}
+      titleId={titleId}
+      ariaDescribedBy={introId}
+    >
+      <ModalBody className={styles.body}>
+        <p id={introId} className={styles.intro}>
+          {intro}
+        </p>
         <ol className={styles.steps}>
           {steps.map((step) => (
             <li key={step} className={styles.step}>
@@ -66,20 +77,20 @@ export default function InstallPwaDialog({ open, mode, onClose }: Readonly<Insta
             </li>
           ))}
         </ol>
-        {mode === 'in_app' ? (
-          <div className={styles.actions}>
+      </ModalBody>
+      <ModalFooter>
+        <ModalActions>
+          {mode === 'in_app' ? (
             <Button type="button" variant="primary" onClick={() => copy(window.location.href)}>
               {copied ? t('pwaInstall.copied') : t('pwaInstall.copyLink')}
             </Button>
-          </div>
-        ) : (
-          <div className={styles.actions}>
+          ) : (
             <Button type="button" variant="primary" onClick={onClose}>
               {t('common.close')}
             </Button>
-          </div>
-        )}
-      </div>
+          )}
+        </ModalActions>
+      </ModalFooter>
     </Modal>
   );
 }

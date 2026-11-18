@@ -13,7 +13,7 @@ import {
   type ProposableMovie,
 } from '@/features/events/hooks/useProposeMovieToEvent';
 import styles from './ProposeToEventModal.module.css';
-import Modal from '@/shared/components/Modal';
+import Modal, { ModalBody } from '@/shared/components/Modal';
 import Card from '@/shared/components/Card';
 import EmptyState from '@/shared/components/EmptyState';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -63,55 +63,57 @@ export default function ProposeToEventModal({
       title={t('watchlist.propose.modalTitle', { title: movie.title })}
       titleId={titleId}
     >
-      {isLoading && <p className="placeholder">{t('common.loading')}</p>}
-      {!isLoading && eligible.length === 0 && (
-        <EmptyState
-          compact
-          icon={<CalendarX aria-hidden size={ICON_SIZE['2xl']} />}
-          message={t('watchlist.propose.noEvents')}
-        />
-      )}
-      {!isLoading && eligible.length > 0 && (
-        <ul className={styles.list}>
-          {eligible.map((e) => {
-            const row = rows[e.slug] ?? { status: 'idle' as const };
-            const isDone = row.status === 'done';
-            return (
-              <li key={e.slug} className={styles.row}>
-                <Card
-                  as="button"
-                  type="button"
-                  interactive
-                  elevation="sm"
-                  padding="none"
-                  className={eventSummaryCardStyles.card}
-                  onClick={() => handlePropose(e.slug)}
-                  disabled={row.status === 'pending' || isDone}
-                >
-                  <EventSummaryCardBody event={e} />
-                </Card>
-                <div className={styles.rowStatus}>
-                  {row.status === 'pending' && <span>{t('common.loading')}</span>}
-                  {isDone && (
-                    <span className={styles.rowDone}>{t('watchlist.propose.proposedDone')}</span>
-                  )}
-                  {row.status === 'error' && (
-                    <span className={styles.rowError} role="alert">
-                      {row.error}
-                    </span>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      <ModalBody>
+        {isLoading && <p className="placeholder">{t('common.loading')}</p>}
+        {!isLoading && eligible.length === 0 && (
+          <EmptyState
+            compact
+            icon={<CalendarX aria-hidden size={ICON_SIZE['2xl']} />}
+            message={t('watchlist.propose.noEvents')}
+          />
+        )}
+        {!isLoading && eligible.length > 0 && (
+          <ul className={styles.list}>
+            {eligible.map((e) => {
+              const row = rows[e.slug] ?? { status: 'idle' as const };
+              const isDone = row.status === 'done';
+              return (
+                <li key={e.slug} className={styles.row}>
+                  <Card
+                    as="button"
+                    type="button"
+                    interactive
+                    elevation="sm"
+                    padding="none"
+                    className={eventSummaryCardStyles.card}
+                    onClick={() => handlePropose(e.slug)}
+                    disabled={row.status === 'pending' || isDone}
+                  >
+                    <EventSummaryCardBody event={e} />
+                  </Card>
+                  <div className={styles.rowStatus}>
+                    {row.status === 'pending' && <span>{t('common.loading')}</span>}
+                    {isDone && (
+                      <span className={styles.rowDone}>{t('watchlist.propose.proposedDone')}</span>
+                    )}
+                    {row.status === 'error' && (
+                      <span className={styles.rowError} role="alert">
+                        {row.error}
+                      </span>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
 
-      {hasMore ? (
-        <Link to={ROUTES.myEvents} className={styles.viewMoreLink} onClick={onClose}>
-          {t('watchlist.propose.viewMore')}
-        </Link>
-      ) : null}
+        {hasMore ? (
+          <Link to={ROUTES.myEvents} className={styles.viewMoreLink} onClick={onClose}>
+            {t('watchlist.propose.viewMore')}
+          </Link>
+        ) : null}
+      </ModalBody>
     </Modal>
   );
 }

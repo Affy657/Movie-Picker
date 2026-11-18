@@ -64,7 +64,11 @@ function ListChoices({
         </MenuCheckboxItem>
       ))}
       <MenuSeparator />
-      <MenuItem icon={<Plus aria-hidden size={ICON_SIZE.md} />} onClick={onCreate}>
+      <MenuItem
+        icon={<Plus aria-hidden size={ICON_SIZE.md} />}
+        aria-haspopup="dialog"
+        onClick={onCreate}
+      >
         {t('lists.addTo.newList')}
       </MenuItem>
     </>
@@ -161,7 +165,12 @@ function MobileListsSheet({
         title={title}
         onClose={() => setOpen(false)}
         footer={
-          <Button variant="primary" fullWidth onClick={offerCreate ? create : () => setOpen(false)}>
+          <Button
+            variant="primary"
+            fullWidth
+            aria-haspopup={offerCreate ? 'dialog' : undefined}
+            onClick={offerCreate ? create : () => setOpen(false)}
+          >
             {offerCreate ? t('lists.addTo.emptyCta') : t('lists.addTo.done')}
           </Button>
         }
@@ -231,7 +240,11 @@ function DesktopListsMenu({
           {ready && !hasLists ? (
             <>
               <p className={styles.empty}>{t('lists.addTo.emptyMessage')}</p>
-              <MenuItem icon={<Plus aria-hidden size={ICON_SIZE.md} />} onClick={create}>
+              <MenuItem
+                icon={<Plus aria-hidden size={ICON_SIZE.md} />}
+                aria-haspopup="dialog"
+                onClick={create}
+              >
                 {t('lists.addTo.emptyCta')}
               </MenuItem>
             </>
