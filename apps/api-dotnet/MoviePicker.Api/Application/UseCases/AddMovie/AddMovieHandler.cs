@@ -192,9 +192,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
             EventTitle = evt.Title,
             MovieTitle = movieTitle
         },
-        new PushMessage(
-            Title: "Un film de plus au menu 🍿",
-            Body: $"{movieTitle} a été ajouté à la soirée {evt.Title}",
-            Tag: $"movie-add-{evt.Id}",
-            Url: FrontRoutes.EventDetail(evt.Slug)));
+        ServerCopy.Push.MovieAdded(movieTitle, evt.Title).ToMessage(
+            tag: $"movie-add-{evt.Id}",
+            url: FrontRoutes.EventDetail(evt.Slug)));
 }

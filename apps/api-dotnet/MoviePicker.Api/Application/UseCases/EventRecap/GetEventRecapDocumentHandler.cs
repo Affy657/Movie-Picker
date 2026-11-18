@@ -52,7 +52,7 @@ public sealed class GetEventRecapDocumentHandler : IGetEventRecapDocumentHandler
     {
         var canonical = webBase + FrontRoutes.NightRecap(evt.RecapSlug ?? string.Empty);
         var fallbackUrl = webBase + FrontRoutes.Home;
-        var title = $"{evt.Title}, le recap";
+        var title = ServerCopy.SharePreviews.RecapTitle(evt.Title);
         var fallbackImage = SharePreview.SiteImage(webBase);
         IReadOnlyList<Movie> winners = evt.HasWinner ? await WinnerMovies.ListAsync(_movies, evt, ct) : [];
         var first = winners.Count > 0 ? winners[0] : null;
@@ -62,7 +62,7 @@ public sealed class GetEventRecapDocumentHandler : IGetEventRecapDocumentHandler
                 canonical,
                 fallbackUrl,
                 title,
-                "Le film n'est pas encore choisi. Soirée ciné organisée sur Movie Picker.",
+                ServerCopy.SharePreviews.RecapWithoutWinner,
                 fallbackImage);
         }
 
@@ -78,22 +78,20 @@ public sealed class GetEventRecapDocumentHandler : IGetEventRecapDocumentHandler
             title,
             BuildDescription(evt, first, ratings, participantCount, evt.IsOver(_clock.GetUtcNow())),
             image,
-            image == fallbackImage ? SharePreview.SiteName : $"Affiche de {first.Title}");
+            image == fallbackImage ? SharePreview.SiteName : ServerCopy.SharePreviews.PosterOf(first.Title));
     }
 
     private static string BuildDescription(Event evt, Movie movie, List<int> ratings, int participantCount, bool nightOver)
     {
         var film = SharePreviewContent.Film(movie);
         var day = SharePreviewContent.Day(evt.Date);
+        var participants = ServerCopy.SharePreviews.Participants(participantCount);
         if (!nightOver)
-            return $"Au programme : {film} le {day}, avec {Participants(participantCount)}.";
+            return ServerCopy.SharePreviews.RecapUpcoming(film, day, participants);
         if (ratings.Count == 0)
-            return $"On a vu {film} le {day}, avec {Participants(participantCount)}.";
+            return ServerCopy.SharePreviews.RecapWatched(film, day, participants);
 
         var average = (ratings.Average() / 2).ToString("0.#", SharePreviewContent.French);
-        return $"On a vu {film}, noté {average}/5 par {Participants(ratings.Count)}, le {day}.";
+        return ServerCopy.SharePreviews.RecapRated(film, average, ServerCopy.SharePreviews.Participants(ratings.Count), day);
     }
-
-    private static string Participants(int count) =>
-        count == 1 ? "1 participant" : $"{count} participants";
 }

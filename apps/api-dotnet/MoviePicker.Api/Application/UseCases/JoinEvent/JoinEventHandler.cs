@@ -168,12 +168,9 @@ public sealed class JoinEventHandler : IJoinEventHandler
             var subscriptions = await _pushSubscriptions.ListByUserIdAsync(evt.CreatorUserId, ct);
             if (subscriptions.Count > 0)
             {
-                var message = new PushMessage(
-                    Title: "Ça s'anime !",
-                    Body: $"{joinerPseudo} vient de rejoindre {evt.Title} ! 🎉",
-                    Tag: $"join-{evt.Id}",
-                    Url: FrontRoutes.EventDetail(evt.Slug)
-                );
+                var message = ServerCopy.Push.ParticipantJoined(joinerPseudo, evt.Title).ToMessage(
+                    tag: $"join-{evt.Id}",
+                    url: FrontRoutes.EventDetail(evt.Slug));
 
                 await PushFanOut.SendToAllAsync(_pushSender, subscriptions, message, ct);
             }

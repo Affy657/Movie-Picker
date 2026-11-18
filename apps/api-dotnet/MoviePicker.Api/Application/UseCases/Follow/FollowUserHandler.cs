@@ -87,11 +87,9 @@ public sealed class FollowUserHandler : IFollowUserHandler
         }
 
         var subs = await _pushSubscriptions.ListByUserIdAsync(target.Id, ct);
-        var message = new PushMessage(
-            Title: "Nouveau follower 👀",
-            Body: $"{follower.DisplayName} a commencé à vous suivre.",
-            Tag: "new-follower",
-            Url: PublicHandleResolver.Resolve(follower) is { } publicHandle ? FrontRoutes.Profile(publicHandle) : FrontRoutes.Notifications);
+        var message = ServerCopy.Push.NewFollower(follower.DisplayName).ToMessage(
+            tag: "new-follower",
+            url: PublicHandleResolver.Resolve(follower) is { } publicHandle ? FrontRoutes.Profile(publicHandle) : FrontRoutes.Notifications);
         await PushFanOut.SendToAllAsync(_pushSender, subs, message, ct);
     }
 }

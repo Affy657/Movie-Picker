@@ -33,7 +33,7 @@ public sealed class WinnerAnnouncer : IWinnerAnnouncer
                 MovieTitle = winnerTitle
             },
             new PushMessage(
-                Title: method == WinnerPickMethod.Manual ? "🎬 Film choisi par l'hôte !" : "🎡 Film tiré au sort !",
+                Title: method == WinnerPickMethod.Manual ? ServerCopy.Push.WinnerPickedByHostTitle : ServerCopy.Push.WinnerDrawnTitle,
                 Body: PushBody(evt, winnerTitle),
                 Tag: $"wheel-{evt.Id}",
                 Url: FrontRoutes.EventDetail(evt.Slug)));
@@ -43,14 +43,14 @@ public sealed class WinnerAnnouncer : IWinnerAnnouncer
 
     private string PushBody(Event evt, string winnerTitle)
     {
-        var programme = $"« {winnerTitle} » pour « {evt.Title} »";
+        var programme = ServerCopy.Push.WinnerProgramme(winnerTitle, evt.Title);
         if (!DateOnly.TryParse(evt.Date, CultureInfo.InvariantCulture, DateTimeStyles.None, out var night))
             return programme;
 
         if (night == EventRecurrence.TodayInParis(_clock.GetUtcNow()))
-            return $"Ce soir : {programme}";
+            return ServerCopy.Push.WinnerProgrammeOn(ServerCopy.Push.Tonight, programme);
 
         var day = night.ToString("dddd d MMMM", FrCulture);
-        return $"{char.ToUpper(day[0], FrCulture)}{day[1..]} : {programme}";
+        return ServerCopy.Push.WinnerProgrammeOn($"{char.ToUpper(day[0], FrCulture)}{day[1..]}", programme);
     }
 }

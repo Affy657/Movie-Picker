@@ -122,12 +122,9 @@ public sealed class InviteUserHandler : IInviteUserHandler
         if (target is not null && !withheld)
         {
             var subs = await _pushSubscriptions.ListByUserIdAsync(targetUserId, ct);
-            var message = new PushMessage(
-                Title: "Invitation reçue ! 💌",
-                Body: $"{actor?.DisplayName} vous invite à rejoindre {evt.Title}",
-                Tag: $"invite-{evt.Id}",
-                Url: FrontRoutes.EventDetail(evt.Slug)
-            );
+            var message = ServerCopy.Push.EventInvitation(actor?.DisplayName, evt.Title).ToMessage(
+                tag: $"invite-{evt.Id}",
+                url: FrontRoutes.EventDetail(evt.Slug));
             await PushFanOut.SendToAllAsync(_pushSender, subs, message, ct);
         }
 

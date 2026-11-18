@@ -129,11 +129,9 @@ public sealed class InviteToMovieListHandler : IInviteToMovieListHandler
             return;
 
         var subscriptions = await _pushSubscriptions.ListByUserIdAsync(targetId, ct);
-        var message = new PushMessage(
-            Title: "Invitation reçue ! 💌",
-            Body: $"{owner?.DisplayName} vous invite à rejoindre la liste {list.Name}",
-            Tag: $"list-invite-{list.Id}",
-            Url: FrontRoutes.Notifications);
+        var message = ServerCopy.Push.ListInvitation(owner?.DisplayName, list.Name).ToMessage(
+            tag: $"list-invite-{list.Id}",
+            url: FrontRoutes.Notifications);
         await PushFanOut.SendToAllAsync(_pushSender, subscriptions, message, ct);
     }
 }
