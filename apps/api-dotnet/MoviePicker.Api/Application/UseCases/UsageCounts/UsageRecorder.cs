@@ -23,13 +23,10 @@ public sealed class UsageRecorder : IUsageRecorder
         {
             await _counts.IncrementAsync(UsageCount.DayOf(_clock.GetUtcNow()), count, ct);
         }
-        catch (OperationCanceledException)
-        {
-            return;
-        }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Usage count {Metric} {Variant} was not recorded", count.Metric, count.Variant);
+            if (ex is not OperationCanceledException)
+                _logger.LogWarning(ex, "Usage count {Metric} {Variant} was not recorded", count.Metric, count.Variant);
         }
     }
 }
