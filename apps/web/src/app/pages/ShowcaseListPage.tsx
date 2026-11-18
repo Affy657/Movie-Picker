@@ -7,6 +7,7 @@ import Button from '@/shared/components/Button';
 import { ROUTES } from '@/app/routes';
 import { MOVIE_PAGE_CHUNKS } from '@/app/routeChunks';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
+import { queryKeys } from '@/shared/hooks/queryKeys';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useRecommendationSeed } from '@/app/pages/home/usePersonalRows';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
@@ -368,7 +369,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
     arrival.collectionName ?? collections.data?.items.find((row) => row.id === collectionId)?.name;
 
   const search = useQuery({
-    queryKey: ['movies', 'search-page', searchQuery] as const,
+    queryKey: queryKeys.movies.searchPage(searchQuery),
     queryFn: ({ signal }) => searchMovies(searchQuery, { signal }),
     enabled: searchEnabled,
   });

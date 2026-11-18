@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '@/shared/hooks/queryKeys';
 import {
   SHOWCASE_STALE_TIME,
   fetchMovieCollections,
@@ -19,7 +20,7 @@ export function useMovieShowcase(query: ShowcaseQuery, enabled = true) {
 
 export function useMovieCollections(enabled = true) {
   return useQuery({
-    queryKey: ['movies', 'collections'] as const,
+    queryKey: queryKeys.movies.collections,
     queryFn: ({ signal }) => fetchMovieCollections(signal),
     staleTime: SHOWCASE_STALE_TIME,
     enabled,
@@ -28,7 +29,7 @@ export function useMovieCollections(enabled = true) {
 
 export function useShowcaseThemes() {
   return useQuery({
-    queryKey: ['movies', 'showcase', 'themes'] as const,
+    queryKey: queryKeys.movies.showcaseThemes,
     queryFn: ({ signal }) => fetchShowcaseThemes(signal),
     staleTime: SHOWCASE_STALE_TIME,
   });

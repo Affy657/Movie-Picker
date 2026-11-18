@@ -63,6 +63,9 @@ export const queryKeys = {
     details: (tmdbId: number | undefined, mediaType?: string) =>
       ['movies', 'details', tmdbId ?? '$pending', mediaType ?? 'movie'] as const,
     nights: (tmdbId: number, mediaType: string) => ['movies', 'nights', tmdbId, mediaType] as const,
+    collections: ['movies', 'collections'] as const,
+    showcaseThemes: ['movies', 'showcase', 'themes'] as const,
+    searchPage: (query: string) => ['movies', 'search-page', query] as const,
     searchIdle: ['movies', 'search', '$idle'] as const,
     search: (
       searchKey: string,
