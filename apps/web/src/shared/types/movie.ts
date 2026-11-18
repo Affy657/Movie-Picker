@@ -18,6 +18,14 @@ export interface TitleSummary {
   runtimeMinutes?: number | null;
 }
 
+export interface AddTitleBody extends Omit<TitleSummary, 'mediaType'> {
+  mediaType?: MovieMediaType;
+}
+
+export interface CatalogTitle extends Omit<AddTitleBody, 'tmdbId'> {
+  id: number;
+}
+
 export interface FavoriteTitle {
   tmdbId: number;
   mediaType: MovieMediaType;

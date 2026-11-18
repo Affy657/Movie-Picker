@@ -8,6 +8,7 @@ import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useTranslation } from '@/shared/i18n';
 import type { RatingScale } from '@/shared/types/theme';
+import { toTitleSummary } from '@/shared/utils/titleSummary';
 import { ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { syncsWithLetterboxd } from '@/features/auth/utils/letterboxdSync';
@@ -182,16 +183,7 @@ export default function WatchedMoviesPage() {
         error: removeError ?? visibility.error ?? watchlistToggle.error,
       }}
       onAddItem={async (item) => {
-        await markWatched.mutateAsync({
-          tmdbId: item.id,
-          mediaType: item.mediaType ?? 'movie',
-          title: item.title,
-          year: item.year,
-          posterPath: item.posterPath,
-          voteAverage: item.voteAverage,
-          runtimeMinutes: item.runtimeMinutes,
-          genreIds: item.genreIds,
-        });
+        await markWatched.mutateAsync(toTitleSummary(item));
       }}
     />
   );

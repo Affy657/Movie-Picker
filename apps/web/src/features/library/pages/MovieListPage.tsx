@@ -11,6 +11,7 @@ import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useShareAction } from '@/shared/hooks/useShareAction';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
+import { toAddTitleBody } from '@/shared/utils/titleSummary';
 import { useTranslation, type Translate } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -371,16 +372,7 @@ export default function MovieListPage() {
         if (!list) return;
         await addItem.mutateAsync({
           listId: list.id,
-          item: {
-            tmdbId: item.id,
-            mediaType: item.mediaType,
-            title: item.title,
-            year: item.year,
-            posterPath: item.posterPath,
-            voteAverage: item.voteAverage,
-            runtimeMinutes: item.runtimeMinutes,
-            genreIds: item.genreIds,
-          },
+          item: toAddTitleBody(item),
         });
       }}
     >

@@ -57,20 +57,14 @@ import SavedToggleButton from '@/features/library/components/SavedToggleButton';
 import { useSavedListToggle } from '@/features/library/hooks/useSavedLists';
 import ShowcaseListStates from './ShowcaseListStates';
 import { readShowcaseListArrival } from './showcaseListState';
-import type { MovieMediaType } from '@/shared/types/movie';
+import type { MovieMediaType, TitleSummary } from '@/shared/types/movie';
+import { toTitleSummary } from '@/shared/utils/titleSummary';
 import styles from './ShowcaseListPage.module.css';
 import { collectionDisplayName } from '@/features/movies/utils/collectionName';
 import BackLink from '@/shared/components/BackLink';
 
-interface ShowcaseListItem {
-  tmdbId: number;
-  title: string;
-  year: string;
-  posterPath: string | null;
+interface ShowcaseListItem extends TitleSummary {
   genreIds: number[];
-  mediaType: MovieMediaType;
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
   order: number;
   rank: number | null;
 }
@@ -201,14 +195,9 @@ type ShowcaseRow =
 
 function toShowcaseListItems(rows: readonly ShowcaseRow[]): ShowcaseListItem[] {
   return rows.map((row, index) => ({
-    tmdbId: row.id,
-    title: row.title,
-    year: row.year,
-    posterPath: row.posterPath,
+    ...toTitleSummary(row),
     genreIds: row.genreIds ?? [],
-    mediaType: row.mediaType ?? 'movie',
-    voteAverage: row.voteAverage,
-    runtimeMinutes: 'runtimeMinutes' in row ? row.runtimeMinutes : null,
+    runtimeMinutes: row.runtimeMinutes ?? null,
     order: index,
     rank: 'rank' in row && row.rank != null ? row.rank : null,
   }));

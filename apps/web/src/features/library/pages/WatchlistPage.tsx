@@ -16,6 +16,7 @@ import {
   useWatchlistAvailability,
 } from '@/features/movies/hooks/useWatchlist';
 import type { WatchlistAvailabilityItem, WatchlistItem } from '@/features/movies/api/watchlistApi';
+import { toAddTitleBody } from '@/shared/utils/titleSummary';
 import { watchlistItemKey as itemKey } from '@/features/movies/utils/watchlistItemKey';
 import type { ToolbarExtraFilter } from '@/features/movies/hooks/useCollectionToolbar';
 import { useWatchlistToggle } from '@/features/library/hooks/useWatchlistToggle';
@@ -164,16 +165,7 @@ export default function WatchlistPage() {
         error: visibility.error ?? watchlistToggle.error,
       }}
       onAddItem={async (item) => {
-        await addMutation.mutateAsync({
-          tmdbId: item.id,
-          mediaType: item.mediaType,
-          title: item.title,
-          year: item.year,
-          posterPath: item.posterPath,
-          voteAverage: item.voteAverage,
-          runtimeMinutes: item.runtimeMinutes,
-          genreIds: item.genreIds,
-        });
+        await addMutation.mutateAsync(toAddTitleBody(item));
       }}
     >
       {letterboxdModalOpen && (

@@ -1,6 +1,6 @@
 import { apiPath, fetchApi } from '@/shared/api/client';
 import { readAllWatchlistPages } from '@/features/movies/api/watchlistApi';
-import type { FavoriteTitle, MovieMediaType } from '@/shared/types/movie';
+import type { FavoriteTitle, MovieMediaType, TitleSummary } from '@/shared/types/movie';
 
 export interface PublicProfile {
   handle: string;
@@ -79,15 +79,8 @@ export async function searchUsers(query: string): Promise<FollowListResponse> {
   );
 }
 
-export interface UserWatchedMovieItem {
-  tmdbId: number;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
+export interface UserWatchedMovieItem extends TitleSummary {
   genreIds: number[];
-  mediaType: MovieMediaType;
   watchedAt: string;
   myRating?: number | null;
 }
@@ -131,15 +124,8 @@ export function fetchUserWatchedMovieCollection(
   return fetchCountedUserWatchedMovies(handle, WATCHED_MOVIES_TAKE, signal);
 }
 
-export interface UserProposedMovieItem {
-  tmdbId: number;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
+export interface UserProposedMovieItem extends TitleSummary {
   genreIds: number[];
-  mediaType: MovieMediaType;
   lastProposedAt: string;
   proposalCount: number;
 }
@@ -169,14 +155,7 @@ export function fetchUserWatchedMoviesPreview(
   return fetchCountedUserWatchedMovies(handle, PROFILE_WATCHED_PREVIEW_TAKE, signal);
 }
 
-export interface UserWatchlistItem {
-  tmdbId: number;
-  mediaType: MovieMediaType;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
+export interface UserWatchlistItem extends TitleSummary {
   genreIds: number[];
   createdAt: string;
 }

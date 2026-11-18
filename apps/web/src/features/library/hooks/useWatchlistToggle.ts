@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useTranslation } from '@/shared/i18n';
-import type { MovieMediaType } from '@/shared/types/movie';
+import type { TitleSummary } from '@/shared/types/movie';
+import { toTitleSummary } from '@/shared/utils/titleSummary';
 import {
   useAddToWatchlist,
   useRemoveFromWatchlist,
@@ -9,16 +10,7 @@ import {
 } from '@/features/movies/hooks/useWatchlist';
 import { watchlistItemKey } from '@/features/movies/utils/watchlistItemKey';
 
-export interface WatchlistToggleItem {
-  tmdbId: number;
-  mediaType: MovieMediaType;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
-  genreIds?: number[];
-}
+export type WatchlistToggleItem = TitleSummary;
 
 type WatchlistToggleRef = Pick<WatchlistToggleItem, 'tmdbId' | 'mediaType'>;
 
@@ -45,16 +37,7 @@ export function useWatchlistToggle(enabled: boolean) {
       remove({ tmdbId: item.tmdbId, mediaType: item.mediaType });
       return;
     }
-    add({
-      tmdbId: item.tmdbId,
-      mediaType: item.mediaType,
-      title: item.title,
-      year: item.year,
-      posterPath: item.posterPath,
-      voteAverage: item.voteAverage,
-      runtimeMinutes: item.runtimeMinutes,
-      genreIds: item.genreIds,
-    });
+    add(toTitleSummary(item));
   };
 
   return { has, error, toggle };

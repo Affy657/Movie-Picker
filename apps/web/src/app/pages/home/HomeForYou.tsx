@@ -2,11 +2,11 @@ import { useId, useState } from 'react';
 import { Tabs, TabPanel } from '@/shared/components/Tabs';
 import { useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
-import type { MovieMediaType } from '@/shared/types/movie';
+import type { AddTitleBody, MovieMediaType } from '@/shared/types/movie';
+import { toTitleSummary } from '@/shared/utils/titleSummary';
 import { ROUTES } from '@/app/routes';
 import MoviePreviewRow, { MoviePreviewRail } from '@/features/movies/components/MoviePreviewRow';
 import MovieBrowseCard, {
-  type MovieBrowseCardItem,
   type MovieLibraryActions,
 } from '@/features/movies/components/MovieBrowseCard';
 import { useMovieShowcase } from '@/features/movies/hooks/useMovieShowcase';
@@ -14,16 +14,7 @@ import type { ShowcaseItem, ShowcaseQuery } from '@/features/movies/api/showcase
 import { ShowcaseRowBody } from './HomeShowcaseRow';
 import styles from './HomeShowcaseRow.module.css';
 
-export interface PersonalRowItem {
-  tmdbId: number;
-  mediaType?: MovieMediaType;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
-  genreIds?: number[];
-}
+export type PersonalRowItem = AddTitleBody;
 
 export interface RecommendationSeed {
   tmdbId: number;
@@ -44,19 +35,6 @@ interface Props {
   onSelectShowcase: (item: ShowcaseItem) => void;
 }
 
-function toCardItem(item: PersonalRowItem): MovieBrowseCardItem {
-  return {
-    tmdbId: item.tmdbId,
-    mediaType: item.mediaType ?? 'movie',
-    title: item.title,
-    year: item.year,
-    posterPath: item.posterPath,
-    voteAverage: item.voteAverage,
-    runtimeMinutes: item.runtimeMinutes,
-    genreIds: item.genreIds,
-  };
-}
-
 function PersonalRail({
   items,
   eagerCount,
@@ -73,7 +51,7 @@ function PersonalRail({
   return (
     <MoviePreviewRail size="md" itemCount={items.length}>
       {items.map((item, index) => {
-        const cardItem = toCardItem(item);
+        const cardItem = toTitleSummary(item);
         return (
           <MovieBrowseCard
             key={`${cardItem.tmdbId}|${cardItem.mediaType}`}

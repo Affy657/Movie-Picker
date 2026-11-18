@@ -4,6 +4,7 @@ import { usePageSeo } from '@/shared/hooks/usePageSeo';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { genreLabel } from '@/shared/utils/tmdbGenres';
+import { toTitleSummary } from '@/shared/utils/titleSummary';
 import { ROUTES } from '@/app/routes';
 import { MOVIE_PAGE_CHUNKS } from '@/app/routeChunks';
 import { useHistoryEntryState } from '@/shared/hooks/useHistoryEntryState';
@@ -116,33 +117,13 @@ export default function HomePage() {
     watchlistRow.items.length > 0 || !!seedTmdbId || friendsRow.items.length > 0
   );
 
-  const openPersonalDetails = (item: PersonalRowItem) =>
-    openMoviePage({
-      tmdbId: item.tmdbId,
-      mediaType: item.mediaType ?? 'movie',
-      title: item.title,
-      year: item.year,
-      posterPath: item.posterPath,
-      voteAverage: item.voteAverage,
-      runtimeMinutes: item.runtimeMinutes,
-      genreIds: item.genreIds,
-    });
+  const openPersonalDetails = (item: PersonalRowItem) => openMoviePage(toTitleSummary(item));
 
   const selectedGenreIds = genreTab === 'all' ? undefined : [Number(genreTab)];
   const mostProposed = useMovieShowcase({ section: 'most-proposed' });
   const showMostProposed = !(mostProposed.isSuccess && mostProposed.data.items.length === 0);
 
-  const openDetails = (item: ShowcaseItem) =>
-    openMoviePage({
-      tmdbId: item.id,
-      mediaType: item.mediaType ?? 'movie',
-      title: item.title,
-      year: item.year,
-      posterPath: item.posterPath,
-      voteAverage: item.voteAverage,
-      runtimeMinutes: item.runtimeMinutes,
-      genreIds: item.genreIds,
-    });
+  const openDetails = (item: ShowcaseItem) => openMoviePage(toTitleSummary(item));
 
   return (
     <PageLayout className={styles.home}>

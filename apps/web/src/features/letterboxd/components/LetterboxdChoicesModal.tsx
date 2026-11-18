@@ -9,6 +9,7 @@ import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { formatShortDate } from '@/shared/utils/formatMyEventsListDate';
 import { formatRating } from '@/shared/utils/formatRating';
 import { metaGenresLabel, movieMetaLine } from '@/shared/utils/movieMetaLine';
+import { toTitleSummary } from '@/shared/utils/titleSummary';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import {
   confirmLetterboxdChoices,
@@ -83,8 +84,8 @@ function toWatchedSelection(
   choice: LetterboxdPendingChoice
 ): LetterboxdWatchedSelection {
   return {
-    ...toSelection(candidate, choice.letterboxdSlug),
-    runtimeMinutes: candidate.runtimeMinutes,
+    ...toTitleSummary(candidate),
+    letterboxdSlug: choice.letterboxdSlug,
     rating: choice.rating ?? null,
     watchedOn: choice.watchedOn ?? null,
   };

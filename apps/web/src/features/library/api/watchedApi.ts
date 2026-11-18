@@ -1,6 +1,6 @@
 import { apiPath, fetchApi } from '@/shared/api/client';
 import type { ApiRequestPath, ApiRoute } from '@/shared/api/apiRoutes';
-import type { MovieMediaType } from '@/shared/types/movie';
+import type { MovieMediaType, TitleSummary } from '@/shared/types/movie';
 
 export type WatchedStatusKind = 'none' | 'night' | 'elsewhere';
 
@@ -19,24 +19,12 @@ export interface WatchedTitleRef {
   mediaType: MovieMediaType;
 }
 
-export interface MarkWatchedBody extends WatchedTitleRef {
-  title: string;
-  year: string;
+export interface MarkWatchedBody extends Omit<TitleSummary, 'posterPath'> {
   posterPath?: string | null;
-  genreIds?: number[];
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
   rating?: number | null;
 }
 
-export interface WatchedMovie {
-  tmdbId: number;
-  mediaType: MovieMediaType;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
+export interface WatchedMovie extends TitleSummary {
   genreIds: number[];
   watchedAt: string;
   myRating?: number | null;

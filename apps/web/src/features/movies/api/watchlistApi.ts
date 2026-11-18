@@ -1,15 +1,12 @@
 import { apiPath, fetchApi } from '@/shared/api/client';
-import type { MovieMediaType, WatchProviderOffer } from '@/shared/types/movie';
+import type {
+  AddTitleBody,
+  MovieMediaType,
+  TitleSummary,
+  WatchProviderOffer,
+} from '@/shared/types/movie';
 
-export interface WatchlistItem {
-  tmdbId: number;
-  mediaType: MovieMediaType;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
-  genreIds?: number[];
+export interface WatchlistItem extends TitleSummary {
   createdAt: string;
   onLetterboxd?: boolean;
 }
@@ -56,16 +53,7 @@ export interface WatchlistAvailabilityResponse {
   partial: boolean;
 }
 
-export interface AddWatchlistItemBody {
-  tmdbId: number;
-  mediaType?: MovieMediaType;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
-  genreIds?: number[];
-}
+export type AddWatchlistItemBody = AddTitleBody;
 
 export async function fetchWatchlist(signal?: AbortSignal): Promise<WatchlistItem[]> {
   return readAllWatchlistPages((skip) =>
