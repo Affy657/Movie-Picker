@@ -1,6 +1,6 @@
 /**
- * Replays the CI `lint-terraform` job locally, at the same Terraform version, through the
- * pinned image of `scripts/terraform.mjs`:
+ * The `lint-terraform` gate, run by the CI job and by `verify:local` alike, through the pinned
+ * image of `scripts/terraform.mjs` (Docker is available on the Ubuntu runners):
  *
  *   - `terraform fmt -check -diff -recursive` on the whole `infra/terraform/` tree;
  *   - for every root module of `infra/terraform/environments/`, `init -backend=false
@@ -8,7 +8,8 @@
  *
  * Neither step reaches GCP: the backend is skipped, the working directory is the gate's own
  * (see `isolatedDataDir` in terraform.mjs), and validation only needs the provider schemas,
- * served from the plugin cache after the first run. The lock file is read-only here on
+ * served from the plugin cache after the first run (a CI runner starts with an empty volume and
+ * downloads them once, the second root reads them from the cache). The lock file is read-only here on
  * purpose: a provider bumped in `versions.tf` without its checksums in `.terraform.lock.hcl`
  * would let two machines validate against two different provider builds; the gate refuses it
  * and says which file to regenerate (`pnpm run terraform -- providers lock`).

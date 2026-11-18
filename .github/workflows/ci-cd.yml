@@ -24,12 +24,17 @@
 #     measurement only a deployment consumed; it moved to `deploy.yml` without losing any of its
 #     blocking power.
 #
+# The gates the workstation also runs are called through the same `pnpm run` entry points
+# (`check:static`, `check:workflows`, `check:terraform`, `check:secrets`, `check:audit`,
+# `test:api:mongo`), Docker being available on the runners: each tool is pinned once, in the
+# script that runs it, and the CI cannot drift from what `verify:local` checks.
+#
 # Security hardening:
 #   - Actions pinned by commit SHA (anti supply-chain); the # vX comment lets Dependabot propose updates.
-#   - Docker images (.NET base, gitleaks, MongoDB) pinned by sha256 digest. The tools that no
-#     Dependabot ecosystem follows (gitleaks image, actionlint, zizmor and Trivy binaries,
-#     SonarScanner, the MongoDB image) are listed by `scripts/check-tool-versions.mjs`, run during
-#     the weekly maintenance pass.
+#   - Docker images (gitleaks, actionlint, zizmor, Terraform, Trivy, MongoDB) pinned by sha256
+#     digest in the gate scripts. The tools that no Dependabot ecosystem follows (those images,
+#     SonarScanner) are listed by `scripts/check-tool-versions.mjs`, run during the weekly
+#     maintenance pass.
 #   - Least-privilege permissions (deny by default); checkout with persist-credentials: false.
 #   - Secrets passed through env: (never interpolated directly into a run: block).
 #   - Blocking SonarCloud Quality Gate: a red QG fails the job, hence forbids the deployment.
@@ -60,15 +65,7 @@ concurrency:
 
 env:
   NODE_VERSION: "22"
-  ACTIONLINT_VERSION: "1.7.12"
-  ACTIONLINT_SHA256: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
-  ZIZMOR_VERSION: "1.32.0"
-  ZIZMOR_SHA256: "bb110cc765eca9cd7efb2e284a956be5974c60027b0970f16397d86208a9957b"
-  GITLEAKS_IMAGE: "ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f"
   SONARSCANNER_VERSION: "11.3.0"
-  # Same Terraform as `scripts/terraform.mjs` (image tag) and as `required_version` in the root
-  # modules of `infra/terraform/environments/`: `scripts/check-tool-versions.mjs` compares the three.
-  TERRAFORM_VERSION: "1.16.5"
 
 jobs:
   # Solo project: no external contribution is accepted, the licence forbids it and
@@ -135,8 +132,13 @@ jobs:
               - '.github/actions/**'
             infra:
               - 'infra/terraform/**'
+              - 'scripts/terraform.mjs'
+              - 'scripts/check-terraform.mjs'
               - '.github/workflows/ci-cd.yml'
+              - '.github/actions/setup-web/**'
 
+  # The working tree as checked out, never the history (`scripts/check-secrets.mjs`). pnpm and Node
+  # only, no `node_modules`: the scan reads the same tree as before the gate moved into the script.
   gitleaks:
     name: 🔑 Secret scan (Gitleaks)
     runs-on: ubuntu-24.04
@@ -148,28 +150,27 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-web
+        with:
+          install-dependencies: "false"
       - name: Scan working tree
-        run: |
-          docker run --rm -v "${PWD}:/repo:ro" \
-            "$GITLEAKS_IMAGE" \
-            dir --no-banner --redact --verbose --exit-code 1 /repo
+        run: pnpm run check:secrets
 
   # Workflows are large YAML and bash files that neither check:architecture, nor ESLint, nor
   # Prettier look at: the chain guarding the code was itself guarded by nothing. The gate covers
   # the whole `.github/workflows/`, hence `deploy.yml` too, and it is unconditional like gitleaks:
   # a red master run forbids the deployment.
   #   - actionlint: syntax errors, invalid ${{ }} expressions, inconsistent permissions. It
-  #     delegates `run:` blocks to shellcheck, preinstalled on GitHub runners. It only reads
-  #     workflows, not composite actions.
+  #     delegates `run:` blocks to the shellcheck its image ships. It only reads workflows, not
+  #     composite actions.
   #   - zizmor: security audit of the workflows **and of the composite actions** in
   #     `.github/actions/`, where the web smoke tests, the health probes and the GCP authentication now
   #     live. `medium` threshold: the repository is at 0 medium and 0 high, so the gate is green
   #     today and only catches serious findings (injection from an untrusted context, exposed
   #     secrets). Going down to `low` would mean handling 9 cosmetic findings. `--offline` so that
   #     the gate does not depend on the GitHub API.
-  # `scripts/check-workflows.mjs` replays both tools locally in `verify:local`, through Docker.
-  # The versions on both sides must stay aligned: changing one here without the other makes a
-  # local gate green on what the CI refuses.
+  # Both run from the images pinned by digest in `scripts/check-workflows.mjs`, the script
+  # `verify:local` runs too: one version of each tool, whichever machine checks.
   lint-workflows:
     name: 🧹 Lint workflows (actionlint + zizmor)
     runs-on: ubuntu-24.04
@@ -181,32 +182,22 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: actionlint (+ shellcheck on run blocks)
-        run: |
-          set -eo pipefail
-          curl -sSL --retry 3 --retry-all-errors -o "$RUNNER_TEMP/actionlint.tgz" \
-            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
-          echo "${ACTIONLINT_SHA256}  $RUNNER_TEMP/actionlint.tgz" | sha256sum -c -
-          tar xzf "$RUNNER_TEMP/actionlint.tgz" -C "$RUNNER_TEMP" actionlint
-          "$RUNNER_TEMP/actionlint" -color
-      - name: zizmor (security audit, medium threshold)
-        run: |
-          set -eo pipefail
-          curl -sSL --retry 3 --retry-all-errors -o "$RUNNER_TEMP/zizmor.tgz" \
-            "https://github.com/zizmorcore/zizmor/releases/download/v${ZIZMOR_VERSION}/zizmor-x86_64-unknown-linux-gnu.tar.gz"
-          echo "${ZIZMOR_SHA256}  $RUNNER_TEMP/zizmor.tgz" | sha256sum -c -
-          tar xzf "$RUNNER_TEMP/zizmor.tgz" -C "$RUNNER_TEMP" zizmor
-          "$RUNNER_TEMP/zizmor" --offline --no-progress --min-severity medium --format plain .github/
+      - uses: ./.github/actions/setup-web
+        with:
+          install-dependencies: "false"
+      - name: actionlint (+ shellcheck on run blocks), then zizmor (medium threshold)
+        run: pnpm run check:workflows
 
   # The infrastructure description (`infra/terraform/`, roadmap Terraform lots) is read by nothing
   # else in this workflow: without this job a malformed or invalid root module would only be
   # discovered at the next `plan`. `fmt -check` on the whole tree, then `init -backend=false` and
-  # `validate` on every root module of `infra/terraform/environments/`, discovered by glob so that
-  # a second environment cannot be forgotten. `-lockfile=readonly`: a provider bumped in
+  # `validate` on every root module of `infra/terraform/environments/`, discovered by listing so
+  # that a second environment cannot be forgotten. `-lockfile=readonly`: a provider bumped in
   # `versions.tf` without its checksums in `.terraform.lock.hcl` fails here rather than letting two
   # machines validate against two provider builds. No backend, no credentials: the job never
-  # reaches GCP. `scripts/check-terraform.mjs` replays it locally in `verify:local`, through the
-  # Docker image pinned in `scripts/terraform.mjs`, at the version of `TERRAFORM_VERSION`.
+  # reaches GCP. `scripts/check-terraform.mjs`, the script of `verify:local`, through the image
+  # pinned in `scripts/terraform.mjs`; the providers are downloaded once per run into a Docker
+  # volume, no GHA cache.
   lint-terraform:
     name: 🧹 Lint Terraform (fmt + validate)
     needs: changes
@@ -215,35 +206,15 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
-    env:
-      TF_IN_AUTOMATION: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+      - uses: ./.github/actions/setup-web
         with:
-          terraform_version: ${{ env.TERRAFORM_VERSION }}
-          terraform_wrapper: false
-      - name: Provider cache directory
-        run: |
-          mkdir -p "$HOME/.terraform.d/plugin-cache"
-          echo "TF_PLUGIN_CACHE_DIR=$HOME/.terraform.d/plugin-cache" >> "$GITHUB_ENV"
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.terraform.d/plugin-cache
-          key: terraform-providers-${{ runner.os }}-${{ hashFiles('infra/terraform/**/.terraform.lock.hcl') }}
-      - name: terraform fmt
-        run: terraform fmt -check -diff -recursive infra/terraform
-      - name: terraform validate (every root module)
-        run: |
-          set -eo pipefail
-          for root in infra/terraform/environments/*/; do
-            echo "::group::${root}"
-            terraform -chdir="$root" init -backend=false -input=false -lockfile=readonly -no-color
-            terraform -chdir="$root" validate -no-color
-            echo "::endgroup::"
-          done
+          install-dependencies: "false"
+      - name: terraform fmt, then init + validate on every root module
+        run: pnpm run check:terraform
 
   # `check:static` is the one list of the static gates: architecture rules, script tests, `tsc`,
   # ESLint, Prettier, knip. The pre-push hook and `verify:local` run the same script.
@@ -288,10 +259,7 @@ jobs:
       # `whitespace`). The analyser pass of the full `dotnet format` is left out: it replays the
       # analysers the build below already runs with `-warnaserror`, for more than half the time.
       - name: dotnet format whitespace + style (verify, roadmap § 31)
-        run: |
-          set -eo pipefail
-          dotnet format whitespace apps/api-dotnet/MoviePicker.slnx --verify-no-changes --verbosity minimal
-          dotnet format style apps/api-dotnet/MoviePicker.slnx --verify-no-changes --no-restore --verbosity minimal
+        run: pnpm run format:dotnet:check
       - name: Build API .NET (warnings → errors)
         run: dotnet build apps/api-dotnet/MoviePicker.slnx -c Release --no-restore -warnaserror
       - name: Export OpenAPI (artifact, roadmap § 32)
@@ -320,34 +288,17 @@ jobs:
         with:
           persist-credentials: false
       # Same split as the image gate of `deploy.yml`, because `ignore-unfixed` applies to every
-      # severity of a step: a HIGH blocks once a fix is published, a CRITICAL blocks with or
-      # without one. The binary and the database do not come from the GHA cache, which the jobs
+      # severity of a pass: a HIGH blocks once a fix is published, a CRITICAL blocks with or
+      # without one. `scripts/check-audit.mjs`, the script of `verify:local`: Trivy from its image
+      # pinned by digest, its database in a Docker volume, never in the GHA cache, which the jobs
       # running the code of the lockfile can write: a poisoned entry would blind this gate.
-      - uses: ./.github/actions/install-trivy
+      - uses: ./.github/actions/setup-web
         if: needs.changes.outputs.web == 'true'
-      - name: npm audit (Trivy, HIGH with a fix; pnpm audit unavailable since the npm endpoint was removed on 2026-07-15, see pnpm/pnpm#11265)
-        if: needs.changes.outputs.web == 'true'
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          scan-type: fs
-          scan-ref: pnpm-lock.yaml
-          scanners: vuln
-          severity: HIGH
-          exit-code: "1"
-          ignore-unfixed: true
-          cache: false
-          skip-setup-trivy: true
-      - name: npm audit (Trivy, every CRITICAL)
+          install-dependencies: "false"
+      - name: npm audit (Trivy on pnpm-lock.yaml, HIGH with a fix, then every CRITICAL)
         if: needs.changes.outputs.web == 'true'
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          scan-type: fs
-          scan-ref: pnpm-lock.yaml
-          scanners: vuln
-          severity: CRITICAL
-          exit-code: "1"
-          cache: false
-          skip-setup-trivy: true
+        run: pnpm run check:audit
       - uses: ./.github/actions/setup-dotnet-cache
         if: needs.changes.outputs.api == 'true'
       - name: Restore API .NET (for the NuGet audit)

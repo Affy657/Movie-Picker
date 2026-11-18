@@ -12,7 +12,10 @@
  * added without this script knowing shows up as `unreadable`, not as a silent pass.
  *
  * `behind`: a newer version exists. `mismatch`: two files pin different versions of the same
- * tool, the local gate and the CI no longer check the same thing. Exit code 1 on either.
+ * tool. The CI jobs run the same gate scripts as the workstation, so most tools have a single pin;
+ * only the ones that two different runners need stay pinned twice or more (Trivy for the lockfile
+ * audit and the image scan of `deploy.yml`, Terraform for the gate and for `infra.yml`, sentry-cli
+ * for the deployment and the rollback). Exit code 1 on either.
  */
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
@@ -94,26 +97,17 @@ const tools = [
   },
   {
     name: 'actionlint',
-    pins: [
-      { file: '.github/workflows/ci-cd.yml', pattern: /ACTIONLINT_VERSION: "([^"]+)"/ },
-      { file: 'scripts/check-workflows.mjs', pattern: /rhysd\/actionlint:([^@']+)@/ },
-    ],
+    pins: [{ file: 'scripts/check-workflows.mjs', pattern: /rhysd\/actionlint:([^@']+)@/ }],
     latest: () => latestGithubRelease('rhysd/actionlint'),
   },
   {
     name: 'zizmor',
-    pins: [
-      { file: '.github/workflows/ci-cd.yml', pattern: /ZIZMOR_VERSION: "([^"]+)"/ },
-      { file: 'scripts/check-workflows.mjs', pattern: /zizmorcore\/zizmor:([^@']+)@/ },
-    ],
+    pins: [{ file: 'scripts/check-workflows.mjs', pattern: /zizmorcore\/zizmor:([^@']+)@/ }],
     latest: () => latestGithubRelease('zizmorcore/zizmor'),
   },
   {
     name: 'gitleaks',
-    pins: [
-      { file: '.github/workflows/ci-cd.yml', pattern: /gitleaks\/gitleaks:v([^@"]+)@/ },
-      { file: 'scripts/verify-local.cjs', pattern: /gitleaks\/gitleaks:v([^@']+)@/ },
-    ],
+    pins: [{ file: 'scripts/check-secrets.mjs', pattern: /gitleaks\/gitleaks:v([^@']+)@/ }],
     latest: () => latestGithubRelease('gitleaks/gitleaks'),
   },
   {
@@ -143,8 +137,9 @@ const tools = [
     pins: [{ file: 'scripts/mongo-replica-set.mjs', pattern: /'mongo:8@(sha256:[0-9a-f]+)'/ }],
     latest: () => dockerHubDigest('library/mongo', '8'),
   },
-  // The binary the workflows install (`skip-setup-trivy` on every `trivy-action` step) and the
-  // image of the local gate: the default version of the action is never used.
+  // The binary `deploy.yml` installs for its image scan (`skip-setup-trivy` on every
+  // `trivy-action` step) and the image of the lockfile audit, run by the CI and the workstation:
+  // the default version of the action is never used.
   {
     name: 'trivy',
     pins: [
@@ -152,16 +147,16 @@ const tools = [
         file: '.github/actions/install-trivy/action.yml',
         pattern: /AQUA_TRIVY_VERSION: "([^"]+)"/,
       },
-      { file: 'scripts/verify-local.cjs', pattern: /aquasec\/trivy:([^@']+)@/ },
+      { file: 'scripts/check-audit.mjs', pattern: /aquasec\/trivy:([^@']+)@/ },
     ],
     latest: () => latestGithubRelease('aquasecurity/trivy'),
   },
-  // The providers are Dependabot's (terraform ecosystem); the binary is pinned in four places,
-  // the two workflows, the local image and every root module, which must agree.
+  // The providers are Dependabot's (terraform ecosystem); the binary is pinned in three places,
+  // the `infra.yml` workflow that plans and applies, the image of the gate and of
+  // `pnpm run terraform`, and every root module, which must agree.
   {
     name: 'terraform',
     pins: [
-      { file: '.github/workflows/ci-cd.yml', pattern: /TERRAFORM_VERSION: "([^"]+)"/ },
       { file: '.github/workflows/infra.yml', pattern: /TERRAFORM_VERSION: "([^"]+)"/ },
       { file: 'scripts/terraform.mjs', pattern: /hashicorp\/terraform:([^@']+)@/ },
       ...listRoots().map((rootName) => ({
