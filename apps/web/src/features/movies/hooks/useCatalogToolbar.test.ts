@@ -2,9 +2,10 @@ import { createElement, StrictMode, type ReactNode } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { useMovieListToolbar, type MovieListItemLike } from './useMovieListToolbar';
+import type { TitleSummary } from '@/shared/types/movie';
+import { useCatalogToolbar } from './useCatalogToolbar';
 
-type WatchedItem = MovieListItemLike & { watchedAt: string };
+type WatchedItem = TitleSummary & { watchedAt: string };
 
 const MEDIA_TYPE_LABELS = { movie: 'Films', tv: 'Séries' };
 
@@ -59,16 +60,16 @@ function StrictListEntry({ children }: Readonly<{ children: ReactNode }>) {
 }
 
 function setup(items: WatchedItem[] = ITEMS) {
-  return renderHook(() => useMovieListToolbar({ items, ...OPTIONS }), { wrapper: ListEntry });
+  return renderHook(() => useCatalogToolbar({ items, ...OPTIONS }), { wrapper: ListEntry });
 }
 
 function setupStrict(items: WatchedItem[] = ITEMS) {
-  return renderHook(() => useMovieListToolbar({ items, ...OPTIONS }), {
+  return renderHook(() => useCatalogToolbar({ items, ...OPTIONS }), {
     wrapper: StrictListEntry,
   });
 }
 
-describe('useMovieListToolbar', () => {
+describe('useCatalogToolbar', () => {
   afterEach(() => {
     sessionStorage.clear();
   });
@@ -221,7 +222,7 @@ describe('useMovieListToolbar', () => {
     act(() => first.result.current.toggleMediaType('tv'));
     first.unmount();
 
-    const { result } = renderHook(() => useMovieListToolbar({ items: ITEMS, ...OPTIONS }), {
+    const { result } = renderHook(() => useCatalogToolbar({ items: ITEMS, ...OPTIONS }), {
       wrapper: FreshEntry,
     });
 

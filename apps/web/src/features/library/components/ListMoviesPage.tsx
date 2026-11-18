@@ -10,11 +10,9 @@ import { Skeleton } from '@/shared/components/Skeleton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import ViewModeToggle, { type MovieViewMode } from '@/shared/components/ViewModeToggle';
 import { useLocale, useTranslation, type Translate, type TranslationKey } from '@/shared/i18n';
-import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
-import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useHistoryEntryState } from '@/shared/hooks/useHistoryEntryState';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { randomIndex } from '@/shared/utils/random';
@@ -24,13 +22,8 @@ import { MOVIE_PAGE_CHUNKS } from '@/app/routeChunks';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import AddMoviePanel from '@/features/movies/components/AddMoviePanel';
 import type { AddMovieFormProps } from '@/features/movies/components/AddMovieForm';
-import ActiveFilterChips from '@/features/movies/components/ActiveFilterChips';
-import FilteredCollectionLayout, {
-  FilterSheet,
-  FilteredEmptyState,
-  toCollectionToolbarProps,
-} from '@/features/movies/components/FilteredCollectionLayout';
-import MovieListFiltersPanel from '@/features/movies/components/MovieListFiltersPanel';
+import { toCollectionToolbarProps } from '@/features/movies/components/FilteredCollectionLayout';
+import MovieListFilteredLayout from '@/features/movies/components/MovieListFilteredLayout';
 import MovieBrowseCard, {
   type MovieAvailability,
 } from '@/features/movies/components/MovieBrowseCard';
@@ -40,13 +33,14 @@ import { MovieTable } from '@/features/movies/components/MovieTable';
 import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
 import { watchlistItemKey as itemKey } from '@/features/movies/utils/watchlistItemKey';
 import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
+import type { ToolbarExtraFilter } from '@/features/movies/hooks/useCollectionToolbar';
 import type { WatchlistToggleItem } from '@/features/library/hooks/useWatchlistToggle';
 import {
-  useWatchlistToolbar,
-  type ToolbarExtraFilter,
+  useLibraryToolbar,
+  type LibraryEntry,
   type ToolbarStorageScope,
-  type WatchlistEntry,
-} from '@/features/library/hooks/useWatchlistToolbar';
+} from '@/features/library/hooks/useLibraryToolbar';
+import { useDimWatched } from '@/features/library/hooks/useDimWatched';
 import WatchlistToolbar, {
   watchlistRowSorts,
   type WatchlistSortConfig,
@@ -69,46 +63,8 @@ function readStoredViewMode(): MovieViewMode {
   return safeLocalStorageGet(VIEW_MODE_STORAGE_KEY) === 'list' ? 'list' : 'grid';
 }
 
-type Toolbar = ReturnType<typeof useWatchlistToolbar>;
-
-function ListFiltersPanel({
-  panelId,
-  tmdbLanguage,
-  labels,
-  ratingScale,
-  toolbar,
-  isMobile,
-}: Readonly<{
-  panelId: string;
-  tmdbLanguage: string;
-  labels: Parameters<typeof MovieListFiltersPanel>[0]['labels'];
-  ratingScale: Parameters<typeof MovieListFiltersPanel>[0]['ratingScale'];
-  toolbar: Toolbar;
-  isMobile: boolean;
-}>) {
-  return (
-    <MovieListFiltersPanel
-      panelId={panelId}
-      tmdbLanguage={tmdbLanguage}
-      labels={labels}
-      ratingScale={ratingScale}
-      selectedGenres={toolbar.selectedGenres}
-      onToggleGenre={toolbar.toggleGenre}
-      selectedMediaTypes={toolbar.selectedMediaTypes}
-      onToggleMediaType={toolbar.toggleMediaType}
-      selectedDecade={toolbar.selectedDecade}
-      onToggleDecade={toolbar.toggleDecade}
-      voteMin={toolbar.voteMin}
-      onToggleVoteMin={toolbar.toggleVoteMin}
-      runtimeRange={toolbar.runtimeRange}
-      onChangeRuntimeRange={toolbar.changeRuntimeRange}
-      onReset={isMobile ? undefined : toolbar.clearAllFilters}
-    />
-  );
-}
-
 interface RandomPick {
-  items: WatchlistEntry[];
+  items: LibraryEntry[];
   scope: RandomPickScope;
 }
 
@@ -130,7 +86,7 @@ function isOpenRandomPick(value: unknown): value is OpenRandomPick | null {
   );
 }
 
-function entryKey(entry: WatchlistEntry): string {
+function entryKey(entry: LibraryEntry): string {
   return itemKey(entry.tmdbId, entry.mediaType);
 }
 
@@ -149,7 +105,7 @@ function RandomPickButton({
   compact,
   onOpen,
 }: Readonly<{
-  toolbar: Toolbar;
+  toolbar: { visibleItems: LibraryEntry[]; isFiltered: boolean };
   compact: boolean;
   onOpen: (pick: RandomPick) => void;
 }>) {
@@ -258,7 +214,7 @@ function PageTitle({
 }
 
 function availabilityOf(
-  entry: WatchlistEntry,
+  entry: LibraryEntry,
   availabilityPending: boolean | undefined
 ): MovieAvailability | undefined {
   if (availabilityPending === undefined) return undefined;
@@ -290,23 +246,23 @@ interface ListMoviesLabels {
   emptyMessage: string;
 }
 
-interface ListMoviesCardActions {
-  inWatchlist: (entry: WatchlistEntry) => boolean;
+export interface ListMoviesCardActions<T extends LibraryEntry> {
+  inWatchlist: (entry: T) => boolean;
   showListBadge: boolean;
-  onToggleWatchlist: (entry: WatchlistEntry) => void;
-  onRemoveFromList?: (entry: WatchlistEntry) => void;
-  canRemove?: (entry: WatchlistEntry) => boolean;
+  onToggleWatchlist: (entry: T) => void;
+  onRemoveFromList?: (entry: T) => void;
+  canRemove?: (entry: T) => boolean;
   removeLabels?: { label: string; ariaLabel: (title: string) => string };
-  leadingBadge?: (entry: WatchlistEntry) => ReactNode;
-  isWatched?: (entry: WatchlistEntry) => boolean;
+  leadingBadge?: (entry: T) => ReactNode;
+  isWatched?: (entry: T) => boolean;
   contributor?: {
     columnLabel: string;
-    of: (entry: WatchlistEntry) => MovieContributor | null;
+    of: (entry: T) => MovieContributor | null;
   };
   error: string | null;
 }
 
-interface ListMoviesHeaderSlots {
+export interface ListMoviesHeaderSlots {
   back?: { to: string; label: string };
   overline?: ReactNode;
   leading?: (layout: { isMobile: boolean; hasItems: boolean }) => ReactNode;
@@ -318,10 +274,9 @@ interface ListMoviesHeaderSlots {
   badge?: ReactNode;
 }
 
-interface ListMoviesToolbarOptions {
+interface ListMoviesToolbarOptions<T extends LibraryEntry> {
   sorts?: WatchlistSortConfig;
-  scopeFilter?: ToolbarExtraFilter & { control?: ReactNode };
-  dimWatched?: DimWatchedOption;
+  scopeFilter?: ToolbarExtraFilter<T> & { control?: ReactNode };
   banner?: ReactNode;
 }
 
@@ -403,11 +358,11 @@ function ToolbarTrailing({
   );
 }
 
-interface ListMoviesPageProps {
+interface ListMoviesPageProps<T extends LibraryEntry> {
   title: string | null;
   subtitle: string | null;
   description?: string | null;
-  items: WatchlistEntry[];
+  items: T[];
   isLoading: boolean;
   isError: boolean;
   availabilityPending?: boolean;
@@ -418,14 +373,13 @@ interface ListMoviesPageProps {
   emptyIcon: ReactNode;
   emptyActions?: ReactNode;
   header?: ListMoviesHeaderSlots;
-  toolbarOptions?: ListMoviesToolbarOptions;
-  card: ListMoviesCardActions;
+  toolbarOptions?: ListMoviesToolbarOptions<T>;
+  card: ListMoviesCardActions<T>;
   onAddItem?: AddMovieFormProps['onAddItem'];
-  isItemAlreadyAdded?: NonNullable<AddMovieFormProps['isItemAlreadyAdded']>;
   children?: ReactNode;
 }
 
-export default function ListMoviesPage({
+export default function ListMoviesPage<T extends LibraryEntry>({
   title,
   subtitle,
   description,
@@ -443,9 +397,8 @@ export default function ListMoviesPage({
   toolbarOptions,
   card,
   onAddItem,
-  isItemAlreadyAdded,
   children,
-}: Readonly<ListMoviesPageProps>) {
+}: Readonly<ListMoviesPageProps<T>>) {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
   const { user, isLoading: authLoading } = useAuth();
@@ -483,7 +436,7 @@ export default function ListMoviesPage({
     [randomPickItems.length, drawnIndex]
   );
   const openMoviePage = useOpenMoviePage();
-  const openDrawnMoviePage = (item: WatchlistEntry) => {
+  const openDrawnMoviePage = (item: LibraryEntry) => {
     setRandomPick((current) => current && { ...current, drawnKey: entryKey(item) });
     openMoviePage(item);
   };
@@ -495,7 +448,12 @@ export default function ListMoviesPage({
     safeLocalStorageSet(VIEW_MODE_STORAGE_KEY, mode);
   };
   const addButtonRef = useRef<HTMLButtonElement>(null);
-  const filtersPanelRef = useRef<HTMLDivElement>(null);
+  const dim = useDimWatched();
+  const isWatched = card.isWatched;
+  const dimWatched: DimWatchedOption | undefined = isWatched
+    ? { enabled: dim.enabled, onChange: dim.change }
+    : undefined;
+  const error = card.error ?? (isWatched ? dim.error : null);
 
   const mediaTypeLabels = useMemo(
     () => ({
@@ -505,23 +463,7 @@ export default function ListMoviesPage({
     [t]
   );
 
-  const filtersLabels = useMemo(
-    () => ({
-      genre: t('watchlist.toolbar.filterGenre'),
-      type: t('watchlist.toolbar.filterType'),
-      typeMovie: t('watchlist.toolbar.filterTypeMovie'),
-      typeTv: t('watchlist.toolbar.filterTypeTv'),
-      decade: t('watchlist.toolbar.filterDecade'),
-      voteMin: t('watchlist.toolbar.filterVoteMin'),
-      duration: t('watchlist.toolbar.filterDuration'),
-      durationMinAria: t('movies.search.durationMinAria'),
-      durationMaxAria: t('movies.search.durationMaxAria'),
-      resetAll: t('watchlist.toolbar.filtersResetAll'),
-    }),
-    [t]
-  );
-
-  const toolbar = useWatchlistToolbar({
+  const toolbar = useLibraryToolbar({
     items,
     userId: user?.userId,
     tmdbLanguage,
@@ -532,31 +474,16 @@ export default function ListMoviesPage({
     extraFilter: toolbarOptions?.scopeFilter,
     defaultSortBy: toolbarOptions?.sorts?.defaultKey,
   });
-  useClickOutside(
-    filtersPanelRef,
-    () => toolbar.setFiltersOpen(false),
-    toolbar.filtersOpen && !isMobile,
-    { ignoreSelector: '[data-filters-toggle]' }
-  );
 
   const activeFilterCount = toolbar.activeFilterChips.length;
-  const filtersPanel = (
-    <ListFiltersPanel
-      panelId={filtersPanelId}
-      tmdbLanguage={tmdbLanguage}
-      labels={filtersLabels}
-      ratingScale={user?.ratingScale}
-      toolbar={toolbar}
-      isMobile={isMobile}
-    />
-  );
   const openAddPanel = () => setAddPanelOpen(true);
   const listView = viewMode === 'list';
   const withAvailability = availabilityPending !== undefined;
   const searchPlaceholder = (isMobile && labels.searchPlaceholderShort) || labels.searchPlaceholder;
   const addLabel = addTriggerLabel(labels, isMobile, t);
-  const dimWatched = !!toolbarOptions?.dimWatched?.enabled;
-  const renderItem = (item: WatchlistEntry, index: number) => {
+  const isItemAlreadyAdded = (item: Parameters<AddMovieFormProps['onAddItem']>[0]) =>
+    entriesByKey.has(itemKey(item.id, item.mediaType));
+  const renderItem = (item: T, index: number) => {
     const removeFromList = card.onRemoveFromList;
     const removable = !!removeFromList && (card.canRemove?.(item) ?? true);
     return (
@@ -571,7 +498,7 @@ export default function ListMoviesPage({
         inWatchlist={card.inWatchlist(item)}
         showListBadge={card.showListBadge}
         eager={listView && index < 3}
-        dimmed={dimWatched && !!card.isWatched?.(item)}
+        dimmed={!!dimWatched?.enabled && !!isWatched?.(item)}
         leadingBadge={card.leadingBadge?.(item)}
         contributor={card.contributor?.of(item)}
         withContributor={!!card.contributor}
@@ -638,9 +565,9 @@ export default function ListMoviesPage({
       <section className="section">
         <h2 className="visually-hidden">{labels.listAria}</h2>
 
-        {card.error ? (
+        {error ? (
           <p className="error" role="alert">
-            {card.error}
+            {error}
           </p>
         ) : null}
 
@@ -659,7 +586,7 @@ export default function ListMoviesPage({
           />
         )}
         {!isLoading && !isError && items.length > 0 && (
-          <FilteredCollectionLayout
+          <MovieListFilteredLayout
             toolbar={
               <>
                 {toolbarOptions?.banner}
@@ -679,56 +606,19 @@ export default function ListMoviesPage({
                     <ToolbarTrailing
                       viewMode={viewMode}
                       onChangeViewMode={changeViewMode}
-                      dimWatched={toolbarOptions?.dimWatched}
+                      dimWatched={dimWatched}
                       isMobile={isMobile}
                     />
                   }
                 />
               </>
             }
-            desktopFilters={
-              toolbar.filtersOpen && !isMobile ? (
-                <div ref={filtersPanelRef}>{filtersPanel}</div>
-              ) : null
-            }
-            chips={
-              activeFilterCount > 0 ? (
-                <ActiveFilterChips
-                  chips={toolbar.activeFilterChips}
-                  groupAriaLabel={t('watchlist.filter.toggleAria')}
-                  removeAriaLabel={t('watchlist.toolbar.removeFilterAria')}
-                />
-              ) : null
-            }
-            mobileSheet={
-              isMobile ? (
-                <FilterSheet
-                  open={toolbar.filtersOpen}
-                  title={t('watchlist.toolbar.filtersSheetTitle')}
-                  onClose={() => toolbar.setFiltersOpen(false)}
-                  resetLabel={t('watchlist.toolbar.filtersReset')}
-                  applyLabel={pluralizeCount(
-                    toolbar.visibleCount,
-                    'watchlist.toolbar.filtersApplyOne',
-                    'watchlist.toolbar.filtersApply',
-                    t
-                  )}
-                  onReset={toolbar.clearAllFilters}
-                >
-                  {filtersPanel}
-                </FilterSheet>
-              ) : null
-            }
-            emptyFiltered={
-              toolbar.visibleItems.length === 0 ? (
-                <FilteredEmptyState
-                  title={t('watchlist.toolbar.emptyTitle')}
-                  message={t('watchlist.toolbar.emptyMessage')}
-                  resetLabel={t('watchlist.toolbar.filtersResetAll')}
-                  onReset={toolbar.resetAll}
-                />
-              ) : null
-            }
+            filters={toolbar}
+            filtersPanelId={filtersPanelId}
+            tmdbLanguage={tmdbLanguage}
+            ratingScale={user?.ratingScale}
+            isMobile={isMobile}
+            texts="library"
           >
             {listView ? (
               <MovieTable
@@ -752,7 +642,7 @@ export default function ListMoviesPage({
                 {toolbar.visibleItems.map((item, index) => renderItem(item, index))}
               </ul>
             )}
-          </FilteredCollectionLayout>
+          </MovieListFilteredLayout>
         )}
       </section>
 

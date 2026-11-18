@@ -18,7 +18,6 @@ import ListActionsMenu from '@/features/library/components/ListActionsMenu';
 import ListMoviesPage from '@/features/library/components/ListMoviesPage';
 import type { WatchlistSortConfig } from '@/features/library/components/WatchlistToolbar';
 import { useWatchlistToggle } from '@/features/library/hooks/useWatchlistToggle';
-import { useDimWatched } from '@/features/library/hooks/useDimWatched';
 import type { ListCreator } from '@/features/library/api/listsApi';
 import type { PublicListDetail } from '@/features/library/api/publicListsApi';
 import type { SavedListSource } from '@/features/library/api/savedListsApi';
@@ -258,7 +257,6 @@ export default function PublicListPage() {
   );
   const savedToggle = useSavedListToggle(source, isSignedIn && !list?.viewerRole);
   const watchlistToggle = useWatchlistToggle(isSignedIn);
-  const dim = useDimWatched();
   const [copyOpen, setCopyOpen] = useState(false);
 
   const { items, watchedCount, isWatched } = useListItemsView(list);
@@ -305,16 +303,13 @@ export default function PublicListPage() {
         onCopy: () => setCopyOpen(true),
         t,
       })}
-      toolbarOptions={{
-        sorts,
-        dimWatched: isSignedIn ? { enabled: dim.enabled, onChange: dim.change } : undefined,
-      }}
+      toolbarOptions={{ sorts }}
       card={{
         inWatchlist: (entry) => watchlistToggle.has(entry),
-        isWatched,
+        isWatched: isSignedIn ? isWatched : undefined,
         showListBadge: true,
         onToggleWatchlist: (entry) => watchlistToggle.toggle(entry),
-        error: savedToggle.error ?? dim.error ?? watchlistToggle.error,
+        error: savedToggle.error ?? watchlistToggle.error,
       }}
     >
       {copyOpen && list ? (

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createElement, type ReactNode } from 'react';
 import { MemoryRouter } from 'react-router';
 import { renderHook, act } from '@testing-library/react';
-import { useWatchlistToolbar, type WatchlistEntry } from './useWatchlistToolbar';
+import { useLibraryToolbar, type LibraryEntry } from './useLibraryToolbar';
 import type { WatchlistItem } from '@/features/movies/api/watchlistApi';
 
 const MEDIA_TYPE_LABELS = { movie: 'Films', tv: 'Séries' };
@@ -46,10 +46,10 @@ const ITEMS: WatchlistItem[] = [
   item({ tmdbId: 3, title: 'Gamma', year: '2010', voteAverage: 6, runtimeMinutes: 100 }),
 ];
 
-function setup(items: WatchlistEntry[] = ITEMS) {
+function setup(items: LibraryEntry[] = ITEMS) {
   return renderHook(
     () =>
-      useWatchlistToolbar({
+      useLibraryToolbar({
         items,
         userId: 'u1',
         tmdbLanguage: 'fr',
@@ -68,7 +68,7 @@ afterEach(() => {
   localStorage.clear();
 });
 
-describe('useWatchlistToolbar', () => {
+describe('useLibraryToolbar', () => {
   it('sorts by addition (default, descending)', () => {
     const { result } = setup();
     expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Beta', 'Gamma', 'Alpha']);
@@ -112,7 +112,7 @@ describe('useWatchlistToolbar', () => {
   it('keeps the order of the source by relevance, the default of a saved list, and reverses it on demand', () => {
     const { result } = renderHook(
       () =>
-        useWatchlistToolbar({
+        useLibraryToolbar({
           items: ITEMS,
           userId: 'u1',
           tmdbLanguage: 'fr',
@@ -161,7 +161,7 @@ describe('useWatchlistToolbar', () => {
 
   it('ne borne pas la duree maximum quand seul le minimum est touche', () => {
     const { result } = setup();
-    act(() => result.current.changeRuntimeRange(5, 180));
+    act(() => result.current.changeRuntimeRange?.(5, 180));
     expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Beta', 'Gamma', 'Alpha']);
     const chip = result.current.activeFilterChips.find((c) => c.key === 'runtime');
     expect(chip?.label).toBe('5min ou plus');
@@ -169,7 +169,7 @@ describe('useWatchlistToolbar', () => {
 
   it('ne borne pas la duree minimum quand seul le maximum est touche', () => {
     const { result } = setup();
-    act(() => result.current.changeRuntimeRange(0, 90));
+    act(() => result.current.changeRuntimeRange?.(0, 90));
     expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Alpha']);
     const chip = result.current.activeFilterChips.find((c) => c.key === 'runtime');
     expect(chip?.label).toBe('1h30 ou moins');
@@ -220,7 +220,7 @@ describe('useWatchlistToolbar', () => {
 
     const createdList = renderHook(
       () =>
-        useWatchlistToolbar({
+        useLibraryToolbar({
           items: ITEMS,
           userId: 'u1',
           tmdbLanguage: 'fr',
@@ -241,7 +241,7 @@ describe('useWatchlistToolbar', () => {
       const renderList = (storageListId: string) =>
         renderHook(
           () =>
-            useWatchlistToolbar({
+            useLibraryToolbar({
               items: ITEMS,
               userId: 'u1',
               tmdbLanguage: 'fr',
@@ -270,7 +270,7 @@ describe('useWatchlistToolbar', () => {
     let resets = 0;
     const { result, rerender } = renderHook(
       () =>
-        useWatchlistToolbar({
+        useLibraryToolbar({
           items: ITEMS,
           userId: 'u1',
           tmdbLanguage: 'fr',

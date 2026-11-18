@@ -519,15 +519,6 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - piege: l'adaptateur InMemory doit suivre la même forme, et `test:api:mongo` est le seul à exécuter l'agrégation
 - fini-quand: la lecture d'une page de Mes soirées ne dépend plus du nombre de films ni de participants des soirées
 
-## DEBT-091 le cadre des pages de liste vit dans `watchlist` et ne connaît que `WatchlistEntry`
-
-- state: agent
-- impact: Mes listes, Films vus, les listes enregistrées et publiques importent leur cadre de page depuis `features/watchlist`, typé sur `WatchlistEntry`. Chaque page reconstruit donc une table par clé pour relire ses propres champs (films vus, « ajouté par », origine et note des films vus), câble à la main « Griser les vus » (`useDimWatched`, options de la barre, `isWatched`, erreur), et la colonne « ajouté par » passe par deux booléens séparés entre l'en-tête et les lignes, avec la grille CSS recopiée. Chaque nouveau champ par film ajoute une table de plus, et une page qui oublie l'erreur de « Griser les vus » la masque.
-- ou: `apps/web/src/features/watchlist/components/ListMoviesPage.tsx`, `features/watchlist/hooks/useWatchlistToolbar.ts`, `features/lists/pages/*ListPage.tsx`, `features/watched/pages/WatchedMoviesPage.tsx`, `app/pages/ShowcaseListPage.tsx`, `features/movies/components/LibraryMovieRow.tsx` et son `.module.css`
-- verify: `grep -n "items: WatchlistEntry\[\]" apps/web/src/features/watchlist/components/ListMoviesPage.tsx`
-- fix: `ListMoviesPage<T extends WatchlistEntry>`, `useWatchlistToolbar<T>` et leurs callbacks génériques ; la page porte « Griser les vus » dès qu'elle reçoit `isWatched` ; la table définit ses colonnes une fois ; le cadre part dans un module neutre dont dépendent `watchlist`, `watched` et `lists` (règles de `scripts/check-architecture.mjs` à suivre)
-- fini-quand: plus de table par clé dans les pages de liste, et `lists` comme `watched` n'importent plus rien de `watchlist`
-
 ## DEBT-092 le rapport de synchronisation Letterboxd double chaque champ par liste
 
 - state: agent

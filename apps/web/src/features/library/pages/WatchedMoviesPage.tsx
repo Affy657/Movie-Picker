@@ -1,4 +1,4 @@
-import { useMemo, useState, type ComponentProps, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Clapperboard, Eye } from 'lucide-react';
 import SegmentedRadioGroup from '@/shared/components/SegmentedRadioGroup';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -11,17 +11,15 @@ import type { RatingScale } from '@/shared/types/theme';
 import { ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { syncsWithLetterboxd } from '@/features/auth/utils/letterboxdSync';
-import { watchlistItemKey as itemKey } from '@/features/movies/utils/watchlistItemKey';
+import type { ToolbarExtraFilter } from '@/features/movies/hooks/useCollectionToolbar';
 import OwnerRatingBadge, { ProfileCardBadge } from '@/features/movies/components/OwnerRatingBadge';
-import ListMoviesPage from '@/features/library/components/ListMoviesPage';
+import ListMoviesPage, {
+  type ListMoviesCardActions,
+} from '@/features/library/components/ListMoviesPage';
 import type { WatchlistSortConfig } from '@/features/library/components/WatchlistToolbar';
 import { useWatchlistToggle } from '@/features/library/hooks/useWatchlistToggle';
 import { useCollectionVisibility } from '@/features/library/hooks/useCollectionVisibility';
 import CollectionVisibilityMenu from '@/features/library/components/CollectionVisibilityMenu';
-import type {
-  ToolbarExtraFilter,
-  WatchlistEntry,
-} from '@/features/library/hooks/useWatchlistToolbar';
 import type { WatchedMovie, WatchedSource } from '@/features/library/api/watchedApi';
 import {
   useMarkWatched,
@@ -32,18 +30,16 @@ import { watchedCountLabel } from '@/features/library/utils/watchedCount';
 
 type SourceScope = 'all' | WatchedSource;
 
+type WatchedEntry = WatchedMovie & { createdAt: string };
+
 const NO_MOVIES: WatchedMovie[] = [];
 
-function toEntry(movie: WatchedMovie): WatchlistEntry {
+function toEntry(movie: WatchedMovie): WatchedEntry {
   return { ...movie, createdAt: movie.watchedAt };
 }
 
-function WatchedBadges({
-  movie,
-  scale,
-}: Readonly<{ movie: WatchedMovie | undefined; scale: RatingScale }>) {
+function WatchedBadges({ movie, scale }: Readonly<{ movie: WatchedMovie; scale: RatingScale }>) {
   const { t } = useTranslation();
-  if (!movie) return null;
   const rated = movie.myRating != null;
   const night = movie.source === 'night';
   if (!rated && !night) return null;
@@ -62,13 +58,10 @@ function WatchedBadges({
   );
 }
 
-type ListMoviesCard = ComponentProps<typeof ListMoviesPage>['card'];
-
 function watchedBadgesSlot(
-  movieOf: (entry: WatchlistEntry) => WatchedMovie | undefined,
   scale: RatingScale
-): ListMoviesCard['leadingBadge'] {
-  return (entry) => <WatchedBadges movie={movieOf(entry)} scale={scale} />;
+): ListMoviesCardActions<WatchedEntry>['leadingBadge'] {
+  return (entry) => <WatchedBadges movie={entry} scale={scale} />;
 }
 
 function SourceFilter({
@@ -113,13 +106,7 @@ export default function WatchedMoviesPage() {
   const scale = user?.ratingScale ?? 'five';
 
   const movies = watchedQuery.data?.items ?? NO_MOVIES;
-  const moviesByKey = useMemo(
-    () => new Map(movies.map((movie) => [itemKey(movie.tmdbId, movie.mediaType), movie])),
-    [movies]
-  );
   const entries = useMemo(() => movies.map(toEntry), [movies]);
-  const movieOf = (entry: WatchlistEntry) =>
-    moviesByKey.get(itemKey(entry.tmdbId, entry.mediaType));
 
   const sorts = useMemo<WatchlistSortConfig>(
     () => ({
@@ -129,16 +116,14 @@ export default function WatchedMoviesPage() {
     [t]
   );
 
-  const scopeFilter = useMemo<ToolbarExtraFilter & { control: ReactNode }>(
+  const scopeFilter = useMemo<ToolbarExtraFilter<WatchedEntry> & { control: ReactNode }>(
     () => ({
       control: <SourceFilter value={source} onChange={setSource} compact={isMobile} />,
-      matches: (entry) =>
-        source === 'all' ||
-        moviesByKey.get(itemKey(entry.tmdbId, entry.mediaType))?.source === source,
+      matches: (entry) => source === 'all' || entry.source === source,
       active: source !== 'all',
       reset: () => setSource('all'),
     }),
-    [source, isMobile, moviesByKey]
+    [source, isMobile]
   );
 
   return (
@@ -178,8 +163,8 @@ export default function WatchedMoviesPage() {
         inWatchlist: (entry) => watchlistToggle.has(entry),
         showListBadge: false,
         onToggleWatchlist: (entry) => watchlistToggle.toggle(entry),
-        leadingBadge: watchedBadgesSlot(movieOf, scale),
-        canRemove: (entry) => movieOf(entry)?.source === 'elsewhere',
+        leadingBadge: watchedBadgesSlot(scale),
+        canRemove: (entry) => entry.source === 'elsewhere',
         removeLabels: {
           label: t('watched.page.remove'),
           ariaLabel: (title) => t('watched.page.removeFor', { title }),
@@ -208,7 +193,6 @@ export default function WatchedMoviesPage() {
           genreIds: item.genreIds,
         });
       }}
-      isItemAlreadyAdded={(item) => moviesByKey.has(itemKey(item.id, item.mediaType))}
     />
   );
 }

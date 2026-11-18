@@ -15,11 +15,10 @@ import { useTranslation, type Translate } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import type { MovieContributor } from '@/features/movies/components/movieCardParts';
-import { watchlistItemKey as itemKey } from '@/features/movies/utils/watchlistItemKey';
 import { useWatchlistToggle } from '@/features/library/hooks/useWatchlistToggle';
-import type { WatchlistEntry } from '@/features/library/hooks/useWatchlistToolbar';
-import ListMoviesPage from '@/features/library/components/ListMoviesPage';
-import { useDimWatched } from '@/features/library/hooks/useDimWatched';
+import ListMoviesPage, {
+  type ListMoviesCardActions,
+} from '@/features/library/components/ListMoviesPage';
 import type {
   MovieListDetail,
   MovieListItem,
@@ -208,28 +207,18 @@ function contributorOf(
   };
 }
 
-interface ListContributors {
-  columnLabel: string;
-  of: (entry: WatchlistEntry) => MovieContributor | null;
-}
-
 function useContributors(
   list: MovieListDetail | undefined,
-  items: readonly MovieListItem[],
   viewerId: string | undefined
-): ListContributors | undefined {
+): ListMoviesCardActions<MovieListItem>['contributor'] {
   const { t } = useTranslation();
   return useMemo(() => {
     if (!list || !isSharedList(list)) return undefined;
-    const addedBy = new Map(
-      items.map((item) => [itemKey(item.tmdbId, item.mediaType), item.addedBy])
-    );
     return {
       columnLabel: t('lists.members.addedByColumn'),
-      of: (entry: WatchlistEntry) =>
-        contributorOf(addedBy.get(itemKey(entry.tmdbId, entry.mediaType)), viewerId, t),
+      of: (entry: MovieListItem) => contributorOf(entry.addedBy, viewerId, t),
     };
-  }, [list, items, viewerId, t]);
+  }, [list, viewerId, t]);
 }
 
 function MovieListDialogs({
@@ -308,16 +297,11 @@ export default function MovieListPage() {
   const watchlistToggle = useWatchlistToggle(!!user);
   const addItem = useAddListItem();
   const removeItem = useRemoveListItem();
-  const dim = useDimWatched();
   const [removeError, setRemoveError] = useState<string | null>(null);
   const [dialog, setDialog] = useState<ListDialog>(null);
 
   const { items, watchedCount, isWatched } = useListItemsView(list);
-  const itemKeys = useMemo(
-    () => new Set(items.map((item) => itemKey(item.tmdbId, item.mediaType))),
-    [items]
-  );
-  const contributor = useContributors(list, items, user?.userId);
+  const contributor = useContributors(list, user?.userId);
 
   if (listQuery.isError && isNotFoundError(listQuery.error)) {
     return (
@@ -364,7 +348,6 @@ export default function MovieListPage() {
         badge: list?.isPublic ? <PublicBadge /> : null,
         menu: list ? <OwnListMenu list={list} onOpen={setDialog} /> : null,
       }}
-      toolbarOptions={{ dimWatched: { enabled: dim.enabled, onChange: dim.change } }}
       card={{
         inWatchlist: (entry) => watchlistToggle.has(entry),
         isWatched,
@@ -382,7 +365,7 @@ export default function MovieListPage() {
             }
           );
         },
-        error: removeError ?? dim.error ?? watchlistToggle.error,
+        error: removeError ?? watchlistToggle.error,
       }}
       onAddItem={async (item) => {
         if (!list) return;
@@ -400,7 +383,6 @@ export default function MovieListPage() {
           },
         });
       }}
-      isItemAlreadyAdded={(item) => itemKeys.has(itemKey(item.id, item.mediaType))}
     >
       {list ? (
         <MovieListDialogs

@@ -1,6 +1,7 @@
 import CollectionToolbar from '@/features/movies/components/CollectionToolbar';
 import { useTranslation } from '@/shared/i18n';
-import type { MovieListSortKey, SortDirection } from '@/features/movies/hooks/useMovieListToolbar';
+import type { CatalogSortKey } from '@/features/movies/hooks/useCatalogToolbar';
+import type { SortDirection } from '@/features/movies/hooks/useCollectionToolbar';
 
 interface ProfileCollectionToolbarProps {
   search: string;
@@ -9,9 +10,9 @@ interface ProfileCollectionToolbarProps {
   onToggleFilters: () => void;
   filtersPanelId: string;
   activeFilterCount: number;
-  sortBy: MovieListSortKey;
+  sortBy: CatalogSortKey;
   sortDir: SortDirection;
-  onSetSort: (key: MovieListSortKey) => void;
+  onSetSort: (key: CatalogSortKey) => void;
   isFiltered: boolean;
   visibleCount: number;
   totalCount: number;

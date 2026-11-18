@@ -3,12 +3,12 @@ import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LocaleProvider } from '@/shared/i18n';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
-import type { WatchlistEntry } from '@/features/library/hooks/useWatchlistToolbar';
+import type { LibraryEntry } from '@/features/library/hooks/useLibraryToolbar';
 import RandomPickDialog from './RandomPickDialog';
 
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
 
-function film(tmdbId: number, title: string, extra: Partial<WatchlistEntry> = {}): WatchlistEntry {
+function film(tmdbId: number, title: string, extra: Partial<LibraryEntry> = {}): LibraryEntry {
   return {
     tmdbId,
     mediaType: 'movie',
@@ -163,7 +163,7 @@ describe('RandomPickDialog, list changing while it is open', () => {
 
   function renderLiveDialog() {
     const onClose = vi.fn();
-    const dialog = (items: WatchlistEntry[]) => (
+    const dialog = (items: LibraryEntry[]) => (
       <LocaleProvider>
         <RandomPickDialog
           items={items}
@@ -177,7 +177,7 @@ describe('RandomPickDialog, list changing while it is open', () => {
       </LocaleProvider>
     );
     const { rerender } = render(dialog([BEETLEJUICE, NOPE, WHIPLASH]));
-    return { onClose, keepOnly: (items: WatchlistEntry[]) => rerender(dialog(items)) };
+    return { onClose, keepOnly: (items: LibraryEntry[]) => rerender(dialog(items)) };
   }
 
   it('keeps the drawn title when another one leaves the list, and counts what is left', () => {

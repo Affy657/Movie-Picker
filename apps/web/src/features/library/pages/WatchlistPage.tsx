@@ -17,16 +17,16 @@ import {
 } from '@/features/movies/hooks/useWatchlist';
 import type { WatchlistAvailabilityItem, WatchlistItem } from '@/features/movies/api/watchlistApi';
 import { watchlistItemKey as itemKey } from '@/features/movies/utils/watchlistItemKey';
+import type { ToolbarExtraFilter } from '@/features/movies/hooks/useCollectionToolbar';
 import { useWatchlistToggle } from '@/features/library/hooks/useWatchlistToggle';
 import { useCollectionVisibility } from '@/features/library/hooks/useCollectionVisibility';
 import CollectionVisibilityMenu from '@/features/library/components/CollectionVisibilityMenu';
-import type {
-  ToolbarExtraFilter,
-  WatchlistEntry,
-} from '@/features/library/hooks/useWatchlistToolbar';
+import type { LibraryEntry } from '@/features/library/hooks/useLibraryToolbar';
 import ListMoviesPage from '@/features/library/components/ListMoviesPage';
 import LetterboxdGapBanner from '@/features/library/components/LetterboxdGapBanner';
 import { watchlistCountLabel } from '@/features/library/utils/watchlistCount';
+
+type WatchlistEntry = WatchlistItem & Pick<LibraryEntry, 'watchProviders' | 'tmdbWatchPageUrl'>;
 
 function mergeAvailability(
   items: WatchlistItem[],
@@ -102,18 +102,13 @@ export default function WatchlistPage() {
   const watchlistToggle = useWatchlistToggle(!!user);
   const visibility = useCollectionVisibility('isWatchlistPublic');
 
-  const inWatchlistKeys = useMemo(
-    () => new Set(items.map((i) => itemKey(i.tmdbId, i.mediaType))),
-    [items]
-  );
-
   const syncedWithLetterboxd = syncsWithLetterboxd(user, 'watchlist');
   const missingOnLetterboxd = syncedWithLetterboxd
     ? items.filter((item) => item.onLetterboxd === false).length
     : 0;
   const [missingOnly, setMissingOnly] = useState(false);
   const showingMissing = missingOnly && missingOnLetterboxd > 0;
-  const missingFilter = useMemo<ToolbarExtraFilter>(
+  const missingFilter = useMemo<ToolbarExtraFilter<WatchlistEntry>>(
     () => ({
       matches: (entry) => !showingMissing || entry.onLetterboxd === false,
       active: showingMissing,
@@ -180,7 +175,6 @@ export default function WatchlistPage() {
           genreIds: item.genreIds,
         });
       }}
-      isItemAlreadyAdded={(item) => inWatchlistKeys.has(itemKey(item.id, item.mediaType))}
     >
       {letterboxdModalOpen && (
         <LetterboxdConnectModal open onClose={() => setLetterboxdModalOpen(false)} />

@@ -1,9 +1,10 @@
 import { useMemo, useRef, type ReactNode } from 'react';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { MovieMediaType } from '@/shared/types/movie';
-import type { ActiveToolbarChip } from '@/features/movies/hooks/useMovieListToolbar';
+import type { RatingScale } from '@/shared/types/theme';
+import type { ActiveToolbarChip } from '@/features/movies/hooks/useCollectionToolbar';
 import ActiveFilterChips from './ActiveFilterChips';
 import FilteredCollectionLayout, {
   FilterSheet,
@@ -20,18 +21,49 @@ export interface MovieListFilters {
   toggleMediaType: (mediaType: MovieMediaType) => void;
   selectedDecade: string | undefined;
   toggleDecade: (decade: string) => void;
+  voteMin?: number;
+  toggleVoteMin?: (min: number) => void;
+  runtimeRange?: [number, number];
+  changeRuntimeRange?: (min: number, max: number) => void;
   clearAllFilters: () => void;
   resetAll: () => void;
   activeFilterChips: ActiveToolbarChip[];
   visibleCount: number;
 }
 
+export type MovieListFilterTexts = 'library' | 'catalog';
+
+const TEXT_KEYS = {
+  library: {
+    resetAll: 'watchlist.toolbar.filtersResetAll',
+    removeFilterAria: 'watchlist.toolbar.removeFilterAria',
+    sheetTitle: 'watchlist.toolbar.filtersSheetTitle',
+    sheetReset: 'watchlist.toolbar.filtersReset',
+    applyOne: 'watchlist.toolbar.filtersApplyOne',
+    apply: 'watchlist.toolbar.filtersApply',
+    emptyTitle: 'watchlist.toolbar.emptyTitle',
+    emptyMessage: 'watchlist.toolbar.emptyMessage',
+  },
+  catalog: {
+    resetAll: 'profile.movies.toolbar.filtersResetAll',
+    removeFilterAria: 'profile.movies.toolbar.removeFilterAria',
+    sheetTitle: 'profile.movies.toolbar.filtersSheetTitle',
+    sheetReset: 'profile.movies.toolbar.filtersReset',
+    applyOne: 'profile.movies.toolbar.filtersApplyOne',
+    apply: 'profile.movies.toolbar.filtersApply',
+    emptyTitle: 'profile.movies.toolbar.emptyTitle',
+    emptyMessage: 'profile.movies.toolbar.emptyMessage',
+  },
+} satisfies Record<MovieListFilterTexts, Record<string, TranslationKey>>;
+
 interface MovieListFilteredLayoutProps {
   toolbar: ReactNode;
   filters: MovieListFilters;
   filtersPanelId: string;
   tmdbLanguage: string;
+  ratingScale?: RatingScale;
   isMobile: boolean;
+  texts?: MovieListFilterTexts;
   children: ReactNode;
 }
 
@@ -40,10 +72,13 @@ export default function MovieListFilteredLayout({
   filters,
   filtersPanelId,
   tmdbLanguage,
+  ratingScale,
   isMobile,
+  texts = 'catalog',
   children,
 }: Readonly<MovieListFilteredLayoutProps>) {
   const { t } = useTranslation();
+  const keys = TEXT_KEYS[texts];
   const panelRef = useRef<HTMLDivElement>(null);
   const desktopPanelOpen = filters.filtersOpen && !isMobile;
   useClickOutside(panelRef, () => filters.setFiltersOpen(false), desktopPanelOpen, {
@@ -57,9 +92,13 @@ export default function MovieListFilteredLayout({
       typeMovie: t('watchlist.toolbar.filterTypeMovie'),
       typeTv: t('watchlist.toolbar.filterTypeTv'),
       decade: t('watchlist.toolbar.filterDecade'),
-      resetAll: t('profile.movies.toolbar.filtersResetAll'),
+      voteMin: t('watchlist.toolbar.filterVoteMin'),
+      duration: t('watchlist.toolbar.filterDuration'),
+      durationMinAria: t('movies.search.durationMinAria'),
+      durationMaxAria: t('movies.search.durationMaxAria'),
+      resetAll: t(keys.resetAll),
     }),
-    [t]
+    [t, keys]
   );
 
   const panel = (
@@ -67,12 +106,17 @@ export default function MovieListFilteredLayout({
       panelId={filtersPanelId}
       tmdbLanguage={tmdbLanguage}
       labels={labels}
+      ratingScale={ratingScale}
       selectedGenres={filters.selectedGenres}
       onToggleGenre={filters.toggleGenre}
       selectedMediaTypes={filters.selectedMediaTypes}
       onToggleMediaType={filters.toggleMediaType}
       selectedDecade={filters.selectedDecade}
       onToggleDecade={filters.toggleDecade}
+      voteMin={filters.voteMin}
+      onToggleVoteMin={filters.toggleVoteMin}
+      runtimeRange={filters.runtimeRange}
+      onChangeRuntimeRange={filters.changeRuntimeRange}
       onReset={isMobile ? undefined : filters.clearAllFilters}
     />
   );
@@ -86,7 +130,7 @@ export default function MovieListFilteredLayout({
           <ActiveFilterChips
             chips={filters.activeFilterChips}
             groupAriaLabel={t('watchlist.filter.toggleAria')}
-            removeAriaLabel={t('profile.movies.toolbar.removeFilterAria')}
+            removeAriaLabel={t(keys.removeFilterAria)}
           />
         ) : null
       }
@@ -94,15 +138,10 @@ export default function MovieListFilteredLayout({
         isMobile ? (
           <FilterSheet
             open={filters.filtersOpen}
-            title={t('profile.movies.toolbar.filtersSheetTitle')}
+            title={t(keys.sheetTitle)}
             onClose={() => filters.setFiltersOpen(false)}
-            resetLabel={t('profile.movies.toolbar.filtersReset')}
-            applyLabel={pluralizeCount(
-              filters.visibleCount,
-              'profile.movies.toolbar.filtersApplyOne',
-              'profile.movies.toolbar.filtersApply',
-              t
-            )}
+            resetLabel={t(keys.sheetReset)}
+            applyLabel={pluralizeCount(filters.visibleCount, keys.applyOne, keys.apply, t)}
             onReset={filters.clearAllFilters}
           >
             {panel}
@@ -112,9 +151,9 @@ export default function MovieListFilteredLayout({
       emptyFiltered={
         filters.visibleCount === 0 ? (
           <FilteredEmptyState
-            title={t('profile.movies.toolbar.emptyTitle')}
-            message={t('profile.movies.toolbar.emptyMessage')}
-            resetLabel={t('profile.movies.toolbar.filtersResetAll')}
+            title={t(keys.emptyTitle)}
+            message={t(keys.emptyMessage)}
+            resetLabel={t(keys.resetAll)}
             onReset={filters.resetAll}
           />
         ) : null

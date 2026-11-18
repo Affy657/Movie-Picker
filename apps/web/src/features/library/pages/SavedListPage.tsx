@@ -14,7 +14,6 @@ import { useWatchlistToggle } from '@/features/library/hooks/useWatchlistToggle'
 import ListActionsMenu from '@/features/library/components/ListActionsMenu';
 import ListMoviesPage from '@/features/library/components/ListMoviesPage';
 import type { WatchlistSortConfig } from '@/features/library/components/WatchlistToolbar';
-import { useDimWatched } from '@/features/library/hooks/useDimWatched';
 import type { SavedListDetail } from '@/features/library/api/savedListsApi';
 import ListFormDialog from '@/features/library/components/ListFormDialog';
 import ListNotFound from '@/features/library/components/ListNotFound';
@@ -142,7 +141,6 @@ export default function SavedListPage() {
 
   const watchlistToggle = useWatchlistToggle(!!user);
   const unsave = useUnsaveList();
-  const dim = useDimWatched();
   const [actionError, setActionError] = useState<string | null>(null);
   const [copyOpen, setCopyOpen] = useState(false);
 
@@ -231,13 +229,13 @@ export default function SavedListPage() {
           />
         ) : null,
       }}
-      toolbarOptions={{ sorts, dimWatched: { enabled: dim.enabled, onChange: dim.change } }}
+      toolbarOptions={{ sorts }}
       card={{
         inWatchlist: (entry) => watchlistToggle.has(entry),
         isWatched,
         showListBadge: true,
         onToggleWatchlist: (entry) => watchlistToggle.toggle(entry),
-        error: actionError ?? dim.error ?? watchlistToggle.error,
+        error: actionError ?? watchlistToggle.error,
       }}
     >
       {copyOpen && list && name ? (

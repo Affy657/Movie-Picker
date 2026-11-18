@@ -24,7 +24,7 @@ import { toCollectionToolbarProps } from '@/features/movies/components/FilteredC
 import MovieListFilteredLayout from '@/features/movies/components/MovieListFilteredLayout';
 import MovieBrowseCard from '@/features/movies/components/MovieBrowseCard';
 import listCardStyles from '@/features/movies/components/ShowcaseMovieCard.module.css';
-import { useMovieListToolbar } from '@/features/movies/hooks/useMovieListToolbar';
+import { useCatalogToolbar } from '@/features/movies/hooks/useCatalogToolbar';
 import { useMovieCollections, useMovieShowcase } from '@/features/movies/hooks/useMovieShowcase';
 import { searchMovies } from '@/features/movies/api/moviesApi';
 import type {
@@ -402,7 +402,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
     []
   );
 
-  const toolbar = useMovieListToolbar({ items, tmdbLanguage, mediaTypeLabels, comparePrimary });
+  const toolbar = useCatalogToolbar({ items, tmdbLanguage, mediaTypeLabels, comparePrimary });
 
   const openMoviePage = useOpenMoviePage();
   const [proposeTarget, setProposeTarget] = useState<WatchlistToggleItem | null>(null);

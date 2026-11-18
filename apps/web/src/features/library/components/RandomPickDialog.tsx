@@ -15,7 +15,7 @@ import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
 import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
 import { randomIndex } from '@/shared/utils/random';
-import type { WatchlistEntry } from '@/features/library/hooks/useWatchlistToolbar';
+import type { LibraryEntry } from '@/features/library/hooks/useLibraryToolbar';
 import { useRandomPick } from '@/features/library/hooks/useRandomPick';
 import type { PickIndex } from '@/features/library/utils/randomPick';
 import { watchlistItemKey } from '@/features/movies/utils/watchlistItemKey';
@@ -25,12 +25,12 @@ export type RandomPickScope = 'list' | 'selection';
 
 interface RandomPickDialogProps {
   open?: boolean;
-  items: readonly WatchlistEntry[];
+  items: readonly LibraryEntry[];
   scope: RandomPickScope;
   ratingScale?: RatingScale;
   onClose: () => void;
-  onPropose: (item: WatchlistEntry) => void;
-  onOpenDetails: (item: WatchlistEntry) => void;
+  onPropose: (item: LibraryEntry) => void;
+  onOpenDetails: (item: LibraryEntry) => void;
   pickIndex?: PickIndex;
 }
 
@@ -39,11 +39,11 @@ const POOL_KEYS = {
   selection: ['watchlist.randomPick.poolSelectionOne', 'watchlist.randomPick.poolSelection'],
 } as const;
 
-function posterSrc(item: WatchlistEntry | undefined): string | undefined {
+function posterSrc(item: LibraryEntry | undefined): string | undefined {
   return tmdbPosterSrcForListDisplay(posterImageSrc(item?.posterPath));
 }
 
-function DrawnPoster({ item }: Readonly<{ item: WatchlistEntry | undefined }>) {
+function DrawnPoster({ item }: Readonly<{ item: LibraryEntry | undefined }>) {
   const src = posterSrc(item);
   if (!src) {
     return (
@@ -69,9 +69,9 @@ function DrawnFacts({
   ratingScale,
   onOpenDetails,
 }: Readonly<{
-  item: WatchlistEntry;
+  item: LibraryEntry;
   ratingScale?: RatingScale;
-  onOpenDetails: (item: WatchlistEntry) => void;
+  onOpenDetails: (item: LibraryEntry) => void;
 }>) {
   const { t, locale } = useTranslation();
   const vote = formatTmdbVote(item.voteAverage, ratingScale, locale);
