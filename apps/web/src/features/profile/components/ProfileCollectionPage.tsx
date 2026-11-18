@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Film, Lock } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import EmptyState from '@/shared/components/EmptyState';
-import { MOVIE_PAGE_CHUNKS } from '@/app/routeChunks';
+import { MOVIE_PAGE_CHUNKS } from '@/app/moviePageChunk';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { ApiError } from '@/shared/api/apiError';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';

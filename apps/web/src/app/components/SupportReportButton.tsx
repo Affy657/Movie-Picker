@@ -10,7 +10,7 @@ import {
 } from '@/shared/support/supportMailto';
 import Modal from '@/shared/components/Modal';
 import styles from './SupportReportButton.module.css';
-import { useCloseOnPageChange } from './useCloseOnPageChange';
+import { useCloseOnPageChange } from '@/shared/hooks/useCloseOnPageChange';
 import Button, { buttonClass } from '@/shared/components/Button';
 
 type CopyState = 'idle' | 'copied' | 'failed';

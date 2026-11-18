@@ -8,7 +8,7 @@ import WatchlistPage from '@/features/library/pages/WatchlistPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubHoverCapability, stubMatchMedia } from '@/test-utils/matchMedia';
 import { createWatchlistHandlers, TEST_API_V1 } from '@/mocks/handlers';
-import { ROUTE_CHUNKS } from '@/app/routeChunks';
+import { MOVIE_PAGE_CHUNK } from '@/app/moviePageChunk';
 
 const { track } = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock('@/shared/hooks/useAnalytics', () => ({
@@ -188,7 +188,7 @@ describe('WatchlistPage (MSW)', () => {
       return 1;
     });
     vi.stubGlobal('cancelIdleCallback', vi.fn());
-    const loadMoviePage = vi.spyOn(ROUTE_CHUNKS, 'moviePage').mockResolvedValue({} as never);
+    const loadMoviePage = vi.spyOn(MOVIE_PAGE_CHUNK, 'load').mockResolvedValue({} as never);
     server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
 
     renderPage();

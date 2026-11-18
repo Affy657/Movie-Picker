@@ -5,7 +5,7 @@ import clsx from 'clsx';
 import PageLayout from '@/shared/components/PageLayout';
 import Button from '@/shared/components/Button';
 import { ROUTES } from '@/app/routes';
-import { MOVIE_PAGE_CHUNKS } from '@/app/routeChunks';
+import { MOVIE_PAGE_CHUNKS } from '@/app/moviePageChunk';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';

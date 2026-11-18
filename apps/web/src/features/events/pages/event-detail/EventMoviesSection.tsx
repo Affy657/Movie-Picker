@@ -15,7 +15,7 @@ import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { useHistoryEntryState } from '@/shared/hooks/useHistoryEntryState';
-import { MOVIE_PAGE_CHUNKS } from '@/app/routeChunks';
+import { MOVIE_PAGE_CHUNKS } from '@/app/moviePageChunk';
 import { setMovieWheelExclusion } from '@/features/movies/api/moviesApi';
 import { getErrorMessage } from '@/shared/api/apiError';
 import type { EventData } from '@/features/events/types';

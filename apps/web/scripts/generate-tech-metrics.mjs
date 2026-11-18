@@ -176,7 +176,13 @@ function computeMetrics(previous) {
   );
 
   const architectureScriptLines = countLines(
-    [join(repoRoot, 'scripts/check-architecture.mjs')].filter((file) => existsSync(file))
+    [
+      join(repoRoot, 'scripts/check-architecture.mjs'),
+      ...walk(
+        join(repoRoot, 'scripts/architecture'),
+        (name) => name.endsWith('.mjs') && !name.includes('.test.')
+      ),
+    ].filter((file) => existsSync(file))
   );
 
   const vitestConfig = readText(join(repoRoot, 'apps/web/vitest.config.ts'));

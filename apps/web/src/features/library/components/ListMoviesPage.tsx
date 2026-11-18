@@ -18,7 +18,7 @@ import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { randomIndex } from '@/shared/utils/random';
 import { safeLocalStorageGet, safeLocalStorageSet } from '@/shared/utils/safeStorage';
 import { ROUTES } from '@/app/routes';
-import { MOVIE_PAGE_CHUNKS } from '@/app/routeChunks';
+import { MOVIE_PAGE_CHUNKS } from '@/app/moviePageChunk';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import AddMoviePanel from '@/features/movies/components/AddMoviePanel';
 import type { AddMovieFormProps } from '@/features/movies/components/AddMovieForm';

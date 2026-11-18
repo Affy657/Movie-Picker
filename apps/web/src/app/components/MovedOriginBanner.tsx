@@ -6,7 +6,7 @@ import { shouldOfferSystemBrowser } from './InAppBrowserBanner';
 import Notice from '@/shared/components/Notice';
 import Button from '@/shared/components/Button';
 import InstallPwaDialog from '@/shared/components/InstallPwaDialog';
-import { useCloseOnPageChange } from './useCloseOnPageChange';
+import { useCloseOnPageChange } from '@/shared/hooks/useCloseOnPageChange';
 
 function shouldShowNotice(): boolean {
   return isMovedOriginNoticePending() && !shouldOfferSystemBrowser();
