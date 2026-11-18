@@ -129,7 +129,7 @@ public sealed class CreateEventHandler : ICreateEventHandler
         Date = created.Date,
         Time = created.Time,
         Slug = created.Slug,
-        ShareUrl = $"/e/{created.Slug}",
+        ShareUrl = FrontRoutes.EventDetail(created.Slug),
         CreatedAt = created.CreatedAt,
         UpdatedAt = created.UpdatedAt,
         CreatorParticipant = ParticipantResponse.FromDomain(creator)

@@ -1,10 +1,11 @@
 /**
- * Replays the CI `lint-workflows` job locally, at the same versions.
+ * The `lint-workflows` gate: the CI job and `verify:local` both run this script.
  *
  * Both tools run through Docker, pinned by digest, for one precise reason: actionlint delegates
  * `run:` blocks to shellcheck and **silently skips** that half of its work when shellcheck is not
  * in the PATH. A dev machine without shellcheck would have a green gate checking half of what the
- * CI checks. The `rhysd/actionlint` image ships shellcheck 0.10.0, exactly the version the CI uses.
+ * CI checks. The `rhysd/actionlint` image ships its own shellcheck, so the workstation and the
+ * runner check the same thing with the same version, and each tool is pinned once, here.
  *
  * The file list is discovered, never hardcoded: a workflow added later and forgotten in a list
  * would escape the gate without anything saying so.
@@ -12,14 +13,16 @@
  * No third YAML parsing gate: actionlint returns `could not parse as YAML` on a badly indented
  * file, checked on a test file. It would be redundant.
  *
+ * zizmor reads `.github/` whole, composite actions and `dependabot.yml` included, at the `medium`
+ * threshold, `--offline` so that the gate does not depend on the GitHub API.
+ *
  * The images carry their version tag next to the digest: the digest is what Docker resolves,
- * the tag is what `scripts/check-tool-versions.mjs` compares with `ACTIONLINT_VERSION` and
- * `ZIZMOR_VERSION` in `.github/workflows/ci-cd.yml`.
+ * the tag is what `scripts/check-tool-versions.mjs` compares with the latest release.
  */
 import { readdirSync, existsSync } from 'node:fs';
-import { spawnSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { dockerRun, fail, requireDocker } from './docker-gate.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const workflowsDir = join(root, '.github', 'workflows');
@@ -28,11 +31,6 @@ const ACTIONLINT_IMAGE =
   'rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667';
 const ZIZMOR_IMAGE =
   'ghcr.io/zizmorcore/zizmor:1.32.0@sha256:3014cc8f68f663935f69b3c3e0e41f5ce102b268d97db13db0f62208747f860d';
-
-function fail(message) {
-  console.error(`\x1b[31m✗\x1b[0m ${message}`);
-  process.exit(1);
-}
 
 if (!existsSync(workflowsDir)) {
   fail('.github/workflows not found.');
@@ -47,32 +45,18 @@ if (workflows.length === 0) {
   fail('No workflow found in .github/workflows.');
 }
 
-function docker(args) {
-  return spawnSync('docker', args, { stdio: 'inherit', shell: true, cwd: root });
-}
-
-const dockerAvailable = spawnSync('docker', ['version', '--format', '{{.Server.Version}}'], {
-  stdio: 'ignore',
-  shell: true,
-});
-if (dockerAvailable.status !== 0) {
-  fail(
-    'Docker is required for this gate (actionlint ships shellcheck, without it half of the run: blocks would go unchecked). Start Docker Desktop and run again.'
-  );
-}
+requireDocker('actionlint ships shellcheck, without it half of the run: blocks would go unchecked');
 
 const mount = ['-v', './.github:/repo/.github:ro', '-w', '/repo'];
 
 console.log(`actionlint + shellcheck on ${workflows.length} workflows`);
-const actionlint = docker(['run', '--rm', ...mount, ACTIONLINT_IMAGE, '-color', ...workflows]);
+const actionlint = dockerRun([...mount, ACTIONLINT_IMAGE, '-color', ...workflows]);
 if (actionlint.status !== 0) {
   fail('actionlint reported findings.');
 }
 
 console.log('zizmor (security audit, medium threshold, workflows and composite actions)');
-const zizmor = docker([
-  'run',
-  '--rm',
+const zizmor = dockerRun([
   ...mount,
   ZIZMOR_IMAGE,
   '--offline',

@@ -1,4 +1,5 @@
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 
 namespace MoviePicker.Api.Application.UseCases.MovieLists;
 

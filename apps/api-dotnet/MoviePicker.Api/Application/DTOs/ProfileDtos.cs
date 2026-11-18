@@ -23,6 +23,14 @@ public sealed class FollowUserItem
     public string DisplayName { get; init; } = string.Empty;
     public string AvatarId { get; init; } = string.Empty;
     public bool? IsFollowedByMe { get; init; }
+
+    public static FollowUserItem From(DisplayedPerson person, bool? isFollowedByMe) => new()
+    {
+        Handle = person.Handle,
+        DisplayName = person.DisplayName,
+        AvatarId = person.AvatarId,
+        IsFollowedByMe = isFollowedByMe
+    };
 }
 
 public sealed class FollowListResponse

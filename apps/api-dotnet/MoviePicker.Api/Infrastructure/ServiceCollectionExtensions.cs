@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -90,6 +91,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IHostTokenAccessor, HostTokenAccessor>();
         services.AddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
         services.AddScoped<IClientAddressAccessor, ClientAddressAccessor>();
+        services.AddSingleton<IClientErrorFactory, ApiErrorClientErrorFactory>();
 
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
@@ -219,7 +221,7 @@ public static class ServiceCollectionExtensions
         var readAccessToken = cfg["TMDB_READ_ACCESS_TOKEN"];
         opts.TmdbReadAccessToken = string.IsNullOrWhiteSpace(readAccessToken) ? null : readAccessToken.Trim();
         var region = cfg["TMDB_WATCH_REGION"];
-        opts.TmdbWatchProvidersRegion = string.IsNullOrWhiteSpace(region) ? "FR" : region.Trim();
+        opts.TmdbWatchProvidersRegion = string.IsNullOrWhiteSpace(region) ? MoviePickerOptions.DefaultWatchProvidersRegion : region.Trim();
         if (int.TryParse(cfg["TMDB_ENRICHMENT_CACHE_HOURS"], out var hours) && hours > 0)
             opts.TmdbEnrichmentCacheHours = hours;
         if (int.TryParse(cfg["TMDB_SEARCH_MAX_PROVIDER_LOOKUPS"], out var maxLp) && maxLp >= 0)

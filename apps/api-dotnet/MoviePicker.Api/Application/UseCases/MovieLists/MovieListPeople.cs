@@ -6,11 +6,11 @@ namespace MoviePicker.Api.Application.UseCases.MovieLists;
 
 public sealed class MovieListPeople
 {
-    private readonly Dictionary<string, UserCard> _cards;
+    private readonly Dictionary<string, DisplayedPerson> _people;
 
-    private MovieListPeople(Dictionary<string, UserCard> cards)
+    private MovieListPeople(Dictionary<string, DisplayedPerson> people)
     {
-        _cards = cards;
+        _people = people;
     }
 
     public static async Task<MovieListPeople> LoadAsync(
@@ -20,16 +20,20 @@ public sealed class MovieListPeople
     {
         var ids = userIds.Where(id => !string.IsNullOrEmpty(id)).Distinct(StringComparer.Ordinal).ToList();
         var cards = ids.Count == 0 ? [] : await users.ListCardsByIdsAsync(ids, ct);
-        return new MovieListPeople(cards.DistinctBy(card => card.Id, StringComparer.Ordinal).ToDictionary(card => card.Id, StringComparer.Ordinal));
+        return new MovieListPeople(cards
+            .DistinctBy(card => card.Id, StringComparer.Ordinal)
+            .ToDictionary(card => card.Id, card => DisplayedPerson.From(card), StringComparer.Ordinal));
     }
 
     public static Task<MovieListPeople> LoadAsync(IUserRepository users, MovieList list, CancellationToken ct) =>
         LoadAsync(users, [.. list.PreviewMemberIds(), .. list.Items.Select(list.AuthorOf)], ct);
 
-    public MovieListPersonResponse? Find(string? userId) =>
-        userId is not null && _cards.TryGetValue(userId, out var card) ? ToPerson(card) : null;
+    public DisplayedPerson PersonOf(string userId) => _people.GetValueOrDefault(userId) ?? DisplayedPerson.Unknown(userId);
 
-    public MovieListPersonResponse OwnerOf(string ownerId) => Find(ownerId) ?? new MovieListPersonResponse { UserId = ownerId };
+    public MovieListPersonResponse? Find(string? userId) =>
+        userId is not null && _people.TryGetValue(userId, out var person) ? MovieListPersonResponse.From(person) : null;
+
+    public MovieListPersonResponse OwnerOf(string ownerId) => MovieListPersonResponse.From(PersonOf(ownerId));
 
     public MovieListAudience AudienceOf(string viewerId, MovieListSummary summary) =>
         AudienceOf(viewerId, summary.OwnerId, summary.MemberCount, summary.PreviewMemberIds);
@@ -46,11 +50,4 @@ public sealed class MovieListPeople
             memberCount,
             [.. previewIds.Select(id => id == ownerId ? OwnerOf(id) : Find(id)).OfType<MovieListPersonResponse>()]);
 
-    private static MovieListPersonResponse ToPerson(UserCard card) => new()
-    {
-        UserId = card.Id,
-        Handle = PublicHandleResolver.Resolve(card),
-        DisplayName = card.DisplayName,
-        AvatarId = card.AvatarId
-    };
 }

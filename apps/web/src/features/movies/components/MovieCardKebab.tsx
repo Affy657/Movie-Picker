@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { letterboxdUrl } from '@/features/movies/utils/movieExternalLinks';
-import type { MovieData } from '@/shared/types/movie';
+import type { MovieData, MovieMediaType } from '@/shared/types/movie';
 import type { MovieWheelExclusion } from '@/features/movies/types';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
@@ -26,17 +26,19 @@ import type { Translate } from '@/shared/i18n';
 
 export type CardKebabTrigger = 'dots' | 'disclosure';
 
+export interface CardKebabRemoveAction {
+  label: string;
+  ariaLabel: string;
+  title?: string;
+  opensDialog?: boolean;
+  onSelect: () => void;
+}
+
 export interface CardKebabProps {
   title: string;
   tmdbId: number;
-  mediaType?: 'movie' | 'tv';
-  isMine: boolean;
-  isHost: boolean;
-  canRemove: boolean;
-  onRemove: () => void;
-  removeLabel?: string;
-  removeAriaLabel?: string;
-  removeOpensDialog?: boolean;
+  mediaType?: MovieMediaType;
+  remove?: CardKebabRemoveAction;
   inWatchlist?: boolean;
   onToggleWatchlist?: () => void;
   onProposeToEvent?: () => void;
@@ -49,7 +51,7 @@ export interface CardKebabProps {
 
 export function kebabHasActions({
   tmdbId,
-  canRemove,
+  remove,
   onToggleWatchlist,
   onProposeToEvent,
   onViewDetails,
@@ -58,7 +60,7 @@ export function kebabHasActions({
   Pick<
     CardKebabProps,
     | 'tmdbId'
-    | 'canRemove'
+    | 'remove'
     | 'onToggleWatchlist'
     | 'onProposeToEvent'
     | 'onViewDetails'
@@ -70,7 +72,7 @@ export function kebabHasActions({
     !!onProposeToEvent ||
     (!!onViewDetails && tmdbId > 0) ||
     !!wheelExclusion ||
-    canRemove
+    !!remove
   );
 }
 
@@ -89,9 +91,8 @@ export function MovieCardKebab({
   movie,
   card,
   slotClassName,
-  isHost,
+  remove,
   isInWatchlist,
-  onRemove,
   onToggleWatchlist,
   onToggleWheelExclusion,
   trigger = 'dots',
@@ -100,15 +101,12 @@ export function MovieCardKebab({
 }: Readonly<{
   movie: MovieData;
   card: {
-    isMine: boolean;
-    canRemove: boolean;
     hasDetails: boolean;
     openDetails: () => void;
   };
   slotClassName: string;
-  isHost: boolean;
+  remove?: CardKebabRemoveAction;
   isInWatchlist?: boolean;
-  onRemove: (movie: MovieData) => void;
   onToggleWatchlist?: (movie: MovieData) => void;
   onToggleWheelExclusion?: (movie: MovieData) => void;
   trigger?: CardKebabTrigger;
@@ -126,7 +124,7 @@ export function MovieCardKebab({
   if (
     !kebabHasActions({
       tmdbId: movie.tmdbId,
-      canRemove: card.canRemove,
+      remove,
       onToggleWatchlist: toggleWatchlist,
       onViewDetails,
       wheelExclusion,
@@ -140,11 +138,7 @@ export function MovieCardKebab({
         title={movie.title}
         tmdbId={movie.tmdbId}
         mediaType={movie.mediaType}
-        isMine={card.isMine}
-        isHost={isHost}
-        canRemove={card.canRemove}
-        onRemove={() => onRemove(movie)}
-        removeOpensDialog
+        remove={remove}
         inWatchlist={isInWatchlist}
         onToggleWatchlist={toggleWatchlist}
         onViewDetails={onViewDetails}
@@ -188,53 +182,11 @@ function ExternalMenuLink({
   );
 }
 
-function RemoveMenuItem({
-  title,
-  isMine,
-  isHost,
-  label,
-  ariaLabel,
-  opensDialog,
-  onPick,
-  t,
-}: Readonly<{
-  title: string;
-  isMine: boolean;
-  isHost: boolean;
-  label?: string;
-  ariaLabel?: string;
-  opensDialog: boolean;
-  onPick: () => void;
-  t: Translate;
-}>) {
-  const defaultAriaLabel = isMine
-    ? `${t('movies.list.removeButton')} ${title}`
-    : t('movies.list.removeAsHostAria', { title });
-  return (
-    <MenuItem
-      tone="danger"
-      icon={<Trash2 aria-hidden size={ICON_SIZE.sm} />}
-      aria-haspopup={opensDialog ? 'dialog' : undefined}
-      onClick={onPick}
-      ariaLabel={ariaLabel ?? defaultAriaLabel}
-      title={!isMine && isHost ? t('movies.list.removeAsHostTitle') : undefined}
-    >
-      {label ?? t('movies.list.removeButton')}
-    </MenuItem>
-  );
-}
-
 export function CardKebab({
   title,
   tmdbId,
   mediaType,
-  isMine,
-  isHost,
-  canRemove,
-  onRemove,
-  removeLabel,
-  removeAriaLabel,
-  removeOpensDialog = false,
+  remove,
   inWatchlist,
   onToggleWatchlist,
   onProposeToEvent,
@@ -310,7 +262,7 @@ export function CardKebab({
   if (
     !kebabHasActions({
       tmdbId,
-      canRemove,
+      remove,
       onToggleWatchlist,
       onProposeToEvent,
       onViewDetails,
@@ -427,18 +379,18 @@ export function CardKebab({
                 onClose={close}
               />
             )}
-            {canRemove && (hasPrimaryGroup || hasLinksGroup) && <MenuSeparator />}
-            {canRemove && (
-              <RemoveMenuItem
-                title={title}
-                isMine={isMine}
-                isHost={isHost}
-                label={removeLabel}
-                ariaLabel={removeAriaLabel}
-                opensDialog={removeOpensDialog}
-                onPick={pick(onRemove)}
-                t={t}
-              />
+            {remove && (hasPrimaryGroup || hasLinksGroup) && <MenuSeparator />}
+            {remove && (
+              <MenuItem
+                tone="danger"
+                icon={<Trash2 aria-hidden size={ICON_SIZE.sm} />}
+                aria-haspopup={remove.opensDialog ? 'dialog' : undefined}
+                onClick={pick(remove.onSelect)}
+                ariaLabel={remove.ariaLabel}
+                title={remove.title}
+              >
+                {remove.label}
+              </MenuItem>
             )}
           </MenuPanel>,
           document.body

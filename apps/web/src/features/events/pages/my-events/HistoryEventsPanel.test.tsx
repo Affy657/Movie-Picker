@@ -6,9 +6,10 @@ import { AppTestProviders } from '@/test-utils/queryWrapper';
 import type { MyEventSummary } from '@/features/events/types';
 import HistoryEventsPanel from './HistoryEventsPanel';
 import type { MyEventsActions } from './useMyEventsActions';
+import { buildMyEventSummary } from '@/test-utils/myEventSummary';
 
 function night(id: string, date: string): MyEventSummary {
-  return {
+  return buildMyEventSummary({
     id,
     slug: id,
     title: `Soirée ${id}`,
@@ -20,8 +21,8 @@ function night(id: string, date: string): MyEventSummary {
     isParticipant: true,
     movieCount: 2,
     participantCount: 2,
-    winnerMovies: [{ title: 'Matrix' }],
-  };
+    winnerMovies: [{ title: 'Matrix', posterPath: null }],
+  });
 }
 
 const ACTIONS = {

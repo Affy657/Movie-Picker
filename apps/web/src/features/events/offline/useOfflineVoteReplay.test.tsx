@@ -15,8 +15,8 @@ const t: Translate = (key, params) => translate(key, params, 'fr');
 
 const api = vi.hoisted(() => ({ voteMovie: vi.fn(), clearMovieVote: vi.fn() }));
 
-vi.mock('@/features/movies/api/moviesApi', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/features/movies/api/moviesApi')>()),
+vi.mock('@/features/events/api/eventMoviesApi', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/features/events/api/eventMoviesApi')>()),
   ...api,
 }));
 

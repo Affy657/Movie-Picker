@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -168,12 +169,9 @@ public sealed class JoinEventHandler : IJoinEventHandler
             var subscriptions = await _pushSubscriptions.ListByUserIdAsync(evt.CreatorUserId, ct);
             if (subscriptions.Count > 0)
             {
-                var message = new PushMessage(
-                    Title: "Ça s'anime !",
-                    Body: $"{joinerPseudo} vient de rejoindre {evt.Title} ! 🎉",
-                    Tag: $"join-{evt.Id}",
-                    Url: $"/e/{evt.Slug}"
-                );
+                var message = ServerCopy.Push.ParticipantJoined(joinerPseudo, evt.Title).ToMessage(
+                    tag: $"join-{evt.Id}",
+                    url: FrontRoutes.EventDetail(evt.Slug));
 
                 await PushFanOut.SendToAllAsync(_pushSender, subscriptions, message, ct);
             }
@@ -182,15 +180,12 @@ public sealed class JoinEventHandler : IJoinEventHandler
             {
                 UserId = evt.CreatorUserId,
                 Type = UserNotificationType.ParticipantJoined,
-                ActorHandle = joiner?.Handle,
-                ActorDisplayName = joiner?.DisplayName,
-                ActorAvatarId = joiner?.DisplayedAvatarId,
                 EventId = evt.Id,
                 EventSlug = evt.Slug,
                 EventTitle = evt.Title,
                 IsRead = false,
                 CreatedAt = _clock.GetUtcNow()
-            }, ct);
+            }.WithActor(joiner), ct);
         }
         catch (Exception ex)
         {

@@ -231,7 +231,7 @@ public sealed class DevelopmentScenarioSeedTests(SeededDevelopmentFixture fixtur
         var vote = scope.ServiceProvider.GetRequiredService<IVoteMovieHandler>();
 
         await Assert.ThrowsAsync<ConflictException>(() =>
-            vote.HandleAsync(evt.Slug, untouched.Id, new VoteRequest { ParticipantId = devPart.Id, Value = 1 }));
+            vote.HandleAsync(dev.Id, evt.Slug, untouched.Id, new VoteRequest { ParticipantId = devPart.Id, Value = 1 }));
     }
 
     [Fact]

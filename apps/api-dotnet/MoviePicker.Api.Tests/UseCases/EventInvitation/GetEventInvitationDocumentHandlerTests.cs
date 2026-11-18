@@ -80,7 +80,7 @@ public sealed class GetEventInvitationDocumentHandlerTests
         Assert.Equal(200, document.StatusCode);
         Assert.Equal("Soirée du vendredi", Meta(document.Html, "og:title"));
         Assert.Equal(
-            "Soirée ciné le vendredi 18 septembre 2026 à 20h30. Thème : Nolan. Rejoins la soirée et vote pour ton film.",
+            "Soirée ciné le vendredi 18 septembre 2026 à 20h30. Thème : Nolan. Rejoignez la soirée et votez pour votre film.",
             Meta(document.Html, "og:description"));
         Assert.Equal("https://web.example/og-image.png", Meta(document.Html, "og:image"));
         Assert.Equal($"https://web.example/e/{Slug}", Meta(document.Html, "og:url"));
@@ -100,7 +100,7 @@ public sealed class GetEventInvitationDocumentHandlerTests
 
         Assert.Equal("Nuit Nolan", Meta(document.Html, "og:title"));
         Assert.Equal(
-            "Soirée ciné le vendredi 18 septembre 2026 à 20h. Rejoins la soirée et vote pour ton film.",
+            "Soirée ciné le vendredi 18 septembre 2026 à 20h. Rejoignez la soirée et votez pour votre film.",
             Meta(document.Html, "og:description"));
     }
 
@@ -114,7 +114,7 @@ public sealed class GetEventInvitationDocumentHandlerTests
         Assert.Equal(200, document.StatusCode);
         Assert.Equal("Invitation à une soirée ciné", Meta(document.Html, "og:title"));
         Assert.Equal(
-            "Tu as reçu une invitation pour une soirée ciné sur Movie Picker. Ouvre le lien pour la rejoindre.",
+            "Vous avez reçu une invitation pour une soirée ciné sur Movie Picker. Ouvrez le lien pour la rejoindre.",
             Meta(document.Html, "og:description"));
         Assert.Equal("https://web.example/og-image.png", Meta(document.Html, "og:image"));
         Assert.Equal($"https://web.example/e/{Slug}", Meta(document.Html, "og:url"));

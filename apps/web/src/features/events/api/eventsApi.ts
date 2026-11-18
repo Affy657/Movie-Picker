@@ -1,13 +1,7 @@
 import { ROUTES } from '@/app/routes';
 import { fetchApi, apiPath, apiUrl, withHostToken } from '@/shared/api/client';
-import {
-  mapEventData,
-  mapParticipantData,
-  mapMovieData,
-  type RawEventData,
-  type RawParticipantData,
-  type RawMovieData,
-} from '@/shared/api/apiMapping';
+import type { ApiSchemas } from '@/shared/api/contract';
+import { mapEventData, mapParticipantData, mapMovieData } from '@/shared/api/apiMapping';
 import type {
   EventConfigData,
   EventConfigPatchPayload,
@@ -18,21 +12,14 @@ import type {
 import type { MovieData, ParticipantData } from '@/shared/types/movie';
 
 export async function fetchEventBySlug(slug: string, hostToken: string | null): Promise<EventData> {
-  const raw = await fetchApi<RawEventData>(
+  const raw = await fetchApi<ApiSchemas['EventDetailResponse']>(
     apiPath('events', 'slug', slug),
     withHostToken(hostToken)
   );
   return mapEventData(raw);
 }
 
-export type RawNightRecap = Omit<
-  RawEventData,
-  '_id' | 'slug' | 'recapSlug' | 'isHost' | 'votersCount'
-> & {
-  recapSlug: string;
-  eventSlug: string | null;
-  winnerMovies: RawMovieData[];
-};
+export type RawNightRecap = ApiSchemas['NightRecapResponse'];
 
 export type NightRecap = { event: EventData; winners: MovieData[]; eventSlug: string | null };
 
@@ -41,10 +28,17 @@ export async function fetchNightRecap(recapSlug: string): Promise<NightRecap> {
     recapSlug: ownSlug,
     eventSlug,
     winnerMovies,
+    config,
     ...night
   } = await fetchApi<RawNightRecap>(apiPath('recaps', recapSlug));
   return {
-    event: mapEventData({ ...night, _id: '', slug: eventSlug ?? '', recapSlug: ownSlug }),
+    event: mapEventData({
+      ...night,
+      config: config ?? undefined,
+      _id: '',
+      slug: eventSlug ?? '',
+      recapSlug: ownSlug,
+    }),
     winners: winnerMovies.map(mapMovieData),
     eventSlug,
   };
@@ -57,14 +51,10 @@ export type CreateEventBody = {
   clientRequestId?: string;
 };
 
-export type CreateEventResponse = {
-  slug: string;
-  shareUrl: string;
-  creatorParticipant?: { id: string; pseudo: string };
-};
+type RawCreateEventResponse = ApiSchemas['CreateEventResponse'];
 
-type RawCreateEventResponse = Omit<CreateEventResponse, 'creatorParticipant'> & {
-  creatorParticipant?: { _id: string; pseudo: string };
+export type CreateEventResponse = Pick<RawCreateEventResponse, 'slug' | 'shareUrl'> & {
+  creatorParticipant?: { id: string; pseudo: string };
 };
 
 export async function createEvent(body: CreateEventBody): Promise<CreateEventResponse> {
@@ -97,11 +87,7 @@ export type JoinEventResponse = {
   message: string;
 };
 
-type RawJoinEventResponse = {
-  participant: RawParticipantData;
-  isNew: boolean;
-  message: string;
-};
+type RawJoinEventResponse = ApiSchemas['JoinEventResult'];
 
 export async function joinEvent(slug: string, pseudo: string): Promise<JoinEventResponse> {
   const raw = await fetchApi<RawJoinEventResponse>(apiPath('events', slug, 'join'), {
@@ -130,10 +116,7 @@ export function patchEventConfig(
   );
 }
 
-export type RawWinnerMovie = Pick<
-  RawMovieData,
-  '_id' | 'eventId' | 'participantId' | 'tmdbId' | 'title' | 'year' | 'posterPath' | 'createdAt'
->;
+export type RawWinnerMovie = ApiSchemas['WinnerMovieResponse'];
 
 function mapWinnerMovie(raw: RawWinnerMovie): MovieData {
   return mapMovieData({ ...raw, proposerPseudo: '', score: 0, up: 0, down: 0 });
@@ -144,7 +127,7 @@ export async function postEventWheel(
   hostToken: string | null,
   expectedWinnerCount?: number
 ): Promise<{ winner: MovieData; message: string }> {
-  const raw = await fetchApi<{ winner: RawWinnerMovie; message: string }>(
+  const raw = await fetchApi<ApiSchemas['WheelResponse']>(
     apiPath('events', slug, 'wheel'),
     withHostToken(hostToken, { method: 'POST', body: JSON.stringify({ expectedWinnerCount }) })
   );
@@ -166,7 +149,7 @@ export async function postEventWinner(
   movieId: string,
   hostToken: string | null
 ): Promise<{ winner: MovieData; message: string }> {
-  const raw = await fetchApi<{ winner: RawWinnerMovie; message: string }>(
+  const raw = await fetchApi<ApiSchemas['WheelResponse']>(
     apiPath('events', slug, 'winner'),
     withHostToken(hostToken, { method: 'POST', body: JSON.stringify({ movieId }) })
   );
@@ -195,12 +178,7 @@ export async function deleteEventWinner(
   );
 }
 
-export type RemoveParticipantResponse = {
-  participantId: string;
-  eventId: string;
-  removedMovies: number;
-  message: string;
-};
+export type RemoveParticipantResponse = ApiSchemas['RemoveParticipantResponse'];
 
 export async function removeEventParticipant(
   idOrSlug: string,
@@ -213,15 +191,7 @@ export async function removeEventParticipant(
   );
 }
 
-export type DeleteEventResponse = {
-  eventId: string;
-  slug: string;
-  message: string;
-  removedParticipants: number;
-  removedMovies: number;
-  removedVotes: number;
-  removedSeenMarks: number;
-};
+export type DeleteEventResponse = ApiSchemas['DeleteEventResponse'];
 
 export async function deleteEvent(idOrSlug: string): Promise<DeleteEventResponse> {
   return fetchApi<DeleteEventResponse>(apiPath('events', idOrSlug), { method: 'DELETE' });
@@ -246,18 +216,9 @@ export function nightRecapFrontendUrl(slug: string): string {
   return `${globalThis.location.origin}${ROUTES.nightRecap(encodeURIComponent(slug))}`;
 }
 
-export interface EligibleFollowItem {
-  userId: string;
-  handle: string;
-  displayName: string;
-  avatarId: string;
-  isAlreadyParticipant: boolean;
-  isAlreadyInvited: boolean;
-}
+export type EligibleFollowItem = ApiSchemas['EligibleFollowItem'];
 
-export interface EligibleFollowsResponse {
-  follows: EligibleFollowItem[];
-}
+export type EligibleFollowsResponse = ApiSchemas['EligibleFollowsResponse'];
 
 export async function getEligibleFollows(idOrSlug: string): Promise<EligibleFollowsResponse> {
   return fetchApi<EligibleFollowsResponse>(

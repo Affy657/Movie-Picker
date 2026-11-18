@@ -1,0 +1,176 @@
+.card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  overflow: hidden;
+  transition: box-shadow var(--duration-base) var(--ease-default);
+}
+
+.card:focus-within {
+  --opacity-card-kebab: 1;
+}
+
+@media (hover: hover) {
+  .card {
+    --opacity-card-kebab: 0;
+  }
+
+  .card:hover {
+    --opacity-card-kebab: 1;
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.cardWinner {
+  border-color: var(--color-primary-border-soft);
+}
+
+.posterCol {
+  position: relative;
+  flex: 0 0 clamp(7rem, 32%, 12rem);
+  align-self: stretch;
+  overflow: hidden;
+  background: var(--color-poster-placeholder);
+}
+
+.posterBackdrop {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: var(--filter-poster-backdrop);
+  transform: scale(1.25);
+}
+
+.poster {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+}
+
+.posterPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 10rem;
+  color: var(--color-placeholder);
+  font-size: var(--font-size-2xs);
+}
+
+.tvBadge {
+  composes: posterBadge from '@/features/movies/components/movieCardParts.module.css';
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: var(--z-raised);
+}
+
+.info {
+  composes: onSurface from '@/features/movies/components/movieCardParts.module.css';
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-3-5);
+}
+
+.kebabSlot {
+  position: absolute;
+  top: var(--space-2-5);
+  right: var(--space-3);
+  z-index: var(--z-raised);
+}
+
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding-right: var(--space-8);
+}
+
+.title {
+  margin: 0;
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-snug);
+  color: var(--color-text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: break-word;
+}
+
+.metaLine {
+  margin: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  overflow: hidden;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.metaLine span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.offersRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  margin: 0 0;
+}
+
+.cardProviders {
+  margin: 0;
+}
+
+.providersEmpty {
+  margin: 0;
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-muted);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2-5);
+  flex-wrap: wrap;
+}
+
+.seenHint {
+  margin: 0;
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-muted);
+}
+
+.bottomSection {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+}
+
+.proposerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}

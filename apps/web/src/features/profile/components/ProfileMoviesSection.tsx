@@ -13,12 +13,12 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import {
   useWatchlistToggle,
   type WatchlistToggleItem,
-} from '@/features/watchlist/hooks/useWatchlistToggle';
+} from '@/features/library/hooks/useWatchlistToggle';
 import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
 import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
 import type { UserWatchedMovieItem } from '@/features/profile/api/profileApi';
 import { useProfileWatchedPreview } from '@/features/profile/hooks/useProfileWatchedPreview';
-import OwnerRatingBadge from '@/features/profile/components/OwnerRatingBadge';
+import OwnerRatingBadge from '@/features/movies/components/OwnerRatingBadge';
 import ProfileFavoritesSection from '@/features/profile/components/ProfileFavoritesSection';
 import ProfileHiddenNotice from '@/features/profile/components/ProfileHiddenNotice';
 import ProfileWatchlistPreview from '@/features/profile/components/ProfileWatchlistPreview';

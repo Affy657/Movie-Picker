@@ -68,14 +68,13 @@ public sealed class GetMovieShareDocumentHandler : IGetMovieShareDocumentHandler
         string apiBase,
         CancellationToken ct)
     {
-        var section = mediaType == MovieMediaType.Tv ? "serie" : "film";
-        var canonical = $"{webBase}/{section}/{Uri.EscapeDataString(movieRef)}";
-        var fallbackUrl = $"{webBase}/";
+        var canonical = webBase + FrontRoutes.MoviePage(mediaType, movieRef);
+        var fallbackUrl = webBase + FrontRoutes.Home;
         var title = TitleWithYear(details);
         var description = Describe(details.Overview, mediaType);
 
         if (!string.IsNullOrEmpty(details.BackdropUrl))
-            return new SharePreview(canonical, fallbackUrl, title, description, details.BackdropUrl, $"Image de {details.Title}");
+            return new SharePreview(canonical, fallbackUrl, title, description, details.BackdropUrl, ServerCopy.SharePreviews.ImageOf(details.Title));
 
         var siteImage = SharePreview.SiteImage(webBase);
         var image = await SharePreviewContent.PosterOrAsync(_posters, details.PosterUrl, apiBase, siteImage, ct);
@@ -85,7 +84,7 @@ public sealed class GetMovieShareDocumentHandler : IGetMovieShareDocumentHandler
             title,
             description,
             image,
-            image == siteImage ? SharePreview.SiteName : $"Affiche de {details.Title}");
+            image == siteImage ? SharePreview.SiteName : ServerCopy.SharePreviews.PosterOf(details.Title));
     }
 
     private static string TitleWithYear(TmdbMovieDetails details)
@@ -100,8 +99,8 @@ public sealed class GetMovieShareDocumentHandler : IGetMovieShareDocumentHandler
         if (string.IsNullOrEmpty(text))
         {
             return mediaType == MovieMediaType.Tv
-                ? "Découvrez cette série sur Movie Picker et proposez-la à votre prochaine soirée entre amis."
-                : "Découvrez ce film sur Movie Picker et proposez-le à votre prochaine soirée ciné entre amis.";
+                ? ServerCopy.SharePreviews.ShowWithoutOverview
+                : ServerCopy.SharePreviews.MovieWithoutOverview;
         }
 
         return text.Length <= DescriptionMaxLength

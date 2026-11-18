@@ -1,6 +1,7 @@
 import { createElement, lazy, useEffect, useState, type ComponentType } from 'react';
 import { matchRoutes } from 'react-router';
 import PageFallback from '@/app/components/PageFallback';
+import { MOVIE_PAGE_CHUNK } from '@/app/moviePageChunk';
 import { ROUTES } from '@/app/routes';
 import { hasSessionHint } from '@/features/auth/session-hint';
 
@@ -8,7 +9,7 @@ export const ROUTE_CHUNKS = {
   home: () => import('@/app/pages/HomePage'),
   showcaseList: () => import('@/app/pages/ShowcaseListPage'),
   movieCollections: () => import('@/app/pages/MovieCollectionsPage'),
-  moviePage: () => import('@/app/pages/movie/MoviePage'),
+  moviePage: () => MOVIE_PAGE_CHUNK.load(),
   landing: () => import('@/app/pages/LandingPage'),
   createEvent: () => import('@/features/events/pages/CreateEvent'),
   eventDetail: () => import('@/features/events/pages/EventDetail'),
@@ -25,14 +26,14 @@ export const ROUTE_CHUNKS = {
   tech: () => import('@/app/pages/TechPage'),
   releaseNotes: () => import('@/app/pages/ReleaseNotesPage'),
   myEvents: () => import('@/features/events/pages/MyEventsPage'),
-  watchlist: () => import('@/features/watchlist/pages/WatchlistPage'),
-  lists: () => import('@/features/lists/pages/MyListsPage'),
-  movieList: () => import('@/features/lists/pages/MovieListPage'),
-  savedList: () => import('@/features/lists/pages/SavedListPage'),
-  joinList: () => import('@/features/lists/pages/JoinListPage'),
-  memberLists: () => import('@/features/lists/pages/MemberListsPage'),
-  publicList: () => import('@/features/lists/pages/PublicListPage'),
-  watchedMovies: () => import('@/features/watched/pages/WatchedMoviesPage'),
+  watchlist: () => import('@/features/library/pages/WatchlistPage'),
+  lists: () => import('@/features/library/pages/MyListsPage'),
+  movieList: () => import('@/features/library/pages/MovieListPage'),
+  savedList: () => import('@/features/library/pages/SavedListPage'),
+  joinList: () => import('@/features/library/pages/JoinListPage'),
+  memberLists: () => import('@/features/profile/pages/MemberListsPage'),
+  publicList: () => import('@/features/library/pages/PublicListPage'),
+  watchedMovies: () => import('@/features/library/pages/WatchedMoviesPage'),
   notifications: () => import('@/features/notifications/pages/NotificationsPage'),
   profile: () => import('@/features/profile/pages/ProfilePage'),
   profileMovies: () => import('@/features/profile/pages/ProfileMoviesPage'),
@@ -42,10 +43,6 @@ export const ROUTE_CHUNKS = {
 };
 
 type RouteChunkName = keyof typeof ROUTE_CHUNKS;
-
-export const MOVIE_PAGE_CHUNKS: ReadonlyArray<() => Promise<unknown>> = [
-  () => ROUTE_CHUNKS.moviePage(),
-];
 
 const CHUNK_BY_PATH: ReadonlyMap<string, RouteChunkName> = new Map([
   [ROUTES.home, 'home'],

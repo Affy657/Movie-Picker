@@ -4,5 +4,5 @@ namespace MoviePicker.Api.Application.UseCases.DeleteEvent;
 
 public interface IDeleteEventHandler
 {
-    Task<DeleteEventResponse> HandleAsync(string idOrSlug, CancellationToken ct = default);
+    Task<DeleteEventResponse> HandleAsync(string userId, string idOrSlug, CancellationToken ct = default);
 }

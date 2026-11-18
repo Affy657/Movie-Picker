@@ -1,68 +1,69 @@
-export interface WatchProviderOffer {
-  providerId: number;
-  name: string;
-  logoPath: string | null;
-  type: string;
-}
+import type { ApiSchemas } from '@/shared/api/contract';
 
-export type MovieMediaType = 'movie' | 'tv';
+export type WatchProviderOffer = ApiSchemas['WatchProviderOfferResponse'];
 
-export interface FavoriteTitle {
-  tmdbId: number;
-  mediaType: MovieMediaType;
-  title: string;
-  year: string;
-  posterPath: string | null;
-}
+export type MovieMediaType = ApiSchemas['MovieMediaType'];
 
-export interface MovieRating {
-  participantId: string;
-  value: number;
-  updatedAt: string;
-}
+type ServedTitle = ApiSchemas['WatchlistItemResponse'];
 
-export interface MovieData {
-  id: string;
-  eventId: string;
+export type TitleSummary = Pick<
+  ServedTitle,
+  'tmdbId' | 'mediaType' | 'title' | 'year' | 'posterPath'
+> &
+  Partial<Pick<ServedTitle, 'genreIds' | 'voteAverage' | 'runtimeMinutes'>>;
 
-  participantId: string | { id: string; pseudo: string };
-  tmdbId: number;
+export type AddTitleBody = Omit<TitleSummary, 'mediaType'> & {
   mediaType?: MovieMediaType;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  pitchNote?: string | null;
-  excludedFromWheel?: boolean;
-  genreIds?: number[];
-  proposerPseudo: string;
-  proposerHandle?: string | null;
-  score: number;
-  up: number;
-  down: number;
+};
 
-  myVote?: 1 | -1 | null;
+export type CatalogTitle = Omit<AddTitleBody, 'tmdbId'> & {
+  id: number;
+};
 
-  pendingVote?: boolean;
-  voteAverage?: number | null;
-  watchProviders?: WatchProviderOffer[];
-  tmdbWatchPageUrl?: string | null;
+export type FavoriteTitle = ApiSchemas['FavoriteTitleResponse'];
 
-  runtimeMinutes?: number | null;
-  releaseDate?: string | null;
+export type MovieRating = ApiSchemas['MovieRatingResponse'];
 
-  createdAt?: string;
+type ServedMovie = ApiSchemas['MovieWithScoreResponse'];
 
-  seenCount?: number;
+export type MovieData = Pick<
+  ServedMovie,
+  | 'eventId'
+  | 'participantId'
+  | 'tmdbId'
+  | 'title'
+  | 'year'
+  | 'posterPath'
+  | 'proposerPseudo'
+  | 'score'
+  | 'up'
+  | 'down'
+> &
+  Partial<
+    Pick<
+      ServedMovie,
+      | 'mediaType'
+      | 'pitchNote'
+      | 'excludedFromWheel'
+      | 'genreIds'
+      | 'proposerHandle'
+      | 'voteAverage'
+      | 'watchProviders'
+      | 'tmdbWatchPageUrl'
+      | 'runtimeMinutes'
+      | 'releaseDate'
+      | 'createdAt'
+      | 'seenCount'
+      | 'seenByPseudos'
+      | 'votersUpPseudos'
+      | 'ratings'
+      | 'myVote'
+    >
+  > & {
+    id: string;
+    pendingVote?: boolean;
+  };
 
-  seenByPseudos?: string[];
-
-  votersUpPseudos?: string[];
-
-  ratings?: MovieRating[];
-}
-
-export interface ParticipantData {
+export type ParticipantData = Pick<ApiSchemas['ParticipantResponse'], 'eventId' | 'pseudo'> & {
   id: string;
-  eventId: string;
-  pseudo: string;
-}
+};

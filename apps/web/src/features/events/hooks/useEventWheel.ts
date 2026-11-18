@@ -14,6 +14,7 @@ import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { remainingWheelRevealDelayMs, WHEEL_SPIN_DURATION_MS } from '@/shared/utils/wheelSpin';
 import { wheelSliceWeights } from '@/features/events/lib/wheelSliceWeights';
+import { isWheelLocked } from '@/features/events/lib/nightRules';
 
 export type EventPrimaryAction = 'add' | 'spin' | null;
 
@@ -393,7 +394,7 @@ export function useEventWheel({
     noMovie: moviesCount === 0,
     canRelaunchFromModal:
       isOpenForActions && !manualReveal && remainingDraws > 0 && drawableMovies.length > 0,
-    wheelLocked: drawnIds.length > 0,
+    wheelLocked: isWheelLocked(allWinnerIds, locallyDrawnIds),
     launch,
     reset,
     dismissModal,

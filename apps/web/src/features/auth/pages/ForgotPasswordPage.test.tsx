@@ -67,7 +67,9 @@ describe('ForgotPasswordPage', () => {
     await user.type(screen.getByLabelText(/^e-mail$/i), 'someone@test.local');
     await user.click(screen.getByRole('button', { name: /recevoir le lien/i }));
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /vérifie ta boîte mail/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { name: /vérifiez votre boîte mail/i })
+      ).toBeInTheDocument();
     });
     expect(screen.getByRole('link', { name: /retour à la connexion/i })).toBeInTheDocument();
   });
@@ -86,7 +88,7 @@ describe('ForgotPasswordPage', () => {
       expect(screen.getByRole('alert')).toBeInTheDocument();
     });
     expect(
-      screen.queryByRole('heading', { name: /vérifie ta boîte mail/i })
+      screen.queryByRole('heading', { name: /vérifiez votre boîte mail/i })
     ).not.toBeInTheDocument();
   });
 

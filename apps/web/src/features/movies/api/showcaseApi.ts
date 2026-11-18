@@ -1,17 +1,10 @@
 import { fetchApi } from '@/shared/api/client';
+import type { ApiSchemas } from '@/shared/api/contract';
 import type { MovieMediaType } from '@/shared/types/movie';
 
 export const SHOWCASE_STALE_TIME = 1000 * 60 * 30;
 
-export type ShowcaseSection =
-  | 'trending'
-  | 'now-playing'
-  | 'most-proposed'
-  | 'theme'
-  | 'collection'
-  | 'provider'
-  | 'recommendations'
-  | 'director';
+export type ShowcaseSection = ShowcaseListResponse['section'];
 
 export const SHOWCASE_THEMES = [
   'frissons',
@@ -38,51 +31,15 @@ export const SHOWCASE_PROVIDERS = [
 
 export type ShowcaseProvider = (typeof SHOWCASE_PROVIDERS)[number];
 
-export interface ShowcaseItem {
-  id: number;
-  mediaType?: MovieMediaType;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
-  genreIds?: number[];
-  rank?: number | null;
-  eventCount?: number | null;
-}
+export type ShowcaseItem = ApiSchemas['MovieShowcaseItemResponse'];
 
-export interface ShowcaseListResponse {
-  section: string;
-  theme: string | null;
-  items: ShowcaseItem[];
-  disclaimer: string;
-  tmdbAttributionUrl: string;
-}
+export type ShowcaseListResponse = ApiSchemas['MovieShowcaseListResponse'];
 
-export interface MovieCollection {
-  id: number;
-  name: string;
-  overview: string | null;
-  posterPath: string | null;
-  movieCount: number;
-  previewPosterPaths?: string[] | null;
-}
+export type MovieCollection = ApiSchemas['MovieCollectionResponse'];
 
-export interface ShowcaseThemePoster {
-  title: string;
-  posterPath: string | null;
-}
+export type ShowcaseThemePreview = ApiSchemas['MovieShowcaseThemeResponse'];
 
-export interface ShowcaseThemePreview {
-  theme: string;
-  posters: ShowcaseThemePoster[];
-}
-
-export interface MovieCollectionListResponse {
-  items: MovieCollection[];
-  disclaimer: string;
-  tmdbAttributionUrl: string;
-}
+export type MovieCollectionListResponse = ApiSchemas['MovieCollectionListResponse'];
 
 export interface ShowcaseQuery {
   section: ShowcaseSection;
@@ -151,7 +108,7 @@ export async function fetchMovieCollections(
 }
 
 export async function fetchShowcaseThemes(signal?: AbortSignal): Promise<ShowcaseThemePreview[]> {
-  const raw = await fetchApi<{ items?: ShowcaseThemePreview[] | null }>(
+  const raw = await fetchApi<ApiSchemas['MovieShowcaseThemeListResponse']>(
     '/movies/showcase/themes',
     signal ? { signal } : undefined
   );

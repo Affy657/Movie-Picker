@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
+using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Application.UseCases.Auth.OAuth;
@@ -118,9 +119,9 @@ public sealed class AuthController : ControllerBase
         return NoContent();
     }
 
-    private const string FrontLoginPath = "/login";
-    private const string FrontIntegrationsPath = "/settings/integrations";
-    private const string FrontCallbackPath = "/auth/callback";
+    private const string FrontLoginPath = FrontRoutes.Login;
+    private const string FrontIntegrationsPath = FrontRoutes.AccountIntegrations;
+    private const string FrontCallbackPath = FrontRoutes.OAuthCallback;
     private const string ReturnToItemKey = "returnTo";
     internal const string ProviderItemKey = "oauthProvider";
     private const string OauthErrorQueryKey = "oauthError";
@@ -287,10 +288,9 @@ public sealed class AuthController : ControllerBase
         string provider,
         [FromServices] IOAuthUnlinkHandler handler,
         [FromServices] TimeProvider clock,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
         if (!OAuthProviders.TryResolve(provider, out var knownProvider))
             return NotFound();
         await handler.HandleAsync(userId, knownProvider, AuthSessionKey.Of(HttpContext), IsRecentlyAuthenticated(clock), ct);
@@ -331,10 +331,11 @@ public sealed class AuthController : ControllerBase
     [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Me([FromServices] IGetUserProfileHandler handler, CancellationToken ct)
+    public async Task<IActionResult> Me(
+        [FromServices] IGetUserProfileHandler handler,
+        [CurrentUserId] string userId,
+        CancellationToken ct)
     {
-        if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
         var profile = await handler.HandleAsync(userId, ct);
         return Ok(profile);
     }
@@ -350,6 +351,7 @@ public sealed class AuthController : ControllerBase
     public async Task<IActionResult> PatchMe(
         [FromBody] PatchUserProfileRequest? request,
         [FromServices] IPatchUserProfileHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
         if (request is null)
@@ -358,8 +360,6 @@ public sealed class AuthController : ControllerBase
                 ApiErrorResponse.FromHttpContext(HttpContext, StatusCodes.Status400BadRequest, "JSON body required", ErrorCodes.ValidationFailed));
         }
 
-        if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
         var profile = await handler.HandleAsync(userId, request, ct);
         return Ok(profile);
     }
@@ -378,14 +378,12 @@ public sealed class AuthController : ControllerBase
         [FromBody] ChangePasswordRequest? request,
         [FromServices] IChangePasswordHandler handler,
         [FromServices] TimeProvider clock,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
         if (request is null)
             return BadRequest(
                 ApiErrorResponse.FromHttpContext(HttpContext, StatusCodes.Status400BadRequest, "JSON body required", ErrorCodes.ValidationFailed));
-
-        if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
 
         await handler.HandleAsync(userId, request, IsRecentlyAuthenticated(clock), ct);
 
@@ -405,11 +403,9 @@ public sealed class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> ExportMyData(
         [FromServices] IExportUserDataHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
-
         var export = await handler.HandleAsync(userId, ct);
         var json = JsonSerializer.Serialize(export, DataExportJsonOptions);
         var bytes = Encoding.UTF8.GetBytes(json);
@@ -434,14 +430,12 @@ public sealed class AuthController : ControllerBase
         [FromBody] DeleteAccountRequest? request,
         [FromServices] IDeleteAccountHandler handler,
         [FromServices] TimeProvider clock,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
         if (request is null)
             return BadRequest(
                 ApiErrorResponse.FromHttpContext(HttpContext, StatusCodes.Status400BadRequest, "JSON body required", ErrorCodes.ValidationFailed));
-
-        if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
 
         await handler.HandleAsync(userId, request, IsRecentlyAuthenticated(clock), ct);
 

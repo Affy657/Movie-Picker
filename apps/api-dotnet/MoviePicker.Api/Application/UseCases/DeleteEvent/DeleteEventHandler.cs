@@ -15,7 +15,6 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
     private readonly IVoteRepository _voteRepository;
     private readonly ISeenMarkRepository _seenMarkRepository;
     private readonly IMovieRatingRepository _ratingRepository;
-    private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IUserNotificationRepository _notifications;
     private readonly EventAudienceNotifier _audience;
     private readonly IUnitOfWork _unitOfWork;
@@ -29,7 +28,6 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         IVoteRepository voteRepository,
         ISeenMarkRepository seenMarkRepository,
         IMovieRatingRepository ratingRepository,
-        ICurrentUserAccessor currentUserAccessor,
         IUserNotificationRepository notifications,
         EventAudienceNotifier audience,
         IUnitOfWork unitOfWork,
@@ -42,7 +40,6 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         _voteRepository = voteRepository;
         _seenMarkRepository = seenMarkRepository;
         _ratingRepository = ratingRepository;
-        _currentUserAccessor = currentUserAccessor;
         _notifications = notifications;
         _audience = audience;
         _unitOfWork = unitOfWork;
@@ -50,20 +47,16 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         _clock = clock;
     }
 
-    public async Task<DeleteEventResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
+    public async Task<DeleteEventResponse> HandleAsync(string userId, string idOrSlug, CancellationToken ct = default)
     {
-        var currentUserId = _currentUserAccessor.GetUserId();
-        if (string.IsNullOrEmpty(currentUserId))
-            throw Errors.AccountRequired();
-
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
-        if (string.IsNullOrEmpty(evt.CreatorUserId) || evt.CreatorUserId != currentUserId)
+        if (string.IsNullOrEmpty(evt.CreatorUserId) || evt.CreatorUserId != userId)
             throw Errors.CreatorOnlyDelete();
 
         var participants = await _participantRepository.ListByEventIdAsync(evt.Id, ct);
         var participantUserIds = participants
-            .Where(p => !string.IsNullOrEmpty(p.UserId) && p.UserId != currentUserId)
+            .Where(p => !string.IsNullOrEmpty(p.UserId) && p.UserId != userId)
             .Select(p => p.UserId!)
             .Distinct()
             .ToList();
@@ -72,12 +65,15 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         await _unitOfWork.ExecuteAsync(
             async token =>
             {
-                cascade.Votes = await _voteRepository.DeleteByEventIdAsync(evt.Id, token);
-                cascade.SeenMarks = await _seenMarkRepository.DeleteByEventIdAsync(evt.Id, token);
-                cascade.Ratings = await _ratingRepository.DeleteByEventIdAsync(evt.Id, token);
-                cascade.Movies = await _movieRepository.DeleteByEventIdAsync(evt.Id, token);
-                cascade.Participants = await _participantRepository.DeleteByEventIdAsync(evt.Id, token);
-                await _notifications.DeleteByEventIdAsync(evt.Id, token);
+                cascade.Children = await EventChildData.PurgeEventAsync(
+                    _voteRepository,
+                    _seenMarkRepository,
+                    _ratingRepository,
+                    _movieRepository,
+                    _participantRepository,
+                    _notifications,
+                    evt.Id,
+                    token);
                 await EndTheSeriesThatLeadsHereAsync(evt, token);
                 cascade.EventDeleted = await _eventRepository.DeleteAsync(evt.Id, token);
             },
@@ -91,28 +87,29 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
             throw Errors.EventNotFound();
         }
 
+        var children = cascade.Children;
         await _audience.NotifyUsersAsync(participantUserIds, EventDeletedMessage(evt), CancellationToken.None);
 
         _logger.LogInformation(
             "Event deleted: {EventId} (slug={Slug}, by={UserId}, cascadedVotes={Votes}, seenMarks={Seen}, movies={Movies}, participants={Participants})",
             evt.Id,
             evt.Slug,
-            currentUserId,
-            cascade.Votes,
-            cascade.SeenMarks,
-            cascade.Movies,
-            cascade.Participants);
+            userId,
+            children.Votes,
+            children.SeenMarks,
+            children.Movies,
+            children.Participants);
 
         return new DeleteEventResponse
         {
             EventId = evt.Id,
             Slug = evt.Slug ?? string.Empty,
             Message = "Movie night deleted",
-            RemovedParticipants = cascade.Participants,
-            RemovedMovies = cascade.Movies,
-            RemovedVotes = cascade.Votes,
-            RemovedSeenMarks = cascade.SeenMarks,
-            RemovedRatings = cascade.Ratings
+            RemovedParticipants = children.Participants,
+            RemovedMovies = children.Movies,
+            RemovedVotes = children.Votes,
+            RemovedSeenMarks = children.SeenMarks,
+            RemovedRatings = children.Ratings
         };
     }
 
@@ -133,11 +130,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
 
     private sealed class Cascade
     {
-        public long Votes { get; set; }
-        public long SeenMarks { get; set; }
-        public long Ratings { get; set; }
-        public long Movies { get; set; }
-        public long Participants { get; set; }
+        public EventChildCounts Children { get; set; } = new(0, 0, 0, 0, 0);
         public bool EventDeleted { get; set; }
     }
 
@@ -148,9 +141,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
             Type = UserNotificationType.EventDeleted,
             EventTitle = evt.Title
         },
-        new PushMessage(
-            Title: "Soirée annulée 😢",
-            Body: $"{evt.Title} a été annulée.",
-            Tag: $"event-deleted-{evt.Id}",
-            Url: "/"));
+        ServerCopy.Push.EventCancelled(evt.Title).ToMessage(
+            tag: $"event-deleted-{evt.Id}",
+            url: FrontRoutes.Home));
 }

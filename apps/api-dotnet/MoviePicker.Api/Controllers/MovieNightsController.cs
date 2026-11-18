@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
-using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.MovieNights;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Web;
@@ -24,13 +23,9 @@ public sealed class MovieNightsController : ControllerBase
         int tmdbId,
         [FromQuery] MovieMediaType mediaType,
         [FromServices] IGetMovieNightsHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Ok(await handler.HandleAsync(userId, tmdbId, mediaType, ct));
     }
 }

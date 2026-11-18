@@ -3,7 +3,7 @@ import { useTranslation } from '@/shared/i18n';
 import { useConsent } from '@/shared/contexts/ConsentContext';
 import ConsentDialog from '@/shared/components/ConsentDialog';
 import styles from './ConsentBanner.module.css';
-import { useCloseOnPageChange } from './useCloseOnPageChange';
+import { useCloseOnPageChange } from '@/shared/hooks/useCloseOnPageChange';
 import Button from '@/shared/components/Button';
 import Notice from '@/shared/components/Notice';
 

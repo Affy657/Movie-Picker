@@ -18,7 +18,14 @@ const api = vi.hoisted(() => ({
 
 vi.mock('@/features/movies/api/moviesApi', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/features/movies/api/moviesApi')>()),
-  ...api,
+  searchMovies: api.searchMovies,
+  fetchMovieDetails: api.fetchMovieDetails,
+}));
+
+vi.mock('@/features/events/api/eventMoviesApi', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/features/events/api/eventMoviesApi')>()),
+  addMovieToEvent: api.addMovieToEvent,
+  removeMovieFromEvent: api.removeMovieFromEvent,
 }));
 
 vi.mock('@/features/auth/contexts/AuthContext', () => ({
@@ -90,6 +97,7 @@ const DUNE: MovieSearchItem = {
   runtimeMinutes: 155,
   watchProviders: [{ providerId: 1899, name: 'Max', logoPath: null, type: 'flatrate' }],
   tmdbWatchPageUrl: null,
+  genreIds: [],
 };
 
 const JAWS: MovieSearchItem = {
@@ -102,6 +110,7 @@ const JAWS: MovieSearchItem = {
   runtimeMinutes: 124,
   watchProviders: [],
   tmdbWatchPageUrl: null,
+  genreIds: [],
 };
 
 const MARLEY: MovieSearchItem = { ...JAWS, id: 14306, title: 'Marley & moi', year: '2008' };

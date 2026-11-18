@@ -11,6 +11,7 @@ import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
 import HomeHero from './HomeHero';
 import { useHomeSearchHidden } from './homeSearchVisibility';
+import { buildMyEventSummary } from '@/test-utils/myEventSummary';
 
 const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
   HttpResponse.json({
@@ -40,7 +41,7 @@ const trendingHandler = http.get(`${TEST_API_V1}/movies/showcase`, () =>
 );
 
 function night(overrides: Partial<MyEventSummary>): MyEventSummary {
-  return {
+  return buildMyEventSummary({
     id: overrides.slug ?? 'night',
     slug: 'night',
     title: 'Soirée',
@@ -55,7 +56,7 @@ function night(overrides: Partial<MyEventSummary>): MyEventSummary {
     movieCount: 3,
     hasVoted: true,
     ...overrides,
-  };
+  });
 }
 
 function eventsHandler(events: MyEventSummary[]) {

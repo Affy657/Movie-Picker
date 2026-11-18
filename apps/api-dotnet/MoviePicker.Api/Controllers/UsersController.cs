@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
-using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AvatarPhotos;
 using MoviePicker.Api.Application.UseCases.EventTemplates;
 using MoviePicker.Api.Application.UseCases.Favorites;
@@ -131,13 +130,9 @@ public sealed class UsersController : ControllerBase
     public async Task<IActionResult> GetMyWatchedMovies(
         [FromQuery] int take,
         [FromServices] IGetUserWatchedMoviesHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         var result = await handler.HandleForUserAsync(userId, take, ct);
         return Ok(result);
     }
@@ -151,13 +146,9 @@ public sealed class UsersController : ControllerBase
     public async Task<IActionResult> GetFollowingWatchedMovies(
         [FromQuery] int take,
         [FromServices] IGetFollowedWatchedMoviesHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         var result = await handler.HandleAsync(userId, take, ct);
         return Ok(result);
     }
@@ -168,13 +159,9 @@ public sealed class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> ListEventTemplates(
         [FromServices] IListEventTemplatesHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Ok(await handler.HandleAsync(userId, ct));
     }
 
@@ -188,13 +175,9 @@ public sealed class UsersController : ControllerBase
     public async Task<IActionResult> CreateEventTemplate(
         [FromBody] SaveEventTemplateRequest request,
         [FromServices] ICreateEventTemplateHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Created(string.Empty, await handler.HandleAsync(userId, request, ct));
     }
 
@@ -210,13 +193,9 @@ public sealed class UsersController : ControllerBase
         string templateId,
         [FromBody] SaveEventTemplateRequest request,
         [FromServices] IUpdateEventTemplateHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Ok(await handler.HandleAsync(userId, templateId, request, ct));
     }
 
@@ -229,13 +208,9 @@ public sealed class UsersController : ControllerBase
     public async Task<IActionResult> DeleteEventTemplate(
         string templateId,
         [FromServices] IDeleteEventTemplateHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         await handler.HandleAsync(userId, templateId, ct);
         return NoContent();
     }
@@ -252,13 +227,9 @@ public sealed class UsersController : ControllerBase
     public async Task<IActionResult> AddFavorite(
         [FromBody] AddFavoriteRequest request,
         [FromServices] IAddFavoriteHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Ok(await handler.HandleAsync(userId, request, ct));
     }
 
@@ -273,14 +244,10 @@ public sealed class UsersController : ControllerBase
     public async Task<IActionResult> RemoveFavorite(
         int tmdbId,
         [FromServices] IRemoveFavoriteHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct,
         [FromQuery] MovieMediaType mediaType = MovieMediaType.Movie)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Ok(await handler.HandleAsync(userId, tmdbId, mediaType, ct));
     }
 
@@ -296,13 +263,9 @@ public sealed class UsersController : ControllerBase
     public async Task<IActionResult> UploadAvatarPhoto(
         [FromBody] UploadAvatarPhotoRequest request,
         [FromServices] IUploadAvatarPhotoHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Ok(await handler.HandleAsync(userId, request, ct));
     }
 
@@ -315,13 +278,9 @@ public sealed class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> DeleteAvatarPhoto(
         [FromServices] IDeleteAvatarPhotoHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Ok(await handler.HandleAsync(userId, ct));
     }
 
@@ -336,11 +295,9 @@ public sealed class UsersController : ControllerBase
     public async Task<IActionResult> Follow(
         string handle,
         [FromServices] IFollowUserHandler handler,
+        [CurrentUserId] string currentUserId,
         CancellationToken ct)
     {
-        if (!User.TryGetUserId(out var currentUserId))
-            return Unauthorized();
-
         await handler.HandleAsync(currentUserId, handle, ct);
         return NoContent();
     }
@@ -355,11 +312,9 @@ public sealed class UsersController : ControllerBase
     public async Task<IActionResult> Unfollow(
         string handle,
         [FromServices] IUnfollowUserHandler handler,
+        [CurrentUserId] string currentUserId,
         CancellationToken ct)
     {
-        if (!User.TryGetUserId(out var currentUserId))
-            return Unauthorized();
-
         await handler.HandleAsync(currentUserId, handle, ct);
         return NoContent();
     }

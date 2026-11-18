@@ -10,7 +10,6 @@ public sealed class ClearMovieVoteHandler : IClearMovieVoteHandler
     private readonly IMovieRepository _movieRepository;
     private readonly IParticipantRepository _participantRepository;
     private readonly IVoteRepository _voteRepository;
-    private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly TimeProvider _clock;
 
     public ClearMovieVoteHandler(
@@ -18,24 +17,22 @@ public sealed class ClearMovieVoteHandler : IClearMovieVoteHandler
         IMovieRepository movieRepository,
         IParticipantRepository participantRepository,
         IVoteRepository voteRepository,
-        ICurrentUserAccessor currentUserAccessor,
         TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _participantRepository = participantRepository;
         _voteRepository = voteRepository;
-        _currentUserAccessor = currentUserAccessor;
         _clock = clock;
     }
 
-    public async Task HandleAsync(string idOrSlug, string movieId, string participantId, CancellationToken ct = default)
+    public async Task HandleAsync(string userId, string idOrSlug, string movieId, string participantId, CancellationToken ct = default)
     {
         var (evt, movie, participant) = await MovieActionContext.ResolveOwnedMovieAsync(
             _eventRepository,
             _movieRepository,
             _participantRepository,
-            _currentUserAccessor,
+            userId,
             _clock.GetUtcNow(),
             idOrSlug,
             movieId,

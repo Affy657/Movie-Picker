@@ -1,6 +1,5 @@
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Domain;
-using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Application.UseCases.Shared;
 
 namespace MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
 
@@ -25,12 +24,12 @@ public sealed class AnnounceWheelWinnerHandler : IAnnounceWheelWinnerHandler
 
     public async Task HandleAsync(string idOrSlug, CancellationToken ct = default)
     {
-        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
-
-        var token = _hostTokenAccessor.GetHostToken();
-        var userId = _currentUserAccessor.GetUserId();
-        if (!EventHost.IsHost(evt, token, userId))
-            throw Errors.HostOnly();
+        var evt = await HostedEvent.LoadForHostEvenFinishedAsync(
+            _eventRepository,
+            _hostTokenAccessor,
+            _currentUserAccessor.GetUserId(),
+            idOrSlug,
+            ct);
 
         await _announcement.AnnounceAwaitingPicksAsync(evt, ct);
     }

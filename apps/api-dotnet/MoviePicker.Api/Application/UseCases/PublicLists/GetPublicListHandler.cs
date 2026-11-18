@@ -33,7 +33,7 @@ public sealed class GetPublicListHandler : IGetPublicListHandler
             ItemCount = list.Items.Count,
             MemberCount = list.MemberCount,
             WatchedCount = watched?.CountAmong(list.Items.Select(item => new MovieListTitle(item.TmdbId, item.MediaType))),
-            Creator = ListCreatorResponse.From(creator),
+            Creator = ListCreatorResponse.From(DisplayedPerson.From(creator)),
             ViewerRole = string.IsNullOrEmpty(viewerId) ? null : list.RoleOf(viewerId),
             Items =
             [

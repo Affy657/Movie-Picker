@@ -27,7 +27,7 @@ import { eventFrontendUrl, nightRecapFrontendUrl } from '@/features/events/api/e
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useEventWheel } from '@/features/events/hooks/useEventWheel';
 import { eventCountdownLabel } from '@/features/events/utils/eventCountdownLabel';
-import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
+import type { MovieCardSelection } from '@/features/events/components/eventMovieCardParts';
 import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import type { EventData } from '@/features/events/types';

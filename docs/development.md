@@ -8,9 +8,9 @@ respecter en écrivant du code sont dans [`AGENTS.md`](../AGENTS.md).
 
 - **Node.js** 20.19+, 22.13+ ou 24+, et **pnpm** 10.
 - **SDK .NET 10** pour l'API.
-- **Docker**, pour les tests d'intégration contre MongoDB, pour la voie docker de `verify:local`
-  (lint des workflows, Terraform, Gitleaks, Trivy) et pour lancer Terraform, qui n'est pas installé
-  sur le poste (voir [`infra/README.md`](../infra/README.md)).
+- **Docker**, pour les tests d'intégration et la suite e2e contre MongoDB, pour la voie docker de
+  `verify:local` (Gitleaks, lint des workflows, Terraform, Trivy) et pour lancer Terraform, qui
+  n'est pas installé sur le poste (voir [`infra/README.md`](../infra/README.md)).
 
 MongoDB n'est pas un prérequis : sans configuration l'API tourne en mémoire, la section suivante dit
 quand et comment brancher une vraie base.
@@ -127,26 +127,30 @@ Tous se lancent à la racine du dépôt.
 | --- | --- |
 | `pnpm dev:full`, `pnpm dev:web`, `pnpm dev:api-dotnet` | Démarrage local |
 | `pnpm build` | Build du front par Turbo |
-| `pnpm lint`, `pnpm run lint:eslint` | Types et règles côté front |
-| `pnpm run check:architecture` | Règles d'architecture, aussi jouées au pre-push |
-| `pnpm run check:unused` | Fichiers, exports et dépendances inutilisés (knip), joué par `verify:local` et le job `lint-web` |
-| `pnpm run check:workflows` | actionlint (+ shellcheck) et zizmor sur `.github/workflows/`, par Docker |
-| `pnpm run check:terraform` | `terraform fmt -check` puis `validate` sur chaque module racine de `infra/terraform/`, par Docker |
+| `pnpm lint`, `pnpm run lint:eslint` | Types puis règles ESLint côté front ; la seconde forme ne joue que les règles |
+| `pnpm run check:static` | Toutes les portes statiques : architecture, tests des scripts, compatibilité du contrat avec la version publiée, `pnpm lint`, Prettier, knip ; c'est le hook pre-push, le job `lint-web` et la voie node de `verify:local` |
+| `pnpm run check:architecture` | Règles d'architecture |
+| `pnpm run check:unused` | Fichiers, exports et dépendances inutilisés (knip) |
+| `pnpm run check:workflows` | actionlint (+ shellcheck) et zizmor sur `.github/`, par Docker, joué tel quel par le job `lint-workflows` |
+| `pnpm run check:terraform` | `terraform fmt -check` puis `validate` sur chaque module racine de `infra/terraform/`, par Docker, joué tel quel par le job `lint-terraform` |
+| `pnpm run check:secrets` | Gitleaks sur l'arbre de travail, par Docker, joué tel quel par le job `gitleaks` |
+| `pnpm run check:audit` | Trivy sur `pnpm-lock.yaml` (HIGH avec correctif, puis tout CRITICAL), par Docker, joué tel quel par le job `audit` |
 | `pnpm run terraform -- <commande>` | Terraform depuis son image épinglée, bucket d'état et jeton GCP fournis par l'enveloppe, voir `infra/README.md` |
 | `pnpm format`, `pnpm format:check` | Prettier |
 | `pnpm run format:dotnet`, `pnpm run format:dotnet:check` | Style C#, après `dotnet restore` ; la vérification joue les passes `whitespace` et `style`, les analyseurs étant ceux du build |
 | `pnpm test`, `pnpm run test:coverage` | Tests front, Vitest |
 | `pnpm run test:changed` | Tests front touchés par le diff depuis `origin/master`, la boucle d'avant push |
-| `pnpm run test:api:mongo` | Tests d'intégration API contre une vraie MongoDB |
+| `pnpm run test:api:mongo` | Tests d'intégration API contre une vraie MongoDB, avec la porte de couverture des adaptateurs Mongo ; joué tel quel par le job `test-api` |
 | `pnpm run test:api:mutation` | Passe Stryker.NET, rapport dans `artifacts/stryker` |
-| `pnpm run test:e2e`, `pnpm run test:e2e:ci` | Playwright, la seconde forme construisant le front avec un stub TMDB |
-| `pnpm run test:e2e:mongo` | Le seul parcours critique, sur base réelle |
-| `pnpm run test:e2e:local` | La suite Playwright depuis le poste, serveurs de dev allumés : API de test en Release sur 5010, front construit contre elle, `--mongo` pour le parcours critique sur base réelle |
-| `pnpm run openapi:export`, `pnpm run openapi:types:check` | Contrat OpenAPI et dérive des types |
+| `pnpm run test:e2e`, `pnpm run test:e2e:ci` | Playwright, la seconde forme construisant le front avec un stub TMDB ; l'API tourne sur la base de `E2E_MONGODB_URI` quand elle est posée (le job `e2e`), en mémoire sinon |
+| `pnpm run test:e2e:local` | La suite Playwright depuis le poste, serveurs de dev allumés : API de test en Release sur 5010, sur MongoDB (le conteneur de test sur 27018, base `moviepicker_e2e` vidée à chaque run, ou `E2E_MONGODB_URI`), front construit contre elle ; `--in-memory` pour la base en mémoire |
+| `pnpm run openapi:sync` | Régénère le contrat OpenAPI (`openapi:export`) puis les types du front (`openapi:types`), à committer avec le changement d'API qui les a fait bouger |
+| `pnpm run openapi:types:check` | Dérive des types générés par rapport au contrat exporté |
+| `pnpm run check:contract-compat [<ref>]` | Compare le contrat de la dernière version publiée (dernier tag `v*` d'`origin`, ou `<ref>`) à l'arbre courant : échoue si une route, une méthode ou une propriété de réponse lue par le front N-1 a disparu ou est devenue optionnelle |
 | `pnpm --filter web prerender` | Prérendu des routes publiques indexables, à lancer après un build |
 | `pnpm run lighthouse` | Lighthouse sur le build, demande Node 22+ et Chrome |
 | `pnpm run capture:screenshots` | Captures du README, sur l'application lancée en local |
-| `pnpm run verify:local` | La chaîne complète, dix-sept étapes en trois voies concurrentes puis la suite front seule, durées affichées en fin de run |
+| `pnpm run verify:local` | La chaîne complète, quatorze étapes en trois voies concurrentes puis la suite front seule, durées affichées en fin de run ; chaque porte qu'elle partage avec la CI y passe par le même `pnpm run` |
 
 ## Captures du README
 
@@ -179,43 +183,71 @@ pnpm exec playwright install chromium   # une seule fois
 pnpm run test:e2e:ci
 ```
 
-`pnpm run test:api:mongo` crée son conteneur MongoDB à la volée et une base jetable par classe de
-test. Au tout premier lancement, l'initialisation du replica set part parfois avant que mongod soit
-prêt, ce qui laisse un conteneur debout sans replica set et fait échouer toutes les relances. Le
-réparer une fois puis relancer :
+Sans `MONGODB_TEST_URI`, la seconde commande joue la suite d'intégration sur la base en mémoire, et
+`pnpm run test:e2e:ci` sans `E2E_MONGODB_URI` en fait autant pour l'API des e2e : pratique pour
+itérer, mais seuls `pnpm run test:api:mongo` et `pnpm run test:e2e:local` jouent ces suites sur
+MongoDB, comme les jobs `test-api` et `e2e` de la CI.
 
-```bash
-docker exec movie-picker-mongo-test mongosh --quiet \
-  --eval 'rs.initiate({_id:"rs0",members:[{_id:0,host:"127.0.0.1:27017"}]})'
-```
+`pnpm run test:api:mongo` et `pnpm run test:e2e:local` partagent le conteneur
+`movie-picker-mongo-test` (port 27018, `MONGO_TEST_PORT` pour un autre) : `scripts/mongo-replica-set.mjs`
+le démarre au besoin avec l'image épinglée, le recrée s'il est arrêté ou tourne sur une autre image,
+initialise le replica set s'il ne l'est pas et attend qu'il accepte les écritures. Chaque classe de
+test d'intégration y prend une base jetable.
 
 ## Structure du dépôt
 
 ```
 movie-picker/
+├─ .github/           Workflows (CI, déploiement, retours arrière, infrastructure, sauvegarde,
+│                     analyse de sécurité) et actions/, les actions composites qu'ils partagent
 ├─ apps/
 │  ├─ web/            Front React, Vite, TypeScript, PWA
-│  └─ api-dotnet/     API ASP.NET Core, solution MoviePicker.slnx
+│  └─ api-dotnet/     API ASP.NET Core, solution MoviePicker.slnx : MoviePicker.Api, ses tests
+│                     unitaires (MoviePicker.Api.Tests) et d'intégration (MoviePicker.Api.IntegrationTests)
 ├─ archive/           Application Expo du cursus et documents gelés, plus construits
-├─ artifacts/         Contrat OpenAPI, rapports Lighthouse et Stryker
-├─ configs/           tsconfig et Prettier partagés, exclusions Sonar
-├─ docs/              Roadmap, dette technique, ce guide, captures du README
+├─ artifacts/         Contrat OpenAPI, rapports Lighthouse et Stryker, généré et ignoré par git
+├─ configs/           tsconfig et Prettier partagés, budgets Lighthouse, exclusions Sonar
+├─ design/            Maquettes de l'application (design/mockups/), publiées dans un canvas Design
+├─ docs/              Roadmap, dette technique, design system, runbook de restauration, ce guide,
+│                     captures du README
 ├─ e2e/               Parcours Playwright
-├─ infra/             Terraform (infra/terraform/) et la configuration du site Firebase Hosting
-└─ scripts/           verify:local, lint des workflows, Terraform, publication Firebase Hosting, prérequis, export OpenAPI, seuils de couverture, captures
+├─ infra/             Terraform (infra/terraform/), configuration du site Firebase Hosting et
+│                     ancienne adresse du site (infra/web-legacy/)
+└─ scripts/           Portes de qualité (check-*.mjs, règles d'architecture dans architecture/),
+                      verify:local, MongoDB de test, contrat OpenAPI, Terraform, publication et
+                      retour arrière du front, release, Lighthouse, prérequis, captures
 ```
 
+Le front est découpé par usage, pas par type de fichier. `apps/web/src/features/` porte sept
+domaines : `auth` (session, connexion, comptes), `movies` (catalogue, recherche, vitrines, liste « À
+voir »), `events` (les soirées, et les films qui y sont proposés), `letterboxd` (import),
+`library` (Mes listes, films vus, listes enregistrées et publiques), `profile` (profils publics,
+suivis) et `notifications` (boîte de réception, push), chacun avec ses `api/`, `components/`,
+`hooks/` et `pages/`. `shared/` est le socle qui n'en connaît aucun : primitives du design system,
+client HTTP et contrat généré, i18n, hooks transverses. `app/` est la composition au-dessus des
+deux : table des routes, coquille, pages qui assemblent plusieurs domaines (`app/pages/`). Qui peut
+importer qui se lit dans `FEATURE_EDGES` (`scripts/architecture/featureEdges.mjs`), seule
+description du graphe des features.
+
 L'API suit un découpage hexagonal : `Domain` porte les entités et les règles sans dépendance au
-framework, `Application` les cas d'usage, les ports et les DTOs, `Infrastructure` les
-implémentations concrètes (MongoDB, TMDB, e-mail, cookies), `Controllers` la traduction HTTP.
-`check:architecture` refuse les `using` qui traversent ces frontières.
+framework, `Application` les cas d'usage (`UseCases/`, un dossier par cas, `UseCases/Shared/` pour
+ce que plusieurs partagent), les ports et les DTOs, `Infrastructure` les implémentations concrètes
+(MongoDB et la base en mémoire, TMDB, Letterboxd, push, e-mail, cookies), `Controllers` la
+traduction HTTP.
+
+`check:architecture` fait respecter ces deux découpages. `scripts/check-architecture.mjs` n'en est
+que le point d'entrée : les règles vivent dans `scripts/architecture/`, un module par famille
+(couches de l'API, `writeSeq`, imports du front, valeurs CSS, primitives, CSS mort), chacun avec
+son `*.test.mjs` joué par `pnpm run test:scripts`. La liste des règles est dans `AGENTS.md`.
 
 ## Deux pièges de build
 
-Le paquet `web` enchaîne `tsc`, `vite build`, un contrôle qui interdit d'embarquer les
-identifiants de démonstration dans `dist/assets/*.js`, puis le prérendu des routes publiques
-indexables dans `dist/prerendered/`. Un `vite build` lancé à la main dans
-`apps/web` saute ce contrôle.
+Le paquet `web` enchaîne la génération des chiffres du dossier technique, `tsc`, `vite build`, un
+contrôle qui interdit d'embarquer les identifiants de démonstration dans `dist/assets/*.js`, puis
+le prérendu des routes publiques indexables dans `dist/prerendered/`. Un `vite build` lancé à la
+main dans `apps/web` saute ce contrôle. La première étape réécrit
+`apps/web/src/app/pages/tech/generated/techMetrics.ts`, un fichier suivi par git : ne le committer
+qu'avec une mise à jour du dossier technique.
 
 La racine force par override une version corrigée de plusieurs dépendances transitives, dont
 `basic-ftp` tirée par Lighthouse, pour garder l'audit vert. À réévaluer à chaque montée majeure de

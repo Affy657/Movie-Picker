@@ -8,7 +8,7 @@ import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
 import { stubHoverCapability } from '@/test-utils/matchMedia';
 import HomePage from '@/app/pages/HomePage';
-import { ROUTE_CHUNKS } from '@/app/routeChunks';
+import { MOVIE_PAGE_CHUNK } from '@/app/moviePageChunk';
 
 function showcaseItems(prefix: string, count: number) {
   return Array.from({ length: count }, (_, index) => ({
@@ -176,7 +176,7 @@ describe('HomePage', () => {
       return 1;
     });
     vi.stubGlobal('cancelIdleCallback', vi.fn());
-    const loadMoviePage = vi.spyOn(ROUTE_CHUNKS, 'moviePage').mockResolvedValue({} as never);
+    const loadMoviePage = vi.spyOn(MOVIE_PAGE_CHUNK, 'load').mockResolvedValue({} as never);
     server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
 
     renderPage();

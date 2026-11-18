@@ -2,7 +2,7 @@ using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.ListMyEvents;
-using MoviePicker.Api.Domain;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -43,9 +43,8 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
     {
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
-        var token = _hostTokenAccessor.GetHostToken();
         var currentUserId = _currentUserAccessor.GetUserId();
-        var isHost = EventHost.IsHost(evt, token, currentUserId);
+        var isHost = HostedEvent.IsHost(evt, _hostTokenAccessor, currentUserId);
         var now = _clock.GetUtcNow();
         var eventLifecycle = evt.Lifecycle(now);
         var isFinished = eventLifecycle == EventLifecycle.Finished;
@@ -126,14 +125,14 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         Dictionary<string, UserCard> cardById,
         string? creatorUserId)
     {
-        UserCard? linkedUser = p.UserId is not null && cardById.TryGetValue(p.UserId, out var card) ? card : null;
+        var person = DisplayedPerson.LinkedTo(p, cardById);
         return new EventParticipantSummaryResponse
         {
             Id = p.Id,
             Pseudo = p.Pseudo,
             IsCreator = !string.IsNullOrEmpty(creatorUserId) && p.UserId == creatorUserId,
-            AvatarId = linkedUser?.AvatarId ?? string.Empty,
-            Handle = PublicHandleResolver.Resolve(linkedUser),
+            AvatarId = person?.AvatarId ?? string.Empty,
+            Handle = person?.PublicHandle,
         };
     }
 }

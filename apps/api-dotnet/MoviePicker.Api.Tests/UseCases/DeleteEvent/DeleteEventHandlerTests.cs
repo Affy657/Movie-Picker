@@ -19,7 +19,6 @@ public sealed class DeleteEventHandlerTests
     private readonly Mock<IVoteRepository> _voteRepo = new();
     private readonly Mock<ISeenMarkRepository> _seenMarkRepo = new();
     private readonly Mock<IMovieRatingRepository> _ratingRepo = new();
-    private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<IUserRepository> _userRepo = new();
     private readonly Mock<IPushSubscriptionRepository> _pushSubRepo = new();
     private readonly Mock<IPushNotificationSender> _pushSender = new();
@@ -56,7 +55,6 @@ public sealed class DeleteEventHandlerTests
             _voteRepo.Object,
             _seenMarkRepo.Object,
             _ratingRepo.Object,
-            _currentUser.Object,
             Mock.Of<IUserNotificationRepository>(),
             TestAudienceNotifier.Over(_participantRepo.Object, _userRepo.Object, _pushSubRepo.Object, _pushSender.Object, Mock.Of<IUserNotificationRepository>()),
             new InMemoryUnitOfWork(),
@@ -87,7 +85,6 @@ public sealed class DeleteEventHandlerTests
     [Fact]
     public async Task HandleAsync_TheNextNightOfASeries_EndsTheSeriesOnThePreviousNight()
     {
-        _currentUser.Setup(c => c.GetUserId()).Returns("user-1");
         SetupEvent(MakeEvent() with { Recurrence = RecurrenceFrequency.Weekly, RecurrenceParentEventId = "parent1" });
         var parent = MakeEvent() with
         {
@@ -106,7 +103,7 @@ public sealed class DeleteEventHandlerTests
             .Callback((Event e, CancellationToken _) => savedParent = e)
             .ReturnsAsync((Event e, CancellationToken _) => e);
 
-        await _sut.HandleAsync("evt1");
+        await _sut.HandleAsync("user-1", "evt1");
 
         Assert.NotNull(savedParent);
         Assert.Equal("parent1", savedParent!.Id);
@@ -117,44 +114,33 @@ public sealed class DeleteEventHandlerTests
     [Fact]
     public async Task HandleAsync_ANightWhoseParentAlreadyMovedOn_LeavesTheParentAlone()
     {
-        _currentUser.Setup(c => c.GetUserId()).Returns("user-1");
         SetupEvent(MakeEvent() with { RecurrenceParentEventId = "parent1" });
         _eventRepo
             .Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([MakeEvent() with { Id = "parent1", Recurrence = RecurrenceFrequency.Weekly, NextOccurrenceEventId = "other" }]);
 
-        await _sut.HandleAsync("evt1");
+        await _sut.HandleAsync("user-1", "evt1");
 
         _eventRepo.Verify(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    [Fact]
-    public async Task HandleAsync_AnonymousUser_ThrowsUnauthorized()
-    {
-        _currentUser.Setup(c => c.GetUserId()).Returns((string?)null);
-        SetupEvent(MakeEvent(creatorUserId: "user-1"));
-
-        await Assert.ThrowsAsync<UnauthorizedException>(() => _sut.HandleAsync("evt1"));
-    }
 
     [Fact]
     public async Task HandleAsync_EventNotFound_ThrowsNotFound()
     {
-        _currentUser.Setup(c => c.GetUserId()).Returns("user-1");
         _eventRepo
             .Setup(r => r.GetByIdOrSlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event?)null);
 
-        await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("missing"));
+        await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("user-1", "missing"));
     }
 
     [Fact]
     public async Task HandleAsync_NonCreatorConnectedUser_ThrowsForbidden()
     {
-        _currentUser.Setup(c => c.GetUserId()).Returns("intruder");
         SetupEvent(MakeEvent(creatorUserId: "user-1"));
 
-        await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1"));
+        await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("intruder", "evt1"));
 
         _voteRepo.Verify(r => r.DeleteByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         _seenMarkRepo.Verify(r => r.DeleteByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -166,16 +152,14 @@ public sealed class DeleteEventHandlerTests
     [Fact]
     public async Task HandleAsync_EventWithoutCreator_ThrowsForbidden()
     {
-        _currentUser.Setup(c => c.GetUserId()).Returns("user-1");
         SetupEvent(MakeEvent(creatorUserId: null));
 
-        await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1"));
+        await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("user-1", "evt1"));
     }
 
     [Fact]
     public async Task HandleAsync_CreatorUser_DeletesEventAndCascades()
     {
-        _currentUser.Setup(c => c.GetUserId()).Returns("user-1");
         SetupEvent(MakeEvent(creatorUserId: "user-1"));
 
         _voteRepo
@@ -191,7 +175,7 @@ public sealed class DeleteEventHandlerTests
             .Setup(r => r.DeleteByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(3L);
 
-        var result = await _sut.HandleAsync("evt1");
+        var result = await _sut.HandleAsync("user-1", "evt1");
 
         Assert.Equal("evt1", result.EventId);
         Assert.Equal("soiree", result.Slug);
@@ -213,10 +197,9 @@ public sealed class DeleteEventHandlerTests
     [Fact]
     public async Task HandleAsync_CreatorUser_AllowsDeletionEvenIfClosed()
     {
-        _currentUser.Setup(c => c.GetUserId()).Returns("user-1");
         SetupEvent(MakeEvent(creatorUserId: "user-1", closedAt: DateTimeOffset.UtcNow));
 
-        var result = await _sut.HandleAsync("evt1");
+        var result = await _sut.HandleAsync("user-1", "evt1");
         Assert.Equal("evt1", result.EventId);
         _eventRepo.Verify(r => r.DeleteAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -224,10 +207,9 @@ public sealed class DeleteEventHandlerTests
     [Fact]
     public async Task HandleAsync_CreatorUser_AllowsDeletionEvenIfWheelLaunched()
     {
-        _currentUser.Setup(c => c.GetUserId()).Returns("user-1");
         SetupEvent(MakeEvent(creatorUserId: "user-1", winnerMovieId: "movie-X"));
 
-        var result = await _sut.HandleAsync("evt1");
+        var result = await _sut.HandleAsync("user-1", "evt1");
         Assert.Equal("evt1", result.EventId);
         _eventRepo.Verify(r => r.DeleteAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -235,12 +217,11 @@ public sealed class DeleteEventHandlerTests
     [Fact]
     public async Task HandleAsync_FinalDeleteReturnsFalse_ThrowsNotFound()
     {
-        _currentUser.Setup(c => c.GetUserId()).Returns("user-1");
         SetupEvent(MakeEvent(creatorUserId: "user-1"));
         _eventRepo
             .Setup(r => r.DeleteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
-        await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("evt1"));
+        await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("user-1", "evt1"));
     }
 }

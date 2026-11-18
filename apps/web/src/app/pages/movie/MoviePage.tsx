@@ -25,12 +25,12 @@ import {
 import {
   useWatchlistToggle,
   type WatchlistToggleItem,
-} from '@/features/watchlist/hooks/useWatchlistToggle';
-import AddToListMenu from '@/features/lists/components/AddToListMenu';
-import type { WatchedStatus } from '@/features/watched/api/watchedApi';
-import WatchedRating, { hasWatchedRating } from '@/features/watched/components/WatchedRating';
-import WatchedToggle from '@/features/watched/components/WatchedToggle';
-import { useWatchedTitle } from '@/features/watched/hooks/useWatched';
+} from '@/features/library/hooks/useWatchlistToggle';
+import AddToListMenu from '@/features/library/components/AddToListMenu';
+import type { WatchedStatus } from '@/features/library/api/watchedApi';
+import WatchedRating, { hasWatchedRating } from '@/features/library/components/WatchedRating';
+import WatchedToggle from '@/features/library/components/WatchedToggle';
+import { useWatchedTitle } from '@/features/library/hooks/useWatched';
 import { ApiError } from '@/shared/api/apiError';
 import BackLink from '@/shared/components/BackLink';
 import Button, { buttonClass } from '@/shared/components/Button';
@@ -47,6 +47,7 @@ import { useShareAction } from '@/shared/hooks/useShareAction';
 import { useLocale, useTranslation, type Translate, type TranslationKey } from '@/shared/i18n';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
 import type { MovieMediaType } from '@/shared/types/movie';
+import { toTitleSummary } from '@/shared/utils/titleSummary';
 import MovieHero, { type MovieHeroView } from '@/app/pages/movie/MovieHero';
 import { MovieInfosCard, MovieLinksCard, MovieNightsCard } from '@/app/pages/movie/MovieAside';
 import MovieRails from '@/app/pages/movie/MovieRails';
@@ -337,16 +338,7 @@ function MovieSynopsisBlock({
 }
 
 function seedOfItem(item: MovieBrowseCardItem): MoviePageSeed {
-  return {
-    tmdbId: item.tmdbId,
-    mediaType: item.mediaType,
-    title: item.title,
-    year: item.year,
-    posterPath: item.posterPath,
-    voteAverage: item.voteAverage,
-    runtimeMinutes: item.runtimeMinutes,
-    genreIds: item.genreIds,
-  };
+  return toTitleSummary(item);
 }
 
 function seoTitleOf(

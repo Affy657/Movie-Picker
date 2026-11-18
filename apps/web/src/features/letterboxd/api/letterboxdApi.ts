@@ -1,71 +1,22 @@
 import { fetchApi, SLOW_REQUEST_TIMEOUT_MS } from '@/shared/api/client';
-import type { MovieMediaType } from '@/shared/types/movie';
+import type { ApiSchemas } from '@/shared/api/contract';
+import type { TitleSummary } from '@/shared/types/movie';
 
-export type LetterboxdImportTarget = 'watchlist' | 'watched';
+export type LetterboxdCandidate = ApiSchemas['LetterboxdImportCandidateResponse'];
 
-export interface LetterboxdCandidate {
-  tmdbId: number;
-  mediaType: MovieMediaType;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  voteAverage?: number | null;
-  genreIds?: number[];
-  runtimeMinutes?: number | null;
-}
+export type LetterboxdPendingChoice = ApiSchemas['LetterboxdImportRowResponse'];
 
-export interface LetterboxdPendingChoice {
-  rowIndex: number;
-  title: string;
-  year: string;
+export type LetterboxdSyncReport = ApiSchemas['LetterboxdSyncResponse'];
+
+export type LetterboxdSelection = TitleSummary & { letterboxdSlug: string | null };
+
+export interface LetterboxdWatchedSelection extends TitleSummary {
   letterboxdSlug: string | null;
-  target?: LetterboxdImportTarget;
-  rating?: number | null;
-  watchedOn?: string | null;
-  candidates: LetterboxdCandidate[];
-}
-
-export interface LetterboxdSyncReport {
-  skipped: boolean;
-  error: string | null;
-  added: number;
-  removed: number;
-  unmatchedTitles: string[];
-  pendingChoices: LetterboxdPendingChoice[];
-  totalOnLetterboxd: number;
-  totalTruncated: number;
-  watchedAdded: number;
-  watchedRemoved: number;
-  watchedUnmatchedTitles: string[];
-  watchedPendingChoices: LetterboxdPendingChoice[];
-  watchedTotalOnLetterboxd: number;
-  watchedTotalTruncated: number;
-}
-
-export interface LetterboxdSelection {
-  tmdbId: number;
-  mediaType: MovieMediaType;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  voteAverage?: number | null;
-  genreIds?: number[];
-  letterboxdSlug: string | null;
-}
-
-export interface LetterboxdWatchedSelection extends LetterboxdSelection {
-  runtimeMinutes?: number | null;
   rating?: number | null;
   watchedOn?: string | null;
 }
 
-export interface LetterboxdConfirmResult {
-  added: number;
-  alreadyPresent: number;
-  watchedAdded: number;
-  watchedAlreadyPresent: number;
-  pendingReconciliationCount: number;
-}
+export type LetterboxdConfirmResult = ApiSchemas['LetterboxdImportConfirmResponse'];
 
 export async function syncLetterboxd(force: boolean): Promise<LetterboxdSyncReport> {
   const report = await fetchApi<Partial<LetterboxdSyncReport>>(

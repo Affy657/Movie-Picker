@@ -1,6 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Domain;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.SetMovieWheelExclusion;
@@ -10,7 +10,6 @@ public sealed class SetMovieWheelExclusionHandler : ISetMovieWheelExclusionHandl
     private readonly IEventRepository _eventRepository;
     private readonly IMovieRepository _movieRepository;
     private readonly IHostTokenAccessor _hostTokenAccessor;
-    private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IUnitOfWork _unitOfWork;
     private readonly TimeProvider _clock;
 
@@ -18,33 +17,30 @@ public sealed class SetMovieWheelExclusionHandler : ISetMovieWheelExclusionHandl
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
         IHostTokenAccessor hostTokenAccessor,
-        ICurrentUserAccessor currentUserAccessor,
         IUnitOfWork unitOfWork,
         TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _hostTokenAccessor = hostTokenAccessor;
-        _currentUserAccessor = currentUserAccessor;
         _unitOfWork = unitOfWork;
         _clock = clock;
     }
 
     public async Task HandleAsync(
+        string userId,
         string idOrSlug,
         string movieId,
         SetMovieWheelExclusionRequest request,
         CancellationToken ct = default)
     {
-        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
-
-        if (evt.IsFinished(_clock.GetUtcNow()))
-            throw Errors.EventFinished();
-
-        var token = _hostTokenAccessor.GetHostToken();
-        var userId = _currentUserAccessor.GetUserId();
-        if (!EventHost.IsHost(evt, token, userId))
-            throw Errors.HostOnly();
+        var evt = await HostedEvent.LoadForHostAsync(
+            _eventRepository,
+            _hostTokenAccessor,
+            userId,
+            idOrSlug,
+            _clock.GetUtcNow(),
+            ct);
 
         var movie = await _movieRepository.GetByIdAndEventIdAsync(movieId, evt.Id, ct);
         if (movie is null)

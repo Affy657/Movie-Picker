@@ -1,6 +1,7 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.MovieLists;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Application.UseCases.UserMovies;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -54,12 +55,12 @@ public sealed class CopySavedListHandler : ICopySavedListHandler
             ct);
     }
 
-    private static IEnumerable<ListSourceTitle> CopiedTitles(SavedList saved, ListSourceContent content)
+    private static IEnumerable<SavedListTitle> CopiedTitles(SavedList saved, ListSourceContent content)
     {
         if (content.IsAvailable)
             return content.Titles;
         if (saved.Snapshot.Count > 0)
-            return saved.Snapshot.Select(ListSourceTitle.From);
+            return saved.Snapshot;
         throw saved.SourceType == ListSourceType.MemberList
             ? Errors.SavedListCopyUnavailable()
             : Errors.ListSourceUnavailable();

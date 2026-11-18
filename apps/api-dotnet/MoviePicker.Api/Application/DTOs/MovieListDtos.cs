@@ -32,6 +32,14 @@ public sealed class MovieListPersonResponse
     public string? Handle { get; init; }
     public string DisplayName { get; init; } = string.Empty;
     public string AvatarId { get; init; } = string.Empty;
+
+    public static MovieListPersonResponse From(DisplayedPerson person) => new()
+    {
+        UserId = person.UserId,
+        Handle = person.PublicHandle,
+        DisplayName = person.DisplayName,
+        AvatarId = person.AvatarId
+    };
 }
 
 public sealed record MovieListAudience(
@@ -165,6 +173,16 @@ public sealed class MovieListMemberResponse
     public string AvatarId { get; init; } = string.Empty;
     public bool IsOwner { get; init; }
     public DateTimeOffset JoinedAt { get; init; }
+
+    public static MovieListMemberResponse From(DisplayedPerson person, bool isOwner, DateTimeOffset joinedAt) => new()
+    {
+        UserId = person.UserId,
+        Handle = person.PublicHandle,
+        DisplayName = person.DisplayName,
+        AvatarId = person.AvatarId,
+        IsOwner = isOwner,
+        JoinedAt = joinedAt
+    };
 }
 
 public sealed class MovieListPendingInvitationResponse
@@ -174,6 +192,15 @@ public sealed class MovieListPendingInvitationResponse
     public string DisplayName { get; init; } = string.Empty;
     public string AvatarId { get; init; } = string.Empty;
     public DateTimeOffset InvitedAt { get; init; }
+
+    public static MovieListPendingInvitationResponse From(DisplayedPerson person, DateTimeOffset invitedAt) => new()
+    {
+        UserId = person.UserId,
+        Handle = person.PublicHandle,
+        DisplayName = person.DisplayName,
+        AvatarId = person.AvatarId,
+        InvitedAt = invitedAt
+    };
 }
 
 public sealed class MovieListInviteLinkResponse
@@ -204,6 +231,14 @@ public sealed class MovieListInvitableUserResponse
     public string Handle { get; init; } = string.Empty;
     public string DisplayName { get; init; } = string.Empty;
     public string AvatarId { get; init; } = string.Empty;
+
+    public static MovieListInvitableUserResponse From(DisplayedPerson person) => new()
+    {
+        UserId = person.UserId,
+        Handle = person.Handle,
+        DisplayName = person.DisplayName,
+        AvatarId = person.AvatarId
+    };
 }
 
 public sealed class MovieListInvitableUsersResponse
@@ -216,6 +251,13 @@ public sealed class MovieListInviterResponse
     public string? Handle { get; init; }
     public string DisplayName { get; init; } = string.Empty;
     public string AvatarId { get; init; } = string.Empty;
+
+    public static MovieListInviterResponse From(DisplayedPerson person) => new()
+    {
+        Handle = person.PublicHandle,
+        DisplayName = person.DisplayName,
+        AvatarId = person.AvatarId
+    };
 }
 
 public sealed class MovieListInvitePreviewResponse
@@ -235,18 +277,11 @@ public sealed class ListCreatorResponse
     public string DisplayName { get; init; } = string.Empty;
     public string AvatarId { get; init; } = string.Empty;
 
-    public static ListCreatorResponse From(User user) => new()
+    public static ListCreatorResponse From(DisplayedPerson person) => new()
     {
-        Handle = user.Handle,
-        DisplayName = user.DisplayName,
-        AvatarId = user.DisplayedAvatarId
-    };
-
-    public static ListCreatorResponse From(UserCard card) => new()
-    {
-        Handle = card.Handle ?? string.Empty,
-        DisplayName = card.DisplayName,
-        AvatarId = card.AvatarId
+        Handle = person.Handle,
+        DisplayName = person.DisplayName,
+        AvatarId = person.AvatarId
     };
 }
 

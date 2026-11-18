@@ -8,25 +8,22 @@ public sealed class DeleteMovieRatingHandler : IDeleteMovieRatingHandler
     private readonly IEventRepository _eventRepository;
     private readonly IParticipantRepository _participantRepository;
     private readonly IMovieRatingRepository _ratingRepository;
-    private readonly ICurrentUserAccessor _currentUserAccessor;
 
     public DeleteMovieRatingHandler(
         IEventRepository eventRepository,
         IParticipantRepository participantRepository,
-        IMovieRatingRepository ratingRepository,
-        ICurrentUserAccessor currentUserAccessor)
+        IMovieRatingRepository ratingRepository)
     {
         _eventRepository = eventRepository;
         _participantRepository = participantRepository;
         _ratingRepository = ratingRepository;
-        _currentUserAccessor = currentUserAccessor;
     }
 
-    public async Task HandleAsync(string idOrSlug, string movieId, string participantId, CancellationToken ct = default)
+    public async Task HandleAsync(string userId, string idOrSlug, string movieId, string participantId, CancellationToken ct = default)
     {
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
         var participant = await RatedParticipation.ResolveOwnAsync(
-            _participantRepository, _currentUserAccessor, evt, participantId, ct);
+            _participantRepository, userId, evt, participantId, ct);
 
         var deleted = await _ratingRepository.DeleteAsync(evt.Id, movieId, participant.Id, ct);
         if (!deleted)

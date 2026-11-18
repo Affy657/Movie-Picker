@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { clearMovieVote, voteMovie } from '@/features/movies/api/moviesApi';
+import { clearMovieVote, voteMovie } from '@/features/events/api/eventMoviesApi';
 import { ApiError, getErrorMessage } from '@/shared/api/apiError';
 import type { Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';

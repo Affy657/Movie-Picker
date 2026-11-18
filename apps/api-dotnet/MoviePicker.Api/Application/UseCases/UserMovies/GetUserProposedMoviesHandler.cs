@@ -60,7 +60,7 @@ public sealed class GetUserProposedMoviesHandler : IGetUserProposedMoviesHandler
             .OrderByDescending(x => x.Latest.CreatedAt)
             .ToList();
 
-        var enrichments = await WatchedMoviesFacts.LoadEnrichmentsAsync(
+        var enrichments = await TmdbEnrichments.LoadAsync(
             films.Select(x => (x.Latest.TmdbId, x.Latest.MediaType)), _tmdb, _options, ct);
 
         return new UserProposedMoviesResponse

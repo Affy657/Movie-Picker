@@ -5,7 +5,7 @@ import { Film, Info, LogIn, Star } from 'lucide-react';
 import Button, { buttonClass } from '@/shared/components/Button';
 import PosterBackdrop from '@/shared/components/PosterBackdrop';
 import { ICON_SIZE } from '@/shared/components/iconSize';
-import { ProposerBadge } from '@/features/movies/components/movieCardParts';
+import { ProposerBadge } from '@/features/events/components/eventMovieCardParts';
 import MovieFacts from '@/features/movies/components/MovieFacts';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
@@ -21,6 +21,7 @@ import type { LocaleCode } from '@/shared/i18n/locales';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { EventParticipantSummary } from '@/shared/types/event';
 import type { MovieData } from '@/shared/types/movie';
+import { toTitleSummary } from '@/shared/utils/titleSummary';
 import type { RatingScale } from '@/shared/types/theme';
 import { averageOfRatings, formatRating } from '@/shared/utils/formatRating';
 import { formatShortDate } from '@/shared/utils/formatMyEventsListDate';
@@ -546,21 +547,7 @@ export default function EventWinnerSummary({
               scale={scale}
               action={action}
               onRate={() => sheet.open(selected.id)}
-              onDetails={() =>
-                openMoviePage(
-                  {
-                    tmdbId: selected.tmdbId,
-                    mediaType: selected.mediaType ?? 'movie',
-                    title: selected.title,
-                    year: selected.year,
-                    posterPath: selected.posterPath,
-                    voteAverage: selected.voteAverage,
-                    runtimeMinutes: selected.runtimeMinutes,
-                    genreIds: selected.genreIds,
-                  },
-                  nightSlug
-                )
-              }
+              onDetails={() => openMoviePage(toTitleSummary(selected), nightSlug)}
             />
             {isMobile ? null : notes}
           </div>

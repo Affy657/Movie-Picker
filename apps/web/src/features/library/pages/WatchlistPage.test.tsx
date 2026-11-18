@@ -1,0 +1,1101 @@
+import { beforeAll, afterEach, afterAll, describe, expect, it, vi } from 'vitest';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router';
+import { setupServer } from 'msw/node';
+import { http, HttpResponse } from 'msw';
+import WatchlistPage from '@/features/library/pages/WatchlistPage';
+import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { stubHoverCapability, stubMatchMedia } from '@/test-utils/matchMedia';
+import { createWatchlistHandlers, TEST_API_V1, type MockWatchlistItem } from '@/mocks/handlers';
+import { MOVIE_PAGE_CHUNK } from '@/app/moviePageChunk';
+
+const { track } = vi.hoisted(() => ({ track: vi.fn() }));
+vi.mock('@/shared/hooks/useAnalytics', () => ({
+  useAnalytics: () => ({ track }),
+}));
+
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
+}
+
+function renderPage(withLocation = false) {
+  return render(
+    <AppTestProviders>
+      <MemoryRouter initialEntries={['/watchlist']}>
+        <WatchlistPage />
+        {withLocation ? <LocationProbe /> : null}
+      </MemoryRouter>
+    </AppTestProviders>
+  );
+}
+
+function FilmPageStub() {
+  const navigate = useNavigate();
+  return (
+    <button type="button" onClick={() => navigate(-1)}>
+      Retour
+    </button>
+  );
+}
+
+function renderPageWithFilmPage() {
+  return render(
+    <AppTestProviders>
+      <MemoryRouter initialEntries={['/watchlist']}>
+        <Routes>
+          <Route path="/watchlist" element={<WatchlistPage />} />
+          <Route path="/film/:movieRef" element={<FilmPageStub />} />
+        </Routes>
+      </MemoryRouter>
+    </AppTestProviders>
+  );
+}
+
+const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
+  HttpResponse.json({
+    userId: 'u1',
+    displayName: 'Alice',
+    emailMasked: 'a***@test.local',
+    uiTheme: 'system',
+    accentColor: 'default',
+    ratingScale: 'ten',
+  })
+);
+
+const ITEM_A: MockWatchlistItem = {
+  tmdbId: 200,
+  mediaType: 'movie',
+  title: 'Ancien Mais Bien Noté',
+  year: '2000',
+  posterPath: null,
+  voteAverage: 9.0,
+  runtimeMinutes: 90,
+  createdAt: '2026-01-01T00:00:00Z',
+};
+
+const ITEM_B: MockWatchlistItem = {
+  tmdbId: 201,
+  mediaType: 'movie',
+  title: 'Recent Mais Mal Noté',
+  year: '2010',
+  posterPath: null,
+  voteAverage: 3.0,
+  runtimeMinutes: 200,
+  createdAt: '2026-02-01T00:00:00Z',
+};
+
+const TOOLBAR_STORAGE_KEY = 'moviepicker_watchlist_toolbar_u1';
+const KEBAB_A = /plus d.actions.*ancien mais bien noté/i;
+const POSTER_A = /voir les détails de « ancien mais bien noté »/i;
+
+const watchlistHandler = createWatchlistHandlers;
+
+function proposeHandlers(onProposed: (body: Record<string, unknown>) => void) {
+  return [
+    http.get(`${TEST_API_V1}/events/mine`, () =>
+      HttpResponse.json({
+        events: [
+          {
+            id: 'e1',
+            slug: 'ma-soiree',
+            title: 'Chez moi',
+            date: '2035-08-01',
+            time: '22:00',
+            createdAt: '2026-01-01T00:00:00Z',
+            updatedAt: '2026-01-02T00:00:00Z',
+            isCreator: true,
+            isParticipant: true,
+            lifecycle: 'upcoming',
+            participantCount: 1,
+            movieCount: 0,
+          },
+        ],
+      })
+    ),
+    http.get(`${TEST_API_V1}/events/slug/ma-soiree`, () =>
+      HttpResponse.json({
+        _id: 'e1',
+        title: 'Chez moi',
+        date: '2035-08-01',
+        time: '22:00',
+        slug: 'ma-soiree',
+        isFinished: false,
+        myParticipant: { _id: 'p1', pseudo: 'Alice' },
+        participantCount: 1,
+        movieCount: 0,
+        participants: [],
+        config: {},
+      })
+    ),
+    http.post(`${TEST_API_V1}/events/ma-soiree/movies`, async ({ request }) => {
+      onProposed((await request.json()) as Record<string, unknown>);
+      return HttpResponse.json({ _id: 'm1', title: 'Ancien Mais Bien Noté' }, { status: 201 });
+    }),
+  ];
+}
+
+function removeHandler(onRemoved: () => void) {
+  return http.delete(`${TEST_API_V1}/watchlist/200`, () => {
+    onRemoved();
+    return new HttpResponse(null, { status: 204 });
+  });
+}
+
+const previouslyFocused = new WeakMap<HTMLDialogElement, Element | null>();
+const globalShowModal = HTMLDialogElement.prototype.showModal;
+const globalClose = HTMLDialogElement.prototype.close;
+
+beforeAll(() => {
+  HTMLDialogElement.prototype.showModal = function showModal() {
+    previouslyFocused.set(this, document.activeElement);
+    this.setAttribute('open', '');
+  };
+  HTMLDialogElement.prototype.close = function close() {
+    this.removeAttribute('open');
+    const previous = previouslyFocused.get(this);
+    previouslyFocused.delete(this);
+    if (this.isConnected && previous instanceof HTMLElement && previous.isConnected) {
+      previous.focus();
+    }
+    this.dispatchEvent(new Event('close'));
+  };
+});
+
+afterAll(() => {
+  HTMLDialogElement.prototype.showModal = globalShowModal;
+  HTMLDialogElement.prototype.close = globalClose;
+});
+
+describe('WatchlistPage (MSW)', () => {
+  const server = setupServer();
+
+  beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
+  afterEach(() => {
+    server.resetHandlers();
+    vi.unstubAllGlobals();
+    localStorage.removeItem('watchlist-view');
+    sessionStorage.clear();
+  });
+  afterAll(() => server.close());
+
+  it('loads the film page code while the browser is idle', async () => {
+    vi.stubGlobal('requestIdleCallback', (callback: () => void) => {
+      callback();
+      return 1;
+    });
+    vi.stubGlobal('cancelIdleCallback', vi.fn());
+    const loadMoviePage = vi.spyOn(MOVIE_PAGE_CHUNK, 'load').mockResolvedValue({} as never);
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
+
+    renderPage();
+
+    expect(await screen.findByText(ITEM_A.title)).toBeInTheDocument();
+    expect(loadMoviePage).toHaveBeenCalled();
+    loadMoviePage.mockRestore();
+  });
+
+  it('titles the page À voir under a link back to Mes listes', async () => {
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
+
+    renderPage();
+
+    expect(await screen.findByText('1 titre à voir')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'À voir' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Mes listes' })).toHaveAttribute('href', '/listes');
+  });
+
+  it('affiche un empty state quand la watchlist est vide', async () => {
+    server.use(authedUserHandler, ...watchlistHandler([]));
+
+    renderPage();
+
+    expect(await screen.findByText(/votre liste est vide/i)).toBeInTheDocument();
+  });
+
+  it('filters the list by minimum rating then resets', async () => {
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A, ITEM_B]));
+
+    renderPage();
+
+    const list = await screen.findByRole('list', { name: /films de ma liste/i });
+    const titlesInOrder = () =>
+      within(list)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent ?? '');
+
+    await waitFor(() => expect(titlesInOrder()).toHaveLength(2));
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: /^filtres$/i }));
+
+    await user.click(screen.getByRole('button', { name: /8\+/ }));
+    await waitFor(() => {
+      const titles = titlesInOrder();
+      expect(titles).toHaveLength(1);
+      expect(titles[0]).toContain('Ancien Mais Bien Noté');
+    });
+    expect(screen.getByText('1 sur 2')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /réinitialiser les filtres/i }));
+    await waitFor(() => expect(titlesInOrder()).toHaveLength(2));
+  });
+
+  it('recherche un titre dans la liste et efface tout depuis le compteur', async () => {
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A, ITEM_B]));
+
+    renderPage();
+
+    const list = await screen.findByRole('list', { name: /films de ma liste/i });
+    const titlesInOrder = () =>
+      within(list)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent ?? '');
+
+    await waitFor(() => expect(titlesInOrder()).toHaveLength(2));
+    expect(screen.queryByText(/sur 2/)).not.toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.type(screen.getByRole('searchbox', { name: /rechercher dans ma liste/i }), 'Ancien');
+
+    await waitFor(() => {
+      const titles = titlesInOrder();
+      expect(titles).toHaveLength(1);
+      expect(titles[0]).toContain('Ancien Mais Bien Noté');
+    });
+    expect(screen.getByText('1 sur 2')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /tout effacer/i }));
+    await waitFor(() => expect(titlesInOrder()).toHaveLength(2));
+  });
+
+  it('keeps the search and the films it retained when Back comes from a film page', async () => {
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A, ITEM_B]));
+    const user = userEvent.setup();
+    renderPageWithFilmPage();
+    await screen.findByText(ITEM_B.title);
+
+    await user.type(screen.getByRole('searchbox', { name: /rechercher dans ma liste/i }), 'Ancien');
+    await waitFor(() => expect(screen.queryByText(ITEM_B.title)).not.toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: POSTER_A }));
+    await user.click(await screen.findByRole('button', { name: 'Retour' }));
+
+    expect(await screen.findByRole('searchbox', { name: /rechercher dans ma liste/i })).toHaveValue(
+      'Ancien'
+    );
+    expect(await screen.findByText(ITEM_A.title)).toBeInTheDocument();
+    expect(screen.queryByText(ITEM_B.title)).not.toBeInTheDocument();
+  });
+
+  it('shows no result when the search matches nothing, with a reset button', async () => {
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A, ITEM_B]));
+
+    renderPage();
+
+    await screen.findByRole('list', { name: /films de ma liste/i });
+
+    const user = userEvent.setup();
+    await user.type(
+      screen.getByRole('searchbox', { name: /rechercher dans ma liste/i }),
+      'Introuvable'
+    );
+
+    expect(await screen.findByText(/aucun titre ne correspond/i)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /réinitialiser les filtres/i }));
+
+    expect(await screen.findByRole('list', { name: /films de ma liste/i })).toBeInTheDocument();
+  });
+
+  it('sorts by addition (default), rating and runtime, and reverses the direction on the second click', async () => {
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A, ITEM_B]));
+
+    renderPage();
+
+    const list = await screen.findByRole('list', { name: /films de ma liste/i });
+    const titlesInOrder = () =>
+      within(list)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent ?? '');
+
+    await waitFor(() => {
+      const [first, second] = titlesInOrder();
+      expect(first).toContain('Recent Mais Mal Noté');
+      expect(second).toContain('Ancien Mais Bien Noté');
+    });
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: /^note$/i }));
+    await waitFor(() => {
+      const [first, second] = titlesInOrder();
+      expect(first).toContain('Ancien Mais Bien Noté');
+      expect(second).toContain('Recent Mais Mal Noté');
+    });
+
+    await user.click(screen.getByRole('button', { name: /^durée$/i }));
+    await waitFor(() => {
+      const [first, second] = titlesInOrder();
+      expect(first).toContain('Ancien Mais Bien Noté');
+      expect(second).toContain('Recent Mais Mal Noté');
+    });
+
+    await user.click(screen.getByRole('button', { name: /^durée$/i }));
+    await waitFor(() => {
+      const [first, second] = titlesInOrder();
+      expect(first).toContain('Recent Mais Mal Noté');
+      expect(second).toContain('Ancien Mais Bien Noté');
+    });
+  });
+
+  it('searches for a movie, adds it with rating, runtime and genres, keeps the results', async () => {
+    let addedBody: Record<string, unknown> | null = null;
+    server.use(
+      authedUserHandler,
+      ...watchlistHandler([]),
+      http.get(`${TEST_API_V1}/movies/search`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: 100,
+              title: 'Film Test',
+              year: '2024',
+              posterPath: null,
+              voteAverage: 7.5,
+              runtimeMinutes: 112,
+              genreIds: [18, 878],
+              watchProviders: [],
+              tmdbWatchPageUrl: null,
+            },
+          ],
+          watchProvidersRegion: 'FR',
+          disclaimer: '',
+          tmdbAttributionUrl: '',
+        })
+      ),
+      http.post(`${TEST_API_V1}/watchlist`, async ({ request }) => {
+        addedBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(
+          { tmdbId: 100, mediaType: 'movie', title: 'Film Test', year: '2024' },
+          { status: 201 }
+        );
+      })
+    );
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: /ajouter un film/i }));
+    await user.type(screen.getByPlaceholderText(/rechercher un film à ajouter/i), 'Film Test');
+    expect(await screen.findByText('Film Test', {}, { timeout: 3000 })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^ajouter « /i }));
+
+    await waitFor(() => expect(addedBody).not.toBeNull());
+    expect(addedBody).toMatchObject({
+      tmdbId: 100,
+      title: 'Film Test',
+      voteAverage: 7.5,
+      runtimeMinutes: 112,
+      genreIds: [18, 878],
+    });
+
+    expect(screen.getByText('Film Test')).toBeInTheDocument();
+  });
+
+  it('hover: removes a movie from the poster through the watchlist toggle', async () => {
+    stubHoverCapability();
+    let removeCalled = false;
+    server.use(
+      authedUserHandler,
+      ...watchlistHandler([ITEM_A]),
+      removeHandler(() => {
+        removeCalled = true;
+      })
+    );
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await screen.findByText('Ancien Mais Bien Noté');
+    await user.click(
+      screen.getByRole('button', { name: 'Retirer « Ancien Mais Bien Noté » de ma liste' })
+    );
+
+    await waitFor(() => expect(removeCalled).toBe(true));
+  });
+
+  it('hover: the poster offers the details, the watchlist toggle and Proposer, no kebab', async () => {
+    stubHoverCapability();
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
+
+    renderPage();
+
+    await screen.findByText('Ancien Mais Bien Noté');
+    expect(screen.queryByRole('button', { name: KEBAB_A })).not.toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: 'Déjà dans votre liste' })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Retirer « Ancien Mais Bien Noté » de ma liste' })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /^proposer « ancien mais bien noté »/i })
+    ).toBeInTheDocument();
+  });
+
+  it('opens the film page of a movie from the poster', async () => {
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
+
+    renderPage(true);
+    const user = userEvent.setup();
+
+    await screen.findByText('Ancien Mais Bien Noté');
+    await user.click(screen.getByRole('button', { name: POSTER_A }));
+
+    expect(screen.getByTestId('location')).toHaveTextContent('/film/200-ancien-mais-bien-note');
+  });
+
+  it('touch: mounts no kebab, the poster trigger opens the details', async () => {
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
+
+    renderPage();
+
+    await screen.findByText('Ancien Mais Bien Noté');
+    expect(screen.queryByRole('button', { name: /plus d.actions/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: POSTER_A })).toBeInTheDocument();
+  });
+
+  it('hover: proposes from the poster through the modal', async () => {
+    stubHoverCapability();
+    let proposedBody: Record<string, unknown> | null = null;
+    server.use(
+      authedUserHandler,
+      ...watchlistHandler([ITEM_A]),
+      ...proposeHandlers((body) => {
+        proposedBody = body;
+      })
+    );
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await screen.findByText('Ancien Mais Bien Noté');
+    expect(screen.queryByRole('button', { name: /^proposer$/i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^proposer « ancien mais bien noté »/i }));
+
+    await screen.findByText(/proposer «\s*ancien mais bien noté\s*» dans une soirée/i);
+    await user.click(screen.getByRole('button', { name: /chez moi/i }));
+
+    await waitFor(() => expect(proposedBody).not.toBeNull());
+    expect(proposedBody).toMatchObject({ tmdbId: 200, participantId: 'p1' });
+    expect(await screen.findByText(/^proposé$/i)).toBeInTheDocument();
+  });
+
+  it('hover, list view: the kebab keeps every action', async () => {
+    localStorage.setItem('watchlist-view', 'list');
+    stubHoverCapability();
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await screen.findByText('Ancien Mais Bien Noté');
+    await user.click(screen.getByRole('button', { name: KEBAB_A }));
+
+    expect(screen.getByRole('menuitem', { name: 'Voir les détails' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Retirer de ma liste' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Proposer dans une soirée' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /letterboxd/i })).toBeInTheDocument();
+  });
+
+  it('list view: a sortable column header replaces the toolbar sort and orders the rows', async () => {
+    localStorage.removeItem(TOOLBAR_STORAGE_KEY);
+    localStorage.setItem('watchlist-view', 'list');
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A, ITEM_B]));
+
+    renderPage();
+    const user = userEvent.setup();
+
+    const list = await screen.findByRole('list', { name: /films de ma liste/i });
+    expect(screen.queryByRole('toolbar', { name: /trier par/i })).not.toBeInTheDocument();
+    const header = screen.getByRole('button', { name: 'Ajout' });
+    expect(header).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Sortie' })).toBeInTheDocument();
+    const titles = () =>
+      within(list)
+        .getAllByRole('heading', { level: 3 })
+        .map((h) => h.textContent);
+    expect(titles()).toEqual(['Recent Mais Mal Noté', 'Ancien Mais Bien Noté']);
+    expect(within(list).getByText('1h30')).toBeInTheDocument();
+    expect(within(list).getByText('9,0/10')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Note' }));
+    expect(titles()).toEqual(['Ancien Mais Bien Noté', 'Recent Mais Mal Noté']);
+
+    await user.click(screen.getByRole('button', { name: /affichage grille/i }));
+    const sortToolbar = screen.getByRole('toolbar', { name: /trier par/i });
+    expect(within(sortToolbar).getByRole('button', { name: 'Sortie' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Sortie' })).toHaveLength(1);
+  });
+
+  it('list view: the availability arrives after the rows, fills the Dispo column and the missing runtime', async () => {
+    localStorage.removeItem(TOOLBAR_STORAGE_KEY);
+    localStorage.setItem('watchlist-view', 'list');
+    let releaseAvailability: () => void = () => undefined;
+    const availabilityGate = new Promise<void>((resolve) => {
+      releaseAvailability = resolve;
+    });
+    server.use(
+      authedUserHandler,
+      http.get(`${TEST_API_V1}/watchlist`, () =>
+        HttpResponse.json({ items: [ITEM_A, { ...ITEM_B, runtimeMinutes: null }] })
+      ),
+      http.get(`${TEST_API_V1}/watchlist/availability`, async () => {
+        await availabilityGate;
+        return HttpResponse.json({
+          items: [
+            {
+              tmdbId: 200,
+              mediaType: 'movie',
+              watchProviders: [
+                { providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' },
+                { providerId: 2, name: 'Apple TV', logoPath: null, type: 'rent' },
+                { providerId: 3, name: 'Google Play', logoPath: null, type: 'buy' },
+              ],
+              tmdbWatchPageUrl: 'https://www.themoviedb.org/movie/200/watch?locale=FR',
+              voteAverage: 9.0,
+              runtimeMinutes: 90,
+            },
+            {
+              tmdbId: 201,
+              mediaType: 'movie',
+              watchProviders: [],
+              tmdbWatchPageUrl: null,
+              voteAverage: 3.0,
+              runtimeMinutes: 125,
+            },
+          ],
+        });
+      })
+    );
+
+    renderPage(true);
+    const user = userEvent.setup();
+
+    const list = await screen.findByRole('list', { name: /films de ma liste/i });
+    expect(within(list).queryByText('2h05')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Dispo' })).toBeInTheDocument();
+
+    releaseAvailability();
+
+    expect(await within(list).findByText('Pas en streaming')).toBeInTheDocument();
+    expect(within(list).getByRole('link', { name: /netflix/i })).toHaveAttribute(
+      'href',
+      expect.stringContaining('themoviedb.org/movie/200/watch')
+    );
+    expect(within(list).getByText('2h05')).toBeInTheDocument();
+
+    await user.click(within(list).getByRole('button', { name: /2 autres offres/i }));
+    expect(screen.getByTestId('location')).toHaveTextContent('/film/200-ancien-mais-bien-note');
+  });
+
+  it('list view: a partial availability keeps the missing rows on their skeleton and asks again until complete', async () => {
+    localStorage.removeItem(TOOLBAR_STORAGE_KEY);
+    localStorage.setItem('watchlist-view', 'list');
+    const netflix = {
+      tmdbId: 200,
+      mediaType: 'movie',
+      watchProviders: [{ providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' }],
+      tmdbWatchPageUrl: 'https://www.themoviedb.org/movie/200/watch?locale=FR',
+      voteAverage: 9.0,
+      runtimeMinutes: 90,
+    };
+    const nowhere = {
+      tmdbId: 201,
+      mediaType: 'movie',
+      watchProviders: [],
+      tmdbWatchPageUrl: null,
+      voteAverage: 3.0,
+      runtimeMinutes: 200,
+    };
+    let calls = 0;
+    server.use(
+      authedUserHandler,
+      http.get(`${TEST_API_V1}/watchlist`, () => HttpResponse.json({ items: [ITEM_A, ITEM_B] })),
+      http.get(`${TEST_API_V1}/watchlist/availability`, () => {
+        calls += 1;
+        return calls === 1
+          ? HttpResponse.json({ items: [netflix], partial: true })
+          : HttpResponse.json({ items: [netflix, nowhere], partial: false });
+      })
+    );
+
+    renderPage();
+
+    const list = await screen.findByRole('list', { name: /films de ma liste/i });
+    expect(await within(list).findByRole('link', { name: /netflix/i })).toBeInTheDocument();
+    expect(within(list).queryByText('Pas en streaming')).not.toBeInTheDocument();
+
+    expect(
+      await within(list).findByText('Pas en streaming', {}, { timeout: 5000 })
+    ).toBeInTheDocument();
+    expect(calls).toBe(2);
+  });
+
+  it('list view on mobile: no column header, the toolbar keeps its sort menu', async () => {
+    localStorage.removeItem(TOOLBAR_STORAGE_KEY);
+    localStorage.setItem('watchlist-view', 'list');
+    stubMatchMedia(true);
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
+
+    renderPage();
+
+    await screen.findByRole('list', { name: /films de ma liste/i });
+    expect(screen.queryByRole('button', { name: 'Note' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^ajout$/i })).toHaveAttribute('aria-haspopup');
+    expect(screen.getByRole('button', { name: POSTER_A })).toBeInTheDocument();
+  });
+
+  it('offers the Letterboxd import when no username is configured, and opens the connection modal', async () => {
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
+
+    renderPage();
+
+    const trigger = await screen.findByRole('button', { name: /importer depuis letterboxd/i });
+    const user = userEvent.setup();
+    await user.click(trigger);
+
+    expect(
+      await screen.findByRole('heading', { name: /importer depuis letterboxd/i })
+    ).toBeInTheDocument();
+  });
+
+  it('hides the Letterboxd prompt once the username is configured', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u1',
+          displayName: 'Alice',
+          emailMasked: 'a***@test.local',
+          uiTheme: 'system',
+          accentColor: 'default',
+          ratingScale: 'ten',
+          letterboxdUsername: 'alice_lb',
+        })
+      ),
+      ...watchlistHandler([ITEM_A])
+    );
+
+    renderPage();
+
+    await screen.findByText(ITEM_A.title);
+    expect(
+      screen.queryByRole('button', { name: /importer depuis letterboxd/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it('on mobile with an empty list, shows Import next to Add with a short label', async () => {
+    stubMatchMedia(true);
+    server.use(authedUserHandler, ...watchlistHandler([]));
+
+    renderPage();
+
+    const importBtn = await screen.findByRole('button', { name: 'Importer' });
+    const addBtn = screen.getByRole('button', { name: 'Ajouter' });
+    expect(importBtn.parentElement).toBe(addBtn.parentElement);
+    expect(screen.queryByText('Importer depuis Letterboxd')).not.toBeInTheDocument();
+  });
+
+  it('on mobile with titles, shrinks Import to an icon so Pick and Add fit beside it', async () => {
+    stubMatchMedia(true);
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
+
+    renderPage();
+
+    await screen.findByRole('button', { name: 'Piocher' });
+    const importBtn = screen.getByRole('button', { name: 'Importer depuis Letterboxd' });
+    expect(importBtn).toHaveTextContent(/^$/);
+    expect(importBtn.parentElement).toBe(
+      screen.getByRole('button', { name: 'Ajouter' }).parentElement
+    );
+  });
+
+  describe('synced with Letterboxd', () => {
+    function letterboxdUser(extra: Record<string, unknown> = {}) {
+      return http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u1',
+          displayName: 'Alice',
+          emailMasked: 'a***@test.local',
+          uiTheme: 'system',
+          accentColor: 'default',
+          ratingScale: 'ten',
+          letterboxdUsername: 'alice_lb',
+          ...extra,
+        })
+      );
+    }
+
+    const ITEM_C = { ...ITEM_B, tmdbId: 202, title: 'Ajouté En Soirée', onLetterboxd: false };
+
+    async function shownTitles() {
+      const list = await screen.findByRole('list', { name: /films de ma liste/i });
+      return within(list)
+        .getAllByRole('heading', { level: 3 })
+        .map((heading) => heading.textContent);
+    }
+
+    it('says under the title that the list is synced with Letterboxd', async () => {
+      server.use(letterboxdUser(), ...watchlistHandler([ITEM_A]));
+
+      renderPage();
+
+      expect(await screen.findByText('Synchronisée avec Letterboxd')).toBeInTheDocument();
+    });
+
+    it('shows the one film missing from the Letterboxd watchlist, then everything again', async () => {
+      const user = userEvent.setup();
+      server.use(
+        letterboxdUser(),
+        ...watchlistHandler([
+          { ...ITEM_A, onLetterboxd: true },
+          { ...ITEM_B, onLetterboxd: false },
+        ])
+      );
+
+      renderPage();
+
+      expect(
+        await screen.findByText(
+          '1 film n’est pas dans votre watchlist Letterboxd, sans doute ajouté depuis une soirée.'
+        )
+      ).toBeInTheDocument();
+      await waitFor(async () => expect(await shownTitles()).toHaveLength(2));
+
+      await user.click(screen.getByRole('button', { name: 'Voir lequel' }));
+
+      await waitFor(async () => expect(await shownTitles()).toEqual([ITEM_B.title]));
+      expect(screen.getByText('1 sur 2')).toBeInTheDocument();
+      expect(
+        screen.getByText('Seul le film absent de votre watchlist Letterboxd est affiché.')
+      ).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Tout afficher' }));
+
+      await waitFor(async () => expect(await shownTitles()).toHaveLength(2));
+      expect(screen.getByRole('button', { name: 'Voir lequel' })).toBeInTheDocument();
+    });
+
+    it('counts several missing films and lets the toolbar clear the selection too', async () => {
+      const user = userEvent.setup();
+      server.use(
+        letterboxdUser(),
+        ...watchlistHandler([
+          { ...ITEM_A, onLetterboxd: true },
+          { ...ITEM_B, onLetterboxd: false },
+          ITEM_C,
+        ])
+      );
+
+      renderPage();
+
+      expect(
+        await screen.findByText(
+          '2 films ne sont pas dans votre watchlist Letterboxd, sans doute ajoutés depuis une soirée.'
+        )
+      ).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Voir lesquels' }));
+
+      await waitFor(async () => expect(await shownTitles()).toHaveLength(2));
+      expect(
+        screen.getByText('Seuls les 2 films absents de votre watchlist Letterboxd sont affichés.')
+      ).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: /tout effacer/i }));
+
+      await waitFor(async () => expect(await shownTitles()).toHaveLength(3));
+    });
+
+    it.each([
+      { why: 'the watchlist sync is off', extra: { letterboxdSyncWatchlist: false } },
+      { why: 'no Letterboxd username is saved', extra: { letterboxdUsername: null } },
+    ])('flags no missing film when $why', async ({ extra }) => {
+      server.use(letterboxdUser(extra), ...watchlistHandler([{ ...ITEM_A, onLetterboxd: false }]));
+
+      renderPage();
+
+      await screen.findByText(ITEM_A.title);
+      expect(screen.queryByText(/pas dans votre watchlist Letterboxd/)).not.toBeInTheDocument();
+      expect(screen.queryByText('Synchronisée avec Letterboxd')).not.toBeInTheDocument();
+    });
+
+    it('flags nothing when every film is on the Letterboxd watchlist', async () => {
+      server.use(
+        letterboxdUser(),
+        ...watchlistHandler([{ ...ITEM_A, onLetterboxd: true }, ITEM_B])
+      );
+
+      renderPage();
+
+      await screen.findByText('Synchronisée avec Letterboxd');
+      expect(screen.queryByText(/pas dans votre watchlist Letterboxd/)).not.toBeInTheDocument();
+    });
+  });
+
+  describe('random pick', () => {
+    const reduceMotion = () => stubMatchMedia((query) => query.includes('reduce'));
+
+    async function openPick(name: string) {
+      const user = userEvent.setup();
+      await user.click(await screen.findByRole('button', { name }));
+      return { user, dialog: await screen.findByRole('dialog', { name: 'Piocher un titre' }) };
+    }
+
+    it('draws a title of the list and proposes it to an event', async () => {
+      reduceMotion();
+      server.use(
+        authedUserHandler,
+        ...watchlistHandler([ITEM_A, ITEM_B]),
+        ...proposeHandlers(vi.fn())
+      );
+      renderPage();
+
+      track.mockClear();
+      const { user, dialog } = await openPick('Piocher un film');
+
+      expect(track).toHaveBeenCalledExactlyOnceWith('random_pick_opened', {
+        scope: 'list',
+        pool: 2,
+      });
+      expect(
+        within(dialog).getByText('Au hasard parmi les 2 titres de votre liste.')
+      ).toBeVisible();
+      const drawn = within(dialog).getByRole('heading', { level: 3 }).textContent ?? '';
+      expect([ITEM_A.title, ITEM_B.title]).toContain(drawn);
+
+      await user.click(within(dialog).getByRole('button', { name: 'Proposer dans une soirée' }));
+
+      expect(
+        await screen.findByRole('dialog', { name: `Proposer « ${drawn} » dans une soirée` })
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('dialog', { name: 'Piocher un titre' })).not.toBeInTheDocument();
+    });
+
+    it('comes back to the same draw once the proposal is closed', async () => {
+      reduceMotion();
+      server.use(
+        authedUserHandler,
+        ...watchlistHandler([ITEM_A, ITEM_B]),
+        ...proposeHandlers(vi.fn())
+      );
+      renderPage();
+      const { user, dialog } = await openPick('Piocher un film');
+      const drawn = within(dialog).getByRole('heading', { level: 3 }).textContent ?? '';
+      await user.click(within(dialog).getByRole('button', { name: 'Proposer dans une soirée' }));
+      const propose = await screen.findByRole('dialog', {
+        name: `Proposer « ${drawn} » dans une soirée`,
+      });
+
+      await user.click(within(propose).getByRole('button', { name: 'Fermer' }));
+
+      const back = await screen.findByRole('dialog', { name: 'Piocher un titre' });
+      expect(within(back).getByRole('heading', { level: 3 })).toHaveTextContent(drawn);
+      expect(
+        screen.queryByRole('dialog', { name: `Proposer « ${drawn} » dans une soirée` })
+      ).not.toBeInTheDocument();
+    });
+
+    it('offers no random pick for an empty list', async () => {
+      server.use(authedUserHandler, ...watchlistHandler([]));
+      renderPage();
+
+      await screen.findByText(/votre liste est vide/i);
+
+      expect(screen.queryByRole('button', { name: /piocher/i })).not.toBeInTheDocument();
+    });
+
+    it('draws within the search results only, named as a selection', async () => {
+      reduceMotion();
+      server.use(authedUserHandler, ...watchlistHandler([ITEM_A, ITEM_B]));
+      renderPage();
+      await screen.findByRole('list', { name: /films de ma liste/i });
+      await userEvent.type(
+        screen.getByRole('searchbox', { name: /rechercher dans ma liste/i }),
+        'Ancien'
+      );
+
+      const { dialog } = await openPick('Piocher dans la sélection');
+
+      expect(
+        within(dialog).getByRole('heading', { name: ITEM_A.title, level: 3 })
+      ).toBeInTheDocument();
+      expect(within(dialog).getByText('Le seul titre de votre sélection.')).toBeVisible();
+      expect(
+        within(dialog).queryByRole('button', { name: 'Piocher un autre' })
+      ).not.toBeInTheDocument();
+    });
+
+    it('offers no random pick when the search matches nothing', async () => {
+      server.use(authedUserHandler, ...watchlistHandler([ITEM_A, ITEM_B]));
+      renderPage();
+      await screen.findByRole('list', { name: /films de ma liste/i });
+
+      await userEvent.type(
+        screen.getByRole('searchbox', { name: /rechercher dans ma liste/i }),
+        'Introuvable'
+      );
+      await screen.findByText(/aucun titre ne correspond/i);
+
+      expect(screen.queryByRole('button', { name: /piocher/i })).not.toBeInTheDocument();
+    });
+
+    it('opens the film page of the drawn title', async () => {
+      reduceMotion();
+      server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
+      renderPage(true);
+
+      const { user, dialog } = await openPick('Piocher un film');
+      expect(within(dialog).getByText('Le seul titre de votre liste.')).toBeVisible();
+      await user.click(within(dialog).getByRole('button', { name: 'Voir les détails' }));
+
+      expect(screen.getByTestId('location')).toHaveTextContent('/film/200-ancien-mais-bien-note');
+    });
+
+    it('shows the same draw again when Back comes from the film page of the drawn title', async () => {
+      reduceMotion();
+      const items = [
+        ITEM_A,
+        ITEM_B,
+        { ...ITEM_A, tmdbId: 202, title: 'Troisième Titre' },
+        { ...ITEM_A, tmdbId: 203, title: 'Quatrième Titre' },
+      ];
+      server.use(authedUserHandler, ...watchlistHandler(items));
+      renderPageWithFilmPage();
+      const { user, dialog } = await openPick('Piocher un film');
+      const drawn = within(dialog).getByRole('heading', { level: 3 }).textContent ?? '';
+
+      await user.click(within(dialog).getByRole('button', { name: 'Voir les détails' }));
+      await user.click(await screen.findByRole('button', { name: 'Retour' }));
+
+      const back = await screen.findByRole('dialog', { name: 'Piocher un titre' });
+      expect(within(back).getByRole('heading', { level: 3 })).toHaveTextContent(drawn);
+      expect(within(back).getByText('Au hasard parmi les 4 titres de votre liste.')).toBeVisible();
+    });
+
+    it('does not reopen a draw closed before leaving the list', async () => {
+      reduceMotion();
+      server.use(authedUserHandler, ...watchlistHandler([ITEM_A, ITEM_B]));
+      renderPageWithFilmPage();
+      const { user, dialog } = await openPick('Piocher un film');
+      await user.click(within(dialog).getByRole('button', { name: 'Fermer' }));
+      await user.click(
+        await screen.findByRole('button', { name: /voir les détails de « ancien/i })
+      );
+      await user.click(await screen.findByRole('button', { name: 'Retour' }));
+
+      expect(await screen.findByText(ITEM_B.title)).toBeInTheDocument();
+      expect(screen.queryByRole('dialog', { name: 'Piocher un titre' })).not.toBeInTheDocument();
+    });
+
+    it('gives the focus back to the Pick button of the layout shown at closing time', async () => {
+      let mobile = true;
+      const listeners = new Set<() => void>();
+      vi.stubGlobal(
+        'matchMedia',
+        vi.fn((query: string) => ({
+          get matches() {
+            return query.includes('max-width') ? mobile : query.includes('reduce');
+          },
+          media: query,
+          addEventListener: (_type: string, listener: () => void) => listeners.add(listener),
+          removeEventListener: (_type: string, listener: () => void) => listeners.delete(listener),
+        }))
+      );
+      server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
+      renderPage();
+      const { user, dialog: sheet } = await openPick('Piocher');
+      within(sheet).getByRole('button', { name: 'Fermer' }).focus();
+
+      mobile = false;
+      act(() => listeners.forEach((listener) => listener()));
+      const dialog = await screen.findByRole('dialog', { name: 'Piocher un titre' });
+      await user.click(within(dialog).getByRole('button', { name: 'Fermer' }));
+
+      expect(screen.getByRole('button', { name: 'Piocher un film' })).toHaveFocus();
+    });
+
+    it('on mobile, shows a short Piocher next to Add', async () => {
+      stubMatchMedia(true);
+      server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
+      renderPage();
+
+      const pickBtn = await screen.findByRole('button', { name: 'Piocher' });
+
+      expect(pickBtn.parentElement).toBe(
+        screen.getByRole('button', { name: 'Ajouter' }).parentElement
+      );
+    });
+  });
+
+  describe('visibility', () => {
+    function userWith(extra: Record<string, unknown>) {
+      return http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u1',
+          displayName: 'Alice',
+          emailMasked: 'a***@test.local',
+          uiTheme: 'system',
+          accentColor: 'default',
+          ratingScale: 'ten',
+          handle: 'alice',
+          isProfilePublic: true,
+          ...extra,
+        })
+      );
+    }
+
+    it('makes the watchlist private from the ⋯ menu, through the account', async () => {
+      let body: unknown = null;
+      server.use(
+        userWith({ isWatchlistPublic: true }),
+        ...watchlistHandler([ITEM_A]),
+        http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
+          body = await request.json();
+          return HttpResponse.json({
+            userId: 'u1',
+            displayName: 'Alice',
+            isWatchlistPublic: false,
+          });
+        })
+      );
+      const user = userEvent.setup();
+      renderPage();
+
+      await user.click(await screen.findByRole('button', { name: 'Actions de la liste' }));
+      await user.click(screen.getByRole('menuitem', { name: 'Rendre privée' }));
+
+      await waitFor(() => expect(body).toEqual({ isWatchlistPublic: false }));
+      await user.click(screen.getByRole('button', { name: 'Actions de la liste' }));
+      expect(screen.getByRole('menuitem', { name: 'Rendre publique' })).toBeInTheDocument();
+    });
+
+    it('turns the setting back and says so when the account refuses the change', async () => {
+      server.use(
+        userWith({ isWatchlistPublic: false }),
+        ...watchlistHandler([ITEM_A]),
+        http.patch(`${TEST_API_V1}/auth/me`, () =>
+          HttpResponse.json({ error: 'boom' }, { status: 500 })
+        )
+      );
+      const user = userEvent.setup();
+      renderPage();
+
+      await user.click(await screen.findByRole('button', { name: 'Actions de la liste' }));
+      await user.click(screen.getByRole('menuitem', { name: 'Rendre publique' }));
+
+      expect(await screen.findByText('La visibilité n’a pas pu être changée.')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Actions de la liste' }));
+      expect(screen.getByRole('menuitem', { name: 'Rendre publique' })).toBeInTheDocument();
+    });
+  });
+});

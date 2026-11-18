@@ -1,67 +1,57 @@
-export type MyEventLifecycle = 'upcoming' | 'live' | 'pending' | 'finished';
+import type { ApiSchemas } from '@/shared/api/contract';
 
-export type WheelMode = 'strictRandom' | 'weightedByVotes';
+export type MyEventLifecycle = ApiSchemas['EventDetailResponse']['lifecycle'];
 
-export type WinnerPickMethod = 'wheel' | 'manual';
+export type WheelMode = ApiSchemas['WheelMode'];
 
-export type EventRecurrence = 'weekly' | 'biweekly' | 'monthly';
+export type WinnerPickMethod = ApiSchemas['EventWinnerResponse']['pickMethod'];
 
-export interface EventConfigData {
-  theme: string | null;
-  maxProposalsPerParticipant: number | null;
+export type EventRecurrence = ApiSchemas['RecurrenceFrequency'];
 
-  maxParticipants: number | null;
+type ServedConfig = ApiSchemas['EventConfigResponse'];
 
-  maxVotesPerParticipant?: number | null;
-  wheelMode: WheelMode;
+export type EventConfigData = Pick<
+  ServedConfig,
+  'theme' | 'maxProposalsPerParticipant' | 'maxParticipants' | 'wheelMode' | 'winnerCount'
+> &
+  Partial<
+    Pick<
+      ServedConfig,
+      | 'maxVotesPerParticipant'
+      | 'richSharePreview'
+      | 'allowSeries'
+      | 'recurrence'
+      | 'hasNextOccurrence'
+      | 'themeColor'
+    >
+  >;
 
-  richSharePreview?: boolean;
+type ServedParticipant = ApiSchemas['EventParticipantSummaryResponse'];
 
-  allowSeries?: boolean;
+export type EventParticipantSummary = Pick<ServedParticipant, 'pseudo'> &
+  Partial<Pick<ServedParticipant, 'isCreator' | 'avatarId' | 'handle'>> & {
+    id: string;
+  };
 
-  recurrence?: EventRecurrence | null;
+type ServedEvent = ApiSchemas['EventDetailResponse'];
 
-  hasNextOccurrence?: boolean;
-
-  winnerCount: number;
-}
-
-export interface EventWinnerData {
-  movieId: string;
-  pickMethod: WinnerPickMethod;
-  pickedAt: string;
-}
-
-export interface EventParticipantSummary {
-  id: string;
-  pseudo: string;
-  isCreator?: boolean;
-  avatarId?: string;
-  handle?: string | null;
-}
-
-export interface EventData {
-  id: string;
-  title: string;
-  date: string;
-  time: string;
-  slug: string;
-  recapSlug?: string | null;
-  isHost?: boolean;
-  isFinished?: boolean;
-  lifecycle?: MyEventLifecycle;
-  closedAt?: string | null;
-  winners?: EventWinnerData[];
-
-  config?: EventConfigData;
-
-  myParticipant?: { id: string; pseudo: string } | null;
-
-  participantCount?: number;
-
-  votersCount?: number;
-
-  movieCount?: number;
-
-  participants?: EventParticipantSummary[];
-}
+export type EventData = Pick<ServedEvent, 'title' | 'date' | 'time' | 'slug'> &
+  Partial<
+    Pick<
+      ServedEvent,
+      | 'recapSlug'
+      | 'isHost'
+      | 'isFinished'
+      | 'lifecycle'
+      | 'closedAt'
+      | 'winners'
+      | 'participantCount'
+      | 'votersCount'
+      | 'movieCount'
+    >
+  > & {
+    id: string;
+    config?: EventConfigData;
+    myParticipant?: { id: string; pseudo: string } | null;
+    participants?: EventParticipantSummary[];
+  };

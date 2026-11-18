@@ -19,23 +19,14 @@ import IconButton from '@/shared/components/IconButton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { Skeleton } from '@/shared/components/Skeleton';
 import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
-import type { MovieMediaType, WatchProviderOffer } from '@/shared/types/movie';
+import type { TitleSummary, WatchProviderOffer } from '@/shared/types/movie';
 import type { RatingScale } from '@/shared/types/theme';
 import { genreLabel } from '@/shared/utils/tmdbGenres';
 import badgeStyles from './MovieBrowseCard.module.css';
 
 const MAX_ROW_GENRES = 3;
 
-export interface MovieBrowseCardItem {
-  tmdbId: number;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  mediaType: MovieMediaType;
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
-  genreIds?: number[];
-}
+export type MovieBrowseCardItem = TitleSummary;
 
 export type MovieAvailability =
   | { status: 'pending' }
@@ -72,7 +63,6 @@ interface MovieBrowseCardProps {
   rank?: number;
   showListBadge?: boolean;
   contributor?: MovieContributor | null;
-  withContributor?: boolean;
 }
 
 function RowAvailability({
@@ -182,7 +172,6 @@ function BrowseMovieRow({
   ratingScale,
   eager,
   contributor,
-  withContributor,
 }: Readonly<MovieBrowseCardProps>) {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
@@ -193,13 +182,15 @@ function BrowseMovieRow({
         title={item.title}
         tmdbId={item.tmdbId}
         mediaType={item.mediaType}
-        isMine={!!onRemoveFromList}
-        isHost={false}
-        canRemove={!!onRemoveFromList}
-        onRemove={onRemoveFromList ?? (() => undefined)}
-        removeLabel={removeLabel ?? t('lists.page.removeFromList')}
-        removeAriaLabel={
-          removeAriaLabel ?? t('lists.page.removeFromListFor', { title: item.title })
+        remove={
+          onRemoveFromList
+            ? {
+                label: removeLabel ?? t('lists.page.removeFromList'),
+                ariaLabel:
+                  removeAriaLabel ?? t('lists.page.removeFromListFor', { title: item.title }),
+                onSelect: onRemoveFromList,
+              }
+            : undefined
         }
         inWatchlist={isLoggedIn ? inWatchlist : undefined}
         onToggleWatchlist={isLoggedIn ? onToggleWatchlist : undefined}
@@ -241,8 +232,11 @@ function BrowseMovieRow({
       onOpenDetails={onOpenDetails}
       kebab={kebab}
       dimmed={dimmed}
-      withContributor={withContributor}
-      contributor={contributor ? <ContributorCell contributor={contributor} /> : undefined}
+      contributor={
+        contributor === undefined
+          ? undefined
+          : contributor && <ContributorCell contributor={contributor} />
+      }
     />
   );
 }

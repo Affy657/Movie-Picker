@@ -164,11 +164,6 @@ public sealed class MongoMovieRepository : IMovieRepository
         return MovieMapper.ToDomain(doc);
     }
 
-    public async Task DeleteAsync(string movieId, CancellationToken ct = default)
-    {
-        await _collection.DeleteOneAsync(x => x.Id == movieId, cancellationToken: ct);
-    }
-
     public async Task<long> DeleteByIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
     {
         if (movieIds.Count == 0)

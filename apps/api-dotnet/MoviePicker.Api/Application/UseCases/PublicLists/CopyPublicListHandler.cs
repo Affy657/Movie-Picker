@@ -2,6 +2,7 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.MovieLists;
 using MoviePicker.Api.Application.UseCases.SavedLists;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Application.UseCases.UserMovies;
 
 namespace MoviePicker.Api.Application.UseCases.PublicLists;
@@ -45,7 +46,7 @@ public sealed class CopyPublicListHandler : ICopyPublicListHandler
             _users,
             userId,
             name,
-            source.List.Items.Select(item => ListSourceTitle.From(item).ToListItem(now)),
+            source.List.Items.Select(item => SavedListTitles.From(item).ToListItem(now)),
             now,
             ct);
     }

@@ -18,6 +18,10 @@ const MOVIE: WatchlistItem = {
   title: 'Un Film',
   year: '2020',
   posterPath: null,
+  voteAverage: null,
+  runtimeMinutes: null,
+  genreIds: [],
+  onLetterboxd: false,
   createdAt: '2026-01-01T00:00:00Z',
 };
 

@@ -1686,7 +1686,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
 
         Assert.Equal(2, cards.Count);
         var visibleCard = cards.Single(c => c.Id == visible.Id);
-        Assert.Equal("avatar-7", visibleCard.AvatarId);
+        Assert.Equal("avatar-7", visibleCard.DisplayedAvatarId);
         Assert.Equal(visible.Handle, visibleCard.Handle);
         Assert.True(visibleCard.IsProfilePublic);
         Assert.False(cards.Single(c => c.Id == hidden.Id).IsProfilePublic);
@@ -1705,7 +1705,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
 
         Assert.Equal(2, cards.Count);
         var visibleCard = cards.Single(c => c.Id == visible.Id);
-        Assert.Equal(("avatar-3", visible.Handle, true), (visibleCard.AvatarId, visibleCard.Handle, visibleCard.IsProfilePublic));
+        Assert.Equal(("avatar-3", visible.Handle, true), (visibleCard.DisplayedAvatarId, visibleCard.Handle, visibleCard.IsProfilePublic));
         var hiddenCard = cards.Single(c => c.Id == hidden.Id);
         Assert.Equal((hidden.Handle, false), (hiddenCard.Handle, hiddenCard.IsProfilePublic));
         Assert.Empty(await users.ListCardsByHandlesAsync([]));

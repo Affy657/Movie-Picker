@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
@@ -69,7 +70,7 @@ internal static class WatchedMoviesFacts
         MoviePickerOptions options,
         CancellationToken ct)
     {
-        var enrichments = await LoadEnrichmentsAsync(
+        var enrichments = await TmdbEnrichments.LoadAsync(
             items.Where(NeedsTmdbFacts).Select(item => (item.TmdbId, item.MediaType)), tmdb, options, ct);
         if (enrichments.Count == 0)
             return items;
@@ -81,22 +82,6 @@ internal static class WatchedMoviesFacts
                 ? WithFacts(item, enrichment)
                 : item)
             .ToList();
-    }
-
-    public static async Task<IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>> LoadEnrichmentsAsync(
-        IEnumerable<(int TmdbId, MovieMediaType MediaType)> films,
-        ITmdbMovieSearch tmdb,
-        MoviePickerOptions options,
-        CancellationToken ct)
-    {
-        var keys = films.Distinct().ToList();
-        if (keys.Count == 0 || !options.HasTmdbCredentials)
-            return new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>();
-
-        var region = string.IsNullOrWhiteSpace(options.TmdbWatchProvidersRegion)
-            ? "FR"
-            : options.TmdbWatchProvidersRegion.Trim().ToUpperInvariant();
-        return await tmdb.GetEnrichmentsAsync(keys, region, ct);
     }
 
     private static bool NeedsTmdbFacts(UserWatchedMovieItem item) => item.Source == WatchedSource.Night;

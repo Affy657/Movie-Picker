@@ -1,11 +1,12 @@
-export type UiThemePreference = 'system' | 'light' | 'dark';
+import type { ApiSchemas } from '@/shared/api/contract';
 
-export type RatingScale = 'five' | 'ten';
+export type UiThemePreference = ApiSchemas['UiThemePreference'];
+
+export type RatingScale = ApiSchemas['RatingScale'];
 
 export const RATING_SCALES: readonly RatingScale[] = ['five', 'ten'];
 
-export type AccentColor =
-  'default' | 'blue' | 'green' | 'purple' | 'pink' | 'orange' | 'red' | 'cyan' | 'indigo';
+export type AccentColor = ApiSchemas['AccentColor'];
 
 export const ACCENT_COLORS: readonly AccentColor[] = [
   'default',

@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-096`.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-105`.
 5. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
 7. **Contraintes** (ce qui casse en silence si on y touche) et **Impasses** (essayé, mesuré, sans gain), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
@@ -54,7 +54,7 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - impact: depuis la 1.14.0, la page soirée écoute `GET /api/v1/events/{slug}/stream` et ne sonde plus tant que le flux répond. Le sondage reste le repli quand le flux manque : navigateur sans `EventSource`, onglet de retour au premier plan avant la reconnexion, flux refusé par `EventStreamGate` au-delà de ses plafonds, flux muet plus de 25 s. En repli, le coût est celui d'avant : environ 13 allers-retours Mongo par cycle et par participant quand la soirée a bougé, 2 lectures par cycle sinon (304 de `EventViewTagHandler`). En régime nominal, une soirée coûte 2 lectures par seconde et par instance qui la diffuse (`EventLiveHub` : le document soirée, puis `event_presence`), quel que soit le nombre de participants.
 - verify: `grep -n EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS apps/web/src/features/events/hooks/useEventLive.ts` ; encore ouvert tant que la constante existe, c'est-à-dire tant que le repli sonde
 - fix: une fois le flux mesuré fiable en production, ralentir le repli (30 s) ou le retirer, la reprise sur `ready` rechargeant déjà la soirée à chaque reconnexion
-- piege: le 304 tient à une règle non outillée, écrite dans `AGENTS.md` : toute mutation de la vue soirée fait bouger `writeSeq` (`UpdateAsync`, `LockForWriteAsync` ou `MarkChangedAsync`). Le flux lit le même compteur : une écriture qui l'oublie n'arrive plus en direct non plus, seulement au prochain rechargement complet.
+- piege: le 304 tient à une règle d'`AGENTS.md` : toute mutation de la vue soirée fait bouger `writeSeq` (`UpdateAsync`, `LockForWriteAsync` ou `MarkChangedAsync`). `check:architecture` la vérifie fichier par fichier (`scripts/architecture/apiWriteSeq.mjs`) : un handler qui écrit sans aucun des trois appels est refusé, mais un second chemin d'écriture du même fichier qui oublie l'appel passe, seul le test du handler le voit. Le flux lit le même compteur : une écriture qui l'oublie n'arrive plus en direct non plus, seulement au prochain rechargement complet.
 - refs: DEBT-033 pour le plafond de participants
 
 ## DEBT-009 palier Atlas jamais confirmé
@@ -106,10 +106,10 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 
 - state: humain
 - bloque: décision produit, retirer ou non le jeton d'hôte. Le chantier co-hôte, au backlog de la roadmap, est le moment naturel, il ajouterait sinon un troisième chemin.
-- impact: `EventHost.IsHost` accepte le jeton (`X-Host-Token`, ou `?host=` pour les anciens liens, que le front range en `sessionStorage` puis retire de la barre d'adresse) **ou** `CreatorUserId`. Créer une soirée exige un compte depuis la V1.2, donc le jeton est un vestige, et un lien partagé avec le jeton donne les commandes de l'hôte à n'importe qui, sans compte. Onze fichiers front le transportent, l'API le masque dans les logs et Sentry pour compenser.
-- ou: `apps/api-dotnet/MoviePicker.Api/Domain/EventHost.cs`, `Infrastructure/Web/HostTokenAccessor.cs`, `SensitiveQueryRedaction.cs` ; côté front `grep -rl hostToken apps/web/src --include=*.ts --include=*.tsx | grep -v test`
+- impact: `EventHost.IsHost` accepte le jeton (`X-Host-Token`, ou `?host=` pour les anciens liens, que le front range en `sessionStorage` puis retire de la barre d'adresse) **ou** `CreatorUserId`. Créer une soirée exige un compte depuis la V1.2, donc le jeton est un vestige, et un lien partagé avec le jeton donne les commandes de l'hôte à n'importe qui, sans compte. Dix-sept fichiers front le transportent, l'API le masque dans les logs et Sentry pour compenser. Côté API, tout contrôle d'hôte passe par `HostedEvent` (`IsHost`, `LoadForHostAsync`, `LoadForHostEvenFinishedAsync`), seul appelant d'`EventHost.IsHost` : retirer le jeton ou ajouter des co-hôtes s'y fait en un endroit, plus le retrait d'`IHostTokenAccessor` des treize handlers et de `MovieActionContext` qui le reçoivent.
+- ou: `apps/api-dotnet/MoviePicker.Api/Domain/EventHost.cs`, `Application/UseCases/Shared/HostedEvent.cs`, `Infrastructure/Web/HostTokenAccessor.cs`, `SensitiveQueryRedaction.cs` ; côté front `grep -rl hostToken apps/web/src --include=*.ts --include=*.tsx | grep -v test`
 - verify: `grep -n "TokenMatches" apps/api-dotnet/MoviePicker.Api/Domain/EventHost.cs` ; encore ouvert tant que le jeton compte dans `IsHost`
-- fix: hôte = `CreatorUserId`, co-hôtes = liste d'identifiants sur `Event` posée par le chantier co-hôte ; puis retirer `HostToken` du document, `HostTokenAccessor`, `SensitiveQueryRedaction`, `withHostToken` et le stockage local côté front, et l'en-tête `X-Host-Token` du contrat OpenAPI
+- fix: hôte = `CreatorUserId`, co-hôtes = liste d'identifiants sur `Event` posée par le chantier co-hôte, lue par `HostedEvent` ; puis retirer `HostToken` du document, `HostTokenAccessor`, `SensitiveQueryRedaction`, `withHostToken` et le stockage local côté front, et l'en-tête `X-Host-Token` du contrat OpenAPI
 - fini-quand: plus aucun `hostToken` hors `archive/`, et `EventHost.IsHost` ne prend qu'un identifiant de compte
 - piege: les soirées créées avant le compte obligatoire n'ont pas de `CreatorUserId` (`events_creatorUserId` est `Sparse` pour cette raison), leur hôte perdrait ses commandes. Compter avant de retirer le jeton, par `mongosh` : `db.events.countDocuments({creatorUserId:{$exists:false}, closedAt:null})` ; si le compte n'est pas nul, attendre la clôture de ces soirées ou les rattacher par migration.
 
@@ -175,7 +175,7 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 
 - state: differe
 - declencheur: une feature repasse dans `Infrastructure/Development/` ou dans ses tests. Ne jamais en faire un chantier isolé.
-- impact: `DevelopmentScenarioSeed.cs` (2 050 lignes) et `DevelopmentDataSeedHostedService.cs` (329 lignes) sont publiés dans l'image de production, environ 12 % des lignes de l'API pour du code que seul `environment.IsDevelopment()` enregistre. Aucune surface exposée, du poids d'assembly et du temps de compilation ReadyToRun pour rien.
+- impact: `DevelopmentScenarioSeed.cs` (2 484 lignes) et `DevelopmentDataSeedHostedService.cs` (329 lignes) sont publiés dans l'image de production, environ 6 % des lignes du projet `MoviePicker.Api` pour du code que seul `environment.IsDevelopment()` enregistre. Aucune surface exposée, du poids d'assembly et du temps de compilation ReadyToRun pour rien.
 - ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Development/`, enregistrement dans `ServiceCollectionExtensions.AddMoviePicker` sous `environment.IsDevelopment()`
 - verify: `ls apps/api-dotnet/MoviePicker.Api/Infrastructure/Development/` ; encore ouvert tant que le dossier est dans le projet `MoviePicker.Api`
 - fix: sortir le dossier dans un projet `MoviePicker.Api.DevelopmentSeed` que `MoviePicker.Api` référence seulement en `Debug` (`<ProjectReference Condition="'$(Configuration)' == 'Debug'">`), l'enregistrement DI passant par une extension de ce projet appelée derrière `#if DEBUG` ; déplacer `DevelopmentScenarioSeedTests` et la moitié seed de `ServiceCollectionExtensionsBranchTests` dans un projet de tests lui aussi Debug. Mesurer avant et après par `dotnet publish -c Release` et la taille de `MoviePicker.Api.dll`.
@@ -384,7 +384,7 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - ou: `apps/api-dotnet/MoviePicker.Api/Application/Ports/IEventRepository.cs`, `EventRepositoryExtensions.cs`, `Infrastructure/Persistence/Mongo/MongoEventRepository.cs`, `Infrastructure/Persistence/InMemory/InMemoryEventRepository.cs`, `Controllers/EventsController.cs`, `Controllers/EventMoviesController.cs`, une quarantaine de fichiers de test ; `apps/web/src/features/events/api/eventsApi.ts`
 - verify: `grep -rln "ByIdOrSlug" apps/api-dotnet --include=*.cs | grep -v /obj/` ; encore ouvert tant qu'il rend un fichier
 - fix: renommer en `GetBySlugAsync` et `GetRequiredBySlugAsync`, `idOrSlug` en `slug` partout, y compris le segment de route, puis `pnpm run openapi:export` et `pnpm run openapi:types`
-- piege: renommer le segment de route change les clés de `paths` dans le contrat OpenAPI, donc le schéma généré et `apiContract.test.ts` côté front ; les faire dans le même commit. La fusion de `v1.7` apporte aussi une trentaine de chemins d'API construits sans `apiPath` (dont `setMovieRating` et `deleteMovieRating` de `moviesApi.ts`) : les convertir dans le même geste, `grep -rln '/events/\${' apps/web/src --include=*.ts | grep -v test` ne doit plus rien rendre.
+- piege: renommer le segment de route change les clés de `paths` dans le contrat OpenAPI, donc le schéma généré et `apiContract.test.ts` côté front ; les faire dans le même commit. La fusion de `v1.7` apporte aussi une trentaine de chemins d'API construits sans `apiPath` (dont `setMovieRating` et `deleteMovieRating`, aujourd'hui dans `features/events/api/eventMoviesApi.ts`) : les convertir dans le même geste, `grep -rln '/events/\${' apps/web/src --include=*.ts | grep -v test` ne doit plus rien rendre.
 
 ## DEBT-065 l'inscription ne vérifie pas que l'adresse e-mail appartient à l'inscrit
 
@@ -519,15 +519,6 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - piege: l'adaptateur InMemory doit suivre la même forme, et `test:api:mongo` est le seul à exécuter l'agrégation
 - fini-quand: la lecture d'une page de Mes soirées ne dépend plus du nombre de films ni de participants des soirées
 
-## DEBT-091 le cadre des pages de liste vit dans `watchlist` et ne connaît que `WatchlistEntry`
-
-- state: agent
-- impact: Mes listes, Films vus, les listes enregistrées et publiques importent leur cadre de page depuis `features/watchlist`, typé sur `WatchlistEntry`. Chaque page reconstruit donc une table par clé pour relire ses propres champs (films vus, « ajouté par », origine et note des films vus), câble à la main « Griser les vus » (`useDimWatched`, options de la barre, `isWatched`, erreur), et la colonne « ajouté par » passe par deux booléens séparés entre l'en-tête et les lignes, avec la grille CSS recopiée. Chaque nouveau champ par film ajoute une table de plus, et une page qui oublie l'erreur de « Griser les vus » la masque.
-- ou: `apps/web/src/features/watchlist/components/ListMoviesPage.tsx`, `features/watchlist/hooks/useWatchlistToolbar.ts`, `features/lists/pages/*ListPage.tsx`, `features/watched/pages/WatchedMoviesPage.tsx`, `app/pages/ShowcaseListPage.tsx`, `features/movies/components/LibraryMovieRow.tsx` et son `.module.css`
-- verify: `grep -n "items: WatchlistEntry\[\]" apps/web/src/features/watchlist/components/ListMoviesPage.tsx`
-- fix: `ListMoviesPage<T extends WatchlistEntry>`, `useWatchlistToolbar<T>` et leurs callbacks génériques ; la page porte « Griser les vus » dès qu'elle reçoit `isWatched` ; la table définit ses colonnes une fois ; le cadre part dans un module neutre dont dépendent `watchlist`, `watched` et `lists` (règles de `scripts/check-architecture.mjs` à suivre)
-- fini-quand: plus de table par clé dans les pages de liste, et `lists` comme `watched` n'importent plus rien de `watchlist`
-
 ## DEBT-092 le rapport de synchronisation Letterboxd double chaque champ par liste
 
 - state: agent
@@ -538,24 +529,6 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - piege: la forme change le contrat OpenAPI, régénérer `openapiSchema.ts`
 - fini-quand: plus aucun champ `Watched*` dans le rapport, et la date de synchronisation est tenue par liste
 
-## DEBT-093 le menu ⋮ des cartes porte les règles de retrait d'une soirée, simulées pour les listes
-
-- state: agent
-- impact: pour offrir « Retirer de la liste », `MovieBrowseCard` passe `isMine` et `isHost={false}` à `MovieCardKebab` avec des libellés de remplacement, et le composant partagé de `features/movies` prend par défaut un libellé de `lists`. Chaque nouveau contexte de retrait ajoute des props et des surcharges.
-- ou: `apps/web/src/features/movies/components/MovieBrowseCard.tsx`, `MovieCardKebab.tsx`, `features/watchlist/components/ListMoviesPage.tsx`
-- verify: `grep -n "isHost={false}" apps/web/src/features/movies/components/MovieBrowseCard.tsx`
-- fix: `MovieCardKebab` reçoit `remove?: { label, ariaLabel, title?, onSelect }` ; la carte de soirée y met ses règles d'hôte et de proposant, `ListMoviesPage` ses libellés de liste
-- fini-quand: `MovieCardKebab` ne connaît plus ni hôte simulé ni libellé de liste
-
-## DEBT-094 `ListSourceTitle` recopie `SavedListTitle`
-
-- state: agent
-- impact: les deux types portent les mêmes huit champs, reliés par deux fonctions de copie ; chaque nouveau fait sur un titre s'ajoute aux deux et aux copies. Même schéma pour les six DTO de personne (pseudo, nom affiché, avatar) des listes.
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/SavedLists/ListSourceContent.cs`, `Domain/Entities/SavedList.cs`, `Application/DTOs/*List*Dtos.cs`
-- verify: `grep -n "public sealed record ListSourceTitle" apps/api-dotnet/MoviePicker.Api/Application/UseCases/SavedLists/ListSourceContent.cs`
-- fix: `SavedListTitle` partout, avec `Key`, `From(MovieListItem)` et `ToListItem` en extensions ; un seul DTO de personne réutilisé
-- fini-quand: plus de `ListSourceTitle`
-
 ## DEBT-095 la page des films vus d'un profil ne liste que les 1 000 premiers
 
 - state: differe
@@ -565,6 +538,90 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - verify: `grep -c "skip" apps/api-dotnet/MoviePicker.Api/Application/UseCases/UserMovies/GetUserWatchedMoviesHandler.cs` ; encore ouvert tant que la commande rend `0`
 - fix: pagination `skip`/`take` côté API, chargement page par page derrière « Afficher plus » côté front
 - fini-quand: le millième et unième film d'un profil s'affiche
+
+## DEBT-096 l'adaptateur en mémoire reste dans l'assembly de production
+
+- state: humain
+- bloque: décider si l'API sans MongoDB sur le poste sert encore (`docs/development.md`, démarrage sans `MONGODB_URI`)
+- impact: depuis l'audit d'architecture du 2026-11-18, la CI et l'e2e ne tournent plus que sur MongoDB, mais chaque méthode de port s'écrit encore deux fois (37 des 47 commits de port touchaient les deux adaptateurs) pour un mode qui ne sert qu'au poste et aux kits de tests unitaires
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/InMemory/`, `Infrastructure/ServiceCollectionExtensions.cs`
+- verify: `grep -c "InMemory" apps/api-dotnet/MoviePicker.Api/Infrastructure/ServiceCollectionExtensions.cs` ; encore ouvert tant que la commande rend plus de `0`
+- fix: si le mode ne sert plus, déplacer les adaptateurs en mémoire dans le projet de tests comme faux des kits (`MovieListTestKit`, `SavedListTestKit`, `WatchedTestKit`), une méthode qu'aucun kit n'appelle levant `NotSupportedException`, et les retirer de l'enregistrement
+- fini-quand: une nouvelle méthode de port ne s'implémente plus qu'une fois dans le code de production
+
+## DEBT-097 six migrations terminées et huit méthodes de port attendent la fin de la rétention des sauvegardes
+
+- state: differe
+- declencheur: 2027-10-20 pour les premières (identifiant de la migration plus 410 jours : 400 jours de copies mensuelles et 7 jours de suppression réversible, règle de retrait de la section « Migrations de données » d'`AGENTS.md`)
+- impact: `ListMissingHandleAsync` (2027-10-20), `ListMissingGenresAsync` films et watchlist (2027-10-20), `ListMissingStartAtAsync` (2027-10-30), `ListMissingFactsAsync` (2027-11-04), `ListWithLegacyPosterPathAsync` films et watchlist (2027-11-07), `ListMissingRecapSlugAsync` (2027-11-28) ne servent qu'à leurs migrations, avec leurs deux implémentations et leurs tests
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Migrations/`, `Application/Ports/`
+- verify: `grep -rlE "ListMissing(Handle|Genres|StartAt|Facts|RecapSlug)Async|ListWithLegacyPosterPathAsync" apps/api-dotnet/MoviePicker.Api/Application/Ports`
+- fix: à chaque date, supprimer la migration, ses méthodes de port, leurs implémentations, leurs tests et son enregistrement ; lire avant le contenu réel du bucket de sauvegarde, une copie mensuelle plus récente que prévu peut avancer la date
+- fini-quand: la commande `verify` ne rend plus rien
+
+## DEBT-098 deux tests d'intégration échouent parfois sous charge
+
+- state: agent
+- impact: `EventUpdate_RacingCopiesOfTheSameVersion_LetExactlyOneWin` (MongoDB : une manche sans gagnant alors que la version a avancé d'un cran) et `EventStreamResultTests.ExecuteResultAsync_PresenceStoreDown_KeepsStreamingAndReleasesTheLease` (délai) ont chacun échoué une fois le 2026-11-18 sur un poste chargé, et passent rejoués seuls
+- ou: `apps/api-dotnet/MoviePicker.Api.IntegrationTests/`, `apps/api-dotnet/MoviePicker.Api.Tests/`
+- verify: `grep -rln "RacingCopiesOfTheSameVersion_LetExactlyOneWin\|PresenceStoreDown_KeepsStreamingAndReleasesTheLease" apps/api-dotnet --include=*.cs`
+- fix: pour la course, établir si un conflit d'écriture peut être vu par tous les participants alors que l'écriture est appliquée (bug du repository) ou si c'est le test qui conclut trop tôt ; pour le flux, remplacer l'attente en temps réel par une horloge contrôlée
+- fini-quand: les deux tests passent vingt fois de suite pendant une suite complète en parallèle
+
+## DEBT-099 la garde anti-tutoiement ne connaît qu'une liste de mots
+
+- state: agent
+- impact: `localeParity.test.ts` et `ServerCopyTests` refusent `tu`, `te`, `toi`, `ton`, `ta`, `tes` et quelques impératifs nommés (`Rejoins`, `Indique`, `Demande`) ; tout autre impératif à la deuxième personne du singulier (« Prépare », « donne-lui ») passe
+- ou: `apps/web/src/shared/i18n/localeParity.test.ts`, `apps/api-dotnet/MoviePicker.Api.Tests/Application/ServerCopyTests.cs`
+- verify: `grep -c "Rejoins-la" apps/web/src/shared/i18n/localeParity.test.ts` ; encore ouvert tant que la garde liste des impératifs un par un
+- fix: une règle sur les impératifs en tête de phrase ou suivis d'un pronom (`-lui`, `-la`, `-toi`), partagée par les deux gardes, validée sur les locales actuelles sans faux positif
+- fini-quand: un impératif à la deuxième personne ajouté dans une locale ou dans `ServerCopy` fait échouer la garde
+
+## DEBT-100 du texte et des chemins du serveur vivent encore hors de leurs tables
+
+- state: agent
+- impact: rien n'empêche d'écrire un chemin du front en dur hors de `FrontRoutes` (les clés `oauthError` et `oauthLinked` d'`AuthController` n'y sont pas) ; le pseudo « Compte supprimé » et le texte des issues GitHub sont hors de `ServerCopy` ; les messages « Authentication required », « Access denied », « Resource not found » et « Too many requests » sont écrits à quatre endroits (`ApiErrorClientErrorFactory`, configuration des cookies, pages de statut de `Program.cs`, limiteur de débit) ; le repli de région `"FR"` reste recopié dans `Infrastructure/Tmdb` (`TmdbMovieSearch.Discovery`, `TmdbMovieSearch.Enrichment`)
+- ou: `apps/api-dotnet/MoviePicker.Api/`
+- verify: `grep -rn "\"FR\"" apps/api-dotnet/MoviePicker.Api/Infrastructure/Tmdb`
+- fix: une règle de `scripts/architecture/` qui refuse un littéral commençant par un chemin de `FrontRoutes` hors de ce fichier ; une table unique des messages d'erreur génériques ; `WatchRegion.Of` dans `Infrastructure/Tmdb`
+- fini-quand: chaque texte et chaque chemin destiné au front n'est écrit qu'une fois
+
+## DEBT-101 les titres ajoutés par un membre à la liste d'un autre ne suivent pas la suppression de son compte
+
+- state: humain
+- bloque: décision produit : effacer ces titres, anonymiser leur auteur, ou les exporter avec ses données
+- impact: `MovieListItemDocument.AddedByUserId` est exempté dans `PersistedReferenceInventoryTests` : à la suppression du compte, les titres restent dans la liste de l'autre membre, affichés sans auteur, et l'export des données de l'auteur ne les contient pas
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Auth/DeleteAccountHandler.cs`, `ExportUserDataHandler.cs`, `PersistedReferenceInventoryTests` dans `apps/api-dotnet/MoviePicker.Api.Tests/`
+- verify: `grep -rn "AddedByUserId" apps/api-dotnet/MoviePicker.Api.Tests --include=PersistedReferenceInventoryTests.cs`
+- fix: selon la décision, l'ajouter à la cascade de `DeleteAccountHandler` ou à l'export, et retirer l'exemption
+- fini-quand: plus d'exemption pour `AddedByUserId`
+
+## DEBT-102 les doublures de l'API dans les tests front restent écrites à la main
+
+- state: agent
+- impact: environ 660 `HttpResponse.json(` dans 73 fichiers de test ne passent pas par `apiJson`, donc un champ renommé côté API les laisse verts ; trois stratégies de doublure coexistent (MSW, `vi.mock` d'un module `*Api`, `vi.mock` de `client`)
+- ou: `apps/web/src/**/*.test.tsx`, `apps/web/src/mocks/apiJson.ts`
+- verify: `grep -rl "HttpResponse.json(" apps/web/src --include=*.test.ts --include=*.test.tsx | wc -l` ; encore ouvert tant que la commande rend plus de `0`
+- fix: passer chaque fichier de test touché à `apiJson` au fil de l'eau, puis une règle de `scripts/architecture/` qui refuse `HttpResponse.json(` dans un test
+- fini-quand: aucune réponse simulée hors de `apiJson` et `apiErrorJson`
+
+## DEBT-103 le contrat ne décrit pas encore les chaînes libres des requêtes
+
+- state: agent
+- impact: côté requêtes, `NotificationTypePreferencePatch.type`, `SaveListRequest.sourceType` et le paramètre `section` restent des chaînes libres dans le contrat, l'export des données écrit ses énumérations en PascalCase (`ToString()`), et `check:contract-compat` ne compare ni le type d'un champ ni l'apparition d'un `null`
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/OpenApi/`, `Application/UseCases/Auth/ExportUserDataHandler.cs`, `scripts/check-contract-compat.mjs`
+- verify: `grep -n "sourceType" apps/web/src/shared/api/generated/openapiSchema.ts`
+- fix: décrire ces valeurs en enums de schéma avec les valeurs acceptées aujourd'hui ; étendre `check:contract-compat` aux types et à la nullabilité des propriétés de réponse
+- fini-quand: plus aucune chaîne à valeurs fermées décrite comme libre dans le contrat
+
+## DEBT-104 quelques règles de soirée restent calculées à deux endroits côté front
+
+- state: agent
+- impact: l'hôte se calcule `event.isHost === true || (event.isHost == null && hostToken)` dans `useEventWheel` et `!!event.isHost` dans les cartes et la barre de soirée ; la bascule « exclure du tirage » est appelée depuis `EventMoviesSection` et `useMovieNight` ; une proposition depuis le dialogue invalide deux fois les mêmes requêtes ; `MovieBrowseCard` prend par défaut des libellés de liste quand `ListMoviesPage` n'en passe pas
+- ou: `apps/web/src/features/events/`, `apps/web/src/features/movies/components/MovieBrowseCard.tsx`
+- verify: `grep -rn "isHost == null" apps/web/src/features/events`
+- fix: l'hôte dans `nightRules.ts` (aligner le comportement demande de vérifier le cas d'un ancien client sans `isHost`) ; la bascule dans `useNightMovieActions` ; une seule invalidation ; libellés toujours passés par la page
+- fini-quand: chaque règle d'un film en soirée n'a qu'une définition
 
 ---
 
@@ -619,7 +676,7 @@ Publié sciemment, ne pas y revenir comme si c'était un oubli :
 1. Le courriel personnel de l'auteur est l'adresse de 916 commits sur 1 003. Réécrire l'historique changerait tous les SHA et casserait les liens des PR pour une adresse déjà publiée. `user.email` est posé en `noreply` en local sur ce dépôt ; un clone neuf hérite de la configuration globale, à reposer.
 2. `archive/docs/_ynov/` (consigne de module) est publié. Le dossier du titre (`archive/docs/RNCP/`, livrables notés et slides) a été retiré de l'arbre le 2026-09-22 et exporté en PDF hors dépôt : il reste lisible dans l'historique, ce qui est sans conséquence, l'audit ci-dessus n'y a trouvé aucune donnée personnelle.
 3. Les branches distantes sont visibles : `master`, `feedback-attachments` (où `GitHubIssueClient` publie les captures jointes aux signalements, lisibles via `raw.githubusercontent.com`) et les branches Dependabot de passage. Les branches de worktree restent locales.
-4. Les journaux et artefacts des runs Actions sont publics. Aucun `set -x` ni `echo` de secret dans les workflows ; `playwright-traces` et `playwright-traces-mongo` (corps de requêtes et cookies) n'existent que sur un run rouge et vivent 7 jours, `sbom-api` (`deploy.yml`, étape de recette) 30 jours. Ne pas allonger ces rétentions.
+4. Les journaux et artefacts des runs Actions sont publics. Aucun `set -x` ni `echo` de secret dans les workflows ; `playwright-traces` (corps de requêtes et cookies) n'existe que sur un run rouge et vit 7 jours, `sbom-api` (`deploy.yml`, étape de recette) 30 jours. Ne pas allonger ces rétentions.
 
 Traité le 2026-09-10, ne pas refaire : identifiants d'infrastructure remplacés par des gabarits `<COMME_CECI>` (table dans `infra/README.md`) ; aucune contribution externe sans geste de l'auteur (`CONTRIBUTING.md`, licence, jobs d'entrée de `ci-cd.yml` conditionnés par `head.repo.fork != true`, ce qui n'est qu'un confort : la vraie barrière est l'approbation `all_external_contributors` ci-dessous, et `rollback-front.yml` ne republie que les archives d'un run de `deploy.yml` sur `master`) ; `SECURITY.md` détourne les failles vers un canal privé.
 
@@ -643,9 +700,10 @@ Réglages posés le même jour, à vérifier et non reposer :
 Signature du diagnostic pour toute régression de ce type : `home` et `login` ne bougent pas, les onze autres perdent, parce que ce sont les deux pages dont le plus grand élément n'attend pas React (titre peint dans la coquille pour `home`, LCP adossé à une ressource pour `login`). Une régression qui épargne ces deux pages est dans le chemin de montage. Pour l'attribuer à un commit, la porte ne tournant qu'au déploiement, relever le score sur les runs passés :
 
 ```bash
-for ID in $(gh run list --workflow ci-cd.yml --limit 30 --json databaseId --jq '.[].databaseId'); do
-  J=$(gh run view "$ID" --json jobs --jq '.jobs[]|select(.name|startswith("Lighthouse"))|.databaseId')
-  [ -n "$J" ] && gh api "repos/<DEPOT>/actions/jobs/$J/logs" | grep -E " performance:"
+for ID in $(gh run list --workflow deploy.yml --limit 30 --json databaseId --jq '.[].databaseId'); do
+  for J in $(gh run view "$ID" --json jobs --jq '.jobs[]|select(.name|contains("Lighthouse"))|.databaseId'); do
+    gh api "repos/<DEPOT>/actions/jobs/$J/logs" | grep -E " performance:"
+  done
 done
 ```
 
@@ -707,7 +765,7 @@ Les créations de documents d'un compte relisent le compte juste avant d'écrire
 
 ## C16 Gitleaks lit tout l'arbre pendant que les autres voies y écrivent
 
-Dans `scripts/verify-local.cjs`, la voie docker monte le dépôt en lecture (`-v .:/repo:ro`) et Gitleaks parcourt l'arbre de travail entier, fichiers ignorés par git compris, pendant que la voie dotnet écrit dedans. Sous Windows, chaque fichier lu reste ouvert côté hôte le temps de sa lecture, en partage lecture et écriture : 375 ms mesurés pour `artifacts/openapi-v1.json` (348 Ko) sur un parcours de 23 s. Une écriture ordinaire passe au travers, une ouverture exclusive échoue.
+Dans `verify:local`, la voie docker commence par `check:secrets` (`scripts/check-secrets.mjs`), qui monte le dépôt en lecture (`-v .:/repo:ro`) : Gitleaks parcourt l'arbre de travail entier, fichiers ignorés par git compris, pendant que la voie dotnet écrit dedans. Sous Windows, chaque fichier lu reste ouvert côté hôte le temps de sa lecture, en partage lecture et écriture : 375 ms mesurés pour `artifacts/openapi-v1.json` (348 Ko) sur un parcours de 23 s. Une écriture ordinaire passe au travers, une ouverture exclusive échoue.
 
 `dotnet swagger tofile` ouvre sa sortie par `File.Create`, donc en exclusif : le 2026-11-09, `verify:local` est tombé sur `IOException: The process cannot access the file ... because it is being used by another process` à l'étape d'export OpenAPI, sans rapport avec le code. D'où `scripts/export-openapi.cjs` : le contrat est généré dans un dossier temporaire hors de l'arbre, puis recopié par `publishContract`, qui écrit en mode partagé et patiente sur `EBUSY` ou `EPERM` (`scripts/export-openapi.test.mjs`).
 
@@ -719,7 +777,7 @@ Dans `scripts/verify-local.cjs`, la voie docker monte le dépôt en lecture (`-v
 
 L'image `mongo` a `HOME=/data/db`. `docker exec <conteneur> mongosh` y écrit `.mongodb/mongosh/` pendant que le script de démarrage du conteneur fait son `chown` récursif sur `/data/db` : si un fichier disparaît entre la liste et le `chown`, le script sort en erreur et le conteneur meurt (`chown: cannot access '/data/db/.mongodb/mongosh/...lock'`). Vu le 2026-11-09 sur le job E2E de `ci-cd.yml`, vert une fois rejoué.
 
-Toute sonde `mongosh` lancée par `docker exec` dans les workflows passe donc `-e HOME=/tmp` (`ci-cd.yml`, `backup-mongo.yml`). Une nouvelle sonde sans ce réglage refait la course, une fois sur quelques dizaines.
+Toute sonde `mongosh` lancée par `docker exec` passe donc `-e HOME=/tmp` : `mongosh()` de `scripts/mongo-replica-set.mjs`, qui démarre tous les conteneurs de test (CI, sauvegarde, poste), et l'étape de vérification de `backup-mongo.yml`. Une nouvelle sonde sans ce réglage refait la course, une fois sur quelques dizaines.
 
 ## C18 la coquille reste montée d'une page à l'autre
 

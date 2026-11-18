@@ -85,13 +85,13 @@ public sealed class EventReminderPass : IEventReminderPass
         var failures = new DeliveryFailures();
         var sent1h = await ProcessWindowAsync(
             eventsWithStart, now,
-            new ReminderWindow(Window1hMin, Window1hMax, UserNotificationType.EventReminder1h, "Dans 1 heure !"),
+            new ReminderWindow(Window1hMin, Window1hMax, UserNotificationType.EventReminder1h, ServerCopy.Push.ReminderOneHourBefore),
             failures,
             ct);
 
         var sent24h = await ProcessWindowAsync(
             eventsWithStart, now,
-            new ReminderWindow(Window24hMin, Window24hMax, UserNotificationType.EventReminder24h, "J-1 !"),
+            new ReminderWindow(Window24hMin, Window24hMax, UserNotificationType.EventReminder24h, ServerCopy.Push.ReminderOneDayBefore),
             failures,
             ct);
 
@@ -197,21 +197,17 @@ public sealed class EventReminderPass : IEventReminderPass
         if (notifiableUsers.Count == 0)
             return;
 
-        var (pushTitle, pushBody) = occurrence.NoMovieYet
-            ? ("Toujours rien au programme ?", $"Plus qu'une heure avant {evt.Title} et toujours aucun film choisi… on en ajoute un ? 👀")
-            : (window.PushTitle, window.PushBody(evt.Title));
+        var copy = occurrence.NoMovieYet ? ServerCopy.Push.ReminderWithoutMovie(evt.Title) : window.Copy(evt.Title);
 
         var subsByUser = (await _subscriptions.ListByUserIdsAsync(
                 notifiableUsers.Select(u => u.Id).ToHashSet(), ct))
             .GroupBy(s => s.UserId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
-        var push = new PushMessage(
-            Title: pushTitle,
-            Body: pushBody,
-            Tag: $"reminder-{window.NotifType}-{evt.Id}",
-            Url: $"/e/{evt.Slug}",
-            TimeToLive: occurrence.StartUtc - now);
+        var push = copy.ToMessage(
+            tag: $"reminder-{window.NotifType}-{evt.Id}",
+            url: FrontRoutes.EventDetail(evt.Slug),
+            timeToLive: occurrence.StartUtc - now);
         foreach (var user in notifiableUsers)
         {
             var subs = subsByUser.TryGetValue(user.Id, out var userSubs) ? userSubs : [];
@@ -310,11 +306,9 @@ public sealed class EventReminderPass : IEventReminderPass
             return;
 
         var subs = await _subscriptions.ListByUserIdAsync(host.Id, ct);
-        var message = new PushMessage(
-            Title: "Soirée en suspens 😅",
-            Body: $"{evt.Title} s'est terminée sans qu'aucun film n'ait été choisi… on se rattrape la prochaine fois ?",
-            Tag: $"pending-{evt.Id}",
-            Url: $"/e/{evt.Slug}");
+        var message = ServerCopy.Push.EventPending(evt.Title).ToMessage(
+            tag: $"pending-{evt.Id}",
+            url: FrontRoutes.EventDetail(evt.Slug));
         if (!EventSchedule.TryGetStartUtc(evt.Date, evt.Time, out var startUtc))
             return;
 
@@ -341,10 +335,5 @@ public sealed class EventReminderPass : IEventReminderPass
         TimeSpan Min,
         TimeSpan Max,
         UserNotificationType NotifType,
-        string PushTitle)
-    {
-        public string PushBody(string eventTitle) => NotifType == UserNotificationType.EventReminder24h
-            ? $"Demain, c'est {eventTitle} ! Prépare le canapé et le popcorn 🍿"
-            : $"⏰ {eventTitle} arrive à grands pas !";
-    }
+        Func<string, PushText> Copy);
 }

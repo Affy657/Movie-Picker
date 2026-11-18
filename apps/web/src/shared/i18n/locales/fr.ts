@@ -454,7 +454,7 @@ export const fr = {
       emailLabel: 'E-mail',
       submit: 'Recevoir le lien',
       submitting: 'Envoi\u2026',
-      successTitle: 'Vérifie ta boîte mail',
+      successTitle: 'Vérifiez votre boîte mail',
       successMessage:
         "Si un compte existe pour cet e-mail, un lien de réinitialisation vient d'être envoyé. Pense à vérifier les spams.",
       backToLogin: '\u2190 Retour à la connexion',
@@ -761,12 +761,6 @@ export const fr = {
         startFrom: 'Partir de',
         likeItem: 'Comme « {{title}} »',
         title: 'Règles de la soirée',
-        participants: 'Participants',
-        participantsHint: 'Combien de personnes peuvent rejoindre',
-        proposals: 'Films par personne',
-        proposalsHint: 'Combien chacun peut en proposer',
-        votes: 'Votes par personne',
-        votesHint: 'Pour combien de films chacun peut voter',
         winners: 'Films gagnants',
         winnersHint: 'Combien de films la roue désigne',
         draw: 'Tirage',
@@ -824,7 +818,7 @@ export const fr = {
       removeSuccess: '{{pseudo}} a été retiré(e) de la soirée.',
       leaveAction: 'Quitter la soirée',
       leaveConfirmTitle: 'Quitter la soirée',
-      leaveConfirm: 'Quitter cette soirée\u00a0? Tes films, votes et marques seront supprimés.',
+      leaveConfirm: 'Quitter cette soirée\u00a0? Vos films, votes et marques seront supprimés.',
       leaveConfirmAction: 'Quitter',
       leaveError: 'Impossible de quitter la soirée.',
       manageAction: 'Gérer',
@@ -969,6 +963,30 @@ export const fr = {
       deleteConfirmAction: 'Supprimer d\u00e9finitivement',
       deleteError: 'Suppression impossible.',
     },
+    limits: {
+      capHint: '{{max}} au maximum.',
+      participants: {
+        label: 'Participants',
+        hint: 'Combien de personnes peuvent rejoindre',
+        toggle: 'Limiter le nombre de participants',
+        toggleHint: 'Sinon, jusqu’à {{max}} personnes peuvent rejoindre la soirée.',
+        field: 'Participants max',
+      },
+      proposals: {
+        label: 'Films par personne',
+        hint: 'Combien chacun peut en proposer',
+        toggle: 'Limiter les films proposés par personne',
+        toggleHint: 'Sinon, chacun peut proposer jusqu’à {{max}} films.',
+        field: 'Films max par personne',
+      },
+      votes: {
+        label: 'Votes par personne',
+        hint: 'Pour combien de films chacun peut voter',
+        toggle: 'Limiter les votes par participant',
+        toggleHint: 'Chaque participant ne peut voter que pour un nombre fixe de films.',
+        field: 'Votes par participant',
+      },
+    },
     settings: {
       title: 'Paramètres de la soirée',
       sectionParticipants: 'Participants et films',
@@ -985,7 +1003,7 @@ export const fr = {
       notifyDateChangeLabel: 'Prévenir les participants du changement de date',
       themeLabel: 'Thème / ambiance',
       themeEmptyTitle: 'Ajouter un thème',
-      themeEmptySubtitle: 'Optionnel : donne le ton de la soirée.',
+      themeEmptySubtitle: 'Optionnel : précisez l’ambiance de la soirée.',
       clearThemeAria: 'Supprimer le thème',
       clearThemeButton: 'Effacer',
       themeFieldPlaceholder: 'Horreur, Comédie\u2026',
@@ -1060,17 +1078,7 @@ export const fr = {
         strictRandom: 'aléatoire strict',
         series: 'séries autorisées',
       },
-      proposalLimitLabel: 'Limiter les films proposés par personne',
-      proposalLimitDesc: 'Sinon, chacun peut proposer jusqu’à {{max}} films.',
-      participantLimitLabel: 'Limiter le nombre de participants',
-      participantLimitDesc: 'Sinon, jusqu’à {{max}} personnes peuvent rejoindre la soirée.',
-      maxParticipantsCapHint: '{{max}} au maximum.',
-      maxProposalsLabel: 'Films max par personne',
-      maxProposalsHint: '{{max}} au maximum.',
       maxProposalsInvalid: 'Films par personne : nombre entier entre 1 et {{max}}.',
-      voteLimitLabel: 'Limiter les votes par participant',
-      voteLimitDesc: 'Chaque participant ne peut voter que pour un nombre fixe de films.',
-      maxVotesLabel: 'Votes par participant',
       maxVotesInvalid: 'Votes par participant : nombre entier à partir de 1.',
       winnerCountLabel: 'Films gagnants',
       winnerCountInvalid: 'Indiquez un nombre entre 1 et {{max}}.',
@@ -1100,7 +1108,6 @@ export const fr = {
       saveStatusPending: 'Enregistrement…',
       saveStatusError: 'Non enregistré',
       fallbackError: 'Enregistrement impossible.',
-      maxParticipantsLabel: 'Participants max',
       maxParticipantsHintOne: '1 personne inscrite. {{max}} au maximum.',
       maxParticipantsHintMany: '{{count}} personnes inscrites. {{max}} au maximum.',
       maxParticipantsInvalid: 'Nombre maximum de participants : entier entre 1 et {{max}}.',
@@ -2921,19 +2928,19 @@ export const fr = {
       structureHeading: 'Comment les deux moitiés tiennent ensemble',
       boundary: 'Frontière',
       boundaryValue:
-        'Le front ne connaît du serveur que {{endpoints}} routes sous /api/v1, décrites par un contrat que la chaîne rejoue à chaque envoi.',
+        'Le serveur expose {{endpoints}} points d’entrée HTTP ; le front ne passe que par ceux de /api/v1, décrits par un contrat que la chaîne rejoue à chaque envoi.',
       boundaryHint:
         'Aucun accès direct à la base depuis le navigateur : tout passe par ces routes, et le contrat sert de frontière vérifiable.',
-      stateless: 'Aucun état en mémoire',
+      stateless: 'Rien qui ne vive qu’en mémoire',
       statelessValue:
-        "L'hébergeur peut lancer jusqu'à cinq instances du serveur, alors rien ne vit dans le processus : ni session, ni minuterie, ni tâche de fond. Seule exception, le cache des fiches TMDB, propre à chaque instance et sans effet sur ce qui est renvoyé.",
+        "L'hébergeur peut lancer jusqu'à cinq instances du serveur, alors rien de ce qui doit durer ne vit dans le processus : ni session, ni minuterie, ni tâche de fond. Ce qui y vit est une copie jetable de la base : les sessions, gardées 30 secondes avant d'être relues, les fiches TMDB, et le flux en direct d'une soirée, qui relit son document chaque seconde tant qu'un participant l'écoute.",
       statelessHint:
-        'Les clés qui signent les cookies sont rangées en base, ce qui évite de déconnecter tout le monde à chaque déploiement.',
+        'Les clés qui signent les cookies sont rangées en base, ce qui évite de déconnecter tout le monde à chaque déploiement. Le prix de ces copies est connu : une session révoquée reste valable jusqu’à 30 secondes sur les autres instances.',
       deploys: 'Deux déploiements',
       deploysValue:
-        "Le front part sur le CDN, le serveur part en image conteneurisée. Chacun peut sortir sans attendre l'autre.",
+        "Le front part sur le CDN, le serveur en image conteneurisée, et le serveur d'abord : un front publié ne parle jamais à un serveur plus ancien que lui.",
       deploysHint:
-        'Deux étapes distinctes dans la chaîne : une correction de style ne redéploie pas le serveur.',
+        'Deux étapes distinctes dans la chaîne : une correction de style ne redéploie pas le serveur, mais une moitié ne part seule que si l’autre n’a pas changé depuis la version servie.',
       servicesHeading: 'Les services extérieurs branchés au serveur',
       servicesNote:
         "Aucun n'est indispensable au fonctionnement : chacun a un comportement défini quand sa clé manque ou quand il ne répond pas, et le serveur démarre sans eux.",
@@ -2944,7 +2951,7 @@ export const fr = {
         'The Movie Database, la base ouverte qui fournit titres, résumés, genres et affiches.',
       letterboxd: 'Letterboxd',
       letterboxdValue:
-        'Import de watchlist depuis le profil public. Sans API publique, la page est lue telle quelle : 300 films au plus, une fois par 24 heures et par compte.',
+        'Import de la watchlist et des films vus depuis le profil public. Sans API publique, la page est lue telle quelle : 300 films au plus par liste, une fois par 24 heures et par compte.',
       letterboxdHint:
         "Réseau social de cinéphiles : la liste publique d'un profil est lue puis rapprochée du catalogue.",
       oauth: 'Google, GitHub',
@@ -2969,7 +2976,7 @@ export const fr = {
         'Plateforme de dons pour créateurs ; le soutien confirmé apparaît ensuite comme un badge sur le profil.',
       scheduler: 'Cloud Scheduler',
       schedulerValue:
-        "Appelle le serveur à heure fixe : toutes les 30 minutes pour les rappels de soirée, une fois par nuit pour les soirées récurrentes, puis pour les soirées terminées. Les routes sont ouvertes sur internet : chaque appel porte un jeton signé par Google pour l'identité du planificateur, que le serveur vérifie, et un appel échoué est retenté trois fois.",
+        "Appelle le serveur à heure fixe : toutes les 30 minutes pour les rappels de soirée, toutes les cinq heures pour recharger le catalogue de l'accueil, chaque nuit pour les soirées récurrentes puis pour les soirées terminées, et chaque matin pour la relance de note. Les routes sont ouvertes sur internet : chaque appel porte un jeton signé par Google pour l'identité du planificateur, que le serveur vérifie, et un appel échoué est retenté trois fois.",
       schedulerHint:
         "Planificateur de Google Cloud : il appelle une adresse à l'heure dite, ce qui remplace une minuterie vivant dans le serveur.",
       issues: 'GitHub Issues',
@@ -2985,14 +2992,14 @@ export const fr = {
       currentBadge: 'en cours',
       unplannedSpan: 'Le backlog',
       unplannedDetail:
-        "Une quarantaine d'idées rangées par thème, sans date ni numéro de version. Chacune se tire quand un retour d'usage la justifie.",
+        "Une trentaine d'idées rangées par thème, sans date ni numéro de version. Chacune se tire quand un retour d'usage la justifie.",
       techHeading: 'Les chantiers techniques ouverts',
       sharedCache: 'Cache partagé entre instances',
       sharedCacheHint:
-        'Le cache des fiches TMDB vit dans la mémoire de chaque instance : deux instances refont le même appel, et un redémarrage repart à froid. Un cache commun corrigerait les deux.',
+        'Les recherches et les fiches TMDB vivent encore dans la mémoire de chaque instance : deux instances refont le même appel, et un redémarrage repart à froid. L’accueil, les collections et l’enrichissement des films passent déjà par un cache commun en base, le modèle à reprendre pour le reste.',
       containerTwice: 'Le conteneur décrit à deux endroits',
       containerTwiceHint:
-        'Les secrets montés, les variables du serveur et les trois jobs planifiés vivent dans la chaîne de déploiement et dans Terraform ; tant que la version voyage en variable plutôt que dans l’image, la chaîne fait foi et la description suit.',
+        'Les secrets montés et les variables du serveur sont décrits dans la chaîne de déploiement et dans Terraform, et les cinq jobs planifiés ne vivent encore que dans la chaîne ; tant que la version voyage en variable plutôt que dans l’image, la chaîne fait foi et la description suit.',
       sentryToken: 'Un jeton de dépôt reste',
       sentryTokenHint:
         'Tout le reste est sans clé ; le jeton qui envoie les source maps à Sentry est encore un secret de dépôt, à ranger derrière un environnement.',
@@ -3157,7 +3164,7 @@ export const fr = {
     },
     ui: {
       title: 'Découpé par usage, pas par type de fichier',
-      lead: "{{features}} domaines autonomes, un socle partagé qui n'en connaît aucun. Vérifié mécaniquement : le socle est une feuille du graphe, aucun cycle toléré.",
+      lead: "{{features}} domaines dont les dépendances entre eux sont déclarées dans une table, un socle partagé qui n'en connaît aucun, et une couche d'application au-dessus qui assemble les pages. Vérifié mécaniquement : le socle est une feuille du graphe, une arête absente de la table ou un cycle font échouer la construction.",
       design: 'Design',
       designValue:
         'Jetons fermés : aucune valeur littérale acceptée en CSS, et tout état de survol confiné aux appareils qui en ont un.',
@@ -3200,7 +3207,7 @@ export const fr = {
       rulesValue:
         "Le domaine ne peut importer que System et lui-même. L'application ignore MongoDB, le framework web et l'infrastructure. Un contrôleur ne touche jamais la persistance.",
       rulesHint:
-        'Ce ne sont pas des consignes : le contrôle lit les using de chaque fichier et fait échouer la construction au premier écart.',
+        'Ce ne sont pas des consignes : le contrôle lit les using de chaque fichier, repère aussi les types du web que le SDK importe sans using écrit, et fait échouer la construction au premier écart.',
       versioning: 'La version en un seul endroit',
       versioningValue:
         'Le préfixe /api/v1 est une constante unique, jamais recopiée dans une route. Le contrat exporté et les types du front en héritent.',
@@ -3214,23 +3221,23 @@ export const fr = {
     },
     contract: {
       title: 'La frontière est un fichier, pas une convention',
-      lead: "Le contrat OpenAPI est exporté depuis le serveur à chaque construction. Le front garde ses propres types, et un test au niveau des types vérifie qu'ils ne lisent aucun champ absent du contrat.",
+      lead: "Le contrat OpenAPI est exporté depuis le serveur à chaque construction et décrit le JSON qu'il écrit vraiment. Le front en tire la liste des routes qu'il peut appeler, garde ses propres types de réponse, et un test au niveau des types vérifie qu'ils ne lisent aucun champ absent du contrat.",
       export: 'Export du contrat',
       exportValue:
-        'Le serveur sérialise son OpenAPI depuis les contrôleurs ; le fichier est un artefact de build, pas un document tenu à la main.',
+        "Le serveur sérialise son OpenAPI depuis les contrôleurs, avec les règles qu'il applique : une propriété qui n'est jamais nulle est requise, une erreur a la forme de l'enveloppe réellement renvoyée, une chaîne aux valeurs fermées devient une énumération.",
       exportHint:
-        "Le script openapi:export démarre l'application et écrit le contrat dans artifacts/openapi-v1.json.",
+        "Le script openapi:sync démarre l'application, écrit le contrat dans artifacts/openapi-v1.json puis régénère les types du front : les deux fichiers changent dans le même commit que le serveur.",
       types: 'Types du front confrontés',
       typesValue:
-        "Le front garde ses propres types, écrits pour son usage. Un test les confronte au contrat et refuse de compiler si l'un d'eux lit un champ que le serveur n'expose pas.",
+        "Le front garde ses propres types de réponse, écrits pour son usage. Un test les confronte au contrat et refuse de compiler si l'un d'eux lit un champ que le serveur n'expose pas.",
       typesHint:
-        'openapi-typescript produit openapiSchema.ts, importé par ce seul test : le schéma sert de référence, pas de source pour le code applicatif.',
+        'openapi-typescript produit openapiSchema.ts. Le code applicatif n’en tire que la liste des routes ; les réponses simulées des tests en tirent leur type, si bien qu’un champ renommé côté serveur casse leur compilation.',
       drift: 'Détection de dérive',
       driftValue:
         'La CI régénère les types et échoue si le fichier versionné ne correspond plus au contrat exporté.',
       driftHint:
-        'openapi:types:check compare la sortie fraîche au fichier commité ; apiContract.test.ts vérifie en plus, au niveau des types, que les champs lus par le front existent bien.',
-      note: "Deux filets de portée différente. Le premier est complet : les {{routes}} routes appelées par le front sont listées une à une, et l'une qui disparaît du contrat fait échouer la compilation. Le second va plus loin mais couvre moins : il confronte champ par champ {{checked}} réponses sur les {{total}} du contrat, celles dont le front déclare son propre type. Les autres, il les lit sans leur donner de nom, et certaines ne le concernent pas, comme les sondes de santé. Les couvrir demande d'abord de nommer ces types : du travail mécanique, pas une décision à prendre.",
+        'openapi:types:check compare la sortie fraîche au fichier commité. Un second script, lancé à la main, compare le contrat de la dernière version publiée à celui du commit et refuse une route ou une propriété disparue : le front d’avant tourne encore quelques jours dans les navigateurs.',
+      note: "Deux filets de portée différente. Le premier est complet : toute route que le front appelle doit figurer parmi les {{routes}} chemins du contrat, sinon la compilation échoue. Le second va plus loin mais couvre moins : il confronte champ par champ les {{checked}} types que le front écrit lui-même, réponses et corps de requête, à un contrat qui décrit {{total}} réponses ; les autres, le front les lit sans leur donner de nom, ou ne les lit pas, comme les sondes de santé. Dans l'autre sens, les adresses du front que le serveur écrit dans un courriel ou une notification viennent d'une seule table, qu'un test du front compare à la sienne.",
     },
     data: {
       title: 'Neuf collections au cœur, et des écritures tout ou rien',
@@ -3238,7 +3245,7 @@ export const fr = {
       modelCaption:
         'Les traits sont les identifiants qui relient les documents. Users et Events sont encadrés parce que tout le reste s’y rattache : chaque autre document porte l’un ou l’autre.',
       caption:
-        "Supprimer un compte touche huit collections dans une seule transaction, dont deux anonymisées plutôt que vidées : aucun état intermédiaire n'est observable.",
+        "Supprimer un compte touche douze collections dans une seule transaction, dont deux anonymisées plutôt que vidées : aucun état intermédiaire n'est observable. Les sessions du compte sont révoquées juste après.",
       atomicity: 'Atomicité',
       atomicityValue:
         "Toute écriture groupée passe par une unité de travail, et ne peut pas s'arrêter à mi-chemin.",
@@ -3251,9 +3258,9 @@ export const fr = {
         'Un moteur documentaire ne connaît pas les clés étrangères : ces index sont ce qui empêche deux comptes de partager un e-mail ou un participant de voter deux fois.',
       expiry: 'Expirations automatiques',
       expiryValue:
-        '{{ttl}} index à expiration font le ménage dans le moteur : sessions, jetons de mot de passe, notifications, marqueurs anti-doublon, compteurs de limitation et journal des dons.',
+        '{{ttl}} index à expiration font le ménage dans le moteur : sessions, jetons de mot de passe, notifications, marqueurs anti-doublon, compteurs de limitation, présence en soirée, caches du catalogue et des affiches, journal des dons.',
       expiryHint:
-        'Aucune tâche de fond ne tourne pour ça, ce qui tombe bien puisque rien ne vit dans le processus du serveur.',
+        'Aucune tâche de fond ne tourne pour ça : le moteur purge seul, et le serveur n’a aucune minuterie à tenir.',
       inventory: 'Inventaire des index',
       inventoryValue:
         'Un test compare les {{indexes}} index réellement créés à une liste attendue : nom, unicité et expiration. En ajouter un sans le déclarer casse la construction.',
@@ -3263,7 +3270,7 @@ export const fr = {
       migrationsValue:
         'Datée, idempotente, appliquée une fois au démarrage puis consignée. {{migrations}} en production.',
       migrationsHint:
-        "Idempotente veut dire qu'une deuxième exécution ne change plus rien au résultat de la première.",
+        "Idempotente veut dire qu'une deuxième exécution ne change plus rien au résultat de la première. Une migration se retire quand plus aucune sauvegarde restaurable ne la précède, sinon une restauration ramènerait des données qu'elle ne corrigerait plus.",
       isolation: 'Isolation',
       isolationValue:
         'Bases dev et prod séparées, avec refus de démarrer si un environnement vise la mauvaise.',
@@ -3281,19 +3288,18 @@ export const fr = {
       caption:
         'Couverture bloquante côté front : {{lines}} % de lignes, {{functions}} % de fonctions, {{branches}} % de branches. Côté serveur aussi : {{apiLines}} % de lignes sur la suite unitaire, et {{mongoLines}} % sur les seuls adaptateurs Mongo, que seule la suite branchée sur une vraie base exécute.',
       unit: 'Tests unitaires',
-      unitValue:
-        '{{count}} cas, sans base ni réseau, sur les doublures en mémoire. Quelques secondes.',
+      unitValue: '{{count}} cas, sans base ni réseau, sur les doublures en mémoire.',
       unitHint:
         "Ils couvrent le domaine, les cas d'usage et les composants d'interface isolés de leurs dépendances.",
       integration: "Tests d'intégration",
       integrationValue: '{{count}} cas rejoués contre une vraie MongoDB, transactions comprises.',
       integrationHint:
-        "C'est le seul chemin qui exécute réellement les adaptateurs Mongo et les transactions ; la CI le rejoue dans un job dédié.",
+        "C'est le seul chemin qui exécute réellement les adaptateurs Mongo et les transactions ; la CI le joue juste après les tests unitaires du serveur, et la base en mémoire n'y remplace jamais la vraie.",
       e2e: 'Tests end to end',
       e2eValue:
         '{{count}} cas Playwright qui pilotent Chromium contre le front compilé et le serveur démarré.',
       e2eHint:
-        "La persistance y est l'implémentation en mémoire et les services tiers sont bouchonnés : le parcours est vrai, l'environnement reste déterministe.",
+        "Le serveur y parle à une vraie MongoDB en replica set, comme en production, et seuls les services tiers sont bouchonnés : le parcours est vrai, l'environnement reste déterministe.",
       howHeading: 'Comment ils sont écrits',
       doubles: 'Doublures en mémoire',
       doublesValue:
@@ -3309,7 +3315,7 @@ export const fr = {
       replicaValue:
         'Le conteneur de test est créé à la volée en replica set, sinon les transactions ne pourraient pas être testées.',
       replicaHint:
-        'Chaque classe de test reçoit sa propre base jetable : les tests ne se marchent pas dessus.',
+        'Chaque classe de test reçoit sa propre base jetable : les tests ne se marchent pas dessus. Un seul script démarre ce replica set, sur le poste, en CI et pour vérifier les sauvegardes.',
       stubs: 'Services tiers bouchonnés',
       stubsValue:
         'TMDB et Letterboxd sont remplacés par des bouchons que deux variables d’environnement activent.',
@@ -3324,29 +3330,29 @@ export const fr = {
       networkValue:
         '{{files}} fichiers de test montent un serveur HTTP simulé et répondent aux vraies requêtes des écrans, sans jamais sortir sur le réseau.',
       networkHint:
-        "Les composants appellent l'API normalement : c'est la couche réseau qui est interceptée, pas le code de l'application.",
+        "Les composants appellent l'API normalement : c'est la couche réseau qui est interceptée, pas le code de l'application. Les réponses simulées des nouveaux tests sont typées sur le contrat d'API.",
     },
     ci: {
       title: '{{jobs}} checks de CI avant la production',
-      lead: "Deux chaînes. Les portes tournent à chaque push ; le déploiement se lance à la main, recette d'abord, et ne part que si elles sont toutes vertes sur ce commit.",
+      lead: "Deux chaînes. Les portes tournent sur chaque commit de master et de chaque demande de fusion ; le déploiement se lance à la main, recette d'abord, et ne part que si elles sont toutes vertes sur ce commit.",
       caption:
-        "En haut, le filtre de périmètre décide quelles colonnes tournent ; gitleaks et lint workflows lui échappent. En bas, la chaîne de déploiement exige une CI verte sur le commit, refuse de ne livrer qu'une moitié, et la production reprend l'image que la recette sert. Le dernier maillon vérifie que chaque cible est partie, pas seulement que rien n'a échoué.",
+        "En haut, sur une demande de fusion, le filtre de périmètre décide quelles colonnes tournent ; sur master, toutes tournent, et gitleaks comme lint workflows lui échappent toujours. sonar n'attend que la suite front : il construit et teste lui-même le serveur. En bas, la chaîne de déploiement exige une CI verte sur le commit, refuse de ne livrer qu'une moitié, et la production reprend l'image que la recette sert. Le dernier maillon vérifie que chaque cible est partie, pas seulement que rien n'a échoué.",
       pipelineHeading: 'Ce qui tient la chaîne',
       trigger: 'Déclenchement',
       triggerValue:
         "Toute poussée sur master et toute demande de fusion vers master lancent la chaîne, et il n'y a aucune autre branche durable : chaque livraison part d'une branche courte, rejoint master le jour où elle est prête et part en production dans la foulée, avec sa propre version.",
       triggerHint:
-        'Les branches ouvertes par le robot de dépendances sont exclues du déclenchement par poussée, pour ne pas jouer la chaîne deux fois.',
+        'Une poussée ne déclenche la chaîne que sur master : une branche courte n’est jouée que par sa demande de fusion, robot de dépendances compris, pour ne pas lancer deux fois la chaîne sur le même commit.',
       scope: 'Périmètre calculé',
       scopeValue:
-        'Un premier job compare les fichiers modifiés et décide quelles branches du graphe tournent. Une correction de style ne rejoue pas la suite serveur.',
+        'Sur une demande de fusion, un premier job compare les fichiers modifiés et décide quelles branches du graphe tournent : une correction de style ne rejoue pas la suite serveur. Sur master, tout tourne.',
       scopeHint:
-        "C'est ce qui garde la chaîne courte, et c'est aussi ce qui a rendu le garde-fou de déploiement nécessaire.",
+        'Le filtre garde courtes les demandes de fusion. Sur master il est levé : un commit de documentation posé après un commit rouge donnait une chaîne verte par vacuité, que le déploiement aurait acceptée.',
       secrets: 'Recherche de secrets',
       secretsValue:
-        "Un balayage cherche clés et jetons dans le code avant la construction de l'image. Une correspondance arrête tout.",
+        "Un balayage cherche clés et jetons dans l'arbre de travail à chaque exécution, sans filtre de périmètre. Une correspondance rend la chaîne rouge, donc interdit tout déploiement.",
       secretsHint:
-        "Il tourne sur l'arbre de travail et bloque la construction de l'image ; la plateforme refuse en plus un push qui contiendrait une clé reconnue.",
+        'Le même script tourne sur le poste dans la vérification complète ; la plateforme refuse en plus un push qui contiendrait une clé reconnue.',
       image: 'Image étiquetée',
       imageValue:
         "Le serveur part en image conteneurisée, étiquetée par l'empreinte du commit et poussée dans le registre par la mise en recette ; la production reprend cette image telle quelle, rescannée mais jamais reconstruite.",
@@ -3359,18 +3365,19 @@ export const fr = {
         "Les deux existent parce que le cas s'est produit : des jobs sautés ont laissé la chaîne verte alors que la production était à moitié à jour, un job sauté n'étant pas un job en échec, et un front livré seul a servi un matin des fiches sans année ni note, sur un serveur resté en arrière.",
       caches: 'Chaîne mise en cache',
       cachesValue:
-        "Dépendances NuGet, tâches Turbo, couches Docker et base de vulnérabilités sont conservées d'une exécution à l'autre.",
+        "Dépendances npm et NuGet, tâches Turbo et cache de l'analyse Sonar sont conservés d'une exécution à l'autre. La construction de l'image et la base de vulnérabilités, elles, n'y touchent jamais.",
       cachesHint:
-        "Chaque job porte aussi un délai maximal, pour qu'une étape bloquée ne retienne pas la chaîne indéfiniment.",
+        "Un cache que les jobs qui exécutent le code des dépendances peuvent écrire aveuglerait le scan qui le relit. Chaque job porte aussi un délai maximal, pour qu'une étape bloquée ne retienne pas la chaîne indéfiniment.",
       otherPipelines: 'Quatre autres chaînes, hors du graphe principal',
       rollback: 'retour arrière',
-      rollbackHint: "Déclenchable à la main pour remettre en ligne l'image précédente.",
+      rollbackHint:
+        'Déclenchable à la main, une chaîne pour le serveur et une pour le front : la révision ou la version publiée précédente reprend le trafic, sans rien reconstruire.',
       terraform: 'infrastructure',
       terraformHint:
         "Planifie un changement de l'infrastructure sur sa pull request. Sur master, deux plans en lecture seule précèdent l'application, qu'un relecteur doit approuver, et seulement si une ressource change. Chaque lundi, le même plan rejoué passe au rouge si l'infrastructure a bougé hors du dépôt.",
       backup: 'sauvegarde',
       backupHint:
-        "Chaque nuit, un export de la base part dans un bucket privé, relu et restauré sur le runner avant d'être retenu ; trente jours de rétention, et une alerte si aucune archive n'est arrivée depuis 36 heures, parce qu'une chaîne planifiée que la plateforme désactive en silence n'échoue jamais.",
+        "Chaque nuit, un export de la base part dans un bucket privé, relu et restauré sur le runner avant d'être retenu ; trente jours de rétention, 400 pour une copie mensuelle, et une alerte si aucune archive n'est arrivée depuis 36 heures, parce qu'une chaîne planifiée que la plateforme désactive en silence n'échoue jamais.",
       securityScan: 'analyse de sécurité',
       securityScanHint:
         "Chaque lundi, indépendante des envois de code, pour attraper les failles publiées après coup : les verrous de dépendances, l'image de base que la production exécute et la description Terraform.",
@@ -3493,9 +3500,9 @@ export const fr = {
       frontValue:
         'Une application entièrement cliente, livrée en fichiers statiques : aucun serveur de rendu à exploiter, à mettre à échelle ni à payer.',
       frontHint:
-        "Le rendu serveur aurait ajouté une infrastructure à tenir pour un catalogue de pages publiques restreint : l'accueil, les profils, le dossier technique et les pages légales.",
+        "Le rendu serveur aurait ajouté une infrastructure à tenir pour un catalogue de pages publiques restreint : l'accueil, les vitrines de films, les profils, le dossier technique et les pages légales.",
       frontTrade:
-        "Cinq pages publiques sont pré-rendues au build, HTML complet et métadonnées compris ; l'accueil et les profils, dynamiques, restent référencés par métadonnées et sitemap.",
+        "Neuf pages publiques sont pré-rendues au build, HTML complet et métadonnées compris ; l'accueil et les profils, dynamiques, restent référencés par métadonnées et sitemap, et le serveur rend lui-même l'aperçu de partage d'une soirée, d'un recap ou d'un film.",
       styling: 'Modules CSS plutôt que Tailwind',
       stylingValue:
         'Des modules CSS et des jetons maison : espacements, tailles, couleurs et profondeurs forment une échelle fermée que le contrôle refuse de voir contournée.',
@@ -3507,14 +3514,14 @@ export const fr = {
       hostingHint:
         'Kubernetes demandait un outillage disproportionné pour un service ; une machine virtuelle demandait un OS à patcher.',
       hostingTrade:
-        "Aucun état en mémoire n'est fiable et aucun travail de fond ne peut vivre dans le processus. Les rappels sont déclenchés de l'extérieur.",
+        "Aucun état en mémoire n'est fiable et aucun travail de fond ne peut vivre dans le processus. Les rappels sont déclenchés de l'extérieur, et le flux en direct d'une soirée relit la base plutôt que de passer d'une instance à l'autre.",
       oneCloud: 'Un seul fournisseur de cloud, depuis septembre 2026',
       oneCloudValue:
         'Le front est né sur AWS avant que le serveur ne parte sur Google Cloud ; il l’y a rejoint sur Firebase Hosting. Une console, un modèle de droits, une facture.',
       oneCloudHint:
         'Cloud Storage et Cloud CDN, l’équivalent direct de S3 et CloudFront, ont été écartés : leur règle de transfert coûte près de vingt dollars par mois avant le premier octet servi. Firebase Hosting sert les fichiers, les en-têtes et le repli SPA dans le palier gratuit.',
       oneCloudTrade:
-        'Un hébergement moins programmable qu’un CDN : sans fonction devant le site, un chemin inconnu reçoit la coquille en 200 et l’aperçu de partage ne peut pas être servi selon le client.',
+        'Un hébergement moins programmable qu’un CDN : sans fonction devant le site, un chemin inconnu reçoit la coquille en 200, et l’aperçu de partage d’une soirée, d’un recap ou d’un film doit être relayé jusqu’au serveur.',
       mono: 'Monorepo pnpm et Turbo',
       monoValue:
         "Un dépôt, une chaîne de livraison, un seul tag de version pour les deux applications. Le contrat d'API et le client qui le consomme changent dans le même commit, donc une rupture ne compile pas au lieu de se découvrir en production.",
@@ -3585,9 +3592,9 @@ export const fr = {
         'Les révisions restent disponibles chez l’hébergeur et les anciennes images dans le registre, purgées par sa politique de rétention pour qu’il ne gonfle pas. Le retour arrière vérifie lui aussi la version servie après coup : une page qui répond, la version retirée le fait aussi.',
       scheduler: 'Travail périodique',
       schedulerValue:
-        "Aucune tâche de fond ne vit dans le processus. Un planificateur externe appelle le serveur toutes les 30 minutes pour les rappels de soirée, et une fois par jour pour faire naître l'occurrence suivante des soirées récurrentes puis clore celles qui se sont terminées seules, sur des routes protégées par jeton.",
+        "Aucune tâche de fond ne vit dans le processus. Un planificateur externe appelle le serveur toutes les 30 minutes pour les rappels de soirée, toutes les cinq heures pour recharger le catalogue de l'accueil, et une fois par jour pour faire naître l'occurrence suivante des soirées récurrentes, retirer le film gagnant de la liste à voir des participants une fois la soirée finie, et relancer ceux qui n'ont pas encore noté le film de la veille, sur des routes protégées par jeton.",
       schedulerHint:
-        'Les trois jobs sont créés par la chaîne de déploiement en production, après chaque promotion, et retentent trois fois un appel tombé sur un démarrage à froid ou une erreur ; une tentative en échec remonte en alerte. La recette n’en a aucun.',
+        'Les cinq jobs sont créés par la chaîne de déploiement en production, après chaque promotion, et retentent trois fois un appel tombé sur un démarrage à froid ou une erreur ; une tentative en échec remonte en alerte. La recette n’en a aucun.',
       origins: 'Origines',
       originsValue:
         'Le serveur n’accepte que les origines déclarées. Le déploiement échoue si la liste n’est pas renseignée.',
@@ -3597,7 +3604,7 @@ export const fr = {
       stagingValue:
         'Chaque commit part d’abord sur staging.movie-picker.fr, une seconde instance du site et du serveur avec sa propre base et ses propres clients de connexion. La production refuse de partir tant que la recette ne sert pas exactement ce commit, et reprend l’image que la recette exécute sans la reconstruire.',
       stagingHint:
-        'La recette n’est pas indexée par les moteurs de recherche, n’a ni sonde ni sauvegarde, et tourne dans le même projet sous ses propres identités.',
+        'La recette n’est pas indexée par les moteurs de recherche, n’a pas de sauvegarde et une seule sonde, sur son serveur, et tourne dans le même projet sous ses propres identités.',
       iac: 'Infrastructure décrite',
       iacValue:
         'Registre, secrets, services, sites, identités, fédération, alertes et journaux d’audit sont décrits en Terraform, avec un état distant versionné et verrouillé. Un changement se planifie sur sa pull request, et ne s’applique sur master qu’après l’accord d’un relecteur, quand il change une ressource.',
@@ -3637,14 +3644,14 @@ export const fr = {
 
       sonar: 'SonarCloud',
       sonarValue:
-        'Analyse à chaque envoi, couverture ingérée depuis la CI. La chaîne attend le verdict du portail qualité et échoue s’il est rouge.',
+        'Analyse à chaque envoi, couverture ingérée depuis la CI. La chaîne attend le verdict du portail qualité, puis exige sur toute la branche zéro problème ouvert, la note A partout et aucune duplication.',
       sonarHint:
         'Les deux déploiements dépendent de ce job : un portail rouge arrête la livraison, il ne se contente pas de l’annoter.',
       monitoring: 'Cloud Monitoring',
       monitoringValue:
-        "Trois sondes interrogent le service de l'extérieur, depuis trois continents, et huit politiques d'alerte préviennent par courriel : service ou base injoignables, erreurs serveur, latence dégradée, passe planifiée en échec, sauvegarde en retard, nouveau compte créé.",
+        "Quatre sondes interrogent le service de l'extérieur, depuis trois continents, et onze politiques d'alerte préviennent par courriel : service, base ou recette injoignables, erreurs serveur, latence dégradée, passe planifiée en échec, sauvegarde en retard, nouveau compte créé, compte bloqué par la limitation de débit, stockage des photos de profil plein.",
       monitoringHint:
-        "Les sondes visent /health, /health/ready et la racine du front. Les seuils sont posés au-dessus du bruit mesuré pour qu'une alerte reste crédible, et un incident se referme seul après trente minutes de retour à la normale. Sondes, politiques et leur documentation sont décrites en code.",
+        "Les sondes visent /health, /health/ready et la racine du front, plus /health de la recette. Les seuils sont posés au-dessus du bruit mesuré pour qu'une alerte reste crédible, et un incident se referme seul après trente minutes de retour à la normale. Sondes, politiques, tableau de bord et leur documentation sont décrits en code.",
       sentry: 'Sentry',
       sentryValue:
         'Erreurs du navigateur et du serveur, rattachées à la version déployée par le SHA du commit.',
@@ -3656,7 +3663,7 @@ export const fr = {
       posthogHint:
         'Les événements émis avant le choix de consentement sont perdus, et c’est le comportement voulu.',
       noteLead: "Le contrôle d'architecture",
-      note: "est un script maison d'environ {{lines}} lignes, joué avant chaque push et en CI. Il fait échouer la construction sur cinq familles de fautes qu'aucun linter du marché ne sait interdire :",
+      note: "est une porte maison d'environ {{lines}} lignes, un module par famille de règles, chaque règle avec un cas qui doit échouer et un qui doit passer. Jouée avant chaque push et en CI, elle fait échouer la construction sur six familles de fautes qu'aucun linter du marché ne sait interdire :",
       ruleComment: 'un commentaire hors directive fonctionnelle',
       ruleCommentHint:
         'Rejette // et /* */, sauf les directives comme @ts-expect-error, eslint-disable ou un shebang.',
@@ -3668,10 +3675,13 @@ export const fr = {
         'Seule une liste fermée de largeurs est admise ; toute autre valeur fait échouer la construction.',
       ruleImport: 'un import interdit entre couches',
       ruleImportHint:
-        'Rejette un import du socle partagé vers un domaine, ou du métier vers la base et le web.',
+        'Rejette un import du socle partagé vers un domaine, une dépendance entre domaines absente de leur table, un domaine qui remonte vers l’assemblage des pages, ou du métier vers la base et le web, using implicites compris.',
       ruleCycle: "un cycle d'imports",
       ruleCycleHint:
-        "Rejette deux modules qui finissent par s'importer l'un l'autre, directement ou par un détour.",
+        "Rejette deux modules qui finissent par s'importer l'un l'autre, directement, par un détour ou par un chargement différé.",
+      ruleWriteSeq: 'une écriture qui ne prévient pas la soirée',
+      ruleWriteSeqHint:
+        'Rejette un cas d’usage qui écrit un film, un vote, un participant ou une note sans faire avancer le compteur de la soirée : sans lui, ni le cache HTTP ni le flux en direct ne verraient le changement.',
     },
     diagram: {
       architectureTitle:
@@ -3745,9 +3755,7 @@ export const fr = {
       ciAudit: 'audit deps',
       ciTestApi: 'test api',
       ciTestWeb: 'test web',
-      ciTestMongo: 'test api mongo',
       ciE2e: 'e2e',
-      ciE2eMongo: 'e2e mongo',
       ciSonar: 'sonar',
       ciSonarSub: 'portail qualité',
       ciVerdict: 'CI du commit verte',
@@ -3791,7 +3799,7 @@ export const fr = {
       devReview: 'code review, sécurité',
       devFixes: 'corrections',
       devRoadmap: 'roadmap mise à jour',
-      devPrePush: 'verify:local avant push',
+      devPrePush: 'check:static au push',
       devPush: 'version, push sur master',
       devCi: 'CI, {{jobs}} checks',
       devMerge: 'recette le jour même',
@@ -3821,6 +3829,7 @@ export const fr = {
       skillSecurityWhen: 'auth, droits, nouvel endpoint',
       skillDeployWhen: 'à la mise en production',
       skillMaintenanceWhen: 'passe hebdomadaire',
+      skillAutoMaintenanceWhen: 'passe quotidienne, sans go',
       mcpLabel: "OUTILS BRANCHÉS SUR L'ASSISTANT (MCP ET LIGNE DE COMMANDE)",
       mcpAssistant: 'assistant',
       mcpGithub: 'PR et CI',
@@ -3837,7 +3846,7 @@ export const fr = {
       domainAuth: 'auth',
       domainEvents: 'soirées',
       domainMovies: 'films',
-      domainWatchlist: 'watchlist',
+      domainLibrary: 'bibliothèque',
       domainNotifications: 'notifications',
       domainProfiles: 'profils',
       domainLetterboxd: 'Letterboxd',
@@ -3846,16 +3855,16 @@ export const fr = {
       frontGraphNote:
         "Le socle est une feuille du graphe : aucune flèche n'en repart. Un cycle fait échouer la CI.",
       unitOfWorkTitle:
-        'Suppression de compte : huit collections écrites dans une transaction, validées ou annulées ensemble',
+        'Suppression de compte : douze collections écrites dans une transaction, validées ou annulées ensemble',
       unitOfWorkLabel: 'UNITÉ DE TRAVAIL',
       unitOfWorkEnvelope: 'IUnitOfWork.ExecuteAsync',
-      unitOfWorkCollections: 'huit collections touchées',
+      unitOfWorkCollections: 'douze collections touchées',
       unitOfWorkCommit: 'commit',
-      unitOfWorkCommitSub: 'les huit écritures',
+      unitOfWorkCommitSub: 'les douze écritures',
       unitOfWorkRollback: 'rollback',
-      unitOfWorkRollbackSub: 'aucune des huit',
+      unitOfWorkRollbackSub: 'aucune des douze',
       unitOfWorkNote:
-        'Transaction MongoDB en production, verrou en mémoire dans les tests : le même code des deux côtés.',
+        'Transaction MongoDB en production, verrou en mémoire dans les tests unitaires : le même code des deux côtés.',
       bugFlowTitle: "Traitement d'une anomalie, du signalement à la non-régression",
       bugFlowLabel: "FLOT D'UNE ANOMALIE",
       bugReproduce: 'reproduire',
@@ -3924,7 +3933,7 @@ export const fr = {
       infraZoneGcp: 'Google Cloud, europe-west1',
       infraMonitoring: 'Cloud Monitoring',
       infraMonitoringSub: 'sondes front et API',
-      infraMonitoringDetail: 'huit alertes actives',
+      infraMonitoringDetail: 'onze alertes actives',
       infraHosting: 'Firebase Hosting',
       infraHostingSub: 'www.movie-picker.fr',
       infraHostingDetail: 'TLS géré, en-têtes',
@@ -3938,7 +3947,7 @@ export const fr = {
       infraRegistrySub: 'une image par commit',
       infraRegistryDetail: 'taguée par SHA, purgée',
       infraScheduler: 'Cloud Scheduler',
-      infraSchedulerSub: 'rappels, passes de nuit',
+      infraSchedulerSub: 'cinq passes planifiées',
       infraSchedulerDetail: 'jeton OIDC, 3 essais',
       infraAtlas: 'MongoDB Atlas',
       infraAtlasSub: 'replica set managé',

@@ -37,8 +37,9 @@
 # `ALERT_SMS_NUMBER`, the same names `scripts/terraform.mjs` reads locally from `.env`.
 #
 # `fmt` and `validate` stay in `ci-cd.yml` (`lint-terraform`), without credentials: this workflow
-# only runs when there is something to plan. The binary version is pinned here, in `ci-cd.yml`,
-# in `scripts/terraform.mjs` and in every root module; `pnpm run check:tools` keeps them equal.
+# only runs when there is something to plan. The binary version is pinned here, in the image of
+# `scripts/terraform.mjs` (which `lint-terraform` runs through `pnpm run check:terraform`) and in
+# every root module; `pnpm run check:tools` keeps them equal.
 
 name: 🏗️ Terraform
 

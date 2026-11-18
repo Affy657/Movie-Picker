@@ -1,9 +1,5 @@
-import type {
-  EventConfigData,
-  EventRecurrence,
-  MyEventLifecycle,
-  WheelMode,
-} from '@/shared/types/event';
+import type { ApiSchemas } from '@/shared/api/contract';
+import type { EventConfigData, EventRecurrence, WheelMode } from '@/shared/types/event';
 
 export type { WheelMode, EventConfigData, EventData, EventRecurrence } from '@/shared/types/event';
 
@@ -33,18 +29,7 @@ export const MAX_EVENT_TEMPLATES = 5;
 
 export const MAX_EVENT_TEMPLATE_NAME_LENGTH = 60;
 
-export interface EventTemplateData {
-  id: string;
-  name: string;
-  theme: string | null;
-  maxProposalsPerParticipant: number | null;
-  maxParticipants: number | null;
-  maxVotesPerParticipant: number | null;
-  wheelMode: WheelMode;
-  richSharePreview: boolean;
-  allowSeries: boolean;
-  winnerCount: number;
-}
+export type EventTemplateData = ApiSchemas['EventTemplateResponse'];
 
 export type SaveEventTemplateBody = Omit<EventTemplateData, 'id'>;
 
@@ -69,60 +54,10 @@ export type EventConfigPatchPayload = {
 
 export type MyEventsScope = 'active' | 'finished';
 
-export interface MyEventSummary {
-  id: string;
-  slug: string;
-  title: string;
-  date: string;
-  time: string;
-  createdAt: string;
-  updatedAt: string;
-  isCreator: boolean;
-  isParticipant: boolean;
+export type MyEventSummary = ApiSchemas['MyEventSummaryDto'];
 
-  lifecycle?: MyEventLifecycle | (string & {});
-  participantCount?: number;
-  movieCount?: number;
+export type MyEventMoviePreview = ApiSchemas['MyEventMoviePreviewDto'];
 
-  maxParticipants?: number | null;
+export type MyEventWinnerMovie = ApiSchemas['MyEventWinnerMovieDto'];
 
-  theme?: string | null;
-
-  winnerMovies?: MyEventWinnerMovie[];
-
-  averageRating?: number | null;
-
-  myRating?: number | null;
-
-  hasWinnerToRate?: boolean;
-
-  autoCloseAt?: string | null;
-
-  topMovies?: MyEventMoviePreview[];
-
-  participantsPreview?: MyEventParticipantPreview[];
-
-  hasVoted?: boolean;
-}
-
-export interface MyEventMoviePreview {
-  title: string;
-  posterPath?: string | null;
-}
-
-export interface MyEventParticipantPreview {
-  pseudo: string;
-  avatarId: string;
-}
-
-export interface MyEventWinnerMovie {
-  title: string;
-  posterPath?: string | null;
-}
-
-export interface MyEventsListResponse {
-  events: MyEventSummary[];
-  hasMore?: boolean;
-  totalActive: number;
-  totalFinished: number;
-}
+export type MyEventsListResponse = ApiSchemas['MyEventsListResponse'];

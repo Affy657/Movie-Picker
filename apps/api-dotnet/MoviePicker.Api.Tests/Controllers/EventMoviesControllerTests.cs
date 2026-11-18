@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
-using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AddMovie;
 using MoviePicker.Api.Application.UseCases.DeleteMovie;
 using MoviePicker.Api.Application.UseCases.DeleteMoviePitchNote;
@@ -62,13 +61,11 @@ public sealed class EventMoviesControllerTests
     public async Task Add_ReturnsCreated_UsingCurrentUser()
     {
         var handler = new Mock<IAddMovieHandler>();
-        var currentUser = new Mock<ICurrentUserAccessor>();
-        currentUser.Setup(c => c.GetUserId()).Returns("u1");
 
-        var result = await Controller().Add("e", null!, handler.Object, currentUser.Object, CancellationToken.None);
+        var result = await Controller().Add("e", null!, handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<CreatedResult>(result);
-        handler.Verify(h => h.HandleAsync("e", It.IsAny<AddMovieRequest>(), "u1", It.IsAny<CancellationToken>()), Times.Once);
+        handler.Verify(h => h.HandleAsync("u1", "e", It.IsAny<AddMovieRequest>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -77,10 +74,10 @@ public sealed class EventMoviesControllerTests
         var handler = new Mock<IDeleteMovieHandler>();
         var body = new DeleteMovieRequest { ParticipantId = "participant-000000000001" };
 
-        var result = await Controller().Delete("e", "m1", body, handler.Object, CancellationToken.None);
+        var result = await Controller().Delete("e", "m1", body, handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
-        handler.Verify(h => h.HandleAsync("e", "m1", "participant-000000000001", It.IsAny<CancellationToken>()), Times.Once);
+        handler.Verify(h => h.HandleAsync("u1", "e", "m1", "participant-000000000001", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -88,11 +85,11 @@ public sealed class EventMoviesControllerTests
     {
         var handler = new Mock<IVoteMovieHandler>();
 
-        var result = await Controller().Vote("e", "m1", null!, handler.Object, CancellationToken.None);
+        var result = await Controller().Vote("e", "m1", null!, handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
         handler.Verify(
-            h => h.HandleAsync("e", "m1", It.IsAny<VoteRequest>(), It.IsAny<CancellationToken>()), Times.Once);
+            h => h.HandleAsync("u1", "e", "m1", It.IsAny<VoteRequest>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -101,11 +98,11 @@ public sealed class EventMoviesControllerTests
         var handler = new Mock<IClearMovieVoteHandler>();
 
         var ex = await Assert.ThrowsAsync<BadRequestException>(() =>
-            Controller().ClearVote("e", "m1", "   ", handler.Object, CancellationToken.None));
+            Controller().ClearVote("e", "m1", "   ", handler.Object, "u1", CancellationToken.None));
 
         Assert.Equal(ErrorCodes.ParticipantIdRequired, ex.Reason);
         handler.Verify(
-            h => h.HandleAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            h => h.HandleAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -114,10 +111,10 @@ public sealed class EventMoviesControllerTests
     {
         var handler = new Mock<IClearMovieVoteHandler>();
 
-        var result = await Controller().ClearVote("e", "m1", "p1", handler.Object, CancellationToken.None);
+        var result = await Controller().ClearVote("e", "m1", "p1", handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
-        handler.Verify(h => h.HandleAsync("e", "m1", "p1", It.IsAny<CancellationToken>()), Times.Once);
+        handler.Verify(h => h.HandleAsync("u1", "e", "m1", "p1", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -125,7 +122,7 @@ public sealed class EventMoviesControllerTests
     {
         var handler = new Mock<IMarkAsSeenHandler>();
 
-        var result = await Controller().MarkAsSeen("e", "m1", null!, handler.Object, CancellationToken.None);
+        var result = await Controller().MarkAsSeen("e", "m1", null!, handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
     }
@@ -135,7 +132,7 @@ public sealed class EventMoviesControllerTests
     {
         var handler = new Mock<ISetMoviePitchNoteHandler>();
 
-        var result = await Controller().SetPitchNote("e", "m1", null!, handler.Object, CancellationToken.None);
+        var result = await Controller().SetPitchNote("e", "m1", null!, handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
     }
@@ -145,7 +142,7 @@ public sealed class EventMoviesControllerTests
     {
         var handler = new Mock<IDeleteMoviePitchNoteHandler>();
 
-        var result = await Controller().DeletePitchNote("e", "m1", null!, handler.Object, CancellationToken.None);
+        var result = await Controller().DeletePitchNote("e", "m1", null!, handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
     }
@@ -156,10 +153,10 @@ public sealed class EventMoviesControllerTests
         var handler = new Mock<IUnmarkAsSeenHandler>();
         var request = new UnmarkAsSeenRequest { ParticipantId = "participant-000000000001" };
 
-        var result = await Controller().UnmarkAsSeen("e", "m1", request, handler.Object, CancellationToken.None);
+        var result = await Controller().UnmarkAsSeen("e", "m1", request, handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
         handler.Verify(
-            h => h.HandleAsync("e", "m1", "participant-000000000001", It.IsAny<CancellationToken>()), Times.Once);
+            h => h.HandleAsync("u1", "e", "m1", "participant-000000000001", It.IsAny<CancellationToken>()), Times.Once);
     }
 }

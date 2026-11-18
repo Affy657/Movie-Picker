@@ -5,7 +5,6 @@ import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import MoviePreviewRow, { MoviePreviewRail } from '@/features/movies/components/MoviePreviewRow';
 import MovieBrowseCard, {
-  type MovieBrowseCardItem,
   type MovieLibraryActions,
 } from '@/features/movies/components/MovieBrowseCard';
 import { useMovieShowcase } from '@/features/movies/hooks/useMovieShowcase';
@@ -15,6 +14,7 @@ import EmptyState from '@/shared/components/EmptyState';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { Film } from 'lucide-react';
 import InlineError from '@/shared/components/InlineError';
+import { toTitleSummary } from '@/shared/utils/titleSummary';
 
 const SKELETON_CARDS = 6;
 export const RAIL_PREVIEW_COUNT = 20;
@@ -53,19 +53,6 @@ interface Props<T extends string> extends BodyProps {
   className?: string;
 }
 
-function toCardItem(item: ShowcaseItem): MovieBrowseCardItem {
-  return {
-    tmdbId: item.id,
-    mediaType: item.mediaType ?? 'movie',
-    title: item.title,
-    year: item.year,
-    posterPath: item.posterPath,
-    voteAverage: item.voteAverage,
-    runtimeMinutes: item.runtimeMinutes,
-    genreIds: item.genreIds,
-  };
-}
-
 function SkeletonRow({ label }: Readonly<{ label: string }>) {
   return (
     <SkeletonScreen label={label}>
@@ -94,7 +81,7 @@ function ShowcaseCards({
   onSelect: (item: ShowcaseItem) => void;
 }>) {
   const cards = items.map((item, index) => {
-    const cardItem = toCardItem(item);
+    const cardItem = toTitleSummary(item);
     return (
       <MovieBrowseCard
         key={`${cardItem.tmdbId}|${cardItem.mediaType}`}

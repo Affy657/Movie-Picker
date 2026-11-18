@@ -15,14 +15,15 @@ import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { useHistoryEntryState } from '@/shared/hooks/useHistoryEntryState';
-import { MOVIE_PAGE_CHUNKS } from '@/app/routeChunks';
-import { setMovieWheelExclusion } from '@/features/movies/api/moviesApi';
+import { MOVIE_PAGE_CHUNKS } from '@/app/moviePageChunk';
+import { setMovieWheelExclusion } from '@/features/events/api/eventMoviesApi';
+import { canToggleWheel, wheelExclusionErrorKey } from '@/features/events/lib/nightRules';
 import { getErrorMessage } from '@/shared/api/apiError';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
-import MovieList, { type MovieRowSortKey } from '@/features/movies/components/MovieList';
+import MovieList, { type MovieRowSortKey } from '@/features/events/components/MovieList';
 import SortControl from '@/features/movies/components/SortControl';
-import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
+import type { MovieCardSelection } from '@/features/events/components/eventMovieCardParts';
 import EmptyState from '@/shared/components/EmptyState';
 import Button from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -188,10 +189,6 @@ function voteQuotaFor(
   return { used, max: maxVotes };
 }
 
-function wheelExclusionErrorKey(excluded: boolean) {
-  return excluded ? 'movies.list.excludeFromWheelError' : 'movies.list.includeInWheelError';
-}
-
 function lockedVoteQuotaHint(
   quota: { used: number; max: number } | null,
   t: Translate
@@ -352,7 +349,9 @@ export default function EventMoviesSection({
     isMobile: compactRows,
     isInWatchlist: user ? isInWatchlist : undefined,
     onToggleWatchlist: user ? toggleWatchlist : undefined,
-    onToggleWheelExclusion: event.isHost && !isFinished ? handleToggleWheelExclusion : undefined,
+    onToggleWheelExclusion: canToggleWheel({ isHost: !!event.isHost, isFinished, wheelLocked })
+      ? handleToggleWheelExclusion
+      : undefined,
     voteErrors,
     onRetryVote: handleRetryVote,
     selection,

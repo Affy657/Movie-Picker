@@ -13,6 +13,7 @@ import { useMovieDetails } from '@/features/movies/hooks/useMovieDetails';
 import { useMovieShowcase } from '@/features/movies/hooks/useMovieShowcase';
 import { useTranslation } from '@/shared/i18n';
 import type { MovieMediaType } from '@/shared/types/movie';
+import { toTitleSummary } from '@/shared/utils/titleSummary';
 import styles from './MovieRails.module.css';
 
 const RAIL_LIMIT = 20;
@@ -30,16 +31,7 @@ interface RailProps {
 }
 
 function toCardItem(item: ShowcaseItem): MovieBrowseCardItem {
-  return {
-    tmdbId: item.id,
-    mediaType: item.mediaType ?? 'movie',
-    title: item.title,
-    year: item.year,
-    posterPath: item.posterPath,
-    voteAverage: item.voteAverage,
-    runtimeMinutes: item.runtimeMinutes,
-    genreIds: item.genreIds,
-  };
+  return toTitleSummary(item);
 }
 
 function isCurrent(item: MovieBrowseCardItem, current: RailProps['current']): boolean {

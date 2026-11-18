@@ -17,7 +17,6 @@ public sealed class SetPresenceHandlerTests
     private readonly Mock<IEventRepository> _events = new();
     private readonly Mock<IParticipantRepository> _participants = new();
     private readonly Mock<IEventPresenceRepository> _presence = new();
-    private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<TimeProvider> _clock = new();
     private readonly SetPresenceHandler _sut;
 
@@ -27,7 +26,6 @@ public sealed class SetPresenceHandlerTests
         _events
             .Setup(r => r.GetByIdOrSlugAsync("soiree", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new EventEntityBuilder().WithId("evt-1").WithSlug("soiree").Build());
-        _currentUser.Setup(u => u.GetUserId()).Returns("user-1");
         _participants
             .Setup(r => r.FindByEventAndUserIdAsync("evt-1", "user-1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Participant { Id = "p-1", EventId = "evt-1", Pseudo = "Alice", UserId = "user-1" });
@@ -35,7 +33,6 @@ public sealed class SetPresenceHandlerTests
             _events.Object,
             _participants.Object,
             _presence.Object,
-            _currentUser.Object,
             _clock.Object,
             Options.Create(new EventLiveOptions { PresenceTtl = TimeSpan.FromSeconds(30) }));
     }
@@ -44,7 +41,7 @@ public sealed class SetPresenceHandlerTests
     public async Task HandleAsync_UnknownEvent_ThrowsEventNotFound()
     {
         var ex = await Assert.ThrowsAsync<NotFoundException>(
-            () => _sut.HandleAsync("nope", new PresenceRequest { Proposing = true }));
+            () => _sut.HandleAsync("user-1", "nope", new PresenceRequest { Proposing = true }));
 
         Assert.Equal(ErrorCodes.EventNotFound, ex.Reason);
     }
@@ -52,10 +49,9 @@ public sealed class SetPresenceHandlerTests
     [Fact]
     public async Task HandleAsync_UserWhoHasNotJoined_ThrowsParticipantNotFound()
     {
-        _currentUser.Setup(u => u.GetUserId()).Returns("user-2");
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(
-            () => _sut.HandleAsync("soiree", new PresenceRequest { Proposing = true }));
+            () => _sut.HandleAsync("user-2", "soiree", new PresenceRequest { Proposing = true }));
 
         Assert.Equal(ErrorCodes.ParticipantNotFound, ex.Reason);
         _presence.VerifyNoOtherCalls();
@@ -64,7 +60,7 @@ public sealed class SetPresenceHandlerTests
     [Fact]
     public async Task HandleAsync_Proposing_KeepsTheParticipantPresentAndProposingForOneTtl()
     {
-        await _sut.HandleAsync("soiree", new PresenceRequest { Proposing = true });
+        await _sut.HandleAsync("user-1", "soiree", new PresenceRequest { Proposing = true });
 
         _presence.Verify(r => r.SetProposingAsync(
             "evt-1",
@@ -77,7 +73,7 @@ public sealed class SetPresenceHandlerTests
     [Fact]
     public async Task HandleAsync_NotProposingAnymore_ClearsTheSignalButKeepsThePresence()
     {
-        await _sut.HandleAsync("soiree", new PresenceRequest { Proposing = false });
+        await _sut.HandleAsync("user-1", "soiree", new PresenceRequest { Proposing = false });
 
         _presence.Verify(r => r.SetProposingAsync(
             "evt-1",

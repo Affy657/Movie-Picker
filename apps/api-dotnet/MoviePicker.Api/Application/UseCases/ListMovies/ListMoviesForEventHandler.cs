@@ -2,6 +2,7 @@ using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 
@@ -58,18 +59,6 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
             return false;
         var participant = eventParticipants.FirstOrDefault(p => p.Id == participantId);
         return participant is not null && participant.UserId == currentUserId;
-    }
-
-    private static UserCard? ResolveProposerUser(
-        string participantId,
-        Dictionary<string, Participant> participantById,
-        Dictionary<string, UserCard> userById)
-    {
-        if (!participantById.TryGetValue(participantId, out var participant))
-            return null;
-        if (participant.UserId is null)
-            return null;
-        return userById.TryGetValue(participant.UserId, out var user) ? user : null;
     }
 
     private static (int Count, IReadOnlyList<string> Pseudos) ResolveSeenSummary(
@@ -148,68 +137,31 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         {
             var votes = voteSummaries.GetValueOrDefault(m.Id, MovieVoteSummary.None);
             participantById.TryGetValue(m.ParticipantId, out var proposer);
-
-            var proposerHandle = PublicHandleResolver.Resolve(
-                ResolveProposerUser(m.ParticipantId, participantById, userById));
-
             var (seenCount, seenByPseudos) = ResolveSeenSummary(m.Id, seenAgg, participantById);
-            var votersUpPseudos = ResolvePseudos(votes.UpVoterIds, participantById);
-
             enrichmentByKey.TryGetValue((m.TmdbId, m.MediaType), out var enr);
-            var posterOut = _posterImageStore.ToPublicPosterPath(m.PosterPath);
 
-            int? myVote = myVotes.TryGetValue(m.Id, out var mv) ? mv : null;
-
-            list.Add(
-                new MovieWithScoreResponse
-                {
-                    Id = m.Id,
-                    EventId = m.EventId,
-                    ParticipantId = m.ParticipantId,
-                    TmdbId = m.TmdbId,
-                    MediaType = m.MediaType,
-                    Title = m.Title,
-                    Year = m.Year,
-                    PosterPath = posterOut,
-                    PitchNote = m.PitchNote,
-                    GenreIds = m.GenreIds,
-                    ExcludedFromWheel = m.ExcludedFromWheel,
-                    CreatedAt = m.CreatedAt,
-                    UpdatedAt = m.UpdatedAt,
-                    ProposerPseudo = proposer?.Pseudo ?? string.Empty,
-                    ProposerHandle = proposerHandle,
-                    Score = votes.Score,
-                    Up = votes.Up,
-                    Down = votes.Down,
-                    MyVote = myVote,
-                    SeenCount = seenCount,
-                    SeenByPseudos = seenByPseudos,
-                    VotersUpPseudos = votersUpPseudos,
-                    Ratings = ratingsByMovie.TryGetValue(m.Id, out var ratings) ? ratings : Array.Empty<MovieRatingResponse>(),
-                    VoteAverage = enr?.VoteAverage,
-                    WatchProviders = enr is null ? Array.Empty<WatchProviderOfferResponse>() : WatchProviderMapping.ToDto(enr.WatchProviders),
-                    TmdbWatchPageUrl = enr?.TmdbWatchPageUrl,
-                    RuntimeMinutes = enr?.RuntimeMinutes,
-                    ReleaseDate = enr?.ReleaseDate
-                });
+            var activity = new MovieNightActivity(
+                votes,
+                myVotes.TryGetValue(m.Id, out var mv) ? mv : null,
+                seenCount,
+                seenByPseudos,
+                ResolvePseudos(votes.UpVoterIds, participantById),
+                ratingsByMovie.TryGetValue(m.Id, out var ratings) ? ratings : []);
+            list.Add(MovieWithScoreResponse.From(m, _posterImageStore, ProposerOf(proposer, userById), activity, enr));
         }
 
         return list;
     }
 
-    private async Task<IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>> BuildEnrichmentMapAsync(
-        IReadOnlyList<Movie> movies,
-        CancellationToken ct)
-    {
-        if (!_options.HasTmdbCredentials)
-            return new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>();
+    private static MovieProposer ProposerOf(Participant? proposer, Dictionary<string, UserCard> userById) =>
+        proposer is null
+            ? new MovieProposer(string.Empty, null)
+            : new MovieProposer(proposer.Pseudo, DisplayedPerson.LinkedTo(proposer, userById)?.PublicHandle);
 
-        var region = string.IsNullOrWhiteSpace(_options.TmdbWatchProvidersRegion)
-            ? "FR"
-            : _options.TmdbWatchProvidersRegion.Trim().ToUpperInvariant();
-        var keys = movies.Select(x => (x.TmdbId, x.MediaType)).Distinct().ToList();
-        return await _tmdbMovieSearch.GetEnrichmentsAsync(keys, region, ct).ConfigureAwait(false);
-    }
+    private Task<IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>> BuildEnrichmentMapAsync(
+        IReadOnlyList<Movie> movies,
+        CancellationToken ct) =>
+        TmdbEnrichments.LoadAsync(movies.Select(m => (m.TmdbId, m.MediaType)), _tmdbMovieSearch, _options, ct);
 
     private static List<string> ResolvePseudos(
         IEnumerable<string> participantIds,

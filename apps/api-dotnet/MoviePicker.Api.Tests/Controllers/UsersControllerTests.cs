@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
-using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Follow;
 using MoviePicker.Api.Application.UseCases.Profile;
 using MoviePicker.Api.Application.UseCases.SearchUsers;
@@ -109,23 +108,10 @@ public sealed class UsersControllerTests
     {
         var handler = new Mock<IFollowUserHandler>();
 
-        var result = await Controller("u1").Follow("cinephile", handler.Object, CancellationToken.None);
+        var result = await Controller("u1").Follow("cinephile", handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
         handler.Verify(h => h.HandleAsync("u1", "cinephile", It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task Follow_Anonymous_ReturnsUnauthorized()
-    {
-        var handler = new Mock<IFollowUserHandler>();
-
-        var result = await Controller(null).Follow("cinephile", handler.Object, CancellationToken.None);
-
-        Assert.IsType<UnauthorizedResult>(result);
-        handler.Verify(
-            h => h.HandleAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
-            Times.Never);
     }
 
     [Fact]
@@ -133,18 +119,10 @@ public sealed class UsersControllerTests
     {
         var handler = new Mock<IUnfollowUserHandler>();
 
-        var result = await Controller("u1").Unfollow("cinephile", handler.Object, CancellationToken.None);
+        var result = await Controller("u1").Unfollow("cinephile", handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
         handler.Verify(h => h.HandleAsync("u1", "cinephile", It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task Unfollow_Anonymous_ReturnsUnauthorized()
-    {
-        var result = await Controller(null).Unfollow("cinephile", new Mock<IUnfollowUserHandler>().Object, CancellationToken.None);
-
-        Assert.IsType<UnauthorizedResult>(result);
     }
 
     [Fact]
@@ -169,13 +147,6 @@ public sealed class UsersControllerTests
         handler.Verify(h => h.HandleAsync("cinephile", "u1", It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    private static Mock<ICurrentUserAccessor> Accessor(string? userId)
-    {
-        var accessor = new Mock<ICurrentUserAccessor>();
-        accessor.Setup(a => a.GetUserId()).Returns(userId);
-        return accessor;
-    }
-
     [Fact]
     public async Task GetMyWatchedMovies_ForwardsTheCurrentUser()
     {
@@ -185,7 +156,7 @@ public sealed class UsersControllerTests
             .ReturnsAsync(new UserWatchedMoviesResponse { Items = [] });
 
         var result = await Controller("u1")
-            .GetMyWatchedMovies(1, handler.Object, Accessor("u1").Object, CancellationToken.None);
+            .GetMyWatchedMovies(1, handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
         handler.Verify(h => h.HandleForUserAsync("u1", 1, It.IsAny<CancellationToken>()), Times.Once);
@@ -200,23 +171,11 @@ public sealed class UsersControllerTests
             .ReturnsAsync(new UserWatchedMoviesResponse { Items = [] });
 
         await Controller("u1")
-            .GetMyWatchedMovies(6, handler.Object, Accessor("u1").Object, CancellationToken.None);
+            .GetMyWatchedMovies(6, handler.Object, "u1", CancellationToken.None);
 
         handler.Verify(
             h => h.HandleAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()),
             Times.Never);
-    }
-
-    [Fact]
-    public async Task GetMyWatchedMovies_WithoutSession_ReturnsUnauthorized()
-    {
-        var handler = new Mock<IGetUserWatchedMoviesHandler>();
-
-        var result = await Controller(null)
-            .GetMyWatchedMovies(1, handler.Object, Accessor(null).Object, CancellationToken.None);
-
-        Assert.IsType<UnauthorizedResult>(result);
-        handler.VerifyNoOtherCalls();
     }
 
     [Fact]
@@ -228,21 +187,10 @@ public sealed class UsersControllerTests
             .ReturnsAsync(new UserWatchedMoviesResponse { Items = [] });
 
         var result = await Controller("u1")
-            .GetFollowingWatchedMovies(20, handler.Object, Accessor("u1").Object, CancellationToken.None);
+            .GetFollowingWatchedMovies(20, handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
         handler.Verify(h => h.HandleAsync("u1", 20, It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    [Fact]
-    public async Task GetFollowingWatchedMovies_WithoutSession_ReturnsUnauthorized()
-    {
-        var handler = new Mock<IGetFollowedWatchedMoviesHandler>();
-
-        var result = await Controller(null)
-            .GetFollowingWatchedMovies(20, handler.Object, Accessor(null).Object, CancellationToken.None);
-
-        Assert.IsType<UnauthorizedResult>(result);
-        handler.VerifyNoOtherCalls();
-    }
 }

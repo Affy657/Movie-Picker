@@ -14,7 +14,7 @@ import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
 import { setStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 import { formatEventTitleDate } from '@/shared/utils/formatMyEventsListDate';
 import { ROUTES } from '@/app/routes';
-import { useCloseOnPageChange } from '@/app/components/useCloseOnPageChange';
+import { useCloseOnPageChange } from '@/shared/hooks/useCloseOnPageChange';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import {
   createEvent as createEventApi,

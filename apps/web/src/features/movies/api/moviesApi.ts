@@ -1,44 +1,12 @@
-import { fetchApi, apiPath, withHostToken } from '@/shared/api/client';
-import { mapMovieData, type RawMovieData } from '@/shared/api/apiMapping';
-import type {
-  MovieData,
-  MovieMediaType,
-  MovieRating,
-  WatchProviderOffer,
-} from '@/shared/types/movie';
+import { fetchApi, apiPath } from '@/shared/api/client';
+import type { ApiSchemas } from '@/shared/api/contract';
+import type { MovieMediaType } from '@/shared/types/movie';
 
 type QueryString = '' | `?${string}`;
 
-export async function fetchEventMovies(
-  slug: string,
-  participantId?: string | null
-): Promise<MovieData[]> {
-  const suffix: QueryString = participantId
-    ? `?participantId=${encodeURIComponent(participantId)}`
-    : '';
-  const list = await fetchApi<RawMovieData[]>(`${apiPath('events', slug, 'movies')}${suffix}`);
-  return Array.isArray(list) ? list.map(mapMovieData) : [];
-}
+export type MovieSearchItem = ApiSchemas['MovieSearchItemResponse'];
 
-export interface MovieSearchItem {
-  id: number;
-  mediaType?: MovieMediaType;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
-  watchProviders?: WatchProviderOffer[] | null;
-  tmdbWatchPageUrl?: string | null;
-  genreIds?: number[];
-}
-
-export interface MovieSearchListResponse {
-  items: MovieSearchItem[];
-  watchProvidersRegion: string;
-  disclaimer: string;
-  tmdbAttributionUrl: string;
-}
+export type MovieSearchListResponse = ApiSchemas['MovieSearchListResponse'];
 
 export interface MovieSearchFilters {
   genreIds?: number[];
@@ -92,82 +60,25 @@ export async function searchMovies(
   };
 }
 
-export interface MovieDetails {
-  tmdbId: number;
-  mediaType?: MovieMediaType;
-  title: string;
-  overview: string | null;
-  tagline: string | null;
-  director: string | null;
-  cast: string[];
-  runtimeMinutes: number | null;
-  genres: string[];
-  releaseDate: string | null;
-  trailerUrl?: string | null;
-  voteAverage: number | null;
-  posterPath: string | null;
-  backdropPath: string | null;
-  seasonCount: number | null;
-  episodeCount: number | null;
-  watchProviders: WatchProviderOffer[];
-  tmdbWatchPageUrl: string | null;
-  originalTitle: string | null;
-  originalLanguage: string | null;
-  productionCountries: string[];
-  budget: number | null;
-  voteCount: number | null;
-  certification: string | null;
-  collection: MovieCollectionRef | null;
-  directorId: number | null;
-  castMembers: MovieCastMember[];
-  crew: MovieCrewMember[];
-  videos: MovieVideo[];
-}
+export type MovieDetails = ApiSchemas['MovieDetailsResponse'];
 
-export interface MovieCollectionRef {
-  id: number;
-  name: string;
-}
+export type MovieCollectionRef = ApiSchemas['MovieDetailsCollectionResponse'];
 
-export interface MovieCastMember {
-  name: string;
-  character: string | null;
-  profilePath: string | null;
-}
+export type MovieCastMember = ApiSchemas['MovieCastMemberResponse'];
 
-export type MovieCrewJob = 'director' | 'writer' | 'composer' | 'photography' | 'creator';
+export type MovieCrewMember = ApiSchemas['MovieCrewMemberResponse'];
 
-export interface MovieCrewMember {
-  job: MovieCrewJob;
-  name: string;
-}
+export type MovieCrewJob = MovieCrewMember['job'];
 
-export interface MovieVideo {
-  key: string;
-  name: string;
-  type: string;
-  language: string | null;
-}
+export type MovieVideo = ApiSchemas['MovieVideoResponse'];
 
-interface RawMovieDetailsPageFields {
-  originalTitle?: string | null;
-  originalLanguage?: string | null;
-  productionCountries?: string[] | null;
-  budget?: number | null;
-  voteCount?: number | null;
-  certification?: string | null;
-  collection?: MovieCollectionRef | null;
-  directorId?: number | null;
-  castMembers?: MovieCastMember[] | null;
-  crew?: MovieCrewMember[] | null;
-  videos?: MovieVideo[] | null;
-}
+type RawMovieDetailsResponse = { [K in keyof MovieDetails]?: MovieDetails[K] | null };
 
 function listOrEmpty<T>(value: T[] | null | undefined): T[] {
   return Array.isArray(value) ? value : [];
 }
 
-function mapPageFields(raw: RawMovieDetailsPageFields) {
+function mapPageFields(raw: RawMovieDetailsResponse) {
   return {
     originalTitle: raw.originalTitle ?? null,
     originalLanguage: raw.originalLanguage ?? null,
@@ -183,27 +94,6 @@ function mapPageFields(raw: RawMovieDetailsPageFields) {
   };
 }
 
-interface RawMovieDetailsResponse extends RawMovieDetailsPageFields {
-  tmdbId?: number;
-  mediaType?: MovieMediaType;
-  title?: string;
-  overview?: string | null;
-  tagline?: string | null;
-  director?: string | null;
-  cast?: string[] | null;
-  runtimeMinutes?: number | null;
-  genres?: string[] | null;
-  releaseDate?: string | null;
-  trailerUrl?: string | null;
-  voteAverage?: number | null;
-  posterPath?: string | null;
-  backdropPath?: string | null;
-  seasonCount?: number | null;
-  episodeCount?: number | null;
-  watchProviders?: WatchProviderOffer[] | null;
-  tmdbWatchPageUrl?: string | null;
-}
-
 export async function fetchMovieDetails(
   tmdbId: number,
   opts?: { signal?: AbortSignal; mediaType?: MovieMediaType }
@@ -217,7 +107,7 @@ export async function fetchMovieDetails(
   );
   return {
     tmdbId: raw.tmdbId ?? tmdbId,
-    mediaType: raw.mediaType,
+    mediaType: raw.mediaType ?? opts?.mediaType ?? 'movie',
     title: raw.title ?? '',
     overview: raw.overview ?? null,
     tagline: raw.tagline ?? null,
@@ -238,29 +128,9 @@ export async function fetchMovieDetails(
   };
 }
 
-export interface MovieNight {
-  slug: string;
-  title: string;
-  date: string | null;
-  isWinner: boolean;
-  isFinished: boolean;
-  recapSlug: string | null;
-  proposerPseudo: string;
-}
+export type MovieNight = ApiSchemas['MovieNightResponse'];
 
-export interface MovieNightViewer {
-  pseudo: string;
-  avatarId: string | null;
-}
-
-export interface MovieNights {
-  nights: MovieNight[];
-  proposalCount: number;
-  winCount: number;
-  rating: { average: number; count: number } | null;
-  seenBy: MovieNightViewer[];
-  seenCount: number;
-}
+export type MovieNights = ApiSchemas['MovieNightsResponse'];
 
 type RawMovieNights = Partial<{ [K in keyof MovieNights]: MovieNights[K] | null }>;
 
@@ -281,140 +151,4 @@ export async function fetchMovieNights(
     seenBy: listOrEmpty(raw.seenBy),
     seenCount: raw.seenCount ?? 0,
   };
-}
-
-export async function addMovieToEvent(
-  slug: string,
-  body: {
-    tmdbId: number;
-    mediaType?: MovieMediaType;
-    title: string;
-    year: string;
-    posterPath: string | null;
-    participantId: string;
-    genreIds?: number[];
-    pitchNote?: string;
-  }
-): Promise<MovieData> {
-  const raw = await fetchApi<RawMovieData>(apiPath('events', slug, 'movies'), {
-    method: 'POST',
-    body: JSON.stringify(body),
-  });
-  return mapMovieData(raw);
-}
-
-export async function voteMovie(
-  slug: string,
-  movieId: string,
-  participantId: string,
-  value: number
-): Promise<void> {
-  await fetchApi(apiPath('events', slug, 'movies', movieId, 'vote'), {
-    method: 'POST',
-    body: JSON.stringify({ participantId, value }),
-  });
-}
-
-export async function clearMovieVote(
-  slug: string,
-  movieId: string,
-  participantId: string
-): Promise<void> {
-  const search = new URLSearchParams({ participantId });
-  await fetchApi(`${apiPath('events', slug, 'movies', movieId, 'vote')}?${search.toString()}`, {
-    method: 'DELETE',
-  });
-}
-
-export async function removeMovieFromEvent(
-  slug: string,
-  movieId: string,
-  participantId: string,
-  hostToken?: string | null
-): Promise<void> {
-  await fetchApi(
-    apiPath('events', slug, 'movies', movieId),
-    withHostToken(hostToken, { method: 'DELETE', body: JSON.stringify({ participantId }) })
-  );
-}
-
-export async function setMovieWheelExclusion(
-  slug: string,
-  movieId: string,
-  excluded: boolean,
-  hostToken?: string | null
-): Promise<void> {
-  await fetchApi(
-    apiPath('events', slug, 'movies', movieId, 'wheel-exclusion'),
-    withHostToken(hostToken, { method: 'PUT', body: JSON.stringify({ excluded }) })
-  );
-}
-
-export async function setMoviePitchNote(
-  slug: string,
-  movieId: string,
-  participantId: string,
-  pitchNote: string
-): Promise<void> {
-  await fetchApi(apiPath('events', slug, 'movies', movieId, 'note'), {
-    method: 'PUT',
-    body: JSON.stringify({ participantId, pitchNote }),
-  });
-}
-
-export async function deleteMoviePitchNote(
-  slug: string,
-  movieId: string,
-  participantId: string | null,
-  hostToken?: string | null
-): Promise<void> {
-  await fetchApi(
-    apiPath('events', slug, 'movies', movieId, 'note'),
-    withHostToken(hostToken, { method: 'DELETE', body: JSON.stringify({ participantId }) })
-  );
-}
-
-export async function markMovieAsSeen(
-  slug: string,
-  movieId: string,
-  participantId: string
-): Promise<void> {
-  await fetchApi(apiPath('events', slug, 'movies', movieId, 'seen'), {
-    method: 'POST',
-    body: JSON.stringify({ participantId }),
-  });
-}
-
-export async function unmarkMovieAsSeen(
-  slug: string,
-  movieId: string,
-  participantId: string
-): Promise<void> {
-  await fetchApi(apiPath('events', slug, 'movies', movieId, 'seen'), {
-    method: 'DELETE',
-    body: JSON.stringify({ participantId }),
-  });
-}
-
-export async function setMovieRating(
-  slug: string,
-  movieId: string,
-  participantId: string,
-  value: number
-): Promise<MovieRating> {
-  return fetchApi<MovieRating>(apiPath('events', slug, 'movies', movieId, 'rating'), {
-    method: 'PUT',
-    body: JSON.stringify({ participantId, value }),
-  });
-}
-
-export async function deleteMovieRating(
-  slug: string,
-  movieId: string,
-  participantId: string
-): Promise<void> {
-  await fetchApi(apiPath('events', slug, 'movies', movieId, 'rating'), {
-    method: 'DELETE',
-    body: JSON.stringify({ participantId }),
-  });
 }

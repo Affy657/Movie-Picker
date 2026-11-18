@@ -1,8 +1,10 @@
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AddMovie;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Tests.Builders;
@@ -23,7 +25,6 @@ public sealed class AddMovieHandlerNotificationTests
     private readonly Mock<IPushSubscriptionRepository> _pushSubRepo = new();
     private readonly Mock<IPushNotificationSender> _pushSender = new();
     private readonly Mock<IUserNotificationRepository> _notifications = new();
-    private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<ITmdbMovieSearch> _tmdb = new();
     private readonly AddMovieHandler _sut;
 
@@ -59,14 +60,13 @@ public sealed class AddMovieHandlerNotificationTests
             .ReturnsAsync((Movie m, CancellationToken _) => m with { Id = "mov1" });
         _tmdb.Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TmdbMovieDetails?)null);
-        _currentUser.Setup(c => c.GetUserId()).Returns(OwnerUserId);
 
         _sut = new AddMovieHandler(
             _eventRepo.Object, _movieRepo.Object, _participantRepo.Object, _posterStore.Object,
             _userRepo.Object,
-            TestAudienceNotifier.Over(_participantRepo.Object, _userRepo.Object, _pushSubRepo.Object, _pushSender.Object, _notifications.Object),
-            _currentUser.Object, _tmdb.Object, new RecordingUnitOfWork(), NullLogger<AddMovieHandler>.Instance,
-            TimeProvider.System);
+            TestAudienceNotifier.Over(_participantRepo.Object, _userRepo.Object, _pushSubRepo.Object, _pushSender.Object, _notifications.Object), _tmdb.Object, new RecordingUnitOfWork(), NullLogger<AddMovieHandler>.Instance,
+            TimeProvider.System,
+            Options.Create(new MoviePickerOptions()));
     }
 
     private void OwnerParticipant() =>
@@ -90,7 +90,7 @@ public sealed class AddMovieHandlerNotificationTests
         _pushSubRepo.Setup(r => r.ListByUserIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([new() { Id = "s1", UserId = "other", Endpoint = "https://push/x", P256dh = "k", Auth = "a" }]);
 
-        var result = await _sut.HandleAsync("evt1", Request(), OwnerUserId);
+        var result = await _sut.HandleAsync(OwnerUserId, "evt1", Request());
 
         Assert.Equal("mov1", result.Id);
         _pushSender.Verify(
@@ -111,7 +111,7 @@ public sealed class AddMovieHandlerNotificationTests
                 new() { Id = ParticipantId, EventId = "evt1", Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
             ]);
 
-        await _sut.HandleAsync("evt1", Request(), OwnerUserId);
+        await _sut.HandleAsync(OwnerUserId, "evt1", Request());
 
         _userRepo.Verify(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()), Times.Never);
         _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -123,7 +123,7 @@ public sealed class AddMovieHandlerNotificationTests
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(ParticipantId, "evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Participant { Id = ParticipantId, EventId = "evt1", Pseudo = "Bob", UserId = "intruder", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow });
 
-        await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1", Request(), OwnerUserId));
+        await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync(OwnerUserId, "evt1", Request()));
 
         _movieRepo.Verify(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>()), Times.Never);
     }

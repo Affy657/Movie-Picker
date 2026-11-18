@@ -11,7 +11,9 @@ public sealed class MoviePickerOptions
     public bool HasTmdbCredentials =>
         !string.IsNullOrWhiteSpace(TmdbReadAccessToken) || !string.IsNullOrWhiteSpace(TmdbApiKey);
 
-    public string TmdbWatchProvidersRegion { get; set; } = "FR";
+    public const string DefaultWatchProvidersRegion = "FR";
+
+    public string TmdbWatchProvidersRegion { get; set; } = DefaultWatchProvidersRegion;
 
     public int TmdbEnrichmentCacheHours { get; set; } = 24;
 

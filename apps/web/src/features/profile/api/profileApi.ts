@@ -1,39 +1,17 @@
 import { apiPath, fetchApi } from '@/shared/api/client';
 import { readAllWatchlistPages } from '@/features/movies/api/watchlistApi';
+import type { ApiSchemas } from '@/shared/api/contract';
 import type { FavoriteTitle, MovieMediaType } from '@/shared/types/movie';
 
-export interface PublicProfile {
-  handle: string;
-  displayName: string;
-  avatarId: string;
-  bio: string | null;
-  memberSince: string;
-  followingCount: number;
-  followersCount: number;
-  isSupporter: boolean;
-  isFollowedByMe: boolean | null;
-  isWatchlistPublic: boolean;
-  watchlistCount: number | null;
-  isWatchedPublic?: boolean;
-  favorites?: FavoriteTitle[];
-}
+export type PublicProfile = ApiSchemas['PublicProfileResponse'];
 
 export const FAVORITES_MAX = 3;
 
-export interface FavoriteListResponse {
-  items: FavoriteTitle[];
-}
+export type FavoriteListResponse = ApiSchemas['FavoriteListResponse'];
 
-export interface FollowUserItem {
-  handle: string;
-  displayName: string;
-  avatarId: string;
-  isFollowedByMe: boolean | null;
-}
+export type FollowUserItem = ApiSchemas['FollowUserItem'];
 
-export interface FollowListResponse {
-  items: FollowUserItem[];
-}
+export type FollowListResponse = ApiSchemas['FollowListResponse'];
 
 export async function fetchPublicProfile(handle: string): Promise<PublicProfile> {
   return fetchApi<PublicProfile>(apiPath('users', handle));
@@ -79,28 +57,11 @@ export async function searchUsers(query: string): Promise<FollowListResponse> {
   );
 }
 
-export interface UserWatchedMovieItem {
-  tmdbId: number;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
-  genreIds: number[];
-  mediaType: MovieMediaType;
-  watchedAt: string;
-  myRating?: number | null;
-}
+export type UserWatchedMovieItem = ApiSchemas['UserWatchedMovieItem'];
 
-export interface UserWatchedMoviesResponse {
-  items: UserWatchedMovieItem[];
-  total?: number;
-}
+export type UserWatchedMoviesResponse = ApiSchemas['UserWatchedMoviesResponse'];
 
-export interface CountedUserWatchedMovies {
-  items: UserWatchedMovieItem[];
-  total: number;
-}
+export type CountedUserWatchedMovies = Omit<UserWatchedMoviesResponse, 'total'> & { total: number };
 
 export async function fetchUserWatchedMovies(
   handle: string,
@@ -131,22 +92,9 @@ export function fetchUserWatchedMovieCollection(
   return fetchCountedUserWatchedMovies(handle, WATCHED_MOVIES_TAKE, signal);
 }
 
-export interface UserProposedMovieItem {
-  tmdbId: number;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
-  genreIds: number[];
-  mediaType: MovieMediaType;
-  lastProposedAt: string;
-  proposalCount: number;
-}
+export type UserProposedMovieItem = ApiSchemas['UserProposedMovieItem'];
 
-export interface UserProposedMoviesResponse {
-  items: UserProposedMovieItem[];
-}
+export type UserProposedMoviesResponse = ApiSchemas['UserProposedMoviesResponse'];
 
 export async function fetchUserProposedMovieItems(
   handle: string,
@@ -169,23 +117,9 @@ export function fetchUserWatchedMoviesPreview(
   return fetchCountedUserWatchedMovies(handle, PROFILE_WATCHED_PREVIEW_TAKE, signal);
 }
 
-export interface UserWatchlistItem {
-  tmdbId: number;
-  mediaType: MovieMediaType;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
-  genreIds: number[];
-  createdAt: string;
-}
+export type UserWatchlistItem = ApiSchemas['WatchlistItemResponse'];
 
-interface UserWatchlistResponse {
-  items: Array<Omit<UserWatchlistItem, 'genreIds'> & { genreIds?: number[] }>;
-  total: number;
-  hasMore: boolean;
-}
+type UserWatchlistResponse = ApiSchemas['WatchlistResponse'];
 
 export async function fetchUserWatchlist(
   handle: string,
@@ -212,16 +146,6 @@ export async function fetchUserWatchlistPreview(
     { signal }
   );
   return page.items.map((item) => ({ ...item, genreIds: item.genreIds ?? [] }));
-}
-
-export async function fetchMyWatchedMovies(
-  take: number,
-  signal?: AbortSignal
-): Promise<UserWatchedMoviesResponse> {
-  return fetchApi<UserWatchedMoviesResponse>(
-    `${apiPath('users', 'me', 'watched-movies')}?take=${take}`,
-    { signal }
-  );
 }
 
 export async function fetchFollowingWatchedMovies(

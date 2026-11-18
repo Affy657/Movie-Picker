@@ -1,17 +1,11 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { ROUTES } from '@/app/routes';
-import type { MovieMediaType } from '@/shared/types/movie';
+import type { TitleSummary } from '@/shared/types/movie';
 
-export interface MoviePageSeed {
-  tmdbId: number;
-  mediaType: MovieMediaType;
-  title: string;
+export interface MoviePageSeed extends Omit<TitleSummary, 'year' | 'posterPath'> {
   year?: string;
   posterPath?: string | null;
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
-  genreIds?: number[];
 }
 
 export interface MoviePageLocationState {

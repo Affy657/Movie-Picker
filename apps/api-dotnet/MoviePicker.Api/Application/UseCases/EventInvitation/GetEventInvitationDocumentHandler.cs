@@ -41,24 +41,29 @@ public sealed class GetEventInvitationDocumentHandler : IGetEventInvitationDocum
 
     private async Task<SharePreview> DescribeAsync(Event evt, string webBase, string apiBase, CancellationToken ct)
     {
-        var path = $"/e/{evt.Slug}";
+        var path = FrontRoutes.EventDetail(evt.Slug);
         var canonical = $"{webBase}{path}";
-        var fallbackUrl = $"{webBase}/login?returnTo={Uri.EscapeDataString(path)}";
+        var fallbackUrl = webBase + FrontRoutes.LoginReturningTo(path);
         var siteImage = SharePreview.SiteImage(webBase);
         if (!(evt.Config ?? EventConfig.SavedWithoutSettings).RichSharePreview)
         {
             return new SharePreview(
                 canonical,
                 fallbackUrl,
-                "Invitation à une soirée ciné",
-                "Tu as reçu une invitation pour une soirée ciné sur Movie Picker. Ouvre le lien pour la rejoindre.",
+                ServerCopy.SharePreviews.PrivateInvitationTitle,
+                ServerCopy.SharePreviews.PrivateInvitationDescription,
                 siteImage);
         }
 
         var when = When(evt);
         IReadOnlyList<Movie> winners = evt.HasWinner ? await WinnerMovies.ListAsync(_movies, evt, ct) : [];
         if (winners.Count == 0)
-            return new SharePreview(canonical, fallbackUrl, evt.Title, Invitation(evt, when), siteImage);
+            return new SharePreview(
+                canonical,
+                fallbackUrl,
+                evt.Title,
+                ServerCopy.SharePreviews.Invitation(when, evt.Config?.Theme?.Trim()),
+                siteImage);
 
         var film = winners[0];
         var image = await SharePreviewContent.PosterOrAsync(_posterImageStore, film, apiBase, siteImage, ct);
@@ -66,23 +71,16 @@ public sealed class GetEventInvitationDocumentHandler : IGetEventInvitationDocum
             canonical,
             fallbackUrl,
             evt.Title,
-            $"Au programme : {SharePreviewContent.Film(film)}{when}.",
+            ServerCopy.SharePreviews.Programme(SharePreviewContent.Film(film), when),
             image,
-            image == siteImage ? SharePreview.SiteName : $"Affiche de {film.Title}");
-    }
-
-    private static string Invitation(Event evt, string when)
-    {
-        var theme = evt.Config?.Theme?.Trim();
-        var themeSentence = string.IsNullOrEmpty(theme) ? string.Empty : $" Thème : {theme}.";
-        return $"Soirée ciné{when}.{themeSentence} Rejoins la soirée et vote pour ton film.";
+            image == siteImage ? SharePreview.SiteName : ServerCopy.SharePreviews.PosterOf(film.Title));
     }
 
     private static string When(Event evt)
     {
         if (string.IsNullOrWhiteSpace(evt.Date))
             return string.Empty;
-        var day = $" le {SharePreviewContent.Day(evt.Date)}";
-        return string.IsNullOrWhiteSpace(evt.Time) ? day : $"{day} à {SharePreviewContent.Hour(evt.Time)}";
+        var day = ServerCopy.SharePreviews.OnDay(SharePreviewContent.Day(evt.Date));
+        return string.IsNullOrWhiteSpace(evt.Time) ? day : day + ServerCopy.SharePreviews.AtHour(SharePreviewContent.Hour(evt.Time));
     }
 }

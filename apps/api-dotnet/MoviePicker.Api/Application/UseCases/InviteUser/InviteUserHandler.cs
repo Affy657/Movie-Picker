@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -20,7 +21,6 @@ public sealed class InviteUserHandler : IInviteUserHandler
     private readonly IUserNotificationRepository _notifications;
     private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly IPushNotificationSender _pushSender;
-    private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly INotificationDedupRepository _dedup;
     private readonly ISharedQuota _quota;
     private readonly TimeProvider _clock;
@@ -33,7 +33,6 @@ public sealed class InviteUserHandler : IInviteUserHandler
         IUserNotificationRepository notifications,
         IPushSubscriptionRepository pushSubscriptions,
         IPushNotificationSender pushSender,
-        ICurrentUserAccessor currentUserAccessor,
         INotificationDedupRepository dedup,
         ISharedQuota quota,
         TimeProvider clock)
@@ -45,29 +44,28 @@ public sealed class InviteUserHandler : IInviteUserHandler
         _notifications = notifications;
         _pushSubscriptions = pushSubscriptions;
         _pushSender = pushSender;
-        _currentUserAccessor = currentUserAccessor;
         _dedup = dedup;
         _quota = quota;
         _clock = clock;
     }
 
-    public async Task<InviteUserResponse> HandleAsync(string idOrSlug, InviteUserRequest request, CancellationToken ct = default)
+    public async Task<InviteUserResponse> HandleAsync(
+        string userId,
+        string idOrSlug,
+        InviteUserRequest request,
+        CancellationToken ct = default)
     {
-        var currentUserId = _currentUserAccessor.GetUserId();
-        if (string.IsNullOrEmpty(currentUserId))
-            throw Errors.AccountRequired();
-
         var evt = await _events.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
         if (evt.IsFinished(_clock.GetUtcNow()))
             throw Errors.InviteEventFinished();
 
-        if (evt.CreatorUserId != currentUserId)
+        if (evt.CreatorUserId != userId)
             throw Errors.HostOnlyInvite();
 
         var targetUserId = request.TargetUserId;
 
-        var isFollow = await _follows.IsFollowingAsync(currentUserId, targetUserId, ct);
+        var isFollow = await _follows.IsFollowingAsync(userId, targetUserId, ct);
         if (!isFollow)
             throw Errors.InviteOnlyFollowed();
 
@@ -80,7 +78,7 @@ public sealed class InviteUserHandler : IInviteUserHandler
             throw Errors.InvitationAlreadySent();
 
         var withinPairQuota = await _quota.TryConsumeAsync(
-            PairQuotaScope, $"{currentUserId}|{targetUserId}", MaxInvitationsPerPairPerDay, PairQuotaWindow, ct);
+            PairQuotaScope, $"{userId}|{targetUserId}", MaxInvitationsPerPairPerDay, PairQuotaWindow, ct);
         if (!withinPairQuota)
             throw Errors.InvitationLimitReached();
 
@@ -96,21 +94,18 @@ public sealed class InviteUserHandler : IInviteUserHandler
         User? actor;
         try
         {
-            actor = await _users.GetByIdAsync(currentUserId, ct);
+            actor = await _users.GetByIdAsync(userId, ct);
             await _notifications.AddAsync(new UserNotification
             {
                 UserId = targetUserId,
                 Type = UserNotificationType.EventInvitation,
-                ActorHandle = actor?.Handle,
-                ActorDisplayName = actor?.DisplayName,
-                ActorAvatarId = actor?.DisplayedAvatarId,
                 EventId = evt.Id,
                 EventSlug = evt.Slug,
                 EventTitle = evt.Title,
                 IsRead = false,
                 IsWithheld = withheld,
                 CreatedAt = _clock.GetUtcNow()
-            }, ct);
+            }.WithActor(actor), ct);
         }
         catch (Exception)
         {
@@ -122,12 +117,9 @@ public sealed class InviteUserHandler : IInviteUserHandler
         if (target is not null && !withheld)
         {
             var subs = await _pushSubscriptions.ListByUserIdAsync(targetUserId, ct);
-            var message = new PushMessage(
-                Title: "Invitation reçue ! 💌",
-                Body: $"{actor?.DisplayName} vous invite à rejoindre {evt.Title}",
-                Tag: $"invite-{evt.Id}",
-                Url: $"/e/{evt.Slug}"
-            );
+            var message = ServerCopy.Push.EventInvitation(actor?.DisplayName, evt.Title).ToMessage(
+                tag: $"invite-{evt.Id}",
+                url: FrontRoutes.EventDetail(evt.Slug));
             await PushFanOut.SendToAllAsync(_pushSender, subs, message, ct);
         }
 

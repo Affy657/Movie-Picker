@@ -3,18 +3,12 @@ import type { MovieData, ParticipantData } from '@/shared/types/movie';
 
 type RawMovieData = Omit<MovieData, 'id' | 'participantId' | 'pendingVote'> & {
   _id: string;
-  participantId: string | { _id: string; pseudo: string };
+  participantId: string;
 };
 
 type RawParticipantData = Omit<ParticipantData, 'id'> & { _id: string };
 
-type RawEventParticipantSummary = {
-  _id: string;
-  pseudo: string;
-  isCreator?: boolean;
-  avatarId?: string;
-  handle?: string | null;
-};
+type RawEventParticipantSummary = Omit<EventParticipantSummary, 'id'> & { _id: string };
 
 type RawEventData = Omit<EventData, 'id' | 'isFinished' | 'myParticipant' | 'participants'> & {
   _id: string;
@@ -26,12 +20,8 @@ type RawEventData = Omit<EventData, 'id' | 'isFinished' | 'myParticipant' | 'par
 };
 
 export function mapMovieData(raw: RawMovieData): MovieData {
-  const { _id, participantId, ...rest } = raw;
-  const pid =
-    typeof participantId === 'object' && participantId !== null && '_id' in participantId
-      ? { id: participantId._id, pseudo: participantId.pseudo }
-      : participantId;
-  return { ...rest, id: _id, participantId: pid };
+  const { _id, ...rest } = raw;
+  return { ...rest, id: _id };
 }
 
 export function mapParticipantData(raw: RawParticipantData): ParticipantData {

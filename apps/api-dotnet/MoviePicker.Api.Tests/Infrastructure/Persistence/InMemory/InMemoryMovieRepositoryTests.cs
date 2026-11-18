@@ -121,20 +121,20 @@ public sealed class InMemoryMovieRepositoryTests
     }
 
     [Fact]
-    public async Task DeleteAsync_RemovesFromBothIndexes()
+    public async Task DeleteByIdsAsync_RemovesFromBothIndexes()
     {
         var created = await _repo.InsertAsync(Mk());
 
-        await _repo.DeleteAsync(created.Id);
+        Assert.Equal(1, await _repo.DeleteByIdsAsync([created.Id]));
 
         Assert.Null(await _repo.GetByIdAsync(created.Id));
         Assert.Empty(await _repo.ListByEventIdAsync("evt1"));
     }
 
     [Fact]
-    public async Task DeleteAsync_NoThrow_WhenMissing()
+    public async Task DeleteByIdsAsync_CountsNothing_WhenMissing()
     {
-        await _repo.DeleteAsync("ghost");
+        Assert.Equal(0, await _repo.DeleteByIdsAsync(["ghost"]));
         Assert.Null(await _repo.GetByIdAsync("ghost"));
     }
 
