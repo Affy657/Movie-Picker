@@ -538,15 +538,6 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - piege: la forme change le contrat OpenAPI, régénérer `openapiSchema.ts`
 - fini-quand: plus aucun champ `Watched*` dans le rapport, et la date de synchronisation est tenue par liste
 
-## DEBT-093 le menu ⋮ des cartes porte les règles de retrait d'une soirée, simulées pour les listes
-
-- state: agent
-- impact: pour offrir « Retirer de la liste », `MovieBrowseCard` passe `isMine` et `isHost={false}` à `MovieCardKebab` avec des libellés de remplacement, et le composant partagé de `features/movies` prend par défaut un libellé de `lists`. Chaque nouveau contexte de retrait ajoute des props et des surcharges.
-- ou: `apps/web/src/features/movies/components/MovieBrowseCard.tsx`, `MovieCardKebab.tsx`, `features/watchlist/components/ListMoviesPage.tsx`
-- verify: `grep -n "isHost={false}" apps/web/src/features/movies/components/MovieBrowseCard.tsx`
-- fix: `MovieCardKebab` reçoit `remove?: { label, ariaLabel, title?, onSelect }` ; la carte de soirée y met ses règles d'hôte et de proposant, `ListMoviesPage` ses libellés de liste
-- fini-quand: `MovieCardKebab` ne connaît plus ni hôte simulé ni libellé de liste
-
 ## DEBT-094 `ListSourceTitle` recopie `SavedListTitle`
 
 - state: agent

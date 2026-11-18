@@ -183,9 +183,7 @@ function EventMovieRowMobile({
   m,
   slug,
   participantId,
-  isHost,
   onVote,
-  onRemove,
   onRemoveNote,
   refresh,
   onActionError,
@@ -295,9 +293,8 @@ function EventMovieRowMobile({
           movie={m}
           card={s}
           slotClassName={styles.mobileMenuSlot ?? ''}
-          isHost={isHost}
+          remove={s.kebabRemove}
           isInWatchlist={isInWatchlist}
-          onRemove={onRemove}
           onToggleWatchlist={onToggleWatchlist}
           onToggleWheelExclusion={onToggleWheelExclusion}
           trigger="disclosure"
@@ -324,9 +321,7 @@ function EventMovieRowDesktop({
   m,
   slug,
   participantId,
-  isHost,
   onVote,
-  onRemove,
   onRemoveNote,
   refresh,
   onActionError,
@@ -449,9 +444,8 @@ function EventMovieRowDesktop({
           movie={m}
           card={s}
           slotClassName={table.kebabCol ?? ''}
-          isHost={isHost}
+          remove={s.kebabRemove}
           isInWatchlist={isInWatchlist}
-          onRemove={onRemove}
           onToggleWatchlist={onToggleWatchlist}
           onToggleWheelExclusion={onToggleWheelExclusion}
           t={t}
@@ -504,6 +498,7 @@ export const EventMovieRow = memo(function EventMovieRow({
     participantAvatars,
     ratingScale,
     refresh,
+    onRemove,
     onActionError,
     t,
   });

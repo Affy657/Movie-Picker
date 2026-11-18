@@ -26,16 +26,18 @@ import type { Translate } from '@/shared/i18n';
 
 export type CardKebabTrigger = 'dots' | 'disclosure';
 
+export interface CardKebabRemoveAction {
+  label: string;
+  ariaLabel: string;
+  title?: string;
+  onSelect: () => void;
+}
+
 export interface CardKebabProps {
   title: string;
   tmdbId: number;
   mediaType?: 'movie' | 'tv';
-  isMine: boolean;
-  isHost: boolean;
-  canRemove: boolean;
-  onRemove: () => void;
-  removeLabel?: string;
-  removeAriaLabel?: string;
+  remove?: CardKebabRemoveAction;
   inWatchlist?: boolean;
   onToggleWatchlist?: () => void;
   onProposeToEvent?: () => void;
@@ -48,7 +50,7 @@ export interface CardKebabProps {
 
 export function kebabHasActions({
   tmdbId,
-  canRemove,
+  remove,
   onToggleWatchlist,
   onProposeToEvent,
   onViewDetails,
@@ -57,7 +59,7 @@ export function kebabHasActions({
   Pick<
     CardKebabProps,
     | 'tmdbId'
-    | 'canRemove'
+    | 'remove'
     | 'onToggleWatchlist'
     | 'onProposeToEvent'
     | 'onViewDetails'
@@ -69,7 +71,7 @@ export function kebabHasActions({
     !!onProposeToEvent ||
     (!!onViewDetails && tmdbId > 0) ||
     !!wheelExclusion ||
-    canRemove
+    !!remove
   );
 }
 
@@ -88,9 +90,8 @@ export function MovieCardKebab({
   movie,
   card,
   slotClassName,
-  isHost,
+  remove,
   isInWatchlist,
-  onRemove,
   onToggleWatchlist,
   onToggleWheelExclusion,
   trigger = 'dots',
@@ -99,15 +100,12 @@ export function MovieCardKebab({
 }: Readonly<{
   movie: MovieData;
   card: {
-    isMine: boolean;
-    canRemove: boolean;
     hasDetails: boolean;
     openDetails: () => void;
   };
   slotClassName: string;
-  isHost: boolean;
+  remove?: CardKebabRemoveAction;
   isInWatchlist?: boolean;
-  onRemove: (movie: MovieData) => void;
   onToggleWatchlist?: (movie: MovieData) => void;
   onToggleWheelExclusion?: (movie: MovieData) => void;
   trigger?: CardKebabTrigger;
@@ -125,7 +123,7 @@ export function MovieCardKebab({
   if (
     !kebabHasActions({
       tmdbId: movie.tmdbId,
-      canRemove: card.canRemove,
+      remove,
       onToggleWatchlist: toggleWatchlist,
       onViewDetails,
       wheelExclusion,
@@ -139,10 +137,7 @@ export function MovieCardKebab({
         title={movie.title}
         tmdbId={movie.tmdbId}
         mediaType={movie.mediaType}
-        isMine={card.isMine}
-        isHost={isHost}
-        canRemove={card.canRemove}
-        onRemove={() => onRemove(movie)}
+        remove={remove}
         inWatchlist={isInWatchlist}
         onToggleWatchlist={toggleWatchlist}
         onViewDetails={onViewDetails}
@@ -180,12 +175,7 @@ export function CardKebab({
   title,
   tmdbId,
   mediaType,
-  isMine,
-  isHost,
-  canRemove,
-  onRemove,
-  removeLabel,
-  removeAriaLabel,
+  remove,
   inWatchlist,
   onToggleWatchlist,
   onProposeToEvent,
@@ -252,7 +242,7 @@ export function CardKebab({
   if (
     !kebabHasActions({
       tmdbId,
-      canRemove,
+      remove,
       onToggleWatchlist,
       onProposeToEvent,
       onViewDetails,
@@ -272,11 +262,6 @@ export function CardKebab({
     }
     setOpen((v) => !v);
   };
-
-  const defaultRemoveAria = isMine
-    ? `${t('movies.list.removeButton')} ${title}`
-    : t('movies.list.removeAsHostAria', { title });
-  const removeAria = removeAriaLabel ?? defaultRemoveAria;
 
   const lbUrl = letterboxdUrl(tmdbId, mediaType, title);
 
@@ -371,16 +356,16 @@ export function CardKebab({
                 onClose={close}
               />
             )}
-            {canRemove && (hasPrimaryGroup || hasLinksGroup) && <MenuSeparator />}
-            {canRemove && (
+            {remove && (hasPrimaryGroup || hasLinksGroup) && <MenuSeparator />}
+            {remove && (
               <MenuItem
                 tone="danger"
                 icon={<Trash2 aria-hidden size={ICON_SIZE.sm} />}
-                onClick={pick(onRemove)}
-                ariaLabel={removeAria}
-                title={!isMine && isHost ? t('movies.list.removeAsHostTitle') : undefined}
+                onClick={pick(remove.onSelect)}
+                ariaLabel={remove.ariaLabel}
+                title={remove.title}
               >
-                {removeLabel ?? t('movies.list.removeButton')}
+                {remove.label}
               </MenuItem>
             )}
           </MenuPanel>,

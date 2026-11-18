@@ -13,10 +13,11 @@ import { getParticipantId } from '@/shared/utils/movieParticipant';
 import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
 import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
-import { markMovieAsSeen, unmarkMovieAsSeen } from '@/features/events/api/eventMoviesApi';
+import { useNightMovieActions } from '@/features/events/hooks/useNightMovieActions';
+import type { NightMovieRules } from '@/features/events/lib/nightRules';
+import type { CardKebabRemoveAction } from '@/features/movies/components/MovieCardKebab';
 import { othersAlreadySeenHint } from '@/features/events/utils/seenHint';
 import { MovieNote } from '@/features/events/components/MovieNote';
-import { getErrorMessage } from '@/shared/api/apiError';
 import type { RatingScale } from '@/shared/types/theme';
 import { useLocale, type Translate } from '@/shared/i18n';
 import styles from './eventMovieCardParts.module.css';
@@ -88,6 +89,23 @@ export function CardSelectionOverlay({
   );
 }
 
+export function nightRemoveAction(
+  movie: Pick<MovieData, 'title'>,
+  rules: Pick<NightMovieRules, 'isMine' | 'canRemove'>,
+  onSelect: () => void,
+  t: Translate
+): CardKebabRemoveAction | undefined {
+  if (!rules.canRemove) return undefined;
+  const label = t('movies.list.removeButton');
+  if (rules.isMine) return { label, ariaLabel: `${label} ${movie.title}`, onSelect };
+  return {
+    label,
+    ariaLabel: t('movies.list.removeAsHostAria', { title: movie.title }),
+    title: t('movies.list.removeAsHostTitle'),
+    onSelect,
+  };
+}
+
 export function useMovieCardState({
   movie: m,
   slug,
@@ -100,6 +118,7 @@ export function useMovieCardState({
   participantAvatars,
   ratingScale,
   refresh,
+  onRemove,
   onActionError,
   t,
 }: Readonly<{
@@ -114,17 +133,24 @@ export function useMovieCardState({
   participantAvatars?: Record<string, string>;
   ratingScale?: RatingScale;
   refresh: () => void;
+  onRemove: (movie: MovieData) => void;
   onActionError: (message: string) => void;
   t: Translate;
 }>) {
   const { locale } = useLocale();
-  const isMine = !!participantId && getParticipantId(m) === participantId;
+  const actions = useNightMovieActions({
+    slug,
+    movie: m,
+    isFinished,
+    isHost,
+    wheelLocked,
+    participantId,
+    participantPseudo,
+    refresh,
+    onError: onActionError,
+  });
   const proposerAvatarId = participantAvatars?.[getParticipantId(m)] ?? '';
-  const canRemove = !isFinished && !wheelLocked && (isMine || isHost);
-  const canAct = !isFinished && !!participantId;
-  const canEditNote = canAct && isMine && !wheelLocked;
-  const votingAvailable = canVote ?? canAct;
-  const iMarkedSeen = !!(participantPseudo && m.seenByPseudos?.includes(participantPseudo));
+  const votingAvailable = canVote ?? actions.canAct;
   const others = (m.seenByPseudos ?? []).filter((p) => p !== participantPseudo);
   const othersHint = othersAlreadySeenHint(m.seenByPseudos, participantPseudo, t);
   const voteLabel = formatTmdbVote(m.voteAverage, ratingScale, locale);
@@ -134,11 +160,10 @@ export function useMovieCardState({
   const providers = m.watchProviders ?? [];
   const mediaType = m.mediaType ?? 'movie';
 
-  const [seenPending, setSeenPending] = useState(false);
   const openMoviePage = useOpenMoviePage();
   const [noteEditing, setNoteEditing] = useState(false);
   const hasDetails = m.tmdbId > 0;
-  const showAddNote = canEditNote && !m.pitchNote && !noteEditing;
+  const showAddNote = actions.canEditNote && !m.pitchNote && !noteEditing;
 
   const openDetails = useCallback(() => {
     if (!hasDetails) return;
@@ -157,31 +182,14 @@ export function useMovieCardState({
     );
   }, [hasDetails, openMoviePage, m, mediaType, slug]);
 
-  const handleToggleSeen = async () => {
-    if (!participantId || seenPending) return;
-    setSeenPending(true);
-    try {
-      if (iMarkedSeen) {
-        await unmarkMovieAsSeen(slug, m.id, participantId);
-      } else {
-        await markMovieAsSeen(slug, m.id, participantId);
-      }
-      refresh();
-    } catch (e) {
-      onActionError(getErrorMessage(e, t('movies.seen.actionError')));
-    } finally {
-      setSeenPending(false);
-    }
-  };
-
   return {
-    isMine,
+    isMine: actions.isMine,
     proposerAvatarId,
-    canRemove,
-    canAct,
-    canEditNote,
+    canRemove: actions.canRemove,
+    canAct: actions.canAct,
+    canEditNote: actions.canEditNote,
     canVote: votingAvailable,
-    iMarkedSeen,
+    iMarkedSeen: actions.iMarkedSeen,
     others,
     othersHint,
     voteLabel,
@@ -190,13 +198,14 @@ export function useMovieCardState({
     posterSrc,
     posterSrcSet,
     providers,
-    seenPending,
+    seenPending: actions.seenPending,
     openDetails,
     hasDetails,
     noteEditing,
     setNoteEditing,
     showAddNote,
-    handleToggleSeen,
+    handleToggleSeen: actions.toggleSeen,
+    kebabRemove: nightRemoveAction(m, actions, () => onRemove(m), t),
   };
 }
 

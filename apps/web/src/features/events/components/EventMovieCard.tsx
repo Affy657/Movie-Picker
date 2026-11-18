@@ -98,6 +98,7 @@ export const EventMovieCard = memo(function EventMovieCard({
     participantAvatars,
     ratingScale,
     refresh,
+    onRemove,
     onActionError,
     t,
   });
@@ -144,9 +145,8 @@ export const EventMovieCard = memo(function EventMovieCard({
           movie={m}
           card={s}
           slotClassName={styles.kebabSlot ?? ''}
-          isHost={isHost}
+          remove={s.kebabRemove}
           isInWatchlist={isInWatchlist}
-          onRemove={onRemove}
           onToggleWatchlist={onToggleWatchlist}
           onToggleWheelExclusion={onToggleWheelExclusion}
           t={t}
