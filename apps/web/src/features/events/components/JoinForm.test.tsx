@@ -7,7 +7,7 @@ import JoinForm from '@/features/events/components/JoinForm';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { ApiError } from '@/shared/api/apiError';
-import type { UserProfile } from '@/features/auth/types';
+import { buildUserProfile } from '@/test-utils/userProfile';
 
 const mockFetchApi = vi.fn();
 const mockSetStoredParticipant = vi.fn();
@@ -28,7 +28,7 @@ const guestAuthImpl = (path: string) => {
   throw new Error(`fetchApi inattendu: ${path}`);
 };
 
-const profile: UserProfile = {
+const profile = buildUserProfile({
   userId: 'u1',
   displayName: 'ProfilCompte',
   emailMasked: 'e***@***',
@@ -46,7 +46,7 @@ const profile: UserProfile = {
   letterboxdPendingReconciliationCount: 0,
   hasPassword: true,
   linkedProviders: [],
-};
+});
 
 function renderForm(node: ReactElement) {
   return render(

@@ -1,45 +1,24 @@
 import { apiPath, fetchApi } from '@/shared/api/client';
 import type { ApiRequestPath, ApiRoute } from '@/shared/api/apiRoutes';
-import type { MovieMediaType, TitleSummary } from '@/shared/types/movie';
+import type { ApiSchemas } from '@/shared/api/contract';
+import type { MovieMediaType } from '@/shared/types/movie';
 
-export type WatchedStatusKind = 'none' | 'night' | 'elsewhere';
+export type WatchedSource = ApiSchemas['WatchedSource'];
 
-export type WatchedSource = 'night' | 'elsewhere';
-
-export interface WatchedStatus {
-  status: WatchedStatusKind;
-  watchedAt: string | null;
-  rating: number | null;
-  nightSlug: string | null;
-  nightTitle: string | null;
-}
+export type WatchedStatus = ApiSchemas['WatchedStatusResponse'];
 
 export interface WatchedTitleRef {
   tmdbId: number;
   mediaType: MovieMediaType;
 }
 
-export interface MarkWatchedBody extends Omit<TitleSummary, 'posterPath'> {
-  posterPath?: string | null;
-  rating?: number | null;
-}
+export type MarkWatchedBody = ApiSchemas['MarkWatchedRequest'] & WatchedTitleRef;
 
-export interface WatchedMovie extends TitleSummary {
-  genreIds: number[];
-  watchedAt: string;
-  myRating?: number | null;
-  source: WatchedSource;
-}
+export type WatchedMovie = ApiSchemas['UserWatchedMovieItem'];
 
-export interface WatchedMovies {
-  items: WatchedMovie[];
-  total: number;
-}
+type WatchedMoviesResponse = ApiSchemas['UserWatchedMoviesResponse'];
 
-interface WatchedMoviesResponse {
-  items?: (Omit<WatchedMovie, 'genreIds'> & { genreIds?: number[] | null })[] | null;
-  total?: number | null;
-}
+export type WatchedMovies = Omit<WatchedMoviesResponse, 'total'> & { total: number };
 
 export const WATCHED_MOVIES_TAKE = 1000;
 

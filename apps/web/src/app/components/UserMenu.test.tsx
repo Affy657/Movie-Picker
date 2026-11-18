@@ -10,8 +10,9 @@ import { TEST_API_V1 } from '@/mocks/handlers';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { resetPwaInstallRuntime } from '@/shared/hooks/usePwaInstall';
 import type { UserProfile } from '@/features/auth/types';
+import { buildUserProfile } from '@/test-utils/userProfile';
 
-const baseUser: UserProfile = {
+const baseUser = buildUserProfile({
   userId: 'u1',
   displayName: 'Alice',
   emailMasked: 'a***@test.local',
@@ -29,7 +30,7 @@ const baseUser: UserProfile = {
   letterboxdPendingReconciliationCount: 0,
   hasPassword: true,
   linkedProviders: [],
-};
+});
 
 function emulateDialogFocusRestoration() {
   const focusedBeforeOpening = new WeakMap<HTMLDialogElement, Element | null>();

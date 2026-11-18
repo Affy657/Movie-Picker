@@ -731,6 +731,9 @@ describe('AddMovieForm (MSW)', () => {
         voteAverage: 7.9,
         runtimeMinutes: 100,
         watchProviders: [{ providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' }],
+        mediaType: 'movie',
+        genreIds: [],
+        tmdbWatchPageUrl: null,
       },
       {
         id: 8,
@@ -740,6 +743,9 @@ describe('AddMovieForm (MSW)', () => {
         voteAverage: 6.2,
         runtimeMinutes: 140,
         watchProviders: [],
+        mediaType: 'movie',
+        genreIds: [],
+        tmdbWatchPageUrl: null,
       },
     ];
     const user = userEvent.setup();

@@ -20,6 +20,8 @@ function item(overrides: Partial<WatchlistItem>): WatchlistItem {
     posterPath: null,
     voteAverage: 5,
     runtimeMinutes: 100,
+    genreIds: [],
+    onLetterboxd: false,
     createdAt: '2026-01-01T00:00:00Z',
     ...overrides,
   };

@@ -8,13 +8,7 @@ type RawMovieData = Omit<MovieData, 'id' | 'participantId' | 'pendingVote'> & {
 
 type RawParticipantData = Omit<ParticipantData, 'id'> & { _id: string };
 
-type RawEventParticipantSummary = {
-  _id: string;
-  pseudo: string;
-  isCreator?: boolean;
-  avatarId?: string;
-  handle?: string | null;
-};
+type RawEventParticipantSummary = Omit<EventParticipantSummary, 'id'> & { _id: string };
 
 type RawEventData = Omit<EventData, 'id' | 'isFinished' | 'myParticipant' | 'participants'> & {
   _id: string;

@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import type { MyEventSummary } from '@/features/events/types';
 import { pickNextEvent } from './nextEvent';
+import { buildMyEventSummary } from '@/test-utils/myEventSummary';
 
 function event(overrides: Partial<MyEventSummary>): MyEventSummary {
-  return {
+  return buildMyEventSummary({
     id: overrides.slug ?? 'e',
     slug: 'e',
     title: 'Soirée',
@@ -15,7 +16,7 @@ function event(overrides: Partial<MyEventSummary>): MyEventSummary {
     isParticipant: true,
     lifecycle: 'upcoming',
     ...overrides,
-  };
+  });
 }
 
 describe('pickNextEvent', () => {

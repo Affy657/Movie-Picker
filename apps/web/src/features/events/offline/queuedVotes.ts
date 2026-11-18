@@ -6,7 +6,7 @@ import {
   type QueuedVote,
 } from '@/shared/utils/offlineEventStorage';
 
-function tally(vote: 1 | -1 | 0 | null | undefined, side: 1 | -1): number {
+function tally(vote: number | null | undefined, side: 1 | -1): number {
   return vote === side ? 1 : 0;
 }
 

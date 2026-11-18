@@ -43,6 +43,7 @@ describe('useMovieDetails', () => {
   it('fetches details when enabled with a valid id', async () => {
     mockFetch.mockResolvedValue({
       tmdbId: 27205,
+      mediaType: 'movie',
       title: 'Inception',
       overview: null,
       tagline: null,
@@ -51,6 +52,7 @@ describe('useMovieDetails', () => {
       runtimeMinutes: null,
       genres: [],
       releaseDate: null,
+      trailerUrl: null,
       voteAverage: null,
       posterPath: null,
       backdropPath: null,

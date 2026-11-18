@@ -152,7 +152,16 @@ describe('useLetterboxdAutoSync', () => {
       meHandler('affy657'),
       createLetterboxdSyncHandler({
         watchedPendingChoices: [
-          { rowIndex: 5000, title: 'Alien', year: '1979', target: 'watched', candidates: [] },
+          {
+            rowIndex: 5000,
+            title: 'Alien',
+            year: '1979',
+            letterboxdSlug: null,
+            target: 'watched',
+            rating: null,
+            watchedOn: null,
+            candidates: [],
+          },
         ],
       })
     );

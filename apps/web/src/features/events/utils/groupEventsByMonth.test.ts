@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { groupEventsByMonth } from './groupEventsByMonth';
 import type { MyEventSummary } from '@/features/events/types';
+import { buildMyEventSummary } from '@/test-utils/myEventSummary';
 
 function event(overrides: Partial<MyEventSummary>): MyEventSummary {
-  return {
+  return buildMyEventSummary({
     id: overrides.id ?? 'e',
     slug: overrides.slug ?? 'e',
     title: overrides.title ?? 'Titre',
@@ -14,7 +15,7 @@ function event(overrides: Partial<MyEventSummary>): MyEventSummary {
     isCreator: false,
     isParticipant: true,
     ...overrides,
-  };
+  });
 }
 
 describe('groupEventsByMonth', () => {

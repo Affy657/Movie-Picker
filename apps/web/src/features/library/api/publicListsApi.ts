@@ -1,10 +1,6 @@
 import { apiPath, fetchApi } from '@/shared/api/client';
-import type {
-  ListCreator,
-  MovieListDetail,
-  MovieListItem,
-  MovieListRole,
-} from '@/features/library/api/listsApi';
+import type { ApiSchemas } from '@/shared/api/contract';
+import type { MovieListDetail } from '@/features/library/api/listsApi';
 import type { CopySavedListBody } from '@/features/library/api/savedListsApi';
 
 export interface PublicListRef {
@@ -12,35 +8,11 @@ export interface PublicListRef {
   listId: string;
 }
 
-export interface PublicListSummary {
-  id: string;
-  name: string;
-  description: string | null;
-  itemCount: number;
-  posterPaths: string[];
-  createdAt: string;
-  updatedAt: string;
-  memberCount: number;
-  watchedCount: number | null;
-}
+export type PublicListSummary = ApiSchemas['PublicListSummaryResponse'];
 
-export interface PublicListDetail {
-  id: string;
-  name: string;
-  description: string | null;
-  createdAt: string;
-  updatedAt: string;
-  itemCount: number;
-  memberCount: number;
-  watchedCount: number | null;
-  creator: ListCreator;
-  viewerRole: MovieListRole | null;
-  items: MovieListItem[];
-}
+export type PublicListDetail = ApiSchemas['PublicListResponse'];
 
-interface PublicListsResponse {
-  items?: PublicListSummary[] | null;
-}
+type PublicListsResponse = ApiSchemas['PublicListsResponse'];
 
 export async function fetchPublicLists(
   handle: string,

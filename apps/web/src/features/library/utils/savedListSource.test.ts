@@ -11,7 +11,7 @@ import {
 
 const fr: Translate = (key, vars) => t(key, vars, 'fr');
 
-const ALICE = { handle: 'alice', displayName: 'Alice Martin', avatarId: null };
+const ALICE = { handle: 'alice', displayName: 'Alice Martin', avatarId: '' };
 
 function saved(overrides: Partial<SavedListSummary>): SavedListSummary {
   return {
@@ -19,6 +19,7 @@ function saved(overrides: Partial<SavedListSummary>): SavedListSummary {
     sourceType: 'memberList',
     sourceId: 'l1',
     name: 'Ciné coréen',
+    description: null,
     creator: ALICE,
     itemCount: 3,
     posterPaths: [],
@@ -90,7 +91,7 @@ describe('savedListSourceLink', () => {
     });
     expect(
       savedListSourceLink(
-        saved({ creator: { handle: 'lea', displayName: 'Léa Moreau', avatarId: null } }),
+        saved({ creator: { handle: 'lea', displayName: 'Léa Moreau', avatarId: '' } }),
         fr
       )
     ).toEqual({ to: '/u/lea/listes/l1', label: 'Voir la liste sur le profil de Léa' });

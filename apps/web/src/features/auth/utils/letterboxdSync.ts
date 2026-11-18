@@ -1,6 +1,7 @@
+import type { ApiSchemas } from '@/shared/api/contract';
 import type { UserProfile } from '@/features/auth/types';
 
-export type LetterboxdSyncTarget = 'watchlist' | 'watched';
+export type LetterboxdSyncTarget = ApiSchemas['LetterboxdImportTarget'];
 
 export function letterboxdSyncEnabled(
   user: UserProfile | null | undefined,

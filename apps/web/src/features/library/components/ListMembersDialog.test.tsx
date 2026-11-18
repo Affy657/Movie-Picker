@@ -9,10 +9,9 @@ import {
   createListMembershipHandlers,
   TEST_API_V1,
   type MockListMembership,
-  type MockListPerson,
 } from '@/mocks/handlers';
 import { copyTextToClipboard } from '@/shared/utils/copyTextToClipboard';
-import type { MovieListDetail } from '@/features/library/api/listsApi';
+import type { MovieListDetail, MovieListPerson } from '@/features/library/api/listsApi';
 import { cancelListInvitation } from '@/features/library/api/listMembersApi';
 import ListMembersDialog from './ListMembersDialog';
 
@@ -35,36 +34,36 @@ function activeLink(token: string) {
   };
 }
 
-const ALICE: MockListPerson = {
+const ALICE: MovieListPerson = {
   userId: 'u1',
   handle: 'alice',
   displayName: 'Alice',
-  avatarId: null,
+  avatarId: '',
 };
-const LEA: MockListPerson = {
+const LEA: MovieListPerson = {
   userId: 'u2',
   handle: 'lea',
   displayName: 'Léa Moreau',
-  avatarId: null,
+  avatarId: '',
 };
-const TOM: MockListPerson = { userId: 'u3', handle: null, displayName: 'Tom', avatarId: null };
-const SAM: MockListPerson = {
+const TOM: MovieListPerson = { userId: 'u3', handle: null, displayName: 'Tom', avatarId: '' };
+const SAM: MovieListPerson = {
   userId: 'u4',
   handle: 'sam',
   displayName: 'Sam Roux',
-  avatarId: null,
+  avatarId: '',
 };
-const MARION: MockListPerson = {
+const MARION: MovieListPerson = {
   userId: 'u5',
   handle: 'marion',
   displayName: 'Marion Petit',
-  avatarId: null,
+  avatarId: '',
 };
-const MARC: MockListPerson = {
+const MARC: MovieListPerson = {
   userId: 'u6',
   handle: 'marc',
   displayName: 'Marc Blanc',
-  avatarId: null,
+  avatarId: '',
 };
 
 const authedAlice = http.get(`${TEST_API_V1}/auth/me`, () =>
@@ -81,6 +80,7 @@ const HALLOWEEN: MovieListDetail = {
   id: 'l1',
   name: 'Halloween',
   description: null,
+  isPublic: false,
   createdAt: '2026-11-01T00:00:00Z',
   updatedAt: '2026-11-01T00:00:00Z',
   items: [],

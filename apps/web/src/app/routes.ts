@@ -85,7 +85,7 @@ export const ROUTES = {
   showcaseMostProposed: '/films/les-plus-proposes',
 
   showcaseRecommendationsPattern: '/films/similaires/:seedTmdbId',
-  showcaseRecommendations: (seedTmdbId: number, seedMediaType?: 'movie' | 'tv') =>
+  showcaseRecommendations: (seedTmdbId: number, seedMediaType?: MovieMediaType) =>
     seedMediaType === 'tv'
       ? `/films/similaires/${seedTmdbId}?type=tv`
       : `/films/similaires/${seedTmdbId}`,

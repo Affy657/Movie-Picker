@@ -1,7 +1,7 @@
 import { HttpResponse } from 'msw';
-import type { components } from '@/shared/api/generated/openapiSchema';
+import type { ApiSchemas } from '@/shared/api/contract';
 
-export type ApiSchemas = components['schemas'];
+export type { ApiSchemas };
 
 type ApiSchemaName = keyof ApiSchemas;
 

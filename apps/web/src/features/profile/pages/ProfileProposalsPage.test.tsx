@@ -31,6 +31,8 @@ function proposal(
     title,
     year: '2019',
     posterPath: null,
+    voteAverage: null,
+    runtimeMinutes: null,
     genreIds: [27],
     mediaType: 'movie',
     lastProposedAt,

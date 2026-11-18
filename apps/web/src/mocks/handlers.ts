@@ -28,6 +28,9 @@ function mockWatchlistItem(item: MockWatchlistItem): Schemas['WatchlistItemRespo
     genreIds: [],
     createdAt: MOCK_DATE,
     onLetterboxd: false,
+    posterPath: null,
+    voteAverage: null,
+    runtimeMinutes: null,
     ...item,
   };
 }
@@ -117,9 +120,12 @@ function mockListItem(
     year: '',
     genreIds: [],
     isWatched: false,
+    posterPath: null,
+    voteAverage: null,
+    runtimeMinutes: null,
     ...title,
     createdAt,
-    addedBy: addedBy ? servedAvatar(addedBy) : undefined,
+    addedBy: addedBy ? servedAvatar(addedBy) : null,
   };
 }
 
@@ -445,13 +451,13 @@ function mockSavedSummary(list: StoredSavedList): Schemas['SavedListSummaryRespo
     sourceId: list.sourceId,
     name: list.name,
     description: list.description,
-    creator: list.creator ? servedAvatar(list.creator) : undefined,
+    creator: list.creator ? servedAvatar(list.creator) : null,
     itemCount: items.length,
     posterPaths: posterPreview(items),
     watchedCount: items.filter((item) => item.isWatched).length,
     createdAt: list.createdAt,
     unavailable: list.unavailable,
-    unavailableReason: list.unavailableReason ?? undefined,
+    unavailableReason: list.unavailableReason ?? null,
     copyAvailable: list.copyAvailable,
   };
 }
@@ -609,7 +615,7 @@ export function createPublicListsHandlers(
         memberCount: list.memberCount ?? 1,
         watchedCount: publicWatchedCount(items, viewerSignedIn),
         creator: servedAvatar(creator),
-        viewerRole: list.viewerRole ?? undefined,
+        viewerRole: list.viewerRole ?? null,
         items: items.map((item) => mockListItem(item)),
       });
     }),
@@ -740,7 +746,7 @@ export interface MockEventOptions {
 }
 
 function mockParticipant(_id: string, pseudo: string, isCreator = false) {
-  return { _id, pseudo, isCreator, avatarId: '' };
+  return { _id, pseudo, isCreator, avatarId: '', handle: null };
 }
 
 export function createEventDetailHandlers(opts: MockEventOptions) {
@@ -756,6 +762,9 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
         date: '2030-12-15',
         time: '21:00',
         slug,
+        recapSlug: null,
+        closedAt: null,
+        myParticipant: null,
         createdAt: MOCK_DATE,
         updatedAt: MOCK_DATE,
         isHost: !!host,
@@ -777,6 +786,8 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
           maxParticipants: null,
           maxVotesPerParticipant: null,
           wheelMode: 'strictRandom',
+          themeColor: null,
+          recurrence: null,
           winnerCount: opts.winnerCount ?? 1,
           richSharePreview: false,
           allowSeries: false,
@@ -830,6 +841,7 @@ export function createUserStatsHandler(handle: string, stats?: MockUserStats) {
       moviesProposed: stats?.moviesProposed ?? 0,
       votesCast: stats?.votesCast ?? 0,
       winningProposals: stats?.winningProposals ?? 0,
+      proposalsAverageRating: null,
       moviesSeen: stats?.moviesSeen ?? 0,
       publicListCount: stats?.publicListCount ?? 0,
       currentStreakWeeks: stats?.currentStreakWeeks ?? 0,
@@ -881,6 +893,14 @@ export function createSearchAndAddHandlers(slug: string) {
           createdAt: MOCK_DATE,
           updatedAt: MOCK_DATE,
           proposerPseudo: 'Alice',
+          proposerHandle: null,
+          posterPath: null,
+          pitchNote: null,
+          myVote: null,
+          voteAverage: null,
+          tmdbWatchPageUrl: null,
+          runtimeMinutes: null,
+          releaseDate: null,
           score: 0,
           up: 0,
           down: 0,

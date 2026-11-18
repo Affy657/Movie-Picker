@@ -9624,9 +9624,9 @@ export interface components {
             date: string;
             time: string;
             slug: string;
-            config?: components["schemas"]["EventConfigResponse"] | null;
+            config: components["schemas"]["EventConfigResponse"] | null;
             /** Format: date-time */
-            closedAt?: string | null;
+            closedAt: string | null;
             winnerMovieIds: string[];
             /** Format: date-time */
             createdAt: string;
@@ -9650,7 +9650,7 @@ export interface components {
             time: string;
             slug: string;
             shareUrl: string;
-            creatorParticipant?: components["schemas"]["ParticipantResponse"] | null;
+            creatorParticipant: components["schemas"]["ParticipantResponse"] | null;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -9718,21 +9718,21 @@ export interface components {
             follows: components["schemas"]["EligibleFollowItem"][];
         };
         EventConfigResponse: {
-            theme?: string | null;
+            theme: string | null;
             /** Format: int32 */
-            themeColor?: number | null;
+            themeColor: number | null;
             /** Format: int32 */
-            maxProposalsPerParticipant?: number | null;
+            maxProposalsPerParticipant: number | null;
             /** Format: int32 */
-            maxParticipants?: number | null;
+            maxParticipants: number | null;
             /** Format: int32 */
-            maxVotesPerParticipant?: number | null;
+            maxVotesPerParticipant: number | null;
             wheelMode: components["schemas"]["WheelMode"];
             richSharePreview: boolean;
             allowSeries: boolean;
             /** Format: int32 */
             winnerCount: number;
-            recurrence?: components["schemas"]["RecurrenceFrequency"] | null;
+            recurrence: components["schemas"]["RecurrenceFrequency"] | null;
             hasNextOccurrence: boolean;
         };
         EventDetailResponse: {
@@ -9741,10 +9741,10 @@ export interface components {
             date: string;
             time: string;
             slug: string;
-            recapSlug?: string | null;
+            recapSlug: string | null;
             config: components["schemas"]["EventConfigResponse"];
             /** Format: date-time */
-            closedAt?: string | null;
+            closedAt: string | null;
             winners: components["schemas"]["EventWinnerResponse"][];
             /** Format: date-time */
             createdAt: string;
@@ -9754,7 +9754,7 @@ export interface components {
             isFinished: boolean;
             /** @enum {string} */
             lifecycle: "upcoming" | "live" | "pending" | "finished";
-            myParticipant?: components["schemas"]["ParticipantResponse"] | null;
+            myParticipant: components["schemas"]["ParticipantResponse"] | null;
             /** Format: int32 */
             participantCount: number;
             /** Format: int32 */
@@ -9768,7 +9768,7 @@ export interface components {
             pseudo: string;
             isCreator: boolean;
             avatarId: string;
-            handle?: string | null;
+            handle: string | null;
         };
         EventReminderPassResult: {
             /** Format: int32 */
@@ -9790,13 +9790,13 @@ export interface components {
         EventTemplateResponse: {
             id: string;
             name: string;
-            theme?: string | null;
+            theme: string | null;
             /** Format: int32 */
-            maxProposalsPerParticipant?: number | null;
+            maxProposalsPerParticipant: number | null;
             /** Format: int32 */
-            maxParticipants?: number | null;
+            maxParticipants: number | null;
             /** Format: int32 */
-            maxVotesPerParticipant?: number | null;
+            maxVotesPerParticipant: number | null;
             wheelMode: components["schemas"]["WheelMode"];
             richSharePreview: boolean;
             allowSeries: boolean;
@@ -10005,7 +10005,7 @@ export interface components {
             mediaType: components["schemas"]["MovieMediaType"];
             title: string;
             year: string;
-            posterPath?: string | null;
+            posterPath: string | null;
         };
         FinishedEventWatchlistPassResult: {
             /** Format: int32 */
@@ -10022,7 +10022,7 @@ export interface components {
             handle: string;
             displayName: string;
             avatarId: string;
-            isFollowedByMe?: boolean | null;
+            isFollowedByMe: boolean | null;
         };
         GenreCount: {
             /** Format: int32 */
@@ -10080,12 +10080,12 @@ export interface components {
             mediaType: components["schemas"]["MovieMediaType"];
             title: string;
             year: string;
-            posterPath?: string | null;
+            posterPath: string | null;
             /** Format: double */
-            voteAverage?: number | null;
+            voteAverage: number | null;
             genreIds: number[];
             /** Format: int32 */
-            runtimeMinutes?: number | null;
+            runtimeMinutes: number | null;
         };
         LetterboxdImportConfirmRequest: {
             selections: components["schemas"]["AddWatchlistItemRequest"][];
@@ -10110,19 +10110,19 @@ export interface components {
             rowIndex: number;
             title: string;
             year: string;
-            letterboxdSlug?: string | null;
+            letterboxdSlug: string | null;
             target: components["schemas"]["LetterboxdImportTarget"];
             /** Format: int32 */
-            rating?: number | null;
+            rating: number | null;
             /** Format: date */
-            watchedOn?: string | null;
+            watchedOn: string | null;
             candidates: components["schemas"]["LetterboxdImportCandidateResponse"][];
         };
         /** @enum {string} */
         LetterboxdImportTarget: "watchlist" | "watched";
         LetterboxdSyncResponse: {
             skipped: boolean;
-            error?: string | null;
+            error: string | null;
             /** Format: int32 */
             added: number;
             /** Format: int32 */
@@ -10203,8 +10203,8 @@ export interface components {
         };
         MovieCastMemberResponse: {
             name: string;
-            character?: string | null;
-            profilePath?: string | null;
+            character: string | null;
+            profilePath: string | null;
         };
         MovieCollectionListResponse: {
             items: components["schemas"]["MovieCollectionResponse"][];
@@ -10215,8 +10215,8 @@ export interface components {
             /** Format: int32 */
             id: number;
             name: string;
-            overview?: string | null;
-            posterPath?: string | null;
+            overview: string | null;
+            posterPath: string | null;
             /** Format: int32 */
             movieCount: number;
             previewPosterPaths: string[];
@@ -10236,36 +10236,36 @@ export interface components {
             tmdbId: number;
             mediaType: components["schemas"]["MovieMediaType"];
             title: string;
-            overview?: string | null;
-            tagline?: string | null;
-            director?: string | null;
+            overview: string | null;
+            tagline: string | null;
+            director: string | null;
             cast: string[];
             /** Format: int32 */
-            runtimeMinutes?: number | null;
+            runtimeMinutes: number | null;
             genres: string[];
-            releaseDate?: string | null;
-            trailerUrl?: string | null;
+            releaseDate: string | null;
+            trailerUrl: string | null;
             /** Format: double */
-            voteAverage?: number | null;
-            posterPath?: string | null;
-            backdropPath?: string | null;
+            voteAverage: number | null;
+            posterPath: string | null;
+            backdropPath: string | null;
             /** Format: int32 */
-            seasonCount?: number | null;
+            seasonCount: number | null;
             /** Format: int32 */
-            episodeCount?: number | null;
+            episodeCount: number | null;
             watchProviders: components["schemas"]["WatchProviderOfferResponse"][];
-            tmdbWatchPageUrl?: string | null;
-            originalTitle?: string | null;
-            originalLanguage?: string | null;
+            tmdbWatchPageUrl: string | null;
+            originalTitle: string | null;
+            originalLanguage: string | null;
             productionCountries: string[];
             /** Format: int64 */
-            budget?: number | null;
+            budget: number | null;
             /** Format: int32 */
-            voteCount?: number | null;
-            certification?: string | null;
-            collection?: components["schemas"]["MovieDetailsCollectionResponse"] | null;
+            voteCount: number | null;
+            certification: string | null;
+            collection: components["schemas"]["MovieDetailsCollectionResponse"] | null;
             /** Format: int32 */
-            directorId?: number | null;
+            directorId: number | null;
             castMembers: components["schemas"]["MovieCastMemberResponse"][];
             crew: components["schemas"]["MovieCrewMemberResponse"][];
             videos: components["schemas"]["MovieVideoResponse"][];
@@ -10292,11 +10292,11 @@ export interface components {
             itemCount: number;
             posterPaths: string[];
             isFull: boolean;
-            role?: components["schemas"]["MovieListRole"] | null;
-            listId?: string | null;
+            role: components["schemas"]["MovieListRole"] | null;
+            listId: string | null;
         };
         MovieListInviterResponse: {
-            handle?: string | null;
+            handle: string | null;
             displayName: string;
             avatarId: string;
         };
@@ -10308,18 +10308,18 @@ export interface components {
             createdAt: string;
             title: string;
             year: string;
-            posterPath?: string | null;
+            posterPath: string | null;
             /** Format: double */
-            voteAverage?: number | null;
+            voteAverage: number | null;
             /** Format: int32 */
-            runtimeMinutes?: number | null;
+            runtimeMinutes: number | null;
             genreIds: number[];
             isWatched: boolean;
-            addedBy?: components["schemas"]["MovieListPersonResponse"] | null;
+            addedBy: components["schemas"]["MovieListPersonResponse"] | null;
         };
         MovieListMemberResponse: {
             userId: string;
-            handle?: string | null;
+            handle: string | null;
             displayName: string;
             avatarId: string;
             isOwner: boolean;
@@ -10330,12 +10330,12 @@ export interface components {
             /** Format: int32 */
             maxMembers: number;
             members: components["schemas"]["MovieListMemberResponse"][];
-            invitations?: components["schemas"]["MovieListPendingInvitationResponse"][] | null;
-            inviteLink?: components["schemas"]["MovieListInviteLinkResponse"] | null;
+            invitations: components["schemas"]["MovieListPendingInvitationResponse"][] | null;
+            inviteLink: components["schemas"]["MovieListInviteLinkResponse"] | null;
         };
         MovieListPendingInvitationResponse: {
             userId: string;
-            handle?: string | null;
+            handle: string | null;
             displayName: string;
             avatarId: string;
             /** Format: date-time */
@@ -10343,14 +10343,14 @@ export interface components {
         };
         MovieListPersonResponse: {
             userId: string;
-            handle?: string | null;
+            handle: string | null;
             displayName: string;
             avatarId: string;
         };
         MovieListResponse: {
             id: string;
             name: string;
-            description?: string | null;
+            description: string | null;
             isPublic: boolean;
             /** Format: date-time */
             createdAt: string;
@@ -10368,7 +10368,7 @@ export interface components {
         MovieListSummaryResponse: {
             id: string;
             name: string;
-            description?: string | null;
+            description: string | null;
             isPublic: boolean;
             /** Format: int32 */
             itemCount: number;
@@ -10394,15 +10394,15 @@ export interface components {
         MovieNightResponse: {
             slug: string;
             title: string;
-            date?: string | null;
+            date: string | null;
             isWinner: boolean;
             isFinished: boolean;
-            recapSlug?: string | null;
+            recapSlug: string | null;
             proposerPseudo: string;
         };
         MovieNightViewerResponse: {
             pseudo: string;
-            avatarId?: string | null;
+            avatarId: string | null;
         };
         MovieNightsRatingResponse: {
             /** Format: double */
@@ -10416,7 +10416,7 @@ export interface components {
             proposalCount: number;
             /** Format: int32 */
             winCount: number;
-            rating?: components["schemas"]["MovieNightsRatingResponse"] | null;
+            rating: components["schemas"]["MovieNightsRatingResponse"] | null;
             seenBy: components["schemas"]["MovieNightViewerResponse"][];
             /** Format: int32 */
             seenCount: number;
@@ -10434,13 +10434,13 @@ export interface components {
             mediaType: components["schemas"]["MovieMediaType"];
             title: string;
             year: string;
-            posterPath?: string | null;
+            posterPath: string | null;
             /** Format: double */
-            voteAverage?: number | null;
+            voteAverage: number | null;
             /** Format: int32 */
-            runtimeMinutes?: number | null;
-            watchProviders?: components["schemas"]["WatchProviderOfferResponse"][] | null;
-            tmdbWatchPageUrl?: string | null;
+            runtimeMinutes: number | null;
+            watchProviders: components["schemas"]["WatchProviderOfferResponse"][] | null;
+            tmdbWatchPageUrl: string | null;
             genreIds: number[];
         };
         MovieSearchListResponse: {
@@ -10455,21 +10455,21 @@ export interface components {
             mediaType: components["schemas"]["MovieMediaType"];
             title: string;
             year: string;
-            posterPath?: string | null;
+            posterPath: string | null;
             /** Format: double */
-            voteAverage?: number | null;
+            voteAverage: number | null;
             /** Format: int32 */
-            runtimeMinutes?: number | null;
+            runtimeMinutes: number | null;
             genreIds: number[];
             /** Format: int32 */
-            rank?: number | null;
+            rank: number | null;
             /** Format: int32 */
-            eventCount?: number | null;
+            eventCount: number | null;
         };
         MovieShowcaseListResponse: {
             /** @enum {string} */
             section: "trending" | "now-playing" | "most-proposed" | "theme" | "collection" | "provider" | "recommendations" | "director";
-            theme?: string | null;
+            theme: string | null;
             items: components["schemas"]["MovieShowcaseItemResponse"][];
             disclaimer: string;
             tmdbAttributionUrl: string;
@@ -10489,7 +10489,7 @@ export interface components {
             key: string;
             name: string;
             type: string;
-            language?: string | null;
+            language: string | null;
         };
         MovieWithScoreResponse: {
             _id: string;
@@ -10500,8 +10500,8 @@ export interface components {
             mediaType: components["schemas"]["MovieMediaType"];
             title: string;
             year: string;
-            posterPath?: string | null;
-            pitchNote?: string | null;
+            posterPath: string | null;
+            pitchNote: string | null;
             genreIds: number[];
             excludedFromWheel: boolean;
             /** Format: date-time */
@@ -10509,7 +10509,7 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
             proposerPseudo: string;
-            proposerHandle?: string | null;
+            proposerHandle: string | null;
             /** Format: int32 */
             score: number;
             /** Format: int32 */
@@ -10517,23 +10517,23 @@ export interface components {
             /** Format: int32 */
             down: number;
             /** Format: int32 */
-            myVote?: number | null;
+            myVote: number | null;
             /** Format: int32 */
             seenCount: number;
             seenByPseudos: string[];
             votersUpPseudos: string[];
             ratings: components["schemas"]["MovieRatingResponse"][];
             /** Format: double */
-            voteAverage?: number | null;
+            voteAverage: number | null;
             watchProviders: components["schemas"]["WatchProviderOfferResponse"][];
-            tmdbWatchPageUrl?: string | null;
+            tmdbWatchPageUrl: string | null;
             /** Format: int32 */
-            runtimeMinutes?: number | null;
-            releaseDate?: string | null;
+            runtimeMinutes: number | null;
+            releaseDate: string | null;
         };
         MyEventMoviePreviewDto: {
             title: string;
-            posterPath?: string | null;
+            posterPath: string | null;
         };
         MyEventParticipantPreviewDto: {
             pseudo: string;
@@ -10558,23 +10558,23 @@ export interface components {
             /** Format: int32 */
             movieCount: number;
             /** Format: int32 */
-            maxParticipants?: number | null;
-            theme?: string | null;
+            maxParticipants: number | null;
+            theme: string | null;
             winnerMovies: components["schemas"]["MyEventWinnerMovieDto"][];
             /** Format: double */
-            averageRating?: number | null;
+            averageRating: number | null;
             /** Format: double */
-            myRating?: number | null;
+            myRating: number | null;
             hasWinnerToRate: boolean;
             /** Format: date-time */
-            autoCloseAt?: string | null;
+            autoCloseAt: string | null;
             topMovies: components["schemas"]["MyEventMoviePreviewDto"][];
             participantsPreview: components["schemas"]["MyEventParticipantPreviewDto"][];
             hasVoted: boolean;
         };
         MyEventWinnerMovieDto: {
             title: string;
-            posterPath?: string | null;
+            posterPath: string | null;
         };
         MyEventsListResponse: {
             events: components["schemas"]["MyEventSummaryDto"][];
@@ -10586,18 +10586,18 @@ export interface components {
         };
         NightRecapResponse: {
             recapSlug: string;
-            eventSlug?: string | null;
+            eventSlug: string | null;
             title: string;
             date: string;
             time: string;
-            config?: components["schemas"]["EventConfigResponse"] | null;
+            config: components["schemas"]["EventConfigResponse"] | null;
             /** Format: date-time */
-            closedAt?: string | null;
+            closedAt: string | null;
             isFinished: boolean;
             /** @enum {string} */
             lifecycle: "upcoming" | "live" | "pending" | "finished";
             winners: components["schemas"]["EventWinnerResponse"][];
-            myParticipant?: components["schemas"]["ParticipantResponse"] | null;
+            myParticipant: components["schemas"]["ParticipantResponse"] | null;
             /** Format: int32 */
             participantCount: number;
             /** Format: int32 */
@@ -10699,7 +10699,7 @@ export interface components {
         PublicListResponse: {
             id: string;
             name: string;
-            description?: string | null;
+            description: string | null;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -10709,15 +10709,15 @@ export interface components {
             /** Format: int32 */
             memberCount: number;
             /** Format: int32 */
-            watchedCount?: number | null;
+            watchedCount: number | null;
             creator: components["schemas"]["ListCreatorResponse"];
-            viewerRole?: components["schemas"]["MovieListRole"] | null;
+            viewerRole: components["schemas"]["MovieListRole"] | null;
             items: components["schemas"]["MovieListItemResponse"][];
         };
         PublicListSummaryResponse: {
             id: string;
             name: string;
-            description?: string | null;
+            description: string | null;
             /** Format: int32 */
             itemCount: number;
             posterPaths: string[];
@@ -10728,7 +10728,7 @@ export interface components {
             /** Format: int32 */
             memberCount: number;
             /** Format: int32 */
-            watchedCount?: number | null;
+            watchedCount: number | null;
         };
         PublicListsResponse: {
             items: components["schemas"]["PublicListSummaryResponse"][];
@@ -10737,7 +10737,7 @@ export interface components {
             handle: string;
             displayName: string;
             avatarId: string;
-            bio?: string | null;
+            bio: string | null;
             /** Format: date-time */
             memberSince: string;
             /** Format: int32 */
@@ -10745,10 +10745,10 @@ export interface components {
             /** Format: int32 */
             followersCount: number;
             isSupporter: boolean;
-            isFollowedByMe?: boolean | null;
+            isFollowedByMe: boolean | null;
             isWatchlistPublic: boolean;
             /** Format: int32 */
-            watchlistCount?: number | null;
+            watchlistCount: number | null;
             isWatchedPublic: boolean;
             favorites: components["schemas"]["FavoriteTitleResponse"][];
         };
@@ -10817,9 +10817,9 @@ export interface components {
             id: string;
             sourceType: components["schemas"]["ListSourceType"];
             sourceId: string;
-            name?: string | null;
-            description?: string | null;
-            creator?: components["schemas"]["ListCreatorResponse"] | null;
+            name: string | null;
+            description: string | null;
+            creator: components["schemas"]["ListCreatorResponse"] | null;
             /** Format: int32 */
             itemCount: number;
             posterPaths: string[];
@@ -10828,7 +10828,7 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
             unavailable: boolean;
-            unavailableReason?: components["schemas"]["ListSourceUnavailableReason"] | null;
+            unavailableReason: components["schemas"]["ListSourceUnavailableReason"] | null;
             copyAvailable: boolean;
             items: components["schemas"]["MovieListItemResponse"][];
         };
@@ -10836,9 +10836,9 @@ export interface components {
             id: string;
             sourceType: components["schemas"]["ListSourceType"];
             sourceId: string;
-            name?: string | null;
-            description?: string | null;
-            creator?: components["schemas"]["ListCreatorResponse"] | null;
+            name: string | null;
+            description: string | null;
+            creator: components["schemas"]["ListCreatorResponse"] | null;
             /** Format: int32 */
             itemCount: number;
             posterPaths: string[];
@@ -10847,7 +10847,7 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
             unavailable: boolean;
-            unavailableReason?: components["schemas"]["ListSourceUnavailableReason"] | null;
+            unavailableReason: components["schemas"]["ListSourceUnavailableReason"] | null;
             copyAvailable: boolean;
         };
         SavedListsResponse: {
@@ -10929,14 +10929,14 @@ export interface components {
             id: string;
             /** @enum {string} */
             type: "newfollower" | "movieadded" | "moviepicked" | "participantjoined" | "eventdeleted" | "eventreminder1h" | "eventreminder24h" | "eventinvitation" | "eventpending" | "moviepickedmanually" | "letterboxdreconciliationpending" | "eventdatechanged" | "ratingreminder" | "listinvitation";
-            actorHandle?: string | null;
-            actorDisplayName?: string | null;
-            actorAvatarId?: string | null;
-            eventSlug?: string | null;
-            eventTitle?: string | null;
-            movieTitle?: string | null;
-            listId?: string | null;
-            listName?: string | null;
+            actorHandle: string | null;
+            actorDisplayName: string | null;
+            actorAvatarId: string | null;
+            eventSlug: string | null;
+            eventTitle: string | null;
+            movieTitle: string | null;
+            listId: string | null;
+            listName: string | null;
             listInvitationPending: boolean;
             isRead: boolean;
             /** Format: date-time */
@@ -10952,17 +10952,17 @@ export interface components {
             ratingScale: components["schemas"]["RatingScale"];
             dimWatched: boolean;
             avatarId: string;
-            avatarPhotoId?: string | null;
+            avatarPhotoId: string | null;
             generatedAvatarId: string;
             handle: string;
-            bio?: string | null;
+            bio: string | null;
             isProfilePublic: boolean;
             isWatchlistPublic: boolean;
             isWatchedPublic: boolean;
-            letterboxdUsername?: string | null;
+            letterboxdUsername: string | null;
             /** Format: date-time */
-            letterboxdLastSyncAt?: string | null;
-            letterboxdLastSyncError?: string | null;
+            letterboxdLastSyncAt: string | null;
+            letterboxdLastSyncError: string | null;
             /** Format: int32 */
             letterboxdPendingReconciliationCount: number;
             letterboxdSyncWatchlist: boolean;
@@ -10982,11 +10982,11 @@ export interface components {
             tmdbId: number;
             title: string;
             year: string;
-            posterPath?: string | null;
+            posterPath: string | null;
             /** Format: double */
-            voteAverage?: number | null;
+            voteAverage: number | null;
             /** Format: int32 */
-            runtimeMinutes?: number | null;
+            runtimeMinutes: number | null;
             genreIds: number[];
             mediaType: components["schemas"]["MovieMediaType"];
             /** Format: date-time */
@@ -11009,7 +11009,7 @@ export interface components {
             /** Format: int32 */
             winningProposals: number;
             /** Format: double */
-            proposalsAverageRating?: number | null;
+            proposalsAverageRating: number | null;
             /** Format: int32 */
             moviesSeen: number;
             /** Format: int32 */
@@ -11026,23 +11026,23 @@ export interface components {
             tmdbId: number;
             title: string;
             year: string;
-            posterPath?: string | null;
+            posterPath: string | null;
             /** Format: double */
-            voteAverage?: number | null;
+            voteAverage: number | null;
             /** Format: int32 */
-            runtimeMinutes?: number | null;
+            runtimeMinutes: number | null;
             genreIds: number[];
             mediaType: components["schemas"]["MovieMediaType"];
             /** Format: date-time */
             watchedAt: string;
             /** Format: int32 */
-            myRating?: number | null;
+            myRating: number | null;
             source: components["schemas"]["WatchedSource"];
         };
         UserWatchedMoviesResponse: {
             items: components["schemas"]["UserWatchedMovieItem"][];
             /** Format: int32 */
-            total?: number | null;
+            total: number | null;
         };
         VoteRequest: {
             participantId: string;
@@ -11065,7 +11065,7 @@ export interface components {
             /** Format: int32 */
             providerId: number;
             name: string;
-            logoPath?: string | null;
+            logoPath: string | null;
             type: string;
         };
         /** @enum {string} */
@@ -11075,22 +11075,22 @@ export interface components {
         WatchedStatusResponse: {
             status: components["schemas"]["WatchedStatus"];
             /** Format: date-time */
-            watchedAt?: string | null;
+            watchedAt: string | null;
             /** Format: int32 */
-            rating?: number | null;
-            nightSlug?: string | null;
-            nightTitle?: string | null;
+            rating: number | null;
+            nightSlug: string | null;
+            nightTitle: string | null;
         };
         WatchlistAvailabilityItemResponse: {
             /** Format: int32 */
             tmdbId: number;
             mediaType: components["schemas"]["MovieMediaType"];
             watchProviders: components["schemas"]["WatchProviderOfferResponse"][];
-            tmdbWatchPageUrl?: string | null;
+            tmdbWatchPageUrl: string | null;
             /** Format: double */
-            voteAverage?: number | null;
+            voteAverage: number | null;
             /** Format: int32 */
-            runtimeMinutes?: number | null;
+            runtimeMinutes: number | null;
         };
         WatchlistAvailabilityResponse: {
             items: components["schemas"]["WatchlistAvailabilityItemResponse"][];
@@ -11102,11 +11102,11 @@ export interface components {
             mediaType: components["schemas"]["MovieMediaType"];
             title: string;
             year: string;
-            posterPath?: string | null;
+            posterPath: string | null;
             /** Format: double */
-            voteAverage?: number | null;
+            voteAverage: number | null;
             /** Format: int32 */
-            runtimeMinutes?: number | null;
+            runtimeMinutes: number | null;
             genreIds: number[];
             /** Format: date-time */
             createdAt: string;
@@ -11132,7 +11132,7 @@ export interface components {
             tmdbId: number;
             title: string;
             year: string;
-            posterPath?: string | null;
+            posterPath: string | null;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
