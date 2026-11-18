@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.15.5] - 2026-11-18
+
 ### Changed
 
 - **Toute l'application vous vouvoie** : les notifications, l'e-mail de réinitialisation du mot de passe, l'aperçu d'une invitation partagée et trois messages de l'application qui vous tutoyaient encore.
@@ -826,7 +828,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.15.4...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.15.5...HEAD
+[1.15.5]: https://github.com/Affy657/Movie-Picker/compare/v1.15.4...v1.15.5
 [1.15.4]: https://github.com/Affy657/Movie-Picker/compare/v1.15.3...v1.15.4
 [1.15.3]: https://github.com/Affy657/Movie-Picker/compare/v1.15.2...v1.15.3
 [1.15.2]: https://github.com/Affy657/Movie-Picker/compare/v1.15.1...v1.15.2
