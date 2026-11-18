@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Domain;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -62,9 +62,8 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         if (!string.IsNullOrEmpty(evt.CreatorUserId) && participant.UserId == evt.CreatorUserId)
             throw Errors.CreatorCannotBeRemoved();
 
-        var hostToken = _hostTokenAccessor.GetHostToken();
         var currentUserId = _currentUserAccessor.GetUserId();
-        var isHost = EventHost.IsHost(evt, hostToken, currentUserId);
+        var isHost = HostedEvent.IsHost(evt, _hostTokenAccessor, currentUserId);
         var isSelfConnected = !string.IsNullOrEmpty(currentUserId)
             && !string.IsNullOrEmpty(participant.UserId)
             && participant.UserId == currentUserId;
@@ -113,15 +112,14 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
                 var current = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, token);
                 EnsureParticipantsCanChange(current);
 
-                movieIds = await _movieRepository.ListIdsByEventAndParticipantAsync(eventId, participantId, token);
-
-                await _voteRepository.DeleteByMovieIdsAsync(movieIds, token);
-                await _seenMarkRepository.DeleteByMovieIdsAsync(eventId, movieIds, token);
-                await _ratingRepository.DeleteByMovieIdsAsync(eventId, movieIds, token);
-                await _movieRepository.DeleteByIdsAsync(movieIds, token);
-                await _voteRepository.DeleteByEventAndParticipantAsync(eventId, participantId, token);
-                await _seenMarkRepository.DeleteByEventAndParticipantAsync(eventId, participantId, token);
-                await _ratingRepository.DeleteByEventAndParticipantAsync(eventId, participantId, token);
+                movieIds = await EventChildData.PurgeParticipantTracesAsync(
+                    _voteRepository,
+                    _seenMarkRepository,
+                    _ratingRepository,
+                    _movieRepository,
+                    eventId,
+                    participantId,
+                    token);
                 if (!await _participantRepository.DeleteAsync(participantId, eventId, token))
                     throw Errors.ParticipantNotFound();
                 await _eventRepository.UpdateAsync(current with { UpdatedAt = _clock.GetUtcNow() }, token);

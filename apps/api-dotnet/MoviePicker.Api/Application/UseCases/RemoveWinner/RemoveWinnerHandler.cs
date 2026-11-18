@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Domain;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.RemoveWinner;
@@ -33,15 +33,13 @@ public sealed class RemoveWinnerHandler : IRemoveWinnerHandler
         string movieId,
         CancellationToken ct = default)
     {
-        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
-
-        var token = _hostTokenAccessor.GetHostToken();
-        var userId = _currentUserAccessor.GetUserId();
-        if (!EventHost.IsHost(evt, token, userId))
-            throw Errors.HostOnly();
-
-        if (evt.IsFinished(_clock.GetUtcNow()))
-            throw Errors.EventFinished();
+        var evt = await HostedEvent.LoadForHostAsync(
+            _eventRepository,
+            _hostTokenAccessor,
+            _currentUserAccessor.GetUserId(),
+            idOrSlug,
+            _clock.GetUtcNow(),
+            ct);
 
         var removed = evt.Winners.FirstOrDefault(w => w.MovieId == movieId)
             ?? throw Errors.MovieNotAWinner();

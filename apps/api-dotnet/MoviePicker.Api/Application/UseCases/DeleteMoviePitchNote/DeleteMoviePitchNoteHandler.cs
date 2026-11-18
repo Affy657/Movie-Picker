@@ -32,11 +32,12 @@ public sealed class DeleteMoviePitchNoteHandler : IDeleteMoviePitchNoteHandler
 
     public async Task HandleAsync(string idOrSlug, string movieId, DeleteMoviePitchNoteRequest request, CancellationToken ct = default)
     {
-        var (evt, movie, currentUserId, isHost) = await MovieActionContext.ResolveMovieForHostActionAsync(
+        var currentUserId = _currentUserAccessor.GetUserId();
+        var (evt, movie, isHost) = await MovieActionContext.ResolveMovieForHostActionAsync(
             _eventRepository,
             _movieRepository,
             _hostTokenAccessor,
-            _currentUserAccessor,
+            currentUserId,
             _clock.GetUtcNow(),
             idOrSlug,
             movieId,

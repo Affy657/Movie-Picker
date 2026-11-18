@@ -41,12 +41,8 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         PatchEventConfigRequest request,
         CancellationToken ct = default)
     {
-        var evt = await _events.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
-
-        var token = _hostTokenAccessor.GetHostToken();
         var userId = _currentUserAccessor.GetUserId();
-        if (!EventHost.IsHost(evt, token, userId))
-            throw Errors.HostOnly();
+        var evt = await HostedEvent.LoadForHostEvenFinishedAsync(_events, _hostTokenAccessor, userId, idOrSlug, ct);
 
         var hasConfigChange = HasConfigChange(request);
         var hasDateTimeChange = request.Date is not null || request.Time is not null;

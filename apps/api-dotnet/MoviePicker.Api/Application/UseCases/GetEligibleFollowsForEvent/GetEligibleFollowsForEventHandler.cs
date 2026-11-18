@@ -12,30 +12,23 @@ public sealed class GetEligibleFollowsForEventHandler : IGetEligibleFollowsForEv
     private readonly IFollowRepository _follows;
     private readonly IUserRepository _users;
     private readonly IUserNotificationRepository _notifications;
-    private readonly ICurrentUserAccessor _currentUserAccessor;
 
     public GetEligibleFollowsForEventHandler(
         IEventRepository events,
         IParticipantRepository participants,
         IFollowRepository follows,
         IUserRepository users,
-        IUserNotificationRepository notifications,
-        ICurrentUserAccessor currentUserAccessor)
+        IUserNotificationRepository notifications)
     {
         _events = events;
         _participants = participants;
         _follows = follows;
         _users = users;
         _notifications = notifications;
-        _currentUserAccessor = currentUserAccessor;
     }
 
-    public async Task<EligibleFollowsResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
+    public async Task<EligibleFollowsResponse> HandleAsync(string currentUserId, string idOrSlug, CancellationToken ct = default)
     {
-        var currentUserId = _currentUserAccessor.GetUserId();
-        if (string.IsNullOrEmpty(currentUserId))
-            throw Errors.AccountRequired();
-
         var evt = await _events.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
         if (evt.CreatorUserId != currentUserId)

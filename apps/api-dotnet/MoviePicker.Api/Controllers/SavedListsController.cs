@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
-using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.SavedLists;
 using MoviePicker.Api.Infrastructure.Web;
 
@@ -24,13 +23,9 @@ public sealed class SavedListsController : ControllerBase
         [FromQuery] string? sourceType,
         [FromQuery] string? sourceId,
         [FromServices] IListSavedListsHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Ok(await handler.HandleAsync(userId, sourceType, sourceId, ct));
     }
 
@@ -45,13 +40,9 @@ public sealed class SavedListsController : ControllerBase
     public async Task<IActionResult> Save(
         [FromBody] SaveListRequest request,
         [FromServices] ISaveListHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         var saving = await handler.HandleAsync(userId, request, ct);
         return saving.Created ? Created(string.Empty, saving.Summary) : Ok(saving.Summary);
     }
@@ -63,13 +54,9 @@ public sealed class SavedListsController : ControllerBase
     public async Task<IActionResult> Get(
         string id,
         [FromServices] IGetSavedListHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Ok(await handler.HandleAsync(userId, id, ct));
     }
 
@@ -79,13 +66,9 @@ public sealed class SavedListsController : ControllerBase
     public async Task<IActionResult> Delete(
         string id,
         [FromServices] IUnsaveListHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         await handler.HandleAsync(userId, id, ct);
         return NoContent();
     }
@@ -101,13 +84,9 @@ public sealed class SavedListsController : ControllerBase
         string id,
         [FromBody] CopySavedListRequest request,
         [FromServices] ICopySavedListHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Created(string.Empty, await handler.HandleAsync(userId, id, request, ct));
     }
 }

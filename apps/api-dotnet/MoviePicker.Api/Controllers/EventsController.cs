@@ -38,11 +38,9 @@ public sealed class EventsController : ControllerBase
     public async Task<IActionResult> Create(
         [FromBody] CreateEventRequest request,
         [FromServices] ICreateEventHandler handler,
+        [CurrentUserId] string creatorUserId,
         CancellationToken ct)
     {
-        if (!User.TryGetUserId(out var creatorUserId))
-            return Unauthorized();
-
         var result = await handler.HandleAsync(request, creatorUserId, ct);
         return CreatedAtAction(nameof(GetBySlug), new { idOrSlug = result.Slug }, result);
     }
@@ -57,11 +55,9 @@ public sealed class EventsController : ControllerBase
         [FromQuery] int? limit,
         [FromQuery] int? offset,
         [FromQuery] string? q,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
-
         var result = await handler.HandleAsync(userId, scope, limit, offset, q, ct);
         return Ok(result);
     }
@@ -131,11 +127,9 @@ public sealed class EventsController : ControllerBase
         string idOrSlug,
         [FromBody] JoinEventRequest request,
         [FromServices] IJoinEventHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
-
         var result = await handler.HandleAsync(idOrSlug, request, userId, ct);
 
         if (result.IsNew)
@@ -270,12 +264,10 @@ public sealed class EventsController : ControllerBase
     public async Task<IActionResult> GetEligibleFollows(
         string idOrSlug,
         [FromServices] IGetEligibleFollowsForEventHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        if (!User.TryGetUserId(out _))
-            return Unauthorized();
-
-        var result = await handler.HandleAsync(idOrSlug, ct);
+        var result = await handler.HandleAsync(userId, idOrSlug, ct);
         return Ok(result);
     }
 
@@ -293,12 +285,10 @@ public sealed class EventsController : ControllerBase
         string idOrSlug,
         [FromBody] InviteUserRequest request,
         [FromServices] IInviteUserHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        if (!User.TryGetUserId(out _))
-            return Unauthorized();
-
-        var result = await handler.HandleAsync(idOrSlug, request, ct);
+        var result = await handler.HandleAsync(userId, idOrSlug, request, ct);
         return Created(string.Empty, result);
     }
 
@@ -313,9 +303,10 @@ public sealed class EventsController : ControllerBase
     public async Task<IActionResult> Delete(
         string idOrSlug,
         [FromServices] IDeleteEventHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var result = await handler.HandleAsync(idOrSlug, ct);
+        var result = await handler.HandleAsync(userId, idOrSlug, ct);
         return Ok(result);
     }
 }

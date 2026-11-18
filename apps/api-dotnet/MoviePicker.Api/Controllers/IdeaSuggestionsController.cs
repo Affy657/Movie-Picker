@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
-using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.IdeaSuggestions;
 using MoviePicker.Api.Infrastructure.Web;
 
@@ -29,13 +28,9 @@ public sealed class IdeaSuggestionsController : ControllerBase
     public async Task<IActionResult> Create(
         [FromBody] CreateIdeaSuggestionRequest request,
         [FromServices] ICreateIdeaSuggestionHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         await handler.HandleAsync(userId, request, ct);
         return NoContent();
     }

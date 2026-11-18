@@ -39,24 +39,10 @@ public sealed class NotificationsControllerTests
         var handler = new Mock<ISubscribePushHandler>();
         var request = new SubscribePushRequest { Endpoint = "https://push/x", P256dh = "k", Auth = "a" };
 
-        var result = await Controller("u1").Subscribe(request, handler.Object, CancellationToken.None);
+        var result = await Controller("u1").Subscribe(request, handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
         handler.Verify(h => h.HandleAsync("u1", request, It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task Subscribe_Anonymous_ReturnsUnauthorized()
-    {
-        var handler = new Mock<ISubscribePushHandler>();
-
-        var result = await Controller(null).Subscribe(
-            new SubscribePushRequest { Endpoint = "e", P256dh = "k", Auth = "a" }, handler.Object, CancellationToken.None);
-
-        Assert.IsType<UnauthorizedResult>(result);
-        handler.Verify(
-            h => h.HandleAsync(It.IsAny<string>(), It.IsAny<SubscribePushRequest>(), It.IsAny<CancellationToken>()),
-            Times.Never);
     }
 
     [Fact]
@@ -65,7 +51,7 @@ public sealed class NotificationsControllerTests
         var handler = new Mock<IUnsubscribePushHandler>();
         var request = new UnsubscribePushRequest { Endpoint = "https://push/x" };
 
-        var result = await Controller("u1").Unsubscribe(request, handler.Object, CancellationToken.None);
+        var result = await Controller("u1").Unsubscribe(request, handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
         handler.Verify(h => h.HandleAsync("u1", "https://push/x", It.IsAny<CancellationToken>()), Times.Once);
@@ -76,19 +62,10 @@ public sealed class NotificationsControllerTests
     {
         var handler = new Mock<IGetNotificationPreferencesHandler>();
 
-        var result = await Controller("u1").GetPreferences(handler.Object, CancellationToken.None);
+        var result = await Controller("u1").GetPreferences(handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
         handler.Verify(h => h.HandleAsync("u1", It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task GetPreferences_Anonymous_ReturnsUnauthorized()
-    {
-        var result = await Controller(null).GetPreferences(
-            new Mock<IGetNotificationPreferencesHandler>().Object, CancellationToken.None);
-
-        Assert.IsType<UnauthorizedResult>(result);
     }
 
     [Fact]
@@ -97,7 +74,7 @@ public sealed class NotificationsControllerTests
         var handler = new Mock<IPatchNotificationPreferencesHandler>();
         var request = new PatchNotificationPreferencesRequest();
 
-        var result = await Controller("u1").PatchPreferences(request, handler.Object, CancellationToken.None);
+        var result = await Controller("u1").PatchPreferences(request, handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
         handler.Verify(h => h.HandleAsync("u1", request, It.IsAny<CancellationToken>()), Times.Once);
@@ -108,18 +85,10 @@ public sealed class NotificationsControllerTests
     {
         var handler = new Mock<IGetInboxHandler>();
 
-        var result = await Controller("u1").GetInbox(handler.Object, null, null, CancellationToken.None);
+        var result = await Controller("u1").GetInbox(handler.Object, null, null, "u1", CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
         handler.Verify(h => h.HandleAsync("u1", null, null, It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task MarkAllRead_Anonymous_ReturnsUnauthorized()
-    {
-        var result = await Controller(null).MarkAllRead(new Mock<IMarkAllReadHandler>().Object, CancellationToken.None);
-
-        Assert.IsType<UnauthorizedResult>(result);
     }
 
     [Fact]
@@ -127,7 +96,7 @@ public sealed class NotificationsControllerTests
     {
         var handler = new Mock<IMarkAllReadHandler>();
 
-        var result = await Controller("u1").MarkAllRead(handler.Object, CancellationToken.None);
+        var result = await Controller("u1").MarkAllRead(handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
         handler.Verify(h => h.HandleAsync("u1", It.IsAny<CancellationToken>()), Times.Once);

@@ -21,21 +21,19 @@ public sealed class InviteUserHandlerTests
     private readonly Mock<IUserNotificationRepository> _notifications = new();
     private readonly Mock<IPushSubscriptionRepository> _pushSubs = new();
     private readonly Mock<IPushNotificationSender> _pushSender = new();
-    private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<INotificationDedupRepository> _dedup = new();
     private readonly RecordingSharedQuota _quota = new();
     private readonly InviteUserHandler _sut;
 
     public InviteUserHandlerTests()
     {
-        _currentUser.Setup(c => c.GetUserId()).Returns(HostId);
         _dedup.Setup(d => d.TryClaimAsync(
                 It.IsAny<string>(), It.IsAny<UserNotificationType>(), It.IsAny<string>(),
                 It.IsAny<NotificationDedupChannel>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         _sut = new InviteUserHandler(
             _events.Object, _participants.Object, _follows.Object, _users.Object,
-            _notifications.Object, _pushSubs.Object, _pushSender.Object, _currentUser.Object, _dedup.Object, _quota, TimeProvider.System);
+            _notifications.Object, _pushSubs.Object, _pushSender.Object, _dedup.Object, _quota, TimeProvider.System);
     }
 
     private static Event Evt(DateTimeOffset? closedAt = null) =>
@@ -46,20 +44,13 @@ public sealed class InviteUserHandlerTests
 
     private static InviteUserRequest Request() => new() { TargetUserId = TargetId };
 
-    [Fact]
-    public async Task HandleAsync_Anonymous_Throws()
-    {
-        _currentUser.Setup(c => c.GetUserId()).Returns((string?)null);
-
-        await Assert.ThrowsAsync<UnauthorizedException>(() => _sut.HandleAsync("evt1", Request()));
-    }
 
     [Fact]
     public async Task HandleAsync_EventNotFound_Throws()
     {
         _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
-        await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("evt1", Request()));
+        await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(HostId, "evt1", Request()));
     }
 
     [Fact]
@@ -67,7 +58,7 @@ public sealed class InviteUserHandlerTests
     {
         SetupEvent(Evt(closedAt: DateTimeOffset.UtcNow.AddDays(-1)));
 
-        await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request()));
+        await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync(HostId, "evt1", Request()));
     }
 
     [Fact]
@@ -75,7 +66,7 @@ public sealed class InviteUserHandlerTests
     {
         SetupEvent(new Event { Id = "evt1", CreatorUserId = "someone-else" });
 
-        await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1", Request()));
+        await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync(HostId, "evt1", Request()));
     }
 
     [Fact]
@@ -84,7 +75,7 @@ public sealed class InviteUserHandlerTests
         SetupEvent(Evt());
         _follows.Setup(f => f.IsFollowingAsync(HostId, TargetId, It.IsAny<CancellationToken>())).ReturnsAsync(false);
 
-        await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", Request()));
+        await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(HostId, "evt1", Request()));
 
         Assert.Empty(_quota.Calls);
     }
@@ -97,7 +88,7 @@ public sealed class InviteUserHandlerTests
         _participants.Setup(p => p.FindByEventAndUserIdAsync("evt1", TargetId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Participant { Id = "p1", EventId = "evt1", UserId = TargetId });
 
-        await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request()));
+        await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync(HostId, "evt1", Request()));
     }
 
     [Fact]
@@ -109,7 +100,7 @@ public sealed class InviteUserHandlerTests
         _notifications.Setup(n => n.ExistsAsync(TargetId, UserNotificationType.EventInvitation, "evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request()));
+        await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync(HostId, "evt1", Request()));
     }
 
     [Fact]
@@ -125,7 +116,7 @@ public sealed class InviteUserHandlerTests
                 NotificationDedupChannel.InApp, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
-        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request()));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync(HostId, "evt1", Request()));
 
         Assert.Equal(ErrorCodes.InvitationAlreadySent, ex.Reason);
         _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -142,7 +133,7 @@ public sealed class InviteUserHandlerTests
         _notifications.Setup(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new TimeoutException("store down"));
 
-        await Assert.ThrowsAsync<TimeoutException>(() => _sut.HandleAsync("evt1", Request()));
+        await Assert.ThrowsAsync<TimeoutException>(() => _sut.HandleAsync(HostId, "evt1", Request()));
 
         _dedup.Verify(d => d.ReleaseAsync(
             TargetId, UserNotificationType.EventInvitation, "evt1",
@@ -160,7 +151,7 @@ public sealed class InviteUserHandlerTests
         _users.Setup(u => u.GetByIdAsync(TargetId, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new TimeoutException("store down"));
 
-        await Assert.ThrowsAsync<TimeoutException>(() => _sut.HandleAsync("evt1", Request()));
+        await Assert.ThrowsAsync<TimeoutException>(() => _sut.HandleAsync(HostId, "evt1", Request()));
 
         _dedup.Verify(d => d.ReleaseAsync(
             It.IsAny<string>(), It.IsAny<UserNotificationType>(), It.IsAny<string>(),
@@ -178,7 +169,7 @@ public sealed class InviteUserHandlerTests
         _users.Setup(u => u.GetByIdAsync(HostId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = HostId, Handle = "host", DisplayName = "Host" });
 
-        var result = await _sut.HandleAsync("evt1", Request());
+        var result = await _sut.HandleAsync(HostId, "evt1", Request());
 
         Assert.Equal("Invitation sent", result.Message);
         _notifications.Verify(n => n.AddAsync(
@@ -201,7 +192,7 @@ public sealed class InviteUserHandlerTests
         _pushSubs.Setup(p => p.ListByUserIdAsync(TargetId, It.IsAny<CancellationToken>()))
             .ReturnsAsync([new PushSubscription { UserId = TargetId, Endpoint = "https://push/x" }]);
 
-        await _sut.HandleAsync("evt1", Request());
+        await _sut.HandleAsync(HostId, "evt1", Request());
 
         _pushSender.Verify(
             s => s.SendAsync(It.Is<PushSubscription>(x => x.UserId == TargetId), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()),
@@ -229,7 +220,7 @@ public sealed class InviteUserHandlerTests
                 }
             });
 
-        var result = await _sut.HandleAsync("evt1", Request());
+        var result = await _sut.HandleAsync(HostId, "evt1", Request());
 
         Assert.Equal("Invitation sent", result.Message);
         _pushSender.Verify(s => s.SendAsync(It.IsAny<PushSubscription>(), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -255,7 +246,7 @@ public sealed class InviteUserHandlerTests
     {
         GivenAnEligibleTarget();
 
-        await _sut.HandleAsync("evt1", Request());
+        await _sut.HandleAsync(HostId, "evt1", Request());
 
         var call = Assert.Single(_quota.Calls);
         Assert.Equal(InviteUserHandler.PairQuotaScope, call.Scope);
@@ -270,7 +261,7 @@ public sealed class InviteUserHandlerTests
         GivenAnEligibleTarget();
         _quota.Allows = false;
 
-        var ex = await Assert.ThrowsAsync<TooManyRequestsException>(() => _sut.HandleAsync("evt1", Request()));
+        var ex = await Assert.ThrowsAsync<TooManyRequestsException>(() => _sut.HandleAsync(HostId, "evt1", Request()));
 
         Assert.Equal(ErrorCodes.InvitationLimitReached, ex.Reason);
         _dedup.Verify(d => d.TryClaimAsync(
@@ -295,7 +286,7 @@ public sealed class InviteUserHandlerTests
             });
         _quota.Allows = false;
 
-        var ex = await Assert.ThrowsAsync<TooManyRequestsException>(() => _sut.HandleAsync("evt1", Request()));
+        var ex = await Assert.ThrowsAsync<TooManyRequestsException>(() => _sut.HandleAsync(HostId, "evt1", Request()));
 
         Assert.Equal(ErrorCodes.InvitationLimitReached, ex.Reason);
     }

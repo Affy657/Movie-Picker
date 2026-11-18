@@ -3,9 +3,8 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.FinishedEvents;
 using MoviePicker.Api.Application.UseCases.RecurringEvents;
-using MoviePicker.Api.Domain;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
-using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.CloseEvent;
 
@@ -39,12 +38,12 @@ public sealed class CloseEventHandler : ICloseEventHandler
 
     public async Task<CloseEventResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
     {
-        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
-
-        var token = _hostTokenAccessor.GetHostToken();
-        var userId = _currentUserAccessor.GetUserId();
-        if (!EventHost.IsHost(evt, token, userId))
-            throw Errors.HostOnly();
+        var evt = await HostedEvent.LoadForHostEvenFinishedAsync(
+            _eventRepository,
+            _hostTokenAccessor,
+            _currentUserAccessor.GetUserId(),
+            idOrSlug,
+            ct);
 
         if (evt.ClosedAt.HasValue)
         {

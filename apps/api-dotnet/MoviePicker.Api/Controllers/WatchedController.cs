@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
-using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Watched;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Web;
@@ -24,13 +23,9 @@ public sealed class WatchedController : ControllerBase
     public async Task<IActionResult> Mark(
         [FromBody] MarkWatchedRequest request,
         [FromServices] IMarkWatchedHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Ok(await handler.HandleAsync(userId, request, ct));
     }
 
@@ -40,14 +35,10 @@ public sealed class WatchedController : ControllerBase
     public async Task<IActionResult> GetStatus(
         int tmdbId,
         [FromServices] IGetWatchedStatusHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct,
         [FromQuery] MovieMediaType mediaType = MovieMediaType.Movie)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Ok(await handler.HandleAsync(userId, tmdbId, mediaType, ct));
     }
 
@@ -60,14 +51,10 @@ public sealed class WatchedController : ControllerBase
         int tmdbId,
         [FromBody] SetWatchedRatingRequest request,
         [FromServices] ISetWatchedRatingHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct,
         [FromQuery] MovieMediaType mediaType = MovieMediaType.Movie)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Ok(await handler.HandleAsync(userId, tmdbId, mediaType, request.Value, ct));
     }
 
@@ -77,14 +64,10 @@ public sealed class WatchedController : ControllerBase
     public async Task<IActionResult> Unmark(
         int tmdbId,
         [FromServices] IUnmarkWatchedHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct,
         [FromQuery] MovieMediaType mediaType = MovieMediaType.Movie)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         await handler.HandleAsync(userId, tmdbId, mediaType, ct);
         return NoContent();
     }

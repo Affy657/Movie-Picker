@@ -1,5 +1,4 @@
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -11,7 +10,7 @@ internal static class MovieActionContext
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
         IParticipantRepository participantRepository,
-        ICurrentUserAccessor currentUserAccessor,
+        string? currentUserId,
         DateTimeOffset utcNow,
         string idOrSlug,
         string movieId,
@@ -36,7 +35,6 @@ internal static class MovieActionContext
         if (participant is null)
             throw Errors.InvalidParticipant();
 
-        var currentUserId = currentUserAccessor.GetUserId();
         if (string.IsNullOrEmpty(currentUserId) || participant.UserId != currentUserId)
             throw ownershipError();
 
@@ -58,11 +56,11 @@ internal static class MovieActionContext
             throw Errors.InvalidParticipant();
     }
 
-    public static async Task<(Event Event, Movie Movie, string? CurrentUserId, bool IsHost)> ResolveMovieForHostActionAsync(
+    public static async Task<(Event Event, Movie Movie, bool IsHost)> ResolveMovieForHostActionAsync(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
         IHostTokenAccessor hostTokenAccessor,
-        ICurrentUserAccessor currentUserAccessor,
+        string? currentUserId,
         DateTimeOffset utcNow,
         string idOrSlug,
         string movieId,
@@ -81,9 +79,8 @@ internal static class MovieActionContext
         if (movie is null)
             throw Errors.MovieNotFound();
 
-        var currentUserId = currentUserAccessor.GetUserId();
-        var isHost = EventHost.IsHost(evt, hostTokenAccessor.GetHostToken(), currentUserId);
+        var isHost = HostedEvent.IsHost(evt, hostTokenAccessor, currentUserId);
 
-        return (evt, movie, currentUserId, isHost);
+        return (evt, movie, isHost);
     }
 }

@@ -23,6 +23,13 @@ public sealed class MoviePickerExceptionFilter : IExceptionFilter
         if (context.Exception is OperationCanceledException && http.RequestAborted.IsCancellationRequested)
             return;
 
+        if (context.Exception is MissingUserIdentityException)
+        {
+            context.Result = new UnauthorizedResult();
+            context.ExceptionHandled = true;
+            return;
+        }
+
         if (context.Exception is MoviePickerException ex)
         {
             var statusCode = ToHttpStatus(ex.Kind);
