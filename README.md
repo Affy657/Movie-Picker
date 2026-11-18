@@ -85,8 +85,11 @@ flowchart LR
   CR --> Resend[Resend]
 ```
 
-L'API expose `/api/v1`, son contrat est exporté vers `artifacts/openapi-v1.json` et le front en
-dérive ses types : une route retirée côté API casse la compilation du front. L'authentification
+L'API expose `/api/v1`, son contrat est exporté vers `artifacts/openapi-v1.json` et décrit le JSON
+qu'elle écrit vraiment (propriétés requises, enveloppe d'erreur, énumérations). Le front en dérive
+la liste des routes qu'il peut appeler et le type des réponses simulées de ses tests, et confronte
+ses propres types de réponse au contrat : une route retirée côté API casse la compilation du
+front. L'authentification
 passe par cookie de session, les actions d'hôte par un jeton envoyé dans l'en-tête `X-Host-Token`.
 
 > **Le dossier technique du projet est publié en ligne, sur
@@ -129,10 +132,13 @@ appellent les mêmes scripts, chaque outil n'est donc épinglé qu'à un endroit
 Ce que la chaîne empêche, plutôt que ce qu'elle mesure :
 
 - **`check:architecture`** refuse un commentaire dans le code, un `using` qui traverse une couche de
-  l'hexagone, un import de `shared/` vers une feature, une valeur littérale d'espacement, de taille
-  de police, de couleur ou de `z-index` dans un CSS module, un point de rupture hors de l'échelle
-  fermée, un `<dialog>` écrit ailleurs que dans `Modal`, une classe `btn` posée à la main, et une
-  cible tactile sous 44 px.
+  l'hexagone (`using` implicites du SDK Web compris), une écriture dans une soirée qui ne fait pas
+  avancer son compteur `writeSeq`, un import de `shared/` vers une feature, une dépendance entre
+  features absente de `FEATURE_EDGES`, une valeur littérale d'espacement, de taille de police, de
+  couleur ou de `z-index` dans un CSS module, un point de rupture hors de l'échelle fermée, un
+  `<dialog>` écrit ailleurs que dans `Modal`, une classe `btn` posée à la main, et une cible tactile
+  sous 44 px. Chaque règle vit dans un module de `scripts/architecture/`, avec un cas qui doit
+  échouer et un qui doit passer.
 - **Les tests d'intégration tournent contre une vraie MongoDB** en replica set, seul chemin qui
   exécute les adaptateurs Mongo et les transactions. Un inventaire compare les index réellement
   créés à la liste attendue : l'expiration des sessions, des jetons de réinitialisation et des
@@ -150,8 +156,9 @@ Ce que la chaîne empêche, plutôt que ce qu'elle mesure :
 
 Deux workflows GitHub Actions, séparés à dessein. `.github/workflows/ci-cd.yml` joue les portes de
 qualité sur `master` et sur les pull requests : Gitleaks, le lint des workflows eux-mêmes
-(`actionlint`, `shellcheck`, `zizmor`), le lint et le build des deux applications, l'audit des
-dépendances npm et NuGet, les suites de tests, les E2E et le Quality Gate SonarCloud.
+(`actionlint`, `shellcheck`, `zizmor`), le lint et le build des deux applications, la validation
+Terraform, l'audit des dépendances npm et NuGet, les suites de tests, les E2E sur MongoDB et le
+Quality Gate SonarCloud.
 
 `.github/workflows/deploy.yml` met en production sur déclenchement : un push sur `master` ne
 déploie rien. Le déclenchement choisit son étape (la recette `staging.movie-picker.fr`, puis la
@@ -164,11 +171,12 @@ prêt et part en production dans la foulée, seul. Sa version se calcule à part
 (une nouveauté donne une version mineure, un correctif une version de correctif), et le tag comme
 la release GitHub ne sont créés qu'une fois la production à jour.
 
-Trois choix structurent la mise en production :
+Quatre choix structurent la mise en production :
 
 - **Rien ne part sans geste explicite**, que donne la session qui livre ou la passe de maintenance
-  quotidienne, si bien que la production rattrape `master` dans la journée. Un garde-fou final vérifie que chaque cible demandée est réellement déployée, parce qu'un job de
-  déploiement empêché par une porte rouge est *sauté* et non *en échec* : le run resterait vert.
+  quotidienne, si bien que la production rattrape `master` dans la journée. Un garde-fou final
+  vérifie que chaque cible demandée est réellement déployée, parce qu'un job de déploiement empêché
+  par une porte rouge est *sauté* et non *en échec* : le run resterait vert.
 - **L'API n'est jamais promue avant d'être vérifiée.** Chaque révision est déployée sans trafic,
   éprouvée sur son URL taguée, et ne reçoit d'utilisateurs qu'une fois ses sondes vertes. Il n'y a
   donc pas de retour arrière à faire sur une révision défaillante, elle n'a servi personne.
