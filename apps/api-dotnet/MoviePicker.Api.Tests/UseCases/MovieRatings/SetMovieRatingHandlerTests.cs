@@ -21,12 +21,10 @@ public sealed class SetMovieRatingHandlerTests
     private readonly Mock<IMovieRepository> _movieRepo = new();
     private readonly Mock<IParticipantRepository> _participantRepo = new();
     private readonly Mock<IMovieRatingRepository> _ratingRepo = new();
-    private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly SetMovieRatingHandler _sut;
 
     public SetMovieRatingHandlerTests()
     {
-        _currentUser.Setup(u => u.GetUserId()).Returns(OwnerUserId);
         _ratingRepo
             .Setup(r => r.UpsertAsync(It.IsAny<MovieRating>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((MovieRating r, CancellationToken _) => r with { Id = "rating-1" });
@@ -35,7 +33,6 @@ public sealed class SetMovieRatingHandlerTests
             _movieRepo.Object,
             _participantRepo.Object,
             _ratingRepo.Object,
-            _currentUser.Object,
             TimeProvider.System);
     }
 
@@ -86,7 +83,7 @@ public sealed class SetMovieRatingHandlerTests
     {
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("ghost", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
-        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("ghost", WinnerMovieId, Request()));
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(OwnerUserId, "ghost", WinnerMovieId, Request()));
         Assert.Equal(ErrorCodes.EventNotFound, ex.Reason);
     }
 
@@ -99,7 +96,7 @@ public sealed class SetMovieRatingHandlerTests
         };
         Arrange(evt, MovieIn(evt, WinnerMovieId), ParticipantIn(evt));
 
-        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("soiree", WinnerMovieId, Request()));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync(OwnerUserId, "soiree", WinnerMovieId, Request()));
         Assert.Equal(ErrorCodes.RatingOnlyOnceStarted, ex.Reason);
         _ratingRepo.Verify(r => r.UpsertAsync(It.IsAny<MovieRating>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -110,7 +107,7 @@ public sealed class SetMovieRatingHandlerTests
         var evt = FinishedEventWithWinner();
         Arrange(evt, null, ParticipantIn(evt));
 
-        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("soiree", "mov-ghost", Request()));
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(OwnerUserId, "soiree", "mov-ghost", Request()));
         Assert.Equal(ErrorCodes.MovieNotFound, ex.Reason);
     }
 
@@ -120,7 +117,7 @@ public sealed class SetMovieRatingHandlerTests
         var evt = FinishedEventWithWinner();
         Arrange(evt, MovieIn(evt, OtherMovieId), ParticipantIn(evt));
 
-        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("soiree", OtherMovieId, Request()));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync(OwnerUserId, "soiree", OtherMovieId, Request()));
         Assert.Equal(ErrorCodes.RatingOnlyChosenMovie, ex.Reason);
     }
 
@@ -130,7 +127,7 @@ public sealed class SetMovieRatingHandlerTests
         var evt = FinishedEventWithWinner();
         Arrange(evt, MovieIn(evt, WinnerMovieId), null);
 
-        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("soiree", WinnerMovieId, Request()));
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(OwnerUserId, "soiree", WinnerMovieId, Request()));
         Assert.Equal(ErrorCodes.InvalidParticipant, ex.Reason);
     }
 
@@ -140,7 +137,7 @@ public sealed class SetMovieRatingHandlerTests
         var evt = FinishedEventWithWinner();
         Arrange(evt, MovieIn(evt, WinnerMovieId), ParticipantIn(evt, userId: "user-other"));
 
-        var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("soiree", WinnerMovieId, Request()));
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync(OwnerUserId, "soiree", WinnerMovieId, Request()));
         Assert.Equal(ErrorCodes.RatingOwnParticipationOnly, ex.Reason);
     }
 
@@ -152,7 +149,7 @@ public sealed class SetMovieRatingHandlerTests
         var evt = FinishedEventWithWinner();
         Arrange(evt, MovieIn(evt, WinnerMovieId), ParticipantIn(evt));
 
-        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("soiree", WinnerMovieId, Request(value)));
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(OwnerUserId, "soiree", WinnerMovieId, Request(value)));
         Assert.Equal(ErrorCodes.RatingOutOfRange, ex.Reason);
         _ratingRepo.Verify(r => r.UpsertAsync(It.IsAny<MovieRating>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -163,7 +160,7 @@ public sealed class SetMovieRatingHandlerTests
         var evt = FinishedEventWithWinner();
         Arrange(evt, MovieIn(evt, WinnerMovieId), ParticipantIn(evt));
 
-        var res = await _sut.HandleAsync("soiree", WinnerMovieId, Request(7));
+        var res = await _sut.HandleAsync(OwnerUserId, "soiree", WinnerMovieId, Request(7));
 
         Assert.Equal(ParticipantId, res.ParticipantId);
         Assert.Equal(7, res.Value);
@@ -187,7 +184,7 @@ public sealed class SetMovieRatingHandlerTests
         };
         Arrange(underway, MovieIn(underway, WinnerMovieId), ParticipantIn(underway));
 
-        var res = await _sut.HandleAsync("soiree", WinnerMovieId, Request(9));
+        var res = await _sut.HandleAsync(OwnerUserId, "soiree", WinnerMovieId, Request(9));
 
         Assert.Equal(9, res.Value);
     }
@@ -203,7 +200,7 @@ public sealed class SetMovieRatingHandlerTests
         };
         Arrange(pastNight, MovieIn(pastNight, WinnerMovieId), ParticipantIn(pastNight));
 
-        var res = await _sut.HandleAsync("soiree", WinnerMovieId, Request(10));
+        var res = await _sut.HandleAsync(OwnerUserId, "soiree", WinnerMovieId, Request(10));
 
         Assert.Equal(10, res.Value);
     }

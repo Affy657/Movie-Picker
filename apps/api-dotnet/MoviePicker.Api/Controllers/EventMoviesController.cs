@@ -213,9 +213,10 @@ public sealed class EventMoviesController : ControllerBase
         string movieId,
         [FromBody] SetMovieRatingRequest request,
         [FromServices] ISetMovieRatingHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var res = await handler.HandleAsync(idOrSlug, movieId, request, ct);
+        var res = await handler.HandleAsync(userId, idOrSlug, movieId, request, ct);
         return Ok(res);
     }
 
@@ -231,9 +232,10 @@ public sealed class EventMoviesController : ControllerBase
         string movieId,
         [FromBody] DeleteMovieRatingRequest request,
         [FromServices] IDeleteMovieRatingHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        await handler.HandleAsync(idOrSlug, movieId, request.ParticipantId, ct);
+        await handler.HandleAsync(userId, idOrSlug, movieId, request.ParticipantId, ct);
         return NoContent();
     }
 
