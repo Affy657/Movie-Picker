@@ -9,13 +9,6 @@ dialog.modal {
   height: var(--sheet-max-height);
 }
 
-.scroll {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
 .body {
   display: flex;
   flex-direction: column;

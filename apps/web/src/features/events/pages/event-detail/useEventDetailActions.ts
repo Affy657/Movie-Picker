@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ROUTES } from '@/app/routes';
 import { removeEventParticipant, postEventClose } from '@/features/events/api/eventsApi';
-import { deleteMoviePitchNote, removeMovieFromEvent } from '@/features/movies/api/moviesApi';
+import { deleteMoviePitchNote, removeMovieFromEvent } from '@/features/events/api/eventMoviesApi';
 import { removeStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { getErrorMessage } from '@/shared/api/apiError';

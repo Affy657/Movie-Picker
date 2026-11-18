@@ -13,13 +13,13 @@ import {
   removeMovieFromEvent,
   setMovieWheelExclusion,
   unmarkMovieAsSeen,
-} from '@/features/movies/api/moviesApi';
+} from '@/features/events/api/eventMoviesApi';
 
 vi.mock('@/features/events/hooks/useEventDetailPage', () => ({ useEventDetailPage: vi.fn() }));
 vi.mock('@/features/events/pages/event-detail/useEventMovieVoting', () => ({
   useEventMovieVoting: vi.fn(),
 }));
-vi.mock('@/features/movies/api/moviesApi', () => ({
+vi.mock('@/features/events/api/eventMoviesApi', () => ({
   markMovieAsSeen: vi.fn(),
   unmarkMovieAsSeen: vi.fn(),
   removeMovieFromEvent: vi.fn(),

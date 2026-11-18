@@ -11,7 +11,7 @@ import {
 import type { EventData } from '@/shared/types/event';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useEvent } from '@/features/events/hooks/useEvent';
-import { useMovies } from '@/features/movies/hooks/useMovies';
+import { useMovies } from '@/features/events/hooks/useMovies';
 import { invalidateWatched } from '@/features/movies/hooks/invalidateWatched';
 import { useEventLive } from '@/features/events/hooks/useEventLive';
 import { useEventLiveStream } from '@/features/events/hooks/useEventLiveStream';

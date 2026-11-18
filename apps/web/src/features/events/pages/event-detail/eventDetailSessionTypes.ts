@@ -1,6 +1,6 @@
 import type { Dispatch, RefObject, SetStateAction } from 'react';
 import type { useEventWheel } from '@/features/events/hooks/useEventWheel';
-import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
+import type { MovieCardSelection } from '@/features/events/components/eventMovieCardParts';
 import type { MovieData } from '@/shared/types/movie';
 
 export type ParticipantRef = { participantId: string; pseudo: string };

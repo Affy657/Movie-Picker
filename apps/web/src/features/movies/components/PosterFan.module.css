@@ -17,9 +17,10 @@
   position: absolute;
   top: var(--space-1);
   left: 0;
+  display: block;
   width: var(--fan-poster);
   aspect-ratio: 2 / 3;
-  object-fit: cover;
+  overflow: hidden;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-xs);
   background: var(--color-poster-placeholder);
@@ -68,6 +69,68 @@
   background: var(--color-success);
 }
 
+.spread {
+  position: relative;
+  flex-shrink: 0;
+  width: var(--fan-width, 8rem);
+  height: var(--fan-height, 7.25rem);
+}
+
+.spreadPoster {
+  position: absolute;
+  top: var(--space-2-5);
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--fan-poster-width, var(--space-16));
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-sunken);
+  box-shadow: var(--shadow-md);
+  color: var(--color-text-subtle);
+  transition: transform var(--duration-enter) var(--ease-reveal);
+}
+
+.center {
+  top: var(--space-0-5);
+  z-index: var(--z-raised);
+  transform: translateX(-50%) translateY(var(--fan-lift, 0));
+}
+
+.left {
+  transform: translateX(calc(-50% - var(--fan-spread, var(--space-7))))
+    rotate(calc(var(--fan-tilt, 9deg) * -1));
+}
+
+.right {
+  transform: translateX(calc(-50% + var(--fan-spread, var(--space-7))))
+    rotate(var(--fan-tilt, 9deg));
+}
+
+.spread[data-count='1'] .center,
+.spread[data-count='0'] .center {
+  top: var(--space-1-5);
+}
+
+.spreadEmpty {
+  border: 2px dashed var(--color-border);
+  background: transparent;
+  box-shadow: none;
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fallback {
+  flex-shrink: 0;
+}
+
 @media (max-width: 39.9375rem) {
   .fan {
     --fan-poster: var(--space-10);
@@ -76,5 +139,31 @@
 
   .md {
     --fan-poster: var(--space-12);
+  }
+}
+
+@media (max-width: 47.9375rem) {
+  .spread {
+    width: var(--fan-width, calc(var(--space-16) + var(--space-3)));
+    height: var(--fan-height, var(--space-24));
+  }
+
+  .spreadPoster {
+    width: var(--fan-poster-width, var(--space-12));
+  }
+
+  .left {
+    transform: translateX(calc(-50% - var(--fan-spread, var(--space-4))))
+      rotate(calc(var(--fan-tilt, 9deg) * -1));
+  }
+
+  .right {
+    display: var(--fan-third, none);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spreadPoster {
+    transition: none;
   }
 }

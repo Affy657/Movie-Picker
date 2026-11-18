@@ -184,13 +184,15 @@ function BrowseMovieRow({
         title={item.title}
         tmdbId={item.tmdbId}
         mediaType={item.mediaType}
-        isMine={!!onRemoveFromList}
-        isHost={false}
-        canRemove={!!onRemoveFromList}
-        onRemove={onRemoveFromList ?? (() => undefined)}
-        removeLabel={removeLabel ?? t('lists.page.removeFromList')}
-        removeAriaLabel={
-          removeAriaLabel ?? t('lists.page.removeFromListFor', { title: item.title })
+        remove={
+          onRemoveFromList
+            ? {
+                label: removeLabel ?? t('lists.page.removeFromList'),
+                ariaLabel:
+                  removeAriaLabel ?? t('lists.page.removeFromListFor', { title: item.title }),
+                onSelect: onRemoveFromList,
+              }
+            : undefined
         }
         inWatchlist={isLoggedIn ? inWatchlist : undefined}
         onToggleWatchlist={isLoggedIn ? onToggleWatchlist : undefined}

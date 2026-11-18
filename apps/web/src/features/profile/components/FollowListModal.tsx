@@ -1,11 +1,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
-import { X } from 'lucide-react';
-import IconButton from '@/shared/components/IconButton';
 import InlineError from '@/shared/components/InlineError';
 import { TabPanel } from '@/shared/components/Tabs';
-import Sheet from '@/shared/components/Sheet';
-import { useIsMobile } from '@/shared/hooks/useIsMobile';
+import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
@@ -25,8 +22,6 @@ import FollowListRow from './FollowListRow';
 import FollowListTabs, { FOLLOW_LIST_TABS_ID } from './FollowListTabs';
 import FollowSearchRow, { MIN_SEARCH_LENGTH } from './FollowSearchRow';
 import styles from './FollowListModal.module.css';
-import Modal from '@/shared/components/Modal';
-import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type Tab = 'following' | 'followers' | 'search';
 
@@ -74,7 +69,6 @@ export default function FollowListModal({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const [selectedTab, setSelectedTab] = useState<Tab>(initialTab);
   const [followError, setFollowError] = useState<string | null>(null);
@@ -202,25 +196,15 @@ export default function FollowListModal({
     </TabPanel>
   );
 
-  if (isMobile) {
-    return (
-      <Sheet open title={t('profile.follow.sheetTitle')} onClose={onClose}>
-        {tabs}
-        {panel}
-      </Sheet>
-    );
-  }
-
   return (
-    <Modal open onClose={onClose} size="sm" column ariaLabel={t('profile.follow.listTitle')}>
-      <div className={styles.header}>
-        {tabs}
-        <IconButton className={styles.closeButton} ariaLabel={t('common.close')} onClick={onClose}>
-          <X size={ICON_SIZE.xl} aria-hidden />
-        </IconButton>
-      </div>
-
+    <ResponsiveDialog
+      open
+      title={t('profile.follow.sheetTitle')}
+      onClose={onClose}
+      tabs={tabs}
+      flush
+    >
       {panel}
-    </Modal>
+    </ResponsiveDialog>
   );
 }

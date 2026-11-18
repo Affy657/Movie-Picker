@@ -12,21 +12,11 @@ import { stubHoverCapability } from '@/test-utils/matchMedia';
 
 type HarnessProps = Partial<Omit<CardKebabProps, 't'>>;
 
+const REMOVE = { label: 'Retirer', ariaLabel: 'Retirer Dune', onSelect: () => {} };
+
 function Harness(props: Readonly<HarnessProps>) {
   const { t } = useTranslation();
-  return (
-    <CardKebab
-      title="Dune"
-      tmdbId={438631}
-      mediaType="movie"
-      isMine
-      isHost={false}
-      canRemove={false}
-      onRemove={() => {}}
-      t={t}
-      {...props}
-    />
-  );
+  return <CardKebab title="Dune" tmdbId={438631} mediaType="movie" t={t} {...props} />;
 }
 
 function renderKebab(props: HarnessProps = {}) {
@@ -68,7 +58,7 @@ describe('CardKebab', () => {
   });
 
   it('offers only the Letterboxd link among the external links', async () => {
-    await openKebab({ onViewDetails: () => {}, canRemove: true });
+    await openKebab({ onViewDetails: () => {}, remove: REMOVE });
 
     const letterboxd = screen.getByRole('menuitem', { name: /letterboxd/i });
     expect(letterboxd).toHaveAttribute('href', 'https://letterboxd.com/tmdb/438631/');
@@ -82,7 +72,7 @@ describe('CardKebab', () => {
       inWatchlist: false,
       onProposeToEvent: () => {},
       wheelExclusion: { excluded: false, onToggle: () => {} },
-      canRemove: true,
+      remove: REMOVE,
     });
 
     expect(menuItemNames()).toEqual([
@@ -108,7 +98,7 @@ describe('CardKebab', () => {
   });
 
   it('is a shared menu: the arrows walk the items, Escape closes and gives the focus back', async () => {
-    const user = await openKebab({ onViewDetails: () => {}, canRemove: true });
+    const user = await openKebab({ onViewDetails: () => {}, remove: REMOVE });
     const menu = screen.getByRole('menu', { name: /plus d’actions/i });
     const items = screen.getAllByRole('menuitem');
     expect(menu).toContainElement(items[0]!);
@@ -169,6 +159,24 @@ describe('CardKebab', () => {
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
+  it('draws the remove action with the labels its context gives', async () => {
+    const onSelect = vi.fn();
+    const user = await openKebab({
+      remove: {
+        label: 'Retirer de la liste',
+        ariaLabel: 'Retirer « Dune » de la liste',
+        title: 'Vous retirez ce film pour tout le monde',
+        onSelect,
+      },
+    });
+
+    const item = screen.getByRole('menuitem', { name: 'Retirer « Dune » de la liste' });
+    expect(item).toHaveTextContent('Retirer de la liste');
+    expect(item).toHaveAttribute('title', 'Vous retirez ce film pour tout le monde');
+    await user.click(item);
+    expect(onSelect).toHaveBeenCalledTimes(1);
+  });
+
   it('closes the menu before running an action', async () => {
     const onViewDetails = vi.fn();
     const user = await openKebab({ onViewDetails });
@@ -207,10 +215,9 @@ function EventHarness({
   return (
     <MovieCardKebab
       movie={movie}
-      card={{ isMine: true, canRemove: true, hasDetails, openDetails: () => {} }}
+      card={{ hasDetails, openDetails: () => {} }}
       slotClassName="slot"
-      isHost={false}
-      onRemove={() => {}}
+      remove={REMOVE}
       onToggleWatchlist={onToggleWatchlist}
       t={t}
     />
@@ -266,10 +273,8 @@ function MovieCardKebabWithoutActions() {
   return (
     <MovieCardKebab
       movie={{ ...eventMovie, tmdbId: 0 }}
-      card={{ isMine: false, canRemove: false, hasDetails: false, openDetails: () => {} }}
+      card={{ hasDetails: false, openDetails: () => {} }}
       slotClassName="slot"
-      isHost={false}
-      onRemove={() => {}}
       t={t}
     />
   );

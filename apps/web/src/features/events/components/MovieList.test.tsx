@@ -2,7 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
 import userEvent from '@testing-library/user-event';
-import MovieList from '@/features/movies/components/MovieList';
+import MovieList from '@/features/events/components/MovieList';
 import type { MovieData, WatchProviderOffer } from '@/shared/types/movie';
 import { LocaleProvider } from '@/shared/i18n';
 import { QueryClientWrapper } from '@/test-utils/queryWrapper';

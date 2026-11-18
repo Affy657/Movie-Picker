@@ -1,23 +1,25 @@
-import SeenButton from '@/features/movies/components/SeenButton';
+import SeenButton from '@/features/events/components/SeenButton';
 import { memo } from 'react';
 import clsx from 'clsx';
 import { Film } from 'lucide-react';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import {
   MovieCardKebab,
+  PaidOfferChip,
+  WatchlistBadge,
+} from '@/features/movies/components/movieCardParts';
+import {
   CardNote,
   CardProposerFooter,
   CardSelectionOverlay,
   PosterDetailsTrigger,
-  PaidOfferChip,
   VoteBar,
-  WatchlistBadge,
   WinnerRibbon,
   isSelectable,
   useMovieCardState,
   type MovieCardCommonProps,
-} from '@/features/movies/components/movieCardParts';
-import cardPartsStyles from './movieCardParts.module.css';
+} from '@/features/events/components/eventMovieCardParts';
+import cardPartsStyles from './eventMovieCardParts.module.css';
 import Card from '@/shared/components/Card';
 import styles from './EventMovieCard.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -96,6 +98,7 @@ export const EventMovieCard = memo(function EventMovieCard({
     participantAvatars,
     ratingScale,
     refresh,
+    onRemove,
     onActionError,
     t,
   });
@@ -142,9 +145,8 @@ export const EventMovieCard = memo(function EventMovieCard({
           movie={m}
           card={s}
           slotClassName={styles.kebabSlot ?? ''}
-          isHost={isHost}
+          remove={s.kebabRemove}
           isInWatchlist={isInWatchlist}
-          onRemove={onRemove}
           onToggleWatchlist={onToggleWatchlist}
           onToggleWheelExclusion={onToggleWheelExclusion}
           t={t}

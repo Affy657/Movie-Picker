@@ -181,7 +181,7 @@ Feuille ancrée en bas, glissable : le geste est `useSheetDrag` (`shared/hooks/`
 
 ### ResponsiveDialog
 
-Le dialogue qui est une `Sheet` sur téléphone et une `Modal` `sm` en colonne sur grand écran, avec le même contenu : `open`, `title`, `onClose`, `footer`. Sur grand écran, le corps défile entre la barre de titre et le pied, que sépare un filet, et sans `footer` il n'y a pas de pied. C'est la note d'un film vu et la pioche dans la watchlist. Un dialogue dont l'en-tête change d'un format à l'autre (onglets à la place du titre, taille `xs`) garde sa propre bascule.
+Le dialogue qui est une `Sheet` sur téléphone et une `Modal` en colonne sur grand écran, avec le même contenu : `open`, `title`, `onClose`, `footer`, `detail` (sous le titre, dans les deux formats). `size` `sm` (défaut : `Modal` `sm`, `Sheet` `md`) ou `md` (`Modal` `md`, `Sheet` `lg`). Sur grand écran, le corps défile entre la barre de titre et le pied, que sépare un filet, et sans `footer` il n'y a pas de pied ; `flush` laisse au contenu ses marges et son pied, le corps restant la colonne qui défile. `tabs` pose des onglets à la place du titre sur grand écran (le titre nomme alors la fenêtre pour les lecteurs d'écran, la croix reste au bout de la barre) et en tête du corps sur téléphone, sous le titre. `sheetClassName` et `modalClassName` habillent chacun son format. C'est la note d'un film vu, la pioche dans la watchlist, la proposition d'un film à une soirée et la liste des abonnements. Un dialogue en taille `xs` garde sa propre bascule.
 
 ### Notice
 

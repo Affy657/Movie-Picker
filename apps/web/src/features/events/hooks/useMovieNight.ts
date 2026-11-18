@@ -1,16 +1,12 @@
 import { useCallback, useState } from 'react';
-import {
-  markMovieAsSeen,
-  removeMovieFromEvent,
-  setMovieWheelExclusion,
-  unmarkMovieAsSeen,
-} from '@/features/movies/api/moviesApi';
+import { removeMovieFromEvent, setMovieWheelExclusion } from '@/features/events/api/eventMoviesApi';
 import { useEventDetailPage } from '@/features/events/hooks/useEventDetailPage';
+import { useNightMovieActions } from '@/features/events/hooks/useNightMovieActions';
+import { isWheelLocked, wheelExclusionErrorKey } from '@/features/events/lib/nightRules';
 import { useEventMovieVoting } from '@/features/events/pages/event-detail/useEventMovieVoting';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useTranslation } from '@/shared/i18n';
 import type { MovieData, MovieMediaType } from '@/shared/types/movie';
-import { getParticipantId } from '@/shared/utils/movieParticipant';
 
 export interface MovieNightTarget {
   slug: string;
@@ -35,17 +31,20 @@ export function useMovieNight({ slug, tmdbId, mediaType }: MovieNightTarget) {
     setActionError,
     refreshAll,
   });
-  const [seenPending, setSeenPending] = useState(false);
   const [removePending, setRemovePending] = useState(false);
-
-  const isFinished = !!event?.isFinished;
-  const isHost = !!event?.isHost;
-  const wheelLocked = (event?.winners ?? []).length > 0;
-  const isMine = !!movie && !!participant && getParticipantId(movie) === participant.participantId;
-  const canAct = !isFinished && !!participant;
-  const canRemove = !!movie && !isFinished && !wheelLocked && (isMine || isHost);
-  const canToggleWheel = !!movie && isHost && !isFinished;
-  const iMarkedSeen = !!(participant && movie?.seenByPseudos?.includes(participant.pseudo));
+  const clearActionError = useCallback(() => setActionError(null), [setActionError]);
+  const actions = useNightMovieActions({
+    slug,
+    movie,
+    isFinished: !!event?.isFinished,
+    isHost: !!event?.isHost,
+    wheelLocked: isWheelLocked((event?.winners ?? []).map((w) => w.movieId)),
+    participantId: participant?.participantId ?? null,
+    participantPseudo: participant?.pseudo ?? null,
+    refresh: refreshAll,
+    onError: setActionError,
+    onActionStart: clearActionError,
+  });
 
   const vote = useCallback(
     (value: 1 | -1) => {
@@ -53,21 +52,6 @@ export function useMovieNight({ slug, tmdbId, mediaType }: MovieNightTarget) {
     },
     [movie, voting]
   );
-
-  const toggleSeen = useCallback(async () => {
-    if (!movie || !participant || seenPending) return;
-    setSeenPending(true);
-    setActionError(null);
-    try {
-      if (iMarkedSeen) await unmarkMovieAsSeen(slug, movie.id, participant.participantId);
-      else await markMovieAsSeen(slug, movie.id, participant.participantId);
-      refreshAll();
-    } catch (e) {
-      setActionError(getErrorMessage(e, t('movies.seen.actionError')));
-    } finally {
-      setSeenPending(false);
-    }
-  }, [movie, participant, seenPending, iMarkedSeen, slug, refreshAll, setActionError, t]);
 
   const toggleWheel = useCallback(async () => {
     if (!movie) return;
@@ -77,10 +61,7 @@ export function useMovieNight({ slug, tmdbId, mediaType }: MovieNightTarget) {
       await setMovieWheelExclusion(slug, movie.id, excluded, hostToken);
       refreshAll();
     } catch (e) {
-      const key = excluded
-        ? 'movies.list.excludeFromWheelError'
-        : 'movies.list.includeInWheelError';
-      setActionError(getErrorMessage(e, t(key)));
+      setActionError(getErrorMessage(e, t(wheelExclusionErrorKey(excluded))));
     }
   }, [movie, slug, hostToken, refreshAll, setActionError, t]);
 
@@ -106,20 +87,20 @@ export function useMovieNight({ slug, tmdbId, mediaType }: MovieNightTarget) {
     loaded: page.eventQuery.isSuccess && page.moviesQuery.isSuccess,
     participant,
     actionError: page.actionError,
-    clearActionError: () => setActionError(null),
+    clearActionError,
     voteLimitReached: voting.voteLimitReached,
     dismissVoteLimit: voting.dismissVoteLimit,
     offlineVoteOutcome: page.offlineVoteOutcome,
     dismissOfflineVoteOutcome: page.dismissOfflineVoteOutcome,
     maxVotes: event?.config?.maxVotesPerParticipant ?? null,
-    canAct,
-    canRemove,
-    canToggleWheel,
-    iMarkedSeen,
-    seenPending,
+    canAct: actions.canAct,
+    canRemove: actions.canRemove,
+    canToggleWheel: actions.canToggleWheel,
+    iMarkedSeen: actions.iMarkedSeen,
+    seenPending: actions.seenPending,
     removePending,
     vote,
-    toggleSeen,
+    toggleSeen: actions.toggleSeen,
     toggleWheel,
     remove,
   };

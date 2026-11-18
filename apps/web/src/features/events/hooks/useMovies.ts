@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchEventMovies } from '@/features/movies/api/moviesApi';
+import { fetchEventMovies } from '@/features/events/api/eventMoviesApi';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { pollIntervalAfterFailures } from '@/shared/api/retryPolicy';
 import type { MovieData } from '@/shared/types/movie';

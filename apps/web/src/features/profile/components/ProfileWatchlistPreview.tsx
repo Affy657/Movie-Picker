@@ -10,11 +10,12 @@ import Card from '@/shared/components/Card';
 import InlineError from '@/shared/components/InlineError';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import type { RatingScale } from '@/shared/types/theme';
+import { posterImageSrc } from '@/shared/utils/posterUrl';
 import MoviePreviewRow from '@/features/movies/components/MoviePreviewRow';
 import MovieBrowseCard, {
   type MovieLibraryActions,
 } from '@/features/movies/components/MovieBrowseCard';
-import PosterFan from '@/features/events/components/PosterFan';
+import PosterFan from '@/features/movies/components/PosterFan';
 import WatchlistSkeleton from '@/features/library/components/WatchlistSkeleton';
 import {
   WATCHLIST_PREVIEW_TAKE,
@@ -77,7 +78,11 @@ export default function ProfileWatchlistPreview({
     return (
       <div className={styles.mobile}>
         <Card as={Link} to={to} interactive padding="none" radius="lg" className={styles.row}>
-          <PosterFan posters={items} className={styles.fan} />
+          <PosterFan
+            layout="spread"
+            srcs={items.map((item) => posterImageSrc(item.posterPath))}
+            className={styles.fan}
+          />
           <span className={styles.rowText}>
             <span className={styles.rowTitle}>{heading}</span>
             <span className={styles.rowCount}>{countLabel}</span>

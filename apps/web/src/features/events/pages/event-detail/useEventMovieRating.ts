@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { deleteMovieRating, setMovieRating } from '@/features/movies/api/moviesApi';
+import { deleteMovieRating, setMovieRating } from '@/features/events/api/eventMoviesApi';
 import { API_ERROR_REASONS, ApiError, getErrorMessage } from '@/shared/api/apiError';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { useTranslation } from '@/shared/i18n';

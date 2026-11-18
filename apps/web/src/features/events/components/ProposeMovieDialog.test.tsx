@@ -18,7 +18,14 @@ const api = vi.hoisted(() => ({
 
 vi.mock('@/features/movies/api/moviesApi', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/features/movies/api/moviesApi')>()),
-  ...api,
+  searchMovies: api.searchMovies,
+  fetchMovieDetails: api.fetchMovieDetails,
+}));
+
+vi.mock('@/features/events/api/eventMoviesApi', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/features/events/api/eventMoviesApi')>()),
+  addMovieToEvent: api.addMovieToEvent,
+  removeMovieFromEvent: api.removeMovieFromEvent,
 }));
 
 vi.mock('@/features/auth/contexts/AuthContext', () => ({
@@ -478,7 +485,7 @@ describe('ProposeMovieDialog', () => {
     const user = userEvent.setup();
     renderDialog();
     await search(user, 'dune');
-    const scroller = document.querySelector<HTMLElement>(`.${styles.scroll}`)!;
+    const scroller = document.querySelector<HTMLElement>(`.${styles.body}`)!.parentElement!;
     const opener = await screen.findByRole('button', { name: 'Voir la fiche de « Dune »' });
     scroller.scrollTop = 240;
 
