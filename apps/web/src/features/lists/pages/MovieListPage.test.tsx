@@ -523,6 +523,9 @@ describe('MovieListPage', () => {
         'Membres',
         'Supprimer la liste',
       ]);
+      for (const name of ['Modifier la liste', 'Membres', 'Supprimer la liste']) {
+        expect(screen.getByRole('menuitem', { name })).toHaveAttribute('aria-haspopup', 'dialog');
+      }
     });
 
     it('tells a member who created the list, and still lets them add and pick a film', async () => {
@@ -549,6 +552,10 @@ describe('MovieListPage', () => {
         'Membres',
         'Quitter la liste',
       ]);
+      expect(screen.getByRole('menuitem', { name: 'Quitter la liste' })).toHaveAttribute(
+        'aria-haspopup',
+        'dialog'
+      );
     });
 
     it('lets a member leave after a confirmation, then goes back to Mes listes', async () => {

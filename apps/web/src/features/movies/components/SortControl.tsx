@@ -39,14 +39,18 @@ export default function SortControl<TSortKey extends string>({
   const activeSort = sortOptions.find((opt) => opt.key === sortBy) ?? sortOptions[0];
 
   if (isMobile) {
+    const directions: { value: 'asc' | 'desc'; label: string }[] = [
+      { value: 'asc', label: sortDirectionAscLabel },
+      { value: 'desc', label: sortDirectionDescLabel },
+    ];
     return (
       <span className={clsx(styles.menuWrap, className)}>
         <Menu
           triggerLabel={activeSort?.label ?? ''}
-          triggerIcon={<DirectionIcon size={ICON_SIZE.xs} aria-hidden />}
+          triggerIcon={<DirectionIcon size={ICON_SIZE.sm} aria-hidden />}
           triggerClassName={styles.menuTrigger}
-          panelClassName={styles.menuPanel}
           panelAriaLabel={sortMenuAriaLabel}
+          align="left"
         >
           {(close) => (
             <>
@@ -64,15 +68,18 @@ export default function SortControl<TSortKey extends string>({
                 </MenuItem>
               ))}
               <MenuSeparator />
-              <MenuItem
-                icon={<DirectionIcon size={ICON_SIZE.sm} aria-hidden />}
-                onClick={() => {
-                  onSetSort(sortBy);
-                  close();
-                }}
-              >
-                {sortDir === 'asc' ? sortDirectionAscLabel : sortDirectionDescLabel}
-              </MenuItem>
+              {directions.map((direction) => (
+                <MenuItem
+                  key={direction.value}
+                  selected={sortDir === direction.value}
+                  onClick={() => {
+                    if (sortDir !== direction.value) onSetSort(sortBy);
+                    close();
+                  }}
+                >
+                  {direction.label}
+                </MenuItem>
+              ))}
             </>
           )}
         </Menu>

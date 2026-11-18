@@ -74,6 +74,20 @@ describe('HeaderSearch', () => {
     expect(scrollTo).not.toHaveBeenCalled();
   });
 
+  it('ties the loupe to the search panel it opens', async () => {
+    stubMatchMedia((query) => query.includes('max-width'));
+    renderHeaderSearch('/');
+    act(() => setHomeSearchHidden(true));
+    const button = loupe() as HTMLElement;
+    expect(button).not.toHaveAttribute('aria-controls');
+
+    await userEvent.click(button);
+
+    const panel = screen.getByRole('search');
+    expect(panel.id).not.toBe('');
+    expect(button).toHaveAttribute('aria-controls', panel.id);
+  });
+
   it('leads a typed search to the results page', async () => {
     stubMatchMedia((query) => query.includes('max-width'));
     renderHeaderSearch('/');

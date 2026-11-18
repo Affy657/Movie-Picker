@@ -30,6 +30,7 @@ import FilteredCollectionLayout, {
   FilteredEmptyState,
   toCollectionToolbarProps,
 } from '@/features/movies/components/FilteredCollectionLayout';
+import { filtersToggleFor } from '@/features/movies/components/ListToolbar';
 import MovieListFiltersPanel from '@/features/movies/components/MovieListFiltersPanel';
 import MovieBrowseCard, {
   type MovieAvailability,
@@ -89,6 +90,7 @@ function ListFiltersPanel({
   return (
     <MovieListFiltersPanel
       panelId={panelId}
+      flat={isMobile}
       tmdbLanguage={tmdbLanguage}
       labels={labels}
       ratingScale={ratingScale}
@@ -532,11 +534,12 @@ export default function ListMoviesPage({
     extraFilter: toolbarOptions?.scopeFilter,
     defaultSortBy: toolbarOptions?.sorts?.defaultKey,
   });
+  const filtersToggle = useMemo(() => filtersToggleFor(filtersPanelId), [filtersPanelId]);
   useClickOutside(
     filtersPanelRef,
     () => toolbar.setFiltersOpen(false),
     toolbar.filtersOpen && !isMobile,
-    { ignoreSelector: '[data-filters-toggle]' }
+    { ignoreSelector: '[data-filters-toggle]', returnFocusTo: filtersToggle }
   );
 
   const activeFilterCount = toolbar.activeFilterChips.length;

@@ -53,7 +53,7 @@ type UserMenuProps = {
 };
 
 function menuIcon(Icon: typeof Settings) {
-  return <Icon className={styles.icon} size={ICON_SIZE.lg} aria-hidden="true" focusable="false" />;
+  return <Icon className={styles.icon} size={ICON_SIZE.md} aria-hidden="true" focusable="false" />;
 }
 
 function ProfileSummary({ user }: Readonly<{ user: UserProfile }>) {
@@ -252,11 +252,6 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
     error: logoutError,
   } = useAsyncAction(logoutAction, t('auth.logout.fallbackError'));
 
-  const closeMenuOnTrigger = () => {
-    menu.close();
-    menu.triggerProps.ref.current?.focus();
-  };
-
   return (
     <div ref={menu.containerRef} className={styles.container}>
       <button
@@ -279,7 +274,7 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
           user={user}
           panelProps={menu.panelProps}
           onClose={menu.close}
-          onHandOverToDialog={closeMenuOnTrigger}
+          onHandOverToDialog={menu.close}
           onOpenFeedback={() => setFeedbackDialogOpen(true)}
           install={{ show: showInstall, mode: installMode, onClick: onInstallClick }}
           logout={{ run: runLogout, loading: loggingOut, error: logoutError }}

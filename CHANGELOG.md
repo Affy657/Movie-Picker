@@ -8,6 +8,21 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Changed
+
+- **Menus, listes déroulantes et fenêtres se ressemblent partout** : même surface, même croix de fermeture, mêmes boutons en bas (Annuler à gauche, l'action à droite), une ouverture en fondu, et un menu qui s'ouvre vers le haut quand la place manque en bas de l'écran.
+- **Le tri sur téléphone propose les deux sens**, Croissant et Décroissant, au lieu d'une entrée qui inversait le sens en affichant le sens actuel.
+- **Une confirmation de suppression place le curseur sur Annuler**, pour qu'Entrée ne supprime rien par mégarde ; « Terminer la soirée » n'est plus présenté comme une action dangereuse.
+
+### Fixed
+
+- **Les menus ne passent plus sous la barre du bas ni sous la carte suivante** : sur téléphone, le menu d'un film de la soirée s'ouvre au-dessus de la barre, et le menu d'une carte de Mes soirées passe devant la carte d'en dessous.
+- **La bande-annonce garde un titre et une croix lisibles en thème clair.**
+- **Les fenêtres ne coupent plus leur contenu sur un petit écran** : consentement aux cookies, photo de profil et réglages de la soirée défilent jusqu'à leurs boutons.
+- **Le pied de la feuille « Proposer un film » reste en bas de l'écran**, même quand la recherche est vide.
+- **Fermer un panneau de filtres ou le choix d'emoji rend la main au bouton qui l'a ouvert**, au clavier comme au lecteur d'écran.
+- **Un lecteur d'écran annonce le tri en cours** dans les menus de tri.
+
 ## [1.15.3] - 2026-11-18
 
 ### Changed

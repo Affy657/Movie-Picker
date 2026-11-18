@@ -3,9 +3,10 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
 import type { QueryClient } from '@tanstack/react-query';
 import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
+import modalStyles from '@/shared/components/Modal.module.css';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
@@ -75,6 +76,32 @@ describe('ProposeToEventModal (MSW)', () => {
     expect(await screen.findByText(/aucune soirée active/i)).toBeInTheDocument();
   });
 
+  it('waits inside the padded body of the dialog', async () => {
+    server.use(
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/events/mine`, async () => {
+        await delay('infinite');
+        return HttpResponse.json({ events: [] });
+      })
+    );
+
+    renderModal();
+
+    expect((await screen.findByText(/chargement/i)).closest(`.${modalStyles.body}`)).not.toBeNull();
+  });
+
+  it('shows the empty state inside the same body as the list', async () => {
+    server.use(
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
+    );
+
+    renderModal();
+
+    const message = await screen.findByText(/aucune soirée active/i);
+    expect(message.closest(`.${modalStyles.body}`)).not.toBeNull();
+  });
+
   it('affiche un lien "voir plus" quand hasMore est vrai', async () => {
     server.use(
       authMeGuestHandler,
@@ -103,10 +130,11 @@ describe('ProposeToEventModal (MSW)', () => {
 
     renderModal();
 
-    expect(await screen.findByRole('link', { name: /voir toutes mes soirées/i })).toHaveAttribute(
-      'href',
-      '/my-events'
-    );
+    const viewMore = await screen.findByRole('link', { name: /voir toutes mes soirées/i });
+    expect(viewMore).toHaveAttribute('href', '/my-events');
+    const body = viewMore.closest(`.${modalStyles.body}`);
+    expect(body).not.toBeNull();
+    expect(body).toContainElement(screen.getByRole('button', { name: /chez moi/i }));
   });
 
   it('shows an inline error when the proposal fails', async () => {

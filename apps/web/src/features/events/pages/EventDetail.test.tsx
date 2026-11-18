@@ -541,6 +541,7 @@ describe('EventDetail (MSW)', () => {
       await user.click(screen.getByRole('menuitem', { name: 'Terminer la soirée' }));
       const dialog = await screen.findByRole('dialog', { name: /^terminer la soirée/i });
       expect(within(dialog).getByText(/films déjà tirés/i)).toBeInTheDocument();
+      expect(within(dialog).getByRole('button', { name: 'Terminer la soirée' })).toHaveFocus();
       expect(closed).toBe(0);
       await user.click(within(dialog).getByRole('button', { name: 'Terminer la soirée' }));
 

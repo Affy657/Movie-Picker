@@ -6,6 +6,7 @@ import { LocaleProvider } from '@/shared/i18n';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
 import ResponsiveDialog from './ResponsiveDialog';
 import sheetStyles from './Sheet.module.css';
+import modalStyles from './Modal.module.css';
 
 function renderDialog(footer?: ReactNode) {
   const onClose = vi.fn();
@@ -47,6 +48,47 @@ describe('ResponsiveDialog', () => {
     await userEvent.click(within(dialog).getByRole('button', { name: 'Fermer' }));
 
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('shows a detail line under its title and takes a size for each format', () => {
+    stubMatchMedia(false);
+    const { unmount } = render(
+      <LocaleProvider>
+        <ResponsiveDialog
+          open
+          title="Proposer un film"
+          detail={<p>Soirée de vendredi</p>}
+          size="md"
+          sheetSize="lg"
+          onClose={vi.fn()}
+        >
+          <p>Recherche</p>
+        </ResponsiveDialog>
+      </LocaleProvider>
+    );
+    const modal = screen.getByRole('dialog', { name: 'Proposer un film' });
+    expect(within(modal).getByText('Soirée de vendredi')).toBeInTheDocument();
+    expect(modal).toHaveClass(modalStyles.sizeMd!);
+    unmount();
+
+    stubMatchMedia(true);
+    render(
+      <LocaleProvider>
+        <ResponsiveDialog
+          open
+          title="Proposer un film"
+          detail={<p>Soirée de vendredi</p>}
+          size="md"
+          sheetSize="lg"
+          onClose={vi.fn()}
+        >
+          <p>Recherche</p>
+        </ResponsiveDialog>
+      </LocaleProvider>
+    );
+    const sheet = screen.getByRole('dialog', { name: 'Proposer un film' });
+    expect(within(sheet).getByText('Soirée de vendredi')).toBeInTheDocument();
+    expect(sheet).toHaveClass(sheetStyles.dialogTall!);
   });
 
   it('draws no footer bar when there is no footer', () => {

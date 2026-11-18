@@ -3,7 +3,7 @@ import { useTranslation } from '@/shared/i18n';
 import { useConsent } from '@/shared/contexts/ConsentContext';
 import Card from './Card';
 import styles from './ConsentDialog.module.css';
-import Modal from './Modal';
+import Modal, { ModalActions, ModalBody, ModalFooter } from './Modal';
 import Button from '@/shared/components/Button';
 
 type Props = {
@@ -17,6 +17,7 @@ export default function ConsentDialog({ open, onClose }: Readonly<Props>) {
   const [analyticsChecked, setAnalyticsChecked] = useState(analytics);
   const reactId = useId();
   const titleId = `consent-dialog-title-${reactId}`;
+  const descriptionId = `consent-dialog-description-${reactId}`;
 
   useEffect(() => {
     if (open) setAnalyticsChecked(analytics);
@@ -38,70 +39,72 @@ export default function ConsentDialog({ open, onClose }: Readonly<Props>) {
   }
 
   return (
-    <Modal open={open} onClose={onClose} size="sm" padded ariaLabelledBy={titleId}>
-      <h2 id={titleId} className={styles.title}>
-        {t('consent.dialog.title')}
-      </h2>
-      <p className={styles.description}>{t('consent.dialog.description')}</p>
+    <Modal
+      open={open}
+      onClose={onClose}
+      size="sm"
+      column
+      ariaLabelledBy={titleId}
+      ariaDescribedBy={descriptionId}
+    >
+      <ModalBody>
+        <h2 id={titleId} className={styles.title}>
+          {t('consent.dialog.title')}
+        </h2>
+        <p id={descriptionId} className={styles.description}>
+          {t('consent.dialog.description')}
+        </p>
 
-      <ul className={styles.categories}>
-        <Card as="li" padding="none" surface="sunken" className={styles.category}>
-          <div className={styles.categoryInfo}>
-            <strong className={styles.categoryName}>{t('consent.dialog.functional')}</strong>
-            <p className={styles.categoryDesc}>{t('consent.dialog.functionalDesc')}</p>
-          </div>
-          <span className={styles.requiredBadge}>{t('consent.dialog.required')}</span>
-        </Card>
-        <Card as="li" padding="none" surface="sunken" className={styles.category}>
-          <label
-            className={styles.categoryLabel}
-            htmlFor="consent-analytics"
-            aria-label={t('consent.dialog.analytics')}
-          >
+        <ul className={styles.categories}>
+          <Card as="li" padding="none" surface="sunken" className={styles.category}>
             <div className={styles.categoryInfo}>
-              <strong className={styles.categoryName}>{t('consent.dialog.analytics')}</strong>
-              <p className={styles.categoryDesc}>{t('consent.dialog.analyticsDesc')}</p>
+              <strong className={styles.categoryName}>{t('consent.dialog.functional')}</strong>
+              <p className={styles.categoryDesc}>{t('consent.dialog.functionalDesc')}</p>
             </div>
-            <input
-              id="consent-analytics"
-              type="checkbox"
-              checked={analyticsChecked}
-              onChange={(e) => setAnalyticsChecked(e.target.checked)}
-              className={styles.checkbox}
-            />
-          </label>
-        </Card>
-        <Card as="li" padding="none" surface="sunken" className={styles.category}>
-          <div className={styles.categoryInfo}>
-            <strong className={styles.categoryName}>{t('consent.dialog.errorMonitoring')}</strong>
-            <p className={styles.categoryDesc}>{t('consent.dialog.errorMonitoringDesc')}</p>
-          </div>
-          <span className={styles.requiredBadge}>{t('consent.dialog.required')}</span>
-        </Card>
-      </ul>
+            <span className={styles.requiredBadge}>{t('consent.dialog.required')}</span>
+          </Card>
+          <Card as="li" padding="none" surface="sunken" className={styles.category}>
+            <label
+              className={styles.categoryLabel}
+              htmlFor="consent-analytics"
+              aria-label={t('consent.dialog.analytics')}
+            >
+              <div className={styles.categoryInfo}>
+                <strong className={styles.categoryName}>{t('consent.dialog.analytics')}</strong>
+                <p className={styles.categoryDesc}>{t('consent.dialog.analyticsDesc')}</p>
+              </div>
+              <input
+                id="consent-analytics"
+                type="checkbox"
+                checked={analyticsChecked}
+                onChange={(e) => setAnalyticsChecked(e.target.checked)}
+                className={styles.checkbox}
+              />
+            </label>
+          </Card>
+          <Card as="li" padding="none" surface="sunken" className={styles.category}>
+            <div className={styles.categoryInfo}>
+              <strong className={styles.categoryName}>{t('consent.dialog.errorMonitoring')}</strong>
+              <p className={styles.categoryDesc}>{t('consent.dialog.errorMonitoringDesc')}</p>
+            </div>
+            <span className={styles.requiredBadge}>{t('consent.dialog.required')}</span>
+          </Card>
+        </ul>
+      </ModalBody>
 
-      <div className={styles.actions}>
-        <Button
-          type="button"
-          size="sm"
-          className={`${styles.actionBtn} ${styles.rejectBtn}`}
-          onClick={handleRejectAll}
-        >
-          {t('consent.dialog.rejectAll')}
-        </Button>
-        <Button type="button" size="sm" className={styles.actionBtn} onClick={handleSave}>
-          {t('consent.dialog.save')}
-        </Button>
-        <Button
-          type="button"
-          variant="primary"
-          size="sm"
-          className={styles.actionBtn}
-          onClick={handleAcceptAll}
-        >
-          {t('consent.dialog.acceptAll')}
-        </Button>
-      </div>
+      <ModalFooter>
+        <ModalActions>
+          <Button type="button" onClick={handleRejectAll}>
+            {t('consent.dialog.rejectAll')}
+          </Button>
+          <Button type="button" onClick={handleSave}>
+            {t('consent.dialog.save')}
+          </Button>
+          <Button type="button" variant="primary" onClick={handleAcceptAll}>
+            {t('consent.dialog.acceptAll')}
+          </Button>
+        </ModalActions>
+      </ModalFooter>
     </Modal>
   );
 }

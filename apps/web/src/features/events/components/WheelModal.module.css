@@ -180,7 +180,7 @@
     grid-template-rows: auto minmax(0, 1fr) auto auto auto auto;
     row-gap: var(--space-3);
     height: 100%;
-    padding: var(--space-3) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom));
+    padding: var(--space-3) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
   }
 
   .title {
@@ -224,7 +224,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dialogDone {
+  .dialogDone.dialogDone {
     animation: none;
   }
 }

@@ -4,12 +4,12 @@ import Avatar from '@/shared/components/Avatar';
 import Button from '@/shared/components/Button';
 import InlineError from '@/shared/components/InlineError';
 import LinkButton from '@/shared/components/LinkButton';
+import { ModalActions } from '@/shared/components/Modal';
 import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
 import SearchField from '@/shared/components/SearchField';
 import Spinner from '@/shared/components/Spinner';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { getErrorMessage } from '@/shared/api/apiError';
-import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useShareAction } from '@/shared/hooks/useShareAction';
 import { useTranslation, type Translate } from '@/shared/i18n';
 import type { LocaleCode } from '@/shared/i18n/locales';
@@ -533,7 +533,6 @@ export default function ListMembersDialog({
 }: Readonly<{ list: MembersDialogList; onClose: () => void }>) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const isMobile = useIsMobile();
   const isOwner = list.role !== 'member';
   const help = isOwner
     ? t('lists.members.ownerHelp')
@@ -545,11 +544,11 @@ export default function ListMembersDialog({
       title={t('lists.members.title', { name: list.name })}
       onClose={onClose}
       footer={
-        <div className={styles.footer}>
-          <Button variant="primary" fullWidth={isMobile} onClick={onClose}>
+        <ModalActions>
+          <Button variant="primary" onClick={onClose}>
             {t('lists.members.done')}
           </Button>
-        </div>
+        </ModalActions>
       }
     >
       <p className={styles.help}>{help}</p>

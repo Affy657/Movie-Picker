@@ -204,7 +204,7 @@ export default function FollowListModal({
 
   if (isMobile) {
     return (
-      <Sheet open title={t('profile.follow.sheetTitle')} onClose={onClose}>
+      <Sheet open title={t('profile.follow.sheetTitle')} onClose={onClose} className={styles.sheet}>
         {tabs}
         {panel}
       </Sheet>
@@ -216,7 +216,7 @@ export default function FollowListModal({
       <div className={styles.header}>
         {tabs}
         <IconButton className={styles.closeButton} ariaLabel={t('common.close')} onClick={onClose}>
-          <X size={ICON_SIZE.xl} aria-hidden />
+          <X size={ICON_SIZE.lg} aria-hidden />
         </IconButton>
       </div>
 

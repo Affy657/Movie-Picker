@@ -170,6 +170,35 @@ describe('MovieNightBar', () => {
     expect(onRemoved).toHaveBeenCalled();
   });
 
+  it('puts the removal last, behind a separator, and says it asks for a confirmation', async () => {
+    vi.mocked(useMovieNight).mockReturnValue(night({ canToggleWheel: true, canRemove: true }));
+    renderBar();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Plus d’actions' }));
+
+    const menu = screen.getByRole('menu', { name: 'Plus d’actions' });
+    expect(
+      Array.from(menu.children).map((child) => (child.tagName === 'HR' ? '---' : child.textContent))
+    ).toEqual(['Exclure du tirage', '---', 'Retirer']);
+    expect(within(menu).getByRole('menuitem', { name: 'Retirer' })).toHaveAttribute(
+      'aria-haspopup',
+      'dialog'
+    );
+  });
+
+  it('opens the ⋯ menu of the phone bar upwards, clear of the navigation under the bar', async () => {
+    vi.mocked(useIsMobile).mockReturnValue(true);
+    vi.mocked(useMovieNight).mockReturnValue(night({ canRemove: true }));
+    renderBar();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Plus d’actions' }));
+
+    expect(screen.getByRole('menu', { name: 'Plus d’actions' })).toHaveAttribute(
+      'data-placement',
+      'top'
+    );
+  });
+
   it('hides the more actions menu when there is nothing to do', () => {
     vi.mocked(useMovieNight).mockReturnValue(night());
     renderBar();

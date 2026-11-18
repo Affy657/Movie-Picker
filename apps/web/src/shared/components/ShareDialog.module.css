@@ -1,15 +1,11 @@
-.dialogWithTabs {
-  max-height: min(760px, 92dvh);
+@media (min-width: 48rem) {
+  dialog.dialogWithTabs {
+    max-height: min(760px, 92dvh);
+  }
 }
 
 .tabs {
-  margin: 0 var(--space-5) var(--space-0-5);
-  flex-shrink: 0;
-}
-
-.body {
-  overflow-y: auto;
-  padding: var(--space-3-5) var(--space-5) var(--space-5);
+  margin-bottom: var(--space-4);
 }
 
 .linkPanel {

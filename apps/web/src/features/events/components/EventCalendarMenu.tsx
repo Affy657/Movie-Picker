@@ -36,7 +36,7 @@ export default function EventCalendarMenu({
   opensAboveRow = false,
 }: Readonly<EventCalendarMenuProps>) {
   const { t } = useTranslation();
-  const menu = useMenuState();
+  const menu = useMenuState({ placement: opensAboveRow ? 'top' : 'auto' });
 
   const calendarEvent: CalendarEvent = {
     title,
@@ -60,7 +60,7 @@ export default function EventCalendarMenu({
     menu.close();
   };
 
-  const externalIcon = <ExternalLink className={styles.icon} size={ICON_SIZE.md} aria-hidden />;
+  const externalIcon = <ExternalLink size={ICON_SIZE.md} aria-hidden />;
 
   return (
     <div
@@ -68,7 +68,11 @@ export default function EventCalendarMenu({
       ref={menu.containerRef}
     >
       {triggerLabel ? (
-        <Button {...menu.triggerProps} className={triggerClassName}>
+        <Button
+          {...menu.triggerProps}
+          variant={menu.open ? 'soft' : 'secondary'}
+          className={triggerClassName}
+        >
           <CalendarPlus size={ICON_SIZE.md} aria-hidden />
           {triggerLabel}
         </Button>
@@ -83,7 +87,7 @@ export default function EventCalendarMenu({
           {...menu.panelProps}
           style={opensAboveRow ? undefined : menu.panelProps.style}
           ariaLabel={t('events.calendar.menuLabel')}
-          className={clsx(styles.panel, opensAboveRow && styles.panelAboveRow)}
+          className={clsx(opensAboveRow && styles.panelAboveRow)}
         >
           <MenuItem href={googleHref} external icon={externalIcon} onClick={menu.close}>
             {t('events.calendar.google')}
@@ -91,10 +95,7 @@ export default function EventCalendarMenu({
           <MenuItem href={outlookHref} external icon={externalIcon} onClick={menu.close}>
             {t('events.calendar.outlook')}
           </MenuItem>
-          <MenuItem
-            icon={<Download className={styles.icon} size={ICON_SIZE.md} aria-hidden />}
-            onClick={handleDownloadIcs}
-          >
+          <MenuItem icon={<Download size={ICON_SIZE.md} aria-hidden />} onClick={handleDownloadIcs}>
             {t('events.calendar.apple')}
           </MenuItem>
         </MenuPanel>

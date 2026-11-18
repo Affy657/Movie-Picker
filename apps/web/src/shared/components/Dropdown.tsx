@@ -178,6 +178,7 @@ export default function Dropdown<V extends string>({
           aria-label={ariaLabel}
           aria-labelledby={ariaLabelledBy}
           className={clsx(styles.menu, upward && styles.menuUp)}
+          data-placement={upward ? 'top' : 'bottom'}
           tabIndex={-1}
           onKeyDown={handleKey}
         >
@@ -216,7 +217,7 @@ export default function Dropdown<V extends string>({
               >
                 <span className={styles.optionLabel}>{opt.label}</span>
                 {selected ? (
-                  <Check size={ICON_SIZE.md} aria-hidden className={styles.optionCheck} />
+                  <Check size={ICON_SIZE.sm} aria-hidden className={styles.optionCheck} />
                 ) : null}
               </li>
             );

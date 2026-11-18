@@ -132,7 +132,6 @@ export default function MovieRatingDialog({
       <div className={styles.layout}>
         <IconButton
           tone="onPoster"
-          size="lg"
           ariaLabel={t('common.close')}
           className={styles.close}
           onClick={onClose}

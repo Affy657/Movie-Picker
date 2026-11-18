@@ -13,6 +13,7 @@ import {
   createSavedListsHandlers,
   TEST_API_V1,
 } from '@/mocks/handlers';
+import modalStyles from '@/shared/components/Modal.module.css';
 import ListFormDialog from './ListFormDialog';
 
 const dune = {
@@ -486,5 +487,16 @@ describe('ListFormDialog', () => {
     await user.click(screen.getByRole('button', { name: 'Annuler' }));
 
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('lays Annuler then the submit button in the shared dialog actions row', () => {
+    server.use(authMeGuestHandler, ...createListsHandlers());
+    renderDialog();
+
+    const cancel = screen.getByRole('button', { name: 'Annuler' });
+    const submit = screen.getByRole('button', { name: 'Créer la liste' });
+    expect(cancel.parentElement).toHaveClass(modalStyles.actions!);
+    expect(submit.parentElement).toBe(cancel.parentElement);
+    expect(cancel.compareDocumentPosition(submit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });

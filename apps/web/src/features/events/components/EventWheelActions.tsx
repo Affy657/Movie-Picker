@@ -20,8 +20,9 @@ import type {
 } from '@/features/events/lib/eventHeaderActions';
 import { useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
+import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useMenuState } from '@/shared/hooks/useMenuState';
-import { MenuItem, MenuPanel } from '@/shared/components/Menu';
+import { MenuItem, MenuPanel, MenuSeparator } from '@/shared/components/Menu';
 import Button from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import styles from './EventWheelActions.module.css';
@@ -97,8 +98,11 @@ function ManageMenu({
   onRequestFinishNight: () => void;
   t: Translate;
 }>) {
-  const menu = useMenuState();
+  const docked = useIsMobile();
+  const menu = useMenuState({ placement: docked ? 'top' : 'auto' });
   const label = t('events.wheel.manageLabel');
+  const hasNeutral = manage.removeWinner || manage.finishNight;
+  const hasDanger = manage.reset || manage.closeWithoutMovie;
   return (
     <div ref={menu.containerRef} className={styles.menuContainer}>
       <Button
@@ -114,7 +118,7 @@ function ManageMenu({
         <ChevronDown size={ICON_SIZE.sm} aria-hidden className={styles.menuChevron} />
       </Button>
       {menu.open ? (
-        <MenuPanel {...menu.panelProps} ariaLabel={label} className={styles.menuPanel}>
+        <MenuPanel {...menu.panelProps} ariaLabel={label}>
           {manage.removeWinner ? (
             <MenuItem
               icon={<CircleMinus size={ICON_SIZE.sm} aria-hidden />}
@@ -126,6 +130,19 @@ function ManageMenu({
               {t('events.wheel.removeWinnerButton')}
             </MenuItem>
           ) : null}
+          {manage.finishNight ? (
+            <MenuItem
+              icon={<Flag size={ICON_SIZE.sm} aria-hidden />}
+              aria-haspopup="dialog"
+              onClick={() => {
+                menu.close();
+                onRequestFinishNight();
+              }}
+            >
+              {t('events.wheel.finishNightButton')}
+            </MenuItem>
+          ) : null}
+          {hasNeutral && hasDanger ? <MenuSeparator /> : null}
           {manage.reset ? (
             <MenuItem
               tone="danger"
@@ -152,18 +169,6 @@ function ManageMenu({
               {t('events.wheel.closeWithoutMovieButton')}
             </MenuItem>
           ) : null}
-          {manage.finishNight ? (
-            <MenuItem
-              icon={<Flag size={ICON_SIZE.sm} aria-hidden />}
-              aria-haspopup="dialog"
-              onClick={() => {
-                menu.close();
-                onRequestFinishNight();
-              }}
-            >
-              {t('events.wheel.finishNightButton')}
-            </MenuItem>
-          ) : null}
         </MenuPanel>
       ) : null}
     </div>
@@ -175,7 +180,8 @@ function DrawSplitButton({
   weight,
   t,
 }: Readonly<{ wheel: EventWheelState; weight: HeaderActionWeight; t: Translate }>) {
-  const menu = useMenuState();
+  const docked = useIsMobile();
+  const menu = useMenuState({ placement: docked ? 'top' : 'auto' });
   const primary = weight === 'primary';
   const hasWinner = wheel.winnerIds.length > 0;
   const drawLabel = hasWinner
@@ -236,7 +242,7 @@ function DrawSplitButton({
         <ChevronDown size={ICON_SIZE.sm} aria-hidden />
       </Button>
       {menu.open ? (
-        <MenuPanel {...menu.panelProps} ariaLabel={otherWays} className={styles.menuPanel}>
+        <MenuPanel {...menu.panelProps} ariaLabel={otherWays}>
           <MenuItem
             icon={<Disc3 size={ICON_SIZE.sm} aria-hidden />}
             onClick={() => {

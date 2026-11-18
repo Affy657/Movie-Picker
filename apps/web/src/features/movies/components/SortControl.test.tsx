@@ -69,9 +69,9 @@ describe('SortControl', () => {
 
       await userEvent.click(trigger);
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
-      expect(screen.getByRole('menuitem', { name: 'Ajout' })).toBeInTheDocument();
-      expect(screen.getByRole('menuitem', { name: /votes/i })).toBeInTheDocument();
-      expect(screen.getByRole('menuitem', { name: 'Durée' })).toBeInTheDocument();
+      expect(screen.getByRole('menuitemradio', { name: 'Ajout' })).not.toBeChecked();
+      expect(screen.getByRole('menuitemradio', { name: /votes/i })).toBeChecked();
+      expect(screen.getByRole('menuitemradio', { name: 'Durée' })).not.toBeChecked();
     });
 
     it('choosing another criterion in the menu calls onSetSort and closes the menu', async () => {
@@ -86,20 +86,40 @@ describe('SortControl', () => {
         />
       );
       await userEvent.click(screen.getByRole('button', { name: /votes/i }));
-      await userEvent.click(screen.getByRole('menuitem', { name: 'Durée' }));
+      await userEvent.click(screen.getByRole('menuitemradio', { name: 'Durée' }));
       expect(onSetSort).toHaveBeenCalledWith('duration');
-      expect(screen.queryByRole('menuitem', { name: 'Durée' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('menuitemradio', { name: 'Durée' })).not.toBeInTheDocument();
     });
 
-    it('the direction entry shows the current direction and calls onSetSort with the active key', async () => {
+    it('offers both directions, the current one checked', async () => {
+      render(<SortControl {...baseProps()} sortBy="score" sortDir="asc" isMobile />);
+      await userEvent.click(screen.getByRole('button', { name: /votes/i }));
+
+      expect(screen.getByRole('menuitemradio', { name: 'Croissant' })).toBeChecked();
+      expect(screen.getByRole('menuitemradio', { name: 'Décroissant' })).not.toBeChecked();
+    });
+
+    it('flips the direction of the active criterion when the other direction is chosen', async () => {
       const onSetSort = vi.fn();
       render(
         <SortControl {...baseProps()} onSetSort={onSetSort} sortBy="score" sortDir="asc" isMobile />
       );
       await userEvent.click(screen.getByRole('button', { name: /votes/i }));
-      const directionItem = screen.getByRole('menuitem', { name: 'Croissant' });
-      await userEvent.click(directionItem);
+      await userEvent.click(screen.getByRole('menuitemradio', { name: 'Décroissant' }));
+
       expect(onSetSort).toHaveBeenCalledWith('score');
+    });
+
+    it('keeps the direction when the current one is chosen again', async () => {
+      const onSetSort = vi.fn();
+      render(
+        <SortControl {...baseProps()} onSetSort={onSetSort} sortBy="score" sortDir="asc" isMobile />
+      );
+      await userEvent.click(screen.getByRole('button', { name: /votes/i }));
+      await userEvent.click(screen.getByRole('menuitemradio', { name: 'Croissant' }));
+
+      expect(onSetSort).not.toHaveBeenCalled();
+      expect(screen.queryByRole('menu')).not.toBeInTheDocument();
     });
   });
 });

@@ -14,6 +14,7 @@ import {
 import { copyTextToClipboard } from '@/shared/utils/copyTextToClipboard';
 import type { MovieListDetail } from '@/features/lists/api/listsApi';
 import { cancelListInvitation } from '@/features/lists/api/listMembersApi';
+import modalStyles from '@/shared/components/Modal.module.css';
 import ListMembersDialog from './ListMembersDialog';
 
 vi.mock('@/shared/utils/copyTextToClipboard', () => ({ copyTextToClipboard: vi.fn() }));
@@ -587,5 +588,15 @@ describe('ListMembersDialog', () => {
     const dialog = await findDialog();
     expect(await within(dialog).findByText('Léa Moreau')).toBeInTheDocument();
     expect(within(dialog).getByRole('button', { name: 'Terminé' })).toBeInTheDocument();
+  });
+
+  it('lays Terminé in the shared actions row, which spans the footer of the phone sheet', async () => {
+    stubMatchMedia(true);
+    server.use(authedAlice, ...createListMembershipHandlers('l1', OWNER_VIEW));
+    renderDialog();
+
+    const dialog = await findDialog();
+    const done = within(dialog).getByRole('button', { name: 'Terminé' });
+    expect(done.parentElement).toHaveClass(modalStyles.actions!);
   });
 });

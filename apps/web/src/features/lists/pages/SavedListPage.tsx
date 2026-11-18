@@ -55,7 +55,11 @@ function SavedListActionsMenu({
             </MenuItem>
           ) : null}
           {sourceLink ? (
-            <MenuItem icon={<SourceIcon aria-hidden size={ICON_SIZE.sm} />} to={sourceLink.to}>
+            <MenuItem
+              icon={<SourceIcon aria-hidden size={ICON_SIZE.sm} />}
+              to={sourceLink.to}
+              onClick={pick()}
+            >
               {sourceLink.label}
             </MenuItem>
           ) : null}

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import InstallPwaDialog from '@/shared/components/InstallPwaDialog';
+import modalStyles from '@/shared/components/Modal.module.css';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 
 function renderDialog(mode: 'ios' | 'in_app' | 'generic', onClose = vi.fn()) {
@@ -41,5 +42,22 @@ describe('InstallPwaDialog', () => {
     if (!primaryClose) throw new Error('missing close button');
     await user.click(primaryClose);
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('describes itself with its intro and keeps its action below the scrolling steps', () => {
+    renderDialog('ios');
+
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveClass(modalStyles.column!);
+    expect(dialog).toHaveAccessibleDescription(/safari n’affiche pas de bouton d’installation/i);
+
+    const body = screen.getByRole('list').closest(`.${modalStyles.body}`);
+    expect(body).not.toBeNull();
+    const closeButtons = screen.getAllByRole('button', { name: /fermer/i });
+    const primaryClose = closeButtons.at(-1)!;
+    expect(body).not.toContainElement(primaryClose);
+    expect(primaryClose.closest(`.${modalStyles.actions}`)?.parentElement).toHaveClass(
+      modalStyles.footer!
+    );
   });
 });

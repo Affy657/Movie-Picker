@@ -20,9 +20,12 @@ type InfoBubbleProps = {
 export default function InfoBubble({ label, children }: Readonly<InfoBubbleProps>) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const [position, setPosition] = useState<{ top: number; left: number; width: number } | null>(
-    null
-  );
+  const [position, setPosition] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    placement: 'top' | 'bottom';
+  } | null>(null);
   const wrapperRef = useRef<HTMLSpanElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLSpanElement>(null);
@@ -54,7 +57,7 @@ export default function InfoBubble({ label, children }: Readonly<InfoBubbleProps
       ? Math.max(MENU_VIEWPORT_MARGIN_PX, rect.top - MENU_ANCHOR_GAP_PX - panelHeight)
       : below;
 
-    setPosition({ top, left, width });
+    setPosition({ top, left, width, placement: overflowsBottom ? 'top' : 'bottom' });
   }, []);
 
   useLayoutEffect(() => {
@@ -95,6 +98,7 @@ export default function InfoBubble({ label, children }: Readonly<InfoBubbleProps
           id={panelId}
           className={styles.panel}
           role="note"
+          data-placement={position?.placement}
           style={
             position === null
               ? { visibility: 'hidden' }

@@ -478,7 +478,7 @@ describe('ProposeMovieDialog', () => {
     const user = userEvent.setup();
     renderDialog();
     await search(user, 'dune');
-    const scroller = document.querySelector<HTMLElement>(`.${styles.scroll}`)!;
+    const scroller = document.querySelector<HTMLElement>(`.${styles.body}`)!.parentElement!;
     const opener = await screen.findByRole('button', { name: 'Voir la fiche de « Dune »' });
     scroller.scrollTop = 240;
 

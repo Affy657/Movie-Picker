@@ -38,10 +38,10 @@ Si on ne peut pas exprimer l'intention via le nommage ou la structure, refactori
 | Attente hors d'un bouton | `Spinner` | `1em`, couleur courante, immobile en `reduced-motion` |
 | Bouton à icône seule | `IconButton`, `iconButtonClass` pour un `<Link>` | `tone` `default` / `danger` / `onPoster`, `shape` `square` / `round`, `loading` |
 | Retour vers la page parente | `BackLink` | `to` ou `onClick`, flèche et libellé ; jamais une classe `back-link` |
-| Fenêtre modale | `Modal` | seul endroit du projet où `<dialog>` et `::backdrop` sont autorisés ; une modale à titre passe par `title` (+ `titleDetail`), jamais par une barre de titre recopiée |
+| Fenêtre modale | `Modal`, `ModalBody`, `ModalFooter`, `ModalActions` | seul endroit du projet où `<dialog>` et `::backdrop` sont autorisés ; une modale à titre passe par `title` (+ `titleDetail`), jamais par une barre de titre recopiée ; corps, pied et rangée de boutons passent par les trois briques, jamais par des marges recopiées |
 | Dialogue déjà câblé | `ConfirmDialog`, `ShareDialog`, `ConsentDialog`, `DialogTitleBar` | bâtis sur `Modal` |
 | Feuille mobile | `Sheet` | modale ancrée en bas, glissable |
-| Dialogue feuille sur téléphone, modale sur grand écran | `ResponsiveDialog` | `title`, `footer` ; jamais une bascule `useIsMobile` entre `Sheet` et `Modal` recopiée pour un dialogue à titre, corps et pied |
+| Dialogue feuille sur téléphone, modale sur grand écran | `ResponsiveDialog` | `title`, `detail`, `footer`, `size`, `sheetSize` ; jamais une bascule `useIsMobile` entre `Sheet` et `Modal` recopiée pour un dialogue à titre, corps et pied |
 | Bandeau flottant | `Notice` | `placement` `top` / `bottom`, `onClose` facultatif, actions en enfants |
 | Pastille, badge, filtre, lien externe | `Chip` | tones `default` / `primary` / `success` / `warning` / `pending` / `danger` / `muted`, `dashed`, `dot`, quatre formes (étiquette, `onClick`, `onRemove`, `href`), centrage optique déjà intégré |
 | Compteur, point d'état | `CountBadge`, `StatusDot` | `CountBadge` `tone` `primary` / `success` / `neutral`, `size` `sm` / `md` ; `StatusDot` `pulsing` ; jamais une pastille de compteur ni une `@keyframes` de pulsation locales |

@@ -114,6 +114,33 @@ describe('ConfirmDialog', () => {
     expect(screen.getByTestId('confirm-dialog-cancel')).not.toBeDisabled();
   });
 
+  it('puts the focus on Cancel when the action is destructive, so Enter does not confirm it', () => {
+    render(
+      <AppTestProviders>
+        <ConfirmDialog open title="x" message="y" onConfirm={vi.fn()} onCancel={vi.fn()} />
+      </AppTestProviders>
+    );
+
+    expect(screen.getByTestId('confirm-dialog-cancel')).toHaveFocus();
+  });
+
+  it('puts the focus on Confirm when the action is not destructive', () => {
+    render(
+      <AppTestProviders>
+        <ConfirmDialog
+          open
+          title="x"
+          message="y"
+          confirmTone="default"
+          onConfirm={vi.fn()}
+          onCancel={vi.fn()}
+        />
+      </AppTestProviders>
+    );
+
+    expect(screen.getByTestId('confirm-dialog-confirm')).toHaveFocus();
+  });
+
   it('propage la fermeture native (Escape) vers onCancel quand la modale est ouverte', () => {
     const onCancel = vi.fn();
     render(

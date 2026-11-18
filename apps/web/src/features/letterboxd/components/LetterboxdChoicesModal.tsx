@@ -20,7 +20,7 @@ import {
 } from '@/features/letterboxd/api/letterboxdApi';
 import { isWatchedChoice } from '@/features/letterboxd/utils/syncReport';
 import styles from './LetterboxdChoicesModal.module.css';
-import Modal from '@/shared/components/Modal';
+import Modal, { ModalActions, ModalBody, ModalFooter } from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Chip from '@/shared/components/Chip';
 import { ChoiceCard, ChoiceGroup } from '@/shared/components/ChoiceCard';
@@ -216,61 +216,63 @@ export default function LetterboxdChoicesModal({
         </span>
       }
     >
-      <p className={styles.intro}>
-        {t('auth.account.letterboxd.choicesStepOf', { current: index + 1, total })}
-      </p>
-
-      <p className={styles.askedTitle}>
-        <strong>{current.title}</strong>
-        <span>{t('auth.account.letterboxd.choicesAskedFrom', { year: current.year })}</span>
-      </p>
-
-      <ChoiceTarget choice={current} />
-
-      {confirmError && (
-        <p className={styles.error} role="alert">
-          {confirmError}
+      <ModalBody>
+        <p className={styles.intro}>
+          {t('auth.account.letterboxd.choicesStepOf', { current: index + 1, total })}
         </p>
-      )}
 
-      <ChoiceGroup
-        value={choiceValue}
-        onChange={selectByValue}
-        className={styles.list}
-        ariaLabel={t('auth.account.letterboxd.choicesRadioGroupAria', { title: current.title })}
-      >
-        {current.candidates.map((candidate) => {
-          const posterRaw = posterImageSrc(candidate.posterPath);
-          const posterSrc = posterRaw ? tmdbPosterSrcForListDisplay(posterRaw) : undefined;
-          const genresLabel = metaGenresLabel(candidate.genreIds, tmdbLanguage);
-          const runtimeLabel = formatRuntimeMinutes(candidate.runtimeMinutes);
-          const metaLine = movieMetaLine(candidate.year, genresLabel, runtimeLabel);
-          return (
-            <ChoiceCard
-              key={candidate.tmdbId}
-              value={String(candidate.tmdbId)}
-              indicator
-              title={candidate.title}
-              description={metaLine || undefined}
-            >
-              {posterSrc ? (
-                <img src={posterSrc} alt="" className={styles.choiceThumb} loading="lazy" />
-              ) : (
-                <span className={styles.choiceThumbPlaceholder} aria-hidden="true" />
-              )}
-            </ChoiceCard>
-          );
-        })}
-        <ChoiceCard value={SKIP_VALUE} indicator dashed>
-          {t('auth.account.letterboxd.choicesNoneOption')}
-        </ChoiceCard>
-      </ChoiceGroup>
+        <p className={styles.askedTitle}>
+          <strong>{current.title}</strong>
+          <span>{t('auth.account.letterboxd.choicesAskedFrom', { year: current.year })}</span>
+        </p>
 
-      <div className={styles.footer}>
+        <ChoiceTarget choice={current} />
+
+        {confirmError && (
+          <p className={styles.error} role="alert">
+            {confirmError}
+          </p>
+        )}
+
+        <ChoiceGroup
+          value={choiceValue}
+          onChange={selectByValue}
+          className={styles.list}
+          ariaLabel={t('auth.account.letterboxd.choicesRadioGroupAria', { title: current.title })}
+        >
+          {current.candidates.map((candidate) => {
+            const posterRaw = posterImageSrc(candidate.posterPath);
+            const posterSrc = posterRaw ? tmdbPosterSrcForListDisplay(posterRaw) : undefined;
+            const genresLabel = metaGenresLabel(candidate.genreIds, tmdbLanguage);
+            const runtimeLabel = formatRuntimeMinutes(candidate.runtimeMinutes);
+            const metaLine = movieMetaLine(candidate.year, genresLabel, runtimeLabel);
+            return (
+              <ChoiceCard
+                key={candidate.tmdbId}
+                value={String(candidate.tmdbId)}
+                indicator
+                title={candidate.title}
+                description={metaLine || undefined}
+              >
+                {posterSrc ? (
+                  <img src={posterSrc} alt="" className={styles.choiceThumb} loading="lazy" />
+                ) : (
+                  <span className={styles.choiceThumbPlaceholder} aria-hidden="true" />
+                )}
+              </ChoiceCard>
+            );
+          })}
+          <ChoiceCard value={SKIP_VALUE} indicator dashed>
+            {t('auth.account.letterboxd.choicesNoneOption')}
+          </ChoiceCard>
+        </ChoiceGroup>
+      </ModalBody>
+
+      <ModalFooter className={styles.footer}>
         <LinkButton size="sm" onClick={decideLater} disabled={confirming}>
           {t('auth.account.letterboxd.choicesDecideLater')}
         </LinkButton>
-        <div className={styles.footerActions}>
+        <ModalActions className={styles.footerActions}>
           <Button
             type="button"
             variant="ghost"
@@ -287,8 +289,8 @@ export default function LetterboxdChoicesModal({
           >
             {confirmStepLabel(confirming, isLast, t)}
           </Button>
-        </div>
-      </div>
+        </ModalActions>
+      </ModalFooter>
     </Modal>
   );
 }

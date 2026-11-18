@@ -34,6 +34,7 @@ interface MovieListFiltersPanelLabels {
 interface MovieListFiltersPanelProps {
   panelId?: string;
   className?: string;
+  flat?: boolean;
   onReset?: () => void;
   tmdbLanguage: string;
   labels: MovieListFiltersPanelLabels;
@@ -53,6 +54,7 @@ interface MovieListFiltersPanelProps {
 export default function MovieListFiltersPanel({
   panelId,
   className,
+  flat = false,
   onReset,
   tmdbLanguage,
   labels,
@@ -68,8 +70,8 @@ export default function MovieListFiltersPanel({
   runtimeRange,
   onChangeRuntimeRange,
 }: Readonly<MovieListFiltersPanelProps>) {
-  return (
-    <Card id={panelId} elevation="sm" className={clsx(styles.panel, className)}>
+  const groups = (
+    <>
       <div className={styles.group}>
         <span className={styles.groupLabel}>{labels.genre}</span>
         <div className={styles.chipRow}>
@@ -155,6 +157,20 @@ export default function MovieListFiltersPanel({
           </LinkButton>
         </div>
       ) : null}
+    </>
+  );
+
+  if (flat) {
+    return (
+      <div id={panelId} className={clsx(styles.panel, className)}>
+        {groups}
+      </div>
+    );
+  }
+
+  return (
+    <Card id={panelId} elevation="sm" className={clsx(styles.panel, className)}>
+      {groups}
     </Card>
   );
 }

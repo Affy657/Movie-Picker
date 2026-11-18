@@ -4,22 +4,23 @@
 }
 
 .panel {
-  z-index: var(--z-sticky-bar);
+  composes: surface from './popover.module.css';
   display: flex;
   flex-direction: column;
   min-width: 11rem;
   max-width: calc(100vw - var(--space-4));
   padding: var(--space-1);
-  background: var(--color-surface-raised);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
 }
 
 .anchored {
   position: absolute;
   top: calc(100% + var(--space-1-5));
   right: 0;
+}
+
+.anchored[data-placement='top'] {
+  top: auto;
+  bottom: calc(100% + var(--space-1-5));
 }
 
 .item {
@@ -81,6 +82,22 @@
 
 .itemCheck {
   flex-shrink: 0;
+}
+
+.itemIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.itemIcon svg {
+  width: var(--icon-md);
+  height: var(--icon-md);
+}
+
+.itemSelected .itemIcon,
+.itemDanger .itemIcon {
+  color: inherit;
 }
 
 .label {
@@ -172,6 +189,7 @@
   border: none;
   border-radius: 0;
   box-shadow: none;
+  animation: none;
 }
 
 .checkboxItem {

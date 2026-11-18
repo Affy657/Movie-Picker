@@ -1,3 +1,4 @@
+import type { ConfirmTone } from '@/shared/components/ConfirmDialog';
 import type { Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { ConfirmBusyByKind, ConfirmState } from './eventDetailSessionTypes';
@@ -15,6 +16,15 @@ type ConfirmDialogInputs = {
   busyByKind: ConfirmBusyByKind;
 };
 
+type ConfirmDialogContent = {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  confirmTone: ConfirmTone;
+  onConfirm: () => void;
+  loading: boolean;
+};
+
 export function buildConfirmDialogContent({
   confirmState,
   t,
@@ -26,7 +36,7 @@ export function buildConfirmDialogContent({
   confirmRemoveNote,
   confirmCloseNight,
   busyByKind,
-}: ConfirmDialogInputs) {
+}: ConfirmDialogInputs): ConfirmDialogContent | null {
   if (!confirmState) return null;
   const loading = busyByKind[confirmState.kind];
   if (confirmState.kind === 'remove') {
@@ -35,6 +45,7 @@ export function buildConfirmDialogContent({
       message: t('events.participants.removeConfirm', { pseudo: confirmState.pseudo }),
       confirmLabel: t('events.participants.removeConfirmAction'),
       onConfirm: () => confirmRemove(confirmState.participantId, confirmState.pseudo),
+      confirmTone: 'danger',
       loading,
     };
   }
@@ -44,6 +55,7 @@ export function buildConfirmDialogContent({
       message: t('events.wheel.resetConfirmMessage'),
       confirmLabel: t('events.wheel.resetConfirmAction'),
       onConfirm: confirmResetWheel,
+      confirmTone: 'danger',
       loading,
     };
   }
@@ -59,6 +71,7 @@ export function buildConfirmDialogContent({
       ),
       confirmLabel: t('movies.list.removeConfirmAction'),
       onConfirm: () => confirmRemoveMovie(confirmState.movieId),
+      confirmTone: 'danger',
       loading,
     };
   }
@@ -68,6 +81,7 @@ export function buildConfirmDialogContent({
       message: t('movies.pitchNote.removeConfirmMessage', { title: confirmState.movieTitle }),
       confirmLabel: t('movies.pitchNote.removeConfirmAction'),
       onConfirm: () => confirmRemoveNote(confirmState.movieId),
+      confirmTone: 'danger',
       loading,
     };
   }
@@ -77,6 +91,7 @@ export function buildConfirmDialogContent({
       message: t('events.wheel.closeWithoutMovieConfirmMessage', { title: eventTitle }),
       confirmLabel: t('events.wheel.closeWithoutMovieConfirmAction'),
       onConfirm: confirmCloseNight,
+      confirmTone: 'danger',
       loading,
     };
   }
@@ -86,6 +101,7 @@ export function buildConfirmDialogContent({
       message: t('events.wheel.finishNightConfirmMessage', { title: eventTitle }),
       confirmLabel: t('events.wheel.finishNightConfirmAction'),
       onConfirm: confirmCloseNight,
+      confirmTone: 'default',
       loading,
     };
   }
@@ -94,6 +110,7 @@ export function buildConfirmDialogContent({
     message: t('events.participants.leaveConfirm'),
     confirmLabel: t('events.participants.leaveConfirmAction'),
     onConfirm: confirmLeave,
+    confirmTone: 'danger',
     loading,
   };
 }

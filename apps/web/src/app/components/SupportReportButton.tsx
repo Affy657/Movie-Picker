@@ -8,7 +8,7 @@ import {
   buildSupportReportText,
   type SupportContext,
 } from '@/shared/support/supportMailto';
-import Modal from '@/shared/components/Modal';
+import Modal, { ModalActions, ModalBody, ModalFooter } from '@/shared/components/Modal';
 import styles from './SupportReportButton.module.css';
 import { useCloseOnPageChange } from './useCloseOnPageChange';
 import Button, { buttonClass } from '@/shared/components/Button';
@@ -27,6 +27,7 @@ export default function SupportReportButton({ className }: Readonly<Props>) {
   useCloseOnPageChange(() => setOpen(false));
   const titleId = useId();
   const reportId = useId();
+  const introId = useId();
 
   const context = useMemo<SupportContext>(
     () => ({
@@ -85,9 +86,12 @@ export default function SupportReportButton({ className }: Readonly<Props>) {
           bottomSheetOnMobile
           title={t('support.dialogTitle')}
           titleId={titleId}
+          ariaDescribedBy={introId}
         >
-          <div className={styles.body}>
-            <p className={styles.intro}>{t('support.dialogIntro')}</p>
+          <ModalBody className={styles.body}>
+            <p id={introId} className={styles.intro}>
+              {t('support.dialogIntro')}
+            </p>
 
             <label className={styles.reportLabel} htmlFor={reportId}>
               {t('support.reportLabel')}
@@ -99,17 +103,17 @@ export default function SupportReportButton({ className }: Readonly<Props>) {
               readOnly
               rows={9}
             />
-          </div>
+          </ModalBody>
 
-          <div className={styles.footer}>
-            <div className={styles.actions}>
-              <a href={mailtoHref} className={buttonClass({ variant: 'primary' })}>
-                {t('support.openMailApp')}
-              </a>
+          <ModalFooter className={styles.footer}>
+            <ModalActions>
               <Button type="button" onClick={() => void handleCopy()}>
                 {t('support.copyReport')}
               </Button>
-            </div>
+              <a href={mailtoHref} className={buttonClass({ variant: 'primary' })}>
+                {t('support.openMailApp')}
+              </a>
+            </ModalActions>
 
             <p className={styles.status} role="status" aria-live="polite">
               {copyState === 'copied' ? t('support.copied') : null}
@@ -117,7 +121,7 @@ export default function SupportReportButton({ className }: Readonly<Props>) {
             </p>
 
             <p className={styles.hint}>{t('support.fallbackHint', { email: SUPPORT_EMAIL })}</p>
-          </div>
+          </ModalFooter>
         </Modal>
       ) : null}
     </>

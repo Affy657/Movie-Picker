@@ -7,7 +7,7 @@ import { useMenuState } from '@/shared/hooks/useMenuState';
 import { useTranslation } from '@/shared/i18n';
 import styles from './ListActionsMenu.module.css';
 
-type PickAction = (action: () => void) => () => void;
+type PickAction = (action?: () => void) => () => void;
 
 export default function ListActionsMenu({
   children,
@@ -17,7 +17,7 @@ export default function ListActionsMenu({
   const label = t('lists.page.moreActions');
   const pick: PickAction = (action) => () => {
     menu.close();
-    action();
+    action?.();
   };
   return (
     <div ref={menu.containerRef} className={styles.menu}>
@@ -25,7 +25,7 @@ export default function ListActionsMenu({
         <MoreHorizontal aria-hidden size={ICON_SIZE.md} />
       </IconButton>
       {menu.open ? (
-        <MenuPanel {...menu.panelProps} ariaLabel={label} className={styles.panel}>
+        <MenuPanel {...menu.panelProps} ariaLabel={label}>
           {children(pick)}
         </MenuPanel>
       ) : null}

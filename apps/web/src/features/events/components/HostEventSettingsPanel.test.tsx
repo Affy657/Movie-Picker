@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
@@ -9,6 +9,9 @@ import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapp
 import { TEST_API_V1, authMeGuestHandler } from '@/mocks/handlers';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import HostEventSettingsPanel from '@/features/events/components/HostEventSettingsPanel';
+import titleBarStyles from '@/shared/components/DialogTitleBar.module.css';
+import modalStyles from '@/shared/components/Modal.module.css';
+import { stubMatchMedia } from '@/test-utils/matchMedia';
 import type { EventData } from '@/features/events/types';
 import {
   setStoredHostToken,
@@ -1336,6 +1339,76 @@ describe('HostEventSettingsPanel', () => {
       expect(screen.getByRole('switch', { name: /répéter cette soirée/i })).toBeDisabled();
       expect(screen.queryByRole('radio', { name: 'Mois' })).not.toBeInTheDocument();
       expect(screen.getByText(/la prochaine soirée est déjà créée/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('dialog frame', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+      vi.unstubAllGlobals();
+    });
+
+    function renderOpenPanel(onClose: () => void = () => {}) {
+      renderWithRouter(
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken={null}
+          event={baseEvent}
+          open
+          onClose={onClose}
+        />
+      );
+    }
+
+    function dragDown(target: HTMLElement) {
+      const now = vi.spyOn(performance, 'now').mockReturnValue(1_000);
+      fireEvent.pointerDown(target, { pointerId: 1, button: 0, clientY: 80 });
+      now.mockReturnValue(1_400);
+      fireEvent.pointerMove(window, { pointerId: 1, clientY: 400 });
+      fireEvent.pointerUp(window, { pointerId: 1, clientY: 400 });
+    }
+
+    function stubPhoneWithoutMotion() {
+      stubMatchMedia(
+        (query) => query.includes('max-width') || query.includes('prefers-reduced-motion')
+      );
+    }
+
+    it('titles the panel with the shared title bar, the save status as its detail', () => {
+      renderOpenPanel();
+
+      const heading = screen.getByRole('heading', { level: 2, name: 'Paramètres de la soirée' });
+      expect(heading).toHaveClass(titleBarStyles.title!);
+      expect(heading.parentElement).toHaveTextContent(/enregistr/i);
+      expect(screen.getByRole('dialog', { name: 'Paramètres de la soirée' })).toBeInTheDocument();
+    });
+
+    it('scrolls every setting inside the padded body of the dialog', () => {
+      renderOpenPanel();
+
+      const body = screen.getByLabelText(/nom de la soir/i).closest(`.${modalStyles.body}`);
+      expect(body).not.toBeNull();
+      expect(body).toContainElement(screen.getByRole('switch', { name: /répéter cette soirée/i }));
+    });
+
+    it('closes when its title bar is dragged down on a phone', () => {
+      stubPhoneWithoutMotion();
+      const onClose = vi.fn();
+      renderOpenPanel(onClose);
+
+      dragDown(screen.getByRole('heading', { level: 2, name: 'Paramètres de la soirée' }));
+
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('stays open when a drag starts on the settings themselves', () => {
+      stubPhoneWithoutMotion();
+      const onClose = vi.fn();
+      renderOpenPanel(onClose);
+
+      dragDown(screen.getByText('Vote et tirage'));
+
+      expect(onClose).not.toHaveBeenCalled();
     });
   });
 });

@@ -69,7 +69,7 @@
   }
 
   .surface[open] {
-    animation: sheetEnter var(--duration-sheet) var(--ease-reveal) both;
+    animation: sheetEnter var(--duration-sheet) var(--ease-reveal) backwards;
   }
 
   .surface[open]::backdrop {

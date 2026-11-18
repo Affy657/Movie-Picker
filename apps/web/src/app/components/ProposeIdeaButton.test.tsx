@@ -8,7 +8,7 @@ import { http, HttpResponse } from 'msw';
 import { LocaleProvider } from '@/shared/i18n';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import ProposeIdeaButton from '@/app/components/ProposeIdeaButton';
-import styles from '@/app/components/ProposeIdeaButton.module.css';
+import modalStyles from '@/shared/components/Modal.module.css';
 
 function renderButton(path = '/e/soiree-cine') {
   return render(
@@ -103,6 +103,25 @@ describe('ProposeIdeaButton', () => {
     });
   });
 
+  it('lines up the close button of the confirmation like every other dialog footer', async () => {
+    server.use(
+      http.post(`${TEST_API_V1}/idea-suggestions`, () => new HttpResponse(null, { status: 204 }))
+    );
+
+    renderButton();
+    const user = await openDialog();
+    await fillForm(user);
+    await user.click(screen.getByRole('button', { name: /envoyer/i }));
+
+    const confirmation = await screen.findByRole('status');
+    expect(confirmation.closest(`.${modalStyles.body}`)).not.toBeNull();
+    const closeButtons = screen.getAllByRole('button', { name: /^fermer$/i });
+    const footerClose = closeButtons.at(-1)!;
+    expect(footerClose.closest(`.${modalStyles.actions}`)?.parentElement).toHaveClass(
+      modalStyles.footer!
+    );
+  });
+
   it('cuts the page path to the 300 characters the API accepts', async () => {
     let receivedBody: unknown = null;
     server.use(
@@ -188,13 +207,14 @@ describe('ProposeIdeaButton', () => {
     await user.upload(input, pngFile());
     await screen.findByRole('button', { name: /retirer cette image/i });
 
-    const scrollArea = document.querySelector(`.${styles.body}`);
+    const scrollArea = screen.getByLabelText(/description/i).closest(`.${modalStyles.body}`);
     expect(scrollArea).not.toBeNull();
-    expect(scrollArea).toContainElement(screen.getByLabelText(/description/i));
 
     const submit = screen.getByRole('button', { name: /envoyer/i });
     expect(scrollArea).not.toContainElement(submit);
-    expect(submit.closest(`.${styles.actions}`)).not.toBeNull();
+    expect(submit.closest(`.${modalStyles.actions}`)?.parentElement).toHaveClass(
+      modalStyles.footer!
+    );
   });
 
   it('creates only one preview URL per added image, even under StrictMode', async () => {

@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import LetterboxdChoicesModal from './LetterboxdChoicesModal';
+import modalStyles from '@/shared/components/Modal.module.css';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { createLetterboxdConfirmHandler, TEST_API_V1 } from '@/mocks/handlers';
 import type { LetterboxdPendingChoice } from '@/features/letterboxd/api/letterboxdApi';
@@ -124,6 +125,24 @@ describe('LetterboxdChoicesModal (MSW)', () => {
       'false'
     );
     expect(screen.getByRole('button', { name: 'Confirmer et terminer' })).toBeDisabled();
+  });
+
+  it('scrolls the title and its candidates above a footer that wraps its actions', () => {
+    renderModal(TWO_CHOICES);
+
+    const body = screen.getByText('Midnight Mass').closest(`.${modalStyles.body}`);
+    expect(body).not.toBeNull();
+    expect(body).toContainElement(screen.getByRole('radio', { name: /Sermons de minuit/ }));
+
+    const next = screen.getByRole('button', { name: 'Confirmer et suivant' });
+    expect(body).not.toContainElement(next);
+    const actions = next.closest<HTMLElement>(`.${modalStyles.actions}`);
+    expect(actions).not.toBeNull();
+    expect(actions?.lastElementChild).toBe(next);
+    expect(within(actions!).getByRole('button', { name: 'Passer' })).toBeInTheDocument();
+
+    const footer = actions!.closest(`.${modalStyles.footer}`);
+    expect(footer).toContainElement(screen.getByRole('button', { name: 'Décider plus tard' }));
   });
 
   it('confirms the selected choice and reports the result on the last title', async () => {

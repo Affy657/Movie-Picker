@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import SupportReportButton from '@/app/components/SupportReportButton';
-import styles from '@/app/components/SupportReportButton.module.css';
+import modalStyles from '@/shared/components/Modal.module.css';
 import { LocaleProvider } from '@/shared/i18n';
 import { SUPPORT_EMAIL } from '@/shared/support/supportMailto';
 import { copyTextToClipboard } from '@/shared/utils/copyTextToClipboard';
@@ -115,16 +115,36 @@ describe('SupportReportButton', () => {
     renderButton();
     await openDialog();
 
-    const scrollArea = document.querySelector(`.${styles.body}`);
+    const report = await screen.findByLabelText(/message à envoyer/i);
+    const scrollArea = report.closest(`.${modalStyles.body}`);
     expect(scrollArea).not.toBeNull();
-    expect(scrollArea).toContainElement(await screen.findByLabelText(/message à envoyer/i));
 
     const mailLink = screen.getByRole('link', { name: /ouvrir ma messagerie/i });
     const copyButton = screen.getByRole('button', { name: /copier le message/i });
     expect(scrollArea).not.toContainElement(mailLink);
     expect(scrollArea).not.toContainElement(copyButton);
-    expect(mailLink.closest(`.${styles.footer}`)).not.toBeNull();
-    expect(copyButton.closest(`.${styles.footer}`)).not.toBeNull();
+    expect(mailLink.closest(`.${modalStyles.footer}`)).not.toBeNull();
+    expect(copyButton.closest(`.${modalStyles.footer}`)).not.toBeNull();
+  });
+
+  it('puts the mail app, the main action, last in the row of actions', async () => {
+    renderButton();
+    await openDialog();
+
+    const mailLink = await screen.findByRole('link', { name: /ouvrir ma messagerie/i });
+    const actions = mailLink.closest(`.${modalStyles.actions}`);
+    expect(actions).not.toBeNull();
+    expect(actions?.lastElementChild).toBe(mailLink);
+    expect(actions).toContainElement(screen.getByRole('button', { name: /copier le message/i }));
+  });
+
+  it('describes the dialog with its intro', async () => {
+    renderButton();
+    await openDialog();
+
+    expect(
+      await screen.findByRole('dialog', { name: /signaler un problème/i })
+    ).toHaveAccessibleDescription(/envoyez-nous le message ci-dessous/i);
   });
 
   it('se ferme via le bouton de fermeture', async () => {

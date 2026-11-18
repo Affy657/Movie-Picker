@@ -24,7 +24,7 @@ import {
 import type { UserProfile } from '@/features/auth/types';
 import LetterboxdChoicesModal from './LetterboxdChoicesModal';
 import styles from './LetterboxdConnectModal.module.css';
-import Modal from '@/shared/components/Modal';
+import Modal, { ModalActions, ModalBody, ModalFooter } from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import Card from '@/shared/components/Card';
@@ -78,100 +78,104 @@ function ConnectFormModal({
       size="sm"
       column
       titleId={titleId}
-      title={
-        <>
-          {t('auth.account.letterboxd.connectTitle')}
-          <InfoBubble label={t('auth.account.letterboxd.helpTitle')}>
-            <p>{t('auth.account.letterboxd.helpSync')}</p>
-            <p>{t('auth.account.letterboxd.helpSafety')}</p>
-            <p>{t('auth.account.letterboxd.helpUsername')}</p>
-          </InfoBubble>
-        </>
-      }
+      title={t('auth.account.letterboxd.connectTitle')}
     >
-      <p className={styles.intro}>{t('auth.account.letterboxd.connectIntro')}</p>
-
       <form
-        className={styles.body}
+        className={styles.form}
         onSubmit={(e) => {
           e.preventDefault();
           void handleSubmit();
         }}
       >
-        <div className={styles.fieldCol}>
-          <label className={styles.fieldLabel} htmlFor="letterboxd-connect-username">
-            {t('auth.account.letterboxd.usernameLabel')}
-          </label>
-          <input
-            ref={inputRef}
-            id="letterboxd-connect-username"
-            type="text"
-            className="input"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder={t('auth.account.letterboxd.usernamePlaceholder')}
-            maxLength={40}
-            disabled={connecting}
-          />
-        </div>
+        <ModalBody className={styles.body}>
+          <div className={styles.introRow}>
+            <p className={styles.intro}>{t('auth.account.letterboxd.connectIntro')}</p>
+            <InfoBubble label={t('auth.account.letterboxd.helpTitle')}>
+              <p>{t('auth.account.letterboxd.helpSync')}</p>
+              <p>{t('auth.account.letterboxd.helpSafety')}</p>
+              <p>{t('auth.account.letterboxd.helpUsername')}</p>
+            </InfoBubble>
+          </div>
 
-        {connecting ? (
-          <Card padding="none" surface="sunken" className={styles.progress}>
-            <div className={styles.progressTrack}>
-              <progress
-                className={styles.progressControl}
-                aria-label={t('auth.account.letterboxd.connectSyncingAria')}
-              />
-              <span className={styles.progressBarFill} aria-hidden />
-            </div>
-            <p className={styles.progressText}>{t('auth.account.letterboxd.connectSyncingHint')}</p>
-          </Card>
-        ) : (
-          <Card padding="none" surface="sunken" className={styles.steps}>
-            <span className={styles.step}>
-              <span className={styles.stepDot}>
-                <span className={styles.stepDotText}>1</span>
-              </span>
-              <span>{t('auth.account.letterboxd.connectStep1')}</span>
-            </span>
-            <span className={styles.step}>
-              <span className={styles.stepDot}>
-                <span className={styles.stepDotText}>2</span>
-              </span>
-              <span>{t('auth.account.letterboxd.connectStep2')}</span>
-            </span>
-            <span className={styles.step}>
-              <span className={styles.stepDot}>
-                <span className={styles.stepDotText}>3</span>
-              </span>
-              <span>{t('auth.account.letterboxd.connectStep3')}</span>
-            </span>
-          </Card>
-        )}
+          <div className={styles.fieldCol}>
+            <label className={styles.fieldLabel} htmlFor="letterboxd-connect-username">
+              {t('auth.account.letterboxd.usernameLabel')}
+            </label>
+            <input
+              ref={inputRef}
+              id="letterboxd-connect-username"
+              type="text"
+              className="input"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder={t('auth.account.letterboxd.usernamePlaceholder')}
+              maxLength={40}
+              disabled={connecting}
+            />
+          </div>
 
-        {connectError && (
-          <p className={styles.error} role="alert">
-            {connectError}
-          </p>
-        )}
+          {connecting ? (
+            <Card padding="none" surface="sunken" className={styles.progress}>
+              <div className={styles.progressTrack}>
+                <progress
+                  className={styles.progressControl}
+                  aria-label={t('auth.account.letterboxd.connectSyncingAria')}
+                />
+                <span className={styles.progressBarFill} aria-hidden />
+              </div>
+              <p className={styles.progressText}>
+                {t('auth.account.letterboxd.connectSyncingHint')}
+              </p>
+            </Card>
+          ) : (
+            <Card padding="none" surface="sunken" className={styles.steps}>
+              <span className={styles.step}>
+                <span className={styles.stepDot}>
+                  <span className={styles.stepDotText}>1</span>
+                </span>
+                <span>{t('auth.account.letterboxd.connectStep1')}</span>
+              </span>
+              <span className={styles.step}>
+                <span className={styles.stepDot}>
+                  <span className={styles.stepDotText}>2</span>
+                </span>
+                <span>{t('auth.account.letterboxd.connectStep2')}</span>
+              </span>
+              <span className={styles.step}>
+                <span className={styles.stepDot}>
+                  <span className={styles.stepDotText}>3</span>
+                </span>
+                <span>{t('auth.account.letterboxd.connectStep3')}</span>
+              </span>
+            </Card>
+          )}
 
-        <div className={styles.footer}>
-          <Button type="button" variant="ghost" onClick={onClose} disabled={connecting}>
-            {t('common.cancel')}
-          </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            disabled={connecting || username.trim().length === 0}
-          >
-            <Import size={ICON_SIZE.md} aria-hidden />
-            <span>
-              {connecting
-                ? t('auth.account.letterboxd.connectSubmitting')
-                : t('auth.account.letterboxd.connectSubmit')}
-            </span>
-          </Button>
-        </div>
+          {connectError && (
+            <p className={styles.error} role="alert">
+              {connectError}
+            </p>
+          )}
+        </ModalBody>
+
+        <ModalFooter>
+          <ModalActions>
+            <Button type="button" onClick={onClose} disabled={connecting}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={connecting || username.trim().length === 0}
+            >
+              <Import size={ICON_SIZE.md} aria-hidden />
+              <span>
+                {connecting
+                  ? t('auth.account.letterboxd.connectSubmitting')
+                  : t('auth.account.letterboxd.connectSubmit')}
+              </span>
+            </Button>
+          </ModalActions>
+        </ModalFooter>
       </form>
     </Modal>
   );
@@ -217,7 +221,7 @@ function DoneModal({
       title={t('auth.account.letterboxd.doneTitle')}
       titleId={titleId}
     >
-      <div className={styles.body}>
+      <ModalBody className={styles.body}>
         <Card padding="none" surface="sunken" className={styles.report}>
           {syncError && (
             <span className={styles.reportRow}>
@@ -301,15 +305,17 @@ function DoneModal({
           )}
         </Card>
 
-        <p className={styles.intro}>{t('auth.account.letterboxd.doneFooterNote')}</p>
+        <p className={styles.note}>{t('auth.account.letterboxd.doneFooterNote')}</p>
+      </ModalBody>
 
-        <div className={styles.footer}>
+      <ModalFooter>
+        <ModalActions>
           <Button type="button" variant="primary" onClick={onClose}>
             <Eye size={ICON_SIZE.sm} aria-hidden />
             <span>{t('auth.account.letterboxd.doneCta')}</span>
           </Button>
-        </div>
-      </div>
+        </ModalActions>
+      </ModalFooter>
     </Modal>
   );
 }

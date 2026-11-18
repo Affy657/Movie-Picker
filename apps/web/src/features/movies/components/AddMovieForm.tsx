@@ -131,10 +131,12 @@ export default function AddMovieForm({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const filtersPanelRef = useRef<HTMLDivElement | null>(null);
+  const filtersToggleRef = useRef<HTMLButtonElement | null>(null);
 
   const closeFilters = useCallback(() => filters.setFiltersOpen(false), [filters]);
   useClickOutside(filtersPanelRef, closeFilters, filters.filtersOpen, {
     ignoreSelector: '[data-filters-toggle]',
+    returnFocusTo: filtersToggleRef,
   });
 
   useEffect(() => {
@@ -333,7 +335,13 @@ export default function AddMovieForm({
               aria-describedby={flags.showMinCharsHint ? minCharsHintId : undefined}
             />
           </div>
-          {quickFilters ? null : <FiltersToggle filters={filters} panelId={filtersPanelId} />}
+          {quickFilters ? null : (
+            <FiltersToggle
+              filters={filters}
+              panelId={filtersPanelId}
+              toggleRef={filtersToggleRef}
+            />
+          )}
         </div>
 
         {showHistory && (
@@ -531,11 +539,20 @@ function AddAction({
 
 type Filters = ReturnType<typeof useMovieSearchFilters>;
 
-function FiltersToggle({ filters, panelId }: Readonly<{ filters: Filters; panelId: string }>) {
+function FiltersToggle({
+  filters,
+  panelId,
+  toggleRef,
+}: Readonly<{
+  filters: Filters;
+  panelId: string;
+  toggleRef: RefObject<HTMLButtonElement | null>;
+}>) {
   const { t } = useTranslation();
   const activeFiltersCount = filters.activeFilterChips.length;
   return (
     <Button
+      ref={toggleRef}
       variant={filters.filtersOpen ? 'soft' : 'secondary'}
       className={clsx(styles.filterIconBtn, styles.filterIconBtnLabeled)}
       onClick={() => filters.setFiltersOpen((v) => !v)}

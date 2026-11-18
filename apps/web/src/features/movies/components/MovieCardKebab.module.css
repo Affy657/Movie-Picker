@@ -54,7 +54,5 @@
 
 .kebabMenu {
   position: fixed;
-  z-index: var(--z-popover);
-  min-width: 10rem;
   white-space: nowrap;
 }

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import clsx from 'clsx';
 import { SlidersHorizontal } from 'lucide-react';
 import SearchField from '@/shared/components/SearchField';
@@ -11,6 +11,16 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 import CountBadge from '@/shared/components/CountBadge';
 
 export type { SortOption };
+
+export function filtersToggleFor(filtersPanelId: string): RefObject<HTMLElement | null> {
+  return {
+    get current() {
+      return document.querySelector<HTMLElement>(
+        `[data-filters-toggle][aria-controls="${filtersPanelId}"]`
+      );
+    },
+  };
+}
 
 export interface ListToolbarProps<TSortKey extends string> {
   search: string;

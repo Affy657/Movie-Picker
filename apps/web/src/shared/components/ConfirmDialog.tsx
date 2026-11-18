@@ -1,7 +1,7 @@
 import { useId } from 'react';
 import { useTranslation } from '@/shared/i18n';
 import Button from './Button';
-import Modal from './Modal';
+import Modal, { ModalActions } from './Modal';
 import styles from './ConfirmDialog.module.css';
 
 export type ConfirmTone = 'danger' | 'default';
@@ -48,6 +48,7 @@ export default function ConfirmDialog({
 
   const confirmText = confirmLabel ?? t('common.confirm');
   const cancelText = cancelLabel ?? t('common.cancel');
+  const focusCancel = confirmTone === 'danger' && !hideCancel;
 
   return (
     <Modal
@@ -65,24 +66,27 @@ export default function ConfirmDialog({
       <p id={messageId} className={styles.message}>
         {message}
       </p>
-      <div className={styles.actions}>
+      <ModalActions>
         {!hideCancel && (
-          <Button size="sm" onClick={onCancel} data-testid={`${testId}-cancel`}>
+          <Button
+            onClick={onCancel}
+            data-testid={`${testId}-cancel`}
+            data-autofocus={focusCancel || undefined}
+          >
             {cancelText}
           </Button>
         )}
         <Button
-          size="sm"
           variant={confirmTone === 'danger' ? 'secondary' : 'primary'}
           tone={confirmTone}
           onClick={onConfirm}
           loading={loading}
           data-testid={`${testId}-confirm`}
-          autoFocus
+          data-autofocus={focusCancel ? undefined : true}
         >
           {confirmText}
         </Button>
-      </div>
+      </ModalActions>
     </Modal>
   );
 }

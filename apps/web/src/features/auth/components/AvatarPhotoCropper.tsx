@@ -228,11 +228,10 @@ export default function AvatarPhotoCropper({
         </p>
       )}
       <div className={styles.actions}>
-        <Button size="sm" onClick={onCancel} disabled={saving}>
+        <Button onClick={onCancel} disabled={saving}>
           {t('common.cancel')}
         </Button>
         <Button
-          size="sm"
           variant="primary"
           loading={saving}
           onClick={() => onConfirm(cropSourceRect(crop, photo, frame, inset))}

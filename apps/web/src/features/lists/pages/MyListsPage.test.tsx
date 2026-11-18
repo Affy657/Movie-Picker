@@ -168,7 +168,7 @@ async function chooseSort(
   option: string
 ) {
   await user.click(screen.getByRole('button', { name: `Trier : ${current}` }));
-  await user.click(await screen.findByRole('menuitem', { name: option }));
+  await user.click(await screen.findByRole('menuitemradio', { name: option }));
 }
 
 describe('MyListsPage', () => {

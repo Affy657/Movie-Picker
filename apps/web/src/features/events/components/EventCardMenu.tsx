@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { LogOut, MoreVertical, RotateCcw, Trash2 } from 'lucide-react';
 import { useMenuState } from '@/shared/hooks/useMenuState';
-import { MenuPanel, MenuItem } from '@/shared/components/Menu';
+import { MenuPanel, MenuItem, MenuSeparator } from '@/shared/components/Menu';
 import { useTranslation } from '@/shared/i18n';
 import styles from './EventCardMenu.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -56,10 +56,12 @@ export default function EventCardMenu({
               {t('events.settings.templates.reuseEventAction')}
             </MenuItem>
           )}
+          {onReuse && (onDelete || onRemove) ? <MenuSeparator /> : null}
           {onDelete && (
             <MenuItem
               tone="danger"
               icon={<Trash2 size={ICON_SIZE.sm} aria-hidden />}
+              aria-haspopup="dialog"
               onClick={() => {
                 menu.close();
                 onDelete();
@@ -72,6 +74,7 @@ export default function EventCardMenu({
             <MenuItem
               tone="danger"
               icon={<LogOut size={ICON_SIZE.sm} aria-hidden />}
+              aria-haspopup="dialog"
               onClick={() => {
                 menu.close();
                 onRemove();

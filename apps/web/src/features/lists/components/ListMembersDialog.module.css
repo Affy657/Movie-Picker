@@ -135,8 +135,3 @@
     font-size: var(--font-size-md);
   }
 }
-
-.footer {
-  display: flex;
-  justify-content: flex-end;
-}

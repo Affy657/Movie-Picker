@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LocaleProvider } from '@/shared/i18n';
+import cardStyles from '@/shared/components/Card.module.css';
 import MovieListFilteredLayout, { type MovieListFilters } from './MovieListFilteredLayout';
 
 function filters(overrides: Partial<MovieListFilters> = {}): MovieListFilters {
@@ -22,11 +23,15 @@ function filters(overrides: Partial<MovieListFilters> = {}): MovieListFilters {
   };
 }
 
-function renderLayout(state: MovieListFilters, isMobile = false) {
+function renderLayout(
+  state: MovieListFilters,
+  isMobile = false,
+  toolbar = <div data-testid="toolbar" />
+) {
   return render(
     <LocaleProvider>
       <MovieListFilteredLayout
-        toolbar={<div data-testid="toolbar" />}
+        toolbar={toolbar}
         filters={state}
         filtersPanelId="filters"
         tmdbLanguage="fr-FR"
@@ -75,6 +80,34 @@ describe('MovieListFilteredLayout', () => {
     expect(screen.queryByTestId('grid')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /réinitialiser/i }));
     expect(state.resetAll).toHaveBeenCalled();
+  });
+
+  it('gives the focus back to the filters toggle when Escape closes the panel', async () => {
+    const user = userEvent.setup();
+    const state = filters({ filtersOpen: true });
+    renderLayout(
+      state,
+      false,
+      <button type="button" data-filters-toggle aria-controls="filters">
+        Filtres
+      </button>
+    );
+
+    screen.getByRole('button', { name: /réinitialiser/i }).focus();
+    await user.keyboard('{Escape}');
+
+    expect(state.setFiltersOpen).toHaveBeenCalledWith(false);
+    expect(screen.getByRole('button', { name: 'Filtres' })).toHaveFocus();
+  });
+
+  it('draws the panel as a card inline, and flat inside the phone sheet', () => {
+    const { unmount } = renderLayout(filters({ filtersOpen: true }));
+    expect(document.getElementById('filters')).toHaveClass(cardStyles.card!);
+    unmount();
+
+    renderLayout(filters({ filtersOpen: true }), true);
+    const sheet = screen.getByRole('dialog');
+    expect(sheet.querySelector('#filters')).not.toHaveClass(cardStyles.card!);
   });
 
   it('passe par une feuille sur mobile', () => {

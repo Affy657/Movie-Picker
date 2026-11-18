@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Bookmark,
@@ -36,6 +36,7 @@ export interface CardKebabProps {
   onRemove: () => void;
   removeLabel?: string;
   removeAriaLabel?: string;
+  removeOpensDialog?: boolean;
   inWatchlist?: boolean;
   onToggleWatchlist?: () => void;
   onProposeToEvent?: () => void;
@@ -143,6 +144,7 @@ export function MovieCardKebab({
         isHost={isHost}
         canRemove={card.canRemove}
         onRemove={() => onRemove(movie)}
+        removeOpensDialog
         inWatchlist={isInWatchlist}
         onToggleWatchlist={toggleWatchlist}
         onViewDetails={onViewDetails}
@@ -153,6 +155,16 @@ export function MovieCardKebab({
       />
     </div>
   );
+}
+
+function triggerOutOfSight(
+  trigger: HTMLElement | null,
+  owners: ReadonlyArray<HTMLElement | null>
+): boolean {
+  if (!trigger || typeof document.elementFromPoint !== 'function') return false;
+  const rect = trigger.getBoundingClientRect();
+  const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+  return !hit || !owners.some((owner) => owner?.contains(hit));
 }
 
 function ExternalMenuLink({
@@ -176,6 +188,42 @@ function ExternalMenuLink({
   );
 }
 
+function RemoveMenuItem({
+  title,
+  isMine,
+  isHost,
+  label,
+  ariaLabel,
+  opensDialog,
+  onPick,
+  t,
+}: Readonly<{
+  title: string;
+  isMine: boolean;
+  isHost: boolean;
+  label?: string;
+  ariaLabel?: string;
+  opensDialog: boolean;
+  onPick: () => void;
+  t: Translate;
+}>) {
+  const defaultAriaLabel = isMine
+    ? `${t('movies.list.removeButton')} ${title}`
+    : t('movies.list.removeAsHostAria', { title });
+  return (
+    <MenuItem
+      tone="danger"
+      icon={<Trash2 aria-hidden size={ICON_SIZE.sm} />}
+      aria-haspopup={opensDialog ? 'dialog' : undefined}
+      onClick={onPick}
+      ariaLabel={ariaLabel ?? defaultAriaLabel}
+      title={!isMine && isHost ? t('movies.list.removeAsHostTitle') : undefined}
+    >
+      {label ?? t('movies.list.removeButton')}
+    </MenuItem>
+  );
+}
+
 export function CardKebab({
   title,
   tmdbId,
@@ -186,6 +234,7 @@ export function CardKebab({
   onRemove,
   removeLabel,
   removeAriaLabel,
+  removeOpensDialog = false,
   inWatchlist,
   onToggleWatchlist,
   onProposeToEvent,
@@ -196,6 +245,7 @@ export function CardKebab({
   t,
 }: Readonly<CardKebabProps>) {
   const [open, setOpen] = useState(false);
+  const menuId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -232,11 +282,19 @@ export function CardKebab({
     closeOnFocusLeave: true,
   });
 
+  const followTrigger = useCallback(() => {
+    if (triggerOutOfSight(btnRef.current, [rootRef.current, menuRef.current])) {
+      setOpen(false);
+      return;
+    }
+    repositionMenu();
+  }, [repositionMenu]);
+
   useEffect(() => {
     if (!open) return;
-    window.addEventListener('scroll', repositionMenu, { capture: true, passive: true });
-    return () => window.removeEventListener('scroll', repositionMenu, true);
-  }, [open, repositionMenu]);
+    window.addEventListener('scroll', followTrigger, { capture: true, passive: true });
+    return () => window.removeEventListener('scroll', followTrigger, true);
+  }, [open, followTrigger]);
 
   useEffect(() => {
     if (!open || !menuPos.ready) return;
@@ -273,11 +331,6 @@ export function CardKebab({
     setOpen((v) => !v);
   };
 
-  const defaultRemoveAria = isMine
-    ? `${t('movies.list.removeButton')} ${title}`
-    : t('movies.list.removeAsHostAria', { title });
-  const removeAria = removeAriaLabel ?? defaultRemoveAria;
-
   const lbUrl = letterboxdUrl(tmdbId, mediaType, title);
 
   const menuLabel = t('movies.list.moreActionsAria', { title });
@@ -296,18 +349,20 @@ export function CardKebab({
         onClick={handleToggle}
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-controls={open ? menuId : undefined}
         aria-label={menuLabel}
       >
         {trigger === 'disclosure' ? (
           <ChevronRight aria-hidden size={ICON_SIZE.md} />
         ) : (
-          <MoreVertical aria-hidden size={ICON_SIZE.lg} />
+          <MoreVertical aria-hidden size={ICON_SIZE.md} />
         )}
       </button>
       {open &&
         createPortal(
           <MenuPanel
             ref={menuRef}
+            id={menuId}
             ariaLabel={menuLabel}
             anchored={false}
             className={styles.kebabMenu}
@@ -342,6 +397,7 @@ export function CardKebab({
             {onProposeToEvent && (
               <MenuItem
                 icon={<ListPlus aria-hidden size={ICON_SIZE.sm} />}
+                aria-haspopup="dialog"
                 onClick={pick(onProposeToEvent)}
               >
                 {t('watchlist.card.proposeAction')}
@@ -373,15 +429,16 @@ export function CardKebab({
             )}
             {canRemove && (hasPrimaryGroup || hasLinksGroup) && <MenuSeparator />}
             {canRemove && (
-              <MenuItem
-                tone="danger"
-                icon={<Trash2 aria-hidden size={ICON_SIZE.sm} />}
-                onClick={pick(onRemove)}
-                ariaLabel={removeAria}
-                title={!isMine && isHost ? t('movies.list.removeAsHostTitle') : undefined}
-              >
-                {removeLabel ?? t('movies.list.removeButton')}
-              </MenuItem>
+              <RemoveMenuItem
+                title={title}
+                isMine={isMine}
+                isHost={isHost}
+                label={removeLabel}
+                ariaLabel={removeAriaLabel}
+                opensDialog={removeOpensDialog}
+                onPick={pick(onRemove)}
+                t={t}
+              />
             )}
           </MenuPanel>,
           document.body

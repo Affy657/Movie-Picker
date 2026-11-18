@@ -92,7 +92,7 @@ export default function Modal({
         styles.dialog,
         SIZE_CLASS[size],
         surface === 'bare' && styles.bare,
-        surface === 'media' && styles.media,
+        surface === 'media' && [styles.media, 'on-dark'],
         surface === 'borderless' && styles.borderless,
         padded && styles.padded,
         column && styles.column,
@@ -118,4 +118,18 @@ export default function Modal({
       {children}
     </dialog>
   );
+}
+
+type ModalBlockProps = Readonly<{ className?: string; children: ReactNode }>;
+
+export function ModalBody({ className, children }: ModalBlockProps) {
+  return <div className={clsx(styles.body, className)}>{children}</div>;
+}
+
+export function ModalFooter({ className, children }: ModalBlockProps) {
+  return <div className={clsx(styles.footer, className)}>{children}</div>;
+}
+
+export function ModalActions({ className, children }: ModalBlockProps) {
+  return <div className={clsx(styles.actions, className)}>{children}</div>;
 }

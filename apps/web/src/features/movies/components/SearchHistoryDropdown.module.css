@@ -1,5 +1,5 @@
 .historyDropdown {
-  composes: card radiusMd elevationLg from '@/shared/components/Card.module.css';
+  composes: surface from '@/shared/components/popover.module.css';
   margin: 0;
   padding: 0;
   min-inline-size: 0;
@@ -7,27 +7,8 @@
   top: calc(100% + var(--space-1-5));
   left: 0;
   right: 0;
-  z-index: var(--z-dropdown);
   max-width: 32rem;
   overflow: hidden;
-  animation: historyDropdownIn var(--duration-base) var(--ease-out);
-}
-
-@keyframes historyDropdownIn {
-  from {
-    opacity: 0;
-    transform: translateY(calc(-1 * var(--space-1)));
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .historyDropdown {
-    animation: none;
-  }
 }
 
 @media (max-width: 47.9375rem) {
