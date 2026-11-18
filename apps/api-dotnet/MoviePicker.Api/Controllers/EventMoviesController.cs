@@ -155,9 +155,10 @@ public sealed class EventMoviesController : ControllerBase
         string movieId,
         [FromBody] SetMoviePitchNoteRequest request,
         [FromServices] ISetMoviePitchNoteHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        await handler.HandleAsync(idOrSlug, movieId, request, ct);
+        await handler.HandleAsync(userId, idOrSlug, movieId, request, ct);
         return NoContent();
     }
 
@@ -174,9 +175,10 @@ public sealed class EventMoviesController : ControllerBase
         string movieId,
         [FromBody] DeleteMoviePitchNoteRequest request,
         [FromServices] IDeleteMoviePitchNoteHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        await handler.HandleAsync(idOrSlug, movieId, request, ct);
+        await handler.HandleAsync(userId, idOrSlug, movieId, request, ct);
         return NoContent();
     }
 

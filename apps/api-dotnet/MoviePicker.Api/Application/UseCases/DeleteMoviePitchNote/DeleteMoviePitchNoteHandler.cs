@@ -11,7 +11,6 @@ public sealed class DeleteMoviePitchNoteHandler : IDeleteMoviePitchNoteHandler
     private readonly IMovieRepository _movieRepository;
     private readonly IParticipantRepository _participantRepository;
     private readonly IHostTokenAccessor _hostTokenAccessor;
-    private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly TimeProvider _clock;
 
     public DeleteMoviePitchNoteHandler(
@@ -19,25 +18,22 @@ public sealed class DeleteMoviePitchNoteHandler : IDeleteMoviePitchNoteHandler
         IMovieRepository movieRepository,
         IParticipantRepository participantRepository,
         IHostTokenAccessor hostTokenAccessor,
-        ICurrentUserAccessor currentUserAccessor,
         TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _participantRepository = participantRepository;
         _hostTokenAccessor = hostTokenAccessor;
-        _currentUserAccessor = currentUserAccessor;
         _clock = clock;
     }
 
-    public async Task HandleAsync(string idOrSlug, string movieId, DeleteMoviePitchNoteRequest request, CancellationToken ct = default)
+    public async Task HandleAsync(string userId, string idOrSlug, string movieId, DeleteMoviePitchNoteRequest request, CancellationToken ct = default)
     {
-        var currentUserId = _currentUserAccessor.GetUserId();
         var (evt, movie, isHost) = await MovieActionContext.ResolveMovieForHostActionAsync(
             _eventRepository,
             _movieRepository,
             _hostTokenAccessor,
-            currentUserId,
+            userId,
             _clock.GetUtcNow(),
             idOrSlug,
             movieId,
@@ -53,7 +49,7 @@ public sealed class DeleteMoviePitchNoteHandler : IDeleteMoviePitchNoteHandler
             if (participant is null)
                 throw Errors.InvalidParticipant();
 
-            if (string.IsNullOrEmpty(currentUserId) || participant.UserId != currentUserId || movie.ParticipantId != participant.Id)
+            if (participant.UserId != userId || movie.ParticipantId != participant.Id)
                 throw Errors.PitchNoteDeletionRestricted();
         }
 

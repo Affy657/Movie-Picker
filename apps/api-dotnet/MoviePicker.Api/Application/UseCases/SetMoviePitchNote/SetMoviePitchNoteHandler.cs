@@ -10,30 +10,27 @@ public sealed class SetMoviePitchNoteHandler : ISetMoviePitchNoteHandler
     private readonly IEventRepository _eventRepository;
     private readonly IMovieRepository _movieRepository;
     private readonly IParticipantRepository _participantRepository;
-    private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly TimeProvider _clock;
 
     public SetMoviePitchNoteHandler(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
         IParticipantRepository participantRepository,
-        ICurrentUserAccessor currentUserAccessor,
         TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _participantRepository = participantRepository;
-        _currentUserAccessor = currentUserAccessor;
         _clock = clock;
     }
 
-    public async Task HandleAsync(string idOrSlug, string movieId, SetMoviePitchNoteRequest request, CancellationToken ct = default)
+    public async Task HandleAsync(string userId, string idOrSlug, string movieId, SetMoviePitchNoteRequest request, CancellationToken ct = default)
     {
         var (evt, movie, participant) = await MovieActionContext.ResolveOwnedMovieAsync(
             _eventRepository,
             _movieRepository,
             _participantRepository,
-            _currentUserAccessor.GetUserId(),
+            userId,
             _clock.GetUtcNow(),
             idOrSlug,
             movieId,

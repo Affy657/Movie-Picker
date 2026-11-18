@@ -4,5 +4,5 @@ namespace MoviePicker.Api.Application.UseCases.SetMoviePitchNote;
 
 public interface ISetMoviePitchNoteHandler
 {
-    Task HandleAsync(string idOrSlug, string movieId, SetMoviePitchNoteRequest request, CancellationToken ct = default);
+    Task HandleAsync(string userId, string idOrSlug, string movieId, SetMoviePitchNoteRequest request, CancellationToken ct = default);
 }

@@ -132,7 +132,7 @@ public sealed class EventMoviesControllerTests
     {
         var handler = new Mock<ISetMoviePitchNoteHandler>();
 
-        var result = await Controller().SetPitchNote("e", "m1", null!, handler.Object, CancellationToken.None);
+        var result = await Controller().SetPitchNote("e", "m1", null!, handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
     }
@@ -142,7 +142,7 @@ public sealed class EventMoviesControllerTests
     {
         var handler = new Mock<IDeleteMoviePitchNoteHandler>();
 
-        var result = await Controller().DeletePitchNote("e", "m1", null!, handler.Object, CancellationToken.None);
+        var result = await Controller().DeletePitchNote("e", "m1", null!, handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
     }
