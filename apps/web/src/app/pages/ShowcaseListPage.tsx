@@ -7,6 +7,7 @@ import Button from '@/shared/components/Button';
 import { ROUTES } from '@/app/routes';
 import { MOVIE_PAGE_CHUNKS } from '@/app/routeChunks';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
+import { queryKeys } from '@/shared/hooks/queryKeys';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useRecommendationSeed } from '@/app/pages/home/usePersonalRows';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
@@ -24,7 +25,7 @@ import { toCollectionToolbarProps } from '@/features/movies/components/FilteredC
 import MovieListFilteredLayout from '@/features/movies/components/MovieListFilteredLayout';
 import MovieBrowseCard from '@/features/movies/components/MovieBrowseCard';
 import listCardStyles from '@/features/movies/components/ShowcaseMovieCard.module.css';
-import { useMovieListToolbar } from '@/features/movies/hooks/useMovieListToolbar';
+import { useCatalogToolbar } from '@/features/movies/hooks/useCatalogToolbar';
 import { useMovieCollections, useMovieShowcase } from '@/features/movies/hooks/useMovieShowcase';
 import { searchMovies } from '@/features/movies/api/moviesApi';
 import type {
@@ -45,32 +46,26 @@ export type { ShowcaseListVariant };
 import {
   useWatchlistToggle,
   type WatchlistToggleItem,
-} from '@/features/watchlist/hooks/useWatchlistToggle';
+} from '@/features/library/hooks/useWatchlistToggle';
 import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
-import DimWatchedControl from '@/features/watchlist/components/DimWatchedControl';
+import DimWatchedControl from '@/features/library/components/DimWatchedControl';
 import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
-import { useDimWatched } from '@/features/watched/hooks/useDimWatched';
-import { useWatchedKeys } from '@/features/watched/hooks/useWatched';
-import type { SavedListSource } from '@/features/lists/api/savedListsApi';
-import ListProgress from '@/features/lists/components/ListProgress';
-import SavedToggleButton from '@/features/lists/components/SavedToggleButton';
-import { useSavedListToggle } from '@/features/lists/hooks/useSavedLists';
+import { useDimWatched } from '@/features/library/hooks/useDimWatched';
+import { useWatchedKeys } from '@/features/library/hooks/useWatched';
+import type { SavedListSource } from '@/features/library/api/savedListsApi';
+import ListProgress from '@/features/library/components/ListProgress';
+import SavedToggleButton from '@/features/library/components/SavedToggleButton';
+import { useSavedListToggle } from '@/features/library/hooks/useSavedLists';
 import ShowcaseListStates from './ShowcaseListStates';
 import { readShowcaseListArrival } from './showcaseListState';
-import type { MovieMediaType } from '@/shared/types/movie';
+import type { MovieMediaType, TitleSummary } from '@/shared/types/movie';
+import { toTitleSummary } from '@/shared/utils/titleSummary';
 import styles from './ShowcaseListPage.module.css';
 import { collectionDisplayName } from '@/features/movies/utils/collectionName';
 import BackLink from '@/shared/components/BackLink';
 
-interface ShowcaseListItem {
-  tmdbId: number;
-  title: string;
-  year: string;
-  posterPath: string | null;
+interface ShowcaseListItem extends TitleSummary {
   genreIds: number[];
-  mediaType: MovieMediaType;
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
   order: number;
   rank: number | null;
 }
@@ -201,14 +196,9 @@ type ShowcaseRow =
 
 function toShowcaseListItems(rows: readonly ShowcaseRow[]): ShowcaseListItem[] {
   return rows.map((row, index) => ({
-    tmdbId: row.id,
-    title: row.title,
-    year: row.year,
-    posterPath: row.posterPath,
+    ...toTitleSummary(row),
     genreIds: row.genreIds ?? [],
-    mediaType: row.mediaType ?? 'movie',
-    voteAverage: row.voteAverage,
-    runtimeMinutes: 'runtimeMinutes' in row ? row.runtimeMinutes : null,
+    runtimeMinutes: row.runtimeMinutes ?? null,
     order: index,
     rank: 'rank' in row && row.rank != null ? row.rank : null,
   }));
@@ -379,7 +369,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
     arrival.collectionName ?? collections.data?.items.find((row) => row.id === collectionId)?.name;
 
   const search = useQuery({
-    queryKey: ['movies', 'search-page', searchQuery] as const,
+    queryKey: queryKeys.movies.searchPage(searchQuery),
     queryFn: ({ signal }) => searchMovies(searchQuery, { signal }),
     enabled: searchEnabled,
   });
@@ -402,7 +392,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
     []
   );
 
-  const toolbar = useMovieListToolbar({ items, tmdbLanguage, mediaTypeLabels, comparePrimary });
+  const toolbar = useCatalogToolbar({ items, tmdbLanguage, mediaTypeLabels, comparePrimary });
 
   const openMoviePage = useOpenMoviePage();
   const [proposeTarget, setProposeTarget] = useState<WatchlistToggleItem | null>(null);

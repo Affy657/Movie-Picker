@@ -25,12 +25,12 @@ import {
 import {
   useWatchlistToggle,
   type WatchlistToggleItem,
-} from '@/features/watchlist/hooks/useWatchlistToggle';
-import AddToListMenu from '@/features/lists/components/AddToListMenu';
-import type { WatchedStatus } from '@/features/watched/api/watchedApi';
-import WatchedRating, { hasWatchedRating } from '@/features/watched/components/WatchedRating';
-import WatchedToggle from '@/features/watched/components/WatchedToggle';
-import { useWatchedTitle } from '@/features/watched/hooks/useWatched';
+} from '@/features/library/hooks/useWatchlistToggle';
+import AddToListMenu from '@/features/library/components/AddToListMenu';
+import type { WatchedStatus } from '@/features/library/api/watchedApi';
+import WatchedRating, { hasWatchedRating } from '@/features/library/components/WatchedRating';
+import WatchedToggle from '@/features/library/components/WatchedToggle';
+import { useWatchedTitle } from '@/features/library/hooks/useWatched';
 import { ApiError } from '@/shared/api/apiError';
 import BackLink from '@/shared/components/BackLink';
 import Button, { buttonClass } from '@/shared/components/Button';

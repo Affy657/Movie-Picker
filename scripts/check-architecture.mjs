@@ -100,10 +100,8 @@ const FEATURE_EDGES = {
   movies: ['auth'],
   events: ['movies', 'auth'],
   letterboxd: ['movies', 'auth'],
-  watchlist: ['letterboxd', 'events', 'movies', 'auth'],
-  profile: ['watchlist', 'events', 'movies', 'auth'],
-  watched: ['profile', 'watchlist', 'movies', 'auth'],
-  lists: ['watched', 'profile', 'watchlist', 'movies', 'auth'],
+  library: ['letterboxd', 'events', 'movies', 'auth'],
+  profile: ['library', 'events', 'movies', 'auth'],
   notifications: ['auth'],
 };
 const FEATURE_OF = /^apps\/web\/src\/features\/([a-z]+)\//;

@@ -7,7 +7,7 @@ import { http, HttpResponse } from 'msw';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import { ROUTE_CHUNKS } from '@/app/routeChunks';
-import type { MovieListItemLike } from '@/features/movies/hooks/useMovieListToolbar';
+import type { TitleSummary } from '@/shared/types/movie';
 import ProfileCollectionPage, {
   type ProfileCollectionTexts,
 } from '@/features/profile/components/ProfileCollectionPage';
@@ -24,7 +24,7 @@ const ALICE_PROFILE = {
   isFollowedByMe: null,
 };
 
-const ITEMS: MovieListItemLike[] = ['Inception', 'Arrival', 'Interstellar'].map((title, i) => ({
+const ITEMS: TitleSummary[] = ['Inception', 'Arrival', 'Interstellar'].map((title, i) => ({
   tmdbId: 100 + i,
   title,
   year: String(2010 + i),

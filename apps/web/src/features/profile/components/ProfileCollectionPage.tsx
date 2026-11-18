@@ -13,10 +13,8 @@ import { useLocale, useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { toCollectionToolbarProps } from '@/features/movies/components/FilteredCollectionLayout';
 import MovieListFilteredLayout from '@/features/movies/components/MovieListFilteredLayout';
-import {
-  useMovieListToolbar,
-  type MovieListItemLike,
-} from '@/features/movies/hooks/useMovieListToolbar';
+import { useCatalogToolbar } from '@/features/movies/hooks/useCatalogToolbar';
+import type { TitleSummary } from '@/shared/types/movie';
 import {
   ProfileLoadErrorState,
   ProfileNotFoundState,
@@ -30,10 +28,10 @@ import MovieBrowseCard from '@/features/movies/components/MovieBrowseCard';
 import {
   useWatchlistToggle,
   type WatchlistToggleItem,
-} from '@/features/watchlist/hooks/useWatchlistToggle';
+} from '@/features/library/hooks/useWatchlistToggle';
 import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
 import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
-import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
+import WatchlistSkeleton from '@/features/library/components/WatchlistSkeleton';
 import styles from './ProfileCollectionPage.module.css';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import Button from '@/shared/components/Button';
@@ -45,7 +43,7 @@ export interface CountedCollection<T> {
   total: number;
 }
 
-export interface ProfileCollectionTexts<T = MovieListItemLike> {
+export interface ProfileCollectionTexts<T = TitleSummary> {
   pageTitle: (name: string) => string;
   seoDescription: (profile: PublicProfile) => string;
   subtitle: (items: readonly T[], total: number) => string;
@@ -57,7 +55,7 @@ export interface ProfileCollectionTexts<T = MovieListItemLike> {
   sortPrimaryLabel: string;
 }
 
-interface ProfileCollectionPageProps<T extends MovieListItemLike> {
+interface ProfileCollectionPageProps<T extends TitleSummary> {
   handle: string | undefined;
   queryKey: readonly unknown[];
   fetchItems: (handle: string, signal: AbortSignal) => Promise<T[] | CountedCollection<T>>;
@@ -77,7 +75,7 @@ function counted<T>(fetched: T[] | CountedCollection<T>): CountedCollection<T> {
   return Array.isArray(fetched) ? { items: fetched, total: fetched.length } : fetched;
 }
 
-export default function ProfileCollectionPage<T extends MovieListItemLike>({
+export default function ProfileCollectionPage<T extends TitleSummary>({
   handle,
   queryKey,
   fetchItems,
@@ -125,7 +123,7 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
     [t]
   );
 
-  const toolbar = useMovieListToolbar({ items, tmdbLanguage, mediaTypeLabels, comparePrimary });
+  const toolbar = useCatalogToolbar({ items, tmdbLanguage, mediaTypeLabels, comparePrimary });
 
   const openMoviePage = useOpenMoviePage();
   useIdlePrefetch(MOVIE_PAGE_CHUNKS);

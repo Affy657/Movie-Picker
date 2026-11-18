@@ -1,18 +1,9 @@
 import { fetchApi, SLOW_REQUEST_TIMEOUT_MS } from '@/shared/api/client';
-import type { MovieMediaType } from '@/shared/types/movie';
+import type { TitleSummary } from '@/shared/types/movie';
 
 export type LetterboxdImportTarget = 'watchlist' | 'watched';
 
-export interface LetterboxdCandidate {
-  tmdbId: number;
-  mediaType: MovieMediaType;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  voteAverage?: number | null;
-  genreIds?: number[];
-  runtimeMinutes?: number | null;
-}
+export type LetterboxdCandidate = TitleSummary;
 
 export interface LetterboxdPendingChoice {
   rowIndex: number;
@@ -42,19 +33,12 @@ export interface LetterboxdSyncReport {
   watchedTotalTruncated: number;
 }
 
-export interface LetterboxdSelection {
-  tmdbId: number;
-  mediaType: MovieMediaType;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  voteAverage?: number | null;
-  genreIds?: number[];
+export interface LetterboxdSelection extends Omit<TitleSummary, 'runtimeMinutes'> {
   letterboxdSlug: string | null;
 }
 
-export interface LetterboxdWatchedSelection extends LetterboxdSelection {
-  runtimeMinutes?: number | null;
+export interface LetterboxdWatchedSelection extends TitleSummary {
+  letterboxdSlug: string | null;
   rating?: number | null;
   watchedOn?: string | null;
 }

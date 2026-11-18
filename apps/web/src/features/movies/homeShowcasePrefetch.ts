@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { ROUTES } from '@/app/routes';
+import { queryKeys } from '@/shared/hooks/queryKeys';
 import {
   SHOWCASE_STALE_TIME,
   fetchMovieCollections,
@@ -28,12 +29,12 @@ export function prefetchHomeShowcase(queryClient: QueryClient): void {
     });
   }
   void queryClient.prefetchQuery({
-    queryKey: ['movies', 'showcase', 'themes'] as const,
+    queryKey: queryKeys.movies.showcaseThemes,
     queryFn: ({ signal }) => fetchShowcaseThemes(signal),
     staleTime: SHOWCASE_STALE_TIME,
   });
   void queryClient.prefetchQuery({
-    queryKey: ['movies', 'collections'] as const,
+    queryKey: queryKeys.movies.collections,
     queryFn: ({ signal }) => fetchMovieCollections(signal),
     staleTime: SHOWCASE_STALE_TIME,
   });

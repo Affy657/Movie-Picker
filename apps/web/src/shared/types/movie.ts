@@ -7,6 +7,25 @@ export interface WatchProviderOffer {
 
 export type MovieMediaType = 'movie' | 'tv';
 
+export interface TitleSummary {
+  tmdbId: number;
+  mediaType: MovieMediaType;
+  title: string;
+  year: string;
+  posterPath: string | null;
+  genreIds?: number[];
+  voteAverage?: number | null;
+  runtimeMinutes?: number | null;
+}
+
+export interface AddTitleBody extends Omit<TitleSummary, 'mediaType'> {
+  mediaType?: MovieMediaType;
+}
+
+export interface CatalogTitle extends Omit<AddTitleBody, 'tmdbId'> {
+  id: number;
+}
+
 export interface FavoriteTitle {
   tmdbId: number;
   mediaType: MovieMediaType;

@@ -1,10 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import {
-  fetchFollowingWatchedMovies,
-  fetchMyWatchedMovies,
-} from '@/features/profile/api/profileApi';
+import { fetchFollowingWatchedMovies } from '@/features/profile/api/profileApi';
+import { fetchMyWatchedMovies } from '@/features/library/api/watchedApi';
 import { useWatchlist } from '@/features/movies/hooks/useWatchlist';
 import { queryKeys } from '@/shared/hooks/queryKeys';
+import { toTitleSummary } from '@/shared/utils/titleSummary';
 import type { WatchlistItem } from '@/features/movies/api/watchlistApi';
 import type { PersonalRowItem } from './HomeForYou';
 
@@ -24,16 +23,7 @@ export function useWatchlistRow(enabled: boolean) {
   const items: PersonalRowItem[] = [...movies]
     .sort(bestRatedFirst)
     .slice(0, WATCHLIST_TAKE)
-    .map((movie): PersonalRowItem => ({
-      tmdbId: movie.tmdbId,
-      mediaType: movie.mediaType,
-      title: movie.title,
-      year: movie.year,
-      posterPath: movie.posterPath,
-      voteAverage: movie.voteAverage,
-      runtimeMinutes: movie.runtimeMinutes,
-      genreIds: movie.genreIds,
-    }));
+    .map((movie) => toTitleSummary(movie));
   return { items, isPending: enabled && watchlist.isPending };
 }
 
@@ -44,26 +34,17 @@ export function useFriendsWatchedRow(enabled: boolean) {
     enabled,
   });
   const movies = enabled ? (query.data?.items ?? []) : [];
-  const items: PersonalRowItem[] = movies.map((movie) => ({
-    tmdbId: movie.tmdbId,
-    mediaType: movie.mediaType,
-    title: movie.title,
-    year: movie.year,
-    posterPath: movie.posterPath,
-    voteAverage: movie.voteAverage,
-    runtimeMinutes: movie.runtimeMinutes,
-    genreIds: movie.genreIds,
-  }));
+  const items: PersonalRowItem[] = movies.map((movie) => toTitleSummary(movie));
   return { items, isPending: enabled && query.isPending };
 }
 
 export function useRecommendationSeed(enabled: boolean) {
   const query = useQuery({
-    queryKey: queryKeys.me.watchedMovies(RECOMMENDATION_SEED_TAKE),
+    queryKey: queryKeys.watched.latest(RECOMMENDATION_SEED_TAKE),
     queryFn: ({ signal }) => fetchMyWatchedMovies(RECOMMENDATION_SEED_TAKE, signal),
     enabled,
   });
-  const seed = enabled ? query.data?.items?.[0] : undefined;
+  const seed = enabled ? query.data?.items[0] : undefined;
   return {
     seedTmdbId: seed?.tmdbId,
     seedMediaType: seed?.mediaType,

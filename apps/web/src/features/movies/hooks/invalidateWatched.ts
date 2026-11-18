@@ -8,8 +8,8 @@ export function invalidateWatchedFilms(
   excludedKeys: readonly QueryKey[] = []
 ): Promise<void> {
   return Promise.all(
-    [queryKeys.watched.all, queryKeys.me.watchedMoviesAll, queryKeys.profile.watchedMoviesAll].map(
-      (queryKey) => invalidateAllExcept(queryClient, queryKey, excludedKeys)
+    [queryKeys.watched.all, queryKeys.profile.watchedMoviesAll].map((queryKey) =>
+      invalidateAllExcept(queryClient, queryKey, excludedKeys)
     )
   ).then(() => undefined);
 }

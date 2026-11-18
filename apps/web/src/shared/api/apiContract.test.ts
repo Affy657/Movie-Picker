@@ -39,7 +39,7 @@ import type {
   MovieListPerson,
   MovieListSummary,
   UpdateListBody,
-} from '@/features/lists/api/listsApi';
+} from '@/features/library/api/listsApi';
 import type {
   MovieListInvitableUser,
   MovieListInviteLink,
@@ -48,19 +48,19 @@ import type {
   MovieListMember,
   MovieListMembers,
   MovieListPendingInvitation,
-} from '@/features/lists/api/listMembersApi';
-import type { PublicListDetail, PublicListSummary } from '@/features/lists/api/publicListsApi';
+} from '@/features/library/api/listMembersApi';
+import type { PublicListDetail, PublicListSummary } from '@/features/library/api/publicListsApi';
 import type {
   CopySavedListBody,
   SavedListDetail,
   SavedListSource,
   SavedListSummary,
-} from '@/features/lists/api/savedListsApi';
+} from '@/features/library/api/savedListsApi';
 import type {
   MarkWatchedBody,
   WatchedMovie,
   WatchedStatus,
-} from '@/features/watched/api/watchedApi';
+} from '@/features/library/api/watchedApi';
 import type {
   LetterboxdConfirmResult,
   LetterboxdPendingChoice,

@@ -15,7 +15,7 @@ import MovieBrowseCard, {
   type MovieLibraryActions,
 } from '@/features/movies/components/MovieBrowseCard';
 import PosterFan from '@/features/events/components/PosterFan';
-import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
+import WatchlistSkeleton from '@/features/library/components/WatchlistSkeleton';
 import {
   WATCHLIST_PREVIEW_TAKE,
   fetchUserWatchlistPreview,

@@ -19,23 +19,14 @@ import IconButton from '@/shared/components/IconButton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { Skeleton } from '@/shared/components/Skeleton';
 import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
-import type { MovieMediaType, WatchProviderOffer } from '@/shared/types/movie';
+import type { TitleSummary, WatchProviderOffer } from '@/shared/types/movie';
 import type { RatingScale } from '@/shared/types/theme';
 import { genreLabel } from '@/shared/utils/tmdbGenres';
 import badgeStyles from './MovieBrowseCard.module.css';
 
 const MAX_ROW_GENRES = 3;
 
-export interface MovieBrowseCardItem {
-  tmdbId: number;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  mediaType: MovieMediaType;
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
-  genreIds?: number[];
-}
+export type MovieBrowseCardItem = TitleSummary;
 
 export type MovieAvailability =
   | { status: 'pending' }

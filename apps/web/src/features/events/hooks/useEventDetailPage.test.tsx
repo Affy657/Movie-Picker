@@ -157,7 +157,7 @@ describe('useEventDetailPage', () => {
     const client = createTestQueryClient();
     client.setQueryData(queryKeys.watched.movies, { items: [], total: 0 });
     client.setQueryData(queryKeys.watched.status(438631, 'movie'), { status: 'night' });
-    client.setQueryData(queryKeys.me.watchedMovies(500), { items: [] });
+    client.setQueryData(queryKeys.watched.latest(500), { items: [], total: 0 });
     const { result } = renderHook(() => useEventDetailPage(slug), {
       wrapper: ({ children }: Readonly<{ children: ReactNode }>) => (
         <QueryClientWrapper client={client}>
@@ -172,7 +172,7 @@ describe('useEventDetailPage', () => {
     expect(client.getQueryState(queryKeys.watched.status(438631, 'movie'))?.isInvalidated).toBe(
       true
     );
-    expect(client.getQueryState(queryKeys.me.watchedMovies(500))?.isInvalidated).toBe(true);
+    expect(client.getQueryState(queryKeys.watched.latest(500))?.isInvalidated).toBe(true);
   });
 
   it('marks the nights of every film stale, so a film page shows the new seen mark', async () => {
