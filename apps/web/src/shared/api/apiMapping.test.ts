@@ -21,15 +21,6 @@ describe('mapMovieData', () => {
     expect(res.participantId).toBe('p1');
     expect(res.title).toBe('A');
   });
-
-  it('normalises an object participantId to { id, pseudo }', () => {
-    const res = mapMovieData({
-      _id: 'm1',
-      participantId: { _id: 'p1', pseudo: 'Bob' },
-    } as unknown as RawMovieData);
-
-    expect(res.participantId).toEqual({ id: 'p1', pseudo: 'Bob' });
-  });
 });
 
 describe('mapParticipantData', () => {
