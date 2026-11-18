@@ -616,9 +616,10 @@ Réglages posés le même jour, à vérifier et non reposer :
 Signature du diagnostic pour toute régression de ce type : `home` et `login` ne bougent pas, les onze autres perdent, parce que ce sont les deux pages dont le plus grand élément n'attend pas React (titre peint dans la coquille pour `home`, LCP adossé à une ressource pour `login`). Une régression qui épargne ces deux pages est dans le chemin de montage. Pour l'attribuer à un commit, la porte ne tournant qu'au déploiement, relever le score sur les runs passés :
 
 ```bash
-for ID in $(gh run list --workflow ci-cd.yml --limit 30 --json databaseId --jq '.[].databaseId'); do
-  J=$(gh run view "$ID" --json jobs --jq '.jobs[]|select(.name|startswith("Lighthouse"))|.databaseId')
-  [ -n "$J" ] && gh api "repos/<DEPOT>/actions/jobs/$J/logs" | grep -E " performance:"
+for ID in $(gh run list --workflow deploy.yml --limit 30 --json databaseId --jq '.[].databaseId'); do
+  for J in $(gh run view "$ID" --json jobs --jq '.jobs[]|select(.name|contains("Lighthouse"))|.databaseId'); do
+    gh api "repos/<DEPOT>/actions/jobs/$J/logs" | grep -E " performance:"
+  done
 done
 ```
 
