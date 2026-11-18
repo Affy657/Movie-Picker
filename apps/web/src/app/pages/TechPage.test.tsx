@@ -193,7 +193,7 @@ describe('TechPage', () => {
       'ciLintWeb',
       'ciTestApi',
       'ciTestWeb',
-      'ciE2eMongo',
+      'ciE2e',
       'ciLintTerraform',
       'ciScopeAlways',
       'ciVerify',
@@ -204,6 +204,11 @@ describe('TechPage', () => {
       expect(diagram).toContain(fr.tech.diagram[node]);
     }
     expect(diagram).not.toMatch(/vers l’image|vers le front/);
+    expect(diagram).not.toMatch(/test api mongo|e2e mongo/i);
+    expect(section.textContent).toMatch(/sur master, toutes tournent/i);
+    expect(section.textContent).not.toMatch(
+      /couches Docker|base de vulnérabilités sont conservées/i
+    );
   });
 
   it('ne redit pas les familles de tests dans les pratiques', () => {
@@ -314,6 +319,7 @@ describe('TechPage', () => {
       '/security-review',
       '/engineering:deploy-checklist',
       '/weekly-maintenance',
+      '/auto-maintenance',
     ]) {
       expect(labels).toContain(command);
     }
@@ -328,7 +334,12 @@ describe('TechPage', () => {
     const boxOf = (command: string) =>
       boxes.find((box) => box.querySelector('text')?.textContent === command) as SVGGElement;
 
-    for (const homemade of ['/dev-feature', '/verify', '/weekly-maintenance']) {
+    for (const homemade of [
+      '/dev-feature',
+      '/verify',
+      '/weekly-maintenance',
+      '/auto-maintenance',
+    ]) {
       const box = boxOf(homemade);
       expect(box.dataset.origin).toBe('project');
       expect(box.querySelector('image')?.getAttribute('href')).toBe('/logo.svg');
@@ -361,6 +372,7 @@ describe('TechPage', () => {
     expect(labels).toContain('plan de tests');
     expect(labels).toContain('contrôle en navigateur');
     expect(labels).not.toContain('plan technique');
+    expect(labels.join(' ')).not.toMatch(/verify:local/);
     expect(flow.querySelectorAll('rect[width="8"]')).toHaveLength(5);
     expect(container.querySelector('#method')?.textContent).toContain(
       'Cadrage, compte rendu fonctionnel, maquette, recette locale.'
@@ -438,6 +450,9 @@ describe('TechPage', () => {
     const { container } = renderTechPage();
 
     expect(container.querySelector('#quality')?.textContent).toMatch(/contrôle d.architecture/i);
+    expect(container.querySelector('#quality')?.textContent).toContain(
+      fr.tech.quality.ruleWriteSeq
+    );
     for (const id of ['tests', 'ci']) {
       expect(container.querySelector(`#${id}`)?.textContent).not.toMatch(
         /contrôle d.architecture/i
@@ -468,6 +483,9 @@ describe('TechPage', () => {
       expect(section.textContent).toContain(fr.tech.architecture[fact]);
     }
     expect(section.textContent).toContain(fr.tech.architecture.structureHeading);
+    expect(section.textContent).not.toMatch(/rien ne vit dans le processus/i);
+    expect(section.textContent).toMatch(/flux en direct/i);
+    expect(section.textContent).toMatch(/30 secondes/);
   });
 
   it('separates the services called by the server from those calling it', () => {
@@ -550,6 +568,8 @@ describe('TechPage', () => {
 
     expect(section.textContent).toContain(fr.tech.contract.types);
     expect(section.textContent).not.toMatch(/jamais (recopiés|écrits)/i);
+    expect(section.textContent).not.toMatch(/importé par ce seul test/i);
+    expect(section.textContent).toMatch(/openapi:sync/);
     expect(diagram).not.toMatch(/générés/i);
     expect(section.textContent).toContain(String(TECH_METRICS.contractCheckedTypes));
     expect(section.textContent).toContain(String(TECH_METRICS.contractResponses));
@@ -567,6 +587,18 @@ describe('TechPage', () => {
     expect(diagram).toContain(`Vite ${TECH_METRICS.viteMajor}`);
     expect(diagram).toContain(`React Router ${TECH_METRICS.routerMajor}`);
     expect(section.textContent).toContain(String(TECH_METRICS.lazyRoutes));
+  });
+
+  it('draws the front domains as the features of the repository', () => {
+    const { container } = renderTechPage();
+    const diagram = container.querySelector(
+      'svg[aria-labelledby="tech-frontgraph-title"]'
+    ) as SVGSVGElement;
+    const labels = [...diagram.querySelectorAll('text')].map((node) => node.textContent);
+
+    expect(labels).toContain(fr.tech.diagram.domainLibrary);
+    expect(labels).not.toContain('watchlist');
+    expect(container.querySelector('#ui')?.textContent).toMatch(/table/i);
   });
 
   it('no longer announces the public screens as an exception', () => {
@@ -587,6 +619,21 @@ describe('TechPage', () => {
     }
     expect(section.textContent).toContain(String(TECH_METRICS.mongoCollections));
     expect(section.textContent).toContain(String(TECH_METRICS.mongoIndexes));
+  });
+
+  it('draws the account deletion with the collections its transaction really writes', () => {
+    const { container } = renderTechPage();
+    const diagram = container.querySelector(
+      'svg[aria-labelledby="tech-unitofwork-title"]'
+    ) as SVGSVGElement;
+    const labels = [...diagram.querySelectorAll('text')].map((node) => node.textContent);
+
+    for (const collection of ['users', 'participants', 'watched_titles', 'avatar_photos']) {
+      expect(labels).toContain(collection);
+    }
+    expect(labels).not.toContain('votes');
+    expect(container.querySelector('#data')?.textContent).toMatch(/douze collections/);
+    expect(container.querySelector('#data')?.textContent).not.toMatch(/huit collections/);
   });
 
   it('backs uniqueness, expirations and the poster cache with build-time measures', () => {
@@ -712,6 +759,10 @@ describe('TechPage', () => {
     expect(infra.textContent).toMatch(/soirées récurrentes/i);
     expect(infra.textContent).toMatch(/30 minutes/);
     expect(infra.textContent).toMatch(/une fois par jour/i);
+    expect(infra.textContent).toMatch(/les cinq jobs/i);
+    expect(architecture.textContent).toMatch(/catalogue de l.accueil/i);
+    expect(fr.tech.trajectory.containerTwiceHint).toMatch(/cinq jobs planifiés/);
+    expect(JSON.stringify(fr.tech)).not.toMatch(/trois jobs/);
   });
 
   it('observe la production aussi depuis Cloud Monitoring, sondes et alertes comprises', () => {
@@ -719,9 +770,9 @@ describe('TechPage', () => {
     const section = container.querySelector('#quality') as HTMLElement;
 
     expect(section.textContent).toMatch(/Cloud Monitoring/);
-    expect(section.textContent).toMatch(/trois sondes/i);
-    expect(section.textContent).toMatch(/huit politiques d.alerte/i);
-    expect(section.textContent).not.toMatch(/cinq politiques d.alerte/i);
+    expect(section.textContent).toMatch(/quatre sondes/i);
+    expect(section.textContent).toMatch(/onze politiques d.alerte/i);
+    expect(section.textContent).not.toMatch(/(cinq|huit) politiques d.alerte/i);
     expect(section.textContent).toMatch(/les trois dernières/i);
     expect(section.textContent).not.toMatch(/les deux dernières/i);
   });

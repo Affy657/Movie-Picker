@@ -247,6 +247,7 @@ const ARCHITECTURE_RULES = [
   'ruleBreakpoint',
   'ruleImport',
   'ruleCycle',
+  'ruleWriteSeq',
 ] as const;
 
 export default function TechPage() {

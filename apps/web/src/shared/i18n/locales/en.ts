@@ -2882,19 +2882,19 @@ export const en: Locale = {
       structureHeading: 'How the two halves hold together',
       boundary: 'Boundary',
       boundaryValue:
-        'The front knows nothing of the server beyond {{endpoints}} routes under /api/v1, described by a contract the pipeline replays on every push.',
+        'The server exposes {{endpoints}} HTTP endpoints; the front only goes through the /api/v1 ones, described by a contract the pipeline replays on every push.',
       boundaryHint:
         'No direct database access from the browser: everything goes through those routes, and the contract makes the boundary verifiable.',
-      stateless: 'No state in memory',
+      stateless: 'Nothing that lives in memory alone',
       statelessValue:
-        'The host can start up to five instances of the server, so nothing lives inside the process: no session, no timer, no background job. The one exception is the TMDB entry cache, private to each instance and without effect on what is returned.',
+        'The host can start up to five instances of the server, so nothing that must last lives inside the process: no session, no timer, no background job. What does live there is a disposable copy of the database: sessions, kept 30 seconds before being read again, TMDB entries, and the live feed of a movie night, which reads its document again every second while a participant listens.',
       statelessHint:
-        'The keys that sign cookies are stored in the database, which avoids signing everyone out on each deployment.',
+        'The keys that sign cookies are stored in the database, which avoids signing everyone out on each deployment. The price of those copies is known: a revoked session stays valid for up to 30 seconds on the other instances.',
       deploys: 'Two deployments',
       deploysValue:
-        'The front ships to the CDN, the server ships as a container image. Either can go out without waiting for the other.',
+        'The front ships to the CDN, the server as a container image, and the server first: a published front never talks to a server older than itself.',
       deploysHint:
-        'Two separate steps in the pipeline: a styling fix does not redeploy the server.',
+        'Two separate steps in the pipeline: a styling fix does not redeploy the server, but one half only ships alone when the other has not changed since the served version.',
       servicesHeading: 'The outside services wired to the server',
       servicesNote:
         'None of them is required for the service to work: each has a defined behaviour when its key is missing or when it stops answering, and the server starts without them.',
@@ -2905,7 +2905,7 @@ export const en: Locale = {
         'The Movie Database, the open catalogue supplying titles, synopses, genres and posters.',
       letterboxd: 'Letterboxd',
       letterboxdValue:
-        'Watchlist import from the public profile. With no public API the page is read as it is: 300 films at most, once every 24 hours per account.',
+        'Watchlist and watched films imported from the public profile. With no public API the page is read as it is: 300 films at most per list, once every 24 hours per account.',
       letterboxdHint:
         "A social network for film lovers: a profile's public list is read, then matched against the catalogue.",
       oauth: 'Google, GitHub',
@@ -2930,7 +2930,7 @@ export const en: Locale = {
         'A donation platform for creators; a confirmed contribution then shows as a badge on the profile.',
       scheduler: 'Cloud Scheduler',
       schedulerValue:
-        'Calls the server on a fixed schedule: every 30 minutes for the movie night reminders, once a night for the recurring nights, then for the finished ones. The routes are open on the internet: every call carries a token signed by Google for the scheduler identity, which the server verifies, and a failed call is retried three times.',
+        'Calls the server on a fixed schedule: every 30 minutes for the movie night reminders, every five hours to reload the home page catalogue, every night for the recurring nights then for the finished ones, and every morning for the rating reminder. The routes are open on the internet: every call carries a token signed by Google for the scheduler identity, which the server verifies, and a failed call is retried three times.',
       schedulerHint:
         'Google Cloud scheduler: it calls an address at the appointed time, which replaces a timer living inside the server.',
       issues: 'GitHub Issues',
@@ -2946,14 +2946,14 @@ export const en: Locale = {
       currentBadge: 'in progress',
       unplannedSpan: 'The backlog',
       unplannedDetail:
-        'Some forty ideas sorted by theme, with no date and no version number. Each one is picked up when real usage calls for it.',
+        'Some thirty ideas sorted by theme, with no date and no version number. Each one is picked up when real usage calls for it.',
       techHeading: 'The open technical work',
       sharedCache: 'Cache shared across instances',
       sharedCacheHint:
-        'The TMDB entry cache lives in the memory of each instance: two instances repeat the same call, and a restart starts cold. A shared cache would fix both.',
+        'TMDB searches and entries still live in the memory of each instance: two instances repeat the same call, and a restart starts cold. The home page, the collections and the film enrichment already go through a shared cache in the database, the model to follow for the rest.',
       containerTwice: 'The container described in two places',
       containerTwiceHint:
-        'The mounted secrets, the server variables and the three scheduled jobs live in the deployment pipeline and in Terraform; as long as the version travels as a variable rather than in the image, the pipeline rules and the description follows.',
+        'The mounted secrets and the server variables are described in the deployment pipeline and in Terraform, and the five scheduled jobs still live in the pipeline only; as long as the version travels as a variable rather than in the image, the pipeline rules and the description follows.',
       sentryToken: 'One repository token remains',
       sentryTokenHint:
         'Everything else is keyless; the token that uploads source maps to Sentry is still a repository secret, to be moved behind an environment.',
@@ -3118,7 +3118,7 @@ export const en: Locale = {
     },
     ui: {
       title: 'Split by purpose, not by file type',
-      lead: '{{features}} self-contained domains and a shared core that knows none of them. Checked mechanically: the core is a leaf of the graph, no cycle tolerated.',
+      lead: '{{features}} domains whose dependencies on each other are declared in a table, a shared core that knows none of them, and an application layer on top that assembles the pages. Checked mechanically: the core is a leaf of the graph, an edge missing from the table or a cycle fails the build.',
       design: 'Design',
       designValue:
         'Closed tokens: no literal value allowed in CSS, and every hover state confined to devices that have one.',
@@ -3161,7 +3161,7 @@ export const en: Locale = {
       rulesValue:
         'The domain may import only System and itself. The application knows nothing of MongoDB, the web framework or the infrastructure. A controller never touches persistence.',
       rulesHint:
-        'These are not guidelines: the checker reads the using directives of every file and fails the build on the first breach.',
+        'These are not guidelines: the checker reads the using directives of every file, also spots the web types the SDK imports without any written using, and fails the build on the first breach.',
       versioning: 'The version in one place',
       versioningValue:
         'The /api/v1 prefix is a single constant, never retyped into a route. The exported contract and the front-end types inherit it.',
@@ -3174,23 +3174,23 @@ export const en: Locale = {
     },
     contract: {
       title: 'The boundary is a file, not a convention',
-      lead: 'The OpenAPI contract is exported from the server on every build. The front end keeps its own types, and a type-level test checks that none of them reads a field the contract does not describe.',
+      lead: 'The OpenAPI contract is exported from the server on every build and describes the JSON it really writes. The front end takes from it the list of routes it may call, keeps its own response types, and a type-level test checks that none of them reads a field the contract does not describe.',
       export: 'Contract export',
       exportValue:
-        'The server serialises its OpenAPI from the controllers; the file is a build artefact, not a hand-maintained document.',
+        'The server serialises its OpenAPI from the controllers, with the rules it applies: a property that is never null is required, an error has the shape of the envelope actually returned, a string with a closed set of values becomes an enumeration.',
       exportHint:
-        'The openapi:export script boots the application and writes the contract to artifacts/openapi-v1.json.',
+        'The openapi:sync script boots the application, writes the contract to artifacts/openapi-v1.json, then regenerates the front-end types: both files change in the same commit as the server.',
       types: 'Front-end types confronted',
       typesValue:
-        'The front end keeps its own types, written for its own use. A test confronts them with the contract and refuses to compile if one of them reads a field the server does not expose.',
+        'The front end keeps its own response types, written for its own use. A test confronts them with the contract and refuses to compile if one of them reads a field the server does not expose.',
       typesHint:
-        'openapi-typescript produces openapiSchema.ts, imported by that single test: the schema is a reference, not a source for the application code.',
+        'openapi-typescript produces openapiSchema.ts. The application code only takes the list of routes from it; the simulated responses of the tests take their type from it, so a field renamed on the server breaks their compilation.',
       drift: 'Drift detection',
       driftValue:
         'CI regenerates the types and fails if the committed file no longer matches the exported contract.',
       driftHint:
-        'openapi:types:check compares fresh output against the committed file; apiContract.test.ts additionally checks, at type level, that the fields the front end reads really exist.',
-      note: 'Two safety nets with different reach. The first is complete: the {{routes}} routes the front end calls are listed one by one, and one disappearing from the contract fails the build. The second goes deeper but covers less: it confronts {{checked}} of the {{total}} responses the contract describes, field by field, the ones the front end declares its own type for. The rest it reads without naming them, and some do not concern it at all, such as the health probes. Covering them means naming those types first: mechanical work, not a decision to make.',
+        'openapi:types:check compares fresh output against the committed file. A second script, run by hand, compares the contract of the last published version with the one of the commit and refuses a route or a property that disappeared: the previous front end keeps running in browsers for a few days.',
+      note: 'Two safety nets with different reach. The first is complete: every route the front end calls must be among the {{routes}} paths of the contract, otherwise the build fails. The second goes deeper but covers less: it confronts, field by field, the {{checked}} types the front end writes itself, responses and request bodies, with a contract that describes {{total}} responses; the others the front end reads without naming them, or does not read at all, such as the health probes. In the other direction, the front-end addresses the server writes into an email or a notification come from a single table, which a front-end test compares with its own.',
     },
     data: {
       title: 'Nine collections at the core, and all-or-nothing writes',
@@ -3198,7 +3198,7 @@ export const en: Locale = {
       modelCaption:
         'The lines are the identifiers that link documents. Users and Events are outlined because everything else hangs off them: every other document carries one or the other.',
       caption:
-        'Deleting an account touches eight collections inside a single transaction, two of them anonymised rather than emptied: no intermediate state is ever observable.',
+        'Deleting an account touches twelve collections inside a single transaction, two of them anonymised rather than emptied: no intermediate state is ever observable. The sessions of the account are revoked right after.',
       atomicity: 'Atomicity',
       atomicityValue: 'Every grouped write goes through a unit of work, and cannot stop halfway.',
       atomicityHint:
@@ -3210,9 +3210,9 @@ export const en: Locale = {
         'A document engine knows nothing of foreign keys: these indexes are what stops two accounts sharing an email or a participant voting twice.',
       expiry: 'Automatic expiry',
       expiryValue:
-        '{{ttl}} expiring indexes do the cleaning inside the engine: sessions, password tokens, notifications, deduplication markers, rate-limit counters and the donation log.',
+        '{{ttl}} expiring indexes do the cleaning inside the engine: sessions, password tokens, notifications, deduplication markers, rate-limit counters, movie night presence, catalogue and poster caches, the donation log.',
       expiryHint:
-        'No background job runs for this, which is just as well since nothing lives inside the server process.',
+        'No background job runs for this: the engine purges on its own, and the server keeps no timer.',
       inventory: 'Index inventory',
       inventoryValue:
         'A test compares the {{indexes}} indexes actually created against an expected list: name, uniqueness and expiry. Adding one without declaring it breaks the build.',
@@ -3222,7 +3222,7 @@ export const en: Locale = {
       migrationsValue:
         'Dated, idempotent, applied once at startup then recorded. {{migrations}} in production.',
       migrationsHint:
-        'Idempotent means a second run no longer changes anything the first one produced.',
+        'Idempotent means a second run no longer changes anything the first one produced. A migration is retired once no restorable backup predates it, otherwise a restore would bring back data it no longer fixes.',
       isolation: 'Isolation',
       isolationValue:
         'Dev and prod databases are separate, with a refusal to start if an environment targets the wrong one.',
@@ -3240,18 +3240,18 @@ export const en: Locale = {
       caption:
         'Blocking coverage on the front end: {{lines}}% of lines, {{functions}}% of functions, {{branches}}% of branches. On the server too: {{apiLines}}% of lines on the unit suite, and {{mongoLines}}% on the Mongo adapters alone, which only the suite wired to a real database ever runs.',
       unit: 'Unit tests',
-      unitValue: '{{count}} cases, no database or network, on in-memory doubles. A few seconds.',
+      unitValue: '{{count}} cases, no database or network, on in-memory doubles.',
       unitHint:
         'They cover the domain, the use cases and interface components isolated from their dependencies.',
       integration: 'Integration tests',
       integrationValue: '{{count}} cases replayed against a real MongoDB, transactions included.',
       integrationHint:
-        'It is the only path that actually exercises the Mongo adapters and the transactions; CI replays it in a dedicated job.',
+        'It is the only path that actually exercises the Mongo adapters and the transactions; CI runs it right after the server unit tests, and the in-memory database never stands in for the real one there.',
       e2e: 'End to end tests',
       e2eValue:
         '{{count}} Playwright cases driving Chromium against the built front end and the running server.',
       e2eHint:
-        'Persistence there is the in-memory implementation and third parties are stubbed: the journey is real, the environment stays deterministic.',
+        'The server talks to a real MongoDB replica set there, as in production, and only third parties are stubbed: the journey is real, the environment stays deterministic.',
       howHeading: 'How they are written',
       doubles: 'In-memory doubles',
       doublesValue:
@@ -3267,7 +3267,7 @@ export const en: Locale = {
       replicaValue:
         'The test container is created on the fly as a replica set, otherwise transactions could not be tested at all.',
       replicaHint:
-        'Each test class gets its own throwaway database: tests never tread on each other.',
+        'Each test class gets its own throwaway database: tests never tread on each other. A single script starts this replica set, on the workstation, in CI and to verify the backups.',
       stubs: 'Stubbed third parties',
       stubsValue:
         'TMDB and Letterboxd are replaced by stubs that two environment variables switch on.',
@@ -3282,29 +3282,29 @@ export const en: Locale = {
       networkValue:
         '{{files}} test files bring up a simulated HTTP server and answer the real requests the screens make, never reaching the network.',
       networkHint:
-        'Components call the API as they normally would: the network layer is intercepted, not the application code.',
+        'Components call the API as they normally would: the network layer is intercepted, not the application code. The simulated responses of new tests are typed on the API contract.',
     },
     ci: {
       title: '{{jobs}} checks before production',
-      lead: 'Two pipelines. The gates run on every push; the deployment is triggered by hand, staging first, and only leaves when all of them are green on that commit.',
+      lead: 'Two pipelines. The gates run on every commit of master and of every pull request; the deployment is triggered by hand, staging first, and only leaves when all of them are green on that commit.',
       caption:
-        'At the top, the scope filter decides which columns run; gitleaks and lint workflows bypass it. At the bottom, the deployment pipeline requires a green CI on the commit, refuses to ship one half alone, and production reuses the image the staging serves. The final link checks that every target left, not merely that nothing failed.',
+        'At the top, on a pull request, the scope filter decides which columns run; on master, all of them run, and gitleaks as well as lint workflows always bypass it. sonar only waits for the front-end suite: it builds and tests the server itself. At the bottom, the deployment pipeline requires a green CI on the commit, refuses to ship one half alone, and production reuses the image the staging serves. The final link checks that every target left, not merely that nothing failed.',
       pipelineHeading: 'What holds the pipeline together',
       trigger: 'Trigger',
       triggerValue:
         'Every push to master and every pull request towards master starts the pipeline, and there is no other long-lived branch: each delivery starts from a short branch, joins master the day it is ready and goes to production right after, with its own version.',
       triggerHint:
-        'Branches opened by the dependency bot are excluded from the push trigger, so the pipeline does not run twice.',
+        'A push only starts the pipeline on master: a short branch is only run through its pull request, dependency bot included, so the pipeline never runs twice on the same commit.',
       scope: 'Computed scope',
       scopeValue:
-        'A first job compares the changed files and decides which branches of the graph run. A styling fix does not replay the server suite.',
+        'On a pull request, a first job compares the changed files and decides which branches of the graph run: a styling fix does not replay the server suite. On master, everything runs.',
       scopeHint:
-        'It is what keeps the pipeline short, and it is also what made the deployment guard necessary.',
+        'The filter keeps pull requests short. On master it is lifted: a documentation commit pushed after a red one gave a pipeline green by vacuity, which the deployment would have accepted.',
       secrets: 'Secret scanning',
       secretsValue:
-        'A scan looks for keys and tokens in the code before the image is built. A match stops everything.',
+        'A scan looks for keys and tokens in the working tree on every run, with no scope filter. A match turns the pipeline red, hence forbids any deployment.',
       secretsHint:
-        'It runs on the working tree and blocks the image build; the platform also refuses a push carrying a recognised key.',
+        'The same script runs on the workstation in the full verification; the platform also refuses a push carrying a recognised key.',
       image: 'Tagged image',
       imageValue:
         'The server ships as a container image, tagged with the commit fingerprint and pushed to the registry by the staging deployment; production reuses that image as is, scanned again but never rebuilt.',
@@ -3317,18 +3317,19 @@ export const en: Locale = {
         'Both exist because it happened: skipped jobs left the pipeline green while production was half up to date, a skipped job not being a failed one, and a front end shipped alone served cards without year or rating for a morning, on a server left behind.',
       caches: 'A cached pipeline',
       cachesValue:
-        'NuGet dependencies, Turbo tasks, Docker layers and the vulnerability database are kept from one run to the next.',
+        'npm and NuGet dependencies, Turbo tasks and the Sonar analysis cache are kept from one run to the next. The image build and the vulnerability database never touch them.',
       cachesHint:
-        'Every job also carries a time limit, so a stuck step cannot hold the pipeline indefinitely.',
+        'A cache the jobs running the dependencies’ code can write would blind the scan that reads it. Every job also carries a time limit, so a stuck step cannot hold the pipeline indefinitely.',
       otherPipelines: 'Four other pipelines, outside the main graph',
       rollback: 'rollback',
-      rollbackHint: 'Manually triggered to put the previous image back online.',
+      rollbackHint:
+        'Triggered by hand, one pipeline for the server and one for the front end: the previous revision or published version takes the traffic back, without rebuilding anything.',
       terraform: 'infrastructure',
       terraformHint:
         'Plans an infrastructure change on its pull request. On master, two read-only plans precede the apply, which a reviewer must approve, and only when a resource changes. Every Monday the same plan is replayed and turns red if the infrastructure moved outside the repository.',
       backup: 'backup',
       backupHint:
-        'Every night, a dump of the database goes to a private bucket, read back and restored on the runner before it is kept; thirty days of retention, and an alert when no archive has arrived for 36 hours, because a scheduled pipeline the platform silently disables never fails.',
+        'Every night, a dump of the database goes to a private bucket, read back and restored on the runner before it is kept; thirty days of retention, 400 for a monthly copy, and an alert when no archive has arrived for 36 hours, because a scheduled pipeline the platform silently disables never fails.',
       securityScan: 'security scan',
       securityScanHint:
         'Every Monday, independent of pushes, to catch vulnerabilities published after the fact: the dependency lockfiles, the base image production runs and the Terraform description.',
@@ -3447,9 +3448,9 @@ export const en: Locale = {
       frontValue:
         'A fully client-side application shipped as static files: no rendering server to operate, scale or pay for.',
       frontHint:
-        'Server rendering would have added infrastructure to maintain for a narrow set of public pages: the home page, profiles, this dossier and the legal pages.',
+        'Server rendering would have added infrastructure to maintain for a narrow set of public pages: the home page, the film showcases, profiles, this dossier and the legal pages.',
       frontTrade:
-        'Five public pages are pre-rendered at build time, full HTML and metadata included; the home page and the profiles, dynamic, are still indexed through metadata and a sitemap.',
+        'Nine public pages are pre-rendered at build time, full HTML and metadata included; the home page and the profiles, dynamic, are still indexed through metadata and a sitemap, and the server itself renders the share preview of a movie night, a recap or a film.',
       styling: 'CSS modules rather than Tailwind',
       stylingValue:
         'CSS modules and in-house tokens: spacing, sizes, colours and depths form a closed scale that the checker refuses to see bypassed.',
@@ -3461,14 +3462,14 @@ export const en: Locale = {
       hostingHint:
         'Kubernetes meant disproportionate tooling for a single service; a virtual machine meant an OS to patch.',
       hostingTrade:
-        'No in-memory state is reliable and no background work can live in the process. Reminders are triggered from outside.',
+        'No in-memory state is reliable and no background work can live in the process. Reminders are triggered from outside, and the live feed of a movie night reads the database again rather than passing from one instance to another.',
       oneCloud: 'One cloud provider, since September 2026',
       oneCloudValue:
         'The front end was born on AWS before the server moved to Google Cloud; it joined it there on Firebase Hosting. One console, one permission model, one invoice.',
       oneCloudHint:
         'Cloud Storage and Cloud CDN, the direct equivalent of S3 and CloudFront, were ruled out: their forwarding rule costs close to twenty dollars a month before the first byte is served. Firebase Hosting serves the files, the headers and the SPA fallback within the free tier.',
       oneCloudTrade:
-        'A hosting less programmable than a CDN: with no function in front of the site, an unknown path gets the shell with a 200 and the share preview cannot be served per client.',
+        'A hosting less programmable than a CDN: with no function in front of the site, an unknown path gets the shell with a 200, and the share preview of a movie night, a recap or a film has to be relayed to the server.',
       mono: 'A pnpm and Turbo monorepo',
       monoValue:
         'One repository, one delivery chain, one version tag for both applications. The API contract and the client that consumes it change in the same commit, so a break fails to compile instead of surfacing in production.',
@@ -3538,9 +3539,9 @@ export const en: Locale = {
         'Revisions stay available at the host and old images in the registry, purged by its retention policy so that it does not grow forever. The rollback also checks the served release afterwards: a page that answers, the withdrawn version answers too.',
       scheduler: 'Periodic work',
       schedulerValue:
-        'No background work lives in the process. An external scheduler calls the server every 30 minutes for the event reminders, and once a day to spawn the next occurrence of recurring nights then close the ones that ended on their own, on routes protected by a token.',
+        'No background work lives in the process. An external scheduler calls the server every 30 minutes for the event reminders, every five hours to reload the home page catalogue, and once a day to spawn the next occurrence of recurring nights, remove the winning film from the participants’ to-watch list once the night is over, and remind those who have not yet rated the previous night’s film, on routes protected by a token.',
       schedulerHint:
-        'The three jobs are created by the deployment pipeline in production, after every promotion, and retry three times a call that hit a cold start or an error; a failed attempt raises an alert. The staging has none.',
+        'The five jobs are created by the deployment pipeline in production, after every promotion, and retry three times a call that hit a cold start or an error; a failed attempt raises an alert. The staging has none.',
       origins: 'Origins',
       originsValue:
         'The server only accepts declared origins. The deployment fails if the list is not set.',
@@ -3550,7 +3551,7 @@ export const en: Locale = {
       stagingValue:
         'Every commit first goes to staging.movie-picker.fr, a second instance of the site and the server with its own database and its own sign-in clients. Production refuses to leave until the staging serves exactly that commit, and reuses the image the staging runs without rebuilding it.',
       stagingHint:
-        'The staging is not indexed by search engines, has neither probes nor backups, and runs in the same project under identities of its own.',
+        'The staging is not indexed by search engines, has no backup and a single probe, on its server, and runs in the same project under identities of its own.',
       iac: 'Infrastructure described',
       iacValue:
         'Registry, secrets, services, sites, identities, federation, alerts and audit logs are described in Terraform, with a versioned and locked remote state. A change is planned on its pull request, and applied on master only after a reviewer agrees, when it changes a resource.',
@@ -3590,14 +3591,14 @@ export const en: Locale = {
 
       sonar: 'SonarCloud',
       sonarValue:
-        'Analysis on every push, coverage ingested from CI. The pipeline waits for the quality gate verdict and fails when it is red.',
+        'Analysis on every push, coverage ingested from CI. The pipeline waits for the quality gate verdict, then requires on the whole branch zero open issue, an A rating everywhere and no duplication.',
       sonarHint:
         'Both deployments depend on this job: a red gate stops the release, it does not merely annotate it.',
       monitoring: 'Cloud Monitoring',
       monitoringValue:
-        'Three probes query the service from outside, from three continents, and eight alert policies warn by e-mail: service or database unreachable, server errors, degraded latency, failed scheduled pass, late backup, new account created.',
+        'Four probes query the service from outside, from three continents, and eleven alert policies warn by e-mail: service, database or staging unreachable, server errors, degraded latency, failed scheduled pass, late backup, new account created, account blocked by rate limiting, profile photo storage full.',
       monitoringHint:
-        'The probes target /health, /health/ready and the front root. Thresholds sit above the measured noise so that an alert stays credible, and an incident closes on its own after thirty minutes back to normal. Probes, policies and their documentation are described in code.',
+        'The probes target /health, /health/ready and the front root, plus /health of the staging. Thresholds sit above the measured noise so that an alert stays credible, and an incident closes on its own after thirty minutes back to normal. Probes, policies, dashboard and their documentation are described in code.',
       sentry: 'Sentry',
       sentryValue:
         'Browser and server errors, tied to the deployed version through the commit SHA.',
@@ -3609,7 +3610,7 @@ export const en: Locale = {
       posthogHint:
         'Events emitted before the consent choice are lost, and that is the intended behaviour.',
       noteLead: 'The architecture check',
-      note: 'is a home-made script of about {{lines}} lines, run before every push and in CI. It fails the build on five families of mistakes no off-the-shelf linter can forbid:',
+      note: 'is a home-made gate of about {{lines}} lines, one module per family of rules, each rule with a case that must fail and one that must pass. Run before every push and in CI, it fails the build on six families of mistakes no off-the-shelf linter can forbid:',
       ruleComment: 'a comment outside a functional directive',
       ruleCommentHint:
         'Rejects // and /* */, except directives such as @ts-expect-error, eslint-disable or a shebang.',
@@ -3621,10 +3622,13 @@ export const en: Locale = {
         'Only a closed list of widths is allowed; any other value fails the build.',
       ruleImport: 'a forbidden import between layers',
       ruleImportHint:
-        'Rejects an import from the shared core into a domain, or from the domain layer into the database and the web.',
+        'Rejects an import from the shared core into a domain, a dependency between domains missing from their table, a domain reaching up to the page assembly, or the domain layer reaching the database and the web, implicit usings included.',
       ruleCycle: 'an import cycle',
       ruleCycleHint:
-        'Rejects two modules that end up importing each other, directly or through a detour.',
+        'Rejects two modules that end up importing each other, directly, through a detour or through a lazy load.',
+      ruleWriteSeq: 'a write that does not notify the movie night',
+      ruleWriteSeqHint:
+        'Rejects a use case that writes a film, a vote, a participant or a rating without moving the movie night counter forward: without it, neither the HTTP cache nor the live feed would see the change.',
     },
     diagram: {
       architectureTitle:
@@ -3673,7 +3677,7 @@ export const en: Locale = {
       contractFail: 'If so, CI fails',
       contractDrift: 'A check regenerates the types and fails if they have drifted.',
       testsPyramidTitle: 'Test pyramid: unit, integration, end to end',
-      testsE2e: '{{count}} Playwright tests, {{files}} files',
+      testsE2e: '{{count}} tests, {{files}} files',
       testsE2eLabel: 'END TO END',
       testsIntegration: '{{count}} tests, real MongoDB replica set',
       testsIntegrationLabel: 'INTEGRATION',
@@ -3698,9 +3702,7 @@ export const en: Locale = {
       ciAudit: 'audit deps',
       ciTestApi: 'test api',
       ciTestWeb: 'test web',
-      ciTestMongo: 'test api mongo',
       ciE2e: 'e2e',
-      ciE2eMongo: 'e2e mongo',
       ciSonar: 'sonar',
       ciSonarSub: 'quality gate',
       ciVerdict: 'green CI on the commit',
@@ -3744,7 +3746,7 @@ export const en: Locale = {
       devReview: 'code review, security',
       devFixes: 'fixes',
       devRoadmap: 'roadmap updated',
-      devPrePush: 'verify:local before push',
+      devPrePush: 'check:static on push',
       devPush: 'version, push to master',
       devCi: 'CI, {{jobs}} checks',
       devMerge: 'staging the same day',
@@ -3773,6 +3775,7 @@ export const en: Locale = {
       skillSecurityWhen: 'auth, permissions, new endpoint',
       skillDeployWhen: 'at production release',
       skillMaintenanceWhen: 'weekly pass',
+      skillAutoMaintenanceWhen: 'daily pass, no go needed',
       mcpLabel: 'TOOLS CONNECTED TO THE ASSISTANT (MCP AND COMMAND LINE)',
       mcpAssistant: 'assistant',
       mcpGithub: 'PRs and CI',
@@ -3788,7 +3791,7 @@ export const en: Locale = {
       domainAuth: 'auth',
       domainEvents: 'movie nights',
       domainMovies: 'films',
-      domainWatchlist: 'watchlist',
+      domainLibrary: 'library',
       domainNotifications: 'notifications',
       domainProfiles: 'profiles',
       domainLetterboxd: 'Letterboxd',
@@ -3796,16 +3799,16 @@ export const en: Locale = {
       sharedCoreSub: 'knows no feature',
       frontGraphNote: 'The core is a leaf of the graph: no arrow leaves it. A cycle fails the CI.',
       unitOfWorkTitle:
-        'Account deletion: eight collections written inside one transaction, committed or rolled back together',
+        'Account deletion: twelve collections written inside one transaction, committed or rolled back together',
       unitOfWorkLabel: 'UNIT OF WORK',
       unitOfWorkEnvelope: 'IUnitOfWork.ExecuteAsync',
-      unitOfWorkCollections: 'eight collections touched',
+      unitOfWorkCollections: 'twelve collections touched',
       unitOfWorkCommit: 'commit',
-      unitOfWorkCommitSub: 'all eight writes',
+      unitOfWorkCommitSub: 'all twelve writes',
       unitOfWorkRollback: 'rollback',
-      unitOfWorkRollbackSub: 'none of the eight',
+      unitOfWorkRollbackSub: 'none of the twelve',
       unitOfWorkNote:
-        'A MongoDB transaction in production, an in-memory lock in tests: the same code on both sides.',
+        'A MongoDB transaction in production, an in-memory lock in unit tests: the same code on both sides.',
       bugFlowTitle: 'Handling a defect, from report to regression cover',
       bugFlowLabel: 'DEFECT FLOW',
       bugReproduce: 'reproduce',
@@ -3874,7 +3877,7 @@ export const en: Locale = {
       infraZoneGcp: 'Google Cloud, europe-west1',
       infraMonitoring: 'Cloud Monitoring',
       infraMonitoringSub: 'front + API probes',
-      infraMonitoringDetail: 'eight alert policies',
+      infraMonitoringDetail: 'eleven alert policies',
       infraHosting: 'Firebase Hosting',
       infraHostingSub: 'www.movie-picker.fr',
       infraHostingDetail: 'managed TLS, headers',
@@ -3888,7 +3891,7 @@ export const en: Locale = {
       infraRegistrySub: 'one image per commit',
       infraRegistryDetail: 'tagged by SHA, purged',
       infraScheduler: 'Cloud Scheduler',
-      infraSchedulerSub: 'reminders, night passes',
+      infraSchedulerSub: 'five scheduled passes',
       infraSchedulerDetail: 'OIDC token, 3 attempts',
       infraAtlas: 'MongoDB Atlas',
       infraAtlasSub: 'managed replica set',

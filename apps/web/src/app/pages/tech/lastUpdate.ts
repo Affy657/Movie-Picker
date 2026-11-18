@@ -1,1 +1,1 @@
-export const TECH_PAGE_LAST_UPDATE = '2026-09-21';
+export const TECH_PAGE_LAST_UPDATE = '2026-11-18';
