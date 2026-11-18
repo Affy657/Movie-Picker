@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging.Console;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure;
 using MoviePicker.Api.Infrastructure.Web;
+using MoviePicker.Api.Infrastructure.Web.OpenApi;
 using Sentry;
 using Sentry.Extensibility;
 using Sentry.Extensions.Logging;
@@ -109,6 +110,7 @@ builder.Services.AddSwaggerGen(c =>
             Description =
                 "Business resources under **`/api/v1`** (health: `GET /health`). See `ApiRoutePrefix.V1` on the server and the prefix in `apps/web/src/shared/api/client.ts`."
         });
+    c.DescribeServedJson();
 });
 
 var app = builder.Build();

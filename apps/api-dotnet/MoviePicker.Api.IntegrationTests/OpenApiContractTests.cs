@@ -1,16 +1,233 @@
+using System.ComponentModel.DataAnnotations;
 using System.Net;
+using System.Net.Http.Json;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using MoviePicker.Api.Application.DTOs;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
 
 public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationFactory>
 {
+    private const string SchemaRefPrefix = "#/components/schemas/";
+
+    private static readonly string[] NotificationTypes =
+    [
+        "newfollower", "movieadded", "moviepicked", "participantjoined", "eventdeleted", "eventreminder1h",
+        "eventreminder24h", "eventinvitation", "eventpending", "moviepickedmanually",
+        "letterboxdreconciliationpending", "eventdatechanged", "ratingreminder", "listinvitation"
+    ];
+
+    private static readonly string[] Lifecycles = ["upcoming", "live", "pending", "finished"];
+
+    private readonly MoviePickerApplicationFactory _factory;
     private readonly HttpClient _client;
 
     public OpenApiContractTests(MoviePickerApplicationFactory factory)
     {
+        _factory = factory;
         _client = factory.CreateClient();
+    }
+
+    private async Task<JsonDocument> ContractAsync()
+    {
+        var res = await _client.GetAsync("/swagger/v1/swagger.json");
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        return JsonDocument.Parse(await res.Content.ReadAsStringAsync());
+    }
+
+    private static JsonElement Schemas(JsonDocument contract) =>
+        contract.RootElement.GetProperty("components").GetProperty("schemas");
+
+    private static IEnumerable<(string Status, JsonElement Response)> Responses(JsonDocument contract) =>
+        from path in contract.RootElement.GetProperty("paths").EnumerateObject()
+        from operation in path.Value.EnumerateObject()
+        from response in operation.Value.GetProperty("responses").EnumerateObject()
+        select (response.Name, response.Value);
+
+    private static HashSet<string> SchemaRefs(JsonElement node)
+    {
+        var refs = new HashSet<string>(StringComparer.Ordinal);
+        CollectSchemaRefs(node, refs);
+        return refs;
+    }
+
+    private static void CollectSchemaRefs(JsonElement node, HashSet<string> refs)
+    {
+        if (node.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in node.EnumerateArray())
+                CollectSchemaRefs(item, refs);
+            return;
+        }
+
+        if (node.ValueKind != JsonValueKind.Object)
+            return;
+
+        foreach (var property in node.EnumerateObject())
+        {
+            if (property.Name == "$ref" && property.Value.GetString() is { } reference && reference.StartsWith(SchemaRefPrefix, StringComparison.Ordinal))
+                refs.Add(reference[SchemaRefPrefix.Length..]);
+            else
+                CollectSchemaRefs(property.Value, refs);
+        }
+    }
+
+    private static HashSet<string> ReachableSchemas(JsonElement schemas, IEnumerable<string> roots)
+    {
+        var reached = new HashSet<string>(StringComparer.Ordinal);
+        var pending = new Stack<string>(roots);
+        while (pending.TryPop(out var name))
+        {
+            if (!reached.Add(name))
+                continue;
+            foreach (var reference in SchemaRefs(schemas.GetProperty(name)))
+                pending.Push(reference);
+        }
+
+        return reached;
+    }
+
+    private static HashSet<string> RequestSchemas(JsonDocument contract)
+    {
+        var roots = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var path in contract.RootElement.GetProperty("paths").EnumerateObject())
+        foreach (var operation in path.Value.EnumerateObject())
+        {
+            if (operation.Value.TryGetProperty("requestBody", out var body))
+                roots.UnionWith(SchemaRefs(body));
+            if (operation.Value.TryGetProperty("parameters", out var parameters))
+                roots.UnionWith(SchemaRefs(parameters));
+        }
+
+        return ReachableSchemas(Schemas(contract), roots);
+    }
+
+    private static bool IsNullable(JsonElement schema) =>
+        schema.TryGetProperty("nullable", out var nullable) && nullable.GetBoolean();
+
+    private static HashSet<string> RequiredOf(JsonElement schema) =>
+        schema.TryGetProperty("required", out var required)
+            ? required.EnumerateArray().Select(name => name.GetString()!).ToHashSet(StringComparer.Ordinal)
+            : [];
+
+    private static string[] EnumOf(JsonElement schemas, string schema, string property) =>
+        schemas.GetProperty(schema).GetProperty("properties").GetProperty(property).TryGetProperty("enum", out var values)
+            ? values.EnumerateArray().Select(value => value.GetString()!).ToArray()
+            : [];
+
+    private static bool IsValidatedAsRequired(PropertyInfo property) =>
+        property.GetCustomAttribute<RequiredAttribute>() is not null
+        || property.GetCustomAttribute<JsonRequiredAttribute>() is not null
+        || property.GetCustomAttribute<RequiredMemberAttribute>() is not null;
+
+    [Fact]
+    public async Task ResponseSchemas_RequireEveryPropertyTheServerAlwaysWritesWithAValue()
+    {
+        using var contract = await ContractAsync();
+        var schemas = Schemas(contract);
+        var requestSchemas = RequestSchemas(contract);
+
+        var optionalButNeverNull = (
+            from schema in schemas.EnumerateObject()
+            where !requestSchemas.Contains(schema.Name) && schema.Value.TryGetProperty("properties", out _)
+            let required = RequiredOf(schema.Value)
+            from property in schema.Value.GetProperty("properties").EnumerateObject()
+            where !IsNullable(property.Value) && !required.Contains(property.Name)
+            select $"{schema.Name}.{property.Name}").ToList();
+
+        Assert.Empty(optionalButNeverNull);
+        var myParticipant = schemas.GetProperty("EventDetailResponse").GetProperty("properties").GetProperty("myParticipant");
+        Assert.True(IsNullable(myParticipant));
+        Assert.Equal("ParticipantResponse", Assert.Single(SchemaRefs(myParticipant)));
+        Assert.Contains("eventsCreated", RequiredOf(schemas.GetProperty("UserStatsResponse")));
+        Assert.Contains("slug", RequiredOf(schemas.GetProperty("EventDetailResponse")));
+        Assert.Contains("status", RequiredOf(schemas.GetProperty("WatchedStatusResponse")));
+        Assert.DoesNotContain("actorHandle", RequiredOf(schemas.GetProperty("UserNotificationItem")));
+        Assert.DoesNotContain("myVote", RequiredOf(schemas.GetProperty("MovieWithScoreResponse")));
+    }
+
+    [Fact]
+    public async Task RequestSchemas_RequireOnlyTheFieldsTheServerValidatesAsRequired()
+    {
+        using var contract = await ContractAsync();
+        var schemas = Schemas(contract);
+        var dtoTypes = typeof(AddMovieRequest).Assembly.GetTypes()
+            .GroupBy(type => type.Name, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+
+        var requiredWithoutValidation = (
+            from name in RequestSchemas(contract)
+            let type = dtoTypes.GetValueOrDefault(name)
+            where type is not null && !type.IsEnum
+            from requiredName in RequiredOf(schemas.GetProperty(name))
+            let property = type.GetProperties().Single(p => JsonNamingPolicy.CamelCase.ConvertName(p.Name) == requiredName)
+            where !IsValidatedAsRequired(property)
+            select $"{name}.{requiredName}").ToList();
+
+        Assert.Empty(requiredWithoutValidation);
+        Assert.Equal(["participantId", "title", "tmdbId"], RequiredOf(schemas.GetProperty("AddMovieRequest")).Order());
+        Assert.Empty(RequiredOf(schemas.GetProperty("PasswordResetRequest")));
+    }
+
+    [Fact]
+    public async Task ErrorResponses_DescribeTheApiErrorEnvelopeTheServerWrites()
+    {
+        using var contract = await ContractAsync();
+        var schemas = Schemas(contract);
+
+        var errorResponses = Responses(contract).Where(r => int.Parse(r.Status) >= 400).ToList();
+
+        Assert.NotEmpty(errorResponses);
+        Assert.All(errorResponses, error =>
+        {
+            var content = error.Response.GetProperty("content").EnumerateObject().ToList();
+            var media = Assert.Single(content);
+            Assert.Equal("application/json", media.Name);
+            Assert.Equal(SchemaRefPrefix + "ApiErrorResponse", media.Value.GetProperty("schema").GetProperty("$ref").GetString());
+        });
+        Assert.False(schemas.TryGetProperty("ProblemDetails", out _));
+        var envelope = schemas.GetProperty("ApiErrorResponse");
+        Assert.Equal(["code", "error"], RequiredOf(envelope).Order());
+        Assert.Equal(
+            ["code", "error", "params", "reason", "requestId"],
+            envelope.GetProperty("properties").EnumerateObject().Select(p => p.Name).Order());
+    }
+
+    [Fact]
+    public async Task FreeStringValues_AreEnumsOfTheValuesTheServerWrites()
+    {
+        using var contract = await ContractAsync();
+        var schemas = Schemas(contract);
+
+        Assert.Equal(NotificationTypes, EnumOf(schemas, "UserNotificationItem", "type"));
+        Assert.Equal(NotificationTypes, EnumOf(schemas, "NotificationTypePreference", "type"));
+        Assert.Equal(Lifecycles, EnumOf(schemas, "EventDetailResponse", "lifecycle"));
+        Assert.Equal(Lifecycles, EnumOf(schemas, "MyEventSummaryDto", "lifecycle"));
+        Assert.Equal(Lifecycles, EnumOf(schemas, "NightRecapResponse", "lifecycle"));
+        Assert.Equal(["wheel", "manual"], EnumOf(schemas, "EventWinnerResponse", "pickMethod"));
+        Assert.Equal(
+            ["creator", "director", "writer", "composer", "photography"],
+            EnumOf(schemas, "MovieCrewMemberResponse", "job"));
+        Assert.Equal(
+            ["trending", "now-playing", "most-proposed", "theme", "collection", "provider", "recommendations", "director"],
+            EnumOf(schemas, "MovieShowcaseListResponse", "section"));
+    }
+
+    [Fact]
+    public async Task NotificationTypeEnum_MatchesTheTypesTheServerServes()
+    {
+        using var contract = await ContractAsync();
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "ContractPrefs");
+
+        var served = await client.GetFromJsonAsync<JsonElement>("/api/v1/notifications/preferences");
+
+        Assert.Equal(
+            EnumOf(Schemas(contract), "NotificationTypePreference", "type"),
+            served.GetProperty("preferences").EnumerateArray().Select(p => p.GetProperty("type").GetString()!));
     }
 
     [Fact]
