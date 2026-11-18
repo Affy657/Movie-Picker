@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-096`.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-105`.
 5. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
 7. **Contraintes** (ce qui casse en silence si on y touche) et **Impasses** (essayé, mesuré, sans gain), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
@@ -538,6 +538,90 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - verify: `grep -c "skip" apps/api-dotnet/MoviePicker.Api/Application/UseCases/UserMovies/GetUserWatchedMoviesHandler.cs` ; encore ouvert tant que la commande rend `0`
 - fix: pagination `skip`/`take` côté API, chargement page par page derrière « Afficher plus » côté front
 - fini-quand: le millième et unième film d'un profil s'affiche
+
+## DEBT-096 l'adaptateur en mémoire reste dans l'assembly de production
+
+- state: humain
+- bloque: décider si l'API sans MongoDB sur le poste sert encore (`docs/development.md`, démarrage sans `MONGODB_URI`)
+- impact: depuis l'audit d'architecture du 2026-11-18, la CI et l'e2e ne tournent plus que sur MongoDB, mais chaque méthode de port s'écrit encore deux fois (37 des 47 commits de port touchaient les deux adaptateurs) pour un mode qui ne sert qu'au poste et aux kits de tests unitaires
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/InMemory/`, `Infrastructure/ServiceCollectionExtensions.cs`
+- verify: `grep -c "InMemory" apps/api-dotnet/MoviePicker.Api/Infrastructure/ServiceCollectionExtensions.cs` ; encore ouvert tant que la commande rend plus de `0`
+- fix: si le mode ne sert plus, déplacer les adaptateurs en mémoire dans le projet de tests comme faux des kits (`MovieListTestKit`, `SavedListTestKit`, `WatchedTestKit`), une méthode qu'aucun kit n'appelle levant `NotSupportedException`, et les retirer de l'enregistrement
+- fini-quand: une nouvelle méthode de port ne s'implémente plus qu'une fois dans le code de production
+
+## DEBT-097 six migrations terminées et huit méthodes de port attendent la fin de la rétention des sauvegardes
+
+- state: differe
+- declencheur: 2027-10-20 pour les premières (identifiant de la migration plus 410 jours : 400 jours de copies mensuelles et 7 jours de suppression réversible, règle de retrait de la section « Migrations de données » d'`AGENTS.md`)
+- impact: `ListMissingHandleAsync` (2027-10-20), `ListMissingGenresAsync` films et watchlist (2027-10-20), `ListMissingStartAtAsync` (2027-10-30), `ListMissingFactsAsync` (2027-11-04), `ListWithLegacyPosterPathAsync` films et watchlist (2027-11-07), `ListMissingRecapSlugAsync` (2027-11-28) ne servent qu'à leurs migrations, avec leurs deux implémentations et leurs tests
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Migrations/`, `Application/Ports/`
+- verify: `grep -rlE "ListMissing(Handle|Genres|StartAt|Facts|RecapSlug)Async|ListWithLegacyPosterPathAsync" apps/api-dotnet/MoviePicker.Api/Application/Ports`
+- fix: à chaque date, supprimer la migration, ses méthodes de port, leurs implémentations, leurs tests et son enregistrement ; lire avant le contenu réel du bucket de sauvegarde, une copie mensuelle plus récente que prévu peut avancer la date
+- fini-quand: la commande `verify` ne rend plus rien
+
+## DEBT-098 deux tests d'intégration échouent parfois sous charge
+
+- state: agent
+- impact: `EventUpdate_RacingCopiesOfTheSameVersion_LetExactlyOneWin` (MongoDB : une manche sans gagnant alors que la version a avancé d'un cran) et `EventStreamResultTests.ExecuteResultAsync_PresenceStoreDown_KeepsStreamingAndReleasesTheLease` (délai) ont chacun échoué une fois le 2026-11-18 sur un poste chargé, et passent rejoués seuls
+- ou: `apps/api-dotnet/MoviePicker.Api.IntegrationTests/`, `apps/api-dotnet/MoviePicker.Api.Tests/`
+- verify: `grep -rln "RacingCopiesOfTheSameVersion_LetExactlyOneWin\|PresenceStoreDown_KeepsStreamingAndReleasesTheLease" apps/api-dotnet --include=*.cs`
+- fix: pour la course, établir si un conflit d'écriture peut être vu par tous les participants alors que l'écriture est appliquée (bug du repository) ou si c'est le test qui conclut trop tôt ; pour le flux, remplacer l'attente en temps réel par une horloge contrôlée
+- fini-quand: les deux tests passent vingt fois de suite pendant une suite complète en parallèle
+
+## DEBT-099 la garde anti-tutoiement ne connaît qu'une liste de mots
+
+- state: agent
+- impact: `localeParity.test.ts` et `ServerCopyTests` refusent `tu`, `te`, `toi`, `ton`, `ta`, `tes` et quelques impératifs nommés (`Rejoins`, `Indique`, `Demande`) ; tout autre impératif à la deuxième personne du singulier (« Prépare », « donne-lui ») passe
+- ou: `apps/web/src/shared/i18n/localeParity.test.ts`, `apps/api-dotnet/MoviePicker.Api.Tests/Application/ServerCopyTests.cs`
+- verify: `grep -c "Rejoins-la" apps/web/src/shared/i18n/localeParity.test.ts` ; encore ouvert tant que la garde liste des impératifs un par un
+- fix: une règle sur les impératifs en tête de phrase ou suivis d'un pronom (`-lui`, `-la`, `-toi`), partagée par les deux gardes, validée sur les locales actuelles sans faux positif
+- fini-quand: un impératif à la deuxième personne ajouté dans une locale ou dans `ServerCopy` fait échouer la garde
+
+## DEBT-100 du texte et des chemins du serveur vivent encore hors de leurs tables
+
+- state: agent
+- impact: rien n'empêche d'écrire un chemin du front en dur hors de `FrontRoutes` (les clés `oauthError` et `oauthLinked` d'`AuthController` n'y sont pas) ; le pseudo « Compte supprimé » et le texte des issues GitHub sont hors de `ServerCopy` ; les messages « Authentication required », « Access denied », « Resource not found » et « Too many requests » sont écrits à quatre endroits (`ApiErrorClientErrorFactory`, configuration des cookies, pages de statut de `Program.cs`, limiteur de débit) ; le repli de région `"FR"` reste recopié dans `Infrastructure/Tmdb` (`TmdbMovieSearch.Discovery`, `TmdbMovieSearch.Enrichment`)
+- ou: `apps/api-dotnet/MoviePicker.Api/`
+- verify: `grep -rn "\"FR\"" apps/api-dotnet/MoviePicker.Api/Infrastructure/Tmdb`
+- fix: une règle de `scripts/architecture/` qui refuse un littéral commençant par un chemin de `FrontRoutes` hors de ce fichier ; une table unique des messages d'erreur génériques ; `WatchRegion.Of` dans `Infrastructure/Tmdb`
+- fini-quand: chaque texte et chaque chemin destiné au front n'est écrit qu'une fois
+
+## DEBT-101 les titres ajoutés par un membre à la liste d'un autre ne suivent pas la suppression de son compte
+
+- state: humain
+- bloque: décision produit : effacer ces titres, anonymiser leur auteur, ou les exporter avec ses données
+- impact: `MovieListItemDocument.AddedByUserId` est exempté dans `PersistedReferenceInventoryTests` : à la suppression du compte, les titres restent dans la liste de l'autre membre, affichés sans auteur, et l'export des données de l'auteur ne les contient pas
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Auth/DeleteAccountHandler.cs`, `ExportUserDataHandler.cs`, `PersistedReferenceInventoryTests` dans `apps/api-dotnet/MoviePicker.Api.Tests/`
+- verify: `grep -rn "AddedByUserId" apps/api-dotnet/MoviePicker.Api.Tests --include=PersistedReferenceInventoryTests.cs`
+- fix: selon la décision, l'ajouter à la cascade de `DeleteAccountHandler` ou à l'export, et retirer l'exemption
+- fini-quand: plus d'exemption pour `AddedByUserId`
+
+## DEBT-102 les doublures de l'API dans les tests front restent écrites à la main
+
+- state: agent
+- impact: environ 660 `HttpResponse.json(` dans 73 fichiers de test ne passent pas par `apiJson`, donc un champ renommé côté API les laisse verts ; trois stratégies de doublure coexistent (MSW, `vi.mock` d'un module `*Api`, `vi.mock` de `client`)
+- ou: `apps/web/src/**/*.test.tsx`, `apps/web/src/mocks/apiJson.ts`
+- verify: `grep -rl "HttpResponse.json(" apps/web/src --include=*.test.ts --include=*.test.tsx | wc -l` ; encore ouvert tant que la commande rend plus de `0`
+- fix: passer chaque fichier de test touché à `apiJson` au fil de l'eau, puis une règle de `scripts/architecture/` qui refuse `HttpResponse.json(` dans un test
+- fini-quand: aucune réponse simulée hors de `apiJson` et `apiErrorJson`
+
+## DEBT-103 le contrat ne décrit pas encore les chaînes libres des requêtes
+
+- state: agent
+- impact: côté requêtes, `NotificationTypePreferencePatch.type`, `SaveListRequest.sourceType` et le paramètre `section` restent des chaînes libres dans le contrat, l'export des données écrit ses énumérations en PascalCase (`ToString()`), et `check:contract-compat` ne compare ni le type d'un champ ni l'apparition d'un `null`
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/OpenApi/`, `Application/UseCases/Auth/ExportUserDataHandler.cs`, `scripts/check-contract-compat.mjs`
+- verify: `grep -n "sourceType" apps/web/src/shared/api/generated/openapiSchema.ts`
+- fix: décrire ces valeurs en enums de schéma avec les valeurs acceptées aujourd'hui ; étendre `check:contract-compat` aux types et à la nullabilité des propriétés de réponse
+- fini-quand: plus aucune chaîne à valeurs fermées décrite comme libre dans le contrat
+
+## DEBT-104 quelques règles de soirée restent calculées à deux endroits côté front
+
+- state: agent
+- impact: l'hôte se calcule `event.isHost === true || (event.isHost == null && hostToken)` dans `useEventWheel` et `!!event.isHost` dans les cartes et la barre de soirée ; la bascule « exclure du tirage » est appelée depuis `EventMoviesSection` et `useMovieNight` ; une proposition depuis le dialogue invalide deux fois les mêmes requêtes ; `MovieBrowseCard` prend par défaut des libellés de liste quand `ListMoviesPage` n'en passe pas
+- ou: `apps/web/src/features/events/`, `apps/web/src/features/movies/components/MovieBrowseCard.tsx`
+- verify: `grep -rn "isHost == null" apps/web/src/features/events`
+- fix: l'hôte dans `nightRules.ts` (aligner le comportement demande de vérifier le cas d'un ancien client sans `isHost`) ; la bascule dans `useNightMovieActions` ; une seule invalidation ; libellés toujours passés par la page
+- fini-quand: chaque règle d'un film en soirée n'a qu'une définition
 
 ---
 
