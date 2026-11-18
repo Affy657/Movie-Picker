@@ -67,16 +67,7 @@ function toSelection(
   candidate: LetterboxdCandidate,
   letterboxdSlug: string | null
 ): LetterboxdSelection {
-  return {
-    tmdbId: candidate.tmdbId,
-    mediaType: candidate.mediaType,
-    title: candidate.title,
-    year: candidate.year,
-    posterPath: candidate.posterPath,
-    voteAverage: candidate.voteAverage,
-    genreIds: candidate.genreIds,
-    letterboxdSlug,
-  };
+  return { ...toTitleSummary(candidate), letterboxdSlug };
 }
 
 function toWatchedSelection(
