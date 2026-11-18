@@ -1,13 +1,15 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { readdirSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import {
+  APP_MODULES_BELOW_APP,
+  appLayerViolations,
   featureLayerViolations,
   importCycleViolations,
   sharedLeafViolations,
 } from './frontImports.mjs';
-import { createImportResolver, webSrc } from './sources.mjs';
+import { createImportResolver, root, webSrc } from './sources.mjs';
 
 const inRepo = (...segments) => join(webSrc, ...segments);
 
@@ -111,6 +113,17 @@ describe('import cycles', () => {
     ]);
   });
 
+  it('refuses a cycle closed by a dynamic import', () => {
+    const { texts, resolve } = graph([
+      ['app/probe/registry.ts', "export const pages = { home: () => import('./Home') };\n"],
+      ['app/probe/Home.tsx', "import { pages } from './registry';\nexport default pages;\n"],
+    ]);
+
+    assert.deepEqual(importCycleViolations(texts, resolve), [
+      'import cycle: apps/web/src/app/probe/registry.ts -> apps/web/src/app/probe/Home.tsx -> apps/web/src/app/probe/registry.ts',
+    ]);
+  });
+
   it('accepts a chain, and leaves a cycle through a test file aside', () => {
     const { texts, resolve } = graph([
       ['shared/probe/a.ts', "import { b } from './b';\nexport const a = 1;\n"],
@@ -119,5 +132,62 @@ describe('import cycles', () => {
     ]);
 
     assert.deepEqual(importCycleViolations(texts, resolve), []);
+  });
+});
+
+describe('app/ above features and shared', () => {
+  const feature = inRepo('features/auth/components/probe.tsx');
+
+  it('refuses a feature or shared/ module that imports app/, whichever way it is written', () => {
+    assert.equal(
+      appLayerViolations(feature, "import AppShell from '@/app/components/AppShell';\n").length,
+      1
+    );
+    assert.equal(
+      appLayerViolations(feature, "import AppShell from '../../../app/components/AppShell';\n")
+        .length,
+      1
+    );
+    assert.equal(
+      appLayerViolations(feature, "const load = () => import('@/app/pages/HomePage');\n").length,
+      1
+    );
+    assert.equal(
+      appLayerViolations(
+        inRepo('shared/components/probe.tsx'),
+        "import { routeLazy } from '@/app/routeChunks';\n"
+      ).length,
+      1
+    );
+  });
+
+  it('accepts the named exceptions, app/ itself and a test that renders the app', () => {
+    const exceptions = [
+      "import { ROUTES } from '@/app/routes';",
+      "import { MOVIE_PAGE_CHUNKS } from '@/app/moviePageChunk';",
+    ].join('\n');
+
+    assert.deepEqual(appLayerViolations(feature, exceptions), []);
+    assert.deepEqual(
+      appLayerViolations(
+        inRepo('app/components/probe.tsx'),
+        "import { routeLazy } from '@/app/routeChunks';\n"
+      ),
+      []
+    );
+    assert.deepEqual(
+      appLayerViolations(
+        inRepo('features/auth/components/probe.test.tsx'),
+        "import AppShell from '@/app/components/AppShell';\n"
+      ),
+      []
+    );
+  });
+
+  it('gives every exception a module that exists and its reason', () => {
+    for (const [path, reason] of APP_MODULES_BELOW_APP) {
+      assert.ok(existsSync(join(root, path)), path);
+      assert.ok(reason.length > 20, path);
+    }
   });
 });

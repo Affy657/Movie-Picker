@@ -12,6 +12,7 @@ import {
   globalTargetViolations,
 } from './architecture/deadCss.mjs';
 import {
+  appLayerViolations,
   featureLayerViolations,
   importCycleViolations,
   sharedLeafViolations,
@@ -72,6 +73,7 @@ function collectViolations(sources) {
   for (const texts of [web, api, e2e]) eachPath(texts, commentViolations);
   eachFile(scripts, sharedLeafViolations);
   eachFile(scripts, featureLayerViolations);
+  eachFile(scripts, appLayerViolations);
   violations.push(...importCycleViolations(scripts));
   eachPath(sheets, (path, text) => [
     ...designTokenViolations(path, text),
@@ -111,7 +113,7 @@ function main() {
     process.exit(1);
   }
   console.log(
-    'Architecture: no violation (comments, API layers, writeSeq of the event view, shared/ as a leaf, feature layers, import cycles, design system tokens, colours in TypeScript, hover and reduced motion, icon, avatar and size scales, Modal, Button and ARIA primitives, tap targets, dead CSS classes, :global targets and tokens).'
+    'Architecture: no violation (comments, API layers, writeSeq of the event view, shared/ as a leaf, feature layers, app/ above features and shared, import cycles through import() included, design system tokens, colours in TypeScript, hover and reduced motion, icon, avatar and size scales, Modal, Button and ARIA primitives, tap targets, dead CSS classes, :global targets and tokens).'
   );
   if (cssModulesExcluded.length > 0)
     console.log(

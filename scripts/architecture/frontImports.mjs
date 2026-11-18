@@ -1,14 +1,22 @@
 import { FEATURE_EDGES } from './featureEdges.mjs';
-import {
-  allImportsIn,
-  isTestFile,
-  rel,
-  resolveImport as resolveOnDisk,
-  staticImportsIn,
-} from './sources.mjs';
+import { allImportsIn, isTestFile, rel, resolveImport as resolveOnDisk } from './sources.mjs';
 
 const FEATURE_OF = /^apps\/web\/src\/features\/([a-z]+)\//;
 const FEATURE_SPEC = /^@\/features\/([a-z]+)\//;
+const APP_DIR = 'apps/web/src/app/';
+const APP_SPEC = /^@\/app\//;
+const LAYERS_BELOW_APP = ['apps/web/src/features/', 'apps/web/src/shared/'];
+
+export const APP_MODULES_BELOW_APP = new Map([
+  [
+    'apps/web/src/app/routes.ts',
+    'the route table, a leaf that imports no feature: every link of the application reads its paths from it',
+  ],
+  [
+    'apps/web/src/app/moviePageChunk.ts',
+    'the loader of the movie page, which composes several features from app/pages/movie/: a feature list prefetches it, and only reaches it through import()',
+  ],
+]);
 
 function featureOfImport(spec, from, resolveImport) {
   const target = resolveImport(spec, from);
@@ -42,6 +50,27 @@ export function featureLayerViolations(file, text, resolveImport = resolveOnDisk
   return found;
 }
 
+function appModuleOfImport(spec, from, resolveImport) {
+  const target = resolveImport(spec, from);
+  if (!target) return APP_SPEC.test(spec) ? spec : null;
+  const path = rel(target);
+  return path.startsWith(APP_DIR) ? path : null;
+}
+
+export function appLayerViolations(file, text, resolveImport = resolveOnDisk) {
+  const path = rel(file);
+  if (isTestFile(file) || !LAYERS_BELOW_APP.some((layer) => path.startsWith(layer))) return [];
+  return allImportsIn(text)
+    .filter((spec) => {
+      const target = appModuleOfImport(spec, file, resolveImport);
+      return target && !APP_MODULES_BELOW_APP.has(target);
+    })
+    .map(
+      (spec) =>
+        `${path} imports ${spec}: app/ composes features/ and shared/, which never import it back (exceptions: APP_MODULES_BELOW_APP of scripts/architecture/frontImports.mjs)`
+    );
+}
+
 export function importCycleViolations(texts, resolveImport = resolveOnDisk) {
   const found = [];
   const graph = new Map();
@@ -49,7 +78,7 @@ export function importCycleViolations(texts, resolveImport = resolveOnDisk) {
     if (isTestFile(file)) continue;
     graph.set(
       file,
-      staticImportsIn(text)
+      allImportsIn(text)
         .map((spec) => resolveImport(spec, file))
         .filter((target) => target && !isTestFile(target))
     );
