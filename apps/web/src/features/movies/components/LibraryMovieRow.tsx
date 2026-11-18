@@ -24,6 +24,10 @@ export interface LibraryMovieRowSorts<K extends string> {
   availability?: MovieTableSort<K>;
 }
 
+function rowGridClass(hasContributorColumn: boolean): string | undefined {
+  return hasContributorColumn ? styles.rowGridWithContributor : styles.rowGrid;
+}
+
 export function LibraryMovieRowHeader<K extends string>({
   sorts,
   sortBy,
@@ -54,7 +58,7 @@ export function LibraryMovieRowHeader<K extends string>({
       sortBy={sortBy}
       sortDir={sortDir}
       onSetSort={onSetSort}
-      gridClassName={contributorLabel ? styles.rowGridWithContributor : styles.rowGrid}
+      gridClassName={rowGridClass(contributorLabel !== undefined)}
     />
   );
 }
@@ -74,8 +78,7 @@ interface LibraryMovieRowProps {
   onOpenDetails: () => void;
   kebab?: ReactNode;
   dimmed?: boolean;
-  contributor?: ReactNode;
-  withContributor?: boolean;
+  contributor?: ReactNode | null;
 }
 
 function LibraryRowMeta({ badge, genres }: Readonly<{ badge?: ReactNode; genres: string[] }>) {
@@ -127,8 +130,8 @@ export default function LibraryMovieRow({
   kebab,
   dimmed = false,
   contributor,
-  withContributor = false,
 }: Readonly<LibraryMovieRowProps>) {
+  const hasContributorColumn = contributor !== undefined;
   const { t, locale } = useTranslation();
   const posterSrc = posterImageSrc(posterPath);
   const posterSrcSet = tmdbPosterSrcSetForList(posterSrc);
@@ -182,7 +185,7 @@ export default function LibraryMovieRow({
     <li
       className={clsx(
         table.row,
-        withContributor ? styles.rowGridWithContributor : styles.rowGrid,
+        rowGridClass(hasContributorColumn),
         styles.rowHoverable,
         dimmed && styles.dimmed
       )}
@@ -198,7 +201,7 @@ export default function LibraryMovieRow({
       <span className={table.cellEnd}>{voteLabel}</span>
       <span className={table.cellEnd}>{runtimeLabel}</span>
       <span className={table.cellEnd}>{year}</span>
-      {withContributor ? <div className={styles.contributorCol}>{contributor}</div> : null}
+      {hasContributorColumn ? <div className={styles.contributorCol}>{contributor}</div> : null}
       <div className={clsx(table.availabilityCol, styles.aboveTrigger)}>{availability}</div>
       <div className={clsx(table.kebabCol, styles.aboveTrigger)}>{kebab}</div>
     </li>

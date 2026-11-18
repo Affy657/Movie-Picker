@@ -500,8 +500,7 @@ export default function ListMoviesPage<T extends LibraryEntry>({
         eager={listView && index < 3}
         dimmed={!!dimWatched?.enabled && !!isWatched?.(item)}
         leadingBadge={card.leadingBadge?.(item)}
-        contributor={card.contributor?.of(item)}
-        withContributor={!!card.contributor}
+        contributor={card.contributor ? card.contributor.of(item) : undefined}
         onToggleWatchlist={() => card.onToggleWatchlist(item)}
         onRemoveFromList={removable ? () => removeFromList(item) : undefined}
         removeLabel={card.removeLabels?.label}
