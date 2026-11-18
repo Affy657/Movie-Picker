@@ -142,7 +142,9 @@ Tous se lancent à la racine du dépôt.
 | `pnpm run test:e2e`, `pnpm run test:e2e:ci` | Playwright, la seconde forme construisant le front avec un stub TMDB |
 | `pnpm run test:e2e:mongo` | Le seul parcours critique, sur base réelle |
 | `pnpm run test:e2e:local` | La suite Playwright depuis le poste, serveurs de dev allumés : API de test en Release sur 5010, front construit contre elle, `--mongo` pour le parcours critique sur base réelle |
-| `pnpm run openapi:export`, `pnpm run openapi:types:check` | Contrat OpenAPI et dérive des types |
+| `pnpm run openapi:sync` | Régénère le contrat OpenAPI (`openapi:export`) puis les types du front (`openapi:types`), à committer avec le changement d'API qui les a fait bouger |
+| `pnpm run openapi:types:check` | Dérive des types générés par rapport au contrat exporté |
+| `pnpm run check:contract-compat [<ref>]` | Compare le contrat de la dernière version publiée (dernier tag `v*` d'`origin`, ou `<ref>`) à l'arbre courant : échoue si une route, une méthode ou une propriété de réponse lue par le front N-1 a disparu ou est devenue optionnelle |
 | `pnpm --filter web prerender` | Prérendu des routes publiques indexables, à lancer après un build |
 | `pnpm run lighthouse` | Lighthouse sur le build, demande Node 22+ et Chrome |
 | `pnpm run capture:screenshots` | Captures du README, sur l'application lancée en local |
