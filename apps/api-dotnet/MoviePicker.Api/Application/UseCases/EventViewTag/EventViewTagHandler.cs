@@ -2,7 +2,7 @@ using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text;
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Domain;
+using MoviePicker.Api.Application.UseCases.Shared;
 
 namespace MoviePicker.Api.Application.UseCases.EventViewTag;
 
@@ -34,7 +34,7 @@ public sealed class EventViewTagHandler : IEventViewTagHandler
             return null;
 
         var currentUserId = _currentUserAccessor.GetUserId();
-        var isHost = EventHost.IsHost(evt, _hostTokenAccessor.GetHostToken(), currentUserId);
+        var isHost = HostedEvent.IsHost(evt, _hostTokenAccessor, currentUserId);
         var digest = ViewerDigest(currentUserId, isHost);
         var windowSeconds = (long)FreshnessWindow.TotalSeconds;
         var viewerOffsetSeconds = BinaryPrimitives.ReadUInt16BigEndian(digest.AsSpan(6, 2)) % windowSeconds;

@@ -2,7 +2,6 @@ using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Shared;
-using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -63,9 +62,8 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         if (!string.IsNullOrEmpty(evt.CreatorUserId) && participant.UserId == evt.CreatorUserId)
             throw Errors.CreatorCannotBeRemoved();
 
-        var hostToken = _hostTokenAccessor.GetHostToken();
         var currentUserId = _currentUserAccessor.GetUserId();
-        var isHost = EventHost.IsHost(evt, hostToken, currentUserId);
+        var isHost = HostedEvent.IsHost(evt, _hostTokenAccessor, currentUserId);
         var isSelfConnected = !string.IsNullOrEmpty(currentUserId)
             && !string.IsNullOrEmpty(participant.UserId)
             && participant.UserId == currentUserId;

@@ -1,5 +1,4 @@
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -82,7 +81,7 @@ internal static class MovieActionContext
             throw Errors.MovieNotFound();
 
         var currentUserId = currentUserAccessor.GetUserId();
-        var isHost = EventHost.IsHost(evt, hostTokenAccessor.GetHostToken(), currentUserId);
+        var isHost = HostedEvent.IsHost(evt, hostTokenAccessor, currentUserId);
 
         return (evt, movie, currentUserId, isHost);
     }

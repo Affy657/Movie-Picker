@@ -41,12 +41,12 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
 
     public async Task<WheelResponse> HandleAsync(string idOrSlug, int? expectedWinnerCount = null, CancellationToken ct = default)
     {
-        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
-
-        var token = _hostTokenAccessor.GetHostToken();
-        var userId = _currentUserAccessor.GetUserId();
-        if (!EventHost.IsHost(evt, token, userId))
-            throw Errors.HostOnly();
+        var evt = await HostedEvent.LoadForHostEvenFinishedAsync(
+            _eventRepository,
+            _hostTokenAccessor,
+            _currentUserAccessor.GetUserId(),
+            idOrSlug,
+            ct);
 
         if (expectedWinnerCount is { } expected && evt.Winners.Count > expected
             && await ReplayLatestDrawAsync(evt, ct) is { } replayed)

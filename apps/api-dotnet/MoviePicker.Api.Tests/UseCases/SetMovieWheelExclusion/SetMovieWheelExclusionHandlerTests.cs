@@ -92,6 +92,17 @@ public sealed class SetMovieWheelExclusionHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_NotHostOnAFinishedEvent_ThrowsHostOnlyBeforeEventFinished()
+    {
+        var evt = ActiveEvent("real") with { ClosedAt = DateTimeOffset.UtcNow };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("wrong");
+
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1", "mov1", Request(true)));
+        Assert.Equal(ErrorCodes.HostOnly, ex.Reason);
+    }
+
+    [Fact]
     public async Task HandleAsync_UnknownMovie_ThrowsNotFoundException()
     {
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());

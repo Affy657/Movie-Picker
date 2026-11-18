@@ -1,6 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Domain;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.SetMovieWheelExclusion;
@@ -36,15 +36,13 @@ public sealed class SetMovieWheelExclusionHandler : ISetMovieWheelExclusionHandl
         SetMovieWheelExclusionRequest request,
         CancellationToken ct = default)
     {
-        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
-
-        if (evt.IsFinished(_clock.GetUtcNow()))
-            throw Errors.EventFinished();
-
-        var token = _hostTokenAccessor.GetHostToken();
-        var userId = _currentUserAccessor.GetUserId();
-        if (!EventHost.IsHost(evt, token, userId))
-            throw Errors.HostOnly();
+        var evt = await HostedEvent.LoadForHostAsync(
+            _eventRepository,
+            _hostTokenAccessor,
+            _currentUserAccessor.GetUserId(),
+            idOrSlug,
+            _clock.GetUtcNow(),
+            ct);
 
         var movie = await _movieRepository.GetByIdAndEventIdAsync(movieId, evt.Id, ct);
         if (movie is null)
