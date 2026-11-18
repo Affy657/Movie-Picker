@@ -128,7 +128,7 @@ Tous se lancent à la racine du dépôt.
 | `pnpm dev:full`, `pnpm dev:web`, `pnpm dev:api-dotnet` | Démarrage local |
 | `pnpm build` | Build du front par Turbo |
 | `pnpm lint`, `pnpm run lint:eslint` | Types puis règles ESLint côté front ; la seconde forme ne joue que les règles |
-| `pnpm run check:static` | Toutes les portes statiques : architecture, tests des scripts, `pnpm lint`, Prettier, knip ; c'est le hook pre-push, le job `lint-web` et la voie node de `verify:local` |
+| `pnpm run check:static` | Toutes les portes statiques : architecture, tests des scripts, compatibilité du contrat avec la version publiée, `pnpm lint`, Prettier, knip ; c'est le hook pre-push, le job `lint-web` et la voie node de `verify:local` |
 | `pnpm run check:architecture` | Règles d'architecture |
 | `pnpm run check:unused` | Fichiers, exports et dépendances inutilisés (knip) |
 | `pnpm run check:workflows` | actionlint (+ shellcheck) et zizmor sur `.github/`, par Docker, joué tel quel par le job `lint-workflows` |
