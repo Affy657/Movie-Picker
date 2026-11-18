@@ -12,6 +12,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 - **Toute l'application vous vouvoie** : les notifications, l'e-mail de réinitialisation du mot de passe, l'aperçu d'une invitation partagée et trois messages de l'application qui vous tutoyaient encore.
 
+### Fixed
+
+- **Les films gardés pour « À voir » depuis Letterboxd conservent leur durée**, comme ceux marqués vus, et le filtre par durée les retrouve.
+
 ## [1.15.3] - 2026-11-18
 
 ### Changed
