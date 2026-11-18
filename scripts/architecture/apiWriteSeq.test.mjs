@@ -64,6 +64,15 @@ describe('writeSeq', () => {
     assert.equal(check(text).length, 1);
   });
 
+  it('counts a purge through EventChildData as a write of its caller', () => {
+    const purge = 'await EventChildData.PurgeMoviesAsync(voteRepository, movieIds, ct);';
+
+    assert.deepEqual(check(handler([purge])), [
+      `${HANDLER}: EventChildData.PurgeMoviesAsync without LockForWriteAsync, MarkChangedAsync or UpdateAsync on IEventRepository, the event view keeps serving its stale ETag (AGENTS.md, writeSeq)`,
+    ]);
+    assert.deepEqual(check(handler(['await eventRepository.UpdateAsync(evt, ct);', purge])), []);
+  });
+
   it('accepts a write that locks, marks or updates the event', () => {
     for (const bump of [
       'await eventRepository.LockForWriteAsync(vote.EventId, ct);',

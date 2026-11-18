@@ -5,7 +5,13 @@ export const WRITE_SEQ_EXEMPTIONS = new Map([
     `${APPLICATION_DIR}UseCases/CreateEvent/CreateEventHandler.cs`,
     'the event and its host participant are inserted in the same transaction, no client holds an ETag of an event that does not exist yet',
   ],
+  [
+    `${APPLICATION_DIR}UseCases/Shared/EventChildData.cs`,
+    'purges on behalf of its callers: a call to EventChildData counts as a write of the calling handler, which must move writeSeq itself',
+  ],
 ]);
+
+const DELEGATED_WRITE = /\bEventChildData\s*\.\s*(\w+Async)\s*\(/g;
 
 const EVENT_VIEW_REPOSITORY =
   /\bI(?:Movie|Vote|Participant|SeenMark|MovieRating)Repository\s+@?([A-Za-z_]\w*)/g;
@@ -28,7 +34,10 @@ function callsOn(names, method, code) {
 
 function eventViewWritesIn(text) {
   const code = text.replace(CSHARP_STRING_RE, '""');
-  const writes = callsOn(namesDeclaredAs(EVENT_VIEW_REPOSITORY, code), WRITE_METHOD, code);
+  const writes = [
+    ...callsOn(namesDeclaredAs(EVENT_VIEW_REPOSITORY, code), WRITE_METHOD, code),
+    ...[...code.matchAll(DELEGATED_WRITE)].map(([, called]) => `EventChildData.${called}`),
+  ];
   const bumps = callsOn(namesDeclaredAs(EVENT_REPOSITORY, code), WRITE_SEQ_BUMP, code);
   return { writes: [...new Set(writes)], bumpsWriteSeq: bumps.length > 0 };
 }
