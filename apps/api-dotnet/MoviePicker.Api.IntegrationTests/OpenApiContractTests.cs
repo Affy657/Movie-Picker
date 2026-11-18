@@ -95,13 +95,13 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
     {
         var roots = new HashSet<string>(StringComparer.Ordinal);
         foreach (var path in contract.RootElement.GetProperty("paths").EnumerateObject())
-        foreach (var operation in path.Value.EnumerateObject())
-        {
-            if (operation.Value.TryGetProperty("requestBody", out var body))
-                roots.UnionWith(SchemaRefs(body));
-            if (operation.Value.TryGetProperty("parameters", out var parameters))
-                roots.UnionWith(SchemaRefs(parameters));
-        }
+            foreach (var operation in path.Value.EnumerateObject())
+            {
+                if (operation.Value.TryGetProperty("requestBody", out var body))
+                    roots.UnionWith(SchemaRefs(body));
+                if (operation.Value.TryGetProperty("parameters", out var parameters))
+                    roots.UnionWith(SchemaRefs(parameters));
+            }
 
         return ReachableSchemas(Schemas(contract), roots);
     }
