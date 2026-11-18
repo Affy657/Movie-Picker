@@ -35,6 +35,7 @@
     "openapi:export": "node scripts/export-openapi.cjs",
     "openapi:types": "openapi-typescript artifacts/openapi-v1.json -o apps/web/src/shared/api/generated/openapiSchema.ts",
     "openapi:types:check": "node scripts/check-openapi-types.mjs",
+    "openapi:sync": "pnpm run openapi:export && pnpm run openapi:types",
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
     "test:changed": "pnpm --filter ./apps/web exec vitest run --changed origin/master",
