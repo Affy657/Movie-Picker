@@ -10,7 +10,6 @@ public sealed class UnmarkAsSeenHandler : IUnmarkAsSeenHandler
     private readonly IMovieRepository _movieRepository;
     private readonly IParticipantRepository _participantRepository;
     private readonly ISeenMarkRepository _seenMarkRepository;
-    private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly TimeProvider _clock;
 
     public UnmarkAsSeenHandler(
@@ -18,18 +17,17 @@ public sealed class UnmarkAsSeenHandler : IUnmarkAsSeenHandler
         IMovieRepository movieRepository,
         IParticipantRepository participantRepository,
         ISeenMarkRepository seenMarkRepository,
-        ICurrentUserAccessor currentUserAccessor,
         TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _participantRepository = participantRepository;
         _seenMarkRepository = seenMarkRepository;
-        _currentUserAccessor = currentUserAccessor;
         _clock = clock;
     }
 
     public async Task HandleAsync(
+        string userId,
         string idOrSlug,
         string movieId,
         string participantId,
@@ -39,7 +37,7 @@ public sealed class UnmarkAsSeenHandler : IUnmarkAsSeenHandler
             _eventRepository,
             _movieRepository,
             _participantRepository,
-            _currentUserAccessor.GetUserId(),
+            userId,
             _clock.GetUtcNow(),
             idOrSlug,
             movieId,

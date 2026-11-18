@@ -122,7 +122,7 @@ public sealed class EventMoviesControllerTests
     {
         var handler = new Mock<IMarkAsSeenHandler>();
 
-        var result = await Controller().MarkAsSeen("e", "m1", null!, handler.Object, CancellationToken.None);
+        var result = await Controller().MarkAsSeen("e", "m1", null!, handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
     }
@@ -153,10 +153,10 @@ public sealed class EventMoviesControllerTests
         var handler = new Mock<IUnmarkAsSeenHandler>();
         var request = new UnmarkAsSeenRequest { ParticipantId = "participant-000000000001" };
 
-        var result = await Controller().UnmarkAsSeen("e", "m1", request, handler.Object, CancellationToken.None);
+        var result = await Controller().UnmarkAsSeen("e", "m1", request, handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
         handler.Verify(
-            h => h.HandleAsync("e", "m1", "participant-000000000001", It.IsAny<CancellationToken>()), Times.Once);
+            h => h.HandleAsync("u1", "e", "m1", "participant-000000000001", It.IsAny<CancellationToken>()), Times.Once);
     }
 }

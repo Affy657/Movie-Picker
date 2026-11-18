@@ -135,9 +135,10 @@ public sealed class EventMoviesController : ControllerBase
         string movieId,
         [FromBody] MarkAsSeenRequest request,
         [FromServices] IMarkAsSeenHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var res = await handler.HandleAsync(idOrSlug, movieId, request, ct);
+        var res = await handler.HandleAsync(userId, idOrSlug, movieId, request, ct);
         return Ok(res);
     }
 
@@ -246,9 +247,10 @@ public sealed class EventMoviesController : ControllerBase
         string movieId,
         [FromBody] UnmarkAsSeenRequest request,
         [FromServices] IUnmarkAsSeenHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        await handler.HandleAsync(idOrSlug, movieId, request.ParticipantId, ct);
+        await handler.HandleAsync(userId, idOrSlug, movieId, request.ParticipantId, ct);
         return NoContent();
     }
 }

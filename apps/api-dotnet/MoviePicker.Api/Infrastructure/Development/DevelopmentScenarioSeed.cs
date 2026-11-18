@@ -844,12 +844,12 @@ internal static class DevelopmentScenarioSeed
 
         ActAs(httpContext, actors.Dev.Id);
         await markAsSeen
-            .HandleAsync(slug, mAlice.Id, new MarkAsSeenRequest { ParticipantId = devPart }, ct)
+            .HandleAsync(actors.Dev.Id, slug, mAlice.Id, new MarkAsSeenRequest { ParticipantId = devPart }, ct)
             .ConfigureAwait(false);
-        await unmarkAsSeen.HandleAsync(slug, mAlice.Id, devPart, ct).ConfigureAwait(false);
+        await unmarkAsSeen.HandleAsync(actors.Dev.Id, slug, mAlice.Id, devPart, ct).ConfigureAwait(false);
         ActAs(httpContext, actors.Carla.Id);
         await markAsSeen
-            .HandleAsync(slug, mBob.Id, new MarkAsSeenRequest { ParticipantId = carlaPart }, ct)
+            .HandleAsync(actors.Carla.Id, slug, mBob.Id, new MarkAsSeenRequest { ParticipantId = carlaPart }, ct)
             .ConfigureAwait(false);
 
         ActAs(httpContext, actors.Bob.Id);
