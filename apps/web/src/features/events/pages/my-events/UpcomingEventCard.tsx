@@ -3,13 +3,10 @@ import { Plus, Vote } from 'lucide-react';
 import { ROUTES } from '@/app/routes';
 import EventCardMenu from '@/features/events/components/EventCardMenu';
 import EventDateBlock from '@/features/events/components/EventDateBlock';
-import PosterFan, {
-  POSTER_FAN_MAX,
-  type PosterFanItem,
-} from '@/features/events/components/PosterFan';
+import PosterFan, { POSTER_FAN_MAX } from '@/features/movies/components/PosterFan';
 import { eventCountdownLabel } from '@/features/events/utils/eventCountdownLabel';
 import { participantsCountLabel } from '@/features/events/utils/eventLabels';
-import type { MyEventSummary } from '@/features/events/types';
+import type { MyEventMoviePreview, MyEventSummary } from '@/features/events/types';
 import AvatarStack from '@/shared/components/AvatarStack';
 import Card from '@/shared/components/Card';
 import PosterBackdrop from '@/shared/components/PosterBackdrop';
@@ -19,9 +16,10 @@ import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { formatEventDateLong } from '@/shared/utils/formatMyEventsListDate';
 import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
+import { posterImageSrc } from '@/shared/utils/posterUrl';
 import styles from './UpcomingEventCard.module.css';
 
-export function upcomingCardPosters(event: MyEventSummary): PosterFanItem[] {
+export function upcomingCardPosters(event: MyEventSummary): MyEventMoviePreview[] {
   const winners = event.winnerMovies ?? [];
   const winnerTitles = new Set(winners.map((movie) => movie.title));
   const others = (event.topMovies ?? []).filter((movie) => !winnerTitles.has(movie.title));
@@ -139,7 +137,10 @@ export default function UpcomingEventCard({
           </span>
           <CardStatusLine event={event} t={t} />
         </span>
-        <PosterFan posters={posters} />
+        <PosterFan
+          layout="spread"
+          srcs={posters.map((poster) => posterImageSrc(poster.posterPath))}
+        />
       </Card>
       {onLeave ? (
         <EventCardMenu

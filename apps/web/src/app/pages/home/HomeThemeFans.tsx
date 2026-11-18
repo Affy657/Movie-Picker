@@ -8,7 +8,7 @@ import MoviePreviewRow from '@/features/movies/components/MoviePreviewRow';
 import { useShowcaseThemes } from '@/features/movies/hooks/useMovieShowcase';
 import { THEME_KEYS, THEME_LABEL_KEYS } from '@/features/movies/showcaseSections';
 import type { ShowcaseTheme, ShowcaseThemePreview } from '@/features/movies/api/showcaseApi';
-import PosterFan from '@/features/events/components/PosterFan';
+import PosterFan from '@/features/movies/components/PosterFan';
 import styles from './HomeThemeFans.module.css';
 
 const SKELETON_FANS = 5;
@@ -56,7 +56,11 @@ export default function HomeThemeFans() {
         {items.map(({ theme, posters }) => (
           <li key={theme}>
             <Link to={ROUTES.showcaseTheme(theme)} className={styles.themeLink}>
-              <PosterFan posters={posters} className={styles.fan} />
+              <PosterFan
+                layout="spread"
+                srcs={posters.map((poster) => posterImageSrc(poster.posterPath))}
+                className={styles.fan}
+              />
               <span className={styles.name}>{t(THEME_LABEL_KEYS[theme])}</span>
             </Link>
           </li>
