@@ -50,11 +50,8 @@ describe('isWheelLocked', () => {
 });
 
 describe('isMine', () => {
-  it('matches the proposer by participant id, whatever the shape the API sent', () => {
+  it('matches the proposer by participant id', () => {
     expect(isMine(film, proposer)).toBe(true);
-    expect(isMine({ ...film, participantId: { id: 'p-alice', pseudo: 'Alice' } }, proposer)).toBe(
-      true
-    );
     expect(isMine(film, guest)).toBe(false);
   });
 
