@@ -14,11 +14,11 @@
 # master, minutes are free since the repository went public, and the conclusion of a run must
 # hold for the whole tree, not just the diff of the commit.
 #   - Web lane: lint-web, test-web-shard (three runners) then test-web (merge + thresholds).
-#   - API lane: lint-api, test-api, test-api-mongo.
+#   - API lane: lint-api, test-api (unit tests, then the integration suite on a real MongoDB).
 #   - Infra lane: lint-terraform (fmt + validate on `infra/terraform/`).
 #   - Cross-cutting: gitleaks (always), lint-workflows (always), npm/NuGet audit,
 #     sonar (global analysis + blocking Quality Gate).
-#   - E2E Playwright: blocking job + local run.
+#   - E2E Playwright on a real MongoDB: blocking job + local run.
 #   - Lighthouse is no longer here: it weighed 9 of the 27 minutes of a master run for a
 #     measurement only a deployment consumed; it moved to `deploy.yml` without losing any of its
 #     blocking power.
@@ -440,18 +440,32 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+  # Unit tests, then the integration suite on a real MongoDB replica set: the in-memory store no
+  # longer stands in for the database in any job that reproduces production (audit B4, step 1;
+  # the in-memory adapters keep their unit tests, and the store stays registered for a
+  # workstation without MongoDB). Two reports, two gates:
+  #   - the unit report (`coverlet.runsettings`, the Mongo adapters excluded since only a real
+  #     database runs them) carries the API gate below, and is the one `sonar` regenerates;
+  #   - `pnpm run test:api:mongo`, the workstation entry point, starts the container through
+  #     `scripts/mongo-replica-set.mjs`, collects its own report
+  #     (`coverlet.integration.runsettings`) and holds the `Infrastructure.Persistence.Mongo`
+  #     namespace to its thresholds (`scripts/check-mongo-coverage.mjs`): without that gate the
+  #     only layer that runs solely in production would be measured nowhere.
   test-api:
-    name: 🧪 API .NET tests + coverage
+    name: 🧪 API .NET tests (unit, then integration on MongoDB) + coverage
     needs: changes
     if: needs.changes.outputs.api == 'true'
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-web
+        with:
+          install-dependencies: "false"
       - uses: ./.github/actions/setup-dotnet-cache
       - name: Unit tests + coverage
         run: |
@@ -483,50 +497,14 @@ jobs:
             fail=1
           fi
           exit $fail
-      - name: Integration tests
-        run: dotnet test apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj -c Debug --verbosity normal
-        env:
-          MONGODB_URI: ""
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: coverage-api-unit
           path: coverage-unit
           if-no-files-found: warn
           retention-days: 7
-
-  test-api-mongo:
-    name: 🧪 API .NET tests on real MongoDB
-    needs: changes
-    if: needs.changes.outputs.api == 'true'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/setup-dotnet-cache
-      - uses: ./.github/actions/start-mongo-replica-set
-        with:
-          container-name: mongo-it
-          port: "27017"
-      - name: Integration tests on MongoDB + coverage
-        run: |
-          set -eo pipefail
-          dotnet test apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj \
-            -c Debug --verbosity normal \
-            --collect:"XPlat Code Coverage" \
-            --settings apps/api-dotnet/coverlet.integration.runsettings \
-            --results-directory ./coverage-mongo
-        env:
-          MONGODB_URI: ""
-          MONGODB_TEST_URI: mongodb://127.0.0.1:27017/?directConnection=true
-      # The Mongo adapters are excluded from the test-api job report: they only run on a real
-      # database. Without this gate, the only layer that runs solely in production would be
-      # measured nowhere.
-      - name: Mongo adapters coverage gate
-        run: node scripts/check-mongo-coverage.mjs coverage-mongo
+      - name: Integration tests on MongoDB + Mongo adapters coverage gate
+        run: pnpm run test:api:mongo
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:
@@ -535,38 +513,12 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+  # The whole Playwright suite on the full stack that runs in production: real browser, API wired
+  # to a real MongoDB replica set started by the composite action (the code of
+  # `scripts/mongo-replica-set.mjs`), dedicated database (the Development guard refuses the
+  # `moviepicker` one). `pnpm run test:e2e:local` plays the same suite on the same engine.
   e2e:
-    name: 🎭 E2E Playwright (blocking)
-    needs: changes
-    if: needs.changes.outputs.web == 'true' || needs.changes.outputs.api == 'true' || needs.changes.outputs.e2e == 'true'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/setup-web
-      - uses: ./.github/actions/setup-dotnet-cache
-      - name: Install the Playwright browser
-        run: pnpm exec playwright install --with-deps chromium
-      - name: E2E tests (web build + API stub + Playwright)
-        run: pnpm run test:e2e:ci
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        if: always()
-        with:
-          name: playwright-traces
-          path: test-results
-          # Playwright only writes test-results/ on failure/retry; empty on a green run is normal.
-          if-no-files-found: ignore
-          retention-days: 7
-
-  e2e-mongo:
-    # The only job running the full stack: real browser + API wired to a real MongoDB. The e2e job
-    # runs on the in-memory database, test-api-mongo runs without a browser: without this one, the
-    # combination that runs in production is reproduced nowhere before the deployment.
-    name: 🎭 E2E critical path on real MongoDB (blocking)
+    name: 🎭 E2E Playwright on MongoDB (blocking)
     needs: changes
     if: needs.changes.outputs.web == 'true' || needs.changes.outputs.api == 'true' || needs.changes.outputs.e2e == 'true'
     runs-on: ubuntu-24.04
@@ -585,16 +537,16 @@ jobs:
           port: "27017"
       - name: Install the Playwright browser
         run: pnpm exec playwright install --with-deps chromium
-      - name: Critical path (web build + API on MongoDB + Playwright)
-        run: pnpm run test:e2e:mongo
+      - name: E2E tests (web build + API on MongoDB + Playwright)
+        run: pnpm run test:e2e:ci
         env:
-          # Dedicated database: the Development guard refuses the 'moviepicker' database.
           E2E_MONGODB_URI: mongodb://127.0.0.1:27017/moviepicker_e2e?directConnection=true
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:
-          name: playwright-traces-mongo
+          name: playwright-traces
           path: test-results
+          # Playwright only writes test-results/ on failure/retry; empty on a green run is normal.
           if-no-files-found: ignore
           retention-days: 7
 

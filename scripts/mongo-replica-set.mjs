@@ -2,7 +2,7 @@
 /**
  * Starts the pinned MongoDB image as a single-member replica set, the only topology where the
  * `IUnitOfWork` transactions run, and waits until it accepts writes. The one implementation of
- * that start: `pnpm run test:api:mongo` imports it, and the
+ * that start: `pnpm run test:api:mongo` and `pnpm run test:e2e:local` import it, and the
  * `.github/actions/start-mongo-replica-set` composite action runs it for the CI jobs and the
  * nightly backup verification. It used to be copied four times, and each copy needed the same two
  * fixes one after the other.

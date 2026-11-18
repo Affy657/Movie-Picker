@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * The API integration suite against a real MongoDB replica set, with its coverage and the gate of
- * `scripts/check-mongo-coverage.mjs` on the Mongo adapters. The container is the one of
+ * `scripts/check-mongo-coverage.mjs` on the Mongo adapters. The same entry point on the
+ * workstation, in `verify:local` and in the CI `test-api` job: the container is the one of
  * `scripts/mongo-replica-set.mjs` (`movie-picker-mongo-test`, port `MONGO_TEST_PORT`, 27018 by
  * default), started or reused, and every test class gets its own disposable database.
  */

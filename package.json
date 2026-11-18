@@ -43,7 +43,6 @@
     "test:e2e": "playwright test",
     "test:e2e:local": "node scripts/e2e-local.mjs",
     "test:e2e:ci": "cross-env VITE_API_URL=http://127.0.0.1:5010 pnpm --filter \"./apps/web\" run build && cross-env CI=1 pnpm run test:e2e",
-    "test:e2e:mongo": "cross-env VITE_API_URL=http://127.0.0.1:5010 pnpm --filter \"./apps/web\" run build && cross-env CI=1 pnpm exec playwright test e2e/critical-flow.spec.ts",
     "audit": "pnpm audit --audit-level=high",
     "verify:local": "node scripts/verify-local.cjs",
     "lighthouse": "node scripts/lighthouse-run.mjs",

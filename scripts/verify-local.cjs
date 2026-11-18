@@ -121,10 +121,11 @@ const nodeLane = () =>
     () => run('Unused code (knip)', 'pnpm', ['run', 'check:unused']),
   ]);
 
-// Format, tests and the OpenAPI export all read the Release build: they only start once it is
-// done, then run side by side. Tests reuse that build (`--no-build`): the API has no
-// `#if DEBUG` nor `Debug.Assert`, so the Debug configuration the CI uses would only rebuild the
-// same code a second time.
+// Format, unit tests and the OpenAPI export all read the Release build: they only start once it
+// is done, then run side by side. Unit tests reuse that build (`--no-build`): the API has no
+// `#if DEBUG` nor `Debug.Assert`, so the Debug configuration would only rebuild the same code a
+// second time. The integration suite runs on MongoDB through `test:api:mongo`, as the CI
+// `test-api` job does, Debug build and Mongo adapters coverage gate included.
 const dotnetLane = () =>
   sequence([
     () => run('dotnet restore', 'dotnet', ['restore', 'apps/api-dotnet/MoviePicker.slnx']),
@@ -177,20 +178,10 @@ const dotnetLane = () =>
               { env: envMongoEmpty }
             ),
           () =>
-            run(
-              'API integration tests',
-              'dotnet',
-              [
-                'test',
-                'apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj',
-                '-c',
-                'Release',
-                '--no-build',
-                '--verbosity',
-                'normal',
-              ],
-              { env: envMongoEmpty }
-            ),
+            run('API integration tests on MongoDB + coverage gate', 'pnpm', [
+              'run',
+              'test:api:mongo',
+            ]),
         ]),
         sequence([
           () =>

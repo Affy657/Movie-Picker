@@ -1,5 +1,5 @@
 name: "Start MongoDB as a replica set"
-description: "Starts the pinned MongoDB image as a single-member replica set rs0 (the only topology where the IUnitOfWork transactions run), waits until it accepts writes and prints the kernel, the Docker version and the container logs if it dies. Runs scripts/mongo-replica-set.mjs, the same code pnpm run test:api:mongo starts the workstation container with, where the image pin, GLIBC_TUNABLES and the HOME=/tmp of every mongosh probe live. Needs the repository checked out and node in the PATH."
+description: "Starts the pinned MongoDB image as a single-member replica set rs0 (the only topology where the IUnitOfWork transactions run), waits until it accepts writes and prints the kernel, the Docker version and the container logs if it dies. Runs scripts/mongo-replica-set.mjs, the same code pnpm run test:api:mongo and pnpm run test:e2e:local start the workstation container with, where the image pin, GLIBC_TUNABLES and the HOME=/tmp of every mongosh probe live. Needs the repository checked out and node in the PATH."
 inputs:
   container-name:
     description: "Name of the container, recreated when it already exists with another image or port"
