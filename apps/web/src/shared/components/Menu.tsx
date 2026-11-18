@@ -1,7 +1,7 @@
 import { forwardRef, type HTMLAttributes, type KeyboardEvent } from 'react';
 import { Link } from 'react-router';
 import clsx from 'clsx';
-import { Check } from 'lucide-react';
+import { Check, ChevronDown } from 'lucide-react';
 import { useMenuState } from '@/shared/hooks/useMenuState';
 import styles from './Menu.module.css';
 import { hasDescenders } from './opticalNudge';
@@ -89,6 +89,7 @@ interface MenuProps {
   triggerClassName?: string;
   panelAriaLabel: string;
   panelClassName?: string;
+  align?: 'left' | 'right';
   children: (close: () => void) => React.ReactNode;
 }
 
@@ -98,9 +99,10 @@ export default function Menu({
   triggerClassName,
   panelAriaLabel,
   panelClassName,
+  align,
   children,
 }: Readonly<MenuProps>) {
-  const menu = useMenuState();
+  const menu = useMenuState({ align });
 
   return (
     <div ref={menu.containerRef} className={styles.container}>
@@ -114,6 +116,7 @@ export default function Menu({
       >
         {triggerIcon}
         <span className={buttonLabelClass(triggerLabel)}>{triggerLabel}</span>
+        <ChevronDown size={ICON_SIZE.sm} aria-hidden />
       </button>
 
       {menu.open ? (
@@ -170,7 +173,7 @@ export function MenuItem({
   );
   const content = (
     <>
-      {icon}
+      {icon ? <span className={styles.itemIcon}>{icon}</span> : null}
       <span className={itemLabelClassName(children)}>{children}</span>
       {trailing}
       {selected ? <Check size={ICON_SIZE.sm} aria-hidden className={styles.itemCheck} /> : null}
@@ -209,10 +212,13 @@ export function MenuItem({
     );
   }
 
+  const isChoice = selected !== undefined;
+
   return (
     <button
       type="button"
-      role="menuitem"
+      role={isChoice ? 'menuitemradio' : 'menuitem'}
+      aria-checked={isChoice ? selected : undefined}
       className={className}
       onClick={onClick}
       disabled={disabled}

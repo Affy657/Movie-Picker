@@ -76,11 +76,5 @@
 }
 
 .actions {
-  composes: actions from '@/shared/components/ConfirmDialog.module.css';
-}
-
-@media (max-width: 29.9375rem) {
-  .actions > button {
-    width: 100%;
-  }
+  composes: actions from '@/shared/components/Modal.module.css';
 }

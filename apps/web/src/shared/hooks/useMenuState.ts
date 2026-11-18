@@ -1,7 +1,16 @@
-import { useCallback, useId, useRef, useState } from 'react';
+import { useCallback, useId, useRef, useState, type CSSProperties } from 'react';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useMenuFocus } from '@/shared/hooks/useMenuFocus';
 import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
+import { useMenuVerticalFit } from '@/shared/hooks/useMenuVerticalFit';
+
+function panelStyle(left: number | null, maxHeight: number | null): CSSProperties | undefined {
+  if (left === null && maxHeight === null) return undefined;
+  return {
+    ...(left === null ? null : { left, right: 'auto' }),
+    ...(maxHeight === null ? null : { maxHeight, overflowY: 'auto' }),
+  };
+}
 
 export function useMenuState(options?: { align?: 'left' | 'right' }) {
   const [open, setOpen] = useState(false);
@@ -10,11 +19,16 @@ export function useMenuState(options?: { align?: 'left' | 'right' }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
 
-  const close = useCallback(() => setOpen(false), []);
+  const dismiss = useCallback(() => setOpen(false), []);
+  const close = useCallback(() => {
+    setOpen(false);
+    triggerRef.current?.focus();
+  }, []);
   const toggle = useCallback(() => setOpen((value) => !value), []);
-  useClickOutside(containerRef, close, open, { closeOnFocusLeave: true });
+  useClickOutside(containerRef, dismiss, open, { closeOnFocusLeave: true });
   useMenuFocus(open, panelRef, triggerRef);
   const fitLeft = useMenuHorizontalFit(open, containerRef, panelRef, options?.align);
+  const { placement, maxHeight } = useMenuVerticalFit(open, containerRef, panelRef);
 
   return {
     open,
@@ -30,7 +44,8 @@ export function useMenuState(options?: { align?: 'left' | 'right' }) {
     panelProps: {
       ref: panelRef,
       id: menuId,
-      style: fitLeft !== null ? { left: fitLeft, right: 'auto' } : undefined,
+      'data-placement': placement,
+      style: panelStyle(fitLeft, maxHeight),
     },
   };
 }

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import Modal from '@/shared/components/Modal';
+import Modal, { ModalActions, ModalBody, ModalFooter } from '@/shared/components/Modal';
 import styles from '@/shared/components/Modal.module.css';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 
@@ -104,6 +104,42 @@ describe('Modal', () => {
 
     expect(screen.getByTestId('small').className).toContain(styles.sizeSm);
     expect(screen.getByTestId('large').className).toContain(styles.sizeLg);
+  });
+
+  it('paints its media surface with the dark-surface tokens, in light theme too', () => {
+    render(
+      <AppTestProviders>
+        <Modal open onClose={vi.fn()} title="Bande-annonce" surface="media" data-testid="media">
+          <p>Vidéo</p>
+        </Modal>
+      </AppTestProviders>
+    );
+
+    expect(screen.getByTestId('media')).toHaveClass('on-dark');
+  });
+
+  it('lays a scrolling body, then a footer whose actions line up at the end', () => {
+    render(
+      <AppTestProviders>
+        <Modal open onClose={vi.fn()} title="Liste" column>
+          <ModalBody>
+            <p>Contenu</p>
+          </ModalBody>
+          <ModalFooter>
+            <ModalActions>
+              <button type="button">Annuler</button>
+              <button type="button">Créer</button>
+            </ModalActions>
+          </ModalFooter>
+        </Modal>
+      </AppTestProviders>
+    );
+
+    const body = screen.getByText('Contenu').parentElement;
+    const actions = screen.getByRole('button', { name: 'Créer' }).parentElement;
+    expect(body).toHaveClass(styles.body!);
+    expect(actions).toHaveClass(styles.actions!);
+    expect(actions?.parentElement).toHaveClass(styles.footer!);
   });
 
   it('refuses a dialog without an accessible name at compile time', () => {

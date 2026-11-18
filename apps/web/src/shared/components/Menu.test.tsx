@@ -53,6 +53,41 @@ describe('Menu', () => {
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
+  it('gives the focus back to its trigger when an item closes it', async () => {
+    const user = userEvent.setup();
+    render(
+      <Menu triggerLabel="Options" panelAriaLabel="Options">
+        {(close) => <MenuItem onClick={close}>Un choix</MenuItem>}
+      </Menu>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Options' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Un choix' }));
+
+    expect(screen.getByRole('button', { name: 'Options' })).toHaveFocus();
+  });
+
+  it('lines its panel up with the left edge of its trigger when asked', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+      top: 100,
+      bottom: 140,
+      left: 500,
+      right: 600,
+    } as DOMRect);
+    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(300);
+    render(
+      <Menu triggerLabel="Options" panelAriaLabel="Options" align="left">
+        {() => <MenuItem>Un choix</MenuItem>}
+      </Menu>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Options' }));
+
+    expect(screen.getByRole('menu')).toHaveStyle({ left: '0px' });
+    vi.restoreAllMocks();
+  });
+
   it('ferme le panneau au clic en dehors', async () => {
     const user = userEvent.setup();
     render(
@@ -208,9 +243,32 @@ describe('MenuItem', () => {
         <MenuItem tone="danger">Retirer</MenuItem>
       </MenuPanel>
     );
-    expect(screen.getByTestId('icon')).toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: 'Sélectionné' }).className).toMatch(/itemSelected/);
+    expect(screen.getByTestId('icon').parentElement?.className).toMatch(/itemIcon/);
+    expect(screen.getByRole('menuitemradio', { name: 'Sélectionné' }).className).toMatch(
+      /itemSelected/
+    );
     expect(screen.getByRole('menuitem', { name: 'Retirer' }).className).toMatch(/itemDanger/);
+  });
+
+  it('is a radio choice that tells assistive technologies whether it is the current one', () => {
+    render(
+      <MenuPanel ariaLabel="Trier">
+        <MenuItem selected>Titre</MenuItem>
+        <MenuItem selected={false}>Date</MenuItem>
+        <MenuItem>Réinitialiser</MenuItem>
+      </MenuPanel>
+    );
+    expect(screen.getByRole('menuitemradio', { name: 'Titre' })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
+    expect(screen.getByRole('menuitemradio', { name: 'Date' })).toHaveAttribute(
+      'aria-checked',
+      'false'
+    );
+    expect(screen.getByRole('menuitem', { name: 'Réinitialiser' })).not.toHaveAttribute(
+      'aria-checked'
+    );
   });
 
   it('takes an accessible name and a title that differ from its visible text', () => {

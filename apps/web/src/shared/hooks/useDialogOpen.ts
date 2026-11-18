@@ -19,8 +19,10 @@ export function useDialogOpen(
   useEffect(() => {
     const dlg = ref.current;
     if (!dlg) return;
-    if (open && !dlg.open) dlg.showModal();
-    else if (!open && dlg.open) dlg.close();
+    if (open && !dlg.open) {
+      dlg.showModal();
+      dlg.querySelector<HTMLElement>('[data-autofocus]')?.focus();
+    } else if (!open && dlg.open) dlg.close();
   }, [open, ref]);
 
   useLayoutEffect(() => {

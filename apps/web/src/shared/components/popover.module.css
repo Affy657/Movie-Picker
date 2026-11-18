@@ -1,0 +1,23 @@
+.surface {
+  composes: card radiusMd elevationLg from './Card.module.css';
+  --popover-enter-shift: calc(-1 * var(--space-1));
+  z-index: var(--z-popover);
+  animation: popoverEnter var(--duration-base) var(--ease-reveal) backwards;
+}
+
+.surface[data-placement='top'] {
+  --popover-enter-shift: var(--space-1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .surface {
+    animation: none;
+  }
+}
+
+@keyframes popoverEnter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--popover-enter-shift));
+  }
+}

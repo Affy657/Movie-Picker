@@ -53,7 +53,10 @@ export default function Sheet({
       {open && (
         <>
           <div className={dragStyles.grab} {...dragBind}>
-            <span className={dragStyles.handle} aria-hidden="true" />
+            <span
+              className={clsx(dragStyles.handle, dragStyles.handleMobileOnly)}
+              aria-hidden="true"
+            />
             <div className={styles.head}>
               <div className={styles.heading}>
                 <h2 id={titleId} className={styles.title}>
@@ -62,7 +65,7 @@ export default function Sheet({
                 {detail}
               </div>
               <IconButton ariaLabel={t('common.close')} onClick={onClose}>
-                <X aria-hidden size={ICON_SIZE.md} />
+                <X aria-hidden size={ICON_SIZE.lg} />
               </IconButton>
             </div>
           </div>
