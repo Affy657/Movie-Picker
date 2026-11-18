@@ -167,7 +167,7 @@ public sealed class ListSourceReader
     private async Task RefreshSnapshotAsync(SavedList saved, ListSourceContent content, CancellationToken ct)
     {
         var name = content.Name ?? saved.Name;
-        var snapshot = content.Snapshot();
+        var snapshot = content.Titles;
         var unchanged = name == saved.Name
             && snapshot.Count == saved.Snapshot.Count
             && snapshot.Zip(saved.Snapshot).All(pair => pair.First.SameFactsAs(pair.Second));
@@ -175,7 +175,7 @@ public sealed class ListSourceReader
             await _saved.RefreshSnapshotAsync(saved.OwnerId, saved.Id, saved.SourceOwnerId, name, snapshot, ct);
     }
 
-    private async Task<IReadOnlyList<ListSourceTitle>> ReadTitlesAsync(ListSource source, CancellationToken ct)
+    private async Task<IReadOnlyList<SavedListTitle>> ReadTitlesAsync(ListSource source, CancellationToken ct)
     {
         var query = source.Type == ListSourceType.TmdbCollection
             ? new MovieShowcaseQuery(MovieShowcaseSections.Collection, CollectionId: CollectionId(source))
@@ -208,15 +208,17 @@ public sealed class ListSourceReader
             shareAcrossInstances: false,
             ct);
 
-    private ListSourceTitle ToTitle(MovieShowcaseItemResponse item) => new(
-        item.Id,
-        item.MediaType,
-        item.Title,
-        item.Year,
-        _posters.ToPublicPosterPath(item.PosterPath),
-        item.VoteAverage,
-        item.RuntimeMinutes,
-        item.GenreIds);
+    private SavedListTitle ToTitle(MovieShowcaseItemResponse item) => new()
+    {
+        TmdbId = item.Id,
+        MediaType = item.MediaType,
+        Title = item.Title,
+        Year = item.Year,
+        PosterPath = _posters.ToPublicPosterPath(item.PosterPath),
+        VoteAverage = item.VoteAverage,
+        RuntimeMinutes = item.RuntimeMinutes,
+        GenreIds = item.GenreIds
+    };
 
     private static string CanonicalCollectionId(string raw) =>
         int.TryParse(raw, NumberStyles.None, CultureInfo.InvariantCulture, out var id)
