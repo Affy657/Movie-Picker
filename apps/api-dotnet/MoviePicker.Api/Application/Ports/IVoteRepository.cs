@@ -11,8 +11,6 @@ public sealed record MovieVoteSummary(int Score, int Up, int Down, IReadOnlyList
 
 public interface IVoteRepository
 {
-    Task DeleteByMovieIdAsync(string movieId, CancellationToken ct = default);
-
     Task<long> DeleteByMovieIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default);
 
     Task DeleteByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default);
