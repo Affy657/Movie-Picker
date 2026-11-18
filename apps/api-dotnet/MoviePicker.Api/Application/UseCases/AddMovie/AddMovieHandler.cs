@@ -4,7 +4,6 @@ using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.Posters;
-using MoviePicker.Api.Application.UseCases.MovieLists;
 using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Configuration;

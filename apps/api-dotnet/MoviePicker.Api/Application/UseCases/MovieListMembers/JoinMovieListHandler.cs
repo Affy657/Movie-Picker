@@ -1,5 +1,5 @@
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Application.UseCases.MovieLists;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Application.UseCases.UserMovies;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;

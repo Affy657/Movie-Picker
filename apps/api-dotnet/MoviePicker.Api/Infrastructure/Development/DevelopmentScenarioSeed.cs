@@ -23,6 +23,7 @@ using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Application.UseCases.RecurringEvents;
 using MoviePicker.Api.Application.UseCases.SavedLists;
 using MoviePicker.Api.Application.UseCases.SeenMarks;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Application.UseCases.VoteMovie;
 using MoviePicker.Api.Application.UseCases.Watched;
 using MoviePicker.Api.Application.UseCases.Watchlist;
