@@ -2352,6 +2352,7 @@ internal static class DevelopmentScenarioSeed
         CancellationToken ct) =>
         await addMovie
             .HandleAsync(
+                callerUserId,
                 slug,
                 new AddMovieRequest
                 {
@@ -2361,7 +2362,6 @@ internal static class DevelopmentScenarioSeed
                     PosterPath = null,
                     ParticipantId = participantId
                 },
-                callerUserId,
                 ct)
             .ConfigureAwait(false);
 

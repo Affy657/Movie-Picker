@@ -60,7 +60,7 @@ public sealed class EventMoviesController : ControllerBase
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var movie = await handler.HandleAsync(idOrSlug, request, userId, ct);
+        var movie = await handler.HandleAsync(userId, idOrSlug, request, ct);
         return Created(string.Empty, movie);
     }
 

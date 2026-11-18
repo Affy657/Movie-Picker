@@ -65,7 +65,7 @@ public sealed class EventMoviesControllerTests
         var result = await Controller().Add("e", null!, handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<CreatedResult>(result);
-        handler.Verify(h => h.HandleAsync("e", It.IsAny<AddMovieRequest>(), "u1", It.IsAny<CancellationToken>()), Times.Once);
+        handler.Verify(h => h.HandleAsync("u1", "e", It.IsAny<AddMovieRequest>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

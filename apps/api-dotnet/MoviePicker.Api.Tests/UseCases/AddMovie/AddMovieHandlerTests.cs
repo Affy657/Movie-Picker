@@ -23,7 +23,6 @@ public sealed class AddMovieHandlerTests
     private readonly Mock<IUserRepository> _userRepo;
     private readonly Mock<IPushSubscriptionRepository> _pushSubRepo;
     private readonly Mock<IPushNotificationSender> _pushSender;
-    private readonly Mock<ICurrentUserAccessor> _currentUser;
     private readonly Mock<ITmdbMovieSearch> _tmdb;
     private readonly RecordingUnitOfWork _unitOfWork = new();
     private readonly AddMovieHandler _sut;
@@ -69,8 +68,6 @@ public sealed class AddMovieHandlerTests
         _userRepo = new Mock<IUserRepository>();
         _pushSubRepo = new Mock<IPushSubscriptionRepository>();
         _pushSender = new Mock<IPushNotificationSender>();
-        _currentUser = new Mock<ICurrentUserAccessor>();
-        _currentUser.Setup(u => u.GetUserId()).Returns(OwnerUserId);
         _tmdb = new Mock<ITmdbMovieSearch>();
         _tmdb
             .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
@@ -86,7 +83,6 @@ public sealed class AddMovieHandlerTests
             _posterStore.Object,
             _userRepo.Object,
             TestAudienceNotifier.Over(_participantRepo.Object, _userRepo.Object, _pushSubRepo.Object, _pushSender.Object, Mock.Of<IUserNotificationRepository>()),
-            _currentUser.Object,
             _tmdb.Object,
             _unitOfWork,
             NullLogger<AddMovieHandler>.Instance,
@@ -99,7 +95,7 @@ public sealed class AddMovieHandlerTests
     {
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
-        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad", Request(), null));
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(OwnerUserId, "bad", Request()));
         Assert.Equal(ErrorCodes.EventNotFound, ex.Reason);
     }
 
@@ -109,7 +105,7 @@ public sealed class AddMovieHandlerTests
         var evt = new Event { Id = "evt1", Title = "Soirée", Date = "2000-01-01", Time = "20:00", Slug = "soiree", HostToken = "ht", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
-        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request(), null));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync(OwnerUserId, "evt1", Request()));
         Assert.Equal(ErrorCodes.EventFinished, ex.Reason);
     }
 
@@ -120,7 +116,7 @@ public sealed class AddMovieHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(
-            () => _sut.HandleAsync("evt1", Request(mediaType: MovieMediaType.Tv), null));
+            () => _sut.HandleAsync(OwnerUserId, "evt1", Request(mediaType: MovieMediaType.Tv)));
         Assert.Equal(ErrorCodes.TvShowsNotAllowed, ex.Reason);
     }
 
@@ -131,7 +127,7 @@ public sealed class AddMovieHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(It.IsAny<string>(), evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync((Participant?)null);
 
-        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", Request(), null));
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(OwnerUserId, "evt1", Request()));
         Assert.Equal(ErrorCodes.InvalidParticipant, ex.Reason);
     }
 
@@ -144,7 +140,7 @@ public sealed class AddMovieHandlerTests
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
         _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 27205, MovieMediaType.Movie, It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
-        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request(participant.Id), null));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync(OwnerUserId, "evt1", Request(participant.Id)));
         Assert.Equal(ErrorCodes.MovieAlreadyProposed, ex.Reason);
     }
 
@@ -172,7 +168,7 @@ public sealed class AddMovieHandlerTests
             ParticipantId = participant.Id
         };
 
-        var result = await _sut.HandleAsync("evt1", request, null);
+        var result = await _sut.HandleAsync(OwnerUserId, "evt1", request);
         Assert.Equal(MovieMediaType.Tv, result.MediaType);
     }
 
@@ -194,7 +190,7 @@ public sealed class AddMovieHandlerTests
             .Setup(t => t.GetDetailsAsync(27205, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TmdbMovieDetails(27205, "Inception", null, null, null, Array.Empty<string>(), 148, Genres, GenreIds, "2010-07-16"));
 
-        var result = await _sut.HandleAsync("evt1", Request(participant.Id), null);
+        var result = await _sut.HandleAsync(OwnerUserId, "evt1", Request(participant.Id));
 
         Assert.NotNull(inserted);
         Assert.Equal(GenreIds, inserted!.GenreIds);
@@ -219,7 +215,7 @@ public sealed class AddMovieHandlerTests
             .Callback<Movie, CancellationToken>((m, _) => inserted = m)
             .ReturnsAsync((Movie m, CancellationToken _) => m with { Id = "mov1" });
 
-        var result = await _sut.HandleAsync("evt1", Request(participant.Id, year: requestedYear), null);
+        var result = await _sut.HandleAsync(OwnerUserId, "evt1", Request(participant.Id, year: requestedYear));
 
         Assert.Equal(storedYear, inserted!.Year);
         Assert.Equal(storedYear, result.Year);
@@ -243,7 +239,7 @@ public sealed class AddMovieHandlerTests
             .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("TMDB indisponible"));
 
-        var result = await _sut.HandleAsync("evt1", Request(participant.Id), null);
+        var result = await _sut.HandleAsync(OwnerUserId, "evt1", Request(participant.Id));
 
         Assert.NotNull(inserted);
         Assert.Empty(inserted!.GenreIds);
@@ -268,7 +264,7 @@ public sealed class AddMovieHandlerTests
             .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("TMDB unavailable"));
 
-        var result = await _sut.HandleAsync("evt1", Request(participant.Id, genreIds: SearchResultGenreIds), null);
+        var result = await _sut.HandleAsync(OwnerUserId, "evt1", Request(participant.Id, genreIds: SearchResultGenreIds));
 
         Assert.Equal(SearchResultGenreIds, inserted!.GenreIds);
         Assert.Equal(SearchResultGenreIds, result.GenreIds);
@@ -292,7 +288,7 @@ public sealed class AddMovieHandlerTests
             ParticipantId = participant.Id
         };
 
-        await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", request, null));
+        await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync(OwnerUserId, "evt1", request));
     }
 
     [Fact]
@@ -305,7 +301,7 @@ public sealed class AddMovieHandlerTests
         _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 27205, MovieMediaType.Movie, It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
-        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request(participant.Id), null));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync(OwnerUserId, "evt1", Request(participant.Id)));
         Assert.Equal(ErrorCodes.MovieTitleAlreadyProposed, ex.Reason);
     }
 
@@ -320,7 +316,7 @@ public sealed class AddMovieHandlerTests
         _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
         var req = new AddMovieRequest { TmdbId = 27205, Title = "Inception", Year = "2010", PosterPath = "not-a-valid-absolute-uri", ParticipantId = participant.Id };
 
-        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", req, null));
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(OwnerUserId, "evt1", req));
         Assert.Equal(ErrorCodes.InvalidPosterPath, ex.Reason);
     }
 
@@ -333,7 +329,7 @@ public sealed class AddMovieHandlerTests
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
         var req = new AddMovieRequest { TmdbId = 27205, Title = "Inception", Year = "2010", PosterPath = "https://tracker.example/pixel.png", ParticipantId = participant.Id };
 
-        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", req, null));
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(OwnerUserId, "evt1", req));
         Assert.Equal(ErrorCodes.InvalidPosterPath, ex.Reason);
         _movieRepo.Verify(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -357,7 +353,7 @@ public sealed class AddMovieHandlerTests
             .ReturnsAsync((Movie m, CancellationToken _) => m with { Id = "mov1" });
         var req = new AddMovieRequest { TmdbId = 27205, Title = "Inception", Year = "2010", PosterPath = null, ParticipantId = participant.Id };
 
-        await _sut.HandleAsync("evt1", req, null);
+        await _sut.HandleAsync(OwnerUserId, "evt1", req);
 
         Assert.Equal(["lock", "count", "insert"], steps);
         Assert.Equal(1, _unitOfWork.Executions);
@@ -375,7 +371,7 @@ public sealed class AddMovieHandlerTests
         _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 27205, MovieMediaType.Movie, It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
 
-        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", Request(participant.Id), null));
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(OwnerUserId, "evt1", Request(participant.Id)));
 
         Assert.Equal(ErrorCodes.InvalidParticipant, ex.Reason);
         _movieRepo.Verify(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -392,7 +388,7 @@ public sealed class AddMovieHandlerTests
         _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _movieRepo.Setup(r => r.CountByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(EventConfig.MaxMoviesPerEventCap);
 
-        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request(participant.Id), null));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync(OwnerUserId, "evt1", Request(participant.Id)));
 
         Assert.Equal(ErrorCodes.EventMovieLimitReached, ex.Reason);
         Assert.Equal(EventConfig.MaxMoviesPerEventCap, ex.Parameters!["max"]);
@@ -421,7 +417,7 @@ public sealed class AddMovieHandlerTests
         _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _movieRepo.Setup(r => r.CountByEventAndParticipantAsync(evt.Id, participant.Id, It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request(participant.Id), null));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync(OwnerUserId, "evt1", Request(participant.Id)));
         Assert.Equal(ErrorCodes.ProposalLimitReached, ex.Reason);
     }
 
@@ -437,7 +433,7 @@ public sealed class AddMovieHandlerTests
         _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _movieRepo.Setup(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>())).ReturnsAsync(createdMovie);
 
-        var result = await _sut.HandleAsync("evt1", Request(participant.Id), null);
+        var result = await _sut.HandleAsync(OwnerUserId, "evt1", Request(participant.Id));
 
         Assert.Equal("mov1", result.Id);
         Assert.Equal("Inception", result.Title);
