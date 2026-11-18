@@ -91,6 +91,21 @@ describe('ResponsiveDialog', () => {
     expect(sheet).toHaveClass(sheetStyles.dialogTall!);
   });
 
+  it.each([false, true])('links its description in both formats (phone: %s)', (isPhone) => {
+    stubMatchMedia(isPhone);
+    render(
+      <LocaleProvider>
+        <ResponsiveDialog open title="Signaler" ariaDescribedBy="intro" onClose={() => {}}>
+          <p id="intro">Copiez le rapport.</p>
+        </ResponsiveDialog>
+      </LocaleProvider>
+    );
+
+    expect(screen.getByRole('dialog', { name: 'Signaler' })).toHaveAccessibleDescription(
+      'Copiez le rapport.'
+    );
+  });
+
   it('draws no footer bar when there is no footer', () => {
     stubMatchMedia(false);
 

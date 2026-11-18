@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Info } from 'lucide-react';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
@@ -6,11 +6,8 @@ import { useTranslation } from '@/shared/i18n';
 import styles from './InfoBubble.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import LinkButton from './LinkButton';
-import {
-  INFO_PANEL_MAX_WIDTH_PX,
-  MENU_ANCHOR_GAP_PX,
-  MENU_VIEWPORT_MARGIN_PX,
-} from './menuGeometry';
+import { fixedPopoverStyle, useFixedPopover } from '@/shared/hooks/useFixedPopover';
+import { INFO_PANEL_MAX_WIDTH_PX } from './menuGeometry';
 
 type InfoBubbleProps = {
   label: string;
@@ -20,12 +17,6 @@ type InfoBubbleProps = {
 export default function InfoBubble({ label, children }: Readonly<InfoBubbleProps>) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const [position, setPosition] = useState<{
-    top: number;
-    left: number;
-    width: number;
-    placement: 'top' | 'bottom';
-  } | null>(null);
   const wrapperRef = useRef<HTMLSpanElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLSpanElement>(null);
@@ -38,46 +29,9 @@ export default function InfoBubble({ label, children }: Readonly<InfoBubbleProps
     triggerRef.current?.focus();
   };
 
-  const place = useCallback(() => {
-    const trigger = triggerRef.current;
-    if (!trigger) return;
-
-    const rect = trigger.getBoundingClientRect();
-    const available = globalThis.innerWidth - MENU_VIEWPORT_MARGIN_PX * 2;
-    const width = Math.min(INFO_PANEL_MAX_WIDTH_PX, available);
-    const left = Math.min(
-      Math.max(rect.left, MENU_VIEWPORT_MARGIN_PX),
-      globalThis.innerWidth - width - MENU_VIEWPORT_MARGIN_PX
-    );
-
-    const panelHeight = panelRef.current?.offsetHeight ?? 0;
-    const below = rect.bottom + MENU_ANCHOR_GAP_PX;
-    const overflowsBottom = panelHeight > 0 && below + panelHeight > globalThis.innerHeight;
-    const top = overflowsBottom
-      ? Math.max(MENU_VIEWPORT_MARGIN_PX, rect.top - MENU_ANCHOR_GAP_PX - panelHeight)
-      : below;
-
-    setPosition({ top, left, width, placement: overflowsBottom ? 'top' : 'bottom' });
-  }, []);
-
-  useLayoutEffect(() => {
-    if (!open) {
-      setPosition(null);
-      return;
-    }
-    place();
-  }, [open, place]);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const onViewportChange = () => place();
-    globalThis.addEventListener('resize', onViewportChange);
-    globalThis.addEventListener('scroll', onViewportChange, true);
-    return () => {
-      globalThis.removeEventListener('resize', onViewportChange);
-      globalThis.removeEventListener('scroll', onViewportChange, true);
-    };
-  }, [open, place]);
+  const position = useFixedPopover(open, triggerRef, panelRef, {
+    maxWidth: INFO_PANEL_MAX_WIDTH_PX,
+  });
 
   return (
     <span className={styles.wrapper} ref={wrapperRef}>
@@ -99,11 +53,7 @@ export default function InfoBubble({ label, children }: Readonly<InfoBubbleProps
           className={styles.panel}
           role="note"
           data-placement={position?.placement}
-          style={
-            position === null
-              ? { visibility: 'hidden' }
-              : { top: position.top, left: position.left, width: position.width }
-          }
+          style={fixedPopoverStyle(position)}
         >
           <span className={styles.panelTitle}>{label}</span>
           {children}

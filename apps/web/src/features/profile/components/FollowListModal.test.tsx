@@ -287,10 +287,26 @@ describe('FollowListModal (MSW)', () => {
 
       renderModal();
 
-      expect(await screen.findByRole('heading', { name: 'Abonnements' })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { name: 'Abonnés et abonnements' })
+      ).toBeInTheDocument();
+      expect(screen.getByRole('dialog', { name: 'Abonnés et abonnements' })).toBeInTheDocument();
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+
+  it('gives the dialog the same name on a large screen as on a phone', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
+    );
+
+    renderModal();
+
+    expect(
+      await screen.findByRole('dialog', { name: 'Abonnés et abonnements' })
+    ).toBeInTheDocument();
   });
 
   it("starts on the Followers tab when initialTab='followers'", async () => {

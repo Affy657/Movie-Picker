@@ -5,9 +5,11 @@
 }
 
 .footer {
-  composes: footer from '@/shared/components/Modal.module.css';
+  display: flex;
   flex-direction: column;
   align-items: stretch;
+  gap: var(--space-3);
+  width: 100%;
 }
 
 .intro {

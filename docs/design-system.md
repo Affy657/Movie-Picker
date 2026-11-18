@@ -165,7 +165,7 @@ Seul endroit du projet où `<dialog>` et `::backdrop` sont écrits. Fermeture pa
 | `ariaDescribedBy` | `string` | |
 | `size` | `xs` / `sm` / `md` / `lg` / `2xl` | `--container-<size>`, `sm` par défaut |
 | `surface` | `surface` / `bare` / `media` / `borderless` | `media` pour une bande-annonce, qui pose aussi `on-dark` : titre et croix restent lisibles en thème clair |
-| `padded`, `column`, `anchoredTop`, `bottomSheetOnMobile`, `strongBackdrop` | `boolean` | |
+| `padded`, `column`, `anchoredTop`, `strongBackdrop` | `boolean` | |
 | `closeAriaLabel` | `string` | nom du bouton de fermeture, « Fermer » par défaut |
 
 `data-testid` se pose sur le `<dialog>`, `dialogRef` en donne la référence à l'appelant. Une modale à titre passe par `title`, jamais par une barre de titre recopiée dans ses enfants. La fenêtre entre en fondu avec un léger glissement (`dialogEnter`, voile en `backdropEnter`), retirés sous `prefers-reduced-motion` ; la `Sheet` garde sa propre entrée. À l'ouverture, `showModal()` donne le focus au premier élément focalisable, la croix d'une modale à titre ; un descendant marqué `data-autofocus` le prend à sa place (l'`autoFocus` de React tombe avant `showModal()`, quand le `<dialog>` est encore fermé, et ne sert à rien ici).
@@ -175,7 +175,7 @@ Trois briques donnent à toutes les modales le même corps et le même pied, exp
 | Brique | Rôle |
 |---|---|
 | `ModalBody` | corps qui défile entre la barre de titre et le pied (`flex: 1 1 auto; min-height: 0`), marges `--space-4` `--space-5` `--space-5` ; avec `column` dès que le contenu peut dépasser l'écran |
-| `ModalFooter` | pied hors du défilement, filet `--color-border-subtle` au-dessus, marges `--space-3` `--space-5`, sans fond propre ; sur une modale `bottomSheetOnMobile`, le dernier bloc porte la marge de sécurité du bas |
+| `ModalFooter` | pied hors du défilement, filet `--color-border-subtle` au-dessus, marges `--space-3` `--space-5`, sans fond propre |
 | `ModalActions` | la rangée de boutons : alignée à droite, `--space-2-5` entre les boutons, retour à la ligne si la place manque, boutons étirés à parts égales sous 48 rem ; Annuler (`secondary`) à gauche, l'action principale à droite, tous en taille `md`, `ghost` réservé à une troisième action (« Passer », « Plus tard ») |
 
 Ont leur propre en-tête, et seulement eux : les dialogues d'alerte sans croix (`ConfirmDialog`, `ConsentDialog`, titre `--font-size-xl`) et les dialogues sur affiche (`WheelModal`, `MovieRatingDialog`), dont la croix reste un `IconButton` à icône `lg` comme celle de `DialogTitleBar`.
@@ -193,7 +193,7 @@ Feuille ancrée en bas, glissable : le geste est `useSheetDrag` (`shared/hooks/`
 
 ### ResponsiveDialog
 
-Le dialogue qui est une `Sheet` sur téléphone et une `Modal` en colonne sur grand écran, avec le même contenu : `open`, `title`, `detail` (sous le titre dans les deux formats), `onClose`, `footer`, `size` (la taille de la `Modal`, `sm` par défaut), `sheetSize` (`md` par défaut), `className`. Sur grand écran, le corps et le pied sont `ModalBody` et `ModalFooter`, et sans `footer` il n'y a pas de pied. C'est la création de soirée, la création et les membres d'une liste, la pioche dans la watchlist et la proposition d'un film. Seul un dialogue dont l'en-tête change d'un format à l'autre (des onglets à la place du titre) garde sa propre bascule.
+Le dialogue qui est une `Sheet` sur téléphone et une `Modal` en colonne sur grand écran, avec le même contenu : `open`, `title`, `detail` (sous le titre dans les deux formats), `onClose`, `footer`, `ariaDescribedBy` (la description accessible, dans les deux formats), `size` (la taille de la `Modal`, `sm` par défaut), `sheetSize` (`md` par défaut), `className`. Sur grand écran, le corps et le pied sont `ModalBody` et `ModalFooter`, et sans `footer` il n'y a pas de pied. Un formulaire dont le bouton d'envoi est dans `footer` pose un `id` sur son `<form>` et `form={id}` sur le bouton. C'est la création de soirée, la création et les membres d'une liste, la pioche dans la watchlist, la proposition d'un film, « Proposer une idée » et « Signaler un problème » : aucune autre fenêtre ne devient feuille sur téléphone sans passer par lui. Seul un dialogue dont l'en-tête change d'un format à l'autre (des onglets à la place du titre) garde sa propre bascule.
 
 ### Notice
 
@@ -240,7 +240,7 @@ Les boutons y prennent leurs tailles et tons de `Button`, la feuille n'en redéf
 
 ### ChoiceGroup et ChoiceCard
 
-Un choix exclusif entre des cartes, quand `SegmentedRadioGroup` est trop étroit (une carte porte un titre, une description, une vignette). `ChoiceGroup` (`id`, `value`, `onChange`, `ariaLabel` ou `ariaLabelledBy`) rend le `role="radiogroup"` et pilote flèches, Home et End ; seule la carte cochée est tabulable, la première quand rien ne l'est. `onSelect` (optionnel) est appelé quand une carte est activée, au clic ou par Entrée et Espace, jamais lors d'un déplacement par flèche : c'est ce qui ferme un popover (`ThemeField`) sans poser de gestionnaire de clic sur un conteneur.
+Un choix exclusif entre des cartes, quand `SegmentedRadioGroup` est trop étroit (une carte porte un titre, une description, une vignette). `ChoiceGroup` (`id`, `value`, `onChange`, `ariaLabel` ou `ariaLabelledBy`) rend le `role="radiogroup"` et pilote flèches, Home et End ; seule la carte cochée est tabulable, la première quand rien ne l'est. `onSelect` (optionnel) est appelé quand une carte est activée, au clic ou par Entrée et Espace, jamais lors d'un déplacement par flèche : c'est ce qui ferme un popover (`ThemeField`) sans poser de gestionnaire de clic sur un conteneur. Un panneau en `position: fixed` hors d'un menu (`InfoBubble`, le sélecteur d'emoji de `ThemeField`) se place par `useFixedPopover` (`shared/hooks/useFixedPopover.ts`) et `fixedPopoverStyle`, jamais par un calcul recopié.
 
 | Prop de `ChoiceCard` | Type | Rôle |
 |---|---|---|
@@ -334,7 +334,7 @@ La barre d'avancée fine suivie de son libellé : `value` (de 0 à 100, bornée)
 | Composant | Props | Rôle |
 |---|---|---|
 | `Tooltip` | `label` (le texte de la bulle), `placement` `top` / `bottom` / `left` / `right`, `delayMs`, `focusable`, `disabled` (ne rend pas la bulle) | apparaît au survol et au focus, jamais seul vecteur d'une information |
-| `InfoBubble` | `label` (titre visible du panneau et nom du bouton d'aide), contenu en enfants | l'aide contextuelle d'un champ ou d'un réglage ; le panneau, sur la surface des panneaux flottants, se place par `menuGeometry.ts` (320 px au plus, 8 px du bord), se ferme par son `LinkButton`, Échap ou un clic dehors ; le bouton Fermer et Échap rendent le focus au bouton d'aide |
+| `InfoBubble` | `label` (titre visible du panneau et nom du bouton d'aide), contenu en enfants | l'aide contextuelle d'un champ ou d'un réglage ; le panneau, sur la surface des panneaux flottants, se place par `useFixedPopover` (320 px au plus, 8 px du bord, retourné au-dessus du bouton et plafonné en hauteur quand la place manque, comme un menu), se ferme par son `LinkButton`, Échap ou un clic dehors ; le bouton Fermer et Échap rendent le focus au bouton d'aide |
 
 ### États de page
 

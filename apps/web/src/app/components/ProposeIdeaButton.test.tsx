@@ -9,6 +9,8 @@ import { LocaleProvider } from '@/shared/i18n';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import ProposeIdeaButton from '@/app/components/ProposeIdeaButton';
 import modalStyles from '@/shared/components/Modal.module.css';
+import sheetStyles from '@/shared/components/Sheet.module.css';
+import { stubMatchMedia } from '@/test-utils/matchMedia';
 
 function renderButton(path = '/e/soiree-cine') {
   return render(
@@ -52,6 +54,30 @@ describe('ProposeIdeaButton', () => {
   beforeEach(() => {
     globalThis.URL.createObjectURL = () => 'blob:mock';
     globalThis.URL.revokeObjectURL = () => {};
+  });
+
+  it('opens as a sheet on a phone and still sends from its footer button', async () => {
+    stubMatchMedia((query) => query.includes('max-width'));
+    let received: unknown = null;
+    server.use(
+      http.post(`${TEST_API_V1}/idea-suggestions`, async ({ request }) => {
+        received = await request.json();
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+    renderButton();
+    const user = await openDialog();
+
+    expect(await screen.findByRole('dialog', { name: /proposer une idée/i })).toHaveClass(
+      sheetStyles.dialog!
+    );
+    await fillForm(user);
+    await user.click(screen.getByRole('button', { name: /envoyer/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toHaveTextContent(/merci/i);
+    });
+    expect(received).toMatchObject({ title: 'Ajouter un mode battle' });
   });
 
   it('the dialog is closed at first', () => {

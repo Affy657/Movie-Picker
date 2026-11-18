@@ -108,23 +108,6 @@
   .actions > * {
     flex: 1 1 auto;
   }
-
-  .bottomSheet .footer:last-child {
-    padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
-  }
-
-  .bottomSheet .body:last-child {
-    padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
-  }
-
-  .dialog.bottomSheet {
-    position: fixed;
-    inset: auto 0 0 0;
-    margin: 0;
-    width: 100%;
-    max-width: 100%;
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

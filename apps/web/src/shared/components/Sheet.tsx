@@ -17,6 +17,7 @@ interface SheetProps {
   footer?: React.ReactNode;
   size?: SheetSize;
   detail?: React.ReactNode;
+  ariaDescribedBy?: string;
   className?: string;
 }
 
@@ -30,6 +31,7 @@ export default function Sheet({
   footer,
   size = 'md',
   detail,
+  ariaDescribedBy,
   className,
 }: Readonly<SheetProps>) {
   const { t } = useTranslation();
@@ -42,6 +44,7 @@ export default function Sheet({
       open={open}
       onClose={onClose}
       ariaLabelledBy={titleId}
+      ariaDescribedBy={ariaDescribedBy}
       dialogRef={dialogRef}
       className={clsx(
         styles.dialog,
