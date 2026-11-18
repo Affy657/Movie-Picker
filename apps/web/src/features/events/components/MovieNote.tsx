@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Check, ChevronDown, ChevronUp, Quote, Trash2, X } from 'lucide-react';
 import clsx from 'clsx';
-import { deleteMoviePitchNote, setMoviePitchNote } from '@/features/movies/api/moviesApi';
+import { deleteMoviePitchNote, setMoviePitchNote } from '@/features/events/api/eventMoviesApi';
 import styles from './MovieNote.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import type { Translate } from '@/shared/i18n';

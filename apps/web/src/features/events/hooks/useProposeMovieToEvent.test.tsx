@@ -6,11 +6,11 @@ import { LocaleProvider } from '@/shared/i18n';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import type { EventData } from '@/features/events/types';
 import { fetchEventBySlug } from '@/features/events/api/eventsApi';
-import { addMovieToEvent } from '@/features/movies/api/moviesApi';
+import { addMovieToEvent } from '@/features/events/api/eventMoviesApi';
 import { useProposeMovieToEvent } from '@/features/events/hooks/useProposeMovieToEvent';
 
 vi.mock('@/features/events/api/eventsApi', () => ({ fetchEventBySlug: vi.fn() }));
-vi.mock('@/features/movies/api/moviesApi', () => ({ addMovieToEvent: vi.fn() }));
+vi.mock('@/features/events/api/eventMoviesApi', () => ({ addMovieToEvent: vi.fn() }));
 
 describe('useProposeMovieToEvent', () => {
   it('marks the nights of the proposed film stale, and only those', async () => {

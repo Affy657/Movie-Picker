@@ -4,10 +4,10 @@ import { act, renderHook } from '@testing-library/react';
 import { LocaleProvider } from '@/shared/i18n';
 import { ConsentProvider } from '@/shared/contexts/ConsentContext';
 import { ApiError } from '@/shared/api/apiError';
-import { deleteMovieRating, setMovieRating } from '@/features/movies/api/moviesApi';
+import { deleteMovieRating, setMovieRating } from '@/features/events/api/eventMoviesApi';
 import { useEventMovieRating } from '@/features/events/pages/event-detail/useEventMovieRating';
 
-vi.mock('@/features/movies/api/moviesApi', () => ({
+vi.mock('@/features/events/api/eventMoviesApi', () => ({
   setMovieRating: vi.fn(),
   deleteMovieRating: vi.fn(),
 }));

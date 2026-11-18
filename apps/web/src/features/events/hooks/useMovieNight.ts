@@ -4,7 +4,7 @@ import {
   removeMovieFromEvent,
   setMovieWheelExclusion,
   unmarkMovieAsSeen,
-} from '@/features/movies/api/moviesApi';
+} from '@/features/events/api/eventMoviesApi';
 import { useEventDetailPage } from '@/features/events/hooks/useEventDetailPage';
 import { useEventMovieVoting } from '@/features/events/pages/event-detail/useEventMovieVoting';
 import { getErrorMessage } from '@/shared/api/apiError';

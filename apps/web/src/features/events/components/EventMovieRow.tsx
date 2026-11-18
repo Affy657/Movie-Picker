@@ -1,22 +1,21 @@
-import SeenButton from '@/features/movies/components/SeenButton';
+import SeenButton from '@/features/events/components/SeenButton';
 import { Fragment, memo } from 'react';
 import clsx from 'clsx';
 import { AlertTriangle, RotateCcw, ThumbsDown, ThumbsUp } from 'lucide-react';
 import Chip from '@/shared/components/Chip';
+import { MovieCardKebab, WatchlistBadge } from '@/features/movies/components/movieCardParts';
 import {
   CardNote,
   CardProposerFooter,
   CardSelectionOverlay,
   isSelectable,
   type MovieCardCommonProps,
-  MovieCardKebab,
   PosterDetailsTrigger,
   useMovieCardState,
   VoteBar,
-  WatchlistBadge,
   winnerBadgeLabel,
   WinnerRibbon,
-} from '@/features/movies/components/movieCardParts';
+} from '@/features/events/components/eventMovieCardParts';
 import Tooltip from '@/shared/components/Tooltip';
 import {
   MovieTableAvailability,
@@ -26,12 +25,12 @@ import {
 } from '@/features/movies/components/MovieTable';
 import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
 import { yearFromDate } from '@/shared/utils/formatReleaseDate';
-import cardPartsStyles from './movieCardParts.module.css';
-import table from './MovieTable.module.css';
+import cardPartsStyles from './eventMovieCardParts.module.css';
+import table from '@/features/movies/components/MovieTable.module.css';
 import styles from './EventMovieRow.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import type { Translate } from '@/shared/i18n';
-import ScoreBar from '@/features/movies/components/ScoreBar';
+import ScoreBar from '@/features/events/components/ScoreBar';
 
 type RowSortKey =
   'createdAt' | 'voteAverage' | 'duration' | 'score' | 'availability' | 'seen' | 'releaseDate';

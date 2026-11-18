@@ -6,7 +6,7 @@ import {
   MovieDetailsContent,
   type MovieDetailsFacts,
   type MovieDetailsQueryState,
-} from '@/features/movies/components/MovieDetailsPanel';
+} from '@/features/events/components/MovieDetailsPanel';
 
 vi.mock('@/shared/i18n', () => ({
   useTranslation: () => ({

@@ -12,16 +12,13 @@ import {
 import clsx from 'clsx';
 import { Link } from 'react-router';
 import { AlertCircle, ArrowLeft, Check, Film, Plus, ThumbsUp } from 'lucide-react';
-import {
-  addMovieToEvent,
-  removeMovieFromEvent,
-  type MovieSearchItem,
-} from '@/features/movies/api/moviesApi';
+import { addMovieToEvent, removeMovieFromEvent } from '@/features/events/api/eventMoviesApi';
+import type { MovieSearchItem } from '@/features/movies/api/moviesApi';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useWatchlist, useWatchlistAvailability } from '@/features/movies/hooks/useWatchlist';
 import { useMovieDetails } from '@/features/movies/hooks/useMovieDetails';
 import AddMovieForm, { type MovieSearchItemAside } from '@/features/movies/components/AddMovieForm';
-import { MovieDetailsContent } from '@/features/movies/components/MovieDetailsPanel';
+import { MovieDetailsContent } from '@/features/events/components/MovieDetailsPanel';
 import MovieFacts from '@/features/movies/components/MovieFacts';
 import StreamingStatus from '@/features/movies/components/StreamingStatus';
 import TmdbAttribution from '@/features/movies/components/TmdbAttribution';

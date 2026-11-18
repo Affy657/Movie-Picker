@@ -2,10 +2,10 @@ import type { ReactNode } from 'react';
 import type { MovieData } from '@/shared/types/movie';
 import type { RatingScale } from '@/shared/types/theme';
 import { useTranslation } from '@/shared/i18n';
-import { EventMovieCard } from '@/features/movies/components/EventMovieCard';
-import { EventMovieRow, EventMovieRowHeader } from '@/features/movies/components/EventMovieRow';
+import { EventMovieCard } from '@/features/events/components/EventMovieCard';
+import { EventMovieRow, EventMovieRowHeader } from '@/features/events/components/EventMovieRow';
 import { MovieTable } from '@/features/movies/components/MovieTable';
-import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
+import type { MovieCardSelection } from '@/features/events/components/eventMovieCardParts';
 import styles from './MovieList.module.css';
 
 export type MovieRowSortKey =

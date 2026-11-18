@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render } from '@testing-library/react';
-import ScoreBar from '@/features/movies/components/ScoreBar';
-import styles from '@/features/movies/components/ScoreBar.module.css';
+import ScoreBar from '@/features/events/components/ScoreBar';
+import styles from '@/features/events/components/ScoreBar.module.css';
 
 describe('ScoreBar', () => {
   it('splits the track between approvals and rejections', () => {

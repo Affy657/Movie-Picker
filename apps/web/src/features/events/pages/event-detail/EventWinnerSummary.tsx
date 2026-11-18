@@ -5,7 +5,7 @@ import { Film, Info, LogIn, Star } from 'lucide-react';
 import Button, { buttonClass } from '@/shared/components/Button';
 import PosterBackdrop from '@/shared/components/PosterBackdrop';
 import { ICON_SIZE } from '@/shared/components/iconSize';
-import { ProposerBadge } from '@/features/movies/components/movieCardParts';
+import { ProposerBadge } from '@/features/events/components/eventMovieCardParts';
 import MovieFacts from '@/features/movies/components/MovieFacts';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';

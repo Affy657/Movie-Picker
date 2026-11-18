@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from '@/shared/i18n';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { fetchEventBySlug } from '@/features/events/api/eventsApi';
-import { addMovieToEvent } from '@/features/movies/api/moviesApi';
+import { addMovieToEvent } from '@/features/events/api/eventMoviesApi';
 import type { MovieMediaType } from '@/shared/types/movie';
 
 export interface ProposableMovie {

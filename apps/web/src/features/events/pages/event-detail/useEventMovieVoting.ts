@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { onlineManager } from '@tanstack/react-query';
 import { hasQueuedVote, latestQueuedVote, queueVote } from '@/shared/utils/offlineEventStorage';
-import { clearMovieVote, voteMovie } from '@/features/movies/api/moviesApi';
+import { clearMovieVote, voteMovie } from '@/features/events/api/eventMoviesApi';
 import { API_ERROR_REASONS, ApiError, getErrorMessage } from '@/shared/api/apiError';
 import { promptToJoinEvent } from '@/features/events/joinPrompt';
 import type { MovieData } from '@/shared/types/movie';

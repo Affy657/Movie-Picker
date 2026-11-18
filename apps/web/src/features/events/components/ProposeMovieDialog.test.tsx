@@ -18,7 +18,14 @@ const api = vi.hoisted(() => ({
 
 vi.mock('@/features/movies/api/moviesApi', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/features/movies/api/moviesApi')>()),
-  ...api,
+  searchMovies: api.searchMovies,
+  fetchMovieDetails: api.fetchMovieDetails,
+}));
+
+vi.mock('@/features/events/api/eventMoviesApi', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/features/events/api/eventMoviesApi')>()),
+  addMovieToEvent: api.addMovieToEvent,
+  removeMovieFromEvent: api.removeMovieFromEvent,
 }));
 
 vi.mock('@/features/auth/contexts/AuthContext', () => ({

@@ -63,7 +63,7 @@
 }
 
 .tvBadge {
-  composes: posterBadge from './movieCardParts.module.css';
+  composes: posterBadge from '@/features/movies/components/movieCardParts.module.css';
   position: absolute;
   top: var(--space-2);
   left: var(--space-2);
@@ -71,7 +71,7 @@
 }
 
 .info {
-  composes: onSurface from './movieCardParts.module.css';
+  composes: onSurface from '@/features/movies/components/movieCardParts.module.css';
   position: relative;
   flex: 1;
   min-width: 0;

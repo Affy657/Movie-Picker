@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { othersAlreadySeenHint } from '@/features/movies/utils/seenHint';
+import { othersAlreadySeenHint } from '@/features/events/utils/seenHint';
 
 const makeT = () => vi.fn((key: string, _vars?: Record<string, string | number>) => key);
 
