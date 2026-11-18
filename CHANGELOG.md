@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.16.1] - 2026-11-19
+
 ### Changed
 
 - **« Proposer une idée » et « Signaler un problème » s'ouvrent en feuille sur téléphone**, avec la poignée pour les fermer d'un glissement, comme les autres fenêtres.
@@ -848,7 +850,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.16.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.16.1...HEAD
+[1.16.1]: https://github.com/Affy657/Movie-Picker/compare/v1.16.0...v1.16.1
 [1.16.0]: https://github.com/Affy657/Movie-Picker/compare/v1.15.5...v1.16.0
 [1.15.5]: https://github.com/Affy657/Movie-Picker/compare/v1.15.4...v1.15.5
 [1.15.4]: https://github.com/Affy657/Movie-Picker/compare/v1.15.3...v1.15.4
