@@ -7,7 +7,7 @@ import { http, HttpResponse } from 'msw';
 import WatchlistPage from '@/features/watchlist/pages/WatchlistPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubHoverCapability, stubMatchMedia } from '@/test-utils/matchMedia';
-import { createWatchlistHandlers, TEST_API_V1 } from '@/mocks/handlers';
+import { createWatchlistHandlers, TEST_API_V1, type MockWatchlistItem } from '@/mocks/handlers';
 import { ROUTE_CHUNKS } from '@/app/routeChunks';
 
 const { track } = vi.hoisted(() => ({ track: vi.fn() }));
@@ -64,7 +64,7 @@ const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
   })
 );
 
-const ITEM_A = {
+const ITEM_A: MockWatchlistItem = {
   tmdbId: 200,
   mediaType: 'movie',
   title: 'Ancien Mais Bien Noté',
@@ -75,7 +75,7 @@ const ITEM_A = {
   createdAt: '2026-01-01T00:00:00Z',
 };
 
-const ITEM_B = {
+const ITEM_B: MockWatchlistItem = {
   tmdbId: 201,
   mediaType: 'movie',
   title: 'Recent Mais Mal Noté',
@@ -90,9 +90,7 @@ const TOOLBAR_STORAGE_KEY = 'moviepicker_watchlist_toolbar_u1';
 const KEBAB_A = /plus d.actions.*ancien mais bien noté/i;
 const POSTER_A = /voir les détails de « ancien mais bien noté »/i;
 
-function watchlistHandler(items: unknown[], availability: unknown[] = []) {
-  return createWatchlistHandlers(items, availability);
-}
+const watchlistHandler = createWatchlistHandlers;
 
 function proposeHandlers(onProposed: (body: Record<string, unknown>) => void) {
   return [

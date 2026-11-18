@@ -13,6 +13,7 @@ import {
   TEST_API_V1,
   type MockList,
   type MockListPerson,
+  type MockWatchlistItem,
 } from '@/mocks/handlers';
 import MovieListPage from './MovieListPage';
 
@@ -128,7 +129,7 @@ function renderPage(path = '/listes/l1') {
   );
 }
 
-function useServer(lists: MockList[] = [HALLOWEEN], watchlist: unknown[] = []) {
+function useServer(lists: MockList[] = [HALLOWEEN], watchlist: MockWatchlistItem[] = []) {
   return [authedUser, ...createWatchlistHandlers(watchlist), ...createListsHandlers(lists)];
 }
 

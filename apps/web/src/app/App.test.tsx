@@ -203,7 +203,7 @@ describe('App (routes)', () => {
         authMeGuestHandler,
         ...createListJoinHandlers('7xK2pQ', {
           name: 'Ciné du dimanche',
-          owner: { handle: 'lea', displayName: 'Léa', avatarId: null },
+          owner: { displayName: 'Léa', avatarId: '' },
           itemCount: 3,
           posterPaths: [],
           isFull: false,

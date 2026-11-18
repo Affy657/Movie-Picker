@@ -1,9 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import type { components } from '@/shared/api/generated/openapiSchema';
-
-type Schemas = components['schemas'];
-
-type EventDetailPayload = Schemas['EventDetailResponse'];
+import { apiErrorJson, apiJson, type ApiSchemas as Schemas } from './apiJson';
 
 export const TEST_API_BASE = 'http://127.0.0.1:3999';
 
@@ -11,18 +7,45 @@ export const TEST_API_V1 = `${TEST_API_BASE}/api/v1`;
 
 const V1 = TEST_API_V1;
 
+const MOCK_DATE = '2026-11-01T00:00:00Z';
+
 export const authMeGuestHandler = http.get(`${V1}/auth/me`, () =>
-  HttpResponse.json(
+  apiJson<'ApiErrorResponse'>(
     { error: 'Authentication required', code: 401, reason: 'unauthorized' },
     { status: 401 }
   )
 );
 
-export function createWatchlistHandlers(items: unknown[], availability: unknown[] = []) {
+type MockTitle<T extends { tmdbId: number; title: string }> = Pick<T, 'tmdbId' | 'title'> &
+  Partial<T>;
+
+export type MockWatchlistItem = MockTitle<Schemas['WatchlistItemResponse']>;
+
+function mockWatchlistItem(item: MockWatchlistItem): Schemas['WatchlistItemResponse'] {
+  return {
+    mediaType: 'movie',
+    year: '',
+    genreIds: [],
+    createdAt: MOCK_DATE,
+    onLetterboxd: false,
+    ...item,
+  };
+}
+
+export function createWatchlistHandlers(
+  items: MockWatchlistItem[],
+  availability: Schemas['WatchlistAvailabilityItemResponse'][] = []
+) {
   return [
-    http.get(`${V1}/watchlist`, () => HttpResponse.json({ items })),
+    http.get(`${V1}/watchlist`, () =>
+      apiJson<'WatchlistResponse'>({
+        items: items.map(mockWatchlistItem),
+        total: items.length,
+        hasMore: false,
+      })
+    ),
     http.get(`${V1}/watchlist/availability`, () =>
-      HttpResponse.json({ items: availability, partial: false })
+      apiJson<'WatchlistAvailabilityResponse'>({ items: availability, partial: false })
     ),
   ];
 }
@@ -44,49 +67,64 @@ const EMPTY_LETTERBOXD_SYNC: Schemas['LetterboxdSyncResponse'] = {
   watchedTotalTruncated: 0,
 };
 
-export function createLetterboxdSyncHandler(report: Schemas['LetterboxdSyncResponse'] = {}) {
+const EMPTY_LETTERBOXD_CONFIRM: Schemas['LetterboxdImportConfirmResponse'] = {
+  added: 0,
+  alreadyPresent: 0,
+  watchedAdded: 0,
+  watchedAlreadyPresent: 0,
+  pendingReconciliationCount: 0,
+};
+
+export function createLetterboxdSyncHandler(
+  report: Partial<Schemas['LetterboxdSyncResponse']> = {}
+) {
   return http.post(`${V1}/letterboxd/sync`, () =>
-    HttpResponse.json({ ...EMPTY_LETTERBOXD_SYNC, ...report })
+    apiJson<'LetterboxdSyncResponse'>({ ...EMPTY_LETTERBOXD_SYNC, ...report })
   );
 }
 
 export function createLetterboxdConfirmHandler(
   onConfirm: (body: Schemas['LetterboxdImportConfirmRequest']) => void = () => undefined,
-  result: Schemas['LetterboxdImportConfirmResponse'] = {}
+  result: Partial<Schemas['LetterboxdImportConfirmResponse']> = {}
 ) {
   return http.post(`${V1}/letterboxd/confirm`, async ({ request }) => {
     onConfirm((await request.json()) as Schemas['LetterboxdImportConfirmRequest']);
-    const body: Schemas['LetterboxdImportConfirmResponse'] = {
-      added: 0,
-      alreadyPresent: 0,
-      watchedAdded: 0,
-      watchedAlreadyPresent: 0,
-      pendingReconciliationCount: 0,
-      ...result,
-    };
-    return HttpResponse.json(body);
+    return apiJson<'LetterboxdImportConfirmResponse'>({ ...EMPTY_LETTERBOXD_CONFIRM, ...result });
   });
 }
 
-interface MockListItem {
-  tmdbId: number;
-  mediaType: 'movie' | 'tv';
-  title: string;
-  year: string;
-  posterPath: string | null;
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
-  genreIds?: number[];
-  createdAt?: string;
-  isWatched?: boolean;
+type WithShorthandAvatar<T extends { avatarId: string }> = Omit<T, 'avatarId'> & {
+  avatarId: string | null;
+};
+
+export type MockListPerson = WithShorthandAvatar<Required<Schemas['MovieListPersonResponse']>>;
+
+function servedAvatar<T extends { avatarId: string | null }>(person: T) {
+  return { ...person, avatarId: person.avatarId ?? '' };
+}
+
+interface MockListItem extends Omit<MockTitle<Schemas['MovieListItemResponse']>, 'addedBy'> {
   addedBy?: MockListPerson;
 }
 
-export interface MockListPerson {
-  userId: string;
-  handle: string | null;
-  displayName: string;
-  avatarId: string | null;
+function mockListItem(
+  item: MockListItem,
+  createdAt = item.createdAt ?? MOCK_DATE
+): Schemas['MovieListItemResponse'] {
+  const { addedBy, ...title } = item;
+  return {
+    mediaType: 'movie',
+    year: '',
+    genreIds: [],
+    isWatched: false,
+    ...title,
+    createdAt,
+    addedBy: addedBy ? servedAvatar(addedBy) : undefined,
+  };
+}
+
+function storedItem(request: Schemas['AddWatchlistItemRequest']): MockListItem {
+  return { ...request, genreIds: request.genreIds ?? undefined, createdAt: MOCK_DATE };
 }
 
 export const MOCK_LIST_OWNER: MockListPerson = {
@@ -103,67 +141,71 @@ export interface MockList {
   items?: MockListItem[];
   createdAt?: string;
   updatedAt?: string;
-  role?: 'owner' | 'member';
+  role?: Schemas['MovieListRole'];
   owner?: MockListPerson;
   memberCount?: number;
   memberPreview?: MockListPerson[];
   isPublic?: boolean;
 }
 
-const MOCK_LIST_LIMIT = 50;
+type StoredList = Required<MockList>;
 
-const MOCK_LIST_ITEM_LIMIT = 500;
-
-const MOCK_RESERVED_LIST_NAMES = ['À voir', 'Watchlist', 'Films vus', 'Watched'];
-
-const MOCK_LIST_DATE = '2026-11-01T00:00:00Z';
-
-function mockListError(status: number, reason: string, params?: Record<string, string | number>) {
-  return HttpResponse.json({ error: reason, code: status, reason, params }, { status });
+function sameMockItem(a: Pick<MockListItem, 'tmdbId' | 'mediaType'>, b: MockListItem): boolean {
+  return a.tmdbId === b.tmdbId && (a.mediaType ?? 'movie') === (b.mediaType ?? 'movie');
 }
 
-function sameMockListName(a: string, b: string): boolean {
-  return a.trim().toLowerCase() === b.trim().toLowerCase();
-}
-
-function mockListAudience(list: Required<MockList>) {
+function mockListAudience(list: StoredList) {
   return {
     role: list.role,
-    owner: list.owner,
+    owner: servedAvatar(list.owner),
     memberCount: list.memberCount,
-    memberPreview: list.memberPreview,
+    memberPreview: list.memberPreview.map(servedAvatar),
   };
 }
 
-function mockListSummary(list: Required<MockList>, containing?: MockListItem | null) {
-  const summary: Schemas['MovieListSummaryResponse'] = {
+function posterPreview(items: MockListItem[]): string[] {
+  return items.flatMap((item) => (item.posterPath ? [item.posterPath] : [])).slice(0, 3);
+}
+
+function mockListSummary(
+  list: StoredList,
+  containing?: Pick<MockListItem, 'tmdbId' | 'mediaType'> | null
+): Schemas['MovieListSummaryResponse'] {
+  return {
     ...mockListAudience(list),
     id: list.id,
     name: list.name,
     description: list.description,
     isPublic: list.isPublic,
     itemCount: list.items.length,
-    posterPaths: list.items
-      .flatMap((item) => (item.posterPath ? [item.posterPath] : []))
-      .slice(0, 3),
+    posterPaths: posterPreview(list.items),
     createdAt: list.createdAt,
     updatedAt: list.updatedAt,
-    containsMovie: !!containing && list.items.some((item) => sameMockItem(item, containing)),
+    containsMovie: !!containing && list.items.some((item) => sameMockItem(containing, item)),
     watchedCount: list.items.filter((item) => item.isWatched).length,
   };
-  return summary;
 }
 
-function sameMockItem(a: Pick<MockListItem, 'tmdbId' | 'mediaType'>, b: MockListItem): boolean {
-  return a.tmdbId === b.tmdbId && (a.mediaType ?? 'movie') === (b.mediaType ?? 'movie');
+function mockListDetail(list: StoredList): Schemas['MovieListResponse'] {
+  const { id, name, description, isPublic, createdAt, updatedAt, items } = list;
+  return {
+    ...mockListAudience(list),
+    id,
+    name,
+    description,
+    isPublic,
+    createdAt,
+    updatedAt,
+    items: items.map((item) => mockListItem(item)),
+  };
 }
 
-function withListDefaults(list: MockList): Required<MockList> {
+function withListDefaults(list: MockList): StoredList {
   const owner = list.owner ?? MOCK_LIST_OWNER;
   return {
     description: null,
-    createdAt: MOCK_LIST_DATE,
-    updatedAt: MOCK_LIST_DATE,
+    createdAt: MOCK_DATE,
+    updatedAt: MOCK_DATE,
     role: 'owner',
     memberCount: 1,
     memberPreview: [owner],
@@ -174,105 +216,68 @@ function withListDefaults(list: MockList): Required<MockList> {
   };
 }
 
+function mediaTypeOf(request: Request): Schemas['MovieMediaType'] {
+  return new URL(request.url).searchParams.get('mediaType') === 'tv' ? 'tv' : 'movie';
+}
+
 export function createListsHandlers(initial: MockList[] = []) {
-  const lists: Required<MockList>[] = initial.map(withListDefaults);
+  const lists: StoredList[] = initial.map(withListDefaults);
   const find = (id: unknown) => lists.find((list) => list.id === id);
-  const nameTaken = (name: string, exceptId?: string) =>
-    MOCK_RESERVED_LIST_NAMES.some((reserved) => sameMockListName(name, reserved)) ||
-    lists.some((list) => list.id !== exceptId && sameMockListName(list.name, name));
   let nextId = lists.length + 1;
 
   return [
     http.get(`${V1}/lists`, ({ request }) => {
-      const params = new URL(request.url).searchParams;
-      const tmdbId = Number(params.get('tmdbId'));
-      const containing = tmdbId
-        ? ({ tmdbId, mediaType: params.get('mediaType') ?? 'movie' } as MockListItem)
-        : null;
-      return HttpResponse.json({ items: lists.map((list) => mockListSummary(list, containing)) });
+      const tmdbId = Number(new URL(request.url).searchParams.get('tmdbId'));
+      const containing = tmdbId ? { tmdbId, mediaType: mediaTypeOf(request) } : null;
+      return apiJson<'MovieListsResponse'>({
+        items: lists.map((list) => mockListSummary(list, containing)),
+      });
     }),
     http.post(`${V1}/lists`, async ({ request }) => {
-      const body = (await request.json()) as {
-        name: string;
-        description?: string | null;
-        isPublic?: boolean;
-        firstItem?: MockListItem;
-      };
-      if (nameTaken(body.name)) {
-        return mockListError(409, 'list_name_taken', { name: body.name.trim() });
-      }
-      if (lists.length >= MOCK_LIST_LIMIT) {
-        return mockListError(409, 'list_limit_reached', { max: MOCK_LIST_LIMIT });
-      }
+      const body = (await request.json()) as Schemas['CreateMovieListRequest'];
       const list = withListDefaults({
         id: `l${nextId++}`,
-        name: body.name.trim(),
+        name: body.name,
         description: body.description ?? null,
         isPublic: body.isPublic ?? false,
-        items: body.firstItem ? [{ ...body.firstItem, createdAt: MOCK_LIST_DATE }] : [],
+        items: body.firstItem ? [storedItem(body.firstItem)] : [],
       });
       lists.push(list);
-      return HttpResponse.json(mockListSummary(list), { status: 201 });
+      return apiJson<'MovieListSummaryResponse'>(mockListSummary(list), { status: 201 });
     }),
     http.get(`${V1}/lists/:id`, ({ params }) => {
       const list = find(params.id);
-      if (!list) return mockListError(404, 'list_not_found');
-      const { id, name, description, isPublic, createdAt, updatedAt, items } = list;
-      const detail: Schemas['MovieListResponse'] = {
-        ...mockListAudience(list),
-        id,
-        name,
-        description,
-        isPublic,
-        createdAt,
-        updatedAt,
-        items,
-      };
-      return HttpResponse.json(detail);
+      if (!list) return apiErrorJson(404, 'list_not_found');
+      return apiJson<'MovieListResponse'>(mockListDetail(list));
     }),
     http.patch(`${V1}/lists/:id`, async ({ params, request }) => {
       const list = find(params.id);
-      if (!list) return mockListError(404, 'list_not_found');
-      const body = (await request.json()) as {
-        name: string;
-        description?: string | null;
-        isPublic?: boolean;
-      };
-      if (nameTaken(body.name, list.id)) {
-        return mockListError(409, 'list_name_taken', { name: body.name.trim() });
-      }
-      list.name = body.name.trim();
+      if (!list) return apiErrorJson(404, 'list_not_found');
+      const body = (await request.json()) as Schemas['UpdateMovieListRequest'];
+      list.name = body.name;
       list.description = body.description ?? null;
       list.isPublic = body.isPublic ?? list.isPublic;
-      return HttpResponse.json(mockListSummary(list));
+      return apiJson<'MovieListSummaryResponse'>(mockListSummary(list));
     }),
     http.delete(`${V1}/lists/:id`, ({ params }) => {
       const list = find(params.id);
-      if (!list) return mockListError(404, 'list_not_found');
+      if (!list) return apiErrorJson(404, 'list_not_found');
       lists.splice(lists.indexOf(list), 1);
       return new HttpResponse(null, { status: 204 });
     }),
     http.post(`${V1}/lists/:id/items`, async ({ params, request }) => {
       const list = find(params.id);
-      if (!list) return mockListError(404, 'list_not_found');
-      const item = (await request.json()) as MockListItem;
-      if (list.items.some((existing) => sameMockItem(item, existing))) {
-        return HttpResponse.json(item, { status: 200 });
-      }
-      if (list.items.length >= MOCK_LIST_ITEM_LIMIT) {
-        return mockListError(409, 'list_full', { max: MOCK_LIST_ITEM_LIMIT });
-      }
-      list.items.push({ ...item, createdAt: MOCK_LIST_DATE });
-      return HttpResponse.json(item, { status: 201 });
+      if (!list) return apiErrorJson(404, 'list_not_found');
+      const item = storedItem((await request.json()) as Schemas['AddWatchlistItemRequest']);
+      const existing = list.items.find((stored) => sameMockItem(item, stored));
+      if (existing) return apiJson<'MovieListItemResponse'>(mockListItem(existing));
+      list.items.push(item);
+      return apiJson<'MovieListItemResponse'>(mockListItem(item), { status: 201 });
     }),
     http.delete(`${V1}/lists/:id/items/:tmdbId`, ({ params, request }) => {
       const list = find(params.id);
-      if (!list) return mockListError(404, 'list_not_found');
-      const target = {
-        tmdbId: Number(params.tmdbId),
-        mediaType: (new URL(request.url).searchParams.get('mediaType') ?? 'movie') as
-          'movie' | 'tv',
-      };
+      if (!list) return apiErrorJson(404, 'list_not_found');
+      const target = { tmdbId: Number(params.tmdbId), mediaType: mediaTypeOf(request) };
       list.items = list.items.filter((item) => !sameMockItem(target, item));
       return new HttpResponse(null, { status: 204 });
     }),
@@ -292,58 +297,67 @@ export interface MockListMembership {
   invitable?: MockListPerson[];
 }
 
-const MOCK_INVITE_LINK_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
+const MOCK_MAX_MEMBERS = 20;
+
+const MOCK_INVITE_LINK_EXPIRY = '2099-01-01T00:00:00Z';
+
+function invitationOf(person: MockListPerson): Schemas['MovieListPendingInvitationResponse'] {
+  const { userId, handle, displayName, avatarId } = person;
+  return servedAvatar({ userId, handle, displayName, avatarId, invitedAt: MOCK_DATE });
+}
 
 export function createListMembershipHandlers(listId: string, initial: MockListMembership) {
   const state = {
-    maxMembers: initial.maxMembers ?? 20,
-    members: initial.members.map((member) => ({
-      isOwner: false,
-      joinedAt: MOCK_LIST_DATE,
-      ...member,
-    })),
+    maxMembers: initial.maxMembers ?? MOCK_MAX_MEMBERS,
+    members: initial.members.map((member) =>
+      servedAvatar({ isOwner: false, joinedAt: MOCK_DATE, ...member })
+    ),
     invitations:
-      initial.invitations === null
-        ? null
-        : (initial.invitations ?? []).map((person) => ({ ...person, invitedAt: MOCK_LIST_DATE })),
+      initial.invitations === null ? null : (initial.invitations ?? []).map(invitationOf),
     inviteLink: initial.inviteLink ?? null,
     invitable: [...(initial.invitable ?? [])],
   };
   const route = `${V1}/lists/${listId}`;
-  const seatsTaken = () => state.members.length + (state.invitations?.length ?? 0);
 
   return [
-    http.get(`${route}/members`, () => {
-      const body: Schemas['MovieListMembersResponse'] = {
+    http.get(`${route}/members`, () =>
+      apiJson<'MovieListMembersResponse'>({
         maxMembers: state.maxMembers,
         members: state.members,
         invitations: state.invitations,
-        inviteLink: state.inviteLink ?? undefined,
-      };
-      return HttpResponse.json(body);
-    }),
+        inviteLink: state.inviteLink,
+      })
+    ),
     http.get(`${route}/invitable`, () =>
-      HttpResponse.json({
-        users: state.invitable,
-      } satisfies Schemas['MovieListInvitableUsersResponse'])
+      apiJson<'MovieListInvitableUsersResponse'>({
+        users: state.invitable.map((person) => ({
+          ...servedAvatar(person),
+          handle: person.handle ?? '',
+        })),
+      })
     ),
     http.post(`${route}/invitations`, async ({ request }) => {
       const { userId } = (await request.json()) as Schemas['InviteToMovieListRequest'];
-      if (seatsTaken() >= state.maxMembers) {
-        return mockListError(409, 'list_members_limit_reached', { max: state.maxMembers });
-      }
-      const person = state.invitable.find((candidate) => candidate.userId === userId);
-      if (!person) return mockListError(400, 'invite_only_followed');
+      const person = state.invitable.find((candidate) => candidate.userId === userId) ?? {
+        userId,
+        handle: null,
+        displayName: userId,
+        avatarId: null,
+      };
+      const invitation = invitationOf(person);
       state.invitable = state.invitable.filter((candidate) => candidate.userId !== userId);
-      state.invitations = [...(state.invitations ?? []), { ...person, invitedAt: MOCK_LIST_DATE }];
-      return HttpResponse.json({ ...person, invitedAt: MOCK_LIST_DATE }, { status: 201 });
+      state.invitations = [...(state.invitations ?? []), invitation];
+      return apiJson<'MovieListPendingInvitationResponse'>(invitation, { status: 201 });
     }),
     http.delete(`${route}/invitations/:userId`, ({ params }) => {
       const invitation = state.invitations?.find((person) => person.userId === params.userId);
-      if (!invitation) return mockListError(404, 'list_invitation_not_found');
+      if (!invitation) return apiErrorJson(404, 'list_invitation_not_found');
       state.invitations = (state.invitations ?? []).filter((person) => person !== invitation);
       const { userId, handle, displayName, avatarId } = invitation;
-      state.invitable = [...state.invitable, { userId, handle, displayName, avatarId }];
+      state.invitable = [
+        ...state.invitable,
+        { userId, handle: handle ?? null, displayName, avatarId },
+      ];
       return new HttpResponse(null, { status: 204 });
     }),
     http.delete(`${route}/members/:userId`, ({ params }) => {
@@ -355,10 +369,10 @@ export function createListMembershipHandlers(listId: string, initial: MockListMe
     http.post(`${route}/invite-link`, () => {
       state.inviteLink = {
         token: 'nouveau-lien',
-        expiresAt: new Date(Date.now() + MOCK_INVITE_LINK_LIFETIME_MS).toISOString(),
+        expiresAt: MOCK_INVITE_LINK_EXPIRY,
         active: true,
       };
-      return HttpResponse.json(state.inviteLink);
+      return apiJson<'MovieListInviteLinkResponse'>(state.inviteLink);
     }),
     http.delete(`${route}/invite-link`, () => {
       state.inviteLink = state.inviteLink ? { ...state.inviteLink, active: false } : null;
@@ -370,30 +384,33 @@ export function createListMembershipHandlers(listId: string, initial: MockListMe
 export function createListJoinHandlers(
   token: string,
   preview: Schemas['MovieListInvitePreviewResponse'] | null,
-  joined: Schemas['MovieListSummaryResponse'] = {}
+  joined: MockList = { id: 'joined-list', name: preview?.name ?? '' }
 ) {
   const route = `${V1}/lists/join/${token}`;
   return [
     http.get(route, () =>
-      preview ? HttpResponse.json(preview) : mockListError(404, 'list_invite_link_invalid')
+      preview
+        ? apiJson<'MovieListInvitePreviewResponse'>(preview)
+        : apiErrorJson(404, 'list_invite_link_invalid')
     ),
     http.post(route, () =>
       preview
-        ? HttpResponse.json(joined, { status: 201 })
-        : mockListError(404, 'list_invite_link_invalid')
+        ? apiJson<'MovieListSummaryResponse'>(
+            mockListSummary(withListDefaults({ role: 'member', ...joined })),
+            {
+              status: 201,
+            }
+          )
+        : apiErrorJson(404, 'list_invite_link_invalid')
     ),
   ];
 }
 
-export interface MockListCreator {
-  handle: string;
-  displayName: string;
-  avatarId: string | null;
-}
+export type MockListCreator = WithShorthandAvatar<Schemas['ListCreatorResponse']>;
 
 export interface MockSavedList {
   id: string;
-  sourceType: 'tmdbCollection' | 'explorerTheme' | 'memberList';
+  sourceType: Schemas['ListSourceType'];
   sourceId: string;
   name: string | null;
   description?: string | null;
@@ -401,7 +418,7 @@ export interface MockSavedList {
   items?: MockListItem[];
   createdAt?: string;
   unavailable?: boolean;
-  unavailableReason?: 'private' | 'deleted' | null;
+  unavailableReason?: Schemas['ListSourceUnavailableReason'] | null;
   copyAvailable?: boolean;
 }
 
@@ -410,7 +427,7 @@ type StoredSavedList = Required<MockSavedList>;
 function withSavedDefaults(list: MockSavedList): StoredSavedList {
   return {
     items: [],
-    createdAt: MOCK_LIST_DATE,
+    createdAt: MOCK_DATE,
     description: null,
     creator: null,
     unavailable: false,
@@ -420,33 +437,53 @@ function withSavedDefaults(list: MockSavedList): StoredSavedList {
   };
 }
 
-function mockSavedSummary(list: StoredSavedList) {
+function mockSavedSummary(list: StoredSavedList): Schemas['SavedListSummaryResponse'] {
   const items = list.unavailable ? [] : list.items;
-  const summary: Schemas['SavedListSummaryResponse'] = {
+  return {
     id: list.id,
     sourceType: list.sourceType,
     sourceId: list.sourceId,
     name: list.name,
     description: list.description,
-    creator: list.creator ?? undefined,
+    creator: list.creator ? servedAvatar(list.creator) : undefined,
     itemCount: items.length,
-    posterPaths: items.flatMap((item) => (item.posterPath ? [item.posterPath] : [])).slice(0, 3),
+    posterPaths: posterPreview(items),
     watchedCount: items.filter((item) => item.isWatched).length,
     createdAt: list.createdAt,
     unavailable: list.unavailable,
     unavailableReason: list.unavailableReason ?? undefined,
     copyAvailable: list.copyAvailable,
   };
-  return summary;
 }
 
-function mockSavedDetail(list: StoredSavedList) {
+function mockSavedDetail(list: StoredSavedList): Schemas['SavedListResponse'] {
   const items = list.unavailable ? [] : list.items;
-  const detail: Schemas['SavedListResponse'] = {
+  return {
     ...mockSavedSummary(list),
-    items: items.map((item) => ({ ...item, createdAt: list.createdAt })),
+    items: items.map((item) => mockListItem(item, list.createdAt)),
   };
-  return detail;
+}
+
+interface MockCopy {
+  id: string;
+  name: string;
+  description: string | null;
+  items: MockListItem[];
+  itemsCreatedAt: string;
+}
+
+function copiedList({ id, name, description, items, itemsCreatedAt }: MockCopy) {
+  return apiJson<'MovieListResponse'>(
+    mockListDetail(
+      withListDefaults({
+        id,
+        name,
+        description,
+        items: items.map((item) => ({ ...item, createdAt: itemsCreatedAt })),
+      })
+    ),
+    { status: 201 }
+  );
 }
 
 export function createSavedListsHandlers(
@@ -470,12 +507,12 @@ export function createSavedListsHandlers(
         ? saved.filter(fromSource(sourceType, params.get('sourceId')))
         : saved;
       const latestFirst = [...matching].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-      return HttpResponse.json({ items: latestFirst.map(mockSavedSummary) });
+      return apiJson<'SavedListsResponse'>({ items: latestFirst.map(mockSavedSummary) });
     }),
     http.post(`${V1}/saved-lists`, async ({ request }) => {
       const body = (await request.json()) as Schemas['SaveListRequest'];
       const existing = saved.find(fromSource(body.sourceType, body.sourceId));
-      if (existing) return HttpResponse.json(mockSavedSummary(existing), { status: 200 });
+      if (existing) return apiJson<'SavedListSummaryResponse'>(mockSavedSummary(existing));
       const source = catalog.find(fromSource(body.sourceType, body.sourceId));
       const list = withSavedDefaults({
         name: body.sourceId,
@@ -486,33 +523,30 @@ export function createSavedListsHandlers(
         createdAt: '2026-11-13T00:00:00Z',
       });
       saved.push(list);
-      return HttpResponse.json(mockSavedSummary(list), { status: 201 });
+      return apiJson<'SavedListSummaryResponse'>(mockSavedSummary(list), { status: 201 });
     }),
     http.get(`${V1}/saved-lists/:id`, ({ params }) => {
       const list = find(params.id);
-      if (!list) return mockListError(404, 'saved_list_not_found');
-      return HttpResponse.json(mockSavedDetail(list));
+      if (!list) return apiErrorJson(404, 'saved_list_not_found');
+      return apiJson<'SavedListResponse'>(mockSavedDetail(list));
     }),
     http.delete(`${V1}/saved-lists/:id`, ({ params }) => {
       const list = find(params.id);
-      if (!list) return mockListError(404, 'saved_list_not_found');
+      if (!list) return apiErrorJson(404, 'saved_list_not_found');
       saved.splice(saved.indexOf(list), 1);
       return new HttpResponse(null, { status: 204 });
     }),
     http.post(`${V1}/saved-lists/:id/copy`, async ({ params, request }) => {
       const list = find(params.id);
-      if (!list) return mockListError(404, 'saved_list_not_found');
-      if (!list.copyAvailable) return mockListError(409, 'saved_list_copy_unavailable');
+      if (!list) return apiErrorJson(404, 'saved_list_not_found');
       const { name } = (await request.json()) as Schemas['CopySavedListRequest'];
-      const copy: Schemas['MovieListResponse'] = {
+      return copiedList({
         id: `copy${nextCopyId++}`,
-        name: name.trim(),
+        name,
         description: null,
-        createdAt: MOCK_LIST_DATE,
-        updatedAt: MOCK_LIST_DATE,
-        items: list.items.map((item) => ({ ...item, createdAt: list.createdAt })),
-      };
-      return HttpResponse.json(copy, { status: 201 });
+        items: list.items,
+        itemsCreatedAt: list.createdAt,
+      });
     }),
   ];
 }
@@ -525,7 +559,7 @@ export interface MockPublicList {
   createdAt?: string;
   updatedAt?: string;
   memberCount?: number;
-  viewerRole?: 'owner' | 'member' | null;
+  viewerRole?: Schemas['MovieListRole'] | null;
 }
 
 function publicWatchedCount(items: MockListItem[], viewerSignedIn: boolean): number | null {
@@ -543,8 +577,8 @@ export function createPublicListsHandlers(
   let nextCopyId = 1;
   return [
     http.get(route, () => {
-      if (options.profileFound === false) return mockListError(404, 'profile_not_found');
-      const body: Schemas['PublicListsResponse'] = {
+      if (options.profileFound === false) return apiErrorJson(404, 'profile_not_found');
+      return apiJson<'PublicListsResponse'>({
         items: lists.map((list) => {
           const items = list.items ?? [];
           return {
@@ -553,64 +587,52 @@ export function createPublicListsHandlers(
             description: list.description ?? null,
             itemCount: items.length,
             posterPaths: items.flatMap((item) => (item.posterPath ? [item.posterPath] : [])),
-            createdAt: list.createdAt ?? MOCK_LIST_DATE,
-            updatedAt: list.updatedAt ?? MOCK_LIST_DATE,
+            createdAt: list.createdAt ?? MOCK_DATE,
+            updatedAt: list.updatedAt ?? MOCK_DATE,
             memberCount: list.memberCount ?? 1,
             watchedCount: publicWatchedCount(items, viewerSignedIn),
           };
         }),
-      };
-      return HttpResponse.json(body);
+      });
     }),
     http.get(`${route}/:listId`, ({ params }) => {
       const list = find(params.listId);
-      if (!list) return mockListError(404, 'list_not_found');
+      if (!list) return apiErrorJson(404, 'list_not_found');
       const items = list.items ?? [];
-      const body: Schemas['PublicListResponse'] = {
+      return apiJson<'PublicListResponse'>({
         id: list.id,
         name: list.name,
         description: list.description ?? null,
-        createdAt: list.createdAt ?? MOCK_LIST_DATE,
-        updatedAt: list.updatedAt ?? MOCK_LIST_DATE,
+        createdAt: list.createdAt ?? MOCK_DATE,
+        updatedAt: list.updatedAt ?? MOCK_DATE,
         itemCount: items.length,
         memberCount: list.memberCount ?? 1,
         watchedCount: publicWatchedCount(items, viewerSignedIn),
-        creator,
+        creator: servedAvatar(creator),
         viewerRole: list.viewerRole ?? undefined,
-        items: items.map((item) => ({ ...item, createdAt: item.createdAt ?? MOCK_LIST_DATE })),
-      };
-      return HttpResponse.json(body);
+        items: items.map((item) => mockListItem(item)),
+      });
     }),
     http.post(`${route}/:listId/copy`, async ({ params, request }) => {
       const list = find(params.listId);
-      if (!list) return mockListError(404, 'list_not_found');
-      if (list.viewerRole) return mockListError(409, 'list_already_yours');
+      if (!list) return apiErrorJson(404, 'list_not_found');
       const { name } = (await request.json()) as Schemas['CopySavedListRequest'];
-      const copy: Schemas['MovieListResponse'] = {
+      return copiedList({
         id: `publicCopy${nextCopyId++}`,
-        name: name.trim(),
+        name,
         description: list.description ?? null,
-        createdAt: MOCK_LIST_DATE,
-        updatedAt: MOCK_LIST_DATE,
-        items: (list.items ?? []).map((item) => ({ ...item, createdAt: MOCK_LIST_DATE })),
-      };
-      return HttpResponse.json(copy, { status: 201 });
+        items: list.items ?? [],
+        itemsCreatedAt: MOCK_DATE,
+      });
     }),
   ];
 }
 
-export interface MockWatchedMovie {
-  tmdbId: number;
-  mediaType?: 'movie' | 'tv';
-  title: string;
-  year?: string;
-  posterPath?: string | null;
-  genreIds?: number[];
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
-  watchedAt?: string;
-  myRating?: number | null;
-  source: 'night' | 'elsewhere';
+export interface MockWatchedMovie extends Omit<
+  MockTitle<Schemas['UserWatchedMovieItem']>,
+  'source'
+> {
+  source: Schemas['WatchedSource'];
   nightSlug?: string | null;
   nightTitle?: string | null;
 }
@@ -620,8 +642,8 @@ type StoredWatchedMovie = MockWatchedMovie &
 
 const MOCK_WATCHED_DATE = '2026-11-01T20:00:00Z';
 
-function mockWatchedStatus(film: StoredWatchedMovie | undefined) {
-  const status: Schemas['WatchedStatusResponse'] = film
+function mockWatchedStatus(film: StoredWatchedMovie | undefined): Schemas['WatchedStatusResponse'] {
+  return film
     ? {
         status: film.source,
         watchedAt: film.watchedAt,
@@ -630,11 +652,10 @@ function mockWatchedStatus(film: StoredWatchedMovie | undefined) {
         nightTitle: film.source === 'night' ? (film.nightTitle ?? null) : null,
       }
     : { status: 'none', watchedAt: null, rating: null, nightSlug: null, nightTitle: null };
-  return status;
 }
 
-function mockWatchedItem(film: StoredWatchedMovie) {
-  const item: Schemas['UserWatchedMovieItem'] = {
+function mockWatchedItem(film: StoredWatchedMovie): Schemas['UserWatchedMovieItem'] {
+  return {
     tmdbId: film.tmdbId,
     mediaType: film.mediaType,
     title: film.title,
@@ -647,14 +668,10 @@ function mockWatchedItem(film: StoredWatchedMovie) {
     myRating: film.myRating ?? null,
     source: film.source,
   };
-  return item;
 }
 
 function mockTitleRef(tmdbId: unknown, request: Request) {
-  return {
-    tmdbId: Number(tmdbId),
-    mediaType: (new URL(request.url).searchParams.get('mediaType') ?? 'movie') as 'movie' | 'tv',
-  };
+  return { tmdbId: Number(tmdbId), mediaType: mediaTypeOf(request) };
 }
 
 export function createWatchedHandlers(initial: MockWatchedMovie[] = []) {
@@ -672,10 +689,15 @@ export function createWatchedHandlers(initial: MockWatchedMovie[] = []) {
   return [
     http.get(`${V1}/users/me/watched-movies`, () => {
       const latestFirst = [...films].sort((a, b) => b.watchedAt.localeCompare(a.watchedAt));
-      return HttpResponse.json({ items: latestFirst.map(mockWatchedItem), total: films.length });
+      return apiJson<'UserWatchedMoviesResponse'>({
+        items: latestFirst.map(mockWatchedItem),
+        total: films.length,
+      });
     }),
     http.get(`${V1}/watched/:tmdbId`, ({ params, request }) =>
-      HttpResponse.json(mockWatchedStatus(find(mockTitleRef(params.tmdbId, request))))
+      apiJson<'WatchedStatusResponse'>(
+        mockWatchedStatus(find(mockTitleRef(params.tmdbId, request)))
+      )
     ),
     http.post(`${V1}/watched`, async ({ request }) => {
       const body = (await request.json()) as Schemas['MarkWatchedRequest'];
@@ -690,17 +712,14 @@ export function createWatchedHandlers(initial: MockWatchedMovie[] = []) {
           source: 'elsewhere',
         });
       }
-      return HttpResponse.json(mockWatchedStatus(find(body)));
+      return apiJson<'WatchedStatusResponse'>(mockWatchedStatus(find(body)));
     }),
     http.put(`${V1}/watched/:tmdbId/rating`, async ({ params, request }) => {
       const film = find(mockTitleRef(params.tmdbId, request));
-      if (film?.source !== 'elsewhere') return mockListError(404, 'watched_title_not_found');
+      if (film?.source !== 'elsewhere') return apiErrorJson(404, 'watched_title_not_found');
       const { value } = (await request.json()) as Schemas['SetWatchedRatingRequest'];
-      if (value != null && (value < 1 || value > 10)) {
-        return mockListError(400, 'validation_failed');
-      }
       film.myRating = value ?? null;
-      return HttpResponse.json(mockWatchedStatus(film));
+      return apiJson<'WatchedStatusResponse'>(mockWatchedStatus(film));
     }),
     http.delete(`${V1}/watched/:tmdbId`, ({ params, request }) => {
       const film = find(mockTitleRef(params.tmdbId, request));
@@ -714,10 +733,14 @@ export interface MockEventOptions {
   slug: string;
   title?: string;
   isFinished?: boolean;
-  lifecycle?: string;
+  lifecycle?: Schemas['EventDetailResponse']['lifecycle'];
   winnerCount?: number;
 
   theme?: string | null;
+}
+
+function mockParticipant(_id: string, pseudo: string, isCreator = false) {
+  return { _id, pseudo, isCreator, avatarId: '' };
 }
 
 export function createEventDetailHandlers(opts: MockEventOptions) {
@@ -727,23 +750,26 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
   return [
     http.get(`${V1}/events/slug/${slug}`, ({ request }) => {
       const host = request.headers.get('X-Host-Token');
-      const body: EventDetailPayload = {
+      return apiJson<'EventDetailResponse'>({
         _id: 'evt-msw',
         title,
         date: '2030-12-15',
         time: '21:00',
         slug,
+        createdAt: MOCK_DATE,
+        updatedAt: MOCK_DATE,
         isHost: !!host,
         isFinished: opts.isFinished ?? false,
         lifecycle: opts.lifecycle ?? (opts.isFinished ? 'finished' : 'live'),
         winners: [],
         participantCount: 4,
         movieCount: 2,
+        votersCount: 0,
         participants: [
-          { _id: 'p-msw-host', pseudo: 'Hôte', isCreator: true },
-          { _id: 'p-msw-alice', pseudo: 'Alice' },
-          { _id: 'p-msw-bob', pseudo: 'Bob' },
-          { _id: 'p-msw-chloe', pseudo: 'Chloé' },
+          mockParticipant('p-msw-host', 'Hôte', true),
+          mockParticipant('p-msw-alice', 'Alice'),
+          mockParticipant('p-msw-bob', 'Bob'),
+          mockParticipant('p-msw-chloe', 'Chloé'),
         ],
         config: {
           theme: opts.theme ?? null,
@@ -752,26 +778,34 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
           maxVotesPerParticipant: null,
           wheelMode: 'strictRandom',
           winnerCount: opts.winnerCount ?? 1,
+          richSharePreview: false,
+          allowSeries: false,
+          hasNextOccurrence: false,
         },
-      };
-      return HttpResponse.json(body);
+      });
     }),
-    http.get(`${V1}/events/${slug}/movies`, () =>
-      HttpResponse.json([] satisfies Schemas['MovieWithScoreResponse'][])
-    ),
+    http.get(`${V1}/events/${slug}/movies`, () => apiJson<'MovieWithScoreResponse[]'>([])),
     http.put(`${V1}/events/${slug}/presence`, () => new HttpResponse(null, { status: 204 })),
   ];
 }
 
 export function createJoinHandler(slug: string) {
-  return http.post(`${V1}/events/${slug}/join`, async () => {
-    const body: Schemas['JoinEventResult'] = {
-      participant: { _id: 'p-msw-1', eventId: 'evt-msw', pseudo: 'Alice' },
-      isNew: true,
-      message: '',
-    };
-    return HttpResponse.json(body, { status: 201 });
-  });
+  return http.post(`${V1}/events/${slug}/join`, async () =>
+    apiJson<'JoinEventResult'>(
+      {
+        participant: {
+          _id: 'p-msw-1',
+          eventId: 'evt-msw',
+          pseudo: 'Alice',
+          createdAt: MOCK_DATE,
+          updatedAt: MOCK_DATE,
+        },
+        isNew: true,
+        message: '',
+      },
+      { status: 201 }
+    )
+  );
 }
 
 export interface MockUserStats {
@@ -789,8 +823,8 @@ export interface MockUserStats {
 }
 
 export function createUserStatsHandler(handle: string, stats?: MockUserStats) {
-  return http.get(`${V1}/users/${handle}/stats`, () => {
-    const body: Schemas['UserStatsResponse'] = {
+  return http.get(`${V1}/users/${handle}/stats`, () =>
+    apiJson<'UserStatsResponse'>({
       eventsCreated: stats?.eventsCreated ?? 0,
       eventsJoined: stats?.eventsJoined ?? 0,
       moviesProposed: stats?.moviesProposed ?? 0,
@@ -802,21 +836,22 @@ export function createUserStatsHandler(handle: string, stats?: MockUserStats) {
       bestStreakWeeks: stats?.bestStreakWeeks ?? 0,
       favoriteGenres: stats?.favoriteGenres ?? [],
       dailyActivity: stats?.dailyActivity ?? [],
-    };
-    return HttpResponse.json(body);
-  });
+    })
+  );
 }
 
 export function createSearchAndAddHandlers(slug: string) {
   return [
-    http.get(`${V1}/movies/search`, () => {
-      const body: Schemas['MovieSearchListResponse'] = {
+    http.get(`${V1}/movies/search`, () =>
+      apiJson<'MovieSearchListResponse'>({
         items: [
           {
             id: 100,
+            mediaType: 'movie',
             title: 'Film Test',
             year: '2024',
             posterPath: null,
+            genreIds: [],
             voteAverage: 7.5,
             runtimeMinutes: 112,
             watchProviders: [
@@ -829,12 +864,34 @@ export function createSearchAndAddHandlers(slug: string) {
         disclaimer:
           'Les notes et les offres de visionnage (streaming / VOD) sont indicatives, issues de The Movie Database (TMDB). Les services disponibles peuvent varier.',
         tmdbAttributionUrl: 'https://www.themoviedb.org/',
-      };
-      return HttpResponse.json(body);
-    }),
-    http.post(`${V1}/events/${slug}/movies`, async () => {
-      const body: Schemas['MovieWithScoreResponse'] = { _id: 'm-new', title: 'Film Test' };
-      return HttpResponse.json(body, { status: 201 });
-    }),
+      })
+    ),
+    http.post(`${V1}/events/${slug}/movies`, async () =>
+      apiJson<'MovieWithScoreResponse'>(
+        {
+          _id: 'm-new',
+          eventId: 'evt-msw',
+          participantId: 'p-msw-1',
+          tmdbId: 100,
+          mediaType: 'movie',
+          title: 'Film Test',
+          year: '2024',
+          genreIds: [],
+          excludedFromWheel: false,
+          createdAt: MOCK_DATE,
+          updatedAt: MOCK_DATE,
+          proposerPseudo: 'Alice',
+          score: 0,
+          up: 0,
+          down: 0,
+          seenCount: 0,
+          seenByPseudos: [],
+          votersUpPseudos: [],
+          ratings: [],
+          watchProviders: [],
+        },
+        { status: 201 }
+      )
+    ),
   ];
 }
