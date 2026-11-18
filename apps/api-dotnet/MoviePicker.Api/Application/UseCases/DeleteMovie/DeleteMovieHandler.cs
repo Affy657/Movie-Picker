@@ -74,10 +74,14 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
                 if (current.HasWinner)
                     throw Errors.WheelLockedDelete();
 
-                await _voteRepository.DeleteByMovieIdAsync(movieId, token);
-                await _seenMarkRepository.DeleteByMovieIdAsync(evt.Id, movieId, token);
-                await _ratingRepository.DeleteByMovieIdsAsync(evt.Id, [movieId], token);
-                await _movieRepository.DeleteAsync(movieId, token);
+                await EventChildData.PurgeMoviesAsync(
+                    _voteRepository,
+                    _seenMarkRepository,
+                    _ratingRepository,
+                    _movieRepository,
+                    evt.Id,
+                    [movieId],
+                    token);
                 await _eventRepository.UpdateAsync(current with { UpdatedAt = _clock.GetUtcNow() }, token);
             },
             ct);

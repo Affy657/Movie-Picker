@@ -35,6 +35,9 @@ public sealed class DeleteMovieHandlerTests
         UpdatedAt = DateTimeOffset.UtcNow
     };
 
+    private static IReadOnlyCollection<string> OnlyMov1() =>
+        It.Is<IReadOnlyCollection<string>>(ids => ids.Count == 1 && ids.Contains("mov1"));
+
     public DeleteMovieHandlerTests()
     {
         _eventRepo = new Mock<IEventRepository>();
@@ -126,18 +129,17 @@ public sealed class DeleteMovieHandlerTests
 
         var deletesOutsideUnitOfWork = 0;
         void CountOutside() { if (!_unitOfWork.IsExecuting) deletesOutsideUnitOfWork++; }
-        _voteRepo.Setup(r => r.DeleteByMovieIdAsync("mov1", It.IsAny<CancellationToken>())).Callback(CountOutside).Returns(Task.CompletedTask);
-        _seenMarkRepo.Setup(r => r.DeleteByMovieIdAsync("evt1", "mov1", It.IsAny<CancellationToken>())).Callback(CountOutside).Returns(Task.CompletedTask);
+        _voteRepo.Setup(r => r.DeleteByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).Callback(CountOutside).ReturnsAsync(0L);
+        _seenMarkRepo.Setup(r => r.DeleteByMovieIdsAsync("evt1", It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).Callback(CountOutside).ReturnsAsync(0L);
         _ratingRepo.Setup(r => r.DeleteByMovieIdsAsync("evt1", It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).Callback(CountOutside).Returns(Task.CompletedTask);
-        _movieRepo.Setup(r => r.DeleteAsync("mov1", It.IsAny<CancellationToken>())).Callback(CountOutside).Returns(Task.CompletedTask);
+        _movieRepo.Setup(r => r.DeleteByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).Callback(CountOutside).ReturnsAsync(1L);
 
         await _sut.HandleAsync("evt1", "mov1", participantId);
 
-        _voteRepo.Verify(r => r.DeleteByMovieIdAsync("mov1", It.IsAny<CancellationToken>()), Times.Once);
-        _seenMarkRepo.Verify(r => r.DeleteByMovieIdAsync("evt1", "mov1", It.IsAny<CancellationToken>()), Times.Once);
-        _ratingRepo.Verify(r => r.DeleteByMovieIdsAsync(
-            "evt1", It.Is<IReadOnlyCollection<string>>(ids => ids.Count == 1 && ids.Contains("mov1")), It.IsAny<CancellationToken>()), Times.Once);
-        _movieRepo.Verify(r => r.DeleteAsync("mov1", It.IsAny<CancellationToken>()), Times.Once);
+        _voteRepo.Verify(r => r.DeleteByMovieIdsAsync(OnlyMov1(), It.IsAny<CancellationToken>()), Times.Once);
+        _seenMarkRepo.Verify(r => r.DeleteByMovieIdsAsync("evt1", OnlyMov1(), It.IsAny<CancellationToken>()), Times.Once);
+        _ratingRepo.Verify(r => r.DeleteByMovieIdsAsync("evt1", OnlyMov1(), It.IsAny<CancellationToken>()), Times.Once);
+        _movieRepo.Verify(r => r.DeleteByIdsAsync(OnlyMov1(), It.IsAny<CancellationToken>()), Times.Once);
         Assert.Equal(1, _unitOfWork.Executions);
         Assert.Equal(0, deletesOutsideUnitOfWork);
         _eventRepo.Verify(r => r.UpdateAsync(It.Is<Event>(e => e.Id == "evt1"), It.IsAny<CancellationToken>()), Times.Once);
@@ -157,7 +159,7 @@ public sealed class DeleteMovieHandlerTests
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", "mov1", "p123456789012345678901234"));
 
         Assert.StartsWith("wheel_locked", ex.Reason);
-        _movieRepo.Verify(r => r.DeleteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _movieRepo.Verify(r => r.DeleteByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()), Times.Never);
         _eventRepo.Verify(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -175,7 +177,7 @@ public sealed class DeleteMovieHandlerTests
 
         var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1", "mov1", proposerId));
         Assert.Equal(ErrorCodes.MovieRemovalRestricted, ex.Reason);
-        _movieRepo.Verify(r => r.DeleteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _movieRepo.Verify(r => r.DeleteByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -189,9 +191,9 @@ public sealed class DeleteMovieHandlerTests
 
         await _sut.HandleAsync("evt1", "mov1", "p123456789012345678901234");
 
-        _voteRepo.Verify(r => r.DeleteByMovieIdAsync("mov1", It.IsAny<CancellationToken>()), Times.Once);
-        _seenMarkRepo.Verify(r => r.DeleteByMovieIdAsync("evt1", "mov1", It.IsAny<CancellationToken>()), Times.Once);
-        _movieRepo.Verify(r => r.DeleteAsync("mov1", It.IsAny<CancellationToken>()), Times.Once);
+        _voteRepo.Verify(r => r.DeleteByMovieIdsAsync(OnlyMov1(), It.IsAny<CancellationToken>()), Times.Once);
+        _seenMarkRepo.Verify(r => r.DeleteByMovieIdsAsync("evt1", OnlyMov1(), It.IsAny<CancellationToken>()), Times.Once);
+        _movieRepo.Verify(r => r.DeleteByIdsAsync(OnlyMov1(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -205,6 +207,6 @@ public sealed class DeleteMovieHandlerTests
 
         await _sut.HandleAsync("evt1", "mov1", "p123456789012345678901234");
 
-        _movieRepo.Verify(r => r.DeleteAsync("mov1", It.IsAny<CancellationToken>()), Times.Once);
+        _movieRepo.Verify(r => r.DeleteByIdsAsync(OnlyMov1(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

@@ -72,12 +72,15 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         await _unitOfWork.ExecuteAsync(
             async token =>
             {
-                cascade.Votes = await _voteRepository.DeleteByEventIdAsync(evt.Id, token);
-                cascade.SeenMarks = await _seenMarkRepository.DeleteByEventIdAsync(evt.Id, token);
-                cascade.Ratings = await _ratingRepository.DeleteByEventIdAsync(evt.Id, token);
-                cascade.Movies = await _movieRepository.DeleteByEventIdAsync(evt.Id, token);
-                cascade.Participants = await _participantRepository.DeleteByEventIdAsync(evt.Id, token);
-                await _notifications.DeleteByEventIdAsync(evt.Id, token);
+                cascade.Children = await EventChildData.PurgeEventAsync(
+                    _voteRepository,
+                    _seenMarkRepository,
+                    _ratingRepository,
+                    _movieRepository,
+                    _participantRepository,
+                    _notifications,
+                    evt.Id,
+                    token);
                 await EndTheSeriesThatLeadsHereAsync(evt, token);
                 cascade.EventDeleted = await _eventRepository.DeleteAsync(evt.Id, token);
             },
@@ -91,6 +94,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
             throw Errors.EventNotFound();
         }
 
+        var children = cascade.Children;
         await _audience.NotifyUsersAsync(participantUserIds, EventDeletedMessage(evt), CancellationToken.None);
 
         _logger.LogInformation(
@@ -98,21 +102,21 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
             evt.Id,
             evt.Slug,
             currentUserId,
-            cascade.Votes,
-            cascade.SeenMarks,
-            cascade.Movies,
-            cascade.Participants);
+            children.Votes,
+            children.SeenMarks,
+            children.Movies,
+            children.Participants);
 
         return new DeleteEventResponse
         {
             EventId = evt.Id,
             Slug = evt.Slug ?? string.Empty,
             Message = "Movie night deleted",
-            RemovedParticipants = cascade.Participants,
-            RemovedMovies = cascade.Movies,
-            RemovedVotes = cascade.Votes,
-            RemovedSeenMarks = cascade.SeenMarks,
-            RemovedRatings = cascade.Ratings
+            RemovedParticipants = children.Participants,
+            RemovedMovies = children.Movies,
+            RemovedVotes = children.Votes,
+            RemovedSeenMarks = children.SeenMarks,
+            RemovedRatings = children.Ratings
         };
     }
 
@@ -133,11 +137,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
 
     private sealed class Cascade
     {
-        public long Votes { get; set; }
-        public long SeenMarks { get; set; }
-        public long Ratings { get; set; }
-        public long Movies { get; set; }
-        public long Participants { get; set; }
+        public EventChildCounts Children { get; set; } = new(0, 0, 0, 0, 0);
         public bool EventDeleted { get; set; }
     }
 
