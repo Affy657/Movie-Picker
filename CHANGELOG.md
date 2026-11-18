@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.15.4] - 2026-11-18
+
 ### Changed
 
 - **Menus, listes déroulantes et fenêtres se ressemblent partout** : même surface, même croix de fermeture, mêmes boutons en bas (Annuler à gauche, l'action à droite), une ouverture en fondu, et un menu qui s'ouvre vers le haut quand la place manque en bas de l'écran.
@@ -816,7 +818,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.15.3...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.15.4...HEAD
+[1.15.4]: https://github.com/Affy657/Movie-Picker/compare/v1.15.3...v1.15.4
 [1.15.3]: https://github.com/Affy657/Movie-Picker/compare/v1.15.2...v1.15.3
 [1.15.2]: https://github.com/Affy657/Movie-Picker/compare/v1.15.1...v1.15.2
 [1.15.1]: https://github.com/Affy657/Movie-Picker/compare/v1.15.0...v1.15.1
