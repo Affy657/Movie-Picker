@@ -485,7 +485,6 @@ const CI_COLUMNS = [
     filtered: true,
     jobs: [
       { key: 'ciLintApi', Logo: Ruler },
-      { key: 'ciTestMongo', Logo: MongoLogo },
       { key: 'ciTestApi', Logo: FlaskConical },
     ],
   },
@@ -503,7 +502,6 @@ const CI_COLUMNS = [
     jobs: [
       { key: 'ciAudit', Logo: PackageSearch },
       { key: 'ciE2e', Logo: MousePointerClick },
-      { key: 'ciE2eMongo', Logo: MongoLogo },
     ],
   },
   { key: 'ciScopeInfra', filtered: true, jobs: [{ key: 'ciLintTerraform', Logo: Ruler }] },
@@ -647,9 +645,6 @@ export function CiGraphDiagram() {
             strokeDasharray={column.filtered ? undefined : '4 3'}
           />
         ))}
-        <path
-          d={`M ${ciColumnX(0) + 70} ${ciRowTop(2) + CI_ROW_H} C ${ciColumnX(0) + 70} 232, 236 236, ${CI_SONAR.x + 36} ${CI_SONAR.y}`}
-        />
         <path
           d={`M ${ciColumnX(1) + 70} ${ciRowTop(1) + CI_ROW_H} C ${ciColumnX(1) + 70} 214, 326 222, ${CI_SONAR.x + 104} ${CI_SONAR.y}`}
         />
@@ -948,6 +943,12 @@ const SKILLS = [
     key: 'maintenance',
     command: '/weekly-maintenance',
     when: 'tech.diagram.skillMaintenanceWhen',
+    origin: 'project',
+  },
+  {
+    key: 'autoMaintenance',
+    command: '/auto-maintenance',
+    when: 'tech.diagram.skillAutoMaintenanceWhen',
     origin: 'project',
   },
 ].map((skill, index) => ({
@@ -1427,7 +1428,7 @@ const FRONT_DOMAINS = [
   'domainAuth',
   'domainEvents',
   'domainMovies',
-  'domainWatchlist',
+  'domainLibrary',
   'domainNotifications',
   'domainProfiles',
   'domainLetterboxd',
@@ -1534,18 +1535,25 @@ export function FrontGraphDiagram() {
 const DELETED_COLLECTIONS = [
   'users',
   'events',
-  'movies',
-  'votes',
-  'watchlists',
-  'notifications',
+  'participants',
+  'user_notifications',
+  'push_subscriptions',
   'follows',
-  'sessions',
+  'watchlist',
+  'movie_lists',
+  'watched_titles',
+  'saved_lists',
+  'reset_tokens',
+  'avatar_photos',
 ] as const;
+
+const UOW_COLUMNS = 3;
+const UOW_CENTER_Y = 154;
 
 export function UnitOfWorkDiagram() {
   const { t } = useTranslation();
   return (
-    <svg viewBox="0 0 880 250" role="img" aria-labelledby="tech-unitofwork-title">
+    <svg viewBox="0 0 880 308" role="img" aria-labelledby="tech-unitofwork-title">
       <title id="tech-unitofwork-title">{t('tech.diagram.unitOfWorkTitle')}</title>
       <defs>
         <ArrowMarker id="tech-arrow-uow" fill={BORDER} />
@@ -1556,16 +1564,24 @@ export function UnitOfWorkDiagram() {
         {t('tech.diagram.unitOfWorkLabel')}
       </text>
 
-      <rect x="8" y="104" width="150" height="48" rx="10" fill={SURFACE} stroke={BORDER} />
-      <text x="83" y="133" textAnchor="middle" className={styles.svgLabel} fill={TEXT}>
+      <rect
+        x="8"
+        y={UOW_CENTER_Y - 24}
+        width="150"
+        height="48"
+        rx="10"
+        fill={SURFACE}
+        stroke={BORDER}
+      />
+      <text x="83" y={UOW_CENTER_Y + 5} textAnchor="middle" className={styles.svgLabel} fill={TEXT}>
         DELETE /auth/me
       </text>
 
       <line
         x1="160"
-        y1="128"
+        y1={UOW_CENTER_Y}
         x2="184"
-        y2="128"
+        y2={UOW_CENTER_Y}
         stroke={BORDER}
         strokeWidth="1.4"
         markerEnd="url(#tech-arrow-uow)"
@@ -1575,7 +1591,7 @@ export function UnitOfWorkDiagram() {
         x="190"
         y="42"
         width="440"
-        height="172"
+        height="224"
         rx="14"
         fill="none"
         stroke={PRIMARY}
@@ -1587,22 +1603,22 @@ export function UnitOfWorkDiagram() {
       </text>
 
       {DELETED_COLLECTIONS.map((collection, index) => {
-        const column = index % 4;
-        const row = Math.floor(index / 4);
+        const column = index % UOW_COLUMNS;
+        const row = Math.floor(index / UOW_COLUMNS);
         return (
           <g key={collection}>
             <rect
-              x={206 + column * 106}
-              y={86 + row * 48}
-              width="96"
-              height="36"
+              x={198 + column * 144}
+              y={80 + row * 42}
+              width="136"
+              height="34"
               rx="8"
               fill={SURFACE}
               stroke={BORDER}
             />
             <text
-              x={254 + column * 106}
-              y={109 + row * 48}
+              x={266 + column * 144}
+              y={102 + row * 42}
               textAnchor="middle"
               className={styles.svgSub}
               fill={MUTED}
@@ -1613,18 +1629,18 @@ export function UnitOfWorkDiagram() {
         );
       })}
 
-      <text x="410" y="200" textAnchor="middle" className={styles.svgSub} fill={META}>
+      <text x="410" y="258" textAnchor="middle" className={styles.svgSub} fill={META}>
         {t('tech.diagram.unitOfWorkCollections')}
       </text>
 
       <g strokeWidth="1.6" fill="none">
         <path
-          d="M 632 128 C 664 128, 664 100, 692 100"
+          d={`M 632 ${UOW_CENTER_Y} C 664 ${UOW_CENTER_Y}, 664 ${UOW_CENTER_Y - 37}, 692 ${UOW_CENTER_Y - 37}`}
           stroke={SUCCESS}
           markerEnd="url(#tech-arrow-uow-ok)"
         />
         <path
-          d="M 632 128 C 664 128, 664 174, 692 174"
+          d={`M 632 ${UOW_CENTER_Y} C 664 ${UOW_CENTER_Y}, 664 ${UOW_CENTER_Y + 37}, 692 ${UOW_CENTER_Y + 37}`}
           stroke={DANGER}
           markerEnd="url(#tech-arrow-uow-ko)"
         />
@@ -1632,7 +1648,7 @@ export function UnitOfWorkDiagram() {
 
       <rect
         x="700"
-        y="78"
+        y={UOW_CENTER_Y - 59}
         width="172"
         height="44"
         rx="10"
@@ -1640,16 +1656,28 @@ export function UnitOfWorkDiagram() {
         stroke={SUCCESS}
         strokeWidth="1.5"
       />
-      <text x="786" y="99" textAnchor="middle" className={styles.svgLabel} fill={SUCCESS}>
+      <text
+        x="786"
+        y={UOW_CENTER_Y - 38}
+        textAnchor="middle"
+        className={styles.svgLabel}
+        fill={SUCCESS}
+      >
         {t('tech.diagram.unitOfWorkCommit')}
       </text>
-      <text x="786" y="113" textAnchor="middle" className={styles.svgSub} fill={SUCCESS}>
+      <text
+        x="786"
+        y={UOW_CENTER_Y - 24}
+        textAnchor="middle"
+        className={styles.svgSub}
+        fill={SUCCESS}
+      >
         {t('tech.diagram.unitOfWorkCommitSub')}
       </text>
 
       <rect
         x="700"
-        y="152"
+        y={UOW_CENTER_Y + 15}
         width="172"
         height="44"
         rx="10"
@@ -1657,14 +1685,26 @@ export function UnitOfWorkDiagram() {
         stroke={DANGER}
         strokeWidth="1.5"
       />
-      <text x="786" y="173" textAnchor="middle" className={styles.svgLabel} fill={DANGER}>
+      <text
+        x="786"
+        y={UOW_CENTER_Y + 36}
+        textAnchor="middle"
+        className={styles.svgLabel}
+        fill={DANGER}
+      >
         {t('tech.diagram.unitOfWorkRollback')}
       </text>
-      <text x="786" y="187" textAnchor="middle" className={styles.svgSub} fill={DANGER}>
+      <text
+        x="786"
+        y={UOW_CENTER_Y + 50}
+        textAnchor="middle"
+        className={styles.svgSub}
+        fill={DANGER}
+      >
         {t('tech.diagram.unitOfWorkRollbackSub')}
       </text>
 
-      <text x="10" y="238" className={styles.svgSub} fill={META}>
+      <text x="10" y="296" className={styles.svgSub} fill={META}>
         {t('tech.diagram.unitOfWorkNote')}
       </text>
     </svg>

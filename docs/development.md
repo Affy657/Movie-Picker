@@ -183,6 +183,11 @@ pnpm exec playwright install chromium   # une seule fois
 pnpm run test:e2e:ci
 ```
 
+Sans `MONGODB_TEST_URI`, la seconde commande joue la suite d'intégration sur la base en mémoire, et
+`pnpm run test:e2e:ci` sans `E2E_MONGODB_URI` en fait autant pour l'API des e2e : pratique pour
+itérer, mais seuls `pnpm run test:api:mongo` et `pnpm run test:e2e:local` jouent ces suites sur
+MongoDB, comme les jobs `test-api` et `e2e` de la CI.
+
 `pnpm run test:api:mongo` et `pnpm run test:e2e:local` partagent le conteneur
 `movie-picker-mongo-test` (port 27018, `MONGO_TEST_PORT` pour un autre) : `scripts/mongo-replica-set.mjs`
 le démarre au besoin avec l'image épinglée, le recrée s'il est arrêté ou tourne sur une autre image,
@@ -193,29 +198,56 @@ test d'intégration y prend une base jetable.
 
 ```
 movie-picker/
+├─ .github/           Workflows (CI, déploiement, retours arrière, infrastructure, sauvegarde,
+│                     analyse de sécurité) et actions/, les actions composites qu'ils partagent
 ├─ apps/
 │  ├─ web/            Front React, Vite, TypeScript, PWA
-│  └─ api-dotnet/     API ASP.NET Core, solution MoviePicker.slnx
+│  └─ api-dotnet/     API ASP.NET Core, solution MoviePicker.slnx : MoviePicker.Api, ses tests
+│                     unitaires (MoviePicker.Api.Tests) et d'intégration (MoviePicker.Api.IntegrationTests)
 ├─ archive/           Application Expo du cursus et documents gelés, plus construits
-├─ artifacts/         Contrat OpenAPI, rapports Lighthouse et Stryker
-├─ configs/           tsconfig et Prettier partagés, exclusions Sonar
-├─ docs/              Roadmap, dette technique, ce guide, captures du README
+├─ artifacts/         Contrat OpenAPI, rapports Lighthouse et Stryker, généré et ignoré par git
+├─ configs/           tsconfig et Prettier partagés, budgets Lighthouse, exclusions Sonar
+├─ design/            Maquettes de l'application (design/mockups/), publiées dans un canvas Design
+├─ docs/              Roadmap, dette technique, design system, runbook de restauration, ce guide,
+│                     captures du README
 ├─ e2e/               Parcours Playwright
-├─ infra/             Terraform (infra/terraform/) et la configuration du site Firebase Hosting
-└─ scripts/           verify:local, lint des workflows, Terraform, publication Firebase Hosting, prérequis, export OpenAPI, seuils de couverture, captures
+├─ infra/             Terraform (infra/terraform/), configuration du site Firebase Hosting et
+│                     ancienne adresse du site (infra/web-legacy/)
+└─ scripts/           Portes de qualité (check-*.mjs, règles d'architecture dans architecture/),
+                      verify:local, MongoDB de test, contrat OpenAPI, Terraform, publication et
+                      retour arrière du front, release, Lighthouse, prérequis, captures
 ```
 
+Le front est découpé par usage, pas par type de fichier. `apps/web/src/features/` porte sept
+domaines : `auth` (session, connexion, comptes), `movies` (catalogue, recherche, vitrines, liste « À
+voir »), `events` (les soirées, et les films qui y sont proposés), `letterboxd` (import),
+`library` (Mes listes, films vus, listes enregistrées et publiques), `profile` (profils publics,
+suivis) et `notifications` (boîte de réception, push), chacun avec ses `api/`, `components/`,
+`hooks/` et `pages/`. `shared/` est le socle qui n'en connaît aucun : primitives du design system,
+client HTTP et contrat généré, i18n, hooks transverses. `app/` est la composition au-dessus des
+deux : table des routes, coquille, pages qui assemblent plusieurs domaines (`app/pages/`). Qui peut
+importer qui se lit dans `FEATURE_EDGES` (`scripts/architecture/featureEdges.mjs`), seule
+description du graphe des features.
+
 L'API suit un découpage hexagonal : `Domain` porte les entités et les règles sans dépendance au
-framework, `Application` les cas d'usage, les ports et les DTOs, `Infrastructure` les
-implémentations concrètes (MongoDB, TMDB, e-mail, cookies), `Controllers` la traduction HTTP.
-`check:architecture` refuse les `using` qui traversent ces frontières.
+framework, `Application` les cas d'usage (`UseCases/`, un dossier par cas, `UseCases/Shared/` pour
+ce que plusieurs partagent), les ports et les DTOs, `Infrastructure` les implémentations concrètes
+(MongoDB et la base en mémoire, TMDB, Letterboxd, push, e-mail, cookies), `Controllers` la
+traduction HTTP.
+
+`check:architecture` fait respecter ces deux découpages. `scripts/check-architecture.mjs` n'en est
+que le point d'entrée : les règles vivent dans `scripts/architecture/`, un module par famille
+(couches de l'API, `writeSeq`, imports du front, valeurs CSS, primitives, CSS mort), chacun avec
+son `*.test.mjs` joué par `pnpm run test:scripts`. La liste des règles est dans `AGENTS.md`.
 
 ## Deux pièges de build
 
-Le paquet `web` enchaîne `tsc`, `vite build`, un contrôle qui interdit d'embarquer les
-identifiants de démonstration dans `dist/assets/*.js`, puis le prérendu des routes publiques
-indexables dans `dist/prerendered/`. Un `vite build` lancé à la main dans
-`apps/web` saute ce contrôle.
+Le paquet `web` enchaîne la génération des chiffres du dossier technique, `tsc`, `vite build`, un
+contrôle qui interdit d'embarquer les identifiants de démonstration dans `dist/assets/*.js`, puis
+le prérendu des routes publiques indexables dans `dist/prerendered/`. Un `vite build` lancé à la
+main dans `apps/web` saute ce contrôle. La première étape réécrit
+`apps/web/src/app/pages/tech/generated/techMetrics.ts`, un fichier suivi par git : ne le committer
+qu'avec une mise à jour du dossier technique.
 
 La racine force par override une version corrigée de plusieurs dépendances transitives, dont
 `basic-ftp` tirée par Lighthouse, pour garder l'audit vert. À réévaluer à chaque montée majeure de
