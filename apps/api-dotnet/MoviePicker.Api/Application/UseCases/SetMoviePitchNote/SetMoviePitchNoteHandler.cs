@@ -33,7 +33,7 @@ public sealed class SetMoviePitchNoteHandler : ISetMoviePitchNoteHandler
             _eventRepository,
             _movieRepository,
             _participantRepository,
-            _currentUserAccessor,
+            _currentUserAccessor.GetUserId(),
             _clock.GetUtcNow(),
             idOrSlug,
             movieId,

@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
-using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.LetterboxdImport;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Web;
@@ -26,14 +25,10 @@ public sealed class LetterboxdController : ControllerBase
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Sync(
         [FromServices] ISyncLetterboxdWatchlistHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct,
         [FromQuery] bool force = false)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         var result = await handler.HandleAsync(userId, force, ct);
         return Ok(result);
     }
@@ -46,7 +41,7 @@ public sealed class LetterboxdController : ControllerBase
     public async Task<IActionResult> Confirm(
         [FromBody] LetterboxdImportConfirmRequest? request,
         [FromServices] IConfirmLetterboxdImportHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
         if (request is null)
@@ -54,10 +49,6 @@ public sealed class LetterboxdController : ControllerBase
             return BadRequest(
                 ApiErrorResponse.FromHttpContext(HttpContext, StatusCodes.Status400BadRequest, "JSON body required", ErrorCodes.ValidationFailed));
         }
-
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
 
         var result = await handler.HandleAsync(userId, request, ct);
         return Ok(result);

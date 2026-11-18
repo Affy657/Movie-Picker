@@ -52,13 +52,9 @@ public sealed class PublicListsController : ControllerBase
         string listId,
         [FromBody] CopySavedListRequest request,
         [FromServices] ICopyPublicListHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Created(string.Empty, await handler.HandleAsync(userId, handle, listId, request, ct));
     }
 }

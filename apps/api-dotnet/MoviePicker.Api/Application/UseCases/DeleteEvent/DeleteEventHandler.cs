@@ -15,7 +15,6 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
     private readonly IVoteRepository _voteRepository;
     private readonly ISeenMarkRepository _seenMarkRepository;
     private readonly IMovieRatingRepository _ratingRepository;
-    private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IUserNotificationRepository _notifications;
     private readonly EventAudienceNotifier _audience;
     private readonly IUnitOfWork _unitOfWork;
@@ -29,7 +28,6 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         IVoteRepository voteRepository,
         ISeenMarkRepository seenMarkRepository,
         IMovieRatingRepository ratingRepository,
-        ICurrentUserAccessor currentUserAccessor,
         IUserNotificationRepository notifications,
         EventAudienceNotifier audience,
         IUnitOfWork unitOfWork,
@@ -42,7 +40,6 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         _voteRepository = voteRepository;
         _seenMarkRepository = seenMarkRepository;
         _ratingRepository = ratingRepository;
-        _currentUserAccessor = currentUserAccessor;
         _notifications = notifications;
         _audience = audience;
         _unitOfWork = unitOfWork;
@@ -50,20 +47,16 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         _clock = clock;
     }
 
-    public async Task<DeleteEventResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
+    public async Task<DeleteEventResponse> HandleAsync(string userId, string idOrSlug, CancellationToken ct = default)
     {
-        var currentUserId = _currentUserAccessor.GetUserId();
-        if (string.IsNullOrEmpty(currentUserId))
-            throw Errors.AccountRequired();
-
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
-        if (string.IsNullOrEmpty(evt.CreatorUserId) || evt.CreatorUserId != currentUserId)
+        if (string.IsNullOrEmpty(evt.CreatorUserId) || evt.CreatorUserId != userId)
             throw Errors.CreatorOnlyDelete();
 
         var participants = await _participantRepository.ListByEventIdAsync(evt.Id, ct);
         var participantUserIds = participants
-            .Where(p => !string.IsNullOrEmpty(p.UserId) && p.UserId != currentUserId)
+            .Where(p => !string.IsNullOrEmpty(p.UserId) && p.UserId != userId)
             .Select(p => p.UserId!)
             .Distinct()
             .ToList();
@@ -101,7 +94,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
             "Event deleted: {EventId} (slug={Slug}, by={UserId}, cascadedVotes={Votes}, seenMarks={Seen}, movies={Movies}, participants={Participants})",
             evt.Id,
             evt.Slug,
-            currentUserId,
+            userId,
             children.Votes,
             children.SeenMarks,
             children.Movies,

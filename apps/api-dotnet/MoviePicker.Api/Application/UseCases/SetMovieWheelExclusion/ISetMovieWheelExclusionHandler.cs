@@ -4,5 +4,10 @@ namespace MoviePicker.Api.Application.UseCases.SetMovieWheelExclusion;
 
 public interface ISetMovieWheelExclusionHandler
 {
-    Task HandleAsync(string idOrSlug, string movieId, SetMovieWheelExclusionRequest request, CancellationToken ct = default);
+    Task HandleAsync(
+        string userId,
+        string idOrSlug,
+        string movieId,
+        SetMovieWheelExclusionRequest request,
+        CancellationToken ct = default);
 }

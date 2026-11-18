@@ -11,10 +11,11 @@ namespace MoviePicker.Api.Tests.UseCases.SetMovieWheelExclusion;
 
 public sealed class SetMovieWheelExclusionHandlerTests
 {
+    private const string OtherUserId = "user-other";
+
     private readonly Mock<IEventRepository> _eventRepo = new();
     private readonly Mock<IMovieRepository> _movieRepo = new();
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor = new();
-    private readonly Mock<ICurrentUserAccessor> _currentUserAccessor = new();
     private readonly RecordingUnitOfWork _unitOfWork = new();
     private readonly SetMovieWheelExclusionHandler _sut;
 
@@ -47,14 +48,12 @@ public sealed class SetMovieWheelExclusionHandlerTests
 
     public SetMovieWheelExclusionHandlerTests()
     {
-        _currentUserAccessor.Setup(c => c.GetUserId()).Returns((string?)null);
         _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
         _sut = new SetMovieWheelExclusionHandler(
             _eventRepo.Object,
             _movieRepo.Object,
             _hostTokenAccessor.Object,
-            _currentUserAccessor.Object,
             _unitOfWork,
             TimeProvider.System);
     }
@@ -64,7 +63,7 @@ public sealed class SetMovieWheelExclusionHandlerTests
     {
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
-        await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad", "mov1", Request(true)));
+        await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(OtherUserId, "bad", "mov1", Request(true)));
     }
 
     [Fact]
@@ -73,7 +72,7 @@ public sealed class SetMovieWheelExclusionHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent("real"));
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("wrong");
 
-        var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1", "mov1", Request(true)));
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync(OtherUserId, "evt1", "mov1", Request(true)));
         Assert.Equal(ErrorCodes.HostOnly, ex.Reason);
         _movieRepo.Verify(
             r => r.UpdateWheelExclusionAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()),
@@ -87,7 +86,7 @@ public sealed class SetMovieWheelExclusionHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
 
-        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", "mov1", Request(true)));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync(OtherUserId, "evt1", "mov1", Request(true)));
         Assert.Equal(ErrorCodes.EventFinished, ex.Reason);
     }
 
@@ -98,7 +97,7 @@ public sealed class SetMovieWheelExclusionHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("wrong");
 
-        var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1", "mov1", Request(true)));
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync(OtherUserId, "evt1", "mov1", Request(true)));
         Assert.Equal(ErrorCodes.HostOnly, ex.Reason);
     }
 
@@ -109,7 +108,7 @@ public sealed class SetMovieWheelExclusionHandlerTests
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", "evt1", It.IsAny<CancellationToken>())).ReturnsAsync((Movie?)null);
 
-        await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("evt1", "mov1", Request(true)));
+        await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(OtherUserId, "evt1", "mov1", Request(true)));
     }
 
     [Fact]
@@ -119,7 +118,7 @@ public sealed class SetMovieWheelExclusionHandlerTests
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", "evt1", It.IsAny<CancellationToken>())).ReturnsAsync(MovieOf("mov1"));
 
-        await _sut.HandleAsync("evt1", "mov1", Request(true));
+        await _sut.HandleAsync(OtherUserId, "evt1", "mov1", Request(true));
 
         _movieRepo.Verify(r => r.UpdateWheelExclusionAsync("mov1", true, It.IsAny<CancellationToken>()), Times.Once);
         _eventRepo.Verify(r => r.UpdateAsync(It.Is<Event>(e => e.Id == "evt1"), It.IsAny<CancellationToken>()), Times.Once);
@@ -139,7 +138,7 @@ public sealed class SetMovieWheelExclusionHandlerTests
             .Callback(() => steps.Add(_unitOfWork.IsExecuting ? "event" : "event-outside"))
             .ReturnsAsync((Event e, CancellationToken _) => e);
 
-        await _sut.HandleAsync("evt1", "mov1", Request(true));
+        await _sut.HandleAsync(OtherUserId, "evt1", "mov1", Request(true));
 
         Assert.Equal(["exclude", "event"], steps);
     }
@@ -152,7 +151,7 @@ public sealed class SetMovieWheelExclusionHandlerTests
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", "evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(MovieOf("mov1", excluded: true));
 
-        await _sut.HandleAsync("evt1", "mov1", Request(false));
+        await _sut.HandleAsync(OtherUserId, "evt1", "mov1", Request(false));
 
         _movieRepo.Verify(r => r.UpdateWheelExclusionAsync("mov1", false, It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -165,7 +164,7 @@ public sealed class SetMovieWheelExclusionHandlerTests
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", "evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(MovieOf("mov1", excluded: true));
 
-        await _sut.HandleAsync("evt1", "mov1", Request(true));
+        await _sut.HandleAsync(OtherUserId, "evt1", "mov1", Request(true));
 
         _movieRepo.Verify(
             r => r.UpdateWheelExclusionAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()),
@@ -181,7 +180,7 @@ public sealed class SetMovieWheelExclusionHandlerTests
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", "evt1", It.IsAny<CancellationToken>())).ReturnsAsync(MovieOf("mov1"));
 
-        await _sut.HandleAsync("evt1", "mov1", Request(true));
+        await _sut.HandleAsync(OtherUserId, "evt1", "mov1", Request(true));
 
         _movieRepo.Verify(r => r.UpdateWheelExclusionAsync("mov1", true, It.IsAny<CancellationToken>()), Times.Once);
         _eventRepo.Verify(r => r.UpdateAsync(It.Is<Event>(e => e.Id == "evt1"), It.IsAny<CancellationToken>()), Times.Once);
@@ -193,10 +192,9 @@ public sealed class SetMovieWheelExclusionHandlerTests
         var evt = ActiveEvent() with { CreatorUserId = "u1" };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
-        _currentUserAccessor.Setup(c => c.GetUserId()).Returns("u1");
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", "evt1", It.IsAny<CancellationToken>())).ReturnsAsync(MovieOf("mov1"));
 
-        await _sut.HandleAsync("evt1", "mov1", Request(true));
+        await _sut.HandleAsync("u1", "evt1", "mov1", Request(true));
 
         _movieRepo.Verify(r => r.UpdateWheelExclusionAsync("mov1", true, It.IsAny<CancellationToken>()), Times.Once);
         _eventRepo.Verify(r => r.UpdateAsync(It.Is<Event>(e => e.Id == "evt1"), It.IsAny<CancellationToken>()), Times.Once);

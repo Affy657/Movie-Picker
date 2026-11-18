@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
-using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Watchlist;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Web;
@@ -24,13 +23,9 @@ public sealed class WatchlistController : ControllerBase
         [FromQuery] int skip,
         [FromQuery] int? take,
         [FromServices] IGetWatchlistHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         var result = await handler.HandleAsync(userId, includeLetterboxd: true, skip, take, ct);
         return Ok(result);
     }
@@ -41,13 +36,9 @@ public sealed class WatchlistController : ControllerBase
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> GetAvailability(
         [FromServices] IGetWatchlistAvailabilityHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         var result = await handler.HandleAsync(userId, ct);
         return Ok(result);
     }
@@ -60,13 +51,9 @@ public sealed class WatchlistController : ControllerBase
     public async Task<IActionResult> Add(
         [FromBody] AddWatchlistItemRequest request,
         [FromServices] IAddToWatchlistHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         var item = await handler.HandleAsync(userId, request, ct);
         return Created(string.Empty, item);
     }
@@ -78,14 +65,10 @@ public sealed class WatchlistController : ControllerBase
     public async Task<IActionResult> Remove(
         int tmdbId,
         [FromServices] IRemoveFromWatchlistHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct,
         [FromQuery] MovieMediaType mediaType = MovieMediaType.Movie)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         await handler.HandleAsync(userId, tmdbId, mediaType, ct);
         return NoContent();
     }

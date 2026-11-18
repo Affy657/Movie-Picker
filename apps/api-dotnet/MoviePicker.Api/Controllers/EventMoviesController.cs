@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
-using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AddMovie;
 using MoviePicker.Api.Application.UseCases.DeleteMovie;
 using MoviePicker.Api.Application.UseCases.DeleteMoviePitchNote;
@@ -58,10 +57,10 @@ public sealed class EventMoviesController : ControllerBase
         string idOrSlug,
         [FromBody] AddMovieRequest request,
         [FromServices] IAddMovieHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var movie = await handler.HandleAsync(idOrSlug, request, currentUser.GetUserId(), ct);
+        var movie = await handler.HandleAsync(idOrSlug, request, userId, ct);
         return Created(string.Empty, movie);
     }
 
@@ -77,9 +76,10 @@ public sealed class EventMoviesController : ControllerBase
         string movieId,
         [FromBody] DeleteMovieRequest body,
         [FromServices] IDeleteMovieHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        await handler.HandleAsync(idOrSlug, movieId, body.ParticipantId, ct);
+        await handler.HandleAsync(userId, idOrSlug, movieId, body.ParticipantId, ct);
         return NoContent();
     }
 
@@ -188,9 +188,10 @@ public sealed class EventMoviesController : ControllerBase
         string movieId,
         [FromBody] SetMovieWheelExclusionRequest request,
         [FromServices] ISetMovieWheelExclusionHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        await handler.HandleAsync(idOrSlug, movieId, request, ct);
+        await handler.HandleAsync(userId, idOrSlug, movieId, request, ct);
         return NoContent();
     }
 

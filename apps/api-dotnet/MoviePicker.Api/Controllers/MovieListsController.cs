@@ -24,14 +24,10 @@ public sealed class MovieListsController : ControllerBase
     public async Task<IActionResult> List(
         [FromQuery] int? tmdbId,
         [FromServices] IListMovieListsHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct,
         [FromQuery] MovieMediaType mediaType = MovieMediaType.Movie)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         var probe = tmdbId is { } probedId ? new MovieListTitle(probedId, mediaType) : null;
         return Ok(await handler.HandleAsync(userId, probe, ct));
     }
@@ -44,13 +40,9 @@ public sealed class MovieListsController : ControllerBase
     public async Task<IActionResult> Create(
         [FromBody] CreateMovieListRequest request,
         [FromServices] ICreateMovieListHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Created(string.Empty, await handler.HandleAsync(userId, request, ct));
     }
 
@@ -61,13 +53,9 @@ public sealed class MovieListsController : ControllerBase
     public async Task<IActionResult> Get(
         string id,
         [FromServices] IGetMovieListHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Ok(await handler.HandleAsync(userId, id, ct));
     }
 
@@ -82,13 +70,9 @@ public sealed class MovieListsController : ControllerBase
         string id,
         [FromBody] UpdateMovieListRequest request,
         [FromServices] IUpdateMovieListHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Ok(await handler.HandleAsync(userId, id, request, ct));
     }
 
@@ -100,13 +84,9 @@ public sealed class MovieListsController : ControllerBase
     public async Task<IActionResult> Delete(
         string id,
         [FromServices] IDeleteMovieListHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         await handler.HandleAsync(userId, id, ct);
         return NoContent();
     }
@@ -122,13 +102,9 @@ public sealed class MovieListsController : ControllerBase
         string id,
         [FromBody] AddWatchlistItemRequest request,
         [FromServices] IAddMovieListItemHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         var addition = await handler.HandleAsync(userId, id, request, ct);
         return addition.Created ? Created(string.Empty, addition.Item) : Ok(addition.Item);
     }
@@ -141,14 +117,10 @@ public sealed class MovieListsController : ControllerBase
         string id,
         int tmdbId,
         [FromServices] IRemoveMovieListItemHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct,
         [FromQuery] MovieMediaType mediaType = MovieMediaType.Movie)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         await handler.HandleAsync(userId, id, new MovieListTitle(tmdbId, mediaType), ct);
         return NoContent();
     }
@@ -160,13 +132,9 @@ public sealed class MovieListsController : ControllerBase
     public async Task<IActionResult> Members(
         string id,
         [FromServices] IGetMovieListMembersHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Ok(await handler.HandleAsync(userId, id, ct));
     }
 
@@ -179,13 +147,9 @@ public sealed class MovieListsController : ControllerBase
         string id,
         [FromQuery] string? q,
         [FromServices] IListMovieListInvitableUsersHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Ok(await handler.HandleAsync(userId, id, q, ct));
     }
 
@@ -200,13 +164,9 @@ public sealed class MovieListsController : ControllerBase
         string id,
         [FromBody] InviteToMovieListRequest request,
         [FromServices] IInviteToMovieListHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Created(string.Empty, await handler.HandleAsync(userId, id, request, ct));
     }
 
@@ -219,13 +179,9 @@ public sealed class MovieListsController : ControllerBase
         string id,
         string userId,
         [FromServices] ICancelMovieListInvitationHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string ownerId,
         CancellationToken ct)
     {
-        var ownerId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(ownerId))
-            return Unauthorized();
-
         await handler.HandleAsync(ownerId, id, userId, ct);
         return NoContent();
     }
@@ -237,13 +193,9 @@ public sealed class MovieListsController : ControllerBase
     public async Task<IActionResult> AcceptInvitation(
         string id,
         [FromServices] IAcceptMovieListInvitationHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Ok(await handler.HandleAsync(userId, id, ct));
     }
 
@@ -253,13 +205,9 @@ public sealed class MovieListsController : ControllerBase
     public async Task<IActionResult> DeclineInvitation(
         string id,
         [FromServices] IDeclineMovieListInvitationHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         await handler.HandleAsync(userId, id, ct);
         return NoContent();
     }
@@ -274,13 +222,9 @@ public sealed class MovieListsController : ControllerBase
         string id,
         string userId,
         [FromServices] IRemoveMovieListMemberHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string ownerId,
         CancellationToken ct)
     {
-        var ownerId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(ownerId))
-            return Unauthorized();
-
         await handler.HandleAsync(ownerId, id, userId, ct);
         return NoContent();
     }
@@ -293,13 +237,9 @@ public sealed class MovieListsController : ControllerBase
     public async Task<IActionResult> Leave(
         string id,
         [FromServices] ILeaveMovieListHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         await handler.HandleAsync(userId, id, ct);
         return NoContent();
     }
@@ -312,13 +252,9 @@ public sealed class MovieListsController : ControllerBase
     public async Task<IActionResult> CreateInviteLink(
         string id,
         [FromServices] ICreateMovieListInviteLinkHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         return Ok(await handler.HandleAsync(userId, id, ct));
     }
 
@@ -330,13 +266,9 @@ public sealed class MovieListsController : ControllerBase
     public async Task<IActionResult> DisableInviteLink(
         string id,
         [FromServices] IDisableMovieListInviteLinkHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         await handler.HandleAsync(userId, id, ct);
         return NoContent();
     }
@@ -365,13 +297,9 @@ public sealed class MovieListsController : ControllerBase
     public async Task<IActionResult> Join(
         string token,
         [FromServices] IJoinMovieListHandler handler,
-        [FromServices] ICurrentUserAccessor currentUser,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var userId = currentUser.GetUserId();
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         var join = await handler.HandleAsync(userId, token, ct);
         return join.Joined ? Created(string.Empty, join.List) : Ok(join.List);
     }

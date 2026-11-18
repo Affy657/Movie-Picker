@@ -16,7 +16,6 @@ public sealed class DeleteEventHandlerNotificationTests
     private readonly Mock<IMovieRepository> _movieRepo = new();
     private readonly Mock<IVoteRepository> _voteRepo = new();
     private readonly Mock<ISeenMarkRepository> _seenMarkRepo = new();
-    private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<IUserRepository> _userRepo = new();
     private readonly Mock<IPushSubscriptionRepository> _pushSubRepo = new();
     private readonly Mock<IPushNotificationSender> _pushSender = new();
@@ -25,7 +24,6 @@ public sealed class DeleteEventHandlerNotificationTests
 
     public DeleteEventHandlerNotificationTests()
     {
-        _currentUser.Setup(c => c.GetUserId()).Returns("creator");
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Event
             {
@@ -50,7 +48,7 @@ public sealed class DeleteEventHandlerNotificationTests
 
         _sut = new DeleteEventHandler(
             _eventRepo.Object, _participantRepo.Object, _movieRepo.Object, _voteRepo.Object,
-            _seenMarkRepo.Object, ratingRepo.Object, _currentUser.Object, _notifications.Object,
+            _seenMarkRepo.Object, ratingRepo.Object, _notifications.Object,
             TestAudienceNotifier.Over(_participantRepo.Object, _userRepo.Object, _pushSubRepo.Object, _pushSender.Object, _notifications.Object),
             new InMemoryUnitOfWork(),
             NullLogger<DeleteEventHandler>.Instance,
@@ -78,7 +76,7 @@ public sealed class DeleteEventHandlerNotificationTests
         _pushSubRepo.Setup(r => r.ListByUserIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([new() { Id = "s1", UserId = "u2", Endpoint = "https://push/x", P256dh = "k", Auth = "a" }]);
 
-        await _sut.HandleAsync("evt1");
+        await _sut.HandleAsync("creator", "evt1");
 
         _pushSender.Verify(
             s => s.SendAsync(It.Is<PushSubscription>(x => x.UserId == "u2"), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()),
@@ -93,7 +91,7 @@ public sealed class DeleteEventHandlerNotificationTests
     {
         Participants("creator");
 
-        await _sut.HandleAsync("evt1");
+        await _sut.HandleAsync("creator", "evt1");
 
         _userRepo.Verify(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()), Times.Never);
         _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -106,7 +104,7 @@ public sealed class DeleteEventHandlerNotificationTests
         _userRepo.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([new() { Id = "u2", NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.EventDeleted] = false } }]);
 
-        await _sut.HandleAsync("evt1");
+        await _sut.HandleAsync("creator", "evt1");
 
         _pushSender.Verify(s => s.SendAsync(It.IsAny<PushSubscription>(), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()), Times.Never);
         _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);

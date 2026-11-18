@@ -39,7 +39,7 @@ public sealed class UnmarkAsSeenHandler : IUnmarkAsSeenHandler
             _eventRepository,
             _movieRepository,
             _participantRepository,
-            _currentUserAccessor,
+            _currentUserAccessor.GetUserId(),
             _clock.GetUtcNow(),
             idOrSlug,
             movieId,

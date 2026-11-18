@@ -22,31 +22,6 @@ public sealed class MovieListMembersControllerTests
     private void SignedIn(string? userId = UserId) => _currentUser.Setup(c => c.GetUserId()).Returns(userId);
 
     [Fact]
-    public async Task EveryMembershipAction_WithoutAUser_IsUnauthorized_AndCallsNoHandler()
-    {
-        SignedIn(null);
-        var ct = CancellationToken.None;
-        var user = _currentUser.Object;
-
-        IActionResult[] results =
-        [
-            await _sut.Members("l1", Mock.Of<IGetMovieListMembersHandler>(MockBehavior.Strict), user, ct),
-            await _sut.Invitable("l1", "lea", Mock.Of<IListMovieListInvitableUsersHandler>(MockBehavior.Strict), user, ct),
-            await _sut.Invite("l1", new InviteToMovieListRequest { UserId = "u2" }, Mock.Of<IInviteToMovieListHandler>(MockBehavior.Strict), user, ct),
-            await _sut.CancelInvitation("l1", "u2", Mock.Of<ICancelMovieListInvitationHandler>(MockBehavior.Strict), user, ct),
-            await _sut.AcceptInvitation("l1", Mock.Of<IAcceptMovieListInvitationHandler>(MockBehavior.Strict), user, ct),
-            await _sut.DeclineInvitation("l1", Mock.Of<IDeclineMovieListInvitationHandler>(MockBehavior.Strict), user, ct),
-            await _sut.RemoveMember("l1", "u2", Mock.Of<IRemoveMovieListMemberHandler>(MockBehavior.Strict), user, ct),
-            await _sut.Leave("l1", Mock.Of<ILeaveMovieListHandler>(MockBehavior.Strict), user, ct),
-            await _sut.CreateInviteLink("l1", Mock.Of<ICreateMovieListInviteLinkHandler>(MockBehavior.Strict), user, ct),
-            await _sut.DisableInviteLink("l1", Mock.Of<IDisableMovieListInviteLinkHandler>(MockBehavior.Strict), user, ct),
-            await _sut.Join("token", Mock.Of<IJoinMovieListHandler>(MockBehavior.Strict), user, ct)
-        ];
-
-        Assert.All(results, result => Assert.IsType<UnauthorizedResult>(result));
-    }
-
-    [Fact]
     public async Task InvitePreview_IsOpenToAnonymousVisitors_AndPassesTheSignedInViewerWhenThereIsOne()
     {
         var handler = new Mock<IGetMovieListInvitePreviewHandler>();
@@ -69,12 +44,11 @@ public sealed class MovieListMembersControllerTests
     [InlineData(false, typeof(OkObjectResult))]
     public async Task Join_AnswersCreatedOnlyWhenTheCallerJustJoined(bool joined, Type expected)
     {
-        SignedIn();
         var summary = new MovieListSummaryResponse { Id = "l1" };
         var handler = new Mock<IJoinMovieListHandler>();
         handler.Setup(h => h.HandleAsync(UserId, "token", It.IsAny<CancellationToken>())).ReturnsAsync(new MovieListJoin(summary, joined));
 
-        var result = await _sut.Join("token", handler.Object, _currentUser.Object, CancellationToken.None);
+        var result = await _sut.Join("token", handler.Object, UserId, CancellationToken.None);
 
         Assert.IsType(expected, result);
         Assert.Same(summary, ((ObjectResult)result).Value);
@@ -83,13 +57,12 @@ public sealed class MovieListMembersControllerTests
     [Fact]
     public async Task Invite_AnswersCreatedWithThePendingInvitation()
     {
-        SignedIn();
         var request = new InviteToMovieListRequest { UserId = "u2" };
         var pending = new MovieListPendingInvitationResponse { UserId = "u2" };
         var handler = new Mock<IInviteToMovieListHandler>();
         handler.Setup(h => h.HandleAsync(UserId, "l1", request, It.IsAny<CancellationToken>())).ReturnsAsync(pending);
 
-        var result = await _sut.Invite("l1", request, handler.Object, _currentUser.Object, CancellationToken.None);
+        var result = await _sut.Invite("l1", request, handler.Object, UserId, CancellationToken.None);
 
         Assert.Same(pending, Assert.IsType<CreatedResult>(result).Value);
     }
@@ -97,12 +70,11 @@ public sealed class MovieListMembersControllerTests
     [Fact]
     public async Task Invitable_PassesTheQuery()
     {
-        SignedIn();
         var handler = new Mock<IListMovieListInvitableUsersHandler>();
         var users = new MovieListInvitableUsersResponse();
         handler.Setup(h => h.HandleAsync(UserId, "l1", "lea", It.IsAny<CancellationToken>())).ReturnsAsync(users);
 
-        var result = await _sut.Invitable("l1", "lea", handler.Object, _currentUser.Object, CancellationToken.None);
+        var result = await _sut.Invitable("l1", "lea", handler.Object, UserId, CancellationToken.None);
 
         Assert.Same(users, Assert.IsType<OkObjectResult>(result).Value);
     }
@@ -110,7 +82,6 @@ public sealed class MovieListMembersControllerTests
     [Fact]
     public async Task MembersAcceptAndInviteLink_AnswerTheirBody()
     {
-        SignedIn();
         var members = new MovieListMembersResponse();
         var summary = new MovieListSummaryResponse { Id = "l1" };
         var link = new MovieListInviteLinkResponse { Token = "t" };
@@ -121,15 +92,14 @@ public sealed class MovieListMembersControllerTests
         var linkHandler = new Mock<ICreateMovieListInviteLinkHandler>();
         linkHandler.Setup(h => h.HandleAsync(UserId, "l1", It.IsAny<CancellationToken>())).ReturnsAsync(link);
 
-        Assert.Same(members, Assert.IsType<OkObjectResult>(await _sut.Members("l1", membersHandler.Object, _currentUser.Object, CancellationToken.None)).Value);
-        Assert.Same(summary, Assert.IsType<OkObjectResult>(await _sut.AcceptInvitation("l1", acceptHandler.Object, _currentUser.Object, CancellationToken.None)).Value);
-        Assert.Same(link, Assert.IsType<OkObjectResult>(await _sut.CreateInviteLink("l1", linkHandler.Object, _currentUser.Object, CancellationToken.None)).Value);
+        Assert.Same(members, Assert.IsType<OkObjectResult>(await _sut.Members("l1", membersHandler.Object, UserId, CancellationToken.None)).Value);
+        Assert.Same(summary, Assert.IsType<OkObjectResult>(await _sut.AcceptInvitation("l1", acceptHandler.Object, UserId, CancellationToken.None)).Value);
+        Assert.Same(link, Assert.IsType<OkObjectResult>(await _sut.CreateInviteLink("l1", linkHandler.Object, UserId, CancellationToken.None)).Value);
     }
 
     [Fact]
     public async Task BodilessActions_AnswerNoContent_AndPassTheirTarget()
     {
-        SignedIn();
         var ct = CancellationToken.None;
         var cancel = new Mock<ICancelMovieListInvitationHandler>();
         var decline = new Mock<IDeclineMovieListInvitationHandler>();
@@ -139,11 +109,11 @@ public sealed class MovieListMembersControllerTests
 
         IActionResult[] results =
         [
-            await _sut.CancelInvitation("l1", "u2", cancel.Object, _currentUser.Object, ct),
-            await _sut.DeclineInvitation("l1", decline.Object, _currentUser.Object, ct),
-            await _sut.RemoveMember("l1", "u3", remove.Object, _currentUser.Object, ct),
-            await _sut.Leave("l1", leave.Object, _currentUser.Object, ct),
-            await _sut.DisableInviteLink("l1", disable.Object, _currentUser.Object, ct)
+            await _sut.CancelInvitation("l1", "u2", cancel.Object, UserId, ct),
+            await _sut.DeclineInvitation("l1", decline.Object, UserId, ct),
+            await _sut.RemoveMember("l1", "u3", remove.Object, UserId, ct),
+            await _sut.Leave("l1", leave.Object, UserId, ct),
+            await _sut.DisableInviteLink("l1", disable.Object, UserId, ct)
         ];
 
         Assert.All(results, result => Assert.IsType<NoContentResult>(result));

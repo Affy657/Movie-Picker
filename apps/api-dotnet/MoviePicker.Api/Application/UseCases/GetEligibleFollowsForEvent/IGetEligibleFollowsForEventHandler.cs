@@ -4,5 +4,5 @@ namespace MoviePicker.Api.Application.UseCases.GetEligibleFollowsForEvent;
 
 public interface IGetEligibleFollowsForEventHandler
 {
-    Task<EligibleFollowsResponse> HandleAsync(string idOrSlug, CancellationToken ct = default);
+    Task<EligibleFollowsResponse> HandleAsync(string currentUserId, string idOrSlug, CancellationToken ct = default);
 }

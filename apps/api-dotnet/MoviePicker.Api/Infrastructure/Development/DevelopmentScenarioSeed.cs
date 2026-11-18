@@ -853,7 +853,7 @@ internal static class DevelopmentScenarioSeed
             .ConfigureAwait(false);
 
         ActAs(httpContext, actors.Bob.Id);
-        await deleteMovie.HandleAsync(slug, mJunk.Id, bobPart, ct).ConfigureAwait(false);
+        await deleteMovie.HandleAsync(actors.Bob.Id, slug, mJunk.Id, bobPart, ct).ConfigureAwait(false);
 
         logger.LogInformation("DevelopmentSeed: multi-participant scenario created (slug={Slug}, host Alice, 4 participants).", slug);
     }

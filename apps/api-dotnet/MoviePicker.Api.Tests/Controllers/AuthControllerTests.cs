@@ -378,7 +378,7 @@ public sealed class AuthControllerTests
         var controller = Controller("u1");
         AuthSessionKey.Remember(controller.HttpContext, "session-1");
 
-        var result = await controller.UnlinkIdentity("github", handler.Object, Clock, CancellationToken.None);
+        var result = await controller.UnlinkIdentity("github", handler.Object, Clock, "u1", CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
         handler.Verify(h => h.HandleAsync("u1", "github", "session-1", It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -392,7 +392,7 @@ public sealed class AuthControllerTests
         var handler = new Mock<IOAuthUnlinkHandler>();
 
         await SessionController(Now.AddMinutes(-minutesSinceSignIn))
-            .UnlinkIdentity("github", handler.Object, Clock, CancellationToken.None);
+            .UnlinkIdentity("github", handler.Object, Clock, "u1", CancellationToken.None);
 
         handler.Verify(
             h => h.HandleAsync("u1", "github", It.IsAny<string?>(), expectedRecent, It.IsAny<CancellationToken>()), Times.Once);
@@ -403,24 +403,16 @@ public sealed class AuthControllerTests
     {
         var handler = new Mock<IGetUserProfileHandler>();
 
-        var result = await Controller("u1").Me(handler.Object, CancellationToken.None);
+        var result = await Controller("u1").Me(handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
         handler.Verify(h => h.HandleAsync("u1", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task Me_Anonymous_ReturnsUnauthorized()
-    {
-        var result = await Controller(null).Me(new Mock<IGetUserProfileHandler>().Object, CancellationToken.None);
-
-        Assert.IsType<UnauthorizedResult>(result);
-    }
-
-    [Fact]
     public async Task PatchMe_NullBody_ReturnsBadRequest()
     {
-        var result = await Controller("u1").PatchMe(null, new Mock<IPatchUserProfileHandler>().Object, CancellationToken.None);
+        var result = await Controller("u1").PatchMe(null, new Mock<IPatchUserProfileHandler>().Object, "u1", CancellationToken.None);
 
         Assert.IsType<BadRequestObjectResult>(result);
     }
@@ -430,7 +422,7 @@ public sealed class AuthControllerTests
     {
         var handler = new Mock<IPatchUserProfileHandler>();
 
-        var result = await Controller("u1").PatchMe(new PatchUserProfileRequest(), handler.Object, CancellationToken.None);
+        var result = await Controller("u1").PatchMe(new PatchUserProfileRequest(), handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
         handler.Verify(
@@ -438,18 +430,9 @@ public sealed class AuthControllerTests
     }
 
     [Fact]
-    public async Task PatchMe_Anonymous_ReturnsUnauthorized()
-    {
-        var result = await Controller(null).PatchMe(
-            new PatchUserProfileRequest(), new Mock<IPatchUserProfileHandler>().Object, CancellationToken.None);
-
-        Assert.IsType<UnauthorizedResult>(result);
-    }
-
-    [Fact]
     public async Task ChangePassword_NullBody_ReturnsBadRequest()
     {
-        var result = await Controller("u1").ChangePassword(null, new Mock<IChangePasswordHandler>().Object, Clock, CancellationToken.None);
+        var result = await Controller("u1").ChangePassword(null, new Mock<IChangePasswordHandler>().Object, Clock, "u1", CancellationToken.None);
 
         Assert.IsType<BadRequestObjectResult>(result);
     }
@@ -459,7 +442,7 @@ public sealed class AuthControllerTests
     {
         var handler = new Mock<IChangePasswordHandler>();
 
-        var result = await Controller("u1").ChangePassword(new ChangePasswordRequest(), handler.Object, Clock, CancellationToken.None);
+        var result = await Controller("u1").ChangePassword(new ChangePasswordRequest(), handler.Object, Clock, "u1", CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
         handler.Verify(
@@ -474,7 +457,7 @@ public sealed class AuthControllerTests
         var handler = new Mock<IChangePasswordHandler>();
 
         await SessionController(Now.AddMinutes(-minutesSinceSignIn))
-            .ChangePassword(new ChangePasswordRequest(), handler.Object, Clock, CancellationToken.None);
+            .ChangePassword(new ChangePasswordRequest(), handler.Object, Clock, "u1", CancellationToken.None);
 
         handler.Verify(
             h => h.HandleAsync("u1", It.IsAny<ChangePasswordRequest>(), expectedRecent, It.IsAny<CancellationToken>()), Times.Once);
@@ -487,7 +470,7 @@ public sealed class AuthControllerTests
         handler.Setup(h => h.HandleAsync("u1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new UserDataExportResponse { ExportedAt = DateTimeOffset.UtcNow });
 
-        var result = await Controller("u1").ExportMyData(handler.Object, CancellationToken.None);
+        var result = await Controller("u1").ExportMyData(handler.Object, "u1", CancellationToken.None);
 
         var file = Assert.IsType<FileContentResult>(result);
         Assert.Equal("application/json", file.ContentType);
@@ -495,17 +478,9 @@ public sealed class AuthControllerTests
     }
 
     [Fact]
-    public async Task ExportMyData_Anonymous_ReturnsUnauthorized()
-    {
-        var result = await Controller(null).ExportMyData(new Mock<IExportUserDataHandler>().Object, CancellationToken.None);
-
-        Assert.IsType<UnauthorizedResult>(result);
-    }
-
-    [Fact]
     public async Task DeleteMe_NullBody_ReturnsBadRequest()
     {
-        var result = await Controller("u1").DeleteMe(null, new Mock<IDeleteAccountHandler>().Object, Clock, CancellationToken.None);
+        var result = await Controller("u1").DeleteMe(null, new Mock<IDeleteAccountHandler>().Object, Clock, "u1", CancellationToken.None);
 
         Assert.IsType<BadRequestObjectResult>(result);
     }
@@ -515,7 +490,7 @@ public sealed class AuthControllerTests
     {
         var handler = new Mock<IDeleteAccountHandler>();
 
-        var result = await Controller("u1").DeleteMe(new DeleteAccountRequest(), handler.Object, Clock, CancellationToken.None);
+        var result = await Controller("u1").DeleteMe(new DeleteAccountRequest(), handler.Object, Clock, "u1", CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
         handler.Verify(
@@ -530,7 +505,7 @@ public sealed class AuthControllerTests
         var handler = new Mock<IDeleteAccountHandler>();
 
         await SessionController(Now.AddMinutes(-minutesSinceSignIn))
-            .DeleteMe(new DeleteAccountRequest(), handler.Object, Clock, CancellationToken.None);
+            .DeleteMe(new DeleteAccountRequest(), handler.Object, Clock, "u1", CancellationToken.None);
 
         handler.Verify(
             h => h.HandleAsync("u1", It.IsAny<DeleteAccountRequest>(), expectedRecent, It.IsAny<CancellationToken>()), Times.Once);

@@ -16,14 +16,12 @@ public sealed class GetEligibleFollowsForEventHandlerTests
     private readonly Mock<IFollowRepository> _follows = new();
     private readonly Mock<IUserRepository> _users = new();
     private readonly Mock<IUserNotificationRepository> _notifications = new();
-    private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly GetEligibleFollowsForEventHandler _sut;
 
     public GetEligibleFollowsForEventHandlerTests()
     {
-        _currentUser.Setup(c => c.GetUserId()).Returns(HostId);
         _sut = new GetEligibleFollowsForEventHandler(
-            _events.Object, _participants.Object, _follows.Object, _users.Object, _notifications.Object, _currentUser.Object);
+            _events.Object, _participants.Object, _follows.Object, _users.Object, _notifications.Object);
     }
 
     private void SetupOwnedEvent() =>
@@ -32,20 +30,13 @@ public sealed class GetEligibleFollowsForEventHandlerTests
 
     private static User U(string id) => new() { Id = id, Handle = id, DisplayName = id };
 
-    [Fact]
-    public async Task HandleAsync_Anonymous_Throws()
-    {
-        _currentUser.Setup(c => c.GetUserId()).Returns((string?)null);
-
-        await Assert.ThrowsAsync<UnauthorizedException>(() => _sut.HandleAsync("evt1"));
-    }
 
     [Fact]
     public async Task HandleAsync_EventNotFound_Throws()
     {
         _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
-        await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("evt1"));
+        await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(HostId, "evt1"));
     }
 
     [Fact]
@@ -54,7 +45,7 @@ public sealed class GetEligibleFollowsForEventHandlerTests
         _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Event { Id = "evt1", CreatorUserId = "other" });
 
-        await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1"));
+        await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync(HostId, "evt1"));
     }
 
     [Fact]
@@ -63,7 +54,7 @@ public sealed class GetEligibleFollowsForEventHandlerTests
         SetupOwnedEvent();
         _follows.Setup(f => f.GetFollowingIdsAsync(HostId, It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
 
-        var result = await _sut.HandleAsync("evt1");
+        var result = await _sut.HandleAsync(HostId, "evt1");
 
         Assert.Empty(result.Follows);
     }
@@ -81,7 +72,7 @@ public sealed class GetEligibleFollowsForEventHandlerTests
         _notifications.Setup(n => n.ListUserIdsByTypeAndEventAsync(UserNotificationType.EventInvitation, "evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new HashSet<string> { "u2" });
 
-        var result = await _sut.HandleAsync("evt1");
+        var result = await _sut.HandleAsync(HostId, "evt1");
 
         Assert.Equal(2, result.Follows.Count);
         var u1 = result.Follows.Single(f => f.UserId == "u1");

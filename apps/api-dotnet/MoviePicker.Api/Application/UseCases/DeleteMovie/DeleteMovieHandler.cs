@@ -13,7 +13,6 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
     private readonly IMovieRatingRepository _ratingRepository;
     private readonly IParticipantRepository _participantRepository;
     private readonly IHostTokenAccessor _hostTokenAccessor;
-    private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IUnitOfWork _unitOfWork;
     private readonly TimeProvider _clock;
 
@@ -25,7 +24,6 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
         IMovieRatingRepository ratingRepository,
         IParticipantRepository participantRepository,
         IHostTokenAccessor hostTokenAccessor,
-        ICurrentUserAccessor currentUserAccessor,
         IUnitOfWork unitOfWork,
         TimeProvider clock)
     {
@@ -36,18 +34,22 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
         _ratingRepository = ratingRepository;
         _participantRepository = participantRepository;
         _hostTokenAccessor = hostTokenAccessor;
-        _currentUserAccessor = currentUserAccessor;
         _unitOfWork = unitOfWork;
         _clock = clock;
     }
 
-    public async Task HandleAsync(string idOrSlug, string movieId, string participantId, CancellationToken ct = default)
+    public async Task HandleAsync(
+        string userId,
+        string idOrSlug,
+        string movieId,
+        string participantId,
+        CancellationToken ct = default)
     {
-        var (evt, movie, currentUserId, isHost) = await MovieActionContext.ResolveMovieForHostActionAsync(
+        var (evt, movie, isHost) = await MovieActionContext.ResolveMovieForHostActionAsync(
             _eventRepository,
             _movieRepository,
             _hostTokenAccessor,
-            _currentUserAccessor,
+            userId,
             _clock.GetUtcNow(),
             idOrSlug,
             movieId,
@@ -59,8 +61,7 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
         {
             var participant = await _participantRepository.FindByIdAndEventIdAsync(participantId, evt.Id, ct);
             isProposer = participant is not null
-                && !string.IsNullOrEmpty(currentUserId)
-                && participant.UserId == currentUserId
+                && participant.UserId == userId
                 && movie.ParticipantId == participant.Id;
         }
 

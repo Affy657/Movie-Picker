@@ -29,11 +29,9 @@ public sealed class NotificationsController : ControllerBase
     public async Task<IActionResult> Subscribe(
         [FromBody] SubscribePushRequest request,
         [FromServices] ISubscribePushHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
-
         await handler.HandleAsync(userId, request, ct);
         return NoContent();
     }
@@ -46,11 +44,9 @@ public sealed class NotificationsController : ControllerBase
     public async Task<IActionResult> Unsubscribe(
         [FromBody] UnsubscribePushRequest request,
         [FromServices] IUnsubscribePushHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
-
         await handler.HandleAsync(userId, request.Endpoint, ct);
         return NoContent();
     }
@@ -61,11 +57,9 @@ public sealed class NotificationsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetPreferences(
         [FromServices] IGetNotificationPreferencesHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
-
         var result = await handler.HandleAsync(userId, ct);
         return Ok(result);
     }
@@ -78,11 +72,9 @@ public sealed class NotificationsController : ControllerBase
     public async Task<IActionResult> PatchPreferences(
         [FromBody] PatchNotificationPreferencesRequest request,
         [FromServices] IPatchNotificationPreferencesHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
-
         var result = await handler.HandleAsync(userId, request, ct);
         return Ok(result);
     }
@@ -95,11 +87,9 @@ public sealed class NotificationsController : ControllerBase
         [FromServices] IGetInboxHandler handler,
         [FromQuery] int? limit,
         [FromQuery] int? offset,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
-
         var result = await handler.HandleAsync(userId, limit, offset, ct);
         return Ok(result);
     }
@@ -110,11 +100,9 @@ public sealed class NotificationsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetUnreadCount(
         [FromServices] IGetUnreadCountHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
-
         var result = await handler.HandleAsync(userId, ct);
         return Ok(result);
     }
@@ -126,11 +114,9 @@ public sealed class NotificationsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> MarkAllRead(
         [FromServices] IMarkAllReadHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
-
         await handler.HandleAsync(userId, ct);
         return NoContent();
     }
@@ -143,11 +129,9 @@ public sealed class NotificationsController : ControllerBase
     public async Task<IActionResult> MarkOneRead(
         string id,
         [FromServices] IMarkOneReadHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
-
         await handler.HandleAsync(userId, id, ct);
         return NoContent();
     }

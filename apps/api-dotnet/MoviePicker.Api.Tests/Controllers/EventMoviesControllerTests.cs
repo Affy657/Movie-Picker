@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
-using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AddMovie;
 using MoviePicker.Api.Application.UseCases.DeleteMovie;
 using MoviePicker.Api.Application.UseCases.DeleteMoviePitchNote;
@@ -62,10 +61,8 @@ public sealed class EventMoviesControllerTests
     public async Task Add_ReturnsCreated_UsingCurrentUser()
     {
         var handler = new Mock<IAddMovieHandler>();
-        var currentUser = new Mock<ICurrentUserAccessor>();
-        currentUser.Setup(c => c.GetUserId()).Returns("u1");
 
-        var result = await Controller().Add("e", null!, handler.Object, currentUser.Object, CancellationToken.None);
+        var result = await Controller().Add("e", null!, handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<CreatedResult>(result);
         handler.Verify(h => h.HandleAsync("e", It.IsAny<AddMovieRequest>(), "u1", It.IsAny<CancellationToken>()), Times.Once);
@@ -77,10 +74,10 @@ public sealed class EventMoviesControllerTests
         var handler = new Mock<IDeleteMovieHandler>();
         var body = new DeleteMovieRequest { ParticipantId = "participant-000000000001" };
 
-        var result = await Controller().Delete("e", "m1", body, handler.Object, CancellationToken.None);
+        var result = await Controller().Delete("e", "m1", body, handler.Object, "u1", CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
-        handler.Verify(h => h.HandleAsync("e", "m1", "participant-000000000001", It.IsAny<CancellationToken>()), Times.Once);
+        handler.Verify(h => h.HandleAsync("u1", "e", "m1", "participant-000000000001", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

@@ -52,20 +52,6 @@ public sealed class PublicListsControllerTests
     }
 
     [Fact]
-    public async Task Copy_WithoutAUser_IsUnauthorized_AndCallsNoHandler()
-    {
-        var result = await _sut.Copy(
-            "lea",
-            "l1",
-            new CopySavedListRequest { Name = "Mon Hitchcock" },
-            Mock.Of<ICopyPublicListHandler>(MockBehavior.Strict),
-            Viewer(null).Object,
-            CancellationToken.None);
-
-        Assert.IsType<UnauthorizedResult>(result);
-    }
-
-    [Fact]
     public async Task Copy_AnswersTheCreatedList()
     {
         var request = new CopySavedListRequest { Name = "Mon Hitchcock" };
@@ -73,7 +59,7 @@ public sealed class PublicListsControllerTests
         var handler = new Mock<ICopyPublicListHandler>();
         handler.Setup(h => h.HandleAsync("u1", "lea", "l1", request, It.IsAny<CancellationToken>())).ReturnsAsync(list);
 
-        var result = await _sut.Copy("lea", "l1", request, handler.Object, Viewer("u1").Object, CancellationToken.None);
+        var result = await _sut.Copy("lea", "l1", request, handler.Object, "u1", CancellationToken.None);
 
         Assert.Same(list, Assert.IsType<CreatedResult>(result).Value);
     }
