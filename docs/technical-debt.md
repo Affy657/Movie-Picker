@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-105`.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-106`.
 5. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
 7. **Contraintes** (ce qui casse en silence si on y touche) et **Impasses** (essayé, mesuré, sans gain), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
@@ -622,6 +622,15 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - verify: `grep -rn "isHost == null" apps/web/src/features/events`
 - fix: l'hôte dans `nightRules.ts` (aligner le comportement demande de vérifier le cas d'un ancien client sans `isHost`) ; la bascule dans `useNightMovieActions` ; une seule invalidation ; libellés toujours passés par la page
 - fini-quand: chaque règle d'un film en soirée n'a qu'une définition
+
+## DEBT-105 la liste des abonnés et des abonnements bascule encore elle-même entre feuille et modale
+
+- state: agent
+- impact: `FollowListModal` garde sa bascule `useIsMobile` entre `Sheet` et `Modal`, avec sa barre d'onglets et sa croix recopiées, parce que `ResponsiveDialog` ne sait pas mettre des onglets à la place du titre sur grand écran ; la version de l'audit du 2026-11-18 qui le faisait a croisé la refonte des menus et fenêtres de la 1.15.4 et n'a pas été gardée
+- ou: `apps/web/src/features/profile/components/FollowListModal.tsx`, `apps/web/src/shared/components/ResponsiveDialog.tsx`
+- verify: `grep -n "useIsMobile" apps/web/src/features/profile/components/FollowListModal.tsx`
+- fix: une prop `tabs` sur `ResponsiveDialog`, bâtie sur `ModalBody` et la barre de titre de `Modal`, puis `FollowListModal` passe par elle
+- fini-quand: `FollowListModal` n'importe plus ni `Sheet` ni `Modal`
 
 ---
 
