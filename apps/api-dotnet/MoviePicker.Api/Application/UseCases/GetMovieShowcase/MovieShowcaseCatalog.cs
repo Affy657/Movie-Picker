@@ -1,4 +1,5 @@
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 
 namespace MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 
@@ -94,7 +95,7 @@ public static class MovieShowcaseCatalog
         if (string.IsNullOrWhiteSpace(provider) || !ProviderIds.TryGetValue(provider.Trim(), out var id))
             return null;
 
-        var watchRegion = string.IsNullOrWhiteSpace(region) ? "FR" : region.Trim().ToUpperInvariant();
+        var watchRegion = WatchRegion.Of(region);
         return new TmdbDiscoveryCriteria(
             VoteCountMin: 100,
             WatchProviderIds: [id],

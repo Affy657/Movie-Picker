@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.DTOs;
@@ -13,7 +14,7 @@ public sealed class MovieSearchListResponse
 {
     public IReadOnlyList<MovieSearchItemResponse> Items { get; init; } = Array.Empty<MovieSearchItemResponse>();
 
-    public string WatchProvidersRegion { get; init; } = "FR";
+    public string WatchProvidersRegion { get; init; } = MoviePickerOptions.DefaultWatchProvidersRegion;
 
     public string Disclaimer { get; init; } = string.Empty;
     public string TmdbAttributionUrl { get; init; } = "https://www.themoviedb.org/";

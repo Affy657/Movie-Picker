@@ -2,6 +2,7 @@ using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -60,9 +61,7 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
             throw Errors.SearchUnavailable();
         }
 
-        var region = string.IsNullOrWhiteSpace(_options.TmdbWatchProvidersRegion)
-            ? "FR"
-            : _options.TmdbWatchProvidersRegion.Trim().ToUpperInvariant();
+        var region = WatchRegion.Of(_options.TmdbWatchProvidersRegion);
         var maxLookups = Math.Clamp(_options.TmdbSearchMaxWatchProviderLookups, 0, 20);
 
         var hasTextQuery = !string.IsNullOrWhiteSpace(query);

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -173,9 +174,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
         if (count == 0 || items.Count == 0)
             return new CacheLoad<IReadOnlyList<MovieShowcaseItemResponse>>(items, IsComplete: true);
 
-        var region = string.IsNullOrWhiteSpace(_options.TmdbWatchProvidersRegion)
-            ? "FR"
-            : _options.TmdbWatchProvidersRegion.Trim().ToUpperInvariant();
+        var region = WatchRegion.Of(_options.TmdbWatchProvidersRegion);
         var parallelism = Math.Clamp(_options.TmdbListEnrichmentMaxParallelism, 1, 16);
         var head = items.Take(count).ToList();
         var runtimes = new ConcurrentDictionary<(int, MovieMediaType), int?>();

@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
@@ -93,9 +94,7 @@ internal static class WatchedMoviesFacts
         if (keys.Count == 0 || !options.HasTmdbCredentials)
             return new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>();
 
-        var region = string.IsNullOrWhiteSpace(options.TmdbWatchProvidersRegion)
-            ? "FR"
-            : options.TmdbWatchProvidersRegion.Trim().ToUpperInvariant();
+        var region = WatchRegion.Of(options.TmdbWatchProvidersRegion);
         return await tmdb.GetEnrichmentsAsync(keys, region, ct);
     }
 
