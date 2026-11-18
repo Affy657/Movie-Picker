@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { LAYER_RULES, apiLayerViolations } from './architecture/apiLayers.mjs';
+import { APPLICATION_DIR, writeSeqViolations } from './architecture/apiWriteSeq.mjs';
 import { commentViolations } from './architecture/comments.mjs';
 import { FOUNDATION } from './architecture/cssSyntax.mjs';
 import { designTokenViolations } from './architecture/cssValues.mjs';
@@ -92,6 +93,10 @@ function collectViolations(sources) {
     eachPath(underDirectory(api, `${API_PROJECT}${layer}/`), (path, text) =>
       apiLayerViolations(layer, path, text)
     );
+  const application = underDirectory(api, APPLICATION_DIR);
+  violations.push(
+    ...writeSeqViolations(new Map([...application].map(([file, text]) => [rel(file), text])))
+  );
   return { violations, cssModulesExcluded: deadClasses.excluded };
 }
 
@@ -106,7 +111,7 @@ function main() {
     process.exit(1);
   }
   console.log(
-    'Architecture: no violation (comments, API layers, shared/ as a leaf, feature layers, import cycles, design system tokens, colours in TypeScript, hover and reduced motion, icon, avatar and size scales, Modal, Button and ARIA primitives, tap targets, dead CSS classes, :global targets and tokens).'
+    'Architecture: no violation (comments, API layers, writeSeq of the event view, shared/ as a leaf, feature layers, import cycles, design system tokens, colours in TypeScript, hover and reduced motion, icon, avatar and size scales, Modal, Button and ARIA primitives, tap targets, dead CSS classes, :global targets and tokens).'
   );
   if (cssModulesExcluded.length > 0)
     console.log(
