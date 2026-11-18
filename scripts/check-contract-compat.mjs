@@ -167,11 +167,23 @@ export function latestReleaseTag(lsRemoteOutput) {
   return versions.length > 0 ? `v${versions[0].join('.')}` : null;
 }
 
+export function tagFetchArgs(ref, shallow) {
+  return [
+    'fetch',
+    '--no-tags',
+    '--quiet',
+    ...(shallow ? ['--depth=1'] : []),
+    'origin',
+    `refs/tags/${ref}:refs/tags/${ref}`,
+  ];
+}
+
 function publishedContract(ref) {
   try {
     git(['rev-parse', '--verify', '--quiet', `${ref}^{commit}`]);
   } catch {
-    git(['fetch', '--no-tags', '--quiet', 'origin', `refs/tags/${ref}:refs/tags/${ref}`]);
+    const shallow = git(['rev-parse', '--is-shallow-repository']).trim() === 'true';
+    git(tagFetchArgs(ref, shallow));
   }
   return git(['show', `${ref}:${CONTRACT}`]);
 }

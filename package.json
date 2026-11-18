@@ -18,7 +18,7 @@
     "dev:full:b": "concurrently -n web-b,api-b -c magenta,yellow \"pnpm run dev:web:b\" \"pnpm run dev:api-dotnet:b\"",
     "lint": "turbo run lint && pnpm run lint:eslint",
     "lint:eslint": "eslint \"apps/web/src/**/*.{ts,tsx}\"",
-    "check:static": "pnpm run check:architecture && pnpm run test:scripts && pnpm run lint && pnpm run format:check && pnpm run check:unused",
+    "check:static": "pnpm run check:architecture && pnpm run test:scripts && pnpm run check:contract-compat && pnpm run lint && pnpm run format:check && pnpm run check:unused",
     "check:architecture": "node scripts/check-architecture.mjs",
     "check:workflows": "node scripts/check-workflows.mjs",
     "check:terraform": "node scripts/check-terraform.mjs",

@@ -1,6 +1,11 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { findBreakingChanges, latestReleaseTag, parseContract } from './check-contract-compat.mjs';
+import {
+  findBreakingChanges,
+  latestReleaseTag,
+  parseContract,
+  tagFetchArgs,
+} from './check-contract-compat.mjs';
 
 function json(schema) {
   return `{ headers: { [name: string]: unknown }; content: { "application/json": components["schemas"]["${schema}"] } }`;
@@ -154,5 +159,28 @@ describe('latestReleaseTag', () => {
 
   it('returns null when origin has no release tag', () => {
     assert.equal(latestReleaseTag(''), null);
+  });
+});
+
+describe('tagFetchArgs', () => {
+  it('fetches only the tagged commit in the shallow checkout of the CI', () => {
+    assert.deepEqual(tagFetchArgs('v1.16.0', true), [
+      'fetch',
+      '--no-tags',
+      '--quiet',
+      '--depth=1',
+      'origin',
+      'refs/tags/v1.16.0:refs/tags/v1.16.0',
+    ]);
+  });
+
+  it('never makes a full clone shallow', () => {
+    assert.deepEqual(tagFetchArgs('v1.16.0', false), [
+      'fetch',
+      '--no-tags',
+      '--quiet',
+      'origin',
+      'refs/tags/v1.16.0:refs/tags/v1.16.0',
+    ]);
   });
 });
