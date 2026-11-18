@@ -95,9 +95,10 @@ public sealed class EventMoviesController : ControllerBase
         string movieId,
         [FromBody] VoteRequest request,
         [FromServices] IVoteMovieHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var vote = await handler.HandleAsync(idOrSlug, movieId, request, ct);
+        var vote = await handler.HandleAsync(userId, idOrSlug, movieId, request, ct);
         return Ok(vote);
     }
 
@@ -113,11 +114,12 @@ public sealed class EventMoviesController : ControllerBase
         string movieId,
         [FromQuery] string participantId,
         [FromServices] IClearMovieVoteHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(participantId))
             throw Errors.ParticipantIdRequired();
-        await handler.HandleAsync(idOrSlug, movieId, participantId, ct);
+        await handler.HandleAsync(userId, idOrSlug, movieId, participantId, ct);
         return NoContent();
     }
 

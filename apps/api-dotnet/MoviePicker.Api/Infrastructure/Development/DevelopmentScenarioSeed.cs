@@ -2377,7 +2377,7 @@ internal static class DevelopmentScenarioSeed
     {
         ActAs(httpContext, callerUserId);
         await vote
-            .HandleAsync(slug, movieId, new VoteRequest { ParticipantId = participantId, Value = value }, ct)
+            .HandleAsync(callerUserId, slug, movieId, new VoteRequest { ParticipantId = participantId, Value = value }, ct)
             .ConfigureAwait(false);
     }
 

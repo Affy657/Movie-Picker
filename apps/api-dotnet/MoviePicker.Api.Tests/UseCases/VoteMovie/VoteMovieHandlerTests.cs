@@ -17,7 +17,6 @@ public sealed class VoteMovieHandlerTests
     private readonly Mock<IMovieRepository> _movieRepo;
     private readonly Mock<IParticipantRepository> _participantRepo;
     private readonly Mock<IVoteRepository> _voteRepo;
-    private readonly Mock<ICurrentUserAccessor> _currentUser;
     private readonly RecordingUnitOfWork _unitOfWork = new();
     private readonly VoteMovieHandler _sut;
 
@@ -30,9 +29,7 @@ public sealed class VoteMovieHandlerTests
         _movieRepo = new Mock<IMovieRepository>();
         _participantRepo = new Mock<IParticipantRepository>();
         _voteRepo = new Mock<IVoteRepository>();
-        _currentUser = new Mock<ICurrentUserAccessor>();
-        _currentUser.Setup(u => u.GetUserId()).Returns(OwnerUserId);
-        _sut = new VoteMovieHandler(_eventRepo.Object, _movieRepo.Object, _participantRepo.Object, _voteRepo.Object, _currentUser.Object, _unitOfWork, TimeProvider.System);
+        _sut = new VoteMovieHandler(_eventRepo.Object, _movieRepo.Object, _participantRepo.Object, _voteRepo.Object, _unitOfWork, TimeProvider.System);
     }
 
     [Fact]
@@ -41,7 +38,7 @@ public sealed class VoteMovieHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
         var request = new VoteRequest { ParticipantId = "p123456789012345678901234", Value = 1 };
 
-        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad", "mov1", request));
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(OwnerUserId, "bad", "mov1", request));
         Assert.Equal(ErrorCodes.EventNotFound, ex.Reason);
     }
 
@@ -52,7 +49,7 @@ public sealed class VoteMovieHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         var request = new VoteRequest { ParticipantId = "p123456789012345678901234", Value = 1 };
 
-        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", "mov1", request));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync(OwnerUserId, "evt1", "mov1", request));
         Assert.Equal(ErrorCodes.EventFinished, ex.Reason);
     }
 
@@ -64,7 +61,7 @@ public sealed class VoteMovieHandlerTests
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync((Movie?)null);
         var request = new VoteRequest { ParticipantId = "p123456789012345678901234", Value = 1 };
 
-        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("evt1", "mov1", request));
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(OwnerUserId, "evt1", "mov1", request));
         Assert.Equal(ErrorCodes.MovieNotFound, ex.Reason);
     }
 
@@ -78,7 +75,7 @@ public sealed class VoteMovieHandlerTests
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync("p123456789012345678901234", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync((Participant?)null);
         var request = new VoteRequest { ParticipantId = "p123456789012345678901234", Value = 1 };
 
-        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", "mov1", request));
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(OwnerUserId, "evt1", "mov1", request));
         Assert.Equal(ErrorCodes.InvalidParticipant, ex.Reason);
     }
 
@@ -95,7 +92,7 @@ public sealed class VoteMovieHandlerTests
         _voteRepo.Setup(r => r.UpsertAsync(It.IsAny<Vote>(), It.IsAny<CancellationToken>())).ReturnsAsync(savedVote);
         var request = new VoteRequest { ParticipantId = participant.Id, Value = 1 };
 
-        var result = await _sut.HandleAsync("evt1", "mov1", request);
+        var result = await _sut.HandleAsync(OwnerUserId, "evt1", "mov1", request);
 
         Assert.Equal("v1", result.Id);
         Assert.Equal(1, result.Value);
@@ -117,7 +114,7 @@ public sealed class VoteMovieHandlerTests
         _voteRepo.Setup(r => r.UpsertAsync(It.IsAny<Vote>(), It.IsAny<CancellationToken>())).ReturnsAsync(savedVote);
         var request = new VoteRequest { ParticipantId = participant.Id, Value = -1 };
 
-        var result = await _sut.HandleAsync("evt1", "mov1", request);
+        var result = await _sut.HandleAsync(OwnerUserId, "evt1", "mov1", request);
 
         Assert.Equal(-1, result.Value);
     }
@@ -149,7 +146,7 @@ public sealed class VoteMovieHandlerTests
         GivenVotableMovie(evt, movie, participant, new Dictionary<string, int> { ["mov1"] = 1, ["mov2"] = -1 });
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() =>
-            _sut.HandleAsync("evt1", "mov3", new VoteRequest { ParticipantId = participant.Id, Value = 1 }));
+            _sut.HandleAsync(OwnerUserId, "evt1", "mov3", new VoteRequest { ParticipantId = participant.Id, Value = 1 }));
 
         Assert.Equal(ErrorCodes.VoteLimitReached, ex.Reason);
         Assert.Equal(2, ex.Parameters!["max"]);
@@ -174,7 +171,7 @@ public sealed class VoteMovieHandlerTests
             .Callback(() => steps.Add(_unitOfWork.IsExecuting ? "write" : "write-outside"))
             .ReturnsAsync((Vote v, CancellationToken _) => v with { Id = "saved" });
 
-        await _sut.HandleAsync("evt1", "mov2", new VoteRequest { ParticipantId = participant.Id, Value = 1 });
+        await _sut.HandleAsync(OwnerUserId, "evt1", "mov2", new VoteRequest { ParticipantId = participant.Id, Value = 1 });
 
         Assert.Equal(["lock", "count", "write"], steps);
         Assert.Equal(1, _unitOfWork.Executions);
@@ -203,7 +200,7 @@ public sealed class VoteMovieHandlerTests
             .Callback(() => Step("write"))
             .ReturnsAsync((Vote v, CancellationToken _) => v with { Id = "saved" });
 
-        await _sut.HandleAsync("evt1", "mov1", new VoteRequest { ParticipantId = participant.Id, Value = 1 });
+        await _sut.HandleAsync(OwnerUserId, "evt1", "mov1", new VoteRequest { ParticipantId = participant.Id, Value = 1 });
 
         Assert.Equal(["lock", "movie", "participant", "write"], steps);
         Assert.Equal(1, _unitOfWork.Executions);
@@ -224,7 +221,7 @@ public sealed class VoteMovieHandlerTests
             .ReturnsAsync((Movie?)null);
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() =>
-            _sut.HandleAsync("evt1", "mov1", new VoteRequest { ParticipantId = participant.Id, Value = 1 }));
+            _sut.HandleAsync(OwnerUserId, "evt1", "mov1", new VoteRequest { ParticipantId = participant.Id, Value = 1 }));
 
         Assert.Equal(ErrorCodes.MovieNotFound, ex.Reason);
         _voteRepo.Verify(r => r.UpsertAsync(It.IsAny<Vote>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -244,7 +241,7 @@ public sealed class VoteMovieHandlerTests
             .ReturnsAsync((Participant?)null);
 
         var ex = await Assert.ThrowsAsync<BadRequestException>(() =>
-            _sut.HandleAsync("evt1", "mov1", new VoteRequest { ParticipantId = participant.Id, Value = 1 }));
+            _sut.HandleAsync(OwnerUserId, "evt1", "mov1", new VoteRequest { ParticipantId = participant.Id, Value = 1 }));
 
         Assert.Equal(ErrorCodes.InvalidParticipant, ex.Reason);
         _voteRepo.Verify(r => r.UpsertAsync(It.IsAny<Vote>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -258,7 +255,7 @@ public sealed class VoteMovieHandlerTests
         var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         GivenVotableMovie(evt, movie, participant, new Dictionary<string, int> { ["mov1"] = 1, ["mov2"] = -1 });
 
-        var result = await _sut.HandleAsync("evt1", "mov2", new VoteRequest { ParticipantId = participant.Id, Value = 1 });
+        var result = await _sut.HandleAsync(OwnerUserId, "evt1", "mov2", new VoteRequest { ParticipantId = participant.Id, Value = 1 });
 
         Assert.Equal(1, result.Value);
     }
@@ -271,7 +268,7 @@ public sealed class VoteMovieHandlerTests
         var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         GivenVotableMovie(evt, movie, participant, new Dictionary<string, int> { ["mov1"] = 1 });
 
-        var result = await _sut.HandleAsync("evt1", "mov2", new VoteRequest { ParticipantId = participant.Id, Value = -1 });
+        var result = await _sut.HandleAsync(OwnerUserId, "evt1", "mov2", new VoteRequest { ParticipantId = participant.Id, Value = -1 });
 
         Assert.Equal(-1, result.Value);
     }
@@ -284,7 +281,7 @@ public sealed class VoteMovieHandlerTests
         var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         GivenVotableMovie(evt, movie, participant, new Dictionary<string, int>());
 
-        await _sut.HandleAsync("evt1", "mov1", new VoteRequest { ParticipantId = participant.Id, Value = 1 });
+        await _sut.HandleAsync(OwnerUserId, "evt1", "mov1", new VoteRequest { ParticipantId = participant.Id, Value = 1 });
 
         _voteRepo.Verify(r => r.GetParticipantVotesByEventAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -300,7 +297,7 @@ public sealed class VoteMovieHandlerTests
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(victim.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(victim);
         var request = new VoteRequest { ParticipantId = victim.Id, Value = 1 };
 
-        await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1", "mov1", request));
+        await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync(OwnerUserId, "evt1", "mov1", request));
         _voteRepo.Verify(r => r.UpsertAsync(It.IsAny<Vote>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

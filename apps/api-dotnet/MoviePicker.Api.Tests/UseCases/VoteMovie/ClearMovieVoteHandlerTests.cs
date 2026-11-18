@@ -16,18 +16,15 @@ public sealed class ClearMovieVoteHandlerTests
     private readonly Mock<IMovieRepository> _movieRepo = new();
     private readonly Mock<IParticipantRepository> _participantRepo = new();
     private readonly Mock<IVoteRepository> _voteRepo = new();
-    private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly ClearMovieVoteHandler _sut;
 
     public ClearMovieVoteHandlerTests()
     {
-        _currentUser.Setup(u => u.GetUserId()).Returns(OwnerUserId);
         _sut = new ClearMovieVoteHandler(
             _eventRepo.Object,
             _movieRepo.Object,
             _participantRepo.Object,
             _voteRepo.Object,
-            _currentUser.Object,
             TimeProvider.System);
     }
 
@@ -39,7 +36,7 @@ public sealed class ClearMovieVoteHandlerTests
     {
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
-        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad", "mov1", "p123"));
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(OwnerUserId, "bad", "mov1", "p123"));
         Assert.Equal(ErrorCodes.EventNotFound, ex.Reason);
     }
 
@@ -59,7 +56,7 @@ public sealed class ClearMovieVoteHandlerTests
         };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
-        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", "mov1", "p123"));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync(OwnerUserId, "evt1", "mov1", "p123"));
         Assert.Equal(ErrorCodes.EventFinished, ex.Reason);
     }
 
@@ -70,7 +67,7 @@ public sealed class ClearMovieVoteHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync((Movie?)null);
 
-        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("evt1", "mov1", "p123"));
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(OwnerUserId, "evt1", "mov1", "p123"));
         Assert.Equal(ErrorCodes.MovieNotFound, ex.Reason);
     }
 
@@ -83,7 +80,7 @@ public sealed class ClearMovieVoteHandlerTests
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync("p123", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync((Participant?)null);
 
-        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", "mov1", "p123"));
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(OwnerUserId, "evt1", "mov1", "p123"));
         Assert.Equal(ErrorCodes.InvalidParticipant, ex.Reason);
     }
 
@@ -98,7 +95,7 @@ public sealed class ClearMovieVoteHandlerTests
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
         _voteRepo.Setup(r => r.DeleteByMovieAndParticipantAsync(movie.Id, participant.Id, It.IsAny<CancellationToken>())).ReturnsAsync(false);
 
-        await _sut.HandleAsync("evt1", "mov1", participant.Id);
+        await _sut.HandleAsync(OwnerUserId, "evt1", "mov1", participant.Id);
 
         _voteRepo.Verify(
             r => r.DeleteByMovieAndParticipantAsync(movie.Id, participant.Id, It.IsAny<CancellationToken>()),
@@ -116,7 +113,7 @@ public sealed class ClearMovieVoteHandlerTests
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
         _voteRepo.Setup(r => r.DeleteByMovieAndParticipantAsync(movie.Id, participant.Id, It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
-        await _sut.HandleAsync("evt1", "mov1", participant.Id);
+        await _sut.HandleAsync(OwnerUserId, "evt1", "mov1", participant.Id);
 
         _voteRepo.Verify(r => r.DeleteByMovieAndParticipantAsync(movie.Id, participant.Id, It.IsAny<CancellationToken>()), Times.Once);
         _eventRepo.Verify(r => r.MarkChangedAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
