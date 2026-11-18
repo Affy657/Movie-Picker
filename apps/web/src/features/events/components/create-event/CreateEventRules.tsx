@@ -7,73 +7,14 @@ import { useTranslation } from '@/shared/i18n';
 import type { CreateEventFieldErrors } from '@/features/events/lib/createEventValidation';
 import type { TemplateFormFields } from '@/features/events/lib/eventTemplateDraft';
 import {
-  DEFAULT_PARTICIPANT_LIMIT,
-  DEFAULT_PROPOSAL_LIMIT,
-  DEFAULT_VOTE_LIMIT,
-  MAX_EVENT_PARTICIPANTS,
-  MAX_PROPOSALS_PER_PARTICIPANT,
-  MAX_WINNERS_PER_EVENT,
-  type WheelMode,
-} from '@/features/events/types';
+  EVENT_LIMIT_KINDS,
+  EVENT_LIMITS,
+  eventLimitCopy,
+  eventLimitInputId,
+  type EventLimitKind,
+} from '@/features/events/lib/eventLimits';
+import { MAX_WINNERS_PER_EVENT, type WheelMode } from '@/features/events/types';
 import styles from './CreateEventDialog.module.css';
-
-export const RULE_INPUT_IDS = {
-  participants: 'create-max-participants',
-  proposals: 'create-max-proposals',
-  votes: 'create-max-votes',
-} as const;
-
-type LimitKey = 'participant' | 'proposal' | 'vote';
-
-const LIMITS: Record<
-  LimitKey,
-  {
-    enabledField: 'participantLimitEnabled' | 'proposalLimitEnabled' | 'voteLimitEnabled';
-    valueField: 'maxParticipants' | 'maxProposals' | 'maxVotes';
-    errorField: 'maxParticipants' | 'maxProposals' | 'maxVotes';
-    inputId: string;
-    fallback: number;
-    max?: number;
-    labelKey:
-      | 'events.create.rules.participants'
-      | 'events.create.rules.proposals'
-      | 'events.create.rules.votes';
-    hintKey:
-      | 'events.create.rules.participantsHint'
-      | 'events.create.rules.proposalsHint'
-      | 'events.create.rules.votesHint';
-  }
-> = {
-  participant: {
-    enabledField: 'participantLimitEnabled',
-    valueField: 'maxParticipants',
-    errorField: 'maxParticipants',
-    inputId: RULE_INPUT_IDS.participants,
-    fallback: DEFAULT_PARTICIPANT_LIMIT,
-    max: MAX_EVENT_PARTICIPANTS,
-    labelKey: 'events.create.rules.participants',
-    hintKey: 'events.create.rules.participantsHint',
-  },
-  proposal: {
-    enabledField: 'proposalLimitEnabled',
-    valueField: 'maxProposals',
-    errorField: 'maxProposals',
-    inputId: RULE_INPUT_IDS.proposals,
-    fallback: DEFAULT_PROPOSAL_LIMIT,
-    max: MAX_PROPOSALS_PER_PARTICIPANT,
-    labelKey: 'events.create.rules.proposals',
-    hintKey: 'events.create.rules.proposalsHint',
-  },
-  vote: {
-    enabledField: 'voteLimitEnabled',
-    valueField: 'maxVotes',
-    errorField: 'maxVotes',
-    inputId: RULE_INPUT_IDS.votes,
-    fallback: DEFAULT_VOTE_LIMIT,
-    labelKey: 'events.create.rules.votes',
-    hintKey: 'events.create.rules.votesHint',
-  },
-};
 
 type CreateEventRulesProps = {
   fields: TemplateFormFields;
@@ -90,16 +31,17 @@ export default function CreateEventRules({
   const drawLabelId = useId();
   const unlimitedLabel = t('events.create.rules.unlimited');
 
-  const limitRow = (key: LimitKey) => {
-    const limit = LIMITS[key];
+  const limitRow = (kind: EventLimitKind) => {
+    const limit = EVENT_LIMITS[kind];
+    const copy = eventLimitCopy(kind, t);
     const enabled = fields[limit.enabledField];
     return (
       <Field
-        key={key}
-        label={t(limit.labelKey)}
-        hint={t(limit.hintKey)}
-        error={errors[limit.errorField]}
-        htmlFor={limit.inputId}
+        key={kind}
+        label={copy.label}
+        hint={copy.hint}
+        error={errors[limit.valueField]}
+        htmlFor={eventLimitInputId('create', kind)}
         className={styles.ruleRow}
       >
         {({ id, describedBy, invalid }) => (
@@ -132,9 +74,7 @@ export default function CreateEventRules({
 
   return (
     <div className={styles.rules}>
-      {limitRow('participant')}
-      {limitRow('proposal')}
-      {limitRow('vote')}
+      {EVENT_LIMIT_KINDS.map(limitRow)}
       <Field
         label={t('events.create.rules.winners')}
         hint={t('events.create.rules.winnersHint')}
