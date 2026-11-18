@@ -8,7 +8,7 @@ internal static class RatedParticipation
 {
     public static async Task<Participant> ResolveOwnAsync(
         IParticipantRepository participantRepository,
-        ICurrentUserAccessor currentUserAccessor,
+        string userId,
         Event evt,
         string participantId,
         CancellationToken ct)
@@ -16,8 +16,7 @@ internal static class RatedParticipation
         var participant = await participantRepository.FindByIdAndEventIdAsync(participantId, evt.Id, ct)
             ?? throw Errors.InvalidParticipant();
 
-        var currentUserId = currentUserAccessor.GetUserId();
-        if (string.IsNullOrEmpty(currentUserId) || participant.UserId != currentUserId)
+        if (participant.UserId != userId)
             throw Errors.RatingOwnParticipationOnly();
 
         return participant;

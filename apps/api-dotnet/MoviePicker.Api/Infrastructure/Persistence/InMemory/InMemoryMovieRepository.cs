@@ -144,26 +144,27 @@ public sealed class InMemoryMovieRepository : IMovieRepository
         return Task.FromResult(created);
     }
 
-    public async Task<long> DeleteByIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
+    public Task<long> DeleteByIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
     {
         long deleted = 0;
         foreach (var movieId in movieIds)
         {
-            if (!_byId.ContainsKey(movieId))
-                continue;
-            await DeleteAsync(movieId, ct);
-            deleted++;
+            if (Remove(movieId))
+                deleted++;
         }
-        return deleted;
+        return Task.FromResult(deleted);
     }
 
-    public Task DeleteAsync(string movieId, CancellationToken ct = default)
+    private bool Remove(string movieId)
     {
-        if (_byId.TryRemove(movieId, out var m) && _byEventId.TryGetValue(m.EventId, out var list))
+        if (!_byId.TryRemove(movieId, out var m))
+            return false;
+
+        if (_byEventId.TryGetValue(m.EventId, out var list))
         {
             lock (list) { list.RemoveAll(x => x.Id == movieId); }
         }
-        return Task.CompletedTask;
+        return true;
     }
 
     public Task UpdatePitchNoteAsync(string movieId, string? pitchNote, CancellationToken ct = default)

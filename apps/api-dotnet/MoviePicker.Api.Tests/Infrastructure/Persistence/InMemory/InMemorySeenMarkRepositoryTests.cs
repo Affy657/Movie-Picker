@@ -50,13 +50,13 @@ public sealed class InMemorySeenMarkRepositoryTests
     }
 
     [Fact]
-    public async Task DeleteByMovieIdAsync_RemovesAllParticipantsForMovie()
+    public async Task DeleteByMovieIdsAsync_RemovesAllParticipantsForThoseMovies()
     {
         await _repo.AddAsync(Mk(movieId: "mov1", participantId: "p1"));
         await _repo.AddAsync(Mk(movieId: "mov1", participantId: "p2"));
         await _repo.AddAsync(Mk(movieId: "mov2", participantId: "p1"));
 
-        await _repo.DeleteByMovieIdAsync("evt1", "mov1");
+        await _repo.DeleteByMovieIdsAsync("evt1", ["mov1"]);
 
         var agg = await _repo.AggregateByMovieIdsAsync("evt1", ["mov1", "mov2"]);
         Assert.False(agg.ContainsKey("mov1"));

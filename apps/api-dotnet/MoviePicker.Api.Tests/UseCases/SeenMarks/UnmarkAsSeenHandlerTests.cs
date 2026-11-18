@@ -16,7 +16,6 @@ public sealed class UnmarkAsSeenHandlerTests
     private readonly Mock<IMovieRepository> _movieRepo;
     private readonly Mock<IParticipantRepository> _participantRepo;
     private readonly Mock<ISeenMarkRepository> _seenMarkRepo;
-    private readonly Mock<ICurrentUserAccessor> _currentUser;
     private readonly UnmarkAsSeenHandler _sut;
 
     private static Event ActiveEvent() =>
@@ -50,9 +49,7 @@ public sealed class UnmarkAsSeenHandlerTests
         _movieRepo = new Mock<IMovieRepository>();
         _participantRepo = new Mock<IParticipantRepository>();
         _seenMarkRepo = new Mock<ISeenMarkRepository>();
-        _currentUser = new Mock<ICurrentUserAccessor>();
-        _currentUser.Setup(u => u.GetUserId()).Returns(OwnerUserId);
-        _sut = new UnmarkAsSeenHandler(_eventRepo.Object, _movieRepo.Object, _participantRepo.Object, _seenMarkRepo.Object, _currentUser.Object, TimeProvider.System);
+        _sut = new UnmarkAsSeenHandler(_eventRepo.Object, _movieRepo.Object, _participantRepo.Object, _seenMarkRepo.Object, TimeProvider.System);
     }
 
     [Fact]
@@ -60,7 +57,7 @@ public sealed class UnmarkAsSeenHandlerTests
     {
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
-        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad", "mov1", "p1"));
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(OwnerUserId, "bad", "mov1", "p1"));
         Assert.Equal(ErrorCodes.EventNotFound, ex.Reason);
     }
 
@@ -70,7 +67,7 @@ public sealed class UnmarkAsSeenHandlerTests
         var evt = new EventEntityBuilder().WithId("evt1").Closed().Build();
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
-        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", "mov1", "p1"));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync(OwnerUserId, "evt1", "mov1", "p1"));
         Assert.Equal(ErrorCodes.EventFinished, ex.Reason);
     }
 
@@ -81,7 +78,7 @@ public sealed class UnmarkAsSeenHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync((Movie?)null);
 
-        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("evt1", "mov1", "p1"));
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(OwnerUserId, "evt1", "mov1", "p1"));
         Assert.Equal(ErrorCodes.MovieNotFound, ex.Reason);
     }
 
@@ -94,7 +91,7 @@ public sealed class UnmarkAsSeenHandlerTests
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync("ghost", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync((Participant?)null);
 
-        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", "mov1", "ghost"));
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(OwnerUserId, "evt1", "mov1", "ghost"));
         Assert.Equal(ErrorCodes.InvalidParticipant, ex.Reason);
     }
 
@@ -111,7 +108,7 @@ public sealed class UnmarkAsSeenHandlerTests
             .Setup(r => r.DeleteAsync(evt.Id, movie.Id, participant.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
-        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("evt1", "mov1", participant.Id));
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(OwnerUserId, "evt1", "mov1", participant.Id));
         Assert.Equal(ErrorCodes.SeenMarkNotFound, ex.Reason);
     }
 
@@ -128,7 +125,7 @@ public sealed class UnmarkAsSeenHandlerTests
             .Setup(r => r.DeleteAsync(evt.Id, movie.Id, participant.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        await _sut.HandleAsync("evt1", "mov1", participant.Id);
+        await _sut.HandleAsync(OwnerUserId, "evt1", "mov1", participant.Id);
 
         _seenMarkRepo.Verify(
             r => r.DeleteAsync(evt.Id, movie.Id, participant.Id, It.IsAny<CancellationToken>()),

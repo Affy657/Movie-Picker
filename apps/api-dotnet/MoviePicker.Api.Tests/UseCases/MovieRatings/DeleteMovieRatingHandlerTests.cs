@@ -17,17 +17,14 @@ public sealed class DeleteMovieRatingHandlerTests
     private readonly Mock<IEventRepository> _eventRepo = new();
     private readonly Mock<IParticipantRepository> _participantRepo = new();
     private readonly Mock<IMovieRatingRepository> _ratingRepo = new();
-    private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly DeleteMovieRatingHandler _sut;
 
     public DeleteMovieRatingHandlerTests()
     {
-        _currentUser.Setup(u => u.GetUserId()).Returns(OwnerUserId);
         _sut = new DeleteMovieRatingHandler(
             _eventRepo.Object,
             _participantRepo.Object,
-            _ratingRepo.Object,
-            _currentUser.Object);
+            _ratingRepo.Object);
     }
 
     private static Event EventWithWinner() =>
@@ -58,7 +55,7 @@ public sealed class DeleteMovieRatingHandlerTests
         var evt = EventWithWinner();
         Arrange(evt, participantUserId: "user-other");
 
-        var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("soiree", WinnerMovieId, ParticipantId));
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync(OwnerUserId, "soiree", WinnerMovieId, ParticipantId));
         Assert.Equal(ErrorCodes.RatingOwnParticipationOnly, ex.Reason);
     }
 
@@ -71,7 +68,7 @@ public sealed class DeleteMovieRatingHandlerTests
             .Setup(r => r.DeleteAsync(evt.Id, WinnerMovieId, ParticipantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
-        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("soiree", WinnerMovieId, ParticipantId));
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(OwnerUserId, "soiree", WinnerMovieId, ParticipantId));
         Assert.Equal(ErrorCodes.RatingNotFound, ex.Reason);
         _eventRepo.Verify(r => r.MarkChangedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -85,7 +82,7 @@ public sealed class DeleteMovieRatingHandlerTests
             .Setup(r => r.DeleteAsync(evt.Id, WinnerMovieId, ParticipantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        await _sut.HandleAsync("soiree", WinnerMovieId, ParticipantId);
+        await _sut.HandleAsync(OwnerUserId, "soiree", WinnerMovieId, ParticipantId);
 
         _eventRepo.Verify(r => r.MarkChangedAsync(evt.Id, It.IsAny<CancellationToken>()), Times.Once);
     }

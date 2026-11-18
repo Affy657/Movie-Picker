@@ -1,6 +1,6 @@
-namespace MoviePicker.Api.Application.UseCases.MovieLists;
+namespace MoviePicker.Api.Application.UseCases.Shared;
 
-public static class MovieListClock
+public static class StorageClock
 {
     public static DateTimeOffset StorageNow(this TimeProvider clock)
     {

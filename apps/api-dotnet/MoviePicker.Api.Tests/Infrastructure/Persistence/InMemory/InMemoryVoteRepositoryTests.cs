@@ -90,12 +90,12 @@ public sealed class InMemoryVoteRepositoryTests
     }
 
     [Fact]
-    public async Task DeleteByMovieIdAsync_RemovesAllVotesForMovie()
+    public async Task DeleteByMovieIdsAsync_RemovesAllVotesForThoseMovies()
     {
         await _repo.UpsertAsync(Mk(movieId: "mov1", participantId: "p1"));
         await _repo.UpsertAsync(Mk(movieId: "mov1", participantId: "p2"));
 
-        await _repo.DeleteByMovieIdAsync("mov1");
+        Assert.Equal(2, await _repo.DeleteByMovieIdsAsync(["mov1"]));
 
         Assert.Equal(0, await _repo.CountByParticipantIdsAsync(["p1", "p2"]));
     }

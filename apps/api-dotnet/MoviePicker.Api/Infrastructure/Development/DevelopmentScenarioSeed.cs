@@ -23,6 +23,7 @@ using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Application.UseCases.RecurringEvents;
 using MoviePicker.Api.Application.UseCases.SavedLists;
 using MoviePicker.Api.Application.UseCases.SeenMarks;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Application.UseCases.VoteMovie;
 using MoviePicker.Api.Application.UseCases.Watched;
 using MoviePicker.Api.Application.UseCases.Watchlist;
@@ -844,12 +845,12 @@ internal static class DevelopmentScenarioSeed
 
         ActAs(httpContext, actors.Dev.Id);
         await markAsSeen
-            .HandleAsync(slug, mAlice.Id, new MarkAsSeenRequest { ParticipantId = devPart }, ct)
+            .HandleAsync(actors.Dev.Id, slug, mAlice.Id, new MarkAsSeenRequest { ParticipantId = devPart }, ct)
             .ConfigureAwait(false);
-        await unmarkAsSeen.HandleAsync(slug, mAlice.Id, devPart, ct).ConfigureAwait(false);
+        await unmarkAsSeen.HandleAsync(actors.Dev.Id, slug, mAlice.Id, devPart, ct).ConfigureAwait(false);
         ActAs(httpContext, actors.Carla.Id);
         await markAsSeen
-            .HandleAsync(slug, mBob.Id, new MarkAsSeenRequest { ParticipantId = carlaPart }, ct)
+            .HandleAsync(actors.Carla.Id, slug, mBob.Id, new MarkAsSeenRequest { ParticipantId = carlaPart }, ct)
             .ConfigureAwait(false);
 
         ActAs(httpContext, actors.Bob.Id);
@@ -2352,6 +2353,7 @@ internal static class DevelopmentScenarioSeed
         CancellationToken ct) =>
         await addMovie
             .HandleAsync(
+                callerUserId,
                 slug,
                 new AddMovieRequest
                 {
@@ -2361,7 +2363,6 @@ internal static class DevelopmentScenarioSeed
                     PosterPath = null,
                     ParticipantId = participantId
                 },
-                callerUserId,
                 ct)
             .ConfigureAwait(false);
 
@@ -2377,7 +2378,7 @@ internal static class DevelopmentScenarioSeed
     {
         ActAs(httpContext, callerUserId);
         await vote
-            .HandleAsync(slug, movieId, new VoteRequest { ParticipantId = participantId, Value = value }, ct)
+            .HandleAsync(callerUserId, slug, movieId, new VoteRequest { ParticipantId = participantId, Value = value }, ct)
             .ConfigureAwait(false);
     }
 

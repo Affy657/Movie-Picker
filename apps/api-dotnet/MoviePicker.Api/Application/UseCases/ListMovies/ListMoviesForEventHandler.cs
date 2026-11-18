@@ -2,7 +2,7 @@ using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Application.UseCases.UserMovies;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 
@@ -161,7 +161,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
     private Task<IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>> BuildEnrichmentMapAsync(
         IReadOnlyList<Movie> movies,
         CancellationToken ct) =>
-        WatchedMoviesFacts.LoadEnrichmentsAsync(movies.Select(m => (m.TmdbId, m.MediaType)), _tmdbMovieSearch, _options, ct);
+        TmdbEnrichments.LoadAsync(movies.Select(m => (m.TmdbId, m.MediaType)), _tmdbMovieSearch, _options, ct);
 
     private static List<string> ResolvePseudos(
         IEnumerable<string> participantIds,

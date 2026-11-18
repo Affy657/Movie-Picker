@@ -4,10 +4,8 @@ using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.Posters;
-using MoviePicker.Api.Application.UseCases.MovieLists;
 using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Application.UseCases.Shared;
-using MoviePicker.Api.Application.UseCases.UserMovies;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -22,7 +20,6 @@ public sealed class AddMovieHandler : IAddMovieHandler
     private readonly IPosterImageStore _posterImageStore;
     private readonly IUserRepository _userRepository;
     private readonly EventAudienceNotifier _audience;
-    private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly ITmdbMovieSearch _tmdb;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<AddMovieHandler> _logger;
@@ -36,7 +33,6 @@ public sealed class AddMovieHandler : IAddMovieHandler
         IPosterImageStore posterImageStore,
         IUserRepository userRepository,
         EventAudienceNotifier audience,
-        ICurrentUserAccessor currentUserAccessor,
         ITmdbMovieSearch tmdb,
         IUnitOfWork unitOfWork,
         ILogger<AddMovieHandler> logger,
@@ -49,7 +45,6 @@ public sealed class AddMovieHandler : IAddMovieHandler
         _posterImageStore = posterImageStore;
         _userRepository = userRepository;
         _audience = audience;
-        _currentUserAccessor = currentUserAccessor;
         _tmdb = tmdb;
         _unitOfWork = unitOfWork;
         _logger = logger;
@@ -57,7 +52,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         _options = options.Value;
     }
 
-    public async Task<MovieWithScoreResponse> HandleAsync(string idOrSlug, AddMovieRequest request, string? callerUserId, CancellationToken ct = default)
+    public async Task<MovieWithScoreResponse> HandleAsync(string userId, string idOrSlug, AddMovieRequest request, CancellationToken ct = default)
     {
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
@@ -73,8 +68,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         if (participant is null)
             throw Errors.InvalidParticipant();
 
-        var currentUserId = callerUserId ?? _currentUserAccessor.GetUserId();
-        if (string.IsNullOrEmpty(currentUserId) || participant.UserId != currentUserId)
+        if (participant.UserId != userId)
             throw Errors.OwnParticipationOnly();
 
         if (await _movieRepository.ExistsByEventAndTmdbIdAsync(evt.Id, request.TmdbId, request.MediaType, ct))
@@ -87,7 +81,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         var now = _clock.StorageNow();
         var pitchNote = string.IsNullOrWhiteSpace(request.PitchNote) ? null : request.PitchNote.Trim();
         var genreIdsTask = FetchGenreIdsBestEffortAsync(request.TmdbId, request.MediaType, request.GenreIds, ct);
-        var proposerUserTask = _userRepository.GetByIdAsync(currentUserId, ct);
+        var proposerUserTask = _userRepository.GetByIdAsync(userId, ct);
         await Task.WhenAll(genreIdsTask, proposerUserTask);
         var genreIds = await genreIdsTask;
         var proposer = await proposerUserTask;
@@ -113,7 +107,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         await _audience.NotifyParticipantsAsync(MovieAddedMessage(evt, created.Title, proposer), participant.UserId, CancellationToken.None);
 
         var key = (created.TmdbId, created.MediaType);
-        var enrichments = await WatchedMoviesFacts.LoadEnrichmentsAsync([key], _tmdb, _options, ct);
+        var enrichments = await TmdbEnrichments.LoadAsync([key], _tmdb, _options, ct);
         return MovieWithScoreResponse.From(
             created,
             _posterImageStore,

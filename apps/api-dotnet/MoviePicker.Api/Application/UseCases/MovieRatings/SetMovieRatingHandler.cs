@@ -11,7 +11,6 @@ public sealed class SetMovieRatingHandler : ISetMovieRatingHandler
     private readonly IMovieRepository _movieRepository;
     private readonly IParticipantRepository _participantRepository;
     private readonly IMovieRatingRepository _ratingRepository;
-    private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly TimeProvider _clock;
 
     public SetMovieRatingHandler(
@@ -19,18 +18,17 @@ public sealed class SetMovieRatingHandler : ISetMovieRatingHandler
         IMovieRepository movieRepository,
         IParticipantRepository participantRepository,
         IMovieRatingRepository ratingRepository,
-        ICurrentUserAccessor currentUserAccessor,
         TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _participantRepository = participantRepository;
         _ratingRepository = ratingRepository;
-        _currentUserAccessor = currentUserAccessor;
         _clock = clock;
     }
 
     public async Task<MovieRatingResponse> HandleAsync(
+        string userId,
         string idOrSlug,
         string movieId,
         SetMovieRatingRequest request,
@@ -47,7 +45,7 @@ public sealed class SetMovieRatingHandler : ISetMovieRatingHandler
             throw Errors.RatingOnlyChosenMovie();
 
         var participant = await RatedParticipation.ResolveOwnAsync(
-            _participantRepository, _currentUserAccessor, evt, request.ParticipantId, ct);
+            _participantRepository, userId, evt, request.ParticipantId, ct);
 
         if (!MovieRating.IsValidValue(request.Value))
             throw Errors.RatingOutOfRange();

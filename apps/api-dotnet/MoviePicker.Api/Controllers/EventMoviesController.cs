@@ -60,7 +60,7 @@ public sealed class EventMoviesController : ControllerBase
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var movie = await handler.HandleAsync(idOrSlug, request, userId, ct);
+        var movie = await handler.HandleAsync(userId, idOrSlug, request, ct);
         return Created(string.Empty, movie);
     }
 
@@ -95,9 +95,10 @@ public sealed class EventMoviesController : ControllerBase
         string movieId,
         [FromBody] VoteRequest request,
         [FromServices] IVoteMovieHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var vote = await handler.HandleAsync(idOrSlug, movieId, request, ct);
+        var vote = await handler.HandleAsync(userId, idOrSlug, movieId, request, ct);
         return Ok(vote);
     }
 
@@ -113,11 +114,12 @@ public sealed class EventMoviesController : ControllerBase
         string movieId,
         [FromQuery] string participantId,
         [FromServices] IClearMovieVoteHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(participantId))
             throw Errors.ParticipantIdRequired();
-        await handler.HandleAsync(idOrSlug, movieId, participantId, ct);
+        await handler.HandleAsync(userId, idOrSlug, movieId, participantId, ct);
         return NoContent();
     }
 
@@ -133,9 +135,10 @@ public sealed class EventMoviesController : ControllerBase
         string movieId,
         [FromBody] MarkAsSeenRequest request,
         [FromServices] IMarkAsSeenHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var res = await handler.HandleAsync(idOrSlug, movieId, request, ct);
+        var res = await handler.HandleAsync(userId, idOrSlug, movieId, request, ct);
         return Ok(res);
     }
 
@@ -152,9 +155,10 @@ public sealed class EventMoviesController : ControllerBase
         string movieId,
         [FromBody] SetMoviePitchNoteRequest request,
         [FromServices] ISetMoviePitchNoteHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        await handler.HandleAsync(idOrSlug, movieId, request, ct);
+        await handler.HandleAsync(userId, idOrSlug, movieId, request, ct);
         return NoContent();
     }
 
@@ -171,9 +175,10 @@ public sealed class EventMoviesController : ControllerBase
         string movieId,
         [FromBody] DeleteMoviePitchNoteRequest request,
         [FromServices] IDeleteMoviePitchNoteHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        await handler.HandleAsync(idOrSlug, movieId, request, ct);
+        await handler.HandleAsync(userId, idOrSlug, movieId, request, ct);
         return NoContent();
     }
 
@@ -208,9 +213,10 @@ public sealed class EventMoviesController : ControllerBase
         string movieId,
         [FromBody] SetMovieRatingRequest request,
         [FromServices] ISetMovieRatingHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var res = await handler.HandleAsync(idOrSlug, movieId, request, ct);
+        var res = await handler.HandleAsync(userId, idOrSlug, movieId, request, ct);
         return Ok(res);
     }
 
@@ -226,9 +232,10 @@ public sealed class EventMoviesController : ControllerBase
         string movieId,
         [FromBody] DeleteMovieRatingRequest request,
         [FromServices] IDeleteMovieRatingHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        await handler.HandleAsync(idOrSlug, movieId, request.ParticipantId, ct);
+        await handler.HandleAsync(userId, idOrSlug, movieId, request.ParticipantId, ct);
         return NoContent();
     }
 
@@ -244,9 +251,10 @@ public sealed class EventMoviesController : ControllerBase
         string movieId,
         [FromBody] UnmarkAsSeenRequest request,
         [FromServices] IUnmarkAsSeenHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        await handler.HandleAsync(idOrSlug, movieId, request.ParticipantId, ct);
+        await handler.HandleAsync(userId, idOrSlug, movieId, request.ParticipantId, ct);
         return NoContent();
     }
 }

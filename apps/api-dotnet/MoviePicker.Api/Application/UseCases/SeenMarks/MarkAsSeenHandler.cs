@@ -12,7 +12,6 @@ public sealed class MarkAsSeenHandler : IMarkAsSeenHandler
     private readonly IMovieRepository _movieRepository;
     private readonly IParticipantRepository _participantRepository;
     private readonly ISeenMarkRepository _seenMarkRepository;
-    private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IUnitOfWork _unitOfWork;
     private readonly TimeProvider _clock;
 
@@ -21,7 +20,6 @@ public sealed class MarkAsSeenHandler : IMarkAsSeenHandler
         IMovieRepository movieRepository,
         IParticipantRepository participantRepository,
         ISeenMarkRepository seenMarkRepository,
-        ICurrentUserAccessor currentUserAccessor,
         IUnitOfWork unitOfWork,
         TimeProvider clock)
     {
@@ -29,12 +27,12 @@ public sealed class MarkAsSeenHandler : IMarkAsSeenHandler
         _movieRepository = movieRepository;
         _participantRepository = participantRepository;
         _seenMarkRepository = seenMarkRepository;
-        _currentUserAccessor = currentUserAccessor;
         _unitOfWork = unitOfWork;
         _clock = clock;
     }
 
     public async Task<SeenMarkResponse> HandleAsync(
+        string userId,
         string idOrSlug,
         string movieId,
         MarkAsSeenRequest request,
@@ -44,7 +42,7 @@ public sealed class MarkAsSeenHandler : IMarkAsSeenHandler
             _eventRepository,
             _movieRepository,
             _participantRepository,
-            _currentUserAccessor.GetUserId(),
+            userId,
             _clock.GetUtcNow(),
             idOrSlug,
             movieId,

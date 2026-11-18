@@ -54,11 +54,6 @@ public sealed class MongoSeenMarkRepository : ISeenMarkRepository
         return res.DeletedCount > 0;
     }
 
-    public async Task DeleteByMovieIdAsync(string eventId, string movieId, CancellationToken ct = default) =>
-        await _collection.DeleteManyAsync(
-            x => x.EventId == eventId && x.MovieId == movieId,
-            cancellationToken: ct);
-
     public async Task<long> DeleteByMovieIdsAsync(string eventId, IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
     {
         if (movieIds.Count == 0)
