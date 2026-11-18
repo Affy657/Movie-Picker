@@ -117,12 +117,14 @@ démonstration, catalogue des scripts, structure du dépôt) est dans
 
 ## Qualité
 
-`pnpm run verify:local` rejoue la CI en local, en dix-sept étapes réparties sur trois voies concurrentes
-puis la suite front seule : règles d'architecture, `pnpm lint`, ESLint, Prettier (voie node) ;
-`dotnet restore`, build Release en `-warnaserror`, `dotnet format` (espaces et style), tests API unitaires et
-d'intégration, export OpenAPI, contrôle de dérive des types (voie dotnet) ; lint des workflows
-(`actionlint`, `shellcheck`, `zizmor`), `terraform fmt` et `validate`, Gitleaks sur l'arbre de
-travail, audit de vulnérabilités Trivy (voie docker) ; tests front avec seuils de couverture.
+`pnpm run verify:local` rejoue la CI en local, en quatorze étapes réparties sur trois voies concurrentes
+puis la suite front seule : `check:static`, soit règles d'architecture, tests des scripts, `tsc`,
+ESLint, Prettier et knip (voie node) ; `dotnet restore`, build Release en `-warnaserror`,
+`dotnet format` (espaces et style), tests API unitaires puis d'intégration sur MongoDB, export
+OpenAPI, contrôle de dérive des types (voie dotnet) ; Gitleaks sur l'arbre de travail, lint des
+workflows (`actionlint`, `shellcheck`, `zizmor`), `terraform fmt` et `validate`, audit de
+vulnérabilités Trivy (voie docker) ; tests front avec seuils de couverture, build web. Les jobs de CI
+appellent les mêmes scripts, chaque outil n'est donc épinglé qu'à un endroit.
 
 Ce que la chaîne empêche, plutôt que ce qu'elle mesure :
 
@@ -135,8 +137,9 @@ Ce que la chaîne empêche, plutôt que ce qu'elle mesure :
   exécute les adaptateurs Mongo et les transactions. Un inventaire compare les index réellement
   créés à la liste attendue : l'expiration des sessions, des jetons de réinitialisation et des
   compteurs de quota n'existe que là.
-- **Le parcours critique tourne dans Playwright avec navigateur réel et base réelle ensemble**,
-  seul endroit de la chaîne où les deux sont vrais en même temps.
+- **Toute la suite Playwright tourne avec navigateur réel et base réelle ensemble**, MongoDB en
+  replica set comme en production : en CI, la base en mémoire ne remplace plus la vraie dans aucun
+  test qui reproduit la production.
 - **Les seuils de couverture sont des portes**, pas des indicateurs : front 84 % d'instructions et
   86 % de lignes, API 90 % de lignes, adaptateurs Mongo 86 % de lignes, mesurés séparément parce
   qu'ils sont exclus du rapport principal.
