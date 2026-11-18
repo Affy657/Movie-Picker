@@ -24,7 +24,6 @@ import MovieFacts from '@/features/movies/components/MovieFacts';
 import StreamingStatus from '@/features/movies/components/StreamingStatus';
 import TmdbAttribution from '@/features/movies/components/TmdbAttribution';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
-import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { getErrorMessage } from '@/shared/api/apiError';
@@ -32,8 +31,7 @@ import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/post
 import { safeTmdbWatchUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
 import type { MovieData, MovieMediaType } from '@/shared/types/movie';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
-import Modal from '@/shared/components/Modal';
-import Sheet from '@/shared/components/Sheet';
+import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
 import Button from '@/shared/components/Button';
 import Field from '@/shared/components/Field';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -152,7 +150,6 @@ export default function ProposeMovieDialog({
   const { t } = useTranslation();
   const { user } = useAuth();
   const { track } = useAnalytics();
-  const isMobile = useIsMobile();
   const [proposed, setProposed] = useState<Proposal[]>([]);
   const [toast, setToast] = useState<Proposal | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -361,41 +358,22 @@ export default function ProposeMovieDialog({
     />
   );
 
-  if (isMobile) {
-    return (
-      <Sheet
-        open={open}
-        title={title}
-        detail={detail}
-        onClose={onClose}
-        size="lg"
-        footer={footer}
-        className={styles.sheet}
-      >
-        <div ref={bodyRef} className={styles.body}>
-          {body}
-        </div>
-      </Sheet>
-    );
-  }
-
   return (
-    <Modal
+    <ResponsiveDialog
       open={open}
       onClose={onClose}
-      size="md"
-      column
       title={title}
-      titleDetail={detail}
-      className={styles.modal}
+      detail={detail}
+      size="md"
+      flush
+      footer={footer}
+      sheetClassName={styles.sheet}
+      modalClassName={styles.modal}
     >
-      <div className={styles.scroll}>
-        <div ref={bodyRef} className={styles.body}>
-          {body}
-        </div>
+      <div ref={bodyRef} className={styles.body}>
+        {body}
       </div>
-      {footer}
-    </Modal>
+    </ResponsiveDialog>
   );
 }
 
