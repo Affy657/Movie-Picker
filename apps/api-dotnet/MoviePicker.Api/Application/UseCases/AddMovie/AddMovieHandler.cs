@@ -7,7 +7,6 @@ using MoviePicker.Api.Application.Posters;
 using MoviePicker.Api.Application.UseCases.MovieLists;
 using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Application.UseCases.Shared;
-using MoviePicker.Api.Application.UseCases.UserMovies;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -109,7 +108,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         await _audience.NotifyParticipantsAsync(MovieAddedMessage(evt, created.Title, proposer), participant.UserId, CancellationToken.None);
 
         var key = (created.TmdbId, created.MediaType);
-        var enrichments = await WatchedMoviesFacts.LoadEnrichmentsAsync([key], _tmdb, _options, ct);
+        var enrichments = await TmdbEnrichments.LoadAsync([key], _tmdb, _options, ct);
         return MovieWithScoreResponse.From(
             created,
             _posterImageStore,
