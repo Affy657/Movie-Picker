@@ -115,11 +115,9 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
             EventSlug = evt.Slug,
             EventTitle = evt.Title
         },
-        new PushMessage(
-            Title: "Nouvelle date pour la soirée 📅",
-            Body: $"{evt.Title} a été reprogrammée.",
-            Tag: $"event-date-changed-{evt.Id}",
-            Url: $"/e/{evt.Slug}"));
+        ServerCopy.Push.EventRescheduled(evt.Title).ToMessage(
+            tag: $"event-date-changed-{evt.Id}",
+            url: FrontRoutes.EventDetail(evt.Slug)));
 
     private static bool HasConfigChange(PatchEventConfigRequest request) =>
         request.Theme is not null

@@ -529,15 +529,6 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - piege: la forme change le contrat OpenAPI, régénérer `openapiSchema.ts`
 - fini-quand: plus aucun champ `Watched*` dans le rapport, et la date de synchronisation est tenue par liste
 
-## DEBT-094 `ListSourceTitle` recopie `SavedListTitle`
-
-- state: agent
-- impact: les deux types portent les mêmes huit champs, reliés par deux fonctions de copie ; chaque nouveau fait sur un titre s'ajoute aux deux et aux copies. Même schéma pour les six DTO de personne (pseudo, nom affiché, avatar) des listes.
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/SavedLists/ListSourceContent.cs`, `Domain/Entities/SavedList.cs`, `Application/DTOs/*List*Dtos.cs`
-- verify: `grep -n "public sealed record ListSourceTitle" apps/api-dotnet/MoviePicker.Api/Application/UseCases/SavedLists/ListSourceContent.cs`
-- fix: `SavedListTitle` partout, avec `Key`, `From(MovieListItem)` et `ToListItem` en extensions ; un seul DTO de personne réutilisé
-- fini-quand: plus de `ListSourceTitle`
-
 ## DEBT-095 la page des films vus d'un profil ne liste que les 1 000 premiers
 
 - state: differe

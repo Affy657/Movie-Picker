@@ -45,7 +45,7 @@ public sealed class CopyPublicListHandler : ICopyPublicListHandler
             _users,
             userId,
             name,
-            source.List.Items.Select(item => ListSourceTitle.From(item).ToListItem(now)),
+            source.List.Items.Select(item => SavedListTitles.From(item).ToListItem(now)),
             now,
             ct);
     }

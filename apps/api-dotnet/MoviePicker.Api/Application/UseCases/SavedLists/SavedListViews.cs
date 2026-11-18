@@ -13,7 +13,7 @@ public static class SavedListViews
         SourceId = saved.SourceId,
         Name = content.Name ?? (saved.Name.Length > 0 ? saved.Name : null),
         Description = content.Description,
-        Creator = content.Creator is { } creator ? ListCreatorResponse.From(creator) : null,
+        Creator = content.Creator is { } creator ? ListCreatorResponse.From(DisplayedPerson.From(creator)) : null,
         ItemCount = content.Titles.Count,
         PosterPaths = content.PosterPaths,
         WatchedCount = watched.CountAmong(content.Keys),

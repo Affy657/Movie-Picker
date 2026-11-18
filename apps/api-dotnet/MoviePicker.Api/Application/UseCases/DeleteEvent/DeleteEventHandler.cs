@@ -148,9 +148,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
             Type = UserNotificationType.EventDeleted,
             EventTitle = evt.Title
         },
-        new PushMessage(
-            Title: "Soirée annulée 😢",
-            Body: $"{evt.Title} a été annulée.",
-            Tag: $"event-deleted-{evt.Id}",
-            Url: "/"));
+        ServerCopy.Push.EventCancelled(evt.Title).ToMessage(
+            tag: $"event-deleted-{evt.Id}",
+            url: FrontRoutes.Home));
 }

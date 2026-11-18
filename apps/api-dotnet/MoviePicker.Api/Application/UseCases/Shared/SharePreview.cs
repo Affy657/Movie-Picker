@@ -22,10 +22,10 @@ public sealed record SharePreview(
     public const string SiteName = "Movie Picker";
 
     public static SharePreview Generic(string webBase) => new(
-        $"{webBase}/",
-        $"{webBase}/",
+        webBase + FrontRoutes.Home,
+        webBase + FrontRoutes.Home,
         SiteName,
-        "Choisissez votre prochain film ensemble : chacun propose, tout le monde vote, la roue tranche.",
+        ServerCopy.SharePreviews.SiteDescription,
         SiteImage(webBase));
 
     public static string SiteImage(string webBase) => $"{webBase}/og-image.png";
@@ -120,7 +120,7 @@ public static partial class SharePreviewHead
             + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n"
             + "<meta http-equiv=\"refresh\" content=\"0; url=" + target + CloseTag
             + HeadTags(preview)
-            + "</head>\n<body>\n<p><a href=\"" + target + "\">Ouvrir sur Movie Picker</a></p>\n</body>\n</html>\n";
+            + "</head>\n<body>\n<p><a href=\"" + target + "\">" + H(ServerCopy.SharePreviews.OpenOnSite) + "</a></p>\n</body>\n</html>\n";
     }
 
     private static string HeadTags(SharePreview preview)

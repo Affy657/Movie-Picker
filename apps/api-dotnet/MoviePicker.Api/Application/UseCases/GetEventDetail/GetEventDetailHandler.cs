@@ -126,14 +126,14 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         Dictionary<string, UserCard> cardById,
         string? creatorUserId)
     {
-        UserCard? linkedUser = p.UserId is not null && cardById.TryGetValue(p.UserId, out var card) ? card : null;
+        var person = DisplayedPerson.LinkedTo(p, cardById);
         return new EventParticipantSummaryResponse
         {
             Id = p.Id,
             Pseudo = p.Pseudo,
             IsCreator = !string.IsNullOrEmpty(creatorUserId) && p.UserId == creatorUserId,
-            AvatarId = linkedUser?.AvatarId ?? string.Empty,
-            Handle = PublicHandleResolver.Resolve(linkedUser),
+            AvatarId = person?.AvatarId ?? string.Empty,
+            Handle = person?.PublicHandle,
         };
     }
 }

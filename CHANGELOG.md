@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Changed
+
+- **Les notifications, l'e-mail de réinitialisation du mot de passe et l'aperçu d'une invitation partagée vous vouvoient**, comme le reste de l'application.
+
 ## [1.15.3] - 2026-11-18
 
 ### Changed

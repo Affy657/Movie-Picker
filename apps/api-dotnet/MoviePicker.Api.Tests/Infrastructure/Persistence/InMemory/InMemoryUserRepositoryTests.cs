@@ -105,7 +105,7 @@ public sealed class InMemoryUserRepositoryTests
 
         Assert.Equal(
             [(withPhoto.Id, photo.AvatarId), (setAside.Id, "cute")],
-            cards.OrderBy(card => card.Handle == "aside").Select(card => (card.Id, card.AvatarId)));
+            cards.OrderBy(card => card.Handle == "aside").Select(card => (card.Id, card.DisplayedAvatarId)));
     }
 
     [Fact]

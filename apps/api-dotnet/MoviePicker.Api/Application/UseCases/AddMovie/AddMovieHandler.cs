@@ -1,9 +1,14 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.Posters;
+using MoviePicker.Api.Application.UseCases.MovieLists;
+using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Application.UseCases.Shared;
+using MoviePicker.Api.Application.UseCases.UserMovies;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -22,6 +27,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<AddMovieHandler> _logger;
     private readonly TimeProvider _clock;
+    private readonly MoviePickerOptions _options;
 
     public AddMovieHandler(
         IEventRepository eventRepository,
@@ -34,7 +40,8 @@ public sealed class AddMovieHandler : IAddMovieHandler
         ITmdbMovieSearch tmdb,
         IUnitOfWork unitOfWork,
         ILogger<AddMovieHandler> logger,
-        TimeProvider clock)
+        TimeProvider clock,
+        IOptions<MoviePickerOptions> options)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
@@ -47,6 +54,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         _unitOfWork = unitOfWork;
         _logger = logger;
         _clock = clock;
+        _options = options.Value;
     }
 
     public async Task<MovieWithScoreResponse> HandleAsync(string idOrSlug, AddMovieRequest request, string? callerUserId, CancellationToken ct = default)
@@ -76,14 +84,13 @@ public sealed class AddMovieHandler : IAddMovieHandler
         if (await _movieRepository.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, request.Title.Trim(), year, ct))
             throw Errors.MovieTitleAlreadyProposed();
 
-        var now = _clock.GetUtcNow();
+        var now = _clock.StorageNow();
         var pitchNote = string.IsNullOrWhiteSpace(request.PitchNote) ? null : request.PitchNote.Trim();
         var genreIdsTask = FetchGenreIdsBestEffortAsync(request.TmdbId, request.MediaType, request.GenreIds, ct);
         var proposerUserTask = _userRepository.GetByIdAsync(currentUserId, ct);
         await Task.WhenAll(genreIdsTask, proposerUserTask);
         var genreIds = await genreIdsTask;
         var proposer = await proposerUserTask;
-        var proposerHandle = PublicHandleResolver.Resolve(proposer);
 
         var movie = new Movie
         {
@@ -105,29 +112,14 @@ public sealed class AddMovieHandler : IAddMovieHandler
 
         await _audience.NotifyParticipantsAsync(MovieAddedMessage(evt, created.Title, proposer), participant.UserId, CancellationToken.None);
 
-        return new MovieWithScoreResponse
-        {
-            Id = created.Id,
-            EventId = created.EventId,
-            ParticipantId = created.ParticipantId,
-            TmdbId = created.TmdbId,
-            MediaType = created.MediaType,
-            Title = created.Title,
-            Year = created.Year,
-            PosterPath = created.PosterPath,
-            PitchNote = created.PitchNote,
-            GenreIds = created.GenreIds,
-            CreatedAt = created.CreatedAt,
-            UpdatedAt = created.UpdatedAt,
-            ProposerPseudo = participant.Pseudo,
-            ProposerHandle = proposerHandle,
-            Score = 0,
-            Up = 0,
-            Down = 0,
-            SeenCount = 0,
-            SeenByPseudos = Array.Empty<string>(),
-            VotersUpPseudos = Array.Empty<string>()
-        };
+        var key = (created.TmdbId, created.MediaType);
+        var enrichments = await WatchedMoviesFacts.LoadEnrichmentsAsync([key], _tmdb, _options, ct);
+        return MovieWithScoreResponse.From(
+            created,
+            _posterImageStore,
+            new MovieProposer(participant.Pseudo, proposer is null ? null : DisplayedPerson.From(proposer).PublicHandle),
+            MovieNightActivity.None,
+            enrichments.GetValueOrDefault(key));
     }
 
     private async Task<Movie> InsertWithinProposalLimitAsync(
@@ -184,17 +176,12 @@ public sealed class AddMovieHandler : IAddMovieHandler
         new UserNotification
         {
             Type = UserNotificationType.MovieAdded,
-            ActorHandle = proposer?.Handle,
-            ActorDisplayName = proposer?.DisplayName,
-            ActorAvatarId = proposer?.DisplayedAvatarId,
             EventId = evt.Id,
             EventSlug = evt.Slug,
             EventTitle = evt.Title,
             MovieTitle = movieTitle
-        },
-        new PushMessage(
-            Title: "Un film de plus au menu 🍿",
-            Body: $"{movieTitle} a été ajouté à la soirée {evt.Title}",
-            Tag: $"movie-add-{evt.Id}",
-            Url: $"/e/{evt.Slug}"));
+        }.WithActor(proposer),
+        ServerCopy.Push.MovieAdded(movieTitle, evt.Title).ToMessage(
+            tag: $"movie-add-{evt.Id}",
+            url: FrontRoutes.EventDetail(evt.Slug)));
 }

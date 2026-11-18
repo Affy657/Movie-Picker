@@ -154,12 +154,9 @@ public sealed class RatingReminderPass : IRatingReminderPass
         Dictionary<string, List<PushSubscription>> subsByUser,
         CancellationToken ct)
     {
-        var push = new PushMessage(
-            Title: "Alors, ce film ? ⭐",
-            Body: $"{movie.Title}, vu pendant {evt.Title} : donne-lui ta note !",
-            Tag: $"rating-reminder-{evt.Id}",
-            Url: $"/e/{evt.Slug}?rate"
-        );
+        var push = ServerCopy.Push.RatingReminder(movie.Title, evt.Title).ToMessage(
+            tag: $"rating-reminder-{evt.Id}",
+            url: FrontRoutes.EventRating(evt.Slug));
         var inApp = new UserNotification
         {
             UserId = user.Id,

@@ -1,8 +1,10 @@
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AddMovie;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Tests.Builders;
@@ -66,7 +68,8 @@ public sealed class AddMovieHandlerNotificationTests
             _userRepo.Object,
             TestAudienceNotifier.Over(_participantRepo.Object, _userRepo.Object, _pushSubRepo.Object, _pushSender.Object, _notifications.Object),
             _currentUser.Object, _tmdb.Object, new RecordingUnitOfWork(), NullLogger<AddMovieHandler>.Instance,
-            TimeProvider.System);
+            TimeProvider.System,
+            Options.Create(new MoviePickerOptions()));
     }
 
     private void OwnerParticipant() =>

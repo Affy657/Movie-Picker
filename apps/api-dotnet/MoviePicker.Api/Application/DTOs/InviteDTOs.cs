@@ -21,6 +21,16 @@ public sealed record EligibleFollowItem
     public string AvatarId { get; init; } = string.Empty;
     public bool IsAlreadyParticipant { get; init; }
     public bool IsAlreadyInvited { get; init; }
+
+    public static EligibleFollowItem From(DisplayedPerson person, bool isAlreadyParticipant, bool isAlreadyInvited) => new()
+    {
+        UserId = person.UserId,
+        Handle = person.Handle,
+        DisplayName = person.DisplayName,
+        AvatarId = person.AvatarId,
+        IsAlreadyParticipant = isAlreadyParticipant,
+        IsAlreadyInvited = isAlreadyInvited
+    };
 }
 
 public sealed record EligibleFollowsResponse
