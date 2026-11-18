@@ -151,12 +151,14 @@ export default function WheelModal({
       const overlay = confettiOverlayRef.current;
       if (!overlay) return;
 
-      if (supportsPopover(overlay)) overlay.showPopover();
+      const popoverSupported = supportsPopover(overlay);
+      if (popoverSupported) overlay.showPopover();
+      const host = popoverSupported ? overlay : (dialogRef.current ?? overlay);
 
       const canvas = document.createElement('canvas');
       canvas.style.cssText =
         'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;';
-      overlay.appendChild(canvas);
+      host.appendChild(canvas);
       confettiCanvasRef.current = canvas;
 
       const fire = confetti.create(canvas, {

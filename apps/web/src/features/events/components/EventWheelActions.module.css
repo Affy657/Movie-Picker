@@ -52,6 +52,7 @@
   height: var(--space-5);
   padding: 0 var(--space-1-5);
   border-radius: var(--radius-pill);
+  background: var(--color-surface-hover-strong);
   background: color-mix(in srgb, currentColor 16%, transparent);
   font-size: var(--font-size-3xs);
   font-weight: var(--font-weight-bold);

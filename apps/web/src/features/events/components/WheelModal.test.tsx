@@ -642,6 +642,29 @@ describe('WheelModal and the Popover API', () => {
     );
   });
 
+  it('draws the confetti inside the modal on Safari before 17, where no popover can rise above it', () => {
+    vi.mocked(confetti.create).mockClear();
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId('spin-done-trigger'));
+    act(() => {
+      vi.advanceTimersToNextFrame();
+    });
+
+    const canvas = vi.mocked(confetti.create).mock.calls[0]?.[0];
+    expect(canvas).toBeInstanceOf(HTMLCanvasElement);
+    expect(wheelDialog()).toContainElement(canvas as HTMLCanvasElement);
+  });
+
   it('still raises the confetti above the modal where the Popover API exists', () => {
     const showPopover = vi.fn();
     Object.defineProperty(HTMLElement.prototype, 'showPopover', {

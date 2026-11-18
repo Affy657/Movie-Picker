@@ -8,6 +8,20 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Changed
+
+- **« Proposer une idée » et « Signaler un problème » s'ouvrent en feuille sur téléphone**, avec la poignée pour les fermer d'un glissement, comme les autres fenêtres.
+- **La liste d'abonnés porte le même titre partout**, « Abonnés et abonnements », quel que soit l'onglet ouvert.
+
+### Fixed
+
+- **Les anciens iPhone retrouvent les couleurs douces de l'app** : sur iOS 15, fonds teintés, bordures, survols et contours de focus étaient invisibles.
+- **Le fond assombri derrière les fenêtres et les feuilles revient sur iPhone 8 et X** (iOS 16, et iOS 17 jusqu'à 17.3), où la page restait en pleine lumière derrière.
+- **En paysage, plus rien ne passe sous l'encoche** : en-tête, pages et pied de page lui laissent sa place, la bande-annonce tient entière à l'écran et le texte ne grossit plus en tournant le téléphone.
+- **Sur iPhone, plus de flash gris au toucher**, les champs de date vides gardent leur hauteur et le remplissage automatique du trousseau ne colore plus les champs en jaune.
+- **Les confettis du tirage s'affichent aussi sur iOS 16 et plus ancien.**
+- **Le pied de page ne glisse plus quand la barre de Safari se replie ou se déplie.**
+
 ## [1.15.5] - 2026-11-18
 
 ### Changed

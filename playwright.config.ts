@@ -1,6 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 import { E2E_API_PROJECT, E2E_API_URL, e2eApiEnvironment } from './e2e/apiServer';
 
+const IPHONE_SPECS = /iphone-[\w-]+\.spec\.ts/;
+
 const apiMongoUri = process.env.E2E_MONGODB_URI ?? '';
 const apiEnvironment = Object.entries(e2eApiEnvironment(apiMongoUri))
   .map(([name, value]) => `${name}=${value}`)
@@ -15,11 +17,22 @@ export default defineConfig({
   workers: 1,
   timeout: 90_000,
   use: {
-    ...devices['Desktop Chrome'],
     baseURL: 'http://127.0.0.1:5174',
     locale: 'fr-FR',
     trace: 'on-first-retry',
   },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+      testIgnore: IPHONE_SPECS,
+    },
+    {
+      name: 'iphone-webkit',
+      use: { browserName: 'webkit' },
+      testMatch: IPHONE_SPECS,
+    },
+  ],
   // --no-launch-profile avoids port 4000 from launchSettings; without a profile, ASPNETCORE_* must force
   // Development, otherwise ProductionStartupValidation requires ALLOWED_ORIGINS + MONGODB_URI.
   // DevelopmentSeed__Enabled=false: the tests create their own accounts; the demo seed is not needed,

@@ -34,6 +34,26 @@ describe('modal backdrop', () => {
     );
   });
 
+  it('still refuses a backdrop styled in the foundation', () => {
+    assert.equal(
+      backdropViolations(
+        'apps/web/src/styles/01-foundation.css',
+        '.overlay::backdrop { background: none; }'
+      ).length,
+      1
+    );
+  });
+
+  it('lets the foundation declare its tokens on ::backdrop', () => {
+    assert.deepEqual(
+      backdropViolations(
+        'apps/web/src/styles/01-foundation.css',
+        ':root, ::backdrop { --a: 1px; }'
+      ),
+      []
+    );
+  });
+
   it('accepts the transparent backdrop of the confetti popover', () => {
     assert.deepEqual(
       backdropViolations(

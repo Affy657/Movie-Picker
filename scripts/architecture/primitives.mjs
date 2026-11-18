@@ -1,3 +1,4 @@
+import { FOUNDATION } from './cssSyntax.mjs';
 import {
   CLASS_IN_COMPOUND_RE,
   CSS_MODULE_IMPORT_RE,
@@ -33,6 +34,7 @@ export function backdropViolations(path, text) {
   if (path === MODAL_CSS || path === SHEET_DRAG_CSS) return [];
   return [...text.matchAll(/([^\s{},]*)::backdrop/g)]
     .map((match) => match[1])
+    .filter((selector) => !(path === FOUNDATION && selector === ''))
     .filter((selector) => !POPOVER_BACKDROPS.has(`${path} ${selector}`))
     .map(
       (selector) => `${path}: ${selector}::backdrop, the modal backdrop belongs to Modal.module.css`

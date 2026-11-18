@@ -1,6 +1,7 @@
 :global(.page).landing {
   max-width: 100%;
-  padding: var(--space-0);
+  padding: var(--space-0) env(safe-area-inset-right, 0px) var(--space-0)
+    env(safe-area-inset-left, 0px);
   overflow-x: clip;
 }
 

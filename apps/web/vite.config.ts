@@ -3,6 +3,13 @@ import { defineConfig, loadEnv, type HtmlTagDescriptor, type Plugin } from 'vite
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
+import { browserTargets } from './tooling/browserTargets';
+import {
+  COLOR_MIX_FALLBACK_MODULE,
+  COLOR_MIX_TOKEN_SHEETS,
+  buildColorMixFallback,
+  readColorMixTokenSheets,
+} from './tooling/colorMixFallback';
 import {
   buildContentSecurityPolicy,
   inlineScriptHashes,
@@ -47,6 +54,21 @@ function cspMetaPlugin(apiOrigin: string, sentryOrigin: string): Plugin {
   };
 }
 
+function colorMixFallbackPlugin(): Plugin {
+  const resolvedId = `\0${COLOR_MIX_FALLBACK_MODULE}`;
+  return {
+    name: 'moviepicker-color-mix-fallback',
+    resolveId(id) {
+      return id === COLOR_MIX_FALLBACK_MODULE ? resolvedId : undefined;
+    },
+    load(id) {
+      if (id !== resolvedId) return undefined;
+      for (const sheet of COLOR_MIX_TOKEN_SHEETS) this.addWatchFile(path.resolve(__dirname, sheet));
+      return buildColorMixFallback(readColorMixTokenSheets(__dirname));
+    },
+  };
+}
+
 function releaseMetaPlugin(release: string): Plugin {
   return {
     name: 'moviepicker-release-meta',
@@ -69,6 +91,8 @@ const CRITICAL_FONT_BASES = [
   'overpass-latin-700-normal',
   'overpass-latin-800-normal',
 ];
+
+const BUILD_TARGETS = browserTargets(__dirname);
 
 const APP_SHELL_CHUNK = /(?:^|\/)App-[\w-]+\.js$/;
 const APP_SHELL_STYLES = /(?:^|\/)App-[\w-]+\.css$/;
@@ -333,6 +357,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react(),
+      colorMixFallbackPlugin(),
       releaseMetaPlugin(release),
       VitePWA({
         strategies: 'injectManifest',
@@ -418,7 +443,8 @@ export default defineConfig(({ mode }) => {
       port: Number(process.env.PORT) || 5173,
     },
     build: {
-      target: 'es2022',
+      target: BUILD_TARGETS,
+      cssTarget: BUILD_TARGETS,
       sourcemap: sentryAuthToken ? 'hidden' : false,
       rollupOptions: {
         output: {
