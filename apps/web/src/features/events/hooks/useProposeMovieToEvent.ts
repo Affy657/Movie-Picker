@@ -4,16 +4,9 @@ import { useTranslation } from '@/shared/i18n';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { fetchEventBySlug } from '@/features/events/api/eventsApi';
 import { addMovieToEvent } from '@/features/events/api/eventMoviesApi';
-import type { MovieData, MovieMediaType } from '@/shared/types/movie';
+import type { MovieData, TitleSummary } from '@/shared/types/movie';
 
-export interface ProposableMovie {
-  tmdbId: number;
-  mediaType: MovieMediaType;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  genreIds?: number[];
-}
+export type ProposableMovie = TitleSummary;
 
 export interface ProposeOptions {
   participantId?: string;

@@ -21,6 +21,7 @@ import type { LocaleCode } from '@/shared/i18n/locales';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { EventParticipantSummary } from '@/shared/types/event';
 import type { MovieData } from '@/shared/types/movie';
+import { toTitleSummary } from '@/shared/utils/titleSummary';
 import type { RatingScale } from '@/shared/types/theme';
 import { averageOfRatings, formatRating } from '@/shared/utils/formatRating';
 import { formatShortDate } from '@/shared/utils/formatMyEventsListDate';
@@ -546,21 +547,7 @@ export default function EventWinnerSummary({
               scale={scale}
               action={action}
               onRate={() => sheet.open(selected.id)}
-              onDetails={() =>
-                openMoviePage(
-                  {
-                    tmdbId: selected.tmdbId,
-                    mediaType: selected.mediaType ?? 'movie',
-                    title: selected.title,
-                    year: selected.year,
-                    posterPath: selected.posterPath,
-                    voteAverage: selected.voteAverage,
-                    runtimeMinutes: selected.runtimeMinutes,
-                    genreIds: selected.genreIds,
-                  },
-                  nightSlug
-                )
-              }
+              onDetails={() => openMoviePage(toTitleSummary(selected), nightSlug)}
             />
             {isMobile ? null : notes}
           </div>

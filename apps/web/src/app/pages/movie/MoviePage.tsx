@@ -47,6 +47,7 @@ import { useShareAction } from '@/shared/hooks/useShareAction';
 import { useLocale, useTranslation, type Translate, type TranslationKey } from '@/shared/i18n';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
 import type { MovieMediaType } from '@/shared/types/movie';
+import { toTitleSummary } from '@/shared/utils/titleSummary';
 import MovieHero, { type MovieHeroView } from '@/app/pages/movie/MovieHero';
 import { MovieInfosCard, MovieLinksCard, MovieNightsCard } from '@/app/pages/movie/MovieAside';
 import MovieRails from '@/app/pages/movie/MovieRails';
@@ -337,16 +338,7 @@ function MovieSynopsisBlock({
 }
 
 function seedOfItem(item: MovieBrowseCardItem): MoviePageSeed {
-  return {
-    tmdbId: item.tmdbId,
-    mediaType: item.mediaType,
-    title: item.title,
-    year: item.year,
-    posterPath: item.posterPath,
-    voteAverage: item.voteAverage,
-    runtimeMinutes: item.runtimeMinutes,
-    genreIds: item.genreIds,
-  };
+  return toTitleSummary(item);
 }
 
 function seoTitleOf(
