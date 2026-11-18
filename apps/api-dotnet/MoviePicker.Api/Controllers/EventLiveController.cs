@@ -52,9 +52,10 @@ public sealed class EventLiveController : ControllerBase
         string idOrSlug,
         [FromBody] PresenceRequest request,
         [FromServices] ISetPresenceHandler handler,
+        [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        await handler.HandleAsync(idOrSlug, request, ct);
+        await handler.HandleAsync(userId, idOrSlug, request, ct);
         return NoContent();
     }
 }
