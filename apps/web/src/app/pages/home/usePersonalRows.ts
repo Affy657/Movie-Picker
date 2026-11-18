@@ -1,8 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import {
-  fetchFollowingWatchedMovies,
-  fetchMyWatchedMovies,
-} from '@/features/profile/api/profileApi';
+import { fetchFollowingWatchedMovies } from '@/features/profile/api/profileApi';
+import { fetchMyWatchedMovies } from '@/features/library/api/watchedApi';
 import { useWatchlist } from '@/features/movies/hooks/useWatchlist';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import type { WatchlistItem } from '@/features/movies/api/watchlistApi';
@@ -59,11 +57,11 @@ export function useFriendsWatchedRow(enabled: boolean) {
 
 export function useRecommendationSeed(enabled: boolean) {
   const query = useQuery({
-    queryKey: queryKeys.me.watchedMovies(RECOMMENDATION_SEED_TAKE),
+    queryKey: queryKeys.watched.latest(RECOMMENDATION_SEED_TAKE),
     queryFn: ({ signal }) => fetchMyWatchedMovies(RECOMMENDATION_SEED_TAKE, signal),
     enabled,
   });
-  const seed = enabled ? query.data?.items?.[0] : undefined;
+  const seed = enabled ? query.data?.items[0] : undefined;
   return {
     seedTmdbId: seed?.tmdbId,
     seedMediaType: seed?.mediaType,

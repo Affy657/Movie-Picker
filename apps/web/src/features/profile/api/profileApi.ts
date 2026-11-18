@@ -214,16 +214,6 @@ export async function fetchUserWatchlistPreview(
   return page.items.map((item) => ({ ...item, genreIds: item.genreIds ?? [] }));
 }
 
-export async function fetchMyWatchedMovies(
-  take: number,
-  signal?: AbortSignal
-): Promise<UserWatchedMoviesResponse> {
-  return fetchApi<UserWatchedMoviesResponse>(
-    `${apiPath('users', 'me', 'watched-movies')}?take=${take}`,
-    { signal }
-  );
-}
-
 export async function fetchFollowingWatchedMovies(
   take: number,
   signal?: AbortSignal

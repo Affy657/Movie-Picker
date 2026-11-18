@@ -45,16 +45,16 @@ export type { ShowcaseListVariant };
 import {
   useWatchlistToggle,
   type WatchlistToggleItem,
-} from '@/features/watchlist/hooks/useWatchlistToggle';
+} from '@/features/library/hooks/useWatchlistToggle';
 import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
-import DimWatchedControl from '@/features/watchlist/components/DimWatchedControl';
+import DimWatchedControl from '@/features/library/components/DimWatchedControl';
 import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
-import { useDimWatched } from '@/features/watched/hooks/useDimWatched';
-import { useWatchedKeys } from '@/features/watched/hooks/useWatched';
-import type { SavedListSource } from '@/features/lists/api/savedListsApi';
-import ListProgress from '@/features/lists/components/ListProgress';
-import SavedToggleButton from '@/features/lists/components/SavedToggleButton';
-import { useSavedListToggle } from '@/features/lists/hooks/useSavedLists';
+import { useDimWatched } from '@/features/library/hooks/useDimWatched';
+import { useWatchedKeys } from '@/features/library/hooks/useWatched';
+import type { SavedListSource } from '@/features/library/api/savedListsApi';
+import ListProgress from '@/features/library/components/ListProgress';
+import SavedToggleButton from '@/features/library/components/SavedToggleButton';
+import { useSavedListToggle } from '@/features/library/hooks/useSavedLists';
 import ShowcaseListStates from './ShowcaseListStates';
 import { readShowcaseListArrival } from './showcaseListState';
 import type { MovieMediaType } from '@/shared/types/movie';

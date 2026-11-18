@@ -30,10 +30,10 @@ import MovieBrowseCard from '@/features/movies/components/MovieBrowseCard';
 import {
   useWatchlistToggle,
   type WatchlistToggleItem,
-} from '@/features/watchlist/hooks/useWatchlistToggle';
+} from '@/features/library/hooks/useWatchlistToggle';
 import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
 import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
-import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
+import WatchlistSkeleton from '@/features/library/components/WatchlistSkeleton';
 import styles from './ProfileCollectionPage.module.css';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import Button from '@/shared/components/Button';

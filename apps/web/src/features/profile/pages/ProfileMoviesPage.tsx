@@ -13,7 +13,7 @@ import {
 import ProfileCollectionPage, {
   type ProfileCollectionTexts,
 } from '@/features/profile/components/ProfileCollectionPage';
-import OwnerRatingBadge from '@/features/profile/components/OwnerRatingBadge';
+import OwnerRatingBadge from '@/features/movies/components/OwnerRatingBadge';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 
 function compareWatchedAt(a: UserWatchedMovieItem, b: UserWatchedMovieItem): number {

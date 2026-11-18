@@ -2,7 +2,7 @@ import { Link } from 'react-router';
 import { Film } from 'lucide-react';
 import { buttonClass } from '@/shared/components/Button';
 import EmptyState from '@/shared/components/EmptyState';
-import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
+import WatchlistSkeleton from '@/features/library/components/WatchlistSkeleton';
 import { ROUTES } from '@/app/routes';
 import { useTranslation } from '@/shared/i18n';
 import type { ShowcaseListVariant } from '@/features/movies/showcaseSections';

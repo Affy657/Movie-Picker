@@ -21,6 +21,7 @@ import {
 } from '@/mocks/handlers';
 import ShowcaseListPage, { type ShowcaseListVariant } from '@/app/pages/ShowcaseListPage';
 import { ROUTE_CHUNKS } from '@/app/routeChunks';
+import { queryKeys } from '@/shared/hooks/queryKeys';
 
 const ACTION_GENRE = 28;
 const DRAMA_GENRE = 18;
@@ -347,7 +348,7 @@ describe('ShowcaseListPage', () => {
         expect(
           client
             .getQueryCache()
-            .findAll({ queryKey: ['users', 'me', 'watched-movies'] })
+            .findAll({ queryKey: queryKeys.watched.latest(1) })
             .map((query) => query.state.status)
         ).toEqual(['success'])
       );

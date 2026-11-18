@@ -23,7 +23,7 @@ import DonatePage from '@/app/pages/DonatePage';
 import TechPage from '@/app/pages/TechPage';
 import ProfilePage from '@/features/profile/pages/ProfilePage';
 import ProfileMoviesPage from '@/features/profile/pages/ProfileMoviesPage';
-import WatchlistPage from '@/features/watchlist/pages/WatchlistPage';
+import WatchlistPage from '@/features/library/pages/WatchlistPage';
 import NotificationsPage from '@/features/notifications/pages/NotificationsPage';
 import ServerErrorPage from '@/shared/components/ServerErrorPage';
 import Modal from '@/shared/components/Modal';
