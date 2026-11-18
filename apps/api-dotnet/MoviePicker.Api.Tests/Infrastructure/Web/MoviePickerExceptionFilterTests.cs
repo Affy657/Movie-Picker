@@ -49,6 +49,18 @@ public sealed class MoviePickerExceptionFilterTests
     }
 
     [Fact]
+    public void OnException_AMissingUserIdentity_AnswersLikeAControllerReturningUnauthorized()
+    {
+        var filter = new MoviePickerExceptionFilter(new StubHostEnvironment());
+        var context = CreateContext(new MissingUserIdentityException());
+
+        filter.OnException(context);
+
+        Assert.True(context.ExceptionHandled);
+        Assert.IsType<UnauthorizedResult>(context.Result);
+    }
+
+    [Fact]
     public void OnException_CancellationWhileTheRequestIsAlive_IsAnInternalError()
     {
         var filter = new MoviePickerExceptionFilter(new StubHostEnvironment());
