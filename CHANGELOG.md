@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Fixed
+
+- **La politique de confidentialité liste toutes les étapes que Movie Picker compte**, et dit ce que l'onglet retient pour ne compter chacune qu'une fois.
+
 ## [1.16.2] - 2026-11-19
 
 ### Fixed

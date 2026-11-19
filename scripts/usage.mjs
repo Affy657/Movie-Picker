@@ -126,36 +126,45 @@ export function buildUsageReport({ since, until, counts, truth }) {
   const steps = [
     [
       'opened_by_visitor',
+      'browser',
       'Event link opened by a visitor',
       totals.matching('event_link_opened', (v) => v.startsWith('visitor.')),
     ],
     [
       'opened_by_visitor_joinable',
+      'browser',
       'Opened while the event could be joined',
       totals.get('event_link_opened', 'visitor.open'),
     ],
     [
       'prompt_register',
+      'browser',
       'Sign-up chosen on the join prompt',
       totals.get('join_prompt_clicked', 'register'),
     ],
     [
       'signed_up_from_event',
+      'server',
       'Account created from an event link',
       totals.matching('user_signed_up', fromEvent),
     ],
     [
       'joined_new_account',
-      'New account joined the event',
+      'server',
+      'Joined by an account under 24 hours old',
       totals.get('event_joined', 'new_account'),
     ],
   ];
-  const funnel = steps.map(([key, label, value], index) => ({
-    key,
-    label,
-    value,
-    shareOfPrevious: index === 0 ? null : shareOf(value, steps[index - 1][2]),
-  }));
+  const funnel = steps.map(([key, source, label, value], index) => {
+    const previous = steps[index - 1];
+    return {
+      key,
+      source,
+      label,
+      value,
+      shareOfPrevious: previous?.[1] === source ? shareOf(value, previous[3]) : null,
+    };
+  });
 
   return {
     since,
@@ -193,7 +202,11 @@ export function buildUsageReport({ since, until, counts, truth }) {
           totals.get('random_pick_opened', source),
         ])
       ),
-      watchlist: { adds: truth.watchlistAdds, people: truth.watchlistPeople },
+      watchlist: {
+        adds: truth.watchlistAdds,
+        people: truth.watchlistPeople,
+        imports: truth.watchlistImports,
+      },
       letterboxd: {
         connectedAccounts: truth.letterboxdConnected,
         syncedPeople: truth.letterboxdSyncedPeople,
@@ -238,8 +251,15 @@ export function formatUsageReport(report) {
       '  No anonymous count recorded over this period: the counters start with the release that brings them.'
     );
   }
+  const sourceTitles = {
+    browser: '  Reported by the browser, unless measurement was refused',
+    server: '  Recorded by the server for everyone',
+  };
+  report.funnel.forEach((step, index) => {
+    if (report.funnel[index - 1]?.source !== step.source) lines.push(sourceTitles[step.source]);
+    lines.push(row(step.label, step.value, step.shareOfPrevious));
+  });
   lines.push(
-    ...report.funnel.map((step) => row(step.label, step.value, step.shareOfPrevious)),
     '',
     'Other ways in',
     row('Event link opened by a signed-in account', sideDoors.openedByAccount),
@@ -247,7 +267,7 @@ export function formatUsageReport(report) {
     row('Event over when opened', sideDoors.openedClosed),
     row('Sign-in chosen on the join prompt', sideDoors.promptLogin),
     row('Signed in from an event link', sideDoors.loggedInFromEvent),
-    row('Existing account joined the event', sideDoors.joinedExistingAccount),
+    row('Joined by an older account', sideDoors.joinedExistingAccount),
     '',
     'What gets used',
     line(
@@ -265,7 +285,7 @@ export function formatUsageReport(report) {
     ),
     line(
       'Watchlist additions',
-      `${features.watchlist.adds} by ${features.watchlist.people} people`
+      `${features.watchlist.adds} by ${features.watchlist.people} people, plus ${features.watchlist.imports} linked to Letterboxd`
     ),
     line(
       'Letterboxd accounts',
@@ -310,8 +330,9 @@ const guests = first(db.participants.aggregate([
   { $group: { _id: null, arrivals: { $sum: 1 }, people: { $addToSet: '$userId' } } },
   { $project: { _id: 0, arrivals: 1, people: { $size: '$people' } } }
 ]).toArray(), { arrivals: 0, people: 0 });
+const addedByHand = { createdAt: inPeriod, letterboxdSlug: { $in: [null, ''] } };
 const watchlistPeople = first(db.watchlist.aggregate([
-  { $match: { createdAt: inPeriod } },
+  { $match: addedByHand },
   { $group: { _id: '$userId' } },
   { $count: 'people' }
 ]).toArray(), { people: 0 }).people;
@@ -324,8 +345,9 @@ print(JSON.stringify({
     arrivingPeople: guests.people,
     ratings: db.movie_ratings.countDocuments({ createdAt: inPeriod }),
     raters,
-    watchlistAdds: db.watchlist.countDocuments({ createdAt: inPeriod }),
+    watchlistAdds: db.watchlist.countDocuments(addedByHand),
     watchlistPeople,
+    watchlistImports: db.watchlist.countDocuments({ createdAt: inPeriod, letterboxdSlug: { $nin: [null, ''] } }),
     letterboxdConnected: db.users.countDocuments({ letterboxdUsername: { $nin: [null, ''] } }),
     letterboxdSyncedPeople: db.users.countDocuments({ letterboxdLastSyncAt: inPeriod })
   }
@@ -336,11 +358,21 @@ function todayInParis() {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(new Date());
 }
 
+const GCP_PROJECT_ID_PATTERN = /^[a-z][a-z0-9-]{4,28}[a-z0-9]$/;
+
+export function gcloudSecretCommand(project) {
+  const command = 'gcloud secrets versions access latest --secret=MONGODB_URI';
+  if (!project) return command;
+  if (!GCP_PROJECT_ID_PATTERN.test(project)) {
+    throw new Error(`GCP_PROJECT_ID is not a Google Cloud project id: ${JSON.stringify(project)}`);
+  }
+  return `${command} --project=${project}`;
+}
+
 function mongoUri() {
   const fromEnvironment = process.env.MONGODB_URI?.trim();
   if (fromEnvironment) return fromEnvironment;
-  const project = process.env.GCP_PROJECT_ID ? ` --project=${process.env.GCP_PROJECT_ID}` : '';
-  const result = spawnSync(`gcloud secrets versions access latest --secret=MONGODB_URI${project}`, {
+  const result = spawnSync(gcloudSecretCommand(process.env.GCP_PROJECT_ID), {
     encoding: 'utf8',
     shell: true,
   });

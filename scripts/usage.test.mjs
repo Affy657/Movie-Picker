@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   buildUsageReport,
   formatUsageReport,
+  gcloudSecretCommand,
   parisDayBounds,
   parseUsageArgs,
   sumCounts,
@@ -111,6 +112,7 @@ const truth = {
   raters: 6,
   watchlistAdds: 30,
   watchlistPeople: 4,
+  watchlistImports: 250,
   letterboxdConnected: 5,
   letterboxdSyncedPeople: 3,
 };
@@ -138,6 +140,23 @@ describe('buildUsageReport', () => {
     assert.equal(shares.opened_by_visitor, null);
     assert.equal(shares.prompt_register, 0.3);
     assert.equal(shares.joined_new_account, 0.875);
+  });
+
+  it('never divides a step the server records by one the browser may not send', () => {
+    assert.deepEqual(
+      report.funnel.map((step) => [step.key, step.source]),
+      [
+        ['opened_by_visitor', 'browser'],
+        ['opened_by_visitor_joinable', 'browser'],
+        ['prompt_register', 'browser'],
+        ['signed_up_from_event', 'server'],
+        ['joined_new_account', 'server'],
+      ]
+    );
+    assert.equal(
+      report.funnel.find((step) => step.key === 'signed_up_from_event').shareOfPrevious,
+      null
+    );
   });
 
   it('never divides by an empty step', () => {
@@ -168,7 +187,7 @@ describe('buildUsageReport', () => {
       ratings: { ratings: 40, people: 6 },
       recaps: { visitor: 9, account: 3 },
       randomPicks: { watchlist: 5, list: 0, saved_list: 0 },
-      watchlist: { adds: 30, people: 4 },
+      watchlist: { adds: 30, people: 4, imports: 250 },
       letterboxd: {
         connectedAccounts: 5,
         syncedPeople: 3,
@@ -190,7 +209,11 @@ describe('formatUsageReport', () => {
 
     assert.match(text, /2026-10-20 to 2026-11-18/);
     assert.match(text, /Event link opened by a visitor\s+50/);
-    assert.match(text, /New account joined the event\s+7\s+87\.5%/);
+    assert.match(text, /Reported by the browser, unless measurement was refused/);
+    assert.match(text, /Recorded by the server for everyone/);
+    assert.match(text, /Account created from an event link\s+8$/m);
+    assert.match(text, /Joined by an account under 24 hours old\s+7\s+87\.5%/);
+    assert.match(text, /Watchlist additions\s+30 by 4 people, plus 250 linked to Letterboxd/);
     assert.match(text, /Ratings\s+40 by 6 people/);
     assert.match(text, /Letterboxd syncs\s+22 \(2 manual, 20 automatic\)/);
     assert.doesNotMatch(text, /NaN|undefined/);
@@ -202,5 +225,26 @@ describe('formatUsageReport', () => {
     );
 
     assert.match(text, /No anonymous count recorded over this period/);
+  });
+});
+
+describe('gcloudSecretCommand', () => {
+  it('reads the secret from the active project when none is named', () => {
+    assert.equal(
+      gcloudSecretCommand(undefined),
+      'gcloud secrets versions access latest --secret=MONGODB_URI'
+    );
+  });
+
+  it('names the project when one is given', () => {
+    assert.equal(
+      gcloudSecretCommand('example-project-42'),
+      'gcloud secrets versions access latest --secret=MONGODB_URI --project=example-project-42'
+    );
+  });
+
+  it('refuses a project id that is not one', () => {
+    assert.throws(() => gcloudSecretCommand('x & calc'), /GCP_PROJECT_ID/);
+    assert.throws(() => gcloudSecretCommand('a$(whoami)b'), /GCP_PROJECT_ID/);
   });
 });

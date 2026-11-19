@@ -97,7 +97,7 @@ export function useAnalytics() {
   const track = useCallback(
     <E extends AnalyticsEvent>(event: E, ...[properties, options]: TrackArguments<E>) => {
       const usage = countedUsageOf(event, properties);
-      if (usage && !refused && firstTimeFor('count', options)) reportUsage(usage);
+      if (usage && !refused && firstTimeFor('count', options)) void reportUsage(usage);
       if (!analytics || !firstTimeFor('capture', options)) return;
       capture(event, properties);
     },

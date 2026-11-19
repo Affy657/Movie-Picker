@@ -72,8 +72,9 @@ public sealed class JoinEventHandler : IJoinEventHandler
             try
             {
                 var created = await InsertAsync(idOrSlug, evt, NewParticipant(evt.Id, pseudo, userId), ct);
-                await NotifyHostAsync(evt, created.Pseudo, userId, CancellationToken.None);
-                await CountArrivalAsync(evt, userId);
+                var joiner = await FindJoinerAsync(evt, userId);
+                await NotifyHostAsync(evt, created.Pseudo, joiner, CancellationToken.None);
+                await CountArrivalAsync(joiner);
                 return new JoinEventResult
                 {
                     Participant = ParticipantResponse.FromDomain(created),
@@ -159,21 +160,26 @@ public sealed class JoinEventHandler : IJoinEventHandler
         return inserted;
     }
 
-    private async Task CountArrivalAsync(Event evt, string joinerUserId)
+    private async Task<User?> FindJoinerAsync(Event evt, string joinerUserId)
     {
         try
         {
-            var joiner = await _userRepository.GetByIdAsync(joinerUserId, CancellationToken.None);
-            if (joiner is not null)
-                await _usage.RecordAsync(UsageCount.EventJoined(joiner.CreatedAt, _clock.GetUtcNow()), CancellationToken.None);
+            return await _userRepository.GetByIdAsync(joinerUserId, CancellationToken.None);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Arrival count failed for movie night {EventId}", evt.Id);
+            _logger.LogWarning(ex, "Joiner lookup failed for movie night {EventId}", evt.Id);
+            return null;
         }
     }
 
-    private async Task NotifyHostAsync(Event evt, string joinerPseudo, string joinerUserId, CancellationToken ct)
+    private async Task CountArrivalAsync(User? joiner)
+    {
+        if (joiner is not null)
+            await _usage.RecordAsync(UsageCount.EventJoined(joiner.CreatedAt, _clock.GetUtcNow()), CancellationToken.None);
+    }
+
+    private async Task NotifyHostAsync(Event evt, string joinerPseudo, User? joiner, CancellationToken ct)
     {
         try
         {
@@ -183,8 +189,6 @@ public sealed class JoinEventHandler : IJoinEventHandler
             var host = await _userRepository.GetByIdAsync(evt.CreatorUserId, ct);
             if (host is null || !host.NotifiesOn(UserNotificationType.ParticipantJoined))
                 return;
-
-            var joiner = await _userRepository.GetByIdAsync(joinerUserId, ct);
 
             var subscriptions = await _pushSubscriptions.ListByUserIdAsync(evt.CreatorUserId, ct);
             if (subscriptions.Count > 0)

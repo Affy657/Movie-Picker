@@ -209,6 +209,49 @@ public sealed class AuthControllerTests
         VerifyCounted(usage, UsageCount.UserLoggedInMetric, "email.recap");
     }
 
+    [Fact]
+    public async Task Login_Refused_CountsNothing()
+    {
+        var handler = new Mock<ILoginUserHandler>();
+        handler.Setup(h => h.HandleAsync(It.IsAny<LoginRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(Errors.InvalidCredentials());
+        var usage = new Mock<IUsageRecorder>();
+
+        await Assert.ThrowsAsync<UnauthorizedException>(() => Controller(null).Login(
+            new LoginRequest { ReturnTo = "/e/abc123" }, handler.Object, usage.Object, Clock, CancellationToken.None));
+
+        usage.Verify(x => x.RecordAsync(It.IsAny<UsageCount>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData(OAuthOutcomeKind.EmailNotVerified)]
+    [InlineData(OAuthOutcomeKind.PasswordAccountRequiresManualLink)]
+    [InlineData(OAuthOutcomeKind.UnlinkedIdentityRequiresManualLink)]
+    [InlineData(OAuthOutcomeKind.IdentityLinkedToOtherAccount)]
+    public async Task OAuthCallback_NoSignIn_CountsNothing(OAuthOutcomeKind outcome)
+    {
+        var loginHandler = new Mock<IOAuthLoginHandler>();
+        loginHandler
+            .Setup(h => h.HandleAsync(It.IsAny<ExternalLoginInfo>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OAuthOutcome { Kind = outcome });
+        var usage = new Mock<IUsageRecorder>();
+
+        await new AuthController()
+            .WithContext(authentication: ExternalSignIn(OAuthProviders.GitHub, "/e/abc123").Object)
+            .OAuthCallback(
+                OAuthProviders.GitHub,
+                loginHandler.Object,
+                new Mock<IOAuthLinkHandler>().Object,
+                usage.Object,
+                GoogleAndGitHubEnabled(),
+                Options(),
+                Clock,
+                NullLogger<AuthController>.Instance,
+                CancellationToken.None);
+
+        usage.Verify(x => x.RecordAsync(It.IsAny<UsageCount>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     [Theory]
     [InlineData(true, "user_signed_up")]
     [InlineData(false, "user_logged_in")]

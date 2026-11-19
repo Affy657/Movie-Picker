@@ -13,7 +13,7 @@ public static class UsageCountProbe
     public static async Task<long> ReadTodayAsync(MoviePickerApplicationFactory factory, string metric, string variant)
     {
         using var scope = factory.Services.CreateScope();
-        var day = UsageCount.DayOf(scope.ServiceProvider.GetRequiredService<TimeProvider>().GetUtcNow());
+        var day = EventRecurrence.TodayInParis(scope.ServiceProvider.GetRequiredService<TimeProvider>().GetUtcNow());
         var repository = scope.ServiceProvider.GetRequiredService<IUsageCountRepository>();
         if (repository is InMemoryUsageCountRepository memory)
             return memory.CountOf(day, metric, variant);

@@ -40,7 +40,8 @@ public sealed class MutatingEndpointsRateLimitTests
         RateLimitingExtensions.KofiWebhookPolicy,
         RateLimitingExtensions.SchedulerPolicy,
         RateLimitingExtensions.IdeaSuggestionPolicy,
-        RateLimitingExtensions.AvatarPhotoUploadPolicy
+        RateLimitingExtensions.AvatarPhotoUploadPolicy,
+        RateLimitingExtensions.UsageCountPolicy
     ];
 
     [Fact]

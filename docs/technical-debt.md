@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-106`.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-107`.
 5. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
 7. **Contraintes** (ce qui casse en silence si on y touche) et **Impasses** (essayé, mesuré, sans gain), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
@@ -631,6 +631,16 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - verify: `grep -n "useIsMobile" apps/web/src/features/profile/components/FollowListModal.tsx`
 - fix: une prop `tabs` sur `ResponsiveDialog`, bâtie sur `ModalBody` et la barre de titre de `Modal`, puis `FollowListModal` passe par elle
 - fini-quand: `FollowListModal` n'importe plus ni `Sheet` ni `Modal`
+
+## DEBT-106 la requête Mongo de `pnpm run usage` n'est couverte par aucun test
+
+- state: agent
+- impact: `scripts/usage.test.mjs` teste le calcul et la mise en forme du rapport, pas la requête `MONGOSH_QUERY` qui lit la base ; un champ renommé dans une des collections lues (`participantId`, `creatorUserId`, `letterboxdSlug`, `letterboxdLastSyncAt`) fait sortir des zéros sans aucune erreur
+- ou: `scripts/usage.mjs` (`MONGOSH_QUERY`, `readUsage`)
+- verify: `grep -L "readUsage" scripts/usage.test.mjs`
+- fix: un test qui sème quelques documents dans le Mongo de test (`startWorkstationMongo`, port 27018) et compare ce que rend `readUsage`, joué là où la CI lance déjà un conteneur Mongo
+- fini-quand: renommer un champ lu par la requête fait échouer un test
+- piege: `readUsage` lance mongosh dans l'image `mongo:8` épinglée, par Docker ; la voie de CI qui joue ce test doit pouvoir lancer un conteneur
 
 ---
 

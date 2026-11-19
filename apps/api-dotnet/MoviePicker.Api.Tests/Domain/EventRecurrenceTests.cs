@@ -117,4 +117,16 @@ public sealed class EventRecurrenceTests
 
         Assert.Null(next);
     }
+
+    [Theory]
+    [InlineData(2026, 11, 18, 22, 59, "2026-11-18")]
+    [InlineData(2026, 11, 18, 23, 0, "2026-11-19")]
+    [InlineData(2026, 7, 1, 21, 59, "2026-07-01")]
+    [InlineData(2026, 7, 1, 22, 0, "2026-07-02")]
+    public void TodayInParis_FollowsTheParisCalendarInWinterAndSummer(int year, int month, int day, int hour, int minute, string expected)
+    {
+        var instant = new DateTimeOffset(year, month, day, hour, minute, 0, TimeSpan.Zero);
+
+        Assert.Equal(DateOnly.Parse(expected, System.Globalization.CultureInfo.InvariantCulture), EventRecurrence.TodayInParis(instant));
+    }
 }
