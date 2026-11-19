@@ -137,6 +137,22 @@ public sealed class UsersController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("me/proposed-movies")]
+    [Authorize]
+    [EnableRateLimiting(RateLimitingExtensions.PublicProfilePolicy)]
+    [ProducesResponseType(typeof(UserProposedMoviesResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> GetMyProposedMovies(
+        [FromQuery] bool winningOnly,
+        [FromServices] IGetUserProposedMoviesHandler handler,
+        [CurrentUserId] string userId,
+        CancellationToken ct)
+    {
+        var result = await handler.HandleForUserAsync(userId, winningOnly, ct);
+        return Ok(result);
+    }
+
     [HttpGet("me/following-watched-movies")]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.PublicProfilePolicy)]

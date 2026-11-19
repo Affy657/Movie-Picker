@@ -78,6 +78,9 @@ export const queryKeys = {
     followingWatchedMoviesAll: ['users', 'me', 'following-watched-movies'] as const,
     followingWatchedMovies: (take: number) =>
       ['users', 'me', 'following-watched-movies', take] as const,
+    proposedMoviesAll: ['users', 'me', 'proposed-movies'] as const,
+    proposedMovies: (winningOnly: boolean) =>
+      ['users', 'me', 'proposed-movies', winningOnly] as const,
   },
   watched: {
     all: ['watched'] as const,

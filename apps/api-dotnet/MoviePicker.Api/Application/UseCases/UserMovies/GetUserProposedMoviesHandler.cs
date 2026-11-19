@@ -46,7 +46,15 @@ public sealed class GetUserProposedMoviesHandler : IGetUserProposedMoviesHandler
         if (winningOnly && !PublicProfileGuard.CanSeeWatched(user, currentUserId))
             throw Errors.WatchedNotFound();
 
-        var participants = await _participants.ListByUserIdAsync(user.Id, ParticipantsCap, ct);
+        return await HandleForUserAsync(user.Id, winningOnly, ct);
+    }
+
+    public async Task<UserProposedMoviesResponse> HandleForUserAsync(
+        string userId,
+        bool winningOnly,
+        CancellationToken ct = default)
+    {
+        var participants = await _participants.ListByUserIdAsync(userId, ParticipantsCap, ct);
         if (participants.Count == 0)
             return new UserProposedMoviesResponse();
 

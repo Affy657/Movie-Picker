@@ -6,6 +6,7 @@ import {
   Compass,
   Eye,
   EyeOff,
+  Film,
   Globe,
   Layers,
   ListPlus,
@@ -13,6 +14,7 @@ import {
   RefreshCw,
   Search,
   Trash2,
+  Trophy,
 } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import Avatar from '@/shared/components/Avatar';
@@ -43,6 +45,9 @@ import { watchlistCountLabel } from '@/features/library/utils/watchlistCount';
 import type { WatchedMovies } from '@/features/library/api/watchedApi';
 import { useWatchedMovies } from '@/features/library/hooks/useWatched';
 import { watchedCountLabel } from '@/features/library/utils/watchedCount';
+import type { ProposedMovie } from '@/features/library/api/proposedMoviesApi';
+import { useMyProposedMovies } from '@/features/library/hooks/useMyProposedMovies';
+import { proposalsCountLabel } from '@/features/library/utils/proposalsCount';
 import type { MovieListSummary } from '@/features/library/api/listsApi';
 import type { SavedListSummary } from '@/features/library/api/savedListsApi';
 import ListFormDialog from '@/features/library/components/ListFormDialog';
@@ -76,6 +81,10 @@ import { posterStackSources } from '@/features/movies/utils/posterStack';
 import styles from './MyListsPage.module.css';
 
 const NO_WATCHED: WatchedMovies = { items: [], total: 0 };
+
+const NO_PROPOSALS: ProposedMovie[] = [];
+
+const SHORTCUT_COUNT = 4;
 
 const MY_LIST_SORTS: readonly ListSortKey[] = ['recent', 'name', 'size', 'progress'];
 
@@ -138,17 +147,23 @@ function ShortcutCard({
 function Shortcuts({
   watchlistItems,
   watched,
+  proposed,
+  winning,
   letterboxd,
   isMobile,
 }: Readonly<{
   watchlistItems: readonly WatchlistItem[];
   watched: WatchedMovies;
+  proposed: readonly ProposedMovie[];
+  winning: readonly ProposedMovie[];
   letterboxd: { watchlist: boolean; watched: boolean };
   isMobile: boolean;
 }>) {
   const { t } = useTranslation();
   const watchlistSrcs = useLatestPosterSources(watchlistItems);
   const watchedSrcs = useLatestPosterSources(watched.items);
+  const proposedSrcs = useLatestPosterSources(proposed);
+  const winningSrcs = useLatestPosterSources(winning);
   return (
     <div className={styles.shortcuts}>
       <ShortcutCard
@@ -173,6 +188,32 @@ function Shortcuts({
         }
         srcs={watchedSrcs}
         letterboxd={letterboxd.watched}
+        isMobile={isMobile}
+      />
+      <ShortcutCard
+        to={ROUTES.myProposals}
+        name={t('myProposals.proposals.title')}
+        icon={<Film size={ICON_SIZE.md} aria-hidden />}
+        countLabel={
+          proposed.length === 0
+            ? t('lists.count.empty')
+            : proposalsCountLabel(proposed.length, 'proposals', t)
+        }
+        srcs={proposedSrcs}
+        letterboxd={false}
+        isMobile={isMobile}
+      />
+      <ShortcutCard
+        to={ROUTES.myWinningProposals}
+        name={t('myProposals.winning.title')}
+        icon={<Trophy size={ICON_SIZE.md} aria-hidden />}
+        countLabel={
+          winning.length === 0
+            ? t('lists.count.empty')
+            : proposalsCountLabel(winning.length, 'winning', t)
+        }
+        srcs={winningSrcs}
+        letterboxd={false}
         isMobile={isMobile}
       />
     </div>
@@ -613,8 +654,9 @@ function ListsLoading({ label }: Readonly<{ label: string }>) {
   return (
     <SkeletonScreen label={label}>
       <div className={styles.shortcuts}>
-        <Skeleton variant="block" className={styles.shortcutSkeleton} />
-        <Skeleton variant="block" className={styles.shortcutSkeleton} />
+        {Array.from({ length: SHORTCUT_COUNT }, (_, index) => (
+          <Skeleton key={index} variant="block" className={styles.shortcutSkeleton} />
+        ))}
       </div>
       <ul className={styles.rows}>
         {Array.from({ length: SKELETON_ROWS }, (_, index) => (
@@ -638,12 +680,14 @@ export default function MyListsPage() {
   const listsQuery = useMyLists({ enabled: !!user });
   const watchlistQuery = useWatchlist({ enabled: !!user });
   const watchedQuery = useWatchedMovies({ enabled: !!user });
+  const proposedQuery = useMyProposedMovies(false, { enabled: !!user });
+  const winningQuery = useMyProposedMovies(true, { enabled: !!user });
   const savedQuery = useSavedLists({ enabled: !!user });
   const unsave = useUnsaveList();
   const [createOpen, setCreateOpen] = useState(false);
   const [copied, setCopied] = useState<SavedListEntry | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const queries = [listsQuery, watchlistQuery, watchedQuery];
+  const queries = [listsQuery, watchlistQuery, watchedQuery, proposedQuery, winningQuery];
   const isPending = [...queries, savedQuery].some((query) => query.isPending);
   const isError = queries.some((query) => query.isError);
 
@@ -681,6 +725,8 @@ export default function MyListsPage() {
         <Shortcuts
           watchlistItems={watchlistQuery.data ?? []}
           watched={watchedQuery.data ?? NO_WATCHED}
+          proposed={proposedQuery.data ?? NO_PROPOSALS}
+          winning={winningQuery.data ?? NO_PROPOSALS}
           letterboxd={{
             watchlist: syncsWithLetterboxd(user, 'watchlist'),
             watched: syncsWithLetterboxd(user, 'watched'),

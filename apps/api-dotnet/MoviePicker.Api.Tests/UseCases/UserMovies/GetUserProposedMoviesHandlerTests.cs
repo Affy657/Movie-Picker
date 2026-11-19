@@ -249,4 +249,29 @@ public sealed class GetUserProposedMoviesHandlerTests
         Assert.Equal(158, item.RuntimeMinutes);
         Assert.Equal("/p7345.jpg", item.PosterPath);
     }
+
+    [Fact]
+    public async Task ForItsOwner_APrivateProfile_StillListsEveryProposal()
+    {
+        var handler = BuildWithThreeNightsAndTwoWins();
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Alice(isPublic: false) with { IsWatchedPublic = false });
+
+        var res = await handler.HandleForUserAsync("u1", winningOnly: false);
+
+        Assert.Equal([25237, 530385], res.Items.Select(i => i.TmdbId));
+        Assert.Equal(3, res.Items.Sum(i => i.ProposalCount));
+    }
+
+    [Fact]
+    public async Task ForItsOwner_WinningOnly_KeepsTheWinnersOfAMemberHidingTheirWatchedFilms()
+    {
+        var handler = BuildWithThreeNightsAndTwoWins();
+
+        var res = await handler.HandleForUserAsync("u1", winningOnly: true);
+
+        Assert.Equal([25237, 530385], res.Items.Select(i => i.TmdbId));
+        Assert.All(res.Items, i => Assert.Equal(1, i.ProposalCount));
+        _users.Verify(r => r.GetByHandleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 }

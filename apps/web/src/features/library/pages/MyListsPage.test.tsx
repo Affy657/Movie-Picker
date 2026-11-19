@@ -8,11 +8,13 @@ import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
 import {
   createListsHandlers,
+  createMyProposedMoviesHandlers,
   createSavedListsHandlers,
   createWatchedHandlers,
   createWatchlistHandlers,
   TEST_API_V1,
   type MockList,
+  type MockProposedMovie,
   type MockSavedList,
   type MockWatchedMovie,
 } from '@/mocks/handlers';
@@ -48,6 +50,16 @@ const WATCHLIST = [film(1, 'Alien', '/alien.jpg'), film(2, 'Heat', '/heat.jpg')]
 const WATCHED: MockWatchedMovie[] = [
   { tmdbId: 10, title: 'Scream', posterPath: '/scream.jpg', source: 'night' },
   { tmdbId: 11, title: 'Brazil', posterPath: '/brazil.jpg', source: 'elsewhere' },
+];
+
+const PROPOSED: MockProposedMovie[] = [
+  { tmdbId: 20, title: 'Midsommar', posterPath: '/midsommar.jpg', proposalCount: 2 },
+  { tmdbId: 21, title: 'Hérédité', posterPath: '/heredite.jpg' },
+  { tmdbId: 22, title: 'The Thing', posterPath: '/thing.jpg' },
+];
+
+const WINNING: MockProposedMovie[] = [
+  { tmdbId: 20, title: 'Midsommar', posterPath: '/midsommar.jpg' },
 ];
 
 const LISTS: MockList[] = [
@@ -128,6 +140,7 @@ function fullServer(saved: MockSavedList[] = [], lists: MockList[] = LISTS) {
     ...createWatchlistHandlers(WATCHLIST),
     ...createListsHandlers(lists),
     ...createWatchedHandlers(WATCHED),
+    ...createMyProposedMoviesHandlers(PROPOSED, WINNING),
     ...createSavedListsHandlers(saved),
   ];
 }
@@ -202,6 +215,48 @@ describe('MyListsPage', () => {
     expect(screen.queryByText(/^\d+ listes/)).toBeNull();
   });
 
+  it('adds my proposed films and my winning proposals to the shortcuts, each opening its page', async () => {
+    server.use(...fullServer());
+
+    renderPage();
+
+    const proposed = await screen.findByRole('link', { name: /films proposés/i });
+    expect(proposed).toHaveAttribute('href', '/listes/propositions');
+    expect(within(proposed).getByText('3 films proposés')).toBeInTheDocument();
+    const winning = screen.getByRole('link', { name: /propositions gagnantes/i });
+    expect(winning).toHaveAttribute('href', '/listes/propositions-gagnantes');
+    expect(within(winning).getByText('1 film gagnant')).toBeInTheDocument();
+    expect(
+      screen
+        .getAllByRole('link')
+        .slice(0, 4)
+        .map((link) => link.getAttribute('href'))
+    ).toEqual([
+      '/watchlist',
+      '/listes/films-vus',
+      '/listes/propositions',
+      '/listes/propositions-gagnantes',
+    ]);
+  });
+
+  it('keeps both proposal shortcuts, empty, for an account that never proposed a film', async () => {
+    server.use(
+      authedUser(),
+      ...createWatchlistHandlers([]),
+      ...createListsHandlers([]),
+      ...createWatchedHandlers(),
+      ...createMyProposedMoviesHandlers(),
+      ...createSavedListsHandlers()
+    );
+
+    renderPage();
+
+    const proposed = await screen.findByRole('link', { name: /films proposés/i });
+    expect(within(proposed).getByText('Vide')).toBeInTheDocument();
+    const winning = screen.getByRole('link', { name: /propositions gagnantes/i });
+    expect(within(winning).getByText('Vide')).toBeInTheDocument();
+  });
+
   it('says how many films of each list are watched, with a bar under its posters only once one is', async () => {
     server.use(...fullServer());
 
@@ -236,6 +291,7 @@ describe('MyListsPage', () => {
       ...createWatchlistHandlers(WATCHLIST),
       ...createListsHandlers(LISTS),
       ...createWatchedHandlers(WATCHED),
+      ...createMyProposedMoviesHandlers(),
       ...createSavedListsHandlers()
     );
 
@@ -261,6 +317,7 @@ describe('MyListsPage', () => {
         ...createWatchlistHandlers(WATCHLIST),
         ...createListsHandlers(LISTS),
         ...createWatchedHandlers(WATCHED),
+        ...createMyProposedMoviesHandlers(),
         ...createSavedListsHandlers()
       );
 
@@ -282,6 +339,7 @@ describe('MyListsPage', () => {
       ...createWatchlistHandlers([]),
       ...createListsHandlers(),
       ...createWatchedHandlers(),
+      ...createMyProposedMoviesHandlers(),
       ...createSavedListsHandlers()
     );
     const user = userEvent.setup();
@@ -451,6 +509,7 @@ describe('MyListsPage', () => {
       authedUser(),
       ...createWatchlistHandlers(WATCHLIST),
       ...createWatchedHandlers(WATCHED),
+      ...createMyProposedMoviesHandlers(),
       ...createSavedListsHandlers(),
       http.get(`${TEST_API_V1}/lists`, () => {
         calls += 1;
