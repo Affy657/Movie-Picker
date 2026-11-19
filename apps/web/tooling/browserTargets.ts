@@ -22,7 +22,9 @@ export function buildTargetsFrom(browsers: ReadonlyArray<string>): string[] {
       (version[0] === current[0] && (version[1] ?? 0) < (current[1] ?? 0));
     if (older) oldest.set(buildName, version);
   }
-  return [...oldest].map(([name, version]) => `${name}${version.join('.')}`).sort();
+  return [...oldest]
+    .map(([name, version]) => `${name}${version.join('.')}`)
+    .sort((a, b) => a.localeCompare(b));
 }
 
 export function browserTargets(webRoot: string): string[] {
