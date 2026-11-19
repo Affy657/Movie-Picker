@@ -46,9 +46,9 @@ public sealed class EventStreamResultTests
         return (new ActionContext(http, new RouteData(), new ActionDescriptor()), body);
     }
 
-    private static EventLiveOptions ShortStream() => new()
+    private static EventLiveOptions ShortStream(int lifetimeMs = 300) => new()
     {
-        StreamLifetime = TimeSpan.FromMilliseconds(300),
+        StreamLifetime = TimeSpan.FromMilliseconds(lifetimeMs),
         PresenceRefresh = TimeSpan.FromMilliseconds(50),
         KeepAliveInterval = TimeSpan.FromMilliseconds(100)
     };
@@ -65,7 +65,7 @@ public sealed class EventStreamResultTests
         var result = new EventStreamResult(
             new EventStreamAccess("evt-1", "soiree", "p-1"),
             new SilentFeed(),
-            ShortStream(),
+            ShortStream(lifetimeMs: 1500),
             lease);
 
         await result.ExecuteResultAsync(context);
