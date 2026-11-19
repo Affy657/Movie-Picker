@@ -9,6 +9,17 @@ export function isChunkLoadError(error: unknown): boolean {
   return error instanceof Error && CHUNK_LOAD_FAILURE.test(error.message);
 }
 
+let leaving = false;
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    leaving = true;
+  });
+  window.addEventListener('pageshow', () => {
+    leaving = false;
+  });
+}
+
 function reloadedRecently(now: number): boolean {
   const last = Number(safeSessionStorageGet(STALE_BUILD_RELOAD_KEY));
   return last > 0 && now - last < RELOAD_COOLDOWN_MS;
@@ -20,7 +31,7 @@ export function reloadIfStaleBuild(
   now: () => number = Date.now,
   isOnline: () => boolean = () => navigator.onLine
 ): boolean {
-  if (!isChunkLoadError(error)) return false;
+  if (leaving || !isChunkLoadError(error)) return false;
   const at = now();
   if (!isOnline() || reloadedRecently(at)) return false;
   if (!safeSessionStorageSet(STALE_BUILD_RELOAD_KEY, String(at))) return false;

@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Fixed
+
+- **Sur Safari, quitter une page encore en chargement ne la recharge plus** à la place de celle demandée.
+
 ## [1.16.1] - 2026-11-19
 
 ### Changed
