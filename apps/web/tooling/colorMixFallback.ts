@@ -75,7 +75,7 @@ function parseCompound(text: string): Compound | null {
 
 function parseSelector(text: string): Selector | null {
   const compounds = text.split(/\s+/).map(parseCompound);
-  if (compounds.some((compound) => compound === null)) return null;
+  if (compounds.includes(null)) return null;
   const parts = text.match(COMPOUND_PART) ?? [];
   const specificity = parts.filter((part) => part !== 'html').length;
   return { compounds: compounds as Compound[], specificity };
@@ -97,37 +97,61 @@ type Ignored = { name: string; where: string };
 function customProperties(body: string): Map<string, string> {
   const declarations = new Map<string, string>();
   for (const declaration of splitTopLevel(body, ';')) {
-    const match = /^(--[\w-]+)\s*:\s*([\s\S]+)$/.exec(declaration);
-    if (match) declarations.set(match[1]!, match[2]!.replaceAll(/\s+/g, ' ').trim());
+    const colon = declaration.indexOf(':');
+    if (colon === -1) continue;
+    const name = declaration.slice(0, colon).trim();
+    const value = declaration
+      .slice(colon + 1)
+      .replaceAll(/\s+/g, ' ')
+      .trim();
+    if (/^--[\w-]+$/.test(name) && value) declarations.set(name, value);
   }
   return declarations;
+}
+
+function declaredNames(body: string): string[] {
+  const names: string[] = [];
+  const colonAfter = /\s*:/y;
+  for (const match of body.matchAll(/--[\w-]+/g)) {
+    colonAfter.lastIndex = match.index + match[0].length;
+    if (colonAfter.test(body)) names.push(match[0]);
+  }
+  return names;
+}
+
+function selectorRule(
+  prelude: string,
+  body: string,
+  order: number,
+  ignored: Ignored[]
+): Rule | null {
+  const declarations = customProperties(body);
+  if (declarations.size === 0) return null;
+  const selectors = splitTopLevel(prelude, ',')
+    .filter((selector) => selector !== '::backdrop')
+    .map(parseSelector);
+  const supported = selectors.filter((selector): selector is Selector => selector !== null);
+  if (supported.length !== selectors.length)
+    for (const name of declarations.keys()) ignored.push({ name, where: prelude });
+  return supported.length > 0 ? { selectors: supported, declarations, order } : null;
 }
 
 function parseRules(css: string, firstOrder: number, ignored: Ignored[]): Rule[] {
   const source = stripComments(css);
   const rules: Rule[] = [];
   let index = 0;
-  while (index < source.length) {
-    const open = source.indexOf('{', index);
-    if (open === -1) break;
+  let open = source.indexOf('{');
+  while (open !== -1) {
     const prelude = source.slice(index, open).trim();
     const { body, end } = readBlock(source, open + 1);
     index = end;
+    open = source.indexOf('{', index);
     if (prelude.startsWith('@')) {
-      for (const [name] of body.matchAll(/--[\w-]+(?=\s*:)/g))
-        ignored.push({ name, where: prelude });
+      for (const name of declaredNames(body)) ignored.push({ name, where: prelude });
       continue;
     }
-    const declarations = customProperties(body);
-    if (declarations.size === 0) continue;
-    const selectors = splitTopLevel(prelude, ',')
-      .filter((selector) => selector !== '::backdrop')
-      .map(parseSelector);
-    const supported = selectors.filter((selector): selector is Selector => selector !== null);
-    if (supported.length !== selectors.length)
-      for (const name of declarations.keys()) ignored.push({ name, where: prelude });
-    if (supported.length > 0)
-      rules.push({ selectors: supported, declarations, order: firstOrder + rules.length });
+    const rule = selectorRule(prelude, body, firstOrder + rules.length, ignored);
+    if (rule) rules.push(rule);
   }
   return rules;
 }
@@ -343,6 +367,46 @@ function ruleText(selector: string, values: ReadonlyMap<string, string>): string
 
 export const COLOR_MIX_FALLBACK_MODULE = 'virtual:color-mix-fallback.css';
 
+function assertFollowable(rules: ReadonlyArray<Rule>, ignored: ReadonlyArray<Ignored>): void {
+  const readByMixes = namesReadByMixes(rules);
+  for (const { name, where } of ignored)
+    if (readByMixes.has(name))
+      throw new Error(
+        `${name} is declared under "${where}", which the colour-mix fallback cannot follow, and a color-mix() token reads it`
+      );
+}
+
+function rootAttributes(rules: ReadonlyArray<Rule>): { themes: string[]; accents: string[] } {
+  const compounds = rules.flatMap((rule) =>
+    rule.selectors.flatMap((selector) => selector.compounds)
+  );
+  return {
+    themes: [...new Set(compounds.flatMap((compound) => compound.theme ?? []))],
+    accents: [...new Set(compounds.flatMap((compound) => compound.accent ?? []))],
+  };
+}
+
+function themeBlocks(
+  rules: ReadonlyArray<Rule>,
+  chain: ReadonlyArray<string>,
+  theme: string,
+  accents: ReadonlyArray<string>
+): string[] {
+  const descendants = chain.map((className) => ` .${className}`).join('');
+  const blocks: string[] = [];
+  const base = valuesOf(rules, { root: { theme, accent: null }, chain });
+  if (base.size > 0) blocks.push(ruleText(`:root[data-theme='${theme}']${descendants}`, base));
+  for (const accent of accents) {
+    const values = valuesOf(rules, { root: { theme, accent }, chain });
+    const differing = new Map([...values].filter(([name, value]) => base.get(name) !== value));
+    if (differing.size > 0)
+      blocks.push(
+        ruleText(`:root[data-theme='${theme}'][data-accent='${accent}']${descendants}`, differing)
+      );
+  }
+  return blocks;
+}
+
 export function buildColorMixFallback(files: ReadonlyArray<string>): string {
   let order = 0;
   const ignored: Ignored[] = [];
@@ -351,40 +415,11 @@ export function buildColorMixFallback(files: ReadonlyArray<string>): string {
     order += parsed.length;
     return parsed;
   });
-  const readByMixes = namesReadByMixes(rules);
-  for (const { name, where } of ignored)
-    if (readByMixes.has(name))
-      throw new Error(
-        `${name} is declared under "${where}", which the colour-mix fallback cannot follow, and a color-mix() token reads it`
-      );
-  const themes = new Set<string>();
-  const accents = new Set<string>();
-  for (const rule of rules)
-    for (const selector of rule.selectors)
-      for (const compound of selector.compounds) {
-        if (compound.theme) themes.add(compound.theme);
-        if (compound.accent) accents.add(compound.accent);
-      }
-
-  const blocks: string[] = [];
-  for (const chain of chainsOf(rules)) {
-    const descendants = chain.map((className) => ` .${className}`).join('');
-    for (const theme of themes) {
-      const base = valuesOf(rules, { root: { theme, accent: null }, chain });
-      if (base.size > 0) blocks.push(ruleText(`:root[data-theme='${theme}']${descendants}`, base));
-      for (const accent of accents) {
-        const values = valuesOf(rules, { root: { theme, accent }, chain });
-        const differing = new Map([...values].filter(([name, value]) => base.get(name) !== value));
-        if (differing.size > 0)
-          blocks.push(
-            ruleText(
-              `:root[data-theme='${theme}'][data-accent='${accent}']${descendants}`,
-              differing
-            )
-          );
-      }
-    }
-  }
+  assertFollowable(rules, ignored);
+  const { themes, accents } = rootAttributes(rules);
+  const blocks = chainsOf(rules).flatMap((chain) =>
+    themes.flatMap((theme) => themeBlocks(rules, chain, theme, accents))
+  );
   if (blocks.length === 0) return '';
   return `@supports not (color: ${COLOR_MIX_SUPPORT_QUERY}) {\n${blocks.join('\n')}\n}\n`;
 }

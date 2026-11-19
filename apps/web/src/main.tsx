@@ -8,9 +8,12 @@ import { captureException, scheduleSentryStart } from '@/shared/observability/se
 import { loadLocale, preferredLocale } from '@/shared/i18n';
 import './index.css';
 
-if (!CSS.supports('color', 'color-mix(in srgb, currentColor 50%, transparent)')) {
+function loadColorMixFallback(): void {
+  if (CSS.supports('color', 'color-mix(in srgb, currentColor 50%, transparent)')) return;
   import('virtual:color-mix-fallback.css').catch(captureException);
 }
+
+loadColorMixFallback();
 
 startPwaInstallRuntime();
 captureMovedOriginMarker(window.location, (url) =>
