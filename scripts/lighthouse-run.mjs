@@ -228,6 +228,11 @@ function startApiStub(port) {
       res.writeHead(200, { 'Content-Type': 'application/json' }).end('[]');
       return;
     }
+    if (urlPath === '/api/v1/usage-counts') {
+      req.resume();
+      res.writeHead(204).end();
+      return;
+    }
     if (urlPath === '/api/1/envelope/') {
       req.resume();
       res.writeHead(200, { 'Content-Type': 'application/json' }).end('{}');
