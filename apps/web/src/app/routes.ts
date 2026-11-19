@@ -60,6 +60,8 @@ export const ROUTES = {
   watchlist: '/watchlist',
   lists: '/listes',
   watchedMovies: '/listes/films-vus',
+  myProposals: '/listes/propositions',
+  myWinningProposals: '/listes/propositions-gagnantes',
   listPattern: '/listes/:listId',
   list: (listId: string) => `/listes/${encodeURIComponent(listId)}`,
   savedListPattern: '/listes/enregistrees/:savedListId',

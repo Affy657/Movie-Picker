@@ -1,6 +1,6 @@
 import { Suspense, useState, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router';
-import { Bookmark, CalendarPlus, Eye, Inbox } from 'lucide-react';
+import { Bookmark, CalendarPlus, Eye, Film, Inbox, Trophy } from 'lucide-react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { createAppQueryClient } from '@/app/appQueryClient';
 import { ThemeProvider } from '@/shared/contexts/ThemeContext';
@@ -48,6 +48,7 @@ const JoinListPage = routeLazy('joinList');
 const MemberListsPage = routeLazy('memberLists');
 const PublicListPage = routeLazy('publicList');
 const WatchedMoviesPage = routeLazy('watchedMovies');
+const MyProposalsPage = routeLazy('myProposals');
 const NotificationsPage = routeLazy('notifications');
 const ProfilePage = routeLazy('profile');
 const ProfileMoviesPage = routeLazy('profileMovies');
@@ -182,6 +183,36 @@ export function AppRoutes() {
               maxWidth="var(--container-lg)"
             >
               <WatchedMoviesPage />
+            </SessionGate>
+          }
+        />
+        <Route
+          path={ROUTES.myProposals}
+          element={
+            <SessionGate
+              icon={<Film aria-hidden size={ICON_SIZE['3xl']} />}
+              headingKey="myProposals.proposals.title"
+              titleKey="lists.signedOutTitle"
+              messageKey="lists.signedOutMessage"
+              returnTo={ROUTES.myProposals}
+              maxWidth="var(--container-lg)"
+            >
+              <MyProposalsPage />
+            </SessionGate>
+          }
+        />
+        <Route
+          path={ROUTES.myWinningProposals}
+          element={
+            <SessionGate
+              icon={<Trophy aria-hidden size={ICON_SIZE['3xl']} />}
+              headingKey="myProposals.winning.title"
+              titleKey="lists.signedOutTitle"
+              messageKey="lists.signedOutMessage"
+              returnTo={ROUTES.myWinningProposals}
+              maxWidth="var(--container-lg)"
+            >
+              <MyProposalsPage winningOnly />
             </SessionGate>
           }
         />

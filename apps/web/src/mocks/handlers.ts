@@ -735,6 +735,36 @@ export function createWatchedHandlers(initial: MockWatchedMovie[] = []) {
   ];
 }
 
+export type MockProposedMovie = MockTitle<Schemas['UserProposedMovieItem']>;
+
+function mockProposedMovie(item: MockProposedMovie): Schemas['UserProposedMovieItem'] {
+  return {
+    mediaType: 'movie',
+    year: '2020',
+    posterPath: null,
+    voteAverage: null,
+    runtimeMinutes: null,
+    genreIds: [],
+    lastProposedAt: MOCK_DATE,
+    proposalCount: 1,
+    ...item,
+  };
+}
+
+export function createMyProposedMoviesHandlers(
+  proposed: MockProposedMovie[] = [],
+  winning: MockProposedMovie[] = []
+) {
+  return [
+    http.get(`${V1}/users/me/proposed-movies`, ({ request }) => {
+      const winningOnly = new URL(request.url).searchParams.get('winningOnly') === 'true';
+      return apiJson<'UserProposedMoviesResponse'>({
+        items: (winningOnly ? winning : proposed).map(mockProposedMovie),
+      });
+    }),
+  ];
+}
+
 export interface MockEventOptions {
   slug: string;
   title?: string;

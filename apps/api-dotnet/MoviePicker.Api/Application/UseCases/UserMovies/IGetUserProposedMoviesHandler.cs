@@ -9,4 +9,9 @@ public interface IGetUserProposedMoviesHandler
         string? currentUserId,
         bool winningOnly,
         CancellationToken ct = default);
+
+    Task<UserProposedMoviesResponse> HandleForUserAsync(
+        string userId,
+        bool winningOnly,
+        CancellationToken ct = default);
 }
