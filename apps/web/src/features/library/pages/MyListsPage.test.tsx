@@ -3,16 +3,18 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
 import {
   createListsHandlers,
+  createNightMoviesHandlers,
   createSavedListsHandlers,
   createWatchedHandlers,
   createWatchlistHandlers,
   TEST_API_V1,
   type MockList,
+  type MockNightMovie,
   type MockSavedList,
   type MockWatchedMovie,
 } from '@/mocks/handlers';
@@ -118,6 +120,12 @@ const KOREAN: MockSavedList = {
   items: [film(500, 'Old Boy', '/oldboy.jpg')],
 };
 
+const NIGHT_MOVIES: MockNightMovie[] = [
+  { tmdbId: 700, title: 'Dune', posterPath: '/dune.jpg' },
+  { tmdbId: 701, title: 'Alien', posterPath: '/alien.jpg' },
+  { tmdbId: 702, title: 'Babylon', posterPath: null },
+];
+
 const ALICE = { userId: 'u1', handle: 'alice', displayName: 'Alice', avatarId: null };
 const LEA = { userId: 'u2', handle: 'lea', displayName: 'Léa Moreau', avatarId: null };
 const TOM = { userId: 'u3', handle: 'tom', displayName: 'Tom', avatarId: null };
@@ -128,6 +136,7 @@ function fullServer(saved: MockSavedList[] = [], lists: MockList[] = LISTS) {
     ...createWatchlistHandlers(WATCHLIST),
     ...createListsHandlers(lists),
     ...createWatchedHandlers(WATCHED),
+    ...createNightMoviesHandlers(NIGHT_MOVIES),
     ...createSavedListsHandlers(saved),
   ];
 }
@@ -181,7 +190,7 @@ describe('MyListsPage', () => {
   });
   afterAll(() => server.close());
 
-  it('puts À voir and Films vus first as shortcuts, then one row per list, the latest updated first', async () => {
+  it('puts À voir, Films vus and Films de mes soirées first as shortcuts, then one row per list, the latest updated first', async () => {
     server.use(...fullServer());
 
     renderPage();
@@ -195,11 +204,30 @@ describe('MyListsPage', () => {
     const watched = screen.getByRole('link', { name: /films vus/i });
     expect(watched).toHaveAttribute('href', '/listes/films-vus');
     expect(within(watched).getByText('2 films vus')).toBeInTheDocument();
+    const nightMovies = screen.getByRole('link', { name: /films de mes soirées/i });
+    expect(nightMovies).toHaveAttribute('href', '/listes/films-des-soirees');
+    expect(await within(nightMovies).findByText('3 films')).toBeInTheDocument();
 
     expect(await rowNames('Vos listes')).toEqual(['Films cultes', 'Halloween', 'Ghibli']);
     expect(screen.getByRole('heading', { level: 2, name: /^Vos listes/ })).toHaveTextContent('3');
     expect(rowOf('Vos listes', /halloween/i)).toHaveAttribute('href', '/listes/l1');
     expect(screen.queryByText(/^\d+ listes/)).toBeNull();
+  });
+
+  it('shows the lists without waiting for the films of my nights', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/users/me/night-movies`, async () => {
+        await delay('infinite');
+        return HttpResponse.json({ items: [] });
+      }),
+      ...fullServer()
+    );
+
+    renderPage();
+
+    expect(await rowNames('Vos listes')).toEqual(['Films cultes', 'Halloween', 'Ghibli']);
+    const nightMovies = screen.getByRole('link', { name: /films de mes soirées/i });
+    expect(within(nightMovies).queryByText(/films?$|^Vide$/)).toBeNull();
   });
 
   it('says how many films of each list are watched, with a bar under its posters only once one is', async () => {
@@ -236,6 +264,7 @@ describe('MyListsPage', () => {
       ...createWatchlistHandlers(WATCHLIST),
       ...createListsHandlers(LISTS),
       ...createWatchedHandlers(WATCHED),
+      ...createNightMoviesHandlers(NIGHT_MOVIES),
       ...createSavedListsHandlers()
     );
 
@@ -261,6 +290,7 @@ describe('MyListsPage', () => {
         ...createWatchlistHandlers(WATCHLIST),
         ...createListsHandlers(LISTS),
         ...createWatchedHandlers(WATCHED),
+        ...createNightMoviesHandlers(NIGHT_MOVIES),
         ...createSavedListsHandlers()
       );
 
@@ -282,6 +312,7 @@ describe('MyListsPage', () => {
       ...createWatchlistHandlers([]),
       ...createListsHandlers(),
       ...createWatchedHandlers(),
+      ...createNightMoviesHandlers(),
       ...createSavedListsHandlers()
     );
     const user = userEvent.setup();
@@ -291,6 +322,9 @@ describe('MyListsPage', () => {
     expect(within(watchlist).getByText('Vide')).toBeInTheDocument();
     expect(
       within(screen.getByRole('link', { name: /films vus/i })).getByText('Vide')
+    ).toBeInTheDocument();
+    expect(
+      await within(screen.getByRole('link', { name: /films de mes soirées/i })).findByText('Vide')
     ).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -451,6 +485,7 @@ describe('MyListsPage', () => {
       authedUser(),
       ...createWatchlistHandlers(WATCHLIST),
       ...createWatchedHandlers(WATCHED),
+      ...createNightMoviesHandlers(NIGHT_MOVIES),
       ...createSavedListsHandlers(),
       http.get(`${TEST_API_V1}/lists`, () => {
         calls += 1;

@@ -735,6 +735,34 @@ export function createWatchedHandlers(initial: MockWatchedMovie[] = []) {
   ];
 }
 
+export type MockNightMovie = Partial<Schemas['MyNightMovieItem']> &
+  Pick<Schemas['MyNightMovieItem'], 'tmdbId' | 'title'>;
+
+function mockNightMovieItem(film: MockNightMovie): Schemas['MyNightMovieItem'] {
+  return {
+    mediaType: 'movie',
+    year: '2020',
+    posterPath: null,
+    genreIds: [],
+    voteAverage: null,
+    runtimeMinutes: null,
+    lastProposedAt: MOCK_WATCHED_DATE,
+    proposedByMe: false,
+    isWinner: false,
+    isWatched: false,
+    lastProposer: null,
+    ...film,
+  };
+}
+
+export function createNightMoviesHandlers(films: MockNightMovie[] = []) {
+  return [
+    http.get(`${V1}/users/me/night-movies`, () =>
+      apiJson<'MyNightMoviesResponse'>({ items: films.map(mockNightMovieItem) })
+    ),
+  ];
+}
+
 export interface MockEventOptions {
   slug: string;
   title?: string;

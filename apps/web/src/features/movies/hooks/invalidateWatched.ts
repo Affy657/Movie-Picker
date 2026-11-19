@@ -21,6 +21,7 @@ export function invalidateWatched(
   return Promise.all([
     invalidateWatchedFilms(queryClient, excludedKeys),
     queryClient.invalidateQueries({ queryKey: queryKeys.lists.all }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.nightMovies }),
     invalidateWatchlist(queryClient),
   ]).then(() => undefined);
 }

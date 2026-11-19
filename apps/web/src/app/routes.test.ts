@@ -86,6 +86,10 @@ describe('ROUTES', () => {
     expect(ROUTES.watchedMovies).toBe('/listes/films-vus');
   });
 
+  it('files the films of my nights under Mes listes', () => {
+    expect(ROUTES.nightMovies).toBe('/listes/films-des-soirees');
+  });
+
   it('gives a list invitation link a short address of its own, outside Mes listes', () => {
     expect(ROUTES.joinListPattern).toBe('/l/:token/rejoindre');
     expect(ROUTES.joinList('7xK2pQ')).toBe('/l/7xK2pQ/rejoindre');

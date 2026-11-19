@@ -38,7 +38,8 @@ const LIBRARY_SORT_RULES: Readonly<Record<LibrarySortKey, SortRule<LibraryEntry>
   },
 };
 
-export type ToolbarStorageScope = 'watchlist' | 'list' | 'watched' | 'savedList' | 'publicList';
+export type ToolbarStorageScope =
+  'watchlist' | 'list' | 'watched' | 'nightMovies' | 'savedList' | 'publicList';
 
 function storageKey(scope: ToolbarStorageScope, userId: string, listId?: string): string {
   const owner = listId ? `${scope}_${listId}` : scope;

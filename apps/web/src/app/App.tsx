@@ -1,6 +1,6 @@
 import { Suspense, useState, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router';
-import { Bookmark, CalendarPlus, Eye, Inbox } from 'lucide-react';
+import { Bookmark, CalendarPlus, Clapperboard, Eye, Inbox } from 'lucide-react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { createAppQueryClient } from '@/app/appQueryClient';
 import { ThemeProvider } from '@/shared/contexts/ThemeContext';
@@ -48,6 +48,7 @@ const JoinListPage = routeLazy('joinList');
 const MemberListsPage = routeLazy('memberLists');
 const PublicListPage = routeLazy('publicList');
 const WatchedMoviesPage = routeLazy('watchedMovies');
+const NightMoviesPage = routeLazy('nightMovies');
 const NotificationsPage = routeLazy('notifications');
 const ProfilePage = routeLazy('profile');
 const ProfileMoviesPage = routeLazy('profileMovies');
@@ -182,6 +183,21 @@ export function AppRoutes() {
               maxWidth="var(--container-lg)"
             >
               <WatchedMoviesPage />
+            </SessionGate>
+          }
+        />
+        <Route
+          path={ROUTES.nightMovies}
+          element={
+            <SessionGate
+              icon={<Clapperboard aria-hidden size={ICON_SIZE['3xl']} />}
+              headingKey="nightMovies.title"
+              titleKey="lists.signedOutTitle"
+              messageKey="lists.signedOutMessage"
+              returnTo={ROUTES.nightMovies}
+              maxWidth="var(--container-lg)"
+            >
+              <NightMoviesPage />
             </SessionGate>
           }
         />

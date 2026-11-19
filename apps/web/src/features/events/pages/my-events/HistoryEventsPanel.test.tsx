@@ -1,8 +1,9 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { stubMatchMedia } from '@/test-utils/matchMedia';
 import type { MyEventSummary } from '@/features/events/types';
 import HistoryEventsPanel from './HistoryEventsPanel';
 import type { MyEventsActions } from './useMyEventsActions';
@@ -65,6 +66,10 @@ function renderPanel({
 }
 
 describe('HistoryEventsPanel', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it('titles the history with its total and groups the nights by month', () => {
     renderPanel();
 
@@ -74,6 +79,24 @@ describe('HistoryEventsPanel', () => {
     expect(within(august).getByText('2 soirées')).toBeInTheDocument();
     expect(within(august).getAllByRole('article')).toHaveLength(2);
     expect(screen.getByRole('region', { name: /juillet 2026/i })).toHaveTextContent('1 soirée');
+  });
+
+  it('links to the films of all my nights next to its title', () => {
+    renderPanel();
+
+    const section = screen.getByRole('region', { name: 'Historique' });
+    expect(within(section).getByRole('link', { name: 'Films de mes soirées' })).toHaveAttribute(
+      'href',
+      '/listes/films-des-soirees'
+    );
+  });
+
+  it('shortens the films link to fit beside the title on a phone', () => {
+    stubMatchMedia(true);
+    renderPanel();
+
+    const link = screen.getByRole('link', { name: 'Films de mes soirées' });
+    expect(link).toHaveTextContent(/^Films$/);
   });
 
   it('nests the night titles under their month heading', () => {

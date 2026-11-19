@@ -1,4 +1,6 @@
 import { useMemo } from 'react';
+import { Link } from 'react-router';
+import { Clapperboard } from 'lucide-react';
 import InlineError from '@/shared/components/InlineError';
 import { getErrorMessage } from '@/shared/api/apiError';
 import type { MyEventSummary } from '@/features/events/types';
@@ -10,7 +12,10 @@ import { useLocale, useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import HistoryEventRow from './HistoryEventRow';
 import type { MyEventsActions } from './useMyEventsActions';
-import Button from '@/shared/components/Button';
+import Button, { buttonClass } from '@/shared/components/Button';
+import { ICON_SIZE } from '@/shared/components/iconSize';
+import { useIsMobile } from '@/shared/hooks/useIsMobile';
+import { ROUTES } from '@/app/routes';
 import styles from '@/features/events/pages/MyEventsPage.module.css';
 
 interface HistoryQueryState {
@@ -112,6 +117,7 @@ function HistoryResults({
 
 export default function HistoryEventsPanel(props: Readonly<HistoryEventsPanelProps>) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
   const { totalFinished, actions } = props;
   if (totalFinished === 0) return null;
 
@@ -122,6 +128,18 @@ export default function HistoryEventsPanel(props: Readonly<HistoryEventsPanelPro
           {t('events.myEvents.historySection')}
         </h2>
         <span className={styles.sectionCount}>{totalFinished}</span>
+        <Link
+          to={ROUTES.nightMovies}
+          aria-label={t('nightMovies.title')}
+          className={buttonClass({
+            variant: 'ghost',
+            size: 'sm',
+            className: styles.nightMoviesLink,
+          })}
+        >
+          <Clapperboard size={ICON_SIZE.sm} aria-hidden />
+          <span>{t(isMobile ? 'events.myEvents.nightMoviesLinkShort' : 'nightMovies.title')}</span>
+        </Link>
       </div>
       {actions.deleteError ? (
         <p className="error" role="alert">

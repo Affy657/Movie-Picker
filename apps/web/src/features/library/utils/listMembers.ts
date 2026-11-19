@@ -1,6 +1,7 @@
 import type { Translate, TranslationKey } from '@/shared/i18n';
 import type { LocaleCode } from '@/shared/i18n/locales';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
+import type { MovieContributor } from '@/features/movies/components/movieCardParts';
 import type { MovieListAudience, MovieListPerson } from '@/features/library/api/listsApi';
 
 const NAMED_COMPANIONS = 2;
@@ -16,6 +17,20 @@ export function isMemberList(list: MovieListAudience): boolean {
 
 export function firstName(displayName: string): string {
   return displayName.trim().split(/\s+/)[0] ?? '';
+}
+
+export function contributorFrom(
+  person: { avatarId: string | null; name: string; isViewer: boolean },
+  labelKeys: { byYou: TranslationKey; by: TranslationKey },
+  t: Translate
+): MovieContributor {
+  const name = person.isViewer ? t('lists.members.you') : firstName(person.name);
+  return {
+    avatarId: person.avatarId,
+    pseudo: person.name,
+    name,
+    label: person.isViewer ? t(labelKeys.byYou) : t(labelKeys.by, { name }),
+  };
 }
 
 export function listCompanions(
