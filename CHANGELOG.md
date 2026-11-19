@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.19.0] - 2026-11-19
+
 ### Added
 
 - **Les films vus, les films proposés et les propositions gagnantes d'un membre s'enregistrent dans Mes listes** : depuis son profil, comme une liste publique, et ils suivent ses ajouts.
@@ -878,7 +880,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.18.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.19.0...HEAD
+[1.19.0]: https://github.com/Affy657/Movie-Picker/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/Affy657/Movie-Picker/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/Affy657/Movie-Picker/compare/v1.16.3...v1.17.0
 [1.16.3]: https://github.com/Affy657/Movie-Picker/compare/v1.16.2...v1.16.3
