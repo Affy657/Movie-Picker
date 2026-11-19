@@ -61,7 +61,7 @@ public sealed class CopySavedListHandler : ICopySavedListHandler
             return content.Titles;
         if (saved.Snapshot.Count > 0)
             return saved.Snapshot;
-        throw saved.SourceType == ListSourceType.MemberList
+        throw ListSourceReader.FollowsAMember(saved.SourceType)
             ? Errors.SavedListCopyUnavailable()
             : Errors.ListSourceUnavailable();
     }

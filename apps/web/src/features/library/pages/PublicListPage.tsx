@@ -1,7 +1,6 @@
 import { useMemo, useState, type ComponentProps } from 'react';
-import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router';
-import { BookmarkPlus, Copy, Link2, Rows3 } from 'lucide-react';
-import { buttonClass } from '@/shared/components/Button';
+import { Navigate, useNavigate, useParams } from 'react-router';
+import { Copy, Link2, Rows3 } from 'lucide-react';
 import InlineError from '@/shared/components/InlineError';
 import { MenuItem } from '@/shared/components/Menu';
 import PageLayout from '@/shared/components/PageLayout';
@@ -12,7 +11,7 @@ import { usePageSeo } from '@/shared/hooks/usePageSeo';
 import { useShareAction } from '@/shared/hooks/useShareAction';
 import { useTranslation, type Translate } from '@/shared/i18n';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
-import { ROUTES, withReturnTo } from '@/app/routes';
+import { ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import ListActionsMenu from '@/features/library/components/ListActionsMenu';
 import ListMoviesPage from '@/features/library/components/ListMoviesPage';
@@ -26,7 +25,7 @@ import CopyLinkStatus from '@/features/library/components/CopyLinkStatus';
 import ListFormDialog from '@/features/library/components/ListFormDialog';
 import ListNotFound from '@/features/library/components/ListNotFound';
 import ListProgress from '@/features/library/components/ListProgress';
-import SavedToggleButton from '@/features/library/components/SavedToggleButton';
+import SaveListAction from '@/features/library/components/SaveListAction';
 import { usePublicList } from '@/features/library/hooks/usePublicLists';
 import { useSavedListToggle } from '@/features/library/hooks/useSavedLists';
 import { useListItemsView } from '@/features/library/hooks/useListItemsView';
@@ -89,40 +88,6 @@ function CreatorOverline({ creator }: Readonly<{ creator: ListCreator }>) {
     <AvatarOverline avatarId={creator.avatarId} pseudo={creator.displayName}>
       {t('lists.public.overline', { handle: creator.handle })}
     </AvatarOverline>
-  );
-}
-
-function SaveForVisitor({ compact }: Readonly<{ compact: boolean }>) {
-  const { t } = useTranslation();
-  const { pathname } = useLocation();
-  return (
-    <Link
-      to={withReturnTo(ROUTES.login, pathname)}
-      className={buttonClass({ size: compact ? 'sm' : 'md' })}
-    >
-      <BookmarkPlus aria-hidden size={ICON_SIZE.md} />
-      <span>{t(compact ? 'lists.saved.saveShort' : 'lists.saved.save')}</span>
-    </Link>
-  );
-}
-
-function SaveAction({
-  isSignedIn,
-  compact,
-  toggle,
-}: Readonly<{
-  isSignedIn: boolean;
-  compact: boolean;
-  toggle: ReturnType<typeof useSavedListToggle>;
-}>) {
-  if (!isSignedIn) return <SaveForVisitor compact={compact} />;
-  return (
-    <SavedToggleButton
-      saved={toggle.saved}
-      compact={compact}
-      disabled={toggle.isLoading || toggle.isPending}
-      onClick={toggle.toggle}
-    />
   );
 }
 
@@ -234,7 +199,7 @@ function publicListHeader({
     overline: <CreatorOverline creator={list.creator} />,
     stackedOnMobile: true,
     leading: ({ isMobile }) => (
-      <SaveAction isSignedIn={isSignedIn} compact={isMobile} toggle={savedToggle} />
+      <SaveListAction isSignedIn={isSignedIn} compact={isMobile} toggle={savedToggle} />
     ),
     progress: isSignedIn && total > 0 ? <ListProgress watched={watched} total={total} /> : null,
     menu: <PublicListMenu list={list} onCopy={isSignedIn ? onCopy : undefined} />,

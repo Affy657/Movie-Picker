@@ -449,6 +449,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<LetterboxdLinkedCounter>();
         services.AddScoped<MovieListItemFactory>();
         services.AddScoped<WatchedHistoryReader>();
+        services.AddScoped<MemberProfileListReader>();
         services.AddScoped<ListSourceReader>();
         services.AddScoped<PublicListReader>();
         services.AddScoped<AvatarPhotoWriter>();

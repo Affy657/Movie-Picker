@@ -47,7 +47,7 @@ public sealed class ListSavedListsHandler : IListSavedListsHandler
         if (sourceType is null && sourceId is null)
             return await _saved.ListByOwnerAsync(userId, ct);
 
-        var source = ListSourceReader.Parse(sourceType, sourceId);
-        return await _saved.FindBySourceAsync(userId, source, ct) is { } found ? [found] : [];
+        var source = await _sources.ResolveAsync(ListSourceReader.Parse(sourceType, sourceId), ct);
+        return source is not null && await _saved.FindBySourceAsync(userId, source, ct) is { } found ? [found] : [];
     }
 }

@@ -6,6 +6,7 @@ using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
+using MoviePicker.Api.Application.UseCases.Profile;
 using MoviePicker.Api.Application.UseCases.PublicLists;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Configuration;
@@ -31,6 +32,7 @@ public sealed class ListSourceReader
     private readonly SharedCacheReadThrough _cache;
     private readonly MoviePickerOptions _options;
     private readonly PublicListReader _publicLists;
+    private readonly MemberProfileListReader _profiles;
     private readonly ISavedListRepository _saved;
     private readonly ILogger<ListSourceReader> _logger;
 
@@ -41,6 +43,7 @@ public sealed class ListSourceReader
         SharedCacheReadThrough cache,
         IOptions<MoviePickerOptions> options,
         PublicListReader publicLists,
+        MemberProfileListReader profiles,
         ISavedListRepository saved,
         ILogger<ListSourceReader> logger)
     {
@@ -50,6 +53,7 @@ public sealed class ListSourceReader
         _cache = cache;
         _options = options.Value;
         _publicLists = publicLists;
+        _profiles = profiles;
         _saved = saved;
         _logger = logger;
     }
@@ -66,14 +70,41 @@ public sealed class ListSourceReader
         {
             ListSourceType.TmdbCollection => new ListSource(type, CanonicalCollectionId(id)),
             ListSourceType.MemberList => new ListSource(type, CanonicalMemberListId(id)),
+            _ when MemberProfileListReader.Covers(type) => new ListSource(type, CanonicalHandle(id)),
             _ => new ListSource(type, MovieShowcaseCatalog.ThemeKey(id) ?? id.ToLowerInvariant())
         };
     }
 
-    public async Task<ListSourceContent> RequireSavableMemberListAsync(
+    public static bool FollowsAMember(ListSourceType type) =>
+        type == ListSourceType.MemberList || MemberProfileListReader.Covers(type);
+
+    public async Task<SavableListSource> RequireSavableAsync(
         string userId,
         ListSource source,
         CancellationToken ct = default)
+    {
+        if (source.Type == ListSourceType.MemberList)
+        {
+            var memberList = await RequireSavableMemberListAsync(userId, source, ct);
+            return new SavableListSource(source, memberList, memberList.Creator?.Id);
+        }
+
+        if (MemberProfileListReader.Covers(source.Type))
+        {
+            var (resolved, content) = await _profiles.RequireSavableAsync(userId, source, ct);
+            return new SavableListSource(resolved, content, resolved.Id);
+        }
+
+        return new SavableListSource(source, null, null);
+    }
+
+    public async Task<ListSource?> ResolveAsync(ListSource source, CancellationToken ct = default) =>
+        MemberProfileListReader.Covers(source.Type) ? await _profiles.ResolveAsync(source, ct) : source;
+
+    private async Task<ListSourceContent> RequireSavableMemberListAsync(
+        string userId,
+        ListSource source,
+        CancellationToken ct)
     {
         var lookup = await _publicLists.FindAsync(source.Id, ct);
         if (lookup.List?.RoleOf(userId) is not null)
@@ -109,6 +140,8 @@ public sealed class ListSourceReader
     {
         if (source.Type == ListSourceType.MemberList)
             return await ReadMemberListAsync(source, ct);
+        if (MemberProfileListReader.Covers(source.Type))
+            return await _profiles.ReadAsync(source, ct);
 
         var titlesTask = ReadTitlesAsync(source, ct);
         var nameTask = ReadNameAsync(source, ct);
@@ -151,7 +184,7 @@ public sealed class ListSourceReader
     public async Task<ListSourceContent> ReadAndKeepWhatIsSeenAsync(SavedList saved, CancellationToken ct = default)
     {
         var content = await ReadAsync(saved.Source, ct);
-        if (saved.SourceType == ListSourceType.MemberList && content.IsAvailable)
+        if (FollowsAMember(saved.SourceType) && content.IsAvailable)
             await RefreshSnapshotAsync(saved, content, ct);
         return content;
     }
@@ -231,6 +264,9 @@ public sealed class ListSourceReader
             ? raw.ToLowerInvariant()
             : throw Errors.ListSourceNotSavable();
 
+    private static string CanonicalHandle(string raw) =>
+        HandlePolicy.Validate(raw) is null ? HandlePolicy.Normalize(raw) : throw Errors.ListSourceNotSavable();
+
     private static int CollectionId(ListSource source) => int.Parse(source.Id, CultureInfo.InvariantCulture);
 
     private static bool IsSourceFailure(Exception ex, CancellationToken ct) =>
@@ -242,3 +278,5 @@ public sealed class ListSourceReader
 
     private sealed record CollectionNameLookup(string? Name);
 }
+
+public sealed record SavableListSource(ListSource Source, ListSourceContent? Content, string? SourceOwnerId);

@@ -7,7 +7,7 @@ import { http, HttpResponse } from 'msw';
 import ProfileMoviesPage from '@/features/profile/pages/ProfileMoviesPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubHoverCapability } from '@/test-utils/matchMedia';
-import { TEST_API_V1 } from '@/mocks/handlers';
+import { createSavedListsHandlers, TEST_API_V1 } from '@/mocks/handlers';
 
 const ALICE_PROFILE = {
   handle: 'alice',
@@ -235,5 +235,33 @@ describe('ProfileMoviesPage (MSW)', () => {
 
       expect(await screen.findByText('1200 films vus')).toBeInTheDocument();
     });
+  });
+
+  it('saves the watched films of another member in Mes listes', async () => {
+    const bodies: unknown[] = [];
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'id-zoe',
+          displayName: 'Zoé',
+          emailMasked: 'z***@test.local',
+          uiTheme: 'system',
+          accentColor: 'default',
+          ratingScale: 'ten',
+          handle: 'zoe',
+        })
+      ),
+      http.post(`${TEST_API_V1}/saved-lists`, async ({ request }) => {
+        bodies.push(await request.clone().json());
+      }),
+      ...createSavedListsHandlers()
+    );
+    const user = userEvent.setup();
+    renderPage('alice');
+
+    await user.click(await screen.findByRole('button', { name: 'Enregistrer dans Mes listes' }));
+
+    expect(await screen.findByRole('button', { name: 'Enregistrée' })).toBeInTheDocument();
+    expect(bodies).toEqual([{ sourceType: 'memberWatched', sourceId: 'alice' }]);
   });
 });

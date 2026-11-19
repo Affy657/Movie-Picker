@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import Avatar from '@/shared/components/Avatar';
 import BackLink from '@/shared/components/BackLink';
 import { useTranslation } from '@/shared/i18n';
@@ -9,10 +10,12 @@ export default function ProfileCollectionHeader({
   profile,
   title,
   subtitle,
+  action,
 }: Readonly<{
   profile: Pick<PublicProfile, 'handle' | 'displayName' | 'avatarId'>;
   title: string;
   subtitle: string | null;
+  action?: ReactNode;
 }>) {
   const { t } = useTranslation();
   return (
@@ -24,6 +27,7 @@ export default function ProfileCollectionHeader({
           <h1 className={styles.pageTitle}>{title}</h1>
           {subtitle ? <p className={styles.pageSubtitle}>{subtitle}</p> : null}
         </div>
+        {action ? <div className={styles.headerAction}>{action}</div> : null}
       </div>
     </>
   );

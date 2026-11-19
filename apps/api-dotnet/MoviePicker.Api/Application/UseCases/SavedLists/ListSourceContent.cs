@@ -45,6 +45,12 @@ public sealed record ListSourceContent
             Creator = creator
         };
 
+    public static ListSourceContent OfMemberProfile(User member, IReadOnlyList<SavedListTitle> titles) =>
+        new(member.DisplayName, titles, LeadingPosterPaths(titles), isAvailable: true)
+        {
+            Creator = new UserCard(member.Id, member.DisplayedAvatarId, member.Handle, member.IsProfilePublic, member.DisplayName)
+        };
+
     public static ListSourceContent Withdrawn(ListSourceUnavailableReason reason) =>
         new(null, [], [], isAvailable: false) { UnavailableReason = reason };
 

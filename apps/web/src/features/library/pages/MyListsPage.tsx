@@ -74,6 +74,7 @@ import { watchedPercent } from '@/features/library/utils/listProgress';
 import {
   canCopySavedList,
   isGoneMemberList,
+  isMemberSource,
   savedListName,
 } from '@/features/library/utils/savedListSource';
 import {
@@ -330,7 +331,7 @@ function toSavedEntry(summary: SavedListSummary, t: Translate): SavedListEntry {
 
 function SavedSource({ summary }: Readonly<{ summary: SavedListSummary }>) {
   const { t } = useTranslation();
-  if (summary.sourceType === 'memberList') {
+  if (isMemberSource(summary.sourceType)) {
     const { creator } = summary;
     if (!creator) return null;
     return (
@@ -380,9 +381,8 @@ interface SavedListActions {
   unsavingId: string | null;
 }
 
-function goneNoticeText(summary: SavedListSummary, t: Translate): string {
+function goneNoticeText({ summary, name }: SavedListEntry, t: Translate): string {
   if (summary.name === null) return t('lists.summary.goneDeletedNameless');
-  const name = summary.name;
   const creator = summary.creator ? firstName(summary.creator.displayName) : null;
   if (summary.unavailableReason === 'private') {
     return creator
@@ -404,7 +404,7 @@ function GoneListNotice({
   return (
     <Card surface="sunken" padding="none" className={styles.notice}>
       <Icon size={ICON_SIZE.lg} aria-hidden className={styles.noticeIcon} />
-      <p className={styles.noticeText}>{renderWithBold(goneNoticeText(summary, t))}</p>
+      <p className={styles.noticeText}>{renderWithBold(goneNoticeText(entry, t))}</p>
       <span className={styles.noticeActions}>
         {canCopySavedList(summary) ? (
           <Button

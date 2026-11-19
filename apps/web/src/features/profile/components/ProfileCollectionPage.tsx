@@ -32,6 +32,9 @@ import {
 import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
 import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
 import WatchlistSkeleton from '@/features/library/components/WatchlistSkeleton';
+import SaveListAction from '@/features/library/components/SaveListAction';
+import type { SavedListSourceType } from '@/features/library/api/savedListsApi';
+import { useSavedListToggle } from '@/features/library/hooks/useSavedLists';
 import styles from './ProfileCollectionPage.module.css';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import Button from '@/shared/components/Button';
@@ -65,6 +68,29 @@ interface ProfileCollectionPageProps<T extends TitleSummary> {
   texts: ProfileCollectionTexts<T>;
   renderLeadingBadge?: (item: T, handle: string) => ReactNode;
   hidden?: { reason: string; message: string };
+  saveSource?: SavedListSourceType;
+}
+
+function useProfileListSave(
+  saveSource: SavedListSourceType | undefined,
+  profile: PublicProfile | undefined,
+  itemsHidden: boolean,
+  isMobile: boolean
+): { action: ReactNode; error: string | null } {
+  const { user } = useAuth();
+  const isOwnProfile = !!user && user.handle === profile?.handle;
+  const canSave = !!saveSource && !!profile && !isOwnProfile && !itemsHidden;
+  const target = useMemo(
+    () => (saveSource && profile ? { sourceType: saveSource, sourceId: profile.handle } : null),
+    [saveSource, profile]
+  );
+  const toggle = useSavedListToggle(target, !!user && canSave);
+  return {
+    action: canSave ? (
+      <SaveListAction isSignedIn={!!user} compact={isMobile} toggle={toggle} />
+    ) : null,
+    error: toggle.error,
+  };
 }
 
 function isNotFoundError(error: unknown): boolean {
@@ -85,6 +111,7 @@ export default function ProfileCollectionPage<T extends TitleSummary>({
   texts,
   renderLeadingBadge,
   hidden,
+  saveSource,
 }: Readonly<ProfileCollectionPageProps<T>>) {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
@@ -129,6 +156,8 @@ export default function ProfileCollectionPage<T extends TitleSummary>({
   useIdlePrefetch(MOVIE_PAGE_CHUNKS);
   const [proposeTarget, setProposeTarget] = useState<WatchlistToggleItem | null>(null);
   const watchlist = useWatchlistToggle(isLoggedIn);
+  const save = useProfileListSave(saveSource, profile, itemsHidden, isMobile);
+  const actionError = watchlist.error ?? save.error;
 
   usePageSeo(profileCollectionSeo(profile, isNotFound, t, texts, canonicalPath));
 
@@ -157,13 +186,14 @@ export default function ProfileCollectionPage<T extends TitleSummary>({
         profile={profile}
         title={texts.pageTitle(profile.displayName)}
         subtitle={itemsHidden ? null : texts.subtitle(items, itemsTotal)}
+        action={save.action}
       />
 
       <h2 className="visually-hidden">{texts.listAria}</h2>
 
-      {watchlist.error ? (
+      {actionError ? (
         <p className="error" role="alert">
-          {watchlist.error}
+          {actionError}
         </p>
       ) : null}
 

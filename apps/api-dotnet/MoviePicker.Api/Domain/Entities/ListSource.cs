@@ -4,7 +4,10 @@ public enum ListSourceType
 {
     TmdbCollection,
     ExplorerTheme,
-    MemberList
+    MemberList,
+    MemberWatched,
+    MemberProposals,
+    MemberWinningProposals
 }
 
 public enum ListSourceUnavailableReason

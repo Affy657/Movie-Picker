@@ -73,6 +73,9 @@ const COPY_HINT_KEYS: Record<SavedListSourceType, TranslationKey> = {
   tmdbCollection: 'lists.copy.hintCollection',
   explorerTheme: 'lists.copy.hintTheme',
   memberList: 'lists.copy.hintMemberList',
+  memberWatched: 'lists.copy.hintMemberList',
+  memberProposals: 'lists.copy.hintMemberList',
+  memberWinningProposals: 'lists.copy.hintMemberList',
 };
 
 const VISIBILITY_HINT_KEYS: Record<ListVisibility, TranslationKey> = {

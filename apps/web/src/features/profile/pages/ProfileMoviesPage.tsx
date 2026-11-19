@@ -57,6 +57,7 @@ export default function ProfileMoviesPage() {
       comparePrimary={compareWatchedAt}
       itemKey={watchedKey}
       canonicalPath={ROUTES.profileMovies}
+      saveSource="memberWatched"
       texts={texts}
       renderLeadingBadge={(item, ownerHandle) =>
         item.myRating != null ? (

@@ -10364,7 +10364,7 @@ export interface components {
             avatarId: string;
         };
         /** @enum {string} */
-        ListSourceType: "tmdbCollection" | "explorerTheme" | "memberList";
+        ListSourceType: "tmdbCollection" | "explorerTheme" | "memberList" | "memberWatched" | "memberProposals" | "memberWinningProposals";
         /** @enum {string} */
         ListSourceUnavailableReason: "private" | "deleted";
         LoginRequest: {

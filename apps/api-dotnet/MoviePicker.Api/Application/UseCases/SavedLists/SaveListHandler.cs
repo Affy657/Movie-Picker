@@ -31,17 +31,18 @@ public sealed class SaveListHandler : ISaveListHandler
 
     public async Task<SavedListSaving> HandleAsync(string userId, SaveListRequest request, CancellationToken ct = default)
     {
-        var source = ListSourceReader.Parse(request.SourceType, request.SourceId);
-        var memberList = source.Type == ListSourceType.MemberList
-            ? await _sources.RequireSavableMemberListAsync(userId, source, ct)
-            : null;
+        var savable = await _sources.RequireSavableAsync(
+            userId,
+            ListSourceReader.Parse(request.SourceType, request.SourceId),
+            ct);
+        var source = savable.Source;
         if (await _saved.FindBySourceAsync(userId, source, ct) is { } existing)
-            return new SavedListSaving(await _sources.ReadSummaryAsync(_history, existing, memberList, ct), Created: false);
+            return new SavedListSaving(await _sources.ReadSummaryAsync(_history, existing, savable.Content, ct), Created: false);
 
         if (await _saved.CountByOwnerAsync(userId, ct) >= SavedList.MaxPerOwner)
             throw Errors.SavedListLimitReached(SavedList.MaxPerOwner);
 
-        var fallbackName = memberList?.Name ?? await _sources.RequireFallbackNameAsync(source, ct);
+        var fallbackName = savable.Content?.Name ?? await _sources.RequireFallbackNameAsync(source, ct);
         await _users.RequireAccountAsync(userId, ct);
         var stored = await _saved.AddIfAbsentAsync(
             new SavedList
@@ -49,11 +50,11 @@ public sealed class SaveListHandler : ISaveListHandler
                 OwnerId = userId,
                 SourceType = source.Type,
                 SourceId = source.Id,
-                SourceOwnerId = memberList?.Creator?.Id,
+                SourceOwnerId = savable.SourceOwnerId,
                 Name = fallbackName,
                 CreatedAt = _clock.StorageNow()
             },
             ct);
-        return new SavedListSaving(await _sources.ReadSummaryAsync(_history, stored, memberList, ct), Created: true);
+        return new SavedListSaving(await _sources.ReadSummaryAsync(_history, stored, savable.Content, ct), Created: true);
     }
 }
