@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.18.0] - 2026-11-19
+
 ### Added
 
 - **Les films de toutes vos soirées réunis sur une page**, dans Mes listes et depuis Mes soirées : retrouvez un film croisé un soir sans vous rappeler de quelle soirée il venait, qu'il soit proposé par vous ou par un autre, avec les gagnants signalés.
@@ -872,7 +874,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.17.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.18.0...HEAD
+[1.18.0]: https://github.com/Affy657/Movie-Picker/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/Affy657/Movie-Picker/compare/v1.16.3...v1.17.0
 [1.16.3]: https://github.com/Affy657/Movie-Picker/compare/v1.16.2...v1.16.3
 [1.16.2]: https://github.com/Affy657/Movie-Picker/compare/v1.16.1...v1.16.2
