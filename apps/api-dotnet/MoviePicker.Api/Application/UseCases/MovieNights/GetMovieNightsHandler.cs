@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 
@@ -90,7 +91,7 @@ public sealed class GetMovieNightsHandler : IGetMovieNightsHandler
         MovieMediaType mediaType,
         CancellationToken ct)
     {
-        var myNightIds = await ListMyNightIdsAsync(userId, ct);
+        var myNightIds = await MyNights.ListIdsAsync(_events, _participants, userId, ct);
         if (myNightIds.Count == 0)
             return ([], []);
 
@@ -104,18 +105,6 @@ public sealed class GetMovieNightsHandler : IGetMovieNightsHandler
             .DistinctBy(night => night.Id)
             .ToDictionary(night => night.Id, StringComparer.Ordinal);
         return (proposals.Where(movie => nights.ContainsKey(movie.EventId)).ToList(), nights);
-    }
-
-    private async Task<HashSet<string>> ListMyNightIdsAsync(string userId, CancellationToken ct)
-    {
-        var createdIdsTask = _events.ListIdsByCreatorUserIdAsync(userId, ct);
-        var joinedIdsTask = _participants.ListDistinctEventIdsByUserIdAsync(userId, ct);
-        await Task.WhenAll(createdIdsTask, joinedIdsTask);
-
-        var ids = (await createdIdsTask).ToHashSet(StringComparer.Ordinal);
-        ids.UnionWith(await joinedIdsTask);
-        ids.RemoveWhere(string.IsNullOrWhiteSpace);
-        return ids;
     }
 
     private async Task<List<Participant>> ListViewersAsync(
@@ -142,17 +131,11 @@ public sealed class GetMovieNightsHandler : IGetMovieNightsHandler
         List<Participant> shown,
         CancellationToken ct)
     {
-        var userIds = shown.Select(p => p.UserId).OfType<string>().Where(id => id.Length > 0).Distinct().ToList();
-        var cardByUserId = userIds.Count == 0
-            ? new Dictionary<string, UserCard>(StringComparer.Ordinal)
-            : (await _users.ListCardsByIdsAsync(userIds, ct))
-                .DistinctBy(card => card.Id)
-                .ToDictionary(card => card.Id, StringComparer.Ordinal);
-
+        var avatars = await ParticipantAvatars.LoadAsync(_users, shown, ct);
         return shown.ConvertAll(p => new MovieNightViewerResponse
         {
             Pseudo = p.Pseudo,
-            AvatarId = DisplayedPerson.LinkedTo(p, cardByUserId)?.AvatarId is { Length: > 0 } avatarId ? avatarId : null,
+            AvatarId = avatars.Of(p),
         });
     }
 

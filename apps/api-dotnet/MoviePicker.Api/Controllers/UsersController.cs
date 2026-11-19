@@ -153,6 +153,20 @@ public sealed class UsersController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("me/night-movies")]
+    [Authorize]
+    [EnableRateLimiting(RateLimitingExtensions.PublicProfilePolicy)]
+    [ProducesResponseType(typeof(MyNightMoviesResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> GetMyNightMovies(
+        [FromServices] IGetMyNightMoviesHandler handler,
+        [CurrentUserId] string userId,
+        CancellationToken ct)
+    {
+        return Ok(await handler.HandleAsync(userId, ct));
+    }
+
     [HttpGet("me/following-watched-movies")]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.PublicProfilePolicy)]

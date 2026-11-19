@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Les films de toutes vos soirées réunis sur une page**, dans Mes listes et depuis Mes soirées : retrouvez un film croisé un soir sans vous rappeler de quelle soirée il venait, qu'il soit proposé par vous ou par un autre, avec les gagnants signalés.
+
 ## [1.17.0] - 2026-11-19
 
 ### Added

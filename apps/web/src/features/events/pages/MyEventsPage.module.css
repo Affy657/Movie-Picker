@@ -35,6 +35,11 @@
   gap: var(--space-2-5);
 }
 
+.nightMoviesLink {
+  align-self: center;
+  margin-left: auto;
+}
+
 .sectionTitle {
   margin: 0;
   font-size: var(--font-size-2xl);

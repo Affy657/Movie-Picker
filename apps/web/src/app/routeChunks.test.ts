@@ -83,6 +83,7 @@ describe('routeChunkForPath', () => {
       '/listes/films-vus': 'watchedMovies',
       '/listes/propositions': 'myProposals',
       '/listes/propositions-gagnantes': 'myProposals',
+      '/listes/films-des-soirees': 'nightMovies',
       '/listes/abc': 'movieList',
       '/listes/enregistrees/abc': 'savedList',
       '/l/token/rejoindre': 'joinList',

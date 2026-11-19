@@ -35,6 +35,7 @@ export const queryKeys = {
     active: ['events', 'mine', 'active'] as const,
     finished: (q: string) => ['events', 'mine', 'finished', q] as const,
     lastHosted: ['events', 'mine', 'last-hosted'] as const,
+    nightMovies: ['events', 'mine', 'night-movies'] as const,
   },
   eventTemplates: {
     list: ['event-templates', 'list'] as const,

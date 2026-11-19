@@ -1,8 +1,10 @@
 import { useId, useMemo, useState, type ReactNode } from 'react';
+import clsx from 'clsx';
 import { Link, useNavigate } from 'react-router';
 import {
   Bookmark,
   ChevronRight,
+  Clapperboard,
   Compass,
   Eye,
   EyeOff,
@@ -44,6 +46,8 @@ import { useWatchlist } from '@/features/movies/hooks/useWatchlist';
 import { watchlistCountLabel } from '@/features/library/utils/watchlistCount';
 import type { WatchedMovies } from '@/features/library/api/watchedApi';
 import { useWatchedMovies } from '@/features/library/hooks/useWatched';
+import type { NightMovie } from '@/features/library/api/nightMoviesApi';
+import { useNightMovies } from '@/features/library/hooks/useNightMovies';
 import { watchedCountLabel } from '@/features/library/utils/watchedCount';
 import type { ProposedMovie } from '@/features/library/api/proposedMoviesApi';
 import { useMyProposedMovies } from '@/features/library/hooks/useMyProposedMovies';
@@ -84,7 +88,9 @@ const NO_WATCHED: WatchedMovies = { items: [], total: 0 };
 
 const NO_PROPOSALS: ProposedMovie[] = [];
 
-const SHORTCUT_COUNT = 4;
+const SHORTCUT_COUNT = 5;
+
+const NO_NIGHT_MOVIES: readonly NightMovie[] = [];
 
 const MY_LIST_SORTS: readonly ListSortKey[] = ['recent', 'name', 'size', 'progress'];
 
@@ -104,19 +110,21 @@ function ShortcutCard({
   srcs,
   letterboxd,
   isMobile,
+  className,
 }: Readonly<{
   to: string;
   name: string;
   icon: ReactNode;
-  countLabel: string;
+  countLabel: string | null;
   srcs: readonly string[];
   letterboxd: boolean;
   isMobile: boolean;
+  className?: string;
 }>) {
   const { t } = useTranslation();
   const synced = t('lists.page.letterboxdSynced');
   return (
-    <Card as={Link} to={to} interactive padding="none" className={styles.shortcut}>
+    <Card as={Link} to={to} interactive padding="none" className={clsx(styles.shortcut, className)}>
       <PosterFan srcs={srcs} size="md" emptyIcon={icon} />
       <span className={styles.shortcutText}>
         <span className={styles.shortcutName}>
@@ -129,7 +137,7 @@ function ShortcutCard({
             </span>
           ) : null}
         </span>
-        <span className={styles.shortcutCount}>{countLabel}</span>
+        {countLabel ? <span className={styles.shortcutCount}>{countLabel}</span> : null}
         {letterboxd && !isMobile ? (
           <span className={styles.shortcutSync}>
             <RefreshCw size={ICON_SIZE.sm} aria-hidden className={styles.shortcutSyncIcon} />
@@ -149,6 +157,7 @@ function Shortcuts({
   watched,
   proposed,
   winning,
+  nightMovies,
   letterboxd,
   isMobile,
 }: Readonly<{
@@ -156,6 +165,7 @@ function Shortcuts({
   watched: WatchedMovies;
   proposed: readonly ProposedMovie[];
   winning: readonly ProposedMovie[];
+  nightMovies: readonly NightMovie[] | undefined;
   letterboxd: { watchlist: boolean; watched: boolean };
   isMobile: boolean;
 }>) {
@@ -164,6 +174,7 @@ function Shortcuts({
   const watchedSrcs = useLatestPosterSources(watched.items);
   const proposedSrcs = useLatestPosterSources(proposed);
   const winningSrcs = useLatestPosterSources(winning);
+  const nightMoviesSrcs = useLatestPosterSources(nightMovies ?? NO_NIGHT_MOVIES);
   return (
     <div className={styles.shortcuts}>
       <ShortcutCard
@@ -215,6 +226,16 @@ function Shortcuts({
         srcs={winningSrcs}
         letterboxd={false}
         isMobile={isMobile}
+      />
+      <ShortcutCard
+        to={ROUTES.nightMovies}
+        name={t('nightMovies.title')}
+        icon={<Clapperboard size={ICON_SIZE.md} aria-hidden />}
+        countLabel={nightMovies ? listCountLabel(nightMovies.length, t) : null}
+        srcs={nightMoviesSrcs}
+        letterboxd={false}
+        isMobile={isMobile}
+        className={styles.shortcutWide}
       />
     </div>
   );
@@ -683,6 +704,7 @@ export default function MyListsPage() {
   const proposedQuery = useMyProposedMovies(false, { enabled: !!user });
   const winningQuery = useMyProposedMovies(true, { enabled: !!user });
   const savedQuery = useSavedLists({ enabled: !!user });
+  const nightMoviesQuery = useNightMovies({ enabled: !!user });
   const unsave = useUnsaveList();
   const [createOpen, setCreateOpen] = useState(false);
   const [copied, setCopied] = useState<SavedListEntry | null>(null);
@@ -727,6 +749,7 @@ export default function MyListsPage() {
           watched={watchedQuery.data ?? NO_WATCHED}
           proposed={proposedQuery.data ?? NO_PROPOSALS}
           winning={winningQuery.data ?? NO_PROPOSALS}
+          nightMovies={nightMoviesQuery.data}
           letterboxd={{
             watchlist: syncsWithLetterboxd(user, 'watchlist'),
             watched: syncsWithLetterboxd(user, 'watched'),

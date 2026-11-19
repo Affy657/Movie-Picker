@@ -62,6 +62,7 @@ export const ROUTES = {
   watchedMovies: '/listes/films-vus',
   myProposals: '/listes/propositions',
   myWinningProposals: '/listes/propositions-gagnantes',
+  nightMovies: '/listes/films-des-soirees',
   listPattern: '/listes/:listId',
   list: (listId: string) => `/listes/${encodeURIComponent(listId)}`,
   savedListPattern: '/listes/enregistrees/:savedListId',

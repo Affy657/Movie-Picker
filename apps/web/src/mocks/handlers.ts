@@ -765,6 +765,33 @@ export function createMyProposedMoviesHandlers(
   ];
 }
 
+export type MockNightMovie = MockTitle<Schemas['MyNightMovieItem']>;
+
+function mockNightMovieItem(film: MockNightMovie): Schemas['MyNightMovieItem'] {
+  return {
+    mediaType: 'movie',
+    year: '2020',
+    posterPath: null,
+    genreIds: [],
+    voteAverage: null,
+    runtimeMinutes: null,
+    lastProposedAt: MOCK_DATE,
+    proposedByMe: false,
+    isWinner: false,
+    isWatched: false,
+    lastProposer: null,
+    ...film,
+  };
+}
+
+export function createNightMoviesHandlers(films: MockNightMovie[] = []) {
+  return [
+    http.get(`${V1}/users/me/night-movies`, () =>
+      apiJson<'MyNightMoviesResponse'>({ items: films.map(mockNightMovieItem) })
+    ),
+  ];
+}
+
 export interface MockEventOptions {
   slug: string;
   title?: string;

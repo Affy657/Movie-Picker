@@ -12,6 +12,7 @@ const PRIVATE_ROUTES = [
   ROUTES.watchlist,
   ROUTES.lists,
   ROUTES.watchedMovies,
+  ROUTES.nightMovies,
   ROUTES.notifications,
   ROUTES.login,
   ROUTES.register,

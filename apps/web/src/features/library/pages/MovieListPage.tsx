@@ -43,6 +43,7 @@ import { useListItemsView } from '@/features/library/hooks/useListItemsView';
 import { listCountLabel } from '@/features/library/utils/listCount';
 import {
   capitalizeFirst,
+  contributorFrom,
   firstName,
   isMemberList,
   isSharedList,
@@ -200,15 +201,11 @@ function contributorOf(
   t: Translate
 ): MovieContributor | null {
   if (!person) return null;
-  const isViewer = person.userId === viewerId;
-  return {
-    avatarId: person.avatarId,
-    pseudo: person.displayName,
-    name: isViewer ? t('lists.members.you') : firstName(person.displayName),
-    label: isViewer
-      ? t('lists.members.addedByYou')
-      : t('lists.members.addedBy', { name: firstName(person.displayName) }),
-  };
+  return contributorFrom(
+    { avatarId: person.avatarId, name: person.displayName, isViewer: person.userId === viewerId },
+    { byYou: 'lists.members.addedByYou', by: 'lists.members.addedBy' },
+    t
+  );
 }
 
 function useContributors(

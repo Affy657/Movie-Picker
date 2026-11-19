@@ -34,6 +34,10 @@
   text-decoration: none;
 }
 
+.shortcutWide {
+  grid-column: 1 / -1;
+}
+
 .shortcutText {
   display: flex;
   flex-direction: column;
@@ -223,6 +227,11 @@
     align-items: flex-start;
     gap: var(--space-2-5);
     padding: var(--space-3);
+  }
+
+  .shortcutWide {
+    flex-direction: row;
+    align-items: center;
   }
 
   .shortcutName {

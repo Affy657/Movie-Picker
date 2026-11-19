@@ -879,6 +879,7 @@ export const fr = {
       hostBadgeTitle: 'Vous organisez cette soir\u00e9e',
       eventOptionsLabel: 'Options pour {{title}}',
       historySection: 'Historique',
+      nightMoviesLinkShort: 'Films',
       signedOutTitle: 'Organisez votre prochaine soirée film',
       signedOutMessage:
         'Connectez-vous ou créez un compte pour créer une soirée, inviter vos amis et retrouver votre historique.',
@@ -2098,6 +2099,32 @@ export const fr = {
       error: 'Préférence non enregistrée.',
     },
   },
+  nightMovies: {
+    title: 'Films de mes soirées',
+    page: {
+      description: 'Tous les films proposés dans vos soirées, par vous comme par les autres.',
+      loading: 'Chargement des films de vos soirées…',
+      loadError: 'Impossible de charger les films de vos soirées.',
+      searchLabel: 'Rechercher dans les films de vos soirées',
+      searchPlaceholder: 'Rechercher un film…',
+      searchPlaceholderShort: 'Rechercher…',
+      emptyTitle: 'Aucun film proposé pour l’instant',
+      emptyMessage:
+        'Les films proposés dans vos soirées arrivent ici d’eux-mêmes, quel que soit leur proposant.',
+      emptyAction: 'Créer une soirée',
+      scopeLabel: 'Afficher',
+      scopeAll: 'Tous',
+      scopeWinners: 'Gagnants',
+      scopeMine: 'Proposés par moi',
+      sortProposedAt: 'Proposé le',
+      sortYear: 'Année',
+      winnerBadge: 'Gagnant',
+      winnerBadgeAria: 'A gagné une de vos soirées',
+      proposedByColumn: 'Proposé par',
+      proposedBy: 'Proposé par {{name}}',
+      proposedByYou: 'Proposé par vous',
+    },
+  },
 
   myProposals: {
     proposals: {
@@ -3178,14 +3205,13 @@ export const fr = {
       nextHint:
         "L'usage se mesure depuis la 1.16.0 : chaque entrée se juge ensuite sur ce qu'elle change dans les chiffres.",
       nextItem1: 'Bannière de profil',
-      nextItem2: 'Films de mes soirées',
-      nextItem3: "Favori depuis la page d'un film",
-      nextItem4: 'Plateformes de streaming par compte',
-      nextItem5: "Groupes d'amis",
-      nextItem6: "Classement d'un groupe",
-      nextItem7: "Soirées d'un groupe",
-      nextItem8: 'Déjà vu automatique en soirée',
-      nextItem9: 'Une seule présentation des listes',
+      nextItem2: "Favori depuis la page d'un film",
+      nextItem3: 'Plateformes de streaming par compte',
+      nextItem4: "Groupes d'amis",
+      nextItem5: "Classement d'un groupe",
+      nextItem6: "Soirées d'un groupe",
+      nextItem7: 'Déjà vu automatique en soirée',
+      nextItem8: 'Une seule présentation des listes',
       v2When: 'Sans date annoncée',
       v2What: 'V2',
       v2Detail:
