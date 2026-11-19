@@ -101,6 +101,19 @@ describe('isChunkLoadError', () => {
     expect(isChunkLoadError(new Error('Cannot read properties of undefined'))).toBe(false);
     expect(isChunkLoadError(null)).toBe(false);
   });
+
+  it('leaves the page alone while it is navigating away, which aborts its pending chunks', () => {
+    const reload = vi.fn();
+    const preloadAborted = new Error('Unable to preload CSS for https://x/assets/Chip.css');
+
+    window.dispatchEvent(new Event('beforeunload'));
+    const reloaded = reloadIfStaleBuild(preloadAborted, reload, () => 1_000_000);
+    window.dispatchEvent(new Event('pageshow'));
+
+    expect(reloaded).toBe(false);
+    expect(reload).not.toHaveBeenCalled();
+    expect(reloadIfStaleBuild(preloadAborted, reload, () => 1_000_000)).toBe(true);
+  });
 });
 
 describe('reloadForFreshBuild', () => {
