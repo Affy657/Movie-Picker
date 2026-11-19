@@ -36,7 +36,9 @@ export async function fetchAuthProfile(): Promise<UserProfile> {
 const RETURN_TO_MAX_LENGTH = 2048;
 
 function boundedReturnTo(returnTo: string | undefined): string | undefined {
-  return returnTo?.slice(0, RETURN_TO_MAX_LENGTH);
+  if (!returnTo || returnTo.length <= RETURN_TO_MAX_LENGTH) return returnTo;
+  const bounded = returnTo.slice(0, RETURN_TO_MAX_LENGTH);
+  return /[\uD800-\uDBFF]$/.test(bounded) ? bounded.slice(0, -1) : bounded;
 }
 
 export async function postAuthLogin(

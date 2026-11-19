@@ -69,6 +69,19 @@ public sealed class JoinEventHandlerNotificationTests
     }
 
     [Fact]
+    public async Task HandleAsync_HostNotifiable_ReadsTheJoinerOnlyOnce()
+    {
+        _userRepo.Setup(r => r.GetByIdAsync("host", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = "host", NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.ParticipantJoined] = true } });
+        _userRepo.Setup(r => r.GetByIdAsync("joiner", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = "joiner", DisplayName = "Joiner", Handle = "joiner" });
+
+        await _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Joiner" }, "joiner");
+
+        _userRepo.Verify(r => r.GetByIdAsync("joiner", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task HandleAsync_HostOptedOut_DoesNotNotify()
     {
         _userRepo.Setup(r => r.GetByIdAsync("host", It.IsAny<CancellationToken>()))

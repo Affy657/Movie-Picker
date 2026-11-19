@@ -2477,7 +2477,7 @@ export const fr = {
     privacyDataUsage:
       'Usage du service : soirées créées, votes, notes de films (visibles sur la soirée et sur sa page recap publique), participations, listes de films et leurs membres, films vus et leur note (repris de Letterboxd si vous activez la synchronisation), films préférés, notifications, abonnements. Les listes que vous rendez publiques et vos films vus s’affichent sur votre profil public, et vous pouvez masquer vos films vus.',
     privacyDataAnalytics:
-      'Mesure d’audience : PostHog, uniquement avec votre consentement. PostHog reçoit un identifiant technique, les pages visitées et les actions (créer une soirée, voter, partager un lien), sans pseudo, handle, e-mail ni localisation précise. Movie Picker tient aussi ses propres totaux par jour de quelques étapes (ouverture du lien d’une soirée, inscription, arrivée dans une soirée, ouverture d’un recap, pioche, synchronisation Letterboxd), sans cookie, sans identifiant et sans lien avec votre compte. Si vous refusez la mesure d’audience, votre navigateur n’envoie plus ceux qui partent de lui.',
+      'Mesure d’audience : PostHog, uniquement avec votre consentement. PostHog reçoit un identifiant technique, les pages visitées et les actions (créer une soirée, voter, partager un lien), sans pseudo, handle, e-mail ni localisation précise. Movie Picker tient aussi ses propres totaux par jour de quelques étapes (ouverture du lien d’une soirée, choix entre connexion et inscription sur ce lien, inscription, connexion, arrivée dans une soirée, ouverture d’un recap, pioche, liaison, retrait et synchronisation d’un compte Letterboxd, choix d’import Letterboxd), sans cookie, sans identifiant et sans lien avec votre compte. Pour ne compter chaque étape qu’une fois, l’onglet retient jusqu’à sa fermeture les soirées et recaps déjà comptés, sans rien envoyer de plus. Si vous refusez la mesure d’audience, votre navigateur n’envoie plus les totaux qui partent de lui et ne retient plus rien.',
     privacyOAuthTitle: 'Connexion via Google ou GitHub',
     privacyOAuthBody:
       'Si vous choisissez de vous connecter via Google ou GitHub, Movie Picker reçoit votre identifiant, votre adresse e-mail (si vérifiée par le fournisseur) et votre nom affiché. Un compte créé avec Google reprend aussi votre photo Google comme photo de profil, que vous pouvez remplacer ou supprimer à tout moment. Aucune autre donnée du fournisseur n’est demandée ni stockée. Vous pouvez lier ou délier ces comptes à tout moment depuis la page Paramètres.',
@@ -3140,7 +3140,7 @@ export const fr = {
       nextDetail:
         "Les entrées en tête du backlog, prises dans l'ordre. L'ordre suit l'usage mesuré : ce qui fait entrer du monde dans une soirée passe avant les nouvelles surfaces.",
       nextHint:
-        "Une surface qu'on ne sait pas mesurer se mesure avant d'être enrichie : c'est pour cela que la mesure ouvre la liste.",
+        "L'usage se mesure depuis la 1.16.0 : chaque entrée se juge ensuite sur ce qu'elle change dans les chiffres.",
       nextItem1: 'Bannière de profil',
       nextItem2: 'Films de mes soirées',
       nextItem3: 'Films vus sur Movie Picker',

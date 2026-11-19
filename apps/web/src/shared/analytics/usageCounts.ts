@@ -14,7 +14,7 @@ export type ReportedUsage =
   | { metric: 'recap_viewed'; variant: UsageViewer }
   | { metric: 'random_pick_opened'; variant: RandomPickSource };
 
-async function sendUsage(usage: ReportedUsage): Promise<void> {
+export async function reportUsage(usage: ReportedUsage): Promise<void> {
   try {
     await fetchApi('/usage-counts', {
       method: 'POST',
@@ -24,8 +24,4 @@ async function sendUsage(usage: ReportedUsage): Promise<void> {
   } catch {
     return;
   }
-}
-
-export function reportUsage(usage: ReportedUsage): void {
-  void sendUsage(usage);
 }

@@ -2438,7 +2438,7 @@ export const en: Locale = {
     privacyDataUsage:
       'Service usage: events you create, votes, film ratings (visible on the event and on its public recap page), participations, film lists and their members, watched films and their rating (imported from Letterboxd if you turn on the sync), favorite films, notifications, follows. The lists you make public and your watched films show on your public profile, and you can hide your watched films.',
     privacyDataAnalytics:
-      'Audience measurement: PostHog, only with your consent. PostHog receives a technical identifier, pages viewed and actions (creating an event, voting, sharing a link), without nickname, handle, email or precise location. Movie Picker also keeps its own daily totals of a few steps (opening an event link, signing up, joining an event, opening a recap, random pick, Letterboxd sync), with no cookie, no identifier and no link to your account. If you refuse audience measurement, your browser stops sending the ones that come from it.',
+      'Audience measurement: PostHog, only with your consent. PostHog receives a technical identifier, pages viewed and actions (creating an event, voting, sharing a link), without nickname, handle, email or precise location. Movie Picker also keeps its own daily totals of a few steps (opening an event link, choosing between signing in and signing up on that link, signing up, signing in, joining an event, opening a recap, random pick, linking, unlinking and syncing a Letterboxd account, Letterboxd import choices), with no cookie, no identifier and no link to your account. To count each step only once, the tab remembers the events and recaps already counted until it is closed, without sending anything more. If you refuse audience measurement, your browser stops sending the totals that come from it and remembers nothing.',
     privacyOAuthTitle: 'Signing in with Google or GitHub',
     privacyOAuthBody:
       'If you choose to sign in with Google or GitHub, Movie Picker receives your identifier, your email address (if verified by the provider) and your display name. An account created with Google also takes your Google photo as its profile photo, which you can replace or delete at any time. No other data from the provider is requested or stored. You can link or unlink these accounts at any time from the Settings page.',
@@ -3094,7 +3094,7 @@ export const en: Locale = {
       nextDetail:
         'The entries at the top of the backlog, taken in order. The order follows measured usage: what brings people into a night comes before new surfaces.',
       nextHint:
-        'A surface that cannot be measured gets measured before it gets extended, which is why measurement opens the list.',
+        'Usage has been measured since 1.16.0: each entry is then judged on what it changes in the numbers.',
       nextItem1: 'Profile banner',
       nextItem2: 'Films from my nights',
       nextItem3: 'Watched on Movie Picker',

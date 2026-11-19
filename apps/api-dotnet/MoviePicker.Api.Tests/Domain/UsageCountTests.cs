@@ -59,6 +59,13 @@ public sealed class UsageCountTests
     [InlineData("/r/abc123", "recap")]
     [InlineData("/l/token/rejoindre", "list")]
     [InlineData("/u/ad0", "profile")]
+    [InlineData("/new?from=recap", "recap")]
+    [InlineData("/new?step=2&from=list", "list")]
+    [InlineData("/e/abc123?from=recap", "event")]
+    [InlineData("/new?from=other", "other")]
+    [InlineData("/new?from=elsewhere", "other")]
+    [InlineData("/new?source=recap", "other")]
+    [InlineData("https://evil.example/new?from=recap", "other")]
     [InlineData("/", "other")]
     [InlineData("/films", "other")]
     [InlineData("/events", "other")]
@@ -141,17 +148,5 @@ public sealed class UsageCountTests
 
         Assert.Equal(UsageCount.LetterboxdChoicesConfirmedMetric, count.Metric);
         Assert.Equal(variant, count.Variant);
-    }
-
-    [Theory]
-    [InlineData(2026, 11, 18, 22, 59, "2026-11-18")]
-    [InlineData(2026, 11, 18, 23, 0, "2026-11-19")]
-    [InlineData(2026, 7, 1, 21, 59, "2026-07-01")]
-    [InlineData(2026, 7, 1, 22, 0, "2026-07-02")]
-    public void DayOf_CountsOnTheParisCalendar(int year, int month, int day, int hour, int minute, string expected)
-    {
-        var instant = new DateTimeOffset(year, month, day, hour, minute, 0, TimeSpan.Zero);
-
-        Assert.Equal(DateOnly.Parse(expected, System.Globalization.CultureInfo.InvariantCulture), UsageCount.DayOf(instant));
     }
 }

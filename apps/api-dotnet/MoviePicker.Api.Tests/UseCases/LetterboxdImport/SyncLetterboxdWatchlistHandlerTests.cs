@@ -729,6 +729,19 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_SyncWhoseLastWritesFail_IsNotCounted()
+    {
+        _users
+            .Setup(u => u.RecordLetterboxdPendingChoicesAsync(
+                UserId, It.IsAny<int>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("write failed"));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.HandleAsync(UserId, force: true));
+
+        _usage.Verify(x => x.RecordAsync(It.IsAny<UsageCount>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task HandleAsync_FailedSync_IsNotCounted()
     {
         GivenUser(Username, null, syncWatched: false);

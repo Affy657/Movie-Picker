@@ -84,8 +84,6 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
             throw SyncFailure(outcome.Error);
         }
 
-        await _usage.RecordAsync(UsageCount.LetterboxdSynced(force), ct);
-
         if (outcome.Error is not null)
             await _users.SetLetterboxdSyncStatusAsync(userId, now, outcome.Error, ct);
 
@@ -112,6 +110,8 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
                 CreatedAt = now
             }, ct);
         }
+
+        await _usage.RecordAsync(UsageCount.LetterboxdSynced(force), ct);
 
         return new LetterboxdSyncResponse
         {

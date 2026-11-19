@@ -13,6 +13,7 @@ public sealed class UsageCountsController : ControllerBase
 {
     [HttpPost]
     [EnableRateLimiting(RateLimitingExtensions.UsageCountPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.UsageCountPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]

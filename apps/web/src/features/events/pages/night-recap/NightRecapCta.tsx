@@ -11,7 +11,9 @@ import styles from './NightRecap.module.css';
 export default function NightRecapCta({ eventSlug }: Readonly<{ eventSlug: string | null }>) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const hostYourOwn = user ? ROUTES.createEvent : withReturnTo(ROUTES.register, ROUTES.createEvent);
+  const hostYourOwn = user
+    ? ROUTES.createEvent
+    : withReturnTo(ROUTES.register, `${ROUTES.createEvent}?from=recap`);
 
   return (
     <Card as="section" padding="lg" className={styles.cta} aria-label={t('events.recap.ctaTitle')}>

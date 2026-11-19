@@ -20,7 +20,7 @@ describe('reportUsage', () => {
       );
     });
 
-    reportUsage({ metric: 'event_link_opened', variant: 'visitor.open' });
+    void reportUsage({ metric: 'event_link_opened', variant: 'visitor.open' });
 
     await expect(received).resolves.toEqual({
       metric: 'event_link_opened',
@@ -38,7 +38,9 @@ describe('reportUsage', () => {
       );
     });
 
-    expect(() => reportUsage({ metric: 'join_prompt_clicked', variant: 'login' })).not.toThrow();
+    await expect(
+      reportUsage({ metric: 'join_prompt_clicked', variant: 'login' })
+    ).resolves.toBeUndefined();
     await answered;
   });
 
@@ -52,7 +54,9 @@ describe('reportUsage', () => {
       );
     });
 
-    expect(() => reportUsage({ metric: 'recap_viewed', variant: 'account' })).not.toThrow();
+    await expect(
+      reportUsage({ metric: 'recap_viewed', variant: 'account' })
+    ).resolves.toBeUndefined();
     await attempted;
   });
 });

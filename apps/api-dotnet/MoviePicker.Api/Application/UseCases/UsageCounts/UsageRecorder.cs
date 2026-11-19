@@ -21,7 +21,7 @@ public sealed class UsageRecorder : IUsageRecorder
     {
         try
         {
-            await _counts.IncrementAsync(UsageCount.DayOf(_clock.GetUtcNow()), count, ct);
+            await _counts.IncrementAsync(EventRecurrence.TodayInParis(_clock.GetUtcNow()), count, ct);
         }
         catch (Exception ex)
         {

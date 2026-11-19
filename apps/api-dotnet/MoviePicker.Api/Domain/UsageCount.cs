@@ -19,6 +19,7 @@ public sealed record UsageCount
     public static readonly TimeSpan NewAccountWindow = TimeSpan.FromDays(1);
 
     private const string OtherValue = "other";
+    private const string DeclaredOriginParameter = "from=";
 
     private static readonly string[] Viewers = ["visitor", "account"];
     private static readonly string[] EventStates = ["open", "full", "closed"];
@@ -65,14 +66,26 @@ public sealed record UsageCount
 
     public static string EntryOriginOf(string? returnTo)
     {
-        if (string.IsNullOrEmpty(returnTo))
+        if (string.IsNullOrEmpty(returnTo) || !returnTo.StartsWith('/') || returnTo.StartsWith("//", StringComparison.Ordinal))
             return OtherValue;
         foreach (var (prefix, origin) in OriginsByReturnPath)
         {
             if (returnTo.StartsWith(prefix, StringComparison.Ordinal) && returnTo.Length > prefix.Length)
                 return origin;
         }
-        return OtherValue;
+        return DeclaredOriginOf(returnTo);
+    }
+
+    private static string DeclaredOriginOf(string returnTo)
+    {
+        var queryStart = returnTo.IndexOf('?', StringComparison.Ordinal);
+        if (queryStart < 0)
+            return OtherValue;
+        var declared = returnTo[(queryStart + 1)..]
+            .Split('&')
+            .FirstOrDefault(parameter => parameter.StartsWith(DeclaredOriginParameter, StringComparison.Ordinal))?
+            [DeclaredOriginParameter.Length..];
+        return Array.Exists(OriginsByReturnPath, known => known.Origin == declared) ? declared! : OtherValue;
     }
 
     public static UsageCount SignedUp(string method, string? returnTo) =>
@@ -92,9 +105,6 @@ public sealed record UsageCount
 
     public static UsageCount LetterboxdChoicesConfirmed(int selectedCount) =>
         new(LetterboxdChoicesConfirmedMetric, selectedCount > 0 ? "selected" : "none");
-
-    public static DateOnly DayOf(DateTimeOffset instant) =>
-        DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(instant, EventSchedule.ParisTimeZone).DateTime);
 
     private static string AuthVariant(string method, string? returnTo)
     {

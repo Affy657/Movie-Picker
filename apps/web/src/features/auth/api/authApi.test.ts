@@ -126,6 +126,15 @@ describe('sign-in and sign-up destination', () => {
     }
   });
 
+  it('never cuts a character in two when it shortens the destination', async () => {
+    const overlong = `/e/${'a'.repeat(2044)}\u{1F3AC}tail`;
+
+    await postAuthLogin('a@test.local', 'secret1', overlong);
+
+    const { returnTo } = bodyOf('/auth/login');
+    expect(returnTo).toBe(`/e/${'a'.repeat(2044)}`);
+  });
+
   it('sends no destination when there is none', async () => {
     await postAuthLogin('a@test.local', 'secret1');
 

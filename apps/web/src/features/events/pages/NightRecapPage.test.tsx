@@ -211,7 +211,7 @@ describe('NightRecapPage (MSW)', () => {
 
     expect(screen.getByRole('link', { name: 'Organise la tienne' })).toHaveAttribute(
       'href',
-      `/register?returnTo=${encodeURIComponent('/new')}`
+      `/register?returnTo=${encodeURIComponent('/new?from=recap')}`
     );
   });
 
