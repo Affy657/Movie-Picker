@@ -25,6 +25,7 @@ import { listCountLabel } from '@/features/library/utils/listCount';
 import {
   canCopySavedList,
   isGoneMemberList,
+  isMemberSource,
   savedListName,
   savedListOverline,
   savedListSourceLink,
@@ -39,7 +40,7 @@ function SavedListActionsMenu({
 }: Readonly<{ list: SavedListDetail; onCopy: () => void; onUnsave: () => void }>) {
   const { t } = useTranslation();
   const sourceLink = savedListSourceLink(list, t);
-  const SourceIcon = list.sourceType === 'memberList' ? UserRound : Compass;
+  const SourceIcon = isMemberSource(list.sourceType) ? UserRound : Compass;
   return (
     <ListActionsMenu>
       {(pick) => (

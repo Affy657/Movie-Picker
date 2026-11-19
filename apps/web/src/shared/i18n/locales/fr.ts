@@ -1911,6 +1911,10 @@ export const fr = {
         'Ses films ne sont plus visibles. Vous pouvez ne plus l’enregistrer.',
       keepCopy: 'Garder une copie',
       deletedName: 'Liste supprimée',
+      nameMemberWatched: 'Films vus par {{name}}',
+      nameMemberProposals: 'Films proposés par {{name}}',
+      nameMemberWinningProposals: 'Propositions gagnantes de {{name}}',
+      nameMemberWinningProposalsElided: 'Propositions gagnantes d’{{name}}',
     },
     copy: {
       title: 'Copier dans une nouvelle liste',

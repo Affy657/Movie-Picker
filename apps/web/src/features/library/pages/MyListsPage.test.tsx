@@ -626,6 +626,52 @@ describe('MyListsPage', () => {
       expect(within(card).queryByText(/^Vide/)).toBeNull();
     });
 
+    it('names a saved list of a member profile after what it follows and its member', async () => {
+      server.use(
+        ...fullServer([
+          {
+            id: 's4',
+            sourceType: 'memberProposals',
+            sourceId: 'u2',
+            name: 'Léa Moreau',
+            creator: { handle: 'lea', displayName: 'Léa Moreau', avatarId: null },
+            createdAt: '2026-11-14T00:00:00Z',
+            items: [film(530385, 'Midsommar', '/midsommar.jpg')],
+          },
+        ])
+      );
+      renderPage();
+
+      expect(await rowNames('Enregistrées')).toEqual(['Films proposés par Léa']);
+      const row = rowOf('Enregistrées', /films proposés par léa/i);
+      expect(row).toHaveAttribute('href', '/listes/enregistrees/s4');
+      expect(within(row).getByText('Par Léa')).toBeInTheDocument();
+    });
+
+    it('turns the watched films a member made private into a line atop Enregistrées', async () => {
+      server.use(
+        ...fullServer([
+          {
+            id: 's5',
+            sourceType: 'memberWatched',
+            sourceId: 'u2',
+            name: 'Léa Moreau',
+            creator: null,
+            createdAt: '2026-11-14T00:00:00Z',
+            unavailable: true,
+            unavailableReason: 'private',
+            copyAvailable: true,
+          },
+        ])
+      );
+      renderPage();
+
+      expect(await screen.findByText(/n’est plus visible/)).toHaveTextContent(
+        'Films vus par Léa n’est plus visible : elle est devenue privée.'
+      );
+      expect(screen.getByRole('button', { name: 'Garder une copie' })).toBeInTheDocument();
+    });
+
     it('turns a list its creator made private into a line atop Enregistrées, and offers to keep a copy', async () => {
       server.use(
         ...fullServer([

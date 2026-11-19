@@ -3,6 +3,7 @@ import { t, type Translate } from '@/shared/i18n/t';
 import type { SavedListSummary } from '@/features/library/api/savedListsApi';
 import {
   canCopySavedList,
+  isGoneMemberList,
   savedListName,
   savedListOverline,
   savedListSourceLink,
@@ -131,5 +132,61 @@ describe('canCopySavedList', () => {
     expect(canCopySavedList(saved({ unavailable: true, copyAvailable: true }))).toBe(true);
     expect(canCopySavedList(saved({ copyAvailable: undefined }))).toBe(true);
     expect(canCopySavedList(saved({ unavailable: true, copyAvailable: undefined }))).toBe(false);
+  });
+});
+
+describe('the lists of a member profile', () => {
+  const lea = { handle: 'lea', displayName: 'Léa Moreau', avatarId: '' };
+  const profileList = (overrides: Partial<SavedListSummary>) =>
+    saved({ sourceId: 'u2', name: 'Léa Moreau', creator: lea, ...overrides });
+
+  it('names each one after the first name of the member, elision included', () => {
+    expect(savedListName(profileList({ sourceType: 'memberWatched' }), fr)).toBe(
+      'Films vus par Léa'
+    );
+    expect(savedListName(profileList({ sourceType: 'memberProposals' }), fr)).toBe(
+      'Films proposés par Léa'
+    );
+    expect(savedListName(profileList({ sourceType: 'memberWinningProposals' }), fr)).toBe(
+      'Propositions gagnantes de Léa'
+    );
+    expect(
+      savedListName(
+        profileList({ sourceType: 'memberWinningProposals', name: 'Alice Martin', creator: ALICE }),
+        fr
+      )
+    ).toBe('Propositions gagnantes d’Alice');
+    expect(savedListName(profileList({ sourceType: 'memberWatched', name: null }), fr)).toBe(
+      'Liste supprimée'
+    );
+  });
+
+  it('leads back to the matching page of the profile', () => {
+    expect(savedListSourceLink(profileList({ sourceType: 'memberWatched' }), fr)).toEqual({
+      to: '/u/lea/films',
+      label: 'Voir la liste sur le profil de Léa',
+    });
+    expect(savedListSourceLink(profileList({ sourceType: 'memberProposals' }), fr)?.to).toBe(
+      '/u/lea/propositions'
+    );
+    expect(savedListSourceLink(profileList({ sourceType: 'memberWinningProposals' }), fr)?.to).toBe(
+      '/u/lea/propositions-gagnantes'
+    );
+    expect(
+      savedListSourceLink(
+        profileList({ sourceType: 'memberWatched', unavailable: true, creator: null }),
+        fr
+      )
+    ).toBeNull();
+  });
+
+  it('reads like a list of the member once saved, gone or private', () => {
+    const watched = profileList({ sourceType: 'memberWatched' });
+    expect(savedListOverline(watched, fr)).toBe('Liste de @lea enregistrée');
+    expect(
+      savedListUnavailableTitle({ ...watched, unavailable: true, unavailableReason: 'private' }, fr)
+    ).toBe('Léa a rendu cette liste privée');
+    expect(isGoneMemberList({ ...watched, unavailable: true })).toBe(true);
+    expect(isGoneMemberList(watched)).toBe(false);
   });
 });

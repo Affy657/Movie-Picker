@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Les films vus, les films proposés et les propositions gagnantes d'un membre s'enregistrent dans Mes listes** : depuis son profil, comme une liste publique, et ils suivent ses ajouts.
+
 ## [1.17.0] - 2026-11-19
 
 ### Added

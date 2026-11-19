@@ -1,10 +1,11 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
-import { TEST_API_V1 } from '@/mocks/handlers';
+import { createSavedListsHandlers, TEST_API_V1 } from '@/mocks/handlers';
 import type { UserProposedMovieItem } from '@/features/profile/api/profileApi';
 import ProfileProposalsPage from './ProfileProposalsPage';
 
@@ -46,6 +47,24 @@ const PROPOSED = [
 ];
 
 const WINNING = [proposal(25237, 'Requiem pour un massacre', 1, '2026-11-10T18:00:00Z')];
+
+function signedInAs(handle: string) {
+  return http.get(`${TEST_API_V1}/auth/me`, () =>
+    HttpResponse.json({
+      userId: `id-${handle}`,
+      displayName: handle,
+      emailMasked: 'z***@test.local',
+      uiTheme: 'system',
+      accentColor: 'default',
+      ratingScale: 'ten',
+      handle,
+    })
+  );
+}
+
+const signedOut = http.get(`${TEST_API_V1}/auth/me`, () =>
+  HttpResponse.json({ code: 401, reason: 'unauthorized', error: 'Unauthorized' }, { status: 401 })
+);
 
 function renderAt(path: string) {
   return render(
@@ -138,5 +157,47 @@ describe('ProfileProposalsPage', () => {
     ).toBeInTheDocument();
     expect(screen.queryByText(/introuvable/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('list', { name: 'Propositions gagnantes' })).not.toBeInTheDocument();
+  });
+
+  describe('saving the list in Mes listes', () => {
+    it.each([
+      { path: '/u/alice/propositions', sourceType: 'memberProposals' },
+      { path: '/u/alice/propositions-gagnantes', sourceType: 'memberWinningProposals' },
+    ])('saves $path of another member by their handle', async ({ path, sourceType }) => {
+      const bodies: unknown[] = [];
+      server.use(
+        signedInAs('zoe'),
+        http.post(`${TEST_API_V1}/saved-lists`, async ({ request }) => {
+          bodies.push(await request.clone().json());
+        }),
+        ...createSavedListsHandlers()
+      );
+      const user = userEvent.setup();
+      renderAt(path);
+
+      await user.click(await screen.findByRole('button', { name: 'Enregistrer dans Mes listes' }));
+
+      expect(await screen.findByRole('button', { name: 'Enregistrée' })).toBeInTheDocument();
+      expect(bodies).toEqual([{ sourceType, sourceId: 'alice' }]);
+    });
+
+    it('offers nothing to save on my own profile', async () => {
+      server.use(signedInAs('alice'), ...createSavedListsHandlers());
+
+      renderAt('/u/alice/propositions');
+
+      expect(await screen.findByRole('list', { name: 'Films proposés' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /enregistr/i })).toBeNull();
+      expect(screen.queryByRole('link', { name: /enregistr/i })).toBeNull();
+    });
+
+    it('sends a visitor to sign in before saving', async () => {
+      server.use(signedOut);
+
+      renderAt('/u/alice/propositions');
+
+      const save = await screen.findByRole('link', { name: 'Enregistrer dans Mes listes' });
+      expect(save.getAttribute('href')).toMatch(/^\/login\?returnTo=/);
+    });
   });
 });

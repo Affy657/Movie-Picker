@@ -83,6 +83,7 @@ export default function ProfileProposalsPage({
       comparePrimary={compareLastProposedAt}
       itemKey={proposalKey}
       canonicalPath={winningOnly ? ROUTES.profileWinningProposals : ROUTES.profileProposals}
+      saveSource={winningOnly ? 'memberWinningProposals' : 'memberProposals'}
       texts={texts}
       hidden={
         winningOnly

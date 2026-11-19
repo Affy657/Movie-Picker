@@ -10,7 +10,7 @@ using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
 
-public sealed class MyProposedMoviesEndpointsTests : IClassFixture<MoviePickerApplicationFactory>
+public sealed class ProfileProposalsEndpointsTests : IClassFixture<MoviePickerApplicationFactory>
 {
     private const string Route = "/api/v1/users/me/proposed-movies";
 
@@ -23,7 +23,10 @@ public sealed class MyProposedMoviesEndpointsTests : IClassFixture<MoviePickerAp
 
     private readonly MoviePickerApplicationFactory _factory;
 
-    public MyProposedMoviesEndpointsTests(MoviePickerApplicationFactory factory) => _factory = factory;
+    public ProfileProposalsEndpointsTests(MoviePickerApplicationFactory factory) => _factory = factory;
+
+    private static async Task<UserProfileResponse> MeAsync(HttpClient client) =>
+        (await client.GetFromJsonAsync<UserProfileResponse>("/api/v1/auth/me", Json))!;
 
     private async Task ProposeAsync(string userId, int tmdbId, string title, bool wins)
     {
@@ -86,7 +89,7 @@ public sealed class MyProposedMoviesEndpointsTests : IClassFixture<MoviePickerAp
             "/api/v1/auth/me",
             new PatchUserProfileRequest { IsProfilePublic = false, IsWatchedPublic = false });
         Assert.Equal(HttpStatusCode.OK, hide.StatusCode);
-        var me = (await client.GetFromJsonAsync<UserProfileResponse>("/api/v1/auth/me", Json))!;
+        var me = await MeAsync(client);
         await ProposeAsync(me.UserId, 603, "Matrix", wins: true);
         await ProposeAsync(me.UserId, 680, "Pulp Fiction", wins: false);
 
@@ -97,5 +100,29 @@ public sealed class MyProposedMoviesEndpointsTests : IClassFixture<MoviePickerAp
         Assert.Equal([603, 680], all!.Items.Select(item => item.TmdbId).Order());
         Assert.Equal([603], winners!.Items.Select(item => item.TmdbId));
         Assert.Equal(HttpStatusCode.NotFound, publicRoute.StatusCode);
+    }
+
+    [Fact]
+    public async Task SavedProposals_OfAnotherMember_FollowTheirNextProposals_AndAreFoundByTheirHandle()
+    {
+        var lea = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "LeaProposes");
+        var leaMe = await MeAsync(lea);
+        await ProposeAsync(leaMe.UserId, 603, "Matrix", wins: true);
+        var zoe = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "ZoeSaves");
+        var source = new { sourceType = "memberProposals", sourceId = leaMe.Handle };
+
+        var save = await zoe.PostAsJsonAsync("/api/v1/saved-lists", source);
+        await ProposeAsync(leaMe.UserId, 680, "Pulp Fiction", wins: false);
+        var bySource = await zoe.GetFromJsonAsync<SavedListsResponse>(
+            $"/api/v1/saved-lists?sourceType=memberProposals&sourceId={leaMe.Handle}",
+            Json);
+        var ownSave = await lea.PostAsJsonAsync("/api/v1/saved-lists", source);
+
+        Assert.Equal(HttpStatusCode.Created, save.StatusCode);
+        var found = Assert.Single(bySource!.Items);
+        Assert.Equal(
+            (ListSourceType.MemberProposals, leaMe.UserId, 2, leaMe.Handle),
+            (found.SourceType, found.SourceId, found.ItemCount, found.Creator!.Handle));
+        Assert.Equal(HttpStatusCode.Conflict, ownSave.StatusCode);
     }
 }

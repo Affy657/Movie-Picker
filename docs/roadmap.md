@@ -28,7 +28,7 @@ Le backlog du projet, en flux continu : ce qui est en cours, ce qui vient ensuit
 
 ## 🚧 En cours
 
-- `M` **Enregistrer les listes d'un profil** : sur le profil d'un autre membre, ses films vus, ses films proposés et ses propositions gagnantes s'enregistrent dans Mes listes comme une liste publique, et suivent ses ajouts.
+Rien pour l'instant.
 
 ---
 

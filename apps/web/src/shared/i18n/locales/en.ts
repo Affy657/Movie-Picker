@@ -1891,6 +1891,10 @@ export const en: Locale = {
       unavailableUnsaveMessage: 'Its films are no longer visible. You can unsave it.',
       keepCopy: 'Keep a copy',
       deletedName: 'Deleted list',
+      nameMemberWatched: 'Watched by {{name}}',
+      nameMemberProposals: 'Proposed by {{name}}',
+      nameMemberWinningProposals: 'Winning proposals by {{name}}',
+      nameMemberWinningProposalsElided: 'Winning proposals by {{name}}',
     },
     copy: {
       title: 'Copy to a new list',

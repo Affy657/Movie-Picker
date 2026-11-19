@@ -55,6 +55,10 @@ internal sealed class SavedListTestKit
 
     public Mock<IWatchedTitleRepository> WatchedReads { get; } = new();
 
+    public Mock<IGetUserWatchedMoviesHandler> MemberWatched { get; } = new();
+
+    public Mock<IGetUserProposedMoviesHandler> MemberProposals { get; } = new();
+
     public MoviePickerOptions Options { get; } = new() { TmdbApiKey = "test-key" };
 
     public SteppingClock Clock => MovieLists.Clock;
@@ -75,10 +79,13 @@ internal sealed class SavedListTestKit
         new SharedCacheReadThrough(_cache, Mock.Of<ISharedCache>(), new SingleFlight()),
         Microsoft.Extensions.Options.Options.Create(Options),
         publicLists ?? PublicLists(),
+        Profiles(),
         Saved,
         logger ?? NullLogger<ListSourceReader>.Instance);
 
     public PublicListReader PublicLists() => new(MovieLists.Lists, MovieLists.Users);
+
+    public MemberProfileListReader Profiles() => new(MovieLists.Users, MemberWatched.Object, MemberProposals.Object);
 
     public ListPublicListsHandler ListPublicHandler() => new(MovieLists.Users, MovieLists.Lists, History);
 
