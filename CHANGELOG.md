@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.23.0] - 2026-11-20
+
 ### Added
 
 - **Importer d’un coup toutes vos listes Letterboxd** : dans Intégrations, la carte Import Letterboxd lit le fichier d’export que Letterboxd vous donne et ajoute toute votre watchlist et tous vos films vus, avec leur note et leur date, sans rien ajouter deux fois. Les titres ambigus se choisissent comme pour la synchronisation, qui suit ensuite vos nouveaux ajouts.
@@ -917,7 +919,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.22.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.23.0...HEAD
+[1.23.0]: https://github.com/Affy657/Movie-Picker/compare/v1.22.0...v1.23.0
 [1.22.0]: https://github.com/Affy657/Movie-Picker/compare/v1.21.0...v1.22.0
 [1.21.0]: https://github.com/Affy657/Movie-Picker/compare/v1.20.0...v1.21.0
 [1.20.0]: https://github.com/Affy657/Movie-Picker/compare/v1.19.0...v1.20.0
