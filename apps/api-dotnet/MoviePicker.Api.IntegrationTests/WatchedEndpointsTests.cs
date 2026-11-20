@@ -245,7 +245,7 @@ public sealed class WatchedEndpointsTests : IClassFixture<MoviePickerApplication
     }
 
     [Fact]
-    public async Task WatchedMovies_MergeNightsAndTitlesWatchedElsewhere_CountingEachFilmOnce()
+    public async Task WatchedMovies_MergeNightsAndTitlesWatchedElsewhere_WhileTheProfileKeepsTheNights()
     {
         var client = await NewUserAsync("WatchedMerge");
         var me = await MeAsync(client);
@@ -264,8 +264,8 @@ public sealed class WatchedEndpointsTests : IClassFixture<MoviePickerApplication
         Assert.Equal(
             [(603, "elsewhere", 8), (27_205, "night", 7)],
             items.Select(item => (item.GetProperty("tmdbId").GetInt32(), item.GetProperty("source").GetString(), item.GetProperty("myRating").GetInt32())));
-        Assert.Equal(2, visitor!.Total);
-        Assert.Equal([603, 27_205], visitor.Items.Select(item => item.TmdbId));
+        Assert.Equal(1, visitor!.Total);
+        Assert.Equal([27_205], visitor.Items.Select(item => item.TmdbId));
     }
 
     [Fact]
