@@ -1,22 +1,25 @@
 import { useState } from 'react';
-import { Link, Navigate, useNavigate, useParams } from 'react-router';
-import { Layers, Link2Off, Users } from 'lucide-react';
+import { Navigate, useNavigate, useParams } from 'react-router';
+import { Layers } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
-import Button, { buttonClass } from '@/shared/components/Button';
+import Button from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
-import ErrorState from '@/shared/components/ErrorState';
-import InlineError from '@/shared/components/InlineError';
 import PageLayout from '@/shared/components/PageLayout';
-import { Skeleton, SkeletonScreen } from '@/shared/components/Skeleton';
+import { Skeleton } from '@/shared/components/Skeleton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
-import { getErrorMessage, isNotFoundError } from '@/shared/api/apiError';
+import { getErrorMessage } from '@/shared/api/apiError';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useTranslation } from '@/shared/i18n';
-import { ROUTES, withReturnTo } from '@/app/routes';
+import { ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import type { MovieListInvitePreview } from '@/features/library/api/listMembersApi';
 import { useInvitePreview, useJoinListByLink } from '@/features/library/hooks/useListMembers';
+import {
+  JoinLinkFull,
+  JoinLinkPending,
+  JoinLinkSignIn,
+} from '@/features/library/components/JoinLinkParts';
 import { listCountLabel } from '@/features/library/utils/listCount';
 import { firstName } from '@/features/library/utils/listMembers';
 import { posterStackSources } from '@/features/movies/utils/posterStack';
@@ -53,32 +56,21 @@ function JoinActions({
 
   if (preview.isFull) {
     return (
-      <div className={styles.full}>
-        <h2 className={styles.fullTitle}>
-          <Users aria-hidden size={ICON_SIZE.md} />
-          {t('lists.join.fullTitle')}
-        </h2>
-        <p className={styles.message}>{t('lists.join.fullMessage', { name: owner })}</p>
-      </div>
+      <JoinLinkFull
+        title={t('lists.join.fullTitle')}
+        message={t('lists.join.fullMessage', { name: owner })}
+        classNames={{ full: styles.full, fullTitle: styles.fullTitle, message: styles.message }}
+      />
     );
   }
 
   if (!user) {
     return (
-      <>
-        <p className={styles.message}>{t('lists.join.signedOut')}</p>
-        <nav className={styles.actions}>
-          <Link
-            to={withReturnTo(ROUTES.login, returnTo)}
-            className={buttonClass({ variant: 'primary' })}
-          >
-            {t('home.ctaLogin')}
-          </Link>
-          <Link to={withReturnTo(ROUTES.register, returnTo)} className={buttonClass()}>
-            {t('home.ctaRegister')}
-          </Link>
-        </nav>
-      </>
+      <JoinLinkSignIn
+        message={t('lists.join.signedOut')}
+        returnTo={returnTo}
+        classNames={{ message: styles.message, actions: styles.actions }}
+      />
     );
   }
 
@@ -113,46 +105,28 @@ export default function JoinListPage() {
   const preview = useInvitePreview(token, user?.userId ?? null, !authLoading && !!token);
   useNoindexPage(pageTitle(preview.data?.name ?? t('lists.join.title')), ROUTES.joinList(token));
 
-  if (preview.isError && isNotFoundError(preview.error)) {
+  if (preview.isError || !preview.data) {
     return (
-      <ErrorState
-        icon={<Link2Off size={ICON_SIZE['4xl']} />}
-        title={t('lists.join.invalidTitle')}
-        message={t('lists.join.invalidMessage')}
-        actions={
-          <Link to={ROUTES.home} className={buttonClass({ variant: 'primary' })}>
-            {t('lists.join.backHome')}
-          </Link>
-        }
-      />
-    );
-  }
-
-  if (preview.isError) {
-    return (
-      <PageLayout className={styles.layout}>
-        <h1 className="visually-hidden">{t('lists.join.title')}</h1>
-        <InlineError
-          message={t('lists.join.loadError')}
-          retryLabel={t('lists.join.retry')}
-          onRetry={() => void preview.refetch()}
-        />
-      </PageLayout>
-    );
-  }
-
-  if (!preview.data) {
-    return (
-      <PageLayout className={styles.layout}>
-        <h1 className="visually-hidden">{t('lists.join.title')}</h1>
-        <SkeletonScreen label={t('lists.join.loading')}>
-          <Card padding="lg" radius="lg" elevation="md" className={styles.card}>
-            <Skeleton variant="poster" className={styles.posterSkeleton} />
-            <Skeleton variant="text" width="60%" />
-            <Skeleton variant="text" width="40%" />
-          </Card>
-        </SkeletonScreen>
-      </PageLayout>
+      <JoinLinkPending
+        error={preview.isError ? preview.error : null}
+        onRetry={() => void preview.refetch()}
+        labels={{
+          title: t('lists.join.title'),
+          invalidTitle: t('lists.join.invalidTitle'),
+          invalidMessage: t('lists.join.invalidMessage'),
+          backHome: t('lists.join.backHome'),
+          loadError: t('lists.join.loadError'),
+          retry: t('lists.join.retry'),
+          loading: t('lists.join.loading'),
+        }}
+        classNames={{ layout: styles.layout }}
+      >
+        <Card padding="lg" radius="lg" elevation="md" className={styles.card}>
+          <Skeleton variant="poster" className={styles.posterSkeleton} />
+          <Skeleton variant="text" width="60%" />
+          <Skeleton variant="text" width="40%" />
+        </Card>
+      </JoinLinkPending>
     );
   }
 
