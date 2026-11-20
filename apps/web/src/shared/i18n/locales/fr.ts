@@ -2201,7 +2201,7 @@ export const fr = {
       unranked: 'Pas encore classés',
       emptyTitle: 'Pas encore de classement',
       emptyMessage:
-        'Le classement démarre après la première soirée terminée du groupe, quand un film a gagné.',
+        'Le classement démarre après la première soirée terminée d’un membre, quand un film a gagné.',
       nobody:
         'Personne n’est encore classé sur cette stat. Essayez-en une autre, ou revenez après quelques soirées.',
       loading: 'Chargement du classement…',
@@ -2211,22 +2211,22 @@ export const fr = {
         rating: {
           label: 'Note de ses films',
           question: 'Qui propose les meilleurs films ?',
-          how: 'Note moyenne donnée par le groupe à ses films gagnants. Classement à partir de 2 films notés.',
+          how: 'Note moyenne donnée à ses films gagnants, dans toutes ses soirées. Classement à partir de 2 films notés.',
         },
         wins: {
           label: 'Victoires',
           question: 'Qui fait gagner le plus de films ?',
-          how: 'Nombre de ses films proposés qui ont gagné une soirée du groupe.',
+          how: 'Nombre de ses films proposés qui ont gagné une soirée, tous groupes confondus.',
         },
         votes: {
           label: 'Votes reçus',
           question: 'Qui propose les films les plus votés ?',
-          how: 'Votes pour reçus en moyenne par ses films proposés, gagnants ou non.',
+          how: 'Votes pour reçus en moyenne par ses films proposés, gagnants ou non, dans toutes ses soirées.',
         },
         flair: {
           label: 'Flair',
           question: 'Qui vote pour le film qui finit par gagner ?',
-          how: 'Part de ses votes pour qui sont allés au film gagnant de la soirée. Classement à partir de 10 votes.',
+          how: 'Part de ses votes pour qui sont allés au film gagnant de la soirée, dans toutes ses soirées. Classement à partir de 10 votes.',
         },
         fresh: {
           label: 'Films inédits',
@@ -2234,19 +2234,19 @@ export const fr = {
           how: 'Part de ses films proposés que personne d’autre dans la soirée n’avait déjà vus.',
         },
         presence: {
-          label: 'Présence',
-          question: 'Qui ne rate aucune soirée ?',
-          how: 'Soirées du groupe rejointes depuis son arrivée dans le groupe.',
+          label: 'Soirées',
+          question: 'Qui a fait le plus de soirées ?',
+          how: 'Soirées terminées avec un film gagnant, tous groupes confondus.',
         },
         host: {
           label: 'Organisation',
           question: 'Qui organise le plus de soirées ?',
-          how: 'Soirées du groupe créées par chaque membre.',
+          how: 'Soirées terminées créées par chaque membre, tous groupes confondus.',
         },
         generous: {
           label: 'Générosité',
           question: 'Qui note le plus large ?',
-          how: 'Moyenne des notes données aux films gagnants. En bas, les plus exigeants. Classement à partir de 5 notes.',
+          how: 'Moyenne des notes données aux films gagnants, dans toutes ses soirées. En bas, les plus exigeants. Classement à partir de 5 notes.',
         },
       },
       details: {
@@ -2259,8 +2259,8 @@ export const fr = {
         votesOnWinner: '{{part}} votes sur {{count}}',
         freshOne: '{{part}} film sur 1',
         fresh: '{{part}} films sur {{count}}',
-        presenceOne: '{{part}} soirée sur 1',
-        presence: '{{part}} soirées sur {{count}}',
+        presenceOne: 'soirée terminée',
+        presence: 'soirées terminées',
         hostedOne: 'soirée organisée',
         hosted: 'soirées organisées',
         ratingsGivenOne: '1 note',
@@ -2275,7 +2275,7 @@ export const fr = {
         noVote: 'Aucun vote pour l’instant',
         notEnoughVotesOne: '1 vote, il en faut {{min}}',
         notEnoughVotes: '{{count}} votes, il en faut {{min}}',
-        noNight: 'Aucune soirée depuis son arrivée',
+        noNight: 'Aucune soirée terminée pour l’instant',
         noRating: 'Aucune note pour l’instant',
         notEnoughRatingsOne: '1 note, il en faut {{min}}',
         notEnoughRatings: '{{count}} notes, il en faut {{min}}',

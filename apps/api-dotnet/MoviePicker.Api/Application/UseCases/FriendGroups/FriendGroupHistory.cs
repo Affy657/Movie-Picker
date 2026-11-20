@@ -1,5 +1,4 @@
 using MoviePicker.Api.Application.DTOs;
-using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.UseCases.FriendGroups;
@@ -68,15 +67,12 @@ public sealed class FriendGroupHistory
             UpVotesOnWinner = castUp.Count(vote => _winnerIds.Contains(vote.MovieId)),
             FreshProposalCount = proposals.Count(movie => _seenByMovie[movie.Id].All(mine.Contains)),
             NightsAttended = attended.Count,
-            NightsSinceJoined = _nights.Count(night => attended.Contains(night.Id) || StartsAfter(night, member.JoinedAt)),
+            NightsSinceJoined = attended.Count,
             NightsHosted = _nights.Count(night => night.CreatorUserId == member.UserId),
             RatingsGiven = given.Count,
             AverageRatingGiven = AverageOf(given.Select(rating => (double)rating.Value).ToList())
         };
     }
-
-    private static bool StartsAfter(Event night, DateTimeOffset joinedAt) =>
-        !EventSchedule.TryGetStartUtc(night.Date, night.Time, out var start) || start >= joinedAt;
 
     private static double? AverageOf(List<double> values) =>
         values.Count == 0 ? null : Math.Round(values.Average(), 2);

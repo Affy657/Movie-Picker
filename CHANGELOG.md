@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Changed
+
+- **Le classement d’un groupe compare toutes les soirées de ses membres** : chaque membre est classé sur l’ensemble de ses soirées terminées, avec ce groupe ou non, et plus seulement sur celles du groupe. La stat Présence devient Soirées, le nombre de soirées terminées de chacun.
+
 ## [1.26.0] - 2026-11-20
 
 ### Added

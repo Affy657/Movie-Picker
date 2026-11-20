@@ -100,9 +100,7 @@ const MEASURES: Record<
   fresh: (member) =>
     fromProposals(member, (proposed) => percent(member.freshProposalCount, proposed)),
   presence: (member) =>
-    member.nightsSinceJoined === 0
-      ? { reason: 'noNight' }
-      : { score: percent(member.nightsAttended, member.nightsSinceJoined) },
+    member.nightsAttended === 0 ? { reason: 'noNight' } : { score: member.nightsAttended },
   host: (member) => ({ score: member.nightsHosted }),
   generous: ratingGiven,
 };
@@ -113,7 +111,7 @@ function measure(stat: RankingStat, member: FriendGroupMemberStats, scale: Ratin
 
 function ceilingOf(stat: RankingStat, scores: readonly number[], scale: RatingScale): number {
   if (stat === 'rating' || stat === 'generous') return ratingScaleMax(scale);
-  if (stat === 'flair' || stat === 'fresh' || stat === 'presence') return PERCENT;
+  if (stat === 'flair' || stat === 'fresh') return PERCENT;
   return Math.max(0, ...scores);
 }
 
