@@ -30,7 +30,7 @@ export type EventConfigData = Pick<
 type ServedParticipant = ApiSchemas['EventParticipantSummaryResponse'];
 
 export type EventParticipantSummary = Pick<ServedParticipant, 'pseudo'> &
-  Partial<Pick<ServedParticipant, 'isCreator' | 'avatarId' | 'handle'>> & {
+  Partial<Pick<ServedParticipant, 'isCreator' | 'avatarId' | 'handle' | 'accentColor'>> & {
     id: string;
   };
 

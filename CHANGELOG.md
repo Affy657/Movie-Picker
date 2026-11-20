@@ -8,6 +8,14 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Votre couleur se voit sur votre profil et en soirée** : la couleur choisie dans vos préférences teinte votre profil pour tous ceux qui le visitent (chiffres, boutons, fondu de la bannière, contour de l'avatar) et entoure votre avatar dans les soirées.
+
+### Changed
+
+- **Une palette de couleurs plus variée** : Turquoise, Citron vert et Or remplacent Cyan, Indigo et Rouge, pour huit couleurs bien distinctes. Si vous aviez choisi une couleur retirée, la plus proche la remplace.
+
 ## [1.22.0] - 2026-11-20
 
 ### Added

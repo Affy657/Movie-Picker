@@ -147,6 +147,27 @@ public sealed class PatchUserProfileHandlerTests
         Assert.Equal(UiThemePreference.System, res.UiTheme);
     }
 
+    [Theory]
+    [InlineData("gold", AccentColor.Gold)]
+    [InlineData("teal", AccentColor.Teal)]
+    [InlineData("lime", AccentColor.Lime)]
+    [InlineData("indigo", AccentColor.Purple)]
+    [InlineData("cyan", AccentColor.Teal)]
+    [InlineData("red", AccentColor.Pink)]
+    public async Task HandleAsync_AccentColor_MovesARetiredColourToItsNearestOne(string sent, AccentColor expected)
+    {
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(User());
+        users
+            .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User x, CancellationToken _) => x);
+        var handler = Handler(users.Object);
+
+        var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { AccentColor = sent });
+
+        Assert.Equal(expected, res.AccentColor);
+    }
+
     [Fact]
     public async Task HandleAsync_UpdatesRatingScale()
     {

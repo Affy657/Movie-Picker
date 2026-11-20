@@ -4,7 +4,7 @@ import foundation from './01-foundation.css?raw';
 type Rgba = readonly [number, number, number, number];
 type Declarations = ReadonlyMap<string, string>;
 
-const ACCENTS = ['blue', 'green', 'purple', 'pink', 'orange', 'red', 'cyan', 'indigo'] as const;
+const ACCENTS = ['blue', 'teal', 'green', 'lime', 'gold', 'orange', 'pink', 'purple'] as const;
 type Accent = (typeof ACCENTS)[number];
 type Theme = 'light' | 'dark';
 
@@ -233,6 +233,14 @@ describe('foundation colour roles', () => {
       ...failures(scope, TEXT_PAIRS, 4.5, theme),
       ...failures(scope, BOUNDARY_PAIRS, 3, theme),
     ]).toEqual([]);
+  });
+
+  it.each(THEMES)('give every accent its own colour in the %s theme', (theme) => {
+    const primaries = ACCENTS.map((accent) =>
+      new Scope(rootDeclarations(theme, accent)).color('--color-primary').join(',')
+    );
+
+    expect(new Set(primaries).size).toBe(ACCENTS.length);
   });
 
   it.each(THEMES)('keep every accent readable in the %s theme', (theme) => {

@@ -216,19 +216,7 @@ public static class UserDocumentMapper
             _ => "system"
         };
 
-    internal static AccentColor ParseAccent(string? s) =>
-        s?.ToLowerInvariant() switch
-        {
-            "blue" => AccentColor.Blue,
-            "green" => AccentColor.Green,
-            "purple" => AccentColor.Purple,
-            "pink" => AccentColor.Pink,
-            "orange" => AccentColor.Orange,
-            "red" => AccentColor.Red,
-            "cyan" => AccentColor.Cyan,
-            "indigo" => AccentColor.Indigo,
-            _ => AccentColor.Default
-        };
+    internal static AccentColor ParseAccent(string? s) => AccentColors.Parse(s);
 
     internal static string? AccentToString(AccentColor c) =>
         c switch
@@ -238,9 +226,9 @@ public static class UserDocumentMapper
             AccentColor.Purple => "purple",
             AccentColor.Pink => "pink",
             AccentColor.Orange => "orange",
-            AccentColor.Red => "red",
-            AccentColor.Cyan => "cyan",
-            AccentColor.Indigo => "indigo",
+            AccentColor.Teal => "teal",
+            AccentColor.Lime => "lime",
+            AccentColor.Gold => "gold",
             _ => null
         };
 

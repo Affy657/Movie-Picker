@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import ProfileBanner from './ProfileBanner';
+import styles from './ProfileBanner.module.css';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import type { ProfileBanner as Banner } from '@/features/profile/api/profileApi';
 
@@ -32,6 +33,26 @@ function renderBanner(banner: Banner, isOwner = false, onEdit = vi.fn()) {
 }
 
 describe('ProfileBanner', () => {
+  it('fades into the colour of its member only when they picked one', () => {
+    const { container: tinted } = render(
+      <AppTestProviders>
+        <MemoryRouter>
+          <ProfileBanner banner={FILM} isOwner={false} onEdit={vi.fn()} tinted />
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+    const { container: plain } = render(
+      <AppTestProviders>
+        <MemoryRouter>
+          <ProfileBanner banner={FILM} isOwner={false} onEdit={vi.fn()} />
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+
+    expect(tinted.firstElementChild).toHaveClass(styles.tinted!);
+    expect(plain.firstElementChild).not.toHaveClass(styles.tinted!);
+  });
+
   it('shows the image of the film, sized for the screen', () => {
     renderBanner(FILM);
 

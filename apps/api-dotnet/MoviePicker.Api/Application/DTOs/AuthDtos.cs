@@ -95,8 +95,8 @@ public sealed class PatchUserProfileRequest
     public string? UiTheme { get; init; }
 
     [RegularExpression(
-        "^(default|blue|green|purple|pink|orange|red|cyan|indigo)$",
-        ErrorMessage = "accentColor must be default, blue, green, purple, pink, orange, red, cyan or indigo")]
+        "^(default|blue|teal|green|lime|gold|orange|pink|purple|red|cyan|indigo)$",
+        ErrorMessage = "accentColor must be default, blue, teal, green, lime, gold, orange, pink or purple")]
     public string? AccentColor { get; init; }
 
     [RegularExpression("^(five|ten)$", ErrorMessage = "ratingScale must be five or ten")]

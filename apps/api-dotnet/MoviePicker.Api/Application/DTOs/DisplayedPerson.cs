@@ -8,10 +8,17 @@ public sealed record DisplayedPerson(
     string Handle,
     string? PublicHandle,
     string DisplayName,
-    string AvatarId)
+    string AvatarId,
+    AccentColor AccentColor = AccentColor.Default)
 {
     public static DisplayedPerson From(User user) =>
-        new(user.Id, user.Handle, PublicOrNull(user.IsProfilePublic, user.Handle), user.DisplayName, user.DisplayedAvatarId);
+        new(
+            user.Id,
+            user.Handle,
+            PublicOrNull(user.IsProfilePublic, user.Handle),
+            user.DisplayName,
+            user.DisplayedAvatarId,
+            user.AccentColor);
 
     public static DisplayedPerson From(UserCard card) =>
         new(
@@ -19,7 +26,8 @@ public sealed record DisplayedPerson(
             card.Handle ?? string.Empty,
             PublicOrNull(card.IsProfilePublic, card.Handle),
             card.DisplayName,
-            card.DisplayedAvatarId);
+            card.DisplayedAvatarId,
+            card.AccentColor);
 
     public static DisplayedPerson Unknown(string userId) =>
         new(userId, string.Empty, null, string.Empty, string.Empty);

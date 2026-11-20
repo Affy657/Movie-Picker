@@ -35,6 +35,10 @@ import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { useEventMovieVoting } from './useEventMovieVoting';
 import { useEventWatchlistToggle } from './useEventWatchlistToggle';
 import styles from './EventMoviesSection.module.css';
+import {
+  ParticipantAccentsContext,
+  useAccentsByParticipant,
+} from '@/features/events/hooks/useParticipantAccent';
 import Chip from '@/shared/components/Chip';
 
 const loadProposeMovieDialog = () => import('@/features/events/components/ProposeMovieDialog');
@@ -292,6 +296,7 @@ export default function EventMoviesSection({
       ),
     [event.participants]
   );
+  const participantAccents = useAccentsByParticipant(event.participants);
   const participantAvatarsByPseudo = useMemo(
     () =>
       Object.fromEntries(
@@ -360,79 +365,84 @@ export default function EventMoviesSection({
   };
 
   return (
-    <section className="section section-movies" aria-labelledby={sectionHeadingId}>
-      <h2 id={sectionHeadingId} className="visually-hidden">
-        {t('movies.list.sectionLabel')}
-      </h2>
-      {!isFinished && participant && addMovieOpen && (
-        <Suspense fallback={null}>
-          <ProposeMovieDialog
-            open
-            onClose={closeAddMovie}
-            slug={slug}
-            eventName={event.title}
-            participant={participant}
-            movies={movies}
-            onChanged={refreshAll}
-            onVote={submitVote}
-            allowSeries={!!event.config?.allowSeries}
-            maxProposals={event.config?.maxProposalsPerParticipant ?? null}
-          />
-        </Suspense>
-      )}
-      {actionError && (
-        <EventActionErrorBanner message={actionError} onDismiss={onDismissActionError} />
-      )}
+    <ParticipantAccentsContext.Provider value={participantAccents}>
+      <section className="section section-movies" aria-labelledby={sectionHeadingId}>
+        <h2 id={sectionHeadingId} className="visually-hidden">
+          {t('movies.list.sectionLabel')}
+        </h2>
+        {!isFinished && participant && addMovieOpen && (
+          <Suspense fallback={null}>
+            <ProposeMovieDialog
+              open
+              onClose={closeAddMovie}
+              slug={slug}
+              eventName={event.title}
+              participant={participant}
+              movies={movies}
+              onChanged={refreshAll}
+              onVote={submitVote}
+              allowSeries={!!event.config?.allowSeries}
+              maxProposals={event.config?.maxProposalsPerParticipant ?? null}
+            />
+          </Suspense>
+        )}
+        {actionError && (
+          <EventActionErrorBanner message={actionError} onDismiss={onDismissActionError} />
+        )}
 
-      {moviesQuery.isPending && !moviesQuery.isError && (
-        <SkeletonScreen label={t('movies.list.loadingPlaceholder')} className={styles.loadingState}>
-          <Skeleton variant="block" height={48} className={styles.skeletonHeader} />
-          <Skeleton variant="block" height={90} className={styles.skeletonRow} />
-          <Skeleton variant="block" height={90} className={styles.skeletonRow} />
-          <Skeleton variant="block" height={90} className={styles.skeletonRow} />
-        </SkeletonScreen>
-      )}
+        {moviesQuery.isPending && !moviesQuery.isError && (
+          <SkeletonScreen
+            label={t('movies.list.loadingPlaceholder')}
+            className={styles.loadingState}
+          >
+            <Skeleton variant="block" height={48} className={styles.skeletonHeader} />
+            <Skeleton variant="block" height={90} className={styles.skeletonRow} />
+            <Skeleton variant="block" height={90} className={styles.skeletonRow} />
+            <Skeleton variant="block" height={90} className={styles.skeletonRow} />
+          </SkeletonScreen>
+        )}
 
-      {showSortControl && (
-        <div className={styles.sectionHeader}>
-          <SortControl
-            sortOptions={sortOptions}
+        {showSortControl && (
+          <div className={styles.sectionHeader}>
+            <SortControl
+              sortOptions={sortOptions}
+              sortBy={sortBy}
+              sortDir={sortDir}
+              onSetSort={handleSetSort}
+              sortLabel={t('movies.list.sortLabel')}
+              sortMenuAriaLabel={t('movies.list.sortLabel')}
+              sortDirectionAscLabel={t('events.myEvents.sortDirectionAsc')}
+              sortDirectionDescLabel={t('events.myEvents.sortDirectionDesc')}
+              isMobile={isMobile}
+            />
+          </div>
+        )}
+
+        {moviesLoaded && voteQuota ? (
+          <output className={styles.voteQuota}>
+            <Chip tone={voteQuotaLockedHint ? 'primary' : 'default'} data-testid="vote-quota">
+              {t('movies.list.voteQuota', { used: voteQuota.used, max: voteQuota.max })}
+            </Chip>
+          </output>
+        ) : null}
+
+        {moviesLoaded && (
+          <EventMovieLists
+            layout={layout}
+            inWheelMovies={inWheelMovies}
+            excludedMovies={excludedMovies}
+            listProps={sharedListProps}
+            emptyState={emptyState}
+            showRank={sortBy === 'score' && sortDir === 'desc' && !isFinished}
             sortBy={sortBy}
             sortDir={sortDir}
             onSetSort={handleSetSort}
-            sortLabel={t('movies.list.sortLabel')}
-            sortMenuAriaLabel={t('movies.list.sortLabel')}
-            sortDirectionAscLabel={t('events.myEvents.sortDirectionAsc')}
-            sortDirectionDescLabel={t('events.myEvents.sortDirectionDesc')}
-            isMobile={isMobile}
           />
-        </div>
-      )}
+        )}
 
-      {moviesLoaded && voteQuota ? (
-        <output className={styles.voteQuota}>
-          <Chip tone={voteQuotaLockedHint ? 'primary' : 'default'} data-testid="vote-quota">
-            {t('movies.list.voteQuota', { used: voteQuota.used, max: voteQuota.max })}
-          </Chip>
-        </output>
-      ) : null}
-
-      {moviesLoaded && (
-        <EventMovieLists
-          layout={layout}
-          inWheelMovies={inWheelMovies}
-          excludedMovies={excludedMovies}
-          listProps={sharedListProps}
-          emptyState={emptyState}
-          showRank={sortBy === 'score' && sortDir === 'desc' && !isFinished}
-          sortBy={sortBy}
-          sortDir={sortDir}
-          onSetSort={handleSetSort}
-        />
-      )}
-
-      <VoteLimitDialog open={voteLimitReached} maxVotes={maxVotes} onClose={dismissVoteLimit} />
-    </section>
+        <VoteLimitDialog open={voteLimitReached} maxVotes={maxVotes} onClose={dismissVoteLimit} />
+      </section>
+    </ParticipantAccentsContext.Provider>
   );
 }
 

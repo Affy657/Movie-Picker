@@ -11510,7 +11510,7 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /** @enum {string} */
-        AccentColor: "default" | "blue" | "green" | "purple" | "pink" | "orange" | "red" | "cyan" | "indigo";
+        AccentColor: "default" | "blue" | "green" | "purple" | "pink" | "orange" | "teal" | "lime" | "gold";
         AddFavoriteRequest: {
             /** Format: int32 */
             tmdbId: number;
@@ -11721,6 +11721,7 @@ export interface components {
             isCreator: boolean;
             avatarId: string;
             handle: string | null;
+            accentColor: components["schemas"]["AccentColor"] | null;
         };
         EventReminderPassResult: {
             /** Format: int32 */
@@ -12908,6 +12909,7 @@ export interface components {
             isWatchedPublic: boolean;
             favorites: components["schemas"]["FavoriteTitleResponse"][];
             banner: components["schemas"]["ProfileBannerResponse"] | null;
+            accentColor: components["schemas"]["AccentColor"];
         };
         RatingReminderPassResult: {
             /** Format: int32 */

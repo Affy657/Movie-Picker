@@ -32,6 +32,18 @@ afterEach(() => {
 });
 
 describe('AccentColorPicker', () => {
+  it('offers eight colours spread around the wheel, from blue to purple', () => {
+    configure('blue');
+
+    render(<AccentColorPicker />);
+
+    expect(screen.getAllByRole('radio').map((radio) => radio.getAttribute('aria-label'))).toEqual(
+      ['blue', 'teal', 'green', 'lime', 'gold', 'orange', 'pink', 'purple'].map(
+        (color) => `auth.account.accentColorOptions.${color}`
+      )
+    );
+  });
+
   it('renders eight swatches with the current one selected', () => {
     configure('blue');
 
@@ -158,6 +170,6 @@ describe('AccentColorPicker', () => {
       key: 'ArrowRight',
     });
 
-    expect(setAccent).toHaveBeenCalledWith('green');
+    expect(setAccent).toHaveBeenCalledWith('teal');
   });
 });

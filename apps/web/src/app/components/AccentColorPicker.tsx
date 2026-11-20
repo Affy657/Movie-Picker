@@ -12,36 +12,36 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const PICKER_COLORS = [
   'blue',
+  'teal',
   'green',
-  'purple',
-  'pink',
+  'lime',
+  'gold',
   'orange',
-  'red',
-  'cyan',
-  'indigo',
+  'pink',
+  'purple',
 ] as const satisfies readonly AccentColor[];
 type PickerColor = (typeof PICKER_COLORS)[number];
 
 const SWATCH_COLORS: Record<PickerColor, string> = {
   blue: 'var(--color-accent-swatch-blue)',
+  teal: 'var(--color-accent-swatch-teal)',
   green: 'var(--color-accent-swatch-green)',
-  purple: 'var(--color-accent-swatch-purple)',
-  pink: 'var(--color-accent-swatch-pink)',
+  lime: 'var(--color-accent-swatch-lime)',
+  gold: 'var(--color-accent-swatch-gold)',
   orange: 'var(--color-accent-swatch-orange)',
-  red: 'var(--color-accent-swatch-red)',
-  cyan: 'var(--color-accent-swatch-cyan)',
-  indigo: 'var(--color-accent-swatch-indigo)',
+  pink: 'var(--color-accent-swatch-pink)',
+  purple: 'var(--color-accent-swatch-purple)',
 };
 
 const ACCENT_LABEL_KEY: Record<PickerColor, TranslationKey> = {
   blue: 'auth.account.accentColorOptions.blue',
+  teal: 'auth.account.accentColorOptions.teal',
   green: 'auth.account.accentColorOptions.green',
-  purple: 'auth.account.accentColorOptions.purple',
-  pink: 'auth.account.accentColorOptions.pink',
+  lime: 'auth.account.accentColorOptions.lime',
+  gold: 'auth.account.accentColorOptions.gold',
   orange: 'auth.account.accentColorOptions.orange',
-  red: 'auth.account.accentColorOptions.red',
-  cyan: 'auth.account.accentColorOptions.cyan',
-  indigo: 'auth.account.accentColorOptions.indigo',
+  pink: 'auth.account.accentColorOptions.pink',
+  purple: 'auth.account.accentColorOptions.purple',
 };
 
 const PATCH_DEBOUNCE_MS = 400;

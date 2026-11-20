@@ -803,7 +803,7 @@ export interface MockEventOptions {
 }
 
 function mockParticipant(_id: string, pseudo: string, isCreator = false) {
-  return { _id, pseudo, isCreator, avatarId: '', handle: null };
+  return { _id, pseudo, isCreator, avatarId: '', handle: null, accentColor: null };
 }
 
 export function createEventDetailHandlers(opts: MockEventOptions) {

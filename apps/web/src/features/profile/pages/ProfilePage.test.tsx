@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import ProfilePage from '@/features/profile/pages/ProfilePage';
+import headerStyles from '@/features/profile/components/ProfileHeader.module.css';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { TEST_API_V1, createUserStatsHandler } from '@/mocks/handlers';
 import { queryKeys } from '@/shared/hooks/queryKeys';
@@ -672,6 +673,63 @@ describe('ProfilePage (MSW)', () => {
 
     const link = await screen.findByRole('link', { name: /modifier mon profil/i });
     expect(link).toHaveAttribute('href', '/settings');
+  });
+
+  describe('member colour', () => {
+    it('shows any visitor the profile in the colour its member picked, avatar ringed', async () => {
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+        http.get(`${TEST_API_V1}/users/alice`, () =>
+          HttpResponse.json({ ...ALICE_PROFILE, accentColor: 'pink' })
+        )
+      );
+
+      const { container } = renderProfile('alice');
+
+      const heading = await screen.findByRole('heading', { name: 'Alice' });
+      expect(heading.closest('.accent-pink')).not.toBeNull();
+      expect(container.querySelector('img.accent-pink')).toHaveClass(headerStyles.avatarAccent!);
+    });
+
+    it('shows a profile without a chosen colour in the app colour, whatever the visitor picked', async () => {
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () =>
+          HttpResponse.json({ ...ME_PROFILE, accentColor: 'orange' })
+        ),
+        http.get(`${TEST_API_V1}/users/alice`, () =>
+          HttpResponse.json({ ...ALICE_PROFILE, accentColor: 'default' })
+        )
+      );
+
+      const { container } = renderProfile('alice');
+
+      const heading = await screen.findByRole('heading', { name: 'Alice' });
+      expect(heading.closest('.accent-default')).not.toBeNull();
+      expect(container.querySelector('.accent-orange')).toBeNull();
+    });
+
+    it('follows my current colour on my own profile, not the one the profile was fetched with', async () => {
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () =>
+          HttpResponse.json({ ...ME_PROFILE, accentColor: 'green' })
+        ),
+        http.get(`${TEST_API_V1}/users/moi`, () =>
+          HttpResponse.json({
+            ...ALICE_PROFILE,
+            handle: 'moi',
+            displayName: 'Moi',
+            accentColor: 'pink',
+          })
+        )
+      );
+
+      renderProfile('moi');
+
+      await screen.findByRole('link', { name: /modifier mon profil/i });
+      const heading = screen.getByRole('heading', { name: 'Moi' });
+      expect(heading.closest('.accent-green')).not.toBeNull();
+      expect(heading.closest('.accent-pink')).toBeNull();
+    });
   });
 
   describe('watchlist', () => {

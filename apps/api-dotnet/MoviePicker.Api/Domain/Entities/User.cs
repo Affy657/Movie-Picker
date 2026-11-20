@@ -15,9 +15,29 @@ public enum AccentColor
     Purple = 3,
     Pink = 4,
     Orange = 5,
-    Red = 6,
-    Cyan = 7,
-    Indigo = 8
+    Teal = 9,
+    Lime = 10,
+    Gold = 11
+}
+
+public static class AccentColors
+{
+    public static AccentColor Parse(string? name) =>
+        name?.Trim().ToLowerInvariant() switch
+        {
+            "blue" => AccentColor.Blue,
+            "green" => AccentColor.Green,
+            "purple" => AccentColor.Purple,
+            "pink" => AccentColor.Pink,
+            "orange" => AccentColor.Orange,
+            "teal" => AccentColor.Teal,
+            "lime" => AccentColor.Lime,
+            "gold" => AccentColor.Gold,
+            "red" => AccentColor.Pink,
+            "cyan" => AccentColor.Teal,
+            "indigo" => AccentColor.Purple,
+            _ => AccentColor.Default
+        };
 }
 
 public enum RatingScale

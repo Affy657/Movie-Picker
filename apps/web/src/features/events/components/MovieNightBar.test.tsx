@@ -86,6 +86,21 @@ describe('MovieNightBar', () => {
     vi.mocked(useIsMobile).mockReturnValue(false);
   });
 
+  it('rings the avatar of the proposer in the colour they picked', () => {
+    vi.mocked(useMovieNight).mockReturnValue(
+      night({
+        event: {
+          ...event,
+          participants: [{ id: 'p2', pseudo: 'Léa', avatarId: null, accentColor: 'teal' }],
+        } as unknown as EventData,
+      })
+    );
+
+    const { container } = renderBar();
+
+    expect(container.querySelector('.accent-teal')).not.toBeNull();
+  });
+
   it('names the night, the proposer and the score, and goes back to the night', async () => {
     const onBack = vi.fn();
     vi.mocked(useMovieNight).mockReturnValue(night());

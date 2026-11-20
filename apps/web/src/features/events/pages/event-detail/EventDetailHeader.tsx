@@ -129,7 +129,12 @@ function ParticipantsButton({
       data-participants-toggle
     >
       <AvatarStack
-        people={participants.map((p) => ({ key: p.id, avatarId: p.avatarId, pseudo: p.pseudo }))}
+        people={participants.map((p) => ({
+          key: p.id,
+          avatarId: p.avatarId,
+          pseudo: p.pseudo,
+          accent: p.accentColor,
+        }))}
         max={MAX_STACKED_AVATARS}
         hidden={hiddenCount}
       />

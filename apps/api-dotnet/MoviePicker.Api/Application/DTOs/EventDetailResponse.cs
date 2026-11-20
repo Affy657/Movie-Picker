@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.DTOs;
 
@@ -50,4 +51,5 @@ public sealed class EventParticipantSummaryResponse
     public string AvatarId { get; init; } = string.Empty;
 
     public string? Handle { get; init; }
+    public AccentColor? AccentColor { get; init; }
 }

@@ -1,11 +1,14 @@
 import clsx from 'clsx';
 import Avatar from './Avatar';
+import type { AccentColor } from '@/shared/types/theme';
+import { isChosenAccent } from '@/shared/utils/accentColor';
 import styles from './AvatarStack.module.css';
 
 export interface AvatarStackPerson {
   key: string;
   avatarId: string | null | undefined;
   pseudo?: string;
+  accent?: AccentColor | null;
 }
 
 interface AvatarStackProps {
@@ -42,7 +45,8 @@ export default function AvatarStack({
             avatarId={person.avatarId}
             pseudo={person.pseudo}
             size={size}
-            className={styles.item}
+            accent={person.accent}
+            className={clsx(styles.item, isChosenAccent(person.accent) && styles.itemAccent)}
           />
         ))}
         {hidden > 0 ? (

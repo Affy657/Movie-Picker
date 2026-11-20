@@ -30,6 +30,7 @@ import { invalidateFollowGraph } from '@/features/profile/lib/invalidateFollowGr
 import { fetchUserStats } from '@/features/events/api/userStatsApi';
 import styles from './ProfilePage.module.css';
 import InlineError from '@/shared/components/InlineError';
+import { accentZoneClass, isChosenAccent } from '@/shared/utils/accentColor';
 
 const FollowListModal = lazy(() => import('@/features/profile/components/FollowListModal'));
 const BannerPicker = lazy(() => import('@/features/profile/components/BannerPicker'));
@@ -178,16 +179,26 @@ export default function ProfilePage() {
       ? { count: watchlistCount, isHidden: isOwnProfile && !profile.isWatchlistPublic }
       : null;
 
+  const profileAccent = (isOwnProfile ? user?.accentColor : profile.accentColor) ?? 'default';
+
   return (
-    <PageLayout className={clsx(styles.layout, bannerView.layoutClass)}>
+    <PageLayout
+      className={clsx(styles.layout, bannerView.layoutClass, accentZoneClass(profileAccent))}
+    >
       {bannerView.banner && (
-        <ProfileBanner banner={bannerView.banner} isOwner={isOwnProfile} onEdit={bannerView.open} />
+        <ProfileBanner
+          banner={bannerView.banner}
+          isOwner={isOwnProfile}
+          onEdit={bannerView.open}
+          tinted={isChosenAccent(profileAccent)}
+        />
       )}
       <div className={bannerView.frameClass}>
         <ProfileHeader
           profile={profile}
           memberSince={memberSince}
           streak={streak}
+          accent={profileAccent}
           overBanner={bannerView.banner !== null}
           onOpenFollowModal={setFollowModal}
         >

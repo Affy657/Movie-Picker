@@ -172,6 +172,18 @@ describe('EventMoviesSection (MSW)', () => {
     });
   });
 
+  it.each(['grid', 'list'] as const)(
+    'rings the avatar of who proposed a film in the colour they picked (%s)',
+    (viewMode) => {
+      const { container } = renderSection({
+        viewMode,
+        event: { ...EVENT, participants: [{ id: 'p1', pseudo: 'Alice', accentColor: 'pink' }] },
+      });
+
+      expect(container.querySelector('.accent-pink')).not.toBeNull();
+    }
+  );
+
   it('adds a movie to the watchlist with vote/runtime from the movie night page', async () => {
     stubHoverCapability();
     let addedBody: Record<string, unknown> | null = null;

@@ -174,4 +174,18 @@ public sealed class GetPublicProfileHandlerTests
         Assert.Equal(["Heat", "Twin Peaks"], res.Favorites.Select(f => f.Title));
         Assert.Equal(MovieMediaType.Tv, res.Favorites[1].MediaType);
     }
+
+    [Theory]
+    [InlineData(AccentColor.Pink)]
+    [InlineData(AccentColor.Default)]
+    public async Task HandleAsync_ShowsTheOwnersColorToAnyVisitor(AccentColor color)
+    {
+        var (users, _, handler) = Build();
+        users.Setup(x => x.GetByHandleAsync("alice", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(User(true) with { AccentColor = color });
+
+        var res = await handler.HandleAsync("alice");
+
+        Assert.Equal(color, res.AccentColor);
+    }
 }

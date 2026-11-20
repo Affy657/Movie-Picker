@@ -11,11 +11,11 @@ export type AccentColor = ApiSchemas['AccentColor'];
 export const ACCENT_COLORS: readonly AccentColor[] = [
   'default',
   'blue',
+  'teal',
   'green',
-  'purple',
-  'pink',
+  'lime',
+  'gold',
   'orange',
-  'red',
-  'cyan',
-  'indigo',
+  'pink',
+  'purple',
 ] as const;

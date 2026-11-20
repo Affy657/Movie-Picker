@@ -22,6 +22,8 @@ import { MovieNote } from '@/features/events/components/MovieNote';
 import type { RatingScale } from '@/shared/types/theme';
 import { useLocale, type Translate } from '@/shared/i18n';
 import styles from './eventMovieCardParts.module.css';
+import type { AccentColor } from '@/shared/types/theme';
+import { useParticipantAccent } from '@/features/events/hooks/useParticipantAccent';
 
 export interface MovieCardSelection {
   active: boolean;
@@ -153,6 +155,7 @@ export function useMovieCardState({
     onError: onActionError,
   });
   const proposerAvatarId = participantAvatars?.[getParticipantId(m)] ?? '';
+  const proposerAccent = useParticipantAccent(getParticipantId(m));
   const votingAvailable = canVote ?? actions.canAct;
   const others = (m.seenByPseudos ?? []).filter((p) => p !== participantPseudo);
   const othersHint = othersAlreadySeenHint(m.seenByPseudos, participantPseudo, t);
@@ -175,6 +178,7 @@ export function useMovieCardState({
   return {
     isMine: actions.isMine,
     proposerAvatarId,
+    proposerAccent,
     canRemove: actions.canRemove,
     canAct: actions.canAct,
     canEditNote: actions.canEditNote,
@@ -266,16 +270,18 @@ export function ProposerBadge({
   avatarId,
   pseudo,
   handle,
+  accent,
   t,
 }: Readonly<{
   avatarId: string;
   pseudo: string;
   handle?: string | null;
+  accent?: AccentColor;
   t: Translate;
 }>) {
   const content = (
     <>
-      <Avatar avatarId={avatarId} pseudo={pseudo} size="xs" />
+      <Avatar avatarId={avatarId} pseudo={pseudo} size="xs" accent={accent} />
       <span className={styles.proposerName}>{pseudo}</span>
     </>
   );
@@ -310,6 +316,7 @@ export function CardProposerFooter({
         avatarId={s.proposerAvatarId}
         pseudo={m.proposerPseudo}
         handle={m.proposerHandle}
+        accent={s.proposerAccent}
         t={t}
       />
       {s.showAddNote && (

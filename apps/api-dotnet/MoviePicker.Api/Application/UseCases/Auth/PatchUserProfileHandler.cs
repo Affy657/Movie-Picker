@@ -111,7 +111,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
 
         var accent = user.AccentColor;
         if (request.AccentColor is not null)
-            accent = ParseEnum(request.AccentColor, AccentColor.Default);
+            accent = AccentColors.Parse(request.AccentColor);
 
         var ratingScale = user.RatingScale;
         if (request.RatingScale is not null)

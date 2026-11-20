@@ -363,4 +363,33 @@ public sealed class GetEventDetailHandlerTests
             r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
+
+    [Fact]
+    public async Task HandleAsync_LinkedParticipants_CarryTheirColorEvenWithAPrivateProfile()
+    {
+        var evt = Event();
+        var now = DateTimeOffset.UtcNow;
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _participantRepo
+            .Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<ParticipantEntity>)
+            [
+                new ParticipantEntity { Id = "p-1", EventId = evt.Id, Pseudo = "Camille", UserId = "u1", CreatedAt = now, UpdatedAt = now },
+                new ParticipantEntity { Id = "p-2", EventId = evt.Id, Pseudo = "Sam", UserId = "u2", CreatedAt = now, UpdatedAt = now },
+                new ParticipantEntity { Id = "p-3", EventId = evt.Id, Pseudo = "Invité", CreatedAt = now, UpdatedAt = now }
+            ]);
+        _userRepo
+            .Setup(r => r.ListCardsByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<UserCard>)
+            [
+                new UserCard("u1", "avatar-3", "camille", IsProfilePublic: true, AccentColor: AccentColor.Pink),
+                new UserCard("u2", "avatar-5", "sam", IsProfilePublic: false, AccentColor: AccentColor.Green)
+            ]);
+
+        var result = await _sut.HandleAsync("evt1");
+
+        Assert.Equal(AccentColor.Pink, result.Participants[0].AccentColor);
+        Assert.Equal(AccentColor.Green, result.Participants[1].AccentColor);
+        Assert.Null(result.Participants[2].AccentColor);
+    }
 }

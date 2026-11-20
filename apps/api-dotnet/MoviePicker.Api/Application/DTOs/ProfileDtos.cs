@@ -1,3 +1,5 @@
+using MoviePicker.Api.Domain.Entities;
+
 namespace MoviePicker.Api.Application.DTOs;
 
 public sealed class PublicProfileResponse
@@ -16,6 +18,7 @@ public sealed class PublicProfileResponse
     public bool IsWatchedPublic { get; init; }
     public IReadOnlyList<FavoriteTitleResponse> Favorites { get; init; } = [];
     public ProfileBannerResponse? Banner { get; init; }
+    public AccentColor AccentColor { get; init; }
 }
 
 public sealed class FollowUserItem

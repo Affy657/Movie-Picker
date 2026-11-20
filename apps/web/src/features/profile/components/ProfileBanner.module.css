@@ -19,6 +19,15 @@
   background: linear-gradient(to bottom, transparent 38%, var(--color-bg) 100%);
 }
 
+.tinted .backdrop::after {
+  background: linear-gradient(
+    to bottom,
+    transparent 30%,
+    var(--color-primary-soft) 70%,
+    var(--color-bg) 100%
+  );
+}
+
 .image {
   display: block;
   width: 100%;
