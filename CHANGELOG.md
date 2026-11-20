@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.24.0] - 2026-11-20
+
 ### Added
 
 - **Votre couleur se voit sur votre profil et en soirée** : la couleur choisie dans vos préférences teinte votre profil pour tous ceux qui le visitent (chiffres, boutons, fondu de la bannière, contour de l'avatar) et entoure votre avatar dans les soirées.
@@ -926,7 +928,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.23.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.24.0...HEAD
+[1.24.0]: https://github.com/Affy657/Movie-Picker/compare/v1.23.0...v1.24.0
 [1.23.0]: https://github.com/Affy657/Movie-Picker/compare/v1.22.0...v1.23.0
 [1.22.0]: https://github.com/Affy657/Movie-Picker/compare/v1.21.0...v1.22.0
 [1.21.0]: https://github.com/Affy657/Movie-Picker/compare/v1.20.0...v1.21.0
