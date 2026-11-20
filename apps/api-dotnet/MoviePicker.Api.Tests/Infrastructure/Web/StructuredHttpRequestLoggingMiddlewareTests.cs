@@ -142,6 +142,27 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
             pair => Convert.ToString(pair.Value, System.Globalization.CultureInfo.InvariantCulture)?.Contains("SECRET", StringComparison.Ordinal) == true);
     }
 
+    [Theory]
+    [InlineData("GET")]
+    [InlineData("POST")]
+    public async Task InvokeAsync_MasksTheInviteTokenOfAGroupJoinPath(string method)
+    {
+        var logger = new CapturingLogger<StructuredHttpRequestLoggingMiddleware>();
+        var ctx = new DefaultHttpContext();
+        ctx.Request.Method = method;
+        ctx.Request.Path = "/api/v1/groups/join/SECRET-INVITE-TOKEN";
+        var mw = new StructuredHttpRequestLoggingMiddleware(_ => Task.CompletedTask, logger);
+
+        await mw.InvokeAsync(ctx);
+
+        var entry = Assert.Single(logger.Entries);
+        Assert.DoesNotContain("SECRET-INVITE-TOKEN", entry.Message);
+        Assert.Contains($"HTTP {method} /api/v1/groups/join/*** ", entry.Message);
+        Assert.DoesNotContain(
+            Assert.Single(logger.States),
+            pair => Convert.ToString(pair.Value, System.Globalization.CultureInfo.InvariantCulture)?.Contains("SECRET", StringComparison.Ordinal) == true);
+    }
+
     [Fact]
     public async Task InvokeAsync_MasksTheInviteTokenCarriedByAReturnTo()
     {
@@ -264,6 +285,9 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
     [InlineData("?ReturnTo=/l/SECRET/rejoindre&x=1", "?ReturnTo=***&x=1")]
     [InlineData("?returnTo=%2Fl%2FSECRET", "?returnTo=***")]
     [InlineData("?returnTo=%2Fsoiree%2Fabc%3Fhost%3DSECRET", "?returnTo=***")]
+    [InlineData("?returnTo=%2Fg%2FSECRET%2Frejoindre", "?returnTo=***")]
+    [InlineData("?ReturnTo=/g/SECRET/rejoindre&x=1", "?ReturnTo=***&x=1")]
+    [InlineData("?returnTo=%2Fgroupes%2F66f0a1", "?returnTo=%2Fgroupes%2F66f0a1")]
     [InlineData("?returnTo=%2Fsoirees", "?returnTo=%2Fsoirees")]
     [InlineData("?returnTo=%2Fusers%2Fl%2Ffilms", "?returnTo=%2Fusers%2Fl%2Ffilms")]
     [InlineData("?returnTo=%E0%A4%A", "?returnTo=%E0%A4%A")]
@@ -286,6 +310,18 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
     [InlineData("returnTo=/l/SECRET/rejoindre", "returnTo=/l/***/rejoindre")]
     [InlineData("/l/", "/l/")]
     [InlineData("/api/v1/users/l/proposed-movies", "/api/v1/users/l/proposed-movies")]
+    [InlineData("/api/v1/groups/join/SECRET", "/api/v1/groups/join/***")]
+    [InlineData("/api/v1/Groups/Join/SECRET/", "/api/v1/Groups/Join/***/")]
+    [InlineData("RequestPath:/api/v1/groups/join/SECRET RequestId:0HN1", "RequestPath:/api/v1/groups/join/*** RequestId:0HN1")]
+    [InlineData("/api/v1/groups/join/", "/api/v1/groups/join/")]
+    [InlineData("/api/v1/groups/66f0a1/members", "/api/v1/groups/66f0a1/members")]
+    [InlineData("/g/SECRET/rejoindre", "/g/***/rejoindre")]
+    [InlineData("https://movie-picker.fr/g/SECRET/rejoindre?x=1", "https://movie-picker.fr/g/***/rejoindre?x=1")]
+    [InlineData("Referer: https://movie-picker.fr/g/SECRET/rejoindre", "Referer: https://movie-picker.fr/g/***/rejoindre")]
+    [InlineData("returnTo=/g/SECRET/rejoindre", "returnTo=/g/***/rejoindre")]
+    [InlineData("/g/", "/g/")]
+    [InlineData("/groupes/66f0a1", "/groupes/66f0a1")]
+    [InlineData("/api/v1/users/g/proposed-movies", "/api/v1/users/g/proposed-movies")]
     [InlineData("", "")]
     [InlineData(null, null)]
     public void SensitiveQueryRedaction_MasksTheInviteTokenOfAListJoinPath(string? path, string? expected)
@@ -305,5 +341,11 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
         Assert.Equal(
             "https://api.test/api/v1/auth/oauth/github/start?returnTo=***",
             SensitiveQueryRedaction.RedactUrl("https://api.test/api/v1/auth/oauth/github/start?returnTo=%2Fl%2FSECRET%2Frejoindre"));
+        Assert.Equal(
+            "https://api.test/api/v1/groups/join/***?token=***&x=1",
+            SensitiveQueryRedaction.RedactUrl("https://api.test/api/v1/groups/join/SECRET?token=SECRET&x=1"));
+        Assert.Equal(
+            "https://api.test/api/v1/auth/oauth/google/start?returnTo=***",
+            SensitiveQueryRedaction.RedactUrl("https://api.test/api/v1/auth/oauth/google/start?returnTo=%2Fg%2FSECRET%2Frejoindre"));
     }
 }

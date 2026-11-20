@@ -157,4 +157,23 @@ public sealed class InMemoryUserNotificationRepository : IUserNotificationReposi
             .Count(entry => _store.TryRemove(entry.Key, out _));
         return Task.FromResult((long)removed);
     }
+
+    public Task<long> DeleteByGroupAsync(string groupId, CancellationToken ct = default) =>
+        RemoveWhere(notification => notification.GroupId == groupId);
+
+    public Task<long> DeleteGroupInvitationAsync(string groupId, string userId, CancellationToken ct = default) =>
+        RemoveWhere(notification => notification.GroupId == groupId
+            && notification.UserId == userId
+            && notification.Type == UserNotificationType.GroupInvitation);
+
+    public Task<long> DeleteByGroupsAsync(IReadOnlyCollection<string> groupIds, CancellationToken ct = default) =>
+        RemoveWhere(notification => notification.GroupId is { } groupId && groupIds.Contains(groupId));
+
+    private Task<long> RemoveWhere(Func<UserNotification, bool> doomed)
+    {
+        var removed = _store
+            .Where(entry => doomed(entry.Value))
+            .Count(entry => _store.TryRemove(entry.Key, out _));
+        return Task.FromResult((long)removed);
+    }
 }

@@ -89,6 +89,36 @@ describe('token redaction', () => {
     });
   });
 
+  it('masks the group invitation token of the page, of the join request and of their breadcrumbs', () => {
+    const event = {
+      type: undefined,
+      transaction: '/g/7xK2pQ/rejoindre',
+      request: { url: 'https://www.movie-picker.fr/g/7xK2pQ/rejoindre' },
+    } as ErrorEvent;
+    const join = {
+      name: 'POST https://api.movie-picker.fr/api/v1/groups/join/7xK2pQ',
+      is_segment: false,
+      attributes: { 'url.full': 'https://api.movie-picker.fr/api/v1/groups/join/7xK2pQ' },
+    } as unknown as Parameters<typeof prepareSpan>[0];
+    const navigation: Breadcrumb = {
+      category: 'navigation',
+      data: { from: '/g/7xK2pQ/rejoindre', to: '/login?returnTo=%2Fg%2F7xK2pQ%2Frejoindre' },
+    };
+
+    const prepared = prepareEvent(event);
+
+    expect(prepared?.transaction).toBe('/g/***/rejoindre');
+    expect(prepared?.request?.url).toBe('https://www.movie-picker.fr/g/***/rejoindre');
+    expect(prepareSpan(join)).toMatchObject({
+      name: 'POST https://api.movie-picker.fr/api/v1/groups/join/***',
+      attributes: { 'url.full': 'https://api.movie-picker.fr/api/v1/groups/join/***' },
+    });
+    expect(prepareBreadcrumb(navigation).data).toEqual({
+      from: '/g/***/rejoindre',
+      to: '/login?returnTo=***',
+    });
+  });
+
   it('masks the tokens of a streamed span name and of its string attributes', () => {
     const span = {
       name: '/reset?token=abc123',

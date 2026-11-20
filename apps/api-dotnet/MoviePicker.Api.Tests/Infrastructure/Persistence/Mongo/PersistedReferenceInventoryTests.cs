@@ -77,6 +77,15 @@ public sealed class PersistedReferenceInventoryTests
         ["FollowDocument.FolloweeId"] = new(
             Handling.Through<IFollowRepository>(),
             Handling.Through<IFollowRepository>()),
+        ["FriendGroupDocument.OwnerId"] = new(
+            Handling.Through<IFriendGroupRepository>(),
+            Handling.Through<IFriendGroupRepository>()),
+        ["FriendGroupMemberDocument.UserId"] = new(
+            Handling.Through<IFriendGroupRepository>(),
+            Handling.Through<IFriendGroupRepository>()),
+        ["FriendGroupInvitationDocument.UserId"] = new(
+            Handling.Through<IFriendGroupRepository>(),
+            Handling.Through<IFriendGroupRepository>()),
         ["MovieListDocument.OwnerId"] = new(
             Handling.Through<IMovieListRepository>(),
             Handling.Through<IMovieListRepository>()),

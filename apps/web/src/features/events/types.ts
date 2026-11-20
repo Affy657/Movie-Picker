@@ -47,6 +47,8 @@ export type EventConfigPatchPayload = {
   winnerCount?: number;
   recurrence?: EventRecurrence;
   clearRecurrence?: boolean;
+  groupId?: string;
+  clearGroup?: boolean;
   date?: string;
   time?: string;
   notifyParticipantsOfDateChange?: boolean;

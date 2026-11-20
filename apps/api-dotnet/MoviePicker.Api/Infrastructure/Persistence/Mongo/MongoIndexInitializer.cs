@@ -70,6 +70,7 @@ public sealed class MongoIndexInitializer : IHostedService
         EnsureFollowIndexes(plan);
         EnsureWatchlistIndexes(plan);
         EnsureMovieListIndexes(plan);
+        EnsureFriendGroupIndexes(plan);
         EnsureWatchedTitleIndexes(plan);
         EnsureSavedListIndexes(plan);
         EnsureUserNotificationIndexes(plan);
@@ -122,6 +123,9 @@ public sealed class MongoIndexInitializer : IHostedService
         var recurrence = new CreateIndexModel<EventDocument>(
             Builders<EventDocument>.IndexKeys.Ascending(x => x.Recurrence).Ascending(x => x.CreatorUserId),
             new CreateIndexOptions { Name = "events_recurrence_creatorUserId", Sparse = true });
+        var group = new CreateIndexModel<EventDocument>(
+            Builders<EventDocument>.IndexKeys.Ascending(x => x.GroupId),
+            new CreateIndexOptions { Name = "events_groupId", Sparse = true });
         var startAt = new CreateIndexModel<EventDocument>(
             Builders<EventDocument>.IndexKeys.Ascending(x => x.StartAtUtc),
             new CreateIndexOptions { Name = "events_startAtUtc", Sparse = true });
@@ -133,7 +137,7 @@ public sealed class MongoIndexInitializer : IHostedService
                 Unique = true,
                 PartialFilterExpression = Builders<EventDocument>.Filter.Exists(x => x.CreationRequestId, true)
             });
-        plan.Create("events", slug, recapSlug, creator, recurrence, startAt, creationRequest);
+        plan.Create("events", slug, recapSlug, creator, recurrence, group, startAt, creationRequest);
         plan.DropIfExists<EventDocument>("events", "events_winners_movieId");
     }
 
@@ -311,6 +315,23 @@ public sealed class MongoIndexInitializer : IHostedService
         plan.DropIfExists<WatchlistItemDocument>("watchlist", "watchlist_runtimeMinutes_missing");
     }
 
+    private static void EnsureFriendGroupIndexes(MongoIndexPlan plan)
+    {
+        var owner = new CreateIndexModel<FriendGroupDocument>(
+            Builders<FriendGroupDocument>.IndexKeys.Ascending(x => x.OwnerId),
+            new CreateIndexOptions { Name = MongoFriendGroupRepository.OwnerIndexName });
+        var members = new CreateIndexModel<FriendGroupDocument>(
+            Builders<FriendGroupDocument>.IndexKeys.Ascending("members.userId"),
+            new CreateIndexOptions { Name = MongoFriendGroupRepository.MemberIndexName });
+        var invitations = new CreateIndexModel<FriendGroupDocument>(
+            Builders<FriendGroupDocument>.IndexKeys.Ascending("invitations.userId"),
+            new CreateIndexOptions { Name = MongoFriendGroupRepository.InvitationIndexName });
+        var inviteToken = new CreateIndexModel<FriendGroupDocument>(
+            Builders<FriendGroupDocument>.IndexKeys.Ascending("inviteLink.token"),
+            new CreateIndexOptions { Name = MongoFriendGroupRepository.InviteTokenIndexName, Unique = true, Sparse = true });
+        plan.Create(MongoFriendGroupRepository.CollectionName, owner, members, invitations, inviteToken);
+    }
+
     private static void EnsureMovieListIndexes(MongoIndexPlan plan)
     {
         var ownerName = new CreateIndexModel<MovieListDocument>(
@@ -388,10 +409,17 @@ public sealed class MongoIndexInitializer : IHostedService
                 Name = "user_notifications_listId",
                 PartialFilterExpression = Builders<UserNotificationDocument>.Filter.Exists(x => x.ListId, true)
             });
+        var byGroup = new CreateIndexModel<UserNotificationDocument>(
+            Builders<UserNotificationDocument>.IndexKeys.Ascending(x => x.GroupId),
+            new CreateIndexOptions<UserNotificationDocument>
+            {
+                Name = "user_notifications_groupId",
+                PartialFilterExpression = Builders<UserNotificationDocument>.Filter.Exists(x => x.GroupId, true)
+            });
         var ttl = new CreateIndexModel<UserNotificationDocument>(
             Builders<UserNotificationDocument>.IndexKeys.Ascending(x => x.CreatedAt),
             new CreateIndexOptions { Name = "user_notifications_createdAt_ttl", ExpireAfter = UserNotification.Lifetime });
-        plan.Create("user_notifications", byUser, unread, byEvent, byActor, byList, ttl);
+        plan.Create("user_notifications", byUser, unread, byEvent, byActor, byList, byGroup, ttl);
     }
 
     private static void EnsurePushDedupIndexes(MongoIndexPlan plan)

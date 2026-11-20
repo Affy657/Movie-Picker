@@ -9,7 +9,9 @@ import {
 } from '@/features/events/lib/eventTemplateDraft';
 import { validateEventLimits } from '@/features/events/lib/eventLimitValidation';
 import { patchEventConfig } from '@/features/events/api/eventsApi';
+import { useMyGroups } from '@/features/events/hooks/useMyGroups';
 import { getErrorMessage } from '@/shared/api/apiError';
+import { invalidateMyNights } from '@/shared/api/invalidateMyNights';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { eventDateTimeToLocal, splitDateTimeLocal } from '@/shared/utils/eventDateTimeLocal';
 import { formatRelativeEventDate } from '@/shared/utils/formatRelativeEventDate';
@@ -87,6 +89,7 @@ export function useHostEventSettingsDraft({
   const [allowSeries, setAllowSeries] = useState(initialFields.allowSeries);
   const [richSharePreview, setRichSharePreview] = useState(initialFields.richSharePreview);
   const [recurrence, setRecurrence] = useState<EventRecurrence | null>(cfg.recurrence ?? null);
+  const [groupId, setGroupId] = useState<string | null>(cfg.groupId ?? null);
   const [winnerCount, setWinnerCount] = useState(initialFields.winnerCount);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const performSaveRef = useRef<() => void>(() => {});
@@ -143,7 +146,7 @@ export function useHostEventSettingsDraft({
       setSaveError(null);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list }),
+        invalidateMyNights(queryClient),
       ]);
     },
     onError: (e) => {
@@ -206,6 +209,8 @@ export function useHostEventSettingsDraft({
     return false;
   };
 
+  const groups = useMyGroups(open && isConnectedCreator).data?.groups ?? [];
+
   const eventTemplates = useEventTemplates(open && isConnectedCreator, {
     draft: templateDraft,
     onError: setSaveError,
@@ -226,6 +231,7 @@ export function useHostEventSettingsDraft({
     setEventDateLocal(saved.dateLocal);
     setNotifyDateChange(true);
     setRecurrence(event.config?.recurrence ?? null);
+    setGroupId(event.config?.groupId ?? null);
     forgetAppliedTemplate();
     setFieldErrors({});
     setSaveError(null);
@@ -294,6 +300,7 @@ export function useHostEventSettingsDraft({
       richSharePreview,
       winnerCount: winnerCountValue ?? savedRef.current.winnerCount,
       recurrence,
+      groupId,
       dateLocal: committedDateLocal,
     };
     const body = settingsPatch(settings, savedRef.current, notifyDateChange);
@@ -352,6 +359,9 @@ export function useHostEventSettingsDraft({
     setAllowSeries,
     recurrence,
     setRecurrence,
+    groupId,
+    setGroupId,
+    groups,
     winnerCount,
     setWinnerCount,
     drawnWinnerCount,

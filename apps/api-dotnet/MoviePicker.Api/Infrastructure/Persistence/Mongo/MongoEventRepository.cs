@@ -273,6 +273,16 @@ public sealed class MongoEventRepository : IEventRepository
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
     }
 
+    public async Task<IReadOnlyList<Event>> ListByGroupIdsAsync(IReadOnlyCollection<string> groupIds, CancellationToken ct = default)
+    {
+        var ids = groupIds.Where(MongoObjectIds.IsValid).Distinct().ToList();
+        if (ids.Count == 0)
+            return [];
+
+        var docs = await _collection.Find(Builders<EventDocument>.Filter.In(x => x.GroupId, ids)).ToListAsync(ct);
+        return docs.ConvertAll(EventDocumentMapper.ToDomain);
+    }
+
     public async Task<IReadOnlyList<Event>> ListRecurringAwaitingNextOccurrenceAsync(
         string? creatorUserId,
         CancellationToken ct = default)
@@ -337,6 +347,19 @@ public sealed class MongoEventRepository : IEventRepository
             .Inc(x => x.Version, 1)
             .Inc(x => x.WriteSeq, 1);
         var res = await _collection.UpdateManyAsync(x => x.CreatorUserId == creatorUserId, update, cancellationToken: ct);
+        return res.IsAcknowledged ? res.ModifiedCount : 0;
+    }
+
+    public async Task<long> DetachGroupsAsync(IReadOnlyCollection<string> groupIds, CancellationToken ct = default)
+    {
+        var ids = groupIds.Where(MongoObjectIds.IsValid).Distinct().ToList();
+        if (ids.Count == 0)
+            return 0;
+        var update = Builders<EventDocument>.Update
+            .Unset(x => x.GroupId)
+            .Inc(x => x.Version, 1)
+            .Inc(x => x.WriteSeq, 1);
+        var res = await _collection.UpdateManyAsync(Builders<EventDocument>.Filter.In(x => x.GroupId, ids), update, cancellationToken: ct);
         return res.IsAcknowledged ? res.ModifiedCount : 0;
     }
 }

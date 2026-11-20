@@ -7,6 +7,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import type { JoinPromptCta } from '@/shared/analytics/usageCounts';
+import { invalidateMyNights } from '@/shared/api/invalidateMyNights';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { setStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 import { useTranslation } from '@/shared/i18n';
@@ -42,7 +43,7 @@ export default function JoinForm({
     const res = await joinEvent(slug, pseudoToSend);
     const { id } = res.participant;
     setStoredParticipant(slug, id, res.participant.pseudo);
-    queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
+    void invalidateMyNights(queryClient);
     queryClient.invalidateQueries({ queryKey: queryKeys.event.detailForAnyHostToken(slug) });
     track('event_joined');
     onJoined(id, res.participant.pseudo);

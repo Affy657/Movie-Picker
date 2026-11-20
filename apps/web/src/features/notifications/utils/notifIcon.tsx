@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import {
   Bell,
   CalendarClock,
+  CalendarPlus,
   CalendarSync,
   Clock,
   Film,
@@ -42,6 +43,10 @@ export function notifIcon(type: string, size = ICON_SIZE.lg): ReactNode {
       return <Mail size={size} aria-hidden />;
     case 'listinvitation':
       return <ListPlus size={size} aria-hidden />;
+    case 'groupinvitation':
+      return <Users size={size} aria-hidden />;
+    case 'groupnight':
+      return <CalendarPlus size={size} aria-hidden />;
     case 'eventpending':
       return <Hourglass size={size} aria-hidden />;
     case 'letterboxdreconciliationpending':

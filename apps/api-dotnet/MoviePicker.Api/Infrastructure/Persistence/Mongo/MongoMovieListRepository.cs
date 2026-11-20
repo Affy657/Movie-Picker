@@ -424,29 +424,11 @@ public sealed class MongoMovieListRepository : IMovieListRepository
     private static FilterDefinition<MovieListDocument> Outsider(ObjectId user) =>
         Filter.Ne(OwnerIdField, user) & Filter.Ne(MemberUserIdField, user);
 
-    private static FilterDefinition<MovieListDocument> SeatsLeft(int maxSeats, DateTimeOffset now)
-    {
-        var pendingInvitations = new BsonDocument(FilterOperator, new BsonDocument
-        {
-            { InputField, new BsonDocument(IfNullOperator, new BsonArray { "$invitations", new BsonArray() }) },
-            { "as", "invitation" },
-            { "cond", new BsonDocument("$gt", new BsonArray { "$$invitation.invitedAt", LatestLapsedAt(now) }) }
-        });
-        var seatsTaken = new BsonDocument("$add", new BsonArray
-        {
-            1,
-            SizeOf("members"),
-            new BsonDocument("$size", pendingInvitations)
-        });
-        return new BsonDocument("$expr", new BsonDocument("$lt", new BsonArray { seatsTaken, maxSeats }));
-    }
+    private static FilterDefinition<MovieListDocument> SeatsLeft(int maxSeats, DateTimeOffset now) =>
+        MongoMembershipExpressions.SeatsLeft(maxSeats, LatestLapsedAt(now));
 
     private static BsonDocument PendingInvitationMatch(ObjectId user, DateTimeOffset now) =>
-        new("$elemMatch", new BsonDocument
-        {
-            { "userId", user },
-            { "invitedAt", new BsonDocument("$gt", LatestLapsedAt(now)) }
-        });
+        MongoMembershipExpressions.PendingInvitationMatch(user, LatestLapsedAt(now));
 
     private static FilterDefinition<MovieListDocument> PendingInvitationOf(ObjectId user, DateTimeOffset now) =>
         new BsonDocument("invitations", PendingInvitationMatch(user, now));
@@ -457,25 +439,11 @@ public sealed class MongoMovieListRepository : IMovieListRepository
     private static BsonDateTime LatestLapsedAt(DateTimeOffset now) =>
         new(MovieListInvitation.LatestLapsedAt(now).UtcDateTime);
 
-    private static UpdateDefinition<MovieListDocument> ReplacingInvitationOf(ObjectId user, MovieListInvitation invitation)
-    {
-        var otherInvitations = new BsonDocument(FilterOperator, new BsonDocument
-        {
-            { InputField, new BsonDocument(IfNullOperator, new BsonArray { "$invitations", new BsonArray() }) },
-            { "as", "invitation" },
-            { "cond", new BsonDocument("$ne", new BsonArray { "$$invitation.userId", user }) }
-        });
-        var invitations = new BsonDocument("$concatArrays", new BsonArray
-        {
-            otherInvitations,
-            new BsonArray { ToDocument(invitation).ToBsonDocument() }
-        });
-        BsonDocument[] stages = [new("$set", new BsonDocument("invitations", invitations))];
-        return Update.Pipeline(PipelineDefinition<MovieListDocument, MovieListDocument>.Create(stages));
-    }
+    private static UpdateDefinition<MovieListDocument> ReplacingInvitationOf(ObjectId user, MovieListInvitation invitation) =>
+        Update.Pipeline(PipelineDefinition<MovieListDocument, MovieListDocument>.Create(
+            MongoMembershipExpressions.ReplacingInvitationOf(user, ToDocument(invitation).ToBsonDocument())));
 
-    private static BsonDocument SizeOf(string field) =>
-        new("$size", new BsonDocument(IfNullOperator, new BsonArray { "$" + field, new BsonArray() }));
+    private static BsonDocument SizeOf(string field) => MongoMembershipExpressions.SizeOf(field);
 
     private static UpdateDefinition<MovieListDocument> PullInvitation(string userId) =>
         Update.PullFilter(x => x.Invitations, invitation => invitation.UserId == userId);
@@ -483,26 +451,9 @@ public sealed class MongoMovieListRepository : IMovieListRepository
     private static UpdateDefinition<MovieListDocument> PullMember(string userId) =>
         Update.PullFilter(x => x.Members, member => member.UserId == userId);
 
-    private static UpdateDefinition<MovieListDocument> WithoutMember(ObjectId user, bool disableInviteLink)
-    {
-        var otherMembers = new BsonDocument(FilterOperator, new BsonDocument
-        {
-            { InputField, "$members" },
-            { "as", "member" },
-            { "cond", new BsonDocument("$ne", new BsonArray { "$$member.userId", user }) }
-        });
-        var disabledLink = new BsonDocument("$cond", new BsonArray
-        {
-            new BsonDocument("$eq", new BsonArray { new BsonDocument("$type", "$inviteLink"), "object" }),
-            new BsonDocument("$mergeObjects", new BsonArray { "$inviteLink", new BsonDocument("disabled", true) }),
-            "$inviteLink"
-        });
-        var set = new BsonDocument("members", otherMembers);
-        if (disableInviteLink)
-            set.Add("inviteLink", disabledLink);
-        BsonDocument[] stages = [new("$set", set)];
-        return Update.Pipeline(PipelineDefinition<MovieListDocument, MovieListDocument>.Create(stages));
-    }
+    private static UpdateDefinition<MovieListDocument> WithoutMember(ObjectId user, bool disableInviteLink) =>
+        Update.Pipeline(PipelineDefinition<MovieListDocument, MovieListDocument>.Create(
+            MongoMembershipExpressions.WithoutMember(user, disableInviteLink)));
 
     private static bool IsNameCollision(MongoWriteException ex) =>
         ex.WriteError?.Category == ServerErrorCategory.DuplicateKey

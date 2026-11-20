@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -22,6 +23,8 @@ public sealed class RecurringEventPass : IRecurringEventPass
     private readonly IEventRepository _events;
     private readonly IParticipantRepository _participants;
     private readonly IUserRepository _users;
+    private readonly IFriendGroupRepository _groups;
+    private readonly IGroupNightAnnouncer _groupNightAnnouncer;
     private readonly IUnitOfWork _unitOfWork;
     private readonly TimeProvider _clock;
     private readonly ILogger<RecurringEventPass> _logger;
@@ -30,6 +33,8 @@ public sealed class RecurringEventPass : IRecurringEventPass
         IEventRepository events,
         IParticipantRepository participants,
         IUserRepository users,
+        IFriendGroupRepository groups,
+        IGroupNightAnnouncer groupNightAnnouncer,
         IUnitOfWork unitOfWork,
         TimeProvider clock,
         ILogger<RecurringEventPass> logger)
@@ -37,6 +42,8 @@ public sealed class RecurringEventPass : IRecurringEventPass
         _events = events;
         _participants = participants;
         _users = users;
+        _groups = groups;
+        _groupNightAnnouncer = groupNightAnnouncer;
         _unitOfWork = unitOfWork;
         _clock = clock;
         _logger = logger;
@@ -152,6 +159,17 @@ public sealed class RecurringEventPass : IRecurringEventPass
         DateTimeOffset now,
         CancellationToken ct)
     {
+        FriendGroup? group;
+        try
+        {
+            group = string.IsNullOrEmpty(parent.GroupId) ? null : await _groups.GetAsync(host.Id, parent.GroupId, ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "Group of movie night {EventId} could not be read", parent.Id);
+            return OccurrenceOutcome.Failed;
+        }
+
         var next = parent with
         {
             Id = string.Empty,
@@ -166,17 +184,19 @@ public sealed class RecurringEventPass : IRecurringEventPass
             RecurrenceParentEventId = parent.Id,
             NextOccurrenceEventId = null,
             CreationRequestId = null,
+            GroupId = group?.Id,
             CreatedAt = now,
             UpdatedAt = now,
             Version = 0
         };
 
+        Event occurrence = null!;
         try
         {
             await _unitOfWork.ExecuteAsync(
                 async token =>
                 {
-                    var occurrence = await _events.AddAsync(next, token);
+                    occurrence = await _events.AddAsync(next, token);
                     await _participants.AddAsync(
                         new Participant
                         {
@@ -218,6 +238,10 @@ public sealed class RecurringEventPass : IRecurringEventPass
             "Next occurrence created for movie night {EventId} on {Date}",
             parent.Id,
             next.Date);
+
+        if (group is not null)
+            await _groupNightAnnouncer.AnnounceAsync(occurrence, group, host.Id, ct);
+
         return OccurrenceOutcome.Created;
     }
 

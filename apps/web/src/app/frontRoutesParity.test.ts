@@ -33,6 +33,9 @@ const routesOfTheWebApp = {
   ProfilePattern: ROUTES.profilePattern,
   MoviePagePattern: ROUTES.moviePagePattern,
   ShowPagePattern: ROUTES.showPagePattern,
+  Groups: ROUTES.groups,
+  GroupPattern: ROUTES.groupPattern,
+  GroupJoinPattern: ROUTES.groupJoinPattern,
   RateQueryParam: RATE_QUERY_PARAM,
   ReturnToQueryParam: firstQueryKeyOf(withReturnTo(ROUTES.login, ROUTES.eventDetail('soiree'))),
   ResetTokenQueryParam: 'token',
@@ -53,6 +56,7 @@ describe('front routes built by the API', () => {
     expect(fill(ROUTES.eventDetailPattern, 'soiree')).toBe(ROUTES.eventDetail('soiree'));
     expect(fill(ROUTES.nightRecapPattern, 'recap')).toBe(ROUTES.nightRecap('recap'));
     expect(fill(ROUTES.profilePattern, 'lea')).toBe(ROUTES.profile('lea'));
+    expect(fill(ROUTES.groupPattern, 'g1')).toBe(ROUTES.group('g1'));
     expect(fill(ROUTES.moviePagePattern, '27205')).toBe(ROUTES.moviePage({ tmdbId: 27205 }));
     expect(fill(ROUTES.showPagePattern, '1399')).toBe(
       ROUTES.moviePage({ tmdbId: 1399, mediaType: 'tv' })

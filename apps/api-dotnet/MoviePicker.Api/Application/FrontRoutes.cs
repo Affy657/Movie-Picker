@@ -17,12 +17,15 @@ public static class FrontRoutes
     public const string MovieCollections = "/films/collections";
     public const string Tech = "/tech";
     public const string Donate = "/soutenir";
+    public const string Groups = "/groupes";
 
     public const string EventDetailPattern = "/e/:slug";
     public const string NightRecapPattern = "/r/:slug";
     public const string ProfilePattern = "/u/:handle";
     public const string MoviePagePattern = "/film/:movieRef";
     public const string ShowPagePattern = "/serie/:movieRef";
+    public const string GroupPattern = "/groupes/:groupId";
+    public const string GroupJoinPattern = "/g/:token/rejoindre";
 
     public const string RateQueryParam = "rate";
     public const string ReturnToQueryParam = "returnTo";

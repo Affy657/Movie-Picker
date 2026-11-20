@@ -19,4 +19,7 @@ public interface IUserNotificationRepository
     Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default);
     Task<long> DeleteByListAsync(string listId, string? userId = null, CancellationToken ct = default);
     Task<long> DeleteByListsAsync(IReadOnlyCollection<string> listIds, CancellationToken ct = default);
+    Task<long> DeleteByGroupAsync(string groupId, CancellationToken ct = default);
+    Task<long> DeleteGroupInvitationAsync(string groupId, string userId, CancellationToken ct = default);
+    Task<long> DeleteByGroupsAsync(IReadOnlyCollection<string> groupIds, CancellationToken ct = default);
 }

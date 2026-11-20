@@ -12,6 +12,7 @@ import { ROUTES } from '@/app/routes';
 import { removeEventParticipant, postEventClose } from '@/features/events/api/eventsApi';
 import { deleteMoviePitchNote, removeMovieFromEvent } from '@/features/events/api/eventMoviesApi';
 import { removeStoredParticipant } from '@/shared/utils/eventIdentityStorage';
+import { invalidateMyNights } from '@/shared/api/invalidateMyNights';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useTranslation } from '@/shared/i18n';
@@ -73,7 +74,7 @@ export function useEventDetailActions({
       setPendingRemovalId(null);
       queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
       queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
+      void invalidateMyNights(queryClient);
     },
   });
 
@@ -92,7 +93,7 @@ export function useEventDetailActions({
   const closeNightMutation = useMutation({
     mutationFn: () => postEventClose(slug, hostToken),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
+      void invalidateMyNights(queryClient);
       refreshAll();
     },
     onError: (err) => {

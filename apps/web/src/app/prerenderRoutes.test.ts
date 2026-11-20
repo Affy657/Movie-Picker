@@ -11,6 +11,7 @@ const PRIVATE_ROUTES = [
   ROUTES.myEvents,
   ROUTES.watchlist,
   ROUTES.lists,
+  ROUTES.groups,
   ROUTES.watchedMovies,
   ROUTES.nightMovies,
   ROUTES.notifications,
@@ -46,6 +47,14 @@ describe('PRERENDERED_ROUTES', () => {
     expect(PRERENDERED_ROUTES).not.toContain(ROUTES.joinListPattern);
     expect(Object.keys(PRERENDERED_ROUTE_CHUNKS)).not.toContain(ROUTES.joinListPattern);
     expect(PRERENDERED_FOR_FIRST_PAINT_ONLY).not.toContain(ROUTES.joinListPattern);
+  });
+
+  it('leaves the group pages out of the prerendering, they belong to their members', () => {
+    for (const route of [ROUTES.groups, ROUTES.groupPattern, ROUTES.groupJoinPattern]) {
+      expect(PRERENDERED_ROUTES).not.toContain(route);
+      expect(Object.keys(PRERENDERED_ROUTE_CHUNKS)).not.toContain(route);
+      expect(PRERENDERED_FOR_FIRST_PAINT_ONLY).not.toContain(route);
+    }
   });
 
   it('leaves the public lists of a member out of the prerendering, like the films they watched', () => {

@@ -16,6 +16,9 @@ public sealed record UserDataExportResponse
     public IReadOnlyList<ExportedMovieList> MovieLists { get; init; } = Array.Empty<ExportedMovieList>();
     public IReadOnlyList<ExportedJoinedMovieList> JoinedMovieLists { get; init; } = Array.Empty<ExportedJoinedMovieList>();
     public IReadOnlyList<ExportedListInvitation> PendingListInvitations { get; init; } = Array.Empty<ExportedListInvitation>();
+    public IReadOnlyList<ExportedFriendGroup> FriendGroups { get; init; } = Array.Empty<ExportedFriendGroup>();
+    public IReadOnlyList<ExportedJoinedFriendGroup> JoinedFriendGroups { get; init; } = Array.Empty<ExportedJoinedFriendGroup>();
+    public IReadOnlyList<ExportedFriendGroupInvitation> PendingFriendGroupInvitations { get; init; } = Array.Empty<ExportedFriendGroupInvitation>();
     public IReadOnlyList<ExportedSavedList> SavedLists { get; init; } = Array.Empty<ExportedSavedList>();
     public IReadOnlyList<ExportedWatchedTitle> WatchedTitles { get; init; } = Array.Empty<ExportedWatchedTitle>();
     public IReadOnlyList<ExportedFavorite> Favorites { get; init; } = Array.Empty<ExportedFavorite>();
@@ -102,6 +105,7 @@ public sealed record ExportedNotification
     public string? EventTitle { get; init; }
     public string? MovieTitle { get; init; }
     public string? ListName { get; init; }
+    public string? GroupName { get; init; }
     public bool IsRead { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
 }
@@ -241,6 +245,29 @@ public sealed record ExportedJoinedMovieList
 public sealed record ExportedListInvitation
 {
     public string ListId { get; init; } = string.Empty;
+    public string Name { get; init; } = string.Empty;
+    public string OwnerDisplayName { get; init; } = string.Empty;
+    public DateTimeOffset InvitedAt { get; init; }
+}
+
+public sealed record ExportedFriendGroup
+{
+    public string Name { get; init; } = string.Empty;
+    public DateTimeOffset CreatedAt { get; init; }
+    public DateTimeOffset UpdatedAt { get; init; }
+}
+
+public sealed record ExportedJoinedFriendGroup
+{
+    public string GroupId { get; init; } = string.Empty;
+    public string Name { get; init; } = string.Empty;
+    public string OwnerDisplayName { get; init; } = string.Empty;
+    public DateTimeOffset JoinedAt { get; init; }
+}
+
+public sealed record ExportedFriendGroupInvitation
+{
+    public string GroupId { get; init; } = string.Empty;
     public string Name { get; init; } = string.Empty;
     public string OwnerDisplayName { get; init; } = string.Empty;
     public DateTimeOffset InvitedAt { get; init; }

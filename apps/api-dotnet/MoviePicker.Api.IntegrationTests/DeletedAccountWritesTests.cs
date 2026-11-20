@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Auth;
+using MoviePicker.Api.Application.UseCases.FriendGroups;
 using MoviePicker.Api.Application.UseCases.LetterboxdImport;
 using MoviePicker.Api.Application.UseCases.MovieLists;
 using MoviePicker.Api.Application.UseCases.SavedLists;
@@ -60,6 +61,9 @@ public sealed class DeletedAccountWritesTests : IClassFixture<MoviePickerApplica
                 Name = "Fantôme",
                 FirstItem = new AddWatchlistItemRequest { TmdbId = 603, Title = "Matrix", Year = "1999" }
             }));
+        await AssertRefusedAsync(() => Get<ICreateFriendGroupHandler>().HandleAsync(
+            ghost,
+            new CreateFriendGroupRequest { Name = "Fantômes" }));
         await AssertRefusedAsync(() => Get<IMarkWatchedHandler>().HandleAsync(
             ghost,
             new MarkWatchedRequest { TmdbId = 603, Title = "Matrix", Year = "1999" }));
@@ -81,6 +85,7 @@ public sealed class DeletedAccountWritesTests : IClassFixture<MoviePickerApplica
             keepOnWatchlist: false));
 
         Assert.Empty(await Get<IMovieListRepository>().ListByOwnerAsync(ghost));
+        Assert.Empty(await Get<IFriendGroupRepository>().ListByOwnerAsync(ghost));
         Assert.Empty(await Get<IWatchedTitleRepository>().ListByOwnerAsync(ghost));
         Assert.Equal(0, await Get<ISavedListRepository>().CountByOwnerAsync(ghost));
         Assert.Empty(await Get<IWatchlistRepository>().ListByUserIdAsync(ghost, int.MaxValue));

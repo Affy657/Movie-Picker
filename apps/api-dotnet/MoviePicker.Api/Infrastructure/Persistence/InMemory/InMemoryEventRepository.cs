@@ -202,6 +202,15 @@ public sealed class InMemoryEventRepository : IEventRepository
         return Task.FromResult(result);
     }
 
+    public Task<IReadOnlyList<Event>> ListByGroupIdsAsync(IReadOnlyCollection<string> groupIds, CancellationToken ct = default)
+    {
+        var ids = groupIds.Where(id => !string.IsNullOrWhiteSpace(id)).ToHashSet(StringComparer.Ordinal);
+        IReadOnlyList<Event> result = ids.Count == 0
+            ? []
+            : _byId.Values.Where(e => e.GroupId is { } groupId && ids.Contains(groupId)).ToList();
+        return Task.FromResult(result);
+    }
+
     public Task<IReadOnlyList<Event>> ListRecurringAwaitingNextOccurrenceAsync(
         string? creatorUserId,
         CancellationToken ct = default)
@@ -237,6 +246,22 @@ public sealed class InMemoryEventRepository : IEventRepository
                 ? e with { CreatorUserId = null, Version = e.Version + 1, WriteSeq = e.WriteSeq + 1 }
                 : null);
             if (anonymized is not null)
+                count++;
+        }
+
+        return Task.FromResult(count);
+    }
+
+    public Task<long> DetachGroupsAsync(IReadOnlyCollection<string> groupIds, CancellationToken ct = default)
+    {
+        var ids = groupIds.Where(id => !string.IsNullOrWhiteSpace(id)).ToHashSet(StringComparer.Ordinal);
+        long count = 0;
+        foreach (var eventId in _byId.Values.Where(e => e.GroupId is { } groupId && ids.Contains(groupId)).Select(e => e.Id).ToList())
+        {
+            var detached = _byId.SwapIfPresent(eventId, e => e.GroupId is { } groupId && ids.Contains(groupId)
+                ? e with { GroupId = null, Version = e.Version + 1, WriteSeq = e.WriteSeq + 1 }
+                : null);
+            if (detached is not null)
                 count++;
         }
 

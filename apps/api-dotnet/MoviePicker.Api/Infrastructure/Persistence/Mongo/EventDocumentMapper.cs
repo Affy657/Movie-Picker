@@ -33,6 +33,7 @@ public static class EventDocumentMapper
             RecurrenceAnchorDay = doc.RecurrenceAnchorDay,
             RecurrenceParentEventId = doc.RecurrenceParentEventId,
             NextOccurrenceEventId = doc.NextOccurrenceEventId,
+            GroupId = doc.GroupId,
             CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero),
             UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero),
             Version = doc.Version,
@@ -71,6 +72,7 @@ public static class EventDocumentMapper
             RecurrenceAnchorDay = evt.RecurrenceAnchorDay,
             RecurrenceParentEventId = evt.RecurrenceParentEventId,
             NextOccurrenceEventId = evt.NextOccurrenceEventId,
+            GroupId = string.IsNullOrEmpty(evt.GroupId) ? null : evt.GroupId,
             StartAtUtc = EventSchedule.TryGetStartUtc(evt.Date, evt.Time, out var startAt)
                 ? startAt.UtcDateTime
                 : null,

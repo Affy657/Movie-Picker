@@ -22,6 +22,7 @@ import { MAX_WINNERS_PER_EVENT } from '@/features/events/types';
 import { useTranslation } from '@/shared/i18n';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import Chip, { type ChipTone } from '@/shared/components/Chip';
+import GroupChips from '@/features/events/components/GroupChips';
 
 type HostEventSettingsPanelProps = {
   slug: string;
@@ -89,6 +90,9 @@ export default function HostEventSettingsPanel({
     setAllowSeries,
     recurrence,
     setRecurrence,
+    groupId,
+    setGroupId,
+    groups,
     winnerCount,
     setWinnerCount,
     drawnWinnerCount,
@@ -104,6 +108,8 @@ export default function HostEventSettingsPanel({
     isConnectedCreator,
   } = useHostEventSettingsDraft({ slug, hostToken, event, open });
 
+  const chosenGroup = groups.find((group) => group.id === groupId) ?? null;
+  const shownGroupId = chosenGroup?.id ?? null;
   const themeCollapseId = useId();
   const wheelModeLabelId = useId();
 
@@ -208,6 +214,29 @@ export default function HostEventSettingsPanel({
             />
           </fieldset>
         </div>
+
+        {isConnectedCreator && groups.length > 0 ? (
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>{t('events.settings.sectionGroup')}</h3>
+            <div className={styles.field}>
+              <GroupChips
+                className={styles.groupChips}
+                groups={groups}
+                groupId={shownGroupId}
+                disabled={event.isFinished}
+                onChange={(next) => {
+                  setGroupId(next);
+                  scheduleAutoSave(true);
+                }}
+              />
+              <p className="hint">
+                {shownGroupId === null
+                  ? t('events.settings.groupHintNone')
+                  : t('events.settings.groupHint')}
+              </p>
+            </div>
+          </div>
+        ) : null}
 
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>{t('events.settings.sectionParticipants')}</h3>
@@ -351,7 +380,11 @@ export default function HostEventSettingsPanel({
                     scheduleAutoSave(true);
                   }}
                 />
-                <p className="hint">{t('events.settings.recurrenceShareHint')}</p>
+                <p className="hint">
+                  {chosenGroup
+                    ? t('events.settings.recurrenceGroupHint', { group: chosenGroup.name })
+                    : t('events.settings.recurrenceShareHint')}
+                </p>
               </div>
             )}
             {recurrenceLocked && (

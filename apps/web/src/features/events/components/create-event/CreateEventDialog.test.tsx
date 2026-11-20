@@ -49,7 +49,22 @@ const PAST_NIGHT = {
   isParticipant: true,
 };
 
+const THURSDAY_GROUP = {
+  id: 'g1',
+  name: 'Les jeudis ciné',
+  role: 'member',
+  ownerId: 'u2',
+  ownerDisplayName: 'Léa',
+  memberCount: 6,
+  memberPreview: [],
+  createdAt: '2026-11-01T10:00:00Z',
+  updatedAt: '2026-11-01T10:00:00Z',
+};
+
+const FAMILY_GROUP = { ...THURSDAY_GROUP, id: 'g2', name: 'Famille', memberCount: 4 };
+
 type Routes = {
+  groups?: unknown[];
   templates?: unknown[];
   pastNights?: unknown[];
   create?: () => Promise<unknown>;
@@ -58,6 +73,7 @@ type Routes = {
 };
 
 function routeApi({
+  groups = [],
   templates = [],
   pastNights = [],
   create = () =>
@@ -71,6 +87,7 @@ function routeApi({
 }: Routes = {}) {
   mockFetchApi.mockImplementation((path: unknown, init?: { method?: string }) => {
     if (typeof path !== 'string') return Promise.resolve({});
+    if (path === '/groups') return Promise.resolve({ groups, invitations: [], nextNights: [] });
     if (path.startsWith('/users/me/event-templates')) {
       return init?.method === 'POST'
         ? Promise.resolve({ ...HORROR_TEMPLATE, id: 't2', name: 'Modèle 1' })
@@ -422,6 +439,80 @@ describe('CreateEventDialog', () => {
       expect(screen.queryByRole('textbox', { name: 'Thème' })).not.toBeInTheDocument();
       await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
       await waitFor(() => expect(configBody().theme).toBe(''));
+    });
+  });
+
+  describe('group', () => {
+    it('offers the viewer groups and sends the chosen one with the night', async () => {
+      const user = userEvent.setup();
+      routeApi({ groups: [THURSDAY_GROUP, FAMILY_GROUP] });
+      renderDialog();
+
+      await user.click(await screen.findByRole('button', { name: 'Les jeudis ciné' }));
+
+      expect(
+        screen.getByText(
+          'Les 6 membres la verront dans Mes soirées et seront prévenus. Pas de lien à envoyer.'
+        )
+      ).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
+      await waitFor(() => expect(createBodies()[0]).toMatchObject({ groupId: 'g1' }));
+    });
+
+    it('starts on the group the dialog was opened for, and lets it go', async () => {
+      const user = userEvent.setup();
+      routeApi({ groups: [THURSDAY_GROUP, FAMILY_GROUP] });
+      renderDialog({ groupId: 'g2' });
+
+      expect(
+        await screen.findByRole('button', { name: 'Famille', pressed: true })
+      ).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Aucun' }));
+      await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
+
+      await waitFor(() => expect(createBodies()[0]?.groupId).toBeNull());
+    });
+
+    it('keeps the group the dialog was opened for while the groups are still loading', async () => {
+      const user = userEvent.setup();
+      routeApi({ groups: [THURSDAY_GROUP] });
+      const routed = mockFetchApi.getMockImplementation();
+      mockFetchApi.mockImplementation((path: unknown, init?: { method?: string }) =>
+        path === '/groups' ? new Promise(() => {}) : routed?.(path, init)
+      );
+      renderDialog({ groupId: 'g1' });
+
+      await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
+
+      await waitFor(() => expect(createBodies()[0]).toMatchObject({ groupId: 'g1' }));
+    });
+
+    it('says nothing about groups to someone without one', async () => {
+      const user = userEvent.setup();
+      routeApi();
+      renderDialog();
+
+      await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
+
+      await waitFor(() => expect(createBodies()).toHaveLength(1));
+      expect(screen.queryByRole('heading', { name: /Groupe/ })).not.toBeInTheDocument();
+      expect(createBodies()[0]?.groupId).toBeNull();
+    });
+
+    it('tells the host the group already sees the night, and keeps the link for someone else', async () => {
+      const user = userEvent.setup();
+      routeApi({ groups: [THURSDAY_GROUP] });
+      renderDialog({ groupId: 'g1' });
+
+      await screen.findByRole('button', { name: 'Les jeudis ciné', pressed: true });
+      await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
+      await screen.findByRole('heading', { name: 'Soirée créée' });
+
+      expect(screen.getByText('Les 5 autres membres la voient déjà')).toBeInTheDocument();
+      expect(
+        screen.getByText('Quelqu’un d’extérieur au groupe ? Envoyez-lui le lien.')
+      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Copier' })).toBeInTheDocument();
     });
   });
 

@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.EventTemplates;
+using MoviePicker.Api.Application.UseCases.FriendGroups;
 using MoviePicker.Api.Application.UseCases.MovieLists;
 using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Application.UseCases.SearchUsers;
@@ -348,6 +349,23 @@ public sealed class DevelopmentScenarioSeedTests(SeededDevelopmentFixture fixtur
     }
 
     [Fact]
+    public async Task FriendGroups_DevOwnsOneGroup_WithAliceAndBob()
+    {
+        var dev = await fixture.UserAsync(Dev);
+        var alice = await fixture.UserAsync(Alice);
+        var bob = await fixture.UserAsync(Bob);
+
+        var owned = Assert.Single(await fixture.Provider.GetRequiredService<IFriendGroupRepository>().ListByOwnerAsync(dev.Id));
+        var mine = await fixture.Provider.GetRequiredService<IListFriendGroupsHandler>().HandleAsync(alice.Id);
+
+        Assert.Equal("Les copains du jeudi", owned.Name);
+        Assert.Equal([alice.Id, bob.Id], owned.Members.Select(member => member.UserId));
+        Assert.Empty(owned.Invitations);
+        var seen = Assert.Single(mine.Groups);
+        Assert.Equal((owned.Id, FriendGroupRole.Member, 3), (seen.Id, seen.Role, seen.MemberCount));
+    }
+
+    [Fact]
     public async Task WatchedElsewhere_DevSawPartOfHisLists_WithAndWithoutARating()
     {
         var dev = await fixture.UserAsync(Dev);
@@ -471,8 +489,14 @@ public sealed class DevelopmentScenarioSeedTests(SeededDevelopmentFixture fixtur
         var savedBefore = await savedLists.ListByOwnerAsync(dev.Id);
         var joinedBefore = await movieLists.ListJoinedAsync(dev.Id);
         var invitingBefore = await movieLists.ListInvitingAsync(dev.Id);
+        var groups = fixture.Provider.GetRequiredService<IFriendGroupRepository>();
+        var groupsBefore = await groups.ListByOwnerAsync(dev.Id);
 
         await fixture.RunSeedAsync();
+
+        Assert.Equal(
+            groupsBefore.Select(group => (group.Id, group.Members.Count, group.Invitations.Count)),
+            (await groups.ListByOwnerAsync(dev.Id)).Select(group => (group.Id, group.Members.Count, group.Invitations.Count)));
 
         Assert.Equal(before, await CountEventsAsync(events, dev.Id, alice.Id, bob.Id));
         Assert.Equal(templatesBefore, (await templates.HandleAsync(dev.Id)).Items.Count);

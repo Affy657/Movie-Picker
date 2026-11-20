@@ -75,6 +75,8 @@ const allPrefs: NotificationPreferences = {
     { type: 'eventreminder24h', enabled: true },
     { type: 'eventinvitation', enabled: true },
     { type: 'listinvitation', enabled: true },
+    { type: 'groupinvitation', enabled: true },
+    { type: 'groupnight', enabled: true },
     { type: 'newfollower', enabled: true },
     { type: 'eventpending', enabled: true },
     { type: 'letterboxdreconciliationpending', enabled: true },
@@ -115,7 +117,7 @@ describe('NotificationsSection', () => {
       await screen.findByRole('switch', { name: 'notifications.prefNewFollower' })
     ).toBeInTheDocument();
     expect(mockFetchPrefs).toHaveBeenCalled();
-    expect(screen.getAllByRole('switch')).toHaveLength(14);
+    expect(screen.getAllByRole('switch')).toHaveLength(16);
   });
 
   it('on an iPhone in Safari, points to the home screen and opens the install guide', async () => {
@@ -173,7 +175,7 @@ describe('NotificationsSection', () => {
     );
   });
 
-  it('loads and renders the 14 preference toggles even when not subscribed to push', async () => {
+  it('loads and renders the 16 preference toggles even when not subscribed to push', async () => {
     mockUsePush.mockReturnValue(pushState({ subscribed: false }));
     mockFetchPrefs.mockResolvedValue(allPrefs);
 
@@ -186,7 +188,7 @@ describe('NotificationsSection', () => {
     expect(
       screen.getByRole('switch', { name: 'notifications.prefRatingReminder' })
     ).toBeInTheDocument();
-    expect(screen.getAllByRole('switch')).toHaveLength(15);
+    expect(screen.getAllByRole('switch')).toHaveLength(17);
   });
 
   it('shows the push error message', () => {

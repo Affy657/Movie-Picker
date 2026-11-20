@@ -123,6 +123,28 @@ describe('UpcomingEventCard', () => {
     expect(screen.queryByText('À vous de voter')).not.toBeInTheDocument();
   });
 
+  it('names the group of a group night above its title', () => {
+    renderCard({ ...base, groupId: 'g1', groupName: 'Les jeudis ciné' });
+
+    const link = screen.getByRole('link', { name: /Soirée chez Léa/ });
+    expect(within(link).getByText('Les jeudis ciné')).toBeInTheDocument();
+    expect(within(link).getByText('Nuits blanches')).toBeInTheDocument();
+  });
+
+  it('invites a member to join a group night they have not joined yet', () => {
+    renderCard({
+      ...base,
+      groupId: 'g1',
+      groupName: 'Les jeudis ciné',
+      isParticipant: false,
+      hasVoted: false,
+    });
+
+    const link = screen.getByRole('link', { name: /Soirée chez Léa/ });
+    expect(within(link).getByText('Rejoignez la soirée')).toBeInTheDocument();
+    expect(within(link).queryByText('À vous de voter')).not.toBeInTheDocument();
+  });
+
   it('keeps the leave menu outside the link', async () => {
     const onLeave = vi.fn();
     renderCard(base, onLeave);

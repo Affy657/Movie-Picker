@@ -6,8 +6,8 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 import { useOpenCreateEvent } from '@/features/events/components/create-event/createEventDialogContext';
 import UpcomingEventCard from './UpcomingEventCard';
 
-function canLeaveNight(event: MyEventSummary): boolean {
-  return !event.isCreator && (event.winnerMovies?.length ?? 0) === 0;
+export function canLeaveNight(event: MyEventSummary): boolean {
+  return event.isParticipant && !event.isCreator && (event.winnerMovies?.length ?? 0) === 0;
 }
 
 interface UpcomingEventsSectionProps {

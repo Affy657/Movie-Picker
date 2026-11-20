@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.FriendGroups;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Domain.Services;
@@ -12,6 +14,8 @@ public sealed class CreateEventHandler : ICreateEventHandler
     private readonly IEventRepository _eventRepository;
     private readonly IUserRepository _userRepository;
     private readonly IParticipantRepository _participantRepository;
+    private readonly IFriendGroupRepository _groups;
+    private readonly IGroupNightAnnouncer _groupNightAnnouncer;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<CreateEventHandler> _logger;
     private readonly TimeProvider _clock;
@@ -20,6 +24,8 @@ public sealed class CreateEventHandler : ICreateEventHandler
         IEventRepository eventRepository,
         IUserRepository userRepository,
         IParticipantRepository participantRepository,
+        IFriendGroupRepository groups,
+        IGroupNightAnnouncer groupNightAnnouncer,
         IUnitOfWork unitOfWork,
         ILogger<CreateEventHandler> logger,
         TimeProvider clock)
@@ -27,6 +33,8 @@ public sealed class CreateEventHandler : ICreateEventHandler
         _eventRepository = eventRepository;
         _userRepository = userRepository;
         _participantRepository = participantRepository;
+        _groups = groups;
+        _groupNightAnnouncer = groupNightAnnouncer;
         _unitOfWork = unitOfWork;
         _logger = logger;
         _clock = clock;
@@ -47,6 +55,10 @@ public sealed class CreateEventHandler : ICreateEventHandler
         if (requestId is not null && await FindReplayAsync(ownerId, requestId, ct) is { } replayed)
             return replayed;
 
+        var group = string.IsNullOrWhiteSpace(request.GroupId)
+            ? null
+            : await FriendGroupPolicy.RequireAsync(_groups, ownerId, request.GroupId.Trim(), ct);
+
         var slug = SlugGenerator.NewSlug();
         var hostToken = SlugGenerator.NewHostToken();
         var now = _clock.GetUtcNow();
@@ -62,6 +74,7 @@ public sealed class CreateEventHandler : ICreateEventHandler
             RecapSlug = SlugGenerator.NewSlug(),
             CreatorUserId = ownerId,
             CreationRequestId = requestId,
+            GroupId = group?.Id,
             Config = new EventConfig
             {
                 RichSharePreview = true
@@ -108,6 +121,9 @@ public sealed class CreateEventHandler : ICreateEventHandler
         }
 
         _logger.LogInformation("Event created: {EventId} by user {UserId}", created.Id, ownerId);
+
+        if (group is not null)
+            await _groupNightAnnouncer.AnnounceAsync(created, group, ownerId, CancellationToken.None);
 
         return ToResponse(created, createdParticipant);
     }

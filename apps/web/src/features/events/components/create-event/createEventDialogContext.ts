@@ -5,6 +5,7 @@ import type { CreateEventReuse } from './CreateEventDialog';
 
 export type OpenCreateEventOptions = {
   reuse?: CreateEventReuse | null;
+  groupId?: string | null;
   onClosed?: () => void;
 };
 

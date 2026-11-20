@@ -1224,6 +1224,155 @@ describe('HostEventSettingsPanel', () => {
     ).toBeTruthy();
   });
 
+  describe('group of the night', () => {
+    const thursdayGroup = {
+      id: 'g1',
+      name: 'Les jeudis ciné',
+      role: 'member' as const,
+      ownerId: 'u2',
+      ownerDisplayName: 'Léa',
+      memberCount: 6,
+      memberPreview: [],
+      createdAt: '2026-11-01T10:00:00Z',
+      updatedAt: '2026-11-01T10:00:00Z',
+    };
+
+    function groupEvent(groupId: string | null): EventData {
+      return { ...creatorEvent, config: { ...creatorEvent.config!, groupId } };
+    }
+
+    function serveGroupsAndCapturePatch() {
+      const bodies: Record<string, unknown>[] = [];
+      server.use(
+        http.get(`${TEST_API_V1}/groups`, () =>
+          HttpResponse.json({ groups: [thursdayGroup], invitations: [], nextNights: [] })
+        ),
+        http.get(`${TEST_API_V1}/users/me/event-templates`, () => HttpResponse.json({ items: [] })),
+        http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+          bodies.push((await request.json()) as Record<string, unknown>);
+          return HttpResponse.json({});
+        })
+      );
+      return bodies;
+    }
+
+    it('puts the night in one of the host groups', async () => {
+      const user = userEvent.setup();
+      const bodies = serveGroupsAndCapturePatch();
+
+      renderWithRouter(
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken="ht-1"
+          event={groupEvent(null)}
+          open
+          onClose={() => {}}
+        />
+      );
+
+      await user.click(await screen.findByRole('button', { name: 'Les jeudis ciné' }));
+
+      await waitFor(() => expect(bodies).toHaveLength(1));
+      expect(bodies[0]!.groupId).toBe('g1');
+      expect(
+        screen.getByText('Les membres du groupe voient cette soirée dans Mes soirées.')
+      ).toBeInTheDocument();
+    });
+
+    it('takes the night out of its group', async () => {
+      const user = userEvent.setup();
+      const bodies = serveGroupsAndCapturePatch();
+
+      renderWithRouter(
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken="ht-1"
+          event={groupEvent('g1')}
+          open
+          onClose={() => {}}
+        />
+      );
+
+      expect(
+        await screen.findByRole('button', { name: 'Les jeudis ciné', pressed: true })
+      ).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Aucun' }));
+
+      await waitFor(() => expect(bodies).toHaveLength(1));
+      expect(bodies[0]!.clearGroup).toBe(true);
+      expect(bodies[0]!.groupId).toBeUndefined();
+    });
+
+    it('tells a repeated group night that each next one reaches the group, with nothing to share again', async () => {
+      serveGroupsAndCapturePatch();
+
+      renderWithRouter(
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken="ht-1"
+          event={{
+            ...groupEvent('g1'),
+            config: { ...groupEvent('g1').config!, recurrence: 'weekly' },
+          }}
+          open
+          onClose={() => {}}
+        />
+      );
+
+      expect(
+        await screen.findByText(
+          'Chaque soirée suivante apparaît chez les membres de « Les jeudis ciné », qui sont prévenus. Rien à repartager.'
+        )
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText(/les participants ne sont pas réinscrits/i)
+      ).not.toBeInTheDocument();
+    });
+
+    it('shows no group for a night left in a group the host no longer belongs to', async () => {
+      serveGroupsAndCapturePatch();
+
+      renderWithRouter(
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken="ht-1"
+          event={groupEvent('gone')}
+          open
+          onClose={() => {}}
+        />
+      );
+
+      expect(
+        await screen.findByRole('button', { name: 'Aucun', pressed: true })
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText('Les membres du groupe voient cette soirée dans Mes soirées.')
+      ).not.toBeInTheDocument();
+    });
+
+    it('shows no group choice to a host without group', async () => {
+      server.use(
+        http.get(`${TEST_API_V1}/groups`, () =>
+          HttpResponse.json({ groups: [], invitations: [], nextNights: [] })
+        ),
+        http.get(`${TEST_API_V1}/users/me/event-templates`, () => HttpResponse.json({ items: [] }))
+      );
+
+      renderWithRouter(
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken="ht-1"
+          event={groupEvent(null)}
+          open
+          onClose={() => {}}
+        />
+      );
+
+      await screen.findByRole('switch', { name: /répéter cette soirée/i });
+      expect(screen.queryByRole('button', { name: 'Aucun' })).not.toBeInTheDocument();
+    });
+  });
+
   describe('movie night repetition', () => {
     function recurringEvent(config: Partial<EventData['config']> = {}): EventData {
       return { ...baseEvent, config: { ...baseEvent.config!, ...config } };

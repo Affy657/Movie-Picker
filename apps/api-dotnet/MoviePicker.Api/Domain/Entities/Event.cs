@@ -22,6 +22,7 @@ public sealed record Event
     public int? RecurrenceAnchorDay { get; init; }
     public string? RecurrenceParentEventId { get; init; }
     public string? NextOccurrenceEventId { get; init; }
+    public string? GroupId { get; init; }
 
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }

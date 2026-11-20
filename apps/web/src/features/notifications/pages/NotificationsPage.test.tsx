@@ -32,6 +32,29 @@ const LIST_INVITATION = {
   listInvitationPending: true,
 };
 
+const GROUP_INVITATION = {
+  ...base,
+  id: 'gi',
+  type: 'groupinvitation',
+  actorHandle: 'lea',
+  actorDisplayName: 'Léa',
+  groupId: 'g9',
+  groupName: 'Les jeudis ciné',
+  groupInvitationPending: true,
+};
+
+const GROUP_NIGHT = {
+  ...base,
+  id: 'gn',
+  type: 'groupnight',
+  actorHandle: 'sam',
+  actorDisplayName: 'Sam',
+  eventSlug: 'halloween',
+  eventTitle: 'Halloween en retard',
+  groupId: 'g9',
+  groupName: 'Les jeudis ciné',
+};
+
 function LocationProbe() {
   const location = useLocation();
   return <output data-testid="location">{location.pathname}</output>;
@@ -44,6 +67,8 @@ function renderInbox() {
         <Routes>
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/listes/:listId" element={<p>Page de la liste</p>} />
+          <Route path="/groupes/:groupId" element={<p>Page du groupe</p>} />
+          <Route path="/e/:slug" element={<p>Page de la soirée</p>} />
         </Routes>
         <LocationProbe />
       </MemoryRouter>
@@ -511,5 +536,75 @@ describe('NotificationsPage (MSW)', () => {
     expect(
       screen.queryByRole('button', { name: /tout marquer comme lu/i })
     ).not.toBeInTheDocument();
+  });
+
+  describe('friend groups', () => {
+    it('asks to answer an invitation to a group, and opens the group once accepted', async () => {
+      let accepted = false;
+      server.use(
+        authedUserHandler,
+        serveInbox([GROUP_INVITATION]),
+        ignoreRead,
+        http.post(`${TEST_API_V1}/groups/g9/invitation/accept`, () => {
+          accepted = true;
+          return HttpResponse.json({ id: 'g9', name: 'Les jeudis ciné' });
+        })
+      );
+      const user = userEvent.setup();
+      renderInbox();
+
+      expect(
+        await screen.findByText(
+          (_, element) =>
+            element?.tagName === 'P' &&
+            element.textContent === 'Léa vous invite à rejoindre le groupe « Les jeudis ciné »'
+        )
+      ).toBeInTheDocument();
+      await user.click(
+        screen.getByRole('button', { name: 'Accepter l’invitation au groupe « Les jeudis ciné »' })
+      );
+
+      expect(await screen.findByText('Page du groupe')).toBeInTheDocument();
+      expect(screen.getByTestId('location')).toHaveTextContent('/groupes/g9');
+      expect(accepted).toBe(true);
+    });
+
+    it('declines an invitation to a group without leaving the inbox', async () => {
+      let declined = false;
+      server.use(
+        authedUserHandler,
+        serveInbox([GROUP_INVITATION]),
+        ignoreRead,
+        http.post(`${TEST_API_V1}/groups/g9/invitation/decline`, () => {
+          declined = true;
+          return new HttpResponse(null, { status: 204 });
+        })
+      );
+      const user = userEvent.setup();
+      renderInbox();
+
+      await user.click(
+        await screen.findByRole('button', {
+          name: 'Refuser l’invitation au groupe « Les jeudis ciné »',
+        })
+      );
+
+      await waitFor(() => expect(declined).toBe(true));
+      expect(screen.getByTestId('location')).toHaveTextContent('/notifications');
+    });
+
+    it('announces a night of a group and opens it', async () => {
+      server.use(authedUserHandler, serveInbox([GROUP_NIGHT]), ignoreRead);
+      const user = userEvent.setup();
+      renderInbox();
+
+      const link = await screen.findByRole('link', {
+        name: /Sam vous attend à Halloween en retard, dans le groupe « Les jeudis ciné »/,
+      });
+      await user.click(link);
+
+      expect(await screen.findByText('Page de la soirée')).toBeInTheDocument();
+      expect(screen.getByTestId('location')).toHaveTextContent('/e/halloween');
+    });
   });
 });

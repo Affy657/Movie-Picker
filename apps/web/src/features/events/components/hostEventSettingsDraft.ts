@@ -35,6 +35,14 @@ export function recurrencePatch(
   return next === null ? { clearRecurrence: true } : { recurrence: next };
 }
 
+export function groupPatch(
+  next: string | null,
+  current: string | null
+): Partial<EventConfigPatchPayload> {
+  if (next === current) return {};
+  return next === null ? { clearGroup: true } : { groupId: next };
+}
+
 export function titlePatch(next: string, current: string): Partial<EventConfigPatchPayload> {
   return next !== current ? { title: next } : {};
 }
@@ -72,6 +80,7 @@ export function normalizeConfig(c: EventConfigData | undefined): EventConfigData
     allowSeries: c?.allowSeries ?? DEFAULT_EVENT_CONFIG.allowSeries,
     recurrence: c?.recurrence ?? null,
     hasNextOccurrence: c?.hasNextOccurrence ?? false,
+    groupId: c?.groupId ?? null,
     winnerCount: c?.winnerCount ?? DEFAULT_EVENT_CONFIG.winnerCount,
   };
 }
@@ -87,6 +96,7 @@ export type SavedSettings = {
   richSharePreview: boolean;
   winnerCount: number;
   recurrence: EventRecurrence | null;
+  groupId: string | null;
   dateLocal: string;
 };
 
@@ -103,6 +113,7 @@ export function savedSettingsOf(event: EventData): SavedSettings {
     richSharePreview: cfg.richSharePreview ?? true,
     winnerCount: cfg.winnerCount,
     recurrence: cfg.recurrence ?? null,
+    groupId: cfg.groupId ?? null,
     dateLocal: eventDateTimeToLocal(event.date, event.time),
   };
 }
@@ -139,6 +150,7 @@ export function settingsPatch(
     ...valuePatch('richSharePreview', next, saved),
     ...valuePatch('winnerCount', next, saved),
     ...recurrencePatch(next.recurrence, saved.recurrence),
+    ...groupPatch(next.groupId, saved.groupId),
     ...dateTimePatch(
       splitDateTimeLocal(next.dateLocal),
       next.dateLocal !== saved.dateLocal,

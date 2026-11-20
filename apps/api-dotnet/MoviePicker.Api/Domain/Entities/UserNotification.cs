@@ -16,6 +16,8 @@ public enum UserNotificationType
     EventDateChanged = 12,
     RatingReminder = 13,
     ListInvitation = 14,
+    GroupInvitation = 15,
+    GroupNight = 16,
 }
 
 public sealed record UserNotification
@@ -34,6 +36,8 @@ public sealed record UserNotification
     public string? MovieTitle { get; init; }
     public string? ListId { get; init; }
     public string? ListName { get; init; }
+    public string? GroupId { get; init; }
+    public string? GroupName { get; init; }
     public bool IsRead { get; init; }
     public bool IsWithheld { get; init; }
     public DateTimeOffset CreatedAt { get; init; }

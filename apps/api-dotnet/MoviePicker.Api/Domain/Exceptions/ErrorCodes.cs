@@ -26,6 +26,9 @@ public static class ErrorCodes
     public const string ListNotFound = "list_not_found";
     public const string ListInvitationNotFound = "list_invitation_not_found";
     public const string ListInviteLinkInvalid = "list_invite_link_invalid";
+    public const string GroupNotFound = "group_not_found";
+    public const string GroupInvitationNotFound = "group_invitation_not_found";
+    public const string GroupInviteLinkInvalid = "group_invite_link_invalid";
     public const string SavedListNotFound = "saved_list_not_found";
     public const string ListSourceNotFound = "list_source_not_found";
     public const string WatchedTitleNotFound = "watched_title_not_found";
@@ -61,6 +64,11 @@ public static class ErrorCodes
     public const string ListAlreadyMember = "list_already_member";
     public const string ListInvitationAlreadySent = "list_invitation_already_sent";
     public const string ListOwnerCannotLeave = "list_owner_cannot_leave";
+    public const string GroupLimitReached = "group_limit_reached";
+    public const string GroupMembersLimitReached = "group_members_limit_reached";
+    public const string GroupAlreadyMember = "group_already_member";
+    public const string GroupInvitationAlreadySent = "group_invitation_already_sent";
+    public const string GroupOwnerCannotLeave = "group_owner_cannot_leave";
     public const string SavedListLimitReached = "saved_list_limit_reached";
     public const string ListAlreadyYours = "list_already_yours";
     public const string SavedListCopyUnavailable = "saved_list_copy_unavailable";
@@ -85,6 +93,7 @@ public static class ErrorCodes
     public const string HostOnlyInvite = "host_only_invite";
     public const string HostOnlyList = "host_only_list";
     public const string ListOwnerOnly = "list_owner_only";
+    public const string GroupOwnerOnly = "group_owner_only";
     public const string HostOrSelfOnly = "host_or_self_only";
     public const string SeenMarkOwnOnly = "seen_mark_own_only";
     public const string SeenMarkOwnParticipationOnly = "seen_mark_own_participation_only";

@@ -28,11 +28,12 @@ export function useListMembers(listId: string) {
   });
 }
 
-export function useInvitableUsers(listId: string) {
+export function useInvitableUsers(listId: string, enabled = true) {
   return useQuery({
     queryKey: queryKeys.lists.invitable(listId),
     queryFn: ({ signal }) => fetchInvitableUsers(listId, signal),
     staleTime: 30_000,
+    enabled,
   });
 }
 

@@ -31,6 +31,7 @@ public sealed class ExportUserDataHandlerTests
         public InMemoryPushSubscriptionRepository Push { get; } = new();
         public InMemoryWatchlistRepository Watchlist { get; } = new();
         public InMemoryMovieListRepository MovieLists { get; } = new();
+        public InMemoryFriendGroupRepository Groups { get; } = new();
         public InMemoryWatchedTitleRepository WatchedTitles { get; } = new();
         public InMemorySavedListRepository SavedLists { get; } = new();
         public InMemoryAvatarPhotoRepository AvatarPhotos { get; } = new();
@@ -50,6 +51,7 @@ public sealed class ExportUserDataHandlerTests
                 Push,
                 Watchlist,
                 MovieLists,
+                Groups,
                 WatchedTitles,
                 SavedLists,
                 AvatarPhotos,
@@ -302,6 +304,51 @@ public sealed class ExportUserDataHandlerTests
         Assert.Equal((joined.Id, "Ciné du dimanche", "Léa", TestEpoch.AddDays(-5)), (member.ListId, member.Name, member.OwnerDisplayName, member.JoinedAt));
         var invitation = Assert.Single(export.PendingListInvitations);
         Assert.Equal((pending.Id, "Nanars", "Léa", TestEpoch.AddDays(-1)), (invitation.ListId, invitation.Name, invitation.OwnerDisplayName, invitation.InvitedAt));
+    }
+
+    [Fact]
+    public async Task HandleAsync_ExportsTheGroupsOwnedJoined_AndTheInvitationsWaitingForAnAnswer()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User { Email = "neo@example.com", DisplayName = "Neo", Handle = "neo" });
+        var lea = await f.Users.AddAsync(new User { Email = "lea@example.com", DisplayName = "Léa", Handle = "lea" });
+        await f.Groups.AddAsync(new FriendGroup { OwnerId = user.Id, Name = "Les miens", CreatedAt = TestEpoch.AddDays(-9), UpdatedAt = TestEpoch.AddDays(-8) });
+        var joined = await f.Groups.AddAsync(new FriendGroup { OwnerId = lea.Id, Name = "Le club du jeudi" });
+        await f.Groups.AddInvitationAsync(joined.Id, new FriendGroupInvitation(user.Id, TestEpoch.AddDays(-6)), FriendGroup.MaxMembers);
+        await f.Groups.AcceptInvitationAsync(joined.Id, new FriendGroupMember(user.Id, TestEpoch.AddDays(-5)));
+        var pending = await f.Groups.AddAsync(new FriendGroup { OwnerId = lea.Id, Name = "Le club du dimanche" });
+        await f.Groups.AddInvitationAsync(pending.Id, new FriendGroupInvitation(user.Id, TestEpoch.AddDays(-1)), FriendGroup.MaxMembers);
+        await f.Groups.AddAsync(new FriendGroup { OwnerId = lea.Id, Name = "Sans Neo" });
+
+        var export = await f.CreateHandler().HandleAsync(user.Id);
+
+        var own = Assert.Single(export.FriendGroups);
+        Assert.Equal(("Les miens", TestEpoch.AddDays(-9), TestEpoch.AddDays(-8)), (own.Name, own.CreatedAt, own.UpdatedAt));
+        var member = Assert.Single(export.JoinedFriendGroups);
+        Assert.Equal((joined.Id, "Le club du jeudi", "Léa", TestEpoch.AddDays(-5)), (member.GroupId, member.Name, member.OwnerDisplayName, member.JoinedAt));
+        var invitation = Assert.Single(export.PendingFriendGroupInvitations);
+        Assert.Equal((pending.Id, "Le club du dimanche", "Léa", TestEpoch.AddDays(-1)), (invitation.GroupId, invitation.Name, invitation.OwnerDisplayName, invitation.InvitedAt));
+    }
+
+    [Fact]
+    public async Task HandleAsync_ExportsTheGroupOfAGroupInvitationNotice()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User { Email = "neo@example.com", DisplayName = "Neo", Handle = "neo" });
+        await f.Notifications.AddAsync(new UserNotification
+        {
+            UserId = user.Id,
+            Type = UserNotificationType.GroupInvitation,
+            ActorDisplayName = "Léa",
+            GroupId = "g1",
+            GroupName = "Le club du jeudi",
+            CreatedAt = TestEpoch
+        });
+
+        var export = await f.CreateHandler().HandleAsync(user.Id);
+
+        var notice = Assert.Single(export.Notifications);
+        Assert.Equal(("GroupInvitation", "Le club du jeudi", (string?)null), (notice.Type, notice.GroupName, notice.ListName));
     }
 
     [Fact]

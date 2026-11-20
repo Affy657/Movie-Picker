@@ -3,6 +3,7 @@ using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.CreateEvent;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
@@ -23,7 +24,8 @@ public sealed class CreateEventHandlerTests
         _eventRepo = new Mock<IEventRepository>();
         _userRepo = new Mock<IUserRepository>();
         _participantRepo = new Mock<IParticipantRepository>();
-        _sut = new CreateEventHandler(_eventRepo.Object, _userRepo.Object, _participantRepo.Object, new InMemoryUnitOfWork(),
+        _sut = new CreateEventHandler(_eventRepo.Object, _userRepo.Object, _participantRepo.Object,
+            new InMemoryFriendGroupRepository(), Mock.Of<IGroupNightAnnouncer>(), new InMemoryUnitOfWork(),
             NullLogger<CreateEventHandler>.Instance,
             TimeProvider.System);
     }

@@ -2,8 +2,10 @@ using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.EventConfiguration;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
@@ -34,6 +36,8 @@ public sealed class PatchEventConfigHandlerTests
             _hostToken.Object,
             _user.Object,
             TestAudienceNotifier.Over(_participants.Object, _userRepo.Object, _pushSubRepo.Object, _pushSender.Object, _notifications.Object),
+            new InMemoryFriendGroupRepository(),
+            Mock.Of<IGroupNightAnnouncer>(),
             _unitOfWork,
             TimeProvider.System);
     }

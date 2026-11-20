@@ -7,6 +7,7 @@ import EmptyState from '@/shared/components/EmptyState';
 import InlineError from '@/shared/components/InlineError';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
+import { invalidateMyNights } from '@/shared/api/invalidateMyNights';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
@@ -18,7 +19,9 @@ import { getErrorMessage } from '@/shared/api/apiError';
 import { renderWithBold } from '@/shared/utils/renderWithBold';
 import { formatRelativeTime } from '@/shared/utils/formatRelativeTime';
 import {
+  acceptGroupInvitation,
   acceptListInvitation,
+  declineGroupInvitation,
   declineListInvitation,
   fetchNotificationInbox,
   markAllNotificationsRead,
@@ -43,26 +46,25 @@ function withoutRepeatedIds(items: UserNotificationItem[]): UserNotificationItem
   });
 }
 
-interface ListInvitationAnswer {
+interface InvitationAnswer {
   item: UserNotificationItem;
   accept: boolean;
 }
 
-type AnswerListInvitation = (answer: ListInvitationAnswer) => void;
+type AnswerInvitation = (answer: InvitationAnswer) => void;
 
-function awaitsListAnswer(item: UserNotificationItem, answered: ReadonlySet<string>): boolean {
-  return (
-    item.type === 'listinvitation' &&
-    !!item.listInvitationPending &&
-    !!item.listId &&
-    !answered.has(item.id)
-  );
+function awaitsAnswer(item: UserNotificationItem, answered: ReadonlySet<string>): boolean {
+  if (answered.has(item.id)) return false;
+  if (item.type === 'listinvitation') return !!item.listInvitationPending && !!item.listId;
+  if (item.type === 'groupinvitation') return !!item.groupInvitationPending && !!item.groupId;
+  return false;
 }
 
 function notifDestination(item: UserNotificationItem): string | null {
   if (item.type === 'newfollower')
     return item.actorHandle ? ROUTES.profile(item.actorHandle) : null;
   if (item.type === 'listinvitation') return ROUTES.lists;
+  if (item.type === 'groupinvitation') return ROUTES.groups;
   if (item.type === 'eventdeleted') return null;
   if (item.type === 'letterboxdreconciliationpending') return ROUTES.accountIntegrations;
   if (!item.eventSlug) return null;
@@ -106,6 +108,8 @@ const NOTIFICATION_TEXT_KEYS = {
   },
   eventinvitation: { plain: 'notifications.eventInvitationText' },
   listinvitation: { plain: 'notifications.listInvitationText' },
+  groupinvitation: { plain: 'notifications.groupInvitationText' },
+  groupnight: { plain: 'notifications.groupNightText' },
   eventpending: {
     plain: 'notifications.eventPendingText',
     grouped: 'notifications.eventPendingGroupedText',
@@ -132,10 +136,11 @@ function notifText(item: UserNotificationItem, t: Translate, withinEventGroup = 
     movie: item.movieTitle ?? '',
     eventTitle: item.eventTitle ?? '',
     listName: item.listName ?? '',
+    groupName: item.groupName ?? '',
   });
 }
 
-function ListInvitationAnswers({
+function InvitationAnswers({
   item,
   t,
   pending,
@@ -144,16 +149,21 @@ function ListInvitationAnswers({
   item: UserNotificationItem;
   t: Translate;
   pending: boolean;
-  onAnswer: AnswerListInvitation;
+  onAnswer: AnswerInvitation;
 }>) {
-  const listName = item.listName ?? '';
+  const toGroup = item.type === 'groupinvitation';
+  const name = (toGroup ? item.groupName : item.listName) ?? '';
   return (
     <span className={styles.itemAnswers}>
       <Button
         size="sm"
         variant="primary"
         disabled={pending}
-        aria-label={t('notifications.listInvitationAcceptAria', { listName })}
+        aria-label={
+          toGroup
+            ? t('notifications.groupInvitationAcceptAria', { groupName: name })
+            : t('notifications.listInvitationAcceptAria', { listName: name })
+        }
         onClick={() => onAnswer({ item, accept: true })}
       >
         {t('notifications.listInvitationAccept')}
@@ -161,7 +171,11 @@ function ListInvitationAnswers({
       <Button
         size="sm"
         disabled={pending}
-        aria-label={t('notifications.listInvitationDeclineAria', { listName })}
+        aria-label={
+          toGroup
+            ? t('notifications.groupInvitationDeclineAria', { groupName: name })
+            : t('notifications.listInvitationDeclineAria', { listName: name })
+        }
         onClick={() => onAnswer({ item, accept: false })}
       >
         {t('notifications.listInvitationDecline')}
@@ -212,11 +226,11 @@ function NotifRow({
     if (!item.isRead) onRead(item.id);
   };
 
-  if (answers && awaitsListAnswer(item, answers.answered)) {
+  if (answers && awaitsAnswer(item, answers.answered)) {
     return (
       <div className={`${rowClassName} ${styles.itemWithAnswers}`}>
         {content}
-        <ListInvitationAnswers
+        <InvitationAnswers
           item={item}
           t={t}
           pending={answers.pendingId === item.id}
@@ -244,7 +258,7 @@ function NotifRow({
 interface InboxAnswers {
   answered: ReadonlySet<string>;
   pendingId: string | null;
-  onAnswer: AnswerListInvitation;
+  onAnswer: AnswerInvitation;
 }
 
 function NotifCard({
@@ -384,7 +398,11 @@ export default function NotificationsPage() {
   });
 
   const answerMutation = useMutation({
-    mutationFn: ({ item, accept }: ListInvitationAnswer) => {
+    mutationFn: ({ item, accept }: InvitationAnswer) => {
+      if (item.type === 'groupinvitation') {
+        const groupId = item.groupId ?? '';
+        return accept ? acceptGroupInvitation(groupId) : declineGroupInvitation(groupId);
+      }
       const listId = item.listId ?? '';
       return accept ? acceptListInvitation(listId) : declineListInvitation(listId);
     },
@@ -393,6 +411,11 @@ export default function NotificationsPage() {
       setAnswered((current) => new Set(current).add(item.id));
       if (!item.isRead) markOneMutation.mutate(item.id);
       invalidateInbox();
+      if (item.type === 'groupinvitation') {
+        void invalidateMyNights(queryClient);
+        if (accept && item.groupId) void navigate(ROUTES.group(item.groupId));
+        return;
+      }
       void queryClient.invalidateQueries({ queryKey: queryKeys.lists.all });
       if (accept && item.listId) void navigate(ROUTES.list(item.listId));
     },

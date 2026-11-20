@@ -8,7 +8,7 @@ import {
 } from '@/features/events/api/eventsApi';
 import { getStoredParticipant, removeStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 import { getErrorMessage } from '@/shared/api/apiError';
-import { queryKeys } from '@/shared/hooks/queryKeys';
+import { invalidateMyNights } from '@/shared/api/invalidateMyNights';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
@@ -32,7 +32,7 @@ export function useMyEventsActions() {
   const [leaveError, setLeaveError] = useState<string | null>(null);
   const [closeError, setCloseError] = useState<string | null>(null);
   const invalidateMyEvents = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
+    void invalidateMyNights(queryClient);
   }, [queryClient]);
   const deleteMutation = useMutation({
     mutationFn: (slug: string) => deleteEvent(slug),

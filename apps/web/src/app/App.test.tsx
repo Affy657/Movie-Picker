@@ -178,6 +178,8 @@ describe('App (routes)', () => {
       ['/listes/l1', '%2Flistes%2Fl1'],
       ['/listes/films-vus', '%2Flistes%2Ffilms-vus'],
       ['/listes/enregistrees/s1', '%2Flistes%2Fenregistrees%2Fs1'],
+      ['/groupes', '%2Fgroupes'],
+      ['/groupes/g1', '%2Fgroupes%2Fg1'],
       ['/notifications', '%2Fnotifications'],
     ])(
       'route %s reste accessible sans compte, avec un CTA de connexion (returnTo=%s)',

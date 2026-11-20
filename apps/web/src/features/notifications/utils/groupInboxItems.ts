@@ -1,6 +1,12 @@
 import type { UserNotificationItem } from '@/features/notifications/api/notificationsApi';
 
-const UNGROUPABLE_TYPES = new Set(['newfollower', 'eventinvitation', 'listinvitation']);
+const UNGROUPABLE_TYPES = new Set([
+  'newfollower',
+  'eventinvitation',
+  'listinvitation',
+  'groupinvitation',
+  'groupnight',
+]);
 
 const STANDING_TASK_TYPES = new Set(['letterboxdreconciliationpending']);
 

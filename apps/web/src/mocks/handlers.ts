@@ -849,6 +849,7 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
           richSharePreview: false,
           allowSeries: false,
           hasNextOccurrence: false,
+          groupId: null,
         },
       });
     }),
@@ -969,6 +970,273 @@ export function createSearchAndAddHandlers(slug: string) {
         },
         { status: 201 }
       )
+    ),
+  ];
+}
+
+export interface MockGroupMember extends MockListPerson {
+  role?: Schemas['FriendGroupRole'];
+}
+
+export interface MockGroup {
+  id: string;
+  name: string;
+  role?: Schemas['FriendGroupRole'];
+  owner?: MockListPerson;
+  members?: MockGroupMember[];
+  upcomingNights?: Schemas['MyEventSummaryDto'][];
+  nextNightParticipantIds?: string[];
+  pastNights?: Schemas['MyEventSummaryDto'][];
+  createdAt?: string;
+}
+
+type StoredGroup = Required<MockGroup>;
+
+export interface MockGroupInvitation {
+  groupId: string;
+  name: string;
+  invitedByDisplayName: string;
+  members?: MockListPerson[];
+}
+
+const MOCK_GROUP_PREVIEW_SIZE = 4;
+
+function withGroupDefaults(group: MockGroup): StoredGroup {
+  const owner = group.owner ?? MOCK_LIST_OWNER;
+  return {
+    role: 'owner',
+    upcomingNights: [],
+    nextNightParticipantIds: [],
+    pastNights: [],
+    createdAt: MOCK_DATE,
+    ...group,
+    owner,
+    members: group.members ?? [{ ...owner, role: 'owner' }],
+  };
+}
+
+function groupPerson(person: MockListPerson): Schemas['FriendGroupPersonResponse'] {
+  const { userId, displayName, avatarId } = servedAvatar(person);
+  return { userId, displayName, avatarId };
+}
+
+function mockGroupSummary(group: StoredGroup): Schemas['FriendGroupSummaryResponse'] {
+  return {
+    id: group.id,
+    name: group.name,
+    role: group.role,
+    ownerId: group.owner.userId,
+    ownerDisplayName: group.owner.displayName,
+    memberCount: group.members.length,
+    memberPreview: group.members.slice(0, MOCK_GROUP_PREVIEW_SIZE).map(groupPerson),
+    createdAt: group.createdAt,
+    updatedAt: group.createdAt,
+  };
+}
+
+function mockGroupMember(member: MockGroupMember): Schemas['FriendGroupMemberResponse'] {
+  const { userId, handle, displayName, avatarId } = servedAvatar(member);
+  return {
+    userId,
+    handle,
+    displayName,
+    avatarId,
+    role: member.role ?? 'member',
+    joinedAt: MOCK_DATE,
+  };
+}
+
+function mockGroupDetail(group: StoredGroup): Schemas['FriendGroupDetailResponse'] {
+  return {
+    ...mockGroupSummary(group),
+    members: group.members.map(mockGroupMember),
+    upcomingNights: group.upcomingNights,
+    nextNightParticipantIds: group.nextNightParticipantIds,
+    pastNights: group.pastNights,
+  };
+}
+
+function mockGroupInvitation(
+  invitation: MockGroupInvitation
+): Schemas['FriendGroupInvitationResponse'] {
+  const members = invitation.members ?? [];
+  return {
+    groupId: invitation.groupId,
+    name: invitation.name,
+    invitedByDisplayName: invitation.invitedByDisplayName,
+    memberCount: members.length,
+    memberPreview: members.slice(0, MOCK_GROUP_PREVIEW_SIZE).map(groupPerson),
+    invitedAt: MOCK_DATE,
+  };
+}
+
+export function createGroupsHandlers(
+  initial: MockGroup[] = [],
+  initialInvitations: MockGroupInvitation[] = []
+) {
+  let groups = initial.map(withGroupDefaults);
+  let invitations = [...initialInvitations];
+  const route = `${V1}/groups`;
+  const find = (id: unknown) => groups.find((group) => group.id === id);
+  const notFound = () => apiErrorJson(404, 'group_not_found');
+
+  return [
+    http.get(route, () =>
+      apiJson<'MyGroupsResponse'>({
+        groups: groups.map(mockGroupSummary),
+        invitations: invitations.map(mockGroupInvitation),
+        nextNights: groups.flatMap((group) => group.upcomingNights.slice(0, 1)),
+      })
+    ),
+    http.post(route, async ({ request }) => {
+      const { name } = (await request.json()) as Schemas['CreateFriendGroupRequest'];
+      const created = withGroupDefaults({ id: `g${groups.length + 1}`, name });
+      groups = [...groups, created];
+      return apiJson<'FriendGroupSummaryResponse'>(mockGroupSummary(created), { status: 201 });
+    }),
+    http.get(`${route}/:id`, ({ params }) => {
+      const group = find(params.id);
+      return group ? apiJson<'FriendGroupDetailResponse'>(mockGroupDetail(group)) : notFound();
+    }),
+    http.patch(`${route}/:id`, async ({ params, request }) => {
+      const group = find(params.id);
+      if (!group) return notFound();
+      const { name } = (await request.json()) as Schemas['UpdateFriendGroupRequest'];
+      group.name = name;
+      return apiJson<'FriendGroupSummaryResponse'>(mockGroupSummary(group));
+    }),
+    http.delete(`${route}/:id`, ({ params }) => {
+      groups = groups.filter((group) => group.id !== params.id);
+      return new HttpResponse(null, { status: 204 });
+    }),
+    http.post(`${route}/:id/leave`, ({ params }) => {
+      groups = groups.filter((group) => group.id !== params.id);
+      return new HttpResponse(null, { status: 204 });
+    }),
+    http.post(`${route}/:id/invitation/accept`, ({ params }) => {
+      const invitation = invitations.find((candidate) => candidate.groupId === params.id);
+      if (!invitation) return apiErrorJson(404, 'group_invitation_not_found');
+      invitations = invitations.filter((candidate) => candidate !== invitation);
+      const joined = withGroupDefaults({
+        id: invitation.groupId,
+        name: invitation.name,
+        role: 'member',
+        members: invitation.members,
+      });
+      groups = [...groups, joined];
+      return apiJson<'FriendGroupSummaryResponse'>(mockGroupSummary(joined));
+    }),
+    http.post(`${route}/:id/invitation/decline`, ({ params }) => {
+      invitations = invitations.filter((candidate) => candidate.groupId !== params.id);
+      return new HttpResponse(null, { status: 204 });
+    }),
+  ];
+}
+
+export interface MockGroupMembership {
+  maxMembers?: number;
+  members: MockGroupMember[];
+  invitations?: MockListPerson[] | null;
+  inviteLink?: Schemas['FriendGroupInviteLinkResponse'] | null;
+  invitable?: MockListPerson[];
+}
+
+function groupInvitationOf(
+  person: MockListPerson
+): Schemas['FriendGroupPendingInvitationResponse'] {
+  const { userId, handle, displayName, avatarId } = servedAvatar(person);
+  return { userId, handle, displayName, avatarId, invitedAt: MOCK_DATE };
+}
+
+export function createGroupMembershipHandlers(groupId: string, initial: MockGroupMembership) {
+  const state = {
+    maxMembers: initial.maxMembers ?? MOCK_MAX_MEMBERS,
+    members: initial.members.map(mockGroupMember),
+    invitations:
+      initial.invitations === null ? null : (initial.invitations ?? []).map(groupInvitationOf),
+    inviteLink: initial.inviteLink ?? null,
+    invitable: [...(initial.invitable ?? [])],
+  };
+  const route = `${V1}/groups/${groupId}`;
+
+  return [
+    http.get(`${route}/members`, () =>
+      apiJson<'FriendGroupMembersResponse'>({
+        maxMembers: state.maxMembers,
+        members: state.members,
+        invitations: state.invitations,
+        inviteLink: state.inviteLink,
+      })
+    ),
+    http.get(`${route}/invitable`, () =>
+      apiJson<'FriendGroupInvitableUsersResponse'>({
+        users: state.invitable.map((person) => ({
+          ...servedAvatar(person),
+          handle: person.handle ?? '',
+        })),
+      })
+    ),
+    http.post(`${route}/invitations`, async ({ request }) => {
+      const { userId } = (await request.json()) as Schemas['InviteToFriendGroupRequest'];
+      const person = state.invitable.find((candidate) => candidate.userId === userId) ?? {
+        userId,
+        handle: null,
+        displayName: userId,
+        avatarId: null,
+      };
+      const invitation = groupInvitationOf(person);
+      state.invitable = state.invitable.filter((candidate) => candidate.userId !== userId);
+      state.invitations = [...(state.invitations ?? []), invitation];
+      return apiJson<'FriendGroupPendingInvitationResponse'>(invitation, { status: 201 });
+    }),
+    http.delete(`${route}/invitations/:userId`, ({ params }) => {
+      const invitation = state.invitations?.find((person) => person.userId === params.userId);
+      if (!invitation) return apiErrorJson(404, 'group_invitation_not_found');
+      state.invitations = (state.invitations ?? []).filter((person) => person !== invitation);
+      state.invitable = [...state.invitable, invitation];
+      return new HttpResponse(null, { status: 204 });
+    }),
+    http.delete(`${route}/members/:userId`, ({ params }) => {
+      state.members = state.members.filter((member) => member.userId !== params.userId);
+      return new HttpResponse(null, { status: 204 });
+    }),
+    http.post(`${route}/invite-link`, () => {
+      state.inviteLink = {
+        token: 'nouveau-lien',
+        expiresAt: MOCK_INVITE_LINK_EXPIRY,
+        active: true,
+      };
+      return apiJson<'FriendGroupInviteLinkResponse'>(state.inviteLink);
+    }),
+    http.delete(`${route}/invite-link`, () => {
+      state.inviteLink = state.inviteLink ? { ...state.inviteLink, active: false } : null;
+      return new HttpResponse(null, { status: 204 });
+    }),
+  ];
+}
+
+export function createGroupJoinHandlers(
+  token: string,
+  preview: Schemas['FriendGroupInvitePreviewResponse'] | null,
+  joined: MockGroup = { id: 'joined-group', name: preview?.name ?? '' }
+) {
+  const route = `${V1}/groups/join/${token}`;
+  return [
+    http.get(route, () =>
+      preview
+        ? apiJson<'FriendGroupInvitePreviewResponse'>(preview)
+        : apiErrorJson(404, 'group_invite_link_invalid')
+    ),
+    http.post(route, () =>
+      preview
+        ? apiJson<'FriendGroupJoinResponse'>(
+            {
+              group: mockGroupSummary(withGroupDefaults({ role: 'member', ...joined })),
+              joined: true,
+            },
+            { status: 201 }
+          )
+        : apiErrorJson(404, 'group_invite_link_invalid')
     ),
   ];
 }

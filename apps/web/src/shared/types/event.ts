@@ -23,6 +23,7 @@ export type EventConfigData = Pick<
       | 'recurrence'
       | 'hasNextOccurrence'
       | 'themeColor'
+      | 'groupId'
     >
   >;
 

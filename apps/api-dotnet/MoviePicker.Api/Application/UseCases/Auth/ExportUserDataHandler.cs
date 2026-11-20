@@ -21,6 +21,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
     private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly IWatchlistRepository _watchlist;
     private readonly IMovieListRepository _movieLists;
+    private readonly IFriendGroupRepository _groups;
     private readonly IWatchedTitleRepository _watchedTitles;
     private readonly ISavedListRepository _savedLists;
     private readonly IAvatarPhotoRepository _avatarPhotos;
@@ -40,6 +41,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         IPushSubscriptionRepository pushSubscriptions,
         IWatchlistRepository watchlist,
         IMovieListRepository movieLists,
+        IFriendGroupRepository groups,
         IWatchedTitleRepository watchedTitles,
         ISavedListRepository savedLists,
         IAvatarPhotoRepository avatarPhotos,
@@ -58,6 +60,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         _pushSubscriptions = pushSubscriptions;
         _watchlist = watchlist;
         _movieLists = movieLists;
+        _groups = groups;
         _watchedTitles = watchedTitles;
         _savedLists = savedLists;
         _avatarPhotos = avatarPhotos;
@@ -95,6 +98,12 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         var joinedLists = await _movieLists.ListJoinedAsync(userId, ct);
         var invitingLists = await _movieLists.ListInvitingAsync(userId, ct);
         var listOwnerNames = await ListOwnerNamesAsync(joinedLists.Concat(invitingLists), ct);
+        var ownedGroups = await _groups.ListByOwnerAsync(userId, ct);
+        var joinedGroups = await _groups.ListJoinedAsync(userId, ct);
+        var invitingGroups = await _groups.ListInvitingAsync(userId, ct);
+        var groupOwnerNames = await DisplayNamesAsync(
+            joinedGroups.Concat(invitingGroups).Select(group => group.OwnerId),
+            ct);
         var watchedTitles = await _watchedTitles.ListByOwnerAsync(userId, ct);
         var savedLists = await _savedLists.ListByOwnerAsync(userId, ct);
         var avatarPhoto = await ExportAvatarPhotoAsync(user, ct);
@@ -153,6 +162,27 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
                     InvitedAt = list.Invitations.First(invitation => invitation.UserId == userId).InvitedAt
                 })
                 .ToList(),
+            FriendGroups = ownedGroups
+                .Select(group => new ExportedFriendGroup { Name = group.Name, CreatedAt = group.CreatedAt, UpdatedAt = group.UpdatedAt })
+                .ToList(),
+            JoinedFriendGroups = joinedGroups
+                .Select(group => new ExportedJoinedFriendGroup
+                {
+                    GroupId = group.Id,
+                    Name = group.Name,
+                    OwnerDisplayName = groupOwnerNames.GetValueOrDefault(group.OwnerId, string.Empty),
+                    JoinedAt = group.Members.First(member => member.UserId == userId).JoinedAt
+                })
+                .ToList(),
+            PendingFriendGroupInvitations = invitingGroups
+                .Select(group => new ExportedFriendGroupInvitation
+                {
+                    GroupId = group.Id,
+                    Name = group.Name,
+                    OwnerDisplayName = groupOwnerNames.GetValueOrDefault(group.OwnerId, string.Empty),
+                    InvitedAt = group.Invitations.First(invitation => invitation.UserId == userId).InvitedAt
+                })
+                .ToList(),
             SavedLists = savedLists.Select(MapSavedList).ToList(),
             WatchedTitles = watchedTitles.Select(MapWatchedTitle).ToList(),
             Favorites = user.Favorites.Select(MapFavorite).ToList(),
@@ -162,12 +192,15 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         };
     }
 
-    private async Task<Dictionary<string, string>> ListOwnerNamesAsync(IEnumerable<MovieList> lists, CancellationToken ct)
+    private Task<Dictionary<string, string>> ListOwnerNamesAsync(IEnumerable<MovieList> lists, CancellationToken ct) =>
+        DisplayNamesAsync(lists.Select(list => list.OwnerId), ct);
+
+    private async Task<Dictionary<string, string>> DisplayNamesAsync(IEnumerable<string> userIds, CancellationToken ct)
     {
-        var ownerIds = lists.Select(list => list.OwnerId).Distinct(StringComparer.Ordinal).ToList();
-        if (ownerIds.Count == 0)
+        var ids = userIds.Distinct(StringComparer.Ordinal).ToList();
+        if (ids.Count == 0)
             return new Dictionary<string, string>(StringComparer.Ordinal);
-        return (await _users.ListCardsByIdsAsync(ownerIds, ct))
+        return (await _users.ListCardsByIdsAsync(ids, ct))
             .DistinctBy(card => card.Id, StringComparer.Ordinal)
             .ToDictionary(card => card.Id, card => card.DisplayName, StringComparer.Ordinal);
     }
@@ -304,6 +337,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         EventTitle = n.EventTitle,
         MovieTitle = n.MovieTitle,
         ListName = n.ListName,
+        GroupName = n.GroupName,
         IsRead = n.IsRead,
         CreatedAt = n.CreatedAt
     };

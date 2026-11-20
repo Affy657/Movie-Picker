@@ -19,4 +19,7 @@ public sealed class CreateEventRequest
 
     [MaxLength(64)]
     public string? ClientRequestId { get; init; }
+
+    [MaxLength(64)]
+    public string? GroupId { get; init; }
 }

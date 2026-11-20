@@ -160,6 +160,34 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task GroupNights_AreListedByTheirGroups_AndKeepTheirGroupThroughAnUpdate()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var groupId = Guid.NewGuid().ToString("N")[..24];
+        var otherGroupId = Guid.NewGuid().ToString("N")[..24];
+        var night = await events.AddAsync(NewEvent("Jeudi ciné") with { GroupId = groupId });
+        var otherNight = await events.AddAsync(NewEvent("Famille") with { GroupId = otherGroupId });
+        await events.AddAsync(NewEvent("Sans groupe"));
+
+        Assert.Equal([night.Id], (await events.ListByGroupIdsAsync([groupId])).Select(e => e.Id));
+
+        var renamed = await events.UpdateAsync(night with { Title = "Jeudi ciné bis" });
+
+        Assert.Equal(groupId, renamed.GroupId);
+        Assert.Equal(
+            new[] { night.Id, otherNight.Id }.Order(),
+            (await events.ListByGroupIdsAsync([groupId, otherGroupId])).Select(e => e.Id).Order());
+        Assert.Empty(await events.ListByGroupIdsAsync([]));
+
+        Assert.Equal(1, await events.DetachGroupsAsync([groupId]));
+
+        Assert.Empty(await events.ListByGroupIdsAsync([groupId]));
+        Assert.Null(Assert.Single(await events.ListByIdsAsync([night.Id])).GroupId);
+        Assert.Equal([otherNight.Id], (await events.ListByGroupIdsAsync([otherGroupId])).Select(e => e.Id));
+    }
+
+    [Fact]
     public async Task NightWithoutRecapSlug_IsListedForTheBackfill_UntilItKeepsOne()
     {
         using var scope = _factory.Services.CreateScope();
@@ -275,6 +303,76 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Empty(await notifications.ListByUserIdAsync(lea));
         Assert.Equal([kept], (await notifications.ListByUserIdAsync(sam)).Select(n => n.ListId));
         Assert.Equal(0, await notifications.DeleteByListsAsync([]));
+    }
+
+    [Fact]
+    public async Task GroupInvitationNotifications_KeepTheirGroup_AndAreDeletedByGroup()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var notifications = scope.ServiceProvider.GetRequiredService<IUserNotificationRepository>();
+        var lea = ObjectId.GenerateNewId().ToString();
+        var sam = ObjectId.GenerateNewId().ToString();
+        var groupId = ObjectId.GenerateNewId().ToString();
+        var otherGroupId = ObjectId.GenerateNewId().ToString();
+        UserNotification Invitation(string userId, string group) => new()
+        {
+            UserId = userId,
+            Type = UserNotificationType.GroupInvitation,
+            GroupId = group,
+            GroupName = "Les cinéphiles",
+            CreatedAt = Now
+        };
+        await notifications.AddAsync(Invitation(lea, groupId));
+        await notifications.AddAsync(Invitation(sam, groupId));
+        await notifications.AddAsync(Invitation(sam, otherGroupId));
+        await notifications.AddAsync(Invitation(sam, groupId) with { Type = UserNotificationType.GroupNight, EventId = "night-1" });
+        await notifications.AddAsync(new UserNotification
+        {
+            UserId = sam,
+            Type = UserNotificationType.ListInvitation,
+            ListId = groupId,
+            ListName = "Halloween",
+            CreatedAt = Now
+        });
+
+        var stored = Assert.Single(await notifications.ListByUserIdAsync(lea));
+        Assert.Equal((UserNotificationType.GroupInvitation, groupId, "Les cinéphiles", (string?)null), (stored.Type, stored.GroupId, stored.GroupName, stored.ListId));
+
+        Assert.Equal(1, await notifications.DeleteGroupInvitationAsync(groupId, sam));
+        Assert.Equal(
+            [UserNotificationType.GroupNight],
+            (await notifications.ListByUserIdAsync(sam)).Where(n => n.GroupId == groupId).Select(n => n.Type));
+        Assert.Equal(2, await notifications.DeleteByGroupAsync(groupId));
+        Assert.Empty(await notifications.ListByUserIdAsync(lea));
+        Assert.Equal(2, (await notifications.ListByUserIdAsync(sam)).Count);
+    }
+
+    [Fact]
+    public async Task GroupInvitationNotifications_OfSeveralGroups_AreDeletedTogether()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var notifications = scope.ServiceProvider.GetRequiredService<IUserNotificationRepository>();
+        var lea = ObjectId.GenerateNewId().ToString();
+        var sam = ObjectId.GenerateNewId().ToString();
+        var first = ObjectId.GenerateNewId().ToString();
+        var second = ObjectId.GenerateNewId().ToString();
+        var kept = ObjectId.GenerateNewId().ToString();
+        UserNotification Invitation(string userId, string group) => new()
+        {
+            UserId = userId,
+            Type = UserNotificationType.GroupInvitation,
+            GroupId = group,
+            GroupName = "Les cinéphiles",
+            CreatedAt = Now
+        };
+        await notifications.AddAsync(Invitation(lea, first));
+        await notifications.AddAsync(Invitation(sam, second));
+        await notifications.AddAsync(Invitation(sam, kept));
+
+        Assert.Equal(2, await notifications.DeleteByGroupsAsync([first, second]));
+        Assert.Empty(await notifications.ListByUserIdAsync(lea));
+        Assert.Equal([kept], (await notifications.ListByUserIdAsync(sam)).Select(n => n.GroupId));
+        Assert.Equal(0, await notifications.DeleteByGroupsAsync([]));
     }
 
     [Fact]

@@ -34,6 +34,12 @@ public static class ServerCopy
         public static PushText ListInvitation(string? ownerName, string listName) =>
             new("Invitation reçue ! 💌", $"{ownerName} vous invite à rejoindre la liste {listName}");
 
+        public static PushText GroupInvitation(string? ownerName, string groupName) =>
+            new("Invitation reçue ! 💌", $"{ownerName} vous invite à rejoindre le groupe « {groupName} »");
+
+        public static PushText GroupNight(string? hostName, string nightTitle, string groupName) =>
+            new($"{groupName} 🍿", $"{hostName} vous attend à « {nightTitle} » : proposez vos films !");
+
         public static PushText ParticipantJoined(string pseudo, string eventTitle) =>
             new("Ça s'anime !", $"{pseudo} vient de rejoindre {eventTitle} ! 🎉");
 
