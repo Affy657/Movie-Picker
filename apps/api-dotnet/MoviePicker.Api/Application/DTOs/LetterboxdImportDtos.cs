@@ -79,6 +79,8 @@ public sealed class LetterboxdImportConfirmRequest
     public IReadOnlyList<LetterboxdWatchedSelectionRequest>? WatchedSelections { get; init; }
 
     public int? RemainingUnresolvedCount { get; init; }
+
+    public bool? FromExport { get; init; }
 }
 
 public sealed class LetterboxdImportConfirmResponse
@@ -88,4 +90,80 @@ public sealed class LetterboxdImportConfirmResponse
     public int WatchedAdded { get; init; }
     public int WatchedAlreadyPresent { get; init; }
     public int PendingReconciliationCount { get; init; }
+}
+
+public sealed class LetterboxdExportFileRequest
+{
+    public const int MaxBase64Length = 16_000_000;
+
+    [Required]
+    [MaxLength(260)]
+    public string Name { get; init; } = string.Empty;
+
+    [Required]
+    [MaxLength(MaxBase64Length)]
+    public string Base64Content { get; init; } = string.Empty;
+}
+
+public sealed class LetterboxdExportReadRequest
+{
+    public const int MaxFiles = 8;
+
+    [Required]
+    [MinLength(1)]
+    [MaxLength(MaxFiles)]
+    [NoEmptyItems]
+    public IReadOnlyList<LetterboxdExportFileRequest> Files { get; init; } = [];
+}
+
+public sealed class LetterboxdExportFilmResponse
+{
+    public string Title { get; init; } = string.Empty;
+    public string Year { get; init; } = string.Empty;
+    public int? Rating { get; init; }
+    public DateOnly? WatchedOn { get; init; }
+}
+
+public sealed class LetterboxdExportResponse
+{
+    public IReadOnlyList<LetterboxdExportFilmResponse> Watchlist { get; init; } = [];
+    public IReadOnlyList<LetterboxdExportFilmResponse> Watched { get; init; } = [];
+}
+
+public sealed class LetterboxdExportRowRequest
+{
+    [Range(1, int.MaxValue)]
+    public int RowIndex { get; init; }
+
+    [Required]
+    [MaxLength(300)]
+    public string Title { get; init; } = string.Empty;
+
+    [MaxLength(10)]
+    public string Year { get; init; } = string.Empty;
+
+    [Range(MovieRating.MinValue, MovieRating.MaxValue)]
+    public int? Rating { get; init; }
+
+    public DateOnly? WatchedOn { get; init; }
+}
+
+public sealed class LetterboxdExportImportRequest
+{
+    public const int MaxRows = 50;
+
+    public LetterboxdImportTarget Target { get; init; } = LetterboxdImportTarget.Watchlist;
+
+    [Required]
+    [MaxLength(MaxRows)]
+    [NoEmptyItems]
+    public IReadOnlyList<LetterboxdExportRowRequest> Rows { get; init; } = [];
+}
+
+public sealed class LetterboxdExportImportResponse
+{
+    public int Added { get; init; }
+    public int AlreadyPresent { get; init; }
+    public IReadOnlyList<LetterboxdImportRowResponse> PendingChoices { get; init; } = [];
+    public IReadOnlyList<string> UnmatchedTitles { get; init; } = [];
 }

@@ -53,4 +53,27 @@ public sealed class LetterboxdController : ControllerBase
         var result = await handler.HandleAsync(userId, request, ct);
         return Ok(result);
     }
+
+    [HttpPost("export/read")]
+    [RequestSizeLimit(RequestBodyLimits.AttachmentsBytes)]
+    [EnableRateLimiting(RateLimitingExtensions.LetterboxdImportPolicy)]
+    [ProducesResponseType(typeof(LetterboxdExportResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public IActionResult ReadExport(
+        [FromBody] LetterboxdExportReadRequest request,
+        [FromServices] IReadLetterboxdExportHandler handler) =>
+        Ok(handler.Handle(request));
+
+    [HttpPost("export/import")]
+    [EnableRateLimiting(RateLimitingExtensions.LetterboxdExportImportPolicy)]
+    [ProducesResponseType(typeof(LetterboxdExportImportResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> ImportExport(
+        [FromBody] LetterboxdExportImportRequest request,
+        [FromServices] IImportLetterboxdExportHandler handler,
+        [CurrentUserId] string userId,
+        CancellationToken ct) =>
+        Ok(await handler.HandleAsync(userId, request, ct));
 }

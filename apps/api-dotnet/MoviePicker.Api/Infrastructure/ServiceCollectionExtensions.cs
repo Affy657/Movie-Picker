@@ -453,6 +453,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<LetterboxdWatchlistSynchronizer>();
         services.AddScoped<LetterboxdWatchedSynchronizer>();
         services.AddScoped<LetterboxdWatchedWriter>();
+        services.AddScoped<LetterboxdSelectionsWriter>();
         services.AddScoped<LetterboxdLinkedCounter>();
         services.AddScoped<MovieListItemFactory>();
         services.AddScoped<WatchedHistoryReader>();

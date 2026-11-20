@@ -5345,6 +5345,164 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/letterboxd/export/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["LetterboxdExportReadRequest"];
+                    "text/json": components["schemas"]["LetterboxdExportReadRequest"];
+                    "application/*+json": components["schemas"]["LetterboxdExportReadRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["LetterboxdExportResponse"];
+                        "application/json": components["schemas"]["LetterboxdExportResponse"];
+                        "text/json": components["schemas"]["LetterboxdExportResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/letterboxd/export/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["LetterboxdExportImportRequest"];
+                    "text/json": components["schemas"]["LetterboxdExportImportRequest"];
+                    "application/*+json": components["schemas"]["LetterboxdExportImportRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["LetterboxdExportImportResponse"];
+                        "application/json": components["schemas"]["LetterboxdExportImportResponse"];
+                        "text/json": components["schemas"]["LetterboxdExportImportResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/lists": {
         parameters: {
             query?: never;
@@ -12172,6 +12330,47 @@ export interface components {
             /** Format: int32 */
             expectedWinnerCount?: number | null;
         };
+        LetterboxdExportFileRequest: {
+            name: string;
+            base64Content: string;
+        };
+        LetterboxdExportFilmResponse: {
+            title: string;
+            year: string;
+            /** Format: int32 */
+            rating: number | null;
+            /** Format: date */
+            watchedOn: string | null;
+        };
+        LetterboxdExportImportRequest: {
+            target?: components["schemas"]["LetterboxdImportTarget"];
+            rows: components["schemas"]["LetterboxdExportRowRequest"][];
+        };
+        LetterboxdExportImportResponse: {
+            /** Format: int32 */
+            added: number;
+            /** Format: int32 */
+            alreadyPresent: number;
+            pendingChoices: components["schemas"]["LetterboxdImportRowResponse"][];
+            unmatchedTitles: string[];
+        };
+        LetterboxdExportReadRequest: {
+            files: components["schemas"]["LetterboxdExportFileRequest"][];
+        };
+        LetterboxdExportResponse: {
+            watchlist: components["schemas"]["LetterboxdExportFilmResponse"][];
+            watched: components["schemas"]["LetterboxdExportFilmResponse"][];
+        };
+        LetterboxdExportRowRequest: {
+            /** Format: int32 */
+            rowIndex?: number;
+            title: string;
+            year?: string;
+            /** Format: int32 */
+            rating?: number | null;
+            /** Format: date */
+            watchedOn?: string | null;
+        };
         LetterboxdImportCandidateResponse: {
             /** Format: int32 */
             tmdbId: number;
@@ -12190,6 +12389,7 @@ export interface components {
             watchedSelections?: components["schemas"]["LetterboxdWatchedSelectionRequest"][] | null;
             /** Format: int32 */
             remainingUnresolvedCount?: number | null;
+            fromExport?: boolean | null;
         };
         LetterboxdImportConfirmResponse: {
             /** Format: int32 */

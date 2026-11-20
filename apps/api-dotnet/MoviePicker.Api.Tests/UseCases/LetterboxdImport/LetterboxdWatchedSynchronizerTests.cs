@@ -194,6 +194,17 @@ public sealed class LetterboxdWatchedSynchronizerTests
     }
 
     [Fact]
+    public async Task ApplyAsync_FilmImportedFromTheExport_WithoutASlug_IsNeverTakenAsDeparted()
+    {
+        await AlreadyWatched(1, WatchedOrigin.Letterboxd);
+
+        var outcome = await _sut.ApplyAsync(UserId, Complete(), null);
+
+        Assert.Equal(0, outcome.Removed);
+        Assert.NotNull(await StoredAsync(1));
+    }
+
+    [Fact]
     public async Task ApplyAsync_TruncatedRead_RemovesNothing()
     {
         await AlreadyWatched(1, WatchedOrigin.Letterboxd, "one");

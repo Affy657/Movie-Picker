@@ -365,6 +365,9 @@ public static class Errors
     public static BadRequestException LetterboxdSyncFailed(string? reason) =>
         new("Letterboxd synchronization failed", reason ?? ErrorCodes.LetterboxdSyncFailed);
 
+    public static BadRequestException LetterboxdExportUnreadable() =>
+        new("No watchlist.csv, watched.csv, ratings.csv or diary.csv found in the Letterboxd export", ErrorCodes.LetterboxdExportUnreadable);
+
     public static ServiceUnavailableException LetterboxdSyncUnavailable() =>
         new("Letterboxd or TMDB did not answer, the synchronization will resume on its own", ErrorCodes.LetterboxdSyncUnavailable);
 
