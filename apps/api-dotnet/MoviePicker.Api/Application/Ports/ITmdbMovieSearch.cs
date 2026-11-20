@@ -55,6 +55,8 @@ public sealed record TmdbMovieDetailsExtras(
 
 public sealed record TmdbCollectionReference(int Id, string Name);
 
+public sealed record TmdbBackdrop(string Path, int Width, int Height);
+
 public sealed record TmdbCastMember(string Name, string? Character, string? ProfileUrl);
 
 public sealed record TmdbCrewCredit(string Job, string Name);
@@ -121,6 +123,8 @@ public interface ITmdbMovieSearch
         CancellationToken ct = default);
 
     Task<TmdbMovieDetails?> GetDetailsAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct = default);
+
+    Task<IReadOnlyList<TmdbBackdrop>?> GetBackdropsAsync(int tmdbId, CancellationToken ct = default);
 
     Task<IReadOnlyList<TmdbSearchItem>> GetTrendingMoviesAsync(int pages, CancellationToken ct = default);
 

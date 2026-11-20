@@ -59,6 +59,9 @@ public static class Errors
     public static NotFoundException AvatarPhotoNotFound() =>
         new("No profile photo to use", ErrorCodes.AvatarPhotoNotFound);
 
+    public static NotFoundException BannerPhotoNotFound() =>
+        new("No banner photo to use", ErrorCodes.BannerPhotoNotFound);
+
     public static NotFoundException OAuthProviderNotLinked() =>
         new("This account is not linked to this provider", ErrorCodes.OAuthProviderNotLinked);
 
@@ -457,6 +460,15 @@ public static class Errors
 
     public static ServiceUnavailableException AvatarPhotoStorageFull() =>
         new("Profile photos cannot be added for now", ErrorCodes.AvatarPhotoStorageFull);
+
+    public static BadRequestException ProfileBannerInvalid() =>
+        new("The banner must be one of the images of the chosen film", ErrorCodes.ProfileBannerInvalid);
+
+    public static BadRequestException BannerPhotoInvalid() =>
+        new("The banner photo must be a 16:9 JPEG, PNG or WebP image of 1280 to 1920 pixels wide and at most 600 KB", ErrorCodes.BannerPhotoInvalid);
+
+    public static ServiceUnavailableException BannerPhotoStorageFull() =>
+        new("Banner photos cannot be added for now", ErrorCodes.BannerPhotoStorageFull);
 
     public static ServiceUnavailableException MovieDetailsUnavailable() =>
         new("Movie details temporarily unavailable", ErrorCodes.MovieDetailsUnavailable);

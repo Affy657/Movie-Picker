@@ -24,6 +24,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
     private readonly IWatchedTitleRepository _watchedTitles;
     private readonly ISavedListRepository _savedLists;
     private readonly IAvatarPhotoRepository _avatarPhotos;
+    private readonly IBannerPhotoRepository _bannerPhotos;
     private readonly IMovieRepository _movies;
     private readonly TimeProvider _clock;
 
@@ -42,6 +43,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         IWatchedTitleRepository watchedTitles,
         ISavedListRepository savedLists,
         IAvatarPhotoRepository avatarPhotos,
+        IBannerPhotoRepository bannerPhotos,
         IMovieRepository movies,
         TimeProvider clock)
     {
@@ -59,6 +61,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         _watchedTitles = watchedTitles;
         _savedLists = savedLists;
         _avatarPhotos = avatarPhotos;
+        _bannerPhotos = bannerPhotos;
         _movies = movies;
         _clock = clock;
     }
@@ -95,6 +98,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         var watchedTitles = await _watchedTitles.ListByOwnerAsync(userId, ct);
         var savedLists = await _savedLists.ListByOwnerAsync(userId, ct);
         var avatarPhoto = await ExportAvatarPhotoAsync(user, ct);
+        var bannerPhoto = await ExportBannerPhotoAsync(user, ct);
 
         var votesByParticipant = votes
             .GroupBy(v => v.ParticipantId)
@@ -152,7 +156,9 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
             SavedLists = savedLists.Select(MapSavedList).ToList(),
             WatchedTitles = watchedTitles.Select(MapWatchedTitle).ToList(),
             Favorites = user.Favorites.Select(MapFavorite).ToList(),
-            AvatarPhoto = avatarPhoto
+            AvatarPhoto = avatarPhoto,
+            Banner = ExportedProfileBanner.From(user.Banner),
+            BannerPhoto = bannerPhoto
         };
     }
 
@@ -241,6 +247,21 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
                 ContentType = stored.ContentType,
                 Base64Content = Convert.ToBase64String(stored.Data),
                 IsActive = photo.IsActive,
+                UpdatedAt = photo.UpdatedAt
+            };
+    }
+
+    private async Task<ExportedBannerPhoto?> ExportBannerPhotoAsync(User user, CancellationToken ct)
+    {
+        if (user.BannerPhoto is not { } photo)
+            return null;
+        var stored = await _bannerPhotos.GetByKeyAsync(photo.Key, ct);
+        return stored is null
+            ? null
+            : new ExportedBannerPhoto
+            {
+                ContentType = stored.ContentType,
+                Base64Content = Convert.ToBase64String(stored.Data),
                 UpdatedAt = photo.UpdatedAt
             };
     }

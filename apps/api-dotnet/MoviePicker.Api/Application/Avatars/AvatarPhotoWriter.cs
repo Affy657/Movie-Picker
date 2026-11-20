@@ -45,16 +45,7 @@ public sealed class AvatarPhotoWriter
             async token =>
             {
                 var current = await _users.GetByIdAsync(userId, token) ?? throw Errors.UserNotFound();
-                await _photos.SaveAsync(
-                    new StoredAvatarPhoto
-                    {
-                        Key = key,
-                        UserId = userId,
-                        ContentType = format.ContentType,
-                        Data = bytes,
-                        CreatedAt = now
-                    },
-                    token);
+                await _photos.SaveAsync(StoredPhoto.Create(key, userId, format.ContentType, bytes, now), token);
                 saved = await _users.UpdateAsync(
                     current with
                     {

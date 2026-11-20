@@ -34,6 +34,7 @@ public sealed class ExportUserDataHandlerTests
         public InMemoryWatchedTitleRepository WatchedTitles { get; } = new();
         public InMemorySavedListRepository SavedLists { get; } = new();
         public InMemoryAvatarPhotoRepository AvatarPhotos { get; } = new();
+        public InMemoryBannerPhotoRepository BannerPhotos { get; } = new();
         public InMemoryMovieRepository Movies { get; } = new();
 
         public ExportUserDataHandler CreateHandler() =>
@@ -52,6 +53,7 @@ public sealed class ExportUserDataHandlerTests
                 WatchedTitles,
                 SavedLists,
                 AvatarPhotos,
+                BannerPhotos,
                 Movies,
                 new FakeTimeProvider(TestEpoch));
     }
@@ -67,7 +69,7 @@ public sealed class ExportUserDataHandlerTests
             Handle = "photo",
             AvatarPhoto = new AvatarPhoto { Key = key, IsActive = true, UpdatedAt = TestEpoch }
         });
-        await f.AvatarPhotos.SaveAsync(new StoredAvatarPhoto
+        await f.AvatarPhotos.SaveAsync(new StoredPhoto
         {
             Key = key,
             UserId = user.Id,
@@ -83,6 +85,30 @@ public sealed class ExportUserDataHandlerTests
         Assert.Equal(Convert.ToBase64String([1, 2, 3]), export.AvatarPhoto.Base64Content);
         Assert.True(export.AvatarPhoto.IsActive);
         Assert.Equal(TestEpoch, export.AvatarPhoto.UpdatedAt);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithBannerAndPhoto_ExportsTheChoiceAndTheImageItself()
+    {
+        var f = new Fixture();
+        var key = AvatarPhotoKeys.Sample;
+        var user = await f.Users.AddAsync(new User
+        {
+            Email = "banner@example.com",
+            Handle = "banner",
+            Banner = ProfileBanner.FromFilm(693134, "Dune", "/sunset.jpg", TestEpoch),
+            BannerPhoto = new BannerPhoto { Key = key, UpdatedAt = TestEpoch }
+        });
+        await f.BannerPhotos.SaveAsync(new StoredPhoto { Key = key, UserId = user.Id, ContentType = "image/jpeg", Data = [4, 5], CreatedAt = TestEpoch });
+
+        var export = await f.CreateHandler().HandleAsync(user.Id);
+
+        Assert.Equal("film", export.Banner!.Source);
+        Assert.Equal(693134, export.Banner.TmdbId);
+        Assert.Equal("Dune", export.Banner.Title);
+        Assert.Equal("/sunset.jpg", export.Banner.ImagePath);
+        Assert.Equal("image/jpeg", export.BannerPhoto!.ContentType);
+        Assert.Equal(Convert.ToBase64String([4, 5]), export.BannerPhoto.Base64Content);
     }
 
     [Fact]

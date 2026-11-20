@@ -47,6 +47,12 @@
   gap: var(--space-4);
 }
 
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
 .side {
   display: flex;
   flex: 1 1 12rem;

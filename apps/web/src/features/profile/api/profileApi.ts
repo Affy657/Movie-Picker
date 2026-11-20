@@ -13,6 +13,14 @@ export type FollowUserItem = ApiSchemas['FollowUserItem'];
 
 export type FollowListResponse = ApiSchemas['FollowListResponse'];
 
+export type ProfileBanner = ApiSchemas['ProfileBannerResponse'];
+
+export type MovieBackdrops = ApiSchemas['MovieBackdropsResponse'];
+
+export async function fetchMovieBackdrops(tmdbId: number): Promise<MovieBackdrops> {
+  return fetchApi<MovieBackdrops>(apiPath('movies', 'tmdb', String(tmdbId), 'backdrops'));
+}
+
 export async function fetchPublicProfile(handle: string): Promise<PublicProfile> {
   return fetchApi<PublicProfile>(apiPath('users', handle));
 }

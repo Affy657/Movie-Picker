@@ -21,12 +21,3 @@ public sealed record AvatarPhoto
     public static bool IsValidKey(string key) =>
         key.Length == KeyByteLength * 2 && key.All(c => char.IsAsciiDigit(c) || c is >= 'a' and <= 'f');
 }
-
-public sealed record StoredAvatarPhoto
-{
-    public string Key { get; init; } = string.Empty;
-    public string UserId { get; init; } = string.Empty;
-    public string ContentType { get; init; } = string.Empty;
-    public byte[] Data { get; init; } = [];
-    public DateTimeOffset CreatedAt { get; init; }
-}

@@ -79,6 +79,7 @@ public sealed class MongoIndexInitializer : IHostedService
         EnsureSharedCacheIndexes(plan);
         EnsurePosterCacheIndexes(plan);
         EnsureAvatarPhotoIndexes(plan);
+        EnsureBannerPhotoIndexes(plan);
         EnsureEventPresenceIndexes(plan);
         return plan;
     }
@@ -440,6 +441,14 @@ public sealed class MongoIndexInitializer : IHostedService
             Builders<AvatarPhotoBlobDocument>.IndexKeys.Ascending(x => x.UserId),
             new CreateIndexOptions { Name = "avatar_photos_userId" });
         plan.Create(MongoAvatarPhotoRepository.CollectionName, userId);
+    }
+
+    private static void EnsureBannerPhotoIndexes(MongoIndexPlan plan)
+    {
+        var userId = new CreateIndexModel<BannerPhotoBlobDocument>(
+            Builders<BannerPhotoBlobDocument>.IndexKeys.Ascending(x => x.UserId),
+            new CreateIndexOptions { Name = "banner_photos_userId" });
+        plan.Create(MongoBannerPhotoRepository.CollectionName, userId);
     }
 
     private static void EnsureEventPresenceIndexes(MongoIndexPlan plan)

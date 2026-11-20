@@ -70,7 +70,7 @@ describe('renderAvatarPhoto', () => {
     const { drawImage } = mockCanvas((type) => new Blob(['x'], { type }));
     const image = document.createElement('img');
 
-    const blob = await renderAvatarPhoto(image, { x: 10, y: 20, size: 300 });
+    const blob = await renderAvatarPhoto(image, { x: 10, y: 20, width: 300, height: 300 });
 
     expect(blob.type).toBe('image/webp');
     expect(drawImage).toHaveBeenCalledWith(
@@ -91,7 +91,12 @@ describe('renderAvatarPhoto', () => {
       (type) => new Blob(['x'], { type: type === 'image/webp' ? 'image/png' : type })
     );
 
-    const blob = await renderAvatarPhoto(document.createElement('img'), { x: 0, y: 0, size: 300 });
+    const blob = await renderAvatarPhoto(document.createElement('img'), {
+      x: 0,
+      y: 0,
+      width: 300,
+      height: 300,
+    });
 
     expect(blob.type).toBe('image/jpeg');
     expect(toBlob).toHaveBeenCalledTimes(2);
@@ -101,7 +106,7 @@ describe('renderAvatarPhoto', () => {
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
 
     await expect(
-      renderAvatarPhoto(document.createElement('img'), { x: 0, y: 0, size: 300 })
+      renderAvatarPhoto(document.createElement('img'), { x: 0, y: 0, width: 300, height: 300 })
     ).rejects.toThrow();
   });
 });

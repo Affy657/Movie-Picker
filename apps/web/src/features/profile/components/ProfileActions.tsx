@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { Pencil, Share2, UserCheck, UserMinus, UserPlus } from 'lucide-react';
+import { ImagePlus, Pencil, Share2, UserCheck, UserMinus, UserPlus } from 'lucide-react';
 import { ROUTES, withReturnTo } from '@/app/routes';
 import { useTranslation } from '@/shared/i18n';
 import ShareDialog from '@/shared/components/ShareDialog';
@@ -51,6 +51,7 @@ interface Props {
   onFollow: () => void;
   onUnfollow: () => void;
   memberSinceLabel: string;
+  onAddBanner?: () => void;
 }
 
 export default function ProfileActions({
@@ -61,6 +62,7 @@ export default function ProfileActions({
   onFollow,
   onUnfollow,
   memberSinceLabel,
+  onAddBanner,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [shareOpen, setShareOpen] = useState(false);
@@ -68,6 +70,17 @@ export default function ProfileActions({
 
   return (
     <div className={styles.actions}>
+      {onAddBanner && (
+        <Button
+          variant="ghost"
+          className={styles.addBanner}
+          aria-label={t('profile.banner.add')}
+          onClick={onAddBanner}
+        >
+          <ImagePlus size={ICON_SIZE.md} aria-hidden />
+          <span className={styles.addBannerLabel}>{t('profile.banner.add')}</span>
+        </Button>
+      )}
       {isOwnProfile && (
         <Link to={ROUTES.account} className={buttonClass({ className: styles.primary })}>
           <Pencil size={ICON_SIZE.md} aria-hidden />

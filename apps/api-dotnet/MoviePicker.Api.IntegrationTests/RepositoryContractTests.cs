@@ -1511,6 +1511,32 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task UserUpdate_Banner_RoundTripsAndClearingItRemovesTheSubDocuments()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var banner = ProfileBanner.FromFilm(693134, "Dune", "/sunset.jpg", Now);
+        var photo = new BannerPhoto { Key = "kept", UpdatedAt = Now };
+        var created = await users.AddAsync(NewUser("banneruser"));
+
+        var withBanner = await users.UpdateAsync(created with { Banner = banner, BannerPhoto = photo });
+        Assert.Equal(banner, (await users.GetByIdAsync(created.Id))!.Banner);
+        Assert.Equal(photo, (await users.GetByIdAsync(created.Id))!.BannerPhoto);
+
+        await users.UpdateAsync(withBanner with { Banner = null, BannerPhoto = null });
+
+        var cleared = await users.GetByIdAsync(created.Id);
+        Assert.Null(cleared!.Banner);
+        Assert.Null(cleared.BannerPhoto);
+        if (_factory.RunsAgainstMongo)
+        {
+            var raw = await ReadRawAsync("users", created.Id);
+            Assert.False(raw.Contains("banner"));
+            Assert.False(raw.Contains("bannerPhoto"));
+        }
+    }
+
+    [Fact]
     public async Task MovieRatingUpsert_ReplacesTheValueAndKeepsOneDocumentPerParticipant()
     {
         using var scope = _factory.Services.CreateScope();

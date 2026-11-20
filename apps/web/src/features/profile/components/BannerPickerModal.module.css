@@ -1,0 +1,166 @@
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sectionLabel {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.photoGroup {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.tile {
+  position: relative;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: var(--space-1-5);
+  padding: var(--space-1);
+}
+
+.tileCheck {
+  top: var(--space-2);
+  right: var(--space-2);
+  bottom: auto;
+}
+
+.thumb {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  background: var(--color-surface-sunken);
+}
+
+.tileLabel {
+  overflow: hidden;
+  padding: 0 var(--space-1) var(--space-0-5);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--leading-snug);
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.year {
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-regular);
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--space-16);
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.result {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--tap-target-min);
+  padding: var(--space-2);
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.result:focus-visible {
+  outline: var(--outline-focus);
+  outline-offset: var(--outline-offset-inset);
+}
+
+@media (hover: hover) {
+  .result:hover {
+    background: var(--color-surface-hover);
+  }
+}
+
+.resultPoster {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--space-10);
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-xs);
+  object-fit: cover;
+  background: var(--color-surface-sunken);
+  color: var(--color-text-muted);
+}
+
+.resultText {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--font-size-md);
+  line-height: var(--leading-snug);
+}
+
+.resultTitle {
+  font-weight: var(--font-weight-semibold);
+}
+
+.resultChevron {
+  flex: none;
+  color: var(--color-text-muted);
+}
+
+.backRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.filmHeading {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--leading-snug);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saveError {
+  margin-top: var(--space-3);
+}
+
+.footer {
+  justify-content: flex-start;
+}
+
+@media (max-width: 24.9375rem) {
+  .tileLabel {
+    font-size: var(--font-size-xs);
+  }
+}

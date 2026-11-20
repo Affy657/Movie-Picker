@@ -7,6 +7,7 @@ import {
   type KeyboardEvent,
   type PointerEvent,
 } from 'react';
+import clsx from 'clsx';
 import { ZoomIn, ZoomOut } from 'lucide-react';
 import Button from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -15,14 +16,15 @@ import {
   MAX_ZOOM,
   MIN_ZOOM,
   centeredCrop,
-  cropSourceRect,
+  cropWindowRect,
   displayedSize,
   moveCrop,
   resizeCrop,
   zoomCrop,
   type Crop,
   type CropPoint,
-  type SourceRect,
+  type ImageSize,
+  type Rect,
 } from '@/features/auth/utils/avatarPhotoCrop';
 import type { LoadedAvatarPhoto } from '@/features/auth/utils/avatarPhotoFile';
 import pickerStyles from './AvatarPickerModal.module.css';
@@ -30,6 +32,10 @@ import styles from './AvatarPhotoCropper.module.css';
 
 const FALLBACK_FRAME = 320;
 const FALLBACK_MASK_INSET = 12;
+const LANDSCAPE_RATIO = 16 / 9;
+const LANDSCAPE_MASK_INSET = 0.06;
+
+export type CropShape = 'circle' | 'landscape';
 const KEY_STEP = 8;
 const KEY_STEP_LARGE = 32;
 const KEY_ZOOM_STEP = 0.1;
@@ -39,9 +45,37 @@ type Props = {
   photo: LoadedAvatarPhoto;
   saving: boolean;
   error: string | null;
+  shape?: CropShape;
+  hint?: string;
+  areaLabel?: string;
+  confirmLabel?: string;
   onCancel: () => void;
-  onConfirm: (rect: SourceRect) => void;
+  onConfirm: (rect: Rect) => void;
 };
+
+function frameOf(width: number, shape: CropShape): ImageSize {
+  return { width, height: shape === 'landscape' ? width / LANDSCAPE_RATIO : width };
+}
+
+function fallbackWindow(frame: ImageSize, shape: CropShape): Rect {
+  if (shape === 'landscape') {
+    const x = frame.width * LANDSCAPE_MASK_INSET;
+    const y = frame.height * LANDSCAPE_MASK_INSET;
+    return { x, y, width: frame.width - 2 * x, height: frame.height - 2 * y };
+  }
+  const side = frame.width - 2 * FALLBACK_MASK_INSET;
+  return { x: FALLBACK_MASK_INSET, y: FALLBACK_MASK_INSET, width: side, height: side };
+}
+
+function measuredWindow(frameBox: DOMRect, maskBox: DOMRect | undefined): Rect | null {
+  if (!maskBox || maskBox.width <= 0 || maskBox.width >= frameBox.width) return null;
+  return {
+    x: maskBox.left - frameBox.left,
+    y: maskBox.top - frameBox.top,
+    width: maskBox.width,
+    height: maskBox.height,
+  };
+}
 
 function distance(a: CropPoint, b: CropPoint): number {
   return Math.hypot(a.x - b.x, a.y - b.y);
@@ -60,6 +94,10 @@ export default function AvatarPhotoCropper({
   photo,
   saving,
   error,
+  shape = 'circle',
+  hint,
+  areaLabel,
+  confirmLabel,
   onCancel,
   onConfirm,
 }: Readonly<Props>) {
@@ -70,9 +108,11 @@ export default function AvatarPhotoCropper({
   const pointers = useRef(new Map<number, CropPoint>());
   const pinchDistance = useRef<number | null>(null);
   const measuredFrame = useRef<number | null>(null);
-  const [frame, setFrame] = useState(FALLBACK_FRAME);
-  const [inset, setInset] = useState(FALLBACK_MASK_INSET);
-  const [crop, setCrop] = useState<Crop>(() => centeredCrop(photo, FALLBACK_FRAME));
+  const [frame, setFrame] = useState<ImageSize>(() => frameOf(FALLBACK_FRAME, shape));
+  const [cropWindow, setCropWindow] = useState<Rect>(() =>
+    fallbackWindow(frameOf(FALLBACK_FRAME, shape), shape)
+  );
+  const [crop, setCrop] = useState<Crop>(() => centeredCrop(photo, frameOf(FALLBACK_FRAME, shape)));
 
   useEffect(() => {
     frameRef.current?.focus({ preventScroll: true });
@@ -84,19 +124,21 @@ export default function AvatarPhotoCropper({
     measuredFrame.current = null;
 
     function measure(frameElement: HTMLElement) {
-      const frameWidth = frameElement.getBoundingClientRect().width;
+      const frameBox = frameElement.getBoundingClientRect();
+      const frameWidth = frameBox.width;
       const previous = measuredFrame.current;
       if (frameWidth <= 0 || frameWidth === previous) return;
-      const maskWidth = maskRef.current?.getBoundingClientRect().width ?? 0;
+      const nextFrame = frameOf(frameWidth, shape);
       measuredFrame.current = frameWidth;
-      setFrame(frameWidth);
-      setInset(
-        maskWidth > 0 && maskWidth < frameWidth ? (frameWidth - maskWidth) / 2 : FALLBACK_MASK_INSET
+      setFrame(nextFrame);
+      setCropWindow(
+        measuredWindow(frameBox, maskRef.current?.getBoundingClientRect()) ??
+          fallbackWindow(nextFrame, shape)
       );
       setCrop((current) =>
         previous === null
-          ? centeredCrop(photo, frameWidth)
-          : resizeCrop(current, photo, previous, frameWidth)
+          ? centeredCrop(photo, nextFrame)
+          : resizeCrop(current, photo, frameOf(previous, shape), nextFrame)
       );
     }
 
@@ -105,7 +147,7 @@ export default function AvatarPhotoCropper({
     const observer = new ResizeObserver(() => measure(element));
     observer.observe(element);
     return () => observer.disconnect();
-  }, [photo]);
+  }, [photo, shape]);
 
   const shown = displayedSize(photo, frame, crop.zoom);
 
@@ -173,14 +215,14 @@ export default function AvatarPhotoCropper({
 
   return (
     <div className={styles.step}>
-      <p className={pickerStyles.hint}>{t('auth.account.avatarPhotoCropHint')}</p>
+      <p className={pickerStyles.hint}>{hint ?? t('auth.account.avatarPhotoCropHint')}</p>
       <div
         ref={frameRef}
         role="toolbar"
-        aria-label={t('auth.account.avatarPhotoCropAreaLabel')}
+        aria-label={areaLabel ?? t('auth.account.avatarPhotoCropAreaLabel')}
         aria-describedby={hintId}
         tabIndex={0}
-        className={styles.frame}
+        className={clsx(styles.frame, shape === 'landscape' && styles.frameLandscape)}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerEnd}
@@ -199,13 +241,17 @@ export default function AvatarPhotoCropper({
             transform: `translate3d(${crop.x}px, ${crop.y}px, 0)`,
           }}
         />
-        <span className={styles.shade} aria-hidden="true" />
-        <span ref={maskRef} className={styles.mask} aria-hidden="true" />
+        {shape === 'circle' && <span className={styles.shade} aria-hidden="true" />}
+        <span
+          ref={maskRef}
+          className={shape === 'landscape' ? styles.maskLandscape : styles.mask}
+          aria-hidden="true"
+        />
       </div>
       <span id={hintId} className="visually-hidden">
         {t('auth.account.avatarPhotoCropKeyboardHint')}
       </span>
-      <div className={styles.zoom}>
+      <div className={clsx(styles.zoom, shape === 'landscape' && styles.zoomLandscape)}>
         <ZoomOut size={ICON_SIZE.xl} aria-hidden />
         <input
           type="range"
@@ -234,9 +280,9 @@ export default function AvatarPhotoCropper({
         <Button
           variant="primary"
           loading={saving}
-          onClick={() => onConfirm(cropSourceRect(crop, photo, frame, inset))}
+          onClick={() => onConfirm(cropWindowRect(crop, photo, frame, cropWindow))}
         >
-          {t('auth.account.avatarPhotoUse')}
+          {confirmLabel ?? t('auth.account.avatarPhotoUse')}
         </Button>
       </div>
     </div>

@@ -14,11 +14,14 @@ export interface CropPoint {
   y: number;
 }
 
-export interface SourceRect {
+export interface Rect {
   x: number;
   y: number;
-  size: number;
+  width: number;
+  height: number;
 }
+
+export type Frame = number | ImageSize;
 
 export const MIN_ZOOM = 1;
 export const MAX_ZOOM = 3;
@@ -27,41 +30,43 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-export function displayedSize(image: ImageSize, frame: number, zoom: number): ImageSize {
-  const shortSide = Math.min(image.width, image.height);
-  return {
-    width: (image.width * frame * zoom) / shortSide,
-    height: (image.height * frame * zoom) / shortSide,
-  };
+function sizeOf(frame: Frame): ImageSize {
+  return typeof frame === 'number' ? { width: frame, height: frame } : frame;
 }
 
-function clampCrop(crop: Crop, image: ImageSize, frame: number): Crop {
+function scaleOf(image: ImageSize, frame: Frame, zoom: number): number {
+  const box = sizeOf(frame);
+  return Math.max(box.width / image.width, box.height / image.height) * zoom;
+}
+
+export function displayedSize(image: ImageSize, frame: Frame, zoom: number): ImageSize {
+  const scale = scaleOf(image, frame, zoom);
+  return { width: image.width * scale, height: image.height * scale };
+}
+
+function clampCrop(crop: Crop, image: ImageSize, frame: Frame): Crop {
   const zoom = clamp(crop.zoom, MIN_ZOOM, MAX_ZOOM);
   const shown = displayedSize(image, frame, zoom);
+  const box = sizeOf(frame);
   return {
     zoom,
-    x: clamp(crop.x, frame - shown.width, 0),
-    y: clamp(crop.y, frame - shown.height, 0),
+    x: clamp(crop.x, box.width - shown.width, 0),
+    y: clamp(crop.y, box.height - shown.height, 0),
   };
 }
 
-export function centeredCrop(image: ImageSize, frame: number): Crop {
+export function centeredCrop(image: ImageSize, frame: Frame): Crop {
   const shown = displayedSize(image, frame, MIN_ZOOM);
-  return { zoom: MIN_ZOOM, x: (frame - shown.width) / 2, y: (frame - shown.height) / 2 };
+  const box = sizeOf(frame);
+  return { zoom: MIN_ZOOM, x: (box.width - shown.width) / 2, y: (box.height - shown.height) / 2 };
 }
 
-export function resizeCrop(crop: Crop, image: ImageSize, fromFrame: number, toFrame: number): Crop {
-  const ratio = toFrame / fromFrame;
+export function resizeCrop(crop: Crop, image: ImageSize, fromFrame: Frame, toFrame: Frame): Crop {
+  const ratio = sizeOf(toFrame).width / sizeOf(fromFrame).width;
   return clampCrop({ ...crop, x: crop.x * ratio, y: crop.y * ratio }, image, toFrame);
 }
 
-export function moveCrop(
-  crop: Crop,
-  dx: number,
-  dy: number,
-  image: ImageSize,
-  frame: number
-): Crop {
+export function moveCrop(crop: Crop, dx: number, dy: number, image: ImageSize, frame: Frame): Crop {
   return clampCrop({ ...crop, x: crop.x + dx, y: crop.y + dy }, image, frame);
 }
 
@@ -69,10 +74,11 @@ export function zoomCrop(
   crop: Crop,
   zoom: number,
   image: ImageSize,
-  frame: number,
+  frame: Frame,
   anchor?: CropPoint
 ): Crop {
-  const center = anchor ?? { x: frame / 2, y: frame / 2 };
+  const box = sizeOf(frame);
+  const center = anchor ?? { x: box.width / 2, y: box.height / 2 };
   const nextZoom = clamp(zoom, MIN_ZOOM, MAX_ZOOM);
   const ratio = nextZoom / crop.zoom;
   return clampCrop(
@@ -86,16 +92,12 @@ export function zoomCrop(
   );
 }
 
-export function cropSourceRect(
-  crop: Crop,
-  image: ImageSize,
-  frame: number,
-  inset: number
-): SourceRect {
-  const scale = (frame * crop.zoom) / Math.min(image.width, image.height);
+export function cropWindowRect(crop: Crop, image: ImageSize, frame: ImageSize, window: Rect): Rect {
+  const scale = scaleOf(image, frame, crop.zoom);
   return {
-    x: (inset - crop.x) / scale,
-    y: (inset - crop.y) / scale,
-    size: (frame - 2 * inset) / scale,
+    x: (window.x - crop.x) / scale,
+    y: (window.y - crop.y) / scale,
+    width: window.width / scale,
+    height: window.height / scale,
   };
 }

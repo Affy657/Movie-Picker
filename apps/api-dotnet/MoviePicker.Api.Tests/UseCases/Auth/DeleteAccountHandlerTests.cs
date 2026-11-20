@@ -31,6 +31,7 @@ public sealed class DeleteAccountHandlerTests
         public InMemoryVoteRepository Votes { get; } = new();
         public InMemorySeenMarkRepository SeenMarks { get; } = new();
         public InMemoryAvatarPhotoRepository AvatarPhotos { get; } = new();
+        public InMemoryBannerPhotoRepository BannerPhotos { get; } = new();
         public Mock<IAuthSessionInvalidator> Sessions { get; } = new();
         public IdentityPasswordHasher Hasher { get; } = new IdentityPasswordHasher();
 
@@ -49,6 +50,7 @@ public sealed class DeleteAccountHandlerTests
                 SavedLists,
                 ResetTokens,
                 AvatarPhotos,
+                BannerPhotos,
                 Sessions.Object,
                 new InMemoryUnitOfWork(),
             NullLogger<DeleteAccountHandler>.Instance);
@@ -100,12 +102,25 @@ public sealed class DeleteAccountHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_DeletesTheBannerPhoto()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        var key = AvatarPhotoKeys.Sample;
+        await f.BannerPhotos.SaveAsync(new StoredPhoto { Key = key, UserId = user.Id, ContentType = "image/jpeg", Data = [1] });
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
+
+        Assert.Null(await f.BannerPhotos.GetByKeyAsync(key));
+    }
+
+    [Fact]
     public async Task HandleAsync_DeletesTheProfilePhoto()
     {
         var f = new Fixture();
         var user = await SeedUserAsync(f, "abcd1234");
         var key = AvatarPhotoKeys.Sample;
-        await f.AvatarPhotos.SaveAsync(new StoredAvatarPhoto { Key = key, UserId = user.Id, ContentType = "image/webp", Data = [1] });
+        await f.AvatarPhotos.SaveAsync(new StoredPhoto { Key = key, UserId = user.Id, ContentType = "image/webp", Data = [1] });
 
         await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
 
@@ -492,6 +507,7 @@ public sealed class DeleteAccountHandlerTests
             f.SavedLists,
             f.ResetTokens,
             f.AvatarPhotos,
+            f.BannerPhotos,
             f.Sessions.Object,
             new InMemoryUnitOfWork(),
             NullLogger<DeleteAccountHandler>.Instance);

@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useId, useState } from 'react';
 import { Check } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import { BOTTTS_IDS, EMOJI_IDS, avatarUrl, isAvatarPhotoId } from '@/shared/utils/avatar';
@@ -10,17 +10,15 @@ import { ChoiceCard, ChoiceGroup } from '@/shared/components/ChoiceCard';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import AvatarPhotoPanel from '@/features/auth/components/AvatarPhotoPanel';
 import AvatarPhotoCropper from '@/features/auth/components/AvatarPhotoCropper';
+import { apiReasonMessage, usePhotoUpload } from '@/features/auth/hooks/usePhotoUpload';
 import {
   AVATAR_PHOTO_MAX_BYTES,
   AVATAR_PHOTO_MIN_SIDE,
-  AvatarPhotoFileRejection,
-  checkAvatarPhotoFile,
   loadAvatarPhoto,
   renderAvatarPhoto,
   type AvatarPhotoFileError,
-  type LoadedAvatarPhoto,
 } from '@/features/auth/utils/avatarPhotoFile';
-import type { SourceRect } from '@/features/auth/utils/avatarPhotoCrop';
+import type { Rect } from '@/features/auth/utils/avatarPhotoCrop';
 import styles from './AvatarPickerModal.module.css';
 
 type Category = 'photo' | 'bottts' | 'emoji';
@@ -46,17 +44,9 @@ type Props = {
   onClose: () => void;
 };
 
-function reasonOf(error: unknown): string | null {
-  return ApiError.is(error) && error.reason ? error.message : null;
-}
-
 function initialCategory(currentAvatarId: string): Category {
   if (!currentAvatarId || isAvatarPhotoId(currentAvatarId)) return 'photo';
   return EMOJI_IDS.includes(currentAvatarId as never) ? 'emoji' : 'bottts';
-}
-
-function keepDroppedFilesInTheApp(event: DragEvent) {
-  event.preventDefault();
 }
 
 export default function AvatarPickerModal({
@@ -76,34 +66,9 @@ export default function AvatarPickerModal({
 
   const [category, setCategory] = useState<Category>(() => initialCategory(currentAvatarId));
   const [browsedAvatarId, setBrowsedAvatarId] = useState<string | null>(null);
-  const [cropPhoto, setCropPhoto] = useState<LoadedAvatarPhoto | null>(null);
-  const [panelError, setPanelError] = useState<string | null>(null);
   const [selectError, setSelectError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
-
-  useEffect(() => {
-    if (!open) return;
-    globalThis.addEventListener('dragover', keepDroppedFilesInTheApp);
-    globalThis.addEventListener('drop', keepDroppedFilesInTheApp);
-    return () => {
-      globalThis.removeEventListener('dragover', keepDroppedFilesInTheApp);
-      globalThis.removeEventListener('drop', keepDroppedFilesInTheApp);
-    };
-  }, [open]);
-  const [deleting, setDeleting] = useState(false);
-  const fileRequest = useRef(0);
-
-  const photoIsActive = photoAvatarId !== null && currentAvatarId === photoAvatarId;
-  const generatedIds = category === 'emoji' ? EMOJI_IDS : BOTTTS_IDS;
-  const selectedAvatarId = browsedAvatarId ?? currentAvatarId;
-
-  function closeCrop() {
-    if (cropPhoto) URL.revokeObjectURL(cropPhoto.url);
-    setCropPhoto(null);
-    setUploadError(null);
-  }
 
   function fileErrorMessage(reason: AvatarPhotoFileError): string {
     return t(FILE_ERROR_KEYS[reason], {
@@ -112,23 +77,21 @@ export default function AvatarPickerModal({
     });
   }
 
-  async function handleFile(file: File) {
-    const request = ++fileRequest.current;
-    const fileError = checkAvatarPhotoFile(file);
-    if (fileError) {
-      setPanelError(fileErrorMessage(fileError));
-      return;
-    }
-    setPanelError(null);
-    try {
-      const photo = await loadAvatarPhoto(file);
-      if (request === fileRequest.current) setCropPhoto(photo);
-      else URL.revokeObjectURL(photo.url);
-    } catch (error) {
-      if (request !== fileRequest.current) return;
-      const reason = error instanceof AvatarPhotoFileRejection ? error.reason : 'unsupported';
-      setPanelError(fileErrorMessage(reason));
-    }
+  const photo = usePhotoUpload({
+    open,
+    load: loadAvatarPhoto,
+    fileErrorMessage,
+    onDeletePhoto,
+    deleteFailedMessage: t('auth.account.avatarPhotoDeleteFailed'),
+  });
+
+  const photoIsActive = photoAvatarId !== null && currentAvatarId === photoAvatarId;
+  const generatedIds = category === 'emoji' ? EMOJI_IDS : BOTTTS_IDS;
+  const selectedAvatarId = browsedAvatarId ?? currentAvatarId;
+
+  function closeCrop() {
+    photo.closeCrop();
+    setUploadError(null);
   }
 
   async function handleSelect(id: string) {
@@ -138,39 +101,26 @@ export default function AvatarPickerModal({
       await onSelect(id);
       onClose();
     } catch (error) {
-      setSelectError(reasonOf(error) ?? t('auth.account.avatarSaveError'));
+      setSelectError(apiReasonMessage(error) ?? t('auth.account.avatarSaveError'));
     }
   }
 
-  async function handleConfirm(rect: SourceRect) {
-    if (!cropPhoto) return;
+  async function handleConfirm(rect: Rect) {
+    if (!photo.cropPhoto) return;
     setSaving(true);
     setUploadError(null);
     try {
-      await onUploadPhoto(await renderAvatarPhoto(cropPhoto.image, rect));
+      await onUploadPhoto(await renderAvatarPhoto(photo.cropPhoto.image, rect));
       closeCrop();
       onClose();
     } catch (error) {
       setUploadError(
         ApiError.is(error) && error.code === TOO_MANY_REQUESTS
           ? t('auth.account.avatarPhotoRateLimited')
-          : (reasonOf(error) ?? t('auth.account.avatarPhotoUploadFailed'))
+          : (apiReasonMessage(error) ?? t('auth.account.avatarPhotoUploadFailed'))
       );
     } finally {
       setSaving(false);
-    }
-  }
-
-  async function handleDelete() {
-    setDeleting(true);
-    try {
-      await onDeletePhoto();
-      setPanelError(null);
-    } catch {
-      setPanelError(t('auth.account.avatarPhotoDeleteFailed'));
-    } finally {
-      setDeleting(false);
-      setConfirmingDelete(false);
     }
   }
 
@@ -190,16 +140,18 @@ export default function AvatarPickerModal({
   return (
     <Modal
       open={open}
-      onClose={cropPhoto ? closeCrop : handleClose}
+      onClose={photo.cropPhoto ? closeCrop : handleClose}
       size="sm"
       column
-      title={cropPhoto ? t('auth.account.avatarPhotoCropTitle') : t('auth.account.avatarLabel')}
+      title={
+        photo.cropPhoto ? t('auth.account.avatarPhotoCropTitle') : t('auth.account.avatarLabel')
+      }
       titleId={titleId}
     >
       <ModalBody>
-        {cropPhoto ? (
+        {photo.cropPhoto ? (
           <AvatarPhotoCropper
-            photo={cropPhoto}
+            photo={photo.cropPhoto}
             saving={saving}
             error={uploadError}
             onCancel={closeCrop}
@@ -225,10 +177,10 @@ export default function AvatarPickerModal({
               <AvatarPhotoPanel
                 photoAvatarId={photoAvatarId}
                 selected={photoIsActive}
-                error={panelError}
-                onChooseFile={(file) => void handleFile(file)}
+                error={photo.panelError}
+                onChooseFile={(file) => void photo.handleFile(file)}
                 onSelectPhoto={(id) => void handleSelect(id)}
-                onDeleteRequest={() => setConfirmingDelete(true)}
+                onDeleteRequest={photo.askToDelete}
               />
             </TabPanel>
 
@@ -277,14 +229,14 @@ export default function AvatarPickerModal({
         )}
 
         <ConfirmDialog
-          open={confirmingDelete}
+          open={photo.confirmingDelete}
           title={t('auth.account.avatarPhotoDeleteTitle')}
           message={deleteMessage()}
           confirmLabel={t('auth.account.avatarPhotoDeleteConfirm')}
           confirmTone="danger"
-          loading={deleting}
-          onConfirm={() => void handleDelete()}
-          onCancel={() => setConfirmingDelete(false)}
+          loading={photo.deleting}
+          onConfirm={() => void photo.handleDelete()}
+          onCancel={photo.cancelDelete}
           testId="avatar-photo-delete"
         />
       </ModalBody>

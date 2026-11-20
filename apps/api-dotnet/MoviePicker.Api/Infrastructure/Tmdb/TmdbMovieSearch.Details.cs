@@ -12,48 +12,17 @@ namespace MoviePicker.Api.Infrastructure.Tmdb;
 
 public sealed partial class TmdbMovieSearch
 {
-    public async Task<TmdbMovieDetails?> GetDetailsAsync(
+    public Task<TmdbMovieDetails?> GetDetailsAsync(
         int tmdbId,
         MovieMediaType mediaType,
         CancellationToken ct = default)
     {
-        if (!_options.HasTmdbCredentials)
-            throw new HttpRequestException("TMDB credentials are missing: set TMDB_READ_ACCESS_TOKEN or TMDB_API_KEY");
-
         var typeSegment = MediaTypeSegment(mediaType);
-        var cacheKey = $"tmdb-details:{typeSegment}:{tmdbId}";
-        var ttl = TimeSpan.FromHours(Math.Clamp(_options.TmdbEnrichmentCacheHours, 1, 168));
-
-        if (_cache.TryGetValue(cacheKey, out object? boxed))
-        {
-            if (boxed is TmdbMovieDetails cached)
-                return cached;
-            if (boxed is TmdbNotFoundMarker)
-                return null;
-        }
-
-        try
-        {
-            var fresh = await FetchDetailsUncachedAsync(tmdbId, mediaType, ct).ConfigureAwait(false);
-            _cache.Set<object>(
-                cacheKey,
-                fresh ?? (object)TmdbNotFoundMarker.Instance,
-                new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = fresh is null ? NotFoundCacheTtl : ttl, Size = 1 });
-            return fresh;
-        }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception ex) when (
-            ex is TaskCanceledException
-                or JsonException
-                or InvalidOperationException
-                or FormatException)
-        {
-            _logger.LogWarning(ex, "TMDB details failed for {MediaType} {TmdbId}", typeSegment, tmdbId);
-            throw new HttpRequestException("TMDB unavailable", ex);
-        }
+        return CachedLookupAsync(
+            $"tmdb-details:{typeSegment}:{tmdbId}",
+            () => FetchDetailsUncachedAsync(tmdbId, mediaType, ct),
+            ex => _logger.LogWarning(ex, "TMDB details failed for {MediaType} {TmdbId}", typeSegment, tmdbId),
+            ct);
     }
 
     private async Task<TmdbMovieDetails?> FetchDetailsUncachedAsync(

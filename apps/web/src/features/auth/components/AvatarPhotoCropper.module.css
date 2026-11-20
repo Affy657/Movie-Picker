@@ -18,6 +18,11 @@
   -webkit-user-select: none;
 }
 
+.frameLandscape {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+
 .frame:active {
   cursor: grabbing;
 }
@@ -57,6 +62,15 @@
   pointer-events: none;
 }
 
+.maskLandscape {
+  position: absolute;
+  inset: 6%;
+  border: 2px solid var(--color-on-poster-fg-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 0 0 100vmax var(--color-overlay-backdrop);
+  pointer-events: none;
+}
+
 .zoom {
   display: flex;
   align-items: center;
@@ -65,6 +79,10 @@
   min-height: var(--tap-target-min);
   margin: 0 auto;
   color: var(--color-text-muted);
+}
+
+.zoomLandscape {
+  width: 100%;
 }
 
 .slider {

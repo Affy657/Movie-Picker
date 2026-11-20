@@ -1,4 +1,5 @@
 import { apiPath, apiUrl, fetchApi, SLOW_REQUEST_TIMEOUT_MS } from '@/shared/api/client';
+import type { ApiRequestOptions } from '@/shared/api/client';
 import type { ApiSchemas } from '@/shared/api/contract';
 import { blobToBase64 } from '@/shared/utils/blobToBase64';
 import { downloadBlob } from '@/shared/utils/downloadBlob';
@@ -135,20 +136,48 @@ export async function patchAuthProfile(patch: ProfilePatch): Promise<UserProfile
   return withProfileDefaults(profile);
 }
 
-export async function putAvatarPhoto(photo: Blob): Promise<UserProfile> {
-  const profile = await fetchApi<UserProfile>(apiPath('users', 'me', 'avatar-photo'), {
+type MyProfileSegment = 'avatar-photo' | 'banner' | 'banner-photo';
+
+async function sendMyProfileChange(
+  segment: MyProfileSegment,
+  init: ApiRequestOptions
+): Promise<UserProfile> {
+  const profile = await fetchApi<UserProfile>(apiPath('users', 'me', segment), init);
+  return withProfileDefaults(profile);
+}
+
+async function putMyPhoto(segment: MyProfileSegment, photo: Blob): Promise<UserProfile> {
+  return sendMyProfileChange(segment, {
     method: 'PUT',
     body: JSON.stringify({ contentType: photo.type, base64Content: await blobToBase64(photo) }),
     timeoutMs: SLOW_REQUEST_TIMEOUT_MS,
   });
-  return withProfileDefaults(profile);
 }
 
-export async function deleteAvatarPhoto(): Promise<UserProfile> {
-  const profile = await fetchApi<UserProfile>(apiPath('users', 'me', 'avatar-photo'), {
-    method: 'DELETE',
-  });
-  return withProfileDefaults(profile);
+export function putAvatarPhoto(photo: Blob): Promise<UserProfile> {
+  return putMyPhoto('avatar-photo', photo);
+}
+
+export function deleteAvatarPhoto(): Promise<UserProfile> {
+  return sendMyProfileChange('avatar-photo', { method: 'DELETE' });
+}
+
+export type ProfileBannerChoice = ApiSchemas['SetProfileBannerRequest'];
+
+export function putProfileBanner(choice: ProfileBannerChoice): Promise<UserProfile> {
+  return sendMyProfileChange('banner', { method: 'PUT', body: JSON.stringify(choice) });
+}
+
+export function deleteProfileBanner(): Promise<UserProfile> {
+  return sendMyProfileChange('banner', { method: 'DELETE' });
+}
+
+export function putBannerPhoto(photo: Blob): Promise<UserProfile> {
+  return putMyPhoto('banner-photo', photo);
+}
+
+export function deleteBannerPhoto(): Promise<UserProfile> {
+  return sendMyProfileChange('banner-photo', { method: 'DELETE' });
 }
 
 export async function patchChangePassword(

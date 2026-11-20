@@ -120,6 +120,13 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
         return Task.FromResult<TmdbMovieDetails?>(details);
     }
 
+    public Task<IReadOnlyList<TmdbBackdrop>?> GetBackdropsAsync(int tmdbId, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<TmdbBackdrop>?>(
+        [
+            new TmdbBackdrop($"/stub-backdrop-{tmdbId}-1.jpg", 1920, 1080),
+            new TmdbBackdrop($"/stub-backdrop-{tmdbId}-2.jpg", 1920, 1080)
+        ]);
+
     public Task<IReadOnlyList<TmdbSearchItem>> GetTrendingMoviesAsync(int pages, CancellationToken ct = default) =>
         Section(700_000, "Tendance stub", pages);
 

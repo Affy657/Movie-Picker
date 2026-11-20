@@ -13,6 +13,11 @@
   height: 8rem;
 }
 
+.avatarOverBanner {
+  border-radius: var(--radius-pill);
+  box-shadow: 0 0 0 4px var(--color-bg);
+}
+
 .identity {
   grid-area: identity;
   min-width: 0;
@@ -126,6 +131,10 @@
   .avatar {
     width: var(--space-20);
     height: var(--space-20);
+  }
+
+  .avatarOverBanner {
+    box-shadow: 0 0 0 3px var(--color-bg);
   }
 
   .nameRow {

@@ -163,6 +163,10 @@ public static class ErrorCodes
     public const string AvatarPhotoInvalid = "avatar_photo_invalid";
     public const string AvatarPhotoNotFound = "avatar_photo_not_found";
     public const string AvatarPhotoStorageFull = "avatar_photo_storage_full";
+    public const string ProfileBannerInvalid = "profile_banner_invalid";
+    public const string BannerPhotoInvalid = "banner_photo_invalid";
+    public const string BannerPhotoNotFound = "banner_photo_not_found";
+    public const string BannerPhotoStorageFull = "banner_photo_storage_full";
     public const string ParticipantIdRequired = "participant_id_required";
 
     public const string MovieDetailsUnavailable = "movie_details_unavailable";

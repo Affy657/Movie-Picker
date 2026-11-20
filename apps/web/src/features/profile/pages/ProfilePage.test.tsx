@@ -257,6 +257,82 @@ describe('ProfilePage (MSW)', () => {
     await waitFor(() => expect(asked).toBe(true));
   });
 
+  it('shows the banner of a member above their profile, credited to its film', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () =>
+        HttpResponse.json({
+          ...ALICE_PROFILE,
+          banner: {
+            source: 'film',
+            imageUrl: 'https://image.tmdb.org/t/p/w1280/sunset.jpg',
+            tmdbId: 693134,
+            title: 'Dune : Deuxième partie',
+          },
+        })
+      )
+    );
+
+    renderProfile('alice');
+
+    expect(await screen.findByTestId('profile-banner-image')).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Bannière tirée de Dune : Deuxième partie, voir le film' })
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Modifier la bannière' })).not.toBeInTheDocument();
+  });
+
+  it('shows nothing in place of a banner to a visitor when the member has none', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE))
+    );
+
+    renderProfile('alice');
+
+    expect(await screen.findByRole('heading', { name: 'Alice' })).toBeInTheDocument();
+    expect(screen.queryByTestId('profile-banner-image')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Ajouter une bannière' })).not.toBeInTheDocument();
+  });
+
+  it('offers me to add a banner on my own profile, which opens the choice', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+      http.get(`${TEST_API_V1}/users/moi`, () =>
+        HttpResponse.json({ ...ALICE_PROFILE, handle: 'moi', displayName: 'Moi' })
+      )
+    );
+
+    renderProfile('moi');
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Ajouter une bannière' }));
+
+    expect(await screen.findByRole('dialog', { name: 'Bannière' })).toBeInTheDocument();
+    expect(screen.getByRole('radiogroup', { name: 'Suggestions' })).toBeInTheDocument();
+  });
+
+  it('lets me edit the banner of my own profile', async () => {
+    const banner = {
+      source: 'film',
+      imageUrl: 'https://image.tmdb.org/t/p/w1280/sunset.jpg',
+      tmdbId: 693134,
+      title: 'Dune : Deuxième partie',
+    };
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({ ...ME_PROFILE, banner })),
+      http.get(`${TEST_API_V1}/users/moi`, () =>
+        HttpResponse.json({ ...ALICE_PROFILE, handle: 'moi', displayName: 'Moi', banner })
+      )
+    );
+
+    renderProfile('moi');
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Modifier la bannière' }));
+
+    expect(await screen.findByRole('dialog', { name: 'Bannière' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Ajouter une bannière' })).not.toBeInTheDocument();
+  });
+
   it('flags on my profile that my watched films are hidden, and leads to the setting', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),

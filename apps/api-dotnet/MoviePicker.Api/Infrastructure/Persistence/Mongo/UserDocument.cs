@@ -69,6 +69,14 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public AvatarPhotoDocument? AvatarPhoto { get; set; }
 
+    [BsonElement("banner")]
+    [BsonIgnoreIfNull]
+    public ProfileBannerDocument? Banner { get; set; }
+
+    [BsonElement("bannerPhoto")]
+    [BsonIgnoreIfNull]
+    public BannerPhotoDocument? BannerPhoto { get; set; }
+
     [BsonElement("notifyOnParticipantJoined")]
     [BsonIgnoreIfNull]
     public bool? NotifyOnParticipantJoined { get; set; }
@@ -228,6 +236,38 @@ public sealed class NotificationPreferenceEntryDocument
 
     [BsonElement("enabled")]
     public bool Enabled { get; set; }
+}
+
+[BsonIgnoreExtraElements]
+public sealed class ProfileBannerDocument
+{
+    [BsonElement("source")]
+    public string Source { get; set; } = string.Empty;
+
+    [BsonElement("tmdbId")]
+    [BsonIgnoreIfNull]
+    public int? TmdbId { get; set; }
+
+    [BsonElement("title")]
+    [BsonIgnoreIfNull]
+    public string? Title { get; set; }
+
+    [BsonElement("imagePath")]
+    [BsonIgnoreIfNull]
+    public string? ImagePath { get; set; }
+
+    [BsonElement("updatedAt")]
+    public DateTime UpdatedAt { get; set; }
+}
+
+[BsonIgnoreExtraElements]
+public sealed class BannerPhotoDocument
+{
+    [BsonElement("key")]
+    public string Key { get; set; } = string.Empty;
+
+    [BsonElement("updatedAt")]
+    public DateTime UpdatedAt { get; set; }
 }
 
 [BsonIgnoreExtraElements]

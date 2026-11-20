@@ -1,0 +1,107 @@
+.banner {
+  position: relative;
+  isolation: isolate;
+  height: clamp(18rem, 26vw, 24rem);
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-below);
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+.backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 38%, var(--color-bg) 100%);
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 40%;
+  opacity: 0;
+  transition: opacity var(--duration-slow) var(--ease-out);
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.imageLoaded {
+  opacity: 1;
+}
+
+.tools {
+  position: absolute;
+  top: var(--space-4);
+  right: max(var(--space-6), calc((100% - var(--container-3xl)) / 2 + var(--space-6)));
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: calc(100% - 2 * var(--space-4));
+}
+
+.credit {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  min-width: 0;
+  height: var(--space-8);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--color-on-poster-scrim);
+  color: var(--color-on-poster-fg-strong);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--leading-none);
+  text-decoration: none;
+  -webkit-backdrop-filter: var(--backdrop-blur-overlay);
+  backdrop-filter: var(--backdrop-blur-overlay);
+}
+
+.creditTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transform: translateY(var(--text-optical-nudge));
+}
+
+.credit:focus-visible {
+  outline: var(--outline-focus);
+  outline-offset: var(--outline-offset);
+}
+
+@media (hover: hover) {
+  .credit:hover {
+    background: var(--color-on-poster-scrim-strong);
+  }
+}
+
+@media (max-width: 47.9375rem) {
+  .banner {
+    height: 13rem;
+  }
+
+  .tools {
+    top: var(--space-3);
+    right: var(--space-4);
+  }
+
+  .credit {
+    height: var(--space-7);
+    padding: 0 var(--space-2-5);
+    font-size: var(--font-size-2xs);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image {
+    transition: none;
+  }
+}

@@ -23,6 +23,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
     private readonly ISavedListRepository _savedLists;
     private readonly IPasswordResetTokenRepository _resetTokens;
     private readonly IAvatarPhotoRepository _avatarPhotos;
+    private readonly IBannerPhotoRepository _bannerPhotos;
     private readonly IAuthSessionInvalidator _sessionInvalidator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<DeleteAccountHandler> _logger;
@@ -41,6 +42,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         ISavedListRepository savedLists,
         IPasswordResetTokenRepository resetTokens,
         IAvatarPhotoRepository avatarPhotos,
+        IBannerPhotoRepository bannerPhotos,
         IAuthSessionInvalidator sessionInvalidator,
         IUnitOfWork unitOfWork,
         ILogger<DeleteAccountHandler> logger)
@@ -58,6 +60,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         _savedLists = savedLists;
         _resetTokens = resetTokens;
         _avatarPhotos = avatarPhotos;
+        _bannerPhotos = bannerPhotos;
         _sessionInvalidator = sessionInvalidator;
         _unitOfWork = unitOfWork;
         _logger = logger;
@@ -119,6 +122,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
                 await _savedLists.DeleteAllForOwnerAsync(userId, token);
                 await _resetTokens.DeleteByUserIdAsync(userId, token);
                 await _avatarPhotos.DeleteByUserIdAsync(userId, token);
+                await _bannerPhotos.DeleteByUserIdAsync(userId, token);
                 await _users.DeleteAsync(userId, token);
             },
             ct);

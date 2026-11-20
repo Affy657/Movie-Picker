@@ -192,7 +192,7 @@ describe('AvatarPickerModal, photo tab', () => {
 
     await waitFor(() => expect(props.onClose).toHaveBeenCalled());
     expect(props.onUploadPhoto).toHaveBeenCalledWith(expect.any(Blob));
-    expect(vi.mocked(renderAvatarPhoto).mock.calls[0]![1].size).toBeGreaterThan(0);
+    expect(vi.mocked(renderAvatarPhoto).mock.calls[0]![1].width).toBeGreaterThan(0);
   });
 
   it('keeps the crop open with a message when the upload fails, and lets the user retry', async () => {

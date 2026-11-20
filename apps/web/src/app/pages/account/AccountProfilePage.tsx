@@ -7,6 +7,7 @@ import { getErrorMessage } from '@/shared/api/apiError';
 import Toggle from '@/shared/components/Toggle';
 import { ROUTES } from '@/app/routes';
 import type { UserProfile } from '@/features/auth/types';
+import AccountBannerCard from './AccountBannerCard';
 import AccountFavoritesCard from './AccountFavoritesCard';
 import AccountSavedChip from './AccountSavedChip';
 import { useSavedFlash } from './useSavedFlash';
@@ -217,6 +218,8 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
           />
         </div>
       </Card>
+
+      <AccountBannerCard user={user} />
 
       <AccountFavoritesCard user={user} onSaved={flashSaved} />
     </>

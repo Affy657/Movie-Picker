@@ -15,6 +15,7 @@ public sealed class PublicProfileResponse
     public int? WatchlistCount { get; init; }
     public bool IsWatchedPublic { get; init; }
     public IReadOnlyList<FavoriteTitleResponse> Favorites { get; init; } = [];
+    public ProfileBannerResponse? Banner { get; init; }
 }
 
 public sealed class FollowUserItem

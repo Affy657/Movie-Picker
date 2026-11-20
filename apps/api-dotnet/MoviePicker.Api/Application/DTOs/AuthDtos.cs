@@ -81,6 +81,8 @@ public sealed class UserProfileResponse
     public bool HasPassword { get; init; } = true;
     public IReadOnlyList<string> LinkedProviders { get; init; } = Array.Empty<string>();
     public IReadOnlyList<FavoriteTitleResponse> Favorites { get; init; } = [];
+    public ProfileBannerResponse? Banner { get; init; }
+    public string? BannerPhotoUrl { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
 }
 
