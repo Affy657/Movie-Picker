@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.21.0] - 2026-11-20
+
 ### Added
 
 - **Toutes les listes se lisent de la même façon** : la page d'une saga ou d'une sélection d'Explorer reprend celle d'une liste, avec le résumé de la saga, « Piocher un film » et la vue en liste, et la page des sagas les présente une par ligne comme Mes listes, avec vos films vus.
@@ -894,7 +896,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.20.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.21.0...HEAD
+[1.21.0]: https://github.com/Affy657/Movie-Picker/compare/v1.20.0...v1.21.0
 [1.20.0]: https://github.com/Affy657/Movie-Picker/compare/v1.19.0...v1.20.0
 [1.19.0]: https://github.com/Affy657/Movie-Picker/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/Affy657/Movie-Picker/compare/v1.17.0...v1.18.0
