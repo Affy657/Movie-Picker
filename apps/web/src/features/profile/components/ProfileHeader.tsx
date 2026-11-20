@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import clsx from 'clsx';
 import Avatar from '@/shared/components/Avatar';
 import { useTranslation } from '@/shared/i18n';
 import ProfileStreakFlame from '@/features/profile/components/ProfileStreakFlame';
@@ -18,6 +19,7 @@ interface Props {
   memberSince: string;
   streak: Streak | null;
   onOpenFollowModal: (tab: FollowTab) => void;
+  overBanner?: boolean;
   children?: ReactNode;
 }
 
@@ -26,6 +28,7 @@ export default function ProfileHeader({
   memberSince,
   streak,
   onOpenFollowModal,
+  overBanner = false,
   children,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -36,7 +39,7 @@ export default function ProfileHeader({
         avatarId={profile.avatarId}
         pseudo={profile.displayName}
         size="xl"
-        className={styles.avatar}
+        className={clsx(styles.avatar, overBanner && styles.avatarOverBanner)}
         priority
       />
 

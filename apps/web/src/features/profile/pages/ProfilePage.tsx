@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from 'react';
 import { useParams } from 'react-router';
+import clsx from 'clsx';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
@@ -14,6 +15,7 @@ import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import ProfileHeader from '@/features/profile/components/ProfileHeader';
 import ProfileStatsSection from '@/features/profile/components/ProfileStatsSection';
 import ProfileActions from '@/features/profile/components/ProfileActions';
+import ProfileBanner from '@/features/profile/components/ProfileBanner';
 import ProfilePageSkeleton, {
   ProfileStatsSkeleton,
 } from '@/features/profile/components/ProfilePageSkeleton';
@@ -30,6 +32,7 @@ import styles from './ProfilePage.module.css';
 import InlineError from '@/shared/components/InlineError';
 
 const FollowListModal = lazy(() => import('@/features/profile/components/FollowListModal'));
+const BannerPicker = lazy(() => import('@/features/profile/components/BannerPicker'));
 const ProfileMoviesSection = lazy(
   () => import('@/features/profile/components/ProfileMoviesSection')
 );
@@ -66,6 +69,25 @@ function buildProfileJsonLd(profile: PublicProfile): Record<string, unknown> {
 
 type FollowTab = 'following' | 'followers';
 
+function useProfileBanner(profile: PublicProfile | undefined, isOwnProfile: boolean) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const banner = profile?.banner ?? null;
+  const open = () => setPickerOpen(true);
+  return {
+    banner,
+    open,
+    layoutClass: banner ? styles.layoutWithBanner : undefined,
+    frameClass: banner ? styles.overBanner : undefined,
+    onAdd: isOwnProfile && !banner ? open : undefined,
+    picker:
+      pickerOpen && isOwnProfile ? (
+        <Suspense fallback={null}>
+          <BannerPicker onClose={() => setPickerOpen(false)} />
+        </Suspense>
+      ) : null,
+  };
+}
+
 export default function ProfilePage() {
   const { handle } = useParams<{ handle: string }>();
   const { t } = useTranslation();
@@ -87,6 +109,7 @@ export default function ProfilePage() {
 
   const profile = profileQuery.data;
   const isOwnProfile = !!user && !!profile && user.handle === profile.handle;
+  const bannerView = useProfileBanner(profile, isOwnProfile);
   const watchedHiddenFromVisitor = !!profile && !isOwnProfile && profile.isWatchedPublic === false;
   const watchedVisible = !!profile && !watchedHiddenFromVisitor;
   const watchedQuery = useProfileWatchedPreview(handle, !watchedHiddenFromVisitor);
@@ -156,71 +179,80 @@ export default function ProfilePage() {
       : null;
 
   return (
-    <PageLayout className={styles.layout}>
-      <ProfileHeader
-        profile={profile}
-        memberSince={memberSince}
-        streak={streak}
-        onOpenFollowModal={setFollowModal}
-      >
-        <ProfileActions
+    <PageLayout className={clsx(styles.layout, bannerView.layoutClass)}>
+      {bannerView.banner && (
+        <ProfileBanner banner={bannerView.banner} isOwner={isOwnProfile} onEdit={bannerView.open} />
+      )}
+      <div className={bannerView.frameClass}>
+        <ProfileHeader
           profile={profile}
-          isOwnProfile={isOwnProfile}
-          isLoggedIn={!!user}
-          followPending={followPending}
-          memberSinceLabel={t('profile.memberSince', { date: memberSince })}
-          onFollow={() => followMutation.mutate()}
-          onUnfollow={() => unfollowMutation.mutate()}
-        />
-        {followError && (
-          <p className="error" role="alert">
-            {followError}
-          </p>
-        )}
-      </ProfileHeader>
-
-      <div className={styles.content}>
-        {statsQuery.isPending && <ProfileStatsSkeleton />}
-
-        {statsQuery.isError && (
-          <InlineError
-            message={t('profile.stats.loadError')}
-            retryLabel={t('profile.stats.retry')}
-            onRetry={() => void statsQuery.refetch()}
-          />
-        )}
-
-        {stats && (
-          <ProfileStatsSection
-            stats={stats}
-            watchedCount={watchedVisible ? watchedQuery.data?.total : undefined}
-            watchedPending={watchedVisible && watchedQuery.isPending}
-            watchedTo={ROUTES.profileMovies(profile.handle)}
-            proposalsTo={ROUTES.profileProposals(profile.handle)}
-            winningProposalsTo={ROUTES.profileWinningProposals(profile.handle)}
-            winningProposalsHidden={watchedHiddenFromVisitor}
-            listsTo={ROUTES.profileLists(profile.handle)}
-            ratingScale={user?.ratingScale}
-          />
-        )}
-
-        <Suspense fallback={null}>
-          <ProfileMoviesSection
-            handle={profile.handle}
-            favorites={profile.favorites ?? []}
+          memberSince={memberSince}
+          streak={streak}
+          overBanner={bannerView.banner !== null}
+          onOpenFollowModal={setFollowModal}
+        >
+          <ProfileActions
+            profile={profile}
             isOwnProfile={isOwnProfile}
-            watchedVisible={watchedVisible}
-            watchedHidden={isOwnProfile && profile.isWatchedPublic === false}
-            watchlist={watchlist}
+            isLoggedIn={!!user}
+            followPending={followPending}
+            memberSinceLabel={t('profile.memberSince', { date: memberSince })}
+            onFollow={() => followMutation.mutate()}
+            onUnfollow={() => unfollowMutation.mutate()}
+            onAddBanner={bannerView.onAdd}
           />
-        </Suspense>
+          {followError && (
+            <p className="error" role="alert">
+              {followError}
+            </p>
+          )}
+        </ProfileHeader>
 
-        {stats && (
+        <div className={styles.content}>
+          {statsQuery.isPending && <ProfileStatsSkeleton />}
+
+          {statsQuery.isError && (
+            <InlineError
+              message={t('profile.stats.loadError')}
+              retryLabel={t('profile.stats.retry')}
+              onRetry={() => void statsQuery.refetch()}
+            />
+          )}
+
+          {stats && (
+            <ProfileStatsSection
+              stats={stats}
+              watchedCount={watchedVisible ? watchedQuery.data?.total : undefined}
+              watchedPending={watchedVisible && watchedQuery.isPending}
+              watchedTo={ROUTES.profileMovies(profile.handle)}
+              proposalsTo={ROUTES.profileProposals(profile.handle)}
+              winningProposalsTo={ROUTES.profileWinningProposals(profile.handle)}
+              winningProposalsHidden={watchedHiddenFromVisitor}
+              listsTo={ROUTES.profileLists(profile.handle)}
+              ratingScale={user?.ratingScale}
+            />
+          )}
+
           <Suspense fallback={null}>
-            <ProfileActivitySection stats={stats} />
+            <ProfileMoviesSection
+              handle={profile.handle}
+              favorites={profile.favorites ?? []}
+              isOwnProfile={isOwnProfile}
+              watchedVisible={watchedVisible}
+              watchedHidden={isOwnProfile && profile.isWatchedPublic === false}
+              watchlist={watchlist}
+            />
           </Suspense>
-        )}
+
+          {stats && (
+            <Suspense fallback={null}>
+              <ProfileActivitySection stats={stats} />
+            </Suspense>
+          )}
+        </div>
       </div>
+
+      {bannerView.picker}
 
       {followModal !== null && (
         <Suspense fallback={null}>

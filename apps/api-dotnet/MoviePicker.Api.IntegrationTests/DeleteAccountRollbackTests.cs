@@ -203,7 +203,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         });
 
         var photoKey = AvatarPhoto.NewKey();
-        await photos.SaveAsync(new StoredAvatarPhoto
+        await photos.SaveAsync(new StoredPhoto
         {
             Key = photoKey,
             UserId = user.Id,
@@ -230,6 +230,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
             services.GetRequiredService<ISavedListRepository>(),
             new ThrowingResetTokenRepository(),
             services.GetRequiredService<IAvatarPhotoRepository>(),
+            services.GetRequiredService<IBannerPhotoRepository>(),
             services.GetRequiredService<IAuthSessionInvalidator>(),
             services.GetRequiredService<IUnitOfWork>(),
             NullLogger<DeleteAccountHandler>.Instance);

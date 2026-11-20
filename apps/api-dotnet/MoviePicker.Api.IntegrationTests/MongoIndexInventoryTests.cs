@@ -96,6 +96,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         new("poster_cache", "poster_cache_expiresAtUtc_ttl", ExpireAfterSeconds: 0),
 
         new("avatar_photos", "avatar_photos_userId"),
+        new("banner_photos", "banner_photos_userId"),
 
         new("event_presence", "event_presence_eventId_participantId"),
         new("event_presence", "event_presence_expiresAt_ttl", ExpireAfterSeconds: 0),

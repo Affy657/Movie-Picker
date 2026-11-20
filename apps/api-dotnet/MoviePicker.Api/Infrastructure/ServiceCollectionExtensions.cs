@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Avatars;
+using MoviePicker.Api.Application.Banners;
 using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
@@ -300,6 +301,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IUserRepository, InMemoryUserRepository>();
             services.AddSingleton<IPasswordResetTokenRepository, InMemoryPasswordResetTokenRepository>();
             services.AddSingleton<IAvatarPhotoRepository, InMemoryAvatarPhotoRepository>();
+            services.AddSingleton<IBannerPhotoRepository, InMemoryBannerPhotoRepository>();
             services.AddSingleton<IMovieRepository, InMemoryMovieRepository>();
             services.AddSingleton<IVoteRepository, InMemoryVoteRepository>();
             services.AddSingleton<ISeenMarkRepository, InMemorySeenMarkRepository>();
@@ -357,6 +359,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserRepository, MongoUserRepository>();
         services.AddScoped<IPasswordResetTokenRepository, MongoPasswordResetTokenRepository>();
         services.AddScoped<IAvatarPhotoRepository, MongoAvatarPhotoRepository>();
+        services.AddScoped<IBannerPhotoRepository, MongoBannerPhotoRepository>();
         services.AddScoped<IMovieRepository, MongoMovieRepository>();
         services.AddScoped<IVoteRepository, MongoVoteRepository>();
         services.AddScoped<ISeenMarkRepository, MongoSeenMarkRepository>();
@@ -453,6 +456,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ListSourceReader>();
         services.AddScoped<PublicListReader>();
         services.AddScoped<AvatarPhotoWriter>();
+        services.AddScoped<ProfileBannerWriter>();
         services.AddScoped<IOAuthProfilePhotoImporter, OAuthProfilePhotoImporter>();
         services.AddScoped<EventAudienceNotifier>();
         services.AddScoped<IUsageRecorder, UsageRecorder>();

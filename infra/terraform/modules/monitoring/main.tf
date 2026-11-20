@@ -717,3 +717,49 @@ resource "google_monitoring_alert_policy" "avatar_storage_full" {
     )
   }
 }
+
+resource "google_monitoring_alert_policy" "banner_storage_full" {
+  project               = var.project_id
+  display_name          = "Plafond d'images de bannière atteint"
+  combiner              = "OR"
+  severity              = "WARNING"
+  notification_channels = [google_monitoring_notification_channel.email.name]
+
+  alert_strategy {
+    auto_close = "3600s"
+
+    notification_rate_limit {
+      period = "3600s"
+    }
+  }
+
+  conditions {
+    display_name = "Import d'une image de bannière refusé, stockage plein"
+
+    condition_matched_log {
+      filter = "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"${var.api_service_name}\" AND jsonPayload.State.\"{OriginalFormat}\"=\"Banner photo refused: {Stored} photos stored for a limit of {Limit}\""
+
+      label_extractors = {
+        stored = "EXTRACT(jsonPayload.State.Stored)"
+        limit  = "EXTRACT(jsonPayload.State.Limit)"
+      }
+    }
+  }
+
+  documentation {
+    mime_type = "text/markdown"
+    content = chomp(<<-EOT
+      **Indicateur** : l'avertissement `Banner photo refused: {Stored} photos stored for a limit of {Limit}` de `ProfileBannerWriter`, dans le journal du service Cloud Run `${var.api_service_name}`.
+
+      **Pourquoi** : le plafond global d'images de bannière protège le quota de stockage de la base. Une fois atteint, toute première image importée est refusée, pour tous les comptes ; remplacer une image existante et choisir l'image d'un film restent possibles.
+
+      **Déclencheur** : chaque ligne correspondante, au plus une notification par heure.
+
+      **Conduite à tenir** :
+      1. Lire `stored` et `limit` portés par la notification.
+      2. Vérifier la place réelle de la base (palier Atlas), puis relever `BannerPhotoMaxEntries` si elle le permet.
+      3. Sinon, supprimer les images de comptes supprimés ou inactifs avant de rouvrir les imports.
+    EOT
+    )
+  }
+}

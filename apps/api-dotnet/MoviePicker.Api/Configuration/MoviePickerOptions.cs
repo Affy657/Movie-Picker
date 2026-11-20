@@ -47,6 +47,8 @@ public sealed class MoviePickerOptions
 
     public int AvatarPhotoMaxEntries { get; set; } = 1_000;
 
+    public int BannerPhotoMaxEntries { get; set; } = 300;
+
     public string PublicWebBaseUrl { get; set; } = "https://www.movie-picker.fr";
 
     public string ResolvedWebBaseUrl() =>

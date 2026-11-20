@@ -34,14 +34,13 @@ Rien pour l'instant.
 
 ## ⏭️ Prochainement
 
-1. `M` **Bannière de profil** : chacun choisit une image affichée en bandeau en tête de son profil public, au-dessus de l'avatar et du pseudo, pour donner sa couleur à sa page.
-2. `S` **Favori depuis la page d'un film** : un bouton de la page d'un film l'ajoute aux favoris du profil ou l'en retire ; quand les trois places sont prises, on choisit lequel remplacer.
-3. `L` **Plateformes de streaming par compte** : chacun renseigne dans son profil ses abonnements, et une soirée marque disponible un film présent sur la plateforme d'au moins un participant. Un panneau de la soirée liste les plateformes retenues, à cocher ou décocher à la main.
-4. `L` **Groupes d'amis** : un groupe persistant de comptes, réutilisable d'une soirée à l'autre, qui s'invite en un clic dans une soirée et rassemble sur sa page tout ce qui concerne ses membres.
-5. `M` **Classement d'un groupe** : les membres d'un groupe classés selon la note moyenne des films qu'ils ont proposés, pour savoir qui propose les meilleurs films. Dépend des groupes d'amis.
-6. `M` **Soirées d'un groupe** : la page d'un groupe affiche les soirées organisées par ses membres, que chacun rejoint directement depuis Movie Picker sans attendre qu'on lui partage le lien. Dépend des groupes d'amis.
-7. `M` **Déjà vu automatique en soirée** : dans une soirée, un film qui figure dans les films vus d'un participant est marqué « Déjà vu » pour lui, sans qu'il ait à le faire. Seulement pour qui a rendu ses films vus visibles, pour ne rien dévoiler d'une liste privée.
-8. `M` **Une seule présentation des listes** : la page des sagas et la page d'une saga reprennent l'allure de Mes listes et de la page d'une liste, pour que toutes les listes, les siennes comme celles enregistrées, se lisent de la même façon.
+1. `S` **Favori depuis la page d'un film** : un bouton de la page d'un film l'ajoute aux favoris du profil ou l'en retire ; quand les trois places sont prises, on choisit lequel remplacer.
+2. `L` **Plateformes de streaming par compte** : chacun renseigne dans son profil ses abonnements, et une soirée marque disponible un film présent sur la plateforme d'au moins un participant. Un panneau de la soirée liste les plateformes retenues, à cocher ou décocher à la main.
+3. `L` **Groupes d'amis** : un groupe persistant de comptes, réutilisable d'une soirée à l'autre, qui s'invite en un clic dans une soirée et rassemble sur sa page tout ce qui concerne ses membres.
+4. `M` **Classement d'un groupe** : les membres d'un groupe classés selon la note moyenne des films qu'ils ont proposés, pour savoir qui propose les meilleurs films. Dépend des groupes d'amis.
+5. `M` **Soirées d'un groupe** : la page d'un groupe affiche les soirées organisées par ses membres, que chacun rejoint directement depuis Movie Picker sans attendre qu'on lui partage le lien. Dépend des groupes d'amis.
+6. `M` **Déjà vu automatique en soirée** : dans une soirée, un film qui figure dans les films vus d'un participant est marqué « Déjà vu » pour lui, sans qu'il ait à le faire. Seulement pour qui a rendu ses films vus visibles, pour ne rien dévoiler d'une liste privée.
+7. `M` **Une seule présentation des listes** : la page des sagas et la page d'une saga reprennent l'allure de Mes listes et de la page d'une liste, pour que toutes les listes, les siennes comme celles enregistrées, se lisent de la même façon.
 
 ---
 

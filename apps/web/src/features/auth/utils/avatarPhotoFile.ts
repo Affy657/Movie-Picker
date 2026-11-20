@@ -1,4 +1,4 @@
-import type { SourceRect } from '@/features/auth/utils/avatarPhotoCrop';
+import type { Rect } from '@/features/auth/utils/avatarPhotoCrop';
 
 export type AvatarPhotoFileError = 'tooLarge' | 'unsupported' | 'tooSmall';
 
@@ -35,12 +35,15 @@ export function checkAvatarPhotoSize(width: number, height: number): AvatarPhoto
   return Math.min(width, height) < AVATAR_PHOTO_MIN_SIDE ? 'tooSmall' : null;
 }
 
-export function loadAvatarPhoto(file: File): Promise<LoadedAvatarPhoto> {
+export function loadAvatarPhoto(
+  file: File,
+  checkSize: (width: number, height: number) => AvatarPhotoFileError | null = checkAvatarPhotoSize
+): Promise<LoadedAvatarPhoto> {
   const url = URL.createObjectURL(file);
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.onload = () => {
-      const sizeError = checkAvatarPhotoSize(image.naturalWidth, image.naturalHeight);
+      const sizeError = checkSize(image.naturalWidth, image.naturalHeight);
       if (sizeError) {
         URL.revokeObjectURL(url);
         reject(new AvatarPhotoFileRejection(sizeError));
@@ -56,32 +59,36 @@ export function loadAvatarPhoto(file: File): Promise<LoadedAvatarPhoto> {
   });
 }
 
-function encode(canvas: HTMLCanvasElement, type: string): Promise<Blob | null> {
-  return new Promise((resolve) => canvas.toBlob(resolve, type, ENCODING_QUALITY));
+export function encodeCanvas(
+  canvas: HTMLCanvasElement,
+  type: string,
+  quality = ENCODING_QUALITY
+): Promise<Blob | null> {
+  return new Promise((resolve) => canvas.toBlob(resolve, type, quality));
 }
 
-export async function renderAvatarPhoto(image: HTMLImageElement, rect: SourceRect): Promise<Blob> {
+export function drawCrop(
+  image: HTMLImageElement,
+  rect: Rect,
+  width: number,
+  height: number
+): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
-  canvas.width = AVATAR_PHOTO_OUTPUT_SIZE;
-  canvas.height = AVATAR_PHOTO_OUTPUT_SIZE;
+  canvas.width = width;
+  canvas.height = height;
   const context = canvas.getContext('2d');
   if (!context) throw new Error('Canvas 2D is not available');
   context.imageSmoothingQuality = 'high';
-  context.drawImage(
-    image,
-    rect.x,
-    rect.y,
-    rect.size,
-    rect.size,
-    0,
-    0,
-    AVATAR_PHOTO_OUTPUT_SIZE,
-    AVATAR_PHOTO_OUTPUT_SIZE
-  );
+  context.drawImage(image, rect.x, rect.y, rect.width, rect.height, 0, 0, width, height);
+  return canvas;
+}
 
-  const webp = await encode(canvas, 'image/webp');
+export async function renderAvatarPhoto(image: HTMLImageElement, rect: Rect): Promise<Blob> {
+  const canvas = drawCrop(image, rect, AVATAR_PHOTO_OUTPUT_SIZE, AVATAR_PHOTO_OUTPUT_SIZE);
+
+  const webp = await encodeCanvas(canvas, 'image/webp');
   if (webp?.type === 'image/webp') return webp;
-  const jpeg = await encode(canvas, 'image/jpeg');
+  const jpeg = await encodeCanvas(canvas, 'image/jpeg');
   if (!jpeg) throw new Error('The photo could not be encoded');
   return jpeg;
 }

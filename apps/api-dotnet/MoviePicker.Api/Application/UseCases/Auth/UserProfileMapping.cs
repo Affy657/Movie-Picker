@@ -34,6 +34,8 @@ public static class UserProfileMapping
         HasPassword = !string.IsNullOrEmpty(user.PasswordHash),
         LinkedProviders = user.Identities.Select(i => i.Provider).ToList(),
         Favorites = FavoriteTitleResponse.ListFrom(user.Favorites),
+        Banner = ProfileBannerResponse.From(user),
+        BannerPhotoUrl = ProfileBannerResponse.PhotoUrlOf(user),
         CreatedAt = user.CreatedAt
     };
 }

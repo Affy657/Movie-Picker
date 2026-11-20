@@ -61,6 +61,8 @@ public sealed record User
     public string AvatarId { get; init; } = string.Empty;
     public AvatarPhoto? AvatarPhoto { get; init; }
     public string DisplayedAvatarId => AvatarPhoto.DisplayedAvatarIdOf(AvatarId, AvatarPhoto);
+    public ProfileBanner? Banner { get; init; }
+    public BannerPhoto? BannerPhoto { get; init; }
     public IReadOnlyDictionary<UserNotificationType, bool> NotificationPreferences { get; init; }
         = NotificationPreferenceDefaults.All();
     public IReadOnlyList<EventTemplate> EventTemplates { get; init; } = Array.Empty<EventTemplate>();

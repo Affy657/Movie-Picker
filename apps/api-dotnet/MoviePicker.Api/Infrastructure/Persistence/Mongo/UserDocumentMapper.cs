@@ -24,6 +24,10 @@ public static class UserDocumentMapper
             DimWatched = doc.DimWatched,
             AvatarId = doc.AvatarId ?? string.Empty,
             AvatarPhoto = ToAvatarPhotoDomain(doc.AvatarPhoto),
+            Banner = ToBannerDomain(doc.Banner),
+            BannerPhoto = doc.BannerPhoto is null
+                ? null
+                : new BannerPhoto { Key = doc.BannerPhoto.Key, UpdatedAt = new DateTimeOffset(doc.BannerPhoto.UpdatedAt, TimeSpan.Zero) },
             NotificationPreferences = BuildNotificationPreferences(doc),
             EventTemplates = (doc.EventTemplates ?? []).ConvertAll(ToTemplateDomain),
             Favorites = (doc.Favorites ?? []).ConvertAll(ToFavoriteDomain),
@@ -68,6 +72,10 @@ public static class UserDocumentMapper
             DimWatched = user.DimWatched,
             AvatarId = string.IsNullOrEmpty(user.AvatarId) ? null : user.AvatarId,
             AvatarPhoto = user.AvatarPhoto is null ? null : ToAvatarPhotoDocument(user.AvatarPhoto),
+            Banner = user.Banner is null ? null : ToBannerDocument(user.Banner),
+            BannerPhoto = user.BannerPhoto is null
+                ? null
+                : new BannerPhotoDocument { Key = user.BannerPhoto.Key, UpdatedAt = user.BannerPhoto.UpdatedAt.UtcDateTime },
             NotificationPreferences = user.NotificationPreferences
                 .Select(kv => new NotificationPreferenceEntryDocument { Type = (int)kv.Key, Enabled = kv.Value })
                 .ToList(),
@@ -116,6 +124,26 @@ public static class UserDocumentMapper
             IsActive = doc.IsActive,
             UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)
         };
+
+    private const string FilmBannerSource = "film";
+    private const string PhotoBannerSource = "photo";
+
+    private static ProfileBanner? ToBannerDomain(ProfileBannerDocument? doc) => doc?.Source switch
+    {
+        FilmBannerSource when doc.TmdbId is { } tmdbId && doc.ImagePath is { } path =>
+            ProfileBanner.FromFilm(tmdbId, doc.Title ?? string.Empty, path, new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)),
+        PhotoBannerSource => ProfileBanner.FromPhoto(new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)),
+        _ => null
+    };
+
+    private static ProfileBannerDocument ToBannerDocument(ProfileBanner banner) => new()
+    {
+        Source = banner.Source == ProfileBannerSource.Photo ? PhotoBannerSource : FilmBannerSource,
+        TmdbId = banner.TmdbId,
+        Title = banner.Title,
+        ImagePath = banner.ImagePath,
+        UpdatedAt = banner.UpdatedAt.UtcDateTime
+    };
 
     private static AvatarPhotoDocument ToAvatarPhotoDocument(AvatarPhoto photo) => new()
     {

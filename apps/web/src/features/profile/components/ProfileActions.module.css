@@ -20,6 +20,27 @@
   }
 }
 
+.addBanner {
+  gap: var(--space-1-5);
+  white-space: nowrap;
+}
+
+.addBannerLabel {
+  transform: translateY(var(--text-optical-nudge));
+}
+
+@media (max-width: 47.9375rem) {
+  .addBanner {
+    flex: none;
+    width: var(--tap-target-min);
+    padding-inline: 0;
+  }
+
+  .addBannerLabel {
+    display: none;
+  }
+}
+
 .btnLabel {
   transform: translateY(var(--text-optical-nudge));
 }

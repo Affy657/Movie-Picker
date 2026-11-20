@@ -217,6 +217,9 @@ public sealed class MovieDetailsEndpointTests : IClassFixture<MoviePickerApplica
             return Details;
         }
 
+        public Task<IReadOnlyList<TmdbBackdrop>?> GetBackdropsAsync(int tmdbId, CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<TmdbBackdrop>?>([]);
+
         public Task<IReadOnlyList<TmdbSearchItem>> GetTrendingMoviesAsync(int pages, CancellationToken ct = default)
             => Task.FromResult<IReadOnlyList<TmdbSearchItem>>(Array.Empty<TmdbSearchItem>());
 

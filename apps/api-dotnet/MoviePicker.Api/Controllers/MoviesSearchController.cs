@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.GetMovieDetails;
+using MoviePicker.Api.Application.UseCases.ProfileBanners;
 using MoviePicker.Api.Application.UseCases.SearchMovies;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Web;
@@ -71,5 +72,22 @@ public sealed class MoviesSearchController : ControllerBase
         if (details is null)
             return NotFound();
         return Ok(details);
+    }
+
+    [HttpGet("tmdb/{tmdbId:int}/backdrops")]
+    [EnableRateLimiting(RateLimitingExtensions.MovieDetailsPolicy)]
+    [ProducesResponseType(typeof(MovieBackdropsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> GetBackdrops(
+        int tmdbId,
+        [FromServices] IGetMovieBackdropsHandler handler,
+        CancellationToken ct)
+    {
+        var backdrops = await handler.HandleAsync(tmdbId, ct);
+        if (backdrops is null)
+            return NotFound();
+        return Ok(backdrops);
     }
 }

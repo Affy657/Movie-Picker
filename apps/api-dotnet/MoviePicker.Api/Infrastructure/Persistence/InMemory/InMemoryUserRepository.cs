@@ -355,6 +355,8 @@ public sealed class InMemoryUserRepository : IUserRepository
             DimWatched = user.DimWatched,
             AvatarId = user.AvatarId,
             AvatarPhoto = user.AvatarPhoto,
+            Banner = user.Banner,
+            BannerPhoto = user.BannerPhoto,
             NotificationPreferences = user.NotificationPreferences,
             EventTemplates = user.EventTemplates,
             Favorites = user.Favorites,

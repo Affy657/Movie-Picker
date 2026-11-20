@@ -1,3 +1,5 @@
+using MoviePicker.Api.Domain.Entities;
+
 namespace MoviePicker.Api.Application.DTOs;
 
 public sealed record UserDataExportResponse
@@ -18,6 +20,35 @@ public sealed record UserDataExportResponse
     public IReadOnlyList<ExportedWatchedTitle> WatchedTitles { get; init; } = Array.Empty<ExportedWatchedTitle>();
     public IReadOnlyList<ExportedFavorite> Favorites { get; init; } = Array.Empty<ExportedFavorite>();
     public ExportedAvatarPhoto? AvatarPhoto { get; init; }
+    public ExportedProfileBanner? Banner { get; init; }
+    public ExportedBannerPhoto? BannerPhoto { get; init; }
+}
+
+public sealed record ExportedProfileBanner
+{
+    public string Source { get; init; } = string.Empty;
+    public int? TmdbId { get; init; }
+    public string? Title { get; init; }
+    public string? ImagePath { get; init; }
+    public DateTimeOffset UpdatedAt { get; init; }
+
+    public static ExportedProfileBanner? From(ProfileBanner? banner) => banner is null
+        ? null
+        : new()
+        {
+            Source = banner.Source == ProfileBannerSource.Photo ? ProfileBannerResponse.PhotoSource : ProfileBannerResponse.FilmSource,
+            TmdbId = banner.TmdbId,
+            Title = banner.Title,
+            ImagePath = banner.ImagePath,
+            UpdatedAt = banner.UpdatedAt
+        };
+}
+
+public sealed record ExportedBannerPhoto
+{
+    public string ContentType { get; init; } = string.Empty;
+    public string Base64Content { get; init; } = string.Empty;
+    public DateTimeOffset UpdatedAt { get; init; }
 }
 
 public sealed record ExportedAvatarPhoto

@@ -43,7 +43,8 @@ public sealed class GetPublicProfileHandler : IGetPublicProfileHandler
             IsWatchlistPublic = user.IsWatchlistPublic,
             WatchlistCount = await watchlistCountTask,
             IsWatchedPublic = user.IsWatchedPublic,
-            Favorites = FavoriteTitleResponse.ListFrom(user.Favorites)
+            Favorites = FavoriteTitleResponse.ListFrom(user.Favorites),
+            Banner = ProfileBannerResponse.From(user)
         };
     }
 

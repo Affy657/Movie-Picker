@@ -3,7 +3,7 @@ import {
   MAX_ZOOM,
   MIN_ZOOM,
   centeredCrop,
-  cropSourceRect,
+  cropWindowRect,
   moveCrop,
   resizeCrop,
   zoomCrop,
@@ -92,20 +92,80 @@ describe('zoomCrop', () => {
   });
 });
 
-describe('cropSourceRect', () => {
+describe('cropWindowRect', () => {
+  const square = { width: FRAME, height: FRAME };
+
   it('returns the square of the photo seen inside the circle', () => {
-    expect(cropSourceRect({ zoom: 1, x: -50, y: 0 }, landscape, FRAME, 12)).toEqual({
-      x: 62,
-      y: 12,
-      size: 276,
-    });
+    expect(
+      cropWindowRect({ zoom: 1, x: -50, y: 0 }, landscape, square, {
+        x: 12,
+        y: 12,
+        width: 276,
+        height: 276,
+      })
+    ).toEqual({ x: 62, y: 12, width: 276, height: 276 });
   });
 
   it('accounts for the zoom', () => {
-    expect(cropSourceRect({ zoom: 2, x: -250, y: -150 }, landscape, FRAME, 0)).toEqual({
-      x: 125,
-      y: 75,
-      size: 150,
+    expect(
+      cropWindowRect({ zoom: 2, x: -250, y: -150 }, landscape, square, {
+        x: 0,
+        y: 0,
+        width: 300,
+        height: 300,
+      })
+    ).toEqual({ x: 125, y: 75, width: 150, height: 150 });
+  });
+});
+
+describe('a landscape frame', () => {
+  const wide = { width: 1600, height: 1200 };
+  const banner = { width: 320, height: 180 };
+
+  it('covers the frame with the side that needs the most room and centres the other', () => {
+    expect(centeredCrop(wide, banner)).toEqual({ zoom: 1, x: 0, y: -30 });
+    expect(centeredCrop({ width: 4000, height: 1000 }, banner)).toEqual({ zoom: 1, x: -200, y: 0 });
+  });
+
+  it('never leaves an empty band inside the frame', () => {
+    expect(moveCrop({ zoom: 1, x: 0, y: -30 }, 50, 100, wide, banner)).toEqual({
+      zoom: 1,
+      x: 0,
+      y: 0,
     });
+    expect(moveCrop({ zoom: 1, x: 0, y: -30 }, -50, -100, wide, banner)).toEqual({
+      zoom: 1,
+      x: 0,
+      y: -60,
+    });
+  });
+
+  it('zooms around the centre of the frame', () => {
+    expect(zoomCrop({ zoom: 1, x: 0, y: -30 }, 2, wide, banner)).toEqual({
+      zoom: 2,
+      x: -160,
+      y: -150,
+    });
+  });
+
+  it('follows a resized frame', () => {
+    expect(
+      resizeCrop({ zoom: 2, x: -160, y: -150 }, wide, banner, { width: 160, height: 90 })
+    ).toEqual({
+      zoom: 2,
+      x: -80,
+      y: -75,
+    });
+  });
+
+  it('returns the part of the photo seen through the window', () => {
+    expect(
+      cropWindowRect({ zoom: 1, x: 0, y: -30 }, wide, banner, {
+        x: 16,
+        y: 9,
+        width: 288,
+        height: 162,
+      })
+    ).toEqual({ x: 80, y: 195, width: 1440, height: 810 });
   });
 });

@@ -8,7 +8,7 @@ public sealed class InMemoryAvatarPhotoRepositoryTests
 {
     private readonly InMemoryAvatarPhotoRepository _repo = new();
 
-    private static StoredAvatarPhoto Photo(string key, string userId = "u1") => new()
+    private static StoredPhoto Photo(string key, string userId = "u1") => new()
     {
         Key = key,
         UserId = userId,

@@ -65,6 +65,9 @@ public sealed class PersistedReferenceInventoryTests
         ["AvatarPhotoBlobDocument.UserId"] = new(
             Handling.Through<IAvatarPhotoRepository>(),
             Handling.Through<IAvatarPhotoRepository>()),
+        ["BannerPhotoBlobDocument.UserId"] = new(
+            Handling.Through<IBannerPhotoRepository>(),
+            Handling.Through<IBannerPhotoRepository>()),
         ["EventDocument.CreatorUserId"] = new(
             Handling.Through<IEventRepository>(),
             Handling.Through<IEventRepository>()),

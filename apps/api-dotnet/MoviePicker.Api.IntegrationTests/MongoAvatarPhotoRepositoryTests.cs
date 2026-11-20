@@ -16,7 +16,7 @@ public sealed class MongoAvatarPhotoRepositoryTests : IClassFixture<MoviePickerA
         _ = _factory.CreateClient();
     }
 
-    private static StoredAvatarPhoto Photo(string key) => new()
+    private static StoredPhoto Photo(string key) => new()
     {
         Key = key,
         UserId = "owner",

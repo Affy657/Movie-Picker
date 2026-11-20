@@ -101,7 +101,7 @@ public sealed class AvatarPhotoEndpointsTests : IClassFixture<MoviePickerApplica
         var key = AvatarPhoto.NewKey();
         using (var scope = _factory.Services.CreateScope())
         {
-            await scope.ServiceProvider.GetRequiredService<IAvatarPhotoRepository>().SaveAsync(new StoredAvatarPhoto
+            await scope.ServiceProvider.GetRequiredService<IAvatarPhotoRepository>().SaveAsync(new StoredPhoto
             {
                 Key = key,
                 UserId = "legacy-owner",

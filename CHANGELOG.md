@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Une bannière en haut de votre profil** : l'image d'un film, choisie parmi des suggestions ou dans n'importe quel film, ou votre propre image recadrée, qui se fond dans la page sous votre nom.
+
 ## [1.19.0] - 2026-11-19
 
 ### Added

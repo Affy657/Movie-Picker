@@ -8,6 +8,7 @@ using MoviePicker.Api.Application.UseCases.EventTemplates;
 using MoviePicker.Api.Application.UseCases.Favorites;
 using MoviePicker.Api.Application.UseCases.Follow;
 using MoviePicker.Api.Application.UseCases.Profile;
+using MoviePicker.Api.Application.UseCases.ProfileBanners;
 using MoviePicker.Api.Application.UseCases.SearchUsers;
 using MoviePicker.Api.Application.UseCases.UserMovies;
 using MoviePicker.Api.Application.UseCases.UserStats;
@@ -308,6 +309,73 @@ public sealed class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> DeleteAvatarPhoto(
         [FromServices] IDeleteAvatarPhotoHandler handler,
+        [CurrentUserId] string userId,
+        CancellationToken ct)
+    {
+        return Ok(await handler.HandleAsync(userId, ct));
+    }
+
+    [HttpPut("me/banner")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPatchProfilePolicy)]
+    [Authorize]
+    [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> SetBanner(
+        [FromBody] SetProfileBannerRequest request,
+        [FromServices] ISetProfileBannerHandler handler,
+        [CurrentUserId] string userId,
+        CancellationToken ct)
+    {
+        return Ok(await handler.HandleAsync(userId, request, ct));
+    }
+
+    [HttpDelete("me/banner")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPatchProfilePolicy)]
+    [Authorize]
+    [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> RemoveBanner(
+        [FromServices] IRemoveProfileBannerHandler handler,
+        [CurrentUserId] string userId,
+        CancellationToken ct)
+    {
+        return Ok(await handler.HandleAsync(userId, ct));
+    }
+
+    [HttpPut("me/banner-photo")]
+    [EnableRateLimiting(RateLimitingExtensions.BannerPhotoUploadPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.BannerPhotoUploadPolicy)]
+    [Authorize]
+    [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> UploadBannerPhoto(
+        [FromBody] UploadBannerPhotoRequest request,
+        [FromServices] IUploadBannerPhotoHandler handler,
+        [CurrentUserId] string userId,
+        CancellationToken ct)
+    {
+        return Ok(await handler.HandleAsync(userId, request, ct));
+    }
+
+    [HttpDelete("me/banner-photo")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPatchProfilePolicy)]
+    [Authorize]
+    [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> DeleteBannerPhoto(
+        [FromServices] IDeleteBannerPhotoHandler handler,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
