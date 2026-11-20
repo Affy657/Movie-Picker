@@ -35,16 +35,22 @@ public sealed record ExportedProfileBanner
     public string? ImagePath { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
 
-    public static ExportedProfileBanner? From(ProfileBanner? banner) => banner is null
-        ? null
-        : new()
+    public static ExportedProfileBanner? From(ProfileBanner? banner)
+    {
+        if (banner is null)
+            return null;
+        var source = banner.Source == ProfileBannerSource.Photo
+            ? ProfileBannerResponse.PhotoSource
+            : ProfileBannerResponse.FilmSource;
+        return new()
         {
-            Source = banner.Source == ProfileBannerSource.Photo ? ProfileBannerResponse.PhotoSource : ProfileBannerResponse.FilmSource,
+            Source = source,
             TmdbId = banner.TmdbId,
             Title = banner.Title,
             ImagePath = banner.ImagePath,
             UpdatedAt = banner.UpdatedAt
         };
+    }
 }
 
 public sealed record ExportedBannerPhoto

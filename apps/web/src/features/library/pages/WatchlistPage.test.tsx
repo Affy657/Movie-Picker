@@ -1023,7 +1023,9 @@ describe('WatchlistPage (MSW)', () => {
       const dialog = await screen.findByRole('dialog', { name: 'Piocher un titre' });
       await user.click(within(dialog).getByRole('button', { name: 'Fermer' }));
 
-      expect(screen.getByRole('button', { name: 'Piocher un film' })).toHaveFocus();
+      await waitFor(() =>
+        expect(screen.getByRole('button', { name: 'Piocher un film' })).toHaveFocus()
+      );
     });
 
     it('on mobile, shows Piocher un film next to Ajouter un film', async () => {
