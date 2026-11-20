@@ -15,6 +15,7 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
 import type { MovieSearchItem } from '@/features/movies/api/moviesApi';
 import { addFavorite, FAVORITES_MAX, removeFavorite } from '@/features/profile/api/profileApi';
+import { favoriteOf, isSameFavorite } from '@/features/profile/utils/favorites';
 import type { UserProfile } from '@/features/auth/types';
 import type { FavoriteTitle } from '@/shared/types/movie';
 import { toTitleSummary } from '@/shared/utils/titleSummary';
@@ -31,12 +32,7 @@ interface Props {
 }
 
 function toFavorite(item: MovieSearchItem): FavoriteTitle {
-  const { tmdbId, mediaType, title, year, posterPath } = toTitleSummary(item);
-  return { tmdbId, mediaType, title, year, posterPath };
-}
-
-function sameTitle(a: FavoriteTitle, b: FavoriteTitle): boolean {
-  return a.tmdbId === b.tmdbId && a.mediaType === b.mediaType;
+  return favoriteOf(toTitleSummary(item));
 }
 
 function FavoriteThumb({ posterPath }: Readonly<{ posterPath: string | null }>) {
@@ -191,7 +187,7 @@ export default function AccountFavoritesCard({ user, onSaved }: Readonly<Props>)
                 onAdded={() => undefined}
                 onAddItem={add}
                 isItemAlreadyAdded={(item) =>
-                  favorites.some((favorite) => sameTitle(favorite, toFavorite(item)))
+                  favorites.some((favorite) => isSameFavorite(favorite, toFavorite(item)))
                 }
                 alreadyAddedLabel={t('profile.favorites.settings.alreadyAdded')}
                 alreadyAddedHint={t('profile.favorites.settings.alreadyAddedHint')}

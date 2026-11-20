@@ -1564,6 +1564,14 @@ export const en: Locale = {
     propose: 'Suggest for a night',
     trailer: 'Trailer',
     watchlistToggle: 'Watchlist',
+    favorite: {
+      toggle: 'Favorite',
+      error: 'Your favorites could not be updated. Try again.',
+      replaceTitle: 'Replace a favorite',
+      replaceIntro: 'Your three favorites are taken. Which one makes room for {{title}}?',
+      replaceGroup: 'Your favorites',
+      replaceConfirm: 'Replace',
+    },
     share: 'Share',
     shareText: '“{{title}}” on Movie Picker',
     synopsis: 'Synopsis',
@@ -3417,10 +3425,9 @@ export const en: Locale = {
         'The entries at the top of the backlog, taken in order. The order follows measured usage: what brings people into a night comes before new surfaces.',
       nextHint:
         'Usage has been measured since 1.16.0: each entry is then judged on what it changes in the numbers.',
-      nextItem1: 'Favorite from a film page',
-      nextItem2: 'Streaming services per account',
-      nextItem3: 'Group leaderboard',
-      nextItem4: 'Automatic "already seen" in a night',
+      nextItem1: 'Streaming services per account',
+      nextItem2: 'Group leaderboard',
+      nextItem3: 'Automatic "already seen" in a night',
       v2When: 'No date announced',
       v2What: 'V2',
       v2Detail:

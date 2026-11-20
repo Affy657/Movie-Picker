@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Un film devient favori depuis sa page** : le bouton Favori l${q}ajoute aux trois favoris de votre profil ou l${q}en retire, et quand les trois places sont prises, vous choisissez celui qu${q}il remplace.
+
 ### Changed
 
 - **Le profil montre les films vus sur Movie Picker** : la rangée, sa page et la liste qu'on en enregistre ne gardent que les films vus en soirée, sans ceux de Letterboxd ni ceux marqués à la main. Votre liste « Films vus » de Mes listes les garde tous.

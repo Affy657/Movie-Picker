@@ -34,10 +34,9 @@ Rien pour l'instant.
 
 ## ⏭️ Prochainement
 
-1. `S` **Favori depuis la page d'un film** : un bouton de la page d'un film l'ajoute aux favoris du profil ou l'en retire ; quand les trois places sont prises, on choisit lequel remplacer.
-2. `L` **Plateformes de streaming par compte** : chacun renseigne dans son profil ses abonnements, et une soirée marque disponible un film présent sur la plateforme d'au moins un participant. Un panneau de la soirée liste les plateformes retenues, à cocher ou décocher à la main.
-3. `M` **Classement d'un groupe** : les membres d'un groupe classés selon la note moyenne des films qu'ils ont proposés, pour savoir qui propose les meilleurs films.
-4. `M` **Déjà vu automatique en soirée** : dans une soirée, un film qui figure dans les films vus d'un participant est marqué « Déjà vu » pour lui, sans qu'il ait à le faire. Seulement pour qui a rendu ses films vus visibles, pour ne rien dévoiler d'une liste privée.
+1. `L` **Plateformes de streaming par compte** : chacun renseigne dans son profil ses abonnements, et une soirée marque disponible un film présent sur la plateforme d'au moins un participant. Un panneau de la soirée liste les plateformes retenues, à cocher ou décocher à la main.
+2. `M` **Classement d'un groupe** : les membres d'un groupe classés selon la note moyenne des films qu'ils ont proposés, pour savoir qui propose les meilleurs films.
+3. `M` **Déjà vu automatique en soirée** : dans une soirée, un film qui figure dans les films vus d'un participant est marqué « Déjà vu » pour lui, sans qu'il ait à le faire. Seulement pour qui a rendu ses films vus visibles, pour ne rien dévoiler d'une liste privée.
 
 ---
 

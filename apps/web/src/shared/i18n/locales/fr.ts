@@ -1581,6 +1581,14 @@ export const fr = {
     propose: 'Proposer dans une soirée',
     trailer: 'Bande-annonce',
     watchlistToggle: 'À voir',
+    favorite: {
+      toggle: 'Favori',
+      error: 'Vos favoris n’ont pas pu être modifiés. Réessayez.',
+      replaceTitle: 'Remplacer un favori',
+      replaceIntro: 'Vos trois favoris sont choisis. Lequel laisse sa place à {{title}} ?',
+      replaceGroup: 'Vos favoris',
+      replaceConfirm: 'Remplacer',
+    },
     share: 'Partager',
     shareText: '« {{title}} » sur Movie Picker',
     synopsis: 'Synopsis',
@@ -3468,10 +3476,9 @@ export const fr = {
         "Les entrées en tête du backlog, prises dans l'ordre. L'ordre suit l'usage mesuré : ce qui fait entrer du monde dans une soirée passe avant les nouvelles surfaces.",
       nextHint:
         "L'usage se mesure depuis la 1.16.0 : chaque entrée se juge ensuite sur ce qu'elle change dans les chiffres.",
-      nextItem1: "Favori depuis la page d'un film",
-      nextItem2: 'Plateformes de streaming par compte',
-      nextItem3: "Classement d'un groupe",
-      nextItem4: 'Déjà vu automatique en soirée',
+      nextItem1: 'Plateformes de streaming par compte',
+      nextItem2: "Classement d'un groupe",
+      nextItem3: 'Déjà vu automatique en soirée',
       v2When: 'Sans date annoncée',
       v2What: 'V2',
       v2Detail:

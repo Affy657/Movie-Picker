@@ -1,0 +1,32 @@
+.intro {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--leading-normal);
+  color: var(--color-text-muted);
+}
+
+.error {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-error);
+}
+
+.choices {
+  margin-top: var(--space-3);
+}
+
+.thumb,
+.thumbEmpty {
+  width: var(--space-10);
+  height: var(--space-14);
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+}
+
+.thumb {
+  object-fit: cover;
+}
+
+.thumbEmpty {
+  background: var(--color-poster-placeholder);
+}
