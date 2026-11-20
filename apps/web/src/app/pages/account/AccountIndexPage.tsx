@@ -1,4 +1,5 @@
 import { Navigate, Link } from 'react-router';
+import { ROUTES } from '@/app/routes';
 import { ChevronRight } from 'lucide-react';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useTranslation } from '@/shared/i18n';
@@ -14,7 +15,7 @@ export default function AccountIndexPage({ user }: Readonly<{ user: UserProfile 
   const needsAttention = user.letterboxdPendingReconciliationCount > 0;
 
   if (!isMobile) {
-    return <Navigate to={ACCOUNT_RUBRIQUES[0]!.key} replace />;
+    return <Navigate to={ROUTES.accountPreferences} replace />;
   }
 
   return (

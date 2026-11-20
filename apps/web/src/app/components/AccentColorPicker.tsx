@@ -46,6 +46,25 @@ const ACCENT_LABEL_KEY: Record<PickerColor, TranslationKey> = {
 
 const PATCH_DEBOUNCE_MS = 400;
 
+function toPickerColor(color: AccentColor): PickerColor {
+  return (PICKER_COLORS as readonly string[]).includes(color) ? (color as PickerColor) : 'blue';
+}
+
+export function AccentColorSummary({ color }: Readonly<{ color: AccentColor }>) {
+  const { t } = useTranslation();
+  const shown = toPickerColor(color);
+  return (
+    <span className={styles.summary}>
+      <span
+        className={clsx(styles.disc, styles.summaryDisc)}
+        style={{ ['--swatch-color' as string]: SWATCH_COLORS[shown] }}
+        aria-hidden="true"
+      />
+      {t(ACCENT_LABEL_KEY[shown])}
+    </span>
+  );
+}
+
 export default function AccentColorPicker({
   id,
   ariaLabelledBy,
@@ -80,9 +99,6 @@ export default function AccentColorPicker({
     },
     []
   );
-
-  const toPickerColor = (color: AccentColor): PickerColor =>
-    (PICKER_COLORS as readonly string[]).includes(color) ? (color as PickerColor) : 'blue';
 
   const effectiveSelection: PickerColor = toPickerColor(accent);
 

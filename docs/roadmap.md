@@ -40,7 +40,6 @@ Rien pour l'instant.
 4. `M` **Une liste en vitrine sur le profil** : un membre épingle l'une de ses listes publiques en haut de son profil, avec ses affiches et son nombre de films, pour la montrer à ceux qui le visitent.
 5. `M` **Cadres d'avatar à débloquer** : un contour autour de l'avatar, gagné avec la flamme de soirées, le soutien Ko-fi ou un nombre de soirées, que le membre choisit d'afficher et que tous voient, sur son profil comme en soirée.
 6. `M` **Recherche globale dans la barre de navigation** : une loupe toujours présente dans la barre de navigation, sur ordinateur comme sur téléphone, ouvre une seule recherche sur les films et séries, les membres, les listes, les sagas, ses soirées et ses groupes, avec les résultats rangés par type.
-7. `M` **Modifier son profil depuis son profil** : un bouton « Modifier le profil » de sa propre page ouvre une fenêtre ou une page qui réunit nom, pseudo, bio, avatar, bannière, favoris et couleur, avec l'aperçu du résultat. Elle remplace la rubrique Profil des paramètres.
 
 ---
 

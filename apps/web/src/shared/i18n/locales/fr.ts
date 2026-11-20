@@ -548,6 +548,7 @@ export const fr = {
         'Vous avez aussi un mot de passe, vous pouvez d\u00e9lier ces comptes sans perdre l\u2019acc\u00e8s.',
       connectionsLastProviderHint:
         'C\u2019est votre seule m\u00e9thode de connexion. D\u00e9finissez un mot de passe avant de pouvoir la d\u00e9lier.',
+      accentColorProfileLink: 'Changer dans mon profil',
       accentColorLabel: 'Couleur d\u2019accent',
       accentColorSaveError:
         'La couleur {{color}} n\u2019a pas pu \u00eatre enregistr\u00e9e, {{previous}} a \u00e9t\u00e9 r\u00e9tabli. R\u00e9essayez.',
@@ -2473,7 +2474,7 @@ export const fr = {
     event_movie_limit_reached: 'Cette soirée a atteint la limite de {{max}} films proposés.',
     proposal_limit_reached: 'Limite de {{max}} proposition(s) par participant atteinte.',
     oauth_link_failed: 'Impossible de connecter ce compte. Réessayez.',
-    handle_taken: 'Ce handle est déjà pris.',
+    handle_taken: 'Ce pseudo est déjà pris.',
     identity_conflict: 'Cette identité externe est déjà liée à un autre compte.',
     email_taken: 'Un compte existe déjà pour cette adresse e-mail.',
     event_config_locked_finished:
@@ -2548,12 +2549,12 @@ export const fr = {
     password_needs_digit: 'Le mot de passe doit contenir au moins un chiffre.',
     display_name_required: 'Le pseudo est requis.',
     display_name_too_long: 'Le pseudo ne peut pas dépasser {{max}} caractères.',
-    handle_required: 'Le handle est requis.',
-    handle_too_short: 'Le handle doit contenir au moins {{min}} caractères.',
-    handle_too_long: 'Le handle ne peut pas dépasser {{max}} caractères.',
+    handle_required: 'Le pseudo est requis.',
+    handle_too_short: 'Le pseudo doit contenir au moins {{min}} caractères.',
+    handle_too_long: 'Le pseudo ne peut pas dépasser {{max}} caractères.',
     handle_invalid_characters:
-      'Le handle ne peut contenir que des lettres minuscules, chiffres et underscores.',
-    handle_reserved: 'Ce handle est réservé.',
+      'Le pseudo ne peut contenir que des lettres minuscules, des chiffres et des tirets bas.',
+    handle_reserved: 'Ce pseudo est réservé.',
     bio_too_long: 'La bio ne peut pas dépasser {{max}} caractères.',
     invalid_reset_token: 'Token invalide ou expiré.',
     letterboxd_username_invalid:
@@ -2896,6 +2897,27 @@ export const fr = {
   },
 
   profile: {
+    edit: {
+      title: 'Modifier le profil',
+      back: 'Mon profil',
+      previewLabel: 'Aperçu de votre profil',
+      banner: 'Bannière',
+      bannerAdd: 'Ajouter une bannière',
+      avatar: 'Changer l’avatar',
+      identity: 'Identité',
+      name: 'Nom',
+      nameRequired: 'Le nom est requis.',
+      handle: 'Pseudo',
+      handleChecking: 'Vérification…',
+      handleAvailable: 'Disponible',
+      handleUse: 'Utiliser ce pseudo',
+      handleWarning: 'L’ancien lien de votre profil ne marchera plus.',
+      color: 'Couleur',
+      favorites: 'Favoris',
+      visibility: 'Visibilité',
+      watchedSuggestions: 'Mes films vus',
+      listSuggestions: 'Dans ma liste',
+    },
     banner: {
       edit: 'Modifier la bannière',
       add: 'Ajouter une bannière',
@@ -3519,7 +3541,6 @@ export const fr = {
       nextItem4: 'Une liste en vitrine sur le profil',
       nextItem5: "Cadres d'avatar à débloquer",
       nextItem6: 'Recherche globale',
-      nextItem7: 'Modifier son profil depuis son profil',
       v2When: 'Sans date annoncée',
       v2What: 'V2',
       v2Detail:

@@ -75,15 +75,20 @@ function renderSettings(path = '/settings/profil') {
 }
 
 async function findBlock() {
-  return screen.findByRole('region', { name: 'Mes favoris' });
+  return screen.findByRole('region', { name: 'Favoris' });
+}
+
+async function openPicker(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(within(await findBlock()).getByRole('button', { name: 'Ajouter un favori' }));
+  return screen.findByRole('dialog', { name: 'Ajouter un favori' });
 }
 
 async function openSearch(user: ReturnType<typeof userEvent.setup>, query: string) {
-  await user.click(await screen.findByRole('button', { name: 'Ajouter un favori' }));
+  await openPicker(user);
   await user.type(await screen.findByRole('searchbox', { name: 'Rechercher un favori' }), query);
 }
 
-describe('AccountFavoritesCard (MSW)', () => {
+describe('ProfileEditFavorites (MSW)', () => {
   const server = setupServer();
   let me: Record<string, unknown>;
 
@@ -97,21 +102,29 @@ describe('AccountFavoritesCard (MSW)', () => {
   beforeEach(() => {
     setSessionHint();
     me = { ...baseUser, favorites: [HEAT, TWIN_PEAKS] };
-    server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(me)));
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(me)),
+      http.get(`${TEST_API_V1}/users/me/watched-movies`, () =>
+        HttpResponse.json({ items: [], total: 0 })
+      ),
+      http.get(`${TEST_API_V1}/watchlist`, () =>
+        HttpResponse.json({ items: [], total: 0, hasMore: false })
+      ),
+      http.get(`${TEST_API_V1}/watchlist/availability`, () => HttpResponse.json({ items: [] }))
+    );
   });
 
-  it('lists the favorites with the places left and a way to remove each', async () => {
+  it('shows the favorites as posters with a way to remove each and a slot to add one', async () => {
     renderSettings();
 
     const block = await findBlock();
-    expect(within(block).getByText('2 sur 3')).toBeInTheDocument();
     expect(within(block).getByText('Heat')).toBeInTheDocument();
     expect(within(block).getByText('Twin Peaks')).toBeInTheDocument();
     expect(within(block).getByText('Série')).toBeInTheDocument();
     expect(
       within(block).getByRole('button', { name: 'Retirer Heat de mes favoris' })
     ).toBeInTheDocument();
-    expect(within(block).getByText(/affichés sur votre profil public/i)).toBeInTheDocument();
+    expect(within(block).getAllByRole('button', { name: 'Ajouter un favori' })).toHaveLength(1);
   });
 
   it('says nobody sees them while the profile is private', async () => {
@@ -124,15 +137,14 @@ describe('AccountFavoritesCard (MSW)', () => {
     ).toBeInTheDocument();
   });
 
-  it('invites to add a first favorite when there is none', async () => {
+  it('offers a single slot to add a first favorite when there is none', async () => {
     me = { ...me, favorites: [] };
 
     renderSettings();
 
     const block = await findBlock();
-    expect(within(block).getByText('Aucun favori pour l’instant.')).toBeInTheDocument();
-    expect(within(block).getByText('0 sur 3')).toBeInTheDocument();
-    expect(within(block).getByRole('button', { name: 'Ajouter un favori' })).toBeInTheDocument();
+    expect(within(block).getAllByRole('button', { name: 'Ajouter un favori' })).toHaveLength(1);
+    expect(within(block).queryByRole('button', { name: /retirer/i })).toBeNull();
   });
 
   it('stops offering to add once three favorites are chosen', async () => {
@@ -141,13 +153,67 @@ describe('AccountFavoritesCard (MSW)', () => {
     renderSettings();
 
     const block = await findBlock();
-    expect(within(block).getByText(/trois favoris au maximum/i)).toBeInTheDocument();
     expect(
       within(block).queryByRole('button', { name: 'Ajouter un favori' })
     ).not.toBeInTheDocument();
   });
 
-  it('adds a title found through the search and saves it right away', async () => {
+  it('opens the film search of the app, with my watched films and my list to pick from', async () => {
+    const user = userEvent.setup();
+    me = { ...me, favorites: [HEAT] };
+    server.use(
+      http.get(`${TEST_API_V1}/users/me/watched-movies`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              tmdbId: INCEPTION.tmdbId,
+              mediaType: 'movie',
+              title: 'Inception',
+              year: '2010',
+              posterPath: null,
+              voteAverage: 8.4,
+              runtimeMinutes: 148,
+              genreIds: [],
+              watchedAt: '2026-11-01T20:00:00Z',
+              myRating: 9,
+              source: 'night',
+            },
+          ],
+          total: 1,
+        })
+      ),
+      http.get(`${TEST_API_V1}/watchlist`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              tmdbId: 603,
+              mediaType: 'movie',
+              title: 'Matrix',
+              year: '1999',
+              posterPath: null,
+              genreIds: [],
+              createdAt: '2026-11-02T20:00:00Z',
+            },
+          ],
+          total: 1,
+          hasMore: false,
+        })
+      )
+    );
+
+    renderSettings();
+    const dialog = await openPicker(user);
+
+    expect(within(dialog).getByText('1 sur 3')).toBeInTheDocument();
+    expect(await within(dialog).findByText('Mes films vus')).toBeInTheDocument();
+    expect(await within(dialog).findByText('Dans ma liste')).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole('button', { name: 'Ajouter « Inception »' })
+    ).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Ajouter « Matrix »' })).toBeInTheDocument();
+  });
+
+  it('adds a title found through the search, saves it and closes the search', async () => {
     const user = userEvent.setup();
     me = { ...me, favorites: [HEAT] };
     let posted: unknown = null;
@@ -173,13 +239,17 @@ describe('AccountFavoritesCard (MSW)', () => {
       })
     );
     const block = await findBlock();
-    expect(await within(block).findByText('2 sur 3')).toBeInTheDocument();
-    expect(within(block).getAllByText('Inception')).toHaveLength(2);
+    expect(await within(block).findByText('Inception')).toBeInTheDocument();
     expect(screen.getByText('Enregistré')).toBeInTheDocument();
-    expect(screen.getByRole('searchbox', { name: 'Rechercher un favori' })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByRole('searchbox', { name: 'Rechercher un favori' })).toBeNull()
+    );
+    await waitFor(() =>
+      expect(within(block).getByRole('heading', { name: 'Favoris' })).toHaveFocus()
+    );
   });
 
-  it('closes the search once the third favorite is added', async () => {
+  it('stops offering to add once the third favorite is added', async () => {
     const user = userEvent.setup();
     server.use(
       searchReturns(INCEPTION),
@@ -193,16 +263,10 @@ describe('AccountFavoritesCard (MSW)', () => {
     await user.click(await screen.findByRole('button', { name: 'Ajouter « Inception »' }));
 
     const block = await findBlock();
-    expect(await within(block).findByText('3 sur 3')).toBeInTheDocument();
-    expect(
-      screen.queryByRole('searchbox', { name: 'Rechercher un favori' })
-    ).not.toBeInTheDocument();
+    expect(await within(block).findByText('Inception')).toBeInTheDocument();
     expect(
       within(block).queryByRole('button', { name: 'Ajouter un favori' })
     ).not.toBeInTheDocument();
-    await waitFor(() =>
-      expect(within(block).getByRole('heading', { name: 'Mes favoris' })).toHaveFocus()
-    );
   });
 
   it('searches movies and series alike', async () => {
@@ -260,7 +324,7 @@ describe('AccountFavoritesCard (MSW)', () => {
     await waitFor(() => expect(removedUrl).toMatch(/\/users\/me\/favorites\/1920\?mediaType=tv$/));
     await waitFor(() => expect(screen.queryByText('Twin Peaks')).not.toBeInTheDocument());
     expect(screen.getByText('Enregistré')).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Mes favoris' })).toHaveFocus());
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Favoris' })).toHaveFocus());
   });
 
   it('keeps the favorite and says so when the removal fails', async () => {
@@ -294,7 +358,6 @@ describe('AccountFavoritesCard (MSW)', () => {
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
     const block = await findBlock();
-    expect(within(block).getByText('2 sur 3')).toBeInTheDocument();
     expect(
       within(block).queryByRole('button', { name: 'Retirer Inception de mes favoris' })
     ).not.toBeInTheDocument();
@@ -331,12 +394,11 @@ describe('AccountFavoritesCard (MSW)', () => {
       'Vous avez déjà 3 favoris. Retirez-en un pour en ajouter un autre.'
     );
     expect(await within(block).findByText('Matrix')).toBeInTheDocument();
-    expect(within(block).getByText('3 sur 3')).toBeInTheDocument();
     expect(
       screen.queryByRole('searchbox', { name: 'Rechercher un favori' })
     ).not.toBeInTheDocument();
     await waitFor(() =>
-      expect(within(block).getByRole('heading', { name: 'Mes favoris' })).toHaveFocus()
+      expect(within(block).getByRole('heading', { name: 'Favoris' })).toHaveFocus()
     );
   });
 

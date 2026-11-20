@@ -78,7 +78,7 @@ export interface AddMovieFormProps {
   historyChips?: boolean;
   flatResults?: boolean;
   hideAttribution?: boolean;
-  suggestions?: { title: string; items: MovieSearchItem[]; action?: ReactNode };
+  suggestions?: ReadonlyArray<{ title: string; items: MovieSearchItem[]; action?: ReactNode }>;
   renderItemAside?: (item: MovieSearchItem) => MovieSearchItemAside | undefined;
   onOpenItem?: (item: MovieSearchItem, trigger: HTMLElement) => void;
 }
@@ -123,7 +123,7 @@ export default function AddMovieForm({
   const [addError, setAddError] = useState<string | null>(null);
 
   const filters = useMovieSearchFilters(tmdbLanguage, user?.ratingScale);
-  const apiFiltersAlone = filters.hasApiFilters && !suggestions;
+  const apiFiltersAlone = filters.hasApiFilters && !suggestions?.length;
 
   const trimmedForSearch = useMemo(() => query.trim(), [query]);
 
@@ -207,9 +207,14 @@ export default function AddMovieForm({
 
   const shownSuggestions = useMemo(
     () =>
-      suggestions?.items.filter((item) =>
-        matchesSearchFilters(item, filters.activeFilters, filters.availabilityFilter)
-      ) ?? [],
+      (suggestions ?? [])
+        .map((group) => ({
+          ...group,
+          items: group.items.filter((item) =>
+            matchesSearchFilters(item, filters.activeFilters, filters.availabilityFilter)
+          ),
+        }))
+        .filter((group) => group.items.length > 0),
     [suggestions, filters.activeFilters, filters.availabilityFilter]
   );
 
@@ -265,7 +270,7 @@ export default function AddMovieForm({
     availabilityFilter: filters.availabilityFilter,
     historyChips,
     historyCount: history.length,
-    suggestionsCount: suggestions?.items.length ?? 0,
+    suggestionsCount: (suggestions ?? []).reduce((count, group) => count + group.items.length, 0),
   });
 
   const renderRow = (item: MovieSearchItem) => {
@@ -385,15 +390,18 @@ export default function AddMovieForm({
           {displayedResults.map(renderRow)}
         </ResultsBlock>
       ) : null}
-      {flags.showSuggestions && suggestions ? (
-        <SuggestionsSection
-          title={suggestions.title}
-          action={suggestions.action}
-          flat={flatResults}
-        >
-          {shownSuggestions.map(renderRow)}
-        </SuggestionsSection>
-      ) : null}
+      {flags.showSuggestions
+        ? shownSuggestions.map((group) => (
+            <SuggestionsSection
+              key={group.title}
+              title={group.title}
+              action={group.action}
+              flat={flatResults}
+            >
+              {group.items.map(renderRow)}
+            </SuggestionsSection>
+          ))
+        : null}
     </div>
   );
 }

@@ -63,13 +63,13 @@ describe('AccountIndexPage (MSW)', () => {
   });
   afterAll(() => server.close());
 
-  it('redirige vers la rubrique Profil sur ordinateur', async () => {
+  it('opens the preferences on a computer, the profile having its own page', async () => {
     stubMatchMedia(false);
 
     renderAccount();
 
     expect(
-      await screen.findByRole('heading', { name: 'Profil' }, { timeout: 8000 })
+      await screen.findByRole('heading', { name: 'Préférences' }, { timeout: 8000 })
     ).toBeInTheDocument();
   });
 

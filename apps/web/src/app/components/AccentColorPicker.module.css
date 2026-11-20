@@ -45,3 +45,15 @@
 .check {
   pointer-events: none;
 }
+
+.summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: var(--font-weight-semibold);
+}
+
+.summaryDisc {
+  width: var(--icon-lg);
+  height: var(--icon-lg);
+}

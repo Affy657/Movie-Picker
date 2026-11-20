@@ -3,7 +3,10 @@ import Card from '@/shared/components/Card';
 import { useTranslation } from '@/shared/i18n';
 import ThemeToggle from '@/app/components/ThemeToggle';
 import LanguageSelector from '@/app/components/LanguageSelector';
-import AccentColorPicker from '@/app/components/AccentColorPicker';
+import { Link } from 'react-router';
+import { AccentColorSummary } from '@/app/components/AccentColorPicker';
+import { ROUTES } from '@/app/routes';
+import prefStyles from './AccountPreferencesPage.module.css';
 import RatingScaleToggle from '@/app/components/RatingScaleToggle';
 import AccountSavedChip from './AccountSavedChip';
 import { useSavedFlash } from './useSavedFlash';
@@ -43,15 +46,13 @@ export default function AccountPreferencesPage() {
         </div>
 
         <div className={styles.field}>
-          <span className="label" id="account-accent-label">
-            {t('auth.account.accentColorLabel')}
-          </span>
-          <AccentColorPicker
-            id="account-accent"
-            ariaLabelledBy="account-accent-label"
-            onSaved={flashSaved}
-          />
-          <p className="hint">{t('auth.account.accentColorHint')}</p>
+          <span className="label">{t('auth.account.accentColorLabel')}</span>
+          <div className={prefStyles.colorRow}>
+            <AccentColorSummary color={user?.accentColor ?? 'default'} />
+            <Link to={`${ROUTES.accountProfile}#couleur`} className={prefStyles.colorLink}>
+              {t('auth.account.accentColorProfileLink')}
+            </Link>
+          </div>
         </div>
 
         {user && (

@@ -8,6 +8,14 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Modifiez votre profil depuis votre profil** : le bouton Modifier mon profil ouvre une page qui réunit votre nom, votre pseudo, votre bio, votre avatar, votre bannière, votre couleur, vos favoris et la visibilité du profil, avec l'aperçu du résultat en haut. Le pseudo ne change qu'une fois sa disponibilité vérifiée, et les favoris se choisissent parmi vos films vus et votre liste.
+
+### Fixed
+
+- **Les fenêtres qui montent du bas de l'écran prennent toute la largeur du téléphone** : certaines s'arrêtaient à quelques millimètres du bord droit.
+
 ## [1.24.0] - 2026-11-20
 
 ### Added

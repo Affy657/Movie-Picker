@@ -318,15 +318,17 @@ export default function ProposeMovieDialog({
           hideAttribution
           suggestions={
             suggestions.length > 0
-              ? {
-                  title: t('events.propose.myList'),
-                  items: suggestions,
-                  action: (
-                    <Link to={ROUTES.watchlist} className={styles.seeAll}>
-                      {t('events.propose.myListSeeAll')}
-                    </Link>
-                  ),
-                }
+              ? [
+                  {
+                    title: t('events.propose.myList'),
+                    items: suggestions,
+                    action: (
+                      <Link to={ROUTES.watchlist} className={styles.seeAll}>
+                        {t('events.propose.myListSeeAll')}
+                      </Link>
+                    ),
+                  },
+                ]
               : undefined
           }
           renderItemAside={asideFor}

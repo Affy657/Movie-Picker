@@ -674,7 +674,7 @@ describe('ProfilePage (MSW)', () => {
     renderProfile('moi');
 
     const link = await screen.findByRole('link', { name: /modifier mon profil/i });
-    expect(link).toHaveAttribute('href', '/settings');
+    expect(link).toHaveAttribute('href', '/settings/profil');
   });
 
   describe('member colour', () => {

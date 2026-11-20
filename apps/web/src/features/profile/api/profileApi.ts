@@ -165,3 +165,16 @@ export async function fetchFollowingWatchedMovies(
     { signal }
   );
 }
+
+export type HandleAvailability = ApiSchemas['HandleAvailabilityResponse'];
+
+export function fetchHandleAvailability(
+  handle: string,
+  signal?: AbortSignal
+): Promise<HandleAvailability> {
+  const params = new URLSearchParams({ handle });
+  return fetchApi<HandleAvailability>(
+    `${apiPath('users', 'me', 'handle-availability')}?${params.toString()}`,
+    { signal }
+  );
+}
