@@ -394,8 +394,8 @@
 .swatchOrange {
   background: var(--color-accent-swatch-orange);
 }
-.swatchCyan {
-  background: var(--color-accent-swatch-cyan);
+.swatchTeal {
+  background: var(--color-accent-swatch-teal);
 }
 
 .swatchActive {

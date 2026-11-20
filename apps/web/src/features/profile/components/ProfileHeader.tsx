@@ -5,6 +5,8 @@ import { useTranslation } from '@/shared/i18n';
 import ProfileStreakFlame from '@/features/profile/components/ProfileStreakFlame';
 import SupporterBadge from '@/features/profile/components/SupporterBadge';
 import type { PublicProfile } from '@/features/profile/api/profileApi';
+import type { AccentColor } from '@/shared/types/theme';
+import { isChosenAccent } from '@/shared/utils/accentColor';
 import styles from './ProfileHeader.module.css';
 
 type FollowTab = 'following' | 'followers';
@@ -19,6 +21,7 @@ interface Props {
   memberSince: string;
   streak: Streak | null;
   onOpenFollowModal: (tab: FollowTab) => void;
+  accent?: AccentColor;
   overBanner?: boolean;
   children?: ReactNode;
 }
@@ -28,6 +31,7 @@ export default function ProfileHeader({
   memberSince,
   streak,
   onOpenFollowModal,
+  accent,
   overBanner = false,
   children,
 }: Readonly<Props>) {
@@ -39,7 +43,12 @@ export default function ProfileHeader({
         avatarId={profile.avatarId}
         pseudo={profile.displayName}
         size="xl"
-        className={clsx(styles.avatar, overBanner && styles.avatarOverBanner)}
+        accent={accent}
+        className={clsx(
+          styles.avatar,
+          overBanner && styles.avatarOverBanner,
+          isChosenAccent(accent) && styles.avatarAccent
+        )}
         priority
       />
 

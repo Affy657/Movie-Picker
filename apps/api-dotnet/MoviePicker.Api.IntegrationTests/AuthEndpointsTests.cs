@@ -360,6 +360,31 @@ public sealed class AuthEndpointsTests : IClassFixture<MoviePickerApplicationFac
     }
 
     [Fact]
+    public async Task PatchMe_AccentColor_ShowsOnThePublicProfileToAnonymousVisitors()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Couleur Publique");
+        var patch = await client.PatchAsJsonAsync("/api/v1/auth/me", new PatchUserProfileRequest { AccentColor = "pink" });
+        var me = await patch.Content.ReadFromJsonAsync<UserProfileResponse>(JsonReadOptions);
+
+        var raw = await _factory.CreateClient().GetStringAsync($"/api/v1/users/{me!.Handle}");
+
+        Assert.Contains("\"accentColor\":\"pink\"", raw);
+    }
+
+    [Theory]
+    [InlineData("gold", "gold")]
+    [InlineData("indigo", "purple")]
+    public async Task PatchMe_AccentColor_TakesTheNewPaletteAndARetiredColourFromACachedApp(string sent, string served)
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Palette");
+
+        var patch = await client.PatchAsJsonAsync("/api/v1/auth/me", new { accentColor = sent });
+
+        Assert.Equal(HttpStatusCode.OK, patch.StatusCode);
+        Assert.Contains($"\"accentColor\":\"{served}\"", await patch.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
     public async Task PatchMe_InvalidAccentColor_Returns400()
     {
         var client = _factory.CreateClient();

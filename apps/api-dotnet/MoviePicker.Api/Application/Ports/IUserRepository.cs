@@ -4,7 +4,13 @@ namespace MoviePicker.Api.Application.Ports;
 
 public sealed record PublicProfileRef(string Handle, DateTimeOffset UpdatedAt);
 
-public sealed record UserCard(string Id, string DisplayedAvatarId, string? Handle, bool IsProfilePublic, string DisplayName = "");
+public sealed record UserCard(
+    string Id,
+    string DisplayedAvatarId,
+    string? Handle,
+    bool IsProfilePublic,
+    string DisplayName = "",
+    AccentColor AccentColor = AccentColor.Default);
 
 public interface IUserRepository
 {

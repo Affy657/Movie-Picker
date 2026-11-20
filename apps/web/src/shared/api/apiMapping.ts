@@ -38,6 +38,7 @@ export function mapEventData(raw: RawEventData): EventData {
         isCreator: p.isCreator ?? false,
         avatarId: p.avatarId,
         handle: p.handle ?? null,
+        accentColor: p.accentColor ?? null,
       }))
     : undefined;
   return {

@@ -14,6 +14,7 @@ type Props = {
   banner: Banner;
   isOwner: boolean;
   onEdit: () => void;
+  tinted?: boolean;
 };
 
 function sourceSet(banner: Banner): string | undefined {
@@ -22,13 +23,18 @@ function sourceSet(banner: Banner): string | undefined {
   return small ? `${small} 780w, ${banner.imageUrl} 1280w` : undefined;
 }
 
-export default function ProfileBanner({ banner, isOwner, onEdit }: Readonly<Props>) {
+export default function ProfileBanner({
+  banner,
+  isOwner,
+  onEdit,
+  tinted = false,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const [loaded, setLoaded] = useState(false);
   const title = banner.source === 'film' ? banner.title : null;
 
   return (
-    <div className={styles.banner}>
+    <div className={clsx(styles.banner, tinted && styles.tinted)}>
       <div className={styles.backdrop} aria-hidden="true">
         <img
           src={posterImageSrc(banner.imageUrl)}

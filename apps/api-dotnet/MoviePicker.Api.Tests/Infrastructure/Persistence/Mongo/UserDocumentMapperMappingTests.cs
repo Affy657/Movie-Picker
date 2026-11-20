@@ -14,9 +14,12 @@ public sealed class UserDocumentMapperMappingTests
     [InlineData("purple", AccentColor.Purple)]
     [InlineData("pink", AccentColor.Pink)]
     [InlineData("orange", AccentColor.Orange)]
-    [InlineData("red", AccentColor.Red)]
-    [InlineData("cyan", AccentColor.Cyan)]
-    [InlineData("indigo", AccentColor.Indigo)]
+    [InlineData("teal", AccentColor.Teal)]
+    [InlineData("lime", AccentColor.Lime)]
+    [InlineData("gold", AccentColor.Gold)]
+    [InlineData("red", AccentColor.Pink)]
+    [InlineData("cyan", AccentColor.Teal)]
+    [InlineData("indigo", AccentColor.Purple)]
     [InlineData("BLUE", AccentColor.Blue)]
     [InlineData("default", AccentColor.Default)]
     [InlineData("unknown", AccentColor.Default)]
@@ -32,9 +35,9 @@ public sealed class UserDocumentMapperMappingTests
     [InlineData(AccentColor.Purple, "purple")]
     [InlineData(AccentColor.Pink, "pink")]
     [InlineData(AccentColor.Orange, "orange")]
-    [InlineData(AccentColor.Red, "red")]
-    [InlineData(AccentColor.Cyan, "cyan")]
-    [InlineData(AccentColor.Indigo, "indigo")]
+    [InlineData(AccentColor.Teal, "teal")]
+    [InlineData(AccentColor.Lime, "lime")]
+    [InlineData(AccentColor.Gold, "gold")]
     [InlineData(AccentColor.Default, null)]
     public void AccentToString_MapsKnownColors(AccentColor color, string? expected)
     {
@@ -266,13 +269,13 @@ public sealed class UserDocumentMapperMappingTests
             Email = "a@b.c",
             PasswordHash = "x",
             DisplayName = "n",
-            AccentColor = AccentColor.Cyan,
+            AccentColor = AccentColor.Teal,
             CreatedAt = new DateTimeOffset(Utc),
             UpdatedAt = new DateTimeOffset(Utc)
         };
 
         var back = UserDocumentMapper.ToDomain(UserDocumentMapper.ToDocument(user));
 
-        Assert.Equal(AccentColor.Cyan, back.AccentColor);
+        Assert.Equal(AccentColor.Teal, back.AccentColor);
     }
 }

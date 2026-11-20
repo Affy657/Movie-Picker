@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import clsx from 'clsx';
+import type { AccentColor } from '@/shared/types/theme';
+import { accentZoneClass, isChosenAccent } from '@/shared/utils/accentColor';
 import { avatarPaletteIndex, avatarUrl } from '@/shared/utils/avatar';
 import { initialsOf } from '@/shared/utils/initials';
 import styles from './Avatar.module.css';
@@ -10,6 +12,11 @@ interface AvatarProps {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
   priority?: boolean;
+  accent?: AccentColor | null;
+}
+
+function accentRingClass(accent: AccentColor | null | undefined): string | undefined {
+  return isChosenAccent(accent) ? clsx(accentZoneClass(accent), styles.accentRing) : undefined;
 }
 
 const SIZE_PX: Record<NonNullable<AvatarProps['size']>, number> = {
@@ -26,16 +33,18 @@ export default function Avatar({
   size = 'md',
   className,
   priority = false,
+  accent,
 }: Readonly<AvatarProps>) {
   const px = SIZE_PX[size];
   const [failedAvatarId, setFailedAvatarId] = useState<string | null>(null);
+  const ring = accentRingClass(accent);
 
   if (!avatarId || failedAvatarId === avatarId) {
     if (pseudo) {
       return (
         <span
           aria-hidden="true"
-          className={clsx(styles.avatar, styles.initials, styles[size], className)}
+          className={clsx(styles.avatar, styles.initials, styles[size], ring, className)}
           data-palette={avatarPaletteIndex(pseudo)}
         >
           <span className={styles.initialsText}>{initialsOf(pseudo)}</span>
@@ -45,7 +54,7 @@ export default function Avatar({
     return (
       <span
         aria-hidden="true"
-        className={clsx(styles.avatar, styles[size], styles.placeholder, className)}
+        className={clsx(styles.avatar, styles[size], styles.placeholder, ring, className)}
       />
     );
   }
@@ -57,7 +66,7 @@ export default function Avatar({
       aria-hidden="true"
       width={px}
       height={px}
-      className={clsx(styles.avatar, styles[size], className)}
+      className={clsx(styles.avatar, styles[size], ring, className)}
       loading={priority ? 'eager' : 'lazy'}
       fetchPriority={priority ? 'high' : undefined}
       decoding="async"

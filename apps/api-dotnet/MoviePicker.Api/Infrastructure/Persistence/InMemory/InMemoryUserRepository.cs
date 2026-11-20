@@ -42,7 +42,7 @@ public sealed class InMemoryUserRepository : IUserRepository
     }
 
     private static UserCard ToCard(User user) =>
-        new(user.Id, user.DisplayedAvatarId, user.Handle, user.IsProfilePublic, user.DisplayName);
+        new(user.Id, user.DisplayedAvatarId, user.Handle, user.IsProfilePublic, user.DisplayName, user.AccentColor);
 
     public Task<User?> GetByEmailAsync(string email, CancellationToken ct = default)
     {

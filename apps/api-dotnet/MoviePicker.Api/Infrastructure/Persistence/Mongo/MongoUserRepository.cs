@@ -56,14 +56,16 @@ public sealed class MongoUserRepository : IUserRepository
             .Include(x => x.AvatarPhoto)
             .Include(x => x.Handle)
             .Include(x => x.IsProfilePublic)
-            .Include(x => x.DisplayName);
+            .Include(x => x.DisplayName)
+            .Include(x => x.AccentColor);
         var docs = await _collection.Find(filter).Project<UserDocument>(card).ToListAsync(ct);
         return docs.ConvertAll(d => new UserCard(
             d.Id,
             AvatarPhoto.DisplayedAvatarIdOf(d.AvatarId ?? string.Empty, UserDocumentMapper.ToAvatarPhotoDomain(d.AvatarPhoto)),
             d.Handle,
             d.IsProfilePublic ?? true,
-            d.DisplayName));
+            d.DisplayName,
+            UserDocumentMapper.ParseAccent(d.AccentColor)));
     }
 
     public async Task<User?> GetByEmailAsync(string email, CancellationToken ct = default)

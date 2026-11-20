@@ -64,7 +64,26 @@ describe('mapEventData', () => {
     expect(res.myParticipant).toEqual({ id: 'p1', pseudo: 'Bob' });
     expect(res.winners?.[0]?.movieId).toBe('m1');
     expect(res.participants).toEqual([
-      { id: 'p1', pseudo: 'Bob', isCreator: false, avatarId: undefined, handle: null },
+      {
+        id: 'p1',
+        pseudo: 'Bob',
+        isCreator: false,
+        avatarId: undefined,
+        handle: null,
+        accentColor: null,
+      },
     ]);
+  });
+
+  it('keeps the colour each member picked, a guest without account having none', () => {
+    const res = mapEventData({
+      _id: 'e1',
+      participants: [
+        { _id: 'p1', pseudo: 'Léa', accentColor: 'pink' },
+        { _id: 'p2', pseudo: 'Invité', accentColor: null },
+      ],
+    } as unknown as RawEventData);
+
+    expect(res.participants?.map((p) => p.accentColor)).toEqual(['pink', null]);
   });
 });

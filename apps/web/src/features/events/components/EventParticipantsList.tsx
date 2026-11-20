@@ -120,7 +120,7 @@ export default function EventParticipantsList({
               : t('events.participants.viewProfileAriaLabel', { pseudo: p.pseudo });
             const identity = (
               <>
-                <Avatar avatarId={p.avatarId} pseudo={p.pseudo} size="xs" />
+                <Avatar avatarId={p.avatarId} pseudo={p.pseudo} size="xs" accent={p.accentColor} />
                 <span className={styles.chipLabel}>{p.pseudo}</span>
                 {isOnline ? (
                   <span className={clsx(styles.presence, isProposing && styles.presenceProposing)}>

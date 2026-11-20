@@ -18,6 +18,16 @@
   box-shadow: 0 0 0 4px var(--color-bg);
 }
 
+.avatarAccent {
+  box-shadow: 0 0 0 3px var(--color-primary);
+}
+
+.avatarOverBanner.avatarAccent {
+  box-shadow:
+    0 0 0 3px var(--color-primary),
+    0 0 0 6px var(--color-bg);
+}
+
 .identity {
   grid-area: identity;
   min-width: 0;
@@ -135,6 +145,12 @@
 
   .avatarOverBanner {
     box-shadow: 0 0 0 3px var(--color-bg);
+  }
+
+  .avatarOverBanner.avatarAccent {
+    box-shadow:
+      0 0 0 2px var(--color-primary),
+      0 0 0 5px var(--color-bg);
   }
 
   .nameRow {

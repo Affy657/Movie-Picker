@@ -233,7 +233,12 @@ function NightIdentity({ night, t }: Readonly<{ night: Night; t: Translate }>) {
       <span className={styles.nightTitle}>{event.title}</span>
       {movie ? (
         <span className={styles.proposer}>
-          <Avatar avatarId={proposer?.avatarId} pseudo={movie.proposerPseudo} size="xs" />
+          <Avatar
+            avatarId={proposer?.avatarId}
+            pseudo={movie.proposerPseudo}
+            size="xs"
+            accent={proposer?.accentColor}
+          />
           {t('moviePage.night.proposedBy', { pseudo: movie.proposerPseudo })}
         </span>
       ) : null}

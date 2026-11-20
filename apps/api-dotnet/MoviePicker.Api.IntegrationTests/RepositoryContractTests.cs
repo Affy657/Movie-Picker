@@ -1803,7 +1803,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     {
         using var scope = _factory.Services.CreateScope();
         var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
-        var visible = await users.AddAsync(NewUser("cardpublic") with { AvatarId = "avatar-7" });
+        var visible = await users.AddAsync(NewUser("cardpublic") with { AvatarId = "avatar-7", AccentColor = AccentColor.Orange });
         var hidden = await users.AddAsync(NewUser("cardprivate") with { IsProfilePublic = false });
 
         var cards = await users.ListCardsByIdsAsync([visible.Id, hidden.Id, ObjectId.GenerateNewId().ToString()]);
@@ -1813,7 +1813,10 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal("avatar-7", visibleCard.DisplayedAvatarId);
         Assert.Equal(visible.Handle, visibleCard.Handle);
         Assert.True(visibleCard.IsProfilePublic);
-        Assert.False(cards.Single(c => c.Id == hidden.Id).IsProfilePublic);
+        Assert.Equal(AccentColor.Orange, visibleCard.AccentColor);
+        var hiddenCard = cards.Single(c => c.Id == hidden.Id);
+        Assert.False(hiddenCard.IsProfilePublic);
+        Assert.Equal(AccentColor.Default, hiddenCard.AccentColor);
     }
 
     [Fact]

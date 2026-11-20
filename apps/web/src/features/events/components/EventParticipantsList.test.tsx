@@ -34,6 +34,25 @@ describe('EventParticipantsList', () => {
     expect(host).not.toHaveTextContent('propose un film…');
   });
 
+  it('rings the avatar of each member in their own colour, a guest without account getting none', () => {
+    render(
+      <AppTestProviders>
+        <EventParticipantsList
+          participants={[
+            { id: 'p-lea', pseudo: 'Léa', isCreator: true, accentColor: 'pink' },
+            { id: 'p-guest', pseudo: 'Invité', isCreator: false, accentColor: null },
+          ]}
+          currentParticipantId="p-guest"
+        />
+      </AppTestProviders>
+    );
+
+    expect(screen.getByTestId('participant-p-lea').querySelector('.accent-pink')).not.toBeNull();
+    expect(
+      screen.getByTestId('participant-p-guest').querySelector('[class*="accent-"]')
+    ).toBeNull();
+  });
+
   it('shows no presence marker while presence is unknown', () => {
     render(
       <AppTestProviders>

@@ -25,6 +25,32 @@ describe('Avatar', () => {
     expect(img).toHaveAttribute('fetchpriority', 'high');
   });
 
+  it('rings the avatar in the colour its member picked', () => {
+    const { container } = render(
+      <>
+        <Avatar avatarId="cat-3" accent="pink" />
+        <Avatar avatarId={null} pseudo="Léa" accent="green" />
+      </>
+    );
+
+    const [image, initials] = Array.from(container.children);
+    expect(image).toHaveClass('accent-pink', styles.accentRing!);
+    expect(initials).toHaveClass('accent-green', styles.accentRing!);
+  });
+
+  it('draws no ring for the default colour nor for a guest without an account', () => {
+    const { container } = render(
+      <>
+        <Avatar avatarId="cat-3" accent="default" />
+        <Avatar avatarId={null} pseudo="Invité" accent={null} />
+        <Avatar avatarId="cat-3" />
+      </>
+    );
+
+    for (const avatar of Array.from(container.children))
+      expect(avatar).not.toHaveClass(styles.accentRing!);
+  });
+
   it('shows a profile photo served by the API', () => {
     const { container } = render(<Avatar avatarId="photo:0123456789abcdef0123456789abcdef" />);
 

@@ -12,6 +12,21 @@ const PEOPLE = [
 ];
 
 describe('AvatarStack', () => {
+  it('rings the face of a member in the colour they picked, over the separating ring', () => {
+    const { container } = render(
+      <AvatarStack
+        people={[
+          { key: '1', avatarId: null, pseudo: 'Alice', accent: 'pink' },
+          { key: '2', avatarId: null, pseudo: 'Bob', accent: 'default' },
+        ]}
+      />
+    );
+
+    const [alice, bob] = Array.from(container.querySelectorAll(`.${styles.item}`));
+    expect(alice).toHaveClass('accent-pink', styles.itemAccent!);
+    expect(bob).not.toHaveClass(styles.itemAccent!);
+  });
+
   it('shows at most max avatars and a +N pill for the rest', () => {
     render(<AvatarStack people={PEOPLE} max={3} />);
     expect(screen.getAllByText(/^[A-Z]{2}$/)).toHaveLength(3);

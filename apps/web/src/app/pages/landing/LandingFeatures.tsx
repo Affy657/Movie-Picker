@@ -169,7 +169,7 @@ export default function LandingFeatures() {
                 <span className={clsx(demo.swatch, demo.swatchPurple)} />
                 <span className={clsx(demo.swatch, demo.swatchPink)} />
                 <span className={clsx(demo.swatch, demo.swatchOrange)} />
-                <span className={clsx(demo.swatch, demo.swatchCyan)} />
+                <span className={clsx(demo.swatch, demo.swatchTeal)} />
               </div>
             </div>
           </Card>

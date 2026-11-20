@@ -133,6 +133,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             IsCreator = !string.IsNullOrEmpty(creatorUserId) && p.UserId == creatorUserId,
             AvatarId = person?.AvatarId ?? string.Empty,
             Handle = person?.PublicHandle,
+            AccentColor = person?.AccentColor,
         };
     }
 }

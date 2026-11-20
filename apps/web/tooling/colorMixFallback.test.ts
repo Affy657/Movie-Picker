@@ -55,6 +55,15 @@ describe('colour-mix fallback for Safari before 16.2', () => {
     );
   });
 
+  it('recomputes the tokens of a member colour zone inside a page of another accent', () => {
+    expect(block(":root[data-theme='dark'] .accent-pink")).toContain(
+      '--color-primary-soft: rgba(244, 114, 182, 0.14);'
+    );
+    expect(block(":root[data-theme='light'] .accent-default")).toContain(
+      '--color-primary-soft: rgba(37, 99, 235, 0.12);'
+    );
+  });
+
   it('recomputes the tokens of a dark section inside a light page', () => {
     expect(block(":root[data-theme='light'] .on-dark")).toContain('--color-primary-text:');
   });

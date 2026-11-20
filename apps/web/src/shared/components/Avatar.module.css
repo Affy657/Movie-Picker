@@ -9,6 +9,10 @@
   background: var(--color-border-subtle);
 }
 
+.accentRing {
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
 .initials {
   display: inline-flex;
   align-items: center;

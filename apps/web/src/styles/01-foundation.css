@@ -82,7 +82,22 @@
   --blue-800: #1e40af;
   --sky-400: #38bdf8;
   --sky-700: #0369a1;
+  --teal-200: #99f6e4;
+  --teal-300: #5eead4;
+  --teal-400: #2dd4bf;
+  --teal-500: #14b8a6;
   --teal-700: #0f766e;
+  --teal-800: #115e59;
+  --teal-900: #134e4a;
+  --teal-950: #042f2e;
+  --lime-200: #d9f99d;
+  --lime-300: #bef264;
+  --lime-400: #a3e635;
+  --lime-500: #84cc16;
+  --lime-700: #4d7c0f;
+  --lime-800: #3f6212;
+  --lime-900: #365314;
+  --lime-950: #1a2e05;
   --green-300: #86efac;
   --green-400: #4ade80;
   --green-500: #22c55e;
@@ -97,6 +112,7 @@
   --emerald-800: #065f46;
   --violet-300: #c4b5fd;
   --violet-400: #a78bfa;
+  --violet-500: #8b5cf6;
   --violet-600: #7c3aed;
   --violet-700: #6d28d9;
   --violet-800: #5b21b6;
@@ -143,10 +159,14 @@
   --indigo-950: #1e1b4b;
   --amber-100: #fef3c7;
   --amber-200: #fde68a;
+  --amber-300: #fcd34d;
   --amber-400: #fbbf24;
+  --amber-500: #f59e0b;
+  --amber-600: #d97706;
   --amber-700: #b45309;
   --amber-800: #92400e;
   --amber-900: #78350f;
+  --amber-950: #451a03;
   --yellow-950: #422006;
 
   --color-overlay-backdrop: rgba(0, 0, 0, 0.55);
@@ -174,14 +194,14 @@
   --color-on-poster-scrim: rgba(7, 11, 22, 0.7);
   --color-on-poster-scrim-strong: rgba(7, 11, 22, 0.8);
 
-  --color-accent-swatch-blue: var(--blue-600);
-  --color-accent-swatch-green: var(--green-700);
-  --color-accent-swatch-purple: var(--violet-600);
-  --color-accent-swatch-pink: var(--pink-600);
-  --color-accent-swatch-orange: var(--orange-700);
-  --color-accent-swatch-red: var(--red-600);
-  --color-accent-swatch-cyan: var(--cyan-700);
-  --color-accent-swatch-indigo: var(--indigo-600);
+  --color-accent-swatch-blue: var(--blue-500);
+  --color-accent-swatch-teal: var(--teal-500);
+  --color-accent-swatch-green: var(--green-500);
+  --color-accent-swatch-lime: var(--lime-500);
+  --color-accent-swatch-gold: var(--amber-400);
+  --color-accent-swatch-orange: var(--orange-500);
+  --color-accent-swatch-pink: var(--pink-500);
+  --color-accent-swatch-purple: var(--violet-500);
 
   --color-wheel-0: var(--blue-600);
   --color-wheel-1: var(--orange-700);
@@ -478,61 +498,69 @@
   --color-heat-3: var(--color-primary);
 }
 
-[data-accent='blue'] {
+[data-accent='blue'],
+.accent-blue {
   --color-primary: var(--blue-600);
   --color-primary-hover: var(--blue-700);
   --color-primary-contrast: var(--white);
   --color-primary-text: var(--blue-700);
   --color-primary-text-hover: var(--blue-800);
 }
-[data-accent='green'] {
+[data-accent='green'],
+.accent-green {
   --color-primary: var(--green-700);
   --color-primary-hover: var(--green-800);
   --color-primary-contrast: var(--white);
   --color-primary-text: var(--green-800);
   --color-primary-text-hover: var(--green-900);
 }
-[data-accent='purple'] {
+[data-accent='purple'],
+.accent-purple {
   --color-primary: var(--violet-600);
   --color-primary-hover: var(--violet-700);
   --color-primary-contrast: var(--white);
   --color-primary-text: var(--violet-700);
   --color-primary-text-hover: var(--violet-800);
 }
-[data-accent='pink'] {
+[data-accent='pink'],
+.accent-pink {
   --color-primary: var(--pink-600);
   --color-primary-hover: var(--pink-700);
   --color-primary-contrast: var(--white);
   --color-primary-text: var(--pink-700);
   --color-primary-text-hover: var(--pink-800);
 }
-[data-accent='orange'] {
+[data-accent='orange'],
+.accent-orange {
   --color-primary: var(--orange-700);
   --color-primary-hover: var(--orange-800);
   --color-primary-contrast: var(--white);
   --color-primary-text: var(--orange-800);
   --color-primary-text-hover: var(--orange-900);
 }
-[data-accent='red'] {
-  --color-primary: var(--red-600);
-  --color-primary-hover: var(--red-700);
+[data-accent='teal'],
+.accent-teal {
+  --color-primary: var(--teal-700);
+  --color-primary-hover: var(--teal-800);
   --color-primary-contrast: var(--white);
-  --color-primary-text: var(--red-700);
-  --color-primary-text-hover: var(--red-800);
+  --color-primary-text: var(--teal-800);
+  --color-primary-text-hover: var(--teal-900);
 }
-[data-accent='cyan'] {
-  --color-primary: var(--cyan-700);
-  --color-primary-hover: var(--cyan-800);
+[data-accent='lime'],
+.accent-lime {
+  --color-primary: var(--lime-700);
+  --color-primary-hover: var(--lime-800);
   --color-primary-contrast: var(--white);
-  --color-primary-text: var(--cyan-800);
-  --color-primary-text-hover: var(--cyan-900);
+  --color-primary-text: var(--lime-800);
+  --color-primary-text-hover: var(--lime-900);
 }
-[data-accent='indigo'] {
-  --color-primary: var(--indigo-600);
-  --color-primary-hover: var(--indigo-700);
-  --color-primary-contrast: var(--white);
-  --color-primary-text: var(--indigo-700);
-  --color-primary-text-hover: var(--indigo-800);
+[data-accent='gold'],
+.accent-gold {
+  --color-primary: var(--amber-600);
+  --color-primary-hover: var(--amber-500);
+  --color-primary-contrast: var(--amber-950);
+  --color-primary-text: var(--amber-800);
+  --color-primary-text-hover: var(--amber-900);
 }
 
 [data-theme='dark'],
@@ -601,61 +629,118 @@
   --color-primary-border: color-mix(in srgb, var(--color-primary) 40%, transparent);
 }
 
-[data-theme='dark'][data-accent='blue'] {
+[data-theme='dark'][data-accent='blue'],
+[data-theme='dark'] .accent-blue {
   --color-primary: var(--blue-500);
   --color-primary-hover: var(--blue-400);
   --color-primary-contrast: var(--night-900);
   --color-primary-text: var(--blue-400);
   --color-primary-text-hover: var(--blue-300);
 }
-[data-theme='dark'][data-accent='green'] {
+[data-theme='dark'][data-accent='green'],
+[data-theme='dark'] .accent-green {
   --color-primary: var(--green-500);
   --color-primary-hover: var(--green-400);
   --color-primary-contrast: var(--green-950);
   --color-primary-text: var(--green-400);
   --color-primary-text-hover: var(--green-300);
 }
-[data-theme='dark'][data-accent='purple'] {
+[data-theme='dark'][data-accent='purple'],
+[data-theme='dark'] .accent-purple {
   --color-primary: var(--violet-400);
   --color-primary-hover: var(--violet-300);
   --color-primary-contrast: var(--indigo-950);
   --color-primary-text: var(--violet-400);
   --color-primary-text-hover: var(--violet-300);
 }
-[data-theme='dark'][data-accent='pink'] {
+[data-theme='dark'][data-accent='pink'],
+[data-theme='dark'] .accent-pink {
   --color-primary: var(--pink-400);
   --color-primary-hover: var(--pink-300);
   --color-primary-contrast: var(--pink-950);
   --color-primary-text: var(--pink-400);
   --color-primary-text-hover: var(--pink-300);
 }
-[data-theme='dark'][data-accent='orange'] {
+[data-theme='dark'][data-accent='orange'],
+[data-theme='dark'] .accent-orange {
   --color-primary: var(--orange-400);
   --color-primary-hover: var(--orange-300);
   --color-primary-contrast: var(--orange-950);
   --color-primary-text: var(--orange-400);
   --color-primary-text-hover: var(--orange-300);
 }
-[data-theme='dark'][data-accent='red'] {
-  --color-primary: var(--red-400);
-  --color-primary-hover: var(--red-300);
-  --color-primary-contrast: var(--red-950);
-  --color-primary-text: var(--red-400);
-  --color-primary-text-hover: var(--red-300);
+[data-theme='dark'][data-accent='teal'],
+[data-theme='dark'] .accent-teal {
+  --color-primary: var(--teal-400);
+  --color-primary-hover: var(--teal-300);
+  --color-primary-contrast: var(--teal-950);
+  --color-primary-text: var(--teal-300);
+  --color-primary-text-hover: var(--teal-200);
 }
-[data-theme='dark'][data-accent='cyan'] {
-  --color-primary: var(--cyan-400);
-  --color-primary-hover: var(--cyan-300);
-  --color-primary-contrast: var(--cyan-950);
-  --color-primary-text: var(--cyan-400);
-  --color-primary-text-hover: var(--cyan-300);
+[data-theme='dark'][data-accent='lime'],
+[data-theme='dark'] .accent-lime {
+  --color-primary: var(--lime-400);
+  --color-primary-hover: var(--lime-300);
+  --color-primary-contrast: var(--lime-950);
+  --color-primary-text: var(--lime-300);
+  --color-primary-text-hover: var(--lime-200);
 }
-[data-theme='dark'][data-accent='indigo'] {
-  --color-primary: var(--indigo-400);
-  --color-primary-hover: var(--indigo-300);
-  --color-primary-contrast: var(--indigo-950);
-  --color-primary-text: var(--indigo-300);
-  --color-primary-text-hover: var(--indigo-200);
+[data-theme='dark'][data-accent='gold'],
+[data-theme='dark'] .accent-gold {
+  --color-primary: var(--amber-400);
+  --color-primary-hover: var(--amber-300);
+  --color-primary-contrast: var(--amber-950);
+  --color-primary-text: var(--amber-300);
+  --color-primary-text-hover: var(--amber-200);
+}
+
+.accent-default {
+  --color-primary: var(--blue-600);
+  --color-primary-hover: var(--blue-700);
+  --color-primary-contrast: var(--white);
+  --color-primary-text: var(--blue-700);
+  --color-primary-text-hover: var(--blue-800);
+}
+[data-theme='dark'] .accent-default {
+  --color-primary: var(--blue-500);
+  --color-primary-hover: var(--blue-400);
+  --color-primary-contrast: var(--night-900);
+  --color-primary-text: var(--blue-400);
+  --color-primary-text-hover: var(--blue-300);
+}
+
+.accent-default,
+.accent-blue,
+.accent-green,
+.accent-purple,
+.accent-pink,
+.accent-orange,
+.accent-teal,
+.accent-lime,
+.accent-gold {
+  --ring-focus: 0 0 0 3px color-mix(in srgb, var(--color-primary) 25%, transparent);
+  --outline-focus: 2px solid var(--color-primary);
+  --color-primary-tint: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  --color-primary-soft: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  --color-primary-soft-hover: color-mix(in srgb, var(--color-primary) 20%, transparent);
+  --color-primary-glow: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  --color-primary-border: color-mix(in srgb, var(--color-primary) 32%, transparent);
+  --color-primary-border-soft: color-mix(in srgb, var(--color-primary) 42%, var(--color-border));
+}
+[data-theme='dark'] .accent-default,
+[data-theme='dark'] .accent-blue,
+[data-theme='dark'] .accent-green,
+[data-theme='dark'] .accent-purple,
+[data-theme='dark'] .accent-pink,
+[data-theme='dark'] .accent-orange,
+[data-theme='dark'] .accent-teal,
+[data-theme='dark'] .accent-lime,
+[data-theme='dark'] .accent-gold {
+  --color-primary-tint: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  --color-primary-soft: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  --color-primary-soft-hover: color-mix(in srgb, var(--color-primary) 24%, transparent);
+  --color-primary-glow: color-mix(in srgb, var(--color-primary) 22%, transparent);
+  --color-primary-border: color-mix(in srgb, var(--color-primary) 40%, transparent);
 }
 
 .on-dark {

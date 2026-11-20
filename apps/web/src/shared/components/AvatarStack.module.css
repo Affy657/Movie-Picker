@@ -13,6 +13,10 @@
   box-shadow: 0 0 0 2px var(--avatar-stack-ring);
 }
 
+.itemAccent {
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
 .item + .item,
 .item + .more {
   margin-left: calc(var(--space-1) * -1);
