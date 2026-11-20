@@ -19,8 +19,6 @@ export interface LetterboxdWatchedSelection extends TitleSummary {
 
 export type LetterboxdConfirmResult = ApiSchemas['LetterboxdImportConfirmResponse'];
 
-export type LetterboxdExportFilm = ApiSchemas['LetterboxdExportFilmResponse'];
-
 export type LetterboxdExport = ApiSchemas['LetterboxdExportResponse'];
 
 export type LetterboxdExportRow = ApiSchemas['LetterboxdExportRowRequest'];

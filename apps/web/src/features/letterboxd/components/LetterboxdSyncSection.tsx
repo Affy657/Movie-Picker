@@ -41,7 +41,7 @@ import type { UserProfile } from '@/features/auth/types';
 import { letterboxdSyncEnabled } from '@/features/auth/utils/letterboxdSync';
 import LetterboxdChoicesModal from './LetterboxdChoicesModal';
 import sharedStyles from '@/shared/components/SettingsSection.module.css';
-import styles from './LetterboxdImportSection.module.css';
+import styles from './LetterboxdSyncSection.module.css';
 import Button from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
 import IconButton from '@/shared/components/IconButton';
@@ -269,7 +269,7 @@ function confirmedMessage(result: LetterboxdConfirmResult, t: Translate): string
   });
 }
 
-export default function LetterboxdImportSection() {
+export default function LetterboxdSyncSection() {
   const { t } = useTranslation();
   const { user, patchProfile } = useAuth();
   const { track } = useAnalytics();

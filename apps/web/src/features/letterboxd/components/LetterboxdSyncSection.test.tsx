@@ -69,7 +69,7 @@ function meHandler(
   );
 }
 
-describe('LetterboxdImportSection (MSW)', () => {
+describe('LetterboxdSyncSection (MSW)', () => {
   const server = setupServer();
 
   beforeAll(() => {

@@ -16,7 +16,8 @@ public sealed record LetterboxdExport(
 public static class LetterboxdExportReader
 {
     public const int MaxFilmsPerList = 20_000;
-    private const long MaxCsvBytes = 20_000_000;
+    private const long MaxCsvBytes = 10_000_000;
+    private const long MaxBytesPerRead = 40_000_000;
 
     private const string WatchlistFile = "watchlist.csv";
     private const string WatchedFile = "watched.csv";
@@ -29,9 +30,10 @@ public static class LetterboxdExportReader
     public static LetterboxdExport Read(IReadOnlyList<LetterboxdExportFile> files)
     {
         var tables = new Dictionary<string, List<IReadOnlyDictionary<string, string>>>(StringComparer.Ordinal);
+        var budget = new ReadBudget();
         foreach (var file in files)
         {
-            foreach (var (name, text) in CsvFilesOf(file))
+            foreach (var (name, text) in CsvFilesOf(file, budget))
                 tables[name] = ParseTable(text);
         }
 
@@ -46,33 +48,42 @@ public static class LetterboxdExportReader
                 tables.GetValueOrDefault(DiaryFile)));
     }
 
-    private static IEnumerable<(string Name, string Text)> CsvFilesOf(LetterboxdExportFile file)
+    private static IEnumerable<(string Name, string Text)> CsvFilesOf(LetterboxdExportFile file, ReadBudget budget)
     {
         if (IsZip(file.Content))
         {
-            foreach (var entry in ZipEntriesOf(file.Content))
+            foreach (var entry in ZipEntriesOf(file.Content, budget))
                 yield return entry;
             yield break;
         }
 
         var name = KnownNameOf(file.Name);
         if (name is not null && file.Content.LongLength <= MaxCsvBytes)
+        {
+            budget.Spend(file.Content.LongLength);
             yield return (name, Decode(file.Content));
+        }
     }
 
-    private static List<(string Name, string Text)> ZipEntriesOf(byte[] content)
+    private static List<(string Name, string Text)> ZipEntriesOf(byte[] content, ReadBudget budget)
     {
-        var entries = new List<(string, string)>();
+        var entries = new List<(string Name, string Text)>();
         try
         {
             using var archive = new ZipArchive(new MemoryStream(content, writable: false), ZipArchiveMode.Read);
             foreach (var entry in archive.Entries)
             {
                 var name = KnownNameOf(entry.FullName);
-                if (name is null || entry.Length > MaxCsvBytes || InIgnoredFolder(entry.FullName))
+                if (name is null
+                    || entry.Length > MaxCsvBytes
+                    || InIgnoredFolder(entry.FullName)
+                    || entries.Exists(read => read.Name == name))
                     continue;
                 if (ReadBounded(entry) is { } bytes)
+                {
+                    budget.Spend(bytes.LongLength);
                     entries.Add((name, Decode(bytes)));
+                }
             }
         }
         catch (InvalidDataException)
@@ -248,6 +259,18 @@ public static class LetterboxdExportReader
     {
         record.Add(field.ToString());
         field.Clear();
+    }
+
+    private sealed class ReadBudget
+    {
+        private long _spent;
+
+        public void Spend(long bytes)
+        {
+            _spent += bytes;
+            if (_spent > MaxBytesPerRead)
+                throw Errors.LetterboxdExportUnreadable();
+        }
     }
 
     private sealed record ExportRow(string Title, string Year, DateOnly? Date, DateOnly? WatchedDate, int? Rating);

@@ -83,6 +83,16 @@ public sealed class LetterboxdExportReaderTests
     }
 
     [Fact]
+    public void Read_KeepsTheFirstCopyOfAList_WhenAnArchiveRepeatsIt()
+    {
+        var export = ReadZip(
+            ("a/watchlist.csv", $"{Header}\n2025-01-01,Heat,1995,https://boxd.it/a\n"),
+            ("b/watchlist.csv", $"{Header}\n2025-01-01,Cats,2019,https://boxd.it/b\n"));
+
+        Assert.Equal(["Heat"], export.Watchlist.Select(film => film.Title));
+    }
+
+    [Fact]
     public void Read_TakesTheLooseFilesOfAnUnzippedExport_ByTheirName()
     {
         var export = LetterboxdExportReader.Read(

@@ -100,16 +100,22 @@ public sealed class RequestBoundsTests
     }
 
     [Fact]
-    public void IdeaWithAttachments_IsTheOnlyActionAllowedPastTheDefaultBodyLimit()
+    public void OnlyTheIdeaAttachmentsAndTheLetterboxdExport_GoPastTheDefaultBodyLimit()
     {
         var widened = typeof(Program).Assembly.GetTypes()
             .Where(t => typeof(ControllerBase).IsAssignableFrom(t))
             .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
             .Where(m => m.GetCustomAttribute<RequestSizeLimitAttribute>() is not null || m.GetCustomAttribute<DisableRequestSizeLimitAttribute>() is not null)
             .Select(m => $"{m.DeclaringType!.Name}.{m.Name}")
+            .Order(StringComparer.Ordinal)
             .ToList();
 
-        Assert.Equal([$"{nameof(IdeaSuggestionsController)}.{nameof(IdeaSuggestionsController.Create)}"], widened);
+        Assert.Equal(
+            [
+                $"{nameof(IdeaSuggestionsController)}.{nameof(IdeaSuggestionsController.Create)}",
+                $"{nameof(LetterboxdController)}.{nameof(LetterboxdController.ReadExport)}"
+            ],
+            widened);
         Assert.True(RequestBodyLimits.AttachmentsBytes > RequestBodyLimits.DefaultBytes);
     }
 }

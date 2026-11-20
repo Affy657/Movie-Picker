@@ -90,10 +90,6 @@
   color: var(--color-text-muted);
 }
 
-.rowSubFlush {
-  margin: 0;
-}
-
 .rowFlush {
   padding-top: 0;
 }
