@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.26.1] - 2026-11-20
+
 ### Changed
 
 - **Le classement d’un groupe compare toutes les soirées de ses membres** : chaque membre est classé sur l’ensemble de ses soirées terminées, avec ce groupe ou non, et plus seulement sur celles du groupe. La stat Présence devient Soirées, le nombre de soirées terminées de chacun.
@@ -948,7 +950,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.26.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.26.1...HEAD
+[1.26.1]: https://github.com/Affy657/Movie-Picker/compare/v1.26.0...v1.26.1
 [1.26.0]: https://github.com/Affy657/Movie-Picker/compare/v1.25.0...v1.26.0
 [1.25.0]: https://github.com/Affy657/Movie-Picker/compare/v1.24.0...v1.25.0
 [1.24.0]: https://github.com/Affy657/Movie-Picker/compare/v1.23.0...v1.24.0
