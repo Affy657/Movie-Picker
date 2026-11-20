@@ -41,6 +41,8 @@ Rien pour l'instant.
 5. `M` **Couleur du profil visible de tous** : la couleur choisie dans le compte teinte aussi le profil public (fondu de la bannière, boutons, contour de l'avatar) et l'avatar du membre dans les soirées, au lieu de ne se voir que chez lui.
 6. `M` **Une liste en vitrine sur le profil** : un membre épingle l'une de ses listes publiques en haut de son profil, avec ses affiches et son nombre de films, pour la montrer à ceux qui le visitent.
 7. `M` **Cadres d'avatar à débloquer** : un contour autour de l'avatar, gagné avec la flamme de soirées, le soutien Ko-fi ou un nombre de soirées, que le membre choisit d'afficher et que tous voient, sur son profil comme en soirée.
+8. `M` **Recherche globale dans la barre de navigation** : une loupe toujours présente dans la barre de navigation, sur ordinateur comme sur téléphone, ouvre une seule recherche sur les films et séries, les membres, les listes, les sagas, ses soirées et ses groupes, avec les résultats rangés par type.
+9. `M` **Modifier son profil depuis son profil** : un bouton « Modifier le profil » de sa propre page ouvre une fenêtre ou une page qui réunit nom, pseudo, bio, avatar, bannière, favoris et couleur, avec l'aperçu du résultat. Elle remplace la rubrique Profil des paramètres.
 
 ---
 
@@ -98,7 +100,7 @@ Rien pour l'instant.
 - `XL` **Application mobile native** : une vraie application iOS et Android, pleinement intégrée à la plateforme, avec les notifications du système et tout le parcours hors navigateur. Le prototype de cours archivé dans `archive/mobile` n'est pas à reprendre.
 - `M` **Story Instagram en un geste** : depuis l'application mobile, un bouton pose l'image du recap directement dans une story Instagram, avec un lien cliquable qui ramène au recap. Dépend de l'application mobile native.
 - `M` **i18n étendue** : langues supplémentaires au-delà de FR / EN ; variantes régionales, RTL si besoin.
-- `L` **Palette de commandes (Cmd+K)** : accès clavier global aux actions et à la navigation ; recherche floue sur les soirées, les films et les utilisateurs, création de soirée, changement de thème.
+- `L` **Palette de commandes (Cmd+K)** : accès clavier global aux actions et à la navigation (création de soirée, changement de thème, pages de l'application), dans le même champ que la recherche globale. Dépend de la recherche globale dans la barre de navigation.
 
 ---
 
