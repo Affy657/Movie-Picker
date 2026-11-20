@@ -36,7 +36,7 @@ namespace MoviePicker.Api.Infrastructure.Development;
 
 internal sealed record DevelopmentSeedActors(User Dev, User Alice, User Bob, User Carla, User David, User Zoe);
 
-internal static class DevelopmentScenarioSeed
+internal static partial class DevelopmentScenarioSeed
 {
     private const string ScenarioPrefix = "Scénario seed — ";
 
@@ -92,6 +92,7 @@ internal static class DevelopmentScenarioSeed
             await RunStepAsync(logger, "shared lists", () => TrySeedSharedListsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "friend groups", () => TrySeedFriendGroupsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "group night", () => TrySeedGroupNightAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "group ranking nights", () => TrySeedGroupRankingNightsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "public lists", () => TrySeedPublicListsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "watched elsewhere", () => TrySeedWatchedElsewhereAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "saved lists", () => TrySeedSavedListsAsync(sp, actors, logger, ct)).ConfigureAwait(false);

@@ -30,3 +30,8 @@ public interface IDeleteFriendGroupHandler
 {
     Task HandleAsync(string userId, string groupId, CancellationToken ct = default);
 }
+
+public interface IGetFriendGroupRankingHandler
+{
+    Task<FriendGroupRankingResponse> HandleAsync(string userId, string groupId, CancellationToken ct = default);
+}

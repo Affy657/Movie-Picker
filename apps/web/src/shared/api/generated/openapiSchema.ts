@@ -3954,6 +3954,81 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/v1/groups/{id}/ranking": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["FriendGroupRankingResponse"];
+                        "application/json": components["schemas"]["FriendGroupRankingResponse"];
+                        "text/json": components["schemas"]["FriendGroupRankingResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/groups/{id}/members": {
         parameters: {
             query?: never;
@@ -12238,6 +12313,35 @@ export interface components {
             /** Format: date-time */
             joinedAt: string;
         };
+        FriendGroupMemberStatsResponse: {
+            userId: string;
+            /** Format: int32 */
+            proposedCount: number;
+            /** Format: int32 */
+            winningCount: number;
+            /** Format: int32 */
+            ratedWinningCount: number;
+            /** Format: double */
+            proposalsAverageRating: number | null;
+            /** Format: int32 */
+            upVotesReceived: number;
+            /** Format: int32 */
+            upVotesCast: number;
+            /** Format: int32 */
+            upVotesOnWinner: number;
+            /** Format: int32 */
+            freshProposalCount: number;
+            /** Format: int32 */
+            nightsAttended: number;
+            /** Format: int32 */
+            nightsSinceJoined: number;
+            /** Format: int32 */
+            nightsHosted: number;
+            /** Format: int32 */
+            ratingsGiven: number;
+            /** Format: double */
+            averageRatingGiven: number | null;
+        };
         FriendGroupMembersResponse: {
             /** Format: int32 */
             maxMembers: number;
@@ -12261,6 +12365,11 @@ export interface components {
         FriendGroupPreviewPersonResponse: {
             displayName: string;
             avatarId: string;
+        };
+        FriendGroupRankingResponse: {
+            /** Format: int32 */
+            nightCount: number;
+            members: components["schemas"]["FriendGroupMemberStatsResponse"][];
         };
         /** @enum {string} */
         FriendGroupRole: "owner" | "member";

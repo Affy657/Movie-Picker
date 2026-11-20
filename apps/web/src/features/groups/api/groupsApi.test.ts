@@ -9,6 +9,7 @@ import {
   deleteGroup,
   disableGroupInviteLink,
   fetchGroup,
+  fetchGroupRanking,
   fetchGroupInvitableUsers,
   fetchGroupInvitePreview,
   fetchGroupMembers,
@@ -40,6 +41,16 @@ describe('a group', () => {
 
     expect(mockFetchApi).toHaveBeenCalledWith('/groups/g1', { signal: controller.signal });
     expect(group).toEqual({ id: 'g1', name: 'Les jeudis ciné' });
+  });
+
+  it('reads the figures of the ranking', async () => {
+    mockFetchApi.mockResolvedValue({ nightCount: 3, members: [] });
+    const controller = new AbortController();
+
+    const ranking = await fetchGroupRanking('g1', controller.signal);
+
+    expect(mockFetchApi).toHaveBeenCalledWith('/groups/g1/ranking', { signal: controller.signal });
+    expect(ranking).toEqual({ nightCount: 3, members: [] });
   });
 
   it('creates, renames and deletes a group', async () => {

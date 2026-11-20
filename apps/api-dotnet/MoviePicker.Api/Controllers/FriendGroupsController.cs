@@ -55,6 +55,19 @@ public sealed class FriendGroupsController : ControllerBase
         return Ok(await handler.HandleAsync(userId, id, ct));
     }
 
+    [HttpGet("{id}/ranking")]
+    [EnableRateLimiting(RateLimitingExtensions.FriendGroupReadPolicy)]
+    [ProducesResponseType(typeof(FriendGroupRankingResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Ranking(
+        string id,
+        [FromServices] IGetFriendGroupRankingHandler handler,
+        [CurrentUserId] string userId,
+        CancellationToken ct)
+    {
+        return Ok(await handler.HandleAsync(userId, id, ct));
+    }
+
     [HttpPatch("{id}")]
     [EnableRateLimiting(RateLimitingExtensions.FriendGroupMutationPolicy)]
     [ProducesResponseType(typeof(FriendGroupSummaryResponse), StatusCodes.Status200OK)]

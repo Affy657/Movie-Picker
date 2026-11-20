@@ -25,6 +25,12 @@ describe('ProgressBar', () => {
     expect(fillOf(container).style.getPropertyValue('--progress-value')).toBe('0%');
   });
 
+  it('fills with the accent colour when asked', () => {
+    const { container } = render(<ProgressBar value={40} label="40" tone="primary" />);
+
+    expect(fillOf(container).className).toContain(styles.primary);
+  });
+
   it('leaves the bar out of the accessibility tree, the label saying it all', () => {
     const { container } = render(<ProgressBar value={50} label="5 sur 10" className="placed" />);
 

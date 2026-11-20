@@ -9,7 +9,7 @@ import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
 import { buildMyEventSummary } from '@/test-utils/myEventSummary';
 import { buildUserProfile } from '@/test-utils/userProfile';
-import { apiJson } from '@/mocks/apiJson';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
 import {
   createGroupMembershipHandlers,
   createGroupsHandlers,
@@ -18,6 +18,7 @@ import {
   type MockListPerson,
 } from '@/mocks/handlers';
 import { CreateEventDialogContext } from '@/features/events/components/create-event/createEventDialogContext';
+import type { FriendGroupMemberStats } from '@/features/groups/api/groupsApi';
 import GroupPage from './GroupPage';
 
 const ALICE: MockListPerson = {
@@ -108,6 +109,63 @@ const JEUDIS: MockGroup = {
   upcomingNights: [JEUDI, SAMEDI],
   nextNightParticipantIds: ['u2', 'u1', 'u3'],
   pastNights: [PAST, TO_RATE],
+};
+
+function memberStats(
+  userId: string,
+  overrides: Partial<FriendGroupMemberStats> = {}
+): FriendGroupMemberStats {
+  return {
+    userId,
+    proposedCount: 0,
+    winningCount: 0,
+    ratedWinningCount: 0,
+    proposalsAverageRating: null,
+    upVotesReceived: 0,
+    upVotesCast: 0,
+    upVotesOnWinner: 0,
+    freshProposalCount: 0,
+    nightsAttended: 0,
+    nightsSinceJoined: 0,
+    nightsHosted: 0,
+    ratingsGiven: 0,
+    averageRatingGiven: null,
+    ...overrides,
+  };
+}
+
+const RANKED_JEUDIS: MockGroup = {
+  ...JEUDIS,
+  ranking: {
+    nightCount: 16,
+    members: [
+      memberStats('u2', {
+        proposedCount: 18,
+        winningCount: 6,
+        ratedWinningCount: 6,
+        proposalsAverageRating: 8.6,
+        nightsAttended: 15,
+        nightsSinceJoined: 16,
+      }),
+      memberStats('u1', {
+        proposedCount: 14,
+        winningCount: 4,
+        ratedWinningCount: 4,
+        proposalsAverageRating: 7.8,
+        nightsAttended: 8,
+        nightsSinceJoined: 16,
+      }),
+      memberStats('u3', {
+        proposedCount: 21,
+        winningCount: 2,
+        ratedWinningCount: 2,
+        proposalsAverageRating: 6.8,
+        nightsAttended: 5,
+        nightsSinceJoined: 10,
+      }),
+      memberStats('u4', { proposedCount: 3, nightsAttended: 3, nightsSinceJoined: 16 }),
+    ],
+  },
 };
 
 function LocationProbe() {
@@ -431,6 +489,95 @@ describe('GroupPage', () => {
     await waitFor(() =>
       expect(screen.getByTestId('location')).toHaveTextContent(/^\/groupes\/g1$/)
     );
+  });
+
+  it('ranks the members on the rating of their films, the viewer named and the rest not ranked yet', async () => {
+    server.use(signedInAs(ALICE), ...createGroupsHandlers([RANKED_JEUDIS]));
+    renderPage();
+
+    const ranking = await screen.findByRole('region', { name: /Classement/ });
+    expect(
+      await within(ranking).findByText('Qui propose les meilleurs films ?')
+    ).toBeInTheDocument();
+    expect(ranking).toHaveTextContent('16 soirées');
+    expect(within(ranking).getByRole('button', { name: 'Note de ses films' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    const podium = within(ranking).getByRole('list', { name: 'Podium' });
+    const places = within(podium).getAllByRole('listitem');
+    expect(places).toHaveLength(3);
+    expect(places[0]).toHaveTextContent(/1re place.*Léa Moreau.*4,3\/5.*6 films notés/);
+    expect(places[1]).toHaveTextContent(/2e place.*Vous.*3,9\/5.*4 films notés/);
+    expect(places[2]).toHaveTextContent(/3e place.*Sam.*3,4\/5.*2 films notés/);
+    expect(ranking).toHaveTextContent('Pas encore classés');
+    expect(ranking).toHaveTextContent('Aucun film gagnant pour l’instant');
+  });
+
+  it('switches the compared stat from its chips, members on a tie sharing a place', async () => {
+    server.use(signedInAs(ALICE), ...createGroupsHandlers([RANKED_JEUDIS]));
+    const user = userEvent.setup();
+    renderPage();
+
+    const ranking = await screen.findByRole('region', { name: /Classement/ });
+    await user.click(await within(ranking).findByRole('button', { name: 'Présence' }));
+
+    expect(within(ranking).getByRole('button', { name: 'Présence' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(within(ranking).getByText('Qui ne rate aucune soirée ?')).toBeInTheDocument();
+    const rows = within(ranking).getAllByRole('listitem');
+    expect(rows.map((row) => row.textContent)).toEqual([
+      expect.stringContaining('Léa Moreau'),
+      expect.stringContaining('Vous'),
+      expect.stringContaining('Sam'),
+      expect.stringContaining('Hugo'),
+    ]);
+    expect(rows[1]).toHaveTextContent('Ex æquo, 8 soirées sur 16');
+    expect(rows[2]).toHaveTextContent('Ex æquo, 5 soirées sur 10');
+    expect(rows[3]).toHaveTextContent(/4.*Hugo.*3 soirées sur 16.*19\s?%/);
+  });
+
+  it('says the ranking starts after the first finished night of the group', async () => {
+    server.use(signedInAs(ALICE), ...createGroupsHandlers([JEUDIS]));
+    renderPage();
+
+    const ranking = await screen.findByRole('region', { name: /Classement/ });
+    expect(
+      await within(ranking).findByText(
+        'Le classement démarre après la première soirée terminée du groupe, quand un film a gagné.'
+      )
+    ).toBeInTheDocument();
+    expect(within(ranking).queryByRole('button', { name: 'Note de ses films' })).toBeNull();
+  });
+
+  it('offers to try the ranking again when it does not load, the rest of the page staying', async () => {
+    let attempts = 0;
+    server.use(
+      signedInAs(ALICE),
+      http.get(`${TEST_API_V1}/groups/g1/ranking`, () => {
+        attempts += 1;
+        return attempts === 1
+          ? apiErrorJson(500, 'internal_error')
+          : apiJson<'FriendGroupRankingResponse'>(RANKED_JEUDIS.ranking!);
+      }),
+      ...createGroupsHandlers([RANKED_JEUDIS])
+    );
+    const user = userEvent.setup();
+    renderPage();
+
+    const ranking = await screen.findByRole('region', { name: /Classement/ });
+    expect(
+      await within(ranking).findByText('Impossible de charger le classement.')
+    ).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Prochaine soirée' })).toBeInTheDocument();
+
+    await user.click(within(ranking).getByRole('button', { name: 'Réessayer' }));
+
+    expect(
+      await within(ranking).findByText('Qui propose les meilleurs films ?')
+    ).toBeInTheDocument();
   });
 
   it('says the group cannot be found, without crashing', async () => {

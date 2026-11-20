@@ -28,6 +28,12 @@ internal sealed class FriendGroupTestKit
 
     public InMemoryMovieRepository Movies { get; } = new();
 
+    public InMemoryVoteRepository Votes { get; } = new();
+
+    public InMemorySeenMarkRepository SeenMarks { get; } = new();
+
+    public InMemoryMovieRatingRepository Ratings { get; } = new();
+
     public InMemoryUserRepository Users { get; } = new();
 
     public InMemoryUserNotificationRepository Notifications { get; } = new();
@@ -53,6 +59,9 @@ internal sealed class FriendGroupTestKit
     public CreateFriendGroupHandler CreateHandler() => new(Groups, Users, Clock);
 
     public GetFriendGroupHandler GetHandler() => new(Groups, Users, NightsReader());
+
+    public GetFriendGroupRankingHandler RankingHandler() =>
+        new(Groups, Events, Participants, Movies, Votes, SeenMarks, Ratings, Clock);
 
     public UpdateFriendGroupHandler UpdateHandler() => new(Groups, Users, Clock);
 

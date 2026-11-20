@@ -52,6 +52,18 @@ public sealed class FriendGroupsControllerTests
     }
 
     [Fact]
+    public async Task Ranking_AnswersTheFiguresOfTheMembers()
+    {
+        var ranking = new FriendGroupRankingResponse { NightCount = 3 };
+        var handler = new Mock<IGetFriendGroupRankingHandler>();
+        handler.Setup(h => h.HandleAsync(UserId, "g1", It.IsAny<CancellationToken>())).ReturnsAsync(ranking);
+
+        var result = await _sut.Ranking("g1", handler.Object, UserId, CancellationToken.None);
+
+        Assert.Same(ranking, Assert.IsType<OkObjectResult>(result).Value);
+    }
+
+    [Fact]
     public async Task Create_AnswersCreatedWithTheSummary()
     {
         var request = new CreateFriendGroupRequest { Name = "Les cinéphiles" };
@@ -180,7 +192,7 @@ public sealed class FriendGroupsControllerTests
             action => Assert.Equal(RateLimitingExtensions.FriendGroupJoinPolicy, PolicyOf(action)));
         Assert.Equal(RateLimitingExtensions.InviteUserPolicy, PolicyOf(nameof(FriendGroupsController.Invite)));
         Assert.All(
-            [nameof(FriendGroupsController.List), nameof(FriendGroupsController.Get), nameof(FriendGroupsController.Members), nameof(FriendGroupsController.Invitable)],
+            [nameof(FriendGroupsController.List), nameof(FriendGroupsController.Get), nameof(FriendGroupsController.Ranking), nameof(FriendGroupsController.Members), nameof(FriendGroupsController.Invitable)],
             action => Assert.Equal(RateLimitingExtensions.FriendGroupReadPolicy, PolicyOf(action)));
         Assert.All(
             [

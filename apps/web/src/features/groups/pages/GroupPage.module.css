@@ -68,23 +68,6 @@
   max-width: 20rem;
 }
 
-.section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-.sectionTitle {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2-5);
-  margin: 0;
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-extrabold);
-  line-height: var(--leading-tight);
-}
-
 .skeleton {
   display: flex;
   flex-direction: column;
@@ -103,9 +86,5 @@
 
   .main {
     gap: var(--space-6);
-  }
-
-  .sectionTitle {
-    font-size: var(--font-size-lg);
   }
 }
