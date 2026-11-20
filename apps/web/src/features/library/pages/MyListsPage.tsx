@@ -5,12 +5,10 @@ import {
   Bookmark,
   ChevronRight,
   Clapperboard,
-  Compass,
   Eye,
   EyeOff,
   Film,
   Globe,
-  Layers,
   ListPlus,
   Plus,
   RefreshCw,
@@ -19,8 +17,6 @@ import {
   Trophy,
 } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
-import Avatar from '@/shared/components/Avatar';
-import AvatarStack from '@/shared/components/AvatarStack';
 import Button from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
 import CountBadge from '@/shared/components/CountBadge';
@@ -40,7 +36,10 @@ import { ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { syncsWithLetterboxd } from '@/features/auth/utils/letterboxdSync';
 import type { WatchlistItem } from '@/features/movies/api/watchlistApi';
-import MovieCollectionCard from '@/features/movies/components/MovieCollectionCard';
+import MovieCollectionCard, {
+  MovieCollectionRows,
+  MovieCollectionRowsSkeleton,
+} from '@/features/movies/components/MovieCollectionCard';
 import PosterFan from '@/features/movies/components/PosterFan';
 import { useWatchlist } from '@/features/movies/hooks/useWatchlist';
 import { watchlistCountLabel } from '@/features/library/utils/watchlistCount';
@@ -55,6 +54,7 @@ import { proposalsCountLabel } from '@/features/library/utils/proposalsCount';
 import type { MovieListSummary } from '@/features/library/api/listsApi';
 import type { SavedListSummary } from '@/features/library/api/savedListsApi';
 import ListFormDialog from '@/features/library/components/ListFormDialog';
+import { ListCompanions, SavedListSource } from '@/features/library/components/ListSource';
 import ListSortMenu from '@/features/library/components/ListSortMenu';
 import {
   useListSummaryFilters,
@@ -62,19 +62,12 @@ import {
 } from '@/features/library/components/ListSummaryToolbar';
 import { useMyLists } from '@/features/library/hooks/useLists';
 import { useSavedLists, useUnsaveList } from '@/features/library/hooks/useSavedLists';
-import { listCountLabel } from '@/features/library/utils/listCount';
-import {
-  capitalizeFirst,
-  firstName,
-  isMemberList,
-  listCompanions,
-  membersPhrase,
-} from '@/features/library/utils/listMembers';
-import { watchedPercent } from '@/features/library/utils/listProgress';
+import { listCountLabel, withWatchedCount } from '@/features/library/utils/listCount';
+import { firstName, isMemberList } from '@/features/library/utils/listMembers';
+import { progressOnceWatched } from '@/features/library/utils/listProgress';
 import {
   canCopySavedList,
   isGoneMemberList,
-  isMemberSource,
   savedListName,
 } from '@/features/library/utils/savedListSource';
 import {
@@ -249,34 +242,7 @@ function rowCountLabel(
   t: Translate
 ): string {
   if (itemCount === 0) return t(isMobile ? 'lists.count.empty' : 'lists.summary.emptyHint');
-  const films = listCountLabel(itemCount, t);
-  if (watchedCount <= 0) return films;
-  if (watchedCount === 1) return t('lists.summary.countWatchedOne', { films });
-  return t('lists.summary.countWatched', { films, count: watchedCount });
-}
-
-function rowProgress(itemCount: number, watchedCount: number): number | null {
-  return watchedCount > 0 ? watchedPercent(watchedCount, itemCount) : null;
-}
-
-function Companions({
-  list,
-  viewerId,
-}: Readonly<{ list: MovieListSummary; viewerId: string | undefined }>) {
-  const { t, locale } = useTranslation();
-  const phrase = membersPhrase(list, viewerId, t);
-  if (!phrase) return null;
-  const people = listCompanions(list, viewerId).map((person) => ({
-    key: person.userId,
-    avatarId: person.avatarId,
-    pseudo: person.displayName,
-  }));
-  return (
-    <>
-      <AvatarStack people={people} />
-      <span className={styles.who}>{capitalizeFirst(phrase, locale)}</span>
-    </>
-  );
+  return withWatchedCount(listCountLabel(itemCount, t), watchedCount, t);
 }
 
 function PublicMark() {
@@ -304,9 +270,9 @@ function CreatedListRow({
       nameSuffix={list.isPublic ? <PublicMark /> : undefined}
       movieCountLabel={rowCountLabel(list.itemCount, watched, isMobile, t)}
       stackSrcs={posterStackSources(list.posterPaths)}
-      progress={rowProgress(list.itemCount, watched)}
+      progress={progressOnceWatched(watched, list.itemCount)}
       emptyIcon={<ListPlus size={ICON_SIZE.lg} />}
-      extra={<Companions list={list} viewerId={viewerId} />}
+      extra={<ListCompanions list={list} viewerId={viewerId} />}
     />
   );
 }
@@ -329,32 +295,6 @@ function toSavedEntry(summary: SavedListSummary, t: Translate): SavedListEntry {
   };
 }
 
-function SavedSource({ summary }: Readonly<{ summary: SavedListSummary }>) {
-  const { t } = useTranslation();
-  if (isMemberSource(summary.sourceType)) {
-    const { creator } = summary;
-    if (!creator) return null;
-    return (
-      <>
-        <Avatar avatarId={creator.avatarId} pseudo={creator.displayName} size="xs" />
-        <span className={styles.who}>
-          {t('lists.summary.byCreator', { name: firstName(creator.displayName) })}
-        </span>
-      </>
-    );
-  }
-  const isSaga = summary.sourceType === 'tmdbCollection';
-  const Icon = isSaga ? Layers : Compass;
-  return (
-    <>
-      <Icon size={ICON_SIZE.sm} aria-hidden className={styles.whoIcon} />
-      <span className={styles.who}>
-        {t(isSaga ? 'lists.summary.sagaTag' : 'lists.summary.explorerSelection')}
-      </span>
-    </>
-  );
-}
-
 function SavedListRow({ entry, isMobile }: Readonly<{ entry: SavedListEntry; isMobile: boolean }>) {
   const { t } = useTranslation();
   const { summary } = entry;
@@ -369,8 +309,8 @@ function SavedListRow({ entry, isMobile }: Readonly<{ entry: SavedListEntry; isM
           : rowCountLabel(entry.itemCount, entry.watchedCount, isMobile, t)
       }
       stackSrcs={posterStackSources(summary.posterPaths)}
-      progress={rowProgress(entry.itemCount, entry.watchedCount)}
-      extra={<SavedSource summary={summary} />}
+      progress={progressOnceWatched(entry.watchedCount, entry.itemCount)}
+      extra={<SavedListSource list={summary} />}
     />
   );
 }
@@ -511,14 +451,6 @@ function NoMatch({ filters }: Readonly<{ filters: ListSummaryFilters }>) {
   );
 }
 
-function ListRows({ label, children }: Readonly<{ label: string; children: ReactNode }>) {
-  return (
-    <ul className={styles.rows} aria-label={label}>
-      {children}
-    </ul>
-  );
-}
-
 function SavedSection({
   entries,
   gone,
@@ -558,11 +490,11 @@ function SavedSection({
         <GoneListNotice key={entry.summary.id} entry={entry} actions={actions} />
       ))}
       {entries.length > 0 ? (
-        <ListRows label={title}>
+        <MovieCollectionRows label={title}>
           {entries.map((entry) => (
             <SavedListRow key={entry.summary.id} entry={entry} isMobile={isMobile} />
           ))}
-        </ListRows>
+        </MovieCollectionRows>
       ) : null}
     </ListSection>
   );
@@ -641,21 +573,21 @@ function ListsCollection({
 
       {visibleOwn.length > 0 ? (
         <ListSection title={ownTitle} count={visibleOwn.length}>
-          <ListRows label={ownTitle}>
+          <MovieCollectionRows label={ownTitle}>
             {visibleOwn.map((list) => (
               <CreatedListRow key={list.id} list={list} viewerId={viewerId} isMobile={isMobile} />
             ))}
-          </ListRows>
+          </MovieCollectionRows>
         </ListSection>
       ) : null}
 
       {visibleShared.length > 0 ? (
         <ListSection title={sharedTitle} count={visibleShared.length}>
-          <ListRows label={sharedTitle}>
+          <MovieCollectionRows label={sharedTitle}>
             {visibleShared.map((list) => (
               <CreatedListRow key={list.id} list={list} viewerId={viewerId} isMobile={isMobile} />
             ))}
-          </ListRows>
+          </MovieCollectionRows>
         </ListSection>
       ) : null}
 
@@ -679,14 +611,7 @@ function ListsLoading({ label }: Readonly<{ label: string }>) {
           <Skeleton key={index} variant="block" className={styles.shortcutSkeleton} />
         ))}
       </div>
-      <ul className={styles.rows}>
-        {Array.from({ length: SKELETON_ROWS }, (_, index) => (
-          <li key={index} className={styles.rowSkeleton}>
-            <Skeleton variant="poster" className={styles.rowSkeletonPoster} />
-            <Skeleton variant="text" width="50%" />
-          </li>
-        ))}
-      </ul>
+      <MovieCollectionRowsSkeleton count={SKELETON_ROWS} />
     </SkeletonScreen>
   );
 }

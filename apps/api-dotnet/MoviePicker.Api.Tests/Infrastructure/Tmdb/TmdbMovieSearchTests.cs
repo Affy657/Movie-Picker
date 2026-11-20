@@ -637,6 +637,7 @@ public sealed class TmdbMovieSearchTests
                 "https://image.tmdb.org/t/p/w154/announced.jpg",
             ],
             summary.PartPosterPaths);
+        Assert.Equal([1, 5, 2, 3, 4], summary.PartIds);
     }
 
     [Fact]

@@ -5,9 +5,25 @@
   padding: var(--space-3) var(--space-3-5);
 }
 
+.plain {
+  padding: 0;
+}
+
 .searchWrap {
   flex: 1 1 15rem;
   max-width: 22rem;
+}
+
+.searchRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.searchRow > .searchWrap {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: none;
 }
 
 .bottomRow {

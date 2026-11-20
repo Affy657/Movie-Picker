@@ -40,7 +40,7 @@ public sealed record UsageCount
             .ToHashSet(StringComparer.Ordinal),
         [JoinPromptClickedMetric] = new(["login", "register"], StringComparer.Ordinal),
         [RecapViewedMetric] = new(Viewers, StringComparer.Ordinal),
-        [RandomPickOpenedMetric] = new(["watchlist", "list", "saved_list"], StringComparer.Ordinal)
+        [RandomPickOpenedMetric] = new(["watchlist", "list", "saved_list", "catalog"], StringComparer.Ordinal)
     };
 
     private UsageCount(string metric, string variant)

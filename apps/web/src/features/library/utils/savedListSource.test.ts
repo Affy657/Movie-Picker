@@ -5,7 +5,6 @@ import {
   canCopySavedList,
   isGoneMemberList,
   savedListName,
-  savedListOverline,
   savedListSourceLink,
   savedListUnavailableTitle,
 } from './savedListSource';
@@ -61,17 +60,6 @@ describe('savedListName', () => {
 
   it('names a list whose creator deleted the account, the list gone with it', () => {
     expect(savedListName(saved({ name: null, creator: null }), fr)).toBe('Liste supprimée');
-  });
-});
-
-describe('savedListOverline', () => {
-  it('says what kind of source the saved list follows', () => {
-    expect(savedListOverline(saved({ sourceType: 'tmdbCollection' }), fr)).toBe('Saga enregistrée');
-    expect(savedListOverline(saved({ sourceType: 'explorerTheme' }), fr)).toBe(
-      'Sélection enregistrée'
-    );
-    expect(savedListOverline(saved({}), fr)).toBe('Liste de @alice enregistrée');
-    expect(savedListOverline(saved({ creator: null }), fr)).toBe('Liste enregistrée');
   });
 });
 
@@ -182,7 +170,6 @@ describe('the lists of a member profile', () => {
 
   it('reads like a list of the member once saved, gone or private', () => {
     const watched = profileList({ sourceType: 'memberWatched' });
-    expect(savedListOverline(watched, fr)).toBe('Liste de @lea enregistrée');
     expect(
       savedListUnavailableTitle({ ...watched, unavailable: true, unavailableReason: 'private' }, fr)
     ).toBe('Léa a rendu cette liste privée');

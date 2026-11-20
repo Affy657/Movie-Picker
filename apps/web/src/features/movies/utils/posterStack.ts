@@ -11,3 +11,11 @@ export function posterStackSources(paths: readonly (string | null | undefined)[]
   }
   return sources;
 }
+
+export function collectionPosterSources(collection: {
+  previewPosterPaths?: readonly string[];
+  posterPath?: string | null;
+}): string[] {
+  const previews = collection.previewPosterPaths ?? [];
+  return posterStackSources(previews.length > 0 ? previews : [collection.posterPath]);
+}

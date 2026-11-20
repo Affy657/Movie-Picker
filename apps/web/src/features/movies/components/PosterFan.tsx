@@ -35,7 +35,7 @@ export default function PosterFan({
   emptyIcon?: ReactNode;
   layout?: PosterFanLayout;
   progress?: number | null;
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
   className?: string;
 }>) {
   const classes = LAYOUTS[layout];
@@ -43,7 +43,7 @@ export default function PosterFan({
   const style = progress ? ({ '--fan-progress': `${progress}%` } as CSSProperties) : undefined;
   return (
     <span
-      className={clsx(classes.root, size === 'md' && styles.md, className)}
+      className={clsx(classes.root, size !== 'sm' && styles[size], className)}
       aria-hidden
       data-count={shown.length}
       style={style}

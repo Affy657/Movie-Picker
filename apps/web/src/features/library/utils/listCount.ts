@@ -13,3 +13,9 @@ export function publicListCountLabel(
   const films = listCountLabel(list.itemCount, t);
   return list.memberCount > 1 ? t('lists.public.sharedCount', { films }) : films;
 }
+
+export function withWatchedCount(films: string, watched: number, t: Translate): string {
+  if (watched <= 0) return films;
+  if (watched === 1) return t('lists.summary.countWatchedOne', { films });
+  return t('lists.summary.countWatched', { films, count: watched });
+}

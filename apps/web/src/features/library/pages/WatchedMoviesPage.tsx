@@ -148,7 +148,6 @@ export default function WatchedMoviesPage() {
         loadError: t('watched.page.loadError'),
         addPanelTitle: t('watched.page.addPanelTitle'),
         addTrigger: t('watched.page.addTrigger'),
-        addTriggerShort: t('watched.page.addTriggerShort'),
         addSearchLabel: t('watched.page.addSearchLabel'),
         addSearchPlaceholder: t('watched.page.addSearchPlaceholder'),
         addError: t('watched.errors.mark'),

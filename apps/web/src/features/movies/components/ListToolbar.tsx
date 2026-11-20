@@ -22,6 +22,40 @@ export function filtersToggleFor(filtersPanelId: string): RefObject<HTMLElement 
   };
 }
 
+function ToolbarFrame({
+  appearance,
+  children,
+}: Readonly<{ appearance: 'card' | 'plain'; children: ReactNode }>) {
+  if (appearance === 'plain') {
+    return <div className={clsx(styles.toolbar, styles.plain)}>{children}</div>;
+  }
+  return (
+    <Card padding="none" elevation="sm" className={styles.toolbar}>
+      {children}
+    </Card>
+  );
+}
+
+function ToolbarSearch({
+  aside,
+  ...field
+}: Readonly<{
+  aside?: ReactNode;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  ariaLabel: string;
+}>) {
+  const searchField = <SearchField className={styles.searchWrap} {...field} />;
+  if (!aside) return searchField;
+  return (
+    <div className={styles.searchRow}>
+      {searchField}
+      {aside}
+    </div>
+  );
+}
+
 export interface ListToolbarProps<TSortKey extends string> {
   search: string;
   onSearchChange: (value: string) => void;
@@ -49,6 +83,8 @@ export interface ListToolbarProps<TSortKey extends string> {
   hideSort?: boolean;
   beforeSort?: ReactNode;
   trailing?: ReactNode;
+  appearance?: 'card' | 'plain';
+  searchAside?: ReactNode;
 }
 
 export default function ListToolbar<TSortKey extends string>({
@@ -78,12 +114,14 @@ export default function ListToolbar<TSortKey extends string>({
   hideSort = false,
   beforeSort,
   trailing,
+  appearance = 'card',
+  searchAside,
 }: Readonly<ListToolbarProps<TSortKey>>) {
   const divider = <span className={styles.divider} aria-hidden="true" />;
   return (
-    <Card padding="none" elevation="sm" className={styles.toolbar}>
-      <SearchField
-        className={styles.searchWrap}
+    <ToolbarFrame appearance={appearance}>
+      <ToolbarSearch
+        aside={searchAside}
         value={search}
         onChange={onSearchChange}
         placeholder={searchPlaceholder}
@@ -130,7 +168,7 @@ export default function ListToolbar<TSortKey extends string>({
             sortMenuAriaLabel={sortMenuAriaLabel}
             sortDirectionAscLabel={sortDirectionAscLabel}
             sortDirectionDescLabel={sortDirectionDescLabel}
-            isMobile={isMobile}
+            isMobile={isMobile || appearance === 'plain'}
           />
         )}
 
@@ -149,6 +187,6 @@ export default function ListToolbar<TSortKey extends string>({
           </div>
         ) : null}
       </div>
-    </Card>
+    </ToolbarFrame>
   );
 }

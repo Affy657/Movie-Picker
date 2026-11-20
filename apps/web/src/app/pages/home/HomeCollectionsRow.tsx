@@ -10,15 +10,10 @@ import { useMovieCollections } from '@/features/movies/hooks/useMovieShowcase';
 import { RAIL_PREVIEW_COUNT } from './HomeShowcaseRow';
 import styles from './HomeShowcaseRow.module.css';
 import { collectionDisplayName } from '@/features/movies/utils/collectionName';
-import { posterStackSources } from '@/features/movies/utils/posterStack';
-import type { MovieCollection } from '@/features/movies/api/showcaseApi';
+import { collectionPosterSources } from '@/features/movies/utils/posterStack';
 
 const SKELETON_CARDS = 6;
 
-function stackSources(collection: MovieCollection): string[] {
-  const previews = collection.previewPosterPaths ?? [];
-  return posterStackSources(previews.length > 0 ? previews : [collection.posterPath]);
-}
 const COLLECTION_CARD_HEIGHT = 102;
 
 export default function HomeCollectionsRow() {
@@ -65,7 +60,7 @@ export default function HomeCollectionsRow() {
               'showcase.collectionMovies',
               t
             )}
-            stackSrcs={stackSources(collection)}
+            stackSrcs={collectionPosterSources(collection)}
           />
         ))}
       </MoviePreviewRail>

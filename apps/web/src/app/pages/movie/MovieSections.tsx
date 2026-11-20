@@ -1,6 +1,5 @@
-import { useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import clsx from 'clsx';
-import { ChevronDown, ChevronUp, Play } from 'lucide-react';
+import { useId, useState, type ReactNode } from 'react';
+import { Play } from 'lucide-react';
 import type {
   MovieCastMember,
   MovieCrewJob,
@@ -8,6 +7,7 @@ import type {
   MovieVideo,
 } from '@/features/movies/api/moviesApi';
 import Avatar from '@/shared/components/Avatar';
+import ClampedText from '@/shared/components/ClampedText';
 import LinkButton from '@/shared/components/LinkButton';
 import { Skeleton, SkeletonScreen } from '@/shared/components/Skeleton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -77,22 +77,6 @@ export function MovieSynopsis({
   pending?: boolean;
 }>) {
   const { t } = useTranslation();
-  const textRef = useRef<HTMLParagraphElement>(null);
-  const textId = useId();
-  const [expanded, setExpanded] = useState(false);
-  const [overflows, setOverflows] = useState(false);
-
-  useLayoutEffect(() => {
-    const node = textRef.current;
-    if (!node || expanded) return;
-    const measure = () => setOverflows(node.scrollHeight > node.clientHeight + 1);
-    measure();
-    if (typeof ResizeObserver === 'undefined') return;
-    const observer = new ResizeObserver(measure);
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [overview, expanded]);
-
   if (pending && !overview) {
     return (
       <Section title={t('moviePage.synopsis')}>
@@ -107,31 +91,7 @@ export function MovieSynopsis({
         <p className={styles.tagline}>{t('moviePage.taglineQuote', { tagline })}</p>
       ) : null}
       {overview ? (
-        <>
-          <p
-            id={textId}
-            ref={textRef}
-            className={clsx(styles.overview, !expanded && styles.overviewClamped)}
-          >
-            {overview}
-          </p>
-          {overflows || expanded ? (
-            <LinkButton
-              size="sm"
-              className={styles.readMore}
-              aria-expanded={expanded}
-              aria-controls={textId}
-              onClick={() => setExpanded((value) => !value)}
-            >
-              {expanded ? t('moviePage.readLess') : t('moviePage.readMore')}
-              {expanded ? (
-                <ChevronUp aria-hidden size={ICON_SIZE.sm} />
-              ) : (
-                <ChevronDown aria-hidden size={ICON_SIZE.sm} />
-              )}
-            </LinkButton>
-          ) : null}
-        </>
+        <ClampedText text={overview} lines={6} className={styles.overview} />
       ) : (
         <p className={styles.muted}>
           {t(isTv ? 'moviePage.synopsisEmptyShow' : 'moviePage.synopsisEmpty')}

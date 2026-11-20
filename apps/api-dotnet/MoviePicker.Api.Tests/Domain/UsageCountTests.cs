@@ -19,6 +19,7 @@ public sealed class UsageCountTests
     [InlineData("random_pick_opened", "watchlist")]
     [InlineData("random_pick_opened", "list")]
     [InlineData("random_pick_opened", "saved_list")]
+    [InlineData("random_pick_opened", "catalog")]
     public void TryParseReported_AcceptsEveryStepTheBrowserReports(string metric, string variant)
     {
         Assert.True(UsageCount.TryParseReported(metric, variant, out var count));

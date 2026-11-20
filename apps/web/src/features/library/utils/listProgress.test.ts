@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { t, type Translate } from '@/shared/i18n/t';
-import {
-  compareListProgress,
-  listProgressDetail,
-  listProgressLabel,
-  watchedPercent,
-} from './listProgress';
+import { compareListProgress, listProgressLabel, watchedPercent } from './listProgress';
 
 const fr: Translate = (key, vars) => t(key, vars, 'fr');
 const en: Translate = (key, vars) => t(key, vars, 'en');
@@ -33,13 +28,6 @@ describe('listProgressLabel', () => {
     expect(withPercentSpace(listProgressLabel(13, 20, fr, 'fr'))).toBe('65 % vus');
     expect(listProgressLabel(13, 20, fr, 'fr')).not.toContain('65 %');
     expect(listProgressLabel(13, 20, en, 'en')).toBe('65% watched');
-  });
-});
-
-describe('listProgressDetail', () => {
-  it('counts the watched films out of the list, the share in bold', () => {
-    expect(withPercentSpace(listProgressDetail(5, 8, fr, 'fr'))).toBe('5 sur 8 vus, **63 %**');
-    expect(withPercentSpace(listProgressDetail(1, 8, fr, 'fr'))).toBe('1 sur 8 vu, **13 %**');
   });
 });
 

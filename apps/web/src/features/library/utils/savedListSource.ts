@@ -19,11 +19,6 @@ type MemberSourceType = ProfileSourceType | 'memberList';
 
 type ExplorerSourceType = Exclude<SavedListSourceType, MemberSourceType>;
 
-const EXPLORER_OVERLINE_KEYS: Record<ExplorerSourceType, TranslationKey> = {
-  tmdbCollection: 'lists.saved.overlineCollection',
-  explorerTheme: 'lists.saved.overlineTheme',
-};
-
 const EXPLORER_LINK_KEYS: Record<ExplorerSourceType, TranslationKey> = {
   tmdbCollection: 'lists.saved.viewCollection',
   explorerTheme: 'lists.saved.viewTheme',
@@ -80,13 +75,6 @@ export function savedListName(list: NamedSource, t: Translate): string {
   if (list.sourceType === 'memberList') return list.name;
   if (isProfileSource(list.sourceType)) return profileListName(list.sourceType, list.name, t);
   return isShowcaseTheme(list.sourceId) ? t(THEME_LABEL_KEYS[list.sourceId]) : list.name;
-}
-
-export function savedListOverline(list: SourceOfList, t: Translate): string {
-  if (!isMemberSource(list.sourceType)) return t(EXPLORER_OVERLINE_KEYS[list.sourceType]);
-  return list.creator
-    ? t('lists.saved.overlineMemberList', { handle: list.creator.handle })
-    : t('lists.saved.overlineMemberListUnknown');
 }
 
 function memberLink(creator: ListCreator, to: string, t: Translate): SavedListSourceLink {

@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { openSortMenu, sortChoices } from '@/test-utils/sortMenu';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubHoverCapability, stubMatchMedia } from '@/test-utils/matchMedia';
 import {
@@ -59,10 +60,6 @@ const FRISSONS: MockSavedList = {
   items: [film(694, 'Shining', '1980')],
 };
 
-function withPercentSpace(text: string | null | undefined) {
-  return (text ?? '').replaceAll(/\p{Zs}/gu, ' ');
-}
-
 function LocationProbe() {
   const location = useLocation();
   return <output data-testid="location">{location.pathname}</output>;
@@ -83,9 +80,31 @@ function renderPage(path = '/listes/enregistrees/s1') {
   );
 }
 
+const HARRY_POTTER_SUMMARY =
+  'Les aventures du jeune sorcier Harry Potter, de son arrivée à Poudlard à sa bataille contre Voldemort.';
+
+const collections = http.get(`${TEST_API_V1}/movies/collections`, () =>
+  HttpResponse.json({
+    items: [
+      {
+        id: 1241,
+        name: 'Harry Potter - Saga',
+        overview: HARRY_POTTER_SUMMARY,
+        posterPath: null,
+        movieCount: 8,
+        previewPosterPaths: [],
+        movieIds: [],
+      },
+    ],
+    disclaimer: '',
+    tmdbAttributionUrl: 'https://www.themoviedb.org/',
+  })
+);
+
 function useServer(saved: MockSavedList[] = [HARRY_POTTER]) {
   return [
     authedUser,
+    collections,
     ...createWatchlistHandlers([]),
     ...createListsHandlers([]),
     ...createSavedListsHandlers(saved),
@@ -109,7 +128,7 @@ describe('SavedListPage', () => {
   });
   afterAll(() => server.close());
 
-  it('shows the saved saga under Mes listes, its films in the order of the saga and its progress', async () => {
+  it('shows the saved saga under Mes listes like its row there, with its summary and its films in the order of the saga', async () => {
     server.use(...useServer());
 
     renderPage();
@@ -118,15 +137,9 @@ describe('SavedListPage', () => {
       await screen.findByRole('heading', { level: 1, name: 'Harry Potter' })
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Mes listes' })).toHaveAttribute('href', '/listes');
-    expect(screen.getByText('Saga enregistrée')).toBeInTheDocument();
-    expect(screen.getByText('3 films')).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        (_, element) =>
-          withPercentSpace(element?.textContent) === '2 sur 3 vus, 67 %' &&
-          element?.lastElementChild?.tagName === 'STRONG'
-      )
-    ).toBeInTheDocument();
+    expect(screen.getByText('Saga')).toBeInTheDocument();
+    expect(screen.getByText('3 films, 2 vus')).toBeInTheDocument();
+    expect(await screen.findByText(HARRY_POTTER_SUMMARY)).toBeInTheDocument();
     await screen.findByRole('list', { name: 'Films de « Harry Potter »' });
     const titles = gridTitles('Films de « Harry Potter »');
     expect(titles[0]).toContain('À l’école des sorciers');
@@ -142,18 +155,11 @@ describe('SavedListPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    const sorts = await screen.findByRole('toolbar', { name: /trier par/i });
-    expect(
-      within(sorts)
-        .getAllByRole('button')
-        .map((button) => button.textContent)
-    ).toEqual(['Pertinence', 'Titre', 'Année']);
-    expect(within(sorts).getByRole('button', { name: /pertinence/i })).toHaveAttribute(
-      'aria-pressed',
-      'true'
-    );
+    const sorts = await openSortMenu(user, 'Pertinence');
+    expect(sortChoices(sorts)).toEqual(['Pertinence', 'Titre', 'Année']);
+    expect(within(sorts).getByRole('menuitemradio', { name: /pertinence/i })).toBeChecked();
 
-    await user.click(within(sorts).getByRole('button', { name: /année/i }));
+    await user.click(within(sorts).getByRole('menuitemradio', { name: /année/i }));
 
     expect(gridTitles('Films de « Harry Potter »')[0]).toContain('Le Prisonnier d’Azkaban');
   });
@@ -182,7 +188,7 @@ describe('SavedListPage', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: "Frissons d'automne" })
     ).toBeInTheDocument();
-    expect(screen.getByText('Sélection enregistrée')).toBeInTheDocument();
+    expect(screen.getByText('Sélection d’Explorer')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Actions de la liste' }));
 
@@ -311,8 +317,8 @@ describe('SavedListPage', () => {
       expect(
         await screen.findByRole('heading', { level: 1, name: 'Ciné coréen' })
       ).toBeInTheDocument();
-      expect(screen.getByText('Liste de @alice2 enregistrée')).toBeInTheDocument();
-      expect(screen.getByText('2 films')).toBeInTheDocument();
+      expect(screen.getByText('Par Alice')).toBeInTheDocument();
+      expect(screen.getByText('2 films, 1 vu')).toBeInTheDocument();
 
       await user.click(screen.getByRole('button', { name: 'Actions de la liste' }));
 
@@ -394,13 +400,14 @@ describe('SavedListPage', () => {
     );
   });
 
-  it('on a phone, puts Enregistrée, Piocher and the menu under the name', async () => {
+  it('on a phone, puts Piocher then Enregistrée under the name, and the menu beside it', async () => {
     stubMatchMedia(true);
     server.use(...useServer());
     renderPage();
 
-    expect(await screen.findByRole('button', { name: 'Enregistrée' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Piocher' })).toBeInTheDocument();
+    const saved = await screen.findByRole('button', { name: 'Enregistrée' });
+    const pick = screen.getByRole('button', { name: 'Piocher un film' });
+    expect(pick.compareDocumentPosition(saved) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Actions de la liste' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Ajouter' })).toBeNull();
   });

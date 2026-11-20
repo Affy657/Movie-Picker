@@ -1,0 +1,40 @@
+.text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icon {
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: var(--tap-target-min);
+  margin-block: calc((var(--tap-target-min) - var(--space-6)) / -2);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.button:focus-visible {
+  outline: var(--outline-focus);
+  outline-offset: var(--outline-offset);
+}
+
+@media (hover: hover) {
+  .button:hover .text {
+    color: var(--color-text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}

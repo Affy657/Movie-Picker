@@ -1,8 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { ChevronRight, Globe, Link2, LogOut, Pencil, Rows3, Trash2, Users } from 'lucide-react';
-import AvatarStack from '@/shared/components/AvatarStack';
-import Chip from '@/shared/components/Chip';
+import { Link2, ListPlus, LogOut, Pencil, Rows3, Trash2, Users } from 'lucide-react';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { MenuItem, MenuSeparator } from '@/shared/components/Menu';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -26,12 +24,11 @@ import type {
   MovieListPerson,
 } from '@/features/library/api/listsApi';
 import ListActionsMenu from '@/features/library/components/ListActionsMenu';
-import AvatarOverline from '@/features/library/components/AvatarOverline';
 import CopyLinkStatus from '@/features/library/components/CopyLinkStatus';
 import ListFormDialog from '@/features/library/components/ListFormDialog';
 import ListMembersDialog from '@/features/library/components/ListMembersDialog';
 import ListNotFound from '@/features/library/components/ListNotFound';
-import ListProgress from '@/features/library/components/ListProgress';
+import { ListCompanions, ListSourceButton } from '@/features/library/components/ListSource';
 import {
   useAddListItem,
   useDeleteList,
@@ -40,18 +37,15 @@ import {
 } from '@/features/library/hooks/useLists';
 import { useLeaveList } from '@/features/library/hooks/useListMembers';
 import { useListItemsView } from '@/features/library/hooks/useListItemsView';
-import { listCountLabel } from '@/features/library/utils/listCount';
+import { listCountLabel, withWatchedCount } from '@/features/library/utils/listCount';
+import { watchedPercent } from '@/features/library/utils/listProgress';
 import {
-  capitalizeFirst,
   contributorFrom,
   firstName,
   isMemberList,
   isSharedList,
-  listCompanions,
-  membersPhrase,
 } from '@/features/library/utils/listMembers';
 import { listPageLabels } from '@/features/library/utils/listPageLabels';
-import styles from './MovieListPage.module.css';
 
 type ListDialog = 'edit' | 'delete' | 'leave' | 'members' | null;
 
@@ -150,49 +144,10 @@ function OwnListMenu({
   return <PublicListMenu list={list} publicPage={publicPage} onOpen={onOpen} />;
 }
 
-function PublicBadge() {
-  const { t } = useTranslation();
-  return (
-    <Chip size="sm" tone="muted" icon={Globe}>
-      {t('lists.page.publicBadge')}
-    </Chip>
-  );
-}
-
-function CreatorOverline({ owner }: Readonly<{ owner: MovieListPerson }>) {
-  const { t } = useTranslation();
-  return (
-    <AvatarOverline avatarId={owner.avatarId} pseudo={owner.displayName}>
-      {t('lists.members.createdBy', { name: firstName(owner.displayName) })}
-    </AvatarOverline>
-  );
-}
-
-function MembersPill({
-  list,
-  viewerId,
-  onOpen,
-}: Readonly<{ list: MovieListDetail; viewerId: string | undefined; onOpen: () => void }>) {
-  const { t, locale } = useTranslation();
-  const phrase = membersPhrase(list, viewerId, t);
-  if (!phrase) return null;
-  const people = listCompanions(list, viewerId).map((person) => ({
-    key: person.userId,
-    avatarId: person.avatarId,
-    pseudo: person.displayName,
-  }));
-  return (
-    <Chip
-      tone="primary"
-      size="sm"
-      className={styles.membersPill}
-      leading={<AvatarStack people={people} className={styles.membersFaces} />}
-      trailingIcon={ChevronRight}
-      onClick={onOpen}
-    >
-      {capitalizeFirst(phrase, locale)}
-    </Chip>
-  );
+function recentPosterPaths(items: readonly MovieListItem[]): (string | null | undefined)[] {
+  return [...items]
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .map((item) => item.posterPath);
 }
 
 function contributorOf(
@@ -303,6 +258,7 @@ export default function MovieListPage() {
 
   const { items, watchedCount, isWatched } = useListItemsView(list);
   const contributor = useContributors(list, user?.userId);
+  const cover = useMemo(() => recentPosterPaths(items), [items]);
 
   if (listQuery.isError && isNotFoundError(listQuery.error)) {
     return (
@@ -318,7 +274,7 @@ export default function MovieListPage() {
   return (
     <ListMoviesPage
       title={name}
-      subtitle={list ? listCountLabel(list.items.length, t) : null}
+      subtitle={list ? withWatchedCount(listCountLabel(items.length, t), watchedCount, t) : null}
       description={list?.description}
       items={items}
       isLoading={listQuery.isPending}
@@ -336,17 +292,16 @@ export default function MovieListPage() {
         addPanelTitle: t('lists.page.addPanelTitle', { name: name ?? '' }),
       }}
       header={{
-        stackedOnMobile: true,
-        overline:
-          list && isMemberList(list) && list.owner ? (
-            <CreatorOverline owner={list.owner} />
+        cover,
+        coverIcon: <ListPlus size={ICON_SIZE.lg} />,
+        progress: watchedPercent(watchedCount, items.length),
+        isPublic: !!list?.isPublic,
+        source:
+          list && isSharedList(list) ? (
+            <ListSourceButton onClick={() => setDialog('members')}>
+              <ListCompanions list={list} viewerId={user?.userId} />
+            </ListSourceButton>
           ) : undefined,
-        members: list ? (
-          <MembersPill list={list} viewerId={user?.userId} onOpen={() => setDialog('members')} />
-        ) : null,
-        progress:
-          items.length > 0 ? <ListProgress watched={watchedCount} total={items.length} /> : null,
-        badge: list?.isPublic ? <PublicBadge /> : null,
         menu: list ? <OwnListMenu list={list} onOpen={setDialog} /> : null,
       }}
       card={{
