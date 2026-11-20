@@ -238,3 +238,27 @@ public sealed class FriendGroupJoinResponse
     public FriendGroupSummaryResponse Group { get; init; } = new();
     public bool Joined { get; init; }
 }
+
+public sealed class FriendGroupRankingResponse
+{
+    public int NightCount { get; init; }
+    public IReadOnlyList<FriendGroupMemberStatsResponse> Members { get; init; } = [];
+}
+
+public sealed class FriendGroupMemberStatsResponse
+{
+    public string UserId { get; init; } = string.Empty;
+    public int ProposedCount { get; init; }
+    public int WinningCount { get; init; }
+    public int RatedWinningCount { get; init; }
+    public double? ProposalsAverageRating { get; init; }
+    public int UpVotesReceived { get; init; }
+    public int UpVotesCast { get; init; }
+    public int UpVotesOnWinner { get; init; }
+    public int FreshProposalCount { get; init; }
+    public int NightsAttended { get; init; }
+    public int NightsSinceJoined { get; init; }
+    public int NightsHosted { get; init; }
+    public int RatingsGiven { get; init; }
+    public double? AverageRatingGiven { get; init; }
+}

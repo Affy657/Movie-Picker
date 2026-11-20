@@ -988,6 +988,7 @@ export interface MockGroup {
   nextNightParticipantIds?: string[];
   pastNights?: Schemas['MyEventSummaryDto'][];
   createdAt?: string;
+  ranking?: Schemas['FriendGroupRankingResponse'];
 }
 
 type StoredGroup = Required<MockGroup>;
@@ -1009,6 +1010,7 @@ function withGroupDefaults(group: MockGroup): StoredGroup {
     nextNightParticipantIds: [],
     pastNights: [],
     createdAt: MOCK_DATE,
+    ranking: { nightCount: 0, members: [] },
     ...group,
     owner,
     members: group.members ?? [{ ...owner, role: 'owner' }],
@@ -1097,6 +1099,10 @@ export function createGroupsHandlers(
     http.get(`${route}/:id`, ({ params }) => {
       const group = find(params.id);
       return group ? apiJson<'FriendGroupDetailResponse'>(mockGroupDetail(group)) : notFound();
+    }),
+    http.get(`${route}/:id/ranking`, ({ params }) => {
+      const group = find(params.id);
+      return group ? apiJson<'FriendGroupRankingResponse'>(group.ranking) : notFound();
     }),
     http.patch(`${route}/:id`, async ({ params, request }) => {
       const group = find(params.id);

@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Un classement dans chaque groupe** : la page d’un groupe classe ses membres sur la stat de votre choix, note des films proposés, victoires, votes reçus, flair, films inédits, présence, organisation ou générosité, avec un podium et la raison de ceux qui ne sont pas encore classés.
+
 ## [1.25.0] - 2026-11-20
 
 ### Added

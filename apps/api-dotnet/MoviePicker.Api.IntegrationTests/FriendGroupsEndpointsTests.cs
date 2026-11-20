@@ -92,6 +92,7 @@ public sealed class FriendGroupsEndpointsTests : IClassFixture<MoviePickerApplic
     [InlineData("GET", "/" + UnknownObjectId)]
     [InlineData("PATCH", "/" + UnknownObjectId)]
     [InlineData("DELETE", "/" + UnknownObjectId)]
+    [InlineData("GET", "/" + UnknownObjectId + "/ranking")]
     [InlineData("GET", "/" + UnknownObjectId + "/members")]
     [InlineData("GET", "/" + UnknownObjectId + "/invitable")]
     [InlineData("POST", "/" + UnknownObjectId + "/invitations")]
@@ -142,6 +143,27 @@ public sealed class FriendGroupsEndpointsTests : IClassFixture<MoviePickerApplic
         Assert.Equal(["userId", "handle", "displayName", "avatarId", "role", "joinedAt"], FieldsOf(member));
         Assert.Equal((owner.Id, "owner"), (member.GetProperty("userId").GetString(), member.GetProperty("role").GetString()));
         Assert.False(summary.TryGetProperty("_id", out _));
+    }
+
+    [Fact]
+    public async Task Ranking_AnswersTheDocumentedShape_ForEveryMember()
+    {
+        var (owner, member, groupId) = await SharedGroupAsync("Ranked");
+
+        var ranking = await member.Client.GetFromJsonAsync<JsonElement>($"{Route}/{groupId}/ranking", Json);
+
+        Assert.Equal(["nightCount", "members"], FieldsOf(ranking));
+        Assert.Equal(0, ranking.GetProperty("nightCount").GetInt32());
+        var members = ranking.GetProperty("members").EnumerateArray().ToList();
+        Assert.Equal([owner.Id, member.Id], members.Select(m => m.GetProperty("userId").GetString()));
+        Assert.Equal(
+            [
+                "userId", "proposedCount", "winningCount", "ratedWinningCount", "proposalsAverageRating",
+                "upVotesReceived", "upVotesCast", "upVotesOnWinner", "freshProposalCount",
+                "nightsAttended", "nightsSinceJoined", "nightsHosted", "ratingsGiven", "averageRatingGiven"
+            ],
+            FieldsOf(members[0]));
+        Assert.Equal(JsonValueKind.Null, members[0].GetProperty("proposalsAverageRating").ValueKind);
     }
 
     [Theory]
@@ -327,6 +349,7 @@ public sealed class FriendGroupsEndpointsTests : IClassFixture<MoviePickerApplic
             await intruder.Client.GetAsync(groupRoute),
             await intruder.Client.PatchAsJsonAsync(groupRoute, new { name = "Volé" }),
             await intruder.Client.DeleteAsync(groupRoute),
+            await intruder.Client.GetAsync($"{groupRoute}/ranking"),
             await intruder.Client.GetAsync($"{groupRoute}/members"),
             await intruder.Client.GetAsync($"{groupRoute}/invitable"),
             await intruder.Client.PostAsJsonAsync($"{groupRoute}/invitations", new { userId = owner.Id }),

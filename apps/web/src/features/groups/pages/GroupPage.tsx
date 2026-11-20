@@ -1,10 +1,9 @@
-import { useEffect, useId, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import { CalendarPlus, Plus, Users } from 'lucide-react';
 import BackLink from '@/shared/components/BackLink';
 import Button, { buttonClass } from '@/shared/components/Button';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import CountBadge from '@/shared/components/CountBadge';
 import EmptyState from '@/shared/components/EmptyState';
 import ErrorState from '@/shared/components/ErrorState';
 import InlineError from '@/shared/components/InlineError';
@@ -23,10 +22,12 @@ import { firstName } from '@/features/library/utils/listMembers';
 import type { FriendGroupDetail } from '@/features/groups/api/groupsApi';
 import GroupFilms from '@/features/groups/components/GroupFilms';
 import GroupFormDialog from '@/features/groups/components/GroupFormDialog';
+import GroupRanking from '@/features/groups/components/GroupRanking';
 import { GroupMembersAside, GroupMembersStrip } from '@/features/groups/components/GroupMembers';
 import GroupMembersDialog from '@/features/groups/components/GroupMembersDialog';
 import GroupMosaic from '@/features/groups/components/GroupMosaic';
 import GroupNextNight from '@/features/groups/components/GroupNextNight';
+import GroupSection from '@/features/groups/components/GroupSection';
 import GroupSettingsMenu, {
   type GroupDialog,
 } from '@/features/groups/components/GroupSettingsMenu';
@@ -54,28 +55,6 @@ function useOpenMembersOnArrival(): boolean {
   }, [pathname, search, hash, state, navigate]);
 
   return arrival;
-}
-
-function GroupSection({
-  title,
-  count,
-  children,
-}: Readonly<{ title: string; count?: number; children: ReactNode }>) {
-  const headingId = useId();
-  return (
-    <section className={styles.section} aria-labelledby={headingId}>
-      <h2 id={headingId} className={styles.sectionTitle}>
-        {title}
-        {count === undefined ? null : (
-          <>
-            {' '}
-            <CountBadge value={count} tone="neutral" />
-          </>
-        )}
-      </h2>
-      {children}
-    </section>
-  );
 }
 
 function GroupNotFound() {
@@ -210,6 +189,7 @@ function GroupBody({
           </GroupSection>
         ) : null}
         {isMobile ? <GroupMembersStrip group={group} viewerId={user?.userId} /> : null}
+        <GroupRanking group={group} viewerId={user?.userId} />
         {films.length > 0 ? (
           <GroupSection title={t('groups.page.films')} count={films.length}>
             <GroupFilms nights={films} />

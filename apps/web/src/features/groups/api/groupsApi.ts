@@ -21,6 +21,10 @@ export type FriendGroupInvitePreview = ApiSchemas['FriendGroupInvitePreviewRespo
 
 export type FriendGroupJoin = ApiSchemas['FriendGroupJoinResponse'];
 
+export type FriendGroupRanking = ApiSchemas['FriendGroupRankingResponse'];
+
+export type FriendGroupMemberStats = ApiSchemas['FriendGroupMemberStatsResponse'];
+
 type FriendGroupMembersResponse = ApiSchemas['FriendGroupMembersResponse'];
 
 type FriendGroupInvitableUsersResponse = ApiSchemas['FriendGroupInvitableUsersResponse'];
@@ -34,6 +38,10 @@ export type FriendGroupMembers = Omit<FriendGroupMembersResponse, 'members' | 'i
 
 export function fetchGroup(id: string, signal?: AbortSignal): Promise<FriendGroupDetail> {
   return fetchApi<FriendGroupDetail>(apiPath('groups', id), { signal });
+}
+
+export function fetchGroupRanking(id: string, signal?: AbortSignal): Promise<FriendGroupRanking> {
+  return fetchApi<FriendGroupRanking>(apiPath('groups', id, 'ranking'), { signal });
 }
 
 export function createGroup(name: string): Promise<FriendGroupSummary> {

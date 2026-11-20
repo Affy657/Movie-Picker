@@ -13,6 +13,7 @@ import {
   fetchGroupInvitableUsers,
   fetchGroupInvitePreview,
   fetchGroupMembers,
+  fetchGroupRanking,
   inviteToGroup,
   joinGroupByLink,
   leaveGroup,
@@ -29,6 +30,7 @@ function forgetGroup(queryClient: QueryClient, groupId: string): Promise<void> {
   return Promise.all([
     invalidateAllExcept(queryClient, queryKeys.groups.all, [
       queryKeys.groups.detail(groupId),
+      queryKeys.groups.ranking(groupId),
       queryKeys.groups.members(groupId),
       queryKeys.groups.invitable(groupId),
     ]),
@@ -42,6 +44,14 @@ export function useGroup(groupId: string | undefined, { enabled = true } = {}) {
     queryKey: queryKeys.groups.detail(id),
     queryFn: ({ signal }) => fetchGroup(id, signal),
     enabled: enabled && !!groupId,
+  });
+}
+
+export function useGroupRanking(groupId: string) {
+  return useQuery({
+    queryKey: queryKeys.groups.ranking(groupId),
+    queryFn: ({ signal }) => fetchGroupRanking(groupId, signal),
+    enabled: !!groupId,
   });
 }
 

@@ -101,6 +101,7 @@ export const queryKeys = {
     all: ['groups'] as const,
     mine: ['groups', 'mine'] as const,
     detail: (id: string) => ['groups', 'detail', id] as const,
+    ranking: (id: string) => ['groups', 'ranking', id] as const,
     members: (id: string) => ['groups', 'members', id] as const,
     invitable: (id: string) => ['groups', 'invitable', id] as const,
     invitePreview: (token: string, viewerId: string | null) =>
