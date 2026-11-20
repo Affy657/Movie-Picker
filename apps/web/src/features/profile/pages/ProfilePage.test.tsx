@@ -364,7 +364,9 @@ describe('ProfilePage (MSW)', () => {
 
     renderProfile('moi');
 
-    expect(await screen.findByRole('heading', { name: 'Films vus 1' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Films vus sur Movie Picker 1' })
+    ).toBeInTheDocument();
     expect(screen.getByText('Masqués')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Rendre visible' })).toHaveAttribute(
       'href',

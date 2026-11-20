@@ -160,7 +160,9 @@ describe('ProfileMoviesSection (MSW)', () => {
 
     renderSection('alice');
 
-    expect(await screen.findByRole('heading', { name: 'Films vus 2' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Films vus sur Movie Picker 2' })
+    ).toBeInTheDocument();
     expect(screen.getByText('Inception')).toBeInTheDocument();
     expect(screen.getByText('Interstellar')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /tout voir/i })).toHaveAttribute(
@@ -377,7 +379,9 @@ describe('ProfileMoviesSection (MSW)', () => {
 
     renderSection('alice');
 
-    expect(await screen.findByRole('heading', { name: 'Films vus 3' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Films vus sur Movie Picker 3' })
+    ).toBeInTheDocument();
     expect(screen.getAllByRole('heading', { name: 'Inception', level: 3 })).toHaveLength(1);
     expect(screen.getByRole('heading', { name: 'Heat', level: 3 })).toBeInTheDocument();
   });
@@ -395,7 +399,9 @@ describe('ProfileMoviesSection (MSW)', () => {
 
     renderSection('alice');
 
-    expect(await screen.findByRole('heading', { name: 'Films vus 10' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Films vus sur Movie Picker 10' })
+    ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Film 8', level: 3 })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Film 9', level: 3 })).not.toBeInTheDocument();
   });
@@ -411,7 +417,7 @@ describe('ProfileMoviesSection (MSW)', () => {
 
     renderSection('alice');
 
-    await screen.findByRole('heading', { name: 'Films vus 1' });
+    await screen.findByRole('heading', { name: 'Films vus sur Movie Picker 1' });
     expect(requestedTakes).toEqual(['24']);
   });
 
@@ -424,7 +430,9 @@ describe('ProfileMoviesSection (MSW)', () => {
 
     renderSection('alice');
 
-    expect(await screen.findByRole('heading', { name: 'Films vus 250' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Films vus sur Movie Picker 250' })
+    ).toBeInTheDocument();
   });
 
   it('says the watched movies could not load and loads them again on demand', async () => {
@@ -443,7 +451,9 @@ describe('ProfileMoviesSection (MSW)', () => {
     expect(await screen.findByText('Les films vus n’ont pas pu être chargés.')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Réessayer' }));
 
-    expect(await screen.findByRole('heading', { name: 'Films vus 1' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Films vus sur Movie Picker 1' })
+    ).toBeInTheDocument();
     expect(screen.queryByText('Les films vus n’ont pas pu être chargés.')).not.toBeInTheDocument();
   });
 
@@ -452,7 +462,9 @@ describe('ProfileMoviesSection (MSW)', () => {
 
     renderSection('alice', [], { isOwnProfile: true, watchedHidden: true });
 
-    expect(await screen.findByRole('heading', { name: 'Films vus 1' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Films vus sur Movie Picker 1' })
+    ).toBeInTheDocument();
     expect(screen.getByText('Masqués')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Rendre visible' })).toHaveAttribute(
       'href',
@@ -465,7 +477,7 @@ describe('ProfileMoviesSection (MSW)', () => {
 
     renderSection('alice', [], { isOwnProfile: true });
 
-    await screen.findByRole('heading', { name: 'Films vus 1' });
+    await screen.findByRole('heading', { name: 'Films vus sur Movie Picker 1' });
     expect(screen.queryByText('Masqués')).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Rendre visible' })).not.toBeInTheDocument();
   });
@@ -507,7 +519,7 @@ describe('ProfileMoviesSection (MSW)', () => {
     renderSection('alice', [HEAT], { watchlist: { count: 1, isHidden: false } });
 
     const favorites = await screen.findByRole('heading', { name: 'Ses favoris' });
-    const watchedRow = await screen.findByRole('heading', { name: 'Films vus 1' });
+    const watchedRow = await screen.findByRole('heading', { name: 'Films vus sur Movie Picker 1' });
     const watchlistRow = screen.getByRole('link', { name: /sa watchlist/i });
     expect(
       favorites.compareDocumentPosition(watchedRow) & Node.DOCUMENT_POSITION_FOLLOWING
@@ -618,7 +630,7 @@ describe('ProfileMoviesSection (MSW)', () => {
 
       renderSection('alice', [], { watchlist: { count: 0, isHidden: false } });
 
-      await screen.findByRole('heading', { name: 'Films vus 1' });
+      await screen.findByRole('heading', { name: 'Films vus sur Movie Picker 1' });
       expect(screen.queryByRole('heading', { name: /watchlist/i })).not.toBeInTheDocument();
     });
 

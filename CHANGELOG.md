@@ -10,6 +10,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Changed
 
+- **Le profil montre les films vus sur Movie Picker** : la rangée, sa page et la liste qu'on en enregistre ne gardent que les films vus en soirée, sans ceux de Letterboxd ni ceux marqués à la main. Votre liste « Films vus » de Mes listes les garde tous.
 - **La carte Letterboxd des réglages se lit d'un coup d'œil** : votre compte, À voir, Films vus et la synchronisation ont chacun leur ligne, avec les mêmes espacements et les mêmes boutons que les autres réglages.
 
 ### Fixed

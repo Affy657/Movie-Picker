@@ -704,7 +704,7 @@ describe('MyListsPage', () => {
       renderPage();
 
       expect(await screen.findByText(/n’est plus visible/)).toHaveTextContent(
-        'Films vus par Léa n’est plus visible : elle est devenue privée.'
+        'Films vus sur Movie Picker par Léa n’est plus visible : elle est devenue privée.'
       );
       expect(screen.getByRole('button', { name: 'Garder une copie' })).toBeInTheDocument();
     });

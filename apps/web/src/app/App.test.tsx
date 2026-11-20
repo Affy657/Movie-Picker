@@ -342,7 +342,7 @@ describe('App (routes)', () => {
       expect(
         await screen.findByRole(
           'heading',
-          { name: /les films vus par alice/i, level: 1 },
+          { name: /les films vus sur movie picker par alice/i, level: 1 },
           { timeout: 20000 }
         )
       ).toBeInTheDocument();

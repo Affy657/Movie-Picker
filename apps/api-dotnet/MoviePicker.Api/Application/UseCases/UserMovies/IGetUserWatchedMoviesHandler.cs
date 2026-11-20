@@ -11,4 +11,6 @@ public interface IGetUserWatchedMoviesHandler
         CancellationToken ct = default);
 
     Task<UserWatchedMoviesResponse> HandleForUserAsync(string userId, int take, CancellationToken ct = default);
+
+    Task<UserWatchedMoviesResponse> HandleNightsForUserAsync(string userId, int take, CancellationToken ct = default);
 }

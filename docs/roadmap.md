@@ -107,5 +107,4 @@ Rien pour l'instant.
 
 ## 🗄️ Rejetée
 
-- `M` **Films vus sur Movie Picker** : les films vus en soirée sur Movie Picker ont leur propre liste, à part de « Films vus », qui mélange aussi Letterboxd et les films marqués à la main. Écartée : le filtre « Vu où » de Films vus suffit, et Mes listes reprend désormais les films proposés et les propositions gagnantes.
 - `S` **Description de soirée** : champ libre en complément du titre, à la création comme ensuite par l'hôte, affiché en tête de la page soirée pour dire à l'invité dans quoi il entre (thème, consignes, lieu). Écartée : la fenêtre de création garde le moins de champs possible, et le titre et le thème disent déjà à l'invité dans quoi il entre.

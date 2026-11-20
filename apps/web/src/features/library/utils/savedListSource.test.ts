@@ -130,7 +130,7 @@ describe('the lists of a member profile', () => {
 
   it('names each one after the first name of the member, elision included', () => {
     expect(savedListName(profileList({ sourceType: 'memberWatched' }), fr)).toBe(
-      'Films vus par Léa'
+      'Films vus sur Movie Picker par Léa'
     );
     expect(savedListName(profileList({ sourceType: 'memberProposals' }), fr)).toBe(
       'Films proposés par Léa'
