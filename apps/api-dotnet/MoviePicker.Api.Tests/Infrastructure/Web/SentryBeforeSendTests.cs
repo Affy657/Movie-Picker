@@ -85,6 +85,26 @@ public sealed class SentryBeforeSendTests
     }
 
     [Fact]
+    public void Prepare_MasksTheGroupInviteTokenInTheRequestUrlTheTransactionNameTheTagsAndTheReferer()
+    {
+        var sentryEvent = new SentryEvent(new InvalidOperationException("boom"))
+        {
+            Request = new SentryRequest { Url = "https://api.test/api/v1/groups/join/SECRET-TOKEN" },
+            TransactionName = "POST /api/v1/groups/join/SECRET-TOKEN"
+        };
+        sentryEvent.SetTag("RequestPath", "/api/v1/groups/join/SECRET-TOKEN");
+        sentryEvent.SetTag("Referer", "https://movie-picker.fr/g/SECRET/rejoindre");
+
+        var prepared = SentryBeforeSend.Prepare(sentryEvent);
+
+        Assert.NotNull(prepared);
+        Assert.Equal("https://api.test/api/v1/groups/join/***", prepared!.Request.Url);
+        Assert.Equal("POST /api/v1/groups/join/***", prepared.TransactionName);
+        Assert.Equal("/api/v1/groups/join/***", prepared.Tags["RequestPath"]);
+        Assert.Equal("https://movie-picker.fr/g/***/rejoindre", prepared.Tags["Referer"]);
+    }
+
+    [Fact]
     public void Prepare_MasksTheInviteTokenCarriedByAReturnTo()
     {
         const string query = "?returnTo=%2Fl%2FSECRET%2Frejoindre";

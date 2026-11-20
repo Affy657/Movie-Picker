@@ -10,17 +10,20 @@ public sealed class GetInboxHandler : IGetInboxHandler
     private readonly IUserNotificationRepository _notifications;
     private readonly IUserRepository _users;
     private readonly IMovieListRepository _lists;
+    private readonly IFriendGroupRepository _groups;
     private readonly TimeProvider _clock;
 
     public GetInboxHandler(
         IUserNotificationRepository notifications,
         IUserRepository users,
         IMovieListRepository lists,
+        IFriendGroupRepository groups,
         TimeProvider clock)
     {
         _notifications = notifications;
         _users = users;
         _lists = lists;
+        _groups = groups;
         _clock = clock;
     }
 
@@ -39,10 +42,12 @@ public sealed class GetInboxHandler : IGetInboxHandler
         var unreadCountTask = _notifications.GetUnreadCountAsync(userId, ct);
         var actorsTask = ResolveActorsAsync(items, ct);
         var pendingListsTask = PendingListInvitationsAsync(userId, items, ct);
-        await Task.WhenAll(unreadCountTask, actorsTask, pendingListsTask);
+        var pendingGroupsTask = PendingGroupInvitationsAsync(userId, items, ct);
+        await Task.WhenAll(unreadCountTask, actorsTask, pendingListsTask, pendingGroupsTask);
         var unreadCount = await unreadCountTask;
         var actors = await actorsTask;
         var pendingLists = await pendingListsTask;
+        var pendingGroups = await pendingGroupsTask;
 
         return new NotificationInboxResponse
         {
@@ -61,6 +66,11 @@ public sealed class GetInboxHandler : IGetInboxHandler
                 ListInvitationPending = n.Type == UserNotificationType.ListInvitation
                     && n.ListId is { } listId
                     && pendingLists.Contains(listId),
+                GroupId = n.GroupId,
+                GroupName = n.GroupName,
+                GroupInvitationPending = n.Type == UserNotificationType.GroupInvitation
+                    && n.GroupId is { } groupId
+                    && pendingGroups.Contains(groupId),
                 IsRead = n.IsRead,
                 CreatedAt = n.CreatedAt
             }).ToList(),
@@ -86,6 +96,22 @@ public sealed class GetInboxHandler : IGetInboxHandler
         return listIds.Count == 0
             ? new HashSet<string>(StringComparer.Ordinal)
             : await _lists.ListPendingInvitationIdsAsync(userId, listIds, _clock.GetUtcNow(), ct);
+    }
+
+    private async Task<IReadOnlySet<string>> PendingGroupInvitationsAsync(
+        string userId,
+        IEnumerable<UserNotification> items,
+        CancellationToken ct)
+    {
+        var groupIds = items
+            .Where(n => n.Type == UserNotificationType.GroupInvitation)
+            .Select(n => n.GroupId)
+            .OfType<string>()
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        return groupIds.Count == 0
+            ? new HashSet<string>(StringComparer.Ordinal)
+            : await _groups.ListPendingInvitationIdsAsync(userId, groupIds, _clock.GetUtcNow(), ct);
     }
 
     private async Task<Dictionary<string, DisplayedPerson>> ResolveActorsAsync(

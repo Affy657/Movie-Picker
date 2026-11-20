@@ -6,16 +6,16 @@ internal sealed record MyEventRatingSummary(double? Average, double? MyRating, b
 
 internal sealed class MyEventRatings
 {
-    public static readonly MyEventRatings None = new([], [], []);
+    public static readonly MyEventRatings None = new([], [], new HashSet<string>());
 
     private readonly ILookup<string, MovieRating> _ratingsByEventId;
     private readonly Dictionary<string, string> _myParticipantIdByEventId;
-    private readonly HashSet<string> _ratingOpenEventIds;
+    private readonly IReadOnlySet<string> _ratingOpenEventIds;
 
     public MyEventRatings(
         IEnumerable<MovieRating> ratings,
         IEnumerable<Participant> myParticipations,
-        HashSet<string> ratingOpenEventIds)
+        IReadOnlySet<string> ratingOpenEventIds)
     {
         _ratingsByEventId = ratings.ToLookup(r => r.EventId);
         _myParticipantIdByEventId = myParticipations

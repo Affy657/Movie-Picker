@@ -55,6 +55,26 @@ describe('redactSensitiveUrl', () => {
     );
   });
 
+  it('masks the group invitation token in the path of the join page, relative or absolute', () => {
+    expect(redactSensitiveUrl('/g/7xK2pQ/rejoindre')).toBe(`/g/${REDACTED_QUERY_VALUE}/rejoindre`);
+    expect(redactSensitiveUrl('https://www.movie-picker.fr/G/7xK2pQ/rejoindre?lang=fr#top')).toBe(
+      `https://www.movie-picker.fr/G/${REDACTED_QUERY_VALUE}/rejoindre?lang=fr#top`
+    );
+    expect(redactSensitiveUrl('/g/7xK2pQ')).toBe(`/g/${REDACTED_QUERY_VALUE}`);
+  });
+
+  it('masks the group invitation token in the API route of the preview and of the join', () => {
+    expect(redactSensitiveUrl('https://api.movie-picker.fr/api/v1/groups/join/7xK2pQ')).toBe(
+      `https://api.movie-picker.fr/api/v1/groups/join/${REDACTED_QUERY_VALUE}`
+    );
+    expect(redactSensitiveUrl('POST /api/v1/Groups/Join/7xK2pQ?x=1')).toBe(
+      `POST /api/v1/Groups/Join/${REDACTED_QUERY_VALUE}?x=1`
+    );
+    expect(redactSensitiveUrl('/login?returnTo=%2Fg%2F7xK2pQ%2Frejoindre')).toBe(
+      `/login?returnTo=${REDACTED_QUERY_VALUE}`
+    );
+  });
+
   it('masks a returnTo that leads back to a token, and keeps the others', () => {
     expect(redactSensitiveUrl('/login?returnTo=%2Fl%2F7xK2pQ%2Frejoindre')).toBe(
       `/login?returnTo=${REDACTED_QUERY_VALUE}`
@@ -81,6 +101,11 @@ describe('redactSensitiveUrl', () => {
       'https://image.tmdb.org/t/p/w500/l/abc.jpg'
     );
     expect(redactSensitiveUrl('/api/v1/lists/l1/members')).toBe('/api/v1/lists/l1/members');
+    expect(redactSensitiveUrl('/groupes/g1')).toBe('/groupes/g1');
+    expect(redactSensitiveUrl('/api/v1/groups/g1/members')).toBe('/api/v1/groups/g1/members');
+    expect(redactSensitiveUrl('/login?returnTo=%2Fgroupes%2Fg1')).toBe(
+      '/login?returnTo=%2Fgroupes%2Fg1'
+    );
     expect(redactSensitiveUrl('Ciné l/abc')).toBe('Ciné l/abc');
   });
 

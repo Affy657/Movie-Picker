@@ -4,6 +4,7 @@ import {
   normalizeConfig,
   validateSettingsDraft,
   type SettingsDraft,
+  groupPatch,
 } from './hostEventSettingsDraft';
 import { MAX_EVENT_PARTICIPANTS, MAX_PROPOSALS_PER_PARTICIPANT } from '@/features/events/types';
 
@@ -101,5 +102,20 @@ describe('normalizeConfig', () => {
 
     expect(config.maxProposalsPerParticipant).toBeNull();
     expect(config.maxParticipants).toBeNull();
+  });
+});
+
+describe('groupPatch', () => {
+  it('sends nothing while the group stays the same', () => {
+    expect(groupPatch('g1', 'g1')).toEqual({});
+    expect(groupPatch(null, null)).toEqual({});
+  });
+
+  it('sends the chosen group', () => {
+    expect(groupPatch('g2', 'g1')).toEqual({ groupId: 'g2' });
+  });
+
+  it('asks to take the night out of its group', () => {
+    expect(groupPatch(null, 'g1')).toEqual({ clearGroup: true });
   });
 });

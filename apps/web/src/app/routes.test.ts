@@ -104,6 +104,15 @@ describe('ROUTES', () => {
     expect(ROUTES.publicList('lea', 'a/b')).toBe('/u/lea/listes/a%2Fb');
   });
 
+  it('files each group under Mes groupes, with a short invitation address of its own', () => {
+    expect(ROUTES.groups).toBe('/groupes');
+    expect(ROUTES.groupPattern).toBe('/groupes/:groupId');
+    expect(ROUTES.group('g1')).toBe('/groupes/g1');
+    expect(ROUTES.group('a/b')).toBe('/groupes/a%2Fb');
+    expect(ROUTES.groupJoinPattern).toBe('/g/:token/rejoindre');
+    expect(ROUTES.groupJoin('7hq2xm')).toBe('/g/7hq2xm/rejoindre');
+  });
+
   it('files each saved list under Mes listes, apart from the created ones', () => {
     expect(ROUTES.savedListPattern).toBe('/listes/enregistrees/:savedListId');
     expect(ROUTES.savedList('s1')).toBe('/listes/enregistrees/s1');

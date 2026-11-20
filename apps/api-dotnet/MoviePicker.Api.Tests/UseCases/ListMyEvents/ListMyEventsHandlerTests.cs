@@ -7,6 +7,7 @@ using MoviePicker.Api.Application.UseCases.ListMyEvents;
 using MoviePicker.Api.Application.UseCases.RecurringEvents;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
@@ -67,6 +68,7 @@ public sealed class ListMyEventsHandlerTests
             _ratingRepo.Object,
             _voteRepo.Object,
             _userRepo.Object,
+            new InMemoryFriendGroupRepository(),
             TimeProvider.System);
     }
 

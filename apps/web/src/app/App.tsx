@@ -1,6 +1,15 @@
 import { Suspense, useState, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router';
-import { Bookmark, CalendarPlus, Clapperboard, Eye, Film, Inbox, Trophy } from 'lucide-react';
+import {
+  Bookmark,
+  CalendarPlus,
+  Clapperboard,
+  Eye,
+  Film,
+  Inbox,
+  Trophy,
+  Users,
+} from 'lucide-react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { createAppQueryClient } from '@/app/appQueryClient';
 import { ThemeProvider } from '@/shared/contexts/ThemeContext';
@@ -45,6 +54,9 @@ const MyListsPage = routeLazy('lists');
 const MovieListPage = routeLazy('movieList');
 const SavedListPage = routeLazy('savedList');
 const JoinListPage = routeLazy('joinList');
+const MyGroupsPage = routeLazy('groups');
+const GroupPage = routeLazy('group');
+const JoinGroupPage = routeLazy('joinGroup');
 const MemberListsPage = routeLazy('memberLists');
 const PublicListPage = routeLazy('publicList');
 const WatchedMoviesPage = routeLazy('watchedMovies');
@@ -57,6 +69,22 @@ const ProfileProposalsPage = routeLazy('profileProposals');
 const ProfileWatchlistPage = routeLazy('profileWatchlist');
 const NotFoundPage = routeLazy('notFound');
 const MoviePage = routeLazy('moviePage');
+
+function GroupRoute({ children }: Readonly<{ children: ReactNode }>) {
+  const { pathname } = useLocation();
+  return (
+    <SessionGate
+      icon={<Users aria-hidden size={ICON_SIZE['3xl']} />}
+      headingKey="groups.title"
+      titleKey="groups.signedOutTitle"
+      messageKey="groups.signedOutMessage"
+      returnTo={pathname}
+      maxWidth="var(--container-lg)"
+    >
+      {children}
+    </SessionGate>
+  );
+}
 
 function ListRoute({ children }: Readonly<{ children: ReactNode }>) {
   const { pathname } = useLocation();
@@ -249,6 +277,23 @@ export function AppRoutes() {
           }
         />
         <Route path={ROUTES.joinListPattern} element={<JoinListPage />} />
+        <Route
+          path={ROUTES.groups}
+          element={
+            <GroupRoute>
+              <MyGroupsPage />
+            </GroupRoute>
+          }
+        />
+        <Route
+          path={ROUTES.groupPattern}
+          element={
+            <GroupRoute>
+              <GroupPage />
+            </GroupRoute>
+          }
+        />
+        <Route path={ROUTES.groupJoinPattern} element={<JoinGroupPage />} />
         <Route
           path={ROUTES.notifications}
           element={

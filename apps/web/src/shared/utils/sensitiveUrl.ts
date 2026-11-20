@@ -10,9 +10,11 @@ const URL_SCHEME = /^[a-z][a-z\d+.-]*:\/\//i;
 
 const WHITESPACE_RUN = /(\s+)/;
 
-const LIST_INVITE_PAGE_SEGMENT = 'l';
+const INVITE_PAGE_SEGMENTS = new Set(['l', 'g']);
 
-const LIST_JOIN_API_SEGMENTS = ['lists', 'join'] as const;
+const JOIN_API_RESOURCES = new Set(['lists', 'groups']);
+
+const JOIN_API_SEGMENT = 'join';
 
 function decodeQueryComponent(component: string): string {
   const withSpaces = component.replaceAll('+', ' ');
@@ -27,16 +29,19 @@ function sameSegment(segment: string | undefined, expected: string): boolean {
   return segment?.toLowerCase() === expected;
 }
 
+function isOneOf(segment: string | undefined, expected: ReadonlySet<string>): boolean {
+  return segment !== undefined && expected.has(segment.toLowerCase());
+}
+
 function redactTokenSegments(segments: string[]): string[] {
   const redacted = [...segments];
-  if (sameSegment(redacted[1], LIST_INVITE_PAGE_SEGMENT) && redacted[2]) {
+  if (isOneOf(redacted[1], INVITE_PAGE_SEGMENTS) && redacted[2]) {
     redacted[2] = REDACTED_QUERY_VALUE;
   }
-  const [lists, join] = LIST_JOIN_API_SEGMENTS;
   for (let index = 0; index + 2 < redacted.length; index++) {
     if (
-      sameSegment(redacted[index], lists) &&
-      sameSegment(redacted[index + 1], join) &&
+      isOneOf(redacted[index], JOIN_API_RESOURCES) &&
+      sameSegment(redacted[index + 1], JOIN_API_SEGMENT) &&
       redacted[index + 2]
     ) {
       redacted[index + 2] = REDACTED_QUERY_VALUE;

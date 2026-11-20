@@ -32,6 +32,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         new("events", "events_recapSlug_unique", Unique: true),
         new("events", "events_creatorUserId"),
         new("events", "events_recurrence_creatorUserId"),
+        new("events", "events_groupId"),
         new("events", "events_startAtUtc"),
         new("events", "events_creator_creationRequest_unique", Unique: true),
 
@@ -74,6 +75,11 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         new("movie_lists", "movie_lists_invitations_userId"),
         new("movie_lists", "movie_lists_inviteLink_token_unique", Unique: true),
 
+        new("friend_groups", "friend_groups_ownerId"),
+        new("friend_groups", "friend_groups_members_userId"),
+        new("friend_groups", "friend_groups_invitations_userId"),
+        new("friend_groups", "friend_groups_inviteLink_token_unique", Unique: true),
+
         new("watched_titles", "watched_titles_ownerId_tmdbId_mediaType_unique", Unique: true),
 
         new("saved_lists", "saved_lists_ownerId_sourceType_sourceId_unique", Unique: true),
@@ -84,6 +90,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         new("user_notifications", "user_notifications_eventId"),
         new("user_notifications", "user_notifications_actorHandle"),
         new("user_notifications", "user_notifications_listId"),
+        new("user_notifications", "user_notifications_groupId"),
         new("user_notifications", "user_notifications_createdAt_ttl", ExpireAfterSeconds: NinetyDays),
 
         new("push_dedup_markers", "push_dedup_markers_channel_unique", Unique: true),

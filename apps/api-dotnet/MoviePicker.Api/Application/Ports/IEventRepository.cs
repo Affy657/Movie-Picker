@@ -22,6 +22,8 @@ public interface IEventRepository
 
     Task<IReadOnlyList<Event>> ListByIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default);
 
+    Task<IReadOnlyList<Event>> ListByGroupIdsAsync(IReadOnlyCollection<string> groupIds, CancellationToken ct = default);
+
     Task<Event?> FindByCreatorAndTitleAsync(string creatorUserId, string title, CancellationToken ct = default);
 
     Task<bool> DeleteAsync(string eventId, CancellationToken ct = default);
@@ -54,6 +56,7 @@ public interface IEventRepository
         CancellationToken ct = default);
 
     Task<long> AnonymizeCreatorAsync(string creatorUserId, CancellationToken ct = default);
+    Task<long> DetachGroupsAsync(IReadOnlyCollection<string> groupIds, CancellationToken ct = default);
 
     Task<bool> MarkWatchlistCleanedAsync(string eventId, DateTimeOffset cleanedAt, CancellationToken ct = default);
 }

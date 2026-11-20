@@ -1,3 +1,3 @@
 export const LEGAL_LAST_UPDATED = '2026-09-09';
 
-export const PRIVACY_LAST_UPDATED = '2026-11-19';
+export const PRIVACY_LAST_UPDATED = '2026-11-20';

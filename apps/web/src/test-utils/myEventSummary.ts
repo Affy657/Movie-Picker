@@ -24,6 +24,8 @@ export function buildMyEventSummary(overrides: Partial<MyEventSummary> = {}): My
     topMovies: [],
     participantsPreview: [],
     hasVoted: false,
+    groupId: null,
+    groupName: null,
     ...overrides,
   };
 }

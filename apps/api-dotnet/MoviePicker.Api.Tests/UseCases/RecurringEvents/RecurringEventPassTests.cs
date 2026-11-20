@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.RecurringEvents;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
@@ -47,6 +48,8 @@ public sealed class RecurringEventPassTests
             _events.Object,
             _participants.Object,
             _users.Object,
+            new InMemoryFriendGroupRepository(),
+            Mock.Of<IGroupNightAnnouncer>(),
             new InMemoryUnitOfWork(),
             new FakeTimeProvider(Now),
             NullLogger<RecurringEventPass>.Instance);
@@ -194,6 +197,8 @@ public sealed class RecurringEventPassTests
             _events.Object,
             _participants.Object,
             _users.Object,
+            new InMemoryFriendGroupRepository(),
+            Mock.Of<IGroupNightAnnouncer>(),
             new InMemoryUnitOfWork(),
             new FakeTimeProvider(new DateTimeOffset(2026, 9, 17, 1, 15, 0, TimeSpan.Zero)),
             NullLogger<RecurringEventPass>.Instance);
@@ -218,6 +223,8 @@ public sealed class RecurringEventPassTests
             _events.Object,
             _participants.Object,
             _users.Object,
+            new InMemoryFriendGroupRepository(),
+            Mock.Of<IGroupNightAnnouncer>(),
             new InMemoryUnitOfWork(),
             new FakeTimeProvider(new DateTimeOffset(2026, 10, 1, 1, 15, 0, TimeSpan.Zero)),
             NullLogger<RecurringEventPass>.Instance);

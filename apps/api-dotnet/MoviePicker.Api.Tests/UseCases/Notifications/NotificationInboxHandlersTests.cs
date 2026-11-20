@@ -29,6 +29,7 @@ public sealed class GetInboxHandlerTests
     private readonly Mock<IUserNotificationRepository> _notifications = new();
     private readonly Mock<IUserRepository> _users = new();
     private readonly Mock<IMovieListRepository> _lists = new();
+    private readonly Mock<IFriendGroupRepository> _groups = new();
     private readonly GetInboxHandler _sut;
 
     private static readonly UserCard Bob = new("bob-id", "avatar-1", "bob", IsProfilePublic: true);
@@ -41,7 +42,7 @@ public sealed class GetInboxHandlerTests
         _users.Setup(u => u.ListCardsByHandlesAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyCollection<string> handles, CancellationToken _) =>
                 new[] { Bob, Hidden }.Where(card => handles.Any(h => h.Trim().Equals(card.Handle, StringComparison.OrdinalIgnoreCase))).ToList());
-        _sut = new GetInboxHandler(_notifications.Object, _users.Object, _lists.Object, new SteppingClock(Now));
+        _sut = new GetInboxHandler(_notifications.Object, _users.Object, _lists.Object, _groups.Object, new SteppingClock(Now));
     }
 
     [Fact]
@@ -68,6 +69,47 @@ public sealed class GetInboxHandlerTests
                 Now,
                 It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AGroupInvitation_CarriesItsGroup_AndOffersAnAnswerOnlyWhileItIsPending()
+    {
+        _notifications.Setup(n => n.ListByUserIdAsync("u1", 31, 0, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                new UserNotification { Id = "n1", UserId = "u1", Type = UserNotificationType.GroupInvitation, ActorHandle = "bob", GroupId = "g1", GroupName = "Les cinéphiles" },
+                new UserNotification { Id = "n2", UserId = "u1", Type = UserNotificationType.GroupInvitation, ActorHandle = "bob", GroupId = "g2", GroupName = "Le club du jeudi" },
+                new UserNotification { Id = "n3", UserId = "u1", Type = UserNotificationType.ListInvitation, ActorHandle = "bob", ListId = "g2", ListName = "Nanars" }
+            ]);
+        _groups.Setup(g => g.ListPendingInvitationIdsAsync("u1", It.IsAny<IReadOnlyCollection<string>>(), Now, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new HashSet<string> { "g2" });
+        _lists.Setup(l => l.ListPendingInvitationIdsAsync("u1", It.IsAny<IReadOnlyCollection<string>>(), Now, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new HashSet<string>());
+
+        var result = await _sut.HandleAsync("u1", limit: null, offset: null);
+
+        Assert.Equal(["groupinvitation", "groupinvitation", "listinvitation"], result.Items.Select(i => i.Type));
+        Assert.Equal(
+            [("g1", "Les cinéphiles", false, false), ("g2", "Le club du jeudi", true, false), (null, null, false, false)],
+            result.Items.Select(i => (i.GroupId, i.GroupName, i.GroupInvitationPending, i.ListInvitationPending)));
+        _groups.Verify(
+            g => g.ListPendingInvitationIdsAsync(
+                "u1",
+                It.Is<IReadOnlyCollection<string>>(ids => ids.Count == 2 && ids.Contains("g1") && ids.Contains("g2")),
+                Now,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_APageWithoutGroupInvitations_ReadsNoGroup()
+    {
+        _notifications.Setup(n => n.ListByUserIdAsync("u1", 31, 0, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new UserNotification { Id = "n1", UserId = "u1", Type = UserNotificationType.NewFollower }]);
+
+        await _sut.HandleAsync("u1", limit: null, offset: null);
+
+        _groups.VerifyNoOtherCalls();
     }
 
     [Fact]

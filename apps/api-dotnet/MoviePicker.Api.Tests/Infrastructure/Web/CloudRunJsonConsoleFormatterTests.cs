@@ -87,10 +87,12 @@ public sealed class CloudRunJsonConsoleFormatterTests
         Assert.Equal("req-9", entry.GetProperty("Scopes")[0].GetProperty("RequestId").GetString());
     }
 
-    [Fact]
-    public void Write_MasksTheInviteTokenOfAListJoinPath_InTheMessageTheStateAndTheRequestScope()
+    [Theory]
+    [InlineData("lists")]
+    [InlineData("groups")]
+    public void Write_MasksTheInviteTokenOfAJoinPath_InTheMessageTheStateAndTheRequestScope(string resource)
     {
-        const string path = "/api/v1/lists/join/SECRET-TOKEN";
+        var path = $"/api/v1/{resource}/join/SECRET-TOKEN";
         var formatter = new CloudRunJsonConsoleFormatter(new FixedOptions(new JsonConsoleFormatterOptions { IncludeScopes = true }));
         var scopes = new LoggerExternalScopeProvider();
         using var _ = scopes.Push(new HostingLikeRequestScope(path));
@@ -115,11 +117,12 @@ public sealed class CloudRunJsonConsoleFormatterTests
         var written = output.ToString();
         Assert.DoesNotContain("SECRET-TOKEN", written);
         var entry = JsonElement.Parse(written);
-        Assert.Equal("Unhandled exception on /api/v1/lists/join/***", entry.GetProperty("Message").GetString());
-        Assert.Equal("/api/v1/lists/join/***", entry.GetProperty("State").GetProperty("Path").GetString());
+        var masked = $"/api/v1/{resource}/join/***";
+        Assert.Equal($"Unhandled exception on {masked}", entry.GetProperty("Message").GetString());
+        Assert.Equal(masked, entry.GetProperty("State").GetProperty("Path").GetString());
         var scope = entry.GetProperty("Scopes")[0];
-        Assert.Equal("/api/v1/lists/join/***", scope.GetProperty("RequestPath").GetString());
-        Assert.Equal("RequestPath:/api/v1/lists/join/*** RequestId:0HN1", scope.GetProperty("Message").GetString());
+        Assert.Equal(masked, scope.GetProperty("RequestPath").GetString());
+        Assert.Equal($"RequestPath:{masked} RequestId:0HN1", scope.GetProperty("Message").GetString());
     }
 
     private sealed class HostingLikeRequestScope(string path) : IReadOnlyList<KeyValuePair<string, object?>>

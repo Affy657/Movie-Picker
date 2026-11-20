@@ -19,6 +19,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
     private readonly IFollowRepository _follows;
     private readonly IWatchlistRepository _watchlist;
     private readonly IMovieListRepository _movieLists;
+    private readonly IFriendGroupRepository _groups;
     private readonly IWatchedTitleRepository _watchedTitles;
     private readonly ISavedListRepository _savedLists;
     private readonly IPasswordResetTokenRepository _resetTokens;
@@ -37,6 +38,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         IFollowRepository follows,
         IWatchlistRepository watchlist,
         IMovieListRepository movieLists,
+        IFriendGroupRepository groups,
         IWatchedTitleRepository watchedTitles,
         ISavedListRepository savedLists,
         IPasswordResetTokenRepository resetTokens,
@@ -54,6 +56,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         _follows = follows;
         _watchlist = watchlist;
         _movieLists = movieLists;
+        _groups = groups;
         _watchedTitles = watchedTitles;
         _savedLists = savedLists;
         _resetTokens = resetTokens;
@@ -115,6 +118,9 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
                 await WithdrawTheListsOfAsync(userId, token);
                 await _movieLists.DeleteAllForOwnerAsync(userId, token);
                 await _movieLists.RemoveFromOthersListsAsync(userId, token);
+                await WithdrawTheGroupsOfAsync(userId, token);
+                await _groups.DeleteAllForOwnerAsync(userId, token);
+                await _groups.RemoveFromOthersGroupsAsync(userId, token);
                 await _watchedTitles.DeleteAllForOwnerAsync(userId, token);
                 await _savedLists.DeleteAllForOwnerAsync(userId, token);
                 await _resetTokens.DeleteByUserIdAsync(userId, token);
@@ -135,6 +141,13 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         var listIds = (await _movieLists.ListByOwnerAsync(userId, ct)).Select(list => list.Id).ToList();
         await _notifications.DeleteByListsAsync(listIds, ct);
         await _savedLists.ForgetListsOfCreatorAsync(userId, ct);
+    }
+
+    private async Task WithdrawTheGroupsOfAsync(string userId, CancellationToken ct)
+    {
+        var groupIds = (await _groups.ListByOwnerAsync(userId, ct)).Select(group => group.Id).ToList();
+        await _events.DetachGroupsAsync(groupIds, ct);
+        await _notifications.DeleteByGroupsAsync(groupIds, ct);
     }
 
     private async Task MarkJoinedEventsChangedAsync(IReadOnlyList<string> joinedEventIds, CancellationToken ct)

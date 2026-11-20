@@ -10,6 +10,7 @@ import {
   Palette,
   Settings,
   Sparkles,
+  Users,
 } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
 import CountBadge from '@/shared/components/CountBadge';
@@ -34,6 +35,8 @@ import {
 } from '@/shared/i18n';
 import type { UiThemePreference } from '@/shared/types/theme';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { useMyGroups } from '@/features/events/hooks/useMyGroups';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { useMenuState } from '@/shared/hooks/useMenuState';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { usePwaInstallClick } from '@/shared/hooks/usePwaInstall';
@@ -85,6 +88,28 @@ function ProfileHeader({ user, onClose }: Readonly<{ user: UserProfile; onClose:
     >
       <ProfileSummary user={user} />
       <span className="visually-hidden">{t('profile.settings.viewMyProfile')}</span>
+    </MenuItem>
+  );
+}
+
+function MyGroupsItem({ onClose }: Readonly<{ onClose: () => void }>) {
+  const { t } = useTranslation();
+  const myGroups = useMyGroups();
+  const pending = myGroups.data?.invitations.length ?? 0;
+  return (
+    <MenuItem
+      to={ROUTES.groups}
+      icon={menuIcon(Users)}
+      onClick={onClose}
+      trailing={pending > 0 ? <CountBadge value={pending} size="sm" aria-hidden /> : undefined}
+    >
+      {t('nav.myGroups')}
+      {pending > 0 ? (
+        <span className="visually-hidden">
+          {', '}
+          {pluralizeCount(pending, 'groups.pendingInvitationsOne', 'groups.pendingInvitations', t)}
+        </span>
+      ) : null}
     </MenuItem>
   );
 }
@@ -168,6 +193,7 @@ function UserMenuPanel({
     <MenuPanel {...panelProps} ariaLabel={t('nav.accountMenu')} className={styles.panel}>
       <ProfileHeader user={user} onClose={onClose} />
       <MenuSeparator />
+      <MyGroupsItem onClose={onClose} />
       <MenuItem to={ROUTES.account} icon={menuIcon(Settings)} onClick={onClose}>
         {t('nav.account')}
       </MenuItem>

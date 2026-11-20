@@ -38,6 +38,14 @@ export async function declineListInvitation(listId: string): Promise<void> {
   await fetchApi(apiPath('lists', listId, 'invitation', 'decline'), { method: 'POST' });
 }
 
+export async function acceptGroupInvitation(groupId: string): Promise<void> {
+  await fetchApi(apiPath('groups', groupId, 'invitation', 'accept'), { method: 'POST' });
+}
+
+export async function declineGroupInvitation(groupId: string): Promise<void> {
+  await fetchApi(apiPath('groups', groupId, 'invitation', 'decline'), { method: 'POST' });
+}
+
 export async function fetchVapidPublicKey(): Promise<string> {
   const res = await fetchApi<{ publicKey: string }>('/notifications/vapid-public-key');
   return res.publicKey;

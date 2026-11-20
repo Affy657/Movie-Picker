@@ -1,4 +1,5 @@
 import { Check, Copy, Link2, Plus, Share2 } from 'lucide-react';
+import AvatarStack from '@/shared/components/AvatarStack';
 import Button from '@/shared/components/Button';
 import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -7,6 +8,12 @@ import { useTranslation } from '@/shared/i18n';
 import EventCalendarMenu from '@/features/events/components/EventCalendarMenu';
 import styles from './CreateEventDialog.module.css';
 
+export type CreatedNightGroup = {
+  name: string;
+  memberCount: number;
+  preview: ReadonlyArray<{ userId: string; displayName: string; avatarId: string }>;
+};
+
 export type CreatedNight = {
   slug: string;
   title: string;
@@ -14,6 +21,7 @@ export type CreatedNight = {
   time: string;
   url: string;
   configNotSaved: boolean;
+  group: CreatedNightGroup | null;
 };
 
 type CreateEventInvitationProps = {
@@ -39,6 +47,23 @@ export default function CreateEventInvitation({
     'event'
   );
   const displayedUrl = night.url.replace(/^https?:\/\//, '');
+  const othersInGroup = night.group ? night.group.memberCount - 1 : 0;
+  const toGroup = night.group !== null && othersInGroup > 0;
+
+  const linkRow = (
+    <div className={styles.linkRow}>
+      <Link2 size={ICON_SIZE.md} aria-hidden className={styles.linkIcon} />
+      <span className={styles.linkText}>{displayedUrl}</span>
+      <Button size="sm" variant={toGroup ? 'secondary' : 'primary'} onClick={() => void copyLink()}>
+        {copied ? (
+          <Check size={ICON_SIZE.sm} aria-hidden />
+        ) : (
+          <Copy size={ICON_SIZE.sm} aria-hidden />
+        )}
+        {copied ? t('events.create.invitation.copied') : t('events.create.invitation.copy')}
+      </Button>
+    </div>
+  );
 
   return (
     <ResponsiveDialog
@@ -61,25 +86,34 @@ export default function CreateEventInvitation({
         <p className={styles.readyTitle}>
           {t('events.create.invitation.ready', { title: night.title })}
         </p>
-        <p className={styles.readyLead}>{t('events.create.invitation.lead')}</p>
+        {toGroup && night.group ? (
+          <div className={styles.groupNotice}>
+            <AvatarStack
+              people={night.group.preview.map((person) => ({
+                key: person.userId,
+                avatarId: person.avatarId,
+                pseudo: person.displayName,
+              }))}
+              max={night.group.preview.length}
+              size="sm"
+            />
+            <p className={styles.groupNoticeTitle}>
+              {othersInGroup === 1
+                ? t('events.create.invitation.groupSeesOne')
+                : t('events.create.invitation.groupSees', { count: othersInGroup })}
+            </p>
+            <p className={styles.groupNoticeLead}>{t('events.create.invitation.groupLead')}</p>
+          </div>
+        ) : (
+          <p className={styles.readyLead}>{t('events.create.invitation.lead')}</p>
+        )}
         {night.configNotSaved ? (
           <output className={styles.configWarning}>{t('events.create.configNotSaved')}</output>
         ) : null}
-        <div className={styles.linkRow}>
-          <Link2 size={ICON_SIZE.md} aria-hidden className={styles.linkIcon} />
-          <span className={styles.linkText}>{displayedUrl}</span>
-          <Button size="sm" variant="primary" onClick={() => void copyLink()}>
-            {copied ? (
-              <Check size={ICON_SIZE.sm} aria-hidden />
-            ) : (
-              <Copy size={ICON_SIZE.sm} aria-hidden />
-            )}
-            {copied ? t('events.create.invitation.copied') : t('events.create.invitation.copy')}
-          </Button>
-        </div>
+        {toGroup ? null : linkRow}
         <div className={styles.inviteActionsFrame}>
           <div className={styles.inviteActions}>
-            {canNativeShare ? (
+            {canNativeShare && !toGroup ? (
               <Button className={styles.inviteAction} onClick={() => void nativeShare()}>
                 <Share2 size={ICON_SIZE.md} aria-hidden />
                 {t('events.create.invitation.share')}
@@ -100,6 +134,12 @@ export default function CreateEventInvitation({
             </Button>
           </div>
         </div>
+        {toGroup ? (
+          <div className={styles.outsider}>
+            <p className={styles.outsiderHint}>{t('events.create.invitation.outsider')}</p>
+            {linkRow}
+          </div>
+        ) : null}
       </div>
     </ResponsiveDialog>
   );

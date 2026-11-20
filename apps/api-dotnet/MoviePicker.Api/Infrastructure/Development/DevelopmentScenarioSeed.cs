@@ -14,6 +14,8 @@ using MoviePicker.Api.Application.UseCases.DeleteMovie;
 using MoviePicker.Api.Application.UseCases.EventTemplates;
 using MoviePicker.Api.Application.UseCases.Favorites;
 using MoviePicker.Api.Application.UseCases.Follow;
+using MoviePicker.Api.Application.UseCases.FriendGroupMembers;
+using MoviePicker.Api.Application.UseCases.FriendGroups;
 using MoviePicker.Api.Application.UseCases.JoinEvent;
 using MoviePicker.Api.Application.UseCases.LaunchWheel;
 using MoviePicker.Api.Application.UseCases.LetterboxdImport;
@@ -45,6 +47,8 @@ internal static class DevelopmentScenarioSeed
     internal const string AlicePrivateListName = "Pour plus tard";
     internal const string AliceSundayListName = "Ciné du dimanche";
     internal const string BobPendingListName = "Nanars du vendredi";
+    internal const string DevFriendGroupName = "Les copains du jeudi";
+    internal const string DevGroupNightTitle = "Jeudi ciné des copains";
 
     internal const string ScenarioMultiTitle = ScenarioPrefix + "Soirée multi-participants";
     internal const string ScenarioWheelTitle = ScenarioPrefix + "Roue et clôture";
@@ -86,6 +90,8 @@ internal static class DevelopmentScenarioSeed
             await RunStepAsync(logger, "favoris", () => TrySeedFavoritesAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "movie lists", () => TrySeedMovieListsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "shared lists", () => TrySeedSharedListsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "friend groups", () => TrySeedFriendGroupsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "group night", () => TrySeedGroupNightAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "public lists", () => TrySeedPublicListsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "watched elsewhere", () => TrySeedWatchedElsewhereAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "saved lists", () => TrySeedSavedListsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
@@ -429,6 +435,76 @@ internal static class DevelopmentScenarioSeed
             "DevelopmentSeed: shared lists (Halloween with Alice and Bob, dev member of \"{Sunday}\", invitation from Bob to \"{Pending}\").",
             AliceSundayListName,
             BobPendingListName);
+    }
+
+    private static async Task TrySeedFriendGroupsAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var groups = sp.GetRequiredService<IFriendGroupRepository>();
+        var group = (await groups.ListByOwnerAsync(actors.Dev.Id, ct).ConfigureAwait(false))
+            .FirstOrDefault(candidate => candidate.Name == DevFriendGroupName);
+        if (group is null)
+        {
+            var created = await sp.GetRequiredService<ICreateFriendGroupHandler>()
+                .HandleAsync(actors.Dev.Id, new CreateFriendGroupRequest { Name = DevFriendGroupName }, ct)
+                .ConfigureAwait(false);
+            group = await groups.FindAsync(created.Id, ct).ConfigureAwait(false)
+                ?? throw new InvalidOperationException($"Seed friend group missing right after its creation: {created.Id}");
+        }
+
+        var invite = sp.GetRequiredService<IInviteToFriendGroupHandler>();
+        var accept = sp.GetRequiredService<IAcceptFriendGroupInvitationHandler>();
+        foreach (var member in new[] { actors.Alice, actors.Bob }.Where(member => group.RoleOf(member.Id) is null))
+        {
+            if (!group.HoldsInvitationOf(member.Id))
+            {
+                await invite
+                    .HandleAsync(actors.Dev.Id, group.Id, new InviteToFriendGroupRequest { UserId = member.Id }, ct)
+                    .ConfigureAwait(false);
+            }
+            await accept.HandleAsync(member.Id, group.Id, ct).ConfigureAwait(false);
+        }
+
+        logger.LogInformation(
+            "DevelopmentSeed: friend group \"{Group}\" owned by dev, with Alice and Bob.",
+            DevFriendGroupName);
+    }
+
+    private static async Task TrySeedGroupNightAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var events = sp.GetRequiredService<IEventRepository>();
+        if (await events.FindByCreatorAndTitleAsync(actors.Alice.Id, DevGroupNightTitle, ct).ConfigureAwait(false) is not null)
+        {
+            logger.LogInformation("DevelopmentSeed: group night already present, skipped.");
+            return;
+        }
+
+        var group = (await sp.GetRequiredService<IFriendGroupRepository>().ListByOwnerAsync(actors.Dev.Id, ct).ConfigureAwait(false))
+            .FirstOrDefault(candidate => candidate.Name == DevFriendGroupName);
+        if (group is null)
+            return;
+
+        var created = await sp.GetRequiredService<ICreateEventHandler>()
+            .HandleAsync(
+                new CreateEventRequest
+                {
+                    Title = DevGroupNightTitle,
+                    Date = FormatDate(DateTimeOffset.UtcNow.AddDays(6)),
+                    Time = "21:00",
+                    GroupId = group.Id
+                },
+                actors.Alice.Id,
+                ct)
+            .ConfigureAwait(false);
+
+        logger.LogInformation("DevelopmentSeed: group night created by Alice (slug={Slug}), dev not joined yet.", created.Slug);
     }
 
     private static async Task TrySeedPublicListsAsync(

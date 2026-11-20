@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Les groupes d'amis, pour ne plus envoyer de lien** : créez un groupe depuis le menu du compte, invitez vos amis une seule fois, et chaque soirée rattachée au groupe arrive dans leur page Mes soirées avec une notification. Une soirée qui se répète reste dans le groupe, et la page du groupe montre la prochaine soirée, qui vient et les films gagnants.
+
 ## [1.19.0] - 2026-11-19
 
 ### Added

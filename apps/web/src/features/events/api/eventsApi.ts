@@ -49,6 +49,7 @@ export type CreateEventBody = {
   date: string;
   time: string;
   clientRequestId?: string;
+  groupId?: string | null;
 };
 
 type RawCreateEventResponse = ApiSchemas['CreateEventResponse'];

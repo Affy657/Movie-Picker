@@ -1,0 +1,111 @@
+.layout {
+  --page-max-width: var(--container-3xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  overflow-anchor: none;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-6);
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.titles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.overline {
+  composes: overline from '@/shared/components/typography.module.css';
+  margin: 0;
+  font-size: var(--font-size-2xs);
+  line-height: var(--leading-none);
+  color: var(--color-primary-text);
+}
+
+.title {
+  composes: pageTitle from '@/shared/components/typography.module.css';
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.columns {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-6);
+}
+
+.main {
+  display: flex;
+  flex: 999 1 35rem;
+  flex-direction: column;
+  gap: var(--space-8);
+  min-width: 0;
+}
+
+.columns > aside {
+  flex: 1 1 17.5rem;
+  max-width: 20rem;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.sectionTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2-5);
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-extrabold);
+  line-height: var(--leading-tight);
+}
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.heroSkeleton {
+  height: 20rem;
+  border-radius: var(--radius-lg);
+}
+
+@media (max-width: 47.9375rem) {
+  .layout {
+    gap: var(--space-4);
+  }
+
+  .main {
+    gap: var(--space-6);
+  }
+
+  .sectionTitle {
+    font-size: var(--font-size-lg);
+  }
+}

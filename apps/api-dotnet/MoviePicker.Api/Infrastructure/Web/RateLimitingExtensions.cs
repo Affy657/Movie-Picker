@@ -44,6 +44,9 @@ public static class RateLimitingExtensions
     public const string MovieListReadPolicy = "movie-list-read";
     public const string MovieListMutationPolicy = "movie-list-mutation";
     public const string MovieListJoinPolicy = "movie-list-join";
+    public const string FriendGroupReadPolicy = "friend-group-read";
+    public const string FriendGroupMutationPolicy = "friend-group-mutation";
+    public const string FriendGroupJoinPolicy = "friend-group-join";
     public const string SavedListReadPolicy = "saved-list-read";
     public const string SavedListMutationPolicy = "saved-list-mutation";
     public const string WatchedReadPolicy = "watched-read";
@@ -113,6 +116,9 @@ public static class RateLimitingExtensions
         new(MovieListReadPolicy, 120, 1),
         new(MovieListMutationPolicy, 60, 1),
         new(MovieListJoinPolicy, 30, 1),
+        new(FriendGroupReadPolicy, 120, 1),
+        new(FriendGroupMutationPolicy, 60, 1),
+        new(FriendGroupJoinPolicy, 30, 1),
         new(SavedListReadPolicy, 120, 1),
         new(SavedListMutationPolicy, 60, 1),
         new(WatchedReadPolicy, 120, 1),

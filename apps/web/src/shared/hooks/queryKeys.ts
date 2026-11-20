@@ -94,6 +94,15 @@ export const queryKeys = {
     list: ['watchlist', 'list'] as const,
     availability: ['watchlist', 'availability'] as const,
   },
+  groups: {
+    all: ['groups'] as const,
+    mine: ['groups', 'mine'] as const,
+    detail: (id: string) => ['groups', 'detail', id] as const,
+    members: (id: string) => ['groups', 'members', id] as const,
+    invitable: (id: string) => ['groups', 'invitable', id] as const,
+    invitePreview: (token: string, viewerId: string | null) =>
+      ['groups', 'invite', token, viewerId ?? '$anonymous'] as const,
+  },
   lists: {
     all: ['lists'] as const,
     mine: ['lists', 'mine'] as const,

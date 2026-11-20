@@ -1,0 +1,120 @@
+.aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.heading {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2-5);
+  margin: 0 0 var(--space-1-5);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-extrabold);
+  line-height: var(--leading-tight);
+}
+
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2-5);
+  min-height: var(--space-12);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.rowText {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--space-0-5);
+  min-width: 0;
+}
+
+.name {
+  overflow: hidden;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.comes,
+.absent {
+  font-size: var(--font-size-2xs);
+}
+
+.comes {
+  color: var(--color-success);
+}
+
+.absent {
+  color: var(--color-text-muted);
+}
+
+.leave {
+  align-self: flex-start;
+  margin-top: var(--space-1-5);
+}
+
+.strip {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.avatars {
+  display: flex;
+  gap: var(--space-3-5);
+  margin: 0 calc(var(--space-4) * -1);
+  padding: var(--space-1) var(--space-4);
+  overflow-x: auto;
+  list-style: none;
+  overscroll-behavior-x: contain;
+}
+
+.person {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-1-5);
+  width: var(--space-14);
+}
+
+.ring {
+  display: inline-flex;
+  border-radius: var(--radius-pill);
+}
+
+.ring[data-comes] {
+  box-shadow:
+    0 0 0 2px var(--color-bg),
+    0 0 0 4px var(--color-success);
+}
+
+.personName {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hint {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}

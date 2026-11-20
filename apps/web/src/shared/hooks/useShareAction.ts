@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useAnalytics, type AnalyticsEvent } from '@/shared/hooks/useAnalytics';
 import { useCopyFeedback } from '@/shared/hooks/useCopyFeedback';
 
-type ShareSurface = 'event' | 'profile' | 'movie' | 'list';
+export type ShareSurface = 'event' | 'profile' | 'movie' | 'list' | 'group';
 
 const LINK_SHARED: AnalyticsEvent = 'link_shared';
 

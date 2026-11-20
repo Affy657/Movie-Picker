@@ -642,6 +642,15 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - fini-quand: renommer un champ lu par la requête fait échouer un test
 - piege: `readUsage` lance mongosh dans l'image `mongo:8` épinglée, par Docker ; la voie de CI qui joue ce test doit pouvoir lancer un conteneur
 
+## DEBT-107 les soirées d'un groupe sont toutes relues à chaque affichage
+
+- state: agent
+- impact: `ListByGroupIdsAsync` rend toutes les soirées jamais rattachées aux groupes du lecteur, documents entiers, filtrées ensuite en mémoire ; Mes soirées, Mes groupes et la page d'un groupe la jouent à chaque chargement, et une soirée hebdomadaire de groupe en ajoute une cinquantaine par an
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/Mongo/MongoEventRepository.cs` (`ListByGroupIdsAsync`), `Application/UseCases/ListMyEvents/ListMyEventsHandler.cs`, `Application/UseCases/FriendGroups/FriendGroupNights.cs`
+- verify: `grep -n "ListByGroupIdsAsync" apps/api-dotnet/MoviePicker.Api/Application/Ports/IEventRepository.cs`
+- fix: une variante bornée aux soirées encore ouvertes (début après maintenant moins le délai de clôture automatique, champ `startAtUtc` déjà indexé) pour Mes soirées et les prochaines soirées, et les soirées passées de la page d'un groupe plafonnées dans la requête
+- fini-quand: aucune lecture d'affichage ne charge une soirée de groupe close depuis plus d'une semaine, hors les douze films de la page du groupe
+
 ---
 
 # Contraintes

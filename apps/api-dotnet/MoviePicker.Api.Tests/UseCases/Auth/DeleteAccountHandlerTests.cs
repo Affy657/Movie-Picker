@@ -25,6 +25,7 @@ public sealed class DeleteAccountHandlerTests
         public InMemoryFollowRepository Follows { get; } = new();
         public InMemoryWatchlistRepository Watchlist { get; } = new();
         public InMemoryMovieListRepository MovieLists { get; } = new();
+        public InMemoryFriendGroupRepository Groups { get; } = new();
         public InMemoryWatchedTitleRepository WatchedTitles { get; } = new();
         public InMemorySavedListRepository SavedLists { get; } = new();
         public InMemoryPasswordResetTokenRepository ResetTokens { get; } = new();
@@ -45,6 +46,7 @@ public sealed class DeleteAccountHandlerTests
                 Follows,
                 Watchlist,
                 MovieLists,
+                Groups,
                 WatchedTitles,
                 SavedLists,
                 ResetTokens,
@@ -327,6 +329,54 @@ public sealed class DeleteAccountHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_DeletesEveryGroupOfTheUser_AndWithdrawsTheirInvitationNotices_AndOnlyThem()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        var now = DateTimeOffset.UtcNow;
+        var own = await f.Groups.AddAsync(new FriendGroup { OwnerId = user.Id, Name = "Les cinéphiles", CreatedAt = now, UpdatedAt = now });
+        var foreign = await f.Groups.AddAsync(new FriendGroup { OwnerId = "other-1", Name = "Les cinéphiles", CreatedAt = now, UpdatedAt = now });
+        UserNotification Invitation(string invitee, string groupId) => new()
+        {
+            UserId = invitee,
+            Type = UserNotificationType.GroupInvitation,
+            GroupId = groupId,
+            GroupName = "Les cinéphiles",
+            CreatedAt = now
+        };
+        await f.Notifications.AddAsync(Invitation("invitee-1", own.Id));
+        await f.Notifications.AddAsync(Invitation("invitee-2", own.Id));
+        await f.Notifications.AddAsync(Invitation("invitee-1", foreign.Id));
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
+
+        Assert.Empty(await f.Groups.ListByOwnerAsync(user.Id));
+        Assert.NotNull(await f.Groups.FindAsync(foreign.Id));
+        Assert.Equal([foreign.Id], (await f.Notifications.ListByUserIdAsync("invitee-1")).Select(n => n.GroupId));
+        Assert.Empty(await f.Notifications.ListByUserIdAsync("invitee-2"));
+    }
+
+    [Fact]
+    public async Task HandleAsync_LeavesTheGroupsOfOthers_AndWithdrawsTheInvitationsItHeld()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        var now = DateTimeOffset.UtcNow;
+        var joined = await f.Groups.AddAsync(new FriendGroup { OwnerId = "other-1", Name = "Le club du jeudi", CreatedAt = now, UpdatedAt = now });
+        await f.Groups.AddInvitationAsync(joined.Id, new FriendGroupInvitation(user.Id, now), FriendGroup.MaxMembers);
+        await f.Groups.AcceptInvitationAsync(joined.Id, new FriendGroupMember(user.Id, now));
+        await f.Groups.AddInvitationAsync(joined.Id, new FriendGroupInvitation("other-2", now), FriendGroup.MaxMembers);
+        await f.Groups.AcceptInvitationAsync(joined.Id, new FriendGroupMember("other-2", now));
+        var inviting = await f.Groups.AddAsync(new FriendGroup { OwnerId = "other-1", Name = "Le club du dimanche", CreatedAt = now, UpdatedAt = now });
+        await f.Groups.AddInvitationAsync(inviting.Id, new FriendGroupInvitation(user.Id, now), FriendGroup.MaxMembers);
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
+
+        Assert.Equal(["other-2"], (await f.Groups.FindAsync(joined.Id))!.Members.Select(member => member.UserId));
+        Assert.Empty((await f.Groups.FindAsync(inviting.Id))!.Invitations);
+    }
+
+    [Fact]
     public async Task HandleAsync_DeletesEverySavedListOfTheUser_AndOnlyThem()
     {
         var f = new Fixture();
@@ -488,6 +538,7 @@ public sealed class DeleteAccountHandlerTests
             f.Follows,
             f.Watchlist,
             f.MovieLists,
+            f.Groups,
             f.WatchedTitles,
             f.SavedLists,
             f.ResetTokens,

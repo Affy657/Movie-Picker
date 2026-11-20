@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 
@@ -22,6 +23,7 @@ public sealed class EventConfigResponse
 
     public RecurrenceFrequency? Recurrence { get; init; }
     public bool HasNextOccurrence { get; init; }
+    public string? GroupId { get; init; }
 
     public static EventConfigResponse FromEvent(Event evt)
     {
@@ -38,7 +40,8 @@ public sealed class EventConfigResponse
             AllowSeries = c?.AllowSeries ?? false,
             WinnerCount = evt.TargetWinnerCount,
             Recurrence = evt.Recurrence,
-            HasNextOccurrence = !string.IsNullOrEmpty(evt.NextOccurrenceEventId)
+            HasNextOccurrence = !string.IsNullOrEmpty(evt.NextOccurrenceEventId),
+            GroupId = string.IsNullOrEmpty(evt.GroupId) ? null : evt.GroupId
         };
     }
 }
@@ -65,6 +68,10 @@ public sealed class PatchEventConfigRequest
 
     public RecurrenceFrequency? Recurrence { get; init; }
     public bool? ClearRecurrence { get; init; }
+
+    [MaxLength(64)]
+    public string? GroupId { get; init; }
+    public bool? ClearGroup { get; init; }
 
     public string? Date { get; init; }
     public string? Time { get; init; }

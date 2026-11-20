@@ -47,6 +47,15 @@ public static class Errors
     public static NotFoundException MovieListInviteLinkInvalid() =>
         new("This invitation link is unknown, expired or disabled", ErrorCodes.ListInviteLinkInvalid);
 
+    public static NotFoundException FriendGroupNotFound() =>
+        new("Group not found", ErrorCodes.GroupNotFound);
+
+    public static NotFoundException FriendGroupInvitationNotFound() =>
+        new("No pending invitation to this group", ErrorCodes.GroupInvitationNotFound);
+
+    public static NotFoundException FriendGroupInviteLinkInvalid() =>
+        new("This group invitation link is unknown, expired or disabled", ErrorCodes.GroupInviteLinkInvalid);
+
     public static NotFoundException SavedListNotFound() =>
         new("Saved list not found", ErrorCodes.SavedListNotFound);
 
@@ -155,6 +164,21 @@ public static class Errors
     public static ConflictException MovieListOwnerCannotLeave() =>
         new("The creator of a list cannot leave it, delete it instead", ErrorCodes.ListOwnerCannotLeave);
 
+    public static ConflictException FriendGroupLimitReached(int max) =>
+        new($"You reached the limit of {max} groups, delete one to create another", ErrorCodes.GroupLimitReached, Params(("max", max)));
+
+    public static ConflictException FriendGroupMembersLimitReached(int max) =>
+        new($"This group already gathers {max} people, pending invitations included", ErrorCodes.GroupMembersLimitReached, Params(("max", max)));
+
+    public static ConflictException FriendGroupAlreadyMember() =>
+        new("This user already belongs to the group", ErrorCodes.GroupAlreadyMember);
+
+    public static ConflictException FriendGroupInvitationAlreadySent() =>
+        new("An invitation to this group is already pending for this user", ErrorCodes.GroupInvitationAlreadySent);
+
+    public static ConflictException FriendGroupOwnerCannotLeave() =>
+        new("The creator of a group cannot leave it, delete it instead", ErrorCodes.GroupOwnerCannotLeave);
+
     public static ConflictException SavedListLimitReached(int max) =>
         new($"You already saved {max} lists, remove one to save another", ErrorCodes.SavedListLimitReached, Params(("max", max)));
 
@@ -229,6 +253,9 @@ public static class Errors
 
     public static ForbiddenException MovieListOwnerOnly() =>
         new("Reserved to the creator of the list", ErrorCodes.ListOwnerOnly);
+
+    public static ForbiddenException FriendGroupOwnerOnly() =>
+        new("Reserved to the creator of the group", ErrorCodes.GroupOwnerOnly);
 
     public static ForbiddenException HostOrSelfOnly() =>
         new("Reserved to the host or to the participant themselves", ErrorCodes.HostOrSelfOnly);
@@ -370,6 +397,12 @@ public static class Errors
 
     public static BadRequestException MovieListDescriptionTooLong(int max) =>
         new($"List description cannot exceed {max} characters", ErrorCodes.ValidationFailed, Params(("max", max)));
+
+    public static BadRequestException FriendGroupNameRequired() =>
+        new("Group name cannot be empty", ErrorCodes.ValidationFailed);
+
+    public static BadRequestException FriendGroupNameTooLong(int max) =>
+        new($"Group name cannot exceed {max} characters", ErrorCodes.ValidationFailed, Params(("max", max)));
 
     public static BadRequestException SelfFollow() =>
         new("You cannot follow yourself", ErrorCodes.SelfFollow);

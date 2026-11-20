@@ -6,4 +6,5 @@ export const FEATURE_EDGES = {
   library: ['letterboxd', 'events', 'movies', 'auth'],
   profile: ['library', 'events', 'movies', 'auth'],
   notifications: ['auth'],
+  groups: ['library', 'events', 'movies', 'auth'],
 };

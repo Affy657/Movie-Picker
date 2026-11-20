@@ -9,6 +9,7 @@ import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
+import { invalidateMyNights } from '@/shared/api/invalidateMyNights';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
 import { setStoredParticipant } from '@/shared/utils/eventIdentityStorage';
@@ -43,6 +44,8 @@ import {
   type TemplateFormFields,
 } from '@/features/events/lib/eventTemplateDraft';
 import type { EventTemplateData } from '@/features/events/types';
+import CreateEventGroup from './CreateEventGroup';
+import { useMyGroups } from '@/features/events/hooks/useMyGroups';
 import CreateEventInvitation, { type CreatedNight } from './CreateEventInvitation';
 import CreateEventRulesStep, { type RulesChoice } from './CreateEventRulesStep';
 import CreateEventTheme from './CreateEventTheme';
@@ -55,6 +58,7 @@ type CreateEventDialogProps = {
   open: boolean;
   onClose: () => void;
   reuse?: CreateEventReuse | null;
+  groupId?: string | null;
 };
 
 type Step = 'form' | 'invitation';
@@ -169,6 +173,7 @@ export default function CreateEventDialog({
   open,
   onClose,
   reuse = null,
+  groupId: presetGroupId = null,
 }: Readonly<CreateEventDialogProps>) {
   const { t } = useTranslation();
   const { locale } = useLocale();
@@ -185,6 +190,11 @@ export default function CreateEventDialog({
   const [fields, setFields] = useState<TemplateFormFields>(defaultTemplateFields);
   const [origin, setOrigin] = useState<RulesOrigin>({ kind: 'defaults' });
   const [reuseTarget, setReuseTarget] = useState<CreateEventReuse | null>(reuse);
+  const [pickedGroupId, setPickedGroupId] = useState<string | null>(presetGroupId);
+  const myGroupsQuery = useMyGroups(open && !!user);
+  const myGroups = myGroupsQuery.data?.groups ?? [];
+  const chosenGroup = myGroups.find((group) => group.id === pickedGroupId) ?? null;
+  const groupIdToSend = myGroupsQuery.isSuccess ? (chosenGroup?.id ?? null) : pickedGroupId;
   const [step, setStep] = useState<Step>('form');
   const [rulesOpen, setRulesOpen] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<CreateEventFieldErrors>({});
@@ -277,7 +287,7 @@ export default function CreateEventDialog({
   const configPatch = draftToConfigPatch(draft);
   const creationRequest = useRef<{ draft: string; id: string } | null>(null);
   const createAction = useCallback(async () => {
-    const requestDraft = JSON.stringify([title, date, time]);
+    const requestDraft = JSON.stringify([title, date, time, groupIdToSend]);
     if (creationRequest.current?.draft !== requestDraft) {
       creationRequest.current = { draft: requestDraft, id: crypto.randomUUID() };
     }
@@ -286,6 +296,7 @@ export default function CreateEventDialog({
       date,
       time,
       clientRequestId: creationRequest.current.id,
+      groupId: groupIdToSend,
     });
     track('event_created');
     if (res.creatorParticipant) {
@@ -297,7 +308,7 @@ export default function CreateEventDialog({
     } catch {
       configNotSaved = true;
     }
-    void queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
+    void invalidateMyNights(queryClient);
     setCreated({
       slug: res.slug,
       title,
@@ -305,9 +316,16 @@ export default function CreateEventDialog({
       time,
       url: `${globalThis.location.origin}${ROUTES.eventDetail(res.slug)}`,
       configNotSaved,
+      group: chosenGroup
+        ? {
+            name: chosenGroup.name,
+            memberCount: chosenGroup.memberCount,
+            preview: chosenGroup.memberPreview,
+          }
+        : null,
     });
     setStep('invitation');
-  }, [title, date, time, configPatch, queryClient, track]);
+  }, [title, date, time, chosenGroup, groupIdToSend, configPatch, queryClient, track]);
 
   const {
     run: submit,
@@ -454,6 +472,11 @@ export default function CreateEventDialog({
             )}
           </Field>
         </section>
+        <CreateEventGroup
+          groups={myGroups}
+          groupId={chosenGroup?.id ?? null}
+          onChange={setPickedGroupId}
+        />
         <CreateEventTheme
           emoji={fields.themeEmoji}
           text={fields.themeText}

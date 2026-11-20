@@ -342,6 +342,22 @@ public sealed class EventDocumentMapperTests
     }
 
     [Fact]
+    public void ToDocument_GroupRoundTrips_AndANightWithoutGroupWritesNone()
+    {
+        var grouped = new Event
+        {
+            Id = "507f1f77bcf86cd799439011",
+            Slug = "s",
+            GroupId = "507f1f77bcf86cd799439012",
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+
+        Assert.Equal(grouped.GroupId, EventDocumentMapper.ToDomain(EventDocumentMapper.ToDocument(grouped)).GroupId);
+        Assert.False(EventDocumentMapper.ToDocument(grouped with { GroupId = "" }).ToBsonDocument().Contains("groupId"));
+    }
+
+    [Fact]
     public void ToDomain_ConfigWithoutWinnerCount_DefaultsToOne()
     {
         var doc = new EventDocument

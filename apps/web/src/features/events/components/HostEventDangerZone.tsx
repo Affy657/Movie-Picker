@@ -5,6 +5,7 @@ import { Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteEvent } from '@/features/events/api/eventsApi';
 import { getErrorMessage } from '@/shared/api/apiError';
+import { invalidateMyNights } from '@/shared/api/invalidateMyNights';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { ROUTES } from '@/app/routes';
 import { clearStoredHostToken, removeStoredParticipant } from '@/shared/utils/eventIdentityStorage';
@@ -37,7 +38,7 @@ export default function HostEventDangerZone({
       removeStoredParticipant(slug);
       clearStoredHostToken(slug);
       queryClient.removeQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
+      await invalidateMyNights(queryClient);
       void navigate(ROUTES.myEvents);
     },
     onError: (e) => {

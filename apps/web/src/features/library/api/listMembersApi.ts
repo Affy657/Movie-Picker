@@ -3,8 +3,6 @@ import { ROUTES } from '@/app/routes';
 import type { ApiSchemas } from '@/shared/api/contract';
 import type { MovieListSummary } from '@/features/library/api/listsApi';
 
-export type MovieListMember = ApiSchemas['MovieListMemberResponse'];
-
 export type MovieListPendingInvitation = ApiSchemas['MovieListPendingInvitationResponse'];
 
 export type MovieListInviteLink = ApiSchemas['MovieListInviteLinkResponse'];

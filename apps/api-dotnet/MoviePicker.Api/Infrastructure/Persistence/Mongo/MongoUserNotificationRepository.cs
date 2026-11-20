@@ -30,6 +30,8 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
             MovieTitle = notification.MovieTitle,
             ListId = notification.ListId,
             ListName = notification.ListName,
+            GroupId = notification.GroupId,
+            GroupName = notification.GroupName,
             IsRead = false,
             IsWithheld = notification.IsWithheld,
             CreatedAt = notification.CreatedAt.UtcDateTime
@@ -60,6 +62,8 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
             MovieTitle = d.MovieTitle,
             ListId = d.ListId,
             ListName = d.ListName,
+            GroupId = d.GroupId,
+            GroupName = d.GroupName,
             IsRead = d.IsRead,
             CreatedAt = new DateTimeOffset(d.CreatedAt, TimeSpan.Zero)
         });
@@ -192,5 +196,34 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
             return 0;
         var res = await _collection.DeleteManyAsync(Builders<UserNotificationDocument>.Filter.In(x => x.ListId, ids), ct);
         return res.IsAcknowledged ? res.DeletedCount : 0;
+    }
+
+    public async Task<long> DeleteByGroupAsync(string groupId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(groupId))
+            return 0;
+        var deleted = await _collection.DeleteManyAsync(Builders<UserNotificationDocument>.Filter.Eq(x => x.GroupId, groupId), ct);
+        return deleted.IsAcknowledged ? deleted.DeletedCount : 0;
+    }
+
+    public async Task<long> DeleteGroupInvitationAsync(string groupId, string userId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(groupId) || string.IsNullOrWhiteSpace(userId))
+            return 0;
+        var filter = Builders<UserNotificationDocument>.Filter;
+        var doomed = filter.Eq(x => x.GroupId, groupId)
+            & filter.Eq(x => x.UserId, userId)
+            & filter.Eq(x => x.Type, (int)UserNotificationType.GroupInvitation);
+        var deleted = await _collection.DeleteManyAsync(doomed, ct);
+        return deleted.IsAcknowledged ? deleted.DeletedCount : 0;
+    }
+
+    public async Task<long> DeleteByGroupsAsync(IReadOnlyCollection<string> groupIds, CancellationToken ct = default)
+    {
+        var known = groupIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct(StringComparer.Ordinal).ToList();
+        if (known.Count == 0)
+            return 0;
+        var deleted = await _collection.DeleteManyAsync(Builders<UserNotificationDocument>.Filter.In(x => x.GroupId, known), ct);
+        return deleted.IsAcknowledged ? deleted.DeletedCount : 0;
     }
 }

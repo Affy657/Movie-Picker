@@ -48,6 +48,14 @@ public sealed class UserNotificationDocument
     [BsonIgnoreIfNull]
     public string? ListName { get; set; }
 
+    [BsonElement("groupId")]
+    [BsonIgnoreIfNull]
+    public string? GroupId { get; set; }
+
+    [BsonElement("groupName")]
+    [BsonIgnoreIfNull]
+    public string? GroupName { get; set; }
+
     [BsonElement("movieTitle")]
     [BsonIgnoreIfNull]
     public string? MovieTitle { get; set; }

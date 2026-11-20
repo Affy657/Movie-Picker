@@ -11,8 +11,10 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
 using MoviePicker.Api.Application.UseCases.EventLive;
 using MoviePicker.Api.Application.UseCases.FinishedEvents;
+using MoviePicker.Api.Application.UseCases.FriendGroups;
 using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using MoviePicker.Api.Application.UseCases.LetterboxdImport;
+using MoviePicker.Api.Application.UseCases.ListMyEvents;
 using MoviePicker.Api.Application.UseCases.MovieLists;
 using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Application.UseCases.PublicLists;
@@ -309,6 +311,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IFollowRepository, InMemoryFollowRepository>();
             services.AddSingleton<IWatchlistRepository, InMemoryWatchlistRepository>();
             services.AddSingleton<IMovieListRepository, InMemoryMovieListRepository>();
+            services.AddSingleton<IFriendGroupRepository, InMemoryFriendGroupRepository>();
             services.AddSingleton<IWatchedTitleRepository, InMemoryWatchedTitleRepository>();
             services.AddSingleton<ISavedListRepository, InMemorySavedListRepository>();
             services.AddSingleton<IUserNotificationRepository, InMemoryUserNotificationRepository>();
@@ -366,6 +369,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFollowRepository, MongoFollowRepository>();
         services.AddScoped<IWatchlistRepository, MongoWatchlistRepository>();
         services.AddScoped<IMovieListRepository, MongoMovieListRepository>();
+        services.AddScoped<IFriendGroupRepository, MongoFriendGroupRepository>();
         services.AddScoped<IWatchedTitleRepository, MongoWatchedTitleRepository>();
         services.AddScoped<ISavedListRepository, MongoSavedListRepository>();
         services.AddScoped<IUserNotificationRepository, MongoUserNotificationRepository>();
@@ -455,6 +459,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<AvatarPhotoWriter>();
         services.AddScoped<IOAuthProfilePhotoImporter, OAuthProfilePhotoImporter>();
         services.AddScoped<EventAudienceNotifier>();
+        services.AddScoped<IGroupNightAnnouncer, GroupNightAnnouncer>();
+        services.AddScoped<MyEventSummaryEnricher>();
+        services.AddScoped<FriendGroupNightsReader>();
         services.AddScoped<IUsageRecorder, UsageRecorder>();
         services.AddScoped<IWinnerAnnouncer, WinnerAnnouncer>();
         services.AddScoped<IWheelWinnerAnnouncement, WheelWinnerAnnouncement>();

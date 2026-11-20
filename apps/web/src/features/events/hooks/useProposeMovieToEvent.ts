@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from '@/shared/i18n';
+import { invalidateMyNights } from '@/shared/api/invalidateMyNights';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { fetchEventBySlug } from '@/features/events/api/eventsApi';
 import { addMovieToEvent } from '@/features/events/api/eventMoviesApi';
@@ -41,7 +42,7 @@ export function useProposeMovieToEvent() {
         genreIds: movie.genreIds,
         ...(options?.pitchNote ? { pitchNote: options.pitchNote } : {}),
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
+      void invalidateMyNights(queryClient);
       queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
       queryClient.invalidateQueries({ queryKey: queryKeys.event.detailForAnyHostToken(slug) });
       queryClient.invalidateQueries({

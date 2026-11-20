@@ -15,6 +15,9 @@ function item(overrides: Partial<UserNotificationItem>): UserNotificationItem {
     listId: null,
     listName: null,
     listInvitationPending: false,
+    groupId: null,
+    groupName: null,
+    groupInvitationPending: false,
     isRead: false,
     createdAt: '2026-01-01T00:00:00Z',
     ...overrides,
@@ -58,6 +61,19 @@ describe('groupInboxItems', () => {
 
     expect(groups.every((g) => g.kind === 'single')).toBe(true);
     expect(groups).toHaveLength(3);
+  });
+
+  it('keeps the announce of a group night apart from the news of that night', () => {
+    const items = [
+      item({ id: 'a', type: 'groupnight', eventSlug: 's1', eventTitle: 'Soiree' }),
+      item({ id: 'b', type: 'movieadded', eventSlug: 's1', eventTitle: 'Soiree' }),
+      item({ id: 'c', type: 'participantjoined', eventSlug: 's1', eventTitle: 'Soiree' }),
+    ];
+
+    const groups = groupInboxItems(items);
+
+    expect(groups).toContainEqual({ kind: 'single', item: items[0], supersededIds: [] });
+    expect(groups).toHaveLength(2);
   });
 
   it('never groups two invitations to lists', () => {

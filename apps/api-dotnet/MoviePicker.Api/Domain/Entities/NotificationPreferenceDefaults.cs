@@ -19,6 +19,8 @@ public static class NotificationPreferenceDefaults
             [UserNotificationType.EventDateChanged] = true,
             [UserNotificationType.RatingReminder] = true,
             [UserNotificationType.ListInvitation] = true,
+            [UserNotificationType.GroupInvitation] = true,
+            [UserNotificationType.GroupNight] = true,
         };
 
     public static bool For(UserNotificationType type)

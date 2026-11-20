@@ -1,6 +1,7 @@
 using System.Globalization;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.FriendGroups;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
@@ -15,6 +16,8 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly EventAudienceNotifier _audience;
+    private readonly IFriendGroupRepository _groups;
+    private readonly IGroupNightAnnouncer _groupNightAnnouncer;
     private readonly IUnitOfWork _unitOfWork;
     private readonly TimeProvider _clock;
 
@@ -24,6 +27,8 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
         EventAudienceNotifier audience,
+        IFriendGroupRepository groups,
+        IGroupNightAnnouncer groupNightAnnouncer,
         IUnitOfWork unitOfWork,
         TimeProvider clock)
     {
@@ -32,6 +37,8 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _audience = audience;
+        _groups = groups;
+        _groupNightAnnouncer = groupNightAnnouncer;
         _unitOfWork = unitOfWork;
         _clock = clock;
     }
@@ -49,15 +56,22 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         var hasTitleChange = request.Title is not null;
         var hasRecurrenceChange = request.Recurrence.HasValue || request.ClearRecurrence == true;
         var hasWinnerCountChange = request.WinnerCount.HasValue;
+        var hasGroupChange = !string.IsNullOrWhiteSpace(request.GroupId) || request.ClearGroup == true;
 
         var now = _clock.GetUtcNow();
         EnsurePatchAllowed(evt, now, hasConfigChange, hasDateTimeChange, hasTitleChange, hasRecurrenceChange);
+        if (hasGroupChange && evt.IsFinished(now))
+            throw Errors.EventConfigLockedFinished();
+
+        var chosenGroup = request.ClearGroup != true && !string.IsNullOrWhiteSpace(request.GroupId)
+            ? await FriendGroupPolicy.RequireAsync(_groups, userId ?? string.Empty, request.GroupId.Trim(), ct)
+            : null;
 
         if (hasWinnerCountChange)
             EnsureWinnerCountAllowed(evt, now, request.WinnerCount!.Value);
 
         if (!hasConfigChange && !hasDateTimeChange && !hasTitleChange && !hasRecurrenceChange
-            && !hasWinnerCountChange)
+            && !hasWinnerCountChange && !hasGroupChange)
             return EventConfigResponse.FromEvent(evt);
 
         var current = evt.Config ?? EventConfig.SavedWithoutSettings;
@@ -88,6 +102,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
             Config = nextConfig,
             Recurrence = recurrence,
             RecurrenceAnchorDay = ResolveRecurrenceAnchorDay(evt, recurrence, date),
+            GroupId = hasGroupChange ? chosenGroup?.Id : evt.GroupId,
             UpdatedAt = now
         };
 
@@ -98,6 +113,9 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         var dateChanged = date != evt.Date || time != evt.Time;
         if (dateChanged && request.NotifyParticipantsOfDateChange == true)
             await _audience.NotifyParticipantsAsync(DateChangedMessage(saved), userId, CancellationToken.None);
+
+        if (chosenGroup is not null && chosenGroup.Id != evt.GroupId)
+            await _groupNightAnnouncer.AnnounceAsync(saved, chosenGroup, userId!, CancellationToken.None);
 
         return EventConfigResponse.FromEvent(saved);
     }

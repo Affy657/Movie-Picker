@@ -3,6 +3,7 @@ using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.CreateEvent;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Tests.Builders;
@@ -17,7 +18,7 @@ public sealed class CreateEventIdempotencyTests
     private readonly InMemoryParticipantRepository _participants = new();
 
     private CreateEventHandler Handler(IEventRepository? events = null) =>
-        new(events ?? _events, _users, _participants, new InMemoryUnitOfWork(),
+        new(events ?? _events, _users, _participants, new InMemoryFriendGroupRepository(), Mock.Of<IGroupNightAnnouncer>(), new InMemoryUnitOfWork(),
             NullLogger<CreateEventHandler>.Instance, TimeProvider.System);
 
     private async Task<User> SeedHostAsync() => await _users.AddAsync(new User

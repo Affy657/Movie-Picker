@@ -36,6 +36,7 @@ export default function CreateEventDialogProvider({ children }: Readonly<{ child
             open
             onClose={close}
             reuse={session.options.reuse ?? null}
+            groupId={session.options.groupId ?? null}
           />
         </Suspense>
       ) : null}

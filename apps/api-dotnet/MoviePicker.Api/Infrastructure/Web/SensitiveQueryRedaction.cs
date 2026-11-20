@@ -72,7 +72,7 @@ public static partial class SensitiveQueryRedaction
         Uri.UnescapeDataString(component.Replace('+', ' '));
 
     [GeneratedRegex(
-        @"(?<route>/lists/join/|(?<![^\s""'=:(,<])/l/|(?<=://[^/?#\s""']+)/l/)[^/?#&\s""']+",
+        @"(?<route>/(?:lists|groups)/join/|(?<![^\s""'=:(,<])/[lg]/|(?<=://[^/?#\s""']+)/[lg]/)[^/?#&\s""']+",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex InviteTokenSegment();
 }

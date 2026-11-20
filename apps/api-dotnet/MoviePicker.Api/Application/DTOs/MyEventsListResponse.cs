@@ -48,6 +48,10 @@ public sealed class MyEventSummaryDto
         Array.Empty<MyEventParticipantPreviewDto>();
 
     public bool HasVoted { get; init; }
+
+    public string? GroupId { get; init; }
+
+    public string? GroupName { get; init; }
 }
 
 public sealed class MyEventMoviePreviewDto

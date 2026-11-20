@@ -75,6 +75,11 @@ public sealed class EventDocument
     [BsonRepresentation(BsonType.ObjectId)]
     public string? NextOccurrenceEventId { get; set; }
 
+    [BsonElement("groupId")]
+    [BsonIgnoreIfNull]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string? GroupId { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 

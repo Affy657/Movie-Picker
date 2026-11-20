@@ -9,6 +9,7 @@ import {
   setStoredParticipant,
 } from '@/shared/utils/eventIdentityStorage';
 import type { EventData } from '@/shared/types/event';
+import { invalidateMyNights } from '@/shared/api/invalidateMyNights';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useEvent } from '@/features/events/hooks/useEvent';
 import { useMovies } from '@/features/events/hooks/useMovies';
@@ -161,7 +162,7 @@ export function useEventDetailPage(
     if (!slug) return;
     queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
     queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
-    queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
+    void invalidateMyNights(queryClient);
     void invalidateWatched(queryClient);
     queryClient.invalidateQueries({ queryKey: MOVIE_NIGHTS_KEY });
     if (recapSlug) {

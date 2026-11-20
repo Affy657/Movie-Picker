@@ -59,6 +59,9 @@ public sealed record UserNotificationItem
     public string? ListId { get; init; }
     public string? ListName { get; init; }
     public bool ListInvitationPending { get; init; }
+    public string? GroupId { get; init; }
+    public string? GroupName { get; init; }
+    public bool GroupInvitationPending { get; init; }
     public bool IsRead { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
 }

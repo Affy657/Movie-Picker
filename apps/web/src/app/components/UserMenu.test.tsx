@@ -6,7 +6,7 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import UserMenu from '@/app/components/UserMenu';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
-import { TEST_API_V1 } from '@/mocks/handlers';
+import { createGroupsHandlers, TEST_API_V1 } from '@/mocks/handlers';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { resetPwaInstallRuntime } from '@/shared/hooks/usePwaInstall';
 import type { UserProfile } from '@/features/auth/types';
@@ -66,7 +66,7 @@ function renderMenu(user: UserProfile = baseUser) {
 }
 
 describe('UserMenu', () => {
-  const server = setupServer();
+  const server = setupServer(...createGroupsHandlers());
 
   beforeAll(() => server.listen({ onUnhandledFrame: 'bypass' }));
   afterEach(() => {
@@ -115,6 +115,7 @@ describe('UserMenu', () => {
       .slice(1)
       .map((item) => item.getAttribute('aria-label') ?? item.textContent);
     expect(labels).toEqual([
+      'Mes groupes',
       'Paramètres',
       'Nouveautés',
       'Envoyer un retour',
@@ -122,6 +123,40 @@ describe('UserMenu', () => {
       'Soutenir le projet',
       'Se déconnecter',
     ]);
+  });
+
+  it('leads to My groups right after the profile, with the group invitations waiting for an answer', async () => {
+    server.use(
+      ...createGroupsHandlers(
+        [],
+        [
+          { groupId: 'g1', name: 'Ciné-club', invitedByDisplayName: 'Inès' },
+          { groupId: 'g2', name: 'Famille', invitedByDisplayName: 'Sam' },
+        ]
+      )
+    );
+    const user = userEvent.setup();
+    renderMenu();
+
+    await user.click(screen.getByRole('button', { name: /menu du compte/i }));
+
+    const groups = screen.getAllByRole('menuitem')[1];
+    expect(groups).toHaveAttribute('href', '/groupes');
+    await waitFor(() =>
+      expect(groups).toHaveAccessibleName('Mes groupes, 2 invitations en attente')
+    );
+    expect(groups).toHaveTextContent('2');
+  });
+
+  it('shows no count on My groups when no invitation is waiting', async () => {
+    const user = userEvent.setup();
+    renderMenu();
+
+    await user.click(screen.getByRole('button', { name: /menu du compte/i }));
+
+    const groups = screen.getByRole('menuitem', { name: /mes groupes/i });
+    await waitFor(() => expect(groups).toHaveAccessibleName('Mes groupes'));
+    expect(groups).toHaveTextContent(/^Mes groupes$/);
   });
 
   it('names the profile entry by its visible name and handle first', async () => {
