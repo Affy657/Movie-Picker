@@ -19,10 +19,9 @@ import type { NightMovieRules } from '@/features/events/lib/nightRules';
 import type { CardKebabRemoveAction } from '@/features/movies/components/MovieCardKebab';
 import { othersAlreadySeenHint } from '@/features/events/utils/seenHint';
 import { MovieNote } from '@/features/events/components/MovieNote';
-import type { RatingScale } from '@/shared/types/theme';
+import type { AccentColor, RatingScale } from '@/shared/types/theme';
 import { useLocale, type Translate } from '@/shared/i18n';
 import styles from './eventMovieCardParts.module.css';
-import type { AccentColor } from '@/shared/types/theme';
 import { useParticipantAccent } from '@/features/events/hooks/useParticipantAccent';
 
 export interface MovieCardSelection {

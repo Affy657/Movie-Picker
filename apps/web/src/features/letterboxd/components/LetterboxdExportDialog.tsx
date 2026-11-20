@@ -161,9 +161,9 @@ function DoneStep({
   const unmatched = [...new Set(report.unmatched)];
   return (
     <>
-      <p className={report.outcome === 'finished' ? styles.lead : styles.error} role="status">
+      <output className={report.outcome === 'finished' ? styles.lead : styles.error}>
         {outcomeLine(report, t)}
-      </p>
+      </output>
       <Card padding="none" surface="sunken" className={styles.report}>
         {report.watched && <TallyLine label={t('watched.title')} tally={report.watched} t={t} />}
         {report.watchlist && (
