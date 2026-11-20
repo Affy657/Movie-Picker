@@ -90,10 +90,6 @@
   color: var(--color-text-muted);
 }
 
-.rowFlush {
-  padding-top: 0;
-}
-
 .rowIcon {
   flex-shrink: 0;
   color: var(--color-text-muted);

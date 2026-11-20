@@ -228,7 +228,7 @@ Une ligne de réglage : un titre, une description et un `Toggle` à droite, nomm
 | `panelHead`, `panelHeading`, `saved` | en-tête du panneau : titre et pastille « Enregistré » (`AccountSavedChip`, un `Chip` `success` dans une région `role="status"`) |
 | `card`, `cardTitle` | groupe de réglages, rendu par `<Card padding="none" elevation="sm">` avec la classe ; `cardTitle` est le libellé en capitales du groupe |
 | `field` | un champ (`Field`) séparé du précédent par un trait |
-| `row`, `rowMain`, `rowLabel`, `rowSub`, `rowIcon`, `rowFlush`, `rowSubFlush`, `noDivider` | une ligne libellé + sous-titre, icône facultative à gauche, action (`Button`, lien, `Toggle`) poussée à droite |
+| `row`, `rowMain`, `rowLabel`, `rowSub`, `rowIcon`, `rowSubFlush`, `noDivider` | une ligne libellé + sous-titre, icône facultative à gauche, action (`Button`, lien, `Toggle`) poussée à droite |
 | `attention`, `attentionText` | bandeau d'alerte `--color-warning-*` dans un groupe, son action est un `Button size="sm" tone="warning"` ; c'est aussi, hors des réglages, le bandeau de « À voir » qui compte les films absents de la watchlist Letterboxd |
 | `dangerZone` | bloc `--color-error-*` des actions irréversibles, en bas de page |
 

@@ -41,3 +41,10 @@ public sealed class FollowListResponse
 {
     public IReadOnlyList<FollowUserItem> Items { get; init; } = [];
 }
+
+public sealed class HandleAvailabilityResponse
+{
+    public string Handle { get; init; } = string.Empty;
+    public bool Available { get; init; }
+    public string? Reason { get; init; }
+}

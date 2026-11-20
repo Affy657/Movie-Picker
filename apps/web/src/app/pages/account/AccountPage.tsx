@@ -13,7 +13,7 @@ import { withReturnTo, ROUTES } from '@/app/routes';
 import type { UserProfile } from '@/features/auth/types';
 import AccountLayout from '@/app/pages/account/AccountLayout';
 import AccountIndexPage from '@/app/pages/account/AccountIndexPage';
-import AccountProfilePage from '@/app/pages/account/AccountProfilePage';
+import ProfileEditPage from '@/app/pages/account/ProfileEditPage';
 import AccountPreferencesPage from '@/app/pages/account/AccountPreferencesPage';
 import AccountNotificationsPage from '@/app/pages/account/AccountNotificationsPage';
 import AccountIntegrationsPage from '@/app/pages/account/AccountIntegrationsPage';
@@ -53,6 +53,15 @@ function GuestPreferencesSection() {
 }
 
 function AccountAuthenticated({ user }: Readonly<{ user: UserProfile }>) {
+  return (
+    <Routes>
+      <Route path="profil" element={<ProfileEditPage user={user} />} />
+      <Route path="*" element={<AccountSettings user={user} />} />
+    </Routes>
+  );
+}
+
+function AccountSettings({ user }: Readonly<{ user: UserProfile }>) {
   const { t } = useTranslation();
 
   return (
@@ -61,13 +70,12 @@ function AccountAuthenticated({ user }: Readonly<{ user: UserProfile }>) {
       <Routes>
         <Route index element={<AccountIndexPage user={user} />} />
         <Route element={<AccountLayout user={user} />}>
-          <Route path="profil" element={<AccountProfilePage user={user} />} />
           <Route path="preferences" element={<AccountPreferencesPage />} />
           <Route path="notifications" element={<AccountNotificationsPage />} />
           <Route path="integrations" element={<AccountIntegrationsPage user={user} />} />
           <Route path="securite" element={<AccountSecurityPage user={user} />} />
         </Route>
-        <Route path="*" element={<Navigate to={ROUTES.accountProfile} replace />} />
+        <Route path="*" element={<Navigate to={ROUTES.accountPreferences} replace />} />
       </Routes>
     </PageLayout>
   );

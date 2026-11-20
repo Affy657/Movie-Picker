@@ -82,7 +82,7 @@ export default function ProfileActions({
         </Button>
       )}
       {isOwnProfile && (
-        <Link to={ROUTES.account} className={buttonClass({ className: styles.primary })}>
+        <Link to={ROUTES.accountProfile} className={buttonClass({ className: styles.primary })}>
           <Pencil size={ICON_SIZE.md} aria-hidden />
           <span className={styles.btnLabel}>{t('profile.editProfile')}</span>
         </Link>

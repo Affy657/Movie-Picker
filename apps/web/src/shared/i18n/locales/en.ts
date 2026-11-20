@@ -545,6 +545,7 @@ export const en: Locale = {
         'You also have a password, you can unlink these accounts without losing access.',
       connectionsLastProviderHint:
         'This is your only sign-in method. Set a password before you can unlink it.',
+      accentColorProfileLink: 'Change it in my profile',
       accentColorLabel: 'Accent color',
       accentColorHint:
         'Choose the dominant colour of buttons and highlights. Applies to both light and dark modes.',
@@ -2443,7 +2444,7 @@ export const en: Locale = {
     event_movie_limit_reached: 'This movie night has reached the limit of {{max}} proposed movies.',
     proposal_limit_reached: 'Limit of {{max}} proposal(s) per participant reached.',
     oauth_link_failed: 'This account could not be linked. Please try again.',
-    handle_taken: 'This handle is already taken.',
+    handle_taken: 'This username is already taken.',
     identity_conflict: 'This external identity is already linked to another account.',
     email_taken: 'An account already exists for this e-mail address.',
     event_config_locked_finished: 'Movie night is over: its settings can no longer be changed.',
@@ -2514,11 +2515,12 @@ export const en: Locale = {
     password_needs_digit: 'Password must contain at least one digit.',
     display_name_required: 'Display name is required.',
     display_name_too_long: 'Display name cannot exceed {{max}} characters.',
-    handle_required: 'Handle is required.',
-    handle_too_short: 'Handle must be at least {{min}} characters long.',
-    handle_too_long: 'Handle cannot exceed {{max}} characters.',
-    handle_invalid_characters: 'Handle can only contain lowercase letters, digits and underscores.',
-    handle_reserved: 'This handle is reserved.',
+    handle_required: 'Your username is required.',
+    handle_too_short: 'Your username needs at least {{min}} characters.',
+    handle_too_long: 'Your username cannot exceed {{max}} characters.',
+    handle_invalid_characters:
+      'Your username can only contain lowercase letters, digits and underscores.',
+    handle_reserved: 'This username is reserved.',
     bio_too_long: 'Bio cannot exceed {{max}} characters.',
     invalid_reset_token: 'Invalid or expired token.',
     letterboxd_username_invalid:
@@ -2853,6 +2855,27 @@ export const en: Locale = {
   },
 
   profile: {
+    edit: {
+      title: 'Edit profile',
+      back: 'My profile',
+      previewLabel: 'Preview of your profile',
+      banner: 'Banner',
+      bannerAdd: 'Add a banner',
+      avatar: 'Change avatar',
+      identity: 'Identity',
+      name: 'Name',
+      nameRequired: 'Your name is required.',
+      handle: 'Username',
+      handleChecking: 'Checking…',
+      handleAvailable: 'Available',
+      handleUse: 'Use this username',
+      handleWarning: 'The old link to your profile will stop working.',
+      color: 'Colour',
+      favorites: 'Favorites',
+      visibility: 'Visibility',
+      watchedSuggestions: 'My watched films',
+      listSuggestions: 'In my list',
+    },
     banner: {
       edit: 'Edit the banner',
       add: 'Add a banner',
@@ -3469,7 +3492,6 @@ export const en: Locale = {
       nextItem4: 'A showcase list on the profile',
       nextItem5: 'Avatar frames to unlock',
       nextItem6: 'Global search',
-      nextItem7: 'Edit your profile from your profile',
       v2When: 'No date announced',
       v2What: 'V2',
       v2Detail:

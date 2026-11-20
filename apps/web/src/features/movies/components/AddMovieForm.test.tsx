@@ -767,7 +767,7 @@ describe('AddMovieForm (MSW)', () => {
         onAddItem={onAddItem}
         onAdded={onAdded}
         quickFilters
-        suggestions={{ title: 'Dans ma liste', items: suggestions }}
+        suggestions={[{ title: 'Dans ma liste', items: suggestions }]}
       />
     );
 
@@ -785,6 +785,40 @@ describe('AddMovieForm (MSW)', () => {
 
     await user.click(screen.getByRole('button', { name: 'Ajouter « Suggestion Streaming »' }));
     await waitFor(() => expect(onAddItem).toHaveBeenCalledWith(expect.objectContaining({ id: 7 })));
+  });
+
+  it('shows each group of suggestions under its own title', () => {
+    const item = (id: number, title: string): MovieSearchItem => ({
+      id,
+      title,
+      year: '2020',
+      posterPath: null,
+      voteAverage: null,
+      runtimeMinutes: null,
+      watchProviders: null,
+      mediaType: 'movie',
+      genreIds: [],
+      tmdbWatchPageUrl: null,
+    });
+    renderWithLocale(
+      <AddMovieForm
+        onAddItem={onAddItem}
+        onAdded={onAdded}
+        suggestions={[
+          { title: 'Mes films vus', items: [item(1, 'Vu')] },
+          { title: 'Dans ma liste', items: [item(2, 'À voir')] },
+          { title: 'Vide', items: [] },
+        ]}
+      />
+    );
+
+    expect(
+      within(screen.getByRole('list', { name: 'Mes films vus' })).getByText('Vu')
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('list', { name: 'Dans ma liste' })).getByText('À voir')
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('list', { name: 'Vide' })).toBeNull();
   });
 
   it('offers the recent searches as buttons when asked to', async () => {

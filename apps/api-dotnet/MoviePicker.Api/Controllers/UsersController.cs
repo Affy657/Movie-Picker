@@ -122,6 +122,23 @@ public sealed class UsersController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("me/handle-availability")]
+    [Authorize]
+    [EnableRateLimiting(RateLimitingExtensions.SearchUsersPolicy)]
+    [ProducesResponseType(typeof(HandleAvailabilityResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> GetHandleAvailability(
+        [FromQuery] string? handle,
+        [FromServices] ICheckHandleAvailabilityHandler handler,
+        [CurrentUserId] string userId,
+        CancellationToken ct)
+    {
+        var result = await handler.HandleAsync(userId, handle ?? string.Empty, ct);
+        return Ok(result);
+    }
+
     [HttpGet("me/watched-movies")]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.PublicProfilePolicy)]

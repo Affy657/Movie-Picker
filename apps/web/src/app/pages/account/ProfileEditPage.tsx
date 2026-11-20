@@ -1,22 +1,27 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import Card from '@/shared/components/Card';
-import clsx from 'clsx';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useLocation } from 'react-router';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useTranslation } from '@/shared/i18n';
 import { getErrorMessage } from '@/shared/api/apiError';
-import Toggle from '@/shared/components/Toggle';
-import { ROUTES } from '@/app/routes';
-import type { UserProfile } from '@/features/auth/types';
-import AccountBannerCard from './AccountBannerCard';
-import AccountFavoritesCard from './AccountFavoritesCard';
-import AccountSavedChip from './AccountSavedChip';
-import { useSavedFlash } from './useSavedFlash';
-import styles from '@/shared/components/SettingsSection.module.css';
+import BackLink from '@/shared/components/BackLink';
 import Field from '@/shared/components/Field';
+import PageLayout from '@/shared/components/PageLayout';
+import Toggle from '@/shared/components/Toggle';
+import AccentColorPicker from '@/app/components/AccentColorPicker';
+import type { UserProfile } from '@/features/auth/types';
+import { ownProfileDestination } from '@/features/auth/utils/ownProfileDestination';
+import AccountSavedChip from './AccountSavedChip';
+import ProfileEditFavorites from './ProfileEditFavorites';
+import ProfileEditHandle from './ProfileEditHandle';
+import ProfileEditPreview from './ProfileEditPreview';
+import ProfileEditSection from './ProfileEditSection';
+import { useSavedFlash } from './useSavedFlash';
+import styles from './ProfileEditPage.module.css';
 
 const BIO_MAX_LENGTH = 140;
 const BIO_HINT_THRESHOLD = 20;
 const AUTOSAVE_DELAY_MS = 800;
+const COLOR_ANCHOR = 'couleur';
 
 type ProfileDraft = {
   displayName: string;
@@ -52,14 +57,23 @@ function keepUnsavedEdits(
   };
 }
 
-export default function AccountProfilePage({ user }: Readonly<{ user: UserProfile }>) {
+function useAnchorScroll(anchor: string) {
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (hash === `#${anchor}`) document.getElementById(anchor)?.scrollIntoView({ block: 'start' });
+  }, [hash, anchor]);
+}
+
+export default function ProfileEditPage({ user }: Readonly<{ user: UserProfile }>) {
   const { t } = useTranslation();
   const { patchProfile } = useAuth();
+  const colorLabelId = useId();
+  useAnchorScroll(COLOR_ANCHOR);
 
   const [draft, setDraft] = useState(() => draftOf(user));
   const draftRef = useRef(draft);
   const serverDraftRef = useRef(draft);
-  const [pseudoError, setPseudoError] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saved, flashSaved] = useSavedFlash();
   const timerRef = useRef<number | undefined>(undefined);
@@ -87,10 +101,10 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
     const sent = draftRef.current;
     const trimmedName = sent.displayName.trim();
     if (!trimmedName) {
-      setPseudoError(t('auth.account.pseudoRequired'));
+      setNameError(t('profile.edit.nameRequired'));
       return;
     }
-    setPseudoError(null);
+    setNameError(null);
 
     const server = serverDraftRef.current;
     const bioTrimmed = sent.bio.trim();
@@ -133,17 +147,17 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
   const { displayName, bio, isPublic } = draft;
   const bioCharsLeft = BIO_MAX_LENGTH - bio.length;
   const showBioHint = bioCharsLeft <= BIO_HINT_THRESHOLD;
-  const errorMsg = pseudoError ?? saveError;
-  const profileUrl = user.handle ? `movie-picker.fr${ROUTES.profile(user.handle)}` : '';
+  const errorMsg = nameError ?? saveError;
 
   return (
-    <>
-      <div className={styles.panelHead}>
-        <h2 id="account-profile-heading" className={styles.panelHeading}>
-          {t('auth.account.profileTitle')}
-        </h2>
+    <PageLayout className={styles.page}>
+      <div className={styles.topBar}>
+        <BackLink to={ownProfileDestination(user).path}>{t('profile.edit.back')}</BackLink>
         <AccountSavedChip visible={saved} />
       </div>
+      <h1 className="visually-hidden">{t('profile.edit.title')}</h1>
+
+      <ProfileEditPreview user={user} displayName={displayName} bio={bio} onSaved={flashSaved} />
 
       {errorMsg && (
         <p id="profile-displayName-error" className="error" role="alert">
@@ -151,77 +165,84 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
         </p>
       )}
 
-      <Card padding="none" elevation="sm" className={styles.card}>
-        <div className={styles.field}>
-          <Field label={t('auth.account.pseudoLabel')} htmlFor="profile-displayName">
-            {({ id }) => (
-              <input
-                id={id}
-                type="text"
-                className="input"
-                autoComplete="nickname"
-                value={displayName}
-                onChange={(e) => {
-                  editDraft({ displayName: e.target.value });
-                  scheduleSave();
-                }}
-                onBlur={() => void flush()}
-                required
-                maxLength={80}
-                aria-describedby={pseudoError ? 'profile-displayName-error' : undefined}
-              />
-            )}
-          </Field>
-        </div>
-
-        <div className={styles.field}>
-          <Field label={t('profile.settings.bioLabel')} htmlFor="profile-bio">
-            {({ id }) => (
-              <textarea
-                id={id}
-                className="input"
-                value={bio}
-                onChange={(e) => {
-                  editDraft({ bio: e.target.value });
-                  scheduleSave();
-                }}
-                onBlur={() => void flush()}
-                maxLength={BIO_MAX_LENGTH}
-                rows={2}
-                aria-describedby={showBioHint ? 'profile-bio-hint' : undefined}
-              />
-            )}
-          </Field>
-          {showBioHint && (
-            <p id="profile-bio-hint" className="hint" aria-live="polite">
-              {t('profile.settings.bioHint', { count: String(bioCharsLeft) })}
-            </p>
-          )}
-        </div>
-
-        <div className={clsx(styles.row, styles.noDivider, styles.rowFlush)}>
-          <div className={styles.rowMain}>
-            <p className={styles.rowLabel}>{t('profile.settings.visibilityLabel')}</p>
-            {profileUrl && (
-              <p className={styles.rowSub}>
-                {t('auth.account.profileVisibilityHint', { url: profileUrl })}
+      <div className={styles.sections}>
+        <ProfileEditSection title={t('profile.edit.identity')}>
+          <div className={styles.identityRow}>
+            <Field label={t('profile.edit.name')} htmlFor="profile-displayName">
+              {({ id }) => (
+                <input
+                  id={id}
+                  type="text"
+                  className="input"
+                  autoComplete="nickname"
+                  value={displayName}
+                  onChange={(e) => {
+                    editDraft({ displayName: e.target.value });
+                    scheduleSave();
+                  }}
+                  onBlur={() => void flush()}
+                  required
+                  maxLength={80}
+                  aria-describedby={nameError ? 'profile-displayName-error' : undefined}
+                />
+              )}
+            </Field>
+            <ProfileEditHandle user={user} onSaved={flashSaved} />
+          </div>
+          <div>
+            <Field label={t('profile.settings.bioLabel')} htmlFor="profile-bio">
+              {({ id }) => (
+                <textarea
+                  id={id}
+                  className="input"
+                  value={bio}
+                  onChange={(e) => {
+                    editDraft({ bio: e.target.value });
+                    scheduleSave();
+                  }}
+                  onBlur={() => void flush()}
+                  maxLength={BIO_MAX_LENGTH}
+                  rows={2}
+                  aria-describedby={showBioHint ? 'profile-bio-hint' : undefined}
+                />
+              )}
+            </Field>
+            {showBioHint && (
+              <p id="profile-bio-hint" className="hint" aria-live="polite">
+                {t('profile.settings.bioHint', { count: String(bioCharsLeft) })}
               </p>
             )}
           </div>
-          <Toggle
-            checked={isPublic}
-            ariaLabel={t('profile.settings.visibilityLabel')}
-            onChange={(checked) => {
-              editDraft({ isPublic: checked });
-              void flush();
-            }}
+        </ProfileEditSection>
+
+        <ProfileEditSection
+          id={COLOR_ANCHOR}
+          labelId={colorLabelId}
+          title={t('profile.edit.color')}
+        >
+          <AccentColorPicker
+            id="profile-color"
+            ariaLabelledBy={colorLabelId}
+            onSaved={flashSaved}
           />
-        </div>
-      </Card>
+        </ProfileEditSection>
 
-      <AccountBannerCard user={user} />
+        <ProfileEditFavorites user={user} onSaved={flashSaved} />
 
-      <AccountFavoritesCard user={user} onSaved={flashSaved} />
-    </>
+        <ProfileEditSection title={t('profile.edit.visibility')}>
+          <div className={styles.toggleRow}>
+            <span className={styles.toggleLabel}>{t('profile.settings.visibilityLabel')}</span>
+            <Toggle
+              checked={isPublic}
+              ariaLabel={t('profile.settings.visibilityLabel')}
+              onChange={(checked) => {
+                editDraft({ isPublic: checked });
+                void flush();
+              }}
+            />
+          </div>
+        </ProfileEditSection>
+      </div>
+    </PageLayout>
   );
 }

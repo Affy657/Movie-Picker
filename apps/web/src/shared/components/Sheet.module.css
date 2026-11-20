@@ -17,6 +17,11 @@
   overflow: hidden;
 }
 
+.dialog.dialog {
+  width: 100%;
+  max-width: 100%;
+}
+
 .dialogTall {
   --sheet-max-height: min(90dvh, 760px);
 }

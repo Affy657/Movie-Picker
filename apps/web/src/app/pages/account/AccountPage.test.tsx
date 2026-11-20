@@ -66,6 +66,30 @@ describe('AccountPage (MSW)', () => {
     await waitFor(() => expect(patchedTheme).toBe('dark'));
   });
 
+  it('names my colour in the preferences and sends me to my profile to change it', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u-acc',
+          displayName: 'Pat',
+          emailMasked: 'p***@test.local',
+          uiTheme: 'light',
+          accentColor: 'teal',
+          handle: 'pat',
+        })
+      )
+    );
+
+    renderAccount('/settings/preferences');
+
+    expect(await screen.findByText('Turquoise')).toBeInTheDocument();
+    expect(screen.queryByRole('radiogroup', { name: /couleur/i })).toBeNull();
+    expect(screen.getByRole('link', { name: 'Changer dans mon profil' })).toHaveAttribute(
+      'href',
+      '/settings/profil#couleur'
+    );
+  });
+
   it('shows the rating scale and sends ratingScale to the profile PATCH', async () => {
     const user = userEvent.setup();
     let patchedRatingScale: string | undefined;
@@ -133,7 +157,7 @@ describe('AccountPage (MSW)', () => {
     expect(screen.getByRole('link', { name: /retour à l.accueil/i })).toHaveAttribute('href', '/');
   });
 
-  it('une rubrique inconnue renvoie vers le profil sans empiler de segments', async () => {
+  it('sends an unknown section to the preferences without stacking segments', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
         HttpResponse.json({
@@ -157,8 +181,8 @@ describe('AccountPage (MSW)', () => {
       </AppTestProviders>
     );
 
-    expect(await screen.findByRole('heading', { name: 'Profil' })).toBeInTheDocument();
-    expect(screen.getByTestId('location').textContent).toBe('/settings/profil');
+    expect(await screen.findByRole('heading', { name: 'Préférences' })).toBeInTheDocument();
+    expect(screen.getByTestId('location').textContent).toBe('/settings/preferences');
   });
 });
 
