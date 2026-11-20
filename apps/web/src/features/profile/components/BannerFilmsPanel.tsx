@@ -80,10 +80,10 @@ function FilmImages({
         </h3>
       </div>
       {backdrops.isPending && (
-        <p className={styles.status} role="status">
+        <output className={styles.status}>
           <Spinner />
           {t('profile.banner.imagesLoading')}
-        </p>
+        </output>
       )}
       {backdrops.isError && (
         <InlineError
@@ -229,9 +229,9 @@ export default function BannerFilmsPanel({ banner, disabled, onChoose }: Readonl
       {searching ? (
         <>
           {search.isPending && (
-            <p className={styles.status} role="status">
+            <output className={styles.status}>
               <Spinner />
-            </p>
+            </output>
           )}
           {search.isError && (
             <InlineError

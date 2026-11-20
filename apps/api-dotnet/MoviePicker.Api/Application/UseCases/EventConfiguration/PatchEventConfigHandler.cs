@@ -60,12 +60,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
 
         var now = _clock.GetUtcNow();
         EnsurePatchAllowed(evt, now, hasConfigChange, hasDateTimeChange, hasTitleChange, hasRecurrenceChange);
-        if (hasGroupChange && evt.IsFinished(now))
-            throw Errors.EventConfigLockedFinished();
-
-        var chosenGroup = request.ClearGroup != true && !string.IsNullOrWhiteSpace(request.GroupId)
-            ? await FriendGroupPolicy.RequireAsync(_groups, userId ?? string.Empty, request.GroupId.Trim(), ct)
-            : null;
+        var chosenGroup = hasGroupChange ? await ResolveChosenGroupAsync(evt, request, userId, now, ct) : null;
 
         if (hasWinnerCountChange)
             EnsureWinnerCountAllowed(evt, now, request.WinnerCount!.Value);
@@ -118,6 +113,20 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
             await _groupNightAnnouncer.AnnounceAsync(saved, chosenGroup, userId!, CancellationToken.None);
 
         return EventConfigResponse.FromEvent(saved);
+    }
+
+    private async Task<FriendGroup?> ResolveChosenGroupAsync(
+        Event evt,
+        PatchEventConfigRequest request,
+        string? userId,
+        DateTimeOffset now,
+        CancellationToken ct)
+    {
+        if (evt.IsFinished(now))
+            throw Errors.EventConfigLockedFinished();
+        if (request.ClearGroup == true || string.IsNullOrWhiteSpace(request.GroupId))
+            return null;
+        return await FriendGroupPolicy.RequireAsync(_groups, userId ?? string.Empty, request.GroupId.Trim(), ct);
     }
 
     private static EventAudienceMessage DateChangedMessage(Event evt) => new(

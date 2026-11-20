@@ -54,61 +54,9 @@ export default function HostEventSettingsPanel({
   onClose,
 }: Readonly<HostEventSettingsPanelProps>) {
   const { t } = useTranslation();
-  const {
-    eventTitle,
-    setEventTitle,
-    themeEmoji,
-    setThemeEmoji,
-    themeText,
-    setThemeText,
-    themeOpen,
-    setThemeOpen,
-    themePreview,
-    eventDateLocal,
-    setEventDateLocal,
-    commitEventDate,
-    relativeDateLabel,
-    dateWasEdited,
-    notifyDateChange,
-    setNotifyDateChange,
-    proposalLimitEnabled,
-    toggleProposalLimit,
-    maxProp,
-    setMaxProp,
-    participantLimitEnabled,
-    toggleParticipantLimit,
-    maxParticipants,
-    setMaxParticipants,
-    maxParticipantsHint,
-    voteLimitEnabled,
-    setVoteLimitEnabled,
-    maxVotes,
-    setMaxVotes,
-    wheelMode,
-    setWheelMode,
-    allowSeries,
-    setAllowSeries,
-    recurrence,
-    setRecurrence,
-    groupId,
-    setGroupId,
-    groups,
-    winnerCount,
-    setWinnerCount,
-    drawnWinnerCount,
-    configLocked,
-    recurrenceLocked,
-    fieldErrors,
-    saveError,
-    saveState,
-    scheduleAutoSave,
-    templateDraft,
-    templateLimitsAreValid,
-    eventTemplates,
-    isConnectedCreator,
-  } = useHostEventSettingsDraft({ slug, hostToken, event, open });
+  const draft = useHostEventSettingsDraft({ slug, hostToken, event, open });
 
-  const chosenGroup = groups.find((group) => group.id === groupId) ?? null;
+  const chosenGroup = draft.groups.find((group) => group.id === draft.groupId) ?? null;
   const shownGroupId = chosenGroup?.id ?? null;
   const themeCollapseId = useId();
   const wheelModeLabelId = useId();
@@ -122,7 +70,7 @@ export default function HostEventSettingsPanel({
     [t]
   );
 
-  const saveStatusLabel = t(SAVE_STATUS_LABEL_KEYS[saveState]);
+  const saveStatusLabel = t(SAVE_STATUS_LABEL_KEYS[draft.saveState]);
 
   return (
     <ResponsiveDialog
@@ -134,32 +82,32 @@ export default function HostEventSettingsPanel({
       detail={
         <Chip
           size="sm"
-          tone={SAVE_STATUS_TONE[saveState]}
-          dot={saveState === 'pending' ? 'pulsing' : true}
+          tone={SAVE_STATUS_TONE[draft.saveState]}
+          dot={draft.saveState === 'pending' ? 'pulsing' : true}
           className={styles.saveStatus}
         >
           {saveStatusLabel}
         </Chip>
       }
     >
-      {configLocked ? (
+      {draft.configLocked ? (
         <output className={styles.lockBanner}>
           <Lock size={ICON_SIZE.sm} aria-hidden />
           <span className={styles.lockBannerLabel}>{t('events.settings.configLockedHint')}</span>
         </output>
       ) : null}
-      {saveError && (
+      {draft.saveError && (
         <p className="error" role="alert">
-          {saveError}
+          {draft.saveError}
         </p>
       )}
       <form className={`form ${styles.form}`}>
         <div className={styles.section}>
-          <fieldset className={styles.lockable} disabled={configLocked}>
+          <fieldset className={styles.lockable} disabled={draft.configLocked}>
             <Field
               label={t('events.settings.titleLabel')}
               htmlFor="host-cfg-title"
-              error={fieldErrors.title}
+              error={draft.fieldErrors.title}
               className={styles.field}
             >
               {({ id, describedBy, invalid }) => (
@@ -167,10 +115,10 @@ export default function HostEventSettingsPanel({
                   id={id}
                   className="input"
                   type="text"
-                  value={eventTitle}
+                  value={draft.eventTitle}
                   onChange={(e) => {
-                    setEventTitle(e.target.value);
-                    scheduleAutoSave();
+                    draft.setEventTitle(e.target.value);
+                    draft.scheduleAutoSave();
                   }}
                   maxLength={200}
                   placeholder={t('events.settings.titlePlaceholder')}
@@ -181,52 +129,52 @@ export default function HostEventSettingsPanel({
             </Field>
 
             <HostEventDateField
-              value={eventDateLocal}
-              error={fieldErrors.date}
-              relativeDateLabel={relativeDateLabel}
-              showNotifyRow={dateWasEdited && !fieldErrors.date}
-              notifyDateChange={notifyDateChange}
-              onValueChange={setEventDateLocal}
-              onCommit={commitEventDate}
-              onNotifyChange={setNotifyDateChange}
+              value={draft.eventDateLocal}
+              error={draft.fieldErrors.date}
+              relativeDateLabel={draft.relativeDateLabel}
+              showNotifyRow={draft.dateWasEdited && !draft.fieldErrors.date}
+              notifyDateChange={draft.notifyDateChange}
+              onValueChange={draft.setEventDateLocal}
+              onCommit={draft.commitEventDate}
+              onNotifyChange={draft.setNotifyDateChange}
             />
 
             <HostEventThemeField
-              emoji={themeEmoji}
-              text={themeText}
-              preview={themePreview}
-              open={themeOpen}
+              emoji={draft.themeEmoji}
+              text={draft.themeText}
+              preview={draft.themePreview}
+              open={draft.themeOpen}
               collapseId={themeCollapseId}
-              onToggle={() => setThemeOpen((v) => !v)}
+              onToggle={() => draft.setThemeOpen((v) => !v)}
               onEmojiChange={(v) => {
-                setThemeEmoji(v);
-                scheduleAutoSave();
+                draft.setThemeEmoji(v);
+                draft.scheduleAutoSave();
               }}
               onTextChange={(v) => {
-                setThemeText(v);
-                scheduleAutoSave();
+                draft.setThemeText(v);
+                draft.scheduleAutoSave();
               }}
               onClear={() => {
-                setThemeEmoji('');
-                setThemeText('');
-                scheduleAutoSave();
+                draft.setThemeEmoji('');
+                draft.setThemeText('');
+                draft.scheduleAutoSave();
               }}
             />
           </fieldset>
         </div>
 
-        {isConnectedCreator && groups.length > 0 ? (
+        {draft.isConnectedCreator && draft.groups.length > 0 ? (
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>{t('events.settings.sectionGroup')}</h3>
             <div className={styles.field}>
               <GroupChips
                 className={styles.groupChips}
-                groups={groups}
+                groups={draft.groups}
                 groupId={shownGroupId}
                 disabled={event.isFinished}
                 onChange={(next) => {
-                  setGroupId(next);
-                  scheduleAutoSave(true);
+                  draft.setGroupId(next);
+                  draft.scheduleAutoSave(true);
                 }}
               />
               <p className="hint">
@@ -241,31 +189,31 @@ export default function HostEventSettingsPanel({
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>{t('events.settings.sectionParticipants')}</h3>
 
-          <fieldset className={styles.lockable} disabled={configLocked}>
+          <fieldset className={styles.lockable} disabled={draft.configLocked}>
             <EventLimitFields
               idPrefix="host-cfg"
-              disabled={configLocked}
+              disabled={draft.configLocked}
               rowClassName={styles.field}
               limits={{
                 participants: {
-                  enabled: participantLimitEnabled,
-                  value: maxParticipants,
-                  error: fieldErrors.maxParticipants,
-                  hint: maxParticipantsHint,
-                  onEnabledChange: toggleParticipantLimit,
+                  enabled: draft.participantLimitEnabled,
+                  value: draft.maxParticipants,
+                  error: draft.fieldErrors.maxParticipants,
+                  hint: draft.maxParticipantsHint,
+                  onEnabledChange: draft.toggleParticipantLimit,
                   onValueChange: (v) => {
-                    setMaxParticipants(v);
-                    scheduleAutoSave();
+                    draft.setMaxParticipants(v);
+                    draft.scheduleAutoSave();
                   },
                 },
                 proposals: {
-                  enabled: proposalLimitEnabled,
-                  value: maxProp,
-                  error: fieldErrors.maxProposals,
-                  onEnabledChange: toggleProposalLimit,
+                  enabled: draft.proposalLimitEnabled,
+                  value: draft.maxProp,
+                  error: draft.fieldErrors.maxProposals,
+                  onEnabledChange: draft.toggleProposalLimit,
                   onValueChange: (v) => {
-                    setMaxProp(v);
-                    scheduleAutoSave();
+                    draft.setMaxProp(v);
+                    draft.scheduleAutoSave();
                   },
                 },
               }}
@@ -275,10 +223,10 @@ export default function HostEventSettingsPanel({
               <ToggleRow
                 title={t('events.settings.allowSeriesLabel')}
                 description={t('events.settings.allowSeriesDesc')}
-                checked={allowSeries}
+                checked={draft.allowSeries}
                 onChange={() => {
-                  setAllowSeries((v) => !v);
-                  scheduleAutoSave(true);
+                  draft.setAllowSeries((v) => !v);
+                  draft.scheduleAutoSave(true);
                 }}
               />
             </div>
@@ -288,23 +236,23 @@ export default function HostEventSettingsPanel({
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>{t('events.settings.sectionDraw')}</h3>
 
-          <fieldset className={styles.lockable} disabled={configLocked}>
+          <fieldset className={styles.lockable} disabled={draft.configLocked}>
             <EventLimitFields
               idPrefix="host-cfg"
-              disabled={configLocked}
+              disabled={draft.configLocked}
               rowClassName={styles.field}
               limits={{
                 votes: {
-                  enabled: voteLimitEnabled,
-                  value: maxVotes,
-                  error: fieldErrors.maxVotes,
+                  enabled: draft.voteLimitEnabled,
+                  value: draft.maxVotes,
+                  error: draft.fieldErrors.maxVotes,
                   onEnabledChange: (enabled) => {
-                    setVoteLimitEnabled(enabled);
-                    scheduleAutoSave(true);
+                    draft.setVoteLimitEnabled(enabled);
+                    draft.scheduleAutoSave(true);
                   },
                   onValueChange: (v) => {
-                    setMaxVotes(v);
-                    scheduleAutoSave();
+                    draft.setMaxVotes(v);
+                    draft.scheduleAutoSave();
                   },
                 },
               }}
@@ -315,11 +263,11 @@ export default function HostEventSettingsPanel({
                 {t('events.settings.wheelModeLabel')}
               </span>
               <WheelModeField
-                value={wheelMode}
+                value={draft.wheelMode}
                 labelId={wheelModeLabelId}
                 onChange={(mode) => {
-                  setWheelMode(mode);
-                  scheduleAutoSave(true);
+                  draft.setWheelMode(mode);
+                  draft.scheduleAutoSave(true);
                 }}
               />
             </div>
@@ -328,9 +276,9 @@ export default function HostEventSettingsPanel({
           <Field
             label={t('events.settings.winnerCountLabel')}
             htmlFor="host-cfg-winner-count"
-            error={fieldErrors.winnerCount}
+            error={draft.fieldErrors.winnerCount}
             hint={
-              fieldErrors.winnerCount
+              draft.fieldErrors.winnerCount
                 ? undefined
                 : t('events.settings.winnerCountHint', { max: MAX_WINNERS_PER_EVENT })
             }
@@ -339,12 +287,12 @@ export default function HostEventSettingsPanel({
             {({ id, describedBy, invalid }) => (
               <NumberInput
                 id={id}
-                value={winnerCount}
+                value={draft.winnerCount}
                 onChange={(v) => {
-                  setWinnerCount(v);
-                  scheduleAutoSave();
+                  draft.setWinnerCount(v);
+                  draft.scheduleAutoSave();
                 }}
-                min={Math.max(1, drawnWinnerCount)}
+                min={Math.max(1, draft.drawnWinnerCount)}
                 max={MAX_WINNERS_PER_EVENT}
                 invalid={invalid}
                 ariaDescribedBy={describedBy}
@@ -360,24 +308,24 @@ export default function HostEventSettingsPanel({
             <ToggleRow
               title={t('events.settings.recurrenceLabel')}
               description={t('events.settings.recurrenceDesc')}
-              checked={recurrence !== null}
-              disabled={recurrenceLocked}
+              checked={draft.recurrence !== null}
+              disabled={draft.recurrenceLocked}
               onChange={() => {
-                setRecurrence((v) => (v === null ? 'weekly' : null));
-                scheduleAutoSave(true);
+                draft.setRecurrence((v) => (v === null ? 'weekly' : null));
+                draft.scheduleAutoSave(true);
               }}
             />
-            {recurrence !== null && !recurrenceLocked && (
+            {draft.recurrence !== null && !draft.recurrenceLocked && (
               <div className={styles.recurrenceRhythm}>
                 <SegmentedRadioGroup
                   className={styles.recurrenceSegments}
                   options={recurrenceOptions}
-                  value={recurrence}
+                  value={draft.recurrence}
                   size="sm"
                   ariaLabel={t('events.settings.recurrenceGroupLabel')}
                   onChange={(value) => {
-                    setRecurrence(value);
-                    scheduleAutoSave(true);
+                    draft.setRecurrence(value);
+                    draft.scheduleAutoSave(true);
                   }}
                 />
                 <p className="hint">
@@ -387,41 +335,43 @@ export default function HostEventSettingsPanel({
                 </p>
               </div>
             )}
-            {recurrenceLocked && (
+            {draft.recurrenceLocked && (
               <p className="hint">{t('events.settings.recurrenceLockedHint')}</p>
             )}
           </div>
         </div>
 
-        {isConnectedCreator && (
+        {draft.isConnectedCreator && (
           <section className={templatesStyles.section} data-testid="event-templates-section">
             <EventTemplatesRow
               className={templatesStyles.row}
-              templates={eventTemplates.templates}
-              appliedTemplate={eventTemplates.matchingTemplate}
-              disabled={eventTemplates.isBusy}
-              applyLockedHint={configLocked ? t('events.settings.templates.lockedHint') : null}
-              onApply={eventTemplates.apply}
-              onRename={eventTemplates.rename}
-              onDelete={eventTemplates.remove}
+              templates={draft.eventTemplates.templates}
+              appliedTemplate={draft.eventTemplates.matchingTemplate}
+              disabled={draft.eventTemplates.isBusy}
+              applyLockedHint={
+                draft.configLocked ? t('events.settings.templates.lockedHint') : null
+              }
+              onApply={draft.eventTemplates.apply}
+              onRename={draft.eventTemplates.rename}
+              onDelete={draft.eventTemplates.remove}
             />
             <EventTemplateSaveBar
               className={templatesStyles.saveBar}
               variant="event"
-              draft={templateDraft}
-              templates={eventTemplates.templates}
-              appliedTemplate={eventTemplates.appliedTemplate}
-              lastSaved={eventTemplates.lastSaved}
-              disabled={eventTemplates.isBusy}
-              onBeforeSave={templateLimitsAreValid}
-              onSave={eventTemplates.saveAs}
-              onUpdate={eventTemplates.updateApplied}
+              draft={draft.templateDraft}
+              templates={draft.eventTemplates.templates}
+              appliedTemplate={draft.eventTemplates.appliedTemplate}
+              lastSaved={draft.eventTemplates.lastSaved}
+              disabled={draft.eventTemplates.isBusy}
+              onBeforeSave={draft.templateLimitsAreValid}
+              onSave={draft.eventTemplates.saveAs}
+              onUpdate={draft.eventTemplates.updateApplied}
             />
           </section>
         )}
       </form>
 
-      {isConnectedCreator && (
+      {draft.isConnectedCreator && (
         <HostEventDangerZone slug={slug} hostToken={hostToken} eventTitle={event.title} />
       )}
     </ResponsiveDialog>

@@ -25,7 +25,7 @@ export function loadBannerPhoto(file: File): Promise<LoadedAvatarPhoto> {
 async function encodeWithin(canvas: HTMLCanvasElement, type: string): Promise<Blob | null> {
   for (const quality of QUALITY_STEPS) {
     const blob = await encodeCanvas(canvas, type, quality);
-    if (!blob || blob.type !== type) return null;
+    if (blob?.type !== type) return null;
     if (blob.size <= BANNER_PHOTO_MAX_OUTPUT_BYTES) return blob;
   }
   throw new Error('The banner photo stays too heavy');

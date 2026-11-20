@@ -8,7 +8,9 @@ import { useTranslation, type Translate } from '@/shared/i18n';
 import { toTitleSummary } from '@/shared/utils/titleSummary';
 import { ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import ListMoviesPage from '@/features/library/components/ListMoviesPage';
+import ListMoviesPage, {
+  type ListMoviesHeaderSlots,
+} from '@/features/library/components/ListMoviesPage';
 import ListNotFound from '@/features/library/components/ListNotFound';
 import { CatalogSource } from '@/features/library/components/ListSource';
 import SaveListAction from '@/features/library/components/SaveListAction';
@@ -52,6 +54,14 @@ function sourceOf(selection: CatalogSelection | null): SavedListSource | null {
   return selection.variant === 'theme'
     ? { sourceType: 'explorerTheme', sourceId: selection.theme }
     : { sourceType: 'tmdbCollection', sourceId: String(selection.collectionId) };
+}
+
+function saveListSlot(
+  isSignedIn: boolean,
+  toggle: ReturnType<typeof useSavedListToggle>
+): ListMoviesHeaderSlots['primary'] {
+  if (!isSignedIn) return undefined;
+  return ({ isMobile }) => <SaveListAction isSignedIn compact={isMobile} toggle={toggle} />;
 }
 
 function backOf(variant: CatalogListVariant, t: Translate) {
@@ -156,9 +166,7 @@ export default function CatalogListPage({ variant }: Readonly<{ variant: Catalog
         back: backOf(variant, t),
         progress: watchedPercent(watched, items.length),
         source: <CatalogSource kind={variant === 'collection' ? 'saga' : 'selection'} />,
-        primary: isSignedIn
-          ? ({ isMobile }) => <SaveListAction isSignedIn compact={isMobile} toggle={savedToggle} />
-          : undefined,
+        primary: saveListSlot(isSignedIn, savedToggle),
       }}
       toolbarOptions={{ sorts }}
       card={{
