@@ -5,6 +5,7 @@ export const API_ERROR_REASONS = {
   invalidResetToken: 'invalid_reset_token',
   letterboxdWatchlistIncomplete: 'letterboxd_watchlist_incomplete',
   letterboxdWatchedIncomplete: 'letterboxd_watched_incomplete',
+  letterboxdExportUnreadable: 'letterboxd_export_unreadable',
   favoritesLimitReached: 'favorites_limit_reached',
   letterboxdSyncUnavailable: 'letterboxd_sync_unavailable',
   letterboxdSyncFailed: 'letterboxd_sync_failed',

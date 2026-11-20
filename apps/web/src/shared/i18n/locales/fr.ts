@@ -628,7 +628,7 @@ export const fr = {
       deleteAccountConfirmationFallbackError:
         'Suppression impossible. Vérifiez la confirmation saisie.',
       letterboxd: {
-        title: 'Letterboxd',
+        title: 'Synchronisation Letterboxd',
         helpTitle: 'Comment ça marche',
         helpSync:
           'Votre watchlist Letterboxd publique est recopiée ici, au plus une fois par jour à l’ouverture de l’application. Rien n’est écrit sur Letterboxd : ajouter, retirer ou proposer un film depuis Movie Picker ne modifie jamais votre liste là-bas.',
@@ -667,12 +667,47 @@ export const fr = {
         reportUnmatched: 'Voir les {{count}} film(s) introuvable(s) sur TMDB',
         reportTruncated: '{{count}} film(s) non traité(s) : trop de films pour une seule fois.',
         reportWatchedPartial:
-          'Films vus : Letterboxd ne laisse lire que vos films sortis récemment et votre journal, {{count}} autre(s) film(s) n’ont pas pu être lus.',
+          'Films vus : Letterboxd ne laisse lire que vos films sortis récemment et votre journal, {{count}} autre(s) film(s) n’ont pas pu être lus. Importez le fichier d’export de Letterboxd pour les récupérer.',
         attentionMessageOne: '1 film n’a pas pu être identifié automatiquement.',
         attentionMessage: '{{count}} films n’ont pas pu être identifiés automatiquement.',
         attentionConfirm: 'Les confirmer',
         syncPersistentHint:
-          'Une lecture par jour au maximum. Rien n’est jamais écrit sur Letterboxd.',
+          'Vos derniers ajouts sur Letterboxd arrivent ici, une fois par jour au plus. Rien n’est jamais écrit sur Letterboxd.',
+        export: {
+          cardTitle: 'Import Letterboxd',
+          rowLabel: 'Importer vos listes Letterboxd',
+          rowHint:
+            'Toute votre watchlist et tous vos films vus d’un coup, depuis le fichier d’export de Letterboxd. Ensuite, la synchronisation suit vos nouveaux ajouts.',
+          open: 'Importer',
+          title: 'Importer depuis Letterboxd',
+          stepExport:
+            'Sur Letterboxd, ouvrez vos réglages, onglet « Import & Export », puis « Export Your Data ». Letterboxd vous donne un fichier .zip.',
+          exportLink: 'Ouvrir la page d’export',
+          stepFile: 'Choisissez ici ce fichier .zip.',
+          chooseFile: 'Choisir le fichier',
+          unzippedHint:
+            'Votre navigateur l’a décompressé ? Choisissez les fichiers watched.csv, watchlist.csv, ratings.csv et diary.csv du dossier.',
+          tooLarge: 'Ce fichier est trop lourd : 12 Mo au plus.',
+          readError: 'Ce fichier n’a pas pu être lu. Réessayez.',
+          reading: 'Lecture du fichier…',
+          found: 'Dans ce fichier, choisissez ce que vous importez :',
+          filmsOne: '1 film',
+          films: '{{count}} films',
+          nothingFound: 'Ce fichier ne contient ni film vu ni film à voir.',
+          noDuplicate: 'Les films déjà dans Movie Picker ne sont pas ajoutés deux fois.',
+          start: 'Importer',
+          progress: 'Import en cours : {{done}} sur {{total}} films',
+          keepOpen: 'Gardez cette fenêtre ouverte jusqu’à la fin.',
+          stop: 'Arrêter l’import',
+          finishedOne: 'Import terminé : 1 film lu.',
+          finished: 'Import terminé : {{count}} films lus.',
+          stopped:
+            'Import arrêté à {{done}} sur {{total}} films. Relancez-le pour finir : rien ne sera ajouté deux fois.',
+          failed:
+            'L’import s’est interrompu à {{done}} sur {{total}} films. Relancez-le pour finir : rien ne sera ajouté deux fois.',
+          again: 'Relancer',
+          tally: '{{list}} : {{added}} film(s) ajouté(s), {{already}} déjà présent(s).',
+        },
         choicesTitleOne: 'Un titre à confirmer',
         choicesTitle: '{{count}} titres à confirmer',
         choicesStepOf:
@@ -2529,6 +2564,8 @@ export const fr = {
       'Letterboxd ou TMDB ne répond pas pour le moment. Réessayez dans quelques minutes.',
     letterboxd_watchlist_incomplete:
       "Watchlist Letterboxd inaccessible. Vérifiez l'orthographe du pseudo et que votre profil Letterboxd est public.",
+    letterboxd_export_unreadable:
+      'Ce fichier ne vient pas de l’export Letterboxd : choisissez le .zip téléchargé depuis Letterboxd.',
     letterboxd_watched_incomplete:
       "Films vus sur Letterboxd inaccessibles. Vérifiez l'orthographe du pseudo et que votre profil Letterboxd est public.",
     invalid_date_format: 'date doit être au format YYYY-MM-DD.',
@@ -3286,7 +3323,7 @@ export const fr = {
         'The Movie Database, la base ouverte qui fournit titres, résumés, genres et affiches.',
       letterboxd: 'Letterboxd',
       letterboxdValue:
-        'Import de la watchlist et des films vus depuis le profil public. Sans API publique, la page est lue telle quelle, une fois par 24 heures et par compte : la watchlist entière, et pour les films vus la seule page que Letterboxd sert encore, complétée par le journal.',
+        'Import de la watchlist et des films vus depuis le profil public. Sans API publique, la page est lue telle quelle, une fois par 24 heures et par compte : la watchlist entière, et pour les films vus la seule page que Letterboxd sert encore, complétée par le journal. L’historique complet arrive par l’import du fichier d’export de Letterboxd, lu côté serveur puis importé par lots de 50.',
       letterboxdHint:
         "Réseau social de cinéphiles : la liste publique d'un profil est lue puis rapprochée du catalogue.",
       oauth: 'Google, GitHub',

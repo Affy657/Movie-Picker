@@ -7,6 +7,8 @@ import type {
   LetterboxdSyncReport,
 } from '@/features/letterboxd/api/letterboxdApi';
 
+export const LETTERBOXD_MAX_CHOICES = 300;
+
 export function pendingChoicesOf(report: LetterboxdSyncReport): LetterboxdPendingChoice[] {
   return [...report.pendingChoices, ...report.watchedPendingChoices];
 }

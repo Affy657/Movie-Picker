@@ -9,6 +9,7 @@ import { oauthStartUrl, unlinkOAuthProvider } from '@/features/auth/api/authApi'
 import { useOAuthProviders } from '@/features/auth/hooks/useOAuthProviders';
 import { resolveOAuthErrorKey } from '@/features/auth/utils/oauthErrors';
 import type { UserProfile } from '@/features/auth/types';
+import LetterboxdExportSection from '@/features/letterboxd/components/LetterboxdExportSection';
 import LetterboxdImportSection from '@/features/letterboxd/components/LetterboxdImportSection';
 import { ROUTES } from '@/app/routes';
 import sharedStyles from '@/shared/components/SettingsSection.module.css';
@@ -62,6 +63,7 @@ export default function AccountIntegrationsPage({ user }: Readonly<{ user: UserP
       </div>
 
       <LetterboxdImportSection />
+      <LetterboxdExportSection />
 
       {(availableProviders.length > 0 || linked.length > 0) && (
         <Card padding="none" elevation="sm" className={sharedStyles.card}>

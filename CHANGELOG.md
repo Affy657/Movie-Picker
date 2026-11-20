@@ -10,6 +10,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Added
 
+- **Importer d’un coup toutes vos listes Letterboxd** : dans Intégrations, la carte Import Letterboxd lit le fichier d’export que Letterboxd vous donne et ajoute toute votre watchlist et tous vos films vus, avec leur note et leur date, sans rien ajouter deux fois. Les titres ambigus se choisissent comme pour la synchronisation, qui suit ensuite vos nouveaux ajouts.
+
 - **Un film devient favori depuis sa page** : le bouton Favori l${q}ajoute aux trois favoris de votre profil ou l${q}en retire, et quand les trois places sont prises, vous choisissez celui qu${q}il remplace.
 
 ### Changed
