@@ -55,9 +55,9 @@ function scoreText(stat: RankingStat, entry: RankedMember, { locale, scale }: Fo
       }).format(entry.score);
     case 'flair':
     case 'fresh':
-    case 'presence':
       return new Intl.NumberFormat(locale, { style: 'percent' }).format(entry.score / PERCENT);
     case 'wins':
+    case 'presence':
     case 'host':
       return new Intl.NumberFormat(locale).format(entry.score);
   }
@@ -101,11 +101,10 @@ function detailText(stat: RankingStat, stats: FriendGroupMemberStats, t: Transla
       );
     case 'presence':
       return pluralizeCount(
-        stats.nightsSinceJoined,
+        stats.nightsAttended,
         'groups.ranking.details.presenceOne',
         'groups.ranking.details.presence',
-        t,
-        { part: stats.nightsAttended }
+        t
       );
     case 'host':
       return pluralizeCount(

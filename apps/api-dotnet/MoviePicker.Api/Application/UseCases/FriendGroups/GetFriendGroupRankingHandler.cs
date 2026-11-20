@@ -6,7 +6,7 @@ namespace MoviePicker.Api.Application.UseCases.FriendGroups;
 
 public sealed class GetFriendGroupRankingHandler : IGetFriendGroupRankingHandler
 {
-    public const int RankedNightsCap = 200;
+    public const int NightsPerMemberCap = 500;
 
     private readonly IFriendGroupRepository _groups;
     private readonly IEventRepository _events;
@@ -40,15 +40,10 @@ public sealed class GetFriendGroupRankingHandler : IGetFriendGroupRankingHandler
     public async Task<FriendGroupRankingResponse> HandleAsync(string userId, string groupId, CancellationToken ct = default)
     {
         var group = await FriendGroupPolicy.RequireAsync(_groups, userId, groupId, ct);
-        var now = _clock.GetUtcNow();
-        var nights = (await _events.ListByGroupIdsAsync([group.Id], ct))
-            .Where(night => night.HasWinner && night.IsFinished(now))
-            .OrderByDescending(night => night.Date, StringComparer.Ordinal)
-            .Take(RankedNightsCap)
-            .ToList();
+        var members = new[] { new FriendGroupMember(group.OwnerId, group.CreatedAt) }.Concat(group.Members).ToList();
+        var nights = await FinishedNightsOfAsync(members, ct);
 
         var history = nights.Count == 0 ? FriendGroupHistory.Empty : await LoadHistoryAsync(nights, ct);
-        var members = new[] { new FriendGroupMember(group.OwnerId, group.CreatedAt) }.Concat(group.Members);
         return new FriendGroupRankingResponse
         {
             NightCount = nights.Count,
@@ -56,7 +51,24 @@ public sealed class GetFriendGroupRankingHandler : IGetFriendGroupRankingHandler
         };
     }
 
-    private async Task<FriendGroupHistory> LoadHistoryAsync(IReadOnlyList<Event> nights, CancellationToken ct)
+    private async Task<List<Event>> FinishedNightsOfAsync(List<FriendGroupMember> members, CancellationToken ct)
+    {
+        var joined = await Task.WhenAll(members.Select(member =>
+            _participants.ListByUserIdAsync(member.UserId, NightsPerMemberCap, ct)));
+        var nightIds = joined.SelectMany(participants => participants)
+            .Select(participant => participant.EventId)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        if (nightIds.Count == 0)
+            return [];
+
+        var now = _clock.GetUtcNow();
+        return (await _events.ListByIdsAsync(nightIds, ct))
+            .Where(night => night.HasWinner && night.IsOver(now))
+            .ToList();
+    }
+
+    private async Task<FriendGroupHistory> LoadHistoryAsync(List<Event> nights, CancellationToken ct)
     {
         var nightIds = nights.Select(night => night.Id).ToList();
         var participantsTask = _participants.ListByEventIdsAsync(nightIds, ct);

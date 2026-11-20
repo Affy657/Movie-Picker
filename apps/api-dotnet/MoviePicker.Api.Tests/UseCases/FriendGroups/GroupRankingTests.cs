@@ -12,7 +12,7 @@ public sealed class GroupRankingTests : FriendGroupTestBase
 
     private readonly Dictionary<(string Night, string User), string> _participantIds = [];
 
-    private async Task<Event> NightAsync(string groupId, string slug, string date, string hostId, params string[] guests)
+    private async Task<Event> NightAsync(string? groupId, string slug, string date, string hostId, params string[] guests)
     {
         var night = await Kit.Events.AddAsync(new Event
         {
@@ -97,7 +97,7 @@ public sealed class GroupRankingTests : FriendGroupTestBase
         await RateAsync(firstWinner, Member, 6);
         await CloseAsync(first, firstWinner);
 
-        var second = await NightAsync(group.Id, "deuxieme", "2026-11-15", Member, Owner, Guest, Invitee);
+        var second = await NightAsync(null, "deuxieme", "2026-11-15", Member, Owner, Guest, Invitee);
         var secondWinner = await ProposeAsync(second, Member, "Sable noir");
         var secondOther = await ProposeAsync(second, Owner, "Tempête de verre");
         await VoteAsync(secondWinner, Owner, 1);
@@ -111,7 +111,7 @@ public sealed class GroupRankingTests : FriendGroupTestBase
         await RateAsync(secondWinner, Guest, 6);
         await CloseAsync(second, secondWinner);
 
-        var third = await NightAsync(group.Id, "troisieme", "2026-11-18", Owner, Invitee);
+        var third = await NightAsync("autre-groupe", "troisieme", "2026-11-18", Owner, Invitee);
         var thirdWinner = await ProposeAsync(third, Owner, "Minuit à Kyoto");
         var thirdOther = await ProposeAsync(third, Invitee, "Les Enfants du phare");
         await VoteAsync(thirdWinner, Invitee, 1);
@@ -120,11 +120,14 @@ public sealed class GroupRankingTests : FriendGroupTestBase
         await RateAsync(thirdWinner, Invitee, 7);
         await CloseAsync(third, thirdWinner);
 
+        var strangers = await NightAsync(null, "sans-membre", "2026-11-16", Stranger, Guest);
+        await CloseAsync(strangers, await ProposeAsync(strangers, Stranger, "Sable noir"));
+
         return group;
     }
 
     [Fact]
-    public async Task TheRanking_GivesEachMemberTheFiguresOfTheFinishedNightsOfTheGroup()
+    public async Task TheRanking_GivesEachMemberTheFiguresOfAllTheirFinishedNights_WhateverTheGroup()
     {
         var group = await ThreeNightsAsync();
 
@@ -140,7 +143,7 @@ public sealed class GroupRankingTests : FriendGroupTestBase
             ranking.Members.Select(m => (m.UpVotesReceived, m.UpVotesCast, m.UpVotesOnWinner)));
         Assert.Equal([2, 0, 1], ranking.Members.Select(m => m.FreshProposalCount));
         Assert.Equal(
-            [(3, 3, 2), (2, 3, 1), (2, 2, 0)],
+            [(3, 3, 2), (2, 2, 1), (2, 2, 0)],
             ranking.Members.Select(m => (m.NightsAttended, m.NightsSinceJoined, m.NightsHosted)));
         Assert.Equal(
             [(3, (double?)9), (2, 7), (1, 7)],
@@ -148,25 +151,22 @@ public sealed class GroupRankingTests : FriendGroupTestBase
     }
 
     [Fact]
-    public async Task TheRanking_LeavesOutUpcomingNights_NightsWithoutFilm_AndOtherGroups()
+    public async Task TheRanking_LeavesOutUpcomingNights_AndNightsWithoutFilm()
     {
         var group = await SharedGroupAsync(Member);
-        var other = await Kit.CreateAsync("Famille", Member);
         var upcoming = await NightAsync(group.Id, "a-venir", "2026-11-26", Owner, Member);
         await ProposeAsync(upcoming, Member, "Brume");
-        await CloseAsync(await NightAsync(group.Id, "sans-film", "2026-11-12", Owner, Member));
-        var elsewhere = await NightAsync(other.Id, "famille", "2026-11-12", Member);
+        await CloseAsync(await NightAsync(null, "sans-film", "2026-11-12", Owner, Member));
+        var elsewhere = await NightAsync("famille", "famille", "2026-11-12", Member);
         await CloseAsync(elsewhere, await ProposeAsync(elsewhere, Member, "Sable noir"));
 
         var ranking = await Kit.RankingHandler().HandleAsync(Owner, group.Id);
 
-        Assert.Equal(0, ranking.NightCount);
-        Assert.All(ranking.Members, member =>
-        {
-            Assert.Equal((0, 0, 0, 0, 0), (member.ProposedCount, member.NightsAttended, member.NightsSinceJoined, member.UpVotesCast, member.RatingsGiven));
-            Assert.Null(member.ProposalsAverageRating);
-            Assert.Null(member.AverageRatingGiven);
-        });
+        Assert.Equal(1, ranking.NightCount);
+        Assert.Equal(
+            [(0, 0, 0), (1, 1, 1)],
+            ranking.Members.Select(m => (m.ProposedCount, m.WinningCount, m.NightsAttended)));
+        Assert.All(ranking.Members, member => Assert.Null(member.ProposalsAverageRating));
     }
 
     [Fact]

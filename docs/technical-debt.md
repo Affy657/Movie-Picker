@@ -645,11 +645,11 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 ## DEBT-107 les soirées d'un groupe sont toutes relues à chaque affichage
 
 - state: agent
-- impact: `ListByGroupIdsAsync` rend toutes les soirées jamais rattachées aux groupes du lecteur, documents entiers, filtrées ensuite en mémoire ; Mes soirées, Mes groupes, la page d'un groupe et son classement la jouent à chaque chargement, et une soirée hebdomadaire de groupe en ajoute une cinquantaine par an ; le classement relit en plus films, votes, marques « vu » et notes des 200 dernières soirées terminées (`RankedNightsCap`)
-- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/Mongo/MongoEventRepository.cs` (`ListByGroupIdsAsync`), `Application/UseCases/ListMyEvents/ListMyEventsHandler.cs`, `Application/UseCases/FriendGroups/FriendGroupNights.cs`, `Application/UseCases/FriendGroups/GetFriendGroupRankingHandler.cs`
+- impact: `ListByGroupIdsAsync` rend toutes les soirées jamais rattachées aux groupes du lecteur, documents entiers, filtrées ensuite en mémoire ; Mes soirées, Mes groupes et la page d'un groupe la jouent à chaque chargement, et une soirée hebdomadaire de groupe en ajoute une cinquantaine par an
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/Mongo/MongoEventRepository.cs` (`ListByGroupIdsAsync`), `Application/UseCases/ListMyEvents/ListMyEventsHandler.cs`, `Application/UseCases/FriendGroups/FriendGroupNights.cs`
 - verify: `grep -n "ListByGroupIdsAsync" apps/api-dotnet/MoviePicker.Api/Application/Ports/IEventRepository.cs`
 - fix: une variante bornée aux soirées encore ouvertes (début après maintenant moins le délai de clôture automatique, champ `startAtUtc` déjà indexé) pour Mes soirées et les prochaines soirées, et les soirées passées de la page d'un groupe plafonnées dans la requête
-- fini-quand: aucune lecture d'affichage ne charge une soirée de groupe close depuis plus d'une semaine, hors les douze films de la page du groupe et les soirées que compte le classement
+- fini-quand: aucune lecture d'affichage ne charge une soirée de groupe close depuis plus d'une semaine, hors les douze films de la page du groupe
 
 ---
 

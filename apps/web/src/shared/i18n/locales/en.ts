@@ -2178,7 +2178,7 @@ export const en: Locale = {
       unranked: 'Not ranked yet',
       emptyTitle: 'No ranking yet',
       emptyMessage:
-        'The ranking starts after the group’s first finished night, once a film has won.',
+        'The ranking starts after a member’s first finished night, once a film has won.',
       nobody:
         'Nobody is ranked on this stat yet. Try another one, or come back after a few nights.',
       loading: 'Loading the ranking…',
@@ -2188,22 +2188,22 @@ export const en: Locale = {
         rating: {
           label: 'Rating of their films',
           question: 'Who proposes the best films?',
-          how: 'Average rating the group gave to their winning films. Ranked from 2 rated films.',
+          how: 'Average rating given to their winning films, across all their nights. Ranked from 2 rated films.',
         },
         wins: {
           label: 'Wins',
           question: 'Who gets the most films picked?',
-          how: 'Number of their proposed films that won a group night.',
+          how: 'Number of their proposed films that won a night, whatever the group.',
         },
         votes: {
           label: 'Votes received',
           question: 'Whose films get the most votes?',
-          how: 'Upvotes received on average per proposed film, winner or not.',
+          how: 'Upvotes received on average per proposed film, winner or not, across all their nights.',
         },
         flair: {
           label: 'Flair',
           question: 'Who votes for the film that ends up winning?',
-          how: 'Share of their upvotes that went to the night’s winning film. Ranked from 10 votes.',
+          how: 'Share of their upvotes that went to the night’s winning film, across all their nights. Ranked from 10 votes.',
         },
         fresh: {
           label: 'Fresh films',
@@ -2211,19 +2211,19 @@ export const en: Locale = {
           how: 'Share of their proposed films nobody else at the night had already seen.',
         },
         presence: {
-          label: 'Attendance',
-          question: 'Who never misses a night?',
-          how: 'Group nights joined since they joined the group.',
+          label: 'Nights',
+          question: 'Who has had the most nights?',
+          how: 'Finished nights with a winning film, whatever the group.',
         },
         host: {
           label: 'Hosting',
           question: 'Who hosts the most nights?',
-          how: 'Group nights each member created.',
+          how: 'Finished nights each member created, whatever the group.',
         },
         generous: {
           label: 'Generosity',
           question: 'Who rates the most generously?',
-          how: 'Average rating given to winning films. The toughest critics at the bottom. Ranked from 5 ratings.',
+          how: 'Average rating given to winning films, across all their nights. The toughest critics at the bottom. Ranked from 5 ratings.',
         },
       },
       details: {
@@ -2236,8 +2236,8 @@ export const en: Locale = {
         votesOnWinner: '{{part}} votes out of {{count}}',
         freshOne: '{{part}} film out of 1',
         fresh: '{{part}} films out of {{count}}',
-        presenceOne: '{{part}} night out of 1',
-        presence: '{{part}} nights out of {{count}}',
+        presenceOne: 'finished night',
+        presence: 'finished nights',
         hostedOne: 'night hosted',
         hosted: 'nights hosted',
         ratingsGivenOne: '1 rating',
@@ -2252,7 +2252,7 @@ export const en: Locale = {
         noVote: 'No vote yet',
         notEnoughVotesOne: '1 vote, {{min}} needed',
         notEnoughVotes: '{{count}} votes, {{min}} needed',
-        noNight: 'No night since joining',
+        noNight: 'No finished night yet',
         noRating: 'No rating yet',
         notEnoughRatingsOne: '1 rating, {{min}} needed',
         notEnoughRatings: '{{count}} ratings, {{min}} needed',

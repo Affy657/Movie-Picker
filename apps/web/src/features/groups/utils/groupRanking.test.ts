@@ -71,19 +71,19 @@ describe('rankMembers', () => {
     const result = rankMembers(
       'presence',
       [
-        stats('lea', { nightsAttended: 15, nightsSinceJoined: 16 }),
-        stats('noe', { nightsAttended: 8, nightsSinceJoined: 16 }),
-        stats('hugo', { nightsAttended: 5, nightsSinceJoined: 10 }),
-        stats('sam', { nightsAttended: 3, nightsSinceJoined: 16 }),
+        stats('lea', { nightsAttended: 15 }),
+        stats('noe', { nightsAttended: 8 }),
+        stats('hugo', { nightsAttended: 8 }),
+        stats('sam', { nightsAttended: 3 }),
       ],
       'five'
     );
 
     expect(ranks(result)).toEqual([
-      ['lea', 1, false, 94],
-      ['noe', 2, true, 50],
-      ['hugo', 2, true, 50],
-      ['sam', 4, false, 19],
+      ['lea', 1, false, 100],
+      ['noe', 2, true, 53],
+      ['hugo', 2, true, 53],
+      ['sam', 4, false, 20],
     ]);
   });
 
@@ -167,7 +167,7 @@ describe('rankMembers', () => {
     expect(result.unranked.map((entry) => entry.reason)).toEqual(['notEnoughRatings']);
   });
 
-  it('leaves out of the presence a member with no night since joining', () => {
+  it('leaves out of the nights a member without any finished night', () => {
     const result = rankMembers('presence', [stats('zoe')], 'five');
 
     expect(result.ranked).toEqual([]);

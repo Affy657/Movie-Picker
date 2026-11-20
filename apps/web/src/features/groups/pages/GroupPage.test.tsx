@@ -160,8 +160,8 @@ const RANKED_JEUDIS: MockGroup = {
         winningCount: 2,
         ratedWinningCount: 2,
         proposalsAverageRating: 6.8,
-        nightsAttended: 5,
-        nightsSinceJoined: 10,
+        nightsAttended: 8,
+        nightsSinceJoined: 8,
       }),
       memberStats('u4', { proposedCount: 3, nightsAttended: 3, nightsSinceJoined: 16 }),
     ],
@@ -520,13 +520,13 @@ describe('GroupPage', () => {
     renderPage();
 
     const ranking = await screen.findByRole('region', { name: /Classement/ });
-    await user.click(await within(ranking).findByRole('button', { name: 'Présence' }));
+    await user.click(await within(ranking).findByRole('button', { name: 'Soirées' }));
 
-    expect(within(ranking).getByRole('button', { name: 'Présence' })).toHaveAttribute(
+    expect(within(ranking).getByRole('button', { name: 'Soirées' })).toHaveAttribute(
       'aria-pressed',
       'true'
     );
-    expect(within(ranking).getByText('Qui ne rate aucune soirée ?')).toBeInTheDocument();
+    expect(within(ranking).getByText('Qui a fait le plus de soirées ?')).toBeInTheDocument();
     const rows = within(ranking).getAllByRole('listitem');
     expect(rows.map((row) => row.textContent)).toEqual([
       expect.stringContaining('Léa Moreau'),
@@ -534,9 +534,9 @@ describe('GroupPage', () => {
       expect.stringContaining('Sam'),
       expect.stringContaining('Hugo'),
     ]);
-    expect(rows[1]).toHaveTextContent('Ex æquo, 8 soirées sur 16');
-    expect(rows[2]).toHaveTextContent('Ex æquo, 5 soirées sur 10');
-    expect(rows[3]).toHaveTextContent(/4.*Hugo.*3 soirées sur 16.*19\s?%/);
+    expect(rows[1]).toHaveTextContent('Ex æquo, soirées terminées');
+    expect(rows[2]).toHaveTextContent('Ex æquo, soirées terminées');
+    expect(rows[3]).toHaveTextContent(/4.*Hugo.*soirées terminées.*3/);
   });
 
   it('says the ranking starts after the first finished night of the group', async () => {
@@ -546,7 +546,7 @@ describe('GroupPage', () => {
     const ranking = await screen.findByRole('region', { name: /Classement/ });
     expect(
       await within(ranking).findByText(
-        'Le classement démarre après la première soirée terminée du groupe, quand un film a gagné.'
+        'Le classement démarre après la première soirée terminée d’un membre, quand un film a gagné.'
       )
     ).toBeInTheDocument();
     expect(within(ranking).queryByRole('button', { name: 'Note de ses films' })).toBeNull();
