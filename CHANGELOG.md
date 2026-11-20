@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.22.0] - 2026-11-20
+
 ### Added
 
 - **Les groupes d'amis, pour ne plus envoyer de lien** : créez un groupe depuis le menu du compte, invitez vos amis une seule fois, et chaque soirée rattachée au groupe arrive dans leur page Mes soirées avec une notification. Une soirée qui se répète reste dans le groupe, et la page du groupe montre la prochaine soirée, qui vient et les films gagnants.
@@ -900,7 +902,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.21.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.22.0...HEAD
+[1.22.0]: https://github.com/Affy657/Movie-Picker/compare/v1.21.0...v1.22.0
 [1.21.0]: https://github.com/Affy657/Movie-Picker/compare/v1.20.0...v1.21.0
 [1.20.0]: https://github.com/Affy657/Movie-Picker/compare/v1.19.0...v1.20.0
 [1.19.0]: https://github.com/Affy657/Movie-Picker/compare/v1.18.0...v1.19.0
