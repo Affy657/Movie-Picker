@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.25.0] - 2026-11-20
+
 ### Added
 
 - **Modifiez votre profil depuis votre profil** : le bouton Modifier mon profil ouvre une page qui réunit votre nom, votre pseudo, votre bio, votre avatar, votre bannière, votre couleur, vos favoris et la visibilité du profil, avec l'aperçu du résultat en haut. Le pseudo ne change qu'une fois sa disponibilité vérifiée, et les favoris se choisissent parmi vos films vus et votre liste.
@@ -936,7 +938,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.24.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.25.0...HEAD
+[1.25.0]: https://github.com/Affy657/Movie-Picker/compare/v1.24.0...v1.25.0
 [1.24.0]: https://github.com/Affy657/Movie-Picker/compare/v1.23.0...v1.24.0
 [1.23.0]: https://github.com/Affy657/Movie-Picker/compare/v1.22.0...v1.23.0
 [1.22.0]: https://github.com/Affy657/Movie-Picker/compare/v1.21.0...v1.22.0
