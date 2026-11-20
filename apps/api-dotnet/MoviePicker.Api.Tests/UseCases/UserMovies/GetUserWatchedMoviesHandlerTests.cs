@@ -516,6 +516,38 @@ public sealed class GetUserWatchedMoviesHandlerTests
     }
 
     [Fact]
+    public async Task ThePublicProfile_ListsOnlyTheFilmsWatchedAtANight_AndCountsOnlyThem()
+    {
+        var handler = Build();
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
+        ParticipatesIn(
+            Evt("A", date: "2026-01-01", winnerMovieId: "m-night"),
+            Evt("B", date: "2026-02-01", winnerMovieId: "m-both"));
+        WinnerMoviesAre(Mov("m-night", tmdbId: 10), Mov("m-both", tmdbId: 11));
+        await WatchElsewhereAsync(11, new DateTimeOffset(2026, 5, 1, 12, 0, 0, TimeSpan.Zero));
+        await WatchElsewhereAsync(20, new DateTimeOffset(2026, 6, 1, 12, 0, 0, TimeSpan.Zero));
+
+        var res = await handler.HandleAsync("alice", null, 6);
+
+        Assert.Equal([(11, WatchedSource.Night), (10, WatchedSource.Night)], res.Items.Select(i => (i.TmdbId, i.Source)));
+        Assert.Equal(2, res.Total);
+    }
+
+    [Fact]
+    public async Task TheNightsOfAMember_LeaveOutTheTitlesWatchedElsewhere()
+    {
+        var handler = Build();
+        ParticipatesIn(Evt("A", date: "2026-01-01", winnerMovieId: "m-night"));
+        WinnerMoviesAre(Mov("m-night", tmdbId: 10));
+        await WatchElsewhereAsync(20, new DateTimeOffset(2026, 3, 1, 12, 0, 0, TimeSpan.Zero));
+
+        var res = await handler.HandleNightsForUserAsync("u1", 6);
+
+        Assert.Equal(10, Assert.Single(res.Items).TmdbId);
+        Assert.Equal(1, res.Total);
+    }
+
+    [Fact]
     public async Task HandleForUser_PrivateProfile_StillReturnsWatchedMovies()
     {
         var handler = Build();

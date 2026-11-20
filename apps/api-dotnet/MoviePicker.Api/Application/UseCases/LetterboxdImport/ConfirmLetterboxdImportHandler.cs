@@ -1,7 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.UsageCounts;
-using MoviePicker.Api.Application.UseCases.Watchlist;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -11,25 +10,19 @@ public sealed class ConfirmLetterboxdImportHandler : IConfirmLetterboxdImportHan
 {
     private const int MaxSelections = LetterboxdImportLimits.MaxRows;
 
-    private readonly IWatchlistRepository _watchlist;
-    private readonly IAddToWatchlistHandler _addToWatchlist;
     private readonly IUserRepository _users;
-    private readonly LetterboxdWatchedWriter _watchedWriter;
+    private readonly LetterboxdSelectionsWriter _writer;
     private readonly LetterboxdLinkedCounter _linkedCounter;
     private readonly IUsageRecorder _usage;
 
     public ConfirmLetterboxdImportHandler(
-        IWatchlistRepository watchlist,
-        IAddToWatchlistHandler addToWatchlist,
         IUserRepository users,
-        LetterboxdWatchedWriter watchedWriter,
+        LetterboxdSelectionsWriter writer,
         LetterboxdLinkedCounter linkedCounter,
         IUsageRecorder usage)
     {
-        _watchlist = watchlist;
-        _addToWatchlist = addToWatchlist;
         _users = users;
-        _watchedWriter = watchedWriter;
+        _writer = writer;
         _linkedCounter = linkedCounter;
         _usage = usage;
     }
@@ -43,14 +36,16 @@ public sealed class ConfirmLetterboxdImportHandler : IConfirmLetterboxdImportHan
         if (request.Selections.Count > MaxSelections || watchedSelections.Count > MaxSelections)
             throw Errors.TooManySelections(MaxSelections);
 
-        var (added, alreadyPresent) = await ConfirmWatchlistAsync(userId, request.Selections, ct);
-        var (watchedAdded, watchedAlreadyPresent) = await ConfirmWatchedAsync(userId, watchedSelections, ct);
+        var (added, alreadyPresent) = await _writer.WriteWatchlistAsync(userId, request.Selections, ct);
+        var (watchedAdded, watchedAlreadyPresent) = await _writer.WriteWatchedAsync(userId, watchedSelections, ct);
 
-        var pendingCount = await PersistPendingCountAsync(
-            userId,
-            request.Selections.Count + watchedSelections.Count,
-            request.RemainingUnresolvedCount,
-            ct);
+        var pendingCount = request.FromExport == true
+            ? await CurrentPendingCountAsync(userId, ct)
+            : await PersistPendingCountAsync(
+                userId,
+                request.Selections.Count + watchedSelections.Count,
+                request.RemainingUnresolvedCount,
+                ct);
         if (request.Selections.Count + watchedSelections.Count > 0)
             await _linkedCounter.RefreshAsync(userId, ct);
         await _usage.RecordAsync(
@@ -66,60 +61,8 @@ public sealed class ConfirmLetterboxdImportHandler : IConfirmLetterboxdImportHan
         };
     }
 
-    private async Task<(int Added, int AlreadyPresent)> ConfirmWatchlistAsync(
-        string userId,
-        IReadOnlyList<AddWatchlistItemRequest> selections,
-        CancellationToken ct)
-    {
-        if (selections.Count == 0)
-            return (0, 0);
-
-        var added = 0;
-        var alreadyPresent = 0;
-        var existingItems = await _watchlist.ListByUserIdAsync(userId, int.MaxValue, ct);
-        var existingKeys = existingItems.Select(i => (i.TmdbId, i.MediaType)).ToHashSet();
-
-        foreach (var selection in selections)
-        {
-            if (existingKeys.Contains((selection.TmdbId, selection.MediaType)))
-            {
-                alreadyPresent++;
-                if (!string.IsNullOrWhiteSpace(selection.LetterboxdSlug))
-                {
-                    await _watchlist.SetLetterboxdSlugAsync(
-                        userId,
-                        selection.TmdbId,
-                        selection.MediaType,
-                        selection.LetterboxdSlug.Trim(),
-                        ct);
-                }
-
-                continue;
-            }
-
-            await _addToWatchlist.HandleAsync(userId, selection, ct);
-            added++;
-        }
-
-        return (added, alreadyPresent);
-    }
-
-    private async Task<(int Added, int AlreadyPresent)> ConfirmWatchedAsync(
-        string userId,
-        IReadOnlyList<LetterboxdWatchedSelectionRequest> selections,
-        CancellationToken ct)
-    {
-        var added = 0;
-        foreach (var selection in selections)
-        {
-            var toWatch = await _watchlist.GetOneAsync(userId, selection.TmdbId, selection.MediaType, ct);
-            var keepOnWatchlist = !string.IsNullOrEmpty(toWatch?.LetterboxdSlug);
-            if ((await _watchedWriter.WriteAsync(userId, selection, keepOnWatchlist, ct)).Added)
-                added++;
-        }
-
-        return (added, selections.Count - added);
-    }
+    private async Task<int> CurrentPendingCountAsync(string userId, CancellationToken ct) =>
+        (await _users.GetByIdAsync(userId, ct) ?? throw Errors.UserNotFound()).LetterboxdPendingReconciliationCount;
 
     private async Task<int> PersistPendingCountAsync(
         string userId,

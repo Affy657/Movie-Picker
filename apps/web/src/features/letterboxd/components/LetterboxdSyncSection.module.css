@@ -1,15 +1,8 @@
-.connectionRow {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: var(--tap-target-min);
-}
-
 .connectionActions {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
-  gap: var(--space-1-5);
+  gap: var(--space-2);
   margin-left: auto;
 }
 
@@ -20,11 +13,7 @@
 }
 
 .usernameValue {
-  min-width: 0;
   overflow-wrap: anywhere;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
 }
 
 .usernameInput {
@@ -40,7 +29,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-1);
-  margin: 0;
+  margin: var(--space-1) 0 0;
   font-size: var(--font-size-xs);
   line-height: var(--leading-snug);
 }
@@ -68,26 +57,21 @@
   transform: translateY(var(--text-optical-nudge));
 }
 
-.syncBtn {
-  flex-shrink: 0;
+.errorLine {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-error);
 }
 
-.syncTargets {
-  display: flex;
-  flex-direction: column;
-  padding-bottom: var(--space-1);
-}
-
-.syncTarget {
-  padding: var(--space-3) 0;
-  border-top: 1px solid var(--color-border-subtle);
+.trailingBlock {
+  margin: 0 0 var(--space-4);
 }
 
 .report {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  margin-top: var(--space-2);
   padding: var(--space-3) var(--space-3-5);
 }
 

@@ -30,6 +30,11 @@ import AddToListMenu from '@/features/library/components/AddToListMenu';
 import type { WatchedStatus } from '@/features/library/api/watchedApi';
 import WatchedRating, { hasWatchedRating } from '@/features/library/components/WatchedRating';
 import WatchedToggle from '@/features/library/components/WatchedToggle';
+import FavoriteToggle from '@/features/profile/components/FavoriteToggle';
+import {
+  useFavoriteToggle,
+  type FavoriteToggleState,
+} from '@/features/profile/hooks/useFavoriteToggle';
 import { useWatchedTitle } from '@/features/library/hooks/useWatched';
 import { ApiError } from '@/shared/api/apiError';
 import BackLink from '@/shared/components/BackLink';
@@ -100,6 +105,7 @@ interface HeroActionsProps {
   fromNight: boolean;
   inWatchlist: boolean;
   watched: { status: WatchedStatus | undefined; pending: boolean; toggle: () => void };
+  favorite: FavoriteToggleState;
   trailer: MovieVideo | undefined;
   shareUrl: string;
   onPropose: () => void;
@@ -115,6 +121,7 @@ function HeroActions({
   fromNight,
   inWatchlist,
   watched,
+  favorite,
   trailer,
   shareUrl,
   onPropose,
@@ -157,6 +164,7 @@ function HeroActions({
       item={item}
       inWatchlist={inWatchlist}
       watched={watched}
+      favorite={favorite}
       disabled={titleUnknown}
       isMobile={isMobile}
       onToggleWatchlist={onToggleWatchlist}
@@ -192,6 +200,7 @@ function MemberActions({
   item,
   inWatchlist,
   watched,
+  favorite,
   disabled,
   isMobile,
   onToggleWatchlist,
@@ -200,6 +209,7 @@ function MemberActions({
   item: WatchlistToggleItem;
   inWatchlist: boolean;
   watched: HeroActionsProps['watched'];
+  favorite: FavoriteToggleState;
   disabled: boolean;
   isMobile: boolean;
   onToggleWatchlist: () => void;
@@ -233,6 +243,9 @@ function MemberActions({
     />
   );
   const lists = <AddToListMenu item={item} disabled={disabled} fullWidth={isMobile} />;
+  const favoriteToggle = (
+    <FavoriteToggle title={item.title} favorite={favorite} disabled={disabled} compact={isMobile} />
+  );
 
   if (isMobile) {
     return (
@@ -241,7 +254,10 @@ function MemberActions({
           {watchlistToggle}
           {watchedToggle}
         </div>
-        {lists}
+        <div className={styles.actionRow}>
+          <div className={styles.grow}>{lists}</div>
+          {favoriteToggle}
+        </div>
       </>
     );
   }
@@ -249,6 +265,7 @@ function MemberActions({
     <div className={styles.actionRow}>
       {lists}
       {watchlistToggle}
+      {favoriteToggle}
       {watchedToggle}
     </div>
   );
@@ -387,6 +404,7 @@ function MoviePageContent({
   const videos = videosOf(details);
   const item = libraryItemOf({ tmdbId, mediaType, details, seed, view });
   const watched = useWatchedTitle(item, signedIn);
+  const favorite = useFavoriteToggle(item);
   const failedWithoutSeed = detailsQuery.isError && !seed;
 
   usePageSeo({
@@ -453,6 +471,7 @@ function MoviePageContent({
               signedIn={signedIn}
               fromNight={!!nightSlug}
               inWatchlist={watchlist.has(item)}
+              favorite={favorite}
               watched={{
                 status: watched.status,
                 pending: watched.isPending,
@@ -468,9 +487,9 @@ function MoviePageContent({
           }
         />
         <div className={styles.content}>
-          {watchlist.error || watched.error ? (
+          {watchlist.error || watched.error || favorite.error ? (
             <p className="error" role="alert">
-              {watchlist.error ?? watched.error}
+              {watchlist.error ?? watched.error ?? favorite.error}
             </p>
           ) : null}
           <div className={styles.body}>

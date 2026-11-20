@@ -73,8 +73,13 @@
     flex-wrap: nowrap;
   }
 
-  .trailer {
+  .trailer,
+  .grow {
     flex: 1 1 auto;
+  }
+
+  .grow {
+    min-width: 0;
   }
 
   .pairItem {

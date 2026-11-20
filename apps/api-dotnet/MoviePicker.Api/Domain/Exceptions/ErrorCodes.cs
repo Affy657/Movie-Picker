@@ -134,6 +134,7 @@ public static class ErrorCodes
     public const string LetterboxdSyncUnavailable = "letterboxd_sync_unavailable";
     public const string LetterboxdWatchlistIncomplete = "letterboxd_watchlist_incomplete";
     public const string LetterboxdWatchedIncomplete = "letterboxd_watched_incomplete";
+    public const string LetterboxdExportUnreadable = "letterboxd_export_unreadable";
     public const string InvalidDateFormat = "invalid_date_format";
     public const string InvalidTimeFormat = "invalid_time_format";
     public const string ThemeColorOutOfRange = "theme_color_out_of_range";

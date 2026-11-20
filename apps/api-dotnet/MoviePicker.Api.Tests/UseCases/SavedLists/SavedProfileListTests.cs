@@ -57,7 +57,7 @@ public sealed class SavedProfileListTests
 
     private void MemberWatched(params int[] tmdbIds) =>
         _kit.MemberWatched
-            .Setup(h => h.HandleForUserAsync(Member, It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Setup(h => h.HandleNightsForUserAsync(Member, It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new UserWatchedMoviesResponse { Items = [.. tmdbIds.Select(Watched)], Total = tmdbIds.Length });
 
     private void MemberHasEverything()

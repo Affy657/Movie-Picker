@@ -168,6 +168,24 @@ public sealed class LetterboxdWatchlistClientTests
     }
 
     [Fact]
+    public async Task GetWatchlistAsync_NextPageUnreachable_KeepsTheFirstPageAsAPartialRead()
+    {
+        var (sut, _) = CreateSut(uri => PageNumber(uri) == 1
+            ? new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(Page(3, Poster("dune", "Dune (2021)"), Poster("akira", "Akira (1988)")))
+            }
+            : new HttpResponseMessage(HttpStatusCode.Forbidden) { Content = new StringContent("Just a moment...") });
+
+        var snapshot = await sut.GetWatchlistAsync("affy657");
+
+        Assert.True(snapshot.IsComplete);
+        Assert.True(snapshot.IsTruncated);
+        Assert.False(snapshot.ConfirmsDepartures);
+        Assert.Equal(["dune", "akira"], snapshot.Films.Select(f => f.Slug));
+    }
+
+    [Fact]
     public async Task GetWatchlistAsync_WatchlistLongerThanThePageBudget_KeepsWhatWasRead()
     {
         const int announced = 5_000;

@@ -56,7 +56,7 @@ public sealed class MemberProfileListReader
             return ListSourceContent.Withdrawn(ListSourceUnavailableReason.Private);
 
         IReadOnlyList<SavedListTitle> titles = type == ListSourceType.MemberWatched
-            ? [.. (await _watched.HandleForUserAsync(member.Id, WatchedTake, ct)).Items.Select(TitleOf)]
+            ? [.. (await _watched.HandleNightsForUserAsync(member.Id, WatchedTake, ct)).Items.Select(TitleOf)]
             : [.. (await _proposals.HandleForUserAsync(member.Id, type == ListSourceType.MemberWinningProposals, ct)).Items.Select(TitleOf)];
         return ListSourceContent.OfMemberProfile(member, titles);
     }

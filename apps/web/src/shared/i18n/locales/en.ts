@@ -622,7 +622,7 @@ export const en: Locale = {
       deleteAccountConfirmationFallbackError:
         'Deletion failed. Check the confirmation you entered.',
       letterboxd: {
-        title: 'Letterboxd',
+        title: 'Letterboxd sync',
         helpTitle: 'How it works',
         helpSync:
           'Your public Letterboxd watchlist is copied here, at most once a day when you open the app. Nothing is ever written back to Letterboxd: adding, removing, or proposing a film from Movie Picker never changes your watchlist there.',
@@ -640,6 +640,7 @@ export const en: Locale = {
         statusOff: 'Add your username to turn the sync on.',
         statusPending: 'Sync is on, first read coming up.',
         statusSyncedAt: 'Synced on {{date}}.',
+        syncRowLabel: 'Sync',
         syncNow: 'Sync now',
         syncSubmitting: 'Reading Letterboxd…',
         syncFallbackError: 'Sync failed. Try again in a moment.',
@@ -660,10 +661,48 @@ export const en: Locale = {
         reportPending: 'Choose for {{count}} ambiguous film(s)',
         reportUnmatched: 'Show the {{count}} film(s) not found on TMDB',
         reportTruncated: '{{count}} film(s) skipped: too many films at once.',
+        reportWatchedPartial:
+          'Watched films: Letterboxd only lets us read your recent releases and your diary, {{count}} other film(s) could not be read. Import the Letterboxd export file to get them.',
         attentionMessageOne: '1 movie could not be identified automatically.',
         attentionMessage: '{{count}} movies could not be identified automatically.',
         attentionConfirm: 'Confirm them',
-        syncPersistentHint: 'At most one read a day. Nothing is ever written back to Letterboxd.',
+        syncPersistentHint:
+          'Your latest additions on Letterboxd come here, at most once a day. Nothing is ever written back to Letterboxd.',
+        export: {
+          cardTitle: 'Letterboxd import',
+          rowLabel: 'Import your Letterboxd lists',
+          rowHint:
+            'Your whole watchlist and all your watched films at once, from the Letterboxd export file. Then the sync follows your new additions.',
+          open: 'Import',
+          title: 'Import from Letterboxd',
+          stepExport:
+            'On Letterboxd, open your settings, “Import & Export” tab, then “Export Your Data”. Letterboxd gives you a .zip file.',
+          exportLink: 'Open the export page',
+          stepFile: 'Choose that .zip file here.',
+          chooseFile: 'Choose the file',
+          unzippedHint:
+            'Did your browser unzip it? Choose the watched.csv, watchlist.csv, ratings.csv and diary.csv files of the folder.',
+          tooLarge: 'This file is too large: 12 MB at most.',
+          readError: 'This file could not be read. Try again.',
+          reading: 'Reading the file…',
+          found: 'In this file, choose what to import:',
+          filmsOne: '1 film',
+          films: '{{count}} films',
+          nothingFound: 'This file holds no watched film and no film to watch.',
+          noDuplicate: 'Films already in Movie Picker are not added twice.',
+          start: 'Import',
+          progress: 'Importing: {{done}} of {{total}} films',
+          keepOpen: 'Keep this window open until the end.',
+          stop: 'Stop the import',
+          finishedOne: 'Import done: 1 film read.',
+          finished: 'Import done: {{count}} films read.',
+          stopped:
+            'Import stopped at {{done}} of {{total}} films. Run it again to finish: nothing gets added twice.',
+          failed:
+            'The import broke off at {{done}} of {{total}} films. Run it again to finish: nothing gets added twice.',
+          again: 'Run again',
+          tally: '{{list}}: {{added}} film(s) added, {{already}} already there.',
+        },
         choicesTitleOne: 'One title to confirm',
         choicesTitle: '{{count}} titles to confirm',
         choicesStepOf:
@@ -1561,6 +1600,14 @@ export const en: Locale = {
     propose: 'Suggest for a night',
     trailer: 'Trailer',
     watchlistToggle: 'Watchlist',
+    favorite: {
+      toggle: 'Favorite',
+      error: 'Your favorites could not be updated. Try again.',
+      replaceTitle: 'Replace a favorite',
+      replaceIntro: 'Your three favorites are taken. Which one makes room for {{title}}?',
+      replaceGroup: 'Your favorites',
+      replaceConfirm: 'Replace',
+    },
     share: 'Share',
     shareText: '“{{title}}” on Movie Picker',
     synopsis: 'Synopsis',
@@ -1902,7 +1949,7 @@ export const en: Locale = {
       unavailableUnsaveMessage: 'Its films are no longer visible. You can unsave it.',
       keepCopy: 'Keep a copy',
       deletedName: 'Deleted list',
-      nameMemberWatched: 'Watched by {{name}}',
+      nameMemberWatched: 'Watched on Movie Picker by {{name}}',
       nameMemberProposals: 'Proposed by {{name}}',
       nameMemberWinningProposals: 'Winning proposals by {{name}}',
       nameMemberWinningProposalsElided: 'Winning proposals by {{name}}',
@@ -2482,6 +2529,8 @@ export const en: Locale = {
       'Letterboxd or TMDB is not answering right now. Try again in a few minutes.',
     letterboxd_watchlist_incomplete:
       'Letterboxd watchlist unreachable. Check the spelling of the username and that your Letterboxd profile is public.',
+    letterboxd_export_unreadable:
+      'This file is not the Letterboxd export: choose the .zip downloaded from Letterboxd.',
     letterboxd_watched_incomplete:
       'Letterboxd watched films unreachable. Check the spelling of the username and that your Letterboxd profile is public.',
     invalid_date_format: 'date must use the YYYY-MM-DD format.',
@@ -2984,22 +3033,22 @@ export const en: Locale = {
       sortAddedAt: 'Added on',
     },
     movies: {
-      title: 'Movies watched',
+      title: 'Watched on Movie Picker',
       seeAll: 'See all',
       hidden: 'Hidden',
       ownerRating: "@{{handle}}'s rating: {{value}}",
       ownRating: 'Your rating: {{value}}',
       backLink: 'Back to profile',
-      pageTitle: 'Movies watched by {{name}}',
+      pageTitle: 'Movies watched on Movie Picker by {{name}}',
       seoDescription:
         'Movies watched by {{name}} (@{{handle}}) on Movie Picker: movie nights won and films picked together.',
       pageSubtitleOne: '{{count}} movie watched',
       pageSubtitle: '{{count}} movies watched',
       loadError: "Could not load this user's watched movies.",
       previewLoadError: 'The watched movies could not be loaded.',
-      listAria: 'Watched movies',
+      listAria: 'Watched on Movie Picker',
       emptyTitle: 'No movies watched yet',
-      emptyMessage: "This person hasn't won a movie night yet.",
+      emptyMessage: "This person hasn't watched a movie at a Movie Picker night yet.",
       loadMoreOne: 'Load the remaining movie',
       loadMore: 'Load {{count}} remaining movies',
       toolbar: {
@@ -3224,7 +3273,7 @@ export const en: Locale = {
         'The Movie Database, the open catalogue supplying titles, synopses, genres and posters.',
       letterboxd: 'Letterboxd',
       letterboxdValue:
-        'Watchlist and watched films imported from the public profile. With no public API the page is read as it is: 300 films at most per list, once every 24 hours per account.',
+        'Watchlist and watched films imported from the public profile. With no public API the page is read as it is, once every 24 hours per account: the whole watchlist, and for watched films the one page Letterboxd still serves, topped up by the diary. The full history comes through the Letterboxd export file, read on the server then imported in batches of 50.',
       letterboxdHint:
         "A social network for film lovers: a profile's public list is read, then matched against the catalogue.",
       oauth: 'Google, GitHub',
@@ -3414,10 +3463,14 @@ export const en: Locale = {
         'The entries at the top of the backlog, taken in order. The order follows measured usage: what brings people into a night comes before new surfaces.',
       nextHint:
         'Usage has been measured since 1.16.0: each entry is then judged on what it changes in the numbers.',
-      nextItem1: 'Favorite from a film page',
-      nextItem2: 'Streaming services per account',
-      nextItem3: 'Group leaderboard',
-      nextItem4: 'Automatic "already seen" in a night',
+      nextItem1: 'Streaming services per account',
+      nextItem2: 'Group leaderboard',
+      nextItem3: 'Automatic "already seen" in a night',
+      nextItem4: 'Profile colour seen by everyone',
+      nextItem5: 'A showcase list on the profile',
+      nextItem6: 'Avatar frames to unlock',
+      nextItem7: 'Global search',
+      nextItem8: 'Edit your profile from your profile',
       v2When: 'No date announced',
       v2What: 'V2',
       v2Detail:

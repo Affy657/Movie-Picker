@@ -672,4 +672,107 @@ describe('MoviePage', () => {
 
     expect(screen.getByTestId('location')).toHaveTextContent('/');
   });
+
+  describe('favorite', () => {
+    const HEAT = { tmdbId: 949, mediaType: 'movie', title: 'Heat', year: '1995', posterPath: null };
+    const ALIEN = {
+      tmdbId: 348,
+      mediaType: 'movie',
+      title: 'Alien',
+      year: '1979',
+      posterPath: null,
+    };
+    const AKIRA = {
+      tmdbId: 149,
+      mediaType: 'movie',
+      title: 'Akira',
+      year: '1988',
+      posterPath: null,
+    };
+    const DUNE = { tmdbId: 438631, mediaType: 'movie', title: 'Dune', year: '2021' };
+    type Favorite = typeof HEAT;
+
+    function favoritesServer(initial: Favorite[]) {
+      let favorites = [...initial];
+      const calls: string[] = [];
+      const handlers = [
+        http.get(`${TEST_API_V1}/auth/me`, () =>
+          HttpResponse.json({
+            userId: 'u1',
+            displayName: 'Alice',
+            emailMasked: 'a***@test.local',
+            uiTheme: 'system',
+            accentColor: 'default',
+            ratingScale: 'ten',
+            favorites,
+          })
+        ),
+        http.post(`${TEST_API_V1}/users/me/favorites`, async ({ request }) => {
+          const body = (await request.json()) as Favorite;
+          calls.push(`add ${body.tmdbId}`);
+          favorites = [...favorites, { ...body, posterPath: body.posterPath ?? null }];
+          return HttpResponse.json({ items: favorites });
+        }),
+        http.delete(`${TEST_API_V1}/users/me/favorites/:tmdbId`, ({ params }) => {
+          calls.push(`remove ${String(params.tmdbId)}`);
+          favorites = favorites.filter((favorite) => String(favorite.tmdbId) !== params.tmdbId);
+          return HttpResponse.json({ items: favorites });
+        }),
+      ];
+      return { handlers, calls };
+    }
+
+    it('adds the film to the profile favorites, then takes it out', async () => {
+      const user = userEvent.setup();
+      const { handlers, calls } = favoritesServer([HEAT]);
+      server.use(...handlers, ...signedInWith());
+      renderPage();
+
+      const toggle = await screen.findByRole('button', { name: 'Favori' });
+      expect(toggle).toHaveAttribute('aria-pressed', 'false');
+      await user.click(toggle);
+      await waitFor(() => expect(toggle).toHaveAttribute('aria-pressed', 'true'));
+
+      await user.click(toggle);
+      await waitFor(() => expect(toggle).toHaveAttribute('aria-pressed', 'false'));
+      expect(calls).toEqual([`add ${DUNE.tmdbId}`, `remove ${DUNE.tmdbId}`]);
+    });
+
+    it('asks which favorite to replace once the three places are taken', async () => {
+      const user = userEvent.setup();
+      const { handlers, calls } = favoritesServer([HEAT, ALIEN, AKIRA]);
+      server.use(...handlers, ...signedInWith());
+      renderPage();
+
+      const toggle = await screen.findByRole('button', { name: 'Favori' });
+      await user.click(toggle);
+
+      const dialog = await screen.findByRole('dialog', { name: 'Remplacer un favori' });
+      expect(
+        within(dialog).getByText('Vos trois favoris sont choisis. Lequel laisse sa place à Dune ?')
+      ).toBeInTheDocument();
+      const replace = within(dialog).getByRole('button', { name: 'Remplacer' });
+      expect(replace).toBeDisabled();
+      await user.click(within(dialog).getByRole('radio', { name: /Alien/ }));
+      await user.click(replace);
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(toggle).toHaveAttribute('aria-pressed', 'true');
+      expect(calls).toEqual([`remove ${ALIEN.tmdbId}`, `add ${DUNE.tmdbId}`]);
+    });
+
+    it('keeps the three favorites when the choice is cancelled', async () => {
+      const user = userEvent.setup();
+      const { handlers, calls } = favoritesServer([HEAT, ALIEN, AKIRA]);
+      server.use(...handlers, ...signedInWith());
+      renderPage();
+
+      await user.click(await screen.findByRole('button', { name: 'Favori' }));
+      const dialog = await screen.findByRole('dialog', { name: 'Remplacer un favori' });
+      await user.click(within(dialog).getByRole('button', { name: 'Annuler' }));
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(calls).toEqual([]);
+    });
+  });
 });

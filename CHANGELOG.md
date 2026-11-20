@@ -8,6 +8,21 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Importer d’un coup toutes vos listes Letterboxd** : dans Intégrations, la carte Import Letterboxd lit le fichier d’export que Letterboxd vous donne et ajoute toute votre watchlist et tous vos films vus, avec leur note et leur date, sans rien ajouter deux fois. Les titres ambigus se choisissent comme pour la synchronisation, qui suit ensuite vos nouveaux ajouts.
+
+- **Un film devient favori depuis sa page** : le bouton Favori l${q}ajoute aux trois favoris de votre profil ou l${q}en retire, et quand les trois places sont prises, vous choisissez celui qu${q}il remplace.
+
+### Changed
+
+- **Le profil montre les films vus sur Movie Picker** : la rangée, sa page et la liste qu'on en enregistre ne gardent que les films vus en soirée, sans ceux de Letterboxd ni ceux marqués à la main. Votre liste « Films vus » de Mes listes les garde tous.
+- **La carte Letterboxd des réglages se lit d'un coup d'œil** : votre compte, À voir, Films vus et la synchronisation ont chacun leur ligne, avec les mêmes espacements et les mêmes boutons que les autres réglages.
+
+### Fixed
+
+- **La synchronisation des films vus Letterboxd fonctionne de nouveau** : Letterboxd ne laisse plus lire la liste entière, Movie Picker recopie donc vos films sortis récemment et ceux de votre journal, et dit combien n'ont pas pu être lus. Jusqu'ici, plus rien n'arrivait.
+
 ## [1.22.0] - 2026-11-20
 
 ### Added

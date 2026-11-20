@@ -139,7 +139,8 @@ public sealed class LetterboxdWatchedSynchronizer
         var onLetterboxd = snapshot.Films.Select(film => film.Slug).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var departedIds = entries
             .Where(entry => entry.Origin == WatchedOrigin.Letterboxd
-                && !(entry.LetterboxdSlug is { } slug && onLetterboxd.Contains(slug))
+                && entry.LetterboxdSlug is { Length: > 0 } slug
+                && !onLetterboxd.Contains(slug)
                 && !relinked.Contains((entry.TmdbId, entry.MediaType)))
             .Select(entry => entry.Id)
             .ToList();

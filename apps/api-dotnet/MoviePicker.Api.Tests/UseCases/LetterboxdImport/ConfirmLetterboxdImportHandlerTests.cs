@@ -44,10 +44,11 @@ public sealed class ConfirmLetterboxdImportHandlerTests
             });
         var facts = new MovieListItemFactory(_posters.Object, _tmdb.Object, NullLogger<MovieListItemFactory>.Instance);
         _sut = new ConfirmLetterboxdImportHandler(
-            _watchlist.Object,
-            _addToWatchlist.Object,
             _users.Object,
-            new LetterboxdWatchedWriter(_watched, _watchlist.Object, _users.Object, facts, _clock),
+            new LetterboxdSelectionsWriter(
+                _watchlist.Object,
+                _addToWatchlist.Object,
+                new LetterboxdWatchedWriter(_watched, _watchlist.Object, _users.Object, facts, _clock)),
             new LetterboxdLinkedCounter(_users.Object, _watchlist.Object, _watched),
             _usage.Object);
     }
@@ -204,6 +205,24 @@ public sealed class ConfirmLetterboxdImportHandlerTests
                 It.Is<AddWatchlistItemRequest>(r => r.LetterboxdSlug == "the-matrix"),
                 It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ChoicesFromAnExportImport_LeaveTheSyncPendingCountAlone()
+    {
+        var result = await _sut.HandleAsync(
+            UserId,
+            new LetterboxdImportConfirmRequest
+            {
+                Selections = [Selection(42)],
+                RemainingUnresolvedCount = 0,
+                FromExport = true
+            });
+
+        Assert.Equal((1, 4), (result.Added, result.PendingReconciliationCount));
+        _users.Verify(
+            u => u.SetLetterboxdPendingReconciliationCountAsync(UserId, It.IsAny<int>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]

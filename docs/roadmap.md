@@ -34,15 +34,14 @@ Rien pour l'instant.
 
 ## ⏭️ Prochainement
 
-1. `S` **Favori depuis la page d'un film** : un bouton de la page d'un film l'ajoute aux favoris du profil ou l'en retire ; quand les trois places sont prises, on choisit lequel remplacer.
-2. `L` **Plateformes de streaming par compte** : chacun renseigne dans son profil ses abonnements, et une soirée marque disponible un film présent sur la plateforme d'au moins un participant. Un panneau de la soirée liste les plateformes retenues, à cocher ou décocher à la main.
-3. `M` **Classement d'un groupe** : les membres d'un groupe classés selon la note moyenne des films qu'ils ont proposés, pour savoir qui propose les meilleurs films.
-4. `M` **Déjà vu automatique en soirée** : dans une soirée, un film qui figure dans les films vus d'un participant est marqué « Déjà vu » pour lui, sans qu'il ait à le faire. Seulement pour qui a rendu ses films vus visibles, pour ne rien dévoiler d'une liste privée.
-5. `M` **Couleur du profil visible de tous** : la couleur choisie dans le compte teinte aussi le profil public (fondu de la bannière, boutons, contour de l'avatar) et l'avatar du membre dans les soirées, au lieu de ne se voir que chez lui.
-6. `M` **Une liste en vitrine sur le profil** : un membre épingle l'une de ses listes publiques en haut de son profil, avec ses affiches et son nombre de films, pour la montrer à ceux qui le visitent.
-7. `M` **Cadres d'avatar à débloquer** : un contour autour de l'avatar, gagné avec la flamme de soirées, le soutien Ko-fi ou un nombre de soirées, que le membre choisit d'afficher et que tous voient, sur son profil comme en soirée.
-8. `M` **Recherche globale dans la barre de navigation** : une loupe toujours présente dans la barre de navigation, sur ordinateur comme sur téléphone, ouvre une seule recherche sur les films et séries, les membres, les listes, les sagas, ses soirées et ses groupes, avec les résultats rangés par type.
-9. `M` **Modifier son profil depuis son profil** : un bouton « Modifier le profil » de sa propre page ouvre une fenêtre ou une page qui réunit nom, pseudo, bio, avatar, bannière, favoris et couleur, avec l'aperçu du résultat. Elle remplace la rubrique Profil des paramètres.
+1. `L` **Plateformes de streaming par compte** : chacun renseigne dans son profil ses abonnements, et une soirée marque disponible un film présent sur la plateforme d'au moins un participant. Un panneau de la soirée liste les plateformes retenues, à cocher ou décocher à la main.
+2. `M` **Classement d'un groupe** : les membres d'un groupe classés selon la note moyenne des films qu'ils ont proposés, pour savoir qui propose les meilleurs films.
+3. `M` **Déjà vu automatique en soirée** : dans une soirée, un film qui figure dans les films vus d'un participant est marqué « Déjà vu » pour lui, sans qu'il ait à le faire. Seulement pour qui a rendu ses films vus visibles, pour ne rien dévoiler d'une liste privée.
+4. `M` **Couleur du profil visible de tous** : la couleur choisie dans le compte teinte aussi le profil public (fondu de la bannière, boutons, contour de l'avatar) et l'avatar du membre dans les soirées, au lieu de ne se voir que chez lui.
+5. `M` **Une liste en vitrine sur le profil** : un membre épingle l'une de ses listes publiques en haut de son profil, avec ses affiches et son nombre de films, pour la montrer à ceux qui le visitent.
+6. `M` **Cadres d'avatar à débloquer** : un contour autour de l'avatar, gagné avec la flamme de soirées, le soutien Ko-fi ou un nombre de soirées, que le membre choisit d'afficher et que tous voient, sur son profil comme en soirée.
+7. `M` **Recherche globale dans la barre de navigation** : une loupe toujours présente dans la barre de navigation, sur ordinateur comme sur téléphone, ouvre une seule recherche sur les films et séries, les membres, les listes, les sagas, ses soirées et ses groupes, avec les résultats rangés par type.
+8. `M` **Modifier son profil depuis son profil** : un bouton « Modifier le profil » de sa propre page ouvre une fenêtre ou une page qui réunit nom, pseudo, bio, avatar, bannière, favoris et couleur, avec l'aperçu du résultat. Elle remplace la rubrique Profil des paramètres.
 
 ---
 
@@ -112,5 +111,4 @@ Rien pour l'instant.
 
 ## 🗄️ Rejetée
 
-- `M` **Films vus sur Movie Picker** : les films vus en soirée sur Movie Picker ont leur propre liste, à part de « Films vus », qui mélange aussi Letterboxd et les films marqués à la main. Écartée : le filtre « Vu où » de Films vus suffit, et Mes listes reprend désormais les films proposés et les propositions gagnantes.
 - `S` **Description de soirée** : champ libre en complément du titre, à la création comme ensuite par l'hôte, affiché en tête de la page soirée pour dire à l'invité dans quoi il entre (thème, consignes, lieu). Écartée : la fenêtre de création garde le moins de champs possible, et le titre et le thème disent déjà à l'invité dans quoi il entre.

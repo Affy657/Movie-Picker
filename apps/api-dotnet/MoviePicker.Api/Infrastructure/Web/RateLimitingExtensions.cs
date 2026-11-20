@@ -52,6 +52,7 @@ public static class RateLimitingExtensions
     public const string WatchedReadPolicy = "watched-read";
     public const string WatchedMutationPolicy = "watched-mutation";
     public const string LetterboxdImportPolicy = "letterboxd-import";
+    public const string LetterboxdExportImportPolicy = "letterboxd-export-import";
     public const string KofiWebhookPolicy = "kofi-webhook";
     public const string IdeaSuggestionPolicy = "idea-suggestion";
     public const string IdeaSuggestionAddressPolicy = "idea-suggestion-address";
@@ -126,6 +127,7 @@ public static class RateLimitingExtensions
         new(WatchedReadPolicy, 120, 1),
         new(WatchedMutationPolicy, 60, 1),
         new(LetterboxdImportPolicy, 10, 1),
+        new(LetterboxdExportImportPolicy, 60, 1),
         new(KofiWebhookPolicy, 20, 1, QuotaScope.Address),
         new(IdeaSuggestionPolicy, 10, 60),
         new(IdeaSuggestionAddressPolicy, 20, 60, QuotaScope.Address),

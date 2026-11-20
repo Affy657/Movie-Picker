@@ -33,6 +33,7 @@ interface LetterboxdChoicesModalProps {
   choices: LetterboxdPendingChoice[];
   onClose: () => void;
   onConfirmed: (result: LetterboxdConfirmResult, unresolved: LetterboxdPendingChoice[]) => void;
+  fromExport?: boolean;
 }
 
 type Answer = { candidate: LetterboxdCandidate } | 'skip';
@@ -113,6 +114,7 @@ export default function LetterboxdChoicesModal({
   choices,
   onClose,
   onConfirmed,
+  fromExport = false,
 }: Readonly<LetterboxdChoicesModalProps>) {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
@@ -142,7 +144,8 @@ export default function LetterboxdChoicesModal({
     const result = await confirmLetterboxdChoices(
       selections,
       watchedSelections,
-      stillPending.length
+      stillPending.length,
+      fromExport
     );
     track('letterboxd_choices_confirmed', {
       selected: selections.length + watchedSelections.length,

@@ -12,7 +12,7 @@ public sealed partial class LetterboxdWatchlistClient : ILetterboxdWatchlistClie
     private const string SiteRoot = "https://letterboxd.com/";
 
     private static readonly FilmList Watchlist = new("watchlist", "watchlist/", ParseWatchlistTotal, NeverEmptyWithoutCounter);
-    private static readonly FilmList WatchedFilms = new("watched films", "films/by/date/", ParseWatchedTotal, IsEmptyFilmsPageOf);
+    private static readonly FilmList WatchedFilms = new("watched films", "films/", ParseWatchedTotal, IsEmptyFilmsPageOf);
 
     private readonly HttpClient _http;
     private readonly ILogger<LetterboxdWatchlistClient> _logger;
@@ -38,16 +38,23 @@ public sealed partial class LetterboxdWatchlistClient : ILetterboxdWatchlistClie
         if (!snapshot.IsComplete || snapshot.Films.Count == 0)
             return snapshot;
 
-        var watchedOn = await ReadDiaryDatesAsync(NormalizeUsername(username)!, ct);
-        if (watchedOn.Count == 0)
+        var diary = await ReadDiaryAsync(NormalizeUsername(username)!, ct);
+        if (diary.Count == 0)
             return snapshot;
 
-        return snapshot with
+        var watchedOn = diary.ToDictionary(entry => entry.Slug, entry => entry.WatchedOn, StringComparer.OrdinalIgnoreCase);
+        var films = snapshot.Films
+            .Select(film => watchedOn.TryGetValue(film.Slug, out var date) ? film with { WatchedOn = date } : film)
+            .ToList();
+        if (snapshot.IsTruncated)
         {
-            Films = snapshot.Films
-                .Select(film => watchedOn.TryGetValue(film.Slug, out var date) ? film with { WatchedOn = date } : film)
-                .ToList()
-        };
+            var read = films.Select(film => film.Slug).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            films.AddRange(diary
+                .Where(entry => entry.Title.Length > 0 && !read.Contains(entry.Slug))
+                .Select(entry => new LetterboxdFilm(entry.Slug, entry.Title, entry.Year, entry.Rating, entry.WatchedOn)));
+        }
+
+        return snapshot with { Films = films };
     }
 
     private sealed record FilmList(
@@ -56,7 +63,14 @@ public sealed partial class LetterboxdWatchlistClient : ILetterboxdWatchlistClie
         Func<string, int?> ParseTotal,
         Func<string, string, bool> IsEmptyWithoutCounter);
 
-    private readonly record struct PageOutcome(bool Failed, bool Done, int Expected, bool EmptyWithoutCounter = false);
+    private sealed record DiaryEntry(string Slug, string Title, string Year, int? Rating, DateOnly WatchedOn);
+
+    private readonly record struct PageOutcome(
+        bool Failed,
+        bool Done,
+        int Expected,
+        bool EmptyWithoutCounter = false,
+        bool Unreachable = false);
 
     private async Task<LetterboxdFilmsSnapshot> ReadListAsync(FilmList list, string username, CancellationToken ct)
     {
@@ -71,6 +85,8 @@ public sealed partial class LetterboxdWatchlistClient : ILetterboxdWatchlistClie
         for (var page = 1; page <= MaxPages; page++)
         {
             var outcome = await ReadPageAsync(list, normalized, page, expected, films, seen, ct);
+            if (outcome.Unreachable && page > 1)
+                return KeepWhatWasRead(list, normalized, films, expected, page);
             if (outcome.Failed)
                 return LetterboxdFilmsSnapshot.Failed();
             if (outcome.EmptyWithoutCounter)
@@ -85,6 +101,18 @@ public sealed partial class LetterboxdWatchlistClient : ILetterboxdWatchlistClie
             list.Name,
             normalized,
             MaxPages,
+            films.Count,
+            expected);
+        return LetterboxdFilmsSnapshot.Truncated(films, expected);
+    }
+
+    private LetterboxdFilmsSnapshot KeepWhatWasRead(FilmList list, string username, List<LetterboxdFilm> films, int expected, int page)
+    {
+        _logger.LogInformation(
+            "Letterboxd {List} of {Username} not served from page {Page}: {Collected} film(s) kept out of {Expected}",
+            list.Name,
+            username,
+            page,
             films.Count,
             expected);
         return LetterboxdFilmsSnapshot.Truncated(films, expected);
@@ -115,7 +143,7 @@ public sealed partial class LetterboxdWatchlistClient : ILetterboxdWatchlistClie
     {
         var html = await FetchAsync(PageUrl(list, username, page), list.Name, username, page, ct);
         if (html is null)
-            return new PageOutcome(true, true, expected);
+            return new PageOutcome(true, true, expected, Unreachable: true);
 
         if (page == 1)
         {
@@ -164,34 +192,53 @@ public sealed partial class LetterboxdWatchlistClient : ILetterboxdWatchlistClie
             ? $"{SiteRoot}{username}/{list.Path}"
             : $"{SiteRoot}{username}/{list.Path}page/{page}/";
 
-    private async Task<Dictionary<string, DateOnly>> ReadDiaryDatesAsync(string username, CancellationToken ct)
+    private async Task<List<DiaryEntry>> ReadDiaryAsync(string username, CancellationToken ct)
     {
-        var watchedOn = new Dictionary<string, DateOnly>(StringComparer.OrdinalIgnoreCase);
+        var diary = new List<DiaryEntry>();
         var feed = await FetchAsync($"{SiteRoot}{username}/rss/", "diary feed", username, 1, ct);
         if (feed is null)
-            return watchedOn;
+            return diary;
 
-        foreach (var item in RssItemRegex().Matches(feed).Cast<Match>())
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in RssItemRegex().Matches(feed).Cast<Match>().Select(match => match.Value))
         {
-            var slug = RssFilmSlugRegex().Match(item.Value).Groups[1].Value;
-            var date = RssWatchedDateRegex().Match(item.Value).Groups[1].Value;
+            var slug = RssFilmSlugRegex().Match(item).Groups[1].Value;
+            var date = RssWatchedDateRegex().Match(item).Groups[1].Value;
             if (slug.Length > 0
-                && DateOnly.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var day))
-                watchedOn.TryAdd(slug, day);
+                && DateOnly.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var day)
+                && seen.Add(slug))
+            {
+                diary.Add(new DiaryEntry(
+                    slug,
+                    WebUtility.HtmlDecode(RssFilmTitleRegex().Match(item).Groups[1].Value).Trim(),
+                    RssFilmYearRegex().Match(item).Groups[1].Value,
+                    ParseMemberRating(RssMemberRatingRegex().Match(item).Groups[1].Value),
+                    day));
+            }
         }
 
-        return watchedOn;
+        return diary;
+    }
+
+    private static int? ParseMemberRating(string stars)
+    {
+        if (!double.TryParse(stars, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var value))
+            return null;
+        var halfStars = (int)Math.Round(value * 2);
+        return halfStars is >= 1 and <= 10 ? halfStars : null;
     }
 
     private async Task<string?> FetchAsync(string url, string what, string username, int page, CancellationToken ct)
     {
+        var level = page == 1 ? LogLevel.Warning : LogLevel.Information;
         try
         {
             return await _http.GetStringAsync(url, ct);
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogWarning(
+            _logger.Log(
+                level,
                 ex,
                 "Failed to fetch the Letterboxd {List} for {Username} (page {Page})",
                 what,
@@ -201,7 +248,8 @@ public sealed partial class LetterboxdWatchlistClient : ILetterboxdWatchlistClie
         }
         catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
         {
-            _logger.LogWarning(
+            _logger.Log(
+                level,
                 ex,
                 "Timeout on the Letterboxd {List} for {Username} (page {Page})",
                 what,
@@ -320,6 +368,15 @@ public sealed partial class LetterboxdWatchlistClient : ILetterboxdWatchlistClie
 
     [GeneratedRegex("<letterboxd:watchedDate>(\\d{4}-\\d{2}-\\d{2})</letterboxd:watchedDate>")]
     private static partial Regex RssWatchedDateRegex();
+
+    [GeneratedRegex("<letterboxd:filmTitle>(?:<!\\[CDATA\\[)?(.*?)(?:\\]\\]>)?</letterboxd:filmTitle>", RegexOptions.Singleline)]
+    private static partial Regex RssFilmTitleRegex();
+
+    [GeneratedRegex("<letterboxd:filmYear>(\\d{4})</letterboxd:filmYear>")]
+    private static partial Regex RssFilmYearRegex();
+
+    [GeneratedRegex("<letterboxd:memberRating>([\\d.]+)</letterboxd:memberRating>")]
+    private static partial Regex RssMemberRatingRegex();
 
     [GeneratedRegex(@"^(.*?)\s*\((\d{4})(?:[-–]\d*)?\)$")]
     private static partial Regex TitleYearRegex();

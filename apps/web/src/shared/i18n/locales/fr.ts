@@ -628,7 +628,7 @@ export const fr = {
       deleteAccountConfirmationFallbackError:
         'Suppression impossible. Vérifiez la confirmation saisie.',
       letterboxd: {
-        title: 'Letterboxd',
+        title: 'Synchronisation Letterboxd',
         helpTitle: 'Comment ça marche',
         helpSync:
           'Votre watchlist Letterboxd publique est recopiée ici, au plus une fois par jour à l’ouverture de l’application. Rien n’est écrit sur Letterboxd : ajouter, retirer ou proposer un film depuis Movie Picker ne modifie jamais votre liste là-bas.',
@@ -646,6 +646,7 @@ export const fr = {
         statusOff: 'Ajoutez votre pseudo pour activer la synchronisation.',
         statusPending: 'Synchronisation active, première lecture à venir.',
         statusSyncedAt: 'Synchronisé le {{date}}.',
+        syncRowLabel: 'Synchronisation',
         syncNow: 'Synchroniser maintenant',
         syncSubmitting: 'Lecture de Letterboxd…',
         syncFallbackError: 'Synchronisation impossible. Réessayez dans un instant.',
@@ -665,11 +666,48 @@ export const fr = {
         reportPending: 'Choisir pour {{count}} film(s) ambigu(s)',
         reportUnmatched: 'Voir les {{count}} film(s) introuvable(s) sur TMDB',
         reportTruncated: '{{count}} film(s) non traité(s) : trop de films pour une seule fois.',
+        reportWatchedPartial:
+          'Films vus : Letterboxd ne laisse lire que vos films sortis récemment et votre journal, {{count}} autre(s) film(s) n’ont pas pu être lus. Importez le fichier d’export de Letterboxd pour les récupérer.',
         attentionMessageOne: '1 film n’a pas pu être identifié automatiquement.',
         attentionMessage: '{{count}} films n’ont pas pu être identifiés automatiquement.',
         attentionConfirm: 'Les confirmer',
         syncPersistentHint:
-          'Une lecture par jour au maximum. Rien n’est jamais écrit sur Letterboxd.',
+          'Vos derniers ajouts sur Letterboxd arrivent ici, une fois par jour au plus. Rien n’est jamais écrit sur Letterboxd.',
+        export: {
+          cardTitle: 'Import Letterboxd',
+          rowLabel: 'Importer vos listes Letterboxd',
+          rowHint:
+            'Toute votre watchlist et tous vos films vus d’un coup, depuis le fichier d’export de Letterboxd. Ensuite, la synchronisation suit vos nouveaux ajouts.',
+          open: 'Importer',
+          title: 'Importer depuis Letterboxd',
+          stepExport:
+            'Sur Letterboxd, ouvrez vos réglages, onglet « Import & Export », puis « Export Your Data ». Letterboxd vous donne un fichier .zip.',
+          exportLink: 'Ouvrir la page d’export',
+          stepFile: 'Choisissez ici ce fichier .zip.',
+          chooseFile: 'Choisir le fichier',
+          unzippedHint:
+            'Votre navigateur l’a décompressé ? Choisissez les fichiers watched.csv, watchlist.csv, ratings.csv et diary.csv du dossier.',
+          tooLarge: 'Ce fichier est trop lourd : 12 Mo au plus.',
+          readError: 'Ce fichier n’a pas pu être lu. Réessayez.',
+          reading: 'Lecture du fichier…',
+          found: 'Dans ce fichier, choisissez ce que vous importez :',
+          filmsOne: '1 film',
+          films: '{{count}} films',
+          nothingFound: 'Ce fichier ne contient ni film vu ni film à voir.',
+          noDuplicate: 'Les films déjà dans Movie Picker ne sont pas ajoutés deux fois.',
+          start: 'Importer',
+          progress: 'Import en cours : {{done}} sur {{total}} films',
+          keepOpen: 'Gardez cette fenêtre ouverte jusqu’à la fin.',
+          stop: 'Arrêter l’import',
+          finishedOne: 'Import terminé : 1 film lu.',
+          finished: 'Import terminé : {{count}} films lus.',
+          stopped:
+            'Import arrêté à {{done}} sur {{total}} films. Relancez-le pour finir : rien ne sera ajouté deux fois.',
+          failed:
+            'L’import s’est interrompu à {{done}} sur {{total}} films. Relancez-le pour finir : rien ne sera ajouté deux fois.',
+          again: 'Relancer',
+          tally: '{{list}} : {{added}} film(s) ajouté(s), {{already}} déjà présent(s).',
+        },
         choicesTitleOne: 'Un titre à confirmer',
         choicesTitle: '{{count}} titres à confirmer',
         choicesStepOf:
@@ -1578,6 +1616,14 @@ export const fr = {
     propose: 'Proposer dans une soirée',
     trailer: 'Bande-annonce',
     watchlistToggle: 'À voir',
+    favorite: {
+      toggle: 'Favori',
+      error: 'Vos favoris n’ont pas pu être modifiés. Réessayez.',
+      replaceTitle: 'Remplacer un favori',
+      replaceIntro: 'Vos trois favoris sont choisis. Lequel laisse sa place à {{title}} ?',
+      replaceGroup: 'Vos favoris',
+      replaceConfirm: 'Remplacer',
+    },
     share: 'Partager',
     shareText: '« {{title}} » sur Movie Picker',
     synopsis: 'Synopsis',
@@ -1923,7 +1969,7 @@ export const fr = {
         'Ses films ne sont plus visibles. Vous pouvez ne plus l’enregistrer.',
       keepCopy: 'Garder une copie',
       deletedName: 'Liste supprimée',
-      nameMemberWatched: 'Films vus par {{name}}',
+      nameMemberWatched: 'Films vus sur Movie Picker par {{name}}',
       nameMemberProposals: 'Films proposés par {{name}}',
       nameMemberWinningProposals: 'Propositions gagnantes de {{name}}',
       nameMemberWinningProposalsElided: 'Propositions gagnantes d’{{name}}',
@@ -2518,6 +2564,8 @@ export const fr = {
       'Letterboxd ou TMDB ne répond pas pour le moment. Réessayez dans quelques minutes.',
     letterboxd_watchlist_incomplete:
       "Watchlist Letterboxd inaccessible. Vérifiez l'orthographe du pseudo et que votre profil Letterboxd est public.",
+    letterboxd_export_unreadable:
+      'Ce fichier ne vient pas de l’export Letterboxd : choisissez le .zip téléchargé depuis Letterboxd.',
     letterboxd_watched_incomplete:
       "Films vus sur Letterboxd inaccessibles. Vérifiez l'orthographe du pseudo et que votre profil Letterboxd est public.",
     invalid_date_format: 'date doit être au format YYYY-MM-DD.',
@@ -3030,22 +3078,22 @@ export const fr = {
       sortAddedAt: 'Ajouté le',
     },
     movies: {
-      title: 'Films vus',
+      title: 'Films vus sur Movie Picker',
       seeAll: 'Tout voir',
       hidden: 'Masqués',
       ownerRating: 'Note de @{{handle}} : {{value}}',
       ownRating: 'Votre note : {{value}}',
       backLink: 'Retour au profil',
-      pageTitle: 'Les films vus par {{name}}',
+      pageTitle: 'Les films vus sur Movie Picker par {{name}}',
       seoDescription:
         'Films vus par {{name}} (@{{handle}}) sur Movie Picker : soirées ciné gagnées et films tirés au sort.',
       pageSubtitleOne: '{{count}} film vu',
       pageSubtitle: '{{count}} films vus',
       loadError: 'Impossible de charger les films vus par cet utilisateur.',
       previewLoadError: 'Les films vus n’ont pas pu être chargés.',
-      listAria: 'Films vus',
+      listAria: 'Films vus sur Movie Picker',
       emptyTitle: 'Aucun film vu pour le moment',
-      emptyMessage: "Cette personne n'a pas encore gagné de soirée ciné.",
+      emptyMessage: 'Cette personne n’a encore vu aucun film en soirée sur Movie Picker.',
       loadMoreOne: 'Charger le film restant',
       loadMore: 'Charger les {{count}} films restants',
       toolbar: {
@@ -3275,7 +3323,7 @@ export const fr = {
         'The Movie Database, la base ouverte qui fournit titres, résumés, genres et affiches.',
       letterboxd: 'Letterboxd',
       letterboxdValue:
-        'Import de la watchlist et des films vus depuis le profil public. Sans API publique, la page est lue telle quelle : 300 films au plus par liste, une fois par 24 heures et par compte.',
+        'Import de la watchlist et des films vus depuis le profil public. Sans API publique, la page est lue telle quelle, une fois par 24 heures et par compte : la watchlist entière, et pour les films vus la seule page que Letterboxd sert encore, complétée par le journal. L’historique complet arrive par l’import du fichier d’export de Letterboxd, lu côté serveur puis importé par lots de 50.',
       letterboxdHint:
         "Réseau social de cinéphiles : la liste publique d'un profil est lue puis rapprochée du catalogue.",
       oauth: 'Google, GitHub',
@@ -3465,10 +3513,14 @@ export const fr = {
         "Les entrées en tête du backlog, prises dans l'ordre. L'ordre suit l'usage mesuré : ce qui fait entrer du monde dans une soirée passe avant les nouvelles surfaces.",
       nextHint:
         "L'usage se mesure depuis la 1.16.0 : chaque entrée se juge ensuite sur ce qu'elle change dans les chiffres.",
-      nextItem1: "Favori depuis la page d'un film",
-      nextItem2: 'Plateformes de streaming par compte',
-      nextItem3: "Classement d'un groupe",
-      nextItem4: 'Déjà vu automatique en soirée',
+      nextItem1: 'Plateformes de streaming par compte',
+      nextItem2: "Classement d'un groupe",
+      nextItem3: 'Déjà vu automatique en soirée',
+      nextItem4: 'Couleur du profil visible de tous',
+      nextItem5: 'Une liste en vitrine sur le profil',
+      nextItem6: "Cadres d'avatar à débloquer",
+      nextItem7: 'Recherche globale',
+      nextItem8: 'Modifier son profil depuis son profil',
       v2When: 'Sans date annoncée',
       v2What: 'V2',
       v2Detail:
