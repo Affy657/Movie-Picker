@@ -640,6 +640,7 @@ export const en: Locale = {
         statusOff: 'Add your username to turn the sync on.',
         statusPending: 'Sync is on, first read coming up.',
         statusSyncedAt: 'Synced on {{date}}.',
+        syncRowLabel: 'Sync',
         syncNow: 'Sync now',
         syncSubmitting: 'Reading Letterboxd…',
         syncFallbackError: 'Sync failed. Try again in a moment.',
@@ -660,6 +661,8 @@ export const en: Locale = {
         reportPending: 'Choose for {{count}} ambiguous film(s)',
         reportUnmatched: 'Show the {{count}} film(s) not found on TMDB',
         reportTruncated: '{{count}} film(s) skipped: too many films at once.',
+        reportWatchedPartial:
+          'Watched films: Letterboxd only lets us read your recent releases and your diary, {{count}} other film(s) could not be read.',
         attentionMessageOne: '1 movie could not be identified automatically.',
         attentionMessage: '{{count}} movies could not be identified automatically.',
         attentionConfirm: 'Confirm them',

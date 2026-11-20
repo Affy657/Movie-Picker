@@ -8,6 +8,14 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Changed
+
+- **La carte Letterboxd des réglages se lit d'un coup d'œil** : votre compte, À voir, Films vus et la synchronisation ont chacun leur ligne, avec les mêmes espacements et les mêmes boutons que les autres réglages.
+
+### Fixed
+
+- **La synchronisation des films vus Letterboxd fonctionne de nouveau** : Letterboxd ne laisse plus lire la liste entière, Movie Picker recopie donc vos films sortis récemment et ceux de votre journal, et dit combien n'ont pas pu être lus. Jusqu'ici, plus rien n'arrivait.
+
 ## [1.22.0] - 2026-11-20
 
 ### Added

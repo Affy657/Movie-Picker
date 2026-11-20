@@ -777,6 +777,30 @@ describe('LetterboxdImportSection (MSW)', () => {
       expect(screen.getByText('À voir : 0 film(s) ajouté(s), 2 retiré(s).')).toBeInTheDocument();
     });
 
+    it('tells apart the watched films Letterboxd no longer serves from a too long watchlist', async () => {
+      const user = userEvent.setup();
+      server.use(
+        meHandler({ letterboxdUsername: 'affy657' }),
+        createLetterboxdSyncHandler({
+          watchedAdded: 41,
+          totalTruncated: 3,
+          watchedTotalTruncated: 693,
+        })
+      );
+
+      renderAccount();
+      await clickSync(user);
+
+      expect(
+        await screen.findByText(
+          'Films vus : Letterboxd ne laisse lire que vos films sortis récemment et votre journal, 693 autre(s) film(s) n’ont pas pu être lus.'
+        )
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('3 film(s) non traité(s) : trop de films pour une seule fois.')
+      ).toBeInTheDocument();
+    });
+
     it('says which list could not be read, and keeps what the other one brought', async () => {
       const user = userEvent.setup();
       server.use(

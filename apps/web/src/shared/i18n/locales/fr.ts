@@ -646,6 +646,7 @@ export const fr = {
         statusOff: 'Ajoutez votre pseudo pour activer la synchronisation.',
         statusPending: 'Synchronisation active, première lecture à venir.',
         statusSyncedAt: 'Synchronisé le {{date}}.',
+        syncRowLabel: 'Synchronisation',
         syncNow: 'Synchroniser maintenant',
         syncSubmitting: 'Lecture de Letterboxd…',
         syncFallbackError: 'Synchronisation impossible. Réessayez dans un instant.',
@@ -665,6 +666,8 @@ export const fr = {
         reportPending: 'Choisir pour {{count}} film(s) ambigu(s)',
         reportUnmatched: 'Voir les {{count}} film(s) introuvable(s) sur TMDB',
         reportTruncated: '{{count}} film(s) non traité(s) : trop de films pour une seule fois.',
+        reportWatchedPartial:
+          'Films vus : Letterboxd ne laisse lire que vos films sortis récemment et votre journal, {{count}} autre(s) film(s) n’ont pas pu être lus.',
         attentionMessageOne: '1 film n’a pas pu être identifié automatiquement.',
         attentionMessage: '{{count}} films n’ont pas pu être identifiés automatiquement.',
         attentionConfirm: 'Les confirmer',

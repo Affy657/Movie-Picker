@@ -1,7 +1,17 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
-import { AlertTriangle, Check, RefreshCw, TriangleAlert, X } from 'lucide-react';
+import {
+  AlertTriangle,
+  AtSign,
+  Bookmark,
+  Check,
+  Eye,
+  RefreshCw,
+  TriangleAlert,
+  X,
+  type LucideIcon,
+} from 'lucide-react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
@@ -11,7 +21,7 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { invalidateWatchlist } from '@/features/movies/hooks/useWatchlist';
 import { invalidateWatched } from '@/features/movies/hooks/invalidateWatched';
 import InfoBubble from '@/shared/components/InfoBubble';
-import ToggleRow from '@/shared/components/ToggleRow';
+import Toggle from '@/shared/components/Toggle';
 import {
   syncLetterboxd,
   type LetterboxdConfirmResult,
@@ -58,13 +68,41 @@ function countedDescription(
   return pluralizeCount(count, keys.one, keys.many, t);
 }
 
+function SyncTargetRow({
+  icon: Icon,
+  title,
+  description,
+  checked,
+  onChange,
+}: Readonly<{
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}>) {
+  const titleId = useId();
+  return (
+    <div className={sharedStyles.row}>
+      <Icon size={ICON_SIZE.xl} aria-hidden className={sharedStyles.rowIcon} />
+      <div className={sharedStyles.rowMain}>
+        <p id={titleId} className={sharedStyles.rowLabel}>
+          {title}
+        </p>
+        <p className={sharedStyles.rowSub}>{description}</p>
+      </div>
+      <Toggle checked={checked} onChange={onChange} ariaLabelledBy={titleId} />
+    </div>
+  );
+}
+
 function SyncTargets({ user }: Readonly<{ user: UserProfile }>) {
   const { t } = useTranslation();
   const targets = useLetterboxdSyncTargets();
   return (
-    <div className={styles.syncTargets}>
-      <ToggleRow
-        className={styles.syncTarget}
+    <>
+      <SyncTargetRow
+        icon={Bookmark}
         title={t('watchlist.title')}
         description={countedDescription(
           user.letterboxdWatchlistCount ?? 0,
@@ -78,8 +116,8 @@ function SyncTargets({ user }: Readonly<{ user: UserProfile }>) {
         checked={targets.watchlist}
         onChange={(checked) => targets.change('watchlist', checked)}
       />
-      <ToggleRow
-        className={styles.syncTarget}
+      <SyncTargetRow
+        icon={Eye}
         title={t('watched.title')}
         description={countedDescription(
           user.letterboxdWatchedCount ?? 0,
@@ -94,11 +132,40 @@ function SyncTargets({ user }: Readonly<{ user: UserProfile }>) {
         onChange={(checked) => targets.change('watched', checked)}
       />
       {targets.error && (
-        <p className="error" role="alert">
+        <p className={clsx(styles.errorLine, styles.trailingBlock)} role="alert">
           {targets.error}
         </p>
       )}
-    </div>
+    </>
+  );
+}
+
+function AccountStatus({
+  connected,
+  lastSyncError,
+  lastSyncAt,
+}: Readonly<{ connected: boolean; lastSyncError: string | null; lastSyncAt: string | null }>) {
+  const { t, locale } = useTranslation();
+  if (!connected) return <p className={styles.status}>{t('auth.account.letterboxd.statusOff')}</p>;
+  if (lastSyncError) {
+    return (
+      <p className={styles.statusError} role="alert">
+        <AlertTriangle size={ICON_SIZE.sm} aria-hidden />
+        <span className={styles.statusLabel}>{lastSyncError}</span>
+      </p>
+    );
+  }
+  return (
+    <p className={styles.statusOk}>
+      <Check size={ICON_SIZE.sm} aria-hidden />
+      <span className={styles.statusLabel}>
+        {lastSyncAt
+          ? t('auth.account.letterboxd.statusSyncedAt', {
+              date: formatSyncDate(lastSyncAt, locale),
+            })
+          : t('auth.account.letterboxd.statusPending')}
+      </span>
+    </p>
   );
 }
 
@@ -127,13 +194,12 @@ function SyncReportCard({
   const { t } = useTranslation();
   const lists = reportedLists(report, user);
   const unmatchedTitles = unmatchedTitlesOf(report);
-  const truncated = report.totalTruncated + report.watchedTotalTruncated;
 
   return (
     <Card
       padding="none"
       surface="sunken"
-      className={styles.report}
+      className={clsx(styles.report, styles.trailingBlock)}
       role="status"
       aria-live="polite"
     >
@@ -176,9 +242,17 @@ function SyncReportCard({
         </details>
       )}
 
-      {truncated > 0 && (
+      {report.totalTruncated > 0 && (
         <p className={styles.reportLine}>
-          {t('auth.account.letterboxd.reportTruncated', { count: String(truncated) })}
+          {t('auth.account.letterboxd.reportTruncated', { count: String(report.totalTruncated) })}
+        </p>
+      )}
+
+      {report.watchedTotalTruncated > 0 && (
+        <p className={styles.reportLine}>
+          {t('auth.account.letterboxd.reportWatchedPartial', {
+            count: String(report.watchedTotalTruncated),
+          })}
         </p>
       )}
     </Card>
@@ -196,7 +270,7 @@ function confirmedMessage(result: LetterboxdConfirmResult, t: Translate): string
 }
 
 export default function LetterboxdImportSection() {
-  const { t, locale } = useTranslation();
+  const { t } = useTranslation();
   const { user, patchProfile } = useAuth();
   const { track } = useAnalytics();
   const queryClient = useQueryClient();
@@ -325,99 +399,129 @@ export default function LetterboxdImportSection() {
         </InfoBubble>
       </p>
 
-      <div className={clsx(sharedStyles.field, sharedStyles.noDivider)}>
-        {showInput ? (
-          <form
-            className={styles.editRow}
-            onSubmit={(e) => {
-              e.preventDefault();
-              void runSaveUsername();
-            }}
-          >
-            <label className="visually-hidden" htmlFor="letterboxd-username">
-              {t('auth.account.letterboxd.usernameLabel')}
-            </label>
-            <input
-              ref={inputRef}
-              id="letterboxd-username"
-              type="text"
-              className={clsx('input', styles.usernameInput)}
-              value={draft}
-              onChange={(e) => {
-                setDraft(e.target.value);
-                clearSaveError();
+      <div className={clsx(sharedStyles.row, sharedStyles.noDivider)}>
+        <AtSign size={ICON_SIZE.xl} aria-hidden className={sharedStyles.rowIcon} />
+        <div className={sharedStyles.rowMain}>
+          {showInput ? (
+            <form
+              className={styles.editRow}
+              onSubmit={(e) => {
+                e.preventDefault();
+                void runSaveUsername();
               }}
-              placeholder={t('auth.account.letterboxd.usernamePlaceholder')}
-              maxLength={40}
-            />
-            <IconButton
-              type="submit"
-              size="lg"
-              loading={savingUsername}
-              ariaLabel={t('auth.account.letterboxd.usernameSave')}
             >
-              <Check size={ICON_SIZE.lg} aria-hidden />
-            </IconButton>
-            {connected && (
-              <IconButton
-                size="lg"
-                onClick={() => {
+              <label className="visually-hidden" htmlFor="letterboxd-username">
+                {t('auth.account.letterboxd.usernameLabel')}
+              </label>
+              <input
+                ref={inputRef}
+                id="letterboxd-username"
+                type="text"
+                className={clsx('input', styles.usernameInput)}
+                value={draft}
+                onChange={(e) => {
+                  setDraft(e.target.value);
                   clearSaveError();
-                  setEditing(false);
                 }}
-                ariaLabel={t('common.cancel')}
+                placeholder={t('auth.account.letterboxd.usernamePlaceholder')}
+                maxLength={40}
+              />
+              <IconButton
+                type="submit"
+                size="lg"
+                loading={savingUsername}
+                ariaLabel={t('auth.account.letterboxd.usernameSave')}
               >
-                <X size={ICON_SIZE.lg} aria-hidden />
+                <Check size={ICON_SIZE.lg} aria-hidden />
               </IconButton>
-            )}
-          </form>
-        ) : (
-          <div className={styles.connectionRow}>
-            <span className={styles.usernameValue}>{savedUsername}</span>
-            <div className={styles.connectionActions}>
-              <Button type="button" size="sm" onClick={startEditing}>
-                {t('auth.account.letterboxd.usernameEdit')}
-              </Button>
-              <Button
-                type="button"
-                tone="danger"
-                size="sm"
-                onClick={() => void runDisconnect()}
-                disabled={disconnecting}
-              >
-                {t('auth.account.letterboxd.usernameDisconnect')}
-              </Button>
-            </div>
+              {connected && (
+                <IconButton
+                  size="lg"
+                  onClick={() => {
+                    clearSaveError();
+                    setEditing(false);
+                  }}
+                  ariaLabel={t('common.cancel')}
+                >
+                  <X size={ICON_SIZE.lg} aria-hidden />
+                </IconButton>
+              )}
+            </form>
+          ) : (
+            <p className={clsx(sharedStyles.rowLabel, styles.usernameValue)}>{savedUsername}</p>
+          )}
+          <AccountStatus
+            connected={connected}
+            lastSyncError={lastSyncError}
+            lastSyncAt={lastSyncAt}
+          />
+          {saveUsernameError && (
+            <p className={styles.errorLine} role="alert">
+              {saveUsernameError}
+            </p>
+          )}
+          {disconnectError && (
+            <p className={styles.errorLine} role="alert">
+              {disconnectError}
+            </p>
+          )}
+        </div>
+        {!showInput && (
+          <div className={styles.connectionActions}>
+            <Button type="button" onClick={startEditing}>
+              {t('auth.account.letterboxd.usernameEdit')}
+            </Button>
+            <Button
+              type="button"
+              tone="danger"
+              onClick={() => void runDisconnect()}
+              disabled={disconnecting}
+            >
+              {t('auth.account.letterboxd.usernameDisconnect')}
+            </Button>
           </div>
-        )}
-
-        {!connected && <p className={styles.status}>{t('auth.account.letterboxd.statusOff')}</p>}
-
-        {connected && lastSyncError && (
-          <p className={styles.statusError} role="alert">
-            <AlertTriangle size={ICON_SIZE.sm} aria-hidden />
-            <span className={styles.statusLabel}>{lastSyncError}</span>
-          </p>
-        )}
-
-        {connected && !lastSyncError && (
-          <p className={styles.statusOk}>
-            <Check size={ICON_SIZE.sm} aria-hidden />
-            <span className={styles.statusLabel}>
-              {lastSyncAt
-                ? t('auth.account.letterboxd.statusSyncedAt', {
-                    date: formatSyncDate(lastSyncAt, locale),
-                  })
-                : t('auth.account.letterboxd.statusPending')}
-            </span>
-          </p>
         )}
       </div>
 
       {connected && <SyncTargets user={user} />}
 
+      {connected && (
+        <div className={sharedStyles.row}>
+          <RefreshCw size={ICON_SIZE.xl} aria-hidden className={sharedStyles.rowIcon} />
+          <div className={sharedStyles.rowMain}>
+            <p className={sharedStyles.rowLabel}>{t('auth.account.letterboxd.syncRowLabel')}</p>
+            <p className={sharedStyles.rowSub}>{t('auth.account.letterboxd.syncPersistentHint')}</p>
+            {syncError && (
+              <p className={styles.errorLine} role="alert">
+                {syncError}
+              </p>
+            )}
+            {skippedReason && (
+              <p className={sharedStyles.rowSub} role="status" aria-live="polite">
+                {t(SKIPPED_MESSAGE_KEYS[skippedReason])}
+              </p>
+            )}
+            {confirmResult && (
+              <p className={sharedStyles.rowSub} role="status" aria-live="polite">
+                {confirmedMessage(confirmResult, t)}
+              </p>
+            )}
+          </div>
+          <Button
+            type="button"
+            variant="primary"
+            onClick={() => void handleSync()}
+            disabled={syncing}
+          >
+            {syncing
+              ? t('auth.account.letterboxd.syncSubmitting')
+              : t('auth.account.letterboxd.syncNow')}
+          </Button>
+        </div>
+      )}
+
       {connected && !report && !confirmResult && user.letterboxdPendingReconciliationCount > 0 && (
-        <output className={sharedStyles.attention}>
+        <output className={clsx(sharedStyles.attention, styles.trailingBlock)}>
           <TriangleAlert size={ICON_SIZE.md} aria-hidden />
           <span className={sharedStyles.attentionText}>
             {pluralizeCount(
@@ -439,54 +543,6 @@ export default function LetterboxdImportSection() {
         </output>
       )}
 
-      {saveUsernameError && (
-        <p className="error" role="alert">
-          {saveUsernameError}
-        </p>
-      )}
-
-      {disconnectError && (
-        <p className="error" role="alert">
-          {disconnectError}
-        </p>
-      )}
-
-      {connected && (
-        <div className={sharedStyles.row}>
-          <div className={sharedStyles.rowMain}>
-            <p className={clsx(sharedStyles.rowSub, sharedStyles.rowSubFlush)}>
-              {t('auth.account.letterboxd.syncPersistentHint')}
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="primary"
-            className={styles.syncBtn}
-            onClick={() => void handleSync()}
-            disabled={syncing}
-          >
-            <RefreshCw size={ICON_SIZE.md} aria-hidden />
-            <span>
-              {syncing
-                ? t('auth.account.letterboxd.syncSubmitting')
-                : t('auth.account.letterboxd.syncNow')}
-            </span>
-          </Button>
-        </div>
-      )}
-
-      {syncError && (
-        <p className="error" role="alert">
-          {syncError}
-        </p>
-      )}
-
-      {skippedReason && (
-        <p className="hint" role="status" aria-live="polite">
-          {t(SKIPPED_MESSAGE_KEYS[skippedReason])}
-        </p>
-      )}
-
       {report && !syncError && (
         <SyncReportCard
           user={user}
@@ -494,12 +550,6 @@ export default function LetterboxdImportSection() {
           pendingCount={pendingChoices.length}
           onOpenChoices={() => setChoicesOpen(true)}
         />
-      )}
-
-      {confirmResult && (
-        <p className="hint" role="status" aria-live="polite">
-          {confirmedMessage(confirmResult, t)}
-        </p>
       )}
 
       {choicesOpen && pendingChoices.length > 0 && (

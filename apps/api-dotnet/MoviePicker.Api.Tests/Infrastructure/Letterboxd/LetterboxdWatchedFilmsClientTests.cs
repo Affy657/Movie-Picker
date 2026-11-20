@@ -115,7 +115,7 @@ public sealed class LetterboxdWatchedFilmsClientTests
     }
 
     [Fact]
-    public async Task GetWatchedFilmsAsync_ReadsTheFilmsPagesSortedByWhenAdded_UntilTheAnnouncedTotal()
+    public async Task GetWatchedFilmsAsync_ReadsTheFilmsPagesServedToVisitors_UntilTheAnnouncedTotal()
     {
         var (sut, handler) = CreateSut(uri => IsRss(uri)
             ? Ok(Rss())
@@ -128,8 +128,90 @@ public sealed class LetterboxdWatchedFilmsClientTests
         Assert.True(snapshot.IsComplete);
         Assert.False(snapshot.IsTruncated);
         Assert.Equal(["inception", "dune", "akira"], snapshot.Films.Select(f => f.Slug));
-        VerifyRequests(handler, Times.Once(), uri => uri.AbsoluteUri == $"https://letterboxd.com/{Username}/films/by/date/");
-        VerifyRequests(handler, Times.Once(), uri => uri.AbsoluteUri == $"https://letterboxd.com/{Username}/films/by/date/page/2/");
+        VerifyRequests(handler, Times.Once(), uri => uri.AbsoluteUri == $"https://letterboxd.com/{Username}/films/");
+        VerifyRequests(handler, Times.Once(), uri => uri.AbsoluteUri == $"https://letterboxd.com/{Username}/films/page/2/");
+        VerifyRequests(handler, Times.Never(), uri => uri.AbsolutePath.Contains("/films/by/"));
+    }
+
+    private static HttpResponseMessage Challenge() =>
+        new(HttpStatusCode.Forbidden) { Content = new StringContent("<title>Just a moment...</title>") };
+
+    private static string DiaryItem(string slug, string title, string year, string watchedDate, string? memberRating = null) =>
+        "<item> <title>A film</title> "
+        + $"<link>https://letterboxd.com/{Username}/film/{slug}/</link> "
+        + "<guid isPermaLink=\"false\">letterboxd-watch-1</guid> "
+        + $"<letterboxd:watchedDate>{watchedDate}</letterboxd:watchedDate> <letterboxd:rewatch>No</letterboxd:rewatch> "
+        + $"<letterboxd:filmTitle>{title}</letterboxd:filmTitle> <letterboxd:filmYear>{year}</letterboxd:filmYear> "
+        + (memberRating is null ? string.Empty : $"<letterboxd:memberRating>{memberRating}</letterboxd:memberRating> ")
+        + "<tmdb:movieId>1</tmdb:movieId> </item>";
+
+    [Fact]
+    public async Task GetWatchedFilmsAsync_NextPagesRefused_KeepsTheFirstPageAsAPartialRead()
+    {
+        var (sut, _) = CreateSut(uri => IsRss(uri)
+            ? Ok(Rss())
+            : PageNumber(uri) == 1
+                ? Ok(Page(765, Poster("dune", "Dune (2021)", rated: 8), Poster("akira", "Akira (1988)")))
+                : Challenge());
+
+        var snapshot = await sut.GetWatchedFilmsAsync(Username);
+
+        Assert.True(snapshot.IsComplete);
+        Assert.True(snapshot.IsTruncated);
+        Assert.False(snapshot.ConfirmsDepartures);
+        Assert.Equal(765, snapshot.Total);
+        Assert.Equal([("dune", (int?)8), ("akira", null)], snapshot.Films.Select(f => (f.Slug, f.Rating)));
+    }
+
+    [Fact]
+    public async Task GetWatchedFilmsAsync_FirstPageRefused_IsIncomplete()
+    {
+        var (sut, _) = CreateSut(uri => IsRss(uri) ? Ok(Rss()) : Challenge());
+
+        var snapshot = await sut.GetWatchedFilmsAsync(Username);
+
+        Assert.False(snapshot.IsComplete);
+    }
+
+    [Fact]
+    public async Task GetWatchedFilmsAsync_PartialRead_AddsTheDiaryFilmsThePagesMissed()
+    {
+        var rss = Rss(
+            DiaryItem("dune", "Dune", "2021", "2026-11-12", "4.5"),
+            DiaryItem("the-thing", "The Thing", "1982", "2026-11-10", "4.0"),
+            ListItem("best-of-2026"),
+            DiaryItem("the-thing", "The Thing", "1982", "2026-01-01"),
+            DiaryItem("oldboy", "Oldboy &amp; Co", "2003", "2026-11-01"));
+        var (sut, _) = CreateSut(uri => IsRss(uri)
+            ? Ok(rss)
+            : PageNumber(uri) == 1
+                ? Ok(Page(765, Poster("dune", "Dune (2021)", rated: 6)))
+                : Challenge());
+
+        var snapshot = await sut.GetWatchedFilmsAsync(Username);
+
+        Assert.True(snapshot.IsTruncated);
+        Assert.False(snapshot.ConfirmsDepartures);
+        Assert.Equal(
+            [
+                ("dune", "Dune", "2021", (int?)6, (DateOnly?)new DateOnly(2026, 11, 12)),
+                ("the-thing", "The Thing", "1982", 8, new DateOnly(2026, 11, 10)),
+                ("oldboy", "Oldboy & Co", "2003", null, new DateOnly(2026, 11, 1))
+            ],
+            snapshot.Films.Select(f => (f.Slug, f.Title, f.Year, f.Rating, f.WatchedOn)));
+    }
+
+    [Fact]
+    public async Task GetWatchedFilmsAsync_CompleteRead_OnlyDatesFromTheDiary_WithoutAddingFilms()
+    {
+        var rss = Rss(DiaryItem("dune", "Dune", "2021", "2026-11-12"), DiaryItem("the-thing", "The Thing", "1982", "2026-11-10"));
+        var (sut, _) = CreateSut(Page(1, Poster("dune", "Dune (2021)")), rss);
+
+        var snapshot = await sut.GetWatchedFilmsAsync(Username);
+
+        Assert.True(snapshot.ConfirmsDepartures);
+        var film = Assert.Single(snapshot.Films);
+        Assert.Equal(("dune", (DateOnly?)new DateOnly(2026, 11, 12)), (film.Slug, film.WatchedOn));
     }
 
     private static int PageNumber(Uri uri)
