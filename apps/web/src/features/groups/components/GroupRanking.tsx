@@ -346,13 +346,14 @@ export default function GroupRanking({
   } else {
     body = (
       <>
-        <div className={styles.chips} role="group" aria-label={t('groups.ranking.statsAria')}>
+        <fieldset className={styles.chips}>
+          <legend className="visually-hidden">{t('groups.ranking.statsAria')}</legend>
           {RANKING_STATS.map((key) => (
             <Chip key={key} onClick={() => setStat(key)} selected={key === stat}>
               {t(`groups.ranking.stats.${key}.label`)}
             </Chip>
           ))}
-        </div>
+        </fieldset>
         <RankingBoard
           stat={stat}
           members={ranking.members}

@@ -52,7 +52,7 @@ public sealed class GroupRankingTests : FriendGroupTestBase
             ClosedAt = Start
         });
 
-    private Task VoteAsync(Movie movie, string userId, int value) =>
+    private Task<Vote> VoteAsync(Movie movie, string userId, int value) =>
         Kit.Votes.UpsertAsync(new Vote
         {
             EventId = movie.EventId,
@@ -61,7 +61,7 @@ public sealed class GroupRankingTests : FriendGroupTestBase
             Value = value
         });
 
-    private Task SeenAsync(Movie movie, string userId) =>
+    private Task<SeenMark> SeenAsync(Movie movie, string userId) =>
         Kit.SeenMarks.AddAsync(new SeenMark
         {
             EventId = movie.EventId,
@@ -69,7 +69,7 @@ public sealed class GroupRankingTests : FriendGroupTestBase
             ParticipantId = _participantIds[(movie.EventId, userId)]
         });
 
-    private Task RateAsync(Movie movie, string userId, int value) =>
+    private Task<MovieRating> RateAsync(Movie movie, string userId, int value) =>
         Kit.Ratings.UpsertAsync(new MovieRating
         {
             EventId = movie.EventId,
