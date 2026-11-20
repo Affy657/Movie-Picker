@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.20.0] - 2026-11-20
+
 ### Added
 
 - **Une bannière en haut de votre profil** : l'image d'un film, choisie parmi des suggestions ou dans n'importe quel film, ou votre propre image recadrée, qui se fond dans la page sous votre nom.
@@ -884,7 +886,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.19.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.20.0...HEAD
+[1.20.0]: https://github.com/Affy657/Movie-Picker/compare/v1.19.0...v1.20.0
 [1.19.0]: https://github.com/Affy657/Movie-Picker/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/Affy657/Movie-Picker/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/Affy657/Movie-Picker/compare/v1.16.3...v1.17.0
