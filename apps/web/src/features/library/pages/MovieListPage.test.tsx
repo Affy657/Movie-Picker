@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { openSortMenu, sortChoices, pickSort } from '@/test-utils/sortMenu';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubHoverCapability, stubMatchMedia } from '@/test-utils/matchMedia';
 import {
@@ -98,18 +99,6 @@ const SUNDAY_CINEMA: MockList = {
   ],
 };
 
-function withPercentSpace(text: string | null | undefined) {
-  return (text ?? '').replaceAll(/\p{Zs}/gu, ' ');
-}
-
-function progressText(expected: string) {
-  return screen.getByText(
-    (_, element) =>
-      element?.lastElementChild?.tagName === 'STRONG' &&
-      withPercentSpace(element.textContent) === expected
-  );
-}
-
 function LocationProbe() {
   const location = useLocation();
   return <output data-testid="location">{location.pathname}</output>;
@@ -200,15 +189,12 @@ describe('MovieListPage', () => {
 
   it('sorts by addition, title, rating, runtime and release, without availability', async () => {
     server.use(...useServer());
+    const user = userEvent.setup();
     renderPage();
 
-    const sorts = await screen.findByRole('toolbar', { name: /trier par/i });
+    const sorts = await openSortMenu(user, 'Ajout');
 
-    expect(
-      within(sorts)
-        .getAllByRole('button')
-        .map((button) => button.textContent)
-    ).toEqual(['Ajout', 'Titre', 'Note', 'Durée', 'Sortie']);
+    expect(sortChoices(sorts)).toEqual(['Ajout', 'Titre', 'Note', 'Durée', 'Sortie']);
   });
 
   it('keeps the sort chosen on a list to that list', async () => {
@@ -227,7 +213,7 @@ describe('MovieListPage', () => {
     const halloween = renderPage('/listes/l1');
     expect(await firstTitle('Halloween')).toContain('Zodiac');
 
-    await user.click(screen.getByRole('button', { name: 'Titre' }));
+    await pickSort(user, 'Ajout', 'Titre');
     await waitFor(async () => expect(await firstTitle('Halloween')).toContain('Alien'));
     halloween.unmount();
     renderPage('/listes/l2');
@@ -383,8 +369,8 @@ describe('MovieListPage', () => {
     server.use(...useServer());
     renderPage();
 
-    expect(await screen.findByRole('button', { name: 'Piocher' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Ajouter' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Piocher un film' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ajouter un film' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Actions de la liste' })).toBeInTheDocument();
     expect(screen.getByRole('searchbox', { name: 'Rechercher dans la liste' })).toHaveAttribute(
       'placeholder',
@@ -392,13 +378,13 @@ describe('MovieListPage', () => {
     );
   });
 
-  it('shows how much of the list is watched under its description', async () => {
+  it('says how many of its films are watched next to their number, as Mes listes does', async () => {
     server.use(...useServer([HALLOWEEN_HALF_SEEN]));
 
     renderPage();
 
     await screen.findByRole('heading', { level: 1, name: 'Halloween' });
-    expect(progressText('1 sur 2 vu, 50 %')).toBeInTheDocument();
+    expect(screen.getByText('2 films, 1 vu')).toBeInTheDocument();
   });
 
   it('shows no progress on an empty list', async () => {
@@ -407,7 +393,7 @@ describe('MovieListPage', () => {
     renderPage();
 
     await screen.findByText('Cette liste est vide');
-    expect(screen.queryByText(/sur 0 vu/)).toBeNull();
+    expect(screen.queryByText(/vu/)).toBeNull();
   });
 
   it('dims the watched films once Griser les vus is on, and keeps the choice on the account', async () => {
@@ -529,14 +515,14 @@ describe('MovieListPage', () => {
       }
     });
 
-    it('tells a member who created the list, and still lets them add and pick a film', async () => {
+    it('tells a member who shares the list as Mes listes does, and still lets them add and pick a film', async () => {
       server.use(...useServer([SUNDAY_CINEMA]));
       renderPage();
 
       expect(
         await screen.findByRole('heading', { level: 1, name: 'Ciné du dimanche' })
       ).toBeInTheDocument();
-      expect(screen.getByText('Créée par Léa')).toBeInTheDocument();
+      expect(screen.queryByText('Créée par Léa')).toBeNull();
       expect(screen.getByRole('button', { name: 'Avec Léa' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Ajouter un film' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Piocher un film' })).toBeInTheDocument();

@@ -197,7 +197,7 @@ export function buildUsageReport({ since, until, counts, truth }) {
         account: totals.get('recap_viewed', 'account'),
       },
       randomPicks: Object.fromEntries(
-        ['watchlist', 'list', 'saved_list'].map((source) => [
+        ['watchlist', 'list', 'saved_list', 'catalog'].map((source) => [
           source,
           totals.get('random_pick_opened', source),
         ])
@@ -281,7 +281,7 @@ export function formatUsageReport(report) {
     ),
     line(
       'Random picks',
-      `${randomPicks.watchlist + randomPicks.list + randomPicks.saved_list} (watchlist ${randomPicks.watchlist}, list ${randomPicks.list}, saved list ${randomPicks.saved_list})`
+      `${randomPicks.watchlist + randomPicks.list + randomPicks.saved_list + randomPicks.catalog} (watchlist ${randomPicks.watchlist}, list ${randomPicks.list}, saved list ${randomPicks.saved_list}, saga or selection ${randomPicks.catalog})`
     ),
     line(
       'Watchlist additions',

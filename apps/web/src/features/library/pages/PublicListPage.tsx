@@ -20,16 +20,16 @@ import { useWatchlistToggle } from '@/features/library/hooks/useWatchlistToggle'
 import type { ListCreator } from '@/features/library/api/listsApi';
 import type { PublicListDetail } from '@/features/library/api/publicListsApi';
 import type { SavedListSource } from '@/features/library/api/savedListsApi';
-import AvatarOverline from '@/features/library/components/AvatarOverline';
 import CopyLinkStatus from '@/features/library/components/CopyLinkStatus';
 import ListFormDialog from '@/features/library/components/ListFormDialog';
 import ListNotFound from '@/features/library/components/ListNotFound';
-import ListProgress from '@/features/library/components/ListProgress';
+import { CreatorSource } from '@/features/library/components/ListSource';
 import SaveListAction from '@/features/library/components/SaveListAction';
 import { usePublicList } from '@/features/library/hooks/usePublicLists';
 import { useSavedListToggle } from '@/features/library/hooks/useSavedLists';
 import { useListItemsView } from '@/features/library/hooks/useListItemsView';
-import { publicListCountLabel } from '@/features/library/utils/listCount';
+import { publicListCountLabel, withWatchedCount } from '@/features/library/utils/listCount';
+import { watchedPercent } from '@/features/library/utils/listProgress';
 import { firstName, withElision } from '@/features/library/utils/listMembers';
 import { listPageLabels } from '@/features/library/utils/listPageLabels';
 
@@ -79,15 +79,6 @@ function PublicListLoadError({
         onRetry={onRetry}
       />
     </PageLayout>
-  );
-}
-
-function CreatorOverline({ creator }: Readonly<{ creator: ListCreator }>) {
-  const { t } = useTranslation();
-  return (
-    <AvatarOverline avatarId={creator.avatarId} pseudo={creator.displayName}>
-      {t('lists.public.overline', { handle: creator.handle })}
-    </AvatarOverline>
   );
 }
 
@@ -192,16 +183,14 @@ function publicListHeader({
   t,
 }: PublicListHeaderArgs): ListMoviesProps['header'] {
   const back = backToLists(handle, list?.creator, t);
-  if (!list) return { back, stackedOnMobile: true };
-  const total = list.items.length;
+  if (!list) return { back };
   return {
     back,
-    overline: <CreatorOverline creator={list.creator} />,
-    stackedOnMobile: true,
-    leading: ({ isMobile }) => (
+    progress: isSignedIn ? watchedPercent(watched, list.items.length) : null,
+    source: <CreatorSource creator={list.creator} />,
+    primary: ({ isMobile }) => (
       <SaveListAction isSignedIn={isSignedIn} compact={isMobile} toggle={savedToggle} />
     ),
-    progress: isSignedIn && total > 0 ? <ListProgress watched={watched} total={total} /> : null,
     menu: <PublicListMenu list={list} onCopy={isSignedIn ? onCopy : undefined} />,
   };
 }
@@ -242,11 +231,12 @@ export default function PublicListPage() {
   if (list?.viewerRole) return <Navigate to={ROUTES.list(list.id)} replace />;
 
   const name = list?.name ?? null;
+  const watchedShown = isSignedIn ? watchedCount : 0;
 
   return (
     <ListMoviesPage
       title={name}
-      subtitle={list ? publicListCountLabel(list, t) : null}
+      subtitle={list ? withWatchedCount(publicListCountLabel(list, t), watchedShown, t) : null}
       description={list?.description}
       items={items}
       isLoading={listQuery.isPending}

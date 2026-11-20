@@ -9,7 +9,7 @@ namespace MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 
 public sealed class GetMovieCollectionsHandler : IGetMovieCollectionsHandler
 {
-    private const string CacheKey = "showcase-collections-v2";
+    private const string CacheKey = "showcase-collections-v3";
 
     private readonly ITmdbMovieSearch _tmdb;
     private readonly SharedCacheReadThrough _cache;
@@ -85,6 +85,7 @@ public sealed class GetMovieCollectionsHandler : IGetMovieCollectionsHandler
                 PosterPath = summary.PosterPath,
                 MovieCount = summary.MovieCount,
                 PreviewPosterPaths = summary.PartPosterPaths.Take(MovieShowcaseCatalog.PreviewPosterCount).ToList(),
+                MovieIds = summary.PartIds,
             })
             .ToList();
 

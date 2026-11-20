@@ -2,6 +2,8 @@ import type { Locale } from './fr';
 
 export const en: Locale = {
   common: {
+    readMore: 'Read more',
+    readLess: 'Show less',
     loading: 'Loading\u2026',
     retry: 'Retry',
     cancel: 'Cancel',
@@ -1548,8 +1550,6 @@ export const en: Locale = {
     synopsisEmpty: 'No synopsis for this movie yet.',
     synopsisEmptyShow: 'No synopsis for this series yet.',
     taglineQuote: '“{{tagline}}”',
-    readMore: 'Read more',
-    readLess: 'Show less',
     videosOne: 'Video',
     videosMany: 'Videos',
     videoTrailer: 'Trailer',
@@ -1649,7 +1649,6 @@ export const en: Locale = {
     },
     addPanel: {
       trigger: 'Add a movie',
-      triggerShort: 'Add',
       title: 'Add a movie to my watchlist',
     },
     card: {
@@ -1857,8 +1856,6 @@ export const en: Locale = {
     },
     progress: {
       percent: '{{percent}} watched',
-      detailOne: '1 of {{total}} watched, **{{percent}}**',
-      detail: '{{watched}} of {{total}} watched, **{{percent}}**',
     },
     saved: {
       save: 'Save to My lists',
@@ -1866,8 +1863,6 @@ export const en: Locale = {
       saved: 'Saved',
       saveError: 'Could not save.',
       unsaveError: 'Could not unsave this list.',
-      overlineCollection: 'Saved saga',
-      overlineTheme: 'Saved selection',
       copy: 'Copy to a new list',
       viewCollection: 'See the saga in Explorer',
       viewTheme: 'See the selection in Explorer',
@@ -1881,8 +1876,6 @@ export const en: Locale = {
       retry: 'Try again',
       notFoundTitle: 'This list is no longer saved.',
       notFoundMessage: 'It may have been removed from My lists, or the address is incomplete.',
-      overlineMemberList: 'Saved list by @{{handle}}',
-      overlineMemberListUnknown: 'Saved list',
       viewOnProfile: 'See the list on {{name}}’s profile',
       viewOnProfileElided: 'See the list on {{name}}’s profile',
       unavailablePrivate: '{{name}} made this list private',
@@ -1917,7 +1910,6 @@ export const en: Locale = {
       withCount: 'with {{count}} people',
       listOf: '{{name}}’s list',
       listOfElided: '{{name}}’s list',
-      createdBy: 'Created by {{name}}',
       addedBy: 'Added by {{name}}',
       addedByYou: 'Added by you',
       addedByColumn: 'Added by',
@@ -2053,7 +2045,6 @@ export const en: Locale = {
       loading: 'Loading your watched films…',
       loadError: 'Could not load your watched films.',
       addTrigger: 'Add a watched film',
-      addTriggerShort: 'Add',
       addPanelTitle: 'Add a watched film',
       addSearchLabel: 'Search for a watched film to add',
       addSearchPlaceholder: 'Search for a watched film…',
@@ -3225,7 +3216,6 @@ export const en: Locale = {
       nextItem4: 'Group leaderboard',
       nextItem5: 'Group nights',
       nextItem6: 'Automatic "already seen" in a night',
-      nextItem7: 'One look for every list',
       v2When: 'No date announced',
       v2What: 'V2',
       v2Detail:

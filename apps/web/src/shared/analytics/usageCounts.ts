@@ -6,7 +6,7 @@ export type EventLinkState = 'open' | 'full' | 'closed';
 
 export type JoinPromptCta = 'login' | 'register';
 
-export type RandomPickSource = 'watchlist' | 'list' | 'saved_list';
+export type RandomPickSource = 'watchlist' | 'list' | 'saved_list' | 'catalog';
 
 export type ReportedUsage =
   | { metric: 'event_link_opened'; variant: `${UsageViewer}.${EventLinkState}` }

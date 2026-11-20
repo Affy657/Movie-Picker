@@ -5,15 +5,45 @@ import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
-import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
+import {
+  authMeGuestHandler,
+  createSavedListsHandlers,
+  createWatchedHandlers,
+  TEST_API_V1,
+} from '@/mocks/handlers';
+import { pickSort } from '@/test-utils/sortMenu';
 import MovieCollectionsPage from '@/app/pages/MovieCollectionsPage';
 
 const collectionsHandler = http.get(`${TEST_API_V1}/movies/collections`, () =>
   HttpResponse.json({
     items: [
-      { id: 1, name: 'Star Wars', overview: null, posterPath: null, movieCount: 9 },
-      { id: 2, name: 'Alien', overview: null, posterPath: null, movieCount: 4 },
-      { id: 3, name: 'Star Trek', overview: null, posterPath: null, movieCount: 13 },
+      {
+        id: 1,
+        name: 'Star Wars',
+        overview: null,
+        posterPath: null,
+        movieCount: 9,
+        previewPosterPaths: ['/sw1.jpg', '/sw2.jpg', '/sw3.jpg'],
+        movieIds: [11, 12, 13, 14, 15, 16, 17, 18, 19],
+      },
+      {
+        id: 2,
+        name: 'Alien',
+        overview: null,
+        posterPath: null,
+        movieCount: 4,
+        previewPosterPaths: [],
+        movieIds: [21, 22, 23, 24],
+      },
+      {
+        id: 3,
+        name: 'Star Trek',
+        overview: null,
+        posterPath: null,
+        movieCount: 13,
+        previewPosterPaths: [],
+        movieIds: [],
+      },
     ],
     disclaimer: 'TMDB',
     tmdbAttributionUrl: 'https://www.themoviedb.org/',
@@ -30,11 +60,31 @@ function renderPage() {
   );
 }
 
+const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
+  HttpResponse.json({
+    userId: 'u1',
+    displayName: 'Alice',
+    emailMasked: 'a***@test.local',
+    uiTheme: 'system',
+    accentColor: 'default',
+    ratingScale: 'ten',
+  })
+);
+
+function sagaRows() {
+  return within(screen.getByRole('list', { name: 'Sagas et collections' })).getAllByRole(
+    'listitem'
+  );
+}
+
+const SAGA_NAMES = ['Star Wars', 'Alien', 'Star Trek'];
+
 function collectionNames() {
-  const grid = screen.getByRole('list', { name: '' });
-  return within(grid)
-    .getAllByRole('listitem')
-    .map((item) => item.textContent?.replace(/\d+ films?$/, '').trim());
+  return sagaRows().map((row) => SAGA_NAMES.find((name) => row.textContent?.startsWith(name)));
+}
+
+function rowOf(name: string) {
+  return sagaRows().find((row) => row.textContent?.includes(name))!;
 }
 
 describe('MovieCollectionsPage', () => {
@@ -91,7 +141,7 @@ describe('MovieCollectionsPage', () => {
     renderPage();
 
     await screen.findByText('Star Wars');
-    await user.click(screen.getByRole('button', { name: /nombre de films/i }));
+    await pickSort(user, 'Popularité', 'Nombre de films');
 
     expect(collectionNames()).toEqual(['Star Trek', 'Star Wars', 'Alien']);
   });
@@ -102,8 +152,68 @@ describe('MovieCollectionsPage', () => {
     renderPage();
 
     await screen.findByText('Star Wars');
-    await user.click(screen.getByRole('button', { name: /^nom$/i }));
+    await pickSort(user, 'Popularité', 'Nom');
 
     expect(collectionNames()).toEqual(['Alien', 'Star Trek', 'Star Wars']);
+  });
+
+  it('shows each saga on one row like Mes listes, with its posters fanned out', async () => {
+    server.use(authMeGuestHandler, collectionsHandler);
+    renderPage();
+
+    await screen.findByText('Star Wars');
+    const starWars = rowOf('Star Wars');
+    expect(within(starWars).getByText('9 films')).toBeInTheDocument();
+    expect(starWars.querySelector('[data-count="3"]')).not.toBeNull();
+  });
+
+  it('counts the films a member has watched in each saga, as Mes listes does', async () => {
+    server.use(
+      authedUserHandler,
+      collectionsHandler,
+      ...createSavedListsHandlers(),
+      ...createWatchedHandlers([
+        { tmdbId: 11, title: 'Un nouvel espoir', source: 'night' },
+        { tmdbId: 12, title: 'L’Empire contre-attaque', source: 'night' },
+      ])
+    );
+    renderPage();
+
+    expect(await screen.findByText('9 films, 2 vus')).toBeInTheDocument();
+    expect(within(rowOf('Alien')).getByText('4 films')).toBeInTheDocument();
+  });
+
+  it('marks the sagas already saved in Mes listes', async () => {
+    server.use(
+      authedUserHandler,
+      collectionsHandler,
+      ...createWatchedHandlers(),
+      ...createSavedListsHandlers([
+        { id: 's1', sourceType: 'tmdbCollection', sourceId: '2', name: 'Alien' },
+      ])
+    );
+    renderPage();
+
+    await screen.findByText('Star Wars');
+    expect(await within(rowOf('Alien')).findByText('Enregistrée')).toBeInTheDocument();
+    expect(within(rowOf('Star Wars')).queryByText('Enregistrée')).toBeNull();
+  });
+
+  it('still lists the sagas of a member when the API does not send their films yet', async () => {
+    server.use(
+      authedUserHandler,
+      ...createSavedListsHandlers(),
+      ...createWatchedHandlers([{ tmdbId: 11, title: 'Un nouvel espoir', source: 'night' }]),
+      http.get(`${TEST_API_V1}/movies/collections`, () =>
+        HttpResponse.json({
+          items: [{ id: 1, name: 'Star Wars', overview: null, posterPath: null, movieCount: 9 }],
+          disclaimer: 'TMDB',
+          tmdbAttributionUrl: 'https://www.themoviedb.org/',
+        })
+      )
+    );
+    renderPage();
+
+    expect(await screen.findByText('9 films')).toBeInTheDocument();
   });
 });

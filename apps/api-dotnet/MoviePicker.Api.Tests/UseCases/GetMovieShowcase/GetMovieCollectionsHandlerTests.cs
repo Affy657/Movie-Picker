@@ -30,7 +30,8 @@ public sealed class GetMovieCollectionsHandlerTests
             $"Resume {id}",
             $"/poster-{id}.jpg",
             5,
-            [$"/part-1-{id}.jpg", $"/part-2-{id}.jpg", $"/part-3-{id}.jpg", $"/part-4-{id}.jpg", $"/part-5-{id}.jpg"]);
+            [$"/part-1-{id}.jpg", $"/part-2-{id}.jpg", $"/part-3-{id}.jpg", $"/part-4-{id}.jpg", $"/part-5-{id}.jpg"],
+            [(id * 10) + 1, (id * 10) + 2, (id * 10) + 3, (id * 10) + 4, (id * 10) + 5]);
 
     private void SetupAllCollections()
     {
@@ -108,10 +109,40 @@ public sealed class GetMovieCollectionsHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_ListsEveryFilmOfEachSagaInItsOrder()
+    {
+        SetupAllCollections();
+        var expectedId = MovieShowcaseCatalog.CollectionIds[0];
+
+        var first = (await Build().HandleAsync()).Items[0];
+
+        Assert.Equal(
+            [(expectedId * 10) + 1, (expectedId * 10) + 2, (expectedId * 10) + 3, (expectedId * 10) + 4, (expectedId * 10) + 5],
+            first.MovieIds);
+    }
+
+    [Fact]
+    public async Task HandleAsync_SnapshotSharedBeforeTheFilmIdsExisted_IsNotServed()
+    {
+        SetupAllCollections();
+        var legacySnapshot = new List<MovieCollectionResponse>
+        {
+            new() { Id = 1, Name = "Saga without film ids", MovieCount = 3, PreviewPosterPaths = ["/a.jpg"] },
+        };
+        _shared.Setup(c => c.TryGetAsync<IReadOnlyList<MovieCollectionResponse>>("showcase-collections-v2", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SharedCacheEntry<IReadOnlyList<MovieCollectionResponse>>(legacySnapshot, DateTimeOffset.UtcNow.AddHours(1)));
+
+        var result = await Build().HandleAsync();
+
+        Assert.Equal(MovieShowcaseCatalog.CollectionIds.Count, result.Items.Count);
+        Assert.All(result.Items, item => Assert.Equal(5, item.MovieIds.Count));
+    }
+
+    [Fact]
     public async Task HandleAsync_SagaWithFewerPostersThanThePreview_PreviewsThoseItHas()
     {
         _tmdb.Setup(t => t.GetCollectionAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((int id, CancellationToken _) => new TmdbCollectionSummary(id, $"Saga {id}", null, null, 2, ["/only.jpg"]));
+            .ReturnsAsync((int id, CancellationToken _) => new TmdbCollectionSummary(id, $"Saga {id}", null, null, 2, ["/only.jpg"], [1, 2]));
 
         var first = (await Build().HandleAsync()).Items[0];
 

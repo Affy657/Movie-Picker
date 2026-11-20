@@ -8,6 +8,14 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Toutes les listes se lisent de la même façon** : la page d'une saga ou d'une sélection d'Explorer reprend celle d'une liste, avec le résumé de la saga, « Piocher un film » et la vue en liste, et la page des sagas les présente une par ligne comme Mes listes, avec vos films vus.
+
+### Changed
+
+- **Le haut des pages de listes prend moins de place** : les affiches de la liste à côté du titre, le nombre de films et de vus sur une seule ligne, avec qui la remplit juste en dessous, la description repliée sur deux lignes et les outils sans cadre. Sur téléphone, les films arrivent plus haut.
+
 ## [1.20.0] - 2026-11-20
 
 ### Added

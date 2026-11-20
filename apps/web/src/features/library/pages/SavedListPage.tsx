@@ -13,21 +13,22 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useWatchlistToggle } from '@/features/library/hooks/useWatchlistToggle';
 import ListActionsMenu from '@/features/library/components/ListActionsMenu';
 import ListMoviesPage from '@/features/library/components/ListMoviesPage';
-import type { WatchlistSortConfig } from '@/features/library/components/WatchlistToolbar';
+import { sourceOrderSorts } from '@/features/library/components/WatchlistToolbar';
 import type { SavedListDetail } from '@/features/library/api/savedListsApi';
 import ListFormDialog from '@/features/library/components/ListFormDialog';
 import ListNotFound from '@/features/library/components/ListNotFound';
-import ListProgress from '@/features/library/components/ListProgress';
+import { SavedListSource } from '@/features/library/components/ListSource';
 import SavedToggleButton from '@/features/library/components/SavedToggleButton';
 import { useSavedList, useUnsaveList } from '@/features/library/hooks/useSavedLists';
 import { useListItemsView } from '@/features/library/hooks/useListItemsView';
-import { listCountLabel } from '@/features/library/utils/listCount';
+import { listCountLabel, withWatchedCount } from '@/features/library/utils/listCount';
+import { watchedPercent } from '@/features/library/utils/listProgress';
+import { useMovieCollection } from '@/features/movies/hooks/useMovieShowcase';
 import {
   canCopySavedList,
   isGoneMemberList,
   isMemberSource,
   savedListName,
-  savedListOverline,
   savedListSourceLink,
   savedListUnavailableTitle,
 } from '@/features/library/utils/savedListSource';
@@ -109,7 +110,7 @@ function unsaveButtonSlot(
   list: SavedListDetail | undefined,
   unsaving: boolean,
   onUnsave: () => void
-): ListMoviesHeader['leading'] {
+): ListMoviesHeader['primary'] {
   return ({ isMobile }) =>
     list ? (
       <SavedToggleButton saved compact={isMobile} disabled={unsaving} onClick={onUnsave} />
@@ -134,6 +135,11 @@ function emptyTexts(list: SavedListDetail | undefined, t: Translate): ListEmptyT
   };
 }
 
+function useSagaSummary(list: SavedListDetail | undefined): string | null {
+  const sagaId = list?.sourceType === 'tmdbCollection' ? Number(list.sourceId) : null;
+  return useMovieCollection(sagaId)?.overview ?? null;
+}
+
 export default function SavedListPage() {
   const { t } = useTranslation();
   const { savedListId } = useParams();
@@ -150,14 +156,8 @@ export default function SavedListPage() {
   const [copyOpen, setCopyOpen] = useState(false);
 
   const { items, watchedCount, isWatched } = useListItemsView(list);
-  const sorts = useMemo<WatchlistSortConfig>(
-    () => ({
-      keys: ['relevance', 'title', 'year'],
-      labels: { year: t('lists.saved.sortYear') },
-      defaultKey: 'relevance',
-    }),
-    [t]
-  );
+  const sagaSummary = useSagaSummary(list);
+  const sorts = useMemo(() => sourceOrderSorts(t), [t]);
 
   if (listQuery.isError && isNotFoundError(listQuery.error)) {
     return (
@@ -203,8 +203,12 @@ export default function SavedListPage() {
   return (
     <ListMoviesPage
       title={name}
-      subtitle={list && !unavailable ? listCountLabel(items.length, t) : null}
-      description={gone ? null : list?.description}
+      subtitle={
+        list && !unavailable
+          ? withWatchedCount(listCountLabel(items.length, t), watchedCount, t)
+          : null
+      }
+      description={gone ? null : (list?.description ?? sagaSummary)}
       items={items}
       isLoading={listQuery.isPending}
       isError={listQuery.isError}
@@ -221,11 +225,10 @@ export default function SavedListPage() {
       emptyActions={emptyActions}
       labels={listPageLabels(name ?? '', texts, t)}
       header={{
-        overline: list ? savedListOverline(list, t) : undefined,
-        stackedOnMobile: true,
-        leading: unsaveButtonSlot(list, unsave.isPending, () => void stopSaving()),
-        progress:
-          items.length > 0 ? <ListProgress watched={watchedCount} total={items.length} /> : null,
+        cover: list?.posterPaths,
+        progress: watchedPercent(watchedCount, items.length),
+        source: list ? <SavedListSource list={list} /> : undefined,
+        primary: unsaveButtonSlot(list, unsave.isPending, () => void stopSaving()),
         menu: list ? (
           <SavedListActionsMenu
             list={list}

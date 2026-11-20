@@ -22,6 +22,14 @@ export interface WatchlistSortConfig {
   defaultKey?: LibrarySortKey;
 }
 
+export function sourceOrderSorts(t: Translate): WatchlistSortConfig {
+  return {
+    keys: ['relevance', 'title', 'year'],
+    labels: { year: t('lists.saved.sortYear') },
+    defaultKey: 'relevance',
+  };
+}
+
 const OPT_IN_SORTS: ReadonlySet<LibrarySortKey> = new Set(['relevance']);
 
 function allows(key: LibrarySortKey, withAvailability: boolean, config?: WatchlistSortConfig) {
@@ -86,6 +94,8 @@ interface WatchlistToolbarProps {
   sorts?: WatchlistSortConfig;
   searchLabel?: string;
   searchPlaceholder?: string;
+  appearance?: 'card' | 'plain';
+  searchAside?: ReactNode;
 }
 
 export default function WatchlistToolbar({

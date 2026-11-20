@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { openSortMenu, sortChoices } from '@/test-utils/sortMenu';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubHoverCapability, stubMatchMedia } from '@/test-utils/matchMedia';
 import {
@@ -106,14 +107,10 @@ describe('WatchedMoviesPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    const sorts = await screen.findByRole('toolbar', { name: /trier par/i });
-    expect(
-      within(sorts)
-        .getAllByRole('button')
-        .map((button) => button.textContent)
-    ).toEqual(['Vu le', 'Titre', 'Année']);
+    const sorts = await openSortMenu(user, 'Vu le');
+    expect(sortChoices(sorts)).toEqual(['Vu le', 'Titre', 'Année']);
 
-    await user.click(within(sorts).getByRole('button', { name: 'Titre' }));
+    await user.click(within(sorts).getByRole('menuitemradio', { name: 'Titre' }));
 
     expect(await titles()).toEqual(['Alien', 'Anora', 'Dune']);
   });
@@ -225,13 +222,13 @@ describe('WatchedMoviesPage', () => {
     expect(screen.getByText('Aucun film vu')).toBeInTheDocument();
   });
 
-  it('on a phone, shortens the add button', async () => {
+  it('on a phone, keeps the whole add button under the title', async () => {
     stubMatchMedia(true);
     server.use(...useServer());
 
     renderPage();
 
-    expect(await screen.findByRole('button', { name: 'Ajouter' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Ajouter un film vu' })).toBeInTheDocument();
   });
 
   it('says under the title that Letterboxd fills Films vus', async () => {

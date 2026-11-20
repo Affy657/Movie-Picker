@@ -10,6 +10,10 @@ export function watchedPercent(watched: number, total: number): number | null {
   return Math.min(ALMOST_ALL, Math.round((watched / total) * ALL));
 }
 
+export function progressOnceWatched(watched: number, total: number): number | null {
+  return watched > 0 ? watchedPercent(watched, total) : null;
+}
+
 function formatPercent(watched: number, total: number, locale: LocaleCode): string {
   const percent = watchedPercent(watched, total) ?? 0;
   return new Intl.NumberFormat(locale, { style: 'percent' }).format(percent / ALL);
@@ -22,17 +26,6 @@ export function listProgressLabel(
   locale: LocaleCode
 ): string {
   return t('lists.progress.percent', { percent: formatPercent(watched, total, locale) });
-}
-
-export function listProgressDetail(
-  watched: number,
-  total: number,
-  t: Translate,
-  locale: LocaleCode
-): string {
-  const percent = formatPercent(watched, total, locale);
-  if (watched === 1) return t('lists.progress.detailOne', { total, percent });
-  return t('lists.progress.detail', { watched, total, percent });
 }
 
 interface ProgressOfList {

@@ -10879,6 +10879,7 @@ export interface components {
             /** Format: int32 */
             movieCount: number;
             previewPosterPaths: string[];
+            movieIds: number[];
         };
         MovieCrewMemberResponse: {
             /** @enum {string} */

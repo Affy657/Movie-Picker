@@ -186,7 +186,7 @@ describe('buildUsageReport', () => {
       },
       ratings: { ratings: 40, people: 6 },
       recaps: { visitor: 9, account: 3 },
-      randomPicks: { watchlist: 5, list: 0, saved_list: 0 },
+      randomPicks: { watchlist: 5, list: 0, saved_list: 0, catalog: 0 },
       watchlist: { adds: 30, people: 4, imports: 250 },
       letterboxd: {
         connectedAccounts: 5,

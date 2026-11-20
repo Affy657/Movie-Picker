@@ -17,39 +17,42 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--space-2-5);
+  gap: var(--space-3);
   margin-bottom: var(--space-5);
 }
 
 .pageHeader {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--space-3) var(--space-4);
+  gap: var(--space-3) var(--space-6);
   align-self: stretch;
 }
 
-.pageHeaderStacked {
-  flex-direction: column;
-  align-items: stretch;
+.pageHeaderMobile {
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.identity {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.pageHeaderMobile .identity {
+  align-items: flex-start;
+  gap: var(--space-3-5);
 }
 
 .pageTitleGroup {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  align-items: flex-start;
+  gap: var(--space-2);
   min-width: 0;
-}
-
-.overline {
-  composes: overline from '@/shared/components/typography.module.css';
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  margin: 0;
-  font-size: var(--font-size-2xs);
-  color: var(--color-text-muted);
 }
 
 .pageTitle {
@@ -58,36 +61,40 @@
   overflow-wrap: anywhere;
 }
 
-.pageSubtitle {
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1-5) var(--space-5);
   margin: 0;
   font-size: var(--font-size-sm);
+  line-height: var(--leading-none);
   color: var(--color-text-subtle);
 }
 
-.headerActions {
+.metaItem {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2-5);
-  flex-shrink: 0;
+  gap: var(--space-1-5);
+  color: var(--color-text-muted);
 }
 
-.headerActionsMobile {
-  display: inline-flex;
+.metaText {
+  transform: translateY(var(--text-optical-nudge));
+}
+
+.synced {
+  color: var(--color-success);
+}
+
+.source {
+  display: flex;
   align-items: center;
   gap: var(--space-2);
-  flex-shrink: 0;
-}
-
-.headerActionsStacked {
-  display: flex;
-}
-
-.headerMenu {
-  display: inline-flex;
-}
-
-.headerActionsStacked .headerMenu {
-  margin-left: auto;
+  min-width: 0;
+  max-width: 100%;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
 }
 
 .description {
@@ -99,9 +106,45 @@
   white-space: pre-line;
 }
 
-.progress {
+.headerActions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2-5);
+  flex-shrink: 0;
+}
+
+.mainActions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2-5);
+}
+
+.headerMenu {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.actionsRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   align-self: stretch;
-  max-width: var(--container-xs);
+}
+
+.actionsRow .mainActions {
+  display: flex;
+  flex: 1 1 auto;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.actionsRow .mainActions > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.actionsRow:not(:has(> .mainActions > *)) {
+  display: none;
 }
 
 .trailingGroup {

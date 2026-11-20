@@ -107,7 +107,7 @@ internal sealed class SavedListTestKit
     {
         Tmdb
             .Setup(t => t.GetCollectionAsync(collectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TmdbCollectionSummary(collectionId, name, null, null, films.Length, []));
+            .ReturnsAsync(new TmdbCollectionSummary(collectionId, name, null, null, films.Length, [], []));
         SagaFilmsAre(collectionId, films);
     }
 

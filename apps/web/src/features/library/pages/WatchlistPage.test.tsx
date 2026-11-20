@@ -6,6 +6,7 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import WatchlistPage from '@/features/library/pages/WatchlistPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { openSortMenu, pickSort } from '@/test-utils/sortMenu';
 import { stubHoverCapability, stubMatchMedia } from '@/test-utils/matchMedia';
 import { createWatchlistHandlers, TEST_API_V1, type MockWatchlistItem } from '@/mocks/handlers';
 import { MOVIE_PAGE_CHUNK } from '@/app/moviePageChunk';
@@ -307,7 +308,7 @@ describe('WatchlistPage (MSW)', () => {
     expect(await screen.findByRole('list', { name: /films de ma liste/i })).toBeInTheDocument();
   });
 
-  it('sorts by addition (default), rating and runtime, and reverses the direction on the second click', async () => {
+  it('sorts by addition (default), rating and runtime from the sort menu, and reverses the direction', async () => {
     server.use(authedUserHandler, ...watchlistHandler([ITEM_A, ITEM_B]));
 
     renderPage();
@@ -325,21 +326,21 @@ describe('WatchlistPage (MSW)', () => {
     });
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole('button', { name: /^note$/i }));
+    await pickSort(user, 'Ajout', 'Note');
     await waitFor(() => {
       const [first, second] = titlesInOrder();
       expect(first).toContain('Ancien Mais Bien Noté');
       expect(second).toContain('Recent Mais Mal Noté');
     });
 
-    await user.click(screen.getByRole('button', { name: /^durée$/i }));
+    await pickSort(user, 'Note', 'Durée');
     await waitFor(() => {
       const [first, second] = titlesInOrder();
       expect(first).toContain('Ancien Mais Bien Noté');
       expect(second).toContain('Recent Mais Mal Noté');
     });
 
-    await user.click(screen.getByRole('button', { name: /^durée$/i }));
+    await pickSort(user, 'Durée', 'Décroissant');
     await waitFor(() => {
       const [first, second] = titlesInOrder();
       expect(first).toContain('Recent Mais Mal Noté');
@@ -532,9 +533,9 @@ describe('WatchlistPage (MSW)', () => {
     expect(titles()).toEqual(['Ancien Mais Bien Noté', 'Recent Mais Mal Noté']);
 
     await user.click(screen.getByRole('button', { name: /affichage grille/i }));
-    const sortToolbar = screen.getByRole('toolbar', { name: /trier par/i });
-    expect(within(sortToolbar).getByRole('button', { name: 'Sortie' })).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Sortie' })).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: 'Sortie' })).toBeNull();
+    const sortMenu = await openSortMenu(user, 'Note');
+    expect(within(sortMenu).getByRole('menuitemradio', { name: 'Sortie' })).toBeInTheDocument();
   });
 
   it('list view: the availability arrives after the rows, fills the Dispo column and the missing runtime', async () => {
@@ -700,8 +701,8 @@ describe('WatchlistPage (MSW)', () => {
     renderPage();
 
     const importBtn = await screen.findByRole('button', { name: 'Importer' });
-    const addBtn = screen.getByRole('button', { name: 'Ajouter' });
-    expect(importBtn.parentElement).toBe(addBtn.parentElement);
+    const addBtn = screen.getByRole('button', { name: 'Ajouter un film' });
+    expect(importBtn.parentElement).toContainElement(addBtn);
     expect(screen.queryByText('Importer depuis Letterboxd')).not.toBeInTheDocument();
   });
 
@@ -711,11 +712,11 @@ describe('WatchlistPage (MSW)', () => {
 
     renderPage();
 
-    await screen.findByRole('button', { name: 'Piocher' });
+    await screen.findByRole('button', { name: 'Piocher un film' });
     const importBtn = screen.getByRole('button', { name: 'Importer depuis Letterboxd' });
     expect(importBtn).toHaveTextContent(/^$/);
-    expect(importBtn.parentElement).toBe(
-      screen.getByRole('button', { name: 'Ajouter' }).parentElement
+    expect(importBtn.parentElement).toContainElement(
+      screen.getByRole('button', { name: 'Ajouter un film' })
     );
   });
 
@@ -1014,7 +1015,7 @@ describe('WatchlistPage (MSW)', () => {
       );
       server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
       renderPage();
-      const { user, dialog: sheet } = await openPick('Piocher');
+      const { user, dialog: sheet } = await openPick('Piocher un film');
       within(sheet).getByRole('button', { name: 'Fermer' }).focus();
 
       mobile = false;
@@ -1025,15 +1026,15 @@ describe('WatchlistPage (MSW)', () => {
       expect(screen.getByRole('button', { name: 'Piocher un film' })).toHaveFocus();
     });
 
-    it('on mobile, shows a short Piocher next to Add', async () => {
+    it('on mobile, shows Piocher un film next to Ajouter un film', async () => {
       stubMatchMedia(true);
       server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
       renderPage();
 
-      const pickBtn = await screen.findByRole('button', { name: 'Piocher' });
+      const pickBtn = await screen.findByRole('button', { name: 'Piocher un film' });
 
       expect(pickBtn.parentElement).toBe(
-        screen.getByRole('button', { name: 'Ajouter' }).parentElement
+        screen.getByRole('button', { name: 'Ajouter un film' }).parentElement
       );
     });
   });

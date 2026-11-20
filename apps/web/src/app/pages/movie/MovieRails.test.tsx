@@ -7,6 +7,7 @@ import { http, HttpResponse } from 'msw';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
 import MovieRails from '@/app/pages/movie/MovieRails';
+import CatalogListPage from '@/app/pages/CatalogListPage';
 import ShowcaseListPage from '@/app/pages/ShowcaseListPage';
 
 const DUNE = { tmdbId: 438631, mediaType: 'movie' as const };
@@ -66,7 +67,7 @@ function renderRails() {
           />
           <Route
             path="/films/collection/:collectionId"
-            element={<ShowcaseListPage variant="collection" />}
+            element={<CatalogListPage variant="collection" />}
           />
           <Route
             path="/films/similaires/:seedTmdbId"

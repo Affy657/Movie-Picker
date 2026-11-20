@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { openSortMenu, sortChoices } from '@/test-utils/sortMenu';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubHoverCapability } from '@/test-utils/matchMedia';
 import {
@@ -93,10 +94,6 @@ function visitorServer() {
   ];
 }
 
-function withPercentSpace(text: string | null | undefined) {
-  return (text ?? '').replaceAll(/\p{Zs}/gu, ' ');
-}
-
 function gridTitles() {
   return within(screen.getByRole('list', { name: 'Films de « Les classiques à voir »' }))
     .getAllByRole('listitem')
@@ -126,16 +123,9 @@ describe('PublicListPage', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: 'Les classiques à voir' })
     ).toBeInTheDocument();
-    expect(screen.getByText('Liste de @lea')).toBeInTheDocument();
-    expect(screen.getByText('3 films')).toBeInTheDocument();
+    expect(screen.getByText('Par Léa')).toBeInTheDocument();
+    expect(screen.getByText('3 films, 1 vu')).toBeInTheDocument();
     expect(screen.getByText('Ceux qu’il faut avoir vus au moins une fois.')).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        (_, element) =>
-          withPercentSpace(element?.textContent) === '1 sur 3 vu, 33 %' &&
-          element?.lastElementChild?.tagName === 'STRONG'
-      )
-    ).toBeInTheDocument();
     expect(await screen.findByRole('switch', { name: 'Griser les vus' })).toBeInTheDocument();
   });
 
@@ -144,20 +134,13 @@ describe('PublicListPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    const sorts = await screen.findByRole('toolbar', { name: /trier par/i });
-    expect(
-      within(sorts)
-        .getAllByRole('button')
-        .map((button) => button.textContent)
-    ).toEqual(['Ordre de Léa', 'Titre', 'Année']);
-    expect(within(sorts).getByRole('button', { name: /ordre de léa/i })).toHaveAttribute(
-      'aria-pressed',
-      'true'
-    );
+    const sorts = await openSortMenu(user, 'Ordre de Léa');
+    expect(sortChoices(sorts)).toEqual(['Ordre de Léa', 'Titre', 'Année']);
+    expect(within(sorts).getByRole('menuitemradio', { name: /ordre de léa/i })).toBeChecked();
     expect(gridTitles()[0]).toContain('Le Parrain');
     expect(gridTitles()[2]).toContain('Vertigo');
 
-    await user.click(within(sorts).getByRole('button', { name: /titre/i }));
+    await user.click(within(sorts).getByRole('menuitemradio', { name: /titre/i }));
 
     expect(gridTitles()[0]).toContain('Citizen Kane');
   });
@@ -246,7 +229,8 @@ describe('PublicListPage', () => {
       screen.getByRole('heading', { level: 1, name: 'Les classiques à voir' })
     ).toBeInTheDocument();
     expect(await screen.findByRole('list', { name: /films de/i })).toBeInTheDocument();
-    expect(screen.queryByText(/sur 3 vu/)).toBeNull();
+    expect(screen.getByText('3 films')).toBeInTheDocument();
+    expect(screen.queryByText('3 films, 1 vu')).toBeNull();
     expect(screen.queryByRole('switch', { name: 'Griser les vus' })).toBeNull();
 
     await user.click(screen.getByRole('button', { name: 'Actions de la liste' }));
@@ -372,13 +356,7 @@ describe('PublicListPage', () => {
       await login!('alice@test.local', 'secret');
     });
 
-    expect(
-      await screen.findByText(
-        (_, element) =>
-          withPercentSpace(element?.textContent) === '1 sur 2 vu, 50 %' &&
-          element?.lastElementChild?.tagName === 'STRONG'
-      )
-    ).toBeInTheDocument();
+    expect(await screen.findByText('2 films, 1 vu')).toBeInTheDocument();
   });
 
   it('says clearly when the list is private or does not exist', async () => {

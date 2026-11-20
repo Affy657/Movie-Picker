@@ -3,7 +3,7 @@ import { Film } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import InlineError from '@/shared/components/InlineError';
 import EmptyState from '@/shared/components/EmptyState';
-import { Skeleton, SkeletonScreen } from '@/shared/components/Skeleton';
+import { SkeletonScreen } from '@/shared/components/Skeleton';
 import { ROUTES } from '@/app/routes';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
@@ -11,8 +11,17 @@ import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
-import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
-import MovieCollectionCard from '@/features/movies/components/MovieCollectionCard';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { SavedMark } from '@/features/library/components/ListSource';
+import { useSavedLists } from '@/features/library/hooks/useSavedLists';
+import { useWatchedKeys } from '@/features/library/hooks/useWatched';
+import { withWatchedCount } from '@/features/library/utils/listCount';
+import { progressOnceWatched } from '@/features/library/utils/listProgress';
+import MovieCollectionCard, {
+  MovieCollectionRows,
+  MovieCollectionRowsSkeleton,
+} from '@/features/movies/components/MovieCollectionCard';
+import { collectionPosterSources } from '@/features/movies/utils/posterStack';
 import ListToolbar from '@/features/movies/components/ListToolbar';
 import { useMovieCollections } from '@/features/movies/hooks/useMovieShowcase';
 import type { MovieCollection } from '@/features/movies/api/showcaseApi';
@@ -21,7 +30,7 @@ import { collectionDisplayName } from '@/features/movies/utils/collectionName';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import BackLink from '@/shared/components/BackLink';
 
-const SKELETON_CARDS = 6;
+const SKELETON_ROWS = 6;
 
 type CollectionSortKey = 'popularity' | 'name' | 'size';
 
@@ -47,6 +56,25 @@ export default function MovieCollectionsPage() {
   const isMobile = useIsMobile();
   const collections = useMovieCollections();
   const items = useMemo(() => collections.data?.items ?? [], [collections.data]);
+  const { user } = useAuth();
+  const isSignedIn = !!user;
+  const watchedKeys = useWatchedKeys(isSignedIn);
+  const savedLists = useSavedLists({ enabled: isSignedIn });
+  const savedSagaIds = useMemo(
+    () =>
+      new Set(
+        (savedLists.data ?? [])
+          .filter((list) => list.sourceType === 'tmdbCollection')
+          .map((list) => list.sourceId)
+      ),
+    [savedLists.data]
+  );
+  const watchedIn = (collection: MovieCollection) =>
+    watchedKeys.ready
+      ? watchedKeys.countAmong(
+          (collection.movieIds ?? []).map((tmdbId) => ({ tmdbId, mediaType: 'movie' as const }))
+        )
+      : 0;
 
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<CollectionSortKey>('popularity');
@@ -99,13 +127,7 @@ export default function MovieCollectionsPage() {
 
       {collections.isPending ? (
         <SkeletonScreen label={t('showcase.loading')}>
-          <ul className={styles.collectionGrid}>
-            {Array.from({ length: SKELETON_CARDS }, (_, index) => (
-              <li key={index}>
-                <Skeleton variant="block" height={88} />
-              </li>
-            ))}
-          </ul>
+          <MovieCollectionRowsSkeleton count={SKELETON_ROWS} />
         </SkeletonScreen>
       ) : null}
 
@@ -151,6 +173,7 @@ export default function MovieCollectionsPage() {
           clearAllLabel={t('profile.movies.toolbar.clearAll')}
           onClearAll={clearAll}
           isMobile={isMobile}
+          appearance="plain"
         />
       ) : null}
 
@@ -163,22 +186,32 @@ export default function MovieCollectionsPage() {
       ) : null}
 
       {visibleItems.length > 0 ? (
-        <ul className={styles.collectionGrid}>
-          {visibleItems.map((collection) => (
-            <MovieCollectionCard
-              key={collection.id}
-              to={ROUTES.movieCollection(collection.id)}
-              name={collectionDisplayName(collection.name)}
-              movieCountLabel={pluralizeCount(
-                collection.movieCount,
-                'showcase.collectionMoviesOne',
-                'showcase.collectionMovies',
-                t
-              )}
-              posterSrc={tmdbPosterSrcForListDisplay(posterImageSrc(collection.posterPath))}
-            />
-          ))}
-        </ul>
+        <MovieCollectionRows label={t('showcase.sections.collectionsTitle')}>
+          {visibleItems.map((collection) => {
+            const watched = watchedIn(collection);
+            return (
+              <MovieCollectionCard
+                key={collection.id}
+                layout="row"
+                to={ROUTES.movieCollection(collection.id)}
+                name={collectionDisplayName(collection.name)}
+                movieCountLabel={withWatchedCount(
+                  pluralizeCount(
+                    collection.movieCount,
+                    'showcase.collectionMoviesOne',
+                    'showcase.collectionMovies',
+                    t
+                  ),
+                  watched,
+                  t
+                )}
+                stackSrcs={collectionPosterSources(collection)}
+                progress={progressOnceWatched(watched, collection.movieCount)}
+                extra={savedSagaIds.has(String(collection.id)) ? <SavedMark /> : undefined}
+              />
+            );
+          })}
+        </MovieCollectionRows>
       ) : null}
     </PageLayout>
   );

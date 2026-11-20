@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import { ChevronRight, Layers } from 'lucide-react';
 import styles from './MovieCollectionCard.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
-import Card from '@/shared/components/Card';
+import { Skeleton } from '@/shared/components/Skeleton';
 import PosterFan from '@/features/movies/components/PosterFan';
 
 const STACK_SLOTS = [styles.stackFront, styles.stackMiddle, styles.stackBack];
@@ -13,8 +13,7 @@ interface Props {
   to: string;
   name: string;
   movieCountLabel: string;
-  posterSrc?: string;
-  stackSrcs?: readonly string[];
+  stackSrcs: readonly string[];
   badgeIcon?: ReactNode;
   extra?: ReactNode;
   layout?: 'stack' | 'row';
@@ -117,11 +116,34 @@ function CollectionStack({
   );
 }
 
+export function MovieCollectionRows({
+  label,
+  children,
+}: Readonly<{ label?: string; children: ReactNode }>) {
+  return (
+    <ul className={styles.rows} aria-label={label}>
+      {children}
+    </ul>
+  );
+}
+
+export function MovieCollectionRowsSkeleton({ count }: Readonly<{ count: number }>) {
+  return (
+    <ul className={styles.rows}>
+      {Array.from({ length: count }, (_, index) => (
+        <li key={index} className={styles.rowSkeleton}>
+          <Skeleton variant="poster" className={styles.rowSkeletonPoster} />
+          <Skeleton variant="text" width="50%" />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export default function MovieCollectionCard({
   to,
   name,
   movieCountLabel,
-  posterSrc,
   stackSrcs,
   badgeIcon,
   extra,
@@ -130,7 +152,7 @@ export default function MovieCollectionCard({
   nameSuffix,
   emptyIcon,
 }: Readonly<Props>) {
-  if (stackSrcs && layout === 'row') {
+  if (layout === 'row') {
     return (
       <CollectionRow
         to={to}
@@ -144,35 +166,14 @@ export default function MovieCollectionCard({
       />
     );
   }
-  if (stackSrcs) {
-    return (
-      <CollectionStack
-        to={to}
-        name={name}
-        movieCountLabel={movieCountLabel}
-        srcs={stackSrcs}
-        badgeIcon={badgeIcon}
-        extra={extra}
-      />
-    );
-  }
   return (
-    <li className={styles.card}>
-      <Card as={Link} to={to} interactive padding="none" surface="sunken" className={styles.link}>
-        <span className={styles.posterWrap}>
-          {posterSrc ? (
-            <img src={posterSrc} alt="" className={styles.poster} loading="lazy" decoding="async" />
-          ) : (
-            <span className={styles.posterPlaceholder} aria-hidden>
-              <Layers size={ICON_SIZE.xl} />
-            </span>
-          )}
-        </span>
-        <span className={styles.body}>
-          <span className={styles.name}>{name}</span>
-          <span className={styles.count}>{movieCountLabel}</span>
-        </span>
-      </Card>
-    </li>
+    <CollectionStack
+      to={to}
+      name={name}
+      movieCountLabel={movieCountLabel}
+      srcs={stackSrcs}
+      badgeIcon={badgeIcon}
+      extra={extra}
+    />
   );
 }

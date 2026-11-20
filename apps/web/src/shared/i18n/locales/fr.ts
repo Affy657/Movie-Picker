@@ -1,5 +1,7 @@
 export const fr = {
   common: {
+    readMore: 'Lire la suite',
+    readLess: 'Réduire',
     loading: 'Chargement\u2026',
     retry: 'Réessayer',
     cancel: 'Annuler',
@@ -1564,8 +1566,6 @@ export const fr = {
     synopsisEmpty: 'Pas encore de synopsis pour ce film.',
     synopsisEmptyShow: 'Pas encore de synopsis pour cette série.',
     taglineQuote: '« {{tagline}} »',
-    readMore: 'Lire la suite',
-    readLess: 'Réduire',
     videosOne: 'Vidéo',
     videosMany: 'Vidéos',
     videoTrailer: 'Bande-annonce',
@@ -1668,7 +1668,6 @@ export const fr = {
     },
     addPanel: {
       trigger: 'Ajouter un film',
-      triggerShort: 'Ajouter',
       title: 'Ajouter un film à ma liste',
     },
     card: {
@@ -1876,8 +1875,6 @@ export const fr = {
     },
     progress: {
       percent: '{{percent}} vus',
-      detailOne: '1 sur {{total}} vu, **{{percent}}**',
-      detail: '{{watched}} sur {{total}} vus, **{{percent}}**',
     },
     saved: {
       save: 'Enregistrer dans Mes listes',
@@ -1885,8 +1882,6 @@ export const fr = {
       saved: 'Enregistrée',
       saveError: 'Enregistrement impossible.',
       unsaveError: 'Impossible de ne plus enregistrer cette liste.',
-      overlineCollection: 'Saga enregistrée',
-      overlineTheme: 'Sélection enregistrée',
       copy: 'Copier dans une nouvelle liste',
       viewCollection: 'Voir la saga dans Explorer',
       viewTheme: 'Voir la sélection dans Explorer',
@@ -1900,8 +1895,6 @@ export const fr = {
       retry: 'Réessayer',
       notFoundTitle: 'Cette liste n’est plus enregistrée.',
       notFoundMessage: 'Elle a pu être retirée de Mes listes, ou l’adresse est incomplète.',
-      overlineMemberList: 'Liste de @{{handle}} enregistrée',
-      overlineMemberListUnknown: 'Liste enregistrée',
       viewOnProfile: 'Voir la liste sur le profil de {{name}}',
       viewOnProfileElided: 'Voir la liste sur le profil d’{{name}}',
       unavailablePrivate: '{{name}} a rendu cette liste privée',
@@ -1937,7 +1930,6 @@ export const fr = {
       withCount: 'avec {{count}} personnes',
       listOf: 'liste de {{name}}',
       listOfElided: 'liste d’{{name}}',
-      createdBy: 'Créée par {{name}}',
       addedBy: 'Ajouté par {{name}}',
       addedByYou: 'Ajouté par vous',
       addedByColumn: 'Ajouté par',
@@ -2076,7 +2068,6 @@ export const fr = {
       loading: 'Chargement de vos films vus…',
       loadError: 'Impossible de charger vos films vus.',
       addTrigger: 'Ajouter un film vu',
-      addTriggerShort: 'Ajouter',
       addPanelTitle: 'Ajouter un film vu',
       addSearchLabel: 'Rechercher un film vu à ajouter',
       addSearchPlaceholder: 'Rechercher un film vu…',
@@ -3274,7 +3265,6 @@ export const fr = {
       nextItem4: "Classement d'un groupe",
       nextItem5: "Soirées d'un groupe",
       nextItem6: 'Déjà vu automatique en soirée',
-      nextItem7: 'Une seule présentation des listes',
       v2When: 'Sans date annoncée',
       v2What: 'V2',
       v2Detail:

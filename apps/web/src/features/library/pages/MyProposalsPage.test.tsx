@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { openSortMenu, sortChoices } from '@/test-utils/sortMenu';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { apiErrorJson } from '@/mocks/apiJson';
 import {
@@ -103,14 +104,10 @@ describe('MyProposalsPage', () => {
     const user = userEvent.setup();
     renderAt(PROPOSALS_PATH);
 
-    const sorts = await screen.findByRole('toolbar', { name: /trier par/i });
-    expect(
-      within(sorts)
-        .getAllByRole('button')
-        .map((button) => button.textContent)
-    ).toEqual(['Proposé le', 'Titre', 'Année']);
+    const sorts = await openSortMenu(user, 'Proposé le');
+    expect(sortChoices(sorts)).toEqual(['Proposé le', 'Titre', 'Année']);
 
-    await user.click(within(sorts).getByRole('button', { name: 'Titre' }));
+    await user.click(within(sorts).getByRole('menuitemradio', { name: 'Titre' }));
 
     expect(await titles('Mes films proposés')).toEqual(['Alien', 'Brazil', 'Midsommar']);
   });

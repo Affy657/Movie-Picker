@@ -13,6 +13,11 @@
   --fan-poster: var(--space-14);
 }
 
+.lg {
+  --fan-poster: var(--space-16);
+  --fan-step: var(--space-8);
+}
+
 .poster {
   position: absolute;
   top: var(--space-1);
@@ -139,6 +144,11 @@
 
   .md {
     --fan-poster: var(--space-12);
+  }
+
+  .lg {
+    --fan-poster: var(--space-12);
+    --fan-step: var(--space-6);
   }
 }
 

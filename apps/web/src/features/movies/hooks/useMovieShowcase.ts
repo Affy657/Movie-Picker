@@ -27,6 +27,11 @@ export function useMovieCollections(enabled = true) {
   });
 }
 
+export function useMovieCollection(collectionId: number | null) {
+  const collections = useMovieCollections(collectionId !== null);
+  return collections.data?.items.find((collection) => collection.id === collectionId);
+}
+
 export function useShowcaseThemes() {
   return useQuery({
     queryKey: queryKeys.movies.showcaseThemes,

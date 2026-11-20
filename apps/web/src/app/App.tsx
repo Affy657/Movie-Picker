@@ -24,6 +24,7 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 const HomePage = routeLazy('home');
 const ShowcaseListPage = routeLazy('showcaseList');
 const MovieCollectionsPage = routeLazy('movieCollections');
+const CatalogListPage = routeLazy('catalogList');
 const LandingPage = routeLazy('landing');
 const CreateEvent = routeLazy('createEvent');
 const EventDetail = routeLazy('eventDetail');
@@ -99,10 +100,10 @@ export function AppRoutes() {
           path={ROUTES.showcaseRecommendationsPattern}
           element={<ShowcaseListPage variant="recommendations" />}
         />
-        <Route path={ROUTES.showcaseThemePattern} element={<ShowcaseListPage variant="theme" />} />
+        <Route path={ROUTES.showcaseThemePattern} element={<CatalogListPage variant="theme" />} />
         <Route
           path={ROUTES.movieCollectionPattern}
-          element={<ShowcaseListPage variant="collection" />}
+          element={<CatalogListPage variant="collection" />}
         />
         <Route path={ROUTES.moviePagePattern} element={<MoviePage mediaType="movie" />} />
         <Route path={ROUTES.showPagePattern} element={<MoviePage mediaType="tv" />} />

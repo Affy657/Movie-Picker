@@ -26,19 +26,16 @@ import MovieListFilteredLayout from '@/features/movies/components/MovieListFilte
 import MovieBrowseCard from '@/features/movies/components/MovieBrowseCard';
 import listCardStyles from '@/features/movies/components/ShowcaseMovieCard.module.css';
 import { useCatalogToolbar } from '@/features/movies/hooks/useCatalogToolbar';
-import { useMovieCollections, useMovieShowcase } from '@/features/movies/hooks/useMovieShowcase';
+import { useMovieShowcase } from '@/features/movies/hooks/useMovieShowcase';
 import { searchMovies } from '@/features/movies/api/moviesApi';
 import type {
   ShowcaseProvider,
   ShowcaseQuery,
   ShowcaseSection,
-  ShowcaseTheme,
 } from '@/features/movies/api/showcaseApi';
 import {
   isShowcaseProvider,
-  isShowcaseTheme,
   PROVIDER_LABEL_KEYS,
-  THEME_LABEL_KEYS,
   type ShowcaseListVariant,
 } from '@/features/movies/showcaseSections';
 
@@ -48,20 +45,12 @@ import {
   type WatchlistToggleItem,
 } from '@/features/library/hooks/useWatchlistToggle';
 import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
-import DimWatchedControl from '@/features/library/components/DimWatchedControl';
 import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
-import { useDimWatched } from '@/features/library/hooks/useDimWatched';
-import { useWatchedKeys } from '@/features/library/hooks/useWatched';
-import type { SavedListSource } from '@/features/library/api/savedListsApi';
-import ListProgress from '@/features/library/components/ListProgress';
-import SavedToggleButton from '@/features/library/components/SavedToggleButton';
-import { useSavedListToggle } from '@/features/library/hooks/useSavedLists';
 import ShowcaseListStates from './ShowcaseListStates';
 import { readShowcaseListArrival } from './showcaseListState';
 import type { MovieMediaType, TitleSummary } from '@/shared/types/movie';
 import { toTitleSummary } from '@/shared/utils/titleSummary';
 import styles from './ShowcaseListPage.module.css';
-import { collectionDisplayName } from '@/features/movies/utils/collectionName';
 import BackLink from '@/shared/components/BackLink';
 
 interface ShowcaseListItem extends TitleSummary {
@@ -74,8 +63,6 @@ const TITLE_KEYS: Record<ShowcaseListVariant, TranslationKey> = {
   trending: 'showcase.sections.trendingTitle',
   'now-playing': 'showcase.sections.nowPlayingTitle',
   'most-proposed': 'showcase.sections.mostProposedTitle',
-  theme: 'showcase.sections.themeTitle',
-  collection: 'showcase.sections.collectionsTitle',
   provider: 'showcase.sections.providerTitle',
   recommendations: 'showcase.sections.similarMoviesTitle',
   search: 'showcase.sections.searchTitle',
@@ -85,8 +72,6 @@ const SUBTITLE_KEYS: Record<ShowcaseListVariant, TranslationKey> = {
   trending: 'showcase.sections.trendingSubtitle',
   'now-playing': 'showcase.sections.nowPlayingSubtitle',
   'most-proposed': 'showcase.sections.mostProposedSubtitle',
-  theme: 'showcase.sections.themeSubtitle',
-  collection: 'showcase.sections.collectionsSubtitle',
   provider: 'showcase.sections.providerSubtitle',
   recommendations: 'showcase.sections.similarSubtitle',
   search: 'showcase.sections.searchSubtitle',
@@ -109,83 +94,53 @@ interface Props {
 }
 
 type ShowcaseRouteSelection = {
-  themeKey: ShowcaseTheme | undefined;
   providerKey: ShowcaseProvider | undefined;
   seedTmdbId: number | undefined;
   seedMediaType: MovieMediaType;
-  collectionId: number | undefined;
   genreId: number | undefined;
 };
 
 function buildShowcaseQuery(
   variant: Props['variant'],
-  {
-    themeKey,
-    providerKey,
-    seedTmdbId,
-    seedMediaType,
-    collectionId,
-    genreId,
-  }: ShowcaseRouteSelection
+  { providerKey, seedTmdbId, seedMediaType, genreId }: ShowcaseRouteSelection
 ): ShowcaseQuery {
   if (variant === 'recommendations')
     return { section: 'recommendations', seedTmdbId, seedMediaType };
   if (variant === 'provider') return { section: 'provider', provider: providerKey };
-  if (variant === 'theme') return { section: 'theme', theme: themeKey };
-  if (variant === 'collection') return { section: 'collection', collectionId };
   if (variant === 'trending' && genreId) return { section: 'trending', genreIds: [genreId] };
   return { section: variant as ShowcaseSection };
 }
 
-function savedListSourceOf(
-  variant: Props['variant'],
-  { themeKey, collectionId }: ShowcaseRouteSelection
-): SavedListSource | null {
-  if (variant === 'theme' && themeKey) return { sourceType: 'explorerTheme', sourceId: themeKey };
-  if (variant === 'collection' && collectionId != null && Number.isSafeInteger(collectionId)) {
-    return { sourceType: 'tmdbCollection', sourceId: String(collectionId) };
-  }
-  return null;
-}
-
 function isShowcaseQueryEnabled(
   variant: Props['variant'],
-  { themeKey, providerKey, seedTmdbId, collectionId }: ShowcaseRouteSelection
+  { providerKey, seedTmdbId }: ShowcaseRouteSelection
 ): boolean {
   if (variant === 'search') return false;
-  if (variant === 'theme') return themeKey != null;
   if (variant === 'provider') return providerKey != null;
   if (variant === 'recommendations') return seedTmdbId != null && Number.isFinite(seedTmdbId);
-  if (variant === 'collection') return collectionId != null && Number.isFinite(collectionId);
   return true;
 }
 
 type ShowcaseRouteInputs = {
   variant: ShowcaseListVariant;
-  theme: string | undefined;
   provider: string | undefined;
   seedTmdbId: string | undefined;
   seedType: string | null;
-  collectionId: string | undefined;
   genreParam: number;
 };
 
 function parseRouteSelection({
   variant,
-  theme,
   provider,
   seedTmdbId,
   seedType,
-  collectionId,
   genreParam,
 }: ShowcaseRouteInputs): ShowcaseRouteSelection {
   const genreUsable = Number.isInteger(genreParam) && genreParam > 0;
   return {
-    themeKey: isShowcaseTheme(theme) ? theme : undefined,
     providerKey: isShowcaseProvider(provider) ? provider : undefined,
     seedTmdbId: seedTmdbId ? Number(seedTmdbId) : undefined,
     seedMediaType: seedType === 'tv' ? 'tv' : 'movie',
-    collectionId: collectionId ? Number(collectionId) : undefined,
     genreId: variant === 'trending' && genreUsable ? genreParam : undefined,
   };
 }
@@ -226,25 +181,19 @@ function recommendationsHeading(
 function resolveHeading({
   variant,
   searchQuery,
-  themeKey,
   providerKey,
-  collectionName,
   recommendationsSeed,
   t,
 }: Readonly<{
   variant: ShowcaseListVariant;
   searchQuery: string;
-  themeKey: ShowcaseTheme | undefined;
   providerKey: ShowcaseProvider | undefined;
-  collectionName: string | undefined;
   recommendationsSeed: RecommendationsSeed;
   t: Translate;
 }>): string {
   if (variant === 'search' && searchQuery)
     return t('showcase.searchHeading', { query: searchQuery });
-  if (variant === 'theme' && themeKey) return t(THEME_LABEL_KEYS[themeKey]);
   if (variant === 'provider' && providerKey) return t(PROVIDER_LABEL_KEYS[providerKey]);
-  if (variant === 'collection' && collectionName) return collectionDisplayName(collectionName);
   if (variant === 'recommendations') return recommendationsHeading(recommendationsSeed, t);
   return t(TITLE_KEYS[variant]);
 }
@@ -308,12 +257,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
   const { user } = useAuth();
-  const params = useParams<{
-    theme?: string;
-    collectionId?: string;
-    provider?: string;
-    seedTmdbId?: string;
-  }>();
+  const params = useParams<{ provider?: string; seedTmdbId?: string }>();
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const arrival = readShowcaseListArrival(location.state);
@@ -327,36 +271,25 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
   const searchQuery = (searchParams.get('q') ?? '').trim();
   const genreParam = Number(searchParams.get('genre'));
   const seedType = searchParams.get('type');
-  const { theme, provider, seedTmdbId: seedParam, collectionId: collectionParam } = params;
+  const { provider, seedTmdbId: seedParam } = params;
 
   const routeSelection: ShowcaseRouteSelection = useMemo(
     () =>
       parseRouteSelection({
         variant,
-        theme,
         provider,
         seedTmdbId: seedParam,
         seedType,
-        collectionId: collectionParam,
         genreParam,
       }),
-    [variant, theme, provider, seedParam, seedType, collectionParam, genreParam]
+    [variant, provider, seedParam, seedType, genreParam]
   );
-  const { themeKey, providerKey, collectionId, genreId } = routeSelection;
+  const { providerKey, genreId } = routeSelection;
 
   const showcaseQuery: ShowcaseQuery = useMemo(
     () => buildShowcaseQuery(variant, routeSelection),
     [variant, routeSelection]
   );
-  const savedListSource = useMemo(
-    () => savedListSourceOf(variant, routeSelection),
-    [variant, routeSelection]
-  );
-  const tracksSavedList = isLoggedIn && savedListSource !== null;
-  const savedToggle = useSavedListToggle(savedListSource, isLoggedIn);
-  const watchedKeys = useWatchedKeys(tracksSavedList);
-  const dim = useDimWatched();
-  const dimWatched = tracksSavedList && dim.enabled;
 
   const isSearch = variant === 'search';
   const showcaseEnabled = isShowcaseQueryEnabled(variant, routeSelection);
@@ -364,9 +297,6 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
   const queryEnabled = isSearch ? searchEnabled : showcaseEnabled;
 
   const showcase = useMovieShowcase(showcaseQuery, showcaseEnabled);
-  const collections = useMovieCollections(variant === 'collection');
-  const collectionName =
-    arrival.collectionName ?? collections.data?.items.find((row) => row.id === collectionId)?.name;
 
   const search = useQuery({
     queryKey: queryKeys.movies.searchPage(searchQuery),
@@ -403,9 +333,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
   const headingText = resolveHeading({
     variant,
     searchQuery,
-    themeKey,
     providerKey,
-    collectionName,
     recommendationsSeed: {
       personalTitle: personalSeedTitle,
       arrivalTitle: arrival.seedTitle,
@@ -433,39 +361,21 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
   const activeFilterCount = toolbar.activeFilterChips.length;
   const totalCount = items.length;
   const hasResults = queryEnabled && !source.isError && totalCount > 0;
-  const actionError = watchlist.error ?? savedToggle.error ?? dim.error;
 
   return (
     <PageLayout className={styles.layout}>
       <BackLink to={ROUTES.home}>{t('showcase.backToHome')}</BackLink>
 
-      <div className={styles.header}>
-        <div className={styles.headerText}>
-          <h1 className={styles.pageTitle}>{headingText}</h1>
-          <p className={styles.pageSubtitle}>{subtitleText}</p>
-          {tracksSavedList && watchedKeys.ready && totalCount > 0 ? (
-            <ListProgress
-              className={styles.progress}
-              watched={watchedKeys.countAmong(items)}
-              total={totalCount}
-            />
-          ) : null}
-        </div>
-        {tracksSavedList ? (
-          <SavedToggleButton
-            saved={savedToggle.saved}
-            compact={isMobile}
-            disabled={savedToggle.isLoading}
-            onClick={savedToggle.toggle}
-          />
-        ) : null}
+      <div className={styles.headerText}>
+        <h1 className={styles.pageTitle}>{headingText}</h1>
+        <p className={styles.pageSubtitle}>{subtitleText}</p>
       </div>
 
       <h2 className="visually-hidden">{t('showcase.sectionsHeading')}</h2>
 
-      {actionError ? (
+      {watchlist.error ? (
         <p className="error" role="alert">
-          {actionError}
+          {watchlist.error}
         </p>
       ) : null}
 
@@ -493,15 +403,6 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
                 { key: 'year', label: t('profile.movies.toolbar.sortYear') },
               ]}
               labels={showcaseToolbarLabels(toolbar, t)}
-              trailing={
-                tracksSavedList ? (
-                  <DimWatchedControl
-                    enabled={dim.enabled}
-                    onChange={dim.change}
-                    isMobile={isMobile}
-                  />
-                ) : undefined
-              }
             />
           }
           filters={toolbar}
@@ -522,7 +423,6 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
                 onProposeToEvent={() => setProposeTarget(item)}
                 ratingScale={user?.ratingScale}
                 leadingBadge={rankBadge(item.rank, t)}
-                dimmed={dimWatched && watchedKeys.has(item)}
               />
             ))}
           </ul>

@@ -55,6 +55,8 @@ public sealed class MovieCollectionResponse
     public int MovieCount { get; init; }
 
     public IReadOnlyList<string> PreviewPosterPaths { get; init; } = Array.Empty<string>();
+
+    public IReadOnlyList<int> MovieIds { get; init; } = Array.Empty<int>();
 }
 
 public sealed class MovieShowcaseThemeListResponse

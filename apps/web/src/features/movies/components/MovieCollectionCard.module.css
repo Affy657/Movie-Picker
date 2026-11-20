@@ -2,51 +2,6 @@
   min-width: 0;
 }
 
-.link {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  min-width: 0;
-  padding: var(--space-2);
-  color: var(--color-text);
-  text-decoration: none;
-}
-
-.posterWrap {
-  position: relative;
-  flex: 0 0 auto;
-  width: var(--space-14);
-  aspect-ratio: 2 / 3;
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
-  overflow: hidden;
-}
-
-.poster {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.posterPlaceholder {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-muted);
-}
-
-.body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  min-width: 0;
-}
-
 .name {
   color: var(--color-text);
   font-size: var(--font-size-xs);
@@ -61,12 +16,6 @@
   font-size: var(--font-size-2xs);
   line-height: var(--leading-snug);
   color: var(--color-text-muted);
-}
-
-@media (hover: hover) {
-  .link:hover {
-    border-color: var(--color-primary);
-  }
 }
 
 .stackLink {
@@ -242,5 +191,31 @@
 @media (prefers-reduced-motion: reduce) {
   .stackPoster {
     transition: none;
+  }
+}
+
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: var(--space-10);
+}
+
+.rowSkeleton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2-5) 0;
+}
+
+.rowSkeletonPoster {
+  width: var(--space-12);
+}
+
+@media (min-width: 48rem) {
+  .rows {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

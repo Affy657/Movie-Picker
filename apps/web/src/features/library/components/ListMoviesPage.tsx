@@ -1,15 +1,15 @@
 import { useId, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
 import clsx from 'clsx';
-import { Dices, Plus } from 'lucide-react';
+import { Dices, Globe, Layers, Plus, RefreshCw } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import EmptyState from '@/shared/components/EmptyState';
 import BackLink from '@/shared/components/BackLink';
 import Button from '@/shared/components/Button';
-import Chip from '@/shared/components/Chip';
+import ClampedText from '@/shared/components/ClampedText';
 import { Skeleton } from '@/shared/components/Skeleton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import ViewModeToggle, { type MovieViewMode } from '@/shared/components/ViewModeToggle';
-import { useLocale, useTranslation, type Translate, type TranslationKey } from '@/shared/i18n';
+import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
@@ -22,6 +22,8 @@ import { ROUTES } from '@/app/routes';
 import { MOVIE_PAGE_CHUNKS } from '@/app/moviePageChunk';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import AddMoviePanel from '@/features/movies/components/AddMoviePanel';
+import PosterFan from '@/features/movies/components/PosterFan';
+import { posterStackSources } from '@/features/movies/utils/posterStack';
 import type { AddMovieFormProps } from '@/features/movies/components/AddMovieForm';
 import { toCollectionToolbarProps } from '@/features/movies/components/FilteredCollectionLayout';
 import MovieListFilteredLayout from '@/features/movies/components/MovieListFilteredLayout';
@@ -97,15 +99,17 @@ function firstDrawLandingOn(poolSize: number, drawnIndex: number): PickIndex {
 }
 
 function randomPickLabelKey(compact: boolean, isFiltered: boolean): TranslationKey {
-  if (compact) return 'watchlist.randomPick.triggerShort';
-  return isFiltered ? 'watchlist.randomPick.triggerSelection' : 'watchlist.randomPick.trigger';
+  if (!isFiltered) return 'watchlist.randomPick.trigger';
+  return compact ? 'watchlist.randomPick.triggerShort' : 'watchlist.randomPick.triggerSelection';
 }
 
 function RandomPickButton({
+  buttonRef,
   toolbar,
   compact,
   onOpen,
 }: Readonly<{
+  buttonRef: RefObject<HTMLButtonElement | null>;
   toolbar: { visibleItems: LibraryEntry[]; isFiltered: boolean };
   compact: boolean;
   onOpen: (pick: RandomPick) => void;
@@ -114,6 +118,7 @@ function RandomPickButton({
   if (toolbar.visibleItems.length === 0) return null;
   return (
     <Button
+      ref={buttonRef}
       type="button"
       size={compact ? 'sm' : 'md'}
       onClick={() =>
@@ -152,11 +157,6 @@ function AddButton({
       <span>{label}</span>
     </Button>
   );
-}
-
-function addTriggerLabel(labels: ListMoviesLabels, compact: boolean, t: Translate): string {
-  if (compact) return labels.addTriggerShort ?? t('watchlist.addPanel.triggerShort');
-  return labels.addTrigger ?? t('watchlist.addPanel.trigger');
 }
 
 function ListAddPanel({
@@ -235,7 +235,6 @@ interface ListMoviesLabels {
   loadError: string;
   addPanelTitle?: string;
   addTrigger?: string;
-  addTriggerShort?: string;
   addSearchLabel?: string;
   addSearchPlaceholder?: string;
   addError?: string;
@@ -263,16 +262,22 @@ export interface ListMoviesCardActions<T extends LibraryEntry> {
   error: string | null;
 }
 
+export interface ListMoviesHeaderLayout {
+  isMobile: boolean;
+  hasItems: boolean;
+}
+
 export interface ListMoviesHeaderSlots {
   back?: { to: string; label: string };
-  overline?: ReactNode;
-  leading?: (layout: { isMobile: boolean; hasItems: boolean }) => ReactNode;
+  cover?: readonly (string | null | undefined)[];
+  coverIcon?: ReactNode;
+  progress?: number | null;
+  source?: ReactNode;
+  leading?: (layout: ListMoviesHeaderLayout) => ReactNode;
+  primary?: (layout: ListMoviesHeaderLayout) => ReactNode;
   menu?: ReactNode;
-  stackedOnMobile?: boolean;
-  progress?: ReactNode;
-  members?: ReactNode;
   letterboxdSynced?: boolean;
-  badge?: ReactNode;
+  isPublic?: boolean;
 }
 
 interface ListMoviesToolbarOptions<T extends LibraryEntry> {
@@ -281,13 +286,38 @@ interface ListMoviesToolbarOptions<T extends LibraryEntry> {
   banner?: ReactNode;
 }
 
+function ListMeta({
+  subtitle,
+  slots,
+}: Readonly<{ subtitle: string | null; slots?: ListMoviesHeaderSlots }>) {
+  const { t } = useTranslation();
+  if (!subtitle && !slots?.isPublic && !slots?.letterboxdSynced) return null;
+  return (
+    <p className={styles.meta}>
+      {subtitle ? <span>{subtitle}</span> : null}
+      {slots?.isPublic ? (
+        <span className={styles.metaItem}>
+          <Globe size={ICON_SIZE.sm} aria-hidden />
+          <span className={styles.metaText}>{t('lists.page.publicBadge')}</span>
+        </span>
+      ) : null}
+      {slots?.letterboxdSynced ? (
+        <span className={clsx(styles.metaItem, styles.synced)}>
+          <RefreshCw size={ICON_SIZE.sm} aria-hidden />
+          <span className={styles.metaText}>{t('lists.page.letterboxdSynced')}</span>
+        </span>
+      ) : null}
+    </p>
+  );
+}
+
 function ListMoviesHeader({
   title,
   subtitle,
   description,
   loadingLabel,
   isMobile,
-  hasItems,
+  cover,
   slots,
   actions,
 }: Readonly<{
@@ -296,44 +326,41 @@ function ListMoviesHeader({
   description?: string | null;
   loadingLabel: string;
   isMobile: boolean;
-  hasItems: boolean;
+  cover: ReactNode;
   slots?: ListMoviesHeaderSlots;
   actions: ReactNode;
 }>) {
   const { t } = useTranslation();
-  const stacked = !!slots?.stackedOnMobile && isMobile;
+  const descriptionText = description ? (
+    <ClampedText text={description} lines={2} className={styles.description} />
+  ) : null;
+  const menu = slots?.menu ? <span className={styles.headerMenu}>{slots.menu}</span> : null;
   return (
     <div className={styles.headerBlock}>
       <BackLink to={slots?.back?.to ?? ROUTES.lists}>
         {slots?.back?.label ?? t('lists.page.back')}
       </BackLink>
-      <div className={clsx(styles.pageHeader, stacked && styles.pageHeaderStacked)}>
-        <div className={styles.pageTitleGroup}>
-          {slots?.overline ? <p className={styles.overline}>{slots.overline}</p> : null}
-          <PageTitle title={title} loadingLabel={loadingLabel} />
-          {subtitle ? <p className={styles.pageSubtitle}>{subtitle}</p> : null}
+      <div className={clsx(styles.pageHeader, isMobile && styles.pageHeaderMobile)}>
+        <div className={styles.identity}>
+          {cover}
+          <div className={styles.pageTitleGroup}>
+            <PageTitle title={title} loadingLabel={loadingLabel} />
+            <ListMeta subtitle={subtitle} slots={slots} />
+            {slots?.source ? <div className={styles.source}>{slots.source}</div> : null}
+            {isMobile ? null : descriptionText}
+          </div>
         </div>
-
-        <div
-          className={clsx(
-            isMobile ? styles.headerActionsMobile : styles.headerActions,
-            stacked && styles.headerActionsStacked
-          )}
-        >
-          {slots?.leading?.({ isMobile, hasItems })}
-          {actions}
-          {slots?.menu ? <span className={styles.headerMenu}>{slots.menu}</span> : null}
-        </div>
+        {isMobile ? (
+          menu
+        ) : (
+          <div className={styles.headerActions}>
+            {actions}
+            {menu}
+          </div>
+        )}
       </div>
-      {slots?.letterboxdSynced ? (
-        <Chip size="sm" tone="success">
-          {t('lists.page.letterboxdSynced')}
-        </Chip>
-      ) : null}
-      {slots?.badge}
-      {description ? <p className={styles.description}>{description}</p> : null}
-      {slots?.members}
-      {slots?.progress ? <div className={styles.progress}>{slots.progress}</div> : null}
+      {isMobile ? descriptionText : null}
+      {isMobile ? <div className={styles.actionsRow}>{actions}</div> : null}
     </div>
   );
 }
@@ -342,18 +369,16 @@ function ToolbarTrailing({
   viewMode,
   onChangeViewMode,
   dimWatched,
-  isMobile,
 }: Readonly<{
   viewMode: MovieViewMode;
   onChangeViewMode: (mode: MovieViewMode) => void;
   dimWatched?: DimWatchedOption;
-  isMobile: boolean;
 }>) {
   const viewToggle = <ViewModeToggle value={viewMode} onChange={onChangeViewMode} />;
   if (!dimWatched) return viewToggle;
   return (
     <span className={styles.trailingGroup}>
-      <DimWatchedControl {...dimWatched} isMobile={isMobile} />
+      <DimWatchedControl {...dimWatched} isMobile={false} />
       {viewToggle}
     </span>
   );
@@ -449,6 +474,11 @@ export default function ListMoviesPage<T extends LibraryEntry>({
     safeLocalStorageSet(VIEW_MODE_STORAGE_KEY, mode);
   };
   const addButtonRef = useRef<HTMLButtonElement>(null);
+  const pickButtonRef = useRef<HTMLButtonElement>(null);
+  const closeRandomPick = () => {
+    setRandomPick(null);
+    requestAnimationFrame(() => pickButtonRef.current?.focus());
+  };
   const dim = useDimWatched();
   const isWatched = card.isWatched;
   const dimWatched: DimWatchedOption | undefined = isWatched
@@ -481,7 +511,13 @@ export default function ListMoviesPage<T extends LibraryEntry>({
   const listView = viewMode === 'list';
   const withAvailability = availabilityPending !== undefined;
   const searchPlaceholder = (isMobile && labels.searchPlaceholderShort) || labels.searchPlaceholder;
-  const addLabel = addTriggerLabel(labels, isMobile, t);
+  const addLabel = labels.addTrigger ?? t('watchlist.addPanel.trigger');
+  const coverPaths = header?.cover;
+  const coverSources = useMemo(
+    () => posterStackSources(coverPaths ?? items.map((item) => item.posterPath)),
+    [coverPaths, items]
+  );
+  const headerLayout = { isMobile, hasItems: items.length > 0 };
   const isItemAlreadyAdded = (item: Parameters<AddMovieFormProps['onAddItem']>[0]) =>
     entriesByKey.has(itemKey(item.id, item.mediaType));
   const renderItem = (item: T, index: number) => {
@@ -531,25 +567,39 @@ export default function ListMoviesPage<T extends LibraryEntry>({
         description={description}
         loadingLabel={labels.loading}
         isMobile={isMobile}
-        hasItems={items.length > 0}
         slots={header}
+        cover={
+          isLoading ? null : (
+            <PosterFan
+              srcs={coverSources}
+              size="lg"
+              progress={header?.progress ?? null}
+              emptyIcon={header?.coverIcon ?? <Layers size={ICON_SIZE.lg} />}
+            />
+          )
+        }
         actions={
           <>
-            {randomPickOptions ? (
-              <RandomPickButton
-                toolbar={toolbar}
-                compact={isMobile}
-                onOpen={(pick) => openRandomPick(pick, randomPickOptions.source)}
-              />
-            ) : null}
-            {onAddItem ? (
-              <AddButton
-                buttonRef={addButtonRef}
-                compact={isMobile}
-                label={addLabel}
-                onOpen={openAddPanel}
-              />
-            ) : null}
+            {header?.leading?.(headerLayout)}
+            <span className={styles.mainActions}>
+              {randomPickOptions ? (
+                <RandomPickButton
+                  buttonRef={pickButtonRef}
+                  toolbar={toolbar}
+                  compact={isMobile}
+                  onOpen={(pick) => openRandomPick(pick, randomPickOptions.source)}
+                />
+              ) : null}
+              {header?.primary?.(headerLayout)}
+              {onAddItem ? (
+                <AddButton
+                  buttonRef={addButtonRef}
+                  compact={isMobile}
+                  label={addLabel}
+                  onOpen={openAddPanel}
+                />
+              ) : null}
+            </span>
           </>
         }
       />
@@ -605,13 +655,18 @@ export default function ListMoviesPage<T extends LibraryEntry>({
                   searchLabel={labels.searchLabel}
                   searchPlaceholder={searchPlaceholder}
                   hideSort={listView && !isMobile}
+                  appearance="plain"
+                  searchAside={
+                    isMobile && dimWatched ? (
+                      <DimWatchedControl {...dimWatched} isMobile />
+                    ) : undefined
+                  }
                   beforeSort={toolbarOptions?.scopeFilter?.control}
                   trailing={
                     <ToolbarTrailing
                       viewMode={viewMode}
                       onChangeViewMode={changeViewMode}
-                      dimWatched={dimWatched}
-                      isMobile={isMobile}
+                      dimWatched={isMobile ? undefined : dimWatched}
                     />
                   }
                 />
@@ -656,7 +711,7 @@ export default function ListMoviesPage<T extends LibraryEntry>({
           items={randomPickItems}
           scope={randomPick.scope}
           ratingScale={user?.ratingScale}
-          onClose={() => setRandomPick(null)}
+          onClose={closeRandomPick}
           onPropose={setProposeTarget}
           onOpenDetails={openDrawnMoviePage}
           pickIndex={randomPickIndex}

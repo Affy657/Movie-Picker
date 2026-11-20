@@ -40,7 +40,6 @@ Rien pour l'instant.
 4. `M` **Classement d'un groupe** : les membres d'un groupe classés selon la note moyenne des films qu'ils ont proposés, pour savoir qui propose les meilleurs films. Dépend des groupes d'amis.
 5. `M` **Soirées d'un groupe** : la page d'un groupe affiche les soirées organisées par ses membres, que chacun rejoint directement depuis Movie Picker sans attendre qu'on lui partage le lien. Dépend des groupes d'amis.
 6. `M` **Déjà vu automatique en soirée** : dans une soirée, un film qui figure dans les films vus d'un participant est marqué « Déjà vu » pour lui, sans qu'il ait à le faire. Seulement pour qui a rendu ses films vus visibles, pour ne rien dévoiler d'une liste privée.
-7. `M` **Une seule présentation des listes** : la page des sagas et la page d'une saga reprennent l'allure de Mes listes et de la page d'une liste, pour que toutes les listes, les siennes comme celles enregistrées, se lisent de la même façon.
 
 ---
 
