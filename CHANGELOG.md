@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.26.0] - 2026-11-20
+
 ### Added
 
 - **Un classement dans chaque groupe** : la page d’un groupe classe ses membres sur la stat de votre choix, note des films proposés, victoires, votes reçus, flair, films inédits, présence, organisation ou générosité, avec un podium et la raison de ceux qui ne sont pas encore classés.
@@ -942,7 +944,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.25.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.26.0...HEAD
+[1.26.0]: https://github.com/Affy657/Movie-Picker/compare/v1.25.0...v1.26.0
 [1.25.0]: https://github.com/Affy657/Movie-Picker/compare/v1.24.0...v1.25.0
 [1.24.0]: https://github.com/Affy657/Movie-Picker/compare/v1.23.0...v1.24.0
 [1.23.0]: https://github.com/Affy657/Movie-Picker/compare/v1.22.0...v1.23.0
