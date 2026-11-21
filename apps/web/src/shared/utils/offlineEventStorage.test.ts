@@ -127,6 +127,22 @@ describe('offlineEventStorage', () => {
       expect(readQueuedVotes('soiree')).toEqual([{ ...sent, value: 0, queuedAt: 2 }]);
     });
 
+    it('keeps a changed intent queued within the same millisecond as the sent one', () => {
+      const sent = {
+        slug: 'soiree',
+        movieId: 'mov-1',
+        participantId: 'p-1',
+        value: 1,
+        queuedAt: 1,
+      } as const;
+      queueVote(sent);
+      queueVote({ ...sent, value: -1 });
+
+      removeQueuedVote(sent);
+
+      expect(readQueuedVotes('soiree')).toEqual([{ ...sent, value: -1 }]);
+    });
+
     it('tells the listeners when another tab changes the queue', () => {
       const listener = vi.fn();
       const unsubscribe = subscribeQueuedVotes(listener);
