@@ -493,7 +493,6 @@
     var(--color-brand-secondary) 100%
   );
   --color-heat-0: var(--color-surface-hover);
-  --color-heat-1: color-mix(in srgb, var(--color-primary) 34%, var(--color-surface));
   --color-heat-2: color-mix(in srgb, var(--color-primary) 62%, var(--color-surface));
   --color-heat-3: var(--color-primary);
 }
@@ -726,6 +725,13 @@
   --color-primary-glow: color-mix(in srgb, var(--color-primary) 14%, transparent);
   --color-primary-border: color-mix(in srgb, var(--color-primary) 32%, transparent);
   --color-primary-border-soft: color-mix(in srgb, var(--color-primary) 42%, var(--color-border));
+  --gradient-accent: linear-gradient(
+    90deg,
+    var(--color-primary) 0%,
+    var(--color-brand-secondary) 100%
+  );
+  --color-heat-2: color-mix(in srgb, var(--color-primary) 62%, var(--color-surface));
+  --color-heat-3: var(--color-primary);
 }
 [data-theme='dark'] .accent-default,
 [data-theme='dark'] .accent-blue,

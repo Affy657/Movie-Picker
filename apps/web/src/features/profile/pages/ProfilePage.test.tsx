@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
@@ -120,38 +120,37 @@ describe('ProfilePage (MSW)', () => {
     expect(share).toHaveAttribute('aria-haspopup', 'dialog');
   });
 
-  it('counts the watched movies figure from the total of every viewing', async () => {
+  it('sums up the statistics under the name, each item leading to them', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
       http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
-      createUserStatsHandler('alice', { eventsCreated: 4 }),
-      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-        HttpResponse.json({
-          items: [
-            {
-              tmdbId: 27205,
-              title: 'Inception',
-              year: '2010',
-              posterPath: null,
-              genreIds: [],
-              mediaType: 'movie',
-              watchedAt: '2026-06-01T00:00:00Z',
-            },
-          ],
-          total: 250,
-        })
-      )
+      createUserStatsHandler('alice', {
+        eventsCreated: 4,
+        eventsJoined: 2,
+        moviesProposed: 9,
+        winningProposals: 3,
+        currentStreakWeeks: 2,
+        bestStreakWeeks: 2,
+      })
     );
 
     renderProfile('alice');
 
-    expect(await screen.findByRole('link', { name: /250\s*films vus/i })).toHaveAttribute(
+    const identity = await screen.findByRole('region', { name: 'Alice' });
+    const nights = await within(identity).findByRole('link', { name: '6 soirées' });
+    expect(nights).toHaveAttribute('href', '#profile-stats');
+    expect(within(identity).getByRole('link', { name: '3 films gagnants' })).toHaveAttribute(
       'href',
-      '/u/alice/films'
+      '#profile-stats'
+    );
+    expect(within(identity).getByRole('link', { name: /^2 semaines de suite/ })).toBeVisible();
+    expect(screen.getByRole('region', { name: 'Statistiques' })).toHaveAttribute(
+      'id',
+      'profile-stats'
     );
   });
 
-  it('counts the public lists as a figure that opens them, in blue like the other links', async () => {
+  it('shows the public lists beside the followers, as a link to them', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
       http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
@@ -160,7 +159,8 @@ describe('ProfilePage (MSW)', () => {
 
     renderProfile('alice');
 
-    expect(await screen.findByRole('link', { name: /4\s*listes créées/i })).toHaveAttribute(
+    const identity = await screen.findByRole('region', { name: 'Alice' });
+    expect(await within(identity).findByRole('link', { name: '4 listes' })).toHaveAttribute(
       'href',
       '/u/alice/listes'
     );
@@ -175,10 +175,10 @@ describe('ProfilePage (MSW)', () => {
 
     renderProfile('alice');
 
-    expect(await screen.findByRole('link', { name: /1\s*liste créée/i })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: '1 liste' })).toBeInTheDocument();
   });
 
-  it('leaves the lists figure out while no list is public', async () => {
+  it('leaves the lists out while no list is public', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
       http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
@@ -187,8 +187,8 @@ describe('ProfilePage (MSW)', () => {
 
     renderProfile('alice');
 
-    expect(await screen.findByText(/soirées créées/i)).toBeInTheDocument();
-    expect(screen.queryByText(/listes? créées?/i)).toBeNull();
+    expect(await screen.findByRole('link', { name: '4 soirées' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /listes?$/ })).toBeNull();
   });
 
   it('keeps hidden watched films out of the figures and out of the page', async () => {
@@ -207,7 +207,7 @@ describe('ProfilePage (MSW)', () => {
 
     renderProfile('alice');
 
-    expect(await screen.findByText(/soirées créées/i)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Statistiques' })).toBeInTheDocument();
     await waitFor(() => expect(asked).toBe(true));
     expect(screen.queryByText(/films vus/i)).toBeNull();
     expect(screen.queryByText('Les films vus n’ont pas pu être chargés.')).toBeNull();
@@ -225,7 +225,7 @@ describe('ProfilePage (MSW)', () => {
     renderProfile('alice');
 
     expect(await screen.findByRole('link', { name: /9\s*films proposés/i })).toBeInTheDocument();
-    expect(screen.queryByText(/propositions? gagnantes?/i)).toBeNull();
+    expect(screen.queryByText(/films? gagnants?/i)).toBeNull();
   });
 
   it('shows the winning proposals of a member whose watched films are public', async () => {
@@ -237,9 +237,11 @@ describe('ProfilePage (MSW)', () => {
 
     renderProfile('alice');
 
-    expect(
-      await screen.findByRole('link', { name: /3\s*propositions gagnantes/i })
-    ).toHaveAttribute('href', '/u/alice/propositions-gagnantes');
+    const stats = await screen.findByRole('region', { name: 'Statistiques' });
+    expect(within(stats).getByRole('link', { name: /3\s*films gagnants/i })).toHaveAttribute(
+      'href',
+      '/u/alice/propositions-gagnantes'
+    );
   });
 
   it('asks for the last watched films without waiting for the profile', async () => {
@@ -407,7 +409,7 @@ describe('ProfilePage (MSW)', () => {
 
     renderProfile('moi');
 
-    expect(await screen.findByRole('link', { name: /12\s*films vus/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /^films vus/i })).toBeInTheDocument();
   });
 
   it('affiche un squelette pendant le chargement du profil', () => {
@@ -935,10 +937,9 @@ describe('ProfilePage (MSW)', () => {
       expect(screen.getByRole('heading', { name: /statistiques/i })).toBeInTheDocument();
     });
 
-    expect(screen.getByText('4')).toBeInTheDocument();
-    expect(screen.getByText(/soirées créées/i)).toBeInTheDocument();
-    expect(screen.getByText('30')).toBeInTheDocument();
-    expect(screen.getByText('votes')).toBeInTheDocument();
+    const stats = screen.getByRole('region', { name: 'Statistiques' });
+    expect(within(stats).getByText('4 organisées, 2 rejointes')).toBeInTheDocument();
+    expect(within(stats).queryByText('30')).not.toBeInTheDocument();
     expect(await screen.findByRole('heading', { name: 'Genres préférés' })).toBeInTheDocument();
     expect(screen.queryByText(/films vus/i)).not.toBeInTheDocument();
   });
@@ -1001,7 +1002,7 @@ describe('ProfilePage (MSW)', () => {
   describe('favorites', () => {
     const HEAT = { tmdbId: 949, mediaType: 'movie', title: 'Heat', year: '1995', posterPath: null };
 
-    it('places the favorites after the statistics, right above the last watched movies', async () => {
+    it('places the favorites first, then the last watched movies, the statistics last', async () => {
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
         http.get(`${TEST_API_V1}/users/alice`, () =>
@@ -1031,10 +1032,10 @@ describe('ProfilePage (MSW)', () => {
       const favorites = await screen.findByRole('heading', { name: 'Ses favoris' });
       const watched = await screen.findByRole('heading', { name: /^films vus/i });
       expect(
-        stats.compareDocumentPosition(favorites) & Node.DOCUMENT_POSITION_FOLLOWING
+        favorites.compareDocumentPosition(watched) & Node.DOCUMENT_POSITION_FOLLOWING
       ).toBeTruthy();
       expect(
-        favorites.compareDocumentPosition(watched) & Node.DOCUMENT_POSITION_FOLLOWING
+        watched.compareDocumentPosition(stats) & Node.DOCUMENT_POSITION_FOLLOWING
       ).toBeTruthy();
     });
 

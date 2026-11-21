@@ -300,3 +300,20 @@ describe('foundation colour roles', () => {
     ).toEqual([]);
   });
 });
+
+describe('accent zones', () => {
+  it('redeclare every root token derived from the primary colour, so it follows the zone', () => {
+    const derivedAtRoot = BLOCKS.filter((block) => block.selectors.includes(':root')).flatMap(
+      (block) =>
+        [...block.declarations]
+          .filter(([, value]) => value.includes('var(--color-primary)'))
+          .map(([name]) => name)
+    );
+    const zone = BLOCKS.find(
+      (block) =>
+        block.selectors.includes('.accent-default') && block.selectors.includes('.accent-gold')
+    );
+
+    expect([...new Set(derivedAtRoot)].filter((name) => !zone?.declarations.has(name))).toEqual([]);
+  });
+});

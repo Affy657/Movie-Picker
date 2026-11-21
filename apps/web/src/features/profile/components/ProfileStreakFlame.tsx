@@ -23,7 +23,7 @@ export default function ProfileStreakFlame({ weeks, bestWeeks }: Readonly<Props>
   );
 
   return (
-    <p className={styles.streak}>
+    <span className={styles.streak}>
       <svg className={styles.flame} viewBox="0 0 64 80" aria-hidden focusable="false">
         <defs>
           <linearGradient id={gradientId} x1="0" y1="1" x2="0" y2="0">
@@ -38,6 +38,6 @@ export default function ProfileStreakFlame({ weeks, bestWeeks }: Readonly<Props>
         {weeks} {t(weekLabelKey)}
         {bestWeeks > weeks && <span className="visually-hidden">, {recordLabel}</span>}
       </span>
-    </p>
+    </span>
   );
 }

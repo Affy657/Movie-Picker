@@ -1,17 +1,20 @@
 import { Skeleton, SkeletonScreen } from '@/shared/components/Skeleton';
 import styles from './ProfilePageSkeleton.module.css';
 
-const FIGURES = ['a', 'b', 'c', 'd', 'e', 'f'];
+const FIGURES = ['a', 'b', 'c', 'd'];
 
 export function ProfileStatsSkeleton() {
   return (
-    <div className={styles.figures}>
-      {FIGURES.map((key) => (
-        <div key={key} className={styles.figure}>
-          <Skeleton variant="text" className={styles.figureValue} />
-          <Skeleton variant="text" className={styles.figureLabel} />
-        </div>
-      ))}
+    <div className={styles.stats} aria-hidden="true">
+      <Skeleton variant="text" className={styles.statsTitle} />
+      <div className={styles.figures}>
+        {FIGURES.map((key) => (
+          <div key={key} className={styles.figure}>
+            <Skeleton variant="text" className={styles.figureValue} />
+            <Skeleton variant="text" className={styles.figureLabel} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -33,7 +36,6 @@ export default function ProfilePageSkeleton({ label }: Readonly<Props>) {
         </div>
         <Skeleton className={styles.action} />
       </div>
-      <ProfileStatsSkeleton />
     </SkeletonScreen>
   );
 }

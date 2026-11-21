@@ -13,7 +13,10 @@ import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import ProfileHeader from '@/features/profile/components/ProfileHeader';
-import ProfileStatsSection from '@/features/profile/components/ProfileStatsSection';
+import ProfileStatsSection, {
+  PROFILE_STATS_ID,
+} from '@/features/profile/components/ProfileStatsSection';
+import ProfileStatsSummary from '@/features/profile/components/ProfileStatsSummary';
 import ProfileActions from '@/features/profile/components/ProfileActions';
 import ProfileBanner from '@/features/profile/components/ProfileBanner';
 import ProfilePageSkeleton, {
@@ -36,9 +39,6 @@ const FollowListModal = lazy(() => import('@/features/profile/components/FollowL
 const BannerPicker = lazy(() => import('@/features/profile/components/BannerPicker'));
 const ProfileMoviesSection = lazy(
   () => import('@/features/profile/components/ProfileMoviesSection')
-);
-const ProfileActivitySection = lazy(
-  () => import('@/features/profile/components/ProfileActivitySection')
 );
 
 function formatMemberSince(iso: string, locale: string): string {
@@ -113,7 +113,7 @@ export default function ProfilePage() {
   const bannerView = useProfileBanner(profile, isOwnProfile);
   const watchedHiddenFromVisitor = !!profile && !isOwnProfile && profile.isWatchedPublic === false;
   const watchedVisible = !!profile && !watchedHiddenFromVisitor;
-  const watchedQuery = useProfileWatchedPreview(handle, !watchedHiddenFromVisitor);
+  useProfileWatchedPreview(handle, !watchedHiddenFromVisitor);
   const isNotFound =
     !handle ||
     (profileQuery.isError && ApiError.is(profileQuery.error) && profileQuery.error.code === 404);
@@ -169,10 +169,9 @@ export default function ProfilePage() {
   const memberSince = formatMemberSince(profile.memberSince, locale);
   const followPending = followMutation.isPending || unfollowMutation.isPending;
   const stats = statsQuery.data;
-  const streak =
-    stats && stats.currentStreakWeeks > 0
-      ? { weeks: stats.currentStreakWeeks, bestWeeks: stats.bestStreakWeeks }
-      : null;
+  const publicLists = stats?.publicListCount
+    ? { count: stats.publicListCount, to: ROUTES.profileLists(profile.handle) }
+    : null;
   const watchlistCount = profile.watchlistCount ?? 0;
   const watchlist =
     isOwnProfile || profile.watchlistCount != null
@@ -197,7 +196,18 @@ export default function ProfilePage() {
         <ProfileHeader
           profile={profile}
           memberSince={memberSince}
-          streak={streak}
+          lists={publicLists}
+          summary={
+            stats && (
+              <ProfileStatsSummary
+                nights={stats.eventsCreated + stats.eventsJoined}
+                winning={watchedHiddenFromVisitor ? null : stats.winningProposals}
+                streakWeeks={stats.currentStreakWeeks}
+                bestStreakWeeks={stats.bestStreakWeeks}
+                targetId={PROFILE_STATS_ID}
+              />
+            )
+          }
           accent={profileAccent}
           overBanner={bannerView.banner !== null}
           onOpenFollowModal={setFollowModal}
@@ -220,6 +230,17 @@ export default function ProfilePage() {
         </ProfileHeader>
 
         <div className={styles.content}>
+          <Suspense fallback={null}>
+            <ProfileMoviesSection
+              handle={profile.handle}
+              favorites={profile.favorites ?? []}
+              isOwnProfile={isOwnProfile}
+              watchedVisible={watchedVisible}
+              watchedHidden={isOwnProfile && profile.isWatchedPublic === false}
+              watchlist={watchlist}
+            />
+          </Suspense>
+
           {statsQuery.isPending && <ProfileStatsSkeleton />}
 
           {statsQuery.isError && (
@@ -233,32 +254,13 @@ export default function ProfilePage() {
           {stats && (
             <ProfileStatsSection
               stats={stats}
-              watchedCount={watchedVisible ? watchedQuery.data?.total : undefined}
-              watchedPending={watchedVisible && watchedQuery.isPending}
-              watchedTo={ROUTES.profileMovies(profile.handle)}
+              memberSince={memberSince}
               proposalsTo={ROUTES.profileProposals(profile.handle)}
               winningProposalsTo={ROUTES.profileWinningProposals(profile.handle)}
               winningProposalsHidden={watchedHiddenFromVisitor}
-              listsTo={ROUTES.profileLists(profile.handle)}
               ratingScale={user?.ratingScale}
-            />
-          )}
-
-          <Suspense fallback={null}>
-            <ProfileMoviesSection
-              handle={profile.handle}
-              favorites={profile.favorites ?? []}
               isOwnProfile={isOwnProfile}
-              watchedVisible={watchedVisible}
-              watchedHidden={isOwnProfile && profile.isWatchedPublic === false}
-              watchlist={watchlist}
             />
-          </Suspense>
-
-          {stats && (
-            <Suspense fallback={null}>
-              <ProfileActivitySection stats={stats} />
-            </Suspense>
           )}
         </div>
       </div>
