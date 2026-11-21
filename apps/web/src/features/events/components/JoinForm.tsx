@@ -44,7 +44,7 @@ export default function JoinForm({
     const { id } = res.participant;
     setStoredParticipant(slug, id, res.participant.pseudo);
     void invalidateMyNights(queryClient);
-    queryClient.invalidateQueries({ queryKey: queryKeys.event.detailForAnyHostToken(slug) });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.event.detailForAnyHostToken(slug) });
     track('event_joined');
     onJoined(id, res.participant.pseudo);
   }, [user, slug, onJoined, track, queryClient]);

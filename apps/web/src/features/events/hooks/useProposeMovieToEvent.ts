@@ -43,9 +43,9 @@ export function useProposeMovieToEvent() {
         ...(options?.pitchNote ? { pitchNote: options.pitchNote } : {}),
       });
       void invalidateMyNights(queryClient);
-      queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.event.detailForAnyHostToken(slug) });
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.event.detailForAnyHostToken(slug) });
+      void queryClient.invalidateQueries({
         queryKey: queryKeys.movies.nights(movie.tmdbId, movie.mediaType),
       });
       return created;

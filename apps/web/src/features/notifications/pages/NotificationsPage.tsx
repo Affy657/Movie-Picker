@@ -375,8 +375,8 @@ export default function NotificationsPage() {
   });
 
   const invalidateInbox = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.notifications.inbox });
-    queryClient.invalidateQueries({ queryKey: queryKeys.notifications.inboxPaged });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.notifications.inbox });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.notifications.inboxPaged });
   }, [queryClient]);
 
   const markAllMutation = useMutation({

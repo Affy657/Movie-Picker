@@ -72,8 +72,8 @@ export function useEventDetailActions({
     },
     onSettled: () => {
       setPendingRemovalId(null);
-      queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
       void invalidateMyNights(queryClient);
     },
   });
