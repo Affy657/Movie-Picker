@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
 import clsx from 'clsx';
+import { Link } from 'react-router';
 import Avatar from '@/shared/components/Avatar';
 import { useTranslation } from '@/shared/i18n';
-import ProfileStreakFlame from '@/features/profile/components/ProfileStreakFlame';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import SupporterBadge from '@/features/profile/components/SupporterBadge';
 import type { PublicProfile } from '@/features/profile/api/profileApi';
 import type { AccentColor } from '@/shared/types/theme';
@@ -11,15 +12,16 @@ import styles from './ProfileHeader.module.css';
 
 type FollowTab = 'following' | 'followers';
 
-interface Streak {
-  weeks: number;
-  bestWeeks: number;
+interface PublicLists {
+  count: number;
+  to: string;
 }
 
 interface Props {
   profile: PublicProfile;
   memberSince: string;
-  streak: Streak | null;
+  lists?: PublicLists | null;
+  summary?: ReactNode;
   onOpenFollowModal: (tab: FollowTab) => void;
   accent?: AccentColor;
   overBanner?: boolean;
@@ -29,7 +31,8 @@ interface Props {
 export default function ProfileHeader({
   profile,
   memberSince,
-  streak,
+  lists,
+  summary,
   onOpenFollowModal,
   accent,
   overBanner = false,
@@ -86,8 +89,15 @@ export default function ProfileHeader({
             <span className={styles.count}>{profile.followersCount}</span>{' '}
             {t('profile.follow.followers')}
           </button>
-          {streak && <ProfileStreakFlame weeks={streak.weeks} bestWeeks={streak.bestWeeks} />}
+          {lists && lists.count > 0 && (
+            <Link to={lists.to} className={styles.followCount}>
+              <span className={styles.count}>{lists.count}</span>{' '}
+              {pluralizeCount(lists.count, 'profile.follow.listOne', 'profile.follow.lists', t)}
+            </Link>
+          )}
         </div>
+
+        {summary && <div className={styles.summary}>{summary}</div>}
       </div>
 
       <div className={styles.actions}>{children}</div>

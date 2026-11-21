@@ -94,6 +94,7 @@
   background: none;
   color: var(--color-text-muted);
   font-size: var(--font-size-md);
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -115,6 +116,11 @@
   font-variant-numeric: tabular-nums;
 }
 
+.summary {
+  grid-area: summary;
+  min-width: 0;
+}
+
 .actions {
   grid-area: actions;
   min-width: 0;
@@ -128,6 +134,7 @@
       'avatar meta'
       'bio bio'
       'social social'
+      'summary summary'
       'actions actions';
     align-items: center;
     column-gap: var(--space-4);

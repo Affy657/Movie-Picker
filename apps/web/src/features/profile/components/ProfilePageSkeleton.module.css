@@ -44,10 +44,21 @@
   border-radius: var(--radius-md);
 }
 
-.figures {
+.stats {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-4) var(--space-12);
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.statsTitle {
+  width: var(--space-24);
+  height: var(--space-6);
+}
+
+.figures {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4) var(--space-6);
   padding: var(--space-5) 0;
   border-top: 1px solid var(--color-border-subtle);
   border-bottom: 1px solid var(--color-border-subtle);
@@ -60,8 +71,8 @@
 }
 
 .figureValue {
-  width: var(--space-10);
-  height: var(--space-6);
+  width: var(--space-12);
+  height: var(--space-9);
 }
 
 .figureLabel {
@@ -87,7 +98,7 @@
   }
 
   .figures {
-    gap: var(--space-4) var(--space-6);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     padding: var(--space-4) 0;
   }
 }

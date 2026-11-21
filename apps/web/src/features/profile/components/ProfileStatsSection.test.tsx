@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
-import ProfileStatsSection from './ProfileStatsSection';
+import ProfileStatsSection, { PROFILE_STATS_ID } from './ProfileStatsSection';
 import type { UserStats } from '@/features/events/api/userStatsApi';
 
 const EMPTY_STATS: UserStats = {
@@ -26,141 +26,126 @@ const BUSY_STATS: UserStats = {
   eventsJoined: 1,
   moviesProposed: 34,
   winningProposals: 7,
+  proposalsAverageRating: 6.86,
   votesCast: 58,
 };
 
 function renderSection(
   stats: UserStats,
-  watchedCount?: number,
-  watchedPending = false,
-  proposalLinks: {
-    proposalsTo?: string;
-    winningProposalsTo?: string;
-    winningProposalsHidden?: boolean;
-  } = {}
+  options: { winningProposalsHidden?: boolean; isOwnProfile?: boolean; memberSince?: string } = {}
 ) {
   return render(
     <AppTestProviders>
       <MemoryRouter>
         <ProfileStatsSection
           stats={stats}
-          watchedCount={watchedCount}
-          watchedPending={watchedPending}
-          watchedTo="/u/lea/films"
-          {...proposalLinks}
+          memberSince={options.memberSince ?? 'avril 2026'}
+          proposalsTo="/u/lea/propositions"
+          winningProposalsTo="/u/lea/propositions-gagnantes"
+          winningProposalsHidden={options.winningProposalsHidden}
+          isOwnProfile={options.isOwnProfile}
         />
       </MemoryRouter>
     </AppTestProviders>
   );
 }
 
+function figures() {
+  return within(screen.getByRole('list', { name: 'Chiffres clés' })).getAllByRole('listitem');
+}
+
 describe('ProfileStatsSection', () => {
-  it('names the strip for assistive technologies without showing a title', () => {
-    renderSection(BUSY_STATS, 26);
-    expect(screen.getByRole('heading', { name: 'Statistiques' })).toHaveClass('visually-hidden');
+  it('titles the section in plain sight, with the month the member joined', () => {
+    renderSection(BUSY_STATS);
+    const heading = screen.getByRole('heading', { name: 'Statistiques', level: 2 });
+    expect(heading).not.toHaveClass('visually-hidden');
+    expect(screen.getByText('depuis avril 2026')).toBeInTheDocument();
   });
 
-  it('shows the empty state when every figure is 0, without a strip of zeros', () => {
-    renderSection(EMPTY_STATS, 0);
-    expect(screen.getByText('Aucune activité pour le moment.')).toBeInTheDocument();
-    expect(screen.queryByRole('list')).not.toBeInTheDocument();
-  });
-
-  it('lines up the watched movies first, then the movie nights, the proposals and the votes', () => {
-    renderSection(BUSY_STATS, 26);
-    const figures = screen.getAllByRole('listitem').map((item) => item.textContent);
-    expect(figures).toEqual([
-      '26films vus',
-      '12soirées créées',
-      '1soirée rejointe',
-      '34films proposés',
-      '7propositions gagnantes',
-      '58votes',
-    ]);
-  });
-
-  it('leads from the watched movies figure to the full list', () => {
-    renderSection(BUSY_STATS, 26);
-    expect(screen.getByRole('link', { name: /26\s*films vus/i })).toHaveAttribute(
-      'href',
-      '/u/lea/films'
+  it('is the target of the summary links of the header', () => {
+    renderSection(BUSY_STATS);
+    expect(screen.getByRole('region', { name: 'Statistiques' })).toHaveAttribute(
+      'id',
+      PROFILE_STATS_ID
     );
   });
 
-  it('leads from the proposals and the winning proposals figures to their lists', () => {
-    renderSection(BUSY_STATS, 26, false, {
-      proposalsTo: '/u/lea/propositions',
-      winningProposalsTo: '/u/lea/propositions-gagnantes',
-    });
-    expect(screen.getByRole('link', { name: /34\s*films proposés/i })).toHaveAttribute(
+  it('lines up the movie nights, the proposals, the winners and their rating, each explained', () => {
+    renderSection(BUSY_STATS);
+    const [nights, proposed, winning, rating] = figures();
+    expect(figures()).toHaveLength(4);
+    expect(nights).toHaveTextContent('13soirées12 organisées, 1 rejointe');
+    expect(proposed).toHaveTextContent('34films proposés2,6 par soirée');
+    expect(winning).toHaveTextContent(/^7films gagnants21\s%\sdes films proposés$/);
+    expect(rating).toHaveTextContent('3,4/5note moyennedes films gagnants notés');
+  });
+
+  it('drops the votes, which say nothing on their own', () => {
+    renderSection(BUSY_STATS);
+    expect(screen.queryByText(/votes?$/)).not.toBeInTheDocument();
+  });
+
+  it('leads from the proposals and the winners to their lists', () => {
+    renderSection(BUSY_STATS);
+    expect(screen.getByRole('link', { name: /34\s*films proposés/ })).toHaveAttribute(
       'href',
       '/u/lea/propositions'
     );
-    expect(screen.getByRole('link', { name: /7\s*propositions gagnantes/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /7\s*films gagnants/ })).toHaveAttribute(
       'href',
       '/u/lea/propositions-gagnantes'
     );
   });
 
-  it('keeps a proposals figure at zero as plain text, with no list to open', () => {
-    renderSection({ ...BUSY_STATS, winningProposals: 0 }, 26, false, {
-      proposalsTo: '/u/lea/propositions',
-      winningProposalsTo: '/u/lea/propositions-gagnantes',
-    });
-    expect(screen.getByText('propositions gagnantes').closest('a')).toBeNull();
-    expect(screen.getByRole('link', { name: /34\s*films proposés/i })).toBeInTheDocument();
+  it('leaves out a figure at zero instead of showing a 0', () => {
+    renderSection({ ...BUSY_STATS, winningProposals: 0, proposalsAverageRating: null });
+    expect(figures()).toHaveLength(2);
+    expect(screen.queryByText(/films? gagnants?$/)).not.toBeInTheDocument();
+    expect(screen.queryByText('0')).not.toBeInTheDocument();
   });
 
-  it('shows the average rating of the proposals on the viewer scale, after the winning proposals', () => {
-    renderSection({ ...BUSY_STATS, proposalsAverageRating: 6.86 }, 26);
-    const figures = screen.getAllByRole('listitem').map((item) => item.textContent);
-    expect(figures).toEqual([
-      '26films vus',
-      '12soirées créées',
-      '1soirée rejointe',
-      '34films proposés',
-      '7propositions gagnantes',
-      '3,4/5note moyenne des propositions',
-      '58votes',
-    ]);
-  });
-
-  it('leaves the winning proposals and their average rating out when they are hidden', () => {
-    renderSection({ ...BUSY_STATS, proposalsAverageRating: 6.86 }, undefined, false, {
-      proposalsTo: '/u/lea/propositions',
-      winningProposalsTo: '/u/lea/propositions-gagnantes',
-      winningProposalsHidden: true,
-    });
-    const figures = screen.getAllByRole('listitem').map((item) => item.textContent);
-    expect(figures).toEqual([
-      '12soirées créées',
-      '1soirée rejointe',
-      '34films proposés',
-      '58votes',
-    ]);
-  });
-
-  it('leaves the average rating out while too few proposals are rated', () => {
-    renderSection({ ...BUSY_STATS, proposalsAverageRating: null }, 26);
-    expect(screen.queryByText('note moyenne des propositions')).not.toBeInTheDocument();
+  it('leaves the winners and their rating out when they are hidden', () => {
+    renderSection(BUSY_STATS, { winningProposalsHidden: true });
+    expect(figures()).toHaveLength(2);
+    expect(screen.queryByText('note moyenne')).not.toBeInTheDocument();
   });
 
   it.each([
-    ['unavailable', undefined],
-    ['zero', 0],
-  ])('leaves the watched movies figure out while their count is %s', (_label, count) => {
-    renderSection(BUSY_STATS, count);
-    expect(screen.getAllByRole('listitem', { hidden: true })).toHaveLength(5);
-    expect(screen.queryByText('films vus')).not.toBeInTheDocument();
-    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    [{ eventsCreated: 0, eventsJoined: 8 }, '8soiréestoutes rejointes'],
+    [{ eventsCreated: 3, eventsJoined: 0 }, '3soiréestoutes organisées'],
+    [{ eventsCreated: 0, eventsJoined: 1 }, '1soiréerejointe'],
+    [{ eventsCreated: 1, eventsJoined: 0 }, '1soiréeorganisée'],
+  ])('says how the movie nights split between hosted and joined (%o)', (split, expected) => {
+    renderSection({ ...EMPTY_STATS, ...split });
+    expect(figures()[0]).toHaveTextContent(expected);
   });
 
-  it('keeps the first place for the watched movies figure while their count loads', () => {
-    renderSection(BUSY_STATS, undefined, true);
-    const places = screen.getAllByRole('listitem', { hidden: true });
-    expect(places).toHaveLength(6);
-    expect(places[0]).toHaveAttribute('aria-hidden', 'true');
-    expect(places[0]).toHaveTextContent('');
-    expect(places[1]).toHaveTextContent('12soirées créées');
+  it('shows nothing to a visitor while the member has no movie night', () => {
+    const { container } = renderSection(EMPTY_STATS);
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('tells the owner what will show up, and how to start', () => {
+    renderSection(EMPTY_STATS, { isOwnProfile: true });
+    expect(screen.getByRole('heading', { name: 'Statistiques' })).toBeInTheDocument();
+    expect(
+      screen.getByText(/vos stats apparaîtront après votre première soirée/i)
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Créer une soirée' })).toHaveAttribute('href', '/new');
+  });
+
+  it('adds the rhythm and the favourite genres below the figures', async () => {
+    renderSection({
+      ...BUSY_STATS,
+      dailyActivity: [
+        { date: '2026-06-01', count: 1 },
+        { date: '2026-06-02', count: 1 },
+      ],
+      favoriteGenres: [{ genreId: 18, count: 20 }],
+    });
+    expect(await screen.findByRole('heading', { name: 'Rythme', level: 3 })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Genres préférés', level: 3 })
+    ).toBeInTheDocument();
   });
 });

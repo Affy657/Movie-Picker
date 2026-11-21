@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Des statistiques de profil réunies et expliquées** : sous le nom, un résumé (soirées, films gagnants, série) mène à une section Statistiques en bas du profil. Chaque chiffre y dit ce qu’il compte (soirées organisées ou rejointes, part de films gagnants, note moyenne), le rythme se lit mois par mois et jour par jour avec la série et son record, les genres préférés en part des films proposés, et les listes publiques s’ouvrent depuis l’en-tête.
+
 ## [1.26.1] - 2026-11-20
 
 ### Changed
