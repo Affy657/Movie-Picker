@@ -59,7 +59,7 @@ export function useMyEventsLists({ enabled }: MyEventsListsOptions) {
   useEffect(() => {
     if (!sessionExpired) return;
     queryClient.setQueryData(queryKeys.auth.me, null);
-    queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
   }, [sessionExpired, queryClient]);
 
   const activeEvents = useMemo(() => flattenEvents(activeQuery.data?.pages), [activeQuery.data]);

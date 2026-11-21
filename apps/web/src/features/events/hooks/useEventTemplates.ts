@@ -52,7 +52,7 @@ export function useEventTemplates(enabled: boolean, { draft, onError, onApply }:
     onError(null);
     setLastSaved(template);
     setAppliedId(template.id);
-    invalidate();
+    void invalidate();
   };
 
   const createMutation = useMutation({
@@ -72,7 +72,7 @@ export function useEventTemplates(enabled: boolean, { draft, onError, onApply }:
     onSuccess: (template) => {
       onError(null);
       setLastSaved((current) => (current?.id === template.id ? template : current));
-      invalidate();
+      void invalidate();
     },
     onError: fail,
   });
@@ -82,7 +82,7 @@ export function useEventTemplates(enabled: boolean, { draft, onError, onApply }:
     onSuccess: (_result, templateId) => {
       onError(null);
       setLastSaved((current) => (current?.id === templateId ? null : current));
-      invalidate();
+      void invalidate();
     },
     onError: fail,
   });

@@ -105,7 +105,14 @@ export function readQueuedVotes(slug?: string): QueuedVote[] {
 
 export function removeQueuedVote(sent: QueuedVote): void {
   writeQueue(
-    readQueue().filter((queued) => !(sameTarget(queued, sent) && queued.queuedAt === sent.queuedAt))
+    readQueue().filter(
+      (queued) =>
+        !(
+          sameTarget(queued, sent) &&
+          queued.queuedAt === sent.queuedAt &&
+          queued.value === sent.value
+        )
+    )
   );
 }
 

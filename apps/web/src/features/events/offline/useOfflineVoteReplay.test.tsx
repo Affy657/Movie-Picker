@@ -35,6 +35,7 @@ describe('useOfflineVoteReplay', () => {
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.useRealTimers();
     onlineManager.setOnline(true);
   });
@@ -197,6 +198,7 @@ describe('useOfflineVoteReplay', () => {
   });
 
   it('sends the intent a participant changed while the replay was running', async () => {
+    vi.spyOn(Date, 'now').mockReturnValue(Date.UTC(2026, 10, 21, 20, 30));
     queue('m1', 1);
     api.voteMovie.mockImplementationOnce(async () => {
       queue('m1', -1);

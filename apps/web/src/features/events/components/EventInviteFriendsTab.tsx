@@ -55,7 +55,7 @@ export default function EventInviteFriendsTab({ slug, onNavigate }: Readonly<Pro
       setInvitedIds((prev) => new Set(prev).add(targetUserId));
       setItemError(null);
       track('invitation_sent');
-      queryClient.invalidateQueries({ queryKey: queryKeys.event.eligibleFollows(slug) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.event.eligibleFollows(slug) });
     },
     onError: (err) => {
       setItemError(getErrorMessage(err, t('events.invite.inviteError')));

@@ -99,8 +99,8 @@ export function useEventDetailPage(
 
   const refreshLive = useCallback(() => {
     if (!slug) return;
-    queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
-    queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
   }, [slug, hostToken, queryClient]);
   const live = useEventLiveStream({
     slug,
@@ -160,13 +160,13 @@ export function useEventDetailPage(
   const recapSlug = event?.recapSlug;
   const refreshAll = useCallback(() => {
     if (!slug) return;
-    queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
-    queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
     void invalidateMyNights(queryClient);
     void invalidateWatched(queryClient);
-    queryClient.invalidateQueries({ queryKey: MOVIE_NIGHTS_KEY });
+    void queryClient.invalidateQueries({ queryKey: MOVIE_NIGHTS_KEY });
     if (recapSlug) {
-      queryClient.invalidateQueries({ queryKey: queryKeys.event.recap(recapSlug) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.event.recap(recapSlug) });
     }
   }, [slug, hostToken, recapSlug, queryClient]);
 
