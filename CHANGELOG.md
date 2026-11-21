@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.27.0] - 2026-11-21
+
 ### Added
 
 - **Des statistiques de profil réunies et expliquées** : sous le nom, un résumé (soirées, films gagnants, série) mène à une section Statistiques en bas du profil. Chaque chiffre y dit ce qu’il compte (soirées organisées ou rejointes, part de films gagnants, note moyenne), le rythme se lit mois par mois et jour par jour avec la série et son record, les genres préférés en part des films proposés, et les listes publiques s’ouvrent depuis l’en-tête.
@@ -954,7 +956,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.26.1...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.27.0...HEAD
+[1.27.0]: https://github.com/Affy657/Movie-Picker/compare/v1.26.1...v1.27.0
 [1.26.1]: https://github.com/Affy657/Movie-Picker/compare/v1.26.0...v1.26.1
 [1.26.0]: https://github.com/Affy657/Movie-Picker/compare/v1.25.0...v1.26.0
 [1.25.0]: https://github.com/Affy657/Movie-Picker/compare/v1.24.0...v1.25.0
