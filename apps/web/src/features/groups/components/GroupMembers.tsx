@@ -1,9 +1,9 @@
-import { useId } from 'react';
+import { UserPlus } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
-import Card from '@/shared/components/Card';
+import Button from '@/shared/components/Button';
 import Chip from '@/shared/components/Chip';
-import CountBadge from '@/shared/components/CountBadge';
 import LinkButton from '@/shared/components/LinkButton';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import type { LocaleCode } from '@/shared/i18n/locales';
 import type { FriendGroupDetail, FriendGroupMember } from '@/features/groups/api/groupsApi';
@@ -28,7 +28,6 @@ function useMembersPresence(group: FriendGroupDetail, viewerId: string | undefin
     (a, b) => Number(b.role === 'owner') - Number(a.role === 'owner')
   );
   return {
-    day,
     members,
     comes: (member: FriendGroupMember) => day !== null && coming.has(member.userId),
     nameOf: (member: FriendGroupMember) =>
@@ -42,28 +41,21 @@ function useMembersPresence(group: FriendGroupDetail, viewerId: string | undefin
   };
 }
 
-type GroupMembersProps = Readonly<{
+export default function GroupMembersPanel({
+  group,
+  viewerId,
+  onInvite,
+  onLeave,
+}: Readonly<{
   group: FriendGroupDetail;
   viewerId: string | undefined;
+  onInvite?: () => void;
   onLeave?: () => void;
-}>;
-
-function MembersHeading({ id, count }: Readonly<{ id: string; count: number }>) {
+}>) {
   const { t } = useTranslation();
-  return (
-    <h2 id={id} className={styles.heading}>
-      {t('groups.page.members')} <CountBadge value={count} tone="neutral" />
-    </h2>
-  );
-}
-
-export function GroupMembersAside({ group, viewerId, onLeave }: GroupMembersProps) {
-  const { t } = useTranslation();
-  const headingId = useId();
   const presence = useMembersPresence(group, viewerId);
   return (
-    <Card as="aside" padding="md" radius="lg" className={styles.aside} aria-labelledby={headingId}>
-      <MembersHeading id={headingId} count={group.members.length} />
+    <div className={styles.panel}>
       <ul className={styles.rows}>
         {presence.members.map((member) => {
           const line = presence.presenceOf(member);
@@ -85,39 +77,20 @@ export function GroupMembersAside({ group, viewerId, onLeave }: GroupMembersProp
           );
         })}
       </ul>
-      {onLeave ? (
-        <LinkButton size="sm" className={styles.leave} onClick={onLeave}>
-          {t('groups.page.leave')}
-        </LinkButton>
-      ) : null}
-    </Card>
-  );
-}
-
-export function GroupMembersStrip({ group, viewerId }: GroupMembersProps) {
-  const { t } = useTranslation();
-  const headingId = useId();
-  const presence = useMembersPresence(group, viewerId);
-  return (
-    <section className={styles.strip} aria-labelledby={headingId}>
-      <MembersHeading id={headingId} count={group.members.length} />
-      <ul className={styles.avatars}>
-        {presence.members.map((member) => {
-          const line = presence.presenceOf(member);
-          return (
-            <li key={member.userId} className={styles.person}>
-              <span className={styles.ring} data-comes={presence.comes(member) || undefined}>
-                <Avatar avatarId={member.avatarId} pseudo={member.displayName} size="md" />
-              </span>
-              <span className={styles.personName}>{presence.nameOf(member)}</span>
-              {line ? <span className="visually-hidden">{line}</span> : null}
-            </li>
-          );
-        })}
-      </ul>
-      {presence.day ? (
-        <p className={styles.hint}>{t('groups.page.ringHint', { day: presence.day })}</p>
-      ) : null}
-    </section>
+      <div className={styles.footer}>
+        {onInvite ? (
+          <Button variant="secondary" onClick={onInvite}>
+            <UserPlus size={ICON_SIZE.md} aria-hidden />
+            {t('groups.page.invite')}
+          </Button>
+        ) : null}
+        <p className={styles.hint}>{t('groups.page.membersHint')}</p>
+        {onLeave ? (
+          <LinkButton size="sm" className={styles.leave} onClick={onLeave}>
+            {t('groups.page.leave')}
+          </LinkButton>
+        ) : null}
+      </div>
+    </div>
   );
 }

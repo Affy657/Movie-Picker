@@ -40,9 +40,41 @@ public sealed class FriendGroupPersonResponse
 public sealed record FriendGroupNightsView(
     IReadOnlyList<MyEventSummaryDto> Upcoming,
     IReadOnlyList<MyEventSummaryDto> Past,
-    IReadOnlyList<string> NextNightParticipantIds)
+    IReadOnlyList<string> NextNightParticipantIds,
+    FriendGroupStatsResponse Stats,
+    FriendGroupCoverResponse? Cover)
 {
-    public static readonly FriendGroupNightsView None = new([], [], []);
+    public static readonly FriendGroupNightsView None = new([], [], [], FriendGroupStatsResponse.None, null);
+}
+
+public sealed record FriendGroupListNights(
+    IReadOnlyList<MyEventSummaryDto> NextNights,
+    IReadOnlyList<FriendGroupShowcaseResponse> Showcases);
+
+public sealed class FriendGroupStatsResponse
+{
+    public static readonly FriendGroupStatsResponse None = new();
+
+    public int NightCount { get; init; }
+    public int FilmCount { get; init; }
+    public string? FirstNightDate { get; init; }
+    public double? AverageRating { get; init; }
+    public int? UsualWeekday { get; init; }
+}
+
+public sealed class FriendGroupCoverResponse
+{
+    public int TmdbId { get; init; }
+    public MovieMediaType MediaType { get; init; }
+    public string Title { get; init; } = string.Empty;
+    public string BackdropUrl { get; init; } = string.Empty;
+}
+
+public sealed class FriendGroupShowcaseResponse
+{
+    public string GroupId { get; init; } = string.Empty;
+    public int NightCount { get; init; }
+    public FriendGroupCoverResponse? Cover { get; init; }
 }
 
 public sealed record FriendGroupAudience(
@@ -110,6 +142,12 @@ public sealed class FriendGroupDetailResponse : FriendGroupSummaryResponse
     [JsonPropertyOrder(4)]
     public IReadOnlyList<MyEventSummaryDto> PastNights { get; init; } = [];
 
+    [JsonPropertyOrder(5)]
+    public FriendGroupStatsResponse Stats { get; init; } = FriendGroupStatsResponse.None;
+
+    [JsonPropertyOrder(6)]
+    public FriendGroupCoverResponse? Cover { get; init; }
+
     public static FriendGroupDetailResponse From(
         FriendGroup group,
         FriendGroupAudience audience,
@@ -128,7 +166,9 @@ public sealed class FriendGroupDetailResponse : FriendGroupSummaryResponse
             Members = members,
             UpcomingNights = nights.Upcoming,
             NextNightParticipantIds = nights.NextNightParticipantIds,
-            PastNights = nights.Past
+            PastNights = nights.Past,
+            Stats = nights.Stats,
+            Cover = nights.Cover
         };
 }
 
@@ -147,6 +187,7 @@ public sealed class MyGroupsResponse
     public IReadOnlyList<FriendGroupSummaryResponse> Groups { get; init; } = [];
     public IReadOnlyList<FriendGroupInvitationResponse> Invitations { get; init; } = [];
     public IReadOnlyList<MyEventSummaryDto> NextNights { get; init; } = [];
+    public IReadOnlyList<FriendGroupShowcaseResponse> Showcases { get; init; } = [];
 }
 
 public sealed class FriendGroupPendingInvitationResponse

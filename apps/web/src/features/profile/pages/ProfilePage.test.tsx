@@ -278,7 +278,7 @@ describe('ProfilePage (MSW)', () => {
 
     renderProfile('alice');
 
-    expect(await screen.findByTestId('profile-banner-image')).toBeInTheDocument();
+    expect(await screen.findByTestId('faded-banner-image')).toBeInTheDocument();
     expect(
       screen.getByRole('link', { name: 'Bannière tirée de Dune : Deuxième partie, voir le film' })
     ).toBeInTheDocument();
@@ -294,7 +294,7 @@ describe('ProfilePage (MSW)', () => {
     renderProfile('alice');
 
     expect(await screen.findByRole('heading', { name: 'Alice' })).toBeInTheDocument();
-    expect(screen.queryByTestId('profile-banner-image')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('faded-banner-image')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Ajouter une bannière' })).not.toBeInTheDocument();
   });
 

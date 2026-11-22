@@ -12322,6 +12322,13 @@ export interface components {
             avatarId: string;
             isFollowedByMe: boolean | null;
         };
+        FriendGroupCoverResponse: {
+            /** Format: int32 */
+            tmdbId: number;
+            mediaType: components["schemas"]["MovieMediaType"];
+            title: string;
+            backdropUrl: string;
+        };
         FriendGroupDetailResponse: {
             id: string;
             name: string;
@@ -12339,6 +12346,8 @@ export interface components {
             upcomingNights: components["schemas"]["MyEventSummaryDto"][];
             nextNightParticipantIds: string[];
             pastNights: components["schemas"]["MyEventSummaryDto"][];
+            stats: components["schemas"]["FriendGroupStatsResponse"];
+            cover: components["schemas"]["FriendGroupCoverResponse"] | null;
         };
         FriendGroupInvitableUserResponse: {
             userId: string;
@@ -12448,6 +12457,23 @@ export interface components {
         };
         /** @enum {string} */
         FriendGroupRole: "owner" | "member";
+        FriendGroupShowcaseResponse: {
+            groupId: string;
+            /** Format: int32 */
+            nightCount: number;
+            cover: components["schemas"]["FriendGroupCoverResponse"] | null;
+        };
+        FriendGroupStatsResponse: {
+            /** Format: int32 */
+            nightCount: number;
+            /** Format: int32 */
+            filmCount: number;
+            firstNightDate: string | null;
+            /** Format: double */
+            averageRating: number | null;
+            /** Format: int32 */
+            usualWeekday: number | null;
+        };
         FriendGroupSummaryResponse: {
             id: string;
             name: string;
@@ -13093,6 +13119,7 @@ export interface components {
             groups: components["schemas"]["FriendGroupSummaryResponse"][];
             invitations: components["schemas"]["FriendGroupInvitationResponse"][];
             nextNights: components["schemas"]["MyEventSummaryDto"][];
+            showcases: components["schemas"]["FriendGroupShowcaseResponse"][];
         };
         MyNightMovieItem: {
             /** Format: int32 */

@@ -19,7 +19,6 @@ import type {
   FriendGroupMember,
   FriendGroupMemberStats,
 } from '@/features/groups/api/groupsApi';
-import GroupSection from '@/features/groups/components/GroupSection';
 import { useGroupRanking } from '@/features/groups/hooks/useGroups';
 import {
   RANKING_MINIMUMS,
@@ -313,10 +312,10 @@ export default function GroupRanking({
   const [stat, setStat] = useState<RankingStat>('rating');
   const query = useGroupRanking(group.id);
   const ranking = query.data;
-  const nights =
+  const scope =
     ranking && ranking.nightCount > 0
-      ? pluralizeCount(ranking.nightCount, 'groups.ranking.nightsOne', 'groups.ranking.nights', t)
-      : undefined;
+      ? pluralizeCount(ranking.nightCount, 'groups.ranking.scopeOne', 'groups.ranking.scope', t)
+      : null;
 
   let body: ReactNode;
   if (query.isError) {
@@ -365,8 +364,9 @@ export default function GroupRanking({
   }
 
   return (
-    <GroupSection title={t('groups.ranking.title')} detail={nights}>
+    <div className={styles.panel}>
+      {scope ? <p className={styles.scope}>{scope}</p> : null}
       {body}
-    </GroupSection>
+    </div>
   );
 }

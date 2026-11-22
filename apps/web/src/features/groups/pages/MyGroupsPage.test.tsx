@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
@@ -53,6 +53,19 @@ const JEUDIS: MockGroup = {
       groupName: 'Les jeudis ciné',
     }),
   ],
+  stats: {
+    nightCount: 16,
+    filmCount: 16,
+    firstNightDate: '2026-09-03',
+    averageRating: 7.8,
+    usualWeekday: 4,
+  },
+  cover: {
+    tmdbId: 101,
+    mediaType: 'movie',
+    title: 'Les Enfants du phare',
+    backdropUrl: 'https://image.tmdb.org/t/p/w780/phare.jpg',
+  },
 };
 
 const FAMILLE: MockGroup = {
@@ -93,30 +106,41 @@ describe('MyGroupsPage', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
-  it('lists each group with its members, its creator and its next night', async () => {
+  it('shows each group as a tile with its last film, its people and its next night', async () => {
     server.use(authedAlice, ...createGroupsHandlers([JEUDIS, FAMILLE]));
     renderPage();
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Mes groupes' })).toBeVisible();
-    expect(
-      screen.getByText(
-        'Les amis avec qui vous faites vos soirées. Les soirées d’un groupe arrivent dans Mes soirées de chaque membre, sans lien à envoyer.'
-      )
-    ).toBeInTheDocument();
-    const section = await screen.findByRole('region', { name: /Vos groupes/ });
-    const jeudis = within(section).getByRole('link', { name: /Les jeudis ciné/ });
+    const jeudis = await screen.findByRole('link', { name: /Les jeudis ciné/ });
     expect(jeudis).toHaveAttribute('href', '/groupes/g1');
-    expect(jeudis).toHaveTextContent('4 membres, créé par Léa');
+    expect(jeudis).toHaveTextContent('Vous, Léa, Sam et Inès, 16 soirées');
+    expect(jeudis).toHaveTextContent('Les Enfants du phare');
+    expect(jeudis.querySelector('img')).toHaveAttribute(
+      'src',
+      'https://image.tmdb.org/t/p/w780/phare.jpg'
+    );
     expect(jeudis).toHaveTextContent('Jeudi ciné');
     expect(jeudis).toHaveTextContent('À vous de voter');
-    const famille = within(section).getByRole('link', { name: /Famille/ });
-    expect(famille).toHaveTextContent('2 membres');
-    expect(famille).toHaveTextContent('Vous l’avez créé');
-    expect(famille).toHaveTextContent('Aucune soirée prévue');
-    expect(within(section).getByRole('button', { name: 'Créer un groupe' })).toBeInTheDocument();
-    expect(screen.queryByRole('region', { name: /Invitations/ })).toBeNull();
+    const famille = screen.getByRole('link', { name: /Famille/ });
+    expect(famille).toHaveTextContent('Vous et Sam');
+    expect(famille).toHaveTextContent(
+      'Pas encore de film : la première soirée donnera son image au groupe'
+    );
+    expect(famille.querySelector('img')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Nouveau groupe' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Créer un groupe' })).toBeNull();
+    expect(screen.queryByText('Invitation')).toBeNull();
     expect(document.head.querySelector('meta[name="robots"]')?.getAttribute('content')).toContain(
       'noindex'
+    );
+  });
+
+  it('says a group with films has no night planned yet', async () => {
+    server.use(authedAlice, ...createGroupsHandlers([{ ...JEUDIS, upcomingNights: [] }]));
+    renderPage();
+
+    expect(await screen.findByRole('link', { name: /Les jeudis ciné/ })).toHaveTextContent(
+      'Aucune soirée prévue'
     );
   });
 
@@ -138,20 +162,19 @@ describe('MyGroupsPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    const invitations = await screen.findByRole('region', { name: /Invitations/ });
-    expect(invitations).toHaveTextContent('Les amis du ciné-club');
-    expect(invitations).toHaveTextContent('Inès vous invite, 3 membres');
+    expect(await screen.findByText('Invitation')).toBeInTheDocument();
+    expect(screen.getByText('Les amis du ciné-club')).toBeInTheDocument();
+    expect(screen.getByText('Inès vous invite, 3 membres')).toBeInTheDocument();
 
     await user.click(
-      within(invitations).getByRole('button', { name: 'Rejoindre le groupe Les amis du ciné-club' })
+      screen.getByRole('button', { name: 'Rejoindre le groupe Les amis du ciné-club' })
     );
 
-    await waitFor(() => expect(screen.queryByRole('region', { name: /Invitations/ })).toBeNull());
-    expect(
-      within(screen.getByRole('region', { name: /Vos groupes/ })).getByRole('link', {
-        name: /Les amis du ciné-club/,
-      })
-    ).toHaveAttribute('href', '/groupes/g3');
+    await waitFor(() => expect(screen.queryByText('Invitation')).toBeNull());
+    expect(screen.getByRole('link', { name: /Les amis du ciné-club/ })).toHaveAttribute(
+      'href',
+      '/groupes/g3'
+    );
   });
 
   it('declines a pending invitation', async () => {
@@ -165,12 +188,11 @@ describe('MyGroupsPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    const invitations = await screen.findByRole('region', { name: /Invitations/ });
     await user.click(
-      within(invitations).getByRole('button', { name: 'Refuser l’invitation au groupe Ciné-club' })
+      await screen.findByRole('button', { name: 'Refuser l’invitation au groupe Ciné-club' })
     );
 
-    await waitFor(() => expect(screen.queryByRole('region', { name: /Invitations/ })).toBeNull());
+    await waitFor(() => expect(screen.queryByText('Invitation')).toBeNull());
     expect(screen.queryByRole('link', { name: /Ciné-club/ })).toBeNull();
   });
 
@@ -224,7 +246,12 @@ describe('MyGroupsPage', () => {
         calls += 1;
         return calls === 1
           ? apiErrorJson(500, 'internal_error')
-          : apiJson<'MyGroupsResponse'>({ groups: [], invitations: [], nextNights: [] });
+          : apiJson<'MyGroupsResponse'>({
+              groups: [],
+              invitations: [],
+              nextNights: [],
+              showcases: [],
+            });
       })
     );
     const user = userEvent.setup();

@@ -1,10 +1,10 @@
-import { useId, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { UserPlus, Users } from 'lucide-react';
+import clsx from 'clsx';
+import { Film, UserPlus, Users } from 'lucide-react';
+import AvatarStack from '@/shared/components/AvatarStack';
 import Button from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
-import Chip from '@/shared/components/Chip';
-import CountBadge from '@/shared/components/CountBadge';
 import EmptyState from '@/shared/components/EmptyState';
 import InlineError from '@/shared/components/InlineError';
 import PageLayout from '@/shared/components/PageLayout';
@@ -15,36 +15,36 @@ import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useLocale, useTranslation } from '@/shared/i18n';
-import { formatEventDateLong } from '@/shared/utils/formatMyEventsListDate';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
+import { formatEventDateLong, formatMyEventsListDate } from '@/shared/utils/formatMyEventsListDate';
+import { posterImageSrc } from '@/shared/utils/posterUrl';
 import { ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import type { FriendGroupSummary, MyGroups } from '@/features/events/api/myGroupsApi';
-import EventDateBlock from '@/features/events/components/EventDateBlock';
 import { useMyGroups } from '@/features/events/hooks/useMyGroups';
 import type { MyEventSummary } from '@/features/events/types';
-import { firstName } from '@/features/library/utils/listMembers';
-import type { FriendGroupInvitation } from '@/features/groups/api/groupsApi';
+import { capitalizeFirst, firstName } from '@/features/library/utils/listMembers';
+import type { FriendGroupInvitation, FriendGroupShowcase } from '@/features/groups/api/groupsApi';
 import GroupFormDialog from '@/features/groups/components/GroupFormDialog';
-import GroupMosaic from '@/features/groups/components/GroupMosaic';
 import NightStatusLine from '@/features/groups/components/NightStatusLine';
 import { useAnswerGroupInvitation } from '@/features/groups/hooks/useGroups';
-import { membersCountLabel } from '@/features/groups/utils/groupLabels';
+import {
+  membersCountLabel,
+  peoplePhrase,
+  personName,
+  viewerFirst,
+} from '@/features/groups/utils/groupLabels';
 import styles from './MyGroupsPage.module.css';
 
-function GroupsSection({
-  title,
-  count,
-  children,
-}: Readonly<{ title: string; count: number; children: ReactNode }>) {
-  const headingId = useId();
-  return (
-    <section className={styles.section} aria-labelledby={headingId}>
-      <h2 id={headingId} className={styles.sectionTitle}>
-        {title} <CountBadge value={count} tone="neutral" />
-      </h2>
-      {children}
-    </section>
-  );
+const NAMED_MEMBERS = 4;
+const STACKED_FACES = 6;
+
+function faces(people: readonly { userId: string; avatarId: string; displayName: string }[]) {
+  return people.map((person) => ({
+    key: person.userId,
+    avatarId: person.avatarId,
+    pseudo: person.displayName,
+  }));
 }
 
 function InvitationCard({ invitation }: Readonly<{ invitation: FriendGroupInvitation }>) {
@@ -64,8 +64,9 @@ function InvitationCard({ invitation }: Readonly<{ invitation: FriendGroupInvita
   return (
     <Card padding="md" radius="lg" className={styles.invitation}>
       <div className={styles.invitationMain}>
-        <GroupMosaic people={invitation.memberPreview} />
+        <AvatarStack people={faces(invitation.memberPreview)} size="sm" />
         <div className={styles.invitationText}>
+          <span className={styles.invitationOverline}>{t('groups.list.invitation')}</span>
           <span className={styles.invitationName}>{invitation.name}</span>
           <span className={styles.meta}>
             {t('groups.list.invitedBy', {
@@ -106,61 +107,101 @@ function InvitationCard({ invitation }: Readonly<{ invitation: FriendGroupInvita
   );
 }
 
-function NextNightBlock({ night }: Readonly<{ night: MyEventSummary | undefined }>) {
+function TileFoot({
+  nextNight,
+  showcase,
+}: Readonly<{ nextNight: MyEventSummary | undefined; showcase: FriendGroupShowcase | undefined }>) {
   const { t } = useTranslation();
   const { locale } = useLocale();
-  if (!night) return <span className={styles.noNight}>{t('groups.list.noNight')}</span>;
-  return (
-    <span className={styles.nextNight}>
-      <EventDateBlock date={night.date} className={styles.nextDate} />
-      <span className={styles.nextText}>
+  const isMobile = useIsMobile();
+  if (nextNight) {
+    return (
+      <span className={styles.foot}>
         <span className="visually-hidden">
           {t('groups.list.nextNight')},{' '}
-          {formatEventDateLong(night.date, night.time, locale, t('events.detail.dateTimeJoiner'))}
-        </span>
-        <span className={styles.nextTitle}>{night.title}</span>
-        <NightStatusLine night={night} />
-      </span>
-    </span>
-  );
-}
-
-function GroupCard({
-  group,
-  nextNight,
-}: Readonly<{ group: FriendGroupSummary; nextNight: MyEventSummary | undefined }>) {
-  const { t } = useTranslation();
-  const isMobile = useIsMobile();
-  const isOwner = group.role === 'owner';
-  const members = membersCountLabel(group.memberCount, t);
-  return (
-    <Card
-      as={Link}
-      to={ROUTES.group(group.id)}
-      interactive
-      elevation="sm"
-      radius="lg"
-      padding="none"
-      className={styles.groupCard}
-    >
-      <GroupMosaic people={group.memberPreview} size={isMobile ? 'md' : 'lg'} />
-      <span className={styles.groupBody}>
-        <span className={styles.groupName}>{group.name}</span>
-        <span className={styles.meta}>
-          {isOwner ? (
-            <>
-              <span>{members}</span>
-              <Chip size="sm">{t('groups.list.createdByYou')}</Chip>
-            </>
-          ) : (
-            <span>
-              {members}, {t('groups.list.createdBy', { name: firstName(group.ownerDisplayName) })}
-            </span>
+          {formatEventDateLong(
+            nextNight.date,
+            nextNight.time,
+            locale,
+            t('events.detail.dateTimeJoiner')
           )}
         </span>
-        <NextNightBlock night={nextNight} />
+        <span className={styles.when} aria-hidden="true">
+          {capitalizeFirst(formatMyEventsListDate(nextNight.date, locale), locale)}
+        </span>
+        <span className={styles.nextTitle}>{nextNight.title}</span>
+        <span className={styles.status}>
+          <NightStatusLine night={nextNight} />
+        </span>
       </span>
-    </Card>
+    );
+  }
+  let line = t('groups.list.noNight');
+  if ((showcase?.nightCount ?? 0) === 0)
+    line = isMobile ? t('groups.list.noFilm') : t('groups.list.noFilmHint');
+  return <span className={styles.foot}>{line}</span>;
+}
+
+function GroupTile({
+  group,
+  nextNight,
+  showcase,
+}: Readonly<{
+  group: FriendGroupSummary;
+  nextNight: MyEventSummary | undefined;
+  showcase: FriendGroupShowcase | undefined;
+}>) {
+  const { t } = useTranslation();
+  const { locale } = useLocale();
+  const { user } = useAuth();
+  const [loaded, setLoaded] = useState(false);
+  const cover = showcase?.cover ?? null;
+  const preview = viewerFirst(group.memberPreview, user?.userId);
+  const people = peoplePhrase(
+    preview.map((person) => personName(person, user?.userId, t)),
+    group.memberCount,
+    NAMED_MEMBERS,
+    locale,
+    t
+  );
+  const nightCount = showcase?.nightCount ?? 0;
+  const nights =
+    nightCount > 0
+      ? pluralizeCount(nightCount, 'groups.ranking.nightsOne', 'groups.ranking.nights', t)
+      : null;
+
+  return (
+    <Link to={ROUTES.group(group.id)} className={clsx(styles.tile, !cover && styles.plain)}>
+      {cover ? (
+        <>
+          <span className={styles.backdrop} aria-hidden="true">
+            <img
+              src={posterImageSrc(cover.backdropUrl)}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              className={clsx(styles.image, loaded && styles.imageLoaded)}
+              onLoad={() => setLoaded(true)}
+            />
+          </span>
+          <span className={styles.credit} aria-hidden="true">
+            <Film size={ICON_SIZE.sm} aria-hidden />
+            <span className={styles.creditTitle}>{cover.title}</span>
+          </span>
+        </>
+      ) : null}
+      <span className={styles.name}>{group.name}</span>
+      <span className={styles.people}>
+        <AvatarStack
+          people={faces(preview)}
+          max={STACKED_FACES}
+          size="xs"
+          className={styles.faces}
+        />
+        <span>{nights ? `${people}, ${nights}` : people}</span>
+      </span>
+      <TileFoot nextNight={nextNight} showcase={showcase} />
+    </Link>
   );
 }
 
@@ -168,38 +209,39 @@ function GroupsLoading() {
   const { t } = useTranslation();
   return (
     <SkeletonScreen label={t('groups.list.loading')} className={styles.grid}>
-      <Skeleton variant="block" className={styles.cardSkeleton} />
-      <Skeleton variant="block" className={styles.cardSkeleton} />
+      <Skeleton variant="block" className={styles.tileSkeleton} />
+      <Skeleton variant="block" className={styles.tileSkeleton} />
     </SkeletonScreen>
   );
 }
 
-function GroupsContent({ data, onCreate }: Readonly<{ data: MyGroups; onCreate: () => void }>) {
-  const { t } = useTranslation();
+function GroupsContent({ data }: Readonly<{ data: MyGroups }>) {
   const nextNightOf = (groupId: string) =>
     data.nextNights.find((night) => night.groupId === groupId);
+  const showcaseOf = (groupId: string) =>
+    data.showcases.find((showcase) => showcase.groupId === groupId);
   return (
     <>
       {data.invitations.length > 0 ? (
-        <GroupsSection title={t('groups.list.invitations')} count={data.invitations.length}>
-          <div className={styles.invitations}>
-            {data.invitations.map((invitation) => (
-              <InvitationCard key={invitation.groupId} invitation={invitation} />
-            ))}
-          </div>
-        </GroupsSection>
-      ) : null}
-      <GroupsSection title={t('groups.list.yourGroups')} count={data.groups.length}>
-        <div className={styles.grid}>
-          {data.groups.map((group) => (
-            <GroupCard key={group.id} group={group} nextNight={nextNightOf(group.id)} />
+        <div className={styles.invitations}>
+          {data.invitations.map((invitation) => (
+            <InvitationCard key={invitation.groupId} invitation={invitation} />
           ))}
-          <button type="button" className={styles.createTile} onClick={onCreate}>
-            <UserPlus size={ICON_SIZE.xl} aria-hidden />
-            {t('groups.list.createGroup')}
-          </button>
         </div>
-      </GroupsSection>
+      ) : null}
+      {data.groups.length > 0 ? (
+        <ul className={styles.grid}>
+          {data.groups.map((group) => (
+            <li key={group.id} className={styles.cell}>
+              <GroupTile
+                group={group}
+                nextNight={nextNightOf(group.id)}
+                showcase={showcaseOf(group.id)}
+              />
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </>
   );
 }
@@ -242,20 +284,22 @@ export default function MyGroupsPage() {
       />
     );
   } else {
-    body = <GroupsContent data={groups.data} onCreate={openCreate} />;
+    body = <GroupsContent data={groups.data} />;
   }
 
   return (
     <PageLayout className={styles.layout}>
       <header className={styles.pageHeader}>
-        <div className={styles.headerText}>
-          <h1 className={styles.pageTitle}>{t('groups.title')}</h1>
-          {empty ? null : <p className={styles.description}>{t('groups.list.description')}</p>}
-        </div>
+        <h1 className={styles.pageTitle}>{t('groups.title')}</h1>
         {empty ? null : (
-          <Button variant="primary" size={isMobile ? 'sm' : 'md'} onClick={openCreate}>
+          <Button
+            variant="primary"
+            size={isMobile ? 'sm' : 'md'}
+            aria-label={isMobile ? t('groups.list.newGroup') : undefined}
+            onClick={openCreate}
+          >
             <UserPlus size={ICON_SIZE.md} aria-hidden />
-            {t('groups.list.newGroup')}
+            {isMobile ? t('groups.list.newGroupShort') : t('groups.list.newGroup')}
           </Button>
         )}
       </header>

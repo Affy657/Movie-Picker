@@ -25,6 +25,12 @@ export type FriendGroupRanking = ApiSchemas['FriendGroupRankingResponse'];
 
 export type FriendGroupMemberStats = ApiSchemas['FriendGroupMemberStatsResponse'];
 
+export type FriendGroupStats = ApiSchemas['FriendGroupStatsResponse'];
+
+export type FriendGroupCover = ApiSchemas['FriendGroupCoverResponse'];
+
+export type FriendGroupShowcase = ApiSchemas['FriendGroupShowcaseResponse'];
+
 type FriendGroupMembersResponse = ApiSchemas['FriendGroupMembersResponse'];
 
 type FriendGroupInvitableUsersResponse = ApiSchemas['FriendGroupInvitableUsersResponse'];

@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
-import { CalendarPlus, Plus, Users } from 'lucide-react';
+import clsx from 'clsx';
+import { CalendarPlus, Plus, UserPlus, Users } from 'lucide-react';
+import AvatarStack from '@/shared/components/AvatarStack';
+import FadedBanner from '@/shared/components/FadedBanner';
 import BackLink from '@/shared/components/BackLink';
 import Button, { buttonClass } from '@/shared/components/Button';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
@@ -9,34 +12,43 @@ import ErrorState from '@/shared/components/ErrorState';
 import InlineError from '@/shared/components/InlineError';
 import PageLayout from '@/shared/components/PageLayout';
 import { Skeleton, SkeletonScreen } from '@/shared/components/Skeleton';
+import { TabPanel, Tabs, type TabDef } from '@/shared/components/Tabs';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { getErrorMessage, isNotFoundError } from '@/shared/api/apiError';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
-import { useTranslation } from '@/shared/i18n';
+import { useLocale, useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useOpenCreateEvent } from '@/features/events/components/create-event/createEventDialogContext';
 import { firstName } from '@/features/library/utils/listMembers';
-import type { FriendGroupDetail } from '@/features/groups/api/groupsApi';
+import type { FriendGroupCover, FriendGroupDetail } from '@/features/groups/api/groupsApi';
+import GroupFigures from '@/features/groups/components/GroupFigures';
 import GroupFilms from '@/features/groups/components/GroupFilms';
 import GroupFormDialog from '@/features/groups/components/GroupFormDialog';
-import GroupRanking from '@/features/groups/components/GroupRanking';
-import { GroupMembersAside, GroupMembersStrip } from '@/features/groups/components/GroupMembers';
+import GroupMembersPanel from '@/features/groups/components/GroupMembers';
 import GroupMembersDialog from '@/features/groups/components/GroupMembersDialog';
-import GroupMosaic from '@/features/groups/components/GroupMosaic';
 import GroupNextNight from '@/features/groups/components/GroupNextNight';
+import GroupRanking from '@/features/groups/components/GroupRanking';
 import GroupSection from '@/features/groups/components/GroupSection';
 import GroupSettingsMenu, {
   type GroupDialog,
 } from '@/features/groups/components/GroupSettingsMenu';
-import GroupUpcomingNights from '@/features/groups/components/GroupUpcomingNights';
+import GroupUpcomingNights, {
+  GroupOnHoldNights,
+} from '@/features/groups/components/GroupUpcomingNights';
 import { useDeleteGroup, useGroup, useLeaveGroup } from '@/features/groups/hooks/useGroups';
+import { peoplePhrase, personName, viewerFirst } from '@/features/groups/utils/groupLabels';
 import { splitUpcomingNights } from '@/features/groups/utils/groupNights';
 import styles from './GroupPage.module.css';
 
 const ARRIVAL_FLAG = 'openMembers';
+const NAMED_MEMBERS = 6;
+const NAMED_MEMBERS_ON_PHONE = 4;
+const STACKED_FACES = 6;
+
+type GroupTab = 'films' | 'ranking' | 'members';
 
 function useOpenMembersOnArrival(): boolean {
   const location = useLocation();
@@ -56,6 +68,25 @@ function useOpenMembersOnArrival(): boolean {
   }, [pathname, search, hash, state, navigate]);
 
   return arrival;
+}
+
+function GroupBanner({ cover }: Readonly<{ cover: FriendGroupCover }>) {
+  const { t } = useTranslation();
+  return (
+    <FadedBanner
+      imageUrl={cover.backdropUrl}
+      fromTmdb
+      credit={{
+        title: cover.title,
+        to: ROUTES.moviePage({
+          tmdbId: cover.tmdbId,
+          mediaType: cover.mediaType,
+          title: cover.title,
+        }),
+        ariaLabel: t('groups.page.coverCredit', { title: cover.title }),
+      }}
+    />
+  );
 }
 
 function GroupNotFound() {
@@ -151,61 +182,167 @@ function GroupDialogs({
   );
 }
 
-function GroupBody({
+function GroupPeople({
   group,
-  onNewNight,
-  onLeave,
-}: Readonly<{ group: FriendGroupDetail; onNewNight: () => void; onLeave?: () => void }>) {
+  viewerId,
+}: Readonly<{ group: FriendGroupDetail; viewerId: string | undefined }>) {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { locale } = useLocale();
   const isMobile = useIsMobile();
-  const { next, later, onHold } = splitUpcomingNights(group.upcomingNights);
-  const films = group.pastNights.filter((night) => night.winnerMovies.length > 0);
-  const coming = new Set(group.nextNightParticipantIds);
-  const comingMembers = group.members.filter((member) => coming.has(member.userId)).length;
-
+  const members = viewerFirst(group.members, viewerId);
+  const names = members.map((member) => personName(member, viewerId, t));
   return (
-    <div className={styles.columns}>
-      <div className={styles.main}>
-        <GroupSection title={t('groups.page.nextNight')}>
-          {next ? (
-            <GroupNextNight night={next} coming={comingMembers} total={group.members.length} />
-          ) : (
-            <EmptyState
-              compact
-              icon={<CalendarPlus size={ICON_SIZE['2xl']} />}
-              message={t('groups.page.noNight')}
-              actions={
-                <Button variant="primary" onClick={onNewNight}>
-                  <Plus size={ICON_SIZE.md} aria-hidden />
-                  {t('groups.page.newNight')}
-                </Button>
-              }
-            />
-          )}
-        </GroupSection>
-        {later.length > 0 ? (
-          <GroupSection title={t('groups.page.then')} count={later.length}>
-            <GroupUpcomingNights nights={later} />
-          </GroupSection>
-        ) : null}
-        {onHold.length > 0 ? (
-          <GroupSection title={t('groups.page.onHold')} count={onHold.length}>
-            <GroupUpcomingNights nights={onHold} />
-          </GroupSection>
-        ) : null}
-        {isMobile ? <GroupMembersStrip group={group} viewerId={user?.userId} /> : null}
-        <GroupRanking group={group} viewerId={user?.userId} />
-        {films.length > 0 ? (
-          <GroupSection title={t('groups.page.films')} count={films.length}>
-            <GroupFilms nights={films} />
-          </GroupSection>
-        ) : null}
+    <p className={styles.people}>
+      <AvatarStack
+        people={members.map((member) => ({
+          key: member.userId,
+          avatarId: member.avatarId,
+          pseudo: member.displayName,
+        }))}
+        max={STACKED_FACES}
+        size="sm"
+        className={styles.faces}
+      />
+      <span>
+        {peoplePhrase(
+          names,
+          members.length,
+          isMobile ? NAMED_MEMBERS_ON_PHONE : NAMED_MEMBERS,
+          locale,
+          t
+        )}
+      </span>
+    </p>
+  );
+}
+
+function GroupHeader({
+  group,
+  viewerId,
+  onNewNight,
+  onOpen,
+}: Readonly<{
+  group: FriendGroupDetail;
+  viewerId: string | undefined;
+  onNewNight: () => void;
+  onOpen: (dialog: GroupDialog) => void;
+}>) {
+  const { t } = useTranslation();
+  const isMobile = useIsMobile();
+  const isOwner = group.role === 'owner';
+  const size = isMobile ? 'sm' : 'md';
+  return (
+    <header className={styles.header}>
+      <div className={styles.identity}>
+        <BackLink to={ROUTES.groups}>{t('groups.page.back')}</BackLink>
+        <h1 className={styles.title}>{group.name}</h1>
+        <GroupPeople group={group} viewerId={viewerId} />
       </div>
-      {isMobile ? null : (
-        <GroupMembersAside group={group} viewerId={user?.userId} onLeave={onLeave} />
+      <div className={clsx(styles.actions, isOwner && styles.actionsWithInvite)}>
+        {isOwner ? (
+          <Button variant="secondary" size={size} onClick={() => onOpen('members')}>
+            <UserPlus size={ICON_SIZE.md} aria-hidden />
+            {t('groups.page.invite')}
+          </Button>
+        ) : null}
+        <Button variant="primary" size={size} onClick={onNewNight}>
+          <Plus size={ICON_SIZE.md} aria-hidden />
+          {t('groups.page.groupNight')}
+        </Button>
+        <GroupSettingsMenu isOwner={isOwner} onOpen={onOpen} />
+      </div>
+    </header>
+  );
+}
+
+function GroupUpcoming({
+  group,
+  viewerId,
+  onNewNight,
+}: Readonly<{ group: FriendGroupDetail; viewerId: string | undefined; onNewNight: () => void }>) {
+  const { t } = useTranslation();
+  const { next, later, onHold } = splitUpcomingNights(group.upcomingNights);
+  return (
+    <GroupSection title={t('groups.page.upcoming')}>
+      {next ? (
+        <GroupNextNight night={next} group={group} viewerId={viewerId} />
+      ) : (
+        <EmptyState
+          compact
+          icon={<CalendarPlus size={ICON_SIZE['2xl']} />}
+          message={t('groups.page.noNight')}
+          actions={
+            <Button variant="primary" onClick={onNewNight}>
+              <Plus size={ICON_SIZE.md} aria-hidden />
+              {t('groups.page.newNight')}
+            </Button>
+          }
+        />
       )}
-    </div>
+      {later.length > 0 ? <GroupUpcomingNights nights={later} /> : null}
+      {onHold.length > 0 ? <GroupOnHoldNights nights={onHold} /> : null}
+    </GroupSection>
+  );
+}
+
+function GroupTabs({
+  group,
+  viewerId,
+  onInvite,
+  onLeave,
+}: Readonly<{
+  group: FriendGroupDetail;
+  viewerId: string | undefined;
+  onInvite?: () => void;
+  onLeave?: () => void;
+}>) {
+  const { t } = useTranslation();
+  const idBase = useId();
+  const [tab, setTab] = useState<GroupTab>('films');
+  const films = group.pastNights.filter((night) => night.winnerMovies.length > 0);
+  const tabs: TabDef<GroupTab>[] = [
+    { key: 'films', label: t('groups.page.films'), badge: films.length || undefined },
+    { key: 'ranking', label: t('groups.page.ranking') },
+    { key: 'members', label: t('groups.page.members'), badge: group.members.length },
+  ];
+  return (
+    <section className={styles.tabs} aria-label={t('groups.page.sectionsAria')}>
+      <Tabs
+        idBase={idBase}
+        tabs={tabs}
+        active={tab}
+        onChange={setTab}
+        ariaLabel={t('groups.page.sectionsAria')}
+      />
+      <TabPanel idBase={idBase} tabKey="films" active={tab === 'films'} className={styles.panel}>
+        {films.length > 0 ? (
+          <GroupFilms nights={films} />
+        ) : (
+          <p className={styles.empty}>{t('groups.page.noFilms')}</p>
+        )}
+      </TabPanel>
+      <TabPanel
+        idBase={idBase}
+        tabKey="ranking"
+        active={tab === 'ranking'}
+        className={styles.panel}
+      >
+        <GroupRanking group={group} viewerId={viewerId} />
+      </TabPanel>
+      <TabPanel
+        idBase={idBase}
+        tabKey="members"
+        active={tab === 'members'}
+        className={styles.panel}
+      >
+        <GroupMembersPanel
+          group={group}
+          viewerId={viewerId}
+          onInvite={onInvite}
+          onLeave={onLeave}
+        />
+      </TabPanel>
+    </section>
   );
 }
 
@@ -213,7 +350,6 @@ export default function GroupPage() {
   const { t } = useTranslation();
   const { groupId = '' } = useParams();
   const { user } = useAuth();
-  const isMobile = useIsMobile();
   const openCreateEvent = useOpenCreateEvent();
   const openMembersOnArrival = useOpenMembersOnArrival();
   const [dialog, setDialog] = useState<GroupDialog | null>(openMembersOnArrival ? 'members' : null);
@@ -241,38 +377,34 @@ export default function GroupPage() {
 
   const isOwner = group.role === 'owner';
   const newNight = () => openCreateEvent({ groupId: group.id });
+  const { cover } = group;
 
   return (
-    <PageLayout className={styles.layout}>
-      <BackLink to={ROUTES.groups}>{t('groups.page.back')}</BackLink>
-      <header className={styles.header}>
-        <div className={styles.identity}>
-          <GroupMosaic people={group.memberPreview} size={isMobile ? 'md' : 'lg'} />
-          <div className={styles.titles}>
-            <p className={styles.overline}>{t('groups.page.overline')}</p>
-            <h1 className={styles.title}>{group.name}</h1>
-          </div>
-        </div>
-        <div className={styles.actions}>
-          <GroupSettingsMenu isOwner={isOwner} onOpen={setDialog} />
-          <Button variant="primary" size={isMobile ? 'sm' : 'md'} onClick={newNight}>
-            <Plus size={ICON_SIZE.md} aria-hidden />
-            {t('groups.page.newNight')}
-          </Button>
-        </div>
-      </header>
+    <PageLayout className={clsx(styles.layout, cover && styles.layoutWithBanner)}>
+      {cover ? <GroupBanner cover={cover} /> : null}
+      <div className={clsx(styles.content, cover && styles.overBanner)}>
+        <GroupHeader
+          group={group}
+          viewerId={user?.userId}
+          onNewNight={newNight}
+          onOpen={setDialog}
+        />
+        <GroupFigures stats={group.stats} />
 
-      {actionError ? (
-        <p className="error" role="alert">
-          {actionError}
-        </p>
-      ) : null}
+        {actionError ? (
+          <p className="error" role="alert">
+            {actionError}
+          </p>
+        ) : null}
 
-      <GroupBody
-        group={group}
-        onNewNight={newNight}
-        onLeave={isOwner ? undefined : () => setDialog('leave')}
-      />
+        <GroupUpcoming group={group} viewerId={user?.userId} onNewNight={newNight} />
+        <GroupTabs
+          group={group}
+          viewerId={user?.userId}
+          onInvite={isOwner ? () => setDialog('members') : undefined}
+          onLeave={isOwner ? undefined : () => setDialog('leave')}
+        />
+      </div>
 
       <GroupDialogs
         group={group}

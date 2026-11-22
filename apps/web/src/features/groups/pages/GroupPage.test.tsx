@@ -123,6 +123,25 @@ const JEUDIS: MockGroup = {
   pastNights: [PAST, TO_RATE],
 };
 
+const PICTURED_JEUDIS: MockGroup = {
+  ...JEUDIS,
+  stats: {
+    nightCount: 16,
+    filmCount: 17,
+    firstNightDate: '2024-09-05',
+    averageRating: 7.8,
+    usualWeekday: 4,
+  },
+  cover: {
+    tmdbId: 101,
+    mediaType: 'movie',
+    title: 'Les Enfants du phare',
+    backdropUrl: 'https://image.tmdb.org/t/p/w780/phare.jpg',
+  },
+};
+
+const MORE = 'Plus d’actions sur le groupe';
+
 function memberStats(
   userId: string,
   overrides: Partial<FriendGroupMemberStats> = {}
@@ -222,7 +241,7 @@ describe('GroupPage', () => {
   });
   afterAll(() => server.close());
 
-  it('heads the page with the group, and opens a new night already in the group', async () => {
+  it('heads the page with the group and its people, and opens a new night already in the group', async () => {
     server.use(signedInAs(ALICE), ...createGroupsHandlers([JEUDIS]));
     const user = userEvent.setup();
     const { openCreateEvent } = renderPage();
@@ -230,25 +249,73 @@ describe('GroupPage', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Les jeudis ciné' })
     ).toBeInTheDocument();
-    expect(screen.getByText('Groupe')).toBeInTheDocument();
+    expect(screen.getByText('Vous, Léa, Sam et Hugo')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Mes groupes' })).toHaveAttribute('href', '/groupes');
+    expect(screen.queryByTestId('faded-banner-image')).toBeNull();
+    expect(screen.queryByRole('list', { name: 'Le groupe en chiffres' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Inviter' })).toBeNull();
     expect(document.head.querySelector('meta[name="robots"]')?.getAttribute('content')).toContain(
       'noindex'
     );
 
-    await user.click(screen.getAllByRole('button', { name: 'Nouvelle soirée' })[0]!);
+    await user.click(screen.getByRole('button', { name: 'Soirée du groupe' }));
 
     expect(openCreateEvent).toHaveBeenCalledWith({ groupId: 'g1' });
+  });
+
+  it('shows the last film of the group as a banner, then the group in figures', async () => {
+    server.use(signedInAs(ALICE), ...createGroupsHandlers([PICTURED_JEUDIS]));
+    renderPage();
+
+    expect(await screen.findByTestId('faded-banner-image')).toHaveAttribute(
+      'src',
+      'https://image.tmdb.org/t/p/w1280/phare.jpg'
+    );
+    expect(
+      screen.getByRole('link', {
+        name: 'Image tirée de Les Enfants du phare, le dernier film du groupe',
+      })
+    ).toHaveAttribute('href', expect.stringContaining('/film/101'));
+    const figures = screen.getByRole('list', { name: 'Le groupe en chiffres' });
+    const items = within(figures).getAllByRole('listitem');
+    expect(items.map((item) => item.textContent)).toEqual([
+      '16soirées depuis septembre 2024',
+      '17films gagnants',
+      '3,9/5note moyenne des films',
+      'Jeudile soir le plus fréquent',
+    ]);
+  });
+
+  it('lets the creator invite people from the head of the page', async () => {
+    server.use(
+      signedInAs(LEA),
+      ...createGroupsHandlers([{ ...JEUDIS, role: 'owner' }]),
+      ...createGroupMembershipHandlers('g1', { members: [{ ...LEA, role: 'owner' }, ALICE] })
+    );
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole('button', { name: 'Inviter' }));
+
+    expect(
+      await screen.findByRole('heading', { name: 'Membres de « Les jeudis ciné »' })
+    ).toBeInTheDocument();
   });
 
   it('shows the next night with who comes, its films, and the way to vote or propose', async () => {
     server.use(signedInAs(ALICE), ...createGroupsHandlers([JEUDIS]));
     renderPage();
 
-    const next = await screen.findByRole('region', { name: 'Prochaine soirée' });
+    const upcoming = await screen.findByRole('region', { name: 'À venir' });
+    const next = within(upcoming).getByRole('article');
     expect(within(next).getByRole('heading', { name: 'Jeudi ciné' })).toBeInTheDocument();
+    expect(within(next).getByRole('link', { name: 'Jeudi ciné' })).toHaveAttribute(
+      'href',
+      '/e/jeudi'
+    );
     expect(next).toHaveTextContent('Polars');
-    expect(next).toHaveTextContent('3 membres sur 4 y sont');
+    expect(next).toHaveTextContent('Vous, Léa et Sam viennent');
+    expect(next).toHaveTextContent('Hugo n’a pas encore rejoint');
     expect(next).toHaveTextContent('21h, dans');
     const films = within(next).getByRole('list', { name: 'Films proposés' });
     expect(within(films).getAllByRole('listitem')).toHaveLength(2);
@@ -258,10 +325,18 @@ describe('GroupPage', () => {
       'href',
       '/e/jeudi'
     );
-    expect(within(next).getByRole('link', { name: 'Ouvrir la soirée' })).toHaveAttribute(
-      'href',
-      '/e/jeudi'
+  });
+
+  it('counts who comes on a phone', async () => {
+    stubMatchMedia((query) => query.includes('max-width: 767px'));
+    server.use(signedInAs(ALICE), ...createGroupsHandlers([JEUDIS]));
+    renderPage();
+
+    const next = within(await screen.findByRole('region', { name: 'À venir' })).getByRole(
+      'article'
     );
+    expect(next).toHaveTextContent('3 sur 4 viennent');
+    expect(next).toHaveTextContent('Hugo n’a pas encore rejoint');
   });
 
   it('leads with proposing a film while the next night has none', async () => {
@@ -273,7 +348,7 @@ describe('GroupPage', () => {
     );
     renderPage();
 
-    const next = await screen.findByRole('region', { name: 'Prochaine soirée' });
+    const next = await screen.findByRole('article');
     expect(within(next).queryByRole('link', { name: 'Voter' })).toBeNull();
     expect(within(next).getByRole('link', { name: 'Proposer un film' })).toHaveClass(
       buttonClass({ variant: 'primary' })
@@ -317,7 +392,7 @@ describe('GroupPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    const next = await screen.findByRole('region', { name: 'Prochaine soirée' });
+    const next = await screen.findByRole('article');
     expect(within(next).queryByRole('link', { name: 'Voter' })).toBeNull();
     await user.click(within(next).getByRole('button', { name: 'Rejoindre la soirée Jeudi ciné' }));
 
@@ -349,14 +424,42 @@ describe('GroupPage', () => {
     );
     renderPage();
 
-    const then = await screen.findByRole('region', { name: /Ensuite/ });
+    const upcoming = await screen.findByRole('region', { name: 'À venir' });
     expect(
-      within(then).getByRole('button', { name: 'Rejoindre la soirée Halloween en retard' })
+      within(upcoming).getByRole('button', { name: 'Rejoindre la soirée Halloween en retard' })
     ).toBeInTheDocument();
-    expect(then).toHaveTextContent('3 participants');
-    const mine = within(then).getByRole('link', { name: /Mardi cinéphile/ });
-    expect(mine).toHaveAttribute('href', '/e/mardi');
-    expect(mine).toHaveTextContent('Organisée par vous');
+    expect(upcoming).toHaveTextContent('3 participants');
+    expect(within(upcoming).getByRole('link', { name: /Mardi cinéphile/ })).toHaveAttribute(
+      'href',
+      '/e/mardi'
+    );
+  });
+
+  it('names who comes to a later night', async () => {
+    server.use(
+      signedInAs(ALICE),
+      ...createGroupsHandlers([
+        {
+          ...JEUDIS,
+          upcomingNights: [
+            JEUDI,
+            {
+              ...SAMEDI,
+              participantsPreview: [
+                { pseudo: 'Léa Moreau', avatarId: '' },
+                { pseudo: 'Inès', avatarId: '' },
+                { pseudo: 'Hugo', avatarId: '' },
+              ],
+            },
+          ],
+        },
+      ])
+    );
+    renderPage();
+
+    expect(await screen.findByRole('region', { name: 'À venir' })).toHaveTextContent(
+      'Léa, Inès et Hugo viennent'
+    );
   });
 
   it('keeps a night on hold out of the next night, and lists it apart', async () => {
@@ -366,17 +469,17 @@ describe('GroupPage', () => {
     );
     renderPage();
 
-    const next = await screen.findByRole('region', { name: 'Prochaine soirée' });
+    const user = userEvent.setup();
+    const upcoming = await screen.findByRole('region', { name: 'À venir' });
+    const next = within(upcoming).getByRole('article');
     expect(next).toHaveTextContent('Jeudi ciné');
     expect(next).not.toHaveTextContent('Soirée du jeudi 19 novembre');
-    const then = screen.getByRole('region', { name: /Ensuite/ });
-    expect(then).not.toHaveTextContent('Soirée du jeudi 19 novembre');
-    const onHold = screen.getByRole('region', { name: /En suspens/ });
+    expect(upcoming).toHaveTextContent('Soirée du jeudi 19 novembre en suspens, sans film choisi.');
     expect(
-      within(onHold).getByRole('link', { name: /Soirée du jeudi 19 novembre/ })
+      within(upcoming).getByRole('link', { name: 'Ouvrir la soirée Soirée du jeudi 19 novembre' })
     ).toHaveAttribute('href', '/e/suspens');
-    const members = screen.getByRole('complementary', { name: /Membres/ });
-    expect(members).toHaveTextContent('Vient jeudi');
+    await user.click(screen.getByRole('tab', { name: /Membres/ }));
+    expect(screen.getByRole('tabpanel')).toHaveTextContent('Vient jeudi');
   });
 
   it('shows no next night while the only night left is on hold', async () => {
@@ -388,12 +491,10 @@ describe('GroupPage', () => {
     );
     renderPage();
 
-    const next = await screen.findByRole('region', { name: 'Prochaine soirée' });
-    expect(next).toHaveTextContent('Aucune soirée prévue');
-    expect(screen.getByRole('region', { name: /En suspens/ })).toHaveTextContent(
-      'Soirée du jeudi 19 novembre'
-    );
-    expect(screen.queryByRole('region', { name: /Ensuite/ })).toBeNull();
+    const upcoming = await screen.findByRole('region', { name: 'À venir' });
+    expect(upcoming).toHaveTextContent('Aucune soirée prévue');
+    expect(upcoming).toHaveTextContent('Soirée du jeudi 19 novembre en suspens');
+    expect(within(upcoming).queryByRole('article')).toBeNull();
     expect(screen.queryByText('Pas encore rejoint')).toBeNull();
   });
 
@@ -401,7 +502,11 @@ describe('GroupPage', () => {
     server.use(signedInAs(ALICE), ...createGroupsHandlers([JEUDIS]));
     renderPage();
 
-    const films = await screen.findByRole('region', { name: /Les films du groupe/ });
+    expect(await screen.findByRole('tab', { name: /Films/ })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    const films = screen.getByRole('tabpanel');
     const phare = within(films).getByRole('link', { name: /Les Enfants du phare/ });
     expect(phare).toHaveAttribute('href', '/e/phare');
     expect(phare).toHaveTextContent('Vous 4/5');
@@ -412,9 +517,11 @@ describe('GroupPage', () => {
 
   it('tells which members come to the next night', async () => {
     server.use(signedInAs(ALICE), ...createGroupsHandlers([JEUDIS]));
+    const user = userEvent.setup();
     renderPage();
 
-    const members = await screen.findByRole('complementary', { name: /Membres/ });
+    await user.click(await screen.findByRole('tab', { name: /Membres/ }));
+    const members = screen.getByRole('tabpanel');
     const rows = within(members).getAllByRole('listitem');
     expect(rows).toHaveLength(4);
     expect(rows[0]).toHaveTextContent('Léa Moreau');
@@ -425,17 +532,6 @@ describe('GroupPage', () => {
     expect(rows[3]).toHaveTextContent('Pas encore rejoint');
   });
 
-  it('shows the members as a row of avatars on a phone, ringed when they come', async () => {
-    stubMatchMedia((query) => query.includes('max-width: 767px'));
-    server.use(signedInAs(ALICE), ...createGroupsHandlers([JEUDIS]));
-    renderPage();
-
-    const members = await screen.findByRole('region', { name: /Membres/ });
-    expect(within(members).getAllByRole('listitem')).toHaveLength(4);
-    expect(members).toHaveTextContent('Cerclés de vert : viennent jeudi.');
-    expect(screen.queryByRole('complementary')).toBeNull();
-  });
-
   it('offers a new night when none is planned, and hides the films until there are some', async () => {
     server.use(
       signedInAs(ALICE),
@@ -444,12 +540,13 @@ describe('GroupPage', () => {
     const user = userEvent.setup();
     const { openCreateEvent } = renderPage();
 
-    const next = await screen.findByRole('region', { name: 'Prochaine soirée' });
-    expect(next).toHaveTextContent('Aucune soirée prévue');
-    await user.click(within(next).getByRole('button', { name: 'Nouvelle soirée' }));
+    const upcoming = await screen.findByRole('region', { name: 'À venir' });
+    expect(upcoming).toHaveTextContent('Aucune soirée prévue');
+    await user.click(within(upcoming).getByRole('button', { name: 'Nouvelle soirée' }));
     expect(openCreateEvent).toHaveBeenCalledWith({ groupId: 'g1' });
-    expect(screen.queryByRole('region', { name: /Les films du groupe/ })).toBeNull();
-    expect(screen.queryByRole('region', { name: /Ensuite/ })).toBeNull();
+    expect(screen.getByRole('tabpanel')).toHaveTextContent(
+      'Les films gagnants du groupe arriveront ici après sa première soirée.'
+    );
     expect(screen.queryByText('Pas encore rejoint')).toBeNull();
   });
 
@@ -458,7 +555,7 @@ describe('GroupPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(await screen.findByRole('button', { name: 'Réglages du groupe' }));
+    await user.click(await screen.findByRole('button', { name: MORE }));
     expect(screen.queryByRole('menuitem', { name: 'Renommer' })).toBeNull();
     await user.click(screen.getByRole('menuitem', { name: 'Quitter le groupe' }));
     const dialog = await screen.findByTestId('leave-group-dialog');
@@ -470,13 +567,15 @@ describe('GroupPage', () => {
     expect(screen.getByTestId('location')).toHaveTextContent(/^\/groupes$/);
   });
 
-  it('lets a member leave the group from the members column', async () => {
+  it('lets a member leave the group from the members tab', async () => {
     server.use(signedInAs(ALICE), ...createGroupsHandlers([JEUDIS]));
     const user = userEvent.setup();
     renderPage();
 
-    const members = await screen.findByRole('complementary', { name: /Membres/ });
-    await user.click(within(members).getByRole('button', { name: 'Quitter le groupe' }));
+    await user.click(await screen.findByRole('tab', { name: /Membres/ }));
+    await user.click(
+      within(screen.getByRole('tabpanel')).getByRole('button', { name: 'Quitter le groupe' })
+    );
 
     expect(await screen.findByTestId('leave-group-dialog')).toBeInTheDocument();
   });
@@ -486,7 +585,7 @@ describe('GroupPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(await screen.findByRole('button', { name: 'Réglages du groupe' }));
+    await user.click(await screen.findByRole('button', { name: MORE }));
     expect(screen.queryByRole('menuitem', { name: 'Quitter le groupe' })).toBeNull();
     await user.click(screen.getByRole('menuitem', { name: 'Renommer' }));
     const name = await screen.findByRole('textbox', { name: 'Nom' });
@@ -496,11 +595,7 @@ describe('GroupPage', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Les vendredis ciné' })
     ).toBeInTheDocument();
-    expect(screen.queryByRole('complementary', { name: /Membres/ })).not.toHaveTextContent(
-      'Quitter le groupe'
-    );
-
-    await user.click(screen.getByRole('button', { name: 'Réglages du groupe' }));
+    await user.click(screen.getByRole('button', { name: MORE }));
     await user.click(screen.getByRole('menuitem', { name: 'Supprimer le groupe' }));
     const dialog = await screen.findByTestId('delete-group-dialog');
     await user.click(within(dialog).getByRole('button', { name: 'Supprimer le groupe' }));
@@ -517,7 +612,7 @@ describe('GroupPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(await screen.findByRole('button', { name: 'Réglages du groupe' }));
+    await user.click(await screen.findByRole('button', { name: MORE }));
     await user.click(screen.getByRole('menuitem', { name: 'Membres' }));
 
     expect(
@@ -543,13 +638,16 @@ describe('GroupPage', () => {
 
   it('ranks the members on the rating of their films, the viewer named and the rest not ranked yet', async () => {
     server.use(signedInAs(ALICE), ...createGroupsHandlers([RANKED_JEUDIS]));
+    const user = userEvent.setup();
     renderPage();
-
-    const ranking = await screen.findByRole('region', { name: /Classement/ });
+    await user.click(await screen.findByRole('tab', { name: 'Classement' }));
+    const ranking = screen.getByRole('tabpanel');
     expect(
       await within(ranking).findByText('Qui propose les meilleurs films ?')
     ).toBeInTheDocument();
-    expect(ranking).toHaveTextContent('16 soirées');
+    expect(ranking).toHaveTextContent(
+      'Sur les 16 soirées terminées de ses membres, tous groupes confondus.'
+    );
     expect(within(ranking).getByRole('button', { name: 'Note de ses films' })).toHaveAttribute(
       'aria-pressed',
       'true'
@@ -569,7 +667,8 @@ describe('GroupPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    const ranking = await screen.findByRole('region', { name: /Classement/ });
+    await user.click(await screen.findByRole('tab', { name: 'Classement' }));
+    const ranking = screen.getByRole('tabpanel');
     await user.click(await within(ranking).findByRole('button', { name: 'Soirées' }));
 
     expect(within(ranking).getByRole('button', { name: 'Soirées' })).toHaveAttribute(
@@ -591,9 +690,11 @@ describe('GroupPage', () => {
 
   it('says the ranking starts after the first finished night of the group', async () => {
     server.use(signedInAs(ALICE), ...createGroupsHandlers([JEUDIS]));
+    const user = userEvent.setup();
     renderPage();
 
-    const ranking = await screen.findByRole('region', { name: /Classement/ });
+    await user.click(await screen.findByRole('tab', { name: 'Classement' }));
+    const ranking = screen.getByRole('tabpanel');
     expect(
       await within(ranking).findByText(
         'Le classement démarre après la première soirée terminée d’un membre, quand un film a gagné.'
@@ -617,11 +718,12 @@ describe('GroupPage', () => {
     const user = userEvent.setup();
     renderPage();
 
-    const ranking = await screen.findByRole('region', { name: /Classement/ });
+    await user.click(await screen.findByRole('tab', { name: 'Classement' }));
+    const ranking = screen.getByRole('tabpanel');
     expect(
       await within(ranking).findByText('Impossible de charger le classement.')
     ).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'Prochaine soirée' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'À venir' })).toBeInTheDocument();
 
     await user.click(within(ranking).getByRole('button', { name: 'Réessayer' }));
 

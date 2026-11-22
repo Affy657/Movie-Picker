@@ -15,12 +15,6 @@
   line-height: var(--leading-tight);
 }
 
-.detail {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-muted);
-}
-
 @media (max-width: 47.9375rem) {
   .title {
     font-size: var(--font-size-lg);

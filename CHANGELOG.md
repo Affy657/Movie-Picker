@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Changed
+
+- **La page d’un groupe et Mes groupes refaites** : la page d’un groupe s’ouvre sur une bannière tirée de son dernier film gagnant, ses membres et ses chiffres (soirées, films gagnants, note moyenne, soir le plus fréquent). À venir dit qui vient dans la carte de la prochaine soirée, puis les films, le classement et les membres passent en onglets. Mes groupes présente chaque groupe en grande vignette, son dernier film en fond.
+
 ## [1.27.1] - 2026-11-22
 
 ### Fixed
