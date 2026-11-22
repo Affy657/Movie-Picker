@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Une recherche dans la barre de navigation** : une loupe, sur ordinateur comme sur téléphone, cherche à la fois les films et séries, les membres et vos soirées, et range les résultats par type pendant la frappe. Le champ d’Explorer fait la même recherche, et « Voir tous les films et séries » mène toujours à la recherche complète.
+
 ## [1.27.2] - 2026-11-22
 
 ### Changed

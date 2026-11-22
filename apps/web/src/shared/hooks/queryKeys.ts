@@ -129,4 +129,9 @@ export const queryKeys = {
     publicDetail: (handle: string | undefined, listId: string | undefined) =>
       ['lists', 'public', handle ?? '$pending', 'detail', listId ?? '$pending'] as const,
   },
+  globalSearch: {
+    all: ['global-search'] as const,
+    results: (viewerId: string | null, query: string) =>
+      ['global-search', viewerId ?? '$guest', query] as const,
+  },
 } as const;

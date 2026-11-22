@@ -5,6 +5,7 @@ import { firstTimeInTab } from '@/shared/analytics/onceInTab';
 import {
   reportUsage,
   type EventLinkState,
+  type GlobalSearchKind,
   type JoinPromptCta,
   type RandomPickSource,
   type ReportedUsage,
@@ -41,6 +42,7 @@ export type AnalyticsEvent =
   | 'recap_viewed'
   | 'watchlist_added'
   | 'random_pick_opened'
+  | 'global_search_result_opened'
   | 'letterboxd_connected'
   | 'letterboxd_disconnected'
   | 'letterboxd_synced'
@@ -51,6 +53,7 @@ interface CountedEventProperties {
   join_prompt_clicked: { cta: JoinPromptCta };
   recap_viewed: { viewer: UsageViewer; winners: number };
   random_pick_opened: { source: RandomPickSource; scope: string; pool: number };
+  global_search_result_opened: { kind: GlobalSearchKind; source: 'header' | 'home' };
 }
 
 type CountedEvent = keyof CountedEventProperties;
@@ -80,6 +83,11 @@ function countedUsageOf(event: AnalyticsEvent, properties: unknown): ReportedUsa
       return {
         metric: event,
         variant: (properties as CountedEventProperties[typeof event]).source,
+      };
+    case 'global_search_result_opened':
+      return {
+        metric: event,
+        variant: (properties as CountedEventProperties[typeof event]).kind,
       };
     default:
       return null;

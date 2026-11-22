@@ -73,10 +73,29 @@ export const fr = {
       action: 'Créer une soirée',
       howItWorks: 'Comment ça marche',
     },
-    searchLabel: 'Chercher un film',
-    closeSearch: 'Fermer la recherche',
-    searchPlaceholder: 'Titre, réalisateur, acteur',
     searchExamplesLabel: 'Par exemple',
+  },
+
+  globalSearch: {
+    open: 'Rechercher',
+    label: 'Rechercher un film, une soirée ou un membre',
+    placeholder: 'Film, série, soirée, membre',
+    close: 'Fermer la recherche',
+    loading: 'Recherche en cours…',
+    error: 'La recherche n’a pas abouti.',
+    retry: 'Réessayer',
+    empty: 'Rien ne correspond à « {{query}} ».',
+    emptyAction: 'Chercher parmi tous les films',
+    seeAllTitles: 'Voir tous les films et séries',
+    resultsOne: '1 résultat',
+    resultsMany: '{{count}} résultats',
+    series: 'Série',
+    finishedNight: 'Terminée',
+    sections: {
+      titles: 'Films et séries',
+      nights: 'Mes soirées',
+      members: 'Membres',
+    },
   },
 
   showcase: {
@@ -3675,7 +3694,6 @@ export const fr = {
       nextItem2: 'Déjà vu automatique en soirée',
       nextItem3: 'Une liste en vitrine sur le profil',
       nextItem4: "Cadres d'avatar à débloquer",
-      nextItem5: 'Recherche globale',
       v2When: 'Sans date annoncée',
       v2What: 'V2',
       v2Detail:

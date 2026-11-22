@@ -97,6 +97,8 @@ const counts = [
   { metric: 'recap_viewed', variant: 'visitor', count: 9 },
   { metric: 'recap_viewed', variant: 'account', count: 3 },
   { metric: 'random_pick_opened', variant: 'watchlist', count: 5 },
+  { metric: 'global_search_result_opened', variant: 'title', count: 4 },
+  { metric: 'global_search_result_opened', variant: 'night', count: 2 },
   { metric: 'letterboxd_synced', variant: 'auto', count: 20 },
   { metric: 'letterboxd_synced', variant: 'manual', count: 2 },
   { metric: 'letterboxd_linked', variant: 'connected', count: 1 },
@@ -187,6 +189,7 @@ describe('buildUsageReport', () => {
       ratings: { ratings: 40, people: 6 },
       recaps: { visitor: 9, account: 3 },
       randomPicks: { watchlist: 5, list: 0, saved_list: 0, catalog: 0 },
+      globalSearch: { title: 4, all_titles: 0, member: 0, night: 2 },
       watchlist: { adds: 30, people: 4, imports: 250 },
       letterboxd: {
         connectedAccounts: 5,
@@ -209,6 +212,10 @@ describe('formatUsageReport', () => {
 
     assert.match(text, /2026-10-20 to 2026-11-18/);
     assert.match(text, /Event link opened by a visitor\s+50/);
+    assert.match(
+      text,
+      /Global search results opened\s+6 \(title 4, all titles 0, member 0, night 2\)/
+    );
     assert.match(text, /Reported by the browser, unless measurement was refused/);
     assert.match(text, /Recorded by the server for everyone/);
     assert.match(text, /Account created from an event link\s+8$/m);

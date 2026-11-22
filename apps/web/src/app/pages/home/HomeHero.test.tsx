@@ -8,6 +8,7 @@ import { http, HttpResponse } from 'msw';
 import type { MyEventSummary } from '@/features/events/types';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
+import { apiJson } from '@/mocks/apiJson';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
 import HomeHero from './HomeHero';
 import { useHomeSearchHidden } from './homeSearchVisibility';
@@ -66,6 +67,25 @@ function eventsHandler(events: MyEventSummary[]) {
 }
 
 const openCreateEvent = vi.fn();
+
+const searchHandler = http.get(`${TEST_API_V1}/search`, () =>
+  apiJson<'GlobalSearchResponse'>({
+    titles: [{ tmdbId: 438631, mediaType: 'movie', title: 'Dune', year: '2021', posterPath: null }],
+    members: [],
+    nights: [
+      {
+        slug: 'dune-night',
+        title: 'Nuit Dune',
+        date: '2035-11-20',
+        time: '20:30',
+        isFinished: false,
+      },
+    ],
+  })
+);
+
+const homeField = () =>
+  screen.getByRole('searchbox', { name: 'Rechercher un film, une soirée ou un membre' });
 
 function renderHero() {
   return render(
@@ -336,5 +356,51 @@ describe('HomeHero', () => {
     expect(hidden).toBe(true);
     act(() => notify([{ isIntersecting: true, boundingClientRect: { top: 30 } as DOMRect }]));
     expect(hidden).toBe(false);
+  });
+  it('shows every kind of result under its field while typing', async () => {
+    server.use(authMeGuestHandler, trendingHandler, searchHandler);
+    renderHero();
+
+    await userEvent.type(homeField(), 'dune');
+
+    expect(await screen.findByRole('link', { name: /Nuit Dune/ })).toHaveAttribute(
+      'href',
+      '/e/dune-night'
+    );
+    expect(screen.getByRole('region', { name: 'Films et séries' })).toBeInTheDocument();
+  });
+
+  it('puts its results away with Escape and brings them back when typing again', async () => {
+    server.use(authMeGuestHandler, trendingHandler, searchHandler);
+    renderHero();
+    await userEvent.type(homeField(), 'dune');
+    await screen.findByRole('link', { name: /Nuit Dune/ });
+
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('link', { name: /Nuit Dune/ })).not.toBeInTheDocument();
+
+    await userEvent.type(homeField(), 's');
+    expect(await screen.findByRole('link', { name: /Nuit Dune/ })).toBeInTheDocument();
+  });
+
+  it('puts its results away when the focus leaves the search', async () => {
+    server.use(authMeGuestHandler, trendingHandler, searchHandler);
+    renderHero();
+    await userEvent.type(homeField(), 'dune');
+    await screen.findByRole('link', { name: /Nuit Dune/ });
+
+    act(() => screen.getByRole('button', { name: 'Dune' }).focus());
+
+    expect(screen.queryByRole('link', { name: /Nuit Dune/ })).not.toBeInTheDocument();
+  });
+
+  it('closes its results once one is opened', async () => {
+    server.use(authMeGuestHandler, trendingHandler, searchHandler);
+    renderHero();
+    await userEvent.type(homeField(), 'dune');
+
+    await userEvent.click(await screen.findByRole('link', { name: /Nuit Dune/ }));
+
+    expect(screen.queryByRole('region', { name: 'Films et séries' })).not.toBeInTheDocument();
   });
 });

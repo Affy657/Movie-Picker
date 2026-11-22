@@ -92,6 +92,20 @@ describe('useAnalytics', () => {
     });
   });
 
+  it('reads the opened search result kind as the counted variant', () => {
+    const { result } = renderAnalytics();
+
+    result.current.analytics.track('global_search_result_opened', {
+      kind: 'member',
+      source: 'home',
+    });
+
+    expect(reportUsage).toHaveBeenCalledWith({
+      metric: 'global_search_result_opened',
+      variant: 'member',
+    });
+  });
+
   it('reports a once-per-tab step a single time', () => {
     givenConsent({ decided: true, analytics: true });
     const { result } = renderAnalytics();

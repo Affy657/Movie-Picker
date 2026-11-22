@@ -8,6 +8,7 @@ public sealed record UsageCount
     public const string JoinPromptClickedMetric = "join_prompt_clicked";
     public const string RecapViewedMetric = "recap_viewed";
     public const string RandomPickOpenedMetric = "random_pick_opened";
+    public const string GlobalSearchResultOpenedMetric = "global_search_result_opened";
     public const string UserSignedUpMetric = "user_signed_up";
     public const string UserLoggedInMetric = "user_logged_in";
     public const string EventJoinedMetric = "event_joined";
@@ -40,7 +41,8 @@ public sealed record UsageCount
             .ToHashSet(StringComparer.Ordinal),
         [JoinPromptClickedMetric] = new(["login", "register"], StringComparer.Ordinal),
         [RecapViewedMetric] = new(Viewers, StringComparer.Ordinal),
-        [RandomPickOpenedMetric] = new(["watchlist", "list", "saved_list", "catalog"], StringComparer.Ordinal)
+        [RandomPickOpenedMetric] = new(["watchlist", "list", "saved_list", "catalog"], StringComparer.Ordinal),
+        [GlobalSearchResultOpenedMetric] = new(["title", "all_titles", "member", "night"], StringComparer.Ordinal)
     };
 
     private UsageCount(string metric, string variant)

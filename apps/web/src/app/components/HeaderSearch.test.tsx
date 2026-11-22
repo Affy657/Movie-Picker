@@ -1,11 +1,44 @@
-import { describe, it, expect, afterEach, vi } from 'vitest';
-import { act, render, screen } from '@testing-library/react';
+import type { ReactNode } from 'react';
+import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
-import { LocaleProvider } from '@/shared/i18n';
+import { setupServer } from 'msw/node';
+import { http } from 'msw';
+import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
+import { apiJson } from '@/mocks/apiJson';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
 import { setHomeSearchHidden } from '@/app/pages/home/homeSearchVisibility';
 import HeaderSearch from './HeaderSearch';
+
+const server = setupServer(
+  authMeGuestHandler,
+  http.get(`${TEST_API_V1}/search`, () =>
+    apiJson<'GlobalSearchResponse'>({
+      titles: [
+        { tmdbId: 438631, mediaType: 'movie', title: 'Dune', year: '2021', posterPath: null },
+      ],
+      members: [],
+      nights: [
+        {
+          slug: 'dune-night',
+          title: 'Nuit Dune',
+          date: '2035-11-20',
+          time: '20:30',
+          isFinished: false,
+        },
+      ],
+    })
+  )
+);
+
+beforeAll(() => server.listen({ onUnhandledFrame: 'bypass' }));
+afterAll(() => server.close());
+
+function Providers({ children }: Readonly<{ children: ReactNode }>) {
+  return <AppTestProviders>{children}</AppTestProviders>;
+}
 
 function LocationProbe() {
   const location = useLocation();
@@ -14,18 +47,20 @@ function LocationProbe() {
 
 function renderHeaderSearch(path = '/') {
   return render(
-    <LocaleProvider>
+    <Providers>
       <MemoryRouter initialEntries={[path]}>
         <HeaderSearch />
         <Routes>
           <Route path="*" element={<LocationProbe />} />
         </Routes>
       </MemoryRouter>
-    </LocaleProvider>
+    </Providers>
   );
 }
 
-const loupe = () => screen.queryByRole('button', { name: 'Chercher un film' });
+const loupe = () => screen.queryByRole('button', { name: 'Rechercher' });
+const field = () =>
+  screen.getByRole('searchbox', { name: 'Rechercher un film, une soirée ou un membre' });
 
 describe('HeaderSearch', () => {
   afterEach(() => {
@@ -33,31 +68,69 @@ describe('HeaderSearch', () => {
     vi.unstubAllGlobals();
   });
 
-  it('on a phone, shows the loupe on Explorer only once the page search has scrolled away', () => {
-    stubMatchMedia((query) => query.includes('max-width'));
-    renderHeaderSearch('/');
+  it.each([
+    ['a phone', (query: string) => query.includes('max-width')],
+    ['a computer', () => false],
+  ])(
+    'on %s, shows the loupe on Explorer only once the page search has scrolled away',
+    (_, phone) => {
+      stubMatchMedia(phone);
+      renderHeaderSearch('/');
 
-    expect(loupe()).not.toBeInTheDocument();
-    act(() => setHomeSearchHidden(true));
-    expect(loupe()).toBeInTheDocument();
-    act(() => setHomeSearchHidden(false));
-    expect(loupe()).not.toBeInTheDocument();
-  });
+      expect(loupe()).not.toBeInTheDocument();
+      act(() => setHomeSearchHidden(true));
+      expect(loupe()).toBeInTheDocument();
+      act(() => setHomeSearchHidden(false));
+      expect(loupe()).not.toBeInTheDocument();
+    }
+  );
 
-  it('never shows the loupe on a computer', () => {
-    stubMatchMedia(false);
-    renderHeaderSearch('/');
-
-    act(() => setHomeSearchHidden(true));
-    expect(loupe()).not.toBeInTheDocument();
-  });
-
-  it('never shows the loupe on another page', () => {
-    stubMatchMedia((query) => query.includes('max-width'));
+  it.each([
+    ['a phone', (query: string) => query.includes('max-width')],
+    ['a computer', () => false],
+  ])('on %s, always shows the loupe on the other pages', (_, phone) => {
+    stubMatchMedia(phone);
     renderHeaderSearch('/watchlist');
 
-    act(() => setHomeSearchHidden(true));
-    expect(loupe()).not.toBeInTheDocument();
+    expect(loupe()).toBeInTheDocument();
+  });
+
+  it('shows the results while typing and closes on the one opened', async () => {
+    stubMatchMedia(false);
+    renderHeaderSearch('/watchlist');
+
+    await userEvent.click(loupe() as HTMLElement);
+    await userEvent.keyboard('dune');
+    await userEvent.click(await screen.findByRole('link', { name: /Nuit Dune/ }));
+
+    expect(screen.getByTestId('location')).toHaveTextContent('/e/dune-night');
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+  });
+
+  it('moves between the field and the results with the arrow keys', async () => {
+    stubMatchMedia(false);
+    renderHeaderSearch('/watchlist');
+
+    await userEvent.click(loupe() as HTMLElement);
+    await userEvent.keyboard('dune');
+    const first = await screen.findByRole('link', { name: /Dune 2021/ });
+
+    await userEvent.keyboard('{ArrowDown}');
+    expect(first).toHaveFocus();
+    await userEvent.keyboard('{ArrowDown}');
+    expect(screen.getByRole('link', { name: 'Voir tous les films et séries' })).toHaveFocus();
+    await userEvent.keyboard('{ArrowUp}{ArrowUp}');
+    expect(field()).toHaveFocus();
+  });
+
+  it('closes when another page opens', async () => {
+    stubMatchMedia(false);
+    renderHeaderSearch('/watchlist');
+    await userEvent.click(loupe() as HTMLElement);
+
+    await userEvent.keyboard('Dune{Enter}');
+
+    await waitFor(() => expect(screen.queryByRole('searchbox')).not.toBeInTheDocument());
   });
 
   it('opens the search with the field ready, without scrolling the page', async () => {
@@ -69,7 +142,7 @@ describe('HeaderSearch', () => {
 
     await userEvent.click(loupe() as HTMLElement);
 
-    expect(screen.getByRole('searchbox', { name: 'Chercher un film' })).toHaveFocus();
+    expect(field()).toHaveFocus();
     expect(screen.getByRole('button', { name: 'Dune' })).toBeInTheDocument();
     expect(scrollTo).not.toHaveBeenCalled();
   });
@@ -129,16 +202,16 @@ describe('HeaderSearch', () => {
   it('keeps the covered loupe out of the tab order while the search is open', async () => {
     stubMatchMedia((query) => query.includes('max-width'));
     render(
-      <LocaleProvider>
+      <Providers>
         <MemoryRouter initialEntries={['/']}>
           <button type="button">Logo</button>
           <HeaderSearch />
         </MemoryRouter>
-      </LocaleProvider>
+      </Providers>
     );
     act(() => setHomeSearchHidden(true));
     await userEvent.click(loupe() as HTMLElement);
-    expect(screen.getByRole('searchbox', { name: 'Chercher un film' })).toHaveFocus();
+    expect(field()).toHaveFocus();
 
     await userEvent.tab({ shift: true });
 
@@ -150,12 +223,12 @@ describe('HeaderSearch', () => {
   it('closes when the focus leaves the search', async () => {
     stubMatchMedia((query) => query.includes('max-width'));
     render(
-      <LocaleProvider>
+      <Providers>
         <MemoryRouter initialEntries={['/']}>
           <HeaderSearch />
           <button type="button">Ailleurs</button>
         </MemoryRouter>
-      </LocaleProvider>
+      </Providers>
     );
     act(() => setHomeSearchHidden(true));
     await userEvent.click(loupe() as HTMLElement);

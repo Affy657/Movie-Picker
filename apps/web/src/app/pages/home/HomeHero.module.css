@@ -6,6 +6,10 @@
   padding: var(--space-12) calc(50vw - 50%) var(--space-10);
 }
 
+.hero:has(.searchResults) {
+  z-index: var(--z-sticky-bar);
+}
+
 .inner {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
@@ -31,9 +35,26 @@
 }
 
 .searchForm {
+  position: relative;
   display: flex;
   margin-top: var(--space-1);
   scroll-margin-top: calc(var(--header-height) + env(safe-area-inset-top, 0px));
+}
+
+.searchResults {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  left: 0;
+  z-index: var(--z-popover);
+  max-height: min(30rem, 60dvh);
+  padding: var(--space-3) var(--space-2);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
 }
 
 .searchField {

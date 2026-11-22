@@ -9254,6 +9254,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    q?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["GlobalSearchResponse"];
+                        "application/json": components["schemas"]["GlobalSearchResponse"];
+                        "text/json": components["schemas"]["GlobalSearchResponse"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sitemap.xml": {
         parameters: {
             query?: never;
@@ -12493,6 +12550,26 @@ export interface components {
             genreId: number;
             /** Format: int32 */
             count: number;
+        };
+        GlobalSearchNightItem: {
+            slug: string;
+            title: string;
+            date: string;
+            time: string;
+            isFinished: boolean;
+        };
+        GlobalSearchResponse: {
+            titles: components["schemas"]["GlobalSearchTitleItem"][];
+            members: components["schemas"]["FollowUserItem"][];
+            nights: components["schemas"]["GlobalSearchNightItem"][];
+        };
+        GlobalSearchTitleItem: {
+            /** Format: int32 */
+            tmdbId: number;
+            mediaType: components["schemas"]["MovieMediaType"];
+            title: string;
+            year: string;
+            posterPath: string | null;
         };
         HandleAvailabilityResponse: {
             handle: string;
