@@ -365,7 +365,7 @@ export default function AppShell() {
                   ))
                 : desktopItems.map((item) => <DesktopNavItem key={item.to} {...item} />)}
             </nav>
-            <HeaderSearch />
+            {isLandingRoute ? null : <HeaderSearch />}
             <HeaderNavActions
               isLoading={isLoading}
               isAuthenticated={isAuthenticated}

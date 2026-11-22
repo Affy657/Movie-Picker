@@ -26,6 +26,7 @@ const DEFAULT_DAYS = 30;
 const DEFAULT_DATABASE = 'moviepicker';
 const DAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const DAY_MS = 24 * 60 * 60 * 1000;
+const GLOBAL_SEARCH_KINDS = ['title', 'all_titles', 'member', 'night'];
 
 function addDays(day, days) {
   const [year, month, date] = day.split('-').map(Number);
@@ -202,6 +203,9 @@ export function buildUsageReport({ since, until, counts, truth }) {
           totals.get('random_pick_opened', source),
         ])
       ),
+      globalSearch: Object.fromEntries(
+        GLOBAL_SEARCH_KINDS.map((kind) => [kind, totals.get('global_search_result_opened', kind)])
+      ),
       watchlist: {
         adds: truth.watchlistAdds,
         people: truth.watchlistPeople,
@@ -240,7 +244,7 @@ function line(label, text) {
 
 export function formatUsageReport(report) {
   const { sideDoors, features } = report;
-  const { signUps, letterboxd, randomPicks, recaps } = features;
+  const { signUps, letterboxd, randomPicks, recaps, globalSearch } = features;
   const lines = [
     `Usage from ${report.since} to ${report.until} (Paris days)`,
     '',
@@ -282,6 +286,10 @@ export function formatUsageReport(report) {
     line(
       'Random picks',
       `${randomPicks.watchlist + randomPicks.list + randomPicks.saved_list + randomPicks.catalog} (watchlist ${randomPicks.watchlist}, list ${randomPicks.list}, saved list ${randomPicks.saved_list}, saga or selection ${randomPicks.catalog})`
+    ),
+    line(
+      'Global search results opened',
+      `${GLOBAL_SEARCH_KINDS.reduce((sum, kind) => sum + globalSearch[kind], 0)} (${GLOBAL_SEARCH_KINDS.map((kind) => `${kind.replace('_', ' ')} ${globalSearch[kind]}`).join(', ')})`
     ),
     line(
       'Watchlist additions',

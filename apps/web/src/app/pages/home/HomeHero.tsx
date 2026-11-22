@@ -5,12 +5,15 @@ import Button, { buttonClass } from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
 import SearchField from '@/shared/components/SearchField';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import UpcomingEventCard from '@/features/events/pages/my-events/UpcomingEventCard';
 import { useOpenCreateEvent } from '@/features/events/components/create-event/createEventDialogContext';
+import GlobalSearchResults from '@/app/components/globalSearch/GlobalSearchResults';
+import { moveThroughResults } from '@/app/components/globalSearch/resultsKeyboard';
 import HomePosterWall from './HomePosterWall';
 import WheelGlyph from './WheelGlyph';
 import { useNextEvent } from './useNextEvent';
@@ -48,8 +51,15 @@ function HomeSearch() {
   const { t } = useTranslation();
   const runSearch = useRunSearch();
   const [searchTerm, setSearchTerm] = useState('');
+  const [showResults, setShowResults] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   useReportSearchVisibility(formRef);
+  useClickOutside(formRef, () => setShowResults(false), showResults, { closeOnFocusLeave: true });
+
+  const typeSearch = (value: string) => {
+    setSearchTerm(value);
+    setShowResults(true);
+  };
 
   const submitSearch = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -60,18 +70,32 @@ function HomeSearch() {
     <div className={styles.opener}>
       <h1 className={styles.title}>{t('home.title')}</h1>
       <p className={styles.intro}>{t('home.intro')}</p>
-      <form ref={formRef} className={styles.searchForm} role="search" onSubmit={submitSearch}>
+      <form
+        ref={formRef}
+        className={styles.searchForm}
+        role="search"
+        onSubmit={submitSearch}
+        onKeyDown={moveThroughResults}
+      >
         <label className="visually-hidden" htmlFor="home-search">
-          {t('home.searchLabel')}
+          {t('globalSearch.label')}
         </label>
         <SearchField
           id="home-search"
           className={styles.searchField}
           value={searchTerm}
-          onChange={setSearchTerm}
-          placeholder={t('home.searchPlaceholder')}
+          onChange={typeSearch}
+          placeholder={t('globalSearch.placeholder')}
           iconSize={ICON_SIZE.md}
         />
+        {showResults ? (
+          <GlobalSearchResults
+            term={searchTerm}
+            source="home"
+            className={styles.searchResults}
+            onPick={() => setShowResults(false)}
+          />
+        ) : null}
       </form>
       <SearchExamples onPick={runSearch} />
     </div>

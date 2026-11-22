@@ -28,7 +28,7 @@ Le backlog du projet, en flux continu : ce qui est en cours, ce qui vient ensuit
 
 ## 🚧 En cours
 
-Rien pour l'instant.
+- `M` **Recherche globale : groupes, listes et sagas** : la loupe de la barre de navigation trouve aussi ses groupes, ses listes, les listes publiques des membres et les sagas, rangés à côté des films, des membres et des soirées.
 
 ---
 
@@ -38,9 +38,8 @@ Rien pour l'instant.
 2. `M` **Déjà vu automatique en soirée** : dans une soirée, un film qui figure dans les films vus d'un participant est marqué « Déjà vu » pour lui, sans qu'il ait à le faire. Seulement pour qui a rendu ses films vus visibles, pour ne rien dévoiler d'une liste privée.
 3. `M` **Une liste en vitrine sur le profil** : un membre épingle l'une de ses listes publiques en haut de son profil, avec ses affiches et son nombre de films, pour la montrer à ceux qui le visitent.
 4. `M` **Cadres d'avatar à débloquer** : un contour autour de l'avatar, gagné avec la flamme de soirées, le soutien Ko-fi ou un nombre de soirées, que le membre choisit d'afficher et que tous voient, sur son profil comme en soirée.
-5. `M` **Recherche globale dans la barre de navigation** : une loupe toujours présente dans la barre de navigation, sur ordinateur comme sur téléphone, ouvre une seule recherche sur les films et séries, les membres, les listes, les sagas, ses soirées et ses groupes, avec les résultats rangés par type.
-6. `L` **Sondage de disponibilité dans un groupe** : sur la page d'un groupe, un membre propose plusieurs créneaux et chacun coche ceux où il est libre. Le créneau retenu devient une soirée du groupe, annoncée à tous ses membres.
-7. `M` **Une liste pour chaque groupe** : chaque groupe a sa liste « À voir ensemble », que tous ses membres remplissent. Dans une soirée du groupe, proposer un film et la pioche partent d'abord de cette liste.
+5. `L` **Sondage de disponibilité dans un groupe** : sur la page d'un groupe, un membre propose plusieurs créneaux et chacun coche ceux où il est libre. Le créneau retenu devient une soirée du groupe, annoncée à tous ses membres.
+6. `M` **Une liste pour chaque groupe** : chaque groupe a sa liste « À voir ensemble », que tous ses membres remplissent. Dans une soirée du groupe, proposer un film et la pioche partent d'abord de cette liste.
 
 ---
 

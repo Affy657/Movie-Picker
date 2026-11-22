@@ -75,10 +75,29 @@ export const en: Locale = {
       action: 'Create a night',
       howItWorks: 'How it works',
     },
-    searchLabel: 'Search for a film',
-    closeSearch: 'Close the search',
-    searchPlaceholder: 'Title, director, actor',
     searchExamplesLabel: 'For example',
+  },
+
+  globalSearch: {
+    open: 'Search',
+    label: 'Search for a film, an event or a member',
+    placeholder: 'Film, show, event, member',
+    close: 'Close the search',
+    loading: 'Searching…',
+    error: 'The search didn’t go through.',
+    retry: 'Try again',
+    empty: 'Nothing matches “{{query}}”.',
+    emptyAction: 'Search all films',
+    seeAllTitles: 'See all films and shows',
+    resultsOne: '1 result',
+    resultsMany: '{{count}} results',
+    series: 'Show',
+    finishedNight: 'Over',
+    sections: {
+      titles: 'Films and shows',
+      nights: 'My events',
+      members: 'Members',
+    },
   },
 
   showcase: {
@@ -3626,7 +3645,6 @@ export const en: Locale = {
       nextItem2: 'Automatic "already seen" in a night',
       nextItem3: 'A showcase list on the profile',
       nextItem4: 'Avatar frames to unlock',
-      nextItem5: 'Global search',
       v2When: 'No date announced',
       v2What: 'V2',
       v2Detail:
