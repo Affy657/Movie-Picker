@@ -100,6 +100,18 @@ const TO_RATE = buildMyEventSummary({
   groupId: 'g1',
 });
 
+const ON_HOLD = buildMyEventSummary({
+  id: 'e6',
+  slug: 'suspens',
+  title: 'Soirée du jeudi 19 novembre',
+  date: '2026-11-19',
+  lifecycle: 'pending',
+  movieCount: 0,
+  participantCount: 1,
+  groupId: 'g1',
+  groupName: 'Les jeudis ciné',
+});
+
 const JEUDIS: MockGroup = {
   id: 'g1',
   name: 'Les jeudis ciné',
@@ -345,6 +357,44 @@ describe('GroupPage', () => {
     const mine = within(then).getByRole('link', { name: /Mardi cinéphile/ });
     expect(mine).toHaveAttribute('href', '/e/mardi');
     expect(mine).toHaveTextContent('Organisée par vous');
+  });
+
+  it('keeps a night on hold out of the next night, and lists it apart', async () => {
+    server.use(
+      signedInAs(ALICE),
+      ...createGroupsHandlers([{ ...JEUDIS, upcomingNights: [ON_HOLD, JEUDI, SAMEDI] }])
+    );
+    renderPage();
+
+    const next = await screen.findByRole('region', { name: 'Prochaine soirée' });
+    expect(next).toHaveTextContent('Jeudi ciné');
+    expect(next).not.toHaveTextContent('Soirée du jeudi 19 novembre');
+    const then = screen.getByRole('region', { name: /Ensuite/ });
+    expect(then).not.toHaveTextContent('Soirée du jeudi 19 novembre');
+    const onHold = screen.getByRole('region', { name: /En suspens/ });
+    expect(
+      within(onHold).getByRole('link', { name: /Soirée du jeudi 19 novembre/ })
+    ).toHaveAttribute('href', '/e/suspens');
+    const members = screen.getByRole('complementary', { name: /Membres/ });
+    expect(members).toHaveTextContent('Vient jeudi');
+  });
+
+  it('shows no next night while the only night left is on hold', async () => {
+    server.use(
+      signedInAs(ALICE),
+      ...createGroupsHandlers([
+        { ...JEUDIS, upcomingNights: [ON_HOLD], nextNightParticipantIds: [] },
+      ])
+    );
+    renderPage();
+
+    const next = await screen.findByRole('region', { name: 'Prochaine soirée' });
+    expect(next).toHaveTextContent('Aucune soirée prévue');
+    expect(screen.getByRole('region', { name: /En suspens/ })).toHaveTextContent(
+      'Soirée du jeudi 19 novembre'
+    );
+    expect(screen.queryByRole('region', { name: /Ensuite/ })).toBeNull();
+    expect(screen.queryByText('Pas encore rejoint')).toBeNull();
   });
 
   it('shows the films the group watched with their ratings', async () => {

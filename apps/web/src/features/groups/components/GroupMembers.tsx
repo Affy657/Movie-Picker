@@ -7,6 +7,7 @@ import LinkButton from '@/shared/components/LinkButton';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import type { LocaleCode } from '@/shared/i18n/locales';
 import type { FriendGroupDetail, FriendGroupMember } from '@/features/groups/api/groupsApi';
+import { splitUpcomingNights } from '@/features/groups/utils/groupNights';
 import styles from './GroupMembers.module.css';
 
 function weekdayOf(isoDate: string, locale: LocaleCode): string | null {
@@ -20,7 +21,7 @@ function weekdayOf(isoDate: string, locale: LocaleCode): string | null {
 function useMembersPresence(group: FriendGroupDetail, viewerId: string | undefined) {
   const { t } = useTranslation();
   const { locale } = useLocale();
-  const next = group.upcomingNights[0];
+  const { next } = splitUpcomingNights(group.upcomingNights);
   const day = next ? weekdayOf(next.date, locale) : null;
   const coming = new Set(group.nextNightParticipantIds);
   const members = [...group.members].sort(

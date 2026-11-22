@@ -139,14 +139,13 @@
     display: none;
   }
 
-  .actions {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .actions > :not(.openLink) {
+    flex: 1 1 auto;
   }
 
   .openLink {
-    grid-column: 1 / -1;
-    justify-self: center;
+    flex-basis: 100%;
     margin-left: 0;
+    text-align: center;
   }
 }

@@ -33,6 +33,7 @@ import GroupSettingsMenu, {
 } from '@/features/groups/components/GroupSettingsMenu';
 import GroupUpcomingNights from '@/features/groups/components/GroupUpcomingNights';
 import { useDeleteGroup, useGroup, useLeaveGroup } from '@/features/groups/hooks/useGroups';
+import { splitUpcomingNights } from '@/features/groups/utils/groupNights';
 import styles from './GroupPage.module.css';
 
 const ARRIVAL_FLAG = 'openMembers';
@@ -158,7 +159,7 @@ function GroupBody({
   const { t } = useTranslation();
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const [next, ...later] = group.upcomingNights;
+  const { next, later, onHold } = splitUpcomingNights(group.upcomingNights);
   const films = group.pastNights.filter((night) => night.winnerMovies.length > 0);
   const coming = new Set(group.nextNightParticipantIds);
   const comingMembers = group.members.filter((member) => coming.has(member.userId)).length;
@@ -186,6 +187,11 @@ function GroupBody({
         {later.length > 0 ? (
           <GroupSection title={t('groups.page.then')} count={later.length}>
             <GroupUpcomingNights nights={later} />
+          </GroupSection>
+        ) : null}
+        {onHold.length > 0 ? (
+          <GroupSection title={t('groups.page.onHold')} count={onHold.length}>
+            <GroupUpcomingNights nights={onHold} />
           </GroupSection>
         ) : null}
         {isMobile ? <GroupMembersStrip group={group} viewerId={user?.userId} /> : null}

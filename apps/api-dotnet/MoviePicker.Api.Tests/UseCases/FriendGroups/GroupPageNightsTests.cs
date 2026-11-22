@@ -66,6 +66,49 @@ public sealed class GroupPageNightsTests : FriendGroupTestBase
     }
 
     [Fact]
+    public async Task TheGroupPage_PutsANightOnHoldAfterTheUpcomingOnes_AndCountsWhoComesToTheRealNextOne()
+    {
+        var group = await SharedGroupAsync(FriendGroupTestKit.Member, FriendGroupTestKit.Invitee);
+        await GroupNightAsync(group.Id, "en-suspens", "2026-11-12", FriendGroupTestKit.Member);
+        await GroupNightAsync(group.Id, "jeudi", "2026-11-19", FriendGroupTestKit.Owner, FriendGroupTestKit.Invitee);
+
+        var page = await Kit.GetHandler().HandleAsync(FriendGroupTestKit.Member, group.Id);
+
+        Assert.Equal(["jeudi", "en-suspens"], page.UpcomingNights.Select(n => n.Slug));
+        Assert.Equal("pending", page.UpcomingNights[1].Lifecycle);
+        Assert.Equal(
+            new[] { FriendGroupTestKit.Owner, FriendGroupTestKit.Invitee }.Order(),
+            page.NextNightParticipantIds.Order());
+    }
+
+    [Fact]
+    public async Task TheGroupPage_CountsNobodyComing_WhenOnlyANightOnHoldIsLeft()
+    {
+        var group = await SharedGroupAsync(FriendGroupTestKit.Member);
+        await GroupNightAsync(group.Id, "en-suspens", "2026-11-12", FriendGroupTestKit.Member);
+
+        var page = await Kit.GetHandler().HandleAsync(FriendGroupTestKit.Member, group.Id);
+
+        Assert.Equal(["en-suspens"], page.UpcomingNights.Select(n => n.Slug));
+        Assert.Empty(page.NextNightParticipantIds);
+    }
+
+    [Fact]
+    public async Task MyGroups_NeverGiveANightOnHoldAsTheNextOne()
+    {
+        var group = await SharedGroupAsync(FriendGroupTestKit.Member);
+        var quiet = await Kit.CreateAsync("Famille", FriendGroupTestKit.Member);
+        await GroupNightAsync(group.Id, "en-suspens", "2026-11-12", FriendGroupTestKit.Member);
+        await GroupNightAsync(group.Id, "jeudi", "2026-11-19", FriendGroupTestKit.Member);
+        await GroupNightAsync(quiet.Id, "famille-en-suspens", "2026-11-11", FriendGroupTestKit.Member);
+
+        var mine = await Kit.ListHandler().HandleAsync(FriendGroupTestKit.Member);
+
+        var next = Assert.Single(mine.NextNights);
+        Assert.Equal("jeudi", next.Slug);
+    }
+
+    [Fact]
     public async Task TheGroupPage_ShowsTheFilmsOfItsFinishedNights_NewestFirst_AndSkipsNightsWithoutFilm()
     {
         var group = await SharedGroupAsync(FriendGroupTestKit.Member);

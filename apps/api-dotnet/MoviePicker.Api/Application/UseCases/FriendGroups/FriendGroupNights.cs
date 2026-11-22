@@ -41,7 +41,8 @@ public sealed class FriendGroupNightsReader
         var viewer = await ViewerOfAsync(viewerId, [group], ct);
         var upcoming = viewer.Summarize(nights.Where(night => !night.IsFinished(now) && group.KeepsNight(night)), now)
             .Where(MyEventSummaryEnricher.IsStillJoinable)
-            .OrderBy(MyEventSummaryEnricher.StartInstant)
+            .OrderBy(IsOnHold)
+            .ThenBy(MyEventSummaryEnricher.StartInstant)
             .ToList();
         var finishedWithFilm = nights
             .Where(night => night.IsFinished(now) && night.HasWinner)
@@ -78,7 +79,7 @@ public sealed class FriendGroupNightsReader
 
         var viewer = await ViewerOfAsync(viewerId, groups, ct);
         var next = viewer.Summarize(upcoming, now)
-            .Where(MyEventSummaryEnricher.IsStillJoinable)
+            .Where(summary => MyEventSummaryEnricher.IsStillJoinable(summary) && !IsOnHold(summary))
             .GroupBy(summary => summary.GroupId)
             .Select(perGroup => perGroup.MinBy(MyEventSummaryEnricher.StartInstant)!)
             .OrderBy(MyEventSummaryEnricher.StartInstant)
@@ -86,12 +87,15 @@ public sealed class FriendGroupNightsReader
         return await _summaries.EnrichAsync(viewerId, next, NoWinners, false, NoRatingOpen, ct);
     }
 
+    private static bool IsOnHold(MyEventSummaryDto summary) => summary.Lifecycle == MyEventListLifecycle.Pending;
+
     private async Task<IReadOnlyList<string>> ParticipantIdsAsync(List<MyEventSummaryDto> upcoming, CancellationToken ct)
     {
-        if (upcoming.Count == 0)
+        var next = upcoming.Find(summary => !IsOnHold(summary));
+        if (next is null)
             return [];
 
-        var participants = await _participants.ListByEventIdAsync(upcoming[0].Id, ct);
+        var participants = await _participants.ListByEventIdAsync(next.Id, ct);
         return participants.Select(participant => participant.UserId).OfType<string>().Distinct().ToList();
     }
 
