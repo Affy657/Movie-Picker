@@ -2175,6 +2175,7 @@ export const fr = {
       joinAria: 'Rejoindre la soirée {{title}}',
       joinError: 'Impossible de rejoindre la soirée.',
       then: 'Ensuite',
+      onHold: 'En suspens',
       organizedByYou: 'Organisée par vous',
       films: 'Les films du groupe',
       averageRating: 'Note moyenne du groupe : {{value}}',

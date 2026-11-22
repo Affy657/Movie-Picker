@@ -2152,6 +2152,7 @@ export const en: Locale = {
       joinAria: 'Join the event {{title}}',
       joinError: 'Could not join the event.',
       then: 'Then',
+      onHold: 'Pending',
       organizedByYou: 'Organised by you',
       films: 'The group’s films',
       averageRating: 'Group average rating: {{value}}',

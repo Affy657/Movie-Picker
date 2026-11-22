@@ -8,6 +8,11 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Fixed
+
+- **Une soirée en suspens ne passe plus pour la prochaine soirée d’un groupe** : la page du groupe la range à part sous « En suspens », la présence des membres suit la vraie prochaine soirée, et Mes groupes n’annonce plus que des soirées à venir.
+- **Le bouton Proposer un film ne se coupe plus en deux sur téléphone** dans la carte de la prochaine soirée d’un groupe.
+
 ## [1.27.0] - 2026-11-21
 
 ### Added
