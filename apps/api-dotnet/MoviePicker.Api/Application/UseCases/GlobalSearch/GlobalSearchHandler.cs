@@ -1,10 +1,10 @@
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using MoviePicker.Api.Application.UseCases.SearchUsers;
 using MoviePicker.Api.Configuration;
-using MoviePicker.Api.Domain;
-using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.GlobalSearch;
 
@@ -14,29 +14,26 @@ public sealed class GlobalSearchHandler : IGlobalSearchHandler
     public const int SectionLimit = 4;
 
     private readonly ITmdbMovieSearch _tmdb;
+    private readonly IGetMovieCollectionsHandler _sagas;
     private readonly ISearchUsersHandler _members;
-    private readonly IEventRepository _events;
-    private readonly IParticipantRepository _participants;
-    private readonly IFriendGroupRepository _groups;
+    private readonly MySpaceSearch _mySpace;
+    private readonly PublicListSearch _publicLists;
     private readonly MoviePickerOptions _options;
-    private readonly TimeProvider _clock;
 
     public GlobalSearchHandler(
         ITmdbMovieSearch tmdb,
+        IGetMovieCollectionsHandler sagas,
         ISearchUsersHandler members,
-        IEventRepository events,
-        IParticipantRepository participants,
-        IFriendGroupRepository groups,
-        IOptions<MoviePickerOptions> options,
-        TimeProvider clock)
+        MySpaceSearch mySpace,
+        PublicListSearch publicLists,
+        IOptions<MoviePickerOptions> options)
     {
         _tmdb = tmdb;
+        _sagas = sagas;
         _members = members;
-        _events = events;
-        _participants = participants;
-        _groups = groups;
+        _mySpace = mySpace;
+        _publicLists = publicLists;
         _options = options.Value;
-        _clock = clock;
     }
 
     public async Task<GlobalSearchResponse> HandleAsync(string? query, string? currentUserId, CancellationToken ct = default)
@@ -46,17 +43,30 @@ public sealed class GlobalSearchHandler : IGlobalSearchHandler
             return new GlobalSearchResponse();
 
         var titles = SearchTitlesAsync(normalized, ct);
+        var sagas = await SearchSagasAsync(normalized, ct);
+
         if (currentUserId is null)
-            return new GlobalSearchResponse { Titles = await titles };
+        {
+            return new GlobalSearchResponse
+            {
+                Titles = await titles,
+                Sagas = sagas,
+                PublicLists = await _publicLists.FindAsync(normalized, new HashSet<string>(), ct)
+            };
+        }
 
         var members = await _members.HandleAsync(normalized, currentUserId, ct);
-        var nights = await SearchNightsAsync(normalized, currentUserId, ct);
+        var mine = await _mySpace.FindAsync(normalized, currentUserId, ct);
 
         return new GlobalSearchResponse
         {
             Titles = await titles,
+            Sagas = sagas,
             Members = members.Items.Take(SectionLimit).ToList(),
-            Nights = nights
+            Nights = mine.Nights,
+            Groups = mine.Groups,
+            Lists = mine.Lists,
+            PublicLists = await _publicLists.FindAsync(normalized, mine.MyListIds, ct)
         };
     }
 
@@ -88,52 +98,28 @@ public sealed class GlobalSearchHandler : IGlobalSearchHandler
             .ToList();
     }
 
-    private async Task<IReadOnlyList<GlobalSearchNightItem>> SearchNightsAsync(string query, string userId, CancellationToken ct)
+    private async Task<IReadOnlyList<GlobalSearchSagaItem>> SearchSagasAsync(string query, CancellationToken ct)
     {
-        var utcNow = _clock.GetUtcNow();
-        var created = await _events.ListAllByCreatorUserIdAsync(userId, ct);
-        var joined = await ListOnlyJoinedAsync(userId, created, ct);
-        var groupNights = await ListOpenGroupNightsAsync(userId, utcNow, ct);
+        MovieCollectionListResponse catalog;
+        try
+        {
+            catalog = await _sagas.HandleAsync(ct);
+        }
+        catch (MoviePickerException)
+        {
+            return [];
+        }
 
-        return created
-            .Concat(joined)
-            .Concat(groupNights)
-            .DistinctBy(night => night.Id)
-            .Where(night => UserSearchPolicy.Contains(night.Title, query))
-            .Select(night => (Night: night, IsFinished: night.IsFinished(utcNow), StartTicks: StartOf(night).UtcTicks))
-            .OrderBy(entry => entry.IsFinished)
-            .ThenBy(entry => entry.IsFinished ? -entry.StartTicks : entry.StartTicks)
+        return catalog.Items
+            .Where(saga => UserSearchPolicy.Contains(saga.Name, query))
             .Take(SectionLimit)
-            .Select(entry => new GlobalSearchNightItem
+            .Select(saga => new GlobalSearchSagaItem
             {
-                Slug = entry.Night.Slug,
-                Title = entry.Night.Title,
-                Date = entry.Night.Date,
-                Time = entry.Night.Time,
-                IsFinished = entry.IsFinished
+                Id = saga.Id,
+                Name = saga.Name,
+                PosterPath = saga.PosterPath,
+                MovieCount = saga.MovieCount
             })
             .ToList();
     }
-
-    private async Task<IReadOnlyList<Event>> ListOnlyJoinedAsync(string userId, IReadOnlyList<Event> created, CancellationToken ct)
-    {
-        var createdIds = created.Select(night => night.Id).ToHashSet(StringComparer.Ordinal);
-        var joinedIds = (await _participants.ListDistinctEventIdsByUserIdAsync(userId, ct))
-            .Where(id => !createdIds.Contains(id))
-            .ToList();
-        return joinedIds.Count == 0 ? [] : await _events.ListByIdsAsync(joinedIds, ct);
-    }
-
-    private async Task<IEnumerable<Event>> ListOpenGroupNightsAsync(string userId, DateTimeOffset utcNow, CancellationToken ct)
-    {
-        var groups = await _groups.ListAdmittingAsync(userId, ct);
-        if (groups.Count == 0)
-            return [];
-
-        var nights = await _events.ListByGroupIdsAsync(groups.Select(group => group.Id).ToList(), ct);
-        return FriendGroup.NightsKeptBy(nights, groups).Where(night => !night.IsFinished(utcNow));
-    }
-
-    private static DateTimeOffset StartOf(Event night) =>
-        EventSchedule.TryGetStartUtc(night.Date, night.Time, out var start) ? start : night.CreatedAt;
 }

@@ -2185,6 +2185,36 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task MovieLists_SearchThePublicOnesByNameIgnoringCaseAndAccents_NewestFirst()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var lists = scope.ServiceProvider.GetRequiredService<IMovieListRepository>();
+        var marker = $"zq{Guid.NewGuid():N}"[..10];
+        var ownerId = ObjectId.GenerateNewId().ToString();
+        var older = await lists.AddAsync(new MovieList
+        {
+            OwnerId = ownerId,
+            Name = $"Ciné {marker} coréen",
+            IsPublic = true,
+            Items = [new MovieListItem { TmdbId = 670, Title = "Old Boy", Year = "2003", PosterPath = "/p.jpg", AddedAt = Now }],
+            CreatedAt = Now,
+            UpdatedAt = Now
+        });
+        var newer = await lists.AddAsync(new MovieList { OwnerId = ownerId, Name = $"CINE {marker} italien", IsPublic = true, CreatedAt = Now, UpdatedAt = Now.AddHours(1) });
+        await lists.AddAsync(new MovieList { OwnerId = ownerId, Name = $"Ciné {marker} privé", CreatedAt = Now, UpdatedAt = Now.AddHours(2) });
+        await lists.AddAsync(new MovieList { OwnerId = ownerId, Name = "Autre chose", IsPublic = true, CreatedAt = Now, UpdatedAt = Now.AddHours(3) });
+
+        var found = await lists.SearchPublicSummariesAsync($"cinê {marker}".ToUpperInvariant(), 10);
+        var firstOnly = await lists.SearchPublicSummariesAsync($"cine {marker}", 1);
+
+        Assert.Equal([newer.Id, older.Id], found.Select(summary => summary.Id));
+        Assert.Equal(1, found[1].ItemCount);
+        Assert.Equal(["/p.jpg"], found[1].PosterPaths);
+        Assert.Equal([newer.Id], firstOnly.Select(summary => summary.Id));
+        Assert.Empty(await lists.SearchPublicSummariesAsync("  ", 10));
+    }
+
+    [Fact]
     public async Task MovieLists_KeepTheirVisibility_ListAndCountThePublicOnesOfACreator()
     {
         using var scope = _factory.Services.CreateScope();

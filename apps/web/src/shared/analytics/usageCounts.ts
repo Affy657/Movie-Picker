@@ -8,7 +8,8 @@ export type JoinPromptCta = 'login' | 'register';
 
 export type RandomPickSource = 'watchlist' | 'list' | 'saved_list' | 'catalog';
 
-export type GlobalSearchKind = 'title' | 'all_titles' | 'member' | 'night';
+export type GlobalSearchKind =
+  'title' | 'all_titles' | 'saga' | 'member' | 'night' | 'group' | 'list' | 'public_list';
 
 export type ReportedUsage =
   | { metric: 'event_link_opened'; variant: `${UsageViewer}.${EventLinkState}` }

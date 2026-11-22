@@ -189,7 +189,16 @@ describe('buildUsageReport', () => {
       ratings: { ratings: 40, people: 6 },
       recaps: { visitor: 9, account: 3 },
       randomPicks: { watchlist: 5, list: 0, saved_list: 0, catalog: 0 },
-      globalSearch: { title: 4, all_titles: 0, member: 0, night: 2 },
+      globalSearch: {
+        title: 4,
+        all_titles: 0,
+        saga: 0,
+        member: 0,
+        night: 2,
+        group: 0,
+        list: 0,
+        public_list: 0,
+      },
       watchlist: { adds: 30, people: 4, imports: 250 },
       letterboxd: {
         connectedAccounts: 5,
@@ -214,7 +223,7 @@ describe('formatUsageReport', () => {
     assert.match(text, /Event link opened by a visitor\s+50/);
     assert.match(
       text,
-      /Global search results opened\s+6 \(title 4, all titles 0, member 0, night 2\)/
+      /Global search results opened\s+6 \(title 4, all titles 0, saga 0, member 0, night 2, group 0, list 0, public list 0\)/
     );
     assert.match(text, /Reported by the browser, unless measurement was refused/);
     assert.match(text, /Recorded by the server for everyone/);

@@ -26,7 +26,16 @@ const DEFAULT_DAYS = 30;
 const DEFAULT_DATABASE = 'moviepicker';
 const DAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const DAY_MS = 24 * 60 * 60 * 1000;
-const GLOBAL_SEARCH_KINDS = ['title', 'all_titles', 'member', 'night'];
+const GLOBAL_SEARCH_KINDS = [
+  'title',
+  'all_titles',
+  'saga',
+  'member',
+  'night',
+  'group',
+  'list',
+  'public_list',
+];
 
 function addDays(day, days) {
   const [year, month, date] = day.split('-').map(Number);

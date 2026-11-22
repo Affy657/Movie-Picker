@@ -8,6 +8,8 @@ public interface IMovieListRepository
 
     Task<IReadOnlyList<MovieListSummary>> ListPublicSummariesAsync(string ownerId, CancellationToken ct = default);
 
+    Task<IReadOnlyList<MovieListSummary>> SearchPublicSummariesAsync(string query, int limit, CancellationToken ct = default);
+
     Task<long> CountPublicByOwnerAsync(string ownerId, CancellationToken ct = default);
 
     Task<IReadOnlyList<MovieList>> ListByOwnerAsync(string ownerId, CancellationToken ct = default);

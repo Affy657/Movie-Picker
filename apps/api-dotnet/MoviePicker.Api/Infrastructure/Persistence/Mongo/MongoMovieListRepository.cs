@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.SearchUsers;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -53,18 +54,35 @@ public sealed class MongoMovieListRepository : IMovieListRepository
             ? SummariesAsync(new BsonDocument { { OwnerIdField, ObjectId.Parse(ownerId) }, { "isPublic", true } }, ct)
             : Task.FromResult<IReadOnlyList<MovieListSummary>>([]);
 
+    public Task<IReadOnlyList<MovieListSummary>> SearchPublicSummariesAsync(string query, int limit, CancellationToken ct = default)
+    {
+        var normalized = UserSearchPolicy.Normalize(query);
+        if (normalized.Length == 0 || limit <= 0)
+            return Task.FromResult<IReadOnlyList<MovieListSummary>>([]);
+
+        var match = new BsonDocument
+        {
+            { "isPublic", true },
+            { "name", new BsonRegularExpression(UserSearchPolicy.ToRegexPattern(normalized), "i") }
+        };
+        return SummariesAsync(match, ct, limit);
+    }
+
     public Task<long> CountPublicByOwnerAsync(string ownerId, CancellationToken ct = default) =>
         MongoObjectIds.IsValid(ownerId)
             ? _collection.CountDocumentsAsync(Filter.Eq(x => x.OwnerId, ownerId) & Filter.Eq(x => x.IsPublic, true), cancellationToken: ct)
             : Task.FromResult(0L);
 
-    private async Task<IReadOnlyList<MovieListSummary>> SummariesAsync(BsonDocument match, CancellationToken ct)
+    private async Task<IReadOnlyList<MovieListSummary>> SummariesAsync(BsonDocument match, CancellationToken ct, int? limit = null)
     {
-        BsonDocument[] stages =
+        List<BsonDocument> stages =
         [
             new("$match", match),
             new("$sort", new BsonDocument("updatedAt", -1)),
-            new("$project", new BsonDocument
+        ];
+        if (limit is { } max)
+            stages.Add(new BsonDocument("$limit", max));
+        stages.Add(new BsonDocument("$project", new BsonDocument
             {
                 { OwnerIdField, 1 },
                 { "name", 1 },
@@ -77,8 +95,7 @@ public sealed class MongoMovieListRepository : IMovieListRepository
                 { "titles", TitlesExpression() },
                 { "memberCount", new BsonDocument("$add", new BsonArray { 1, SizeOf("members") }) },
                 { "previewMemberIds", PreviewMemberIdsExpression() }
-            })
-        ];
+            }));
         using var cursor = await _collection.AggregateAsync(
             PipelineDefinition<MovieListDocument, MovieListSummaryRow>.Create(stages),
             cancellationToken: ct);

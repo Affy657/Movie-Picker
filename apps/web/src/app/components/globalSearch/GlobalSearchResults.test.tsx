@@ -11,9 +11,30 @@ import GlobalSearchResults from './GlobalSearchResults';
 
 type SearchPayload = ApiSchemas['GlobalSearchResponse'];
 
-const EMPTY: SearchPayload = { titles: [], members: [], nights: [] };
+const EMPTY: SearchPayload = {
+  titles: [],
+  sagas: [],
+  members: [],
+  nights: [],
+  groups: [],
+  lists: [],
+  publicLists: [],
+};
 
 const FULL: SearchPayload = {
+  sagas: [{ id: 10, name: 'Dune, la saga', posterPath: null, movieCount: 3 }],
+  groups: [{ id: 'g1', name: 'Dune club', memberCount: 4 }],
+  lists: [{ id: 'l1', name: 'Dune et compagnie', itemCount: 1, posterPath: null }],
+  publicLists: [
+    {
+      id: 'p1',
+      name: 'Toute la SF de Dune',
+      itemCount: 12,
+      posterPath: null,
+      ownerHandle: 'alice_m',
+      ownerDisplayName: 'Alice Martin',
+    },
+  ],
   titles: [
     { tmdbId: 438631, mediaType: 'movie', title: 'Dune', year: '2021', posterPath: null },
     { tmdbId: 90228, mediaType: 'tv', title: 'Dune : Prophecy', year: '2024', posterPath: null },
@@ -113,6 +134,26 @@ describe('GlobalSearchResults', () => {
     expect(queries).toEqual(['dune']);
   });
 
+  it('finds sagas, groups, lists and the public lists of members', async () => {
+    renderResults('dune');
+
+    const saga = await screen.findByRole('link', { name: /Dune, la saga/ });
+    expect(saga).toHaveAttribute('href', '/films/collection/10');
+    expect(saga).toHaveTextContent('3 films');
+    const group = within(screen.getByRole('region', { name: 'Mes groupes' })).getByRole('link');
+    expect(group).toHaveAttribute('href', '/groupes/g1');
+    expect(group).toHaveTextContent('4 membres');
+    const list = within(screen.getByRole('region', { name: 'Mes listes' })).getByRole('link');
+    expect(list).toHaveAttribute('href', '/listes/l1');
+    expect(list).toHaveTextContent('1 film');
+    const shared = within(screen.getByRole('region', { name: 'Listes des membres' })).getByRole(
+      'link'
+    );
+    expect(shared).toHaveAttribute('href', '/u/alice_m/listes/p1');
+    expect(shared).toHaveTextContent('par Alice Martin');
+    expect(screen.getByRole('region', { name: 'Sagas' })).toBeInTheDocument();
+  });
+
   it('offers every film and show for the typed words', async () => {
     renderResults('dune');
 
@@ -155,7 +196,7 @@ describe('GlobalSearchResults', () => {
   it('announces how many results it found', async () => {
     renderResults('dune');
 
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('5 résultats'));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('9 résultats'));
   });
 
   it('tells which kind of result was opened', async () => {

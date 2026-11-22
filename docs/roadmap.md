@@ -28,7 +28,7 @@ Le backlog du projet, en flux continu : ce qui est en cours, ce qui vient ensuit
 
 ## 🚧 En cours
 
-- `M` **Recherche globale : groupes, listes et sagas** : la loupe de la barre de navigation trouve aussi ses groupes, ses listes, les listes publiques des membres et les sagas, rangés à côté des films, des membres et des soirées.
+Rien pour l'instant.
 
 ---
 
@@ -96,7 +96,7 @@ Le backlog du projet, en flux continu : ce qui est en cours, ce qui vient ensuit
 - `XL` **Application mobile native** : une vraie application iOS et Android, pleinement intégrée à la plateforme, avec les notifications du système et tout le parcours hors navigateur. Le prototype de cours archivé dans `archive/mobile` n'est pas à reprendre.
 - `M` **Story Instagram en un geste** : depuis l'application mobile, un bouton pose l'image du recap directement dans une story Instagram, avec un lien cliquable qui ramène au recap. Dépend de l'application mobile native.
 - `M` **i18n étendue** : langues supplémentaires au-delà de FR / EN ; variantes régionales, RTL si besoin.
-- `L` **Palette de commandes (Cmd+K)** : accès clavier global aux actions et à la navigation (création de soirée, changement de thème, pages de l'application), dans le même champ que la recherche globale. Dépend de la recherche globale dans la barre de navigation.
+- `L` **Palette de commandes (Cmd+K)** : accès clavier global aux actions et à la navigation (création de soirée, changement de thème, pages de l'application), dans le même champ que la recherche de la barre de navigation.
 
 ---
 

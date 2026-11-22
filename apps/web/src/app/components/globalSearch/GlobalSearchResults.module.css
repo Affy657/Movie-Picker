@@ -63,7 +63,7 @@
 }
 
 .poster {
-  width: var(--space-8);
+  width: var(--avatar-md);
   height: var(--space-12);
   border-radius: var(--radius-xs);
 }

@@ -1,4 +1,5 @@
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.SearchUsers;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -18,6 +19,23 @@ public sealed class InMemoryMovieListRepository : IMovieListRepository
                 .. Latest(_store.Values.Where(list => list.RoleOf(userId) is not null))
                     .Select(MovieListSummary.Of)
             ];
+            return Task.FromResult(summaries);
+        }
+    }
+
+    public Task<IReadOnlyList<MovieListSummary>> SearchPublicSummariesAsync(string query, int limit, CancellationToken ct = default)
+    {
+        var normalized = UserSearchPolicy.Normalize(query);
+        lock (_gate)
+        {
+            IReadOnlyList<MovieListSummary> summaries = normalized.Length == 0
+                ? []
+                :
+                [
+                    .. Latest(_store.Values.Where(list => list.IsPublic && UserSearchPolicy.Contains(list.Name, normalized)))
+                        .Take(Math.Max(0, limit))
+                        .Select(MovieListSummary.Of)
+                ];
             return Task.FromResult(summaries);
         }
     }

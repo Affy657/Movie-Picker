@@ -12551,6 +12551,19 @@ export interface components {
             /** Format: int32 */
             count: number;
         };
+        GlobalSearchGroupItem: {
+            id: string;
+            name: string;
+            /** Format: int32 */
+            memberCount: number;
+        };
+        GlobalSearchListItem: {
+            id: string;
+            name: string;
+            /** Format: int32 */
+            itemCount: number;
+            posterPath: string | null;
+        };
         GlobalSearchNightItem: {
             slug: string;
             title: string;
@@ -12558,10 +12571,31 @@ export interface components {
             time: string;
             isFinished: boolean;
         };
+        GlobalSearchPublicListItem: {
+            id: string;
+            name: string;
+            /** Format: int32 */
+            itemCount: number;
+            posterPath: string | null;
+            ownerHandle: string;
+            ownerDisplayName: string;
+        };
         GlobalSearchResponse: {
             titles: components["schemas"]["GlobalSearchTitleItem"][];
+            sagas: components["schemas"]["GlobalSearchSagaItem"][];
             members: components["schemas"]["FollowUserItem"][];
             nights: components["schemas"]["GlobalSearchNightItem"][];
+            groups: components["schemas"]["GlobalSearchGroupItem"][];
+            lists: components["schemas"]["GlobalSearchListItem"][];
+            publicLists: components["schemas"]["GlobalSearchPublicListItem"][];
+        };
+        GlobalSearchSagaItem: {
+            /** Format: int32 */
+            id: number;
+            name: string;
+            posterPath: string | null;
+            /** Format: int32 */
+            movieCount: number;
         };
         GlobalSearchTitleItem: {
             /** Format: int32 */
