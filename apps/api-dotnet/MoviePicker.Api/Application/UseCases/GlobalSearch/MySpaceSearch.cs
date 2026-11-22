@@ -55,7 +55,7 @@ public sealed class MySpaceSearch
                     Id = list.Id,
                     Name = list.Name,
                     ItemCount = list.ItemCount,
-                    PosterPath = list.PosterPaths.FirstOrDefault()
+                    PosterPath = list.PosterPaths.Count > 0 ? list.PosterPaths[0] : null
                 })
                 .ToList(),
             lists.Select(list => list.Id).ToHashSet(StringComparer.Ordinal));

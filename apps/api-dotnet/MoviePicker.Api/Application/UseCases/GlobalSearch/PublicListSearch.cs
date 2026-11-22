@@ -37,7 +37,7 @@ public sealed class PublicListSearch
                 Id = list.Id,
                 Name = list.Name,
                 ItemCount = list.ItemCount,
-                PosterPath = list.PosterPaths.FirstOrDefault(),
+                PosterPath = list.PosterPaths.Count > 0 ? list.PosterPaths[0] : null,
                 OwnerHandle = owners[list.OwnerId].Handle!,
                 OwnerDisplayName = owners[list.OwnerId].DisplayName
             })
