@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **La recherche trouve aussi vos groupes, vos listes, les listes des membres et les sagas** : la loupe de la barre de navigation et le champ d’Explorer les rangent à côté des films, des membres et des soirées, avec le nombre de films ou de membres de chacun.
+
 ## [1.28.0] - 2026-11-23
 
 ### Added

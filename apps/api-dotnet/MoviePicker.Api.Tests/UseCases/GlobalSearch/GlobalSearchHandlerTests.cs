@@ -2,10 +2,12 @@ using Microsoft.Extensions.Options;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using MoviePicker.Api.Application.UseCases.GlobalSearch;
 using MoviePicker.Api.Application.UseCases.SearchUsers;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
@@ -20,6 +22,9 @@ public sealed class GlobalSearchHandlerTests
     private readonly Mock<IEventRepository> _events = new();
     private readonly Mock<IParticipantRepository> _participants = new();
     private readonly Mock<IFriendGroupRepository> _groups = new();
+    private readonly Mock<IMovieListRepository> _lists = new();
+    private readonly Mock<IUserRepository> _users = new();
+    private readonly Mock<IGetMovieCollectionsHandler> _sagas = new();
     private readonly GlobalSearchHandler _sut;
 
     public GlobalSearchHandlerTests()
@@ -39,6 +44,14 @@ public sealed class GlobalSearchHandlerTests
             .ReturnsAsync([]);
         _participants.Setup(p => p.ListDistinctEventIdsByUserIdAsync(Me, It.IsAny<CancellationToken>())).ReturnsAsync([]);
         _groups.Setup(g => g.ListAdmittingAsync(Me, It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _lists.Setup(l => l.ListSummariesAsync(Me, It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _lists
+            .Setup(l => l.SearchPublicSummariesAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        _users
+            .Setup(u => u.ListCardsByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        _sagas.Setup(s => s.HandleAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new MovieCollectionListResponse());
 
         _sut = Build(new MoviePickerOptions { TmdbApiKey = "key" });
     }
@@ -46,12 +59,24 @@ public sealed class GlobalSearchHandlerTests
     private GlobalSearchHandler Build(MoviePickerOptions options) =>
         new(
             _tmdb.Object,
+            _sagas.Object,
             _members.Object,
-            _events.Object,
-            _participants.Object,
-            _groups.Object,
-            Options.Create(options),
-            TimeProvider.System);
+            new MySpaceSearch(_events.Object, _participants.Object, _groups.Object, _lists.Object, TimeProvider.System),
+            new PublicListSearch(_lists.Object, _users.Object),
+            Options.Create(options));
+
+    private static MovieListSummary ListSummary(string id, string name, string ownerId = Me, int itemCount = 0, params string[] posters) =>
+        new(id, ownerId, name, null, true, itemCount, posters, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, [], 1, []);
+
+    private void PublicListsAre(params MovieListSummary[] lists) =>
+        _lists
+            .Setup(l => l.SearchPublicSummariesAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(lists);
+
+    private void OwnersAre(params UserCard[] cards) =>
+        _users
+            .Setup(u => u.ListCardsByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(cards);
 
     private static Event Night(string id, string title, string? creator = Me, bool finished = false, string? groupId = null, string? date = null) => new()
     {
@@ -261,5 +286,100 @@ public sealed class GlobalSearchHandlerTests
         var result = await _sut.HandleAsync("cine", Me);
 
         Assert.Equal(["slug-open"], result.Nights.Select(n => n.Slug));
+    }
+    [Fact]
+    public async Task HandleAsync_FindsMyGroupsByNameWithTheirMemberCount()
+    {
+        _groups.Setup(g => g.ListAdmittingAsync(Me, It.IsAny<CancellationToken>())).ReturnsAsync([
+            new FriendGroup { Id = "g1", OwnerId = Me, Name = "Les Cinéphiles", Members = [new FriendGroupMember("u2", DateTimeOffset.UtcNow)] },
+            new FriendGroup { Id = "g2", OwnerId = "u3", Name = "Foot du mardi" }
+        ]);
+
+        var result = await _sut.HandleAsync("cinephile", Me);
+
+        var group = Assert.Single(result.Groups);
+        Assert.Equal(("g1", "Les Cinéphiles", 2), (group.Id, group.Name, group.MemberCount));
+    }
+
+    [Fact]
+    public async Task HandleAsync_FindsMyListsByNameWithTheirSizeAndFirstPoster()
+    {
+        _lists.Setup(l => l.ListSummariesAsync(Me, It.IsAny<CancellationToken>())).ReturnsAsync([
+            ListSummary("l1", "Polars coréens", itemCount: 7, posters: ["/a.jpg", "/b.jpg"]),
+            ListSummary("l2", "À revoir"),
+            ListSummary("l3", "Coréens partagés", ownerId: "friend")
+        ]);
+
+        var result = await _sut.HandleAsync("coreens", Me);
+
+        Assert.Equal(["l1", "l3"], result.Lists.Select(list => list.Id));
+        Assert.Equal(("Polars coréens", 7, "/a.jpg"), (result.Lists[0].Name, result.Lists[0].ItemCount, result.Lists[0].PosterPath));
+        Assert.Null(result.Lists[1].PosterPath);
+    }
+
+    [Fact]
+    public async Task HandleAsync_Anonymous_FindsPublicListsWithTheirOwner()
+    {
+        PublicListsAre(ListSummary("p1", "Polars", ownerId: "alice", itemCount: 3, posters: ["/p.jpg"]));
+        OwnersAre(new UserCard("alice", "🎬", "alice_m", IsProfilePublic: true, DisplayName: "Alice Martin"));
+
+        var result = await _sut.HandleAsync("polar", null);
+
+        var list = Assert.Single(result.PublicLists);
+        Assert.Equal(("p1", "Polars", 3, "/p.jpg"), (list.Id, list.Name, list.ItemCount, list.PosterPath));
+        Assert.Equal(("alice_m", "Alice Martin"), (list.OwnerHandle, list.OwnerDisplayName));
+        Assert.Empty(result.Lists);
+        Assert.Empty(result.Groups);
+    }
+
+    [Fact]
+    public async Task HandleAsync_LeavesOutOfPublicListsMyOwnAndThoseOfPrivateProfiles()
+    {
+        _lists.Setup(l => l.ListSummariesAsync(Me, It.IsAny<CancellationToken>())).ReturnsAsync([ListSummary("mine", "Polars à moi")]);
+        PublicListsAre(
+            ListSummary("mine", "Polars à moi"),
+            ListSummary("hidden", "Polars cachés", ownerId: "bob"),
+            ListSummary("nohandle", "Polars sans pseudo", ownerId: "carl"),
+            ListSummary("shown", "Polars de Dana", ownerId: "dana"));
+        OwnersAre(
+            new UserCard("bob", "🎬", "bob", IsProfilePublic: false, DisplayName: "Bob"),
+            new UserCard("carl", "🎬", null, IsProfilePublic: true, DisplayName: "Carl"),
+            new UserCard("dana", "🎬", "dana", IsProfilePublic: true, DisplayName: "Dana"));
+
+        var result = await _sut.HandleAsync("polars", Me);
+
+        Assert.Equal(["shown"], result.PublicLists.Select(list => list.Id));
+        Assert.Equal(["mine"], result.Lists.Select(list => list.Id));
+    }
+
+    [Fact]
+    public async Task HandleAsync_FindsSagasByNameIgnoringAccents()
+    {
+        _sagas.Setup(s => s.HandleAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new MovieCollectionListResponse
+        {
+            Items =
+            [
+                new MovieCollectionResponse { Id = 10, Name = "Star Wars", PosterPath = "/sw.jpg", MovieCount = 9 },
+                new MovieCollectionResponse { Id = 1241, Name = "Harry Potter", MovieCount = 8 },
+                new MovieCollectionResponse { Id = 645, Name = "James Bond", MovieCount = 27 }
+            ]
+        });
+
+        var result = await _sut.HandleAsync("stâr", null);
+
+        var saga = Assert.Single(result.Sagas);
+        Assert.Equal((10, "Star Wars", "/sw.jpg", 9), (saga.Id, saga.Name, saga.PosterPath, saga.MovieCount));
+    }
+
+    [Fact]
+    public async Task HandleAsync_SagasUnavailable_StillReturnsTheOtherSections()
+    {
+        _sagas.Setup(s => s.HandleAsync(It.IsAny<CancellationToken>())).ThrowsAsync(Errors.ShowcaseUnavailable());
+        TitlesAre(new TmdbSearchItem(11, MovieMediaType.Movie, "Star Wars", "1977", null));
+
+        var result = await _sut.HandleAsync("star", null);
+
+        Assert.Empty(result.Sagas);
+        Assert.Single(result.Titles);
     }
 }

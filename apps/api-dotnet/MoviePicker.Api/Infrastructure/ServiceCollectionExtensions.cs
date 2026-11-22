@@ -13,6 +13,7 @@ using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
 using MoviePicker.Api.Application.UseCases.EventLive;
 using MoviePicker.Api.Application.UseCases.FinishedEvents;
 using MoviePicker.Api.Application.UseCases.FriendGroups;
+using MoviePicker.Api.Application.UseCases.GlobalSearch;
 using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using MoviePicker.Api.Application.UseCases.LetterboxdImport;
 using MoviePicker.Api.Application.UseCases.ListMyEvents;
@@ -467,6 +468,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IGroupNightAnnouncer, GroupNightAnnouncer>();
         services.AddScoped<MyEventSummaryEnricher>();
         services.AddScoped<FriendGroupShowcaseReader>();
+        services.AddScoped<MySpaceSearch>();
+        services.AddScoped<PublicListSearch>();
         services.AddScoped<FriendGroupNightsReader>();
         services.AddScoped<IUsageRecorder, UsageRecorder>();
         services.AddScoped<IWinnerAnnouncer, WinnerAnnouncer>();

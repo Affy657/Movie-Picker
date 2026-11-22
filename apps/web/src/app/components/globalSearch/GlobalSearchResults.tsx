@@ -1,6 +1,15 @@
 import { Fragment, useId, type ReactNode } from 'react';
 import { Link } from 'react-router';
-import { CalendarDays, ChevronRight, Film, SearchX } from 'lucide-react';
+import {
+  Bookmark,
+  CalendarDays,
+  ChevronRight,
+  Film,
+  Layers,
+  SearchX,
+  Users,
+  type LucideIcon,
+} from 'lucide-react';
 import clsx from 'clsx';
 import Avatar from '@/shared/components/Avatar';
 import { buttonClass } from '@/shared/components/Button';
@@ -10,7 +19,8 @@ import Spinner from '@/shared/components/Spinner';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import type { GlobalSearchKind } from '@/shared/analytics/usageCounts';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type Translate } from '@/shared/i18n';
+import type { LocaleCode } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { formatMyEventsListDate } from '@/shared/utils/formatMyEventsListDate';
 import { posterImageSrc, posterSrcAtSize } from '@/shared/utils/posterUrl';
@@ -23,44 +33,66 @@ export type GlobalSearchSource = 'header' | 'home';
 
 type Pick = (kind: GlobalSearchKind) => void;
 
-const resultMarker = { [SEARCH_RESULT_ATTRIBUTE]: '' };
-
-function countOf(found: GlobalSearchResponse): number {
-  return found.titles.length + found.nights.length + found.members.length;
-}
-
-function ResultSection({ label, children }: Readonly<{ label: string; children: ReactNode }>) {
-  const labelId = useId();
-  return (
-    <section className={styles.section} aria-labelledby={labelId}>
-      <h2 id={labelId} className={styles.sectionLabel}>
-        {label}
-      </h2>
-      {children}
-    </section>
-  );
-}
-
-function ResultLink({
-  to,
-  media,
-  name,
-  meta,
-  onOpen,
-}: Readonly<{
+interface ResultRow {
+  key: string;
   to: string;
   media: ReactNode;
   name: string;
   meta: readonly (string | null)[];
-  onOpen: () => void;
-}>) {
-  const details = meta.filter((part): part is string => Boolean(part));
+}
+
+interface FoundSection {
+  kind: GlobalSearchKind;
+  label: string;
+  rows: ResultRow[];
+}
+
+const resultMarker = { [SEARCH_RESULT_ATTRIBUTE]: '' };
+
+function countOf(found: GlobalSearchResponse): number {
+  return (
+    found.titles.length +
+    found.sagas.length +
+    found.nights.length +
+    found.groups.length +
+    found.lists.length +
+    found.members.length +
+    found.publicLists.length
+  );
+}
+
+function PosterThumb({
+  posterPath,
+  Icon,
+}: Readonly<{ posterPath: string | null; Icon: LucideIcon }>) {
+  const src = posterSrcAtSize(posterImageSrc(posterPath), 'w92');
+  return (
+    <span className={styles.poster} aria-hidden>
+      {src ? (
+        <img src={src} alt="" loading="lazy" decoding="async" />
+      ) : (
+        <Icon size={ICON_SIZE.sm} />
+      )}
+    </span>
+  );
+}
+
+function IconTile({ Icon }: Readonly<{ Icon: LucideIcon }>) {
+  return (
+    <span className={styles.tile} aria-hidden>
+      <Icon size={ICON_SIZE.md} />
+    </span>
+  );
+}
+
+function ResultLink({ row, onOpen }: Readonly<{ row: ResultRow; onOpen: () => void }>) {
+  const details = row.meta.filter((part): part is string => Boolean(part));
   return (
     <li>
-      <Link to={to} className={styles.row} onClick={onOpen} {...resultMarker}>
-        {media}
+      <Link to={row.to} className={styles.row} onClick={onOpen} {...resultMarker}>
+        {row.media}
         <span className={styles.text}>
-          <span className={styles.name}>{name}</span>
+          <span className={styles.name}>{row.name}</span>
           {details.length > 0 ? (
             <>
               {' '}
@@ -80,103 +112,129 @@ function ResultLink({
   );
 }
 
-function PosterThumb({ posterPath }: Readonly<{ posterPath: string | null }>) {
-  const src = posterSrcAtSize(posterImageSrc(posterPath), 'w92');
+function ResultSection({
+  section,
+  onPick,
+  children,
+}: Readonly<{ section: FoundSection; onPick: Pick; children?: ReactNode }>) {
+  const labelId = useId();
   return (
-    <span className={styles.poster} aria-hidden>
-      {src ? (
-        <img src={src} alt="" loading="lazy" decoding="async" />
-      ) : (
-        <Film size={ICON_SIZE.sm} />
-      )}
-    </span>
+    <section className={styles.section} aria-labelledby={labelId}>
+      <h2 id={labelId} className={styles.sectionLabel}>
+        {section.label}
+      </h2>
+      <ul className={styles.list}>
+        {section.rows.map((row) => (
+          <ResultLink key={row.key} row={row} onOpen={() => onPick(section.kind)} />
+        ))}
+      </ul>
+      {children}
+    </section>
   );
 }
 
-function TitleResults({
-  query,
-  titles,
-  onPick,
-}: Readonly<{ query: string; titles: GlobalSearchResponse['titles']; onPick: Pick }>) {
-  const { t } = useTranslation();
-  return (
-    <ResultSection label={t('globalSearch.sections.titles')}>
-      <ul className={styles.list}>
-        {titles.map((title) => (
-          <ResultLink
-            key={`${title.mediaType}-${title.tmdbId}`}
-            to={ROUTES.moviePage(title)}
-            media={<PosterThumb posterPath={title.posterPath} />}
-            name={title.title}
-            meta={[title.year, title.mediaType === 'tv' ? t('globalSearch.series') : null]}
-            onOpen={() => onPick('title')}
-          />
-        ))}
-      </ul>
-      <Link
-        to={ROUTES.movieSearchFor(query)}
-        className={styles.seeAll}
-        onClick={() => onPick('all_titles')}
-        {...resultMarker}
-      >
-        {t('globalSearch.seeAllTitles')}
-        <ChevronRight size={ICON_SIZE.sm} aria-hidden />
-      </Link>
-    </ResultSection>
-  );
+function filmCount(count: number, t: Translate) {
+  return pluralizeCount(count, 'globalSearch.filmsOne', 'globalSearch.filmsMany', t);
 }
 
-function NightResults({
-  nights,
-  onPick,
-}: Readonly<{ nights: GlobalSearchResponse['nights']; onPick: Pick }>) {
-  const { t, locale } = useTranslation();
-  return (
-    <ResultSection label={t('globalSearch.sections.nights')}>
-      <ul className={styles.list}>
-        {nights.map((night) => (
-          <ResultLink
-            key={night.slug}
-            to={ROUTES.eventDetail(night.slug)}
-            media={
-              <span className={styles.tile} aria-hidden>
-                <CalendarDays size={ICON_SIZE.md} />
-              </span>
-            }
-            name={night.title}
-            meta={[
-              formatMyEventsListDate(night.date, locale),
-              night.isFinished ? t('globalSearch.finishedNight') : null,
-            ]}
-            onOpen={() => onPick('night')}
-          />
-        ))}
-      </ul>
-    </ResultSection>
-  );
-}
-
-function MemberResults({
-  members,
-  onPick,
-}: Readonly<{ members: GlobalSearchResponse['members']; onPick: Pick }>) {
-  const { t } = useTranslation();
-  return (
-    <ResultSection label={t('globalSearch.sections.members')}>
-      <ul className={styles.list}>
-        {members.map((member) => (
-          <ResultLink
-            key={member.handle}
-            to={ROUTES.profile(member.handle)}
-            media={<Avatar avatarId={member.avatarId} pseudo={member.displayName} size="md" />}
-            name={member.displayName}
-            meta={[`@${member.handle}`]}
-            onOpen={() => onPick('member')}
-          />
-        ))}
-      </ul>
-    </ResultSection>
-  );
+function foundSections(
+  found: GlobalSearchResponse,
+  t: Translate,
+  locale: LocaleCode
+): FoundSection[] {
+  const sections: FoundSection[] = [
+    {
+      kind: 'title',
+      label: t('globalSearch.sections.titles'),
+      rows: found.titles.map((title) => ({
+        key: `${title.mediaType}-${title.tmdbId}`,
+        to: ROUTES.moviePage(title),
+        media: <PosterThumb posterPath={title.posterPath} Icon={Film} />,
+        name: title.title,
+        meta: [title.year, title.mediaType === 'tv' ? t('globalSearch.series') : null],
+      })),
+    },
+    {
+      kind: 'saga',
+      label: t('globalSearch.sections.sagas'),
+      rows: found.sagas.map((saga) => ({
+        key: String(saga.id),
+        to: ROUTES.movieCollection(saga.id),
+        media: <PosterThumb posterPath={saga.posterPath} Icon={Layers} />,
+        name: saga.name,
+        meta: [filmCount(saga.movieCount, t)],
+      })),
+    },
+    {
+      kind: 'night',
+      label: t('globalSearch.sections.nights'),
+      rows: found.nights.map((night) => ({
+        key: night.slug,
+        to: ROUTES.eventDetail(night.slug),
+        media: <IconTile Icon={CalendarDays} />,
+        name: night.title,
+        meta: [
+          formatMyEventsListDate(night.date, locale),
+          night.isFinished ? t('globalSearch.finishedNight') : null,
+        ],
+      })),
+    },
+    {
+      kind: 'group',
+      label: t('globalSearch.sections.groups'),
+      rows: found.groups.map((group) => ({
+        key: group.id,
+        to: ROUTES.group(group.id),
+        media: <IconTile Icon={Users} />,
+        name: group.name,
+        meta: [
+          pluralizeCount(
+            group.memberCount,
+            'globalSearch.membersOne',
+            'globalSearch.membersMany',
+            t
+          ),
+        ],
+      })),
+    },
+    {
+      kind: 'list',
+      label: t('globalSearch.sections.lists'),
+      rows: found.lists.map((list) => ({
+        key: list.id,
+        to: ROUTES.list(list.id),
+        media: <PosterThumb posterPath={list.posterPath} Icon={Bookmark} />,
+        name: list.name,
+        meta: [filmCount(list.itemCount, t)],
+      })),
+    },
+    {
+      kind: 'member',
+      label: t('globalSearch.sections.members'),
+      rows: found.members.map((member) => ({
+        key: member.handle,
+        to: ROUTES.profile(member.handle),
+        media: <Avatar avatarId={member.avatarId} pseudo={member.displayName} size="md" />,
+        name: member.displayName,
+        meta: [`@${member.handle}`],
+      })),
+    },
+    {
+      kind: 'public_list',
+      label: t('globalSearch.sections.publicLists'),
+      rows: found.publicLists.map((list) => ({
+        key: list.id,
+        to: ROUTES.publicList(list.ownerHandle, list.id),
+        media: <PosterThumb posterPath={list.posterPath} Icon={Bookmark} />,
+        name: list.name,
+        meta: [
+          filmCount(list.itemCount, t),
+          t('globalSearch.byOwner', { name: list.ownerDisplayName }),
+        ],
+      })),
+    },
+  ];
+  return sections.filter((section) => section.rows.length > 0);
 }
 
 function FoundResults({
@@ -184,7 +242,7 @@ function FoundResults({
   found,
   onPick,
 }: Readonly<{ query: string; found: GlobalSearchResponse; onPick: Pick }>) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   if (countOf(found) === 0) {
     return (
       <EmptyState
@@ -206,11 +264,21 @@ function FoundResults({
   }
   return (
     <>
-      {found.titles.length > 0 ? (
-        <TitleResults query={query} titles={found.titles} onPick={onPick} />
-      ) : null}
-      {found.nights.length > 0 ? <NightResults nights={found.nights} onPick={onPick} /> : null}
-      {found.members.length > 0 ? <MemberResults members={found.members} onPick={onPick} /> : null}
+      {foundSections(found, t, locale).map((section) => (
+        <ResultSection key={section.kind} section={section} onPick={onPick}>
+          {section.kind === 'title' ? (
+            <Link
+              to={ROUTES.movieSearchFor(query)}
+              className={styles.seeAll}
+              onClick={() => onPick('all_titles')}
+              {...resultMarker}
+            >
+              {t('globalSearch.seeAllTitles')}
+              <ChevronRight size={ICON_SIZE.sm} aria-hidden />
+            </Link>
+          ) : null}
+        </ResultSection>
+      ))}
     </>
   );
 }

@@ -80,8 +80,8 @@ export const en: Locale = {
 
   globalSearch: {
     open: 'Search',
-    label: 'Search for a film, an event or a member',
-    placeholder: 'Film, show, event, member',
+    label: 'Search for a film, an event, a list or a member',
+    placeholder: 'Film, event, list, member',
     close: 'Close the search',
     loading: 'Searching…',
     error: 'The search didn’t go through.',
@@ -93,10 +93,19 @@ export const en: Locale = {
     resultsMany: '{{count}} results',
     series: 'Show',
     finishedNight: 'Over',
+    filmsOne: '1 film',
+    filmsMany: '{{count}} films',
+    membersOne: '1 member',
+    membersMany: '{{count}} members',
+    byOwner: 'by {{name}}',
     sections: {
       titles: 'Films and shows',
+      sagas: 'Sagas',
       nights: 'My events',
+      groups: 'My groups',
+      lists: 'My lists',
       members: 'Members',
+      publicLists: 'Members’ lists',
     },
   },
 

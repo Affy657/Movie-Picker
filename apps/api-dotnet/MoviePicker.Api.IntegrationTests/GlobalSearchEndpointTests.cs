@@ -57,6 +57,26 @@ public sealed class GlobalSearchEndpointTests : IClassFixture<MoviePickerApplica
     }
 
     [Fact]
+    public async Task Search_SignedIn_FindsOwnGroupsAndListsAndOthersPublicLists()
+    {
+        var marker = $"Qy{Guid.NewGuid():N}"[..12];
+        var owner = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Propriétaire");
+        var other = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Autre membre");
+        Assert.Equal(HttpStatusCode.Created, (await owner.PostAsJsonAsync("/api/v1/groups", new { name = $"Groupe {marker}" })).StatusCode);
+        Assert.Equal(HttpStatusCode.Created, (await owner.PostAsJsonAsync("/api/v1/lists", new { name = $"Liste {marker}" })).StatusCode);
+        Assert.Equal(HttpStatusCode.Created, (await other.PostAsJsonAsync("/api/v1/lists", new { name = $"Publique {marker}", isPublic = true })).StatusCode);
+
+        var result = await SearchAsync(owner, marker);
+
+        Assert.Equal([$"Groupe {marker}"], result.Groups.Select(group => group.Name));
+        Assert.Equal([$"Liste {marker}"], result.Lists.Select(list => list.Name));
+        var shared = Assert.Single(result.PublicLists);
+        Assert.Equal($"Publique {marker}", shared.Name);
+        Assert.Equal("Autre membre", shared.OwnerDisplayName);
+        Assert.NotEmpty(shared.OwnerHandle);
+    }
+
+    [Fact]
     public async Task Search_TooShort_ReturnsEmptySections()
     {
         var result = await SearchAsync(_factory.CreateClient(), "f");

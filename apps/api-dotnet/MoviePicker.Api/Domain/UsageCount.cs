@@ -42,7 +42,9 @@ public sealed record UsageCount
         [JoinPromptClickedMetric] = new(["login", "register"], StringComparer.Ordinal),
         [RecapViewedMetric] = new(Viewers, StringComparer.Ordinal),
         [RandomPickOpenedMetric] = new(["watchlist", "list", "saved_list", "catalog"], StringComparer.Ordinal),
-        [GlobalSearchResultOpenedMetric] = new(["title", "all_titles", "member", "night"], StringComparer.Ordinal)
+        [GlobalSearchResultOpenedMetric] = new(
+            ["title", "all_titles", "saga", "member", "night", "group", "list", "public_list"],
+            StringComparer.Ordinal)
     };
 
     private UsageCount(string metric, string variant)

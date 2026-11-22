@@ -19,6 +19,10 @@ const server = setupServer(
       titles: [
         { tmdbId: 438631, mediaType: 'movie', title: 'Dune', year: '2021', posterPath: null },
       ],
+      sagas: [],
+      groups: [],
+      lists: [],
+      publicLists: [],
       members: [],
       nights: [
         {
@@ -60,7 +64,7 @@ function renderHeaderSearch(path = '/') {
 
 const loupe = () => screen.queryByRole('button', { name: 'Rechercher' });
 const field = () =>
-  screen.getByRole('searchbox', { name: 'Rechercher un film, une soirée ou un membre' });
+  screen.getByRole('searchbox', { name: 'Rechercher un film, une soirée, une liste ou un membre' });
 
 describe('HeaderSearch', () => {
   afterEach(() => {

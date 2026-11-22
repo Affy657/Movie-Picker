@@ -24,6 +24,10 @@ public sealed class UsageCountTests
     [InlineData("global_search_result_opened", "all_titles")]
     [InlineData("global_search_result_opened", "member")]
     [InlineData("global_search_result_opened", "night")]
+    [InlineData("global_search_result_opened", "saga")]
+    [InlineData("global_search_result_opened", "group")]
+    [InlineData("global_search_result_opened", "list")]
+    [InlineData("global_search_result_opened", "public_list")]
     public void TryParseReported_AcceptsEveryStepTheBrowserReports(string metric, string variant)
     {
         Assert.True(UsageCount.TryParseReported(metric, variant, out var count));

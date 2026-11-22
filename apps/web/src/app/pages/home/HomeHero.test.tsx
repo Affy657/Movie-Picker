@@ -71,6 +71,10 @@ const openCreateEvent = vi.fn();
 const searchHandler = http.get(`${TEST_API_V1}/search`, () =>
   apiJson<'GlobalSearchResponse'>({
     titles: [{ tmdbId: 438631, mediaType: 'movie', title: 'Dune', year: '2021', posterPath: null }],
+    sagas: [],
+    groups: [],
+    lists: [],
+    publicLists: [],
     members: [],
     nights: [
       {
@@ -85,7 +89,7 @@ const searchHandler = http.get(`${TEST_API_V1}/search`, () =>
 );
 
 const homeField = () =>
-  screen.getByRole('searchbox', { name: 'Rechercher un film, une soirée ou un membre' });
+  screen.getByRole('searchbox', { name: 'Rechercher un film, une soirée, une liste ou un membre' });
 
 function renderHero() {
   return render(

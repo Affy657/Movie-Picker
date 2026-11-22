@@ -78,8 +78,8 @@ export const fr = {
 
   globalSearch: {
     open: 'Rechercher',
-    label: 'Rechercher un film, une soirée ou un membre',
-    placeholder: 'Film, série, soirée, membre',
+    label: 'Rechercher un film, une soirée, une liste ou un membre',
+    placeholder: 'Film, soirée, liste, membre',
     close: 'Fermer la recherche',
     loading: 'Recherche en cours…',
     error: 'La recherche n’a pas abouti.',
@@ -91,10 +91,19 @@ export const fr = {
     resultsMany: '{{count}} résultats',
     series: 'Série',
     finishedNight: 'Terminée',
+    filmsOne: '1 film',
+    filmsMany: '{{count}} films',
+    membersOne: '1 membre',
+    membersMany: '{{count}} membres',
+    byOwner: 'par {{name}}',
     sections: {
       titles: 'Films et séries',
+      sagas: 'Sagas',
       nights: 'Mes soirées',
+      groups: 'Mes groupes',
+      lists: 'Mes listes',
       members: 'Membres',
+      publicLists: 'Listes des membres',
     },
   },
 
