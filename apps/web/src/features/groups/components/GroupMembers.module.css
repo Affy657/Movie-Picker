@@ -1,17 +1,8 @@
-.aside {
+.panel {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-}
-
-.heading {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2-5);
-  margin: 0 0 var(--space-1-5);
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-extrabold);
-  line-height: var(--leading-tight);
+  gap: var(--space-3);
+  max-width: var(--container-sm);
 }
 
 .rows {
@@ -23,8 +14,8 @@
 .row {
   display: flex;
   align-items: center;
-  gap: var(--space-2-5);
-  min-height: var(--space-12);
+  gap: var(--space-3);
+  min-height: var(--space-14);
   border-bottom: 1px solid var(--color-border-subtle);
 }
 
@@ -42,7 +33,7 @@
 
 .name {
   overflow: hidden;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-md);
   font-weight: var(--font-weight-bold);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -50,7 +41,7 @@
 
 .comes,
 .absent {
-  font-size: var(--font-size-2xs);
+  font-size: var(--font-size-xs);
 }
 
 .comes {
@@ -61,61 +52,22 @@
   color: var(--color-text-muted);
 }
 
-.leave {
-  align-self: flex-start;
-  margin-top: var(--space-1-5);
-}
-
-.strip {
+.footer {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-.avatars {
-  display: flex;
-  gap: var(--space-3-5);
-  margin: 0 calc(var(--space-4) * -1);
-  padding: var(--space-1) var(--space-4);
-  overflow-x: auto;
-  list-style: none;
-  overscroll-behavior-x: contain;
-}
-
-.person {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-1-5);
-  width: var(--space-14);
-}
-
-.ring {
-  display: inline-flex;
-  border-radius: var(--radius-pill);
-}
-
-.ring[data-comes] {
-  box-shadow:
-    0 0 0 2px var(--color-bg),
-    0 0 0 4px var(--color-success);
-}
-
-.personName {
-  max-width: 100%;
-  overflow: hidden;
-  font-size: var(--font-size-2xs);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-muted);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  gap: var(--space-3);
 }
 
 .hint {
+  flex: 1 1 14rem;
   margin: 0;
   font-size: var(--font-size-xs);
+  line-height: var(--leading-snug);
   color: var(--color-text-muted);
+}
+
+.leave {
+  flex-basis: 100%;
+  justify-content: flex-start;
 }

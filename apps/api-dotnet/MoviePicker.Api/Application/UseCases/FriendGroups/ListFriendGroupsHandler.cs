@@ -35,6 +35,7 @@ public sealed class ListFriendGroupsHandler : IListFriendGroupsHandler
         if (admitted.Count == 0 && invitations.Count == 0)
             return new MyGroupsResponse();
 
+        var nights = await _nights.ReadListAsync(userId, admitted, ct);
         var people = await FriendGroupPeople.LoadPreviewsAsync(
             _users,
             [.. admitted, .. invitations.Select(pending => pending.Group)],
@@ -43,7 +44,8 @@ public sealed class ListFriendGroupsHandler : IListFriendGroupsHandler
         {
             Groups = [.. admitted.Select(group => people.SummaryOf(userId, group))],
             Invitations = [.. invitations.Select(pending => people.InvitationOf(pending.Group, pending.Invitation))],
-            NextNights = await _nights.NextNightsAsync(userId, admitted, ct)
+            NextNights = nights.NextNights,
+            Showcases = nights.Showcases
         };
     }
 }

@@ -466,6 +466,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<EventAudienceNotifier>();
         services.AddScoped<IGroupNightAnnouncer, GroupNightAnnouncer>();
         services.AddScoped<MyEventSummaryEnricher>();
+        services.AddScoped<FriendGroupShowcaseReader>();
         services.AddScoped<FriendGroupNightsReader>();
         services.AddScoped<IUsageRecorder, UsageRecorder>();
         services.AddScoped<IWinnerAnnouncer, WinnerAnnouncer>();

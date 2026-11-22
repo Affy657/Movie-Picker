@@ -44,6 +44,8 @@ internal sealed class FriendGroupTestKit
 
     public Mock<IPushNotificationSender> Push { get; } = new();
 
+    public Mock<ITmdbMovieSearch> Tmdb { get; } = new();
+
     public RecordingSharedQuota Quota { get; } = new();
 
     public SteppingClock Clock { get; } = new(Start);
@@ -51,7 +53,8 @@ internal sealed class FriendGroupTestKit
     public FriendGroupNightsReader NightsReader() => new(
         Events,
         Participants,
-        new MyEventSummaryEnricher(Participants, Movies, new InMemoryMovieRatingRepository(), new InMemoryVoteRepository(), Users),
+        new MyEventSummaryEnricher(Participants, Movies, Ratings, Votes, Users),
+        new FriendGroupShowcaseReader(Movies, Ratings, Tmdb.Object),
         Clock);
 
     public ListFriendGroupsHandler ListHandler() => new(Groups, Users, NightsReader(), Clock);

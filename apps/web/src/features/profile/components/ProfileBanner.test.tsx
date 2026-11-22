@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import ProfileBanner from './ProfileBanner';
-import styles from './ProfileBanner.module.css';
+import styles from '@/shared/components/FadedBanner.module.css';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import type { ProfileBanner as Banner } from '@/features/profile/api/profileApi';
 
@@ -56,7 +56,7 @@ describe('ProfileBanner', () => {
   it('shows the image of the film, sized for the screen', () => {
     renderBanner(FILM);
 
-    const image = screen.getByTestId('profile-banner-image');
+    const image = screen.getByTestId('faded-banner-image');
     expect(image).toHaveAttribute('src', FILM.imageUrl);
     expect(image).toHaveAttribute('srcset', expect.stringContaining('/t/p/w780/sunset.jpg 780w'));
     expect(image).toHaveAttribute('alt', '');
@@ -75,7 +75,7 @@ describe('ProfileBanner', () => {
   it('shows an imported image without any credit', () => {
     renderBanner(PHOTO);
 
-    expect(screen.getByTestId('profile-banner-image')).toHaveAttribute(
+    expect(screen.getByTestId('faded-banner-image')).toHaveAttribute(
       'src',
       expect.stringContaining(PHOTO.imageUrl)
     );

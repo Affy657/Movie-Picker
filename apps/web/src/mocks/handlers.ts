@@ -989,6 +989,8 @@ export interface MockGroup {
   pastNights?: Schemas['MyEventSummaryDto'][];
   createdAt?: string;
   ranking?: Schemas['FriendGroupRankingResponse'];
+  stats?: Schemas['FriendGroupStatsResponse'];
+  cover?: Schemas['FriendGroupCoverResponse'] | null;
 }
 
 type StoredGroup = Required<MockGroup>;
@@ -1011,6 +1013,14 @@ function withGroupDefaults(group: MockGroup): StoredGroup {
     pastNights: [],
     createdAt: MOCK_DATE,
     ranking: { nightCount: 0, members: [] },
+    stats: {
+      nightCount: 0,
+      filmCount: 0,
+      firstNightDate: null,
+      averageRating: null,
+      usualWeekday: null,
+    },
+    cover: null,
     ...group,
     owner,
     members: group.members ?? [{ ...owner, role: 'owner' }],
@@ -1055,6 +1065,8 @@ function mockGroupDetail(group: StoredGroup): Schemas['FriendGroupDetailResponse
     upcomingNights: group.upcomingNights,
     nextNightParticipantIds: group.nextNightParticipantIds,
     pastNights: group.pastNights,
+    stats: group.stats,
+    cover: group.cover,
   };
 }
 
@@ -1088,6 +1100,11 @@ export function createGroupsHandlers(
         groups: groups.map(mockGroupSummary),
         invitations: invitations.map(mockGroupInvitation),
         nextNights: groups.flatMap((group) => group.upcomingNights.slice(0, 1)),
+        showcases: groups.map((group) => ({
+          groupId: group.id,
+          nightCount: group.stats.nightCount,
+          cover: group.cover,
+        })),
       })
     ),
     http.post(route, async ({ request }) => {

@@ -59,8 +59,10 @@ export default function GroupFilms({ nights }: Readonly<{ nights: readonly MyEve
                   <Film size={ICON_SIZE.xl} aria-hidden />
                 )}
                 <span className={styles.date}>{formatShortDate(night.date, locale)}</span>
+                <span className={src ? 'visually-hidden' : styles.posterTitle}>
+                  {winner?.title ?? night.title}
+                </span>
               </span>
-              <span className={styles.title}>{winner?.title ?? night.title}</span>
               <RatingLine night={night} />
             </Link>
           </li>

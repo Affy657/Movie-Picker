@@ -1,22 +1,39 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { ChevronRight, LogIn } from 'lucide-react';
+import { ChevronRight, Hourglass, LogIn } from 'lucide-react';
 import Button from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
+import type { LocaleCode } from '@/shared/i18n/locales';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { formatEventDateLong } from '@/shared/utils/formatMyEventsListDate';
 import { ROUTES } from '@/app/routes';
 import EventDateBlock from '@/features/events/components/EventDateBlock';
 import type { MyEventSummary } from '@/features/events/types';
 import { participantsCountLabel } from '@/features/events/utils/eventLabels';
+import { firstName } from '@/features/library/utils/listMembers';
 import { useJoinGroupNight } from '@/features/groups/hooks/useGroups';
+import { peoplePhrase } from '@/features/groups/utils/groupLabels';
 import styles from './GroupUpcomingNights.module.css';
 
-function nightLine(night: MyEventSummary, t: Translate): string {
-  const participants = participantsCountLabel(night.participantCount, t);
-  return night.isCreator ? `${t('groups.page.organizedByYou')}, ${participants}` : participants;
+const NAMED_GUESTS = 3;
+
+function nightLine(night: MyEventSummary, locale: LocaleCode, t: Translate): string {
+  if (night.participantCount === 0) return t('groups.page.nobodyYet');
+  if (night.participantsPreview.length === 0)
+    return participantsCountLabel(night.participantCount, t);
+  const names = peoplePhrase(
+    night.participantsPreview.map((person) => firstName(person.pseudo)),
+    night.participantCount,
+    NAMED_GUESTS,
+    locale,
+    t
+  );
+  return pluralizeCount(night.participantCount, 'groups.page.comingOne', 'groups.page.coming', t, {
+    names,
+  });
 }
 
 function NightText({ night }: Readonly<{ night: MyEventSummary }>) {
@@ -31,7 +48,7 @@ function NightText({ night }: Readonly<{ night: MyEventSummary }>) {
         <span className="visually-hidden">
           {formatEventDateLong(night.date, night.time, locale, t('events.detail.dateTimeJoiner'))}
         </span>
-        <span className={styles.line}>{nightLine(night, t)}</span>
+        <span className={styles.line}>{nightLine(night, locale, t)}</span>
       </span>
     </>
   );
@@ -69,6 +86,29 @@ function JoinableNight({ night }: Readonly<{ night: MyEventSummary }>) {
         </p>
       ) : null}
     </Card>
+  );
+}
+
+export function GroupOnHoldNights({ nights }: Readonly<{ nights: readonly MyEventSummary[] }>) {
+  const { t } = useTranslation();
+  return (
+    <ul className={styles.list}>
+      {nights.map((night) => (
+        <li key={night.id} className={styles.onHold}>
+          <Hourglass size={ICON_SIZE.md} aria-hidden className={styles.onHoldIcon} />
+          <span className={styles.onHoldText}>
+            <b className={styles.onHoldTitle}>{night.title}</b> {t('groups.page.onHold')}
+          </span>
+          <Link
+            to={ROUTES.eventDetail(night.slug)}
+            className={styles.onHoldLink}
+            aria-label={t('groups.page.openAria', { title: night.title })}
+          >
+            {t('groups.page.open')}
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }
 

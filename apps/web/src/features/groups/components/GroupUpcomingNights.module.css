@@ -65,6 +65,47 @@
   margin: 0;
 }
 
+.onHold {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-warning-bg);
+  font-size: var(--font-size-sm);
+  line-height: var(--leading-snug);
+}
+
+.onHoldIcon {
+  flex-shrink: 0;
+  color: var(--color-warning);
+}
+
+.onHoldText {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.onHoldTitle {
+  font-weight: var(--font-weight-bold);
+}
+
+.onHoldLink {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
+  flex-shrink: 0;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary-text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+@media (hover: hover) {
+  .onHoldLink:hover {
+    text-decoration: underline;
+  }
+}
+
 @media (max-width: 47.9375rem) {
   .row {
     gap: var(--space-2-5);

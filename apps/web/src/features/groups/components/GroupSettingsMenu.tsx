@@ -1,4 +1,4 @@
-import { LogOut, Pencil, Settings, Trash2, Users } from 'lucide-react';
+import { Ellipsis, LogOut, Pencil, Trash2, Users } from 'lucide-react';
 import IconButton from '@/shared/components/IconButton';
 import { MenuItem, MenuPanel, MenuSeparator } from '@/shared/components/Menu';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -23,7 +23,7 @@ export default function GroupSettingsMenu({
   return (
     <div ref={menu.containerRef} className={styles.menu}>
       <IconButton {...menu.triggerProps} ariaLabel={label} showTitle={false}>
-        <Settings aria-hidden size={ICON_SIZE.md} />
+        <Ellipsis aria-hidden size={ICON_SIZE.md} />
       </IconButton>
       {menu.open ? (
         <MenuPanel {...menu.panelProps} ariaLabel={label}>

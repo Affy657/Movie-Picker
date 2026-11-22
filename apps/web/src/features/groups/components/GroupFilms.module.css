@@ -45,13 +45,21 @@
   left: var(--space-2);
 }
 
-.title {
+.posterTitle {
+  position: absolute;
+  right: var(--space-2);
+  bottom: var(--space-2);
+  left: var(--space-2);
+  display: -webkit-box;
   overflow: hidden;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);
   line-height: var(--leading-tight);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  color: var(--color-text);
+  text-align: center;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
 }
 
 .rating {

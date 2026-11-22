@@ -7,7 +7,7 @@ namespace MoviePicker.Api.Application.UseCases.FriendGroups;
 
 public sealed class FriendGroupNightsReader
 {
-    public const int PastNightsShown = 12;
+    public const int PastNightsShown = 60;
 
     private static readonly IReadOnlyDictionary<string, IReadOnlyList<string>> NoWinners =
         new Dictionary<string, IReadOnlyList<string>>();
@@ -17,17 +17,20 @@ public sealed class FriendGroupNightsReader
     private readonly IEventRepository _events;
     private readonly IParticipantRepository _participants;
     private readonly MyEventSummaryEnricher _summaries;
+    private readonly FriendGroupShowcaseReader _showcases;
     private readonly TimeProvider _clock;
 
     public FriendGroupNightsReader(
         IEventRepository events,
         IParticipantRepository participants,
         MyEventSummaryEnricher summaries,
+        FriendGroupShowcaseReader showcases,
         TimeProvider clock)
     {
         _events = events;
         _participants = participants;
         _summaries = summaries;
+        _showcases = showcases;
         _clock = clock;
     }
 
@@ -44,11 +47,8 @@ public sealed class FriendGroupNightsReader
             .OrderBy(IsOnHold)
             .ThenBy(MyEventSummaryEnricher.StartInstant)
             .ToList();
-        var finishedWithFilm = nights
-            .Where(night => night.IsFinished(now) && night.HasWinner)
-            .OrderByDescending(night => MyEventSummaryEnricher.StartInstant(viewer.Summarize(night, now)))
-            .Take(PastNightsShown)
-            .ToList();
+        var held = FriendGroupShowcaseReader.HeldNights(nights, now);
+        var finishedWithFilm = held.Take(PastNightsShown).ToList();
         var past = viewer.Summarize(finishedWithFilm, now).ToList();
 
         var enrichedUpcoming = await _summaries.EnrichAsync(viewerId, upcoming, NoWinners, false, NoRatingOpen, ct);
@@ -60,22 +60,29 @@ public sealed class FriendGroupNightsReader
             finishedWithFilm.Where(night => night.IsRatingOpen(now)).Select(night => night.Id).ToHashSet(),
             ct);
 
-        return new FriendGroupNightsView(enrichedUpcoming, enrichedPast, await ParticipantIdsAsync(upcoming, ct));
+        var covers = await _showcases.CoversAsync(held.Take(1).ToList(), ct);
+        return new FriendGroupNightsView(
+            enrichedUpcoming,
+            enrichedPast,
+            await ParticipantIdsAsync(upcoming, ct),
+            await _showcases.StatsAsync(held, ct),
+            held.Count == 0 ? null : covers.GetValueOrDefault(held[0].Id));
     }
 
-    public async Task<IReadOnlyList<MyEventSummaryDto>> NextNightsAsync(
+    public async Task<FriendGroupListNights> ReadListAsync(
         string viewerId,
         IReadOnlyList<FriendGroup> groups,
         CancellationToken ct)
     {
         if (groups.Count == 0)
-            return [];
+            return new FriendGroupListNights([], []);
 
         var nights = await _events.ListByGroupIdsAsync(groups.Select(group => group.Id).ToList(), ct);
         var now = _clock.GetUtcNow();
+        var showcases = await ShowcasesAsync(groups, nights, now, ct);
         var upcoming = FriendGroup.NightsKeptBy(nights, groups).Where(night => !night.IsFinished(now)).ToList();
         if (upcoming.Count == 0)
-            return [];
+            return new FriendGroupListNights([], showcases);
 
         var viewer = await ViewerOfAsync(viewerId, groups, ct);
         var next = viewer.Summarize(upcoming, now)
@@ -84,7 +91,32 @@ public sealed class FriendGroupNightsReader
             .Select(perGroup => perGroup.MinBy(MyEventSummaryEnricher.StartInstant)!)
             .OrderBy(MyEventSummaryEnricher.StartInstant)
             .ToList();
-        return await _summaries.EnrichAsync(viewerId, next, NoWinners, false, NoRatingOpen, ct);
+        return new FriendGroupListNights(
+            await _summaries.EnrichAsync(viewerId, next, NoWinners, false, NoRatingOpen, ct),
+            showcases);
+    }
+
+    private async Task<IReadOnlyList<FriendGroupShowcaseResponse>> ShowcasesAsync(
+        IReadOnlyList<FriendGroup> groups,
+        IReadOnlyList<Event> nights,
+        DateTimeOffset now,
+        CancellationToken ct)
+    {
+        var heldByGroup = FriendGroupShowcaseReader.HeldNights(nights, now).ToLookup(night => night.GroupId ?? string.Empty);
+        var lastNights = groups.Select(group => heldByGroup[group.Id].FirstOrDefault()).OfType<Event>().ToList();
+        var covers = await _showcases.CoversAsync(lastNights, ct);
+        return groups
+            .Select(group =>
+            {
+                var held = heldByGroup[group.Id].ToList();
+                return new FriendGroupShowcaseResponse
+                {
+                    GroupId = group.Id,
+                    NightCount = held.Count,
+                    Cover = held.Count == 0 ? null : covers.GetValueOrDefault(held[0].Id)
+                };
+            })
+            .ToList();
     }
 
     private static bool IsOnHold(MyEventSummaryDto summary) => summary.Lifecycle == MyEventListLifecycle.Pending;
