@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.29.0] - 2026-11-23
+
 ### Added
 
 - **La recherche trouve aussi vos groupes, vos listes, les listes des membres et les sagas** : la loupe de la barre de navigation et le champ d’Explorer les rangent à côté des films, des membres et des soirées, avec le nombre de films ou de membres de chacun.
@@ -979,7 +981,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.28.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.29.0...HEAD
+[1.29.0]: https://github.com/Affy657/Movie-Picker/compare/v1.28.0...v1.29.0
 [1.28.0]: https://github.com/Affy657/Movie-Picker/compare/v1.27.2...v1.28.0
 [1.27.2]: https://github.com/Affy657/Movie-Picker/compare/v1.27.1...v1.27.2
 [1.27.1]: https://github.com/Affy657/Movie-Picker/compare/v1.27.0...v1.27.1
