@@ -45,7 +45,7 @@ public sealed class GroupShowcaseTests : FriendGroupTestBase
         return movie;
     }
 
-    private Task RateAsync(Movie movie, string participantId, int value) =>
+    private Task<MovieRating> RateAsync(Movie movie, string participantId, int value) =>
         Kit.Ratings.UpsertAsync(new MovieRating
         {
             EventId = movie.EventId,

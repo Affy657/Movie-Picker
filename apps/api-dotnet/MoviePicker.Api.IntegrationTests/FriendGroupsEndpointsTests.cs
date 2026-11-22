@@ -135,10 +135,15 @@ public sealed class FriendGroupsEndpointsTests : IClassFixture<MoviePickerApplic
         var person = summary.GetProperty("memberPreview").EnumerateArray().Single();
         Assert.Equal(["userId", "displayName", "avatarId"], FieldsOf(person));
         Assert.Equal(owner.Id, person.GetProperty("userId").GetString());
-        Assert.Equal(["groups", "invitations", "nextNights"], FieldsOf(mine));
+        Assert.Equal(["groups", "invitations", "nextNights", "showcases"], FieldsOf(mine));
         Assert.Equal(groupId, mine.GetProperty("groups").EnumerateArray().Single().GetProperty("id").GetString());
         Assert.Empty(mine.GetProperty("invitations").EnumerateArray());
-        Assert.Equal([.. SummaryFields, "members", "upcomingNights", "nextNightParticipantIds", "pastNights"], FieldsOf(detail));
+        var showcase = mine.GetProperty("showcases").EnumerateArray().Single();
+        Assert.Equal(["groupId", "nightCount", "cover"], FieldsOf(showcase));
+        Assert.Equal((groupId, 0, JsonValueKind.Null), (showcase.GetProperty("groupId").GetString(), showcase.GetProperty("nightCount").GetInt32(), showcase.GetProperty("cover").ValueKind));
+        Assert.Equal([.. SummaryFields, "members", "upcomingNights", "nextNightParticipantIds", "pastNights", "stats", "cover"], FieldsOf(detail));
+        Assert.Equal(["nightCount", "filmCount", "firstNightDate", "averageRating", "usualWeekday"], FieldsOf(detail.GetProperty("stats")));
+        Assert.Equal(JsonValueKind.Null, detail.GetProperty("cover").ValueKind);
         var member = detail.GetProperty("members").EnumerateArray().Single();
         Assert.Equal(["userId", "handle", "displayName", "avatarId", "role", "joinedAt"], FieldsOf(member));
         Assert.Equal((owner.Id, "owner"), (member.GetProperty("userId").GetString(), member.GetProperty("role").GetString()));
