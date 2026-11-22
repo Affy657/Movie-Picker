@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.28.0] - 2026-11-23
+
 ### Added
 
 - **Une recherche dans la barre de navigation** : une loupe, sur ordinateur comme sur téléphone, cherche à la fois les films et séries, les membres et vos soirées, et range les résultats par type pendant la frappe. Le champ d’Explorer fait la même recherche, et « Voir tous les films et séries » mène toujours à la recherche complète.
@@ -973,7 +975,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.27.2...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.28.0...HEAD
+[1.28.0]: https://github.com/Affy657/Movie-Picker/compare/v1.27.2...v1.28.0
 [1.27.2]: https://github.com/Affy657/Movie-Picker/compare/v1.27.1...v1.27.2
 [1.27.1]: https://github.com/Affy657/Movie-Picker/compare/v1.27.0...v1.27.1
 [1.27.0]: https://github.com/Affy657/Movie-Picker/compare/v1.26.1...v1.27.0
