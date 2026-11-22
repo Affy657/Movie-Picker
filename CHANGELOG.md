@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.27.1] - 2026-11-22
+
 ### Fixed
 
 - **Une soirée en suspens ne passe plus pour la prochaine soirée d’un groupe** : la page du groupe la range à part sous « En suspens », la présence des membres suit la vraie prochaine soirée, et Mes groupes n’annonce plus que des soirées à venir.
@@ -961,7 +963,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.27.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.27.1...HEAD
+[1.27.1]: https://github.com/Affy657/Movie-Picker/compare/v1.27.0...v1.27.1
 [1.27.0]: https://github.com/Affy657/Movie-Picker/compare/v1.26.1...v1.27.0
 [1.26.1]: https://github.com/Affy657/Movie-Picker/compare/v1.26.0...v1.26.1
 [1.26.0]: https://github.com/Affy657/Movie-Picker/compare/v1.25.0...v1.26.0
