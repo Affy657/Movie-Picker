@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.27.2] - 2026-11-22
+
 ### Changed
 
 - **La page d’un groupe et Mes groupes refaites** : la page d’un groupe s’ouvre sur une bannière tirée de son dernier film gagnant, ses membres et ses chiffres (soirées, films gagnants, note moyenne, soir le plus fréquent). À venir dit qui vient dans la carte de la prochaine soirée, puis les films, le classement et les membres passent en onglets. Mes groupes présente chaque groupe en grande vignette, son dernier film en fond.
@@ -967,7 +969,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.27.1...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.27.2...HEAD
+[1.27.2]: https://github.com/Affy657/Movie-Picker/compare/v1.27.1...v1.27.2
 [1.27.1]: https://github.com/Affy657/Movie-Picker/compare/v1.27.0...v1.27.1
 [1.27.0]: https://github.com/Affy657/Movie-Picker/compare/v1.26.1...v1.27.0
 [1.26.1]: https://github.com/Affy657/Movie-Picker/compare/v1.26.0...v1.26.1
