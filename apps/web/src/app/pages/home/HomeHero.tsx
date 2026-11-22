@@ -13,7 +13,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import UpcomingEventCard from '@/features/events/pages/my-events/UpcomingEventCard';
 import { useOpenCreateEvent } from '@/features/events/components/create-event/createEventDialogContext';
 import GlobalSearchResults from '@/app/components/globalSearch/GlobalSearchResults';
-import { moveThroughResults } from '@/app/components/globalSearch/resultsKeyboard';
+import { useResultsKeyboard } from '@/app/components/globalSearch/resultsKeyboard';
 import HomePosterWall from './HomePosterWall';
 import WheelGlyph from './WheelGlyph';
 import { useNextEvent } from './useNextEvent';
@@ -54,6 +54,7 @@ function HomeSearch() {
   const [showResults, setShowResults] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   useReportSearchVisibility(formRef);
+  useResultsKeyboard(formRef, showResults);
   useClickOutside(formRef, () => setShowResults(false), showResults, { closeOnFocusLeave: true });
 
   const typeSearch = (value: string) => {
@@ -70,13 +71,7 @@ function HomeSearch() {
     <div className={styles.opener}>
       <h1 className={styles.title}>{t('home.title')}</h1>
       <p className={styles.intro}>{t('home.intro')}</p>
-      <form
-        ref={formRef}
-        className={styles.searchForm}
-        role="search"
-        onSubmit={submitSearch}
-        onKeyDown={moveThroughResults}
-      >
+      <form ref={formRef} className={styles.searchForm} role="search" onSubmit={submitSearch}>
         <label className="visually-hidden" htmlFor="home-search">
           {t('globalSearch.label')}
         </label>

@@ -12,7 +12,7 @@ import { useRunSearch } from '@/app/pages/home/homeSearch';
 import SearchExamples from '@/app/pages/home/SearchExamples';
 import GlobalSearchResults from './globalSearch/GlobalSearchResults';
 import { GLOBAL_SEARCH_MIN_LENGTH } from './globalSearch/globalSearchApi';
-import { moveThroughResults } from './globalSearch/resultsKeyboard';
+import { useResultsKeyboard } from './globalSearch/resultsKeyboard';
 import styles from './HeaderSearch.module.css';
 
 export default function HeaderSearch() {
@@ -27,6 +27,7 @@ export default function HeaderSearch() {
   const panelId = useId();
   const available = pathname !== ROUTES.home || homeSearchHidden;
 
+  useResultsKeyboard(panelRef, open);
   useClickOutside([panelRef, loupeRef], () => setOpen(false), open, {
     returnFocusTo: loupeRef,
     closeOnFocusLeave: true,
@@ -71,14 +72,7 @@ export default function HeaderSearch() {
         <Search size={ICON_SIZE.lg} aria-hidden />
       </IconButton>
       {open ? (
-        <form
-          ref={panelRef}
-          id={panelId}
-          role="search"
-          className={styles.panel}
-          onSubmit={submit}
-          onKeyDown={moveThroughResults}
-        >
+        <form ref={panelRef} id={panelId} role="search" className={styles.panel} onSubmit={submit}>
           <div className={styles.fieldRow}>
             <label className="visually-hidden" htmlFor="header-search">
               {t('globalSearch.label')}

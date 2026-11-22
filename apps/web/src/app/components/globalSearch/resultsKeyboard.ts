@@ -1,10 +1,9 @@
-import type { KeyboardEvent } from 'react';
+import { useEffect, type RefObject } from 'react';
 
 export const SEARCH_RESULT_ATTRIBUTE = 'data-search-result';
 
-export function moveThroughResults(event: KeyboardEvent<HTMLElement>): void {
+function moveThroughResults(box: HTMLElement, event: KeyboardEvent): void {
   if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
-  const box = event.currentTarget;
   const results = Array.from(box.querySelectorAll<HTMLElement>(`[${SEARCH_RESULT_ATTRIBUTE}]`));
   if (results.length === 0) return;
   event.preventDefault();
@@ -18,4 +17,14 @@ export function moveThroughResults(event: KeyboardEvent<HTMLElement>): void {
     return;
   }
   box.querySelector<HTMLInputElement>('input[type="search"]')?.focus();
+}
+
+export function useResultsKeyboard(boxRef: RefObject<HTMLElement | null>, enabled: boolean): void {
+  useEffect(() => {
+    const box = boxRef.current;
+    if (!enabled || !box) return;
+    const onKeyDown = (event: KeyboardEvent) => moveThroughResults(box, event);
+    box.addEventListener('keydown', onKeyDown);
+    return () => box.removeEventListener('keydown', onKeyDown);
+  }, [boxRef, enabled]);
 }

@@ -328,7 +328,7 @@ export default function GlobalSearchResults({
 
   return (
     <div className={clsx(styles.results, className)} aria-busy={results.isFetching}>
-      <p role="status" className="visually-hidden">
+      <p role="status" aria-live="polite" aria-atomic="true" className="visually-hidden">
         {found
           ? pluralizeCount(countOf(found), 'globalSearch.resultsOne', 'globalSearch.resultsMany', t)
           : ''}
