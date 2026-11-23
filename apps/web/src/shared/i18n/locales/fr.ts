@@ -439,6 +439,8 @@ export const fr = {
     login: {
       title: 'Connexion',
       description: 'Acc\u00e9dez \u00e0 vos soir\u00e9es et \u00e0 votre profil.',
+      seoDescription:
+        'Connectez-vous à Movie Picker pour retrouver vos soirées ciné, vos listes et votre profil.',
       emailLabel: 'E-mail',
       passwordLabel: 'Mot de passe',
       submit: 'Se connecter',
@@ -454,6 +456,8 @@ export const fr = {
     register: {
       title: 'Inscription',
       description: 'Cr\u00e9ez un compte pour retrouver vos soir\u00e9es.',
+      seoDescription:
+        'Créez votre compte Movie Picker, gratuit, pour organiser vos soirées ciné : chacun propose, tout le monde vote, la roue tranche.',
       emailLabel: 'E-mail',
       passwordLabel: 'Mot de passe',
       passwordRulesHint: '8 caract\u00e8res minimum, au moins une lettre et un chiffre.',
@@ -493,6 +497,8 @@ export const fr = {
       title: 'Mot de passe oublié',
       description:
         'Indiquez votre e-mail pour recevoir un lien de réinitialisation. Le lien est valable 30 minutes.',
+      seoDescription:
+        'Recevez par e-mail un lien pour réinitialiser le mot de passe de votre compte Movie Picker.',
       emailLabel: 'E-mail',
       submit: 'Recevoir le lien',
       submitting: 'Envoi\u2026',
@@ -1042,7 +1048,9 @@ export const fr = {
     },
     share: {
       dialogTitle: 'Partager la soirée',
-      shareText: "Je t'invite à {{title}} le {{date}} à {{time}} sur Movie Picker !",
+      shareText: 'Je vous invite à « {{title}} » le {{date}} à {{time}} sur Movie Picker !',
+      shareTextDefaultTitle:
+        'Je vous invite à une soirée ciné le {{date}} à {{time}} sur Movie Picker !',
       qrHint: "Ouvrez l'appareil photo pour rejoindre la soirée sur mobile.",
     },
     calendar: {
@@ -2147,6 +2155,8 @@ export const fr = {
       pageTitleElided: 'Les listes d’{{name}}',
       backToHandle: 'Les listes de @{{handle}}',
       seoDescription: 'Les listes de films publiques de {{name}} (@{{handle}}) sur Movie Picker.',
+      seoDescriptionElided:
+        'Les listes de films publiques d’{{name}} (@{{handle}}) sur Movie Picker.',
       countOne: '{{count}} liste créée',
       count: '{{count}} listes créées',
       gridAria: 'Listes publiques',
@@ -2171,6 +2181,9 @@ export const fr = {
     },
     join: {
       title: 'Rejoindre une liste',
+      previewTitle: 'Invitation à une liste de films',
+      previewDescription:
+        'Vous avez reçu une invitation à rejoindre une liste de films partagée sur Movie Picker. Ouvrez le lien pour la découvrir.',
       overline: 'Invitation',
       invitedBy: '{{name}} vous invite à rejoindre cette liste.',
       submit: 'Rejoindre la liste',
@@ -2452,6 +2465,9 @@ export const fr = {
     join: {
       overline: 'Invitation',
       title: 'Rejoindre un groupe',
+      previewTitle: 'Invitation à un groupe d’amis',
+      previewDescription:
+        'Vous avez reçu une invitation à rejoindre un groupe d’amis sur Movie Picker, pour organiser vos soirées ciné ensemble. Ouvrez le lien pour le rejoindre.',
       invitedBy: '{{name}} vous invite à rejoindre ce groupe.',
       explanation:
         'Les soirées du groupe apparaîtront dans Mes soirées, sans lien à attendre. Vous pourrez quitter le groupe à tout moment.',
@@ -3235,6 +3251,12 @@ export const fr = {
       'Profil de {{name}} (@{{handle}}) sur Movie Picker : statistiques de soirées ciné, films proposés et abonnements.',
     notFoundTitle: 'Profil introuvable',
     notFound: 'Ce profil n’existe pas ou n’est pas public.',
+    seoDescriptionElided:
+      'Profil d’{{name}} (@{{handle}}) sur Movie Picker : statistiques de soirées ciné, films proposés et abonnements.',
+    empty: {
+      title: 'Ce profil est encore vide',
+      message: '{{name}} n’a encore rien partagé ici : ni soirée, ni film vu, ni liste publique.',
+    },
     loadError: 'Impossible de charger ce profil.',
     loading: 'Chargement du profil…',
     editProfile: 'Modifier mon profil',
@@ -3373,8 +3395,11 @@ export const fr = {
       hidden: 'Masquée',
       makeVisible: 'Rendre visible',
       pageTitle: 'La watchlist de {{name}}',
+      pageTitleElided: 'La watchlist d’{{name}}',
       seoDescription:
         'Watchlist de {{name}} (@{{handle}}) sur Movie Picker\u00a0: ses films à voir, à proposer pour une prochaine soirée.',
+      seoDescriptionElided:
+        'Watchlist d’{{name}} (@{{handle}}) sur Movie Picker\u00a0: ses films à voir, à proposer pour une prochaine soirée.',
       loadError: 'Impossible de charger la watchlist de cet utilisateur.',
       previewLoadError: 'La watchlist n’a pas pu être chargée.',
       loading: 'Chargement de la watchlist…',
@@ -3446,6 +3471,7 @@ export const fr = {
     },
     winningProposals: {
       pageTitle: 'Les propositions gagnantes de {{name}}',
+      pageTitleElided: 'Les propositions gagnantes d’{{name}}',
       seoDescription:
         'Films proposés par {{name}} (@{{handle}}) qui ont gagné une soirée Movie Picker.',
       pageSubtitleOne: '{{count}} film gagnant',
@@ -4714,6 +4740,12 @@ export const fr = {
       requestPathNote:
         'Une flèche ne pointe jamais vers l’extérieur : le contrôle d’architecture fait échouer la construction si elle le fait.',
     },
+  },
+  languageSuggestion: {
+    title: 'Afficher Movie Picker en anglais ?',
+    description:
+      'Movie Picker est en français par défaut et existe aussi en anglais. Vous pourrez changer de langue en bas de chaque page.',
+    switch: 'Passer en anglais',
   },
   inAppBrowser: {
     banner: {

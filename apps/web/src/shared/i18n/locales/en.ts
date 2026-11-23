@@ -440,6 +440,8 @@ export const en: Locale = {
     login: {
       title: 'Log in',
       description: 'Access your events and profile.',
+      seoDescription:
+        'Log in to Movie Picker to find your movie nights, your lists and your profile.',
       emailLabel: 'Email',
       passwordLabel: 'Password',
       submit: 'Log in',
@@ -455,6 +457,8 @@ export const en: Locale = {
     register: {
       title: 'Sign up',
       description: 'Create an account to keep track of your events.',
+      seoDescription:
+        'Create your free Movie Picker account to organise movie nights: everyone proposes, everyone votes, the wheel decides.',
       emailLabel: 'Email',
       passwordLabel: 'Password',
       passwordRulesHint: 'At least 8 characters, including a letter and a number.',
@@ -492,6 +496,8 @@ export const en: Locale = {
     forgotPassword: {
       title: 'Forgot password',
       description: 'Enter your email to receive a reset link. The link is valid for 30 minutes.',
+      seoDescription:
+        'Get an email with a link to reset the password of your Movie Picker account.',
       emailLabel: 'Email',
       submit: 'Send the link',
       submitting: 'Sending\u2026',
@@ -1032,6 +1038,8 @@ export const en: Locale = {
     share: {
       dialogTitle: 'Share the event',
       shareText: "You're invited to {{title}} on {{date}} at {{time}} on Movie Picker!",
+      shareTextDefaultTitle:
+        "You're invited to a movie night on {{date}} at {{time}} on Movie Picker!",
       qrHint: 'Open your camera to join the event on mobile.',
     },
     calendar: {
@@ -2126,6 +2134,7 @@ export const en: Locale = {
       pageTitleElided: '{{name}}’s lists',
       backToHandle: '@{{handle}}’s lists',
       seoDescription: 'The public film lists of {{name}} (@{{handle}}) on Movie Picker.',
+      seoDescriptionElided: 'The public film lists of {{name}} (@{{handle}}) on Movie Picker.',
       countOne: '{{count}} list created',
       count: '{{count}} lists created',
       gridAria: 'Public lists',
@@ -2148,6 +2157,9 @@ export const en: Locale = {
       notFoundBack: 'See @{{handle}}’s profile',
     },
     join: {
+      previewTitle: 'Invitation to a film list',
+      previewDescription:
+        'You have been invited to join a shared film list on Movie Picker. Open the link to see it.',
       title: 'Join a list',
       overline: 'Invitation',
       invitedBy: '{{name}} invites you to join this list.',
@@ -2426,6 +2438,9 @@ export const en: Locale = {
       done: 'Done',
     },
     join: {
+      previewTitle: 'Invitation to a group of friends',
+      previewDescription:
+        'You have been invited to join a group of friends on Movie Picker, to plan your movie nights together. Open the link to join it.',
       overline: 'Invitation',
       title: 'Join a group',
       invitedBy: '{{name}} invites you to join this group.',
@@ -3189,6 +3204,13 @@ export const en: Locale = {
     seoDescription:
       '{{name}} (@{{handle}}) on Movie Picker: movie night stats, proposed films and follows.',
     notFoundTitle: 'Profile not found',
+    seoDescriptionElided:
+      '{{name}} (@{{handle}}) on Movie Picker: movie night stats, proposed films and follows.',
+    empty: {
+      title: 'This profile is still empty',
+      message:
+        '{{name}} has not shared anything here yet: no movie night, no watched film, no public list.',
+    },
     notFound: 'This profile does not exist or is not public.',
     loadError: 'Unable to load this profile.',
     loading: 'Loading profile…',
@@ -3328,7 +3350,10 @@ export const en: Locale = {
       hidden: 'Hidden',
       makeVisible: 'Make it visible',
       pageTitle: "{{name}}'s watchlist",
+      pageTitleElided: "{{name}}'s watchlist",
       seoDescription:
+        "{{name}}'s (@{{handle}}) watchlist on Movie Picker: movies to watch, ready to propose for a next night.",
+      seoDescriptionElided:
         "{{name}}'s (@{{handle}}) watchlist on Movie Picker: movies to watch, ready to propose for a next night.",
       loadError: "Unable to load this user's watchlist.",
       previewLoadError: 'The watchlist could not be loaded.',
@@ -3400,6 +3425,7 @@ export const en: Locale = {
     },
     winningProposals: {
       pageTitle: "{{name}}'s winning proposals",
+      pageTitleElided: "{{name}}'s winning proposals",
       seoDescription: 'Movies proposed by {{name}} (@{{handle}}) that won a Movie Picker night.',
       pageSubtitleOne: '{{count}} winning movie',
       pageSubtitle: '{{count}} winning movies',
@@ -4654,6 +4680,12 @@ export const en: Locale = {
       requestPathNote:
         'An arrow never points outward: the architecture check fails the build when one does.',
     },
+  },
+  languageSuggestion: {
+    title: 'View Movie Picker in English?',
+    description:
+      'Movie Picker is in French by default and also comes in English. You can change the language at the bottom of every page.',
+    switch: 'Switch to English',
   },
   inAppBrowser: {
     banner: {

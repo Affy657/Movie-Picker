@@ -252,7 +252,7 @@ public sealed class InMemoryUserRepository : IUserRepository
             .Where(u => u.IsProfilePublic && !string.IsNullOrWhiteSpace(u.Handle))
             .OrderByDescending(u => u.UpdatedAt)
             .Take(limit > 0 ? limit : int.MaxValue)
-            .Select(u => new PublicProfileRef(u.Handle, u.UpdatedAt))
+            .Select(PublicProfileRef.Of)
             .ToList();
         return Task.FromResult(result);
     }

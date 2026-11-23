@@ -53,6 +53,9 @@ public sealed class SitemapEndpointTests : IClassFixture<MoviePickerApplicationF
     {
         var publicClient = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Sitemap Public");
         var publicHandle = await GetHandleAsync(publicClient);
+        (await publicClient.PatchAsJsonAsync("/api/v1/auth/me", new { bio = "Fan de Nolan" })).EnsureSuccessStatusCode();
+        var emptyClient = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Sitemap Empty");
+        var emptyHandle = await GetHandleAsync(emptyClient);
 
         var privateClient = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Sitemap Private");
         var privateHandle = await GetHandleAsync(privateClient);
@@ -67,5 +70,6 @@ public sealed class SitemapEndpointTests : IClassFixture<MoviePickerApplicationF
 
         Assert.Contains($"https://web.integration.test/u/{publicHandle}", xml);
         Assert.DoesNotContain($"/u/{privateHandle}", xml);
+        Assert.DoesNotContain($"/u/{emptyHandle}", xml);
     }
 }

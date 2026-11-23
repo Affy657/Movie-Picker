@@ -3,16 +3,14 @@
 User-agent: *
 Allow: /
 # Routes privées ou non indexables : pages soirée (lien partagé, non publique),
-# espaces utilisateur et formulaires derrière auth.
+# espaces utilisateur et formulaires derrière auth. La connexion, l'inscription et le mot de
+# passe oublié restent explorables : leur noindex n'est lu que si la page l'est.
 Disallow: /e/
 Disallow: /my-events
 Disallow: /settings
 Disallow: /new
 Disallow: /watchlist
 Disallow: /notifications
-Disallow: /login
-Disallow: /register
-Disallow: /forgot-password
 Disallow: /reset
 Disallow: /auth/
 # Résultats de recherche interne : jamais indexés, et sans fin par la requête.

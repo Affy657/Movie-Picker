@@ -2,7 +2,6 @@ import { Link } from 'react-router';
 import { HeartHandshake } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
-import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useTranslation } from '@/shared/i18n';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
@@ -20,7 +19,7 @@ export default function DonatePage() {
   const { track } = useAnalytics();
 
   usePageSeo({
-    title: pageTitle(t('donate.title')),
+    title: t('donate.title'),
     description: t('donate.seoDescription'),
     canonical: absoluteUrl(ROUTES.donate),
   });

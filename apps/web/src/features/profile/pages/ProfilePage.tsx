@@ -2,6 +2,7 @@ import { lazy, Suspense, useState } from 'react';
 import { useParams } from 'react-router';
 import clsx from 'clsx';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Film } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
 import { getErrorMessage, ApiError } from '@/shared/api/apiError';
@@ -34,7 +35,11 @@ import { invalidateFollowGraph } from '@/features/profile/lib/invalidateFollowGr
 import { fetchUserStats } from '@/features/events/api/userStatsApi';
 import styles from './ProfilePage.module.css';
 import InlineError from '@/shared/components/InlineError';
+import EmptyState from '@/shared/components/EmptyState';
+import { ICON_SIZE } from '@/shared/components/iconSize';
+import type { UserStats } from '@/features/events/api/userStatsApi';
 import { accentZoneClass, isChosenAccent } from '@/shared/utils/accentColor';
+import { withElision } from '@/features/library/utils/listMembers';
 
 const FollowListModal = lazy(() => import('@/features/profile/components/FollowListModal'));
 const BannerPicker = lazy(() => import('@/features/profile/components/BannerPicker'));
@@ -51,7 +56,13 @@ function formatMemberSince(iso: string, locale: string): string {
 function buildProfileDescription(profile: PublicProfile, t: Translate): string {
   const bio = profile.bio?.trim();
   if (bio) return bio;
-  return t('profile.seoDescription', { name: profile.displayName, handle: profile.handle });
+  return withElision(
+    profile.displayName,
+    'profile.seoDescription',
+    'profile.seoDescriptionElided',
+    t,
+    { handle: profile.handle }
+  );
 }
 
 function buildProfileJsonLd(profile: PublicProfile): Record<string, unknown> {
@@ -70,6 +81,24 @@ function buildProfileJsonLd(profile: PublicProfile): Record<string, unknown> {
 }
 
 type FollowTab = 'following' | 'followers';
+
+interface VisitorView {
+  isOwnProfile: boolean;
+  stats: UserStats | undefined;
+  watchedHidden: boolean;
+  watchedCount: number | undefined;
+}
+
+function hasNothingToShow(profile: PublicProfile, view: VisitorView): boolean {
+  const { stats } = view;
+  if (view.isOwnProfile || !stats) return false;
+  if (!view.watchedHidden && view.watchedCount !== 0) return false;
+  return (
+    stats.eventsCreated + stats.eventsJoined + stats.moviesProposed + stats.publicListCount === 0 &&
+    (profile.favorites ?? []).length === 0 &&
+    !profile.watchlistCount
+  );
+}
 
 function useProfileBanner(profile: PublicProfile | undefined, isOwnProfile: boolean) {
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -114,7 +143,7 @@ export default function ProfilePage() {
   const bannerView = useProfileBanner(profile, isOwnProfile);
   const watchedHiddenFromVisitor = !!profile && !isOwnProfile && profile.isWatchedPublic === false;
   const watchedVisible = !!profile && !watchedHiddenFromVisitor;
-  useProfileWatchedPreview(handle, !watchedHiddenFromVisitor);
+  const watchedPreview = useProfileWatchedPreview(handle, !watchedHiddenFromVisitor);
   const isNotFound =
     !handle ||
     (profileQuery.isError && ApiError.is(profileQuery.error) && profileQuery.error.code === 404);
@@ -180,6 +209,12 @@ export default function ProfilePage() {
       : null;
 
   const profileAccent = (isOwnProfile ? user?.accentColor : profile.accentColor) ?? 'default';
+  const showEmptyState = hasNothingToShow(profile, {
+    isOwnProfile,
+    stats,
+    watchedHidden: watchedHiddenFromVisitor,
+    watchedCount: watchedPreview.data?.items.length,
+  });
 
   return (
     <PageLayout
@@ -261,6 +296,14 @@ export default function ProfilePage() {
               winningProposalsHidden={watchedHiddenFromVisitor}
               ratingScale={user?.ratingScale}
               isOwnProfile={isOwnProfile}
+            />
+          )}
+
+          {showEmptyState && (
+            <EmptyState
+              icon={<Film size={ICON_SIZE.xl} />}
+              title={t('profile.empty.title')}
+              message={t('profile.empty.message', { name: profile.displayName })}
             />
           )}
         </div>

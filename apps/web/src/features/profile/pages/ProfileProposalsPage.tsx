@@ -14,8 +14,14 @@ import ProfileCollectionPage, {
   type ProfileCollectionTexts,
 } from '@/features/profile/components/ProfileCollectionPage';
 import { ProfileCardBadge } from '@/features/movies/components/OwnerRatingBadge';
+import { withElision } from '@/features/library/utils/listMembers';
 
 type ProposalsNamespace = 'proposals' | 'winningProposals';
+
+const ELIDED_PAGE_TITLE = {
+  proposals: 'profile.proposals.pageTitle',
+  winningProposals: 'profile.winningProposals.pageTitleElided',
+} as const;
 
 function compareLastProposedAt(a: UserProposedMovieItem, b: UserProposedMovieItem): number {
   return a.lastProposedAt.localeCompare(b.lastProposedAt);
@@ -30,7 +36,8 @@ function proposalsTexts(
   ns: ProposalsNamespace
 ): ProfileCollectionTexts<UserProposedMovieItem> {
   return {
-    pageTitle: (name) => t(`profile.${ns}.pageTitle` as const, { name }),
+    pageTitle: (name) =>
+      withElision(name, `profile.${ns}.pageTitle` as const, ELIDED_PAGE_TITLE[ns], t),
     seoDescription: (profile) =>
       t(`profile.${ns}.seoDescription` as const, {
         name: profile.displayName,

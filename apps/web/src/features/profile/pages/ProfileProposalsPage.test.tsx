@@ -122,10 +122,11 @@ describe('ProfileProposalsPage', () => {
     expect(
       await screen.findByRole('heading', {
         level: 1,
-        name: 'Les propositions gagnantes de Alice',
+        name: 'Les propositions gagnantes d’Alice',
       })
     ).toBeInTheDocument();
     expect(screen.getByText('1 film gagnant')).toBeInTheDocument();
+    expect(document.title).toBe('Les propositions gagnantes d’Alice | Movie Picker');
     const list = await screen.findByRole('list', { name: 'Propositions gagnantes' });
     expect(within(list).getByText('Requiem pour un massacre')).toBeInTheDocument();
     expect(within(list).queryByText('Midsommar')).not.toBeInTheDocument();
@@ -153,7 +154,7 @@ describe('ProfileProposalsPage', () => {
       )
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Les propositions gagnantes de Alice' })
+      screen.getByRole('heading', { level: 1, name: 'Les propositions gagnantes d’Alice' })
     ).toBeInTheDocument();
     expect(screen.queryByText(/introuvable/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('list', { name: 'Propositions gagnantes' })).not.toBeInTheDocument();

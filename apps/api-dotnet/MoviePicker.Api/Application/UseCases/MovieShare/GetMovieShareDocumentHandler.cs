@@ -8,9 +8,10 @@ namespace MoviePicker.Api.Application.UseCases.MovieShare;
 
 public sealed class GetMovieShareDocumentHandler : IGetMovieShareDocumentHandler
 {
-    public const int DescriptionMaxLength = 200;
+    public const int DescriptionMaxLength = SharePreviewContent.DescriptionMaxLength;
 
-    private const string Ellipsis = "…";
+    private const string MovieType = "video.movie";
+    private const string TvShowType = "video.tv_show";
 
     private readonly ITmdbMovieSearch _tmdb;
     private readonly IPosterImageStore _posters;
@@ -72,19 +73,28 @@ public sealed class GetMovieShareDocumentHandler : IGetMovieShareDocumentHandler
         var fallbackUrl = webBase + FrontRoutes.Home;
         var title = TitleWithYear(details);
         var description = Describe(details.Overview, mediaType);
+        var ogType = mediaType == MovieMediaType.Tv ? TvShowType : MovieType;
 
         if (!string.IsNullOrEmpty(details.BackdropUrl))
-            return new SharePreview(canonical, fallbackUrl, title, description, details.BackdropUrl, ServerCopy.SharePreviews.ImageOf(details.Title));
+            return new SharePreview(canonical, fallbackUrl, title, description, details.BackdropUrl, ServerCopy.SharePreviews.ImageOf(details.Title))
+            {
+                OgType = ogType
+            };
 
         var siteImage = SharePreview.SiteImage(webBase);
         var image = await SharePreviewContent.PosterOrAsync(_posters, details.PosterUrl, apiBase, siteImage, ct);
+        var isPoster = image != siteImage;
         return new SharePreview(
             canonical,
             fallbackUrl,
             title,
             description,
             image,
-            image == siteImage ? SharePreview.SiteName : ServerCopy.SharePreviews.PosterOf(details.Title));
+            isPoster ? ServerCopy.SharePreviews.PosterOf(details.Title) : SharePreview.SiteName)
+        {
+            OgType = ogType,
+            PortraitImage = isPoster
+        };
     }
 
     private static string TitleWithYear(TmdbMovieDetails details)
@@ -103,8 +113,6 @@ public sealed class GetMovieShareDocumentHandler : IGetMovieShareDocumentHandler
                 : ServerCopy.SharePreviews.MovieWithoutOverview;
         }
 
-        return text.Length <= DescriptionMaxLength
-            ? text
-            : TextTruncation.ToMaxLength(text, DescriptionMaxLength - Ellipsis.Length) + Ellipsis;
+        return SharePreviewContent.Excerpt(text);
     }
 }

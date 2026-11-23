@@ -2,7 +2,22 @@ using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.Ports;
 
-public sealed record PublicProfileRef(string Handle, DateTimeOffset UpdatedAt);
+public sealed record PublicProfileRef(string Handle, DateTimeOffset UpdatedAt)
+{
+    public string UserId { get; init; } = string.Empty;
+
+    public bool HasProfileText { get; init; }
+
+    public bool IsWatchlistPublic { get; init; }
+
+    public static PublicProfileRef Of(User user) =>
+        new(user.Handle, user.UpdatedAt)
+        {
+            UserId = user.Id,
+            HasProfileText = !string.IsNullOrWhiteSpace(user.Bio) || user.Favorites.Count > 0,
+            IsWatchlistPublic = user.IsWatchlistPublic
+        };
+}
 
 public sealed record UserCard(
     string Id,

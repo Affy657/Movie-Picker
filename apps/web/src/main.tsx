@@ -5,6 +5,7 @@ import { showBootFailure } from '@/shared/pwa/bootFailure';
 import { captureMovedOriginMarker } from '@/shared/pwa/movedOrigin';
 import { reloadIfStaleBuild } from '@/shared/pwa/staleBuildReload';
 import { captureException, scheduleSentryStart } from '@/shared/observability/sentry';
+import { reportContentSecurityPolicyViolations } from '@/shared/observability/cspViolations';
 import { loadLocale, preferredLocale } from '@/shared/i18n';
 import './index.css';
 
@@ -12,6 +13,8 @@ function loadColorMixFallback(): void {
   if (CSS.supports('color', 'color-mix(in srgb, currentColor 50%, transparent)')) return;
   import('virtual:color-mix-fallback.css').catch(captureException);
 }
+
+reportContentSecurityPolicyViolations(document, captureException);
 
 loadColorMixFallback();
 

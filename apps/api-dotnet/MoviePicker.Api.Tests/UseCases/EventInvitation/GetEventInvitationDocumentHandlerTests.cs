@@ -25,6 +25,7 @@ public sealed class GetEventInvitationDocumentHandlerTests
     private readonly Mock<IMovieRepository> _movies = new();
     private readonly Mock<IPosterImageStore> _posters = new();
     private readonly Mock<IWebShellSource> _shell = new();
+    private readonly Mock<IUserRepository> _users = new();
 
     public GetEventInvitationDocumentHandlerTests()
     {
@@ -37,11 +38,17 @@ public sealed class GetEventInvitationDocumentHandlerTests
         new(
             _events.Object,
             _movies.Object,
+            _users.Object,
             _posters.Object,
             _shell.Object,
             Options.Create(new MoviePickerOptions { PublicWebBaseUrl = "https://web.example/" }));
 
-    private Event GivenNight(string title, EventConfig? config, string time = "20:30", string? winnerMovieId = null)
+    private Event GivenNight(
+        string title,
+        EventConfig? config,
+        string time = "20:30",
+        string? winnerMovieId = null,
+        string? hostName = null)
     {
         var evt = new Event
         {
@@ -53,6 +60,7 @@ public sealed class GetEventInvitationDocumentHandlerTests
             Date = "2026-09-18",
             Time = time,
             Config = config,
+            CreatorUserId = hostName is null ? null : "host-1",
             Winners = winnerMovieId is null
                 ? []
                 : [new EventWinner { MovieId = winnerMovieId, Method = WinnerPickMethod.Wheel, PickedAt = DateTimeOffset.UtcNow }],
@@ -60,6 +68,11 @@ public sealed class GetEventInvitationDocumentHandlerTests
             UpdatedAt = DateTimeOffset.UtcNow
         };
         _events.Setup(r => r.GetByIdOrSlugAsync(Slug, It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        if (hostName is not null)
+        {
+            _users.Setup(r => r.GetByIdAsync("host-1", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new User { Id = "host-1", Email = "h@example.com", Handle = "lea", DisplayName = hostName });
+        }
         return evt;
     }
 
@@ -179,5 +192,71 @@ public sealed class GetEventInvitationDocumentHandlerTests
         Assert.Contains("content=\"&lt;script&gt;alert(1)&lt;/script&gt;\"", document.Html);
         Assert.DoesNotContain("<script>alert(1)</script>", document.Html);
         Assert.DoesNotContain("<img src=x>", document.Html);
+    }
+
+    [Fact]
+    public async Task HandleAsync_HostKnown_SaysWhoInvitesToTheNamedNight()
+    {
+        GivenNight("Nuit Nolan", new EventConfig { RichSharePreview = true }, time: "20:00", hostName: "Léa");
+
+        var document = await CreateSut().HandleAsync(Slug, "https://api.example", default);
+
+        Assert.Equal("Léa vous invite à « Nuit Nolan »", Meta(document.Html, "og:title"));
+        Assert.Equal(
+            "Soirée ciné le vendredi 18 septembre 2026 à 20h. Rejoignez la soirée et votez pour votre film.",
+            Meta(document.Html, "og:description"));
+        Assert.Contains("<title>Léa vous invite à « Nuit Nolan » | Movie Picker</title>", document.Html);
+    }
+
+    [Theory]
+    [InlineData("Soirée du vendredi 18 septembre")]
+    [InlineData("Soirée du vendredi 18 septembre 2026")]
+    [InlineData("Movie night on Friday 18 September")]
+    public async Task HandleAsync_DefaultTitleAndKnownHost_InvitesToANightAndGivesTheDateOnce(string defaultTitle)
+    {
+        GivenNight(defaultTitle, new EventConfig { RichSharePreview = true }, hostName: "Léa");
+
+        var document = await CreateSut().HandleAsync(Slug, "https://api.example", default);
+
+        Assert.Equal("Léa vous invite à une soirée ciné", Meta(document.Html, "og:title"));
+        Assert.Equal(
+            "Rendez-vous le vendredi 18 septembre 2026 à 20h30. Rejoignez la soirée et votez pour votre film.",
+            Meta(document.Html, "og:description"));
+    }
+
+    [Fact]
+    public async Task HandleAsync_DefaultTitleWithoutAHost_DoesNotRepeatTheDay()
+    {
+        GivenNight("Soirée du vendredi 18 septembre", new EventConfig { RichSharePreview = true, Theme = "Nolan" });
+
+        var document = await CreateSut().HandleAsync(Slug, "https://api.example", default);
+
+        Assert.Equal("Soirée du vendredi 18 septembre", Meta(document.Html, "og:title"));
+        Assert.Equal(
+            "Rendez-vous à 20h30. Thème : Nolan. Rejoignez la soirée et votez pour votre film.",
+            Meta(document.Html, "og:description"));
+    }
+
+    [Fact]
+    public async Task HandleAsync_DefaultTitleWithAWinner_GivesTheHourOnly()
+    {
+        var evt = GivenNight("Soirée du vendredi 18 septembre", new EventConfig { RichSharePreview = true }, winnerMovieId: "m1");
+        _movies.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new Movie { Id = "m1", EventId = evt.Id, Title = "Heat", Year = "1995" }]);
+
+        var document = await CreateSut().HandleAsync(Slug, "https://api.example", default);
+
+        Assert.Equal("Au programme : Heat (1995) à 20h30.", Meta(document.Html, "og:description"));
+    }
+
+    [Fact]
+    public async Task HandleAsync_RichPreviewTurnedOff_DoesNotNameTheHost()
+    {
+        GivenNight("Nuit Nolan", new EventConfig { RichSharePreview = false }, hostName: "Léa");
+
+        var document = await CreateSut().HandleAsync(Slug, "https://api.example", default);
+
+        Assert.Equal("Invitation à une soirée ciné", Meta(document.Html, "og:title"));
+        Assert.DoesNotContain("Léa", document.Html);
     }
 }

@@ -21,6 +21,14 @@ public sealed record SharePreview(
 {
     public const string SiteName = "Movie Picker";
 
+    public const string WebsiteType = "website";
+
+    public string OgType { get; init; } = WebsiteType;
+
+    public bool PortraitImage { get; init; }
+
+    public bool Indexable { get; init; }
+
     public static SharePreview Generic(string webBase) => new(
         webBase + FrontRoutes.Home,
         webBase + FrontRoutes.Home,
@@ -35,7 +43,16 @@ public sealed record SharePreview(
 
 public static class SharePreviewContent
 {
+    public const int DescriptionMaxLength = 200;
+
+    private const string Ellipsis = "…";
+
     public static readonly CultureInfo French = new("fr-FR");
+
+    public static string Excerpt(string text) =>
+        text.Length <= DescriptionMaxLength
+            ? text
+            : TextTruncation.ToMaxLength(text, DescriptionMaxLength - Ellipsis.Length) + Ellipsis;
 
     public static string Day(string date) =>
         DateOnly.TryParse(date, CultureInfo.InvariantCulture, DateTimeStyles.None, out var day)
@@ -133,17 +150,17 @@ public static partial class SharePreviewHead
         return new StringBuilder()
             .Append("<title>").Append(H(preview.DocumentTitle)).Append("</title>\n")
             .Append("<meta name=\"description\" content=\"").Append(description).Append(CloseTag)
-            .Append("<meta name=\"robots\" content=\"noindex, nofollow\" />\n")
+            .Append(preview.Indexable ? string.Empty : "<meta name=\"robots\" content=\"noindex, nofollow\" />\n")
             .Append("<link rel=\"canonical\" href=\"").Append(canonical).Append(CloseTag)
             .Append("<meta property=\"og:site_name\" content=\"").Append(SharePreview.SiteName).Append(CloseTag)
-            .Append("<meta property=\"og:type\" content=\"website\" />\n")
+            .Append("<meta property=\"og:type\" content=\"").Append(H(preview.OgType)).Append(CloseTag)
             .Append("<meta property=\"og:url\" content=\"").Append(canonical).Append(CloseTag)
             .Append("<meta property=\"og:title\" content=\"").Append(title).Append(CloseTag)
             .Append("<meta property=\"og:description\" content=\"").Append(description).Append(CloseTag)
             .Append("<meta property=\"og:image\" content=\"").Append(image).Append(CloseTag)
             .Append("<meta property=\"og:image:alt\" content=\"").Append(imageAlt).Append(CloseTag)
             .Append("<meta property=\"og:locale\" content=\"fr_FR\" />\n")
-            .Append("<meta name=\"twitter:card\" content=\"summary_large_image\" />\n")
+            .Append("<meta name=\"twitter:card\" content=\"").Append(preview.PortraitImage ? "summary" : "summary_large_image").Append(CloseTag)
             .Append("<meta name=\"twitter:title\" content=\"").Append(title).Append(CloseTag)
             .Append("<meta name=\"twitter:description\" content=\"").Append(description).Append(CloseTag)
             .Append("<meta name=\"twitter:image\" content=\"").Append(image).Append(CloseTag)

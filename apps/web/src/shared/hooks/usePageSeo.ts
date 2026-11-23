@@ -3,7 +3,7 @@ import { absoluteUrl, DEFAULT_OG_IMAGE, SITE_NAME } from '@/shared/seo/siteMeta'
 import { ROUTES } from '@/app/routes';
 import { preferredLocale, t } from '@/shared/i18n';
 
-export type OgType = 'website' | 'profile' | 'article';
+export type OgType = 'website' | 'profile' | 'article' | 'video.movie' | 'video.tv_show';
 
 export interface PageSeo {
   title: string;
@@ -163,6 +163,11 @@ export function usePageSeo(seo: PageSeo): void {
   useEffect(() => () => applySeo(seoDefaults()), []);
 }
 
-export function useNoindexPage(title: string, path?: string): void {
-  usePageSeo({ title, noindex: true, canonical: path ? absoluteUrl(path) : undefined });
+export function useNoindexPage(title: string, path?: string, description?: string): void {
+  usePageSeo({
+    title,
+    description,
+    noindex: true,
+    canonical: path ? absoluteUrl(path) : undefined,
+  });
 }

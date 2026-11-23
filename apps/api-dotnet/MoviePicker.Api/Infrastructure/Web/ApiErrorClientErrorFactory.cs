@@ -16,12 +16,13 @@ public sealed class ApiErrorClientErrorFactory : IClientErrorFactory
         };
     }
 
-    private static (string Message, string? Reason) Describe(int status) => status switch
+    internal static (string Message, string? Reason) Describe(int status) => status switch
     {
         StatusCodes.Status400BadRequest => ("Bad request", ErrorCodes.ValidationFailed),
         StatusCodes.Status401Unauthorized => ("Authentication required", ErrorCodes.Unauthorized),
         StatusCodes.Status403Forbidden => ("Access denied", ErrorCodes.Forbidden),
         StatusCodes.Status404NotFound => ("Resource not found", ErrorCodes.NotFound),
+        StatusCodes.Status405MethodNotAllowed => ("Method not allowed", null),
         StatusCodes.Status429TooManyRequests => ("Too many requests, please retry in a moment", ErrorCodes.RateLimited),
         _ => ("Request failed", null)
     };

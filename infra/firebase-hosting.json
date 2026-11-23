@@ -6,6 +6,9 @@
     { "glob": "/e/*", "run": { "serviceId": "movie-picker-api", "region": "europe-west1" } },
     { "glob": "/film/*", "run": { "serviceId": "movie-picker-api", "region": "europe-west1" } },
     { "glob": "/serie/*", "run": { "serviceId": "movie-picker-api", "region": "europe-west1" } },
+    { "glob": "/u/*", "run": { "serviceId": "movie-picker-api", "region": "europe-west1" } },
+    { "glob": "/l/**", "path": "/invitations/list.html" },
+    { "glob": "/g/**", "path": "/invitations/group.html" },
     {
       "regex": "^/(?:[^a].*|a(?:[^s].*)?|as(?:[^s].*)?|ass(?:[^e].*)?|asse(?:[^t].*)?|asset(?:[^s].*)?|assets(?:[^/].*)?)?$",
       "path": "/index.html"
@@ -19,6 +22,8 @@
         "X-Frame-Options": "DENY",
         "Referrer-Policy": "strict-origin-when-cross-origin",
         "Content-Security-Policy": "frame-ancestors 'none'",
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Cross-Origin-Resource-Policy": "same-site",
         "X-Content-Type-Options": "nosniff",
         "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
         "Permissions-Policy": "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
@@ -37,7 +42,11 @@
       "headers": { "Cache-Control": "public, max-age=86400, must-revalidate" }
     },
     {
-      "glob": "/@(robots.txt|sitemap.xml)",
+      "glob": "/@(robots.txt|sitemap.xml|llms.txt)",
+      "headers": { "Cache-Control": "public, max-age=3600, must-revalidate" }
+    },
+    {
+      "glob": "/.well-known/security.txt",
       "headers": { "Cache-Control": "public, max-age=3600, must-revalidate" }
     },
     {

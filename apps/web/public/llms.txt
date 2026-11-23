@@ -1,0 +1,36 @@
+# Movie Picker
+
+> Application web gratuite pour choisir ensemble le film d’une soirée : l’hôte crée une soirée et partage son lien, chacun propose des films ou des séries du catalogue TMDB, tout le monde vote, puis la roue tire le film gagnant. Après la séance, chacun note le film.
+
+Le site est en français, avec une version anglaise que l’on choisit en bas de chaque page. Il est installable comme une application (PWA) sur téléphone et sur ordinateur. Rejoindre une soirée depuis son lien demande un compte, gratuit.
+
+Ce qui est public, et donc lisible sans compte :
+
+- les pages de films et de séries, et les catalogues ;
+- les profils que leurs membres ont laissés publics, avec leurs listes publiques ;
+- la présentation du produit et le dossier technique.
+
+Ce qui ne l’est pas : une soirée ne s’ouvre que par son lien, et les invitations à un groupe d’amis ou à une liste portent un jeton secret. Ces pages ne sont pas indexées.
+
+## Pages principales
+
+- [Accueil](https://www.movie-picker.fr/): les films du moment et l’accès à ses soirées
+- [Comment ça marche](https://www.movie-picker.fr/decouvrir): le déroulé d’une soirée, de la création au tirage
+- [Tendances](https://www.movie-picker.fr/films/tendances): les films dont tout le monde parle, filtrables par genre
+- [Au cinéma](https://www.movie-picker.fr/films/au-cinema): les films encore en salles en France
+- [Les plus proposés](https://www.movie-picker.fr/films/les-plus-proposes): les films que les membres proposent le plus à leurs soirées
+- [Collections](https://www.movie-picker.fr/films/collections): les sagas et les collections de films
+- [Journal des versions](https://www.movie-picker.fr/nouveautes): ce qui a changé, version par version
+
+## Projet
+
+- [Dossier technique](https://www.movie-picker.fr/tech): architecture, choix techniques, qualité et chaîne de livraison
+- [Code source](https://github.com/Affy657/Movie-Picker): le dépôt GitHub du projet
+- [Soutenir le projet](https://www.movie-picker.fr/soutenir): dons facultatifs, le site reste gratuit
+
+## Optional
+
+- [Mentions légales](https://www.movie-picker.fr/mentions-legales)
+- [Politique de confidentialité](https://www.movie-picker.fr/politique-de-confidentialite)
+- [Signaler une faille de sécurité](https://www.movie-picker.fr/.well-known/security.txt)
+- [Plan du site](https://www.movie-picker.fr/sitemap.xml)

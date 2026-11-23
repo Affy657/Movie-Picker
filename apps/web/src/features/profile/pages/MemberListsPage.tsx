@@ -54,7 +54,13 @@ function memberListsSeo(profile: PublicProfile | undefined, notFound: boolean, t
     {
       pageTitle: (name) => memberListsTitle(name, t),
       seoDescription: (member) =>
-        t('lists.public.seoDescription', { name: member.displayName, handle: member.handle }),
+        withElision(
+          member.displayName,
+          'lists.public.seoDescription',
+          'lists.public.seoDescriptionElided',
+          t,
+          { handle: member.handle }
+        ),
     },
     ROUTES.profileLists
   );
