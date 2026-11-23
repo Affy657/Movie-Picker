@@ -219,6 +219,76 @@ describe('CreateEventDialog', () => {
     vi.useRealTimers();
   });
 
+  describe('draft', () => {
+    it('gives the draft back after a refresh', async () => {
+      const user = userEvent.setup();
+      const first = renderDialog();
+      await user.clear(screen.getByLabelText('Nom'));
+      await user.type(screen.getByLabelText('Nom'), 'Soirée frissons');
+      await user.click(screen.getByRole('radio', { name: /samedi/i }));
+      await user.click(screen.getByRole('radio', { name: '21:00' }));
+      first.unmount();
+
+      renderDialog();
+
+      expect(screen.getByLabelText('Nom')).toHaveValue('Soirée frissons');
+      expect(screen.getByRole('radio', { name: /samedi/i })).toBeChecked();
+      expect(screen.getByRole('radio', { name: '21:00' })).toBeChecked();
+    });
+
+    it('forgets the draft once the host closes the window', async () => {
+      const user = userEvent.setup();
+      const first = renderDialog();
+      await user.clear(screen.getByLabelText('Nom'));
+      await user.type(screen.getByLabelText('Nom'), 'Soirée frissons');
+      pressEscape(formDialog());
+      expect(onClose).toHaveBeenCalled();
+      first.unmount();
+
+      renderDialog();
+
+      expect(screen.getByLabelText('Nom')).toHaveValue('Soirée du jeudi 12 novembre');
+    });
+
+    it('forgets the draft once the night is created', async () => {
+      const user = userEvent.setup();
+      const first = renderDialog();
+      await user.clear(screen.getByLabelText('Nom'));
+      await user.type(screen.getByLabelText('Nom'), 'Soirée frissons');
+      await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
+      await screen.findByRole('dialog', { name: 'Soirée créée' });
+      first.unmount();
+
+      renderDialog();
+
+      expect(screen.getByLabelText('Nom')).toHaveValue('Soirée du jeudi 12 novembre');
+    });
+  });
+
+  describe('date bounds', () => {
+    it('blocks a date typed before the automatic closing window', async () => {
+      const user = userEvent.setup();
+      renderDialog();
+      await user.click(screen.getByRole('radio', { name: /autre date/i }));
+
+      fireEvent.change(screen.getByLabelText('Date'), { target: { value: '2025-11-12' } });
+
+      expect(
+        screen.getByText('Cette date est trop ancienne : la soirée serait aussitôt terminée.')
+      ).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
+      expect(createBodies()).toEqual([]);
+    });
+
+    it('keeps the date picker within two years', async () => {
+      const user = userEvent.setup();
+      renderDialog();
+      await user.click(screen.getByRole('radio', { name: /autre date/i }));
+
+      expect(screen.getByLabelText('Date')).toHaveAttribute('max', '2028-11-12');
+    });
+  });
+
   describe('when', () => {
     it('opens on tonight at 20:00, with a name that follows the date', () => {
       renderDialog();
@@ -384,12 +454,12 @@ describe('CreateEventDialog', () => {
       expect(screen.getByLabelText('Heure')).toHaveValue('00:00');
     });
 
-    it('warns about a start already past without blocking the creation', async () => {
+    it('warns about a start already past but still open without blocking the creation', async () => {
       const user = userEvent.setup();
       renderDialog();
 
       await user.click(screen.getByRole('radio', { name: /autre date/i }));
-      fireEvent.change(screen.getByLabelText('Date'), { target: { value: '2026-11-01' } });
+      fireEvent.change(screen.getByLabelText('Date'), { target: { value: '2026-11-08' } });
 
       expect(screen.getByText('Cette date est déjà passée.')).toBeInTheDocument();
       await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));

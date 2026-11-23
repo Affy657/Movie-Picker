@@ -32,11 +32,14 @@ public sealed class RegisterUserHandler : IRegisterUserHandler
         if (pwdErr is not null)
             throw pwdErr;
 
+        if (AuthInputValidation.ValidateEmail(request.Email) is { } emailErr)
+            throw emailErr;
+
         var email = request.Email.Trim();
         if (await _users.GetByEmailAsync(email, ct) is not null)
             throw Errors.EmailTaken();
 
-        var displayName = request.DisplayName.Trim();
+        var displayName = AuthInputValidation.CleanDisplayName(request.DisplayName);
         var now = _clock.GetUtcNow();
 
         var created = await HandleAllocator.CreateWithUniqueHandleAsync(

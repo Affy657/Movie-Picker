@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   formatMyEventsListDate,
   formatEventTime,
@@ -79,6 +79,27 @@ describe('formatEventDateLong', () => {
 
   it('returns the raw string when the date is invalid', () => {
     expect(formatEventDateLong('nope', '20:00', 'fr', 'à')).toBe('nope');
+  });
+
+  it('says the time is Paris time when the browser clock is set on another zone', () => {
+    const newYork = vi.spyOn(Date.prototype, 'getTimezoneOffset').mockReturnValue(300);
+    try {
+      expect(formatEventDateLong('2030-12-20', '19:05', 'fr', 'à')).toMatch(
+        / à 19h05 \(heure de Paris\)$/
+      );
+      expect(formatEventDateLong('2030-12-20', '19:05', 'en', 'at')).toMatch(
+        / at 19h05 \(Paris time\)$/
+      );
+      expect(
+        formatEventDateLong('2030-12-20', '19:05', 'fr', 'à', { keepsake: true })
+      ).not.toContain('Paris');
+    } finally {
+      newYork.mockRestore();
+    }
+  });
+
+  it('says nothing about the zone when the browser keeps Paris time', () => {
+    expect(formatEventDateLong('2030-12-20', '19:05', 'fr', 'à')).not.toContain('Paris');
   });
 
   it('writes the month in full and always the year when asked for a keepsake', () => {

@@ -1,5 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
-import { eventScheduledStartUtcMs, eventWallClockAt } from '@/shared/utils/eventScheduled';
+import {
+  browserClockDiffersFromEventZone,
+  eventScheduledStartUtcMs,
+  eventTimeNeedsZone,
+  eventWallClockAt,
+} from '@/shared/utils/eventScheduled';
 
 describe('eventScheduled', () => {
   it('eventScheduledStartUtcMs convertit depuis Europe/Paris (hiver, UTC+1)', () => {
@@ -70,5 +75,29 @@ describe('eventScheduled', () => {
 
   it('eventScheduledStartUtcMs : heure invalide', () => {
     expect(eventScheduledStartUtcMs({ date: '2030-06-01', time: 'not-a-time' })).toBeNull();
+  });
+});
+
+describe('eventTimeNeedsZone', () => {
+  it('is false when the browser keeps Paris time, winter or summer', () => {
+    expect(eventTimeNeedsZone({ date: '2026-12-04', time: '20:00' })).toBe(false);
+    expect(eventTimeNeedsZone({ date: '2026-07-04', time: '20:00' })).toBe(false);
+  });
+
+  it('is true when the browser clock is set on another zone at the start of the night', () => {
+    const newYork = vi.spyOn(Date.prototype, 'getTimezoneOffset').mockReturnValue(300);
+    try {
+      expect(eventTimeNeedsZone({ date: '2026-12-04', time: '20:00' })).toBe(true);
+    } finally {
+      newYork.mockRestore();
+    }
+  });
+
+  it('ignores the milliseconds of the current instant', () => {
+    expect(browserClockDiffersFromEventZone(Date.UTC(2026, 10, 23, 12, 0, 0, 437))).toBe(false);
+  });
+
+  it('is false for a date it cannot read', () => {
+    expect(eventTimeNeedsZone({ date: '', time: '20:00' })).toBe(false);
   });
 });

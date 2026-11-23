@@ -27,6 +27,13 @@ public static class TmdbTitleFacts
         }
     }
 
+    private const int YearLength = 4;
+
+    public static string? ReleaseYear(string? releaseDate) =>
+        releaseDate is { Length: >= YearLength } && releaseDate[..YearLength].All(char.IsAsciiDigit)
+            ? releaseDate[..YearLength]
+            : null;
+
     public static int? RuntimeMinutes(int? requested, TmdbMovieDetails? details) =>
         Known(requested) ?? Known(details?.Runtime) ?? requested;
 

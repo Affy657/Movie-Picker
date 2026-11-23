@@ -22,6 +22,9 @@ public static class ServerCopy
         public static PushText EventCancelled(string eventTitle) =>
             new("Soirée annulée 😢", $"{eventTitle} a été annulée.");
 
+        public static PushText HostRoleReceived(string eventTitle) =>
+            new("Vous êtes l’hôte 🎬", $"L’hôte de « {eventTitle} » a supprimé son compte : vous organisez désormais la soirée.");
+
         public static PushText EventRescheduled(string eventTitle) =>
             new("Nouvelle date pour la soirée 📅", $"{eventTitle} a été reprogrammée.");
 
@@ -125,26 +128,21 @@ public static class ServerCopy
     {
         public const string Subject = "Réinitialisez votre mot de passe Movie Picker";
 
-        public static string HtmlBody(string url) => $"""
-            <!DOCTYPE html>
-            <html lang="fr">
-            <body style="font-family: Arial, sans-serif; background:#f6f6f6; padding:24px;">
-              <table width="100%" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:8px;padding:24px;">
-                <tr><td>
-                  <h1 style="font-size:20px;margin-top:0;">Réinitialisez votre mot de passe</h1>
-                  <p>Bonjour,</p>
-                  <p>Vous avez demandé à réinitialiser votre mot de passe Movie Picker. Cliquez sur le bouton ci-dessous (lien valide 30 minutes) :</p>
-                  <p style="text-align:center;margin:32px 0;">
-                    <a href="{url}" style="background:#2563eb;color:#ffffff;padding:12px 20px;text-decoration:none;border-radius:6px;display:inline-block;">Définir un nouveau mot de passe</a>
-                  </p>
-                  <p style="font-size:14px;color:#555;">Si le bouton ne fonctionne pas, copiez cette URL dans votre navigateur :<br/><a href="{url}">{url}</a></p>
-                  <p style="font-size:14px;color:#555;">Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail : votre mot de passe restera inchangé.</p>
-                  <p style="font-size:12px;color:#999;margin-top:32px;">L'équipe Movie Picker</p>
-                </td></tr>
-              </table>
-            </body>
-            </html>
-            """;
+        public static string HtmlBody(string url, string siteUrl) => BrandedEmailHtml.Render(new BrandedEmail(
+            Lang: "fr",
+            Title: Subject,
+            Heading: "Réinitialisez votre mot de passe",
+            Intro:
+            [
+                "Bonjour,",
+                "Vous avez demandé à réinitialiser votre mot de passe Movie Picker. Cliquez sur le bouton ci-dessous, le lien reste valable 30 minutes."
+            ],
+            ButtonLabel: "Définir un nouveau mot de passe",
+            ButtonUrl: url,
+            FallbackIntro: "Si le bouton ne fonctionne pas, copiez cette adresse dans votre navigateur :",
+            Outro: ["Si vous n’êtes pas à l’origine de cette demande, ignorez cet e-mail : votre mot de passe restera inchangé."],
+            Signature: "L’équipe Movie Picker",
+            SiteUrl: siteUrl));
 
         public static string TextBody(string url) => $"""
             Bonjour,
@@ -154,9 +152,9 @@ public static class ServerCopy
 
             {url}
 
-            Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail : votre mot de passe restera inchangé.
+            Si vous n’êtes pas à l’origine de cette demande, ignorez cet e-mail : votre mot de passe restera inchangé.
 
-            L'équipe Movie Picker
+            L’équipe Movie Picker
             """;
     }
 
@@ -166,26 +164,21 @@ public static class ServerCopy
         {
             public const string Subject = "Reset your Movie Picker password";
 
-            public static string HtmlBody(string url) => $"""
-                <!DOCTYPE html>
-                <html lang="en">
-                <body style="font-family: Arial, sans-serif; background:#f6f6f6; padding:24px;">
-                  <table width="100%" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:8px;padding:24px;">
-                    <tr><td>
-                      <h1 style="font-size:20px;margin-top:0;">Reset your password</h1>
-                      <p>Hi,</p>
-                      <p>You asked to reset your Movie Picker password. Click the button below (link valid for 30 minutes):</p>
-                      <p style="text-align:center;margin:32px 0;">
-                        <a href="{url}" style="background:#2563eb;color:#ffffff;padding:12px 20px;text-decoration:none;border-radius:6px;display:inline-block;">Set a new password</a>
-                      </p>
-                      <p style="font-size:14px;color:#555;">If the button doesn't work, copy this URL into your browser:<br/><a href="{url}">{url}</a></p>
-                      <p style="font-size:14px;color:#555;">If you didn't request this, ignore this email: your password will remain unchanged.</p>
-                      <p style="font-size:12px;color:#999;margin-top:32px;">The Movie Picker team</p>
-                    </td></tr>
-                  </table>
-                </body>
-                </html>
-                """;
+            public static string HtmlBody(string url, string siteUrl) => BrandedEmailHtml.Render(new BrandedEmail(
+                Lang: "en",
+                Title: Subject,
+                Heading: "Reset your password",
+                Intro:
+                [
+                    "Hi,",
+                    "You asked to reset your Movie Picker password. Click the button below, the link stays valid for 30 minutes."
+                ],
+                ButtonLabel: "Set a new password",
+                ButtonUrl: url,
+                FallbackIntro: "If the button doesn't work, copy this address into your browser:",
+                Outro: ["If you didn't request this, ignore this email: your password will remain unchanged."],
+                Signature: "The Movie Picker team",
+                SiteUrl: siteUrl));
 
             public static string TextBody(string url) => $"""
                 Hi,

@@ -254,6 +254,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
             services.GetRequiredService<IAvatarPhotoRepository>(),
             services.GetRequiredService<IBannerPhotoRepository>(),
             services.GetRequiredService<IAuthSessionInvalidator>(),
+            services.GetRequiredService<HostedNightsHandover>(),
             services.GetRequiredService<IUnitOfWork>(),
             NullLogger<DeleteAccountHandler>.Instance);
 

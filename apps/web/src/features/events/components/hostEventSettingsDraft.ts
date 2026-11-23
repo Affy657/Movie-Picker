@@ -18,6 +18,12 @@ import {
   type EventLimitDraft,
   type EventLimitErrors,
 } from '@/features/events/lib/eventLimitValidation';
+import {
+  eventStartIssue,
+  eventStartIssueMessage,
+  isValidDate,
+  isValidTime,
+} from '@/features/events/lib/createEventValidation';
 
 export type FieldErrors = EventLimitErrors & {
   title?: string;
@@ -170,15 +176,23 @@ function validateTitle(draft: SettingsDraft, t: Translate, errors: FieldErrors) 
   if (!draft.eventTitle.trim()) errors.title = t('events.settings.titleRequired');
 }
 
-function validateDate(draft: SettingsDraft, t: Translate, errors: FieldErrors) {
-  const trimmed = draft.eventDateLocal.trim();
-  if (!trimmed) {
-    errors.date = t('events.settings.dateRequired');
+export function eventDateLocalError(value: string, t: Translate, now: Date): string | undefined {
+  if (!value.trim()) return t('events.settings.dateRequired');
+  const parsed = splitDateTimeLocal(value);
+  if (!parsed || !isValidDate(parsed.date) || !isValidTime(parsed.time)) {
+    return t('events.settings.dateInvalid');
+  }
+  const issue = eventStartIssue(parsed.date, parsed.time, now);
+  return issue ? eventStartIssueMessage(issue, t, 'settings') : undefined;
+}
+
+function validateDate(draft: SettingsDraft, t: Translate, errors: FieldErrors, now: Date) {
+  const error = eventDateLocalError(draft.eventDateLocal, t, now);
+  if (error) {
+    errors.date = error;
     return null;
   }
-  const parsed = splitDateTimeLocal(draft.eventDateLocal);
-  if (!parsed) errors.date = t('events.settings.dateInvalid');
-  return parsed;
+  return splitDateTimeLocal(draft.eventDateLocal);
 }
 
 export function maxParticipantsHintFor(participantCount: number, t: Translate): string {
@@ -214,11 +228,11 @@ function validateWinnerCount(draft: SettingsDraft, t: Translate, errors: FieldEr
   return value;
 }
 
-export function validateSettingsDraft(draft: SettingsDraft, t: Translate) {
+export function validateSettingsDraft(draft: SettingsDraft, t: Translate, now: Date) {
   const limits = validateEventLimits(draft, t);
   const errors: FieldErrors = { ...limits.errors };
   validateTitle(draft, t, errors);
-  const eventDateTime = validateDate(draft, t, errors);
+  const eventDateTime = validateDate(draft, t, errors, now);
   const winnerCount = validateWinnerCount(draft, t, errors);
   return {
     errors,

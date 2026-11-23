@@ -10,7 +10,7 @@ import {
 import { validateEventLimits } from '@/features/events/lib/eventLimitValidation';
 import { patchEventConfig } from '@/features/events/api/eventsApi';
 import { useMyGroups } from '@/features/events/hooks/useMyGroups';
-import { getErrorMessage } from '@/shared/api/apiError';
+import { ApiError, getErrorMessage } from '@/shared/api/apiError';
 import { invalidateMyNights } from '@/shared/api/invalidateMyNights';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { eventDateTimeToLocal, splitDateTimeLocal } from '@/shared/utils/eventDateTimeLocal';
@@ -27,6 +27,7 @@ import {
 } from '@/features/events/types';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import {
+  eventDateLocalError,
   isCreatorParticipant,
   maxParticipantsHintFor,
   normalizeConfig,
@@ -37,6 +38,12 @@ import {
   type SavedSettings,
   type SaveState,
 } from './hostEventSettingsDraft';
+
+const DATE_ERROR_REASONS: ReadonlySet<string> = new Set([
+  'event_date_too_early',
+  'event_date_too_far',
+  'invalid_date_format',
+]);
 
 type HostEventSettingsDraftInput = {
   slug: string;
@@ -151,7 +158,12 @@ export function useHostEventSettingsDraft({
     },
     onError: (e) => {
       setSaveState('error');
-      setSaveError(getErrorMessage(e, t('events.settings.fallbackError')));
+      const message = getErrorMessage(e, t('events.settings.fallbackError'));
+      if (ApiError.is(e) && e.reason && DATE_ERROR_REASONS.has(e.reason)) {
+        setFieldErrors((current) => ({ ...current, date: message }));
+        return;
+      }
+      setSaveError(message);
     },
     onSettled: () => {
       saveInFlightRef.current = false;
@@ -279,7 +291,8 @@ export function useHostEventSettingsDraft({
         currentParticipantCount: event.participantCount ?? 0,
         drawnWinnerCount,
       },
-      t
+      t,
+      new Date()
     );
 
     setFieldErrors(errors);
@@ -316,11 +329,18 @@ export function useHostEventSettingsDraft({
   const configLocked = drawnWinnerCount > 0;
   const recurrenceLocked = cfg.hasNextOccurrence ?? false;
 
-  const liveDateTime = eventDateLocal.trim() ? splitDateTimeLocal(eventDateLocal) : null;
+  const dateWasEdited = eventDateLocal !== savedRef.current.dateLocal;
+  const liveDateError = dateWasEdited
+    ? eventDateLocalError(eventDateLocal, t, new Date())
+    : undefined;
+  const liveDateTime =
+    eventDateLocal.trim() && !liveDateError ? splitDateTimeLocal(eventDateLocal) : null;
   const relativeDateLabel = liveDateTime
     ? formatRelativeEventDate(liveDateTime.date, locale)
     : null;
-  const dateWasEdited = eventDateLocal !== savedRef.current.dateLocal;
+  const shownFieldErrors: FieldErrors = liveDateError
+    ? { ...fieldErrors, date: fieldErrors.date ?? liveDateError }
+    : fieldErrors;
   const themePreview = [themeEmoji, themeText.trim()].filter(Boolean).join(' ');
 
   return {
@@ -367,9 +387,9 @@ export function useHostEventSettingsDraft({
     drawnWinnerCount,
     configLocked,
     recurrenceLocked,
-    fieldErrors,
+    fieldErrors: shownFieldErrors,
     saveError,
-    saveState,
+    saveState: liveDateError ? 'error' : saveState,
     scheduleAutoSave,
     templateDraft,
     templateLimitsAreValid,

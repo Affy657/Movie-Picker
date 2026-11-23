@@ -58,4 +58,48 @@ public sealed class AuthInputValidationTests
     {
         Assert.Null(AuthInputValidation.ValidateDisplayName("  OK  "));
     }
+
+    [Theory]
+    [InlineData("\u200B\u200B\u200B")]
+    [InlineData("\u3164")]
+    [InlineData("\u202E\u202E")]
+    public void ValidateDisplayName_InvisibleCharactersOnly_IsRequired(string name)
+    {
+        var error = AuthInputValidation.ValidateDisplayName(name);
+
+        Assert.Equal(ErrorCodes.DisplayNameRequired, error?.Reason);
+    }
+
+    [Fact]
+    public void CleanDisplayName_DropsTheRightToLeftOverride()
+    {
+        Assert.Null(AuthInputValidation.ValidateDisplayName("\u202Eecila"));
+        Assert.Equal("ecila", AuthInputValidation.CleanDisplayName("  \u202Eecila "));
+    }
+
+    [Theory]
+    [InlineData("alice@exemple.fr")]
+    [InlineData("a.b+c@sub.domaine.co")]
+    [InlineData("bob@xn--e1afmkfd.xn--p1ai")]
+    [InlineData("  carl@exemple.com  ")]
+    public void ValidateEmail_AddressWithATopLevelDomain_ReturnsNull(string email)
+    {
+        Assert.Null(AuthInputValidation.ValidateEmail(email));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("alice@exemple")]
+    [InlineData("alice@localhost")]
+    [InlineData("alice@exemple.f")]
+    [InlineData("alice@exemple..fr")]
+    [InlineData("alice@exemple.123")]
+    [InlineData("alice@.fr")]
+    [InlineData("@exemple.fr")]
+    [InlineData("alice@exemple.fr-")]
+    public void ValidateEmail_AddressWithoutATopLevelDomain_IsInvalid(string? email)
+    {
+        Assert.Equal(ErrorCodes.EmailInvalid, AuthInputValidation.ValidateEmail(email)?.Reason);
+    }
 }

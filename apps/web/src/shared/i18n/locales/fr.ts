@@ -837,6 +837,9 @@ export const fr = {
       dateRequired: 'Choisissez une date.',
       timeRequired: 'Choisissez une heure.',
       pastDateHint: 'Cette date est déjà passée.',
+      dateTooEarly: 'Cette date est trop ancienne : la soirée serait aussitôt terminée.',
+      dateTooFar: 'Une soirée se prévoit au plus {{years}} ans à l’avance.',
+      parisTimeHint: 'Les heures sont celles de Paris.',
       configNotSaved:
         'La soirée est créée, mais ses options n’ont pas été enregistrées. Réglez-les depuis les paramètres de la soirée.',
       rules: {
@@ -948,6 +951,7 @@ export const fr = {
       backHome: "Retour à l'accueil",
       backNav: 'Retour',
       dateTimeJoiner: 'à',
+      parisTime: '{{value}} (heure de Paris)',
       countdownImminent: 'quelques instants',
       countdownMinutes: '{{count}} min',
       countdownHours: '{{count}} h',
@@ -1113,6 +1117,8 @@ export const fr = {
       dateTimeLabel: 'Date et heure de la soirée',
       dateRequired: 'La date de la soirée est requise.',
       dateInvalid: 'Date et heure de la soirée invalides.',
+      dateTooEarly: 'Cette date terminerait la soirée aussitôt : choisissez une date plus récente.',
+      dateTooFar: 'Une soirée se prévoit au plus {{years}} ans à l’avance.',
       dateHint:
         'Soirée prévue {{relative}}. Les participants seront prévenus si vous modifiez la date.',
       notifyDateChangeLabel: 'Prévenir les participants du changement de date',
@@ -2740,6 +2746,8 @@ export const fr = {
     password_needs_digit: 'Le mot de passe doit contenir au moins un chiffre.',
     display_name_required: 'Le pseudo est requis.',
     display_name_too_long: 'Le pseudo ne peut pas dépasser {{max}} caractères.',
+    email_invalid:
+      'Adresse e-mail incomplète : vérifiez ce qui suit « @ » (par exemple « exemple.fr »).',
     handle_required: 'Le pseudo est requis.',
     handle_too_short: 'Le pseudo doit contenir au moins {{min}} caractères.',
     handle_too_long: 'Le pseudo ne peut pas dépasser {{max}} caractères.',
@@ -2761,6 +2769,8 @@ export const fr = {
     letterboxd_watched_incomplete:
       "Films vus sur Letterboxd inaccessibles. Vérifiez l'orthographe du pseudo et que votre profil Letterboxd est public.",
     invalid_date_format: 'date doit être au format YYYY-MM-DD.',
+    event_date_too_early: 'Cette date est trop ancienne : la soirée serait aussitôt terminée.',
+    event_date_too_far: 'Une soirée se prévoit au plus {{years}} ans à l’avance.',
     invalid_time_format: 'time doit être au format HH:mm.',
     theme_color_out_of_range: 'themeColor doit être une teinte entre 0 et 359.',
     event_title_required: 'Le titre de la soirée ne peut pas être vide.',
@@ -2879,6 +2889,7 @@ export const fr = {
     prefGroupInvitation: 'Invitation à un groupe',
     prefGroupNight: 'Nouvelle soirée dans un de vos groupes',
     prefRemovedFromEvent: 'L’hôte retire votre participation',
+    prefHostRoleReceived: 'Vous devenez l’hôte d’une soirée',
     prefNewFollower: "Quelqu'un vous suit",
     prefEventPending: 'Soirée terminée sans film choisi',
     prefLetterboxdReconciliationPending: 'Films Letterboxd à confirmer',
@@ -2921,6 +2932,8 @@ export const fr = {
     groupInvitationText: '{{name}} vous invite à rejoindre le groupe « **{{groupName}}** »',
     groupNightText: '{{name}} vous attend à **{{eventTitle}}**, dans le groupe « {{groupName}} »',
     removedFromEventText: 'L’hôte a retiré votre participation à **{{eventTitle}}**.',
+    hostRoleReceivedText:
+      'L’hôte de **{{eventTitle}}** a supprimé son compte : vous organisez désormais la soirée.',
     groupInvitationAcceptAria: 'Accepter l’invitation au groupe « {{groupName}} »',
     groupInvitationDeclineAria: 'Refuser l’invitation au groupe « {{groupName}} »',
     listInvitationAccept: 'Accepter',

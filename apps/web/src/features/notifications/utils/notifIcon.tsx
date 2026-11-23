@@ -5,6 +5,7 @@ import {
   CalendarPlus,
   CalendarSync,
   Clock,
+  Crown,
   Film,
   Hourglass,
   ListPlus,
@@ -50,6 +51,8 @@ export function notifIcon(type: string, size = ICON_SIZE.lg): ReactNode {
       return <CalendarPlus size={size} aria-hidden />;
     case 'removedfromevent':
       return <UserX size={size} aria-hidden />;
+    case 'hostrolereceived':
+      return <Crown size={size} aria-hidden />;
     case 'eventpending':
       return <Hourglass size={size} aria-hidden />;
     case 'letterboxdreconciliationpending':

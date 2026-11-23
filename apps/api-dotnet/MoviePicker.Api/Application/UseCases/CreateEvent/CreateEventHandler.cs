@@ -50,6 +50,10 @@ public sealed class CreateEventHandler : ICreateEventHandler
         if (!TimeOnly.TryParse(request.Time, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _))
             throw Errors.InvalidTimeFormat();
 
+        var now = _clock.GetUtcNow();
+        var title = EventStartPolicy.CleanTitle(request.Title);
+        EventStartPolicy.EnsureSchedulable(new Event { Date = request.Date, Time = request.Time }, now);
+
         var ownerId = creatorUserId.Trim();
         var requestId = string.IsNullOrWhiteSpace(request.ClientRequestId) ? null : request.ClientRequestId.Trim();
         if (requestId is not null && await FindReplayAsync(ownerId, requestId, ct) is { } replayed)
@@ -61,12 +65,11 @@ public sealed class CreateEventHandler : ICreateEventHandler
 
         var slug = SlugGenerator.NewSlug();
         var hostToken = SlugGenerator.NewHostToken();
-        var now = _clock.GetUtcNow();
 
         var evt = new Event
         {
             Id = string.Empty,
-            Title = request.Title.Trim(),
+            Title = title,
             Date = request.Date,
             Time = request.Time,
             HostToken = hostToken,

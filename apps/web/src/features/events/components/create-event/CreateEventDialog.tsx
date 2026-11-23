@@ -25,6 +25,8 @@ import {
 } from '@/features/events/api/eventsApi';
 import { useEventTemplates } from '@/features/events/hooks/useEventTemplates';
 import {
+  eventStartIssue,
+  eventStartIssueMessage,
   isPastEventDateTime,
   validateCreateEventDraft,
   type CreateEventFieldErrors,
@@ -50,6 +52,12 @@ import CreateEventInvitation, { type CreatedNight } from './CreateEventInvitatio
 import CreateEventRulesStep, { type RulesChoice } from './CreateEventRulesStep';
 import CreateEventTheme from './CreateEventTheme';
 import CreateEventWhen from './CreateEventWhen';
+import {
+  forgetCreateEventDraft,
+  readCreateEventDraft,
+  saveCreateEventDraft,
+  type CreateEventDraftSnapshot,
+} from './createEventDraftStorage';
 import styles from './CreateEventDialog.module.css';
 
 export type CreateEventReuse = { slug: string; title: string };
@@ -156,6 +164,33 @@ function useCloseUnlessCreating(
   };
 }
 
+function startingDraft(
+  saved: CreateEventDraftSnapshot | null,
+  reusesANight: boolean,
+  presetGroupId: string | null
+): CreateEventDraftSnapshot {
+  const start = defaultEventStart(Date.now());
+  if (!saved) {
+    return { ...start, typedTitle: null, fields: defaultTemplateFields(), groupId: presetGroupId };
+  }
+  return {
+    ...saved,
+    fields: reusesANight ? defaultTemplateFields() : saved.fields,
+    groupId: presetGroupId ?? saved.groupId,
+  };
+}
+
+function whenFeedback(date: string, time: string, typedError: string | undefined, t: Translate) {
+  const now = new Date();
+  const issue = eventStartIssue(date, time, now);
+  const issueMessage = issue ? eventStartIssueMessage(issue, t, 'create') : undefined;
+  const past = !issue && isPastEventDateTime(date, time, now);
+  return {
+    dateError: typedError ?? issueMessage,
+    pastDateHint: past ? t('events.create.pastDateHint') : undefined,
+  };
+}
+
 function useLastHostedNight(enabled: boolean): CreateEventReuse | null {
   const { data } = useQuery({
     queryKey: queryKeys.myEvents.lastHosted,
@@ -183,14 +218,16 @@ export default function CreateEventDialog({
   const { track } = useAnalytics();
 
   const [today] = useState(() => todayInEventZone(Date.now()));
-  const [defaultStart] = useState(() => defaultEventStart(Date.now()));
-  const [date, setDate] = useState(defaultStart.date);
-  const [time, setTime] = useState(defaultStart.time);
-  const [typedTitle, setTypedTitle] = useState<string | null>(null);
-  const [fields, setFields] = useState<TemplateFormFields>(defaultTemplateFields);
+  const [initial] = useState(() =>
+    startingDraft(readCreateEventDraft(), reuse !== null, presetGroupId)
+  );
+  const [date, setDate] = useState(initial.date);
+  const [time, setTime] = useState(initial.time);
+  const [typedTitle, setTypedTitle] = useState<string | null>(initial.typedTitle);
+  const [fields, setFields] = useState<TemplateFormFields>(initial.fields);
   const [origin, setOrigin] = useState<RulesOrigin>({ kind: 'defaults' });
   const [reuseTarget, setReuseTarget] = useState<CreateEventReuse | null>(reuse);
-  const [pickedGroupId, setPickedGroupId] = useState<string | null>(presetGroupId);
+  const [pickedGroupId, setPickedGroupId] = useState<string | null>(initial.groupId);
   const myGroupsQuery = useMyGroups(open && !!user);
   const myGroups = myGroupsQuery.data?.groups ?? [];
   const chosenGroup = myGroups.find((group) => group.id === pickedGroupId) ?? null;
@@ -201,6 +238,11 @@ export default function CreateEventDialog({
   const [templateError, setTemplateError] = useState<string | null>(null);
   const [created, setCreated] = useState<CreatedNight | null>(null);
   const titleRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (step !== 'form') return;
+    saveCreateEventDraft({ typedTitle, date, time, fields, groupId: pickedGroupId });
+  }, [step, typedTitle, date, time, fields, pickedGroupId]);
 
   const suggestedTitle = t('events.create.defaultTitle', {
     date: formatEventTitleDate(date, locale),
@@ -299,6 +341,7 @@ export default function CreateEventDialog({
       groupId: groupIdToSend,
     });
     track('event_created');
+    forgetCreateEventDraft();
     if (res.creatorParticipant) {
       setStoredParticipant(res.slug, res.creatorParticipant.id, res.creatorParticipant.pseudo);
     }
@@ -332,9 +375,13 @@ export default function CreateEventDialog({
     loading,
     error,
   } = useAsyncAction(createAction, t('events.create.fallbackError'));
-  const requestClose = useCloseUnlessCreating(loading, onClose, titleRef);
+  const closeAndForget = useCallback(() => {
+    forgetCreateEventDraft();
+    onClose();
+  }, [onClose]);
+  const requestClose = useCloseUnlessCreating(loading, closeAndForget, titleRef);
   useCloseOnPageChange(() => {
-    if (!loading && step !== 'invitation') onClose();
+    if (!loading && step !== 'invitation') closeAndForget();
   });
 
   const limitErrors = () =>
@@ -352,7 +399,10 @@ export default function CreateEventDialog({
     ).errors;
 
   const handleSubmit = () => {
-    const errors = { ...validateCreateEventDraft({ title, date, time }, t), ...limitErrors() };
+    const errors = {
+      ...validateCreateEventDraft({ title, date, time }, t, new Date()),
+      ...limitErrors(),
+    };
     setFieldErrors(errors);
     const invalidPart = firstInvalidPart(errors);
     if (invalidPart === 'title') titleRef.current?.focus();
@@ -382,9 +432,7 @@ export default function CreateEventDialog({
     void navigate(ROUTES.eventDetail(created.slug), state ? { state } : undefined);
   };
 
-  const pastDateHint = isPastEventDateTime(date, time, new Date())
-    ? t('events.create.pastDateHint')
-    : undefined;
+  const { dateError, pastDateHint } = whenFeedback(date, time, fieldErrors.date, t);
 
   if (step === 'invitation' && created) {
     return (
@@ -428,7 +476,7 @@ export default function CreateEventDialog({
           today={today}
           date={date}
           time={time}
-          dateError={fieldErrors.date}
+          dateError={dateError}
           timeError={fieldErrors.time}
           pastDateHint={pastDateHint}
           onDateChange={(next) => {

@@ -59,7 +59,7 @@ public sealed class AddMovieHandlerNotificationTests
         _movieRepo.Setup(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Movie m, CancellationToken _) => m with { Id = "mov1" });
         _tmdb.Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((TmdbMovieDetails?)null);
+            .ReturnsAsync(new TmdbMovieDetails(27205, "Inception", null, null, null, [], 148, [], [], "2010-07-16"));
 
         _sut = new AddMovieHandler(
             _eventRepo.Object, _movieRepo.Object, _participantRepo.Object, _posterStore.Object,
@@ -98,6 +98,32 @@ public sealed class AddMovieHandlerNotificationTests
             Times.Once);
         _notifications.Verify(
             n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "other" && u.Type == UserNotificationType.MovieAdded), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ForgedTitle_NotifiesWithTheTmdbTitle()
+    {
+        OwnerParticipant();
+        _participantRepo.Setup(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                new() { Id = ParticipantId, EventId = "evt1", Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
+                new() { Id = "p2", EventId = "evt1", Pseudo = "Bob", UserId = "other", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
+            ]);
+        _userRepo.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new() { Id = "other", NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.MovieAdded] = true } }]);
+        _pushSubRepo.Setup(r => r.ListByUserIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new() { Id = "s1", UserId = "other", Endpoint = "https://push/x", P256dh = "k", Auth = "a" }]);
+        var forged = new AddMovieRequest { TmdbId = 27205, Title = "Cliquez ici pour gagner", Year = "2010", ParticipantId = ParticipantId };
+
+        await _sut.HandleAsync(OwnerUserId, "evt1", forged);
+
+        _notifications.Verify(
+            n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "other" && u.MovieTitle == "Inception"), It.IsAny<CancellationToken>()),
+            Times.Once);
+        _pushSender.Verify(
+            s => s.SendAsync(It.IsAny<PushSubscription>(), It.Is<PushMessage>(m => m.Body.Contains("Inception") && !m.Body.Contains("gagner")), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

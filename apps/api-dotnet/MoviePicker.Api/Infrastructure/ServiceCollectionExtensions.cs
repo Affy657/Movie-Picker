@@ -10,6 +10,7 @@ using MoviePicker.Api.Application.Banners;
 using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
+using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Application.UseCases.EventLive;
 using MoviePicker.Api.Application.UseCases.FinishedEvents;
 using MoviePicker.Api.Application.UseCases.FriendGroups;
@@ -465,6 +466,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ProfileBannerWriter>();
         services.AddScoped<IOAuthProfilePhotoImporter, OAuthProfilePhotoImporter>();
         services.AddScoped<EventAudienceNotifier>();
+        services.AddScoped<HostedNightsHandover>();
         services.AddScoped<IGroupNightAnnouncer, GroupNightAnnouncer>();
         services.AddScoped<MyEventSummaryEnricher>();
         services.AddScoped<FriendGroupShowcaseReader>();

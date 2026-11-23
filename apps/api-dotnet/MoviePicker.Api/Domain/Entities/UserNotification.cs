@@ -19,6 +19,7 @@ public enum UserNotificationType
     GroupInvitation = 15,
     GroupNight = 16,
     RemovedFromEvent = 17,
+    HostRoleReceived = 18,
 }
 
 public sealed record UserNotification

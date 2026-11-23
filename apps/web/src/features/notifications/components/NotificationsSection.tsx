@@ -38,6 +38,7 @@ const PREF_LABEL_KEYS: Readonly<Record<NotificationTypeKey, TranslationKey>> = {
   groupinvitation: 'notifications.prefGroupInvitation',
   groupnight: 'notifications.prefGroupNight',
   removedfromevent: 'notifications.prefRemovedFromEvent',
+  hostrolereceived: 'notifications.prefHostRoleReceived',
   newfollower: 'notifications.prefNewFollower',
   letterboxdreconciliationpending: 'notifications.prefLetterboxdReconciliationPending',
 };
@@ -60,6 +61,7 @@ const PREF_GROUPS: readonly PrefGroup[] = [
       'eventpending',
       'groupnight',
       'removedfromevent',
+      'hostrolereceived',
     ],
   },
   {

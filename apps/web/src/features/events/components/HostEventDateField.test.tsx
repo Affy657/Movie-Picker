@@ -37,4 +37,31 @@ describe('HostEventDateField', () => {
     renderField(null);
     expect(screen.queryByText(/Les participants seront prévenus/)).not.toBeInTheDocument();
   });
+
+  it('bounds the picker between the last start that keeps the night open and two years ahead', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-23T12:00:00Z'));
+    try {
+      renderField(null);
+
+      const input = screen.getByLabelText('Date et heure de la soirée');
+      expect(input).toHaveAttribute('min', '2026-11-16T11:01');
+      expect(input).toHaveAttribute('max', '2028-11-23T23:59');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('says the time is Paris time when the browser clock is set on another zone', () => {
+    const newYork = vi.spyOn(Date.prototype, 'getTimezoneOffset').mockReturnValue(300);
+    try {
+      renderField(null);
+
+      expect(
+        screen.getByLabelText('Date et heure de la soirée (heure de Paris)')
+      ).toBeInTheDocument();
+    } finally {
+      newYork.mockRestore();
+    }
+  });
 });

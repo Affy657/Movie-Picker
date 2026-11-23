@@ -33,7 +33,7 @@ public sealed class CreateEventHandlerTests
     [Fact]
     public async Task HandleAsync_WithoutCreatorUserId_ThrowsUnauthorizedException()
     {
-        var request = new CreateEventRequest { Title = "T", Date = "2025-01-01", Time = "12:00" };
+        var request = new CreateEventRequest { Title = "T", Date = TestDates.Upcoming, Time = "12:00" };
         await Assert.ThrowsAsync<UnauthorizedException>(() => _sut.HandleAsync(request, null));
         await Assert.ThrowsAsync<UnauthorizedException>(() => _sut.HandleAsync(request, "   "));
     }
@@ -44,7 +44,7 @@ public sealed class CreateEventHandlerTests
         var request = new CreateEventRequest
         {
             Title = " Soirée film ",
-            Date = "2025-12-31",
+            Date = TestDates.Upcoming,
             Time = "20:00"
         };
         Event? capturedEvent = null;
@@ -98,7 +98,7 @@ public sealed class CreateEventHandlerTests
 
         Assert.NotNull(capturedEvent);
         Assert.Equal("Soirée film", capturedEvent!.Title);
-        Assert.Equal("2025-12-31", capturedEvent.Date);
+        Assert.Equal(TestDates.Upcoming, capturedEvent.Date);
         Assert.Equal("20:00", capturedEvent.Time);
         Assert.False(string.IsNullOrEmpty(capturedEvent.Slug));
         Assert.False(string.IsNullOrEmpty(capturedEvent.HostToken));
@@ -128,7 +128,7 @@ public sealed class CreateEventHandlerTests
     {
         var request = new CreateEventRequestBuilder()
             .WithTitle("  Titre  ")
-            .WithDate("2025-01-01")
+            .WithDate(TestDates.Upcoming)
             .WithTime("19:00")
             .Build();
         Event? captured = null;
@@ -185,7 +185,7 @@ public sealed class CreateEventHandlerTests
     {
         var request = new CreateEventRequestBuilder()
             .WithTitle("  Titre  ")
-            .WithDate("2025-01-01")
+            .WithDate(TestDates.Upcoming)
             .WithTime("19:00")
             .Build();
         Event? captured = null;

@@ -22,6 +22,7 @@ public static class NotificationPreferenceDefaults
             [UserNotificationType.GroupInvitation] = true,
             [UserNotificationType.GroupNight] = true,
             [UserNotificationType.RemovedFromEvent] = true,
+            [UserNotificationType.HostRoleReceived] = true,
         };
 
     public static bool For(UserNotificationType type)

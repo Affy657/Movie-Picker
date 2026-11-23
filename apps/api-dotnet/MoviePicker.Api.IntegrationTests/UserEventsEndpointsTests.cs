@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Infrastructure.Tmdb;
 using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
@@ -125,7 +126,7 @@ public sealed class UserEventsEndpointsTests : IClassFixture<MoviePickerApplicat
         var before = await client.GetFromJsonAsync<MyEventsListResponse>("/api/v1/events/mine", JsonOptions);
         var rowBefore = Assert.Single(before!.Events, e => e.Slug == slug);
         Assert.False(rowBefore.HasVoted);
-        Assert.Equal("Film aperçu", Assert.Single(rowBefore.TopMovies).Title);
+        Assert.Equal(StubTmdbMovieSearch.TitleOf(4242), Assert.Single(rowBefore.TopMovies).Title);
         Assert.Equal("Apercu", Assert.Single(rowBefore.ParticipantsPreview).Pseudo);
 
         var vote = await client.PostAsJsonAsync(

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using MoviePicker.Api.Infrastructure.Tmdb;
 using MoviePicker.Api.IntegrationTests.Helpers;
 using MoviePicker.Api.Tests.Builders;
 using Xunit;
@@ -41,7 +42,7 @@ public sealed class NightRecapEndpointsTests : IClassFixture<MoviePickerApplicat
         Assert.NotEqual(slug, recapSlug);
         Assert.Equal("Soirée du vendredi", recap.GetProperty("title").GetString());
         Assert.Equal(JsonValueKind.Null, recap.GetProperty("eventSlug").ValueKind);
-        Assert.Equal("Heat", recap.GetProperty("winnerMovies")[0].GetProperty("title").GetString());
+        Assert.Equal(StubTmdbMovieSearch.TitleOf(949), recap.GetProperty("winnerMovies")[0].GetProperty("title").GetString());
         Assert.DoesNotContain(slug, recap.GetRawText(), StringComparison.Ordinal);
     }
 

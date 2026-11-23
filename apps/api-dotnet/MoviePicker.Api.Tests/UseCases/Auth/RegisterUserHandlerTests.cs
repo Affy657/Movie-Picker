@@ -63,6 +63,38 @@ public sealed class RegisterUserHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_EmailWithoutTopLevelDomain_IsRefusedBeforeAnyLookup()
+    {
+        var users = new Mock<IUserRepository>();
+        var handler = new RegisterUserHandler(users.Object, Mock.Of<IPasswordHasher>(), NullLogger<RegisterUserHandler>.Instance, TimeProvider.System);
+
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() =>
+            handler.HandleAsync(
+                new RegisterRequest { Email = "alice@exemple", Password = "abcd1234", DisplayName = "Alice" }));
+
+        Assert.Equal(ErrorCodes.EmailInvalid, ex.Reason);
+        users.Verify(x => x.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_DisplayNameWithARightToLeftOverride_IsStoredWithoutIt()
+    {
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+        users.Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User u, CancellationToken _) => u with { Id = "new" });
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(h => h.Hash(It.IsAny<string>())).Returns("hash");
+        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System);
+
+        var res = await handler.HandleAsync(
+            new RegisterRequest { Email = "rtl@b.co", Password = "abcd1234", DisplayName = "\u202Eecila" });
+
+        Assert.Equal("ecila", res.DisplayName);
+    }
+
+    [Fact]
     public async Task HandleAsync_EmptyDisplayName_ThrowsBadRequest()
     {
         var users = new Mock<IUserRepository>();

@@ -6,6 +6,10 @@ namespace MoviePicker.Api.Infrastructure.Tmdb;
 public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
 {
     private const int ShowcaseItemsPerPage = 20;
+    private const int StubFilmId = 999_001;
+    private const int OtherStubFilmId = 999_002;
+    private const string StubFilmTitle = "Film E2E Stub";
+    private const string OtherStubFilmTitle = "Autre film test";
 
     private static readonly int[] SciFiAdventureGenreIds = [878, 12];
     private static readonly int[] DramaGenreIds = [18];
@@ -17,8 +21,8 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
                 ? Array.Empty<TmdbSearchItem>()
                 : new[]
                 {
-                    new TmdbSearchItem(999_001, MovieMediaType.Movie, "Film E2E Stub", "2024", null, 8.1, GenreIds: SciFiAdventureGenreIds),
-                    new TmdbSearchItem(999_002, MovieMediaType.Movie, "Autre film test", "2023", null, 7.0, GenreIds: DramaGenreIds),
+                    new TmdbSearchItem(StubFilmId, MovieMediaType.Movie, StubFilmTitle, "2024", null, 8.1, GenreIds: SciFiAdventureGenreIds),
+                    new TmdbSearchItem(OtherStubFilmId, MovieMediaType.Movie, OtherStubFilmTitle, "2023", null, 7.0, GenreIds: DramaGenreIds),
                 };
         return Task.FromResult(list);
     }
@@ -97,11 +101,18 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
                 ],
                 []);
 
+    public static string TitleOf(int tmdbId) => tmdbId switch
+    {
+        StubFilmId => StubFilmTitle,
+        OtherStubFilmId => OtherStubFilmTitle,
+        _ => $"{StubFilmTitle} {tmdbId}"
+    };
+
     public Task<TmdbMovieDetails?> GetDetailsAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct = default)
     {
         var details = new TmdbMovieDetails(
             tmdbId,
-            "Film E2E Stub",
+            TitleOf(tmdbId),
             "Synopsis généré par le stub TMDB pour les tests E2E.",
             "Tagline test",
             "Réalisateur Stub",
@@ -109,7 +120,7 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
             120,
             Genres,
             GenreIds,
-            "2024-01-01",
+            tmdbId == OtherStubFilmId ? "2023-01-01" : "2024-01-01",
             null,
             7.3,
             null,

@@ -10,6 +10,8 @@ import {
   eventDateShortcuts,
   type EventDateShortcut,
 } from '@/features/events/lib/eventStartShortcuts';
+import { latestEventDate } from '@/features/events/lib/createEventValidation';
+import { eventTimeNeedsZone } from '@/shared/utils/eventScheduled';
 import styles from './CreateEventDialog.module.css';
 
 const OTHER = 'other';
@@ -154,6 +156,7 @@ export default function CreateEventWhen({
               className="input"
               value={date}
               min={today}
+              max={latestEventDate(new Date())}
               onChange={(event) => onDateChange(event.target.value)}
               required
               aria-invalid={invalid || undefined}
@@ -205,6 +208,9 @@ export default function CreateEventWhen({
         </Field>
       ) : null}
       {pastDateHint ? <p className={styles.pastHint}>{pastDateHint}</p> : null}
+      {eventTimeNeedsZone({ date, time }) ? (
+        <p className={styles.pastHint}>{t('events.create.parisTimeHint')}</p>
+      ) : null}
     </section>
   );
 }

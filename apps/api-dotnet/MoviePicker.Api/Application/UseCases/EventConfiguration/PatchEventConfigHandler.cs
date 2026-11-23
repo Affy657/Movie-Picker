@@ -59,7 +59,9 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         var hasGroupChange = !string.IsNullOrWhiteSpace(request.GroupId) || request.ClearGroup == true;
 
         var now = _clock.GetUtcNow();
-        EnsurePatchAllowed(evt, now, hasConfigChange, hasDateTimeChange, hasTitleChange, hasRecurrenceChange);
+        var date = ResolveDate(request, evt.Date);
+        var time = ResolveTime(request, evt.Time);
+        EnsurePatchAllowed(evt, evt with { Date = date, Time = time }, now, hasConfigChange, hasDateTimeChange, hasTitleChange, hasRecurrenceChange);
         var chosenGroup = hasGroupChange ? await ResolveChosenGroupAsync(evt, request, userId, now, ct) : null;
 
         if (hasWinnerCountChange)
@@ -84,8 +86,6 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
             WinnerCount = request.WinnerCount ?? current.WinnerCount
         };
 
-        var date = ResolveDate(request, evt.Date);
-        var time = ResolveTime(request, evt.Time);
         var title = ResolveTitle(request, evt.Title);
         var recurrence = ResolveRecurrence(request, evt.Recurrence);
 
@@ -175,6 +175,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
 
     private static void EnsurePatchAllowed(
         Event evt,
+        Event rescheduled,
         DateTimeOffset utcNow,
         bool hasConfigChange,
         bool hasDateTimeChange,
@@ -191,6 +192,9 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
 
         if (hasDateTimeChange && (evt.IsFinished(utcNow) || evt.HasWinner))
             throw Errors.EventDateLockedFinished();
+
+        if (hasDateTimeChange)
+            EventStartPolicy.EnsureSchedulable(rescheduled, utcNow);
 
         if (hasTitleChange && (evt.IsFinished(utcNow) || evt.HasWinner))
             throw Errors.EventTitleLockedFinished();
@@ -267,9 +271,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
     {
         if (request.Title is null)
             return current;
-        var trimmed = request.Title.Trim();
-        if (trimmed.Length == 0)
-            throw Errors.EventTitleRequired();
+        var trimmed = EventStartPolicy.CleanTitle(request.Title);
         if (trimmed.Length > 200)
             throw Errors.EventTitleTooLong(200);
         return trimmed;
