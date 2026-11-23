@@ -205,7 +205,7 @@ La page d'un formulaire seul : `back` (`to`, `label`) rend le `BackLink`, puis u
 
 ### InlineError
 
-L'erreur d'un bloc qui n'a pas chargé, dans la page : `message`, `retryLabel`, `onRetry`, `messageRole` `alert` (défaut) / `status`. Icône `AlertCircle`, bouton `sm` de nouvel essai. `status` quand plusieurs blocs peuvent échouer ensemble (les rangées de l'accueil) : une alerte par rangée ferait lire le même message six fois. Une erreur de page entière reste `ErrorState`.
+L'erreur d'un bloc qui n'a pas chargé, dans la page : `message`, `retryLabel`, `onRetry`, `messageRole` `alert` (défaut) / `status`. Icône `AlertCircle`, bouton `sm` de nouvel essai. `status` quand plusieurs blocs peuvent échouer ensemble (les rangées de l'accueil) : une alerte par rangée ferait lire le même message six fois. Une erreur de page entière reste `ErrorState`. Après un 429 qui porte `Retry-After`, le bouton reste désactivé et décompte le délai (« Réessayer dans 30 s ») : `fetchApi` le note dans `shared/api/rateLimitCooldown.ts`, que lit `useRateLimitCooldownMs`.
 
 ### Field
 
