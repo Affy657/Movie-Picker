@@ -2874,10 +2874,16 @@ export const en: Locale = {
     noticeTitle: 'Legal notice',
     noticeIntro: 'Movie Picker is a personal project developed and published by Adrien Morand.',
     noticeEditorTitle: 'Publisher',
-    noticeEditorBody: 'Adrien Morand, contact: {{email}}',
+    noticeEditorBody:
+      'Adrien Morand, a private individual, publishes Movie Picker on a non-professional basis. Contact: {{email}}. As French law no. 2004-575 of 21 June 2004 on confidence in the digital economy allows, his home address is not published: his details are held at the disposal of the hosting provider.',
+    noticePublicationTitle: 'Publication director',
+    noticePublicationBody: 'Adrien Morand.',
     noticeHostingTitle: 'Hosting',
-    noticeHostingBody:
-      'The website (front-end) and the API are hosted by Google Cloud Platform (Firebase Hosting and Cloud Run). The database is hosted by MongoDB Atlas.',
+    noticeHostingBody: 'The website and its data are hosted by two providers:',
+    noticeHostingWeb:
+      'Website and API: Google Cloud Platform (Firebase Hosting, and Cloud Run in the europe-west1 region, in Belgium), a service of Google LLC, 1600 Amphitheatre Parkway, Mountain View, CA 94043, United States.',
+    noticeHostingDatabase:
+      'Database: MongoDB Atlas, a service of MongoDB, Inc., 1633 Broadway, 38th Floor, New York, NY 10019, United States, on servers located in Ireland (Amazon Web Services, eu-west-1 region).',
     noticeIpTitle: 'Intellectual property',
     noticeIpBody:
       'Movie and TV show data, posters and availability information come from The Movie Database (TMDB) and remain the property of their respective rights holders. Movie Picker is neither produced by nor affiliated with TMDB.',
@@ -2891,7 +2897,12 @@ export const en: Locale = {
     privacyIntro:
       'This page describes the personal data processed by Movie Picker and your rights over that data.',
     privacyDataTitle: 'Data collected',
-    privacyDataBody: 'Movie Picker processes three families of data:',
+    privacyControllerTitle: 'Data controller',
+    privacyControllerBody:
+      'Adrien Morand, publisher of Movie Picker, is the controller of your data. You can reach him at {{email}}.',
+    privacyDataBody: 'Movie Picker processes four families of data:',
+    privacyDataTechnical:
+      'Technical data: IP address, date, requested address and account identifier of each request the API receives, in its logs, and error reports (see “Error tracking”).',
     privacyDataAccount:
       'Account: email, nickname, public handle, profile photo if you have one, hashed password, or an identity linked via Google/GitHub.',
     privacyDataUsage:
@@ -2907,12 +2918,54 @@ export const en: Locale = {
     privacyIdeasTitle: 'Idea suggestions',
     privacyIdeasBody:
       'A suggestion sent from the “Suggest an idea” button becomes a public issue of the project’s GitHub repository, readable by anyone: its title, description, screenshots (without their metadata), the kind of page it was sent from and the app version. Your name, handle and email are not included, only a technical identifier that lets us reach you. Deleting your account does not remove that issue: write to the contact address to have it taken down.',
+    privacyPurposesTitle: 'Purposes and legal bases',
+    privacyPurposesBody: 'Each processing rests on a legal basis of the GDPR:',
+    privacyPurposeService:
+      'Running the service you use (account, events, votes, lists, groups, notifications, Letterboxd sync): performance of the service you ask for (Article 6(1)(b)).',
+    privacyPurposeSecurity:
+      'Technical logs, abuse protection, error tracking and backups: the publisher’s legitimate interest in a safe and reliable service (Article 6(1)(f)).',
+    privacyPurposeAnalytics:
+      'PostHog audience measurement: your consent (Article 6(1)(a)), which you can withdraw at any time through “Manage cookies”, at the bottom of every page.',
+    privacyPurposeCounts:
+      'Usage totals without any identifier and the supporter badge: the publisher’s legitimate interest in knowing what gets used and in thanking donors (Article 6(1)(f)).',
+    privacyErrorsTitle: 'Error tracking',
+    privacyErrorsBody:
+      'When an error occurs, your browser or the server sends Sentry a technical report: the error message and stack trace, browser and operating system, the page concerned (invitation tokens masked). On part of the page loads and requests (one in ten in the browser), Sentry also receives loading time measurements. These reports carry no cookie, no account identifier, no request headers or bodies, and no session tracking. They are only used to fix errors and slowness.',
+    privacyProcessorsTitle: 'Processors and recipients',
+    privacyProcessorsBody:
+      'Your data is neither sold nor transferred. Only these providers process it, on behalf of Movie Picker:',
+    privacyProcessorGoogleCloud:
+      'Google Cloud (Google LLC, United States): hosting of the website (Firebase Hosting), of the API and its logs (Cloud Run, Belgium), database backups (Belgium).',
+    privacyProcessorAtlas:
+      'MongoDB Atlas (MongoDB, Inc., United States): database, hosted in Ireland.',
+    privacyProcessorResend:
+      'Resend (United States): sending the password reset email, from Ireland.',
+    privacyProcessorSentry:
+      'Sentry (Functional Software, Inc., United States): error tracking, data stored in the European Union.',
+    privacyProcessorPostHog:
+      'PostHog (PostHog, Inc., United States): audience measurement, only with your consent, data stored in the European Union.',
+    privacyProcessorGitHub:
+      'GitHub (GitHub, Inc., United States): signing in with GitHub if you choose it, and the public issues of idea suggestions.',
+    privacyProcessorKofi:
+      'Ko-fi (Ko-fi Labs Limited, United Kingdom): donations, as a separate controller for payments.',
+    privacyThirdPartiesTitle: 'Content loaded from other services',
+    privacyThirdPartiesBody:
+      'To show some images, your browser contacts other services directly, which then receive your IP address: The Movie Database for posters, DiceBear for generated avatars, YouTube (Google) for thumbnails and trailers, which may set its own cookies when you play a video. If you turn on notifications, they go through the push service of your browser (Google, Mozilla, Apple or Microsoft).',
+    privacyTransfersTitle: 'Transfers outside the European Union',
+    privacyTransfersBody:
+      'Google, MongoDB, Resend, Sentry, PostHog and GitHub are companies established in the United States. Your data is stored in the European Union where the service allows it, but these companies may access it from the United States. These transfers are covered by the European Commission’s standard contractual clauses included in their data processing agreements and, for certified companies, by the EU-US Data Privacy Framework. Ko-fi is established in the United Kingdom, which the European Commission recognises as offering an adequate level of protection.',
     privacyRetentionTitle: 'Data retention',
     privacyRetentionBody:
-      'Your data is kept for as long as your account exists. Deleting your account, available from the Settings page, permanently erases your profile and your photo; events you created, your votes and your ratings are kept but anonymised.',
+      'Your data is kept for as long as your account exists. Deleting your account, available from the Settings page, erases your profile and your photo from the live database; events you created, your votes and your ratings are kept but anonymised.',
+    privacyRetentionBackups:
+      'Backups: the database is backed up every day. Daily archives are kept 30 days and one archive per month 400 days, then remain recoverable for 7 more days before being erased for good. Data deleted from the database can therefore remain in a backup for up to 407 days. These backups are only used to restore the service after an incident.',
+    privacyRetentionLogs: 'Technical logs of the API: 30 days.',
     privacyRightsTitle: 'Your rights',
     privacyRightsBody:
-      'Under GDPR, you can export your data (Settings page) or delete your account at any time. For any other request about your data, contact {{email}}.',
+      'Under the GDPR and the French Data Protection Act, you have the right to access, rectify, erase, restrict and port your data, the right to object, the right to withdraw your consent at any time and the right to set instructions for what happens to your data after your death. You can export your data or delete your account from the Settings page; for any other request, write to {{email}}.',
+    privacyComplaintTitle: 'Complaint',
+    privacyComplaintBody:
+      'If, after writing to the publisher, you consider that your rights are not respected, you can lodge a complaint with the CNIL, the French data protection authority (Commission nationale de l’informatique et des libertés, 3 place de Fontenoy, TSA 80715, 75334 Paris Cedex 07, France, www.cnil.fr).',
     privacyContactTitle: 'Contact',
     privacyContactBody: 'For any question about this policy, write to {{email}}.',
   },
