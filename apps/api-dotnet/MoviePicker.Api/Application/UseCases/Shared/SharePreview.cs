@@ -43,7 +43,16 @@ public sealed record SharePreview(
 
 public static class SharePreviewContent
 {
+    public const int DescriptionMaxLength = 200;
+
+    private const string Ellipsis = "…";
+
     public static readonly CultureInfo French = new("fr-FR");
+
+    public static string Excerpt(string text) =>
+        text.Length <= DescriptionMaxLength
+            ? text
+            : TextTruncation.ToMaxLength(text, DescriptionMaxLength - Ellipsis.Length) + Ellipsis;
 
     public static string Day(string date) =>
         DateOnly.TryParse(date, CultureInfo.InvariantCulture, DateTimeStyles.None, out var day)

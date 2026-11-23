@@ -8,9 +8,8 @@ namespace MoviePicker.Api.Application.UseCases.MovieShare;
 
 public sealed class GetMovieShareDocumentHandler : IGetMovieShareDocumentHandler
 {
-    public const int DescriptionMaxLength = 200;
+    public const int DescriptionMaxLength = SharePreviewContent.DescriptionMaxLength;
 
-    private const string Ellipsis = "…";
     private const string MovieType = "video.movie";
     private const string TvShowType = "video.tv_show";
 
@@ -114,8 +113,6 @@ public sealed class GetMovieShareDocumentHandler : IGetMovieShareDocumentHandler
                 : ServerCopy.SharePreviews.MovieWithoutOverview;
         }
 
-        return text.Length <= DescriptionMaxLength
-            ? text
-            : TextTruncation.ToMaxLength(text, DescriptionMaxLength - Ellipsis.Length) + Ellipsis;
+        return SharePreviewContent.Excerpt(text);
     }
 }

@@ -116,6 +116,18 @@ public static class ServerCopy
             $"On a vu {film}, noté {average}/5 par {raters}, le {day}.";
 
         public static string Participants(int count) => count == 1 ? "1 participant" : $"{count} participants";
+
+        public static string ProfileTitle(string name, string handle) => $"{name} (@{handle})";
+
+        public static string ProfileDescription(string name, string handle) =>
+            $"Profil {Of(name)} (@{handle}) sur Movie Picker : statistiques de soirées ciné, films proposés et abonnements.";
+
+        public static string BannerOf(string name) => $"Bannière du profil {Of(name)}";
+
+        private static string Of(string name) =>
+            name.Length > 0 && "aeiouyàâäéèêëîïôöùûüÿæœ".Contains(char.ToLowerInvariant(name[0]), StringComparison.Ordinal)
+                ? $"d’{name}"
+                : $"de {name}";
     }
 
     public static class PasswordResetEmail
