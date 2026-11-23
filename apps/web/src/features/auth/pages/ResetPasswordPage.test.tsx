@@ -29,7 +29,7 @@ function renderReset(initialPath: string) {
 
 async function submitNewPassword(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText(/nouveau mot de passe/i), 'newpass1A');
-  await user.type(screen.getByLabelText(/confirme le mot de passe/i), 'newpass1A');
+  await user.type(screen.getByLabelText(/confirmez le mot de passe/i), 'newpass1A');
   await user.click(screen.getByRole('button', { name: /mettre à jour/i }));
 }
 
@@ -58,7 +58,7 @@ describe('ResetPasswordPage', () => {
     renderReset('/reset?token=abc');
     expect(screen.getByRole('heading', { name: /nouveau mot de passe/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/nouveau mot de passe/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/confirme le mot de passe/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/confirmez le mot de passe/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /mettre à jour/i })).toBeInTheDocument();
   });
 
@@ -66,7 +66,7 @@ describe('ResetPasswordPage', () => {
     const user = userEvent.setup();
     renderReset('/reset?token=abc');
     await user.type(screen.getByLabelText(/nouveau mot de passe/i), 'abcd1234');
-    await user.type(screen.getByLabelText(/confirme le mot de passe/i), 'differen');
+    await user.type(screen.getByLabelText(/confirmez le mot de passe/i), 'differen');
     await user.click(screen.getByRole('button', { name: /mettre à jour/i }));
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent(/doivent être identiques/i);
@@ -84,7 +84,7 @@ describe('ResetPasswordPage', () => {
     );
     renderReset('/reset?token=plainTokenABC');
     await user.type(screen.getByLabelText(/nouveau mot de passe/i), 'newpass1A');
-    await user.type(screen.getByLabelText(/confirme le mot de passe/i), 'newpass1A');
+    await user.type(screen.getByLabelText(/confirmez le mot de passe/i), 'newpass1A');
     await user.click(screen.getByRole('button', { name: /mettre à jour/i }));
     await waitFor(() => {
       expect(captured?.token).toBe('plainTokenABC');
@@ -110,7 +110,7 @@ describe('ResetPasswordPage', () => {
       expect(screen.getByTestId('location-search').textContent).toBe('?lang=fr');
     });
     await user.type(screen.getByLabelText(/nouveau mot de passe/i), 'newpass1A');
-    await user.type(screen.getByLabelText(/confirme le mot de passe/i), 'newpass1A');
+    await user.type(screen.getByLabelText(/confirmez le mot de passe/i), 'newpass1A');
     await user.click(screen.getByRole('button', { name: /mettre à jour/i }));
     await waitFor(() => {
       expect(captured?.token).toBe('plainTokenABC');
@@ -129,7 +129,7 @@ describe('ResetPasswordPage', () => {
     );
     renderReset('/reset?token=expired');
     await user.type(screen.getByLabelText(/nouveau mot de passe/i), 'newpass1A');
-    await user.type(screen.getByLabelText(/confirme le mot de passe/i), 'newpass1A');
+    await user.type(screen.getByLabelText(/confirmez le mot de passe/i), 'newpass1A');
     await user.click(screen.getByRole('button', { name: /mettre à jour/i }));
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /lien invalide/i })).toBeInTheDocument();
@@ -149,7 +149,7 @@ describe('ResetPasswordPage', () => {
     );
     renderReset('/reset?token=abc');
     await user.type(screen.getByLabelText(/nouveau mot de passe/i), 'newpass1A');
-    await user.type(screen.getByLabelText(/confirme le mot de passe/i), 'newpass1A');
+    await user.type(screen.getByLabelText(/confirmez le mot de passe/i), 'newpass1A');
     await user.click(screen.getByRole('button', { name: /mettre à jour/i }));
     await waitFor(() => {
       expect(screen.getByRole('alert')).toBeInTheDocument();
