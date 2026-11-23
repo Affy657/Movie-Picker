@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain;
 
 namespace MoviePicker.Api.Application.UseCases.UsageCounts;
@@ -26,7 +27,11 @@ public sealed class UsageRecorder : IUsageRecorder
         catch (Exception ex)
         {
             if (ex is not OperationCanceledException)
-                _logger.LogWarning(ex, "Usage count {Metric} {Variant} was not recorded", count.Metric, count.Variant);
+                _logger.LogWarning(
+                    ex,
+                    "Usage count {Metric} {Variant} was not recorded",
+                    LogText.SingleLine(count.Metric),
+                    LogText.SingleLine(count.Variant));
         }
     }
 }

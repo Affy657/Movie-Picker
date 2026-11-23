@@ -86,7 +86,7 @@ public sealed class AuthController : ControllerBase
     {
         var result = await handler.HandleAsync(request, ct);
         await SignInAsync(result.UserId, result.DisplayName, clock);
-        await usage.RecordAsync(UsageCount.SignedUp(UsageCount.EmailMethod, request.ReturnTo), ct);
+        await usage.RecordAsync(UsageCount.SignedUp(UsageCount.FormMethod, request.ReturnTo), ct);
         return CreatedAtAction(nameof(Me), null, result);
     }
 
@@ -106,7 +106,7 @@ public sealed class AuthController : ControllerBase
     {
         var result = await handler.HandleAsync(request, ct);
         await SignInAsync(result.UserId, result.DisplayName, clock);
-        await usage.RecordAsync(UsageCount.LoggedIn(UsageCount.EmailMethod, request.ReturnTo), ct);
+        await usage.RecordAsync(UsageCount.LoggedIn(UsageCount.FormMethod, request.ReturnTo), ct);
         return Ok(result);
     }
 

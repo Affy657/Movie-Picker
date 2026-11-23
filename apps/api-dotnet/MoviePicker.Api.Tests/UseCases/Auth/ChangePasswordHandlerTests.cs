@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
@@ -6,6 +7,7 @@ using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
+using MoviePicker.Api.Tests.Logging;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.Auth;
@@ -40,7 +42,8 @@ public sealed class ChangePasswordHandlerTests
         IAuthSessionInvalidator sessions,
         TimeProvider clock,
         IPushSubscriptionRepository? pushSubscriptions = null,
-        IPasswordResetTokenRepository? resetTokens = null) =>
+        IPasswordResetTokenRepository? resetTokens = null,
+        ILogger<ChangePasswordHandler>? logger = null) =>
         new(
             users,
             hasher,
@@ -48,7 +51,7 @@ public sealed class ChangePasswordHandlerTests
             sessions,
             pushSubscriptions ?? new Mock<IPushSubscriptionRepository>().Object,
             clock,
-            NullLogger<ChangePasswordHandler>.Instance);
+            logger ?? NullLogger<ChangePasswordHandler>.Instance);
 
     private static ChangePasswordRequest Change(string? currentPassword, string newPassword) =>
         new() { CurrentPassword = currentPassword, NewPassword = newPassword };
@@ -230,6 +233,30 @@ public sealed class ChangePasswordHandlerTests
         Assert.Equal(ErrorCodes.CurrentPasswordIncorrect, ex.Reason);
         users.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
         sessions.Verify(x => x.InvalidateAllForUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WrongCurrentPassword_LogsTheAccountIdWithoutLineBreakNorControlCharacter()
+    {
+        var user = SampleUser("user-1\r\nforged\u001b[31m");
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Verify("old-hash", "wrong")).Returns(PasswordVerification.Failed);
+        var logger = new CapturingLogger<ChangePasswordHandler>();
+        var handler = CreateHandler(
+            users.Object,
+            hasher.Object,
+            new Mock<IAuthSessionInvalidator>().Object,
+            new FakeTimeProvider(TestEpoch),
+            logger: logger);
+
+        await Assert.ThrowsAsync<UnauthorizedException>(
+            () => handler.HandleAsync(user.Id, Change("wrong", "wxyz5678"), recentlyAuthenticated: false));
+
+        var entry = Assert.Single(logger.Entries);
+        Assert.DoesNotContain(entry.Message, char.IsControl);
+        Assert.Contains("user-1 forged [31m", entry.Message);
     }
 
     [Fact]

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.InMemory;
 
@@ -24,7 +25,7 @@ public sealed class InMemoryAuthSessionInvalidator(
             _logger.LogWarning(
                 "In-memory sessions: ticket store {TicketStore} cannot be searched by user, nothing invalidated for user {UserId}",
                 _ticketStore.GetType().Name,
-                userId);
+                LogText.SingleLine(userId));
             return Task.FromResult(0L);
         }
 

@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -42,7 +43,7 @@ public sealed class ChangePasswordHandler : IChangePasswordHandler
         {
             if (!recentlyAuthenticated)
             {
-                _logger.LogWarning("ChangePassword: first password refused on a stale session for {UserId}", userId);
+                _logger.LogWarning("ChangePassword: first password refused on a stale session for {UserId}", LogText.SingleLine(userId));
                 throw Errors.ReauthenticationRequired();
             }
         }
@@ -51,7 +52,7 @@ public sealed class ChangePasswordHandler : IChangePasswordHandler
             var verify = _passwordHasher.Verify(user.PasswordHash, request.CurrentPassword ?? string.Empty);
             if (verify == PasswordVerification.Failed)
             {
-                _logger.LogWarning("ChangePassword: incorrect current password for {UserId}", userId);
+                _logger.LogWarning("ChangePassword: incorrect current password for {UserId}", LogText.SingleLine(userId));
                 throw Errors.CurrentPasswordIncorrect();
             }
         }
@@ -71,7 +72,7 @@ public sealed class ChangePasswordHandler : IChangePasswordHandler
 
         _logger.LogInformation(
             "ChangePassword: success for {EmailMasked} (userId={UserId}, invalidatedSessions={Sessions}, revokedPushSubscriptions={PushSubscriptions})",
-            EmailMasking.Mask(user.Email), userId, invalidatedSessions, revokedPushSubscriptions);
+            EmailMasking.Mask(user.Email), LogText.SingleLine(userId), invalidatedSessions, revokedPushSubscriptions);
     }
 
     private async Task<long> RevokePushSubscriptionsAsync(string userId, CancellationToken ct)
@@ -82,7 +83,7 @@ public sealed class ChangePasswordHandler : IChangePasswordHandler
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogError(ex, "ChangePassword: push subscriptions not revoked for {UserId}", userId);
+            _logger.LogError(ex, "ChangePassword: push subscriptions not revoked for {UserId}", LogText.SingleLine(userId));
             return 0;
         }
     }

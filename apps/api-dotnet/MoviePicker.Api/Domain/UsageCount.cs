@@ -15,7 +15,7 @@ public sealed record UsageCount
     public const string LetterboxdLinkedMetric = "letterboxd_linked";
     public const string LetterboxdSyncedMetric = "letterboxd_synced";
     public const string LetterboxdChoicesConfirmedMetric = "letterboxd_choices_confirmed";
-    public const string EmailMethod = "email";
+    public const string FormMethod = "email";
 
     public static readonly TimeSpan NewAccountWindow = TimeSpan.FromDays(1);
 
@@ -24,7 +24,7 @@ public sealed record UsageCount
 
     private static readonly string[] Viewers = ["visitor", "account"];
     private static readonly string[] EventStates = ["open", "full", "closed"];
-    private static readonly string[] AuthMethods = [EmailMethod, "google", "github"];
+    private static readonly string[] AuthMethods = [FormMethod, "google", "github"];
 
     private static readonly (string Prefix, string Origin)[] OriginsByReturnPath =
     [

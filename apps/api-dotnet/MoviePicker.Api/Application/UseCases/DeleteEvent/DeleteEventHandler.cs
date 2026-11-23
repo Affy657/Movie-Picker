@@ -94,7 +94,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
             "Event deleted: {EventId} (slug={Slug}, by={UserId}, cascadedVotes={Votes}, seenMarks={Seen}, movies={Movies}, participants={Participants})",
             evt.Id,
             evt.Slug,
-            userId,
+            LogText.SingleLine(userId),
             children.Votes,
             children.SeenMarks,
             children.Movies,
