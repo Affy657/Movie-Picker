@@ -26,6 +26,7 @@ interface ShowcaseMovieCardProps {
   rankLabel?: string;
   dimmed?: boolean;
   className?: string;
+  caption?: ReactNode;
 }
 
 export default function ShowcaseMovieCard({
@@ -45,6 +46,7 @@ export default function ShowcaseMovieCard({
   rankLabel,
   dimmed = false,
   className,
+  caption,
 }: Readonly<ShowcaseMovieCardProps>) {
   const { t, locale } = useTranslation();
   const posterRaw = posterImageSrc(posterPath);
@@ -111,6 +113,7 @@ export default function ShowcaseMovieCard({
         </span>
         {rankLabel ? <span className="visually-hidden">{rankLabel}</span> : null}
         {body}
+        {caption}
       </li>
     );
   }
@@ -121,6 +124,7 @@ export default function ShowcaseMovieCard({
       data-no-poster={posterSrc ? undefined : true}
     >
       {body}
+      {caption}
     </li>
   );
 }

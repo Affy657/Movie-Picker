@@ -210,6 +210,13 @@ export const en: Locale = {
     providerLabel: 'Platform',
     searchHeading: 'Results for "{{query}}"',
     searchEmptyQuery: 'Type a title to start searching.',
+    searchResultsHeading: 'Search results',
+    searchFieldLabel: 'Search for a film',
+    searchFieldPlaceholder: 'Title, actor or director…',
+    searchLoading: 'Searching',
+    searchError: 'The search did not go through. Check your connection, then try again.',
+    searchEmpty: 'No film matches "{{query}}".',
+    searchEmptyMessage: 'Check the spelling, or look for another title, an actor or a director.',
     backToHome: 'Back to home',
     toolbar: {
       sortRelevance: 'Relevance',

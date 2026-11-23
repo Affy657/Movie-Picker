@@ -8,7 +8,7 @@ import {
 } from '@/features/movies/api/moviesApi';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 
-const SEARCH_DEBOUNCE_MS = 350;
+export const SEARCH_DEBOUNCE_MS = 350;
 export const SEARCH_MIN_CHARS = 2;
 
 const NO_RESULTS: MovieSearchItem[] = [];

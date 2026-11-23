@@ -24,6 +24,11 @@
   color: var(--color-text-muted);
 }
 
+.searchForm {
+  width: 100%;
+  max-width: var(--container-sm);
+}
+
 .grid {
   list-style: none;
   margin: 0;

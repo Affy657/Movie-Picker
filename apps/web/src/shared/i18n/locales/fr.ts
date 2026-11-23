@@ -208,6 +208,14 @@ export const fr = {
     providerLabel: 'Plateforme',
     searchHeading: 'Résultats pour « {{query}} »',
     searchEmptyQuery: 'Entrez un titre pour lancer la recherche.',
+    searchResultsHeading: 'Résultats de la recherche',
+    searchFieldLabel: 'Rechercher un film',
+    searchFieldPlaceholder: 'Titre, acteur ou réalisateur…',
+    searchLoading: 'Recherche en cours',
+    searchError: 'La recherche n’a pas abouti. Vérifiez votre connexion, puis réessayez.',
+    searchEmpty: 'Aucun film ne correspond à « {{query}} ».',
+    searchEmptyMessage:
+      'Vérifiez l’orthographe, ou cherchez un autre titre, un acteur ou un réalisateur.',
     backToHome: "Retour à l'accueil",
     toolbar: {
       sortRelevance: 'Pertinence',
