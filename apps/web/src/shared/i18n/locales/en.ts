@@ -2762,7 +2762,7 @@ export const en: Locale = {
       'Your username can only contain lowercase letters, digits and underscores.',
     handle_reserved: 'This username is reserved.',
     bio_too_long: 'Bio cannot exceed {{max}} characters.',
-    invalid_reset_token: 'Invalid or expired token.',
+    invalid_reset_token: 'Invalid or expired link.',
     letterboxd_username_invalid:
       'Letterboxd username can only contain letters, digits and underscores.',
     letterboxd_username_missing: 'No Letterboxd username saved on your account.',

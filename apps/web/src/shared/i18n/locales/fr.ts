@@ -2799,7 +2799,7 @@ export const fr = {
       'Le pseudo ne peut contenir que des lettres minuscules, des chiffres et des tirets bas.',
     handle_reserved: 'Ce pseudo est réservé.',
     bio_too_long: 'La bio ne peut pas dépasser {{max}} caractères.',
-    invalid_reset_token: 'Token invalide ou expiré.',
+    invalid_reset_token: 'Lien invalide ou expiré.',
     letterboxd_username_invalid:
       'Le pseudo Letterboxd ne peut contenir que des lettres, chiffres et underscores.',
     letterboxd_username_missing: 'Aucun pseudo Letterboxd enregistré sur votre compte.',
@@ -3058,11 +3058,11 @@ export const fr = {
     privacyDataTechnical:
       'Données techniques : adresse IP, date, adresse demandée et identifiant de compte de chaque requête reçue par l’API, dans ses journaux, et rapports d’erreur (voir « Suivi des erreurs »).',
     privacyDataAccount:
-      'Compte : e-mail, pseudo, handle public, photo de profil si vous en avez une, mot de passe (haché) ou identité liée via Google/GitHub.',
+      'Compte : e-mail, nom affiché, pseudo public, photo de profil si vous en avez une, mot de passe (haché) ou identité liée via Google/GitHub.',
     privacyDataUsage:
       'Usage du service : soirées créées, votes, notes de films (visibles sur la soirée et sur sa page recap publique), participations, listes de films et leurs membres, groupes d’amis et leurs membres (visibles des seuls membres), films vus et leur note (repris de Letterboxd si vous activez la synchronisation), films préférés, notifications, abonnements. Les listes que vous rendez publiques et vos films vus s’affichent sur votre profil public, et vous pouvez masquer vos films vus.',
     privacyDataAnalytics:
-      'Mesure d’audience : PostHog, uniquement avec votre consentement. PostHog reçoit un identifiant technique, les pages visitées et les actions (créer une soirée, voter, partager un lien), sans pseudo, handle, e-mail ni localisation précise. Movie Picker tient aussi ses propres totaux par jour de quelques étapes (ouverture du lien d’une soirée, choix entre connexion et inscription sur ce lien, inscription, connexion, arrivée dans une soirée, ouverture d’un recap, pioche, liaison, retrait et synchronisation d’un compte Letterboxd, choix d’import Letterboxd), sans cookie, sans identifiant et sans lien avec votre compte. Pour ne compter chaque étape qu’une fois, l’onglet retient jusqu’à sa fermeture les soirées et recaps déjà comptés, sans rien envoyer de plus. Si vous refusez la mesure d’audience, votre navigateur n’envoie plus les totaux qui partent de lui et ne retient plus rien.',
+      'Mesure d’audience : PostHog, uniquement avec votre consentement. PostHog reçoit un identifiant technique, les pages visitées et les actions (créer une soirée, voter, partager un lien), sans nom affiché, pseudo, e-mail ni localisation précise. Movie Picker tient aussi ses propres totaux par jour de quelques étapes (ouverture du lien d’une soirée, choix entre connexion et inscription sur ce lien, inscription, connexion, arrivée dans une soirée, ouverture d’un recap, pioche, liaison, retrait et synchronisation d’un compte Letterboxd, choix d’import Letterboxd), sans cookie, sans identifiant et sans lien avec votre compte. Pour ne compter chaque étape qu’une fois, l’onglet retient jusqu’à sa fermeture les soirées et recaps déjà comptés, sans rien envoyer de plus. Si vous refusez la mesure d’audience, votre navigateur n’envoie plus les totaux qui partent de lui et ne retient plus rien.',
     privacyOAuthTitle: 'Connexion via Google ou GitHub',
     privacyOAuthBody:
       'Si vous choisissez de vous connecter via Google ou GitHub, Movie Picker reçoit votre identifiant, votre adresse e-mail (si vérifiée par le fournisseur) et votre nom affiché. Un compte créé avec Google reprend aussi votre photo Google comme photo de profil, que vous pouvez remplacer ou supprimer à tout moment. Aucune autre donnée du fournisseur n’est demandée ni stockée. Vous pouvez lier ou délier ces comptes à tout moment depuis la page Paramètres.',
@@ -3071,7 +3071,7 @@ export const fr = {
       'Les paiements sont traités intégralement par Ko-fi, qui agit comme responsable de traitement pour les données de paiement : Movie Picker n’y a jamais accès. À chaque don, Ko-fi notifie notre serveur et transmet l’adresse e-mail du donateur. Cette adresse est utilisée uniquement, en mémoire, pour retrouver le compte Movie Picker correspondant et y afficher le badge de soutien ; elle n’est jamais enregistrée. Aucun montant, nom de donateur ni message n’est conservé : seule la date du premier don est stockée sur le compte concerné, ainsi qu’un identifiant technique de notification qui évite de traiter deux fois le même don.',
     privacyIdeasTitle: 'Suggestions d’idées',
     privacyIdeasBody:
-      'Une suggestion envoyée depuis le bouton « Proposer une idée » devient un ticket public du dépôt GitHub du projet, lisible par tous : son titre, sa description, ses captures d’écran (sans leurs métadonnées), le type de page d’où elle part et la version de l’application. Votre nom, votre handle et votre e-mail n’y figurent pas, seulement un identifiant technique qui permet de vous recontacter. La suppression de votre compte n’efface pas ce ticket : écrivez à l’adresse de contact pour le faire retirer.',
+      'Une suggestion envoyée depuis le bouton « Proposer une idée » devient un ticket public du dépôt GitHub du projet, lisible par tous : son titre, sa description, ses captures d’écran (sans leurs métadonnées), le type de page d’où elle part et la version de l’application. Votre nom, votre pseudo et votre e-mail n’y figurent pas, seulement un identifiant technique qui permet de vous recontacter. La suppression de votre compte n’efface pas ce ticket : écrivez à l’adresse de contact pour le faire retirer.',
     privacyPurposesTitle: 'Finalités et bases légales',
     privacyPurposesBody: 'Chaque traitement repose sur une base légale du RGPD :',
     privacyPurposeService:
