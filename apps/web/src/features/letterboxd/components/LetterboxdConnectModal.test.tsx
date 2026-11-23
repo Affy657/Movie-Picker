@@ -264,7 +264,7 @@ describe('LetterboxdConnectModal (MSW)', () => {
 
     expect(
       await screen.findByText(
-        /Watchlist Letterboxd inaccessible\. Vérifiez l'orthographe du pseudo/
+        /Watchlist Letterboxd inaccessible\. Vérifiez l’orthographe du pseudo/
       )
     ).toBeInTheDocument();
     expect(screen.getByText('Films vus : 5 film(s) ajouté(s), 0 retiré(s).')).toBeInTheDocument();

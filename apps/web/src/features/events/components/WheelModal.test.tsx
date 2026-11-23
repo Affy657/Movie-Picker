@@ -264,7 +264,7 @@ describe('WheelModal', () => {
       />
     );
     expect(screen.getByText(/tirage en cours/i)).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /c'est parti/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /c’est parti/i })).not.toBeInTheDocument();
   });
 
   it('affiche le titre gagnant et le film apres la fin de la roue', () => {
@@ -331,7 +331,7 @@ describe('WheelModal', () => {
       />
     );
     fireEvent.click(screen.getByTestId('spin-done-trigger'));
-    fireEvent.click(screen.getByRole('button', { name: /c'est parti/i }));
+    fireEvent.click(screen.getByRole('button', { name: /c’est parti/i }));
     expect(onClose).toHaveBeenCalledOnce();
   });
 
@@ -354,7 +354,7 @@ describe('WheelModal', () => {
     expect(screen.getByTestId('provider-chips')).toBeInTheDocument();
   });
 
-  it("n'affiche pas les chips si watchProviders absent", () => {
+  it("n’affiche pas les chips si watchProviders absent", () => {
     wrap(
       <WheelModal
         open
@@ -389,7 +389,7 @@ describe('WheelModal', () => {
 
     expect(screen.getByRole('heading', { name: /film 1 sur 3 sélectionné/i })).toBeInTheDocument();
     expect(screen.getByText(/encore 2 films à tirer/i)).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /c'est parti/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /c’est parti/i })).not.toBeInTheDocument();
 
     const finishHere = screen.getByRole('button', { name: /terminer ici/i });
     expect(finishHere).not.toHaveClass(buttonStyles.ghost!);
@@ -467,7 +467,7 @@ describe('WheelModal', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it(`goes back to "Let's go" without a possible rerun`, () => {
+  it(`goes back to "Let’s go" without a possible rerun`, () => {
     wrap(
       <WheelModal
         open
@@ -485,7 +485,7 @@ describe('WheelModal', () => {
     expect(screen.getByRole('heading', { name: /film 3 sur 3 sélectionné/i })).toBeInTheDocument();
     expect(screen.queryByText(/à tirer/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /tirer le suivant/i })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /c'est parti/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /c’est parti/i })).toBeInTheDocument();
   });
 
   it('keeps the title simple for a single-winner movie night', () => {
@@ -504,7 +504,7 @@ describe('WheelModal', () => {
     expect(screen.getByRole('heading', { name: /^film sélectionné/i })).toBeInTheDocument();
   });
 
-  it("remet l'etat a spinning quand wheelKey change", () => {
+  it("remet l’etat a spinning quand wheelKey change", () => {
     const { rerender } = wrap(
       <WheelModal
         open
@@ -614,7 +614,7 @@ describe('WheelModal', () => {
     expect(onSpinComplete).toHaveBeenCalledOnce();
   });
 
-  it("skipSpin : n'appelle onSpinComplete qu'une fois si le parent rerend", () => {
+  it("skipSpin : n’appelle onSpinComplete qu’une fois si le parent rerend", () => {
     const onSpinComplete = vi.fn();
     const { rerender } = wrap(
       <WheelModal

@@ -172,7 +172,7 @@ describe('useOfflineVoteReplay', () => {
 
     await waitFor(() => expect(result.current.outcome).not.toBeNull());
     expect(offlineVoteReport(result.current.outcome, t)?.message).toBe(
-      "Un vote fait hors ligne n'a pas pu être enregistré : Soirée terminée. Lecture seule."
+      "Un vote fait hors ligne n’a pas pu être enregistré : Soirée terminée. Lecture seule."
     );
     expect(offlineVoteReport(result.current.outcome, t)?.tone).toBe('warning');
     expect(readQueuedVotes('cine-club')).toEqual([]);

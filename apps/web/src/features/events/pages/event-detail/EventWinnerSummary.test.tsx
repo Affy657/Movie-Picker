@@ -64,12 +64,12 @@ describe('EventWinnerSummary', () => {
       <EventWinnerSummary
         winners={[movie({})]}
         isFinished
-        rating={ratingContext({ error: "Votre note n'a pas été enregistrée. Réessayez." })}
+        rating={ratingContext({ error: "Votre note n’a pas été enregistrée. Réessayez." })}
       />
     );
 
     expect(screen.getByRole('alert')).toHaveTextContent(
-      "Votre note n'a pas été enregistrée. Réessayez."
+      "Votre note n’a pas été enregistrée. Réessayez."
     );
   });
 
@@ -79,7 +79,7 @@ describe('EventWinnerSummary', () => {
       <EventWinnerSummary
         winners={[movie({})]}
         isFinished
-        rating={ratingContext({ error: "Votre note n'a pas été enregistrée. Réessayez." })}
+        rating={ratingContext({ error: "Votre note n’a pas été enregistrée. Réessayez." })}
       />
     );
 
@@ -360,7 +360,7 @@ describe('EventWinnerSummary', () => {
       );
 
       expect(screen.getByRole('button', { name: 'Donner la première note' })).toBeInTheDocument();
-      expect(screen.getByText("Personne n'a encore noté ce film.")).toBeInTheDocument();
+      expect(screen.getByText("Personne n’a encore noté ce film.")).toBeInTheDocument();
     });
 
     it('invites me to rate once the others have', () => {

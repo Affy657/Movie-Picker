@@ -396,7 +396,7 @@ describe('NightRecapPage (MSW)', () => {
     serveNight({ winners: [], isFinished: false });
     renderRecap();
 
-    expect(await screen.findByText("Le film n'est pas encore choisi")).toBeInTheDocument();
+    expect(await screen.findByText("Le film n’est pas encore choisi")).toBeInTheDocument();
     expect(screen.getByText(/arrive après la soirée/)).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Voir la soirée' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Organisez la vôtre' })).not.toBeInTheDocument();
@@ -472,7 +472,7 @@ describe('NightRecapPage (MSW)', () => {
     );
     renderRecap();
 
-    expect(await screen.findByText("Le recap n'a pas pu être chargé")).toBeInTheDocument();
+    expect(await screen.findByText("Le recap n’a pas pu être chargé")).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Réessayer' }));
 
     expect(await screen.findByRole('heading', { name: 'Soirée du vendredi' })).toBeInTheDocument();

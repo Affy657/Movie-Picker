@@ -86,7 +86,7 @@ describe('StoryShareTab', () => {
   it('prepares the image, then shows it', async () => {
     setup();
 
-    expect(screen.getByText("Préparation de l'image…")).toBeInTheDocument();
+    expect(screen.getByText("Préparation de l’image…")).toBeInTheDocument();
     expect(await screen.findByAltText('Story de Soirée du vendredi')).toHaveAttribute(
       'src',
       'blob:story'
@@ -131,7 +131,7 @@ describe('StoryShareTab', () => {
     const downloaded = vi.spyOn(download, 'downloadBlob').mockReturnValue(true);
     setup();
 
-    const button = await screen.findByRole('button', { name: "Télécharger l'image" });
+    const button = await screen.findByRole('button', { name: "Télécharger l’image" });
     expect(screen.queryByRole('button', { name: 'Partager' })).not.toBeInTheDocument();
 
     await user.click(button);
@@ -193,8 +193,8 @@ describe('StoryShareTab', () => {
     rendered.mockResolvedValue(null);
     setup();
 
-    expect(await screen.findByText("L'image n'a pas pu être créée")).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: "Télécharger l'image" })).not.toBeInTheDocument();
+    expect(await screen.findByText("L’image n’a pas pu être créée")).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: "Télécharger l’image" })).not.toBeInTheDocument();
   });
 
   it('offers to draw the image again after a failure', async () => {

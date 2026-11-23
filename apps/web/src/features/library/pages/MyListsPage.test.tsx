@@ -120,7 +120,7 @@ const FRISSONS: MockSavedList = {
   items: [film(694, 'Shining', '/shining.jpg')],
 };
 
-const FRISSONS_LABEL = "Frissons d'automne";
+const FRISSONS_LABEL = "Frissons d’automne";
 
 const KOREAN: MockSavedList = {
   id: 's3',

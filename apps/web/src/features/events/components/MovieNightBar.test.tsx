@@ -143,7 +143,7 @@ describe('MovieNightBar', () => {
     const notice = screen.getByRole('region', { name: 'Votes faits hors ligne' });
     expect(
       within(notice).getByText(
-        "Un vote fait hors ligne n'a pas pu être enregistré : Soirée terminée. Lecture seule."
+        "Un vote fait hors ligne n’a pas pu être enregistré : Soirée terminée. Lecture seule."
       )
     ).toBeInTheDocument();
     await userEvent.click(within(notice).getByRole('button', { name: 'Fermer' }));

@@ -556,7 +556,7 @@ describe('ProfilePage (MSW)', () => {
     renderProfile('alice');
     await screen.findByRole('heading', { name: 'Alice' });
 
-    expect(await screen.findByText(/statistiques n'ont pas pu être chargées/i)).toBeInTheDocument();
+    expect(await screen.findByText(/statistiques n’ont pas pu être chargées/i)).toBeInTheDocument();
     const retryBtn = screen.getByRole('button', { name: /réessayer/i });
 
     await user.click(retryBtn);
@@ -606,7 +606,7 @@ describe('ProfilePage (MSW)', () => {
     expect(badge.closest('[aria-describedby]')).toHaveAccessibleDescription(/soutien du projet/i);
   });
 
-  it("n'affiche pas le badge soutien sur un profil sans don", async () => {
+  it("n’affiche pas le badge soutien sur un profil sans don", async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
       http.get(`${TEST_API_V1}/users/alice`, () =>
@@ -632,7 +632,7 @@ describe('ProfilePage (MSW)', () => {
     expect(screen.getByRole('button', { name: /7.*abonnés/i })).toBeInTheDocument();
   });
 
-  it("ouvre la modal following au clic sur le compteur d'abonnements", async () => {
+  it("ouvre la modal following au clic sur le compteur d’abonnements", async () => {
     const user = userEvent.setup();
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
@@ -697,7 +697,7 @@ describe('ProfilePage (MSW)', () => {
     );
   });
 
-  it("shows the Follow button when signed in on someone else's profile", async () => {
+  it("shows the Follow button when signed in on someone else’s profile", async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
       http.get(`${TEST_API_V1}/users/alice`, () =>
@@ -767,7 +767,7 @@ describe('ProfilePage (MSW)', () => {
     }
   );
 
-  it("n'affiche pas de bouton Suivre sur son propre profil", async () => {
+  it("n’affiche pas de bouton Suivre sur son propre profil", async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
       http.get(`${TEST_API_V1}/users/moi`, () =>
@@ -1005,7 +1005,7 @@ describe('ProfilePage (MSW)', () => {
     }
   );
 
-  it("still shows the not found state on someone else's private profile when signed in", async () => {
+  it("still shows the not found state on someone else’s private profile when signed in", async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
       http.get(`${TEST_API_V1}/users/alice`, () =>

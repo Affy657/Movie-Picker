@@ -186,7 +186,7 @@ describe('SavedListPage', () => {
     renderPage('/listes/enregistrees/s2');
 
     expect(
-      await screen.findByRole('heading', { level: 1, name: "Frissons d'automne" })
+      await screen.findByRole('heading', { level: 1, name: "Frissons d’automne" })
     ).toBeInTheDocument();
     expect(screen.getByText('Sélection d’Explorer')).toBeInTheDocument();
 

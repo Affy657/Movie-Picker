@@ -199,7 +199,7 @@ describe('BannerPickerModal', () => {
     await userEvent.click(await screen.findByRole('button', { name: /Sans image \(1990\)/ }));
 
     expect(
-      await screen.findByText("Ce film n'a pas d'image utilisable comme bannière.")
+      await screen.findByText("Ce film n’a pas d’image utilisable comme bannière.")
     ).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Retour aux films' }));
     expect(screen.getByRole('searchbox', { name: 'Rechercher un film' })).toHaveValue('sans');
@@ -273,7 +273,7 @@ describe('BannerPickerModal', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Enregistrer' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      "Vous avez importé plusieurs images d'affilée. Réessayez dans quelques minutes."
+      "Vous avez importé plusieurs images d’affilée. Réessayez dans quelques minutes."
     );
   });
 
@@ -291,10 +291,10 @@ describe('BannerPickerModal', () => {
     const props = renderPicker({ photoUrl: PHOTO_URL });
     await userEvent.click(screen.getByRole('tab', { name: 'Mon image' }));
 
-    await userEvent.click(screen.getByRole('button', { name: "Supprimer l'image" }));
+    await userEvent.click(screen.getByRole('button', { name: "Supprimer l’image" }));
     const dialog = await screen.findByTestId('banner-photo-delete');
     expect(dialog).toHaveTextContent('Votre bannière actuelle ne change pas.');
-    await userEvent.click(within(dialog).getByRole('button', { name: "Supprimer l'image" }));
+    await userEvent.click(within(dialog).getByRole('button', { name: "Supprimer l’image" }));
 
     await waitFor(() => expect(props.onDeletePhoto).toHaveBeenCalled());
   });

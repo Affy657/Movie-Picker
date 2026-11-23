@@ -245,7 +245,7 @@ describe('ShowcaseListPage', () => {
     server.use(authMeGuestHandler, showcaseHandler);
     renderPage('trending', '/films/tendances', '/films/tendances');
 
-    expect(screen.getByRole('link', { name: /retour à l'accueil/i })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: /retour à l’accueil/i })).toHaveAttribute('href', '/');
   });
 
   it('signale une section en panne', async () => {

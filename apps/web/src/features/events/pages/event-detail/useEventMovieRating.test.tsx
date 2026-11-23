@@ -113,7 +113,7 @@ describe('useEventMovieRating', () => {
       await hook.result.current.save('m1', 8);
     });
 
-    expect(hook.result.current.error).toBe("Votre note n'a pas été enregistrée. Réessayez.");
+    expect(hook.result.current.error).toBe("Votre note n’a pas été enregistrée. Réessayez.");
   });
 
   it('clears a rating and refreshes', async () => {

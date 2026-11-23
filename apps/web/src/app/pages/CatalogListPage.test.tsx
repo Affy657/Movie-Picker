@@ -149,7 +149,7 @@ describe('CatalogListPage', () => {
     renderPage('theme', '/films/theme/nawak');
 
     expect(await screen.findByText(/n’existe pas/i)).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: /retour à l'accueil/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: /retour à l’accueil/i }).length).toBeGreaterThan(0);
   });
 
   it('saves the saga from the button after Piocher, then stops saving it, for a member', async () => {
@@ -199,10 +199,10 @@ describe('CatalogListPage', () => {
 
     expect(await screen.findByRole('button', { name: 'Enregistrée' })).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { level: 1, name: "Frissons d'automne" })
+      screen.getByRole('heading', { level: 1, name: "Frissons d’automne" })
     ).toBeInTheDocument();
     expect(screen.getByText('Sélection d’Explorer')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /retour à l'accueil/i })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: /retour à l’accueil/i })).toHaveAttribute('href', '/');
   });
 
   it('offers no saving and no dimming to a visitor', async () => {
