@@ -182,12 +182,12 @@ public sealed class GlobalSearchHandlerTests
         Assert.Equal([1, 2, 3, 4, 5], result.Titles.Select(t => t.TmdbId));
     }
 
-    public static TheoryData<Exception> TmdbFailures => new() { new HttpRequestException("down"), new JsonException("garbled") };
-
     [Theory]
-    [MemberData(nameof(TmdbFailures))]
-    public async Task HandleAsync_TmdbUnavailable_StillReturnsTheOtherSections(Exception failure)
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task HandleAsync_TmdbUnavailable_StillReturnsTheOtherSections(bool garbledAnswer)
     {
+        Exception failure = garbledAnswer ? new JsonException("garbled") : new HttpRequestException("down");
         _tmdb
             .Setup(t => t.SearchTitlesAsync(It.IsAny<string>(), It.IsAny<bool>(), null, null, It.IsAny<CancellationToken>()))
             .ThrowsAsync(failure);

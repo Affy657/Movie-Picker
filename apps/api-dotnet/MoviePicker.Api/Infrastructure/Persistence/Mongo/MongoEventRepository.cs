@@ -298,11 +298,11 @@ public sealed class MongoEventRepository : IEventRepository
         var filter = Builders<EventDocument>.Filter;
         var ids = eventIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
         var groups = groupIds.Where(MongoObjectIds.IsValid).Distinct().ToList();
-        var reachable = new List<FilterDefinition<EventDocument>>
-        {
+        List<FilterDefinition<EventDocument>> reachable =
+        [
             filter.In(x => x.Id, ids),
             filter.In(x => x.GroupId, groups)
-        };
+        ];
         if (!string.IsNullOrWhiteSpace(creatorUserId))
             reachable.Add(filter.Eq(x => x.CreatorUserId, creatorUserId));
 
