@@ -468,6 +468,27 @@ describe('EventWinnerSummary', () => {
       expect(screen.queryByRole('button', { name: 'Noter ce film' })).not.toBeInTheDocument();
     });
 
+    it('puts hosting their own night first for someone who was not there, signing in to rate after it', () => {
+      renderSummary(
+        <EventWinnerSummary
+          winners={[movie({ id: 'm-win' })]}
+          isFinished
+          rating={ratingContext({
+            currentParticipantId: null,
+            signInHref: (movieId) => `/login?returnTo=%2Fe%2Fsoiree%3Frate%3D${movieId}`,
+            hostYourOwnHref: '/register?returnTo=%2Fnew',
+          })}
+        />
+      );
+
+      const links = screen.getAllByRole('link').map((link) => link.textContent);
+      expect(links.slice(0, 2)).toEqual(['Organisez la vôtre', 'Se connecter pour noter']);
+      expect(screen.getByRole('link', { name: 'Organisez la vôtre' })).toHaveAttribute(
+        'href',
+        '/register?returnTo=%2Fnew'
+      );
+    });
+
     it('moves on to the next drawn movie not rated yet, recalling the one just saved', async () => {
       renderSummary(
         <EventWinnerSummary

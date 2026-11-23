@@ -1266,6 +1266,7 @@ export const en: Locale = {
       upcoming: 'Tonight you are watching',
       upcomingTomorrow: 'Tomorrow you are watching',
       upcomingOn: 'On {{date}} you are watching',
+      hostYourOwn: 'Host your own',
     },
     propose: {
       title: 'Suggest a movie',

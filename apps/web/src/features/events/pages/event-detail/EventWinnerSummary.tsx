@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import clsx from 'clsx';
-import { Film, Info, LogIn, Star } from 'lucide-react';
+import { CalendarPlus, Film, Info, LogIn, Star } from 'lucide-react';
 import Button, { buttonClass } from '@/shared/components/Button';
 import PosterBackdrop from '@/shared/components/PosterBackdrop';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -41,6 +41,7 @@ export type WinnerRatingContext = {
   autoOpenMovieId?: string | null;
   onAutoOpen?: () => void;
   signInHref?: (movieId: string) => string;
+  hostYourOwnHref?: string;
 };
 
 type Props = {
@@ -274,16 +275,32 @@ function PrimaryAction({
       </Button>
     );
   }
-  const href = context.signInHref?.(movie.id);
-  if (!href) return null;
-  return (
-    <Link
-      to={href}
-      className={buttonClass({ variant: 'primary', size: 'lg', className: styles.cta })}
-    >
+  return <VisitorActions movie={movie} context={context} />;
+}
+
+function VisitorActions({
+  movie,
+  context,
+}: Readonly<{ movie: MovieData; context: WinnerRatingContext }>) {
+  const { t } = useTranslation();
+  const signInHref = context.signInHref?.(movie.id);
+  const mainAction = buttonClass({ variant: 'primary', size: 'lg', className: styles.cta });
+  const hostYourOwn = context.hostYourOwnHref;
+  const signIn = signInHref ? (
+    <Link to={signInHref} className={hostYourOwn ? buttonClass() : mainAction}>
       <LogIn size={ICON_SIZE.md} aria-hidden />
       {t('events.ratings.signInToRate')}
     </Link>
+  ) : null;
+  if (!hostYourOwn) return signIn;
+  return (
+    <>
+      <Link to={hostYourOwn} className={mainAction}>
+        <CalendarPlus size={ICON_SIZE.md} aria-hidden />
+        {t('events.winners.hostYourOwn')}
+      </Link>
+      {signIn}
+    </>
   );
 }
 

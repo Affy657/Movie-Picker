@@ -1280,6 +1280,7 @@ export const fr = {
       upcoming: 'Ce soir, vous regardez',
       upcomingTomorrow: 'Demain, vous regardez',
       upcomingOn: 'Le {{date}}, vous regardez',
+      hostYourOwn: 'Organisez la vôtre',
     },
     propose: {
       title: 'Proposer un film',

@@ -997,6 +997,45 @@ describe('EventDetail (MSW)', () => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
+    it('invites a signed-out visitor who was not at the night to host their own first', async () => {
+      serveFinishedNightWithWinner(false, false, yesterday(), { signedIn: false });
+
+      renderEventDetail(`/e/${slug}`);
+
+      const hostYourOwn = await screen.findByRole('link', { name: 'Organisez la vôtre' });
+      expect(hostYourOwn).toHaveAttribute(
+        'href',
+        `/register?returnTo=${encodeURIComponent('/new?from=night')}`
+      );
+      const signIn = screen.getByRole('link', { name: 'Se connecter pour noter' });
+      expect(
+        hostYourOwn.compareDocumentPosition(signIn) & Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy();
+    });
+
+    it('invites a member who was not at the night to host their own', async () => {
+      serveFinishedNightWithWinner(false, false, yesterday(), { signedIn: true });
+
+      renderEventDetail(`/e/${slug}`);
+
+      expect(await screen.findByRole('link', { name: 'Organisez la vôtre' })).toHaveAttribute(
+        'href',
+        '/new'
+      );
+      expect(screen.queryByRole('link', { name: 'Se connecter pour noter' })).toBeNull();
+    });
+
+    it('leaves hosting out for a participant who only has to sign in to rate', async () => {
+      localStorage.removeItem('moviepicker_rating_prompted');
+      setStoredParticipant(slug, myPid, 'Alice');
+      serveFinishedNightWithWinner(false, true, yesterday(), { signedIn: false });
+
+      renderEventDetail(`/e/${slug}`);
+
+      await screen.findByRole('link', { name: 'Se connecter pour noter' });
+      expect(screen.queryByRole('link', { name: 'Organisez la vôtre' })).toBeNull();
+    });
+
     it('leaves the rating closed on a night older than a week', async () => {
       localStorage.removeItem('moviepicker_rating_prompted');
       setStoredParticipant(slug, myPid, 'Alice');
