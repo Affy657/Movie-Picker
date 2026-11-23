@@ -28,11 +28,11 @@ vi.mock('@/features/auth/api/authApi', () => ({
   postAuthRegister: vi.fn(),
 }));
 const { unauthorizedListeners } = vi.hoisted(() => ({
-  unauthorizedListeners: new Set<() => void>(),
+  unauthorizedListeners: new Set<(url: string) => void>(),
 }));
 vi.mock('@/shared/api/client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/shared/api/client')>()),
-  onUnauthorizedResponse: (listener: () => void) => {
+  onUnauthorizedResponse: (listener: (url: string) => void) => {
     unauthorizedListeners.add(listener);
     return () => unauthorizedListeners.delete(listener);
   },
@@ -528,8 +528,8 @@ describe('AuthProvider session end', () => {
 });
 
 describe('AuthProvider expired session', () => {
-  function meetUnauthorizedResponse() {
-    for (const listener of unauthorizedListeners) listener();
+  function meetUnauthorizedResponse(url = 'http://localhost:4000/api/v1/events/soiree/vote') {
+    for (const listener of unauthorizedListeners) listener(url);
   }
 
   async function renderSignedIn() {
@@ -570,6 +570,18 @@ describe('AuthProvider expired session', () => {
     expect(auth().user?.userId).toBe('u1');
     expect(auth().sessionExpired).toBe(false);
   });
+
+  it.each(['login', 'register', 'logout', 'password-reset/confirm'])(
+    'leaves the 401 of /auth/%s to the screen that asked',
+    async (route) => {
+      await renderSignedIn();
+      const checksBefore = vi.mocked(fetchAuthMeForSession).mock.calls.length;
+
+      act(() => meetUnauthorizedResponse(`http://localhost:4000/api/v1/auth/${route}`));
+
+      expect(vi.mocked(fetchAuthMeForSession).mock.calls.length).toBe(checksBefore);
+    }
+  );
 
   it('does not call a sign-out an expired session', async () => {
     const auth = await renderSignedIn();

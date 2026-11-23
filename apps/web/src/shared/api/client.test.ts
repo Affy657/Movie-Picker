@@ -388,6 +388,7 @@ describe('fetchApi', () => {
     try {
       await expect(fetchApi('/events')).rejects.toMatchObject({ code: 401 });
       expect(listener).toHaveBeenCalledTimes(1);
+      expect(listener).toHaveBeenCalledWith(expect.stringMatching(/\/api\/v1\/events$/));
     } finally {
       unsubscribe();
     }

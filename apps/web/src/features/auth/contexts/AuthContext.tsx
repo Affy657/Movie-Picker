@@ -70,6 +70,8 @@ function signedOutStateRendered(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
+const ANSWERS_A_SIGN_IN_FORM = /\/auth\/(login|register|logout|password-reset)(\/|$)/;
+
 function sessionIsGone(error: unknown): boolean {
   return ApiError.is(error) && error.code === 401;
 }
@@ -136,7 +138,8 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
 
   useEffect(
     () =>
-      onUnauthorizedResponse(() => {
+      onUnauthorizedResponse((url) => {
+        if (ANSWERS_A_SIGN_IN_FORM.test(url)) return;
         if (!queryClient.getQueryData(queryKeys.auth.me)) return;
         void queryClient.invalidateQueries(
           { queryKey: queryKeys.auth.me },
@@ -151,6 +154,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const endSession = useCallback(async () => {
     lastSessionUserIdRef.current = null;
     setSessionExpired(false);
+    await queryClient.cancelQueries({ queryKey: queryKeys.auth.me });
     clearStoredEventIdentities();
     queryClient.setQueryData(queryKeys.auth.me, null);
     await signedOutStateRendered();
