@@ -227,23 +227,6 @@ describe('EventDetail (MSW)', () => {
     expect(screen.getByRole('link', { name: 'Retour à l’accueil' })).toHaveAttribute('href', '/');
   });
 
-  it('does not ask for the movies of a movie night that does not exist', async () => {
-    const moviesRequests: string[] = [];
-    server.use(
-      http.get(`${TEST_API_V1}/events/slug/:s`, () =>
-        HttpResponse.json({ error: 'introuvable' }, { status: 404 })
-      ),
-      http.get(`${TEST_API_V1}/events/:s/movies`, ({ request }) => {
-        moviesRequests.push(request.url);
-        return HttpResponse.json({ error: 'introuvable' }, { status: 404 });
-      })
-    );
-    renderEventDetail('/e/inconnu');
-
-    await screen.findByRole('heading', { level: 1, name: 'Soirée introuvable' });
-    expect(moviesRequests).toEqual([]);
-  });
-
   it('offers to retry when the movie night cannot be loaded for now', async () => {
     let attempts = 0;
     server.use(

@@ -95,7 +95,9 @@ describe('invite link: back to the movie night after authentication', () => {
     await expectEventPage();
     await userEvent
       .setup()
-      .click(within(screen.getByRole('main')).getByRole('link', { name: /^se connecter$/i }));
+      .click(
+        within(screen.getByRole('main')).getByRole('link', { name: /^j.ai déjà un compte$/i })
+      );
     await screen.findByRole('heading', { name: /^connexion$/i }, { timeout: 20000 });
     await submitLoginForm();
 
@@ -139,7 +141,9 @@ describe('invite link: back to the movie night after authentication', () => {
     await expectEventPage();
     await userEvent
       .setup()
-      .click(within(screen.getByRole('main')).getByRole('link', { name: /^se connecter$/i }));
+      .click(
+        within(screen.getByRole('main')).getByRole('link', { name: /^j.ai déjà un compte$/i })
+      );
     await screen.findByRole('heading', { name: /^connexion$/i }, { timeout: 20000 });
     await submitLoginForm();
 

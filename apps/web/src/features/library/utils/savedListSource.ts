@@ -8,7 +8,8 @@ import type {
   SavedListSourceType,
   SavedListSummary,
 } from '@/features/library/api/savedListsApi';
-import { firstName, withElision } from '@/features/library/utils/listMembers';
+import { firstName } from '@/features/library/utils/listMembers';
+import { withElision } from '@/shared/i18n/withElision';
 
 type ProfileSourceType = Extract<
   SavedListSourceType,

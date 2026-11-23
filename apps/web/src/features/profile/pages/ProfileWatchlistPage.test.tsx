@@ -190,7 +190,7 @@ describe('ProfileWatchlistPage (MSW)', () => {
       await screen.findByText('La watchlist de ce membre n’est pas publique.')
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /la watchlist d’alice/i })).toBeInTheDocument();
-    expect(screen.queryByText(/ce profil n'existe pas/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/ce profil n.existe pas/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Réessayer' })).not.toBeInTheDocument();
     expect(screen.queryByText(/0 film à voir/i)).not.toBeInTheDocument();
   });
@@ -203,7 +203,7 @@ describe('ProfileWatchlistPage (MSW)', () => {
     );
     renderPage('alice');
 
-    expect(await screen.findByText(/ce profil n'existe pas/i)).toBeInTheDocument();
+    expect(await screen.findByText(/ce profil n.existe pas/i)).toBeInTheDocument();
   });
 
   it("affiche l'introuvable pour un profil inconnu", async () => {
@@ -217,6 +217,6 @@ describe('ProfileWatchlistPage (MSW)', () => {
     );
     renderPage('ghost');
 
-    expect(await screen.findByText(/ce profil n'existe pas/i)).toBeInTheDocument();
+    expect(await screen.findByText(/ce profil n.existe pas/i)).toBeInTheDocument();
   });
 });

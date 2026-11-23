@@ -132,7 +132,7 @@ describe('ProfileMoviesPage (MSW)', () => {
     );
     renderPage('ghost');
 
-    expect(await screen.findByText(/ce profil n'existe pas/i)).toBeInTheDocument();
+    expect(await screen.findByText(/ce profil n.existe pas/i)).toBeInTheDocument();
   });
 
   it('tells a visitor the watched films are not public, with nothing to retry', async () => {
@@ -155,7 +155,7 @@ describe('ProfileMoviesPage (MSW)', () => {
     expect(
       screen.getByRole('heading', { name: /les films vus sur movie picker par alice/i })
     ).toBeInTheDocument();
-    expect(screen.queryByText(/ce profil n'existe pas/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/ce profil n.existe pas/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Réessayer' })).not.toBeInTheDocument();
     expect(screen.queryByText(/0 film vu/i)).not.toBeInTheDocument();
   });

@@ -31,7 +31,7 @@ import ListSummaryToolbar, {
 } from '@/features/library/components/ListSummaryToolbar';
 import { usePublicLists } from '@/features/library/hooks/usePublicLists';
 import { publicListCountLabel } from '@/features/library/utils/listCount';
-import { withElision } from '@/features/library/utils/listMembers';
+import { withElision } from '@/shared/i18n/withElision';
 import {
   matchesListSearch,
   sortListSummaries,

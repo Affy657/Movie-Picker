@@ -9,8 +9,8 @@ import {
   listCompanionLabel,
   listOfLabel,
   membersPhrase,
-  withElision,
 } from './listMembers';
+import { withElision } from '@/shared/i18n/withElision';
 
 const fr: Translate = (key, vars) => t(key, vars, 'fr');
 const en: Translate = (key, vars) => t(key, vars, 'en');

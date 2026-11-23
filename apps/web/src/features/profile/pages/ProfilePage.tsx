@@ -39,7 +39,7 @@ import EmptyState from '@/shared/components/EmptyState';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import type { UserStats } from '@/features/events/api/userStatsApi';
 import { accentZoneClass, isChosenAccent } from '@/shared/utils/accentColor';
-import { withElision } from '@/features/library/utils/listMembers';
+import { withElision } from '@/shared/i18n/withElision';
 
 const FollowListModal = lazy(() => import('@/features/profile/components/FollowListModal'));
 const BannerPicker = lazy(() => import('@/features/profile/components/BannerPicker'));

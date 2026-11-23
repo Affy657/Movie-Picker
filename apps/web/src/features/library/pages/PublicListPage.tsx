@@ -30,7 +30,8 @@ import { useSavedListToggle } from '@/features/library/hooks/useSavedLists';
 import { useListItemsView } from '@/features/library/hooks/useListItemsView';
 import { publicListCountLabel, withWatchedCount } from '@/features/library/utils/listCount';
 import { watchedPercent } from '@/features/library/utils/listProgress';
-import { firstName, withElision } from '@/features/library/utils/listMembers';
+import { firstName } from '@/features/library/utils/listMembers';
+import { withElision } from '@/shared/i18n/withElision';
 import { listPageLabels } from '@/features/library/utils/listPageLabels';
 
 function creatorName(creator: ListCreator | undefined): string | null {

@@ -14,7 +14,7 @@ import ProfileCollectionPage, {
   type ProfileCollectionTexts,
 } from '@/features/profile/components/ProfileCollectionPage';
 import { ProfileCardBadge } from '@/features/movies/components/OwnerRatingBadge';
-import { withElision } from '@/features/library/utils/listMembers';
+import { withElision } from '@/shared/i18n/withElision';
 
 type ProposalsNamespace = 'proposals' | 'winningProposals';
 

@@ -69,8 +69,6 @@ export function membersPhrase(
   return namedPhrase(names, Math.max(0, others - names.length), t);
 }
 
-export { withElision };
-
 export function listOfLabel(displayName: string, t: Translate): string {
   return withElision(
     firstName(displayName),

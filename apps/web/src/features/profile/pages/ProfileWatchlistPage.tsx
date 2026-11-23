@@ -5,7 +5,7 @@ import { API_ERROR_REASONS } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
-import { withElision } from '@/features/library/utils/listMembers';
+import { withElision } from '@/shared/i18n/withElision';
 import { fetchUserWatchlist, type UserWatchlistItem } from '@/features/profile/api/profileApi';
 import ProfileCollectionPage, {
   type ProfileCollectionTexts,
