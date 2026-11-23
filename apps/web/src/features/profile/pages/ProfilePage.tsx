@@ -18,6 +18,7 @@ import ProfileStatsSection, {
 } from '@/features/profile/components/ProfileStatsSection';
 import ProfileStatsSummary from '@/features/profile/components/ProfileStatsSummary';
 import ProfileActions from '@/features/profile/components/ProfileActions';
+import ProfileMoviesSection from '@/features/profile/components/ProfileMoviesSection';
 import ProfileBanner from '@/features/profile/components/ProfileBanner';
 import ProfilePageSkeleton, {
   ProfileStatsSkeleton,
@@ -33,13 +34,11 @@ import { invalidateFollowGraph } from '@/features/profile/lib/invalidateFollowGr
 import { fetchUserStats } from '@/features/events/api/userStatsApi';
 import styles from './ProfilePage.module.css';
 import InlineError from '@/shared/components/InlineError';
+import { Skeleton } from '@/shared/components/Skeleton';
 import { accentZoneClass, isChosenAccent } from '@/shared/utils/accentColor';
 
 const FollowListModal = lazy(() => import('@/features/profile/components/FollowListModal'));
 const BannerPicker = lazy(() => import('@/features/profile/components/BannerPicker'));
-const ProfileMoviesSection = lazy(
-  () => import('@/features/profile/components/ProfileMoviesSection')
-);
 
 function formatMemberSince(iso: string, locale: string): string {
   const date = new Date(iso);
@@ -198,7 +197,7 @@ export default function ProfilePage() {
           memberSince={memberSince}
           lists={publicLists}
           summary={
-            stats && (
+            stats ? (
               <ProfileStatsSummary
                 nights={stats.eventsCreated + stats.eventsJoined}
                 winning={watchedHiddenFromVisitor ? null : stats.winningProposals}
@@ -206,6 +205,8 @@ export default function ProfilePage() {
                 bestStreakWeeks={stats.bestStreakWeeks}
                 targetId={PROFILE_STATS_ID}
               />
+            ) : (
+              statsQuery.isPending && <Skeleton className={styles.summaryPending} />
             )
           }
           accent={profileAccent}
@@ -230,16 +231,14 @@ export default function ProfilePage() {
         </ProfileHeader>
 
         <div className={styles.content}>
-          <Suspense fallback={null}>
-            <ProfileMoviesSection
-              handle={profile.handle}
-              favorites={profile.favorites ?? []}
-              isOwnProfile={isOwnProfile}
-              watchedVisible={watchedVisible}
-              watchedHidden={isOwnProfile && profile.isWatchedPublic === false}
-              watchlist={watchlist}
-            />
-          </Suspense>
+          <ProfileMoviesSection
+            handle={profile.handle}
+            favorites={profile.favorites ?? []}
+            isOwnProfile={isOwnProfile}
+            watchedVisible={watchedVisible}
+            watchedHidden={isOwnProfile && profile.isWatchedPublic === false}
+            watchlist={watchlist}
+          />
 
           {statsQuery.isPending && <ProfileStatsSkeleton />}
 

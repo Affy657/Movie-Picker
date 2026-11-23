@@ -424,6 +424,41 @@ describe('ProfilePage (MSW)', () => {
     expect(screen.queryByRole('heading', { name: 'Alice' })).not.toBeInTheDocument();
   });
 
+  it('shows the films in the same paint as the profile, so nothing pushes the statistics down', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () =>
+        HttpResponse.json({
+          ...ALICE_PROFILE,
+          favorites: [
+            { tmdbId: 949, mediaType: 'movie', title: 'Heat', year: '1995', posterPath: null },
+          ],
+        })
+      )
+    );
+
+    renderProfile('alice');
+
+    await screen.findByRole('heading', { level: 1, name: 'Alice' });
+    expect(screen.getByRole('heading', { name: 'Ses favoris' })).toBeInTheDocument();
+  });
+
+  it('keeps the place of the summary under the name while the statistics load', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      http.get(`${TEST_API_V1}/users/alice/stats`, async () => {
+        await new Promise(() => undefined);
+        return HttpResponse.json(EMPTY_STATS);
+      })
+    );
+
+    renderProfile('alice');
+
+    const identity = await screen.findByRole('region', { name: 'Alice' });
+    expect(identity.querySelector('[class*="summaryPending"]')).not.toBeNull();
+  });
+
   it('shows an error with a Retry button when the statistics fail, and recovers', async () => {
     const user = userEvent.setup();
     let statsCallCount = 0;

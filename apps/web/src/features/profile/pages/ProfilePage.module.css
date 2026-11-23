@@ -10,6 +10,12 @@
   composes: overBanner from '@/shared/components/FadedBanner.module.css';
 }
 
+.summaryPending {
+  width: 60%;
+  height: var(--tap-target-min);
+  margin-top: var(--space-0-5);
+}
+
 .content {
   display: flex;
   flex-direction: column;
