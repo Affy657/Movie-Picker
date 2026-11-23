@@ -7,6 +7,7 @@ using MoviePicker.Api.Application.Posters;
 using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Configuration;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -62,7 +63,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         if (request.MediaType == MovieMediaType.Tv && evt.Config?.AllowSeries != true)
             throw Errors.TvShowsNotAllowed();
 
-        var poster = await TmdbPosterPathResolver.ResolveAsync(_posterImageStore, request.PosterPath, ct);
+        var requestedPoster = await TmdbPosterPathResolver.ResolveAsync(_posterImageStore, request.PosterPath, ct);
 
         var participant = await _participantRepository.FindByIdAndEventIdAsync(request.ParticipantId, evt.Id, ct);
         if (participant is null)
@@ -74,17 +75,20 @@ public sealed class AddMovieHandler : IAddMovieHandler
         if (await _movieRepository.ExistsByEventAndTmdbIdAsync(evt.Id, request.TmdbId, request.MediaType, ct))
             throw Errors.MovieAlreadyProposed();
 
-        var year = MovieYear.Normalize(request.Year);
-        if (await _movieRepository.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, request.Title.Trim(), year, ct))
+        var lookupTask = LookUpOnTmdbAsync(request.TmdbId, request.MediaType, ct);
+        var proposerUserTask = _userRepository.GetByIdAsync(userId, ct);
+        await Task.WhenAll(lookupTask, proposerUserTask);
+        var lookup = await lookupTask;
+        var proposer = await proposerUserTask;
+        if (lookup.Answered && lookup.Details is null)
+            throw Errors.MovieNotFound();
+
+        var facts = await ProposedFactsAsync(request, lookup.Details, requestedPoster, ct);
+        if (await _movieRepository.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, facts.Title, facts.Year, ct))
             throw Errors.MovieTitleAlreadyProposed();
 
         var now = _clock.StorageNow();
         var pitchNote = string.IsNullOrWhiteSpace(request.PitchNote) ? null : request.PitchNote.Trim();
-        var genreIdsTask = FetchGenreIdsBestEffortAsync(request.TmdbId, request.MediaType, request.GenreIds, ct);
-        var proposerUserTask = _userRepository.GetByIdAsync(userId, ct);
-        await Task.WhenAll(genreIdsTask, proposerUserTask);
-        var genreIds = await genreIdsTask;
-        var proposer = await proposerUserTask;
 
         var movie = new Movie
         {
@@ -93,11 +97,11 @@ public sealed class AddMovieHandler : IAddMovieHandler
             ParticipantId = participant.Id,
             TmdbId = request.TmdbId,
             MediaType = request.MediaType,
-            Title = request.Title.Trim(),
-            Year = year ?? string.Empty,
-            PosterPath = poster,
+            Title = facts.Title,
+            Year = facts.Year ?? string.Empty,
+            PosterPath = facts.PosterPath,
             PitchNote = pitchNote,
-            GenreIds = genreIds,
+            GenreIds = TmdbTitleFacts.GenreIds(request.GenreIds, lookup.Details),
             CreatedAt = now,
             UpdatedAt = now
         };
@@ -144,26 +148,44 @@ public sealed class AddMovieHandler : IAddMovieHandler
         return created;
     }
 
-    private async Task<IReadOnlyList<int>> FetchGenreIdsBestEffortAsync(
-        int tmdbId,
-        MovieMediaType mediaType,
-        IReadOnlyList<int>? searchResultGenreIds,
-        CancellationToken ct)
+    private async Task<TmdbLookup> LookUpOnTmdbAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct)
     {
-        var knownGenreIds = searchResultGenreIds is null
-            ? []
-            : searchResultGenreIds.Where(id => id > 0).Distinct().ToList();
         try
         {
-            var details = await _tmdb.GetDetailsAsync(tmdbId, mediaType, ct);
-            return details?.GenreIds ?? knownGenreIds;
+            return new TmdbLookup(true, await _tmdb.GetDetailsAsync(tmdbId, mediaType, ct));
         }
-        catch (Exception ex)
+        catch (Exception ex) when (!ct.IsCancellationRequested)
         {
-            _logger.LogWarning(ex, "TMDB genre lookup failed for {TmdbId}, movie added with the genres of its search result", tmdbId);
-            return knownGenreIds;
+            _logger.LogWarning(ex, "TMDB lookup failed for {TmdbId}, movie added with the title, year and poster sent by the browser", tmdbId);
+            return new TmdbLookup(false, null);
         }
     }
+
+    private async Task<ProposedFacts> ProposedFactsAsync(
+        AddMovieRequest request,
+        TmdbMovieDetails? details,
+        string? requestedPoster,
+        CancellationToken ct)
+    {
+        if (details is null)
+            return new ProposedFacts(BrowserTitle(request.Title), MovieYear.Normalize(request.Year), requestedPoster);
+
+        var title = UserText.Clean(details.Title);
+        return new ProposedFacts(
+            UserText.HasVisibleCharacter(title) ? title : BrowserTitle(request.Title),
+            TmdbTitleFacts.ReleaseYear(details.ReleaseDate),
+            await _posterImageStore.ToStoredPosterPathAsync(details.PosterUrl, ct));
+    }
+
+    private static string BrowserTitle(string title)
+    {
+        var cleaned = UserText.Clean(title);
+        return UserText.HasVisibleCharacter(cleaned) ? cleaned : throw Errors.MovieTitleRequired();
+    }
+
+    private sealed record TmdbLookup(bool Answered, TmdbMovieDetails? Details);
+
+    private sealed record ProposedFacts(string Title, string? Year, string? PosterPath);
 
     private static EventAudienceMessage MovieAddedMessage(Event evt, string movieTitle, User? proposer) => new(
         evt.Id,

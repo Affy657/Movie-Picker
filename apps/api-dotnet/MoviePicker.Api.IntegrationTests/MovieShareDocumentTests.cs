@@ -27,16 +27,16 @@ public sealed class MovieShareDocumentTests : IClassFixture<MoviePickerApplicati
     {
         _factory.FakeWebShell.Next = FakeWebShellSource.Shell;
 
-        var res = await _factory.CreateClient().GetAsync("/film/42-film-e2e-stub");
+        var res = await _factory.CreateClient().GetAsync("/film/42-film-e2e-stub-42");
 
         Assert.Equal(HttpStatusCode.OK, res.StatusCode);
         Assert.Equal("text/html", res.Content.Headers.ContentType?.MediaType);
         Assert.Equal("public, max-age=60", string.Join(", ", res.Headers.GetValues("Cache-Control")));
         Assert.Equal("frame-ancestors 'none'", string.Join(", ", res.Headers.GetValues("Content-Security-Policy")));
         var html = await res.Content.ReadAsStringAsync();
-        Assert.Contains("<meta property=\"og:title\" content=\"Film E2E Stub (2024)\" />", html);
-        Assert.Contains("<meta property=\"og:url\" content=\"https://web.integration.test/film/42-film-e2e-stub\" />", html);
-        Assert.Contains("<link rel=\"canonical\" href=\"https://web.integration.test/film/42-film-e2e-stub\" />", html);
+        Assert.Contains("<meta property=\"og:title\" content=\"Film E2E Stub 42 (2024)\" />", html);
+        Assert.Contains("<meta property=\"og:url\" content=\"https://web.integration.test/film/42-film-e2e-stub-42\" />", html);
+        Assert.Contains("<link rel=\"canonical\" href=\"https://web.integration.test/film/42-film-e2e-stub-42\" />", html);
         Assert.Contains("<div id=\"root\"></div>", html);
         Assert.Contains("src=\"/assets/index.js\"", html);
         Assert.DoesNotContain("Titre du site", html);

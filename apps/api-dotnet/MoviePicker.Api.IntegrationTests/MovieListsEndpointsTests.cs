@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Infrastructure.Tmdb;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -17,7 +18,7 @@ public sealed class MovieListsEndpointsTests : IClassFixture<MoviePickerApplicat
 
     private const string TmdbPoster = "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg";
 
-    private const string StubTmdbTitle = "Film E2E Stub";
+    private static readonly string StubTmdbTitle = StubTmdbMovieSearch.TitleOf(603);
 
     private const string StubTmdbYear = "2024";
 

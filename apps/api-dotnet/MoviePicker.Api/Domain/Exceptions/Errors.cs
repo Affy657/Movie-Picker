@@ -413,6 +413,9 @@ public static class Errors
     public static BadRequestException FriendGroupNameTooLong(int max) =>
         new($"Group name cannot exceed {max} characters", ErrorCodes.ValidationFailed, Params(("max", max)));
 
+    public static BadRequestException MovieTitleRequired() =>
+        new("Movie title cannot be empty", ErrorCodes.ValidationFailed);
+
     public static BadRequestException SelfFollow() =>
         new("You cannot follow yourself", ErrorCodes.SelfFollow);
 

@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Infrastructure.Tmdb;
 using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
@@ -187,7 +188,7 @@ public sealed class MultipleWinnersEndpointsTests : IClassFixture<MoviePickerApp
         var list = await mine.Content.ReadFromJsonAsync<MyEventsListResponse>(JsonOptions);
         var summary = Assert.Single(list!.Events, e => e.Slug == slug);
 
-        Assert.Equal(["The Matrix", "Inception"], summary.WinnerMovies.Select(w => w.Title));
+        Assert.Equal([StubTmdbMovieSearch.TitleOf(603), StubTmdbMovieSearch.TitleOf(27205)], summary.WinnerMovies.Select(w => w.Title));
     }
 
     [Fact]

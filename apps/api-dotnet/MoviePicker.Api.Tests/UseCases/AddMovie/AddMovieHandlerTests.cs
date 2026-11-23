@@ -59,6 +59,33 @@ public sealed class AddMovieHandlerTests
 
     private static readonly int[] SearchResultGenreIds = [878, 28];
 
+    private static TmdbMovieDetails? KnownTitle(int tmdbId) => tmdbId switch
+    {
+        27205 => new TmdbMovieDetails(27205, "Inception", null, null, null, [], 148, [], [], "2010-07-16"),
+        42 => new TmdbMovieDetails(42, "Breaking Bad", null, null, null, [], 47, [], [], "2008-01-20"),
+        _ => null
+    };
+
+    private Participant ProposingParticipant(Event evt)
+    {
+        var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
+        _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        return participant;
+    }
+
+    private Func<Movie?> CaptureInsertedMovie()
+    {
+        Movie? inserted = null;
+        _movieRepo
+            .Setup(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>()))
+            .Callback<Movie, CancellationToken>((m, _) => inserted = m)
+            .ReturnsAsync((Movie m, CancellationToken _) => m with { Id = "mov1" });
+        return () => inserted;
+    }
+
     public AddMovieHandlerTests()
     {
         _eventRepo = new Mock<IEventRepository>();
@@ -71,7 +98,7 @@ public sealed class AddMovieHandlerTests
         _tmdb = new Mock<ITmdbMovieSearch>();
         _tmdb
             .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((TmdbMovieDetails?)null);
+            .ReturnsAsync((int id, MovieMediaType _, CancellationToken _) => KnownTitle(id));
         _posterStore.Setup(s => s.ToPublicPosterPath(It.IsAny<string?>())).Returns((string? u) => u);
         _participantRepo
             .Setup(r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -197,12 +224,66 @@ public sealed class AddMovieHandlerTests
         Assert.Equal(GenreIds, result.GenreIds);
     }
 
+    [Fact]
+    public async Task HandleAsync_TitleYearAndPosterComeFromTmdb_NotFromTheBrowser()
+    {
+        var participant = ProposingParticipant(ActiveEvent());
+        var inserted = CaptureInsertedMovie();
+        _tmdb
+            .Setup(t => t.GetDetailsAsync(27205, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TmdbMovieDetails(27205, "Inception", null, null, null, [], 148, [], GenreIds, "2010-07-16", PosterUrl: "https://image.tmdb.org/t/p/w500/real.jpg"));
+        var forged = new AddMovieRequest
+        {
+            TmdbId = 27205,
+            Title = "Votre compte est suspendu, écrivez-nous",
+            Year = "1900",
+            PosterPath = "https://image.tmdb.org/t/p/w154/forged.jpg",
+            ParticipantId = participant.Id
+        };
+
+        var result = await _sut.HandleAsync(OwnerUserId, "evt1", forged);
+
+        Assert.Equal(("Inception", "2010", "https://image.tmdb.org/t/p/w500/real.jpg"), (inserted()!.Title, inserted()!.Year, inserted()!.PosterPath));
+        Assert.Equal("Inception", result.Title);
+        _movieRepo.Verify(r => r.ExistsByEventAndTitleCaseInsensitiveAsync("evt1", "Inception", "2010", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_IdUnknownToTmdb_IsRefused()
+    {
+        var participant = ProposingParticipant(ActiveEvent());
+        var request = new AddMovieRequest { TmdbId = 999_999_999, Title = "Titre inventé", Year = "2024", ParticipantId = participant.Id };
+
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(OwnerUserId, "evt1", request));
+
+        Assert.Equal(ErrorCodes.MovieNotFound, ex.Reason);
+        _movieRepo.Verify(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TmdbUnavailable_KeepsTheBrowserTitleWithoutDirectionalControls()
+    {
+        var participant = ProposingParticipant(ActiveEvent());
+        var inserted = CaptureInsertedMovie();
+        _tmdb
+            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("TMDB unavailable"));
+        var request = new AddMovieRequest { TmdbId = 27205, Title = " \u202EInception ", Year = "2010", ParticipantId = participant.Id };
+
+        await _sut.HandleAsync(OwnerUserId, "evt1", request);
+
+        Assert.Equal(("Inception", "2010"), (inserted()!.Title, inserted()!.Year));
+    }
+
     [Theory]
     [InlineData(" 2010 ", "2010")]
     [InlineData("   ", "")]
     [InlineData("", "")]
-    public async Task HandleAsync_StoresTheYearTrimmed(string requestedYear, string storedYear)
+    public async Task HandleAsync_TmdbUnavailable_StoresTheBrowserYearTrimmed(string requestedYear, string storedYear)
     {
+        _tmdb
+            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("TMDB unavailable"));
         var evt = ActiveEvent();
         var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         Movie? inserted = null;
