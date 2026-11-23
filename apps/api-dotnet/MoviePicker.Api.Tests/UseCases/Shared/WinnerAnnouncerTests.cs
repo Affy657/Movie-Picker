@@ -51,7 +51,7 @@ public sealed class WinnerAnnouncerTests
 
     private void Users(params User[] users) =>
         _userRepo.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(users.ToList());
+            .ReturnsAsync((IReadOnlyCollection<string> ids, CancellationToken _) => users.Where(u => ids.Contains(u.Id)).ToList());
 
     private void Subscriptions(params string[] userIds) =>
         _pushSubRepo.Setup(r => r.ListByUserIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
@@ -103,6 +103,27 @@ public sealed class WinnerAnnouncerTests
         _notifications.Verify(
             n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "u1" && u.Type == UserNotificationType.MoviePicked), It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Theory]
+    [InlineData(WinnerPickMethod.Wheel, UserNotificationType.MoviePicked)]
+    [InlineData(WinnerPickMethod.Manual, UserNotificationType.MoviePickedManually)]
+    public async Task AnnounceAsync_LeavesOutTheHostWhoMadeThePick(WinnerPickMethod method, UserNotificationType type)
+    {
+        HasParticipants("u-host", "u2");
+        var opted = new Dictionary<UserNotificationType, bool> { [type] = true };
+        Users(
+            new User { Id = "u-host", NotificationPreferences = opted },
+            new User { Id = "u2", NotificationPreferences = opted });
+        Subscriptions("u-host", "u2");
+
+        await _sut.AnnounceAsync(Soiree with { CreatorUserId = "u-host" }, "Winner", method);
+
+        _notifications.Verify(n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "u2"), It.IsAny<CancellationToken>()), Times.Once);
+        _notifications.Verify(n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "u-host"), It.IsAny<CancellationToken>()), Times.Never);
+        _pushSender.Verify(
+            s => s.SendAsync(It.Is<PushSubscription>(x => x.UserId == "u-host"), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]

@@ -38,7 +38,7 @@ public sealed class WinnerAnnouncer : IWinnerAnnouncer
                 Tag: $"wheel-{evt.Id}",
                 Url: FrontRoutes.EventDetail(evt.Slug)));
 
-        return _audience.NotifyParticipantsAsync(message, ct: ct);
+        return _audience.NotifyParticipantsAsync(message, exceptUserId: evt.CreatorUserId, ct: ct);
     }
 
     private string PushBody(Event evt, string winnerTitle)
