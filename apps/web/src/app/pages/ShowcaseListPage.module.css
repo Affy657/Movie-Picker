@@ -17,6 +17,7 @@
   composes: pageTitle from '@/shared/components/typography.module.css';
   margin: 0;
   text-wrap: balance;
+  overflow-wrap: anywhere;
 }
 
 .pageSubtitle {

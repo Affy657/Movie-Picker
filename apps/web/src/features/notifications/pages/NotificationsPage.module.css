@@ -90,6 +90,7 @@
   margin: 0;
   font-size: var(--font-size-sm);
   line-height: var(--leading-normal);
+  overflow-wrap: anywhere;
 }
 
 .itemText strong {
