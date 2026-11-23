@@ -866,12 +866,16 @@ jobs:
   # users run. A deployment whose version is already published (a dependency update, a fix with
   # nothing user-visible) publishes nothing. The only job with `contents: write`: it installs
   # nothing from the lockfile, Node alone reads the changelog, and it holds no cloud identity.
-  # Every version merged since the last published one is tagged on the deployed commit, the one
-  # that first brought it to users: the `GITHUB_TOKEN` can never hold the Workflows permission
-  # that GitHub requires to tag a commit whose `.github/workflows/` differs from the default
-  # branch, which an older `chore(release)` commit usually does (HTTP 403 on 2026-11-12). The
-  # deployed commit is the head of master when the run starts; a deployment overtaken by a
-  # workflow change on master fails here, and the next production deployment publishes.
+  # Every version merged since the last published one is tagged on its own `chore(release)`
+  # commit when GitHub allows it, so that `git checkout vX.Y.Z` gives that version: the
+  # `GITHUB_TOKEN` can never hold the Workflows permission that GitHub requires to tag a commit
+  # whose `.github/workflows/` differs from the default branch (HTTP 403 on 2026-11-12).
+  # `node scripts/release.mjs target` compares the two trees and falls back on the deployed
+  # commit, the one that first brought the version to users, when they differ; a refused tag on
+  # the version commit falls back the same way. The release is titled after the lead of its first
+  # changelog entry, and its notes are the changelog section with French headings. The deployed
+  # commit is the head of master when the run starts; a deployment overtaken by a workflow change
+  # on master fails here, and the next production deployment publishes.
   publish-release:
     name: 🏷️ Tag and publish the version production serves
     runs-on: ubuntu-24.04
@@ -887,6 +891,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
       - name: Publish the deployed version and every version merged since the last one
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -909,6 +914,15 @@ jobs:
               latest=true
             fi
             node scripts/release.mjs notes "$version" > "$RUNNER_TEMP/notes.md"
-            gh release create "$tag" --target "$GITHUB_SHA" --title "$tag" --notes-file "$RUNNER_TEMP/notes.md" --latest="$latest"
-            echo "Published $tag on $GITHUB_SHA."
+            title="$(node scripts/release.mjs title "$version")"
+            target="$(node scripts/release.mjs target "$version")"
+            if ! gh release create "$tag" --target "$target" --title "$title" --notes-file "$RUNNER_TEMP/notes.md" --latest="$latest"; then
+              if [ "$target" = "$GITHUB_SHA" ]; then
+                exit 1
+              fi
+              echo "::warning::$tag refused on $target, published on the deployed commit instead."
+              target="$GITHUB_SHA"
+              gh release create "$tag" --target "$target" --title "$title" --notes-file "$RUNNER_TEMP/notes.md" --latest="$latest"
+            fi
+            echo "Published $tag on $target."
           done
