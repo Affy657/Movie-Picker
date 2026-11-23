@@ -428,6 +428,11 @@ export const fr = {
       backHome: "Retour à l'accueil",
     },
     backToEvent: 'Retour à la soirée',
+    sessionExpired: {
+      title: 'Votre session a expiré',
+      description: 'Reconnectez-vous pour reprendre là où vous en étiez.',
+      signInAgain: 'Se reconnecter',
+    },
     login: {
       title: 'Connexion',
       eventDescription: 'Connectez-vous pour rejoindre la soirée, proposer vos films et voter.',
@@ -660,10 +665,13 @@ export const fr = {
       exportDataError: 'Export impossible. Réessayez dans un instant.',
       deleteAccountSectionTitle: 'Supprimer mon compte',
       deleteAccountDescription:
-        'Votre profil, vos notifications, vos abonnements et vos appareils de notification seront définitivement supprimés. Les soirées que vous avez créées et vos votes sont conservés mais anonymisés (rattachés à « Compte supprimé ») pour ne pas perturber les autres participants. Cette action est irréversible.',
+        'Votre profil et vos photos, votre liste À voir, vos films vus, vos listes, vos groupes, vos abonnements, vos notifications et vos appareils de notification seront définitivement supprimés ; vous quitterez aussi les listes et les groupes des autres. Les soirées que vous avez créées et vos votes sont conservés mais anonymisés (rattachés à « Compte supprimé ») pour ne pas perturber les autres participants. Cette action est irréversible.',
       deleteAccountButton: 'Supprimer mon compte',
       deleteAccountPasswordLabel: 'Saisissez votre mot de passe pour confirmer',
-      deleteAccountConfirmationLabel: 'Saisissez votre handle ou votre e-mail pour confirmer',
+      deleteAccountConfirmationLabel: 'Saisissez votre pseudo ou votre e-mail pour confirmer',
+      accountDeletedTitle: 'Votre compte est supprimé',
+      accountDeletedDescription:
+        'Votre profil et vos données personnelles ont été effacés. Merci d’avoir utilisé Movie Picker.',
       deleteAccountConfirmButton: 'Supprimer définitivement',
       deleteAccountSubmitting: 'Suppression…',
       deleteAccountCancel: 'Annuler',

@@ -10,6 +10,7 @@ import { TEST_API_V1 } from '@/mocks/handlers';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import type { QueryClient } from '@tanstack/react-query';
 import { setSessionHint } from '@/features/auth/session-hint';
+import { createAppQueryClient } from '@/app/appQueryClient';
 
 const baseUser = {
   userId: 'u1',
@@ -45,7 +46,49 @@ describe('ProfileEditPage (MSW)', () => {
 
   beforeEach(() => {
     setSessionHint();
+    sessionStorage.clear();
     server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(baseUser)));
+  });
+
+  it('keeps the bio being typed through an expired session and saves it once back', async () => {
+    const user = userEvent.setup();
+    let sessionAlive = true;
+    const patchBodies: Record<string, unknown>[] = [];
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        sessionAlive
+          ? HttpResponse.json(baseUser)
+          : HttpResponse.json({ reason: 'unauthorized' }, { status: 401 })
+      ),
+      http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
+        if (!sessionAlive) {
+          return HttpResponse.json({ reason: 'unauthorized' }, { status: 401 });
+        }
+        const body = (await request.json()) as Record<string, unknown>;
+        patchBodies.push(body);
+        return HttpResponse.json({ ...baseUser, ...body });
+      })
+    );
+    const client = createAppQueryClient();
+    renderProfile(client);
+    const bioInput = await screen.findByLabelText(/bio/i);
+
+    sessionAlive = false;
+    await user.clear(bioInput);
+    await user.type(bioInput, 'Brouillon gardé');
+    await user.tab();
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: /paramètres/i }, { timeout: 5000 })
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText(/bio/i)).not.toBeInTheDocument();
+
+    sessionAlive = true;
+    setSessionHint();
+    await client.invalidateQueries({ queryKey: queryKeys.auth.me });
+
+    expect(await screen.findByLabelText(/bio/i)).toHaveValue('Brouillon gardé');
+    await waitFor(() => expect(patchBodies.at(-1)?.bio).toBe('Brouillon gardé'));
   });
 
   it('pre-fills the display name, the bio and the visibility from the account', async () => {

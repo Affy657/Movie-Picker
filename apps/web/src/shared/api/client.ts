@@ -36,6 +36,19 @@ export type ApiRequestOptions = RequestInit & { timeoutMs?: number };
 
 const HOST_TOKEN_HEADER = 'X-Host-Token';
 
+const unauthorizedListeners = new Set<() => void>();
+
+export function onUnauthorizedResponse(listener: () => void): () => void {
+  unauthorizedListeners.add(listener);
+  return () => {
+    unauthorizedListeners.delete(listener);
+  };
+}
+
+function reportUnauthorizedResponse(): void {
+  for (const listener of unauthorizedListeners) listener();
+}
+
 export function withHostToken(
   hostToken: string | null | undefined,
   init: RequestInit = {}
@@ -308,6 +321,7 @@ async function sendRequest<T>(url: string, options: RequestInit): Promise<T> {
   const isJson = /application\/(?:[\w.-]+\+)?json/i.test(contentType);
   const text = await readResponseText(res);
 
+  if (res.status === 401) reportUnauthorizedResponse();
   if (!res.ok) handleErrorResponse(res, text, isJson);
   return parseSuccessBody<T>(res, text, isJson);
 }

@@ -4,6 +4,7 @@ import {
   apiUrl,
   DEFAULT_REQUEST_TIMEOUT_MS,
   fetchApi,
+  onUnauthorizedResponse,
   SLOW_REQUEST_TIMEOUT_MS,
 } from '@/shared/api/client';
 import { ApiError } from '@/shared/api/apiError';
@@ -373,6 +374,40 @@ describe('fetchApi', () => {
       retryAfterMs: 12_000,
       message: 'Trop de requêtes. Réessayez dans 12 s.',
     });
+  });
+
+  it('tells the session listeners about every 401, whatever the caller', async () => {
+    const listener = vi.fn();
+    const unsubscribe = onUnauthorizedResponse(listener);
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      text: () => Promise.resolve(JSON.stringify({ reason: 'unauthorized' })),
+    });
+    try {
+      await expect(fetchApi('/events')).rejects.toMatchObject({ code: 401 });
+      expect(listener).toHaveBeenCalledTimes(1);
+    } finally {
+      unsubscribe();
+    }
+  });
+
+  it('keeps the session listeners out of the other failures', async () => {
+    const listener = vi.fn();
+    const unsubscribe = onUnauthorizedResponse(listener);
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      text: () => Promise.resolve(JSON.stringify({ reason: 'forbidden' })),
+    });
+    try {
+      await expect(fetchApi('/events')).rejects.toMatchObject({ code: 403 });
+      expect(listener).not.toHaveBeenCalled();
+    } finally {
+      unsubscribe();
+    }
   });
 
   it('words a long Retry-After in minutes', async () => {

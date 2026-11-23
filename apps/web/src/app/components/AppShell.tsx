@@ -20,6 +20,8 @@ import ConsentBanner from './ConsentBanner';
 import InAppBrowserBanner from './InAppBrowserBanner';
 import MovedOriginBanner from './MovedOriginBanner';
 import SignOutPendingNotice from './SignOutPendingNotice';
+import SessionExpiredNotice from './SessionExpiredNotice';
+import AccountDeletedNotice from './AccountDeletedNotice';
 import { useLegacyMovieLinkRedirect } from './useLegacyMovieLinkRedirect';
 import styles from './AppShell.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
@@ -393,6 +395,8 @@ export default function AppShell() {
         <InAppBrowserBanner />
         <MovedOriginBanner />
         <SignOutPendingNotice />
+        <SessionExpiredNotice />
+        <AccountDeletedNotice />
         {user ? <CreateEventDialogIdlePrefetch /> : null}
       </div>
     </CreateEventDialogProvider>

@@ -6,6 +6,7 @@ import { useTranslation } from '@/shared/i18n';
 import type { TranslationKey } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { ROUTES } from '@/app/routes';
+import { ACCOUNT_DELETED_STATE } from './accountDeletedState';
 import {
   deleteAccount,
   downloadMyDataExport,
@@ -313,7 +314,7 @@ function DeleteAccountZone({ hasPassword }: Readonly<{ hasPassword: boolean }>) 
   const deleteAction = useCallback(async () => {
     await deleteAccount(hasPassword ? { password: value } : { confirmation: value });
     await endSession();
-    void navigate(ROUTES.home, { replace: true });
+    void navigate(ROUTES.home, { replace: true, state: ACCOUNT_DELETED_STATE });
   }, [hasPassword, value, endSession, navigate]);
 
   const {

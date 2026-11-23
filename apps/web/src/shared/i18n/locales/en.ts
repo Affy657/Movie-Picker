@@ -430,6 +430,11 @@ export const en: Locale = {
       backHome: 'Back to home',
     },
     backToEvent: 'Back to the movie night',
+    sessionExpired: {
+      title: 'Your session has expired',
+      description: 'Log in again to pick up where you left off.',
+      signInAgain: 'Log in again',
+    },
     login: {
       title: 'Log in',
       description: 'Access your events and profile.',
@@ -654,10 +659,13 @@ export const en: Locale = {
       exportDataError: 'Export failed. Please try again in a moment.',
       deleteAccountSectionTitle: 'Delete my account',
       deleteAccountDescription:
-        'Your profile, notifications, follows and notification devices will be permanently deleted. The events you created and your votes are kept but anonymised (attributed to “Deleted account”) so other participants are not disrupted. This action cannot be undone.',
+        'Your profile and photos, your watchlist, your watched films, your lists, your groups, follows, notifications and notification devices will be permanently deleted; you will also leave the lists and groups of others. The events you created and your votes are kept but anonymised (attributed to “Deleted account”) so other participants are not disrupted. This action cannot be undone.',
       deleteAccountButton: 'Delete my account',
       deleteAccountPasswordLabel: 'Enter your password to confirm',
       deleteAccountConfirmationLabel: 'Enter your handle or email to confirm',
+      accountDeletedTitle: 'Your account is deleted',
+      accountDeletedDescription:
+        'Your profile and personal data have been erased. Thank you for using Movie Picker.',
       deleteAccountConfirmButton: 'Delete permanently',
       deleteAccountSubmitting: 'Deleting…',
       deleteAccountCancel: 'Cancel',
