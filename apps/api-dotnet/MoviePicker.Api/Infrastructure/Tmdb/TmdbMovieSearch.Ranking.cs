@@ -21,6 +21,24 @@ public sealed partial class TmdbMovieSearch
             .ToList();
     }
 
+    private static List<TmdbSearchItem> PersonFirstAfterExactTitles(
+        string query,
+        IReadOnlyList<TmdbSearchItem> titleMatches,
+        IReadOnlyList<TmdbSearchItem> credits)
+    {
+        var normalizedQuery = NormalizeSearchText(query);
+        var exactTitles = titleMatches
+            .Where(item => ResemblanceOf(item, normalizedQuery) == TitleResemblance.EqualsQuery)
+            .ToList();
+        var otherTitles = RankByTitleResemblance(query, titleMatches.Except(exactTitles));
+        return exactTitles
+            .Concat(credits)
+            .Concat(otherTitles)
+            .DistinctBy(item => (item.Id, item.MediaType))
+            .Take(MaxResults)
+            .ToList();
+    }
+
     private static TitleResemblance ResemblanceOf(TmdbSearchItem item, string normalizedQuery)
     {
         var title = ResemblanceOf(item.Title, normalizedQuery);

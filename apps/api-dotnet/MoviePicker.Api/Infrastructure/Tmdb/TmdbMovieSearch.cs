@@ -35,11 +35,11 @@ public sealed partial class TmdbMovieSearch : ITmdbMovieSearch
         public static readonly TmdbNotFoundMarker Instance = new();
     }
 
-    private sealed record PersonMatch(int Id, bool LeadsResults, int CreditBudget);
+    private sealed record PersonMatch(int Id, bool LeadsResults, bool NamedByQuery, int CreditBudget);
 
-    private sealed record PersonCreditMatches(IReadOnlyList<TmdbSearchItem> Items, bool LeadsResults)
+    private sealed record PersonCreditMatches(IReadOnlyList<TmdbSearchItem> Items, bool LeadsResults, bool NamedByQuery)
     {
-        public static readonly PersonCreditMatches None = new(Array.Empty<TmdbSearchItem>(), false);
+        public static readonly PersonCreditMatches None = new(Array.Empty<TmdbSearchItem>(), false, false);
     }
 
     private static readonly (string Property, Func<JsonElement, bool> KeepCredit)[] PersonCreditSources =

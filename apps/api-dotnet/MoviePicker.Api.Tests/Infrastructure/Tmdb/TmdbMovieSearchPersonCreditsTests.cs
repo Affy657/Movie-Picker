@@ -134,6 +134,35 @@ public sealed class TmdbMovieSearchPersonCreditsTests
     }
 
     [Fact]
+    public async Task SearchAsync_PersonFoundBySurname_LeadsBeforeTitlesThatOnlyContainTheName()
+    {
+        var titles = TitleResults("Facing Nolan", "Finding Nolan", "Apocalypse Nolan");
+        var sut = CreateSut(CreateHttpClient(RouteBy(titles, Person("Christopher Nolan"), CastCredits(12)).Object));
+
+        var result = await sut.SearchAsync("nolan", false);
+
+        Assert.All(result.Take(12), item => Assert.True(IsCredit(item)));
+        Assert.Equal(["Facing Nolan", "Finding Nolan", "Apocalypse Nolan"], result.Skip(12).Select(item => item.Title));
+    }
+
+    [Theory]
+    [InlineData("tarantino", "Tarantino", "Quentin Tarantino")]
+    [InlineData("rocky", "Rocky", "A$AP Rocky")]
+    public async Task SearchAsync_TitleEqualToTheQuery_StaysFirstEvenBeforeAPersonNamedByIt(
+        string query,
+        string exactTitle,
+        string personName)
+    {
+        var titles = TitleResults($"{exactTitle} : le documentaire", exactTitle);
+        var sut = CreateSut(CreateHttpClient(RouteBy(titles, Person(personName), CastCredits(12)).Object));
+
+        var result = await sut.SearchAsync(query, false);
+
+        Assert.Equal(exactTitle, result[0].Title);
+        Assert.All(result.Skip(1).Take(12), item => Assert.True(IsCredit(item)));
+    }
+
+    [Fact]
     public async Task SearchAsync_TitlesWithoutTheWord_FallBehindTitlesThatContainIt()
     {
         var titles = TitleResults("Anatomie d'une chute", "Dune", "La Revanche d'une blonde", "Dune : Deuxième partie");

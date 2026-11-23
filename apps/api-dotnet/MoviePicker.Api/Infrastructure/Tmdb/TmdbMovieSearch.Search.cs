@@ -128,7 +128,7 @@ public sealed partial class TmdbMovieSearch
 
             return credits.Count == 0
                 ? PersonCreditMatches.None
-                : new PersonCreditMatches(credits.Take(person.CreditBudget).ToList(), person.LeadsResults);
+                : new PersonCreditMatches(credits.Take(person.CreditBudget).ToList(), person.LeadsResults, person.NamedByQuery);
         }
         catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
         {
@@ -185,7 +185,7 @@ public sealed partial class TmdbMovieSearch
             .First();
 
         var creditBudget = best.NamedByQuery ? MaxResults : MaxResults / 2;
-        return new PersonMatch(best.Id, best.NameMatchesWholeWords, creditBudget);
+        return new PersonMatch(best.Id, best.NameMatchesWholeWords, best.NamedByQuery, creditBudget);
     }
 
     private static bool MatchesWholeWords(string normalizedName, string normalizedQuery) =>
@@ -249,6 +249,9 @@ public sealed partial class TmdbMovieSearch
         IReadOnlyList<TmdbSearchItem> titleMatches,
         PersonCreditMatches creditMatches)
     {
+        if (creditMatches.NamedByQuery)
+            return PersonFirstAfterExactTitles(query, titleMatches, creditMatches.Items);
+
         var ordered = creditMatches.LeadsResults
             ? creditMatches.Items.Concat(titleMatches)
             : titleMatches.Concat(creditMatches.Items);
