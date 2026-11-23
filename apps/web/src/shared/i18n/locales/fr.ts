@@ -879,7 +879,13 @@ export const fr = {
         "La soirée est complète ({{max}} participants maximum). Demandez à l'hôte d'ouvrir une place pour la rejoindre.",
       full: "La soirée est complète. Demandez à l'hôte d'ouvrir une place pour la rejoindre.",
       intro: 'Rejoignez la soirée pour proposer des films et voter.',
-      signedOutIntro: 'Connectez-vous ou créez un compte pour rejoindre la soirée.',
+      signedOutIntro:
+        'Chacun propose ses films et vote pour ceux des autres, puis la roue désigne le film de la soirée. Il suffit d’un compte pour participer.',
+      invitedBy: '{{name}} vous invite à « {{title}} ».',
+      invited: 'On vous invite à « {{title}} ».',
+      votePrompt: 'Pour voter, rejoignez d’abord la soirée.',
+      joinedTitle: 'Vous avez rejoint la soirée',
+      joinedDescription: 'Proposez vos films et votez pour ceux des autres.',
     },
     participants: {
       dialogTitle: 'Participants ({{count}})',

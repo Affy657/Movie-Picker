@@ -10,6 +10,9 @@ import { absoluteUrl } from '@/shared/seo/siteMeta';
 import PageLayout from '@/shared/components/PageLayout';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useEventDetailPage } from '@/features/events/hooks/useEventDetailPage';
+import { useJoinIntent } from '@/features/events/hooks/useJoinIntent';
+import { JoinedAnnouncementContext, useJoinedNotice } from '@/features/events/joinedAnnouncement';
+import JoinedNotice from '@/features/events/components/JoinedNotice';
 import { isWellFormedEventSlug } from '@/features/events/utils/eventSlug';
 import EventDetailSession from '@/features/events/pages/event-detail/EventDetailSession';
 import Button, { buttonClass } from '@/shared/components/Button';
@@ -120,6 +123,18 @@ export default function EventDetail() {
   } = useEventDetailPage(slug, arrival?.configNotSaved ? t('events.create.configNotSaved') : null);
 
   const online = useOnlineStatus();
+  const offline = !online || showingOfflineCopy;
+  const joinedNotice = useJoinedNotice();
+  useJoinIntent({
+    slug,
+    event,
+    participant,
+    setParticipant,
+    eventSettled: !eventQuery.isFetching,
+    offline,
+    onJoined: joinedNotice.show,
+    onError: setActionError,
+  });
   const isNetworkPaused = eventQuery.isPending && eventQuery.fetchStatus === 'paused';
   const isLoadingEvent = !isMalformedSlug && eventQuery.isPending && !isNetworkPaused;
   const isEventGone = ApiError.is(eventQuery.error) && eventQuery.error.code === 404;
@@ -170,23 +185,26 @@ export default function EventDetail() {
   if (!event || !slug) return null;
 
   return (
-    <EventDetailSession
-      slug={slug}
-      hostToken={hostToken}
-      event={event}
-      moviesQuery={moviesQuery}
-      movies={movies}
-      participant={participant}
-      setParticipant={setParticipant}
-      actionError={actionError}
-      setActionError={setActionError}
-      refreshAll={refreshAll}
-      connectionUnstable={isShowingStaleData}
-      proposeOnArrival={arrival?.openPropose === true}
-      livePresence={livePresence}
-      offline={!online || showingOfflineCopy}
-      offlineVoteOutcome={offlineVoteOutcome}
-      onDismissOfflineVoteOutcome={dismissOfflineVoteOutcome}
-    />
+    <JoinedAnnouncementContext value={joinedNotice.show}>
+      <EventDetailSession
+        slug={slug}
+        hostToken={hostToken}
+        event={event}
+        moviesQuery={moviesQuery}
+        movies={movies}
+        participant={participant}
+        setParticipant={setParticipant}
+        actionError={actionError}
+        setActionError={setActionError}
+        refreshAll={refreshAll}
+        connectionUnstable={isShowingStaleData}
+        proposeOnArrival={arrival?.openPropose === true}
+        livePresence={livePresence}
+        offline={offline}
+        offlineVoteOutcome={offlineVoteOutcome}
+        onDismissOfflineVoteOutcome={dismissOfflineVoteOutcome}
+      />
+      {joinedNotice.shown ? <JoinedNotice onClose={joinedNotice.dismiss} /> : null}
+    </JoinedAnnouncementContext>
   );
 }

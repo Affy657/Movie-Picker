@@ -871,7 +871,13 @@ export const en: Locale = {
         'The event is full ({{max}} participants max). Ask the host to raise the capacity to join.',
       full: 'The event is full. Ask the host to raise the capacity to join.',
       intro: 'Join the event to suggest films and vote.',
-      signedOutIntro: 'Log in or create an account to join the event.',
+      signedOutIntro:
+        'Everyone suggests films and votes on the others, then the wheel picks the film of the night. All it takes is an account.',
+      invitedBy: '{{name}} invites you to “{{title}}”.',
+      invited: 'You are invited to “{{title}}”.',
+      votePrompt: 'To vote, join the event first.',
+      joinedTitle: 'You joined the event',
+      joinedDescription: 'Suggest your films and vote on the others.',
     },
     participants: {
       dialogTitle: 'Participants ({{count}})',

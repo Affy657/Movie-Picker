@@ -39,6 +39,8 @@ function moviePagePath({ tmdbId, mediaType = 'movie', title }: MoviePageRef, nig
 
 export const RATE_QUERY_PARAM = 'rate';
 
+export const JOIN_QUERY_PARAM = 'rejoindre';
+
 export const FAVORITES_ANCHOR = 'favoris';
 
 export const ROUTES = {
@@ -119,6 +121,8 @@ export const ROUTES = {
   eventDetailPattern: `${EVENT_PREFIX}/:slug`,
 
   eventDetail: (slug: string) => `${EVENT_PREFIX}/${slug}`,
+
+  eventDetailJoin: (slug: string) => `${EVENT_PREFIX}/${slug}?${JOIN_QUERY_PARAM}=1`,
 
   eventDetailRating: (slug: string, movieId?: string) => {
     const rateQuery = movieId ? `${RATE_QUERY_PARAM}=${movieId}` : RATE_QUERY_PARAM;

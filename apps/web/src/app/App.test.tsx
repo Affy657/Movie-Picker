@@ -279,13 +279,13 @@ describe('App (routes)', () => {
       ).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: /rejoindre la soirée/i })).toBeInTheDocument();
       const main = screen.getByRole('main');
-      expect(within(main).getByRole('link', { name: /^se connecter$/i })).toHaveAttribute(
+      expect(within(main).getByRole('link', { name: 'J’ai déjà un compte' })).toHaveAttribute(
         'href',
-        `/login?returnTo=${encodeURIComponent('/e/soiree-secrete')}`
+        `/login?returnTo=${encodeURIComponent('/e/soiree-secrete?rejoindre=1')}`
       );
       expect(within(main).getByRole('link', { name: /^créer un compte$/i })).toHaveAttribute(
         'href',
-        `/register?returnTo=${encodeURIComponent('/e/soiree-secrete')}`
+        `/register?returnTo=${encodeURIComponent('/e/soiree-secrete?rejoindre=1')}`
       );
       expect(screen.queryByRole('heading', { name: /^connexion$/i })).not.toBeInTheDocument();
     });
