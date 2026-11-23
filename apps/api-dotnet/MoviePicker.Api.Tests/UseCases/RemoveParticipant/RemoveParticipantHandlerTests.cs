@@ -19,9 +19,14 @@ public sealed class RemoveParticipantHandlerTests
     private readonly Mock<IMovieRatingRepository> _ratingRepo = new();
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
+    private readonly Mock<IUserRepository> _users = new();
+    private readonly Mock<IPushSubscriptionRepository> _pushSubscriptions = new();
+    private readonly Mock<IPushNotificationSender> _pushSender = new();
+    private readonly Mock<IUserNotificationRepository> _notifications = new();
     private readonly RecordingUnitOfWork _unitOfWork = new();
     private readonly RemoveParticipantHandler _sut;
     private static readonly string[] value = new[] { "m1", "m2" };
+    private static readonly string[] KeptOut = ["earlier", "user-2"];
 
     public RemoveParticipantHandlerTests()
     {
@@ -41,6 +46,8 @@ public sealed class RemoveParticipantHandlerTests
             _ratingRepo.Object,
             _hostTokenAccessor.Object,
             _currentUser.Object,
+            TestAudienceNotifier.Over(
+                _participantRepo.Object, _users.Object, _pushSubscriptions.Object, _pushSender.Object, _notifications.Object),
             _unitOfWork,
             TimeProvider.System,
             NullLogger<RemoveParticipantHandler>.Instance);
@@ -281,6 +288,49 @@ public sealed class RemoveParticipantHandlerTests
         var result = await _sut.HandleAsync("evt1", "p1");
 
         Assert.Equal("Participant removed", result.Message);
+    }
+
+    [Fact]
+    public async Task HandleAsync_HostRemovesAnAccount_KeepsItOutOfTheNightAndTellsIt()
+    {
+        SetupEvent(ActiveEvent(creatorUserId: "creator-1") with { RemovedUserIds = ["earlier"] });
+        SetupParticipant(Participant(userId: "user-2"));
+        _currentUser.Setup(c => c.GetUserId()).Returns("creator-1");
+        _participantRepo
+            .Setup(r => r.DeleteAsync("p1", "evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _users.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new User { Id = "user-2" }]);
+
+        await _sut.HandleAsync("evt1", "p1");
+
+        _eventRepo.Verify(r => r.UpdateAsync(
+            It.Is<Event>(e => e.RemovedUserIds.SequenceEqual(KeptOut)),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _notifications.Verify(n => n.AddAsync(
+            It.Is<UserNotification>(x => x.UserId == "user-2"
+                && x.Type == UserNotificationType.RemovedFromEvent
+                && x.EventSlug == "soiree"
+                && x.EventTitle == "Soirée"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ParticipantWhoLeaves_CanComeBackAndIsNotNotified()
+    {
+        SetupEvent(ActiveEvent(creatorUserId: "creator"));
+        SetupParticipant(Participant(userId: "user-1"));
+        _currentUser.Setup(c => c.GetUserId()).Returns("user-1");
+        _participantRepo
+            .Setup(r => r.DeleteAsync("p1", "evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        await _sut.HandleAsync("evt1", "p1");
+
+        _eventRepo.Verify(r => r.UpdateAsync(
+            It.Is<Event>(e => e.RemovedUserIds.Count == 0),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

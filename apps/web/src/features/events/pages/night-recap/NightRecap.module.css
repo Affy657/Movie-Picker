@@ -6,32 +6,8 @@
   margin-bottom: var(--space-4);
 }
 
-.top :global(.back-link) {
-  margin-bottom: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  padding: var(--space-1-5) var(--space-2-5) var(--space-1-5) var(--space-2);
-  border-radius: var(--radius-pill);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-muted);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
 .back {
-  composes: expanded from '@/shared/components/tapTarget.module.css';
-  margin-left: calc(var(--space-2) * -1);
-}
-
-@media (hover: hover) {
-  .top :global(.back-link):hover {
-    color: var(--color-primary-text);
-    background: var(--color-primary-tint);
-    text-decoration: none;
-  }
+  margin-left: calc(var(--space-1-5) * -1);
 }
 
 .eyebrow {

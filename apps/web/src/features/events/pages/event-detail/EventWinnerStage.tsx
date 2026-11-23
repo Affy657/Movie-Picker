@@ -57,7 +57,13 @@ function useWinnerRating({
     signInHref: user
       ? undefined
       : (movieId) => withReturnTo(ROUTES.login, ROUTES.eventDetailRating(slug, movieId)),
+    hostYourOwnHref: event.isFinished && !participant ? hostYourOwnHref(!!user) : undefined,
   };
+}
+
+function hostYourOwnHref(signedIn: boolean): string {
+  if (signedIn) return ROUTES.createEvent;
+  return withReturnTo(ROUTES.register, `${ROUTES.createEvent}?from=night`);
 }
 
 export default function EventWinnerStage({

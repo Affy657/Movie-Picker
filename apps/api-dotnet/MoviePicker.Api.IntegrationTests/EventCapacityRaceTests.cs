@@ -157,11 +157,11 @@ public sealed class EventCapacityRaceTests : IClassFixture<MoviePickerApplicatio
         var (host, evt) = await CreateEventAsync(new { maxProposalsPerParticipant = 100 });
         var movieId = await ProposeAsync(host, evt.Slug, evt.CreatorParticipant!.Id, 4000);
         var moviePath = $"/api/v1/events/{evt.Slug}/movies/{movieId}";
-        var guest = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Invité");
         var removedParticipantIds = new List<string>();
 
         for (var round = 0; round < 15; round++)
         {
+            var guest = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Invité");
             var participantId = await JoinAsync(guest, evt.Slug, "Invité");
             removedParticipantIds.Add(participantId);
             var removal = host.DeleteAsync($"/api/v1/events/{evt.Slug}/participants/{participantId}");

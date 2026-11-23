@@ -342,6 +342,19 @@ public sealed class EventDocumentMapperTests
     }
 
     [Fact]
+    public void ToDocument_RemovedPeopleRoundTrip_AndANightWithoutAnyWritesNone()
+    {
+        var night = new EventEntityBuilder().WithId("507f1f77bcf86cd799439011").WithSlug("s").Build() with
+        {
+            RemovedUserIds = ["507f1f77bcf86cd799439013"]
+        };
+
+        Assert.Equal(night.RemovedUserIds, EventDocumentMapper.ToDomain(EventDocumentMapper.ToDocument(night)).RemovedUserIds);
+        Assert.False(EventDocumentMapper.ToDocument(night with { RemovedUserIds = [] }).ToBsonDocument().Contains("removedUserIds"));
+        Assert.Empty(EventDocumentMapper.ToDomain(new EventDocument { Id = night.Id, Slug = "s" }).RemovedUserIds);
+    }
+
+    [Fact]
     public void ToDocument_GroupRoundTrips_AndANightWithoutGroupWritesNone()
     {
         var grouped = new Event

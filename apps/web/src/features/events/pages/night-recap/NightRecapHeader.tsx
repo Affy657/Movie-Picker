@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { ArrowLeft, Clapperboard } from 'lucide-react';
-import clsx from 'clsx';
+import { Clapperboard } from 'lucide-react';
 import AvatarStack from '@/shared/components/AvatarStack';
 import EventShareButton from '@/features/events/components/EventShareButton';
 import EventThemeBanner from '@/features/events/components/EventThemeBanner';
+import BackLink from '@/shared/components/BackLink';
 import EventShareDialog from '@/features/events/pages/event-detail/EventShareDialog';
 import { useEventBack } from '@/features/events/pages/event-detail/useEventBack';
 import { nightRecapFrontendUrl } from '@/features/events/api/eventsApi';
@@ -55,14 +55,9 @@ export default function NightRecapHeader({
   return (
     <>
       <div className={styles.top}>
-        <button
-          type="button"
-          className={clsx('back-link back-link-button', styles.back)}
-          onClick={goBack}
-        >
-          <ArrowLeft size={ICON_SIZE.md} aria-hidden />
+        <BackLink onClick={goBack} className={styles.back}>
           {t('events.detail.backNav')}
-        </button>
+        </BackLink>
         {recapOf ? <EventShareButton onClick={() => setShareOpen(true)} /> : null}
       </div>
       <p className={styles.eyebrow}>

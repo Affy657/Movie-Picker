@@ -28,6 +28,7 @@ import EmptyState from '@/shared/components/EmptyState';
 import Button from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import EventActionErrorBanner from '@/features/events/pages/event-detail/EventActionErrorBanner';
+import EventInviteCard from '@/features/events/pages/event-detail/EventInviteCard';
 import VoteLimitDialog from '@/features/events/components/VoteLimitDialog';
 import { SkeletonScreen, Skeleton } from '@/shared/components/Skeleton';
 import { useTranslation, type Translate } from '@/shared/i18n';
@@ -58,6 +59,7 @@ function useMoviesLayout(viewMode: 'grid' | 'list') {
 }
 
 const DEFAULT_SORT_DIRECTION: Record<MovieRowSortKey, 'asc' | 'desc'> = {
+  title: 'asc',
   score: 'desc',
   voteAverage: 'desc',
   duration: 'asc',
@@ -79,6 +81,8 @@ function pinWinnersFirst(movies: MovieData[], winnerMovieIds?: string[]): MovieD
 
 function compareMovies(a: MovieData, b: MovieData, sortBy: MovieRowSortKey): number {
   switch (sortBy) {
+    case 'title':
+      return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' });
     case 'score':
       return a.score - b.score;
     case 'voteAverage': {
@@ -137,9 +141,20 @@ export type EventMoviesSectionProps = {
 function emptyStateMessageKey(input: {
   isParticipant: boolean;
   isFull: boolean;
-}): 'movies.list.emptyParticipant' | 'movies.list.emptyVisitor' | 'movies.list.emptyVisitorFull' {
+  hostAlone: boolean;
+}):
+  | 'movies.list.emptyHostAlone'
+  | 'movies.list.emptyParticipant'
+  | 'movies.list.emptyVisitor'
+  | 'movies.list.emptyVisitorFull' {
+  if (input.hostAlone) return 'movies.list.emptyHostAlone';
   if (input.isParticipant) return 'movies.list.emptyParticipant';
   return input.isFull ? 'movies.list.emptyVisitorFull' : 'movies.list.emptyVisitor';
+}
+
+function isHostAlone(event: EventData, offline: boolean): boolean {
+  if (!event.isHost || event.isFinished || offline) return false;
+  return (event.participantCount ?? event.participants?.length ?? 0) <= 1;
 }
 
 const DEFAULT_MOVIE_SORT: { by: MovieRowSortKey; dir: 'asc' | 'desc' } = {
@@ -306,6 +321,7 @@ export default function EventMoviesSection({
   );
 
   const sortOptions = [
+    { key: 'title' as const, label: t('movies.list.sortTitle') },
     { key: 'createdAt' as const, label: t('movies.list.sortAddedAt') },
     { key: 'score' as const, label: t('movies.list.sortScore') },
     { key: 'voteAverage' as const, label: t('movies.list.sortTmdbVote') },
@@ -318,11 +334,12 @@ export default function EventMoviesSection({
   const moviesLoaded = moviesQuery.data !== undefined;
   const showSortControl = moviesLoaded && (layout === 'grid' || compactRows) && movies.length > 1;
   const canAddFromEmptyState = !!participant && !addMovieOpen && !offline;
+  const hostAlone = isHostAlone(event, offline);
   const emptyState = isFinished ? null : (
     <EmptyState
       icon={<Film size={ICON_SIZE['3xl']} aria-hidden />}
       title={t('movies.list.emptyTitle')}
-      message={t(emptyStateMessageKey({ isParticipant: !!participant, isFull }))}
+      message={t(emptyStateMessageKey({ isParticipant: !!participant, isFull, hostAlone }))}
       actions={
         canAddFromEmptyState ? (
           <Button type="button" variant="primary" onClick={() => onAddMovieOpenChange(true)}>
@@ -389,6 +406,7 @@ export default function EventMoviesSection({
         {actionError && (
           <EventActionErrorBanner message={actionError} onDismiss={onDismissActionError} />
         )}
+        {hostAlone ? <EventInviteCard slug={slug} title={event.title} /> : null}
 
         {moviesQuery.isPending && !moviesQuery.isError && (
           <SkeletonScreen

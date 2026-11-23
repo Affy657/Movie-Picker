@@ -212,6 +212,38 @@ describe('EventDetail (MSW)', () => {
     expect(document.title).toBe(pageTitle('Soirée introuvable'));
   });
 
+  it('shows a missing movie night like the other missing pages: heading, message, filled way home', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/events/slug/:s`, () =>
+        HttpResponse.json({ error: 'introuvable' }, { status: 404 })
+      )
+    );
+    renderEventDetail('/e/inconnu');
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Soirée introuvable' })
+    ).toBeInTheDocument();
+    expect(screen.getByText('Cette soirée n’existe pas ou a été supprimée.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Retour à l’accueil' })).toHaveAttribute('href', '/');
+  });
+
+  it('does not ask for the movies of a movie night that does not exist', async () => {
+    const moviesRequests: string[] = [];
+    server.use(
+      http.get(`${TEST_API_V1}/events/slug/:s`, () =>
+        HttpResponse.json({ error: 'introuvable' }, { status: 404 })
+      ),
+      http.get(`${TEST_API_V1}/events/:s/movies`, ({ request }) => {
+        moviesRequests.push(request.url);
+        return HttpResponse.json({ error: 'introuvable' }, { status: 404 });
+      })
+    );
+    renderEventDetail('/e/inconnu');
+
+    await screen.findByRole('heading', { level: 1, name: 'Soirée introuvable' });
+    expect(moviesRequests).toEqual([]);
+  });
+
   it('offers to retry when the movie night cannot be loaded for now', async () => {
     let attempts = 0;
     server.use(
@@ -252,7 +284,7 @@ describe('EventDetail (MSW)', () => {
 
     renderEventDetail('/e/soiree-absente');
 
-    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Soirée introuvable' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Réessayer' })).toBeNull();
   });
 
@@ -566,6 +598,28 @@ describe('EventDetail (MSW)', () => {
     expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     expect(await screen.findByRole('button', { name: /réessayer/i })).toBeInTheDocument();
     expect(screen.getByText(/indisponible|Service/i)).toBeInTheDocument();
+  });
+
+  it('tells an account the host removed that it is out, instead of offering to join again', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u1',
+          displayName: 'Bob',
+          emailMasked: 'b***@test.local',
+          uiTheme: 'system',
+          accentColor: 'default',
+        })
+      ),
+      ...createEventDetailHandlers({ slug, title: 'Soirée démo', viewerRemoved: true })
+    );
+    renderEventDetail(`/e/${slug}`);
+
+    expect(await screen.findByText('Participation retirée')).toBeInTheDocument();
+    expect(
+      screen.getByText('L’hôte a retiré votre participation à cette soirée.')
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /rejoindre/i })).not.toBeInTheDocument();
   });
 
   it('after joining, shows the Movies section and allows proposing a movie', async () => {
@@ -970,6 +1024,45 @@ describe('EventDetail (MSW)', () => {
         screen.queryByRole('button', { name: 'Donner la première note' })
       ).not.toBeInTheDocument();
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('invites a signed-out visitor who was not at the night to host their own first', async () => {
+      serveFinishedNightWithWinner(false, false, yesterday(), { signedIn: false });
+
+      renderEventDetail(`/e/${slug}`);
+
+      const hostYourOwn = await screen.findByRole('link', { name: 'Organisez la vôtre' });
+      expect(hostYourOwn).toHaveAttribute(
+        'href',
+        `/register?returnTo=${encodeURIComponent('/new?from=night')}`
+      );
+      const signIn = screen.getByRole('link', { name: 'Se connecter pour noter' });
+      expect(
+        hostYourOwn.compareDocumentPosition(signIn) & Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy();
+    });
+
+    it('invites a member who was not at the night to host their own', async () => {
+      serveFinishedNightWithWinner(false, false, yesterday(), { signedIn: true });
+
+      renderEventDetail(`/e/${slug}`);
+
+      expect(await screen.findByRole('link', { name: 'Organisez la vôtre' })).toHaveAttribute(
+        'href',
+        '/new'
+      );
+      expect(screen.queryByRole('link', { name: 'Se connecter pour noter' })).toBeNull();
+    });
+
+    it('leaves hosting out for a participant who only has to sign in to rate', async () => {
+      localStorage.removeItem('moviepicker_rating_prompted');
+      setStoredParticipant(slug, myPid, 'Alice');
+      serveFinishedNightWithWinner(false, true, yesterday(), { signedIn: false });
+
+      renderEventDetail(`/e/${slug}`);
+
+      await screen.findByRole('link', { name: 'Se connecter pour noter' });
+      expect(screen.queryByRole('link', { name: 'Organisez la vôtre' })).toBeNull();
     });
 
     it('leaves the rating closed on a night older than a week', async () => {

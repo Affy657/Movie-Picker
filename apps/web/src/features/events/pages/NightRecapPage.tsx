@@ -8,8 +8,9 @@ import { ApiError } from '@/shared/api/apiError';
 import { APP_DOCUMENT_TITLE, pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type Translate } from '@/shared/i18n';
 import { useNightRecap } from '@/features/events/hooks/useNightRecap';
+import type { NightRecap } from '@/features/events/api/eventsApi';
 import NightRecapHeader from './night-recap/NightRecapHeader';
 import NightRecapFilms from './night-recap/NightRecapFilms';
 import NightRecapCta from './night-recap/NightRecapCta';
@@ -22,6 +23,12 @@ import {
 
 function isNotFound(error: unknown): boolean {
   return ApiError.is(error) && error.code === 404;
+}
+
+function recapDocumentTitle(recap: NightRecap | null, notFound: boolean, t: Translate): string {
+  if (recap) return pageTitle(t('events.recap.documentTitle', { title: recap.event.title }));
+  if (notFound) return pageTitle(t('events.recap.notFoundTitle'));
+  return APP_DOCUMENT_TITLE;
 }
 
 function useRecapViewCount(slug: string | undefined, winnerCount: number): void {
@@ -47,9 +54,7 @@ export default function NightRecapPage() {
   useRecapViewCount(slug, recap?.winners.length ?? 0);
 
   usePageSeo({
-    title: recap
-      ? pageTitle(t('events.recap.documentTitle', { title: recap.event.title }))
-      : APP_DOCUMENT_TITLE,
+    title: recapDocumentTitle(recap, isNotFound(recapQuery.error), t),
     noindex: true,
     canonical: slug ? absoluteUrl(ROUTES.nightRecap(slug)) : undefined,
   });

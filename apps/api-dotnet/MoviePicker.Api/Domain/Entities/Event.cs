@@ -23,6 +23,7 @@ public sealed record Event
     public string? RecurrenceParentEventId { get; init; }
     public string? NextOccurrenceEventId { get; init; }
     public string? GroupId { get; init; }
+    public IReadOnlyList<string> RemovedUserIds { get; init; } = [];
 
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
@@ -61,6 +62,15 @@ public sealed record Event
         Lifecycle(utcNow) is EventLifecycle.Pending or EventLifecycle.Finished;
 
     public bool HasWinner => Winners.Count > 0;
+
+    public bool HasRemoved(string? userId) =>
+        !string.IsNullOrEmpty(userId) && RemovedUserIds.Contains(userId);
+
+    public Event KeepingOut(string userId) =>
+        this with { RemovedUserIds = [.. RemovedUserIds.Where(id => id != userId), userId] };
+
+    public Event LettingBackIn(string userId) =>
+        this with { RemovedUserIds = [.. RemovedUserIds.Where(id => id != userId)] };
 
     public IReadOnlyList<string> GetWinnerMovieIds() => Winners.Select(w => w.MovieId).ToList();
 

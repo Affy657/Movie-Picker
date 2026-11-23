@@ -34,6 +34,7 @@ public static class EventDocumentMapper
             RecurrenceParentEventId = doc.RecurrenceParentEventId,
             NextOccurrenceEventId = doc.NextOccurrenceEventId,
             GroupId = doc.GroupId,
+            RemovedUserIds = doc.RemovedUserIds ?? [],
             CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero),
             UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero),
             Version = doc.Version,
@@ -73,6 +74,7 @@ public static class EventDocumentMapper
             RecurrenceParentEventId = evt.RecurrenceParentEventId,
             NextOccurrenceEventId = evt.NextOccurrenceEventId,
             GroupId = string.IsNullOrEmpty(evt.GroupId) ? null : evt.GroupId,
+            RemovedUserIds = evt.RemovedUserIds.Count > 0 ? [.. evt.RemovedUserIds] : null,
             StartAtUtc = EventSchedule.TryGetStartUtc(evt.Date, evt.Time, out var startAt)
                 ? startAt.UtcDateTime
                 : null,

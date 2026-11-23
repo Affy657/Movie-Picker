@@ -150,6 +150,26 @@ describe('MovieList', () => {
       expect(onSetSort).toHaveBeenCalledWith('duration');
     });
 
+    it('names the title column by the title, with the date added beside it', async () => {
+      const onSetSort = vi.fn();
+      renderWithLocale(
+        <MovieList
+          movies={movies}
+          {...baseProps()}
+          viewMode="list"
+          showHeader
+          sortBy="score"
+          sortDir="desc"
+          onSetSort={onSetSort}
+        />
+      );
+      const user = userEvent.setup();
+      await user.click(screen.getByRole('button', { name: /^titre$/i }));
+      expect(onSetSort).toHaveBeenCalledWith('title');
+      await user.click(screen.getByRole('button', { name: /^ajout$/i }));
+      expect(onSetSort).toHaveBeenCalledWith('createdAt');
+    });
+
     it('does not show the header when showHeader is false', () => {
       renderWithLocale(
         <MovieList

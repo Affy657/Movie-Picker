@@ -45,6 +45,7 @@
 .chip {
   display: inline-flex;
   align-items: center;
+  max-width: 100%;
   gap: var(--space-1-5);
   padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3);
   border-radius: var(--radius-pill);
@@ -59,7 +60,9 @@
 }
 
 .chipLabel {
+  min-width: 0;
   line-height: var(--leading-none);
+  overflow-wrap: anywhere;
   transform: translateY(var(--text-optical-nudge));
 }
 
@@ -84,6 +87,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1-5);
+  min-width: 0;
   line-height: var(--leading-none);
   text-decoration: none;
   color: inherit;

@@ -80,6 +80,10 @@ public sealed class EventDocument
     [BsonRepresentation(BsonType.ObjectId)]
     public string? GroupId { get; set; }
 
+    [BsonElement("removedUserIds")]
+    [BsonIgnoreIfNull]
+    public List<string>? RemovedUserIds { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 

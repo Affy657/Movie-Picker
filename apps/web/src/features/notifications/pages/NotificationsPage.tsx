@@ -110,6 +110,7 @@ const NOTIFICATION_TEXT_KEYS = {
   listinvitation: { plain: 'notifications.listInvitationText' },
   groupinvitation: { plain: 'notifications.groupInvitationText' },
   groupnight: { plain: 'notifications.groupNightText' },
+  removedfromevent: { plain: 'notifications.removedFromEventText' },
   eventpending: {
     plain: 'notifications.eventPendingText',
     grouped: 'notifications.eventPendingGroupedText',

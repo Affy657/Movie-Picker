@@ -37,6 +37,16 @@ public sealed class MovieRatingEndpointsTests : IClassFixture<MoviePickerApplica
         return json.GetProperty("_id").GetString()!;
     }
 
+    private static async Task InviteAgainAsync(HttpClient host, HttpClient guest, string slug)
+    {
+        var guestProfile = await guest.GetFromJsonAsync<JsonElement>("/api/v1/auth/me");
+        (await host.PostAsync($"/api/v1/users/{guestProfile.GetProperty("handle").GetString()}/follow", null))
+            .EnsureSuccessStatusCode();
+        (await host.PostAsJsonAsync(
+            $"/api/v1/events/{slug}/invitations",
+            new { targetUserId = guestProfile.GetProperty("userId").GetString() })).EnsureSuccessStatusCode();
+    }
+
     private static async Task<string> JoinAsync(HttpClient client, string slug, string pseudo)
     {
         var res = await client.PostAsJsonAsync($"/api/v1/events/{slug}/join", new { pseudo });
@@ -142,6 +152,9 @@ public sealed class MovieRatingEndpointsTests : IClassFixture<MoviePickerApplica
         Assert.True((await ReadEventAsync(slug)).WriteSeq > beforeRemoval.WriteSeq);
         Assert.Equal(hostParticipantId, Assert.Single(await StoredRatingsAsync(eventId)).ParticipantId);
 
+        var refused = await guest.PostAsJsonAsync($"/api/v1/events/{slug}/join", new { pseudo = "Bob" });
+        Assert.Equal(HttpStatusCode.Forbidden, refused.StatusCode);
+        await InviteAgainAsync(host, guest, slug);
         var rejoinedParticipantId = await JoinAsync(guest, slug, "Bob");
         (await DrawAsync(host, slug, movieId)).EnsureSuccessStatusCode();
         (await RateAsync(guest, slug, movieId, rejoinedParticipantId, 4)).EnsureSuccessStatusCode();

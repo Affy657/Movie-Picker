@@ -25,6 +25,8 @@ public sealed class EventDetailResponse
 
     public ParticipantResponse? MyParticipant { get; init; }
 
+    public bool ViewerRemoved { get; init; }
+
     public int ParticipantCount { get; init; }
 
     public int MovieCount { get; init; }

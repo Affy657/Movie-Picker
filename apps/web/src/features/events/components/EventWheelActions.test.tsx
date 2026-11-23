@@ -5,6 +5,7 @@ import EventWheelActions from '@/features/events/components/EventWheelActions';
 import type { EventWheelState } from '@/features/events/hooks/useEventWheel';
 import { LocaleProvider } from '@/shared/i18n';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
+import styles from '@/features/events/components/EventWheelActions.module.css';
 import {
   eventHeaderActions,
   type EventHeaderActionsInput,
@@ -290,6 +291,23 @@ describe('EventWheelActions', () => {
     );
 
     expect(screen.getByRole('status')).toHaveTextContent('3 films choisis');
+  });
+
+  it('shrinks proposing to an icon beside the chosen movie, so it no longer reads as the main action', () => {
+    renderActions(
+      wheelState({
+        isHost: false,
+        canSpin: false,
+        primaryAction: null,
+        winnerIds: ['m1'],
+        remainingDraws: 0,
+        spinDisabled: true,
+      })
+    );
+
+    const propose = screen.getByRole('button', { name: 'Proposer un film' });
+    expect(within(propose).getByText('Proposer un film')).toHaveClass(styles.denseLabel!);
+    expect(propose).toHaveAttribute('title', 'Proposer un film');
   });
 
   it('disables the draw and carries the reason in a tooltip', () => {

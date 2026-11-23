@@ -888,6 +888,15 @@ export const en: Locale = {
       joinedTitle: 'You joined the event',
       joinedDescription: 'Suggest your films and vote on the others.',
     },
+    removed: {
+      kicker: 'Participation removed',
+      text: 'The host removed you from this event.',
+      meta: 'To come back, ask them to invite you again.',
+    },
+    inviteCard: {
+      title: 'Invite your friends',
+      lead: 'A movie night takes a few people: send this link, your friends join, suggest their movies and vote.',
+    },
     participants: {
       dialogTitle: 'Participants ({{count}})',
       empty: 'Nobody has joined the event yet.',
@@ -903,7 +912,7 @@ export const en: Locale = {
       inviteAriaLabel: 'Invite friends',
       removeConfirmTitle: 'Remove a participant',
       removeConfirm:
-        'Remove {{pseudo}} from the event? Their movies, votes and marks will be deleted.',
+        'Remove {{pseudo}} from the event? Their movies, votes and marks will be deleted, and only a new invitation from you will let them back.',
       removeConfirmAction: 'Remove',
       removeError: 'Unable to remove this participant.',
       removeSuccess: '{{pseudo}} was removed from the event.',
@@ -924,6 +933,7 @@ export const en: Locale = {
       moviesLoadError: 'Could not load the film list. Check your connection or try again.',
       errorFallback: 'Event not found',
       errorOffline: 'Connection unavailable',
+      notFoundTitle: 'Event not found',
       missing: 'This event does not exist or has been deleted.',
       backHome: 'Back to home',
       backNav: 'Back',
@@ -1286,6 +1296,7 @@ export const en: Locale = {
       upcoming: 'Tonight you are watching',
       upcomingTomorrow: 'Tomorrow you are watching',
       upcomingOn: 'On {{date}} you are watching',
+      hostYourOwn: 'Host your own',
     },
     propose: {
       title: 'Suggest a movie',
@@ -1475,6 +1486,7 @@ export const en: Locale = {
     list: {
       emptyTitle: 'No movies suggested yet',
       emptyParticipant: 'Suggest the first movie, the wheel comes next.',
+      emptyHostAlone: 'While your friends are on their way, suggest the first movie.',
       emptyVisitor: 'Join the movie night to suggest the first movie.',
       emptyVisitorFull: 'The participants have not suggested anything yet.',
       voteUp: 'Vote up',
@@ -1527,6 +1539,8 @@ export const en: Locale = {
       sortAvailability: 'Availability',
       sortSeen: 'Already seen',
       sortReleaseDate: 'Release date',
+      sortTitle: 'Title',
+      columnTitle: 'Title',
       columnAddedAt: 'Added',
       columnTmdbVote: 'Rating',
       columnDuration: 'Duration',
@@ -2662,6 +2676,8 @@ export const en: Locale = {
     host_only_invite: 'Only the host can send invitations.',
     host_only_list: 'Only the host can view this list.',
     host_or_self_only: 'Reserved to the host or to the participant themselves.',
+    removed_from_event:
+      'The host removed you from this event. To come back, ask them to invite you again.',
     seen_mark_own_only: 'You can only change your own seen mark.',
     rating_own_participation_only: 'You can only rate for your own participation.',
     rating_only_once_started: 'A movie can be rated once the night has started.',
@@ -2823,6 +2839,7 @@ export const en: Locale = {
     prefListInvitation: 'Invitation to a list',
     prefGroupInvitation: 'Invitation to a group',
     prefGroupNight: 'New night in one of your groups',
+    prefRemovedFromEvent: 'The host removes you from an event',
     prefNewFollower: 'Someone follows you',
     prefEventPending: 'Event finished with no movie picked',
     prefLetterboxdReconciliationPending: 'Letterboxd films to confirm',
@@ -2864,6 +2881,7 @@ export const en: Locale = {
     groupInvitationText: '{{name}} invites you to join the group “**{{groupName}}**”',
     groupNightText:
       '{{name}} is waiting for you at **{{eventTitle}}**, in the group “{{groupName}}”',
+    removedFromEventText: 'The host removed you from **{{eventTitle}}**.',
     groupInvitationAcceptAria: 'Accept the invitation to the group “{{groupName}}”',
     groupInvitationDeclineAria: 'Decline the invitation to the group “{{groupName}}”',
     listInvitationAccept: 'Accept',
@@ -3157,10 +3175,10 @@ export const en: Locale = {
     },
     seoDescription:
       '{{name}} (@{{handle}}) on Movie Picker: movie night stats, proposed films and follows.',
+    notFoundTitle: 'Profile not found',
     notFound: 'This profile does not exist or is not public.',
     loadError: 'Unable to load this profile.',
     loading: 'Loading profile…',
-    backHome: 'Back to home',
     editProfile: 'Edit my profile',
     memberSince: 'Member since {{date}}',
     shareTitle: 'Share this profile',

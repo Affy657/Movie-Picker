@@ -98,6 +98,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             Lifecycle = lifecycle,
             Winners = evt.Winners.Select(ToWinnerResponse).ToList(),
             MyParticipant = myParticipant,
+            ViewerRemoved = evt.HasRemoved(currentUserId),
             ParticipantCount = participants.Count,
             MovieCount = movieCount,
             VotersCount = votersCount,

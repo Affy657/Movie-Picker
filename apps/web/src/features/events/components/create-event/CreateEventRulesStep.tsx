@@ -84,41 +84,43 @@ export default function CreateEventRulesStep({
         </div>
       }
     >
-      <section className={styles.startingPoint} aria-labelledby={startingPointId}>
-        <h3 id={startingPointId} className={styles.startingPointTitle}>
-          {t('events.create.rules.startFrom')}
-        </h3>
-        <div className={styles.chips}>
-          <Chip
-            size="md"
-            selected={selected === 'defaults'}
-            onClick={() => onChoose({ kind: 'defaults' })}
-          >
-            {t('events.create.rules.defaultsItem')}
-          </Chip>
-          {nights.map((night) => (
+      {nights.length > 0 || templates.length > 0 ? (
+        <section className={styles.startingPoint} aria-labelledby={startingPointId}>
+          <h3 id={startingPointId} className={styles.startingPointTitle}>
+            {t('events.create.rules.startFrom')}
+          </h3>
+          <div className={styles.chips}>
             <Chip
-              key={night.slug}
               size="md"
-              icon={RotateCcw}
-              selected={selected === 'night' && selectedNightSlug === night.slug}
-              onClick={() => onChoose({ kind: 'night', slug: night.slug, title: night.title })}
+              selected={selected === 'defaults'}
+              onClick={() => onChoose({ kind: 'defaults' })}
             >
-              {t('events.create.rules.likeItem', { title: night.title })}
+              {t('events.create.rules.defaultsItem')}
             </Chip>
-          ))}
-          {templates.map((template) => (
-            <Chip
-              key={template.id}
-              size="md"
-              selected={selected === 'template' && selectedTemplateId === template.id}
-              onClick={() => onChoose({ kind: 'template', template })}
-            >
-              {template.name}
-            </Chip>
-          ))}
-        </div>
-      </section>
+            {nights.map((night) => (
+              <Chip
+                key={night.slug}
+                size="md"
+                icon={RotateCcw}
+                selected={selected === 'night' && selectedNightSlug === night.slug}
+                onClick={() => onChoose({ kind: 'night', slug: night.slug, title: night.title })}
+              >
+                {t('events.create.rules.likeItem', { title: night.title })}
+              </Chip>
+            ))}
+            {templates.map((template) => (
+              <Chip
+                key={template.id}
+                size="md"
+                selected={selected === 'template' && selectedTemplateId === template.id}
+                onClick={() => onChoose({ kind: 'template', template })}
+              >
+                {template.name}
+              </Chip>
+            ))}
+          </div>
+        </section>
+      ) : null}
       <CreateEventRules fields={fields} errors={errors} onChange={onChange} />
       {templateName === null ? null : (
         <div className={styles.templateName}>

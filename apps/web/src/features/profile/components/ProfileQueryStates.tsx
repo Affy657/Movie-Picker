@@ -1,6 +1,7 @@
 import { Link, Navigate } from 'react-router';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, UserX } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
+import ErrorState from '@/shared/components/ErrorState';
 import { ROUTES } from '@/app/routes';
 import { ApiError } from '@/shared/api/apiError';
 import { useTranslation } from '@/shared/i18n';
@@ -16,17 +17,16 @@ export function ProfileNotFoundState({ handle }: Readonly<{ handle: string | und
     return <Navigate to={ROUTES.account} replace />;
   }
   return (
-    <PageLayout className="page--centered page--errorState">
-      <span className="errorStateIcon" aria-hidden>
-        <AlertCircle size={ICON_SIZE['4xl']} />
-      </span>
-      <p className="errorStateMessage" role="alert">
-        {t('profile.notFound')}
-      </p>
-      <Link to={ROUTES.home} className={buttonClass()}>
-        {t('profile.backHome')}
-      </Link>
-    </PageLayout>
+    <ErrorState
+      icon={<UserX size={ICON_SIZE['4xl']} />}
+      title={t('profile.notFoundTitle')}
+      message={t('profile.notFound')}
+      actions={
+        <Link to={ROUTES.home} className={buttonClass({ variant: 'primary' })}>
+          {t('errors.backHome')}
+        </Link>
+      }
+    />
   );
 }
 

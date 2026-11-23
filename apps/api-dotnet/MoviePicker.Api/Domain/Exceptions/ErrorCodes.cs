@@ -95,6 +95,7 @@ public static class ErrorCodes
     public const string ListOwnerOnly = "list_owner_only";
     public const string GroupOwnerOnly = "group_owner_only";
     public const string HostOrSelfOnly = "host_or_self_only";
+    public const string RemovedFromEvent = "removed_from_event";
     public const string SeenMarkOwnOnly = "seen_mark_own_only";
     public const string SeenMarkOwnParticipationOnly = "seen_mark_own_participation_only";
     public const string RatingOwnParticipationOnly = "rating_own_participation_only";

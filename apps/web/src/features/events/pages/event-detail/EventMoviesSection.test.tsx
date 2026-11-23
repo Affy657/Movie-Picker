@@ -154,6 +154,70 @@ describe('EventMoviesSection (MSW)', () => {
       expect(onAddMovieOpenChange).toHaveBeenCalledWith(true);
     });
 
+    it('asks a host alone on the night to invite friends, with the link to copy', async () => {
+      const user = userEvent.setup();
+      server.use(authedUserHandler, watchlistHandler([]));
+      renderSection({
+        movies: [],
+        event: {
+          ...EVENT,
+          isHost: true,
+          participantCount: 1,
+          participants: [{ id: 'p1', pseudo: 'Alice', isCreator: true }],
+        },
+      });
+
+      const invite = screen.getByRole('region', { name: 'Invitez vos amis' });
+      expect(within(invite).getByText(/\/e\/soiree-cine$/)).toBeInTheDocument();
+      expect(
+        screen.queryByText('Proposez le premier film, la roue viendra ensuite.')
+      ).not.toBeInTheDocument();
+      expect(
+        within(screen.getByRole('region', { name: 'Films proposés' })).getByRole('button', {
+          name: 'Proposer un film',
+        })
+      ).toBeInTheDocument();
+
+      await user.click(within(invite).getByRole('button', { name: 'Copier' }));
+
+      expect(await navigator.clipboard.readText()).toBe(
+        `${globalThis.location.origin}/e/soiree-cine`
+      );
+      expect(within(invite).getByRole('button', { name: 'Copié' })).toBeInTheDocument();
+    });
+
+    it('keeps inviting a host alone once a movie is proposed, and stops once a friend joins', () => {
+      server.use(authedUserHandler, watchlistHandler([]));
+      const alone: EventData = {
+        ...EVENT,
+        isHost: true,
+        participantCount: 1,
+        participants: [{ id: 'p1', pseudo: 'Alice', isCreator: true }],
+      };
+      const { unmount } = renderSection({ event: alone });
+      expect(screen.getByRole('region', { name: 'Invitez vos amis' })).toBeInTheDocument();
+      unmount();
+
+      renderSection({
+        event: {
+          ...alone,
+          participantCount: 2,
+          participants: [...(alone.participants ?? []), { id: 'p2', pseudo: 'Bob' }],
+        },
+      });
+      expect(screen.queryByRole('region', { name: 'Invitez vos amis' })).toBeNull();
+    });
+
+    it('leaves a guest with the usual empty state, without the invitation', () => {
+      server.use(authedUserHandler, watchlistHandler([]));
+      renderSection({ movies: [], event: { ...EVENT, isHost: false, participantCount: 1 } });
+
+      expect(screen.queryByRole('region', { name: 'Invitez vos amis' })).toBeNull();
+      expect(
+        screen.getByText('Proposez le premier film, la roue viendra ensuite.')
+      ).toBeInTheDocument();
+    });
+
     it('tells a visitor to join first and offers no proposal button', () => {
       server.use(authedUserHandler, watchlistHandler([]));
       renderSection({ movies: [], participant: null });
@@ -492,6 +556,22 @@ describe('EventMoviesSection (MSW)', () => {
     const headings = screen.getAllByRole('heading', { level: 3 });
     expect(headings[0]).toHaveTextContent('Inception');
     expect(screen.getByText('Film gagnant')).toBeInTheDocument();
+  });
+
+  it('sorts the movies by title, from A to Z', async () => {
+    server.use(authedUserHandler, watchlistHandler([]));
+    const whiplash: MovieData = { ...MOVIE, id: 'm2', title: 'Whiplash', score: 9 };
+    const amelie: MovieData = { ...MOVIE, id: 'm3', title: 'Amélie', score: 1 };
+    renderSection({ movies: [MOVIE, whiplash, amelie], viewMode: 'grid' });
+
+    await userEvent.setup().click(screen.getByRole('button', { name: /^titre$/i }));
+
+    const headings = screen.getAllByRole('heading', { level: 3 });
+    expect(headings.map((heading) => heading.textContent)).toEqual([
+      'Amélie',
+      'Matrix',
+      'Whiplash',
+    ]);
   });
 
   it('pins the winners in draw order, not in sort order', () => {

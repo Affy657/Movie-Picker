@@ -17,6 +17,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
     private readonly IMovieRatingRepository _ratingRepository;
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
+    private readonly EventAudienceNotifier _audience;
     private readonly IUnitOfWork _unitOfWork;
     private readonly TimeProvider _clock;
     private readonly ILogger<RemoveParticipantHandler> _logger;
@@ -30,6 +31,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         IMovieRatingRepository ratingRepository,
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
+        EventAudienceNotifier audience,
         IUnitOfWork unitOfWork,
         TimeProvider clock,
         ILogger<RemoveParticipantHandler> logger)
@@ -42,6 +44,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         _ratingRepository = ratingRepository;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
+        _audience = audience;
         _unitOfWork = unitOfWork;
         _clock = clock;
         _logger = logger;
@@ -71,7 +74,10 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         if (!isHost && !isSelfConnected)
             throw Errors.HostOrSelfOnly();
 
-        var movieIds = await RemoveWithItsMoviesAsync(idOrSlug, evt.Id, participant.Id, ct);
+        var keptOutUserId = isHost && !isSelfConnected ? participant.UserId : null;
+        var movieIds = await RemoveWithItsMoviesAsync(idOrSlug, evt.Id, participant.Id, keptOutUserId, ct);
+        if (!string.IsNullOrEmpty(keptOutUserId))
+            await _audience.NotifyUsersAsync([keptOutUserId], RemovedMessage(evt), CancellationToken.None);
 
         _logger.LogInformation(
             "Participant removed: {ParticipantId} from event {EventId} (byHost={IsHost}, selfConnected={IsSelf}, cascadedMovies={MovieCount})",
@@ -103,6 +109,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         string idOrSlug,
         string eventId,
         string participantId,
+        string? keptOutUserId,
         CancellationToken ct)
     {
         IReadOnlyList<string> movieIds = [];
@@ -122,9 +129,23 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
                     token);
                 if (!await _participantRepository.DeleteAsync(participantId, eventId, token))
                     throw Errors.ParticipantNotFound();
-                await _eventRepository.UpdateAsync(current with { UpdatedAt = _clock.GetUtcNow() }, token);
+                var updated = string.IsNullOrEmpty(keptOutUserId) ? current : current.KeepingOut(keptOutUserId);
+                await _eventRepository.UpdateAsync(updated with { UpdatedAt = _clock.GetUtcNow() }, token);
             },
             ct);
         return movieIds;
     }
+
+    private static EventAudienceMessage RemovedMessage(Event evt) => new(
+        evt.Id,
+        new UserNotification
+        {
+            Type = UserNotificationType.RemovedFromEvent,
+            EventId = evt.Id,
+            EventSlug = evt.Slug,
+            EventTitle = evt.Title
+        },
+        ServerCopy.Push.RemovedFromEvent(evt.Title).ToMessage(
+            tag: $"removed-{evt.Id}",
+            url: FrontRoutes.EventDetail(evt.Slug)));
 }

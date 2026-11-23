@@ -60,6 +60,9 @@ public sealed class JoinEventHandler : IJoinEventHandler
         if (evt.IsFinished(_clock.GetUtcNow()))
             throw Errors.EventFinished();
 
+        if (evt.HasRemoved(authenticatedUserId))
+            throw Errors.RemovedFromEvent();
+
         var userId = authenticatedUserId;
         var alreadyLinked = await _participantRepository.FindByEventAndUserIdAsync(evt.Id, userId, ct);
         if (alreadyLinked is not null)
@@ -148,6 +151,8 @@ public sealed class JoinEventHandler : IJoinEventHandler
             {
                 await _eventRepository.LockForWriteAsync(evt.Id, token);
                 var current = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, token);
+                if (current.HasRemoved(participant.UserId))
+                    throw Errors.RemovedFromEvent();
                 if (current.Config?.MaxParticipants is { } cap && cap > 0)
                 {
                     var currentCount = await _participantRepository.CountByEventIdAsync(evt.Id, token);
