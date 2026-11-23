@@ -16,6 +16,7 @@ import ProfileEditHandle from './ProfileEditHandle';
 import ProfileEditPreview from './ProfileEditPreview';
 import ProfileEditSection from './ProfileEditSection';
 import { useSavedFlash } from './useSavedFlash';
+import { forgetProfileDraft, keepProfileDraft, readProfileDraft } from './profileDraftStorage';
 import styles from './ProfileEditPage.module.css';
 
 const BIO_MAX_LENGTH = 140;
@@ -35,6 +36,11 @@ function draftOf(user: UserProfile): ProfileDraft {
     bio: user.bio ?? '',
     isPublic: user.isProfilePublic ?? true,
   };
+}
+
+function withUnsavedText(server: ProfileDraft, userId: string): ProfileDraft {
+  const unsaved = readProfileDraft(userId);
+  return unsaved ? { ...server, ...unsaved } : server;
 }
 
 function sameDraft(a: ProfileDraft, b: ProfileDraft): boolean {
@@ -70,9 +76,10 @@ export default function ProfileEditPage({ user }: Readonly<{ user: UserProfile }
   const colorLabelId = useId();
   useAnchorScroll(COLOR_ANCHOR);
 
-  const [draft, setDraft] = useState(() => draftOf(user));
+  const [draft, setDraft] = useState(() => withUnsavedText(draftOf(user), user.userId));
   const draftRef = useRef(draft);
-  const serverDraftRef = useRef(draft);
+  const serverDraftRef = useRef(draftOf(user));
+  const restoredDraftRef = useRef(!sameDraft(draft, serverDraftRef.current));
   const [nameError, setNameError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saved, flashSaved] = useSavedFlash();
@@ -85,7 +92,11 @@ export default function ProfileEditPage({ user }: Readonly<{ user: UserProfile }
     setDraft(next);
   }, []);
 
-  const editDraft = (edit: Partial<ProfileDraft>) => replaceDraft({ ...draftRef.current, ...edit });
+  const editDraft = (edit: Partial<ProfileDraft>) => {
+    const next = { ...draftRef.current, ...edit };
+    replaceDraft(next);
+    keepProfileDraft(user.userId, next);
+  };
 
   useEffect(() => {
     const incoming = draftOf(user);
@@ -126,7 +137,10 @@ export default function ProfileEditPage({ user }: Readonly<{ user: UserProfile }
         isProfilePublic: sent.isPublic,
       });
       serverDraftRef.current = draftOf(updated);
-      if (sameDraft(draftRef.current, sent)) replaceDraft(serverDraftRef.current);
+      if (sameDraft(draftRef.current, sent)) {
+        replaceDraft(serverDraftRef.current);
+        forgetProfileDraft();
+      }
       flashSaved();
     } catch (err) {
       setSaveError(getErrorMessage(err, t('profile.settings.fallbackError')));
@@ -138,6 +152,12 @@ export default function ProfileEditPage({ user }: Readonly<{ user: UserProfile }
       }
     }
   }, [patchProfile, flashSaved, t, replaceDraft]);
+
+  useEffect(() => {
+    if (!restoredDraftRef.current) return;
+    restoredDraftRef.current = false;
+    void flush();
+  }, [flush]);
 
   const scheduleSave = () => {
     globalThis.clearTimeout(timerRef.current);

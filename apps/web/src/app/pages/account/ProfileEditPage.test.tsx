@@ -10,6 +10,7 @@ import { TEST_API_V1 } from '@/mocks/handlers';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import type { QueryClient } from '@tanstack/react-query';
 import { setSessionHint } from '@/features/auth/session-hint';
+import { createAppQueryClient } from '@/app/appQueryClient';
 
 const baseUser = {
   userId: 'u1',
@@ -45,13 +46,55 @@ describe('ProfileEditPage (MSW)', () => {
 
   beforeEach(() => {
     setSessionHint();
+    sessionStorage.clear();
     server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(baseUser)));
+  });
+
+  it('keeps the bio being typed through an expired session and saves it once back', async () => {
+    const user = userEvent.setup();
+    let sessionAlive = true;
+    const patchBodies: Record<string, unknown>[] = [];
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        sessionAlive
+          ? HttpResponse.json(baseUser)
+          : HttpResponse.json({ reason: 'unauthorized' }, { status: 401 })
+      ),
+      http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
+        if (!sessionAlive) {
+          return HttpResponse.json({ reason: 'unauthorized' }, { status: 401 });
+        }
+        const body = (await request.json()) as Record<string, unknown>;
+        patchBodies.push(body);
+        return HttpResponse.json({ ...baseUser, ...body });
+      })
+    );
+    const client = createAppQueryClient();
+    renderProfile(client);
+    const bioInput = await screen.findByLabelText(/bio/i);
+
+    sessionAlive = false;
+    await user.clear(bioInput);
+    await user.type(bioInput, 'Brouillon gardé');
+    await user.tab();
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: /paramètres/i }, { timeout: 20000 })
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText(/bio/i)).not.toBeInTheDocument();
+
+    sessionAlive = true;
+    setSessionHint();
+    await client.invalidateQueries({ queryKey: queryKeys.auth.me });
+
+    expect(await screen.findByLabelText(/bio/i)).toHaveValue('Brouillon gardé');
+    await waitFor(() => expect(patchBodies.at(-1)?.bio).toBe('Brouillon gardé'));
   });
 
   it('pre-fills the display name, the bio and the visibility from the account', async () => {
     renderProfile();
 
-    await waitFor(() => expect(screen.getByLabelText('Nom')).toHaveValue('Alice'));
+    await waitFor(() => expect(screen.getByLabelText('Nom affiché')).toHaveValue('Alice'));
     expect(screen.getByLabelText('Pseudo')).toHaveValue('alice');
     expect(screen.getByLabelText(/bio/i)).toHaveValue('Ma bio');
     expect(screen.getByRole('switch', { name: /profil public/i })).toHaveAttribute(
@@ -73,7 +116,7 @@ describe('ProfileEditPage (MSW)', () => {
     renderProfile();
     await screen.findByDisplayValue('Alice');
 
-    const pseudoInput = screen.getByLabelText('Nom');
+    const pseudoInput = screen.getByLabelText('Nom affiché');
     await user.clear(pseudoInput);
     await user.type(pseudoInput, 'Alicia');
     await user.tab();
@@ -97,7 +140,7 @@ describe('ProfileEditPage (MSW)', () => {
     renderProfile();
     await screen.findByDisplayValue('Alice');
 
-    const pseudoInput = screen.getByLabelText('Nom');
+    const pseudoInput = screen.getByLabelText('Nom affiché');
     await user.clear(pseudoInput);
     await user.type(pseudoInput, 'Alicia');
 
@@ -173,7 +216,7 @@ describe('ProfileEditPage (MSW)', () => {
     renderProfile();
     await screen.findByDisplayValue('Alice');
 
-    const pseudoInput = screen.getByLabelText('Nom');
+    const pseudoInput = screen.getByLabelText('Nom affiché');
     await user.clear(pseudoInput);
     await user.type(pseudoInput, 'Alicia');
     await user.tab();
@@ -208,7 +251,7 @@ describe('ProfileEditPage (MSW)', () => {
     renderProfile();
     await screen.findByDisplayValue('Alice');
 
-    const pseudoInput = screen.getByLabelText('Nom');
+    const pseudoInput = screen.getByLabelText('Nom affiché');
     await user.clear(pseudoInput);
     await user.type(pseudoInput, 'Alicia');
     await user.tab();
@@ -272,12 +315,12 @@ describe('ProfileEditPage (MSW)', () => {
   it('refuses an empty name', async () => {
     const user = userEvent.setup();
     renderProfile();
-    const pseudoInput = await screen.findByLabelText('Nom');
+    const pseudoInput = await screen.findByLabelText('Nom affiché');
 
     await user.clear(pseudoInput);
     await user.tab();
 
-    expect(await screen.findByText('Le nom est requis.')).toBeInTheDocument();
+    expect(await screen.findByText('Le nom affiché est requis.')).toBeInTheDocument();
   });
 
   it('shows the bio hint only within the last 20 characters', async () => {
@@ -315,8 +358,8 @@ describe('ProfileEditPage (MSW)', () => {
 
     renderProfile();
     const preview = await screen.findByRole('region', { name: 'Aperçu de votre profil' });
-    await user.clear(screen.getByLabelText('Nom'));
-    await user.type(screen.getByLabelText('Nom'), 'Alicia');
+    await user.clear(screen.getByLabelText('Nom affiché'));
+    await user.type(screen.getByLabelText('Nom affiché'), 'Alicia');
     await user.clear(screen.getByLabelText(/bio/i));
     await user.type(screen.getByLabelText(/bio/i), 'Cinéphile');
 

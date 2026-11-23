@@ -14,6 +14,7 @@ import {
   markSignOutPending,
 } from '@/features/auth/session-hint';
 import type { UserProfile } from '@/features/auth/types';
+import { takeWelcomePending } from '@/features/auth/welcome';
 import { ApiError } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { dropBrowserPushSubscription } from '@/shared/utils/browserPushSubscription';
@@ -25,6 +26,16 @@ vi.mock('@/features/auth/api/authApi', () => ({
   postAuthLogin: vi.fn(),
   postAuthLogout: vi.fn(async () => undefined),
   postAuthRegister: vi.fn(),
+}));
+const { unauthorizedListeners } = vi.hoisted(() => ({
+  unauthorizedListeners: new Set<(url: string) => void>(),
+}));
+vi.mock('@/shared/api/client', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/shared/api/client')>()),
+  onUnauthorizedResponse: (listener: (url: string) => void) => {
+    unauthorizedListeners.add(listener);
+    return () => unauthorizedListeners.delete(listener);
+  },
 }));
 vi.mock('@/shared/utils/browserPushSubscription', () => ({
   dropBrowserPushSubscription: vi.fn(async () => undefined),
@@ -516,6 +527,97 @@ describe('AuthProvider session end', () => {
   });
 });
 
+describe('AuthProvider expired session', () => {
+  function meetUnauthorizedResponse(url = 'http://localhost:4000/api/v1/events/soiree/vote') {
+    for (const listener of unauthorizedListeners) listener(url);
+  }
+
+  async function renderSignedIn() {
+    let auth: ReturnType<typeof useAuth> | undefined;
+    function ExposeAuth() {
+      auth = useAuth();
+      return null;
+    }
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <AuthProvider>
+          <ExposeAuth />
+        </AuthProvider>
+      </QueryClientProvider>
+    );
+    await waitFor(() => expect(auth?.user?.userId).toBe('u1'));
+    return () => auth!;
+  }
+
+  it('checks the session again after a 401 met by any call', async () => {
+    const auth = await renderSignedIn();
+    const checksBefore = vi.mocked(fetchAuthMeForSession).mock.calls.length;
+    vi.mocked(fetchAuthMeForSession).mockResolvedValueOnce(null);
+
+    act(() => meetUnauthorizedResponse());
+
+    await waitFor(() => expect(auth().user).toBeNull());
+    expect(vi.mocked(fetchAuthMeForSession).mock.calls.length).toBe(checksBefore + 1);
+    expect(auth().sessionExpired).toBe(true);
+  });
+
+  it('keeps a valid session when the 401 was about something else', async () => {
+    const auth = await renderSignedIn();
+
+    act(() => meetUnauthorizedResponse());
+
+    await waitFor(() => expect(vi.mocked(fetchAuthMeForSession)).toHaveBeenCalled());
+    expect(auth().user?.userId).toBe('u1');
+    expect(auth().sessionExpired).toBe(false);
+  });
+
+  it.each(['login', 'register', 'logout', 'password-reset/confirm'])(
+    'leaves the 401 of /auth/%s to the screen that asked',
+    async (route) => {
+      await renderSignedIn();
+      const checksBefore = vi.mocked(fetchAuthMeForSession).mock.calls.length;
+
+      act(() => meetUnauthorizedResponse(`http://localhost:4000/api/v1/auth/${route}`));
+
+      expect(vi.mocked(fetchAuthMeForSession).mock.calls.length).toBe(checksBefore);
+    }
+  );
+
+  it('does not call a sign-out an expired session', async () => {
+    const auth = await renderSignedIn();
+
+    await act(async () => {
+      await auth().endSession();
+    });
+
+    expect(auth().user).toBeNull();
+    expect(auth().sessionExpired).toBe(false);
+  });
+
+  it('does not call the sign-out of another tab an expired session', async () => {
+    const auth = await renderSignedIn();
+    vi.mocked(fetchAuthMeForSession).mockResolvedValueOnce(null);
+
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: 'mp.session-hint' }));
+    });
+
+    await waitFor(() => expect(auth().user).toBeNull());
+    expect(auth().sessionExpired).toBe(false);
+  });
+
+  it('forgets the expiry once the reader dismisses it', async () => {
+    const auth = await renderSignedIn();
+    vi.mocked(fetchAuthMeForSession).mockResolvedValueOnce(null);
+    act(() => meetUnauthorizedResponse());
+    await waitFor(() => expect(auth().sessionExpired).toBe(true));
+
+    act(() => auth().dismissSessionExpired());
+
+    expect(auth().sessionExpired).toBe(false);
+  });
+});
+
 describe('AuthProvider sign-in measure', () => {
   async function renderAuthProvider(): Promise<() => ReturnType<typeof useAuth>> {
     let auth: ReturnType<typeof useAuth> | undefined;
@@ -548,6 +650,22 @@ describe('AuthProvider sign-in measure', () => {
 
     expect(postAuthRegister).toHaveBeenCalledWith('a@test.local', 'secret1', 'Alice', '/e/soiree');
     expect(track).toHaveBeenCalledWith('user_signed_up', { method: 'email', origin: 'event' });
+  });
+
+  it('keeps a welcome for the first home visit of a new account, and only of a new one', async () => {
+    const auth = await renderAuthProvider();
+    takeWelcomePending();
+
+    await act(async () => {
+      await auth().login('a@test.local', 'secret1', '/');
+    });
+    expect(takeWelcomePending()).toBe(false);
+
+    await act(async () => {
+      await auth().register('a@test.local', 'secret1', 'Alice', '/e/soiree');
+    });
+    expect(takeWelcomePending()).toBe(true);
+    expect(takeWelcomePending()).toBe(false);
   });
 
   it('tells the server and the measure where a returning account was heading', async () => {

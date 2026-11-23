@@ -187,7 +187,8 @@ describe('App (routes)', () => {
         server.use(authMeGuestHandler);
         renderRoutes([path]);
         const loginLink = await waitFor(
-          () => within(screen.getByRole('main')).getByRole('link', { name: /^se connecter$/i }),
+          () =>
+            within(screen.getByRole('main')).getByRole('link', { name: /^j’ai déjà un compte$/i }),
           { timeout: 20000 }
         );
         const main = screen.getByRole('main');
@@ -245,14 +246,15 @@ describe('App (routes)', () => {
         await screen.findByRole('heading', { name: /^paramètres$/i, level: 1 }, { timeout: 20000 })
       ).toBeInTheDocument();
       const main = screen.getByRole('main');
-      expect(within(main).getByRole('link', { name: /^se connecter$/i })).toHaveAttribute(
-        'href',
-        '/login?returnTo=%2Fsettings'
-      );
-      expect(within(main).getByRole('link', { name: /créer un compte/i })).toHaveAttribute(
-        'href',
-        '/register?returnTo=%2Fsettings'
-      );
+      expect(within(main).getByText(/s’appliquent à cet appareil/i)).toBeInTheDocument();
+      expect(within(main).queryByText(/garder vos soirées/i)).not.toBeInTheDocument();
+      const [register, login] = within(
+        within(main).getByRole('navigation', { name: /connexion et inscription/i })
+      ).getAllByRole('link');
+      expect(register).toHaveAccessibleName('Créer un compte');
+      expect(register).toHaveAttribute('href', '/register?returnTo=%2Fsettings');
+      expect(login).toHaveAccessibleName('J’ai déjà un compte');
+      expect(login).toHaveAttribute('href', '/login?returnTo=%2Fsettings');
     });
 
     it.each([
@@ -413,18 +415,18 @@ describe('App (routes)', () => {
       const labels = within(mobileNav)
         .getAllByRole('link')
         .map((link) => link.textContent?.trim());
-      expect(labels).toEqual(['Explorer', 'Soirées', 'Créer', 'Mes listes', 'Connexion']);
+      expect(labels).toEqual(['Explorer', 'Soirées', 'Créer', 'Listes', 'Connexion']);
       expect(within(mobileNav).getByRole('link', { name: /^Connexion$/i })).toHaveAttribute(
         'href',
         '/login'
       );
       expect(within(mobileNav).getByRole('link', { name: /^Créer$/i })).toHaveAttribute(
         'href',
-        '/login?returnTo=%2Fnew'
+        '/new'
       );
       const desktopNav = navs.at(0);
       if (!desktopNav) throw new Error('Nav bureau introuvable');
-      expect(within(desktopNav).getByRole('link', { name: /^Mes soirées$/i })).toHaveAttribute(
+      expect(within(desktopNav).getByRole('link', { name: /^Soirées$/i })).toHaveAttribute(
         'href',
         '/my-events'
       );
@@ -566,7 +568,7 @@ describe('App (routes)', () => {
       const labels = within(mobileNav)
         .getAllByRole('link')
         .map((link) => link.textContent?.trim());
-      expect(labels).toEqual(['Explorer', 'Soirées', 'Mes listes', 'Profil']);
+      expect(labels).toEqual(['Explorer', 'Soirées', 'Listes', 'Profil']);
       expect(within(mobileNav).getByRole('link', { name: /^Profil$/i })).toHaveAttribute(
         'href',
         '/u/alice'

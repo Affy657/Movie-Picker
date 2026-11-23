@@ -11,6 +11,7 @@ export const fr = {
     languageLabel: 'Langue',
     decrement: 'Diminuer',
     increment: 'Augmenter',
+    showPassword: 'Afficher le mot de passe',
   },
   share: {
     trigger: 'Partager',
@@ -28,7 +29,7 @@ export const fr = {
     myEvents: 'Mes soirées',
     myEventsShort: 'Soirées',
     lists: 'Mes listes',
-    listsShort: 'Mes listes',
+    listsShort: 'Listes',
     myGroups: 'Mes groupes',
     account: 'Paramètres',
     createEvent: 'Nouvelle soirée',
@@ -66,6 +67,11 @@ export const fr = {
     nextEvent: {
       title: 'Votre prochaine soirée',
       createAnother: 'Créer une autre soirée',
+    },
+    welcome: {
+      title: 'Bienvenue, {{name}} !',
+      body: 'Votre pseudo est @{{handle}}, l’adresse de votre profil, modifiable dans les paramètres. Pour commencer, créez votre première soirée : chacun propose un film, tout le monde vote, la roue tranche.',
+      action: 'Créer ma première soirée',
     },
     createNight: {
       title: 'Vous n’arrivez pas à choisir ?',
@@ -436,8 +442,15 @@ export const fr = {
       failed: 'Impossible de vérifier votre session. Vérifiez votre connexion puis réessayez.',
       backHome: "Retour à l'accueil",
     },
+    backToEvent: 'Retour à la soirée',
+    sessionExpired: {
+      title: 'Votre session a expiré',
+      description: 'Reconnectez-vous pour reprendre là où vous en étiez.',
+      signInAgain: 'Se reconnecter',
+    },
     login: {
       title: 'Connexion',
+      eventDescription: 'Connectez-vous pour rejoindre la soirée, proposer vos films et voter.',
       description: 'Acc\u00e9dez \u00e0 vos soir\u00e9es et \u00e0 votre profil.',
       seoDescription:
         'Connectez-vous à Movie Picker pour retrouver vos soirées ciné, vos listes et votre profil.',
@@ -446,6 +459,7 @@ export const fr = {
       submit: 'Se connecter',
       submitting: 'Connexion\u2026',
       fallbackError: 'Connexion impossible.',
+      passwordRequired: 'Saisissez votre mot de passe.',
       registerPrompt: 'Pas encore de compte ?',
       registerLink: 'Créer un compte',
       forgotPasswordLink: 'Mot de passe oublié ?',
@@ -458,12 +472,22 @@ export const fr = {
       description: 'Cr\u00e9ez un compte pour retrouver vos soir\u00e9es.',
       seoDescription:
         'Créez votre compte Movie Picker, gratuit, pour organiser vos soirées ciné : chacun propose, tout le monde vote, la roue tranche.',
+      eventDescription:
+        'Cr\u00e9ez votre compte pour rejoindre la soir\u00e9e : proposez vos films, votez, et la roue tranche.',
       emailLabel: 'E-mail',
       passwordLabel: 'Mot de passe',
       passwordRulesHint: '8 caract\u00e8res minimum, au moins une lettre et un chiffre.',
       passwordRulesError:
         'Le mot de passe doit faire au moins 8 caract\u00e8res et inclure au moins une lettre et un chiffre.',
-      pseudoLabel: 'Pseudo',
+      displayNameLabel: 'Nom affich\u00e9',
+      displayNameHint:
+        'Le nom que vos amis verront dans les soir\u00e9es. Votre pseudo, l\u2019adresse de votre profil, en sera tir\u00e9.',
+      displayNameRequired: 'Indiquez le nom que vos amis verront.',
+      displayNameBlank: 'Le nom affich\u00e9 ne peut pas contenir que des espaces.',
+      emailInvalid: 'Saisissez une adresse e-mail valide, par exemple nom@exemple.fr.',
+      publicProfileNote:
+        'Votre profil, votre liste \u00c0 voir et vos films vus sont publics par d\u00e9faut. Vous pouvez les rendre priv\u00e9s dans les param\u00e8tres.',
+      privacyPolicyLink: 'Politique de confidentialit\u00e9',
       submit: 'Cr\u00e9er mon compte',
       submitting: 'Cr\u00e9ation\u2026',
       fallbackError: 'Inscription impossible.',
@@ -504,17 +528,17 @@ export const fr = {
       submitting: 'Envoi\u2026',
       successTitle: 'Vérifiez votre boîte mail',
       successMessage:
-        "Si un compte existe pour cet e-mail, un lien de réinitialisation vient d'être envoyé. Pense à vérifier les spams.",
+        'Si un compte existe pour cet e-mail, un lien de réinitialisation vient d’être envoyé. Pensez à vérifier les spams.',
       backToLogin: '\u2190 Retour à la connexion',
       fallbackError:
-        "Impossible d'envoyer le lien pour le moment. Réessaie dans quelques instants.",
+        'Impossible d’envoyer le lien pour le moment. Réessayez dans quelques instants.',
     },
     resetPassword: {
       title: 'Définir un nouveau mot de passe',
       description: 'Choisissez un nouveau mot de passe pour votre compte Movie Picker.',
       newPasswordLabel: 'Nouveau mot de passe',
       newPasswordHint: '8 caractères minimum, au moins une lettre et un chiffre.',
-      confirmPasswordLabel: 'Confirme le mot de passe',
+      confirmPasswordLabel: 'Confirmez le mot de passe',
       passwordsMustMatch: 'Les deux mots de passe doivent être identiques.',
       submit: 'Mettre à jour mon mot de passe',
       submitting: 'Mise à jour\u2026',
@@ -525,10 +549,11 @@ export const fr = {
       requestNewLink: 'Demander un nouveau lien',
       invalidTokenTitle: 'Lien invalide ou expiré',
       invalidTokenMessage:
-        "Ce lien de réinitialisation n'est plus valable. Demande-en un nouveau ci-dessous.",
+        'Ce lien de réinitialisation n’est plus valable. Demandez-en un nouveau ci-dessous.',
       fallbackError:
-        'Impossible de mettre à jour le mot de passe. Réessaie dans quelques instants.',
-      missingTokenError: 'Lien invalide : aucun token fourni.',
+        'Impossible de mettre à jour le mot de passe. Réessayez dans quelques instants.',
+      missingTokenError:
+        'Ce lien est incomplet. Ouvrez en entier le lien reçu par e-mail, ou demandez-en un nouveau.',
     },
     account: {
       title: 'Paramètres',
@@ -554,9 +579,9 @@ export const fr = {
         'Le thème {{theme}} n’a pas pu être enregistré, {{previous}} a été rétabli. Réessayez.',
       preferencesTitle: 'Préférences',
       languageLabel: 'Langue',
-      guestLead: 'Connectez-vous ou créez un compte pour garder vos soirées.',
+      guestLead:
+        'Ces préférences s’appliquent à cet appareil. Avec un compte, votre thème et votre couleur vous suivent sur tous vos appareils.',
       logoutButton: 'Se déconnecter',
-      loginCta: 'Se connecter',
       registerCta: 'Créer un compte',
       sessionRowLabel: 'Cet appareil',
       sessionRowHint: 'Se déconnecter de Movie Picker sur cet appareil.',
@@ -661,10 +686,13 @@ export const fr = {
       exportDataError: 'Export impossible. Réessayez dans un instant.',
       deleteAccountSectionTitle: 'Supprimer mon compte',
       deleteAccountDescription:
-        'Votre profil, vos notifications, vos abonnements et vos appareils de notification seront définitivement supprimés. Les soirées que vous avez créées et vos votes sont conservés mais anonymisés (rattachés à « Compte supprimé ») pour ne pas perturber les autres participants. Cette action est irréversible.',
+        'Votre profil et vos photos, votre liste À voir, vos films vus, vos listes, vos groupes, vos abonnements, vos notifications et vos appareils de notification seront définitivement supprimés ; vous quitterez aussi les listes et les groupes des autres. Les soirées que vous avez créées et vos votes sont conservés mais anonymisés (rattachés à « Compte supprimé ») pour ne pas perturber les autres participants. Cette action est irréversible.',
       deleteAccountButton: 'Supprimer mon compte',
       deleteAccountPasswordLabel: 'Saisissez votre mot de passe pour confirmer',
-      deleteAccountConfirmationLabel: 'Saisissez votre handle ou votre e-mail pour confirmer',
+      deleteAccountConfirmationLabel: 'Saisissez votre pseudo ou votre e-mail pour confirmer',
+      accountDeletedTitle: 'Votre compte est supprimé',
+      accountDeletedDescription:
+        'Votre profil et vos données personnelles ont été effacés. Merci d’avoir utilisé Movie Picker.',
       deleteAccountConfirmButton: 'Supprimer définitivement',
       deleteAccountSubmitting: 'Suppression…',
       deleteAccountCancel: 'Annuler',
@@ -1407,7 +1435,7 @@ export const fr = {
       ctaTitle: 'Et la prochaine ?',
       ctaText:
         'Sur Movie Picker, chacun propose ses films, tout le monde vote et la roue tranche. Gratuit, rien à installer.',
-      ctaButton: 'Organise la tienne',
+      ctaButton: 'Organisez la vôtre',
       notChosenTitle: "Le film n'est pas encore choisi",
       notChosenText: 'Le recap de « {{title}} » arrive après la soirée, une fois le film tiré.',
       noMovieTitle: 'Terminée sans film',
@@ -2845,6 +2873,10 @@ export const fr = {
       server: 'Une erreur est survenue côté serveur. Réessayez dans un instant.',
       invalidJson: 'Réponse invalide du serveur (JSON attendu).',
       timeout: 'Le serveur met trop de temps à répondre. Réessayez dans un instant.',
+      rateLimitedSeconds: 'Trop de requêtes. Réessayez dans {{count}} s.',
+      rateLimitedMinutes: 'Trop de requêtes. Réessayez dans {{count}} min.',
+      retryInSeconds: 'Réessayer dans {{count}} s',
+      retryInMinutes: 'Réessayer dans {{count}} min',
     },
     network: 'Problème de connexion au serveur. Vérifiez votre réseau.',
     generic: 'Une erreur est survenue.',
@@ -2976,7 +3008,8 @@ export const fr = {
     reportIssue: 'Signaler un problème',
     donate: 'Soutenir le projet',
     releaseNotes: 'Journal des versions',
-    githubLabel: 'Profil GitHub (nouvel onglet)',
+    githubLabel: 'Code source sur GitHub (nouvel onglet)',
+    sourceCode: 'Code source',
     linkedinLabel: 'Profil LinkedIn (nouvel onglet)',
     tmdbPrefix: 'Données fournies par',
     tmdbSuffix: '. Les notes et disponibilités sont indicatives.',
@@ -3180,8 +3213,8 @@ export const fr = {
       bannerAdd: 'Ajouter une bannière',
       avatar: 'Changer l’avatar',
       identity: 'Identité',
-      name: 'Nom',
-      nameRequired: 'Le nom est requis.',
+      name: 'Nom affiché',
+      nameRequired: 'Le nom affiché est requis.',
       handle: 'Pseudo',
       handleChecking: 'Vérification…',
       handleAvailable: 'Disponible',
@@ -3287,10 +3320,10 @@ export const fr = {
       search: {
         tab: 'Rechercher',
         tabAriaLabel: 'Rechercher des utilisateurs',
-        placeholder: 'Pseudo ou @handle',
+        placeholder: 'Nom ou @pseudo',
         minLength: 'Tapez au moins {{count}} caractères.',
-        idleTitle: 'Cherchez un pseudo',
-        idleMessage: 'Tapez le pseudo ou le handle de la personne que vous voulez suivre.',
+        idleTitle: 'Cherchez un nom ou un pseudo',
+        idleMessage: 'Tapez le nom ou le pseudo de la personne que vous voulez suivre.',
         emptyTitle: 'Personne ne correspond',
         emptyMessage:
           "Vérifiez l'orthographe du pseudo. Les comptes dont le profil est privé n'apparaissent pas dans la recherche.",

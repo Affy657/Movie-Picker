@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import clsx from 'clsx';
 import { Link } from 'react-router';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import { APP_VERSION } from '@/shared/appVersion';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -59,6 +59,35 @@ function LinkedInIcon() {
 
 const CURRENT_YEAR = new Date().getFullYear();
 
+type FooterNavLink = { to: string; labelKey: TranslationKey };
+
+const MEMBER_NAV_LINKS: ReadonlyArray<FooterNavLink> = [
+  { to: ROUTES.myEvents, labelKey: 'nav.myEvents' },
+  { to: ROUTES.createEvent, labelKey: 'nav.createEvent' },
+  { to: ROUTES.lists, labelKey: 'nav.lists' },
+  { to: ROUTES.account, labelKey: 'nav.account' },
+];
+
+const VISITOR_NAV_LINKS: ReadonlyArray<FooterNavLink> = [
+  { to: ROUTES.register, labelKey: 'home.ctaRegister' },
+  { to: ROUTES.login, labelKey: 'home.ctaLogin' },
+];
+
+function NavLinks({ links }: Readonly<{ links: ReadonlyArray<FooterNavLink> }>) {
+  const { t } = useTranslation();
+  return (
+    <>
+      {links.map(({ to, labelKey }) => (
+        <li key={to}>
+          <Link to={to} className={styles.colLink}>
+            {t(labelKey)}
+          </Link>
+        </li>
+      ))}
+    </>
+  );
+}
+
 export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>) {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -100,14 +129,14 @@ export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>
           <ul className={styles.socialList} aria-label={t('footer.socialTitle')}>
             <li>
               <a
-                href="https://github.com/Affy657"
+                href="https://github.com/Affy657/Movie-Picker"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={styles.socialLink}
                 aria-label={t('footer.githubLabel')}
               >
                 <GitHubIcon />
-                GitHub
+                {t('footer.sourceCode')}
               </a>
             </li>
             <li>
@@ -138,26 +167,7 @@ export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>
                 {t('nav.landing.howItWorks')}
               </Link>
             </li>
-            <li>
-              <Link to={ROUTES.myEvents} className={styles.colLink}>
-                {t('nav.myEvents')}
-              </Link>
-            </li>
-            <li>
-              <Link to={ROUTES.createEvent} className={styles.colLink}>
-                {t('nav.createEvent')}
-              </Link>
-            </li>
-            <li>
-              <Link to={ROUTES.lists} className={styles.colLink}>
-                {t('nav.lists')}
-              </Link>
-            </li>
-            <li>
-              <Link to={ROUTES.account} className={styles.colLink}>
-                {t('nav.account')}
-              </Link>
-            </li>
+            <NavLinks links={user ? MEMBER_NAV_LINKS : VISITOR_NAV_LINKS} />
           </ul>
         </div>
 

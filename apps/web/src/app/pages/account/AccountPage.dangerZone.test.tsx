@@ -6,6 +6,7 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import type { QueryClient } from '@tanstack/react-query';
 import AccountPage from '@/app/pages/account/AccountPage';
+import AccountDeletedNotice from '@/app/components/AccountDeletedNotice';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import { queryKeys } from '@/shared/hooks/queryKeys';
@@ -29,7 +30,15 @@ function renderAccount(initialPath = '/settings/securite', client?: QueryClient)
       <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
           <Route path="/settings/*" element={<AccountPage />} />
-          <Route path="/" element={<div data-testid="home-marker">Accueil</div>} />
+          <Route
+            path="/"
+            element={
+              <div data-testid="home-marker">
+                Accueil
+                <AccountDeletedNotice />
+              </div>
+            }
+          />
         </Routes>
       </MemoryRouter>
     </AppTestProviders>
@@ -102,6 +111,18 @@ describe('AccountPage — zone de danger (MSW)', () => {
 
     await waitFor(() => expect(deletedWith).toBe('abcd1234'));
     expect(await screen.findByTestId('home-marker')).toBeInTheDocument();
+    expect(screen.getByText('Votre compte est supprimé')).toBeInTheDocument();
+  });
+
+  it('warns about everything the deletion takes away', async () => {
+    const user = userEvent.setup();
+    renderAccount();
+
+    await user.click(await screen.findByRole('button', { name: 'Supprimer mon compte' }));
+
+    for (const lost of [/vos listes/i, /vos groupes/i, /liste à voir/i, /films vus/i]) {
+      expect(screen.getAllByText(lost).length).toBeGreaterThan(0);
+    }
   });
 
   it('forgets what this tab cached for the deleted account', async () => {

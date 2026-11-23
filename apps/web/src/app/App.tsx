@@ -1,5 +1,5 @@
 import { Suspense, useState, type ReactNode } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router';
+import { BrowserRouter, Routes, Route } from 'react-router';
 import {
   Bookmark,
   CalendarPlus,
@@ -72,15 +72,12 @@ const NotFoundPage = routeLazy('notFound');
 const MoviePage = routeLazy('moviePage');
 
 function GroupRoute({ children }: Readonly<{ children: ReactNode }>) {
-  const { pathname } = useLocation();
   return (
     <SessionGate
       icon={<Users aria-hidden size={ICON_SIZE['3xl']} />}
       headingKey="groups.title"
       titleKey="groups.signedOutTitle"
       messageKey="groups.signedOutMessage"
-      returnTo={pathname}
-      maxWidth="var(--container-lg)"
     >
       {children}
     </SessionGate>
@@ -88,15 +85,12 @@ function GroupRoute({ children }: Readonly<{ children: ReactNode }>) {
 }
 
 function ListRoute({ children }: Readonly<{ children: ReactNode }>) {
-  const { pathname } = useLocation();
   return (
     <SessionGate
       icon={<Bookmark aria-hidden size={ICON_SIZE['3xl']} />}
       headingKey="lists.title"
       titleKey="lists.signedOutTitle"
       messageKey="lists.signedOutMessage"
-      returnTo={pathname}
-      maxWidth="var(--container-lg)"
     >
       {children}
     </SessionGate>
@@ -144,8 +138,6 @@ export function AppRoutes() {
               headingHidden
               titleKey="events.create.signedOutTitle"
               messageKey="events.create.signedOutMessage"
-              returnTo={ROUTES.createEvent}
-              maxWidth="var(--container-sm)"
               back={{ to: ROUTES.myEvents, labelKey: 'nav.myEvents' }}
             >
               <CreateEvent />
@@ -171,8 +163,6 @@ export function AppRoutes() {
               headingKey="events.myEvents.title"
               titleKey="events.myEvents.signedOutTitle"
               messageKey="events.myEvents.signedOutMessage"
-              returnTo={ROUTES.myEvents}
-              maxWidth="min(var(--container-2xl), 100%)"
             >
               <MyEventsPage />
             </SessionGate>
@@ -186,8 +176,6 @@ export function AppRoutes() {
               headingKey="watchlist.title"
               titleKey="watchlist.signedOutTitle"
               messageKey="watchlist.signedOutMessage"
-              returnTo={ROUTES.watchlist}
-              maxWidth="var(--container-lg)"
             >
               <WatchlistPage />
             </SessionGate>
@@ -209,8 +197,6 @@ export function AppRoutes() {
               headingKey="watched.title"
               titleKey="lists.signedOutTitle"
               messageKey="lists.signedOutMessage"
-              returnTo={ROUTES.watchedMovies}
-              maxWidth="var(--container-lg)"
             >
               <WatchedMoviesPage />
             </SessionGate>
@@ -224,8 +210,6 @@ export function AppRoutes() {
               headingKey="myProposals.proposals.title"
               titleKey="lists.signedOutTitle"
               messageKey="lists.signedOutMessage"
-              returnTo={ROUTES.myProposals}
-              maxWidth="var(--container-lg)"
             >
               <MyProposalsPage />
             </SessionGate>
@@ -239,8 +223,6 @@ export function AppRoutes() {
               headingKey="myProposals.winning.title"
               titleKey="lists.signedOutTitle"
               messageKey="lists.signedOutMessage"
-              returnTo={ROUTES.myWinningProposals}
-              maxWidth="var(--container-lg)"
             >
               <MyProposalsPage winningOnly />
             </SessionGate>
@@ -254,8 +236,6 @@ export function AppRoutes() {
               headingKey="nightMovies.title"
               titleKey="lists.signedOutTitle"
               messageKey="lists.signedOutMessage"
-              returnTo={ROUTES.nightMovies}
-              maxWidth="var(--container-lg)"
             >
               <NightMoviesPage />
             </SessionGate>
@@ -303,7 +283,6 @@ export function AppRoutes() {
               headingKey="notifications.inboxTitle"
               titleKey="notifications.signedOutTitle"
               messageKey="notifications.signedOutMessage"
-              returnTo={ROUTES.notifications}
             >
               <NotificationsPage />
             </SessionGate>

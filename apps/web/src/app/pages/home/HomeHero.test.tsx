@@ -13,6 +13,7 @@ import { stubMatchMedia } from '@/test-utils/matchMedia';
 import HomeHero from './HomeHero';
 import { useHomeSearchHidden } from './homeSearchVisibility';
 import { buildMyEventSummary } from '@/test-utils/myEventSummary';
+import { markWelcomePending } from '@/features/auth/welcome';
 
 const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
   HttpResponse.json({
@@ -165,6 +166,22 @@ describe('HomeHero', () => {
     renderHero();
 
     await expectCreateWindowButton();
+  });
+
+  it('welcomes a new account once, with its handle and its first night to create', async () => {
+    server.use(authedUserHandler, trendingHandler, eventsHandler([]));
+    markWelcomePending();
+    const firstVisit = renderHero();
+
+    expect(await screen.findByText('Bienvenue, Alice !')).toBeInTheDocument();
+    expect(screen.getByText(/@alice/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Créer ma première soirée' }));
+    expect(openCreateEvent).toHaveBeenCalledTimes(1);
+    firstVisit.unmount();
+
+    renderHero();
+    await expectCreateNightBlock();
+    expect(screen.queryByText('Bienvenue, Alice !')).not.toBeInTheDocument();
   });
 
   it('signed in with a pending night only: the create block', async () => {

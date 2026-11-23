@@ -1,9 +1,33 @@
-import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import InlineError from '@/shared/components/InlineError';
+import { noteRateLimit, resetRateLimitCooldownForTests } from '@/shared/api/rateLimitCooldown';
 
 describe('InlineError', () => {
+  afterEach(() => {
+    resetRateLimitCooldownForTests();
+    vi.useRealTimers();
+  });
+
+  it('holds the retry back for the delay a rate limit asked for', () => {
+    vi.useFakeTimers();
+    noteRateLimit(3_000);
+    render(<InlineError message="Trop de requêtes." retryLabel="Réessayer" onRetry={vi.fn()} />);
+
+    expect(screen.getByRole('button', { name: /réessayer dans 3 s/i })).toBeDisabled();
+
+    act(() => {
+      vi.advanceTimersByTime(1_000);
+    });
+    expect(screen.getByRole('button', { name: /réessayer dans 2 s/i })).toBeDisabled();
+
+    act(() => {
+      vi.advanceTimersByTime(2_000);
+    });
+    expect(screen.getByRole('button', { name: 'Réessayer' })).toBeEnabled();
+  });
+
   it('announces the failure and retries on demand', async () => {
     const onRetry = vi.fn();
     render(

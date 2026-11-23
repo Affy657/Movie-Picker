@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { safeReturnTo } from '@/shared/utils/returnTo';
+import { returnToOf, safeReturnTo } from '@/shared/utils/returnTo';
 
 describe('safeReturnTo', () => {
   it('garde un chemin relatif interne', () => {
@@ -40,5 +40,21 @@ describe('safeReturnTo', () => {
     expect(safeReturnTo('/LOGIN/')).toBe('/');
     expect(safeReturnTo('/register/')).toBe('/');
     expect(safeReturnTo('/reset//?token=abc')).toBe('/');
+  });
+});
+
+describe('returnToOf', () => {
+  it('keeps the query and the anchor of the page to come back to', () => {
+    expect(
+      returnToOf({ pathname: '/settings/profil', search: '?onglet=1', hash: '#favoris' })
+    ).toBe('/settings/profil?onglet=1#favoris');
+  });
+
+  it('keeps a bare path as is', () => {
+    expect(returnToOf({ pathname: '/watchlist', search: '', hash: '' })).toBe('/watchlist');
+  });
+
+  it('keeps an anchor through the safety check of the sign-in page', () => {
+    expect(safeReturnTo('/settings/profil#favoris')).toBe('/settings/profil#favoris');
   });
 });

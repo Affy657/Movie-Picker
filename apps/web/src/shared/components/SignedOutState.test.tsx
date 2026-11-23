@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import SignedOutState from '@/shared/components/SignedOutState';
+import buttonStyles from '@/shared/components/Button.module.css';
 import { LocaleProvider } from '@/shared/i18n';
 
 const { track } = vi.hoisted(() => ({ track: vi.fn() }));
@@ -31,24 +32,23 @@ describe('SignedOutState', () => {
     track.mockClear();
   });
 
-  it('propose connexion et inscription en gardant la page de retour', () => {
+  it('puts account creation first and keeps the page to come back to', () => {
     renderState('/watchlist');
 
     expect(screen.getByRole('heading', { level: 2, name: 'Connectez-vous' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Se connecter' })).toHaveAttribute(
-      'href',
-      '/login?returnTo=%2Fwatchlist'
-    );
-    expect(screen.getByRole('link', { name: 'Créer un compte' })).toHaveAttribute(
-      'href',
-      '/register?returnTo=%2Fwatchlist'
-    );
+    const [register, login] = screen.getAllByRole('link');
+    expect(register).toHaveAccessibleName('Créer un compte');
+    expect(register).toHaveAttribute('href', '/register?returnTo=%2Fwatchlist');
+    expect(register).toHaveClass(buttonStyles.primary!);
+    expect(login).toHaveAccessibleName('J’ai déjà un compte');
+    expect(login).toHaveAttribute('href', '/login?returnTo=%2Fwatchlist');
+    expect(login).not.toHaveClass(buttonStyles.primary!);
   });
 
   it('tracks the click on every call to action', async () => {
     renderState('/watchlist');
 
-    await userEvent.click(screen.getByRole('link', { name: 'Se connecter' }));
+    await userEvent.click(screen.getByRole('link', { name: 'J’ai déjà un compte' }));
     expect(track).toHaveBeenCalledWith('signed_out_cta_clicked', {
       page: '/watchlist',
       cta: 'login',

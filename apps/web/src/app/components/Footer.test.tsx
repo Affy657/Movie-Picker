@@ -4,9 +4,11 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import Footer from '@/app/components/Footer';
 import dropdownStyles from '@/shared/components/Dropdown.module.css';
-import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { resetPwaInstallRuntime } from '@/shared/hooks/usePwaInstall';
 import { resetSessionHintMemoryForTests } from '@/features/auth/session-hint';
+import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
+import { queryKeys } from '@/shared/hooks/queryKeys';
+import type { UserProfile } from '@/features/auth/types';
 import type { BeforeInstallPromptEvent } from '@/shared/pwa/pwaInstall';
 
 const { track } = vi.hoisted(() => ({ track: vi.fn() }));
@@ -15,9 +17,11 @@ vi.mock('@/shared/hooks/useAnalytics', () => ({
   useAnalytics: () => ({ track }),
 }));
 
-function renderFooter() {
+function renderFooter(user: UserProfile | null = null) {
+  const client = createTestQueryClient();
+  if (user) client.setQueryData(queryKeys.auth.me, user);
   return render(
-    <AppTestProviders>
+    <AppTestProviders client={client}>
       <MemoryRouter>
         <Footer />
       </MemoryRouter>
@@ -58,6 +62,52 @@ describe('Footer release notes', () => {
       '/nouveautes'
     );
     expect(screen.queryByRole('button', { name: /nouveautés/i })).not.toBeInTheDocument();
+  });
+});
+
+describe('Footer navigation', () => {
+  const member = {
+    userId: 'u1',
+    displayName: 'Alice',
+    emailMasked: 'a***@test.local',
+    handle: 'alice',
+  } as UserProfile;
+
+  it('offers a visitor to create an account rather than pages of a member', () => {
+    renderFooter();
+
+    const nav = screen.getByText('Navigation').parentElement!;
+    expect(within(nav).getByRole('link', { name: 'Créer un compte' })).toHaveAttribute(
+      'href',
+      '/register'
+    );
+    expect(within(nav).getByRole('link', { name: 'Se connecter' })).toHaveAttribute(
+      'href',
+      '/login'
+    );
+    for (const memberPage of ['Mes soirées', 'Nouvelle soirée', 'Mes listes', 'Paramètres']) {
+      expect(within(nav).queryByRole('link', { name: memberPage })).not.toBeInTheDocument();
+    }
+  });
+
+  it('keeps the pages of a member for a signed-in reader', () => {
+    renderFooter(member);
+
+    const nav = screen.getByText('Navigation').parentElement!;
+    for (const memberPage of ['Mes soirées', 'Nouvelle soirée', 'Mes listes', 'Paramètres']) {
+      expect(within(nav).getByRole('link', { name: memberPage })).toBeInTheDocument();
+    }
+    expect(within(nav).queryByRole('link', { name: 'Créer un compte' })).not.toBeInTheDocument();
+  });
+});
+
+describe('Footer source code', () => {
+  it('links the GitHub repository of the project, not the author profile', () => {
+    renderFooter();
+
+    const link = screen.getByRole('link', { name: 'Code source sur GitHub (nouvel onglet)' });
+    expect(link).toHaveAttribute('href', 'https://github.com/Affy657/Movie-Picker');
+    expect(link).toHaveTextContent('Code source');
   });
 });
 

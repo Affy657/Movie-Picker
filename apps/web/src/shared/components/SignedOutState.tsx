@@ -34,18 +34,18 @@ export default function SignedOutState({
       actions={
         <>
           <Link
-            to={withReturnTo(ROUTES.login, returnTo)}
-            className={buttonClass({ variant: 'primary' })}
-            onClick={() => track('signed_out_cta_clicked', { page: returnTo, cta: 'login' })}
-          >
-            {t('home.ctaLogin')}
-          </Link>
-          <Link
             to={withReturnTo(ROUTES.register, returnTo)}
-            className={buttonClass()}
+            className={buttonClass({ variant: 'primary' })}
             onClick={() => track('signed_out_cta_clicked', { page: returnTo, cta: 'register' })}
           >
             {t('home.ctaRegister')}
+          </Link>
+          <Link
+            to={withReturnTo(ROUTES.login, returnTo)}
+            className={buttonClass()}
+            onClick={() => track('signed_out_cta_clicked', { page: returnTo, cta: 'login' })}
+          >
+            {t('home.ctaHaveAccount')}
           </Link>
         </>
       }

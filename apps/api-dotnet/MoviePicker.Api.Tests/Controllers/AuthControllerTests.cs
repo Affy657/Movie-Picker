@@ -679,6 +679,17 @@ public sealed class AuthControllerTests
     }
 
     [Fact]
+    public async Task VerifyPasswordReset_ReturnsNoContent()
+    {
+        var handler = new Mock<IVerifyPasswordResetHandler>();
+
+        var result = await Controller(null).VerifyPasswordReset(null!, handler.Object, CancellationToken.None);
+
+        Assert.IsType<NoContentResult>(result);
+        handler.Verify(h => h.HandleAsync(It.IsAny<PasswordResetVerifyRequest>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task ConfirmPasswordReset_ReturnsOk()
     {
         var handler = new Mock<IConfirmPasswordResetHandler>();

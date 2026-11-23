@@ -256,7 +256,7 @@ describe('AccountPage — connexions et compte sans mot de passe (MSW)', () => {
     await vi.advanceTimersByTimeAsync(4000);
 
     await waitFor(() => expect(client.getQueryData(queryKeys.auth.me)).toBeNull());
-    expect(await screen.findByRole('link', { name: 'Se connecter' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'J’ai déjà un compte' })).toBeInTheDocument();
     vi.useRealTimers();
   });
 
@@ -277,7 +277,7 @@ describe('AccountPage — connexions et compte sans mot de passe (MSW)', () => {
     await user.click(openButton);
 
     const confirmInput = await screen.findByLabelText(
-      'Saisissez votre handle ou votre e-mail pour confirmer'
+      'Saisissez votre pseudo ou votre e-mail pour confirmer'
     );
     await user.type(confirmInput, 'oauthuser');
     await user.click(screen.getByRole('button', { name: 'Supprimer définitivement' }));
@@ -298,7 +298,7 @@ describe('AccountPage — connexions et compte sans mot de passe (MSW)', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Supprimer mon compte' }));
     await user.type(
-      await screen.findByLabelText('Saisissez votre handle ou votre e-mail pour confirmer'),
+      await screen.findByLabelText('Saisissez votre pseudo ou votre e-mail pour confirmer'),
       'oauthuser'
     );
     await user.click(screen.getByRole('button', { name: 'Supprimer définitivement' }));

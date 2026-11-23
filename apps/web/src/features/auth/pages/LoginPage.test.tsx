@@ -143,6 +143,61 @@ describe('LoginPage (MSW)', () => {
     );
   });
 
+  it('leads back to the movie night the visitor came from and says why to sign in', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/oauth/providers`, () => HttpResponse.json({ providers: [] }))
+    );
+    renderLogin('/login?returnTo=%2Fe%2Fsoiree-horreur');
+
+    expect(screen.getByRole('link', { name: /retour à la soirée/i })).toHaveAttribute(
+      'href',
+      '/e/soiree-horreur'
+    );
+    expect(screen.getByText(/rejoindre la soirée/i)).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /^accueil$/i })).not.toBeInTheDocument();
+  });
+
+  it('keeps the query of the join card in the way back to the movie night', () => {
+    renderLogin('/login?returnTo=%2Fe%2Fsoiree-horreur%3Frejoindre%3D1');
+
+    expect(screen.getByRole('link', { name: /retour à la soirée/i })).toHaveAttribute(
+      'href',
+      '/e/soiree-horreur?rejoindre=1'
+    );
+    expect(screen.getByRole('link', { name: /créer un compte/i })).toHaveAttribute(
+      'href',
+      `/register?returnTo=${encodeURIComponent('/e/soiree-horreur?rejoindre=1')}`
+    );
+  });
+
+  it('leads back home when the visitor did not come from a movie night', () => {
+    renderLogin('/login?returnTo=%2Fwatchlist');
+
+    expect(screen.getByRole('link', { name: /^accueil$/i })).toHaveAttribute('href', '/');
+    expect(screen.queryByText(/rejoindre la soirée/i)).not.toBeInTheDocument();
+  });
+
+  it('checks the fields with the messages of the app, not the browser bubbles', async () => {
+    const user = userEvent.setup();
+    let loginPosts = 0;
+    server.use(
+      http.post(`${TEST_API_V1}/auth/login`, () => {
+        loginPosts += 1;
+        return HttpResponse.json({}, { status: 200 });
+      })
+    );
+    renderLogin();
+
+    const form = screen.getByRole('button', { name: /^se connecter$/i }).closest('form')!;
+    expect(form).toHaveAttribute('novalidate');
+    await user.click(screen.getByRole('button', { name: /^se connecter$/i }));
+
+    expect(await screen.findByText(/saisissez une adresse e-mail valide/i)).toBeInTheDocument();
+    expect(screen.getByText('Saisissez votre mot de passe.')).toBeInTheDocument();
+    expect(loginPosts).toBe(0);
+    expect(screen.getByRole('button', { name: 'Afficher le mot de passe' })).toBeInTheDocument();
+  });
+
   it('exposes a "Forgot password?" link to /forgot-password', () => {
     renderLogin();
     const forgotLink = screen.getByRole('link', { name: /mot de passe oublié/i });

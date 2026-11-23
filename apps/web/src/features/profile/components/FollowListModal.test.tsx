@@ -130,7 +130,7 @@ describe('FollowListModal (MSW)', () => {
     renderModal();
     await screen.findByText(/aucun utilisateur/i);
     await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
-    await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'mor');
+    await user.type(screen.getByPlaceholderText('Nom ou @pseudo'), 'mor');
 
     expect(await screen.findByText('Recherche impossible, réessayez.')).toBeInTheDocument();
     expect(screen.queryByText('Personne ne correspond')).not.toBeInTheDocument();
@@ -349,7 +349,7 @@ describe('FollowListModal (MSW)', () => {
     renderModal({ initialTab: 'search' });
 
     expect(await screen.findByText(/aucun utilisateur/i)).toBeInTheDocument();
-    expect(screen.queryByPlaceholderText('Pseudo ou @handle')).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('Nom ou @pseudo')).not.toBeInTheDocument();
     expect(screen.queryByText('Recherche impossible, réessayez.')).not.toBeInTheDocument();
     expect(searchCalls).toEqual([]);
   });
@@ -366,8 +366,8 @@ describe('FollowListModal (MSW)', () => {
 
     await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
 
-    expect(await screen.findByText('Cherchez un pseudo')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Pseudo ou @handle')).toBeInTheDocument();
+    expect(await screen.findByText('Cherchez un nom ou un pseudo')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Nom ou @pseudo')).toBeInTheDocument();
   });
 
   it('demande deux caracteres avant de lancer la recherche', async () => {
@@ -386,7 +386,7 @@ describe('FollowListModal (MSW)', () => {
     await screen.findByText(/aucun utilisateur/i);
     await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
 
-    await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'm');
+    await user.type(screen.getByPlaceholderText('Nom ou @pseudo'), 'm');
 
     expect(await screen.findByText('Tapez au moins 2 caractères.')).toBeInTheDocument();
     expect(searchCalls).toEqual([]);
@@ -415,7 +415,7 @@ describe('FollowListModal (MSW)', () => {
     renderModal();
     await screen.findByText(/aucun utilisateur/i);
     await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
-    await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'mor');
+    await user.type(screen.getByPlaceholderText('Nom ou @pseudo'), 'mor');
 
     expect(await screen.findByText('Sofia Benali')).toBeInTheDocument();
     const highlights = document.querySelectorAll('mark');
@@ -439,7 +439,7 @@ describe('FollowListModal (MSW)', () => {
     renderModal();
     await screen.findByText(/aucun utilisateur/i);
     await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
-    await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'mor');
+    await user.type(screen.getByPlaceholderText('Nom ou @pseudo'), 'mor');
 
     expect(await screen.findByRole('button', { name: 'Suivre @lea_m' })).toBeInTheDocument();
   });
@@ -470,7 +470,7 @@ describe('FollowListModal (MSW)', () => {
     renderModal({}, vi.fn(), client);
     await screen.findByText(/aucun utilisateur/i);
     await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
-    await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'mor');
+    await user.type(screen.getByPlaceholderText('Nom ou @pseudo'), 'mor');
     await user.click(await screen.findByRole('button', { name: 'Suivre @lea_m' }));
 
     await waitFor(() => {
@@ -491,7 +491,7 @@ describe('FollowListModal (MSW)', () => {
     renderModal();
     await screen.findByText(/aucun utilisateur/i);
     await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
-    await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'zephyrin');
+    await user.type(screen.getByPlaceholderText('Nom ou @pseudo'), 'zephyrin');
 
     expect(await screen.findByText('Personne ne correspond')).toBeInTheDocument();
     expect(screen.getByText(/profil est privé/i)).toBeInTheDocument();

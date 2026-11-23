@@ -114,6 +114,30 @@ public sealed partial class PasswordResetEndpointsTests : IClassFixture<MoviePic
     }
 
     [Fact]
+    public async Task VerifyReset_TellsALiveLinkFromAUsedOne_WithoutConsumingIt()
+    {
+        var client = _factory.CreateClient();
+        _factory.FakeEmail.Clear();
+        var email = await RegisterUserAsync(client);
+        await client.PostAsJsonAsync("/api/v1/auth/password-reset/request",
+            new PasswordResetRequest { Email = email, Locale = "fr" });
+        var token = ExtractTokenFromEmail(_factory.FakeEmail.SentMessages.First());
+
+        var live = await client.PostAsJsonAsync("/api/v1/auth/password-reset/verify",
+            new PasswordResetVerifyRequest { Token = token });
+        Assert.Equal(HttpStatusCode.NoContent, live.StatusCode);
+
+        var confirm = await client.PostAsJsonAsync("/api/v1/auth/password-reset/confirm",
+            new PasswordResetConfirmRequest { Token = token, NewPassword = "verified1A" });
+        Assert.Equal(HttpStatusCode.OK, confirm.StatusCode);
+
+        var used = await client.PostAsJsonAsync("/api/v1/auth/password-reset/verify",
+            new PasswordResetVerifyRequest { Token = token });
+        Assert.Equal(HttpStatusCode.BadRequest, used.StatusCode);
+        Assert.Contains("invalid_reset_token", await used.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
     public async Task ConfirmReset_WithInvalidToken_Returns400()
     {
         var client = _factory.CreateClient();

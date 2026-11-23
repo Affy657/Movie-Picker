@@ -85,18 +85,48 @@ describe('AppShell', () => {
   });
 
   it.each(['/listes', '/listes/l1', '/watchlist'])(
-    'leads to Mes listes and keeps it active on %s',
+    'leads to the lists and keeps them active on %s',
     async (path) => {
       server.use(authedUserHandler);
       renderShell(path);
 
       await screen.findByRole('button', { name: /menu du compte/i }, { timeout: 20000 });
-      const navs = screen.getAllByRole('navigation', { name: 'Navigation principale' });
-      for (const nav of navs) {
-        const link = within(nav).getByRole('link', { name: 'Mes listes' });
+      const [desktopNav, mobileNav] = screen.getAllByRole('navigation', {
+        name: 'Navigation principale',
+      });
+      const desktopLink = within(desktopNav!).getByRole('link', { name: 'Mes listes' });
+      const mobileLink = within(mobileNav!).getByRole('link', { name: 'Listes' });
+      for (const link of [desktopLink, mobileLink]) {
         expect(link).toHaveAttribute('href', '/listes');
         expect(link).toHaveAttribute('aria-current', 'page');
       }
     }
   );
+
+  it('speaks to a visitor without calling the pages his own', async () => {
+    server.use(authMeGuestHandler);
+    renderShell('/films/tendances');
+
+    await screen.findAllByRole('link', { name: /^se connecter$/i }, { timeout: 20000 });
+    const [desktopNav, mobileNav] = screen.getAllByRole('navigation', {
+      name: 'Navigation principale',
+    });
+    for (const nav of [desktopNav!, mobileNav!]) {
+      expect(within(nav).getByRole('link', { name: 'Soirées' })).toHaveAttribute(
+        'href',
+        '/my-events'
+      );
+      expect(within(nav).getByRole('link', { name: 'Listes' })).toHaveAttribute('href', '/listes');
+      expect(within(nav).queryByRole('link', { name: /^mes /i })).not.toBeInTheDocument();
+    }
+  });
+
+  it('opens the same creation page from the mobile bar as from the home page', async () => {
+    server.use(authMeGuestHandler);
+    renderShell('/films/tendances');
+
+    await screen.findAllByRole('link', { name: /^se connecter$/i }, { timeout: 20000 });
+    const [, mobileNav] = screen.getAllByRole('navigation', { name: 'Navigation principale' });
+    expect(within(mobileNav!).getByRole('link', { name: 'Créer' })).toHaveAttribute('href', '/new');
+  });
 });

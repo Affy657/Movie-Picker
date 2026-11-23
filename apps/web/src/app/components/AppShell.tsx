@@ -7,7 +7,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { ownProfileDestination } from '@/features/auth/utils/ownProfileDestination';
 import { useLetterboxdAutoSync } from '@/features/letterboxd/hooks/useLetterboxdAutoSync';
 import { withReturnTo, ROUTES } from '@/app/routes';
-import { safeReturnTo } from '@/shared/utils/returnTo';
+import { returnToOf, safeReturnTo } from '@/shared/utils/returnTo';
 import { routeIntentHandlers } from '@/app/routeChunks';
 import { LANDING_ANCHORS } from '@/app/pages/landing/anchors';
 import UserMenu from './UserMenu';
@@ -21,6 +21,8 @@ import InAppBrowserBanner from './InAppBrowserBanner';
 import MovedOriginBanner from './MovedOriginBanner';
 import LanguageSuggestion from './LanguageSuggestion';
 import SignOutPendingNotice from './SignOutPendingNotice';
+import SessionExpiredNotice from './SessionExpiredNotice';
+import AccountDeletedNotice from './AccountDeletedNotice';
 import { useLegacyMovieLinkRedirect } from './useLegacyMovieLinkRedirect';
 import styles from './AppShell.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
@@ -203,11 +205,7 @@ function CreateEventHeaderButton({ label }: Readonly<{ label: string }>) {
   );
 }
 
-function MobileCreateItem({
-  signedIn,
-  label,
-  returnTo,
-}: Readonly<{ signedIn: boolean; label: string; returnTo: string }>) {
+function MobileCreateItem({ signedIn, label }: Readonly<{ signedIn: boolean; label: string }>) {
   const openCreateEvent = useOpenCreateEvent();
   const content = (
     <>
@@ -217,10 +215,7 @@ function MobileCreateItem({
   );
   if (!signedIn) {
     return (
-      <Link
-        to={withReturnTo(ROUTES.login, returnTo)}
-        className={clsx(styles.navLink, styles.navCreate)}
-      >
+      <Link to={ROUTES.createEvent} className={clsx(styles.navLink, styles.navCreate)}>
         {content}
       </Link>
     );
@@ -305,7 +300,7 @@ export default function AppShell() {
   ).includes(location.pathname);
   const returnTo = isOnAuthRoute
     ? safeReturnTo(new URLSearchParams(location.search).get('returnTo'))
-    : `${location.pathname}${location.search}`;
+    : returnToOf(location);
 
   const exploreItem: NavItemDef = {
     to: ROUTES.home,
@@ -340,7 +335,7 @@ export default function AppShell() {
           Icon: HelpCircle,
           wideOnly: true,
         },
-        ...items,
+        ...compactItems,
       ];
 
   return (
@@ -390,11 +385,7 @@ export default function AppShell() {
             {mobileItemsBeforeCreate.map((item) => (
               <MobileNavItem key={item.to} {...item} />
             ))}
-            <MobileCreateItem
-              signedIn={isAuthenticated}
-              label={t('nav.createEventShort')}
-              returnTo={ROUTES.createEvent}
-            />
+            <MobileCreateItem signedIn={isAuthenticated} label={t('nav.createEventShort')} />
             {mobileItemsAfterCreate.map((item) => (
               <MobileNavItem key={item.to} {...item} />
             ))}
@@ -406,6 +397,8 @@ export default function AppShell() {
         <MovedOriginBanner />
         <LanguageSuggestion />
         <SignOutPendingNotice />
+        <SessionExpiredNotice />
+        <AccountDeletedNotice />
         {user ? <CreateEventDialogIdlePrefetch /> : null}
       </div>
     </CreateEventDialogProvider>

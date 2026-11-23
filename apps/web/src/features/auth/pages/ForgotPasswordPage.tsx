@@ -11,6 +11,7 @@ import { safeReturnTo } from '@/shared/utils/returnTo';
 import { postPasswordResetRequest } from '@/features/auth/api/authApi';
 import Button from '@/shared/components/Button';
 import Field from '@/shared/components/Field';
+import { looksLikeEmail } from '@/features/auth/utils/authFormValidation';
 
 export default function ForgotPasswordPage() {
   const { t, locale } = useTranslation();
@@ -20,9 +21,11 @@ export default function ForgotPasswordPage() {
     t('auth.forgotPassword.seoDescription')
   );
   const [params] = useSearchParams();
-  const loginTo = withReturnTo(ROUTES.login, safeReturnTo(params.get('returnTo')));
+  const returnTo = safeReturnTo(params.get('returnTo'));
+  const loginTo = withReturnTo(ROUTES.login, returnTo);
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [emailError, setEmailError] = useState<string | undefined>(undefined);
 
   const requestAction = useCallback(async () => {
     await postPasswordResetRequest(email.trim(), locale ?? 'fr');
@@ -37,6 +40,10 @@ export default function ForgotPasswordPage() {
 
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!looksLikeEmail(email)) {
+      setEmailError(t('auth.register.emailInvalid'));
+      return;
+    }
     void submit();
   };
 
@@ -46,6 +53,7 @@ export default function ForgotPasswordPage() {
         <AuthPageShell
           title={t('auth.forgotPassword.successTitle')}
           description={t('auth.forgotPassword.successMessage')}
+          returnTo={returnTo}
         >
           <p className="muted">
             <Link to={loginTo}>{t('auth.forgotPassword.backToLogin')}</Link>
@@ -60,10 +68,12 @@ export default function ForgotPasswordPage() {
       <AuthPageShell
         title={t('auth.forgotPassword.title')}
         description={t('auth.forgotPassword.description')}
+        returnTo={returnTo}
       >
         <form
           onSubmit={handleSubmit}
           className="form"
+          noValidate
           aria-describedby={error ? 'forgot-form-error' : undefined}
         >
           {error && (
@@ -71,17 +81,25 @@ export default function ForgotPasswordPage() {
               {error}
             </p>
           )}
-          <Field label={t('auth.forgotPassword.emailLabel')} htmlFor="forgot-email">
-            {({ id }) => (
+          <Field
+            label={t('auth.forgotPassword.emailLabel')}
+            htmlFor="forgot-email"
+            error={emailError}
+          >
+            {({ id, describedBy, invalid }) => (
               <input
                 id={id}
                 type="email"
                 className="input"
                 autoComplete="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setEmailError(undefined);
+                }}
                 required
-                aria-invalid={error ? true : undefined}
+                aria-describedby={describedBy}
+                aria-invalid={invalid || error ? true : undefined}
               />
             )}
           </Field>

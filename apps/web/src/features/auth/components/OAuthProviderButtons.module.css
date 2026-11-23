@@ -2,6 +2,14 @@
   margin-top: var(--space-5);
 }
 
+.wrapperBefore {
+  margin-bottom: var(--space-4);
+}
+
+.wrapperBefore .divider {
+  margin: var(--space-4) 0 0;
+}
+
 .divider {
   display: flex;
   align-items: center;

@@ -10,6 +10,7 @@ import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { takeWelcomePending } from '@/features/auth/welcome';
 import UpcomingEventCard from '@/features/events/pages/my-events/UpcomingEventCard';
 import { useOpenCreateEvent } from '@/features/events/components/create-event/createEventDialogContext';
 import GlobalSearchResults from '@/app/components/globalSearch/GlobalSearchResults';
@@ -102,19 +103,28 @@ function HomeSearch() {
   );
 }
 
+type Welcome = { name: string; handle: string };
+
 function CreateNightCard({
   isMobile,
   onCreate,
-}: Readonly<{ isMobile: boolean; onCreate: (() => void) | null }>) {
+  welcome,
+}: Readonly<{ isMobile: boolean; onCreate: (() => void) | null; welcome?: Welcome }>) {
   const { t } = useTranslation();
+  const title = welcome
+    ? t('home.welcome.title', { name: welcome.name })
+    : t('home.createNight.title');
+  const action = welcome ? t('home.welcome.action') : t('home.createNight.action');
 
   if (isMobile) {
     const content = (
       <>
         <WheelGlyph className={styles.wheelSmall} />
         <span className={styles.createText}>
-          <span className={styles.createTitle}>{t('home.createNight.title')}</span>
-          <span className={styles.createBody}>{t('home.createNight.bodyShort')}</span>
+          <span className={styles.createTitle}>{title}</span>
+          <span className={styles.createBody}>
+            {welcome ? action : t('home.createNight.bodyShort')}
+          </span>
         </span>
         <ChevronRight size={ICON_SIZE.md} aria-hidden className={styles.createChevron} />
       </>
@@ -147,16 +157,20 @@ function CreateNightCard({
     <Card padding="none" radius="lg" className={styles.createCard}>
       <WheelGlyph className={styles.wheel} />
       <div className={styles.createText}>
-        <p className={styles.createTitle}>{t('home.createNight.title')}</p>
-        <p className={styles.createBody}>{t('home.createNight.body')}</p>
+        <p className={styles.createTitle}>{title}</p>
+        <p className={styles.createBody}>
+          {welcome
+            ? t('home.welcome.body', { handle: welcome.handle })
+            : t('home.createNight.body')}
+        </p>
         <div className={styles.createActions}>
           {onCreate ? (
             <Button variant="primary" onClick={onCreate}>
-              {t('home.createNight.action')}
+              {action}
             </Button>
           ) : (
             <Link to={ROUTES.createEvent} className={buttonClass({ variant: 'primary' })}>
-              {t('home.createNight.action')}
+              {action}
             </Link>
           )}
           <Link to={ROUTES.howItWorks} className={styles.textLink}>
@@ -175,13 +189,22 @@ function NightPanel() {
   const { user, isLoading } = useAuth();
   const isMobile = useIsMobile();
   const next = useNextEvent(!!user);
+  const [welcomePending] = useState(takeWelcomePending);
+  const welcome =
+    welcomePending && user ? { name: user.displayName, handle: user.handle } : undefined;
 
   if (isLoading || next.isPending) {
     return <div className={styles.panelPlaceholder} aria-hidden="true" />;
   }
 
   if (!next.event) {
-    return <CreateNightCard isMobile={isMobile} onCreate={user ? () => openCreateEvent() : null} />;
+    return (
+      <CreateNightCard
+        isMobile={isMobile}
+        onCreate={user ? () => openCreateEvent() : null}
+        welcome={welcome}
+      />
+    );
   }
 
   if (isMobile) {

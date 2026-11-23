@@ -4,9 +4,14 @@ import {
   apiUrl,
   DEFAULT_REQUEST_TIMEOUT_MS,
   fetchApi,
+  onUnauthorizedResponse,
   SLOW_REQUEST_TIMEOUT_MS,
 } from '@/shared/api/client';
 import { ApiError } from '@/shared/api/apiError';
+import {
+  rateLimitCooldownUntil,
+  resetRateLimitCooldownForTests,
+} from '@/shared/api/rateLimitCooldown';
 import { loadLocale } from '@/shared/i18n/locales';
 import { fr } from '@/shared/i18n/locales/fr';
 import { en } from '@/shared/i18n/locales/en';
@@ -170,6 +175,7 @@ describe('fetchApi', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn());
     localStorage.setItem('moviepicker-locale', 'fr');
+    resetRateLimitCooldownForTests();
   });
 
   it('translates a known reason code into the preferred locale, with its params', async () => {
@@ -366,7 +372,83 @@ describe('fetchApi', () => {
     await expect(fetchApi('/events')).rejects.toMatchObject({
       code: 429,
       retryAfterMs: 12_000,
-      message: fr.apiErrors.rate_limited,
+      message: 'Trop de requêtes. Réessayez dans 12 s.',
+    });
+  });
+
+  it('tells the session listeners about every 401, whatever the caller', async () => {
+    const listener = vi.fn();
+    const unsubscribe = onUnauthorizedResponse(listener);
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      text: () => Promise.resolve(JSON.stringify({ reason: 'unauthorized' })),
+    });
+    try {
+      await expect(fetchApi('/events')).rejects.toMatchObject({ code: 401 });
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(listener).toHaveBeenCalledWith(expect.stringMatching(/\/api\/v1\/events$/));
+    } finally {
+      unsubscribe();
+    }
+  });
+
+  it('keeps the session listeners out of the other failures', async () => {
+    const listener = vi.fn();
+    const unsubscribe = onUnauthorizedResponse(listener);
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      text: () => Promise.resolve(JSON.stringify({ reason: 'forbidden' })),
+    });
+    try {
+      await expect(fetchApi('/events')).rejects.toMatchObject({ code: 403 });
+      expect(listener).not.toHaveBeenCalled();
+    } finally {
+      unsubscribe();
+    }
+  });
+
+  it('words a long Retry-After in minutes', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      status: 429,
+      headers: new Headers({ 'content-type': 'application/json', 'retry-after': '290' }),
+      text: () => Promise.resolve(JSON.stringify({ reason: 'rate_limited' })),
+    });
+    await expect(fetchApi('/events')).rejects.toMatchObject({
+      message: 'Trop de requêtes. Réessayez dans 5 min.',
+    });
+  });
+
+  it('holds the retry buttons back for the delay a 429 asks for', async () => {
+    vi.spyOn(Date, 'now').mockReturnValue(1_000_000);
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      status: 429,
+      headers: new Headers({ 'content-type': 'application/json', 'retry-after': '30' }),
+      text: () => Promise.resolve(JSON.stringify({ reason: 'rate_limited' })),
+    });
+    try {
+      await expect(fetchApi('/events')).rejects.toMatchObject({ code: 429 });
+      expect(rateLimitCooldownUntil()).toBe(1_030_000);
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
+
+  it('words a platform error page as a temporary unavailability', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      status: 503,
+      headers: new Headers({ 'content-type': 'text/html; charset=UTF-8' }),
+      text: () => Promise.resolve('<html><body>Service Unavailable</body></html>'),
+    });
+    await expect(fetchApi('/events')).rejects.toMatchObject({
+      code: 503,
+      message: fr.errors.api.unavailable,
     });
   });
 

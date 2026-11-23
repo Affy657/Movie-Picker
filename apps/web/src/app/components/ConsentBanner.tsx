@@ -22,26 +22,29 @@ export default function ConsentBanner() {
         title={t('consent.banner.title')}
         description={t('consent.banner.description')}
       >
-        <Button type="button" size="sm" className={styles.rejectBtn} onClick={rejectAll}>
-          {t('consent.banner.rejectAll')}
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          className={styles.customizeBtn}
-          onClick={() => setDialogOpen(true)}
-        >
-          {t('consent.banner.customize')}
-        </Button>
-        <Button
-          type="button"
-          variant="primary"
-          size="sm"
-          className={styles.acceptBtn}
-          onClick={acceptAll}
-        >
-          {t('consent.banner.acceptAll')}
-        </Button>
+        <div className={styles.choices}>
+          <Button type="button" size="sm" className={styles.rejectBtn} onClick={rejectAll}>
+            {t('consent.banner.rejectAll')}
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            className={styles.acceptBtn}
+            onClick={acceptAll}
+          >
+            {t('consent.banner.acceptAll')}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className={styles.customizeBtn}
+            onClick={() => setDialogOpen(true)}
+          >
+            {t('consent.banner.customize')}
+          </Button>
+        </div>
       </Notice>
       <ConsentDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
     </>

@@ -20,6 +20,16 @@ const apiErrorCodes = Array.from(
   ([, code]) => code ?? ''
 );
 
+const TUTOIEMENT =
+  /(^|[\s«(])(tu|Tu|te|Te|toi|Toi|ton|Ton|ta|Ta|tes|Tes|tien|tienne|tiennes|Rejoins|Rejoins-la|Connecte-toi|Indique|Demande|Pense|Réessaie|Essaie|Confirme|Organise|Vérifie|Choisis|Ajoute|Clique|Regarde|Utilise|Saisis|Retrouve|Découvre|Reviens|Viens|Fais|Prends|Crée)(?=[\s.,!?'’»)]|$)/u;
+
+const IMPERATIVE_WITH_PRONOUN =
+  /(^|[\s«(])\p{L}*[a-yà-ÿ]-(toi|en|la|le|les|lui|leur)(?=[\s.,!?'’»)]|$)/u;
+
+function isFamiliar(text: string): boolean {
+  return TUTOIEMENT.test(text) || IMPERATIVE_WITH_PRONOUN.test(text);
+}
+
 describe('locale parity', () => {
   it('the English locale covers every French key', () => {
     const missing = frKeys.filter((key) => !enKeys.includes(key));
@@ -49,11 +59,21 @@ describe('locale parity', () => {
   });
 
   it('the French locale uses the formal "vous" everywhere', () => {
-    const tutoiement =
-      /(^|[\s«(])(tu|Tu|te|Te|toi|Toi|ton|Ton|ta|Ta|tes|Tes|Rejoins|Rejoins-la|Connecte-toi|Indique|Demande)(?=[\s.,!?'’»)]|$)/u;
     const familiar = frEntries
-      .filter(([, value]) => typeof value === 'string' && tutoiement.test(value))
+      .filter(([, value]) => typeof value === 'string' && isFamiliar(value))
       .map(([key]) => key);
     expect(familiar, `tutoiement dans : ${familiar.join(', ')}`).toEqual([]);
+  });
+
+  it('the formal "vous" guard catches every familiar form already met', () => {
+    expect(isFamiliar('Pense à vérifier les spams.')).toBe(true);
+    expect(isFamiliar('Réessaie dans quelques instants.')).toBe(true);
+    expect(isFamiliar('Demande-en un nouveau ci-dessous.')).toBe(true);
+    expect(isFamiliar('Confirme le mot de passe')).toBe(true);
+    expect(isFamiliar('Organise la tienne')).toBe(true);
+    expect(isFamiliar('Pensez à vérifier les spams.')).toBe(false);
+    expect(isFamiliar('Demandez-en un nouveau ci-dessous.')).toBe(false);
+    expect(isFamiliar('Organisez la vôtre')).toBe(false);
+    expect(isFamiliar('Comment les deux moitiés tiennent ensemble')).toBe(false);
   });
 });

@@ -24,12 +24,14 @@ import {
   onSessionChangedInAnotherTab,
 } from '@/features/auth/session-hint';
 import { ApiError } from '@/shared/api/apiError';
+import { onUnauthorizedResponse } from '@/shared/api/client';
 import { clearStoredEventIdentities } from '@/shared/utils/eventIdentityStorage';
 import { dropBrowserPushSubscription } from '@/shared/utils/browserPushSubscription';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { entryOriginOf } from '@/shared/analytics/entryOrigin';
 import { applyUpdatedProfile } from '@/features/auth/utils/profileCache';
+import { markWelcomePending } from '@/features/auth/welcome';
 import type { UserProfile } from '@/features/auth/types';
 
 type AuthContextValue = {
@@ -37,6 +39,8 @@ type AuthContextValue = {
   isLoading: boolean;
   authCheckFailed: boolean;
   signOutPending: boolean;
+  sessionExpired: boolean;
+  dismissSessionExpired: () => void;
   retryAuthCheck: () => void;
   login: (email: string, password: string, returnTo?: string) => Promise<void>;
   register: (
@@ -66,6 +70,8 @@ function signedOutStateRendered(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
+const ANSWERS_A_SIGN_IN_FORM = /\/auth\/(login|register|logout|password-reset)(\/|$)/;
+
 function sessionIsGone(error: unknown): boolean {
   return ApiError.is(error) && error.code === 401;
 }
@@ -79,6 +85,8 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
 
   const { track } = useAnalytics();
   const [signOutPending, setSignOutPending] = useState(hasPendingSignOut);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const sessionEndedOnPurposeRef = useRef(false);
   const replayingSignOutRef = useRef(false);
 
   const invalidateSession = useCallback(async () => {
@@ -122,11 +130,31 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     const sessionStillUnknown = previousUserId === undefined || sessionUserId === undefined;
     if (sessionStillUnknown || previousUserId === sessionUserId) return;
     if (previousUserId !== null) clearStoredEventIdentities();
+    const endedOnPurpose = sessionEndedOnPurposeRef.current;
+    sessionEndedOnPurposeRef.current = false;
+    setSessionExpired(previousUserId !== null && sessionUserId === null && !endedOnPurpose);
     void resetAccountQueries();
   }, [sessionUserId, resetAccountQueries]);
 
+  useEffect(
+    () =>
+      onUnauthorizedResponse((url) => {
+        if (ANSWERS_A_SIGN_IN_FORM.test(url)) return;
+        if (!queryClient.getQueryData(queryKeys.auth.me)) return;
+        void queryClient.invalidateQueries(
+          { queryKey: queryKeys.auth.me },
+          { cancelRefetch: false }
+        );
+      }),
+    [queryClient]
+  );
+
+  const dismissSessionExpired = useCallback(() => setSessionExpired(false), []);
+
   const endSession = useCallback(async () => {
     lastSessionUserIdRef.current = null;
+    setSessionExpired(false);
+    await queryClient.cancelQueries({ queryKey: queryKeys.auth.me });
     clearStoredEventIdentities();
     queryClient.setQueryData(queryKeys.auth.me, null);
     await signedOutStateRendered();
@@ -151,6 +179,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     },
     onSuccess: (_result, { returnTo }) => {
       setSignOutPending(false);
+      markWelcomePending();
       track('user_signed_up', { method: 'email', origin: entryOriginOf(returnTo) });
     },
   });
@@ -178,6 +207,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   useEffect(
     () =>
       onSessionChangedInAnotherTab(() => {
+        sessionEndedOnPurposeRef.current = true;
         setSignOutPending(hasPendingSignOut());
         void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
       }),
@@ -235,6 +265,8 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       isLoading,
       authCheckFailed,
       signOutPending,
+      sessionExpired,
+      dismissSessionExpired,
       retryAuthCheck,
       login,
       register,
@@ -247,6 +279,8 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       isLoading,
       authCheckFailed,
       signOutPending,
+      sessionExpired,
+      dismissSessionExpired,
       retryAuthCheck,
       login,
       register,

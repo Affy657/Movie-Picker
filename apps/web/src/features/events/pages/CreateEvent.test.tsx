@@ -51,7 +51,6 @@ function routes(entry: string | { pathname: string; state: unknown }) {
                     headingKey="nav.createEvent"
                     titleKey="events.create.signedOutTitle"
                     messageKey="events.create.signedOutMessage"
-                    returnTo="/new"
                   >
                     <CreateEvent />
                   </SessionGate>

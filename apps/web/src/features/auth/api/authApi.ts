@@ -199,6 +199,14 @@ export async function postPasswordResetRequest(email: string, locale: string): P
 
 export type PasswordResetConfirmResponse = ApiSchemas['PasswordResetConfirmResponse'];
 
+export async function postPasswordResetVerify(token: string, signal?: AbortSignal): Promise<void> {
+  await fetchApi('/auth/password-reset/verify', {
+    method: 'POST',
+    body: JSON.stringify({ token }),
+    signal,
+  });
+}
+
 export async function postPasswordResetConfirm(
   token: string,
   newPassword: string

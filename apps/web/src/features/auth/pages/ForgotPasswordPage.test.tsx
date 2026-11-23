@@ -46,6 +46,26 @@ describe('ForgotPasswordPage', () => {
     );
   });
 
+  it('checks the address with a message of the app before sending it', async () => {
+    const user = userEvent.setup();
+    let requests = 0;
+    server.use(
+      http.post(`${TEST_API_V1}/auth/password-reset/request`, () => {
+        requests += 1;
+        return HttpResponse.json({}, { status: 202 });
+      })
+    );
+    renderForgot();
+
+    const form = screen.getByRole('button', { name: /recevoir le lien/i }).closest('form')!;
+    expect(form).toHaveAttribute('novalidate');
+    await user.type(screen.getByLabelText(/^e-mail$/i), 'alice');
+    await user.click(screen.getByRole('button', { name: /recevoir le lien/i }));
+
+    expect(await screen.findByText(/saisissez une adresse e-mail valide/i)).toBeInTheDocument();
+    expect(requests).toBe(0);
+  });
+
   it('soumet le formulaire et appelle l API avec email + locale', async () => {
     const user = userEvent.setup();
     let captured: { email?: string; locale?: string } | null = null;

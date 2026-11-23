@@ -9,7 +9,7 @@ public sealed partial class ServerCopyTests
 {
     private const string TitlePlaceholder = "Dune";
 
-    [GeneratedRegex(@"(^|[\s«(])(tu|Tu|te|Te|toi|Toi|ton|Ton|ta|Ta|tes|Tes|Rejoins|Rejoins-la|Connecte-toi|Indique|Demande)(?=[\s.,!?'’»)]|$)")]
+    [GeneratedRegex(@"(^|[\s«(])(tu|Tu|te|Te|toi|Toi|ton|Ton|ta|Ta|tes|Tes|tien|tienne|tiennes|Rejoins|Rejoins-la|Connecte-toi|Indique|Demande|Pense|Réessaie|Essaie|Confirme|Organise|Vérifie|Choisis|Ajoute|Clique|Regarde|Utilise|Saisis|Retrouve|Découvre|Reviens|Viens|Fais|Prends|Crée)(?=[\s.,!?'’»)]|$)|(^|[\s«(])\p{L}*[a-yà-ÿ]-(toi|en|la|le|les|lui|leur)(?=[\s.,!?'’»)]|$)")]
     private static partial Regex Tutoiement();
 
     public static TheoryData<string, string> FrenchTexts()
@@ -29,6 +29,7 @@ public sealed partial class ServerCopyTests
     [InlineData("Tu as reçu une invitation pour une soirée ciné sur Movie Picker. Ouvre le lien pour la rejoindre.")]
     [InlineData("Soirée ciné le samedi 21 novembre. Rejoins la soirée et vote pour ton film.")]
     [InlineData("Si tu n'es pas à l'origine de cette demande, ignore cet email : ton mot de passe restera inchangé.")]
+    [InlineData("Pense à vérifier les spams. Demande-en un nouveau.")]
     public void TutoiementPattern_CatchesTheFamiliarTextTheServerUsedToSend(string formerText) =>
         Assert.Matches(Tutoiement(), formerText);
 
