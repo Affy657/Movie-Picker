@@ -18,3 +18,52 @@
   font-size: var(--font-size-sm);
   color: var(--color-text-subtle);
 }
+
+.older {
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.folded {
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.foldedSummary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+  min-height: var(--tap-target-min);
+  padding: var(--space-3) var(--space-1);
+  cursor: pointer;
+  list-style: none;
+}
+
+.foldedSummary::-webkit-details-marker {
+  display: none;
+}
+
+.foldedSummary::after {
+  content: '+';
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xl);
+  line-height: var(--leading-none);
+  color: var(--color-primary-text);
+}
+
+.folded[open] .foldedSummary::after {
+  content: '\2212';
+}
+
+.foldedSummary h2 {
+  margin: 0;
+}
+
+.foldedDate {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-subtle);
+}
+
+.foldedBody {
+  padding: 0 var(--space-1) var(--space-5);
+}

@@ -1,6 +1,7 @@
 import {
   Accessibility,
   Activity,
+  Bot,
   Boxes,
   Braces,
   CalendarClock,
@@ -18,6 +19,7 @@ import {
   GitCommitVertical,
   GitCompare,
   GitPullRequest,
+  Hexagon,
   IdCard,
   ImageDown,
   KeyRound,
@@ -46,14 +48,17 @@ import {
   WifiOff,
   Zap,
 } from 'lucide-react';
-import type { ComponentType } from 'react';
+import { startTransition, useEffect, useState, type ComponentType } from 'react';
+import { useLocation } from 'react-router';
+import Card from '@/shared/components/Card';
 import PageLayout from '@/shared/components/PageLayout';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
 import { SITE_URL } from '@/shared/seo/siteMeta';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import TechHero from './tech/TechHero';
-import TechRail, { sectionNumber, type TechSectionId } from './tech/TechRail';
+import TechRail, { sectionNumber, TECH_SECTIONS, type TechSectionId } from './tech/TechRail';
+import { useTechFormat } from './tech/techFormat';
 import { FactGrid, Figure, TechHint, TechSection, type FactItem } from './tech/TechBlocks';
 import TechTimeline, { PLANNED_MILESTONES, SHIPPED_MILESTONES } from './tech/TechTimeline';
 import {
@@ -63,12 +68,15 @@ import {
   CiGraphDiagram,
   ContractDiagram,
   DataModelDiagram,
+  EXTERNAL_SKILL_COUNT,
   FeatureFlowDiagram,
+  FRONT_DOMAINS,
   FrontGraphDiagram,
   InfraDiagram,
   LayersDiagram,
   LetterboxdFlowDiagram,
   ProductFlowDiagram,
+  PROJECT_SKILL_COUNT,
   RequestPathDiagram,
   SKILL_COUNT,
   TestPyramidDiagram,
@@ -102,6 +110,7 @@ const METHOD_CARDS = [
   { key: 'memory', Icon: Boxes },
   { key: 'control', Icon: UserCheck },
   { key: 'arbitration', Icon: GitCompare },
+  { key: 'autonomy', Icon: Bot },
 ] as const;
 
 const ARCHITECTURE_STRUCTURE = [
@@ -183,6 +192,7 @@ const TEST_FAMILIES = [
 
 const CHOICE_KEYS = [
   { key: 'runtime', Icon: DotNetLogo },
+  { key: 'hexagonal', Icon: Hexagon },
   { key: 'database', Icon: MongoLogo },
   { key: 'persistence', Icon: FileJson },
   { key: 'auth', Icon: Fingerprint },
@@ -193,7 +203,15 @@ const CHOICE_KEYS = [
   { key: 'mono', Icon: FolderTree },
 ] as const;
 
-const PRICED_CHOICES = new Set(['runtime', 'database', 'auth', 'front', 'hosting', 'oneCloud']);
+const PRICED_CHOICES = new Set([
+  'runtime',
+  'hexagonal',
+  'database',
+  'auth',
+  'front',
+  'hosting',
+  'oneCloud',
+]);
 
 const FEATURE_KEYS = [
   { key: 'trigger', Icon: Timer },
@@ -241,6 +259,19 @@ const TEST_PRACTICE_KEYS = [
   { key: 'network', Icon: Network },
 ] as const;
 
+const SUMMARY_ITEMS = ['item1', 'item2', 'item3', 'item4', 'item5'] as const;
+
+function useRenderedSectionCount() {
+  const { hash } = useLocation();
+  const [count, setCount] = useState(hash === '' ? 1 : TECH_SECTIONS.length);
+
+  useEffect(() => {
+    if (count < TECH_SECTIONS.length) startTransition(() => setCount((value) => value + 1));
+  }, [count]);
+
+  return count;
+}
+
 const ARCHITECTURE_RULES = [
   'ruleComment',
   'ruleLiteral',
@@ -251,9 +282,11 @@ const ARCHITECTURE_RULES = [
 ] as const;
 
 export default function TechPage() {
-  const { t, locale } = useTranslation();
-  const formatNumber = (value: number) =>
-    new Intl.NumberFormat(locale === 'en' ? 'en-GB' : 'fr-FR').format(value);
+  const { t } = useTranslation();
+  const format = useTechFormat();
+  const renderedSections = useRenderedSectionCount();
+  const complete = renderedSections === TECH_SECTIONS.length;
+  const rendered = (id: TechSectionId) => TECH_SECTIONS.indexOf(id) < renderedSections;
 
   usePageSeo({
     title: t('common.pageTitle', { segment: t('tech.seoTitle') }),
@@ -289,14 +322,40 @@ export default function TechPage() {
       <div className={styles.shell}>
         <TechRail />
 
-        <div className={styles.content}>
+        <div className={styles.content} data-render-pending={complete ? undefined : 'true'}>
+          <Card
+            as="aside"
+            padding="md"
+            radius="lg"
+            surface="sunken"
+            className={styles.summary}
+            aria-labelledby="tech-summary-title"
+          >
+            <h2 className={styles.summaryTitle} id="tech-summary-title">
+              {t('tech.summary.title')}
+            </h2>
+            <ul className={styles.summaryList}>
+              {SUMMARY_ITEMS.map((item) => (
+                <li key={item}>
+                  {t(`tech.summary.${item}`, {
+                    tests: format.number(TECH_METRICS.testCases),
+                    method: sectionNumber('method'),
+                    trajectory: sectionNumber('trajectory'),
+                  })}
+                </li>
+              ))}
+            </ul>
+          </Card>
           <TechSection
             id="architecture"
             eyebrow={eyebrow('architecture')}
             title={t('tech.architecture.title')}
             lead={t('tech.architecture.lead')}
           >
-            <Figure caption={t('tech.architecture.caption')}>
+            <Figure
+              caption={t('tech.architecture.caption')}
+              label={t('tech.diagram.architectureTitle')}
+            >
               <ArchitectureDiagram />
             </Figure>
             <FactGrid
@@ -319,336 +378,390 @@ export default function TechPage() {
               }))}
             />
           </TechSection>
-          <TechSection
-            id="choices"
-            eyebrow={eyebrow('choices')}
-            title={t('tech.choices.title')}
-            lead={t('tech.choices.lead')}
-          >
-            <FactGrid
-              items={iconFacts('choices', CHOICE_KEYS).map((fact) =>
-                PRICED_CHOICES.has(fact.key)
-                  ? {
-                      ...fact,
-                      trade: {
-                        label: t('tech.choices.tradeLabel'),
-                        text: t(`tech.choices.${fact.key}Trade` as TranslationKey),
-                      },
-                    }
-                  : fact
-              )}
-            />
-          </TechSection>
-          <TechSection
-            id="contract"
-            eyebrow={eyebrow('contract')}
-            title={t('tech.contract.title')}
-            lead={t('tech.contract.lead')}
-          >
-            <Figure>
-              <ContractDiagram />
-            </Figure>
-            <FactGrid items={iconFacts('contract', CONTRACT_KEYS)} />
-            <p className={shared.note}>
-              {t('tech.contract.note', {
-                routes: TECH_METRICS.contractRoutesChecked,
-                checked: TECH_METRICS.contractCheckedTypes,
-                total: TECH_METRICS.contractResponses,
-              })}
-            </p>
-          </TechSection>
-          <TechSection
-            id="ui"
-            eyebrow={eyebrow('ui')}
-            title={t('tech.ui.title')}
-            lead={t('tech.ui.lead', { features: TECH_METRICS.features })}
-          >
-            <Figure caption={t('tech.diagram.frontGraphNote')}>
-              <FrontGraphDiagram />
-            </Figure>
-            <FactGrid
-              items={iconFacts('ui', UI_KEYS, {
-                design: t('tech.ui.designValue', { components: TECH_METRICS.sharedComponents }),
-                loading: t('tech.ui.loadingValue', { routes: TECH_METRICS.lazyRoutes }),
-                a11y: t('tech.ui.a11yValue', { views: TECH_METRICS.a11yViews }),
-              })}
-            />
-          </TechSection>
-          <TechSection
-            id="server"
-            eyebrow={eyebrow('server')}
-            title={t('tech.server.title')}
-            lead={t('tech.server.lead')}
-          >
-            <Figure
-              caption={t('tech.server.caption', {
-                ports: TECH_METRICS.ports,
-                repositories: TECH_METRICS.doubledRepositories,
-              })}
+          {rendered('choices') ? (
+            <TechSection
+              id="choices"
+              eyebrow={eyebrow('choices')}
+              title={t('tech.choices.title')}
+              lead={t('tech.choices.lead')}
             >
-              <LayersDiagram />
-            </Figure>
-            <p className={shared.groupHeading}>{t('tech.server.requestHeading')}</p>
-            <Figure caption={t('tech.server.requestNote', { useCases: TECH_METRICS.useCases })}>
-              <RequestPathDiagram />
-            </Figure>
-            <FactGrid
-              heading={t('tech.server.noteLead')}
-              items={iconFacts('server', SERVER_KEYS)}
-            />
-          </TechSection>
-          <TechSection
-            id="data"
-            eyebrow={eyebrow('data')}
-            title={t('tech.data.title')}
-            lead={t('tech.data.lead')}
-          >
-            <Figure
-              caption={`${t('tech.data.modelCaption')} ${t('tech.diagram.dataModelNote', {
-                collections: TECH_METRICS.mongoCollections,
-                indexes: TECH_METRICS.mongoIndexes,
-                ttl: TECH_METRICS.ttlIndexes,
-              })}`}
+              <FactGrid
+                items={iconFacts('choices', CHOICE_KEYS).map((fact) =>
+                  PRICED_CHOICES.has(fact.key)
+                    ? {
+                        ...fact,
+                        trade: {
+                          label: t('tech.choices.tradeLabel'),
+                          text: t(`tech.choices.${fact.key}Trade` as TranslationKey),
+                        },
+                      }
+                    : fact
+                )}
+              />
+            </TechSection>
+          ) : null}
+          {rendered('contract') ? (
+            <TechSection
+              id="contract"
+              eyebrow={eyebrow('contract')}
+              title={t('tech.contract.title')}
+              lead={t('tech.contract.lead')}
             >
-              <DataModelDiagram />
-            </Figure>
-            <Figure caption={t('tech.data.caption')}>
-              <UnitOfWorkDiagram />
-            </Figure>
-            <FactGrid
-              items={iconFacts('data', DATA_KEYS, {
-                uniqueness: t('tech.data.uniquenessValue', {
-                  unique: TECH_METRICS.uniqueIndexes,
-                }),
-                expiry: t('tech.data.expiryValue', { ttl: TECH_METRICS.ttlIndexes }),
-                inventory: t('tech.data.inventoryValue', {
-                  indexes: TECH_METRICS.inventoriedIndexes,
-                }),
-                migrations: t('tech.data.migrationsValue', {
-                  migrations: TECH_METRICS.migrations,
-                }),
-                posters: t('tech.data.postersValue', {
-                  days: TECH_METRICS.posterCacheTtlDays,
-                }),
-              })}
-            />
-          </TechSection>
-          <TechSection
-            id="feature"
-            eyebrow={eyebrow('feature')}
-            title={t('tech.feature.title')}
-            lead={t('tech.feature.lead')}
-          >
-            <Figure caption={t('tech.feature.caption')}>
-              <LetterboxdFlowDiagram />
-            </Figure>
-            <FactGrid items={iconFacts('feature', FEATURE_KEYS)} />
-          </TechSection>
-          <TechSection
-            id="tests"
-            eyebrow={eyebrow('tests')}
-            title={t('tech.tests.title', { tests: formatNumber(TECH_METRICS.testCases) })}
-            lead={t('tech.tests.lead')}
-          >
-            <Figure
-              caption={t('tech.tests.caption', {
-                lines: TECH_METRICS.coverageLines,
-                functions: TECH_METRICS.coverageFunctions,
-                branches: TECH_METRICS.coverageBranches,
-                apiLines: TECH_METRICS.apiCoverageLines,
-                mongoLines: TECH_METRICS.mongoCoverageLines,
-              })}
+              <Figure label={t('tech.diagram.contractTitle')}>
+                <ContractDiagram />
+              </Figure>
+              <FactGrid items={iconFacts('contract', CONTRACT_KEYS)} />
+              <p className={shared.note}>
+                {t('tech.contract.note', {
+                  routes: TECH_METRICS.contractRoutesChecked,
+                  checked: TECH_METRICS.contractCheckedTypes,
+                  total: TECH_METRICS.contractResponses,
+                })}
+              </p>
+            </TechSection>
+          ) : null}
+          {rendered('ui') ? (
+            <TechSection
+              id="ui"
+              eyebrow={eyebrow('ui')}
+              title={t('tech.ui.title')}
+              lead={t('tech.ui.lead', { features: FRONT_DOMAINS.length })}
             >
-              <TestPyramidDiagram />
-            </Figure>
-            <FactGrid
-              items={TEST_FAMILIES.map(({ key, Icon, value }) => ({
-                key,
-                icon: <Icon size={ICON_SIZE.md} />,
-                term: t(`tech.tests.${key}` as TranslationKey),
-                detail: t(`tech.tests.${key}Value` as TranslationKey, {
-                  count: formatNumber(value),
-                }),
-                hint: t(`tech.tests.${key}Hint` as TranslationKey),
-              }))}
-            />
-            <FactGrid
-              heading={t('tech.tests.howHeading')}
-              items={iconFacts('tests', TEST_PRACTICE_KEYS, {
-                doubles: t('tech.tests.doublesValue', {
+              <Figure
+                caption={t('tech.diagram.frontGraphNote')}
+                label={t('tech.diagram.frontGraphTitle', { count: String(FRONT_DOMAINS.length) })}
+              >
+                <FrontGraphDiagram />
+              </Figure>
+              <FactGrid
+                items={iconFacts('ui', UI_KEYS, {
+                  design: t('tech.ui.designValue', { components: TECH_METRICS.sharedComponents }),
+                  loading: t('tech.ui.loadingValue', { routes: TECH_METRICS.lazyRoutes }),
+                  a11y: t('tech.ui.a11yValue', { views: TECH_METRICS.a11yViews }),
+                })}
+              />
+            </TechSection>
+          ) : null}
+          {rendered('server') ? (
+            <TechSection
+              id="server"
+              eyebrow={eyebrow('server')}
+              title={t('tech.server.title')}
+              lead={t('tech.server.lead')}
+            >
+              <Figure
+                caption={t('tech.server.caption', {
+                  ports: TECH_METRICS.ports,
                   repositories: TECH_METRICS.doubledRepositories,
-                }),
-                network: t('tech.tests.networkValue', {
-                  files: TECH_METRICS.mswTestFiles,
-                }),
-              })}
-            />
-          </TechSection>
-          <TechSection
-            id="quality"
-            eyebrow={eyebrow('quality')}
-            title={t('tech.quality.title')}
-            lead={t('tech.quality.lead')}
-          >
-            <FactGrid
-              heading={t('tech.quality.blockingHeading')}
-              items={iconFacts('quality', QUALITY_BLOCKING_KEYS, {
-                coverage: t('tech.quality.coverageValue', {
+                })}
+                label={t('tech.diagram.layersTitle')}
+              >
+                <LayersDiagram />
+              </Figure>
+              <p className={shared.groupHeading}>{t('tech.server.requestHeading')}</p>
+              <Figure
+                caption={t('tech.server.requestNote', { useCases: TECH_METRICS.useCases })}
+                label={t('tech.diagram.requestPathTitle')}
+              >
+                <RequestPathDiagram />
+              </Figure>
+              <FactGrid
+                heading={t('tech.server.noteLead')}
+                items={iconFacts('server', SERVER_KEYS)}
+              />
+            </TechSection>
+          ) : null}
+          {rendered('data') ? (
+            <TechSection
+              id="data"
+              eyebrow={eyebrow('data')}
+              title={t('tech.data.title')}
+              lead={t('tech.data.lead')}
+            >
+              <Figure
+                caption={`${t('tech.data.modelCaption')} ${t('tech.diagram.dataModelNote', {
+                  collections: TECH_METRICS.mongoCollections,
+                  indexes: TECH_METRICS.mongoIndexes,
+                  ttl: TECH_METRICS.ttlIndexes,
+                })}`}
+                label={t('tech.diagram.dataModelTitle')}
+              >
+                <DataModelDiagram />
+              </Figure>
+              <Figure caption={t('tech.data.caption')} label={t('tech.diagram.unitOfWorkTitle')}>
+                <UnitOfWorkDiagram />
+              </Figure>
+              <FactGrid
+                items={iconFacts('data', DATA_KEYS, {
+                  uniqueness: t('tech.data.uniquenessValue', {
+                    unique: TECH_METRICS.uniqueIndexes,
+                  }),
+                  expiry: t('tech.data.expiryValue', { ttl: TECH_METRICS.ttlIndexes }),
+                  inventory: t('tech.data.inventoryValue', {
+                    indexes: TECH_METRICS.inventoriedIndexes,
+                  }),
+                  migrations: t('tech.data.migrationsValue', {
+                    migrations: TECH_METRICS.migrations,
+                  }),
+                  posters: t('tech.data.postersValue', {
+                    days: TECH_METRICS.posterCacheTtlDays,
+                  }),
+                })}
+              />
+            </TechSection>
+          ) : null}
+          {rendered('feature') ? (
+            <TechSection
+              id="feature"
+              eyebrow={eyebrow('feature')}
+              title={t('tech.feature.title')}
+              lead={t('tech.feature.lead')}
+            >
+              <Figure caption={t('tech.feature.caption')} label={t('tech.diagram.letterboxdTitle')}>
+                <LetterboxdFlowDiagram />
+              </Figure>
+              <FactGrid items={iconFacts('feature', FEATURE_KEYS)} />
+            </TechSection>
+          ) : null}
+          {rendered('tests') ? (
+            <TechSection
+              id="tests"
+              eyebrow={eyebrow('tests')}
+              title={t('tech.tests.title', { tests: format.number(TECH_METRICS.testCases) })}
+              lead={t('tech.tests.lead')}
+            >
+              <Figure
+                caption={t('tech.tests.caption', {
                   lines: TECH_METRICS.coverageLines,
                   functions: TECH_METRICS.coverageFunctions,
                   branches: TECH_METRICS.coverageBranches,
                   apiLines: TECH_METRICS.apiCoverageLines,
                   mongoLines: TECH_METRICS.mongoCoverageLines,
-                }),
-                lighthouse: t('tech.quality.lighthouseValue', {
-                  pages: TECH_METRICS.lighthousePages,
-                  perf: TECH_METRICS.lighthousePerformance,
-                  a11y: TECH_METRICS.lighthouseAccessibility,
-                  bp: TECH_METRICS.lighthouseBestPractices,
-                  seo: TECH_METRICS.lighthouseSeo,
-                }),
-                axe: t('tech.quality.axeValue', { views: TECH_METRICS.a11yViews }),
+                })}
+                label={t('tech.diagram.testsPyramidTitle')}
+              >
+                <TestPyramidDiagram />
+              </Figure>
+              <FactGrid
+                items={TEST_FAMILIES.map(({ key, Icon, value }) => ({
+                  key,
+                  icon: <Icon size={ICON_SIZE.md} />,
+                  term: t(`tech.tests.${key}` as TranslationKey),
+                  detail: t(`tech.tests.${key}Value` as TranslationKey, {
+                    count: format.number(value),
+                  }),
+                  hint: t(`tech.tests.${key}Hint` as TranslationKey),
+                }))}
+              />
+              <FactGrid
+                heading={t('tech.tests.howHeading')}
+                items={iconFacts('tests', TEST_PRACTICE_KEYS, {
+                  doubles: t('tech.tests.doublesValue', {
+                    repositories: TECH_METRICS.doubledRepositories,
+                  }),
+                  network: t('tech.tests.networkValue', {
+                    files: TECH_METRICS.mswTestFiles,
+                  }),
+                })}
+              />
+            </TechSection>
+          ) : null}
+          {rendered('quality') ? (
+            <TechSection
+              id="quality"
+              eyebrow={eyebrow('quality')}
+              title={t('tech.quality.title')}
+              lead={t('tech.quality.lead')}
+            >
+              <FactGrid
+                heading={t('tech.quality.blockingHeading')}
+                items={iconFacts('quality', QUALITY_BLOCKING_KEYS, {
+                  coverage: t('tech.quality.coverageValue', {
+                    lines: TECH_METRICS.coverageLines,
+                    functions: TECH_METRICS.coverageFunctions,
+                    branches: TECH_METRICS.coverageBranches,
+                    apiLines: TECH_METRICS.apiCoverageLines,
+                    mongoLines: TECH_METRICS.mongoCoverageLines,
+                  }),
+                  lighthouse: t('tech.quality.lighthouseValue', {
+                    pages: TECH_METRICS.lighthousePages,
+                    perf: TECH_METRICS.lighthousePerformance,
+                    a11y: TECH_METRICS.lighthouseAccessibility,
+                    bp: TECH_METRICS.lighthouseBestPractices,
+                    seo: TECH_METRICS.lighthouseSeo,
+                  }),
+                  axe: t('tech.quality.axeValue', { views: TECH_METRICS.a11yViews }),
+                })}
+              />
+              <p className={shared.note}>
+                <strong>{t('tech.quality.noteLead')}</strong>{' '}
+                {t('tech.quality.note', {
+                  lines: format.number(TECH_METRICS.architectureScriptLines),
+                })}
+              </p>
+              <ul className={shared.tags}>
+                {ARCHITECTURE_RULES.map((rule) => (
+                  <li key={rule}>
+                    <TechHint label={t(`tech.quality.${rule}Hint` as TranslationKey)}>
+                      <span className={shared.tag}>
+                        {t(`tech.quality.${rule}` as TranslationKey)}
+                      </span>
+                    </TechHint>
+                  </li>
+                ))}
+              </ul>
+              <FactGrid
+                heading={t('tech.quality.informativeHeading')}
+                items={iconFacts('quality', QUALITY_OBSERVED_KEYS)}
+              />
+            </TechSection>
+          ) : null}
+          {rendered('ci') ? (
+            <TechSection
+              id="ci"
+              eyebrow={eyebrow('ci')}
+              title={t('tech.ci.title', { jobs: TECH_METRICS.ciJobs })}
+              lead={t('tech.ci.lead')}
+            >
+              <Figure caption={t('tech.ci.caption')} label={t('tech.diagram.ciTitle')}>
+                <CiGraphDiagram />
+              </Figure>
+              <FactGrid heading={t('tech.ci.pipelineHeading')} items={iconFacts('ci', CI_KEYS)} />
+              <p className={shared.groupHeading}>{t('tech.ci.otherPipelines')}</p>
+              <ul className={shared.tags}>
+                {OTHER_PIPELINES.map((pipeline) => (
+                  <li key={pipeline}>
+                    <TechHint label={t(`tech.ci.${pipeline}Hint` as TranslationKey)}>
+                      <span className={shared.tag}>
+                        {t(`tech.ci.${pipeline}` as TranslationKey)}
+                      </span>
+                    </TechHint>
+                  </li>
+                ))}
+              </ul>
+            </TechSection>
+          ) : null}
+          {rendered('infra') ? (
+            <TechSection
+              id="infra"
+              eyebrow={eyebrow('infra')}
+              title={t('tech.infra.title')}
+              lead={t('tech.infra.lead')}
+            >
+              <Figure caption={t('tech.infra.caption')} label={t('tech.diagram.infraTitle')}>
+                <InfraDiagram />
+              </Figure>
+              <FactGrid
+                items={iconFacts('infra', INFRA_KEYS, {
+                  secrets: t('tech.infra.secretsValue', { secrets: TECH_METRICS.deploySecrets }),
+                })}
+              />
+            </TechSection>
+          ) : null}
+          {rendered('production') ? (
+            <TechSection
+              id="production"
+              eyebrow={eyebrow('production')}
+              title={t('tech.production.title')}
+              lead={t('tech.production.lead')}
+            >
+              <FactGrid
+                items={iconFacts('production', SECURITY_KEYS, {
+                  abuse: t('tech.production.abuseValue', {
+                    policies: TECH_METRICS.rateLimitPolicies,
+                  }),
+                })}
+              />
+            </TechSection>
+          ) : null}
+          {rendered('method') ? (
+            <TechSection
+              id="method"
+              eyebrow={eyebrow('method')}
+              title={t('tech.method.title')}
+              lead={t('tech.method.lead')}
+            >
+              <Figure
+                caption={t('tech.method.productCaption')}
+                label={t('tech.diagram.productFlowTitle')}
+              >
+                <ProductFlowDiagram />
+              </Figure>
+              <Figure
+                caption={t('tech.method.featureCaption')}
+                label={t('tech.diagram.featureFlowTitle')}
+              >
+                <FeatureFlowDiagram />
+              </Figure>
+              <Figure caption={t('tech.method.bugCaption')} label={t('tech.diagram.bugFlowTitle')}>
+                <BugFlowDiagram />
+              </Figure>
+              <Figure
+                caption={t('tech.method.toolingCaption', {
+                  count: SKILL_COUNT,
+                  project: PROJECT_SKILL_COUNT,
+                  external: EXTERNAL_SKILL_COUNT,
+                })}
+                label={t('tech.diagram.toolingTitle')}
+              >
+                <AssistantToolingDiagram />
+              </Figure>
+              <p className={shared.note}>
+                <strong>{t('tech.method.mcpNoteLead')}</strong>{' '}
+                {t('tech.method.mcpNote', { tools: TECH_METRICS.assistantTools })}
+              </p>
+              <FactGrid
+                items={METHOD_CARDS.map(({ key, Icon }) => ({
+                  key,
+                  icon: <Icon size={ICON_SIZE.md} />,
+                  term: t(`tech.method.${key}Title` as TranslationKey),
+                  detail:
+                    key === 'arbitration'
+                      ? t('tech.method.arbitrationText', { jobs: TECH_METRICS.ciJobs })
+                      : t(`tech.method.${key}Text` as TranslationKey),
+                  hint: t(`tech.method.${key}Hint` as TranslationKey),
+                }))}
+              />
+            </TechSection>
+          ) : null}
+          {rendered('trajectory') ? (
+            <TechSection
+              id="trajectory"
+              eyebrow={eyebrow('trajectory')}
+              title={t('tech.trajectory.title', {
+                months: TECH_METRICS.monthsActive,
+                shipped: SHIPPED_MILESTONES,
               })}
-            />
-            <p className={shared.note}>
-              <strong>{t('tech.quality.noteLead')}</strong>{' '}
-              {t('tech.quality.note', { lines: TECH_METRICS.architectureScriptLines })}
-            </p>
-            <ul className={shared.tags}>
-              {ARCHITECTURE_RULES.map((rule) => (
-                <li key={rule}>
-                  <TechHint label={t(`tech.quality.${rule}Hint` as TranslationKey)}>
-                    <span className={shared.tag}>
-                      {t(`tech.quality.${rule}` as TranslationKey)}
-                    </span>
-                  </TechHint>
-                </li>
-              ))}
-            </ul>
-            <FactGrid
-              heading={t('tech.quality.informativeHeading')}
-              items={iconFacts('quality', QUALITY_OBSERVED_KEYS)}
-            />
-          </TechSection>
-          <TechSection
-            id="ci"
-            eyebrow={eyebrow('ci')}
-            title={t('tech.ci.title', { jobs: TECH_METRICS.ciJobs })}
-            lead={t('tech.ci.lead')}
-          >
-            <Figure caption={t('tech.ci.caption')}>
-              <CiGraphDiagram />
-            </Figure>
-            <FactGrid heading={t('tech.ci.pipelineHeading')} items={iconFacts('ci', CI_KEYS)} />
-            <p className={shared.groupHeading}>{t('tech.ci.otherPipelines')}</p>
-            <ul className={shared.tags}>
-              {OTHER_PIPELINES.map((pipeline) => (
-                <li key={pipeline}>
-                  <TechHint label={t(`tech.ci.${pipeline}Hint` as TranslationKey)}>
-                    <span className={shared.tag}>{t(`tech.ci.${pipeline}` as TranslationKey)}</span>
-                  </TechHint>
-                </li>
-              ))}
-            </ul>
-          </TechSection>
-          <TechSection
-            id="infra"
-            eyebrow={eyebrow('infra')}
-            title={t('tech.infra.title')}
-            lead={t('tech.infra.lead')}
-          >
-            <Figure caption={t('tech.infra.caption')}>
-              <InfraDiagram />
-            </Figure>
-            <FactGrid
-              items={iconFacts('infra', INFRA_KEYS, {
-                secrets: t('tech.infra.secretsValue', { secrets: TECH_METRICS.deploySecrets }),
+              lead={t('tech.trajectory.lead', {
+                commits: format.number(TECH_METRICS.commits),
+                planned: PLANNED_MILESTONES,
               })}
-            />
-          </TechSection>
-          <TechSection
-            id="production"
-            eyebrow={eyebrow('production')}
-            title={t('tech.production.title')}
-            lead={t('tech.production.lead')}
-          >
-            <FactGrid
-              items={iconFacts('production', SECURITY_KEYS, {
-                abuse: t('tech.production.abuseValue', {
-                  policies: TECH_METRICS.rateLimitPolicies,
-                }),
-              })}
-            />
-          </TechSection>
-          <TechSection
-            id="method"
-            eyebrow={eyebrow('method')}
-            title={t('tech.method.title')}
-            lead={t('tech.method.lead')}
-          >
-            <Figure caption={t('tech.method.productCaption')}>
-              <ProductFlowDiagram />
-            </Figure>
-            <Figure caption={t('tech.method.featureCaption')}>
-              <FeatureFlowDiagram />
-            </Figure>
-            <Figure caption={t('tech.method.bugCaption')}>
-              <BugFlowDiagram />
-            </Figure>
-            <Figure caption={t('tech.method.toolingCaption', { count: SKILL_COUNT })}>
-              <AssistantToolingDiagram />
-            </Figure>
-            <p className={shared.note}>
-              <strong>{t('tech.method.mcpNoteLead')}</strong>{' '}
-              {t('tech.method.mcpNote', { tools: TECH_METRICS.assistantTools })}
-            </p>
-            <FactGrid
-              items={METHOD_CARDS.map(({ key, Icon }) => ({
-                key,
-                icon: <Icon size={ICON_SIZE.md} />,
-                term: t(`tech.method.${key}Title` as TranslationKey),
-                detail:
-                  key === 'arbitration'
-                    ? t('tech.method.arbitrationText', { jobs: TECH_METRICS.ciJobs })
-                    : t(`tech.method.${key}Text` as TranslationKey),
-                hint: t(`tech.method.${key}Hint` as TranslationKey),
-              }))}
-            />
-          </TechSection>
-          <TechSection
-            id="trajectory"
-            eyebrow={eyebrow('trajectory')}
-            title={t('tech.trajectory.title', {
-              months: TECH_METRICS.monthsActive,
-              shipped: SHIPPED_MILESTONES,
-            })}
-            lead={t('tech.trajectory.lead', {
-              commits: TECH_METRICS.commits,
-              planned: PLANNED_MILESTONES,
-            })}
-          >
-            <TechTimeline />
-            <p className={shared.groupHeading}>{t('tech.trajectory.techHeading')}</p>
-            <p className={shared.note}>{t('tech.trajectory.techLead')}</p>
-            <ul className={shared.tags}>
-              {OPEN_TECH_WORK.map((item) => (
-                <li key={item}>
-                  <TechHint label={t(`tech.trajectory.${item}Hint` as TranslationKey)}>
-                    <span className={shared.tag}>
-                      {t(`tech.trajectory.${item}` as TranslationKey)}
-                    </span>
-                  </TechHint>
-                </li>
-              ))}
-            </ul>
-          </TechSection>
+            >
+              <TechTimeline />
+              <p className={shared.groupHeading}>{t('tech.trajectory.techHeading')}</p>
+              <p className={shared.note}>{t('tech.trajectory.techLead')}</p>
+              <ul className={shared.tags}>
+                {OPEN_TECH_WORK.map((item) => (
+                  <li key={item}>
+                    <TechHint label={t(`tech.trajectory.${item}Hint` as TranslationKey)}>
+                      <span className={shared.tag}>
+                        {t(`tech.trajectory.${item}` as TranslationKey)}
+                      </span>
+                    </TechHint>
+                  </li>
+                ))}
+              </ul>
+            </TechSection>
+          ) : null}
 
-          <div className={styles.signature}>
-            <p className={styles.signatureText}>
-              <span className={styles.signatureName}>{t('tech.signature')}</span>{' '}
-              {t('tech.signatureText')}
-            </p>
-          </div>
+          {complete ? (
+            <div className={styles.signature}>
+              <p className={styles.signatureText}>
+                <span className={styles.signatureName}>{t('tech.signature')}</span>{' '}
+                {t('tech.signatureText')}
+              </p>
+            </div>
+          ) : null}
         </div>
       </div>
     </PageLayout>

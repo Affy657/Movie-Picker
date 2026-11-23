@@ -1,7 +1,11 @@
 import clsx from 'clsx';
-import type { ReactNode } from 'react';
+import { MoveHorizontal } from 'lucide-react';
+import { useRef, type ReactNode } from 'react';
 import Card from '@/shared/components/Card';
 import Tooltip from '@/shared/components/Tooltip';
+import { ICON_SIZE } from '@/shared/components/iconSize';
+import { useRailScroll } from '@/shared/hooks/useRailScroll';
+import { useTranslation } from '@/shared/i18n';
 import styles from './techShared.module.css';
 
 type TechSectionProps = {
@@ -92,10 +96,38 @@ export function FactGrid({
   );
 }
 
-export function Figure({ caption, children }: Readonly<{ caption?: string; children: ReactNode }>) {
+export function Figure({
+  caption,
+  label,
+  children,
+}: Readonly<{ caption?: string; label: string; children: ReactNode }>) {
+  const { t } = useTranslation();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const { canScrollBack, canScrollForward } = useRailScroll(scrollRef, 1);
+
   return (
     <Card as="figure" padding="none" radius="lg" elevation="sm" className={styles.figure}>
-      <div className={styles.figureScroll}>{children}</div>
+      <div
+        className={styles.figureFrame}
+        data-more-before={canScrollBack || undefined}
+        data-more-after={canScrollForward || undefined}
+      >
+        <div
+          ref={scrollRef}
+          className={styles.figureScroll}
+          tabIndex={0}
+          role="region"
+          aria-label={t('tech.figure.regionLabel', { title: label })}
+        >
+          {children}
+        </div>
+        {canScrollForward ? (
+          <span className={styles.figureHint} aria-hidden="true">
+            <MoveHorizontal size={ICON_SIZE.sm} aria-hidden focusable="false" />
+            {t('tech.figure.scrollHint')}
+          </span>
+        ) : null}
+      </div>
       {caption ? <figcaption className={styles.caption}>{caption}</figcaption> : null}
     </Card>
   );

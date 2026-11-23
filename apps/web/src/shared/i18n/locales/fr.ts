@@ -3549,7 +3549,7 @@ export const fr = {
   tech: {
     seoTitle: 'Dossier technique',
     seoDescription:
-      "Comment Movie Picker est construit : architecture, contrat d'API, tests, chaîne de livraison et méthode de travail.",
+      'Comment Movie Picker est construit : architecture, contrat d’API, tests, chaîne de livraison et méthode de travail.',
     ogImageAlt: 'Dossier technique de Movie Picker',
     railTitle: 'Sommaire',
     signature: 'Adrien Morand.',
@@ -3558,18 +3558,22 @@ export const fr = {
     hero: {
       eyebrow: 'Dossier technique',
       title: 'Comment Movie Picker est construit',
-      lead: "Movie Picker aide un groupe à choisir un film sans y passer la soirée : chacun propose, tout le monde vote, une roue tranche. Je l'ai commencé en février 2026 pour un besoin réel dans mon entourage, et ça ne devait pas dépasser le stade du petit outil. C'est devenu une plateforme, puis mon projet de fin de master, et le service est aujourd'hui en ligne, ouvert au public, maintenu par moi seul.",
+      byline: 'Par Adrien Morand, développeur backend .NET',
+      sourceLink: 'Code source sur GitHub',
+      sourceLinkAria: 'Code source sur GitHub, nouvel onglet',
+      lead: 'Movie Picker aide un groupe à choisir un film sans y passer la soirée : chacun propose, tout le monde vote, une roue tranche. Je l’ai commencé en février 2026 pour un besoin réel dans mon entourage, et ça ne devait pas dépasser le stade du petit outil. C’est devenu une plateforme, puis mon projet de fin de master, et le service est aujourd’hui en ligne, ouvert au public, maintenu par moi seul.',
       leadIntent:
-        "Il me sert aussi de bac à sable : j'y essaie des technologies et des méthodes, j'explore, je lis les documentations. Le but n'est pas d'en faire le projet d'une vie, mais d'y gagner de l'expérience et de prendre plaisir à faire vivre un produit qui évolue avec les retours de ses utilisateurs, en couvrant toute la chaîne, du besoin métier à la mise en production.",
+        'Il me sert aussi de bac à sable : j’y essaie des technologies et des méthodes, j’explore, je lis les documentations. Le but n’est pas d’en faire le projet d’une vie, mais d’y gagner de l’expérience et de prendre plaisir à faire vivre un produit qui évolue avec les retours de ses utilisateurs, en couvrant toute la chaîne, du besoin métier à la mise en production.',
       metricLines: 'lignes de code',
+      metricLinesDetail: 'dont {{share}} % de tests',
       metricLinesHint:
-        'Fichiers .ts, .tsx et .css du front plus les .cs du serveur, comptés au build et arrondis au millier.',
-      metricEndpoints: 'endpoints HTTP',
+        'Lignes non vides des fichiers .ts, .tsx et .css du front et des .cs du serveur, tests compris, sans le code généré (types du contrat d’API, ces chiffres). Comptées au build, arrondies au millier.',
+      metricEndpoints: 'routes HTTP',
       metricEndpointsHint:
         'Attributs [HttpGet], [HttpPost] et suivants, comptés dans les contrôleurs du serveur.',
       metricTests: 'tests automatisés',
       metricTestsHint:
-        'Cas de test déclarés dans le dépôt, comptés au build : {{web}} côté front et {{api}} côté serveur, répartis sur {{files}} fichiers.',
+        'Cas de test déclarés dans le dépôt, comptés au build : {{web}} côté front, {{api}} côté serveur et {{e2e}} end to end, répartis sur {{files}} fichiers. C’est la somme des trois étages de la pyramide de la section Tests.',
       metricCommits: 'commits',
       metricCommitsHint:
         'Commits de la branche principale depuis le premier jour du projet, comptés au build.',
@@ -3580,8 +3584,25 @@ export const fr = {
       metricCoverage: 'de couverture exigée',
       metricCoverageUnit: '%',
       metricCoverageHint:
-        "Part de lignes que les tests du front doivent couvrir. En dessous de ce seuil, la chaîne d'intégration échoue et rien ne part en production.",
+        'Part de lignes que les tests du front doivent couvrir. En dessous de ce seuil, la chaîne d’intégration échoue et rien ne part en production.',
       stamp: 'Document mis à jour le {{update}}, chiffres relevés au build du {{build}}',
+    },
+    summary: {
+      title: 'En une minute',
+      item1:
+        'Un produit en ligne et ouvert au public, conçu, développé et exploité seul depuis février 2026, avec un assistant IA dont le rôle est décrit en section {{method}}.',
+      item2:
+        'Un front React et TypeScript livré en fichiers statiques, une API .NET 10 en architecture hexagonale sur Cloud Run, une base MongoDB Atlas, et entre les deux un contrat OpenAPI que l’intégration continue vérifie.',
+      item3:
+        '{{tests}} tests automatisés, des tests unitaires aux parcours Playwright sur une vraie MongoDB, une couverture minimale qui bloque la livraison et SonarCloud tenu à zéro problème.',
+      item4:
+        'Rien ne part sans intégration continue verte : recette puis production, infrastructure décrite en Terraform, identités cloud sans clé, sauvegardes restaurées chaque nuit pour être vérifiées, retour arrière sans reconstruire.',
+      item5:
+        'Les choix techniques sont donnés avec leur prix quand ils en ont un, et ce qui reste à faire est nommé : la section {{trajectory}} liste les chantiers encore ouverts.',
+    },
+    figure: {
+      scrollHint: 'Faites glisser',
+      regionLabel: 'Schéma : {{title}}',
     },
     nav: {
       architecture: 'Architecture',
@@ -3603,7 +3624,7 @@ export const fr = {
       title: 'Deux applications, une frontière nette',
       lead: 'Un front statique sur CDN, une API conteneurisée, une base managée. Ce qui compte : la frontière entre les deux est un contrat, pas une habitude.',
       caption:
-        "Le trait bleu est le seul chemin entre le front et le serveur. Les flèches en pointillés vont dans le sens de l'appel.",
+        'Le trait bleu est le seul chemin entre le front et le serveur. Les flèches en pointillés vont dans le sens de l’appel.',
       structureHeading: 'Comment les deux moitiés tiennent ensemble',
       boundary: 'Frontière',
       boundaryValue:
@@ -3612,17 +3633,17 @@ export const fr = {
         'Aucun accès direct à la base depuis le navigateur : tout passe par ces routes, et le contrat sert de frontière vérifiable.',
       stateless: 'Rien qui ne vive qu’en mémoire',
       statelessValue:
-        "L'hébergeur peut lancer jusqu'à cinq instances du serveur, alors rien de ce qui doit durer ne vit dans le processus : ni session, ni minuterie, ni tâche de fond. Ce qui y vit est une copie jetable de la base : les sessions, gardées 30 secondes avant d'être relues, les fiches TMDB, et le flux en direct d'une soirée, qui relit son document chaque seconde tant qu'un participant l'écoute.",
+        'L’hébergeur peut lancer jusqu’à cinq instances du serveur, alors rien de ce qui doit durer ne vit dans le processus : ni session, ni minuterie, ni tâche de fond. Ce qui y vit est une copie jetable de la base : les sessions, gardées 30 secondes avant d’être relues, les fiches TMDB, et le flux en direct d’une soirée, qui relit son document chaque seconde tant qu’un participant l’écoute.',
       statelessHint:
         'Les clés qui signent les cookies sont rangées en base, ce qui évite de déconnecter tout le monde à chaque déploiement. Le prix de ces copies est connu : une session révoquée reste valable jusqu’à 30 secondes sur les autres instances.',
       deploys: 'Deux déploiements',
       deploysValue:
-        "Le front part sur le CDN, le serveur en image conteneurisée, et le serveur d'abord : un front publié ne parle jamais à un serveur plus ancien que lui.",
+        'Le front part sur le CDN, le serveur en image conteneurisée, et le serveur d’abord : un front publié ne parle jamais à un serveur plus ancien que lui.',
       deploysHint:
         'Deux étapes distinctes dans la chaîne : une correction de style ne redéploie pas le serveur, mais une moitié ne part seule que si l’autre n’a pas changé depuis la version servie.',
       servicesHeading: 'Les services extérieurs branchés au serveur',
       servicesNote:
-        "Aucun n'est indispensable au fonctionnement : chacun a un comportement défini quand sa clé manque ou quand il ne répond pas, et le serveur démarre sans eux.",
+        'Aucun n’est indispensable au fonctionnement : chacun a un comportement défini quand sa clé manque ou quand il ne répond pas, et le serveur démarre sans eux.',
       tmdb: 'TMDB',
       tmdbValue:
         'Métadonnées, genres et affiches. Les fiches et les affiches sont mises en cache, et une panne est retenue quelques minutes plutôt que réessayée à chaque requête.',
@@ -3632,46 +3653,46 @@ export const fr = {
       letterboxdValue:
         'Import de la watchlist et des films vus depuis le profil public. Sans API publique, la page est lue telle quelle, une fois par 24 heures et par compte : la watchlist entière, et pour les films vus la seule page que Letterboxd sert encore, complétée par le journal. L’historique complet arrive par l’import du fichier d’export de Letterboxd, lu côté serveur puis importé par lots de 50.',
       letterboxdHint:
-        "Réseau social de cinéphiles : la liste publique d'un profil est lue puis rapprochée du catalogue.",
+        'Réseau social de cinéphiles : la liste publique d’un profil est lue puis rapprochée du catalogue.',
       oauth: 'Google, GitHub',
       oauthValue:
-        "Connexion déléguée. Un fournisseur non configuré disparaît de l'écran au lieu d'échouer, et la connexion par mot de passe reste disponible.",
+        'Connexion déléguée. Un fournisseur non configuré disparaît de l’écran au lieu d’échouer, et la connexion par mot de passe reste disponible.',
       oauthHint:
-        "Délégation d'identité : le mot de passe reste chez le fournisseur, l'application ne reçoit qu'un jeton.",
+        'Délégation d’identité : le mot de passe reste chez le fournisseur, l’application ne reçoit qu’un jeton.',
       push: 'Web Push',
       pushValue:
         'Notifications navigateur, protocole VAPID. Un abonnement que le navigateur déclare expiré est effacé de la base au premier envoi qui le rencontre.',
       pushHint:
-        "VAPID signe chaque notification pour prouver au navigateur quel serveur en est à l'origine.",
+        'VAPID signe chaque notification pour prouver au navigateur quel serveur en est à l’origine.',
       email: 'Resend',
       emailValue:
         'Envoi des courriels de réinitialisation de mot de passe. Sans clé configurée, le message part dans les journaux du serveur au lieu de faire échouer le démarrage.',
       emailHint:
-        "Service d'envoi transactionnel : le courriel part par un appel d'API plutôt que par un serveur de messagerie à administrer.",
+        'Service d’envoi transactionnel : le courriel part par un appel d’API plutôt que par un serveur de messagerie à administrer.',
       kofi: 'Ko-fi',
       kofiValue:
-        "Dons. C'est Ko-fi qui appelle le serveur : l'appel porte un jeton partagé, il est limité en débit, et il est refusé si le jeton ne correspond pas.",
+        'Dons. C’est Ko-fi qui appelle le serveur : l’appel porte un jeton partagé, il est limité en débit, et il est refusé si le jeton ne correspond pas.',
       kofiHint:
         'Plateforme de dons pour créateurs ; le soutien confirmé apparaît ensuite comme un badge sur le profil.',
       scheduler: 'Cloud Scheduler',
       schedulerValue:
-        "Appelle le serveur à heure fixe : toutes les 30 minutes pour les rappels de soirée, toutes les cinq heures pour recharger le catalogue de l'accueil, chaque nuit pour les soirées récurrentes puis pour les soirées terminées, et chaque matin pour la relance de note. Les routes sont ouvertes sur internet : chaque appel porte un jeton signé par Google pour l'identité du planificateur, que le serveur vérifie, et un appel échoué est retenté trois fois.",
+        'Appelle le serveur à heure fixe : toutes les 30 minutes pour les rappels de soirée, toutes les cinq heures pour recharger le catalogue de l’accueil, chaque nuit pour les soirées récurrentes puis pour les soirées terminées, et chaque matin pour la relance de note. Les routes sont ouvertes sur internet : chaque appel porte un jeton signé par Google pour l’identité du planificateur, que le serveur vérifie, et un appel échoué est retenté trois fois.',
       schedulerHint:
-        "Planificateur de Google Cloud : il appelle une adresse à l'heure dite, ce qui remplace une minuterie vivant dans le serveur.",
+        'Planificateur de Google Cloud : il appelle une adresse à l’heure dite, ce qui remplace une minuterie vivant dans le serveur.',
       issues: 'GitHub Issues',
       issuesValue:
-        "Une suggestion envoyée dans l'app ouvre une issue, capture d'écran comprise. Sans jeton, l'envoi est ignoré et journalisé plutôt que renvoyé en erreur.",
+        'Une suggestion envoyée dans l’app ouvre une issue, capture d’écran comprise. Sans jeton, l’envoi est ignoré et journalisé plutôt que renvoyé en erreur.',
       issuesHint:
-        "Le suivi de bugs de GitHub, alimenté directement par le formulaire de suggestion de l'app.",
+        'Le suivi de bugs de GitHub, alimenté directement par le formulaire de suggestion de l’app.',
     },
     trajectory: {
-      title: '{{months}} mois, {{shipped}} paliers livrés',
-      lead: "{{commits}} commits depuis février 2026. Jusqu'à la V1.7, chaque palier est parti en production avant que le suivant ne s'ouvre ; depuis, chaque amélioration part seule. Les {{planned}} derniers repères sont la suite prévue, pas du travail fait.",
+      title: '{{months}} mois, {{shipped}} étapes livrées',
+      lead: '{{commits}} commits depuis février 2026. Jusqu’à la V1.7, chaque palier est parti en production avant que le suivant ne s’ouvre ; depuis, chaque amélioration part seule. Les {{planned}} derniers repères sont la suite prévue, pas du travail fait.',
       plannedBadge: 'à venir',
       currentBadge: 'en cours',
       unplannedSpan: 'Le backlog',
       unplannedDetail:
-        "Une trentaine d'idées rangées par thème, sans date ni numéro de version. Chacune se tire quand un retour d'usage la justifie.",
+        'Une trentaine d’idées rangées par thème, sans date ni numéro de version. Chacune se tire quand un retour d’usage la justifie.',
       techHeading: 'Les chantiers techniques ouverts',
       sharedCache: 'Cache partagé entre instances',
       sharedCacheHint:
@@ -3684,14 +3705,14 @@ export const fr = {
         'Tout le reste est sans clé ; le jeton qui envoie les source maps à Sentry est encore un secret de dépôt, à ranger derrière un environnement.',
       scopedAccess: 'Trois accès plus larges que leur usage',
       scopedAccessHint:
-        "Le jeton GitHub que le serveur utilise pour ouvrir les issues, l'utilisateur de base que l'API et la sauvegarde partagent, et le droit de publication de la recette, que l'hébergement ne sait pas borner à un site, dépassent ce qu'ils servent. Les trois corrections passent par une console et sont écrites pas à pas.",
+        'Le jeton GitHub que le serveur utilise pour ouvrir les issues, l’utilisateur de base que l’API et la sauvegarde partagent, et le droit de publication de la recette, que l’hébergement ne sait pas borner à un site, dépassent ce qu’ils servent. Les trois corrections passent par une console et sont écrites pas à pas.',
       techLead: 'Ce qui n’est pas fait, et qui est nommé plutôt que passé sous silence.',
       mvpWhen: 'Février 2026',
       mvpWhat: 'MVP',
       mvpDetail:
-        "Le parcours entier d'une soirée, du lien de partage au film tiré. La chaîne de déploiement existe avant la première fonctionnalité.",
+        'Le parcours entier d’une soirée, du lien de partage au film tiré. La chaîne de déploiement existe avant la première fonctionnalité.',
       mvpHint:
-        "L'objectif était de valider le parcours, pas la technique : la production existe dès les premiers jours.",
+        'L’objectif était de valider le parcours, pas la technique : la production existe dès les premiers jours.',
       mvpItem1: 'Créer une soirée',
       mvpItem2: 'Proposer et voter',
       mvpItem3: 'Tirage à la roue',
@@ -3714,7 +3735,7 @@ export const fr = {
       v1Hint:
         'Premier palier où une machine, et non une relecture, décide si le code atteint la production.',
       v1Item1: 'Comptes et mot de passe oublié',
-      v1Item2: "Réglages de soirée par l'hôte",
+      v1Item2: 'Réglages de soirée par l’hôte',
       v1Item3: 'Marqueur déjà vu',
       v1Item4: 'Disponibilité streaming',
       v1Item5: 'Thème sombre',
@@ -3723,7 +3744,7 @@ export const fr = {
       v11When: 'Mai 2026',
       v11What: 'V1.1',
       v11Detail:
-        "Fiches films enrichies, ouverture directe vers les plateformes, et les premières notifications hors de l'onglet.",
+        'Fiches films enrichies, ouverture directe vers les plateformes, et les premières notifications hors de l’onglet.',
       v11Hint:
         'Palier de confort : peu de structure nouvelle, beaucoup de valeur perçue côté utilisateur.',
       v11Item1: 'Note, durée, bande-annonce',
@@ -3736,7 +3757,7 @@ export const fr = {
       v12What: 'V1.2',
       v12Detail:
         'La dimension sociale arrive, et avec elle le consentement : aucun script tiers ne se charge avant un choix explicite.',
-      v12Hint: "Le bandeau de consentement est posé avant l'analytics, jamais l'inverse.",
+      v12Hint: 'Le bandeau de consentement est posé avant l’analytics, jamais l’inverse.',
       v12Item1: 'Profils publics',
       v12Item2: 'Abonnements entre membres',
       v12Item3: 'Notifications in-app',
@@ -3746,7 +3767,7 @@ export const fr = {
       v13When: 'Juin à juillet 2026',
       v13What: 'V1.3',
       v13Detail:
-        "La roue devient une vraie roue, le compte devient exportable et supprimable, et l'accessibilité est auditée écran par écran.",
+        'La roue devient une vraie roue, le compte devient exportable et supprimable, et l’accessibilité est auditée écran par écran.',
       v13Hint:
         'Palier réglementaire : le produit devient ouvrable à des tiers sans dette juridique.',
       v13Item1: 'Roue animée',
@@ -3759,7 +3780,7 @@ export const fr = {
       v14When: 'Août 2026',
       v14What: 'V1.4',
       v14Detail:
-        "Le produit s'ouvre sur l'extérieur : identités déléguées, bibliothèque personnelle et données importées d'un service tiers.",
+        'Le produit s’ouvre sur l’extérieur : identités déléguées, bibliothèque personnelle et données importées d’un service tiers.',
       v14Hint:
         'Le plus gros palier en volume : cinq surfaces produit nouvelles et trois intégrations externes.',
       v14Item1: 'Watchlist personnelle',
@@ -3772,9 +3793,9 @@ export const fr = {
       v15When: 'Septembre 2026',
       v15What: 'V1.5',
       v15Detail:
-        "Les valeurs d'interface deviennent un jeu fermé vérifié par script, et la racine du site redevient une page publique.",
+        'Les valeurs d’interface deviennent un jeu fermé vérifié par script, et la racine du site redevient une page publique.',
       v15Hint:
-        "Les règles d'interface passent du document au script : une valeur en dur fait échouer la construction.",
+        'Les règles d’interface passent du document au script : une valeur en dur fait échouer la construction.',
       v15Item1: 'Jetons de design fermés',
       v15Item2: 'Contrôle automatique du CSS',
       v15Item3: 'Primitives partagées',
@@ -3786,81 +3807,96 @@ export const fr = {
         'La boucle sociale ouverte en V1.2 se referme et la soirée devient un rituel : elle se répète, se rejoue depuis un modèle et peut couronner plusieurs films.',
       v16Hint:
         'Le mode tournoi a quitté ce palier pour le backlog : son coût dépassait à lui seul celui des cinq autres items réunis.',
-      v16Item1: "Recherche d'utilisateurs",
+      v16Item1: 'Recherche d’utilisateurs',
       v16Item2: 'Soirées récurrentes',
       v16Item3: 'Modèles de soirée',
       v16Item4: 'Plusieurs gagnants',
       v16Item5: 'Plage de votes réglable',
-      v16Item6: "Watchlist d'un autre compte",
+      v16Item6: 'Watchlist d’un autre compte',
       v17When: 'Novembre 2026',
       v17What: 'V1.7',
       v17Detail:
         'La boucle se ferme après la soirée : chacun note le film vu, le recap se partage et ramène de nouveaux hôtes, et le profil se personnalise.',
       v17Hint:
-        "La note et le partage étaient les deux maillons du parcours où l'application ne faisait encore rien, et le partage est le seul qui ramène du monde de l'extérieur.",
-      v17Item1: "Note d'un film vu",
+        'La note et le partage étaient les deux maillons du parcours où l’application ne faisait encore rien, et le partage est le seul qui ramène du monde de l’extérieur.',
+      v17Item1: 'Note d’un film vu',
       v17Item2: 'Relance du lendemain',
       v17Item3: 'Page recap publique',
       v17Item4: 'Partage en story',
       v17Item5: 'Top 3 films préférés',
       v17Item6: 'Photo de profil',
       v17Item7: 'Pioche dans la watchlist',
+      since17When: 'Novembre 2026',
+      since17What: 'Après la V1.7',
+      since17Detail:
+        'Une quarantaine de versions livrées une à une : la soirée se suit en direct, les listes se multiplient et se partagent, les amis se retrouvent en groupes qui ont leur classement, et une seule recherche couvre tout le site.',
+      since17Hint:
+        'Livrées en flux continu, chacune avec son numéro de version ; le journal des versions, en pied de page, les détaille une à une.',
+      since17Item1: 'Une page par film',
+      since17Item2: 'Soirée en direct',
+      since17Item3: 'Mes listes',
+      since17Item4: 'Groupes d’amis',
+      since17Item5: 'Classement d’un groupe',
+      since17Item6: 'Statistiques du profil',
+      since17Item7: 'Recherche globale',
       flowWhen: 'Depuis novembre 2026',
       flowWhat: 'Flux continu',
       flowDetail:
         'Plus de palier : chaque amélioration part en production le jour où elle est prête, avec son propre numéro de version, calculé à partir du journal des changements.',
       flowHint:
-        "La version n'est plus une promesse de contenu mais la trace de ce qui est vraiment en ligne : le tag et la release ne naissent qu'au déploiement en production.",
+        'La version n’est plus une promesse de contenu mais la trace de ce qui est vraiment en ligne : le tag et la release ne naissent qu’au déploiement en production.',
       flowItem1: 'Une version par livraison',
       flowItem2: 'Tag et release à la mise en ligne',
       flowItem3: 'Journal des versions',
       nextWhen: 'Ensuite',
       nextWhat: 'Prochainement',
       nextDetail:
-        "Les entrées en tête du backlog, prises dans l'ordre. L'ordre suit l'usage mesuré : ce qui fait entrer du monde dans une soirée passe avant les nouvelles surfaces.",
+        'Les entrées en tête du backlog, prises dans l’ordre. L’ordre suit l’usage mesuré : ce qui fait entrer du monde dans une soirée passe avant les nouvelles surfaces.',
       nextHint:
-        "L'usage se mesure depuis la 1.16.0 : chaque entrée se juge ensuite sur ce qu'elle change dans les chiffres.",
+        'L’usage se mesure depuis la 1.16.0 : chaque entrée se juge ensuite sur ce qu’elle change dans les chiffres.',
       nextItem1: 'Plateformes de streaming par compte',
       nextItem2: 'Déjà vu automatique en soirée',
       nextItem3: 'Une liste en vitrine sur le profil',
-      nextItem4: "Cadres d'avatar à débloquer",
+      nextItem4: 'Cadres d’avatar à débloquer',
+      nextItem5: 'Sondage de disponibilité dans un groupe',
+      nextItem6: 'Une liste pour chaque groupe',
       v2When: 'Sans date annoncée',
       v2What: 'V2',
       v2Detail:
         'Une application mobile native, pleinement intégrée à la plateforme. Le prototype de cours a été archivé plutôt que rafistolé.',
       v2Hint:
-        "Aucune date annoncée : elle se décidera sur l'usage de la version web, pas sur un calendrier.",
+        'Aucune date annoncée : elle se décidera sur l’usage de la version web, pas sur un calendrier.',
       v2Item1: 'Application native',
       v2Item2: 'Notifications système',
       v2Item3: 'Parcours complet hors navigateur',
     },
     ui: {
       title: 'Découpé par usage, pas par type de fichier',
-      lead: "{{features}} domaines dont les dépendances entre eux sont déclarées dans une table, un socle partagé qui n'en connaît aucun, et une couche d'application au-dessus qui assemble les pages. Vérifié mécaniquement : le socle est une feuille du graphe, une arête absente de la table ou un cycle font échouer la construction.",
+      lead: '{{features}} domaines dont les dépendances entre eux sont déclarées dans une table, un socle partagé qui n’en connaît aucun, et une couche d’application au-dessus qui assemble les pages. Vérifié mécaniquement : le socle est une feuille du graphe, une arête absente de la table ou un cycle font échouer la construction.',
       design: 'Design',
       designValue:
         'Jetons fermés : aucune valeur littérale acceptée en CSS, et tout état de survol confiné aux appareils qui en ont un.',
       designHint:
-        "Un jeton est une variable CSS unique pour une couleur, un espacement ou une taille de texte. Un survol laissé libre reste collé après un appui sur mobile, d'où la condition.",
+        'Un jeton est une variable CSS unique pour une couleur, un espacement ou une taille de texte. Un survol laissé libre reste collé après un appui sur mobile, d’où la condition.',
       data: 'Données serveur',
       dataValue:
-        "Un cache client tient les réponses de l'API. Une écriture invalide les vues concernées au lieu de recharger la page.",
+        'Un cache client tient les réponses de l’API. Une écriture invalide les vues concernées au lieu de recharger la page.',
       dataHint:
-        "TanStack Query range chaque réponse sous une clé, sert le cache pendant qu'il rafraîchit en arrière-plan, et expose les états de chargement et d'erreur au composant.",
+        'TanStack Query range chaque réponse sous une clé, sert le cache pendant qu’il rafraîchit en arrière-plan, et expose les états de chargement et d’erreur au composant.',
       loading: 'Chargement à la demande',
       loadingValue:
         '{{routes}} écrans téléchargés seulement quand on y va, et les dépendances rangées à part du code applicatif.',
       loadingHint:
-        "Le premier écran n'emporte pas le reste de l'application, et les paquets de dépendances restent en cache du navigateur d'une version à la suivante.",
+        'Le premier écran n’emporte pas le reste de l’application, et les paquets de dépendances restent en cache du navigateur d’une version à la suivante.',
       offline: 'Hors ligne',
       offlineValue:
         'Installable, coquille et vitrine en cache ; la dernière soirée ouverte reste lisible et ses votes attendent le réseau.',
       offlineHint:
-        "Le service worker garde la coquille de l'app et la vitrine du catalogue pour démarrer vite ; la dernière soirée ouverte est gardée sur l'appareil, et un vote fait sans réseau part tout seul au retour de la connexion.",
+        'Le service worker garde la coquille de l’app et la vitrine du catalogue pour démarrer vite ; la dernière soirée ouverte est gardée sur l’appareil, et un vote fait sans réseau part tout seul au retour de la connexion.',
       languages: 'Langues',
       languagesValue: 'Français et anglais, bascule sans rechargement.',
       languagesHint:
-        "Les textes viennent d'un dictionnaire par langue, vérifié à la compilation contre les clés du français.",
+        'Les textes viennent d’un dictionnaire par langue, vérifié à la compilation contre les clés du français.',
       a11y: 'Accessibilité',
       a11yValue: 'Audit automatisé sur {{views}} vues à chaque exécution des tests.',
       a11yHint:
@@ -3868,7 +3904,7 @@ export const fr = {
     },
     server: {
       title: 'Le métier ne connaît ni la base ni le web',
-      lead: "Quatre couches, une seule règle : tout pointe vers l'intérieur. Vérifiée à chaque exécution de la CI, pas seulement écrite.",
+      lead: 'Quatre couches, une seule règle : tout pointe vers l’intérieur. Vérifiée à chaque exécution de la CI, pas seulement écrite.',
       caption:
         '{{ports}} ports, {{repositories}} dépôts implémentés deux fois : en mémoire et sur MongoDB.',
       noteLead: 'Ce qui tient la frontière',
@@ -3877,7 +3913,7 @@ export const fr = {
         'Les mêmes {{useCases}} cas d’usage servent les tests unitaires et la production : ce qui change, c’est l’implémentation branchée derrière les ports.',
       rules: 'Cloisons vérifiées',
       rulesValue:
-        "Le domaine ne peut importer que System et lui-même. L'application ignore MongoDB, le framework web et l'infrastructure. Un contrôleur ne touche jamais la persistance.",
+        'Le domaine ne peut importer que System et lui-même. L’application ignore MongoDB, le framework web et l’infrastructure. Un contrôleur ne touche jamais la persistance.',
       rulesHint:
         'Ce ne sont pas des consignes : le contrôle lit les using de chaque fichier, repère aussi les types du web que le SDK importe sans using écrit, et fait échouer la construction au premier écart.',
       versioning: 'La version en un seul endroit',
@@ -3887,29 +3923,29 @@ export const fr = {
         'Une route qui écrirait son préfixe à la main pourrait diverger du contrat sans que rien ne le signale.',
       health: 'Deux sondes de santé',
       healthValue:
-        "/health répond aussitôt qu'un processus est vivant. /health/ready interroge la base et renvoie 503 si elle ne répond pas, avec la durée mesurée et la version déployée.",
+        '/health répond aussitôt qu’un processus est vivant. /health/ready interroge la base et renvoie 503 si elle ne répond pas, avec la durée mesurée et la version déployée.',
       healthHint:
-        "L'hébergeur distingue ainsi une instance qui démarre d'une instance qui ne peut pas servir.",
+        'L’hébergeur distingue ainsi une instance qui démarre d’une instance qui ne peut pas servir.',
     },
     contract: {
       title: 'La frontière est un fichier, pas une convention',
-      lead: "Le contrat OpenAPI est exporté depuis le serveur à chaque construction et décrit le JSON qu'il écrit vraiment. Le front en tire la liste des routes qu'il peut appeler, garde ses propres types de réponse, et un test au niveau des types vérifie qu'ils ne lisent aucun champ absent du contrat.",
+      lead: 'Le contrat OpenAPI est exporté depuis le serveur à chaque construction et décrit le JSON qu’il écrit vraiment. Le front en tire la liste des routes qu’il peut appeler, garde ses propres types de réponse, et un test au niveau des types vérifie qu’ils ne lisent aucun champ absent du contrat.',
       export: 'Export du contrat',
       exportValue:
-        "Le serveur sérialise son OpenAPI depuis les contrôleurs, avec les règles qu'il applique : une propriété qui n'est jamais nulle est requise, une erreur a la forme de l'enveloppe réellement renvoyée, une chaîne aux valeurs fermées devient une énumération.",
+        'Le serveur sérialise son OpenAPI depuis les contrôleurs, avec les règles qu’il applique : une propriété qui n’est jamais nulle est requise, une erreur a la forme de l’enveloppe réellement renvoyée, une chaîne aux valeurs fermées devient une énumération.',
       exportHint:
-        "Le script openapi:sync démarre l'application, écrit le contrat dans artifacts/openapi-v1.json puis régénère les types du front : les deux fichiers changent dans le même commit que le serveur.",
+        'Le script openapi:sync démarre l’application, écrit le contrat dans artifacts/openapi-v1.json puis régénère les types du front : les deux fichiers changent dans le même commit que le serveur.',
       types: 'Types du front confrontés',
       typesValue:
-        "Le front garde ses propres types de réponse, écrits pour son usage. Un test les confronte au contrat et refuse de compiler si l'un d'eux lit un champ que le serveur n'expose pas.",
+        'Le front garde ses propres types de réponse, écrits pour son usage. Un test les confronte au contrat et refuse de compiler si l’un d’eux lit un champ que le serveur n’expose pas.',
       typesHint:
         'openapi-typescript produit openapiSchema.ts. Le code applicatif n’en tire que la liste des routes ; les réponses simulées des tests en tirent leur type, si bien qu’un champ renommé côté serveur casse leur compilation.',
       drift: 'Détection de dérive',
       driftValue:
         'La CI régénère les types et échoue si le fichier versionné ne correspond plus au contrat exporté.',
       driftHint:
-        'openapi:types:check compare la sortie fraîche au fichier commité. Un second script, lancé à la main, compare le contrat de la dernière version publiée à celui du commit et refuse une route ou une propriété disparue : le front d’avant tourne encore quelques jours dans les navigateurs.',
-      note: "Deux filets de portée différente. Le premier est complet : toute route que le front appelle doit figurer parmi les {{routes}} chemins du contrat, sinon la compilation échoue. Le second va plus loin mais couvre moins : il confronte champ par champ les {{checked}} types que le front écrit lui-même, réponses et corps de requête, à un contrat qui décrit {{total}} réponses ; les autres, le front les lit sans leur donner de nom, ou ne les lit pas, comme les sondes de santé. Dans l'autre sens, les adresses du front que le serveur écrit dans un courriel ou une notification viennent d'une seule table, qu'un test du front compare à la sienne.",
+        'openapi:types:check compare la sortie fraîche au fichier commité. Un second script, joué avant chaque push et en intégration continue, compare le contrat de la dernière version publiée à celui du commit et refuse une route ou une propriété disparue : le front d’avant tourne encore quelques jours dans les navigateurs.',
+      note: 'Deux filets de portée différente. Le premier est complet : toute route que le front appelle doit figurer parmi les {{routes}} chemins du contrat, sinon la compilation échoue. Le second va plus loin mais couvre moins : il confronte champ par champ les {{checked}} types que le front écrit lui-même, réponses et corps de requête, à un contrat qui décrit {{total}} réponses ; les autres, le front les lit sans leur donner de nom, ou ne les lit pas, comme les sondes de santé. Dans l’autre sens, les adresses du front que le serveur écrit dans un courriel ou une notification viennent d’une seule table, qu’un test du front compare à la sienne.',
     },
     data: {
       title: 'Neuf collections au cœur, et des écritures tout ou rien',
@@ -3917,12 +3953,12 @@ export const fr = {
       modelCaption:
         'Les traits sont les identifiants qui relient les documents. Users et Events sont encadrés parce que tout le reste s’y rattache : chaque autre document porte l’un ou l’autre.',
       caption:
-        "Supprimer un compte touche douze collections dans une seule transaction, dont deux anonymisées plutôt que vidées : aucun état intermédiaire n'est observable. Les sessions du compte sont révoquées juste après.",
+        'Supprimer un compte touche douze collections dans une seule transaction, dont deux anonymisées plutôt que vidées : aucun état intermédiaire n’est observable. Les sessions du compte sont révoquées juste après.',
       atomicity: 'Atomicité',
       atomicityValue:
-        "Toute écriture groupée passe par une unité de travail, et ne peut pas s'arrêter à mi-chemin.",
+        'Toute écriture groupée passe par une unité de travail, et ne peut pas s’arrêter à mi-chemin.',
       atomicityHint:
-        "Une transaction regroupe plusieurs écritures : soit toutes aboutissent, soit aucune. Les soirées créées et les participations restent, l'identité en moins, pour ne pas amputer les données des autres participants.",
+        'Une transaction regroupe plusieurs écritures : soit toutes aboutissent, soit aucune. Les soirées créées et les participations restent, l’identité en moins, pour ne pas amputer les données des autres participants.',
       uniqueness: 'Unicité',
       uniquenessValue:
         '{{unique}} index uniques refusent les doublons dans le moteur : un e-mail, un pseudo, un lien de soirée, un vote par participant et par film.',
@@ -3937,22 +3973,22 @@ export const fr = {
       inventoryValue:
         'Un test compare les {{indexes}} index réellement créés à une liste attendue : nom, unicité et expiration. En ajouter un sans le déclarer casse la construction.',
       inventoryHint:
-        "Trois garanties ne tiennent qu'à ces index : l'expiration des sessions, celle des jetons de réinitialisation et celle des compteurs de limitation de débit.",
+        'Trois garanties ne tiennent qu’à ces index : l’expiration des sessions, celle des jetons de réinitialisation et celle des compteurs de limitation de débit.',
       migrations: 'Migrations',
       migrationsValue:
         'Datée, idempotente, appliquée une fois au démarrage puis consignée. {{migrations}} en production.',
       migrationsHint:
-        "Idempotente veut dire qu'une deuxième exécution ne change plus rien au résultat de la première. Une migration se retire quand plus aucune sauvegarde restaurable ne la précède, sinon une restauration ramènerait des données qu'elle ne corrigerait plus.",
+        'Idempotente veut dire qu’une deuxième exécution ne change plus rien au résultat de la première. Une migration se retire quand plus aucune sauvegarde restaurable ne la précède, sinon une restauration ramènerait des données qu’elle ne corrigerait plus.',
       isolation: 'Isolation',
       isolationValue:
         'Bases dev et prod séparées, avec refus de démarrer si un environnement vise la mauvaise.',
       isolationHint:
-        "Le garde-fou compare le nom de la base à l'environnement et refuse de démarrer en cas de mélange.",
+        'Le garde-fou compare le nom de la base à l’environnement et refuse de démarrer en cas de mélange.',
       posters: 'Affiches',
       postersValue:
         'Récupérées une fois puis servies depuis le serveur. Chaque consultation repousse leur expiration ; sans accès pendant {{days}} jours, elles sortent du cache.',
       postersHint:
-        "Les images sont copiées côté serveur : un changement d'URL chez le fournisseur ne casse plus l'affichage.",
+        'Les images sont copiées côté serveur : un changement d’URL chez le fournisseur ne casse plus l’affichage.',
     },
     tests: {
       title: '{{tests}} tests automatisés, et une couverture qui bloque',
@@ -3962,16 +3998,16 @@ export const fr = {
       unit: 'Tests unitaires',
       unitValue: '{{count}} cas, sans base ni réseau, sur les doublures en mémoire.',
       unitHint:
-        "Ils couvrent le domaine, les cas d'usage et les composants d'interface isolés de leurs dépendances.",
-      integration: "Tests d'intégration",
+        'Ils couvrent le domaine, les cas d’usage et les composants d’interface isolés de leurs dépendances.',
+      integration: 'Tests d’intégration',
       integrationValue: '{{count}} cas rejoués contre une vraie MongoDB, transactions comprises.',
       integrationHint:
-        "C'est le seul chemin qui exécute réellement les adaptateurs Mongo et les transactions ; la CI le joue juste après les tests unitaires du serveur, et la base en mémoire n'y remplace jamais la vraie.",
+        'C’est le seul chemin qui exécute réellement les adaptateurs Mongo et les transactions ; la CI le joue juste après les tests unitaires du serveur, et la base en mémoire n’y remplace jamais la vraie.',
       e2e: 'Tests end to end',
       e2eValue:
         '{{count}} cas Playwright qui pilotent Chromium contre le front compilé et le serveur démarré.',
       e2eHint:
-        "Le serveur y parle à une vraie MongoDB en replica set, comme en production, et seuls les services tiers sont bouchonnés : le parcours est vrai, l'environnement reste déterministe.",
+        'Le serveur y parle à une vraie MongoDB en replica set, comme en production, et seuls les services tiers sont bouchonnés : le parcours est vrai, l’environnement reste déterministe.',
       howHeading: 'Comment ils sont écrits',
       doubles: 'Doublures en mémoire',
       doublesValue:
@@ -3992,7 +4028,7 @@ export const fr = {
       stubsValue:
         'TMDB et Letterboxd sont remplacés par des bouchons que deux variables d’environnement activent.',
       stubsHint:
-        "Sans cela, la suite dépendrait de la disponibilité et des quotas de deux sites externes. L'envoi d'e-mail et les issues GitHub, eux, tombent sur leur repli faute de clé configurée.",
+        'Sans cela, la suite dépendrait de la disponibilité et des quotas de deux sites externes. L’envoi d’e-mail et les issues GitHub, eux, tombent sur leur repli faute de clé configurée.',
       first: 'Le test avant le code',
       firstValue:
         'Fonctionnalité comme correctif : le test qui décrit le comportement attendu est écrit et échoue avant l’implémentation.',
@@ -4002,17 +4038,17 @@ export const fr = {
       networkValue:
         '{{files}} fichiers de test montent un serveur HTTP simulé et répondent aux vraies requêtes des écrans, sans jamais sortir sur le réseau.',
       networkHint:
-        "Les composants appellent l'API normalement : c'est la couche réseau qui est interceptée, pas le code de l'application. Les réponses simulées des nouveaux tests sont typées sur le contrat d'API.",
+        'Les composants appellent l’API normalement : c’est la couche réseau qui est interceptée, pas le code de l’application. Les réponses simulées des nouveaux tests sont typées sur le contrat d’API.',
     },
     ci: {
-      title: '{{jobs}} checks de CI avant la production',
-      lead: "Deux chaînes. Les portes tournent sur chaque commit de master et de chaque demande de fusion ; le déploiement se lance à la main, recette d'abord, et ne part que si elles sont toutes vertes sur ce commit.",
+      title: '{{jobs}} étapes automatisées avant la production',
+      lead: 'Deux chaînes. Les contrôles tournent sur chaque commit de master et de chaque demande de fusion ; le déploiement se lance sur commande, recette d’abord, et ne part que s’ils sont tous verts sur ce commit.',
       caption:
-        "En haut, sur une demande de fusion, le filtre de périmètre décide quelles colonnes tournent ; sur master, toutes tournent, et gitleaks comme lint workflows lui échappent toujours. sonar n'attend que la suite front : il construit et teste lui-même le serveur. En bas, la chaîne de déploiement exige une CI verte sur le commit, refuse de ne livrer qu'une moitié, et la production reprend l'image que la recette sert. Le dernier maillon vérifie que chaque cible est partie, pas seulement que rien n'a échoué.",
+        'En haut, sur une demande de fusion, le filtre de périmètre décide quelles colonnes tournent ; sur master, toutes tournent, et gitleaks comme lint workflows lui échappent toujours. sonar n’attend que la suite front : il construit et teste lui-même le serveur. En bas, la chaîne de déploiement exige une CI verte sur le commit, refuse de ne livrer qu’une moitié, et la production reprend l’image que la recette sert. Le dernier maillon vérifie que chaque cible est partie, pas seulement que rien n’a échoué.',
       pipelineHeading: 'Ce qui tient la chaîne',
       trigger: 'Déclenchement',
       triggerValue:
-        "Toute poussée sur master et toute demande de fusion vers master lancent la chaîne, et il n'y a aucune autre branche durable : chaque livraison part d'une branche courte, rejoint master le jour où elle est prête et part en production dans la foulée, avec sa propre version.",
+        'Toute poussée sur master et toute demande de fusion vers master lancent la chaîne. Le code n’a pas d’autre branche durable : chaque livraison part d’une branche courte, rejoint master le jour où elle est prête et part en production dans la journée, avec sa propre version. La seule autre branche, feedback-attachments, ne contient pas de code : le serveur y range les captures d’écran jointes aux suggestions.',
       triggerHint:
         'Une poussée ne déclenche la chaîne que sur master : une branche courte n’est jouée que par sa demande de fusion, robot de dépendances compris, pour ne pas lancer deux fois la chaîne sur le même commit.',
       scope: 'Périmètre calculé',
@@ -4022,41 +4058,41 @@ export const fr = {
         'Le filtre garde courtes les demandes de fusion. Sur master il est levé : un commit de documentation posé après un commit rouge donnait une chaîne verte par vacuité, que le déploiement aurait acceptée.',
       secrets: 'Recherche de secrets',
       secretsValue:
-        "Un balayage cherche clés et jetons dans l'arbre de travail à chaque exécution, sans filtre de périmètre. Une correspondance rend la chaîne rouge, donc interdit tout déploiement.",
+        'Un balayage cherche clés et jetons dans l’arbre de travail à chaque exécution, sans filtre de périmètre. Une correspondance rend la chaîne rouge, donc interdit tout déploiement.',
       secretsHint:
         'Le même script tourne sur le poste dans la vérification complète ; la plateforme refuse en plus un push qui contiendrait une clé reconnue.',
       image: 'Image étiquetée',
       imageValue:
-        "Le serveur part en image conteneurisée, étiquetée par l'empreinte du commit et poussée dans le registre par la mise en recette ; la production reprend cette image telle quelle, rescannée mais jamais reconstruite.",
+        'Le serveur part en image conteneurisée, étiquetée par l’empreinte du commit et poussée dans le registre par la mise en recette ; la production reprend cette image telle quelle, rescannée mais jamais reconstruite.',
       imageHint:
-        "Le déploiement pointe une image précise plutôt qu'une étiquette mouvante : revenir en arrière consiste à repointer la précédente.",
+        'Le déploiement pointe une image précise plutôt qu’une étiquette mouvante : revenir en arrière consiste à repointer la précédente.',
       guard: 'Garde-fou de déploiement',
       guardValue:
-        "Un premier contrôle refuse de ne livrer qu'une moitié quand l'autre a changé depuis la version servie. Un dernier job compare ce qui a été demandé au résultat de chaque déploiement et échoue si une cible n'est pas partie, en recette comme en production.",
+        'Un premier contrôle refuse de ne livrer qu’une moitié quand l’autre a changé depuis la version servie. Un dernier job compare ce qui a été demandé au résultat de chaque déploiement et échoue si une cible n’est pas partie, en recette comme en production.',
       guardHint:
-        "Les deux existent parce que le cas s'est produit : des jobs sautés ont laissé la chaîne verte alors que la production était à moitié à jour, un job sauté n'étant pas un job en échec, et un front livré seul a servi un matin des fiches sans année ni note, sur un serveur resté en arrière.",
+        'Les deux existent parce que le cas s’est produit : des jobs sautés ont laissé la chaîne verte alors que la production était à moitié à jour, un job sauté n’étant pas un job en échec, et un front livré seul a servi un matin des fiches sans année ni note, sur un serveur resté en arrière.',
       caches: 'Chaîne mise en cache',
       cachesValue:
-        "Dépendances npm et NuGet, tâches Turbo et cache de l'analyse Sonar sont conservés d'une exécution à l'autre. La construction de l'image et la base de vulnérabilités, elles, n'y touchent jamais.",
+        'Dépendances npm et NuGet, tâches Turbo et cache de l’analyse Sonar sont conservés d’une exécution à l’autre. La construction de l’image et la base de vulnérabilités, elles, n’y touchent jamais.',
       cachesHint:
-        "Un cache que les jobs qui exécutent le code des dépendances peuvent écrire aveuglerait le scan qui le relit. Chaque job porte aussi un délai maximal, pour qu'une étape bloquée ne retienne pas la chaîne indéfiniment.",
+        'Un cache que les jobs qui exécutent le code des dépendances peuvent écrire aveuglerait le scan qui le relit. Chaque job porte aussi un délai maximal, pour qu’une étape bloquée ne retienne pas la chaîne indéfiniment.',
       otherPipelines: 'Quatre autres chaînes, hors du graphe principal',
       rollback: 'retour arrière',
       rollbackHint:
-        'Déclenchable à la main, une chaîne pour le serveur et une pour le front : la révision ou la version publiée précédente reprend le trafic, sans rien reconstruire.',
+        'Déclenchable sur commande, une chaîne pour le serveur et une pour le front : la révision ou la version publiée précédente reprend le trafic, sans rien reconstruire.',
       terraform: 'infrastructure',
       terraformHint:
-        "Planifie un changement de l'infrastructure sur sa pull request. Sur master, deux plans en lecture seule précèdent l'application, qu'un relecteur doit approuver, et seulement si une ressource change. Chaque lundi, le même plan rejoué passe au rouge si l'infrastructure a bougé hors du dépôt.",
+        'Planifie un changement de l’infrastructure sur sa pull request. Sur master, deux plans en lecture seule précèdent l’application, qu’un relecteur doit approuver, et seulement si une ressource change. Chaque lundi, le même plan rejoué passe au rouge si l’infrastructure a bougé hors du dépôt.',
       backup: 'sauvegarde',
       backupHint:
-        "Chaque nuit, un export de la base part dans un bucket privé, relu et restauré sur le runner avant d'être retenu ; trente jours de rétention, 400 pour une copie mensuelle, et une alerte si aucune archive n'est arrivée depuis 36 heures, parce qu'une chaîne planifiée que la plateforme désactive en silence n'échoue jamais.",
+        'Chaque nuit, un export de la base part dans un bucket privé, relu et restauré sur le runner avant d’être retenu ; trente jours de rétention, 400 pour une copie mensuelle, et une alerte si aucune archive n’est arrivée depuis 36 heures, parce qu’une chaîne planifiée que la plateforme désactive en silence n’échoue jamais.',
       securityScan: 'analyse de sécurité',
       securityScanHint:
-        "Chaque lundi, indépendante des envois de code, pour attraper les failles publiées après coup : les verrous de dépendances, l'image de base que la production exécute et la description Terraform.",
+        'Chaque lundi, indépendante des envois de code, pour attraper les failles publiées après coup : les verrous de dépendances, l’image de base que la production exécute et la description Terraform.',
     },
     production: {
       title: 'Ce qui protège la production',
-      lead: "Chaque garde-fou est rattaché à un mécanisme précis plutôt qu'à une intention.",
+      lead: 'Chaque garde-fou est rattaché à un mécanisme précis plutôt qu’à une intention.',
       passwords: 'Mots de passe',
       passwordsValue:
         'Jamais stockés, seulement leur empreinte salée issue d’une dérivation à itérations. Un format devenu obsolète est réencodé à la connexion suivante.',
@@ -4064,28 +4100,28 @@ export const fr = {
         'Le sel rend deux mots de passe identiques indiscernables en base, et les itérations rendent une attaque par force brute coûteuse.',
       dependencies: 'Dépendances',
       dependenciesValue:
-        "Audit npm et NuGet à chaque envoi : une faille haute ou critique arrête la chaîne. L'image est scannée avant publication, puis chaque semaine sur les couches de base que la production exécute ; les mises à jour sont automatisées.",
+        'Audit npm et NuGet à chaque envoi : une faille haute ou critique arrête la chaîne. L’image est scannée avant publication, puis chaque semaine sur les couches de base que la production exécute ; les mises à jour sont automatisées.',
       dependenciesHint:
-        "Une CVE est une faille publiée avec un identifiant public ; l'image est scannée avant publication.",
+        'Une CVE est une faille publiée avec un identifiant public ; l’image est scannée avant publication.',
       browser: 'Navigateur',
       browserValue: 'Politique de sécurité du contenu, en-têtes de protection, origines déclarées.',
       browserHint:
         'La politique de sécurité du contenu liste les origines autorisées et bloque tout le reste.',
       sessions: 'Sessions',
       sessionsValue:
-        "Clés de signature persistées en base, pour qu'un déploiement ne déconnecte personne.",
+        'Clés de signature persistées en base, pour qu’un déploiement ne déconnecte personne.',
       sessionsHint:
         'Sans clés persistées, chaque déploiement changerait la signature des cookies et déconnecterait tout le monde.',
       abuse: 'Abus',
       abuseValue:
         '{{policies}} politiques de limitation de débit, une par famille de routes sensibles.',
       abuseHint:
-        "La limitation plafonne le nombre d'appels par adresse sur les routes de connexion et d'écriture.",
+        'La limitation plafonne le nombre d’appels par adresse sur les routes de connexion et d’écriture.',
       startup: 'Démarrage',
       startupValue:
-        "Hors développement, le serveur refuse de démarrer sans liste d'origines autorisées ni adresse de base de données.",
+        'Hors développement, le serveur refuse de démarrer sans liste d’origines autorisées ni adresse de base de données.',
       startupHint:
-        "Mieux vaut une panne visible au démarrage qu'un service qui accepte n'importe quelle origine ou qui tourne sans persistance.",
+        'Mieux vaut une panne visible au démarrage qu’un service qui accepte n’importe quelle origine ou qui tourne sans persistance.',
       gdpr: 'RGPD',
       gdprValue:
         'Export et suppression de compte en autonomie, consentement avant tout script tiers.',
@@ -4093,74 +4129,86 @@ export const fr = {
         'Export et suppression se déclenchent depuis la page de compte, sans passer par une demande écrite.',
       traces: 'Traces',
       tracesValue:
-        "Journaux structurés et identifiant de requête, propagé jusqu'aux journaux et renvoyé dans chaque réponse d'erreur.",
+        'Journaux structurés et identifiant de requête, propagé jusqu’aux journaux et renvoyé dans chaque réponse d’erreur.',
       tracesHint:
-        "L'utilisateur qui signale une erreur porte sans le savoir la clé qui retrouve sa trace exacte côté serveur.",
-      audit: "Journal d'audit",
+        'L’utilisateur qui signale une erreur porte sans le savoir la clé qui retrouve sa trace exacte côté serveur.',
+      audit: 'Journal d’audit',
       auditValue:
-        "Chaque lecture d'un secret, d'une archive de sauvegarde ou de l'état de l'infrastructure est consignée, avec son auteur, dans un journal à part conservé 400 jours.",
+        'Chaque lecture d’un secret, d’une archive de sauvegarde ou de l’état de l’infrastructure est consignée, avec son auteur, dans un journal à part conservé 400 jours.',
       auditHint:
-        "Les journaux ordinaires vivent trente jours : qui avait lu quel secret devenait illisible au bout d'un mois. Ce journal a son propre compartiment, en europe-west1, alimenté par un routage décrit en code.",
+        'Les journaux ordinaires vivent trente jours : qui avait lu quel secret devenait illisible au bout d’un mois. Ce journal a son propre compartiment, en europe-west1, alimenté par un routage décrit en code.',
     },
     method: {
       title: 'Une exécution assistée, des décisions qui ne le sont pas',
-      lead: "Ce projet est développé avec un assistant IA. Le principe tient en une phrase : je délègue l'exécution, jamais la décision, et je rends la vérification automatique plutôt que déclarative.",
+      lead: 'Ce projet est développé avec un assistant IA. Le principe : je délègue l’exécution et je garde les décisions, à une exception près, une maintenance quotidienne au périmètre fermé et écrit ; et je rends la vérification automatique plutôt que déclarative.',
       productCaption:
         'Le brainstorming alimente le backlog, la roadmap le priorise. Chaque étape se mène en conversation avec un modèle frontière qui a lu la documentation et le code du dépôt avant de répondre.',
       featureCaption:
-        "Le compte rendu fonctionnel fixe les cas à la marge, chacun devient un test avant le code, et aucune ligne n'est envoyée avant que j'aie testé la fonctionnalité moi-même. Ce que la production révèle repart ensuite vers le backlog produit.",
+        'Le compte rendu fonctionnel fixe les cas à la marge, chacun devient un test avant le code, et aucune ligne n’est envoyée avant que j’aie testé la fonctionnalité moi-même. Ce que la production révèle repart ensuite vers le backlog produit.',
       bugCaption:
         'Le test précède le correctif. Sans lui, rien ne prouve que la cause a été traitée.',
       toolingCaption:
-        "Les {{count}} procédures sont rappelées par leur nom : l'assistant recharge la marche à suivre au lieu que je la redécrive.",
+        'Les {{count}} procédures sont rappelées par leur nom : l’assistant recharge la marche à suivre au lieu que je la redécrive. Les {{project}} marquées du clap sont écrites dans ce dépôt, sous .claude/skills ; les {{external}} autres, au logo d’Anthropic, sont des extensions publiques installées sur mon poste et ne figurent pas dans le dépôt.',
       mcpNoteLead: 'Les outils branchés :',
       mcpNote:
-        "{{tools}} connecteurs donnent à l'assistant une lecture directe de l'état réel, au lieu de ce que je lui en raconte. Ils servent à constater : aucun ne décide, aucun ne court-circuite les quatre points de validation ni la chaîne de contrôle.",
+        '{{tools}} connecteurs donnent à l’assistant une lecture directe de l’état réel, au lieu de ce que je lui en raconte. Ils servent à constater : aucun ne décide, aucun ne court-circuite les quatre points de validation ni la chaîne de contrôle.',
       reliabilityKicker: 'Fiabilité',
       reliabilityTitle: 'Des règles exécutables',
       reliabilityText:
-        "Une règle qu'aucun script ne vérifie finit par être contournée, quel que soit l'auteur de la ligne.",
+        'Une règle qu’aucun script ne vérifie finit par être contournée, quel que soit l’auteur de la ligne.',
       reliabilityHint: 'Une convention non outillée dépend de la vigilance ; un script, non.',
       memoryKicker: 'Mémoire',
       memoryTitle: 'Les pièges sont versionnés',
       memoryText:
         'Chaque piège diagnostiqué une fois est consigné et rechargé. Le même problème ne se diagnostique pas deux fois.',
       memoryHint:
-        "Les pièges sont écrits dans des fichiers versionnés que l'assistant relit à chaque session.",
+        'Les pièges sont écrits dans des fichiers versionnés que l’assistant relit à chaque session.',
       controlKicker: 'Contrôle',
       controlTitle: 'Quatre points de validation',
       controlText:
-        'Cadrage, compte rendu fonctionnel, maquette, recette locale. Rien ne continue sans mon accord.',
+        'Cadrage, compte rendu fonctionnel, maquette, recette locale. Une fonctionnalité ne franchit aucune de ces étapes sans mon accord, et mon accord à la recette vaut feu vert pour la production.',
       controlHint:
-        "Quatre moments où la machine s'arrête et attend une décision humaine avant de continuer.",
+        'Quatre moments où la machine s’arrête et attend une décision humaine avant de continuer.',
       arbitrationKicker: 'Arbitrage',
       arbitrationTitle: 'La chaîne, pas la confiance',
       arbitrationText:
-        '{{jobs}} checks de CI séparent une ligne de la production, quelle que soit son origine.',
+        '{{jobs}} étapes automatisées séparent une ligne de la production, quelle que soit son origine.',
       arbitrationHint:
-        "Le même passage obligé s'applique à une ligne écrite à la main et à une ligne générée.",
+        'Le même passage obligé s’applique à une ligne écrite à la main et à une ligne générée.',
+      autonomyTitle: 'Ce qui part sans moi',
+      autonomyText:
+        'Une passe de maintenance planifiée chaque jour (/auto-maintenance) corrige les failles publiées, fusionne les mises à jour mineures des dépendances et les petits correctifs prouvés par un test, déploie en recette puis en production, et revient en arrière seule si la production se dégrade.',
+      autonomyHint:
+        'Tout le reste m’attend : une montée majeure, une décision produit, l’authentification, l’infrastructure, le contrat d’API, une migration ou une suppression de données. Une issue marquée maintenance-freeze l’arrête net.',
     },
     choices: {
       title: 'Ce qui a été arbitré, et ce qui a été hérité',
-      lead: "Certaines de ces décisions ont été prises contre une alternative nommée. D'autres viennent de l'histoire du projet et sont gardées en connaissance de cause.",
+      lead: 'Certaines de ces décisions ont été prises contre une alternative nommée. D’autres viennent de l’histoire du projet et sont gardées en connaissance de cause.',
       runtime: '.NET 10 côté serveur',
       runtimeValue:
-        "Le serveur était en Node et Express jusqu'en mars 2026, puis réécrit en ASP.NET Core à contrat identique. Typage à la compilation, injection de dépendances native, xUnit.",
+        'Le serveur était en Node et Express jusqu’en mars 2026, puis réécrit en ASP.NET Core à contrat identique. Typage à la compilation, injection de dépendances native, xUnit.',
       runtimeHint:
-        "Les routes et les charges utiles n'ont pas changé : dans le commit de migration, les seules lignes touchées côté front sont du reformatage, pas un appel.",
+        'Les routes et les charges utiles n’ont pas changé : dans le commit de migration, les seules lignes touchées côté front sont du reformatage, pas un appel.',
       runtimeTrade: 'Une réécriture complète du serveur, trois semaines après le premier commit.',
+      hexagonal: 'Hexagonale, dans un seul projet .NET',
+      hexagonalValue:
+        'Domain, Application, Infrastructure et Controllers sont quatre dossiers d’un même projet, pas quatre projets qui se référencent. Le sens des dépendances n’est donc pas tenu par le compilateur, mais par des contrôles qui font échouer la construction.',
+      hexagonalHint:
+        'Le contrôle d’architecture lit les using de chaque fichier, y compris ceux que le SDK web importe sans qu’ils soient écrits, et refuse qu’une couche intérieure regarde vers l’extérieur ; un test d’architecture de la suite .NET vérifie la même règle sur les types compilés.',
+      hexagonalTrade:
+        'Un projet par couche aurait confié la règle au compilateur, au prix de quatre fichiers de projet et de leurs références pour un seul déployable : la vérification vit dans la chaîne plutôt que dans la forme de la solution.',
       database: 'MongoDB plutôt que PostgreSQL',
       databaseValue:
-        "Le document d'une soirée est lu en bloc et sa forme change à chaque palier. Un moteur documentaire évite une migration de schéma par fonctionnalité.",
+        'Le document d’une soirée est lu en bloc et sa forme change à chaque palier. Un moteur documentaire évite une migration de schéma par fonctionnalité.',
       databaseHint:
         'Les transactions multi-documents restent disponibles : le cluster tourne en replica set, condition nécessaire pour les ouvrir.',
       databaseTrade:
-        "L'intégrité référentielle est portée par le code et par des index uniques, pas par le moteur.",
-      persistence: "Driver MongoDB plutôt qu'un ORM",
+        'L’intégrité référentielle est portée par le code et par des index uniques, pas par le moteur.',
+      persistence: 'Driver MongoDB plutôt qu’un ORM',
       persistenceValue:
-        "L'API en Node passait par Mongoose ; la version .NET parle au driver directement. Chaque collection a sa classe de document, aux noms de champs explicites, et la conversion vers le domaine est écrite à la main.",
+        'L’API en Node passait par Mongoose ; la version .NET parle au driver directement. Chaque collection a sa classe de document, aux noms de champs explicites, et la conversion vers le domaine est écrite à la main.',
       persistenceHint:
-        "Un ORM documentaire réintroduit un schéma là où le moteur n'en impose pas, et masque la requête réellement envoyée.",
+        'Un ORM documentaire réintroduit un schéma là où le moteur n’en impose pas, et masque la requête réellement envoyée.',
       auth: 'Cookie de session plutôt que JWT',
       authValue:
         'Le navigateur reçoit un cookie signé, marqué HttpOnly et SameSite, jamais un jeton à ranger quelque part. Les clés de signature vivent en base.',
@@ -4172,31 +4220,31 @@ export const fr = {
       frontValue:
         'Une application entièrement cliente, livrée en fichiers statiques : aucun serveur de rendu à exploiter, à mettre à échelle ni à payer.',
       frontHint:
-        "Le rendu serveur aurait ajouté une infrastructure à tenir pour un catalogue de pages publiques restreint : l'accueil, les vitrines de films, les profils, le dossier technique et les pages légales.",
+        'Le rendu serveur aurait ajouté une infrastructure à tenir pour un catalogue de pages publiques restreint : l’accueil, les vitrines de films, les profils, le dossier technique et les pages légales.',
       frontTrade:
-        "Neuf pages publiques sont pré-rendues au build, HTML complet et métadonnées compris ; l'accueil et les profils, dynamiques, restent référencés par métadonnées et sitemap, et le serveur rend lui-même l'aperçu de partage d'une soirée, d'un recap ou d'un film.",
+        'Neuf pages publiques sont pré-rendues au build, HTML complet et métadonnées compris ; l’accueil et les profils, dynamiques, restent référencés par métadonnées et sitemap, et le serveur rend lui-même l’aperçu de partage d’une soirée, d’un recap ou d’un film.',
       styling: 'Modules CSS plutôt que Tailwind',
       stylingValue:
         'Des modules CSS et des jetons maison : espacements, tailles, couleurs et profondeurs forment une échelle fermée que le contrôle refuse de voir contournée.',
       stylingHint:
-        "Le contrôle échoue sur une valeur écrite en dur, un z-index nu ou un point de rupture hors échelle. Il tourne avant chaque envoi et dans l'intégration continue.",
+        'Le contrôle échoue sur une valeur écrite en dur, un z-index nu ou un point de rupture hors échelle. Il tourne avant chaque envoi et dans l’intégration continue.',
       hosting: 'Cloud Run plutôt que Kubernetes',
       hostingValue:
-        "Un conteneur, une mise à l'échelle jusqu'à zéro, une facturation à la requête. Aucun système d'exploitation à tenir à jour.",
+        'Un conteneur, une mise à l’échelle jusqu’à zéro, une facturation à la requête. Aucun système d’exploitation à tenir à jour.',
       hostingHint:
         'Kubernetes demandait un outillage disproportionné pour un service ; une machine virtuelle demandait un OS à patcher.',
       hostingTrade:
-        "Aucun état en mémoire n'est fiable et aucun travail de fond ne peut vivre dans le processus. Les rappels sont déclenchés de l'extérieur, et le flux en direct d'une soirée relit la base plutôt que de passer d'une instance à l'autre.",
+        'Aucun état en mémoire n’est fiable et aucun travail de fond ne peut vivre dans le processus. Les rappels sont déclenchés de l’extérieur, et le flux en direct d’une soirée relit la base plutôt que de passer d’une instance à l’autre.',
       oneCloud: 'Un seul fournisseur de cloud, depuis septembre 2026',
       oneCloudValue:
         'Le front est né sur AWS avant que le serveur ne parte sur Google Cloud ; il l’y a rejoint sur Firebase Hosting. Une console, un modèle de droits, une facture.',
       oneCloudHint:
-        'Cloud Storage et Cloud CDN, l’équivalent direct de S3 et CloudFront, ont été écartés : leur règle de transfert coûte près de vingt dollars par mois avant le premier octet servi. Firebase Hosting sert les fichiers, les en-têtes et le repli SPA dans le palier gratuit.',
+        'Cloud Storage et Cloud CDN, l’équivalent direct de S3 et CloudFront, ont été écartés : leur règle de transfert coûte près de vingt dollars par mois avant le premier octet servi. Firebase Hosting sert les fichiers, les en-têtes et le renvoi de toute adresse vers l’application dans le palier gratuit.',
       oneCloudTrade:
-        'Un hébergement moins programmable qu’un CDN : sans fonction devant le site, un chemin inconnu reçoit la coquille en 200, et l’aperçu de partage d’une soirée, d’un recap ou d’un film doit être relayé jusqu’au serveur.',
+        'Un hébergement moins programmable qu’un CDN : sans fonction devant le site, une adresse inconnue reçoit la page de l’application avec un statut 200 plutôt qu’une erreur 404, et l’aperçu de partage d’une soirée, d’un recap ou d’un film doit être relayé jusqu’au serveur.',
       mono: 'Monorepo pnpm et Turbo',
       monoValue:
-        "Un dépôt, une chaîne de livraison, un seul tag de version pour les deux applications. Le contrat d'API et le client qui le consomme changent dans le même commit, donc une rupture ne compile pas au lieu de se découvrir en production.",
+        'Un dépôt, une chaîne de livraison, un seul tag de version pour les deux applications. Le contrat d’API et le client qui le consomme changent dans le même commit, donc une rupture ne compile pas au lieu de se découvrir en production.',
       monoHint:
         'Turbo met en cache les tâches par graphe de dépendances : seul ce qui a changé est reconstruit.',
       tradeLabel: 'Le prix',
@@ -4205,27 +4253,27 @@ export const fr = {
       title: 'Une fonctionnalité de bout en bout',
       lead: 'La synchronisation Letterboxd traverse toutes les couches : un navigateur, un service tiers sans API publique, un rapprochement de catalogue, une écriture. Et un cas où la machine refuse de décider seule.',
       caption:
-        "Un seul chemin d'écriture, et un arbitrage renvoyé à l'utilisateur quand la correspondance n'est pas certaine.",
+        'Un seul chemin d’écriture, et un arbitrage renvoyé à l’utilisateur quand la correspondance n’est pas certaine.',
       trigger: 'Déclenchement',
       triggerValue:
-        "Automatique à l'ouverture de l'application, avec un plafond serveur d'une fois par 24 heures. Une synchronisation demandée explicitement, à la connexion du compte ou par le bouton, passe outre ce plafond.",
+        'Automatique à l’ouverture de l’application, avec un plafond serveur d’une fois par 24 heures. Une synchronisation demandée explicitement, à la connexion du compte ou par le bouton, passe outre ce plafond.',
       triggerHint:
-        "Le plafond régule le déclenchement automatique, pas le geste volontaire de l'utilisateur ; c'est la limitation de débit de la route qui borne les appels répétés.",
+        'Le plafond régule le déclenchement automatique, pas le geste volontaire de l’utilisateur ; c’est la limitation de débit de la route qui borne les appels répétés.',
       read: 'Lecture',
       readValue:
         'Letterboxd ne publie pas d’API. La watchlist publique est parcourue page par page, et une lecture incomplète annule toute la synchronisation.',
       readHint:
-        "Si une page manque, appliquer le résultat viderait la liste de l'utilisateur : le code préfère ne rien écrire.",
+        'Si une page manque, appliquer le résultat viderait la liste de l’utilisateur : le code préfère ne rien écrire.',
       match: 'Rapprochement',
       matchValue:
-        "Chaque titre est cherché dans TMDB avec une tolérance d'un an sur l'année, puis comparé au titre original comme au titre traduit du candidat, accents et casse retirés.",
+        'Chaque titre est cherché dans TMDB avec une tolérance d’un an sur l’année, puis comparé au titre original comme au titre traduit du candidat, accents et casse retirés.',
       matchHint:
         'Jusqu’à cinq candidats sont examinés ; la correspondance n’est retenue que si exactement un titre est identique après normalisation.',
       align: 'Alignement',
       alignValue:
-        "La synchronisation aligne les deux listes : elle ajoute les films absents et retire ceux qui ont quitté Letterboxd. La rejouer ne crée aucun doublon, l'index unique et le slug conservé font foi.",
+        'La synchronisation aligne les deux listes : elle ajoute les films absents et retire ceux qui ont quitté Letterboxd. La rejouer ne crée aucun doublon, l’index unique et le slug conservé font foi.',
       alignHint:
-        "Le slug est gardé sur l'élément de watchlist : c'est lui qui permet à la synchronisation suivante de calculer un écart au lieu de tout ré-importer.",
+        'Le slug est gardé sur l’élément de watchlist : c’est lui qui permet à la synchronisation suivante de calculer un écart au lieu de tout ré-importer.',
       human: 'Arbitrage',
       humanValue:
         'Un titre ambigu remonte à l’utilisateur avec ses candidats au lieu d’être deviné. Rien n’est écrit tant qu’il n’a pas tranché.',
@@ -4239,14 +4287,14 @@ export const fr = {
     },
     infra: {
       title: 'Où ça tourne, et ce qui a le droit de le changer',
-      lead: 'Rien n’est déployé à la main. Une image par commit, des secrets hors du dépôt, une recette que chaque livraison traverse, un retour arrière en une exécution, et une infrastructure décrite en code que seule une revue change.',
+      lead: 'Aucun déploiement ne part d’un poste : il se lance sur commande, et la chaîne fait le reste. Une image par commit, des secrets hors du dépôt, une recette que chaque livraison traverse, un retour arrière en une exécution, et une infrastructure décrite en code que seule une revue change.',
       caption:
         'Le front et le serveur vivent chez le même fournisseur, en europe-west1, reliés par une seule origine autorisée ; la recette est une seconde instance du même cadre, sous staging.movie-picker.fr.',
       smoke: 'Déploiement constaté',
       smokeValue:
-        "Après chaque déploiement, la chaîne interroge les deux sondes de santé du serveur, charge le front sur son domaine public, et lit dans chaque réponse la version servie. Un service muet, ou une version qui n'est pas celle attendue, fait échouer le déploiement.",
+        'Après chaque déploiement, la chaîne interroge les deux sondes de santé du serveur, charge le front sur son domaine public, et lit dans chaque réponse la version servie. Un service muet, ou une version qui n’est pas celle attendue, fait échouer le déploiement.',
       smokeHint:
-        "Se terminer sans erreur ne prouve pas qu'un service répond, et une page qui répond peut être l'ancienne ; ces appels prouvent les deux.",
+        'Se terminer sans erreur ne prouve pas qu’un service répond, et une page qui répond peut être l’ancienne ; ces appels prouvent les deux.',
       image: 'Image',
       imageValue:
         'Une image Docker par commit, taguée par son empreinte Git et poussée dans un registre privé.',
@@ -4259,12 +4307,12 @@ export const fr = {
         'Une origine manquante fait échouer le déploiement ; un secret optionnel absent se signale par un avertissement et désactive la fonctionnalité qui en dépend.',
       rollback: 'Retour arrière',
       rollbackValue:
-        "Un déclenchement manuel bascule tout le trafic du serveur vers la révision précédente, déjà en ligne : aucune reconstruction, aucun redéploiement. Le front a le sien : l'hébergement garde chaque version publiée, et un déclenchement remet la précédente en service.",
+        'Un déclenchement manuel bascule tout le trafic du serveur vers la révision précédente, déjà en ligne : aucune reconstruction, aucun redéploiement. Le front a le sien : l’hébergement garde chaque version publiée, et un déclenchement remet la précédente en service.',
       rollbackHint:
         'Les révisions restent disponibles chez l’hébergeur et les anciennes images dans le registre, purgées par sa politique de rétention pour qu’il ne gonfle pas. Le retour arrière vérifie lui aussi la version servie après coup : une page qui répond, la version retirée le fait aussi.',
       scheduler: 'Travail périodique',
       schedulerValue:
-        "Aucune tâche de fond ne vit dans le processus. Un planificateur externe appelle le serveur toutes les 30 minutes pour les rappels de soirée, toutes les cinq heures pour recharger le catalogue de l'accueil, et une fois par jour pour faire naître l'occurrence suivante des soirées récurrentes, retirer le film gagnant de la liste à voir des participants une fois la soirée finie, et relancer ceux qui n'ont pas encore noté le film de la veille, sur des routes protégées par jeton.",
+        'Aucune tâche de fond ne vit dans le processus. Un planificateur externe appelle le serveur toutes les 30 minutes pour les rappels de soirée, toutes les cinq heures pour recharger le catalogue de l’accueil, et une fois par jour pour faire naître l’occurrence suivante des soirées récurrentes, retirer le film gagnant de la liste à voir des participants une fois la soirée finie, et relancer ceux qui n’ont pas encore noté le film de la veille, sur des routes protégées par jeton.',
       schedulerHint:
         'Les cinq jobs sont créés par la chaîne de déploiement en production, après chaque promotion, et retentent trois fois un appel tombé sur un démarrage à froid ou une erreur ; une tentative en échec remonte en alerte. La recette n’en a aucun.',
       origins: 'Origines',
@@ -4289,9 +4337,9 @@ export const fr = {
         'Le serveur tourne sous une identité qui ne sait que lire ses secrets : compromis, il ne pourrait ni se redéployer, ni lire une clé qu’il n’utilise pas.',
       legacy: 'Ancienne adresse',
       legacyValue:
-        "L'ancienne adresse du site, web.movie-picker.fr, vit sur un second site d'hébergement qui ne sert qu'un service worker de départ et redirige tout le reste vers www, page demandée comprise.",
+        'L’ancienne adresse du site, web.movie-picker.fr, vit sur un second site d’hébergement qui ne sert qu’un service worker de départ et redirige tout le reste vers www, page demandée comprise.',
       legacyHint:
-        "Une redirection ne met jamais à jour un service worker déjà installé, le navigateur refusant de la suivre pour ce fichier : les visiteurs de l'ancienne adresse auraient gardé l'ancienne coquille en cache. Ce dernier worker efface ses caches, envoie chaque onglet ouvert vers la nouvelle adresse, puis l'application installée propose sa réinstallation.",
+        'Une redirection ne met jamais à jour un service worker déjà installé, le navigateur refusant de la suivre pour ce fichier : les visiteurs de l’ancienne adresse auraient gardé l’ancienne coquille en cache. Ce dernier worker efface ses caches, envoie chaque onglet ouvert vers la nouvelle adresse, puis l’application installée propose sa réinstallation.',
     },
     quality: {
       title: 'Ce qui est mesuré, et le seuil qui fait échouer',
@@ -4305,9 +4353,9 @@ export const fr = {
         'Les seuils sont montés au fil des paliers ; ils ne descendent jamais, c’est ce qui les rend utiles.',
       lighthouse: 'Lighthouse',
       lighthouseValue:
-        '{{pages}} pages auditées à chaque mise en recette, avec des minimums de {{perf}} en performance, {{a11y}} en accessibilité, {{bp}} en bonnes pratiques et {{seo}} en référencement ; la production ne part que si la recette a servi ce commit, donc si cette porte l’a laissé passer.',
+        '{{pages}} pages auditées à chaque mise en recette, avec des minimums de {{perf}} en performance, {{a11y}} en accessibilité, {{bp}} en bonnes pratiques et {{seo}} en référencement ; la production ne part que si la recette a servi ce commit, donc si ce contrôle l’a laissé passer.',
       lighthouseHint:
-        "Chaque page est mesurée cinq fois et c'est la médiane qui est retenue, pour lisser la variance du runner. Plus aucune page n'a de plancher à elle depuis que l'état déconnecté d'une route protégée se rend depuis la coquille.",
+        'Chaque page est mesurée cinq fois et c’est la médiane qui est retenue, pour lisser la variance du runner. Plus aucune page n’a de plancher à elle depuis que l’état déconnecté d’une route protégée se rend depuis la coquille.',
       axe: 'Accessibilité automatisée',
       axeValue:
         '{{views}} vues passées à axe-core pendant la suite de tests. Une violation fait échouer le test, pas un rapport.',
@@ -4321,9 +4369,9 @@ export const fr = {
         'Les deux déploiements dépendent de ce job : un portail rouge arrête la livraison, il ne se contente pas de l’annoter.',
       monitoring: 'Cloud Monitoring',
       monitoringValue:
-        "Quatre sondes interrogent le service de l'extérieur, depuis trois continents, et onze politiques d'alerte préviennent par courriel : service, base ou recette injoignables, erreurs serveur, latence dégradée, passe planifiée en échec, sauvegarde en retard, nouveau compte créé, compte bloqué par la limitation de débit, stockage des photos de profil plein.",
+        'Quatre sondes interrogent le service de l’extérieur, depuis trois continents, et douze politiques d’alerte préviennent par courriel : service, base ou recette injoignables, erreurs serveur, latence dégradée, passe planifiée en échec, sauvegarde en retard, nouveau compte créé, compte bloqué par la limitation de débit, stockage des photos de profil ou des bannières plein.',
       monitoringHint:
-        "Les sondes visent /health, /health/ready et la racine du front, plus /health de la recette. Les seuils sont posés au-dessus du bruit mesuré pour qu'une alerte reste crédible, et un incident se referme seul après trente minutes de retour à la normale. Sondes, politiques, tableau de bord et leur documentation sont décrits en code.",
+        'Les sondes visent /health, /health/ready et la racine du front, plus /health de la recette. Les seuils sont posés au-dessus du bruit mesuré pour qu’une alerte reste crédible, et un incident se referme seul après trente minutes de retour à la normale. Sondes, politiques, tableau de bord et leur documentation sont décrits en code.',
       sentry: 'Sentry',
       sentryValue:
         'Erreurs du navigateur et du serveur, rattachées à la version déployée par le SHA du commit.',
@@ -4334,8 +4382,8 @@ export const fr = {
         'Événements produit et Web Vitals mesurés chez de vrais visiteurs, uniquement après consentement explicite.',
       posthogHint:
         'Les événements émis avant le choix de consentement sont perdus, et c’est le comportement voulu.',
-      noteLead: "Le contrôle d'architecture",
-      note: "est une porte maison d'environ {{lines}} lignes, un module par famille de règles, chaque règle avec un cas qui doit échouer et un qui doit passer. Jouée avant chaque push et en CI, elle fait échouer la construction sur six familles de fautes qu'aucun linter du marché ne sait interdire :",
+      noteLead: 'Le contrôle d’architecture',
+      note: 'est un script maison d’environ {{lines}} lignes, un module par famille de règles, chaque règle avec un cas qui doit échouer et un qui doit passer. Joué avant chaque push et en intégration continue, il fait échouer la construction sur six familles de fautes que les linters courants ne couvrent pas tels quels :',
       ruleComment: 'un commentaire hors directive fonctionnelle',
       ruleCommentHint:
         'Rejette // et /* */, sauf les directives comme @ts-expect-error, eslint-disable ou un shebang.',
@@ -4348,44 +4396,44 @@ export const fr = {
       ruleImport: 'un import interdit entre couches',
       ruleImportHint:
         'Rejette un import du socle partagé vers un domaine, une dépendance entre domaines absente de leur table, un domaine qui remonte vers l’assemblage des pages, ou du métier vers la base et le web, using implicites compris.',
-      ruleCycle: "un cycle d'imports",
+      ruleCycle: 'un cycle d’imports',
       ruleCycleHint:
-        "Rejette deux modules qui finissent par s'importer l'un l'autre, directement, par un détour ou par un chargement différé.",
+        'Rejette deux modules qui finissent par s’importer l’un l’autre, directement, par un détour ou par un chargement différé.',
       ruleWriteSeq: 'une écriture qui ne prévient pas la soirée',
       ruleWriteSeqHint:
         'Rejette un cas d’usage qui écrit un film, un vote, un participant ou une note sans faire avancer le compteur de la soirée : sans lui, ni le cache HTTP ni le flux en direct ne verraient le changement.',
     },
     diagram: {
       architectureTitle:
-        "Navigateur, CDN, API sur Cloud Run, MongoDB Atlas, services appelés par le serveur et services qui l'appellent",
+        'Navigateur, CDN, API sur Cloud Run, MongoDB Atlas, services appelés par le serveur et services qui l’appellent',
       browser: 'Navigateur',
       browserPwa: 'PWA installable',
       browserWorker: 'Service Worker',
       assets: 'assets',
       cdn: 'Firebase Hosting',
       cdnBundle: 'bundle React statique',
-      cdnFallback: 'fallback SPA',
+      cdnFallback: 'repli vers l’application',
       api: 'API .NET 10',
       apiHost: 'Cloud Run, image Docker',
-      apiEndpoints: '{{endpoints}} endpoints',
+      apiEndpoints: '{{endpoints}} routes HTTP',
       database: 'MongoDB Atlas',
       databaseReplica: 'replica set',
       databaseTransactions: 'transactions',
-      externalServices: "APPELÉS PAR L'API",
+      externalServices: 'APPELÉS PAR L’API',
       outboundCalls: 'appels sortants',
-      inboundCalls: "APPELLENT L'API",
-      layersTitle: "Les quatre couches de l'API et le sens des dépendances",
+      inboundCalls: 'APPELLENT L’API',
+      layersTitle: 'Les quatre couches de l’API et le sens des dépendances',
       controllers: 'CONTROLLERS',
       controllersSub: '{{controllers}} contrôleurs, validation, codes HTTP',
       infrastructure: 'INFRASTRUCTURE',
       infrastructureSub: 'Mongo, TMDB, Letterboxd, push, e-mail',
       application: 'APPLICATION',
-      applicationSub: "{{useCases}} cas d'usage, {{ports}} ports",
+      applicationSub: '{{useCases}} cas d’usage, {{ports}} ports',
       domainLayer: 'DOMAIN',
       domainLayerSub: 'entités, règles, aucune dépendance',
       inwardLine1: 'Les dépendances',
       inwardLine2: 'ne pointent que',
-      inwardLine3: "vers l'intérieur.",
+      inwardLine3: 'vers l’intérieur.',
       inwardNote1: 'Un import interdit',
       inwardNote2: 'fait échouer la CI.',
       contractTitle:
@@ -4400,7 +4448,7 @@ export const fr = {
       contractTestSub1: 'un type du front lit-il',
       contractTestSub2: 'un champ inexistant ?',
       contractFail: 'Si oui, la CI échoue',
-      contractDrift: "Une vérification régénère les types et échoue s'ils ont dérivé.",
+      contractDrift: 'Une vérification régénère les types et échoue s’ils ont dérivé.',
       testsPyramidTitle: 'Pyramide de tests : unitaires, intégration, end to end',
       testsE2e: '{{count}} tests, {{files}} fichiers',
       testsE2eLabel: 'END TO END',
@@ -4409,9 +4457,9 @@ export const fr = {
       testsUnit: '{{total}} tests : {{web}} interface, {{api}} serveur',
       testsUnitLabel: 'UNITAIRE',
       ciTitle:
-        'Les portes jouées à chaque push, puis la chaîne de déploiement lancée à la main, recette puis production',
+        'Les contrôles joués à chaque push, puis la chaîne de déploiement lancée sur commande, recette puis production',
       ciZoneGates: 'À CHAQUE PUSH ET PULL REQUEST',
-      ciZoneDeploy: 'À LA MAIN, RECETTE PUIS PRODUCTION',
+      ciZoneDeploy: 'SUR COMMANDE, RECETTE PUIS PRODUCTION',
       ciTrigger: 'push / PR',
       ciChanges: 'changes',
       ciScopeApi: 'serveur touché',
@@ -4431,7 +4479,7 @@ export const fr = {
       ciSonar: 'sonar',
       ciSonarSub: 'portail qualité',
       ciVerdict: 'CI du commit verte',
-      ciManual: 'à la main',
+      ciManual: 'sur commande',
       ciManualSub: 'recette, puis prod',
       ciVerify: 'verify ci',
       ciVerifySub1: 'moitié seule refusée',
@@ -4473,7 +4521,7 @@ export const fr = {
       devRoadmap: 'roadmap mise à jour',
       devPrePush: 'check:static au push',
       devPush: 'version, push sur master',
-      devCi: 'CI, {{jobs}} checks',
+      devCi: 'CI, {{jobs}} étapes',
       devMerge: 'recette le jour même',
       devDeploy: 'prod, tag et release',
       devSignals: 'monitoring',
@@ -4491,7 +4539,7 @@ export const fr = {
       productFlowLabel: 'FLOT PRODUIT',
       flowNoteDev:
         'Les quatre étapes encadrées attendent ma relecture et mon accord avant de continuer.',
-      toolingTitle: "Procédures nommées et connecteurs de lecture branchés sur l'assistant.",
+      toolingTitle: 'Procédures nommées et connecteurs de lecture branchés sur l’assistant.',
       skillsLabel: 'PROCÉDURES OUTILLÉES, RAPPELÉES PAR LEUR NOM',
       skillFlowWhen: 'le flot entier, du scope au push',
       skillCritiqueWhen: 'sur la maquette',
@@ -4501,8 +4549,8 @@ export const fr = {
       skillSecurityWhen: 'auth, droits, nouvel endpoint',
       skillDeployWhen: 'à la mise en production',
       skillMaintenanceWhen: 'passe hebdomadaire',
-      skillAutoMaintenanceWhen: 'passe quotidienne, sans go',
-      mcpLabel: "OUTILS BRANCHÉS SUR L'ASSISTANT (MCP ET LIGNE DE COMMANDE)",
+      skillAutoMaintenanceWhen: 'chaque jour, sans mon accord',
+      mcpLabel: 'OUTILS BRANCHÉS SUR L’ASSISTANT (MCP ET LIGNE DE COMMANDE)',
       mcpAssistant: 'assistant',
       mcpGithub: 'PR et CI',
       mcpGcp: 'journaux',
@@ -4512,8 +4560,8 @@ export const fr = {
       mcpMongo: 'base dev',
       mcpResend: 'e-mails',
       frontGraphTitle:
-        "Graphe d'imports du front : sept domaines qui pointent tous vers le socle partagé",
-      frontGraphLabel: "GRAPHE D'IMPORTS DU FRONT",
+        'Graphe d’imports du front : {{count}} domaines qui pointent tous vers le socle partagé',
+      frontGraphLabel: 'GRAPHE D’IMPORTS DU FRONT',
       stackLabel: 'SOCLE TECHNIQUE',
       domainAuth: 'auth',
       domainEvents: 'soirées',
@@ -4522,10 +4570,11 @@ export const fr = {
       domainNotifications: 'notifications',
       domainProfiles: 'profils',
       domainLetterboxd: 'Letterboxd',
+      domainGroups: 'groupes',
       sharedCore: 'shared/ : {{components}} composants, hooks, client HTTP',
       sharedCoreSub: 'ne connaît aucune feature',
       frontGraphNote:
-        "Le socle est une feuille du graphe : aucune flèche n'en repart. Un cycle fait échouer la CI.",
+        'Le socle est une feuille du graphe : aucune flèche n’en repart. Un cycle fait échouer la CI.',
       unitOfWorkTitle:
         'Suppression de compte : douze collections écrites dans une transaction, validées ou annulées ensemble',
       unitOfWorkLabel: 'UNITÉ DE TRAVAIL',
@@ -4537,8 +4586,8 @@ export const fr = {
       unitOfWorkRollbackSub: 'aucune des douze',
       unitOfWorkNote:
         'Transaction MongoDB en production, verrou en mémoire dans les tests unitaires : le même code des deux côtés.',
-      bugFlowTitle: "Traitement d'une anomalie, du signalement à la non-régression",
-      bugFlowLabel: "FLOT D'UNE ANOMALIE",
+      bugFlowTitle: 'Traitement d’une anomalie, du signalement à la non-régression',
+      bugFlowLabel: 'FLOT D’UNE ANOMALIE',
       bugReproduce: 'reproduire',
       bugFailingTest: 'test qui échoue',
       bugFailingTestSub: 'avant tout correctif',
@@ -4605,7 +4654,7 @@ export const fr = {
       infraZoneGcp: 'Google Cloud, europe-west1',
       infraMonitoring: 'Cloud Monitoring',
       infraMonitoringSub: 'sondes front et API',
-      infraMonitoringDetail: 'onze alertes actives',
+      infraMonitoringDetail: 'douze alertes actives',
       infraHosting: 'Firebase Hosting',
       infraHostingSub: 'www.movie-picker.fr',
       infraHostingDetail: 'TLS géré, en-têtes',
@@ -4630,8 +4679,8 @@ export const fr = {
       infraGap:
         'Tout le cadre est décrit en Terraform, identités, alertes et journaux d’audit compris ; un changement passe par une revue.',
       infraNote:
-        "Le pointillé n'est pas un chemin réseau : le navigateur appelle le serveur directement.",
-      infraNoteOrigin: "L'origine du front est la seule que le serveur accepte.",
+        'Le pointillé n’est pas un chemin réseau : le navigateur appelle le serveur directement.',
+      infraNoteOrigin: 'L’origine du front est la seule que le serveur accepte.',
       requestPathTitle:
         'Le trajet d’une requête à travers les quatre couches, et le sens des dépendances',
       requestPathLabel: 'POST /api/v1/events/{slug}/movies',

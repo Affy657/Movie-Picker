@@ -2,11 +2,12 @@
 
 export const TECH_METRICS = {
   linesOfCode: 190000,
+  testLinesShare: 48,
   endpoints: 86,
   testFiles: 512,
   webTestFiles: 252,
   apiTestFiles: 260,
-  testCases: 4725,
+  testCases: 4768,
   webTestCases: 2080,
   apiTestCases: 2645,
   unitTestCases: 4457,

@@ -3508,18 +3508,22 @@ export const en: Locale = {
     hero: {
       eyebrow: 'Technical dossier',
       title: 'How Movie Picker is built',
+      byline: 'By Adrien Morand, backend .NET developer',
+      sourceLink: 'Source code on GitHub',
+      sourceLinkAria: 'Source code on GitHub, new tab',
       lead: 'Movie Picker helps a group pick a film without spending the evening on it: everyone proposes, everyone votes, a wheel settles it. I started it in February 2026 for a real need among the people around me, and it was never meant to go beyond a small tool. It became a platform, then my final master project, and the service is now live, open to the public, and maintained by me alone.',
       leadIntent:
         "It also serves as my sandbox: I try out technologies and methods, I explore, I read the documentation. The goal is not to build the project of a lifetime but to gain experience, and to enjoy running a product that evolves with its users' feedback, covering the whole chain from business need to production.",
       metricLines: 'lines of code',
+      metricLinesDetail: 'of which {{share}}% tests',
       metricLinesHint:
-        'Front-end .ts, .tsx and .css files plus server .cs files, counted at build time and rounded to the thousand.',
-      metricEndpoints: 'HTTP endpoints',
+        'Non-blank lines of the front-end .ts, .tsx and .css files and of the server .cs files, tests included, generated code left out (API contract types, these figures). Counted at build time, rounded to the thousand.',
+      metricEndpoints: 'HTTP routes',
       metricEndpointsHint:
         '[HttpGet], [HttpPost] and similar attributes, counted across the server controllers.',
       metricTests: 'automated tests',
       metricTestsHint:
-        'Test cases declared in the repository, counted at build time: {{web}} on the front end and {{api}} on the server, spread across {{files}} files.',
+        'Test cases declared in the repository, counted at build time: {{web}} on the front end, {{api}} on the server and {{e2e}} end to end, spread across {{files}} files. It is the sum of the three tiers of the pyramid in the Tests section.',
       metricCommits: 'commits',
       metricCommitsHint:
         'Commits on the main branch since the first day of the project, counted at build time.',
@@ -3532,6 +3536,23 @@ export const en: Locale = {
       metricCoverageHint:
         'Share of lines the front-end tests must cover. Below that threshold the integration pipeline fails and nothing ships to production.',
       stamp: 'Document updated on {{update}}, figures measured at the build of {{build}}',
+    },
+    summary: {
+      title: 'In one minute',
+      item1:
+        'A live product, open to the public, designed, built and operated alone since February 2026, with an AI assistant whose role is described in section {{method}}.',
+      item2:
+        'A React and TypeScript front end shipped as static files, a .NET 10 API with a hexagonal architecture on Cloud Run, a MongoDB Atlas database, and between them an OpenAPI contract that continuous integration checks.',
+      item3:
+        '{{tests}} automated tests, from unit tests to Playwright journeys on a real MongoDB, a minimum coverage that blocks the delivery, and SonarCloud held at zero issues.',
+      item4:
+        'Nothing ships without green continuous integration: staging then production, infrastructure described in Terraform, keyless cloud identities, backups restored every night to be checked, rollback without rebuilding.',
+      item5:
+        'Technical choices come with their cost when they have one, and what is left to do is named: section {{trajectory}} lists the work still open.',
+    },
+    figure: {
+      scrollHint: 'Swipe',
+      regionLabel: 'Diagram: {{title}}',
     },
     nav: {
       architecture: 'Architecture',
@@ -3615,7 +3636,7 @@ export const en: Locale = {
         "GitHub's bug tracker, fed directly by the suggestion form inside the application.",
     },
     trajectory: {
-      title: '{{months}} months, {{shipped}} milestones shipped',
+      title: '{{months}} months, {{shipped}} stages shipped',
       lead: '{{commits}} commits since February 2026. Up to V1.7, every milestone reached production before the next one opened; since then, every improvement ships on its own. The last {{planned}} markers are the plan ahead, not work already done.',
       plannedBadge: 'ahead',
       currentBadge: 'in progress',
@@ -3755,6 +3776,19 @@ export const en: Locale = {
       v17Item5: 'Top 3 favourite films',
       v17Item6: 'Profile picture',
       v17Item7: 'Watchlist random pick',
+      since17When: 'November 2026',
+      since17What: 'After V1.7',
+      since17Detail:
+        'Some forty versions shipped one by one: the movie night updates live, lists multiply and get shared, friends meet in groups with their own ranking, and a single search covers the whole site.',
+      since17Hint:
+        'Shipped in continuous flow, each with its own version number; the release notes, linked in the footer, detail them one by one.',
+      since17Item1: 'A page per film',
+      since17Item2: 'Live movie night',
+      since17Item3: 'My lists',
+      since17Item4: 'Friend groups',
+      since17Item5: 'Group ranking',
+      since17Item6: 'Profile statistics',
+      since17Item7: 'Global search',
       flowWhen: 'Since November 2026',
       flowWhat: 'Continuous flow',
       flowDetail:
@@ -3774,6 +3808,8 @@ export const en: Locale = {
       nextItem2: 'Automatic "already seen" in a night',
       nextItem3: 'A showcase list on the profile',
       nextItem4: 'Avatar frames to unlock',
+      nextItem5: 'Availability poll in a group',
+      nextItem6: 'A list for every group',
       v2When: 'No date announced',
       v2What: 'V2',
       v2Detail:
@@ -3857,7 +3893,7 @@ export const en: Locale = {
       driftValue:
         'CI regenerates the types and fails if the committed file no longer matches the exported contract.',
       driftHint:
-        'openapi:types:check compares fresh output against the committed file. A second script, run by hand, compares the contract of the last published version with the one of the commit and refuses a route or a property that disappeared: the previous front end keeps running in browsers for a few days.',
+        'openapi:types:check compares fresh output against the committed file. A second script, run before every push and in CI, compares the contract of the last published version with the one of the commit and refuses a route or a property that disappeared: the previous front end keeps running in browsers for a few days.',
       note: 'Two safety nets with different reach. The first is complete: every route the front end calls must be among the {{routes}} paths of the contract, otherwise the build fails. The second goes deeper but covers less: it confronts, field by field, the {{checked}} types the front end writes itself, responses and request bodies, with a contract that describes {{total}} responses; the others the front end reads without naming them, or does not read at all, such as the health probes. In the other direction, the front-end addresses the server writes into an email or a notification come from a single table, which a front-end test compares with its own.',
     },
     data: {
@@ -3954,13 +3990,13 @@ export const en: Locale = {
     },
     ci: {
       title: '{{jobs}} checks before production',
-      lead: 'Two pipelines. The gates run on every commit of master and of every pull request; the deployment is triggered by hand, staging first, and only leaves when all of them are green on that commit.',
+      lead: 'Two pipelines. The checks run on every commit of master and of every pull request; the deployment is started on demand, staging first, and only leaves when all of them are green on that commit.',
       caption:
         'At the top, on a pull request, the scope filter decides which columns run; on master, all of them run, and gitleaks as well as lint workflows always bypass it. sonar only waits for the front-end suite: it builds and tests the server itself. At the bottom, the deployment pipeline requires a green CI on the commit, refuses to ship one half alone, and production reuses the image the staging serves. The final link checks that every target left, not merely that nothing failed.',
       pipelineHeading: 'What holds the pipeline together',
       trigger: 'Trigger',
       triggerValue:
-        'Every push to master and every pull request towards master starts the pipeline, and there is no other long-lived branch: each delivery starts from a short branch, joins master the day it is ready and goes to production right after, with its own version.',
+        'Every push to master and every pull request towards master starts the pipeline. The code has no other long-lived branch: each delivery starts from a short branch, joins master the day it is ready and reaches production within the day, with its own version. The only other branch, feedback-attachments, holds no code: the server stores there the screenshots attached to suggestions.',
       triggerHint:
         'A push only starts the pipeline on master: a short branch is only run through its pull request, dependency bot included, so the pipeline never runs twice on the same commit.',
       scope: 'Computed scope',
@@ -3991,7 +4027,7 @@ export const en: Locale = {
       otherPipelines: 'Four other pipelines, outside the main graph',
       rollback: 'rollback',
       rollbackHint:
-        'Triggered by hand, one pipeline for the server and one for the front end: the previous revision or published version takes the traffic back, without rebuilding anything.',
+        'Triggered on demand, one pipeline for the server and one for the front end: the previous revision or published version takes the traffic back, without rebuilding anything.',
       terraform: 'infrastructure',
       terraformHint:
         'Plans an infrastructure change on its pull request. On master, two read-only plans precede the apply, which a reviewer must approve, and only when a resource changes. Every Monday the same plan is replayed and turns red if the infrastructure moved outside the repository.',
@@ -4049,7 +4085,7 @@ export const en: Locale = {
     },
     method: {
       title: 'Assisted execution, decisions that are not',
-      lead: 'This project is developed with an AI assistant. The principle fits in one sentence: I delegate execution, never the decision, and I make verification automatic rather than declarative.',
+      lead: 'This project is developed with an AI assistant. The principle: I delegate execution and keep the decisions, with one exception, a daily maintenance pass with a closed, written scope; and I make verification automatic rather than declarative.',
       productCaption:
         'Brainstorming feeds the backlog, the roadmap prioritises it. Every step is a conversation with a frontier model that has read the repository documentation and code before answering.',
       featureCaption:
@@ -4057,7 +4093,7 @@ export const en: Locale = {
       bugCaption:
         'The test comes before the fix. Without it, nothing proves the cause was addressed.',
       toolingCaption:
-        'The {{count}} procedures are recalled by name: the assistant reloads the steps instead of me describing them again.',
+        'The {{count}} procedures are recalled by name: the assistant reloads the steps instead of me describing them again. The {{project}} marked with the clapperboard are written in this repository, under .claude/skills; the other {{external}}, with the Anthropic logo, are public extensions installed on my machine and are not in the repository.',
       mcpNoteLead: 'The connected tools:',
       mcpNote:
         '{{tools}} connectors give the assistant a direct reading of the real state, rather than whatever I tell it. They exist to observe: none decides, and none bypasses the four approval points or the check pipeline.',
@@ -4074,15 +4110,20 @@ export const en: Locale = {
       controlKicker: 'Control',
       controlTitle: 'Four approval points',
       controlText:
-        'Scoping, functional write-up, mockup, local acceptance. Nothing moves on without my approval.',
+        'Scoping, functional write-up, mockup, local acceptance. A feature passes none of these steps without my approval, and my approval at acceptance is the go-ahead for production.',
       controlHint:
         'Four moments where the machine halts and waits for a human decision before carrying on.',
       arbitrationKicker: 'Arbitration',
       arbitrationTitle: 'The pipeline, not trust',
       arbitrationText:
-        '{{jobs}} checks separate a line of code from production, whatever its origin.',
+        '{{jobs}} automated jobs separate a line of code from production, whatever its origin.',
       arbitrationHint:
         'The same mandatory path applies to a hand-written line and to a generated one.',
+      autonomyTitle: 'What ships without me',
+      autonomyText:
+        'A maintenance pass scheduled every day (/auto-maintenance) fixes published vulnerabilities, merges minor dependency updates and small fixes proven by a test, deploys to staging then production, and rolls back on its own if production degrades.',
+      autonomyHint:
+        'Everything else waits for me: a major upgrade, a product decision, authentication, infrastructure, the API contract, a data migration or deletion. An open issue labelled maintenance-freeze stops it at once.',
     },
     choices: {
       title: 'What was arbitrated, and what was inherited',
@@ -4093,6 +4134,13 @@ export const en: Locale = {
       runtimeHint:
         'Routes and payloads did not change: in the migration commit, the only lines touched on the front end are reformatting, not a single call.',
       runtimeTrade: 'A full server rewrite, three weeks after the first commit.',
+      hexagonal: 'Hexagonal, in a single .NET project',
+      hexagonalValue:
+        'Domain, Application, Infrastructure and Controllers are four folders of one project, not four projects referencing each other. The direction of dependencies is therefore not held by the compiler but by checks that fail the build.',
+      hexagonalHint:
+        'The architecture check reads the usings of every file, including those the web SDK imports without them being written, and refuses an inner layer that looks outwards; an architecture test in the .NET suite checks the same rule on the compiled types.',
+      hexagonalTrade:
+        'One project per layer would have handed the rule to the compiler, at the cost of four project files and their references for a single deployable: the check lives in the pipeline rather than in the shape of the solution.',
       database: 'MongoDB rather than PostgreSQL',
       databaseValue:
         'An event document is read as a whole and its shape changes at every milestone. A document engine avoids one schema migration per feature.',
@@ -4135,9 +4183,9 @@ export const en: Locale = {
       oneCloudValue:
         'The front end was born on AWS before the server moved to Google Cloud; it joined it there on Firebase Hosting. One console, one permission model, one invoice.',
       oneCloudHint:
-        'Cloud Storage and Cloud CDN, the direct equivalent of S3 and CloudFront, were ruled out: their forwarding rule costs close to twenty dollars a month before the first byte is served. Firebase Hosting serves the files, the headers and the SPA fallback within the free tier.',
+        'Cloud Storage and Cloud CDN, the direct equivalent of S3 and CloudFront, were ruled out: their forwarding rule costs close to twenty dollars a month before the first byte is served. Firebase Hosting serves the files, the headers and the rewrite of every path to the app within the free tier.',
       oneCloudTrade:
-        'A hosting less programmable than a CDN: with no function in front of the site, an unknown path gets the shell with a 200, and the share preview of a movie night, a recap or a film has to be relayed to the server.',
+        'A hosting less programmable than a CDN: with no function in front of the site, an unknown path gets the app page with a 200 status rather than a 404 error, and the share preview of a movie night, a recap or a film has to be relayed to the server.',
       mono: 'A pnpm and Turbo monorepo',
       monoValue:
         'One repository, one delivery chain, one version tag for both applications. The API contract and the client that consumes it change in the same commit, so a break fails to compile instead of surfacing in production.',
@@ -4182,7 +4230,7 @@ export const en: Locale = {
     },
     infra: {
       title: 'Where it runs, and what is allowed to change it',
-      lead: 'Nothing is deployed by hand. One image per commit, secrets outside the repository, a staging every delivery goes through, a rollback in one run, and an infrastructure described in code that only a review changes.',
+      lead: 'No deployment leaves from a workstation: it is started on demand, and the pipeline does the rest. One image per commit, secrets outside the repository, a staging every delivery goes through, a rollback in one run, and an infrastructure described in code that only a review changes.',
       caption:
         'The front end and the server live with the same provider, in europe-west1, joined by a single allowed origin; the staging is a second instance of the same frame, under staging.movie-picker.fr.',
       smoke: 'Deployment observed',
@@ -4248,7 +4296,7 @@ export const en: Locale = {
         'Thresholds were raised milestone after milestone; they never come back down, which is what makes them useful.',
       lighthouse: 'Lighthouse',
       lighthouseValue:
-        '{{pages}} pages audited at every staging deployment, with minimums of {{perf}} for performance, {{a11y}} for accessibility, {{bp}} for best practices and {{seo}} for SEO; production only leaves once the staging served this commit, hence once this gate let it through.',
+        '{{pages}} pages audited at every staging deployment, with minimums of {{perf}} for performance, {{a11y}} for accessibility, {{bp}} for best practices and {{seo}} for SEO; production only leaves once the staging served this commit, hence once this check let it through.',
       lighthouseHint:
         'Each page is measured five times and the median is kept, to smooth out the runner variance. No page has a floor of its own any more since the signed-out state of a protected route renders from the shell.',
       axe: 'Automated accessibility',
@@ -4264,7 +4312,7 @@ export const en: Locale = {
         'Both deployments depend on this job: a red gate stops the release, it does not merely annotate it.',
       monitoring: 'Cloud Monitoring',
       monitoringValue:
-        'Four probes query the service from outside, from three continents, and eleven alert policies warn by e-mail: service, database or staging unreachable, server errors, degraded latency, failed scheduled pass, late backup, new account created, account blocked by rate limiting, profile photo storage full.',
+        'Four probes query the service from outside, from three continents, and twelve alert policies warn by e-mail: service, database or staging unreachable, server errors, degraded latency, failed scheduled pass, late backup, new account created, account blocked by rate limiting, profile photo or banner storage full.',
       monitoringHint:
         'The probes target /health, /health/ready and the front root, plus /health of the staging. Thresholds sit above the measured noise so that an alert stays credible, and an incident closes on its own after thirty minutes back to normal. Probes, policies, dashboard and their documentation are described in code.',
       sentry: 'Sentry',
@@ -4278,7 +4326,7 @@ export const en: Locale = {
       posthogHint:
         'Events emitted before the consent choice are lost, and that is the intended behaviour.',
       noteLead: 'The architecture check',
-      note: 'is a home-made gate of about {{lines}} lines, one module per family of rules, each rule with a case that must fail and one that must pass. Run before every push and in CI, it fails the build on six families of mistakes no off-the-shelf linter can forbid:',
+      note: 'is a home-made script of about {{lines}} lines, one module per family of rules, each rule with a case that must fail and one that must pass. Run before every push and in CI, it fails the build on six families of mistakes that common linters do not cover out of the box:',
       ruleComment: 'a comment outside a functional directive',
       ruleCommentHint:
         'Rejects // and /* */, except directives such as @ts-expect-error, eslint-disable or a shebang.',
@@ -4310,7 +4358,7 @@ export const en: Locale = {
       cdnFallback: 'SPA fallback',
       api: '.NET 10 API',
       apiHost: 'Cloud Run, Docker image',
-      apiEndpoints: '{{endpoints}} endpoints',
+      apiEndpoints: '{{endpoints}} HTTP routes',
       database: 'MongoDB Atlas',
       databaseReplica: 'replica set',
       databaseTransactions: 'transactions',
@@ -4352,9 +4400,9 @@ export const en: Locale = {
       testsUnit: '{{total}} tests: {{web}} front end, {{api}} server',
       testsUnitLabel: 'UNIT',
       ciTitle:
-        'The gates run on every push, then the deployment pipeline triggered by hand, staging then production',
+        'The checks run on every push, then the deployment pipeline started on demand, staging then production',
       ciZoneGates: 'ON EVERY PUSH AND PULL REQUEST',
-      ciZoneDeploy: 'BY HAND, STAGING THEN PRODUCTION',
+      ciZoneDeploy: 'ON DEMAND, STAGING THEN PRODUCTION',
       ciTrigger: 'push / PR',
       ciChanges: 'changes',
       ciScopeApi: 'server touched',
@@ -4374,7 +4422,7 @@ export const en: Locale = {
       ciSonar: 'sonar',
       ciSonarSub: 'quality gate',
       ciVerdict: 'green CI on the commit',
-      ciManual: 'by hand',
+      ciManual: 'on demand',
       ciManualSub: 'staging, then prod',
       ciVerify: 'verify ci',
       ciVerifySub1: 'never one half alone',
@@ -4416,7 +4464,7 @@ export const en: Locale = {
       devRoadmap: 'roadmap updated',
       devPrePush: 'check:static on push',
       devPush: 'version, push to master',
-      devCi: 'CI, {{jobs}} checks',
+      devCi: 'CI, {{jobs}} jobs',
       devMerge: 'staging the same day',
       devDeploy: 'production, tag, release',
       devSignals: 'monitoring',
@@ -4443,7 +4491,7 @@ export const en: Locale = {
       skillSecurityWhen: 'auth, permissions, new endpoint',
       skillDeployWhen: 'at production release',
       skillMaintenanceWhen: 'weekly pass',
-      skillAutoMaintenanceWhen: 'daily pass, no go needed',
+      skillAutoMaintenanceWhen: 'daily, without my approval',
       mcpLabel: 'TOOLS CONNECTED TO THE ASSISTANT (MCP AND COMMAND LINE)',
       mcpAssistant: 'assistant',
       mcpGithub: 'PRs and CI',
@@ -4453,7 +4501,7 @@ export const en: Locale = {
       mcpPosthog: 'usage',
       mcpMongo: 'dev database',
       mcpResend: 'emails',
-      frontGraphTitle: 'Front-end import graph: seven domains all pointing at the shared core',
+      frontGraphTitle: 'Front-end import graph: {{count}} domains all pointing at the shared core',
       frontGraphLabel: 'FRONT-END IMPORT GRAPH',
       stackLabel: 'TECHNICAL CORE',
       domainAuth: 'auth',
@@ -4463,6 +4511,7 @@ export const en: Locale = {
       domainNotifications: 'notifications',
       domainProfiles: 'profiles',
       domainLetterboxd: 'Letterboxd',
+      domainGroups: 'groups',
       sharedCore: 'shared/: {{components}} components, hooks, HTTP client',
       sharedCoreSub: 'knows no feature',
       frontGraphNote: 'The core is a leaf of the graph: no arrow leaves it. A cycle fails the CI.',
@@ -4545,7 +4594,7 @@ export const en: Locale = {
       infraZoneGcp: 'Google Cloud, europe-west1',
       infraMonitoring: 'Cloud Monitoring',
       infraMonitoringSub: 'front + API probes',
-      infraMonitoringDetail: 'eleven alert policies',
+      infraMonitoringDetail: 'twelve alert policies',
       infraHosting: 'Firebase Hosting',
       infraHostingSub: 'www.movie-picker.fr',
       infraHostingDetail: 'managed TLS, headers',
