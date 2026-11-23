@@ -9,6 +9,7 @@ let api: SentryApi | null = null;
 let loading: Promise<void> | null = null;
 
 const IN_APP_BROWSER_NOISE = /SCDynimacBridge/i;
+const SESSION_INTEGRATION = 'BrowserSession';
 const IDLE_INIT_TIMEOUT_MS = 3000;
 const START_DELAY_AFTER_LOAD_MS = 10000;
 const FIRST_INTERACTION_EVENTS = ['pointerdown', 'keydown', 'touchstart', 'wheel'] as const;
@@ -89,7 +90,10 @@ async function loadAndInit(dsn: string): Promise<void> {
     environment: import.meta.env.VITE_SENTRY_ENVIRONMENT || 'production',
     tracesSampleRate: 0.1,
     tracePropagationTargets: sentryTracePropagationTargets(),
-    integrations: [Sentry.browserTracingIntegration()],
+    integrations: (defaults) => [
+      ...defaults.filter((integration) => integration.name !== SESSION_INTEGRATION),
+      Sentry.browserTracingIntegration(),
+    ],
     dataCollection: {
       userInfo: false,
       cookies: false,

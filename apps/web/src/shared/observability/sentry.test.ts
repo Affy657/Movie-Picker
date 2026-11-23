@@ -309,10 +309,36 @@ describe('initSentry', () => {
 
     await sentry.initSentry();
 
+    const { integrations } = init.mock.calls[0]![0] as {
+      integrations: (defaults: Array<{ name: string }>) => Array<{ name: string }>;
+    };
+    expect(integrations([{ name: 'Breadcrumbs' }])).toEqual([
+      { name: 'Breadcrumbs' },
+      { name: 'BrowserTracing' },
+    ]);
     expect(browserTracingIntegration).toHaveBeenCalledTimes(1);
-    expect(init).toHaveBeenCalledWith(
-      expect.objectContaining({ integrations: [{ name: 'BrowserTracing' }] })
-    );
+  });
+
+  it('sends no session before any consent choice, the session integration is left out', async () => {
+    const init = vi.fn();
+    vi.doMock('@sentry/react', () => ({
+      init,
+      captureException: vi.fn(),
+      browserTracingIntegration: () => ({ name: 'BrowserTracing' }),
+    }));
+    const sentry = await import('./sentry');
+
+    await sentry.initSentry();
+
+    const { integrations } = init.mock.calls[0]![0] as {
+      integrations: (defaults: Array<{ name: string }>) => Array<{ name: string }>;
+    };
+    const kept = integrations([
+      { name: 'GlobalHandlers' },
+      { name: 'BrowserSession' },
+      { name: 'Dedupe' },
+    ]).map((integration) => integration.name);
+    expect(kept).toEqual(['GlobalHandlers', 'Dedupe', 'BrowserTracing']);
   });
 
   it('scrubs the streamed spans, since the SDK no longer sends transaction events', async () => {
