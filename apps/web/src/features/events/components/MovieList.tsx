@@ -9,7 +9,14 @@ import type { MovieCardSelection } from '@/features/events/components/eventMovie
 import styles from './MovieList.module.css';
 
 export type MovieRowSortKey =
-  'createdAt' | 'voteAverage' | 'duration' | 'score' | 'availability' | 'seen' | 'releaseDate';
+  | 'title'
+  | 'createdAt'
+  | 'voteAverage'
+  | 'duration'
+  | 'score'
+  | 'availability'
+  | 'seen'
+  | 'releaseDate';
 
 interface MovieListProps {
   movies: MovieData[];
@@ -134,6 +141,7 @@ export default function MovieList({
           !isMobile && showHeader && sortBy && sortDir && onSetSort ? (
             <EventMovieRowHeader
               columns={[
+                { key: 'title', label: t('movies.list.columnTitle') },
                 { key: 'createdAt', label: t('movies.list.columnAddedAt') },
                 { key: 'voteAverage', label: t('movies.list.columnTmdbVote') },
                 { key: 'duration', label: t('movies.list.columnDuration') },

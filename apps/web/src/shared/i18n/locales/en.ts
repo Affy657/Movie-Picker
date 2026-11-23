@@ -1506,6 +1506,8 @@ export const en: Locale = {
       sortAvailability: 'Availability',
       sortSeen: 'Already seen',
       sortReleaseDate: 'Release date',
+      sortTitle: 'Title',
+      columnTitle: 'Title',
       columnAddedAt: 'Added',
       columnTmdbVote: 'Rating',
       columnDuration: 'Duration',

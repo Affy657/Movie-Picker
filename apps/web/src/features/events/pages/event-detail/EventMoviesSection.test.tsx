@@ -494,6 +494,22 @@ describe('EventMoviesSection (MSW)', () => {
     expect(screen.getByText('Film gagnant')).toBeInTheDocument();
   });
 
+  it('sorts the movies by title, from A to Z', async () => {
+    server.use(authedUserHandler, watchlistHandler([]));
+    const whiplash: MovieData = { ...MOVIE, id: 'm2', title: 'Whiplash', score: 9 };
+    const amelie: MovieData = { ...MOVIE, id: 'm3', title: 'Amélie', score: 1 };
+    renderSection({ movies: [MOVIE, whiplash, amelie], viewMode: 'grid' });
+
+    await userEvent.setup().click(screen.getByRole('button', { name: /^titre$/i }));
+
+    const headings = screen.getAllByRole('heading', { level: 3 });
+    expect(headings.map((heading) => heading.textContent)).toEqual([
+      'Amélie',
+      'Matrix',
+      'Whiplash',
+    ]);
+  });
+
   it('pins the winners in draw order, not in sort order', () => {
     server.use(authedUserHandler, watchlistHandler([]));
     const second: MovieData = { ...MOVIE, id: 'm2', title: 'Inception', createdAt: '2030-01-02' };

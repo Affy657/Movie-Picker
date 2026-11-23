@@ -1522,6 +1522,8 @@ export const fr = {
       sortAvailability: 'Disponibilit\u00e9',
       sortSeen: 'D\u00e9j\u00e0 vu',
       sortReleaseDate: 'Date de sortie',
+      sortTitle: 'Titre',
+      columnTitle: 'Titre',
       columnAddedAt: 'Ajout',
       columnTmdbVote: 'Note',
       columnDuration: 'Dur\u00e9e',

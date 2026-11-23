@@ -58,6 +58,7 @@ function useMoviesLayout(viewMode: 'grid' | 'list') {
 }
 
 const DEFAULT_SORT_DIRECTION: Record<MovieRowSortKey, 'asc' | 'desc'> = {
+  title: 'asc',
   score: 'desc',
   voteAverage: 'desc',
   duration: 'asc',
@@ -79,6 +80,8 @@ function pinWinnersFirst(movies: MovieData[], winnerMovieIds?: string[]): MovieD
 
 function compareMovies(a: MovieData, b: MovieData, sortBy: MovieRowSortKey): number {
   switch (sortBy) {
+    case 'title':
+      return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' });
     case 'score':
       return a.score - b.score;
     case 'voteAverage': {
@@ -306,6 +309,7 @@ export default function EventMoviesSection({
   );
 
   const sortOptions = [
+    { key: 'title' as const, label: t('movies.list.sortTitle') },
     { key: 'createdAt' as const, label: t('movies.list.sortAddedAt') },
     { key: 'score' as const, label: t('movies.list.sortScore') },
     { key: 'voteAverage' as const, label: t('movies.list.sortTmdbVote') },

@@ -33,7 +33,14 @@ import type { Translate } from '@/shared/i18n';
 import ScoreBar from '@/features/events/components/ScoreBar';
 
 type RowSortKey =
-  'createdAt' | 'voteAverage' | 'duration' | 'score' | 'availability' | 'seen' | 'releaseDate';
+  | 'title'
+  | 'createdAt'
+  | 'voteAverage'
+  | 'duration'
+  | 'score'
+  | 'availability'
+  | 'seen'
+  | 'releaseDate';
 
 export interface EventMovieRowHeaderColumn {
   key: RowSortKey;
@@ -61,7 +68,7 @@ export function EventMovieRowHeader({
   const layout: MovieTableColumn<RowSortKey>[] = [
     { id: 'rank' },
     { id: 'poster' },
-    { id: 'title', sorts: sort('createdAt'), inset: true },
+    { id: 'title', sorts: [...sort('title'), ...sort('createdAt')], inset: true },
     { id: 'vote', sorts: sort('voteAverage'), align: 'end' },
     { id: 'runtime', sorts: sort('duration'), align: 'end' },
     { id: 'release', sorts: sort('releaseDate'), align: 'end' },
