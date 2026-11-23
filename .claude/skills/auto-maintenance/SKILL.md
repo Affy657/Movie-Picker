@@ -56,7 +56,7 @@ S'il existe et que `git -C $WT status --porcelain` n'est pas vide, c'est le rest
 
 **Docker :** si `docker info` échoue, lancer `C:\Program Files\Docker\Docker\Docker Desktop.exe` et attendre jusqu'à trois minutes. Sans Docker, pas de tests d'intégration Mongo en local ; la passe continue, la CI les joue.
 
-**État local :** `C:/Users/adrie/.claude/auto-maintenance/etat.json` garde entre les runs les points déjà notifiés, pour ne pas renvoyer chaque jour la même notification. Le créer vide s'il manque. Rien de sensible ne va dans une issue GitHub : le dépôt est public.
+**État local :** `~/.claude/auto-maintenance/etat.json` (le dossier `.claude` du profil de l'utilisateur, hors du dépôt) garde entre les runs les points déjà notifiés, pour ne pas renvoyer chaque jour la même notification. Le créer vide s'il manque. Rien de sensible ne va dans une issue GitHub : le dépôt est public.
 
 ## Étape 1 : collecte
 
