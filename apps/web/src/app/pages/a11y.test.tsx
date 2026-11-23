@@ -502,8 +502,6 @@ describe('accessibility (axe)', () => {
           headingKey="watchlist.title"
           titleKey="watchlist.signedOutTitle"
           messageKey="watchlist.signedOutMessage"
-          returnTo={ROUTES.watchlist}
-          maxWidth="var(--container-lg)"
         >
           <p>jamais rendu</p>
         </SessionGate>
@@ -520,8 +518,6 @@ describe('accessibility (axe)', () => {
           headingHidden
           titleKey="events.create.signedOutTitle"
           messageKey="events.create.signedOutMessage"
-          returnTo={ROUTES.createEvent}
-          maxWidth="var(--container-sm)"
           back={{ to: ROUTES.myEvents, labelKey: 'nav.myEvents' }}
         >
           <p>jamais rendu</p>
