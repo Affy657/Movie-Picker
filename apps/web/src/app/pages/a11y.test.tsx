@@ -7,7 +7,12 @@ import { http, HttpResponse } from 'msw';
 import { axe } from 'vitest-axe';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { stubHoverCapability } from '@/test-utils/matchMedia';
-import { authMeGuestHandler, createWatchlistHandlers, TEST_API_V1 } from '@/mocks/handlers';
+import {
+  authMeGuestHandler,
+  createUserStatsHandler,
+  createWatchlistHandlers,
+  TEST_API_V1,
+} from '@/mocks/handlers';
 import LandingPage from '@/app/pages/LandingPage';
 import HomePage from '@/app/pages/HomePage';
 import ShowcaseListPage from '@/app/pages/ShowcaseListPage';
@@ -52,7 +57,9 @@ const HEAVIEST_PAGE_AXE_BUDGET = 60000;
 describe('accessibility (axe)', () => {
   const server = setupServer(
     authMeGuestHandler,
-    http.get(`${TEST_API_V1}/auth/oauth/providers`, () => HttpResponse.json({ providers: [] }))
+    http.get(`${TEST_API_V1}/auth/oauth/providers`, () => HttpResponse.json({ providers: [] })),
+    http.get(`${TEST_API_V1}/users/:handle/watched-movies`, () => HttpResponse.json({ items: [] })),
+    createUserStatsHandler('alice')
   );
 
   beforeAll(() => server.listen({ onUnhandledFrame: 'bypass' }));

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import clsx from 'clsx';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -76,6 +76,22 @@ function awaitsFirstAnswer(query: {
   return query.isPending && query.failureCount === 0 && query.fetchStatus === 'fetching';
 }
 
+const SECTIONS_WAIT_MS = 1500;
+
+function useHoldForSections(
+  handle: string | undefined,
+  profileLoaded: boolean,
+  sectionsPending: boolean
+): boolean {
+  const [waitOverFor, setWaitOverFor] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    if (!profileLoaded) return;
+    const timer = setTimeout(() => setWaitOverFor(handle), SECTIONS_WAIT_MS);
+    return () => clearTimeout(timer);
+  }, [handle, profileLoaded]);
+  return profileLoaded && sectionsPending && waitOverFor !== handle;
+}
+
 function useProfileBanner(profile: PublicProfile | undefined, isOwnProfile: boolean) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const banner = profile?.banner ?? null;
@@ -120,7 +136,11 @@ export default function ProfilePage() {
   const watchedHiddenFromVisitor = !!profile && !isOwnProfile && profile.isWatchedPublic === false;
   const watchedVisible = !!profile && !watchedHiddenFromVisitor;
   const watchedPreview = useProfileWatchedPreview(handle, !watchedHiddenFromVisitor);
-  const sectionsPending = awaitsFirstAnswer(statsQuery) || awaitsFirstAnswer(watchedPreview);
+  const holdsForSections = useHoldForSections(
+    handle,
+    !!profile,
+    awaitsFirstAnswer(statsQuery) || awaitsFirstAnswer(watchedPreview)
+  );
   const isNotFound =
     !handle ||
     (profileQuery.isError && ApiError.is(profileQuery.error) && profileQuery.error.code === 404);
@@ -157,7 +177,7 @@ export default function ProfilePage() {
     onError: (err) => setFollowError(getErrorMessage(err, t('profile.follow.error'))),
   });
 
-  if (handle && (profileQuery.isPending || (!!profile && sectionsPending))) {
+  if (handle && (profileQuery.isPending || holdsForSections)) {
     return (
       <PageLayout className={styles.layout}>
         <ProfilePageSkeleton label={t('profile.loading')} />

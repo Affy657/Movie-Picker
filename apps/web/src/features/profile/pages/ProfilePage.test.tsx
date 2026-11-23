@@ -471,6 +471,23 @@ describe('ProfilePage (MSW)', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Alice' })).toBeInTheDocument();
   });
 
+  it('does not hold the profile for statistics that never answer', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      http.get(`${TEST_API_V1}/users/alice/stats`, async () => {
+        await new Promise(() => undefined);
+        return HttpResponse.json(EMPTY_STATS);
+      })
+    );
+
+    renderProfile('alice');
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Alice' }, { timeout: 4000 })
+    ).toBeInTheDocument();
+  });
+
   it('shows an error with a Retry button when the statistics fail, and recovers', async () => {
     const user = userEvent.setup();
     let statsCallCount = 0;
