@@ -5,6 +5,11 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { browserTargets } from './tooling/browserTargets';
 import {
+  apiPreconnectTags,
+  contentSecurityPolicyMeta,
+  insertAfterCharset,
+} from './tooling/documentHead';
+import {
   COLOR_MIX_FALLBACK_MODULE,
   COLOR_MIX_TOKEN_SHEETS,
   buildColorMixFallback,
@@ -42,15 +47,17 @@ function cspMetaPlugin(apiOrigin: string, sentryOrigin: string): Plugin {
           sentryOrigin,
           await inlineScriptHashes(html)
         );
-        return [
-          {
-            tag: 'meta',
-            attrs: { 'http-equiv': 'Content-Security-Policy', content: policy },
-            injectTo: 'head-prepend',
-          },
-        ];
+        return insertAfterCharset(html, contentSecurityPolicyMeta(policy));
       },
     },
+  };
+}
+
+function apiPreconnectPlugin(apiOrigin: string): Plugin {
+  return {
+    name: 'moviepicker-api-preconnect',
+    apply: 'build',
+    transformIndexHtml: () => apiPreconnectTags(apiOrigin),
   };
 }
 
@@ -359,6 +366,7 @@ export default defineConfig(({ mode }) => {
       react(),
       colorMixFallbackPlugin(),
       releaseMetaPlugin(release),
+      apiPreconnectPlugin(apiOrigin),
       VitePWA({
         strategies: 'injectManifest',
         srcDir: 'src',
