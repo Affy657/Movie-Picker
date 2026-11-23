@@ -1,10 +1,7 @@
 import type { ReactNode } from 'react';
-import { Link } from 'react-router';
 import EmptyState from '@/shared/components/EmptyState';
-import { withReturnTo, ROUTES } from '@/app/routes';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
-import { useTranslation } from '@/shared/i18n';
-import { buttonClass } from '@/shared/components/Button';
+import AccountChoiceLinks from '@/shared/components/AccountChoiceLinks';
 
 type SignedOutStateProps = {
   icon: ReactNode;
@@ -21,7 +18,6 @@ export default function SignedOutState({
   returnTo,
   compact,
 }: Readonly<SignedOutStateProps>) {
-  const { t } = useTranslation();
   const { track } = useAnalytics();
 
   return (
@@ -32,22 +28,10 @@ export default function SignedOutState({
       message={message}
       compact={compact}
       actions={
-        <>
-          <Link
-            to={withReturnTo(ROUTES.register, returnTo)}
-            className={buttonClass({ variant: 'primary' })}
-            onClick={() => track('signed_out_cta_clicked', { page: returnTo, cta: 'register' })}
-          >
-            {t('home.ctaRegister')}
-          </Link>
-          <Link
-            to={withReturnTo(ROUTES.login, returnTo)}
-            className={buttonClass()}
-            onClick={() => track('signed_out_cta_clicked', { page: returnTo, cta: 'login' })}
-          >
-            {t('home.ctaHaveAccount')}
-          </Link>
-        </>
+        <AccountChoiceLinks
+          returnTo={returnTo}
+          onChoose={(cta) => track('signed_out_cta_clicked', { page: returnTo, cta })}
+        />
       }
     />
   );
