@@ -7,13 +7,13 @@ namespace MoviePicker.Api.Tests.UseCases.Shared;
 
 public sealed class UserNamePoliciesTests
 {
-    public static TheoryData<string> InvisibleOnlyNames => new()
-    {
+    public static TheoryData<string> InvisibleOnlyNames =>
+    [
         "\u200B\u200B",
         "\u3164\u3164",
         "\u202E \u2066",
         "\uFEFF\u00AD",
-    };
+    ];
 
     [Theory]
     [MemberData(nameof(InvisibleOnlyNames))]
