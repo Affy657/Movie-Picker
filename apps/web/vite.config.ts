@@ -11,6 +11,7 @@ import {
   readColorMixTokenSheets,
 } from './tooling/colorMixFallback';
 import { securityTxtPlugin } from './tooling/securityTxt';
+import { invitationDocumentsPlugin } from './tooling/invitationDocuments';
 import {
   buildContentSecurityPolicy,
   inlineScriptHashes,
@@ -416,6 +417,7 @@ export default defineConfig(({ mode }) => {
       securityTxtPlugin(),
       preloadCriticalAssetsPlugin(),
       cspMetaPlugin(apiOrigin, sentryOrigin),
+      invitationDocumentsPlugin(),
       ...(sentryAuthToken
         ? sentryVitePlugin({
             org: process.env.SENTRY_ORG,

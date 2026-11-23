@@ -1015,7 +1015,9 @@ export const fr = {
     },
     share: {
       dialogTitle: 'Partager la soirée',
-      shareText: "Je t'invite à {{title}} le {{date}} à {{time}} sur Movie Picker !",
+      shareText: 'Je vous invite à « {{title}} » le {{date}} à {{time}} sur Movie Picker !',
+      shareTextDefaultTitle:
+        'Je vous invite à une soirée ciné le {{date}} à {{time}} sur Movie Picker !',
       qrHint: "Ouvrez l'appareil photo pour rejoindre la soirée sur mobile.",
     },
     calendar: {
@@ -2125,6 +2127,9 @@ export const fr = {
     },
     join: {
       title: 'Rejoindre une liste',
+      previewTitle: 'Invitation à une liste de films',
+      previewDescription:
+        'Vous avez reçu une invitation à rejoindre une liste de films partagée sur Movie Picker. Ouvrez le lien pour la découvrir.',
       overline: 'Invitation',
       invitedBy: '{{name}} vous invite à rejoindre cette liste.',
       submit: 'Rejoindre la liste',
@@ -2406,6 +2411,9 @@ export const fr = {
     join: {
       overline: 'Invitation',
       title: 'Rejoindre un groupe',
+      previewTitle: 'Invitation à un groupe d’amis',
+      previewDescription:
+        'Vous avez reçu une invitation à rejoindre un groupe d’amis sur Movie Picker, pour organiser vos soirées ciné ensemble. Ouvrez le lien pour le rejoindre.',
       invitedBy: '{{name}} vous invite à rejoindre ce groupe.',
       explanation:
         'Les soirées du groupe apparaîtront dans Mes soirées, sans lien à attendre. Vous pourrez quitter le groupe à tout moment.',

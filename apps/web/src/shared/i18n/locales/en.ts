@@ -1006,6 +1006,8 @@ export const en: Locale = {
     share: {
       dialogTitle: 'Share the event',
       shareText: "You're invited to {{title}} on {{date}} at {{time}} on Movie Picker!",
+      shareTextDefaultTitle:
+        "You're invited to a movie night on {{date}} at {{time}} on Movie Picker!",
       qrHint: 'Open your camera to join the event on mobile.',
     },
     calendar: {
@@ -2102,6 +2104,9 @@ export const en: Locale = {
       notFoundBack: 'See @{{handle}}’s profile',
     },
     join: {
+      previewTitle: 'Invitation to a film list',
+      previewDescription:
+        'You have been invited to join a shared film list on Movie Picker. Open the link to see it.',
       title: 'Join a list',
       overline: 'Invitation',
       invitedBy: '{{name}} invites you to join this list.',
@@ -2380,6 +2385,9 @@ export const en: Locale = {
       done: 'Done',
     },
     join: {
+      previewTitle: 'Invitation to a group of friends',
+      previewDescription:
+        'You have been invited to join a group of friends on Movie Picker, to plan your movie nights together. Open the link to join it.',
       overline: 'Invitation',
       title: 'Join a group',
       invitedBy: '{{name}} invites you to join this group.',

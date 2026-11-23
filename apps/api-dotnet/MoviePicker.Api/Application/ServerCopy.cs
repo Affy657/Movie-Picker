@@ -75,6 +75,8 @@ public static class ServerCopy
 
         public const string OpenOnSite = "Ouvrir sur Movie Picker";
 
+        public const string JoinAndVote = "Rejoignez la soirée et votez pour votre film.";
+
         public const string PrivateInvitationTitle = "Invitation à une soirée ciné";
 
         public const string PrivateInvitationDescription =
@@ -95,8 +97,18 @@ public static class ServerCopy
 
         public static string Invitation(string when, string? theme) =>
             string.IsNullOrEmpty(theme)
-                ? $"Soirée ciné{when}. Rejoignez la soirée et votez pour votre film."
-                : $"Soirée ciné{when}. Thème : {theme}. Rejoignez la soirée et votez pour votre film.";
+                ? $"Soirée ciné{when}. {JoinAndVote}"
+                : $"Soirée ciné{when}. Thème : {theme}. {JoinAndVote}";
+
+        public static string Gathering(string when, string? theme)
+        {
+            var invitation = string.IsNullOrEmpty(theme) ? JoinAndVote : $"Thème : {theme}. {JoinAndVote}";
+            return string.IsNullOrEmpty(when) ? invitation : $"Rendez-vous{when}. {invitation}";
+        }
+
+        public static string InvitedTo(string host, string eventTitle) => $"{host} vous invite à « {eventTitle} »";
+
+        public static string InvitedToANight(string host) => $"{host} vous invite à une soirée ciné";
 
         public static string Programme(string film, string when) => $"Au programme : {film}{when}.";
 

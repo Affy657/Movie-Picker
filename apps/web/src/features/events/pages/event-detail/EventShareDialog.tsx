@@ -10,6 +10,7 @@ import type { MovieData } from '@/shared/types/movie';
 import type { RecapShare } from './eventDetailSessionTypes';
 import { averageOfRatings, formatRating } from '@/shared/utils/formatRating';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import { invitationShareText } from '@/features/events/utils/invitationShareText';
 
 export type EventShareTab = 'link' | 'friends';
 
@@ -62,7 +63,7 @@ export default function EventShareDialog({
   friendsBadge,
   recap = null,
 }: Readonly<Props>) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const recapMovie = recap ? (recap.winners[0] ?? null) : null;
   const ratingsLabel = useRecapRatingsLabel(recapMovie);
   const friendsTab =
@@ -121,11 +122,7 @@ export default function EventShareDialog({
         name: event.title,
         meta: [dateFormatted, participantsLabel],
       }}
-      shareText={t('events.share.shareText', {
-        title: event.title,
-        time: timeFormatted,
-        date: dateLabel,
-      })}
+      shareText={invitationShareText(t, locale, event, dateLabel, timeFormatted)}
       analyticsSurface="event"
       initialTab={initialTab}
       extraTab={friendsTab}

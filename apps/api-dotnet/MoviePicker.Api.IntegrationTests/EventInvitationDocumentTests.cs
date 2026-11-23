@@ -34,7 +34,7 @@ public sealed class EventInvitationDocumentTests : IClassFixture<MoviePickerAppl
         Assert.Equal("public, max-age=60", string.Join(", ", res.Headers.GetValues("Cache-Control")));
         Assert.Equal("frame-ancestors 'none'", string.Join(", ", res.Headers.GetValues("Content-Security-Policy")));
         var html = await res.Content.ReadAsStringAsync();
-        Assert.Contains("<meta property=\"og:title\" content=\"Soirée publique OG\" />", html);
+        Assert.Contains("<meta property=\"og:title\" content=\"Tester vous invite à « Soirée publique OG »\" />", html);
         Assert.Contains($"<meta property=\"og:url\" content=\"https://web.integration.test/e/{slug}\" />", html);
         Assert.Contains("à 19h30", html);
         Assert.Contains("<div id=\"root\"></div>", html);
