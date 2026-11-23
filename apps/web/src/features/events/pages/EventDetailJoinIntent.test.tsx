@@ -162,6 +162,7 @@ function nightWithBob(): ApiSchemas['EventDetailResponse'] {
     slug: SLUG,
     recapSlug: null,
     closedAt: null,
+    viewerRemoved: false,
     myParticipant: {
       _id: 'p-bob',
       eventId: 'evt-msw',
