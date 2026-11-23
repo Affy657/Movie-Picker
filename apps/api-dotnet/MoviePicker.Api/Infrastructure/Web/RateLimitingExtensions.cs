@@ -113,7 +113,7 @@ public static class RateLimitingExtensions
         new(PostersPolicy, 3_000, 1, QuotaScope.Address),
         new(PublicProfilePolicy, 120, 1),
         new(SearchUsersPolicy, 40, 1),
-        new(GlobalSearchPolicy, 90, 1),
+        new(GlobalSearchPolicy, 40, 1),
         new(FollowMutationPolicy, 60, 1),
         new(InviteUserPolicy, 60, 1),
         new(WatchlistReadPolicy, 120, 1),

@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Fixed
+
+- **La recherche de la barre de navigation reste à jour et se referme mieux** : une liste, un groupe ou une soirée que vous venez de changer apparaît tel quel à la recherche suivante, « Rien ne correspond » ne s'affiche plus sous des mots encore en cours de recherche, la loupe referme la recherche qu'elle a ouverte, et Échap rend la main au champ d'Explorer.
+
 ## [1.29.0] - 2026-11-23
 
 ### Added

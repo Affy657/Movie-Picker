@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Extensions.Options;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
@@ -25,6 +26,9 @@ public sealed class GlobalSearchHandlerTests
     private readonly Mock<IMovieListRepository> _lists = new();
     private readonly Mock<IUserRepository> _users = new();
     private readonly Mock<IGetMovieCollectionsHandler> _sagas = new();
+    private readonly List<Event> _nights = [];
+    private readonly List<string> _joinedIds = [];
+    private readonly List<MovieListSummary> _myLists = [];
     private readonly GlobalSearchHandler _sut;
 
     public GlobalSearchHandlerTests()
@@ -35,16 +39,24 @@ public sealed class GlobalSearchHandlerTests
         _members
             .Setup(m => m.HandleAsync(It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new FollowListResponse());
-        _events.Setup(e => e.ListAllByCreatorUserIdAsync(Me, It.IsAny<CancellationToken>())).ReturnsAsync([]);
         _events
-            .Setup(e => e.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-        _events
-            .Setup(e => e.ListByGroupIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-        _participants.Setup(p => p.ListDistinctEventIdsByUserIdAsync(Me, It.IsAny<CancellationToken>())).ReturnsAsync([]);
+            .Setup(e => e.ListTitleMatchesAsync(
+                It.IsAny<string>(),
+                It.IsAny<IReadOnlyCollection<string>>(),
+                It.IsAny<IReadOnlyCollection<string>>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((string creator, IReadOnlyCollection<string> ids, IReadOnlyCollection<string> groupIds, string query, CancellationToken _) =>
+                _nights
+                    .Where(n => n.CreatorUserId == creator || ids.Contains(n.Id) || (n.GroupId is { } g && groupIds.Contains(g)))
+                    .Where(n => UserSearchPolicy.Contains(n.Title, query))
+                    .ToList());
+        _participants.Setup(p => p.ListDistinctEventIdsByUserIdAsync(Me, It.IsAny<CancellationToken>())).ReturnsAsync(_joinedIds);
         _groups.Setup(g => g.ListAdmittingAsync(Me, It.IsAny<CancellationToken>())).ReturnsAsync([]);
-        _lists.Setup(l => l.ListSummariesAsync(Me, It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _lists
+            .Setup(l => l.SearchSummariesAsync(Me, It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((string _, string query, int limit, CancellationToken _) =>
+                _myLists.Where(list => UserSearchPolicy.Contains(list.Name, query)).Take(limit).ToList());
         _lists
             .Setup(l => l.SearchPublicSummariesAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
@@ -95,19 +107,17 @@ public sealed class GlobalSearchHandlerTests
             .Setup(t => t.SearchTitlesAsync(It.IsAny<string>(), true, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(rows);
 
-    private void ICreated(params Event[] nights) =>
-        _events.Setup(e => e.ListAllByCreatorUserIdAsync(Me, It.IsAny<CancellationToken>())).ReturnsAsync(nights);
+    private void ICreated(params Event[] nights) => _nights.AddRange(nights);
 
     private void IJoined(params Event[] nights)
     {
-        _participants
-            .Setup(p => p.ListDistinctEventIdsByUserIdAsync(Me, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(nights.Select(n => n.Id).ToList());
-        _events
-            .Setup(e => e.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((IReadOnlyCollection<string> ids, CancellationToken _) =>
-                nights.Where(n => ids.Contains(n.Id)).ToList());
+        _nights.AddRange(nights);
+        _joinedIds.AddRange(nights.Select(n => n.Id));
     }
+
+    private void TheyExist(params Event[] nights) => _nights.AddRange(nights);
+
+    private void MyListsAre(params MovieListSummary[] lists) => _myLists.AddRange(lists);
 
     [Theory]
     [InlineData(null)]
@@ -123,7 +133,14 @@ public sealed class GlobalSearchHandlerTests
         _tmdb.Verify(
             t => t.SearchTitlesAsync(It.IsAny<string>(), It.IsAny<bool>(), null, null, It.IsAny<CancellationToken>()),
             Times.Never);
-        _events.Verify(e => e.ListAllByCreatorUserIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _events.Verify(
+            e => e.ListTitleMatchesAsync(
+                It.IsAny<string>(),
+                It.IsAny<IReadOnlyCollection<string>>(),
+                It.IsAny<IReadOnlyCollection<string>>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -165,12 +182,15 @@ public sealed class GlobalSearchHandlerTests
         Assert.Equal([1, 2, 3, 4, 5], result.Titles.Select(t => t.TmdbId));
     }
 
-    [Fact]
-    public async Task HandleAsync_TmdbUnavailable_StillReturnsTheOtherSections()
+    public static TheoryData<Exception> TmdbFailures => new() { new HttpRequestException("down"), new JsonException("garbled") };
+
+    [Theory]
+    [MemberData(nameof(TmdbFailures))]
+    public async Task HandleAsync_TmdbUnavailable_StillReturnsTheOtherSections(Exception failure)
     {
         _tmdb
             .Setup(t => t.SearchTitlesAsync(It.IsAny<string>(), It.IsAny<bool>(), null, null, It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new HttpRequestException("down"));
+            .ThrowsAsync(failure);
         ICreated(Night("n1", "Soirée Dune"));
 
         var result = await _sut.HandleAsync("dune", Me);
@@ -202,14 +222,21 @@ public sealed class GlobalSearchHandlerTests
         _members.Verify(
             m => m.HandleAsync(It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
             Times.Never);
-        _events.Verify(e => e.ListAllByCreatorUserIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _events.Verify(
+            e => e.ListTitleMatchesAsync(
+                It.IsAny<string>(),
+                It.IsAny<IReadOnlyCollection<string>>(),
+                It.IsAny<IReadOnlyCollection<string>>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
     public async Task HandleAsync_SignedIn_ReturnsTheFirstFourMembers()
     {
         _members
-            .Setup(m => m.HandleAsync("lea", Me, It.IsAny<CancellationToken>()))
+            .Setup(m => m.HandleAsync("lea", null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new FollowListResponse
             {
                 Items = Enumerable.Range(1, 6)
@@ -220,6 +247,7 @@ public sealed class GlobalSearchHandlerTests
         var result = await _sut.HandleAsync("lea", Me);
 
         Assert.Equal(["lea1", "lea2", "lea3", "lea4"], result.Members.Select(m => m.Handle));
+        _members.Verify(m => m.HandleAsync(It.IsAny<string?>(), Me, It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -276,12 +304,11 @@ public sealed class GlobalSearchHandlerTests
             Members = [new FriendGroupMember(Me, DateTimeOffset.UtcNow.AddDays(-30))]
         };
         _groups.Setup(g => g.ListAdmittingAsync(Me, It.IsAny<CancellationToken>())).ReturnsAsync([group]);
-        _events
-            .Setup(e => e.ListByGroupIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([
-                Night("open", "Ciné du groupe", creator: "friend", groupId: "g1"),
-                Night("done", "Ciné du groupe passé", creator: "friend", groupId: "g1", finished: true)
-            ]);
+        TheyExist(
+            Night("open", "Ciné du groupe", creator: "friend", groupId: "g1"),
+            Night("done", "Ciné du groupe passé", creator: "friend", groupId: "g1", finished: true),
+            Night("left", "Ciné d'un ancien membre", creator: "gone", groupId: "g1"),
+            Night("elsewhere", "Ciné d'un inconnu", creator: "stranger"));
 
         var result = await _sut.HandleAsync("cine", Me);
 
@@ -304,11 +331,10 @@ public sealed class GlobalSearchHandlerTests
     [Fact]
     public async Task HandleAsync_FindsMyListsByNameWithTheirSizeAndFirstPoster()
     {
-        _lists.Setup(l => l.ListSummariesAsync(Me, It.IsAny<CancellationToken>())).ReturnsAsync([
+        MyListsAre(
             ListSummary("l1", "Polars coréens", itemCount: 7, posters: ["/a.jpg", "/b.jpg"]),
             ListSummary("l2", "À revoir"),
-            ListSummary("l3", "Coréens partagés", ownerId: "friend")
-        ]);
+            ListSummary("l3", "Coréens partagés", ownerId: "friend"));
 
         var result = await _sut.HandleAsync("coreens", Me);
 
@@ -333,23 +359,25 @@ public sealed class GlobalSearchHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_LeavesOutOfPublicListsMyOwnAndThoseOfPrivateProfiles()
+    public async Task HandleAsync_LeavesOutOfPublicListsMyOwnTheOnesIShareAndThoseOfPrivateProfiles()
     {
-        _lists.Setup(l => l.ListSummariesAsync(Me, It.IsAny<CancellationToken>())).ReturnsAsync([ListSummary("mine", "Polars à moi")]);
+        MyListsAre(ListSummary("mine", "Polars à moi"), ListSummary("joined", "Polars d'Erin", ownerId: "erin"));
         PublicListsAre(
             ListSummary("mine", "Polars à moi"),
+            ListSummary("joined", "Polars d'Erin", ownerId: "erin"),
             ListSummary("hidden", "Polars cachés", ownerId: "bob"),
             ListSummary("nohandle", "Polars sans pseudo", ownerId: "carl"),
             ListSummary("shown", "Polars de Dana", ownerId: "dana"));
         OwnersAre(
             new UserCard("bob", "🎬", "bob", IsProfilePublic: false, DisplayName: "Bob"),
             new UserCard("carl", "🎬", null, IsProfilePublic: true, DisplayName: "Carl"),
-            new UserCard("dana", "🎬", "dana", IsProfilePublic: true, DisplayName: "Dana"));
+            new UserCard("dana", "🎬", "dana", IsProfilePublic: true, DisplayName: "Dana"),
+            new UserCard("erin", "🎬", "erin", IsProfilePublic: true, DisplayName: "Erin"));
 
         var result = await _sut.HandleAsync("polars", Me);
 
         Assert.Equal(["shown"], result.PublicLists.Select(list => list.Id));
-        Assert.Equal(["mine"], result.Lists.Select(list => list.Id));
+        Assert.Equal(["mine", "joined"], result.Lists.Select(list => list.Id));
     }
 
     [Fact]

@@ -387,6 +387,20 @@ describe('HomeHero', () => {
     expect(await screen.findByRole('link', { name: /Nuit Dune/ })).toBeInTheDocument();
   });
 
+  it('gives the focus back to its field when Escape puts the results away from one of them', async () => {
+    server.use(authMeGuestHandler, trendingHandler, searchHandler);
+    renderHero();
+    await userEvent.type(homeField(), 'dune');
+    await screen.findByRole('link', { name: /Nuit Dune/ });
+
+    await userEvent.keyboard('{ArrowDown}');
+    expect(screen.getByRole('link', { name: /Dune 2021/ })).toHaveFocus();
+    await userEvent.keyboard('{Escape}');
+
+    expect(screen.queryByRole('link', { name: /Nuit Dune/ })).not.toBeInTheDocument();
+    expect(homeField()).toHaveFocus();
+  });
+
   it('puts its results away when the focus leaves the search', async () => {
     server.use(authMeGuestHandler, trendingHandler, searchHandler);
     renderHero();

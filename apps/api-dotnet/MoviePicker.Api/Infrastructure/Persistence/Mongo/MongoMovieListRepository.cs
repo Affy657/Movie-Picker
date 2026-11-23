@@ -63,10 +63,28 @@ public sealed class MongoMovieListRepository : IMovieListRepository
         var match = new BsonDocument
         {
             { "isPublic", true },
-            { "name", new BsonRegularExpression(UserSearchPolicy.ToRegexPattern(normalized), "i") }
+            { "name", NameMatching(normalized) }
         };
         return SummariesAsync(match, ct, limit);
     }
+
+    public Task<IReadOnlyList<MovieListSummary>> SearchSummariesAsync(string userId, string query, int limit, CancellationToken ct = default)
+    {
+        var normalized = UserSearchPolicy.Normalize(query);
+        if (normalized.Length == 0 || limit <= 0 || !MongoObjectIds.IsValid(userId))
+            return Task.FromResult<IReadOnlyList<MovieListSummary>>([]);
+
+        var user = ObjectId.Parse(userId);
+        var match = new BsonDocument
+        {
+            { "$or", new BsonArray { new BsonDocument(OwnerIdField, user), new BsonDocument(MemberUserIdField, user) } },
+            { "name", NameMatching(normalized) }
+        };
+        return SummariesAsync(match, ct, limit);
+    }
+
+    private static BsonRegularExpression NameMatching(string normalized) =>
+        new(UserSearchPolicy.ToRegexPattern(normalized), "i");
 
     public Task<long> CountPublicByOwnerAsync(string ownerId, CancellationToken ct = default) =>
         MongoObjectIds.IsValid(ownerId)

@@ -1,6 +1,7 @@
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.SearchUsers;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -280,6 +281,33 @@ public sealed class MongoEventRepository : IEventRepository
             return [];
 
         var docs = await _collection.Find(Builders<EventDocument>.Filter.In(x => x.GroupId, ids)).ToListAsync(ct);
+        return docs.ConvertAll(EventDocumentMapper.ToDomain);
+    }
+
+    public async Task<IReadOnlyList<Event>> ListTitleMatchesAsync(
+        string creatorUserId,
+        IReadOnlyCollection<string> eventIds,
+        IReadOnlyCollection<string> groupIds,
+        string query,
+        CancellationToken ct = default)
+    {
+        var normalized = UserSearchPolicy.Normalize(query);
+        if (normalized.Length == 0)
+            return [];
+
+        var filter = Builders<EventDocument>.Filter;
+        var ids = eventIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
+        var groups = groupIds.Where(MongoObjectIds.IsValid).Distinct().ToList();
+        var reachable = new List<FilterDefinition<EventDocument>>
+        {
+            filter.In(x => x.Id, ids),
+            filter.In(x => x.GroupId, groups)
+        };
+        if (!string.IsNullOrWhiteSpace(creatorUserId))
+            reachable.Add(filter.Eq(x => x.CreatorUserId, creatorUserId));
+
+        var titled = filter.Regex(x => x.Title, new BsonRegularExpression(UserSearchPolicy.ToRegexPattern(normalized), "i"));
+        var docs = await _collection.Find(titled & filter.Or(reachable)).ToListAsync(ct);
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
     }
 

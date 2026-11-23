@@ -1,3 +1,4 @@
+import type { Ref } from 'react';
 import { Search } from 'lucide-react';
 import clsx from 'clsx';
 import styles from './SearchField.module.css';
@@ -13,6 +14,7 @@ export interface SearchFieldProps {
   iconSize?: IconSizeValue;
   className?: string;
   disabled?: boolean;
+  ref?: Ref<HTMLInputElement>;
 }
 
 export default function SearchField({
@@ -25,11 +27,13 @@ export default function SearchField({
   iconSize = ICON_SIZE.md,
   className,
   disabled,
+  ref,
 }: Readonly<SearchFieldProps>) {
   return (
     <span className={clsx(styles.wrap, className)}>
       <Search size={iconSize} aria-hidden className={styles.icon} />
       <input
+        ref={ref}
         id={id}
         type="search"
         enterKeyHint="search"

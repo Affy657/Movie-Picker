@@ -296,14 +296,18 @@ export default function GlobalSearchResults({
   const { t } = useTranslation();
   const { track } = useAnalytics();
   const { query, ready, results } = useGlobalSearch(term);
-
-  if (!ready) return null;
-
   const pick: Pick = (kind) => {
     track('global_search_result_opened', { kind, source });
     onPick(kind);
   };
-  const found = results.data;
+  const stale = results.isPlaceholderData;
+  const found = stale && results.data && countOf(results.data) === 0 ? undefined : results.data;
+  const announcement =
+    ready && found && !stale
+      ? pluralizeCount(countOf(found), 'globalSearch.resultsOne', 'globalSearch.resultsMany', t, {
+          query,
+        })
+      : '';
 
   let body: ReactNode;
   if (found) {
@@ -326,13 +330,15 @@ export default function GlobalSearchResults({
   }
 
   return (
-    <div className={clsx(styles.results, className)} aria-busy={results.isFetching}>
+    <>
       <p role="status" aria-live="polite" aria-atomic="true" className="visually-hidden">
-        {found
-          ? pluralizeCount(countOf(found), 'globalSearch.resultsOne', 'globalSearch.resultsMany', t)
-          : ''}
+        {announcement}
       </p>
-      {body}
-    </div>
+      {ready ? (
+        <div className={clsx(styles.results, className)} aria-busy={results.isFetching}>
+          {body}
+        </div>
+      ) : null}
+    </>
   );
 }

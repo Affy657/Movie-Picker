@@ -3,7 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http } from 'msw';
+import { delay, http } from 'msw';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
 import { apiErrorJson, apiJson, type ApiSchemas } from '@/mocks/apiJson';
@@ -83,8 +83,8 @@ function LocationProbe() {
   return <span data-testid="location">{`${location.pathname}${location.search}`}</span>;
 }
 
-function renderResults(term: string, onPick = vi.fn()) {
-  render(
+function resultsTree(term: string, onPick: () => void) {
+  return (
     <AppTestProviders>
       <MemoryRouter initialEntries={['/']}>
         <GlobalSearchResults term={term} source="header" onPick={onPick} />
@@ -94,6 +94,10 @@ function renderResults(term: string, onPick = vi.fn()) {
       </MemoryRouter>
     </AppTestProviders>
   );
+}
+
+function renderResults(term: string, onPick = vi.fn()) {
+  render(resultsTree(term, onPick));
   return onPick;
 }
 
@@ -193,10 +197,36 @@ describe('GlobalSearchResults', () => {
     expect(await screen.findByRole('region', { name: 'Films et séries' })).toBeInTheDocument();
   });
 
-  it('announces how many results it found', async () => {
+  it('announces how many results it found and for which words', async () => {
     renderResults('dune');
 
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('9 résultats'));
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent('9 résultats pour « dune »')
+    );
+  });
+
+  it('keeps its announcement area in place before the search starts', () => {
+    renderResults('d');
+
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+  });
+
+  it('never says the new words match nothing while their results load', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/search`, async ({ request }) => {
+        const term = new URL(request.url).searchParams.get('q');
+        if (term === 'dun') await delay(300);
+        return apiJson<'GlobalSearchResponse'>(term === 'dun' ? FULL : EMPTY);
+      })
+    );
+    const { rerender } = render(resultsTree('dunx', vi.fn()));
+    expect(await screen.findByText('Rien ne correspond à « dunx ».')).toBeInTheDocument();
+
+    rerender(resultsTree('dun', vi.fn()));
+
+    expect(await screen.findByText('Recherche en cours…')).toBeInTheDocument();
+    expect(screen.queryByText(/Rien ne correspond/)).not.toBeInTheDocument();
+    expect(await screen.findByRole('region', { name: 'Films et séries' })).toBeInTheDocument();
   });
 
   it('tells which kind of result was opened', async () => {

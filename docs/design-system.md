@@ -213,7 +213,7 @@ Câble `label`, `hint`, `error` et `aria-describedby` autour d'un champ rendu pa
 
 Le skin de champ est la classe globale `.input` de `02-forms-and-content.css` : bordure `--color-border-field`, corps `--font-size-md`, survol, `:focus` en `--ring-focus`, `:disabled` en `--opacity-disabled`. `SearchField` et `NumberInput` la portent, ils n'en redessinent rien.
 
-`NumberInput` (`value` chaîne, `min`, `max`, `step`, `placeholder`, `invalid`, `disabled`, `ariaDescribedBy`, et `unlimited` (`label`, `fallback`) pour une limite facultative : la valeur vide s'affiche « Sans limite », se place au-dessus de `max`, et « − » la ramène à `fallback`), `SearchField` (`type="search"`, `placeholder`, `ariaLabel`, `ariaDescribedBy`, `iconSize` dans `ICON_SIZE`, `disabled`, icône décorative) et `Toggle` (`role="switch"`, `checked`, `onChange(checked)`, `ariaLabel` ou `ariaLabelledBy`) s'y insèrent.
+`NumberInput` (`value` chaîne, `min`, `max`, `step`, `placeholder`, `invalid`, `disabled`, `ariaDescribedBy`, et `unlimited` (`label`, `fallback`) pour une limite facultative : la valeur vide s'affiche « Sans limite », se place au-dessus de `max`, et « − » la ramène à `fallback`), `SearchField` (`type="search"`, `placeholder`, `ariaLabel`, `ariaDescribedBy`, `iconSize` dans `ICON_SIZE`, `disabled`, `ref` vers le champ pour y rendre le focus, icône décorative) et `Toggle` (`role="switch"`, `checked`, `onChange(checked)`, `ariaLabel` ou `ariaLabelledBy`) s'y insèrent.
 
 ### ToggleRow
 
