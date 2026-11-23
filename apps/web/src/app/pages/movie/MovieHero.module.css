@@ -146,6 +146,21 @@
   color: var(--color-text-muted);
 }
 
+.genresPending {
+  width: 40%;
+  height: calc(var(--font-size-md) * var(--leading-relaxed));
+}
+
+.scoresPending {
+  width: 45%;
+  height: calc(2 * var(--font-size-xs) * var(--leading-relaxed) + var(--space-0-5));
+}
+
+.streamingPending {
+  width: 60%;
+  height: var(--space-7);
+}
+
 .scores {
   display: flex;
   flex-wrap: wrap;

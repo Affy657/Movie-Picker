@@ -571,6 +571,51 @@ describe('MoviePage', () => {
     expect(screen.queryByText('Pas encore de synopsis pour ce film.')).toBeNull();
   });
 
+  it('keeps the room of the genres, scores and streaming while a deep link loads', async () => {
+    server.use(authMeGuestHandler, pendingDetailsHandler, showcaseHandler);
+    renderPage();
+
+    const loading = await screen.findByRole('heading', { level: 1, name: 'Chargement du film…' });
+    const pending = loading.closest('header')!.querySelectorAll('[class*="Pending"]');
+    expect([...pending].map((element) => element.getAttribute('class'))).toEqual([
+      expect.stringContaining('genresPending'),
+      expect.stringContaining('scoresPending'),
+      expect.stringContaining('streamingPending'),
+    ]);
+  });
+
+  it('only keeps room for what the card it was opened from did not tell', async () => {
+    server.use(authMeGuestHandler, pendingDetailsHandler, showcaseHandler);
+    renderPage({
+      pathname: '/film/438631-dune',
+      state: {
+        fromApp: true,
+        seed: {
+          tmdbId: 438631,
+          mediaType: 'movie',
+          title: 'Dune',
+          genreIds: [878],
+          voteAverage: 7.8,
+        },
+      },
+    });
+
+    const title = await screen.findByRole('heading', { level: 1, name: 'Dune' });
+    const pending = title.closest('header')!.querySelectorAll('[class*="Pending"]');
+    expect([...pending].map((element) => element.getAttribute('class'))).toEqual([
+      expect.stringContaining('streamingPending'),
+    ]);
+  });
+
+  it('gives the room back once the details are there', async () => {
+    server.use(authMeGuestHandler, detailsHandler, showcaseHandler);
+    renderPage();
+
+    const title = await screen.findByRole('heading', { level: 1, name: 'Dune' });
+    await screen.findByText('Science-Fiction, Aventure');
+    expect(title.closest('header')!.querySelectorAll('[class*="Pending"]')).toHaveLength(0);
+  });
+
   it('shows similar films without waiting for the details', async () => {
     server.use(authMeGuestHandler, pendingDetailsHandler, showcaseHandler);
     renderPage();
