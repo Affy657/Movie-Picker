@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -38,7 +39,7 @@ public sealed class OAuthUnlinkHandler : IOAuthUnlinkHandler
 
         if (!hasPassword && !recentlyAuthenticated)
         {
-            _logger.LogWarning("OAuth unlink: refused on a stale session for {UserId}", userId);
+            _logger.LogWarning("OAuth unlink: refused on a stale session for {UserId}", LogText.SingleLine(userId));
             throw Errors.ReauthenticationRequired();
         }
 
@@ -63,6 +64,6 @@ public sealed class OAuthUnlinkHandler : IOAuthUnlinkHandler
 
         _logger.LogInformation(
             "OAuth unlink: removed {Provider} (userId={UserId}, revokedSessions={Sessions})",
-            provider, userId, revokedSessions);
+            LogText.SingleLine(provider), LogText.SingleLine(userId), revokedSessions);
     }
 }

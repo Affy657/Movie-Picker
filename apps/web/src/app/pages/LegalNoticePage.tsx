@@ -18,7 +18,12 @@ export default function LegalNoticePage() {
           title: t('legal.noticeEditorTitle'),
           body: t('legal.noticeEditorBody', { email: SUPPORT_EMAIL }),
         },
-        { title: t('legal.noticeHostingTitle'), body: t('legal.noticeHostingBody') },
+        { title: t('legal.noticePublicationTitle'), body: t('legal.noticePublicationBody') },
+        {
+          title: t('legal.noticeHostingTitle'),
+          body: t('legal.noticeHostingBody'),
+          items: [t('legal.noticeHostingWeb'), t('legal.noticeHostingDatabase')],
+        },
         { title: t('legal.noticeIpTitle'), body: t('legal.noticeIpBody') },
         { title: t('legal.noticeDonationsTitle'), body: t('legal.noticeDonationsBody') },
         {

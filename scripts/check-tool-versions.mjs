@@ -151,9 +151,11 @@ const tools = [
     ],
     latest: () => latestGithubRelease('aquasecurity/trivy'),
   },
-  // The providers are Dependabot's (terraform ecosystem); the binary is pinned in three places,
-  // the `infra.yml` workflow that plans and applies, the image of the gate and of
-  // `pnpm run terraform`, and every root module, which must agree.
+  // The providers are Dependabot's (terraform ecosystem); the binary is pinned in two places,
+  // the `infra.yml` workflow that plans and applies, and the image of the gate and of
+  // `pnpm run terraform`, which must agree. Every root module only sets a `~> X.Y` floor that the
+  // pinned binary must satisfy: an exact `required_version` newer than the Terraform bundled in
+  // Dependabot made each of its runs fail at `terraform init` (2026-10-01 and 2026-11-01).
   {
     name: 'terraform',
     pins: [
@@ -161,12 +163,19 @@ const tools = [
       { file: 'scripts/terraform.mjs', pattern: /hashicorp\/terraform:([^@']+)@/ },
       ...listRoots().map((rootName) => ({
         file: `${ENVIRONMENTS_DIR}/${rootName}/versions.tf`,
-        pattern: /required_version = "([^"]+)"/,
+        pattern: /required_version = "~> (\d+\.\d+)"/,
+        floor: true,
       })),
     ],
     latest: () => latestGithubRelease('hashicorp/terraform'),
   },
 ];
+
+function satisfiesFloor(version, floor) {
+  const [major, minor] = version.split('.').map(Number);
+  const [floorMajor, floorMinor] = floor.split('.').map(Number);
+  return major === floorMajor && minor >= floorMinor;
+}
 
 function short(value) {
   return value.startsWith('sha256:') ? value.slice(0, 19) : value;
@@ -184,11 +193,14 @@ for (const tool of tools) {
     );
     continue;
   }
-  const values = [...new Set(pinned.map((pin) => pin.value))];
-  if (values.length > 1) {
+  const values = [...new Set(pinned.filter((pin) => !pin.floor).map((pin) => pin.value))];
+  const unmetFloors = pinned.filter(
+    (pin) => pin.floor && values.length === 1 && !satisfiesFloor(values[0], pin.value)
+  );
+  if (values.length > 1 || unmetFloors.length > 0) {
     failures += 1;
     console.log(
-      `mismatch    ${tool.name}: ${pinned.map((pin) => `${pin.file} pins ${short(pin.value)}`).join(', ')}`
+      `mismatch    ${tool.name}: ${pinned.map((pin) => `${pin.file} ${pin.floor ? 'requires ~>' : 'pins'} ${short(pin.value)}`).join(', ')}`
     );
     continue;
   }

@@ -59,7 +59,10 @@ public sealed class GroupNightAnnouncer : IGroupNightAnnouncer
         if (!await _quota.TryConsumeAsync(
                 HostQuotaScope, $"{hostUserId}|{group.Id}", MaxAnnouncementsPerHostPerGroupPerDay, HostQuotaWindow, ct))
         {
-            _logger.LogInformation("Host {UserId} reached the daily announcements of group {GroupId}", hostUserId, group.Id);
+            _logger.LogInformation(
+                "Host {UserId} reached the daily announcements of group {GroupId}",
+                LogText.SingleLine(hostUserId),
+                group.Id);
             return;
         }
 

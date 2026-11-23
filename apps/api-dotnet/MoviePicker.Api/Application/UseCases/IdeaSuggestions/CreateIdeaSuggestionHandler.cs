@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -53,7 +54,7 @@ public sealed class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionHandler
         var reference = RandomNumberGenerator.GetHexString(ReferenceLength, lowercase: true);
         var draft = BuildDraft(request, reference, screenshotUrls);
         await _github.CreateIssueAsync(draft, ct);
-        _logger.LogInformation("IdeaSuggestion: published reference {Reference} for {UserId}", reference, userId);
+        _logger.LogInformation("IdeaSuggestion: published reference {Reference} for {UserId}", reference, LogText.SingleLine(userId));
     }
 
     private static GitHubAttachmentUpload PrepareUpload(IdeaSuggestionAttachmentDto attachment)

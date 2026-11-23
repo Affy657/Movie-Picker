@@ -9,7 +9,7 @@
 MoviePicker.Api/MoviePicker.Api.http
 MoviePicker.Api.Tests/
 MoviePicker.Api.IntegrationTests/
-ToolGenDpKey/
+MoviePicker.ToolGenDpKey/
 MoviePicker.slnx
 dotnet-tools.json
 stryker-config.json

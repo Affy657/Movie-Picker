@@ -5,8 +5,13 @@ import {
   commandOf,
   freeVersion,
   nextVersion,
+  preflightLanes,
   releaseChangelog,
+  releaseCommitPattern,
   releaseNotes,
+  releaseTitle,
+  roslynFindings,
+  tagTarget,
   unreleasedSection,
   versionsAfter,
   withAppVersion,
@@ -143,8 +148,8 @@ describe('release changelog', () => {
 
   it('extracts the notes of a version, the last one before the links included', () => {
     const text = changelog(FIXES_ONLY);
-    assert.equal(releaseNotes(text, '1.7.0'), '### Added\n\n- **Rating** : rate the movie.');
-    assert.equal(releaseNotes(text, '1.6.0'), '### Fixed\n\n- **Wheel** : spins again.');
+    assert.equal(releaseNotes(text, '1.7.0'), '### Nouveautés\n\n- **Rating** : rate the movie.');
+    assert.equal(releaseNotes(text, '1.6.0'), '### Corrections\n\n- **Wheel** : spins again.');
   });
 
   it('lists the versions released after the last published one, oldest first', () => {
@@ -162,6 +167,56 @@ describe('release changelog', () => {
     assert.deepEqual(versionsAfter(text, '1.10.0'), []);
   });
 
+  it('writes every heading of the notes in French, like the entries', () => {
+    const text = changelog(FIXES_ONLY).replace(
+      '## [1.7.0] - 2026-11-06',
+      [
+        '## [1.7.1] - 2026-11-07',
+        '',
+        '### Changed',
+        '',
+        '- **A** : a.',
+        '',
+        '### Security',
+        '',
+        '- **B** : b.',
+        '',
+        '### Removed',
+        '',
+        '- **C** : c.',
+        '',
+        '### Deprecated',
+        '',
+        '- **D** : d.',
+        '',
+        '## [1.7.0] - 2026-11-06',
+      ].join('\n')
+    );
+    const headings = releaseNotes(text, '1.7.1')
+      .split('\n')
+      .filter((line) => line.startsWith('### '));
+    assert.deepEqual(headings, [
+      '### Changements',
+      '### Sécurité',
+      '### Retraits',
+      '### Bientôt retiré',
+    ]);
+  });
+
+  it('titles a release after the lead of its first entry', () => {
+    const text = changelog(FIXES_ONLY);
+    assert.equal(releaseTitle(text, '1.7.0'), '1.7.0 : Rating');
+    assert.equal(releaseTitle(text, '1.6.0'), '1.6.0 : Wheel');
+  });
+
+  it('titles a release by its number alone when its first entry has no lead', () => {
+    const text = changelog(FIXES_ONLY).replace(
+      '- **Rating** : rate the movie.',
+      '- Rate the movie.'
+    );
+    assert.equal(releaseTitle(text, '1.7.0'), '1.7.0');
+  });
+
   it('refuses to extract the notes of a version the changelog does not list', () => {
     assert.throws(() => releaseNotes(changelog(FIXES_ONLY), '9.9.9'), /9\.9\.9/);
   });
@@ -177,5 +232,98 @@ describe('release app version', () => {
 
   it('refuses a source without the version constant', () => {
     assert.throws(() => withAppVersion('export const OTHER = 1;\n', '1.7.1'), /APP_VERSION/);
+  });
+});
+
+describe('release tag target', () => {
+  it('finds the version commit by its exact subject, not a longer version that starts the same', () => {
+    const pattern = new RegExp(releaseCommitPattern('1.2.1'));
+    assert.ok(pattern.test('chore(release): 1.2.1'));
+    assert.ok(!pattern.test('chore(release): 1.2.10'));
+    assert.ok(!pattern.test('chore(release): 1x2x1'));
+  });
+
+  it('tags the version commit when its workflows are those of the deployed commit', () => {
+    const trees = { version: 'tree-a', deployed: 'tree-a' };
+    const target = tagTarget({
+      releaseCommit: 'version',
+      deployed: 'deployed',
+      workflowsTreeOf: (sha) => trees[sha],
+    });
+    assert.equal(target, 'version');
+  });
+
+  it('falls back on the deployed commit when the workflows differ, which GitHub refuses with a 403', () => {
+    const trees = { version: 'tree-a', deployed: 'tree-b' };
+    const target = tagTarget({
+      releaseCommit: 'version',
+      deployed: 'deployed',
+      workflowsTreeOf: (sha) => trees[sha],
+    });
+    assert.equal(target, 'deployed');
+  });
+
+  it('falls back on the deployed commit when no version commit is found', () => {
+    const target = tagTarget({
+      releaseCommit: '',
+      deployed: 'deployed',
+      workflowsTreeOf: () => 'tree-a',
+    });
+    assert.equal(target, 'deployed');
+  });
+});
+
+describe('release preflight', () => {
+  it('checks the API lane only when the API changed, and the web lane only when the web did', () => {
+    assert.deepEqual(preflightLanes(['apps/api-dotnet/MoviePicker.Api/Program.cs']), ['dotnet']);
+    assert.deepEqual(preflightLanes(['apps/web/src/main.tsx', 'e2e/home.spec.ts']), ['web']);
+    assert.deepEqual(preflightLanes(['CHANGELOG.md', 'docs/roadmap.md']), []);
+    assert.deepEqual(
+      preflightLanes(['apps/web/src/main.tsx', 'apps/api-dotnet/Directory.Build.props']),
+      ['dotnet', 'web']
+    );
+  });
+
+  it('runs every lane when the changed files cannot be listed', () => {
+    assert.deepEqual(preflightLanes(null), ['dotnet', 'web']);
+  });
+
+  it('reports every Roslyn diagnostic SonarCloud would import, suggestions included', () => {
+    const sarif = {
+      runs: [
+        {
+          results: [
+            {
+              ruleId: 'IDE0028',
+              level: 'note',
+              message: { text: 'Collection initialization can be simplified' },
+              locations: [
+                {
+                  physicalLocation: {
+                    artifactLocation: { uri: 'file:///repo/Infrastructure/Repo.cs' },
+                    region: { startLine: 12 },
+                  },
+                },
+              ],
+            },
+            { ruleId: 'IDE0005', level: 'none', message: { text: 'hidden' } },
+            {
+              ruleId: 'CA1826',
+              level: 'warning',
+              message: { text: 'suppressed' },
+              suppressions: [{ kind: 'inSource' }],
+            },
+          ],
+        },
+      ],
+    };
+    assert.deepEqual(roslynFindings(sarif), [
+      'file:///repo/Infrastructure/Repo.cs:12 IDE0028 Collection initialization can be simplified',
+    ]);
+  });
+
+  it('finds nothing in a clean build', () => {
+    assert.deepEqual(roslynFindings({ runs: [{ results: [] }] }), []);
+    assert.deepEqual(roslynFindings({ runs: [{}] }), []);
   });
 });

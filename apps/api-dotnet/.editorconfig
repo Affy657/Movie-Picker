@@ -1,4 +1,4 @@
-# Convention C# API .NET (dotnet format + analyzers, roadmap § 31)
+# Convention C# API .NET (dotnet format + analyzers)
 root = true
 
 [*]

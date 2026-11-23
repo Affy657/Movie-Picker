@@ -1,5 +1,5 @@
 <Project>
-  <!-- Roadmap § 31: SDK analysers + code style at build time; EditorConfig in this folder. -->
+  <!-- SDK analysers + code style at build time; EditorConfig in this folder. -->
   <PropertyGroup>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>

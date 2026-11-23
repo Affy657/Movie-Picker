@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -77,7 +78,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         {
             if (!recentlyAuthenticated)
             {
-                _logger.LogWarning("DeleteAccount: refused on a stale session for {UserId}", userId);
+                _logger.LogWarning("DeleteAccount: refused on a stale session for {UserId}", LogText.SingleLine(userId));
                 throw Errors.ReauthenticationRequired();
             }
 
@@ -87,7 +88,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
             var matchesEmail = string.Equals(confirmation, user.Email, StringComparison.OrdinalIgnoreCase);
             if (!matchesHandle && !matchesEmail)
             {
-                _logger.LogWarning("DeleteAccount: incorrect confirmation for {UserId}", userId);
+                _logger.LogWarning("DeleteAccount: incorrect confirmation for {UserId}", LogText.SingleLine(userId));
                 throw Errors.ConfirmationIncorrect();
             }
         }
@@ -96,7 +97,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
             var verify = _passwordHasher.Verify(user.PasswordHash, request.Password ?? string.Empty);
             if (verify == PasswordVerification.Failed)
             {
-                _logger.LogWarning("DeleteAccount: incorrect password for {UserId}", userId);
+                _logger.LogWarning("DeleteAccount: incorrect password for {UserId}", LogText.SingleLine(userId));
                 throw Errors.WrongPassword();
             }
         }
@@ -137,7 +138,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
 
         _logger.LogInformation(
             "DeleteAccount: success for {EmailMasked} (userId={UserId}, anonymizedEvents={Events}, anonymizedParticipations={Participations})",
-            EmailMasking.Mask(user.Email), userId, anonymizedEvents, anonymizedParticipations);
+            EmailMasking.Mask(user.Email), LogText.SingleLine(userId), anonymizedEvents, anonymizedParticipations);
     }
 
     private async Task WithdrawTheListsOfAsync(string userId, CancellationToken ct)

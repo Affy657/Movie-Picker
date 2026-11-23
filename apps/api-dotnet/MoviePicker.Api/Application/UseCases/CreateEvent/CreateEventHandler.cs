@@ -120,7 +120,7 @@ public sealed class CreateEventHandler : ICreateEventHandler
             return await FindReplayAsync(ownerId, requestId, ct) ?? throw Errors.ConcurrentUpdate();
         }
 
-        _logger.LogInformation("Event created: {EventId} by user {UserId}", created.Id, ownerId);
+        _logger.LogInformation("Event created: {EventId} by user {UserId}", created.Id, LogText.SingleLine(ownerId));
 
         if (group is not null)
             await _groupNightAnnouncer.AnnounceAsync(created, group, ownerId, CancellationToken.None);
