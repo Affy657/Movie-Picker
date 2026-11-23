@@ -19,6 +19,7 @@ import PwaAutoUpdate from './PwaAutoUpdate';
 import ConsentBanner from './ConsentBanner';
 import InAppBrowserBanner from './InAppBrowserBanner';
 import MovedOriginBanner from './MovedOriginBanner';
+import LanguageSuggestion from './LanguageSuggestion';
 import SignOutPendingNotice from './SignOutPendingNotice';
 import { useLegacyMovieLinkRedirect } from './useLegacyMovieLinkRedirect';
 import styles from './AppShell.module.css';
@@ -403,6 +404,7 @@ export default function AppShell() {
         <ConsentBanner />
         <InAppBrowserBanner />
         <MovedOriginBanner />
+        <LanguageSuggestion />
         <SignOutPendingNotice />
         {user ? <CreateEventDialogIdlePrefetch /> : null}
       </div>

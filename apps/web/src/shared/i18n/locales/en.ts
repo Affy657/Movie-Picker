@@ -4512,6 +4512,12 @@ export const en: Locale = {
         'An arrow never points outward: the architecture check fails the build when one does.',
     },
   },
+  languageSuggestion: {
+    title: 'View Movie Picker in English?',
+    description:
+      'Movie Picker is in French by default and also comes in English. You can change the language at the bottom of every page.',
+    switch: 'Switch to English',
+  },
   inAppBrowser: {
     banner: {
       title: "You're in this app's built-in browser",

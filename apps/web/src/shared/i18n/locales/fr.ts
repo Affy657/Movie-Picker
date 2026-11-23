@@ -4571,6 +4571,12 @@ export const fr = {
         'Une flèche ne pointe jamais vers l’extérieur : le contrôle d’architecture fait échouer la construction si elle le fait.',
     },
   },
+  languageSuggestion: {
+    title: 'Afficher Movie Picker en anglais ?',
+    description:
+      'Movie Picker est en français par défaut et existe aussi en anglais. Vous pourrez changer de langue en bas de chaque page.',
+    switch: 'Passer en anglais',
+  },
   inAppBrowser: {
     banner: {
       title: 'Vous êtes dans le navigateur intégré de cette application',
