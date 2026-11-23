@@ -1,4 +1,4 @@
-import { Link, Navigate, Route, Routes } from 'react-router';
+import { Link, Navigate, Route, Routes, useLocation } from 'react-router';
 import PageLayout from '@/shared/components/PageLayout';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { hasSessionHint } from '@/features/auth/session-hint';
@@ -10,6 +10,7 @@ import ThemeToggle from '@/app/components/ThemeToggle';
 import LanguageSelector from '@/app/components/LanguageSelector';
 import AccentColorPicker from '@/app/components/AccentColorPicker';
 import { withReturnTo, ROUTES } from '@/app/routes';
+import { returnToOf } from '@/shared/utils/returnTo';
 import type { UserProfile } from '@/features/auth/types';
 import AccountLayout from '@/app/pages/account/AccountLayout';
 import AccountIndexPage from '@/app/pages/account/AccountIndexPage';
@@ -85,6 +86,7 @@ export default function AccountPage() {
   const { t } = useTranslation();
   useNoindexPage(pageTitle(t('auth.account.title')), ROUTES.account);
   const { user, isLoading, authCheckFailed } = useAuth();
+  const returnTo = returnToOf(useLocation());
 
   if (isLoading) {
     return (
@@ -108,12 +110,12 @@ export default function AccountPage() {
 
         <nav className="nav-actions" aria-label={t('auth.account.guestNavAriaLabel')}>
           <Link
-            to={withReturnTo(ROUTES.register, ROUTES.account)}
+            to={withReturnTo(ROUTES.register, returnTo)}
             className={buttonClass({ variant: 'primary' })}
           >
             {t('auth.account.registerCta')}
           </Link>
-          <Link to={withReturnTo(ROUTES.login, ROUTES.account)} className={buttonClass()}>
+          <Link to={withReturnTo(ROUTES.login, returnTo)} className={buttonClass()}>
             {t('home.ctaHaveAccount')}
           </Link>
         </nav>

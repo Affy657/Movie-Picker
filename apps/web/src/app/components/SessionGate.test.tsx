@@ -30,16 +30,15 @@ function AuthedPage() {
   return <p>contenu authentifié</p>;
 }
 
-function renderGate() {
+function renderGate(entry: string = ROUTES.watchlist) {
   return render(
     <AppTestProviders>
-      <MemoryRouter initialEntries={[ROUTES.watchlist]}>
+      <MemoryRouter initialEntries={[entry]}>
         <SessionGate
           icon={<Bookmark aria-hidden size={28} />}
           headingKey="watchlist.title"
           titleKey="watchlist.signedOutTitle"
           messageKey="watchlist.signedOutMessage"
-          returnTo={ROUTES.watchlist}
         >
           <AuthedPage />
         </SessionGate>
@@ -79,6 +78,32 @@ describe('SessionGate', () => {
       'href',
       '/register?returnTo=%2Fwatchlist'
     );
+  });
+
+  it('keeps the query and the anchor of the requested page for the return', async () => {
+    renderGate(`${ROUTES.watchlist}?tri=titre#films`);
+
+    expect(await screen.findByRole('link', { name: /^créer un compte$/i })).toHaveAttribute(
+      'href',
+      `/register?returnTo=${encodeURIComponent('/watchlist?tri=titre#films')}`
+    );
+  });
+
+  it('names the tab after the page and keeps the signed-out state out of search engines', async () => {
+    renderGate();
+
+    await screen.findByRole('heading', { level: 2 });
+    await waitFor(() => expect(document.title).toBe('À voir | Movie Picker'));
+    expect(document.head.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe(
+      'noindex, nofollow'
+    );
+  });
+
+  it('gives the sign-in card the same width on every page', async () => {
+    renderGate();
+
+    await screen.findByRole('heading', { level: 2 });
+    expect(screen.getByRole('main').style.getPropertyValue('--page-max-width')).toBe('');
   });
 
   it('mounts the page when the session is confirmed', async () => {

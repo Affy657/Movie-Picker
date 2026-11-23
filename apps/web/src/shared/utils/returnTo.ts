@@ -22,3 +22,11 @@ export function safeReturnTo(raw: string | null): string {
   if (AUTH_PATHS.has(normalizedAuthCandidate(path))) return '/';
   return raw;
 }
+
+export function returnToOf({
+  pathname,
+  search,
+  hash,
+}: Readonly<{ pathname: string; search: string; hash: string }>): string {
+  return `${pathname}${search}${hash}`;
+}

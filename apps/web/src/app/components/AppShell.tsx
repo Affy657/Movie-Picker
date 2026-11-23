@@ -7,7 +7,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { ownProfileDestination } from '@/features/auth/utils/ownProfileDestination';
 import { useLetterboxdAutoSync } from '@/features/letterboxd/hooks/useLetterboxdAutoSync';
 import { withReturnTo, ROUTES } from '@/app/routes';
-import { safeReturnTo } from '@/shared/utils/returnTo';
+import { returnToOf, safeReturnTo } from '@/shared/utils/returnTo';
 import { routeIntentHandlers } from '@/app/routeChunks';
 import { LANDING_ANCHORS } from '@/app/pages/landing/anchors';
 import UserMenu from './UserMenu';
@@ -297,7 +297,7 @@ export default function AppShell() {
   ).includes(location.pathname);
   const returnTo = isOnAuthRoute
     ? safeReturnTo(new URLSearchParams(location.search).get('returnTo'))
-    : `${location.pathname}${location.search}`;
+    : returnToOf(location);
 
   const exploreItem: NavItemDef = {
     to: ROUTES.home,
