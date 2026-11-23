@@ -209,7 +209,7 @@ describe('NightRecapPage (MSW)', () => {
     renderRecap();
     await screen.findByRole('heading', { name: 'Soirée du vendredi' });
 
-    expect(screen.getByRole('link', { name: 'Organise la tienne' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Organisez la vôtre' })).toHaveAttribute(
       'href',
       `/register?returnTo=${encodeURIComponent('/new?from=recap')}`
     );
@@ -242,7 +242,7 @@ describe('NightRecapPage (MSW)', () => {
     renderRecap();
     await screen.findByRole('heading', { name: 'Soirée du vendredi' });
 
-    expect(await screen.findByRole('link', { name: 'Organise la tienne' })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: 'Organisez la vôtre' })).toHaveAttribute(
       'href',
       '/new'
     );
@@ -398,7 +398,7 @@ describe('NightRecapPage (MSW)', () => {
     expect(await screen.findByText("Le film n'est pas encore choisi")).toBeInTheDocument();
     expect(screen.getByText(/arrive après la soirée/)).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Voir la soirée' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Organise la tienne' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Organisez la vôtre' })).not.toBeInTheDocument();
   });
 
   it('says so when the night ended without a movie', async () => {

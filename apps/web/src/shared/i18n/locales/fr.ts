@@ -487,17 +487,17 @@ export const fr = {
       submitting: 'Envoi\u2026',
       successTitle: 'Vérifiez votre boîte mail',
       successMessage:
-        "Si un compte existe pour cet e-mail, un lien de réinitialisation vient d'être envoyé. Pense à vérifier les spams.",
+        'Si un compte existe pour cet e-mail, un lien de réinitialisation vient d’être envoyé. Pensez à vérifier les spams.',
       backToLogin: '\u2190 Retour à la connexion',
       fallbackError:
-        "Impossible d'envoyer le lien pour le moment. Réessaie dans quelques instants.",
+        'Impossible d’envoyer le lien pour le moment. Réessayez dans quelques instants.',
     },
     resetPassword: {
       title: 'Définir un nouveau mot de passe',
       description: 'Choisissez un nouveau mot de passe pour votre compte Movie Picker.',
       newPasswordLabel: 'Nouveau mot de passe',
       newPasswordHint: '8 caractères minimum, au moins une lettre et un chiffre.',
-      confirmPasswordLabel: 'Confirme le mot de passe',
+      confirmPasswordLabel: 'Confirmez le mot de passe',
       passwordsMustMatch: 'Les deux mots de passe doivent être identiques.',
       submit: 'Mettre à jour mon mot de passe',
       submitting: 'Mise à jour\u2026',
@@ -508,9 +508,9 @@ export const fr = {
       requestNewLink: 'Demander un nouveau lien',
       invalidTokenTitle: 'Lien invalide ou expiré',
       invalidTokenMessage:
-        "Ce lien de réinitialisation n'est plus valable. Demande-en un nouveau ci-dessous.",
+        'Ce lien de réinitialisation n’est plus valable. Demandez-en un nouveau ci-dessous.',
       fallbackError:
-        'Impossible de mettre à jour le mot de passe. Réessaie dans quelques instants.',
+        'Impossible de mettre à jour le mot de passe. Réessayez dans quelques instants.',
       missingTokenError: 'Lien invalide : aucun token fourni.',
     },
     account: {
@@ -1360,7 +1360,7 @@ export const fr = {
       ctaTitle: 'Et la prochaine ?',
       ctaText:
         'Sur Movie Picker, chacun propose ses films, tout le monde vote et la roue tranche. Gratuit, rien à installer.',
-      ctaButton: 'Organise la tienne',
+      ctaButton: 'Organisez la vôtre',
       notChosenTitle: "Le film n'est pas encore choisi",
       notChosenText: 'Le recap de « {{title}} » arrive après la soirée, une fois le film tiré.',
       noMovieTitle: 'Terminée sans film',
