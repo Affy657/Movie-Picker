@@ -23,6 +23,8 @@ import {
 } from '@/shared/utils/offlineEventStorage';
 import type { EventData } from '@/shared/types/event';
 import type { MovieData } from '@/shared/types/movie';
+import { apiJson } from '@/mocks/apiJson';
+import { clearVoteSending, markVoteSending } from '@/features/events/offline/sendingVotes';
 
 const slug = 'soiree-perf';
 
@@ -110,6 +112,57 @@ describe('useEventDetailPage', () => {
     await waitFor(() => expect(result.current.event).not.toBeNull());
     expect(result.current.participant).toEqual({ participantId: 'p-msw-bob', pseudo: 'Bob' });
     expect(getStoredParticipant(slug)).toEqual({ participantId: 'p-msw-bob', pseudo: 'Bob' });
+  });
+
+  it('shows a vote on its way to the server as cast, marked pending, and drops it once settled', async () => {
+    setStoredParticipant(slug, 'p-msw-bob', 'Bob');
+    server.use(
+      http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
+        apiJson<'MovieWithScoreResponse[]'>([
+          {
+            _id: 'm-1',
+            eventId: 'evt-msw',
+            participantId: 'p-msw-alice',
+            tmdbId: 100,
+            mediaType: 'movie',
+            title: 'Dune',
+            year: '2021',
+            genreIds: [],
+            excludedFromWheel: false,
+            createdAt: '2030-01-01T00:00:00Z',
+            updatedAt: '2030-01-01T00:00:00Z',
+            proposerPseudo: 'Alice',
+            proposerHandle: null,
+            posterPath: null,
+            pitchNote: null,
+            myVote: null,
+            voteAverage: null,
+            tmdbWatchPageUrl: null,
+            runtimeMinutes: null,
+            releaseDate: null,
+            score: 0,
+            up: 0,
+            down: 0,
+            seenCount: 0,
+            seenByPseudos: [],
+            votersUpPseudos: [],
+            ratings: [],
+            watchProviders: [],
+          },
+        ])
+      ),
+      ...createEventDetailHandlers({ slug })
+    );
+    const { result } = renderHook(() => useEventDetailPage(slug), { wrapper });
+    await waitFor(() => expect(result.current.movies).toHaveLength(1));
+    const target = { slug, movieId: 'm-1', participantId: 'p-msw-bob' };
+
+    act(() => markVoteSending({ ...target, value: 1 }));
+    expect(result.current.movies[0]).toMatchObject({ myVote: 1, up: 1, pendingVote: true });
+
+    act(() => clearVoteSending(target));
+    expect(result.current.movies[0]).toMatchObject({ myVote: null, up: 0 });
+    expect(result.current.movies[0]?.pendingVote).toBeUndefined();
   });
 
   it('marks my movie nights stale when it refreshes the movie night after a draw', async () => {

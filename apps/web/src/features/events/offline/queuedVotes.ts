@@ -5,6 +5,7 @@ import {
   subscribeQueuedVotes,
   type QueuedVote,
 } from '@/shared/utils/offlineEventStorage';
+import type { SendingVote } from '@/features/events/offline/sendingVotes';
 
 function tally(vote: number | null | undefined, side: 1 | -1): number {
   return vote === side ? 1 : 0;
@@ -12,7 +13,7 @@ function tally(vote: number | null | undefined, side: 1 | -1): number {
 
 export function applyQueuedVotes(
   movies: MovieData[],
-  queued: readonly QueuedVote[],
+  queued: readonly (QueuedVote | SendingVote)[],
   participantId: string | null
 ): MovieData[] {
   if (!participantId || queued.length === 0) return movies;
