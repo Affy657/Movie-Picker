@@ -14,6 +14,7 @@ import {
   markSignOutPending,
 } from '@/features/auth/session-hint';
 import type { UserProfile } from '@/features/auth/types';
+import { takeWelcomePending } from '@/features/auth/welcome';
 import { ApiError } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { dropBrowserPushSubscription } from '@/shared/utils/browserPushSubscription';
@@ -637,6 +638,22 @@ describe('AuthProvider sign-in measure', () => {
 
     expect(postAuthRegister).toHaveBeenCalledWith('a@test.local', 'secret1', 'Alice', '/e/soiree');
     expect(track).toHaveBeenCalledWith('user_signed_up', { method: 'email', origin: 'event' });
+  });
+
+  it('keeps a welcome for the first home visit of a new account, and only of a new one', async () => {
+    const auth = await renderAuthProvider();
+    takeWelcomePending();
+
+    await act(async () => {
+      await auth().login('a@test.local', 'secret1', '/');
+    });
+    expect(takeWelcomePending()).toBe(false);
+
+    await act(async () => {
+      await auth().register('a@test.local', 'secret1', 'Alice', '/e/soiree');
+    });
+    expect(takeWelcomePending()).toBe(true);
+    expect(takeWelcomePending()).toBe(false);
   });
 
   it('tells the server and the measure where a returning account was heading', async () => {

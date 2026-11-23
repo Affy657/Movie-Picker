@@ -31,6 +31,7 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { entryOriginOf } from '@/shared/analytics/entryOrigin';
 import { applyUpdatedProfile } from '@/features/auth/utils/profileCache';
+import { markWelcomePending } from '@/features/auth/welcome';
 import type { UserProfile } from '@/features/auth/types';
 
 type AuthContextValue = {
@@ -174,6 +175,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     },
     onSuccess: (_result, { returnTo }) => {
       setSignOutPending(false);
+      markWelcomePending();
       track('user_signed_up', { method: 'email', origin: entryOriginOf(returnTo) });
     },
   });

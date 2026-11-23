@@ -68,6 +68,11 @@ export const fr = {
       title: 'Votre prochaine soirée',
       createAnother: 'Créer une autre soirée',
     },
+    welcome: {
+      title: 'Bienvenue, {{name}} !',
+      body: 'Votre pseudo est @{{handle}}, l’adresse de votre profil, modifiable dans les paramètres. Pour commencer, créez votre première soirée : chacun propose un film, tout le monde vote, la roue tranche.',
+      action: 'Créer ma première soirée',
+    },
     createNight: {
       title: 'Vous n’arrivez pas à choisir ?',
       body: 'Chacun propose un film, tout le monde vote, la roue tranche.',
@@ -3075,8 +3080,8 @@ export const fr = {
       bannerAdd: 'Ajouter une bannière',
       avatar: 'Changer l’avatar',
       identity: 'Identité',
-      name: 'Nom',
-      nameRequired: 'Le nom est requis.',
+      name: 'Nom affiché',
+      nameRequired: 'Le nom affiché est requis.',
       handle: 'Pseudo',
       handleChecking: 'Vérification…',
       handleAvailable: 'Disponible',
@@ -3173,10 +3178,10 @@ export const fr = {
       search: {
         tab: 'Rechercher',
         tabAriaLabel: 'Rechercher des utilisateurs',
-        placeholder: 'Pseudo ou @handle',
+        placeholder: 'Nom ou @pseudo',
         minLength: 'Tapez au moins {{count}} caractères.',
-        idleTitle: 'Cherchez un pseudo',
-        idleMessage: 'Tapez le pseudo ou le handle de la personne que vous voulez suivre.',
+        idleTitle: 'Cherchez un nom ou un pseudo',
+        idleMessage: 'Tapez le nom ou le pseudo de la personne que vous voulez suivre.',
         emptyTitle: 'Personne ne correspond',
         emptyMessage:
           "Vérifiez l'orthographe du pseudo. Les comptes dont le profil est privé n'apparaissent pas dans la recherche.",

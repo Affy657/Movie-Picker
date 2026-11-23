@@ -94,7 +94,7 @@ describe('ProfileEditPage (MSW)', () => {
   it('pre-fills the display name, the bio and the visibility from the account', async () => {
     renderProfile();
 
-    await waitFor(() => expect(screen.getByLabelText('Nom')).toHaveValue('Alice'));
+    await waitFor(() => expect(screen.getByLabelText('Nom affiché')).toHaveValue('Alice'));
     expect(screen.getByLabelText('Pseudo')).toHaveValue('alice');
     expect(screen.getByLabelText(/bio/i)).toHaveValue('Ma bio');
     expect(screen.getByRole('switch', { name: /profil public/i })).toHaveAttribute(
@@ -116,7 +116,7 @@ describe('ProfileEditPage (MSW)', () => {
     renderProfile();
     await screen.findByDisplayValue('Alice');
 
-    const pseudoInput = screen.getByLabelText('Nom');
+    const pseudoInput = screen.getByLabelText('Nom affiché');
     await user.clear(pseudoInput);
     await user.type(pseudoInput, 'Alicia');
     await user.tab();
@@ -140,7 +140,7 @@ describe('ProfileEditPage (MSW)', () => {
     renderProfile();
     await screen.findByDisplayValue('Alice');
 
-    const pseudoInput = screen.getByLabelText('Nom');
+    const pseudoInput = screen.getByLabelText('Nom affiché');
     await user.clear(pseudoInput);
     await user.type(pseudoInput, 'Alicia');
 
@@ -216,7 +216,7 @@ describe('ProfileEditPage (MSW)', () => {
     renderProfile();
     await screen.findByDisplayValue('Alice');
 
-    const pseudoInput = screen.getByLabelText('Nom');
+    const pseudoInput = screen.getByLabelText('Nom affiché');
     await user.clear(pseudoInput);
     await user.type(pseudoInput, 'Alicia');
     await user.tab();
@@ -251,7 +251,7 @@ describe('ProfileEditPage (MSW)', () => {
     renderProfile();
     await screen.findByDisplayValue('Alice');
 
-    const pseudoInput = screen.getByLabelText('Nom');
+    const pseudoInput = screen.getByLabelText('Nom affiché');
     await user.clear(pseudoInput);
     await user.type(pseudoInput, 'Alicia');
     await user.tab();
@@ -315,12 +315,12 @@ describe('ProfileEditPage (MSW)', () => {
   it('refuses an empty name', async () => {
     const user = userEvent.setup();
     renderProfile();
-    const pseudoInput = await screen.findByLabelText('Nom');
+    const pseudoInput = await screen.findByLabelText('Nom affiché');
 
     await user.clear(pseudoInput);
     await user.tab();
 
-    expect(await screen.findByText('Le nom est requis.')).toBeInTheDocument();
+    expect(await screen.findByText('Le nom affiché est requis.')).toBeInTheDocument();
   });
 
   it('shows the bio hint only within the last 20 characters', async () => {
@@ -358,8 +358,8 @@ describe('ProfileEditPage (MSW)', () => {
 
     renderProfile();
     const preview = await screen.findByRole('region', { name: 'Aperçu de votre profil' });
-    await user.clear(screen.getByLabelText('Nom'));
-    await user.type(screen.getByLabelText('Nom'), 'Alicia');
+    await user.clear(screen.getByLabelText('Nom affiché'));
+    await user.type(screen.getByLabelText('Nom affiché'), 'Alicia');
     await user.clear(screen.getByLabelText(/bio/i));
     await user.type(screen.getByLabelText(/bio/i), 'Cinéphile');
 

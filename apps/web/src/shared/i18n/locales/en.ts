@@ -70,6 +70,11 @@ export const en: Locale = {
       title: 'Your next movie night',
       createAnother: 'Create another night',
     },
+    welcome: {
+      title: 'Welcome, {{name}}!',
+      body: 'Your handle is @{{handle}}, the address of your profile, which you can change in the settings. To begin, create your first movie night: everyone proposes a film, everyone votes, the wheel decides.',
+      action: 'Create my first movie night',
+    },
     createNight: {
       title: 'Can’t decide?',
       body: 'Everyone proposes a film, everyone votes, the wheel decides.',
@@ -3033,8 +3038,8 @@ export const en: Locale = {
       bannerAdd: 'Add a banner',
       avatar: 'Change avatar',
       identity: 'Identity',
-      name: 'Name',
-      nameRequired: 'Your name is required.',
+      name: 'Display name',
+      nameRequired: 'Your display name is required.',
       handle: 'Username',
       handleChecking: 'Checking…',
       handleAvailable: 'Available',
