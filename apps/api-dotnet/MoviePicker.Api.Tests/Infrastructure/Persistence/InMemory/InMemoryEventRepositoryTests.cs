@@ -156,6 +156,21 @@ public sealed class InMemoryEventRepositoryTests
     }
 
     [Fact]
+    public async Task ForgetRemovedUserAsync_TakesTheUserOutOfEveryRemovalList()
+    {
+        var first = await _repo.AddAsync(Mk(slug: "premiere") with { RemovedUserIds = ["u2", "u3"] });
+        var second = await _repo.AddAsync(Mk(slug: "seconde") with { RemovedUserIds = ["u2"] });
+        var untouched = await _repo.AddAsync(Mk(slug: "autre") with { RemovedUserIds = ["u3"] });
+
+        Assert.Equal(0L, await _repo.ForgetRemovedUserAsync(""));
+        Assert.Equal(2L, await _repo.ForgetRemovedUserAsync("u2"));
+
+        Assert.Equal(["u3"], (await _repo.GetByIdOrSlugAsync(first.Slug))!.RemovedUserIds);
+        Assert.Empty((await _repo.GetByIdOrSlugAsync(second.Slug))!.RemovedUserIds);
+        Assert.Equal(untouched.WriteSeq, (await _repo.GetByIdOrSlugAsync(untouched.Slug))!.WriteSeq);
+    }
+
+    [Fact]
     public async Task MarkWatchlistCleanedAsync_StampsOnceAndKeepsTheRestOfTheEvent()
     {
         var evt = await _repo.AddAsync(new EventEntityBuilder().WithSlug("stamp-me").Build());

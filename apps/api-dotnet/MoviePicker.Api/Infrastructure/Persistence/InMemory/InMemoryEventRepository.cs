@@ -256,6 +256,24 @@ public sealed class InMemoryEventRepository : IEventRepository
         return Task.FromResult(result);
     }
 
+    public Task<long> ForgetRemovedUserAsync(string userId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return Task.FromResult(0L);
+
+        long count = 0;
+        foreach (var eventId in _byId.Values.Where(e => e.RemovedUserIds.Contains(userId)).Select(e => e.Id).ToList())
+        {
+            var forgotten = _byId.SwapIfPresent(eventId, e => e.RemovedUserIds.Contains(userId)
+                ? e.LettingBackIn(userId) with { Version = e.Version + 1, WriteSeq = e.WriteSeq + 1 }
+                : null);
+            if (forgotten is not null)
+                count++;
+        }
+
+        return Task.FromResult(count);
+    }
+
     public Task<long> AnonymizeCreatorAsync(string creatorUserId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(creatorUserId))

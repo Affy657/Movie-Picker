@@ -25,7 +25,7 @@ public sealed class PersistedReferenceInventoryTests
         ["EventId"] = nameof(EventChildData.PurgeEventAsync),
     };
 
-    private static readonly string[] AccountSuffixes = ["UserId", "OwnerId", "FollowerId", "FolloweeId", "ActorHandle"];
+    private static readonly string[] AccountSuffixes = ["UserId", "UserIds", "OwnerId", "FollowerId", "FolloweeId", "ActorHandle"];
 
     private const string ExpiresWithinMinutes = "expires by TTL a few minutes after the last heartbeat (event_presence_expiresAt_ttl)";
 
@@ -71,6 +71,9 @@ public sealed class PersistedReferenceInventoryTests
         ["EventDocument.CreatorUserId"] = new(
             Handling.Through<IEventRepository>(),
             Handling.Through<IEventRepository>()),
+        ["EventDocument.RemovedUserIds"] = new(
+            Handling.Through<IEventRepository>(),
+            Handling.Exempt("a removal is a decision of the host about their event; the notice sent to the user goes with the exported notifications")),
         ["FollowDocument.FollowerId"] = new(
             Handling.Through<IFollowRepository>(),
             Handling.Through<IFollowRepository>()),

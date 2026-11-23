@@ -114,6 +114,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
             {
                 handovers = await _handover.HandOverAsync(userId, token);
                 anonymizedEvents = await _events.AnonymizeCreatorAsync(userId, token);
+                await _events.ForgetRemovedUserAsync(userId, token);
                 var joinedEventIds = await _participants.ListDistinctEventIdsByUserIdAsync(userId, token);
                 anonymizedParticipations = await _participants.AnonymizeByUserIdAsync(
                     userId, AnonymizedParticipantPseudo, token);

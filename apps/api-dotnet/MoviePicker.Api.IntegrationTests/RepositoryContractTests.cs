@@ -678,6 +678,22 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task ForgetRemovedUser_TakesTheUserOutOfTheRemovalLists_AndBumpsTheWriteSequence()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var gone = ObjectId.GenerateNewId().ToString();
+        var kept = ObjectId.GenerateNewId().ToString();
+        var created = await events.AddAsync(NewEvent("Retraits") with { RemovedUserIds = [kept, gone] });
+
+        Assert.Equal(1, await events.ForgetRemovedUserAsync(gone));
+        var reloaded = await events.GetByIdOrSlugAsync(created.Slug);
+
+        Assert.Equal([kept], reloaded!.RemovedUserIds);
+        Assert.Equal(created.WriteSeq + 1, reloaded.WriteSeq);
+    }
+
+    [Fact]
     public async Task EventUpdate_OnAMissingEvent_ThrowsNotFound()
     {
         using var scope = _factory.Services.CreateScope();

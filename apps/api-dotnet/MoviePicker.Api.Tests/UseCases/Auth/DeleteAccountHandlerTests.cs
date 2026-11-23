@@ -126,6 +126,25 @@ public sealed class DeleteAccountHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_ForgetsTheUser_InTheRemovalListsOfOtherHosts()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        var other = await f.Events.AddAsync(new Event
+        {
+            Title = "Soirée amie",
+            Slug = "soiree-amie",
+            CreatorUserId = "other-1",
+            RemovedUserIds = ["someone-else", user.Id],
+        });
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
+
+        var reloaded = await f.Events.GetByIdOrSlugAsync(other.Slug);
+        Assert.Equal(["someone-else"], reloaded!.RemovedUserIds);
+    }
+
+    [Fact]
     public async Task HandleAsync_DeletesTheProfilePhoto()
     {
         var f = new Fixture();
