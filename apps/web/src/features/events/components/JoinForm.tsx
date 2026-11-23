@@ -1,25 +1,25 @@
-import { useCallback, type ReactNode } from 'react';
-import { Link } from 'react-router';
-import { useQueryClient } from '@tanstack/react-query';
+import { useCallback, useId, type ReactNode } from 'react';
+import clsx from 'clsx';
 import { UserPlus, Users } from 'lucide-react';
-import { joinEvent } from '@/features/events/api/eventsApi';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import type { JoinPromptCta } from '@/shared/analytics/usageCounts';
-import { invalidateMyNights } from '@/shared/api/invalidateMyNights';
-import { queryKeys } from '@/shared/hooks/queryKeys';
-import { setStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 import { useTranslation } from '@/shared/i18n';
-import { ROUTES, withReturnTo } from '@/app/routes';
-import { JOIN_PROMPT_ANCHOR_ID } from '@/features/events/joinPrompt';
+import { ROUTES } from '@/app/routes';
+import { JOIN_PROMPT_ANCHOR_ID, useJoinPromptCount } from '@/features/events/joinPrompt';
+import { useAnnounceJoined } from '@/features/events/joinedAnnouncement';
+import { useJoinEvent } from '@/features/events/hooks/useJoinEvent';
+import type { EventData } from '@/features/events/types';
 import styles from './JoinForm.module.css';
-import Button, { buttonClass } from '@/shared/components/Button';
+import AccountChoiceLinks from '@/shared/components/AccountChoiceLinks';
+import Button from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface JoinFormProps {
   slug: string;
+  event: Pick<EventData, 'title' | 'participants'>;
   onJoined: (participantId: string, pseudo: string) => void;
 
   isFull?: boolean;
@@ -27,8 +27,17 @@ interface JoinFormProps {
   maxParticipants?: number | null;
 }
 
+function useInvitationLine(event: JoinFormProps['event']): string {
+  const { t } = useTranslation();
+  const hostName = event.participants?.find((participant) => participant.isCreator)?.pseudo;
+  return hostName
+    ? t('events.join.invitedBy', { name: hostName, title: event.title })
+    : t('events.join.invited', { title: event.title });
+}
+
 export default function JoinForm({
   slug,
+  event,
   onJoined,
   isFull,
   maxParticipants,
@@ -36,18 +45,17 @@ export default function JoinForm({
   const { t } = useTranslation();
   const { user } = useAuth();
   const { track } = useAnalytics();
-  const queryClient = useQueryClient();
+  const join = useJoinEvent(slug);
+  const announceJoined = useAnnounceJoined();
+  const promptCount = useJoinPromptCount();
+  const titleId = useId();
+  const invitation = useInvitationLine(event);
 
   const joinAction = useCallback(async () => {
-    const pseudoToSend = user?.displayName.trim() || 'Participant';
-    const res = await joinEvent(slug, pseudoToSend);
-    const { id } = res.participant;
-    setStoredParticipant(slug, id, res.participant.pseudo);
-    void invalidateMyNights(queryClient);
-    void queryClient.invalidateQueries({ queryKey: queryKeys.event.detailForAnyHostToken(slug) });
-    track('event_joined');
-    onJoined(id, res.participant.pseudo);
-  }, [user, slug, onJoined, track, queryClient]);
+    const joined = await join();
+    onJoined(joined.participantId, joined.pseudo);
+    if (joined.isNew) announceJoined();
+  }, [join, onJoined, announceJoined]);
 
   const {
     run: submit,
@@ -65,9 +73,14 @@ export default function JoinForm({
       ? t('events.join.fullWithCap', { max: maxParticipants })
       : t('events.join.full');
 
-  const returnTo = ROUTES.eventDetail(slug);
   const trackPromptClick = (cta: JoinPromptCta) =>
     track('join_prompt_clicked', { cta }, { oncePerTab: `join_prompt_clicked:${slug}:${cta}` });
+
+  const votePrompt = (
+    <p className={styles.votePrompt} role="status">
+      {promptCount > 0 ? <span key={promptCount}>{t('events.join.votePrompt')}</span> : null}
+    </p>
+  );
 
   let body: ReactNode;
   if (isFull) {
@@ -75,7 +88,9 @@ export default function JoinForm({
   } else if (user) {
     body = (
       <>
+        <p className={styles.invitation}>{invitation}</p>
         <p className={styles.intro}>{t('events.join.intro')}</p>
+        {votePrompt}
         <form
           onSubmit={handleSubmit}
           className="form"
@@ -95,23 +110,12 @@ export default function JoinForm({
   } else {
     body = (
       <>
+        <p className={styles.invitation}>{invitation}</p>
         <p className={styles.intro}>{t('events.join.signedOutIntro')}</p>
-        <nav className="nav-actions">
-          <Link
-            to={withReturnTo(ROUTES.login, returnTo)}
-            className={buttonClass({ variant: 'primary' })}
-            onClick={() => trackPromptClick('login')}
-          >
-            {t('home.ctaLogin')}
-          </Link>
-          <Link
-            to={withReturnTo(ROUTES.register, returnTo)}
-            className={buttonClass()}
-            onClick={() => trackPromptClick('register')}
-          >
-            {t('home.ctaRegister')}
-          </Link>
-        </nav>
+        {votePrompt}
+        <div className="nav-actions">
+          <AccountChoiceLinks returnTo={ROUTES.eventDetailJoin(slug)} onChoose={trackPromptClick} />
+        </div>
       </>
     );
   }
@@ -120,11 +124,13 @@ export default function JoinForm({
     <Card
       as="section"
       id={JOIN_PROMPT_ANCHOR_ID}
+      aria-labelledby={titleId}
       padding="lg"
       elevation="sm"
-      className={styles.root}
+      className={clsx(styles.root, promptCount > 0 && styles.prompted)}
     >
-      <h2 className={styles.title}>
+      {promptCount > 0 ? <span key={promptCount} className={styles.pulse} aria-hidden /> : null}
+      <h2 className={styles.title} id={titleId}>
         {isFull ? (
           <Users size={ICON_SIZE.lg} aria-hidden className={styles.titleIcon} />
         ) : (

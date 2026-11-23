@@ -557,18 +557,30 @@ describe('ProfilePage (MSW)', () => {
     });
   });
 
-  it('offers a Follow link to sign-in for a signed-out visitor', async () => {
+  it('asks a signed-out visitor who wants to follow to create an account first', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
       http.get(`${TEST_API_V1}/users/alice`, () =>
         HttpResponse.json({ ...ALICE_PROFILE, isFollowedByMe: null })
       )
     );
+    const user = userEvent.setup();
 
     renderProfile('alice');
 
-    const link = await screen.findByRole('link', { name: /suivre/i });
-    expect(link).toHaveAttribute('href', expect.stringContaining('/login'));
+    const follow = await screen.findByRole('link', { name: 'Suivre' });
+    expect(follow).toHaveAttribute('href', '/register?returnTo=%2Fu%2Falice');
+    await user.click(follow);
+
+    const dialog = await screen.findByRole('dialog', { name: 'Suivre Alice' });
+    expect(within(dialog).getByRole('link', { name: 'Créer un compte' })).toHaveAttribute(
+      'href',
+      '/register?returnTo=%2Fu%2Falice'
+    );
+    expect(within(dialog).getByRole('link', { name: 'J’ai déjà un compte' })).toHaveAttribute(
+      'href',
+      '/login?returnTo=%2Fu%2Falice'
+    );
   });
 
   it("shows the Follow button when signed in on someone else's profile", async () => {

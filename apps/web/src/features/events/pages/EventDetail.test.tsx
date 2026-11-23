@@ -105,11 +105,15 @@ describe('EventDetail (MSW)', () => {
     renderEventDetail(`/e/${slug}`);
     expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /rejoindre la soirée/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /^se connecter$/i })).toHaveAttribute(
+    expect(screen.getByText('Hôte vous invite à « Soirée démo ».')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Créer un compte' })).toHaveAttribute(
       'href',
-      `/login?returnTo=${encodeURIComponent(`/e/${slug}`)}`
+      `/register?returnTo=${encodeURIComponent(`/e/${slug}?rejoindre=1`)}`
     );
-    expect(screen.getByRole('link', { name: /^créer un compte$/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'J’ai déjà un compte' })).toHaveAttribute(
+      'href',
+      `/login?returnTo=${encodeURIComponent(`/e/${slug}?rejoindre=1`)}`
+    );
     expect(await screen.findByRole('region', { name: /films proposés/i })).toBeInTheDocument();
   });
 
@@ -147,6 +151,9 @@ describe('EventDetail (MSW)', () => {
         document.activeElement as HTMLElement
       )
     );
+    expect(
+      within(document.getElementById(JOIN_PROMPT_ANCHOR_ID)!).getByRole('status')
+    ).toHaveTextContent('Pour voter, rejoignez d’abord la soirée.');
   });
 
   it('shows "Movie night not found" even with the production retry policy', async () => {

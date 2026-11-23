@@ -217,14 +217,13 @@ describe('PublicListPage', () => {
     );
   });
 
-  it('lets a visitor read the list, and sends Enregistrer to the sign-in, which comes back', async () => {
+  it('lets a visitor read the list, and offers an account to save it, coming back to the list', async () => {
     server.use(...visitorServer());
     const user = userEvent.setup();
     renderPage();
 
-    expect(
-      await screen.findByRole('link', { name: 'Enregistrer dans Mes listes' })
-    ).toHaveAttribute('href', '/login?returnTo=%2Fu%2Flea%2Flistes%2Fl1');
+    const save = await screen.findByRole('link', { name: 'Enregistrer dans Mes listes' });
+    expect(save).toHaveAttribute('href', '/register?returnTo=%2Fu%2Flea%2Flistes%2Fl1');
     expect(
       screen.getByRole('heading', { level: 1, name: 'Les classiques à voir' })
     ).toBeInTheDocument();
@@ -237,6 +236,19 @@ describe('PublicListPage', () => {
     expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual([
       'Copier le lien',
     ]);
+    await user.keyboard('{Escape}');
+
+    await user.click(save);
+
+    const dialog = await screen.findByRole('dialog', { name: 'Enregistrer cette liste' });
+    expect(within(dialog).getByRole('link', { name: 'Créer un compte' })).toHaveAttribute(
+      'href',
+      '/register?returnTo=%2Fu%2Flea%2Flistes%2Fl1'
+    );
+    expect(within(dialog).getByRole('link', { name: 'J’ai déjà un compte' })).toHaveAttribute(
+      'href',
+      '/login?returnTo=%2Fu%2Flea%2Flistes%2Fl1'
+    );
   });
 
   it('sends the creator or a member to the working page of the list', async () => {

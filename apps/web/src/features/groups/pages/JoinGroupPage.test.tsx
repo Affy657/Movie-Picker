@@ -8,6 +8,7 @@ import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { buildUserProfile } from '@/test-utils/userProfile';
 import { apiErrorJson, apiJson, type ApiSchemas } from '@/mocks/apiJson';
 import { authMeGuestHandler, createGroupJoinHandlers, TEST_API_V1 } from '@/mocks/handlers';
+import buttonStyles from '@/shared/components/Button.module.css';
 import JoinGroupPage from './JoinGroupPage';
 
 const authedAlice = http.get(`${TEST_API_V1}/auth/me`, () =>
@@ -54,7 +55,7 @@ describe('JoinGroupPage', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
-  it('shows a visitor the group behind the link, and asks them to sign in to join', async () => {
+  it('shows a visitor the group behind the link, and asks them to create an account to join', async () => {
     server.use(authMeGuestHandler, ...createGroupJoinHandlers('tok', PREVIEW));
     renderPage();
 
@@ -65,7 +66,18 @@ describe('JoinGroupPage', () => {
     expect(screen.getByText('Invitation')).toBeInTheDocument();
     expect(screen.getByText('Les jeudis ciné')).toBeInTheDocument();
     expect(screen.getByText('6 membres')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Se connecter' })).toHaveAttribute(
+    const [register, login] = screen.getAllByRole('link', {
+      name: /^(Créer un compte|J’ai déjà un compte)$/,
+    });
+    expect(register).toHaveAccessibleName('Créer un compte');
+    expect(register).toHaveClass(buttonStyles.primary!);
+    expect(register).toHaveAttribute(
+      'href',
+      `/register?returnTo=${encodeURIComponent('/g/tok/rejoindre')}`
+    );
+    expect(login).toHaveAccessibleName('J’ai déjà un compte');
+    expect(login).not.toHaveClass(buttonStyles.primary!);
+    expect(login).toHaveAttribute(
       'href',
       `/login?returnTo=${encodeURIComponent('/g/tok/rejoindre')}`
     );

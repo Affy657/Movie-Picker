@@ -191,13 +191,23 @@ describe('ProfileProposalsPage', () => {
       expect(screen.queryByRole('link', { name: /enregistr/i })).toBeNull();
     });
 
-    it('sends a visitor to sign in before saving', async () => {
+    it('offers a visitor an account before saving, coming back to the proposals', async () => {
       server.use(signedOut);
+      const user = userEvent.setup();
 
       renderAt('/u/alice/propositions');
 
-      const save = await screen.findByRole('link', { name: 'Enregistrer dans Mes listes' });
-      expect(save.getAttribute('href')).toMatch(/^\/login\?returnTo=/);
+      await user.click(await screen.findByRole('link', { name: 'Enregistrer dans Mes listes' }));
+
+      const dialog = await screen.findByRole('dialog', { name: 'Enregistrer cette liste' });
+      expect(within(dialog).getByRole('link', { name: 'Créer un compte' })).toHaveAttribute(
+        'href',
+        '/register?returnTo=%2Fu%2Falice%2Fpropositions'
+      );
+      expect(within(dialog).getByRole('link', { name: 'J’ai déjà un compte' })).toHaveAttribute(
+        'href',
+        '/login?returnTo=%2Fu%2Falice%2Fpropositions'
+      );
     });
   });
 });

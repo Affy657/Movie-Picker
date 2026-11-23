@@ -57,6 +57,7 @@ export const fr = {
   home: {
     ctaLogin: 'Se connecter',
     ctaRegister: 'Créer un compte',
+    ctaHaveAccount: 'J’ai déjà un compte',
     title: "Qu'est-ce qu'on regarde ce soir ?",
     intro: 'Cherchez un film ou parcourez les sélections.',
     seoTitle: 'Movie Picker : choisir le film de la soirée, ensemble',
@@ -888,7 +889,13 @@ export const fr = {
         "La soirée est complète ({{max}} participants maximum). Demandez à l'hôte d'ouvrir une place pour la rejoindre.",
       full: "La soirée est complète. Demandez à l'hôte d'ouvrir une place pour la rejoindre.",
       intro: 'Rejoignez la soirée pour proposer des films et voter.',
-      signedOutIntro: 'Connectez-vous ou créez un compte pour rejoindre la soirée.',
+      signedOutIntro:
+        'Chacun propose ses films et vote pour ceux des autres, puis la roue désigne le film de la soirée. Il suffit d’un compte pour participer.',
+      invitedBy: '{{name}} vous invite à « {{title}} ».',
+      invited: 'On vous invite à « {{title}} ».',
+      votePrompt: 'Pour voter, rejoignez d’abord la soirée.',
+      joinedTitle: 'Vous avez rejoint la soirée',
+      joinedDescription: 'Proposez vos films et votez pour ceux des autres.',
     },
     participants: {
       dialogTitle: 'Participants ({{count}})',
@@ -1996,6 +2003,9 @@ export const fr = {
     saved: {
       save: 'Enregistrer dans Mes listes',
       saveShort: 'Enregistrer',
+      visitorTitle: 'Enregistrer cette liste',
+      visitorMessage:
+        'Créez un compte pour la garder dans Mes listes et la retrouver quand vous voulez.',
       saved: 'Enregistrée',
       saveError: 'Enregistrement impossible.',
       unsaveError: 'Impossible de ne plus enregistrer cette liste.',
@@ -2145,7 +2155,7 @@ export const fr = {
       invitedBy: '{{name}} vous invite à rejoindre cette liste.',
       submit: 'Rejoindre la liste',
       signedOut:
-        'Connectez-vous ou créez un compte pour rejoindre la liste et y ajouter vos films.',
+        'Créez un compte ou connectez-vous pour rejoindre la liste et y ajouter vos films.',
       fullTitle: 'Cette liste est complète',
       fullMessage:
         'Elle réunit déjà le nombre maximum de personnes. Demandez à {{name}} de faire de la place.',
@@ -2426,7 +2436,7 @@ export const fr = {
       explanation:
         'Les soirées du groupe apparaîtront dans Mes soirées, sans lien à attendre. Vous pourrez quitter le groupe à tout moment.',
       submit: 'Rejoindre le groupe',
-      signedOut: 'Connectez-vous ou créez un compte pour rejoindre ce groupe.',
+      signedOut: 'Créez un compte ou connectez-vous pour rejoindre ce groupe.',
       fullTitle: 'Ce groupe est complet',
       fullMessage:
         'Il réunit déjà le nombre maximum de personnes. Demandez à {{name}} de faire de la place.',
@@ -3217,6 +3227,9 @@ export const fr = {
       privateHidden: 'Les profils privés n’apparaissent pas dans cette liste.',
       followAriaLabel: 'Suivre @{{handle}}',
       unfollowAriaLabel: 'Ne plus suivre @{{handle}}',
+      visitorTitle: 'Suivre {{name}}',
+      visitorMessage:
+        'Créez un compte pour suivre {{name}} : vous pourrez ensuite l’inviter à vos soirées, à vos listes et à vos groupes.',
       error: 'Action impossible, réessayez.',
       search: {
         tab: 'Rechercher',

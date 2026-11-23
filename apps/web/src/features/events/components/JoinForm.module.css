@@ -3,6 +3,30 @@
   margin-bottom: var(--space-6);
 }
 
+.root.prompted {
+  border-color: var(--color-primary);
+}
+
+.pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--ring-focus);
+  pointer-events: none;
+  animation: joinPromptPulse var(--duration-breathe) var(--ease-out) both;
+}
+
+@keyframes joinPromptPulse {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.03);
+  }
+}
+
 .title {
   display: flex;
   align-items: center;
@@ -24,6 +48,14 @@
   transform: translateY(var(--text-optical-nudge));
 }
 
+.invitation {
+  margin: 0 0 var(--space-1-5);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--leading-comfortable);
+  color: var(--color-text);
+}
+
 .intro {
   margin: 0 0 var(--space-4);
   font-size: var(--font-size-md);
@@ -35,7 +67,26 @@
   margin-bottom: 0;
 }
 
+.votePrompt {
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--leading-comfortable);
+  color: var(--color-primary-text);
+}
+
+.votePrompt:empty {
+  margin: 0;
+}
+
 .submit {
   width: 100%;
   max-width: var(--container-xs);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse {
+    display: none;
+    animation: none;
+  }
 }

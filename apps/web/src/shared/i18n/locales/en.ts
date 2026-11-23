@@ -59,6 +59,7 @@ export const en: Locale = {
   home: {
     ctaLogin: 'Log in',
     ctaRegister: 'Create an account',
+    ctaHaveAccount: 'I already have an account',
     title: 'What are we watching tonight?',
     intro: 'Search for a film or browse the selections.',
     seoTitle: "Movie Picker: pick the night's film, together",
@@ -879,7 +880,13 @@ export const en: Locale = {
         'The event is full ({{max}} participants max). Ask the host to raise the capacity to join.',
       full: 'The event is full. Ask the host to raise the capacity to join.',
       intro: 'Join the event to suggest films and vote.',
-      signedOutIntro: 'Log in or create an account to join the event.',
+      signedOutIntro:
+        'Everyone suggests films and votes on the others, then the wheel picks the film of the night. All it takes is an account.',
+      invitedBy: '{{name}} invites you to “{{title}}”.',
+      invited: 'You are invited to “{{title}}”.',
+      votePrompt: 'To vote, join the event first.',
+      joinedTitle: 'You joined the event',
+      joinedDescription: 'Suggest your films and vote on the others.',
     },
     participants: {
       dialogTitle: 'Participants ({{count}})',
@@ -1976,6 +1983,9 @@ export const en: Locale = {
     saved: {
       save: 'Save to My lists',
       saveShort: 'Save',
+      visitorTitle: 'Save this list',
+      visitorMessage:
+        'Create an account to keep it in My lists and find it again whenever you like.',
       saved: 'Saved',
       saveError: 'Could not save.',
       unsaveError: 'Could not unsave this list.',
@@ -2122,7 +2132,7 @@ export const en: Locale = {
       overline: 'Invitation',
       invitedBy: '{{name}} invites you to join this list.',
       submit: 'Join the list',
-      signedOut: 'Sign in or create an account to join the list and add your films to it.',
+      signedOut: 'Create an account or sign in to join the list and add your films to it.',
       fullTitle: 'This list is full',
       fullMessage: 'It already gathers as many people as it can. Ask {{name}} to make room.',
       invalidTitle: 'This invitation link is no longer valid',
@@ -2402,7 +2412,7 @@ export const en: Locale = {
       explanation:
         'The group’s events will show up in My events, with no link to wait for. You can leave the group at any time.',
       submit: 'Join the group',
-      signedOut: 'Sign in or create an account to join this group.',
+      signedOut: 'Create an account or sign in to join this group.',
       fullTitle: 'This group is full',
       fullMessage: 'It already gathers as many people as it can. Ask {{name}} to make room.',
       invalidTitle: 'This invitation link is no longer valid',
@@ -3172,6 +3182,9 @@ export const en: Locale = {
       privateHidden: 'Private profiles are not shown in this list.',
       followAriaLabel: 'Follow @{{handle}}',
       unfollowAriaLabel: 'Unfollow @{{handle}}',
+      visitorTitle: 'Follow {{name}}',
+      visitorMessage:
+        'Create an account to follow {{name}}: you can then invite them to your movie nights, lists and groups.',
       error: 'Action failed, please try again.',
       search: {
         tab: 'Search',

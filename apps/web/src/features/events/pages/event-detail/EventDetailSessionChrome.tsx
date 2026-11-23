@@ -118,6 +118,7 @@ function EventDetailSessionOverlays({
       {join.needsJoin ? (
         <JoinForm
           slug={slug}
+          event={event}
           onJoined={(participantId, pseudo) => join.setParticipant({ participantId, pseudo })}
           isFull={join.isFull}
           maxParticipants={join.maxParticipants}

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import { Link2Off, Users } from 'lucide-react';
+import AccountChoiceLinks from '@/shared/components/AccountChoiceLinks';
 import { buttonClass } from '@/shared/components/Button';
 import ErrorState from '@/shared/components/ErrorState';
 import InlineError from '@/shared/components/InlineError';
@@ -8,8 +9,7 @@ import PageLayout from '@/shared/components/PageLayout';
 import { SkeletonScreen } from '@/shared/components/Skeleton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { isNotFoundError } from '@/shared/api/apiError';
-import { useTranslation } from '@/shared/i18n';
-import { ROUTES, withReturnTo } from '@/app/routes';
+import { ROUTES } from '@/app/routes';
 
 interface JoinLinkClassNames {
   layout?: string;
@@ -90,21 +90,12 @@ export function JoinLinkSignIn({
   returnTo,
   classNames,
 }: Readonly<{ message: string; returnTo: string; classNames: JoinLinkClassNames }>) {
-  const { t } = useTranslation();
   return (
     <>
       <p className={classNames.message}>{message}</p>
-      <nav className={classNames.actions}>
-        <Link
-          to={withReturnTo(ROUTES.login, returnTo)}
-          className={buttonClass({ variant: 'primary' })}
-        >
-          {t('home.ctaLogin')}
-        </Link>
-        <Link to={withReturnTo(ROUTES.register, returnTo)} className={buttonClass()}>
-          {t('home.ctaRegister')}
-        </Link>
-      </nav>
+      <div className={classNames.actions}>
+        <AccountChoiceLinks returnTo={returnTo} />
+      </div>
     </>
   );
 }

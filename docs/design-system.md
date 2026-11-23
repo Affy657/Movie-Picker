@@ -197,7 +197,7 @@ Le dialogue qui est une `Sheet` sur téléphone et une `Modal` en colonne sur gr
 
 ### Notice
 
-Le bandeau d'information flottant : `title`, `description`, `placement` `top` (défaut, glisse du haut) / `bottom` (glisse du bas), `onClose` (sans lui, pas de croix : le bandeau attend une décision), les actions en enfants, pleine largeur sur mobile. C'est le consentement, l'avertissement du navigateur intégré et celui de l'ancienne adresse.
+Le bandeau d'information flottant : `title`, `description`, `placement` `top` (défaut, glisse du haut) / `bottom` (glisse du bas), `onClose` (sans lui, pas de croix : le bandeau attend une décision), les actions en enfants, pleine largeur sur mobile. C'est le consentement, l'avertissement du navigateur intégré et celui de l'ancienne adresse, et la confirmation d'une soirée rejointe (`JoinedNotice`, qui se retire seule après huit secondes).
 
 ### FormPageShell
 
@@ -346,6 +346,8 @@ La barre d'avancée fine suivie de son libellé : `value` (de 0 à 100, bornée)
 - `ServerErrorPage` : `ErrorState` 500, `onRetry` optionnel, message d'erreur masqué en production.
 - `Skeleton` (`variant` `text` / `circle` / `poster` / `block`, `width`, `height`, `style`) et `SkeletonScreen` (`label`, texte masqué visuellement, `role="status"`, `aria-busy`, `style`).
 - `ErrorBoundary` : attrape les erreurs de rendu et affiche `ServerErrorPage`.
+- `AccountChoiceLinks` : les deux liens d'un visiteur qui doit avoir un compte, « Créer un compte » en `primary` d'abord, « J’ai déjà un compte » en `secondary` ensuite, tous deux avec `returnTo` ; `fullWidth`, `onChoose('register' | 'login')` pour la mesure. Rendu sans conteneur, l'appelant pose sa rangée. C'est la carte « Rejoindre la soirée » et les invitations à une liste ou à un groupe.
+- `AccountPromptLink` : le lien d'une action réservée aux membres (Suivre, Enregistrer une liste) vu par un visiteur. Sans script il mène à l'inscription ; un clic simple ouvre un `ResponsiveDialog` (`title`, `message`) qui explique ce que le compte apporte puis propose `AccountChoiceLinks` en pleine largeur ; un clic avec modificateur garde l'ouverture dans un nouvel onglet. `aria-haspopup="dialog"`, `className` et `ariaLabel` pour le dessin du bouton qu'il remplace ; la fenêtre n'est montée qu'à la première ouverture.
 
 ### Divers
 

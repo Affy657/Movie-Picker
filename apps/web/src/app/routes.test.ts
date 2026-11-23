@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { ROUTES, movieSlug, parseMovieRef, withReturnTo } from '@/app/routes';
+import { safeReturnTo } from '@/shared/utils/returnTo';
 
 describe('movie page routes', () => {
   it('gives each film and show a readable address built from its title', () => {
@@ -74,6 +75,11 @@ describe('ROUTES', () => {
     expect(ROUTES.nightRecap('7fKq2p')).toBe('/r/7fKq2p');
     expect(ROUTES.eventDetailRating('7fKq2p')).toBe('/e/7fKq2p?rate');
     expect(ROUTES.eventDetailRating('7fKq2p', 'abc123')).toBe('/e/7fKq2p?rate=abc123');
+  });
+
+  it('gives a night an address that carries the wish to join it, kept through the sign-in', () => {
+    expect(ROUTES.eventDetailJoin('7fKq2p')).toBe('/e/7fKq2p?rejoindre=1');
+    expect(safeReturnTo(ROUTES.eventDetailJoin('7fKq2p'))).toBe('/e/7fKq2p?rejoindre=1');
   });
 
   it('files each created list under Mes listes', () => {
