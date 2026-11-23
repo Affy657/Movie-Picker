@@ -40,6 +40,23 @@ public sealed class InMemoryMovieListRepository : IMovieListRepository
         }
     }
 
+    public Task<IReadOnlyList<MovieListSummary>> SearchSummariesAsync(string userId, string query, int limit, CancellationToken ct = default)
+    {
+        var normalized = UserSearchPolicy.Normalize(query);
+        lock (_gate)
+        {
+            IReadOnlyList<MovieListSummary> summaries = normalized.Length == 0
+                ? []
+                :
+                [
+                    .. Latest(_store.Values.Where(list => list.RoleOf(userId) is not null && UserSearchPolicy.Contains(list.Name, normalized)))
+                        .Take(Math.Max(0, limit))
+                        .Select(MovieListSummary.Of)
+                ];
+            return Task.FromResult(summaries);
+        }
+    }
+
     public Task<IReadOnlyList<MovieListSummary>> ListPublicSummariesAsync(string ownerId, CancellationToken ct = default)
     {
         lock (_gate)

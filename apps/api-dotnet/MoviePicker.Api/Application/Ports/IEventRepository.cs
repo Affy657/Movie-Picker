@@ -24,6 +24,13 @@ public interface IEventRepository
 
     Task<IReadOnlyList<Event>> ListByGroupIdsAsync(IReadOnlyCollection<string> groupIds, CancellationToken ct = default);
 
+    Task<IReadOnlyList<Event>> ListTitleMatchesAsync(
+        string creatorUserId,
+        IReadOnlyCollection<string> eventIds,
+        IReadOnlyCollection<string> groupIds,
+        string query,
+        CancellationToken ct = default);
+
     Task<Event?> FindByCreatorAndTitleAsync(string creatorUserId, string title, CancellationToken ct = default);
 
     Task<bool> DeleteAsync(string eventId, CancellationToken ct = default);

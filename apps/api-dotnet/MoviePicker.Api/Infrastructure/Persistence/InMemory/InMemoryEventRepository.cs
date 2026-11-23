@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
+using MoviePicker.Api.Application.UseCases.SearchUsers;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -208,6 +209,27 @@ public sealed class InMemoryEventRepository : IEventRepository
         IReadOnlyList<Event> result = ids.Count == 0
             ? []
             : _byId.Values.Where(e => e.GroupId is { } groupId && ids.Contains(groupId)).ToList();
+        return Task.FromResult(result);
+    }
+
+    public Task<IReadOnlyList<Event>> ListTitleMatchesAsync(
+        string creatorUserId,
+        IReadOnlyCollection<string> eventIds,
+        IReadOnlyCollection<string> groupIds,
+        string query,
+        CancellationToken ct = default)
+    {
+        var normalized = UserSearchPolicy.Normalize(query);
+        var ids = eventIds.ToHashSet(StringComparer.Ordinal);
+        var groups = groupIds.ToHashSet(StringComparer.Ordinal);
+        IReadOnlyList<Event> result = normalized.Length == 0
+            ? []
+            : _byId.Values
+                .Where(e => (!string.IsNullOrWhiteSpace(creatorUserId) && e.CreatorUserId == creatorUserId)
+                            || ids.Contains(e.Id)
+                            || (e.GroupId is { } groupId && groups.Contains(groupId)))
+                .Where(e => UserSearchPolicy.Contains(e.Title, normalized))
+                .ToList();
         return Task.FromResult(result);
     }
 

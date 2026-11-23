@@ -160,6 +160,28 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task Events_FindTheTitleMatchesAmongTheCreatedJoinedAndGroupNights()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var marker = $"zq{Guid.NewGuid():N}"[..10];
+        var creatorId = ObjectId.GenerateNewId().ToString();
+        var groupId = ObjectId.GenerateNewId().ToString();
+        var created = await events.AddAsync(NewEvent($"Ciné {marker} créé") with { CreatorUserId = creatorId });
+        var joined = await events.AddAsync(NewEvent($"CINE {marker} rejoint") with { CreatorUserId = ObjectId.GenerateNewId().ToString() });
+        var ofGroup = await events.AddAsync(NewEvent($"Ciné {marker} du groupe") with { GroupId = groupId });
+        await events.AddAsync(NewEvent($"Ciné {marker} d'un autre") with { CreatorUserId = ObjectId.GenerateNewId().ToString() });
+        await events.AddAsync(NewEvent("Autre titre") with { CreatorUserId = creatorId });
+
+        var found = await events.ListTitleMatchesAsync(creatorId, [joined.Id], [groupId], $"cinê {marker}".ToUpperInvariant());
+        var createdOnly = await events.ListTitleMatchesAsync(creatorId, [], [], $"cine {marker}");
+
+        Assert.Equal(new[] { created.Id, joined.Id, ofGroup.Id }.Order(), found.Select(night => night.Id).Order());
+        Assert.Equal([created.Id], createdOnly.Select(night => night.Id));
+        Assert.Empty(await events.ListTitleMatchesAsync(creatorId, [joined.Id], [groupId], "  "));
+    }
+
+    [Fact]
     public async Task GroupNights_AreListedByTheirGroups_AndKeepTheirGroupThroughAnUpdate()
     {
         using var scope = _factory.Services.CreateScope();
@@ -2182,6 +2204,34 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal(1, deletedByOwner);
         Assert.Equal(0, await saved.CountByOwnerAsync(ownerId));
         Assert.Single(await saved.ListByOwnerAsync(otherId));
+    }
+
+    [Fact]
+    public async Task MovieLists_SearchTheOnesAUserOwnsOrSharesByName_NewestFirst()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var lists = scope.ServiceProvider.GetRequiredService<IMovieListRepository>();
+        var marker = $"zq{Guid.NewGuid():N}"[..10];
+        var userId = ObjectId.GenerateNewId().ToString();
+        var strangerId = ObjectId.GenerateNewId().ToString();
+        var own = await lists.AddAsync(new MovieList { OwnerId = userId, Name = $"Polar {marker}", CreatedAt = Now, UpdatedAt = Now });
+        var shared = await lists.AddAsync(new MovieList
+        {
+            OwnerId = strangerId,
+            Name = $"POLAR {marker} partagé",
+            Members = [new MovieListMember(userId, Now)],
+            CreatedAt = Now,
+            UpdatedAt = Now.AddHours(1)
+        });
+        await lists.AddAsync(new MovieList { OwnerId = strangerId, Name = $"Polar {marker} étranger", IsPublic = true, CreatedAt = Now, UpdatedAt = Now.AddHours(2) });
+        await lists.AddAsync(new MovieList { OwnerId = userId, Name = "Comédies", CreatedAt = Now, UpdatedAt = Now.AddHours(3) });
+
+        var found = await lists.SearchSummariesAsync(userId, $"polâr {marker}", 10);
+        var newestOnly = await lists.SearchSummariesAsync(userId, $"polar {marker}", 1);
+
+        Assert.Equal([shared.Id, own.Id], found.Select(summary => summary.Id));
+        Assert.Equal([shared.Id], newestOnly.Select(summary => summary.Id));
+        Assert.Empty(await lists.SearchSummariesAsync(userId, " ", 10));
     }
 
     [Fact]

@@ -53,9 +53,13 @@ function HomeSearch() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showResults, setShowResults] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const fieldRef = useRef<HTMLInputElement>(null);
   useReportSearchVisibility(formRef);
   useResultsKeyboard(formRef, showResults);
-  useClickOutside(formRef, () => setShowResults(false), showResults, { closeOnFocusLeave: true });
+  useClickOutside(formRef, () => setShowResults(false), showResults, {
+    closeOnFocusLeave: true,
+    returnFocusTo: fieldRef,
+  });
 
   const typeSearch = (value: string) => {
     setSearchTerm(value);
@@ -76,6 +80,7 @@ function HomeSearch() {
           {t('globalSearch.label')}
         </label>
         <SearchField
+          ref={fieldRef}
           id="home-search"
           className={styles.searchField}
           value={searchTerm}

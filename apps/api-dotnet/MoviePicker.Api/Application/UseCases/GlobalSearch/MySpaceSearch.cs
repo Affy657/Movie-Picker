@@ -9,8 +9,7 @@ namespace MoviePicker.Api.Application.UseCases.GlobalSearch;
 public sealed record MySpaceMatches(
     IReadOnlyList<GlobalSearchNightItem> Nights,
     IReadOnlyList<GlobalSearchGroupItem> Groups,
-    IReadOnlyList<GlobalSearchListItem> Lists,
-    IReadOnlySet<string> MyListIds);
+    IReadOnlyList<GlobalSearchListItem> Lists);
 
 public sealed class MySpaceSearch
 {
@@ -36,20 +35,22 @@ public sealed class MySpaceSearch
 
     public async Task<MySpaceMatches> FindAsync(string query, string userId, CancellationToken ct)
     {
-        var groups = await _groups.ListAdmittingAsync(userId, ct);
-        var nights = await SearchNightsAsync(query, userId, groups, ct);
-        var lists = await _lists.ListSummariesAsync(userId, ct);
+        var groupsTask = _groups.ListAdmittingAsync(userId, ct);
+        var joinedTask = _participants.ListDistinctEventIdsByUserIdAsync(userId, ct);
+        var listsTask = _lists.SearchSummariesAsync(userId, query, GlobalSearchHandler.SectionLimit, ct);
+        var groups = await groupsTask;
+        var joined = await joinedTask;
+        var nights = await _events.ListTitleMatchesAsync(userId, joined, groups.Select(group => group.Id).ToList(), query, ct);
+        var lists = await listsTask;
 
         return new MySpaceMatches(
-            nights,
+            VisibleNights(nights, userId, joined, groups),
             groups
                 .Where(group => UserSearchPolicy.Contains(group.Name, query))
                 .Take(GlobalSearchHandler.SectionLimit)
                 .Select(group => new GlobalSearchGroupItem { Id = group.Id, Name = group.Name, MemberCount = group.MemberCount })
                 .ToList(),
             lists
-                .Where(list => UserSearchPolicy.Contains(list.Name, query))
-                .Take(GlobalSearchHandler.SectionLimit)
                 .Select(list => new GlobalSearchListItem
                 {
                     Id = list.Id,
@@ -57,24 +58,22 @@ public sealed class MySpaceSearch
                     ItemCount = list.ItemCount,
                     PosterPath = list.PosterPaths.Count > 0 ? list.PosterPaths[0] : null
                 })
-                .ToList(),
-            lists.Select(list => list.Id).ToHashSet(StringComparer.Ordinal));
+                .ToList());
     }
 
-    private async Task<IReadOnlyList<GlobalSearchNightItem>> SearchNightsAsync(
-        string query, string userId, IReadOnlyList<FriendGroup> groups, CancellationToken ct)
+    private List<GlobalSearchNightItem> VisibleNights(
+        IReadOnlyList<Event> matches, string userId, IReadOnlyList<string> joinedIds, IReadOnlyList<FriendGroup> groups)
     {
         var utcNow = _clock.GetUtcNow();
-        var created = await _events.ListAllByCreatorUserIdAsync(userId, ct);
-        var joined = await ListOnlyJoinedAsync(userId, created, ct);
-        var groupNights = await ListOpenGroupNightsAsync(groups, utcNow, ct);
+        var joined = joinedIds.ToHashSet(StringComparer.Ordinal);
+        var keptByMyGroups = FriendGroup.NightsKeptBy(matches, groups).Select(night => night.Id).ToHashSet(StringComparer.Ordinal);
 
-        return created
-            .Concat(joined)
-            .Concat(groupNights)
+        return matches
             .DistinctBy(night => night.Id)
-            .Where(night => UserSearchPolicy.Contains(night.Title, query))
             .Select(night => (Night: night, IsFinished: night.IsFinished(utcNow), StartTicks: StartOf(night).UtcTicks))
+            .Where(entry => entry.Night.CreatorUserId == userId
+                            || joined.Contains(entry.Night.Id)
+                            || (keptByMyGroups.Contains(entry.Night.Id) && !entry.IsFinished))
             .OrderBy(entry => entry.IsFinished)
             .ThenBy(entry => entry.IsFinished ? -entry.StartTicks : entry.StartTicks)
             .Take(GlobalSearchHandler.SectionLimit)
@@ -87,25 +86,6 @@ public sealed class MySpaceSearch
                 IsFinished = entry.IsFinished
             })
             .ToList();
-    }
-
-    private async Task<IReadOnlyList<Event>> ListOnlyJoinedAsync(string userId, IReadOnlyList<Event> created, CancellationToken ct)
-    {
-        var createdIds = created.Select(night => night.Id).ToHashSet(StringComparer.Ordinal);
-        var joinedIds = (await _participants.ListDistinctEventIdsByUserIdAsync(userId, ct))
-            .Where(id => !createdIds.Contains(id))
-            .ToList();
-        return joinedIds.Count == 0 ? [] : await _events.ListByIdsAsync(joinedIds, ct);
-    }
-
-    private async Task<IEnumerable<Event>> ListOpenGroupNightsAsync(
-        IReadOnlyList<FriendGroup> groups, DateTimeOffset utcNow, CancellationToken ct)
-    {
-        if (groups.Count == 0)
-            return [];
-
-        var nights = await _events.ListByGroupIdsAsync(groups.Select(group => group.Id).ToList(), ct);
-        return FriendGroup.NightsKeptBy(nights, groups).Where(night => !night.IsFinished(utcNow));
     }
 
     private static DateTimeOffset StartOf(Event night) =>

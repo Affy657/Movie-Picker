@@ -191,6 +191,17 @@ describe('HeaderSearch', () => {
     expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
   });
 
+  it('closes when its loupe is pressed again', async () => {
+    stubMatchMedia(false);
+    renderHeaderSearch('/watchlist');
+
+    await userEvent.click(loupe() as HTMLElement);
+    expect(field()).toBeInTheDocument();
+    await userEvent.click(loupe() as HTMLElement);
+
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+  });
+
   it('closes when the page search comes back into view, and stays closed', async () => {
     stubMatchMedia((query) => query.includes('max-width'));
     renderHeaderSearch('/');

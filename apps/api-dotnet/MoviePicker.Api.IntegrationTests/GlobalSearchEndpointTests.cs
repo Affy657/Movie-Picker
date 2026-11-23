@@ -28,13 +28,39 @@ public sealed class GlobalSearchEndpointTests : IClassFixture<MoviePickerApplica
     }
 
     [Fact]
-    public async Task Search_Anonymous_FindsTitlesOnly()
+    public async Task Search_Anonymous_FindsTitlesButNeitherTheMatchingMemberNorTheirNight()
     {
-        var result = await SearchAsync(_factory.CreateClient(), "film");
+        var marker = $"Qx{Guid.NewGuid():N}"[..12];
+        var host = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, $"Hôte {marker}");
+        var night = await host.PostAsJsonAsync("/api/v1/events", new { title = $"Soirée {marker}", date = TestDates.Upcoming, time = "20:00" });
+        Assert.Equal(HttpStatusCode.Created, night.StatusCode);
+        var signedIn = await SearchAsync(host, marker);
+        Assert.NotEmpty(signedIn.Members);
+        Assert.NotEmpty(signedIn.Nights);
+
+        var result = await SearchAsync(_factory.CreateClient(), marker);
 
         Assert.Contains(result.Titles, title => title.Title == "Film E2E Stub");
         Assert.Empty(result.Members);
         Assert.Empty(result.Nights);
+        Assert.Empty(result.Groups);
+        Assert.Empty(result.Lists);
+    }
+
+    [Fact]
+    public async Task Search_SignedIn_KeepsSomeoneElsesGroupAndPrivateListHidden()
+    {
+        var marker = $"Qw{Guid.NewGuid():N}"[..12];
+        var owner = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Propriétaire secret");
+        var searcher = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Curieux");
+        Assert.Equal(HttpStatusCode.Created, (await owner.PostAsJsonAsync("/api/v1/groups", new { name = $"Groupe {marker}" })).StatusCode);
+        Assert.Equal(HttpStatusCode.Created, (await owner.PostAsJsonAsync("/api/v1/lists", new { name = $"Liste {marker}" })).StatusCode);
+
+        var result = await SearchAsync(searcher, marker);
+
+        Assert.Empty(result.Groups);
+        Assert.Empty(result.Lists);
+        Assert.Empty(result.PublicLists);
     }
 
     [Fact]

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
@@ -43,30 +44,35 @@ public sealed class GlobalSearchHandler : IGlobalSearchHandler
             return new GlobalSearchResponse();
 
         var titles = SearchTitlesAsync(normalized, ct);
-        var sagas = await SearchSagasAsync(normalized, ct);
+        var sagas = SearchSagasAsync(normalized, ct);
+        var publicLists = _publicLists.FindAsync(normalized, currentUserId, ct);
 
         if (currentUserId is null)
         {
+            await Task.WhenAll(titles, sagas, publicLists);
             return new GlobalSearchResponse
             {
                 Titles = await titles,
-                Sagas = sagas,
-                PublicLists = await _publicLists.FindAsync(normalized, new HashSet<string>(), ct)
+                Sagas = await sagas,
+                PublicLists = (await publicLists).Take(SectionLimit).ToList()
             };
         }
 
-        var members = await _members.HandleAsync(normalized, currentUserId, ct);
-        var mine = await _mySpace.FindAsync(normalized, currentUserId, ct);
+        var members = _members.HandleAsync(normalized, null, ct);
+        var mine = _mySpace.FindAsync(normalized, currentUserId, ct);
+        await Task.WhenAll(titles, sagas, publicLists, members, mine);
 
+        var myMatches = await mine;
+        var listedAsMine = myMatches.Lists.Select(list => list.Id).ToHashSet(StringComparer.Ordinal);
         return new GlobalSearchResponse
         {
             Titles = await titles,
-            Sagas = sagas,
-            Members = members.Items.Take(SectionLimit).ToList(),
-            Nights = mine.Nights,
-            Groups = mine.Groups,
-            Lists = mine.Lists,
-            PublicLists = await _publicLists.FindAsync(normalized, mine.MyListIds, ct)
+            Sagas = await sagas,
+            Members = (await members).Items.Take(SectionLimit).ToList(),
+            Nights = myMatches.Nights,
+            Groups = myMatches.Groups,
+            Lists = myMatches.Lists,
+            PublicLists = (await publicLists).Where(list => !listedAsMine.Contains(list.Id)).Take(SectionLimit).ToList()
         };
     }
 
@@ -80,7 +86,7 @@ public sealed class GlobalSearchHandler : IGlobalSearchHandler
         {
             rows = await _tmdb.SearchTitlesAsync(query, allowSeries: true, ct: ct);
         }
-        catch (HttpRequestException)
+        catch (Exception ex) when (ex is HttpRequestException or JsonException)
         {
             return [];
         }

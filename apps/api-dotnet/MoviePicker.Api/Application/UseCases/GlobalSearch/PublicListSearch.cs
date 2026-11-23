@@ -5,7 +5,7 @@ namespace MoviePicker.Api.Application.UseCases.GlobalSearch;
 
 public sealed class PublicListSearch
 {
-    private const int CandidateLimit = 12;
+    private const int CandidateLimit = 24;
 
     private readonly IMovieListRepository _lists;
     private readonly IUserRepository _users;
@@ -16,11 +16,10 @@ public sealed class PublicListSearch
         _users = users;
     }
 
-    public async Task<IReadOnlyList<GlobalSearchPublicListItem>> FindAsync(
-        string query, IReadOnlySet<string> excludedListIds, CancellationToken ct)
+    public async Task<IReadOnlyList<GlobalSearchPublicListItem>> FindAsync(string query, string? viewerId, CancellationToken ct)
     {
         var candidates = (await _lists.SearchPublicSummariesAsync(query, CandidateLimit, ct))
-            .Where(list => !excludedListIds.Contains(list.Id))
+            .Where(list => list.OwnerId != viewerId)
             .ToList();
         if (candidates.Count == 0)
             return [];
@@ -31,7 +30,6 @@ public sealed class PublicListSearch
 
         return candidates
             .Where(list => owners.ContainsKey(list.OwnerId))
-            .Take(GlobalSearchHandler.SectionLimit)
             .Select(list => new GlobalSearchPublicListItem
             {
                 Id = list.Id,

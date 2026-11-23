@@ -64,7 +64,7 @@ export default function HeaderSearch() {
         ref={loupeRef}
         ariaLabel={t('globalSearch.open')}
         className={styles.loupe}
-        onClick={() => setOpen(true)}
+        onClick={() => setOpen((wasOpen) => !wasOpen)}
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         tabIndex={open ? -1 : undefined}
@@ -99,14 +99,13 @@ export default function HeaderSearch() {
                 if (runSearch(example)) setOpen(false);
               }}
             />
-          ) : (
-            <GlobalSearchResults
-              term={term}
-              source="header"
-              className={styles.results}
-              onPick={() => setOpen(false)}
-            />
-          )}
+          ) : null}
+          <GlobalSearchResults
+            term={term}
+            source="header"
+            className={styles.results}
+            onPick={() => setOpen(false)}
+          />
         </form>
       ) : null}
     </>
