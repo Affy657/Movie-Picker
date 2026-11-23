@@ -37,7 +37,11 @@
       "headers": { "Cache-Control": "public, max-age=86400, must-revalidate" }
     },
     {
-      "glob": "/@(robots.txt|sitemap.xml)",
+      "glob": "/@(robots.txt|sitemap.xml|llms.txt)",
+      "headers": { "Cache-Control": "public, max-age=3600, must-revalidate" }
+    },
+    {
+      "glob": "/.well-known/security.txt",
       "headers": { "Cache-Control": "public, max-age=3600, must-revalidate" }
     },
     {

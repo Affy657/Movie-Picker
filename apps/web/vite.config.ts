@@ -10,6 +10,7 @@ import {
   buildColorMixFallback,
   readColorMixTokenSheets,
 } from './tooling/colorMixFallback';
+import { securityTxtPlugin } from './tooling/securityTxt';
 import {
   buildContentSecurityPolicy,
   inlineScriptHashes,
@@ -371,11 +372,11 @@ export default defineConfig(({ mode }) => {
           short_name: 'Movie Picker',
           description:
             'Organisez une soirée cinéma : créez un événement, partagez le lien, proposez des films, votez et tirez au sort.',
-          theme_color: '#0a0f1c',
-          background_color: '#0f172a',
+          theme_color: '#f4f6fa',
+          background_color: '#f4f6fa',
           display: 'standalone',
-          orientation: 'portrait',
-          start_url: '/my-events',
+          id: '/my-events',
+          start_url: '/',
           scope: '/',
           lang: 'fr',
           prefer_related_applications: false,
@@ -412,6 +413,7 @@ export default defineConfig(({ mode }) => {
         },
       }),
       appShellClosurePlugin(appShellModules),
+      securityTxtPlugin(),
       preloadCriticalAssetsPlugin(),
       cspMetaPlugin(apiOrigin, sentryOrigin),
       ...(sentryAuthToken
