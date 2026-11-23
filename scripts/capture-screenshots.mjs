@@ -7,7 +7,7 @@ const API = process.env.CAPTURE_API_URL ?? 'http://localhost:4000';
 const OUT = path.resolve(process.env.CAPTURE_OUT ?? 'docs/screenshots');
 const VIEWPORT = { width: 1280, height: 800 };
 
-const HOST = { email: 'dev@test.local', password: 'DevTest123!' };
+const HOST = { email: 'david@test.local', password: 'DavidTest123!' };
 const GUESTS = [
   { email: 'alice@test.local', password: 'AliceTest123!', pseudo: 'Alice' },
   { email: 'bob@test.local', password: 'BobTest12345!', pseudo: 'Bob' },
@@ -38,7 +38,7 @@ const WATCHLIST = [
 
 function eventDate() {
   const date = new Date();
-  date.setDate(date.getDate() + 3);
+  date.setDate(date.getDate() + 1);
   return date.toISOString().slice(0, 10);
 }
 
@@ -101,7 +101,8 @@ async function seedEvent(host) {
         displayName: 'Adrien',
         handle: 'adrien',
         bio: 'Soirées ciné entre amis, un vendredi sur deux.',
-        uiTheme: 'dark',
+        uiTheme: 'light',
+        accentColor: 'default',
         isProfilePublic: true,
         isWatchlistPublic: true,
       },
@@ -117,34 +118,9 @@ async function seedEvent(host) {
   );
   const slug = created.slug;
   const hostParticipant = created.creatorParticipant._id;
-
-  for (const query of PICKS) {
-    const found = await json(
-      host.get(`/api/v1/movies/search?q=${encodeURIComponent(query)}`),
-      `search ${query}`
-    );
-    const movie = listOf(found)[0];
-    if (!movie) continue;
-    await json(
-      host.post(`/api/v1/events/${slug}/movies`, {
-        data: {
-          tmdbId: movie.id,
-          mediaType: movie.mediaType,
-          title: movie.title,
-          year: movie.year,
-          posterPath: movie.posterPath,
-          participantId: hostParticipant,
-        },
-      }),
-      `add ${query}`
-    );
-  }
-
-  const movies = listOf(
-    await json(
-      host.get(`/api/v1/events/${slug}/movies?participantId=${hostParticipant}`),
-      'list movies'
-    )
+  await json(
+    host.patch(`/api/v1/events/${slug}/config`, { data: { wheelMode: 'weightedByVotes' } }),
+    'weighted wheel'
   );
 
   const voters = [{ context: host, participantId: hostParticipant, index: 0 }];
@@ -160,6 +136,36 @@ async function seedEvent(host) {
       index: index + 1,
     });
   }
+
+  for (const [position, query] of PICKS.entries()) {
+    const proposer = voters[position % voters.length];
+    const found = await json(
+      proposer.context.get(`/api/v1/movies/search?q=${encodeURIComponent(query)}`),
+      `search ${query}`
+    );
+    const movie = listOf(found)[0];
+    if (!movie) continue;
+    await json(
+      proposer.context.post(`/api/v1/events/${slug}/movies`, {
+        data: {
+          tmdbId: movie.id,
+          mediaType: movie.mediaType,
+          title: movie.title,
+          year: movie.year,
+          posterPath: movie.posterPath,
+          participantId: proposer.participantId,
+        },
+      }),
+      `add ${query}`
+    );
+  }
+
+  const movies = listOf(
+    await json(
+      host.get(`/api/v1/events/${slug}/movies?participantId=${hostParticipant}`),
+      'list movies'
+    )
+  );
 
   for (const voter of voters) {
     for (const [position, movie] of movies.entries()) {
@@ -247,14 +253,13 @@ mkdirSync(OUT, { recursive: true });
 const browser = await chromium.launch();
 const context = await browser.newContext({
   viewport: VIEWPORT,
-  colorScheme: 'dark',
+  colorScheme: 'light',
   locale: 'fr-FR',
   storageState: await host.storageState(),
-  reducedMotion: 'reduce',
 });
 await context.addInitScript(() => {
   localStorage.setItem('moviepicker-consent', JSON.stringify({ decided: true, analytics: false }));
-  localStorage.setItem('moviepicker-theme', 'dark');
+  localStorage.setItem('moviepicker-theme', 'light');
   localStorage.setItem('moviepicker-locale', 'fr');
   localStorage.setItem('mp.session-hint', '1');
 });
@@ -267,11 +272,14 @@ await page.goto(`${WEB}/e/${seeded.slug}`, { waitUntil: 'domcontentloaded' });
 await shot(page, '02-soiree.png');
 
 await page.getByRole('button', { name: /lancer la roue/i }).click();
-await page.waitForTimeout(3000);
-await shot(page, '03-tirage.png');
+await page.waitForTimeout(5200);
+await page.screenshot({ path: path.join(OUT, '03-roue.png') });
+console.log('saved 03-roue.png');
 
-await page.goto(`${WEB}/watchlist`, { waitUntil: 'domcontentloaded' });
-await shot(page, '04-ma-liste.png');
+await page.getByText(/film sélectionné/i).waitFor({ timeout: 15000 });
+await page.waitForTimeout(1200);
+await page.screenshot({ path: path.join(OUT, '04-tirage.png') });
+console.log('saved 04-tirage.png');
 
 await context.close();
 await browser.close();

@@ -157,8 +157,9 @@ Tous se lancent à la racine du dépôt.
 
 `pnpm run capture:screenshots` refait les quatre images de `docs/screenshots/` sur l'application
 lancée en local. Le script se connecte au compte de démonstration, renomme le profil, crée une
-soirée propre (six films, quatre participants, des votes), retire de la liste les films sans
-affiche, puis photographie l'accueil, la soirée, le tirage et la liste en 1280 x 800, thème sombre.
+soirée propre (six films, quatre participants, des votes, roue selon les votes), retire de la liste les films sans
+affiche, puis photographie l'accueil, la soirée, la roue avec les chances de chaque film et le tirage en
+1280 x 800, thème clair. Les films sont proposés par les quatre participants à tour de rôle.
 
 L'API doit tourner **sans base**, sinon la soirée de démonstration est écrite dans MongoDB, et
 **avec une clé TMDB**, sinon les affiches manquent. Depuis un worktree, `MOVIEPICKER_TEST_CONTEXT`

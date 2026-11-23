@@ -65,12 +65,21 @@ On crée une soirée, on partage le lien, chacun propose des films et vote, la r
 5. **Lancer la roue**, en tirage strictement aléatoire ou pondéré par les votes, au choix de l’hôte.
 6. **Couronner** un ou plusieurs films, jusqu’à dix selon le réglage de l’hôte : chaque tirage en ajoute un au palmarès.
 
-|  |  |
-| :--: | :--: |
-| <img src="docs/screenshots/01-accueil.png" alt="Page d’accueil : recherche et rangées de films"> | <img src="docs/screenshots/02-soiree.png" alt="Une soirée : films proposés, votes et participants"> |
-| Ce qu’on peut regarder ce soir | Les films proposés, les votes, les participants |
-| <img src="docs/screenshots/03-tirage.png" alt="Résultat du tirage de la roue"> | <img src="docs/screenshots/04-ma-liste.png" alt="Une liste de films"> |
-| La roue tranche | Ses listes de films, notées et importables depuis Letterboxd |
+<img src="docs/screenshots/01-accueil.png" alt="Page d’accueil : recherche et rangées de films">
+
+*Ce qu’on peut regarder ce soir.*
+
+<img src="docs/screenshots/02-soiree.png" alt="Une soirée : films proposés par quatre amis, votes et participants">
+
+*Une soirée : chacun propose ses films, tout le monde vote.*
+
+<img src="docs/screenshots/03-roue.png" alt="La roue, avec les chances de chaque film selon les votes">
+
+*La roue, pondérée par les votes : chaque film affiche ses chances.*
+
+<img src="docs/screenshots/04-tirage.png" alt="Résultat du tirage de la roue">
+
+*La roue tranche.*
 
 Captures prises sur l’application lancée en local, par
 [`scripts/capture-screenshots.mjs`](scripts/capture-screenshots.mjs).
