@@ -76,3 +76,23 @@ export function tmdbPosterSrcSetForList(url: string | undefined): string | undef
     return undefined;
   }
 }
+
+const BACKDROP_SRCSET_WIDTHS: ReadonlyArray<readonly [string, number]> = [
+  ['w780', 780],
+  ['w1280', 1280],
+  ['original', 1920],
+];
+
+export function tmdbBackdropSrcSet(url: string | null | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    const u = new URL(url);
+    if (u.protocol !== 'https:' || u.hostname !== 'image.tmdb.org') return undefined;
+    if (!TMDB_SIZED_POSTER_SEGMENT.test(u.pathname)) return undefined;
+    return BACKDROP_SRCSET_WIDTHS.map(
+      ([size, width]) => `${posterSrcAtSize(url, size)} ${width}w`
+    ).join(', ');
+  } catch {
+    return undefined;
+  }
+}

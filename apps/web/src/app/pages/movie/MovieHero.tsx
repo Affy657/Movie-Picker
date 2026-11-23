@@ -23,6 +23,7 @@ export interface MovieHeroView {
   posterSrc: string | undefined;
   posterSrcSet: string | undefined;
   backdropSrc: string | null;
+  backdropSrcSet: string | undefined;
   voteAverage: number | null;
   voteCount: number | null;
   providers: WatchProviderOffer[];
@@ -208,6 +209,8 @@ export default function MovieHero({
         <div className={styles.backdrop} aria-hidden>
           <img
             src={view.backdropSrc}
+            srcSet={view.backdropSrcSet}
+            sizes="100vw"
             alt=""
             decoding="async"
             className={clsx(styles.backdropImg, backdropLoaded && styles.backdropImgLoaded)}

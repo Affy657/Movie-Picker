@@ -9,6 +9,7 @@ import {
   tmdbPosterSrcForListDisplay,
   tmdbPosterSrcSetForList,
   posterSrcAtSize,
+  tmdbBackdropSrcSet,
 } from '@/shared/utils/posterUrl';
 
 describe('posterImageSrc', () => {
@@ -134,5 +135,18 @@ describe('posterSrcAtSize', () => {
       'https://example.com/abc.jpg'
     );
     expect(posterSrcAtSize(undefined, 'w154')).toBeUndefined();
+  });
+});
+
+describe('tmdbBackdropSrcSet', () => {
+  it('offers the backdrop at three widths so a wide screen no longer stretches the w780', () => {
+    expect(tmdbBackdropSrcSet('https://image.tmdb.org/t/p/w780/bg.jpg')).toBe(
+      'https://image.tmdb.org/t/p/w780/bg.jpg 780w, https://image.tmdb.org/t/p/w1280/bg.jpg 1280w, https://image.tmdb.org/t/p/original/bg.jpg 1920w'
+    );
+  });
+
+  it('leaves any other image alone', () => {
+    expect(tmdbBackdropSrcSet('https://example.com/bg.jpg')).toBeUndefined();
+    expect(tmdbBackdropSrcSet(null)).toBeUndefined();
   });
 });

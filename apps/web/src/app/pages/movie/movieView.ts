@@ -11,7 +11,11 @@ import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { MovieMediaType, TitleSummary } from '@/shared/types/movie';
 import { formatReleaseDate, yearFromDate } from '@/shared/utils/formatReleaseDate';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
-import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
+import {
+  posterImageSrc,
+  tmdbBackdropSrcSet,
+  tmdbPosterSrcSetForList,
+} from '@/shared/utils/posterUrl';
 import { extractYouTubeId } from '@/shared/utils/youtube';
 import { genreLabel } from '@/shared/utils/tmdbGenres';
 import type { MovieHeroView } from '@/app/pages/movie/MovieHero';
@@ -71,6 +75,7 @@ export function buildHeroView(input: ViewInput): MovieHeroView {
     posterSrc,
     posterSrcSet: tmdbPosterSrcSetForList(posterSrc),
     backdropSrc: details?.backdropPath ?? null,
+    backdropSrcSet: tmdbBackdropSrcSet(details?.backdropPath),
     voteAverage: details?.voteAverage ?? seed?.voteAverage ?? null,
     voteCount: details?.voteCount ?? null,
     providers: details?.watchProviders ?? [],
