@@ -81,12 +81,17 @@ function buildProfileJsonLd(profile: PublicProfile): Record<string, unknown> {
 
 type FollowTab = 'following' | 'followers';
 
-function hasNothingToShow(
-  profile: PublicProfile,
-  stats: UserStats | undefined,
-  watchedCount: number | undefined
-): boolean {
-  if (!stats || watchedCount !== 0) return false;
+interface VisitorView {
+  isOwnProfile: boolean;
+  stats: UserStats | undefined;
+  watchedHidden: boolean;
+  watchedCount: number | undefined;
+}
+
+function hasNothingToShow(profile: PublicProfile, view: VisitorView): boolean {
+  const { stats } = view;
+  if (view.isOwnProfile || !stats) return false;
+  if (!view.watchedHidden && view.watchedCount !== 0) return false;
   return (
     stats.eventsCreated + stats.eventsJoined + stats.moviesProposed + stats.publicListCount === 0 &&
     (profile.favorites ?? []).length === 0 &&
@@ -138,7 +143,6 @@ export default function ProfilePage() {
   const watchedHiddenFromVisitor = !!profile && !isOwnProfile && profile.isWatchedPublic === false;
   const watchedVisible = !!profile && !watchedHiddenFromVisitor;
   const watchedPreview = useProfileWatchedPreview(handle, !watchedHiddenFromVisitor);
-  const watchedCount = watchedHiddenFromVisitor ? 0 : watchedPreview.data?.items.length;
   const isNotFound =
     !handle ||
     (profileQuery.isError && ApiError.is(profileQuery.error) && profileQuery.error.code === 404);
@@ -204,7 +208,12 @@ export default function ProfilePage() {
       : null;
 
   const profileAccent = (isOwnProfile ? user?.accentColor : profile.accentColor) ?? 'default';
-  const showEmptyState = !isOwnProfile && hasNothingToShow(profile, stats, watchedCount);
+  const showEmptyState = hasNothingToShow(profile, {
+    isOwnProfile,
+    stats,
+    watchedHidden: watchedHiddenFromVisitor,
+    watchedCount: watchedPreview.data?.items.length,
+  });
 
   return (
     <PageLayout

@@ -47,7 +47,7 @@ public sealed class GetProfileShareDocumentHandler : IGetProfileShareDocumentHan
             canonical,
             webBase + FrontRoutes.Home,
             ServerCopy.SharePreviews.ProfileTitle(person.DisplayName, person.Handle),
-            Describe(user.Bio, person),
+            DescriptionOf(user.Bio, person),
             image ?? SharePreview.SiteImage(webBase),
             image is null ? SharePreview.SiteName : ServerCopy.SharePreviews.BannerOf(person.DisplayName))
         {
@@ -64,7 +64,7 @@ public sealed class GetProfileShareDocumentHandler : IGetProfileShareDocumentHan
         return imageUrl.StartsWith('/') ? apiBase + imageUrl : imageUrl;
     }
 
-    private static string Describe(string? bio, DisplayedPerson person)
+    private static string DescriptionOf(string? bio, DisplayedPerson person)
     {
         var text = bio?.Trim();
         return string.IsNullOrEmpty(text)
