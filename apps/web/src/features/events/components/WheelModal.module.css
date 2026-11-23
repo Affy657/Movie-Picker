@@ -13,6 +13,15 @@
   letter-spacing: var(--tracking-wide);
 }
 
+.spinHint {
+  max-width: 28rem;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-on-poster-fg-soft);
+  text-align: center;
+}
+
 .dialogDone.dialogDone {
   width: 100%;
   max-width: 47.5rem;

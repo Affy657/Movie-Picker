@@ -43,6 +43,7 @@ describe('SpinningWheel', () => {
   let rotateCalls: number[] = [];
   let arcCalls: ArcCall[] = [];
   let fillTextCalls = 0;
+  let filledTexts: string[] = [];
   let drawImageCalls = 0;
 
   function sliceArcs(): ArcCall[] {
@@ -54,6 +55,7 @@ describe('SpinningWheel', () => {
     rotateCalls = [];
     arcCalls = [];
     fillTextCalls = 0;
+    filledTexts = [];
     drawImageCalls = 0;
     vi.mocked(randomCenteredUnit).mockReturnValue(0);
     HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
@@ -71,8 +73,9 @@ describe('SpinningWheel', () => {
       translate: vi.fn(),
       rotate: (angle: number) => rotateCalls.push(angle),
       scale: vi.fn(),
-      fillText: () => {
+      fillText: (text: string) => {
         fillTextCalls++;
+        filledTexts.push(text);
       },
       drawImage: () => {
         drawImageCalls++;
@@ -134,6 +137,41 @@ describe('SpinningWheel', () => {
     const layersPerFrame = 2;
     expect(fillTextCalls).toBe(6);
     expect(drawImageCalls).toBe(framesDrawn * layersPerFrame);
+  });
+
+  it('stops within the spin time it is given', () => {
+    stubMatchMedia(false);
+    const frames: Array<FrameRequestCallback> = [];
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      frames.push(callback);
+      return frames.length;
+    });
+    vi.stubGlobal('cancelAnimationFrame', vi.fn());
+    const onDone = vi.fn();
+
+    render(
+      <SpinningWheel movies={makeMovies(3)} winnerIndex={1} onDone={onDone} durationMs={2000} />
+    );
+    frames.shift()!(0);
+    frames.shift()!(1950);
+
+    expect(onDone).toHaveBeenCalledTimes(1);
+  });
+
+  it('writes the chance of each movie after its title', () => {
+    stubMatchMedia(true);
+
+    render(
+      <SpinningWheel
+        movies={makeMovies(2)}
+        weights={[2, 1]}
+        chanceLabels={['67 %', '33 %']}
+        winnerIndex={0}
+        onDone={vi.fn()}
+      />
+    );
+
+    expect(filledTexts).toEqual(['Film 1 67 %', 'Film 2 33 %']);
   });
 
   it('draws equal slices when no weights are given', () => {

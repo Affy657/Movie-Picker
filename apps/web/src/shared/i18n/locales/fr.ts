@@ -1264,6 +1264,9 @@ export const fr = {
         remainingMany: 'Encore {{count}} films à tirer.',
         closeButton: "C'est parti !",
         finishHereButton: 'Terminer ici',
+        weightedHint:
+          'Tirage selon les votes : plus un film a de votes, plus sa part de la roue est grande.',
+        chanceItem: '{{title}} : {{chance}}',
       },
     },
     lifecycle: {

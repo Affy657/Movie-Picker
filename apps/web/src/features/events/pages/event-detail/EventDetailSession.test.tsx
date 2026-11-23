@@ -173,14 +173,17 @@ describe('EventDetailSession: the chosen movie and the wheel', () => {
     await waitFor(() => expect(winnerCard()).toBeInTheDocument(), { timeout: 5000 });
   });
 
-  it('leaves the recap link out of the night while the only movie is still hidden', () => {
-    renderSession({
-      ...EVENT,
-      isFinished: true,
-      lifecycle: 'finished',
-      recapSlug: 'recap-soiree',
-      winners: wheelPickEndingIn(WHEEL_SPIN_DURATION_MS),
-    });
+  it('leaves the recap link out of the night while the only winner is still hidden', () => {
+    renderSession(
+      {
+        ...EVENT,
+        isFinished: true,
+        lifecycle: 'finished',
+        recapSlug: 'recap-soiree',
+        winners: wheelPickEndingIn(WHEEL_SPIN_DURATION_MS),
+      },
+      { movies: [MOVIE, { ...MOVIE, id: 'm2', tmdbId: 348, title: 'Alien' }] }
+    );
 
     expect(winnerCard()).toBeNull();
     expect(screen.queryByRole('link', { name: /recap/i })).toBeNull();

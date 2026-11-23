@@ -75,9 +75,11 @@ function EventWheelModalGate({ wheel }: Readonly<{ wheel: WheelApi }>) {
         open={wheel.isModalOpen}
         movies={wheel.spinPool}
         weights={wheel.spinWeights}
+        showChances={wheel.weightedDraw}
         winnerIndex={wheel.winnerIndex}
         winner={wheel.spinWinner}
         wheelKey={wheel.wheelKey}
+        spinDurationMs={wheel.spinDurationMs}
         onClose={wheel.dismissModal}
         onSpinComplete={wheel.revealWinner}
         onRelaunch={wheel.canRelaunchFromModal ? wheel.launch : undefined}

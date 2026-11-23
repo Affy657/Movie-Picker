@@ -7,6 +7,7 @@ import { useEventWheel } from '@/features/events/hooks/useEventWheel';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 import { WHEEL_SPIN_DURATION_MS } from '@/shared/utils/wheelSpin';
+import { ApiError } from '@/shared/api/apiError';
 import {
   deleteEventWinner,
   postEventWheel,
@@ -532,5 +533,174 @@ describe('useEventWheel: taking a winner out', () => {
     await waitFor(() => expect(result.current.removalMode).toBe(false));
     expect(deleteEventWinner).toHaveBeenCalledWith('soiree', 'mov1', 'ht1');
     expect(result.current.canSpin).toBe(true);
+  });
+});
+
+describe('useEventWheel: a draw made elsewhere', () => {
+  const alien = { id: 'mov2', title: 'Alien', tmdbId: 2, score: 0 } as MovieData;
+  const liked = { ...winner, score: 1 } as MovieData;
+  const guestNight = { ...hostEvent, isHost: false, winners: [] } as unknown as EventData;
+
+  function drawnJustNow(event: EventData, movieId = 'mov1'): EventData {
+    return {
+      ...event,
+      winners: [{ movieId, pickMethod: 'wheel', pickedAt: new Date().toISOString() }],
+    } as EventData;
+  }
+
+  function renderAs(initial: EventData, movies: MovieData[] = [liked, alien]) {
+    return renderHook(
+      ({ event }: { event: EventData }) =>
+        useEventWheel({
+          slug: 'soiree',
+          event,
+          movies,
+          hostToken: initial.isHost ? 'ht1' : null,
+          onWheelDone: () => {},
+        }),
+      { wrapper, initialProps: { event: initial } }
+    );
+  }
+
+  beforeEach(() => {
+    vi.mocked(postEventWheelAnnounce).mockClear();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('spins the wheel for a guest when the draw lands, and stops it on the winner', () => {
+    const { result, rerender } = renderAs(guestNight);
+
+    rerender({ event: drawnJustNow(guestNight) });
+
+    expect(result.current.isModalOpen).toBe(true);
+    expect(result.current.spinWinner?.id).toBe('mov1');
+    expect(result.current.spinPool.map((m) => m.id)).toEqual(['mov1', 'mov2']);
+    expect(result.current.winnerIndex).toBe(0);
+    expect(result.current.spinDurationMs).toBeGreaterThan(0);
+    expect(result.current.spinDurationMs).toBeLessThanOrEqual(WHEEL_SPIN_DURATION_MS);
+    expect(result.current.winnerIds).toEqual([]);
+    expect(result.current.canRelaunchFromModal).toBe(false);
+  });
+
+  it('shows the guest the slices the draw weighed, with their chances', () => {
+    const weighted = {
+      ...guestNight,
+      config: { winnerCount: 1, wheelMode: 'weightedByVotes' },
+    } as unknown as EventData;
+    const { result, rerender } = renderAs(weighted);
+
+    rerender({ event: drawnJustNow(weighted) });
+
+    expect(result.current.spinWeights).toEqual([2, 1]);
+    expect(result.current.weightedDraw).toBe(true);
+  });
+
+  it('lets the guest see the winner after the spin, without announcing it on the host behalf', () => {
+    const { result, rerender } = renderAs(guestNight);
+    rerender({ event: drawnJustNow(guestNight) });
+
+    act(() => result.current.revealWinner());
+    expect(result.current.winnerIds).toEqual(['mov1']);
+    act(() => result.current.dismissModal());
+
+    expect(result.current.isModalOpen).toBe(false);
+    expect(result.current.winnerIds).toEqual(['mov1']);
+    expect(postEventWheelAnnounce).not.toHaveBeenCalled();
+  });
+
+  it('shows a draw made long before the page opened as it is, without spinning', () => {
+    const { result } = renderAs({
+      ...guestNight,
+      winners: [{ movieId: 'mov1', pickMethod: 'wheel', pickedAt: '2026-01-01T20:00:00Z' }],
+    } as unknown as EventData);
+
+    expect(result.current.isModalOpen).toBe(false);
+    expect(result.current.winnerIds).toEqual(['mov1']);
+  });
+
+  it('spins the draw in the other tab of the host too, and announces nothing from there', () => {
+    const { result, rerender } = renderAs(hostEvent);
+
+    rerender({ event: drawnJustNow(hostEvent) });
+    expect(result.current.isModalOpen).toBe(true);
+    act(() => result.current.revealWinner());
+    act(() => result.current.dismissModal());
+
+    expect(postEventWheelAnnounce).not.toHaveBeenCalled();
+  });
+
+  it('keeps a single spin when the live update brings the draw before the launch answers', async () => {
+    let answer: (value: { winner: MovieData; message: string }) => void = () => undefined;
+    vi.mocked(postEventWheel).mockReturnValue(
+      new Promise((resolve) => {
+        answer = resolve;
+      })
+    );
+    const { result, rerender } = renderAs(hostEvent);
+
+    act(() => result.current.launch());
+    rerender({ event: drawnJustNow(hostEvent) });
+    expect(result.current.isModalOpen).toBe(false);
+
+    await act(async () => {
+      answer({ winner, message: 'Roue lancée.' });
+    });
+    expect(result.current.isModalOpen).toBe(true);
+    expect(result.current.spinDurationMs).toBe(WHEEL_SPIN_DURATION_MS);
+    act(() => result.current.revealWinner());
+
+    await waitFor(() => expect(postEventWheelAnnounce).toHaveBeenCalledTimes(1));
+  });
+});
+
+describe('useEventWheel: two tabs of the host', () => {
+  const concurrentUpdate = () =>
+    new ApiError('Modified in the meantime', { code: 409, reason: 'concurrent_update' });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('draws again once when another write got in first, instead of showing an error', async () => {
+    vi.mocked(postEventWheel)
+      .mockRejectedValueOnce(concurrentUpdate())
+      .mockResolvedValueOnce({ winner, message: 'Roue lancée.' });
+    const { result } = renderWheel();
+
+    act(() => result.current.launch());
+
+    await waitFor(() => expect(result.current.spinWinner?.id).toBe('mov1'));
+    expect(postEventWheel).toHaveBeenCalledTimes(2);
+    expect(result.current.error).toBeNull();
+  });
+
+  it('drops a draw error once the winner drawn in the other tab arrives', async () => {
+    vi.mocked(postEventWheel).mockRejectedValue(concurrentUpdate());
+    const { result, rerender } = renderHook(
+      ({ event }: { event: EventData }) =>
+        useEventWheel({
+          slug: 'soiree',
+          event,
+          movies: [winner],
+          hostToken: 'ht1',
+          onWheelDone: () => {},
+        }),
+      { wrapper, initialProps: { event: hostEvent } }
+    );
+
+    act(() => result.current.launch());
+    await waitFor(() => expect(result.current.error).not.toBeNull());
+
+    rerender({
+      event: {
+        ...hostEvent,
+        winners: [{ movieId: 'mov1', pickMethod: 'wheel', pickedAt: '2026-01-01T20:00:00Z' }],
+      } as EventData,
+    });
+
+    expect(result.current.error).toBeNull();
   });
 });

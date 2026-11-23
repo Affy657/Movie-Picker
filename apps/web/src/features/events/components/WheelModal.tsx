@@ -1,5 +1,5 @@
 import confetti from 'canvas-confetti';
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Disc3, Film, X } from 'lucide-react';
 import type { MovieData } from '@/shared/types/movie';
 import type { RatingScale } from '@/shared/types/theme';
@@ -7,8 +7,9 @@ import WatchProviderChips from '@/features/movies/components/WatchProviderChips'
 import MovieFacts from '@/features/movies/components/MovieFacts';
 import { keepPunctuationAttached } from '@/shared/utils/keepPunctuationAttached';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
-import { useTranslation, type Translate } from '@/shared/i18n';
+import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
+import { wheelChanceLabels } from '@/features/events/lib/wheelSliceWeights';
 import SpinningWheel, { WHEEL_SEGMENT_TOKENS } from './SpinningWheel';
 import { readCssToken } from '@/shared/utils/cssToken';
 import PosterBackdrop from '@/shared/components/PosterBackdrop';
@@ -51,9 +52,11 @@ interface WheelModalProps {
   open: boolean;
   movies: MovieData[];
   weights?: readonly number[];
+  showChances?: boolean;
   winnerIndex: number;
   winner: MovieData;
   wheelKey: number;
+  spinDurationMs?: number;
   onClose: () => void;
   onRelaunch?: () => void;
   relaunching?: boolean;
@@ -69,9 +72,11 @@ export default function WheelModal({
   open,
   movies,
   weights,
+  showChances = false,
   winnerIndex,
   winner,
   wheelKey,
+  spinDurationMs,
   onClose,
   onRelaunch,
   relaunching = false,
@@ -83,7 +88,9 @@ export default function WheelModal({
   ratingScale,
 }: Readonly<WheelModalProps>) {
   const { t } = useTranslation();
+  const { locale } = useLocale();
   const titleId = useId();
+  const spinless = skipSpin || movies.length < 2;
   const drawIndex = Math.max(1, winnerCount - remainingDraws);
   const title = revealTitle(skipSpin, winnerCount, { index: drawIndex, total: winnerCount }, t);
   const remainingLabel =
@@ -96,8 +103,13 @@ export default function WheelModal({
         )
       : null;
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
   const confettiOverlayRef = useRef<HTMLDivElement>(null);
-  const [animDone, setAnimDone] = useState(skipSpin);
+  const [animDone, setAnimDone] = useState(spinless);
+  const chanceLabels = useMemo(
+    () => (showChances ? wheelChanceLabels(weights ?? movies.map(() => 1), locale) : undefined),
+    [showChances, weights, movies, locale]
+  );
   const confettiTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const confettiCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -113,10 +125,14 @@ export default function WheelModal({
 
   useEffect(() => {
     if (open) {
-      setAnimDone(skipSpin);
+      setAnimDone(spinless);
       cleanupConfettiOverlay();
     }
-  }, [open, wheelKey, skipSpin, cleanupConfettiOverlay]);
+  }, [open, wheelKey, spinless, cleanupConfettiOverlay]);
+
+  useEffect(() => {
+    if (open && animDone) titleRef.current?.focus();
+  }, [open, animDone]);
 
   useEffect(() => {
     return () => cleanupConfettiOverlay();
@@ -203,10 +219,10 @@ export default function WheelModal({
   }, [cleanupConfettiOverlay]);
 
   useEffect(() => {
-    if (open && skipSpin) {
+    if (open && spinless) {
       handleWheelDone();
     }
-  }, [open, wheelKey, skipSpin, handleWheelDone]);
+  }, [open, wheelKey, spinless, handleWheelDone]);
 
   const posterSrc = posterImageSrc(winner.posterPath);
   const providers = winner.watchProviders ?? [];
@@ -232,12 +248,29 @@ export default function WheelModal({
               key={wheelKey}
               movies={movies}
               weights={weights}
+              chanceLabels={chanceLabels}
               winnerIndex={winnerIndex}
+              durationMs={spinDurationMs}
               onDone={handleWheelDone}
             />
             <p className={styles.spinLabel} id={titleId}>
               {t('events.wheel.modal.spinningTitle')}
             </p>
+            {chanceLabels ? (
+              <>
+                <p className={styles.spinHint}>{t('events.wheel.modal.weightedHint')}</p>
+                <ul className="visually-hidden">
+                  {movies.map((movie, index) => (
+                    <li key={movie.id}>
+                      {t('events.wheel.modal.chanceItem', {
+                        title: movie.title,
+                        chance: chanceLabels[index] ?? '',
+                      })}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : null}
           </div>
         )}
 
@@ -245,7 +278,7 @@ export default function WheelModal({
           <div className={styles.reveal}>
             <PosterBackdrop posterPath={winner.posterPath} />
             <div className={styles.header}>
-              <h2 id={titleId} className={styles.title}>
+              <h2 id={titleId} ref={titleRef} tabIndex={-1} className={styles.title}>
                 {title}
               </h2>
               <IconButton tone="onPoster" ariaLabel={t('common.close')} onClick={onClose}>
