@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import styles from './HomeRowWhenNear.module.css';
 
-const LOAD_AHEAD_MARGIN = '100% 0px';
+const LOAD_AHEAD_MARGIN = '50% 0px';
 
 export default function HomeRowWhenNear({ children }: Readonly<{ children: ReactNode }>) {
   const [near, setNear] = useState(() => typeof IntersectionObserver === 'undefined');
