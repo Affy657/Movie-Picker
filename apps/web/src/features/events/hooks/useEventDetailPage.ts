@@ -76,7 +76,7 @@ export function useEventDetailPage(
     eventQuery.data !== undefined &&
     eventQuery.dataUpdatedAt === offlineCopy.savedAt;
 
-  const moviesQueryEnabled = !!slug;
+  const moviesQueryEnabled = !!slug && event !== null;
   const { moviesRefetchInterval } = useEventLive(event ?? undefined, { moviesQueryEnabled });
 
   const [participant, setParticipant] = useState<{ participantId: string; pseudo: string } | null>(

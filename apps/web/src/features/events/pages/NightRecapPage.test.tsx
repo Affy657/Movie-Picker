@@ -8,6 +8,7 @@ import NightRecapPage from '@/features/events/pages/NightRecapPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1, authMeGuestHandler } from '@/mocks/handlers';
 import { setSessionHint } from '@/features/auth/session-hint';
+import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 
 const { track } = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock('@/shared/hooks/useAnalytics', () => ({
@@ -421,8 +422,11 @@ describe('NightRecapPage (MSW)', () => {
     );
     renderRecap();
 
-    expect(await screen.findByText('Recap introuvable')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: "Retour à l'accueil" })).toHaveAttribute('href', '/');
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Recap introuvable' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Retour à l’accueil' })).toHaveAttribute('href', '/');
+    expect(document.title).toBe(pageTitle('Recap introuvable'));
     expect(track).not.toHaveBeenCalledWith('recap_viewed', expect.anything());
   });
 

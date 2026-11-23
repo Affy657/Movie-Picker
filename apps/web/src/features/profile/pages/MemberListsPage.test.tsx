@@ -221,7 +221,7 @@ describe('MemberListsPage', () => {
     renderPage();
 
     expect(
-      await screen.findByText("Ce profil n'existe pas ou n'est pas public.")
+      await screen.findByText('Ce profil n’existe pas ou n’est pas public.')
     ).toBeInTheDocument();
   });
 
@@ -239,7 +239,7 @@ describe('MemberListsPage', () => {
     renderPage('nobody');
 
     expect(
-      await screen.findByText("Ce profil n'existe pas ou n'est pas public.")
+      await screen.findByText('Ce profil n’existe pas ou n’est pas public.')
     ).toBeInTheDocument();
   });
 });

@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import { AlertCircle, Film, Link2Off } from 'lucide-react';
 import EmptyState from '@/shared/components/EmptyState';
+import ErrorState from '@/shared/components/ErrorState';
 import PageLayout from '@/shared/components/PageLayout';
 import Button, { buttonClass } from '@/shared/components/Button';
 import { Skeleton, SkeletonScreen } from '@/shared/components/Skeleton';
@@ -51,16 +52,16 @@ export function NightRecapWaiting({
 export function NightRecapNotFound() {
   const { t } = useTranslation();
   return (
-    <PageLayout className="page--centered page--errorState">
-      <span className="errorStateIcon" aria-hidden>
-        <Link2Off size={ICON_SIZE['4xl']} />
-      </span>
-      <h1 className="errorStateMessage">{t('events.recap.notFoundTitle')}</h1>
-      <p role="alert">{t('events.recap.notFoundText')}</p>
-      <Link to={ROUTES.home} className={buttonClass()}>
-        {t('events.detail.backHome')}
-      </Link>
-    </PageLayout>
+    <ErrorState
+      icon={<Link2Off size={ICON_SIZE['4xl']} />}
+      title={t('events.recap.notFoundTitle')}
+      message={t('events.recap.notFoundText')}
+      actions={
+        <Link to={ROUTES.home} className={buttonClass({ variant: 'primary' })}>
+          {t('errors.backHome')}
+        </Link>
+      }
+    />
   );
 }
 

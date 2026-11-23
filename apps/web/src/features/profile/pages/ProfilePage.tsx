@@ -6,8 +6,9 @@ import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
 import { getErrorMessage, ApiError } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
-import { APP_DOCUMENT_TITLE, pageTitle } from '@/shared/hooks/useDocumentTitle';
+import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
+import { missingProfileSeo } from '@/features/profile/utils/profileCollectionSeo';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -127,7 +128,7 @@ export default function ProfilePage() {
           ogType: 'profile',
           jsonLd: buildProfileJsonLd(profile),
         }
-      : { title: APP_DOCUMENT_TITLE, noindex: isNotFound }
+      : missingProfileSeo(isNotFound, t)
   );
 
   const followMutation = useMutation({

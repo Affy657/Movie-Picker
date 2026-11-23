@@ -9,6 +9,7 @@ import headerStyles from '@/features/profile/components/ProfileHeader.module.css
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { TEST_API_V1, createUserStatsHandler } from '@/mocks/handlers';
 import { queryKeys } from '@/shared/hooks/queryKeys';
+import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import type { QueryClient } from '@tanstack/react-query';
 
 const EMPTY_STATS = {
@@ -851,9 +852,12 @@ describe('ProfilePage (MSW)', () => {
 
     renderProfile('ghost');
 
-    await waitFor(() => {
-      expect(screen.getByText(/n'existe pas ou n'est pas public/i)).toBeInTheDocument();
-    });
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Profil introuvable' })
+    ).toBeInTheDocument();
+    expect(screen.getByText('Ce profil n’existe pas ou n’est pas public.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Retour à l’accueil' })).toHaveAttribute('href', '/');
+    await waitFor(() => expect(document.title).toBe(pageTitle('Profil introuvable')));
     expect(screen.queryByRole('heading', { name: 'ghost' })).not.toBeInTheDocument();
   });
 
@@ -872,7 +876,7 @@ describe('ProfilePage (MSW)', () => {
       renderProfile(encodeURIComponent(urlHandle));
 
       expect(await screen.findByTestId('route-settings')).toBeInTheDocument();
-      expect(screen.queryByText(/n'existe pas ou n'est pas public/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/n’existe pas ou n’est pas public/i)).not.toBeInTheDocument();
     }
   );
 
@@ -886,7 +890,7 @@ describe('ProfilePage (MSW)', () => {
 
     renderProfile('alice');
 
-    expect(await screen.findByText(/n'existe pas ou n'est pas public/i)).toBeInTheDocument();
+    expect(await screen.findByText(/n’existe pas ou n’est pas public/i)).toBeInTheDocument();
     expect(screen.queryByTestId('route-settings')).not.toBeInTheDocument();
   });
 

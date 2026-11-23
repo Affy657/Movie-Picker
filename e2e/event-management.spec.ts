@@ -133,7 +133,7 @@ test.describe('Event management', () => {
 
       await guestPage.reload();
       await expect(
-        guestPage.getByText("Cette soirée n'existe pas ou a été supprimée.")
+        guestPage.getByText('Cette soirée n’existe pas ou a été supprimée.')
       ).toBeVisible({ timeout: 15_000 });
     } finally {
       await hostContext?.close();
