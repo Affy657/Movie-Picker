@@ -725,11 +725,11 @@ describe('AddMovieForm (MSW)', () => {
     const user = userEvent.setup();
     renderWithLocale(<AddMovieForm onAddItem={onAddItem} onAdded={onAdded} quickFilters />);
     await user.type(screen.getByRole('searchbox', { name: 'Chercher un film' }), 'Film');
-    expect(await screen.findByText('2 résultat(s)')).toBeInTheDocument();
+    expect(await screen.findByText('2 résultats')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'En streaming' }));
 
-    expect(screen.getByText('1 résultat(s)')).toBeInTheDocument();
+    expect(screen.getByText('1 résultat')).toBeInTheDocument();
   });
 
   it('shows the suggestions while nothing is typed and filters them without searching', async () => {

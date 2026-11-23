@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 import { Check, Crown, Settings2, UserPlus, X } from 'lucide-react';
 import type { EventParticipantSummary } from '@/shared/types/event';
 import { useTranslation } from '@/shared/i18n';
+import { withElision } from '@/shared/i18n/withElision';
 import Chip from '@/shared/components/Chip';
 import { ROUTES } from '@/app/routes';
 import Avatar from '@/shared/components/Avatar';
@@ -113,11 +114,19 @@ export default function EventParticipantsList({
               isProposing ? 'events.participants.proposing' : 'events.participants.online'
             );
             const profileLinkLabel = isOnline
-              ? t('events.participants.viewProfilePresenceAriaLabel', {
-                  pseudo: p.pseudo,
-                  presence: presenceLabel,
-                })
-              : t('events.participants.viewProfileAriaLabel', { pseudo: p.pseudo });
+              ? withElision(
+                  p.pseudo,
+                  'events.participants.viewProfilePresenceAriaLabel',
+                  'events.participants.viewProfilePresenceAriaLabelElided',
+                  t,
+                  { presence: presenceLabel }
+                )
+              : withElision(
+                  p.pseudo,
+                  'events.participants.viewProfileAriaLabel',
+                  'events.participants.viewProfileAriaLabelElided',
+                  t
+                );
             const identity = (
               <>
                 <Avatar avatarId={p.avatarId} pseudo={p.pseudo} size="xs" accent={p.accentColor} />

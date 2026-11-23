@@ -14,6 +14,7 @@ import { Check, History, ListFilter, Plus, Search } from 'lucide-react';
 import type { MovieSearchItem } from '@/features/movies/api/moviesApi';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { RatingScale } from '@/shared/types/theme';
 import TmdbAttribution from '@/features/movies/components/TmdbAttribution';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -47,7 +48,12 @@ function searchStatusLabel(
   if (search.searching) return t('movies.search.a11ySearching');
   if (!search.answered) return '';
   if (search.count === 0) return t('movies.search.a11yNoResults');
-  return t('movies.search.a11yResultsCount', { count: search.count });
+  return pluralizeCount(
+    search.count,
+    'movies.search.a11yResultsCountOne',
+    'movies.search.a11yResultsCount',
+    t
+  );
 }
 
 function itemKey(item: MovieSearchItem): string {

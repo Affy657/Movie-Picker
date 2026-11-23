@@ -21,6 +21,7 @@ import { othersAlreadySeenHint } from '@/features/events/utils/seenHint';
 import { MovieNote } from '@/features/events/components/MovieNote';
 import type { AccentColor, RatingScale } from '@/shared/types/theme';
 import { useLocale, type Translate } from '@/shared/i18n';
+import { withElision } from '@/shared/i18n/withElision';
 import styles from './eventMovieCardParts.module.css';
 import { useParticipantAccent } from '@/features/events/hooks/useParticipantAccent';
 
@@ -292,7 +293,12 @@ export function ProposerBadge({
       <Link
         to={ROUTES.profile(handle)}
         className={clsx(styles.proposer, styles.proposerLink)}
-        aria-label={t('movies.details.viewProposerProfileAria', { pseudo })}
+        aria-label={withElision(
+          pseudo,
+          'movies.details.viewProposerProfileAria',
+          'movies.details.viewProposerProfileAriaElided',
+          t
+        )}
       >
         {content}
       </Link>

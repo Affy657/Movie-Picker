@@ -238,7 +238,13 @@ function showcaseToolbarLabels(
     sortDirectionAscLabel: t('profile.movies.toolbar.sortDirectionAsc'),
     sortDirectionDescLabel: t('profile.movies.toolbar.sortDirectionDesc'),
     resultCountText: toolbar.isFiltered
-      ? t('showcase.filteredCount', { shown: toolbar.visibleCount, total: toolbar.totalCount })
+      ? pluralizeCount(
+          toolbar.visibleCount,
+          'showcase.filteredCountOne',
+          'showcase.filteredCount',
+          t,
+          { shown: toolbar.visibleCount, total: toolbar.totalCount }
+        )
       : pluralizeCount(toolbar.totalCount, 'showcase.resultCountOne', 'showcase.resultCount', t),
     clearAllLabel: t('profile.movies.toolbar.clearAll'),
   };

@@ -174,7 +174,7 @@ describe('ShowcaseListPage', () => {
     await screen.findByText('Film 1');
     await userEvent.type(screen.getByLabelText(/filtrer dans cette liste/i), 'Film 1');
 
-    expect(await screen.findByText('1 films sur 3')).toBeInTheDocument();
+    expect(await screen.findByText('1 film sur 3')).toBeInTheDocument();
     expect(screen.queryByText('Film 3')).not.toBeInTheDocument();
   });
 
