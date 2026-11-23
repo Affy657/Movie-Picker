@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
@@ -7,6 +7,7 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { TEST_API_V1, authMeGuestHandler } from '@/mocks/handlers';
+import { apiErrorJson } from '@/mocks/apiJson';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import HostEventSettingsPanel from '@/features/events/components/HostEventSettingsPanel';
 import titleBarStyles from '@/shared/components/DialogTitleBar.module.css';
@@ -69,7 +70,14 @@ describe('HostEventSettingsPanel', () => {
   const server = setupServer(authMeGuestHandler);
 
   beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
-  afterEach(() => server.resetHandlers());
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2029-12-01T12:00:00Z'));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    server.resetHandlers();
+  });
   afterAll(() => server.close());
 
   it('stays open once a movie is drawn and only leaves the number of winners adjustable', () => {
@@ -579,6 +587,89 @@ describe('HostEventSettingsPanel', () => {
       date: '2030-02-01',
       time: '21:30',
       notifyParticipantsOfDateChange: true,
+    });
+  });
+
+  describe('dates the night cannot take', () => {
+    function watchPatches() {
+      const bodies: Record<string, unknown>[] = [];
+      server.use(
+        http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+          bodies.push((await request.json()) as Record<string, unknown>);
+          return HttpResponse.json({ ...baseEvent.config });
+        })
+      );
+      return bodies;
+    }
+
+    function renderPanel() {
+      renderWithRouter(
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken={null}
+          event={baseEvent}
+          open
+          onClose={() => {}}
+        />
+      );
+      return screen.getByLabelText(/date et heure/i);
+    }
+
+    it('refuses a typo on the year that would end the night, and saves nothing', async () => {
+      const user = userEvent.setup();
+      const bodies = watchPatches();
+      const dateField = renderPanel();
+
+      await user.click(dateField);
+      fireEvent.change(dateField, { target: { value: '2028-01-01T20:00' } });
+      await user.click(screen.getByLabelText(/nom de la soir/i));
+
+      expect(
+        screen.getByText(
+          'Cette date terminerait la soirée aussitôt : choisissez une date plus récente.'
+        )
+      ).toBeInTheDocument();
+      expect(screen.getByText('Non enregistré')).toBeInTheDocument();
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      expect(bodies).toEqual([]);
+    });
+
+    it('shows an absurd year as an error, never as saved', async () => {
+      const user = userEvent.setup();
+      const bodies = watchPatches();
+      const dateField = renderPanel();
+
+      await user.click(dateField);
+      fireEvent.change(dateField, { target: { value: '200494-12-04T20:00' } });
+
+      expect(screen.getByText('Date et heure de la soirée invalides.')).toBeInTheDocument();
+      expect(screen.getByText('Non enregistré')).toBeInTheDocument();
+      expect(screen.queryByText('Enregistré')).not.toBeInTheDocument();
+      expect(screen.queryByText(/Soirée prévue/)).not.toBeInTheDocument();
+      await user.click(screen.getByLabelText(/nom de la soir/i));
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      expect(bodies).toEqual([]);
+    });
+
+    it('shows the refusal of the API under the date field', async () => {
+      const user = userEvent.setup();
+      server.use(
+        http.patch(`${TEST_API_V1}/events/${slug}/config`, () =>
+          apiErrorJson(400, 'event_date_too_early')
+        )
+      );
+      const dateField = renderPanel();
+
+      await user.click(dateField);
+      fireEvent.change(dateField, { target: { value: '2030-02-01T21:30' } });
+      await user.click(screen.getByLabelText(/nom de la soir/i));
+
+      expect(
+        await screen.findByText(
+          'Cette date est trop ancienne : la soirée serait aussitôt terminée.'
+        )
+      ).toBeInTheDocument();
+      expect(screen.getByLabelText(/date et heure/i)).toHaveAttribute('aria-invalid', 'true');
     });
   });
 

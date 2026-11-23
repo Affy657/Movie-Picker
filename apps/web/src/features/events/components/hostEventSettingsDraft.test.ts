@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { t } from '@/shared/i18n';
 import {
   normalizeConfig,
+  eventDateLocalError,
   validateSettingsDraft,
   type SettingsDraft,
   groupPatch,
@@ -22,9 +23,11 @@ const draft: SettingsDraft = {
   drawnWinnerCount: 0,
 };
 
+const planningDay = new Date('2029-06-01T12:00:00Z');
+
 describe('validateSettingsDraft', () => {
   it('keeps the limits typed by the host', () => {
-    const result = validateSettingsDraft(draft, t);
+    const result = validateSettingsDraft(draft, t, planningDay);
 
     expect(result.errors).toEqual({});
     expect(result.maxProposalsPerParticipant).toBe(4);
@@ -40,7 +43,8 @@ describe('validateSettingsDraft', () => {
         participantLimitEnabled: false,
         maxParticipants: '0',
       },
-      t
+      t,
+      planningDay
     );
 
     expect(result.errors).toEqual({});
@@ -55,7 +59,8 @@ describe('validateSettingsDraft', () => {
         maxProposals: String(MAX_PROPOSALS_PER_PARTICIPANT),
         maxParticipants: String(MAX_EVENT_PARTICIPANTS),
       },
-      t
+      t,
+      planningDay
     );
 
     expect(result.errors).toEqual({});
@@ -64,7 +69,11 @@ describe('validateSettingsDraft', () => {
   });
 
   it('flags an enabled limit that is empty or out of bounds', () => {
-    const result = validateSettingsDraft({ ...draft, maxProposals: '', maxParticipants: '999' }, t);
+    const result = validateSettingsDraft(
+      { ...draft, maxProposals: '', maxParticipants: '999' },
+      t,
+      planningDay
+    );
 
     expect(result.errors.maxProposals).toBe(
       `Films par personne : nombre entier entre 1 et ${MAX_PROPOSALS_PER_PARTICIPANT}.`
@@ -77,11 +86,52 @@ describe('validateSettingsDraft', () => {
   it('refuses a capacity below the people already in', () => {
     const result = validateSettingsDraft(
       { ...draft, maxParticipants: '3', currentParticipantCount: 5 },
-      t
+      t,
+      planningDay
     );
 
     expect(result.errors.maxParticipants).toBe(
       'Impossible de réduire la capacité à 3 : 5 participants sont déjà inscrits.'
+    );
+  });
+});
+
+describe('eventDateLocalError', () => {
+  const auditDay = new Date('2026-11-23T12:00:00Z');
+
+  it('accepts a date that keeps the night open', () => {
+    expect(eventDateLocalError('2026-12-04T20:00', t, auditDay)).toBeUndefined();
+    expect(eventDateLocalError('2026-11-17T20:00', t, auditDay)).toBeUndefined();
+  });
+
+  it('refuses a typo on the year that would end an upcoming night', () => {
+    expect(eventDateLocalError('2025-12-04T20:00', t, auditDay)).toBe(
+      'Cette date terminerait la soirée aussitôt : choisissez une date plus récente.'
+    );
+  });
+
+  it('refuses an absurd year instead of showing it as saved', () => {
+    expect(eventDateLocalError('200494-12-04T20:00', t, auditDay)).toBe(
+      'Date et heure de la soirée invalides.'
+    );
+    expect(eventDateLocalError('2031-12-04T20:00', t, auditDay)).toBe(
+      'Une soirée se prévoit au plus 2 ans à l’avance.'
+    );
+  });
+
+  it('asks for a date when the field is empty', () => {
+    expect(eventDateLocalError('  ', t, auditDay)).toBe('La date de la soirée est requise.');
+  });
+
+  it('blocks the save of a refused date', () => {
+    const result = validateSettingsDraft(
+      { ...draft, eventDateLocal: '2025-12-04T20:00' },
+      t,
+      auditDay
+    );
+
+    expect(result.errors.date).toBe(
+      'Cette date terminerait la soirée aussitôt : choisissez une date plus récente.'
     );
   });
 });

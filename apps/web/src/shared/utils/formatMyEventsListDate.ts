@@ -1,4 +1,6 @@
+import { t } from '@/shared/i18n';
 import type { LocaleCode } from '@/shared/i18n/locales';
+import { eventTimeNeedsZone } from '@/shared/utils/eventScheduled';
 
 const LOCALE_TAG: Record<LocaleCode, string> = {
   fr: 'fr-FR',
@@ -77,7 +79,11 @@ export function formatEventDateLong(
     month: keepsake ? 'long' : 'short',
     ...(keepsake && { year: 'numeric' }),
   });
-  return datePart === null ? isoDate.trim() : `${datePart} ${joiner} ${formatEventTime(time)}`;
+  if (datePart === null) return isoDate.trim();
+  const dateTime = `${datePart} ${joiner} ${formatEventTime(time)}`;
+  return !keepsake && eventTimeNeedsZone({ date: isoDate.trim(), time })
+    ? t('events.detail.parisTime', { value: dateTime }, locale)
+    : dateTime;
 }
 
 export function formatEventTitleDate(isoDate: string, locale: LocaleCode): string {

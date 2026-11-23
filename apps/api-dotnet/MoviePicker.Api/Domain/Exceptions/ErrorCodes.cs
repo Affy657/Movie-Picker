@@ -138,6 +138,8 @@ public static class ErrorCodes
     public const string LetterboxdExportUnreadable = "letterboxd_export_unreadable";
     public const string InvalidDateFormat = "invalid_date_format";
     public const string InvalidTimeFormat = "invalid_time_format";
+    public const string EventDateTooEarly = "event_date_too_early";
+    public const string EventDateTooFar = "event_date_too_far";
     public const string ThemeColorOutOfRange = "theme_color_out_of_range";
     public const string EventTitleRequired = "event_title_required";
     public const string EventTitleTooLong = "event_title_too_long";

@@ -91,6 +91,7 @@ beforeEach(() => {
   localStorage.setItem('moviepicker-locale', 'fr');
   localStorage.removeItem('mp.offline-last-event');
   localStorage.removeItem('mp.offline-votes');
+  sessionStorage.removeItem('mp.create-event-draft');
   for (const key of Object.keys(sessionStorage)) {
     if (key.startsWith('mp.history-entry:')) sessionStorage.removeItem(key);
   }

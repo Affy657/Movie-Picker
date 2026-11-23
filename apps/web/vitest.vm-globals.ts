@@ -1,6 +1,8 @@
 import { webcrypto } from 'node:crypto';
 import { ReadableStream, TransformStream, WritableStream } from 'node:stream/web';
 
+process.env.TZ = 'Europe/Paris';
+
 const webStreams = { ReadableStream, WritableStream, TransformStream };
 
 for (const [name, value] of Object.entries(webStreams)) {

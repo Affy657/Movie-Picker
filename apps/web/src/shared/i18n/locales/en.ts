@@ -818,6 +818,9 @@ export const en: Locale = {
       dateRequired: 'Pick a date.',
       timeRequired: 'Pick a time.',
       pastDateHint: 'This date is already in the past.',
+      dateTooEarly: 'This date is too far in the past: the movie night would already be over.',
+      dateTooFar: 'A movie night can be planned at most {{years}} years ahead.',
+      parisTimeHint: 'Times are Paris time.',
       configNotSaved:
         'The movie night is created, but its options could not be saved. Set them from the movie night settings.',
       rules: {
@@ -910,6 +913,7 @@ export const en: Locale = {
       backHome: 'Back to home',
       backNav: 'Back',
       dateTimeJoiner: 'at',
+      parisTime: '{{value}} (Paris time)',
       countdownImminent: 'a few moments',
       countdownMinutes: '{{count}} min',
       countdownHours: '{{count}} h',
@@ -1073,6 +1077,8 @@ export const en: Locale = {
       dateTimeLabel: 'Event date and time',
       dateRequired: 'The event date is required.',
       dateInvalid: 'Invalid event date and time.',
+      dateTooEarly: 'This date would end the movie night right away: pick a later date.',
+      dateTooFar: 'A movie night can be planned at most {{years}} years ahead.',
       dateHint: 'Scheduled {{relative}}. Participants will be notified if you change the date.',
       notifyDateChangeLabel: 'Notify participants of the date change',
       themeLabel: 'Theme / mood',
@@ -2656,13 +2662,13 @@ export const en: Locale = {
     password_needs_digit: 'Password must contain at least one digit.',
     display_name_required: 'Display name is required.',
     display_name_too_long: 'Display name cannot exceed {{max}} characters.',
+    email_invalid: 'Incomplete e-mail address: check what follows “@” (for example “example.com”).',
     handle_required: 'Your username is required.',
     handle_too_short: 'Your username needs at least {{min}} characters.',
     handle_too_long: 'Your username cannot exceed {{max}} characters.',
     handle_invalid_characters:
       'Your username can only contain lowercase letters, digits and underscores.',
     handle_reserved: 'This username is reserved.',
-    email_invalid: 'Incomplete e-mail address: check what follows “@” (for example “example.com”).',
     bio_too_long: 'Bio cannot exceed {{max}} characters.',
     invalid_reset_token: 'Invalid or expired token.',
     letterboxd_username_invalid:
@@ -2678,6 +2684,9 @@ export const en: Locale = {
     letterboxd_watched_incomplete:
       'Letterboxd watched films unreachable. Check the spelling of the username and that your Letterboxd profile is public.',
     invalid_date_format: 'date must use the YYYY-MM-DD format.',
+    event_date_too_early:
+      'This date is too far in the past: the movie night would already be over.',
+    event_date_too_far: 'A movie night can be planned at most {{years}} years ahead.',
     invalid_time_format: 'time must use the HH:mm format.',
     theme_color_out_of_range: 'themeColor must be a hue between 0 and 359.',
     event_title_required: 'The movie night title cannot be empty.',

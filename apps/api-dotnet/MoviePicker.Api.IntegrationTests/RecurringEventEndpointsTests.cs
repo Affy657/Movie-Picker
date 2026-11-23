@@ -3,7 +3,9 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.DependencyInjection;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Tests.Builders;
 using Xunit;
@@ -27,6 +29,14 @@ public sealed class RecurringEventEndpointsTests : IClassFixture<MoviePickerAppl
 
     private static DateOnly TwoDaysAgo() =>
         EventRecurrence.TodayInParis(DateTimeOffset.UtcNow).AddDays(-2);
+
+    private async Task MoveTheNightToAsync(string slug, DateOnly date)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var evt = await events.GetByIdOrSlugAsync(slug);
+        await events.UpdateAsync(evt! with { Date = Iso(date) });
+    }
 
     private static async Task<CreateEventResponse> CreateEventAsync(HttpClient client, string title, DateOnly date)
     {
@@ -175,7 +185,8 @@ public sealed class RecurringEventEndpointsTests : IClassFixture<MoviePickerAppl
     {
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var start = EventRecurrence.TodayInParis(DateTimeOffset.UtcNow).AddDays(-30);
-        var created = await CreateEventAsync(client, "Ciné-club oublié", start);
+        var created = await CreateEventAsync(client, "Ciné-club oublié", TestDates.UpcomingDay);
+        await MoveTheNightToAsync(created.Slug, start);
         await client.PatchAsJsonAsync($"/api/v1/events/{created.Slug}/config", new { recurrence = "weekly" });
 
         var mine = await client.GetAsync("/api/v1/events/mine");

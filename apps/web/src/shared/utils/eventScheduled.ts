@@ -60,3 +60,14 @@ export function eventScheduledStartUtcMs(event: { date: string; time: string }):
   if (offsetAtFirstGuessMs === offsetAtWallClockMs) return firstGuessMs;
   return wallClockAsUtcMs - offsetAtFirstGuessMs;
 }
+
+export function browserClockDiffersFromEventZone(utcMs: number): boolean {
+  const wholeSecondMs = Math.floor(utcMs / 1000) * 1000;
+  const browserOffsetMs = -new Date(wholeSecondMs).getTimezoneOffset() * 60_000;
+  return browserOffsetMs !== timeZoneOffsetMs(wholeSecondMs, EVENT_TIMEZONE);
+}
+
+export function eventTimeNeedsZone(event: { date: string; time: string }): boolean {
+  const startMs = eventScheduledStartUtcMs(event);
+  return startMs !== null && browserClockDiffersFromEventZone(startMs);
+}

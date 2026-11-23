@@ -377,6 +377,12 @@ public static class Errors
     public static BadRequestException InvalidDateFormat() =>
         new("date must use the YYYY-MM-DD format", ErrorCodes.InvalidDateFormat);
 
+    public static BadRequestException EventDateTooEarly() =>
+        new("This date is too far in the past: the movie night would already be over", ErrorCodes.EventDateTooEarly);
+
+    public static BadRequestException EventDateTooFar(int years) =>
+        new($"A movie night can be planned at most {years} years ahead", ErrorCodes.EventDateTooFar, Params(("years", years)));
+
     public static BadRequestException InvalidTimeFormat() =>
         new("time must use the HH:mm format", ErrorCodes.InvalidTimeFormat);
 
@@ -407,14 +413,14 @@ public static class Errors
     public static BadRequestException MovieListDescriptionTooLong(int max) =>
         new($"List description cannot exceed {max} characters", ErrorCodes.ValidationFailed, Params(("max", max)));
 
+    public static BadRequestException MovieTitleRequired() =>
+        new("Movie title cannot be empty", ErrorCodes.ValidationFailed);
+
     public static BadRequestException FriendGroupNameRequired() =>
         new("Group name cannot be empty", ErrorCodes.ValidationFailed);
 
     public static BadRequestException FriendGroupNameTooLong(int max) =>
         new($"Group name cannot exceed {max} characters", ErrorCodes.ValidationFailed, Params(("max", max)));
-
-    public static BadRequestException MovieTitleRequired() =>
-        new("Movie title cannot be empty", ErrorCodes.ValidationFailed);
 
     public static BadRequestException SelfFollow() =>
         new("You cannot follow yourself", ErrorCodes.SelfFollow);

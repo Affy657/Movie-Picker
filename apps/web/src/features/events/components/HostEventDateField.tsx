@@ -1,5 +1,10 @@
 import { useTranslation } from '@/shared/i18n';
 import Field from '@/shared/components/Field';
+import {
+  earliestOpenStartLocal,
+  latestEventDate,
+} from '@/features/events/lib/createEventValidation';
+import { browserClockDiffersFromEventZone } from '@/shared/utils/eventScheduled';
 import styles from './HostEventSettingsPanel.module.css';
 
 type Props = {
@@ -24,6 +29,8 @@ export default function HostEventDateField({
   onNotifyChange,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const now = new Date();
+  const label = t('events.settings.dateTimeLabel');
 
   return (
     <div
@@ -33,7 +40,11 @@ export default function HostEventDateField({
       }}
     >
       <Field
-        label={t('events.settings.dateTimeLabel')}
+        label={
+          browserClockDiffersFromEventZone(now.getTime())
+            ? t('events.detail.parisTime', { value: label })
+            : label
+        }
         htmlFor="host-cfg-datetime"
         error={error}
         hint={
@@ -49,6 +60,8 @@ export default function HostEventDateField({
             className="input"
             type="datetime-local"
             value={value}
+            min={earliestOpenStartLocal(now)}
+            max={`${latestEventDate(now)}T23:59`}
             onChange={(e) => onValueChange(e.target.value)}
             aria-invalid={invalid || undefined}
             aria-describedby={describedBy}
