@@ -1,13 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
+import { whenPageImagesSettle } from '@/app/components/whenPageImagesSettle';
 
 const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
 
 const reloadCurrentPage = () => globalThis.location.reload();
 
+type PageWait = (onSettled: () => void) => () => void;
+
 export default function PwaAutoUpdate({
   reloadPage = reloadCurrentPage,
-}: Readonly<{ reloadPage?: () => void }>) {
+  waitForPage = whenPageImagesSettle,
+}: Readonly<{ reloadPage?: () => void; waitForPage?: PageWait }>) {
+  const [pageSettled, setPageSettled] = useState(false);
+  useEffect(() => waitForPage(() => setPageSettled(true)), [waitForPage]);
+  return pageSettled ? <ServiceWorkerUpdates reloadPage={reloadPage} /> : null;
+}
+
+function ServiceWorkerUpdates({ reloadPage }: Readonly<{ reloadPage: () => void }>) {
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
   const mountedRef = useRef(false);
   const pendingRegistrationRef = useRef<ServiceWorkerRegistration | null>(null);

@@ -66,11 +66,16 @@ function memberListsSeo(profile: PublicProfile | undefined, notFound: boolean, t
   );
 }
 
-function PublicListCard({ handle, list }: Readonly<{ handle: string; list: PublicListSummary }>) {
+function PublicListCard({
+  handle,
+  list,
+  eager,
+}: Readonly<{ handle: string; list: PublicListSummary; eager: boolean }>) {
   const { t } = useTranslation();
   const watchedCount = list.watchedCount;
   return (
     <MovieCollectionCard
+      eager={eager}
       to={ROUTES.publicList(handle, list.id)}
       name={list.name}
       movieCountLabel={publicListCountLabel(list, t)}
@@ -120,8 +125,8 @@ function PublicListsCollection({
         />
       ) : (
         <ul className={listGridClass} aria-label={t('lists.public.gridAria')}>
-          {visible.map((list) => (
-            <PublicListCard key={list.id} handle={handle} list={list} />
+          {visible.map((list, index) => (
+            <PublicListCard key={list.id} handle={handle} list={list} eager={index === 0} />
           ))}
         </ul>
       )}

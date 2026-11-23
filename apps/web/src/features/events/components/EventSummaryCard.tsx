@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { Clock, Crown, Film, Trophy, Users } from 'lucide-react';
-import { posterImageSrc } from '@/shared/utils/posterUrl';
+import { posterImageSrc, posterSrcAtSize } from '@/shared/utils/posterUrl';
 import { useLocale, useTranslation, type TranslationKey, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
@@ -201,7 +201,7 @@ function WinnerRow({ event }: Readonly<{ event: MyEventSummary }>) {
         winnerPosters.map((posterPath) => (
           <img
             key={posterPath}
-            src={posterImageSrc(posterPath)}
+            src={posterSrcAtSize(posterImageSrc(posterPath), 'w92')}
             alt=""
             aria-hidden
             className={styles.winnerPoster}

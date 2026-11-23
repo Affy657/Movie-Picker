@@ -59,6 +59,32 @@ public sealed class PostersEndpointTests : IClassFixture<MoviePickerApplicationF
         Assert.Equal(["https://image.tmdb.org/t/p/w500/never-seen.jpg"], tmdb.Requested);
     }
 
+    [Theory]
+    [InlineData("w92")]
+    [InlineData("w185")]
+    [InlineData("w342")]
+    public async Task GetTmdbPoster_DisplaySize_IsFetchedAndKeptAtThatSize(string size)
+    {
+        var tmdb = new RecordingImageHandler();
+        var client = _factory.WithWebHostBuilder(b => b.ConfigureTestServices(services =>
+            services.AddHttpClient(PosterFetchHttp.ClientName).ConfigurePrimaryHttpMessageHandler(() => tmdb)))
+            .CreateClient();
+
+        var first = await client.GetAsync($"/api/v1/posters/tmdb/{size}/display-size.jpg");
+        var second = await client.GetAsync($"/api/v1/posters/tmdb/{size}/display-size.jpg");
+
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, second.StatusCode);
+        Assert.Equal([$"https://image.tmdb.org/t/p/{size}/display-size.jpg"], tmdb.Requested);
+    }
+
+    [Fact]
+    public async Task GetTmdbPoster_SizeTheRelayDoesNotServe_ReturnsNotFound()
+    {
+        var res = await _client.GetAsync("/api/v1/posters/tmdb/w780/abc.jpg");
+        Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
+    }
+
     [Fact]
     public async Task GetTmdbPoster_PosterCacheDisabled_RedirectsToTheTmdbCdn()
     {

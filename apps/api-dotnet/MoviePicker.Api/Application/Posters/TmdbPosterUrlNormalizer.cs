@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -15,6 +16,9 @@ public static partial class TmdbPosterUrlNormalizer
     public const int PosterKeyHexLength = 64;
 
     public const string PreferredPosterSize = "w500";
+
+    private static readonly FrozenSet<string> RelayedPosterSizes =
+        FrozenSet.ToFrozenSet(["w92", "w185", "w342", PreferredPosterSize], StringComparer.Ordinal);
 
     private const string TmdbImagePathPrefix = "/t/p/";
 
@@ -97,7 +101,7 @@ public static partial class TmdbPosterUrlNormalizer
     public static bool TryResolveTmdbRoute(string? size, string? file, out string normalizedUrl)
     {
         normalizedUrl = "";
-        if (!string.Equals(size, PreferredPosterSize, StringComparison.Ordinal) || string.IsNullOrEmpty(file))
+        if (size is null || !RelayedPosterSizes.Contains(size) || string.IsNullOrEmpty(file))
             return false;
         if (!TmdbRouteFileRegex().IsMatch(file))
             return false;
@@ -149,8 +153,8 @@ public static partial class TmdbPosterUrlNormalizer
         if (TryParsePosterKey(trimmed, out var parsedKey))
             return ApiPosterPathPrefix + parsedKey;
 
-        if (TryParseTmdbRoutePath(trimmed, out _))
-            return trimmed;
+        if (TryParseTmdbRoutePath(trimmed, out var relayed))
+            return TryBuildTmdbRoutePath(relayed, out var storedRoute) ? storedRoute : trimmed;
 
         return TryBuildTmdbRoutePath(trimmed, out var route) ? route : posterUrl;
     }

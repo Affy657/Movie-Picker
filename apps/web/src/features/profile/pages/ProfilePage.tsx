@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import clsx from 'clsx';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -20,6 +20,7 @@ import ProfileStatsSection, {
 } from '@/features/profile/components/ProfileStatsSection';
 import ProfileStatsSummary from '@/features/profile/components/ProfileStatsSummary';
 import ProfileActions from '@/features/profile/components/ProfileActions';
+import ProfileMoviesSection from '@/features/profile/components/ProfileMoviesSection';
 import ProfileBanner from '@/features/profile/components/ProfileBanner';
 import ProfilePageSkeleton, {
   ProfileStatsSkeleton,
@@ -43,9 +44,6 @@ import { withElision } from '@/shared/i18n/withElision';
 
 const FollowListModal = lazy(() => import('@/features/profile/components/FollowListModal'));
 const BannerPicker = lazy(() => import('@/features/profile/components/BannerPicker'));
-const ProfileMoviesSection = lazy(
-  () => import('@/features/profile/components/ProfileMoviesSection')
-);
 
 function formatMemberSince(iso: string, locale: string): string {
   const date = new Date(iso);
@@ -100,6 +98,30 @@ function hasNothingToShow(profile: PublicProfile, view: VisitorView): boolean {
   );
 }
 
+function awaitsFirstAnswer(query: {
+  isPending: boolean;
+  failureCount: number;
+  fetchStatus: string;
+}): boolean {
+  return query.isPending && query.failureCount === 0 && query.fetchStatus === 'fetching';
+}
+
+const SECTIONS_WAIT_MS = 1500;
+
+function useHoldForSections(
+  handle: string | undefined,
+  profileLoaded: boolean,
+  sectionsPending: boolean
+): boolean {
+  const [waitOverFor, setWaitOverFor] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    if (!profileLoaded) return;
+    const timer = setTimeout(() => setWaitOverFor(handle), SECTIONS_WAIT_MS);
+    return () => clearTimeout(timer);
+  }, [handle, profileLoaded]);
+  return profileLoaded && sectionsPending && waitOverFor !== handle;
+}
+
 function useProfileBanner(profile: PublicProfile | undefined, isOwnProfile: boolean) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const banner = profile?.banner ?? null;
@@ -144,6 +166,11 @@ export default function ProfilePage() {
   const watchedHiddenFromVisitor = !!profile && !isOwnProfile && profile.isWatchedPublic === false;
   const watchedVisible = !!profile && !watchedHiddenFromVisitor;
   const watchedPreview = useProfileWatchedPreview(handle, !watchedHiddenFromVisitor);
+  const holdsForSections = useHoldForSections(
+    handle,
+    !!profile,
+    awaitsFirstAnswer(statsQuery) || awaitsFirstAnswer(watchedPreview)
+  );
   const isNotFound =
     !handle ||
     (profileQuery.isError && ApiError.is(profileQuery.error) && profileQuery.error.code === 404);
@@ -180,7 +207,7 @@ export default function ProfilePage() {
     onError: (err) => setFollowError(getErrorMessage(err, t('profile.follow.error'))),
   });
 
-  if (profileQuery.isPending && handle) {
+  if (handle && (profileQuery.isPending || holdsForSections)) {
     return (
       <PageLayout className={styles.layout}>
         <ProfilePageSkeleton label={t('profile.loading')} />
@@ -266,16 +293,14 @@ export default function ProfilePage() {
         </ProfileHeader>
 
         <div className={styles.content}>
-          <Suspense fallback={null}>
-            <ProfileMoviesSection
-              handle={profile.handle}
-              favorites={profile.favorites ?? []}
-              isOwnProfile={isOwnProfile}
-              watchedVisible={watchedVisible}
-              watchedHidden={isOwnProfile && profile.isWatchedPublic === false}
-              watchlist={watchlist}
-            />
-          </Suspense>
+          <ProfileMoviesSection
+            handle={profile.handle}
+            favorites={profile.favorites ?? []}
+            isOwnProfile={isOwnProfile}
+            watchedVisible={watchedVisible}
+            watchedHidden={isOwnProfile && profile.isWatchedPublic === false}
+            watchlist={watchlist}
+          />
 
           {statsQuery.isPending && <ProfileStatsSkeleton />}
 

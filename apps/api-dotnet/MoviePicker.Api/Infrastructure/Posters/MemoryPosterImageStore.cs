@@ -54,9 +54,11 @@ public sealed class MemoryPosterImageStore : IPosterImageStore
         if (FreshBlob(entry) is { } fresh)
             return fresh;
 
-        return TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(entry.SourceUrl, out var source)
-            ? await _fetches.RunAsync(key, () => FetchAndStoreAsync(key, source, entry), ct)
-            : null;
+        if (!TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(entry.SourceUrl, out var source))
+            return null;
+
+        var stored = TmdbPosterUrlNormalizer.UpgradeTmdbSize(source, TmdbPosterUrlNormalizer.PreferredPosterSize);
+        return await _fetches.RunAsync(key, () => FetchAndStoreAsync(key, stored, entry), ct);
     }
 
     public Task<string?> FindSourceUrlAsync(string posterKey, CancellationToken ct = default) =>

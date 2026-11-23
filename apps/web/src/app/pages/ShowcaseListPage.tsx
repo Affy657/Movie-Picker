@@ -60,6 +60,8 @@ interface ShowcaseListItem extends TitleSummary {
   rank: number | null;
 }
 
+const FIRST_ROW_EAGER_COUNT = 3;
+
 const TITLE_KEYS: Record<ShowcaseListVariant, TranslationKey> = {
   trending: 'showcase.sections.trendingTitle',
   'now-playing': 'showcase.sections.nowPlayingTitle',
@@ -429,10 +431,11 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
           isMobile={isMobile}
         >
           <ul className={styles.grid} aria-label={listHeading}>
-            {toolbar.revealedItems.map((item) => (
+            {toolbar.revealedItems.map((item, index) => (
               <MovieBrowseCard
                 key={`${item.tmdbId}|${item.mediaType}`}
                 item={item}
+                eager={index < FIRST_ROW_EAGER_COUNT}
                 hasHover={hasHover}
                 isLoggedIn={isLoggedIn}
                 inWatchlist={watchlist.has(item)}

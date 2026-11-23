@@ -136,6 +136,24 @@ describe('MemberListsPage', () => {
     );
   });
 
+  it('loads the posters of the first list at once, the others when they come close', async () => {
+    server.use(
+      signedIn,
+      profileOf(LEA),
+      ...createPublicListsHandlers(LEA, [COREAN, HALLOWEEN, HITCHCOCK])
+    );
+
+    renderPage();
+
+    const grid = await screen.findByRole('list', { name: 'Listes publiques' });
+    const [first, ...others] = within(grid).getAllByRole('link');
+    const loadings = (card: HTMLElement) =>
+      [...card.querySelectorAll('img')].map((img) => img.getAttribute('loading'));
+    expect(loadings(first!).length).toBeGreaterThan(0);
+    expect(new Set(loadings(first!))).toEqual(new Set(['eager']));
+    expect(new Set(others.flatMap(loadings))).toEqual(new Set(['lazy']));
+  });
+
   it('elides the title before a name that starts with a vowel', async () => {
     const alice = { handle: 'alice', displayName: 'Alice Martin', avatarId: null };
     server.use(authMeGuestHandler, profileOf(alice), ...createPublicListsHandlers(alice, [COREAN]));

@@ -5,6 +5,12 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { browserTargets } from './tooling/browserTargets';
 import {
+  apiPreconnectTags,
+  contentSecurityPolicyMeta,
+  insertAfterCharset,
+} from './tooling/documentHead';
+import { PRECACHE_IGNORES, chunkFileName } from './tooling/precache';
+import {
   COLOR_MIX_FALLBACK_MODULE,
   COLOR_MIX_TOKEN_SHEETS,
   buildColorMixFallback,
@@ -44,15 +50,17 @@ function cspMetaPlugin(apiOrigin: string, sentryOrigin: string): Plugin {
           sentryOrigin,
           await inlineScriptHashes(html)
         );
-        return [
-          {
-            tag: 'meta',
-            attrs: { 'http-equiv': 'Content-Security-Policy', content: policy },
-            injectTo: 'head-prepend',
-          },
-        ];
+        return insertAfterCharset(html, contentSecurityPolicyMeta(policy));
       },
     },
+  };
+}
+
+function apiPreconnectPlugin(apiOrigin: string): Plugin {
+  return {
+    name: 'moviepicker-api-preconnect',
+    apply: 'build',
+    transformIndexHtml: () => apiPreconnectTags(apiOrigin),
   };
 }
 
@@ -361,13 +369,15 @@ export default defineConfig(({ mode }) => {
       react(),
       colorMixFallbackPlugin(),
       releaseMetaPlugin(release),
+      apiPreconnectPlugin(apiOrigin),
       VitePWA({
         strategies: 'injectManifest',
         srcDir: 'src',
         filename: 'sw.ts',
         registerType: 'prompt',
         injectRegister: 'auto',
-        includeAssets: ['favicon.svg', 'favicon.ico'],
+        includeAssets: ['favicon.ico'],
+        includeManifestIcons: false,
         manifest: {
           name: 'Movie Picker',
           short_name: 'Movie Picker',
@@ -407,6 +417,7 @@ export default defineConfig(({ mode }) => {
         },
         injectManifest: {
           globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+          globIgnores: PRECACHE_IGNORES,
         },
         devOptions: {
           enabled: env.VITE_DEV_SERVICE_WORKER === 'true',
@@ -453,7 +464,7 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           entryFileNames: 'assets/[name]-[hash].js',
-          chunkFileNames: 'assets/[name]-[hash].js',
+          chunkFileNames: chunkFileName,
           assetFileNames: 'assets/[name]-[hash][extname]',
           codeSplitting: { groups: codeSplittingGroups(appShellModules) },
         },

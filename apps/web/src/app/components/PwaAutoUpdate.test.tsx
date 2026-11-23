@@ -13,6 +13,11 @@ vi.mock('virtual:pwa-register/react', () => ({
 
 type RegisteredCallback = (url: string, r?: ServiceWorkerRegistration) => void;
 
+function settledAtOnce(onSettled: () => void) {
+  onSettled();
+  return () => undefined;
+}
+
 function setupHook(needRefresh: boolean): () => RegisteredCallback | undefined {
   let captured: RegisteredCallback | undefined;
   mockUseRegisterSW.mockImplementation((opts?: { onRegisteredSW?: RegisteredCallback }) => {
@@ -33,7 +38,7 @@ async function renderWithRegistration(
 ) {
   const getCallback = setupHook(needRefresh);
   const registration = { installing: null, update } as unknown as ServiceWorkerRegistration;
-  const view = render(<PwaAutoUpdate reloadPage={reloadPage} />);
+  const view = render(<PwaAutoUpdate reloadPage={reloadPage} waitForPage={settledAtOnce} />);
   await act(async () => {
     getCallback()?.('sw.js', registration);
   });
@@ -79,6 +84,23 @@ describe('PwaAutoUpdate', () => {
   it("n'affiche aucune interface", async () => {
     const { container } = await renderWithRegistration(vi.fn().mockResolvedValue(undefined));
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it('registers the worker only once the page and its posters have loaded', async () => {
+    setupHook(false);
+    let settle: () => void = () => undefined;
+    render(
+      <PwaAutoUpdate
+        waitForPage={(onSettled) => {
+          settle = onSettled;
+          return () => undefined;
+        }}
+      />
+    );
+    expect(mockUseRegisterSW).not.toHaveBeenCalled();
+
+    await act(async () => settle());
+    expect(mockUseRegisterSW).toHaveBeenCalled();
   });
 
   describe('new version detection', () => {

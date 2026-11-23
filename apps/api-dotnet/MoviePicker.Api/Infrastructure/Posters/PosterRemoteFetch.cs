@@ -13,10 +13,7 @@ internal static class PosterRemoteFetch
         int maxBytes,
         CancellationToken ct)
     {
-        var fetchUrl = TmdbPosterUrlNormalizer.UpgradeTmdbSize(
-            sourceUrl,
-            TmdbPosterUrlNormalizer.PreferredPosterSize);
-        if (!Uri.TryCreate(fetchUrl, UriKind.Absolute, out var fetchUri)
+        if (!Uri.TryCreate(sourceUrl, UriKind.Absolute, out var fetchUri)
             || fetchUri.Scheme != Uri.UriSchemeHttps
             || !string.Equals(fetchUri.Host, "image.tmdb.org", StringComparison.OrdinalIgnoreCase))
             return null;

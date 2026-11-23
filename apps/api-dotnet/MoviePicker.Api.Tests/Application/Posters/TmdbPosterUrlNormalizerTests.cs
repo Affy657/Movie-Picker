@@ -93,6 +93,9 @@ public sealed class TmdbPosterUrlNormalizerTests
     [InlineData("w500", "abc.jpg", "https://image.tmdb.org/t/p/w500/abc.jpg")]
     [InlineData("w500", "A-b_9.png", "https://image.tmdb.org/t/p/w500/A-b_9.png")]
     [InlineData("w500", "x.webp", "https://image.tmdb.org/t/p/w500/x.webp")]
+    [InlineData("w92", "abc.jpg", "https://image.tmdb.org/t/p/w92/abc.jpg")]
+    [InlineData("w185", "abc.jpg", "https://image.tmdb.org/t/p/w185/abc.jpg")]
+    [InlineData("w342", "abc.jpg", "https://image.tmdb.org/t/p/w342/abc.jpg")]
     public void TryResolveTmdbRoute_ValidSegments_BuildTheTmdbUrl(string size, string file, string expected)
     {
         Assert.True(TmdbPosterUrlNormalizer.TryResolveTmdbRoute(size, file, out var url));
@@ -103,7 +106,8 @@ public sealed class TmdbPosterUrlNormalizerTests
     [InlineData("x500", "abc.jpg")]
     [InlineData("w5", "abc.jpg")]
     [InlineData("w0500", "abc.jpg")]
-    [InlineData("w185", "abc.jpg")]
+    [InlineData("w154", "abc.jpg")]
+    [InlineData("w780", "abc.jpg")]
     [InlineData("original", "abc.jpg")]
     [InlineData("w\u0665\u0660\u0660", "abc.jpg")]
     [InlineData("w500", "\u212Aabc.jpg")]
@@ -149,8 +153,17 @@ public sealed class TmdbPosterUrlNormalizerTests
     [InlineData("https://image.tmdb.org/t/p/w185/abc.jpg")]
     [InlineData("https://image.tmdb.org/t/p/original/abc.jpg")]
     [InlineData("https://image.tmdb.org/t/p/w92/abc.jpg")]
-    public void ToPublicPosterPath_AnyStoredTmdbSize_PointsAtTheOnlySizeTheServerFetches(string stored)
+    public void ToPublicPosterPath_AnyStoredTmdbSize_PointsAtTheStoredSize(string stored)
     {
         Assert.Equal("/api/v1/posters/tmdb/w500/abc.jpg", TmdbPosterUrlNormalizer.ToPublicPosterPath(stored));
+    }
+
+    [Theory]
+    [InlineData("/api/v1/posters/tmdb/w92/abc.jpg")]
+    [InlineData("/api/v1/posters/tmdb/w342/abc.jpg")]
+    public void ToPublicPosterPath_RouteAtADisplaySize_IsStoredAtTheStoredSize(string route)
+    {
+        Assert.True(TmdbPosterUrlNormalizer.IsAcceptedPosterReference(route));
+        Assert.Equal("/api/v1/posters/tmdb/w500/abc.jpg", TmdbPosterUrlNormalizer.ToPublicPosterPath(route));
     }
 }

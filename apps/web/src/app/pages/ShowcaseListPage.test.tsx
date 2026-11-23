@@ -185,6 +185,30 @@ describe('ShowcaseListPage', () => {
     expect(screen.getByText('Film 3')).toBeInTheDocument();
   });
 
+  it('loads the first row of posters at once, the rest when it comes close', async () => {
+    server.use(
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/movies/showcase`, () =>
+        HttpResponse.json({
+          section: 'trending',
+          theme: null,
+          items: Array.from({ length: 6 }, (_, index) => ({
+            ...item(index + 1, ACTION_GENRE),
+            posterPath: `https://image.tmdb.org/t/p/w154/p${index}.jpg`,
+          })),
+          disclaimer: 'TMDB',
+          tmdbAttributionUrl: 'https://www.themoviedb.org/',
+        })
+      )
+    );
+    renderPage('trending', '/films/tendances', '/films/tendances');
+
+    await screen.findByText('Film 6');
+    const grid = screen.getByRole('list', { name: /films/i });
+    const loadings = [...grid.querySelectorAll('img')].map((img) => img.getAttribute('loading'));
+    expect(loadings).toEqual(['eager', 'eager', 'eager', 'lazy', 'lazy', 'lazy']);
+  });
+
   it('puts a hidden level-two heading above the grid', () => {
     server.use(authMeGuestHandler, showcaseHandler);
     renderPage('trending', '/films/tendances', '/films/tendances');

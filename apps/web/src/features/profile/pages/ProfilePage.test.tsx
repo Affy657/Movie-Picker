@@ -474,6 +474,70 @@ describe('ProfilePage (MSW)', () => {
     expect(screen.queryByRole('heading', { name: 'Alice' })).not.toBeInTheDocument();
   });
 
+  it('shows the films in the same paint as the profile, so nothing pushes the statistics down', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () =>
+        HttpResponse.json({
+          ...ALICE_PROFILE,
+          favorites: [
+            { tmdbId: 949, mediaType: 'movie', title: 'Heat', year: '1995', posterPath: null },
+          ],
+        })
+      )
+    );
+
+    renderProfile('alice');
+
+    await screen.findByRole('heading', { level: 1, name: 'Alice' });
+    expect(screen.getByRole('heading', { name: 'Ses favoris' })).toBeInTheDocument();
+  });
+
+  it('waits for the statistics and the last watched films before showing the profile', async () => {
+    let answerStats: () => void = () => undefined;
+    let answerWatched: () => void = () => undefined;
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      http.get(`${TEST_API_V1}/users/alice/stats`, async () => {
+        await new Promise<void>((resolve) => (answerStats = resolve));
+        return HttpResponse.json(EMPTY_STATS);
+      }),
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, async () => {
+        await new Promise<void>((resolve) => (answerWatched = resolve));
+        return HttpResponse.json({ items: [] });
+      })
+    );
+
+    renderProfile('alice');
+
+    await waitFor(() => expect(screen.getByRole('status')).toBeInTheDocument());
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.queryByRole('heading', { level: 1, name: 'Alice' })).not.toBeInTheDocument();
+    answerStats();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.queryByRole('heading', { level: 1, name: 'Alice' })).not.toBeInTheDocument();
+    answerWatched();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Alice' })).toBeInTheDocument();
+  });
+
+  it('does not hold the profile for statistics that never answer', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      http.get(`${TEST_API_V1}/users/alice/stats`, async () => {
+        await new Promise(() => undefined);
+        return HttpResponse.json(EMPTY_STATS);
+      })
+    );
+
+    renderProfile('alice');
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Alice' }, { timeout: 4000 })
+    ).toBeInTheDocument();
+  });
+
   it('shows an error with a Retry button when the statistics fail, and recovers', async () => {
     const user = userEvent.setup();
     let statsCallCount = 0;

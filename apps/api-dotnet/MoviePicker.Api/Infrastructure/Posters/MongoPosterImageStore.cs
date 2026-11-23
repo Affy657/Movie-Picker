@@ -61,7 +61,8 @@ public sealed class MongoPosterImageStore : IPosterImageStore
             return null;
         }
 
-        return await _fetches.RunAsync(key, () => FetchAndStoreAsync(key, source, doc), ct);
+        var stored = TmdbPosterUrlNormalizer.UpgradeTmdbSize(source, TmdbPosterUrlNormalizer.PreferredPosterSize);
+        return await _fetches.RunAsync(key, () => FetchAndStoreAsync(key, stored, doc), ct);
     }
 
     public async Task<string?> FindSourceUrlAsync(string posterKey, CancellationToken ct = default)
