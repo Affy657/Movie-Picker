@@ -117,7 +117,7 @@ describe('NotificationsSection', () => {
       await screen.findByRole('switch', { name: 'notifications.prefNewFollower' })
     ).toBeInTheDocument();
     expect(mockFetchPrefs).toHaveBeenCalled();
-    expect(screen.getAllByRole('switch')).toHaveLength(16);
+    expect(screen.getAllByRole('switch')).toHaveLength(17);
   });
 
   it('on an iPhone in Safari, points to the home screen and opens the install guide', async () => {
@@ -175,7 +175,7 @@ describe('NotificationsSection', () => {
     );
   });
 
-  it('loads and renders the 16 preference toggles even when not subscribed to push', async () => {
+  it('loads and renders the 17 preference toggles even when not subscribed to push', async () => {
     mockUsePush.mockReturnValue(pushState({ subscribed: false }));
     mockFetchPrefs.mockResolvedValue(allPrefs);
 
@@ -188,7 +188,7 @@ describe('NotificationsSection', () => {
     expect(
       screen.getByRole('switch', { name: 'notifications.prefRatingReminder' })
     ).toBeInTheDocument();
-    expect(screen.getAllByRole('switch')).toHaveLength(17);
+    expect(screen.getAllByRole('switch')).toHaveLength(18);
   });
 
   it('shows the push error message', () => {

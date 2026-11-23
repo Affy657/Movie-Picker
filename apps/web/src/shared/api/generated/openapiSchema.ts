@@ -13291,7 +13291,7 @@ export interface components {
         };
         NotificationTypePreference: {
             /** @enum {string} */
-            type: "newfollower" | "movieadded" | "moviepicked" | "participantjoined" | "eventdeleted" | "eventreminder1h" | "eventreminder24h" | "eventinvitation" | "eventpending" | "moviepickedmanually" | "letterboxdreconciliationpending" | "eventdatechanged" | "ratingreminder" | "listinvitation" | "groupinvitation" | "groupnight";
+            type: "newfollower" | "movieadded" | "moviepicked" | "participantjoined" | "eventdeleted" | "eventreminder1h" | "eventreminder24h" | "eventinvitation" | "eventpending" | "moviepickedmanually" | "letterboxdreconciliationpending" | "eventdatechanged" | "ratingreminder" | "listinvitation" | "groupinvitation" | "groupnight" | "hostrolereceived";
             enabled: boolean;
         };
         NotificationTypePreferencePatch: {
@@ -13637,7 +13637,7 @@ export interface components {
         UserNotificationItem: {
             id: string;
             /** @enum {string} */
-            type: "newfollower" | "movieadded" | "moviepicked" | "participantjoined" | "eventdeleted" | "eventreminder1h" | "eventreminder24h" | "eventinvitation" | "eventpending" | "moviepickedmanually" | "letterboxdreconciliationpending" | "eventdatechanged" | "ratingreminder" | "listinvitation" | "groupinvitation" | "groupnight";
+            type: "newfollower" | "movieadded" | "moviepicked" | "participantjoined" | "eventdeleted" | "eventreminder1h" | "eventreminder24h" | "eventinvitation" | "eventpending" | "moviepickedmanually" | "letterboxdreconciliationpending" | "eventdatechanged" | "ratingreminder" | "listinvitation" | "groupinvitation" | "groupnight" | "hostrolereceived";
             actorHandle: string | null;
             actorDisplayName: string | null;
             actorAvatarId: string | null;

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { Inbox } from 'lucide-react';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -16,7 +16,6 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useLocale, useTranslation, type TranslationKey, type Translate } from '@/shared/i18n';
 import type { LocaleCode } from '@/shared/i18n/locales';
 import { getErrorMessage } from '@/shared/api/apiError';
-import { renderWithBold } from '@/shared/utils/renderWithBold';
 import { formatRelativeTime } from '@/shared/utils/formatRelativeTime';
 import {
   acceptGroupInvitation,
@@ -29,6 +28,7 @@ import {
   type UserNotificationItem,
 } from '@/features/notifications/api/notificationsApi';
 import { notifIcon } from '@/features/notifications/utils/notifIcon';
+import { renderNotificationText } from '@/features/notifications/utils/renderNotificationText';
 import { groupInboxItems, type InboxGroup } from '@/features/notifications/utils/groupInboxItems';
 import Button from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
@@ -110,6 +110,7 @@ const NOTIFICATION_TEXT_KEYS = {
   listinvitation: { plain: 'notifications.listInvitationText' },
   groupinvitation: { plain: 'notifications.groupInvitationText' },
   groupnight: { plain: 'notifications.groupNightText' },
+  hostrolereceived: { plain: 'notifications.hostRoleReceivedText' },
   eventpending: {
     plain: 'notifications.eventPendingText',
     grouped: 'notifications.eventPendingGroupedText',
@@ -125,13 +126,13 @@ const NOTIFICATION_TEXT_KEYS = {
   Record<UserNotificationItem['type'], { plain: TranslationKey; grouped?: TranslationKey }>
 >;
 
-function notifText(item: UserNotificationItem, t: Translate, withinEventGroup = false): string {
+function notifText(item: UserNotificationItem, t: Translate, withinEventGroup = false): ReactNode {
   const keys = NOTIFICATION_TEXT_KEYS[item.type as keyof typeof NOTIFICATION_TEXT_KEYS] as
     { plain: TranslationKey; grouped?: TranslationKey } | undefined;
   if (!keys) return '';
 
   const key = withinEventGroup ? (keys.grouped ?? keys.plain) : keys.plain;
-  return t(key, {
+  return renderNotificationText(t(key), {
     name: item.actorDisplayName ?? '',
     movie: item.movieTitle ?? '',
     eventTitle: item.eventTitle ?? '',
@@ -216,7 +217,7 @@ function NotifRow({
         )}
       </span>
       <span className={styles.itemBody}>
-        <p className={styles.itemText}>{renderWithBold(notifText(item, t, withinEventGroup))}</p>
+        <p className={styles.itemText}>{notifText(item, t, withinEventGroup)}</p>
       </span>
       <span className={styles.itemTime}>{formatRelativeTime(item.createdAt, locale)}</span>
     </>
@@ -293,7 +294,9 @@ function NotifCard({
 
   return (
     <Card padding="none" elevation="sm" className={styles.card}>
-      <p className={styles.cardHead}>{group.eventTitle}</p>
+      <p className={styles.cardHead}>
+        <bdi>{group.eventTitle}</bdi>
+      </p>
       {visible.map((item) => (
         <NotifRow
           key={item.id}

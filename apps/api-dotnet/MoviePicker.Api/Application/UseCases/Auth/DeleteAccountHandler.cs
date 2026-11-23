@@ -26,6 +26,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
     private readonly IAvatarPhotoRepository _avatarPhotos;
     private readonly IBannerPhotoRepository _bannerPhotos;
     private readonly IAuthSessionInvalidator _sessionInvalidator;
+    private readonly HostedNightsHandover _handover;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<DeleteAccountHandler> _logger;
 
@@ -46,6 +47,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         IAvatarPhotoRepository avatarPhotos,
         IBannerPhotoRepository bannerPhotos,
         IAuthSessionInvalidator sessionInvalidator,
+        HostedNightsHandover handover,
         IUnitOfWork unitOfWork,
         ILogger<DeleteAccountHandler> logger)
     {
@@ -65,6 +67,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         _avatarPhotos = avatarPhotos;
         _bannerPhotos = bannerPhotos;
         _sessionInvalidator = sessionInvalidator;
+        _handover = handover;
         _unitOfWork = unitOfWork;
         _logger = logger;
     }
@@ -103,10 +106,12 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
 
         long anonymizedEvents = 0;
         long anonymizedParticipations = 0;
+        IReadOnlyList<HostHandover> handovers = [];
 
         await _unitOfWork.ExecuteAsync(
             async token =>
             {
+                handovers = await _handover.HandOverAsync(userId, token);
                 anonymizedEvents = await _events.AnonymizeCreatorAsync(userId, token);
                 var joinedEventIds = await _participants.ListDistinctEventIdsByUserIdAsync(userId, token);
                 anonymizedParticipations = await _participants.AnonymizeByUserIdAsync(
@@ -134,6 +139,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
             ct);
 
         await _sessionInvalidator.InvalidateAllForUserAsync(userId, ct);
+        await _handover.AnnounceAsync(handovers);
 
         _logger.LogInformation(
             "DeleteAccount: success for {EmailMasked} (userId={UserId}, anonymizedEvents={Events}, anonymizedParticipations={Participations})",

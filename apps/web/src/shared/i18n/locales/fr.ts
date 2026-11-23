@@ -2838,6 +2838,7 @@ export const fr = {
     prefListInvitation: 'Invitation à une liste',
     prefGroupInvitation: 'Invitation à un groupe',
     prefGroupNight: 'Nouvelle soirée dans un de vos groupes',
+    prefHostRoleReceived: 'Vous devenez l’hôte d’une soirée',
     prefNewFollower: "Quelqu'un vous suit",
     prefEventPending: 'Soirée terminée sans film choisi',
     prefLetterboxdReconciliationPending: 'Films Letterboxd à confirmer',
@@ -2879,6 +2880,8 @@ export const fr = {
     listInvitationText: '{{name}} vous invite à rejoindre la liste « **{{listName}}** »',
     groupInvitationText: '{{name}} vous invite à rejoindre le groupe « **{{groupName}}** »',
     groupNightText: '{{name}} vous attend à **{{eventTitle}}**, dans le groupe « {{groupName}} »',
+    hostRoleReceivedText:
+      'L’hôte de **{{eventTitle}}** a supprimé son compte : vous organisez désormais la soirée.',
     groupInvitationAcceptAria: 'Accepter l’invitation au groupe « {{groupName}} »',
     groupInvitationDeclineAria: 'Refuser l’invitation au groupe « {{groupName}} »',
     listInvitationAccept: 'Accepter',

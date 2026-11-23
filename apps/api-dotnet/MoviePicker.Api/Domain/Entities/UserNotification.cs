@@ -18,6 +18,7 @@ public enum UserNotificationType
     ListInvitation = 14,
     GroupInvitation = 15,
     GroupNight = 16,
+    HostRoleReceived = 17,
 }
 
 public sealed record UserNotification

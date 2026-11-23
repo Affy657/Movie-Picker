@@ -7,6 +7,7 @@ import { http, HttpResponse } from 'msw';
 import NotificationsPage from '@/features/notifications/pages/NotificationsPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
+import { apiJson, type ApiSchemas } from '@/mocks/apiJson';
 import { ROUTES } from '@/app/routes';
 
 function renderPage() {
@@ -54,6 +55,35 @@ const GROUP_NIGHT = {
   groupId: 'g9',
   groupName: 'Les jeudis ciné',
 };
+
+function inboxItem(
+  item: Partial<ApiSchemas['UserNotificationItem']> &
+    Pick<ApiSchemas['UserNotificationItem'], 'id' | 'type'>
+): ApiSchemas['UserNotificationItem'] {
+  return {
+    actorHandle: null,
+    actorDisplayName: null,
+    actorAvatarId: null,
+    eventSlug: null,
+    eventTitle: null,
+    movieTitle: null,
+    listId: null,
+    listName: null,
+    listInvitationPending: false,
+    groupId: null,
+    groupName: null,
+    groupInvitationPending: false,
+    isRead: false,
+    createdAt: '2026-06-03T10:00:00Z',
+    ...item,
+  };
+}
+
+function serveTypedInbox(items: ApiSchemas['UserNotificationItem'][]) {
+  return http.get(`${TEST_API_V1}/notifications/inbox`, () =>
+    apiJson<'NotificationInboxResponse'>({ items, unreadCount: items.length, hasMore: false })
+  );
+}
 
 function LocationProbe() {
   const location = useLocation();
@@ -174,7 +204,7 @@ describe('NotificationsPage (MSW)', () => {
 
     renderPage();
 
-    const headers = await screen.findAllByText('Soiree Groupee', { selector: 'p' });
+    const headers = await screen.findAllByText('Soiree Groupee', { selector: 'p > bdi' });
     expect(headers).toHaveLength(1);
   });
 
@@ -297,6 +327,75 @@ describe('NotificationsPage (MSW)', () => {
     await screen.findByText(/Soiree Annulee/);
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Soiree Annulee/ })).toBeInTheDocument();
+  });
+
+  describe('names written by other people', () => {
+    it('isolates a name that carries a right-to-left override, so it cannot turn the sentence around', async () => {
+      const reversed = '\u202Eecila';
+      server.use(
+        authedUserHandler,
+        serveTypedInbox([
+          inboxItem({
+            id: 'rlo',
+            type: 'participantjoined',
+            actorHandle: 'alice',
+            actorDisplayName: reversed,
+            eventSlug: 'nolan',
+            eventTitle: 'Nuit Nolan',
+          }),
+        ])
+      );
+      renderInbox();
+
+      const text = await screen.findByText(
+        (_, element) => element?.tagName === 'P' && !!element.textContent?.includes('Nuit Nolan')
+      );
+      const isolated = Array.from(text.querySelectorAll('bdi')).map((node) => node.textContent);
+      expect(isolated).toEqual([reversed, 'Nuit Nolan']);
+    });
+
+    it('keeps the bold of the template when a title holds two asterisks', async () => {
+      server.use(
+        authedUserHandler,
+        serveTypedInbox([
+          inboxItem({ id: 'stars', type: 'eventdeleted', eventTitle: 'Soirée **gras**' }),
+        ])
+      );
+      renderInbox();
+
+      const title = await screen.findByText('Soirée **gras**');
+      expect(title.tagName).toBe('BDI');
+      expect(title.closest('strong')).not.toBeNull();
+    });
+  });
+
+  describe('host role handed over', () => {
+    it('tells the new host which night is now theirs and opens it', async () => {
+      const user = userEvent.setup();
+      server.use(
+        authedUserHandler,
+        ignoreRead,
+        serveTypedInbox([
+          inboxItem({
+            id: 'heir',
+            type: 'hostrolereceived',
+            eventSlug: 'halloween',
+            eventTitle: 'Halloween en retard',
+          }),
+        ])
+      );
+      renderInbox();
+
+      const text = await screen.findByText(
+        (_, element) =>
+          element?.tagName === 'P' &&
+          element.textContent ===
+            'L’hôte de Halloween en retard a supprimé son compte : vous organisez désormais la soirée.'
+      );
+      await user.click(text);
+
+      expect(await screen.findByText('Page de la soirée')).toBeInTheDocument();
+    });
   });
 
   describe('invitation to a list', () => {

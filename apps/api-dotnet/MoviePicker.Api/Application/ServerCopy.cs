@@ -22,6 +22,9 @@ public static class ServerCopy
         public static PushText EventCancelled(string eventTitle) =>
             new("Soirée annulée 😢", $"{eventTitle} a été annulée.");
 
+        public static PushText HostRoleReceived(string eventTitle) =>
+            new("Vous êtes l’hôte 🎬", $"L’hôte de « {eventTitle} » a supprimé son compte : vous organisez désormais la soirée.");
+
         public static PushText EventRescheduled(string eventTitle) =>
             new("Nouvelle date pour la soirée 📅", $"{eventTitle} a été reprogrammée.");
 

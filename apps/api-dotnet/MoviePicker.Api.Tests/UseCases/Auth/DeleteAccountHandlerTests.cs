@@ -34,7 +34,15 @@ public sealed class DeleteAccountHandlerTests
         public InMemoryAvatarPhotoRepository AvatarPhotos { get; } = new();
         public InMemoryBannerPhotoRepository BannerPhotos { get; } = new();
         public Mock<IAuthSessionInvalidator> Sessions { get; } = new();
+        public Mock<IPushNotificationSender> PushSender { get; } = new();
         public IdentityPasswordHasher Hasher { get; } = new IdentityPasswordHasher();
+
+        public HostedNightsHandover Handover(IEventRepository events) =>
+            new(
+                events,
+                Participants,
+                TestAudienceNotifier.Over(Participants, Users, Push, PushSender.Object, Notifications),
+                TimeProvider.System);
 
         public DeleteAccountHandler CreateHandler() =>
             new(
@@ -54,6 +62,7 @@ public sealed class DeleteAccountHandlerTests
                 AvatarPhotos,
                 BannerPhotos,
                 Sessions.Object,
+                Handover(Events),
                 new InMemoryUnitOfWork(),
             NullLogger<DeleteAccountHandler>.Instance);
     }
@@ -531,6 +540,69 @@ public sealed class DeleteAccountHandlerTests
         Assert.Equal(DeleteAccountHandler.AnonymizedParticipantPseudo, kept.ActorDisplayName);
     }
 
+    private static async Task<User> SeedGuestAsync(Fixture f, string handle) =>
+        await f.Users.AddAsync(new User { Email = $"{handle}@example.com", DisplayName = handle, Handle = handle });
+
+    private static async Task JoinAsync(Fixture f, string eventId, string? userId, string pseudo, DateTimeOffset at) =>
+        await f.Participants.AddAsync(new Participant { EventId = eventId, Pseudo = pseudo, UserId = userId, CreatedAt = at, UpdatedAt = at });
+
+    [Fact]
+    public async Task HandleAsync_HostOfAnUpcomingNight_HandsTheNightToTheOldestRemainingParticipant()
+    {
+        var f = new Fixture();
+        var host = await SeedUserAsync(f, "abcd1234");
+        var first = await SeedGuestAsync(f, "first");
+        var second = await SeedGuestAsync(f, "second");
+        var night = await f.Events.AddAsync(new Event { Title = "Nuit Nolan", Slug = "nuit-nolan", Date = TestDates.Upcoming, Time = "20:00", HostToken = "old-token", CreatorUserId = host.Id });
+        var start = DateTimeOffset.UtcNow.AddDays(-3);
+        await JoinAsync(f, night.Id, host.Id, "Neo", start);
+        await JoinAsync(f, night.Id, null, DeleteAccountHandler.AnonymizedParticipantPseudo, start.AddMinutes(1));
+        await JoinAsync(f, night.Id, second.Id, "Second", start.AddHours(2));
+        await JoinAsync(f, night.Id, first.Id, "First", start.AddHours(1));
+
+        await f.CreateHandler().HandleAsync(host.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
+
+        var handedOver = await f.Events.GetByIdOrSlugAsync("nuit-nolan");
+        Assert.Equal(first.Id, handedOver!.CreatorUserId);
+        Assert.NotEqual("old-token", handedOver.HostToken);
+        Assert.Null(handedOver.ClosedAt);
+        var notice = Assert.Single(await f.Notifications.ListByUserIdAsync(first.Id));
+        Assert.Equal((UserNotificationType.HostRoleReceived, night.Id, "Nuit Nolan"), (notice.Type, notice.EventId, notice.EventTitle));
+        Assert.Empty(await f.Notifications.ListByUserIdAsync(second.Id));
+    }
+
+    [Fact]
+    public async Task HandleAsync_HostAloneOnAnUpcomingNight_ClosesTheNight()
+    {
+        var f = new Fixture();
+        var host = await SeedUserAsync(f, "abcd1234");
+        var night = await f.Events.AddAsync(new Event { Title = "Seul", Slug = "seul", Date = TestDates.Upcoming, Time = "20:00", CreatorUserId = host.Id });
+        await JoinAsync(f, night.Id, host.Id, "Neo", DateTimeOffset.UtcNow);
+
+        await f.CreateHandler().HandleAsync(host.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
+
+        var closed = await f.Events.GetByIdOrSlugAsync("seul");
+        Assert.NotNull(closed!.ClosedAt);
+        Assert.Null(closed.CreatorUserId);
+    }
+
+    [Fact]
+    public async Task HandleAsync_HostOfAFinishedNight_KeepsItAnonymized()
+    {
+        var f = new Fixture();
+        var host = await SeedUserAsync(f, "abcd1234");
+        var guest = await SeedGuestAsync(f, "guest");
+        var night = await f.Events.AddAsync(new Event { Title = "Passée", Slug = "passee", Date = "2020-01-01", Time = "20:00", CreatorUserId = host.Id });
+        await JoinAsync(f, night.Id, guest.Id, "Guest", DateTimeOffset.UtcNow);
+
+        await f.CreateHandler().HandleAsync(host.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
+
+        var kept = await f.Events.GetByIdOrSlugAsync("passee");
+        Assert.Null(kept!.CreatorUserId);
+        Assert.Null(kept.ClosedAt);
+        Assert.Empty(await f.Notifications.ListByUserIdAsync(guest.Id));
+    }
+
     [Fact]
     public async Task HandleAsync_MarksEveryJoinedNightAsChanged()
     {
@@ -539,6 +611,9 @@ public sealed class DeleteAccountHandlerTests
         await f.Participants.AddAsync(new Participant { EventId = "joined-1", Pseudo = "Neo", UserId = user.Id });
         await f.Participants.AddAsync(new Participant { EventId = "joined-2", Pseudo = "Neo", UserId = user.Id });
         var events = new Mock<IEventRepository>();
+        events
+            .Setup(r => r.ListAllByCreatorUserIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
         events
             .Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyCollection<string> ids, CancellationToken _) =>
@@ -560,6 +635,7 @@ public sealed class DeleteAccountHandlerTests
             f.AvatarPhotos,
             f.BannerPhotos,
             f.Sessions.Object,
+            f.Handover(events.Object),
             new InMemoryUnitOfWork(),
             NullLogger<DeleteAccountHandler>.Instance);
 

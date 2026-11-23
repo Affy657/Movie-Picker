@@ -2800,6 +2800,7 @@ export const en: Locale = {
     prefListInvitation: 'Invitation to a list',
     prefGroupInvitation: 'Invitation to a group',
     prefGroupNight: 'New night in one of your groups',
+    prefHostRoleReceived: 'You become the host of a movie night',
     prefNewFollower: 'Someone follows you',
     prefEventPending: 'Event finished with no movie picked',
     prefLetterboxdReconciliationPending: 'Letterboxd films to confirm',
@@ -2841,6 +2842,8 @@ export const en: Locale = {
     groupInvitationText: '{{name}} invites you to join the group “**{{groupName}}**”',
     groupNightText:
       '{{name}} is waiting for you at **{{eventTitle}}**, in the group “{{groupName}}”',
+    hostRoleReceivedText:
+      'The host of **{{eventTitle}}** deleted their account: you now host this movie night.',
     groupInvitationAcceptAria: 'Accept the invitation to the group “{{groupName}}”',
     groupInvitationDeclineAria: 'Decline the invitation to the group “{{groupName}}”',
     listInvitationAccept: 'Accept',
