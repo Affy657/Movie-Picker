@@ -1,4 +1,5 @@
 import { ApiError } from '@/shared/api/apiError';
+import { noteRateLimit, retryDelayOf } from '@/shared/api/rateLimitCooldown';
 import type { ApiRequestPath, ApiRoute, ApiRouteSegments } from '@/shared/api/apiRoutes';
 import { interpolate, loadedLocale, preferredLocale, t, type TranslationKey } from '@/shared/i18n';
 
@@ -205,6 +206,22 @@ function startRequestDeadline(
   };
 }
 
+const PLATFORM_UNAVAILABLE_STATUSES = new Set([502, 503, 504]);
+
+function htmlErrorMessage(status: number): string {
+  return PLATFORM_UNAVAILABLE_STATUSES.has(status)
+    ? userFacing('errors.api.unavailable')
+    : htmlResponseMessage();
+}
+
+function rateLimitMessage(status: number, retryAfterMs: number | undefined): string | undefined {
+  if (status !== 429 || retryAfterMs === undefined || retryAfterMs < 1000) return undefined;
+  const { unit, count } = retryDelayOf(retryAfterMs);
+  const key =
+    unit === 'seconds' ? 'errors.api.rateLimitedSeconds' : 'errors.api.rateLimitedMinutes';
+  return t(key, { count: String(count) }, preferredLocale());
+}
+
 function statusMessage(status: number): string {
   if (status === 429) return userFacing('apiErrors.rate_limited');
   if (status === 503) return userFacing('errors.api.unavailable');
@@ -234,8 +251,10 @@ function parseErrorBody(text: string, isJson: boolean): ErrorBody {
 }
 
 function handleErrorResponse(res: Response, text: string, isJson: boolean): never {
+  const retryAfterMs = readRetryAfterMs(res);
+  if (res.status === 429 && retryAfterMs !== undefined) noteRateLimit(retryAfterMs);
   if (looksLikeHtml(isJson, text)) {
-    throw new ApiError(htmlResponseMessage(), { code: res.status });
+    throw new ApiError(htmlErrorMessage(res.status), { code: res.status, retryAfterMs });
   }
   const parsed = parseErrorBody(text, isJson);
   const reason = typeof parsed.reason === 'string' ? parsed.reason : undefined;
@@ -244,11 +263,12 @@ function handleErrorResponse(res: Response, text: string, isJson: boolean): neve
     : undefined;
   const serverMessage =
     typeof parsed.error === 'string' && parsed.error.trim() ? parsed.error : undefined;
-  throw new ApiError(translated ?? serverMessage ?? statusMessage(res.status), {
-    code: res.status,
-    reason,
-    retryAfterMs: readRetryAfterMs(res),
-  });
+  const message =
+    rateLimitMessage(res.status, retryAfterMs) ??
+    translated ??
+    serverMessage ??
+    statusMessage(res.status);
+  throw new ApiError(message, { code: res.status, reason, retryAfterMs });
 }
 
 function parseSuccessBody<T>(res: Response, text: string, isJson: boolean): T {

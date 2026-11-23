@@ -523,7 +523,8 @@ export const en: Locale = {
       invalidTokenTitle: 'Invalid or expired link',
       invalidTokenMessage: 'This reset link is no longer valid. Request a new one below.',
       fallbackError: 'Could not update the password. Please try again in a moment.',
-      missingTokenError: 'Invalid link: no token provided.',
+      missingTokenError:
+        'This link is incomplete. Open the whole link from the email, or ask for a new one.',
     },
     account: {
       title: 'Settings',
@@ -2747,6 +2748,10 @@ export const en: Locale = {
       server: 'Something went wrong on the server. Please try again in a moment.',
       invalidJson: 'Invalid server response (JSON expected).',
       timeout: 'The server is taking too long to answer. Try again in a moment.',
+      rateLimitedSeconds: 'Too many requests. Try again in {{count}} s.',
+      rateLimitedMinutes: 'Too many requests. Try again in {{count}} min.',
+      retryInSeconds: 'Retry in {{count}} s',
+      retryInMinutes: 'Retry in {{count}} min',
     },
     network: 'Could not reach the server. Check your connection.',
     generic: 'An error occurred.',

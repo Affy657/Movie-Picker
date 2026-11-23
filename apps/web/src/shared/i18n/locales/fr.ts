@@ -526,7 +526,8 @@ export const fr = {
         'Ce lien de réinitialisation n’est plus valable. Demandez-en un nouveau ci-dessous.',
       fallbackError:
         'Impossible de mettre à jour le mot de passe. Réessayez dans quelques instants.',
-      missingTokenError: 'Lien invalide : aucun token fourni.',
+      missingTokenError:
+        'Ce lien est incomplet. Ouvrez en entier le lien reçu par e-mail, ou demandez-en un nouveau.',
     },
     account: {
       title: 'Paramètres',
@@ -2784,6 +2785,10 @@ export const fr = {
       server: 'Une erreur est survenue côté serveur. Réessayez dans un instant.',
       invalidJson: 'Réponse invalide du serveur (JSON attendu).',
       timeout: 'Le serveur met trop de temps à répondre. Réessayez dans un instant.',
+      rateLimitedSeconds: 'Trop de requêtes. Réessayez dans {{count}} s.',
+      rateLimitedMinutes: 'Trop de requêtes. Réessayez dans {{count}} min.',
+      retryInSeconds: 'Réessayer dans {{count}} s',
+      retryInMinutes: 'Réessayer dans {{count}} min',
     },
     network: 'Problème de connexion au serveur. Vérifiez votre réseau.',
     generic: 'Une erreur est survenue.',
