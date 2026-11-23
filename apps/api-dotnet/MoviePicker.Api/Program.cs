@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Logging.Console;
-using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure;
 using MoviePicker.Api.Infrastructure.Web;
 using MoviePicker.Api.Infrastructure.Web.OpenApi;
@@ -140,21 +139,7 @@ app.UseAuthentication();
 app.UseRateLimiter();
 app.UseAuthorization();
 
-app.UseStatusCodePages(async context =>
-{
-    if (context.HttpContext.Response.StatusCode == 404 &&
-        !context.HttpContext.Response.HasStarted &&
-        string.IsNullOrEmpty(context.HttpContext.Response.ContentType))
-    {
-        context.HttpContext.Response.ContentType = "application/json";
-        var json = ApiErrorJson.Serialize(
-            context.HttpContext,
-            StatusCodes.Status404NotFound,
-            "Resource not found",
-            ErrorCodes.NotFound);
-        await context.HttpContext.Response.WriteAsync(json);
-    }
-});
+app.UseStatusCodePages(ApiStatusCodePage.WriteAsync);
 
 app.MapControllers();
 

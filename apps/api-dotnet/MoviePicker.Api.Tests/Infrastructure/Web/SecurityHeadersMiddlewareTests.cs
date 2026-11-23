@@ -28,6 +28,24 @@ public sealed class SecurityHeadersMiddlewareTests
         Assert.Contains("default-src 'none'", h.ContentSecurityPolicy.ToString());
     }
 
+    [Theory]
+    [InlineData("/api/v1/events/slug/abc", "same-site")]
+    [InlineData("/e/abc", "same-site")]
+    [InlineData("/api/v1/posters/tmdb/w500/a.jpg", "cross-origin")]
+    [InlineData("/api/v1/banners/k1", "cross-origin")]
+    [InlineData("/api/v1/avatars/k1", "cross-origin")]
+    public async Task InvokeAsync_IsolatesTheBrowsingContextAndSharesOnlyTheImages(string path, string resourcePolicy)
+    {
+        var ctx = new DefaultHttpContext();
+        ctx.Request.Path = path;
+        var mw = new SecurityHeadersMiddleware(_ => Task.CompletedTask);
+
+        await mw.InvokeAsync(ctx);
+
+        Assert.Equal("same-origin", ctx.Response.Headers["Cross-Origin-Opener-Policy"].ToString());
+        Assert.Equal(resourcePolicy, ctx.Response.Headers["Cross-Origin-Resource-Policy"].ToString());
+    }
+
     [Fact]
     public async Task InvokeAsync_ForbidsStoringTheResponse_WhenTheEndpointSaysNothing()
     {
