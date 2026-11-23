@@ -38,7 +38,13 @@ describe('ResetPasswordPage', () => {
   beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   beforeEach(() => {
     localStorage.setItem('moviepicker-locale', 'fr');
-    server.use(authMeGuestHandler);
+    server.use(
+      authMeGuestHandler,
+      http.post(
+        `${TEST_API_V1}/auth/password-reset/verify`,
+        () => new HttpResponse(null, { status: 204 })
+      )
+    );
   });
   afterEach(() => {
     server.resetHandlers();
@@ -52,6 +58,46 @@ describe('ResetPasswordPage', () => {
     const requestLink = screen.getByRole('link', { name: /demander un nouveau lien/i });
     expect(requestLink).toHaveAttribute('href', '/forgot-password');
     expect(screen.getByRole('link', { name: /aller à la connexion/i })).toBeInTheDocument();
+  });
+
+  it('without token: says the link is incomplete without talking about a token', () => {
+    renderReset('/reset');
+
+    expect(screen.getByText(/lien est incomplet/i)).toBeInTheDocument();
+    expect(screen.queryByText(/token/i)).not.toBeInTheDocument();
+  });
+
+  it('checks the link on arrival and says at once that a used one is invalid', async () => {
+    let verified: { token?: string } | null = null;
+    server.use(
+      http.post(`${TEST_API_V1}/auth/password-reset/verify`, async ({ request }) => {
+        verified = (await request.json()) as { token: string };
+        return HttpResponse.json(
+          { error: 'Invalid or expired token', reason: 'invalid_reset_token' },
+          { status: 400 }
+        );
+      })
+    );
+    renderReset('/reset?token=alreadyUsed');
+
+    expect(await screen.findByRole('heading', { name: /lien invalide/i })).toBeInTheDocument();
+    expect(verified).toEqual({ token: 'alreadyUsed' });
+    expect(screen.queryByLabelText(/nouveau mot de passe/i)).not.toBeInTheDocument();
+  });
+
+  it('keeps the form when the check itself cannot reach the server', async () => {
+    let checks = 0;
+    server.use(
+      http.post(`${TEST_API_V1}/auth/password-reset/verify`, () => {
+        checks += 1;
+        return HttpResponse.json({ error: 'oops' }, { status: 500 });
+      })
+    );
+    renderReset('/reset?token=abc');
+
+    await waitFor(() => expect(checks).toBe(1));
+    expect(screen.getByLabelText(/nouveau mot de passe/i)).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /lien invalide/i })).not.toBeInTheDocument();
   });
 
   it('avec token : affiche le formulaire 2 mots de passe', () => {

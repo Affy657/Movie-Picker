@@ -473,6 +473,21 @@ public sealed class AuthController : ControllerBase
         return Accepted();
     }
 
+    [HttpPost("password-reset/verify")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPasswordResetConfirmPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.AuthPasswordResetConfirmPolicy)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> VerifyPasswordReset(
+        [FromBody] PasswordResetVerifyRequest request,
+        [FromServices] IVerifyPasswordResetHandler handler,
+        CancellationToken ct)
+    {
+        await handler.HandleAsync(request, ct);
+        return NoContent();
+    }
+
     [HttpPost("password-reset/confirm")]
     [EnableRateLimiting(RateLimitingExtensions.AuthPasswordResetConfirmPolicy)]
     [SharedRateLimit(RateLimitingExtensions.AuthPasswordResetConfirmPolicy)]

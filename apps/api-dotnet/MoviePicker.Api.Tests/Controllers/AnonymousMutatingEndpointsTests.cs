@@ -20,7 +20,8 @@ public sealed class AnonymousMutatingEndpointsTests
         "AuthController.ConfirmPasswordReset",
         "AuthController.Login",
         "AuthController.Register",
-        "AuthController.RequestPasswordReset"
+        "AuthController.RequestPasswordReset",
+        "AuthController.VerifyPasswordReset"
     ];
 
     private static readonly string[] HostTokenActions =

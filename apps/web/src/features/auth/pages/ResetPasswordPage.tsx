@@ -7,7 +7,7 @@ import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
-import { postPasswordResetConfirm } from '@/features/auth/api/authApi';
+import { postPasswordResetConfirm, postPasswordResetVerify } from '@/features/auth/api/authApi';
 import { API_ERROR_REASONS, ApiError } from '@/shared/api/apiError';
 import Button, { buttonClass } from '@/shared/components/Button';
 import Field from '@/shared/components/Field';
@@ -28,6 +28,21 @@ function tokenFromUrl(params: URLSearchParams): string {
 
 function initialResetToken(params: URLSearchParams): string {
   return tokenFromUrl(params) || (safeSessionStorageGet(RESET_TOKEN_STORAGE_KEY) ?? '').trim();
+}
+
+function isInvalidResetToken(error: unknown): boolean {
+  return ApiError.is(error) && error.reason === API_ERROR_REASONS.invalidResetToken;
+}
+
+function useResetTokenCheck(token: string, onInvalid: () => void) {
+  useEffect(() => {
+    if (!token) return;
+    const controller = new AbortController();
+    postPasswordResetVerify(token, controller.signal).catch((error: unknown) => {
+      if (isInvalidResetToken(error)) onInvalid();
+    });
+    return () => controller.abort();
+  }, [token, onInvalid]);
 }
 
 export default function ResetPasswordPage() {
@@ -51,6 +66,12 @@ export default function ResetPasswordPage() {
   const [success, setSuccess] = useState(false);
   const [tokenInvalid, setTokenInvalid] = useState(false);
 
+  const forgetInvalidToken = useCallback(() => {
+    safeSessionStorageRemove(RESET_TOKEN_STORAGE_KEY);
+    setTokenInvalid(true);
+  }, []);
+  useResetTokenCheck(token, forgetInvalidToken);
+
   const confirmAction = useCallback(async () => {
     if (newPassword.length < PASSWORD_MIN_LENGTH) {
       throw new Error(t('auth.resetPassword.newPasswordHint'));
@@ -63,14 +84,13 @@ export default function ResetPasswordPage() {
       safeSessionStorageRemove(RESET_TOKEN_STORAGE_KEY);
       setSuccess(true);
     } catch (e) {
-      if (ApiError.is(e) && e.reason === API_ERROR_REASONS.invalidResetToken) {
-        safeSessionStorageRemove(RESET_TOKEN_STORAGE_KEY);
-        setTokenInvalid(true);
+      if (isInvalidResetToken(e)) {
+        forgetInvalidToken();
         return;
       }
       throw e;
     }
-  }, [token, newPassword, confirmPassword, t]);
+  }, [token, newPassword, confirmPassword, t, forgetInvalidToken]);
 
   const {
     run: submit,
