@@ -9,6 +9,7 @@ import {
   contentSecurityPolicyMeta,
   insertAfterCharset,
 } from './tooling/documentHead';
+import { PRECACHE_IGNORES, chunkFileName } from './tooling/precache';
 import {
   COLOR_MIX_FALLBACK_MODULE,
   COLOR_MIX_TOKEN_SHEETS,
@@ -373,7 +374,8 @@ export default defineConfig(({ mode }) => {
         filename: 'sw.ts',
         registerType: 'prompt',
         injectRegister: 'auto',
-        includeAssets: ['favicon.svg', 'favicon.ico'],
+        includeAssets: ['favicon.ico'],
+        includeManifestIcons: false,
         manifest: {
           name: 'Movie Picker',
           short_name: 'Movie Picker',
@@ -413,6 +415,7 @@ export default defineConfig(({ mode }) => {
         },
         injectManifest: {
           globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+          globIgnores: PRECACHE_IGNORES,
         },
         devOptions: {
           enabled: env.VITE_DEV_SERVICE_WORKER === 'true',
@@ -457,7 +460,7 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           entryFileNames: 'assets/[name]-[hash].js',
-          chunkFileNames: 'assets/[name]-[hash].js',
+          chunkFileNames: chunkFileName,
           assetFileNames: 'assets/[name]-[hash][extname]',
           codeSplitting: { groups: codeSplittingGroups(appShellModules) },
         },
