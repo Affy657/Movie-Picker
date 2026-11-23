@@ -246,14 +246,15 @@ describe('App (routes)', () => {
         await screen.findByRole('heading', { name: /^paramètres$/i, level: 1 }, { timeout: 20000 })
       ).toBeInTheDocument();
       const main = screen.getByRole('main');
-      expect(within(main).getByRole('link', { name: /^se connecter$/i })).toHaveAttribute(
-        'href',
-        '/login?returnTo=%2Fsettings'
-      );
-      expect(within(main).getByRole('link', { name: /créer un compte/i })).toHaveAttribute(
-        'href',
-        '/register?returnTo=%2Fsettings'
-      );
+      expect(within(main).getByText(/s’appliquent à cet appareil/i)).toBeInTheDocument();
+      expect(within(main).queryByText(/garder vos soirées/i)).not.toBeInTheDocument();
+      const [register, login] = within(
+        within(main).getByRole('navigation', { name: /connexion et inscription/i })
+      ).getAllByRole('link');
+      expect(register).toHaveAccessibleName('Créer un compte');
+      expect(register).toHaveAttribute('href', '/register?returnTo=%2Fsettings');
+      expect(login).toHaveAccessibleName('J’ai déjà un compte');
+      expect(login).toHaveAttribute('href', '/login?returnTo=%2Fsettings');
     });
 
     it.each([

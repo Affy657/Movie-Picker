@@ -538,9 +538,9 @@ export const fr = {
         'Le thème {{theme}} n’a pas pu être enregistré, {{previous}} a été rétabli. Réessayez.',
       preferencesTitle: 'Préférences',
       languageLabel: 'Langue',
-      guestLead: 'Connectez-vous ou créez un compte pour garder vos soirées.',
+      guestLead:
+        'Ces préférences s’appliquent à cet appareil. Avec un compte, votre thème et votre couleur vous suivent sur tous vos appareils.',
       logoutButton: 'Se déconnecter',
-      loginCta: 'Se connecter',
       registerCta: 'Créer un compte',
       sessionRowLabel: 'Cet appareil',
       sessionRowHint: 'Se déconnecter de Movie Picker sur cet appareil.',

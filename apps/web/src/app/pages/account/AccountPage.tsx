@@ -108,13 +108,13 @@ export default function AccountPage() {
 
         <nav className="nav-actions" aria-label={t('auth.account.guestNavAriaLabel')}>
           <Link
-            to={withReturnTo(ROUTES.login, ROUTES.account)}
+            to={withReturnTo(ROUTES.register, ROUTES.account)}
             className={buttonClass({ variant: 'primary' })}
           >
-            {t('auth.account.loginCta')}
-          </Link>
-          <Link to={withReturnTo(ROUTES.register, ROUTES.account)} className={buttonClass()}>
             {t('auth.account.registerCta')}
+          </Link>
+          <Link to={withReturnTo(ROUTES.login, ROUTES.account)} className={buttonClass()}>
+            {t('home.ctaHaveAccount')}
           </Link>
         </nav>
       </PageLayout>

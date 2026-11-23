@@ -535,9 +535,9 @@ export const en: Locale = {
         'The {{theme}} theme could not be saved, {{previous}} was restored. Try again.',
       preferencesTitle: 'Preferences',
       languageLabel: 'Language',
-      guestLead: 'Log in or create an account to keep your events.',
+      guestLead:
+        'These preferences apply to this device. With an account, your theme and colour follow you on every device.',
       logoutButton: 'Log out',
-      loginCta: 'Log in',
       registerCta: 'Create an account',
       guestNavAriaLabel: 'Sign in and sign up',
       sessionRowLabel: 'This device',
