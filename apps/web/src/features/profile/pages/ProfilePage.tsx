@@ -34,7 +34,6 @@ import { invalidateFollowGraph } from '@/features/profile/lib/invalidateFollowGr
 import { fetchUserStats } from '@/features/events/api/userStatsApi';
 import styles from './ProfilePage.module.css';
 import InlineError from '@/shared/components/InlineError';
-import { Skeleton } from '@/shared/components/Skeleton';
 import { accentZoneClass, isChosenAccent } from '@/shared/utils/accentColor';
 
 const FollowListModal = lazy(() => import('@/features/profile/components/FollowListModal'));
@@ -68,6 +67,14 @@ function buildProfileJsonLd(profile: PublicProfile): Record<string, unknown> {
 }
 
 type FollowTab = 'following' | 'followers';
+
+function awaitsFirstAnswer(query: {
+  isPending: boolean;
+  failureCount: number;
+  fetchStatus: string;
+}): boolean {
+  return query.isPending && query.failureCount === 0 && query.fetchStatus === 'fetching';
+}
 
 function useProfileBanner(profile: PublicProfile | undefined, isOwnProfile: boolean) {
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -112,7 +119,8 @@ export default function ProfilePage() {
   const bannerView = useProfileBanner(profile, isOwnProfile);
   const watchedHiddenFromVisitor = !!profile && !isOwnProfile && profile.isWatchedPublic === false;
   const watchedVisible = !!profile && !watchedHiddenFromVisitor;
-  useProfileWatchedPreview(handle, !watchedHiddenFromVisitor);
+  const watchedPreview = useProfileWatchedPreview(handle, !watchedHiddenFromVisitor);
+  const sectionsPending = awaitsFirstAnswer(statsQuery) || awaitsFirstAnswer(watchedPreview);
   const isNotFound =
     !handle ||
     (profileQuery.isError && ApiError.is(profileQuery.error) && profileQuery.error.code === 404);
@@ -149,7 +157,7 @@ export default function ProfilePage() {
     onError: (err) => setFollowError(getErrorMessage(err, t('profile.follow.error'))),
   });
 
-  if (profileQuery.isPending && handle) {
+  if (handle && (profileQuery.isPending || (!!profile && sectionsPending))) {
     return (
       <PageLayout className={styles.layout}>
         <ProfilePageSkeleton label={t('profile.loading')} />
@@ -197,7 +205,7 @@ export default function ProfilePage() {
           memberSince={memberSince}
           lists={publicLists}
           summary={
-            stats ? (
+            stats && (
               <ProfileStatsSummary
                 nights={stats.eventsCreated + stats.eventsJoined}
                 winning={watchedHiddenFromVisitor ? null : stats.winningProposals}
@@ -205,8 +213,6 @@ export default function ProfilePage() {
                 bestStreakWeeks={stats.bestStreakWeeks}
                 targetId={PROFILE_STATS_ID}
               />
-            ) : (
-              statsQuery.isPending && <Skeleton className={styles.summaryPending} />
             )
           }
           accent={profileAccent}

@@ -443,20 +443,32 @@ describe('ProfilePage (MSW)', () => {
     expect(screen.getByRole('heading', { name: 'Ses favoris' })).toBeInTheDocument();
   });
 
-  it('keeps the place of the summary under the name while the statistics load', async () => {
+  it('waits for the statistics and the last watched films before showing the profile', async () => {
+    let answerStats: () => void = () => undefined;
+    let answerWatched: () => void = () => undefined;
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
       http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
       http.get(`${TEST_API_V1}/users/alice/stats`, async () => {
-        await new Promise(() => undefined);
+        await new Promise<void>((resolve) => (answerStats = resolve));
         return HttpResponse.json(EMPTY_STATS);
+      }),
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, async () => {
+        await new Promise<void>((resolve) => (answerWatched = resolve));
+        return HttpResponse.json({ items: [] });
       })
     );
 
     renderProfile('alice');
 
-    const identity = await screen.findByRole('region', { name: 'Alice' });
-    expect(identity.querySelector('[class*="summaryPending"]')).not.toBeNull();
+    await waitFor(() => expect(screen.getByRole('status')).toBeInTheDocument());
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.queryByRole('heading', { level: 1, name: 'Alice' })).not.toBeInTheDocument();
+    answerStats();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.queryByRole('heading', { level: 1, name: 'Alice' })).not.toBeInTheDocument();
+    answerWatched();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Alice' })).toBeInTheDocument();
   });
 
   it('shows an error with a Retry button when the statistics fail, and recovers', async () => {
