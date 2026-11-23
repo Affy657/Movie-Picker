@@ -6,6 +6,7 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { authMeGuestHandler, createListJoinHandlers, TEST_API_V1 } from '@/mocks/handlers';
+import buttonStyles from '@/shared/components/Button.module.css';
 import JoinListPage from './JoinListPage';
 
 const authedAlice = http.get(`${TEST_API_V1}/auth/me`, () =>
@@ -58,7 +59,7 @@ describe('JoinListPage', () => {
   });
   afterAll(() => server.close());
 
-  it('shows a visitor what the list holds, and asks them to sign in to join', async () => {
+  it('shows a visitor what the list holds, and asks them to create an account to join', async () => {
     server.use(authMeGuestHandler, ...createListJoinHandlers('tok', PREVIEW));
     renderPage();
 
@@ -70,7 +71,18 @@ describe('JoinListPage', () => {
     expect(
       Array.from(document.querySelectorAll('img'), (image) => image.getAttribute('src'))
     ).toEqual([expect.stringContaining('/a.jpg'), expect.stringContaining('/b.jpg')]);
-    expect(screen.getByRole('link', { name: 'Se connecter' })).toHaveAttribute(
+    const [register, login] = screen.getAllByRole('link', {
+      name: /^(Créer un compte|J’ai déjà un compte)$/,
+    });
+    expect(register).toHaveAccessibleName('Créer un compte');
+    expect(register).toHaveClass(buttonStyles.primary!);
+    expect(register).toHaveAttribute(
+      'href',
+      `/register?returnTo=${encodeURIComponent('/l/tok/rejoindre')}`
+    );
+    expect(login).toHaveAccessibleName('J’ai déjà un compte');
+    expect(login).not.toHaveClass(buttonStyles.primary!);
+    expect(login).toHaveAttribute(
       'href',
       `/login?returnTo=${encodeURIComponent('/l/tok/rejoindre')}`
     );

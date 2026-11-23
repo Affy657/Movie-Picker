@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { ImagePlus, Pencil, Share2, UserCheck, UserMinus, UserPlus } from 'lucide-react';
-import { ROUTES, withReturnTo } from '@/app/routes';
+import { ROUTES } from '@/app/routes';
 import { useTranslation } from '@/shared/i18n';
+import AccountPromptLink from '@/shared/components/AccountPromptLink';
 import ShareDialog from '@/shared/components/ShareDialog';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
 import type { PublicProfile } from '@/features/profile/api/profileApi';
@@ -89,13 +90,15 @@ export default function ProfileActions({
       )}
 
       {!isOwnProfile && !isLoggedIn && (
-        <Link
-          to={withReturnTo(ROUTES.login, ROUTES.profile(profile.handle))}
+        <AccountPromptLink
+          returnTo={ROUTES.profile(profile.handle)}
+          title={t('profile.follow.visitorTitle', { name: profile.displayName })}
+          message={t('profile.follow.visitorMessage', { name: profile.displayName })}
           className={buttonClass({ variant: 'primary', className: styles.primary })}
         >
           <UserPlus size={ICON_SIZE.md} aria-hidden />
           <span className={styles.btnLabel}>{t('profile.follow.follow')}</span>
-        </Link>
+        </AccountPromptLink>
       )}
 
       {!isOwnProfile && isLoggedIn && (

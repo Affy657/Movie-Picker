@@ -223,7 +223,7 @@ describe('App (routes)', () => {
         )
       ).toBeInTheDocument();
       const main = screen.getByRole('main');
-      expect(within(main).getByRole('link', { name: /^se connecter$/i })).toHaveAttribute(
+      expect(within(main).getByRole('link', { name: 'J’ai déjà un compte' })).toHaveAttribute(
         'href',
         '/login?returnTo=%2Fl%2F7xK2pQ%2Frejoindre'
       );
