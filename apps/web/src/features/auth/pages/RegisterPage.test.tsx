@@ -58,7 +58,7 @@ describe('RegisterPage (MSW)', () => {
 
     renderRegister('/register?returnTo=%2F');
 
-    await user.type(screen.getByLabelText(/^pseudo$/i), 'Sam');
+    await user.type(screen.getByLabelText(/^nom affiché$/i), 'Sam');
     await user.type(screen.getByLabelText(/^e-mail$/i), 'sam@test.local');
     await user.type(screen.getByLabelText(/^mot de passe$/i), 'abcd1234');
     await user.click(screen.getByRole('button', { name: /créer mon compte/i }));
@@ -92,7 +92,7 @@ describe('RegisterPage (MSW)', () => {
 
     renderRegister('/register?returnTo=%2Fe%2Fsoiree');
 
-    await user.type(screen.getByLabelText(/^pseudo$/i), 'Sam');
+    await user.type(screen.getByLabelText(/^nom affiché$/i), 'Sam');
     await user.type(screen.getByLabelText(/^e-mail$/i), 'sam@test.local');
     await user.type(screen.getByLabelText(/^mot de passe$/i), 'abcd1234');
     await user.click(screen.getByRole('button', { name: /créer mon compte/i }));
@@ -130,6 +130,63 @@ describe('RegisterPage (MSW)', () => {
     expect(google.compareDocumentPosition(submit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
+  it('explains a name made of spaces instead of sending it', async () => {
+    const user = userEvent.setup();
+    let registerPosts = 0;
+    server.use(
+      http.post(`${TEST_API_V1}/auth/register`, () => {
+        registerPosts += 1;
+        return HttpResponse.json({}, { status: 201 });
+      })
+    );
+    renderRegister();
+
+    await user.type(screen.getByLabelText(/^nom affiché$/i), '   ');
+    await user.type(screen.getByLabelText(/^e-mail$/i), 'sam@test.local');
+    await user.type(screen.getByLabelText(/^mot de passe$/i), 'abcd1234');
+    await user.click(screen.getByRole('button', { name: /créer mon compte/i }));
+
+    expect(await screen.findByText(/ne peut pas contenir que des espaces/i)).toBeInTheDocument();
+    expect(registerPosts).toBe(0);
+  });
+
+  it('checks the fields with the messages of the app, not the browser bubbles', async () => {
+    const user = userEvent.setup();
+    renderRegister();
+
+    const form = screen.getByRole('button', { name: /créer mon compte/i }).closest('form')!;
+    expect(form).toHaveAttribute('novalidate');
+    await user.type(screen.getByLabelText(/^e-mail$/i), 'sam');
+    await user.click(screen.getByRole('button', { name: /créer mon compte/i }));
+
+    expect(await screen.findByText('Indiquez le nom que vos amis verront.')).toBeInTheDocument();
+    expect(screen.getByText(/saisissez une adresse e-mail valide/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^e-mail$/i)).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('names the display name and says the handle comes from it', () => {
+    renderRegister();
+
+    expect(screen.getByLabelText(/^nom affiché$/i)).toBeInTheDocument();
+    expect(screen.getByText(/votre pseudo/i)).toBeInTheDocument();
+  });
+
+  it('says the profile is public by default and links the privacy policy', () => {
+    renderRegister();
+
+    expect(screen.getByText(/publics par défaut/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /politique de confidentialité/i })).toHaveAttribute(
+      'href',
+      '/politique-de-confidentialite'
+    );
+  });
+
+  it('lets the visitor see the password he types', () => {
+    renderRegister();
+
+    expect(screen.getByRole('button', { name: 'Afficher le mot de passe' })).toBeInTheDocument();
+  });
+
   it('n’appelle pas l’API si le mot de passe ne contient pas de chiffre', async () => {
     const user = userEvent.setup();
     let registerPosts = 0;
@@ -145,7 +202,7 @@ describe('RegisterPage (MSW)', () => {
 
     renderRegister('/register?returnTo=%2F');
 
-    await user.type(screen.getByLabelText(/^pseudo$/i), 'Sam');
+    await user.type(screen.getByLabelText(/^nom affiché$/i), 'Sam');
     await user.type(screen.getByLabelText(/^e-mail$/i), 'sam@test.local');
     await user.type(screen.getByLabelText(/^mot de passe$/i), 'abcdefgh');
     await user.click(screen.getByRole('button', { name: /créer mon compte/i }));

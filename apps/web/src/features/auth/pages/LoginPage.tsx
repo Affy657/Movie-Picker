@@ -19,8 +19,12 @@ import { useTranslation } from '@/shared/i18n';
 import styles from './LoginPage.module.css';
 import Button from '@/shared/components/Button';
 import Field from '@/shared/components/Field';
+import PasswordInput from '@/shared/components/PasswordInput';
+import { looksLikeEmail } from '@/features/auth/utils/authFormValidation';
 
 type LoginSubmitMode = 'form' | 'devQuick';
+
+type LoginFieldErrors = { email?: string; password?: string };
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -32,6 +36,7 @@ export default function LoginPage() {
   const { login, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<LoginFieldErrors>({});
   const oauthErrorKey = resolveOAuthErrorKey(params.get('oauthError'));
 
   const loginAction = useCallback(
@@ -54,6 +59,12 @@ export default function LoginPage() {
 
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const errors: LoginFieldErrors = {
+      email: looksLikeEmail(email) ? undefined : t('auth.register.emailInvalid'),
+      password: password ? undefined : t('auth.login.passwordRequired'),
+    };
+    setFieldErrors(errors);
+    if (errors.email || errors.password) return;
     void submit('form');
   };
 
@@ -77,6 +88,7 @@ export default function LoginPage() {
         <form
           onSubmit={handleSubmit}
           className="form"
+          noValidate
           aria-describedby={error ? 'login-form-error' : undefined}
         >
           {(error || oauthErrorKey) && (
@@ -84,31 +96,41 @@ export default function LoginPage() {
               {error || (oauthErrorKey ? t(oauthErrorKey) : null)}
             </p>
           )}
-          <Field label={t('auth.login.emailLabel')} htmlFor="login-email">
-            {({ id }) => (
+          <Field label={t('auth.login.emailLabel')} htmlFor="login-email" error={fieldErrors.email}>
+            {({ id, describedBy, invalid }) => (
               <input
                 id={id}
                 type="email"
                 className="input"
                 autoComplete="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setFieldErrors((current) => ({ ...current, email: undefined }));
+                }}
                 required
-                aria-invalid={error ? true : undefined}
+                aria-describedby={describedBy}
+                aria-invalid={invalid || error ? true : undefined}
               />
             )}
           </Field>
-          <Field label={t('auth.login.passwordLabel')} htmlFor="login-password">
-            {({ id }) => (
-              <input
+          <Field
+            label={t('auth.login.passwordLabel')}
+            htmlFor="login-password"
+            error={fieldErrors.password}
+          >
+            {({ id, describedBy, invalid }) => (
+              <PasswordInput
                 id={id}
-                type="password"
-                className="input"
                 autoComplete="current-password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setFieldErrors((current) => ({ ...current, password: undefined }));
+                }}
                 required
-                aria-invalid={error ? true : undefined}
+                aria-describedby={describedBy}
+                aria-invalid={invalid || error ? true : undefined}
               />
             )}
           </Field>

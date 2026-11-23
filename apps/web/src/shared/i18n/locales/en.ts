@@ -13,6 +13,7 @@ export const en: Locale = {
     languageLabel: 'Language',
     decrement: 'Decrease',
     increment: 'Increase',
+    showPassword: 'Show password',
   },
   share: {
     trigger: 'Share',
@@ -438,6 +439,7 @@ export const en: Locale = {
       submit: 'Log in',
       submitting: 'Logging in\u2026',
       fallbackError: 'Login failed.',
+      passwordRequired: 'Enter your password.',
       registerPrompt: "Don't have an account?",
       registerLink: 'Create an account',
       forgotPasswordLink: 'Forgot password?',
@@ -455,7 +457,15 @@ export const en: Locale = {
       passwordRulesHint: 'At least 8 characters, including a letter and a number.',
       passwordRulesError:
         'Password must be at least 8 characters and include at least one letter and one digit.',
-      pseudoLabel: 'Nickname',
+      displayNameLabel: 'Display name',
+      displayNameHint:
+        'The name your friends will see in movie nights. Your handle, the address of your profile, will be made from it.',
+      displayNameRequired: 'Enter the name your friends will see.',
+      displayNameBlank: 'The display name cannot be made of spaces only.',
+      emailInvalid: 'Enter a valid email address, for example name@example.com.',
+      publicProfileNote:
+        'Your profile, your watchlist and your watched films are public by default. You can make them private in the settings.',
+      privacyPolicyLink: 'Privacy policy',
       submit: 'Create my account',
       submitting: 'Creating\u2026',
       fallbackError: 'Sign-up failed.',

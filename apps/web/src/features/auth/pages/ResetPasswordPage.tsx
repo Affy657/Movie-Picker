@@ -11,6 +11,7 @@ import { postPasswordResetConfirm } from '@/features/auth/api/authApi';
 import { API_ERROR_REASONS, ApiError } from '@/shared/api/apiError';
 import Button, { buttonClass } from '@/shared/components/Button';
 import Field from '@/shared/components/Field';
+import PasswordInput from '@/shared/components/PasswordInput';
 import {
   safeSessionStorageGet,
   safeSessionStorageRemove,
@@ -132,6 +133,7 @@ export default function ResetPasswordPage() {
         <form
           onSubmit={handleSubmit}
           className="form"
+          noValidate
           aria-describedby={error ? 'reset-form-error' : undefined}
         >
           {error && (
@@ -141,10 +143,8 @@ export default function ResetPasswordPage() {
           )}
           <Field label={t('auth.resetPassword.newPasswordLabel')} htmlFor="reset-new-password">
             {({ id }) => (
-              <input
+              <PasswordInput
                 id={id}
-                type="password"
-                className="input"
                 autoComplete="new-password"
                 minLength={PASSWORD_MIN_LENGTH}
                 value={newPassword}
@@ -163,10 +163,8 @@ export default function ResetPasswordPage() {
             htmlFor="reset-confirm-password"
           >
             {({ id }) => (
-              <input
+              <PasswordInput
                 id={id}
-                type="password"
-                className="input"
                 autoComplete="new-password"
                 minLength={PASSWORD_MIN_LENGTH}
                 value={confirmPassword}

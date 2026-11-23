@@ -11,6 +11,7 @@ export const fr = {
     languageLabel: 'Langue',
     decrement: 'Diminuer',
     increment: 'Augmenter',
+    showPassword: 'Afficher le mot de passe',
   },
   share: {
     trigger: 'Partager',
@@ -436,6 +437,7 @@ export const fr = {
       submit: 'Se connecter',
       submitting: 'Connexion\u2026',
       fallbackError: 'Connexion impossible.',
+      passwordRequired: 'Saisissez votre mot de passe.',
       registerPrompt: 'Pas encore de compte ?',
       registerLink: 'Créer un compte',
       forgotPasswordLink: 'Mot de passe oublié ?',
@@ -453,7 +455,15 @@ export const fr = {
       passwordRulesHint: '8 caract\u00e8res minimum, au moins une lettre et un chiffre.',
       passwordRulesError:
         'Le mot de passe doit faire au moins 8 caract\u00e8res et inclure au moins une lettre et un chiffre.',
-      pseudoLabel: 'Pseudo',
+      displayNameLabel: 'Nom affich\u00e9',
+      displayNameHint:
+        'Le nom que vos amis verront dans les soir\u00e9es. Votre pseudo, l\u2019adresse de votre profil, en sera tir\u00e9.',
+      displayNameRequired: 'Indiquez le nom que vos amis verront.',
+      displayNameBlank: 'Le nom affich\u00e9 ne peut pas contenir que des espaces.',
+      emailInvalid: 'Saisissez une adresse e-mail valide, par exemple nom@exemple.fr.',
+      publicProfileNote:
+        'Votre profil, votre liste \u00c0 voir et vos films vus sont publics par d\u00e9faut. Vous pouvez les rendre priv\u00e9s dans les param\u00e8tres.',
+      privacyPolicyLink: 'Politique de confidentialit\u00e9',
       submit: 'Cr\u00e9er mon compte',
       submitting: 'Cr\u00e9ation\u2026',
       fallbackError: 'Inscription impossible.',

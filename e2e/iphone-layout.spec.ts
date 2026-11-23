@@ -56,7 +56,7 @@ for (const iphone of IPHONES) {
 
     test('the sign-up fields are large enough for iOS not to zoom in', async ({ page }) => {
       await page.goto('/register');
-      await expect(page.getByLabel('Pseudo')).toBeVisible();
+      await expect(page.getByLabel('Nom affiché')).toBeVisible();
       expect(await smallestFieldFontSize(page)).toBeGreaterThanOrEqual(IOS_ZOOM_FREE_FONT_SIZE_PX);
     });
 

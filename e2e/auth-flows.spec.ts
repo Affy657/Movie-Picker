@@ -9,9 +9,9 @@ test.describe('Authentication journey', () => {
     const email = uniqueEmail(asciiSlug(displayName));
 
     await page.goto('/register');
-    await page.getByLabel('Pseudo').fill(displayName);
+    await page.getByLabel('Nom affiché').fill(displayName);
     await page.getByLabel('E-mail', { exact: true }).fill(email);
-    await page.getByLabel('Mot de passe').fill(TEST_PASSWORD);
+    await page.getByLabel('Mot de passe', { exact: true }).fill(TEST_PASSWORD);
     await page.getByRole('button', { name: 'Créer mon compte' }).click();
     await page.waitForURL((url) => !url.pathname.startsWith('/register'));
 
@@ -25,7 +25,7 @@ test.describe('Authentication journey', () => {
     await expect(page).toHaveURL(/\/login\?returnTo=/);
 
     await page.getByLabel('E-mail', { exact: true }).fill(email);
-    await page.getByLabel('Mot de passe').fill(TEST_PASSWORD);
+    await page.getByLabel('Mot de passe', { exact: true }).fill(TEST_PASSWORD);
     await page.getByRole('button', { name: 'Se connecter' }).click();
     await expect(page).toHaveURL(/\/new$/, { timeout: 15_000 });
   });
