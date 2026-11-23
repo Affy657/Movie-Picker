@@ -61,6 +61,20 @@
   text-wrap: balance;
 }
 
+.heroByline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+.heroAuthor {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
 .heroLeadGroup {
   display: grid;
   gap: var(--space-4);
@@ -128,6 +142,11 @@
 .metricLabel {
   composes: monoLabel from './techShared.module.css';
   font-size: var(--font-size-3xs);
+  color: var(--color-text-subtle);
+}
+
+.metricDetail {
+  font-size: var(--font-size-xs);
   color: var(--color-text-subtle);
 }
 
@@ -312,6 +331,35 @@
   display: grid;
   gap: var(--space-16);
   padding-block: var(--space-16) var(--space-24);
+}
+
+.content[data-render-pending='true'] {
+  min-height: 100svh;
+}
+
+.summary {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.summaryTitle {
+  composes: monoLabel from './techShared.module.css';
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary-text);
+}
+
+.summaryList {
+  display: grid;
+  gap: var(--space-2);
+  max-width: var(--container-xl);
+  padding-left: var(--space-5);
+  list-style: disc;
+  color: var(--color-text-muted);
+}
+
+.summaryList li::marker {
+  color: var(--color-primary-text);
 }
 
 .timeline {

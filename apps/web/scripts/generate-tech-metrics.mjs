@@ -83,7 +83,8 @@ export function historyMetrics(git, { ci, previous, today = new Date(), warn = (
     return readHistory(git, today);
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
-    if (ci) throw new Error(`tech metrics: cannot read the git history (${reason})`);
+    if (ci)
+      throw new Error(`tech metrics: cannot read the git history (${reason})`, { cause: error });
     warn(
       `tech metrics: ${reason}; the commit count and the months keep their previous values, fine for a local build only`
     );

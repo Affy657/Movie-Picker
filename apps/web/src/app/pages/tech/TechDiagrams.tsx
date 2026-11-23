@@ -35,6 +35,7 @@ import {
 } from './TechLogos';
 import styles from './techShared.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import { useTechFormat } from './techFormat';
 
 const SURFACE = 'var(--color-surface-sunken)';
 const SURFACE_PLAIN = 'var(--color-surface)';
@@ -439,6 +440,7 @@ export function ContractDiagram() {
 
 export function TestPyramidDiagram() {
   const { t } = useTranslation();
+  const format = useTechFormat();
   return (
     <svg viewBox="0 0 880 215" role="img" aria-labelledby="tech-testpyramid-title">
       <title id="tech-testpyramid-title">{t('tech.diagram.testsPyramidTitle')}</title>
@@ -446,8 +448,8 @@ export function TestPyramidDiagram() {
       <rect x="340" y="16" width="200" height="50" rx="8" fill={PRIMARY_SOFT} stroke={PRIMARY} />
       <text x="440" y="47" textAnchor="middle" className={styles.svgLabel} fill={TEXT}>
         {t('tech.diagram.testsE2e', {
-          count: String(TECH_METRICS.e2eTestCases),
-          files: String(TECH_METRICS.e2eScenarios),
+          count: format.number(TECH_METRICS.e2eTestCases),
+          files: format.number(TECH_METRICS.e2eScenarios),
         })}
       </text>
       <text x="740" y="47" className={styles.svgSub} fill={META}>
@@ -457,7 +459,7 @@ export function TestPyramidDiagram() {
       <rect x="270" y="76" width="340" height="50" rx="8" fill={SURFACE} stroke={BORDER} />
       <text x="440" y="107" textAnchor="middle" className={styles.svgLabel} fill={TEXT}>
         {t('tech.diagram.testsIntegration', {
-          count: String(TECH_METRICS.integrationTestCases),
+          count: format.number(TECH_METRICS.integrationTestCases),
         })}
       </text>
       <text x="740" y="107" className={styles.svgSub} fill={META}>
@@ -467,9 +469,9 @@ export function TestPyramidDiagram() {
       <rect x="170" y="136" width="540" height="50" rx="8" fill={SURFACE} stroke={BORDER} />
       <text x="440" y="167" textAnchor="middle" className={styles.svgLabel} fill={TEXT}>
         {t('tech.diagram.testsUnit', {
-          total: new Intl.NumberFormat('fr-FR').format(TECH_METRICS.unitTestCases),
-          web: new Intl.NumberFormat('fr-FR').format(TECH_METRICS.webTestCases),
-          api: new Intl.NumberFormat('fr-FR').format(TECH_METRICS.apiUnitTestCases),
+          total: format.number(TECH_METRICS.unitTestCases),
+          web: format.number(TECH_METRICS.webTestCases),
+          api: format.number(TECH_METRICS.apiUnitTestCases),
         })}
       </text>
       <text x="740" y="167" className={styles.svgSub} fill={META}>
@@ -965,6 +967,8 @@ const SKILLS = [
 }[];
 
 export const SKILL_COUNT = SKILLS.length;
+export const PROJECT_SKILL_COUNT = SKILLS.filter((skill) => skill.origin === 'project').length;
+export const EXTERNAL_SKILL_COUNT = SKILL_COUNT - PROJECT_SKILL_COUNT;
 const SKILL_ROWS = Math.ceil(SKILL_COUNT / SKILL_COLUMNS);
 const MCP_TOP = 34 + SKILL_ROWS * SKILL_ROW_HEIGHT + 26;
 const SKILL_LOGOS = { anthropic: AnthropicLogo, project: MoviePickerLogo } as const;
@@ -1424,15 +1428,24 @@ export function BugFlowDiagram() {
   );
 }
 
-const FRONT_DOMAINS = [
-  'domainAuth',
-  'domainEvents',
-  'domainMovies',
-  'domainLibrary',
-  'domainNotifications',
-  'domainProfiles',
-  'domainLetterboxd',
-] as const;
+export const FRONT_DOMAINS = [
+  { feature: 'auth', label: 'tech.diagram.domainAuth' },
+  { feature: 'events', label: 'tech.diagram.domainEvents' },
+  { feature: 'groups', label: 'tech.diagram.domainGroups' },
+  { feature: 'movies', label: 'tech.diagram.domainMovies' },
+  { feature: 'library', label: 'tech.diagram.domainLibrary' },
+  { feature: 'notifications', label: 'tech.diagram.domainNotifications' },
+  { feature: 'profile', label: 'tech.diagram.domainProfiles' },
+  { feature: 'letterboxd', label: 'tech.diagram.domainLetterboxd' },
+] as const satisfies readonly { feature: string; label: TranslationKey }[];
+
+const DOMAIN_STEP = 860 / FRONT_DOMAINS.length;
+const DOMAIN_WIDTH = DOMAIN_STEP - 8;
+const CORE_LEFT = 240;
+const CORE_SPAN = 400;
+const domainX = (index: number) => 10 + index * DOMAIN_STEP;
+const domainCenter = (index: number) => domainX(index) + DOMAIN_WIDTH / 2;
+const coreTarget = (index: number) => CORE_LEFT + (index * CORE_SPAN) / (FRONT_DOMAINS.length - 1);
 
 const FRONT_STACK = [
   { name: `React ${TECH_METRICS.reactMajor}`, x: 66, width: 120, Logo: ReactLogo },
@@ -1446,7 +1459,9 @@ export function FrontGraphDiagram() {
   const { t } = useTranslation();
   return (
     <svg viewBox="0 0 880 298" role="img" aria-labelledby="tech-frontgraph-title">
-      <title id="tech-frontgraph-title">{t('tech.diagram.frontGraphTitle')}</title>
+      <title id="tech-frontgraph-title">
+        {t('tech.diagram.frontGraphTitle', { count: String(FRONT_DOMAINS.length) })}
+      </title>
       <defs>
         <ArrowMarker id="tech-arrow-front" fill={BORDER} />
       </defs>
@@ -1455,32 +1470,32 @@ export function FrontGraphDiagram() {
       </text>
 
       <g stroke={BORDER} strokeWidth="1.2" fill="none" markerEnd="url(#tech-arrow-front)">
-        {FRONT_DOMAINS.map((domain, index) => {
-          const from = 66 + index * 125;
-          const to = 240 + index * 68;
-          return <path key={domain} d={`M ${from} 90 C ${from} 122, ${to} 118, ${to} 148`} />;
+        {FRONT_DOMAINS.map(({ feature }, index) => {
+          const from = domainCenter(index);
+          const to = coreTarget(index);
+          return <path key={feature} d={`M ${from} 90 C ${from} 122, ${to} 118, ${to} 148`} />;
         })}
       </g>
 
-      {FRONT_DOMAINS.map((domain, index) => (
-        <g key={domain}>
+      {FRONT_DOMAINS.map(({ feature, label }, index) => (
+        <g key={feature}>
           <rect
-            x={10 + index * 125}
+            x={domainX(index)}
             y="46"
-            width="112"
+            width={DOMAIN_WIDTH}
             height="44"
             rx="10"
             fill={SURFACE}
             stroke={BORDER}
           />
           <text
-            x={66 + index * 125}
+            x={domainCenter(index)}
             y="73"
             textAnchor="middle"
             className={styles.svgLabel}
             fill={TEXT}
           >
-            {t(`tech.diagram.${domain}` as 'tech.diagram.domainAuth')}
+            {t(label)}
           </text>
         </g>
       ))}

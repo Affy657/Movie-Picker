@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { afterEach, describe, it, expect } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
@@ -11,9 +11,18 @@ import {
   SHIPPED_MILESTONES,
 } from '@/app/pages/tech/TechTimeline';
 import { TECH_METRICS } from '@/app/pages/tech/generated/techMetrics';
-import { SKILL_COUNT } from '@/app/pages/tech/TechDiagrams';
+import {
+  EXTERNAL_SKILL_COUNT,
+  FRONT_DOMAINS,
+  PROJECT_SKILL_COUNT,
+  SKILL_COUNT,
+} from '@/app/pages/tech/TechDiagrams';
 import { TECH_PAGE_LAST_UPDATE } from '@/app/pages/tech/lastUpdate';
+import { SOURCE_REPOSITORY_URL } from '@/app/pages/tech/TechHero';
+import { TypeScriptLogo } from '@/app/pages/tech/TechLogos';
+import { techFormat } from '@/app/pages/tech/techFormat';
 import { fr } from '@/shared/i18n/locales/fr';
+import { en } from '@/shared/i18n/locales/en';
 import { SITE_URL } from '@/shared/seo/siteMeta';
 import { ROUTES } from '@/app/routes';
 
@@ -26,6 +35,24 @@ function renderTechPage() {
     </AppTestProviders>
   );
 }
+
+const FEATURE_FOLDERS = [
+  ...new Set(
+    Object.keys(import.meta.glob('../../features/*/**/*.{ts,tsx}')).map(
+      (file) => file.split('/')[3] as string
+    )
+  ),
+].sort((a, b) => a.localeCompare(b));
+
+function techTexts(node: unknown): string[] {
+  if (typeof node === 'string') return [node];
+  if (node && typeof node === 'object') return Object.values(node).flatMap(techTexts);
+  return [];
+}
+
+afterEach(() => {
+  localStorage.removeItem('moviepicker-locale');
+});
 
 describe('TechPage', () => {
   it('affiche le titre principal et le canonical de /tech', () => {
@@ -113,7 +140,7 @@ describe('TechPage', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#method') as HTMLElement;
 
-    expect(section.querySelectorAll('article')).toHaveLength(4);
+    expect(section.querySelectorAll('article')).toHaveLength(5);
     expect(section.querySelectorAll('figure')).toHaveLength(4);
     expect(section.textContent).toContain(`${SKILL_COUNT} procédures`);
     expect(section.querySelectorAll('svg g[data-origin]')).toHaveLength(SKILL_COUNT);
@@ -251,7 +278,7 @@ describe('TechPage', () => {
     const { container } = renderTechPage();
     const steps = [...container.querySelectorAll('section#trajectory > ol > li')];
 
-    expect(steps).toHaveLength(14);
+    expect(steps).toHaveLength(15);
     expect(steps[0]).toHaveTextContent(/MVP/);
     expect(steps.at(-1)).toHaveTextContent(/V2/);
     const titles = steps.map((step) => step.querySelector('h3')?.textContent ?? '');
@@ -515,11 +542,12 @@ describe('TechPage', () => {
       (node) => node.tagName === 'P'
     );
 
-    expect(cards).toHaveLength(9);
+    expect(cards).toHaveLength(10);
     expect(fr.tech.choices.title).not.toMatch(/chaque brique/i);
 
     for (const choice of [
       'runtime',
+      'hexagonal',
       'database',
       'persistence',
       'auth',
@@ -532,7 +560,15 @@ describe('TechPage', () => {
       expect(section.textContent).toContain(fr.tech.choices[choice]);
     }
 
-    const priced = ['runtime', 'database', 'auth', 'front', 'hosting', 'oneCloud'] as const;
+    const priced = [
+      'runtime',
+      'hexagonal',
+      'database',
+      'auth',
+      'front',
+      'hosting',
+      'oneCloud',
+    ] as const;
     expect(trades).toHaveLength(priced.length);
     for (const choice of priced) {
       expect(trades.map((trade) => trade.textContent)).toContain(
@@ -735,7 +771,8 @@ describe('TechPage', () => {
     expect(section.textContent).toMatch(/relecteur/i);
     expect(section.textContent).toMatch(/chaque lundi/i);
     expect(section.textContent).toMatch(/36 heures/);
-    expect(section.textContent).toMatch(/aucune autre branche durable/i);
+    expect(section.textContent).toMatch(/pas d.autre branche durable/i);
+    expect(section.textContent).toMatch(/feedback-attachments/);
     expect(section.textContent).not.toMatch(/branche de version/i);
   });
 
@@ -771,16 +808,176 @@ describe('TechPage', () => {
 
     expect(section.textContent).toMatch(/Cloud Monitoring/);
     expect(section.textContent).toMatch(/quatre sondes/i);
-    expect(section.textContent).toMatch(/onze politiques d.alerte/i);
-    expect(section.textContent).not.toMatch(/(cinq|huit) politiques d.alerte/i);
+    expect(section.textContent).toMatch(/douze politiques d.alerte/i);
+    expect(section.textContent).not.toMatch(/(cinq|huit|onze) politiques d.alerte/i);
     expect(section.textContent).toMatch(/les trois dernières/i);
     expect(section.textContent).not.toMatch(/les deux dernières/i);
+  });
+
+  it('gives the same test total in the header as the three tiers of the pyramid', () => {
+    const { container } = renderTechPage();
+    const hero = container.querySelector('header') as HTMLElement;
+    const total =
+      TECH_METRICS.unitTestCases + TECH_METRICS.integrationTestCases + TECH_METRICS.e2eTestCases;
+
+    expect(TECH_METRICS.testCases).toBe(total);
+    expect(hero.textContent).toContain(techFormat('fr').number(total));
+    expect(hero.textContent).toContain(`dont ${TECH_METRICS.testLinesShare}\u00a0% de tests`);
+    expect(fr.tech.hero.metricLinesHint).toMatch(/non vides/);
+    expect(fr.tech.hero.metricLinesHint).toMatch(/sans le code généré/);
+  });
+
+  it('names its author and links to the source code from the header', () => {
+    const { container } = renderTechPage();
+    const hero = container.querySelector('header') as HTMLElement;
+    const source = within(hero).getByRole('link', { name: /code source sur github/i });
+
+    expect(hero.textContent).toContain('Adrien Morand');
+    expect(source).toHaveAttribute('href', SOURCE_REPOSITORY_URL);
+    expect(source).toHaveAttribute('target', '_blank');
+    expect(SOURCE_REPOSITORY_URL).toBe('https://github.com/Affy657/Movie-Picker');
+  });
+
+  it('opens with a one-minute summary of five points', () => {
+    renderTechPage();
+    const summary = screen.getByRole('complementary', { name: 'En une minute' });
+
+    expect(within(summary).getAllByRole('listitem')).toHaveLength(5);
+    expect(summary.textContent).toContain(techFormat('fr').number(TECH_METRICS.testCases));
+    expect(summary.textContent).not.toMatch(/\{\{/);
+  });
+
+  it('speaks French rather than jargon, with typographic apostrophes', () => {
+    const text = techTexts(fr.tech).join(' ');
+
+    expect(text).not.toMatch(/\bchecks\b|fallback|coquille en 200|\b(la|les|une|cette) portes?\b/i);
+    expect(text).not.toContain("'");
+    expect(fr.tech.quality.note).toMatch(/linters courants ne couvrent pas tels quels/);
+    expect(fr.tech.quality.note).not.toMatch(/aucun linter du marché/);
+  });
+
+  it('never says both that nothing is deployed by hand and that the deployment is manual', () => {
+    const text = JSON.stringify(fr.tech);
+
+    expect(text).not.toMatch(/rien n.est déployé à la main|déploiement se lance à la main/i);
+    expect(fr.tech.infra.lead).toMatch(/sur commande/);
+    expect(fr.tech.ci.lead).toMatch(/sur commande/);
+  });
+
+  it('draws one front domain per folder of features/', () => {
+    const { container } = renderTechPage();
+    const diagram = container.querySelector(
+      'svg[aria-labelledby="tech-frontgraph-title"]'
+    ) as SVGSVGElement;
+    const labels = [...diagram.querySelectorAll('text')].map((node) => node.textContent);
+
+    expect(FEATURE_FOLDERS.length).toBeGreaterThan(0);
+    expect(
+      FRONT_DOMAINS.map((domain) => domain.feature).sort((a, b) => a.localeCompare(b))
+    ).toEqual(FEATURE_FOLDERS);
+    expect(labels).toContain(fr.tech.diagram.domainGroups);
+    expect(container.querySelector('#ui h2 + p')?.textContent).toMatch(
+      new RegExp(`^${FRONT_DOMAINS.length} domaines`)
+    );
+  });
+
+  it('marks what follows V1.7 in the trajectory', () => {
+    const { container } = renderTechPage();
+    const section = container.querySelector('#trajectory') as HTMLElement;
+
+    expect(section.textContent).toContain(fr.tech.trajectory.since17What);
+    for (const item of ['since17Item4', 'since17Item5', 'since17Item6', 'since17Item7'] as const) {
+      expect(section.textContent).toContain(fr.tech.trajectory[item]);
+    }
+  });
+
+  it('writes down what the daily maintenance does alone and what waits for approval', () => {
+    const { container } = renderTechPage();
+    const section = container.querySelector('#method') as HTMLElement;
+
+    expect(section.textContent).toContain(fr.tech.method.autonomyTitle);
+    expect(section.textContent).toMatch(/\/auto-maintenance/);
+    expect(section.textContent).toMatch(/Tout le reste m.attend/);
+    expect(fr.tech.method.lead).not.toMatch(/jamais la décision/);
+    expect(PROJECT_SKILL_COUNT + EXTERNAL_SKILL_COUNT).toBe(SKILL_COUNT);
+    expect(section.textContent).toContain(`Les ${PROJECT_SKILL_COUNT} marquées du clap`);
+    expect(section.textContent).toMatch(/ne figurent pas dans le dépôt/);
+  });
+
+  it('justifies the hexagonal architecture in a single .NET project', () => {
+    const { container } = renderTechPage();
+    const section = container.querySelector('#choices') as HTMLElement;
+
+    expect(section.textContent).toContain(fr.tech.choices.hexagonal);
+    expect(section.textContent).toMatch(/test d.architecture/);
+  });
+
+  it('draws the TypeScript logo with its two letters only', () => {
+    const { container } = render(<TypeScriptLogo />);
+
+    expect(container.querySelectorAll('path')).toHaveLength(1);
+  });
+
+  it('formats every number in the reader language', () => {
+    localStorage.setItem('moviepicker-locale', 'en');
+    const { container } = renderTechPage();
+    const english = techFormat('en');
+    const french = techFormat('fr');
+
+    expect(container.querySelector('h1')).toHaveTextContent(en.tech.hero.title);
+    const pyramid = container.querySelector(
+      'svg[aria-labelledby="tech-testpyramid-title"]'
+    ) as SVGSVGElement;
+    expect(pyramid.textContent).toContain(english.number(TECH_METRICS.unitTestCases));
+    expect(pyramid.textContent).not.toContain(french.number(TECH_METRICS.unitTestCases));
+    expect(container.textContent).toContain(english.date(TECH_PAGE_LAST_UPDATE));
+  });
+
+  it('lets the keyboard reach every diagram, a labelled region', () => {
+    const { container } = renderTechPage();
+    const regions = screen.getAllByRole('region', { name: /^Schéma : / });
+
+    expect(regions).toHaveLength(container.querySelectorAll('figure').length);
+    for (const region of regions) expect(region).toHaveAttribute('tabindex', '0');
+    expect(
+      screen.getByRole('region', { name: `Schéma : ${fr.tech.diagram.ciTitle}` })
+    ).toBeInTheDocument();
+  });
+
+  it('says a diagram can be swiped only when it overflows', () => {
+    renderTechPage();
+    expect(screen.queryByText(fr.tech.figure.scrollHint)).toBeNull();
+  });
+
+  it('shows the swipe hint on a diagram wider than its frame', () => {
+    Object.defineProperty(HTMLElement.prototype, 'scrollWidth', {
+      configurable: true,
+      get: () => 880,
+    });
+    Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
+      configurable: true,
+      get: () => 300,
+    });
+    try {
+      renderTechPage();
+      const region = screen.getByRole('region', {
+        name: `Schéma : ${fr.tech.diagram.ciTitle}`,
+      });
+
+      expect(region.parentElement?.textContent).toContain(fr.tech.figure.scrollHint);
+      expect(region.parentElement).toHaveAttribute('data-more-after', 'true');
+    } finally {
+      Reflect.deleteProperty(HTMLElement.prototype, 'scrollWidth');
+      Reflect.deleteProperty(HTMLElement.prototype, 'clientWidth');
+    }
   });
 
   it("shows the document's last update date, kept by hand", () => {
     renderTechPage();
     expect(
-      screen.getByText(new RegExp(`mis à jour le ${TECH_PAGE_LAST_UPDATE}`, 'i'))
+      screen.getByText(
+        new RegExp(`mis à jour le ${techFormat('fr').date(TECH_PAGE_LAST_UPDATE)}`, 'i')
+      )
     ).toBeVisible();
   });
 

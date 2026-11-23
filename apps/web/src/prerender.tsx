@@ -24,13 +24,20 @@ function nextTurns(count: number): Promise<void> {
   return new Promise<void>((resolve) => setTimeout(resolve, 0)).then(() => nextTurns(count - 1));
 }
 
-function waitForHeading(container: HTMLElement): Promise<void> {
+function isRendered(container: HTMLElement): boolean {
+  return (
+    container.querySelector('h1') !== null &&
+    container.querySelector('[data-render-pending]') === null
+  );
+}
+
+function waitForPage(container: HTMLElement): Promise<void> {
   const deadline = Date.now() + READY_TIMEOUT_MS;
   return new Promise((resolve, reject) => {
     const poll = () => {
-      if (container.querySelector('h1')) resolve();
+      if (isRendered(container)) resolve();
       else if (Date.now() >= deadline)
-        reject(new Error(`no <h1> rendered after ${READY_TIMEOUT_MS} ms`));
+        reject(new Error(`page not fully rendered after ${READY_TIMEOUT_MS} ms`));
       else setTimeout(poll, READY_POLL_MS);
     };
     poll();
@@ -53,7 +60,7 @@ export async function renderRoute(url: string): Promise<PrerenderedPage> {
     </AppProviders>
   );
 
-  await waitForHeading(container);
+  await waitForPage(container);
   await nextTurns(EFFECT_FLUSH_TURNS);
 
   const page = { head: document.head.innerHTML, body: container.innerHTML };
