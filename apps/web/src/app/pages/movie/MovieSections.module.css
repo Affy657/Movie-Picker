@@ -195,9 +195,7 @@
   }
 
   .videos,
-  .cast {
-    grid-template-columns: none;
-    grid-auto-flow: column;
+  .castRail {
     margin-inline: calc(var(--space-4) * -1);
     padding: 0 var(--space-4) var(--space-1);
     overflow-x: auto;
@@ -206,12 +204,28 @@
     scrollbar-width: none;
   }
 
+  .castRail {
+    border-radius: var(--radius-sm);
+  }
+
+  .castRail:focus-visible {
+    outline: var(--outline-focus);
+    outline-offset: var(--outline-offset);
+  }
+
+  .videos,
+  .cast {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+  }
+
   .videos {
     grid-auto-columns: 75%;
   }
 
   .cast {
     grid-auto-columns: 7rem;
+    width: max-content;
   }
 
   .videos > li,

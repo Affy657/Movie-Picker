@@ -34,7 +34,18 @@ describe('TrailerModal', () => {
   it('appelle onClose au clic sur le bouton de fermeture', () => {
     const onClose = vi.fn();
     wrap(<TrailerModal open movieTitle="Dune" trailerUrl={YT_URL} onClose={onClose} />);
-    fireEvent.click(screen.getByRole('button', { name: /fermer/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }));
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('offers a way out right after the player, since the player keeps Escape for itself', () => {
+    const onClose = vi.fn();
+    wrap(<TrailerModal open movieTitle="Dune" trailerUrl={YT_URL} onClose={onClose} />);
+
+    const player = document.querySelector('iframe');
+    const close = screen.getByRole('button', { name: 'Fermer la bande-annonce' });
+    expect(player?.compareDocumentPosition(close)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    fireEvent.click(close);
+    expect(onClose).toHaveBeenCalledOnce();
   });
 });
