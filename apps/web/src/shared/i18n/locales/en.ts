@@ -2073,6 +2073,7 @@ export const en: Locale = {
       pageTitleElided: '{{name}}’s lists',
       backToHandle: '@{{handle}}’s lists',
       seoDescription: 'The public film lists of {{name}} (@{{handle}}) on Movie Picker.',
+      seoDescriptionElided: 'The public film lists of {{name}} (@{{handle}}) on Movie Picker.',
       countOne: '{{count}} list created',
       count: '{{count}} lists created',
       gridAria: 'Public lists',
@@ -3208,7 +3209,10 @@ export const en: Locale = {
       hidden: 'Hidden',
       makeVisible: 'Make it visible',
       pageTitle: "{{name}}'s watchlist",
+      pageTitleElided: "{{name}}'s watchlist",
       seoDescription:
+        "{{name}}'s (@{{handle}}) watchlist on Movie Picker: movies to watch, ready to propose for a next night.",
+      seoDescriptionElided:
         "{{name}}'s (@{{handle}}) watchlist on Movie Picker: movies to watch, ready to propose for a next night.",
       loadError: "Unable to load this user's watchlist.",
       previewLoadError: 'The watchlist could not be loaded.',
@@ -3280,6 +3284,7 @@ export const en: Locale = {
     },
     winningProposals: {
       pageTitle: "{{name}}'s winning proposals",
+      pageTitleElided: "{{name}}'s winning proposals",
       seoDescription: 'Movies proposed by {{name}} (@{{handle}}) that won a Movie Picker night.',
       pageSubtitleOne: '{{count}} winning movie',
       pageSubtitle: '{{count}} winning movies',

@@ -146,6 +146,10 @@ describe('MemberListsPage', () => {
       await screen.findByRole('heading', { level: 1, name: 'Les listes d’Alice Martin' })
     ).toBeInTheDocument();
     expect(await screen.findByText('1 liste créée')).toBeInTheDocument();
+    expect(document.head.querySelector('meta[name="description"]')).toHaveAttribute(
+      'content',
+      'Les listes de films publiques d’Alice Martin (@alice) sur Movie Picker.'
+    );
   });
 
   it('shows a signed-in member how much of each list they watched, and which lists are shared', async () => {

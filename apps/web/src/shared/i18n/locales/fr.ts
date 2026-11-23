@@ -2093,6 +2093,8 @@ export const fr = {
       pageTitleElided: 'Les listes d’{{name}}',
       backToHandle: 'Les listes de @{{handle}}',
       seoDescription: 'Les listes de films publiques de {{name}} (@{{handle}}) sur Movie Picker.',
+      seoDescriptionElided:
+        'Les listes de films publiques d’{{name}} (@{{handle}}) sur Movie Picker.',
       countOne: '{{count}} liste créée',
       count: '{{count}} listes créées',
       gridAria: 'Listes publiques',
@@ -3252,8 +3254,11 @@ export const fr = {
       hidden: 'Masquée',
       makeVisible: 'Rendre visible',
       pageTitle: 'La watchlist de {{name}}',
+      pageTitleElided: 'La watchlist d’{{name}}',
       seoDescription:
         'Watchlist de {{name}} (@{{handle}}) sur Movie Picker\u00a0: ses films à voir, à proposer pour une prochaine soirée.',
+      seoDescriptionElided:
+        'Watchlist d’{{name}} (@{{handle}}) sur Movie Picker\u00a0: ses films à voir, à proposer pour une prochaine soirée.',
       loadError: 'Impossible de charger la watchlist de cet utilisateur.',
       previewLoadError: 'La watchlist n’a pas pu être chargée.',
       loading: 'Chargement de la watchlist…',
@@ -3325,6 +3330,7 @@ export const fr = {
     },
     winningProposals: {
       pageTitle: 'Les propositions gagnantes de {{name}}',
+      pageTitleElided: 'Les propositions gagnantes d’{{name}}',
       seoDescription:
         'Films proposés par {{name}} (@{{handle}}) qui ont gagné une soirée Movie Picker.',
       pageSubtitleOne: '{{count}} film gagnant',

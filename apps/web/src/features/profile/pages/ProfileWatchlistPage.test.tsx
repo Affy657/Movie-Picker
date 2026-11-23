@@ -86,9 +86,14 @@ describe('ProfileWatchlistPage (MSW)', () => {
     renderPage('alice');
 
     expect(
-      await screen.findByRole('heading', { name: /la watchlist de alice/i })
+      await screen.findByRole('heading', { name: /la watchlist d’alice/i })
     ).toBeInTheDocument();
     expect(screen.getByText(/3 films à voir/i)).toBeInTheDocument();
+    expect(document.title).toBe('La watchlist d’Alice | Movie Picker');
+    expect(document.head.querySelector('meta[name="description"]')).toHaveAttribute(
+      'content',
+      expect.stringMatching(/^Watchlist d’Alice \(@alice\)/)
+    );
     expect(screen.getByText('Inception')).toBeInTheDocument();
     expect(screen.getByText('Interstellar')).toBeInTheDocument();
     expect(screen.getByText('Arrival')).toBeInTheDocument();
@@ -184,7 +189,7 @@ describe('ProfileWatchlistPage (MSW)', () => {
     expect(
       await screen.findByText('La watchlist de ce membre n’est pas publique.')
     ).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /la watchlist de alice/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /la watchlist d’alice/i })).toBeInTheDocument();
     expect(screen.queryByText(/ce profil n'existe pas/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Réessayer' })).not.toBeInTheDocument();
     expect(screen.queryByText(/0 film à voir/i)).not.toBeInTheDocument();
