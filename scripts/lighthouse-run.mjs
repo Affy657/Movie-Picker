@@ -9,6 +9,12 @@ import lighthouse, { generateReport } from 'lighthouse';
 import { launch as launchChrome } from 'chrome-launcher';
 
 import { median, reviewCategory, selectPages } from './lighthouse-budget.mjs';
+import {
+  STUB_ACTIVE_HANDLE,
+  STUB_HANDLE,
+  STUB_MOVIE_ID,
+  startApiStub,
+} from './lighthouse-stub.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
@@ -36,7 +42,7 @@ const OUT = path.join(ROOT, 'artifacts', 'lighthouse');
 const URLS = [
   { path: '/', slug: 'home', indexable: true },
   { path: '/soutenir', slug: 'donate', indexable: true },
-  { path: '/u/lighthouse', slug: 'profile', indexable: true },
+  { path: `/u/${STUB_HANDLE}`, slug: 'profile', indexable: true },
   { path: '/my-events', slug: 'my-events', indexable: false },
   { path: '/new', slug: 'new', indexable: false },
   { path: '/watchlist', slug: 'watchlist', indexable: false },
@@ -49,6 +55,19 @@ const URLS = [
   { path: '/politique-de-confidentialite', slug: 'privacy', indexable: false },
   { path: '/e/lighthouse-smoke', slug: 'event-slug', indexable: false, skipPerformance: true },
 ];
+
+/**
+ * Pages measured with real posters and real data that do not reach the performance floor yet
+ * (audit of 2026-11-23, M03). `LH_CANDIDATES=1` adds them to a local run, threshold ignored; one
+ * moves into `URLS` once its median reaches the floor, never the other way round (I4).
+ */
+const CANDIDATE_URLS = [
+  { path: `/u/${STUB_ACTIVE_HANDLE}`, slug: 'profile-active', indexable: true },
+  { path: `/film/${STUB_MOVIE_ID}-film-de-demonstration-1`, slug: 'movie', indexable: false },
+  { path: '/films/tendances', slug: 'trending', indexable: true },
+].map((page) => ({ ...page, skipPerformance: true }));
+
+const MEASURED_URLS = process.env.LH_CANDIDATES === '1' ? [...URLS, ...CANDIDATE_URLS] : URLS;
 
 function waitForServer(hostname, port, maxMs = 60000) {
   return new Promise((resolve, reject) => {
@@ -84,174 +103,14 @@ function killServe(proc) {
   }
 }
 
-const SHOWCASE_ITEM_COUNT = 20;
-
-function showcaseItems(ranked = false) {
-  return Array.from({ length: SHOWCASE_ITEM_COUNT }, (_, index) => ({
-    id: 1000 + index,
-    mediaType: 'movie',
-    title: `Test movie ${index + 1}`,
-    year: `${2000 + (index % 25)}`,
-    posterPath: null,
-    voteAverage: 7.5,
-    runtimeMinutes: 100 + index,
-    genreIds: [28],
-    rank: ranked ? index + 1 : null,
-    eventCount: ranked ? 5 : null,
-  }));
-}
-
-/**
- * Minimal API stub, required so that unauthenticated pages under test (redirected to
- * /login) can resolve their `GET /auth/oauth/providers` call without raising a
- * CSP/CORS/network error that would drop the best-practices score.
- */
-function startApiStub(port) {
-  const server = http.createServer((req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', BASE);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, sentry-trace, baggage');
-    if (req.method === 'OPTIONS') {
-      res.writeHead(204).end();
-      return;
-    }
-    const urlPath = (req.url ?? '').split('?')[0];
-    if (urlPath === '/api/v1/auth/oauth/providers') {
-      res
-        .writeHead(200, { 'Content-Type': 'application/json' })
-        .end(JSON.stringify({ providers: [] }));
-      return;
-    }
-    if (urlPath === '/api/v1/movies/showcase') {
-      const section = new URL(req.url ?? '/', BASE).searchParams.get('section') ?? 'trending';
-      res.writeHead(200, { 'Content-Type': 'application/json' }).end(
-        JSON.stringify({
-          section,
-          theme: null,
-          items: showcaseItems(section === 'most-proposed'),
-          disclaimer: 'Test data',
-          tmdbAttributionUrl: 'https://www.themoviedb.org/',
-        })
-      );
-      return;
-    }
-    if (urlPath === '/api/v1/movies/showcase/themes') {
-      res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ items: [] }));
-      return;
-    }
-    if (urlPath === '/api/v1/movies/collections') {
-      res.writeHead(200, { 'Content-Type': 'application/json' }).end(
-        JSON.stringify({
-          items: Array.from({ length: 12 }, (_, index) => ({
-            id: 500 + index,
-            name: `Test saga ${index + 1}`,
-            overview: null,
-            posterPath: null,
-            movieCount: 3 + index,
-          })),
-          disclaimer: 'Test data',
-          tmdbAttributionUrl: 'https://www.themoviedb.org/',
-        })
-      );
-      return;
-    }
-    if (urlPath === '/api/v1/users/lighthouse') {
-      res.writeHead(200, { 'Content-Type': 'application/json' }).end(
-        JSON.stringify({
-          handle: 'lighthouse',
-          displayName: 'Lighthouse',
-          avatarId: 'alpha',
-          bio: 'Profil de recette Lighthouse',
-          memberSince: '2024-03-15T00:00:00Z',
-          followingCount: 0,
-          followersCount: 0,
-          isSupporter: false,
-          isFollowedByMe: null,
-        })
-      );
-      return;
-    }
-    if (urlPath === '/api/v1/users/lighthouse/stats') {
-      res.writeHead(200, { 'Content-Type': 'application/json' }).end(
-        JSON.stringify({
-          eventsCreated: 0,
-          eventsJoined: 0,
-          moviesProposed: 0,
-          votesCast: 0,
-          winningProposals: 0,
-          moviesSeen: 0,
-          currentStreakWeeks: 0,
-          bestStreakWeeks: 0,
-          favoriteGenres: [],
-          dailyActivity: [],
-        })
-      );
-      return;
-    }
-    if (urlPath === '/api/v1/users/lighthouse/watched-movies') {
-      res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ items: [] }));
-      return;
-    }
-    if (urlPath.startsWith('/api/v1/events/slug/')) {
-      const slug = urlPath.slice('/api/v1/events/slug/'.length);
-      res.writeHead(200, { 'Content-Type': 'application/json' }).end(
-        JSON.stringify({
-          _id: 'evt-lh',
-          title: 'Lighthouse',
-          date: '2030-12-15',
-          time: '21:00',
-          slug,
-          isHost: false,
-          isFinished: false,
-          lifecycle: 'live',
-          winnerMovie: null,
-          participantCount: 0,
-          movieCount: 0,
-          participants: [],
-          config: {
-            theme: null,
-            maxProposalsPerParticipant: null,
-            maxParticipants: null,
-            wheelMode: 'strictRandom',
-          },
-        })
-      );
-      return;
-    }
-    if (/^\/api\/v1\/events\/[^/]+\/stream$/.test(urlPath)) {
-      res
-        .writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' })
-        .end('retry: 600000\n\nevent: ready\ndata: {}\n\n');
-      return;
-    }
-    if (/^\/api\/v1\/events\/[^/]+\/movies$/.test(urlPath)) {
-      res.writeHead(200, { 'Content-Type': 'application/json' }).end('[]');
-      return;
-    }
-    if (urlPath === '/api/v1/usage-counts') {
-      req.resume();
-      res.writeHead(204).end();
-      return;
-    }
-    if (urlPath === '/api/1/envelope/') {
-      req.resume();
-      res.writeHead(200, { 'Content-Type': 'application/json' }).end('{}');
-      return;
-    }
-    res
-      .writeHead(404, { 'Content-Type': 'application/json' })
-      .end(JSON.stringify({ message: 'Not Found' }));
+if (process.env.LH_SKIP_BUILD !== '1') {
+  execSync('pnpm --filter web run build', {
+    cwd: ROOT,
+    stdio: 'inherit',
+    shell: true,
+    env: { ...process.env, VITE_API_URL: API_URL, VITE_SENTRY_DSN: SENTRY_STUB_DSN },
   });
-  server.listen(port, 'localhost');
-  return server;
 }
-
-execSync('pnpm --filter web run build', {
-  cwd: ROOT,
-  stdio: 'inherit',
-  shell: true,
-  env: { ...process.env, VITE_API_URL: API_URL, VITE_SENTRY_DSN: SENTRY_STUB_DSN },
-});
 
 if (!fs.existsSync(DIST)) {
   console.error('apps/web/dist not found after the build.');
@@ -329,7 +188,7 @@ const serve = spawn(`pnpm exec serve "${DIST}" -l ${PORT} -c "${serveConfigPath}
   stdio: 'ignore',
   shell: true,
 });
-const apiStub = startApiStub(API_PORT);
+const apiStub = startApiStub({ port: API_PORT, webOrigin: BASE });
 
 let failed = false;
 
@@ -342,7 +201,7 @@ try {
 
   const RUNS = Number(process.env.LH_RUNS || 3);
 
-  const selected = selectPages(URLS, {
+  const selected = selectPages(MEASURED_URLS, {
     only: process.env.LH_ONLY ?? '',
     shard: process.env.LH_SHARD ?? '',
   });
@@ -381,7 +240,7 @@ try {
         const suffix = skipBudget
           ? skipSeo
             ? ' (not indexable, threshold ignored)'
-            : ' (event SPA, threshold ignored)'
+            : ' (threshold ignored)'
           : ` (min ${min}, median of ${RUNS} runs)`;
         if (score !== null) console.log(`${slug} ${cat}: ${score}${suffix}`);
         if (failure) {
