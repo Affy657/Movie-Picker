@@ -114,6 +114,17 @@ describe('EventSummaryCardBody', () => {
     expect(screen.getByLabelText('Gagnants : Matrix')).toBeInTheDocument();
     expect(screen.getByText('Matrix')).toBeInTheDocument();
   });
+
+  it('asks the poster relay for a thumbnail, not the stored w500', () => {
+    renderCard(
+      event({
+        winnerMovies: [{ title: 'Matrix', posterPath: '/api/v1/posters/tmdb/w500/matrix.jpg' }],
+      })
+    );
+
+    const poster = screen.getByLabelText('Gagnants : Matrix').querySelector('img');
+    expect(poster?.getAttribute('src')).toMatch(/\/api\/v1\/posters\/tmdb\/w92\/matrix\.jpg$/);
+  });
 });
 
 describe('formatCountdownCompact', () => {

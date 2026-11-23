@@ -1,11 +1,25 @@
 import { apiUrl } from '@/shared/api/client';
 
 const TMDB_POSTER_SIZE_SEGMENT = /\/t\/p\/w\d+\//i;
+const RELAY_POSTER_SIZE_SEGMENT = /\/api\/v1\/posters\/tmdb\/w\d+\//;
+const RELAY_POSTER_SIZES = new Set(['w92', 'w185', 'w342', 'w500']);
+const LIST_SRCSET_SIZES = ['w92', 'w185', 'w342'];
+
+function relayPosterAtSize(u: URL, size: string): string | undefined {
+  if (!RELAY_POSTER_SIZE_SEGMENT.test(u.pathname) || !RELAY_POSTER_SIZES.has(size)) {
+    return undefined;
+  }
+  const resized = new URL(u);
+  resized.pathname = u.pathname.replace(RELAY_POSTER_SIZE_SEGMENT, `/api/v1/posters/tmdb/${size}/`);
+  return resized.toString();
+}
 
 export function tmdbPosterSrcForListDisplay(url: string | undefined): string | undefined {
   if (!url) return undefined;
   try {
     const u = new URL(url);
+    const relayed = relayPosterAtSize(u, 'w185');
+    if (relayed) return relayed;
     if (u.protocol !== 'https:' || u.hostname !== 'image.tmdb.org') return url;
     if (!TMDB_POSTER_SIZE_SEGMENT.test(u.pathname)) return url;
     u.pathname = u.pathname.replace(TMDB_POSTER_SIZE_SEGMENT, '/t/p/w185/');
@@ -21,6 +35,8 @@ export function posterSrcAtSize(url: string | undefined, size: string): string |
   if (!url) return undefined;
   try {
     const u = new URL(url);
+    const relayed = relayPosterAtSize(u, size);
+    if (relayed) return relayed;
     if (u.protocol !== 'https:' || u.hostname !== 'image.tmdb.org') return url;
     if (!TMDB_SIZED_POSTER_SEGMENT.test(u.pathname)) return url;
     u.pathname = u.pathname.replace(TMDB_SIZED_POSTER_SEGMENT, `/t/p/${size}/`);
@@ -43,6 +59,11 @@ export function tmdbPosterSrcSetForList(url: string | undefined): string | undef
   if (!url) return undefined;
   try {
     const u = new URL(url);
+    if (RELAY_POSTER_SIZE_SEGMENT.test(u.pathname)) {
+      return LIST_SRCSET_SIZES.map(
+        (size) => `${relayPosterAtSize(u, size)} ${size.slice(1)}w`
+      ).join(', ');
+    }
     if (u.protocol !== 'https:' || u.hostname !== 'image.tmdb.org') return undefined;
     if (!TMDB_POSTER_SIZE_SEGMENT.test(u.pathname)) return undefined;
     const base = u.pathname;
@@ -50,7 +71,7 @@ export function tmdbPosterSrcSetForList(url: string | undefined): string | undef
       const replacement = `/t/p/${size}/`;
       return `https://${u.hostname}${base.replace(TMDB_POSTER_SIZE_SEGMENT, replacement)}`;
     };
-    return `${make('w92')} 92w, ${make('w185')} 185w, ${make('w342')} 342w`;
+    return LIST_SRCSET_SIZES.map((size) => `${make(size)} ${size.slice(1)}w`).join(', ');
   } catch {
     return undefined;
   }

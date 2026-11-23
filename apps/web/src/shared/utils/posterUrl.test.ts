@@ -46,6 +46,12 @@ describe('tmdbPosterSrcForListDisplay', () => {
     );
   });
 
+  it('asks the API relay for the list size too, instead of its stored w500', () => {
+    expect(tmdbPosterSrcForListDisplay('https://api.test/api/v1/posters/tmdb/w500/abc.jpg')).toBe(
+      'https://api.test/api/v1/posters/tmdb/w185/abc.jpg'
+    );
+  });
+
   it('leaves non-TMDB URLs unchanged', () => {
     expect(tmdbPosterSrcForListDisplay('https://api.test/api/v1/posters/x')).toBe(
       'https://api.test/api/v1/posters/x'
@@ -79,16 +85,33 @@ describe('tmdbPosterSrcSetForList', () => {
     );
   });
 
+  it('builds the same srcset from a poster relayed by the API', () => {
+    expect(tmdbPosterSrcSetForList('https://api.test/api/v1/posters/tmdb/w500/abc.jpg')).toBe(
+      'https://api.test/api/v1/posters/tmdb/w92/abc.jpg 92w, ' +
+        'https://api.test/api/v1/posters/tmdb/w185/abc.jpg 185w, ' +
+        'https://api.test/api/v1/posters/tmdb/w342/abc.jpg 342w'
+    );
+  });
+
   it('returns undefined for malformed input', () => {
     expect(tmdbPosterSrcSetForList('not a url')).toBeUndefined();
   });
 });
 
 describe('posterSrcAtSize', () => {
-  it('leaves an API relay poster at w500, the only size the relay serves', () => {
+  it('leaves an API relay poster alone at a size the relay does not serve', () => {
     expect(
       posterSrcAtSize('https://api.movie-picker.fr/api/v1/posters/tmdb/w500/abc.jpg', 'w154')
     ).toBe('https://api.movie-picker.fr/api/v1/posters/tmdb/w500/abc.jpg');
+    expect(
+      posterSrcAtSize('https://api.movie-picker.fr/api/v1/posters/tmdb/w500/abc.jpg', 'w1280')
+    ).toBe('https://api.movie-picker.fr/api/v1/posters/tmdb/w500/abc.jpg');
+  });
+
+  it('asks the API relay for a size it serves', () => {
+    expect(
+      posterSrcAtSize('https://api.movie-picker.fr/api/v1/posters/tmdb/w500/abc.jpg', 'w92')
+    ).toBe('https://api.movie-picker.fr/api/v1/posters/tmdb/w92/abc.jpg');
   });
 
   it('only rewrites the size of a poster served by image.tmdb.org', () => {
