@@ -1,7 +1,13 @@
 import { useCallback, useState } from 'react';
-import { onlineManager } from '@tanstack/react-query';
+import { onlineManager, useQueryClient } from '@tanstack/react-query';
 import { hasQueuedVote, latestQueuedVote, queueVote } from '@/shared/utils/offlineEventStorage';
 import { clearMovieVote, voteMovie } from '@/features/events/api/eventMoviesApi';
+import {
+  clearVoteSending,
+  isVoteSending,
+  markVoteSending,
+} from '@/features/events/offline/sendingVotes';
+import { queryKeys } from '@/shared/hooks/queryKeys';
 import { API_ERROR_REASONS, ApiError, getErrorMessage } from '@/shared/api/apiError';
 import { promptToJoinEvent } from '@/features/events/joinPrompt';
 import type { MovieData } from '@/shared/types/movie';
@@ -40,6 +46,7 @@ export function useEventMovieVoting({
 }: EventMovieVotingInput) {
   const { track } = useAnalytics();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [voteErrors, setVoteErrors] = useState<VoteErrors>({});
   const [voteLimitReached, setVoteLimitReached] = useState(false);
 
@@ -71,17 +78,28 @@ export function useEventMovieVoting({
 
   const sendVote = useCallback(
     async (participantId: string, movieId: string, value: VoteValue) => {
+      const target = { slug, movieId, participantId };
       const current = movies.find((m) => m.id === movieId)?.myVote ?? null;
-      if (current === value) {
-        await clearMovieVote(slug, movieId, participantId);
-        track('vote_cast', { value, cleared: true });
-      } else {
-        await voteMovie(slug, movieId, participantId, value);
-        track('vote_cast', { value });
+      const withdraws = current === value;
+      markVoteSending({ ...target, value: withdraws ? 0 : value });
+      try {
+        if (withdraws) {
+          await clearMovieVote(slug, movieId, participantId);
+          track('vote_cast', { value, cleared: true });
+        } else {
+          await voteMovie(slug, movieId, participantId, value);
+          track('vote_cast', { value });
+        }
+        refreshAll();
+        await queryClient.refetchQueries(
+          { queryKey: queryKeys.movies.list(slug), type: 'active' },
+          { cancelRefetch: false }
+        );
+      } finally {
+        clearVoteSending(target);
       }
-      refreshAll();
     },
-    [slug, movies, refreshAll, track]
+    [slug, movies, refreshAll, track, queryClient]
   );
 
   const queueForLater = useCallback(
@@ -106,6 +124,7 @@ export function useEventMovieVoting({
         promptToJoinEvent();
         return;
       }
+      if (isVoteSending({ slug, movieId, participantId: participant.participantId })) return;
       setActionError(null);
       clearVoteError(movieId);
       const waitingBehindQueue = hasQueuedVote({
@@ -136,6 +155,7 @@ export function useEventMovieVoting({
         promptToJoinEvent();
         return;
       }
+      if (isVoteSending({ slug, movieId, participantId: participant.participantId })) return;
       try {
         await sendVote(participant.participantId, movieId, value);
       } catch (e) {
@@ -143,7 +163,7 @@ export function useEventMovieVoting({
         throw e;
       }
     },
-    [participant, sendVote, refreshAll]
+    [slug, participant, sendVote, refreshAll]
   );
 
   const handleRetryVote = useCallback(

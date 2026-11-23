@@ -1250,6 +1250,9 @@ export const en: Locale = {
         remainingMany: '{{count}} more movies to draw.',
         closeButton: "Let's watch!",
         finishHereButton: 'Stop here',
+        weightedHint:
+          'Draw by votes: the more votes a movie has, the bigger its slice of the wheel.',
+        chanceItem: '{{title}}: {{chance}}',
       },
     },
     lifecycle: {

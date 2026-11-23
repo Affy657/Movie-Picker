@@ -23,6 +23,7 @@ import {
 } from '@/shared/utils/offlineEventStorage';
 import { ApiError } from '@/shared/api/apiError';
 import { applyQueuedVotes, useQueuedVotes } from '@/features/events/offline/queuedVotes';
+import { useSendingVotes } from '@/features/events/offline/sendingVotes';
 import { useOfflineVoteReplay } from '@/features/events/offline/useOfflineVoteReplay';
 
 const MOVIE_NIGHTS_KEY = [...queryKeys.movies.all, 'nights'] as const;
@@ -90,11 +91,12 @@ export function useEventDetailPage(
     offlineCopy,
   });
   const queuedVotes = useQueuedVotes(slug);
+  const sendingVotes = useSendingVotes(slug);
   const serverMovies = moviesQuery.data;
   const participantId = participant?.participantId ?? null;
   const movies = useMemo(
-    () => applyQueuedVotes(serverMovies ?? [], queuedVotes, participantId),
-    [serverMovies, queuedVotes, participantId]
+    () => applyQueuedVotes(serverMovies ?? [], [...queuedVotes, ...sendingVotes], participantId),
+    [serverMovies, queuedVotes, sendingVotes, participantId]
   );
 
   const refreshLive = useCallback(() => {

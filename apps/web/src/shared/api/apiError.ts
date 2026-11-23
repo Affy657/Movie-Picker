@@ -2,6 +2,7 @@ import type { Locale } from '@/shared/i18n/locales';
 
 export const API_ERROR_REASONS = {
   voteLimitReached: 'vote-limit-reached',
+  concurrentUpdate: 'concurrent_update',
   invalidResetToken: 'invalid_reset_token',
   letterboxdWatchlistIncomplete: 'letterboxd_watchlist_incomplete',
   letterboxdWatchedIncomplete: 'letterboxd_watched_incomplete',

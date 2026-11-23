@@ -71,36 +71,53 @@ function setFont(ctx: CanvasRenderingContext2D, size: number, fontFamily: string
 
 function applyFittedFont(
   ctx: CanvasRenderingContext2D,
-  title: string,
+  text: string,
   maxFont: number,
   fontFamily: string
 ): void {
   let size = maxFont;
   setFont(ctx, size, fontFamily);
-  while (size > MIN_FONT && ctx.measureText(title).width > TEXT_MAX_W) {
+  while (size > MIN_FONT && ctx.measureText(text).width > TEXT_MAX_W) {
     size--;
     setFont(ctx, size, fontFamily);
   }
 }
 
-function truncateToWidth(ctx: CanvasRenderingContext2D, title: string): string {
-  if (ctx.measureText(title).width <= TEXT_MAX_W) return title;
+function truncateToWidth(ctx: CanvasRenderingContext2D, title: string, maxWidth: number): string {
+  if (ctx.measureText(title).width <= maxWidth) return title;
 
   const words = title.split(' ').filter(Boolean);
   if (words.length > 1) {
     let kept = words.slice(0, -1);
-    while (kept.length > 1 && ctx.measureText(`${kept.join(' ')}…`).width > TEXT_MAX_W) {
+    while (kept.length > 1 && ctx.measureText(`${kept.join(' ')}…`).width > maxWidth) {
       kept = kept.slice(0, -1);
     }
     const candidate = `${kept.join(' ')}…`;
-    if (ctx.measureText(candidate).width <= TEXT_MAX_W) return candidate;
+    if (ctx.measureText(candidate).width <= maxWidth) return candidate;
   }
 
   let label = title;
-  while (label.length > 1 && ctx.measureText(`${label}…`).width > TEXT_MAX_W) {
+  while (label.length > 1 && ctx.measureText(`${label}…`).width > maxWidth) {
     label = label.slice(0, -1);
   }
   return `${label}…`;
+}
+
+function sliceLabel(
+  ctx: CanvasRenderingContext2D,
+  title: string,
+  chance: string | undefined,
+  maxFont: number,
+  fontFamily: string
+): string {
+  if (!chance) {
+    applyFittedFont(ctx, title, maxFont, fontFamily);
+    return truncateToWidth(ctx, title, TEXT_MAX_W);
+  }
+  const suffix = ` ${chance}`;
+  applyFittedFont(ctx, `${title}${suffix}`, maxFont, fontFamily);
+  const titleRoom = TEXT_MAX_W - ctx.measureText(suffix).width;
+  return `${truncateToWidth(ctx, title, titleRoom)}${suffix}`;
 }
 
 function maxFontForSegment(segAngle: number): number {
@@ -127,6 +144,7 @@ function drawSegments(
   ctx: CanvasRenderingContext2D,
   movies: MovieData[],
   slices: readonly WheelSlice[],
+  chanceLabels: readonly string[] | undefined,
   rotation: number,
   palette: WheelPalette
 ): void {
@@ -158,9 +176,13 @@ function drawSegments(
     ctx.textBaseline = 'middle';
     ctx.textAlign = readsRightToLeft ? 'left' : 'right';
 
-    const title = movies[i]?.title ?? '';
-    applyFittedFont(ctx, title, maxFontForSegment(segAngle), palette.fontFamily);
-    const label = truncateToWidth(ctx, title);
+    const label = sliceLabel(
+      ctx,
+      movies[i]?.title ?? '',
+      chanceLabels?.[i],
+      maxFontForSegment(segAngle),
+      palette.fontFamily
+    );
 
     ctx.shadowColor = palette.labelShadow;
     ctx.shadowBlur = 4;
@@ -222,12 +244,13 @@ function createLayer(dpr: number): [HTMLCanvasElement, CanvasRenderingContext2D 
 function renderLayers(
   movies: MovieData[],
   slices: readonly WheelSlice[],
+  chanceLabels: readonly string[] | undefined,
   restRotation: number,
   dpr: number,
   palette: WheelPalette
 ): WheelLayers {
   const [disc, discCtx] = createLayer(dpr);
-  if (discCtx) drawSegments(discCtx, movies, slices, restRotation, palette);
+  if (discCtx) drawSegments(discCtx, movies, slices, chanceLabels, restRotation, palette);
   const [overlay, overlayCtx] = createLayer(dpr);
   if (overlayCtx) drawHubAndPointer(overlayCtx, palette);
   return { disc, overlay, restRotation };
@@ -249,14 +272,18 @@ function drawFrame(ctx: CanvasRenderingContext2D, layers: WheelLayers, rotation:
 interface SpinningWheelProps {
   movies: MovieData[];
   weights?: readonly number[];
+  chanceLabels?: readonly string[];
   winnerIndex: number;
+  durationMs?: number;
   onDone: () => void;
 }
 
 export default function SpinningWheel({
   movies,
   weights,
+  chanceLabels,
   winnerIndex,
+  durationMs = WHEEL_SPIN_DURATION_MS,
   onDone,
 }: Readonly<SpinningWheelProps>) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -281,7 +308,14 @@ export default function SpinningWheel({
     const jitter = randomCenteredUnit() * winnerSlice.sweep * 0.4;
     const targetRotation =
       SPIN_ROTATIONS * 2 * Math.PI - (winnerSlice.start + winnerSlice.sweep / 2) + jitter;
-    const layers = renderLayers(movies, slices, targetRotation, dpr, readWheelPalette(canvas));
+    const layers = renderLayers(
+      movies,
+      slices,
+      chanceLabels,
+      targetRotation,
+      dpr,
+      readWheelPalette(canvas)
+    );
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       drawFrame(ctx, layers, targetRotation);
@@ -294,7 +328,7 @@ export default function SpinningWheel({
 
     function animate(ts: number): void {
       startTime ??= ts;
-      const t = Math.min((ts - startTime) / WHEEL_SPIN_DURATION_MS, 1);
+      const t = Math.min((ts - startTime) / durationMs, 1);
       drawFrame(ctx!, layers, easeOutQuint(t) * targetRotation);
 
       if (t < ANIM_CUT) {
@@ -311,7 +345,7 @@ export default function SpinningWheel({
     return () => {
       if (rafRef.current !== undefined) cancelAnimationFrame(rafRef.current);
     };
-  }, [movies, weights, winnerIndex]);
+  }, [movies, weights, chanceLabels, winnerIndex, durationMs]);
 
   return (
     <div className={styles.wrapper} aria-hidden>

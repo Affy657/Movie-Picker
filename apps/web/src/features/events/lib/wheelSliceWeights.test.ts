@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import sharedCases from '../../../../../api-dotnet/MoviePicker.Api.Tests/Domain/wheel-slice-weights.json?raw';
 import type { WheelMode } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
-import { wheelSliceWeights } from './wheelSliceWeights';
+import { wheelChanceLabels, wheelSliceWeights } from './wheelSliceWeights';
 
 type SharedCase = { mode: WheelMode; scores: number[]; weights: number[] };
 
@@ -42,5 +42,22 @@ describe('wheelSliceWeights', () => {
     const movies = [{ id: 'm1', title: 'Film' } as MovieData];
 
     expect(wheelSliceWeights(movies, 'weightedByVotes')).toEqual([1]);
+  });
+});
+
+describe('wheelChanceLabels', () => {
+  it('gives each film its share of the wheel, so 0 votes against 1 reads 33 % against 67 %', () => {
+    expect(wheelChanceLabels([1, 2], 'en')).toEqual(['33%', '67%']);
+  });
+
+  it('never writes 0 % for a film that can still win', () => {
+    expect(wheelChanceLabels([1, 400], 'en')).toEqual(['1%', '100%']);
+  });
+
+  it('writes the share the French way', () => {
+    const [first, second] = wheelChanceLabels([1, 1], 'fr');
+
+    expect(first).toMatch(/^50\s%$/);
+    expect(second).toBe(first);
   });
 });

@@ -13,8 +13,24 @@ vi.mock('canvas-confetti', () => ({
   }),
 }));
 vi.mock('./SpinningWheel', () => ({
-  default: ({ onDone, weights }: { onDone: () => void; weights?: readonly number[] }) => (
-    <button data-testid="spin-done-trigger" data-weights={weights?.join(',')} onClick={onDone}>
+  default: ({
+    onDone,
+    weights,
+    chanceLabels,
+    durationMs,
+  }: {
+    onDone: () => void;
+    weights?: readonly number[];
+    chanceLabels?: readonly string[];
+    durationMs?: number;
+  }) => (
+    <button
+      data-testid="spin-done-trigger"
+      data-weights={weights?.join(',')}
+      data-chances={chanceLabels?.join(',')}
+      data-duration={durationMs}
+      onClick={onDone}
+    >
       Fin de roue
     </button>
   ),
@@ -40,7 +56,9 @@ const baseMovie: MovieData = {
   down: 0,
 };
 
-const movies: MovieData[] = [baseMovie];
+const alien: MovieData = { ...baseMovie, id: 'm2', tmdbId: 2, title: 'Alien', year: '1979' };
+
+const movies: MovieData[] = [baseMovie, alien];
 
 function wrap(ui: ReactNode) {
   return render(<LocaleProvider>{ui}</LocaleProvider>);
@@ -81,6 +99,95 @@ describe('WheelModal', () => {
     );
 
     expect(screen.getByTestId('spin-done-trigger')).toHaveAttribute('data-weights', '5,1');
+  });
+
+  it('reveals the only movie of the draw at once, instead of spinning a wheel of one slice', () => {
+    const onSpinComplete = vi.fn();
+    wrap(
+      <WheelModal
+        open
+        movies={[baseMovie]}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+        onSpinComplete={onSpinComplete}
+      />
+    );
+
+    expect(screen.queryByTestId('spin-done-trigger')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /film sélectionné/i })).toBeInTheDocument();
+    expect(onSpinComplete).toHaveBeenCalledOnce();
+  });
+
+  it('moves the focus onto the result once the wheel stops', () => {
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId('spin-done-trigger'));
+
+    expect(screen.getByRole('heading', { name: /film sélectionné/i })).toHaveFocus();
+  });
+
+  it('spins for the time it is given', () => {
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        spinDurationMs={3200}
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(screen.getByTestId('spin-done-trigger')).toHaveAttribute('data-duration', '3200');
+  });
+
+  it('shows the chance of each movie on a draw weighted by votes', () => {
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        weights={[1, 2]}
+        showChances
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(screen.getByTestId('spin-done-trigger').dataset.chances).toMatch(/^33\s%,67\s%$/);
+    expect(screen.getByText(/plus un film a de votes/i)).toBeInTheDocument();
+    expect(screen.getByRole('list')).toHaveTextContent(/Interstellar : 33\s%/);
+    expect(screen.getByRole('list')).toHaveTextContent(/Alien : 67\s%/);
+  });
+
+  it('leaves the chances out of a draw where every movie has the same', () => {
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        weights={[1, 1]}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(screen.getByTestId('spin-done-trigger')).not.toHaveAttribute('data-chances');
+    expect(screen.queryByText(/plus un film a de votes/i)).not.toBeInTheDocument();
   });
 
   it('cannot be dismissed while the wheel spins, so the winner is not announced early', () => {
@@ -182,7 +289,7 @@ describe('WheelModal', () => {
     wrap(
       <WheelModal
         open
-        movies={[drawn]}
+        movies={[drawn, alien]}
         winnerIndex={0}
         winner={drawn}
         wheelKey={1}
@@ -236,7 +343,7 @@ describe('WheelModal', () => {
     wrap(
       <WheelModal
         open
-        movies={[movieWithProviders]}
+        movies={[movieWithProviders, alien]}
         winnerIndex={0}
         winner={movieWithProviders}
         wheelKey={1}

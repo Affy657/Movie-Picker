@@ -2,6 +2,8 @@ import type { WinnerPickMethod } from '@/shared/types/event';
 
 export const WHEEL_SPIN_DURATION_MS = 7500;
 
+export const WHEEL_REPLAY_MIN_SPIN_MS = 3000;
+
 export function remainingWheelRevealDelayMs(
   winnerPickMethod: WinnerPickMethod | null | undefined,
   winnerPickedAt: string | null | undefined,
