@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.30.0] - 2026-11-23
+
 ### Added
 
 - **Une invitation qui mène jusqu’à la soirée** : la carte « Rejoindre la soirée » dit qui vous invite et comment se déroule la soirée, et l’invité qui crée son compte ou se connecte depuis le lien est inscrit à la soirée sans recliquer sur « Rejoindre », avec un message qui le confirme.
@@ -1037,7 +1039,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.29.1...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.30.0...HEAD
+[1.30.0]: https://github.com/Affy657/Movie-Picker/compare/v1.29.1...v1.30.0
 [1.29.1]: https://github.com/Affy657/Movie-Picker/compare/v1.29.0...v1.29.1
 [1.29.0]: https://github.com/Affy657/Movie-Picker/compare/v1.28.0...v1.29.0
 [1.28.0]: https://github.com/Affy657/Movie-Picker/compare/v1.27.2...v1.28.0
