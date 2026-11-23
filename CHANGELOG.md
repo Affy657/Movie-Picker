@@ -2,7 +2,7 @@
 
 Toutes les évolutions notables de Movie Picker sont consignées dans ce fichier.
 
-Le format s'appuie sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le
+Le format s’appuie sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le
 projet suit le [versionnage sémantique](https://semver.org/lang/fr/) (SemVer). Chaque
 version publiée est associée à un tag Git et à une release GitHub.
 
@@ -12,7 +12,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Fixed
 
-- **La recherche de la barre de navigation reste à jour et se referme mieux** : une liste, un groupe ou une soirée que vous venez de changer apparaît tel quel à la recherche suivante, « Rien ne correspond » ne s'affiche plus sous des mots encore en cours de recherche, la loupe referme la recherche qu'elle a ouverte, et Échap rend la main au champ d'Explorer.
+- **La recherche de la barre de navigation reste à jour et se referme mieux** : une liste, un groupe ou une soirée que vous venez de changer apparaît tel quel à la recherche suivante, « Rien ne correspond » ne s’affiche plus sous des mots encore en cours de recherche, la loupe referme la recherche qu’elle a ouverte, et Échap rend la main au champ d’Explorer.
 
 ## [1.29.0] - 2026-11-23
 
@@ -61,17 +61,17 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Added
 
-- **Modifiez votre profil depuis votre profil** : le bouton Modifier mon profil ouvre une page qui réunit votre nom, votre pseudo, votre bio, votre avatar, votre bannière, votre couleur, vos favoris et la visibilité du profil, avec l'aperçu du résultat en haut. Le pseudo ne change qu'une fois sa disponibilité vérifiée, et les favoris se choisissent parmi vos films vus et votre liste.
+- **Modifiez votre profil depuis votre profil** : le bouton Modifier mon profil ouvre une page qui réunit votre nom, votre pseudo, votre bio, votre avatar, votre bannière, votre couleur, vos favoris et la visibilité du profil, avec l’aperçu du résultat en haut. Le pseudo ne change qu’une fois sa disponibilité vérifiée, et les favoris se choisissent parmi vos films vus et votre liste.
 
 ### Fixed
 
-- **Les fenêtres qui montent du bas de l'écran prennent toute la largeur du téléphone** : certaines s'arrêtaient à quelques millimètres du bord droit.
+- **Les fenêtres qui montent du bas de l’écran prennent toute la largeur du téléphone** : certaines s’arrêtaient à quelques millimètres du bord droit.
 
 ## [1.24.0] - 2026-11-20
 
 ### Added
 
-- **Votre couleur se voit sur votre profil et en soirée** : la couleur choisie dans vos préférences teinte votre profil pour tous ceux qui le visitent (chiffres, boutons, fondu de la bannière, contour de l'avatar) et entoure votre avatar dans les soirées.
+- **Votre couleur se voit sur votre profil et en soirée** : la couleur choisie dans vos préférences teinte votre profil pour tous ceux qui le visitent (chiffres, boutons, fondu de la bannière, contour de l’avatar) et entoure votre avatar dans les soirées.
 
 ### Changed
 
@@ -86,24 +86,24 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Changed
 
-- **Le profil montre les films vus sur Movie Picker** : la rangée, sa page et la liste qu'on en enregistre ne gardent que les films vus en soirée, sans ceux de Letterboxd ni ceux marqués à la main. Votre liste « Films vus » de Mes listes les garde tous.
-- **La carte Letterboxd des réglages se lit d'un coup d'œil** : votre compte, À voir, Films vus et la synchronisation ont chacun leur ligne, avec les mêmes espacements et les mêmes boutons que les autres réglages.
+- **Le profil montre les films vus sur Movie Picker** : la rangée, sa page et la liste qu’on en enregistre ne gardent que les films vus en soirée, sans ceux de Letterboxd ni ceux marqués à la main. Votre liste « Films vus » de Mes listes les garde tous.
+- **La carte Letterboxd des réglages se lit d’un coup d’œil** : votre compte, À voir, Films vus et la synchronisation ont chacun leur ligne, avec les mêmes espacements et les mêmes boutons que les autres réglages.
 
 ### Fixed
 
-- **La synchronisation des films vus Letterboxd fonctionne de nouveau** : Letterboxd ne laisse plus lire la liste entière, Movie Picker recopie donc vos films sortis récemment et ceux de votre journal, et dit combien n'ont pas pu être lus. Jusqu'ici, plus rien n'arrivait.
+- **La synchronisation des films vus Letterboxd fonctionne de nouveau** : Letterboxd ne laisse plus lire la liste entière, Movie Picker recopie donc vos films sortis récemment et ceux de votre journal, et dit combien n’ont pas pu être lus. Jusqu’ici, plus rien n’arrivait.
 
 ## [1.22.0] - 2026-11-20
 
 ### Added
 
-- **Les groupes d'amis, pour ne plus envoyer de lien** : créez un groupe depuis le menu du compte, invitez vos amis une seule fois, et chaque soirée rattachée au groupe arrive dans leur page Mes soirées avec une notification. Une soirée qui se répète reste dans le groupe, et la page du groupe montre la prochaine soirée, qui vient et les films gagnants.
+- **Les groupes d’amis, pour ne plus envoyer de lien** : créez un groupe depuis le menu du compte, invitez vos amis une seule fois, et chaque soirée rattachée au groupe arrive dans leur page Mes soirées avec une notification. Une soirée qui se répète reste dans le groupe, et la page du groupe montre la prochaine soirée, qui vient et les films gagnants.
 
 ## [1.21.0] - 2026-11-20
 
 ### Added
 
-- **Toutes les listes se lisent de la même façon** : la page d'une saga ou d'une sélection d'Explorer reprend celle d'une liste, avec le résumé de la saga, « Piocher un film » et la vue en liste, et la page des sagas les présente une par ligne comme Mes listes, avec vos films vus.
+- **Toutes les listes se lisent de la même façon** : la page d’une saga ou d’une sélection d’Explorer reprend celle d’une liste, avec le résumé de la saga, « Piocher un film » et la vue en liste, et la page des sagas les présente une par ligne comme Mes listes, avec vos films vus.
 
 ### Changed
 
@@ -113,19 +113,19 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Added
 
-- **Une bannière en haut de votre profil** : l'image d'un film, choisie parmi des suggestions ou dans n'importe quel film, ou votre propre image recadrée, qui se fond dans la page sous votre nom.
+- **Une bannière en haut de votre profil** : l’image d’un film, choisie parmi des suggestions ou dans n’importe quel film, ou votre propre image recadrée, qui se fond dans la page sous votre nom.
 
 ## [1.19.0] - 2026-11-19
 
 ### Added
 
-- **Les films vus, les films proposés et les propositions gagnantes d'un membre s'enregistrent dans Mes listes** : depuis son profil, comme une liste publique, et ils suivent ses ajouts.
+- **Les films vus, les films proposés et les propositions gagnantes d’un membre s’enregistrent dans Mes listes** : depuis son profil, comme une liste publique, et ils suivent ses ajouts.
 
 ## [1.18.0] - 2026-11-19
 
 ### Added
 
-- **Les films de toutes vos soirées réunis sur une page**, dans Mes listes et depuis Mes soirées : retrouvez un film croisé un soir sans vous rappeler de quelle soirée il venait, qu'il soit proposé par vous ou par un autre, avec les gagnants signalés.
+- **Les films de toutes vos soirées réunis sur une page**, dans Mes listes et depuis Mes soirées : retrouvez un film croisé un soir sans vous rappeler de quelle soirée il venait, qu’il soit proposé par vous ou par un autre, avec les gagnants signalés.
 
 ## [1.17.0] - 2026-11-19
 
@@ -137,7 +137,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Fixed
 
-- **La politique de confidentialité liste toutes les étapes que Movie Picker compte**, et dit ce que l'onglet retient pour ne compter chacune qu'une fois.
+- **La politique de confidentialité liste toutes les étapes que Movie Picker compte**, et dit ce que l’onglet retient pour ne compter chacune qu’une fois.
 
 ## [1.16.2] - 2026-11-19
 
@@ -149,29 +149,29 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Changed
 
-- **« Proposer une idée » et « Signaler un problème » s'ouvrent en feuille sur téléphone**, avec la poignée pour les fermer d'un glissement, comme les autres fenêtres.
-- **La liste d'abonnés porte le même titre partout**, « Abonnés et abonnements », quel que soit l'onglet ouvert.
+- **« Proposer une idée » et « Signaler un problème » s’ouvrent en feuille sur téléphone**, avec la poignée pour les fermer d’un glissement, comme les autres fenêtres.
+- **La liste d’abonnés porte le même titre partout**, « Abonnés et abonnements », quel que soit l’onglet ouvert.
 
 ### Fixed
 
-- **Les anciens iPhone retrouvent les couleurs douces de l'app** : sur iOS 15, fonds teintés, bordures, survols et contours de focus étaient invisibles.
-- **Le fond assombri derrière les fenêtres et les feuilles revient sur iPhone 8 et X** (iOS 16, et iOS 17 jusqu'à 17.3), où la page restait en pleine lumière derrière.
-- **En paysage, plus rien ne passe sous l'encoche** : en-tête, pages et pied de page lui laissent sa place, la bande-annonce tient entière à l'écran et le texte ne grossit plus en tournant le téléphone.
+- **Les anciens iPhone retrouvent les couleurs douces de l’app** : sur iOS 15, fonds teintés, bordures, survols et contours de focus étaient invisibles.
+- **Le fond assombri derrière les fenêtres et les feuilles revient sur iPhone 8 et X** (iOS 16, et iOS 17 jusqu’à 17.3), où la page restait en pleine lumière derrière.
+- **En paysage, plus rien ne passe sous l’encoche** : en-tête, pages et pied de page lui laissent sa place, la bande-annonce tient entière à l’écran et le texte ne grossit plus en tournant le téléphone.
 - **Sur iPhone, plus de flash gris au toucher**, les champs de date vides gardent leur hauteur et le remplissage automatique du trousseau ne colore plus les champs en jaune.
-- **Les confettis du tirage s'affichent aussi sur iOS 16 et plus ancien.**
+- **Les confettis du tirage s’affichent aussi sur iOS 16 et plus ancien.**
 - **Le pied de page ne glisse plus quand la barre de Safari se replie ou se déplie.**
 
 ## [1.16.0] - 2026-11-18
 
 ### Added
 
-- **Des totaux anonymes pour savoir ce qui sert vraiment** : Movie Picker compte lui-même, par jour, sans cookie ni identifiant, quelques étapes (ouverture du lien d'une soirée, inscription, arrivée dans une soirée, ouverture d'un recap, pioche, synchronisation Letterboxd), pour voir où décroche une personne invitée. Si vous refusez la mesure d'audience, votre navigateur n'envoie plus ceux qui partent de lui ; la politique de confidentialité détaille le tout.
+- **Des totaux anonymes pour savoir ce qui sert vraiment** : Movie Picker compte lui-même, par jour, sans cookie ni identifiant, quelques étapes (ouverture du lien d’une soirée, inscription, arrivée dans une soirée, ouverture d’un récap, pioche, synchronisation Letterboxd), pour voir où décroche une personne invitée. Si vous refusez la mesure d’audience, votre navigateur n’envoie plus ceux qui partent de lui ; la politique de confidentialité détaille le tout.
 
 ## [1.15.5] - 2026-11-18
 
 ### Changed
 
-- **Toute l'application vous vouvoie** : les notifications, l'e-mail de réinitialisation du mot de passe, l'aperçu d'une invitation partagée et trois messages de l'application qui vous tutoyaient encore.
+- **Toute l’application vous vouvoie** : les notifications, l’e-mail de réinitialisation du mot de passe, l’aperçu d’une invitation partagée et trois messages de l’application qui vous tutoyaient encore.
 
 ### Fixed
 
@@ -181,91 +181,91 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Changed
 
-- **Menus, listes déroulantes et fenêtres se ressemblent partout** : même surface, même croix de fermeture, mêmes boutons en bas (Annuler à gauche, l'action à droite), une ouverture en fondu, et un menu qui s'ouvre vers le haut quand la place manque en bas de l'écran.
-- **Le tri sur téléphone propose les deux sens**, Croissant et Décroissant, au lieu d'une entrée qui inversait le sens en affichant le sens actuel.
-- **Une confirmation de suppression place le curseur sur Annuler**, pour qu'Entrée ne supprime rien par mégarde ; « Terminer la soirée » n'est plus présenté comme une action dangereuse.
+- **Menus, listes déroulantes et fenêtres se ressemblent partout** : même surface, même croix de fermeture, mêmes boutons en bas (Annuler à gauche, l’action à droite), une ouverture en fondu, et un menu qui s’ouvre vers le haut quand la place manque en bas de l’écran.
+- **Le tri sur téléphone propose les deux sens**, Croissant et Décroissant, au lieu d’une entrée qui inversait le sens en affichant le sens actuel.
+- **Une confirmation de suppression place le curseur sur Annuler**, pour qu’Entrée ne supprime rien par mégarde ; « Terminer la soirée » n’est plus présenté comme une action dangereuse.
 
 ### Fixed
 
-- **Les menus ne passent plus sous la barre du bas ni sous la carte suivante** : sur téléphone, le menu d'un film de la soirée s'ouvre au-dessus de la barre, et le menu d'une carte de Mes soirées passe devant la carte d'en dessous.
+- **Les menus ne passent plus sous la barre du bas ni sous la carte suivante** : sur téléphone, le menu d’un film de la soirée s’ouvre au-dessus de la barre, et le menu d’une carte de Mes soirées passe devant la carte d’en dessous.
 - **La bande-annonce garde un titre et une croix lisibles en thème clair.**
-- **Les fenêtres ne coupent plus leur contenu sur un petit écran** : consentement aux cookies, photo de profil et réglages de la soirée défilent jusqu'à leurs boutons.
-- **Le pied de la feuille « Proposer un film » reste en bas de l'écran**, même quand la recherche est vide.
-- **Fermer un panneau de filtres ou le choix d'emoji rend la main au bouton qui l'a ouvert**, au clavier comme au lecteur d'écran.
-- **Un lecteur d'écran annonce le tri en cours** dans les menus de tri.
+- **Les fenêtres ne coupent plus leur contenu sur un petit écran** : consentement aux cookies, photo de profil et réglages de la soirée défilent jusqu’à leurs boutons.
+- **Le pied de la feuille « Proposer un film » reste en bas de l’écran**, même quand la recherche est vide.
+- **Fermer un panneau de filtres ou le choix d’emoji rend la main au bouton qui l’a ouvert**, au clavier comme au lecteur d’écran.
+- **Un lecteur d’écran annonce le tri en cours** dans les menus de tri.
 
 ## [1.15.3] - 2026-11-18
 
 ### Changed
 
-- **Une soirée à plusieurs films reste ouverte jusqu'au dernier tirage** : passé l'heure de la soirée, l'hôte peut encore tirer les films suivants, la soirée n'est plus annoncée en suspens quand un film est déjà choisi, et « Terminer la soirée », sur la soirée ou dans À traiter de Mes soirées, la clôt avec les films déjà tirés. Le film tiré compte comme vu dès la fin de la soirée.
+- **Une soirée à plusieurs films reste ouverte jusqu’au dernier tirage** : passé l’heure de la soirée, l’hôte peut encore tirer les films suivants, la soirée n’est plus annoncée en suspens quand un film est déjà choisi, et « Terminer la soirée », sur la soirée ou dans À traiter de Mes soirées, la clôt avec les films déjà tirés. Le film tiré compte comme vu dès la fin de la soirée.
 - **Vos propositions gagnantes suivent la confidentialité de vos films vus** : quand vos films vus sont privés, les autres membres ne voient plus vos propositions gagnantes, ni leur nombre, ni leur note moyenne.
-- **Un film ajouté à une liste ou marqué comme vu prend le titre, l'année, la note et la durée de TMDB**, y compris les films vus importés depuis Letterboxd.
+- **Un film ajouté à une liste ou marqué comme vu prend le titre, l’année, la note et la durée de TMDB**, y compris les films vus importés depuis Letterboxd.
 
 ### Fixed
 
-- **L'en-tête reste en place d'une page à l'autre** : changer de page ne cache plus l'en-tête, le pied et la barre du bas derrière le chargeur, et la synchronisation Letterboxd ne repart plus à chaque page.
-- **Les pages publiques ne clignotent plus à l'ouverture** : sur Soutenir, Comment ça marche ou les sélections de films, le titre ne disparaît plus un instant derrière le chargeur.
-- **Les affiches d'une longue liste s'affichent toutes**, au lieu de rester vides au-delà de la trois-centième.
-- **Pendant une soirée, le passage à en cours, terminée ou en suspens et l'ouverture des notes s'affichent tout de suite**, sans plusieurs minutes de retard.
-- **Un vote fait sur un réseau faible part dès que la connexion répond de nouveau**, et retoucher un vote en attente ne l'annule plus. Sur la page d'un film, un vote fait hors ligne puis refusé par la soirée est signalé.
-- **Relancée sans réseau, l'application ouvre la dernière soirée consultée** sous la bannière « Données en cache, reconnexion en cours. », au lieu d'une page d'erreur.
+- **L’en-tête reste en place d’une page à l’autre** : changer de page ne cache plus l’en-tête, le pied et la barre du bas derrière le chargeur, et la synchronisation Letterboxd ne repart plus à chaque page.
+- **Les pages publiques ne clignotent plus à l’ouverture** : sur Soutenir, Comment ça marche ou les sélections de films, le titre ne disparaît plus un instant derrière le chargeur.
+- **Les affiches d’une longue liste s’affichent toutes**, au lieu de rester vides au-delà de la trois-centième.
+- **Pendant une soirée, le passage à en cours, terminée ou en suspens et l’ouverture des notes s’affichent tout de suite**, sans plusieurs minutes de retard.
+- **Un vote fait sur un réseau faible part dès que la connexion répond de nouveau**, et retoucher un vote en attente ne l’annule plus. Sur la page d’un film, un vote fait hors ligne puis refusé par la soirée est signalé.
+- **Relancée sans réseau, l’application ouvre la dernière soirée consultée** sous la bannière « Données en cache, reconnexion en cours. », au lieu d’une page d’erreur.
 - **Un invité qui vient de rejoindre une soirée apparaît tout de suite en ligne** pour les autres, et VoiceOver annonce qui est en ligne ou propose un film dans la liste des participants.
-- **La note moyenne de la page d'un film ne compte plus les notes d'un film retiré des gagnants** de sa soirée.
-- **La page des films vus d'un profil affiche et compte tous ses films**, au lieu de s'arrêter à 200.
-- **Après une connexion par mot de passe, les listes publiques et les profils montrent tout de suite votre progression et vos abonnements**, et l'avis de déconnexion en attente disparaît.
-- **La recherche d'une liste, ainsi que la recherche et le tri de Mes listes, sont conservés au retour de la page d'un film**, et le tri et les filtres choisis sur une liste ne s'appliquent plus à vos autres listes.
-- **Une watchlist rendue privée indique qu'elle n'est pas publique**, au lieu de « Ce profil n'existe pas ».
-- **Depuis la page d'un film, « Voir la saga » et « Tout voir » affichent le nom de la saga ou « Films similaires à » suivi du titre**, au lieu d'un titre générique.
-- **Une invitation à une liste restée sans réponse expire au bout de 90 jours** : elle libère sa place et l'hôte peut la renvoyer.
-- **Un réseau faible ne recharge plus la page en pleine saisie** : seul l'échec de la page demandée déclenche le rechargement qui suit une mise à jour.
-- **Sur iPhone, le bas des fenêtres qui s'ouvrent depuis le bas de l'écran ne passe plus sous la barre d'accueil.**
-- **Au clavier, fermer « Envoyer un retour » ou le guide d'installation rend le focus au menu du compte.**
+- **La note moyenne de la page d’un film ne compte plus les notes d’un film retiré des gagnants** de sa soirée.
+- **La page des films vus d’un profil affiche et compte tous ses films**, au lieu de s’arrêter à 200.
+- **Après une connexion par mot de passe, les listes publiques et les profils montrent tout de suite votre progression et vos abonnements**, et l’avis de déconnexion en attente disparaît.
+- **La recherche d’une liste, ainsi que la recherche et le tri de Mes listes, sont conservés au retour de la page d’un film**, et le tri et les filtres choisis sur une liste ne s’appliquent plus à vos autres listes.
+- **Une watchlist rendue privée indique qu’elle n’est pas publique**, au lieu de « Ce profil n’existe pas ».
+- **Depuis la page d’un film, « Voir la saga » et « Tout voir » affichent le nom de la saga ou « Films similaires à » suivi du titre**, au lieu d’un titre générique.
+- **Une invitation à une liste restée sans réponse expire au bout de 90 jours** : elle libère sa place et l’hôte peut la renvoyer.
+- **Un réseau faible ne recharge plus la page en pleine saisie** : seul l’échec de la page demandée déclenche le rechargement qui suit une mise à jour.
+- **Sur iPhone, le bas des fenêtres qui s’ouvrent depuis le bas de l’écran ne passe plus sous la barre d’accueil.**
+- **Au clavier, fermer « Envoyer un retour » ou le guide d’installation rend le focus au menu du compte.**
 
 ### Security
 
-- **Les liens d'invitation à une liste ne sont plus conservés dans les journaux du serveur.**
-- **Après la suppression d'un compte, plus rien n'est recréé à son nom**, ni par une session encore ouverte ni par une synchronisation Letterboxd en cours.
-- **Refuser la mesure d'audience vaut pour tous les onglets ouverts**, sans avoir à les recharger.
+- **Les liens d’invitation à une liste ne sont plus conservés dans les journaux du serveur.**
+- **Après la suppression d’un compte, plus rien n’est recréé à son nom**, ni par une session encore ouverte ni par une synchronisation Letterboxd en cours.
+- **Refuser la mesure d’audience vaut pour tous les onglets ouverts**, sans avoir à les recharger.
 
 ## [1.15.2] - 2026-11-16
 
 ### Changed
 
-- **Mes listes se lit d'un coup d'œil** : À voir et Films vus en raccourcis en tête, puis une liste par ligne, rangées en trois sections (Vos listes, Partagées avec vous, Enregistrées), chacune avec son nombre de films vus, avec qui vous la remplissez ou d'où elle vient. Recherche et tri n'apparaissent qu'à partir de sept listes, et le sens du tri se choisit dans le menu.
+- **Mes listes se lit d’un coup d’œil** : À voir et Films vus en raccourcis en tête, puis une liste par ligne, rangées en trois sections (Vos listes, Partagées avec vous, Enregistrées), chacune avec son nombre de films vus, avec qui vous la remplissez ou d’où elle vient. Recherche et tri n’apparaissent qu’à partir de sept listes, et le sens du tri se choisit dans le menu.
 
 ## [1.15.1] - 2026-11-16
 
 ### Changed
 
-- **Les pages s'affichent plus vite à l'ouverture du site** : la page demandée se charge en même temps que l'application au lieu de l'attendre, et la photo d'un profil arrive en priorité. Le bandeau des cookies apparaît d'un léger glissement, sans fondu.
+- **Les pages s’affichent plus vite à l’ouverture du site** : la page demandée se charge en même temps que l’application au lieu de l’attendre, et la photo d’un profil arrive en priorité. Le bandeau des cookies apparaît d’un léger glissement, sans fondu.
 
 ## [1.15.0] - 2026-11-16
 
 ### Added
 
-- **La page d'une soirée se met à jour en direct** : propositions, votes et arrivées de participants s'affichent en une à deux secondes, sans recharger la page.
-- **Qui est là, qui propose** : la page d'une soirée indique combien de participants sont en ligne, les marque d'un point vert dans la liste des participants et affiche « Alice propose un film… » pendant que quelqu'un cherche un film à proposer.
-- **La dernière soirée ouverte reste lisible sans réseau** : sans connexion, elle s'affiche avec ses films et ses votes sous la bannière « Données en cache, reconnexion en cours. ». Proposer un film, lancer la roue ou régler la soirée attendent le retour du réseau.
-- **Les votes faits sans réseau partent tout seuls** : un vote posé hors ligne s'affiche aussitôt, marqué en attente, puis part au retour de la connexion. Un vote que la soirée refuse entre-temps est signalé avec sa raison.
+- **La page d’une soirée se met à jour en direct** : propositions, votes et arrivées de participants s’affichent en une à deux secondes, sans recharger la page.
+- **Qui est là, qui propose** : la page d’une soirée indique combien de participants sont en ligne, les marque d’un point vert dans la liste des participants et affiche « Alice propose un film… » pendant que quelqu’un cherche un film à proposer.
+- **La dernière soirée ouverte reste lisible sans réseau** : sans connexion, elle s’affiche avec ses films et ses votes sous la bannière « Données en cache, reconnexion en cours. ». Proposer un film, lancer la roue ou régler la soirée attendent le retour du réseau.
+- **Les votes faits sans réseau partent tout seuls** : un vote posé hors ligne s’affiche aussitôt, marqué en attente, puis part au retour de la connexion. Un vote que la soirée refuse entre-temps est signalé avec sa raison.
 
 ## [1.14.0] - 2026-11-16
 
 ### Added
 
-- **Ma liste devient Mes listes** : vous y créez, renommez et supprimez vos propres listes à côté d'« À voir », et un film s'ajoute à n'importe laquelle depuis sa page.
-- **Les films vus ont leur liste** : « Je l'ai vu » et votre note sur la page d'un film, la liste « Films vus » dans Mes listes, la part déjà vue de chaque liste et l'option pour griser les films vus.
-- **Letterboxd remplit aussi vos films vus**, avec la date et la note de chaque film, et « À voir » signale les films absents de votre watchlist Letterboxd. Si votre compte était déjà relié, cette synchronisation reste coupée tant que vous ne l'activez pas dans Compte, Intégrations.
-- **Une saga, une sélection d'Explorer ou la liste publique d'un membre s'enregistre dans Mes listes**, reste à jour avec sa source et se copie en liste à vous.
-- **Les listes se partagent à plusieurs** : invitez des comptes que vous suivez ou partagez un lien, les membres ajoutent et retirent des films, et chaque film affiche qui l'a ajouté.
+- **Ma liste devient Mes listes** : vous y créez, renommez et supprimez vos propres listes à côté d’« À voir », et un film s’ajoute à n’importe laquelle depuis sa page.
+- **Les films vus ont leur liste** : « Je l’ai vu » et votre note sur la page d’un film, la liste « Films vus » dans Mes listes, la part déjà vue de chaque liste et l’option pour griser les films vus.
+- **Letterboxd remplit aussi vos films vus**, avec la date et la note de chaque film, et « À voir » signale les films absents de votre watchlist Letterboxd. Si votre compte était déjà relié, cette synchronisation reste coupée tant que vous ne l’activez pas dans Compte, Intégrations.
+- **Une saga, une sélection d’Explorer ou la liste publique d’un membre s’enregistre dans Mes listes**, reste à jour avec sa source et se copie en liste à vous.
+- **Les listes se partagent à plusieurs** : invitez des comptes que vous suivez ou partagez un lien, les membres ajoutent et retirent des films, et chaque film affiche qui l’a ajouté.
 - **Les listes deviennent publiques ou privées** : votre profil affiche vos listes publiques et ouvre leur page, et vous choisissez si vos films vus y sont visibles.
 
 ## [1.13.0] - 2026-11-13
 
 ### Added
 
-- **Les films proposés et les propositions gagnantes d'un profil s'ouvrent en liste** : sur le profil, toucher « films proposés » ou « propositions gagnantes » affiche les films concernés, chacun une seule fois avec le nombre de fois où il a été proposé ou a gagné, avec la recherche, les filtres et le tri des films vus.
-- **La note moyenne des propositions** rejoint les chiffres du profil : pour chaque film proposé qui a gagné une soirée, la moyenne des notes de toute la soirée, puis la moyenne de ces films. Elle s'affiche dès que trois de ces films sont notés et permet de voir qui propose les films les plus appréciés.
+- **Les films proposés et les propositions gagnantes d’un profil s’ouvrent en liste** : sur le profil, toucher « films proposés » ou « propositions gagnantes » affiche les films concernés, chacun une seule fois avec le nombre de fois où il a été proposé ou a gagné, avec la recherche, les filtres et le tri des films vus.
+- **La note moyenne des propositions** rejoint les chiffres du profil : pour chaque film proposé qui a gagné une soirée, la moyenne des notes de toute la soirée, puis la moyenne de ces films. Elle s’affiche dès que trois de ces films sont notés et permet de voir qui propose les films les plus appréciés.
 
 ### Fixed
 
@@ -275,65 +275,65 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Fixed
 
-- **En revenant de la page d'un film, la liste reprend là où vous étiez** : recherche, filtres, tri, films déjà chargés et position dans la page dans Explorer et les collections d'un profil, genre et plateforme choisis sur l'accueil, tri de la soirée, et tirage au hasard de votre liste.
-- **La page d'un film ou d'une série s'ouvre plus vite** depuis les listes et les soirées, affiche un état de chargement, garde ses boutons inactifs tant que le titre n'est pas connu, propose de réessayer si ses informations ne chargent pas et ramène à l'accueil quand le titre n'existe pas.
-- **Sur la page d'un film ouvert depuis une soirée, un vote refusé parce que tous vos votes sont posés vous l'explique**, et un ajout à votre liste qui échoue s'affiche au lieu de passer inaperçu.
-- **La rubrique « Dans vos soirées » d'une page de film se met à jour** après une proposition ou un film marqué comme vu.
-- **Le bouton Retour du navigateur se comporte comme attendu** : après avoir retiré un film d'une soirée depuis sa page, il ne ramène plus sur la même soirée, et les anciens liens vers un film s'ouvrent sans erreur puis ramènent à la liste d'où ils venaient.
-- **Les pages de séries parlent de série**, et la phrase d'accroche d'un film suit la ponctuation de la langue choisie.
-- **« Nouvelle soirée » ne crée plus de soirée en double** : fermer la fenêtre pendant la création ne la crée plus sans vous le dire, la fenêtre reste ouverte jusqu'au lien d'invitation, et son menu « Calendrier » s'affiche en entier.
-- **Recharger une soirée tout juste créée, ou y revenir depuis la page d'un film, ne rouvre plus « Proposer un film »** ni l'avertissement sur les options.
-- **« Créer une soirée » s'ouvre sur place depuis l'accueil**, l'annuler vous y laisse, et la fenêtre s'ouvre sans délai au premier appui sur téléphone. Le lien de création ouvert avec une session expirée n'affiche plus la fenêtre par-dessus la page de connexion.
-- **Au clavier, les flèches parcourent les jours et les heures de « Nouvelle soirée »** sans entrer dans le champ « Autre » ; Entrée ou Espace l'ouvre. En refaisant une soirée, la pastille mise en avant dans les règles est bien celle que vous refaites.
+- **En revenant de la page d’un film, la liste reprend là où vous étiez** : recherche, filtres, tri, films déjà chargés et position dans la page dans Explorer et les collections d’un profil, genre et plateforme choisis sur l’accueil, tri de la soirée, et tirage au hasard de votre liste.
+- **La page d’un film ou d’une série s’ouvre plus vite** depuis les listes et les soirées, affiche un état de chargement, garde ses boutons inactifs tant que le titre n’est pas connu, propose de réessayer si ses informations ne chargent pas et ramène à l’accueil quand le titre n’existe pas.
+- **Sur la page d’un film ouvert depuis une soirée, un vote refusé parce que tous vos votes sont posés vous l’explique**, et un ajout à votre liste qui échoue s’affiche au lieu de passer inaperçu.
+- **La rubrique « Dans vos soirées » d’une page de film se met à jour** après une proposition ou un film marqué comme vu.
+- **Le bouton Retour du navigateur se comporte comme attendu** : après avoir retiré un film d’une soirée depuis sa page, il ne ramène plus sur la même soirée, et les anciens liens vers un film s’ouvrent sans erreur puis ramènent à la liste d’où ils venaient.
+- **Les pages de séries parlent de série**, et la phrase d’accroche d’un film suit la ponctuation de la langue choisie.
+- **« Nouvelle soirée » ne crée plus de soirée en double** : fermer la fenêtre pendant la création ne la crée plus sans vous le dire, la fenêtre reste ouverte jusqu’au lien d’invitation, et son menu « Calendrier » s’affiche en entier.
+- **Recharger une soirée tout juste créée, ou y revenir depuis la page d’un film, ne rouvre plus « Proposer un film »** ni l’avertissement sur les options.
+- **« Créer une soirée » s’ouvre sur place depuis l’accueil**, l’annuler vous y laisse, et la fenêtre s’ouvre sans délai au premier appui sur téléphone. Le lien de création ouvert avec une session expirée n’affiche plus la fenêtre par-dessus la page de connexion.
+- **Au clavier, les flèches parcourent les jours et les heures de « Nouvelle soirée »** sans entrer dans le champ « Autre » ; Entrée ou Espace l’ouvre. En refaisant une soirée, la pastille mise en avant dans les règles est bien celle que vous refaites.
 - **Sur téléphone, toucher le logo ne déclenche plus son animation.**
-- **Le profil se charge plus vite et compte tous vos films vus**, au-delà de 200. La watchlist et les films vus y affichent un état de chargement et un bouton Réessayer quand ils n'ont pas pu être chargés.
-- **Sur téléphone, les chiffres d'un profil passent à la ligne** au lieu de défiler hors de l'écran, et sa watchlist se lit dans l'ordre où elle s'affiche.
+- **Le profil se charge plus vite et compte tous vos films vus**, au-delà de 200. La watchlist et les films vus y affichent un état de chargement et un bouton Réessayer quand ils n’ont pas pu être chargés.
+- **Sur téléphone, les chiffres d’un profil passent à la ligne** au lieu de défiler hors de l’écran, et sa watchlist se lit dans l’ordre où elle s’affiche.
 
 ## [1.12.0] - 2026-11-12
 
 ### Added
 
-- **Créer une soirée sans quitter l'écran** : « Nouvelle soirée » n'est plus un onglet mais un bouton dans l'en-tête (« Créer » dans la barre du bas sur téléphone), qui ouvre une fenêtre par-dessus la page. On y choisit le jour d'un clic (ce soir, demain, le week-end) et l'heure, le nom suit la date, l'ambiance se choisit en une puce, et les règles s'ouvrent dans leur propre fenêtre, sans perdre la saisie : on part des réglages par défaut, de votre dernière soirée ou de l'un de vos modèles, puis on ajuste chaque règle.
-- **Le lien à envoyer dès la création** : une fois la soirée créée, la fenêtre donne son lien à copier ou à partager, l'ajout au calendrier, et ouvre la soirée prête à proposer le premier film.
+- **Créer une soirée sans quitter l’écran** : « Nouvelle soirée » n’est plus un onglet mais un bouton dans l’en-tête (« Créer » dans la barre du bas sur téléphone), qui ouvre une fenêtre par-dessus la page. On y choisit le jour d’un clic (ce soir, demain, le week-end) et l’heure, le nom suit la date, l’ambiance se choisit en une puce, et les règles s’ouvrent dans leur propre fenêtre, sans perdre la saisie : on part des réglages par défaut, de votre dernière soirée ou de l’un de vos modèles, puis on ajuste chaque règle.
+- **Le lien à envoyer dès la création** : une fois la soirée créée, la fenêtre donne son lien à copier ou à partager, l’ajout au calendrier, et ouvre la soirée prête à proposer le premier film.
 
 ### Changed
 
-- **Les « templates » s'appellent désormais des « modèles »**, à la création d'une soirée comme dans ses réglages.
+- **Les « templates » s’appellent désormais des « modèles »**, à la création d’une soirée comme dans ses réglages.
 
 ## [1.11.2] - 2026-11-12
 
 ### Changed
 
-- **Le clap du logo claque au survol** : en haut de chaque page, passer la souris sur le logo fait s'ouvrir et se refermer le clap, une fois, comme pendant un chargement.
+- **Le clap du logo claque au survol** : en haut de chaque page, passer la souris sur le logo fait s’ouvrir et se refermer le clap, une fois, comme pendant un chargement.
 
 ## [1.11.1] - 2026-11-12
 
 ### Changed
 
-- **Le profil public montre d'abord les films** : l'identité et le bouton Suivre en tête, une ligne de chiffres (films vus, soirées, propositions, votes), puis les favoris en grand à côté de la watchlist en affiches et les films vus, chacun une seule fois. Les soirées des six derniers mois et les genres préférés ferment la page, et la flamme n'apparaît que pendant une série en cours.
+- **Le profil public montre d’abord les films** : l’identité et le bouton Suivre en tête, une ligne de chiffres (films vus, soirées, propositions, votes), puis les favoris en grand à côté de la watchlist en affiches et les films vus, chacun une seule fois. Les soirées des six derniers mois et les genres préférés ferment la page, et la flamme n’apparaît que pendant une série en cours.
 
 ## [1.11.0] - 2026-11-12
 
 ### Added
 
-- **Chaque film a sa propre page** : la fiche qui s'ouvrait en fenêtre devient une vraie page, avec son adresse à partager. On y trouve le synopsis en entier, les vidéos, la distribution avec photos et rôles, l'équipe, le titre original, le public, la langue, les pays, le budget, les plateformes de streaming, la note TMDB et celle de vos soirées. En dessous : la saga, les films du même réalisateur et les films similaires.
-- **Le film dans vos soirées** : la page dit dans combien de vos soirées il a été proposé, s'il a gagné, la note donnée après la séance et qui l'a déjà vu.
-- **Depuis une soirée, la page garde la soirée sous la main** : une barre en haut montre qui a proposé le film et son score, avec Pour, Contre et « Déjà vu » ; « Exclure du tirage » et « Retirer » sont dans le menu « … ». Sur téléphone, le vote passe dans une barre en bas de l'écran, à portée de pouce.
+- **Chaque film a sa propre page** : la fiche qui s’ouvrait en fenêtre devient une vraie page, avec son adresse à partager. On y trouve le synopsis en entier, les vidéos, la distribution avec photos et rôles, l’équipe, le titre original, le public, la langue, les pays, le budget, les plateformes de streaming, la note TMDB et celle de vos soirées. En dessous : la saga, les films du même réalisateur et les films similaires.
+- **Le film dans vos soirées** : la page dit dans combien de vos soirées il a été proposé, s’il a gagné, la note donnée après la séance et qui l’a déjà vu.
+- **Depuis une soirée, la page garde la soirée sous la main** : une barre en haut montre qui a proposé le film et son score, avec Pour, Contre et « Déjà vu » ; « Exclure du tirage » et « Retirer » sont dans le menu « … ». Sur téléphone, le vote passe dans une barre en bas de l’écran, à portée de pouce.
 
 ## [1.10.1] - 2026-11-12
 
 ### Changed
 
-- **« Proposer un film » s'ouvre dans une fenêtre** : au centre de l'écran sur ordinateur, sur toute la hauteur sur téléphone, sans faire défiler la page. Elle montre tout de suite vos recherches récentes et les films de votre liste, chaque film avec son année, sa durée, sa note TMDB et s'il est en streaming. Un clic sur le titre ouvre un aperçu où ajouter un mot pour convaincre ; un film déjà proposé dit par qui et se vote d'ici ; chaque proposition se confirme et peut s'annuler.
-- **La recherche de films dit seulement « En streaming » ou « Pas en streaming »**, avec les plateformes incluses dans l'abonnement, aussi depuis Ma liste et les favoris. Les résultats restent affichés après un ajout, et une recherche sans résultat n'entre plus dans l'historique.
+- **« Proposer un film » s’ouvre dans une fenêtre** : au centre de l’écran sur ordinateur, sur toute la hauteur sur téléphone, sans faire défiler la page. Elle montre tout de suite vos recherches récentes et les films de votre liste, chaque film avec son année, sa durée, sa note TMDB et s’il est en streaming. Un clic sur le titre ouvre un aperçu où ajouter un mot pour convaincre ; un film déjà proposé dit par qui et se vote d’ici ; chaque proposition se confirme et peut s’annuler.
+- **La recherche de films dit seulement « En streaming » ou « Pas en streaming »**, avec les plateformes incluses dans l’abonnement, aussi depuis Ma liste et les favoris. Les résultats restent affichés après un ajout, et une recherche sans résultat n’entre plus dans l’historique.
 
 ## [1.10.0] - 2026-11-12
 
 ### Added
 
-- **Explorer ouvre sur votre prochaine soirée** : en haut de la page, la recherche côtoie votre soirée en cours ou la plus proche, ou la roue pour en créer une, sur un fond d'affiches qui glisse lentement. Sur téléphone, une loupe apparaît dans l'en-tête dès que la recherche sort de l'écran.
-- **Des affiches qui réagissent au survol** : au survol, une affiche grandit et montre son titre, son année, sa note et sa durée, avec Ma liste et Proposer à portée de clic. Les affiches des cartes de soirée s'écartent au survol.
-- **Chaque sélection d'Explorer a sa forme** : Pour vous en onglets, un top 10 des tendances, Au cinéma à côté des films les plus proposés, des éventails d'affiches pour les thèmes et des piles pour les sagas.
+- **Explorer ouvre sur votre prochaine soirée** : en haut de la page, la recherche côtoie votre soirée en cours ou la plus proche, ou la roue pour en créer une, sur un fond d’affiches qui glisse lentement. Sur téléphone, une loupe apparaît dans l’en-tête dès que la recherche sort de l’écran.
+- **Des affiches qui réagissent au survol** : au survol, une affiche grandit et montre son titre, son année, sa note et sa durée, avec Ma liste et Proposer à portée de clic. Les affiches des cartes de soirée s’écartent au survol.
+- **Chaque sélection d’Explorer a sa forme** : Pour vous en onglets, un top 10 des tendances, Au cinéma à côté des films les plus proposés, des éventails d’affiches pour les thèmes et des piles pour les sagas.
 
 ### Changed
 
@@ -344,29 +344,29 @@ version publiée est associée à un tag Git et à une release GitHub.
 ### Changed
 
 - **Le film tiré au sort montre sa durée, sa note TMDB et où le regarder** : dans la fenêtre qui annonce le gagnant comme dans la carte du film en haut de la soirée, où les plateformes de streaming reviennent.
-- **Une soirée à plusieurs films se parcourt par une bande au-dessus de la carte** : chaque film y dit s'il reste à noter ou donne sa moyenne, et la carte garde la même forme qu'avec un seul film, les notes à côté.
-- **Les notes d'un grand groupe restent lisibles** : au-delà de six notes, l'échelle passe en points et seul votre avatar y reste ; la liste montre cinq personnes, vous d'abord puis de la meilleure note à la moins bonne, et s'ouvre sur les autres.
+- **Une soirée à plusieurs films se parcourt par une bande au-dessus de la carte** : chaque film y dit s’il reste à noter ou donne sa moyenne, et la carte garde la même forme qu’avec un seul film, les notes à côté.
+- **Les notes d’un grand groupe restent lisibles** : au-delà de six notes, l’échelle passe en points et seul votre avatar y reste ; la liste montre cinq personnes, vous d’abord puis de la meilleure note à la moins bonne, et s’ouvre sur les autres.
 - **Une soirée en solo affiche simplement votre note**, sans panneau des notes du groupe.
 
 ### Removed
 
-- **« Noter ce film » quitte l'en-tête et la barre du bas** : il reste dans la carte du film. Le lien vers le recap n'apparaît plus qu'une fois la soirée terminée.
+- **« Noter ce film » quitte l’en-tête et la barre du bas** : il reste dans la carte du film. Le lien vers le récap n’apparaît plus qu’une fois la soirée terminée.
 
 ## [1.9.0] - 2026-11-11
 
 ### Added
 
-- **Apparence et langue se règlent depuis le menu du compte** : le menu s'ouvre sur votre profil public, regroupe idées et problèmes dans « Envoyer un retour » et signale les nouveautés que vous n'avez pas encore lues.
+- **Apparence et langue se règlent depuis le menu du compte** : le menu s’ouvre sur votre profil public, regroupe idées et problèmes dans « Envoyer un retour » et signale les nouveautés que vous n’avez pas encore lues.
 
 ### Changed
 
-- **Mes soirées tient sur une seule page** : les soirées à traiter, puis celles à venir, puis l'historique classé par mois. Chaque soirée à venir montre sa date, les trois films les mieux notés en affiches et ce qui vous attend (« À vous de voter », « Proposez le premier film »), chaque soirée passée son film, sa note et votre note.
-- **Le haut de la page d'une soirée est plus simple** : le retour et les boutons passent au-dessus du titre sur ordinateur, le thème au-dessus du titre, le compte à rebours en bout de ligne. « Proposer un film » devient l'action principale jusqu'au premier tirage, « Lancer la roue » et « Choisir moi-même » partagent un bouton, et retirer un gagnant, repartir de zéro ou clôturer sans film passent dans « Gérer le tirage ».
-- **La liste des participants s'ouvre dans une fenêtre** : au centre de l'écran sur ordinateur, depuis le bas sur téléphone.
+- **Mes soirées tient sur une seule page** : les soirées à traiter, puis celles à venir, puis l’historique classé par mois. Chaque soirée à venir montre sa date, les trois films les mieux notés en affiches et ce qui vous attend (« À vous de voter », « Proposez le premier film »), chaque soirée passée son film, sa note et votre note.
+- **Le haut de la page d’une soirée est plus simple** : le retour et les boutons passent au-dessus du titre sur ordinateur, le thème au-dessus du titre, le compte à rebours en bout de ligne. « Proposer un film » devient l’action principale jusqu’au premier tirage, « Lancer la roue » et « Choisir moi-même » partagent un bouton, et retirer un gagnant, repartir de zéro ou clôturer sans film passent dans « Gérer le tirage ».
+- **La liste des participants s’ouvre dans une fenêtre** : au centre de l’écran sur ordinateur, depuis le bas sur téléphone.
 
 ### Removed
 
-- **La recherche, les filtres, le tri et les statistiques de l'historique** : les statistiques restent sur votre profil.
+- **La recherche, les filtres, le tri et les statistiques de l’historique** : les statistiques restent sur votre profil.
 
 ## [1.8.0] - 2026-11-11
 
@@ -376,421 +376,421 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Removed
 
-- **La fenêtre « Quoi de neuf » et la pastille « Nouveautés » de la barre du haut** : plus rien ne s'ouvre de lui-même après une mise à jour, le journal des versions les remplace.
+- **La fenêtre « Quoi de neuf » et la pastille « Nouveautés » de la barre du haut** : plus rien ne s’ouvre de lui-même après une mise à jour, le journal des versions les remplace.
 
 ## [1.7.2] - 2026-11-11
 
 ### Fixed
 
-- **L'icône d'onglet existe aussi pour les navigateurs qui la demandent en `favicon.ico`**, et les icônes de l'app installée se mettent à jour au lieu de rester un an en cache.
+- **L’icône d’onglet existe aussi pour les navigateurs qui la demandent en `favicon.ico`**, et les icônes de l’app installée se mettent à jour au lieu de rester un an en cache.
 
 ### Changed
 
-- **Le logo se redresse et s'anime pendant le chargement** : le clap claque à l'ouverture de l'app et entre deux pages, et le nom s'écrit « movie picker », avec le point du i de « picker » en cyan. L'onglet, les icônes de l'app installée et l'aperçu des liens partagés suivent.
+- **Le logo se redresse et s’anime pendant le chargement** : le clap claque à l’ouverture de l’app et entre deux pages, et le nom s’écrit « movie picker », avec le point du i de « picker » en cyan. L’onglet, les icônes de l’app installée et l’aperçu des liens partagés suivent.
 
 ## [1.7.1] - 2026-11-11
 
 ### Security
 
-- **Une connexion Google ou GitHub reste liée au fournisseur qui l'a délivrée** : tout écart est refusé avant d'ouvrir une session.
+- **Une connexion Google ou GitHub reste liée au fournisseur qui l’a délivrée** : tout écart est refusé avant d’ouvrir une session.
 - **Le mail de réinitialisation ne cite plus votre nom** et part au plus cinq fois par jour vers une même adresse.
 - **Supprimer un compte sans mot de passe ou y délier un fournisseur demande une connexion récente.**
-- **Les photos de profil sont limitées à ce que l'application produit**, et leur nombre total est plafonné.
-- **Une même personne reçoit au plus cinq invitations par jour d'un même hôte**, et couper les invitations les retire aussi de la boîte de réception.
+- **Les photos de profil sont limitées à ce que l’application produit**, et leur nombre total est plafonné.
+- **Une même personne reçoit au plus cinq invitations par jour d’un même hôte**, et couper les invitations les retire aussi de la boîte de réception.
 - **Une session fermée depuis un autre onglet ou appareil déconnecte aussi cet onglet**, sans rechargement.
 - **Une déconnexion sans réseau est signalée comme non confirmée**, puis relancée au retour de la connexion.
-- **Retirer son consentement efface l'identifiant de mesure d'audience du navigateur.**
-- **L'inscription et les sections à clé libre de l'accueil sont bornées par heure et par adresse**, ce qui freine les essais automatisés d'adresses et les appels au catalogue.
-- **La chaîne de livraison se resserre** : la garde de déploiement partiel refuse une comparaison tronquée, l'image de production se construit sans cache partagé, toute CVE critique bloque, et le contrôle IAM repère un compte étranger ou un propriétaire de plus. Le retour arrière vise désormais une release nommée, sonde sa cible avant de basculer le trafic, et a été répété pour de vrai en recette.
+- **Retirer son consentement efface l’identifiant de mesure d’audience du navigateur.**
+- **L’inscription et les sections à clé libre de l’accueil sont bornées par heure et par adresse**, ce qui freine les essais automatisés d’adresses et les appels au catalogue.
+- **La chaîne de livraison se resserre** : la garde de déploiement partiel refuse une comparaison tronquée, l’image de production se construit sans cache partagé, toute CVE critique bloque, et le contrôle IAM repère un compte étranger ou un propriétaire de plus. Le retour arrière vise désormais une release nommée, sonde sa cible avant de basculer le trafic, et a été répété pour de vrai en recette.
 
 ### Fixed
 
-- **Le film tiré reste caché aux participants jusqu'à l'arrêt de la roue**, et la feuille de note ne s'ouvre plus par-dessus la roue.
-- **Retirer un participant ou un film après l'annulation d'un tirage efface aussi ses notes** : la moyenne et le recap restent justes.
-- **Une limite égale au maximum (15 films, 300 participants) est enregistrée comme une limite**, et non comme « sans limite ». À la création, une limite invalide affiche une erreur au lieu d'être remplacée en silence.
-- **La note de pitch se lit et s'écrit en vue liste, donc sur téléphone**, et l'hôte peut la supprimer.
-- **Le recap se met à jour après une note.**
-- **L'historique filtré garde « Charger plus ».**
+- **Le film tiré reste caché aux participants jusqu’à l’arrêt de la roue**, et la feuille de note ne s’ouvre plus par-dessus la roue.
+- **Retirer un participant ou un film après l’annulation d’un tirage efface aussi ses notes** : la moyenne et le récap restent justes.
+- **Une limite égale au maximum (15 films, 300 participants) est enregistrée comme une limite**, et non comme « sans limite ». À la création, une limite invalide affiche une erreur au lieu d’être remplacée en silence.
+- **La note de pitch se lit et s’écrit en vue liste, donc sur téléphone**, et l’hôte peut la supprimer.
+- **Le récap se met à jour après une note.**
+- **L’historique filtré garde « Charger plus ».**
 - **Une soirée qui ne se charge pas propose « Réessayer ».**
 - **Une notification du film ne dit « Ce soir » que le jour même**, sinon elle nomme le jour.
-- **Le tirage d'une soirée lointaine est annoncé même si l'hôte a quitté la page pendant la roue.**
+- **Le tirage d’une soirée lointaine est annoncé même si l’hôte a quitté la page pendant la roue.**
 - **Un incident chez un destinataire ne prive plus les suivants de leur notification**, et le rappel de note arrive dans la boîte même si le premier passage a échoué.
 - **Un vote ou une marque « vu » envoyé pendant le retrait du film ou du participant est refusé.**
 - **Le lancement de la roue depuis le bandeau « en suspens » ne peut plus partir deux fois.**
 - **Une note en échec reste signalée après la fermeture de la feuille.**
 - **Rejoindre une soirée met le compteur à jour tout de suite.**
-- **Le film tiré et l'échec d'un vote sont annoncés aux lecteurs d'écran**, et les confettis respectent la réduction des animations.
+- **Le film tiré et l’échec d’un vote sont annoncés aux lecteurs d’écran**, et les confettis respectent la réduction des animations.
 - **La page ne défile plus derrière une fenêtre ou une feuille ouverte.**
-- **Si l'application ne peut pas démarrer, un message propose de recharger la page**, et « Réessayer » recharge vraiment après un fichier manquant.
-- **Une requête bloquée s'arrête avec un message clair** au lieu de tourner sans fin.
+- **Si l’application ne peut pas démarrer, un message propose de recharger la page**, et « Réessayer » recharge vraiment après un fichier manquant.
+- **Une requête bloquée s’arrête avec un message clair** au lieu de tourner sans fin.
 - **La bannière de cookies et les boutons de connexion ne clignotent plus** au chargement des pages publiques.
-- **L'application installée s'ouvre hors ligne.**
+- **L’application installée s’ouvre hors ligne.**
 - **Tab ferme les menus et les listes déroulantes.**
 - **Un lien de connexion mal formé ne fait plus planter la page.**
-- **Les durées des films restent affichées sur l'accueil quand TMDB limite ses réponses.**
-- **La mesure d'audience ne s'arrête plus après la première page vue**, et une page vue ne compte plus deux fois.
-- **Un lien d'invitation partagé montre à nouveau le titre, la date et le thème de la soirée**, puis l'affiche du film une fois choisi, au lieu de l'aperçu générique du site. Un lien de soirée inconnu répond « introuvable ».
+- **Les durées des films restent affichées sur l’accueil quand TMDB limite ses réponses.**
+- **La mesure d’audience ne s’arrête plus après la première page vue**, et une page vue ne compte plus deux fois.
+- **Un lien d’invitation partagé montre à nouveau le titre, la date et le thème de la soirée**, puis l’affiche du film une fois choisi, au lieu de l’aperçu générique du site. Un lien de soirée inconnu répond « introuvable ».
 
 ### Changed
 
-- **Les nouveautés arrivent au fil de l'eau** : chaque amélioration est mise en ligne dès qu'elle est prête, avec son propre numéro de version, au lieu d'attendre une grosse mise à jour.
+- **Les nouveautés arrivent au fil de l’eau** : chaque amélioration est mise en ligne dès qu’elle est prête, avec son propre numéro de version, au lieu d’attendre une grosse mise à jour.
 - **La cloche de notifications ne recharge plus toute la boîte de réception** pour afficher son compteur.
-- **La liste de films d'une soirée coûte moins de lectures** : les enrichissements se lisent en une requête et les votes en un agrégat.
-- **La synchronisation Letterboxd manuelle s'espace de cinq minutes** et le dit à l'écran.
+- **La liste de films d’une soirée coûte moins de lectures** : les enrichissements se lisent en une requête et les votes en un agrégat.
+- **La synchronisation Letterboxd manuelle s’espace de cinq minutes** et le dit à l’écran.
 
 ## [1.7.0] - 2026-11-06
 
 ### Added
 
-- **Noter les films vus** : dès que la soirée a commencé, chaque participant note le ou les films choisis, en étoiles à la demi-étoile près, dans l'échelle de son compte, et modifie ou efface sa note sans limite de temps. Tout le monde, visiteur compris, voit les notes et la moyenne, et la note de l'auteur figure sur ses films vus du profil public.
-- **Relance du lendemain** : à 10 h, chaque participant qui n'a pas encore noté un film choisi reçoit une notification, push et dans l'application, qui ouvre directement le premier film à noter. Une seule relance par soirée, rattrapée jusqu'à trois jours, désactivable dans les réglages.
-- **Page recap publique** : dès qu'un film est choisi, une page partageable et lisible sans compte résume la soirée (films choisis, moyenne, note de chacun), avec « Noter » pour qui ne l'a pas encore fait et « Organise la tienne » pour le visiteur. Le lien partagé montre le titre, le film, la moyenne et l'affiche.
-- **Partager sa soirée en story** : une image au format des stories, générée depuis le recap avec son lien, part par le partage natif du téléphone ou se télécharge depuis la page de la soirée.
-- **Top 3 de films préférés** : jusqu'à trois films ou séries, choisis par une recherche TMDB, s'affichent sur le profil public et se modifient depuis les paramètres.
-- **Photo de profil** : téléverser une photo, la recadrer dans un cercle et en faire son avatar partout dans l'application, robots et emojis restant disponibles ; un compte créé avec Google part avec sa photo Google.
+- **Noter les films vus** : dès que la soirée a commencé, chaque participant note le ou les films choisis, en étoiles à la demi-étoile près, dans l’échelle de son compte, et modifie ou efface sa note sans limite de temps. Tout le monde, visiteur compris, voit les notes et la moyenne, et la note de l’auteur figure sur ses films vus du profil public.
+- **Relance du lendemain** : à 10 h, chaque participant qui n’a pas encore noté un film choisi reçoit une notification, push et dans l’application, qui ouvre directement le premier film à noter. Une seule relance par soirée, rattrapée jusqu’à trois jours, désactivable dans les réglages.
+- **Page récap publique** : dès qu’un film est choisi, une page partageable et lisible sans compte résume la soirée (films choisis, moyenne, note de chacun), avec « Noter » pour qui ne l’a pas encore fait et « Organise la tienne » pour le visiteur. Le lien partagé montre le titre, le film, la moyenne et l’affiche.
+- **Partager sa soirée en story** : une image au format des stories, générée depuis le récap avec son lien, part par le partage natif du téléphone ou se télécharge depuis la page de la soirée.
+- **Top 3 de films préférés** : jusqu’à trois films ou séries, choisis par une recherche TMDB, s’affichent sur le profil public et se modifient depuis les paramètres.
+- **Photo de profil** : téléverser une photo, la recadrer dans un cercle et en faire son avatar partout dans l’application, robots et emojis restant disponibles ; un compte créé avec Google part avec sa photo Google.
 - **Piocher un film au hasard dans sa liste** : un bouton tire un titre parmi les films à voir, à proposer dans une soirée en un clic.
-- **Le site s'appelle désormais `www.movie-picker.fr`** : l'adresse historique `web.movie-picker.fr` et `movie-picker.fr` y renvoient d'elles-mêmes, en gardant la page demandée, donc un lien de soirée ou un courriel déjà reçu continue d'ouvrir la bonne page ; `www` et l'adresse nue répondent enfin en HTTPS. L'hébergement du site est passé sur Firebase Hosting, à côté de l'API, et une adresse tapée avec une barre finale est ramenée sur sa page.
-- **Un environnement de recette, `staging.movie-picker.fr`** : une seconde instance de l'API et du site, avec sa propre base et ses propres comptes de connexion, décrite en code à côté de la production ; chaque livraison y passe d'abord, et la production ne part que si la recette sert exactement le même commit, avec la même image de conteneur, sans reconstruction. La recette n'est pas indexée par les moteurs de recherche.
-- **L'infrastructure commence à s'écrire en code** : une arborescence Terraform dédiée, aux versions épinglées, avec un état distant versionné et verrouillé, et une porte `fmt` + `validate` jouée dans la vérification locale comme dans la CI.
-- **La production GCP est décrite et importée** : le registre d'images et sa rétention, le service qui sert l'API avec son domaine, et les quatorze secrets avec le droit de les lire, en trois modules réutilisables, sans qu'aucune ressource n'ait été recréée. Le workflow mensuel qui reposait la rétention du registre disparaît, la description la porte.
+- **Le site s’appelle désormais `www.movie-picker.fr`** : l’adresse historique `web.movie-picker.fr` et `movie-picker.fr` y renvoient d’elles-mêmes, en gardant la page demandée, donc un lien de soirée ou un courriel déjà reçu continue d’ouvrir la bonne page ; `www` et l’adresse nue répondent enfin en HTTPS. L’hébergement du site est passé sur Firebase Hosting, à côté de l’API, et une adresse tapée avec une barre finale est ramenée sur sa page.
+- **Un environnement de recette, `staging.movie-picker.fr`** : une seconde instance de l’API et du site, avec sa propre base et ses propres comptes de connexion, décrite en code à côté de la production ; chaque livraison y passe d’abord, et la production ne part que si la recette sert exactement le même commit, avec la même image de conteneur, sans reconstruction. La recette n’est pas indexée par les moteurs de recherche.
+- **L’infrastructure commence à s’écrire en code** : une arborescence Terraform dédiée, aux versions épinglées, avec un état distant versionné et verrouillé, et une porte `fmt` + `validate` jouée dans la vérification locale comme dans la CI.
+- **La production GCP est décrite et importée** : le registre d’images et sa rétention, le service qui sert l’API avec son domaine, et les quatorze secrets avec le droit de les lire, en trois modules réutilisables, sans qu’aucune ressource n’ait été recréée. Le workflow mensuel qui reposait la rétention du registre disparaît, la description la porte.
 
 ### Security
 
-- **Le serveur refuse une adresse e-mail de plus de 254 caractères et une adresse d'affiche démesurée**, qui remplissaient la base à chaque inscription ou chaque film proposé et repartaient vers chaque participant.
-- **Une suggestion d'idée ne crée plus de liens vers les tickets d'autres projets GitHub** et ne peut plus masquer la fin du ticket publié (référence, page, captures) par un commentaire HTML.
-- **Le jeton d'hôte et l'adresse IP ne partent plus vers le suivi d'erreurs** : les en-têtes qui les portaient étaient transmis tels quels à Sentry avec chaque erreur et chaque requête échantillonnée, et les requêtes échantillonnées gardaient aussi le `?host=` d'un ancien lien. Seuls quelques en-têtes sans donnée personnelle (langue, format, navigateur) y partent désormais, ce qui écarte aussi les autres en-têtes porteurs de l'adresse IP, les cookies et la page d'origine.
-- **Les codes de connexion Google et GitHub ne s'écrivent plus dans les journaux du serveur** au retour du fournisseur.
-- **Le pseudo d'un profil privé ne s'affiche plus dans les notifications des autres** : rejoindre une soirée, y proposer un film ou suivre quelqu'un laissait voir son pseudo, et un lien vers un profil introuvable.
-- **Retirer son consentement aux mesures d'audience est respecté même pendant le chargement** : un refus donné dans les premières secondes pouvait être annulé par la fin du chargement de PostHog, qui reprenait alors la mesure.
-- **Le choix des cookies se modifie depuis le pied de page** (« Gérer les cookies ») : une fois le bandeau validé, il n'existait plus aucun moyen de retirer son accord.
-- **Une adresse de retour piégée après la connexion ne fait plus planter la page** : un lien de connexion dont l'adresse de retour cachait une tabulation ou un saut de ligne menait vers un autre site et bloquait l'application.
-- **Une soirée ne s'ouvre plus que par son lien**, plus par son identifiant interne.
-- **Les adresses de soirée sont vérifiées avant tout appel au serveur** : le code de la soirée est encodé dans chaque requête, une adresse malformée affiche « soirée introuvable », et l'ajout à l'agenda ne laisse plus passer de saut de ligne.
-- **Changer ou réinitialiser son mot de passe coupe aussi les notifications push** des appareils abonnés, se déconnecter désabonne le navigateur, et un appareil encore connecté se réabonne de lui-même ; un navigateur ne reçoit plus que les notifications du dernier compte qui s'y est connecté, et seuls les services push de Google, Mozilla, Microsoft et Apple sont acceptés, y compris pour les abonnements déjà enregistrés.
-- **Lier un compte Google ou GitHub, ou définir un premier mot de passe sur un tel compte, demande une connexion de moins de dix minutes**, et un fournisseur déjà lié doit être délié avant d'en lier un autre du même fournisseur. Les messages de liaison s'affichent désormais sur la page Intégrations.
-- **Les listes d'abonnés et d'abonnements n'affichent plus les profils privés**, sauf au titulaire du profil, et une ligne le signale quand le compteur en tient compte.
-- **Une suggestion d'idée ne publie plus ni votre nom ni votre identifiant de compte**, seulement une référence aléatoire, ni l'adresse de la soirée ou du profil d'où elle part ; ses captures (JPEG, PNG, WebP, GIF) perdent leurs métadonnées, position GPS comprise, avant publication, et le formulaire comme la politique de confidentialité disent que le ticket est public.
-- **Le jeton d'un lien de réinitialisation ne part plus vers la mesure d'audience ni le suivi d'erreurs** : il quitte la barre d'adresse dès l'ouverture de la page, et les adresses envoyées à PostHog et Sentry masquent les jetons comme le serveur le faisait déjà.
-- **L'API refuse de démarrer hors développement sans l'envoi réel des e-mails**, plutôt que d'écrire les liens de réinitialisation dans ses journaux.
-- **Une session ne dure plus indéfiniment** : chaque renouvellement repartait de la date de création, si bien qu'une session utilisée chaque jour voyait son échéance reculer de semaines en semaines ; elle repart désormais du dernier renouvellement, et aucune ne dépasse un an. Un cookie volé cesse de fonctionner à l'échéance.
-- **Un compte accepte au plus dix appareils abonnés aux notifications**, et la déconnexion retire aussi l'appareil de la liste du serveur, pas seulement du navigateur.
-- **Les quotas de requêtes se comptent par compte une fois connecté**, et plus par adresse : toute une soirée sur le même Wi-Fi partageait le même quota. La connexion est aussi limitée par compte, après dix échecs, quelle que soit l'adresse d'où viennent les essais.
+- **Le serveur refuse une adresse e-mail de plus de 254 caractères et une adresse d’affiche démesurée**, qui remplissaient la base à chaque inscription ou chaque film proposé et repartaient vers chaque participant.
+- **Une suggestion d’idée ne crée plus de liens vers les tickets d’autres projets GitHub** et ne peut plus masquer la fin du ticket publié (référence, page, captures) par un commentaire HTML.
+- **Le jeton d’hôte et l’adresse IP ne partent plus vers le suivi d’erreurs** : les en-têtes qui les portaient étaient transmis tels quels à Sentry avec chaque erreur et chaque requête échantillonnée, et les requêtes échantillonnées gardaient aussi le `?host=` d’un ancien lien. Seuls quelques en-têtes sans donnée personnelle (langue, format, navigateur) y partent désormais, ce qui écarte aussi les autres en-têtes porteurs de l’adresse IP, les cookies et la page d’origine.
+- **Les codes de connexion Google et GitHub ne s’écrivent plus dans les journaux du serveur** au retour du fournisseur.
+- **Le pseudo d’un profil privé ne s’affiche plus dans les notifications des autres** : rejoindre une soirée, y proposer un film ou suivre quelqu’un laissait voir son pseudo, et un lien vers un profil introuvable.
+- **Retirer son consentement aux mesures d’audience est respecté même pendant le chargement** : un refus donné dans les premières secondes pouvait être annulé par la fin du chargement de PostHog, qui reprenait alors la mesure.
+- **Le choix des cookies se modifie depuis le pied de page** (« Gérer les cookies ») : une fois le bandeau validé, il n’existait plus aucun moyen de retirer son accord.
+- **Une adresse de retour piégée après la connexion ne fait plus planter la page** : un lien de connexion dont l’adresse de retour cachait une tabulation ou un saut de ligne menait vers un autre site et bloquait l’application.
+- **Une soirée ne s’ouvre plus que par son lien**, plus par son identifiant interne.
+- **Les adresses de soirée sont vérifiées avant tout appel au serveur** : le code de la soirée est encodé dans chaque requête, une adresse malformée affiche « soirée introuvable », et l’ajout à l’agenda ne laisse plus passer de saut de ligne.
+- **Changer ou réinitialiser son mot de passe coupe aussi les notifications push** des appareils abonnés, se déconnecter désabonne le navigateur, et un appareil encore connecté se réabonne de lui-même ; un navigateur ne reçoit plus que les notifications du dernier compte qui s’y est connecté, et seuls les services push de Google, Mozilla, Microsoft et Apple sont acceptés, y compris pour les abonnements déjà enregistrés.
+- **Lier un compte Google ou GitHub, ou définir un premier mot de passe sur un tel compte, demande une connexion de moins de dix minutes**, et un fournisseur déjà lié doit être délié avant d’en lier un autre du même fournisseur. Les messages de liaison s’affichent désormais sur la page Intégrations.
+- **Les listes d’abonnés et d’abonnements n’affichent plus les profils privés**, sauf au titulaire du profil, et une ligne le signale quand le compteur en tient compte.
+- **Une suggestion d’idée ne publie plus ni votre nom ni votre identifiant de compte**, seulement une référence aléatoire, ni l’adresse de la soirée ou du profil d’où elle part ; ses captures (JPEG, PNG, WebP, GIF) perdent leurs métadonnées, position GPS comprise, avant publication, et le formulaire comme la politique de confidentialité disent que le ticket est public.
+- **Le jeton d’un lien de réinitialisation ne part plus vers la mesure d’audience ni le suivi d’erreurs** : il quitte la barre d’adresse dès l’ouverture de la page, et les adresses envoyées à PostHog et Sentry masquent les jetons comme le serveur le faisait déjà.
+- **L’API refuse de démarrer hors développement sans l’envoi réel des e-mails**, plutôt que d’écrire les liens de réinitialisation dans ses journaux.
+- **Une session ne dure plus indéfiniment** : chaque renouvellement repartait de la date de création, si bien qu’une session utilisée chaque jour voyait son échéance reculer de semaines en semaines ; elle repart désormais du dernier renouvellement, et aucune ne dépasse un an. Un cookie volé cesse de fonctionner à l’échéance.
+- **Un compte accepte au plus dix appareils abonnés aux notifications**, et la déconnexion retire aussi l’appareil de la liste du serveur, pas seulement du navigateur.
+- **Les quotas de requêtes se comptent par compte une fois connecté**, et plus par adresse : toute une soirée sur le même Wi-Fi partageait le même quota. La connexion est aussi limitée par compte, après dix échecs, quelle que soit l’adresse d’où viennent les essais.
 - **Le serveur borne ses ressources** : la taille des requêtes (1 Mo, davantage pour les pièces jointes), leur durée, celle des transactions, et la taille de ses caches en mémoire.
 - **La sauvegarde ne peut plus supprimer ses propres archives**, seulement celles qui attendent leur vérification, et la copie mensuelle ne dépend plus de la réussite de la sauvegarde du 1er du mois.
-- **Les passes planifiées s'authentifient par un jeton signé, plus par un secret partagé** : Cloud Scheduler signe chaque appel avec une identité dédiée et l'API vérifie hors ligne l'émetteur, l'audience et cette identité ; le secret qui voyageait dans un en-tête n'est plus monté, et une passe planifiée qui échoue déclenche désormais sa propre alerte, là où un échec toutes les trente minutes passait sous les seuils des erreurs serveur.
-- **Chaque workflow n'assume plus que l'identité de son environnement** : la sauvegarde a la sienne, seule à lire l'adresse de la base ; l'application de l'infrastructure a la sienne, seule à administrer les droits, dans un environnement qu'aucun autre workflow n'utilise ; le déploiement ne lit plus aucun secret ; et la fédération n'accepte chaque environnement que depuis `master`. Le site se construit dans un job sans identité et n'est publié que par un job qui ne construit rien.
-- **Les identités de l'infrastructure ne lisent plus aucun objet des buckets** : le rôle pris pour lire le projet Firebase donnait la lecture des sauvegardes à tout le projet, et les liaisons de convenance des buckets la donnaient à toute identité en lecture ; le compte de calcul par défaut, qui lisait encore neuf secrets de production par des liaisons d'avant l'identité d'exécution, et le compte Firebase Admin, qui pouvait frapper un jeton pour l'identité Terraform, sont désactivés. Une revue hebdomadaire relit chaque liaison que Terraform ne voit pas.
-- **Le projet ne peut plus être supprimé d'un geste**, chaque lecture d'un secret est journalisée, les dépendances .NET sont verrouillées par empreinte comme celles du site, le site n'autorise plus aucun script en ligne qui ne soit reconnu par son empreinte, et `HTTPS` est imposé aux sous-domaines aussi depuis les domaines personnalisés, ce que seul l'adresse technique du site faisait.
-- **Délier Google ou GitHub tient enfin** : la connexion suivante par ce fournisseur le reliait de nouveau au compte sans rien demander, et les sessions ouvertes par lui restaient actives. Il faut désormais le relier depuis Paramètres / Intégrations, un message le dit à la connexion, et délier un fournisseur déconnecte vos autres appareils, pas celui d'où vous le faites.
-- **Les limites de connexion, d'inscription et de réinitialisation valent pour tout un réseau IPv6** : un appareil qui changeait d'adresse IPv6 à chaque essai y échappait, elles s'appliquent maintenant au préfixe /64. Les suggestions d'idées se comptent par compte, plus par adresse.
-- **Changer son mot de passe annule les liens de réinitialisation en attente** : un lien reçu avant le changement permettait encore d'en choisir un autre après.
-- **Les sélections de films ne se laissent plus gonfler par des adresses fabriquées** : un paramètre qu'une rubrique ignore suffisait à la recharger depuis TMDB et à stocker une copie de plus en base pendant six heures ; chaque rubrique ne tient plus compte que de ses propres réglages.
-- **Les passes planifiées n'acceptent plus que le jeton signé par Cloud Scheduler** : l'ancien secret partagé, que plus aucun job n'envoyait depuis le 21 septembre, n'ouvre plus aucune route.
-- **La revue hebdomadaire des droits d'accès relit aussi les identités décrites en code** : elle sautait tout compte de service décrit, quel que soit le rôle. Elle compare désormais chaque liaison à l'état Terraform, donc un rôle ajouté à la main à une identité du pipeline, ou une condition retirée, est signalé.
+- **Les passes planifiées s’authentifient par un jeton signé, plus par un secret partagé** : Cloud Scheduler signe chaque appel avec une identité dédiée et l’API vérifie hors ligne l’émetteur, l’audience et cette identité ; le secret qui voyageait dans un en-tête n’est plus monté, et une passe planifiée qui échoue déclenche désormais sa propre alerte, là où un échec toutes les trente minutes passait sous les seuils des erreurs serveur.
+- **Chaque workflow n’assume plus que l’identité de son environnement** : la sauvegarde a la sienne, seule à lire l’adresse de la base ; l’application de l’infrastructure a la sienne, seule à administrer les droits, dans un environnement qu’aucun autre workflow n’utilise ; le déploiement ne lit plus aucun secret ; et la fédération n’accepte chaque environnement que depuis `master`. Le site se construit dans un job sans identité et n’est publié que par un job qui ne construit rien.
+- **Les identités de l’infrastructure ne lisent plus aucun objet des buckets** : le rôle pris pour lire le projet Firebase donnait la lecture des sauvegardes à tout le projet, et les liaisons de convenance des buckets la donnaient à toute identité en lecture ; le compte de calcul par défaut, qui lisait encore neuf secrets de production par des liaisons d’avant l’identité d’exécution, et le compte Firebase Admin, qui pouvait frapper un jeton pour l’identité Terraform, sont désactivés. Une revue hebdomadaire relit chaque liaison que Terraform ne voit pas.
+- **Le projet ne peut plus être supprimé d’un geste**, chaque lecture d’un secret est journalisée, les dépendances .NET sont verrouillées par empreinte comme celles du site, le site n’autorise plus aucun script en ligne qui ne soit reconnu par son empreinte, et `HTTPS` est imposé aux sous-domaines aussi depuis les domaines personnalisés, ce que seul l’adresse technique du site faisait.
+- **Délier Google ou GitHub tient enfin** : la connexion suivante par ce fournisseur le reliait de nouveau au compte sans rien demander, et les sessions ouvertes par lui restaient actives. Il faut désormais le relier depuis Paramètres / Intégrations, un message le dit à la connexion, et délier un fournisseur déconnecte vos autres appareils, pas celui d’où vous le faites.
+- **Les limites de connexion, d’inscription et de réinitialisation valent pour tout un réseau IPv6** : un appareil qui changeait d’adresse IPv6 à chaque essai y échappait, elles s’appliquent maintenant au préfixe /64. Les suggestions d’idées se comptent par compte, plus par adresse.
+- **Changer son mot de passe annule les liens de réinitialisation en attente** : un lien reçu avant le changement permettait encore d’en choisir un autre après.
+- **Les sélections de films ne se laissent plus gonfler par des adresses fabriquées** : un paramètre qu’une rubrique ignore suffisait à la recharger depuis TMDB et à stocker une copie de plus en base pendant six heures ; chaque rubrique ne tient plus compte que de ses propres réglages.
+- **Les passes planifiées n’acceptent plus que le jeton signé par Cloud Scheduler** : l’ancien secret partagé, que plus aucun job n’envoyait depuis le 2026-09-21, n’ouvre plus aucune route.
+- **La revue hebdomadaire des droits d’accès relit aussi les identités décrites en code** : elle sautait tout compte de service décrit, quel que soit le rôle. Elle compare désormais chaque liaison à l’état Terraform, donc un rôle ajouté à la main à une identité du pipeline, ou une condition retirée, est signalé.
 - **Les sauvegardes gardent une copie mensuelle pendant treize mois**, les versions de secret remplacées sont détruites, et les retours arrière se répètent en recette.
-- **La fédération GitHub reconnaît le dépôt par son identifiant numérique**, et plus seulement par son nom, qu'un renommage libérerait pour quelqu'un d'autre.
-- **La supervision est décrite en code** : les trois sondes de disponibilité, les six politiques d'alerte avec la conduite à tenir que reçoit l'e-mail, le canal et le tableau de bord sont versionnés et appliqués par le même chemin que le reste de l'infrastructure ; la sonde du front vise le domaine canonique et le tableau de bord la lit à nouveau.
-- **L'infrastructure ne change plus que par une revue** : un changement de `infra/terraform/` est planifié contre la production et publié en commentaire de sa pull request, puis appliqué sur `master` derrière l'environnement de production, par deux identités sans clé dont l'une ne sait que lire.
-- **La chaîne de déploiement s'identifie avec un compte dédié au moindre privilège** : chaque droit est celui d'une commande du pipeline et vise la ressource qu'elle touche (une seule identité sous laquelle déployer, un seul dépôt d'images, deux secrets lisibles sur quatorze, un seul bucket), la fédération avec GitHub et l'identité d'exécution de l'API sont décrites en Terraform, aucune clé n'existe, et le compte par défaut du projet, qui portait tout, n'a plus aucun droit.
-- **La clé TMDB ne circule plus dans l'adresse des requêtes que le serveur envoie à TMDB** : l'API accepte le jeton d'accès en lecture de TMDB, envoyé dans un en-tête, et si l'ancienne clé reste en service elle est masquée dans le suivi d'erreurs comme le jeton d'hôte.
-- **La sonde de disponibilité de l'API ne relit plus la base à chaque appel** mais au plus toutes les cinq secondes, et n'accepte plus que trente appels par minute et par adresse ; toute route sans plafond dédié reçoit un plafond global de neuf cents requêtes par minute et par adresse.
+- **La fédération GitHub reconnaît le dépôt par son identifiant numérique**, et plus seulement par son nom, qu’un renommage libérerait pour quelqu’un d’autre.
+- **La supervision est décrite en code** : les trois sondes de disponibilité, les six politiques d’alerte avec la conduite à tenir que reçoit l’e-mail, le canal et le tableau de bord sont versionnés et appliqués par le même chemin que le reste de l’infrastructure ; la sonde du front vise le domaine canonique et le tableau de bord la lit à nouveau.
+- **L’infrastructure ne change plus que par une revue** : un changement de `infra/terraform/` est planifié contre la production et publié en commentaire de sa pull request, puis appliqué sur `master` derrière l’environnement de production, par deux identités sans clé dont l’une ne sait que lire.
+- **La chaîne de déploiement s’identifie avec un compte dédié au moindre privilège** : chaque droit est celui d’une commande du pipeline et vise la ressource qu’elle touche (une seule identité sous laquelle déployer, un seul dépôt d’images, deux secrets lisibles sur quatorze, un seul bucket), la fédération avec GitHub et l’identité d’exécution de l’API sont décrites en Terraform, aucune clé n’existe, et le compte par défaut du projet, qui portait tout, n’a plus aucun droit.
+- **La clé TMDB ne circule plus dans l’adresse des requêtes que le serveur envoie à TMDB** : l’API accepte le jeton d’accès en lecture de TMDB, envoyé dans un en-tête, et si l’ancienne clé reste en service elle est masquée dans le suivi d’erreurs comme le jeton d’hôte.
+- **La sonde de disponibilité de l’API ne relit plus la base à chaque appel** mais au plus toutes les cinq secondes, et n’accepte plus que trente appels par minute et par adresse ; toute route sans plafond dédié reçoit un plafond global de neuf cents requêtes par minute et par adresse.
 - **Le serveur tourne sur une image minimale** sans interpréteur de commandes ni gestionnaire de paquets : dix paquets système au lieu de quatre-vingt-dix-sept, aucune vulnérabilité haute connue au lieu de treize, et il refuse de démarrer si les données de fuseau horaire manquent au lieu de planifier les soirées en UTC.
-- **Le jeton qui donne les commandes de l'hôte ne transite plus dans l'adresse des requêtes** mais dans un en-tête, et il est masqué dans les journaux du serveur et le suivi d'erreurs.
-- **Un compte créé avec un mot de passe ne peut plus être rattaché à Google ou GitHub par simple coïncidence d'adresse e-mail** : il faut se connecter puis lier le fournisseur depuis les paramètres.
-- **Durcissements de l'API** : HTTPS imposé pour deux ans aux navigateurs, un e-mail inconnu au login répond dans le même temps qu'un e-mail connu, les affiches proposées ne peuvent venir que de TMDB et le mot de passe est plafonné à 128 caractères.
-- **Réinitialiser son mot de passe détache les comptes Google et GitHub reliés** : quelqu'un qui avait ouvert un compte avec votre adresse avant vous, puis y avait relié son propre compte Google ou GitHub, gardait une porte d'entrée après que vous avez récupéré le compte par « mot de passe oublié ». La réinitialisation ferme désormais aussi cette porte, et la page de confirmation le dit.
-- **Sur un appareil partagé, l'application ne garde plus en réserve les réponses de votre compte** (profil, soirées, notifications, export de vos données) après votre déconnexion : seules les sélections publiques de l'accueil et les affiches restent en cache, et l'API refuse par défaut toute mise en cache de ses réponses.
-- **Le retour arrière du site ne republie plus qu'une archive produite par un déploiement depuis `master`.**
-- **Une affiche de la liste « À voir » ne peut plus venir que de TMDB**, comme celles des soirées : une adresse d'image quelconque était acceptée et enregistrée.
+- **Le jeton qui donne les commandes de l’hôte ne transite plus dans l’adresse des requêtes** mais dans un en-tête, et il est masqué dans les journaux du serveur et le suivi d’erreurs.
+- **Un compte créé avec un mot de passe ne peut plus être rattaché à Google ou GitHub par simple coïncidence d’adresse e-mail** : il faut se connecter puis lier le fournisseur depuis les paramètres.
+- **Durcissements de l’API** : HTTPS imposé pour deux ans aux navigateurs, un e-mail inconnu au login répond dans le même temps qu’un e-mail connu, les affiches proposées ne peuvent venir que de TMDB et le mot de passe est plafonné à 128 caractères.
+- **Réinitialiser son mot de passe détache les comptes Google et GitHub reliés** : quelqu’un qui avait ouvert un compte avec votre adresse avant vous, puis y avait relié son propre compte Google ou GitHub, gardait une porte d’entrée après que vous avez récupéré le compte par « mot de passe oublié ». La réinitialisation ferme désormais aussi cette porte, et la page de confirmation le dit.
+- **Sur un appareil partagé, l’application ne garde plus en réserve les réponses de votre compte** (profil, soirées, notifications, export de vos données) après votre déconnexion : seules les sélections publiques de l’accueil et les affiches restent en cache, et l’API refuse par défaut toute mise en cache de ses réponses.
+- **Le retour arrière du site ne republie plus qu’une archive produite par un déploiement depuis `master`.**
+- **Une affiche de la liste « À voir » ne peut plus venir que de TMDB**, comme celles des soirées : une adresse d’image quelconque était acceptée et enregistrée.
 
 ### Changed
 
-- **La page d'une soirée se lit de haut en bas** : le titre de la soirée, le retour, les actions et les réglages restent au-dessus du film choisi, jamais dans sa carte, et le film gagnant s'affiche ensuite en grand avec sa note et sa moyenne ; la page recap suit la même hiérarchie.
-- **La note s'enregistre toute seule** : choisir une étoile suffit, un échec se réessaie, et le film suivant à noter s'enchaîne depuis la même feuille.
-- **La politique de confidentialité décrit la V1.7** : la photo de profil, sa reprise depuis Google à la création du compte, et les notes visibles sur la page recap publique.
-- **Des rangées plus épurées sur la page Explorer** : sous chaque affiche ne reste que le titre du film, sans l'année, la note ni la durée, qui se lisent toujours dans la fiche du film et sur les pages « Voir tout ». Les liens « Voir ma liste » et « Voir les N films » perdent leur soulignement au profit d'un texte gris suivi d'une flèche, qui s'éclaire au survol, et les flèches de défilement se centrent sur les affiches. La rangée « Les plus proposés » garde le nombre de soirées sous chaque titre.
+- **La page d’une soirée se lit de haut en bas** : le titre de la soirée, le retour, les actions et les réglages restent au-dessus du film choisi, jamais dans sa carte, et le film gagnant s’affiche ensuite en grand avec sa note et sa moyenne ; la page récap suit la même hiérarchie.
+- **La note s’enregistre toute seule** : choisir une étoile suffit, un échec se réessaie, et le film suivant à noter s’enchaîne depuis la même feuille.
+- **La politique de confidentialité décrit la V1.7** : la photo de profil, sa reprise depuis Google à la création du compte, et les notes visibles sur la page récap publique.
+- **Des rangées plus épurées sur la page Explorer** : sous chaque affiche ne reste que le titre du film, sans l’année, la note ni la durée, qui se lisent toujours dans la fiche du film et sur les pages « Voir tout ». Les liens « Voir ma liste » et « Voir les N films » perdent leur soulignement au profit d’un texte gris suivi d’une flèche, qui s’éclaire au survol, et les flèches de défilement se centrent sur les affiches. La rangée « Les plus proposés » garde le nombre de soirées sous chaque titre.
 - **Le code reste à zéro remarque SonarCloud** : les vingt-sept remarques ouvertes, les seize acceptées ou écartées à la main et les trois blocs dupliqués sont corrigés dans le code, et la CI refuse désormais toute branche qui en porterait une, qui descendrait sous A sur une note, dupliquerait du code ou ferait baisser la couverture ; les règles de SonarCloud tournent aussi dans la vérification locale, avant chaque envoi.
-- **Les écrans parlent le même langage visuel** : un même lien de retour en haut des pages secondaires (compte, formulaires, listes, profil, soirée), des titres de page à la même taille, les mêmes pastilles de compteur sur les filtres, la cloche et les onglets, le même encart « Réessayer » quand un bloc ne charge pas, les mêmes états vides, et la création de soirée prend la carte des pages de connexion. Un bouton de filtre ou de menu ouvert se teinte de la couleur d'accent au lieu de changer de forme.
-- **La recette est surveillée** : une sonde vérifie son API toutes les cinq minutes et prévient par e-mail avant qu'une livraison ne bute dessus. Une alerte signale aussi un compte connecté bloqué par les quotas ou une connexion bloquée après trop d'échecs. Le site n'est plus publié quand la nouvelle version de l'API échoue à sa validation.
-- **Lighthouse ne se joue qu'à la mise en recette** : la même mesure, sur le même build local, ne se rejoue plus en production, qui exige déjà que la recette serve ce commit ; neuf minutes de moins par livraison et une occasion de moins pour le runner de planter.
-- **La description du rôle Terraform sur les secrets dit ce qu'elle garantit** : ne jamais lire une version soi-même, sans prétendre fermer le chemin par lequel une identité fuitée se donnerait le droit ; la politique de refus IAM qui le fermerait demande une organisation Google Cloud, ce que le projet n'a pas, et la limite est écrite.
-- **Le dossier technique suit la chaîne telle qu'elle tourne** : l'application Terraform derrière un relecteur et le plan du lundi qui signale une dérive, la sauvegarde surveillée, l'analyse hebdomadaire de l'image de base et de la description Terraform, le journal d'audit gardé 400 jours, la version servie relue après chaque déploiement et chaque retour arrière, la moitié refusée quand l'autre a bougé, le planificateur qui retente ses appels, l'ancienne adresse et son service worker de départ, huit politiques d'alerte, et les trois accès plus larges que leur usage parmi les chantiers ouverts.
-- **Le dossier technique dit ce que l'infrastructure est devenue** : la recette, l'infrastructure décrite en code et les identités sans clé rejoignent la section infrastructure, les chaînes d'infrastructure et de sauvegarde rejoignent les chaînes annexes, les trois jobs du planificateur sont comptés, et les chantiers ouverts sont ceux qui le sont encore : cache partagé, conteneur décrit à deux endroits, planificateur authentifié par secret, dernier jeton de dépôt.
-- **La page « Créer une soirée » se lit en trois temps** : le titre, la date et l'heure, puis les options avancées regroupées par phase (ambiance, participants et films, vote et tirage), puis les templates. Le nombre de participants et de films par personne ne sont plus deux compteurs calés sur 300 et 15 mais deux interrupteurs « Limiter », éteints par défaut : une soirée créée sans y toucher n'a plus de plafond affiché, et l'allumer propose 10 personnes ou 3 films, à ajuster. Appliquer un template n'ouvre plus les options : une ligne résume ce qu'il règle, presser sa pastille une seconde fois revient aux réglages par défaut, un bouton « Réinitialiser les options » fait de même, et « Enregistrer en template » se grise tant que la configuration est identique au template appliqué au lieu de proposer un doublon. La barre d'enregistrement rejoint les pastilles dans un même bloc, comme dans les paramètres d'une soirée.
-- **Les paramètres d'une soirée suivent la même grille** : trois sections (participants et films, vote et tirage, après la soirée) à la place du bloc « Le déroulé », et les mêmes interrupteurs « Limiter le nombre de participants » et « Limiter les films proposés par personne » que la création, avec le compteur dessous ; éteindre l'un retire le plafond de la soirée au lieu de le poser à 300 ou 15, et une soirée dont le plafond vaut déjà le maximum se lit comme sans limite.
-- **Sur téléphone, le choix d'emoji du thème s'ouvre dans une feuille en bas de l'écran** au lieu d'un popover, et « Plus de thèmes » est une pastille qui dit combien de thèmes elle cache.
-- **Le mode sombre s'applique aussi aux contrôles natifs** : les icônes calendrier et horloge des champs de date et d'heure ne sont plus noires sur bleu nuit, et les sélecteurs natifs s'ouvrent en sombre.
-- **Les textes d'exemple des champs sont lisibles sur Safari** : ils prennent la couleur de texte atténué du thème au lieu du gris clair par défaut du navigateur (2,35:1 sur fond blanc).
+- **Les écrans parlent le même langage visuel** : un même lien de retour en haut des pages secondaires (compte, formulaires, listes, profil, soirée), des titres de page à la même taille, les mêmes pastilles de compteur sur les filtres, la cloche et les onglets, le même encart « Réessayer » quand un bloc ne charge pas, les mêmes états vides, et la création de soirée prend la carte des pages de connexion. Un bouton de filtre ou de menu ouvert se teinte de la couleur d’accent au lieu de changer de forme.
+- **La recette est surveillée** : une sonde vérifie son API toutes les cinq minutes et prévient par e-mail avant qu’une livraison ne bute dessus. Une alerte signale aussi un compte connecté bloqué par les quotas ou une connexion bloquée après trop d’échecs. Le site n’est plus publié quand la nouvelle version de l’API échoue à sa validation.
+- **Lighthouse ne se joue qu’à la mise en recette** : la même mesure, sur le même build local, ne se rejoue plus en production, qui exige déjà que la recette serve ce commit ; neuf minutes de moins par livraison et une occasion de moins pour le runner de planter.
+- **La description du rôle Terraform sur les secrets dit ce qu’elle garantit** : ne jamais lire une version soi-même, sans prétendre fermer le chemin par lequel une identité fuitée se donnerait le droit ; la politique de refus IAM qui le fermerait demande une organisation Google Cloud, ce que le projet n’a pas, et la limite est écrite.
+- **Le dossier technique suit la chaîne telle qu’elle tourne** : l’application Terraform derrière un relecteur et le plan du lundi qui signale une dérive, la sauvegarde surveillée, l’analyse hebdomadaire de l’image de base et de la description Terraform, le journal d’audit gardé 400 jours, la version servie relue après chaque déploiement et chaque retour arrière, la moitié refusée quand l’autre a bougé, le planificateur qui retente ses appels, l’ancienne adresse et son service worker de départ, huit politiques d’alerte, et les trois accès plus larges que leur usage parmi les chantiers ouverts.
+- **Le dossier technique dit ce que l’infrastructure est devenue** : la recette, l’infrastructure décrite en code et les identités sans clé rejoignent la section infrastructure, les chaînes d’infrastructure et de sauvegarde rejoignent les chaînes annexes, les trois jobs du planificateur sont comptés, et les chantiers ouverts sont ceux qui le sont encore : cache partagé, conteneur décrit à deux endroits, planificateur authentifié par secret, dernier jeton de dépôt.
+- **La page « Créer une soirée » se lit en trois temps** : le titre, la date et l’heure, puis les options avancées regroupées par phase (ambiance, participants et films, vote et tirage), puis les templates. Le nombre de participants et de films par personne ne sont plus deux compteurs calés sur 300 et 15 mais deux interrupteurs « Limiter », éteints par défaut : une soirée créée sans y toucher n’a plus de plafond affiché, et l’allumer propose 10 personnes ou 3 films, à ajuster. Appliquer un template n’ouvre plus les options : une ligne résume ce qu’il règle, presser sa pastille une seconde fois revient aux réglages par défaut, un bouton « Réinitialiser les options » fait de même, et « Enregistrer en template » se grise tant que la configuration est identique au template appliqué au lieu de proposer un doublon. La barre d’enregistrement rejoint les pastilles dans un même bloc, comme dans les paramètres d’une soirée.
+- **Les paramètres d’une soirée suivent la même grille** : trois sections (participants et films, vote et tirage, après la soirée) à la place du bloc « Le déroulé », et les mêmes interrupteurs « Limiter le nombre de participants » et « Limiter les films proposés par personne » que la création, avec le compteur dessous ; éteindre l’un retire le plafond de la soirée au lieu de le poser à 300 ou 15, et une soirée dont le plafond vaut déjà le maximum se lit comme sans limite.
+- **Sur téléphone, le choix d’emoji du thème s’ouvre dans une feuille en bas de l’écran** au lieu d’un popover, et « Plus de thèmes » est une pastille qui dit combien de thèmes elle cache.
+- **Le mode sombre s’applique aussi aux contrôles natifs** : les icônes calendrier et horloge des champs de date et d’heure ne sont plus noires sur bleu nuit, et les sélecteurs natifs s’ouvrent en sombre.
+- **Les textes d’exemple des champs sont lisibles sur Safari** : ils prennent la couleur de texte atténué du thème au lieu du gris clair par défaut du navigateur (2,35:1 sur fond blanc).
 
-- **Le site et l'API sont hébergés chez un seul fournisseur** : le front a quitté AWS pour Firebase Hosting, à côté de l'API sur Google Cloud ; la chaîne de déploiement, le retour arrière et la sonde de disponibilité ne connaissent plus qu'un cloud, et le compte AWS est vide.
-- **Les mêmes onglets, menus et pastilles partout** : les onglets de « Mes soirées », de la liste d'abonnés et du choix d'avatar sont le composant d'onglets commun (celui des abonnés n'annonçait pas ses onglets aux lecteurs d'écran), le menu du compte et celui de l'agenda sont le menu commun, les filtres de recherche de films, les thèmes suggérés, l'invitation d'un participant et une dizaine de badges (« Vous », « Complet », « Série », gagnant, date relative, liste masquée) sont la pastille commune, et les boutons « Charger plus », « Tout marquer lu », « Suivre », les votes du détail d'un film et les filtres de liste sont le bouton commun.
-- **Le mode de tirage, les candidats Letterboxd et la grille d'avatars partagent une même carte à cocher**, les avatars empilés une même pile, les réglages à interrupteur une même ligne.
-- **Les icônes suivent une échelle de huit tailles**, les avatars et les petites dimensions la grille de 4 px, ce qui décale certains dessins d'un ou deux pixels.
+- **Le site et l’API sont hébergés chez un seul fournisseur** : le front a quitté AWS pour Firebase Hosting, à côté de l’API sur Google Cloud ; la chaîne de déploiement, le retour arrière et la sonde de disponibilité ne connaissent plus qu’un cloud, et le compte AWS est vide.
+- **Les mêmes onglets, menus et pastilles partout** : les onglets de « Mes soirées », de la liste d’abonnés et du choix d’avatar sont le composant d’onglets commun (celui des abonnés n’annonçait pas ses onglets aux lecteurs d’écran), le menu du compte et celui de l’agenda sont le menu commun, les filtres de recherche de films, les thèmes suggérés, l’invitation d’un participant et une dizaine de badges (« Vous », « Complet », « Série », gagnant, date relative, liste masquée) sont la pastille commune, et les boutons « Charger plus », « Tout marquer lu », « Suivre », les votes du détail d’un film et les filtres de liste sont le bouton commun.
+- **Le mode de tirage, les candidats Letterboxd et la grille d’avatars partagent une même carte à cocher**, les avatars empilés une même pile, les réglages à interrupteur une même ligne.
+- **Les icônes suivent une échelle de huit tailles**, les avatars et les petites dimensions la grille de 4 px, ce qui décale certains dessins d’un ou deux pixels.
 - **Tout ce qui se touche fait au moins 44 px** : petits boutons, pastilles de filtre, croix de retrait, interrupteurs, liens dans une phrase, flèches des rangées de films et boutons de carte gardent leur dessin mais répondent au doigt sur une zone plus large.
-- **Les croix de fermeture des feuilles et des panneaux, les boutons de renommage et de suppression des modèles de soirée, le bouton des paramètres et celui de l'agenda d'une soirée sont le même bouton à icône que partout ailleurs**, et les badges « Hôte » et « Soutien » la même pastille que les filtres.
-- **Le focus clavier reste visible partout** : dix-sept boutons et entrées de menu (menus contextuels, colonnes de la vue liste, notes de film, fournisseurs de streaming, sous-menu « Proposer ») n'avaient pour tout repère de focus qu'un fond à peine teinté ; ils prennent le contour standard.
-- **Les boutons d'envoi montrent un spinner pendant l'attente** (connexion, inscription, création de soirée, proposition d'idée, suppression de compte) au lieu de seulement se griser, et les boutons de tri de la vue liste, les badges d'invitation et la pastille « Nouveautés » sont désormais la même pastille que partout ailleurs.
-- **Les menus et sélecteurs se pilotent au clavier** : le menu « ⋮ » d'un film et le survol « Proposer dans une soirée » se parcourent aux flèches, Home et End, et Échap les ferme en rendant le focus à leur bouton ; le menu du compte comme celui de l'agenda gagnent les mêmes flèches ; le choix d'emoji du thème et les pastilles de couleur d'accent sont des groupes de boutons radio de 44 px, où les flèches changent la sélection sans fermer la grille.
-- **Chaque champ de formulaire annonce son aide et son erreur au lecteur d'écran** (création de soirée, paramètres d'une soirée, compte, mots de passe, proposition d'idée), et l'erreur porte une icône partout, plus seulement dans les paramètres d'une soirée.
-- **Le champ de recherche prend le même habillage que les autres champs**, un champ ou un menu désactivé se grise, et les boutons ne se soulèvent plus au survol quand le système demande moins d'animations.
+- **Les croix de fermeture des feuilles et des panneaux, les boutons de renommage et de suppression des modèles de soirée, le bouton des paramètres et celui de l’agenda d’une soirée sont le même bouton à icône que partout ailleurs**, et les badges « Hôte » et « Soutien » la même pastille que les filtres.
+- **Le focus clavier reste visible partout** : dix-sept boutons et entrées de menu (menus contextuels, colonnes de la vue liste, notes de film, fournisseurs de streaming, sous-menu « Proposer ») n’avaient pour tout repère de focus qu’un fond à peine teinté ; ils prennent le contour standard.
+- **Les boutons d’envoi montrent un spinner pendant l’attente** (connexion, inscription, création de soirée, proposition d’idée, suppression de compte) au lieu de seulement se griser, et les boutons de tri de la vue liste, les badges d’invitation et la pastille « Nouveautés » sont désormais la même pastille que partout ailleurs.
+- **Les menus et sélecteurs se pilotent au clavier** : le menu « ⋮ » d’un film et le survol « Proposer dans une soirée » se parcourent aux flèches, Home et End, et Échap les ferme en rendant le focus à leur bouton ; le menu du compte comme celui de l’agenda gagnent les mêmes flèches ; le choix d’emoji du thème et les pastilles de couleur d’accent sont des groupes de boutons radio de 44 px, où les flèches changent la sélection sans fermer la grille.
+- **Chaque champ de formulaire annonce son aide et son erreur au lecteur d’écran** (création de soirée, paramètres d’une soirée, compte, mots de passe, proposition d’idée), et l’erreur porte une icône partout, plus seulement dans les paramètres d’une soirée.
+- **Le champ de recherche prend le même habillage que les autres champs**, un champ ou un menu désactivé se grise, et les boutons ne se soulèvent plus au survol quand le système demande moins d’animations.
 - **Le mode sombre distingue ce qui flotte** : menus, feuilles, modales, infobulles et cartes surélevées se posent sur une surface un ton plus claire que la page, au lieu de compter sur une ombre invisible sur fond sombre ; les séparateurs discrets y sont aussi un peu plus lisibles.
-- **La pastille « Nouveautés » suit la couleur d'accent choisie** au lieu de rester verte, et la piste d'un interrupteur éteint est plus foncée pour rester visible.
-- **Deux personnes qui modifient la même soirée en même temps ne s'écrasent plus** : deux lancements de roue simultanés donnaient deux gagnants différents, chacun affiché à son auteur et un seul retenu. Le second reçoit maintenant « modifiée entre-temps, rechargez ». Les plafonds de participants, de propositions et de votes tiennent aussi sous des envois simultanés, et retirer un participant ou un film est tout ou rien.
-- **L'API démarre et répond plus vite** : les index de la base ne sont plus recréés à chaque démarrage, la session n'est plus relue en base à chaque requête pendant trente secondes, et les rappels de soirée ne lisent plus toutes les soirées ouvertes mais seulement celles dont l'heure approche.
-- **La page d'accueil n'attend plus TMDB à chaque redémarrage du serveur** : les sélections de films gardent une copie partagée entre les instances, donc un serveur qui vient de démarrer répond en quelques millisecondes au lieu de 6 à 10 secondes. Deux visiteurs qui arrivent en même temps ne déclenchent plus deux fois le même travail, et les réponses de l'API voyagent compressées.
-- **L'application s'affiche plus tôt** : l'outil de suivi des erreurs se charge à la première interaction ou dix secondes après l'affichage, au lieu de retarder le premier rendu, et chaque page demande sept fichiers de moins. Les rangées de l'accueil sont demandées dès l'ouverture et servies depuis le cache du navigateur quand on revient.
-- **Un lien de soirée s'ouvre plus vite** : la liste des films part sans attendre les détails de la soirée, et les fenêtres de partage, de paramètres, de proposition et de tirage ne sont chargées qu'à leur première ouverture, soit un tiers de JavaScript en moins pour un invité. L'animation de la roue est plus régulière sur mobile.
-- **Une soirée où personne ne bouge ne coûte presque rien** : pendant une soirée, chaque téléphone redemande la page toutes les 3,5 secondes ; le serveur reconnaît maintenant qu'il n'y a rien de neuf et répond « rien n'a changé » sans recalculer la liste des films ni la retransmettre, ce qui divise par sept le travail de la base et le trafic mobile sur une soirée calme. Dès qu'un vote, une proposition, un retrait ou une note arrive, tout le monde reçoit la nouvelle liste comme avant.
-- **Les titres d'onglet (« Mes soirées | Movie Picker »), les aperçus de partage, les courriels de réinitialisation et les métadonnées SEO abandonnent le tiret cadratin et le point médian.**
+- **La pastille « Nouveautés » suit la couleur d’accent choisie** au lieu de rester verte, et la piste d’un interrupteur éteint est plus foncée pour rester visible.
+- **Deux personnes qui modifient la même soirée en même temps ne s’écrasent plus** : deux lancements de roue simultanés donnaient deux gagnants différents, chacun affiché à son auteur et un seul retenu. Le second reçoit maintenant « modifiée entre-temps, rechargez ». Les plafonds de participants, de propositions et de votes tiennent aussi sous des envois simultanés, et retirer un participant ou un film est tout ou rien.
+- **L’API démarre et répond plus vite** : les index de la base ne sont plus recréés à chaque démarrage, la session n’est plus relue en base à chaque requête pendant trente secondes, et les rappels de soirée ne lisent plus toutes les soirées ouvertes mais seulement celles dont l’heure approche.
+- **La page d’accueil n’attend plus TMDB à chaque redémarrage du serveur** : les sélections de films gardent une copie partagée entre les instances, donc un serveur qui vient de démarrer répond en quelques millisecondes au lieu de 6 à 10 secondes. Deux visiteurs qui arrivent en même temps ne déclenchent plus deux fois le même travail, et les réponses de l’API voyagent compressées.
+- **L’application s’affiche plus tôt** : l’outil de suivi des erreurs se charge à la première interaction ou dix secondes après l’affichage, au lieu de retarder le premier rendu, et chaque page demande sept fichiers de moins. Les rangées de l’accueil sont demandées dès l’ouverture et servies depuis le cache du navigateur quand on revient.
+- **Un lien de soirée s’ouvre plus vite** : la liste des films part sans attendre les détails de la soirée, et les fenêtres de partage, de paramètres, de proposition et de tirage ne sont chargées qu’à leur première ouverture, soit un tiers de JavaScript en moins pour un invité. L’animation de la roue est plus régulière sur mobile.
+- **Une soirée où personne ne bouge ne coûte presque rien** : pendant une soirée, chaque téléphone redemande la page toutes les 3,5 secondes ; le serveur reconnaît maintenant qu’il n’y a rien de neuf et répond « rien n’a changé » sans recalculer la liste des films ni la retransmettre, ce qui divise par sept le travail de la base et le trafic mobile sur une soirée calme. Dès qu’un vote, une proposition, un retrait ou une note arrive, tout le monde reçoit la nouvelle liste comme avant.
+- **Les titres d’onglet (« Mes soirées | Movie Picker »), les aperçus de partage, les courriels de réinitialisation et les métadonnées SEO abandonnent le tiret cadratin et le point médian.**
 
 ### Removed
 
-- Le bouton « Détails » d'un film, qui n'était plus branché nulle part.
+- Le bouton « Détails » d’un film, qui n’était plus branché nulle part.
 
 ### Fixed
 
-- **La roue pondérée montre enfin le poids de chaque film** : en mode « Pondéré par les votes », le tirage tenait déjà compte des votes, mais la roue dessinait toutes les parts de la même taille. Chaque film y occupe désormais une part à la mesure de ses chances, comme au tirage : un film à +4 a une part cinq fois plus grande qu'un film sans vote, et un film à 0 ou en négatif garde la plus petite.
-- **Le menu d'une soirée de l'historique s'ouvre en entier** : dans Mes soirées, les trois points d'une soirée passée ouvraient le menu à l'intérieur de la carte, qui le rognait et décalait son contenu ; « Supprimer la soirée » restait hors de portée. Le menu passe désormais par-dessus la liste.
-- **Un rappel de soirée n'arrive plus le lendemain** sur un téléphone resté éteint pendant la soirée : il expire au début de la soirée, et les autres notifications push au bout de deux jours.
-- **Une soirée reportée puis de nouveau restée sans film prévient encore l'hôte** qu'elle est en suspens.
-- **La notification d'un nouvel abonné au profil privé ouvre la boîte de réception** au lieu d'un profil introuvable.
-- **Le lien vers votre profil ne mène plus à une page introuvable quand il est privé** : l'onglet « Profil » sur mobile, le lien de l'invitation d'amis et les nouveautés ouvrent les réglages du compte, et l'adresse de votre propre profil y renvoie aussi.
-- **Le récapitulatif de l'historique n'affiche plus de faux zéros quand votre profil est privé** : les films regardés et la série de semaines n'y figurent pas plutôt que de valoir 0.
+- **La roue pondérée montre enfin le poids de chaque film** : en mode « Pondéré par les votes », le tirage tenait déjà compte des votes, mais la roue dessinait toutes les parts de la même taille. Chaque film y occupe désormais une part à la mesure de ses chances, comme au tirage : un film à +4 a une part cinq fois plus grande qu’un film sans vote, et un film à 0 ou en négatif garde la plus petite.
+- **Le menu d’une soirée de l’historique s’ouvre en entier** : dans Mes soirées, les trois points d’une soirée passée ouvraient le menu à l’intérieur de la carte, qui le rognait et décalait son contenu ; « Supprimer la soirée » restait hors de portée. Le menu passe désormais par-dessus la liste.
+- **Un rappel de soirée n’arrive plus le lendemain** sur un téléphone resté éteint pendant la soirée : il expire au début de la soirée, et les autres notifications push au bout de deux jours.
+- **Une soirée reportée puis de nouveau restée sans film prévient encore l’hôte** qu’elle est en suspens.
+- **La notification d’un nouvel abonné au profil privé ouvre la boîte de réception** au lieu d’un profil introuvable.
+- **Le lien vers votre profil ne mène plus à une page introuvable quand il est privé** : l’onglet « Profil » sur mobile, le lien de l’invitation d’amis et les nouveautés ouvrent les réglages du compte, et l’adresse de votre propre profil y renvoie aussi.
+- **Le récapitulatif de l’historique n’affiche plus de faux zéros quand votre profil est privé** : les films regardés et la série de semaines n’y figurent pas plutôt que de valoir 0.
 - **Une session expirée est reconnue même quand la réponse du serveur arrive tronquée**, au lieu de passer pour une coupure réseau.
-- **La boîte de réception s'ouvre plus vite** quand ses notifications viennent de nombreuses personnes.
-- **Une requête trop volumineuse est expliquée comme telle**, par exemple la confirmation de milliers de films Letterboxd d'un coup : le message demandait de corriger des informations « non valides ».
-- **Toutes les captures d'une suggestion d'idée sont publiées** : avec plusieurs images, certaines disparaissaient du ticket sans message.
-- **Un mot de passe trop long reçoit le message qui dit la limite** au lieu d'une erreur générique, et une liste envoyée avec un élément vide est refusée proprement au lieu d'une erreur serveur.
-- **Une soirée qui a atteint 1 000 films refuse le suivant avec un message clair** : au-delà, le film était enregistré mais n'apparaissait ni dans la liste ni dans la roue.
-- **L'export de vos données est complet** : il contient aussi les films que vous avez proposés et leurs notes, vos modèles de soirée, votre compte Letterboxd et votre échelle de notes.
-- **Effacer sa bio l'efface vraiment** : l'enregistrement automatique remettait l'ancienne bio dans le champ.
-- **Après un tirage, les actions que le serveur refuse ne sont plus proposées** (quitter la soirée, retirer un participant ou un film, ajouter ou modifier une note), et une note ne s'ouvre plus en modification sur une soirée terminée ; « Retirer de mon historique », refusé presque partout, disparaît.
-- **Sur une soirée en suspens à plusieurs films, la roue n'annonce plus des tirages qui ne peuvent plus avoir lieu**, et la fenêtre du gagnant montre ses plateformes de streaming.
-- **L'heure proposée et l'alerte « date déjà passée » de la création d'une soirée suivent l'heure de Paris**, depuis un appareil réglé sur un autre fuseau.
-- **L'historique de « Mes soirées » range dans le bon ordre les soirées d'un même jour**, et le fichier d'agenda respecte la longueur de ligne des calendriers stricts, accents compris.
-- **Glisser le curseur de durée n'envoie plus une recherche à chaque cran**, ce qui bloquait la recherche plusieurs dizaines de secondes, et une recherche faite sur les seuls filtres se relance quand on change un filtre, qu'on efface ce qu'on avait tapé ou qu'on change de langue, au lieu de se vider.
-- **Les séries répondent aux filtres de genre** Action, Science-fiction, Aventure, Fantastique et Guerre, et un film et une série de même numéro TMDB s'affichent tous deux dans les résultats.
-- **Un film ajouté ou proposé depuis les rangées de l'accueil garde ses genres**, et la rangée « Vus par vos amis » se met à jour après un abonnement ou un désabonnement.
-- **« Connexion » dans la barre du bas d'une page d'inscription ramène à la soirée d'origine** après la connexion, et les réglages proposent de réessayer quand la session ne répond pas, au lieu d'afficher la page de connexion.
-- **La fin de la page de découverte propose de créer une soirée à qui est déjà connecté**, et la notification des films Letterboxd à confirmer ouvre les réglages d'intégrations.
-- **Une capture illisible est signalée par son nom, dans la langue de l'interface**, et un nom de fichier trop long est raccourci au lieu de faire échouer toute la suggestion.
-- **Le sommaire du dossier technique et le menu des réglages ne passent plus sous l'en-tête** en défilant, et un lien du sommaire amène la section sous l'en-tête plutôt que derrière.
-- **Un tirage relancé après une coupure réseau retrouve son gagnant** : quand la réponse d'un tirage se perdait sur une soirée déjà en suspens, le second clic répondait « soirée terminée », et le gagnant n'était jamais annoncé.
-- **Le gagnant de la roue est annoncé même si l'hôte quitte la page ou ferme l'application pendant qu'elle tourne** (au plus tard une demi-heure après le tirage), et une erreur au tirage suivant s'affiche dans la fenêtre de la roue, avec un bouton qui montre son attente, au lieu de rester cachée derrière.
-- **La roue s'ouvre sur les iPhone restés sous iOS 16** : les confettis faisaient planter la page de la soirée sur Safari avant la version 17.
+- **La boîte de réception s’ouvre plus vite** quand ses notifications viennent de nombreuses personnes.
+- **Une requête trop volumineuse est expliquée comme telle**, par exemple la confirmation de milliers de films Letterboxd d’un coup : le message demandait de corriger des informations « non valides ».
+- **Toutes les captures d’une suggestion d’idée sont publiées** : avec plusieurs images, certaines disparaissaient du ticket sans message.
+- **Un mot de passe trop long reçoit le message qui dit la limite** au lieu d’une erreur générique, et une liste envoyée avec un élément vide est refusée proprement au lieu d’une erreur serveur.
+- **Une soirée qui a atteint 1 000 films refuse le suivant avec un message clair** : au-delà, le film était enregistré mais n’apparaissait ni dans la liste ni dans la roue.
+- **L’export de vos données est complet** : il contient aussi les films que vous avez proposés et leurs notes, vos modèles de soirée, votre compte Letterboxd et votre échelle de notes.
+- **Effacer sa bio l’efface vraiment** : l’enregistrement automatique remettait l’ancienne bio dans le champ.
+- **Après un tirage, les actions que le serveur refuse ne sont plus proposées** (quitter la soirée, retirer un participant ou un film, ajouter ou modifier une note), et une note ne s’ouvre plus en modification sur une soirée terminée ; « Retirer de mon historique », refusé presque partout, disparaît.
+- **Sur une soirée en suspens à plusieurs films, la roue n’annonce plus des tirages qui ne peuvent plus avoir lieu**, et la fenêtre du gagnant montre ses plateformes de streaming.
+- **L’heure proposée et l’alerte « date déjà passée » de la création d’une soirée suivent l’heure de Paris**, depuis un appareil réglé sur un autre fuseau.
+- **L’historique de « Mes soirées » range dans le bon ordre les soirées d’un même jour**, et le fichier d’agenda respecte la longueur de ligne des calendriers stricts, accents compris.
+- **Glisser le curseur de durée n’envoie plus une recherche à chaque cran**, ce qui bloquait la recherche plusieurs dizaines de secondes, et une recherche faite sur les seuls filtres se relance quand on change un filtre, qu’on efface ce qu’on avait tapé ou qu’on change de langue, au lieu de se vider.
+- **Les séries répondent aux filtres de genre** Action, Science-fiction, Aventure, Fantastique et Guerre, et un film et une série de même numéro TMDB s’affichent tous deux dans les résultats.
+- **Un film ajouté ou proposé depuis les rangées de l’accueil garde ses genres**, et la rangée « Vus par vos amis » se met à jour après un abonnement ou un désabonnement.
+- **« Connexion » dans la barre du bas d’une page d’inscription ramène à la soirée d’origine** après la connexion, et les réglages proposent de réessayer quand la session ne répond pas, au lieu d’afficher la page de connexion.
+- **La fin de la page de découverte propose de créer une soirée à qui est déjà connecté**, et la notification des films Letterboxd à confirmer ouvre les réglages d’intégrations.
+- **Une capture illisible est signalée par son nom, dans la langue de l’interface**, et un nom de fichier trop long est raccourci au lieu de faire échouer toute la suggestion.
+- **Le sommaire du dossier technique et le menu des réglages ne passent plus sous l’en-tête** en défilant, et un lien du sommaire amène la section sous l’en-tête plutôt que derrière.
+- **Un tirage relancé après une coupure réseau retrouve son gagnant** : quand la réponse d’un tirage se perdait sur une soirée déjà en suspens, le second clic répondait « soirée terminée », et le gagnant n’était jamais annoncé.
+- **Le gagnant de la roue est annoncé même si l’hôte quitte la page ou ferme l’application pendant qu’elle tourne** (au plus tard une demi-heure après le tirage), et une erreur au tirage suivant s’affiche dans la fenêtre de la roue, avec un bouton qui montre son attente, au lieu de rester cachée derrière.
+- **La roue s’ouvre sur les iPhone restés sous iOS 16** : les confettis faisaient planter la page de la soirée sur Safari avant la version 17.
 - **Un film exclu de la roue ne peut plus être tiré au même instant** par un second hôte, ni un film proposé par un participant retiré pendant son ajout survivre à ce retrait.
-- **Le plafond de participants tient face à une inscription simultanée** : baisser le plafond pendant qu'un invité rejoignait pouvait laisser six participants dans une soirée limitée à cinq.
+- **Le plafond de participants tient face à une inscription simultanée** : baisser le plafond pendant qu’un invité rejoignait pouvait laisser six participants dans une soirée limitée à cinq.
 - **Un remake se propose à côté du film dont il reprend le titre** : « Le Roi lion » de 2019 était refusé dès que celui de 1994 était proposé.
-- **Supprimer la prochaine soirée d'une série arrête la série proprement** : la soirée précédente affichait encore « La prochaine soirée est déjà créée » et bloquait le réglage de récurrence.
-- **Une soirée datée de l'an 9999 ne bloque plus les séries des autres hôtes**, et « Mes soirées » ne plante plus sur une date aussi lointaine.
-- **Modifier le thème d'une ancienne soirée ne change plus son mode de tirage** : sur une soirée enregistrée sans réglages, la première modification passait le tirage en « pondéré par les votes » et retirait l'aperçu riche.
-- **Le thème d'une soirée garde son emoji** quand il n'a pas de texte (« 🎃 ») ou que l'emoji est composé (« 👨‍👩‍👧 Famille ») : il revenait dans le champ texte à la réouverture des réglages.
-- **Échap dans le nom d'un modèle de soirée n'annule que ce nom**, sans fermer toute la feuille des réglages.
-- **Une soirée commencée entre 1 h et 2 h un jour de changement d'heure** s'affiche, se compte à rebours et s'ajoute à l'agenda à la bonne heure.
-- **Une soirée fixée à une heure sautée au passage à l'heure d'été**, comme 2 h 30 le dernier dimanche de mars, commence à 3 h 30 pour le serveur comme pour l'application : ses rappels ne partaient pas, et elle ne passait jamais en suspens ni dans l'historique.
-- **La date proposée à la création d'une soirée n'est plus déjà passée** quand on ouvre le formulaire pile à l'heure ou à la demie.
-- **Proposer un film depuis Ma liste, l'accueil ou un profil met à jour la soirée et « Mes soirées »**, qui gardaient l'ancien nombre de films jusqu'à cinq minutes.
-- **Les réglages de notifications s'affichent sur un navigateur sans notifications push** : sur iPhone hors de l'app installée, on ne pouvait plus couper les notifications de la boîte de réception.
-- **Suivre à nouveau quelqu'un ne le notifie plus à chaque fois** : désabonner puis réabonner envoyait une nouvelle notification et un push à chaque clic. La première notification suffit tant qu'elle est dans la boîte de réception.
-- **Les films Letterboxd à confirmer ne sont plus signalés chaque jour** tant qu'ils restent les mêmes, un nouveau titre à confirmer est signalé même quand il en remplace un autre, et les titres passés restent comptés comme en attente au lieu de disparaître du récapitulatif.
+- **Supprimer la prochaine soirée d’une série arrête la série proprement** : la soirée précédente affichait encore « La prochaine soirée est déjà créée » et bloquait le réglage de récurrence.
+- **Une soirée datée de l’an 9999 ne bloque plus les séries des autres hôtes**, et « Mes soirées » ne plante plus sur une date aussi lointaine.
+- **Modifier le thème d’une ancienne soirée ne change plus son mode de tirage** : sur une soirée enregistrée sans réglages, la première modification passait le tirage en « pondéré par les votes » et retirait l’aperçu riche.
+- **Le thème d’une soirée garde son emoji** quand il n’a pas de texte (« 🎃 ») ou que l’emoji est composé (« 👨‍👩‍👧 Famille ») : il revenait dans le champ texte à la réouverture des réglages.
+- **Échap dans le nom d’un modèle de soirée n’annule que ce nom**, sans fermer toute la feuille des réglages.
+- **Une soirée commencée entre 1 h et 2 h un jour de changement d’heure** s’affiche, se compte à rebours et s’ajoute à l’agenda à la bonne heure.
+- **Une soirée fixée à une heure sautée au passage à l’heure d’été**, comme 2 h 30 le dernier dimanche de mars, commence à 3 h 30 pour le serveur comme pour l’application : ses rappels ne partaient pas, et elle ne passait jamais en suspens ni dans l’historique.
+- **La date proposée à la création d’une soirée n’est plus déjà passée** quand on ouvre le formulaire pile à l’heure ou à la demie.
+- **Proposer un film depuis Ma liste, l’accueil ou un profil met à jour la soirée et « Mes soirées »**, qui gardaient l’ancien nombre de films jusqu’à cinq minutes.
+- **Les réglages de notifications s’affichent sur un navigateur sans notifications push** : sur iPhone hors de l’app installée, on ne pouvait plus couper les notifications de la boîte de réception.
+- **Suivre à nouveau quelqu’un ne le notifie plus à chaque fois** : désabonner puis réabonner envoyait une nouvelle notification et un push à chaque clic. La première notification suffit tant qu’elle est dans la boîte de réception.
+- **Les films Letterboxd à confirmer ne sont plus signalés chaque jour** tant qu’ils restent les mêmes, un nouveau titre à confirmer est signalé même quand il en remplace un autre, et les titres passés restent comptés comme en attente au lieu de disparaître du récapitulatif.
 - **La synchronisation automatique de Letterboxd suit le compte connecté** : elle ne partait plus après un changement de compte sans rechargement, et partait en double pendant la première connexion.
-- **Le bouton « Suivre » disparaît sur un abonné au profil privé**, qui renvoyait toujours une erreur, et l'onglet « Rechercher » des abonnés n'est plus proposé sans être connecté.
-- **Suivre ou ne plus suivre quelqu'un met à jour toutes les listes et tous les compteurs** concernés, profils, abonnés, abonnements, recherche et invitations d'amis compris.
-- **« Voir mon profil » n'est plus proposé quand votre profil est privé**, où il menait à « Ce profil n'existe pas ».
+- **Le bouton « Suivre » disparaît sur un abonné au profil privé**, qui renvoyait toujours une erreur, et l’onglet « Rechercher » des abonnés n’est plus proposé sans être connecté.
+- **Suivre ou ne plus suivre quelqu’un met à jour toutes les listes et tous les compteurs** concernés, profils, abonnés, abonnements, recherche et invitations d’amis compris.
+- **« Voir mon profil » n’est plus proposé quand votre profil est privé**, où il menait à « Ce profil n’existe pas ».
 - **Un film ajouté depuis la recherche de Ma liste garde ses genres**, et retirer un film de Ma liste met à jour votre page publique.
-- **La recherche d'un utilisateur trouve les noms accentués hors du français** (Šárka, Dvořák, Erdoğan), et le surlignage tombe sur les bonnes lettres après un emoji.
-- **« Les plus proposés » compte une fois un film proposé avant et après l'arrivée des séries**, qui était coupé en deux et pouvait disparaître du classement.
-- **Un nom Google ou GitHub de plus de 80 caractères ne bloque plus l'enregistrement du profil** : il est raccourci à la création du compte.
-- **Changer d'avatar au clavier ne l'enregistre plus à chaque flèche** : les flèches parcourent la grille, Entrée ou Espace choisit, et un échec d'enregistrement s'affiche.
-- **Les flèches des choix segmentés vont jusqu'au bout** (thème, échelle de notes) : le focus restait sur l'ancienne option et la sélection ne dépassait pas la voisine.
-- **L'échelle de notes signale un enregistrement raté**, et la couleur d'accent choisie juste avant de quitter la page est bien enregistrée.
+- **La recherche d’un utilisateur trouve les noms accentués hors du français** (Šárka, Dvořák, Erdoğan), et le surlignage tombe sur les bonnes lettres après un emoji.
+- **« Les plus proposés » compte une fois un film proposé avant et après l’arrivée des séries**, qui était coupé en deux et pouvait disparaître du classement.
+- **Un nom Google ou GitHub de plus de 80 caractères ne bloque plus l’enregistrement du profil** : il est raccourci à la création du compte.
+- **Changer d’avatar au clavier ne l’enregistre plus à chaque flèche** : les flèches parcourent la grille, Entrée ou Espace choisit, et un échec d’enregistrement s’affiche.
+- **Les flèches des choix segmentés vont jusqu’au bout** (thème, échelle de notes) : le focus restait sur l’ancienne option et la sélection ne dépassait pas la voisine.
+- **L’échelle de notes signale un enregistrement raté**, et la couleur d’accent choisie juste avant de quitter la page est bien enregistrée.
 - **« Parce que vous avez aimé » nomme le bon film** sur un lien partagé ou ancien, au lieu du dernier film vu.
-- **Les listes déroulantes annoncent leur valeur aux lecteurs d'écran**, et une bulle d'information rend le focus à son bouton en se fermant.
-- **« Copier le lien » fonctionne dans une fenêtre** sur les navigateurs sans presse-papiers moderne, dont le guide d'installation des navigateurs intégrés.
-- **Les aperçus de captures de « Proposer une idée » libèrent leur mémoire** une fois la fenêtre fermée ou l'idée envoyée.
-- **Un texte qui contient un « $ » s'affiche tel quel** dans les messages (« Tom $& Jerry », « Ca$$h ») au lieu d'être déformé.
-- **Une coupure réseau pendant la lecture d'une réponse affiche le message d'erreur réseau traduit** au lieu du texte anglais du navigateur, et les erreurs d'activation des notifications push sont traduites.
-- **Les erreurs de saisie refusées par le serveur sont traduites**, et une requête trop volumineuse reçoit une erreur 413 claire au lieu d'une erreur serveur.
-- **L'anglais choisi reste appliqué aux messages d'erreur quand le navigateur bloque le stockage local.**
-- **Une affiche TMDB en erreur n'est plus gardée un mois en cache** : seules les affiches bien reçues y entrent, et une affiche déjà affichée n'est plus retéléchargée à chaque affichage.
-- **Couper le cache d'affiches du serveur ne vide plus toutes les affiches** : elles sont servies directement par TMDB.
+- **Les listes déroulantes annoncent leur valeur aux lecteurs d’écran**, et une bulle d’information rend le focus à son bouton en se fermant.
+- **« Copier le lien » fonctionne dans une fenêtre** sur les navigateurs sans presse-papiers moderne, dont le guide d’installation des navigateurs intégrés.
+- **Les aperçus de captures de « Proposer une idée » libèrent leur mémoire** une fois la fenêtre fermée ou l’idée envoyée.
+- **Un texte qui contient un « $ » s’affiche tel quel** dans les messages (« Tom $& Jerry », « Ca$$h ») au lieu d’être déformé.
+- **Une coupure réseau pendant la lecture d’une réponse affiche le message d’erreur réseau traduit** au lieu du texte anglais du navigateur, et les erreurs d’activation des notifications push sont traduites.
+- **Les erreurs de saisie refusées par le serveur sont traduites**, et une requête trop volumineuse reçoit une erreur 413 claire au lieu d’une erreur serveur.
+- **L’anglais choisi reste appliqué aux messages d’erreur quand le navigateur bloque le stockage local.**
+- **Une affiche TMDB en erreur n’est plus gardée un mois en cache** : seules les affiches bien reçues y entrent, et une affiche déjà affichée n’est plus retéléchargée à chaque affichage.
+- **Couper le cache d’affiches du serveur ne vide plus toutes les affiches** : elles sont servies directement par TMDB.
 - **Les préférences de notification refusent un type inconnu** au lieu de désactiver une autre préférence.
 - **Le plan du site reste sous la limite de 50 000 adresses** acceptée par les moteurs de recherche.
-- **La connexion avec Google fonctionne de nouveau pour un premier accès** : depuis la V1.4, toute première connexion par Google était refusée avec « l'adresse e-mail de ce compte n'est pas vérifiée », parce que le serveur cherchait la vérification de l'adresse au mauvais endroit de la réponse de Google ; seuls les comptes Google déjà liés depuis les paramètres passaient. Une adresse vérifiée par Google suffit désormais, comme prévu.
+- **La connexion avec Google fonctionne de nouveau pour un premier accès** : depuis la V1.4, toute première connexion par Google était refusée avec « l’adresse e-mail de ce compte n’est pas vérifiée », parce que le serveur cherchait la vérification de l’adresse au mauvais endroit de la réponse de Google ; seuls les comptes Google déjà liés depuis les paramètres passaient. Une adresse vérifiée par Google suffit désormais, comme prévu.
 - **Un rappel de soirée ne repart plus quand le serveur est mis à jour** pendant la fenêtre du rappel : la nouvelle version reconnaît les rappels déjà envoyés par la précédente.
-- **Les films gagnants quittent les listes « À voir » le soir même** : quand l'hôte ne clôturait pas la soirée, le film tiré au sort restait jusqu'à sept jours de trop dans la liste de chaque participant ; il en sort désormais à la passe de nuit qui suit la fin de la soirée.
-- **La roue ne se ferme plus pendant qu'elle tourne** : Échap ou un appui à côté la fermaient en plein tirage, ce qui annonçait le gagnant avant la fin de l'animation. Elle reste ouverte jusqu'à son arrêt.
-- **Un tirage ne peut plus désigner un film retiré au même instant** : si un participant retirait son film, ou quittait la soirée, pendant que l'hôte lançait la roue, le gagnant pouvait être ce film disparu, sans annonce. Le tirage est désormais refusé et se relance, ou le retrait est refusé si le tirage est passé avant.
-- **Un réglage de soirée changé puis remis aussitôt est bien enregistré** : activer puis désactiver « Autoriser les séries TV » coup sur coup laissait l'option active sur le serveur alors que la feuille affichait « Enregistré ». Les modifications partent désormais une à une, comparées à la dernière version enregistrée.
-- **Reprogrammer une soirée n'envoie plus qu'une notification** : chaque pause pendant la saisie de la nouvelle date prévenait les participants, et la case « Prévenir les participants du changement de date » disparaissait avant qu'on puisse la décocher. La date s'enregistre quand on quitte le champ ou qu'on ferme les réglages, et la case reste affichée jusque-là.
-- **« Mes soirées » est à jour après un tirage, une inscription ou un changement de réglages** : la liste pouvait montrer l'ancien état pendant cinq minutes ; elle se recharge désormais à l'ouverture suivante.
-- **L'historique de « Mes soirées » propose de réessayer quand il ne se charge pas** : un échec de chargement s'affichait comme une recherche sans résultat.
-- **Renommer un template ne propose plus de l'écraser** : après le renommage d'un template non appliqué, la barre proposait « Mettre à jour », qui remplaçait ses réglages par ceux du formulaire.
+- **Les films gagnants quittent les listes « À voir » le soir même** : quand l’hôte ne clôturait pas la soirée, le film tiré au sort restait jusqu’à sept jours de trop dans la liste de chaque participant ; il en sort désormais à la passe de nuit qui suit la fin de la soirée.
+- **La roue ne se ferme plus pendant qu’elle tourne** : Échap ou un appui à côté la fermaient en plein tirage, ce qui annonçait le gagnant avant la fin de l’animation. Elle reste ouverte jusqu’à son arrêt.
+- **Un tirage ne peut plus désigner un film retiré au même instant** : si un participant retirait son film, ou quittait la soirée, pendant que l’hôte lançait la roue, le gagnant pouvait être ce film disparu, sans annonce. Le tirage est désormais refusé et se relance, ou le retrait est refusé si le tirage est passé avant.
+- **Un réglage de soirée changé puis remis aussitôt est bien enregistré** : activer puis désactiver « Autoriser les séries TV » coup sur coup laissait l’option active sur le serveur alors que la feuille affichait « Enregistré ». Les modifications partent désormais une à une, comparées à la dernière version enregistrée.
+- **Reprogrammer une soirée n’envoie plus qu’une notification** : chaque pause pendant la saisie de la nouvelle date prévenait les participants, et la case « Prévenir les participants du changement de date » disparaissait avant qu’on puisse la décocher. La date s’enregistre quand on quitte le champ ou qu’on ferme les réglages, et la case reste affichée jusque-là.
+- **« Mes soirées » est à jour après un tirage, une inscription ou un changement de réglages** : la liste pouvait montrer l’ancien état pendant cinq minutes ; elle se recharge désormais à l’ouverture suivante.
+- **L’historique de « Mes soirées » propose de réessayer quand il ne se charge pas** : un échec de chargement s’affichait comme une recherche sans résultat.
+- **Renommer un template ne propose plus de l’écraser** : après le renommage d’un template non appliqué, la barre proposait « Mettre à jour », qui remplaçait ses réglages par ceux du formulaire.
 - **Une soirée créée après 23 h 30 démarre le lendemain à minuit** : le formulaire proposait minuit le jour même, une heure déjà passée.
-- **L'ajout au calendrier respecte l'heure de Paris** : sur un appareil réglé sur un autre fuseau, Google Agenda, Outlook et le fichier .ics décalaient la soirée d'une à six heures.
-- **Une soirée hebdomadaire restée sans film ne fait plus sauter la semaine suivante** : tant qu'une soirée restait en suspens, la suivante n'était pas créée, puis la série repartait une semaine plus loin. L'occurrence suivante est créée dès la fin du créneau, film tiré ou non.
-- **Une série mensuelle calée sur le 29, le 30 ou le 31 y revient après un mois plus court** : après février, une série du 31 restait bloquée au 28 pour de bon ; chaque occurrence retrouve désormais le jour choisi, ramené au dernier jour des mois qui ne l'ont pas.
-- **La notification « Soirée en suspens » repart après un échec d'envoi** : quand le service de notifications de l'hôte était momentanément indisponible, elle n'était jamais renvoyée ; elle l'est à la passe suivante, sans doublon dans la boîte de réception.
-- **Les notifications push reprennent d'elles-mêmes après un changement de clé du serveur** : un appareil abonné avant ce changement ne recevait plus rien alors que les réglages le disaient abonné. L'application le réabonne désormais sans rien demander.
-- **Le thème d'une soirée est limité à 100 caractères**, emoji compris, avec un message clair au-delà ; le champ du thème s'arrête de lui-même avant la limite.
-- **Le pseudo et la bio s'enregistrent tels que vous les avez tapés** : l'enregistrement automatique gardait la saisie d'une frappe plus tôt, « Alicia » devenait « Alici » et le champ se réécrivait avec, et basculer « Profil public » pendant l'enregistrement du pseudo remettait l'interrupteur dans sa position d'avant.
-- **L'accueil ne montre plus les films du compte précédent** : après une suppression de compte, un changement de mot de passe ou une session expirée, Ma liste, les films vus par vos amis et les recommandations restaient affichés sur l'accueil déconnecté, et le compte suivant connecté dans le même onglet en héritait. Toute fin de session efface désormais ce que l'onglet gardait du compte.
-- **« Se déconnecter » aboutit même quand la session a déjà pris fin** : le bouton répondait « Déconnexion impossible. » et l'application restait connectée, par exemple après avoir quitté la page Sécurité juste après un changement de mot de passe.
-- **Une fenêtre ne se ferme plus sur un clic dans ses marges** : un clic dans la marge d'une confirmation ou du bandeau de consentement la fermait, et sélectionner du texte dans « Proposer une idée » en relâchant la souris hors de la fenêtre la fermait en perdant le brouillon. Seul un clic sur le fond assombri ferme désormais une fenêtre.
-- **Un chargement raté ne passe plus pour une liste vide** : quand les notifications ou une liste d'abonnés ou d'abonnements ne se chargeaient pas, la page affichait une liste vide ; elle signale désormais l'échec et propose de réessayer, recherche d'utilisateurs comprise.
-- **Ma liste s'affiche en entier au-delà de 500 films** : les films les plus anciens n'apparaissaient ni dans Ma liste ni sur le profil public, le compteur s'arrêtait à 500 et le bouton d'ajout les croyait absents.
+- **L’ajout au calendrier respecte l’heure de Paris** : sur un appareil réglé sur un autre fuseau, Google Agenda, Outlook et le fichier .ics décalaient la soirée d’une à six heures.
+- **Une soirée hebdomadaire restée sans film ne fait plus sauter la semaine suivante** : tant qu’une soirée restait en suspens, la suivante n’était pas créée, puis la série repartait une semaine plus loin. L’occurrence suivante est créée dès la fin du créneau, film tiré ou non.
+- **Une série mensuelle calée sur le 29, le 30 ou le 31 y revient après un mois plus court** : après février, une série du 31 restait bloquée au 28 pour de bon ; chaque occurrence retrouve désormais le jour choisi, ramené au dernier jour des mois qui ne l’ont pas.
+- **La notification « Soirée en suspens » repart après un échec d’envoi** : quand le service de notifications de l’hôte était momentanément indisponible, elle n’était jamais renvoyée ; elle l’est à la passe suivante, sans doublon dans la boîte de réception.
+- **Les notifications push reprennent d’elles-mêmes après un changement de clé du serveur** : un appareil abonné avant ce changement ne recevait plus rien alors que les réglages le disaient abonné. L’application le réabonne désormais sans rien demander.
+- **Le thème d’une soirée est limité à 100 caractères**, emoji compris, avec un message clair au-delà ; le champ du thème s’arrête de lui-même avant la limite.
+- **Le pseudo et la bio s’enregistrent tels que vous les avez tapés** : l’enregistrement automatique gardait la saisie d’une frappe plus tôt, « Alicia » devenait « Alici » et le champ se réécrivait avec, et basculer « Profil public » pendant l’enregistrement du pseudo remettait l’interrupteur dans sa position d’avant.
+- **L’accueil ne montre plus les films du compte précédent** : après une suppression de compte, un changement de mot de passe ou une session expirée, Ma liste, les films vus par vos amis et les recommandations restaient affichés sur l’accueil déconnecté, et le compte suivant connecté dans le même onglet en héritait. Toute fin de session efface désormais ce que l’onglet gardait du compte.
+- **« Se déconnecter » aboutit même quand la session a déjà pris fin** : le bouton répondait « Déconnexion impossible. » et l’application restait connectée, par exemple après avoir quitté la page Sécurité juste après un changement de mot de passe.
+- **Une fenêtre ne se ferme plus sur un clic dans ses marges** : un clic dans la marge d’une confirmation ou du bandeau de consentement la fermait, et sélectionner du texte dans « Proposer une idée » en relâchant la souris hors de la fenêtre la fermait en perdant le brouillon. Seul un clic sur le fond assombri ferme désormais une fenêtre.
+- **Un chargement raté ne passe plus pour une liste vide** : quand les notifications ou une liste d’abonnés ou d’abonnements ne se chargeaient pas, la page affichait une liste vide ; elle signale désormais l’échec et propose de réessayer, recherche d’utilisateurs comprise.
+- **Ma liste s’affiche en entier au-delà de 500 films** : les films les plus anciens n’apparaissaient ni dans Ma liste ni sur le profil public, le compteur s’arrêtait à 500 et le bouton d’ajout les croyait absents.
 - **« Charger la suite » ne répète plus une notification** : une notification arrivée pendant la lecture de la boîte décalait la page suivante, qui répétait la dernière notification déjà affichée.
-- **Un film vu par vos abonnements n'apparaît plus qu'une fois** : un film regardé lors de deux soirées s'affichait deux fois ; il n'apparaît plus qu'une fois, à la date de la soirée la plus récente.
-- **Les recommandations suivent une série quand vous venez d'en regarder une** : la rangée « Parce que vous avez aimé » partait d'un film sans rapport ou affichait une erreur ; elle propose désormais des séries proches.
-- **La bande-annonce anglaise s'affiche quand il n'en existe pas en français** : ces films n'en montraient aucune ; la française reste préférée.
-- **Les rubriques de l'accueil ne restent plus bloquées en erreur** : quand TMDB s'interrompait au milieu d'une réponse, une rubrique ou une affiche pouvait rester en échec jusqu'au redémarrage du serveur ; chaque appel est désormais borné.
+- **Un film vu par vos abonnements n’apparaît plus qu’une fois** : un film regardé lors de deux soirées s’affichait deux fois ; il n’apparaît plus qu’une fois, à la date de la soirée la plus récente.
+- **Les recommandations suivent une série quand vous venez d’en regarder une** : la rangée « Parce que vous avez aimé » partait d’un film sans rapport ou affichait une erreur ; elle propose désormais des séries proches.
+- **La bande-annonce anglaise s’affiche quand il n’en existe pas en français** : ces films n’en montraient aucune ; la française reste préférée.
+- **Les rubriques de l’accueil ne restent plus bloquées en erreur** : quand TMDB s’interrompait au milieu d’une réponse, une rubrique ou une affiche pouvait rester en échec jusqu’au redémarrage du serveur ; chaque appel est désormais borné.
 - **Un film ajouté pendant une panne passagère de TMDB garde ses genres** : il restait sans genre pour de bon, absent des filtres et des statistiques ; les genres déjà connus par la recherche sont conservés.
-- **L'import Letterboxd retrouve les films dont le titre est un nom de personne** : « Jackie » (2016) ramenait la filmographie de Jackie Chan et le film n'était ni ajouté ni proposé au choix. La recherche ne porte plus que sur les titres, titres exacts en tête.
-- **Les très longues watchlists Letterboxd se synchronisent** : au-delà d'environ 1 100 films, chaque synchronisation échouait et rien n'était importé. Les films lus sont désormais importés, sans rien retirer de votre watchlist.
-- **Un film renommé sur Letterboxd reste dans votre watchlist** : la synchronisation le retirait sans le rajouter ; il garde sa place et sa date d'ajout.
+- **L’import Letterboxd retrouve les films dont le titre est un nom de personne** : « Jackie » (2016) ramenait la filmographie de Jackie Chan et le film n’était ni ajouté ni proposé au choix. La recherche ne porte plus que sur les titres, titres exacts en tête.
+- **Les très longues watchlists Letterboxd se synchronisent** : au-delà d’environ 1 100 films, chaque synchronisation échouait et rien n’était importé. Les films lus sont désormais importés, sans rien retirer de votre watchlist.
+- **Un film renommé sur Letterboxd reste dans votre watchlist** : la synchronisation le retirait sans le rajouter ; il garde sa place et sa date d’ajout.
 - **La pastille Letterboxd « à traiter » reste juste après un enregistrement du profil** : elle disparaissait à chaque modification du profil et restait affichée après avoir retiré Letterboxd.
-- **Les notifications suivent votre nouveau handle** : après un changement de handle, les notifications reçues par les autres menaient toujours à l'ancien profil, et la suppression du compte ne les anonymisait plus.
-- **Une connexion Google ou GitHub ne s'arrête plus sur une page d'erreur brute** : un double clic lors d'une première connexion, ou un échec pendant une liaison, affichait du JSON. La première connexion aboutit, et toute autre erreur ramène à la page de connexion ou aux Intégrations avec un message.
-- **Un compte supprimé disparaît tout de suite des soirées qu'il avait rejointes** : son pseudo restait affiché jusqu'à une minute chez les participants qui avaient la soirée ouverte.
-- **Une recherche de membres très longue ne provoque plus d'erreur** : seuls les 64 premiers caractères comptent désormais.
-- **Une adresse de film, de participant ou de notification malformée répond « introuvable »** au lieu d'une erreur serveur.
-- **Revenir à une version précédente de l'API ne casse plus aucune collection** : dix-huit types de documents, participants, votes et abonnements compris, faisaient échouer la version précédente dès qu'un champ leur était ajouté ; tous ignorent désormais les champs qu'ils ne connaissent pas.
-- **Échap ne ferme plus que le menu ouvert, pas la fenêtre qui le contient** : dans les paramètres d'une soirée, Échap sur le sélecteur d'emoji fermait toute la feuille des paramètres. Il ne ferme plus que le sélecteur, comme les listes déroulantes, les bulles d'aide et le menu des cartes de film, et un clic ailleurs dans la feuille referme aussi le sélecteur. À l'inverse, Échap sur une liste déroulante fermée ferme bien la fenêtre qui la contient.
-- **Les accents vert, orange et cyan se lisent en thème clair** : le texte blanc de leurs boutons et les liens teintés de ces couleurs passaient sous le contraste minimal recommandé, comme les messages de succès et d'avertissement ; ils sont foncés d'un ton. En sombre, le texte d'une option ou d'un bouton d'accent survolés et le contour des champs posés sur une carte gagnent aussi en contraste. Chaque couleur d'accent est désormais vérifiée sur les fonds où elle sert, en clair comme en sombre, avant toute livraison.
-- **Les affiches ne disparaissent plus** : chaque affiche enregistrée dépendait d'une entrée de cache qui expirait au bout de trente jours, après quoi elle restait vide pour de bon. L'adresse d'une affiche porte désormais le chemin de l'image chez TMDB, et une migration répare les affiches déjà perdues.
+- **Les notifications suivent votre nouveau handle** : après un changement de handle, les notifications reçues par les autres menaient toujours à l’ancien profil, et la suppression du compte ne les anonymisait plus.
+- **Une connexion Google ou GitHub ne s’arrête plus sur une page d’erreur brute** : un double clic lors d’une première connexion, ou un échec pendant une liaison, affichait du JSON. La première connexion aboutit, et toute autre erreur ramène à la page de connexion ou aux Intégrations avec un message.
+- **Un compte supprimé disparaît tout de suite des soirées qu’il avait rejointes** : son pseudo restait affiché jusqu’à une minute chez les participants qui avaient la soirée ouverte.
+- **Une recherche de membres très longue ne provoque plus d’erreur** : seuls les 64 premiers caractères comptent désormais.
+- **Une adresse de film, de participant ou de notification malformée répond « introuvable »** au lieu d’une erreur serveur.
+- **Revenir à une version précédente de l’API ne casse plus aucune collection** : dix-huit types de documents, participants, votes et abonnements compris, faisaient échouer la version précédente dès qu’un champ leur était ajouté ; tous ignorent désormais les champs qu’ils ne connaissent pas.
+- **Échap ne ferme plus que le menu ouvert, pas la fenêtre qui le contient** : dans les paramètres d’une soirée, Échap sur le sélecteur d’emoji fermait toute la feuille des paramètres. Il ne ferme plus que le sélecteur, comme les listes déroulantes, les bulles d’aide et le menu des cartes de film, et un clic ailleurs dans la feuille referme aussi le sélecteur. À l’inverse, Échap sur une liste déroulante fermée ferme bien la fenêtre qui la contient.
+- **Les accents vert, orange et cyan se lisent en thème clair** : le texte blanc de leurs boutons et les liens teintés de ces couleurs passaient sous le contraste minimal recommandé, comme les messages de succès et d’avertissement ; ils sont foncés d’un ton. En sombre, le texte d’une option ou d’un bouton d’accent survolés et le contour des champs posés sur une carte gagnent aussi en contraste. Chaque couleur d’accent est désormais vérifiée sur les fonds où elle sert, en clair comme en sombre, avant toute livraison.
+- **Les affiches ne disparaissent plus** : chaque affiche enregistrée dépendait d’une entrée de cache qui expirait au bout de trente jours, après quoi elle restait vide pour de bon. L’adresse d’une affiche porte désormais le chemin de l’image chez TMDB, et une migration répare les affiches déjà perdues.
 - **Deux personnes qui portent le même nom peuvent rejoindre la même soirée** : la seconde prenait la place de la première, puis chacun de ses votes était refusé. Chaque participant est reconnu par son compte, et un nom déjà pris reçoit un suffixe.
-- **Une connexion instable ne fait plus tomber la page d'une soirée** : un rafraîchissement raté remplaçait la page par un écran d'erreur, roue et recherche comprises. La page garde la dernière version reçue, le signale dans un bandeau et se remet à jour dès que le serveur répond ; en cas d'erreur, l'application patiente de plus en plus longtemps et respecte le délai demandé par le serveur, au lieu de relancer aussitôt.
-- **Supprimer son compte n'échoue plus après deux minutes d'attente** quand deux comptes supprimés avaient participé à la même soirée, et le nom, l'identifiant et l'avatar d'un compte supprimé disparaissent aussi des notifications des autres.
-- **La page d'accueil ne ralentit plus plusieurs fois par jour** : le catalogue est rechargé en arrière-plan avant d'expirer, et une réponse incomplète de TMDB ne remplace plus une sélection complète.
-- **Les rappels de soirée se rattrapent** : un rappel dont l'envoi a échoué repart au passage suivant, une soirée déplacée retrouve ses rappels, la notification « Soirée en suspens » ne part plus en double, et une passe planifiée en échec le signale au lieu de répondre que tout va bien.
+- **Une connexion instable ne fait plus tomber la page d’une soirée** : un rafraîchissement raté remplaçait la page par un écran d’erreur, roue et recherche comprises. La page garde la dernière version reçue, le signale dans un bandeau et se remet à jour dès que le serveur répond ; en cas d’erreur, l’application patiente de plus en plus longtemps et respecte le délai demandé par le serveur, au lieu de relancer aussitôt.
+- **Supprimer son compte n’échoue plus après deux minutes d’attente** quand deux comptes supprimés avaient participé à la même soirée, et le nom, l’identifiant et l’avatar d’un compte supprimé disparaissent aussi des notifications des autres.
+- **La page d’accueil ne ralentit plus plusieurs fois par jour** : le catalogue est rechargé en arrière-plan avant d’expirer, et une réponse incomplète de TMDB ne remplace plus une sélection complète.
+- **Les rappels de soirée se rattrapent** : un rappel dont l’envoi a échoué repart au passage suivant, une soirée déplacée retrouve ses rappels, la notification « Soirée en suspens » ne part plus en double, et une passe planifiée en échec le signale au lieu de répondre que tout va bien.
 - **Après une mise à jour du site, un onglet resté ouvert se recharge de lui-même** au lieu de rester sur un écran qui ne charge plus.
-- **Un double clic ou une connexion qui lâche ne créent plus deux soirées**, ne tirent plus un film gagnant de trop et n'envoient plus deux fois la même invitation ; une série qui porte le même numéro TMDB qu'un film déjà proposé peut être proposée à son tour.
-- **La synchronisation Letterboxd ne reste plus bloquée une journée après un incident** : une panne de TMDB est signalée et la synchronisation retente dans l'heure. Un film vu lors d'une soirée ne revient plus dans la watchlist à la synchronisation suivante.
-- **Les erreurs du serveur s'affichent en français** au lieu d'un libellé anglais ou d'un message vide.
-- **Les statistiques de profil et la page d'une soirée lisent moins de données** : des index servent les statistiques, et la page d'une soirée ne charge plus des comptes que l'avatar et l'identifiant public.
-- **La page technique ne promet plus une consultation hors ligne** que l'application n'offre pas : elle garde la coquille et la vitrine en cache, une soirée demande le réseau.
-- **Les téléphones qui avaient gardé l'ancienne adresse retrouvent le site** : un navigateur qui avait visité `web.movie-picker.fr` avant le changement d'adresse y gardait un service worker que la redirection ne pouvait pas mettre à jour, et qui rouvrait l'ancienne application depuis son cache, sans connexion possible. L'ancienne adresse sert désormais un worker qui se retire de lui-même et envoie chaque fenêtre ouverte sur `www`, avec la page demandée ; et quand on arrive de l'ancienne adresse, ou de l'application installée depuis elle, le site le dit une fois et propose de réinstaller l'application, une application installée ne pouvant pas changer d'adresse toute seule.
-- **Une panne de la base de recette ne bloque plus une mise en production** : la porte lit la version que la recette sert même quand sa base ne répond pas, au lieu de refuser sur le code d'erreur.
-- **La production reprend exactement ce que la recette sert** : le digest de la révision en service, relu avec le commit dont elle a été construite, et non le dernier tag poussé, qu'une mise en recette échouée à la validation aurait pu laisser en avance.
-- **Créer une soirée sans titre, sans date ou sans heure le dit sous le champ, en français**, au lieu de la bulle du navigateur qui pointait sur un champ caché derrière l'en-tête ; le champ fautif reçoit le focus et n'est plus masqué par la barre du haut. Une date déjà passée est signalée sous le champ sans bloquer. L'erreur de création s'affiche juste au-dessus du bouton, pas en haut du formulaire, et si la soirée est créée mais que ses options n'ont pas pu être enregistrées, la page de la soirée le dit au lieu de se taire.
-- **Le lien de retour « Mes soirées », le sommaire « Options avancées » et « Plus de thèmes » répondent au doigt sur 44 px**, comme le reste de l'interface.
+- **Un double clic ou une connexion qui lâche ne créent plus deux soirées**, ne tirent plus un film gagnant de trop et n’envoient plus deux fois la même invitation ; une série qui porte le même numéro TMDB qu’un film déjà proposé peut être proposée à son tour.
+- **La synchronisation Letterboxd ne reste plus bloquée une journée après un incident** : une panne de TMDB est signalée et la synchronisation retente dans l’heure. Un film vu lors d’une soirée ne revient plus dans la watchlist à la synchronisation suivante.
+- **Les erreurs du serveur s’affichent en français** au lieu d’un libellé anglais ou d’un message vide.
+- **Les statistiques de profil et la page d’une soirée lisent moins de données** : des index servent les statistiques, et la page d’une soirée ne charge plus des comptes que l’avatar et l’identifiant public.
+- **La page technique ne promet plus une consultation hors ligne** que l’application n’offre pas : elle garde la coquille et la vitrine en cache, une soirée demande le réseau.
+- **Les téléphones qui avaient gardé l’ancienne adresse retrouvent le site** : un navigateur qui avait visité `web.movie-picker.fr` avant le changement d’adresse y gardait un service worker que la redirection ne pouvait pas mettre à jour, et qui rouvrait l’ancienne application depuis son cache, sans connexion possible. L’ancienne adresse sert désormais un worker qui se retire de lui-même et envoie chaque fenêtre ouverte sur `www`, avec la page demandée ; et quand on arrive de l’ancienne adresse, ou de l’application installée depuis elle, le site le dit une fois et propose de réinstaller l’application, une application installée ne pouvant pas changer d’adresse toute seule.
+- **Une panne de la base de recette ne bloque plus une mise en production** : la porte lit la version que la recette sert même quand sa base ne répond pas, au lieu de refuser sur le code d’erreur.
+- **La production reprend exactement ce que la recette sert** : le digest de la révision en service, relu avec le commit dont elle a été construite, et non le dernier tag poussé, qu’une mise en recette échouée à la validation aurait pu laisser en avance.
+- **Créer une soirée sans titre, sans date ou sans heure le dit sous le champ, en français**, au lieu de la bulle du navigateur qui pointait sur un champ caché derrière l’en-tête ; le champ fautif reçoit le focus et n’est plus masqué par la barre du haut. Une date déjà passée est signalée sous le champ sans bloquer. L’erreur de création s’affiche juste au-dessus du bouton, pas en haut du formulaire, et si la soirée est créée mais que ses options n’ont pas pu être enregistrées, la page de la soirée le dit au lieu de se taire.
+- **Le lien de retour « Mes soirées », le sommaire « Options avancées » et « Plus de thèmes » répondent au doigt sur 44 px**, comme le reste de l’interface.
 
 - **Sur un téléphone, « Mes soirées » ne se coupe plus en « Mes soir… » dans la barre du bas** : la barre dit « Soirées » et « Connexion », un mot chacun, et les cinq libellés tiennent sur une ligne même sur un écran de 320 px ou avec une taille de texte système agrandie.
-- **Les rangées de films de l'accueil ne bougent plus de quelques pixels vers le haut quand on les fait défiler** : la ligne année, note, durée de chaque carte dépassait sa hauteur et donnait à la rangée un défilement vertical de 3 px.
-- **L'historique des soirées se lit sur un téléphone** : le titre et le film gagnant prennent toute la largeur au lieu d'être coupés après cinq lettres, la date, les participants, les films et la couronne d'hôte passent en dessous, le récapitulatif tient sur trois colonnes, et la barre de recherche défile avec la page comme sur Ma liste.
-- **Un film ajouté à Ma liste sans durée ni note les reçoit de TMDB au moment de l'ajout**, et ceux déjà ajoutés sans elles sont complétés au démarrage suivant : « Dans votre liste » sur l'accueil et la liste publique du profil lisent désormais la même ligne année, note, durée que Ma liste.
-- **Les derniers films vus du profil lisent la note sur l'échelle du compte** (sur 5 ou sur 10), comme toutes les autres cartes.
-- **Les notifications push n'ouvrent plus une connexion neuve à chaque envoi** : le serveur créait un client HTTP par notification et ne le libérait jamais, il passe désormais par un pool de connexions partagé.
-- **Revenir à une version précédente de l'API ne perd plus de données** : une ancienne version qui réécrivait une soirée ou un compte effaçait les réglages qu'elle ne connaissait pas encore (gagnants multiples, récurrence, modèles de soirée). Elle ne touche plus qu'aux champs qu'elle connaît.
-- **« Mes soirées » n'oublie plus les soirées créées au-delà de la deux-centième.**
+- **Les rangées de films de l’accueil ne bougent plus de quelques pixels vers le haut quand on les fait défiler** : la ligne année, note, durée de chaque carte dépassait sa hauteur et donnait à la rangée un défilement vertical de 3 px.
+- **L’historique des soirées se lit sur un téléphone** : le titre et le film gagnant prennent toute la largeur au lieu d’être coupés après cinq lettres, la date, les participants, les films et la couronne d’hôte passent en dessous, le récapitulatif tient sur trois colonnes, et la barre de recherche défile avec la page comme sur Ma liste.
+- **Un film ajouté à Ma liste sans durée ni note les reçoit de TMDB au moment de l’ajout**, et ceux déjà ajoutés sans elles sont complétés au démarrage suivant : « Dans votre liste » sur l’accueil et la liste publique du profil lisent désormais la même ligne année, note, durée que Ma liste.
+- **Les derniers films vus du profil lisent la note sur l’échelle du compte** (sur 5 ou sur 10), comme toutes les autres cartes.
+- **Les notifications push n’ouvrent plus une connexion neuve à chaque envoi** : le serveur créait un client HTTP par notification et ne le libérait jamais, il passe désormais par un pool de connexions partagé.
+- **Revenir à une version précédente de l’API ne perd plus de données** : une ancienne version qui réécrivait une soirée ou un compte effaçait les réglages qu’elle ne connaissait pas encore (gagnants multiples, récurrence, modèles de soirée). Elle ne touche plus qu’aux champs qu’elle connaît.
+- **« Mes soirées » n’oublie plus les soirées créées au-delà de la deux-centième.**
 - **Avec un accent vert, orange ou cyan, les liens et les textes en couleur restaient sous le seuil de lisibilité** en mode clair (3,3 à 3,7:1 au lieu des 4,5:1 requis). Le texte prend maintenant une teinte plus foncée que les boutons, pour chacun des huit accents.
-- **Le bouton d'aide des champs avait perdu son arrondi et deux étiquettes de la page `/tech` leur petite taille**, deux jetons qui n'existaient pas ; une porte de qualité refuse désormais tout jeton fantôme.
-- **Le retrait d'un gagnant journalisait l'identifiant reçu dans la requête** plutôt que celui du film réellement retiré de la soirée, la dernière alerte CodeQL ouverte du dépôt.
+- **Le bouton d’aide des champs avait perdu son arrondi et deux étiquettes de la page `/tech` leur petite taille**, deux jetons qui n’existaient pas ; une porte de qualité refuse désormais tout jeton fantôme.
+- **Le retrait d’un gagnant journalisait l’identifiant reçu dans la requête** plutôt que celui du film réellement retiré de la soirée, la dernière alerte CodeQL ouverte du dépôt.
 - **Les interrupteurs des paramètres de la soirée étaient inégalement espacés** : « Répéter cette soirée » collait à « Limiter les votes par participant ». Les champs du panneau suivent maintenant un pas unique.
-- **Se déconnecter oublie vraiment la soirée en cours** : la page gardait les commandes de l'hôte et les votes du compte fermé, jusqu'à afficher « Retirer mon vote » à un visiteur anonyme sur un appareil partagé. La déconnexion vide le cache et les identités de participant retenues par l'onglet.
-- **Une adresse de réglages inconnue** (`/settings/account`, un vieux favori) affichait une page vide en empilant `profil/profil/profil…` dans l'URL. Elle renvoie vers le profil.
-- **Un film de la watchlist Letterboxd ne peut plus être pris pour une série** : « Come and See » (1985) arrivait comme série TMDB sans note. Le rapprochement automatique ne retient plus qu'un film ; à titre égal, l'année Letterboxd départage, ce qui réduit aussi la liste des titres à confirmer.
-- **Les votes d'un participant restent les siens** : la liste des films d'une soirée renvoyait « mon vote » pour n'importe quel identifiant de participant, y compris à un visiteur anonyme. Le champ n'est rempli que pour le compte connecté.
-- **Demander un nouveau mot de passe répond dans le même temps** qu'une adresse existe ou non, ce qui fermait une façon de deviner les comptes.
-- **Détails de coquilles** : l'aide sous la date d'une soirée commençait par « aujourd'hui. », une soirée dans neuf ans se disait « dans 105 mois », un groupe de notifications proposait « Voir les 1 autres », la date de sortie d'un film s'affichait en `2021-09-15`, et le bloc « Rejoindre la soirée » tutoyait dans une application qui vouvoie. Les boutons « Ajouter » de la recherche de films portent maintenant le titre pour les lecteurs d'écran.
+- **Se déconnecter oublie vraiment la soirée en cours** : la page gardait les commandes de l’hôte et les votes du compte fermé, jusqu’à afficher « Retirer mon vote » à un visiteur anonyme sur un appareil partagé. La déconnexion vide le cache et les identités de participant retenues par l’onglet.
+- **Une adresse de réglages inconnue** (`/settings/account`, un vieux favori) affichait une page vide en empilant `profil/profil/profil…` dans l’URL. Elle renvoie vers le profil.
+- **Un film de la watchlist Letterboxd ne peut plus être pris pour une série** : « Come and See » (1985) arrivait comme série TMDB sans note. Le rapprochement automatique ne retient plus qu’un film ; à titre égal, l’année Letterboxd départage, ce qui réduit aussi la liste des titres à confirmer.
+- **Les votes d’un participant restent les siens** : la liste des films d’une soirée renvoyait « mon vote » pour n’importe quel identifiant de participant, y compris à un visiteur anonyme. Le champ n’est rempli que pour le compte connecté.
+- **Demander un nouveau mot de passe répond dans le même temps** qu’une adresse existe ou non, ce qui fermait une façon de deviner les comptes.
+- **Détails de coquilles** : l’aide sous la date d’une soirée commençait par « aujourd’hui. », une soirée dans neuf ans se disait « dans 105 mois », un groupe de notifications proposait « Voir les 1 autres », la date de sortie d’un film s’affichait en `2021-09-15`, et le bloc « Rejoindre la soirée » tutoyait dans une application qui vouvoie. Les boutons « Ajouter » de la recherche de films portent maintenant le titre pour les lecteurs d’écran.
 
 ## [1.6.0] - 2026-09-12
 
 ### Added
 
-- **Recherche d'utilisateurs** : un troisième onglet « Rechercher » dans la modale Abonnements / Abonnés trouve un compte par pseudo ou par handle, insensible à la casse et aux accents, la portion trouvée surlignée. Les profils privés en sont exclus, et les correspondances en début de pseudo passent devant les autres.
-- **Soirée récurrente** : l'hôte fait se répéter une soirée au rythme hebdomadaire, bimensuel ou mensuel. L'occurrence suivante naît à la clôture de la précédente, avec la même configuration et une liste de films vide, une seule ouverte à la fois. Le groupe n'est pas reconduit : à l'hôte de repartager le lien. Une série laissée en plan est rattrapée à l'ouverture de « Mes soirées », et une série dormante au-delà de soixante intervalles s'arrête d'elle-même.
-- **Le dépôt est préparé pour être lu de l'extérieur** : `CONTRIBUTING.md` dit que le projet est solo et qu'aucune PR externe ne sera fusionnée, `SECURITY.md` détourne les failles vers un canal privé plutôt qu'un ticket public, et `infra/README.md` documente les fichiers de configuration appliqués à la main. Les identifiants d'infrastructure qui traînaient dans la documentation, compte, distribution, bucket, certificat, projet, organisation, sont remplacés par des gabarits, avec la commande qui relève chaque valeur.
-- **Sauvegarde quotidienne de la base de production** : le palier gratuit Atlas ne fournit aucun instantané, et rien ne sauvegardait la base. Un dump part chaque nuit vers un bucket Cloud Storage versionné, puis est relu depuis ce bucket et restauré dans une MongoDB jetable avant d'être publié, une archive qui échoue la restauration ne devient jamais la sauvegarde du jour.
-- **Archive du build front à chaque déploiement** (30 jours) : l'hébergement ne conserve aucune version, un retour arrière ne demande plus de rejouer toute la chaîne de portes.
-- Porte de qualité sur les workflows eux-mêmes (`actionlint`, `shellcheck`, `zizmor`), bloquante pour le déploiement : jusqu'ici la chaîne qui garde le code n'était gardée par rien.
-- **Les pages publiques sont servies en HTML complet** : « Comment ça marche », « Soutenir » et le dossier technique sont rendus au moment du build, titre, description et données structurées compris. Un moteur d'indexation ou un aperçu de lien recevait jusqu'ici un document vide qu'il fallait exécuter pour lire ; il reçoit maintenant la page.
-- **Modèles de soirée** : jusqu'à cinq configurations nommées par compte, enregistrées depuis la création d'une soirée comme depuis les paramètres d'une soirée existante, et réappliquées en un clic. Le modèle porte la configuration avancée seule, le titre et la date restent propres à chaque soirée, et le menu d'une soirée passée propose « Refaire cette soirée ».
-- **Plusieurs films gagnants par soirée** : l'hôte règle le nombre de films gagnants jusqu'à dix, à la création comme en cours de soirée. Chaque tirage, roue ou choix manuel, ajoute un film au palmarès et l'exclut des suivants ; les gagnants comptent partout, historique, statistiques, partage et « Vos amis ont vu ». Le bouton de clôture disparaît, il ne servait plus à rien.
-- **Limite de votes par participant** : l'hôte active un nombre de votes par personne dans les paramètres de la soirée, repris par les modèles et les soirées récurrentes. Le quota s'affiche au-dessus de la liste, les pouces des autres films se grisent une fois le quota consommé, et le serveur refuse le vote de trop.
-- **Watchlist d'un autre compte** : la liste d'un compte se consulte depuis son profil public, sur une page calquée sur celle de ses films vus. Un réglage dédié, actif par défaut, permet de masquer la sienne ; le serveur répond alors 404 aux visiteurs et cache le compteur.
-- **Les films d'une soirée se voient sans avoir rejoint** : un lien de soirée montre affiches, titres, scores et film gagnant à tout visiteur ; un clic sur un vote sans avoir rejoint ramène sur la carte de participation. Proposer, voter et marquer un film vu restent réservés aux participants.
-- **Letterboxd depuis la carte d'un film en soirée** : le menu des trois points ouvre la page Letterboxd du film en un clic, sans passer par sa fiche.
+- **Recherche d’utilisateurs** : un troisième onglet « Rechercher » dans la modale Abonnements / Abonnés trouve un compte par pseudo ou par handle, insensible à la casse et aux accents, la portion trouvée surlignée. Les profils privés en sont exclus, et les correspondances en début de pseudo passent devant les autres.
+- **Soirée récurrente** : l’hôte fait se répéter une soirée au rythme hebdomadaire, bimensuel ou mensuel. L’occurrence suivante naît à la clôture de la précédente, avec la même configuration et une liste de films vide, une seule ouverte à la fois. Le groupe n’est pas reconduit : à l’hôte de repartager le lien. Une série laissée en plan est rattrapée à l’ouverture de « Mes soirées », et une série dormante au-delà de soixante intervalles s’arrête d’elle-même.
+- **Le dépôt est préparé pour être lu de l’extérieur** : `CONTRIBUTING.md` dit que le projet est solo et qu’aucune PR externe ne sera fusionnée, `SECURITY.md` détourne les failles vers un canal privé plutôt qu’un ticket public, et `infra/README.md` documente les fichiers de configuration appliqués à la main. Les identifiants d’infrastructure qui traînaient dans la documentation, compte, distribution, bucket, certificat, projet, organisation, sont remplacés par des gabarits, avec la commande qui relève chaque valeur.
+- **Sauvegarde quotidienne de la base de production** : le palier gratuit Atlas ne fournit aucun instantané, et rien ne sauvegardait la base. Un dump part chaque nuit vers un bucket Cloud Storage versionné, puis est relu depuis ce bucket et restauré dans une MongoDB jetable avant d’être publié, une archive qui échoue la restauration ne devient jamais la sauvegarde du jour.
+- **Archive du build front à chaque déploiement** (30 jours) : l’hébergement ne conserve aucune version, un retour arrière ne demande plus de rejouer toute la chaîne de portes.
+- Porte de qualité sur les workflows eux-mêmes (`actionlint`, `shellcheck`, `zizmor`), bloquante pour le déploiement : jusqu’ici la chaîne qui garde le code n’était gardée par rien.
+- **Les pages publiques sont servies en HTML complet** : « Comment ça marche », « Soutenir » et le dossier technique sont rendus au moment du build, titre, description et données structurées compris. Un moteur d’indexation ou un aperçu de lien recevait jusqu’ici un document vide qu’il fallait exécuter pour lire ; il reçoit maintenant la page.
+- **Modèles de soirée** : jusqu’à cinq configurations nommées par compte, enregistrées depuis la création d’une soirée comme depuis les paramètres d’une soirée existante, et réappliquées en un clic. Le modèle porte la configuration avancée seule, le titre et la date restent propres à chaque soirée, et le menu d’une soirée passée propose « Refaire cette soirée ».
+- **Plusieurs films gagnants par soirée** : l’hôte règle le nombre de films gagnants jusqu’à dix, à la création comme en cours de soirée. Chaque tirage, roue ou choix manuel, ajoute un film au palmarès et l’exclut des suivants ; les gagnants comptent partout, historique, statistiques, partage et « Vos amis ont vu ». Le bouton de clôture disparaît, il ne servait plus à rien.
+- **Limite de votes par participant** : l’hôte active un nombre de votes par personne dans les paramètres de la soirée, repris par les modèles et les soirées récurrentes. Le quota s’affiche au-dessus de la liste, les pouces des autres films se grisent une fois le quota consommé, et le serveur refuse le vote de trop.
+- **Watchlist d’un autre compte** : la liste d’un compte se consulte depuis son profil public, sur une page calquée sur celle de ses films vus. Un réglage dédié, actif par défaut, permet de masquer la sienne ; le serveur répond alors 404 aux visiteurs et cache le compteur.
+- **Les films d’une soirée se voient sans avoir rejoint** : un lien de soirée montre affiches, titres, scores et film gagnant à tout visiteur ; un clic sur un vote sans avoir rejoint ramène sur la carte de participation. Proposer, voter et marquer un film vu restent réservés aux participants.
+- **Letterboxd depuis la carte d’un film en soirée** : le menu des trois points ouvre la page Letterboxd du film en un clic, sans passer par sa fiche.
 
 ### Fixed
 
-- **Le site entier était ralenti par un mot** : une ligne du point d'entrée attendait la fin du démarrage avant de laisser le reste s'exécuter, ce qui retardait l'affichage sur onze pages sur treize. Le plus grand élément de chaque page apparaît de nouveau 3 à 5 points de performance plus tôt. Les deux pages épargnées étaient l'accueil et la connexion, les seules dont le contenu principal n'attendait pas l'application.
-- **Un échec au démarrage laissait l'écran de lancement affiché indéfiniment.** Il est désormais retiré et l'erreur remontée, donc l'utilisateur voit l'application ou une erreur, plus un écran figé.
-- **Le gagnant de la roue était annoncé avant qu'elle ne s'arrête** : la notification partait dès le lancement du tirage, pendant les sept secondes d'animation. Elle part maintenant quand le résultat est révélé, et une seule fois par tirage.
-- **Les modales « Proposer une idée » et « Signaler un problème » débordaient de l'écran sur mobile**, ce qui rendait leur bouton d'envoi inatteignable avec des images jointes ou une police agrandie. Elles adoptent le gabarit des autres fenêtres du projet : en-tête et pied fixes, corps défilant.
-- **La barre du bas mobile recouvrait les actions d'une soirée** quand le libellé « Nouvelle soirée » passait sur deux lignes : sa hauteur est désormais fixe, le libellé court sur mobile.
-- **Un lien de soirée ouvert sans réseau restait sur son squelette de chargement** sans message : la page distingue maintenant la pause réseau du chargement et affiche l'erreur réseau existante.
-- **PostHog ne se charge plus avant le consentement** : la bibliothèque s'amorçait au démarrage et posait déjà des identifiants dans le stockage local avant tout choix ; elle n'est chargée qu'après un consentement explicite.
-- **Les captures jointes à une suggestion ne disparaissent plus de l'issue GitHub** : l'URL portait un jeton temporaire qui expirait en quelques minutes ; seul son chemin est conservé.
+- **Le site entier était ralenti par un mot** : une ligne du point d’entrée attendait la fin du démarrage avant de laisser le reste s’exécuter, ce qui retardait l’affichage sur onze pages sur treize. Le plus grand élément de chaque page apparaît de nouveau 3 à 5 points de performance plus tôt. Les deux pages épargnées étaient l’accueil et la connexion, les seules dont le contenu principal n’attendait pas l’application.
+- **Un échec au démarrage laissait l’écran de lancement affiché indéfiniment.** Il est désormais retiré et l’erreur remontée, donc l’utilisateur voit l’application ou une erreur, plus un écran figé.
+- **Le gagnant de la roue était annoncé avant qu’elle ne s’arrête** : la notification partait dès le lancement du tirage, pendant les sept secondes d’animation. Elle part maintenant quand le résultat est révélé, et une seule fois par tirage.
+- **Les modales « Proposer une idée » et « Signaler un problème » débordaient de l’écran sur mobile**, ce qui rendait leur bouton d’envoi inatteignable avec des images jointes ou une police agrandie. Elles adoptent le gabarit des autres fenêtres du projet : en-tête et pied fixes, corps défilant.
+- **La barre du bas mobile recouvrait les actions d’une soirée** quand le libellé « Nouvelle soirée » passait sur deux lignes : sa hauteur est désormais fixe, le libellé court sur mobile.
+- **Un lien de soirée ouvert sans réseau restait sur son squelette de chargement** sans message : la page distingue maintenant la pause réseau du chargement et affiche l’erreur réseau existante.
+- **PostHog ne se charge plus avant le consentement** : la bibliothèque s’amorçait au démarrage et posait déjà des identifiants dans le stockage local avant tout choix ; elle n’est chargée qu’après un consentement explicite.
+- **Les captures jointes à une suggestion ne disparaissent plus de l’issue GitHub** : l’URL portait un jeton temporaire qui expirait en quelques minutes ; seul son chemin est conservé.
 - **Le réglage « Watchlist visible sur mon profil » revenait à ON à chaque rechargement** alors que la liste était masquée : le serveur renvoie maintenant la visibilité réelle.
 
 ### Changed
 
-- **Les pages qui demandent de se connecter s'affichent presque aussitôt** : un visiteur déconnecté qui ouvrait « Mes soirées », « Ma liste », ses notifications ou la création de soirée téléchargeait la page entière, une quarantaine de fichiers, avant de lire la phrase qui l'invitait à se connecter. L'invitation vient maintenant de l'ossature de l'application, et le code de la page n'est chargé qu'une fois la session confirmée.
-- **Le premier affichage est plus rapide sur presque toutes les pages** : la feuille de style principale voyage avec le document au lieu d'être réclamée dans un second aller-retour, et les polices ne prennent plus la bande passante du code dont l'affichage dépend.
-- **Les mentions légales et la politique de confidentialité sont servies en HTML complet**, comme les trois pages publiques déjà prérendues. Et chaque page prérendue emporte désormais ses styles, donc son contenu s'affiche directement dans sa mise en page finale au lieu d'apparaître brut puis de se réorganiser.
-- **Le dossier technique et toute sa page sortent de l'angle mort de l'analyse statique** : environ 3 000 lignes de code de production en avaient été exclues pour tenir sous le plafond de lignes du plan gratuit, plafond qui disparaît avec le passage du dépôt en public.
-- **Une pull request venue d'un fork ne déclenche plus aucun run** : les jobs d'entrée de la CI la sautent. Sans cette condition, un tel run échouerait de toute façon sur l'analyse SonarCloud, GitHub ne fournissant aucun secret à une PR externe, tout en dépensant des minutes de build.
-- **La CI n'accepte plus qu'une action épinglée par empreinte** : le réglage était déjà la pratique du dépôt, il est maintenant imposé côté GitHub, donc une action référencée par tag est refusée au lieu de passer inaperçue.
-- **La mise en production est devenue un geste manuel** : un push sur `master` joue les portes de qualité et s'arrête là, le déploiement se déclenche depuis GitHub Actions en choisissant sa cible (tout, front seul, API seule). Il refuse de partir sur un commit dont la CI n'est pas verte, et un garde-fou final vérifie que chaque cible demandée est réellement en ligne. Motif : les minutes de build d'un dépôt privé sont facturées, et rejouer le chemin de déploiement à chaque commit en consommait la moitié pour des livraisons qui, en pratique, se groupent. Contrepartie assumée : la production est en retard sur `master` entre deux déclenchements.
+- **Les pages qui demandent de se connecter s’affichent presque aussitôt** : un visiteur déconnecté qui ouvrait « Mes soirées », « Ma liste », ses notifications ou la création de soirée téléchargeait la page entière, une quarantaine de fichiers, avant de lire la phrase qui l’invitait à se connecter. L’invitation vient maintenant de l’ossature de l’application, et le code de la page n’est chargé qu’une fois la session confirmée.
+- **Le premier affichage est plus rapide sur presque toutes les pages** : la feuille de style principale voyage avec le document au lieu d’être réclamée dans un second aller-retour, et les polices ne prennent plus la bande passante du code dont l’affichage dépend.
+- **Les mentions légales et la politique de confidentialité sont servies en HTML complet**, comme les trois pages publiques déjà prérendues. Et chaque page prérendue emporte désormais ses styles, donc son contenu s’affiche directement dans sa mise en page finale au lieu d’apparaître brut puis de se réorganiser.
+- **Le dossier technique et toute sa page sortent de l’angle mort de l’analyse statique** : environ 3 000 lignes de code de production en avaient été exclues pour tenir sous le plafond de lignes du plan gratuit, plafond qui disparaît avec le passage du dépôt en public.
+- **Une pull request venue d’un fork ne déclenche plus aucun run** : les jobs d’entrée de la CI la sautent. Sans cette condition, un tel run échouerait de toute façon sur l’analyse SonarCloud, GitHub ne fournissant aucun secret à une PR externe, tout en dépensant des minutes de build.
+- **La CI n’accepte plus qu’une action épinglée par empreinte** : le réglage était déjà la pratique du dépôt, il est maintenant imposé côté GitHub, donc une action référencée par tag est refusée au lieu de passer inaperçue.
+- **La mise en production est devenue un geste manuel** : un push sur `master` joue les portes de qualité et s’arrête là, le déploiement se déclenche depuis GitHub Actions en choisissant sa cible (tout, front seul, API seule). Il refuse de partir sur un commit dont la CI n’est pas verte, et un garde-fou final vérifie que chaque cible demandée est réellement en ligne. Motif : les minutes de build d’un dépôt privé sont facturées, et rejouer le chemin de déploiement à chaque commit en consommait la moitié pour des livraisons qui, en pratique, se groupent. Contrepartie assumée : la production est en retard sur `master` entre deux déclenchements.
 - La porte de performance Lighthouse est passée sur le chemin du déploiement, avec ses seuils inchangés : elle bloque toujours la mise en ligne du front, mais ne pèse plus sur chaque commit. Une régression de performance se voit donc au déploiement et non plus au push.
-- **Déploiement API validé avant exposition** : chaque révision est déployée sans trafic, éprouvée sur son URL taguée, et n'est promue qu'une fois ses sondes vertes. Une révision défaillante n'atteint plus aucun utilisateur, là où le trafic basculait auparavant avant toute vérification.
-- L'image de l'API est déployée par digest et non plus par tag : la révision en production désigne exactement les octets scannés par Trivy.
-- Les vérifications de fin de déploiement couvrent aussi les domaines publics de l'API et du front, et non plus seulement les URL internes.
-- **Démarrage de la page d'accueil deux fois plus rapide** : son titre est désormais peint dès le HTML initial au lieu d'attendre le montage de React. Le plus grand élément de la page s'affiche en 2,3 s au lieu de 4,2 s (score Lighthouse 80 puis 95, médiane de 5 passages), ce qui remet la porte de performance au vert et débloque le déploiement du front.
+- **Déploiement API validé avant exposition** : chaque révision est déployée sans trafic, éprouvée sur son URL taguée, et n’est promue qu’une fois ses sondes vertes. Une révision défaillante n’atteint plus aucun utilisateur, là où le trafic basculait auparavant avant toute vérification.
+- L’image de l’API est déployée par digest et non plus par tag : la révision en production désigne exactement les octets scannés par Trivy.
+- Les vérifications de fin de déploiement couvrent aussi les domaines publics de l’API et du front, et non plus seulement les URL internes.
+- **Démarrage de la page d’accueil deux fois plus rapide** : son titre est désormais peint dès le HTML initial au lieu d’attendre le montage de React. Le plus grand élément de la page s’affiche en 2,3 s au lieu de 4,2 s (score Lighthouse 80 puis 95, médiane de 5 passages), ce qui remet la porte de performance au vert et débloque le déploiement du front.
 - Le front ne charge plus que la langue affichée : la langue inactive, environ 93 Ko, quitte le chemin de démarrage.
-- Les icônes sont regroupées en un seul fichier au lieu d'une quarantaine : autant d'allers-retours réseau en moins avant le premier rendu.
-- `<html lang>` porte la langue réelle du visiteur dès la première peinture, au lieu d'être corrigé après le montage de React.
-- **Le bouton de partage d'une soirée reste une icône seule** sur toutes les largeurs, son libellé survivant comme nom accessible et infobulle.
+- Les icônes sont regroupées en un seul fichier au lieu d’une quarantaine : autant d’allers-retours réseau en moins avant le premier rendu.
+- `<html lang>` porte la langue réelle du visiteur dès la première peinture, au lieu d’être corrigé après le montage de React.
+- **Le bouton de partage d’une soirée reste une icône seule** sur toutes les largeurs, son libellé survivant comme nom accessible et infobulle.
 - **Les chiffres du dossier technique sont de nouveau mesurés à chaque build** : le script qui les relève échouait en silence depuis le 2026-09-10 et republiait les nombres du 2026-09-09 ; il lit maintenant les deux workflows et fait échouer le build plutôt que de conserver des chiffres périmés. Le dossier annonce la V1.6 livrée, les deux jobs du planificateur, les sondes et alertes Cloud Monitoring, les pages pré-rendues et les six procédures outillées.
 
 ### Security
 
-- **`js-yaml` remonté en 4.3.2** : la version tirée par l'outillage de génération des types OpenAPI était vulnérable à une consommation de processeur non bornée. Dépendance de développement uniquement, donc jamais servie aux utilisateurs. Bornée au `4.x` : la contrainte ouverte résolvait un `5.4.1` majeur sur un outil qui garde le contrat d'API.
+- **`js-yaml` remonté en 4.3.2** : la version tirée par l’outillage de génération des types OpenAPI était vulnérable à une consommation de processeur non bornée. Dépendance de développement uniquement, donc jamais servie aux utilisateurs. Bornée au `4.x` : la contrainte ouverte résolvait un `5.4.1` majeur sur un outil qui garde le contrat d’API.
 
 ## [1.5.0] - 2026-09-07
 
 ### Added
 
-- **Page d'accueil d'exploration** : la racine `/` propose des films à tout le monde, connecté ou non, en huit rangées ordonnées du plus personnel au plus exploratoire. Une entrée « Explorer » ouvre la page depuis la nav et depuis la barre du bas mobile.
-- **Recherche en tête d'accueil** : un champ de recherche et trois exemples cliquables, sans compte requis.
-- **Rangées personnelles** : votre liste triée par note, des recommandations tirées du dernier film vu en soirée, et ce qu'ont vu les personnes que vous suivez.
-- **Ce soir en streaming** : Netflix, Prime Video, Disney+, Canal+ et Apple TV+, avec bascule d'une plateforme à l'autre.
+- **Page d’accueil d’exploration** : la racine `/` propose des films à tout le monde, connecté ou non, en huit rangées ordonnées du plus personnel au plus exploratoire. Une entrée « Explorer » ouvre la page depuis la nav et depuis la barre du bas mobile.
+- **Recherche en tête d’accueil** : un champ de recherche et trois exemples cliquables, sans compte requis.
+- **Rangées personnelles** : votre liste triée par note, des recommandations tirées du dernier film vu en soirée, et ce qu’ont vu les personnes que vous suivez.
+- **Ce soir en streaming** : Netflix, Prime Video, Disney+, Canal+ et Apple TV+, avec bascule d’une plateforme à l’autre.
 - **Cent vingt sagas** : les grandes franchises réunies, chacune avec sa page, et une barre de recherche et de tri sur la page qui les liste.
 - **Dix sélections thématiques** : frissons, comédies françaises, années 80 à 2000, braquages, pépites A24, moins de 90 minutes, indétrônables, en famille.
 - **Classement communautaire** : les films que les soirées proposent le plus souvent, un film y entrant à partir de deux soirées distinctes.
-- **Nouvelle landing page** : neuf sections, l'interface du produit reconstruite en CSS et une roue de tirage réellement jouable depuis la page.
+- **Nouvelle landing page** : neuf sections, l’interface du produit reconstruite en CSS et une roue de tirage réellement jouable depuis la page.
 - Pages listes complètes derrière chaque rangée, avec filtres par genre et par type, tri et recherche.
-- Composant partagé `SearchField`, extrait de la barre d'outils des listes et réutilisé par la recherche d'accueil.
+- Composant partagé `SearchField`, extrait de la barre d’outils des listes et réutilisé par la recherche d’accueil.
 - Endpoints `GET /movies/showcase`, `GET /movies/collections`, `GET /users/me/watched-movies` et `GET /users/me/following-watched-movies`, avec cache mémoire de six heures par section.
-- Contexte `.on-dark` dans le design system : une bande sombre redéfinit les jetons de thème pour ses descendants, si bien que `Button`, `Card`, `Chip` et `Avatar` s'y posent sans classe locale.
-- Taille `lg` sur `Button` et `buttonClass`, pour les appels à l'action de page d'accueil.
-- Test de parité des clés d'internationalisation : une clé française sans équivalent anglais fait désormais échouer la suite.
+- Contexte `.on-dark` dans le design system : une bande sombre redéfinit les jetons de thème pour ses descendants, si bien que `Button`, `Card`, `Chip` et `Avatar` s’y posent sans classe locale.
+- Taille `lg` sur `Button` et `buttonClass`, pour les appels à l’action de page d’accueil.
+- Test de parité des clés d’internationalisation : une clé française sans équivalent anglais fait désormais échouer la suite.
 
 ### Changed
 
-- La racine `/` sert la page d'exploration ; la présentation du produit vit sur `/decouvrir`, annoncée dans le sitemap.
+- La racine `/` sert la page d’exploration ; la présentation du produit vit sur `/decouvrir`, annoncée dans le sitemap.
 - Les listes de films et les profils affichent la note et la durée, comme Ma liste.
-- Les rangées d'onglets signalent leur débordement par un dégradé et ramènent l'onglet actif dans le champ de vision.
-- Les recommandations d'accueil passent par un endpoint authentifié plutôt que par le profil public : un compte au profil privé garde sa rangée.
-- Sur mobile, le titre d'une rangée tient sur une ligne et le lien « voir tout » descend sous lui, aligné à droite, quand la place manque.
-- La roue de tirage s'adapte enfin à la largeur de son conteneur au lieu d'être figée à 460 pixels.
+- Les rangées d’onglets signalent leur débordement par un dégradé et ramènent l’onglet actif dans le champ de vision.
+- Les recommandations d’accueil passent par un endpoint authentifié plutôt que par le profil public : un compte au profil privé garde sa rangée.
+- Sur mobile, le titre d’une rangée tient sur une ligne et le lien « voir tout » descend sous lui, aligné à droite, quand la place manque.
+- La roue de tirage s’adapte enfin à la largeur de son conteneur au lieu d’être figée à 460 pixels.
 - Les pastilles `Chip` de ton primaire passent sur le bleu de texte, mieux contrasté que le bleu de fond en thème clair comme en thème sombre.
 
 ### Fixed
 
-- La fiche film ouverte depuis un carrousel d'accueil affiche son affiche et son année.
-- Le service worker de développement ne s'enregistre plus par défaut : un worker obsolète interceptait `/api/v1/*` sur `localhost` et vidait toutes les sections sans le moindre message d'erreur. Il revient avec `VITE_DEV_SERVICE_WORKER=true`.
+- La fiche film ouverte depuis un carrousel d’accueil affiche son affiche et son année.
+- Le service worker de développement ne s’enregistre plus par défaut : un worker obsolète interceptait `/api/v1/*` sur `localhost` et vidait toutes les sections sans le moindre message d’erreur. Il revient avec `VITE_DEV_SERVICE_WORKER=true`.
 - La rangée « Vos amis ont vu » exclut les profils passés en privé.
 
 ## [1.4.1] - 2026-09-04
 
 ### Added
 
-- **Navigation ouverte aux visiteurs sans compte** : la nav, le pied de page et cinq pages (Mes soirées, Nouvelle soirée, Ma liste, Notifications, Paramètres) sont désormais accessibles sans compte, avec un état déconnecté dédié par page et un appel à l'action vers la connexion ou l'inscription.
-- **Pièces jointes sur « Proposer une idée »** : jusqu'à 4 images (bouton, glisser-déposer ou collage) jointes à une suggestion de feature ou de bug.
+- **Navigation ouverte aux visiteurs sans compte** : la nav, le pied de page et cinq pages (Mes soirées, Nouvelle soirée, Ma liste, Notifications, Paramètres) sont désormais accessibles sans compte, avec un état déconnecté dédié par page et un appel à l’action vers la connexion ou l’inscription.
+- **Pièces jointes sur « Proposer une idée »** : jusqu’à 4 images (bouton, glisser-déposer ou collage) jointes à une suggestion de feature ou de bug.
 - **Resservir un film déjà vu** : proposer un film de son historique vers une soirée en cours, sans le rechercher.
-- **Alerte de date changée** : quand l'hôte reprogramme une soirée, les participants reçoivent une notification push et un message in-app.
+- **Alerte de date changée** : quand l’hôte reprogramme une soirée, les participants reçoivent une notification push et un message in-app.
 
 ### Changed
 
@@ -798,31 +798,31 @@ version publiée est associée à un tag Git et à une release GitHub.
 - **Mes soirées repensée** : onglets Actives et Historique, bloc « À traiter » pour les soirées en suspens, cartes adaptées au mobile.
 - **Historique fouillable** : recherche, tris (date, titre, films, participants) et filtre sur les soirées restées sans film choisi.
 - **Mon compte devient Paramètres** : cinq rubriques (Profil, Préférences, Notifications, Intégrations, Compte et sécurité), enregistrement automatique.
-- **Panneau de soirée revu** : enregistrement en direct, erreurs par champ, mode de roue et séries TV dès la création ; jusqu'à 15 films par personne et 300 participants.
+- **Panneau de soirée revu** : enregistrement en direct, erreurs par champ, mode de roue et séries TV dès la création ; jusqu’à 15 films par personne et 300 participants.
 - **Liste de films** : vue liste en plus de la grille, date de sortie, indicateur Ma liste, plateformes redessinées, fiche film en un geste.
-- **Partage unifié** : une seule fenêtre pour le lien, le QR code et l'invitation des abonnements, sur la soirée comme sur le profil.
-- Premier affichage plus rapide : le chunk App et sa CSS sont préchargés en parallèle de l'entrée.
+- **Partage unifié** : une seule fenêtre pour le lien, le QR code et l’invitation des abonnements, sur la soirée comme sur le profil.
+- Premier affichage plus rapide : le chunk App et sa CSS sont préchargés en parallèle de l’entrée.
 
 ### Fixed
 
-- Contraste du libellé actif de la navigation mobile et de l'option de thème sélectionnée en mode sombre (ratio AA).
-- Navigateurs intégrés (Snapchat, etc.) : un bandeau propose d'ouvrir Movie Picker dans Safari ou Chrome, au lieu de perdre la session.
-- Pseudo et identifiant public exclus des événements d'analytics.
+- Contraste du libellé actif de la navigation mobile et de l’option de thème sélectionnée en mode sombre (ratio AA).
+- Navigateurs intégrés (Snapchat, etc.) : un bandeau propose d’ouvrir Movie Picker dans Safari ou Chrome, au lieu de perdre la session.
+- Pseudo et identifiant public exclus des événements d’analytics.
 
 ## [1.4.0] - 2026-08-25
 
 ### Added
 
-- **Watchlist personnelle** : liste de films « à voir » par utilisateur, alimentée depuis la recherche TMDB, avec proposition rapide d'un film de la watchlist directement dans une soirée.
-- **Intégration Letterboxd** : synchronisation bidirectionnelle de la watchlist à partir du pseudo Letterboxd, rafraîchie automatiquement (plafonnée à une fois par jour côté serveur) avec un écran de revue des correspondances à l'import.
-- **Sélection manuelle du film gagnant** : alternative au tirage par la roue, l'hôte bascule en « choix manuel » et désigne lui-même le gagnant, avec la même animation de révélation et un badge « Choisi par l'hôte ».
-- **Exclusion d'un film de la roue** : l'hôte écarte un film du tirage sans le retirer de la liste ; réversible à tout moment, y compris après un tirage.
+- **Watchlist personnelle** : liste de films « à voir » par utilisateur, alimentée depuis la recherche TMDB, avec proposition rapide d’un film de la watchlist directement dans une soirée.
+- **Intégration Letterboxd** : synchronisation bidirectionnelle de la watchlist à partir du pseudo Letterboxd, rafraîchie automatiquement (plafonnée à une fois par jour côté serveur) avec un écran de revue des correspondances à l’import.
+- **Sélection manuelle du film gagnant** : alternative au tirage par la roue, l’hôte bascule en « choix manuel » et désigne lui-même le gagnant, avec la même animation de révélation et un badge « Choisi par l’hôte ».
+- **Exclusion d’un film de la roue** : l’hôte écarte un film du tirage sans le retirer de la liste ; réversible à tout moment, y compris après un tirage.
 - **Flamme streak de soirées** : compteur de semaines consécutives de participation à une soirée avec tirage, affiché sur le profil public, mis en avant sur la carte de profil.
 - **Connexion sociale (OAuth)** : connexion et inscription via Google ou GitHub, avec une section « Connexions » sur la page Compte pour lier ou délier un fournisseur.
 - **Système de dons** : page publique « Soutenir Movie Picker » exposant les frais réels du service, renvoyant vers Ko-fi, avec un badge « Soutien » décoratif sur le profil public des donateurs.
 - **Modale de nouveautés** : à la première visite suivant une mise à jour, une modale résume ce qui a changé dans la version ; affichée une seule fois par version connectée, consultable ensuite à la demande depuis le pied de page.
 - **Bouton « Proposer une idée »** : depuis le pied de page ou le menu compte, titre + description ; la soumission crée une GitHub Issue côté serveur.
-- **Bouton d'installation PWA** : « Installer l'app » dans le pied de page et le menu compte ; prompt natif Chrome/Edge/Android, guide iOS et navigateurs in-app.
+- **Bouton d’installation PWA** : « Installer l’app » dans le pied de page et le menu compte ; prompt natif Chrome/Edge/Android, guide iOS et navigateurs in-app.
 
 ## [1.3.2] - 2026-07-25
 
@@ -830,54 +830,54 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 - Lien **« Signaler un problème »** en pied de page : ouvre un message pré-rempli (description, étapes, comportement attendu et observé) avec le contexte technique (page, version, navigateur).
 - Sonde de disponibilité applicative **`GET /health/ready`** : vérifie la joignabilité de MongoDB, renvoie 503 si la base est injoignable, et expose la version déployée.
-- **Supervision de production** : trois sondes de disponibilité (API, readiness, front) interrogées depuis trois continents, cinq politiques d'alerte (indisponibilité, base injoignable, erreurs serveur, latence dégradée) notifiées par e-mail, tableau de bord d'exploitation, et alertes Sentry sur les régressions et les rafales d'erreurs.
+- **Supervision de production** : trois sondes de disponibilité (API, readiness, front) interrogées depuis trois continents, cinq politiques d’alerte (indisponibilité, base injoignable, erreurs serveur, latence dégradée) notifiées par e-mail, tableau de bord d’exploitation, et alertes Sentry sur les régressions et les rafales d’erreurs.
 - Vérification de la readiness dans le **smoke test de déploiement** : une révision dont la base est injoignable fait échouer sa propre mise en production.
-- **Monitoring d'erreurs Sentry** sur le front (React) et l'API (.NET), en production uniquement, avec une catégorie « surveillance des erreurs » dans les préférences de confidentialité.
+- **Monitoring d’erreurs Sentry** sur le front (React) et l’API (.NET), en production uniquement, avec une catégorie « surveillance des erreurs » dans les préférences de confidentialité.
 - **SEO global** : métadonnées par page, image Open Graph, données structurées JSON-LD et sitemap dynamique des profils publics.
 - QR code de partage sur le profil public.
-- Filtre de durée de film dans la recherche d'ajout (10 min ou moins à 3h et plus).
-- Réglage de compte pour l'échelle de notes TMDB (affichage sur 5 ou sur 10).
+- Filtre de durée de film dans la recherche d’ajout (10 min ou moins à 3h et plus).
+- Réglage de compte pour l’échelle de notes TMDB (affichage sur 5 ou sur 10).
 - Nouveau logo (clap incliné, fond sombre) et icônes PWA régénérées.
-- Version de l'application affichée dans le pied de page.
+- Version de l’application affichée dans le pied de page.
 
 ### Changed
 
 - Portes de qualité CI désormais **bloquantes** (Quality Gate SonarCloud, Lighthouse, E2E Playwright) : un échec fait échouer le pipeline et bloque le déploiement.
-- Réduction de la duplication de code : factorisation des handlers d'action sur un film (vote, « déjà vu », note de pitch, suppression), fermeture des modales mutualisée (`useModalDialog`), pied de carte film partagé entre les vues grille et liste.
+- Réduction de la duplication de code : factorisation des handlers d’action sur un film (vote, « déjà vu », note de pitch, suppression), fermeture des modales mutualisée (`useModalDialog`), pied de carte film partagé entre les vues grille et liste.
 - Optimisations Lighthouse : accessibilité 100/100, CLS éliminé, bundle réduit de 83 %.
 - Immersion PWA Android (theme-color dynamique, safe-area) et alignements optiques (logo, pseudo/avatar).
 - Cartes film : streaming affiché uniquement par abonnement, location et achat regroupés en pastilles compactes.
 
 ### Removed
 
-- Barre de couleur du thème sur la page de détail d'une soirée.
+- Barre de couleur du thème sur la page de détail d’une soirée.
 
 ### Fixed
 
-- **Sessions non persistées en production** : les utilisateurs étaient déconnectés à la fermeture du navigateur, sans qu'aucun code n'ait changé. Deux causes cumulées, l'expiration au bout de 90 jours de la clé de protection des données (générée sans durée explicite, puis régénérée en éphémère à chaque démarrage à froid) et un configurateur de cookie enregistré sur une interface que la fabrique d'options ne consomme pas, donc inopérant depuis l'origine. Les clés sont désormais persistées en base et partagées entre instances et révisions, le configurateur est enregistré sur la bonne interface, la durée de session est unifiée à 30 jours glissants et un test de non-régression vérifie que la configuration s'applique réellement. Une reconnexion unique a été nécessaire au déploiement.
+- **Sessions non persistées en production** : les utilisateurs étaient déconnectés à la fermeture du navigateur, sans qu’aucun code n’ait changé. Deux causes cumulées, l’expiration au bout de 90 jours de la clé de protection des données (générée sans durée explicite, puis régénérée en éphémère à chaque démarrage à froid) et un configurateur de cookie enregistré sur une interface que la fabrique d’options ne consomme pas, donc inopérant depuis l’origine. Les clés sont désormais persistées en base et partagées entre instances et révisions, le configurateur est enregistré sur la bonne interface, la durée de session est unifiée à 30 jours glissants et un test de non-régression vérifie que la configuration s’applique réellement. Une reconnexion unique a été nécessaire au déploiement.
 - Résolution des 7 signalements SonarCloud restants (règle CA1861 : tableaux constants hissés en `static readonly`).
-- CSRF : les deux endpoints de lancement/clôture de la roue exigent désormais un corps JSON, alignés sur le reste de l'API.
-- Accessibilité : l'animation de la roue respecte `prefers-reduced-motion` (affiche le résultat directement si la préférence système est active).
+- CSRF : les deux endpoints de lancement/clôture de la roue exigent désormais un corps JSON, alignés sur le reste de l’API.
+- Accessibilité : l’animation de la roue respecte `prefers-reduced-motion` (affiche le résultat directement si la préférence système est active).
 - Images cassées en production : la CSP bloquait les posters et les avatars par défaut (`img-src` incomplet).
 - Cookie de session passé en `SameSite=Lax` en production.
 - Bandes-annonces cassées, contraste des actions de carte film en thème clair, modale sur mobile.
-- Année de film absente désormais acceptée à l'ajout ; QR code et copie du lien regroupés.
-- Le skip transitif du pipeline empêchait `deploy-api` et `deploy-front` de s'exécuter.
-- Envoi d'e-mails de production rebranché (`RESEND_API_KEY`, `EMAIL_PROVIDER=resend`).
+- Année de film absente désormais acceptée à l’ajout ; QR code et copie du lien regroupés.
+- Le skip transitif du pipeline empêchait `deploy-api` et `deploy-front` de s’exécuter.
+- Envoi d’e-mails de production rebranché (`RESEND_API_KEY`, `EMAIL_PROVIDER=resend`).
 
 ### Security
 
-- Montée de **react-router 7.18.1 vers 8.3.0** (paquet unifié `react-router`), corrigeant `GHSA-qwww-vcr4-c8h2` (contournement CSRF en mode RSC). L'API de routage utilisée est inchangée.
+- Montée de **react-router 7.18.1 vers 8.3.0** (paquet unifié `react-router`), corrigeant `GHSA-qwww-vcr4-c8h2` (contournement CSRF en mode RSC). L’API de routage utilisée est inchangée.
 - Résolution des 8 alertes Dependabot ouvertes (6 hautes, 2 basses) : `fast-uri`, `shell-quote`, `brace-expansion`, `dompurify`, `linkify-it`, `js-yaml`.
-- Remplacement de `pnpm audit` par Trivy sur `pnpm-lock.yaml`, le service d'audit npm ayant été retiré le 15 juillet 2026 ; l'audit ne scannait plus aucun fichier depuis son introduction.
-- Déblocage du pipeline : CVE de l'image Docker de base et version de Java obsolète pour le scanner Sonar.
+- Remplacement de `pnpm audit` par Trivy sur `pnpm-lock.yaml`, le service d’audit npm ayant été retiré le 2026-07-15 ; l’audit ne scannait plus aucun fichier depuis son introduction.
+- Déblocage du pipeline : CVE de l’image Docker de base et version de Java obsolète pour le scanner Sonar.
 
 ## [1.3.1] - 2026-07-08
 
 ### Added
 
 - Content-Security-Policy (CSP) sur le front SPA.
-- Repli sur les initiales pour l'avatar quand aucun avatar n'est choisi.
+- Repli sur les initiales pour l’avatar quand aucun avatar n’est choisi.
 
 ### Changed
 
@@ -892,7 +892,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 ### Security
 
 - Scans de sécurité étendus en CI : dépendances NuGet vulnérables, Trivy (image Docker), Gitleaks (secrets).
-- Durcissement de la sécurité applicative : validation SSRF sur la récupération des affiches TMDB, sandbox de l'iframe bande-annonce, assainissement des URLs (Security Rating SonarCloud A).
+- Durcissement de la sécurité applicative : validation SSRF sur la récupération des affiches TMDB, sandbox de l’iframe bande-annonce, assainissement des URLs (Security Rating SonarCloud A).
 
 ### Fixed
 
@@ -905,8 +905,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 - Roue de tirage repensée en canvas, avec animation de confettis.
 - Recherche avancée de films : note minimale, langue originale, décennie, disponibilité.
-- Tri de la liste de films (votes, note TMDB, durée, ordre d'ajout).
-- Affichage de la location et de l'achat (VOD) sur la fiche film.
+- Tri de la liste de films (votes, note TMDB, durée, ordre d’ajout).
+- Affichage de la location et de l’achat (VOD) sur la fiche film.
 - États vides (empty states) harmonisés sur les écrans sans contenu.
 - Export calendrier `.ics` (Google / Outlook / Apple) pour les soirées à venir.
 - Infobulles (tooltips) accessibles et réutilisables.
@@ -926,21 +926,21 @@ version publiée est associée à un tag Git et à une release GitHub.
 - Profil public léger : handle `/u/:handle`, bio, visibilité (public par défaut, profil privé en 404).
 - Statistiques utilisateur sur le profil public.
 - Suivi (follow) léger entre utilisateurs.
-- Notifications in-app (7 types) avec cloche d'inbox.
-- Invitations in-app : l'hôte invite ses follows depuis la soirée.
+- Notifications in-app (7 types) avec cloche d’inbox.
+- Invitations in-app : l’hôte invite ses follows depuis la soirée.
 - Historique de recherche de films (local, par utilisateur).
 - Analytics produit (PostHog) et bandeau de consentement (CMP).
-- Accessibilité étendue : lien d'évitement, focus-visible global, couverture axe sur 9 vues.
+- Accessibilité étendue : lien d’évitement, focus-visible global, couverture axe sur 9 vues.
 - Suppression de compte et export des données personnelles (RGPD).
 - Note de pitch sur les propositions de film.
-- Pages d'erreur dédiées (404, 500).
-- Personnalisation de la couleur d'accent des soirées (palette étendue).
+- Pages d’erreur dédiées (404, 500).
+- Personnalisation de la couleur d’accent des soirées (palette étendue).
 
 ### Changed
 
 - Migration complète des tokens du design system.
 - Isolation des bases de données dev / prod avec garde-fou anti-base-prod en environnement Development.
-- PWA : ajout d'un splash screen et d'une bannière de mise à jour du service worker.
+- PWA : ajout d’un splash screen et d’une bannière de mise à jour du service worker.
 
 ### Removed
 
@@ -948,17 +948,17 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Security
 
-- Correction d'une faille IDOR sur les actions de film (vote, déjà vu, note, suppression, ajout).
-- Résorption de vulnérabilités SonarCloud (Security Rating de C à A) et durcissement du pipeline CI (SHA-pin, secrets en variables d'environnement).
+- Correction d’une faille IDOR sur les actions de film (vote, déjà vu, note, suppression, ajout).
+- Résorption de vulnérabilités SonarCloud (Security Rating de C à A) et durcissement du pipeline CI (SHA-pin, secrets en variables d’environnement).
 
 ## [1.1.0] - 2026-05-25
 
 ### Added
 
 - Progressive Web App : manifest, icônes, service worker (Workbox).
-- Notifications push (VAPID) : 5 déclencheurs (rejoindre la soirée, ajout de film, tirage, suppression, rappels 1h/24h avant l'événement).
+- Notifications push (VAPID) : 5 déclencheurs (rejoindre la soirée, ajout de film, tirage, suppression, rappels 1h/24h avant l’événement).
 - Séries TV, bandes-annonces TMDB, liens externes et deep links vers les plateformes de streaming.
-- Sélecteur d'avatar (DiceBear Bottts, thème cinéma, 18+ options).
+- Sélecteur d’avatar (DiceBear Bottts, thème cinéma, 18+ options).
 
 ## [1.0.0] - 2026-05-19
 
@@ -967,11 +967,11 @@ Première version de production complète.
 ### Added
 
 - Comptes utilisateurs : inscription, connexion, mot de passe oublié par e-mail.
-- Création de soirée, lien de partage (+ QR code), configuration par l'hôte (thème, expiration, limite de propositions, type de roue).
+- Création de soirée, lien de partage (+ QR code), configuration par l’hôte (thème, expiration, limite de propositions, type de roue).
 - Proposition de films (recherche TMDB), vote, marqueur « déjà vu » (avec décompte des autres participants), roue de tirage.
 - Fournisseurs de visionnage (watch providers), aperçus Open Graph, internationalisation (FR / EN).
 - Landing page publique ; mode sombre / clair ; mise à jour en direct des films et votes ; rappel in-app avant le début de soirée.
-- Suppression d'un événement et expulsion d'un participant par l'hôte.
+- Suppression d’un événement et expulsion d’un participant par l’hôte.
 
 ### Changed
 
