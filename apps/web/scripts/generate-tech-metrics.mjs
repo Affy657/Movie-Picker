@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, mkdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDir, '../../..');
@@ -48,50 +48,96 @@ function readPreviousMetrics() {
   return Object.fromEntries(entries.map(([, key, value]) => [key, Number(value)]));
 }
 
-function countCommits(previous) {
-  try {
-    const shallow = execFileSync('git', ['rev-parse', '--is-shallow-repository'], {
-      cwd: repoRoot,
-      encoding: 'utf8',
-    }).trim();
-    if (shallow === 'true') return previous.commits ?? 0;
-    const count = execFileSync('git', ['rev-list', '--count', 'HEAD'], {
-      cwd: repoRoot,
-      encoding: 'utf8',
-    }).trim();
-    return Number(count);
-  } catch {
-    return previous.commits ?? 0;
-  }
+function runGit(args) {
+  return execFileSync('git', args, { cwd: repoRoot, encoding: 'utf8' }).trim();
 }
 
-function countMonthsSinceFirstCommit(previous) {
+export function monthsBetween(firstDate, today) {
+  const [year, month, day] = firstDate.split('-').map(Number);
+  const elapsed = (today.getFullYear() - year) * 12 + (today.getMonth() + 1 - month);
+  return today.getDate() < day ? elapsed - 1 : elapsed;
+}
+
+function readHistory(git, today) {
+  if (git(['rev-parse', '--is-shallow-repository']) === 'true') {
+    throw new Error(
+      'shallow clone: the commit count and the months of development need the full git history, check out with fetch-depth: 0'
+    );
+  }
+  const commits = Number(git(['rev-list', '--count', 'HEAD']));
+  const [firstDate] = git([
+    'log',
+    '--max-parents=0',
+    '--reverse',
+    '--format=%ad',
+    '--date=short',
+  ]).split('\n');
+  if (!Number.isFinite(commits) || commits === 0 || !firstDate) {
+    throw new Error('empty git history');
+  }
+  return { commits, monthsActive: monthsBetween(firstDate, today) };
+}
+
+export function historyMetrics(git, { ci, previous, today = new Date(), warn = () => {} }) {
   try {
-    const shallow = execFileSync('git', ['rev-parse', '--is-shallow-repository'], {
-      cwd: repoRoot,
-      encoding: 'utf8',
-    }).trim();
-    if (shallow === 'true') return previous.monthsActive ?? 0;
-    const rootCommitDates = execFileSync(
-      'git',
-      ['log', '--max-parents=0', '--reverse', '--format=%ad', '--date=short'],
-      { cwd: repoRoot, encoding: 'utf8' }
-    )
-      .trim()
-      .split('\n');
-    const [firstDate] = rootCommitDates;
-    if (!firstDate) return previous.monthsActive ?? 0;
-    const [year, month, day] = firstDate.split('-').map(Number);
-    const today = new Date();
-    const elapsed = (today.getFullYear() - year) * 12 + (today.getMonth() + 1 - month);
-    return today.getDate() < day ? elapsed - 1 : elapsed;
-  } catch {
-    return previous.monthsActive ?? 0;
+    return readHistory(git, today);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    if (ci) throw new Error(`tech metrics: cannot read the git history (${reason})`);
+    warn(
+      `tech metrics: ${reason}; the commit count and the months keep their previous values, fine for a local build only`
+    );
+    return { commits: previous.commits ?? 0, monthsActive: previous.monthsActive ?? 0 };
   }
 }
 
 function roundToThousand(value) {
   return Math.round(value / 1000) * 1000;
+}
+
+const TEST_DIRECTORIES = new Set([
+  'MoviePicker.Api.Tests',
+  'MoviePicker.Api.IntegrationTests',
+  'test-utils',
+  'mocks',
+  '__mocks__',
+]);
+
+function pathSegments(file) {
+  return file.split(/[\\/]/);
+}
+
+function isGeneratedSource(file) {
+  return pathSegments(file).includes('generated');
+}
+
+function isTestSource(file) {
+  const segments = pathSegments(file);
+  const name = segments.at(-1) ?? '';
+  return (
+    /\.test\.tsx?$/.test(name) ||
+    name === 'test-setup.ts' ||
+    segments.some((segment) => TEST_DIRECTORIES.has(segment))
+  );
+}
+
+function countNonBlankLines(source) {
+  return source.split('\n').filter((line) => line.trim() !== '').length;
+}
+
+export function sourceLineMetrics(files, read, { round = roundToThousand } = {}) {
+  let total = 0;
+  let tests = 0;
+  for (const file of files) {
+    if (isGeneratedSource(file)) continue;
+    const lines = countNonBlankLines(read(file));
+    total += lines;
+    if (isTestSource(file)) tests += lines;
+  }
+  return {
+    linesOfCode: round(total),
+    testLinesShare: total === 0 ? 0 : Math.round((tests / total) * 100),
+  };
 }
 
 function computeMetrics(previous) {
@@ -290,13 +336,19 @@ function computeMetrics(previous) {
     if (value === 0) throw new Error(`empty measurement: ${name}`);
   }
 
+  const history = historyMetrics(runGit, {
+    ci: Boolean(process.env.CI),
+    previous,
+    warn: (message) => process.stderr.write(`${message}\n`),
+  });
+
   return {
-    linesOfCode: roundToThousand(countLines(webSources) + countLines(apiSources)),
+    ...sourceLineMetrics([...webSources, ...apiSources], readText),
     endpoints,
     testFiles: webTests.length + apiTests.length,
     webTestFiles: webTests.length,
     apiTestFiles: apiTests.length,
-    testCases: webTestCases + apiTestCases,
+    testCases: webTestCases + apiTestCases + e2eTestCases,
     webTestCases,
     apiTestCases,
     unitTestCases,
@@ -305,8 +357,8 @@ function computeMetrics(previous) {
     e2eTestCases,
     e2eScenarios: e2eScenarios.length,
     ciJobs,
-    commits: countCommits(previous),
-    monthsActive: countMonthsSinceFirstCommit(previous),
+    commits: history.commits,
+    monthsActive: history.monthsActive,
     controllers: controllers.length,
     ports: ports.length,
     useCases: useCases.length,
@@ -348,18 +400,19 @@ function computeMetrics(previous) {
   };
 }
 
-const metrics = computeMetrics(readPreviousMetrics());
+function main() {
+  const metrics = computeMetrics(readPreviousMetrics());
 
-const unmeasured = Object.entries(metrics)
-  .filter(([, value]) => !Number.isFinite(value))
-  .map(([name]) => name);
-if (unmeasured.length > 0) {
-  throw new Error(`non-numeric metric: ${unmeasured.join(', ')}`);
-}
+  const unmeasured = Object.entries(metrics)
+    .filter(([, value]) => !Number.isFinite(value))
+    .map(([name]) => name);
+  if (unmeasured.length > 0) {
+    throw new Error(`non-numeric metric: ${unmeasured.join(', ')}`);
+  }
 
-const buildDate = new Date().toISOString().slice(0, 10);
+  const buildDate = new Date().toISOString().slice(0, 10);
 
-const body = `// Generated by apps/web/scripts/generate-tech-metrics.mjs, do not edit by hand.
+  const body = `// Generated by apps/web/scripts/generate-tech-metrics.mjs, do not edit by hand.
 
 export const TECH_METRICS = {
 ${Object.entries(metrics)
@@ -370,7 +423,10 @@ ${Object.entries(metrics)
 export const TECH_METRICS_BUILD_DATE = '${buildDate}';
 `;
 
-mkdirSync(outputDir, { recursive: true });
-writeFileSync(outputFile, body, 'utf8');
+  mkdirSync(outputDir, { recursive: true });
+  writeFileSync(outputFile, body, 'utf8');
 
-process.stdout.write(`tech metrics -> ${outputFile}\n`);
+  process.stdout.write(`tech metrics -> ${outputFile}\n`);
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

@@ -475,8 +475,11 @@ jobs:
     permissions:
       contents: read
     steps:
+      # Full history: `test:e2e:ci` builds the web app, whose tech metrics count the commits and
+      # fail a CI build on a shallow clone (`apps/web/scripts/generate-tech-metrics.mjs`).
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 0
           persist-credentials: false
       - uses: ./.github/actions/setup-web
       - uses: ./.github/actions/setup-dotnet-cache

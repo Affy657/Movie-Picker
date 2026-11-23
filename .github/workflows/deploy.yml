@@ -215,8 +215,10 @@ jobs:
       matrix:
         shard: [1, 2, 3, 4, 5, 6, 7]
     steps:
+      # Full history for the same reason as `build-front`: `pnpm run lighthouse` builds the web app.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 0
           persist-credentials: false
       - uses: ./.github/actions/setup-web
       - uses: browser-actions/setup-chrome@48ad923757ca74d66703209fe939badbdf80f2f4 # v2
@@ -686,8 +688,12 @@ jobs:
     permissions:
       contents: read
     steps:
+      # The full history: the build counts the commits and the months of development shown on
+      # /tech, and `generate-tech-metrics.mjs` fails a CI build on a shallow clone rather than
+      # publishing the figures of an older build (R01 of the 2026-11-23 audit).
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 0
           persist-credentials: false
       - uses: ./.github/actions/setup-web
       - run: |
