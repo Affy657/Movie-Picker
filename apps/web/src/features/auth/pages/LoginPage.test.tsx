@@ -149,6 +149,19 @@ describe('LoginPage (MSW)', () => {
     expect(screen.queryByRole('link', { name: /^accueil$/i })).not.toBeInTheDocument();
   });
 
+  it('keeps the query of the join card in the way back to the movie night', () => {
+    renderLogin('/login?returnTo=%2Fe%2Fsoiree-horreur%3Frejoindre%3D1');
+
+    expect(screen.getByRole('link', { name: /retour à la soirée/i })).toHaveAttribute(
+      'href',
+      '/e/soiree-horreur?rejoindre=1'
+    );
+    expect(screen.getByRole('link', { name: /créer un compte/i })).toHaveAttribute(
+      'href',
+      `/register?returnTo=${encodeURIComponent('/e/soiree-horreur?rejoindre=1')}`
+    );
+  });
+
   it('leads back home when the visitor did not come from a movie night', () => {
     renderLogin('/login?returnTo=%2Fwatchlist');
 
