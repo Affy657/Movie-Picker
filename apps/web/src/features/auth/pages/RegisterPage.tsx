@@ -4,6 +4,7 @@ import AuthPageShell, { authPageShellStyles } from '@/features/auth/components/A
 import PageLayout from '@/shared/components/PageLayout';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import OAuthProviderButtons from '@/features/auth/components/OAuthProviderButtons';
+import { returnsToEvent } from '@/features/auth/utils/eventReturn';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
@@ -52,7 +53,14 @@ export default function RegisterPage() {
 
   return (
     <PageLayout className={authPageShellStyles.layout}>
-      <AuthPageShell title={t('auth.register.title')} description={t('auth.register.description')}>
+      <AuthPageShell
+        title={t('auth.register.title')}
+        description={t(
+          returnsToEvent(returnTo) ? 'auth.register.eventDescription' : 'auth.register.description'
+        )}
+        returnTo={returnTo}
+      >
+        <OAuthProviderButtons returnTo={returnTo} placement="before" />
         <form
           onSubmit={handleSubmit}
           className="form"
@@ -120,7 +128,6 @@ export default function RegisterPage() {
             {loading ? t('auth.register.submitting') : t('auth.register.submit')}
           </Button>
         </form>
-        <OAuthProviderButtons returnTo={returnTo} />
         <p className="muted">
           {t('auth.register.loginPrompt')}{' '}
           <Link to={withReturnTo(ROUTES.login, returnTo)}>{t('auth.register.loginLink')}</Link>

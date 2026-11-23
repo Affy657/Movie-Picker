@@ -9,6 +9,7 @@ import {
 } from '@/features/auth/devQuickLoginCredentials';
 import OAuthProviderButtons from '@/features/auth/components/OAuthProviderButtons';
 import { resolveOAuthErrorKey } from '@/features/auth/utils/oauthErrors';
+import { returnsToEvent } from '@/features/auth/utils/eventReturn';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
@@ -66,7 +67,13 @@ export default function LoginPage() {
 
   return (
     <PageLayout className={authPageShellStyles.layout}>
-      <AuthPageShell title={t('auth.login.title')} description={t('auth.login.description')}>
+      <AuthPageShell
+        title={t('auth.login.title')}
+        description={t(
+          returnsToEvent(returnTo) ? 'auth.login.eventDescription' : 'auth.login.description'
+        )}
+        returnTo={returnTo}
+      >
         <form
           onSubmit={handleSubmit}
           className="form"

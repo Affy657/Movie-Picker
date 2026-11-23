@@ -16,7 +16,8 @@ export default function ForgotPasswordPage() {
   const { t, locale } = useTranslation();
   useNoindexPage(pageTitle(t('auth.forgotPassword.title')), ROUTES.forgotPassword);
   const [params] = useSearchParams();
-  const loginTo = withReturnTo(ROUTES.login, safeReturnTo(params.get('returnTo')));
+  const returnTo = safeReturnTo(params.get('returnTo'));
+  const loginTo = withReturnTo(ROUTES.login, returnTo);
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
@@ -42,6 +43,7 @@ export default function ForgotPasswordPage() {
         <AuthPageShell
           title={t('auth.forgotPassword.successTitle')}
           description={t('auth.forgotPassword.successMessage')}
+          returnTo={returnTo}
         >
           <p className="muted">
             <Link to={loginTo}>{t('auth.forgotPassword.backToLogin')}</Link>
@@ -56,6 +58,7 @@ export default function ForgotPasswordPage() {
       <AuthPageShell
         title={t('auth.forgotPassword.title')}
         description={t('auth.forgotPassword.description')}
+        returnTo={returnTo}
       >
         <form
           onSubmit={handleSubmit}

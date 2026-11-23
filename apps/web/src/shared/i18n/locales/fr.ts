@@ -426,8 +426,10 @@ export const fr = {
       failed: 'Impossible de vérifier votre session. Vérifiez votre connexion puis réessayez.',
       backHome: "Retour à l'accueil",
     },
+    backToEvent: 'Retour à la soirée',
     login: {
       title: 'Connexion',
+      eventDescription: 'Connectez-vous pour rejoindre la soirée, proposer vos films et voter.',
       description: 'Acc\u00e9dez \u00e0 vos soir\u00e9es et \u00e0 votre profil.',
       emailLabel: 'E-mail',
       passwordLabel: 'Mot de passe',
@@ -444,6 +446,8 @@ export const fr = {
     register: {
       title: 'Inscription',
       description: 'Cr\u00e9ez un compte pour retrouver vos soir\u00e9es.',
+      eventDescription:
+        'Cr\u00e9ez votre compte pour rejoindre la soir\u00e9e : proposez vos films, votez, et la roue tranche.',
       emailLabel: 'E-mail',
       passwordLabel: 'Mot de passe',
       passwordRulesHint: '8 caract\u00e8res minimum, au moins une lettre et un chiffre.',

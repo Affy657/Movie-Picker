@@ -428,9 +428,11 @@ export const en: Locale = {
       failed: 'We could not verify your session. Check your connection and try again.',
       backHome: 'Back to home',
     },
+    backToEvent: 'Back to the movie night',
     login: {
       title: 'Log in',
       description: 'Access your events and profile.',
+      eventDescription: 'Log in to join the movie night, suggest your films and vote.',
       emailLabel: 'Email',
       passwordLabel: 'Password',
       submit: 'Log in',
@@ -446,6 +448,8 @@ export const en: Locale = {
     register: {
       title: 'Sign up',
       description: 'Create an account to keep track of your events.',
+      eventDescription:
+        'Create your account to join the movie night: suggest your films, vote, and let the wheel decide.',
       emailLabel: 'Email',
       passwordLabel: 'Password',
       passwordRulesHint: 'At least 8 characters, including a letter and a number.',

@@ -54,19 +54,27 @@ const PROVIDER_LABELS: Record<string, string> = {
 
 type OAuthProviderButtonsProps = {
   returnTo: string;
+  placement?: 'before' | 'after';
 };
 
-export default function OAuthProviderButtons({ returnTo }: Readonly<OAuthProviderButtonsProps>) {
+export default function OAuthProviderButtons({
+  returnTo,
+  placement = 'after',
+}: Readonly<OAuthProviderButtonsProps>) {
   const { t } = useTranslation();
   const providers = useOAuthProviders();
 
   if (providers.length === 0) return null;
 
+  const divider = (
+    <div className={styles.divider}>
+      <span>{t('auth.oauth.divider')}</span>
+    </div>
+  );
+
   return (
-    <div className={styles.wrapper}>
-      <div className={styles.divider}>
-        <span>{t('auth.oauth.divider')}</span>
-      </div>
+    <div className={placement === 'before' ? styles.wrapperBefore : styles.wrapper}>
+      {placement === 'after' ? divider : null}
       <div className={styles.buttons}>
         {providers.map((provider) => {
           const Icon = PROVIDER_ICONS[provider];
@@ -82,6 +90,7 @@ export default function OAuthProviderButtons({ returnTo }: Readonly<OAuthProvide
           );
         })}
       </div>
+      {placement === 'before' ? divider : null}
     </div>
   );
 }

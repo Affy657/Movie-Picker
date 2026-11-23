@@ -107,6 +107,29 @@ describe('RegisterPage (MSW)', () => {
     );
   });
 
+  it('leads back to the movie night the visitor came from and says what joining brings', () => {
+    renderRegister('/register?returnTo=%2Fe%2Fsoiree-horreur');
+
+    expect(screen.getByRole('link', { name: /retour à la soirée/i })).toHaveAttribute(
+      'href',
+      '/e/soiree-horreur'
+    );
+    expect(screen.getByText(/rejoindre la soirée/i)).toBeInTheDocument();
+  });
+
+  it('shows the Google and GitHub sign-up before the form', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/oauth/providers`, () =>
+        HttpResponse.json({ providers: ['google', 'github'] })
+      )
+    );
+    renderRegister();
+
+    const google = await screen.findByRole('link', { name: /continuer avec google/i });
+    const submit = screen.getByRole('button', { name: /créer mon compte/i });
+    expect(google.compareDocumentPosition(submit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('n’appelle pas l’API si le mot de passe ne contient pas de chiffre', async () => {
     const user = userEvent.setup();
     let registerPosts = 0;

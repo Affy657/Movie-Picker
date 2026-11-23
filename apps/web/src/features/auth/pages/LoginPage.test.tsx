@@ -135,6 +135,27 @@ describe('LoginPage (MSW)', () => {
     });
   });
 
+  it('leads back to the movie night the visitor came from and says why to sign in', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/oauth/providers`, () => HttpResponse.json({ providers: [] }))
+    );
+    renderLogin('/login?returnTo=%2Fe%2Fsoiree-horreur');
+
+    expect(screen.getByRole('link', { name: /retour à la soirée/i })).toHaveAttribute(
+      'href',
+      '/e/soiree-horreur'
+    );
+    expect(screen.getByText(/rejoindre la soirée/i)).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /^accueil$/i })).not.toBeInTheDocument();
+  });
+
+  it('leads back home when the visitor did not come from a movie night', () => {
+    renderLogin('/login?returnTo=%2Fwatchlist');
+
+    expect(screen.getByRole('link', { name: /^accueil$/i })).toHaveAttribute('href', '/');
+    expect(screen.queryByText(/rejoindre la soirée/i)).not.toBeInTheDocument();
+  });
+
   it('exposes a "Forgot password?" link to /forgot-password', () => {
     renderLogin();
     const forgotLink = screen.getByRole('link', { name: /mot de passe oublié/i });
