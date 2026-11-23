@@ -354,7 +354,7 @@ describe('WheelModal', () => {
     expect(screen.getByTestId('provider-chips')).toBeInTheDocument();
   });
 
-  it("n’affiche pas les chips si watchProviders absent", () => {
+  it('n’affiche pas les chips si watchProviders absent', () => {
     wrap(
       <WheelModal
         open
@@ -504,7 +504,7 @@ describe('WheelModal', () => {
     expect(screen.getByRole('heading', { name: /^film sélectionné/i })).toBeInTheDocument();
   });
 
-  it("remet l’etat a spinning quand wheelKey change", () => {
+  it('remet l’etat a spinning quand wheelKey change', () => {
     const { rerender } = wrap(
       <WheelModal
         open
@@ -614,7 +614,7 @@ describe('WheelModal', () => {
     expect(onSpinComplete).toHaveBeenCalledOnce();
   });
 
-  it("skipSpin : n’appelle onSpinComplete qu’une fois si le parent rerend", () => {
+  it('skipSpin : n’appelle onSpinComplete qu’une fois si le parent rerend', () => {
     const onSpinComplete = vi.fn();
     const { rerender } = wrap(
       <WheelModal

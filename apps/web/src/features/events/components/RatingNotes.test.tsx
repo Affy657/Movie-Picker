@@ -104,7 +104,7 @@ describe('RatingNotes', () => {
   it('says so when nobody rated yet', () => {
     renderNotes({ participants: rows.map((row) => ({ ...row, value: null })) });
 
-    expect(screen.getByText("Personne n’a encore noté ce film.")).toBeInTheDocument();
+    expect(screen.getByText('Personne n’a encore noté ce film.')).toBeInTheDocument();
     expect(screen.queryByRole('list')).not.toBeInTheDocument();
     expect(screen.queryByText(/Moyenne/)).not.toBeInTheDocument();
   });
@@ -116,7 +116,7 @@ describe('RatingNotes', () => {
       selfAction: <a href="/e/soiree?rate">Noter</a>,
     });
 
-    expect(screen.queryByText("Personne n’a encore noté ce film.")).not.toBeInTheDocument();
+    expect(screen.queryByText('Personne n’a encore noté ce film.')).not.toBeInTheDocument();
     expect(screen.getAllByRole('listitem')).toHaveLength(4);
     expect(screen.getByRole('link', { name: 'Noter' })).toBeInTheDocument();
     expect(screen.getAllByText('Pas encore noté')).toHaveLength(3);

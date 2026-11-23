@@ -199,7 +199,7 @@ describe('CatalogListPage', () => {
 
     expect(await screen.findByRole('button', { name: 'Enregistrée' })).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { level: 1, name: "Frissons d’automne" })
+      screen.getByRole('heading', { level: 1, name: 'Frissons d’automne' })
     ).toBeInTheDocument();
     expect(screen.getByText('Sélection d’Explorer')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /retour à l’accueil/i })).toHaveAttribute('href', '/');

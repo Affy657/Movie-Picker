@@ -49,7 +49,7 @@ describe('HomeThemeFans', () => {
     ).closest('section') as HTMLElement;
     expect(within(section).getByText('Une sélection prête à lancer')).toBeInTheDocument();
     const links = await within(section).findAllByRole('link');
-    expect(links.map((link) => link.textContent)).toEqual(["Frissons d’automne", 'Années 80']);
+    expect(links.map((link) => link.textContent)).toEqual(['Frissons d’automne', 'Années 80']);
     expect(links[0]).toHaveAttribute('href', '/films/theme/frissons');
     expect((links[0] as HTMLElement).querySelectorAll('img')).toHaveLength(3);
   });
