@@ -3480,7 +3480,7 @@ export const fr = {
         'Les choix techniques sont donnés avec leur prix quand ils en ont un, et ce qui reste à faire est nommé : la section {{trajectory}} liste les chantiers encore ouverts.',
     },
     figure: {
-      scrollHint: 'Faites glisser pour voir tout le schéma',
+      scrollHint: 'Faites glisser',
       regionLabel: 'Schéma : {{title}}',
     },
     nav: {

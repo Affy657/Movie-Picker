@@ -61,7 +61,7 @@
 
 .figure {
   min-width: 0;
-  padding: var(--space-6);
+  padding: var(--space-6) var(--space-3);
 }
 
 .figureFrame {
@@ -149,6 +149,7 @@
 .svgSub {
   font-family: var(--font-mono);
   font-size: var(--font-size-2xs);
+  letter-spacing: var(--tracking-tighter);
 }
 
 .caption {

@@ -3431,7 +3431,7 @@ export const en: Locale = {
         'Technical choices come with their cost when they have one, and what is left to do is named: section {{trajectory}} lists the work still open.',
     },
     figure: {
-      scrollHint: 'Swipe to see the whole diagram',
+      scrollHint: 'Swipe',
       regionLabel: 'Diagram: {{title}}',
     },
     nav: {
