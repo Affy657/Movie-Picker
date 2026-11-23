@@ -872,6 +872,10 @@ export const en: Locale = {
       intro: 'Join the event to suggest films and vote.',
       signedOutIntro: 'Log in or create an account to join the event.',
     },
+    inviteCard: {
+      title: 'Invite your friends',
+      lead: 'A movie night takes a few people: send this link, your friends join, suggest their movies and vote.',
+    },
     participants: {
       dialogTitle: 'Participants ({{count}})',
       empty: 'Nobody has joined the event yet.',
@@ -1455,6 +1459,7 @@ export const en: Locale = {
     list: {
       emptyTitle: 'No movies suggested yet',
       emptyParticipant: 'Suggest the first movie, the wheel comes next.',
+      emptyHostAlone: 'While your friends are on their way, suggest the first movie.',
       emptyVisitor: 'Join the movie night to suggest the first movie.',
       emptyVisitorFull: 'The participants have not suggested anything yet.',
       voteUp: 'Vote up',

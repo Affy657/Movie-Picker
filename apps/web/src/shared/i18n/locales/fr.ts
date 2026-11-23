@@ -880,6 +880,10 @@ export const fr = {
       intro: 'Rejoignez la soirée pour proposer des films et voter.',
       signedOutIntro: 'Connectez-vous ou créez un compte pour rejoindre la soirée.',
     },
+    inviteCard: {
+      title: 'Invitez vos amis',
+      lead: 'Une soirée se joue à plusieurs : envoyez ce lien, vos amis rejoignent la soirée, proposent leurs films et votent.',
+    },
     participants: {
       dialogTitle: 'Participants ({{count}})',
       empty: "Personne n'a encore rejoint la soirée.",
@@ -1471,6 +1475,7 @@ export const fr = {
     list: {
       emptyTitle: 'Aucun film proposé',
       emptyParticipant: 'Proposez le premier film, la roue viendra ensuite.',
+      emptyHostAlone: 'En attendant vos amis, proposez le premier film.',
       emptyVisitor: 'Rejoignez la soirée pour proposer le premier film.',
       emptyVisitorFull: "Les participants n'ont encore rien proposé.",
       voteUp: 'Voter pour',

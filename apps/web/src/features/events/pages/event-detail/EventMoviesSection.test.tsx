@@ -154,6 +154,70 @@ describe('EventMoviesSection (MSW)', () => {
       expect(onAddMovieOpenChange).toHaveBeenCalledWith(true);
     });
 
+    it('asks a host alone on the night to invite friends, with the link to copy', async () => {
+      const user = userEvent.setup();
+      server.use(authedUserHandler, watchlistHandler([]));
+      renderSection({
+        movies: [],
+        event: {
+          ...EVENT,
+          isHost: true,
+          participantCount: 1,
+          participants: [{ id: 'p1', pseudo: 'Alice', isCreator: true }],
+        },
+      });
+
+      const invite = screen.getByRole('region', { name: 'Invitez vos amis' });
+      expect(within(invite).getByText(/\/e\/soiree-cine$/)).toBeInTheDocument();
+      expect(
+        screen.queryByText('Proposez le premier film, la roue viendra ensuite.')
+      ).not.toBeInTheDocument();
+      expect(
+        within(screen.getByRole('region', { name: 'Films proposés' })).getByRole('button', {
+          name: 'Proposer un film',
+        })
+      ).toBeInTheDocument();
+
+      await user.click(within(invite).getByRole('button', { name: 'Copier' }));
+
+      expect(await navigator.clipboard.readText()).toBe(
+        `${globalThis.location.origin}/e/soiree-cine`
+      );
+      expect(within(invite).getByRole('button', { name: 'Copié' })).toBeInTheDocument();
+    });
+
+    it('keeps inviting a host alone once a movie is proposed, and stops once a friend joins', () => {
+      server.use(authedUserHandler, watchlistHandler([]));
+      const alone: EventData = {
+        ...EVENT,
+        isHost: true,
+        participantCount: 1,
+        participants: [{ id: 'p1', pseudo: 'Alice', isCreator: true }],
+      };
+      const { unmount } = renderSection({ event: alone });
+      expect(screen.getByRole('region', { name: 'Invitez vos amis' })).toBeInTheDocument();
+      unmount();
+
+      renderSection({
+        event: {
+          ...alone,
+          participantCount: 2,
+          participants: [...(alone.participants ?? []), { id: 'p2', pseudo: 'Bob' }],
+        },
+      });
+      expect(screen.queryByRole('region', { name: 'Invitez vos amis' })).toBeNull();
+    });
+
+    it('leaves a guest with the usual empty state, without the invitation', () => {
+      server.use(authedUserHandler, watchlistHandler([]));
+      renderSection({ movies: [], event: { ...EVENT, isHost: false, participantCount: 1 } });
+
+      expect(screen.queryByRole('region', { name: 'Invitez vos amis' })).toBeNull();
+      expect(
+        screen.getByText('Proposez le premier film, la roue viendra ensuite.')
+      ).toBeInTheDocument();
+    });
+
     it('tells a visitor to join first and offers no proposal button', () => {
       server.use(authedUserHandler, watchlistHandler([]));
       renderSection({ movies: [], participant: null });

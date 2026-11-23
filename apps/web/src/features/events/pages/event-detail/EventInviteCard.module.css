@@ -1,0 +1,64 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-tint);
+  color: var(--color-primary-text);
+}
+
+.text {
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--leading-tight);
+}
+
+.lead {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--leading-relaxed);
+  color: var(--color-text-muted);
+}
+
+.linkRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border-field);
+  border-radius: var(--radius-md);
+  background: var(--color-input-bg);
+}
+
+.link {
+  flex: 1 1 12rem;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: var(--font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
