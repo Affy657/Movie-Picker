@@ -359,7 +359,7 @@ export default function EventWheelActions(props: Readonly<EventWheelActionsProps
   const { t } = useTranslation();
   if (wheel.manualMode || wheel.removalMode) return <SelectionBar wheel={wheel} t={t} />;
 
-  const dense = countButtons(plan) + (plan.chosen ? 1 : 0) >= 3;
+  const dense = plan.chosen || countButtons(plan) >= 3;
   const ordered = weightedActions(props, dense, t);
 
   if (!plan.chosen && !plan.manage && ordered.length === 0) return null;
