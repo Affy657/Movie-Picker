@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Infrastructure.Tmdb;
 using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
@@ -64,7 +65,7 @@ public sealed class ProfileBannerEndpointsTests : IClassFixture<MoviePickerAppli
         var visitor = await _factory.CreateClient().GetFromJsonAsync<PublicProfileResponse>($"/api/v1/users/{profile.Handle}", Json);
         Assert.Equal("film", visitor!.Banner!.Source);
         Assert.Equal(FilmId, visitor.Banner.TmdbId);
-        Assert.Equal("Film E2E Stub", visitor.Banner.Title);
+        Assert.Equal(StubTmdbMovieSearch.TitleOf(FilmId), visitor.Banner.Title);
         Assert.Equal(profile.Banner.ImageUrl, visitor.Banner.ImageUrl);
     }
 

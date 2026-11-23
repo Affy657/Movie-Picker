@@ -44,6 +44,6 @@ public sealed class AddMovieResponseTests : IClassFixture<MoviePickerApplication
         Assert.Equal(0, posted.GetProperty("score").GetInt32());
         Assert.Equal(JsonValueKind.Null, posted.GetProperty("myVote").ValueKind);
         Assert.Equal(120, posted.GetProperty("runtimeMinutes").GetInt32());
-        Assert.Equal("/api/v1/posters/tmdb/w500/abc.jpg", posted.GetProperty("posterPath").GetString());
+        Assert.Equal(JsonValueKind.Null, posted.GetProperty("posterPath").ValueKind);
     }
 }

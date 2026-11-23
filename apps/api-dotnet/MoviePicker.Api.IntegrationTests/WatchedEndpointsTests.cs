@@ -7,6 +7,7 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Infrastructure.Tmdb;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -15,7 +16,7 @@ public sealed class WatchedEndpointsTests : IClassFixture<MoviePickerApplication
 {
     private const string Route = "/api/v1/watched";
 
-    private const string StubTmdbTitle = "Film E2E Stub";
+    private static readonly string StubTmdbTitle = StubTmdbMovieSearch.TitleOf(603);
 
     private static readonly JsonSerializerOptions Json = new()
     {

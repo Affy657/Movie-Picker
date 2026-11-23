@@ -18,7 +18,7 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
     [
         "newfollower", "movieadded", "moviepicked", "participantjoined", "eventdeleted", "eventreminder1h",
         "eventreminder24h", "eventinvitation", "eventpending", "moviepickedmanually",
-        "letterboxdreconciliationpending", "eventdatechanged", "ratingreminder", "listinvitation", "groupinvitation", "groupnight"
+        "letterboxdreconciliationpending", "eventdatechanged", "ratingreminder", "listinvitation", "groupinvitation", "groupnight", "hostrolereceived"
     ];
 
     private static readonly string[] Lifecycles = ["upcoming", "live", "pending", "finished"];
