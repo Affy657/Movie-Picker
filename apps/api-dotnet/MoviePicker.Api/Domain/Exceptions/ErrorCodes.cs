@@ -121,6 +121,7 @@ public static class ErrorCodes
     public const string PasswordNeedsDigit = "password_needs_digit";
     public const string DisplayNameRequired = "display_name_required";
     public const string DisplayNameTooLong = "display_name_too_long";
+    public const string EmailInvalid = "email_invalid";
     public const string HandleRequired = "handle_required";
     public const string HandleTooShort = "handle_too_short";
     public const string HandleTooLong = "handle_too_long";

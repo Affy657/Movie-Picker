@@ -335,6 +335,9 @@ public static class Errors
     public static BadRequestException DisplayNameTooLong(int max) =>
         new($"Display name cannot exceed {max} characters", ErrorCodes.DisplayNameTooLong, Params(("max", max)));
 
+    public static BadRequestException EmailInvalid() =>
+        new("This e-mail address has no valid domain", ErrorCodes.EmailInvalid);
+
     public static BadRequestException HandleRequired() =>
         new("Handle is required", ErrorCodes.HandleRequired);
 

@@ -1,4 +1,5 @@
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -8,8 +9,8 @@ public static class FriendGroupPolicy
 {
     public static string NormalizeName(string? raw)
     {
-        var trimmed = (raw ?? string.Empty).Trim();
-        if (trimmed.Length == 0)
+        var trimmed = UserText.Clean(raw);
+        if (!UserText.HasVisibleCharacter(trimmed))
             throw Errors.FriendGroupNameRequired();
         if (trimmed.Length > FriendGroup.MaxNameLength)
             throw Errors.FriendGroupNameTooLong(FriendGroup.MaxNameLength);

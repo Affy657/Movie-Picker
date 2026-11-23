@@ -2696,6 +2696,8 @@ export const fr = {
     handle_invalid_characters:
       'Le pseudo ne peut contenir que des lettres minuscules, des chiffres et des tirets bas.',
     handle_reserved: 'Ce pseudo est réservé.',
+    email_invalid:
+      'Adresse e-mail incomplète : vérifiez ce qui suit « @ » (par exemple « exemple.fr »).',
     bio_too_long: 'La bio ne peut pas dépasser {{max}} caractères.',
     invalid_reset_token: 'Token invalide ou expiré.',
     letterboxd_username_invalid:

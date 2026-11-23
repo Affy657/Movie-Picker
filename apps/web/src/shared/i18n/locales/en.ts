@@ -2662,6 +2662,7 @@ export const en: Locale = {
     handle_invalid_characters:
       'Your username can only contain lowercase letters, digits and underscores.',
     handle_reserved: 'This username is reserved.',
+    email_invalid: 'Incomplete e-mail address: check what follows “@” (for example “example.com”).',
     bio_too_long: 'Bio cannot exceed {{max}} characters.',
     invalid_reset_token: 'Invalid or expired token.',
     letterboxd_username_invalid:

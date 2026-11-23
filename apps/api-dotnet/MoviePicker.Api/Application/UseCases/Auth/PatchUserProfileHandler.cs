@@ -102,7 +102,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             var err = AuthInputValidation.ValidateDisplayName(request.DisplayName);
             if (err is not null)
                 throw err;
-            displayName = request.DisplayName.Trim();
+            displayName = AuthInputValidation.CleanDisplayName(request.DisplayName);
         }
 
         var theme = user.UiTheme;
