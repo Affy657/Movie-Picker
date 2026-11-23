@@ -58,6 +58,7 @@ Rien pour l'instant.
 
 ### Accueil, aide et contact
 
+- `L` **Soirée de démo sans compte** : un bouton de l'accueil ouvre une soirée déjà remplie de participants fictifs, de films proposés et de votes, où le visiteur vote et lance la roue sans créer de compte. De quoi comprendre le produit seul, en une minute, avant de s'inscrire.
 - `M` **Onboarding pour nouveaux utilisateurs** : mini tour guidé ou écran de bienvenue à la première connexion, expliquant le concept (créer une soirée, voter, la roue).
 - `S` **FAQ / Centre d'aide** : page qui répond aux questions récurrentes (fonctionnement de la roue, invitation, votes), accessible depuis le pied de page.
 - `S` **Serveur Discord Movie Picker** : un serveur communautaire pour les retours, les idées et l'annonce des versions, avec un lien d'invitation dans le pied de page et le centre d'aide, sans remplacer les tickets GitHub.
