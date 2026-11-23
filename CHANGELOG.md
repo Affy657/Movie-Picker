@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.29.1] - 2026-11-23
+
 ### Fixed
 
 - **La recherche de la barre de navigation reste à jour et se referme mieux** : une liste, un groupe ou une soirée que vous venez de changer apparaît tel quel à la recherche suivante, « Rien ne correspond » ne s'affiche plus sous des mots encore en cours de recherche, la loupe referme la recherche qu'elle a ouverte, et Échap rend la main au champ d'Explorer.
@@ -985,7 +987,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.29.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.29.1...HEAD
+[1.29.1]: https://github.com/Affy657/Movie-Picker/compare/v1.29.0...v1.29.1
 [1.29.0]: https://github.com/Affy657/Movie-Picker/compare/v1.28.0...v1.29.0
 [1.28.0]: https://github.com/Affy657/Movie-Picker/compare/v1.27.2...v1.28.0
 [1.27.2]: https://github.com/Affy657/Movie-Picker/compare/v1.27.1...v1.27.2
