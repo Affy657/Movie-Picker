@@ -100,14 +100,14 @@ export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>
           <ul className={styles.socialList} aria-label={t('footer.socialTitle')}>
             <li>
               <a
-                href="https://github.com/Affy657"
+                href="https://github.com/Affy657/Movie-Picker"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={styles.socialLink}
                 aria-label={t('footer.githubLabel')}
               >
                 <GitHubIcon />
-                GitHub
+                {t('footer.sourceCode')}
               </a>
             </li>
             <li>

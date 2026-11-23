@@ -61,6 +61,16 @@ describe('Footer release notes', () => {
   });
 });
 
+describe('Footer source code', () => {
+  it('links the GitHub repository of the project, not the author profile', () => {
+    renderFooter();
+
+    const link = screen.getByRole('link', { name: 'Code source sur GitHub (nouvel onglet)' });
+    expect(link).toHaveAttribute('href', 'https://github.com/Affy657/Movie-Picker');
+    expect(link).toHaveTextContent('Code source');
+  });
+});
+
 describe('Footer language', () => {
   it('switches the interface language from the footer', async () => {
     const user = userEvent.setup();
