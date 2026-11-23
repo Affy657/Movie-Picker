@@ -16,7 +16,11 @@ import Field from '@/shared/components/Field';
 
 export default function RegisterPage() {
   const { t } = useTranslation();
-  useNoindexPage(pageTitle(t('auth.register.title')), ROUTES.register);
+  useNoindexPage(
+    pageTitle(t('auth.register.title')),
+    ROUTES.register,
+    t('auth.register.seoDescription')
+  );
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const returnTo = safeReturnTo(params.get('returnTo'));

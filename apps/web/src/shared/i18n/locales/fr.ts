@@ -428,6 +428,8 @@ export const fr = {
     login: {
       title: 'Connexion',
       description: 'Acc\u00e9dez \u00e0 vos soir\u00e9es et \u00e0 votre profil.',
+      seoDescription:
+        'Connectez-vous à Movie Picker pour retrouver vos soirées ciné, vos listes et votre profil.',
       emailLabel: 'E-mail',
       passwordLabel: 'Mot de passe',
       submit: 'Se connecter',
@@ -443,6 +445,8 @@ export const fr = {
     register: {
       title: 'Inscription',
       description: 'Cr\u00e9ez un compte pour retrouver vos soir\u00e9es.',
+      seoDescription:
+        'Créez votre compte Movie Picker, gratuit, pour organiser vos soirées ciné : chacun propose, tout le monde vote, la roue tranche.',
       emailLabel: 'E-mail',
       passwordLabel: 'Mot de passe',
       passwordRulesHint: '8 caract\u00e8res minimum, au moins une lettre et un chiffre.',
@@ -482,6 +486,8 @@ export const fr = {
       title: 'Mot de passe oublié',
       description:
         'Indiquez votre e-mail pour recevoir un lien de réinitialisation. Le lien est valable 30 minutes.',
+      seoDescription:
+        'Recevez par e-mail un lien pour réinitialiser le mot de passe de votre compte Movie Picker.',
       emailLabel: 'E-mail',
       submit: 'Recevoir le lien',
       submitting: 'Envoi\u2026',

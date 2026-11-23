@@ -135,6 +135,14 @@ describe('LoginPage (MSW)', () => {
     });
   });
 
+  it('describes the page for link previews', () => {
+    renderLogin();
+    expect(document.head.querySelector('meta[name="description"]')).toHaveAttribute(
+      'content',
+      'Connectez-vous à Movie Picker pour retrouver vos soirées ciné, vos listes et votre profil.'
+    );
+  });
+
   it('exposes a "Forgot password?" link to /forgot-password', () => {
     renderLogin();
     const forgotLink = screen.getByRole('link', { name: /mot de passe oublié/i });

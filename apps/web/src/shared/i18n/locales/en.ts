@@ -430,6 +430,8 @@ export const en: Locale = {
     login: {
       title: 'Log in',
       description: 'Access your events and profile.',
+      seoDescription:
+        'Log in to Movie Picker to find your movie nights, your lists and your profile.',
       emailLabel: 'Email',
       passwordLabel: 'Password',
       submit: 'Log in',
@@ -445,6 +447,8 @@ export const en: Locale = {
     register: {
       title: 'Sign up',
       description: 'Create an account to keep track of your events.',
+      seoDescription:
+        'Create your free Movie Picker account to organise movie nights: everyone proposes, everyone votes, the wheel decides.',
       emailLabel: 'Email',
       passwordLabel: 'Password',
       passwordRulesHint: 'At least 8 characters, including a letter and a number.',
@@ -482,6 +486,8 @@ export const en: Locale = {
     forgotPassword: {
       title: 'Forgot password',
       description: 'Enter your email to receive a reset link. The link is valid for 30 minutes.',
+      seoDescription:
+        'Get an email with a link to reset the password of your Movie Picker account.',
       emailLabel: 'Email',
       submit: 'Send the link',
       submitting: 'Sending\u2026',

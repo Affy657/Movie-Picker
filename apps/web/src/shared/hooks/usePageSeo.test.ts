@@ -133,6 +133,21 @@ describe('usePageSeo', () => {
     expect(document.head.querySelector('script[type="application/ld+json"]')).toBeNull();
   });
 
+  it('gives a film page its Open Graph video type', () => {
+    renderHook(() => usePageSeo({ title: 'Heat (1995)', ogType: 'video.movie', noindex: true }));
+
+    expect(meta('meta[property="og:type"]')).toBe('video.movie');
+  });
+
+  it('useNoindexPage takes the description of the page when it has one', () => {
+    renderHook(() =>
+      useNoindexPage('Connexion | Movie Picker', '/login', 'Retrouvez vos soirées.')
+    );
+
+    expect(meta('meta[name="description"]')).toBe('Retrouvez vos soirées.');
+    expect(meta('meta[property="og:description"]')).toBe('Retrouvez vos soirées.');
+  });
+
   it('useNoindexPage pose noindex et un canonical de la route', () => {
     renderHook(() => useNoindexPage('Connexion | Movie Picker', '/login'));
     expect(document.title).toBe('Connexion | Movie Picker');

@@ -22,6 +22,7 @@ describe('DonatePage', () => {
     expect(
       screen.getByRole('heading', { name: /soutenir movie picker/i, level: 1 })
     ).toBeInTheDocument();
+    expect(document.title).toBe('Soutenir Movie Picker');
 
     const cta = screen.getByRole('link', { name: /faire un don sur ko-fi/i });
     expect(cta).toHaveAttribute('href', KOFI_URL);

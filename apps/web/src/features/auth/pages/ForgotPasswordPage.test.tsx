@@ -38,6 +38,14 @@ describe('ForgotPasswordPage', () => {
     expect(screen.getByRole('button', { name: /recevoir le lien/i })).toBeInTheDocument();
   });
 
+  it('describes the page for link previews', () => {
+    renderForgot();
+    expect(document.head.querySelector('meta[name="description"]')).toHaveAttribute(
+      'content',
+      'Recevez par e-mail un lien pour réinitialiser le mot de passe de votre compte Movie Picker.'
+    );
+  });
+
   it('soumet le formulaire et appelle l API avec email + locale', async () => {
     const user = userEvent.setup();
     let captured: { email?: string; locale?: string } | null = null;

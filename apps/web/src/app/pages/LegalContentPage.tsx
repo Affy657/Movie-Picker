@@ -44,6 +44,7 @@ export default function LegalContentPage({
   const { t } = useTranslation();
   usePageSeo({
     title: pageTitle(heading),
+    description: intro,
     canonical,
     noindex: true,
   });

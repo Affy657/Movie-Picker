@@ -14,7 +14,11 @@ import Field from '@/shared/components/Field';
 
 export default function ForgotPasswordPage() {
   const { t, locale } = useTranslation();
-  useNoindexPage(pageTitle(t('auth.forgotPassword.title')), ROUTES.forgotPassword);
+  useNoindexPage(
+    pageTitle(t('auth.forgotPassword.title')),
+    ROUTES.forgotPassword,
+    t('auth.forgotPassword.seoDescription')
+  );
   const [params] = useSearchParams();
   const loginTo = withReturnTo(ROUTES.login, safeReturnTo(params.get('returnTo')));
   const [email, setEmail] = useState('');

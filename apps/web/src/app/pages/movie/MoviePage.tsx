@@ -414,6 +414,7 @@ function MoviePageContent({
     description: details?.overview ?? undefined,
     canonical: absoluteUrl(canonicalPath),
     image: view.backdropSrc ?? undefined,
+    ogType: mediaType === 'tv' ? 'video.tv_show' : 'video.movie',
     noindex: true,
   });
 

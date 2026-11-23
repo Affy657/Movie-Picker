@@ -107,6 +107,14 @@ describe('RegisterPage (MSW)', () => {
     );
   });
 
+  it('describes the page for link previews', () => {
+    renderRegister();
+    expect(document.head.querySelector('meta[name="description"]')).toHaveAttribute(
+      'content',
+      'Créez votre compte Movie Picker, gratuit, pour organiser vos soirées ciné : chacun propose, tout le monde vote, la roue tranche.'
+    );
+  });
+
   it('n’appelle pas l’API si le mot de passe ne contient pas de chiffre', async () => {
     const user = userEvent.setup();
     let registerPosts = 0;

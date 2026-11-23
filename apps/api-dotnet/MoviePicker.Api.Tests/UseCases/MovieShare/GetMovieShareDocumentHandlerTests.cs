@@ -80,6 +80,8 @@ public sealed class GetMovieShareDocumentHandlerTests
         Assert.Contains("<title>Inception (2010) | Movie Picker</title>", document.Html);
         Assert.Contains("<div id=\"root\"></div>", document.Html);
         Assert.DoesNotContain("Titre du site", document.Html);
+        Assert.Equal("video.movie", Meta(document.Html, "og:type"));
+        Assert.Equal("summary_large_image", Meta(document.Html, "twitter:card"));
     }
 
     [Fact]
@@ -92,6 +94,7 @@ public sealed class GetMovieShareDocumentHandlerTests
         Assert.Equal(200, document.StatusCode);
         Assert.Equal("Game of Thrones (2011)", Meta(document.Html, "og:title"));
         Assert.Equal("https://web.example/serie/1399-game-of-thrones", Meta(document.Html, "og:url"));
+        Assert.Equal("video.tv_show", Meta(document.Html, "og:type"));
     }
 
     [Fact]
@@ -150,6 +153,7 @@ public sealed class GetMovieShareDocumentHandlerTests
 
         Assert.Equal("https://api.example/api/v1/posters/tmdb/w500/inception.jpg", Meta(document.Html, "og:image"));
         Assert.Equal("Affiche de Inception", Meta(document.Html, "og:image:alt"));
+        Assert.Equal("summary", Meta(document.Html, "twitter:card"));
     }
 
     [Fact]
@@ -161,6 +165,7 @@ public sealed class GetMovieShareDocumentHandlerTests
 
         Assert.Equal("https://web.example/og-image.png", Meta(document.Html, "og:image"));
         Assert.Equal("Movie Picker", Meta(document.Html, "og:image:alt"));
+        Assert.Equal("summary_large_image", Meta(document.Html, "twitter:card"));
     }
 
     [Fact]

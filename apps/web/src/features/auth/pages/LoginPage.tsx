@@ -23,7 +23,7 @@ type LoginSubmitMode = 'form' | 'devQuick';
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  useNoindexPage(pageTitle(t('auth.login.title')), ROUTES.login);
+  useNoindexPage(pageTitle(t('auth.login.title')), ROUTES.login, t('auth.login.seoDescription'));
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const returnTo = safeReturnTo(params.get('returnTo'));
