@@ -14,6 +14,7 @@ import { http, HttpResponse } from 'msw';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { stubHoverCapability } from '@/test-utils/matchMedia';
 import { authMeGuestHandler, createWatchedHandlers, TEST_API_V1 } from '@/mocks/handlers';
+import { apiErrorJson, apiJson, type ApiSchemas } from '@/mocks/apiJson';
 import ShowcaseListPage, { type ShowcaseListVariant } from '@/app/pages/ShowcaseListPage';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { MOVIE_PAGE_CHUNK } from '@/app/moviePageChunk';
@@ -45,6 +46,32 @@ const showcaseHandler = http.get(`${TEST_API_V1}/movies/showcase`, ({ request })
     tmdbAttributionUrl: 'https://www.themoviedb.org/',
   });
 });
+
+function searchItem(index: number, title: string): ApiSchemas['MovieSearchItemResponse'] {
+  return {
+    id: 3000 + index,
+    mediaType: 'movie',
+    title,
+    year: `${2000 + index}`,
+    posterPath: null,
+    voteAverage: null,
+    runtimeMinutes: null,
+    watchProviders: null,
+    tmdbWatchPageUrl: null,
+    genreIds: [ACTION_GENRE],
+  };
+}
+
+function searchHandler(results: (query: string) => ApiSchemas['MovieSearchItemResponse'][]) {
+  return http.get(`${TEST_API_V1}/movies/search`, ({ request }) =>
+    apiJson<'MovieSearchListResponse'>({
+      items: results(new URL(request.url).searchParams.get('q') ?? ''),
+      watchProvidersRegion: 'FR',
+      disclaimer: '',
+      tmdbAttributionUrl: '',
+    })
+  );
+}
 
 const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
   HttpResponse.json({
@@ -174,7 +201,7 @@ describe('ShowcaseListPage', () => {
     await screen.findByText('Film 1');
     await userEvent.type(screen.getByLabelText(/filtrer dans cette liste/i), 'Film 1');
 
-    expect(await screen.findByText('1 films sur 3')).toBeInTheDocument();
+    expect(await screen.findByText('1 film sur 3')).toBeInTheDocument();
     expect(screen.queryByText('Film 3')).not.toBeInTheDocument();
   });
 
@@ -231,7 +258,82 @@ describe('ShowcaseListPage', () => {
     expect(
       screen.getByRole('heading', { name: /résultats pour « dune »/i, level: 1 })
     ).toBeInTheDocument();
-    expect(await screen.findByText('Film 9')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Film 9', level: 3 })).toBeInTheDocument();
+  });
+
+  it('names each search result under its poster, with its year', async () => {
+    server.use(
+      authMeGuestHandler,
+      searchHandler((query) => [searchItem(9, `${query} 9`)])
+    );
+    renderPage('search', '/films/recherche?q=dune', '/films/recherche');
+
+    expect(await screen.findAllByText('dune 9')).toHaveLength(2);
+    expect(screen.getAllByText('2009')).toHaveLength(2);
+  });
+
+  it('tells a search that found nothing apart from an empty selection', async () => {
+    server.use(
+      authMeGuestHandler,
+      searchHandler(() => [])
+    );
+    renderPage('search', '/films/recherche?q=zzzz', '/films/recherche');
+
+    expect(await screen.findByText(/aucun film ne correspond à « zzzz »/i)).toBeInTheDocument();
+    expect(screen.queryByText(/sélection/i)).not.toBeInTheDocument();
+  });
+
+  it('tells a search that failed apart from a selection out of order', async () => {
+    server.use(
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/movies/search`, () => apiErrorJson(503, 'search_unavailable'))
+    );
+    renderPage('search', '/films/recherche?q=dune', '/films/recherche');
+
+    expect(await screen.findByText(/la recherche n’a pas abouti/i)).toBeInTheDocument();
+    expect(screen.queryByText(/sélection/i)).not.toBeInTheDocument();
+  });
+
+  it('runs a new search from the field of the search page', async () => {
+    const user = userEvent.setup();
+    const queries: string[] = [];
+    server.use(
+      authMeGuestHandler,
+      searchHandler((query) => {
+        queries.push(query);
+        return [searchItem(1, `${query} 1`), searchItem(2, `${query} 2`)];
+      })
+    );
+    renderPage('search', '/films/recherche?q=dune', '/films/recherche');
+
+    await screen.findByRole('heading', { name: 'dune 1', level: 3 });
+    expect(screen.queryByLabelText(/filtrer dans cette liste/i)).not.toBeInTheDocument();
+    const field = screen.getByRole('searchbox', { name: /rechercher un film/i });
+    expect(field).toHaveValue('dune');
+
+    await user.clear(field);
+    await user.type(field, 'rocky');
+
+    expect(await screen.findByRole('heading', { name: 'rocky 1', level: 3 })).toBeInTheDocument();
+    expect(screen.getByTestId('location')).toHaveTextContent('/films/recherche?q=rocky');
+    expect(queries).toEqual(['dune', 'rocky']);
+    expect(field).toHaveFocus();
+  });
+
+  it('keeps the search field when a new search finds nothing', async () => {
+    const user = userEvent.setup();
+    server.use(
+      authMeGuestHandler,
+      searchHandler((query) => (query === 'dune' ? [searchItem(1, 'Dune')] : []))
+    );
+    renderPage('search', '/films/recherche?q=dune', '/films/recherche');
+
+    await screen.findByRole('heading', { name: 'Dune', level: 3 });
+    const field = screen.getByRole('searchbox', { name: /rechercher un film/i });
+    await user.type(field, 'zz');
+
+    expect(await screen.findByText(/aucun film ne correspond à « dunezz »/i)).toBeInTheDocument();
+    expect(field).toHaveFocus();
   });
 
   it('shows an empty state rather than a bare page when the section returns nothing', async () => {

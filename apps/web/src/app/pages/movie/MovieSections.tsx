@@ -11,6 +11,7 @@ import ClampedText from '@/shared/components/ClampedText';
 import LinkButton from '@/shared/components/LinkButton';
 import { Skeleton, SkeletonScreen } from '@/shared/components/Skeleton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useTranslation, type Translate, type TranslationKey } from '@/shared/i18n';
 import { crewGroups } from '@/app/pages/movie/moviePageFacts';
 import styles from './MovieSections.module.css';
@@ -154,6 +155,22 @@ function CastFace({ member }: Readonly<{ member: MovieCastMember }>) {
   return <Avatar avatarId={null} pseudo={member.name} size="lg" />;
 }
 
+function CastRail({ children }: Readonly<{ children: ReactNode }>) {
+  const { t } = useTranslation();
+  const isMobile = useIsMobile();
+  if (!isMobile) return children;
+  return (
+    <div
+      className={styles.castRail}
+      role="region"
+      aria-label={t('moviePage.castScrollAria')}
+      tabIndex={0}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function MovieCast({ cast }: Readonly<{ cast: MovieCastMember[] }>) {
   const { t } = useTranslation();
   const listId = useId();
@@ -177,19 +194,21 @@ export function MovieCast({ cast }: Readonly<{ cast: MovieCastMember[] }>) {
         ) : undefined
       }
     >
-      <ul id={listId} className={styles.cast}>
-        {visible.map((member, index) => (
-          <li key={`${member.name}-${member.character ?? index}`} className={styles.person}>
-            <CastFace member={member} />
-            <span className={styles.personText}>
-              <span className={styles.personName}>{member.name}</span>
-              {member.character ? (
-                <span className={styles.personRole}>{member.character}</span>
-              ) : null}
-            </span>
-          </li>
-        ))}
-      </ul>
+      <CastRail>
+        <ul id={listId} className={styles.cast}>
+          {visible.map((member, index) => (
+            <li key={`${member.name}-${member.character ?? index}`} className={styles.person}>
+              <CastFace member={member} />
+              <span className={styles.personText}>
+                <span className={styles.personName}>{member.name}</span>
+                {member.character ? (
+                  <span className={styles.personRole}>{member.character}</span>
+                ) : null}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </CastRail>
     </Section>
   );
 }

@@ -166,10 +166,13 @@ export default function MovieCollectionsPage() {
           sortDirectionAscLabel={t('profile.movies.toolbar.sortDirectionAsc')}
           sortDirectionDescLabel={t('profile.movies.toolbar.sortDirectionDesc')}
           isFiltered={isFiltered}
-          resultCountText={t('showcase.collectionsFilteredCount', {
-            shown: visibleItems.length,
-            total: items.length,
-          })}
+          resultCountText={pluralizeCount(
+            visibleItems.length,
+            'showcase.collectionsFilteredCountOne',
+            'showcase.collectionsFilteredCount',
+            t,
+            { shown: visibleItems.length, total: items.length }
+          )}
           clearAllLabel={t('profile.movies.toolbar.clearAll')}
           onClearAll={clearAll}
           isMobile={isMobile}

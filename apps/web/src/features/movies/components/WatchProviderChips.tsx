@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { ChevronLeft, Euro, Film, PlayCircle, Tag } from 'lucide-react';
 import type { WatchProviderOffer } from '@/shared/types/movie';
 import { useTranslation, type Translate } from '@/shared/i18n';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { isSafeTmdbLogoUrl, tmdbLogoSrcForUi } from '@/shared/utils/tmdbLogo';
 import styles from './WatchProviderChips.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -68,7 +69,12 @@ function OverflowToggle({
 }: Readonly<OverflowToggleProps>) {
   const label = expanded
     ? t('movies.watchProviders.showLessAria')
-    : t('movies.watchProviders.showMoreAria', { count: hidden });
+    : pluralizeCount(
+        hidden,
+        'movies.watchProviders.showMoreAriaOne',
+        'movies.watchProviders.showMoreAria',
+        t
+      );
 
   return (
     <button

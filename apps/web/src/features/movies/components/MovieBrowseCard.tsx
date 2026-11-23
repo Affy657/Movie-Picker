@@ -63,6 +63,16 @@ interface MovieBrowseCardProps {
   rank?: number;
   showListBadge?: boolean;
   contributor?: MovieContributor | null;
+  showCaption?: boolean;
+}
+
+function PosterCaption({ title, year }: Readonly<{ title: string; year?: string }>) {
+  return (
+    <p className={badgeStyles.caption} aria-hidden>
+      <span className={badgeStyles.captionTitle}>{title}</span>
+      {year ? <span className={badgeStyles.captionYear}>{year}</span> : null}
+    </p>
+  );
 }
 
 function RowAvailability({
@@ -257,6 +267,7 @@ function BrowseMoviePoster({
   showListBadge = true,
   dimmed,
   contributor,
+  showCaption = false,
 }: Readonly<MovieBrowseCardProps>) {
   const { t } = useTranslation();
   const isTv = item.mediaType === 'tv';
@@ -277,6 +288,7 @@ function BrowseMoviePoster({
       rankLabel={rank != null ? t('showcase.rank', { rank }) : undefined}
       dimmed={dimmed}
       onOpenDetails={onOpenDetails}
+      caption={showCaption ? <PosterCaption title={item.title} year={item.year} /> : undefined}
       badges={
         hasBadges && (
           <div className={badgeStyles.badgeGroup}>

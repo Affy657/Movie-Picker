@@ -1,11 +1,11 @@
 import type { Translate, TranslationKey } from '@/shared/i18n';
 import type { LocaleCode } from '@/shared/i18n/locales';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
+import { withElision } from '@/shared/i18n/withElision';
 import type { MovieContributor } from '@/features/movies/components/movieCardParts';
 import type { MovieListAudience, MovieListPerson } from '@/features/library/api/listsApi';
 
 const NAMED_COMPANIONS = 2;
-const STARTS_WITH_VOWEL = /^[aeiouyàâäéèêëîïôöùûüÿæœ]/iu;
 
 export function isSharedList(list: MovieListAudience): boolean {
   return (list.memberCount ?? 1) > 1;
@@ -69,15 +69,7 @@ export function membersPhrase(
   return namedPhrase(names, Math.max(0, others - names.length), t);
 }
 
-export function withElision(
-  name: string,
-  plainKey: TranslationKey,
-  elidedKey: TranslationKey,
-  t: Translate,
-  vars: Record<string, string | number> = {}
-): string {
-  return t(STARTS_WITH_VOWEL.test(name) ? elidedKey : plainKey, { ...vars, name });
-}
+export { withElision };
 
 export function listOfLabel(displayName: string, t: Translate): string {
   return withElision(

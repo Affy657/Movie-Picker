@@ -50,7 +50,7 @@ public sealed partial class TmdbMovieSearch
 
         await Task.WhenAll(titleMatchesTask, creditMatchesTask);
 
-        return MergeTitleAndCreditMatches(await titleMatchesTask, await creditMatchesTask);
+        return MergeTitleAndCreditMatches(trimmedQuery, await titleMatchesTask, await creditMatchesTask);
     }
 
     public async Task<IReadOnlyList<TmdbSearchItem>> SearchTitlesAsync(
@@ -66,10 +66,11 @@ public sealed partial class TmdbMovieSearch
         if (trimmedQuery.Length == 0)
             return [];
 
-        return await FetchAndMapResultsAsync(
+        var titleMatches = await FetchAndMapResultsAsync(
             TitleSearchUrl(trimmedQuery, allowSeries),
             item => TryMapSearchItem(item, allowSeries, null, yearFrom, yearTo, null, null),
             ct);
+        return RankByTitleResemblance(trimmedQuery, titleMatches);
     }
 
     private static string TitleSearchUrl(string query, bool allowSeries) =>
@@ -127,7 +128,7 @@ public sealed partial class TmdbMovieSearch
 
             return credits.Count == 0
                 ? PersonCreditMatches.None
-                : new PersonCreditMatches(credits, person.LeadsResults);
+                : new PersonCreditMatches(credits.Take(person.CreditBudget).ToList(), person.LeadsResults);
         }
         catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
         {
@@ -152,7 +153,7 @@ public sealed partial class TmdbMovieSearch
         if (!doc.RootElement.TryGetProperty(ResultsProperty, out var results) || results.ValueKind != JsonValueKind.Array)
             return null;
 
-        var candidates = new List<(int Id, bool NameMatchesWholeWords, double Popularity)>();
+        var candidates = new List<(int Id, bool NameMatchesWholeWords, bool NamedByQuery, double Popularity)>();
         foreach (var candidate in results.EnumerateArray())
         {
             if (!candidate.TryGetProperty("name", out var nameElement) || nameElement.ValueKind != JsonValueKind.String)
@@ -171,6 +172,7 @@ public sealed partial class TmdbMovieSearch
             candidates.Add((
                 idElement.GetInt32(),
                 MatchesWholeWords(normalizedName, normalizedQuery),
+                IsFullNameOrSurname(normalizedName, normalizedQuery),
                 popularity));
         }
 
@@ -182,11 +184,15 @@ public sealed partial class TmdbMovieSearch
             .ThenByDescending(candidate => candidate.Popularity)
             .First();
 
-        return new PersonMatch(best.Id, best.NameMatchesWholeWords);
+        var creditBudget = best.NamedByQuery ? MaxResults : MaxResults / 2;
+        return new PersonMatch(best.Id, best.NameMatchesWholeWords, creditBudget);
     }
 
     private static bool MatchesWholeWords(string normalizedName, string normalizedQuery) =>
         $" {normalizedName} ".Contains($" {normalizedQuery} ", StringComparison.Ordinal);
+
+    private static bool IsFullNameOrSurname(string normalizedName, string normalizedQuery) =>
+        $" {normalizedName}".EndsWith($" {normalizedQuery}", StringComparison.Ordinal);
 
     private async Task<IReadOnlyList<TmdbSearchItem>> FetchPersonCreditsAsync(
         int personId,
@@ -238,28 +244,16 @@ public sealed partial class TmdbMovieSearch
             .ToList();
     }
 
-    private static IReadOnlyList<TmdbSearchItem> MergeTitleAndCreditMatches(
+    private static List<TmdbSearchItem> MergeTitleAndCreditMatches(
+        string query,
         IReadOnlyList<TmdbSearchItem> titleMatches,
         PersonCreditMatches creditMatches)
     {
-        if (creditMatches.Items.Count == 0)
-            return titleMatches;
-
         var ordered = creditMatches.LeadsResults
             ? creditMatches.Items.Concat(titleMatches)
             : titleMatches.Concat(creditMatches.Items);
 
-        var alreadyKept = new HashSet<(int, MovieMediaType)>();
-        var merged = new List<TmdbSearchItem>(MaxResults);
-        foreach (var item in ordered)
-        {
-            if (merged.Count >= MaxResults)
-                break;
-            if (alreadyKept.Add((item.Id, item.MediaType)))
-                merged.Add(item);
-        }
-
-        return merged;
+        return RankByTitleResemblance(query, ordered.DistinctBy(item => (item.Id, item.MediaType)));
     }
 
     private static bool IsDirectingCredit(JsonElement credit) =>

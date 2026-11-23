@@ -141,6 +141,36 @@ describe('WatchProviderChips', () => {
     expect(groups[1]?.className).not.toMatch(/groupSep/);
   });
 
+  it('agrees the hidden platforms count in the button that shows them', () => {
+    const { unmount } = renderWithLocale(
+      <WatchProviderChips
+        providers={[
+          { providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' },
+          { providerId: 9, name: 'Prime Video', logoPath: null, type: 'flatrate' },
+        ]}
+        maxVisible={1}
+      />
+    );
+    expect(
+      screen.getByRole('button', { name: 'Afficher 1 plateforme supplémentaire' })
+    ).toBeInTheDocument();
+    unmount();
+
+    renderWithLocale(
+      <WatchProviderChips
+        providers={[
+          { providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' },
+          { providerId: 9, name: 'Prime Video', logoPath: null, type: 'flatrate' },
+          { providerId: 10, name: 'Max', logoPath: null, type: 'flatrate' },
+        ]}
+        maxVisible={1}
+      />
+    );
+    expect(
+      screen.getByRole('button', { name: 'Afficher 2 plateformes supplémentaires' })
+    ).toBeInTheDocument();
+  });
+
   it('provider inconnu + watchPageUrl non TMDB : pas de lien', () => {
     renderWithLocale(
       <WatchProviderChips

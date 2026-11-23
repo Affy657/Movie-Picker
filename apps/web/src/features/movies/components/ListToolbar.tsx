@@ -85,6 +85,7 @@ export interface ListToolbarProps<TSortKey extends string> {
   trailing?: ReactNode;
   appearance?: 'card' | 'plain';
   searchAside?: ReactNode;
+  hideSearch?: boolean;
 }
 
 export default function ListToolbar<TSortKey extends string>({
@@ -116,17 +117,20 @@ export default function ListToolbar<TSortKey extends string>({
   trailing,
   appearance = 'card',
   searchAside,
+  hideSearch = false,
 }: Readonly<ListToolbarProps<TSortKey>>) {
   const divider = <span className={styles.divider} aria-hidden="true" />;
   return (
     <ToolbarFrame appearance={appearance}>
-      <ToolbarSearch
-        aside={searchAside}
-        value={search}
-        onChange={onSearchChange}
-        placeholder={searchPlaceholder}
-        ariaLabel={searchLabel}
-      />
+      {hideSearch ? null : (
+        <ToolbarSearch
+          aside={searchAside}
+          value={search}
+          onChange={onSearchChange}
+          placeholder={searchPlaceholder}
+          ariaLabel={searchLabel}
+        />
+      )}
 
       <div className={styles.bottomRow}>
         {onToggleFilters ? (

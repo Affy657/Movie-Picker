@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Moq;
 using Moq.Protected;
 using MoviePicker.Api.Application.Caching;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
@@ -58,6 +59,117 @@ public sealed class TmdbMovieSearchPersonCreditsTests
                 return Json(credits);
             return Json(titles);
         });
+
+    private const int CreditIdBase = 5000;
+    private const string NoPeopleJson = """{"results":[]}""";
+    private const string NoCreditsJson = """{"cast":[]}""";
+    private const string FuzzyTitle = "Titre approchant";
+
+    private static readonly string[] DuneTitlesByResemblance =
+        ["Dune", "Dune : Deuxième partie", "Anatomie d'une chute", "La Revanche d'une blonde"];
+
+    private static string TitleResults(params string[] titles) =>
+        "{\"results\":["
+        + string.Join(",", titles.Select((title, index) =>
+            $$"""{"id":{{100 + index}},"title":"{{title}}","release_date":"2000-01-01"}"""))
+        + "]}";
+
+    private static string CastCredits(int count) =>
+        "{\"cast\":["
+        + string.Join(",", Enumerable.Range(1, count).Select(index =>
+            $$"""{"id":{{CreditIdBase + index}},"media_type":"movie","title":"Filmographie {{index}}","release_date":"2010-01-01","popularity":{{100 - index}}}"""))
+        + "]}";
+
+    private static string Person(string name) =>
+        $$"""{"results":[{"id":77,"name":"{{name}}","popularity":25}]}""";
+
+    private static string[] FuzzyTitles(int count) =>
+        Enumerable.Range(1, count).Select(index => $"Titre {index}").ToArray();
+
+    private static bool IsCredit(TmdbSearchItem item) => item.Id > CreditIdBase;
+
+    [Theory]
+    [InlineData("rocky", "Rocky", "Rocky Carroll")]
+    [InlineData("amelie", "Le Fabuleux Destin d'Amélie Poulain", "Amélie Lens")]
+    [InlineData("leon", "Léon", "Leon Lai")]
+    [InlineData("MATILDA", "Matilda", "Matilda Lawler")]
+    public async Task SearchAsync_TitleNamedLikeAPerson_LeadsBeforeTheNamesakeCredits(
+        string query,
+        string expectedFirst,
+        string personName)
+    {
+        var titles = TitleResults(FuzzyTitle, expectedFirst);
+        var sut = CreateSut(CreateHttpClient(RouteBy(titles, Person(personName), CastCredits(20)).Object));
+
+        var result = await sut.SearchAsync(query, false);
+
+        Assert.Equal(expectedFirst, result[0].Title);
+        Assert.Contains(result, item => item.Title == FuzzyTitle);
+    }
+
+    [Fact]
+    public async Task SearchAsync_PersonFoundByFirstName_KeepsHalfThePlacesForTitles()
+    {
+        var titles = TitleResults(FuzzyTitles(15));
+        var sut = CreateSut(CreateHttpClient(RouteBy(titles, Person("Rocky Carroll"), CastCredits(20)).Object));
+
+        var result = await sut.SearchAsync("rocky", false);
+
+        Assert.Equal(20, result.Count);
+        Assert.Equal(10, result.Count(IsCredit));
+        Assert.All(result.Take(10), item => Assert.True(IsCredit(item)));
+    }
+
+    [Fact]
+    public async Task SearchAsync_PersonFoundBySurname_KeepsTheWholeFilmographyFirst()
+    {
+        var titles = TitleResults(FuzzyTitles(15));
+        var sut = CreateSut(CreateHttpClient(RouteBy(titles, Person("Christopher Nolan"), CastCredits(12)).Object));
+
+        var result = await sut.SearchAsync("nolan", false);
+
+        Assert.Equal(20, result.Count);
+        Assert.All(result.Take(12), item => Assert.True(IsCredit(item)));
+        Assert.All(result.Skip(12), item => Assert.False(IsCredit(item)));
+    }
+
+    [Fact]
+    public async Task SearchAsync_TitlesWithoutTheWord_FallBehindTitlesThatContainIt()
+    {
+        var titles = TitleResults("Anatomie d'une chute", "Dune", "La Revanche d'une blonde", "Dune : Deuxième partie");
+        var sut = CreateSut(CreateHttpClient(RouteBy(titles, NoPeopleJson, NoCreditsJson).Object));
+
+        var result = await sut.SearchAsync("dune", false);
+
+        Assert.Equal(DuneTitlesByResemblance, result.Select(item => item.Title));
+    }
+
+    [Fact]
+    public async Task SearchAsync_OriginalTitleEqualToTheQuery_Leads()
+    {
+        var titles = """
+            {"results":[
+              {"id":1,"title":"Titre approchant","release_date":"2001-01-01"},
+              {"id":2,"title":"Ça","original_title":"It","release_date":"2017-09-06"}
+            ]}
+            """;
+        var sut = CreateSut(CreateHttpClient(RouteBy(titles, NoPeopleJson, NoCreditsJson).Object));
+
+        var result = await sut.SearchAsync("it", false);
+
+        Assert.Equal("Ça", result[0].Title);
+    }
+
+    [Fact]
+    public async Task SearchTitlesAsync_RanksTitlesByResemblance()
+    {
+        var titles = TitleResults("Anatomie d'une chute", "Dune");
+        var sut = CreateSut(CreateHttpClient(RouteBy(titles, NoPeopleJson, NoCreditsJson).Object));
+
+        var result = await sut.SearchTitlesAsync("Dune", false);
+
+        Assert.Equal("Dune", result[0].Title);
+    }
 
     [Fact]
     public async Task SearchAsync_ExactFullName_PutsPersonCreditsBeforeTitleMatches()

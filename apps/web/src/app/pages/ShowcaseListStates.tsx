@@ -1,10 +1,10 @@
 import { Link } from 'react-router';
-import { Film } from 'lucide-react';
+import { Film, SearchX } from 'lucide-react';
 import { buttonClass } from '@/shared/components/Button';
 import EmptyState from '@/shared/components/EmptyState';
 import WatchlistSkeleton from '@/features/library/components/WatchlistSkeleton';
 import { ROUTES } from '@/app/routes';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import type { ShowcaseListVariant } from '@/features/movies/showcaseSections';
 import styles from './ShowcaseListPage.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -12,6 +12,7 @@ import InlineError from '@/shared/components/InlineError';
 
 type Props = {
   variant: ShowcaseListVariant;
+  searchQuery: string;
   queryEnabled: boolean;
   isPending: boolean;
   isError: boolean;
@@ -19,8 +20,38 @@ type Props = {
   onRetry: () => void;
 };
 
+type StateKeys = {
+  loading: TranslationKey;
+  error: TranslationKey;
+  empty: TranslationKey;
+  emptyMessage: TranslationKey;
+};
+
+const SEARCH_KEYS: StateKeys = {
+  loading: 'showcase.searchLoading',
+  error: 'showcase.searchError',
+  empty: 'showcase.searchEmpty',
+  emptyMessage: 'showcase.searchEmptyMessage',
+};
+
+const SELECTION_KEYS: StateKeys = {
+  loading: 'showcase.loading',
+  error: 'showcase.error',
+  empty: 'showcase.empty',
+  emptyMessage: 'showcase.emptyMessage',
+};
+
+function stateKeysOf(variant: ShowcaseListVariant): StateKeys {
+  if (variant === 'search') return SEARCH_KEYS;
+  if (variant === 'most-proposed') {
+    return { ...SELECTION_KEYS, emptyMessage: 'showcase.emptyMessageMostProposed' };
+  }
+  return SELECTION_KEYS;
+}
+
 export default function ShowcaseListStates({
   variant,
+  searchQuery,
   queryEnabled,
   isPending,
   isError,
@@ -29,6 +60,7 @@ export default function ShowcaseListStates({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const searching = variant === 'search';
+  const keys = stateKeysOf(variant);
 
   if (!queryEnabled) {
     return (
@@ -48,29 +80,22 @@ export default function ShowcaseListStates({
   }
 
   if (isPending) {
-    return <WatchlistSkeleton label={t('showcase.loading')} gridClassName={styles.grid} />;
+    return <WatchlistSkeleton label={t(keys.loading)} gridClassName={styles.grid} />;
   }
 
   if (isError) {
     return (
-      <InlineError
-        message={t('showcase.error')}
-        retryLabel={t('showcase.retry')}
-        onRetry={onRetry}
-      />
+      <InlineError message={t(keys.error)} retryLabel={t('showcase.retry')} onRetry={onRetry} />
     );
   }
 
   if (totalCount === 0) {
+    const EmptyIcon = searching ? SearchX : Film;
     return (
       <EmptyState
-        icon={<Film aria-hidden size={ICON_SIZE['3xl']} />}
-        title={t('showcase.empty')}
-        message={
-          variant === 'most-proposed'
-            ? t('showcase.emptyMessageMostProposed')
-            : t('showcase.emptyMessage')
-        }
+        icon={<EmptyIcon aria-hidden size={ICON_SIZE['3xl']} />}
+        title={t(keys.empty, { query: searchQuery })}
+        message={t(keys.emptyMessage)}
       />
     );
   }

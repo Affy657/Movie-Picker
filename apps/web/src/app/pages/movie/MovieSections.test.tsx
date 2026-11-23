@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LocaleProvider } from '@/shared/i18n';
+import { stubMatchMedia } from '@/test-utils/matchMedia';
 import { MovieCast, MovieCrew, MovieSynopsis, MovieVideos } from '@/app/pages/movie/MovieSections';
 
 const OVERVIEW = 'Prue part seule dans le Bois Impassable pour retrouver son petit frère.';
@@ -122,6 +123,23 @@ describe('MovieCast', () => {
       'aria-expanded',
       'true'
     );
+  });
+
+  it('lets the keyboard reach and scroll the cast rail on a phone', () => {
+    stubMatchMedia((query) => query.includes('max-width'));
+    renderWithLocale(<MovieCast cast={cast} />);
+
+    const rail = screen.getByRole('region', { name: 'Distribution, liste à faire défiler' });
+    expect(rail).toHaveAttribute('tabindex', '0');
+    expect(within(rail).getByText('Acteur 1')).toBeInTheDocument();
+    vi.unstubAllGlobals();
+  });
+
+  it('adds no tab stop to the cast grid on a computer', () => {
+    renderWithLocale(<MovieCast cast={cast} />);
+
+    expect(screen.queryByRole('region', { name: /à faire défiler/i })).toBeNull();
+    expect(screen.getByText('Acteur 1').closest('[tabindex]')).toBeNull();
   });
 });
 

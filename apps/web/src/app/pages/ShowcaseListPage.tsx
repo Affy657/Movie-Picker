@@ -1,6 +1,6 @@
 import { useCallback, useId, useMemo, useState, type ReactNode } from 'react';
 import { useLocation, useParams, useSearchParams } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import PageLayout from '@/shared/components/PageLayout';
 import Button from '@/shared/components/Button';
@@ -47,6 +47,7 @@ import {
 import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
 import { useOpenMoviePage } from '@/features/movies/hooks/useOpenMoviePage';
 import ShowcaseListStates from './ShowcaseListStates';
+import ShowcaseSearchField from './ShowcaseSearchField';
 import { readShowcaseListArrival } from './showcaseListState';
 import type { MovieMediaType, TitleSummary } from '@/shared/types/movie';
 import { toTitleSummary } from '@/shared/utils/titleSummary';
@@ -238,7 +239,13 @@ function showcaseToolbarLabels(
     sortDirectionAscLabel: t('profile.movies.toolbar.sortDirectionAsc'),
     sortDirectionDescLabel: t('profile.movies.toolbar.sortDirectionDesc'),
     resultCountText: toolbar.isFiltered
-      ? t('showcase.filteredCount', { shown: toolbar.visibleCount, total: toolbar.totalCount })
+      ? pluralizeCount(
+          toolbar.visibleCount,
+          'showcase.filteredCountOne',
+          'showcase.filteredCount',
+          t,
+          { shown: toolbar.visibleCount, total: toolbar.totalCount }
+        )
       : pluralizeCount(toolbar.totalCount, 'showcase.resultCountOne', 'showcase.resultCount', t),
     clearAllLabel: t('profile.movies.toolbar.clearAll'),
   };
@@ -258,7 +265,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
   const { tmdbLanguage } = useLocale();
   const { user } = useAuth();
   const params = useParams<{ provider?: string; seedTmdbId?: string }>();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const arrival = readShowcaseListArrival(location.state);
   const isLoggedIn = !!user;
@@ -302,7 +309,13 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
     queryKey: queryKeys.movies.searchPage(searchQuery),
     queryFn: ({ signal }) => searchMovies(searchQuery, { signal }),
     enabled: searchEnabled,
+    placeholderData: keepPreviousData,
   });
+
+  const runSearch = useCallback(
+    (term: string) => setSearchParams(term ? { q: term } : {}, { replace: true }),
+    [setSearchParams]
+  );
 
   const source = isSearch ? search : showcase;
   const rows = source.data?.items;
@@ -358,6 +371,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
     noindex: canonicalPath == null,
   });
 
+  const listHeading = t(isSearch ? 'showcase.searchResultsHeading' : 'showcase.sectionsHeading');
   const activeFilterCount = toolbar.activeFilterChips.length;
   const totalCount = items.length;
   const hasResults = queryEnabled && !source.isError && totalCount > 0;
@@ -371,7 +385,9 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
         <p className={styles.pageSubtitle}>{subtitleText}</p>
       </div>
 
-      <h2 className="visually-hidden">{t('showcase.sectionsHeading')}</h2>
+      {isSearch ? <ShowcaseSearchField query={searchQuery} onSearch={runSearch} /> : null}
+
+      <h2 className="visually-hidden">{listHeading}</h2>
 
       {watchlist.error ? (
         <p className="error" role="alert">
@@ -381,6 +397,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
 
       <ShowcaseListStates
         variant={variant}
+        searchQuery={searchQuery}
         queryEnabled={queryEnabled}
         isPending={source.isPending}
         isError={source.isError}
@@ -397,6 +414,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
                 activeFilterCount,
                 isMobile,
               })}
+              hideSearch={isSearch}
               sortOptions={[
                 { key: 'primary', label: t('showcase.toolbar.sortRelevance') },
                 { key: 'title', label: t('profile.movies.toolbar.sortTitle') },
@@ -410,7 +428,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
           tmdbLanguage={tmdbLanguage}
           isMobile={isMobile}
         >
-          <ul className={styles.grid} aria-label={t('showcase.sectionsHeading')}>
+          <ul className={styles.grid} aria-label={listHeading}>
             {toolbar.revealedItems.map((item) => (
               <MovieBrowseCard
                 key={`${item.tmdbId}|${item.mediaType}`}
@@ -423,6 +441,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
                 onProposeToEvent={() => setProposeTarget(item)}
                 ratingScale={user?.ratingScale}
                 leadingBadge={rankBadge(item.rank, t)}
+                showCaption={isSearch}
               />
             ))}
           </ul>

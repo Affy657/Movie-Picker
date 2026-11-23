@@ -155,7 +155,7 @@ describe('EventParticipantsList', () => {
       </AppTestProviders>
     );
 
-    const link = screen.getByRole('link', { name: /voir le profil de alice/i });
+    const link = screen.getByRole('link', { name: /voir le profil d’alice/i });
     expect(link).toHaveAttribute('href', '/u/alice');
   });
 
@@ -177,7 +177,7 @@ describe('EventParticipantsList', () => {
       </AppTestProviders>
     );
 
-    expect(screen.getByRole('link', { name: 'Voir le profil de Alice, en ligne' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Voir le profil d’Alice, en ligne' })).toHaveAttribute(
       'href',
       '/u/alice'
     );

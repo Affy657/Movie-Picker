@@ -35,6 +35,7 @@ type CollectionToolbarProps<TSortKey extends string> = {
   trailing?: ReactNode;
   appearance?: 'card' | 'plain';
   searchAside?: ReactNode;
+  hideSearch?: boolean;
   labels: CollectionToolbarLabels;
 };
 
@@ -72,6 +73,7 @@ export default function CollectionToolbar<TSortKey extends string>({
       trailing={rest.trailing}
       appearance={rest.appearance}
       searchAside={rest.searchAside}
+      hideSearch={rest.hideSearch}
     />
   );
 }

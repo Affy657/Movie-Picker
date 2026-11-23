@@ -50,6 +50,14 @@
   color: var(--color-primary-text);
 }
 
+.signedOutLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
 .muted {
   margin: 0;
   font-size: var(--font-size-sm);

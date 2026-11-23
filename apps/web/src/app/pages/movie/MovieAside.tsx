@@ -152,17 +152,23 @@ export function MovieNightsCard({
 }>) {
   const { t, locale } = useTranslation();
   if (authPending) return null;
-  let body: ReactNode = null;
   if (!signedIn) {
-    body = (
-      <p className={styles.muted}>
-        {t('moviePage.nightsSignedOut')}{' '}
-        <Link to={withReturnTo(ROUTES.login, returnTo)} className={styles.inlineLink}>
-          {t('moviePage.nightsSignIn')}
-        </Link>
-      </p>
+    return (
+      <AsideCard title={t('moviePage.nightsSignedOutTitle')}>
+        <p className={styles.muted}>{t('moviePage.nightsSignedOut')}</p>
+        <p className={styles.signedOutLinks}>
+          <Link to={withReturnTo(ROUTES.register, returnTo)} className={styles.inlineLink}>
+            {t('moviePage.nightsSignedOutRegister')}
+          </Link>
+          <Link to={withReturnTo(ROUTES.login, returnTo)} className={styles.inlineLink}>
+            {t('moviePage.nightsSignIn')}
+          </Link>
+        </p>
+      </AsideCard>
     );
-  } else if (nights && nights.proposalCount > 0) {
+  }
+  let body: ReactNode = null;
+  if (nights && nights.proposalCount > 0) {
     body = <NightsRows nights={nights} scale={scale} locale={locale} t={t} />;
   } else if (nights) {
     body = <p className={styles.muted}>{t('moviePage.nightsEmpty')}</p>;

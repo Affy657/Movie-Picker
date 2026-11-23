@@ -248,17 +248,32 @@ describe('MoviePage', () => {
     expect(await screen.findByRole('region', { name: 'Films similaires' })).toBeInTheDocument();
   });
 
-  it('asks a guest to sign in to see the film in their nights', async () => {
+  it('offers a guest to propose the film to a night through a new account', async () => {
     server.use(authMeGuestHandler, detailsHandler, showcaseHandler);
     renderPage();
 
-    const nights = await screen.findByRole('region', { name: 'Dans vos soirées' });
-    expect(within(nights).getByRole('link', { name: 'Se connecter' })).toHaveAttribute(
+    expect(
+      await screen.findByRole('link', { name: 'Proposer ce film à une soirée' })
+    ).toHaveAttribute('href', `/register?returnTo=${encodeURIComponent('/film/438631-dune')}`);
+    expect(screen.queryByRole('button', { name: /proposer dans une soirée/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Je l’ai vu' })).toBeNull();
+  });
+
+  it('tells a guest without any night what a night is, with a way in', async () => {
+    server.use(authMeGuestHandler, detailsHandler, showcaseHandler);
+    renderPage();
+
+    const card = await screen.findByRole('region', { name: 'Une soirée ciné à plusieurs ?' });
+    expect(within(card).getByText(/la roue choisit/i)).toBeInTheDocument();
+    expect(within(card).getByRole('link', { name: 'Créer un compte' })).toHaveAttribute(
+      'href',
+      `/register?returnTo=${encodeURIComponent('/film/438631-dune')}`
+    );
+    expect(within(card).getByRole('link', { name: 'Se connecter' })).toHaveAttribute(
       'href',
       `/login?returnTo=${encodeURIComponent('/film/438631-dune')}`
     );
-    expect(screen.queryByRole('button', { name: /proposer dans une soirée/i })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Je l’ai vu' })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Dans vos soirées' })).toBeNull();
   });
 
   it('tells a signed in member how the film did in their nights', async () => {
@@ -361,6 +376,8 @@ describe('MoviePage', () => {
       /^je l’ai vu$/i,
     ].map((name) => screen.getByRole('button', { name }));
     expect(inDocumentOrder(buttons)).toBe(true);
+    expect(screen.queryByRole('link', { name: 'Proposer ce film à une soirée' })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Une soirée ciné à plusieurs ?' })).toBeNull();
   });
 
   it('marks the film seen elsewhere, the button turning to Vu and the rating showing up', async () => {

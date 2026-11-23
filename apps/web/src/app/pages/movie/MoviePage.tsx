@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { Bookmark, BookmarkCheck, Film, PlayCircle, Plus, Share2 } from 'lucide-react';
 import type { UseQueryResult } from '@tanstack/react-query';
-import { NIGHT_QUERY_PARAM, ROUTES, parseMovieRef } from '@/app/routes';
+import { NIGHT_QUERY_PARAM, ROUTES, parseMovieRef, withReturnTo } from '@/app/routes';
 import NotFoundPage from '@/app/pages/NotFoundPage';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import MovieNightBar from '@/features/events/components/MovieNightBar';
@@ -98,10 +98,49 @@ function isNotFound(error: unknown): boolean {
   return ApiError.is(error) && error.code === 404;
 }
 
+function ProposeAction({
+  signedIn,
+  visitor,
+  disabled,
+  fullWidth,
+  returnTo,
+  onPropose,
+  t,
+}: Readonly<{
+  signedIn: boolean;
+  visitor: boolean;
+  disabled: boolean;
+  fullWidth: boolean;
+  returnTo: string;
+  onPropose: () => void;
+  t: Translate;
+}>) {
+  if (signedIn) {
+    return (
+      <Button variant="primary" fullWidth={fullWidth} disabled={disabled} onClick={onPropose}>
+        <Plus aria-hidden size={ICON_SIZE.md} />
+        {t('moviePage.propose')}
+      </Button>
+    );
+  }
+  if (!visitor) return null;
+  return (
+    <Link
+      to={withReturnTo(ROUTES.register, returnTo)}
+      className={buttonClass({ variant: 'primary', fullWidth })}
+    >
+      <Plus aria-hidden size={ICON_SIZE.md} />
+      {t('moviePage.proposeSignedOut')}
+    </Link>
+  );
+}
+
 interface HeroActionsProps {
   view: MovieHeroView;
   item: WatchlistToggleItem;
   signedIn: boolean;
+  visitor: boolean;
+  returnTo: string;
   fromNight: boolean;
   inWatchlist: boolean;
   watched: { status: WatchedStatus | undefined; pending: boolean; toggle: () => void };
@@ -118,6 +157,8 @@ function HeroActions({
   view,
   item,
   signedIn,
+  visitor,
+  returnTo,
   fromNight,
   inWatchlist,
   watched,
@@ -137,13 +178,17 @@ function HeroActions({
     'movie'
   );
   const titleUnknown = !view.title;
-  const propose =
-    signedIn && !fromNight ? (
-      <Button variant="primary" fullWidth={isMobile} disabled={titleUnknown} onClick={onPropose}>
-        <Plus aria-hidden size={ICON_SIZE.md} />
-        {t('moviePage.propose')}
-      </Button>
-    ) : null;
+  const propose = fromNight ? null : (
+    <ProposeAction
+      signedIn={signedIn}
+      visitor={visitor}
+      disabled={titleUnknown}
+      fullWidth={isMobile}
+      returnTo={returnTo}
+      onPropose={onPropose}
+      t={t}
+    />
+  );
   const trailerButton = trailer ? (
     <Button className={styles.trailer} onClick={() => onPlay(trailer)}>
       <PlayCircle aria-hidden size={ICON_SIZE.md} />
@@ -406,6 +451,7 @@ function MoviePageContent({
   const watched = useWatchedTitle(item, signedIn);
   const favorite = useFavoriteToggle(item);
   const failedWithoutSeed = detailsQuery.isError && !seed;
+  const returnTo = `${location.pathname}${location.search}`;
 
   usePageSeo({
     title: pageTitle(
@@ -469,6 +515,8 @@ function MoviePageContent({
               view={view}
               item={item}
               signedIn={signedIn}
+              visitor={!signedIn && !authPending}
+              returnTo={returnTo}
               fromNight={!!nightSlug}
               inWatchlist={watchlist.has(item)}
               favorite={favorite}
@@ -505,7 +553,7 @@ function MoviePageContent({
                 signedIn={signedIn}
                 nights={nightsQuery.data}
                 scale={scale}
-                returnTo={`${location.pathname}${location.search}`}
+                returnTo={returnTo}
               />
               <MovieInfosCard rows={buildInfoRows(viewInput, view)} />
               <MovieLinksCard tmdbId={tmdbId} mediaType={mediaType} title={title} year={year} />
