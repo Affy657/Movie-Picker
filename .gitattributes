@@ -1,7 +1,7 @@
-# Normalise les fins de ligne en LF dans le dépôt, quelle que soit la plateforme.
+# Line endings are normalised to LF in the repository, whatever the platform.
 * text=auto eol=lf
 
-# Fichiers binaires — pas de conversion
+# Binary files: no conversion
 *.png binary
 *.jpg binary
 *.jpeg binary
@@ -15,7 +15,11 @@
 *.pdf binary
 *.zip binary
 
-# Barre de langages GitHub : le contrat d'API généré et les dossiers gelés ne sont pas du code
-# écrit pour ce produit, ils faussent la mesure.
+# GitHub language bar: generated code, translations, frozen folders and the Python that draws the
+# design mockups are not code written for the product, and they skewed the measure (TypeScript
+# 44.3 %, C# 43.6 %, Python 4.6 % on 2026-11-23; C# about 48 % and TypeScript 44 % without them).
 apps/web/src/shared/api/generated/** linguist-generated=true
+apps/web/src/app/pages/tech/generated/** linguist-generated=true
+apps/web/src/shared/i18n/locales/** linguist-generated=true
+design/mockups/** linguist-documentation=true
 archive/** linguist-vendored=true

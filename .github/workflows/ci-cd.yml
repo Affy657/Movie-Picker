@@ -258,11 +258,11 @@ jobs:
       # Whitespace and charset, then the code style (the order of the usings lives there, not in
       # `whitespace`). The analyser pass of the full `dotnet format` is left out: it replays the
       # analysers the build below already runs with `-warnaserror`, for more than half the time.
-      - name: dotnet format whitespace + style (verify, roadmap § 31)
+      - name: dotnet format whitespace + style (verify)
         run: pnpm run format:dotnet:check
       - name: Build API .NET (warnings → errors)
         run: dotnet build apps/api-dotnet/MoviePicker.slnx -c Release --no-restore -warnaserror
-      - name: Export OpenAPI (artifact, roadmap § 32)
+      - name: Export OpenAPI (artifact)
         env:
           SKIP_OPENAPI_BUILD: '1'
         run: node scripts/export-openapi.cjs
