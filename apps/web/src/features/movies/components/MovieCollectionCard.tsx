@@ -20,6 +20,7 @@ interface Props {
   progress?: number | null;
   nameSuffix?: ReactNode;
   emptyIcon?: ReactNode;
+  eager?: boolean;
 }
 
 interface CollectionStackProps {
@@ -29,6 +30,7 @@ interface CollectionStackProps {
   srcs: readonly string[];
   badgeIcon?: ReactNode;
   extra?: ReactNode;
+  eager: boolean;
 }
 
 interface CollectionRowProps {
@@ -81,6 +83,7 @@ function CollectionStack({
   srcs,
   badgeIcon,
   extra,
+  eager,
 }: Readonly<CollectionStackProps>) {
   return (
     <li className={styles.card}>
@@ -102,7 +105,8 @@ function CollectionStack({
                 src={src}
                 alt=""
                 className={clsx(styles.stackPoster, STACK_SLOTS[index])}
-                loading="lazy"
+                loading={eager ? 'eager' : 'lazy'}
+                fetchPriority={eager ? 'high' : 'auto'}
                 decoding="async"
               />
             ))
@@ -151,6 +155,7 @@ export default function MovieCollectionCard({
   progress,
   nameSuffix,
   emptyIcon,
+  eager = false,
 }: Readonly<Props>) {
   if (layout === 'row') {
     return (
@@ -174,6 +179,7 @@ export default function MovieCollectionCard({
       srcs={stackSrcs}
       badgeIcon={badgeIcon}
       extra={extra}
+      eager={eager}
     />
   );
 }
