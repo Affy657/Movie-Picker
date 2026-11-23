@@ -52,7 +52,9 @@ test.describe('Critical journey', () => {
   }) => {
     await page.goto('/new');
     await expect(page).toHaveURL(/\/new$/);
-    await expect(page.getByRole('main').getByRole('link', { name: 'Se connecter' })).toBeVisible();
+    await expect(
+      page.getByRole('main').getByRole('link', { name: 'J’ai déjà un compte' })
+    ).toBeVisible();
     await expect(
       page.getByRole('main').getByRole('link', { name: 'Créer un compte' })
     ).toBeVisible();

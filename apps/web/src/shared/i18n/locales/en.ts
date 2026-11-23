@@ -30,7 +30,7 @@ export const en: Locale = {
     myEvents: 'My events',
     myEventsShort: 'Events',
     lists: 'My lists',
-    listsShort: 'My lists',
+    listsShort: 'Lists',
     myGroups: 'My groups',
     account: 'Settings',
     createEvent: 'New event',
@@ -59,6 +59,7 @@ export const en: Locale = {
   home: {
     ctaLogin: 'Log in',
     ctaRegister: 'Create an account',
+    ctaHaveAccount: 'I already have an account',
     title: 'What are we watching tonight?',
     intro: 'Search for a film or browse the selections.',
     seoTitle: "Movie Picker: pick the night's film, together",

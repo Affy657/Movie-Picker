@@ -28,7 +28,7 @@ export const fr = {
     myEvents: 'Mes soirées',
     myEventsShort: 'Soirées',
     lists: 'Mes listes',
-    listsShort: 'Mes listes',
+    listsShort: 'Listes',
     myGroups: 'Mes groupes',
     account: 'Paramètres',
     createEvent: 'Nouvelle soirée',
@@ -57,6 +57,7 @@ export const fr = {
   home: {
     ctaLogin: 'Se connecter',
     ctaRegister: 'Créer un compte',
+    ctaHaveAccount: 'J’ai déjà un compte',
     title: "Qu'est-ce qu'on regarde ce soir ?",
     intro: 'Cherchez un film ou parcourez les sélections.',
     seoTitle: 'Movie Picker : choisir le film de la soirée, ensemble',

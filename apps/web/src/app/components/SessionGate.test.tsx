@@ -71,7 +71,7 @@ describe('SessionGate', () => {
   it('redirects to sign-in while keeping the requested page as the return', async () => {
     renderGate();
 
-    expect(await screen.findByRole('link', { name: /^se connecter$/i })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: /^j’ai déjà un compte$/i })).toHaveAttribute(
       'href',
       '/login?returnTo=%2Fwatchlist'
     );

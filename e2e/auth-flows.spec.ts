@@ -21,7 +21,7 @@ test.describe('Authentication journey', () => {
 
     await page.goto('/new');
     await expect(page).toHaveURL(/\/new$/);
-    await page.getByRole('main').getByRole('link', { name: 'Se connecter' }).click();
+    await page.getByRole('main').getByRole('link', { name: 'J’ai déjà un compte' }).click();
     await expect(page).toHaveURL(/\/login\?returnTo=/);
 
     await page.getByLabel('E-mail', { exact: true }).fill(email);
@@ -41,6 +41,8 @@ test.describe('Authentication journey', () => {
 
     await page.goto('/new');
     await expect(page).toHaveURL(/\/new$/);
-    await expect(page.getByRole('main').getByRole('link', { name: 'Se connecter' })).toBeVisible();
+    await expect(
+      page.getByRole('main').getByRole('link', { name: 'J’ai déjà un compte' })
+    ).toBeVisible();
   });
 });

@@ -202,11 +202,7 @@ function CreateEventHeaderButton({ label }: Readonly<{ label: string }>) {
   );
 }
 
-function MobileCreateItem({
-  signedIn,
-  label,
-  returnTo,
-}: Readonly<{ signedIn: boolean; label: string; returnTo: string }>) {
+function MobileCreateItem({ signedIn, label }: Readonly<{ signedIn: boolean; label: string }>) {
   const openCreateEvent = useOpenCreateEvent();
   const content = (
     <>
@@ -216,10 +212,7 @@ function MobileCreateItem({
   );
   if (!signedIn) {
     return (
-      <Link
-        to={withReturnTo(ROUTES.login, returnTo)}
-        className={clsx(styles.navLink, styles.navCreate)}
-      >
+      <Link to={ROUTES.createEvent} className={clsx(styles.navLink, styles.navCreate)}>
         {content}
       </Link>
     );
@@ -339,7 +332,7 @@ export default function AppShell() {
           Icon: HelpCircle,
           wideOnly: true,
         },
-        ...items,
+        ...compactItems,
       ];
 
   return (
@@ -389,11 +382,7 @@ export default function AppShell() {
             {mobileItemsBeforeCreate.map((item) => (
               <MobileNavItem key={item.to} {...item} />
             ))}
-            <MobileCreateItem
-              signedIn={isAuthenticated}
-              label={t('nav.createEventShort')}
-              returnTo={ROUTES.createEvent}
-            />
+            <MobileCreateItem signedIn={isAuthenticated} label={t('nav.createEventShort')} />
             {mobileItemsAfterCreate.map((item) => (
               <MobileNavItem key={item.to} {...item} />
             ))}
