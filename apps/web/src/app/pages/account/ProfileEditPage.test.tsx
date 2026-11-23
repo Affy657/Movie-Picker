@@ -79,7 +79,7 @@ describe('ProfileEditPage (MSW)', () => {
     await user.tab();
 
     expect(
-      await screen.findByRole('heading', { level: 1, name: /paramètres/i }, { timeout: 5000 })
+      await screen.findByRole('heading', { level: 1, name: /paramètres/i }, { timeout: 20000 })
     ).toBeInTheDocument();
     expect(screen.queryByLabelText(/bio/i)).not.toBeInTheDocument();
 

@@ -523,7 +523,7 @@ describe('accessibility (axe)', () => {
           <p>jamais rendu</p>
         </SessionGate>
       );
-      await screen.findByRole('link', { name: /^se connecter$/i });
+      await screen.findByRole('link', { name: /^j’ai déjà un compte$/i });
       await assertNoViolations(container, queryClient);
     });
   });
