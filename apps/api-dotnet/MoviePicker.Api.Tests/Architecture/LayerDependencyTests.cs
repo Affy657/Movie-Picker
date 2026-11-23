@@ -15,10 +15,11 @@ public sealed class LayerDependencyTests
     private const string MongoDriver = "MongoDB";
     private const string AspNetCore = "Microsoft.AspNetCore";
     private const string CompilerGeneratedHelpersNamespace = "";
+    private const string CoverageInstrumentation = "Coverlet.Core.Instrumentation.Tracker";
 
     private static readonly Assembly Api = typeof(Program).Assembly;
 
-    private static readonly string[] DomainAllowedDependencies = [BaseLibrary, Domain, CompilerGeneratedHelpersNamespace];
+    private static readonly string[] DomainAllowedDependencies = [BaseLibrary, Domain, CompilerGeneratedHelpersNamespace, CoverageInstrumentation];
 
     [Fact]
     public void Domain_DependsOnTheBaseLibraryAndItselfOnly()
