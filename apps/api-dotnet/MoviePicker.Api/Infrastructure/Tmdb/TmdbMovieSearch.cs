@@ -35,7 +35,7 @@ public sealed partial class TmdbMovieSearch : ITmdbMovieSearch
         public static readonly TmdbNotFoundMarker Instance = new();
     }
 
-    private sealed record PersonMatch(int Id, bool LeadsResults);
+    private sealed record PersonMatch(int Id, bool LeadsResults, int CreditBudget);
 
     private sealed record PersonCreditMatches(IReadOnlyList<TmdbSearchItem> Items, bool LeadsResults)
     {
