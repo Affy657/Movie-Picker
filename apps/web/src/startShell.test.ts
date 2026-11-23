@@ -87,6 +87,12 @@ describe('coquille de demarrage', () => {
     expect(indexHtml).toContain(en.home.title);
   });
 
+  it('keeps the title lines of the shell unbalanced, so a phone first poster stays smaller', () => {
+    const rule = /#splash-title\s*\{([^}]*)\}/.exec(indexHtml)?.[1] ?? '';
+    expect(rule).toContain('font-size: 32px');
+    expect(rule).not.toMatch(/text-wrap:\s*balance/);
+  });
+
   it('ne pose la coquille que sur la route racine', () => {
     expect(indexHtml).toContain("location.pathname === '/'");
   });
