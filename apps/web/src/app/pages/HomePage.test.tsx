@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
@@ -187,6 +187,65 @@ describe('HomePage', () => {
 
   const posterCard = async (title: string) =>
     (await screen.findByRole('heading', { name: title, level: 3 })).closest('li') as HTMLElement;
+
+  it('asks for the rows further down only when they come close', async () => {
+    const observers: Array<{
+      callback: (entries: Partial<IntersectionObserverEntry>[]) => void;
+      targets: Element[];
+    }> = [];
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        targets: Element[] = [];
+        constructor(public callback: (entries: Partial<IntersectionObserverEntry>[]) => void) {
+          observers.push(this);
+        }
+        observe(target: Element) {
+          this.targets.push(target);
+        }
+        unobserve() {}
+        disconnect() {}
+        takeRecords() {
+          return [];
+        }
+      }
+    );
+    const requested: string[] = [];
+    server.use(
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/movies/showcase`, ({ request }) => {
+        const section = new URL(request.url).searchParams.get('section') ?? 'trending';
+        requested.push(section);
+        return HttpResponse.json({
+          section,
+          theme: null,
+          items: showcaseItems(section, 3),
+          disclaimer: 'TMDB',
+          tmdbAttributionUrl: 'https://www.themoviedb.org/',
+        });
+      }),
+      http.get(`${TEST_API_V1}/movies/collections`, () => {
+        requested.push('collections');
+        return HttpResponse.json({ items: [], disclaimer: 'TMDB', tmdbAttributionUrl: '' });
+      })
+    );
+
+    renderPage();
+
+    await screen.findByText('trending 1');
+    expect(requested).not.toContain('provider');
+    expect(requested).not.toContain('now-playing');
+    expect(requested).not.toContain('collections');
+
+    await act(async () => {
+      for (const observer of observers) {
+        observer.callback(observer.targets.map((target) => ({ target, isIntersecting: true })));
+      }
+    });
+    await waitFor(() =>
+      expect(requested).toEqual(expect.arrayContaining(['provider', 'now-playing', 'collections']))
+    );
+  });
 
   it('ouvre sur un titre de niveau un et son introduction', () => {
     server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);

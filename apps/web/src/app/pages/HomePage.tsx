@@ -31,6 +31,7 @@ import HomeCollectionsRow from './home/HomeCollectionsRow';
 import HomeThemeFans from './home/HomeThemeFans';
 import HomeForYou, { type PersonalRowItem } from './home/HomeForYou';
 import HomeMostProposed from './home/HomeMostProposed';
+import HomeRowWhenNear from './home/HomeRowWhenNear';
 import { useMovieShowcase } from '@/features/movies/hooks/useMovieShowcase';
 import {
   useFriendsWatchedRow,
@@ -162,35 +163,43 @@ export default function HomePage() {
           onChange: setGenreTab,
         }}
       />
-      <HomeShowcaseRow
-        headingKey="showcase.sections.providerTitle"
-        seeAllTo={ROUTES.showcaseProvider(providerTab)}
-        query={{ section: 'provider', provider: providerTab }}
-        library={library}
-        onSelect={openDetails}
-        tabConfig={{
-          ariaLabel: t('showcase.providerLabel'),
-          tabs: providerTabs,
-          active: providerTab,
-          onChange: setProviderTab,
-        }}
-      />
-      <div className={showMostProposed ? styles.pair : undefined}>
+      <HomeRowWhenNear>
         <HomeShowcaseRow
-          headingKey="showcase.sections.nowPlayingTitle"
-          seeAllTo={ROUTES.showcaseNowPlaying}
-          query={{ section: 'now-playing' }}
-          layout={showMostProposed ? 'grid' : 'rail'}
+          headingKey="showcase.sections.providerTitle"
+          seeAllTo={ROUTES.showcaseProvider(providerTab)}
+          query={{ section: 'provider', provider: providerTab }}
           library={library}
           onSelect={openDetails}
-          className={showMostProposed ? styles.pairMain : undefined}
+          tabConfig={{
+            ariaLabel: t('showcase.providerLabel'),
+            tabs: providerTabs,
+            active: providerTab,
+            onChange: setProviderTab,
+          }}
         />
-        {showMostProposed ? (
-          <HomeMostProposed onSelect={openDetails} className={styles.pairSide} />
-        ) : null}
-      </div>
-      <HomeThemeFans />
-      <HomeCollectionsRow />
+      </HomeRowWhenNear>
+      <HomeRowWhenNear>
+        <div className={showMostProposed ? styles.pair : undefined}>
+          <HomeShowcaseRow
+            headingKey="showcase.sections.nowPlayingTitle"
+            seeAllTo={ROUTES.showcaseNowPlaying}
+            query={{ section: 'now-playing' }}
+            layout={showMostProposed ? 'grid' : 'rail'}
+            library={library}
+            onSelect={openDetails}
+            className={showMostProposed ? styles.pairMain : undefined}
+          />
+          {showMostProposed ? (
+            <HomeMostProposed onSelect={openDetails} className={styles.pairSide} />
+          ) : null}
+        </div>
+      </HomeRowWhenNear>
+      <HomeRowWhenNear>
+        <HomeThemeFans />
+      </HomeRowWhenNear>
+      <HomeRowWhenNear>
+        <HomeCollectionsRow />
+      </HomeRowWhenNear>
 
       {proposeTarget ? (
         <ProposeToEventModal open movie={proposeTarget} onClose={() => setProposeTarget(null)} />
