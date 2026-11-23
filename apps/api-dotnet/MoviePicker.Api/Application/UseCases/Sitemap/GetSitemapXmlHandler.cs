@@ -35,17 +35,26 @@ public sealed class GetSitemapXmlHandler : IGetSitemapXmlHandler
     private static readonly int MaxProfileUrls = SitemapUrlLimit - StaticPages.Length;
 
     private readonly IUserRepository _users;
+    private readonly IParticipantRepository _participants;
+    private readonly IMovieListRepository _lists;
+    private readonly IWatchlistRepository _watchlist;
     private readonly MoviePickerOptions _options;
     private readonly ILogger<GetSitemapXmlHandler> _logger;
     private readonly TimeProvider _clock;
 
     public GetSitemapXmlHandler(
         IUserRepository users,
+        IParticipantRepository participants,
+        IMovieListRepository lists,
+        IWatchlistRepository watchlist,
         IOptions<MoviePickerOptions> options,
         ILogger<GetSitemapXmlHandler> logger,
         TimeProvider clock)
     {
         _users = users;
+        _participants = participants;
+        _lists = lists;
+        _watchlist = watchlist;
         _options = options.Value;
         _logger = logger;
         _clock = clock;
@@ -72,11 +81,24 @@ public sealed class GetSitemapXmlHandler : IGetSitemapXmlHandler
             AppendUrl(sb, $"{webBase}{page.Path}", page.ChangesDaily ? today : null, page.ChangeFrequency, page.Priority);
         foreach (var profile in profiles)
         {
+            if (!await ShowsSomethingAsync(profile, ct))
+                continue;
             var loc = webBase + FrontRoutes.Profile(profile.Handle);
             AppendUrl(sb, loc, profile.UpdatedAt, Weekly, "0.6");
         }
         sb.Append("</urlset>\n");
         return sb.ToString();
+    }
+
+    private async Task<bool> ShowsSomethingAsync(PublicProfileRef profile, CancellationToken ct)
+    {
+        if (profile.HasProfileText)
+            return true;
+        if ((await _participants.ListByUserIdAsync(profile.UserId, 1, ct)).Count > 0)
+            return true;
+        if (await _lists.CountPublicByOwnerAsync(profile.UserId, ct) > 0)
+            return true;
+        return profile.IsWatchlistPublic && await _watchlist.CountByUserIdAsync(profile.UserId, ct) > 0;
     }
 
     private static void AppendUrl(

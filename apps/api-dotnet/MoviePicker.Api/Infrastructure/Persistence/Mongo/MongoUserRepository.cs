@@ -352,9 +352,7 @@ public sealed class MongoUserRepository : IUserRepository
         var docs = await find.ToListAsync(ct);
         return docs
             .Where(d => !string.IsNullOrWhiteSpace(d.Handle))
-            .Select(d => new PublicProfileRef(
-                d.Handle!,
-                new DateTimeOffset(DateTime.SpecifyKind(d.UpdatedAt, DateTimeKind.Utc))))
+            .Select(d => PublicProfileRef.Of(UserDocumentMapper.ToDomain(d)))
             .ToList();
     }
 

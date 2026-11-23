@@ -3123,6 +3123,12 @@ export const fr = {
     },
     seoDescription:
       'Profil de {{name}} (@{{handle}}) sur Movie Picker : statistiques de soirées ciné, films proposés et abonnements.',
+    seoDescriptionElided:
+      'Profil d’{{name}} (@{{handle}}) sur Movie Picker : statistiques de soirées ciné, films proposés et abonnements.',
+    empty: {
+      title: 'Ce profil est encore vide',
+      message: '{{name}} n’a encore rien partagé ici : ni soirée, ni film vu, ni liste publique.',
+    },
     notFound: "Ce profil n'existe pas ou n'est pas public.",
     loadError: 'Impossible de charger ce profil.',
     loading: 'Chargement du profil…',

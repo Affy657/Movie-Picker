@@ -5,6 +5,7 @@ using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Sitemap;
 using MoviePicker.Api.Configuration;
+using MoviePicker.Api.Domain.Entities;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.Sitemap;
@@ -20,12 +21,22 @@ public sealed class GetSitemapXmlHandlerTests
     }
 
     private readonly Mock<IUserRepository> _users = new();
+    private readonly Mock<IParticipantRepository> _participants = new();
+    private readonly Mock<IMovieListRepository> _lists = new();
+    private readonly Mock<IWatchlistRepository> _watchlist = new();
+
+    public GetSitemapXmlHandlerTests() =>
+        _participants.Setup(r => r.ListByUserIdAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
 
     private GetSitemapXmlHandler CreateSut(string webBase = "https://web.example")
     {
         var opts = Options.Create(new MoviePickerOptions { PublicWebBaseUrl = webBase });
         return new GetSitemapXmlHandler(
             _users.Object,
+            _participants.Object,
+            _lists.Object,
+            _watchlist.Object,
             opts,
             NullLogger<GetSitemapXmlHandler>.Instance,
             new FakeTimeProvider(GenerationDay));
@@ -35,6 +46,12 @@ public sealed class GetSitemapXmlHandlerTests
         XDocument.Parse(xml).Descendants(Ns + "url")
             .Single(u => u.Element(Ns + "loc")!.Value == loc)
             .Element(Ns + "lastmod")?.Value;
+
+    private static PublicProfileRef Showing(string handle, DateTimeOffset updatedAt) =>
+        new(handle, updatedAt) { UserId = $"id-{handle}", HasProfileText = true };
+
+    private static PublicProfileRef Bare(string handle, bool isWatchlistPublic = true) =>
+        new(handle, GenerationDay) { UserId = $"id-{handle}", IsWatchlistPublic = isWatchlistPublic };
 
     private void SetupProfiles(params PublicProfileRef[] profiles) =>
         _users.Setup(r => r.ListPublicProfilesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
@@ -48,7 +65,7 @@ public sealed class GetSitemapXmlHandlerTests
     {
         _users.Setup(r => r.ListPublicProfilesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((int limit, CancellationToken _) => Enumerable.Range(0, limit)
-                .Select(i => new PublicProfileRef($"user-{i}", GenerationDay))
+                .Select(i => Showing($"user-{i}", GenerationDay))
                 .ToList());
 
         var xml = await CreateSut().BuildXmlAsync();
@@ -125,8 +142,8 @@ public sealed class GetSitemapXmlHandlerTests
     public async Task BuildXmlAsync_IncludesPublicProfileUrls()
     {
         SetupProfiles(
-            new PublicProfileRef("alice", new DateTimeOffset(2026, 7, 10, 0, 0, 0, TimeSpan.Zero)),
-            new PublicProfileRef("bob", new DateTimeOffset(2026, 7, 12, 0, 0, 0, TimeSpan.Zero)));
+            Showing("alice", new DateTimeOffset(2026, 7, 10, 0, 0, 0, TimeSpan.Zero)),
+            Showing("bob", new DateTimeOffset(2026, 7, 12, 0, 0, 0, TimeSpan.Zero)));
         var xml = await CreateSut().BuildXmlAsync();
 
         var locs = Locs(xml);
@@ -138,7 +155,7 @@ public sealed class GetSitemapXmlHandlerTests
     [Fact]
     public async Task BuildXmlAsync_TrimsTrailingSlashOnBase()
     {
-        SetupProfiles(new PublicProfileRef("alice", DateTimeOffset.UtcNow));
+        SetupProfiles(Showing("alice", DateTimeOffset.UtcNow));
         var xml = await CreateSut("https://web.example/").BuildXmlAsync();
 
         Assert.Contains("https://web.example/u/alice", Locs(xml));
@@ -149,12 +166,42 @@ public sealed class GetSitemapXmlHandlerTests
     [Fact]
     public async Task BuildXmlAsync_ProducesWellFormedUrlset()
     {
-        SetupProfiles(new PublicProfileRef("alice", DateTimeOffset.UtcNow));
+        SetupProfiles(Showing("alice", DateTimeOffset.UtcNow));
         var xml = await CreateSut().BuildXmlAsync();
 
         var root = XDocument.Parse(xml).Root;
         Assert.NotNull(root);
         Assert.Equal(Ns + "urlset", root!.Name);
         Assert.Equal(9, root.Elements(Ns + "url").Count());
+    }
+
+    [Fact]
+    public async Task BuildXmlAsync_LeavesOutTheProfilesThatShowNothing()
+    {
+        SetupProfiles(Bare("empty"), Bare("night"), Bare("lists"), Bare("watchlist"), Bare("hidden", isWatchlistPublic: false));
+        _participants.Setup(r => r.ListByUserIdAsync("id-night", 1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new Participant { Id = "p1", EventId = "e1", UserId = "id-night", Pseudo = "Nuit" }]);
+        _lists.Setup(r => r.CountPublicByOwnerAsync("id-lists", It.IsAny<CancellationToken>())).ReturnsAsync(2);
+        _watchlist.Setup(r => r.CountByUserIdAsync("id-watchlist", It.IsAny<CancellationToken>())).ReturnsAsync(5);
+        _watchlist.Setup(r => r.CountByUserIdAsync("id-hidden", It.IsAny<CancellationToken>())).ReturnsAsync(5);
+
+        var locs = Locs(await CreateSut().BuildXmlAsync());
+
+        Assert.Contains("https://web.example/u/night", locs);
+        Assert.Contains("https://web.example/u/lists", locs);
+        Assert.Contains("https://web.example/u/watchlist", locs);
+        Assert.DoesNotContain("https://web.example/u/empty", locs);
+        Assert.DoesNotContain("https://web.example/u/hidden", locs);
+    }
+
+    [Fact]
+    public async Task BuildXmlAsync_ProfileWithABioOrFavorites_IsListedWithoutAskingFurther()
+    {
+        SetupProfiles(Showing("alice", GenerationDay));
+
+        var locs = Locs(await CreateSut().BuildXmlAsync());
+
+        Assert.Contains("https://web.example/u/alice", locs);
+        _participants.Verify(r => r.ListByUserIdAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

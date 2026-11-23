@@ -3078,6 +3078,13 @@ export const en: Locale = {
     },
     seoDescription:
       '{{name}} (@{{handle}}) on Movie Picker: movie night stats, proposed films and follows.',
+    seoDescriptionElided:
+      '{{name}} (@{{handle}}) on Movie Picker: movie night stats, proposed films and follows.',
+    empty: {
+      title: 'This profile is still empty',
+      message:
+        '{{name}} has not shared anything here yet: no movie night, no watched film, no public list.',
+    },
     notFound: 'This profile does not exist or is not public.',
     loadError: 'Unable to load this profile.',
     loading: 'Loading profile…',

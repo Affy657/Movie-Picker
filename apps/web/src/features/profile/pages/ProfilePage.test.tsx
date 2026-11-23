@@ -95,6 +95,55 @@ describe('ProfilePage (MSW)', () => {
     expect(screen.getByRole('button', { name: /^partager$/i })).toBeInTheDocument();
   });
 
+  it('describes a member without a bio, eliding before a vowel', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () =>
+        HttpResponse.json({ ...ALICE_PROFILE, bio: null })
+      )
+    );
+
+    renderProfile('alice');
+
+    await screen.findByRole('heading', { name: 'Alice' });
+    expect(document.head.querySelector('meta[name="description"]')).toHaveAttribute(
+      'content',
+      'Profil d’Alice (@alice) sur Movie Picker : statistiques de soirées ciné, films proposés et abonnements.'
+    );
+  });
+
+  it('tells a visitor that a member has nothing to show yet', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () =>
+        HttpResponse.json({ ...ALICE_PROFILE, watchlistCount: 0, favorites: [] })
+      ),
+      createUserStatsHandler('alice')
+    );
+
+    renderProfile('alice');
+
+    expect(await screen.findByText('Ce profil est encore vide')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Alice n’a encore rien partagé ici : ni soirée, ni film vu, ni liste publique.'
+      )
+    ).toBeInTheDocument();
+  });
+
+  it('leaves the empty state out of a profile with something to show', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      createUserStatsHandler('alice', { eventsJoined: 2 })
+    );
+
+    renderProfile('alice');
+
+    expect(await screen.findByRole('heading', { name: 'Statistiques' })).toBeInTheDocument();
+    expect(screen.queryByText('Ce profil est encore vide')).not.toBeInTheDocument();
+  });
+
   it('groups the identity of the person in a region named after them', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
