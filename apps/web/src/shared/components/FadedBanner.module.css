@@ -16,15 +16,19 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, transparent 38%, var(--color-bg) 100%);
+  background: linear-gradient(
+    to bottom,
+    transparent calc(100% - var(--banner-overlap) - var(--space-16)),
+    var(--color-bg) calc(100% - var(--banner-overlap))
+  );
 }
 
 .tinted .backdrop::after {
   background: linear-gradient(
     to bottom,
-    transparent 30%,
-    var(--color-primary-soft) 70%,
-    var(--color-bg) 100%
+    transparent calc(100% - var(--banner-overlap) - var(--space-16)),
+    var(--color-primary-soft) calc(100% - var(--banner-overlap) - var(--space-6)),
+    var(--color-bg) calc(100% - var(--banner-overlap))
   );
 }
 
@@ -116,6 +120,7 @@
 }
 
 .pageWithBanner {
+  --banner-overlap: calc(var(--space-24) + var(--space-8));
   max-width: none;
   padding-top: 0;
   padding-left: 0;
@@ -125,7 +130,7 @@
 .overBanner {
   position: relative;
   max-width: var(--container-3xl);
-  margin: calc(-1 * (var(--space-24) + var(--space-8))) auto 0;
+  margin: calc(-1 * var(--banner-overlap)) auto 0;
   padding-left: max(var(--space-4), env(safe-area-inset-left, 0px));
   padding-right: max(var(--space-4), env(safe-area-inset-right, 0px));
 }
@@ -138,7 +143,7 @@
 }
 
 @media (max-width: 47.9375rem) {
-  .overBanner {
-    margin-top: calc(-1 * var(--space-24));
+  .pageWithBanner {
+    --banner-overlap: var(--space-24);
   }
 }
