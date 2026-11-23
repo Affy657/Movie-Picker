@@ -85,6 +85,21 @@ public sealed class GetEventDetailHandlerTests
             Times.Never);
     }
 
+    [Theory]
+    [InlineData("removed-user", true)]
+    [InlineData("other-user", false)]
+    [InlineData(null, false)]
+    public async Task HandleAsync_TellsOnlyARemovedViewerThatTheHostRemovedThem(string? viewer, bool expected)
+    {
+        var evt = new EventEntityBuilder().WithId("evt-1").Build() with { RemovedUserIds = ["removed-user"] };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt-1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _currentUserAccessor.Setup(c => c.GetUserId()).Returns(viewer);
+
+        var result = await _sut.HandleAsync("evt-1");
+
+        Assert.Equal(expected, result.ViewerRemoved);
+    }
+
     [Fact]
     public async Task HandleAsync_GivesTheRecapLinkOfTheNight()
     {

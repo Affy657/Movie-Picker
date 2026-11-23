@@ -15,6 +15,7 @@ import {
   Star,
   UserPlus,
   Users,
+  UserX,
   XCircle,
 } from 'lucide-react';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -47,6 +48,8 @@ export function notifIcon(type: string, size = ICON_SIZE.lg): ReactNode {
       return <Users size={size} aria-hidden />;
     case 'groupnight':
       return <CalendarPlus size={size} aria-hidden />;
+    case 'removedfromevent':
+      return <UserX size={size} aria-hidden />;
     case 'eventpending':
       return <Hourglass size={size} aria-hidden />;
     case 'letterboxdreconciliationpending':

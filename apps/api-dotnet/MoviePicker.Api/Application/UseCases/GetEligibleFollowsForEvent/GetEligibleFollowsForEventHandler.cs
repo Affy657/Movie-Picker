@@ -61,7 +61,7 @@ public sealed class GetEligibleFollowsForEventHandler : IGetEligibleFollowsForEv
                 continue;
 
             var isParticipant = participantUserIds.Contains(userId);
-            var isInvited = invitedUserIds.Contains(userId);
+            var isInvited = invitedUserIds.Contains(userId) && !evt.HasRemoved(userId);
 
             items.Add(EligibleFollowItem.From(DisplayedPerson.From(user), isParticipant, isInvited));
         }

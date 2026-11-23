@@ -59,6 +59,9 @@ public static class ServerCopy
                 "Soirée en suspens 😅",
                 $"{eventTitle} s'est terminée sans qu'aucun film n'ait été choisi… on se rattrape la prochaine fois ?");
 
+        public static PushText RemovedFromEvent(string eventTitle) =>
+            new("Participation retirée", $"L'hôte a retiré votre participation à {eventTitle}.");
+
         public static PushText RatingReminder(string movieTitle, string eventTitle) =>
             new("Alors, ce film ? ⭐", $"{movieTitle}, vu pendant {eventTitle} : donnez-lui votre note !");
 

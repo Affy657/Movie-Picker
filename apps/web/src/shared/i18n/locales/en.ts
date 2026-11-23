@@ -872,6 +872,11 @@ export const en: Locale = {
       intro: 'Join the event to suggest films and vote.',
       signedOutIntro: 'Log in or create an account to join the event.',
     },
+    removed: {
+      kicker: 'Participation removed',
+      text: 'The host removed you from this event.',
+      meta: 'To come back, ask them to invite you again.',
+    },
     inviteCard: {
       title: 'Invite your friends',
       lead: 'A movie night takes a few people: send this link, your friends join, suggest their movies and vote.',
@@ -889,7 +894,7 @@ export const en: Locale = {
       inviteAriaLabel: 'Invite friends',
       removeConfirmTitle: 'Remove a participant',
       removeConfirm:
-        'Remove {{pseudo}} from the event? Their movies, votes and marks will be deleted.',
+        'Remove {{pseudo}} from the event? Their movies, votes and marks will be deleted, and only a new invitation from you will let them back.',
       removeConfirmAction: 'Remove',
       removeError: 'Unable to remove this participant.',
       removeSuccess: '{{pseudo}} was removed from the event.',
@@ -2638,6 +2643,8 @@ export const en: Locale = {
     host_only_invite: 'Only the host can send invitations.',
     host_only_list: 'Only the host can view this list.',
     host_or_self_only: 'Reserved to the host or to the participant themselves.',
+    removed_from_event:
+      'The host removed you from this event. To come back, ask them to invite you again.',
     seen_mark_own_only: 'You can only change your own seen mark.',
     rating_own_participation_only: 'You can only rate for your own participation.',
     rating_only_once_started: 'A movie can be rated once the night has started.',
@@ -2799,6 +2806,7 @@ export const en: Locale = {
     prefListInvitation: 'Invitation to a list',
     prefGroupInvitation: 'Invitation to a group',
     prefGroupNight: 'New night in one of your groups',
+    prefRemovedFromEvent: 'The host removes you from an event',
     prefNewFollower: 'Someone follows you',
     prefEventPending: 'Event finished with no movie picked',
     prefLetterboxdReconciliationPending: 'Letterboxd films to confirm',
@@ -2840,6 +2848,7 @@ export const en: Locale = {
     groupInvitationText: '{{name}} invites you to join the group “**{{groupName}}**”',
     groupNightText:
       '{{name}} is waiting for you at **{{eventTitle}}**, in the group “{{groupName}}”',
+    removedFromEventText: 'The host removed you from **{{eventTitle}}**.',
     groupInvitationAcceptAria: 'Accept the invitation to the group “{{groupName}}”',
     groupInvitationDeclineAria: 'Decline the invitation to the group “{{groupName}}”',
     listInvitationAccept: 'Accept',

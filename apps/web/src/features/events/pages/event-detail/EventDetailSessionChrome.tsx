@@ -6,6 +6,7 @@ import EventMoviesLoadError from '@/features/events/pages/event-detail/EventMovi
 import EventPendingBanner from '@/features/events/components/EventPendingBanner';
 import EventConnectionBanner from '@/features/events/components/EventConnectionBanner';
 import EventProposingNotice from '@/features/events/pages/event-detail/EventProposingNotice';
+import EventRemovedBanner from '@/features/events/pages/event-detail/EventRemovedBanner';
 import EventWheelActions from '@/features/events/components/EventWheelActions';
 import { eventHeaderActions, hasHeaderActions } from '@/features/events/lib/eventHeaderActions';
 import { getEligibleFollows } from '@/features/events/api/eventsApi';
@@ -115,7 +116,8 @@ function EventDetailSessionOverlays({
       {moviesQuery.isError && moviesQuery.data === undefined ? (
         <EventMoviesLoadError error={moviesQuery.error} onRetry={() => moviesQuery.refetch()} />
       ) : null}
-      {join.needsJoin ? (
+      {join.needsJoin && event.viewerRemoved ? <EventRemovedBanner /> : null}
+      {join.needsJoin && !event.viewerRemoved ? (
         <JoinForm
           slug={slug}
           onJoined={(participantId, pseudo) => join.setParticipant({ participantId, pseudo })}

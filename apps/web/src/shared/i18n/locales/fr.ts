@@ -880,6 +880,11 @@ export const fr = {
       intro: 'Rejoignez la soirée pour proposer des films et voter.',
       signedOutIntro: 'Connectez-vous ou créez un compte pour rejoindre la soirée.',
     },
+    removed: {
+      kicker: 'Participation retirée',
+      text: 'L’hôte a retiré votre participation à cette soirée.',
+      meta: 'Pour revenir, demandez-lui de vous inviter de nouveau.',
+    },
     inviteCard: {
       title: 'Invitez vos amis',
       lead: 'Une soirée se joue à plusieurs : envoyez ce lien, vos amis rejoignent la soirée, proposent leurs films et votent.',
@@ -897,7 +902,7 @@ export const fr = {
       inviteAriaLabel: 'Inviter des amis',
       removeConfirmTitle: 'Retirer un participant',
       removeConfirm:
-        'Retirer {{pseudo}} de la soirée\u00a0? Ses films, votes et marques seront supprimés.',
+        'Retirer {{pseudo}} de la soirée\u00a0? Ses films, votes et marques seront supprimés, et seule une nouvelle invitation de votre part permettra de revenir.',
       removeConfirmAction: 'Retirer',
       removeError: 'Impossible de retirer ce participant.',
       removeSuccess: '{{pseudo}} a été retiré(e) de la soirée.',
@@ -2671,6 +2676,8 @@ export const fr = {
     host_only_invite: "Seul l'hôte peut envoyer des invitations.",
     host_only_list: "Seul l'hôte peut consulter cette liste.",
     host_or_self_only: "Action réservée à l'hôte ou au participant lui-même.",
+    removed_from_event:
+      'L’hôte a retiré votre participation à cette soirée. Pour revenir, demandez-lui de vous inviter de nouveau.',
     seen_mark_own_only: 'Vous ne pouvez modifier que votre propre marque « déjà vu ».',
     rating_own_participation_only: 'Vous ne pouvez noter que pour votre propre participation.',
     rating_only_once_started: 'Le film se note une fois la soirée commencée.',
@@ -2837,6 +2844,7 @@ export const fr = {
     prefListInvitation: 'Invitation à une liste',
     prefGroupInvitation: 'Invitation à un groupe',
     prefGroupNight: 'Nouvelle soirée dans un de vos groupes',
+    prefRemovedFromEvent: 'L’hôte retire votre participation',
     prefNewFollower: "Quelqu'un vous suit",
     prefEventPending: 'Soirée terminée sans film choisi',
     prefLetterboxdReconciliationPending: 'Films Letterboxd à confirmer',
@@ -2878,6 +2886,7 @@ export const fr = {
     listInvitationText: '{{name}} vous invite à rejoindre la liste « **{{listName}}** »',
     groupInvitationText: '{{name}} vous invite à rejoindre le groupe « **{{groupName}}** »',
     groupNightText: '{{name}} vous attend à **{{eventTitle}}**, dans le groupe « {{groupName}} »',
+    removedFromEventText: 'L’hôte a retiré votre participation à **{{eventTitle}}**.',
     groupInvitationAcceptAria: 'Accepter l’invitation au groupe « {{groupName}} »',
     groupInvitationDeclineAria: 'Refuser l’invitation au groupe « {{groupName}} »',
     listInvitationAccept: 'Accepter',

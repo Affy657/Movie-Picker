@@ -82,4 +82,22 @@ public sealed class GetEligibleFollowsForEventHandlerTests
         Assert.False(u2.IsAlreadyParticipant);
         Assert.True(u2.IsAlreadyInvited);
     }
+
+    [Fact]
+    public async Task HandleAsync_AFriendTheHostRemoved_CanBeInvitedAgain()
+    {
+        _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Event { Id = "evt1", CreatorUserId = HostId, RemovedUserIds = ["u2"] });
+        _follows.Setup(f => f.GetFollowingIdsAsync(HostId, It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(["u2"]);
+        _users.Setup(u => u.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([U("u2")]);
+        _participants.Setup(p => p.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _notifications.Setup(n => n.ListUserIdsByTypeAndEventAsync(UserNotificationType.EventInvitation, "evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new HashSet<string> { "u2" });
+
+        var result = await _sut.HandleAsync(HostId, "evt1");
+
+        Assert.False(result.Follows.Single().IsAlreadyInvited);
+    }
 }

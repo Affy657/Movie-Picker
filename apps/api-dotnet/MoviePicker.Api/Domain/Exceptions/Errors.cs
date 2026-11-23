@@ -263,6 +263,9 @@ public static class Errors
     public static ForbiddenException HostOrSelfOnly() =>
         new("Reserved to the host or to the participant themselves", ErrorCodes.HostOrSelfOnly);
 
+    public static ForbiddenException RemovedFromEvent() =>
+        new("The host removed this account from the movie night", ErrorCodes.RemovedFromEvent);
+
     public static ForbiddenException SeenMarkOwnOnly() =>
         new("You can only change your own seen mark", ErrorCodes.SeenMarkOwnOnly);
 

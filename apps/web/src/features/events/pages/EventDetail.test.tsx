@@ -593,6 +593,28 @@ describe('EventDetail (MSW)', () => {
     expect(screen.getByText(/indisponible|Service/i)).toBeInTheDocument();
   });
 
+  it('tells an account the host removed that it is out, instead of offering to join again', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u1',
+          displayName: 'Bob',
+          emailMasked: 'b***@test.local',
+          uiTheme: 'system',
+          accentColor: 'default',
+        })
+      ),
+      ...createEventDetailHandlers({ slug, title: 'Soirée démo', viewerRemoved: true })
+    );
+    renderEventDetail(`/e/${slug}`);
+
+    expect(await screen.findByText('Participation retirée')).toBeInTheDocument();
+    expect(
+      screen.getByText('L’hôte a retiré votre participation à cette soirée.')
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /rejoindre/i })).not.toBeInTheDocument();
+  });
+
   it('after joining, shows the Movies section and allows proposing a movie', async () => {
     const user = userEvent.setup();
     server.use(

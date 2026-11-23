@@ -49,6 +49,7 @@ export type EventData = Pick<ServedEvent, 'title' | 'date' | 'time' | 'slug'> &
       | 'participantCount'
       | 'votersCount'
       | 'movieCount'
+      | 'viewerRemoved'
     >
   > & {
     id: string;

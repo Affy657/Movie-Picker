@@ -75,6 +75,47 @@ public sealed class JoinEventHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_AccountTheHostRemoved_IsRefusedWithoutJoining()
+    {
+        var evt = ActiveEvent() with { RemovedUserIds = ["u1"] };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(
+            () => _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Alice" }, "u1"));
+
+        Assert.Equal(ErrorCodes.RemovedFromEvent, ex.Reason);
+        _participantRepo.Verify(r => r.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_RemovedWhileJoining_IsRefusedInsideTheUnitOfWork()
+    {
+        var evt = ActiveEvent();
+        _eventRepo.SetupSequence(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(evt)
+            .ReturnsAsync(evt with { RemovedUserIds = ["u1"] });
+
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(
+            () => _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Alice" }, "u1"));
+
+        Assert.Equal(ErrorCodes.RemovedFromEvent, ex.Reason);
+        _participantRepo.Verify(r => r.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AnotherAccount_JoinsANightWithRemovedPeople()
+    {
+        var evt = ActiveEvent() with { RemovedUserIds = ["u-removed"] };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _participantRepo.Setup(r => r.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Participant p, CancellationToken _) => p with { Id = "p1" });
+
+        var result = await _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Alice" }, "u1");
+
+        Assert.True(result.IsNew);
+    }
+
+    [Fact]
     public async Task HandleAsync_NewParticipant_ReturnsCreatedWithIsNewTrue()
     {
         var evt = ActiveEvent();

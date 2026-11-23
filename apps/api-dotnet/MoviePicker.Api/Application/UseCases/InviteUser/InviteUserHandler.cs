@@ -73,8 +73,8 @@ public sealed class InviteUserHandler : IInviteUserHandler
         if (alreadyParticipant is not null)
             throw Errors.AlreadyParticipant();
 
-        var alreadyInvited = await _notifications.ExistsAsync(targetUserId, UserNotificationType.EventInvitation, evt.Id, ct);
-        if (alreadyInvited)
+        var lettingBackIn = evt.HasRemoved(targetUserId);
+        if (!lettingBackIn && await _notifications.ExistsAsync(targetUserId, UserNotificationType.EventInvitation, evt.Id, ct))
             throw Errors.InvitationAlreadySent();
 
         var withinPairQuota = await _quota.TryConsumeAsync(
@@ -83,6 +83,9 @@ public sealed class InviteUserHandler : IInviteUserHandler
             throw Errors.InvitationLimitReached();
 
         var target = await _users.GetByIdAsync(targetUserId, ct);
+
+        if (lettingBackIn)
+            await LetBackInAsync(evt, targetUserId, ct);
 
         var claimed = await _dedup.TryClaimAsync(
             targetUserId, UserNotificationType.EventInvitation, evt.Id, NotificationDedupChannel.InApp, ct);
@@ -124,6 +127,13 @@ public sealed class InviteUserHandler : IInviteUserHandler
         }
 
         return Sent();
+    }
+
+    private async Task LetBackInAsync(Event evt, string targetUserId, CancellationToken ct)
+    {
+        await _events.UpdateAsync(evt.LettingBackIn(targetUserId) with { UpdatedAt = _clock.GetUtcNow() }, ct);
+        await _dedup.ReleaseAsync(
+            targetUserId, UserNotificationType.EventInvitation, evt.Id, NotificationDedupChannel.InApp, ct);
     }
 
     private static InviteUserResponse Sent() => new() { Message = "Invitation sent" };

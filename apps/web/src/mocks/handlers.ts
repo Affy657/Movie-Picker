@@ -800,6 +800,7 @@ export interface MockEventOptions {
   winnerCount?: number;
 
   theme?: string | null;
+  viewerRemoved?: boolean;
 }
 
 function mockParticipant(_id: string, pseudo: string, isCreator = false) {
@@ -828,6 +829,7 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
         isFinished: opts.isFinished ?? false,
         lifecycle: opts.lifecycle ?? (opts.isFinished ? 'finished' : 'live'),
         winners: [],
+        viewerRemoved: opts.viewerRemoved ?? false,
         participantCount: 4,
         movieCount: 2,
         votersCount: 0,

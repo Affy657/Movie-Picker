@@ -13,6 +13,7 @@ public sealed class InviteUserHandlerTests
 {
     private const string HostId = "host";
     private const string TargetId = "target";
+    private static readonly string[] StillRemoved = ["someone-else"];
 
     private readonly Mock<IEventRepository> _events = new();
     private readonly Mock<IParticipantRepository> _participants = new();
@@ -156,6 +157,36 @@ public sealed class InviteUserHandlerTests
         _dedup.Verify(d => d.ReleaseAsync(
             It.IsAny<string>(), It.IsAny<UserNotificationType>(), It.IsAny<string>(),
             It.IsAny<NotificationDedupChannel>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_FriendTheHostRemoved_IsLetBackInAndInvitedAgain()
+    {
+        SetupEvent(Evt() with { RemovedUserIds = [TargetId, "someone-else"] });
+        _follows.Setup(f => f.IsFollowingAsync(HostId, TargetId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _participants.Setup(p => p.FindByEventAndUserIdAsync("evt1", TargetId, It.IsAny<CancellationToken>())).ReturnsAsync((Participant?)null);
+        _notifications.Setup(n => n.ExistsAsync(TargetId, UserNotificationType.EventInvitation, "evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var released = false;
+        _dedup.Setup(d => d.ReleaseAsync(
+                TargetId, UserNotificationType.EventInvitation, "evt1",
+                NotificationDedupChannel.InApp, It.IsAny<CancellationToken>()))
+            .Callback(() => released = true)
+            .Returns(Task.CompletedTask);
+        _dedup.Setup(d => d.TryClaimAsync(
+                TargetId, UserNotificationType.EventInvitation, "evt1",
+                NotificationDedupChannel.InApp, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => released);
+
+        var result = await _sut.HandleAsync(HostId, "evt1", Request());
+
+        Assert.Equal("Invitation sent", result.Message);
+        _events.Verify(e => e.UpdateAsync(
+            It.Is<Event>(x => x.RemovedUserIds.SequenceEqual(StillRemoved)),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _notifications.Verify(n => n.AddAsync(
+            It.Is<UserNotification>(x => x.UserId == TargetId && x.Type == UserNotificationType.EventInvitation),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

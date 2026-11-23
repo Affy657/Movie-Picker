@@ -12072,6 +12072,7 @@ export interface components {
             /** @enum {string} */
             lifecycle: "upcoming" | "live" | "pending" | "finished";
             myParticipant: components["schemas"]["ParticipantResponse"] | null;
+            viewerRemoved: boolean;
             /** Format: int32 */
             participantCount: number;
             /** Format: int32 */
@@ -13291,7 +13292,7 @@ export interface components {
         };
         NotificationTypePreference: {
             /** @enum {string} */
-            type: "newfollower" | "movieadded" | "moviepicked" | "participantjoined" | "eventdeleted" | "eventreminder1h" | "eventreminder24h" | "eventinvitation" | "eventpending" | "moviepickedmanually" | "letterboxdreconciliationpending" | "eventdatechanged" | "ratingreminder" | "listinvitation" | "groupinvitation" | "groupnight";
+            type: "newfollower" | "movieadded" | "moviepicked" | "participantjoined" | "eventdeleted" | "eventreminder1h" | "eventreminder24h" | "eventinvitation" | "eventpending" | "moviepickedmanually" | "letterboxdreconciliationpending" | "eventdatechanged" | "ratingreminder" | "listinvitation" | "groupinvitation" | "groupnight" | "removedfromevent";
             enabled: boolean;
         };
         NotificationTypePreferencePatch: {
@@ -13637,7 +13638,7 @@ export interface components {
         UserNotificationItem: {
             id: string;
             /** @enum {string} */
-            type: "newfollower" | "movieadded" | "moviepicked" | "participantjoined" | "eventdeleted" | "eventreminder1h" | "eventreminder24h" | "eventinvitation" | "eventpending" | "moviepickedmanually" | "letterboxdreconciliationpending" | "eventdatechanged" | "ratingreminder" | "listinvitation" | "groupinvitation" | "groupnight";
+            type: "newfollower" | "movieadded" | "moviepicked" | "participantjoined" | "eventdeleted" | "eventreminder1h" | "eventreminder24h" | "eventinvitation" | "eventpending" | "moviepickedmanually" | "letterboxdreconciliationpending" | "eventdatechanged" | "ratingreminder" | "listinvitation" | "groupinvitation" | "groupnight" | "removedfromevent";
             actorHandle: string | null;
             actorDisplayName: string | null;
             actorAvatarId: string | null;
