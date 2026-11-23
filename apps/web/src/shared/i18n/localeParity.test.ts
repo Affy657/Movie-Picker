@@ -65,6 +65,13 @@ describe('locale parity', () => {
     expect(familiar, `tutoiement dans : ${familiar.join(', ')}`).toEqual([]);
   });
 
+  it('the French locale writes the typographic apostrophe', () => {
+    const straight = frEntries
+      .filter(([, value]) => typeof value === 'string' && /\p{L}'[\p{L}\d{]/u.test(value))
+      .map(([key]) => key);
+    expect(straight, `apostrophe droite dans : ${straight.join(', ')}`).toEqual([]);
+  });
+
   it('the formal "vous" guard catches every familiar form already met', () => {
     expect(isFamiliar('Pense à vérifier les spams.')).toBe(true);
     expect(isFamiliar('Réessaie dans quelques instants.')).toBe(true);
