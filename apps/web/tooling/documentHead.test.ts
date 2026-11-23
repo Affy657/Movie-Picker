@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import indexHtml from '../index.html?raw';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { apiPreconnectTags, contentSecurityPolicyMeta, insertAfterCharset } from './documentHead';
+
+const indexHtml = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
 
 const SHELL =
   '<!doctype html>\n<html>\n  <head>\n    <meta charset="UTF-8">\n    <title>x</title>\n';

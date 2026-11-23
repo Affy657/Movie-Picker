@@ -10,6 +10,7 @@ import { SkeletonScreen } from '@/shared/components/Skeleton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { isNotFoundError } from '@/shared/api/apiError';
 import { ROUTES } from '@/app/routes';
+import type { Translate } from '@/shared/i18n';
 
 interface JoinLinkClassNames {
   layout?: string;
@@ -27,6 +28,21 @@ interface JoinLinkPendingLabels {
   loadError: string;
   retry: string;
   loading: string;
+}
+
+export function joinLinkPendingLabels(
+  t: Translate,
+  scope: 'groups.join' | 'lists.join'
+): JoinLinkPendingLabels {
+  return {
+    title: t(`${scope}.title`),
+    invalidTitle: t(`${scope}.invalidTitle`),
+    invalidMessage: t(`${scope}.invalidMessage`),
+    backHome: t(`${scope}.backHome`),
+    loadError: t(`${scope}.loadError`),
+    retry: t(`${scope}.retry`),
+    loading: t(`${scope}.loading`),
+  };
 }
 
 export function JoinLinkPending({

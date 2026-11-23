@@ -18,6 +18,7 @@ import { useInvitePreview, useJoinListByLink } from '@/features/library/hooks/us
 import {
   JoinLinkFull,
   JoinLinkPending,
+  joinLinkPendingLabels,
   JoinLinkSignIn,
 } from '@/features/library/components/JoinLinkParts';
 import { listCountLabel } from '@/features/library/utils/listCount';
@@ -110,15 +111,7 @@ export default function JoinListPage() {
       <JoinLinkPending
         error={preview.isError ? preview.error : null}
         onRetry={() => void preview.refetch()}
-        labels={{
-          title: t('lists.join.title'),
-          invalidTitle: t('lists.join.invalidTitle'),
-          invalidMessage: t('lists.join.invalidMessage'),
-          backHome: t('lists.join.backHome'),
-          loadError: t('lists.join.loadError'),
-          retry: t('lists.join.retry'),
-          loading: t('lists.join.loading'),
-        }}
+        labels={joinLinkPendingLabels(t, 'lists.join')}
         classNames={{ layout: styles.layout }}
       >
         <Card padding="lg" radius="lg" elevation="md" className={styles.card}>

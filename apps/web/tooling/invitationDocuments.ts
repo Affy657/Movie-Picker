@@ -23,12 +23,68 @@ export const INVITATION_DOCUMENTS: ReadonlyArray<InvitationDocument> = [
   },
 ];
 
-const PAGE_HEAD_TAGS = [
-  /[ \t]*<title>[\s\S]*?<\/title>\s*/g,
-  /[ \t]*<meta\b[^>]*\b(?:name|property)="(?:description|robots|og:[^"]*|twitter:[^"]*)"[^>]*>\s*/g,
-  /[ \t]*<link\b[^>]*\brel="canonical"[^>]*>\s*/g,
-  /[ \t]*<script\b[^>]*\btype="application\/ld\+json"[^>]*>[\s\S]*?<\/script>\s*/g,
-];
+function attributeValue(tag: string, name: string): string | null {
+  const marker = ` ${name}="`;
+  const start = tag.indexOf(marker);
+  if (start < 0) return null;
+  const valueStart = start + marker.length;
+  const valueEnd = tag.indexOf('"', valueStart);
+  return valueEnd < 0 ? null : tag.slice(valueStart, valueEnd);
+}
+
+function describesThePage(tag: string): boolean {
+  const key = attributeValue(tag, 'name') ?? attributeValue(tag, 'property');
+  if (key === null) return false;
+  return (
+    key === 'description' || key === 'robots' || key.startsWith('og:') || key.startsWith('twitter:')
+  );
+}
+
+function closingEnd(html: string, closing: string, from: number): number {
+  const at = html.indexOf(closing, from);
+  return at < 0 ? from : at + closing.length;
+}
+
+function replacedElementEnd(html: string, tag: string, after: number): number | null {
+  if (tag === '<title>') return closingEnd(html, '</title>', after);
+  if (tag.startsWith('<script') && attributeValue(tag, 'type') === 'application/ld+json') {
+    return closingEnd(html, '</script>', after);
+  }
+  if (tag.startsWith('<link') && attributeValue(tag, 'rel') === 'canonical') return after;
+  if (tag.startsWith('<meta') && describesThePage(tag)) return after;
+  return null;
+}
+
+function withoutTrailingIndent(text: string): string {
+  let end = text.length;
+  while (end > 0 && (text[end - 1] === ' ' || text[end - 1] === '\t')) end -= 1;
+  return text.slice(0, end);
+}
+
+function afterWhitespace(html: string, from: number): number {
+  let at = from;
+  while (at < html.length && /\s/.test(html.charAt(at))) at += 1;
+  return at;
+}
+
+function withoutPageHeadTags(html: string): string {
+  let kept = '';
+  let cursor = 0;
+  let open = html.indexOf('<');
+  while (open >= 0) {
+    const close = html.indexOf('>', open);
+    if (close < 0) break;
+    const end = replacedElementEnd(html, html.slice(open, close + 1), close + 1);
+    if (end === null) {
+      open = html.indexOf('<', open + 1);
+      continue;
+    }
+    kept += withoutTrailingIndent(html.slice(cursor, open));
+    cursor = afterWhitespace(html, end);
+    open = html.indexOf('<', cursor);
+  }
+  return kept + html.slice(cursor);
+}
 
 function attribute(value: string): string {
   return value
@@ -60,7 +116,7 @@ function headTags({ title, description }: InvitationDocument): string {
 }
 
 export function invitationDocument(shell: string, document: InvitationDocument): string {
-  const stripped = PAGE_HEAD_TAGS.reduce((html, tag) => html.replace(tag, ''), shell);
+  const stripped = withoutPageHeadTags(shell);
   const headEnd = stripped.indexOf('</head>');
   if (headEnd < 0) throw new Error('index.html: no </head> to write the invitation preview into');
   return `${stripped.slice(0, headEnd)}${headTags(document)}\n${stripped.slice(headEnd)}`;

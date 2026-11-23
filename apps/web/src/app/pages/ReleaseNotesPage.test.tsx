@@ -47,7 +47,7 @@ describe('ReleaseNotesPage', () => {
     const folded = [...container.querySelectorAll('details')];
     const versions = screen.getAllByRole('heading', { level: 2 });
 
-    expect(folded.length).toBe(versions.length - RECENT_RELEASES);
+    expect(folded).toHaveLength(versions.length - RECENT_RELEASES);
     expect(folded.every((release) => !release.open)).toBe(true);
     expect(versions[0]?.closest('details')).toBeNull();
     expect(versions.at(-1)?.closest('summary')).not.toBeNull();

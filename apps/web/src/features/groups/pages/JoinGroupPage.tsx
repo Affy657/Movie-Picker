@@ -13,6 +13,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import {
   JoinLinkFull,
   JoinLinkPending,
+  joinLinkPendingLabels,
   JoinLinkSignIn,
 } from '@/features/library/components/JoinLinkParts';
 import { firstName } from '@/features/library/utils/listMembers';
@@ -88,15 +89,7 @@ export default function JoinGroupPage() {
       <JoinLinkPending
         error={preview.isError ? preview.error : null}
         onRetry={() => void preview.refetch()}
-        labels={{
-          title: t('groups.join.title'),
-          invalidTitle: t('groups.join.invalidTitle'),
-          invalidMessage: t('groups.join.invalidMessage'),
-          backHome: t('groups.join.backHome'),
-          loadError: t('groups.join.loadError'),
-          retry: t('groups.join.retry'),
-          loading: t('groups.join.loading'),
-        }}
+        labels={joinLinkPendingLabels(t, 'groups.join')}
         classNames={{ layout: styles.layout }}
       >
         <Card padding="lg" radius="lg" elevation="md" className={styles.card}>

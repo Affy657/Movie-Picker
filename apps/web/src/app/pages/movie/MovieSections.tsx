@@ -158,16 +158,14 @@ function CastFace({ member }: Readonly<{ member: MovieCastMember }>) {
 function CastRail({ children }: Readonly<{ children: ReactNode }>) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
-  if (!isMobile) return children;
   return (
-    <div
+    <section
       className={styles.castRail}
-      role="region"
-      aria-label={t('moviePage.castScrollAria')}
-      tabIndex={0}
+      aria-label={isMobile ? t('moviePage.castScrollAria') : undefined}
+      tabIndex={isMobile ? 0 : undefined}
     >
       {children}
-    </div>
+    </section>
   );
 }
 

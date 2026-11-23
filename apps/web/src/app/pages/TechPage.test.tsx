@@ -933,12 +933,12 @@ describe('TechPage', () => {
     expect(container.textContent).toContain(english.date(TECH_PAGE_LAST_UPDATE));
   });
 
-  it('lets the keyboard reach every diagram, a labelled region', () => {
+  it('labels every diagram as a region, a tab stop only when it overflows', () => {
     const { container } = renderTechPage();
     const regions = screen.getAllByRole('region', { name: /^Schéma : / });
 
     expect(regions).toHaveLength(container.querySelectorAll('figure').length);
-    for (const region of regions) expect(region).toHaveAttribute('tabindex', '0');
+    for (const region of regions) expect(region).not.toHaveAttribute('tabindex');
     expect(
       screen.getByRole('region', { name: `Schéma : ${fr.tech.diagram.ciTitle}` })
     ).toBeInTheDocument();
@@ -966,6 +966,7 @@ describe('TechPage', () => {
 
       expect(region.parentElement?.textContent).toContain(fr.tech.figure.scrollHint);
       expect(region.parentElement).toHaveAttribute('data-more-after', 'true');
+      expect(region).toHaveAttribute('tabindex', '0');
     } finally {
       Reflect.deleteProperty(HTMLElement.prototype, 'scrollWidth');
       Reflect.deleteProperty(HTMLElement.prototype, 'clientWidth');

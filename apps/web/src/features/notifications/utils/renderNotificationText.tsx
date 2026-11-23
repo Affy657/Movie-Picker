@@ -12,8 +12,10 @@ function withIsolatedValues(
   let cursor = 0;
   for (const match of text.matchAll(PLACEHOLDER)) {
     const start = match.index;
-    nodes.push(text.slice(cursor, start));
-    nodes.push(<bdi key={offset + start}>{values[match[1] ?? ''] ?? ''}</bdi>);
+    nodes.push(
+      text.slice(cursor, start),
+      <bdi key={offset + start}>{values[match[1] ?? ''] ?? ''}</bdi>
+    );
     cursor = start + match[0].length;
   }
   nodes.push(text.slice(cursor));

@@ -77,9 +77,9 @@ export default function JoinForm({
     track('join_prompt_clicked', { cta }, { oncePerTab: `join_prompt_clicked:${slug}:${cta}` });
 
   const votePrompt = (
-    <p className={styles.votePrompt} role="status">
+    <output className={styles.votePrompt}>
       {promptCount > 0 ? <span key={promptCount}>{t('events.join.votePrompt')}</span> : null}
-    </p>
+    </output>
   );
 
   let body: ReactNode;

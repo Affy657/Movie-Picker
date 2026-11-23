@@ -6,7 +6,10 @@ const SHELL = `<!doctype html>
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="description" content="Description du site" />
+    <meta
+      name="description"
+      content="Description du site"
+    />
     <meta property="og:title" content="Titre du site" />
     <meta property="og:url" content="https://www.movie-picker.fr/" />
     <meta name="twitter:card" content="summary_large_image" />

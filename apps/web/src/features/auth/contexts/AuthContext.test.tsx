@@ -557,7 +557,7 @@ describe('AuthProvider expired session', () => {
     act(() => meetUnauthorizedResponse());
 
     await waitFor(() => expect(auth().user).toBeNull());
-    expect(vi.mocked(fetchAuthMeForSession).mock.calls.length).toBe(checksBefore + 1);
+    expect(vi.mocked(fetchAuthMeForSession).mock.calls).toHaveLength(checksBefore + 1);
     expect(auth().sessionExpired).toBe(true);
   });
 
@@ -579,7 +579,7 @@ describe('AuthProvider expired session', () => {
 
       act(() => meetUnauthorizedResponse(`http://localhost:4000/api/v1/auth/${route}`));
 
-      expect(vi.mocked(fetchAuthMeForSession).mock.calls.length).toBe(checksBefore);
+      expect(vi.mocked(fetchAuthMeForSession).mock.calls).toHaveLength(checksBefore);
     }
   );
 

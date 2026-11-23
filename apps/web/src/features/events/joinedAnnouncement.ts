@@ -1,8 +1,6 @@
 import { createContext, useCallback, useContext, useState } from 'react';
 
-function ignoreAnnouncement(): void {}
-
-export const JoinedAnnouncementContext = createContext<() => void>(ignoreAnnouncement);
+export const JoinedAnnouncementContext = createContext<() => void>(() => undefined);
 
 export function useAnnounceJoined(): () => void {
   return useContext(JoinedAnnouncementContext);
