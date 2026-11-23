@@ -8,6 +8,56 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Une invitation qui mène jusqu’à la soirée** : la carte « Rejoindre la soirée » dit qui vous invite et comment se déroule la soirée, et l’invité qui crée son compte ou se connecte depuis le lien est inscrit à la soirée sans recliquer sur « Rejoindre », avec un message qui le confirme.
+- **Un accueil après l’inscription** : l’accueil vous souhaite la bienvenue, donne votre pseudo et propose de créer votre première soirée.
+- **« Invitez vos amis »** : tant que vous êtes seul sur votre soirée, un encart donne son lien à copier ou à partager.
+- **Tout le monde voit la roue tourner** : les invités assistent au tirage en direct, et un tirage selon les votes affiche les chances de chaque film.
+- **Un hôte qui supprime son compte passe la main** : le participant le plus ancien devient l’hôte et en est prévenu.
+- **Un participant retiré par l’hôte est prévenu**, et seule une nouvelle invitation de l’hôte lui permet de revenir.
+- **Une session expirée est annoncée**, avec un lien pour se reconnecter qui ramène à la même page ; le nom et la bio en cours de modification sont gardés.
+- **Des aperçus de liens qui disent de quoi il s’agit** : un profil partagé dans une messagerie montre le nom, la bio et la bannière du membre, une invitation à un groupe ou à une liste s’affiche comme une invitation, et l’aperçu d’une soirée dit qui invite.
+- **Le site en anglais est proposé** à un navigateur qui n’est pas réglé en français, et le site publie un `security.txt` pour signaler une faille et un `llms.txt` qui le décrit aux assistants IA.
+- **Un bouton pour afficher le mot de passe** pendant la saisie, et un lien de réinitialisation déjà utilisé ou expiré est signalé dès l’ouverture de la page.
+
+### Changed
+
+- **« Créer un compte » passe en premier** partout où un visiteur arrive sans compte (soirée, liste, groupe, Suivre, Enregistrer, pages réservées), avec « J’ai déjà un compte » juste à côté. La connexion et l’inscription ouvertes depuis une soirée y ramènent, et Google et GitHub passent avant le formulaire d’inscription.
+- **L’inscription demande un « Nom affiché »** et dit que le profil est public par défaut, avec le lien vers la politique de confidentialité.
+- **Un visiteur ne voit plus « Mes soirées » ni « Mes listes »**, son pied de page lui propose de créer un compte, et « Créer » de la barre mobile mène au même endroit que « Créer une soirée » de l’accueil.
+- **Le bandeau des cookies est plus court sur téléphone**, avec « Tout refuser » et « Tout accepter » côte à côte.
+- **La recherche de films a son propre champ**, qui relance la recherche, et affiche le titre et l’année sous chaque affiche.
+- **La fiche d’un film parle aux visiteurs** : « Proposer ce film à une soirée » et une phrase sur ce qu’est une soirée Movie Picker.
+- **La soirée après le tirage** : « Proposer un film » devient une simple icône, une soirée terminée propose d’abord « Organisez la vôtre » à qui n’y était pas, la fenêtre « Règles » n’affiche plus « Partir de » quand seuls les réglages par défaut existent, et la colonne des titres de la vue tableau s’appelle « Titre ».
+- **Les dates d’une soirée** : au plus deux ans à l’avance, « heure de Paris » précisé quand votre appareil est réglé sur un autre fuseau, et le brouillon d’une nouvelle soirée survit à une actualisation.
+- **Avec un seul film en lice, la roue donne le résultat tout de suite**, et l’hôte n’est plus notifié du tirage qu’il vient de faire.
+- **Des pages plus rapides** : chaque affiche est téléchargée à la taille où elle est vue, la première rangée d’un catalogue ou d’une liste passe en priorité, l’accueil charge ses rangées du bas à l’approche, et l’application se prépare au hors-ligne une fois la page affichée.
+- **Le dossier technique va à l’essentiel** : un encart « En une minute », l’auteur et le code source en haut, des chiffres exacts, et des schémas lisibles sur téléphone et atteignables au clavier.
+- **Le journal des versions montre les cinq dernières versions** et replie les précédentes.
+- **L’application installée s’ouvre sur l’accueil** et n’est plus bloquée en portrait.
+- **Les mentions légales et la politique de confidentialité sont complètes** : hébergeurs, directeur de la publication, responsable du traitement, bases légales, prestataires et transferts hors de l’Union européenne, recours auprès de la CNIL, et durée réelle de conservation des sauvegardes.
+- **L’e-mail de réinitialisation du mot de passe** porte le logo et les couleurs de Movie Picker.
+- **Le lien GitHub du pied de page mène au code source**, et l’avertissement avant la suppression du compte cite les listes, les groupes, la liste À voir et les films vus.
+
+### Fixed
+
+- **La recherche de films trouve « Rocky », « Amélie », « Léon » ou « Matilda » en tête**, au lieu de la filmographie d’un acteur qui porte ce prénom, aussi dans « Proposer un film » ; « dune » ne remonte plus les titres qui contiennent « d’une », et une recherche sans résultat ne parle plus d’une « sélection ».
+- **Une faute de frappe sur l’année ne termine plus une soirée** : une date qui la terminerait est refusée et le champ le signale, une soirée ne peut plus être créée déjà terminée, et une année impossible n’affiche plus « Enregistré ».
+- **Le titre d’un film proposé est toujours celui de TMDB**, jusque dans les notifications, et un nom ou un titre ne peut plus retourner le texte de l’application ni être fait de caractères invisibles.
+- **Un vote s’affiche tout de suite**, même sur un réseau lent ; un second appui pendant l’envoi ne l’annule plus, un échec remet le vote d’avant, et voter sans avoir rejoint la soirée affiche un message à chaque fois.
+- **Après le tirage, le focus va sur le résultat**, et le second onglet de l’hôte n’affiche plus « Modifié entre-temps » au-dessus d’un gagnant déjà tiré.
+- **« Retour » sur une soirée ou un récap ouvert depuis un lien ne fait plus quitter le site**, et une soirée, un récap ou un profil introuvable s’affiche comme la page 404.
+- **La fiche d’un film ou d’une série et le profil ne sautent plus pendant leur chargement** sur téléphone, et l’image de fond d’une fiche reste nette sur un grand écran.
+- **Le profil** : nom et pseudo lisibles sur une bannière en thème clair, un message quand il est vide, et « d’AD » élidé dans les titres.
+- **Les formulaires de compte affichent leurs propres messages**, une adresse e-mail sans domaine complet est refusée, « Trop de requêtes » dit dans combien de temps réessayer, et le retour après connexion garde la position dans la page.
+- **Les textes** : vouvoiement partout, apostrophes typographiques, accords (« 1 film sur 20 », « 1 résultat ») et élisions (« Voir le profil d’Alice »).
+- **Chaque page a son propre titre et sa propre description** dans un partage ou un moteur de recherche, et les pages réservées ont leur titre d’onglet.
+- **La bande-annonce se ferme par un bouton placé après le lecteur**, et la distribution d’un film se fait défiler au clavier.
+- **Les textes longs sans espace passent à la ligne** au lieu de déborder.
+- **Le suivi des erreurs n’envoie plus rien avant votre choix sur les cookies.**
+- **Un message confirme la suppression du compte.**
+
 ## [1.29.1] - 2026-11-23
 
 ### Fixed

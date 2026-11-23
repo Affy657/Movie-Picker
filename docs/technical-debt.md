@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-107`.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-116`.
 5. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
 7. **Contraintes** (ce qui casse en silence si on y touche) et **Impasses** (essayé, mesuré, sans gain), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
@@ -651,6 +651,77 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - fix: une variante bornée aux soirées encore ouvertes (début après maintenant moins le délai de clôture automatique, champ `startAtUtc` déjà indexé) pour Mes soirées et les prochaines soirées, et les soirées passées de la page d'un groupe plafonnées dans la requête
 - fini-quand: aucune lecture d'affichage ne charge une soirée de groupe close depuis plus d'une semaine, hors les douze films de la page du groupe
 
+## DEBT-108 quatre pages publiques restent sous le plancher Lighthouse mobile, hors de la porte
+
+- state: agent
+- impact: la porte Lighthouse ne mesure ni la fiche film, ni `/films/tendances`, ni un profil rempli, ni `/tech`. Mesurées en local avec le stub réaliste (vraies tailles d'affiches, `scripts/lighthouse-stub.mjs`), elles font 62, 62, 56 et 71 sur mobile (LCP de 5,7 à 6,1 s pour les trois premières, TBT d'environ 690 ms pour `/tech`), sous le plancher de 85. C'est le premier chiffre qu'obtient quelqu'un qui lance Lighthouse sur le site (constats M03 et M08 de `docs/audits/2026-11-23-new-user-and-recruiter.md`). Sur un téléphone de 360 px, le LCP de l'accueil reste aussi la première affiche.
+- ou: `scripts/lighthouse-run.mjs` (`URLS`), `scripts/lighthouse-stub.mjs`, `configs/lighthouse-budgets.json`, `apps/web/src/app/pages/tech/`
+- verify: `LH_CANDIDATES=1 LH_ONLY=movie,trending,profile-active pnpm run lighthouse` ; encore ouvert tant qu'une de ces pages reste sous 85 ou absente de `URLS`
+- fix: pour `/tech`, `content-visibility` par section avec une hauteur estimée par section, ou hydrater le prérendu au lieu de le remplacer ; pour les trois autres, le LCP de l'affiche (préchargement annoncé dès le document, ou première rangée moins haute)
+- fini-quand: chaque page atteint 85 en médiane sur le runner et entre dans `URLS`, sans desserrer la porte (I4)
+- piege: avec ces quatre pages, sept shards mesurent trois pages chacun : surveiller la durée du job
+
+## DEBT-109 les titres de films restent en français dans l'interface anglaise
+
+- state: differe
+- declencheur: un usage réel de l'interface anglaise (part des sessions `en` dans PostHog)
+- impact: `language=fr-FR` est écrit en dur dans les appels TMDB ; les caches mémoire et partagé ne tiennent pas compte de la langue, et les films d'une soirée gardent le titre français enregistré à la proposition
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Tmdb/TmdbMovieSearch.*.cs`
+- verify: `grep -rn "language=fr-FR" apps/api-dotnet/MoviePicker.Api/Infrastructure/Tmdb`
+- fix: passer la langue de l'interface jusqu'aux appels TMDB, la mettre dans la clé de chaque cache, et garder le titre enregistré d'une soirée comme repli
+
+## DEBT-110 quelques affiches passent encore par le relais en w500
+
+- state: agent
+- impact: le relais sert w92, w185, w342 et w500 depuis le 2026-11-23, mais `HistoryEventRow`, `UpcomingEventCard`, `GroupFilms`, `GroupNextNight` et `MovieRatingDialog` demandent encore la w500 pour une petite vignette, et `HomeMostProposed` pourrait passer en w92. Chaque taille a sa propre entrée de cache : jusqu'à quatre par affiche, pour un plafond `PosterCacheMaxEntries` de 2 000.
+- ou: les composants cités, `apps/web/src/shared/utils/posterUrl.ts`, le relais d'affiches de l'API
+- verify: `grep -rLn "posterSrcAtSize" apps/web/src/features/events/components/HistoryEventRow.tsx apps/web/src/features/events/components/UpcomingEventCard.tsx` ; encore ouvert tant que la commande rend un fichier
+- fix: `posterSrcAtSize` à la taille d'affichage dans chaque composant cité, puis relever le plafond du cache s'il se remplit
+
+## DEBT-111 les schémas de `/tech` n'ont pas de variante verticale sur téléphone
+
+- state: differe
+- declencheur: un retour d'un lecteur sur téléphone
+- impact: sous 768 px, chaque schéma garde sa largeur de bureau dans un cadre qui défile ; le fondu et « Faites glisser » le signalent, le texte ne descend plus sous 12 px, mais on n'en voit qu'un tiers à la fois
+- ou: `apps/web/src/app/pages/tech/TechDiagrams.tsx`, `TechBlocks.tsx`
+- verify: `grep -c "vertical" apps/web/src/app/pages/tech/TechDiagrams.tsx` ; encore ouvert tant que la commande rend `0`
+- fix: une disposition verticale des schémas les plus larges sous 768 px, boîtes de texte revérifiées par `getBBox`
+
+## DEBT-112 un participant retiré ne revient que par une invitation qui exige de le suivre
+
+- state: differe
+- declencheur: un hôte qui demande comment laisser revenir quelqu'un
+- impact: depuis le 2026-11-23, une personne retirée par l'hôte ne peut plus rejoindre par le lien ; seule une nouvelle invitation lève le blocage, et inviter exige que l'hôte suive la personne. La liste des participants n'a pas de bouton pour la laisser revenir, et une soirée de groupe reste proposée à un membre retiré, dont la tentative est refusée avec un message.
+- ou: `apps/web/src/features/events/components/EventParticipantsList.tsx`, le cas d'usage `InviteUser`, `Event.RemovedUserIds`
+- verify: `grep -rln "LettingBackIn" apps/api-dotnet/MoviePicker.Api --include=*.cs` ; encore ouvert tant que seuls `Event.cs` et l'invitation l'appellent
+- fix: une action « Laisser revenir » dans le menu de l'hôte, et les soirées de groupe filtrées pour un membre retiré
+
+## DEBT-113 une soirée récurrente close faute de participant garde sa récurrence
+
+- state: agent
+- impact: quand l'hôte supprime son compte et que personne ne reste pour reprendre sa soirée, elle est close ; sa récurrence reste inscrite. Le planificateur ne crée pas d'occurrence pour une soirée terminée, mais aucun test ne le vérifie
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Auth/HostedNightsHandover.cs`, planificateur des récurrences
+- verify: `grep -rl "Recurr" apps/api-dotnet/MoviePicker.Api.Tests/UseCases/Auth` ; encore ouvert tant que la commande ne rend rien
+- fix: un test qui ferme une soirée récurrente par passation impossible et vérifie qu'aucune occurrence ne naît, ou couper la récurrence à la clôture
+
+## DEBT-114 trois règles SonarJS ne tournent qu'en CI
+
+- state: differe
+- declencheur: un commit de version rouge sur S6819, S6847 ou S3863
+- impact: SonarCloud reprend des règles de jsx-a11y et d'import (S6819, S6847, S3863) que la vérification préalable de `pnpm run release` ne joue pas : un commit de version peut encore passer rouge sur ces règles
+- ou: `scripts/release.mjs` (`preflight`), configuration ESLint du front
+- verify: `grep -rn "jsx-a11y" apps/web/eslint.config.*` ; encore ouvert tant que les trois règles n'y sont pas actives
+- fix: activer les règles équivalentes de `eslint-plugin-jsx-a11y` et d'`eslint-plugin-import` dans l'ESLint du front
+
+## DEBT-115 les mises à jour de sécurité Dependabot des dépendances transitives échouent
+
+- state: humain
+- bloque: c'est un réglage du dépôt (Settings, Code security, Dependabot security updates), pas un fichier
+- impact: les runs « Dependabot Updates » de sécurité sur des dépendances transitives pnpm échouent : Dependabot ne sait pas les monter seul, et son pnpm refuse certaines versions trop récentes (`minimumReleaseAge`). Chaque échec ajoute un run rouge à l'historique public
+- ou: réglages du dépôt GitHub, `.github/dependabot.yml`
+- verify: `gh run list --workflow "Dependabot Updates" --limit 20 --json conclusion -q '[.[] | select(.conclusion=="failure")] | length'` ; encore ouvert tant que la commande rend autre chose que `0`
+- fix: (humain) couper les mises à jour de sécurité automatiques et garder les alertes ; les montées transitives passent par `pnpm.overrides` pendant `/weekly-maintenance`
+
 ---
 
 # Contraintes
@@ -668,6 +739,8 @@ Le titre de l'accueil est peint dans `apps/web/index.html`, dans l'écran de dé
 1. **L'écran de démarrage couvre toute la page** (`position: fixed; inset: 0`, fond opaque) et n'est retiré qu'après `createRoot().render()` : rien de ce qui est peint dessous ne compte comme LCP tant qu'il est là.
 2. **La boîte du titre de la coquille reste au moins aussi grande que celle du `<h1>` réel** : Chrome ne remplace un candidat LCP que par un plus grand. Même police calculée des deux côtés (`700 32px / 51.2px Overpass`), 51 px de haut, 520 px de large contre 488. Toucher `font-size`, `line-height`, `max-width` ou le texte d'un seul côté fait repasser le LCP après le montage.
 3. **Les styles de l'entrée sont en ligne dans le document** (`inlineBlockingStyles`, `apps/web/vite.config.ts`), donc Overpass est déclarée avant la peinture de la coquille. Les repasser en feuille liée ou différée ramène une substitution de police tardive et un nouveau candidat LCP après le montage ; mesuré : 1 point perdu sur six pages, rien gagné sur `home`.
+
+Le titre de la coquille n'a pas de `text-wrap: balance` : équilibré sur deux lignes, il faisait sur téléphone une boîte plus petite que la première affiche, qui redevenait le LCP (`startShell.test.ts` le vérifie).
 
 Les trois préchargements de police portent `fetchpriority="low"` : à priorité haute, 53 Ko partaient dans la première vague devant `react-vendor`. Remesurer `home` après y avoir touché.
 
