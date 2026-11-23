@@ -29,7 +29,7 @@ import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 
 export const MONGO_IMAGE =
-  'mongo:8@sha256:0f64db83d5926400d1cbcbaf35fbf2b0dfa6a4eaa71e04a26481a38cd803b27b';
+  'mongo:8@sha256:747773029b84309981a3624a1af64ffc8c4d792283cc0834f26fe01fc6d28b34';
 export const WORKSTATION_CONTAINER = 'movie-picker-mongo-test';
 export const WORKSTATION_PORT = process.env.MONGO_TEST_PORT ?? '27018';
 
