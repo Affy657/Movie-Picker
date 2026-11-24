@@ -938,7 +938,7 @@ describe('TechPage', () => {
     const regions = screen.getAllByRole('region', { name: /^Schéma : / });
 
     expect(regions).toHaveLength(container.querySelectorAll('figure').length);
-    for (const region of regions) expect(region).not.toHaveAttribute('tabindex');
+    for (const region of regions) expect(region.querySelector('[tabindex]')).toBeNull();
     expect(
       screen.getByRole('region', { name: `Schéma : ${fr.tech.diagram.ciTitle}` })
     ).toBeInTheDocument();
@@ -964,9 +964,9 @@ describe('TechPage', () => {
         name: `Schéma : ${fr.tech.diagram.ciTitle}`,
       });
 
-      expect(region.parentElement?.textContent).toContain(fr.tech.figure.scrollHint);
-      expect(region.parentElement).toHaveAttribute('data-more-after', 'true');
-      expect(region).toHaveAttribute('tabindex', '0');
+      expect(region.textContent).toContain(fr.tech.figure.scrollHint);
+      expect(region).toHaveAttribute('data-more-after', 'true');
+      expect(region.querySelector('[tabindex="0"]')).not.toBeNull();
     } finally {
       Reflect.deleteProperty(HTMLElement.prototype, 'scrollWidth');
       Reflect.deleteProperty(HTMLElement.prototype, 'clientWidth');

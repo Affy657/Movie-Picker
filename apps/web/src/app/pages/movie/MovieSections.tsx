@@ -159,12 +159,10 @@ function CastRail({ children }: Readonly<{ children: ReactNode }>) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   return (
-    <section
-      className={styles.castRail}
-      aria-label={isMobile ? t('moviePage.castScrollAria') : undefined}
-      tabIndex={isMobile ? 0 : undefined}
-    >
-      {children}
+    <section aria-label={isMobile ? t('moviePage.castScrollAria') : undefined}>
+      <div className={styles.castRail} tabIndex={isMobile ? 0 : undefined}>
+        {children}
+      </div>
     </section>
   );
 }

@@ -102,32 +102,28 @@ export function Figure({
   children,
 }: Readonly<{ caption?: string; label: string; children: ReactNode }>) {
   const { t } = useTranslation();
-  const scrollRef = useRef<HTMLElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const { canScrollBack, canScrollForward } = useRailScroll(scrollRef, 1);
   const scrolls = canScrollBack || canScrollForward;
 
   return (
     <Card as="figure" padding="none" radius="lg" elevation="sm" className={styles.figure}>
-      <div
+      <section
         className={styles.figureFrame}
+        aria-label={t('tech.figure.regionLabel', { title: label })}
         data-more-before={canScrollBack || undefined}
         data-more-after={canScrollForward || undefined}
       >
-        <section
-          ref={scrollRef}
-          className={styles.figureScroll}
-          tabIndex={scrolls ? 0 : undefined}
-          aria-label={t('tech.figure.regionLabel', { title: label })}
-        >
+        <div ref={scrollRef} className={styles.figureScroll} tabIndex={scrolls ? 0 : undefined}>
           {children}
-        </section>
+        </div>
         {canScrollForward ? (
           <span className={styles.figureHint} aria-hidden="true">
             <MoveHorizontal size={ICON_SIZE.sm} aria-hidden focusable="false" />
             {t('tech.figure.scrollHint')}
           </span>
         ) : null}
-      </div>
+      </section>
       {caption ? <figcaption className={styles.caption}>{caption}</figcaption> : null}
     </Card>
   );

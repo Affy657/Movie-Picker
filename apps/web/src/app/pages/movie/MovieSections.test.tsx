@@ -130,7 +130,7 @@ describe('MovieCast', () => {
     renderWithLocale(<MovieCast cast={cast} />);
 
     const rail = screen.getByRole('region', { name: 'Distribution, liste à faire défiler' });
-    expect(rail).toHaveAttribute('tabindex', '0');
+    expect(rail.querySelector('[tabindex="0"]')).not.toBeNull();
     expect(within(rail).getByText('Acteur 1')).toBeInTheDocument();
     vi.unstubAllGlobals();
   });
