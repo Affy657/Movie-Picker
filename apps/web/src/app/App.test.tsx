@@ -150,7 +150,7 @@ describe('App (routes)', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('AppShell: the home leads to the landing through the nav and the footer', async () => {
+    it('AppShell: a visitor explores from the header and reaches the landing through the footer', async () => {
       server.use(authMeGuestHandler);
       renderRoutes(['/']);
       await screen.findByRole(
@@ -159,10 +159,10 @@ describe('App (routes)', () => {
         { timeout: 20000 }
       );
       const banner = screen.getByRole('banner');
-      expect(within(banner).getByRole('link', { name: /comment ça marche/i })).toHaveAttribute(
-        'href',
-        '/decouvrir'
-      );
+      expect(within(banner).getByRole('link', { name: 'Explorer' })).toHaveAttribute('href', '/');
+      expect(
+        within(banner).queryByRole('link', { name: /comment ça marche/i })
+      ).not.toBeInTheDocument();
       const contentinfo = screen.getByRole('contentinfo');
       expect(within(contentinfo).getByRole('link', { name: /comment ça marche/i })).toHaveAttribute(
         'href',
