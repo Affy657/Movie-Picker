@@ -15,18 +15,21 @@ async function openParticipants(page: Page): Promise<void> {
 }
 
 test.describe('Event management', () => {
-  test('the host removes a guest, the guest comes back and leaves on their own', async ({
+  test('the host removes a guest, who cannot come back by the link, and another guest leaves on their own', async ({
     browser,
   }) => {
-    test.setTimeout(150_000);
+    test.setTimeout(180_000);
     let hostContext: BrowserContext | undefined;
     let guestContext: BrowserContext | undefined;
+    let leaverContext: BrowserContext | undefined;
 
     try {
       hostContext = await browser.newContext({ locale: 'fr-FR' });
       guestContext = await browser.newContext({ locale: 'fr-FR' });
+      leaverContext = await browser.newContext({ locale: 'fr-FR' });
       const hostPage = await hostContext.newPage();
       const guestPage = await guestContext.newPage();
+      const leaverPage = await leaverContext.newPage();
 
       await registerAccount(hostPage, 'HoteGestion');
       const slug = await createEvent(hostPage, 'Soirée gestion E2E');
@@ -48,26 +51,27 @@ test.describe('Event management', () => {
       await expect(hostPage.getByTestId('event-participants')).not.toContainText('InviteGestion');
 
       await guestPage.reload();
-      await expect(guestPage.getByRole('button', { name: /^rejoindre$/i })).toBeVisible({
-        timeout: 15_000,
-      });
+      await expect(guestPage.getByText('Participation retirée')).toBeVisible({ timeout: 15_000 });
+      await expect(guestPage.getByRole('button', { name: /^rejoindre$/i })).toBeHidden();
 
-      await joinEvent(guestPage, slug);
-      await openParticipants(guestPage);
-      await guestPage.getByTestId('leave-event-button').click();
-      const leaveDialog = guestPage.getByRole('dialog', { name: 'Quitter la soirée' });
+      await registerAccount(leaverPage, 'InviteDepart');
+      await joinEvent(leaverPage, slug);
+      await openParticipants(leaverPage);
+      await leaverPage.getByTestId('leave-event-button').click();
+      const leaveDialog = leaverPage.getByRole('dialog', { name: 'Quitter la soirée' });
       await expect(leaveDialog).toBeVisible();
       await leaveDialog.getByRole('button', { name: 'Quitter', exact: true }).click();
-      await expect(guestPage).toHaveURL(/\/my-events$/, { timeout: 15_000 });
+      await expect(leaverPage).toHaveURL(/\/my-events$/, { timeout: 15_000 });
 
-      await guestPage.goto(`/e/${slug}`);
-      await expect(guestPage.getByRole('button', { name: /^rejoindre$/i })).toBeVisible({
+      await leaverPage.goto(`/e/${slug}`);
+      await expect(leaverPage.getByRole('button', { name: /^rejoindre$/i })).toBeVisible({
         timeout: 15_000,
       });
-      await expect(guestPage.getByRole('button', { name: /proposer un film/i })).toBeHidden();
+      await expect(leaverPage.getByRole('button', { name: /proposer un film/i })).toBeHidden();
     } finally {
       await hostContext?.close();
       await guestContext?.close();
+      await leaverContext?.close();
     }
   });
 
