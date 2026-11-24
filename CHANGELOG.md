@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.30.4] - 2026-11-24
+
 ### Changed
 
 - **Une liste de films plus lisible dans une soirée** : les plateformes s’affichent en logos, une seule fois chacune, avec un « +N » qui ouvre la liste complète ; le tri par titre ou par ordre d’ajout passe par un seul menu « Film », le bouton « Déjà vu » devient un œil et le mot pour convaincre tient sur une ligne. La vue en cartes devient une fiche de taille fixe (affiche, infos, proposeur, score, qui l’a vu, votes) et c’est la seule vue sur téléphone.
@@ -1073,7 +1075,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.30.3...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.30.4...HEAD
+[1.30.4]: https://github.com/Affy657/Movie-Picker/compare/v1.30.3...v1.30.4
 [1.30.3]: https://github.com/Affy657/Movie-Picker/compare/v1.30.2...v1.30.3
 [1.30.2]: https://github.com/Affy657/Movie-Picker/compare/v1.30.1...v1.30.2
 [1.30.1]: https://github.com/Affy657/Movie-Picker/compare/v1.30.0...v1.30.1
