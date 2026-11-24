@@ -8,6 +8,7 @@ import { safeLocalStorageGet, safeLocalStorageSet } from '@/shared/utils/safeSto
 import styles from './InAppBrowserBanner.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
 import Notice from '@/shared/components/Notice';
+import { useTopNoticeTurn } from './topNoticeQueue';
 
 export const IN_APP_BANNER_DISMISSED_KEY = 'moviepicker_in_app_browser_dismissed_at';
 export const IN_APP_BANNER_DISMISSAL_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -30,8 +31,9 @@ export default function InAppBrowserBanner() {
   const location = useLocation();
   const { copied, copy } = useCopyFeedback();
   const [visible, setVisible] = useState(shouldOfferSystemBrowser);
+  const shown = useTopNoticeTurn('inAppBrowser', visible);
 
-  if (!visible) return null;
+  if (!shown) return null;
 
   const rememberDismissal = () =>
     safeLocalStorageSet(IN_APP_BANNER_DISMISSED_KEY, String(Date.now()));

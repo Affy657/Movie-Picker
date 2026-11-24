@@ -261,9 +261,15 @@ const TEST_PRACTICE_KEYS = [
 
 const SUMMARY_ITEMS = ['item1', 'item2', 'item3', 'item4', 'item5'] as const;
 
+function prerenderedSectionsOnScreen(): boolean {
+  return TECH_SECTIONS.every((id) => document.getElementById(id) !== null);
+}
+
 function useRenderedSectionCount() {
   const { hash } = useLocation();
-  const [count, setCount] = useState(hash === '' ? 1 : TECH_SECTIONS.length);
+  const [count, setCount] = useState(() =>
+    hash === '' && !prerenderedSectionsOnScreen() ? 1 : TECH_SECTIONS.length
+  );
 
   useEffect(() => {
     if (count < TECH_SECTIONS.length) startTransition(() => setCount((value) => value + 1));

@@ -17,12 +17,12 @@ vi.mock('@/shared/hooks/useAnalytics', () => ({
   useAnalytics: () => ({ track }),
 }));
 
-function renderFooter(user: UserProfile | null = null) {
+function renderFooter(user: UserProfile | null = null, path = '/') {
   const client = createTestQueryClient();
   if (user) client.setQueryData(queryKeys.auth.me, user);
   return render(
     <AppTestProviders client={client}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[path]}>
         <Footer />
       </MemoryRouter>
     </AppTestProviders>
@@ -46,6 +46,7 @@ function dispatchBeforeInstallPrompt(
 afterEach(() => {
   resetPwaInstallRuntime();
   track.mockClear();
+  vi.unstubAllGlobals();
 });
 
 beforeEach(() => {
@@ -73,21 +74,51 @@ describe('Footer navigation', () => {
     handle: 'alice',
   } as UserProfile;
 
-  it('offers a visitor to create an account rather than pages of a member', () => {
+  it('offers a visitor to create an account rather than pages of a member', async () => {
     renderFooter();
 
     const nav = screen.getByText('Navigation').parentElement!;
-    expect(within(nav).getByRole('link', { name: 'Créer un compte' })).toHaveAttribute(
+    expect(await within(nav).findByRole('link', { name: 'Créer un compte' })).toHaveAttribute(
       'href',
       '/register'
     );
-    expect(within(nav).getByRole('link', { name: 'Se connecter' })).toHaveAttribute(
+    expect(within(nav).getByRole('link', { name: 'J’ai déjà un compte' })).toHaveAttribute(
       'href',
       '/login'
     );
     for (const memberPage of ['Mes soirées', 'Nouvelle soirée', 'Mes listes', 'Paramètres']) {
       expect(within(nav).queryByRole('link', { name: memberPage })).not.toBeInTheDocument();
     }
+  });
+
+  it('brings a visitor back to the page the footer was read on', async () => {
+    renderFooter(null, '/film/438631-dune');
+
+    const nav = screen.getByText('Navigation').parentElement!;
+    expect(await within(nav).findByRole('link', { name: 'Créer un compte' })).toHaveAttribute(
+      'href',
+      `/register?returnTo=${encodeURIComponent('/film/438631-dune')}`
+    );
+    expect(within(nav).getByRole('link', { name: 'J’ai déjà un compte' })).toHaveAttribute(
+      'href',
+      `/login?returnTo=${encodeURIComponent('/film/438631-dune')}`
+    );
+  });
+
+  it('offers no visitor link while the session is still being checked', () => {
+    localStorage.setItem('mp.session-hint', '1');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise<Response>(() => undefined))
+    );
+    renderFooter();
+
+    const nav = screen.getByText('Navigation').parentElement!;
+    expect(within(nav).getByRole('link', { name: 'Accueil' })).toBeInTheDocument();
+    expect(within(nav).queryByRole('link', { name: 'Créer un compte' })).not.toBeInTheDocument();
+    expect(
+      within(nav).queryByRole('link', { name: 'J’ai déjà un compte' })
+    ).not.toBeInTheDocument();
   });
 
   it('keeps the pages of a member for a signed-in reader', () => {

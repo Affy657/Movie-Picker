@@ -47,6 +47,20 @@ describe('AccountChoiceLinks', () => {
     }
   });
 
+  it('draws both choices as the links of the list it sits in when given their class', () => {
+    renderLinks({ linkClassName: 'columnLink' });
+
+    const links = screen.getAllByRole('link');
+    expect(links.map((link) => link.textContent)).toEqual([
+      'Créer un compte',
+      'J’ai déjà un compte',
+    ]);
+    for (const link of links) {
+      expect(link).toHaveClass('columnLink');
+      expect(link).not.toHaveClass(buttonStyles.btn!);
+    }
+  });
+
   it('says which way the visitor chose', async () => {
     const onChoose = vi.fn();
     const user = userEvent.setup();

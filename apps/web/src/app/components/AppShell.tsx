@@ -23,6 +23,7 @@ import LanguageSuggestion from './LanguageSuggestion';
 import SignOutPendingNotice from './SignOutPendingNotice';
 import SessionExpiredNotice from './SessionExpiredNotice';
 import AccountDeletedNotice from './AccountDeletedNotice';
+import TopNoticeQueueProvider from './TopNoticeQueueProvider';
 import { useLegacyMovieLinkRedirect } from './useLegacyMovieLinkRedirect';
 import styles from './AppShell.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
@@ -393,12 +394,14 @@ export default function AppShell() {
         )}
         <PwaAutoUpdate />
         <ConsentBanner />
-        <InAppBrowserBanner />
-        <MovedOriginBanner />
-        <LanguageSuggestion />
-        <SignOutPendingNotice />
-        <SessionExpiredNotice />
-        <AccountDeletedNotice />
+        <TopNoticeQueueProvider>
+          <InAppBrowserBanner />
+          <MovedOriginBanner />
+          <LanguageSuggestion />
+          <SignOutPendingNotice />
+          <SessionExpiredNotice />
+          <AccountDeletedNotice />
+        </TopNoticeQueueProvider>
         {user ? <CreateEventDialogIdlePrefetch /> : null}
       </div>
     </CreateEventDialogProvider>
