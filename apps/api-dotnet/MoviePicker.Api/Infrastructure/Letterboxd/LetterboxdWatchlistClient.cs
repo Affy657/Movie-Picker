@@ -79,37 +79,12 @@ public sealed partial class LetterboxdWatchlistClient : ILetterboxdWatchlistClie
         if (normalized is null)
             return LetterboxdFilmsSnapshot.Failed();
 
-        var films = new List<LetterboxdFilm>();
-        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var expected = -1;
-        var lastPage = MaxPages;
-        var refused = 0;
-        var refusedInARow = 0;
-
+        var read = new ListRead();
         for (var page = 1; page <= MaxPages; page++)
         {
-            var outcome = await ReadPageAsync(list, normalized, page, expected, films, seen, ct);
-            if (outcome.Unreachable && page > 1)
-            {
-                refused++;
-                refusedInARow++;
-                if (refusedInARow >= MaxRefusedPagesInARow || page >= lastPage)
-                    return KeepWhatWasRead(list, normalized, films, expected, refused);
-                continue;
-            }
-
-            refusedInARow = 0;
-            if (outcome.Failed)
-                return LetterboxdFilmsSnapshot.Failed();
-            if (outcome.EmptyWithoutCounter)
-                return LetterboxdFilmsSnapshot.EmptyWithoutCounter();
-            expected = outcome.Expected;
-            if (page == 1)
-                lastPage = LastPageOf(expected, films.Count);
-            if (refused > 0 && (outcome.Done || page >= lastPage))
-                return KeepWhatWasRead(list, normalized, films, expected, refused);
-            if (outcome.Done)
-                return Conclude(list, normalized, films, expected);
+            var outcome = await ReadPageAsync(list, normalized, page, read.Expected, read.Films, read.Seen, ct);
+            if (Settle(list, normalized, page, outcome, read) is { } snapshot)
+                return snapshot;
         }
 
         _logger.LogInformation(
@@ -117,24 +92,66 @@ public sealed partial class LetterboxdWatchlistClient : ILetterboxdWatchlistClie
             list.Name,
             normalized,
             MaxPages,
-            films.Count,
-            expected);
-        return LetterboxdFilmsSnapshot.Truncated(films, expected);
+            read.Films.Count,
+            read.Expected);
+        return LetterboxdFilmsSnapshot.Truncated(read.Films, read.Expected);
+    }
+
+    private LetterboxdFilmsSnapshot? Settle(FilmList list, string username, int page, PageOutcome outcome, ListRead read)
+    {
+        if (outcome.Unreachable && page > 1)
+            return read.Refuse() || page >= read.LastPage ? KeepWhatWasRead(list, username, read) : null;
+
+        read.Served();
+        if (outcome.Failed)
+            return LetterboxdFilmsSnapshot.Failed();
+        if (outcome.EmptyWithoutCounter)
+            return LetterboxdFilmsSnapshot.EmptyWithoutCounter();
+        read.Expected = outcome.Expected;
+        if (page == 1)
+            read.LastPage = LastPageOf(read.Expected, read.Films.Count);
+        if (read.Refused > 0 && (outcome.Done || page >= read.LastPage))
+            return KeepWhatWasRead(list, username, read);
+        return outcome.Done ? Conclude(list, username, read.Films, read.Expected) : null;
     }
 
     private static int LastPageOf(int expected, int filmsPerPage) =>
         filmsPerPage <= 0 ? 1 : Math.Clamp((expected + filmsPerPage - 1) / filmsPerPage, 1, MaxPages);
 
-    private LetterboxdFilmsSnapshot KeepWhatWasRead(FilmList list, string username, List<LetterboxdFilm> films, int expected, int refused)
+    private LetterboxdFilmsSnapshot KeepWhatWasRead(FilmList list, string username, ListRead read)
     {
         _logger.LogInformation(
             "Letterboxd {List} of {Username}: {Refused} page(s) not served, {Collected} film(s) kept out of {Expected}",
             list.Name,
             username,
-            refused,
-            films.Count,
-            expected);
-        return LetterboxdFilmsSnapshot.Truncated(films, expected);
+            read.Refused,
+            read.Films.Count,
+            read.Expected);
+        return LetterboxdFilmsSnapshot.Truncated(read.Films, read.Expected);
+    }
+
+    private sealed class ListRead
+    {
+        private int _refusedInARow;
+
+        public List<LetterboxdFilm> Films { get; } = [];
+
+        public HashSet<string> Seen { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+        public int Expected { get; set; } = -1;
+
+        public int LastPage { get; set; } = MaxPages;
+
+        public int Refused { get; private set; }
+
+        public bool Refuse()
+        {
+            Refused++;
+            _refusedInARow++;
+            return _refusedInARow >= MaxRefusedPagesInARow;
+        }
+
+        public void Served() => _refusedInARow = 0;
     }
 
     private LetterboxdFilmsSnapshot Conclude(FilmList list, string username, List<LetterboxdFilm> films, int expected)
