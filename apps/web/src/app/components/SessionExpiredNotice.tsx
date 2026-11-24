@@ -5,6 +5,7 @@ import Notice from '@/shared/components/Notice';
 import { buttonClass } from '@/shared/components/Button';
 import { returnToOf } from '@/shared/utils/returnTo';
 import { ROUTES, withReturnTo } from '@/app/routes';
+import { useTopNoticeTurn } from './topNoticeQueue';
 
 const SIGN_IN_ROUTES: ReadonlySet<string> = new Set([
   ROUTES.login,
@@ -17,8 +18,12 @@ export default function SessionExpiredNotice() {
   const { t } = useTranslation();
   const { sessionExpired, dismissSessionExpired } = useAuth();
   const location = useLocation();
+  const shown = useTopNoticeTurn(
+    'sessionExpired',
+    sessionExpired && !SIGN_IN_ROUTES.has(location.pathname)
+  );
 
-  if (!sessionExpired || SIGN_IN_ROUTES.has(location.pathname)) return null;
+  if (!shown) return null;
 
   return (
     <Notice

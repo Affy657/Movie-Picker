@@ -3,6 +3,7 @@ import Button from '@/shared/components/Button';
 import Notice from '@/shared/components/Notice';
 import { loadLocale, t, useLocale } from '@/shared/i18n';
 import { safeLocalStorageGet } from '@/shared/utils/safeStorage';
+import { useTopNoticeTurn } from './topNoticeQueue';
 
 const LOCALE_STORAGE_KEY = 'moviepicker-locale';
 const AUTOMATED_AGENT = /bot|crawl|spider|slurp|lighthouse|headless|preview/i;
@@ -37,6 +38,7 @@ export default function LanguageSuggestion({
   const [suggested] = useState(() => shouldSuggestEnglish(browser ?? currentBrowser()));
   const [answered, setAnswered] = useState(false);
   const visible = suggested && !answered && locale === 'fr';
+  const shown = useTopNoticeTurn('languageSuggestion', visible && englishReady);
 
   useEffect(() => {
     if (!visible) return;
@@ -51,7 +53,7 @@ export default function LanguageSuggestion({
     };
   }, [visible]);
 
-  if (!visible || !englishReady) return null;
+  if (!shown) return null;
 
   const answer = (code: 'fr' | 'en') => {
     setAnswered(true);

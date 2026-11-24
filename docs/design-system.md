@@ -197,7 +197,7 @@ Le dialogue qui est une `Sheet` sur téléphone et une `Modal` en colonne sur gr
 
 ### Notice
 
-Le bandeau d'information flottant : `title`, `description`, `placement` `top` (défaut, glisse du haut) / `bottom` (glisse du bas), `onClose` (sans lui, pas de croix : le bandeau attend une décision), `closeAriaLabel` pour nommer la croix dans la langue d'un contenu qui n'est pas celle de l'interface (la suggestion de l'anglais), les actions en enfants, pleine largeur sur mobile. C'est le consentement, l'avertissement du navigateur intégré et celui de l'ancienne adresse, et la confirmation d'une soirée rejointe (`JoinedNotice`, qui se retire seule après huit secondes).
+Le bandeau d'information flottant : `title`, `description`, `placement` `top` (défaut, glisse du haut) / `bottom` (glisse du bas), `onClose` (sans lui, pas de croix : le bandeau attend une décision), `closeAriaLabel` pour nommer la croix dans la langue d'un contenu qui n'est pas celle de l'interface (la suggestion de l'anglais), les actions en enfants, pleine largeur sur mobile. C'est le consentement, l'avertissement du navigateur intégré et celui de l'ancienne adresse, et la confirmation d'une soirée rejointe (`JoinedNotice`, qui se retire seule après huit secondes). Les bandeaux du haut de la coquille passent un par un : chacun demande son tour par `useTopNoticeTurn(id, wanted)` (`app/components/topNoticeQueue.ts`), et `TopNoticeQueueProvider`, posé dans `AppShell`, n'en montre qu'un, le premier de `TOP_NOTICE_ORDER` (session expirée, déconnexion en attente, compte supprimé, navigateur intégré, ancienne adresse, suggestion de l'anglais) ; le suivant paraît quand il est fermé. Un nouveau bandeau du haut s'ajoute à cette liste.
 
 ### FormPageShell
 
