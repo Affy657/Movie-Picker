@@ -78,6 +78,17 @@ function buildProfileJsonLd(profile: PublicProfile): Record<string, unknown> {
   };
 }
 
+function profileSeo(profile: PublicProfile, showsNothing: boolean, t: Translate) {
+  return {
+    title: pageTitle(`@${profile.handle}`),
+    description: buildProfileDescription(profile, t),
+    canonical: absoluteUrl(ROUTES.profile(profile.handle)),
+    ogType: 'profile' as const,
+    jsonLd: buildProfileJsonLd(profile),
+    noindex: showsNothing && !profile.bio?.trim(),
+  };
+}
+
 type FollowTab = 'following' | 'followers';
 
 interface VisitorView {
@@ -183,18 +194,7 @@ export default function ProfilePage() {
   };
   const showEmptyState = !!profile && hasNothingToShow(profile, visitorView);
 
-  usePageSeo(
-    profile
-      ? {
-          title: pageTitle(`@${profile.handle}`),
-          description: buildProfileDescription(profile, t),
-          canonical: absoluteUrl(ROUTES.profile(profile.handle)),
-          ogType: 'profile',
-          jsonLd: buildProfileJsonLd(profile),
-          noindex: showEmptyState && !profile.bio?.trim(),
-        }
-      : missingProfileSeo(isNotFound, t)
-  );
+  usePageSeo(profile ? profileSeo(profile, showEmptyState, t) : missingProfileSeo(isNotFound, t));
 
   const followMutation = useMutation({
     mutationFn: () => followUser(profile!.handle),
