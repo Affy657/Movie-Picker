@@ -369,6 +369,24 @@ describe('NotificationsPage (MSW)', () => {
     });
   });
 
+  describe('a kind of notification this version does not know yet', () => {
+    it('still says something rather than leaving the row blank', async () => {
+      server.use(
+        authedUserHandler,
+        ignoreRead,
+        serveTypedInbox([
+          inboxItem({
+            id: 'later',
+            type: 'kindfromalaterversion' as ApiSchemas['UserNotificationItem']['type'],
+          }),
+        ])
+      );
+      renderInbox();
+
+      expect(await screen.findByText('Nouvelle activité sur Movie Picker.')).toBeInTheDocument();
+    });
+  });
+
   describe('host role handed over', () => {
     it('tells the new host which night is now theirs and opens it', async () => {
       const user = userEvent.setup();

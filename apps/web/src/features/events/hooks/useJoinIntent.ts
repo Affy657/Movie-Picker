@@ -32,7 +32,7 @@ export function joinIntentStep(state: JoinIntentState): JoinIntentStep {
   if (state.authLoading || !state.eventSettled || state.offline) return 'wait';
   if (!state.slug || event?.slug !== state.slug) return 'wait';
   if (!state.signedIn || state.alreadyParticipant || event.myParticipant) return 'drop';
-  if (event.isFinished || isFull(event)) return 'drop';
+  if (event.isFinished || event.viewerRemoved || isFull(event)) return 'drop';
   return 'join';
 }
 
@@ -90,12 +90,12 @@ export function useJoinIntent({
     }
     if (startedRef.current) return;
     startedRef.current = true;
+    dropIntent();
     join()
       .then((joined) => {
         setParticipant({ participantId: joined.participantId, pseudo: joined.pseudo });
         if (joined.isNew) onJoined();
       })
-      .catch((error: unknown) => onError(getErrorMessage(error, t('events.join.fallbackError'))))
-      .finally(dropIntent);
+      .catch((error: unknown) => onError(getErrorMessage(error, t('events.join.fallbackError'))));
   }, [step, join, setParticipant, onJoined, onError, setSearchParams, t]);
 }

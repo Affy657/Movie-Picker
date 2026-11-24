@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import MovieList from '@/features/events/components/MovieList';
@@ -438,6 +438,26 @@ describe('MovieList', () => {
       );
       expect(screen.getByText('Alice')).toBeInTheDocument();
       expect(screen.queryByText(/action/i)).not.toBeInTheDocument();
+    });
+
+    it('paints the blurred poster backdrop from the file the poster loaded, without a second download', () => {
+      const { container } = renderWithLocale(
+        <MovieList
+          movies={[{ ...movies[0]!, posterPath: 'https://image.tmdb.org/t/p/w500/abc.jpg' }]}
+          {...baseProps()}
+          viewMode="grid"
+        />
+      );
+      const poster = container.querySelector<HTMLImageElement>('img[srcset*="abc.jpg"]')!;
+      const backdrop = poster.previousElementSibling as HTMLElement;
+      expect(backdrop.style.backgroundImage).toBe('');
+
+      Object.defineProperty(poster, 'currentSrc', {
+        value: 'https://image.tmdb.org/t/p/w342/abc.jpg',
+      });
+      fireEvent.load(poster);
+
+      expect(backdrop.style.backgroundImage).toBe('url("https://image.tmdb.org/t/p/w342/abc.jpg")');
     });
 
     it('mounts no kebab on a device without hover capability', () => {

@@ -65,7 +65,7 @@ describe('LanguageSuggestion', () => {
     renderSuggestion();
 
     await screen.findByText('View Movie Picker in English?');
-    await user.click(screen.getByRole('button', { name: 'Fermer' }));
+    await user.click(screen.getByRole('button', { name: 'Close' }));
 
     expect(localStorage.getItem('moviepicker-locale')).toBe('fr');
     expect(screen.queryByText('View Movie Picker in English?')).not.toBeInTheDocument();

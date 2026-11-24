@@ -29,7 +29,7 @@ export interface MovieHeroView {
   providers: WatchProviderOffer[];
   watchPageUrl: string | null;
   isTv: boolean;
-  detailsLoaded: boolean;
+  detailsPending: boolean;
 }
 
 export interface PersonalScore {
@@ -95,7 +95,7 @@ function Scores({
   const tmdb = scoreParts(view.voteAverage, scale, locale);
   const mine = scoreParts(nights?.rating?.average, scale, locale);
   if (!tmdb && !mine && !personal) {
-    return view.detailsLoaded ? null : <Skeleton className={styles.scoresPending} />;
+    return view.detailsPending ? <Skeleton className={styles.scoresPending} /> : null;
   }
   const votes = view.voteCount
     ? pluralizeCount(view.voteCount, 'moviePage.votesOne', 'moviePage.votesMany', t, {
@@ -122,7 +122,7 @@ function Scores({
 }
 
 function Streaming({ view, t }: Readonly<{ view: MovieHeroView; t: Translate }>) {
-  if (!view.detailsLoaded && view.providers.length === 0) {
+  if (view.detailsPending && view.providers.length === 0) {
     return <Skeleton className={styles.streamingPending} />;
   }
   const href = safeTmdbWatchUrl(view.watchPageUrl);
@@ -156,11 +156,11 @@ function Streaming({ view, t }: Readonly<{ view: MovieHeroView; t: Translate }>)
 
 function Genres({ view }: Readonly<{ view: MovieHeroView }>) {
   if (view.genres.length > 0) return <p className={styles.genres}>{view.genres.join(', ')}</p>;
-  return view.detailsLoaded ? null : <Skeleton variant="text" className={styles.genresPending} />;
+  return view.detailsPending ? <Skeleton variant="text" className={styles.genresPending} /> : null;
 }
 
 function HeroTitle({ view, t }: Readonly<{ view: MovieHeroView; t: Translate }>) {
-  if (view.title || view.detailsLoaded) {
+  if (view.title || !view.detailsPending) {
     return <h1 className={styles.title}>{view.title}</h1>;
   }
   return (

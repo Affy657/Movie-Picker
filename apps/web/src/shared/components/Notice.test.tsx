@@ -27,6 +27,13 @@ describe('Notice', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it('names the cross in the language of its content when told to', () => {
+    renderNotice({ onClose: vi.fn(), closeAriaLabel: 'Close' });
+
+    expect(screen.getByRole('button', { name: 'Close' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Fermer' })).toBeNull();
+  });
+
   it('renders its actions only when given some', () => {
     renderNotice({ children: <button type="button">Agir</button> });
 

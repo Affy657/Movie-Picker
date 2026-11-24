@@ -25,12 +25,12 @@ describe('insertAfterCharset', () => {
 });
 
 describe('preconnections', () => {
-  it('opens the TMDB connection the posters use, without crossorigin', () => {
-    const tmdb = /<link[^>]*rel="preconnect"[^>]*href="https:\/\/image\.tmdb\.org"[^>]*>/.exec(
-      indexHtml
-    );
-    expect(tmdb?.[0]).toBeDefined();
-    expect(tmdb?.[0]).not.toMatch(/crossorigin/);
+  it('opens both TMDB connections: no-cors for the page, anonymous for the service worker', () => {
+    const tmdb =
+      indexHtml.match(/<link[^>]*rel="preconnect"[^>]*href="https:\/\/image\.tmdb\.org"[^>]*>/g) ??
+      [];
+    expect(tmdb).toHaveLength(2);
+    expect(tmdb.filter((tag) => /\scrossorigin[\s/>]/.test(tag))).toHaveLength(1);
   });
 
   it('opens the API connection early, the credentialed one its requests travel on', () => {

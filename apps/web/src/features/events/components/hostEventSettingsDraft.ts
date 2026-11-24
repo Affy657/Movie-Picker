@@ -168,6 +168,7 @@ export function settingsPatch(
 export type SettingsDraft = EventLimitDraft & {
   eventTitle: string;
   eventDateLocal: string;
+  savedEventDateLocal?: string;
   winnerCount: string;
   drawnWinnerCount: number;
 };
@@ -176,18 +177,28 @@ function validateTitle(draft: SettingsDraft, t: Translate, errors: FieldErrors) 
   if (!draft.eventTitle.trim()) errors.title = t('events.settings.titleRequired');
 }
 
-export function eventDateLocalError(value: string, t: Translate, now: Date): string | undefined {
+function eventDateLocalFormatError(value: string, t: Translate): string | undefined {
   if (!value.trim()) return t('events.settings.dateRequired');
   const parsed = splitDateTimeLocal(value);
   if (!parsed || !isValidDate(parsed.date) || !isValidTime(parsed.time)) {
     return t('events.settings.dateInvalid');
   }
-  const issue = eventStartIssue(parsed.date, parsed.time, now);
+  return undefined;
+}
+
+export function eventDateLocalError(value: string, t: Translate, now: Date): string | undefined {
+  const formatError = eventDateLocalFormatError(value, t);
+  if (formatError) return formatError;
+  const parsed = splitDateTimeLocal(value);
+  const issue = parsed ? eventStartIssue(parsed.date, parsed.time, now) : null;
   return issue ? eventStartIssueMessage(issue, t, 'settings') : undefined;
 }
 
 function validateDate(draft: SettingsDraft, t: Translate, errors: FieldErrors, now: Date) {
-  const error = eventDateLocalError(draft.eventDateLocal, t, now);
+  const unchanged = draft.eventDateLocal === draft.savedEventDateLocal;
+  const error = unchanged
+    ? eventDateLocalFormatError(draft.eventDateLocal, t)
+    : eventDateLocalError(draft.eventDateLocal, t, now);
   if (error) {
     errors.date = error;
     return null;

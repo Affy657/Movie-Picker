@@ -9,6 +9,7 @@ type Props = {
   text: string;
   meta: string;
   actions?: ReactNode;
+  anchorId?: string;
 };
 
 export default function EventInfoBanner({
@@ -18,10 +19,13 @@ export default function EventInfoBanner({
   text,
   meta,
   actions,
+  anchorId,
 }: Readonly<Props>) {
   const kickerId = useId();
   return (
     <aside
+      id={anchorId}
+      tabIndex={anchorId ? -1 : undefined}
       className={clsx(styles.root, styles[tone])}
       role="status"
       aria-live="polite"

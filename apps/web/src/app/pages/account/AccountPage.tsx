@@ -1,4 +1,4 @@
-import { Link, Navigate, Route, Routes, useLocation } from 'react-router';
+import { Navigate, Route, Routes, useLocation } from 'react-router';
 import PageLayout from '@/shared/components/PageLayout';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { hasSessionHint } from '@/features/auth/session-hint';
@@ -9,7 +9,7 @@ import { useTranslation } from '@/shared/i18n';
 import ThemeToggle from '@/app/components/ThemeToggle';
 import LanguageSelector from '@/app/components/LanguageSelector';
 import AccentColorPicker from '@/app/components/AccentColorPicker';
-import { withReturnTo, ROUTES } from '@/app/routes';
+import { ROUTES } from '@/app/routes';
 import { returnToOf } from '@/shared/utils/returnTo';
 import type { UserProfile } from '@/features/auth/types';
 import AccountLayout from '@/app/pages/account/AccountLayout';
@@ -21,7 +21,7 @@ import AccountIntegrationsPage from '@/app/pages/account/AccountIntegrationsPage
 import AccountSecurityPage from '@/app/pages/account/AccountSecurityPage';
 import AccountLoadingSkeleton from '@/app/pages/account/AccountLoadingSkeleton';
 import styles from './AccountPage.module.css';
-import { buttonClass } from '@/shared/components/Button';
+import AccountChoiceLinks from '@/shared/components/AccountChoiceLinks';
 import Field from '@/shared/components/Field';
 
 function GuestPreferencesSection() {
@@ -109,15 +109,7 @@ export default function AccountPage() {
         <GuestPreferencesSection />
 
         <nav className="nav-actions" aria-label={t('auth.account.guestNavAriaLabel')}>
-          <Link
-            to={withReturnTo(ROUTES.register, returnTo)}
-            className={buttonClass({ variant: 'primary' })}
-          >
-            {t('auth.account.registerCta')}
-          </Link>
-          <Link to={withReturnTo(ROUTES.login, returnTo)} className={buttonClass()}>
-            {t('home.ctaHaveAccount')}
-          </Link>
+          <AccountChoiceLinks returnTo={returnTo} />
         </nav>
       </PageLayout>
     );

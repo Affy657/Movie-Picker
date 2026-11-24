@@ -188,11 +188,12 @@ describe('HomePage', () => {
   const posterCard = async (title: string) =>
     (await screen.findByRole('heading', { name: title, level: 3 })).closest('li') as HTMLElement;
 
-  it('asks for the rows further down only when they come close', async () => {
+  function deferLowerRows() {
     const observers: Array<{
       callback: (entries: Partial<IntersectionObserverEntry>[]) => void;
       targets: Element[];
     }> = [];
+    const idleCallbacks: Array<() => void> = [];
     vi.stubGlobal(
       'IntersectionObserver',
       class {
@@ -210,6 +211,8 @@ describe('HomePage', () => {
         }
       }
     );
+    vi.stubGlobal('requestIdleCallback', (callback: () => void) => idleCallbacks.push(callback));
+    vi.stubGlobal('cancelIdleCallback', vi.fn());
     const requested: string[] = [];
     server.use(
       authMeGuestHandler,
@@ -229,22 +232,40 @@ describe('HomePage', () => {
         return HttpResponse.json({ items: [], disclaimer: 'TMDB', tmdbAttributionUrl: '' });
       })
     );
+    return { observers, idleCallbacks, requested };
+  }
 
+  async function expectOnlyTheFirstRows(requested: string[]) {
     renderPage();
 
     await screen.findByText('trending 1');
     expect(requested).not.toContain('provider');
     expect(requested).not.toContain('now-playing');
     expect(requested).not.toContain('collections');
+  }
+
+  const LOWER_ROWS = ['provider', 'now-playing', 'collections'];
+
+  it('asks for the rows further down when they come close', async () => {
+    const { observers, requested } = deferLowerRows();
+    await expectOnlyTheFirstRows(requested);
 
     await act(async () => {
       for (const observer of observers) {
         observer.callback(observer.targets.map((target) => ({ target, isIntersecting: true })));
       }
     });
-    await waitFor(() =>
-      expect(requested).toEqual(expect.arrayContaining(['provider', 'now-playing', 'collections']))
-    );
+    await waitFor(() => expect(requested).toEqual(expect.arrayContaining(LOWER_ROWS)));
+  });
+
+  it('builds the rows further down once the page is idle, so a return lands where it left', async () => {
+    const { idleCallbacks, requested } = deferLowerRows();
+    await expectOnlyTheFirstRows(requested);
+
+    await act(async () => {
+      for (const callback of idleCallbacks.splice(0)) callback();
+    });
+    await waitFor(() => expect(requested).toEqual(expect.arrayContaining(LOWER_ROWS)));
   });
 
   it('ouvre sur un titre de niveau un et son introduction', () => {

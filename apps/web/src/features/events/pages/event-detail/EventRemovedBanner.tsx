@@ -1,5 +1,6 @@
 import { UserX } from 'lucide-react';
 import EventInfoBanner from '@/features/events/components/EventInfoBanner';
+import { JOIN_PROMPT_ANCHOR_ID } from '@/features/events/joinPrompt';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { useTranslation } from '@/shared/i18n';
 
@@ -12,6 +13,7 @@ export default function EventRemovedBanner() {
       kicker={t('events.removed.kicker')}
       text={t('events.removed.text')}
       meta={t('events.removed.meta')}
+      anchorId={JOIN_PROMPT_ANCHOR_ID}
     />
   );
 }

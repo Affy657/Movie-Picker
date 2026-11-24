@@ -14,6 +14,7 @@ type NoticeProps = {
   description: string;
   placement?: NoticePlacement;
   onClose?: () => void;
+  closeAriaLabel?: string;
   children?: ReactNode;
 };
 
@@ -22,6 +23,7 @@ export default function Notice({
   description,
   placement = 'top',
   onClose,
+  closeAriaLabel,
   children,
 }: Readonly<NoticeProps>) {
   const { t } = useTranslation();
@@ -41,7 +43,7 @@ export default function Notice({
           <p className={styles.description}>{description}</p>
         </div>
         {onClose ? (
-          <IconButton ariaLabel={t('common.close')} onClick={onClose}>
+          <IconButton ariaLabel={closeAriaLabel ?? t('common.close')} onClick={onClose}>
             <X size={ICON_SIZE.lg} aria-hidden />
           </IconButton>
         ) : null}

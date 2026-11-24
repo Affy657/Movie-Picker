@@ -130,7 +130,7 @@ const NOTIFICATION_TEXT_KEYS = {
 function notifText(item: UserNotificationItem, t: Translate, withinEventGroup = false): ReactNode {
   const keys = NOTIFICATION_TEXT_KEYS[item.type as keyof typeof NOTIFICATION_TEXT_KEYS] as
     { plain: TranslationKey; grouped?: TranslationKey } | undefined;
-  if (!keys) return '';
+  if (!keys) return t('notifications.unknownText');
 
   const key = withinEventGroup ? (keys.grouped ?? keys.plain) : keys.plain;
   return renderNotificationText(t(key), {

@@ -582,7 +582,6 @@ export const fr = {
       guestLead:
         'Ces préférences s’appliquent à cet appareil. Avec un compte, votre thème et votre couleur vous suivent sur tous vos appareils.',
       logoutButton: 'Se déconnecter',
-      registerCta: 'Créer un compte',
       sessionRowLabel: 'Cet appareil',
       sessionRowHint: 'Se déconnecter de Movie Picker sur cet appareil.',
       emailLabel: 'Adresse e-mail',
@@ -1766,8 +1765,6 @@ export const fr = {
     nightsSignedOutTitle: 'Une soirée ciné à plusieurs ?',
     nightsSignedOut:
       'Chacun propose ses films, tout le monde vote, et la roue choisit celui de la soirée.',
-    nightsSignedOutRegister: 'Créer un compte',
-    nightsSignIn: 'Se connecter',
     nightsProposedOne: 'Proposé dans 1 soirée',
     nightsProposedMany: 'Proposé dans {{count}} soirées',
     nightsWonAt: 'Gagnant à {{title}}',
@@ -2982,6 +2979,7 @@ export const fr = {
     removedFromEventText: 'L’hôte a retiré votre participation à **{{eventTitle}}**.',
     hostRoleReceivedText:
       'L’hôte de **{{eventTitle}}** a supprimé son compte : vous organisez désormais la soirée.',
+    unknownText: 'Nouvelle activité sur Movie Picker.',
     groupInvitationAcceptAria: 'Accepter l’invitation au groupe « {{groupName}} »',
     groupInvitationDeclineAria: 'Refuser l’invitation au groupe « {{groupName}} »',
     listInvitationAccept: 'Accepter',

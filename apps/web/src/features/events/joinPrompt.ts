@@ -9,7 +9,7 @@ export function promptToJoinEvent(): void {
   if (!anchor) return;
   const prefersReducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   anchor.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'center' });
-  anchor.querySelector<HTMLElement>('button, a[href]')?.focus({ preventScroll: true });
+  (anchor.querySelector<HTMLElement>('button, a[href]') ?? anchor).focus({ preventScroll: true });
   anchor.dispatchEvent(new CustomEvent(JOIN_PROMPT_EVENT, { bubbles: true }));
 }
 

@@ -20,7 +20,6 @@ import ProfileStatsSection, {
 } from '@/features/profile/components/ProfileStatsSection';
 import ProfileStatsSummary from '@/features/profile/components/ProfileStatsSummary';
 import ProfileActions from '@/features/profile/components/ProfileActions';
-import ProfileMoviesSection from '@/features/profile/components/ProfileMoviesSection';
 import ProfileBanner from '@/features/profile/components/ProfileBanner';
 import ProfilePageSkeleton, {
   ProfileStatsSkeleton,
@@ -30,6 +29,7 @@ import {
   ProfileNotFoundState,
 } from '@/features/profile/components/ProfileQueryStates';
 import { followUser, unfollowUser, type PublicProfile } from '@/features/profile/api/profileApi';
+import { useProfileMoviesSection } from '@/features/profile/hooks/useProfileMoviesSection';
 import { useProfileWatchedPreview } from '@/features/profile/hooks/useProfileWatchedPreview';
 import { usePublicProfile } from '@/features/profile/hooks/usePublicProfile';
 import { invalidateFollowGraph } from '@/features/profile/lib/invalidateFollowGraph';
@@ -75,6 +75,17 @@ function buildProfileJsonLd(profile: PublicProfile): Record<string, unknown> {
       url: absoluteUrl(ROUTES.profile(profile.handle)),
       ...(bio ? { description: bio } : {}),
     },
+  };
+}
+
+function profileSeo(profile: PublicProfile, showsNothing: boolean, t: Translate) {
+  return {
+    title: pageTitle(`@${profile.handle}`),
+    description: buildProfileDescription(profile, t),
+    canonical: absoluteUrl(ROUTES.profile(profile.handle)),
+    ogType: 'profile' as const,
+    jsonLd: buildProfileJsonLd(profile),
+    noindex: showsNothing && !profile.bio?.trim(),
   };
 }
 
@@ -166,26 +177,24 @@ export default function ProfilePage() {
   const watchedHiddenFromVisitor = !!profile && !isOwnProfile && profile.isWatchedPublic === false;
   const watchedVisible = !!profile && !watchedHiddenFromVisitor;
   const watchedPreview = useProfileWatchedPreview(handle, !watchedHiddenFromVisitor);
+  const MoviesSection = useProfileMoviesSection(!!profile);
   const holdsForSections = useHoldForSections(
     handle,
     !!profile,
-    awaitsFirstAnswer(statsQuery) || awaitsFirstAnswer(watchedPreview)
+    !MoviesSection || awaitsFirstAnswer(statsQuery) || awaitsFirstAnswer(watchedPreview)
   );
   const isNotFound =
     !handle ||
     (profileQuery.isError && ApiError.is(profileQuery.error) && profileQuery.error.code === 404);
+  const visitorView: VisitorView = {
+    isOwnProfile,
+    stats: statsQuery.data,
+    watchedHidden: watchedHiddenFromVisitor,
+    watchedCount: watchedPreview.data?.items.length,
+  };
+  const showEmptyState = !!profile && hasNothingToShow(profile, visitorView);
 
-  usePageSeo(
-    profile
-      ? {
-          title: pageTitle(`@${profile.handle}`),
-          description: buildProfileDescription(profile, t),
-          canonical: absoluteUrl(ROUTES.profile(profile.handle)),
-          ogType: 'profile',
-          jsonLd: buildProfileJsonLd(profile),
-        }
-      : missingProfileSeo(isNotFound, t)
-  );
+  usePageSeo(profile ? profileSeo(profile, showEmptyState, t) : missingProfileSeo(isNotFound, t));
 
   const followMutation = useMutation({
     mutationFn: () => followUser(profile!.handle),
@@ -236,12 +245,6 @@ export default function ProfilePage() {
       : null;
 
   const profileAccent = (isOwnProfile ? user?.accentColor : profile.accentColor) ?? 'default';
-  const showEmptyState = hasNothingToShow(profile, {
-    isOwnProfile,
-    stats,
-    watchedHidden: watchedHiddenFromVisitor,
-    watchedCount: watchedPreview.data?.items.length,
-  });
 
   return (
     <PageLayout
@@ -293,14 +296,16 @@ export default function ProfilePage() {
         </ProfileHeader>
 
         <div className={styles.content}>
-          <ProfileMoviesSection
-            handle={profile.handle}
-            favorites={profile.favorites ?? []}
-            isOwnProfile={isOwnProfile}
-            watchedVisible={watchedVisible}
-            watchedHidden={isOwnProfile && profile.isWatchedPublic === false}
-            watchlist={watchlist}
-          />
+          {MoviesSection && (
+            <MoviesSection
+              handle={profile.handle}
+              favorites={profile.favorites ?? []}
+              isOwnProfile={isOwnProfile}
+              watchedVisible={watchedVisible}
+              watchedHidden={isOwnProfile && profile.isWatchedPublic === false}
+              watchlist={watchlist}
+            />
+          )}
 
           {statsQuery.isPending && <ProfileStatsSkeleton />}
 

@@ -13,15 +13,18 @@ public sealed class GetProfileShareDocumentHandler : IGetProfileShareDocumentHan
     private const string ProfileType = "profile";
 
     private readonly IUserRepository _users;
+    private readonly PublicProfileContent _profileContent;
     private readonly IWebShellSource _shell;
     private readonly MoviePickerOptions _options;
 
     public GetProfileShareDocumentHandler(
         IUserRepository users,
+        PublicProfileContent profileContent,
         IWebShellSource shell,
         IOptions<MoviePickerOptions> options)
     {
         _users = users;
+        _profileContent = profileContent;
         _shell = shell;
         _options = options.Value;
     }
@@ -33,12 +36,16 @@ public sealed class GetProfileShareDocumentHandler : IGetProfileShareDocumentHan
         var member = user is { IsProfilePublic: true } ? user : null;
         var preview = member is null
             ? SharePreview.Generic(webBase)
-            : Describe(member, webBase, apiPublicBaseUrl.Trim().TrimEnd('/'));
+            : Describe(
+                member,
+                webBase,
+                apiPublicBaseUrl.Trim().TrimEnd('/'),
+                await _profileContent.ShowsSomethingAsync(PublicProfileRef.Of(member), ct));
         var html = SharePreviewHead.Render(await _shell.GetShellAsync(ct), preview);
         return new ShareDocument(member is null ? 404 : 200, html);
     }
 
-    private static SharePreview Describe(User user, string webBase, string apiBase)
+    private static SharePreview Describe(User user, string webBase, string apiBase, bool indexable)
     {
         var person = DisplayedPerson.From(user);
         var canonical = webBase + FrontRoutes.Profile(person.Handle);
@@ -52,7 +59,7 @@ public sealed class GetProfileShareDocumentHandler : IGetProfileShareDocumentHan
             image is null ? SharePreview.SiteName : ServerCopy.SharePreviews.BannerOf(person.DisplayName))
         {
             OgType = ProfileType,
-            Indexable = true
+            Indexable = indexable
         };
     }
 

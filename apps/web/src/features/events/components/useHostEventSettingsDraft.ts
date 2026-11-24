@@ -281,6 +281,7 @@ export function useHostEventSettingsDraft({
       {
         eventTitle,
         eventDateLocal: committedDateLocal,
+        savedEventDateLocal: savedRef.current.dateLocal,
         proposalLimitEnabled,
         maxProposals: maxProp,
         participantLimitEnabled,

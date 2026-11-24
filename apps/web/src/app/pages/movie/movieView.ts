@@ -61,7 +61,7 @@ export function yearOf(details: MovieDetails | undefined, seed: MoviePageSeed | 
   return yearFromDate(details?.releaseDate) ?? (seed?.year || undefined);
 }
 
-export function buildHeroView(input: ViewInput): MovieHeroView {
+export function buildHeroView(input: ViewInput, detailsPending: boolean): MovieHeroView {
   const { details, seed, mediaType } = input;
   const title = titleOf(details, seed);
   const posterSrc = posterImageSrc(details?.posterPath ?? seed?.posterPath);
@@ -81,7 +81,7 @@ export function buildHeroView(input: ViewInput): MovieHeroView {
     providers: details?.watchProviders ?? [],
     watchPageUrl: details?.tmdbWatchPageUrl ?? null,
     isTv: mediaType === 'tv',
-    detailsLoaded: !!details,
+    detailsPending,
   };
 }
 

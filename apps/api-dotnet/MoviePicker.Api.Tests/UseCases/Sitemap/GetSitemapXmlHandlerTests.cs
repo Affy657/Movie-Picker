@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Profile;
 using MoviePicker.Api.Application.UseCases.Sitemap;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
@@ -34,9 +35,7 @@ public sealed class GetSitemapXmlHandlerTests
         var opts = Options.Create(new MoviePickerOptions { PublicWebBaseUrl = webBase });
         return new GetSitemapXmlHandler(
             _users.Object,
-            _participants.Object,
-            _lists.Object,
-            _watchlist.Object,
+            new PublicProfileContent(_participants.Object, _lists.Object, _watchlist.Object),
             opts,
             NullLogger<GetSitemapXmlHandler>.Instance,
             new FakeTimeProvider(GenerationDay));

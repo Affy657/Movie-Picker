@@ -5,6 +5,7 @@ import {
   forgetCreateEventDraft,
   readCreateEventDraft,
   saveCreateEventDraft,
+  startingCreateEventDraft,
 } from './createEventDraftStorage';
 
 const draft = {
@@ -13,11 +14,44 @@ const draft = {
   time: '21:00',
   fields: { ...defaultTemplateFields(), themeText: 'Nolan', maxProposals: '3' },
   groupId: 'group-1',
+  openedFromGroupId: null,
 };
+
+const DECEMBER_FIRST = Date.parse('2026-12-01T10:00:00Z');
 
 afterEach(() => {
   vi.restoreAllMocks();
   sessionStorage.clear();
+});
+
+describe('startingCreateEventDraft', () => {
+  it('resumes a draft opened the same way, with its group and its date', () => {
+    const start = startingCreateEventDraft(draft, false, null, DECEMBER_FIRST);
+
+    expect(start).toEqual(draft);
+  });
+
+  it('starts a past draft on the default evening rather than on its old date', () => {
+    const start = startingCreateEventDraft(
+      { ...draft, date: '2026-11-27' },
+      false,
+      null,
+      DECEMBER_FIRST
+    );
+
+    expect(start.date).not.toBe('2026-11-27');
+    expect(start.date >= '2026-12-01').toBe(true);
+    expect(start.typedTitle).toBe('Nuit Nolan');
+  });
+
+  it('does not carry the group of a draft opened from a group page into another opening', () => {
+    const fromGroupPage = { ...draft, groupId: 'group-a', openedFromGroupId: 'group-a' };
+
+    expect(startingCreateEventDraft(fromGroupPage, false, null, DECEMBER_FIRST).groupId).toBeNull();
+    expect(startingCreateEventDraft(fromGroupPage, false, 'group-b', DECEMBER_FIRST).groupId).toBe(
+      'group-b'
+    );
+  });
 });
 
 describe('createEventDraftStorage', () => {

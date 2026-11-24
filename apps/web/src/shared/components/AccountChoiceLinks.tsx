@@ -8,34 +8,38 @@ export type AccountChoice = 'register' | 'login';
 type AccountChoiceLinksProps = {
   returnTo: string;
   fullWidth?: boolean;
+  linkClassName?: string;
   onChoose?: (choice: AccountChoice) => void;
 };
+
+const CHOICES = [
+  { choice: 'register', path: ROUTES.register, labelKey: 'home.ctaRegister', variant: 'primary' },
+  { choice: 'login', path: ROUTES.login, labelKey: 'home.ctaHaveAccount', variant: 'secondary' },
+] as const;
 
 export default function AccountChoiceLinks({
   returnTo,
   fullWidth = false,
+  linkClassName,
   onChoose,
 }: Readonly<AccountChoiceLinksProps>) {
   const { t } = useTranslation();
-  const registerLabel = t('home.ctaRegister');
-  const loginLabel = t('home.ctaHaveAccount');
 
   return (
     <>
-      <Link
-        to={withReturnTo(ROUTES.register, returnTo)}
-        className={buttonClass({ variant: 'primary', fullWidth })}
-        onClick={() => onChoose?.('register')}
-      >
-        <span className={buttonLabelClass(registerLabel)}>{registerLabel}</span>
-      </Link>
-      <Link
-        to={withReturnTo(ROUTES.login, returnTo)}
-        className={buttonClass({ fullWidth })}
-        onClick={() => onChoose?.('login')}
-      >
-        <span className={buttonLabelClass(loginLabel)}>{loginLabel}</span>
-      </Link>
+      {CHOICES.map(({ choice, path, labelKey, variant }) => {
+        const label = t(labelKey);
+        return (
+          <Link
+            key={choice}
+            to={withReturnTo(path, returnTo)}
+            className={linkClassName ?? buttonClass({ variant, fullWidth })}
+            onClick={() => onChoose?.(choice)}
+          >
+            {linkClassName ? label : <span className={buttonLabelClass(label)}>{label}</span>}
+          </Link>
+        );
+      })}
     </>
   );
 }
