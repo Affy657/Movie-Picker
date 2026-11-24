@@ -6,6 +6,16 @@
     var(--table-col-kebab);
 }
 
+li.rowGrid {
+  --opacity-card-kebab: 1;
+}
+
+li.rowGrid:has([data-note-expanded]) {
+  height: auto;
+  min-height: var(--space-24);
+  padding-block: var(--space-2);
+}
+
 .rowGrid.rowWithNote {
   height: auto;
   min-height: var(--space-24);
@@ -25,9 +35,6 @@
 }
 
 .errorBanner {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2-5);
   padding: var(--space-2-5) var(--space-4) var(--space-2-5) var(--space-24);
   background: var(--color-error-bg);
   border-bottom: 1px solid var(--color-border-subtle);
@@ -36,57 +43,6 @@
 
 .errorBanner:last-child {
   border-bottom: none;
-}
-
-.errorIcon {
-  flex-shrink: 0;
-  color: var(--color-error);
-}
-
-.errorMessage {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
-  font-size: var(--font-size-sm);
-  color: var(--color-error);
-}
-
-.errorRetry {
-  composes: expanded from '@/shared/components/tapTarget.module.css';
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  flex-shrink: 0;
-  height: var(--space-8);
-  padding: 0 var(--space-3);
-  border: 1px solid var(--color-error);
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--color-error);
-  font-family: inherit;
-  font-size: var(--font-size-3xs);
-  font-weight: var(--font-weight-semibold);
-  line-height: var(--leading-none);
-  cursor: pointer;
-}
-
-.errorRetry span {
-  transform: translateY(var(--text-optical-nudge));
-}
-
-.errorRetry:focus-visible {
-  background: var(--color-error-bg);
-}
-
-@media (hover: hover) {
-  .errorRetry:hover {
-    background: var(--color-error-bg);
-  }
-}
-
-.errorRetry:focus-visible {
-  outline: 2px solid var(--color-error);
-  outline-offset: var(--outline-offset);
 }
 
 .rank {
@@ -98,25 +54,12 @@
   font-variant-numeric: tabular-nums;
 }
 
-.winnerBadge {
-  flex-shrink: 0;
+.rankTrophy {
+  color: var(--color-primary-text);
 }
 
 .votesCol {
   justify-self: center;
-}
-
-.voteReadonly {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  font-variant-numeric: tabular-nums;
-}
-
-.voteReadonly span {
-  transform: translateY(var(--text-optical-nudge));
 }
 
 .seenCol {
@@ -138,74 +81,4 @@
 .scoreCol {
   justify-self: end;
   text-align: right;
-}
-
-.scoreBlock {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.scoreValue {
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-bold);
-  line-height: var(--leading-none);
-  color: var(--color-text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.scorePositive {
-  color: var(--color-primary-text);
-}
-
-.scoreNegative {
-  color: var(--color-error);
-}
-
-.scoreBar {
-  width: var(--tap-target-min);
-  margin-top: var(--space-1-5);
-}
-
-.mobileBottomSection {
-  margin-top: auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1-5);
-}
-
-.mobileProposerRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  min-width: 0;
-}
-
-.mobileSeenSlot {
-  flex-shrink: 0;
-  max-width: 60%;
-}
-
-.mobileSeenHint {
-  margin: 0;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: var(--font-size-2xs);
-  color: var(--color-text-subtle);
-}
-
-.mobileVoteScore {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2-5);
-  flex-shrink: 0;
-}
-
-.mobileMenuSlot {
-  display: flex;
-  align-self: stretch;
-  flex-shrink: 0;
 }

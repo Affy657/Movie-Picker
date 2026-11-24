@@ -366,15 +366,13 @@ describe('EventMoviesSection (MSW)', () => {
     expect(screen.queryByRole('menuitem', { name: /tirage/i })).not.toBeInTheDocument();
   });
 
-  it('without hover capability: no kebab, the poster still opens the film page', async () => {
+  it('without hover capability: the kebab stays, the poster still opens the film page', async () => {
     server.use(authedUserHandler, watchlistHandler([]));
     renderSection({ withLocation: true });
     const user = userEvent.setup();
 
     expect(await screen.findByRole('heading', { name: 'Matrix' })).toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: /plus d.actions.*matrix/i })
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /plus d.actions.*matrix/i })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /voir les détails de « matrix »/i }));
     expect(screen.getByTestId('location')).toHaveTextContent('/film/42-matrix?soiree=soiree-cine');
@@ -481,17 +479,15 @@ describe('EventMoviesSection (MSW)', () => {
     );
   });
 
-  it('on mobile, the seen chip shows a count only once someone has seen the movie', () => {
+  it('on mobile, shows the film sheets with an eye toggle without text', () => {
     stubMatchMedia(true);
     server.use(authedUserHandler, watchlistHandler([]));
     renderSection({ movies: [MOVIE, { ...MOVIE, id: 'm2', title: 'Alien', seenCount: 2 }] });
 
     expect(
       screen.getByRole('button', { name: /marquer « déjà vu » pour matrix/i })
-    ).toHaveTextContent(/^Déjà vu$/);
-    expect(
-      screen.getByRole('button', { name: /marquer « déjà vu » pour alien/i })
-    ).toHaveTextContent('Déjà vu (2)');
+    ).toHaveTextContent('');
+    expect(screen.getAllByText('Proposé par')).toHaveLength(2);
   });
 
   it('does not show the grid/list toggle on desktop (moved to the header)', () => {
@@ -555,7 +551,7 @@ describe('EventMoviesSection (MSW)', () => {
 
     const headings = screen.getAllByRole('heading', { level: 3 });
     expect(headings[0]).toHaveTextContent('Inception');
-    expect(screen.getByText('Film gagnant')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Film gagnant' })).toBeInTheDocument();
   });
 
   it('sorts the movies by title, from A to Z', async () => {
@@ -587,8 +583,8 @@ describe('EventMoviesSection (MSW)', () => {
     const headings = screen.getAllByRole('heading', { level: 3 });
     expect(headings[0]).toHaveTextContent('Whiplash');
     expect(headings[1]).toHaveTextContent('Inception');
-    expect(screen.getByText('Gagnant 1')).toBeInTheDocument();
-    expect(screen.getByText('Gagnant 2')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Gagnant 1' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Gagnant 2' })).toBeInTheDocument();
   });
 
   it('sends vote_cast after voting for a movie', async () => {

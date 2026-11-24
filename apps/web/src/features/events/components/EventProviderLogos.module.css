@@ -1,0 +1,104 @@
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  min-height: var(--space-7);
+}
+
+.logo {
+  flex-shrink: 0;
+  display: block;
+  width: var(--space-7);
+  height: var(--space-7);
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  background: var(--color-surface-sunken);
+}
+
+.logoFallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--leading-none);
+}
+
+.more {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--space-8);
+  height: var(--space-7);
+  padding: calc(var(--space-0-5) + var(--text-optical-nudge)) var(--space-1-5)
+    calc(var(--space-0-5) - var(--text-optical-nudge));
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-hover-strong);
+  color: var(--color-text);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--leading-none);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background var(--duration-base) var(--ease-default);
+}
+
+.more[aria-expanded='true'] {
+  background: var(--color-surface-active);
+}
+
+@media (hover: hover) {
+  .more:hover {
+    background: var(--color-surface-active);
+  }
+}
+
+.more:focus-visible {
+  outline: var(--outline-focus);
+  outline-offset: var(--outline-offset);
+}
+
+.paid {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  height: var(--space-7);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: inherit;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--duration-base) var(--ease-default);
+}
+
+@media (hover: hover) {
+  .paid:hover {
+    background: var(--color-surface-hover);
+  }
+}
+
+.paid:focus-visible {
+  outline: var(--outline-focus);
+  outline-offset: var(--outline-offset);
+}
+
+.paidLabel {
+  line-height: var(--leading-none);
+  transform: translateY(var(--text-optical-nudge));
+}
+
+.none {
+  color: var(--color-text-subtle);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}

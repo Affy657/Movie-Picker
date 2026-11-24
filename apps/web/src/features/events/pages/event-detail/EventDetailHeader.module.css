@@ -132,6 +132,12 @@
   margin-left: auto;
 }
 
+@media (max-width: 63.9375rem) {
+  .viewToggle {
+    display: none;
+  }
+}
+
 .participants {
   composes: expanded from '@/shared/components/tapTarget.module.css';
   display: inline-flex;
@@ -215,8 +221,7 @@
     flex: 1 1 100%;
   }
 
-  .sep,
-  .viewToggle {
+  .sep {
     display: none;
   }
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import MovieList from '@/features/events/components/MovieList';
@@ -79,19 +79,6 @@ function baseProps() {
 describe('MovieList', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it('opens the film page, with its night, from the rental chip', async () => {
-    renderWithLocale(
-      <MovieList
-        movies={[{ ...movies[0]!, watchProviders: mixedProviders }]}
-        {...baseProps()}
-        viewMode="grid"
-      />,
-      true
-    );
-    await userEvent.click(screen.getByRole('button', { name: /Location/ }));
-    expect(screen.getByTestId('location')).toHaveTextContent('/film/1-inception?soiree=s');
-  });
-
   it('renders the empty state handed by its owner when the list is empty', () => {
     const { container } = renderWithLocale(<MovieList movies={[]} {...baseProps()} />);
     expect(container).toBeEmptyDOMElement();
@@ -150,7 +137,7 @@ describe('MovieList', () => {
       expect(onSetSort).toHaveBeenCalledWith('duration');
     });
 
-    it('names the title column by the title, with the date added beside it', async () => {
+    it('names the film column once and offers its two sorts in a menu', async () => {
       const onSetSort = vi.fn();
       renderWithLocale(
         <MovieList
@@ -158,16 +145,67 @@ describe('MovieList', () => {
           {...baseProps()}
           viewMode="list"
           showHeader
-          sortBy="score"
-          sortDir="desc"
+          sortBy="createdAt"
+          sortDir="asc"
           onSetSort={onSetSort}
         />
       );
       const user = userEvent.setup();
-      await user.click(screen.getByRole('button', { name: /^titre$/i }));
+      expect(screen.queryByRole('button', { name: /^ajout$/i })).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Trier par film' }));
+      const menu = screen.getByRole('menu', { name: 'Trier par film' });
+      expect(within(menu).getByRole('menuitemradio', { name: 'Ordre d’ajout' })).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
+
+      await user.click(within(menu).getByRole('menuitemradio', { name: 'Titre' }));
       expect(onSetSort).toHaveBeenCalledWith('title');
-      await user.click(screen.getByRole('button', { name: /^ajout$/i }));
-      expect(onSetSort).toHaveBeenCalledWith('createdAt');
+      expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    });
+
+    it('shows logos instead of provider names, three at most before a +N button', () => {
+      const six: WatchProviderOffer[] = [
+        'Netflix',
+        'Amazon Prime Video',
+        'Disney Plus',
+        'HBO Max',
+        'Canal+',
+        'Paramount Plus',
+      ].map((name, i) => ({ providerId: i + 1, name, logoPath: null, type: 'flatrate' }));
+      renderWithLocale(
+        <MovieList
+          movies={[{ ...movies[0]!, watchProviders: six }]}
+          {...baseProps()}
+          viewMode="list"
+        />
+      );
+
+      expect(screen.queryByText('Netflix')).not.toBeInTheDocument();
+      expect(screen.getAllByRole('img', { name: /Netflix|Amazon/ })).toHaveLength(2);
+      expect(
+        screen.getByRole('button', { name: '+4 : voir les 6 abonnements de « Inception »' })
+      ).toHaveTextContent('+4');
+    });
+
+    it('turns the seen button into an eye without text and keeps the note on one line without a bin', () => {
+      renderWithLocale(
+        <MovieList
+          movies={[{ ...movies[0]!, pitchNote: 'À voir absolument' }]}
+          {...baseProps()}
+          participantId="p1"
+          participantPseudo="Alice"
+          viewMode="list"
+        />
+      );
+
+      const eye = screen.getByRole('button', { name: 'Marquer « déjà vu » pour Inception' });
+      expect(eye).not.toHaveTextContent(/déjà vu/i);
+      expect(screen.getByText(/À voir absolument/)).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Supprimer la note sur Inception' })
+      ).not.toBeInTheDocument();
     });
 
     it('does not show the header when showHeader is false', () => {
@@ -205,8 +243,10 @@ describe('MovieList', () => {
       renderWithLocale(
         <MovieList movies={movies} {...baseProps()} viewMode="list" winnerMovieIds={['m1']} />
       );
-      expect(screen.getByText('Film gagnant')).toBeInTheDocument();
-      expect(screen.getAllByText('Film gagnant')).toHaveLength(1);
+      expect(screen.getAllByRole('img', { name: 'Film gagnant' })).toHaveLength(1);
+      expect(
+        screen.getByRole('img', { name: 'Film gagnant' }).closest('[data-testid="movie-rank"]')
+      ).not.toBeNull();
     });
 
     it('in grid view, the winner marker sits on the poster, outside the title', () => {
@@ -222,9 +262,9 @@ describe('MovieList', () => {
       renderWithLocale(
         <MovieList movies={movies} {...baseProps()} viewMode="list" winnerMovieIds={['m2', 'm1']} />
       );
-      expect(screen.getByText('Gagnant 1')).toBeInTheDocument();
-      expect(screen.getByText('Gagnant 2')).toBeInTheDocument();
-      expect(screen.queryByText('Film gagnant')).not.toBeInTheDocument();
+      expect(screen.getByRole('img', { name: 'Gagnant 1' })).toBeInTheDocument();
+      expect(screen.getByRole('img', { name: 'Gagnant 2' })).toBeInTheDocument();
+      expect(screen.queryByRole('img', { name: 'Film gagnant' })).not.toBeInTheDocument();
     });
 
     it('in list view, the removal mode only offers the designated movies as selectable', () => {
@@ -327,24 +367,23 @@ describe('MovieList', () => {
       expect(screen.getByText('1')).toBeInTheDocument();
     });
 
-    it('caps the displayed platforms and offers a unified overflow badge', async () => {
-      const manyProviders: WatchProviderOffer[] = [
-        { providerId: 1, name: 'A', logoPath: null, type: 'flatrate' },
-        { providerId: 2, name: 'B', logoPath: null, type: 'flatrate' },
-        { providerId: 3, name: 'C', logoPath: null, type: 'flatrate' },
-        { providerId: 4, name: 'D', logoPath: null, type: 'flatrate' },
-      ];
+    it('keeps the row menu on a touch screen, where it is the only way to delete a note', () => {
+      renderWithLocale(<MovieList movies={movies} {...baseProps()} viewMode="list" />);
+
+      expect(screen.getAllByRole('button', { name: /plus d’actions/i })).toHaveLength(2);
+    });
+
+    it('shows the subscription logo alone when rentals and purchases also exist', () => {
       renderWithLocale(
         <MovieList
-          movies={[{ ...movies[0]!, watchProviders: manyProviders }]}
+          movies={[{ ...movies[0]!, watchProviders: mixedProviders }]}
           {...baseProps()}
           viewMode="list"
         />
       );
-      expect(screen.getByText('A')).toBeInTheDocument();
-      expect(screen.getByText('B')).toBeInTheDocument();
-      expect(screen.queryByText('C')).not.toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /2 autres offres/i })).toBeInTheDocument();
+      expect(screen.getByRole('img', { name: 'Netflix' })).toBeInTheDocument();
+      expect(screen.queryByText('Location')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /abonnements/i })).not.toBeInTheDocument();
     });
 
     it('shows a label when no offer is available', () => {
@@ -355,7 +394,7 @@ describe('MovieList', () => {
           viewMode="list"
         />
       );
-      expect(screen.getByText(/pas en streaming/i)).toBeInTheDocument();
+      expect(screen.getByText('Aucune offre')).toBeInTheDocument();
     });
 
     it('split bar: proportions the for/against segments and exposes the detail in a tooltip', () => {
@@ -405,26 +444,6 @@ describe('MovieList', () => {
       );
       expect(onRetryVote).toHaveBeenCalledWith('m1');
     });
-
-    it('mobile row: the chevron opens the same menu as the kebab, details first', async () => {
-      const user = userEvent.setup();
-      renderWithLocale(
-        <MovieList
-          movies={[{ ...movies[0]!, tmdbId: 27205 }]}
-          {...baseProps()}
-          isMobile
-          viewMode="list"
-        />,
-        true
-      );
-      const chevron = screen.getByRole('button', { name: /plus d’actions/i });
-      expect(chevron).toHaveAttribute('aria-haspopup', 'menu');
-      await user.click(chevron);
-      const items = screen.getAllByRole('menuitem').map((item) => item.textContent);
-      expect(items[0]).toBe('Voir les détails');
-      await user.click(screen.getByRole('menuitem', { name: 'Voir les détails' }));
-      expect(screen.getByTestId('location')).toHaveTextContent('/film/27205-inception?soiree=s');
-    });
   });
 
   describe('vue grille', () => {
@@ -440,31 +459,11 @@ describe('MovieList', () => {
       expect(screen.queryByText(/action/i)).not.toBeInTheDocument();
     });
 
-    it('paints the blurred poster backdrop from the file the poster loaded, without a second download', () => {
-      const { container } = renderWithLocale(
-        <MovieList
-          movies={[{ ...movies[0]!, posterPath: 'https://image.tmdb.org/t/p/w500/abc.jpg' }]}
-          {...baseProps()}
-          viewMode="grid"
-        />
-      );
-      const poster = container.querySelector<HTMLImageElement>('img[srcset*="abc.jpg"]')!;
-      const backdrop = poster.previousElementSibling as HTMLElement;
-      expect(backdrop.style.backgroundImage).toBe('');
-
-      Object.defineProperty(poster, 'currentSrc', {
-        value: 'https://image.tmdb.org/t/p/w342/abc.jpg',
-      });
-      fireEvent.load(poster);
-
-      expect(backdrop.style.backgroundImage).toBe('url("https://image.tmdb.org/t/p/w342/abc.jpg")');
-    });
-
-    it('mounts no kebab on a device without hover capability', () => {
+    it('keeps the kebab on a device without hover capability, next to the poster link', () => {
       renderWithLocale(
         <MovieList movies={[movies[0]!]} {...baseProps()} isMobile viewMode="grid" />
       );
-      expect(screen.queryByRole('button', { name: /plus d’actions/i })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /plus d’actions/i })).toBeInTheDocument();
       expect(screen.getByTestId('poster-details-trigger')).toBeInTheDocument();
     });
 
@@ -521,47 +520,31 @@ describe('MovieList', () => {
       expect(screen.getAllByRole('separator')).toHaveLength(2);
     });
 
-    it('vue grille : abonnement seul → chips flatrate, aucune pastille location/achat', () => {
-      renderWithLocale(
-        <MovieList
-          movies={[{ ...movies[0]!, watchProviders: flatrateOnly }]}
-          {...baseProps()}
-          viewMode="grid"
-        />
-      );
-      expect(screen.getByText('Netflix')).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /Location/ })).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /Achat/ })).not.toBeInTheDocument();
-    });
-
-    it('grid view: separates rental and purchase from flatrate in two distinct chips that open the film page', async () => {
-      renderWithLocale(
+    it('grid view: shows the subscription logo, or Location when the film can only be rented', () => {
+      const { rerender } = renderWithLocale(
         <MovieList
           movies={[{ ...movies[0]!, watchProviders: mixedProviders }]}
           {...baseProps()}
           viewMode="grid"
-        />,
-        true
-      );
-      expect(screen.getByText('Netflix')).toBeInTheDocument();
-      const rentBtn = screen.getByRole('button', { name: /Location/ });
-      const buyBtn = screen.getByRole('button', { name: /Achat/ });
-      await userEvent.click(rentBtn);
-      expect(screen.getByTestId('location')).toHaveTextContent('/film/1-inception?soiree=s');
-      expect(buyBtn).toBeInTheDocument();
-    });
-
-    it('vue grille : sans abonnement, affiche uniquement les pastilles location/achat', () => {
-      renderWithLocale(
-        <MovieList
-          movies={[{ ...movies[0]!, watchProviders: rentBuyOnly }]}
-          {...baseProps()}
-          viewMode="grid"
         />
       );
-      expect(screen.queryByText('Netflix')).not.toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Location/ })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Achat/ })).toBeInTheDocument();
+      expect(screen.getByRole('img', { name: 'Netflix' })).toBeInTheDocument();
+      expect(screen.queryByText('Location')).not.toBeInTheDocument();
+
+      rerender(
+        <MemoryRouter>
+          <QueryClientWrapper>
+            <LocaleProvider>
+              <MovieList
+                movies={[{ ...movies[0]!, watchProviders: rentBuyOnly }]}
+                {...baseProps()}
+                viewMode="grid"
+              />
+            </LocaleProvider>
+          </QueryClientWrapper>
+        </MemoryRouter>
+      );
+      expect(screen.getByText('Location')).toBeInTheDocument();
     });
 
     it('selection mode in grid view: also neutralises the usual actions', () => {
@@ -734,6 +717,7 @@ describe('MovieList', () => {
     it.each(['grid', 'list'] as const)(
       'lets the host take a pitch note down from the %s view',
       async (viewMode) => {
+        stubHoverCapability();
         const onRemoveNote = vi.fn();
         const pitched = { ...movies[0]!, pitchNote: 'Un casse dans les rêves' };
         renderWithLocale(
@@ -748,15 +732,20 @@ describe('MovieList', () => {
           />
         );
 
+        expect(
+          screen.queryByRole('button', { name: 'Supprimer la note sur Inception' })
+        ).not.toBeInTheDocument();
+        await userEvent.click(screen.getByRole('button', { name: /plus d’actions/i }));
         await userEvent.click(
-          screen.getByRole('button', { name: 'Supprimer la note sur Inception' })
+          screen.getByRole('menuitem', { name: 'Supprimer la note sur Inception' })
         );
 
         expect(onRemoveNote).toHaveBeenCalledWith(pitched);
       }
     );
 
-    it('lets the proposer take their own pitch note down, not the other guests', () => {
+    it('lets the proposer take their own pitch note down, not the other guests', async () => {
+      stubHoverCapability();
       const pitchedList = (participantId: string) => (
         <MemoryRouter>
           <QueryClientWrapper>
@@ -774,13 +763,16 @@ describe('MovieList', () => {
         </MemoryRouter>
       );
       const { rerender } = render(pitchedList('p1'));
+      await userEvent.click(screen.getByRole('button', { name: /plus d’actions/i }));
       expect(
-        screen.getByRole('button', { name: 'Supprimer la note sur Inception' })
+        screen.getByRole('menuitem', { name: 'Supprimer la note sur Inception' })
       ).toBeInTheDocument();
+      await userEvent.keyboard('{Escape}');
 
       rerender(pitchedList('p2'));
+      await userEvent.click(screen.getByRole('button', { name: /plus d’actions/i }));
       expect(
-        screen.queryByRole('button', { name: 'Supprimer la note sur Inception' })
+        screen.queryByRole('menuitem', { name: 'Supprimer la note sur Inception' })
       ).not.toBeInTheDocument();
     });
 

@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { Check, ChevronDown, ChevronUp, Quote, Trash2, X } from 'lucide-react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { Check, ChevronDown, ChevronUp, Quote, X } from 'lucide-react';
 import clsx from 'clsx';
 import { deleteMoviePitchNote, setMoviePitchNote } from '@/features/events/api/eventMoviesApi';
 import styles from './MovieNote.module.css';
@@ -11,7 +11,6 @@ const NOTE_PREVIEW_THRESHOLD = 38;
 
 interface MovieNoteProps {
   movieId: string;
-  movieTitle: string;
   slug: string;
   pitchNote?: string | null;
   editable: boolean;
@@ -20,13 +19,12 @@ interface MovieNoteProps {
   onEditingChange: (editing: boolean) => void;
   refresh: () => void;
   onActionError: (message: string) => void;
-  onRemove?: () => void;
+  lines?: 1 | 2;
   t: Translate;
 }
 
 export function MovieNote({
   movieId,
-  movieTitle,
   slug,
   pitchNote,
   editable,
@@ -35,7 +33,7 @@ export function MovieNote({
   onEditingChange,
   refresh,
   onActionError,
-  onRemove,
+  lines = 1,
   t,
 }: Readonly<MovieNoteProps>) {
   const [draft, setDraft] = useState('');
@@ -126,19 +124,14 @@ export function MovieNote({
   if (!pitchNote) return null;
 
   const textNode = (
-    <span className={clsx(styles.noteText, !expanded && styles.noteTextClamp)}>{pitchNote}</span>
-  );
-
-  const removeButton = onRemove ? (
-    <button
-      type="button"
-      className={styles.noteIconBtn}
-      aria-label={t('movies.pitchNote.removeAria', { title: movieTitle })}
-      onClick={onRemove}
+    <span
+      className={clsx(styles.noteText, !expanded && styles.noteTextClamp)}
+      style={{ '--note-lines': lines } as CSSProperties}
+      title={pitchNote}
     >
-      <Trash2 aria-hidden size={ICON_SIZE.sm} />
-    </button>
-  ) : null;
+      {pitchNote}
+    </span>
+  );
 
   if (editable) {
     return (
@@ -151,14 +144,13 @@ export function MovieNote({
         >
           {textNode}
         </button>
-        {removeButton}
       </div>
     );
   }
 
   const showExpand = pitchNote.length > NOTE_PREVIEW_THRESHOLD;
   return (
-    <div className={styles.note}>
+    <div className={styles.note} data-note-expanded={expanded || undefined}>
       <Quote aria-hidden size={ICON_SIZE.sm} className={styles.noteQuote} />
       {textNode}
       {showExpand && (
@@ -176,7 +168,6 @@ export function MovieNote({
           )}
         </button>
       )}
-      {removeButton}
     </div>
   );
 }

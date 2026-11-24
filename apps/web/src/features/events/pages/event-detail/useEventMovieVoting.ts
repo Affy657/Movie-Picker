@@ -31,7 +31,7 @@ interface EventMovieVotingInput {
   slug: string;
   participant: ParticipantRef | null;
   movies: MovieData[];
-  layout: 'grid' | 'list';
+  voteErrorsInline: boolean;
   setActionError: (message: string | null) => void;
   refreshAll: () => void;
 }
@@ -40,7 +40,7 @@ export function useEventMovieVoting({
   slug,
   participant,
   movies,
-  layout,
+  voteErrorsInline,
   setActionError,
   refreshAll,
 }: EventMovieVotingInput) {
@@ -66,14 +66,14 @@ export function useEventMovieVoting({
         refreshAll();
         return;
       }
-      if (layout === 'list') {
+      if (voteErrorsInline) {
         const message = getErrorMessage(error, t('movies.list.voteErrorRow'));
         setVoteErrors((prev) => ({ ...prev, [movieId]: { message, value } }));
         return;
       }
       setActionError(getErrorMessage(error, t('movies.list.voteError')));
     },
-    [layout, refreshAll, setActionError, t]
+    [voteErrorsInline, refreshAll, setActionError, t]
   );
 
   const sendVote = useCallback(

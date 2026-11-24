@@ -130,19 +130,24 @@ export default function MovieList({
     isWinner: winners.includes(m.id),
     winnerRank: winnerRankOf(m.id),
     voteLockedHint: voteQuotaLockedHint && m.myVote == null ? voteQuotaLockedHint : undefined,
-    isMobile,
+    voteError: voteErrorFor(m.id),
     t,
   });
 
-  if (viewMode === 'list') {
+  function voteErrorFor(movieId: string) {
+    const error = voteErrors?.[movieId];
+    return error ? { message: error.message, onRetry: () => onRetryVote?.(movieId) } : undefined;
+  }
+
+  if (viewMode === 'list' && !isMobile) {
     return (
       <MovieTable
         header={
-          !isMobile && showHeader && sortBy && sortDir && onSetSort ? (
+          showHeader && sortBy && sortDir && onSetSort ? (
             <EventMovieRowHeader
               columns={[
                 { key: 'title', label: t('movies.list.columnTitle') },
-                { key: 'createdAt', label: t('movies.list.columnAddedAt') },
+                { key: 'createdAt', label: t('movies.list.columnAddedOrder') },
                 { key: 'voteAverage', label: t('movies.list.columnTmdbVote') },
                 { key: 'duration', label: t('movies.list.columnDuration') },
                 { key: 'releaseDate', label: t('movies.list.columnReleaseDate') },
@@ -150,6 +155,8 @@ export default function MovieList({
                 { key: 'seen', label: t('movies.seen.columnLabel') },
                 { key: 'score', label: t('movies.list.columnScore') },
               ]}
+              filmLabel={t('movies.list.columnFilm')}
+              filmSortAriaLabel={t('movies.list.sortFilmAria')}
               sortBy={sortBy}
               sortDir={sortDir}
               onSetSort={onSetSort}
@@ -158,18 +165,12 @@ export default function MovieList({
         }
       >
         {movies.map((m, i) => {
-          const rowError = voteErrors?.[m.id];
           return (
             <EventMovieRow
               key={m.id}
               {...commonCardProps(m)}
               eager={i < 3}
               rank={showRank ? listRanks.get(m.id) : undefined}
-              voteError={
-                rowError
-                  ? { message: rowError.message, onRetry: () => onRetryVote?.(m.id) }
-                  : undefined
-              }
             />
           );
         })}
@@ -179,9 +180,9 @@ export default function MovieList({
 
   return (
     <ul className={styles.grid}>
-      {movies.map((m, i) => (
-        <EventMovieCard key={m.id} {...commonCardProps(m)} eager={i < 3} />
-      ))}
+      {movies.map((m, i) => {
+        return <EventMovieCard key={m.id} {...commonCardProps(m)} eager={i < 3} />;
+      })}
     </ul>
   );
 }

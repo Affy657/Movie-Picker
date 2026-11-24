@@ -2,7 +2,7 @@ import type { RatingScale } from '@/shared/types/theme';
 
 export const RATING_MAX = 10;
 
-type Options = { decimals?: 0 | 1 };
+type Options = { decimals?: 0 | 1; withMax?: boolean };
 
 export function ratingScaleMax(scale: RatingScale): number {
   return scale === 'ten' ? RATING_MAX : RATING_MAX / 2;
@@ -12,7 +12,7 @@ export function formatRating(
   value: number,
   scale: RatingScale,
   locale: string,
-  { decimals = 0 }: Options = {}
+  { decimals = 0, withMax = true }: Options = {}
 ): string {
   const max = ratingScaleMax(scale);
   const shown = (value * max) / RATING_MAX;
@@ -20,7 +20,7 @@ export function formatRating(
     minimumFractionDigits: decimals,
     maximumFractionDigits: 1,
   }).format(shown);
-  return `${text}/${max}`;
+  return withMax ? `${text}/${max}` : text;
 }
 
 export function averageRating(values: readonly number[]): number | null {

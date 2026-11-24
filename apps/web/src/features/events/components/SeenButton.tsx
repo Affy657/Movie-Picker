@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import { Eye } from 'lucide-react';
 import AvatarStack from '@/shared/components/AvatarStack';
+import Button from '@/shared/components/Button';
 import Tooltip from '@/shared/components/Tooltip';
 import type { MovieData } from '@/shared/types/movie';
 import styles from './SeenButton.module.css';
@@ -12,43 +13,54 @@ function SeenButton({
   iMarkedSeen,
   seenPending,
   onToggle,
-  others,
-  othersHint,
+  others = [],
+  othersHint = null,
   avatarsByPseudo,
-  alwaysShowCount = false,
+  framed = false,
   t,
 }: Readonly<{
   m: MovieData;
   iMarkedSeen: boolean;
   seenPending: boolean;
   onToggle: () => void;
-  others: string[];
-  othersHint: string | null;
+  others?: string[];
+  othersHint?: string | null;
   avatarsByPseudo?: Record<string, string>;
-  alwaysShowCount?: boolean;
+  framed?: boolean;
   t: Translate;
 }>) {
+  const shared = {
+    onClick: onToggle,
+    disabled: seenPending,
+    'aria-pressed': iMarkedSeen,
+    'aria-label': iMarkedSeen
+      ? t('movies.seen.unmarkAria', { title: m.title })
+      : t('movies.seen.markAria', { title: m.title }),
+    title: t('movies.seen.neutralTooltip'),
+  };
+  const icon = <Eye aria-hidden size={ICON_SIZE.md} />;
+
+  if (framed) {
+    return (
+      <Button
+        variant={iMarkedSeen ? 'soft' : 'secondary'}
+        size="sm"
+        className={styles.seenFramed}
+        {...shared}
+      >
+        {icon}
+      </Button>
+    );
+  }
+
   return (
     <span className={styles.seenWrap}>
       <button
         type="button"
         className={clsx(styles.seenBtn, iMarkedSeen && styles.seenActive)}
-        onClick={onToggle}
-        disabled={seenPending}
-        aria-pressed={iMarkedSeen}
-        aria-label={
-          iMarkedSeen
-            ? t('movies.seen.unmarkAria', { title: m.title })
-            : t('movies.seen.markAria', { title: m.title })
-        }
-        title={t('movies.seen.neutralTooltip')}
+        {...shared}
       >
-        <Eye aria-hidden size={ICON_SIZE.md} />
-        <span className={styles.seenLabel}>
-          {m.seenCount || alwaysShowCount
-            ? t('movies.seen.labelWithCount', { count: m.seenCount ?? 0 })
-            : t('movies.seen.label')}
-        </span>
+        {icon}
       </button>
       {othersHint && others.length > 0 && (
         <Tooltip label={othersHint}>

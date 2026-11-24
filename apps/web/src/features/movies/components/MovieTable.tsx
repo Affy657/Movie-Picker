@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import clsx from 'clsx';
-import { ArrowDown, ArrowUp, Film } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronDown, Film } from 'lucide-react';
+import FixedMenu from '@/shared/components/FixedMenu';
+import { MenuItem } from '@/shared/components/Menu';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import { OverflowChip, PaidOfferChip } from '@/features/movies/components/movieCardParts';
 import type { WatchProviderOffer } from '@/shared/types/movie';
@@ -41,6 +43,59 @@ export interface MovieTableColumn<K extends string> {
   sorts?: MovieTableSort<K>[];
   align?: 'start' | 'end' | 'center';
   inset?: boolean;
+  menuLabel?: string;
+  menuAriaLabel?: string;
+}
+
+function SortMenuHeader<K extends string>({
+  label,
+  ariaLabel,
+  sorts,
+  sortBy,
+  sortDir,
+  onSetSort,
+}: Readonly<{
+  label: string;
+  ariaLabel: string;
+  sorts: MovieTableSort<K>[];
+  sortBy: K;
+  sortDir: 'asc' | 'desc';
+  onSetSort: (key: K) => void;
+}>) {
+  const active = sorts.some((sort) => sort.key === sortBy);
+  const DirectionIcon = sortDir === 'asc' ? ArrowUp : ArrowDown;
+  return (
+    <FixedMenu
+      ariaLabel={ariaLabel}
+      trigger={(triggerProps) => (
+        <button
+          type="button"
+          {...triggerProps}
+          aria-label={ariaLabel}
+          className={clsx(styles.colHeaderBtn, active && styles.colHeaderBtnActive)}
+        >
+          <span>{label}</span>
+          {active ? <DirectionIcon aria-hidden size={ICON_SIZE.xs} /> : null}
+          <ChevronDown aria-hidden size={ICON_SIZE.xs} />
+        </button>
+      )}
+    >
+      {(close) =>
+        sorts.map((sort) => (
+          <MenuItem
+            key={sort.key}
+            selected={sort.key === sortBy}
+            onClick={() => {
+              close();
+              onSetSort(sort.key);
+            }}
+          >
+            {sort.label}
+          </MenuItem>
+        ))
+      }
+    </FixedMenu>
+  );
 }
 
 const ALIGN_CLASS = {
@@ -48,6 +103,14 @@ const ALIGN_CLASS = {
   end: styles.colHeaderEnd,
   center: styles.colHeaderCenter,
 } as const;
+
+function headerCellClass<K extends string>(column: MovieTableColumn<K>) {
+  return clsx(
+    styles.colHeaderCell,
+    ALIGN_CLASS[column.align ?? 'start'],
+    column.inset && styles.colHeaderInset
+  );
+}
 
 export function MovieTableHeader<K extends string>({
   columns,
@@ -84,15 +147,22 @@ export function MovieTableHeader<K extends string>({
           );
         }
         if (sorts.length === 0) return <span key={column.id} />;
+        if (column.menuLabel) {
+          return (
+            <span key={column.id} className={headerCellClass(column)}>
+              <SortMenuHeader
+                label={column.menuLabel}
+                ariaLabel={column.menuAriaLabel ?? column.menuLabel}
+                sorts={sorts}
+                sortBy={sortBy}
+                sortDir={sortDir}
+                onSetSort={onSetSort}
+              />
+            </span>
+          );
+        }
         return (
-          <span
-            key={column.id}
-            className={clsx(
-              styles.colHeaderCell,
-              ALIGN_CLASS[column.align ?? 'start'],
-              column.inset && styles.colHeaderInset
-            )}
-          >
+          <span key={column.id} className={headerCellClass(column)}>
             {sorts.map((sort) => {
               const active = sortBy === sort.key;
               return (

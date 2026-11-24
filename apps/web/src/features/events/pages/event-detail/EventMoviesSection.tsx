@@ -260,7 +260,14 @@ export default function EventMoviesSection({
     handleVote,
     handleRetryVote,
     submitVote,
-  } = useEventMovieVoting({ slug, participant, movies, layout, setActionError, refreshAll });
+  } = useEventMovieVoting({
+    slug,
+    participant,
+    movies,
+    voteErrorsInline: true,
+    setActionError,
+    refreshAll,
+  });
   const maxVotes = event.config?.maxVotesPerParticipant ?? null;
   const votesUsed = useMemo(() => movies.filter((m) => m.myVote != null).length, [movies]);
   const voteQuota = voteQuotaFor(maxVotes, !!participant, isFinished, votesUsed);
@@ -445,7 +452,6 @@ export default function EventMoviesSection({
 
         {moviesLoaded && (
           <EventMovieLists
-            layout={layout}
             inWheelMovies={inWheelMovies}
             excludedMovies={excludedMovies}
             listProps={sharedListProps}
@@ -464,7 +470,6 @@ export default function EventMoviesSection({
 }
 
 function EventMovieLists({
-  layout,
   inWheelMovies,
   excludedMovies,
   listProps,
@@ -474,7 +479,6 @@ function EventMovieLists({
   sortDir,
   onSetSort,
 }: Readonly<{
-  layout: 'grid' | 'list';
   inWheelMovies: MovieData[];
   excludedMovies: MovieData[];
   listProps: SharedMovieListProps;
@@ -485,10 +489,9 @@ function EventMovieLists({
   onSetSort: (key: MovieRowSortKey) => void;
 }>) {
   const { t } = useTranslation();
-  const bleed = layout === 'list' ? styles.movieListBleed : undefined;
   return (
     <>
-      <div className={inWheelMovies.length > 0 ? bleed : undefined}>
+      <div>
         <MovieList
           movies={inWheelMovies}
           {...listProps}
@@ -507,7 +510,7 @@ function EventMovieLists({
             <span className={styles.wheelDividerCount}>{excludedMovies.length}</span>
             <span className={styles.wheelDividerLine} aria-hidden />
           </div>
-          <div className={bleed}>
+          <div>
             <MovieList movies={excludedMovies} {...listProps} showHeader={false} />
           </div>
         </>
