@@ -19,6 +19,7 @@ public sealed class ProfileShareDocumentTests : IClassFixture<MoviePickerApplica
         var member = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Profil Partagé");
         var me = await member.GetFromJsonAsync<JsonElement>("/api/v1/auth/me");
         var handle = me.GetProperty("handle").GetString()!;
+        (await member.PatchAsJsonAsync("/api/v1/auth/me", new { bio = "Fan de Nolan" })).EnsureSuccessStatusCode();
 
         var res = await _factory.CreateClient().GetAsync($"/u/{handle}");
 
@@ -32,6 +33,22 @@ public sealed class ProfileShareDocumentTests : IClassFixture<MoviePickerApplica
         Assert.DoesNotContain("name=\"robots\"", html);
         Assert.Contains("<div id=\"root\"></div>", html);
         Assert.DoesNotContain("Titre du site", html);
+    }
+
+    [Fact]
+    public async Task ProfilePage_PublicMemberWithNothingToShow_IsServedButKeptOutOfTheIndex()
+    {
+        _factory.FakeWebShell.Next = FakeWebShellSource.Shell;
+        var member = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Profil Vide");
+        var me = await member.GetFromJsonAsync<JsonElement>("/api/v1/auth/me");
+        var handle = me.GetProperty("handle").GetString()!;
+
+        var res = await _factory.CreateClient().GetAsync($"/u/{handle}");
+
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        var html = await res.Content.ReadAsStringAsync();
+        Assert.Contains($"<meta property=\"og:title\" content=\"Profil Vide (@{handle})\" />", html);
+        Assert.Contains("<meta name=\"robots\" content=\"noindex, nofollow\" />", html);
     }
 
     [Fact]
