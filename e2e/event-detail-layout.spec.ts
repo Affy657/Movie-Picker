@@ -58,7 +58,9 @@ test.describe('Event page layout', () => {
     await addStubMovie(page);
 
     await expect(page.getByRole('button', { name: 'Note', exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: '1 participant' })).toBeVisible();
+    const condensedParticipants = page.getByTestId('participants-toggle-condensed');
+    await expect(condensedParticipants).toBeVisible();
+    await expect(condensedParticipants).toHaveAccessibleName('1 participant');
 
     await page.getByRole('button', { name: 'Autre façon de choisir le film' }).click();
     await page.getByRole('menuitem', { name: 'Choisir moi-même' }).click();

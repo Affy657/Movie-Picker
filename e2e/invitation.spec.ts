@@ -44,11 +44,11 @@ test.describe('Invitation to a movie night', () => {
       await register.click();
       await expect(guestPage).toHaveURL(/\/register\?returnTo=/);
 
-      await guestPage.getByLabel('Pseudo').fill('InvitéE2E');
+      await guestPage.getByLabel('Nom affiché').fill('InvitéE2E');
       await guestPage
         .getByLabel('E-mail', { exact: true })
         .fill(uniqueEmail(asciiSlug('InvitéE2E')));
-      await guestPage.getByLabel('Mot de passe').fill(TEST_PASSWORD);
+      await guestPage.getByLabel('Mot de passe', { exact: true }).fill(TEST_PASSWORD);
       await guestPage.getByRole('button', { name: 'Créer mon compte' }).click();
 
       await expect(
