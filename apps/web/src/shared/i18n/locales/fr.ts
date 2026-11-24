@@ -740,7 +740,7 @@ export const fr = {
         reportUnmatched: 'Voir les {{count}} film(s) introuvable(s) sur TMDB',
         reportTruncated: '{{count}} film(s) non traité(s) : trop de films pour une seule fois.',
         reportWatchedPartial:
-          'Films vus : Letterboxd ne laisse lire que vos films sortis récemment et votre journal, {{count}} autre(s) film(s) n’ont pas pu être lus. Importez le fichier d’export de Letterboxd pour les récupérer.',
+          'Films vus : Letterboxd a refusé une partie de vos pages cette fois, {{count}} film(s) n’ont pas pu être lus. Ils arriveront aux prochaines synchronisations, ou tous d’un coup en important le fichier d’export de Letterboxd.',
         attentionMessageOne: '1 film n’a pas pu être identifié automatiquement.',
         attentionMessage: '{{count}} films n’ont pas pu être identifiés automatiquement.',
         attentionConfirm: 'Les confirmer',

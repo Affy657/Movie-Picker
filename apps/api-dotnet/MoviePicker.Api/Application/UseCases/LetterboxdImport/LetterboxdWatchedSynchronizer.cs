@@ -42,6 +42,7 @@ public sealed class LetterboxdWatchedSynchronizer
         string userId,
         LetterboxdFilmsSnapshot snapshot,
         IReadOnlySet<string>? letterboxdWatchlistSlugs,
+        IReadOnlySet<string>? slugsOfferedAsChoices = null,
         CancellationToken ct = default)
     {
         var entries = await _watched.ListByOwnerAsync(userId, ct);
@@ -58,7 +59,10 @@ public sealed class LetterboxdWatchedSynchronizer
             known.MarkChanged(entry.TmdbId, entry.MediaType);
         }
 
-        var unknown = snapshot.Films.Where(film => !bySlug.ContainsKey(film.Slug)).ToList();
+        var unknown = snapshot.Films
+            .Where(film => !bySlug.ContainsKey(film.Slug))
+            .OrderBy(film => slugsOfferedAsChoices?.Contains(film.Slug) == true)
+            .ToList();
         var addition = await AddUnknownAsync(userId, unknown, letterboxdWatchlistSlugs, known, ct);
 
         if (!snapshot.ConfirmsDepartures)

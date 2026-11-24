@@ -29,10 +29,12 @@ export type LetterboxdExportBatchReport = ApiSchemas['LetterboxdExportImportResp
 
 export const LETTERBOXD_EXPORT_BATCH = 50;
 
+const LETTERBOXD_SYNC_TIMEOUT_MS = 290_000;
+
 export async function syncLetterboxd(force: boolean): Promise<LetterboxdSyncReport> {
   const report = await fetchApi<Partial<LetterboxdSyncReport>>(
     `/letterboxd/sync?force=${force ? 'true' : 'false'}`,
-    { method: 'POST', timeoutMs: SLOW_REQUEST_TIMEOUT_MS }
+    { method: 'POST', timeoutMs: LETTERBOXD_SYNC_TIMEOUT_MS }
   );
   return {
     skipped: report.skipped ?? false,

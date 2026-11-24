@@ -793,7 +793,7 @@ describe('LetterboxdSyncSection (MSW)', () => {
 
       expect(
         await screen.findByText(
-          'Films vus : Letterboxd ne laisse lire que vos films sortis récemment et votre journal, 693 autre(s) film(s) n’ont pas pu être lus. Importez le fichier d’export de Letterboxd pour les récupérer.'
+          'Films vus : Letterboxd a refusé une partie de vos pages cette fois, 693 film(s) n’ont pas pu être lus. Ils arriveront aux prochaines synchronisations, ou tous d’un coup en important le fichier d’export de Letterboxd.'
         )
       ).toBeInTheDocument();
       expect(
