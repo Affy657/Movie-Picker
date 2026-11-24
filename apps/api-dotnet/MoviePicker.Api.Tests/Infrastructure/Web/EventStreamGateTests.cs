@@ -38,10 +38,10 @@ public sealed class EventStreamGateTests
     {
         var gate = Gate(perAccount: 2);
 
-        Assert.True(gate.TryEnter(SignedIn("u1"), out _));
-        Assert.True(gate.TryEnter(SignedIn("u1"), out _));
-        Assert.False(gate.TryEnter(SignedIn("u1"), out _));
-        Assert.True(gate.TryEnter(SignedIn("u2"), out _));
+        Assert.True(gate.TryEnter(SignedIn("u1"), null, out _));
+        Assert.True(gate.TryEnter(SignedIn("u1"), null, out _));
+        Assert.False(gate.TryEnter(SignedIn("u1"), null, out _));
+        Assert.True(gate.TryEnter(SignedIn("u2"), null, out _));
     }
 
     [Fact]
@@ -49,11 +49,11 @@ public sealed class EventStreamGateTests
     {
         var gate = Gate(perAccount: 1, perAddress: 3);
 
-        Assert.True(gate.TryEnter(Anonymous("198.51.100.4"), out _));
-        Assert.True(gate.TryEnter(Anonymous("198.51.100.4"), out _));
-        Assert.True(gate.TryEnter(Anonymous("198.51.100.4"), out _));
-        Assert.False(gate.TryEnter(Anonymous("198.51.100.4"), out _));
-        Assert.True(gate.TryEnter(Anonymous("198.51.100.5"), out _));
+        Assert.True(gate.TryEnter(Anonymous("198.51.100.4"), null, out _));
+        Assert.True(gate.TryEnter(Anonymous("198.51.100.4"), null, out _));
+        Assert.True(gate.TryEnter(Anonymous("198.51.100.4"), null, out _));
+        Assert.False(gate.TryEnter(Anonymous("198.51.100.4"), null, out _));
+        Assert.True(gate.TryEnter(Anonymous("198.51.100.5"), null, out _));
     }
 
     [Fact]
@@ -61,21 +61,82 @@ public sealed class EventStreamGateTests
     {
         var gate = Gate(perInstance: 2, perAccount: 5);
 
-        Assert.True(gate.TryEnter(SignedIn("u1"), out _));
-        Assert.True(gate.TryEnter(SignedIn("u2"), out _));
-        Assert.False(gate.TryEnter(SignedIn("u3"), out _));
+        Assert.True(gate.TryEnter(SignedIn("u1"), null, out _));
+        Assert.True(gate.TryEnter(SignedIn("u2"), null, out _));
+        Assert.False(gate.TryEnter(SignedIn("u3"), null, out _));
     }
 
     [Fact]
     public void ReleasedLease_FreesItsSlotOnce()
     {
         var gate = Gate(perInstance: 1, perAccount: 1);
-        Assert.True(gate.TryEnter(SignedIn("u1"), out var lease));
+        Assert.True(gate.TryEnter(SignedIn("u1"), null, out var lease));
 
         lease!.Dispose();
         lease.Dispose();
 
-        Assert.True(gate.TryEnter(SignedIn("u1"), out _));
-        Assert.False(gate.TryEnter(SignedIn("u2"), out _));
+        Assert.True(gate.TryEnter(SignedIn("u1"), null, out _));
+        Assert.False(gate.TryEnter(SignedIn("u2"), null, out _));
+    }
+    private const string TabA = "tab-aaaaaaaa";
+    private const string TabB = "tab-bbbbbbbb";
+    private const string TabC = "tab-cccccccc";
+
+    [Fact]
+    public void TryEnter_SameTabAgain_ReplacesItsPreviousStream_WithoutTakingAnotherSlot()
+    {
+        var gate = Gate(perAccount: 2);
+        Assert.True(gate.TryEnter(SignedIn("u1"), TabA, out var first));
+
+        Assert.True(gate.TryEnter(SignedIn("u1"), TabA, out var second));
+
+        Assert.True(first!.IsReplaced);
+        Assert.False(second!.IsReplaced);
+        Assert.True(gate.TryEnter(SignedIn("u1"), TabB, out _));
+        Assert.False(gate.TryEnter(SignedIn("u1"), TabC, out _));
+    }
+
+    [Fact]
+    public void ReplacedLease_ReleasedLater_DoesNotFreeTheSlotOfItsReplacement()
+    {
+        var gate = Gate(perAccount: 1);
+        Assert.True(gate.TryEnter(SignedIn("u1"), TabA, out var first));
+        Assert.True(gate.TryEnter(SignedIn("u1"), TabA, out var second));
+
+        first!.Dispose();
+
+        Assert.False(gate.TryEnter(SignedIn("u1"), TabB, out _));
+        second!.Dispose();
+        Assert.True(gate.TryEnter(SignedIn("u1"), TabB, out _));
+    }
+
+    [Fact]
+    public void TryEnter_SameTabOfAnotherViewer_ReplacesNothing()
+    {
+        var gate = Gate(perAccount: 2, perAddress: 2);
+        Assert.True(gate.TryEnter(SignedIn("u1"), TabA, out var account));
+        Assert.True(gate.TryEnter(Anonymous("198.51.100.4"), TabA, out var anonymous));
+
+        Assert.True(gate.TryEnter(SignedIn("u2"), TabA, out _));
+        Assert.True(gate.TryEnter(Anonymous("198.51.100.5"), TabA, out _));
+
+        Assert.False(account!.IsReplaced);
+        Assert.False(anonymous!.IsReplaced);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("short")]
+    [InlineData("tab with spaces")]
+    [InlineData("0123456789012345678901234567890123456789012345678901234567890123456789")]
+    public void TryEnter_MalformedTab_IsIgnored(string tab)
+    {
+        var gate = Gate(perAccount: 2);
+        Assert.True(gate.TryEnter(SignedIn("u1"), tab, out var first));
+
+        Assert.True(gate.TryEnter(SignedIn("u1"), tab, out _));
+
+        Assert.False(first!.IsReplaced);
+        Assert.False(gate.TryEnter(SignedIn("u1"), tab, out _));
     }
 }

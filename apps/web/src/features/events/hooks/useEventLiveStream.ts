@@ -38,6 +38,13 @@ function parsePresence(data: unknown): LivePresence[] | null {
   }
 }
 
+let streamTab: string | null = null;
+
+function streamTabOfThisPage(): string {
+  streamTab ??= crypto.randomUUID();
+  return streamTab;
+}
+
 function supportsEventSource(): boolean {
   return typeof globalThis.EventSource === 'function';
 }
@@ -66,7 +73,9 @@ export function useEventLiveStream({
 
   useEffect(() => {
     if (!active || !slug) return;
-    const source = new EventSource(eventStreamUrl(slug), { withCredentials: true });
+    const source = new EventSource(eventStreamUrl(slug, streamTabOfThisPage()), {
+      withCredentials: true,
+    });
     let lastMessageAt = Date.now();
     let reopenTimer: ReturnType<typeof setTimeout> | undefined;
 

@@ -198,8 +198,8 @@ export async function deleteEvent(idOrSlug: string): Promise<DeleteEventResponse
   return fetchApi<DeleteEventResponse>(apiPath('events', idOrSlug), { method: 'DELETE' });
 }
 
-export function eventStreamUrl(slug: string): string {
-  return apiUrl(apiPath('events', slug, 'stream'));
+export function eventStreamUrl(slug: string, tab: string): string {
+  return `${apiUrl(apiPath('events', slug, 'stream'))}?tab=${encodeURIComponent(tab)}`;
 }
 
 export async function setEventPresence(slug: string, proposing: boolean): Promise<void> {
