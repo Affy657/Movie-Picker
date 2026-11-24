@@ -662,6 +662,22 @@ describe('MoviePage', () => {
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
+  it('stops holding room for the genres, scores and streaming once the details fail', async () => {
+    server.use(
+      authMeGuestHandler,
+      showcaseHandler,
+      http.get(
+        `${TEST_API_V1}/movies/tmdb/438631/details`,
+        () => new HttpResponse(null, { status: 500 })
+      )
+    );
+    renderPage(duneSeedEntry);
+
+    await screen.findByRole('alert');
+    const header = screen.getByRole('heading', { level: 1, name: 'Dune' }).closest('header')!;
+    expect(header.querySelectorAll('[class*="Pending"]')).toHaveLength(0);
+  });
+
   it('says when the film could not be added to the list', async () => {
     server.use(
       signedInHandler,

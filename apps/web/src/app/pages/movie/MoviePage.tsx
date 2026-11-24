@@ -442,7 +442,7 @@ function MoviePageContent({
   const [playing, setPlaying] = useState<MovieVideo | null>(null);
 
   const viewInput = { mediaType, details, seed, t, locale, tmdbLanguage };
-  const view = buildHeroView(viewInput);
+  const view = buildHeroView(viewInput, detailsQuery.isPending);
   const title = titleOf(details, seed);
   const year = yearOf(details, seed);
   const canonicalPath = ROUTES.moviePage({ tmdbId, mediaType, title: title || undefined });
