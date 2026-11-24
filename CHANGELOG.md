@@ -8,6 +8,17 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Fixed
+
+- **Un profil s’ouvre plus vite** : ses films arrivent une fois le profil reçu, toujours sans faire bouger la page, et un profil qui n’a encore rien à montrer n’est plus proposé aux moteurs de recherche.
+- **Rejoindre une soirée depuis un lien** ne vous ramène plus sur la soirée si vous êtes parti ailleurs entre-temps. Un participant retiré n’est plus réinscrit en se reconnectant, et s’il tente de voter, l’encart qui explique pourquoi s’affiche. Après avoir rejoint, le clavier et le lecteur d’écran arrivent sur les films proposés.
+- **Les réglages d’une soirée prévue très loin s’enregistrent à nouveau** : la limite de deux ans ne s’applique qu’à une date que vous changez. Un brouillon de soirée repris ne repart plus sur une date passée ni dans le groupe d’une autre ouverture.
+- **Des affiches nettes sur les écrans haute densité**, et la grande image d’un film ne télécharge plus son fichier original, souvent très lourd.
+- **L’application en anglais se lance hors ligne** après une mise à jour, et le logo des e-mails s’affiche aussi dans les messageries qui chargent les images directement.
+- **La page « Dossier technique » garde toutes ses sections** pendant son chargement, et le retour sur l’accueil retrouve votre position.
+- **Les bandeaux du haut de l’écran ne se recouvrent plus**, le pied de page propose de créer un compte en ramenant à la page d’origine, et une notification d’un type nouveau affiche un texte au lieu d’une ligne vide.
+- **Un nom fait uniquement de caractères invisibles est refusé**, même avec des caractères rares.
+
 ## [1.30.0] - 2026-11-23
 
 ### Added
