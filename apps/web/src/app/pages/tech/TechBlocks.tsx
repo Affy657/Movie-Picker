@@ -5,6 +5,7 @@ import Card from '@/shared/components/Card';
 import Tooltip from '@/shared/components/Tooltip';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { useRailScroll } from '@/shared/hooks/useRailScroll';
+import { useScrollAreaTabStop } from '@/shared/hooks/useScrollAreaTabStop';
 import { useTranslation } from '@/shared/i18n';
 import styles from './techShared.module.css';
 
@@ -104,7 +105,7 @@ export function Figure({
   const { t } = useTranslation();
   const scrollRef = useRef<HTMLDivElement>(null);
   const { canScrollBack, canScrollForward } = useRailScroll(scrollRef, 1);
-  const scrolls = canScrollBack || canScrollForward;
+  useScrollAreaTabStop(scrollRef, canScrollBack || canScrollForward);
 
   return (
     <Card as="figure" padding="none" radius="lg" elevation="sm" className={styles.figure}>
@@ -114,7 +115,7 @@ export function Figure({
         data-more-before={canScrollBack || undefined}
         data-more-after={canScrollForward || undefined}
       >
-        <div ref={scrollRef} className={styles.figureScroll} tabIndex={scrolls ? 0 : undefined}>
+        <div ref={scrollRef} className={styles.figureScroll}>
           {children}
         </div>
         {canScrollForward ? (

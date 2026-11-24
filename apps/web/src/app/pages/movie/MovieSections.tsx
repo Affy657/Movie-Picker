@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from 'react';
+import { useId, useRef, useState, type ReactNode } from 'react';
 import { Play } from 'lucide-react';
 import type {
   MovieCastMember,
@@ -12,6 +12,7 @@ import LinkButton from '@/shared/components/LinkButton';
 import { Skeleton, SkeletonScreen } from '@/shared/components/Skeleton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
+import { useScrollAreaTabStop } from '@/shared/hooks/useScrollAreaTabStop';
 import { useTranslation, type Translate, type TranslationKey } from '@/shared/i18n';
 import { crewGroups } from '@/app/pages/movie/moviePageFacts';
 import styles from './MovieSections.module.css';
@@ -158,9 +159,11 @@ function CastFace({ member }: Readonly<{ member: MovieCastMember }>) {
 function CastRail({ children }: Readonly<{ children: ReactNode }>) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
+  const railRef = useRef<HTMLDivElement>(null);
+  useScrollAreaTabStop(railRef, isMobile);
   return (
     <section aria-label={isMobile ? t('moviePage.castScrollAria') : undefined}>
-      <div className={styles.castRail} tabIndex={isMobile ? 0 : undefined}>
+      <div ref={railRef} className={styles.castRail}>
         {children}
       </div>
     </section>
