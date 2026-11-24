@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Options;
 using Moq;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Profile;
 using MoviePicker.Api.Application.UseCases.ProfileShare;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
@@ -22,13 +23,21 @@ public sealed class GetProfileShareDocumentHandlerTests
 
     private readonly Mock<IUserRepository> _users = new();
     private readonly Mock<IWebShellSource> _shell = new();
+    private readonly Mock<IParticipantRepository> _participants = new();
+    private readonly Mock<IMovieListRepository> _lists = new();
+    private readonly Mock<IWatchlistRepository> _watchlist = new();
 
-    public GetProfileShareDocumentHandlerTests() =>
+    public GetProfileShareDocumentHandlerTests()
+    {
         _shell.Setup(s => s.GetShellAsync(It.IsAny<CancellationToken>())).ReturnsAsync(Shell);
+        _participants.Setup(r => r.ListByUserIdAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+    }
 
     private GetProfileShareDocumentHandler CreateSut() =>
         new(
             _users.Object,
+            new PublicProfileContent(_participants.Object, _lists.Object, _watchlist.Object),
             _shell.Object,
             Options.Create(new MoviePickerOptions { PublicWebBaseUrl = "https://web.example/" }));
 
@@ -87,13 +96,36 @@ public sealed class GetProfileShareDocumentHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_PublicProfile_StaysIndexable()
+    public async Task HandleAsync_PublicProfileWithABio_StaysIndexable()
+    {
+        GivenMember(bio: "Fan de Nolan.");
+
+        var document = await CreateSut().HandleAsync("lea", "https://api.example", default);
+
+        Assert.DoesNotContain("name=\"robots\"", document.Html);
+    }
+
+    [Fact]
+    public async Task HandleAsync_PublicProfileWithAPublicList_StaysIndexable()
+    {
+        GivenMember();
+        _lists.Setup(r => r.CountPublicByOwnerAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
+        var document = await CreateSut().HandleAsync("lea", "https://api.example", default);
+
+        Assert.DoesNotContain("name=\"robots\"", document.Html);
+    }
+
+    [Fact]
+    public async Task HandleAsync_PublicProfileThatShowsNothing_IsServedButKeptOutOfTheIndex()
     {
         GivenMember();
 
         var document = await CreateSut().HandleAsync("lea", "https://api.example", default);
 
-        Assert.DoesNotContain("name=\"robots\"", document.Html);
+        Assert.Equal(200, document.StatusCode);
+        Assert.Equal("Léa Moreau (@lea)", Meta(document.Html, "og:title"));
+        Assert.Equal("noindex, nofollow", Meta(document.Html, "robots"));
     }
 
     [Fact]

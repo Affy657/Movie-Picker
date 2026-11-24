@@ -20,6 +20,7 @@ using MoviePicker.Api.Application.UseCases.LetterboxdImport;
 using MoviePicker.Api.Application.UseCases.ListMyEvents;
 using MoviePicker.Api.Application.UseCases.MovieLists;
 using MoviePicker.Api.Application.UseCases.Notifications;
+using MoviePicker.Api.Application.UseCases.Profile;
 using MoviePicker.Api.Application.UseCases.PublicLists;
 using MoviePicker.Api.Application.UseCases.RecurringEvents;
 using MoviePicker.Api.Application.UseCases.SavedLists;
@@ -462,6 +463,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<MemberProfileListReader>();
         services.AddScoped<ListSourceReader>();
         services.AddScoped<PublicListReader>();
+        services.AddScoped<PublicProfileContent>();
         services.AddScoped<AvatarPhotoWriter>();
         services.AddScoped<ProfileBannerWriter>();
         services.AddScoped<IOAuthProfilePhotoImporter, OAuthProfilePhotoImporter>();

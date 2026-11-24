@@ -45,6 +45,8 @@ public sealed class UserTextTests
     [InlineData("\u00AD")]
     [InlineData("\uFE0F")]
     [InlineData("\u034F")]
+    [InlineData("\U000E0020\U000E0020")]
+    [InlineData("\U0001D173")]
     public void HasVisibleCharacter_InvisibleOnly_ReturnsFalse(string text)
     {
         Assert.False(UserText.HasVisibleCharacter(text));
@@ -55,6 +57,7 @@ public sealed class UserTextTests
     [InlineData("\u200Ba")]
     [InlineData("🎬")]
     [InlineData("中")]
+    [InlineData("\U000E0020𝄞")]
     public void HasVisibleCharacter_WithAVisibleCharacter_ReturnsTrue(string text)
     {
         Assert.True(UserText.HasVisibleCharacter(text));
