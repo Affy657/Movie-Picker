@@ -1,5 +1,5 @@
 import SeenButton from '@/features/events/components/SeenButton';
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import clsx from 'clsx';
 import { Film } from 'lucide-react';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
@@ -29,6 +29,7 @@ function ListPoster({
   srcSet,
   eager,
 }: Readonly<{ src: string | null | undefined; srcSet?: string; eager: boolean }>) {
+  const [loadedSrc, setLoadedSrc] = useState<string>();
   if (!src) {
     return (
       <div className={styles.posterPlaceholder} aria-hidden>
@@ -40,12 +41,13 @@ function ListPoster({
     <>
       <div
         className={styles.posterBackdrop}
-        style={{ backgroundImage: `url("${encodeURI(src)}")` }}
+        style={loadedSrc ? { backgroundImage: `url("${loadedSrc}")` } : undefined}
         aria-hidden
       />
       <img
         src={src}
         srcSet={srcSet}
+        onLoad={(event) => setLoadedSrc(event.currentTarget.currentSrc || event.currentTarget.src)}
         sizes="(max-width: 479px) 33vw, 200px"
         alt=""
         className={styles.poster}
