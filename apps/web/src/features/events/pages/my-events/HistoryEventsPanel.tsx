@@ -127,7 +127,6 @@ export default function HistoryEventsPanel(props: Readonly<HistoryEventsPanelPro
         <h2 id="my-events-history-heading" className={styles.sectionTitle}>
           {t('events.myEvents.historySection')}
         </h2>
-        <span className={styles.sectionCount}>{totalFinished}</span>
         <Link
           to={ROUTES.nightMovies}
           aria-label={t('nightMovies.title')}

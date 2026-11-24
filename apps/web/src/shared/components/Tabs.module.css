@@ -101,13 +101,15 @@
 
 .pillList {
   gap: var(--space-1);
+  overflow-y: hidden;
 }
 
 .pillTab {
+  composes: expanded from './tapTarget.module.css';
   flex: 1 1 0;
   min-width: max-content;
-  height: auto;
-  padding: var(--space-2) var(--space-2-5);
+  height: var(--space-10);
+  padding: 0 var(--space-3);
   border-bottom: none;
   border-radius: var(--radius-pill);
   justify-content: center;
@@ -163,8 +165,11 @@
 }
 
 @media (hover: none) {
-  .pillTab,
   .chipTab {
     min-height: var(--tap-target-min);
+  }
+
+  .pillTab {
+    height: var(--tap-target-min);
   }
 }

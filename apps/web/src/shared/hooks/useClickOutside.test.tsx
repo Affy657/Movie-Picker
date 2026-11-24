@@ -177,6 +177,36 @@ describe('useClickOutside', () => {
     expect(outside).toHaveFocus();
   });
 
+  it('lets Escape close the popover opened last, not the one it opened from', () => {
+    const outerClose = vi.fn();
+    const innerClose = vi.fn();
+    function Nested({ innerOpen }: Readonly<{ innerOpen: boolean }>) {
+      const outerRef = useRef<HTMLDivElement>(null);
+      const innerRef = useRef<HTMLDivElement>(null);
+      useClickOutside(outerRef, outerClose, true);
+      useClickOutside(innerRef, innerClose, innerOpen);
+      return (
+        <div ref={outerRef}>
+          <div ref={innerRef}>
+            <button type="button">in the inner popover</button>
+          </div>
+        </div>
+      );
+    }
+    const { rerender } = render(<Nested innerOpen={false} />);
+    rerender(<Nested innerOpen />);
+    const inner = screen.getByRole('button', { name: 'in the inner popover' });
+    inner.focus();
+
+    fireEvent.keyDown(inner, { key: 'Escape' });
+    expect(innerClose).toHaveBeenCalledTimes(1);
+    expect(outerClose).not.toHaveBeenCalled();
+
+    rerender(<Nested innerOpen={false} />);
+    fireEvent.keyDown(inner, { key: 'Escape' });
+    expect(outerClose).toHaveBeenCalledTimes(1);
+  });
+
   it('leaves an Escape already handled by the widget alone', () => {
     const onClose = vi.fn();
     render(<Harness onClose={onClose} />);

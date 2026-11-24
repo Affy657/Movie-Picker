@@ -1,10 +1,9 @@
 import { Suspense, type Dispatch, type SetStateAction } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
-import EventParticipantsList from '@/features/events/components/EventParticipantsList';
+import EventParticipantsDialog from '@/features/events/pages/event-detail/EventParticipantsDialog';
 import EventMoviesSection from '@/features/events/pages/event-detail/EventMoviesSection';
 import EventClosedWithoutMovieState from '@/features/events/pages/event-detail/EventClosedWithoutMovieState';
 import ViewModeToggle from '@/shared/components/ViewModeToggle';
-import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
 import { useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import type { EventData } from '@/features/events/types';
@@ -17,54 +16,6 @@ import type {
   ParticipantsPanelState,
   WheelApi,
 } from './eventDetailSessionTypes';
-
-function participantsCountText(count: number, max: number | null | undefined): string {
-  return typeof max === 'number' && max > 0 ? `${count} / ${max}` : String(count);
-}
-
-function EventParticipantsDialog({
-  event,
-  participant,
-  panel,
-}: Readonly<{
-  event: EventData;
-  participant: ParticipantRef | null;
-  panel: ParticipantsPanelState;
-}>) {
-  const { t } = useTranslation();
-  const hostCanInvite = !!event.isHost && !event.isFinished;
-  const currentParticipantId = participant?.participantId ?? null;
-  return (
-    <ResponsiveDialog
-      open={panel.open}
-      onClose={panel.onClose}
-      title={t('events.participants.dialogTitle', {
-        count: participantsCountText(
-          event.participants?.length ?? 0,
-          event.config?.maxParticipants
-        ),
-      })}
-    >
-      <EventParticipantsList
-        participants={event.participants}
-        currentParticipantId={currentParticipantId}
-        maxParticipants={event.config?.maxParticipants ?? null}
-        isHost={!!event.isHost}
-        pendingRemovalId={panel.pendingRemovalId}
-        onRemoveParticipant={panel.canRemove ? panel.onRemove : undefined}
-        onInvite={hostCanInvite ? panel.onInviteFriends : undefined}
-        onLeave={panel.canShowLeave ? panel.onLeave : undefined}
-        onlineIds={panel.onlineIds}
-        proposingIds={panel.proposingIds}
-        leaveDisabled={
-          panel.isConnectedSelf &&
-          panel.removePending &&
-          panel.pendingRemovalId === currentParticipantId
-        }
-      />
-    </ResponsiveDialog>
-  );
-}
 
 function EventWheelModalGate({ wheel }: Readonly<{ wheel: WheelApi }>) {
   const { user } = useAuth();
@@ -128,6 +79,7 @@ export default function EventDetailSessionBody({
     <>
       {participantsPanel.open ? (
         <EventParticipantsDialog
+          slug={slug}
           event={event}
           participant={participant}
           panel={participantsPanel}

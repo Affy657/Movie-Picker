@@ -1,11 +1,9 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { ChevronUp, MoreHorizontal } from 'lucide-react';
 import clsx from 'clsx';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { fixedPopoverStyle, useFixedPopover } from '@/shared/hooks/useFixedPopover';
 import { t as translate, SUPPORTED_LOCALES, useTranslation } from '@/shared/i18n';
-import Chip from '@/shared/components/Chip';
 import Sheet from '@/shared/components/Sheet';
 import { ChoiceCard, ChoiceGroup } from '@/shared/components/ChoiceCard';
 import styles from './ThemeField.module.css';
@@ -48,8 +46,6 @@ export const THEME_EMOJIS = [
   '🌙',
 ];
 
-const PRESETS_VISIBLE = 5;
-
 export const THEME_TEXT_MAX_LENGTH = 90;
 
 export const THEME_PRESETS = [
@@ -73,15 +69,15 @@ export const THEME_PRESETS = [
   { emoji: '⭐', slug: 'classics' },
 ] as const;
 
-function isPresetSelected(
-  slug: (typeof THEME_PRESETS)[number]['slug'],
-  presetEmoji: string,
+export function isPresetTheme(
+  preset: (typeof THEME_PRESETS)[number],
   emoji: string,
   text: string
 ): boolean {
-  if (emoji !== presetEmoji) return false;
+  if (emoji !== preset.emoji) return false;
   return SUPPORTED_LOCALES.some(
-    (locale) => translate(`events.settings.themePresets.${slug}`, undefined, locale) === text
+    (locale) =>
+      translate(`events.settings.themePresets.${preset.slug}`, undefined, locale) === text.trim()
   );
 }
 
@@ -108,7 +104,6 @@ type ThemeFieldProps = {
   onTextChange: (t: string) => void;
   disabled?: boolean;
   textInputId?: string;
-  showPresets?: boolean;
 };
 
 export default function ThemeField({
@@ -118,11 +113,9 @@ export default function ThemeField({
   onTextChange,
   disabled,
   textInputId,
-  showPresets = true,
 }: Readonly<ThemeFieldProps>) {
   const { t } = useTranslation();
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [presetsExpanded, setPresetsExpanded] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
   const emojiGridRef = useRef<HTMLDivElement>(null);
@@ -170,8 +163,6 @@ export default function ThemeField({
       ))}
     </ChoiceGroup>
   );
-
-  const hiddenPresetCount = THEME_PRESETS.length - PRESETS_VISIBLE;
 
   return (
     <>
@@ -222,35 +213,6 @@ export default function ThemeField({
           disabled={disabled}
         />
       </div>
-      {!disabled && showPresets && (
-        <fieldset className={styles.presets}>
-          <legend className="visually-hidden">{t('events.settings.themePresetsLegend')}</legend>
-          {(presetsExpanded ? THEME_PRESETS : THEME_PRESETS.slice(0, PRESETS_VISIBLE)).map((p) => {
-            const presetText = t(`events.settings.themePresets.${p.slug}`);
-            return (
-              <Chip
-                key={p.slug}
-                selected={isPresetSelected(p.slug, p.emoji, emoji, text)}
-                onClick={() => {
-                  onEmojiChange(p.emoji);
-                  onTextChange(presetText);
-                }}
-              >
-                {p.emoji} {presetText}
-              </Chip>
-            );
-          })}
-          <Chip
-            tone="muted"
-            icon={presetsExpanded ? ChevronUp : MoreHorizontal}
-            onClick={() => setPresetsExpanded((v) => !v)}
-          >
-            {presetsExpanded
-              ? t('events.settings.themePresetsLess')
-              : t('events.settings.themePresetsMoreCount', { count: hiddenPresetCount })}
-          </Chip>
-        </fieldset>
-      )}
     </>
   );
 }

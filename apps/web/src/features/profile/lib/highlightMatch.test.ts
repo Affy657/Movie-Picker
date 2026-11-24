@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { splitOnMatch } from './highlightMatch';
+import { containsMatch, splitOnMatch } from './highlightMatch';
 
 describe('splitOnMatch', () => {
   it('returns the whole value as a single unmatched segment when the query is empty', () => {
@@ -77,5 +77,16 @@ describe('splitOnMatch', () => {
       { text: 'Mor', matched: true },
       { text: 'in', matched: false },
     ]);
+  });
+});
+
+describe('containsMatch', () => {
+  it('finds the query in a value, ignoring case and accents', () => {
+    expect(containsMatch('Zoé Lefèvre', 'LEFEV')).toBe(true);
+    expect(containsMatch('Carla Rossi', 'oscar')).toBe(false);
+  });
+
+  it('matches every value on an empty query', () => {
+    expect(containsMatch('Carla Rossi', '  ')).toBe(true);
   });
 });

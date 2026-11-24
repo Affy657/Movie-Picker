@@ -3,12 +3,3 @@
   display: inline-flex;
   align-items: center;
 }
-
-.containerInRow {
-  position: static;
-}
-
-.panelAboveRow {
-  left: 0;
-  right: 0;
-}

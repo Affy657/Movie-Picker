@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { useNavigate } from 'react-router';
 import clsx from 'clsx';
-import { SlidersHorizontal } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Button from '@/shared/components/Button';
 import Field from '@/shared/components/Field';
@@ -9,6 +9,7 @@ import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
+import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { invalidateMyNights } from '@/shared/api/invalidateMyNights';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
@@ -23,42 +24,53 @@ import {
   fetchMyEventsList,
   patchEventConfig,
 } from '@/features/events/api/eventsApi';
+import type { FriendGroupSummary } from '@/features/events/api/myGroupsApi';
 import { useEventTemplates } from '@/features/events/hooks/useEventTemplates';
 import {
+  earliestOpenStartLocal,
   eventStartIssue,
   eventStartIssueMessage,
   isPastEventDateTime,
+  latestEventDate,
   validateCreateEventDraft,
   type CreateEventFieldErrors,
 } from '@/features/events/lib/createEventValidation';
 import { validateEventLimits } from '@/features/events/lib/eventLimitValidation';
-import { defaultEventStart, todayInEventZone } from '@/features/events/lib/eventStartShortcuts';
+import { firstRuleError } from '@/features/events/lib/eventLimits';
+import { todayInEventZone } from '@/features/events/lib/eventStartShortcuts';
 import {
   buildTemplateDraft,
   configToFields,
   defaultTemplateFields,
   draftToConfigPatch,
   isSameTemplateConfig,
-  suggestTemplateName,
   templateToDraft,
   type ApplicableConfig,
   type TemplateConfigDraft,
   type TemplateFormFields,
 } from '@/features/events/lib/eventTemplateDraft';
 import type { EventTemplateData } from '@/features/events/types';
-import CreateEventGroup from './CreateEventGroup';
+import EventTemplateSaveBar from '@/features/events/components/EventTemplateSaveBar';
+import NightDateField from '@/features/events/components/night-form/NightDateField';
+import NightFormLayout, {
+  useNightFormBodyClass,
+} from '@/features/events/components/night-form/NightFormLayout';
+import NightGroupField from '@/features/events/components/night-form/NightGroupField';
+import NightRuleStarts, {
+  ManageTemplatesButton,
+  type RuleStart,
+} from '@/features/events/components/night-form/NightRuleStarts';
+import NightRules from '@/features/events/components/night-form/NightRules';
+import NightThemeField from '@/features/events/components/night-form/NightThemeField';
+import nightStyles from '@/features/events/components/night-form/NightForm.module.css';
 import { useMyGroups } from '@/features/events/hooks/useMyGroups';
 import CreateEventInvitation, { type CreatedNight } from './CreateEventInvitation';
-import CreateEventRulesStep, { type RulesChoice } from './CreateEventRulesStep';
-import CreateEventTheme from './CreateEventTheme';
-import CreateEventWhen from './CreateEventWhen';
 import {
   forgetCreateEventDraft,
   readCreateEventDraft,
   saveCreateEventDraft,
-  type CreateEventDraftSnapshot,
+  startingCreateEventDraft,
 } from './createEventDraftStorage';
-import styles from './CreateEventDialog.module.css';
 
 export type CreateEventReuse = { slug: string; title: string };
 
@@ -114,11 +126,11 @@ function rulesLabel(summary: RulesSummary, t: Translate): string {
     case 'template':
       return summary.template.name;
     case 'night':
-      return t('events.create.rules.like', { title: summary.title });
+      return t('events.create.rules.likeItem', { title: summary.title });
     case 'defaults':
-      return t('events.create.rules.defaults');
+      return t('events.create.rules.defaultsItem');
     default:
-      return t('events.create.rules.custom');
+      return t('events.form.rulesCustom');
   }
 }
 
@@ -164,22 +176,6 @@ function useCloseUnlessCreating(
   };
 }
 
-function startingDraft(
-  saved: CreateEventDraftSnapshot | null,
-  reusesANight: boolean,
-  presetGroupId: string | null
-): CreateEventDraftSnapshot {
-  const start = defaultEventStart(Date.now());
-  if (!saved) {
-    return { ...start, typedTitle: null, fields: defaultTemplateFields(), groupId: presetGroupId };
-  }
-  return {
-    ...saved,
-    fields: reusesANight ? defaultTemplateFields() : saved.fields,
-    groupId: presetGroupId ?? saved.groupId,
-  };
-}
-
 function whenFeedback(date: string, time: string, typedError: string | undefined, t: Translate) {
   const now = new Date();
   const issue = eventStartIssue(date, time, now);
@@ -204,6 +200,22 @@ function useLastHostedNight(enabled: boolean): CreateEventReuse | null {
   return latest ? { slug: latest.slug, title: latest.title } : null;
 }
 
+function groupNoteLabel(others: number, t: Translate): string {
+  if (others > 1) return t('events.form.groupNotifiedMany', { count: others });
+  if (others === 1) return t('events.form.groupNotifiedOne');
+  return t('events.create.groupHintAlone');
+}
+
+function GroupNote({ group, t }: Readonly<{ group: FriendGroupSummary; t: Translate }>) {
+  const label = groupNoteLabel(group.memberCount - 1, t);
+  return (
+    <p className={nightStyles.message}>
+      <Users size={ICON_SIZE.sm} aria-hidden />
+      <span className={nightStyles.messageText}>{label}</span>
+    </p>
+  );
+}
+
 export default function CreateEventDialog({
   open,
   onClose,
@@ -216,10 +228,16 @@ export default function CreateEventDialog({
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { track } = useAnalytics();
+  const isMobile = useIsMobile();
+  const bodyClassName = useNightFormBodyClass();
 
   const [today] = useState(() => todayInEventZone(Date.now()));
+  const [dateBounds] = useState(() => {
+    const now = new Date();
+    return { min: earliestOpenStartLocal(now).slice(0, 10), max: latestEventDate(now) };
+  });
   const [initial] = useState(() =>
-    startingDraft(readCreateEventDraft(), reuse !== null, presetGroupId)
+    startingCreateEventDraft(readCreateEventDraft(), reuse !== null, presetGroupId, Date.now())
   );
   const [date, setDate] = useState(initial.date);
   const [time, setTime] = useState(initial.time);
@@ -234,6 +252,7 @@ export default function CreateEventDialog({
   const groupIdToSend = myGroupsQuery.isSuccess ? (chosenGroup?.id ?? null) : pickedGroupId;
   const [step, setStep] = useState<Step>('form');
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [managing, setManaging] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<CreateEventFieldErrors>({});
   const [templateError, setTemplateError] = useState<string | null>(null);
   const [created, setCreated] = useState<CreatedNight | null>(null);
@@ -241,8 +260,15 @@ export default function CreateEventDialog({
 
   useEffect(() => {
     if (step !== 'form') return;
-    saveCreateEventDraft({ typedTitle, date, time, fields, groupId: pickedGroupId });
-  }, [step, typedTitle, date, time, fields, pickedGroupId]);
+    saveCreateEventDraft({
+      typedTitle,
+      date,
+      time,
+      fields,
+      groupId: pickedGroupId,
+      openedFromGroupId: presetGroupId,
+    });
+  }, [step, typedTitle, date, time, fields, pickedGroupId, presetGroupId]);
 
   const suggestedTitle = t('events.create.defaultTitle', {
     date: formatEventTitleDate(date, locale),
@@ -293,8 +319,6 @@ export default function CreateEventDialog({
   const matchesSavedTemplate = eventTemplates.templates.some((template) =>
     isSameTemplateConfig(draft, templateToDraft(template))
   );
-  const canSaveTemplate =
-    rules.kind !== 'defaults' && !matchesSavedTemplate && !eventTemplates.isBusy;
 
   const updateFields = (patch: Partial<TemplateFormFields>) => {
     setFields((current) => ({ ...current, ...patch }));
@@ -306,7 +330,7 @@ export default function CreateEventDialog({
     }));
   };
 
-  const chooseRules = (choice: RulesChoice) => {
+  const chooseRules = (choice: RuleStart) => {
     if (choice.kind === 'template') {
       eventTemplates.apply(choice.template);
       return;
@@ -398,6 +422,15 @@ export default function CreateEventDialog({
       t
     ).errors;
 
+  const showRuleError = (errors: CreateEventFieldErrors) => {
+    if (isMobile) {
+      setRulesOpen(true);
+      return;
+    }
+    const target = firstRuleError('create', errors);
+    if (target) document.getElementById(target.inputId)?.focus();
+  };
+
   const handleSubmit = () => {
     const errors = {
       ...validateCreateEventDraft({ title, date, time }, t, new Date()),
@@ -406,19 +439,14 @@ export default function CreateEventDialog({
     setFieldErrors(errors);
     const invalidPart = firstInvalidPart(errors);
     if (invalidPart === 'title') titleRef.current?.focus();
-    if (invalidPart === 'rules') setRulesOpen(true);
+    if (invalidPart === 'rules') showRuleError(errors);
     if (invalidPart === null) void submit();
   };
 
-  const suggestName = () => {
+  const limitsAreValid = () => {
     const errors = limitErrors();
     setFieldErrors((current) => ({ ...current, ...errors }));
-    if (hasLimitError(errors)) return null;
-    return suggestTemplateName(
-      draft.theme,
-      eventTemplates.templates.map((template) => template.name),
-      (index) => t('events.settings.templates.numberedName', { index })
-    );
+    return !hasLimitError(errors);
   };
 
   const saveTemplate = (name: string) => {
@@ -446,108 +474,156 @@ export default function CreateEventDialog({
     );
   }
 
-  return (
+  const main = (
     <>
-      <ResponsiveDialog
-        open={open}
-        onClose={requestClose}
-        title={t('events.create.title')}
-        footer={
-          <div className={styles.footer}>
-            {error ? (
-              <p className={clsx('error', styles.footerError)} role="alert">
-                {error}
-              </p>
-            ) : null}
-            <Button className={styles.rulesTrigger} onClick={() => setRulesOpen(true)}>
-              <SlidersHorizontal size={ICON_SIZE.md} aria-hidden />
-              <span className={styles.rulesTriggerLabel}>
-                {t('events.create.rules.trigger', { name: rulesLabel(rules, t) })}
-              </span>
-            </Button>
-            <span className={styles.footerSpacer} />
-            <Button variant="primary" loading={loading} onClick={handleSubmit}>
-              {loading ? t('events.create.submitting') : t('events.create.submit')}
-            </Button>
-          </div>
-        }
-      >
-        <CreateEventWhen
-          today={today}
-          date={date}
-          time={time}
-          dateError={dateError}
-          timeError={fieldErrors.time}
-          pastDateHint={pastDateHint}
-          onDateChange={(next) => {
-            setDate(next);
-            setFieldErrors((current) => ({ ...current, date: undefined }));
-          }}
-          onTimeChange={(next) => {
-            setTime(next);
-            setFieldErrors((current) => ({ ...current, time: undefined }));
-          }}
-        />
-        <section className={styles.section}>
-          <Field
-            label={<span className={styles.sectionTitle}>{t('events.create.nameLabel')}</span>}
-            htmlFor="create-title"
-            error={fieldErrors.title}
-            className={styles.inlineField}
-          >
-            {({ id, describedBy, invalid }) => (
-              <input
-                ref={titleRef}
-                id={id}
-                type="text"
-                className="input"
-                value={shownTitle}
-                onChange={(event) => {
-                  setTypedTitle(event.target.value);
-                  setFieldErrors((current) => ({ ...current, title: undefined }));
-                }}
-                onBlur={(event) => {
-                  if (event.target.value.trim() === '') setTypedTitle(null);
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') handleSubmit();
-                }}
-                maxLength={200}
-                placeholder={t('events.create.titlePlaceholder')}
-                aria-invalid={invalid || undefined}
-                aria-describedby={describedBy}
-              />
-            )}
-          </Field>
-        </section>
-        <CreateEventGroup
-          groups={myGroups}
-          groupId={chosenGroup?.id ?? null}
-          onChange={setPickedGroupId}
-        />
-        <CreateEventTheme
-          emoji={fields.themeEmoji}
-          text={fields.themeText}
-          onChange={(themeEmoji, themeText) => updateFields({ themeEmoji, themeText })}
-        />
-      </ResponsiveDialog>
-      <CreateEventRulesStep
-        open={open && rulesOpen}
-        onClose={() => setRulesOpen(false)}
-        fields={fields}
-        errors={fieldErrors}
-        onChange={updateFields}
-        selected={rules.kind === 'custom' ? null : rules.kind}
-        selectedTemplateId={rules.kind === 'template' ? rules.template.id : null}
-        selectedNightSlug={rules.kind === 'night' ? rules.slug : null}
-        nights={distinctNights([reuse, lastNight])}
-        templates={eventTemplates.templates}
-        onChoose={chooseRules}
-        canSaveTemplate={canSaveTemplate}
-        suggestTemplateName={suggestName}
-        onSaveTemplate={saveTemplate}
-        templateError={templateError}
+      <NightDateField
+        id="create-when"
+        value={{ date, time }}
+        onChange={(next) => {
+          setDate(next.date);
+          setTime(next.time);
+          setFieldErrors((current) => ({ ...current, date: undefined, time: undefined }));
+        }}
+        min={dateBounds.min}
+        max={dateBounds.max}
+        today={today}
+        error={dateError ?? fieldErrors.time}
+        notice={pastDateHint}
+      />
+      <div className={nightStyles.block}>
+        <Field
+          label={<span className={nightStyles.blockTitle}>{t('events.create.nameLabel')}</span>}
+          htmlFor="create-title"
+          error={fieldErrors.title}
+          className={nightStyles.fieldBare}
+        >
+          {({ id, describedBy, invalid }) => (
+            <input
+              ref={titleRef}
+              id={id}
+              type="text"
+              className="input"
+              value={shownTitle}
+              onChange={(event) => {
+                setTypedTitle(event.target.value);
+                setFieldErrors((current) => ({ ...current, title: undefined }));
+              }}
+              onBlur={(event) => {
+                if (event.target.value.trim() === '') setTypedTitle(null);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') handleSubmit();
+              }}
+              maxLength={200}
+              placeholder={t('events.create.titlePlaceholder')}
+              aria-invalid={invalid || undefined}
+              aria-describedby={describedBy}
+            />
+          )}
+        </Field>
+      </div>
+      <NightThemeField
+        inputId="create-theme"
+        emoji={fields.themeEmoji}
+        text={fields.themeText}
+        onChange={(themeEmoji, themeText) => updateFields({ themeEmoji, themeText })}
+      />
+      <NightGroupField
+        groups={myGroups}
+        groupId={chosenGroup?.id ?? null}
+        onChange={setPickedGroupId}
+        note={chosenGroup ? <GroupNote group={chosenGroup} t={t} /> : null}
       />
     </>
+  );
+
+  const templates = eventTemplates.templates;
+  const nights = distinctNights([reuse, lastNight]);
+
+  const rulesPanel = (
+    <NightRules
+      idPrefix="create"
+      fields={fields}
+      errors={fieldErrors}
+      onChange={updateFields}
+      showTitle={!isMobile}
+      titleAction={
+        templates.length > 0 ? (
+          <ManageTemplatesButton
+            managing={managing}
+            disabled={eventTemplates.isBusy}
+            onManagingChange={setManaging}
+          />
+        ) : undefined
+      }
+      start={
+        <NightRuleStarts
+          defaultsSelected={rules.kind === 'defaults'}
+          nights={nights}
+          selectedNightSlug={rules.kind === 'night' ? rules.slug : null}
+          templates={templates}
+          selectedTemplateId={rules.kind === 'template' ? rules.template.id : null}
+          onChoose={chooseRules}
+          managing={managing}
+          onManagingChange={setManaging}
+          busy={eventTemplates.isBusy}
+          onRename={eventTemplates.rename}
+          onDelete={eventTemplates.remove}
+        />
+      }
+      end={
+        <>
+          <EventTemplateSaveBar
+            draft={draft}
+            templates={templates}
+            appliedTemplate={eventTemplates.appliedTemplate}
+            lastSaved={eventTemplates.lastSaved}
+            disabled={eventTemplates.isBusy}
+            hidden={rules.kind === 'defaults' || matchesSavedTemplate}
+            onBeforeSave={limitsAreValid}
+            onSave={saveTemplate}
+            onUpdate={eventTemplates.updateApplied}
+          />
+          {templateError ? (
+            <p className="error" role="alert">
+              {templateError}
+            </p>
+          ) : null}
+        </>
+      }
+    />
+  );
+
+  return (
+    <ResponsiveDialog
+      open={open}
+      onClose={requestClose}
+      title={t('events.create.title')}
+      size="xl"
+      sheetSize="lg"
+      bodyClassName={bodyClassName}
+      footer={
+        <div className={nightStyles.footer}>
+          {error ? (
+            <p className={clsx('error', nightStyles.footerError)} role="alert">
+              {error}
+            </p>
+          ) : null}
+          <span className={nightStyles.footerSpacer} />
+          <Button variant="primary" loading={loading} onClick={handleSubmit}>
+            {loading ? t('events.create.submitting') : t('events.create.submit')}
+          </Button>
+        </div>
+      }
+    >
+      <NightFormLayout
+        main={main}
+        rules={rulesPanel}
+        rulesSummary={rulesLabel(rules, t)}
+        rulesError={firstRuleError('create', fieldErrors)?.message}
+        rulesOpen={rulesOpen}
+        onRulesOpenChange={setRulesOpen}
+      />
+    </ResponsiveDialog>
   );
 }

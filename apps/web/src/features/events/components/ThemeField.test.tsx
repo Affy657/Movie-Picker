@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { LocaleProvider } from '@/shared/i18n';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
 import ThemeField, {
+  isPresetTheme,
   parseTheme,
   THEME_EMOJIS,
   THEME_PRESETS,
@@ -15,7 +16,6 @@ function renderField(
     emoji: string;
     text: string;
     disabled: boolean;
-    showPresets: boolean;
   }> = {}
 ) {
   const onEmojiChange = vi.fn();
@@ -28,19 +28,22 @@ function renderField(
         onEmojiChange={onEmojiChange}
         onTextChange={onTextChange}
         disabled={overrides.disabled}
-        showPresets={overrides.showPresets}
       />
     </LocaleProvider>
   );
   return { onEmojiChange, onTextChange };
 }
 
-describe('ThemeField presets', () => {
-  it('leaves the suggested themes out when its host already shows them', () => {
-    renderField({ showPresets: false });
+describe('isPresetTheme', () => {
+  const horror = THEME_PRESETS[0];
 
-    expect(screen.queryByRole('group', { name: 'Thèmes suggérés' })).not.toBeInTheDocument();
-    expect(screen.getByRole('textbox')).toBeInTheDocument();
+  it('recognises a suggested theme in any language', () => {
+    expect(isPresetTheme(horror, '🎃', 'Horreur')).toBe(true);
+    expect(isPresetTheme(horror, '🎃', 'Horror')).toBe(true);
+  });
+
+  it('needs the emoji of the suggestion too', () => {
+    expect(isPresetTheme(horror, '👻', 'Horreur')).toBe(false);
   });
 });
 
@@ -85,19 +88,15 @@ describe('parseTheme', () => {
 });
 
 describe('ThemeField', () => {
-  it('opens the emoji picker and applies a preset', async () => {
+  it('opens the emoji picker and applies the emoji picked', async () => {
     const user = userEvent.setup();
-    const { onEmojiChange, onTextChange } = renderField();
+    const { onEmojiChange } = renderField();
 
     await user.click(screen.getByRole('button', { name: 'Choisir un emoji' }));
     expect(screen.getByRole('radiogroup', { name: 'Emojis' })).toBeInTheDocument();
     await user.click(screen.getByRole('radio', { name: 'Sans emoji' }));
     expect(onEmojiChange).toHaveBeenCalledWith('');
     expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: /horreur/i }));
-    expect(onEmojiChange).toHaveBeenCalledWith('🎃');
-    expect(onTextChange).toHaveBeenCalledWith('Horreur');
   });
 
   it('walks the emojis with the arrows without closing, and closes on Escape', async () => {
@@ -153,18 +152,6 @@ describe('ThemeField', () => {
     expect(sheetKeepsOpen).toBe(true);
     expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
     expect(opener).toHaveFocus();
-  });
-
-  it('unfolds the list of suggested themes, counting the hidden ones', async () => {
-    const user = userEvent.setup();
-    renderField({ emoji: '🎃', text: 'Horreur' });
-
-    expect(screen.queryByRole('button', { name: /western/i })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: `${THEME_PRESETS.length - 5} de plus` }));
-    expect(screen.getByRole('button', { name: /western/i })).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Moins de thèmes' }));
-    expect(screen.queryByRole('button', { name: /western/i })).not.toBeInTheDocument();
   });
 
   it('names the grid it opens', async () => {
@@ -267,16 +254,5 @@ describe('ThemeField', () => {
     const longestEmoji = Math.max(...THEME_EMOJIS.map((emoji) => emoji.length));
     expect(screen.getByRole('textbox')).toHaveAttribute('maxLength', String(THEME_TEXT_MAX_LENGTH));
     expect(longestEmoji + 1 + THEME_TEXT_MAX_LENGTH).toBeLessThanOrEqual(100);
-  });
-
-  it('hides the suggested themes when disabled', () => {
-    renderField({ disabled: true });
-    expect(screen.queryByText('Thèmes suggérés')).not.toBeInTheDocument();
-  });
-
-  it('recognises a theme saved in the other language', () => {
-    localStorage.setItem('moviepicker-locale', 'en');
-    renderField({ emoji: '🎃', text: 'Horreur' });
-    expect(screen.getByRole('button', { name: /horror/i })).toHaveAttribute('aria-pressed', 'true');
   });
 });

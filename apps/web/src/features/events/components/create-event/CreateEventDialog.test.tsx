@@ -22,7 +22,8 @@ const mockTrack = vi.fn();
 vi.mock('@/shared/hooks/useAnalytics', () => ({
   useAnalytics: () => ({ track: mockTrack }),
 }));
-vi.mock('@/shared/hooks/useIsMobile', () => ({ useIsMobile: () => false }));
+const mockIsMobile = vi.fn(() => false);
+vi.mock('@/shared/hooks/useIsMobile', () => ({ useIsMobile: () => mockIsMobile() }));
 
 const HORROR_TEMPLATE = {
   id: 't1',
@@ -171,11 +172,6 @@ function dialog() {
   return screen.getByRole('dialog', { name: 'Soirée créée' });
 }
 
-async function openRules(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole('button', { name: /^règles/i }));
-  return screen.findByRole('dialog', { name: 'Règles de la soirée' });
-}
-
 function formDialog(): HTMLDialogElement {
   return screen.getByRole('dialog', { name: 'Nouvelle soirée' }) as HTMLDialogElement;
 }
@@ -205,12 +201,28 @@ function holdCreation(): () => void {
   return () => finish({ slug: 'abc', shareUrl: '/e/abc' });
 }
 
+function whenTrigger() {
+  return screen.getByRole('button', { name: /^date et heure/i });
+}
+
+async function chooseWhen(
+  user: ReturnType<typeof userEvent.setup>,
+  { day, time }: { day?: string; time?: string }
+) {
+  await user.click(whenTrigger());
+  const panel = screen.getByRole('group', { name: 'Date et heure' });
+  if (day) await user.click(within(panel).getByRole('button', { name: day }));
+  if (time) await user.click(within(panel).getByRole('button', { name: time }));
+  else await user.click(whenTrigger());
+}
+
 describe('CreateEventDialog', () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-11-12T09:00:00Z'));
     mockFetchApi.mockReset();
     mockTrack.mockReset();
+    mockIsMobile.mockReturnValue(false);
     onClose.mockReset();
     routeApi();
   });
@@ -225,15 +237,13 @@ describe('CreateEventDialog', () => {
       const first = renderDialog();
       await user.clear(screen.getByLabelText('Nom'));
       await user.type(screen.getByLabelText('Nom'), 'Soirée frissons');
-      await user.click(screen.getByRole('radio', { name: /samedi/i }));
-      await user.click(screen.getByRole('radio', { name: '21:00' }));
+      await chooseWhen(user, { day: 'samedi 14 novembre 2026', time: '21:00' });
       first.unmount();
 
       renderDialog();
 
       expect(screen.getByLabelText('Nom')).toHaveValue('Soirée frissons');
-      expect(screen.getByRole('radio', { name: /samedi/i })).toBeChecked();
-      expect(screen.getByRole('radio', { name: '21:00' })).toBeChecked();
+      expect(whenTrigger()).toHaveTextContent('Samedi 14 novembre, 21:00');
     });
 
     it('forgets the draft once the host closes the window', async () => {
@@ -266,26 +276,47 @@ describe('CreateEventDialog', () => {
   });
 
   describe('date bounds', () => {
-    it('blocks a date typed before the automatic closing window', async () => {
+    afterEach(() => {
+      sessionStorage.removeItem('mp.create-event-draft');
+    });
+
+    it('blocks a start that would end the night at once', async () => {
       const user = userEvent.setup();
       renderDialog();
-      await user.click(screen.getByRole('radio', { name: /autre date/i }));
 
-      fireEvent.change(screen.getByLabelText('Date'), { target: { value: '2025-11-12' } });
+      await user.click(whenTrigger());
+      const panel = screen.getByRole('group', { name: 'Date et heure' });
+      await user.click(within(panel).getByRole('button', { name: 'jeudi 5 novembre 2026' }));
+      const typed = within(panel).getByRole('textbox', { name: 'Heure' });
+      await user.clear(typed);
+      await user.type(typed, '07:00{Enter}');
 
       expect(
         screen.getByText('Cette date est trop ancienne : la soirée serait aussitôt terminée.')
       ).toBeInTheDocument();
+      expect(whenTrigger()).toHaveAttribute('aria-invalid', 'true');
       await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
       expect(createBodies()).toEqual([]);
     });
 
-    it('keeps the date picker within two years', async () => {
+    it('keeps the calendar between the last start still open and two years ahead', async () => {
       const user = userEvent.setup();
       renderDialog();
-      await user.click(screen.getByRole('radio', { name: /autre date/i }));
 
-      expect(screen.getByLabelText('Date')).toHaveAttribute('max', '2028-11-12');
+      await user.click(whenTrigger());
+      const panel = screen.getByRole('group', { name: 'Date et heure' });
+      expect(
+        within(panel).getByRole('button', { name: 'mercredi 4 novembre 2026' })
+      ).toBeDisabled();
+      expect(within(panel).getByRole('button', { name: 'jeudi 5 novembre 2026' })).toBeEnabled();
+      const next = within(panel).getByRole('button', { name: 'Mois suivant' });
+      for (let month = 0; month < 24; month += 1) await user.click(next);
+
+      expect(next).toBeDisabled();
+      expect(
+        within(panel).getByRole('button', { name: 'dimanche 12 novembre 2028' })
+      ).toBeEnabled();
+      expect(within(panel).getByRole('button', { name: 'lundi 13 novembre 2028' })).toBeDisabled();
     });
   });
 
@@ -294,26 +325,15 @@ describe('CreateEventDialog', () => {
       renderDialog();
 
       expect(screen.getByRole('heading', { name: 'Nouvelle soirée' })).toBeInTheDocument();
-      expect(screen.getByRole('radio', { name: /ce soir/i })).toBeChecked();
-      expect(screen.getByRole('radio', { name: '20:00' })).toBeChecked();
+      expect(whenTrigger()).toHaveTextContent('Jeudi 12 novembre, 20:00');
       expect(screen.getByLabelText('Nom')).toHaveValue('Soirée du jeudi 12 novembre');
-    });
-
-    it('offers tonight, tomorrow and the coming weekend', () => {
-      renderDialog();
-
-      const dates = within(screen.getByRole('radiogroup', { name: 'Quand' }));
-      expect(dates.getByRole('radio', { name: /demain/i })).toBeInTheDocument();
-      expect(dates.getByRole('radio', { name: /samedi/i })).toBeInTheDocument();
-      expect(dates.getByRole('radio', { name: /dimanche/i })).toBeInTheDocument();
-      expect(dates.getByRole('radio', { name: /autre date/i })).toBeInTheDocument();
     });
 
     it('renames the night after the date while the name is untouched', async () => {
       const user = userEvent.setup();
       renderDialog();
 
-      await user.click(screen.getByRole('radio', { name: /demain/i }));
+      await chooseWhen(user, { day: 'vendredi 13 novembre 2026' });
 
       expect(screen.getByLabelText('Nom')).toHaveValue('Soirée du vendredi 13 novembre');
     });
@@ -324,142 +344,44 @@ describe('CreateEventDialog', () => {
 
       await user.clear(screen.getByLabelText('Nom'));
       await user.type(screen.getByLabelText('Nom'), 'Soirée frissons');
-      await user.click(screen.getByRole('radio', { name: /samedi/i }));
+      await chooseWhen(user, { day: 'samedi 14 novembre 2026' });
 
       expect(screen.getByLabelText('Nom')).toHaveValue('Soirée frissons');
     });
 
-    it('reveals a date field for another day', async () => {
-      const user = userEvent.setup();
-      renderDialog();
-
-      expect(screen.queryByLabelText('Date')).not.toBeInTheDocument();
-      await user.click(screen.getByRole('radio', { name: /autre date/i }));
-
-      expect(screen.getByLabelText('Date')).toHaveValue('2026-11-12');
-    });
-
-    it('closes the date field once a shortcut is picked again', async () => {
-      const user = userEvent.setup();
-      renderDialog();
-
-      await user.click(screen.getByRole('radio', { name: /autre date/i }));
-      await user.click(screen.getByRole('radio', { name: /ce soir/i }));
-
-      expect(screen.queryByLabelText('Date')).not.toBeInTheDocument();
-      expect(screen.getByRole('radio', { name: /ce soir/i })).toBeChecked();
-    });
-
-    it('closes the time field once a shortcut is picked again', async () => {
-      const user = userEvent.setup();
-      renderDialog();
-
-      await user.click(screen.getByRole('radio', { name: 'Autre' }));
-      await user.click(screen.getByRole('radio', { name: '20:30' }));
-
-      expect(screen.queryByLabelText('Heure')).not.toBeInTheDocument();
-      expect(screen.getByRole('radio', { name: '20:30' })).toBeChecked();
-    });
-
-    it('moves the focus into the field it reveals', async () => {
-      const user = userEvent.setup();
-      renderDialog();
-
-      await user.click(screen.getByRole('radio', { name: /autre date/i }));
-
-      expect(screen.getByLabelText('Date')).toHaveFocus();
-    });
-
-    it('moves the focus into the time field it reveals', async () => {
-      const user = userEvent.setup();
-      renderDialog();
-
-      await user.click(screen.getByRole('radio', { name: 'Autre' }));
-
-      expect(screen.getByLabelText('Heure')).toHaveFocus();
-    });
-
-    it('keeps the focus on the days when the arrows reach « Autre date »', async () => {
-      const user = userEvent.setup();
-      renderDialog();
-
-      screen.getByRole('radio', { name: /dimanche/i }).focus();
-      await user.keyboard('{ArrowRight}');
-
-      const other = screen.getByRole('radio', { name: /autre date/i });
-      expect(other).toBeChecked();
-      expect(screen.getByLabelText('Date')).toBeInTheDocument();
-      expect(other).toHaveFocus();
-      await user.keyboard('{ArrowLeft}');
-      expect(screen.getByRole('radio', { name: /dimanche/i })).toHaveFocus();
-    });
-
-    it('enters the date field once « Autre date » is activated from the keyboard', async () => {
-      const user = userEvent.setup();
-      renderDialog();
-
-      screen.getByRole('radio', { name: /dimanche/i }).focus();
-      await user.keyboard('{ArrowRight}');
-      await user.keyboard('{Enter}');
-
-      expect(screen.getByLabelText('Date')).toHaveFocus();
-    });
-
-    it('keeps the focus on the hours when the arrows reach « Autre »', async () => {
-      const user = userEvent.setup();
-      renderDialog();
-
-      screen.getByRole('radio', { name: '21:00' }).focus();
-      await user.keyboard('{ArrowRight}');
-
-      const other = screen.getByRole('radio', { name: 'Autre' });
-      expect(other).toBeChecked();
-      expect(screen.getByLabelText('Heure')).toBeInTheDocument();
-      expect(other).toHaveFocus();
-    });
-
-    it('shows the chosen day on « Autre date »', async () => {
-      const user = userEvent.setup();
-      renderDialog();
-
-      await user.click(screen.getByRole('radio', { name: /autre date/i }));
-      fireEvent.change(screen.getByLabelText('Date'), { target: { value: '2026-12-24' } });
-
-      expect(screen.getByRole('radio', { name: /autre date/i })).toHaveTextContent('24 déc.');
-    });
-
-    it('reveals a time field for another hour', async () => {
-      const user = userEvent.setup();
-      renderDialog();
-
-      await user.click(screen.getByRole('radio', { name: 'Autre' }));
-
-      expect(screen.getByLabelText('Heure')).toHaveValue('20:00');
-    });
-
-    it('opens on another hour when the next half hour is not a shortcut', () => {
+    it('opens on the next half hour once 20:00 is past', () => {
       vi.setSystemTime(new Date('2026-11-12T20:20:00Z'));
       renderDialog();
 
-      expect(screen.getByRole('radio', { name: 'Autre' })).toBeChecked();
-      expect(screen.getByLabelText('Heure')).toHaveValue('21:30');
+      expect(whenTrigger()).toHaveTextContent('Jeudi 12 novembre, 21:30');
     });
 
     it('opens on tomorrow at midnight right at 23:30 in Paris', () => {
       vi.setSystemTime(new Date('2026-11-12T22:30:05Z'));
       renderDialog();
 
-      expect(screen.getByRole('radio', { name: /demain/i })).toBeChecked();
+      expect(whenTrigger()).toHaveTextContent('Vendredi 13 novembre, 00:00');
       expect(screen.getByLabelText('Nom')).toHaveValue('Soirée du vendredi 13 novembre');
-      expect(screen.getByLabelText('Heure')).toHaveValue('00:00');
+    });
+
+    it('takes a time typed by hand', async () => {
+      const user = userEvent.setup();
+      renderDialog();
+
+      await user.click(whenTrigger());
+      const typed = screen.getByRole('textbox', { name: 'Heure' });
+      await user.clear(typed);
+      await user.type(typed, '21h15{Enter}');
+      await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
+
+      await waitFor(() => expect(createBodies()[0]).toMatchObject({ time: '21:15' }));
     });
 
     it('warns about a start already past but still open without blocking the creation', async () => {
       const user = userEvent.setup();
       renderDialog();
 
-      await user.click(screen.getByRole('radio', { name: /autre date/i }));
-      fireEvent.change(screen.getByLabelText('Date'), { target: { value: '2026-11-08' } });
+      await chooseWhen(user, { day: 'dimanche 8 novembre 2026', time: '20:00' });
 
       expect(screen.getByText('Cette date est déjà passée.')).toBeInTheDocument();
       await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
@@ -489,26 +411,39 @@ describe('CreateEventDialog', () => {
       await waitFor(() => expect(configBody().theme).toBe(''));
     });
 
-    it('opens the free theme field on « Autre… », ready to type', async () => {
+    it('opens the other moods on « Autre », ready to type a free theme', async () => {
       const user = userEvent.setup();
       renderDialog();
 
-      await user.click(screen.getByRole('button', { name: 'Autre…' }));
+      await user.click(screen.getByRole('button', { name: 'Autre' }));
 
+      expect(screen.getByRole('button', { name: /action/i })).toBeInTheDocument();
       expect(screen.getByRole('textbox', { name: 'Thème' })).toHaveFocus();
     });
 
-    it('closes the free theme field and drops its text when « Autre… » is pressed again', async () => {
+    it('shows a free theme in place of « Autre » and sends it', async () => {
       const user = userEvent.setup();
       renderDialog();
 
-      await user.click(screen.getByRole('button', { name: 'Autre…' }));
+      await user.click(screen.getByRole('button', { name: 'Autre' }));
       await user.type(screen.getByRole('textbox', { name: 'Thème' }), 'Nanars');
-      await user.click(screen.getByRole('button', { name: 'Autre…' }));
+
+      expect(screen.getByRole('button', { name: 'Nanars', expanded: true })).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
+      await waitFor(() => expect(configBody().theme).toBe('Nanars'));
+    });
+
+    it('picks one of the other moods and closes the panel', async () => {
+      const user = userEvent.setup();
+      renderDialog();
+
+      await user.click(screen.getByRole('button', { name: 'Autre' }));
+      await user.click(screen.getByRole('button', { name: /action/i }));
 
       expect(screen.queryByRole('textbox', { name: 'Thème' })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /action/i, expanded: false })).toBeInTheDocument();
       await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
-      await waitFor(() => expect(configBody().theme).toBe(''));
+      await waitFor(() => expect(configBody().theme).toBe('🎬 Action'));
     });
   });
 
@@ -520,11 +455,7 @@ describe('CreateEventDialog', () => {
 
       await user.click(await screen.findByRole('button', { name: 'Les jeudis ciné' }));
 
-      expect(
-        screen.getByText(
-          'Les 6 membres la verront dans Mes soirées et seront prévenus. Pas de lien à envoyer.'
-        )
-      ).toBeInTheDocument();
+      expect(screen.getByText('5 membres prévenus')).toBeInTheDocument();
       await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
       await waitFor(() => expect(createBodies()[0]).toMatchObject({ groupId: 'g1' }));
     });
@@ -771,45 +702,43 @@ describe('CreateEventDialog', () => {
   });
 
   describe('rules', () => {
-    it('opens the rules straight away, with every starting point and every rule', async () => {
-      const user = userEvent.setup();
+    it('shows every starting point and every rule beside the night', async () => {
       routeApi({ templates: [HORROR_TEMPLATE], pastNights: [PAST_NIGHT] });
       renderDialog();
 
-      await screen.findByRole('button', { name: 'Règles : par défaut' });
       await waitFor(() => expect(mockFetchApi).toHaveBeenCalledWith('/events/mine?scope=finished'));
-      const rules = await openRules(user);
 
-      expect(within(rules).getByRole('button', { name: 'Par défaut' })).toHaveAttribute(
+      expect(screen.getByRole('heading', { name: 'Règles' })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('button', { name: /comme « ciné-club du mercredi »/i })
+      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Par défaut' })).toHaveAttribute(
         'aria-pressed',
         'true'
       );
-      expect(
-        await within(rules).findByRole('button', { name: /comme « ciné-club du mercredi »/i })
-      ).toBeInTheDocument();
-      expect(within(rules).getByRole('button', { name: 'Soirée horreur' })).toBeInTheDocument();
-      expect(within(rules).getByLabelText('Participants')).toHaveAttribute(
-        'placeholder',
-        'Sans limite'
-      );
-      expect(within(rules).getByLabelText('Films par personne')).toHaveValue(null);
-      expect(within(rules).getByLabelText('Votes par personne')).toHaveValue(null);
-      expect(within(rules).getByLabelText('Films gagnants')).toHaveValue(1);
-      expect(within(rules).getByRole('radio', { name: 'Selon les votes' })).toBeChecked();
-      expect(within(rules).getByRole('switch', { name: /séries tv/i })).not.toBeChecked();
+      expect(screen.getByRole('button', { name: 'Soirée horreur' })).toBeInTheDocument();
+      expect(screen.getByLabelText('Participants')).toHaveAttribute('placeholder', 'Sans limite');
+      expect(screen.getByLabelText('Films par personne')).toHaveValue(null);
+      expect(screen.getByLabelText('Votes par personne')).toHaveValue(null);
+      expect(screen.getByLabelText('Films gagnants')).toHaveValue(1);
+      expect(screen.getByRole('radio', { name: 'Selon les votes' })).toBeChecked();
+      expect(screen.getByRole('switch', { name: /séries tv/i })).not.toBeChecked();
     });
 
-    it('goes back to the night when the rules are closed, without losing anything', async () => {
+    it('opens the rules in their own sheet on a phone, without losing anything', async () => {
       const user = userEvent.setup();
+      mockIsMobile.mockReturnValue(true);
       renderDialog();
 
       await user.clear(screen.getByLabelText('Nom'));
       await user.type(screen.getByLabelText('Nom'), 'Soirée frissons');
-      const rules = await openRules(user);
-      await user.click(within(rules).getByRole('button', { name: 'Fermer' }));
+      expect(screen.queryByLabelText('Films par personne')).not.toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Règles Par défaut' }));
+      const rules = await screen.findByRole('dialog', { name: 'Règles' });
+      expect(within(rules).getByLabelText('Films par personne')).toBeInTheDocument();
+      await user.click(within(rules).getByRole('button', { name: 'Terminé' }));
 
-      expect(screen.queryByRole('dialog', { name: 'Règles de la soirée' })).not.toBeInTheDocument();
-      expect(screen.getByRole('dialog', { name: 'Nouvelle soirée' })).toBeInTheDocument();
+      expect(screen.queryByRole('dialog', { name: 'Règles' })).not.toBeInTheDocument();
       expect(screen.getByLabelText('Nom')).toHaveValue('Soirée frissons');
       expect(onClose).not.toHaveBeenCalled();
     });
@@ -819,12 +748,13 @@ describe('CreateEventDialog', () => {
       routeApi({ templates: [HORROR_TEMPLATE] });
       renderDialog();
 
-      const rules = await openRules(user);
-      await user.click(await within(rules).findByRole('button', { name: 'Soirée horreur' }));
-      expect(within(rules).getByLabelText('Films par personne')).toHaveValue(4);
-      await user.click(within(rules).getByRole('button', { name: 'Terminé' }));
+      await user.click(await screen.findByRole('button', { name: 'Soirée horreur' }));
 
-      expect(screen.getByRole('button', { name: 'Règles : Soirée horreur' })).toBeInTheDocument();
+      expect(screen.getByLabelText('Films par personne')).toHaveValue(4);
+      expect(screen.getByRole('button', { name: 'Soirée horreur' })).toHaveAttribute(
+        'aria-pressed',
+        'true'
+      );
       await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
       await waitFor(() =>
         expect(configBody()).toMatchObject({
@@ -853,16 +783,11 @@ describe('CreateEventDialog', () => {
       });
       renderDialog();
 
-      const rules = await openRules(user);
       await user.click(
-        await within(rules).findByRole('button', { name: /comme « ciné-club du mercredi »/i })
+        await screen.findByRole('button', { name: /comme « ciné-club du mercredi »/i })
       );
-      await waitFor(() => expect(within(rules).getByLabelText('Participants')).toHaveValue(8));
-      await user.click(within(rules).getByRole('button', { name: 'Terminé' }));
+      await waitFor(() => expect(screen.getByLabelText('Participants')).toHaveValue(8));
 
-      expect(
-        screen.getByRole('button', { name: 'Règles : comme « Ciné-club du mercredi »' })
-      ).toBeInTheDocument();
       await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
       await waitFor(() =>
         expect(configBody()).toMatchObject({
@@ -887,24 +812,25 @@ describe('CreateEventDialog', () => {
       });
       renderDialog({ reuse: { slug: 'old', title: 'Soirée du 31 octobre' } });
 
-      expect(
-        await screen.findByRole('button', { name: 'Règles : comme « Soirée du 31 octobre »' })
-      ).toBeInTheDocument();
+      await waitFor(() =>
+        expect(
+          screen.getByRole('button', { name: /comme « soirée du 31 octobre »/i })
+        ).toHaveAttribute('aria-pressed', 'true')
+      );
+      expect(screen.getByLabelText('Participants')).toHaveValue(12);
     });
 
     it('highlights the night being redone, not the last night hosted', async () => {
-      const user = userEvent.setup();
       routeApi({ pastNights: [PAST_NIGHT], reusedConfig: { maxParticipants: 6 } });
       renderDialog({ reuse: { slug: 'old', title: 'Soirée du 31 octobre' } });
 
-      await screen.findByRole('button', { name: 'Règles : comme « Soirée du 31 octobre »' });
-      const rules = await openRules(user);
-
+      await waitFor(() =>
+        expect(
+          screen.getByRole('button', { name: /comme « soirée du 31 octobre »/i })
+        ).toHaveAttribute('aria-pressed', 'true')
+      );
       expect(
-        within(rules).getByRole('button', { name: /comme « soirée du 31 octobre »/i })
-      ).toHaveAttribute('aria-pressed', 'true');
-      expect(
-        await within(rules).findByRole('button', { name: /comme « ciné-club du mercredi »/i })
+        await screen.findByRole('button', { name: /comme « ciné-club du mercredi »/i })
       ).toHaveAttribute('aria-pressed', 'false');
     });
 
@@ -913,19 +839,17 @@ describe('CreateEventDialog', () => {
       routeApi({ pastNights: [PAST_NIGHT], reusedConfig: { maxParticipants: 6 } });
       renderDialog({ reuse: { slug: 'old', title: 'Soirée du 31 octobre' } });
 
-      await screen.findByRole('button', { name: 'Règles : comme « Soirée du 31 octobre »' });
-      const rules = await openRules(user);
       await user.click(
-        await within(rules).findByRole('button', { name: /comme « ciné-club du mercredi »/i })
+        await screen.findByRole('button', { name: /comme « ciné-club du mercredi »/i })
       );
 
       await waitFor(() =>
         expect(
-          within(rules).getByRole('button', { name: /comme « ciné-club du mercredi »/i })
+          screen.getByRole('button', { name: /comme « ciné-club du mercredi »/i })
         ).toHaveAttribute('aria-pressed', 'true')
       );
       expect(
-        within(rules).getByRole('button', { name: /comme « soirée du 31 octobre »/i })
+        screen.getByRole('button', { name: /comme « soirée du 31 octobre »/i })
       ).toHaveAttribute('aria-pressed', 'false');
     });
 
@@ -933,13 +857,9 @@ describe('CreateEventDialog', () => {
       const user = userEvent.setup();
       renderDialog();
 
-      const rules = await openRules(user);
-      const row = within(rules).getByLabelText('Films par personne').closest('div')!;
+      const row = screen.getByLabelText('Films par personne').closest('div')!;
       await user.click(within(row).getByRole('button', { name: 'Diminuer' }));
-      await user.click(within(rules).getByRole('radio', { name: 'Au hasard' }));
-      await user.click(within(rules).getByRole('button', { name: 'Terminé' }));
-
-      expect(screen.getByRole('button', { name: 'Règles : personnalisées' })).toBeInTheDocument();
+      await user.click(screen.getByRole('radio', { name: 'Au hasard' }));
       await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
       await waitFor(() =>
         expect(configBody()).toMatchObject({
@@ -949,33 +869,51 @@ describe('CreateEventDialog', () => {
       );
     });
 
-    it('refuses an out-of-range limit and shows it in the rules', async () => {
+    it('refuses an out-of-range limit, shows it beside the rule and takes the focus there', async () => {
       const user = userEvent.setup();
       renderDialog();
 
-      const rules = await openRules(user);
-      fireEvent.change(within(rules).getByLabelText('Films par personne'), {
-        target: { value: '99' },
-      });
-      await user.click(within(rules).getByRole('button', { name: 'Terminé' }));
+      fireEvent.change(screen.getByLabelText('Films par personne'), { target: { value: '99' } });
       await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
 
-      const reopened = await screen.findByRole('dialog', { name: 'Règles de la soirée' });
-      expect(within(reopened).getByText(/entre 1 et 15/)).toBeInTheDocument();
+      expect(screen.getByText(/entre 1 et 15/)).toBeInTheDocument();
+      expect(screen.getByLabelText('Films par personne')).toHaveFocus();
       expect(createBodies()).toHaveLength(0);
+    });
+
+    it('opens the rules sheet on a phone when a rule is wrong', async () => {
+      const user = userEvent.setup();
+      mockIsMobile.mockReturnValue(true);
+      sessionStorage.setItem(
+        'mp.create-event-draft',
+        JSON.stringify({
+          typedTitle: null,
+          date: '2026-11-12',
+          time: '20:00',
+          groupId: null,
+          fields: { proposalLimitEnabled: true, maxProposals: '99' },
+        })
+      );
+      renderDialog();
+
+      await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
+
+      const rules = await screen.findByRole('dialog', { name: 'Règles' });
+      expect(within(rules).getByText(/entre 1 et 15/)).toBeInTheDocument();
+      expect(createBodies()).toHaveLength(0);
+      sessionStorage.removeItem('mp.create-event-draft');
     });
 
     it('saves changed rules as a template under a suggested name', async () => {
       const user = userEvent.setup();
       renderDialog();
 
-      const rules = await openRules(user);
-      expect(within(rules).queryByRole('button', { name: 'Enregistrer comme modèle' })).toBeNull();
-      await user.click(within(rules).getByRole('switch', { name: /séries tv/i }));
-      await user.click(within(rules).getByRole('button', { name: 'Enregistrer comme modèle' }));
+      expect(screen.queryByRole('button', { name: 'Enregistrer comme modèle' })).toBeNull();
+      await user.click(screen.getByRole('switch', { name: /séries tv/i }));
+      await user.click(screen.getByRole('button', { name: 'Enregistrer comme modèle' }));
 
-      expect(within(rules).getByRole('textbox', { name: 'Nom du modèle' })).toHaveValue('Modèle 1');
-      await user.click(within(rules).getByRole('button', { name: 'Valider' }));
+      expect(screen.getByRole('textbox', { name: 'Nom du modèle' })).toHaveValue('Modèle 1');
+      await user.click(screen.getByRole('button', { name: 'Valider' }));
       await waitFor(() =>
         expect(mockFetchApi).toHaveBeenCalledWith(
           '/users/me/event-templates',
@@ -989,12 +927,26 @@ describe('CreateEventDialog', () => {
       routeApi({ templates: [HORROR_TEMPLATE] });
       renderDialog();
 
-      const rules = await openRules(user);
-      await user.click(await within(rules).findByRole('button', { name: 'Soirée horreur' }));
-      await user.click(within(rules).getByRole('button', { name: 'Par défaut' }));
-      await user.click(within(rules).getByRole('button', { name: 'Terminé' }));
+      await user.click(await screen.findByRole('button', { name: 'Soirée horreur' }));
+      await user.click(screen.getByRole('button', { name: 'Par défaut' }));
 
-      expect(screen.getByRole('button', { name: 'Règles : par défaut' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Par défaut' })).toHaveAttribute(
+        'aria-pressed',
+        'true'
+      );
+      expect(screen.getByLabelText('Films par personne')).toHaveValue(null);
+    });
+
+    it('manages the saved templates from the rules', async () => {
+      const user = userEvent.setup();
+      routeApi({ templates: [HORROR_TEMPLATE] });
+      renderDialog();
+
+      await user.click(await screen.findByRole('button', { name: 'Gérer' }));
+
+      expect(
+        screen.getByRole('button', { name: 'Renommer le modèle « Soirée horreur »' })
+      ).toBeInTheDocument();
     });
   });
 
@@ -1013,7 +965,7 @@ describe('CreateEventDialog', () => {
       expect(screen.getByText('« Soirée du jeudi 12 novembre » est prête')).toBeInTheDocument();
       expect(within(dialog()).getByText(`${globalThis.location.host}/e/abc`)).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Copier' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Calendrier' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Ajouter au calendrier' })).toBeInTheDocument();
     });
 
     it('opens the night', async () => {

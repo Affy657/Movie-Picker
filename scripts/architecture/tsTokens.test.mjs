@@ -40,9 +40,9 @@ describe('tokens in TypeScript', () => {
     });
   }
 
-  it('lets the QR code paint its colours and a test use numbers', () => {
+  it('lets the brand art paint its colours and a test use numbers', () => {
     assert.deepEqual(
-      inlineStyleViolations('apps/web/src/shared/components/QrCode.tsx', "const ink = '#000000';"),
+      inlineStyleViolations('apps/web/src/shared/brand/brandArt.ts', "const ink = '#000000';"),
       []
     );
     assert.deepEqual(

@@ -1,0 +1,9 @@
+.leave {
+  flex: 0 0 auto;
+}
+
+.single {
+  display: flex;
+  flex: 1 1 auto;
+  justify-content: flex-end;
+}

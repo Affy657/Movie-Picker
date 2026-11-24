@@ -39,7 +39,6 @@ test.describe('Event management', () => {
 
       await hostPage.reload();
       await openParticipants(hostPage);
-      await hostPage.getByTestId('manage-participants-toggle').click();
       await hostPage.getByRole('button', { name: 'Retirer InviteGestion de la soirée' }).click();
       const removeDialog = hostPage.getByRole('dialog', { name: 'Retirer un participant' });
       await expect(removeDialog).toBeVisible();
@@ -104,10 +103,6 @@ test.describe('Event management', () => {
       const titleSaved = configSaved();
       await settings.locator('#host-cfg-title').fill('Soirée renommée E2E');
       await titleSaved;
-      await expect(saved).toBeVisible({ timeout: 15_000 });
-      const limitSaved = configSaved();
-      await settings.getByRole('switch', { name: 'Limiter le nombre de participants' }).click();
-      await limitSaved;
       await expect(saved).toBeVisible({ timeout: 15_000 });
       const capSaved = configSaved();
       await settings.locator('#host-cfg-max-participants').fill('1');

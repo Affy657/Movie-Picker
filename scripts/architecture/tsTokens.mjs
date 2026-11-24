@@ -13,8 +13,6 @@ const TS_COLOR_ALLOWED = new Set([
   'apps/web/src/app/pages/tech/TechLogos.tsx',
   'apps/web/src/features/auth/components/OAuthProviderButtons.tsx',
   'apps/web/src/shared/brand/brandArt.ts',
-  'apps/web/src/shared/components/QrCode.tsx',
-  'apps/web/src/shared/utils/downloadQrPng.ts',
 ]);
 const TS_COLOR_LITERAL =
   /['"`]#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})['"`]|['"`][^'"`\n]*\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\([^'"`\n]*['"`]/g;

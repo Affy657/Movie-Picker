@@ -1,11 +1,12 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import FollowListModal from '@/features/profile/components/FollowListModal';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
+import { stubMatchMedia } from '@/test-utils/matchMedia';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import type { QueryClient } from '@tanstack/react-query';
@@ -25,6 +26,18 @@ const SIGNED_IN_ALICE = {
 const signedInAsAlice = () =>
   http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(SIGNED_IN_ALICE));
 
+const signedOut = () =>
+  http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 }));
+
+const person = (handle: string, displayName: string, isFollowedByMe: boolean | null = false) => ({
+  handle,
+  displayName,
+  avatarId: '',
+  isFollowedByMe,
+});
+
+const listOf = (items: ReturnType<typeof person>[]) => () => HttpResponse.json({ items });
+
 function renderModal(
   overrides: Partial<Parameters<typeof FollowListModal>[0]> = {},
   onClose = vi.fn(),
@@ -32,7 +45,7 @@ function renderModal(
 ) {
   const props = {
     handle: 'alice',
-    initialTab: 'following' as const,
+    initialTab: 'followers' as const,
     followingCount: 2,
     followersCount: 5,
     onClose,
@@ -47,56 +60,67 @@ function renderModal(
   );
 }
 
+async function openSearch(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole('button', { name: 'Rechercher des utilisateurs' }));
+  return screen.getByRole('searchbox', { name: 'Rechercher des utilisateurs' });
+}
+
 describe('FollowListModal (MSW)', () => {
   const server = setupServer();
 
   beforeAll(() => server.listen({ onUnhandledFrame: 'warn' }));
-  afterEach(() => server.resetHandlers());
+  afterEach(() => {
+    server.resetHandlers();
+    vi.unstubAllGlobals();
+  });
   afterAll(() => server.close());
 
-  it('affiche les deux onglets avec compteurs', async () => {
-    server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
-    );
+  it('shows the followers tab then the following tab, each with its count', async () => {
+    server.use(signedOut(), http.get(`${TEST_API_V1}/users/alice/followers`, listOf([])));
 
     renderModal();
 
-    expect(await screen.findByRole('tab', { name: /2 abonnements/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /5 abonnés/i })).toBeInTheDocument();
+    const tabs = await screen.findAllByRole('tab');
+    expect(tabs.map((tab) => tab.textContent)).toEqual(['Abonnés5', 'Abonnements2']);
+    expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
   });
 
-  it("affiche 'Aucun utilisateur' quand la liste est vide", async () => {
-    server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
+  it('starts on the following tab when asked to', async () => {
+    server.use(signedOut(), http.get(`${TEST_API_V1}/users/alice/following`, listOf([])));
+
+    renderModal({ initialTab: 'following' });
+
+    expect(await screen.findByRole('tab', { name: /Abonnements/ })).toHaveAttribute(
+      'aria-selected',
+      'true'
     );
+    expect(await screen.findByText('Aucun abonnement')).toBeInTheDocument();
+  });
+
+  it('says there is no follower yet on an empty followers list', async () => {
+    server.use(signedOut(), http.get(`${TEST_API_V1}/users/alice/followers`, listOf([])));
 
     renderModal();
 
-    await waitFor(() => {
-      expect(screen.getByText(/aucun utilisateur/i)).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Aucun abonné')).toBeInTheDocument();
   });
 
   it('says the list could not load and retries, instead of an empty list', async () => {
     const user = userEvent.setup();
     let calls = 0;
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice/following`, () => {
+      signedOut(),
+      http.get(`${TEST_API_V1}/users/alice/followers`, () => {
         calls += 1;
         if (calls === 1) return new HttpResponse(null, { status: 500 });
-        return HttpResponse.json({
-          items: [{ handle: 'bob', displayName: 'Bob', avatarId: '', isFollowedByMe: null }],
-        });
+        return HttpResponse.json({ items: [person('bob', 'Bob', null)] });
       })
     );
 
-    renderModal({ followingCount: 2 });
+    renderModal({ followersCount: 2 });
 
     expect(await screen.findByText('Impossible de charger cette liste.')).toBeInTheDocument();
-    expect(screen.queryByText(/aucun utilisateur/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('Aucun abonné')).not.toBeInTheDocument();
     expect(screen.queryByText(/profils privés/i)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Réessayer' }));
@@ -105,68 +129,30 @@ describe('FollowListModal (MSW)', () => {
     expect(screen.queryByText('Impossible de charger cette liste.')).not.toBeInTheDocument();
   });
 
-  it('says the search failed and retries, instead of claiming nobody matches', async () => {
+  it('lists each person with a handle and a link to the profile that closes the window', async () => {
     const user = userEvent.setup();
-    let calls = 0;
+    const onClose = vi.fn();
     server.use(
-      signedInAsAlice(),
-      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
-      http.get(`${TEST_API_V1}/users/search`, () => {
-        calls += 1;
-        if (calls === 1) return new HttpResponse(null, { status: 500 });
-        return HttpResponse.json({
-          items: [
-            {
-              handle: 'sofiamorgane',
-              displayName: 'Sofia Benali',
-              avatarId: '',
-              isFollowedByMe: false,
-            },
-          ],
-        });
-      })
+      signedOut(),
+      http.get(`${TEST_API_V1}/users/alice/followers`, listOf([person('bob', 'Bob', null)]))
     );
 
-    renderModal();
-    await screen.findByText(/aucun utilisateur/i);
-    await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
-    await user.type(screen.getByPlaceholderText('Nom ou @pseudo'), 'mor');
+    renderModal({ followersCount: 1 }, onClose);
 
-    expect(await screen.findByText('Recherche impossible, réessayez.')).toBeInTheDocument();
-    expect(screen.queryByText('Personne ne correspond')).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Réessayer' }));
-
-    expect(await screen.findByText('Sofia Benali')).toBeInTheDocument();
-  });
-
-  it('affiche les utilisateurs dans la liste', async () => {
-    server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice/following`, () =>
-        HttpResponse.json({
-          items: [{ handle: 'bob', displayName: 'Bob', avatarId: '', isFollowedByMe: null }],
-        })
-      )
-    );
-
-    renderModal();
-
-    expect(await screen.findByText('Bob')).toBeInTheDocument();
-    expect(screen.getByText('@bob')).toBeInTheDocument();
+    const link = await screen.findByRole('link', { name: /Bob/ });
+    expect(link).toHaveAttribute('href', '/u/bob');
+    expect(within(link).getByText('@bob')).toBeInTheDocument();
+    await user.click(link);
+    expect(onClose).toHaveBeenCalledOnce();
   });
 
   it('explains the gap when the list is shorter than the count', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice/following`, () =>
-        HttpResponse.json({
-          items: [{ handle: 'bob', displayName: 'Bob', avatarId: '', isFollowedByMe: null }],
-        })
-      )
+      signedOut(),
+      http.get(`${TEST_API_V1}/users/alice/following`, listOf([person('bob', 'Bob', null)]))
     );
 
-    renderModal({ followingCount: 2 });
+    renderModal({ initialTab: 'following', followingCount: 2 });
 
     expect(await screen.findByText('Bob')).toBeInTheDocument();
     expect(
@@ -176,62 +162,47 @@ describe('FollowListModal (MSW)', () => {
 
   it('says nothing about private profiles when the list matches the count', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice/following`, () =>
-        HttpResponse.json({
-          items: [{ handle: 'bob', displayName: 'Bob', avatarId: '', isFollowedByMe: null }],
-        })
-      )
+      signedOut(),
+      http.get(`${TEST_API_V1}/users/alice/following`, listOf([person('bob', 'Bob', null)]))
     );
 
-    renderModal({ followingCount: 1 });
+    renderModal({ initialTab: 'following', followingCount: 1 });
 
     expect(await screen.findByText('Bob')).toBeInTheDocument();
     expect(screen.queryByText(/profils privés/i)).not.toBeInTheDocument();
   });
 
-  it("bascule vers l'onglet Followers au clic", async () => {
+  it('switches to the following list on a tab click', async () => {
     const user = userEvent.setup();
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
-      http.get(`${TEST_API_V1}/users/alice/followers`, () =>
-        HttpResponse.json({
-          items: [{ handle: 'carol', displayName: 'Carol', avatarId: '', isFollowedByMe: null }],
-        })
-      )
+      signedOut(),
+      http.get(`${TEST_API_V1}/users/alice/followers`, listOf([])),
+      http.get(`${TEST_API_V1}/users/alice/following`, listOf([person('carol', 'Carol', null)]))
     );
 
     renderModal();
-    await screen.findByText(/aucun utilisateur/i);
+    await screen.findByText('Aucun abonné');
 
-    await user.click(screen.getByRole('tab', { name: /5 abonnés/i }));
+    await user.click(screen.getByRole('tab', { name: /Abonnements/ }));
 
     expect(await screen.findByText('Carol')).toBeInTheDocument();
   });
 
-  it('appelle onClose quand on clique sur la croix', async () => {
+  it('calls onClose from the close button', async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
-    );
+    server.use(signedOut(), http.get(`${TEST_API_V1}/users/alice/followers`, listOf([])));
 
     renderModal({}, onClose);
-    await screen.findByRole('button', { name: /fermer/i });
 
-    await user.click(screen.getByRole('button', { name: /fermer/i }));
+    await user.click(await screen.findByRole('button', { name: 'Fermer' }));
 
     expect(onClose).toHaveBeenCalledOnce();
   });
 
   it('opens as a native modal and closes on the close event (Escape)', async () => {
     const onClose = vi.fn();
-    server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
-    );
+    server.use(signedOut(), http.get(`${TEST_API_V1}/users/alice/followers`, listOf([])));
 
     renderModal({}, onClose);
     const dialog = await screen.findByRole('dialog');
@@ -241,210 +212,54 @@ describe('FollowListModal (MSW)', () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
-  it('affiche un badge "Vous" et aucun bouton pour sa propre ligne', async () => {
-    server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u-bob',
-          displayName: 'Bob',
-          emailMasked: 'b***@test.local',
-          uiTheme: 'system',
-          accentColor: 'default',
-          avatarId: '',
-          handle: 'bob',
-          bio: null,
-          isProfilePublic: true,
-        })
-      ),
-      http.get(`${TEST_API_V1}/users/alice/following`, () =>
-        HttpResponse.json({
-          items: [{ handle: 'bob', displayName: 'Bob', avatarId: '', isFollowedByMe: null }],
-        })
-      )
-    );
-
-    renderModal();
-
-    expect(await screen.findByText('Vous')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /suivre/i })).not.toBeInTheDocument();
-  });
-
-  it('bascule en feuille (Sheet) sous 768px', async () => {
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn((query: string) => ({
-        matches: true,
-        media: query,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      }))
-    );
-    try {
-      server.use(
-        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-        http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
-      );
+  it.each([false, true])(
+    'carries the same name and tabs on a phone and on a large screen (phone: %s)',
+    async (isPhone) => {
+      stubMatchMedia(isPhone);
+      server.use(signedOut(), http.get(`${TEST_API_V1}/users/alice/followers`, listOf([])));
 
       renderModal();
 
-      expect(
-        await screen.findByRole('heading', { name: 'Abonnés et abonnements' })
-      ).toBeInTheDocument();
-      expect(screen.getByRole('dialog', { name: 'Abonnés et abonnements' })).toBeInTheDocument();
-    } finally {
-      vi.unstubAllGlobals();
+      const dialog = await screen.findByRole('dialog', { name: 'Abonnés et abonnements' });
+      expect(within(dialog).getAllByRole('tab')).toHaveLength(2);
     }
-  });
+  );
 
-  it('gives the dialog the same name on a large screen as on a phone', async () => {
+  it('shows a "Vous" badge and no button on the viewer own row', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          ...SIGNED_IN_ALICE,
+          userId: 'u-bob',
+          displayName: 'Bob',
+          handle: 'bob',
+        })
+      ),
+      http.get(`${TEST_API_V1}/users/alice/followers`, listOf([person('bob', 'Bob', null)]))
     );
 
-    renderModal();
+    renderModal({ followersCount: 1 });
 
+    expect(await screen.findByText('Vous')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /suivi?re? @bob/i })).not.toBeInTheDocument();
+  });
+
+  it('offers no follow button and no search to a signed-out visitor', async () => {
+    server.use(
+      signedOut(),
+      http.get(`${TEST_API_V1}/users/alice/followers`, listOf([person('bob', 'Bob', null)]))
+    );
+
+    renderModal({ followersCount: 1 });
+
+    expect(await screen.findByText('Bob')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /suivre/i })).not.toBeInTheDocument();
     expect(
-      await screen.findByRole('dialog', { name: 'Abonnés et abonnements' })
-    ).toBeInTheDocument();
+      screen.queryByRole('button', { name: 'Rechercher des utilisateurs' })
+    ).not.toBeInTheDocument();
   });
 
-  it("starts on the Followers tab when initialTab='followers'", async () => {
-    server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice/followers`, () => HttpResponse.json({ items: [] }))
-    );
-
-    renderModal({ initialTab: 'followers' });
-
-    await waitFor(() => {
-      expect(screen.getByText(/aucun utilisateur/i)).toBeInTheDocument();
-    });
-  });
-
-  it('offers no search tab to a signed-out visitor, since the search needs an account', async () => {
-    server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
-    );
-
-    renderModal();
-
-    expect(await screen.findByText(/aucun utilisateur/i)).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /2 abonnements/i })).toBeInTheDocument();
-    expect(screen.queryByRole('tab', { name: 'Rechercher' })).not.toBeInTheDocument();
-  });
-
-  it('never runs the user search for a signed-out visitor opened on the search tab', async () => {
-    const searchCalls: string[] = [];
-    server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
-      http.get(`${TEST_API_V1}/users/search`, ({ request }) => {
-        searchCalls.push(new URL(request.url).searchParams.get('q') ?? '');
-        return new HttpResponse(null, { status: 401 });
-      })
-    );
-
-    renderModal({ initialTab: 'search' });
-
-    expect(await screen.findByText(/aucun utilisateur/i)).toBeInTheDocument();
-    expect(screen.queryByPlaceholderText('Nom ou @pseudo')).not.toBeInTheDocument();
-    expect(screen.queryByText('Recherche impossible, réessayez.')).not.toBeInTheDocument();
-    expect(searchCalls).toEqual([]);
-  });
-
-  it("affiche l'invitation a chercher sur l'onglet Rechercher", async () => {
-    const user = userEvent.setup();
-    server.use(
-      signedInAsAlice(),
-      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
-    );
-
-    renderModal();
-    await screen.findByText(/aucun utilisateur/i);
-
-    await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
-
-    expect(await screen.findByText('Cherchez un nom ou un pseudo')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Nom ou @pseudo')).toBeInTheDocument();
-  });
-
-  it('demande deux caracteres avant de lancer la recherche', async () => {
-    const user = userEvent.setup();
-    const searchCalls: string[] = [];
-    server.use(
-      signedInAsAlice(),
-      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
-      http.get(`${TEST_API_V1}/users/search`, ({ request }) => {
-        searchCalls.push(new URL(request.url).searchParams.get('q') ?? '');
-        return HttpResponse.json({ items: [] });
-      })
-    );
-
-    renderModal();
-    await screen.findByText(/aucun utilisateur/i);
-    await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
-
-    await user.type(screen.getByPlaceholderText('Nom ou @pseudo'), 'm');
-
-    expect(await screen.findByText('Tapez au moins 2 caractères.')).toBeInTheDocument();
-    expect(searchCalls).toEqual([]);
-  });
-
-  it('surligne la portion trouvee dans le pseudo et le handle', async () => {
-    const user = userEvent.setup();
-    server.use(
-      signedInAsAlice(),
-      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
-      http.get(`${TEST_API_V1}/users/search`, () =>
-        HttpResponse.json({
-          items: [
-            { handle: 'lea_m', displayName: 'Léa Moreau', avatarId: '', isFollowedByMe: false },
-            {
-              handle: 'sofiamorgane',
-              displayName: 'Sofia Benali',
-              avatarId: '',
-              isFollowedByMe: true,
-            },
-          ],
-        })
-      )
-    );
-
-    renderModal();
-    await screen.findByText(/aucun utilisateur/i);
-    await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
-    await user.type(screen.getByPlaceholderText('Nom ou @pseudo'), 'mor');
-
-    expect(await screen.findByText('Sofia Benali')).toBeInTheDocument();
-    const highlights = document.querySelectorAll('mark');
-    expect([...highlights].map((mark) => mark.textContent)).toEqual(['Mor', 'mor']);
-  });
-
-  it('propose de suivre un compte trouve qui ne l est pas encore', async () => {
-    const user = userEvent.setup();
-    server.use(
-      signedInAsAlice(),
-      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
-      http.get(`${TEST_API_V1}/users/search`, () =>
-        HttpResponse.json({
-          items: [
-            { handle: 'lea_m', displayName: 'Léa Moreau', avatarId: '', isFollowedByMe: false },
-          ],
-        })
-      )
-    );
-
-    renderModal();
-    await screen.findByText(/aucun utilisateur/i);
-    await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
-    await user.type(screen.getByPlaceholderText('Nom ou @pseudo'), 'mor');
-
-    expect(await screen.findByRole('button', { name: 'Suivre @lea_m' })).toBeInTheDocument();
-  });
-
-  it('refreshes every cached profile and follow list touched by a follow, not only the viewed one', async () => {
+  it('follows someone from the list and refreshes every cached profile and list it touched', async () => {
     const user = userEvent.setup();
     const client = createTestQueryClient();
     const touchedKeys = [
@@ -454,25 +269,20 @@ describe('FollowListModal (MSW)', () => {
       queryKeys.event.eligibleFollows('movie-night'),
     ];
     for (const key of touchedKeys) client.setQueryData(key, { items: [] });
+    const follows: string[] = [];
     server.use(
       signedInAsAlice(),
-      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
-      http.get(`${TEST_API_V1}/users/search`, () =>
-        HttpResponse.json({
-          items: [
-            { handle: 'lea_m', displayName: 'Léa Moreau', avatarId: '', isFollowedByMe: false },
-          ],
-        })
-      ),
-      http.post(`${TEST_API_V1}/users/lea_m/follow`, () => new HttpResponse(null, { status: 204 }))
+      http.get(`${TEST_API_V1}/users/alice/followers`, listOf([person('lea_m', 'Léa Moreau')])),
+      http.post(`${TEST_API_V1}/users/:handle/follow`, ({ params }) => {
+        follows.push(String(params.handle));
+        return new HttpResponse(null, { status: 204 });
+      })
     );
 
-    renderModal({}, vi.fn(), client);
-    await screen.findByText(/aucun utilisateur/i);
-    await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
-    await user.type(screen.getByPlaceholderText('Nom ou @pseudo'), 'mor');
+    renderModal({ followersCount: 1 }, vi.fn(), client);
     await user.click(await screen.findByRole('button', { name: 'Suivre @lea_m' }));
 
+    await waitFor(() => expect(follows).toEqual(['lea_m']));
     await waitFor(() => {
       for (const key of touchedKeys) {
         expect(client.getQueryState(key)?.isInvalidated, JSON.stringify(key)).toBe(true);
@@ -480,49 +290,256 @@ describe('FollowListModal (MSW)', () => {
     });
   });
 
-  it('explique une recherche sans resultat', async () => {
+  it('opens a menu from "Suivi" to stop following someone', async () => {
     const user = userEvent.setup();
+    const unfollows: string[] = [];
     server.use(
       signedInAsAlice(),
-      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
-      http.get(`${TEST_API_V1}/users/search`, () => HttpResponse.json({ items: [] }))
+      http.get(`${TEST_API_V1}/users/alice/following`, listOf([person('bob', 'Bob Durand', true)])),
+      http.delete(`${TEST_API_V1}/users/:handle/follow`, ({ params }) => {
+        unfollows.push(String(params.handle));
+        return new HttpResponse(null, { status: 204 });
+      })
     );
 
-    renderModal();
-    await screen.findByText(/aucun utilisateur/i);
-    await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
-    await user.type(screen.getByPlaceholderText('Nom ou @pseudo'), 'zephyrin');
+    renderModal({ initialTab: 'following', followingCount: 1 });
 
-    expect(await screen.findByText('Personne ne correspond')).toBeInTheDocument();
-    expect(screen.getByText(/profil est privé/i)).toBeInTheDocument();
+    const trigger = await screen.findByRole('button', { name: 'Suivi @bob' });
+    expect(trigger).toHaveTextContent('Suivi');
+    expect(unfollows).toEqual([]);
+
+    await user.click(trigger);
+    const menu = screen.getByRole('menu', { name: 'Bob Durand' });
+    await user.click(within(menu).getByRole('menuitem', { name: 'Ne plus suivre @bob' }));
+
+    await waitFor(() => expect(unfollows).toEqual(['bob']));
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
-  it('reduit l onglet Rechercher a une loupe sur mobile sans toucher aux compteurs', async () => {
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn((query: string) => ({
-        matches: true,
-        media: query,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      }))
+  it('keeps the other rows usable and the focus on the row while a follow is sent', async () => {
+    const user = userEvent.setup();
+    let release: () => void = () => {};
+    server.use(
+      signedInAsAlice(),
+      http.get(
+        `${TEST_API_V1}/users/alice/followers`,
+        listOf([person('lea_m', 'Léa Moreau'), person('zoe', 'Zoé Lefèvre')])
+      ),
+      http.post(
+        `${TEST_API_V1}/users/:handle/follow`,
+        () =>
+          new Promise<Response>((resolve) => {
+            release = () => resolve(new HttpResponse(null, { status: 204 }));
+          })
+      )
     );
-    try {
+
+    renderModal({ followersCount: 2 });
+    const lea = await screen.findByRole('button', { name: 'Suivre @lea_m' });
+    await user.click(lea);
+
+    await waitFor(() => expect(lea).toHaveAttribute('aria-busy', 'true'));
+    expect(lea).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Suivre @zoe' })).toBeEnabled();
+    release();
+  });
+
+  it('moves the focus to the next row when unfollowing removes the row', async () => {
+    const user = userEvent.setup();
+    let following = [person('bob', 'Bob Durand', true), person('zoe', 'Zoé Lefèvre', true)];
+    server.use(
+      signedInAsAlice(),
+      http.get(`${TEST_API_V1}/users/alice/following`, () =>
+        HttpResponse.json({ items: following })
+      ),
+      http.delete(`${TEST_API_V1}/users/:handle/follow`, ({ params }) => {
+        following = following.filter((item) => item.handle !== params.handle);
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+
+    renderModal({ initialTab: 'following', followingCount: 2 });
+    await user.click(await screen.findByRole('button', { name: 'Suivi @bob' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Ne plus suivre @bob' }));
+
+    await waitFor(() => expect(screen.queryByText('Bob Durand')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Suivi @zoe' })).toHaveFocus());
+  });
+
+  describe('search in the header', () => {
+    it('replaces the title and the tabs with a search field that lists both lists first', async () => {
+      const user = userEvent.setup();
       server.use(
         signedInAsAlice(),
-        http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
+        http.get(
+          `${TEST_API_V1}/users/alice/followers`,
+          listOf([person('zoe', 'Zoé Lefèvre'), person('bob', 'Bob Durand', true)])
+        ),
+        http.get(
+          `${TEST_API_V1}/users/alice/following`,
+          listOf([person('bob', 'Bob Durand', true)])
+        )
       );
 
       renderModal();
+      const field = await openSearch(user);
 
-      expect(
-        await screen.findByRole('tab', { name: 'Rechercher des utilisateurs' })
-      ).toBeInTheDocument();
-      expect(screen.queryByRole('tab', { name: 'Rechercher' })).not.toBeInTheDocument();
-      expect(screen.getByRole('tab', { name: /2 abonnements/i })).toBeInTheDocument();
-      expect(screen.getByRole('tab', { name: /5 abonnés/i })).toBeInTheDocument();
-    } finally {
-      vi.unstubAllGlobals();
-    }
+      expect(field).toHaveFocus();
+      expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Fermer' })).not.toBeInTheDocument();
+      expect(screen.getByRole('dialog', { name: 'Abonnés et abonnements' })).toBeInTheDocument();
+      expect(screen.getByText('Dans vos listes')).toBeInTheDocument();
+      expect(await screen.findByText('Zoé Lefèvre')).toBeInTheDocument();
+      expect(screen.getAllByText('Bob Durand')).toHaveLength(1);
+    });
+
+    it('names the lists of someone else as theirs', async () => {
+      const user = userEvent.setup();
+      server.use(
+        signedInAsAlice(),
+        http.get(`${TEST_API_V1}/users/carla/followers`, listOf([person('zoe', 'Zoé Lefèvre')])),
+        http.get(`${TEST_API_V1}/users/carla/following`, listOf([]))
+      );
+
+      renderModal({ handle: 'carla' });
+      await openSearch(user);
+
+      expect(await screen.findByText('Dans ces listes')).toBeInTheDocument();
+    });
+
+    it('filters both lists, then adds the rest of Movie Picker, each match highlighted', async () => {
+      const user = userEvent.setup();
+      server.use(
+        signedInAsAlice(),
+        http.get(
+          `${TEST_API_V1}/users/alice/followers`,
+          listOf([person('carla', 'Carla Rossi'), person('zoe', 'Zoé Lefèvre')])
+        ),
+        http.get(`${TEST_API_V1}/users/alice/following`, listOf([])),
+        http.get(
+          `${TEST_API_V1}/users/search`,
+          listOf([
+            person('carla', 'Carla Rossi'),
+            person('camille_m', 'Camille'),
+            person('oscar_b', 'Oscar'),
+          ])
+        )
+      );
+
+      renderModal();
+      await user.type(await openSearch(user), 'ca');
+
+      expect(await screen.findByText('Sur Movie Picker')).toBeInTheDocument();
+      expect(screen.queryByText('Zoé Lefèvre')).not.toBeInTheDocument();
+      expect(screen.getAllByRole('link', { name: /Carla Rossi/ })).toHaveLength(1);
+      const marks = [...document.querySelectorAll('mark')].map((mark) => mark.textContent);
+      expect(marks).toEqual(['Ca', 'ca', 'Ca', 'ca', 'ca', 'ca']);
+    });
+
+    it('says nobody matches when neither the lists nor Movie Picker do', async () => {
+      const user = userEvent.setup();
+      server.use(
+        signedInAsAlice(),
+        http.get(`${TEST_API_V1}/users/alice/followers`, listOf([person('zoe', 'Zoé Lefèvre')])),
+        http.get(`${TEST_API_V1}/users/alice/following`, listOf([])),
+        http.get(`${TEST_API_V1}/users/search`, listOf([]))
+      );
+
+      renderModal();
+      await user.type(await openSearch(user), 'xavier');
+
+      expect(await screen.findByText('Personne ne correspond')).toBeInTheDocument();
+      expect(screen.queryByText('Dans vos listes')).not.toBeInTheDocument();
+    });
+
+    it('waits for two characters before searching all of Movie Picker', async () => {
+      const user = userEvent.setup();
+      const searchCalls: string[] = [];
+      server.use(
+        signedInAsAlice(),
+        http.get(`${TEST_API_V1}/users/alice/followers`, listOf([person('mona', 'Mona')])),
+        http.get(`${TEST_API_V1}/users/alice/following`, listOf([])),
+        http.get(`${TEST_API_V1}/users/search`, ({ request }) => {
+          searchCalls.push(new URL(request.url).searchParams.get('q') ?? '');
+          return HttpResponse.json({ items: [] });
+        })
+      );
+
+      renderModal();
+      await user.type(await openSearch(user), 'm');
+
+      expect(await screen.findByText('Tapez au moins 2 caractères.')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /Mona/ })).toBeInTheDocument();
+      expect(searchCalls).toEqual([]);
+    });
+
+    it('says the search failed and retries, instead of claiming nobody matches', async () => {
+      const user = userEvent.setup();
+      let calls = 0;
+      server.use(
+        signedInAsAlice(),
+        http.get(`${TEST_API_V1}/users/alice/followers`, listOf([])),
+        http.get(`${TEST_API_V1}/users/alice/following`, listOf([])),
+        http.get(`${TEST_API_V1}/users/search`, () => {
+          calls += 1;
+          if (calls === 1) return new HttpResponse(null, { status: 500 });
+          return HttpResponse.json({ items: [person('sofiamorgane', 'Sofia Benali')] });
+        })
+      );
+
+      renderModal();
+      await user.type(await openSearch(user), 'mor');
+
+      expect(await screen.findByText('Recherche impossible, réessayez.')).toBeInTheDocument();
+      expect(screen.queryByText('Personne ne correspond')).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Réessayer' }));
+
+      expect(await screen.findByText('Sofia Benali')).toBeInTheDocument();
+    });
+
+    it('says the lists could not load and retries, instead of claiming nobody matches', async () => {
+      const user = userEvent.setup();
+      let followerCalls = 0;
+      server.use(
+        signedInAsAlice(),
+        http.get(`${TEST_API_V1}/users/alice/followers`, () => {
+          followerCalls += 1;
+          if (followerCalls === 1) return new HttpResponse(null, { status: 500 });
+          return HttpResponse.json({ items: [person('carla', 'Carla Rossi')] });
+        }),
+        http.get(`${TEST_API_V1}/users/alice/following`, listOf([])),
+        http.get(`${TEST_API_V1}/users/search`, listOf([]))
+      );
+
+      renderModal({ initialTab: 'following' });
+      await user.type(await openSearch(user), 'carla');
+
+      expect(await screen.findByText('Impossible de charger cette liste.')).toBeInTheDocument();
+      expect(screen.queryByText('Personne ne correspond')).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Réessayer' }));
+
+      expect(await screen.findByRole('link', { name: /Carla/ })).toBeInTheDocument();
+      expect(screen.queryByText('Impossible de charger cette liste.')).not.toBeInTheDocument();
+    });
+
+    it('brings the title and the tabs back on cancel, focus on the search button', async () => {
+      const user = userEvent.setup();
+      server.use(
+        signedInAsAlice(),
+        http.get(`${TEST_API_V1}/users/alice/followers`, listOf([])),
+        http.get(`${TEST_API_V1}/users/alice/following`, listOf([]))
+      );
+
+      renderModal();
+      await user.type(await openSearch(user), 'zz');
+      await user.click(screen.getByRole('button', { name: 'Annuler' }));
+
+      expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Abonnés et abonnements' })).toBeVisible();
+      expect(screen.getAllByRole('tab')).toHaveLength(2);
+      expect(screen.getByRole('button', { name: 'Rechercher des utilisateurs' })).toHaveFocus();
+    });
   });
 });

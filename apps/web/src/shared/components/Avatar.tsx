@@ -13,6 +13,7 @@ interface AvatarProps {
   className?: string;
   priority?: boolean;
   accent?: AccentColor | null;
+  halo?: boolean;
 }
 
 function accentRingClass(accent: AccentColor | null | undefined): string | undefined {
@@ -34,10 +35,11 @@ export default function Avatar({
   className,
   priority = false,
   accent,
+  halo = false,
 }: Readonly<AvatarProps>) {
   const px = SIZE_PX[size];
   const [failedAvatarId, setFailedAvatarId] = useState<string | null>(null);
-  const ring = accentRingClass(accent);
+  const ring = halo ? styles.halo : accentRingClass(accent);
 
   if (!avatarId || failedAvatarId === avatarId) {
     if (pseudo) {

@@ -235,4 +235,42 @@ describe('Modal', () => {
 
     expect(screen.getByTestId('m')).not.toHaveAttribute('aria-labelledby');
   });
+
+  it('lets onEscape handle the Escape key and keep the dialog open', () => {
+    const onClose = vi.fn();
+    const onEscape = vi.fn(() => true);
+    render(
+      <AppTestProviders>
+        <Modal open onClose={onClose} onEscape={onEscape} data-testid="m" ariaLabel="Fenêtre">
+          <button type="button">Dedans</button>
+        </Modal>
+      </AppTestProviders>
+    );
+
+    const kept = fireEvent.keyDown(screen.getByRole('button', { name: 'Dedans' }), {
+      key: 'Escape',
+    });
+
+    expect(onEscape).toHaveBeenCalledTimes(1);
+    expect(kept).toBe(false);
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('leaves the Escape key to the dialog when onEscape does not handle it', () => {
+    const onEscape = vi.fn(() => false);
+    render(
+      <AppTestProviders>
+        <Modal open onClose={vi.fn()} onEscape={onEscape} ariaLabel="Fenêtre">
+          <button type="button">Dedans</button>
+        </Modal>
+      </AppTestProviders>
+    );
+
+    const kept = fireEvent.keyDown(screen.getByRole('button', { name: 'Dedans' }), {
+      key: 'Escape',
+    });
+
+    expect(onEscape).toHaveBeenCalledTimes(1);
+    expect(kept).toBe(true);
+  });
 });

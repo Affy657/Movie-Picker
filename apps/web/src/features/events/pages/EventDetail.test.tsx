@@ -78,11 +78,6 @@ async function openParticipantsPanel(user: ReturnType<typeof userEvent.setup>) {
   await user.click(await screen.findByTestId('participants-toggle'));
 }
 
-async function openParticipantsManageMode(user: ReturnType<typeof userEvent.setup>) {
-  await openParticipantsPanel(user);
-  await user.click(await screen.findByTestId('manage-participants-toggle'));
-}
-
 describe('EventDetail (MSW)', () => {
   const slug = 'soiree-msw';
 
@@ -363,7 +358,8 @@ describe('EventDetail (MSW)', () => {
     expect(
       await screen.findByRole('button', { name: /copier le lien/i }, { timeout: 20000 })
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /télécharger/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Enregistrer le QR' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Inviter des amis' })).not.toBeInTheDocument();
     expect(screen.queryByText('Votre lien hôte (ne pas partager)')).not.toBeInTheDocument();
   });
 
@@ -405,11 +401,13 @@ describe('EventDetail (MSW)', () => {
 
     const settingsToggle = screen.getByRole('button', { name: 'Paramètres de la soirée' });
     expect(settingsToggle).toHaveAttribute('aria-haspopup', 'dialog');
-    expect(screen.queryByLabelText(/nom de la soirée/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Paramètres de la soirée' })).toBeNull();
 
     await userEvent.setup().click(settingsToggle);
-    const nameField = await screen.findByLabelText(/nom de la soirée/i);
-    await waitFor(() => expect(nameField.closest('dialog')).toHaveAttribute('open'));
+    const settings = await screen.findByRole('dialog', { name: 'Paramètres de la soirée' });
+    const nameField = within(settings).getByRole('textbox', { name: 'Nom' });
+    expect(nameField).toHaveValue('Soirée démo');
+    await waitFor(() => expect(settings).toHaveAttribute('open'));
   });
 
   describe('pending movie night (host)', () => {
@@ -457,7 +455,10 @@ describe('EventDetail (MSW)', () => {
       usePendingHandlers();
       renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
       await user.click(await screen.findByRole('button', { name: 'Paramètres de la soirée' }));
-      expect(await screen.findByLabelText(/date et heure de la soirée/i)).toBeInTheDocument();
+      const settings = await screen.findByRole('dialog', { name: 'Paramètres de la soirée' });
+      expect(
+        within(settings).getByRole('button', { name: /^date et heure( \(heure de paris\))? \S/i })
+      ).toBeEnabled();
     });
   });
 
@@ -762,7 +763,7 @@ describe('EventDetail (MSW)', () => {
       renderEventDetail(`/e/${slug}?host=host-token`);
       expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
 
-      await openParticipantsManageMode(user);
+      await openParticipantsPanel(user);
       const removeButton = await screen.findByTestId('remove-participant-p-msw-alice');
       await user.click(removeButton);
 
@@ -791,7 +792,7 @@ describe('EventDetail (MSW)', () => {
       );
 
       renderEventDetail(`/e/${slug}?host=host-token`);
-      await openParticipantsManageMode(user);
+      await openParticipantsPanel(user);
       const removeButton = await screen.findByTestId('remove-participant-p-msw-alice');
       await user.click(removeButton);
 
@@ -818,7 +819,7 @@ describe('EventDetail (MSW)', () => {
       );
 
       renderEventDetail(`/e/${slug}?host=host-token`);
-      await openParticipantsManageMode(user);
+      await openParticipantsPanel(user);
       const removeButton = await screen.findByTestId('remove-participant-p-msw-alice');
       await user.click(removeButton);
       await user.click(screen.getByTestId('confirm-dialog-confirm'));
@@ -1076,6 +1077,7 @@ describe('EventDetail (MSW)', () => {
   });
 
   describe('the recap of the night', () => {
+    const shownOrigin = () => globalThis.location.origin.replace(/^https?:\/\//, '');
     const myPid = 'p-msw-alice';
     const recapSlug = 'recap-msw-1';
 
@@ -1147,11 +1149,8 @@ describe('EventDetail (MSW)', () => {
       await userEvent.click(screen.getByRole('button', { name: 'Partager' }));
 
       const dialog = await screen.findByRole('dialog', { name: 'Partager le recap' });
-      expect(
-        within(dialog).getByText(`${globalThis.location.origin}/r/${recapSlug}`)
-      ).toBeInTheDocument();
-      expect(within(dialog).getByText('Matrix')).toBeInTheDocument();
-      expect(within(dialog).getByText('Moyenne 4,0/5, 1 note')).toBeInTheDocument();
+      expect(within(dialog).getByText(`${shownOrigin()}/r/${recapSlug}`)).toBeInTheDocument();
+      expect(within(dialog).getByRole('button', { name: 'Story' })).toBeInTheDocument();
     });
 
     it('keeps the invitation to share and leaves the recap link out while the night is not over', async () => {
@@ -1167,7 +1166,7 @@ describe('EventDetail (MSW)', () => {
       expect(
         await screen.findByRole('heading', { name: 'Partager la soirée' })
       ).toBeInTheDocument();
-      expect(screen.getByText(`${globalThis.location.origin}/e/${slug}`)).toBeInTheDocument();
+      expect(screen.getByText(`${shownOrigin()}/e/${slug}`)).toBeInTheDocument();
     });
 
     it('shares the recap of a finished night even while its movies have not arrived', async () => {
@@ -1180,10 +1179,8 @@ describe('EventDetail (MSW)', () => {
       await userEvent.click(screen.getByRole('button', { name: 'Partager' }));
 
       const dialog = await screen.findByRole('dialog', { name: 'Partager le recap' });
-      expect(
-        within(dialog).getByText(`${globalThis.location.origin}/r/${recapSlug}`)
-      ).toBeInTheDocument();
-      expect(within(dialog).queryByText('Matrix')).not.toBeInTheDocument();
+      expect(within(dialog).getByText(`${shownOrigin()}/r/${recapSlug}`)).toBeInTheDocument();
+      expect(within(dialog).queryByRole('button', { name: 'Story' })).not.toBeInTheDocument();
     });
 
     it('offers the story of the night beside its link', async () => {
@@ -1195,10 +1192,11 @@ describe('EventDetail (MSW)', () => {
       await userEvent.click(screen.getByRole('button', { name: 'Partager' }));
 
       const dialog = await screen.findByRole('dialog', { name: 'Partager le recap' });
-      await userEvent.click(within(dialog).getByRole('tab', { name: 'Story' }));
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Story' }));
 
-      expect(within(dialog).getByRole('radio', { name: 'Le film' })).toBeChecked();
-      expect(within(dialog).getByRole('radio', { name: 'Les notes' })).toBeInTheDocument();
+      const story = screen.getByRole('dialog', { name: 'Story' });
+      expect(within(story).getByRole('radio', { name: 'Le film' })).toBeChecked();
+      expect(within(story).getByRole('radio', { name: 'Les notes' })).toBeInTheDocument();
     });
 
     it('has no story to offer while the movies of the night have not arrived', async () => {
@@ -1211,7 +1209,7 @@ describe('EventDetail (MSW)', () => {
       await userEvent.click(screen.getByRole('button', { name: 'Partager' }));
 
       const dialog = await screen.findByRole('dialog', { name: 'Partager le recap' });
-      expect(within(dialog).queryByRole('tab', { name: 'Story' })).not.toBeInTheDocument();
+      expect(within(dialog).queryByRole('button', { name: 'Story' })).not.toBeInTheDocument();
     });
 
     it('offers no recap link and keeps the invitation when no movie was chosen', async () => {
@@ -1426,7 +1424,6 @@ describe('EventDetail (MSW)', () => {
       await openParticipantsPanel(user);
 
       expect(screen.getByText('Alice')).toBeInTheDocument();
-      expect(screen.queryByTestId('manage-participants-toggle')).not.toBeInTheDocument();
       expect(screen.queryByTestId('remove-participant-p-msw-alice')).not.toBeInTheDocument();
     });
 
@@ -1466,7 +1463,7 @@ describe('EventDetail (MSW)', () => {
       renderEventDetail(`/e/${slug}?host=host-token`);
       expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
 
-      await openParticipantsManageMode(user);
+      await openParticipantsPanel(user);
       await user.click(await screen.findByTestId('remove-participant-p-msw-alice'));
       const dialog1 = await screen.findByTestId('confirm-dialog');
       expect(dialog1).toHaveAttribute('open');

@@ -1,4 +1,4 @@
-import { Check, Copy, Link2, Plus, Share2 } from 'lucide-react';
+import { Check, ChevronDown, Copy, Link2, Plus, Share2 } from 'lucide-react';
 import AvatarStack from '@/shared/components/AvatarStack';
 import Button from '@/shared/components/Button';
 import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
@@ -54,7 +54,7 @@ export default function CreateEventInvitation({
     <div className={styles.linkRow}>
       <Link2 size={ICON_SIZE.md} aria-hidden className={styles.linkIcon} />
       <span className={styles.linkText}>{displayedUrl}</span>
-      <Button size="sm" variant={toGroup ? 'secondary' : 'primary'} onClick={() => void copyLink()}>
+      <Button size="sm" variant={toGroup ? 'secondary' : 'soft'} onClick={() => void copyLink()}>
         {copied ? (
           <Check size={ICON_SIZE.sm} aria-hidden />
         ) : (
@@ -69,11 +69,11 @@ export default function CreateEventInvitation({
     <ResponsiveDialog
       open={open}
       onClose={onClose}
+      size="sm"
       title={t('events.create.invitation.title')}
       footer={
         <div className={styles.footer}>
-          <p className={styles.footerHint}>{t('events.create.invitation.linkStays')}</p>
-          <Button variant="primary" onClick={onOpen}>
+          <Button variant="primary" className={styles.openAction} onClick={onOpen}>
             {t('events.create.invitation.open')}
           </Button>
         </div>
@@ -102,37 +102,36 @@ export default function CreateEventInvitation({
                 ? t('events.create.invitation.groupSeesOne')
                 : t('events.create.invitation.groupSees', { count: othersInGroup })}
             </p>
-            <p className={styles.groupNoticeLead}>{t('events.create.invitation.groupLead')}</p>
           </div>
-        ) : (
-          <p className={styles.readyLead}>{t('events.create.invitation.lead')}</p>
-        )}
+        ) : null}
         {night.configNotSaved ? (
           <output className={styles.configWarning}>{t('events.create.configNotSaved')}</output>
         ) : null}
         {toGroup ? null : linkRow}
-        <div className={styles.inviteActionsFrame}>
-          <div className={styles.inviteActions}>
-            {canNativeShare && !toGroup ? (
-              <Button className={styles.inviteAction} onClick={() => void nativeShare()}>
-                <Share2 size={ICON_SIZE.md} aria-hidden />
-                {t('events.create.invitation.share')}
-              </Button>
-            ) : null}
-            <EventCalendarMenu
-              title={night.title}
-              date={night.date}
-              time={night.time}
-              url={night.url}
-              triggerLabel={t('events.create.invitation.calendar')}
-              triggerClassName={styles.inviteAction}
-              opensAboveRow
-            />
-            <Button className={styles.inviteAction} onClick={onPropose}>
-              <Plus size={ICON_SIZE.md} aria-hidden />
-              {t('events.create.invitation.propose')}
+        <div className={styles.actionList}>
+          {canNativeShare && !toGroup ? (
+            <Button variant="ghost" className={styles.actionRow} onClick={() => void nativeShare()}>
+              <Share2 size={ICON_SIZE.md} aria-hidden />
+              {t('share.trigger')}
             </Button>
-          </div>
+          ) : null}
+          <EventCalendarMenu
+            title={night.title}
+            date={night.date}
+            time={night.time}
+            url={night.url}
+            triggerLabel={t('events.calendar.addButton')}
+            triggerVariant="ghost"
+            triggerTrailing={
+              <ChevronDown size={ICON_SIZE.md} aria-hidden className={styles.actionChevron} />
+            }
+            triggerClassName={styles.actionRow}
+            className={styles.actionMenu}
+          />
+          <Button variant="ghost" className={styles.actionRow} onClick={onPropose}>
+            <Plus size={ICON_SIZE.md} aria-hidden />
+            {t('events.create.invitation.propose')}
+          </Button>
         </div>
         {toGroup ? (
           <div className={styles.outsider}>

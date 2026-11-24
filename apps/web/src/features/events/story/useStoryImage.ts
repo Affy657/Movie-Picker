@@ -13,10 +13,19 @@ type Drawn = {
 
 export type StoryImageState = Drawn & { retry: () => void };
 
+export type ImageRenderer<S> = (spec: S, cache: StoryAssetCache) => Promise<Blob | null>;
+
+export type RenderedImageOptions = { objectUrl?: boolean };
+
 const PENDING: Drawn = { status: 'pending', url: null, blob: null };
 const FAILED: Drawn = { status: 'error', url: null, blob: null };
 
-export function useStoryImage(key: string, spec: StoryImageSpec | null): StoryImageState {
+export function useRenderedImage<S>(
+  key: string,
+  spec: S | null,
+  render: ImageRenderer<S>,
+  { objectUrl = true }: RenderedImageOptions = {}
+): StoryImageState {
   const cache = useRef(new Map<string, Drawn>());
   const assets = useRef<StoryAssetCache>(new Map());
   const drawing = useRef(new Set<string>());
@@ -55,9 +64,9 @@ export function useStoryImage(key: string, spec: StoryImageSpec | null): StoryIm
 
     drawing.current.add(key);
     setShown({ key, drawn: PENDING });
-    void renderStoryImage(spec, assets.current)
+    void render(spec, assets.current)
       .then((blob): Drawn =>
-        blob ? { status: 'ready', url: URL.createObjectURL(blob), blob } : FAILED
+        blob ? { status: 'ready', url: objectUrl ? URL.createObjectURL(blob) : null, blob } : FAILED
       )
       .catch((): Drawn => FAILED)
       .then((drawn) => {
@@ -69,7 +78,7 @@ export function useStoryImage(key: string, spec: StoryImageSpec | null): StoryIm
         cache.current.set(key, drawn);
         setShown((previous) => (previous.key === key ? { key, drawn } : previous));
       });
-  }, [key, spec, attempt]);
+  }, [key, spec, render, attempt, objectUrl]);
 
   const retry = useCallback(() => {
     const stale = cache.current.get(key);
@@ -80,4 +89,8 @@ export function useStoryImage(key: string, spec: StoryImageSpec | null): StoryIm
   }, [key]);
 
   return useMemo(() => ({ ...shown.drawn, retry }), [shown, retry]);
+}
+
+export function useStoryImage(key: string, spec: StoryImageSpec | null): StoryImageState {
+  return useRenderedImage(key, spec, renderStoryImage);
 }

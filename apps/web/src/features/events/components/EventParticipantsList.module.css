@@ -1,163 +1,22 @@
-.root {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.headerRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.manageBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  line-height: var(--leading-none);
-  margin-left: auto;
-  flex-shrink: 0;
-}
-
-.manageBtnLabel {
-  transform: translateY(var(--text-optical-nudge));
-}
-
-.leaveRow {
-  margin-top: var(--space-3-5);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--color-border-subtle);
-}
-
-.fullBadge {
-  margin-left: var(--space-1-5);
-}
-
 .list {
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  padding: 0;
   margin: 0;
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  max-width: 100%;
-  gap: var(--space-1-5);
-  padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3);
-  border-radius: var(--radius-pill);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border-subtle);
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
-  line-height: var(--leading-none);
-  transition:
-    background var(--duration-base) var(--ease-default),
-    border-color var(--duration-base) var(--ease-default);
-}
-
-.chipLabel {
-  min-width: 0;
-  line-height: var(--leading-none);
-  overflow-wrap: anywhere;
-  transform: translateY(var(--text-optical-nudge));
-}
-
-.presence {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  color: var(--color-success);
-}
-
-.presenceProposing {
-  color: var(--color-primary-text);
-}
-
-.presenceLabel {
-  font-size: var(--font-size-xs);
-  line-height: var(--leading-none);
-  transform: translateY(var(--text-optical-nudge));
-}
-
-.profileLink {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  min-width: 0;
-  line-height: var(--leading-none);
-  text-decoration: none;
-  color: inherit;
-  border-radius: var(--radius-pill);
-}
-
-.profileLink:focus-visible .chipLabel {
-  text-decoration: underline;
-}
-
-@media (hover: hover) {
-  .profileLink:hover .chipLabel {
-    text-decoration: underline;
-  }
-}
-
-.profileLink:focus-visible {
-  outline: var(--outline-focus);
-  outline-offset: var(--outline-offset);
+  padding: 0;
+  list-style: none;
 }
 
 .hostBadge {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   color: var(--color-badge-host-text);
-  flex-shrink: 0;
 }
 
-.removeBtn {
-  composes: expanded from '@/shared/components/tapTarget.module.css';
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--space-5);
-  height: var(--space-5);
-  padding: 0;
-  margin-left: var(--space-0-5);
-  border: none;
-  border-radius: var(--radius-pill);
-  background: transparent;
+.row .remove {
   color: var(--color-text-muted);
-  cursor: pointer;
-  transition:
-    background-color var(--duration-base) var(--ease-default),
-    color var(--duration-base) var(--ease-default);
-}
-
-.removeBtn:focus-visible:not(:disabled) {
-  background: var(--color-error-bg);
-  color: var(--color-error);
-  outline: var(--outline-focus);
-  outline-offset: var(--outline-offset);
 }
 
 @media (hover: hover) {
-  .removeBtn:hover:not(:disabled) {
-    background: var(--color-error-bg);
+  .row .remove:hover:not(:disabled) {
     color: var(--color-error);
-    outline: none;
   }
-}
-
-.removeBtn:disabled {
-  opacity: var(--opacity-disabled);
-  cursor: not-allowed;
-}
-
-.chipMe {
-  border-color: var(--color-primary-border);
-  background: var(--color-primary-soft);
-  color: var(--color-primary-text);
-  font-weight: var(--font-weight-semibold);
 }

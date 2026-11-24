@@ -1,144 +1,217 @@
-@media (min-width: 48rem) {
-  dialog.dialogWithTabs {
-    max-height: min(760px, 92dvh);
-  }
-}
-
-.tabs {
-  margin-bottom: var(--space-4);
-}
-
-.linkPanel {
+.body.body {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  padding: 0;
 }
 
-.preview {
+.body.body:last-child {
+  padding-bottom: 0;
+}
+
+.main {
   display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-3);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  background: var(--color-bg);
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-.previewIcon {
-  flex-shrink: 0;
-  width: var(--space-10);
-  height: var(--space-10);
+.mainFill {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.mainFill > .more {
+  min-height: 15rem;
+}
+
+.imageError {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-error);
+}
+
+.identity {
+  margin: 0;
+  padding: var(--space-2) var(--space-5) 0;
+}
+
+.top {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-5);
+}
+
+.qrButton {
+  position: relative;
+  flex: 0 0 auto;
+  width: 8.5rem;
+  height: 8.5rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.qrButton:focus-visible {
+  outline: var(--outline-focus);
+  outline-offset: var(--outline-offset);
+}
+
+.qrSmall {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.qrZoom {
+  position: absolute;
+  right: calc(var(--space-1-5) * -1);
+  bottom: calc(var(--space-1-5) * -1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-md);
-  background: var(--color-badge-host-bg);
-  color: var(--color-badge-host-text);
+  width: var(--space-7);
+  height: var(--space-7);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  box-shadow: 0 0 0 3px var(--color-surface);
 }
 
-.previewText {
-  min-width: 0;
+.side {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
-  gap: var(--space-0-5);
-}
-
-.previewName {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-bold);
-  line-height: var(--leading-tight);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.previewMeta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-0-5) var(--space-3-5);
-  font-size: var(--font-size-xs);
-  line-height: var(--leading-tight);
-  color: var(--color-text-muted);
-}
-
-.qrCanvas {
-  align-self: center;
-  padding: var(--space-3-5);
-  background: var(--color-fixed-white);
-  border-radius: var(--radius-md);
-  line-height: 0;
-  box-shadow: var(--shadow-sm);
-}
-
-.hint {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  line-height: var(--leading-comfortable);
-  color: var(--color-text-muted);
-  text-align: center;
-}
-
-.urlField {
-  display: flex;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
-  background: var(--color-input-readonly);
-  overflow: hidden;
-}
-
-.urlField code {
-  flex: 1;
+  gap: var(--space-1-5);
   min-width: 0;
+}
+
+.linkField {
   display: flex;
   align-items: center;
-  padding: var(--space-2) var(--space-2-5);
-  font-family: var(--font-mono);
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-  white-space: nowrap;
+  gap: var(--space-1);
+  min-height: var(--tap-target-min);
+  padding: 0 var(--space-0-5) 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-input-readonly);
+}
+
+.linkText {
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
   text-overflow: ellipsis;
+  white-space: nowrap;
   user-select: all;
   -webkit-user-select: all;
 }
 
-.actionsStack {
+.copied.copied {
+  border-color: transparent;
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.secondary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.more {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  padding: var(--space-4) var(--space-5) var(--space-2);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.cardView {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-}
-
-.actionBlock {
-  width: 100%;
-}
-
-.actions {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.actionBtn {
-  flex: 1 1 0;
-  min-width: 0;
-  display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: var(--space-1-5);
-  line-height: var(--leading-none);
+  padding: var(--space-6) var(--space-5);
+  text-align: center;
 }
 
-.actionBtn .btnLabel {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.qrLarge {
+  display: block;
+  width: min(20rem, 100%);
+  height: auto;
+  margin-bottom: var(--space-2-5);
 }
 
-.actionCopied {
-  border-color: var(--color-success);
-  color: var(--color-success);
-  background: var(--color-success-bg);
+.cardName {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-extrabold);
+  line-height: var(--leading-tight);
+  color: var(--color-text);
 }
 
-.btnLabel {
-  transform: translateY(var(--text-optical-nudge));
+.cardDetail {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-text-muted);
+}
+
+.extra {
+  padding: var(--space-4) var(--space-5);
+}
+
+dialog.fullscreen {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: var(--color-bg);
+}
+
+dialog.fullscreen:not([open]) {
+  display: none;
+}
+
+.fullscreenTop {
+  display: flex;
+  justify-content: flex-end;
+  padding: max(var(--space-3), env(safe-area-inset-top, 0px)) var(--space-3) 0;
+}
+
+.fullscreenMiddle {
+  flex: 1 1 auto;
+  justify-content: center;
+  min-height: 0;
+}
+
+.fullscreenBottom {
+  padding: var(--space-4) var(--space-5) calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width: 47.9375rem) {
+  .top {
+    gap: var(--space-3-5);
+    padding: var(--space-4) var(--space-5);
+  }
+
+  .qrButton {
+    width: 8rem;
+    height: 8rem;
+  }
 }

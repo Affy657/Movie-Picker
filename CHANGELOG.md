@@ -8,6 +8,23 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Une image à partager avec le QR code** : depuis la fenêtre de partage, « Enregistrer le QR » donne une image avec le nom de la soirée, sa date et un QR code aux couleurs de Movie Picker, qu’on agrandit d’un clic pour le faire scanner.
+
+### Changed
+
+- **Nouvelle soirée et Paramètres de la soirée ne font plus qu’une fenêtre** : sur ordinateur, la soirée à gauche et les règles à droite, sans défiler ; sur téléphone, les règles s’ouvrent à part. Le jour et l’heure se choisissent dans un seul champ, avec un calendrier et la liste des heures, et « Autre » ouvre toutes les ambiances et le choix d’un emoji.
+- **Partager tient sur une page** : le QR code, le lien et les amis à inviter sont réunis sans onglets, et la story du recap s’ouvre depuis un bouton.
+- **Les participants en liste** : une ligne par personne, avec qui est en ligne et qui propose un film ; l’hôte retire quelqu’un depuis sa ligne, et « Copier le lien », « Inviter » ou « Quitter » sont au pied de la fenêtre.
+- **Abonnés et abonnements** : la loupe en haut de la fenêtre cherche d’abord dans vos listes puis sur tout Movie Picker, et « Suivi » propose « Ne plus suivre ».
+- **Des fenêtres qui se ressemblent** : même en-tête, une croix plus facile à toucher, et une hauteur qui ne saute plus quand on change d’onglet.
+- **Mes soirées** n’affiche plus de chiffre à côté de « À venir » et « Historique ».
+
+### Fixed
+
+- **Quand le partage du téléphone échoue**, le bouton propose de copier le lien et la copie marche dès l’appui suivant, sur iPhone compris : avant, rien ne se passait.
+
 ## [1.30.0] - 2026-11-23
 
 ### Added

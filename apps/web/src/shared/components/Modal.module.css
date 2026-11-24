@@ -40,6 +40,10 @@
   --modal-width: var(--container-lg);
 }
 
+.sizeXl {
+  --modal-width: var(--container-xl);
+}
+
 .size2xl {
   --modal-width: var(--container-2xl);
 }
@@ -52,6 +56,14 @@
   display: flex;
   flex-direction: column;
   max-height: min(85dvh, 44rem);
+}
+
+.column.fixedHeightMd {
+  height: min(85dvh, 34rem);
+}
+
+.column.fixedHeightLg {
+  height: min(85dvh, 44rem);
 }
 
 .anchoredTop {

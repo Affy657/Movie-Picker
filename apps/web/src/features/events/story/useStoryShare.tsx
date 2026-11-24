@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { CircleAlert, Download, Film, RotateCcw, Share2, Star } from 'lucide-react';
 import Button from '@/shared/components/Button';
 import EmptyState from '@/shared/components/EmptyState';
@@ -31,13 +31,19 @@ const FAMILY_ICONS = {
   ratings: Star,
 } as const;
 
-type Props = {
+type StoryShareInput = {
   event: EventData;
   winners: readonly MovieData[];
   recapUrl: string;
+  active: boolean;
 };
 
-export default function StoryShareTab({ event, winners, recapUrl }: Readonly<Props>) {
+export type StoryShare = {
+  body: ReactNode;
+  actions: ReactNode;
+};
+
+export function useStoryShare({ event, winners, recapUrl, active }: StoryShareInput): StoryShare {
   const { t, locale } = useTranslation();
   const { user } = useAuth();
   const { track } = useAnalytics();
@@ -51,8 +57,8 @@ export default function StoryShareTab({ event, winners, recapUrl }: Readonly<Pro
   const slide = slides[Math.min(index, slides.length - 1)] ?? slides[0];
 
   const spec = useMemo(
-    () => (slide ? storyImageSpec({ event, winners, slide, scale, locale, t }) : null),
-    [event, winners, slide, scale, locale, t]
+    () => (active && slide ? storyImageSpec({ event, winners, slide, scale, locale, t }) : null),
+    [active, event, winners, slide, scale, locale, t]
   );
 
   const image = useStoryImage(`${slide?.key ?? 'none'}-${locale}-${scale}`, spec);
@@ -110,7 +116,9 @@ export default function StoryShareTab({ event, winners, recapUrl }: Readonly<Pro
   const slideLabel = (item: StorySlide) =>
     item.movie ? `${item.movie.title} (${item.movie.year})` : t('events.recap.story.familyFilms');
 
-  return (
+  const failed = image.status === 'error';
+
+  const body = (
     <div className={styles.panel}>
       <SegmentedRadioGroup
         className={styles.families}
@@ -128,7 +136,7 @@ export default function StoryShareTab({ event, winners, recapUrl }: Readonly<Pro
         })}
       />
 
-      {image.status === 'error' ? (
+      {failed ? (
         <EmptyState
           className={styles.error}
           compact
@@ -171,25 +179,30 @@ export default function StoryShareTab({ event, winners, recapUrl }: Readonly<Pro
             {linkCopied ? t('events.recap.story.linkCopied') : t('events.recap.story.hint')}
             {!linkCopied && slides.length > 1 ? ` ${t('events.recap.story.hintSwipe')}` : ''}
           </output>
-          <div className={styles.actions}>
-            {canShareFile ? (
-              <Button type="button" variant="primary" onClick={() => void share()}>
-                <Share2 size={ICON_SIZE.md} aria-hidden />
-                {t('events.recap.story.share')}
-              </Button>
-            ) : null}
-            <Button
-              type="button"
-              variant={canShareFile ? 'secondary' : 'primary'}
-              disabled={image.status !== 'ready'}
-              onClick={download}
-            >
-              <Download size={ICON_SIZE.md} aria-hidden />
-              {t('events.recap.story.download')}
-            </Button>
-          </div>
         </>
       )}
     </div>
   );
+
+  const actions = failed ? null : (
+    <>
+      <Button
+        type="button"
+        variant={canShareFile ? 'secondary' : 'primary'}
+        disabled={image.status !== 'ready'}
+        onClick={download}
+      >
+        <Download size={ICON_SIZE.md} aria-hidden />
+        {t('events.recap.story.download')}
+      </Button>
+      {canShareFile ? (
+        <Button type="button" variant="primary" onClick={() => void share()}>
+          <Share2 size={ICON_SIZE.md} aria-hidden />
+          {t('events.recap.story.share')}
+        </Button>
+      ) : null}
+    </>
+  );
+
+  return { body, actions };
 }

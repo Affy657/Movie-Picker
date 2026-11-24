@@ -1,18 +1,15 @@
-import { Clapperboard, Film, Image as ImageIcon, Users } from 'lucide-react';
-import ShareDialog from '@/shared/components/ShareDialog';
-import EventInviteFriendsTab from '@/features/events/components/EventInviteFriendsTab';
-import StoryShareTab from '@/features/events/story/StoryShareTab';
-import { ratingCountLabel } from '@/features/events/components/RatingNotes';
-import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { useState } from 'react';
+import { Image as ImageIcon } from 'lucide-react';
+import ShareDialog, { type ShareView } from '@/shared/components/ShareDialog';
+import EventInviteFriends from '@/features/events/components/EventInviteFriends';
+import { useStoryShare } from '@/features/events/story/useStoryShare';
+import { qrCardFileName, useQrCardImage } from '@/features/events/story/qrCardImage';
 import { useTranslation, type Translate } from '@/shared/i18n';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
-import type { RecapShare } from './eventDetailSessionTypes';
-import { averageOfRatings, formatRating } from '@/shared/utils/formatRating';
+import type { RecapShare, ShareTab } from './eventDetailSessionTypes';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { invitationShareText } from '@/features/events/utils/invitationShareText';
-
-export type EventShareTab = 'link' | 'friends';
 
 type Props = {
   open: boolean;
@@ -23,10 +20,8 @@ type Props = {
   dateFormatted: string;
   timeFormatted: string;
   dateLabel: string;
-  participantsLabel: string;
-  initialTab?: EventShareTab;
+  initialTab?: ShareTab;
   hostCanInvite?: boolean;
-  friendsBadge?: number;
   recap?: RecapShare | null;
 };
 
@@ -38,17 +33,64 @@ function recapShareText(t: Translate, event: EventData, movie: MovieData | null)
   return t(key, { movie: movie.title, title: event.title });
 }
 
-function useRecapRatingsLabel(movie: MovieData | null | undefined): string {
-  const { t, locale } = useTranslation();
-  const { user } = useAuth();
-  if (!movie) return '';
-  const average = averageOfRatings(movie.ratings);
-  if (average === null) return t('events.recap.share.noRating');
-  const scale = user?.ratingScale ?? 'five';
-  return `${t('events.ratings.average', { value: formatRating(average, scale, locale, { decimals: 1 }) })}, ${ratingCountLabel(movie.ratings?.length ?? 0, t)}`;
+function upperFirst(value: string, locale: string): string {
+  return value.charAt(0).toLocaleUpperCase(locale) + value.slice(1);
 }
 
-export default function EventShareDialog({
+type RecapProps = Pick<Props, 'open' | 'onClose' | 'event' | 'shareUrl' | 'dateFormatted'> & {
+  recap: RecapShare;
+};
+
+type NightProps = Omit<Props, 'recap'>;
+
+function RecapShareDialog({
+  open,
+  onClose,
+  event,
+  shareUrl,
+  dateFormatted,
+  recap,
+}: Readonly<RecapProps>) {
+  const { t, locale } = useTranslation();
+  const [view, setView] = useState<ShareView>('main');
+  const detail = upperFirst(dateFormatted, locale);
+  const qrImage = useQrCardImage(open ? { title: event.title, detail, url: shareUrl } : null);
+  const story = useStoryShare({
+    event,
+    winners: recap.winners,
+    recapUrl: shareUrl,
+    active: open && view === 'extra',
+  });
+
+  return (
+    <ShareDialog
+      open={open}
+      onClose={onClose}
+      title={t('events.recap.share.dialogTitle')}
+      url={shareUrl}
+      qrTitle={t('events.recap.share.qrTitle')}
+      card={{ name: event.title, detail }}
+      qrImage={qrImage}
+      imageFileName={qrCardFileName(`recap-${event.recapSlug ?? ''}`)}
+      shareText={recapShareText(t, event, recap.winners[0] ?? null)}
+      analyticsSurface="event"
+      onViewChange={setView}
+      extraView={
+        recap.winners.length > 0
+          ? {
+              triggerLabel: t('events.recap.story.tab'),
+              triggerIcon: <ImageIcon size={ICON_SIZE.md} aria-hidden />,
+              title: t('events.recap.story.tab'),
+              body: story.body,
+              footer: story.actions,
+            }
+          : undefined
+      }
+    />
+  );
+}
+
+function NightShareDialog({
   open,
   onClose,
   slug,
@@ -57,57 +99,12 @@ export default function EventShareDialog({
   dateFormatted,
   timeFormatted,
   dateLabel,
-  participantsLabel,
   initialTab,
   hostCanInvite = false,
-  friendsBadge,
-  recap = null,
-}: Readonly<Props>) {
+}: Readonly<NightProps>) {
   const { t, locale } = useTranslation();
-  const recapMovie = recap ? (recap.winners[0] ?? null) : null;
-  const ratingsLabel = useRecapRatingsLabel(recapMovie);
-  const friendsTab =
-    hostCanInvite && !recap
-      ? {
-          id: 'friends',
-          label: t('share.tabFriends'),
-          icon: <Users size={ICON_SIZE.md} aria-hidden />,
-          badge: friendsBadge,
-          content: <EventInviteFriendsTab slug={slug} onNavigate={onClose} />,
-        }
-      : undefined;
-
-  if (recap) {
-    const shareText = recapShareText(t, event, recapMovie);
-    const storyTab =
-      recap.winners.length > 0
-        ? {
-            id: 'story',
-            label: t('events.recap.story.tab'),
-            icon: <ImageIcon size={ICON_SIZE.md} aria-hidden />,
-            content: <StoryShareTab event={event} winners={recap.winners} recapUrl={shareUrl} />,
-          }
-        : undefined;
-    return (
-      <ShareDialog
-        open={open}
-        onClose={onClose}
-        title={t('events.recap.share.dialogTitle')}
-        url={shareUrl}
-        qrHint={t('events.recap.share.qrHint')}
-        fileSlug={`recap-${event.recapSlug ?? ''}`}
-        preview={{
-          icon: <Clapperboard size={ICON_SIZE.xl} aria-hidden />,
-          name: event.title,
-          meta: recapMovie ? [recapMovie.title, ratingsLabel] : [dateFormatted],
-        }}
-        shareText={shareText}
-        analyticsSurface="event"
-        initialTab="link"
-        extraTab={storyTab}
-      />
-    );
-  }
+  const detail = upperFirst(dateFormatted, locale);
+  const qrImage = useQrCardImage(open ? { title: event.title, detail, url: shareUrl } : null);
 
   return (
     <ShareDialog
@@ -115,17 +112,35 @@ export default function EventShareDialog({
       onClose={onClose}
       title={t('events.share.dialogTitle')}
       url={shareUrl}
-      qrHint={t('events.share.qrHint')}
-      fileSlug={slug}
-      preview={{
-        icon: <Film size={ICON_SIZE.xl} aria-hidden />,
-        name: event.title,
-        meta: [dateFormatted, participantsLabel],
-      }}
+      qrTitle={t('events.share.qrTitle')}
+      card={{ name: event.title, detail }}
+      qrImage={qrImage}
+      imageFileName={qrCardFileName(slug)}
       shareText={invitationShareText(t, locale, event, dateLabel, timeFormatted)}
       analyticsSurface="event"
-      initialTab={initialTab}
-      extraTab={friendsTab}
+      fixedHeight={hostCanInvite}
+    >
+      {hostCanInvite ? (
+        <EventInviteFriends
+          slug={slug}
+          focusSearch={initialTab === 'friends'}
+          onNavigate={onClose}
+        />
+      ) : null}
+    </ShareDialog>
+  );
+}
+
+export default function EventShareDialog({ recap = null, ...night }: Readonly<Props>) {
+  if (!recap) return <NightShareDialog {...night} />;
+  return (
+    <RecapShareDialog
+      open={night.open}
+      onClose={night.onClose}
+      event={night.event}
+      shareUrl={night.shareUrl}
+      dateFormatted={night.dateFormatted}
+      recap={recap}
     />
   );
 }

@@ -39,7 +39,7 @@ function renderBar(
     templates: EventTemplateData[];
     appliedTemplate: EventTemplateData | null;
     lastSaved: EventTemplateData | null;
-    variant: 'create' | 'event';
+    hidden: boolean;
   }> = {}
 ) {
   const onSave = vi.fn();
@@ -51,7 +51,7 @@ function renderBar(
         templates={overrides.templates ?? []}
         appliedTemplate={overrides.appliedTemplate ?? null}
         lastSaved={overrides.lastSaved ?? null}
-        variant={overrides.variant ?? 'create'}
+        hidden={overrides.hidden ?? false}
         onSave={onSave}
         onUpdate={onUpdate}
       />
@@ -67,11 +67,10 @@ describe('EventTemplateSaveBar', () => {
     expect(screen.getByRole('button', { name: 'Enregistrer comme modèle' })).toBeInTheDocument();
   });
 
-  it('keeps the same label on the movie night page, only the advice changes', () => {
-    renderBar({ variant: 'event' });
+  it('stays out of the way when the rules have nothing to save', () => {
+    renderBar({ hidden: true });
 
-    expect(screen.getByRole('button', { name: 'Enregistrer comme modèle' })).toBeInTheDocument();
-    expect(screen.getByText('Cette configuration marche bien ?')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Enregistrer comme modèle' })).toBeNull();
   });
 
   it('pre-fills the name with the theme then saves', async () => {
@@ -143,14 +142,32 @@ describe('EventTemplateSaveBar', () => {
     });
 
     expect(screen.getByRole('button', { name: 'Enregistrer comme modèle' })).toBeDisabled();
+    expect(
+      screen.getByText(
+        `${MAX_EVENT_TEMPLATES} modèles sur ${MAX_EVENT_TEMPLATES}. Supprimez-en un pour en enregistrer un nouveau.`
+      )
+    ).toBeVisible();
   });
 
-  it('refuses a duplicate while the applied template is unchanged', () => {
+  it('says why a copy cannot be saved at the cap', () => {
+    const applied = makeTemplate();
+    renderBar({
+      draft: { ...draft, maxProposalsPerParticipant: 5 },
+      templates: Array.from({ length: MAX_EVENT_TEMPLATES }, (_, index) =>
+        makeTemplate({ id: index === 0 ? 't1' : `t${index}`, name: `Template ${index}` })
+      ),
+      appliedTemplate: applied,
+    });
+
+    expect(screen.getByRole('button', { name: 'Enregistrer comme nouveau' })).toBeDisabled();
+    expect(screen.getByText(/Supprimez-en un pour en enregistrer un nouveau/)).toBeVisible();
+  });
+
+  it('offers nothing while the applied template is unchanged', () => {
     renderBar({ templates: [makeTemplate()], appliedTemplate: makeTemplate() });
 
     expect(screen.queryByRole('button', { name: 'Mettre à jour' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Enregistrer comme modèle' })).toBeDisabled();
-    expect(screen.getByText('Identique au modèle « Soirée horreur ».')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Enregistrer comme modèle' })).toBeNull();
   });
 
   it('offers the update when the applied configuration has changed', async () => {
@@ -162,7 +179,7 @@ describe('EventTemplateSaveBar', () => {
       appliedTemplate: applied,
     });
 
-    expect(screen.getByText(/Soirée horreur/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Enregistrer comme nouveau' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Mettre à jour' }));
 
@@ -202,7 +219,7 @@ describe('EventTemplateSaveBar', () => {
   it('does not offer to save again the configuration that was just saved', () => {
     renderBar({ templates: [makeTemplate()], lastSaved: makeTemplate() });
 
-    expect(screen.getByRole('button', { name: 'Enregistrer comme modèle' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Enregistrer comme modèle' })).toBeNull();
   });
 
   it('removes the confirmation as soon as the configuration changes', () => {
@@ -216,23 +233,9 @@ describe('EventTemplateSaveBar', () => {
     expect(screen.getByRole('button', { name: 'Enregistrer comme modèle' })).not.toBeDisabled();
   });
 
-  it('does not ask again when the applied template is unchanged', () => {
-    renderBar({ variant: 'event', templates: [makeTemplate()], appliedTemplate: makeTemplate() });
-
-    expect(screen.queryByText('Cette configuration marche bien ?')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Enregistrer comme modèle' })).toBeDisabled();
-  });
-
-  it('asks as long as no template is applied', () => {
-    renderBar({ variant: 'event', templates: [makeTemplate()] });
-
-    expect(screen.getByText('Cette configuration marche bien ?')).toBeInTheDocument();
-  });
-
-  it('also confirms from a movie night panel', () => {
-    renderBar({ variant: 'event', templates: [makeTemplate()], lastSaved: makeTemplate() });
+  it('confirms the save even when the bar is otherwise hidden', () => {
+    renderBar({ templates: [makeTemplate()], lastSaved: makeTemplate(), hidden: true });
 
     expect(screen.getByRole('status')).toHaveTextContent('Enregistré comme « Soirée horreur ».');
-    expect(screen.queryByText('Cette configuration marche bien ?')).not.toBeInTheDocument();
   });
 });

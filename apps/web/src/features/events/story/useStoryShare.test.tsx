@@ -1,7 +1,7 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import StoryShareTab from './StoryShareTab';
+import { useStoryShare } from './useStoryShare';
 import { renderStoryImage } from './renderStoryImage';
 import * as download from '@/shared/utils/downloadBlob';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
@@ -28,14 +28,29 @@ const event = {
   config: { theme: null },
 } as EventData;
 
-function setup(over: { winners?: MovieData[] } = {}) {
+function StoryView({
+  night,
+  movies,
+  active = true,
+}: Readonly<{ night: EventData; movies: MovieData[]; active?: boolean }>) {
+  const { body, actions } = useStoryShare({
+    event: night,
+    winners: movies,
+    recapUrl: 'https://www.movie-picker.fr/r/abc',
+    active,
+  });
+  return (
+    <>
+      {body}
+      <footer>{actions}</footer>
+    </>
+  );
+}
+
+function setup(over: { winners?: MovieData[]; active?: boolean } = {}) {
   return render(
     <AppTestProviders>
-      <StoryShareTab
-        event={event}
-        winners={over.winners ?? winners}
-        recapUrl="https://www.movie-picker.fr/r/abc"
-      />
+      <StoryView night={event} movies={over.winners ?? winners} active={over.active} />
     </AppTestProviders>
   );
 }
@@ -65,7 +80,24 @@ afterEach(() => {
   Reflect.deleteProperty(navigator, 'canShare');
 });
 
-describe('StoryShareTab', () => {
+describe('useStoryShare', () => {
+  it('draws nothing while the story view is not open', () => {
+    setup({ active: false });
+
+    expect(rendered).not.toHaveBeenCalled();
+  });
+
+  it('puts the download before the share in the actions', async () => {
+    withFileShare();
+    setup();
+
+    await screen.findByRole('button', { name: 'Partager' });
+    const names = within(screen.getByRole('contentinfo'))
+      .getAllByRole('button')
+      .map((button) => button.textContent);
+    expect(names).toEqual(['Télécharger l’image', 'Partager']);
+  });
+
   it('offers the three families of story', () => {
     setup();
 

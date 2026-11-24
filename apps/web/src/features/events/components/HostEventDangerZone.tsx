@@ -19,12 +19,14 @@ type HostEventDangerZoneProps = {
   slug: string;
   hostToken: string | null;
   eventTitle: string;
+  className?: string;
 };
 
 export default function HostEventDangerZone({
   slug,
   hostToken,
   eventTitle,
+  className,
 }: Readonly<HostEventDangerZoneProps>) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -50,36 +52,27 @@ export default function HostEventDangerZone({
   });
 
   return (
-    <>
-      <div className={styles.dangerSection} data-testid="host-danger-zone">
-        <h3 className={clsx(styles.sectionTitle, styles.dangerTitle)}>
-          {t('events.danger.sectionTitle')}
-        </h3>
-        <p className={styles.dangerLead}>{t('events.danger.sectionDescription')}</p>
-        {deleteError && (
-          <p className="error" role="alert">
-            {deleteError}
-          </p>
-        )}
-        <Button
-          type="button"
-          tone="danger"
-          className={styles.deleteBtn}
-          onClick={() => {
-            setDeleteError(null);
-            setConfirmDeleteOpen(true);
-          }}
-          disabled={deleteMutation.isPending}
-          data-testid="delete-event-button"
-        >
-          <Trash2 size={ICON_SIZE.md} aria-hidden />
-          <span>
-            {deleteMutation.isPending
-              ? t('events.danger.deleting')
-              : t('events.danger.deleteButton')}
-          </span>
-        </Button>
-      </div>
+    <div className={clsx(styles.danger, className)} data-testid="host-danger-zone">
+      {deleteError && (
+        <p className={clsx('error', styles.dangerError)} role="alert">
+          {deleteError}
+        </p>
+      )}
+      <Button
+        type="button"
+        variant="ghost"
+        tone="danger"
+        className={styles.deleteBtn}
+        onClick={() => {
+          setDeleteError(null);
+          setConfirmDeleteOpen(true);
+        }}
+        disabled={deleteMutation.isPending}
+        data-testid="delete-event-button"
+      >
+        <Trash2 size={ICON_SIZE.md} aria-hidden />
+        {deleteMutation.isPending ? t('events.danger.deleting') : t('events.danger.deleteButton')}
+      </Button>
       <ConfirmDialog
         open={confirmDeleteOpen}
         title={t('events.danger.deleteConfirmTitle')}
@@ -90,6 +83,6 @@ export default function HostEventDangerZone({
         onCancel={() => setConfirmDeleteOpen(false)}
         testId="delete-event-confirm-dialog"
       />
-    </>
+    </div>
   );
 }

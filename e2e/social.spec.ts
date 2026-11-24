@@ -30,11 +30,10 @@ test.describe('Social journey (follow, then invite)', () => {
       await expect(pageA).toHaveURL(/\/e\/[^/?]+/, { timeout: 15_000 });
 
       await pageA.getByRole('button', { name: 'Partager' }).click();
-      await pageA.getByRole('tab', { name: 'Amis' }).click();
       const inviteBtn = pageA.getByRole('button', { name: /inviter amie2e/i });
       await expect(inviteBtn).toBeVisible({ timeout: 15_000 });
       await inviteBtn.click();
-      await expect(pageA.getByText('Invité ✓')).toBeVisible({ timeout: 15_000 });
+      await expect(pageA.getByText('Invité', { exact: true })).toBeVisible({ timeout: 15_000 });
     } finally {
       await ctxA?.close();
       await ctxB?.close();

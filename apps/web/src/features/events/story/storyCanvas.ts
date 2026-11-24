@@ -27,7 +27,13 @@ import {
   type FilmsGrid,
   type RatingsLayout,
 } from './storyLayout';
-import type { StoryImageSpec, StoryRating, StorySpecFilm, StorySpecRow } from './storySpec';
+import type {
+  QrCardSpec,
+  StoryImageSpec,
+  StoryRating,
+  StorySpecFilm,
+  StorySpecRow,
+} from './storySpec';
 
 const STORY_COLOR_TOKENS = {
   ink: '--color-story-ink',
@@ -973,4 +979,111 @@ export function drawStory(
   drawGround(ctx, spec, assets);
   SLIDES[spec.layout](ctx, spec, assets);
   drawFoot(ctx, spec, assets);
+}
+
+export const QR_CARD_WIDTH = 1080;
+export const QR_CARD_HEIGHT = 1350;
+const QR_CARD_QR_SIZE = 600;
+const QR_CARD_BRAND_CENTER_Y = 150;
+const QR_CARD_LOGO_SIZE = 76;
+const QR_CARD_BRAND_GAP = 18;
+const QR_CARD_WORDMARK_HEIGHT = 62;
+const QR_CARD_SITE_CENTER_Y = 1262;
+const QR_CARD_TITLE_SIZES = [76, 66, 56];
+const QR_CARD_TITLE_LEADING = 1.1;
+const QR_CARD_DETAIL_LINE = 56;
+const QR_CARD_DETAIL_GAP = 22;
+const QR_CARD_QR_GAP = 60;
+const QR_CARD_STACK_MARGIN = 60;
+const QR_CARD_DETAIL_FONT: Font = { size: 44, weight: 400 };
+const QR_CARD_SITE_FONT: Font = { size: 36, weight: 700, spacing: '1.5px' };
+const QR_CARD_BRAND_FONT: Font = { size: 56, weight: 800 };
+
+function drawQrCardBrand(
+  ctx: CanvasRenderingContext2D,
+  spec: QrCardSpec,
+  assets: StoryAssets
+): void {
+  const logo = assets.get(STORY_LOGO_SRC);
+  const wordmark = assets.get(spec.wordmark.src);
+  const logoWidth = logo ? QR_CARD_LOGO_SIZE + QR_CARD_BRAND_GAP : 0;
+  const wordmarkWidth = wordmark
+    ? QR_CARD_WORDMARK_HEIGHT * spec.wordmark.ratio
+    : textWidth(ctx, spec.brandName, QR_CARD_BRAND_FONT);
+  const x = (QR_CARD_WIDTH - logoWidth - wordmarkWidth) / 2;
+  if (logo) {
+    ctx.drawImage(
+      logo,
+      x,
+      QR_CARD_BRAND_CENTER_Y - QR_CARD_LOGO_SIZE / 2,
+      QR_CARD_LOGO_SIZE,
+      QR_CARD_LOGO_SIZE
+    );
+  }
+  if (wordmark) {
+    ctx.drawImage(
+      wordmark,
+      x + logoWidth,
+      QR_CARD_BRAND_CENTER_Y - QR_CARD_WORDMARK_HEIGHT / 2,
+      wordmarkWidth,
+      QR_CARD_WORDMARK_HEIGHT
+    );
+    return;
+  }
+  text(ctx, spec.brandName, x + logoWidth, QR_CARD_BRAND_CENTER_Y, {
+    ...QR_CARD_BRAND_FONT,
+    color: colors(ctx).ink,
+    baseline: 'middle',
+  });
+}
+
+export function drawQrCard(
+  ctx: CanvasRenderingContext2D,
+  spec: QrCardSpec,
+  assets: StoryAssets
+): void {
+  const qr = assets.get(spec.qrSrc);
+  if (!qr) throw new Error('The QR code image did not load');
+  palettes.set(ctx, readStoryPalette());
+  const palette = colors(ctx);
+  ctx.fillStyle = palette.ground;
+  ctx.fillRect(0, 0, QR_CARD_WIDTH, QR_CARD_HEIGHT);
+  drawQrCardBrand(ctx, spec, assets);
+
+  const title = fittedTitle(ctx, spec.title, QR_CARD_TITLE_SIZES, STORY_CONTENT_WIDTH);
+  const lineHeight = Math.round(title.size * QR_CARD_TITLE_LEADING);
+  const titleHeight = title.lines.length * lineHeight;
+  const stackHeight =
+    titleHeight + QR_CARD_DETAIL_GAP + QR_CARD_DETAIL_LINE + QR_CARD_QR_GAP + QR_CARD_QR_SIZE;
+  const areaTop = QR_CARD_BRAND_CENTER_Y + QR_CARD_LOGO_SIZE / 2 + QR_CARD_STACK_MARGIN;
+  const areaBottom = QR_CARD_SITE_CENTER_Y - QR_CARD_STACK_MARGIN;
+  const top = Math.round((areaTop + areaBottom - stackHeight) / 2);
+
+  title.lines.forEach((line, index) => {
+    text(ctx, line, QR_CARD_WIDTH / 2, top + (index + 0.5) * lineHeight, {
+      ...boldFont(title.size),
+      color: palette.ink,
+      align: 'center',
+      baseline: 'middle',
+    });
+  });
+
+  const detailCenter = top + titleHeight + QR_CARD_DETAIL_GAP + QR_CARD_DETAIL_LINE / 2;
+  text(ctx, spec.detail, QR_CARD_WIDTH / 2, detailCenter, {
+    ...QR_CARD_DETAIL_FONT,
+    color: palette.soft,
+    align: 'center',
+    baseline: 'middle',
+    maxWidth: STORY_CONTENT_WIDTH,
+  });
+
+  const qrTop = detailCenter + QR_CARD_DETAIL_LINE / 2 + QR_CARD_QR_GAP;
+  ctx.drawImage(qr, (QR_CARD_WIDTH - QR_CARD_QR_SIZE) / 2, qrTop, QR_CARD_QR_SIZE, QR_CARD_QR_SIZE);
+
+  text(ctx, spec.site, QR_CARD_WIDTH / 2, QR_CARD_SITE_CENTER_Y, {
+    ...QR_CARD_SITE_FONT,
+    color: palette.soft,
+    align: 'center',
+    baseline: 'middle',
+  });
 }

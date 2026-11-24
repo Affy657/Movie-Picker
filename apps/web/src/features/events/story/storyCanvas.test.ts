@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { drawStory, storySources } from './storyCanvas';
+import { QR_CARD_WIDTH, drawQrCard, drawStory, storySources } from './storyCanvas';
 import { STORY_LOGO_SRC } from './storyAssets';
 import { STORY_FOOT_CENTER_Y, STORY_SAFE_TOP, STORY_WIDTH } from './storyLayout';
-import type { StoryImageSpec } from './storySpec';
+import type { QrCardSpec, StoryImageSpec } from './storySpec';
 
 type DrawnText = {
   text: string;
@@ -512,5 +512,92 @@ describe('the footer', () => {
 
     const line = placed(drawn, filmSpec.footer);
     expect(line.x + line.width / 2).toBeCloseTo(STORY_WIDTH / 2, 3);
+  });
+});
+
+describe('the image of a QR code', () => {
+  const card: QrCardSpec = {
+    title: 'Soirée du vendredi',
+    detail: 'Jeudi 26 nov. à 20:30',
+    site: 'movie-picker.fr',
+    brandName: 'Movie Picker',
+    qrSrc: 'data:image/svg+xml,qr',
+    wordmark: { src: 'data:image/svg+xml,wordmark', ratio: 6 },
+  };
+  const qr = { qr: true } as unknown as CanvasImageSource;
+  const logo = { logo: true } as unknown as CanvasImageSource;
+  const wordmark = { wordmark: true } as unknown as CanvasImageSource;
+
+  it('stacks the night, its date, a large QR code and the site, all centered', () => {
+    const { ctx, drawn } = recordingContext();
+
+    drawQrCard(
+      ctx,
+      card,
+      new Map([
+        [card.qrSrc, qr],
+        [STORY_LOGO_SRC, logo],
+        [card.wordmark.src, wordmark],
+      ])
+    );
+
+    const title = placed(drawn, card.title);
+    const detail = placed(drawn, card.detail);
+    const site = placed(drawn, card.site);
+    const code = drawn.boxes.find((entry) => entry.image === qr);
+    expect(code?.width).toBe(600);
+    expect((code?.x ?? 0) + (code?.width ?? 0) / 2).toBe(QR_CARD_WIDTH / 2);
+    expect(title.y).toBeLessThan(detail.y);
+    expect(detail.y).toBeLessThan(code?.y ?? 0);
+    expect((code?.y ?? 0) + (code?.height ?? 0)).toBeLessThan(site.y);
+    expect([title.x, detail.x, site.x]).toEqual([
+      QR_CARD_WIDTH / 2,
+      QR_CARD_WIDTH / 2,
+      QR_CARD_WIDTH / 2,
+    ]);
+  });
+
+  it('heads the image with the clap and the wordmark, centered together', () => {
+    const { ctx, drawn } = recordingContext();
+
+    drawQrCard(
+      ctx,
+      card,
+      new Map([
+        [card.qrSrc, qr],
+        [STORY_LOGO_SRC, logo],
+        [card.wordmark.src, wordmark],
+      ])
+    );
+
+    const clap = drawn.boxes.find((entry) => entry.image === logo);
+    const word = drawn.boxes.find((entry) => entry.image === wordmark);
+    const left = clap?.x ?? 0;
+    const right = (word?.x ?? 0) + (word?.width ?? 0);
+    expect((left + right) / 2).toBeCloseTo(QR_CARD_WIDTH / 2, 3);
+    expect(word?.width).toBe((word?.height ?? 0) * card.wordmark.ratio);
+  });
+
+  it('writes the brand name when the wordmark could not be read', () => {
+    const { ctx, drawn } = recordingContext();
+
+    drawQrCard(ctx, card, new Map([[card.qrSrc, qr]]));
+
+    expect(drawn.texts).toContain('Movie Picker');
+  });
+
+  it('refuses to draw the card when the QR code itself did not load', () => {
+    const { ctx } = recordingContext();
+
+    expect(() =>
+      drawQrCard(
+        ctx,
+        card,
+        new Map([
+          [STORY_LOGO_SRC, logo],
+          [card.wordmark.src, wordmark],
+        ])
+      )
+    ).toThrow();
   });
 });

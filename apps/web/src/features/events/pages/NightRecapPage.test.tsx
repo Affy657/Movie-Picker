@@ -9,6 +9,7 @@ import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1, authMeGuestHandler } from '@/mocks/handlers';
 import { setSessionHint } from '@/features/auth/session-hint';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
+import { stubMatchMedia } from '@/test-utils/matchMedia';
 
 const { track } = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock('@/shared/hooks/useAnalytics', () => ({
@@ -362,16 +363,18 @@ describe('NightRecapPage (MSW)', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Partager' }));
 
     const dialog = await screen.findByRole('dialog', { name: 'Partager le recap' });
-    await userEvent.click(within(dialog).getByRole('tab', { name: 'Story' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Story' }));
 
-    expect(within(dialog).getByRole('radio', { name: 'Les films' })).toBeChecked();
-    expect(within(dialog).getByRole('radio', { name: 'Un film' })).toBeInTheDocument();
-    expect(within(dialog).getByRole('radio', { name: 'Les notes' })).toBeInTheDocument();
+    const story = screen.getByRole('dialog', { name: 'Story' });
+    expect(within(story).getByRole('radio', { name: 'Les films' })).toBeChecked();
+    expect(within(story).getByRole('radio', { name: 'Un film' })).toBeInTheDocument();
+    expect(within(story).getByRole('radio', { name: 'Les notes' })).toBeInTheDocument();
   });
 
   it('shares a movie drawn for a night still to come as the plan, not as a movie already seen', async () => {
     const share = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'share', { value: share, configurable: true });
+    stubMatchMedia((query) => query.includes('max-width'));
     try {
       serveNight({ isFinished: false, ratings: { 'm-heat': [] } });
       renderRecap();
@@ -389,6 +392,7 @@ describe('NightRecapPage (MSW)', () => {
       );
     } finally {
       Reflect.deleteProperty(navigator, 'share');
+      vi.unstubAllGlobals();
     }
   });
 

@@ -1,140 +1,89 @@
-.header {
+.body {
   display: flex;
-  align-items: stretch;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: 0 var(--space-2) 0 var(--space-4);
-  border-bottom: 1px solid var(--color-border-subtle);
-  flex-shrink: 0;
-}
-
-.tabs {
-  flex: 1;
-  min-width: 0;
+  flex-direction: column;
 }
 
 .panel {
   display: flex;
+  flex: 1 0 auto;
   flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 0;
 }
 
-.closeButton {
-  align-self: center;
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.searchRow {
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--color-border-subtle);
-  flex-shrink: 0;
+.fill {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  justify-content: center;
 }
 
-.hint {
-  margin: var(--space-2) 0 0;
+.placeholder {
+  margin: 0;
+  padding: var(--space-8) 0;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.section + .section {
+  margin-top: var(--space-4);
+}
+
+.sectionLabel {
+  composes: sectionLabel from '@/shared/components/typography.module.css';
+  margin: 0;
+  padding: var(--space-1-5) 0 var(--space-1);
   font-size: var(--font-size-2xs);
   color: var(--color-text-muted);
 }
 
-.highlight {
-  background: var(--color-search-highlight-bg);
-  color: var(--color-search-highlight-text);
-  border-radius: var(--radius-sm);
-  padding: 0 var(--space-0-5);
-}
-
-.list {
-  list-style: none;
-  margin: 0;
-  padding: var(--space-2) 0;
-  overflow-y: auto;
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-.placeholder {
-  padding: var(--space-8) var(--space-4);
-  text-align: center;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-}
-
-.privateNote {
-  padding: var(--space-3) var(--space-4);
-  text-align: center;
-}
-
-.loadError {
-  padding: var(--space-2) var(--space-4);
-}
-
-.item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: var(--space-16);
-  padding: var(--space-1) var(--space-4);
-}
-
-@media (hover: hover) {
-  .item:hover {
-    background: var(--color-surface-hover);
-  }
-}
-
-.itemLink {
-  display: flex;
-  align-self: stretch;
-  align-items: center;
-  gap: var(--space-2-5);
-  flex: 1;
-  min-width: 0;
-  min-height: var(--tap-target-min);
-  text-decoration: none;
-  color: inherit;
-}
-
-@media (max-width: 47.9375rem) {
-  .itemLink {
-    min-height: var(--space-12);
-  }
-}
-
-.itemInfo {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.itemName {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.itemHandle {
+.hint {
+  margin: 0 0 var(--space-2);
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
 }
 
+.privateNote {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2-5) 0 0;
+  padding-top: var(--space-3-5);
+  border-top: 1px solid var(--color-border-subtle);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.highlight {
+  padding: 0;
+  background: transparent;
+  color: var(--color-primary-text);
+  font-weight: var(--font-weight-extrabold);
+}
+
 .followBtn {
-  flex-shrink: 0;
+  min-width: 6.5rem;
 }
 
-.btnLabel {
-  transform: translateY(var(--text-optical-nudge));
+.followMenu {
+  position: relative;
 }
 
-.meBadge {
-  flex-shrink: 0;
+.searchBar {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  padding-right: var(--space-1);
 }
 
-.sheet .searchRow,
-.sheet .item,
-.sheet .placeholder,
-.sheet .privateNote,
-.sheet .loadError {
-  padding-inline: 0;
+.searchField {
+  flex: 1 1 auto;
+  min-width: 0;
 }

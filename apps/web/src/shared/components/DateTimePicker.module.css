@@ -1,0 +1,292 @@
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2-5);
+  width: 100%;
+  min-height: var(--space-12);
+  padding: var(--space-2) var(--space-3-5);
+  font-family: inherit;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--leading-tight);
+  text-align: left;
+  background: var(--color-input-bg);
+  color: var(--color-text);
+  border: var(--border-width-field) solid var(--color-border-field);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    border-color var(--duration-base) var(--ease-default),
+    box-shadow var(--duration-base) var(--ease-default);
+}
+
+@media (hover: hover) {
+  .trigger:hover:not(:disabled, [aria-expanded='true']) {
+    border-color: var(--color-primary-border-soft);
+  }
+}
+
+.trigger:focus-visible,
+.trigger[aria-expanded='true'] {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: var(--ring-focus);
+}
+
+.trigger:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+}
+
+.triggerInvalid {
+  border-color: var(--color-error);
+}
+
+.triggerIcon {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  transition: transform var(--duration-base) var(--ease-default);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.triggerValue {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transform: translateY(var(--text-optical-nudge));
+}
+
+.panel {
+  composes: surface from './popover.module.css';
+  position: fixed;
+  display: flex;
+  gap: var(--space-4);
+  max-width: calc(100vw - var(--space-4));
+  padding: var(--space-4);
+  background: var(--color-surface-raised);
+}
+
+.calendar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.monthBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.monthTitle {
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-extrabold);
+  text-align: center;
+}
+
+.weekdays,
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, var(--space-10));
+  gap: var(--space-0-5);
+}
+
+.weekday {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--space-7);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-text-subtle);
+}
+
+.blank {
+  width: var(--space-10);
+  height: var(--space-10);
+}
+
+.day {
+  composes: expanded from './tapTarget.module.css';
+  width: var(--space-10);
+  height: var(--space-10);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .day:hover:not(:disabled, .daySelected) {
+    background: var(--color-surface-hover);
+  }
+}
+
+.day:focus-visible {
+  outline: var(--outline-focus);
+  outline-offset: var(--outline-offset);
+}
+
+.day:disabled {
+  color: var(--color-text-subtle);
+  cursor: default;
+}
+
+.dayToday {
+  box-shadow: inset 0 0 0 1px var(--color-text-muted);
+}
+
+.daySelected {
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+  box-shadow: none;
+}
+
+.timeColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 6.5rem;
+}
+
+.timeTitle {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-text-subtle);
+}
+
+.timeInput {
+  min-height: var(--space-10);
+  margin-bottom: 0;
+  padding: var(--space-2) var(--space-3);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.timeColumnList {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--space-0-5);
+  max-height: 15rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.timeOption {
+  flex: 0 0 auto;
+  min-height: var(--space-9);
+  padding: 0 var(--space-3);
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  cursor: pointer;
+}
+
+.timeRow {
+  display: flex;
+  gap: var(--space-2);
+  margin: var(--space-2) calc(-1 * var(--space-4)) 0;
+  padding: 0 var(--space-4) var(--space-1);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.timeRow::-webkit-scrollbar {
+  display: none;
+}
+
+.sheetTime {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.sheetTime .timeInput {
+  flex: 0 0 auto;
+  width: var(--space-20);
+  min-height: var(--tap-target-min);
+}
+
+.sheetTime .timeRow {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0 calc(-1 * var(--space-4)) 0 0;
+  padding-left: var(--space-3);
+  mask-image: linear-gradient(to right, transparent, currentColor var(--space-6));
+}
+
+.timeChip {
+  flex: 0 0 auto;
+  min-width: var(--space-16);
+  min-height: var(--tap-target-min);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .timeOption:hover:not(.timeSelected),
+  .timeChip:hover:not(.timeSelected) {
+    background: var(--color-surface-hover);
+  }
+}
+
+.timeOption:focus-visible,
+.timeChip:focus-visible {
+  outline: var(--outline-focus);
+  outline-offset: var(--outline-offset-inset);
+}
+
+.timeSelected {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .triggerIcon {
+    transition: none;
+  }
+}
+
+@media (max-width: 47.9375rem) {
+  .weekdays,
+  .days {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+
+  .day,
+  .blank {
+    justify-self: center;
+  }
+}

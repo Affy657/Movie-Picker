@@ -198,8 +198,13 @@ describe('MyEventsPage (MSW)', () => {
     expect(joinedLink).toHaveAttribute('href', '/e/autre');
     expect(screen.getByText('En cours')).toBeInTheDocument();
 
-    expect(screen.getByRole('region', { name: 'À venir' })).toHaveTextContent(/^À venir2/);
-    expect(screen.getByRole('region', { name: 'Historique' })).toHaveTextContent(/^Historique1/);
+    const outsideCards = { selector: ':not(li *):not(article *)' };
+    expect(
+      within(screen.getByRole('region', { name: 'À venir' })).queryByText('2', outsideCards)
+    ).toBeNull();
+    expect(
+      within(screen.getByRole('region', { name: 'Historique' })).queryByText('1', outsideCards)
+    ).toBeNull();
 
     expect(document.title).toBe(pageTitle('Mes soirées'));
   });

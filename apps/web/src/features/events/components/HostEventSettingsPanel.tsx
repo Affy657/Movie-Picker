@@ -1,38 +1,46 @@
-import { useId, useMemo } from 'react';
+import { useState, type ReactNode } from 'react';
 import clsx from 'clsx';
-import { Lock } from 'lucide-react';
-import HostEventDateField from './HostEventDateField';
-import HostEventThemeField from './HostEventThemeField';
-import WheelModeField from './WheelModeField';
-import EventLimitFields from './EventLimitFields';
+import { CircleAlert, Check, Lock } from 'lucide-react';
+import Field from '@/shared/components/Field';
+import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
+import StatusDot from '@/shared/components/StatusDot';
+import ToggleRow from '@/shared/components/ToggleRow';
+import { ICON_SIZE } from '@/shared/components/iconSize';
+import { useIsMobile } from '@/shared/hooks/useIsMobile';
+import { useTranslation, type Translate } from '@/shared/i18n';
+import { splitDateTimeLocal } from '@/shared/utils/eventDateTimeLocal';
+import { eventDateBounds } from '@/features/events/lib/eventStartShortcuts';
+import {
+  buildTemplateDraft,
+  defaultTemplateFields,
+  isSameTemplateConfig,
+  type TemplateConfigDraft,
+} from '@/features/events/lib/eventTemplateDraft';
+import type { EventData } from '@/features/events/types';
+import { firstRuleError } from '@/features/events/lib/eventLimits';
 import EventTemplateSaveBar from './EventTemplateSaveBar';
-import EventTemplatesRow from './EventTemplatesRow';
 import HostEventDangerZone from './HostEventDangerZone';
+import NightDateField from './night-form/NightDateField';
+import NightFormLayout, { useNightFormBodyClass } from './night-form/NightFormLayout';
+import NightGroupField from './night-form/NightGroupField';
+import NightRepeatField from './night-form/NightRepeatField';
+import NightRuleStarts, { ManageTemplatesButton } from './night-form/NightRuleStarts';
+import NightRules from './night-form/NightRules';
+import NightThemeField from './night-form/NightThemeField';
+import nightStyles from './night-form/NightForm.module.css';
 import { useHostEventSettingsDraft } from './useHostEventSettingsDraft';
 import type { SaveState } from './hostEventSettingsDraft';
-import NumberInput from '@/shared/components/NumberInput';
-import Field from '@/shared/components/Field';
-import ToggleRow from '@/shared/components/ToggleRow';
-import SegmentedRadioGroup from '@/shared/components/SegmentedRadioGroup';
-import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
 import styles from './HostEventSettingsPanel.module.css';
-import templatesStyles from './EventTemplatesSection.module.css';
-import type { EventData } from '@/features/events/types';
-import { MAX_WINNERS_PER_EVENT } from '@/features/events/types';
-import { useTranslation } from '@/shared/i18n';
-import { ICON_SIZE } from '@/shared/components/iconSize';
-import Chip, { type ChipTone } from '@/shared/components/Chip';
-import GroupChips from '@/features/events/components/GroupChips';
 
 type HostEventSettingsPanelProps = {
   slug: string;
   hostToken: string | null;
   event: EventData;
-
   open: boolean;
-
   onClose: () => void;
 };
+
+type SettingsDraft = ReturnType<typeof useHostEventSettingsDraft>;
 
 const SAVE_STATUS_LABEL_KEYS = {
   saved: 'events.settings.saveStatusSaved',
@@ -40,11 +48,195 @@ const SAVE_STATUS_LABEL_KEYS = {
   error: 'events.settings.saveStatusError',
 } as const satisfies Record<SaveState, string>;
 
-const SAVE_STATUS_TONE = {
-  saved: 'success',
-  pending: 'muted',
-  error: 'danger',
-} as const satisfies Record<SaveState, ChipTone>;
+const SAVE_STATUS_CLASS: Record<SaveState, string | undefined> = {
+  saved: styles.saveStatusSaved,
+  pending: styles.saveStatusPending,
+  error: styles.saveStatusError,
+};
+
+const SAVE_STATUS_ICON: Record<SaveState, ReactNode> = {
+  saved: <Check size={ICON_SIZE.sm} aria-hidden />,
+  pending: <StatusDot pulsing />,
+  error: <CircleAlert size={ICON_SIZE.sm} aria-hidden />,
+};
+
+function SaveStatus({ state, t }: Readonly<{ state: SaveState; t: Translate }>) {
+  return (
+    <span className={clsx(styles.saveStatus, SAVE_STATUS_CLASS[state])}>
+      {SAVE_STATUS_ICON[state]}
+      <span className={styles.saveStatusLabel}>{t(SAVE_STATUS_LABEL_KEYS[state])}</span>
+    </span>
+  );
+}
+
+function withoutTheme(draft: TemplateConfigDraft): TemplateConfigDraft {
+  return { ...draft, theme: null };
+}
+
+const DEFAULT_RULES = withoutTheme(buildTemplateDraft(defaultTemplateFields()));
+
+function SettingsMain({ draft, event }: Readonly<{ draft: SettingsDraft; event: EventData }>) {
+  const { t } = useTranslation();
+  const bounds = eventDateBounds(new Date());
+  const chosenGroup = draft.groups.find((group) => group.id === draft.groupId) ?? null;
+  const dateValue = splitDateTimeLocal(draft.eventDateLocal) ?? { date: '', time: '' };
+  const showNotify = draft.dateWasEdited && !draft.fieldErrors.date;
+
+  return (
+    <>
+      <NightDateField
+        id="host-cfg-datetime"
+        value={dateValue}
+        onChange={(next) => draft.setEventDateLocal(`${next.date}T${next.time}`)}
+        onLeave={draft.commitEventDate}
+        min={bounds.min}
+        max={bounds.max}
+        today={bounds.today}
+        error={draft.fieldErrors.date}
+        disabled={draft.configLocked}
+      >
+        {showNotify ? (
+          <ToggleRow
+            title={t('events.form.notify')}
+            checked={draft.notifyDateChange}
+            onChange={draft.setNotifyDateChange}
+            className={styles.notifyRow}
+          />
+        ) : null}
+      </NightDateField>
+      <div className={nightStyles.block}>
+        <Field
+          label={<span className={nightStyles.blockTitle}>{t('events.create.nameLabel')}</span>}
+          htmlFor="host-cfg-title"
+          error={draft.fieldErrors.title}
+          className={nightStyles.fieldBare}
+        >
+          {({ id, describedBy, invalid }) => (
+            <input
+              id={id}
+              className="input"
+              type="text"
+              value={draft.eventTitle}
+              onChange={(e) => {
+                draft.setEventTitle(e.target.value);
+                draft.scheduleAutoSave();
+              }}
+              disabled={draft.configLocked}
+              maxLength={200}
+              placeholder={t('events.settings.titlePlaceholder')}
+              aria-invalid={invalid || undefined}
+              aria-describedby={describedBy}
+            />
+          )}
+        </Field>
+      </div>
+      <NightThemeField
+        inputId="host-cfg-theme"
+        emoji={draft.themeEmoji}
+        text={draft.themeText}
+        disabled={draft.configLocked}
+        onChange={(emoji, text) => {
+          draft.setThemeEmoji(emoji);
+          draft.setThemeText(text);
+          draft.scheduleAutoSave();
+        }}
+      />
+      {draft.isConnectedCreator ? (
+        <NightGroupField
+          groups={draft.groups}
+          groupId={chosenGroup?.id ?? null}
+          disabled={event.isFinished}
+          onChange={(next) => {
+            draft.setGroupId(next);
+            draft.scheduleAutoSave(true);
+          }}
+        />
+      ) : null}
+    </>
+  );
+}
+
+function SettingsRules({
+  draft,
+  defaultsSelected,
+  lockNotice,
+  showTitle,
+}: Readonly<{
+  draft: SettingsDraft;
+  defaultsSelected: boolean;
+  lockNotice: ReactNode;
+  showTitle: boolean;
+}>) {
+  const [managing, setManaging] = useState(false);
+  const templates = draft.eventTemplates.templates;
+  const matchingTemplate = draft.eventTemplates.matchingTemplate;
+  const appliedTemplate = draft.eventTemplates.appliedTemplate;
+  const ownsTemplates = draft.isConnectedCreator;
+
+  return (
+    <NightRules
+      idPrefix="host-cfg"
+      fields={draft.ruleFields}
+      errors={draft.fieldErrors}
+      onChange={draft.applyRulesPatch}
+      locked={draft.configLocked}
+      winnerMin={Math.max(1, draft.drawnWinnerCount)}
+      showTitle={showTitle}
+      notice={lockNotice}
+      titleAction={
+        ownsTemplates && templates.length > 0 ? (
+          <ManageTemplatesButton
+            managing={managing}
+            disabled={draft.eventTemplates.isBusy}
+            onManagingChange={setManaging}
+          />
+        ) : undefined
+      }
+      start={
+        ownsTemplates ? (
+          <NightRuleStarts
+            defaultsSelected={defaultsSelected}
+            templates={templates}
+            selectedTemplateId={matchingTemplate?.id ?? null}
+            modifiedTemplateId={matchingTemplate ? null : (appliedTemplate?.id ?? null)}
+            applyLocked={draft.configLocked}
+            managing={managing}
+            onManagingChange={setManaging}
+            busy={draft.eventTemplates.isBusy}
+            onRename={draft.eventTemplates.rename}
+            onDelete={draft.eventTemplates.remove}
+            onChoose={(choice) => {
+              if (draft.configLocked) return;
+              if (choice.kind === 'template') draft.eventTemplates.apply(choice.template);
+              if (choice.kind === 'defaults') draft.applyDefaultRules();
+            }}
+          />
+        ) : null
+      }
+      end={
+        ownsTemplates ? (
+          <EventTemplateSaveBar
+            draft={draft.templateDraft}
+            templates={templates}
+            appliedTemplate={appliedTemplate}
+            lastSaved={draft.eventTemplates.lastSaved}
+            disabled={draft.eventTemplates.isBusy}
+            onBeforeSave={draft.templateLimitsAreValid}
+            onSave={draft.eventTemplates.saveAs}
+            onUpdate={draft.eventTemplates.updateApplied}
+          />
+        ) : null
+      }
+    />
+  );
+}
+
+function rulesSummaryOf(draft: SettingsDraft, defaultsSelected: boolean, t: Translate): string {
+  const matching = draft.eventTemplates.matchingTemplate;
+  if (matching) return matching.name;
+  if (defaultsSelected) return t('events.create.rules.defaultsItem');
+  return t('events.form.rulesCustom');
+}
 
 export default function HostEventSettingsPanel({
   slug,
@@ -54,326 +246,85 @@ export default function HostEventSettingsPanel({
   onClose,
 }: Readonly<HostEventSettingsPanelProps>) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
+  const bodyClassName = useNightFormBodyClass();
   const draft = useHostEventSettingsDraft({ slug, hostToken, event, open });
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const ruleError = firstRuleError('host-cfg', draft.fieldErrors)?.message;
+  const [seenRuleError, setSeenRuleError] = useState(ruleError);
+  if (ruleError !== seenRuleError) {
+    setSeenRuleError(ruleError);
+    if (ruleError && isMobile) setRulesOpen(true);
+  }
+  const defaultsSelected =
+    draft.eventTemplates.matchingTemplate === null &&
+    isSameTemplateConfig(withoutTheme(draft.templateDraft), DEFAULT_RULES);
 
-  const chosenGroup = draft.groups.find((group) => group.id === draft.groupId) ?? null;
-  const shownGroupId = chosenGroup?.id ?? null;
-  const themeCollapseId = useId();
-  const wheelModeLabelId = useId();
+  const lockBanner = draft.configLocked ? (
+    <output className={nightStyles.lockBanner}>
+      <Lock size={ICON_SIZE.sm} aria-hidden />
+      <span>{t('events.settings.configLockedHint')}</span>
+    </output>
+  ) : null;
 
-  const recurrenceOptions = useMemo(
-    () => [
-      { value: 'weekly' as const, label: t('events.settings.recurrenceWeekly') },
-      { value: 'biweekly' as const, label: t('events.settings.recurrenceBiweekly') },
-      { value: 'monthly' as const, label: t('events.settings.recurrenceMonthly') },
-    ],
-    [t]
-  );
-
-  const saveStatusLabel = t(SAVE_STATUS_LABEL_KEYS[draft.saveState]);
+  const deleteAction = draft.isConnectedCreator ? (
+    <HostEventDangerZone
+      slug={slug}
+      hostToken={hostToken}
+      eventTitle={event.title}
+      className={isMobile ? nightStyles.deleteAction : undefined}
+    />
+  ) : null;
 
   return (
     <ResponsiveDialog
       open={open}
       onClose={onClose}
-      size="md"
+      size="xl"
       sheetSize="lg"
       title={t('events.settings.title')}
-      detail={
-        <Chip
-          size="sm"
-          tone={SAVE_STATUS_TONE[draft.saveState]}
-          dot={draft.saveState === 'pending' ? 'pulsing' : true}
-          className={styles.saveStatus}
-        >
-          {saveStatusLabel}
-        </Chip>
-      }
+      detail={<SaveStatus state={draft.saveState} t={t} />}
+      footer={isMobile ? undefined : (deleteAction ?? undefined)}
+      bodyClassName={bodyClassName}
     >
-      {draft.configLocked ? (
-        <output className={styles.lockBanner}>
-          <Lock size={ICON_SIZE.sm} aria-hidden />
-          <span className={styles.lockBannerLabel}>{t('events.settings.configLockedHint')}</span>
-        </output>
-      ) : null}
-      {draft.saveError && (
-        <p className="error" role="alert">
+      {lockBanner}
+      {draft.saveError ? (
+        <p className={clsx('error', styles.saveError)} role="alert">
           {draft.saveError}
         </p>
-      )}
-      <form className={`form ${styles.form}`}>
-        <div className={styles.section}>
-          <fieldset className={styles.lockable} disabled={draft.configLocked}>
-            <Field
-              label={t('events.settings.titleLabel')}
-              htmlFor="host-cfg-title"
-              error={draft.fieldErrors.title}
-              className={styles.field}
-            >
-              {({ id, describedBy, invalid }) => (
-                <input
-                  id={id}
-                  className="input"
-                  type="text"
-                  value={draft.eventTitle}
-                  onChange={(e) => {
-                    draft.setEventTitle(e.target.value);
-                    draft.scheduleAutoSave();
-                  }}
-                  maxLength={200}
-                  placeholder={t('events.settings.titlePlaceholder')}
-                  aria-invalid={invalid || undefined}
-                  aria-describedby={describedBy}
-                />
-              )}
-            </Field>
-
-            <HostEventDateField
-              value={draft.eventDateLocal}
-              error={draft.fieldErrors.date}
-              relativeDateLabel={draft.relativeDateLabel}
-              showNotifyRow={draft.dateWasEdited && !draft.fieldErrors.date}
-              notifyDateChange={draft.notifyDateChange}
-              onValueChange={draft.setEventDateLocal}
-              onCommit={draft.commitEventDate}
-              onNotifyChange={draft.setNotifyDateChange}
-            />
-
-            <HostEventThemeField
-              emoji={draft.themeEmoji}
-              text={draft.themeText}
-              preview={draft.themePreview}
-              open={draft.themeOpen}
-              collapseId={themeCollapseId}
-              onToggle={() => draft.setThemeOpen((v) => !v)}
-              onEmojiChange={(v) => {
-                draft.setThemeEmoji(v);
-                draft.scheduleAutoSave();
+      ) : null}
+      <NightFormLayout
+        main={<SettingsMain draft={draft} event={event} />}
+        mainEnd={
+          <>
+            <NightRepeatField
+              recurrence={draft.recurrence}
+              locked={draft.recurrenceLocked}
+              onToggle={() => {
+                draft.setRecurrence((value) => (value === null ? 'weekly' : null));
+                draft.scheduleAutoSave(true);
               }}
-              onTextChange={(v) => {
-                draft.setThemeText(v);
-                draft.scheduleAutoSave();
-              }}
-              onClear={() => {
-                draft.setThemeEmoji('');
-                draft.setThemeText('');
-                draft.scheduleAutoSave();
-              }}
-            />
-          </fieldset>
-        </div>
-
-        {draft.isConnectedCreator && draft.groups.length > 0 ? (
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>{t('events.settings.sectionGroup')}</h3>
-            <div className={styles.field}>
-              <GroupChips
-                className={styles.groupChips}
-                groups={draft.groups}
-                groupId={shownGroupId}
-                disabled={event.isFinished}
-                onChange={(next) => {
-                  draft.setGroupId(next);
-                  draft.scheduleAutoSave(true);
-                }}
-              />
-              <p className="hint">
-                {shownGroupId === null
-                  ? t('events.settings.groupHintNone')
-                  : t('events.settings.groupHint')}
-              </p>
-            </div>
-          </div>
-        ) : null}
-
-        <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>{t('events.settings.sectionParticipants')}</h3>
-
-          <fieldset className={styles.lockable} disabled={draft.configLocked}>
-            <EventLimitFields
-              idPrefix="host-cfg"
-              disabled={draft.configLocked}
-              rowClassName={styles.field}
-              limits={{
-                participants: {
-                  enabled: draft.participantLimitEnabled,
-                  value: draft.maxParticipants,
-                  error: draft.fieldErrors.maxParticipants,
-                  hint: draft.maxParticipantsHint,
-                  onEnabledChange: draft.toggleParticipantLimit,
-                  onValueChange: (v) => {
-                    draft.setMaxParticipants(v);
-                    draft.scheduleAutoSave();
-                  },
-                },
-                proposals: {
-                  enabled: draft.proposalLimitEnabled,
-                  value: draft.maxProp,
-                  error: draft.fieldErrors.maxProposals,
-                  onEnabledChange: draft.toggleProposalLimit,
-                  onValueChange: (v) => {
-                    draft.setMaxProp(v);
-                    draft.scheduleAutoSave();
-                  },
-                },
-              }}
-            />
-
-            <div className={styles.field}>
-              <ToggleRow
-                title={t('events.settings.allowSeriesLabel')}
-                description={t('events.settings.allowSeriesDesc')}
-                checked={draft.allowSeries}
-                onChange={() => {
-                  draft.setAllowSeries((v) => !v);
-                  draft.scheduleAutoSave(true);
-                }}
-              />
-            </div>
-          </fieldset>
-        </div>
-
-        <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>{t('events.settings.sectionDraw')}</h3>
-
-          <fieldset className={styles.lockable} disabled={draft.configLocked}>
-            <EventLimitFields
-              idPrefix="host-cfg"
-              disabled={draft.configLocked}
-              rowClassName={styles.field}
-              limits={{
-                votes: {
-                  enabled: draft.voteLimitEnabled,
-                  value: draft.maxVotes,
-                  error: draft.fieldErrors.maxVotes,
-                  onEnabledChange: (enabled) => {
-                    draft.setVoteLimitEnabled(enabled);
-                    draft.scheduleAutoSave(true);
-                  },
-                  onValueChange: (v) => {
-                    draft.setMaxVotes(v);
-                    draft.scheduleAutoSave();
-                  },
-                },
-              }}
-            />
-
-            <div className={styles.field}>
-              <span className="label" id={wheelModeLabelId}>
-                {t('events.settings.wheelModeLabel')}
-              </span>
-              <WheelModeField
-                value={draft.wheelMode}
-                labelId={wheelModeLabelId}
-                onChange={(mode) => {
-                  draft.setWheelMode(mode);
-                  draft.scheduleAutoSave(true);
-                }}
-              />
-            </div>
-          </fieldset>
-
-          <Field
-            label={t('events.settings.winnerCountLabel')}
-            htmlFor="host-cfg-winner-count"
-            error={draft.fieldErrors.winnerCount}
-            hint={
-              draft.fieldErrors.winnerCount
-                ? undefined
-                : t('events.settings.winnerCountHint', { max: MAX_WINNERS_PER_EVENT })
-            }
-            className={clsx(styles.field, styles.counterField)}
-          >
-            {({ id, describedBy, invalid }) => (
-              <NumberInput
-                id={id}
-                value={draft.winnerCount}
-                onChange={(v) => {
-                  draft.setWinnerCount(v);
-                  draft.scheduleAutoSave();
-                }}
-                min={Math.max(1, draft.drawnWinnerCount)}
-                max={MAX_WINNERS_PER_EVENT}
-                invalid={invalid}
-                ariaDescribedBy={describedBy}
-              />
-            )}
-          </Field>
-        </div>
-
-        <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>{t('events.settings.sectionAfter')}</h3>
-
-          <div className={styles.field}>
-            <ToggleRow
-              title={t('events.settings.recurrenceLabel')}
-              description={t('events.settings.recurrenceDesc')}
-              checked={draft.recurrence !== null}
-              disabled={draft.recurrenceLocked}
-              onChange={() => {
-                draft.setRecurrence((v) => (v === null ? 'weekly' : null));
+              onRhythm={(value) => {
+                draft.setRecurrence(value);
                 draft.scheduleAutoSave(true);
               }}
             />
-            {draft.recurrence !== null && !draft.recurrenceLocked && (
-              <div className={styles.recurrenceRhythm}>
-                <SegmentedRadioGroup
-                  className={styles.recurrenceSegments}
-                  options={recurrenceOptions}
-                  value={draft.recurrence}
-                  size="sm"
-                  ariaLabel={t('events.settings.recurrenceGroupLabel')}
-                  onChange={(value) => {
-                    draft.setRecurrence(value);
-                    draft.scheduleAutoSave(true);
-                  }}
-                />
-                <p className="hint">
-                  {chosenGroup
-                    ? t('events.settings.recurrenceGroupHint', { group: chosenGroup.name })
-                    : t('events.settings.recurrenceShareHint')}
-                </p>
-              </div>
-            )}
-            {draft.recurrenceLocked && (
-              <p className="hint">{t('events.settings.recurrenceLockedHint')}</p>
-            )}
-          </div>
-        </div>
-
-        {draft.isConnectedCreator && (
-          <section className={templatesStyles.section} data-testid="event-templates-section">
-            <EventTemplatesRow
-              className={templatesStyles.row}
-              templates={draft.eventTemplates.templates}
-              appliedTemplate={draft.eventTemplates.matchingTemplate}
-              disabled={draft.eventTemplates.isBusy}
-              applyLockedHint={
-                draft.configLocked ? t('events.settings.templates.lockedHint') : null
-              }
-              onApply={draft.eventTemplates.apply}
-              onRename={draft.eventTemplates.rename}
-              onDelete={draft.eventTemplates.remove}
-            />
-            <EventTemplateSaveBar
-              className={templatesStyles.saveBar}
-              variant="event"
-              draft={draft.templateDraft}
-              templates={draft.eventTemplates.templates}
-              appliedTemplate={draft.eventTemplates.appliedTemplate}
-              lastSaved={draft.eventTemplates.lastSaved}
-              disabled={draft.eventTemplates.isBusy}
-              onBeforeSave={draft.templateLimitsAreValid}
-              onSave={draft.eventTemplates.saveAs}
-              onUpdate={draft.eventTemplates.updateApplied}
-            />
-          </section>
-        )}
-      </form>
-
-      {draft.isConnectedCreator && (
-        <HostEventDangerZone slug={slug} hostToken={hostToken} eventTitle={event.title} />
-      )}
+            {isMobile ? deleteAction : null}
+          </>
+        }
+        rules={
+          <SettingsRules
+            draft={draft}
+            defaultsSelected={defaultsSelected}
+            lockNotice={isMobile ? lockBanner : null}
+            showTitle={!isMobile}
+          />
+        }
+        rulesSummary={rulesSummaryOf(draft, defaultsSelected, t)}
+        rulesError={ruleError}
+        rulesOpen={rulesOpen}
+        onRulesOpenChange={setRulesOpen}
+      />
     </ResponsiveDialog>
   );
 }

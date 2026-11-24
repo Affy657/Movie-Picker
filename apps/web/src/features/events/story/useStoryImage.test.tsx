@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useStoryImage } from './useStoryImage';
+import { useRenderedImage, useStoryImage } from './useStoryImage';
 import { renderStoryImage } from './renderStoryImage';
 import type { StoryImageSpec } from './storySpec';
 
@@ -135,5 +135,17 @@ describe('useStoryImage', () => {
     const { result } = renderHook(() => useStoryImage('films', spec));
 
     await waitFor(() => expect(result.current.status).toBe('error'));
+  });
+
+  it('keeps no object URL for an image nobody shows', async () => {
+    const draw = vi.fn(async () => new Blob(['png'], { type: 'image/png' }));
+    const { result } = renderHook(() =>
+      useRenderedImage('qr', { value: 'qr' }, draw, { objectUrl: false })
+    );
+
+    await waitFor(() => expect(result.current.status).toBe('ready'));
+    expect(result.current.url).toBeNull();
+    expect(result.current.blob).toBeInstanceOf(Blob);
+    expect(URL.createObjectURL).not.toHaveBeenCalled();
   });
 });

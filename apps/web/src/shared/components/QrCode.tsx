@@ -1,31 +1,27 @@
-import QRCodeImport from 'react-qr-code';
+import { useMemo } from 'react';
+import { qrSvgDataUrl } from './qrCodeShapes';
 
 const QR_SIZE = 240;
-const QR_BG_COLOR = '#ffffff';
-const QR_FG_COLOR = '#111827';
-
-const QRCode =
-  typeof QRCodeImport === 'object' &&
-  QRCodeImport !== null &&
-  'QRCode' in QRCodeImport &&
-  !('$$typeof' in QRCodeImport)
-    ? (QRCodeImport as unknown as { QRCode: typeof QRCodeImport }).QRCode
-    : QRCodeImport;
 
 interface QrCodeProps {
   value: string;
   title: string;
+  plain?: boolean;
+  className?: string;
 }
 
-export default function QrCode({ value, title }: Readonly<QrCodeProps>) {
+export default function QrCode({ value, title, plain = false, className }: Readonly<QrCodeProps>) {
+  const src = useMemo(() => qrSvgDataUrl(value, QR_SIZE, { plain }), [value, plain]);
+
   return (
-    <QRCode
-      value={value}
-      size={QR_SIZE}
-      level="M"
-      title={title}
-      bgColor={QR_BG_COLOR}
-      fgColor={QR_FG_COLOR}
+    <img
+      src={src}
+      alt={title}
+      width={QR_SIZE}
+      height={QR_SIZE}
+      decoding="async"
+      draggable={false}
+      className={className}
     />
   );
 }

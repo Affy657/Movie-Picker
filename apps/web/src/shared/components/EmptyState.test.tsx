@@ -30,6 +30,13 @@ describe('EmptyState', () => {
     expect(screen.getByText('Rien ici').tagName).toBe('P');
   });
 
+  it('shows a title alone, without an empty message paragraph', () => {
+    const { container } = render(<EmptyState icon={<svg />} title="Aucun abonné" />);
+
+    expect(screen.getByText('Aucun abonné')).toBeInTheDocument();
+    expect(container.querySelector(`.${styles.message}`)).toBeNull();
+  });
+
   it('la variante compacte ajoute sa classe sans en retirer aucune', () => {
     const { container } = render(
       <EmptyState icon={<svg />} message="…" compact className="extra" />

@@ -26,6 +26,26 @@ const draft: SettingsDraft = {
 const planningDay = new Date('2029-06-01T12:00:00Z');
 
 describe('validateSettingsDraft', () => {
+  it('saves the other settings of a night whose unchanged date is now out of reach', () => {
+    const result = validateSettingsDraft(
+      { ...draft, eventDateLocal: '2062-01-01T20:00', savedEventDateLocal: '2062-01-01T20:00' },
+      t,
+      planningDay
+    );
+
+    expect(result.errors).toEqual({});
+  });
+
+  it('still refuses a date moved out of reach', () => {
+    const result = validateSettingsDraft(
+      { ...draft, eventDateLocal: '2062-01-01T20:00', savedEventDateLocal: '2030-01-01T20:00' },
+      t,
+      planningDay
+    );
+
+    expect(result.errors.date).toBeDefined();
+  });
+
   it('keeps the limits typed by the host', () => {
     const result = validateSettingsDraft(draft, t, planningDay);
 
