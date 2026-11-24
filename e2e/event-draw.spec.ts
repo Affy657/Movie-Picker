@@ -72,7 +72,7 @@ test.describe('Draw (host)', () => {
     await expect(confirm).toContainText('Soirée en suspens E2E');
     await confirm.getByRole('button', { name: 'Clôturer sans film' }).click();
 
-    await expect(page.getByText("Aucun film n'a été choisi")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Aucun film n’a été choisi')).toBeVisible({ timeout: 15_000 });
     await expect(page.getByText(/la soirée est clôturée/i)).toBeVisible();
     await expect(banner).toBeHidden();
     await expect(page.getByRole('button', { name: /proposer un film/i })).toBeHidden();
