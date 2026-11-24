@@ -1,3 +1,4 @@
+import { Profiler } from 'react';
 import { afterEach, describe, it, expect } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -987,5 +988,52 @@ describe('TechPage', () => {
     const update = new Date(`${TECH_PAGE_LAST_UPDATE}T00:00:00Z`);
     expect(Number.isNaN(update.getTime())).toBe(false);
     expect(update.getTime()).toBeLessThanOrEqual(Date.now());
+  });
+});
+
+describe('TechPage first render', () => {
+  function renderAndReadFirstCommit(container: HTMLElement) {
+    const firstCommit = { sections: 0, pending: false };
+    const readMount = (_id: string, phase: string) => {
+      if (phase !== 'mount') return;
+      firstCommit.sections = TECH_SECTIONS.filter(
+        (id) => container.querySelector(`section#${id}`) !== null
+      ).length;
+      firstCommit.pending = container.querySelector('[data-render-pending]') !== null;
+    };
+    render(
+      <Profiler id="tech" onRender={readMount}>
+        <AppTestProviders>
+          <MemoryRouter>
+            <TechPage />
+          </MemoryRouter>
+        </AppTestProviders>
+      </Profiler>,
+      { container }
+    );
+    return firstCommit;
+  }
+
+  it('adds the sections one by one when reached by a navigation inside the app', () => {
+    const container = document.body.appendChild(document.createElement('div'));
+
+    const firstCommit = renderAndReadFirstCommit(container);
+
+    expect(firstCommit).toEqual({ sections: 1, pending: true });
+    for (const id of TECH_SECTIONS) {
+      expect(container.querySelector(`section#${id}`)).not.toBeNull();
+    }
+  });
+
+  it('starts with every section when it takes over its prerendered page', () => {
+    const prerendered = renderTechPage();
+    const prerenderedMarkup = prerendered.container.innerHTML;
+    prerendered.unmount();
+    const root = document.body.appendChild(document.createElement('div'));
+    root.innerHTML = prerenderedMarkup;
+
+    const firstCommit = renderAndReadFirstCommit(root);
+
+    expect(firstCommit).toEqual({ sections: TECH_SECTIONS.length, pending: false });
   });
 });
