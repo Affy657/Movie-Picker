@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import { useMovieShowcase } from '@/features/movies/hooks/useMovieShowcase';
+import { useAfterIdle } from '@/shared/hooks/useAfterIdle';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { posterImageSrc, posterSrcAtSize } from '@/shared/utils/posterUrl';
 import styles from './HomePosterWall.module.css';
@@ -8,22 +8,6 @@ const WALL_TILES = 160;
 const WALL_TILES_MOBILE = 42;
 const WALL_POSTER_SIZE = 'w154';
 const WALL_DISTINCT_POSTERS = 24;
-const IDLE_FALLBACK_MS = 200;
-
-function useAfterIdle(): boolean {
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    const show = () => setReady(true);
-    if (typeof requestIdleCallback === 'function' && typeof cancelIdleCallback === 'function') {
-      const cancel = cancelIdleCallback;
-      const handle = requestIdleCallback(show);
-      return () => cancel(handle);
-    }
-    const timer = setTimeout(show, IDLE_FALLBACK_MS);
-    return () => clearTimeout(timer);
-  }, []);
-  return ready;
-}
 
 export default function HomePosterWall() {
   const ready = useAfterIdle();
