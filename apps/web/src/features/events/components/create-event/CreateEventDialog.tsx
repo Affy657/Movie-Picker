@@ -32,7 +32,7 @@ import {
   type CreateEventFieldErrors,
 } from '@/features/events/lib/createEventValidation';
 import { validateEventLimits } from '@/features/events/lib/eventLimitValidation';
-import { defaultEventStart, todayInEventZone } from '@/features/events/lib/eventStartShortcuts';
+import { todayInEventZone } from '@/features/events/lib/eventStartShortcuts';
 import {
   buildTemplateDraft,
   configToFields,
@@ -56,7 +56,7 @@ import {
   forgetCreateEventDraft,
   readCreateEventDraft,
   saveCreateEventDraft,
-  type CreateEventDraftSnapshot,
+  startingCreateEventDraft,
 } from './createEventDraftStorage';
 import styles from './CreateEventDialog.module.css';
 
@@ -164,22 +164,6 @@ function useCloseUnlessCreating(
   };
 }
 
-function startingDraft(
-  saved: CreateEventDraftSnapshot | null,
-  reusesANight: boolean,
-  presetGroupId: string | null
-): CreateEventDraftSnapshot {
-  const start = defaultEventStart(Date.now());
-  if (!saved) {
-    return { ...start, typedTitle: null, fields: defaultTemplateFields(), groupId: presetGroupId };
-  }
-  return {
-    ...saved,
-    fields: reusesANight ? defaultTemplateFields() : saved.fields,
-    groupId: presetGroupId ?? saved.groupId,
-  };
-}
-
 function whenFeedback(date: string, time: string, typedError: string | undefined, t: Translate) {
   const now = new Date();
   const issue = eventStartIssue(date, time, now);
@@ -219,7 +203,7 @@ export default function CreateEventDialog({
 
   const [today] = useState(() => todayInEventZone(Date.now()));
   const [initial] = useState(() =>
-    startingDraft(readCreateEventDraft(), reuse !== null, presetGroupId)
+    startingCreateEventDraft(readCreateEventDraft(), reuse !== null, presetGroupId, Date.now())
   );
   const [date, setDate] = useState(initial.date);
   const [time, setTime] = useState(initial.time);
@@ -241,8 +225,15 @@ export default function CreateEventDialog({
 
   useEffect(() => {
     if (step !== 'form') return;
-    saveCreateEventDraft({ typedTitle, date, time, fields, groupId: pickedGroupId });
-  }, [step, typedTitle, date, time, fields, pickedGroupId]);
+    saveCreateEventDraft({
+      typedTitle,
+      date,
+      time,
+      fields,
+      groupId: pickedGroupId,
+      openedFromGroupId: presetGroupId,
+    });
+  }, [step, typedTitle, date, time, fields, pickedGroupId, presetGroupId]);
 
   const suggestedTitle = t('events.create.defaultTitle', {
     date: formatEventTitleDate(date, locale),

@@ -8,6 +8,7 @@ import {
   type TemplateFormFields,
 } from '@/features/events/lib/eventTemplateDraft';
 import type { WheelMode } from '@/features/events/types';
+import { defaultEventStart, todayInEventZone } from '@/features/events/lib/eventStartShortcuts';
 
 export const CREATE_EVENT_DRAFT_KEY = 'mp.create-event-draft';
 
@@ -17,6 +18,7 @@ export type CreateEventDraftSnapshot = {
   time: string;
   fields: TemplateFormFields;
   groupId: string | null;
+  openedFromGroupId: string | null;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -75,6 +77,33 @@ export function readCreateEventDraft(): CreateEventDraftSnapshot | null {
     time: parsed.time,
     fields: readFields(parsed.fields),
     groupId: stringOrNull(parsed.groupId),
+    openedFromGroupId: stringOrNull(parsed.openedFromGroupId),
+  };
+}
+
+export function startingCreateEventDraft(
+  saved: CreateEventDraftSnapshot | null,
+  reusesANight: boolean,
+  presetGroupId: string | null,
+  nowMs: number
+): CreateEventDraftSnapshot {
+  const start = defaultEventStart(nowMs);
+  if (!saved) {
+    return {
+      ...start,
+      typedTitle: null,
+      fields: defaultTemplateFields(),
+      groupId: presetGroupId,
+      openedFromGroupId: presetGroupId,
+    };
+  }
+  const dateGone = saved.date < todayInEventZone(nowMs);
+  return {
+    ...saved,
+    ...(dateGone ? start : {}),
+    fields: reusesANight ? defaultTemplateFields() : saved.fields,
+    groupId: saved.openedFromGroupId === presetGroupId ? saved.groupId : presetGroupId,
+    openedFromGroupId: presetGroupId,
   };
 }
 

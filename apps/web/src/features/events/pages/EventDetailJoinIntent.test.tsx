@@ -153,6 +153,7 @@ describe('EventDetail: joining on the way back from the invitation card', () => 
       await screen.findByRole('region', { name: 'Vous avez rejoint la soirée' })
     ).toBeInTheDocument();
     expect(joinCalls).toHaveLength(1);
+    expect(screen.getByRole('heading', { level: 2, name: 'Films proposés' })).toHaveFocus();
   });
 });
 

@@ -2982,6 +2982,7 @@ export const fr = {
     removedFromEventText: 'L’hôte a retiré votre participation à **{{eventTitle}}**.',
     hostRoleReceivedText:
       'L’hôte de **{{eventTitle}}** a supprimé son compte : vous organisez désormais la soirée.',
+    unknownText: 'Nouvelle activité sur Movie Picker.',
     groupInvitationAcceptAria: 'Accepter l’invitation au groupe « {{groupName}} »',
     groupInvitationDeclineAria: 'Refuser l’invitation au groupe « {{groupName}} »',
     listInvitationAccept: 'Accepter',

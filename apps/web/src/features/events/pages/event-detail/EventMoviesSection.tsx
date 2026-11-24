@@ -2,7 +2,6 @@ import {
   lazy,
   Suspense,
   useCallback,
-  useId,
   useMemo,
   type ComponentProps,
   type ReactNode,
@@ -14,6 +13,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
+import { MOVIES_HEADING_ID } from '@/features/events/joinedAnnouncement';
 import { useHistoryEntryState } from '@/shared/hooks/useHistoryEntryState';
 import { MOVIE_PAGE_CHUNKS } from '@/app/moviePageChunk';
 import { setMovieWheelExclusion } from '@/features/events/api/eventMoviesApi';
@@ -251,7 +251,6 @@ export default function EventMoviesSection({
   const { t } = useTranslation();
   const { isMobile, layout, compactRows } = useMoviesLayout(viewMode);
   useIdlePrefetch(ADD_MOVIE_CHUNKS);
-  const sectionHeadingId = useId();
   const { sortBy, sortDir, setSort: handleSetSort } = useMovieSort();
   const { isInWatchlist, toggleWatchlist } = useEventWatchlistToggle(!!user, setActionError);
   const {
@@ -383,8 +382,8 @@ export default function EventMoviesSection({
 
   return (
     <ParticipantAccentsContext.Provider value={participantAccents}>
-      <section className="section section-movies" aria-labelledby={sectionHeadingId}>
-        <h2 id={sectionHeadingId} className="visually-hidden">
+      <section className="section section-movies" aria-labelledby={MOVIES_HEADING_ID}>
+        <h2 id={MOVIES_HEADING_ID} className="visually-hidden" tabIndex={-1}>
           {t('movies.list.sectionLabel')}
         </h2>
         {!isFinished && participant && addMovieOpen && (

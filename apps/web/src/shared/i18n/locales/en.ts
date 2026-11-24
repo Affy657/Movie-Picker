@@ -2942,6 +2942,7 @@ export const en: Locale = {
     removedFromEventText: 'The host removed you from **{{eventTitle}}**.',
     hostRoleReceivedText:
       'The host of **{{eventTitle}}** deleted their account: you now host this movie night.',
+    unknownText: 'New activity on Movie Picker.',
     groupInvitationAcceptAria: 'Accept the invitation to the group “{{groupName}}”',
     groupInvitationDeclineAria: 'Decline the invitation to the group “{{groupName}}”',
     listInvitationAccept: 'Accept',
