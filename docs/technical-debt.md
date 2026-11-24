@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-116`.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-119`.
 5. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
 7. **Contraintes** (ce qui casse en silence si on y touche) et **Impasses** (essayé, mesuré, sans gain), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
@@ -721,6 +721,31 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - ou: réglages du dépôt GitHub, `.github/dependabot.yml`
 - verify: `gh run list --workflow "Dependabot Updates" --limit 20 --json conclusion -q '[.[] | select(.conclusion=="failure")] | length'` ; encore ouvert tant que la commande rend autre chose que `0`
 - fix: (humain) couper les mises à jour de sécurité automatiques et garder les alertes ; les montées transitives passent par `pnpm.overrides` pendant `/weekly-maintenance`
+
+## DEBT-116 la porte Lighthouse mesure un profil que l'API ne renvoie pas
+
+- state: agent
+- impact: le stub de `scripts/lighthouse-stub.mjs` renvoie pour `/u/lighthouse` des statistiques sans `publicListCount` ni `proposalsAverageRating` et un profil sans six champs que l'API envoie toujours. `hasNothingToShow` y calcule `NaN` et n'affiche jamais l'état vide qu'un vrai profil vide montre : la porte mesure une page que personne ne reçoit. Une route inconnue du stub rend un 404 muet, car `lighthouse-run.mjs` ne passe pas `onUnknownRequest`. En prod, `/u/*` est servi par Cloud Run (document de partage), alors que le serveur local de Lighthouse sert `index.html`
+- ou: `scripts/lighthouse-stub.mjs` (`minimalStats`, profil du stub), `scripts/lighthouse-run.mjs` (démarrage du stub, réécritures locales)
+- verify: `node -e` sur le stub, ou lire le rapport `report-profile.json` : l'état vide doit apparaître pour le profil vide
+- fix: renvoyer les objets complets de l'API (générés depuis le schéma OpenAPI si possible), faire échouer le run sur une requête inconnue, et documenter ou imiter le rendu `/u/*` de Cloud Run
+- piege: l'état vide peut devenir l'élément LCP du profil et faire bouger son score : mesurer sur le runner avant de fusionner (le PC local est environ trois fois plus lent, `benchmarkIndex`)
+
+## DEBT-117 la suggestion d'anglais charge la langue anglaise dès l'ouverture
+
+- state: agent
+- impact: pour un premier visiteur dont le navigateur n'est pas en français, `LanguageSuggestion` télécharge et lit la langue anglaise (environ 69 Ko compressés) dès le montage de l'app, en concurrence avec l'élément LCP de la page. La porte Lighthouse ne le voit pas (le run de la CI ne la déclenche pas, vérifié le 2026-11-24 : aucune requête `i18n-en`)
+- ou: `apps/web/src/app/components/LanguageSuggestion.tsx`
+- verify: ouvrir le site dans un Chrome en anglais sans `moviepicker-locale`, onglet Réseau : `i18n-en` ne doit partir qu'après les images de la page
+- fix: charger la langue et afficher la suggestion après `whenPageImagesSettle`
+
+## DEBT-118 la passation d'hôte à la suppression d'un compte n'est testée qu'en mémoire
+
+- state: agent
+- impact: la remise du rôle d'hôte quand l'hôte supprime son compte tourne dans la transaction Mongo de la suppression, mais ses tests passent par les dépôts en mémoire. Un écart de comportement Mongo (filtre, transaction, ordre des écritures) ne serait vu qu'en prod
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Account/DeleteAccountHandler.cs`, `MoviePicker.Api.IntegrationTests`
+- verify: un test d'intégration Mongo qui supprime le compte d'un hôte et relit la soirée avec son nouvel hôte
+- fix: ajouter ce test à la suite `test:api:mongo`
 
 ---
 
