@@ -9,7 +9,8 @@
   composes: expanded from '@/shared/components/tapTarget.module.css';
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1-5);
+  justify-content: center;
+  min-width: var(--space-10);
   padding: var(--space-1) var(--space-2-5);
   background: transparent;
   border: 1px solid var(--mc-border, var(--color-on-poster-border));
@@ -48,11 +49,12 @@
   color: var(--mc-fg, var(--color-on-poster-fg));
 }
 
-.seenLabel {
-  font-size: var(--font-size-2xs);
-  transform: translateY(var(--text-optical-nudge));
-}
-
 .seenAvatars {
   --avatar-stack-ring: var(--mc-surface-ring, var(--color-on-poster-surface-ring));
+}
+
+.seenFramed {
+  min-width: var(--tap-target-min);
+  min-height: var(--tap-target-min);
+  padding-inline: 0;
 }

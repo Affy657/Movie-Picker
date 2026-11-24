@@ -39,6 +39,7 @@ export interface CardKebabProps {
   tmdbId: number;
   mediaType?: MovieMediaType;
   remove?: CardKebabRemoveAction;
+  removeNote?: CardKebabRemoveAction;
   inWatchlist?: boolean;
   onToggleWatchlist?: () => void;
   onProposeToEvent?: () => void;
@@ -52,6 +53,7 @@ export interface CardKebabProps {
 export function kebabHasActions({
   tmdbId,
   remove,
+  removeNote,
   onToggleWatchlist,
   onProposeToEvent,
   onViewDetails,
@@ -61,6 +63,7 @@ export function kebabHasActions({
     CardKebabProps,
     | 'tmdbId'
     | 'remove'
+    | 'removeNote'
     | 'onToggleWatchlist'
     | 'onProposeToEvent'
     | 'onViewDetails'
@@ -72,7 +75,8 @@ export function kebabHasActions({
     !!onProposeToEvent ||
     (!!onViewDetails && tmdbId > 0) ||
     !!wheelExclusion ||
-    !!remove
+    !!remove ||
+    !!removeNote
   );
 }
 
@@ -92,11 +96,13 @@ export function MovieCardKebab({
   card,
   slotClassName,
   remove,
+  removeNote,
   isInWatchlist,
   onToggleWatchlist,
   onToggleWheelExclusion,
   trigger = 'dots',
   triggerClassName,
+  alwaysVisible = false,
   t,
 }: Readonly<{
   movie: MovieData;
@@ -106,11 +112,13 @@ export function MovieCardKebab({
   };
   slotClassName: string;
   remove?: CardKebabRemoveAction;
+  removeNote?: CardKebabRemoveAction;
   isInWatchlist?: boolean;
   onToggleWatchlist?: (movie: MovieData) => void;
   onToggleWheelExclusion?: (movie: MovieData) => void;
   trigger?: CardKebabTrigger;
   triggerClassName?: string;
+  alwaysVisible?: boolean;
   t: Translate;
 }>) {
   const hasHover = useHasHoverCapability();
@@ -125,13 +133,14 @@ export function MovieCardKebab({
     !kebabHasActions({
       tmdbId: movie.tmdbId,
       remove,
+      removeNote,
       onToggleWatchlist: toggleWatchlist,
       onViewDetails,
       wheelExclusion,
     })
   )
     return null;
-  if (trigger === 'dots' && !hasHover && card.hasDetails) return null;
+  if (trigger === 'dots' && !hasHover && card.hasDetails && !alwaysVisible) return null;
   return (
     <div className={slotClassName}>
       <CardKebab
@@ -139,6 +148,7 @@ export function MovieCardKebab({
         tmdbId={movie.tmdbId}
         mediaType={movie.mediaType}
         remove={remove}
+        removeNote={removeNote}
         inWatchlist={isInWatchlist}
         onToggleWatchlist={toggleWatchlist}
         onViewDetails={onViewDetails}
@@ -187,6 +197,7 @@ export function CardKebab({
   tmdbId,
   mediaType,
   remove,
+  removeNote,
   inWatchlist,
   onToggleWatchlist,
   onProposeToEvent,
@@ -263,6 +274,7 @@ export function CardKebab({
     !kebabHasActions({
       tmdbId,
       remove,
+      removeNote,
       onToggleWatchlist,
       onProposeToEvent,
       onViewDetails,
@@ -379,7 +391,19 @@ export function CardKebab({
                 onClose={close}
               />
             )}
-            {remove && (hasPrimaryGroup || hasLinksGroup) && <MenuSeparator />}
+            {(remove || removeNote) && (hasPrimaryGroup || hasLinksGroup) && <MenuSeparator />}
+            {removeNote && (
+              <MenuItem
+                tone="danger"
+                icon={<Trash2 aria-hidden size={ICON_SIZE.sm} />}
+                aria-haspopup={removeNote.opensDialog ? 'dialog' : undefined}
+                onClick={pick(removeNote.onSelect)}
+                ariaLabel={removeNote.ariaLabel}
+                title={removeNote.title}
+              >
+                {removeNote.label}
+              </MenuItem>
+            )}
             {remove && (
               <MenuItem
                 tone="danger"

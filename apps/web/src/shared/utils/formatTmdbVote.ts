@@ -4,8 +4,9 @@ import { formatRating } from '@/shared/utils/formatRating';
 export function formatTmdbVote(
   v: number | null | undefined,
   scale: RatingScale | undefined,
-  locale: string
+  locale: string,
+  withMax = true
 ): string | null {
   if (v == null || Number.isNaN(v) || v === 0) return null;
-  return formatRating(v, scale ?? 'five', locale, { decimals: 1 });
+  return formatRating(v, scale ?? 'five', locale, { decimals: 1, withMax });
 }

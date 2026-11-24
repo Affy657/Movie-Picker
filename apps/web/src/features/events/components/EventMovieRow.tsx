@@ -1,8 +1,8 @@
 import SeenButton from '@/features/events/components/SeenButton';
 import { Fragment, memo } from 'react';
 import clsx from 'clsx';
-import { AlertTriangle, RotateCcw, ThumbsDown, ThumbsUp } from 'lucide-react';
-import Chip from '@/shared/components/Chip';
+import { Trophy } from 'lucide-react';
+import EventProviderLogos from '@/features/events/components/EventProviderLogos';
 import { MovieCardKebab, WatchlistBadge } from '@/features/movies/components/movieCardParts';
 import {
   CardNote,
@@ -10,15 +10,17 @@ import {
   CardSelectionOverlay,
   isSelectable,
   type MovieCardCommonProps,
+  noteRemoveAction,
   PosterDetailsTrigger,
+  ScoreBlock,
+  VoteCounts,
+  VoteErrorNotice,
+  type MovieVoteError,
   useMovieCardState,
   VoteBar,
   winnerBadgeLabel,
-  WinnerRibbon,
 } from '@/features/events/components/eventMovieCardParts';
-import Tooltip from '@/shared/components/Tooltip';
 import {
-  MovieTableAvailability,
   MovieTableHeader,
   MovieTablePoster,
   type MovieTableColumn,
@@ -30,7 +32,6 @@ import table from '@/features/movies/components/MovieTable.module.css';
 import styles from './EventMovieRow.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import type { Translate } from '@/shared/i18n';
-import ScoreBar from '@/features/events/components/ScoreBar';
 
 type RowSortKey =
   | 'title'
@@ -49,6 +50,8 @@ export interface EventMovieRowHeaderColumn {
 
 export interface EventMovieRowHeaderProps {
   columns: EventMovieRowHeaderColumn[];
+  filmLabel: string;
+  filmSortAriaLabel: string;
   sortBy: RowSortKey;
   sortDir: 'asc' | 'desc';
   onSetSort: (key: RowSortKey) => void;
@@ -56,6 +59,8 @@ export interface EventMovieRowHeaderProps {
 
 export function EventMovieRowHeader({
   columns,
+  filmLabel,
+  filmSortAriaLabel,
   sortBy,
   sortDir,
   onSetSort,
@@ -68,7 +73,13 @@ export function EventMovieRowHeader({
   const layout: MovieTableColumn<RowSortKey>[] = [
     { id: 'rank' },
     { id: 'poster' },
-    { id: 'title', sorts: [...sort('title'), ...sort('createdAt')], inset: true },
+    {
+      id: 'title',
+      sorts: [...sort('title'), ...sort('createdAt')],
+      inset: true,
+      menuLabel: filmLabel,
+      menuAriaLabel: filmSortAriaLabel,
+    },
     { id: 'vote', sorts: sort('voteAverage'), align: 'end' },
     { id: 'runtime', sorts: sort('duration'), align: 'end' },
     { id: 'release', sorts: sort('releaseDate'), align: 'end' },
@@ -90,75 +101,19 @@ export function EventMovieRowHeader({
   );
 }
 
-function ScoreBlock({ m, t }: Readonly<{ m: MovieCardCommonProps['movie']; t: Translate }>) {
-  const total = m.up + m.down;
-  const upRatio = total > 0 ? (m.up / total) * 100 : 0;
-  const downRatio = total > 0 ? (m.down / total) * 100 : 0;
-  const breakdown = t('movies.list.voteBreakdownAria', { up: m.up, down: m.down });
-  const scoreNode = (
-    <span className={styles.scoreBlock}>
-      <span
-        className={clsx(
-          styles.scoreValue,
-          m.score > 0 && styles.scorePositive,
-          m.score < 0 && styles.scoreNegative
-        )}
-      >
-        {m.score > 0 ? `+${m.score}` : m.score}
-      </span>
-      <ScoreBar upRatio={upRatio} downRatio={downRatio} className={styles.scoreBar} />
-    </span>
-  );
-  if (total === 0) return scoreNode;
-  return (
-    <Tooltip label={breakdown} placement="top">
-      {scoreNode}
-    </Tooltip>
-  );
-}
-
-function VoteReadonly({ m }: Readonly<{ m: MovieCardCommonProps['movie'] }>) {
-  return (
-    <span className={styles.voteReadonly}>
-      <ThumbsUp aria-hidden size={ICON_SIZE.sm} />
-      <span>{m.up}</span>
-      <ThumbsDown aria-hidden size={ICON_SIZE.sm} />
-      <span>{m.down}</span>
-    </span>
-  );
-}
-
-export interface MovieRowVoteError {
-  message: string;
-  onRetry: () => void;
-}
-
 export interface EventMovieRowProps extends MovieCardCommonProps {
-  isMobile: boolean;
   rank?: number;
-  voteError?: MovieRowVoteError;
+  voteError?: MovieVoteError;
 }
 
 function VoteErrorBanner({
   voteError,
   title,
   t,
-}: Readonly<{ voteError: MovieRowVoteError; title: string; t: Translate }>) {
+}: Readonly<{ voteError: MovieVoteError; title: string; t: Translate }>) {
   return (
     <li className={styles.errorBanner}>
-      <AlertTriangle aria-hidden size={ICON_SIZE.md} className={styles.errorIcon} />
-      <p className={styles.errorMessage} role="alert">
-        {voteError.message}
-      </p>
-      <button
-        type="button"
-        className={styles.errorRetry}
-        onClick={voteError.onRetry}
-        aria-label={t('movies.list.retryVoteAria', { title })}
-      >
-        <RotateCcw aria-hidden size={ICON_SIZE.sm} />
-        <span>{t('movies.list.retryVoteAction')}</span>
-      </button>
+      <VoteErrorNotice voteError={voteError} title={title} t={t} />
     </li>
   );
 }
@@ -167,164 +122,19 @@ type EventMovieRowView = EventMovieRowProps & {
   s: ReturnType<typeof useMovieCardState>;
   posterSrc: string | undefined;
   posterSrcSet: string | undefined;
-  flatrateProviders: EventMovieRowProps['movie']['watchProviders'];
-  rentCount: number;
-  buyCount: number;
   releaseDateLabel: string | undefined;
   excluded: boolean;
   selecting: boolean;
-  emptyAvailabilityLabel: string;
   m: EventMovieRowProps['movie'];
 };
-
-function EventMovieRowMobile({
-  s,
-  posterSrc,
-  posterSrcSet,
-  flatrateProviders,
-  rentCount,
-  buyCount,
-  excluded,
-  selecting,
-  emptyAvailabilityLabel,
-  m,
-  slug,
-  participantId,
-  onVote,
-  onRemoveNote,
-  refresh,
-  onActionError,
-  t,
-  participantAvatarsByPseudo,
-  eager,
-  isInWatchlist,
-  onToggleWatchlist,
-  onToggleWheelExclusion,
-  selection,
-  isWinner,
-  winnerRank,
-  voteLockedHint,
-  voteError,
-}: Readonly<EventMovieRowView>) {
-  return (
-    <Fragment>
-      <li
-        className={clsx(
-          table.mobileRow,
-          isWinner && styles.rowWinner,
-          !!voteError && styles.rowError,
-          excluded && cardPartsStyles.excluded,
-          selecting && cardPartsStyles.selectable
-        )}
-      >
-        {excluded && (
-          <span className="visually-hidden">{t('movies.list.excludedFromWheelSr')}</span>
-        )}
-        {selecting && selection ? (
-          <CardSelectionOverlay movie={m} selection={selection} t={t} />
-        ) : null}
-        <div className={table.mobilePosterCol} inert={selecting}>
-          <MovieTablePoster src={posterSrc} srcSet={posterSrcSet} eager={!!eager} />
-          <PosterDetailsTrigger
-            hasDetails={s.hasDetails}
-            onOpen={() => s.openDetails()}
-            title={m.title}
-            t={t}
-          />
-          <WatchlistBadge inWatchlist={!!isInWatchlist} t={t} />
-          <WinnerRibbon isWinner={isWinner} winnerRank={winnerRank} compact t={t} />
-        </div>
-        <div className={table.mobileContent} inert={selecting}>
-          <div className={table.mobileTitleRow}>
-            <h3 className={table.title} title={m.title}>
-              {m.title}
-            </h3>
-          </div>
-          <div className={table.mobileFacts}>
-            {m.year ? <span>{m.year}</span> : null}
-            {s.runtimeLabel ? <span>{s.runtimeLabel}</span> : null}
-            {s.voteLabel ? <span>{s.voteLabel}</span> : null}
-            <MovieTableAvailability
-              flatrateProviders={flatrateProviders}
-              rentCount={rentCount}
-              buyCount={buyCount}
-              watchPageUrl={m.tmdbWatchPageUrl}
-              maxVisible={1}
-              onMoreClick={() => s.openDetails()}
-              emptyLabel={emptyAvailabilityLabel}
-              title={m.title}
-              t={t}
-            />
-          </div>
-          <CardNote
-            s={s}
-            m={m}
-            slug={slug}
-            participantId={participantId}
-            refresh={refresh}
-            onActionError={onActionError}
-            onRemoveNote={onRemoveNote}
-            t={t}
-          />
-          <div className={styles.mobileBottomSection}>
-            <span className={styles.mobileVoteScore}>
-              {s.canVote ? (
-                <VoteBar m={m} onVote={onVote} t={t} lockedHint={voteLockedHint} />
-              ) : (
-                <VoteReadonly m={m} />
-              )}
-              <ScoreBlock m={m} t={t} />
-            </span>
-            <div className={styles.mobileProposerRow}>
-              <CardProposerFooter s={s} m={m} t={t} />
-              <span className={styles.mobileSeenSlot}>
-                {s.canAct ? (
-                  <SeenButton
-                    m={m}
-                    iMarkedSeen={s.iMarkedSeen}
-                    seenPending={s.seenPending}
-                    onToggle={() => void s.handleToggleSeen()}
-                    others={s.others}
-                    othersHint={s.othersHint}
-                    avatarsByPseudo={participantAvatarsByPseudo}
-                    t={t}
-                  />
-                ) : (
-                  s.othersHint && <p className={styles.mobileSeenHint}>{s.othersHint}</p>
-                )}
-              </span>
-            </div>
-          </div>
-        </div>
-        <MovieCardKebab
-          movie={m}
-          card={s}
-          slotClassName={styles.mobileMenuSlot ?? ''}
-          remove={s.kebabRemove}
-          isInWatchlist={isInWatchlist}
-          onToggleWatchlist={onToggleWatchlist}
-          onToggleWheelExclusion={onToggleWheelExclusion}
-          trigger="disclosure"
-          triggerClassName={table.disclosure}
-          t={t}
-        />
-      </li>
-      {voteError ? <VoteErrorBanner voteError={voteError} title={m.title} t={t} /> : null}
-    </Fragment>
-  );
-}
 
 function EventMovieRowDesktop({
   s,
   posterSrc,
   posterSrcSet,
-  flatrateProviders,
-  rentCount,
-  buyCount,
   releaseDateLabel,
   excluded,
   selecting,
-  emptyAvailabilityLabel,
   m,
   slug,
   participantId,
@@ -351,7 +161,7 @@ function EventMovieRowDesktop({
         className={clsx(
           table.row,
           styles.rowGrid,
-          (m.pitchNote || s.noteEditing) && styles.rowWithNote,
+          s.noteEditing && styles.rowWithNote,
           isWinner && styles.rowWinner,
           !!voteError && styles.rowError,
           excluded && cardPartsStyles.excluded,
@@ -365,7 +175,16 @@ function EventMovieRowDesktop({
           <CardSelectionOverlay movie={m} selection={selection} t={t} />
         ) : null}
         <span className={styles.rank} data-testid="movie-rank">
-          {rank ?? ''}
+          {isWinner ? (
+            <Trophy
+              role="img"
+              aria-label={winnerBadgeLabel(t, winnerRank)}
+              size={ICON_SIZE.lg}
+              className={styles.rankTrophy}
+            />
+          ) : (
+            (rank ?? '')
+          )}
         </span>
         <div className={table.posterCol} inert={selecting}>
           <MovieTablePoster src={posterSrc} srcSet={posterSrcSet} eager={!!eager} />
@@ -385,11 +204,6 @@ function EventMovieRowDesktop({
           </div>
           <div className={table.metaRow}>
             <CardProposerFooter s={s} m={m} t={t} />
-            {isWinner ? (
-              <Chip tone="primary" size="sm" className={styles.winnerBadge}>
-                {winnerBadgeLabel(t, winnerRank)}
-              </Chip>
-            ) : null}
           </div>
           <div className={styles.note}>
             <CardNote
@@ -399,33 +213,27 @@ function EventMovieRowDesktop({
               participantId={participantId}
               refresh={refresh}
               onActionError={onActionError}
-              onRemoveNote={onRemoveNote}
               t={t}
             />
           </div>
         </div>
-        <span className={table.cellEnd}>{s.voteLabel}</span>
+        <span className={table.cellEnd}>{s.voteValue}</span>
         <span className={table.cellEnd}>{s.runtimeLabel}</span>
         <span className={table.cellEnd}>{releaseDateLabel}</span>
         <div className={table.availabilityCol}>
-          <MovieTableAvailability
-            flatrateProviders={flatrateProviders}
-            rentCount={rentCount}
-            buyCount={buyCount}
-            watchPageUrl={m.tmdbWatchPageUrl}
-            maxVisible={2}
-            chipMaxWidth="2.75rem"
-            onMoreClick={() => s.openDetails()}
-            emptyLabel={emptyAvailabilityLabel}
+          <EventProviderLogos
+            providers={m.watchProviders}
+            slots={3}
             title={m.title}
-            t={t}
+            watchPageUrl={m.tmdbWatchPageUrl}
+            onOpenDetails={() => s.openDetails()}
           />
         </div>
         <div className={styles.votesCol} inert={selecting}>
           {s.canVote ? (
             <VoteBar m={m} onVote={onVote} t={t} lockedHint={voteLockedHint} />
           ) : (
-            <VoteReadonly m={m} />
+            <VoteCounts m={m} t={t} />
           )}
         </div>
         <div className={styles.seenCol} inert={selecting}>
@@ -451,7 +259,9 @@ function EventMovieRowDesktop({
           movie={m}
           card={s}
           slotClassName={table.kebabCol ?? ''}
+          alwaysVisible
           remove={s.kebabRemove}
+          removeNote={noteRemoveAction(m, s.canRemove, onRemoveNote, t)}
           isInWatchlist={isInWatchlist}
           onToggleWatchlist={onToggleWatchlist}
           onToggleWheelExclusion={onToggleWheelExclusion}
@@ -489,7 +299,6 @@ export const EventMovieRow = memo(function EventMovieRow({
   isWinner = false,
   winnerRank,
   voteLockedHint,
-  isMobile,
   rank,
   voteError,
 }: Readonly<EventMovieRowProps>) {
@@ -511,13 +320,9 @@ export const EventMovieRow = memo(function EventMovieRow({
   });
   const posterSrc = posterImageSrc(m.posterPath);
   const posterSrcSet = tmdbPosterSrcSetForList(posterSrc);
-  const flatrateProviders = s.providers.filter((p) => p.type === 'flatrate');
-  const rentCount = s.providers.filter((p) => p.type === 'rent').length;
-  const buyCount = s.providers.filter((p) => p.type === 'buy').length;
   const releaseDateLabel = yearFromDate(m.releaseDate);
   const excluded = !!m.excludedFromWheel;
   const selecting = isSelectable(m, selection) && !excluded;
-  const emptyAvailabilityLabel = t('movies.watchProviders.emptyLabel');
 
   const view: EventMovieRowView = {
     ...({
@@ -545,23 +350,17 @@ export const EventMovieRow = memo(function EventMovieRow({
       isWinner,
       winnerRank,
       voteLockedHint,
-      isMobile,
       rank,
       voteError,
     } as EventMovieRowProps),
     s,
     posterSrc,
     posterSrcSet,
-    flatrateProviders,
-    rentCount,
-    buyCount,
     releaseDateLabel,
     excluded,
     selecting,
-    emptyAvailabilityLabel,
     m,
   };
 
-  if (isMobile) return <EventMovieRowMobile {...view} />;
   return <EventMovieRowDesktop {...view} />;
 });

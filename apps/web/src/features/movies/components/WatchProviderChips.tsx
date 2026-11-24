@@ -5,6 +5,7 @@ import type { WatchProviderOffer } from '@/shared/types/movie';
 import { useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { isSafeTmdbLogoUrl, tmdbLogoSrcForUi } from '@/shared/utils/tmdbLogo';
+import { safeTmdbWatchHref } from '@/shared/utils/tmdbWatchPage';
 import styles from './WatchProviderChips.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
@@ -136,18 +137,7 @@ export default function WatchProviderChips({
   const rootStyle = chipMaxWidth
     ? ({ '--chip-max-width': chipMaxWidth } as React.CSSProperties)
     : undefined;
-  const safeWatchHref = (() => {
-    if (!watchPageUrl) return null;
-    try {
-      const u = new URL(watchPageUrl.trim());
-      if (u.protocol !== 'https:') return null;
-      const h = u.hostname.toLowerCase();
-      if (h !== 'www.themoviedb.org' && h !== 'themoviedb.org') return null;
-      return `https://www.themoviedb.org${encodeURI(u.pathname)}${u.search ? encodeURI(u.search) : ''}`;
-    } catch {
-      return null;
-    }
-  })();
+  const safeWatchHref = safeTmdbWatchHref(watchPageUrl);
 
   const groups = [
     ...TYPE_ORDER.map((type) => ({

@@ -27,7 +27,7 @@ export function useMovieNight({ slug, tmdbId, mediaType }: MovieNightTarget) {
     slug,
     participant,
     movies,
-    layout: 'grid',
+    voteErrorsInline: false,
     setActionError,
     refreshAll,
   });

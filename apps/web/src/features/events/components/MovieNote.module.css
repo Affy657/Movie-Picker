@@ -21,7 +21,7 @@
 
 .noteTextClamp {
   display: -webkit-box;
-  -webkit-line-clamp: 1;
+  -webkit-line-clamp: var(--note-lines);
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

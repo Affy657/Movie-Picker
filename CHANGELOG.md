@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Changed
+
+- **Une liste de films plus lisible dans une soirée** : les plateformes s’affichent en logos, une seule fois chacune, avec un « +N » qui ouvre la liste complète ; le tri par titre ou par ordre d’ajout passe par un seul menu « Film », le bouton « Déjà vu » devient un œil et le mot pour convaincre tient sur une ligne. La vue en cartes devient une fiche de taille fixe (affiche, infos, proposeur, score, qui l’a vu, votes) et c’est la seule vue sur téléphone.
+
 ## [1.30.3] - 2026-11-24
 
 ### Fixed

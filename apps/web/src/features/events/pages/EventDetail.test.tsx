@@ -672,10 +672,10 @@ describe('EventDetail (MSW)', () => {
       )
     );
 
+    stubHoverCapability();
     renderEventDetail(`/e/${slug}`);
-    await user.click(
-      await screen.findByRole('button', { name: 'Supprimer la note sur Inception' })
-    );
+    await user.click(await screen.findByRole('button', { name: /plus d’actions/i }));
+    await user.click(screen.getByRole('menuitem', { name: 'Supprimer la note sur Inception' }));
     await user.click(
       within(await screen.findByTestId('confirm-dialog')).getByRole('button', {
         name: 'Supprimer',

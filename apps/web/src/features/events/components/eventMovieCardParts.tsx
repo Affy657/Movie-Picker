@@ -1,7 +1,15 @@
 import { useCallback, useState } from 'react';
 import { Link } from 'react-router';
 import clsx from 'clsx';
-import { MessageSquarePlus, ThumbsDown, ThumbsUp, Trophy } from 'lucide-react';
+import {
+  AlertTriangle,
+  MessageSquarePlus,
+  RotateCcw,
+  ThumbsDown,
+  ThumbsUp,
+  Trophy,
+} from 'lucide-react';
+import Button from '@/shared/components/Button';
 import { ROUTES } from '@/app/routes';
 import Avatar from '@/shared/components/Avatar';
 import Tooltip from '@/shared/components/Tooltip';
@@ -12,6 +20,7 @@ import type { MovieData } from '@/shared/types/movie';
 import { toTitleSummary } from '@/shared/utils/titleSummary';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
 import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
+import ScoreBar from '@/features/events/components/ScoreBar';
 import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { useNightMovieActions } from '@/features/events/hooks/useNightMovieActions';
@@ -64,7 +73,6 @@ export interface MovieCardCommonProps {
   isWinner?: boolean;
   winnerRank?: number;
   voteLockedHint?: string;
-  isMobile?: boolean;
 }
 
 export function CardSelectionOverlay({
@@ -108,6 +116,21 @@ export function nightRemoveAction(
     title: t('movies.list.removeAsHostTitle'),
     opensDialog: true,
     onSelect,
+  };
+}
+
+export function noteRemoveAction(
+  m: MovieData,
+  canRemove: boolean,
+  onRemoveNote: ((movie: MovieData) => void) | undefined,
+  t: Translate
+): CardKebabRemoveAction | undefined {
+  if (!m.pitchNote || !canRemove || !onRemoveNote) return undefined;
+  return {
+    label: t('movies.pitchNote.removeAction'),
+    ariaLabel: t('movies.pitchNote.removeAria', { title: m.title }),
+    opensDialog: true,
+    onSelect: () => onRemoveNote(m),
   };
 }
 
@@ -159,11 +182,10 @@ export function useMovieCardState({
   const votingAvailable = canVote ?? actions.canAct;
   const others = (m.seenByPseudos ?? []).filter((p) => p !== participantPseudo);
   const othersHint = othersAlreadySeenHint(m.seenByPseudos, participantPseudo, t);
-  const voteLabel = formatTmdbVote(m.voteAverage, ratingScale, locale);
+  const voteValue = formatTmdbVote(m.voteAverage, ratingScale, locale, false);
   const runtimeLabel = formatRuntimeMinutes(m.runtimeMinutes);
   const posterSrc = posterImageSrc(m.posterPath);
   const posterSrcSet = tmdbPosterSrcSetForList(posterSrc);
-  const providers = m.watchProviders ?? [];
 
   const openMoviePage = useOpenMoviePage();
   const [noteEditing, setNoteEditing] = useState(false);
@@ -186,12 +208,11 @@ export function useMovieCardState({
     iMarkedSeen: actions.iMarkedSeen,
     others,
     othersHint,
-    voteLabel,
+    voteValue,
     runtimeLabel,
     ratingScale,
     posterSrc,
     posterSrcSet,
-    providers,
     seenPending: actions.seenPending,
     openDetails,
     hasDetails,
@@ -203,55 +224,83 @@ export function useMovieCardState({
   };
 }
 
+export interface MovieVoteError {
+  message: string;
+  onRetry: () => void;
+}
+
 export function VoteBar({
   m,
   onVote,
   t,
   lockedHint,
+  framed = false,
+  showLabels = false,
 }: Readonly<{
   m: MovieData;
   onVote: (movieId: string, value: 1 | -1) => Promise<void>;
   t: Translate;
   lockedHint?: string;
+  framed?: boolean;
+  showLabels?: boolean;
 }>) {
   const locked = !!lockedHint;
+  const voteButton = (value: 1 | -1) => {
+    const up = value === 1;
+    const active = m.myVote === value;
+    const Icon = up ? ThumbsUp : ThumbsDown;
+    let ariaLabel = `${t(up ? 'movies.list.voteUp' : 'movies.list.voteDown')} ${m.title}`;
+    if (active) {
+      ariaLabel = t(up ? 'movies.list.voteUpRemoveAria' : 'movies.list.voteDownRemoveAria', {
+        title: m.title,
+      });
+    }
+    const content = (
+      <>
+        <Icon aria-hidden size={ICON_SIZE.md} />
+        {showLabels ? (
+          <span>{t(up ? 'movies.card.voteUpLabel' : 'movies.card.voteDownLabel')}</span>
+        ) : null}
+        <span className={styles.voteCount}>{up ? m.up : m.down}</span>
+      </>
+    );
+    const shared = {
+      onClick: () => void onVote(m.id, value),
+      disabled: locked,
+      'aria-pressed': active,
+      'aria-label': ariaLabel,
+    };
+    if (framed) {
+      return (
+        <Button
+          variant={active ? 'primary' : 'secondary'}
+          size="sm"
+          className={styles.voteBtnFramed}
+          {...shared}
+        >
+          {content}
+        </Button>
+      );
+    }
+    return (
+      <button
+        type="button"
+        className={clsx(styles.voteBtn, active && styles.voteActive)}
+        {...shared}
+      >
+        {content}
+      </button>
+    );
+  };
   return (
     <div
-      className={clsx(styles.votes, locked && styles.votesLocked)}
+      className={clsx(styles.votes, framed && styles.votesFramed, locked && styles.votesLocked)}
       role="toolbar"
       aria-label={t('movies.list.voteToolbarAria', { title: m.title })}
       title={lockedHint}
     >
-      <button
-        type="button"
-        className={clsx(styles.voteBtn, m.myVote === 1 && styles.voteActive)}
-        onClick={() => void onVote(m.id, 1)}
-        disabled={locked}
-        aria-pressed={m.myVote === 1}
-        aria-label={
-          m.myVote === 1
-            ? t('movies.list.voteUpRemoveAria', { title: m.title })
-            : `${t('movies.list.voteUp')} ${m.title}`
-        }
-      >
-        <ThumbsUp aria-hidden size={ICON_SIZE.md} />
-        <span className={styles.voteCount}>{m.up}</span>
-      </button>
-      <button
-        type="button"
-        className={clsx(styles.voteBtn, m.myVote === -1 && styles.voteActive)}
-        onClick={() => void onVote(m.id, -1)}
-        disabled={locked}
-        aria-pressed={m.myVote === -1}
-        aria-label={
-          m.myVote === -1
-            ? t('movies.list.voteDownRemoveAria', { title: m.title })
-            : `${t('movies.list.voteDown')} ${m.title}`
-        }
-      >
-        <ThumbsDown aria-hidden size={ICON_SIZE.md} />
-        <span className={styles.voteCount}>{m.down}</span>
-      </button>
+      {voteButton(1)}
+      {voteButton(-1)}
       {m.pendingVote ? (
         <span
           className={styles.votePending}
@@ -262,6 +311,47 @@ export function VoteBar({
           <StatusDot pulsing />
         </span>
       ) : null}
+    </div>
+  );
+}
+
+export function VoteCounts({ m, t }: Readonly<{ m: MovieData; t: Translate }>) {
+  return (
+    <span
+      className={styles.voteCounts}
+      role="img"
+      aria-label={t('movies.list.voteBreakdownAria', { up: m.up, down: m.down })}
+    >
+      <ThumbsUp aria-hidden size={ICON_SIZE.sm} />
+      <span className={styles.voteCount}>{m.up}</span>
+      <ThumbsDown aria-hidden size={ICON_SIZE.sm} />
+      <span className={styles.voteCount}>{m.down}</span>
+    </span>
+  );
+}
+
+export function VoteErrorNotice({
+  voteError,
+  title,
+  t,
+  className,
+}: Readonly<{ voteError: MovieVoteError; title: string; t: Translate; className?: string }>) {
+  return (
+    <div className={clsx(styles.voteError, className)}>
+      <AlertTriangle aria-hidden size={ICON_SIZE.md} className={styles.voteErrorIcon} />
+      <p className={styles.voteErrorMessage} role="alert">
+        {voteError.message}
+      </p>
+      <Button
+        variant="secondary"
+        tone="danger"
+        size="sm"
+        onClick={voteError.onRetry}
+        aria-label={t('movies.list.retryVoteAria', { title })}
+      >
+        <RotateCcw aria-hidden size={ICON_SIZE.sm} />
+        {t('movies.list.retryVoteAction')}
+      </Button>
     </div>
   );
 }
@@ -346,7 +436,7 @@ export function CardNote({
   participantId,
   refresh,
   onActionError,
-  onRemoveNote,
+  lines = 1,
   t,
 }: Readonly<{
   s: ReturnType<typeof useMovieCardState>;
@@ -355,14 +445,13 @@ export function CardNote({
   participantId: string | null;
   refresh: () => void;
   onActionError: (message: string) => void;
-  onRemoveNote?: (movie: MovieData) => void;
+  lines?: 1 | 2;
   t: Translate;
 }>) {
   if (!m.pitchNote && !s.noteEditing) return null;
   return (
     <MovieNote
       movieId={m.id}
-      movieTitle={m.title}
       slug={slug}
       pitchNote={m.pitchNote}
       editable={s.canEditNote}
@@ -371,7 +460,7 @@ export function CardNote({
       onEditingChange={s.setNoteEditing}
       refresh={refresh}
       onActionError={onActionError}
-      onRemove={s.canRemove && onRemoveNote ? () => onRemoveNote(m) : undefined}
+      lines={lines}
       t={t}
     />
   );
@@ -409,23 +498,44 @@ export function winnerBadgeLabel(t: Translate, winnerRank?: number): string {
 export function WinnerRibbon({
   isWinner,
   winnerRank,
-  compact = false,
   t,
-}: Readonly<{ isWinner?: boolean; winnerRank?: number; compact?: boolean; t: Translate }>) {
+}: Readonly<{ isWinner?: boolean; winnerRank?: number; t: Translate }>) {
   if (!isWinner) return null;
-  const label = winnerBadgeLabel(t, winnerRank);
-  if (compact) {
-    return (
-      <span className={styles.winnerRibbon} role="img" aria-label={label}>
-        <Trophy aria-hidden size={ICON_SIZE.xs} />
-        {winnerRank ? <span className={styles.winnerRibbonLabel}>{winnerRank}</span> : null}
-      </span>
-    );
-  }
   return (
     <span className={styles.winnerRibbon}>
       <Trophy aria-hidden size={ICON_SIZE.xs} />
-      <span className={styles.winnerRibbonLabel}>{label}</span>
+      <span className={styles.winnerRibbonLabel}>{winnerBadgeLabel(t, winnerRank)}</span>
     </span>
+  );
+}
+
+export function ScoreBlock({
+  m,
+  t,
+  inline = false,
+}: Readonly<{ m: MovieData; t: Translate; inline?: boolean }>) {
+  const total = m.up + m.down;
+  const upRatio = total > 0 ? (m.up / total) * 100 : 0;
+  const downRatio = total > 0 ? (m.down / total) * 100 : 0;
+  const breakdown = t('movies.list.voteBreakdownAria', { up: m.up, down: m.down });
+  const scoreNode = (
+    <span className={clsx(styles.scoreBlock, inline && styles.scoreBlockInline)}>
+      <span
+        className={clsx(
+          styles.scoreValue,
+          m.score > 0 && styles.scorePositive,
+          m.score < 0 && styles.scoreNegative
+        )}
+      >
+        {m.score > 0 ? `+${m.score}` : m.score}
+      </span>
+      <ScoreBar upRatio={upRatio} downRatio={downRatio} className={styles.scoreBar} />
+    </span>
+  );
+  if (total === 0) return scoreNode;
+  return (
+    <Tooltip label={breakdown} placement="top">
+      {scoreNode}
+    </Tooltip>
   );
 }
