@@ -433,6 +433,10 @@ describe('GroupPage', () => {
       'href',
       '/e/mardi'
     );
+    expect(within(upcoming).getByRole('link', { name: 'Halloween en retard' })).toHaveAttribute(
+      'href',
+      '/e/samedi'
+    );
   });
 
   it('names who comes to a later night', async () => {
@@ -530,6 +534,21 @@ describe('GroupPage', () => {
     expect(rows[1]).toHaveTextContent('Vous');
     expect(rows[3]).toHaveTextContent('Hugo');
     expect(rows[3]).toHaveTextContent('Pas encore rejoint');
+  });
+
+  it('leads from a member to their profile', async () => {
+    server.use(signedInAs(ALICE), ...createGroupsHandlers([JEUDIS]));
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole('tab', { name: /Membres/ }));
+    const members = screen.getByRole('tabpanel');
+
+    expect(within(members).getByRole('link', { name: /Léa Moreau/ })).toHaveAttribute(
+      'href',
+      '/u/lea'
+    );
+    expect(within(members).getByRole('link', { name: /Hugo/ })).toHaveAttribute('href', '/u/hugo');
   });
 
   it('offers a new night when none is planned, and hides the films until there are some', async () => {
@@ -658,6 +677,10 @@ describe('GroupPage', () => {
     expect(places[0]).toHaveTextContent(/1re place.*Léa Moreau.*4,3\/5.*6 films notés/);
     expect(places[1]).toHaveTextContent(/2e place.*Vous.*3,9\/5.*4 films notés/);
     expect(places[2]).toHaveTextContent(/3e place.*Sam.*3,4\/5.*2 films notés/);
+    expect(within(podium).getByRole('link', { name: 'Léa Moreau' })).toHaveAttribute(
+      'href',
+      '/u/lea'
+    );
     expect(ranking).toHaveTextContent('Pas encore classés');
     expect(ranking).toHaveTextContent('Aucun film gagnant pour l’instant');
   });

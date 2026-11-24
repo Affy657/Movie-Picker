@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { Suspense, useState, type ComponentType, type ReactNode, type SVGProps } from 'react';
-import { Bookmark, CalendarDays, Compass, HelpCircle, LogIn, Plus, UserRound } from 'lucide-react';
+import { Bookmark, CalendarDays, Compass, LogIn, Plus, UserRound } from 'lucide-react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { useTranslation, type TranslationKey, type Translate } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -25,6 +25,7 @@ import SessionExpiredNotice from './SessionExpiredNotice';
 import AccountDeletedNotice from './AccountDeletedNotice';
 import TopNoticeQueueProvider from './TopNoticeQueueProvider';
 import { useLegacyMovieLinkRedirect } from './useLegacyMovieLinkRedirect';
+import DevQuickLoginButton from '@/app/components/DevQuickLoginButton';
 import styles from './AppShell.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
@@ -121,20 +122,9 @@ function NavItemLink({
   );
 }
 
-function DesktopNavItem({
-  to,
-  end,
-  activeOn,
-  label,
-  wideOnly,
-}: Readonly<Omit<NavItemDef, 'Icon'> & { wideOnly?: boolean }>) {
+function DesktopNavItem({ to, end, activeOn, label }: Readonly<Omit<NavItemDef, 'Icon'>>) {
   return (
-    <NavItemLink
-      to={to}
-      end={end}
-      activeOn={activeOn}
-      className={(state) => clsx(navLinkClass(state), wideOnly && styles.navLinkWideOnly)}
-    >
+    <NavItemLink to={to} end={end} activeOn={activeOn} className={navLinkClass}>
       {label}
     </NavItemLink>
   );
@@ -264,6 +254,7 @@ function HeaderNavActions({
 
   return (
     <div className={styles.navActions}>
+      {import.meta.env.DEV ? <DevQuickLoginButton returnTo={returnTo} /> : null}
       <Link
         to={withReturnTo(ROUTES.login, returnTo)}
         className={buttonClass({ size: 'sm', className: styles.guestLogin })}
@@ -327,17 +318,7 @@ export default function AppShell() {
   const mobileItemsBeforeCreate = [exploreItem, ...compactItems.slice(0, 1)];
   const mobileItemsAfterCreate = [...compactItems.slice(1), accountItem];
 
-  const desktopItems: (NavItemDef & { wideOnly?: boolean })[] = isAuthenticated
-    ? [exploreItem, ...items]
-    : [
-        {
-          to: ROUTES.howItWorks,
-          label: t('nav.landing.howItWorks'),
-          Icon: HelpCircle,
-          wideOnly: true,
-        },
-        ...compactItems,
-      ];
+  const desktopItems: NavItemDef[] = [exploreItem, ...(isAuthenticated ? items : compactItems)];
 
   return (
     <CreateEventDialogProvider>
