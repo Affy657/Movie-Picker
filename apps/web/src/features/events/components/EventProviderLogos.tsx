@@ -56,20 +56,13 @@ function SubscriptionsMenu({
   return (
     <FixedMenu
       ariaLabel={t('movies.watchProviders.subscriptionsLabel')}
-      trigger={(triggerProps) => (
-        <button
-          type="button"
-          {...triggerProps}
-          className={styles.more}
-          aria-label={t('movies.watchProviders.moreSubscriptionsAria', {
-            more: hiddenCount,
-            count: families.length,
-            title,
-          })}
-        >
-          +{hiddenCount}
-        </button>
-      )}
+      triggerContent={`+${hiddenCount}`}
+      triggerAriaLabel={t('movies.watchProviders.moreSubscriptionsAria', {
+        more: hiddenCount,
+        count: families.length,
+        title,
+      })}
+      triggerClassName={styles.more}
     >
       {(close) =>
         families.map((family) => (

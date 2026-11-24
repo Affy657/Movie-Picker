@@ -67,18 +67,15 @@ function SortMenuHeader<K extends string>({
   return (
     <FixedMenu
       ariaLabel={ariaLabel}
-      trigger={(triggerProps) => (
-        <button
-          type="button"
-          {...triggerProps}
-          aria-label={ariaLabel}
-          className={clsx(styles.colHeaderBtn, active && styles.colHeaderBtnActive)}
-        >
+      triggerContent={
+        <>
           <span>{label}</span>
           {active ? <DirectionIcon aria-hidden size={ICON_SIZE.xs} /> : null}
           <ChevronDown aria-hidden size={ICON_SIZE.xs} />
-        </button>
-      )}
+        </>
+      }
+      triggerAriaLabel={ariaLabel}
+      triggerClassName={clsx(styles.colHeaderBtn, active && styles.colHeaderBtnActive)}
     >
       {(close) =>
         sorts.map((sort) => (

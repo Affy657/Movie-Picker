@@ -11,7 +11,7 @@ const FAMILY_SUFFIXES = [
 ];
 
 export function providerFamilyName(name: string): string {
-  const clean = name.trim().split(/\s+/).join(' ');
+  const clean = name.trim().replaceAll(/\s+/g, ' ');
   const lower = clean.toLowerCase();
   const suffix = FAMILY_SUFFIXES.find((candidate) => lower.endsWith(candidate));
   return suffix ? clean.slice(0, clean.length - suffix.length) : clean;

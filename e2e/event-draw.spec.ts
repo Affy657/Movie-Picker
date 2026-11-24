@@ -5,6 +5,7 @@ import {
   isoDateDaysFromNow,
   registerAccount,
   STUB_MOVIE,
+  winnerMarker,
 } from './helpers';
 
 test.describe('Draw (host)', () => {
@@ -34,11 +35,7 @@ test.describe('Draw (host)', () => {
       timeout: 15_000,
     });
     await expect(page.getByText('Film choisi', { exact: true })).toBeVisible();
-    await expect(
-      page
-        .getByRole('region', { name: 'Films proposés' })
-        .getByText('Film gagnant', { exact: true })
-    ).toBeVisible();
+    await expect(winnerMarker(page).first()).toBeVisible();
 
     await page.getByRole('button', { name: 'Gérer le tirage' }).click();
     await page.getByRole('menuitem', { name: 'Retirer un gagnant' }).click();
@@ -49,7 +46,7 @@ test.describe('Draw (host)', () => {
       timeout: 15_000,
     });
     await expect(page.getByRole('region', { name: /vous regardez/i })).toBeHidden();
-    await expect(page.getByText('Film gagnant', { exact: true })).toBeHidden();
+    await expect(winnerMarker(page)).toHaveCount(0);
   });
 
   test('closes a night whose time has passed without picking a movie, then files it in the history', async ({

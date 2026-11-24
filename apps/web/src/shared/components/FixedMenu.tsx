@@ -1,4 +1,4 @@
-import { useCallback, useId, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { useCallback, useId, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { MenuPanel } from '@/shared/components/Menu';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
@@ -6,21 +6,17 @@ import { fixedPopoverStyle, useFixedPopover } from '@/shared/hooks/useFixedPopov
 import { useMenuFocus } from '@/shared/hooks/useMenuFocus';
 import styles from './FixedMenu.module.css';
 
-export interface FixedMenuTriggerProps {
-  ref: RefObject<HTMLButtonElement | null>;
-  onClick: () => void;
-  'aria-haspopup': 'menu';
-  'aria-expanded': boolean;
-  'aria-controls': string | undefined;
-}
-
 export default function FixedMenu({
   ariaLabel,
-  trigger,
+  triggerContent,
+  triggerAriaLabel,
+  triggerClassName,
   children,
 }: Readonly<{
   ariaLabel: string;
-  trigger: (props: FixedMenuTriggerProps) => ReactNode;
+  triggerContent: ReactNode;
+  triggerAriaLabel: string;
+  triggerClassName?: string;
   children: (close: () => void) => ReactNode;
 }>) {
   const [open, setOpen] = useState(false);
@@ -38,13 +34,18 @@ export default function FixedMenu({
 
   return (
     <>
-      {trigger({
-        ref: triggerRef,
-        onClick: () => setOpen((value) => !value),
-        'aria-haspopup': 'menu',
-        'aria-expanded': open,
-        'aria-controls': open ? menuId : undefined,
-      })}
+      <button
+        type="button"
+        ref={triggerRef}
+        className={triggerClassName}
+        onClick={() => setOpen((value) => !value)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls={open ? menuId : undefined}
+        aria-label={triggerAriaLabel}
+      >
+        {triggerContent}
+      </button>
       {open
         ? createPortal(
             <MenuPanel
