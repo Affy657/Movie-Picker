@@ -71,6 +71,18 @@ describe('EventDetail: joining on the way back from the invitation card', () => 
     expect(joinCalls).toHaveLength(1);
   });
 
+  it('drops the request from the address as soon as the join starts, not when it answers', async () => {
+    server.use(
+      signedInBob,
+      http.post(`${TEST_API_V1}/events/${SLUG}/join`, () => new Promise<never>(() => undefined))
+    );
+
+    renderNight(`/e/${SLUG}?rejoindre=1`);
+
+    await waitFor(() => expect(joinCalls).toHaveLength(1));
+    await waitFor(() => expect(screen.getByTestId('location-search')).toHaveTextContent(''));
+  });
+
   it('leaves a visitor who came back without an account in front of the card', async () => {
     server.use(authMeGuestHandler, createJoinHandler(SLUG));
 

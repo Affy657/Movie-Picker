@@ -52,6 +52,7 @@ describe('joinIntentStep', () => {
       { event: { ...NIGHT, myParticipant: { id: 'p1', pseudo: 'Bob' } } },
     ],
     ['the night is over', { event: { ...NIGHT, isFinished: true } }],
+    ['the host removed the account from the night', { event: { ...NIGHT, viewerRemoved: true } }],
     [
       'the night is full',
       {
