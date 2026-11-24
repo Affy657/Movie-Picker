@@ -5,7 +5,8 @@ namespace MoviePicker.Api.Domain;
 
 public static class UserText
 {
-    private static readonly HashSet<char> BlankLetters = ['\u115F', '\u1160', '\u3164', '\uFFA0', '\u2800'];
+    private static readonly HashSet<Rune> BlankLetters =
+        [new Rune('\u115F'), new Rune('\u1160'), new Rune('\u3164'), new Rune('\uFFA0'), new Rune('\u2800')];
 
     public static string Clean(string? raw)
     {
@@ -30,9 +31,9 @@ public static class UserText
 
     public static bool HasVisibleCharacter(string text)
     {
-        foreach (var character in text)
+        foreach (var rune in text.EnumerateRunes())
         {
-            if (!IsInvisible(character))
+            if (!IsInvisible(rune))
                 return true;
         }
         return false;
@@ -41,11 +42,11 @@ public static class UserText
     private static bool IsDirectionalControl(char character) =>
         character is >= '\u202A' and <= '\u202E' or >= '\u2066' and <= '\u2069';
 
-    private static bool IsInvisible(char character)
+    private static bool IsInvisible(Rune rune)
     {
-        if (char.IsWhiteSpace(character) || char.IsControl(character) || BlankLetters.Contains(character))
+        if (Rune.IsWhiteSpace(rune) || Rune.IsControl(rune) || BlankLetters.Contains(rune))
             return true;
-        return CharUnicodeInfo.GetUnicodeCategory(character)
+        return Rune.GetUnicodeCategory(rune)
             is UnicodeCategory.Format
             or UnicodeCategory.NonSpacingMark
             or UnicodeCategory.EnclosingMark;
