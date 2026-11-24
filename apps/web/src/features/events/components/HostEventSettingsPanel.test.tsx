@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
@@ -33,6 +33,25 @@ beforeAll(() => {
     };
   }
 });
+
+function whenTrigger() {
+  return screen.getByRole('button', { name: /^date et heure/i });
+}
+
+async function pickDay(user: ReturnType<typeof userEvent.setup>, day: string) {
+  if (whenTrigger().getAttribute('aria-expanded') !== 'true') await user.click(whenTrigger());
+  const panel = screen.getByRole('group', { name: 'Date et heure' });
+  if (!within(panel).queryByRole('button', { name: day })) {
+    await user.click(within(panel).getByRole('button', { name: 'Mois suivant' }));
+  }
+  await user.click(within(panel).getByRole('button', { name: day }));
+}
+
+async function pickTime(user: ReturnType<typeof userEvent.setup>, time: string) {
+  if (whenTrigger().getAttribute('aria-expanded') !== 'true') await user.click(whenTrigger());
+  const panel = screen.getByRole('group', { name: 'Date et heure' });
+  await user.click(within(panel).getByRole('button', { name: time }));
+}
 
 function renderWithRouter(ui: ReactNode, qc = createTestQueryClient()) {
   return render(
@@ -76,6 +95,7 @@ describe('HostEventSettingsPanel', () => {
   });
   afterEach(() => {
     vi.useRealTimers();
+    vi.unstubAllGlobals();
     server.resetHandlers();
   });
   afterAll(() => server.close());
@@ -95,14 +115,13 @@ describe('HostEventSettingsPanel', () => {
       />
     );
 
-    expect(screen.getByLabelText(/nom de la soir/i)).toBeDisabled();
-    expect(screen.getByRole('radio', { name: /par les votes/i })).toBeDisabled();
-    expect(screen.getByRole('switch', { name: /limiter les films proposés/i })).toBeDisabled();
-    expect(
-      screen.getByRole('switch', { name: /limiter le nombre de participants/i })
-    ).toBeDisabled();
+    expect(screen.getByLabelText('Nom')).toBeDisabled();
+    expect(screen.getByRole('button', { name: /^date et heure/i })).toBeDisabled();
+    expect(screen.getByRole('radio', { name: 'Selon les votes' })).toBeDisabled();
+    expect(screen.getByLabelText('Films par personne')).toBeDisabled();
+    expect(screen.getByLabelText('Participants')).toBeDisabled();
     expect(screen.getByLabelText(/films gagnants/i)).toBeEnabled();
-    expect(screen.getByRole('switch', { name: /répéter cette soirée/i })).toBeEnabled();
+    expect(screen.getByRole('switch', { name: 'Répéter' })).toBeEnabled();
     expect(screen.getByRole('status')).toHaveTextContent(/tirage a commenc/i);
   });
 
@@ -140,7 +159,7 @@ describe('HostEventSettingsPanel', () => {
       qc
     );
 
-    await user.click(screen.getByRole('radio', { name: /pondéré par les votes/i }));
+    await user.click(screen.getByRole('radio', { name: 'Selon les votes' }));
 
     await waitFor(() => expect(patched).toBe(true));
   });
@@ -164,7 +183,7 @@ describe('HostEventSettingsPanel', () => {
         onClose={() => {}}
       />
     );
-    const allowSeries = screen.getByRole('switch', { name: /autoriser les séries tv/i });
+    const allowSeries = screen.getByRole('switch', { name: 'Séries TV' });
 
     await user.click(allowSeries);
     await waitFor(() => expect(bodies).toHaveLength(1));
@@ -193,7 +212,7 @@ describe('HostEventSettingsPanel', () => {
         onClose={() => {}}
       />
     );
-    const title = screen.getByLabelText(/nom de la soir/i);
+    const title = screen.getByLabelText('Nom');
 
     await user.type(title, 'x{Backspace}');
     await new Promise((resolve) => setTimeout(resolve, 800));
@@ -226,7 +245,7 @@ describe('HostEventSettingsPanel', () => {
         onClose={() => {}}
       />
     );
-    const allowSeries = screen.getByRole('switch', { name: /autoriser les séries tv/i });
+    const allowSeries = screen.getByRole('switch', { name: 'Séries TV' });
 
     await user.click(allowSeries);
     await waitFor(() => expect(bodies).toHaveLength(1));
@@ -266,7 +285,7 @@ describe('HostEventSettingsPanel', () => {
       qc
     );
 
-    await user.type(screen.getByLabelText(/nom de la soir/i), ' ciné');
+    await user.type(screen.getByLabelText('Nom'), ' ciné');
 
     await waitFor(() => expect(patchedBody).toEqual({ title: 'Test ciné' }), { timeout: 3000 });
     await waitFor(() =>
@@ -274,20 +293,14 @@ describe('HostEventSettingsPanel', () => {
     );
   });
 
-  it('enabling the participants limit sends the default cap, then the typed one', async () => {
+  it('stepping the participants limit down from unlimited sends the default cap, then the typed one', async () => {
     const user = userEvent.setup();
     const seen: unknown[] = [];
     server.use(
       http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
         const body = (await request.json()) as Record<string, unknown>;
         seen.push(body.maxParticipants);
-        return HttpResponse.json({
-          theme: 'SF',
-          maxProposalsPerParticipant: null,
-          maxParticipants: 8,
-          wheelMode: 'strictRandom',
-          richSharePreview: false,
-        });
+        return HttpResponse.json({ ...baseEvent.config, maxParticipants: 8 });
       })
     );
 
@@ -301,18 +314,17 @@ describe('HostEventSettingsPanel', () => {
       />
     );
 
-    expect(screen.queryByLabelText(/participants max/i)).not.toBeInTheDocument();
-    await user.click(screen.getByRole('switch', { name: /limiter le nombre de participants/i }));
-    await waitFor(() => expect(seen).toEqual([10]));
+    const field = screen.getByLabelText('Participants');
+    expect(field).toHaveAttribute('placeholder', 'Sans limite');
+    await user.click(within(field.closest('div')!).getByRole('button', { name: 'Diminuer' }));
+    await waitFor(() => expect(seen).toEqual([10]), { timeout: 3000 });
 
-    await user.clear(screen.getByLabelText(/participants max/i));
-    await user.type(screen.getByLabelText(/participants max/i), '8');
+    fireEvent.change(field, { target: { value: '8' } });
 
     await waitFor(() => expect(seen.at(-1)).toBe(8), { timeout: 3000 });
   });
 
-  it('turning the participants limit off sends 0 and hides the counter', async () => {
-    const user = userEvent.setup();
+  it('emptying the participants limit sends 0 and shows it as unlimited', async () => {
     let seenMax: unknown = 'untouched';
     server.use(
       http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
@@ -332,11 +344,12 @@ describe('HostEventSettingsPanel', () => {
       />
     );
 
-    expect(screen.getByLabelText(/participants max/i)).toHaveValue(8);
-    await user.click(screen.getByRole('switch', { name: /limiter le nombre de participants/i }));
+    const field = screen.getByLabelText('Participants');
+    expect(field).toHaveValue(8);
+    fireEvent.change(field, { target: { value: '' } });
 
     await waitFor(() => expect(seenMax).toBe(0));
-    expect(screen.queryByLabelText(/participants max/i)).not.toBeInTheDocument();
+    expect(field).toHaveValue(null);
   });
 
   it('shows a limit stored at the cap as a limit, with its value', () => {
@@ -353,18 +366,11 @@ describe('HostEventSettingsPanel', () => {
       />
     );
 
-    expect(
-      screen.getByRole('switch', { name: /limiter le nombre de participants/i })
-    ).toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByRole('switch', { name: /limiter les films proposés/i })).toHaveAttribute(
-      'aria-checked',
-      'true'
-    );
-    expect(screen.getByLabelText(/participants max/i)).toHaveValue(300);
-    expect(screen.getByLabelText(/films max par personne/i)).toHaveValue(15);
+    expect(screen.getByLabelText('Participants')).toHaveValue(300);
+    expect(screen.getByLabelText('Films par personne')).toHaveValue(15);
   });
 
-  it('enabling the vote limit sends the default value, then the typed value', async () => {
+  it('stepping the vote limit down from unlimited sends the default value, then the typed value', async () => {
     const user = userEvent.setup();
     const seen: unknown[] = [];
     server.use(
@@ -385,24 +391,19 @@ describe('HostEventSettingsPanel', () => {
       />
     );
 
-    const toggle = screen.getByRole('switch', { name: /limiter les votes par participant/i });
-    expect(toggle).toHaveAttribute('aria-checked', 'false');
-    expect(screen.queryByLabelText(/^votes par participant$/i)).not.toBeInTheDocument();
-
-    await user.click(toggle);
+    const field = screen.getByLabelText('Votes par personne');
+    expect(field).toHaveValue(null);
+    await user.click(within(field.closest('div')!).getByRole('button', { name: 'Diminuer' }));
 
     await waitFor(() => expect(seen).toEqual([3]), { timeout: 3000 });
-    const field = screen.getByLabelText(/^votes par participant$/i);
     expect(field).toHaveValue(3);
 
-    await user.clear(field);
-    await user.type(field, '5');
+    fireEvent.change(field, { target: { value: '5' } });
 
     await waitFor(() => expect(seen.at(-1)).toBe(5), { timeout: 3000 });
   });
 
-  it('disabling the vote limit sends 0', async () => {
-    const user = userEvent.setup();
+  it('emptying the vote limit sends 0', async () => {
     let seenMaxVotes: unknown;
     server.use(
       http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
@@ -422,18 +423,14 @@ describe('HostEventSettingsPanel', () => {
       />
     );
 
-    const toggle = screen.getByRole('switch', { name: /limiter les votes par participant/i });
-    expect(toggle).toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByLabelText(/^votes par participant$/i)).toHaveValue(4);
-
-    await user.click(toggle);
+    const field = screen.getByLabelText('Votes par personne');
+    expect(field).toHaveValue(4);
+    fireEvent.change(field, { target: { value: '' } });
 
     await waitFor(() => expect(seenMaxVotes).toBe(0), { timeout: 3000 });
-    expect(screen.queryByLabelText(/^votes par participant$/i)).not.toBeInTheDocument();
   });
 
   it('refuse une limite de votes en dessous de 1 sans appeler l’API', async () => {
-    const user = userEvent.setup();
     let patchCalled = false;
     server.use(
       http.patch(`${TEST_API_V1}/events/${slug}/config`, () => {
@@ -452,9 +449,7 @@ describe('HostEventSettingsPanel', () => {
       />
     );
 
-    const field = screen.getByLabelText(/^votes par participant$/i);
-    await user.clear(field);
-    await user.type(field, '0');
+    fireEvent.change(screen.getByLabelText('Votes par personne'), { target: { value: '0' } });
 
     expect(
       await screen.findByText(/votes par participant : nombre entier à partir de 1/i)
@@ -464,7 +459,6 @@ describe('HostEventSettingsPanel', () => {
   });
 
   it('rejects a capacity below the number of participants already in', async () => {
-    const user = userEvent.setup();
     let patchCalled = false;
     server.use(
       http.patch(`${TEST_API_V1}/events/${slug}/config`, () => {
@@ -487,13 +481,45 @@ describe('HostEventSettingsPanel', () => {
       />
     );
 
-    await user.clear(screen.getByLabelText(/participants max/i));
-    await user.type(screen.getByLabelText(/participants max/i), '3');
+    fireEvent.change(screen.getByLabelText('Participants'), { target: { value: '3' } });
 
     expect(
       await screen.findByText(/Impossible de réduire la capacité/i, {}, { timeout: 3000 })
     ).toBeInTheDocument();
     expect(patchCalled).toBe(false);
+  });
+
+  it('shows a refused rule on the rules row of a phone and opens the rules again', async () => {
+    stubMatchMedia(true);
+    const user = userEvent.setup();
+    server.use(http.patch(`${TEST_API_V1}/events/${slug}/config`, () => HttpResponse.json({})));
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={{
+          ...baseEvent,
+          participantCount: 5,
+          config: { ...baseEvent.config!, maxParticipants: 8 },
+        }}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /^règles/i }));
+    const rules = screen.getByRole('dialog', { name: 'Règles' });
+    fireEvent.change(within(rules).getByLabelText('Participants'), { target: { value: '3' } });
+    await user.click(within(rules).getByRole('button', { name: 'Terminé' }));
+
+    expect(screen.queryByRole('dialog', { name: 'Règles' })).not.toBeInTheDocument();
+    expect(
+      await screen.findByRole('dialog', { name: 'Règles' }, { timeout: 3000 })
+    ).toHaveTextContent(/Impossible de réduire la capacité/i);
+    expect(screen.getByRole('button', { name: /^règles/i })).toHaveAccessibleDescription(
+      /Impossible de réduire la capacité/i
+    );
   });
 
   it('sends the number of movies to draw typed by the host', async () => {
@@ -556,7 +582,7 @@ describe('HostEventSettingsPanel', () => {
     expect(body).toEqual({ winnerCount: 3 });
   });
 
-  it('sends the date, the time and the notify choice once the host leaves the date field', async () => {
+  it('sends the date, the time and the notify choice once the host leaves the date', async () => {
     const user = userEvent.setup();
     let body: Record<string, unknown> | null = null;
     server.use(
@@ -577,10 +603,10 @@ describe('HostEventSettingsPanel', () => {
       createTestQueryClient()
     );
 
-    const dateField = screen.getByLabelText(/date et heure/i);
-    await user.clear(dateField);
-    await user.type(dateField, '2030-02-01T21:30');
-    await user.click(screen.getByLabelText(/nom de la soir/i));
+    expect(whenTrigger()).toHaveTextContent('Mardi 1 janvier 2030, 20:00');
+    await pickDay(user, 'vendredi 1 février 2030');
+    await pickTime(user, '21:30');
+    await user.click(screen.getByLabelText('Nom'));
 
     await waitFor(() => expect(body).not.toBeNull(), { timeout: 3000 });
     expect(body).toEqual({
@@ -591,17 +617,6 @@ describe('HostEventSettingsPanel', () => {
   });
 
   describe('dates the night cannot take', () => {
-    function watchPatches() {
-      const bodies: Record<string, unknown>[] = [];
-      server.use(
-        http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
-          bodies.push((await request.json()) as Record<string, unknown>);
-          return HttpResponse.json({ ...baseEvent.config });
-        })
-      );
-      return bodies;
-    }
-
     function renderPanel() {
       renderWithRouter(
         <HostEventSettingsPanel
@@ -612,43 +627,22 @@ describe('HostEventSettingsPanel', () => {
           onClose={() => {}}
         />
       );
-      return screen.getByLabelText(/date et heure/i);
     }
 
-    it('refuses a typo on the year that would end the night, and saves nothing', async () => {
+    it('keeps the days that would end the night at once out of reach', async () => {
       const user = userEvent.setup();
-      const bodies = watchPatches();
-      const dateField = renderPanel();
+      renderPanel();
 
-      await user.click(dateField);
-      fireEvent.change(dateField, { target: { value: '2028-01-01T20:00' } });
-      await user.click(screen.getByLabelText(/nom de la soir/i));
+      await user.click(whenTrigger());
+      const panel = screen.getByRole('group', { name: 'Date et heure' });
+      await user.click(within(panel).getByRole('button', { name: 'Mois précédent' }));
+      await user.click(within(panel).getByRole('button', { name: 'Mois précédent' }));
 
+      expect(within(panel).getByRole('button', { name: 'Mois précédent' })).toBeDisabled();
       expect(
-        screen.getByText(
-          'Cette date terminerait la soirée aussitôt : choisissez une date plus récente.'
-        )
-      ).toBeInTheDocument();
-      expect(screen.getByText('Non enregistré')).toBeInTheDocument();
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      expect(bodies).toEqual([]);
-    });
-
-    it('shows an absurd year as an error, never as saved', async () => {
-      const user = userEvent.setup();
-      const bodies = watchPatches();
-      const dateField = renderPanel();
-
-      await user.click(dateField);
-      fireEvent.change(dateField, { target: { value: '200494-12-04T20:00' } });
-
-      expect(screen.getByText('Date et heure de la soirée invalides.')).toBeInTheDocument();
-      expect(screen.getByText('Non enregistré')).toBeInTheDocument();
-      expect(screen.queryByText('Enregistré')).not.toBeInTheDocument();
-      expect(screen.queryByText(/Soirée prévue/)).not.toBeInTheDocument();
-      await user.click(screen.getByLabelText(/nom de la soir/i));
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      expect(bodies).toEqual([]);
+        within(panel).getByRole('button', { name: 'vendredi 23 novembre 2029' })
+      ).toBeDisabled();
+      expect(within(panel).getByRole('button', { name: 'samedi 24 novembre 2029' })).toBeEnabled();
     });
 
     it('shows the refusal of the API under the date field', async () => {
@@ -658,18 +652,21 @@ describe('HostEventSettingsPanel', () => {
           apiErrorJson(400, 'event_date_too_early')
         )
       );
-      const dateField = renderPanel();
+      renderPanel();
 
-      await user.click(dateField);
-      fireEvent.change(dateField, { target: { value: '2030-02-01T21:30' } });
-      await user.click(screen.getByLabelText(/nom de la soir/i));
+      await pickDay(user, 'vendredi 1 février 2030');
+      await pickTime(user, '21:30');
+      await user.click(screen.getByLabelText('Nom'));
 
       expect(
         await screen.findByText(
-          'Cette date est trop ancienne : la soirée serait aussitôt terminée.'
+          'Cette date est trop ancienne : la soirée serait aussitôt terminée.',
+          {},
+          { timeout: 3000 }
         )
       ).toBeInTheDocument();
-      expect(screen.getByLabelText(/date et heure/i)).toHaveAttribute('aria-invalid', 'true');
+      expect(whenTrigger()).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.getByText('Non enregistré')).toBeInTheDocument();
     });
   });
 
@@ -695,49 +692,81 @@ describe('HostEventSettingsPanel', () => {
           onClose={() => {}}
         />
       );
-      return screen.getByLabelText(/date et heure/i);
     }
 
     const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-    it('sends a single new date, so a single notification, however long the host pauses while editing it', async () => {
+    it('sends a single new date, so a single notification, however long the host pauses while picking it', async () => {
       const user = userEvent.setup();
       const bodies = capturePatchBodies();
-      const dateField = renderPanel();
+      renderPanel();
 
-      await user.click(dateField);
-      fireEvent.change(dateField, { target: { value: '2030-02-01T20:00' } });
+      await pickDay(user, 'vendredi 1 février 2030');
       await pause(800);
-      fireEvent.change(dateField, { target: { value: '2030-02-01T21:30' } });
+      await pickDay(user, 'samedi 2 février 2030');
       await pause(800);
 
       expect(bodies).toEqual([]);
 
-      await user.click(screen.getByLabelText(/nom de la soir/i));
+      await pickTime(user, '21:30');
+      await user.click(screen.getByLabelText('Nom'));
 
       await waitFor(() => expect(bodies).toHaveLength(1), { timeout: 3000 });
       expect(bodies[0]).toEqual({
-        date: '2030-02-01',
+        date: '2030-02-02',
         time: '21:30',
         notifyParticipantsOfDateChange: true,
       });
     });
 
-    it('keeps the notify choice on screen until the new date is saved, and sends it', async () => {
+    it('lets the host keep the participants out of the loop once the date is picked', async () => {
       const user = userEvent.setup();
       const bodies = capturePatchBodies();
-      const dateField = renderPanel();
+      renderPanel();
 
-      await user.click(dateField);
-      fireEvent.change(dateField, { target: { value: '2030-02-01T21:30' } });
+      await pickDay(user, 'vendredi 1 février 2030');
+      await pickTime(user, '21:30');
       await pause(800);
-      await user.click(screen.getByRole('checkbox', { name: /prévenir les participants/i }));
-      await user.click(screen.getByLabelText(/nom de la soir/i));
+
+      expect(bodies).toEqual([]);
+      expect(screen.getByText('Enregistrement…')).toBeInTheDocument();
+      await user.click(screen.getByRole('switch', { name: 'Prévenir les participants' }));
+      await user.click(screen.getByLabelText('Nom'));
 
       await waitFor(() => expect(bodies).toHaveLength(1), { timeout: 3000 });
       expect(bodies[0]).toEqual({
         date: '2030-02-01',
         time: '21:30',
+        notifyParticipantsOfDateChange: false,
+      });
+      expect(await screen.findByText('Enregistré')).toBeInTheDocument();
+    });
+
+    it('lets the host keep the participants out of the loop on a phone too', async () => {
+      stubMatchMedia(true);
+      const user = userEvent.setup();
+      const bodies = capturePatchBodies();
+      renderWithRouter(<ClosablePanel />);
+
+      await user.click(whenTrigger());
+      const sheet = screen.getByRole('dialog', { name: 'Date et heure' });
+      await user.click(within(sheet).getByRole('button', { name: 'vendredi 4 janvier 2030' }));
+      await user.click(within(sheet).getByRole('button', { name: 'Valider' }));
+      await pause(800);
+
+      expect(bodies).toEqual([]);
+      await user.click(screen.getByRole('switch', { name: 'Prévenir les participants' }));
+      fireEvent.click(
+        within(screen.getByRole('dialog', { name: 'Paramètres de la soirée' })).getByRole(
+          'button',
+          { name: 'Fermer' }
+        )
+      );
+
+      await waitFor(() => expect(bodies).toHaveLength(1), { timeout: 3000 });
+      expect(bodies[0]).toEqual({
+        date: '2030-01-04',
+        time: '20:00',
         notifyParticipantsOfDateChange: false,
       });
     });
@@ -755,32 +784,64 @@ describe('HostEventSettingsPanel', () => {
       );
     }
 
-    it('saves a date still being edited when the sheet closes', async () => {
+    function ReopenablePanel() {
+      const [open, setOpen] = useState(true);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>
+            Rouvrir
+          </button>
+          <HostEventSettingsPanel
+            slug={slug}
+            hostToken={null}
+            event={baseEvent}
+            open={open}
+            onClose={() => setOpen(false)}
+          />
+        </>
+      );
+    }
+
+    it('takes today from the moment the window opens again', async () => {
+      const user = userEvent.setup();
+      renderWithRouter(<ReopenablePanel />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Fermer' }));
+      vi.setSystemTime(new Date('2029-12-04T12:00:00Z'));
+      await user.click(screen.getByRole('button', { name: 'Rouvrir' }));
+      await user.click(whenTrigger());
+      const panel = screen.getByRole('group', { name: 'Date et heure' });
+      await user.click(within(panel).getByRole('button', { name: 'Mois précédent' }));
+
+      expect(within(panel).getByRole('button', { name: 'mardi 4 décembre 2029' })).toHaveAttribute(
+        'aria-current',
+        'date'
+      );
+    });
+
+    it('saves a date still being picked when the window closes', async () => {
       const user = userEvent.setup();
       const bodies = capturePatchBodies();
       renderWithRouter(<ClosablePanel />);
-      const dateField = screen.getByLabelText(/date et heure/i);
 
-      await user.click(dateField);
-      fireEvent.change(dateField, { target: { value: '2030-02-01T21:30' } });
+      await pickDay(user, 'vendredi 1 février 2030');
       fireEvent.click(screen.getByRole('button', { name: 'Fermer' }));
 
       await waitFor(() => expect(bodies).toHaveLength(1), { timeout: 3000 });
       expect(bodies[0]).toEqual({
         date: '2030-02-01',
-        time: '21:30',
+        time: '20:00',
         notifyParticipantsOfDateChange: true,
       });
     });
 
-    it('leaves a date still being edited out of the save of another field', async () => {
+    it('leaves a date still being picked out of the save of another field', async () => {
       const user = userEvent.setup();
       const bodies = capturePatchBodies();
-      const dateField = renderPanel();
+      renderPanel();
 
-      await user.type(screen.getByLabelText(/nom de la soir/i), ' ciné');
-      await user.click(dateField);
-      fireEvent.change(dateField, { target: { value: '2030-02-01T21:30' } });
+      await user.type(screen.getByLabelText('Nom'), ' ciné');
+      await pickDay(user, 'vendredi 1 février 2030');
 
       await waitFor(() => expect(bodies).toHaveLength(1), { timeout: 3000 });
       expect(bodies[0]).toEqual({ title: 'Test ciné' });
@@ -1073,10 +1134,7 @@ describe('HostEventSettingsPanel', () => {
       />
     );
 
-    await user.click(
-      await screen.findByRole('switch', { name: /limiter les votes par participant/i })
-    );
-    await user.clear(screen.getByLabelText(/^votes par participant$/i));
+    fireEvent.change(screen.getByLabelText('Votes par personne'), { target: { value: '0' } });
     await user.click(await screen.findByRole('button', { name: /enregistrer comme modèle/i }));
 
     expect(
@@ -1150,7 +1208,7 @@ describe('HostEventSettingsPanel', () => {
     expect(await screen.findByText('Soirée frissons')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Mettre à jour' })).not.toBeInTheDocument();
     expect(screen.queryByText(/Vous avez modifié la configuration/)).not.toBeInTheDocument();
-    expect(screen.getByText('Cette configuration marche bien ?')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Enregistrer comme modèle' })).toBeInTheDocument();
   });
 
   it('updates the applied template after a settings tweak', async () => {
@@ -1188,10 +1246,10 @@ describe('HostEventSettingsPanel', () => {
 
     await user.click(await screen.findByRole('button', { name: /Soirée horreur/ }));
     await waitFor(() =>
-      expect(screen.getByRole('radio', { name: /pondéré par les votes/i })).toBeChecked()
+      expect(screen.getByRole('radio', { name: 'Selon les votes' })).toBeChecked()
     );
 
-    await user.click(screen.getByRole('radio', { name: /aléatoire strict/i }));
+    await user.click(screen.getByRole('radio', { name: 'Au hasard' }));
 
     const updateButton = await screen.findByRole('button', { name: 'Mettre à jour' });
     await user.click(updateButton);
@@ -1273,10 +1331,9 @@ describe('HostEventSettingsPanel', () => {
       />
     );
 
-    const section = screen.getByTestId('event-templates-section');
     const chip = await screen.findByRole('button', { name: /Soirée horreur/ });
     expect(chip).toBeDisabled();
-    expect(section).toHaveTextContent(/les modèles ne s’appliquent plus/i);
+    expect(screen.getByText(/les modèles ne s’appliquent plus/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Gérer' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Enregistrer comme modèle' })).toBeEnabled();
 
@@ -1284,7 +1341,7 @@ describe('HostEventSettingsPanel', () => {
     expect(patched).toBe(false);
   });
 
-  it('regroupe la gestion des templates en bas du panneau', async () => {
+  it('puts the templates at the top of the rules, before the first rule', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
         HttpResponse.json({ items: [templateFixture] })
@@ -1302,16 +1359,15 @@ describe('HostEventSettingsPanel', () => {
     );
 
     const chip = await screen.findByRole('button', { name: /Soirée horreur/ });
-    const section = screen.getByTestId('event-templates-section');
+    const rules = screen.getByRole('region', { name: 'Règles' });
 
-    expect(section).toContainElement(chip);
-    expect(section).toContainElement(
+    expect(rules).toContainElement(chip);
+    expect(rules).toContainElement(
       screen.getByRole('button', { name: 'Enregistrer comme modèle' })
     );
-
-    const lastSetting = screen.getByRole('radio', { name: /aléatoire strict/i });
     expect(
-      lastSetting.compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING
+      chip.compareDocumentPosition(screen.getByLabelText('Participants')) &
+        Node.DOCUMENT_POSITION_FOLLOWING
     ).toBeTruthy();
   });
 
@@ -1365,9 +1421,6 @@ describe('HostEventSettingsPanel', () => {
 
       await waitFor(() => expect(bodies).toHaveLength(1));
       expect(bodies[0]!.groupId).toBe('g1');
-      expect(
-        screen.getByText('Les membres du groupe voient cette soirée dans Mes soirées.')
-      ).toBeInTheDocument();
     });
 
     it('takes the night out of its group', async () => {
@@ -1394,32 +1447,6 @@ describe('HostEventSettingsPanel', () => {
       expect(bodies[0]!.groupId).toBeUndefined();
     });
 
-    it('tells a repeated group night that each next one reaches the group, with nothing to share again', async () => {
-      serveGroupsAndCapturePatch();
-
-      renderWithRouter(
-        <HostEventSettingsPanel
-          slug={slug}
-          hostToken="ht-1"
-          event={{
-            ...groupEvent('g1'),
-            config: { ...groupEvent('g1').config!, recurrence: 'weekly' },
-          }}
-          open
-          onClose={() => {}}
-        />
-      );
-
-      expect(
-        await screen.findByText(
-          'Chaque soirée suivante apparaît chez les membres de « Les jeudis ciné », qui sont prévenus. Rien à repartager.'
-        )
-      ).toBeInTheDocument();
-      expect(
-        screen.queryByText(/les participants ne sont pas réinscrits/i)
-      ).not.toBeInTheDocument();
-    });
-
     it('shows no group for a night left in a group the host no longer belongs to', async () => {
       serveGroupsAndCapturePatch();
 
@@ -1436,9 +1463,6 @@ describe('HostEventSettingsPanel', () => {
       expect(
         await screen.findByRole('button', { name: 'Aucun', pressed: true })
       ).toBeInTheDocument();
-      expect(
-        screen.queryByText('Les membres du groupe voient cette soirée dans Mes soirées.')
-      ).not.toBeInTheDocument();
     });
 
     it('shows no group choice to a host without group', async () => {
@@ -1459,7 +1483,7 @@ describe('HostEventSettingsPanel', () => {
         />
       );
 
-      await screen.findByRole('switch', { name: /répéter cette soirée/i });
+      await screen.findByRole('switch', { name: 'Répéter' });
       expect(screen.queryByRole('button', { name: 'Aucun' })).not.toBeInTheDocument();
     });
   });
@@ -1494,7 +1518,7 @@ describe('HostEventSettingsPanel', () => {
         />
       );
 
-      await user.click(screen.getByRole('switch', { name: /répéter cette soirée/i }));
+      await user.click(screen.getByRole('switch', { name: 'Répéter' }));
 
       await waitFor(() => expect(bodies).toHaveLength(1));
       expect(bodies[0]!.recurrence).toBe('weekly');
@@ -1515,7 +1539,7 @@ describe('HostEventSettingsPanel', () => {
         />
       );
 
-      expect(screen.getByText(/les participants ne sont pas réinscrits/i)).toBeInTheDocument();
+      expect(screen.getByRole('radio', { name: 'Semaine' })).toBeChecked();
 
       await user.click(screen.getByRole('radio', { name: 'Mois' }));
 
@@ -1537,7 +1561,7 @@ describe('HostEventSettingsPanel', () => {
         />
       );
 
-      await user.click(screen.getByRole('switch', { name: /répéter cette soirée/i }));
+      await user.click(screen.getByRole('switch', { name: 'Répéter' }));
 
       await waitFor(() => expect(bodies).toHaveLength(1));
       expect(bodies[0]!.clearRecurrence).toBe(true);
@@ -1558,7 +1582,7 @@ describe('HostEventSettingsPanel', () => {
         />
       );
 
-      await user.click(screen.getByRole('switch', { name: /autoriser les séries tv/i }));
+      await user.click(screen.getByRole('switch', { name: 'Séries TV' }));
 
       await waitFor(() => expect(bodies).toHaveLength(1));
       expect(bodies[0]!.recurrence).toBeUndefined();
@@ -1576,7 +1600,7 @@ describe('HostEventSettingsPanel', () => {
         />
       );
 
-      expect(screen.getByRole('switch', { name: /répéter cette soirée/i })).toBeDisabled();
+      expect(screen.getByRole('switch', { name: 'Répéter' })).toBeDisabled();
       expect(screen.queryByRole('radio', { name: 'Mois' })).not.toBeInTheDocument();
       expect(screen.getByText(/la prochaine soirée est déjà créée/i)).toBeInTheDocument();
     });
@@ -1626,9 +1650,9 @@ describe('HostEventSettingsPanel', () => {
     it('scrolls every setting inside the padded body of the dialog', () => {
       renderOpenPanel();
 
-      const body = screen.getByLabelText(/nom de la soir/i).closest(`.${modalStyles.body}`);
+      const body = screen.getByLabelText('Nom').closest(`.${modalStyles.body}`);
       expect(body).not.toBeNull();
-      expect(body).toContainElement(screen.getByRole('switch', { name: /répéter cette soirée/i }));
+      expect(body).toContainElement(screen.getByRole('switch', { name: 'Répéter' }));
     });
 
     it('closes when its title bar is dragged down on a phone', () => {
@@ -1646,7 +1670,7 @@ describe('HostEventSettingsPanel', () => {
       const onClose = vi.fn();
       renderOpenPanel(onClose);
 
-      dragDown(screen.getByText('Vote et tirage'));
+      dragDown(screen.getByText('Ambiance'));
 
       expect(onClose).not.toHaveBeenCalled();
     });

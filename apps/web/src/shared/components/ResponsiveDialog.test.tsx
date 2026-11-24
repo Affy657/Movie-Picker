@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LocaleProvider } from '@/shared/i18n';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
@@ -113,4 +113,105 @@ describe('ResponsiveDialog', () => {
 
     expect(dialog.lastElementChild).toHaveTextContent('Votre note');
   });
+
+  it.each([false, true])(
+    'keeps a back button, header actions and tabs in its fixed header (phone: %s)',
+    async (isPhone) => {
+      stubMatchMedia(isPhone);
+      const onBack = vi.fn();
+      render(
+        <LocaleProvider>
+          <ResponsiveDialog
+            open
+            title="Abonnés et abonnements"
+            onClose={vi.fn()}
+            leading={
+              <button type="button" onClick={onBack}>
+                Retour
+              </button>
+            }
+            headerActions={<button type="button">Rechercher</button>}
+            tabs={<div data-testid="tabs">Onglets</div>}
+          >
+            <p>Liste</p>
+          </ResponsiveDialog>
+        </LocaleProvider>
+      );
+
+      const dialog = screen.getByRole('dialog', { name: 'Abonnés et abonnements' });
+      expect(within(dialog).getByTestId('tabs')).toBeInTheDocument();
+      expect(within(dialog).getByRole('button', { name: 'Rechercher' })).toBeInTheDocument();
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Retour' }));
+      expect(onBack).toHaveBeenCalledTimes(1);
+    }
+  );
+
+  it.each([false, true])(
+    'lets a replacement take the title row and stays named by its title (phone: %s)',
+    (isPhone) => {
+      stubMatchMedia(isPhone);
+      render(
+        <LocaleProvider>
+          <ResponsiveDialog
+            open
+            title="Abonnés et abonnements"
+            onClose={vi.fn()}
+            headerReplacement={<input aria-label="Nom ou @pseudo" />}
+          >
+            <p>Résultats</p>
+          </ResponsiveDialog>
+        </LocaleProvider>
+      );
+
+      const dialog = screen.getByRole('dialog', { name: 'Abonnés et abonnements' });
+      expect(within(dialog).getByRole('textbox', { name: 'Nom ou @pseudo' })).toBeInTheDocument();
+    }
+  );
+
+  it('keeps one height whatever its content with a fixed height', () => {
+    stubMatchMedia(false);
+    render(
+      <LocaleProvider>
+        <ResponsiveDialog open title="Partager" fixedHeight="md" onClose={vi.fn()}>
+          <p>Lien</p>
+        </ResponsiveDialog>
+      </LocaleProvider>
+    );
+
+    expect(screen.getByRole('dialog', { name: 'Partager' })).toHaveClass(
+      modalStyles.fixedHeightMd!
+    );
+  });
+
+  it('keeps one height on a phone with a fixed height', () => {
+    stubMatchMedia(true);
+    render(
+      <LocaleProvider>
+        <ResponsiveDialog open title="Partager" fixedHeight="md" onClose={vi.fn()}>
+          <p>Lien</p>
+        </ResponsiveDialog>
+      </LocaleProvider>
+    );
+
+    expect(screen.getByRole('dialog', { name: 'Partager' })).toHaveClass(sheetStyles.fixedHeight!);
+  });
+
+  it.each([false, true])(
+    'hands the Escape key to onEscape in both formats (phone: %s)',
+    (isPhone) => {
+      stubMatchMedia(isPhone);
+      const onEscape = vi.fn(() => true);
+      render(
+        <LocaleProvider>
+          <ResponsiveDialog open title="QR code" onClose={vi.fn()} onEscape={onEscape}>
+            <button type="button">Dedans</button>
+          </ResponsiveDialog>
+        </LocaleProvider>
+      );
+
+      fireEvent.keyDown(screen.getByRole('button', { name: 'Dedans' }), { key: 'Escape' });
+
+      expect(onEscape).toHaveBeenCalledTimes(1);
+    }
+  );
 });

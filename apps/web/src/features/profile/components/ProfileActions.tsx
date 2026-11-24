@@ -1,17 +1,18 @@
-import { useState } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import { Link } from 'react-router';
 import { ImagePlus, Pencil, Share2, UserCheck, UserMinus, UserPlus } from 'lucide-react';
 import { ROUTES } from '@/app/routes';
 import { useTranslation } from '@/shared/i18n';
 import AccountPromptLink from '@/shared/components/AccountPromptLink';
-import ShareDialog from '@/shared/components/ShareDialog';
-import { absoluteUrl } from '@/shared/seo/siteMeta';
 import type { PublicProfile } from '@/features/profile/api/profileApi';
+import { useEverOpened } from '@/shared/hooks/useEverOpened';
 import styles from './ProfileActions.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
 import clsx from 'clsx';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+
+const ProfileShareDialog = lazy(() => import('./ProfileShareDialog'));
 
 function followButtonClass(
   isFollowedByMe: boolean | null,
@@ -51,7 +52,6 @@ interface Props {
   followPending: boolean;
   onFollow: () => void;
   onUnfollow: () => void;
-  memberSinceLabel: string;
   onAddBanner?: () => void;
 }
 
@@ -62,12 +62,11 @@ export default function ProfileActions({
   followPending,
   onFollow,
   onUnfollow,
-  memberSinceLabel,
   onAddBanner,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [shareOpen, setShareOpen] = useState(false);
-  const shareUrl = absoluteUrl(ROUTES.profile(profile.handle));
+  const shareMounted = useEverOpened(shareOpen);
 
   return (
     <div className={styles.actions}>
@@ -142,20 +141,15 @@ export default function ProfileActions({
         <Share2 size={ICON_SIZE.md} aria-hidden />
       </IconButton>
 
-      <ShareDialog
-        open={shareOpen}
-        onClose={() => setShareOpen(false)}
-        title={t('profile.shareTitle')}
-        url={shareUrl}
-        qrHint={t('profile.qrHint')}
-        fileSlug={profile.handle}
-        preview={{
-          avatarId: profile.avatarId,
-          name: profile.displayName,
-          meta: [`@${profile.handle}`, memberSinceLabel],
-        }}
-        analyticsSurface="profile"
-      />
+      {shareMounted ? (
+        <Suspense fallback={null}>
+          <ProfileShareDialog
+            profile={profile}
+            open={shareOpen}
+            onClose={() => setShareOpen(false)}
+          />
+        </Suspense>
+      ) : null}
     </div>
   );
 }

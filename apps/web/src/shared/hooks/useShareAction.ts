@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useAnalytics, type AnalyticsEvent } from '@/shared/hooks/useAnalytics';
 import { useCopyFeedback } from '@/shared/hooks/useCopyFeedback';
 
@@ -14,7 +14,11 @@ export function useShareAction(
 ) {
   const { track } = useAnalytics();
   const { copied, copy } = useCopyFeedback();
-  const canNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const [nativeShareRefused, setNativeShareRefused] = useState(false);
+  const canNativeShare =
+    !nativeShareRefused &&
+    typeof navigator !== 'undefined' &&
+    typeof navigator.share === 'function';
 
   const copyLink = useCallback(async () => {
     const ok = await copy(url);
@@ -30,6 +34,7 @@ export function useShareAction(
       } catch (e) {
         const err = e as { name?: string };
         if (err?.name === 'AbortError') return;
+        setNativeShareRefused(true);
       }
     }
     await copyLink();

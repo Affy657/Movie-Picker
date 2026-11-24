@@ -1,24 +1,26 @@
 import { useId, useRef } from 'react';
 import clsx from 'clsx';
-import { X } from 'lucide-react';
 import { useSheetDrag } from '@/shared/hooks/useSheetDrag';
 import { useTranslation } from '@/shared/i18n';
 import dragStyles from './SheetDrag.module.css';
-import IconButton from './IconButton';
-import Modal from './Modal';
+import DialogTitleBar from './DialogTitleBar';
+import Modal, { type ModalTitleSlots } from './Modal';
 import styles from './Sheet.module.css';
-import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface SheetProps {
   open: boolean;
   title: string;
   onClose: () => void;
+  onEscape?: () => boolean;
   children: React.ReactNode;
   footer?: React.ReactNode;
   size?: SheetSize;
   detail?: React.ReactNode;
   ariaDescribedBy?: string;
+  fixedHeight?: boolean;
+  titleSlots?: ModalTitleSlots;
   className?: string;
+  bodyClassName?: string;
 }
 
 export type SheetSize = 'md' | 'lg';
@@ -27,12 +29,16 @@ export default function Sheet({
   open,
   title,
   onClose,
+  onEscape,
   children,
   footer,
   size = 'md',
   detail,
   ariaDescribedBy,
+  fixedHeight = false,
+  titleSlots,
   className,
+  bodyClassName,
 }: Readonly<SheetProps>) {
   const { t } = useTranslation();
   const titleId = useId();
@@ -43,12 +49,14 @@ export default function Sheet({
     <Modal
       open={open}
       onClose={onClose}
+      onEscape={onEscape}
       ariaLabelledBy={titleId}
       ariaDescribedBy={ariaDescribedBy}
       dialogRef={dialogRef}
       className={clsx(
         styles.dialog,
         size === 'lg' && styles.dialogTall,
+        fixedHeight && styles.fixedHeight,
         dragStyles.surface,
         className
       )}
@@ -60,19 +68,22 @@ export default function Sheet({
               className={clsx(dragStyles.handle, dragStyles.handleMobileOnly)}
               aria-hidden="true"
             />
-            <div className={styles.head}>
-              <div className={styles.heading}>
-                <h2 id={titleId} className={styles.title}>
-                  {title}
-                </h2>
-                {detail}
-              </div>
-              <IconButton ariaLabel={t('common.close')} onClick={onClose}>
-                <X aria-hidden size={ICON_SIZE.lg} />
-              </IconButton>
-            </div>
+            <DialogTitleBar
+              titleId={titleId}
+              title={title}
+              detail={detail}
+              onClose={onClose}
+              closeAriaLabel={t('common.close')}
+              leading={titleSlots?.leading}
+              actions={titleSlots?.actions}
+              replacement={titleSlots?.replacement}
+              divided
+              className={styles.titleBar}
+            >
+              {titleSlots?.below}
+            </DialogTitleBar>
           </div>
-          <div className={styles.body}>{children}</div>
+          <div className={clsx(styles.body, bodyClassName)}>{children}</div>
           {footer ? <div className={styles.footer}>{footer}</div> : null}
         </>
       )}

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import clsx from 'clsx';
 import { CalendarPlus, Download, ExternalLink } from 'lucide-react';
 import Button from '@/shared/components/Button';
@@ -23,7 +24,9 @@ type EventCalendarMenuProps = {
   url?: string;
   triggerLabel?: string;
   triggerClassName?: string;
-  opensAboveRow?: boolean;
+  triggerVariant?: 'secondary' | 'ghost';
+  triggerTrailing?: ReactNode;
+  className?: string;
 };
 
 export default function EventCalendarMenu({
@@ -33,10 +36,12 @@ export default function EventCalendarMenu({
   url,
   triggerLabel,
   triggerClassName,
-  opensAboveRow = false,
+  triggerVariant = 'secondary',
+  triggerTrailing,
+  className,
 }: Readonly<EventCalendarMenuProps>) {
   const { t } = useTranslation();
-  const menu = useMenuState({ placement: opensAboveRow ? 'top' : 'auto' });
+  const menu = useMenuState({ placement: 'auto' });
 
   const calendarEvent: CalendarEvent = {
     title,
@@ -63,18 +68,16 @@ export default function EventCalendarMenu({
   const externalIcon = <ExternalLink size={ICON_SIZE.md} aria-hidden />;
 
   return (
-    <div
-      className={clsx(styles.container, opensAboveRow && styles.containerInRow)}
-      ref={menu.containerRef}
-    >
+    <div className={clsx(styles.container, className)} ref={menu.containerRef}>
       {triggerLabel ? (
         <Button
           {...menu.triggerProps}
-          variant={menu.open ? 'soft' : 'secondary'}
+          variant={menu.open ? 'soft' : triggerVariant}
           className={triggerClassName}
         >
           <CalendarPlus size={ICON_SIZE.md} aria-hidden />
           {triggerLabel}
+          {triggerTrailing}
         </Button>
       ) : (
         <IconButton {...menu.triggerProps} size="lg" ariaLabel={t('events.calendar.addButton')}>
@@ -83,12 +86,7 @@ export default function EventCalendarMenu({
       )}
 
       {menu.open ? (
-        <MenuPanel
-          {...menu.panelProps}
-          style={opensAboveRow ? undefined : menu.panelProps.style}
-          ariaLabel={t('events.calendar.menuLabel')}
-          className={clsx(opensAboveRow && styles.panelAboveRow)}
-        >
+        <MenuPanel {...menu.panelProps} ariaLabel={t('events.calendar.menuLabel')}>
           <MenuItem href={googleHref} external icon={externalIcon} onClick={menu.close}>
             {t('events.calendar.google')}
           </MenuItem>

@@ -6,7 +6,6 @@ import {
   draftToConfigPatch,
   isDefaultTemplateDraft,
   isSameTemplateConfig,
-  limitFieldOnEnable,
   suggestTemplateName,
   templateToDraft,
   type TemplateConfigDraft,
@@ -314,23 +313,6 @@ describe('isDefaultTemplateDraft', () => {
       false
     );
   });
-});
-
-describe('limitFieldOnEnable', () => {
-  it.each(['8', String(MAX_EVENT_PARTICIPANTS)])('keeps the usable counter value %j', (value) => {
-    expect(limitFieldOnEnable(value, MAX_EVENT_PARTICIPANTS, DEFAULT_PARTICIPANT_LIMIT)).toBe(
-      value
-    );
-  });
-
-  it.each(['', '0', 'abc', String(MAX_EVENT_PARTICIPANTS + 1)])(
-    'replaces %j by the default limit',
-    (value) => {
-      expect(limitFieldOnEnable(value, MAX_EVENT_PARTICIPANTS, DEFAULT_PARTICIPANT_LIMIT)).toBe(
-        String(DEFAULT_PARTICIPANT_LIMIT)
-      );
-    }
-  );
 });
 
 describe('suggestTemplateName', () => {

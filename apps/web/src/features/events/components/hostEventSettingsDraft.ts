@@ -7,11 +7,7 @@ import type {
   EventRecurrence,
   WheelMode,
 } from '@/features/events/types';
-import {
-  DEFAULT_EVENT_CONFIG,
-  MAX_EVENT_PARTICIPANTS,
-  MAX_WINNERS_PER_EVENT,
-} from '@/features/events/types';
+import { DEFAULT_EVENT_CONFIG, MAX_WINNERS_PER_EVENT } from '@/features/events/types';
 import { positiveLimit } from '@/features/events/lib/eventTemplateDraft';
 import {
   validateEventLimits,
@@ -204,16 +200,6 @@ function validateDate(draft: SettingsDraft, t: Translate, errors: FieldErrors, n
     return null;
   }
   return splitDateTimeLocal(draft.eventDateLocal);
-}
-
-export function maxParticipantsHintFor(participantCount: number, t: Translate): string {
-  if (participantCount === 1) {
-    return t('events.settings.maxParticipantsHintOne', { max: MAX_EVENT_PARTICIPANTS });
-  }
-  return t('events.settings.maxParticipantsHintMany', {
-    count: participantCount,
-    max: MAX_EVENT_PARTICIPANTS,
-  });
 }
 
 function validateWinnerCount(draft: SettingsDraft, t: Translate, errors: FieldErrors) {

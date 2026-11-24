@@ -29,6 +29,17 @@ function escapeBelongsToADialog(refs: readonly ElementRef[], target: EventTarget
   );
 }
 
+const openedPopovers: symbol[] = [];
+
+function isLastOpened(popover: symbol): boolean {
+  return openedPopovers[openedPopovers.length - 1] === popover;
+}
+
+function forget(popover: symbol) {
+  const index = openedPopovers.indexOf(popover);
+  if (index !== -1) openedPopovers.splice(index, 1);
+}
+
 function focusIsInside(refs: readonly ElementRef[]): boolean {
   const active = document.activeElement;
   return !active || active === document.body || isInside(refs, active);
@@ -47,6 +58,8 @@ export function useClickOutside(
 
   useEffect(() => {
     if (!enabled) return;
+    const popover = Symbol('popover');
+    openedPopovers.push(popover);
     const watched = (): readonly ElementRef[] => {
       const current = refsRef.current;
       return 'current' in current ? [current] : current;
@@ -61,7 +74,7 @@ export function useClickOutside(
       onCloseRef.current();
     };
     const handleKey = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || event.defaultPrevented) return;
+      if (event.key !== 'Escape' || event.defaultPrevented || !isLastOpened(popover)) return;
       const list = watched();
       if (escapeBelongsToADialog(list, event.target)) return;
       event.preventDefault();
@@ -73,6 +86,7 @@ export function useClickOutside(
     document.addEventListener('keydown', handleKey);
     if (closeOnFocusLeave) document.addEventListener('focusin', closeWhenOutside);
     return () => {
+      forget(popover);
       document.removeEventListener('mousedown', closeWhenOutside);
       document.removeEventListener('keydown', handleKey);
       document.removeEventListener('focusin', closeWhenOutside);

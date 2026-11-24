@@ -4,8 +4,9 @@ import { useEventTemplates } from '@/features/events/hooks/useEventTemplates';
 import {
   buildTemplateDraft,
   configToFields,
-  limitFieldOnEnable,
+  defaultTemplateFields,
   type ApplicableConfig,
+  type TemplateFormFields,
 } from '@/features/events/lib/eventTemplateDraft';
 import { validateEventLimits } from '@/features/events/lib/eventLimitValidation';
 import { patchEventConfig } from '@/features/events/api/eventsApi';
@@ -13,23 +14,17 @@ import { useMyGroups } from '@/features/events/hooks/useMyGroups';
 import { ApiError, getErrorMessage } from '@/shared/api/apiError';
 import { invalidateMyNights } from '@/shared/api/invalidateMyNights';
 import { queryKeys } from '@/shared/hooks/queryKeys';
-import { eventDateTimeToLocal, splitDateTimeLocal } from '@/shared/utils/eventDateTimeLocal';
-import { formatRelativeEventDate } from '@/shared/utils/formatRelativeEventDate';
+import { eventDateTimeToLocal } from '@/shared/utils/eventDateTimeLocal';
 import {
-  DEFAULT_PARTICIPANT_LIMIT,
-  DEFAULT_PROPOSAL_LIMIT,
-  MAX_EVENT_PARTICIPANTS,
-  MAX_PROPOSALS_PER_PARTICIPANT,
   type EventConfigPatchPayload,
   type EventData,
   type EventRecurrence,
   type WheelMode,
 } from '@/features/events/types';
-import { useLocale, useTranslation } from '@/shared/i18n';
+import { useTranslation } from '@/shared/i18n';
 import {
   eventDateLocalError,
   isCreatorParticipant,
-  maxParticipantsHintFor,
   normalizeConfig,
   savedSettingsOf,
   settingsPatch,
@@ -39,11 +34,28 @@ import {
   type SaveState,
 } from './hostEventSettingsDraft';
 
+const TYPED_RULE_FIELDS: ReadonlyArray<keyof TemplateFormFields> = [
+  'maxParticipants',
+  'maxProposals',
+  'maxVotes',
+  'winnerCount',
+];
+
 const DATE_ERROR_REASONS: ReadonlySet<string> = new Set([
   'event_date_too_early',
   'event_date_too_far',
   'invalid_date_format',
 ]);
+
+function shownSaveState(
+  state: SaveState,
+  dateError: string | undefined,
+  dateAwaitingSave: boolean
+): SaveState {
+  if (dateError) return 'error';
+  if (dateAwaitingSave) return 'pending';
+  return state;
+}
 
 type HostEventSettingsDraftInput = {
   slug: string;
@@ -64,7 +76,6 @@ export function useHostEventSettingsDraft({
   open,
 }: HostEventSettingsDraftInput) {
   const { t } = useTranslation();
-  const { locale } = useLocale();
   const queryClient = useQueryClient();
   const cfg = normalizeConfig(event.config);
   const drawnWinnerCount = event.winners?.length ?? 0;
@@ -73,7 +84,6 @@ export function useHostEventSettingsDraft({
   const [eventTitle, setEventTitle] = useState(event.title);
   const [themeEmoji, setThemeEmoji] = useState(initialFields.themeEmoji);
   const [themeText, setThemeText] = useState(initialFields.themeText);
-  const [themeOpen, setThemeOpen] = useState(false);
   const [eventDateLocal, setEventDateLocal] = useState(
     eventDateTimeToLocal(event.date, event.time)
   );
@@ -105,7 +115,6 @@ export function useHostEventSettingsDraft({
   useEffect(() => () => clearTimeout(saveTimerRef.current), []);
 
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const maxParticipantsHint = maxParticipantsHintFor(event.participantCount ?? 0, t);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState>('saved');
 
@@ -114,7 +123,7 @@ export function useHostEventSettingsDraft({
     [event.myParticipant, event.participants]
   );
 
-  const templateDraft = buildTemplateDraft({
+  const ruleFields: TemplateFormFields = {
     themeEmoji,
     themeText,
     proposalLimitEnabled,
@@ -127,7 +136,8 @@ export function useHostEventSettingsDraft({
     richSharePreview,
     allowSeries,
     winnerCount,
-  });
+  };
+  const templateDraft = buildTemplateDraft(ruleFields);
 
   const applyFields = useCallback((config: ApplicableConfig) => {
     const next = configToFields(config);
@@ -179,28 +189,30 @@ export function useHostEventSettingsDraft({
     saveTimerRef.current = setTimeout(() => performSaveRef.current(), immediate ? 0 : 600);
   }, []);
 
-  const toggleProposalLimit = useCallback(
-    (checked: boolean) => {
-      setProposalLimitEnabled(checked);
-      if (checked)
-        setMaxProp((current) =>
-          limitFieldOnEnable(current, MAX_PROPOSALS_PER_PARTICIPANT, DEFAULT_PROPOSAL_LIMIT)
-        );
-      scheduleAutoSave(true);
-    },
-    [scheduleAutoSave]
-  );
+  const setRuleFields = useCallback((patch: Partial<TemplateFormFields>) => {
+    if (patch.participantLimitEnabled !== undefined)
+      setParticipantLimitEnabled(patch.participantLimitEnabled);
+    if (patch.maxParticipants !== undefined) setMaxParticipants(patch.maxParticipants);
+    if (patch.proposalLimitEnabled !== undefined)
+      setProposalLimitEnabled(patch.proposalLimitEnabled);
+    if (patch.maxProposals !== undefined) setMaxProp(patch.maxProposals);
+    if (patch.voteLimitEnabled !== undefined) setVoteLimitEnabled(patch.voteLimitEnabled);
+    if (patch.maxVotes !== undefined) setMaxVotes(patch.maxVotes);
+    if (patch.wheelMode !== undefined) setWheelMode(patch.wheelMode);
+    if (patch.allowSeries !== undefined) setAllowSeries(patch.allowSeries);
+    if (patch.richSharePreview !== undefined) setRichSharePreview(patch.richSharePreview);
+    if (patch.winnerCount !== undefined) setWinnerCount(patch.winnerCount);
+    if (patch.themeEmoji !== undefined) setThemeEmoji(patch.themeEmoji);
+    if (patch.themeText !== undefined) setThemeText(patch.themeText);
+  }, []);
 
-  const toggleParticipantLimit = useCallback(
-    (checked: boolean) => {
-      setParticipantLimitEnabled(checked);
-      if (checked)
-        setMaxParticipants((current) =>
-          limitFieldOnEnable(current, MAX_EVENT_PARTICIPANTS, DEFAULT_PARTICIPANT_LIMIT)
-        );
-      scheduleAutoSave(true);
+  const applyRulesPatch = useCallback(
+    (patch: Partial<TemplateFormFields>) => {
+      setRuleFields(patch);
+      const typed = TYPED_RULE_FIELDS.some((field) => field in patch);
+      scheduleAutoSave(!typed);
     },
-    [scheduleAutoSave]
+    [setRuleFields, scheduleAutoSave]
   );
 
   const templateLimitsAreValid = () => {
@@ -233,10 +245,15 @@ export function useHostEventSettingsDraft({
   });
   const forgetAppliedTemplate = eventTemplates.forget;
 
+  const applyDefaultRules = () => {
+    setRuleFields({ ...defaultTemplateFields(), themeEmoji, themeText });
+    forgetAppliedTemplate();
+    scheduleAutoSave(true);
+  };
+
   const hydrateFromEvent = useCallback(() => {
     setEventTitle(event.title);
     applyFields(normalizeConfig(event.config));
-    setThemeOpen(false);
     const saved = savedSettingsOf(event);
     savedRef.current = saved;
     committedDateLocalRef.current = saved.dateLocal;
@@ -331,18 +348,13 @@ export function useHostEventSettingsDraft({
   const recurrenceLocked = cfg.hasNextOccurrence ?? false;
 
   const dateWasEdited = eventDateLocal !== savedRef.current.dateLocal;
+  const dateAwaitingSave = eventDateLocal !== committedDateLocalRef.current;
   const liveDateError = dateWasEdited
     ? eventDateLocalError(eventDateLocal, t, new Date())
     : undefined;
-  const liveDateTime =
-    eventDateLocal.trim() && !liveDateError ? splitDateTimeLocal(eventDateLocal) : null;
-  const relativeDateLabel = liveDateTime
-    ? formatRelativeEventDate(liveDateTime.date, locale)
-    : null;
   const shownFieldErrors: FieldErrors = liveDateError
     ? { ...fieldErrors, date: fieldErrors.date ?? liveDateError }
     : fieldErrors;
-  const themePreview = [themeEmoji, themeText.trim()].filter(Boolean).join(' ');
 
   return {
     eventTitle,
@@ -351,25 +363,18 @@ export function useHostEventSettingsDraft({
     setThemeEmoji,
     themeText,
     setThemeText,
-    themeOpen,
-    setThemeOpen,
-    themePreview,
     eventDateLocal,
     setEventDateLocal,
     commitEventDate,
-    relativeDateLabel,
     dateWasEdited,
     notifyDateChange,
     setNotifyDateChange,
     proposalLimitEnabled,
-    toggleProposalLimit,
     maxProp,
     setMaxProp,
     participantLimitEnabled,
-    toggleParticipantLimit,
     maxParticipants,
     setMaxParticipants,
-    maxParticipantsHint,
     voteLimitEnabled,
     setVoteLimitEnabled,
     maxVotes,
@@ -390,9 +395,12 @@ export function useHostEventSettingsDraft({
     recurrenceLocked,
     fieldErrors: shownFieldErrors,
     saveError,
-    saveState: liveDateError ? 'error' : saveState,
+    saveState: shownSaveState(saveState, liveDateError, dateAwaitingSave),
     scheduleAutoSave,
     templateDraft,
+    ruleFields,
+    applyRulesPatch,
+    applyDefaultRules,
     templateLimitsAreValid,
     eventTemplates,
     isConnectedCreator,

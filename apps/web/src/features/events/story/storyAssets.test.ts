@@ -113,4 +113,14 @@ describe('loadStoryAssets', () => {
 
     expect(assets.has('/flaky.jpg')).toBe(true);
   });
+
+  it('reads a drawing written in the page without asking the network', async () => {
+    const source = 'data:image/svg+xml;charset=utf-8,%3Csvg%3E%3C%2Fsvg%3E';
+
+    const assets = await loadStoryAssets([source]);
+
+    expect(assets.has(source)).toBe(true);
+    expect(fetchedSrc).toEqual([]);
+    expect(loadedSrc).toEqual([source]);
+  });
 });

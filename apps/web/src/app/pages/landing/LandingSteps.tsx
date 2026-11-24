@@ -71,7 +71,7 @@ export default function LandingSteps() {
               <Card padding="none" surface="sunken" className={styles.demo}>
                 <span className={demo.qr} aria-hidden="true">
                   <Suspense fallback={null}>
-                    <QrCode value={DEMO_QR_URL} title={t('landing.steps.share.qrTitle')} />
+                    <QrCode value={DEMO_QR_URL} title={t('landing.steps.share.qrTitle')} plain />
                   </Suspense>
                 </span>
                 <div className={demo.shareLine} aria-hidden="true">

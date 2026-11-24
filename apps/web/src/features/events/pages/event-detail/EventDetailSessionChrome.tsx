@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+import type { UseQueryResult } from '@tanstack/react-query';
 import JoinForm from '@/features/events/components/JoinForm';
 import EventDetailHeader from '@/features/events/pages/event-detail/EventDetailHeader';
 import EventMoviesLoadError from '@/features/events/pages/event-detail/EventMoviesLoadError';
@@ -9,10 +9,6 @@ import EventProposingNotice from '@/features/events/pages/event-detail/EventProp
 import EventRemovedBanner from '@/features/events/pages/event-detail/EventRemovedBanner';
 import EventWheelActions from '@/features/events/components/EventWheelActions';
 import { eventHeaderActions, hasHeaderActions } from '@/features/events/lib/eventHeaderActions';
-import { getEligibleFollows } from '@/features/events/api/eventsApi';
-import { queryKeys } from '@/shared/hooks/queryKeys';
-import { useTranslation } from '@/shared/i18n';
-import { participantsCountLabel } from '@/features/events/utils/eventLabels';
 import { useEverOpened } from '@/shared/hooks/useEverOpened';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
@@ -47,7 +43,6 @@ function EventDetailSessionOverlays({
   settings,
   share,
   dates,
-  participantCount,
   moviesQuery,
   join,
   wheelError,
@@ -58,20 +53,11 @@ function EventDetailSessionOverlays({
   settings: SettingsOverlay;
   share: ShareOverlay;
   dates: EventDateLabels;
-  participantCount: number;
   moviesQuery: UseQueryResult<MovieData[]>;
   join: JoinGate;
   wheelError: string | null;
 }>) {
-  const { t } = useTranslation();
   const hostCanInvite = !!event.isHost && !event.isFinished;
-  const eligibleFollowsQuery = useQuery({
-    queryKey: queryKeys.event.eligibleFollows(slug),
-    queryFn: () => getEligibleFollows(slug),
-    enabled: hostCanInvite,
-    staleTime: 30_000,
-  });
-  const participantsLabel = participantsCountLabel(participantCount, t);
 
   const settingsEverOpened = useEverOpened(settings.open);
   const shareEverOpened = useEverOpened(share.open);
@@ -106,10 +92,8 @@ function EventDetailSessionOverlays({
             dateFormatted={dates.dateFormatted}
             timeFormatted={dates.timeFormatted}
             dateLabel={dates.dateLabel}
-            participantsLabel={participantsLabel}
             initialTab={share.initialTab}
             hostCanInvite={hostCanInvite}
-            friendsBadge={eligibleFollowsQuery.data?.follows.length}
           />
         </Suspense>
       ) : null}
@@ -251,7 +235,6 @@ export default function EventDetailSessionChrome({
         settings={settings}
         share={share}
         dates={dates}
-        participantCount={counts.participants}
         moviesQuery={moviesQuery}
         join={join}
         wheelError={wheel.error}

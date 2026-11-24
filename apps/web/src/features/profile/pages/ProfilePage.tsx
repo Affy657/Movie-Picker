@@ -283,7 +283,6 @@ export default function ProfilePage() {
             isOwnProfile={isOwnProfile}
             isLoggedIn={!!user}
             followPending={followPending}
-            memberSinceLabel={t('profile.memberSince', { date: memberSince })}
             onFollow={() => followMutation.mutate()}
             onUnfollow={() => unfollowMutation.mutate()}
             onAddBanner={bannerView.onAdd}

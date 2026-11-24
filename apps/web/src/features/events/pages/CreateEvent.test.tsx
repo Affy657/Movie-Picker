@@ -124,9 +124,12 @@ describe('CreateEvent route', () => {
       state: { reuseEventSlug: 'old', reuseEventTitle: 'Soirée du 31 octobre' },
     });
 
-    expect(
-      await screen.findByRole('button', { name: 'Règles : comme « Soirée du 31 octobre »' })
-    ).toBeInTheDocument();
+    const rules = await screen.findByRole('region', { name: 'Règles' });
+    await waitFor(() =>
+      expect(
+        within(rules).getByRole('button', { name: 'Comme « Soirée du 31 octobre »' })
+      ).toHaveAttribute('aria-pressed', 'true')
+    );
   });
 
   it('waits for the session before opening the window', async () => {

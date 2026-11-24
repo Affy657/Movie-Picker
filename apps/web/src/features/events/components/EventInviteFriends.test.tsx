@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
-import EventInviteFriendsTab from '@/features/events/components/EventInviteFriendsTab';
+import EventInviteFriends from '@/features/events/components/EventInviteFriends';
 import type { EligibleFollowItem } from '@/features/events/api/eventsApi';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
@@ -15,7 +15,7 @@ function renderTab() {
   render(
     <AppTestProviders>
       <MemoryRouter>
-        <EventInviteFriendsTab slug={SLUG} />
+        <EventInviteFriends slug={SLUG} />
       </MemoryRouter>
     </AppTestProviders>
   );
@@ -41,12 +41,18 @@ const eligible = (follows: EligibleFollowItem[]) =>
     HttpResponse.json({ follows })
   );
 
-describe('EventInviteFriendsTab (MSW)', () => {
+describe('EventInviteFriends (MSW)', () => {
   const server = setupServer();
 
   beforeAll(() => server.listen({ onUnhandledFrame: 'warn' }));
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
+
+  it('heads the list with its title', async () => {
+    server.use(guestMe(), eligible([follow()]));
+    renderTab();
+    expect(await screen.findByRole('region', { name: 'Inviter des amis' })).toBeInTheDocument();
+  });
 
   it('liste les follows eligibles', async () => {
     server.use(guestMe(), eligible([follow()]));
@@ -95,7 +101,7 @@ describe('EventInviteFriendsTab (MSW)', () => {
     renderTab();
     await screen.findByText('Bob');
     await user.click(screen.getByRole('button', { name: /inviter bob/i }));
-    expect(await screen.findByText(/invité/i)).toBeInTheDocument();
+    expect(await screen.findByText('Invité')).toBeInTheDocument();
     expect(posted).toBe(true);
     expect(screen.queryByRole('button', { name: /inviter bob/i })).not.toBeInTheDocument();
   });
@@ -125,7 +131,7 @@ describe('EventInviteFriendsTab (MSW)', () => {
   it('affiche le badge invite si deja invite', async () => {
     server.use(guestMe(), eligible([follow({ isAlreadyInvited: true })]));
     renderTab();
-    expect(await screen.findByText(/invité/i)).toBeInTheDocument();
+    expect(await screen.findByText('Invité')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /inviter bob/i })).not.toBeInTheDocument();
   });
 

@@ -24,16 +24,47 @@ export function isoDateDaysFromNow(days: number): string {
   return date.toISOString().slice(0, 10);
 }
 
+const MONTHS_TO_SEARCH = 30;
+
+async function pickNightStart(page: Page, date: string, time: string): Promise<void> {
+  const dayLabel = new Intl.DateTimeFormat('fr-FR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(`${date}T12:00:00Z`));
+  await page
+    .getByRole('dialog', { name: 'Nouvelle soirée' })
+    .getByRole('button', { name: /^date et heure/i })
+    .click();
+  const sheet = page.getByRole('dialog', { name: 'Date et heure' });
+  const picker = page.getByRole('group', { name: 'Date et heure' }).or(sheet);
+  await expect(picker).toBeVisible();
+  const day = picker.getByRole('button', { name: dayLabel, exact: true });
+  const towards = date < isoDateDaysFromNow(0) ? 'Mois précédent' : 'Mois suivant';
+  for (let month = 0; month < MONTHS_TO_SEARCH && !(await day.isVisible()); month += 1) {
+    await picker.getByRole('button', { name: towards }).click();
+  }
+  await day.click();
+  if (await sheet.isVisible()) {
+    await sheet.getByRole('button', { name: time, exact: true }).click();
+    await sheet.getByRole('button', { name: 'Valider' }).click();
+    await expect(sheet).toBeHidden();
+    return;
+  }
+  await picker.getByRole('textbox', { name: 'Heure' }).fill(time);
+  await picker.getByRole('textbox', { name: 'Heure' }).press('Enter');
+  await expect(picker).toBeHidden();
+}
+
 export async function fillCreateEventForm(
   page: Page,
   title: string,
   date = isoDateDaysFromNow(365)
 ): Promise<void> {
   const dialog = page.getByRole('dialog', { name: 'Nouvelle soirée' });
-  await dialog.getByRole('radio', { name: /autre date/i }).click();
-  await dialog.locator('#create-date').fill(date);
-  await dialog.getByRole('radio', { name: 'Autre', exact: true }).click();
-  await dialog.locator('#create-time').fill('20:30');
+  await pickNightStart(page, date, '20:30');
   await dialog.locator('#create-title').fill(title);
   await dialog.getByRole('button', { name: /créer la soirée/i }).click();
   await page

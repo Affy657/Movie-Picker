@@ -12,17 +12,21 @@ function sized(svg: string, size: number): string {
   return svg.replace(/<svg\b/i, `<svg width="${size}" height="${size}"`);
 }
 
-function fromObjectUrl(url: string): Promise<CanvasImageSource | null> {
+function loadImage(src: string, release?: () => void): Promise<CanvasImageSource | null> {
   return new Promise((resolve) => {
     const image = new Image();
     const done = (value: CanvasImageSource | null) => () => {
-      URL.revokeObjectURL(url);
+      release?.();
       resolve(value);
     };
     image.addEventListener('load', done(image));
     image.addEventListener('error', done(null));
-    image.src = url;
+    image.src = src;
   });
+}
+
+function fromObjectUrl(url: string): Promise<CanvasImageSource | null> {
+  return loadImage(url, () => URL.revokeObjectURL(url));
 }
 
 async function assetBlob(response: Response): Promise<Blob> {
@@ -31,6 +35,7 @@ async function assetBlob(response: Response): Promise<Blob> {
 }
 
 export async function loadStoryAsset(src: string): Promise<CanvasImageSource | null> {
+  if (src.startsWith('data:')) return loadImage(src);
   try {
     const response = await fetch(src, { mode: 'cors', cache: 'reload' });
     if (!response.ok) return null;

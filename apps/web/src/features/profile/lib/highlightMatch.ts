@@ -38,3 +38,8 @@ export function splitOnMatch(value: string, query: string): MatchSegment[] {
 
   return segments;
 }
+
+export function containsMatch(value: string, query: string): boolean {
+  if (query.trim().length === 0) return true;
+  return splitOnMatch(value, query).some((segment) => segment.matched);
+}

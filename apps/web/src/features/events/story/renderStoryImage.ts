@@ -1,4 +1,4 @@
-import { loadStoryAssets, type StoryAssetCache } from './storyAssets';
+import { loadStoryAssets, type StoryAssetCache, type StoryAssets } from './storyAssets';
 import { drawStory, storySources } from './storyCanvas';
 import { STORY_HEIGHT, STORY_WIDTH } from './storyLayout';
 import type { StoryImageSpec } from './storySpec';
@@ -6,19 +6,28 @@ import type { StoryImageSpec } from './storySpec';
 export const STORY_MIME = 'image/jpeg';
 const STORY_QUALITY = 0.92;
 
-export async function renderStoryImage(
-  spec: StoryImageSpec,
+export type CanvasImageFormat = {
+  width: number;
+  height: number;
+  mime: string;
+  quality?: number;
+};
+
+export async function renderCanvasImage(
+  format: CanvasImageFormat,
+  sources: readonly string[],
+  draw: (ctx: CanvasRenderingContext2D, assets: StoryAssets) => void,
   cache?: StoryAssetCache
 ): Promise<Blob | null> {
   const canvas = document.createElement('canvas');
-  canvas.width = STORY_WIDTH;
-  canvas.height = STORY_HEIGHT;
+  canvas.width = format.width;
+  canvas.height = format.height;
   const ctx = canvas.getContext('2d');
   if (!ctx || typeof canvas.toBlob !== 'function') return null;
 
   await document.fonts?.ready.catch(() => undefined);
 
-  drawStory(ctx, spec, await loadStoryAssets(storySources(spec), cache));
+  draw(ctx, await loadStoryAssets(sources, cache));
 
   return new Promise((resolve) => {
     canvas.toBlob(
@@ -27,8 +36,20 @@ export async function renderStoryImage(
         canvas.height = 0;
         resolve(blob);
       },
-      STORY_MIME,
-      STORY_QUALITY
+      format.mime,
+      format.quality
     );
   });
+}
+
+export function renderStoryImage(
+  spec: StoryImageSpec,
+  cache?: StoryAssetCache
+): Promise<Blob | null> {
+  return renderCanvasImage(
+    { width: STORY_WIDTH, height: STORY_HEIGHT, mime: STORY_MIME, quality: STORY_QUALITY },
+    storySources(spec),
+    (ctx, assets) => drawStory(ctx, spec, assets),
+    cache
+  );
 }

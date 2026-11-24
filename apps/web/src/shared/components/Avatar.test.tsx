@@ -116,4 +116,12 @@ describe('Avatar', () => {
     expect(first?.getAttribute('data-palette')).not.toBe(other?.getAttribute('data-palette'));
     expect(first).not.toHaveAttribute('style');
   });
+
+  it('draws a halo around the avatar instead of the accent ring', () => {
+    const { container } = render(<Avatar avatarId={null} pseudo="Carla" accent="teal" halo />);
+
+    const avatar = container.firstElementChild;
+    expect(avatar).toHaveClass(styles.halo!);
+    expect(avatar).not.toHaveClass(styles.accentRing!);
+  });
 });

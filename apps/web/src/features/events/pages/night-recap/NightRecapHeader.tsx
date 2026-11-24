@@ -93,7 +93,6 @@ export default function NightRecapHeader({
           dateFormatted={dateFormatted}
           timeFormatted={formatEventTime(event.time)}
           dateLabel={formatMyEventsListDate(event.date, locale)}
-          participantsLabel={participantsLabel}
         />
       ) : null}
     </>

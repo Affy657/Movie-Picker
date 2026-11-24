@@ -6,7 +6,7 @@ type EmptyStateProps = {
   icon: ReactNode;
   title?: string;
   titleTag?: 'p' | 'h1' | 'h2';
-  message: ReactNode;
+  message?: ReactNode;
   actions?: ReactNode;
   compact?: boolean;
   className?: string;
@@ -28,7 +28,7 @@ export default function EmptyState({
         {icon}
       </span>
       {title ? <TitleTag className={styles.title}>{title}</TitleTag> : null}
-      <p className={styles.message}>{message}</p>
+      {message ? <p className={styles.message}>{message}</p> : null}
       {actions ? <div className={styles.actions}>{actions}</div> : null}
     </div>
   );

@@ -1,6 +1,6 @@
 import { useId, useState } from 'react';
 import clsx from 'clsx';
-import { BadgeCheck, Plus, RotateCcw, Sparkles } from 'lucide-react';
+import { BadgeCheck, Bookmark, Plus, RotateCcw } from 'lucide-react';
 import Button from '@/shared/components/Button';
 import TemplateNameEditor from '@/features/events/components/TemplateNameEditor';
 import { useTranslation } from '@/shared/i18n';
@@ -19,8 +19,8 @@ type Props = {
   templates: EventTemplateData[];
   appliedTemplate: EventTemplateData | null;
   lastSaved?: EventTemplateData | null;
-  variant?: 'create' | 'event';
   disabled?: boolean;
+  hidden?: boolean;
   className?: string;
   onBeforeSave?: () => boolean;
   onSave: (name: string) => void;
@@ -32,8 +32,8 @@ export default function EventTemplateSaveBar({
   templates,
   appliedTemplate,
   lastSaved = null,
-  variant = 'create',
   disabled = false,
+  hidden = false,
   className,
   onBeforeSave,
   onSave,
@@ -53,6 +53,12 @@ export default function EventTemplateSaveBar({
     lastSaved !== null && isSameTemplateConfig(draft, templateToDraft(lastSaved))
       ? lastSaved
       : null;
+
+  const capHint = isFull ? (
+    <p className={styles.capHint}>
+      {t('events.settings.templates.capReached', { max: String(MAX_EVENT_TEMPLATES) })}
+    </p>
+  ) : null;
 
   const draftCanBeSaved = () => onBeforeSave === undefined || onBeforeSave();
 
@@ -78,37 +84,9 @@ export default function EventTemplateSaveBar({
     cancelNaming();
   };
 
-  const saveLabel =
-    variant === 'event'
-      ? t('events.settings.templates.saveFromEventAction')
-      : t('events.settings.templates.saveAction');
-
-  const idleHint =
-    variant === 'event'
-      ? t('events.settings.templates.saveFromEventHint')
-      : t('events.settings.templates.saveHint');
-
-  const hintLabel = (() => {
-    if (appliedTemplate === null) return idleHint;
-    if (hasDrifted)
-      return t('events.settings.templates.modifiedHint', { name: appliedTemplate.name });
-    return t('events.settings.templates.sameAsApplied', { name: appliedTemplate.name });
-  })();
-
-  return (
-    <div className={clsx(styles.bar, className)}>
-      {justSaved ? (
-        <output className={styles.saved}>
-          <BadgeCheck size={ICON_SIZE.md} aria-hidden />
-          <span className={styles.savedLabel}>
-            {t('events.settings.templates.savedAs', { name: justSaved.name })}
-          </span>
-        </output>
-      ) : (
-        <p className={styles.hint}>{hintLabel}</p>
-      )}
-
-      {naming ? (
+  if (naming) {
+    return (
+      <div className={clsx(styles.bar, className)}>
         <TemplateNameEditor
           id={nameFieldId}
           value={draftName}
@@ -116,39 +94,61 @@ export default function EventTemplateSaveBar({
           onConfirm={confirmNaming}
           onCancel={cancelNaming}
         />
-      ) : (
-        <div className={styles.actions}>
-          {hasDrifted && onUpdate && (
-            <Button
-              variant="primary"
-              size="sm"
-              disabled={disabled}
-              onClick={() => {
-                if (draftCanBeSaved()) onUpdate(appliedTemplate);
-              }}
-            >
-              <RotateCcw size={ICON_SIZE.sm} aria-hidden />
-              <span className={styles.actionLabel}>
-                {t('events.settings.templates.updateAction')}
-              </span>
-            </Button>
-          )}
-          <Button
-            size="sm"
-            disabled={disabled || isFull || justSaved !== null || sameAsApplied}
-            onClick={startNaming}
-          >
-            {hasDrifted ? (
-              <Plus size={ICON_SIZE.sm} aria-hidden />
-            ) : (
-              <Sparkles size={ICON_SIZE.sm} aria-hidden />
-            )}
-            <span className={styles.actionLabel}>
-              {hasDrifted ? t('events.settings.templates.saveAsNewAction') : saveLabel}
-            </span>
-          </Button>
-        </div>
-      )}
+      </div>
+    );
+  }
+
+  if (justSaved) {
+    return (
+      <div className={clsx(styles.bar, className)}>
+        <output className={styles.saved}>
+          <BadgeCheck size={ICON_SIZE.md} aria-hidden />
+          <span className={styles.savedLabel}>
+            {t('events.settings.templates.savedAs', { name: justSaved.name })}
+          </span>
+        </output>
+      </div>
+    );
+  }
+
+  if (hasDrifted && onUpdate) {
+    return (
+      <div className={clsx(styles.bar, styles.actions, className)}>
+        <Button
+          variant="soft"
+          size="sm"
+          disabled={disabled}
+          onClick={() => {
+            if (draftCanBeSaved()) onUpdate(appliedTemplate);
+          }}
+        >
+          <RotateCcw size={ICON_SIZE.sm} aria-hidden />
+          {t('events.settings.templates.updateAction')}
+        </Button>
+        <Button variant="ghost" size="sm" disabled={disabled || isFull} onClick={startNaming}>
+          <Plus size={ICON_SIZE.sm} aria-hidden />
+          {t('events.settings.templates.saveAsNewAction')}
+        </Button>
+        {capHint}
+      </div>
+    );
+  }
+
+  if (hidden || sameAsApplied) return null;
+
+  return (
+    <div className={clsx(styles.bar, className)}>
+      <Button
+        variant="ghost"
+        size="sm"
+        className={styles.saveAction}
+        disabled={disabled || isFull}
+        onClick={startNaming}
+      >
+        <Bookmark size={ICON_SIZE.sm} aria-hidden />
+        {t('events.settings.templates.saveAction')}
+      </Button>
+      {capHint}
     </div>
   );
 }

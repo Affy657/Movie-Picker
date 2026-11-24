@@ -28,7 +28,6 @@ export default function UpcomingEventsSection({
         <h2 id="my-events-upcoming-heading" className={styles.sectionTitle}>
           {t('events.myEvents.upcomingSectionTitle')}
         </h2>
-        <span className={styles.sectionCount}>{events.length}</span>
       </div>
       <ul className={styles.grid}>
         {events.map((ev) => (

@@ -13,6 +13,12 @@
   box-shadow: 0 0 0 2px var(--color-primary);
 }
 
+.halo {
+  box-shadow:
+    0 0 0 3px var(--color-surface-raised),
+    0 0 0 6px var(--color-success-border);
+}
+
 .initials {
   display: inline-flex;
   align-items: center;

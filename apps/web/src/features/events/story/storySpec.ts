@@ -53,6 +53,15 @@ export type StoryImageSpec = {
   moreText: string | null;
 };
 
+export type QrCardSpec = {
+  title: string;
+  detail: string;
+  site: string;
+  brandName: string;
+  qrSrc: string;
+  wordmark: { src: string; ratio: number };
+};
+
 export type StorySpecInput = {
   event: EventData;
   winners: readonly MovieData[];

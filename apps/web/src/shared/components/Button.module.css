@@ -53,6 +53,11 @@
   border-color: var(--color-warning-border);
 }
 
+.ghost.danger,
+.ghost.warning {
+  border-color: transparent;
+}
+
 .fullWidth {
   width: 100%;
 }
@@ -113,6 +118,16 @@
   .btn.warning:not(:disabled, [aria-disabled='true']):hover {
     color: var(--color-warning);
     border-color: var(--color-warning);
+  }
+
+  .btn.ghost.danger:not(:disabled, [aria-disabled='true']):hover {
+    background: var(--color-error-bg);
+    border-color: transparent;
+  }
+
+  .btn.ghost.warning:not(:disabled, [aria-disabled='true']):hover {
+    background: var(--color-warning-bg);
+    border-color: transparent;
   }
 }
 

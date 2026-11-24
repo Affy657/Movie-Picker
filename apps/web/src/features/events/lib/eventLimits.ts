@@ -46,15 +46,24 @@ export function eventLimitInputId(idPrefix: string, kind: EventLimitKind): strin
   return `${idPrefix}-${EVENT_LIMITS[kind].idSuffix}`;
 }
 
-export function eventLimitCopy(kind: EventLimitKind, t: Translate) {
-  const { max } = EVENT_LIMITS[kind];
-  const vars = max === undefined ? undefined : { max };
-  return {
-    label: t(`events.limits.${kind}.label`),
-    hint: t(`events.limits.${kind}.hint`),
-    toggle: t(`events.limits.${kind}.toggle`),
-    toggleHint: t(`events.limits.${kind}.toggleHint`, vars),
-    field: t(`events.limits.${kind}.field`),
-    fieldHint: vars ? t('events.limits.capHint', vars) : undefined,
-  };
+export function eventLimitLabel(kind: EventLimitKind, t: Translate): string {
+  return t(`events.limits.${kind}.label`);
+}
+
+export type RuleErrors = Partial<Record<EventLimitSpec['valueField'] | 'winnerCount', string>>;
+
+export function winnerCountInputId(idPrefix: string): string {
+  return `${idPrefix}-winner-count`;
+}
+
+export function firstRuleError(
+  idPrefix: string,
+  errors: RuleErrors
+): { message: string; inputId: string } | null {
+  for (const kind of EVENT_LIMIT_KINDS) {
+    const message = errors[EVENT_LIMITS[kind].valueField];
+    if (message) return { message, inputId: eventLimitInputId(idPrefix, kind) };
+  }
+  if (!errors.winnerCount) return null;
+  return { message: errors.winnerCount, inputId: winnerCountInputId(idPrefix) };
 }

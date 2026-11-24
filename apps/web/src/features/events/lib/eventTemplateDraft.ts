@@ -72,10 +72,6 @@ function draftLimit(enabled: boolean, raw: string, cap: number, fallback: number
   return parseCappedLimit(raw, cap) ?? fallback;
 }
 
-export function limitFieldOnEnable(value: string, cap: number, fallback: number): string {
-  return parseCappedLimit(value, cap) === null ? String(fallback) : value;
-}
-
 function parseWinnerCount(raw: string): number {
   const value = Number(raw.trim());
   if (!Number.isInteger(value) || value < 1 || value > MAX_WINNERS_PER_EVENT)

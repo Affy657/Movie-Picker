@@ -1,219 +1,131 @@
-import { useState } from 'react';
-import clsx from 'clsx';
-import { Link } from 'react-router';
-import { Check, Crown, Settings2, UserPlus, X } from 'lucide-react';
+import { Crown, UserMinus, UserPlus } from 'lucide-react';
 import type { EventParticipantSummary } from '@/shared/types/event';
 import { useTranslation } from '@/shared/i18n';
 import { withElision } from '@/shared/i18n/withElision';
-import Chip from '@/shared/components/Chip';
-import { ROUTES } from '@/app/routes';
 import Avatar from '@/shared/components/Avatar';
-import StatusDot from '@/shared/components/StatusDot';
+import Chip from '@/shared/components/Chip';
 import EmptyState from '@/shared/components/EmptyState';
-import styles from './EventParticipantsList.module.css';
-import Button from '@/shared/components/Button';
+import IconButton from '@/shared/components/IconButton';
+import PersonRow from '@/shared/components/PersonRow';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import { ROUTES } from '@/app/routes';
+import styles from './EventParticipantsList.module.css';
 
 type Props = {
   participants: EventParticipantSummary[] | undefined;
   currentParticipantId: string | null | undefined;
-
-  maxParticipants?: number | null;
-
   isHost?: boolean;
-
   pendingRemovalId?: string | null;
-
   onRemoveParticipant?: (participantId: string, pseudo: string) => void;
-
-  onInvite?: () => void;
-
-  onLeave?: () => void;
-
-  leaveDisabled?: boolean;
-
   onlineIds?: ReadonlySet<string>;
-
   proposingIds?: ReadonlySet<string>;
 };
 
 export default function EventParticipantsList({
   participants,
   currentParticipantId,
-  maxParticipants,
   isHost,
   pendingRemovalId,
   onRemoveParticipant,
-  onInvite,
-  onLeave,
-  leaveDisabled,
   onlineIds,
   proposingIds,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [managing, setManaging] = useState(false);
   if (!participants) return null;
 
-  const hasCap = typeof maxParticipants === 'number' && maxParticipants > 0;
-  const isFull = hasCap && participants.length >= (maxParticipants ?? 0);
-  const canManage = !!isHost && !!onRemoveParticipant && participants.length > 1;
+  if (participants.length === 0) {
+    return (
+      <EmptyState
+        compact
+        icon={<UserPlus size={ICON_SIZE['2xl']} aria-hidden />}
+        message={t('events.participants.empty')}
+      />
+    );
+  }
 
   return (
-    <div className={styles.root} data-testid="event-participants">
-      {isFull || canManage ? (
-        <div className={styles.headerRow}>
-          {isFull ? (
-            <Chip tone="warning" size="sm" className={styles.fullBadge}>
-              <span aria-hidden="true">{t('events.participants.fullBadge')}</span>
-              <span className="visually-hidden">{t('events.participants.fullBadgeAria')}</span>
-            </Chip>
-          ) : null}
-          {canManage && (
-            <Button
-              type="button"
-              size="sm"
-              className={styles.manageBtn}
-              onClick={() => setManaging((value) => !value)}
-              aria-pressed={managing}
-              data-testid="manage-participants-toggle"
-            >
-              {managing ? (
-                <>
-                  <Check aria-hidden size={ICON_SIZE.sm} />
-                  {t('events.participants.manageDone')}
-                </>
-              ) : (
-                <>
-                  <Settings2 aria-hidden size={ICON_SIZE.sm} />
-                  <span className={styles.manageBtnLabel}>
-                    {t('events.participants.manageAction')}
-                  </span>
-                </>
-              )}
-            </Button>
-          )}
-        </div>
-      ) : null}
+    <ul className={styles.list} data-testid="event-participants">
+      {participants.map((p) => {
+        const isMe = p.id === currentParticipantId;
+        const isCreator = !!p.isCreator;
+        const canHostRemove = !!isHost && !!onRemoveParticipant && !isCreator && !isMe;
+        const isProposing = proposingIds?.has(p.id) ?? false;
+        const isOnline = isProposing || (onlineIds?.has(p.id) ?? false);
+        const presenceLabel = t(
+          isProposing ? 'events.participants.proposing' : 'events.participants.online'
+        );
+        const states = [
+          isCreator ? t('events.participants.hostBadge') : null,
+          isMe ? t('events.participants.youState') : null,
+          isOnline ? presenceLabel : null,
+        ].filter((state): state is string => state !== null);
+        const profileLinkLabel =
+          states.length > 0
+            ? withElision(
+                p.pseudo,
+                'events.participants.viewProfilePresenceAriaLabel',
+                'events.participants.viewProfilePresenceAriaLabelElided',
+                t,
+                { presence: states.join(', ') }
+              )
+            : withElision(
+                p.pseudo,
+                'events.participants.viewProfileAriaLabel',
+                'events.participants.viewProfileAriaLabelElided',
+                t
+              );
 
-      {participants.length === 0 && !onInvite ? (
-        <EmptyState
-          compact
-          icon={<UserPlus size={ICON_SIZE['2xl']} aria-hidden />}
-          message={t('events.participants.empty')}
-        />
-      ) : (
-        <ul className={styles.list}>
-          {participants.map((p) => {
-            const isMe = p.id === currentParticipantId;
-            const isCreator = !!p.isCreator;
-            const canHostRemove = !!isHost && !!onRemoveParticipant && !isCreator && !isMe;
-            const isPending = pendingRemovalId === p.id;
-            const isProposing = proposingIds?.has(p.id) ?? false;
-            const isOnline = isProposing || (onlineIds?.has(p.id) ?? false);
-            const presenceLabel = t(
-              isProposing ? 'events.participants.proposing' : 'events.participants.online'
-            );
-            const profileLinkLabel = isOnline
-              ? withElision(
-                  p.pseudo,
-                  'events.participants.viewProfilePresenceAriaLabel',
-                  'events.participants.viewProfilePresenceAriaLabelElided',
-                  t,
-                  { presence: presenceLabel }
-                )
-              : withElision(
-                  p.pseudo,
-                  'events.participants.viewProfileAriaLabel',
-                  'events.participants.viewProfileAriaLabelElided',
-                  t
-                );
-            const identity = (
+        return (
+          <PersonRow
+            key={p.id}
+            data-testid={`participant-${p.id}`}
+            avatar={
+              <Avatar
+                avatarId={p.avatarId}
+                pseudo={p.pseudo}
+                size="md"
+                accent={p.accentColor}
+                halo={isProposing}
+              />
+            }
+            name={p.pseudo}
+            badges={
               <>
-                <Avatar avatarId={p.avatarId} pseudo={p.pseudo} size="xs" accent={p.accentColor} />
-                <span className={styles.chipLabel}>{p.pseudo}</span>
-                {isOnline ? (
-                  <span className={clsx(styles.presence, isProposing && styles.presenceProposing)}>
-                    <StatusDot pulsing={isProposing} />
-                    <span className={isProposing ? styles.presenceLabel : 'visually-hidden'}>
-                      {presenceLabel}
-                    </span>
-                  </span>
-                ) : null}
-              </>
-            );
-
-            return (
-              <li
-                key={p.id}
-                className={clsx(styles.chip, isMe && styles.chipMe)}
-                data-testid={`participant-${p.id}`}
-              >
-                {p.handle ? (
-                  <Link
-                    to={ROUTES.profile(p.handle)}
-                    className={styles.profileLink}
-                    aria-label={profileLinkLabel}
-                  >
-                    {identity}
-                  </Link>
-                ) : (
-                  identity
-                )}
-                {isCreator && (
+                {isCreator ? (
                   <span
                     className={styles.hostBadge}
                     role="img"
                     aria-label={t('events.participants.hostBadge')}
                     title={t('events.participants.hostBadge')}
                   >
-                    <Crown aria-hidden size={ICON_SIZE.xs} />
+                    <Crown aria-hidden size={ICON_SIZE.md} />
                   </span>
-                )}
-                {managing && canHostRemove && (
-                  <button
-                    type="button"
-                    className={styles.removeBtn}
-                    aria-label={t('events.participants.removeAriaLabel', { pseudo: p.pseudo })}
-                    title={t('events.participants.removeAction')}
-                    disabled={isPending}
-                    onClick={() => onRemoveParticipant(p.id, p.pseudo)}
-                    data-testid={`remove-participant-${p.id}`}
-                  >
-                    <X aria-hidden size={ICON_SIZE.sm} />
-                  </button>
-                )}
-              </li>
-            );
-          })}
-          {onInvite && (
-            <li>
-              <Chip
-                icon={UserPlus}
-                dashed
-                onClick={onInvite}
-                ariaLabel={t('events.participants.inviteAriaLabel')}
-              >
-                {t('events.participants.inviteAction')}
-              </Chip>
-            </li>
-          )}
-        </ul>
-      )}
-
-      {onLeave && (
-        <div className={styles.leaveRow}>
-          <Button
-            type="button"
-            tone="danger"
-            size="sm"
-            onClick={onLeave}
-            disabled={leaveDisabled}
-            data-testid="leave-event-button"
-          >
-            {t('events.participants.leaveAction')}
-          </Button>
-        </div>
-      )}
-    </div>
+                ) : null}
+                {isMe ? <Chip size="sm">{t('events.participants.youBadge')}</Chip> : null}
+                {isOnline ? <span className="visually-hidden">{presenceLabel}</span> : null}
+              </>
+            }
+            online={isOnline}
+            to={p.handle ? ROUTES.profile(p.handle) : undefined}
+            linkAriaLabel={p.handle ? profileLinkLabel : undefined}
+            className={styles.row}
+            action={
+              canHostRemove ? (
+                <IconButton
+                  tone="danger"
+                  className={styles.remove}
+                  ariaLabel={t('events.participants.removeAriaLabel', { pseudo: p.pseudo })}
+                  disabled={pendingRemovalId === p.id}
+                  onClick={() => onRemoveParticipant(p.id, p.pseudo)}
+                  data-testid={`remove-participant-${p.id}`}
+                >
+                  <UserMinus aria-hidden size={ICON_SIZE.xl} />
+                </IconButton>
+              ) : null
+            }
+          />
+        );
+      })}
+    </ul>
   );
 }
