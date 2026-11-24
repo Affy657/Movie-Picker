@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.30.3] - 2026-11-24
+
 ### Fixed
 
 - **La synchronisation Letterboxd retrouve vos films vus**, y compris les films anciens que vous venez de marquer comme vus : toutes les pages de votre profil sont lues, une page que Letterboxd refuse n’arrête plus la lecture des suivantes, et les films jamais proposés passent avant ceux qui attendent déjà votre choix.
@@ -1067,7 +1069,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.30.2...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.30.3...HEAD
+[1.30.3]: https://github.com/Affy657/Movie-Picker/compare/v1.30.2...v1.30.3
 [1.30.2]: https://github.com/Affy657/Movie-Picker/compare/v1.30.1...v1.30.2
 [1.30.1]: https://github.com/Affy657/Movie-Picker/compare/v1.30.0...v1.30.1
 [1.30.0]: https://github.com/Affy657/Movie-Picker/compare/v1.29.1...v1.30.0
