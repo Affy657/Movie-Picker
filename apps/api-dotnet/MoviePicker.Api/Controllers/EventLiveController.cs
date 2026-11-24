@@ -25,6 +25,7 @@ public sealed class EventLiveController : ControllerBase
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Stream(
         string idOrSlug,
+        [FromQuery] string? tab,
         [FromServices] IOpenEventStreamHandler handler,
         [FromServices] IEventLiveFeed feed,
         [FromServices] IOptions<EventLiveOptions> options,
@@ -32,7 +33,7 @@ public sealed class EventLiveController : ControllerBase
         CancellationToken ct)
     {
         var access = await handler.HandleAsync(idOrSlug, ct);
-        if (!gate.TryEnter(HttpContext, out var lease))
+        if (!gate.TryEnter(HttpContext, tab, out var lease))
         {
             Response.Headers.RetryAfter = StreamRetryAfterSeconds;
             return StatusCode(StatusCodes.Status429TooManyRequests);

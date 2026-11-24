@@ -26,9 +26,11 @@ public sealed class EventStreamResultTests
         }
     }
 
-    private sealed class CountingLease : IDisposable
+    private sealed class CountingLease : IEventStreamLease
     {
         public int Disposals { get; private set; }
+
+        public bool IsReplaced { get; set; }
 
         public void Dispose() => Disposals += 1;
     }
@@ -94,6 +96,25 @@ public sealed class EventStreamResultTests
             lease);
 
         await result.ExecuteResultAsync(context);
+
+        Assert.Equal(1, lease.Disposals);
+    }
+
+    [Fact]
+    public async Task ExecuteResultAsync_ReplacedByANewerStreamOfTheSameTab_EndsBeforeItsLifetime()
+    {
+        var (context, _) = Context(Mock.Of<IEventPresenceRepository>());
+        var lease = new CountingLease();
+        var result = new EventStreamResult(
+            new EventStreamAccess("evt-1", "soiree", "p-1"),
+            new SilentFeed(),
+            ShortStream(lifetimeMs: 30_000),
+            lease);
+
+        var streaming = result.ExecuteResultAsync(context);
+        await Task.Delay(200);
+        lease.IsReplaced = true;
+        await streaming.WaitAsync(TimeSpan.FromSeconds(10));
 
         Assert.Equal(1, lease.Disposals);
     }

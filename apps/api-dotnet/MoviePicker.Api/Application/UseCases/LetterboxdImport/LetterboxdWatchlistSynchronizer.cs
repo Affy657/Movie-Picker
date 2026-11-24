@@ -141,7 +141,12 @@ public sealed class LetterboxdWatchlistSynchronizer
                 return null;
 
             var stillToWatch = await StillToWatchOnLetterboxdAsync(user.Id, watchlist, syncBudget);
-            return await _watched.ApplyAsync(user.Id, snapshot, stillToWatch, syncBudget);
+            return await _watched.ApplyAsync(
+                user.Id,
+                snapshot,
+                stillToWatch,
+                LetterboxdPendingChoiceKey.WatchedSlugsOf(user.LetterboxdPendingChoiceKeys),
+                syncBudget);
         }
         catch (OperationCanceledException) when (syncBudget.IsCancellationRequested && !ct.IsCancellationRequested)
         {

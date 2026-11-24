@@ -111,6 +111,25 @@ public sealed class LetterboxdWatchedSynchronizerTests
     }
 
     [Fact]
+    public async Task ApplyAsync_MoreUnknownFilmsThanOneSyncResolves_ResolvesTheFilmsNotYetOfferedAsChoicesFirst()
+    {
+        GivenTmdbMovie("Akira", 149, "1988");
+        var offered = Enumerable.Range(1, LetterboxdImportLimits.MaxRows)
+            .Select(i => new LetterboxdFilm($"offered-{i}", $"Offered {i}", "2001"))
+            .ToList();
+        var films = offered.Append(new LetterboxdFilm("akira", "Akira", "1988")).ToArray();
+
+        var outcome = await _sut.ApplyAsync(
+            UserId,
+            Complete(films),
+            null,
+            offered.Select(film => film.Slug).ToHashSet(StringComparer.OrdinalIgnoreCase));
+
+        Assert.Equal(1, outcome.Added);
+        Assert.Equal("akira", (await StoredAsync(149))!.LetterboxdSlug);
+    }
+
+    [Fact]
     public async Task ApplyAsync_FilmOutsideTheDiary_IsDatedWhenTheSyncFirstSeesIt()
     {
         _clock.Advance(TimeSpan.FromTicks(4_567));

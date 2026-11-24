@@ -164,6 +164,61 @@ public sealed class LetterboxdWatchedFilmsClientTests
     }
 
     [Fact]
+    public async Task GetWatchedFilmsAsync_OnePageRefused_ReadsThePagesAfterIt_WithoutAskingTheRefusedOneAgain()
+    {
+        var (sut, handler) = CreateSut(uri => IsRss(uri)
+            ? Ok(Rss())
+            : PageNumber(uri) switch
+            {
+                1 => Ok(Page(5, Poster("dune", "Dune (2021)"), Poster("akira", "Akira (1988)"))),
+                2 => Challenge(),
+                _ => Ok(Page(5, Poster("the-thing", "The Thing (1982)", rated: 9)))
+            });
+
+        var snapshot = await sut.GetWatchedFilmsAsync(Username);
+
+        Assert.True(snapshot.IsComplete);
+        Assert.True(snapshot.IsTruncated);
+        Assert.False(snapshot.ConfirmsDepartures);
+        Assert.Equal(5, snapshot.Total);
+        Assert.Equal([("dune", (int?)null), ("akira", null), ("the-thing", 9)], snapshot.Films.Select(f => (f.Slug, f.Rating)));
+        VerifyRequests(handler, Times.Once(), uri => uri.AbsoluteUri == $"https://letterboxd.com/{Username}/films/page/2/");
+        VerifyRequests(handler, Times.Once(), uri => uri.AbsoluteUri == $"https://letterboxd.com/{Username}/films/page/3/");
+        VerifyRequests(handler, Times.Never(), uri => PageNumber(uri) > 3);
+    }
+
+    [Fact]
+    public async Task GetWatchedFilmsAsync_EveryNextPageRefused_StopsAfterAFewRefusalsInARow()
+    {
+        var (sut, handler) = CreateSut(uri => IsRss(uri)
+            ? Ok(Rss())
+            : PageNumber(uri) == 1
+                ? Ok(Page(2_000, Poster("dune", "Dune (2021)")))
+                : Challenge());
+
+        var snapshot = await sut.GetWatchedFilmsAsync(Username);
+
+        Assert.True(snapshot.IsTruncated);
+        Assert.Equal(["dune"], snapshot.Films.Select(f => f.Slug));
+        VerifyRequests(handler, Times.Exactly(8), uri => !IsRss(uri) && PageNumber(uri) > 1);
+    }
+
+    [Fact]
+    public async Task GetWatchedFilmsAsync_RefusalsBetweenServedPages_DoNotEndTheRead()
+    {
+        var (sut, _) = CreateSut(uri => IsRss(uri)
+            ? Ok(Rss())
+            : PageNumber(uri) % 2 == 0
+                ? Challenge()
+                : Ok(Page(9, Poster($"film-{PageNumber(uri)}", $"Film {PageNumber(uri)} (2001)"))));
+
+        var snapshot = await sut.GetWatchedFilmsAsync(Username);
+
+        Assert.True(snapshot.IsTruncated);
+        Assert.Equal(["film-1", "film-3", "film-5", "film-7", "film-9"], snapshot.Films.Select(f => f.Slug));
+    }
+
+    [Fact]
     public async Task GetWatchedFilmsAsync_FirstPageRefused_IsIncomplete()
     {
         var (sut, _) = CreateSut(uri => IsRss(uri) ? Ok(Rss()) : Challenge());

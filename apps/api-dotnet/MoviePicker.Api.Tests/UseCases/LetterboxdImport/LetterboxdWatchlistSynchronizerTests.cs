@@ -496,6 +496,29 @@ public sealed class LetterboxdWatchlistSynchronizerTests
     }
 
     [Fact]
+    public async Task SyncAsync_WatchedFilmsAlreadyOfferedAsChoices_AreResolvedAfterTheNewOnes()
+    {
+        GivenLetterboxd(true);
+        GivenTmdbFindsNothing();
+        GivenTmdbResults("Akira", new TmdbSearchItem(149, MovieMediaType.Movie, "Akira", "1988", null, 8.0, "Akira"));
+        var offered = Enumerable.Range(1, LetterboxdImportLimits.MaxRows)
+            .Select(i => new LetterboxdFilm($"offered-{i}", $"Offered {i}", "2001"))
+            .ToList();
+        GivenWatchedOnLetterboxd(true, [.. offered, new LetterboxdFilm("akira", "Akira", "1988")]);
+        var user = new User
+        {
+            Id = UserId,
+            Email = "a@b.c",
+            LetterboxdUsername = Username,
+            LetterboxdPendingChoiceKeys = [.. offered.Select(film => $"watched:{film.Slug}"), "offered-1"]
+        };
+
+        var outcome = await _sut.SyncAsync(user);
+
+        Assert.Equal(1, outcome.WatchedAdded);
+    }
+
+    [Fact]
     public async Task SyncAsync_WatchedFilmsOverTheBudget_KeepTheWatchlistSync_AndReportTheWatchedError()
     {
         GivenLetterboxd(true, new LetterboxdFilm("akira", "Akira", "1988"));

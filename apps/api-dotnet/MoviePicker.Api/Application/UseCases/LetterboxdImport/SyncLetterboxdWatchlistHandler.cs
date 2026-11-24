@@ -19,8 +19,6 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
     private static readonly TimeSpan RetryIntervalAfterFailure = TimeSpan.FromHours(1);
     private static readonly TimeSpan ForcedSyncQuotaWindow = TimeSpan.FromHours(1);
 
-    private const string WatchedChoiceKeyPrefix = "watched:";
-
     private readonly IUserRepository _users;
     private readonly IUserNotificationRepository _notifications;
     private readonly LetterboxdWatchlistSynchronizer _synchronizer;
@@ -90,7 +88,7 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
         var pendingChoices = outcome.PendingChoices.Concat(outcome.WatchedPendingChoices).ToList();
         var keptKeys = KeysOfTheUnreadList(user, outcome.Error);
         var pendingChoiceKeys = pendingChoices
-            .Select(PendingChoiceKey)
+            .Select(LetterboxdPendingChoiceKey.Of)
             .Concat(keptKeys)
             .Distinct(StringComparer.Ordinal)
             .ToList();
@@ -164,24 +162,16 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
         }
     }
 
-    private static string PendingChoiceKey(LetterboxdImportRowResponse choice)
-    {
-        var film = string.IsNullOrEmpty(choice.LetterboxdSlug) ? $"{choice.Title}|{choice.Year}" : choice.LetterboxdSlug;
-        return choice.Target == LetterboxdImportTarget.Watched ? WatchedChoiceKeyPrefix + film : film;
-    }
-
     private static List<string> KeysOfTheUnreadList(User user, string? error)
     {
         var reported = user.LetterboxdPendingChoiceKeys ?? [];
         return error switch
         {
-            ErrorCodes.LetterboxdWatchedIncomplete => reported.Where(IsWatchedKey).ToList(),
-            ErrorCodes.LetterboxdWatchlistIncomplete => reported.Where(key => !IsWatchedKey(key)).ToList(),
+            ErrorCodes.LetterboxdWatchedIncomplete => reported.Where(LetterboxdPendingChoiceKey.IsWatched).ToList(),
+            ErrorCodes.LetterboxdWatchlistIncomplete => reported.Where(key => !LetterboxdPendingChoiceKey.IsWatched(key)).ToList(),
             _ => []
         };
     }
-
-    private static bool IsWatchedKey(string key) => key.StartsWith(WatchedChoiceKeyPrefix, StringComparison.Ordinal);
 
     private static bool HasPendingChoiceNotYetReported(User user, int pendingCount, List<string> pendingChoiceKeys)
     {

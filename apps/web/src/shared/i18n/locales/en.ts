@@ -734,7 +734,7 @@ export const en: Locale = {
         reportUnmatched: 'Show the {{count}} film(s) not found on TMDB',
         reportTruncated: '{{count}} film(s) skipped: too many films at once.',
         reportWatchedPartial:
-          'Watched films: Letterboxd only lets us read your recent releases and your diary, {{count}} other film(s) could not be read. Import the Letterboxd export file to get them.',
+          'Watched films: Letterboxd refused some of your pages this time, {{count}} film(s) could not be read. They will come with the next syncs, or all at once by importing the Letterboxd export file.',
         attentionMessageOne: '1 movie could not be identified automatically.',
         attentionMessage: '{{count}} movies could not be identified automatically.',
         attentionConfirm: 'Confirm them',

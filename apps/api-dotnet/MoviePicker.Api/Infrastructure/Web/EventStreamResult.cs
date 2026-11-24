@@ -17,9 +17,9 @@ public sealed class EventStreamResult : IActionResult
     private readonly EventStreamAccess _access;
     private readonly IEventLiveFeed _feed;
     private readonly EventLiveOptions _options;
-    private readonly IDisposable _lease;
+    private readonly IEventStreamLease _lease;
 
-    public EventStreamResult(EventStreamAccess access, IEventLiveFeed feed, EventLiveOptions options, IDisposable lease)
+    public EventStreamResult(EventStreamAccess access, IEventLiveFeed feed, EventLiveOptions options, IEventStreamLease lease)
     {
         _access = access;
         _feed = feed;
@@ -81,7 +81,7 @@ public sealed class EventStreamResult : IActionResult
         var nextPing = _options.KeepAliveInterval;
         var nextTouch = _options.PresenceRefresh;
 
-        while (elapsed.Elapsed < _options.StreamLifetime)
+        while (elapsed.Elapsed < _options.StreamLifetime && !_lease.IsReplaced)
         {
             if (presence is not null && elapsed.Elapsed >= nextTouch)
             {

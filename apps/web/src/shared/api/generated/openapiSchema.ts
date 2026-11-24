@@ -1127,7 +1127,9 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    tab?: string;
+                };
                 header?: never;
                 path: {
                     idOrSlug: string;

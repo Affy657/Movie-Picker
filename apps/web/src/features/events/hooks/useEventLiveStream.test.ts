@@ -34,7 +34,7 @@ describe('useEventLiveStream', () => {
     renderHook(() => useEventLiveStream({ slug: 'soiree', enabled: true, onChanged: vi.fn() }));
 
     expect(FakeEventSource.instances).toHaveLength(1);
-    expect(latest().url).toMatch(/\/api\/v1\/events\/soiree\/stream$/);
+    expect(latest().url).toMatch(/\/api\/v1\/events\/soiree\/stream\?tab=[\w-]{8,64}$/);
     expect(latest().init).toEqual({ withCredentials: true });
   });
 
@@ -195,6 +195,18 @@ describe('useEventLiveStream', () => {
 
     act(() => setVisibility('visible'));
     expect(FakeEventSource.instances).toHaveLength(2);
+  });
+
+  it('names the same tab on every stream it opens, so the server can drop the one it replaces', () => {
+    renderHook(() => useEventLiveStream({ slug: 'soiree', enabled: true, onChanged: vi.fn() }));
+    const tab = new URL(latest().url).searchParams.get('tab');
+
+    act(() => setVisibility('hidden'));
+    act(() => setVisibility('visible'));
+
+    expect(FakeEventSource.instances).toHaveLength(2);
+    expect(tab).toMatch(/^[\w-]{8,64}$/);
+    expect(new URL(latest().url).searchParams.get('tab')).toBe(tab);
   });
 
   it('closes while offline', () => {

@@ -8,6 +8,11 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Fixed
+
+- **La synchronisation Letterboxd retrouve vos films vus**, y compris les films anciens que vous venez de marquer comme vus : toutes les pages de votre profil sont lues, une page que Letterboxd refuse n’arrête plus la lecture des suivantes, et les films jamais proposés passent avant ceux qui attendent déjà votre choix.
+- **Le direct d’une soirée ne se coupe plus** quand vous passez d’un onglet ou d’une application à l’autre plusieurs fois de suite.
+
 ## [1.30.2] - 2026-11-24
 
 ### Changed
