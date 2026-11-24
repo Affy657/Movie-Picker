@@ -175,6 +175,13 @@ export default function ProfilePage() {
   const isNotFound =
     !handle ||
     (profileQuery.isError && ApiError.is(profileQuery.error) && profileQuery.error.code === 404);
+  const visitorView: VisitorView = {
+    isOwnProfile,
+    stats: statsQuery.data,
+    watchedHidden: watchedHiddenFromVisitor,
+    watchedCount: watchedPreview.data?.items.length,
+  };
+  const showEmptyState = !!profile && hasNothingToShow(profile, visitorView);
 
   usePageSeo(
     profile
@@ -184,6 +191,7 @@ export default function ProfilePage() {
           canonical: absoluteUrl(ROUTES.profile(profile.handle)),
           ogType: 'profile',
           jsonLd: buildProfileJsonLd(profile),
+          noindex: showEmptyState && !profile.bio?.trim(),
         }
       : missingProfileSeo(isNotFound, t)
   );
@@ -237,12 +245,6 @@ export default function ProfilePage() {
       : null;
 
   const profileAccent = (isOwnProfile ? user?.accentColor : profile.accentColor) ?? 'default';
-  const showEmptyState = hasNothingToShow(profile, {
-    isOwnProfile,
-    stats,
-    watchedHidden: watchedHiddenFromVisitor,
-    watchedCount: watchedPreview.data?.items.length,
-  });
 
   return (
     <PageLayout

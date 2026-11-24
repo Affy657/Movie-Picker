@@ -132,6 +132,43 @@ describe('ProfilePage (MSW)', () => {
     ).toBeInTheDocument();
   });
 
+  it('keeps a profile with nothing to show out of search engines, as the server does', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () =>
+        HttpResponse.json({ ...ALICE_PROFILE, bio: '', watchlistCount: 0, favorites: [] })
+      ),
+      createUserStatsHandler('alice')
+    );
+
+    renderProfile('alice');
+
+    await screen.findByText('Ce profil est encore vide');
+    await waitFor(() =>
+      expect(document.querySelector('meta[name="robots"]')).toHaveAttribute(
+        'content',
+        'noindex, nofollow'
+      )
+    );
+  });
+
+  it('lets search engines index an otherwise empty profile that has a bio', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice`, () =>
+        HttpResponse.json({ ...ALICE_PROFILE, watchlistCount: 0, favorites: [] })
+      ),
+      createUserStatsHandler('alice')
+    );
+
+    renderProfile('alice');
+
+    await screen.findByText('Ce profil est encore vide');
+    expect(
+      document.querySelector('meta[name="robots"]')?.getAttribute('content') ?? ''
+    ).not.toMatch(/noindex/);
+  });
+
   it('leaves the empty state out of a profile with something to show', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
