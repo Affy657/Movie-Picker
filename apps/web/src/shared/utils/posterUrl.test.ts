@@ -86,11 +86,12 @@ describe('tmdbPosterSrcSetForList', () => {
     );
   });
 
-  it('builds the same srcset from a poster relayed by the API', () => {
+  it('offers the relayed poster up to the w500 the relay serves, for high density screens', () => {
     expect(tmdbPosterSrcSetForList('https://api.test/api/v1/posters/tmdb/w500/abc.jpg')).toBe(
       'https://api.test/api/v1/posters/tmdb/w92/abc.jpg 92w, ' +
         'https://api.test/api/v1/posters/tmdb/w185/abc.jpg 185w, ' +
-        'https://api.test/api/v1/posters/tmdb/w342/abc.jpg 342w'
+        'https://api.test/api/v1/posters/tmdb/w342/abc.jpg 342w, ' +
+        'https://api.test/api/v1/posters/tmdb/w500/abc.jpg 500w'
     );
   });
 
@@ -139,9 +140,15 @@ describe('posterSrcAtSize', () => {
 });
 
 describe('tmdbBackdropSrcSet', () => {
-  it('offers the backdrop at three widths so a wide screen no longer stretches the w780', () => {
+  it('offers the backdrop up to w1280 so a wide screen no longer stretches the w780', () => {
     expect(tmdbBackdropSrcSet('https://image.tmdb.org/t/p/w780/bg.jpg')).toBe(
-      'https://image.tmdb.org/t/p/w780/bg.jpg 780w, https://image.tmdb.org/t/p/w1280/bg.jpg 1280w, https://image.tmdb.org/t/p/original/bg.jpg 1920w'
+      'https://image.tmdb.org/t/p/w780/bg.jpg 780w, https://image.tmdb.org/t/p/w1280/bg.jpg 1280w'
+    );
+  });
+
+  it('never offers the original backdrop, whose real width and weight are unknown', () => {
+    expect(tmdbBackdropSrcSet('https://image.tmdb.org/t/p/original/bg.jpg')).not.toContain(
+      '/t/p/original/'
     );
   });
 

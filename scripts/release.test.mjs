@@ -2,6 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   bumpFor,
+  changedSinceMaster,
   commandOf,
   freeVersion,
   nextVersion,
@@ -284,8 +285,38 @@ describe('release preflight', () => {
     );
   });
 
+  it('checks the web lane when the root manifest, the lockfile, turbo or the shared tsconfig changed', () => {
+    for (const file of [
+      'package.json',
+      'pnpm-lock.yaml',
+      'turbo.json',
+      'configs/tsconfig.base.json',
+      'configs/tsconfig.node.json',
+    ]) {
+      assert.deepEqual(preflightLanes([file]), ['web'], file);
+    }
+  });
+
   it('runs every lane when the changed files cannot be listed', () => {
     assert.deepEqual(preflightLanes(null), ['dotnet', 'web']);
+  });
+
+  it('lists the untracked files with the committed and uncommitted ones', () => {
+    const answers = {
+      'diff --name-only origin/master...HEAD': 'CHANGELOG.md',
+      'diff --name-only HEAD': 'docs/roadmap.md',
+      'ls-files --others --exclude-standard': 'apps/web/src/NewPage.tsx',
+    };
+    const changed = changedSinceMaster((args) => answers[args.join(' ')]);
+    assert.deepEqual(changed, ['CHANGELOG.md', 'docs/roadmap.md', 'apps/web/src/NewPage.tsx']);
+    assert.deepEqual(preflightLanes(changed), ['web']);
+  });
+
+  it('runs every lane when git cannot compare with origin/master', () => {
+    const changed = changedSinceMaster(() => {
+      throw new Error('unknown revision origin/master');
+    });
+    assert.equal(changed, null);
   });
 
   it('reports every Roslyn diagnostic SonarCloud would import, suggestions included', () => {

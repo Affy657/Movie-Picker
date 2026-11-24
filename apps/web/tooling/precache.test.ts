@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { INVITATION_DOCUMENTS } from './invitationDocuments';
 import { PRECACHE_IGNORES, chunkFileName } from './precache';
 
 const precached = (file: string) =>
@@ -27,11 +28,10 @@ describe('chunkFileName', () => {
 });
 
 describe('PRECACHE_IGNORES', () => {
-  it('leaves out telemetry, the share image, English and the release notes', () => {
+  it('leaves out telemetry, the share image and the release notes', () => {
     for (const file of [
       'assets/sentry-AbC12345.js',
       'assets/posthog-AbC12345.js',
-      'assets/i18n-en-fZeYRtel.js',
       'assets/ReleaseNotesPage-ClSfBtTp.js',
       'assets/ReleaseNotesPage-B1c2D3e4.css',
       'og-image.png',
@@ -40,10 +40,18 @@ describe('PRECACHE_IGNORES', () => {
     }
   });
 
-  it('keeps what the application needs offline', () => {
+  it('leaves out the invitation documents, which only Hosting serves', () => {
+    expect(INVITATION_DOCUMENTS.length).toBeGreaterThan(0);
+    for (const { fileName } of INVITATION_DOCUMENTS) {
+      expect(precached(fileName), fileName).toBe(false);
+    }
+  });
+
+  it('keeps what the application needs offline, both locales included', () => {
     for (const file of [
       'index.html',
       'assets/i18n-fr-Dcw1Pgee.js',
+      'assets/i18n-en-fZeYRtel.js',
       'assets/App-Yv7It8Ow.js',
       'assets/HomePage-CJF7KFts.js',
       'icons/clap-192x192.png',

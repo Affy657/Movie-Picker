@@ -4,6 +4,7 @@ const TMDB_POSTER_SIZE_SEGMENT = /\/t\/p\/w\d+\//i;
 const RELAY_POSTER_SIZE_SEGMENT = /\/api\/v1\/posters\/tmdb\/w\d+\//;
 const RELAY_POSTER_SIZES = new Set(['w92', 'w185', 'w342', 'w500']);
 const LIST_SRCSET_SIZES = ['w92', 'w185', 'w342'];
+const RELAY_SRCSET_SIZES = [...LIST_SRCSET_SIZES, 'w500'];
 
 function relayPosterAtSize(u: URL, size: string): string | undefined {
   if (!RELAY_POSTER_SIZE_SEGMENT.test(u.pathname) || !RELAY_POSTER_SIZES.has(size)) {
@@ -60,7 +61,7 @@ export function tmdbPosterSrcSetForList(url: string | undefined): string | undef
   try {
     const u = new URL(url);
     if (RELAY_POSTER_SIZE_SEGMENT.test(u.pathname)) {
-      return LIST_SRCSET_SIZES.map(
+      return RELAY_SRCSET_SIZES.map(
         (size) => `${relayPosterAtSize(u, size)} ${size.slice(1)}w`
       ).join(', ');
     }
@@ -80,7 +81,6 @@ export function tmdbPosterSrcSetForList(url: string | undefined): string | undef
 const BACKDROP_SRCSET_WIDTHS: ReadonlyArray<readonly [string, number]> = [
   ['w780', 780],
   ['w1280', 1280],
-  ['original', 1920],
 ];
 
 export function tmdbBackdropSrcSet(url: string | null | undefined): string | undefined {
