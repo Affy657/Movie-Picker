@@ -63,15 +63,6 @@
   content: '';
 }
 
-.titleLink:focus-visible {
-  outline: none;
-}
-
-.card:has(.titleLink:focus-visible) {
-  outline: var(--outline-focus);
-  outline-offset: var(--outline-offset);
-}
-
 @media (hover: hover) {
   .card:hover .titleLink {
     text-decoration: underline;
@@ -145,7 +136,7 @@
 
 .actions {
   position: relative;
-  z-index: 1;
+  z-index: var(--z-base);
   grid-area: actions;
   display: flex;
   flex-wrap: wrap;

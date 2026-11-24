@@ -53,15 +53,6 @@
   content: '';
 }
 
-.titleLink:focus-visible {
-  outline: none;
-}
-
-.row:has(.titleLink:focus-visible) {
-  outline: var(--outline-focus);
-  outline-offset: var(--outline-offset);
-}
-
 @media (hover: hover) {
   .row:hover .titleLink {
     text-decoration: underline;
@@ -70,7 +61,7 @@
 
 .joinButton {
   position: relative;
-  z-index: 1;
+  z-index: var(--z-base);
 }
 
 .title {

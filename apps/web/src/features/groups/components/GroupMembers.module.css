@@ -34,8 +34,10 @@
   text-decoration: none;
 }
 
-a.identity:hover .name {
-  text-decoration: underline;
+@media (hover: hover) {
+  a.identity:hover .name {
+    text-decoration: underline;
+  }
 }
 
 a.identity:focus-visible {
