@@ -197,7 +197,7 @@ Le dialogue qui est une `Sheet` sur téléphone et une `Modal` en colonne sur gr
 
 ### Notice
 
-Le bandeau d'information flottant : `title`, `description`, `placement` `top` (défaut, glisse du haut) / `bottom` (glisse du bas), `onClose` (sans lui, pas de croix : le bandeau attend une décision), les actions en enfants, pleine largeur sur mobile. C'est le consentement, l'avertissement du navigateur intégré et celui de l'ancienne adresse, et la confirmation d'une soirée rejointe (`JoinedNotice`, qui se retire seule après huit secondes).
+Le bandeau d'information flottant : `title`, `description`, `placement` `top` (défaut, glisse du haut) / `bottom` (glisse du bas), `onClose` (sans lui, pas de croix : le bandeau attend une décision), `closeAriaLabel` pour nommer la croix dans la langue d'un contenu qui n'est pas celle de l'interface (la suggestion de l'anglais), les actions en enfants, pleine largeur sur mobile. C'est le consentement, l'avertissement du navigateur intégré et celui de l'ancienne adresse, et la confirmation d'une soirée rejointe (`JoinedNotice`, qui se retire seule après huit secondes).
 
 ### FormPageShell
 

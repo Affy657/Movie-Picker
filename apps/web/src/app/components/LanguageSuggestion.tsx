@@ -65,6 +65,7 @@ export default function LanguageSuggestion({
         description={t('languageSuggestion.description', undefined, 'en')}
         placement="top"
         onClose={() => answer('fr')}
+        closeAriaLabel={t('common.close', undefined, 'en')}
       >
         <Button type="button" size="sm" variant="primary" onClick={() => answer('en')}>
           {t('languageSuggestion.switch', undefined, 'en')}
