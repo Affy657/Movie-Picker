@@ -1,7 +1,7 @@
 import { useId, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { CalendarDays, ExternalLink, Eye, Star, Trophy } from 'lucide-react';
-import { ROUTES, withReturnTo } from '@/app/routes';
+import { ROUTES } from '@/app/routes';
 import type { MovieNight, MovieNights } from '@/features/movies/api/moviesApi';
 import {
   allocineUrl,
@@ -10,6 +10,7 @@ import {
   tmdbPageUrl,
 } from '@/features/movies/utils/movieExternalLinks';
 import AvatarStack from '@/shared/components/AvatarStack';
+import AccountChoiceLinks from '@/shared/components/AccountChoiceLinks';
 import Card from '@/shared/components/Card';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { useTranslation, type Translate } from '@/shared/i18n';
@@ -157,12 +158,7 @@ export function MovieNightsCard({
       <AsideCard title={t('moviePage.nightsSignedOutTitle')}>
         <p className={styles.muted}>{t('moviePage.nightsSignedOut')}</p>
         <p className={styles.signedOutLinks}>
-          <Link to={withReturnTo(ROUTES.register, returnTo)} className={styles.inlineLink}>
-            {t('moviePage.nightsSignedOutRegister')}
-          </Link>
-          <Link to={withReturnTo(ROUTES.login, returnTo)} className={styles.inlineLink}>
-            {t('moviePage.nightsSignIn')}
-          </Link>
+          <AccountChoiceLinks returnTo={returnTo} linkClassName={styles.inlineLink} />
         </p>
       </AsideCard>
     );

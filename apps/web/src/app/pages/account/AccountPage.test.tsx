@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
@@ -138,6 +138,19 @@ describe('AccountPage (MSW)', () => {
     });
 
     expect(screen.queryByText('Échelle des notes')).not.toBeInTheDocument();
+  });
+
+  it('offers a visitor to create an account first, then to sign in, back to the settings', async () => {
+    server.use(authMeGuestHandler);
+
+    renderAccount();
+
+    const nav = await screen.findByRole('navigation', { name: 'Connexion et inscription' });
+    const links = within(nav).getAllByRole('link');
+    expect(links.map((link) => [link.textContent, link.getAttribute('href')])).toEqual([
+      ['Créer un compte', `/register?returnTo=${encodeURIComponent('/settings')}`],
+      ['J’ai déjà un compte', `/login?returnTo=${encodeURIComponent('/settings')}`],
+    ]);
   });
 
   it('failed session check: retry screen instead of the signed-out settings', async () => {

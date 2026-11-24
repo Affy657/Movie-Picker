@@ -269,7 +269,7 @@ describe('MoviePage', () => {
       'href',
       `/register?returnTo=${encodeURIComponent('/film/438631-dune')}`
     );
-    expect(within(card).getByRole('link', { name: 'Se connecter' })).toHaveAttribute(
+    expect(within(card).getByRole('link', { name: 'J’ai déjà un compte' })).toHaveAttribute(
       'href',
       `/login?returnTo=${encodeURIComponent('/film/438631-dune')}`
     );

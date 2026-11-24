@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import clsx from 'clsx';
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import { APP_VERSION } from '@/shared/appVersion';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { usePwaInstallClick } from '@/shared/hooks/usePwaInstall';
+import { returnToOf } from '@/shared/utils/returnTo';
+import AccountChoiceLinks from '@/shared/components/AccountChoiceLinks';
 import ProposeIdeaButton from './ProposeIdeaButton';
 import SupportReportButton from './SupportReportButton';
 import InstallPwaDialog from '@/shared/components/InstallPwaDialog';
@@ -68,23 +70,28 @@ const MEMBER_NAV_LINKS: ReadonlyArray<FooterNavLink> = [
   { to: ROUTES.account, labelKey: 'nav.account' },
 ];
 
-const VISITOR_NAV_LINKS: ReadonlyArray<FooterNavLink> = [
-  { to: ROUTES.register, labelKey: 'home.ctaRegister' },
-  { to: ROUTES.login, labelKey: 'home.ctaLogin' },
-];
-
-function NavLinks({ links }: Readonly<{ links: ReadonlyArray<FooterNavLink> }>) {
+function SessionNavLinks() {
   const { t } = useTranslation();
+  const { user, isLoading } = useAuth();
+  const location = useLocation();
+  if (user) {
+    return (
+      <>
+        {MEMBER_NAV_LINKS.map(({ to, labelKey }) => (
+          <li key={to}>
+            <Link to={to} className={styles.colLink}>
+              {t(labelKey)}
+            </Link>
+          </li>
+        ))}
+      </>
+    );
+  }
+  if (isLoading) return null;
   return (
-    <>
-      {links.map(({ to, labelKey }) => (
-        <li key={to}>
-          <Link to={to} className={styles.colLink}>
-            {t(labelKey)}
-          </Link>
-        </li>
-      ))}
-    </>
+    <li className={styles.accountChoice}>
+      <AccountChoiceLinks returnTo={returnToOf(location)} linkClassName={styles.colLink} />
+    </li>
   );
 }
 
@@ -167,7 +174,7 @@ export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>
                 {t('nav.landing.howItWorks')}
               </Link>
             </li>
-            <NavLinks links={user ? MEMBER_NAV_LINKS : VISITOR_NAV_LINKS} />
+            <SessionNavLinks />
           </ul>
         </div>
 

@@ -578,7 +578,6 @@ export const en: Locale = {
       guestLead:
         'These preferences apply to this device. With an account, your theme and colour follow you on every device.',
       logoutButton: 'Log out',
-      registerCta: 'Create an account',
       guestNavAriaLabel: 'Sign in and sign up',
       sessionRowLabel: 'This device',
       sessionRowHint: 'Sign out of Movie Picker on this device.',
@@ -1749,8 +1748,6 @@ export const en: Locale = {
     nightsSignedOutTitle: 'A movie night with friends?',
     nightsSignedOut:
       'Everyone suggests their movies, everyone votes, and the wheel picks the one for the night.',
-    nightsSignedOutRegister: 'Create an account',
-    nightsSignIn: 'Sign in',
     nightsProposedOne: 'Suggested in 1 night',
     nightsProposedMany: 'Suggested in {{count}} nights',
     nightsWonAt: 'Won at {{title}}',
