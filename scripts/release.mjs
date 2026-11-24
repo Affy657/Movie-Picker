@@ -24,7 +24,16 @@ const FRENCH_HEADINGS = {
 };
 const LANE_PATHS = {
   dotnet: ['apps/api-dotnet/'],
-  web: ['apps/web/', 'e2e/', 'eslint.config.mjs', 'playwright.config.ts'],
+  web: [
+    'apps/web/',
+    'e2e/',
+    'eslint.config.mjs',
+    'playwright.config.ts',
+    'package.json',
+    'pnpm-lock.yaml',
+    'turbo.json',
+    'configs/tsconfig',
+  ],
 };
 const DOTNET_SOLUTION = 'apps/api-dotnet/MoviePicker.slnx';
 const ROSLYN_LOG = 'obj/roslyn-preflight.sarif';
@@ -198,11 +207,15 @@ function run(command, args) {
   execFileSync(command, args, { cwd: ROOT, stdio: 'inherit', shell: process.platform === 'win32' });
 }
 
-function changedSinceMaster() {
+export function changedSinceMaster(runGit = git) {
   try {
-    const committed = git(['diff', '--name-only', 'origin/master...HEAD']);
-    const uncommitted = git(['diff', '--name-only', 'HEAD']);
-    return [...committed.split('\n'), ...uncommitted.split('\n')].filter(Boolean);
+    return [
+      runGit(['diff', '--name-only', 'origin/master...HEAD']),
+      runGit(['diff', '--name-only', 'HEAD']),
+      runGit(['ls-files', '--others', '--exclude-standard']),
+    ]
+      .flatMap((listing) => listing.split('\n'))
+      .filter(Boolean);
   } catch {
     console.warn('Could not compare with origin/master: every preflight lane runs.');
     return null;
