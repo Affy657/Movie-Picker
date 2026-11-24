@@ -35,11 +35,17 @@
     },
     {
       "glob": "/@(favicon.svg|favicon.ico|logo.svg|og-image.png)",
-      "headers": { "Cache-Control": "public, max-age=86400, must-revalidate" }
+      "headers": {
+        "Cache-Control": "public, max-age=86400, must-revalidate",
+        "Cross-Origin-Resource-Policy": "cross-origin"
+      }
     },
     {
       "glob": "/icons/**",
-      "headers": { "Cache-Control": "public, max-age=86400, must-revalidate" }
+      "headers": {
+        "Cache-Control": "public, max-age=86400, must-revalidate",
+        "Cross-Origin-Resource-Policy": "cross-origin"
+      }
     },
     {
       "glob": "/@(robots.txt|sitemap.xml|llms.txt)",
