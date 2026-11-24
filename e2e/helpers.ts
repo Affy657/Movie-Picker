@@ -27,7 +27,7 @@ export function isoDateDaysFromNow(days: number): string {
 export async function fillCreateEventForm(
   page: Page,
   title: string,
-  date = '2030-12-20'
+  date = isoDateDaysFromNow(365)
 ): Promise<void> {
   const dialog = page.getByRole('dialog', { name: 'Nouvelle soirée' });
   await dialog.getByRole('radio', { name: /autre date/i }).click();
