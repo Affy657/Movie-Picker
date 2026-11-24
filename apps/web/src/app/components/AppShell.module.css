@@ -286,16 +286,6 @@
   }
 }
 
-.navDesktop .navLinkWideOnly {
-  display: none;
-}
-
-@media (min-width: 64rem) {
-  .navDesktop .navLinkWideOnly {
-    display: flex;
-  }
-}
-
 @media (max-width: 63.9375rem) {
   .navDesktop {
     gap: var(--space-3);

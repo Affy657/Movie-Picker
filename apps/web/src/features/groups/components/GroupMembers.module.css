@@ -23,6 +23,29 @@
   border-bottom: none;
 }
 
+.identity {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  align-self: stretch;
+  color: inherit;
+  text-decoration: none;
+}
+
+@media (hover: hover) {
+  a.identity:hover .name {
+    text-decoration: underline;
+  }
+}
+
+a.identity:focus-visible {
+  border-radius: var(--radius-sm);
+  outline: var(--outline-focus);
+  outline-offset: var(--outline-offset);
+}
+
 .rowText {
   display: flex;
   flex: 1 1 auto;

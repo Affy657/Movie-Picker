@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import clsx from 'clsx';
+import { Link } from 'react-router';
 import { Star, Trophy } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
 import Card from '@/shared/components/Card';
@@ -13,6 +14,7 @@ import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { RatingScale } from '@/shared/types/theme';
 import { formatRating } from '@/shared/utils/formatRating';
+import { ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import type {
   FriendGroupDetail,
@@ -233,7 +235,9 @@ function RankingBoard({
                     size={PODIUM_AVATAR[index] ?? 'md'}
                   />
                 </span>
-                <span className={styles.placeName}>{nameOf(member)}</span>
+                <MemberName handle={member.handle} className={styles.placeName}>
+                  {nameOf(member)}
+                </MemberName>
                 <span className={styles.placeValue}>
                   <Score stat={stat}>{scoreText(stat, entry, formatting)}</Score>
                 </span>
@@ -259,7 +263,9 @@ function RankingBoard({
                 <span className={styles.rank}>{entry.rank}</span>
                 <Avatar avatarId={member.avatarId} pseudo={member.displayName} size="md" />
                 <span className={styles.who}>
-                  <span className={styles.name}>{nameOf(member)}</span>
+                  <MemberName handle={member.handle} className={styles.name}>
+                    {nameOf(member)}
+                  </MemberName>
                   <span className={styles.detail}>{rankedDetail(stat, entry, t)}</span>
                 </span>
                 <ProgressBar
@@ -289,7 +295,9 @@ function RankingBoard({
                   <span className={styles.rank} />
                   <Avatar avatarId={member.avatarId} pseudo={member.displayName} size="md" />
                   <span className={styles.who}>
-                    <span className={styles.name}>{nameOf(member)}</span>
+                    <MemberName handle={member.handle} className={styles.name}>
+                      {nameOf(member)}
+                    </MemberName>
                     <span className={styles.detail}>{reasonText(entry, t)}</span>
                   </span>
                 </li>
@@ -299,6 +307,19 @@ function RankingBoard({
         </div>
       ) : null}
     </Card>
+  );
+}
+
+function MemberName({
+  handle,
+  className,
+  children,
+}: Readonly<{ handle: string | null; className: string | undefined; children: ReactNode }>) {
+  if (!handle) return <span className={className}>{children}</span>;
+  return (
+    <Link to={ROUTES.profile(handle)} className={clsx(className, styles.nameLink)}>
+      {children}
+    </Link>
   );
 }
 

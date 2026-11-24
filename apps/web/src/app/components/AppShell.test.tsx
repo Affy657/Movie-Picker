@@ -129,6 +129,51 @@ describe('AppShell', () => {
       expect(within(nav).getByRole('link', { name: 'Listes' })).toHaveAttribute('href', '/listes');
       expect(within(nav).queryByRole('link', { name: /^mes /i })).not.toBeInTheDocument();
     }
+    expect(within(desktopNav!).getByRole('link', { name: 'Explorer' })).toHaveAttribute(
+      'href',
+      '/'
+    );
+    expect(
+      within(desktopNav!).queryByRole('link', { name: 'Comment ça marche' })
+    ).not.toBeInTheDocument();
+  });
+
+  it('signs in the local dev account in one click from the header, in development', async () => {
+    let body: unknown = null;
+    let signedIn = false;
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        signedIn
+          ? HttpResponse.json({
+              userId: 'u-dev',
+              displayName: 'Dev',
+              emailMasked: 'd***@test.local',
+              uiTheme: 'system',
+              accentColor: 'default',
+              handle: 'dev',
+              isProfilePublic: true,
+            })
+          : HttpResponse.json({ error: '401' }, { status: 401 })
+      ),
+      http.post(`${TEST_API_V1}/auth/login`, async ({ request }) => {
+        body = await request.json();
+        signedIn = true;
+        return HttpResponse.json({});
+      })
+    );
+    const user = userEvent.setup();
+    renderShell('/films/tendances');
+
+    await user.click(
+      await screen.findByRole(
+        'button',
+        { name: 'Connexion rapide compte développeur (local uniquement)' },
+        { timeout: 20000 }
+      )
+    );
+
+    expect(await screen.findByRole('button', { name: /menu du compte/i })).toBeInTheDocument();
+    expect(body).toMatchObject({ email: 'dev@test.local' });
   });
 
   it('opens the same creation page from the mobile bar as from the home page', async () => {

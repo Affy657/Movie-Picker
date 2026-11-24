@@ -1,4 +1,7 @@
+import type { ReactNode } from 'react';
+import { Link } from 'react-router';
 import { UserPlus } from 'lucide-react';
+import { ROUTES } from '@/app/routes';
 import Avatar from '@/shared/components/Avatar';
 import Button from '@/shared/components/Button';
 import Chip from '@/shared/components/Chip';
@@ -41,6 +44,18 @@ function useMembersPresence(group: FriendGroupDetail, viewerId: string | undefin
   };
 }
 
+function MemberIdentity({
+  handle,
+  children,
+}: Readonly<{ handle: string | null; children: ReactNode }>) {
+  if (!handle) return <span className={styles.identity}>{children}</span>;
+  return (
+    <Link to={ROUTES.profile(handle)} className={styles.identity}>
+      {children}
+    </Link>
+  );
+}
+
 export default function GroupMembersPanel({
   group,
   viewerId,
@@ -61,15 +76,17 @@ export default function GroupMembersPanel({
           const line = presence.presenceOf(member);
           return (
             <li key={member.userId} className={styles.row}>
-              <Avatar avatarId={member.avatarId} pseudo={member.displayName} size="md" />
-              <span className={styles.rowText}>
-                <span className={styles.name}>{presence.nameOf(member)}</span>
-                {line ? (
-                  <span className={presence.comes(member) ? styles.comes : styles.absent}>
-                    {line}
-                  </span>
-                ) : null}
-              </span>
+              <MemberIdentity handle={member.handle}>
+                <Avatar avatarId={member.avatarId} pseudo={member.displayName} size="md" />
+                <span className={styles.rowText}>
+                  <span className={styles.name}>{presence.nameOf(member)}</span>
+                  {line ? (
+                    <span className={presence.comes(member) ? styles.comes : styles.absent}>
+                      {line}
+                    </span>
+                  ) : null}
+                </span>
+              </MemberIdentity>
               {member.role === 'owner' ? (
                 <Chip size="sm">{t('groups.members.ownerBadge')}</Chip>
               ) : null}

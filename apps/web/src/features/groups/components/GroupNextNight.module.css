@@ -1,4 +1,5 @@
 .card {
+  position: relative;
   display: grid;
   grid-template-areas:
     'top films'
@@ -55,8 +56,15 @@
   text-decoration: none;
 }
 
+.titleLink::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  content: '';
+}
+
 @media (hover: hover) {
-  .titleLink:hover {
+  .card:hover .titleLink {
     text-decoration: underline;
   }
 }
@@ -127,6 +135,8 @@
 }
 
 .actions {
+  position: relative;
+  z-index: var(--z-base);
   grid-area: actions;
   display: flex;
   flex-wrap: wrap;

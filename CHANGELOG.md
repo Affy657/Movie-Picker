@@ -8,6 +8,14 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Changed
+
+- **Dans un groupe, toute la carte d’une soirée mène à la soirée**, y compris celles que vous n’avez pas encore rejointes, et le nom d’un membre, dans la liste des membres comme au classement, ouvre son profil.
+
+### Fixed
+
+- **« Explorer » revient dans la barre du haut** quand vous n’êtes pas connecté, à la place de « Comment ça marche ».
+
 ## [1.30.1] - 2026-11-24
 
 ### Fixed

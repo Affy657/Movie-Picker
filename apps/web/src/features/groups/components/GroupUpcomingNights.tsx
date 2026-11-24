@@ -36,7 +36,10 @@ function nightLine(night: MyEventSummary, locale: LocaleCode, t: Translate): str
   });
 }
 
-function NightText({ night }: Readonly<{ night: MyEventSummary }>) {
+function NightText({
+  night,
+  linked = false,
+}: Readonly<{ night: MyEventSummary; linked?: boolean }>) {
   const { t } = useTranslation();
   const { locale } = useLocale();
   return (
@@ -44,7 +47,16 @@ function NightText({ night }: Readonly<{ night: MyEventSummary }>) {
       <EventDateBlock date={night.date} className={styles.date} />
       <span className={styles.divider} aria-hidden="true" />
       <span className={styles.text}>
-        <span className={styles.title}>{night.title}</span>
+        {linked ? (
+          <Link
+            to={ROUTES.eventDetail(night.slug)}
+            className={`${styles.title} ${styles.titleLink}`}
+          >
+            {night.title}
+          </Link>
+        ) : (
+          <span className={styles.title}>{night.title}</span>
+        )}
         <span className="visually-hidden">
           {formatEventDateLong(night.date, night.time, locale, t('events.detail.dateTimeJoiner'))}
         </span>
@@ -70,9 +82,10 @@ function JoinableNight({ night }: Readonly<{ night: MyEventSummary }>) {
 
   return (
     <Card padding="none" radius="lg" className={styles.row}>
-      <NightText night={night} />
+      <NightText night={night} linked />
       <Button
         size="sm"
+        className={styles.joinButton}
         loading={joinNight.isPending}
         aria-label={t('groups.page.joinAria', { title: night.title })}
         onClick={join}
