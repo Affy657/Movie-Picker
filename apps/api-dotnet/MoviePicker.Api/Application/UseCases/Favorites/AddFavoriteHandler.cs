@@ -1,6 +1,8 @@
+using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.Posters;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -11,12 +13,21 @@ public sealed class AddFavoriteHandler : IAddFavoriteHandler
     private readonly IUserRepository _users;
     private readonly IPosterImageStore _posterImageStore;
     private readonly TimeProvider _clock;
+    private readonly ITmdbMovieSearch _tmdb;
+    private readonly ILogger<AddFavoriteHandler> _logger;
 
-    public AddFavoriteHandler(IUserRepository users, IPosterImageStore posterImageStore, TimeProvider clock)
+    public AddFavoriteHandler(
+        IUserRepository users,
+        IPosterImageStore posterImageStore,
+        TimeProvider clock,
+        ITmdbMovieSearch tmdb,
+        ILogger<AddFavoriteHandler> logger)
     {
         _users = users;
         _posterImageStore = posterImageStore;
         _clock = clock;
+        _tmdb = tmdb;
+        _logger = logger;
     }
 
     public async Task<FavoriteListResponse> HandleAsync(string userId, AddFavoriteRequest request, CancellationToken ct = default)
@@ -27,13 +38,15 @@ public sealed class AddFavoriteHandler : IAddFavoriteHandler
         if (user.Favorites.Count >= FavoriteTitle.MaxPerUser)
             throw Errors.FavoritesLimitReached(FavoriteTitle.MaxPerUser);
 
+        var requestedPoster = await TmdbPosterPathResolver.ResolveAsync(_posterImageStore, request.PosterPath, ct);
+        var details = await TmdbTitleFacts.FetchDetailsBestEffortAsync(_tmdb, _logger, request.TmdbId, request.MediaType, ct);
         var favorite = new FavoriteTitle
         {
             TmdbId = request.TmdbId,
             MediaType = request.MediaType,
-            Title = request.Title.Trim(),
-            Year = (request.Year ?? string.Empty).Trim(),
-            PosterPath = await TmdbPosterPathResolver.ResolveAsync(_posterImageStore, request.PosterPath, ct)
+            Title = TmdbTitleFacts.Title(request.Title, details),
+            Year = TmdbTitleFacts.Year(request.Year, details),
+            PosterPath = requestedPoster ?? await _posterImageStore.ToStoredPosterPathAsync(details?.PosterUrl, ct)
         };
 
         var added = await _users.AddFavoriteAsync(user.Id, favorite, FavoriteTitle.MaxPerUser, _clock.GetUtcNow(), ct);

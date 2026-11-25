@@ -97,6 +97,40 @@ public sealed class AddToWatchlistHandlerTests
 
 
     [Fact]
+    public async Task HandleAsync_StoresTheTitleAndYearOfTmdb_NotThoseTheClientSent()
+    {
+        WatchlistItem? stored = null;
+        _watchlist.Setup(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>()))
+            .Callback<WatchlistItem, CancellationToken>((item, _) => stored = item)
+            .ReturnsAsync(true);
+        _tmdb
+            .Setup(t => t.GetDetailsAsync(42, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MatrixDetails(136));
+        var forged = new AddWatchlistItemRequest { TmdbId = 42, Title = "Faux titre", Year = "1066" };
+
+        var result = await _sut.HandleAsync(UserId, forged);
+
+        Assert.Equal(("Matrix", "1999"), (stored!.Title, stored.Year));
+        Assert.Equal(("Matrix", "1999"), (result.Title, result.Year));
+    }
+
+    [Fact]
+    public async Task HandleAsync_TmdbDown_KeepsTheTitleAndYearOfTheRequest()
+    {
+        WatchlistItem? stored = null;
+        _watchlist.Setup(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>()))
+            .Callback<WatchlistItem, CancellationToken>((item, _) => stored = item)
+            .ReturnsAsync(true);
+        _tmdb
+            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("TMDB unavailable"));
+
+        await _sut.HandleAsync(UserId, Request());
+
+        Assert.Equal(("Matrix", "1999"), (stored!.Title, stored.Year));
+    }
+
+    [Fact]
     public async Task HandleAsync_NewItem_Persists_AndReturnsIt()
     {
         _watchlist.Setup(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>()))

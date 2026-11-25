@@ -32,8 +32,8 @@ public sealed class MovieListItemFactory
         {
             TmdbId = request.TmdbId,
             MediaType = request.MediaType,
-            Title = string.IsNullOrWhiteSpace(details?.Title) ? request.Title.Trim() : details.Title.Trim(),
-            Year = TmdbTitleFacts.ReleaseYear(details?.ReleaseDate) ?? request.Year,
+            Title = TmdbTitleFacts.Title(request.Title, details),
+            Year = TmdbTitleFacts.Year(request.Year, details),
             PosterPath = requestedPoster ?? await _posters.ToStoredPosterPathAsync(details?.PosterUrl, ct),
             VoteAverage = details?.VoteAverage ?? request.VoteAverage,
             RuntimeMinutes = details?.Runtime is > 0

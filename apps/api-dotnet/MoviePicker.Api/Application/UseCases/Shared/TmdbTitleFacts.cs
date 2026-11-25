@@ -34,6 +34,12 @@ public static class TmdbTitleFacts
             ? releaseDate[..YearLength]
             : null;
 
+    public static string Title(string requested, TmdbMovieDetails? details) =>
+        string.IsNullOrWhiteSpace(details?.Title) ? requested.Trim() : details.Title.Trim();
+
+    public static string Year(string? requested, TmdbMovieDetails? details) =>
+        ReleaseYear(details?.ReleaseDate) ?? (requested ?? string.Empty).Trim();
+
     public static int? RuntimeMinutes(int? requested, TmdbMovieDetails? details) =>
         Known(requested) ?? Known(details?.Runtime) ?? requested;
 
