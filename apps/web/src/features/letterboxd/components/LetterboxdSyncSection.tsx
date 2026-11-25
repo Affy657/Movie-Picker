@@ -30,15 +30,18 @@ import {
 } from '@/features/letterboxd/api/letterboxdApi';
 import { useLetterboxdSyncTargets } from '@/features/letterboxd/hooks/useLetterboxdSyncTargets';
 import {
+  listChanged,
+  listChangesText,
+  listTruncatedText,
   pendingChoicesOf,
   reportedLists,
   syncErrorMessage,
   syncMeasureOf,
+  truncatedLists,
   unmatchedTitlesOf,
-  watchedChanged,
 } from '@/features/letterboxd/utils/syncReport';
 import type { UserProfile } from '@/features/auth/types';
-import { letterboxdSyncEnabled } from '@/features/auth/utils/letterboxdSync';
+import { letterboxdSyncEnabled } from '@/features/letterboxd/utils/letterboxdSync';
 import LetterboxdChoicesModal from './LetterboxdChoicesModal';
 import sharedStyles from '@/shared/components/SettingsSection.module.css';
 import styles from './LetterboxdSyncSection.module.css';
@@ -181,18 +184,15 @@ function ReportChangesRow({ text }: Readonly<{ text: string }>) {
 }
 
 function SyncReportCard({
-  user,
   report,
   pendingCount,
   onOpenChoices,
 }: Readonly<{
-  user: UserProfile;
   report: LetterboxdSyncReport;
   pendingCount: number;
   onOpenChoices: () => void;
 }>) {
   const { t } = useTranslation();
-  const lists = reportedLists(report, user);
   const unmatchedTitles = unmatchedTitlesOf(report);
 
   return (
@@ -203,23 +203,9 @@ function SyncReportCard({
       role="status"
       aria-live="polite"
     >
-      {lists.watchlist && (
-        <ReportChangesRow
-          text={t('auth.account.letterboxd.reportChanges', {
-            added: String(report.added),
-            removed: String(report.removed),
-          })}
-        />
-      )}
-
-      {lists.watched && (
-        <ReportChangesRow
-          text={t('auth.account.letterboxd.reportWatchedChanges', {
-            added: String(report.watchedAdded),
-            removed: String(report.watchedRemoved),
-          })}
-        />
-      )}
+      {reportedLists(report).map((list) => (
+        <ReportChangesRow key={list.target} text={listChangesText(list, t)} />
+      ))}
 
       {pendingCount > 0 && (
         <LinkButton size="sm" className={styles.reportAction} onClick={onOpenChoices}>
@@ -242,19 +228,11 @@ function SyncReportCard({
         </details>
       )}
 
-      {report.totalTruncated > 0 && (
-        <p className={styles.reportLine}>
-          {t('auth.account.letterboxd.reportTruncated', { count: String(report.totalTruncated) })}
+      {truncatedLists(report).map((list) => (
+        <p key={list.target} className={styles.reportLine}>
+          {listTruncatedText(list, t)}
         </p>
-      )}
-
-      {report.watchedTotalTruncated > 0 && (
-        <p className={styles.reportLine}>
-          {t('auth.account.letterboxd.reportWatchedPartial', {
-            count: String(report.watchedTotalTruncated),
-          })}
-        </p>
-      )}
+      ))}
     </Card>
   );
 }
@@ -329,7 +307,7 @@ export default function LetterboxdSyncSection() {
   const syncAction = useCallback(async () => {
     const result = await syncLetterboxd(true);
     await queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
-    if (watchedChanged(result)) void invalidateWatched(queryClient);
+    if (listChanged(result, 'watched')) void invalidateWatched(queryClient);
     else void invalidateWatchlist(queryClient);
     return result;
   }, [queryClient]);
@@ -545,7 +523,6 @@ export default function LetterboxdSyncSection() {
 
       {report && !syncError && (
         <SyncReportCard
-          user={user}
           report={report}
           pendingCount={pendingChoices.length}
           onOpenChoices={() => setChoicesOpen(true)}

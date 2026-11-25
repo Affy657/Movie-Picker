@@ -34,7 +34,7 @@ import { useTranslation, type Translate } from '@/shared/i18n';
 import { renderWithBold } from '@/shared/utils/renderWithBold';
 import { ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import { syncsWithLetterboxd } from '@/features/auth/utils/letterboxdSync';
+import { syncsWithLetterboxd } from '@/features/letterboxd/utils/letterboxdSync';
 import type { WatchlistItem } from '@/features/movies/api/watchlistApi';
 import MovieCollectionCard, {
   MovieCollectionRows,

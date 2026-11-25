@@ -56,6 +56,7 @@ export function createWatchlistHandlers(
 const EMPTY_LETTERBOXD_SYNC: Schemas['LetterboxdSyncResponse'] = {
   skipped: false,
   error: null,
+  lists: [],
   added: 0,
   removed: 0,
   unmatchedTitles: [],
@@ -77,6 +78,25 @@ const EMPTY_LETTERBOXD_CONFIRM: Schemas['LetterboxdImportConfirmResponse'] = {
   watchedAlreadyPresent: 0,
   pendingReconciliationCount: 0,
 };
+
+export function letterboxdListReport(
+  target: Schemas['LetterboxdImportTarget'],
+  report: Partial<Schemas['LetterboxdListSyncResponse']> = {}
+): Schemas['LetterboxdListSyncResponse'] {
+  return {
+    target,
+    added: 0,
+    removed: 0,
+    unmatchedTitles: [],
+    pendingChoices: [],
+    totalOnLetterboxd: 0,
+    totalTruncated: 0,
+    incomplete: false,
+    lastSyncAt: null,
+    error: null,
+    ...report,
+  };
+}
 
 export function createLetterboxdSyncHandler(
   report: Partial<Schemas['LetterboxdSyncResponse']> = {}

@@ -1,20 +1,38 @@
 import { API_ERROR_REASONS } from '@/shared/api/apiError';
 import type { Translate, TranslationKey } from '@/shared/i18n';
-import type { UserProfile } from '@/features/auth/types';
-import { letterboxdSyncEnabled } from '@/features/auth/utils/letterboxdSync';
 import type {
+  LetterboxdList,
+  LetterboxdListReport,
   LetterboxdPendingChoice,
   LetterboxdSyncReport,
 } from '@/features/letterboxd/api/letterboxdApi';
 
 export const LETTERBOXD_MAX_CHOICES = 300;
 
+const LIST_REPORT_KEYS: Record<
+  LetterboxdList,
+  { changes: TranslationKey; truncated: TranslationKey }
+> = {
+  watchlist: {
+    changes: 'auth.account.letterboxd.reportChanges',
+    truncated: 'auth.account.letterboxd.reportTruncated',
+  },
+  watched: {
+    changes: 'auth.account.letterboxd.reportWatchedChanges',
+    truncated: 'auth.account.letterboxd.reportWatchedPartial',
+  },
+};
+
 export function pendingChoicesOf(report: LetterboxdSyncReport): LetterboxdPendingChoice[] {
-  return [...report.pendingChoices, ...report.watchedPendingChoices];
+  return report.lists.flatMap((list) => list.pendingChoices);
 }
 
-export function watchedChanged(report: LetterboxdSyncReport): boolean {
-  return report.watchedAdded > 0 || report.watchedRemoved > 0;
+function changed(list: LetterboxdListReport): boolean {
+  return list.added > 0 || list.removed > 0;
+}
+
+export function listChanged(report: LetterboxdSyncReport, target: LetterboxdList): boolean {
+  return report.lists.some((list) => list.target === target && changed(list));
 }
 
 export function syncMeasureOf(report: LetterboxdSyncReport): {
@@ -22,7 +40,7 @@ export function syncMeasureOf(report: LetterboxdSyncReport): {
   pendingChoices: number;
 } {
   return {
-    changed: report.added > 0 || report.removed > 0 || watchedChanged(report),
+    changed: report.lists.some(changed),
     pendingChoices: pendingChoicesOf(report).length,
   };
 }
@@ -31,28 +49,27 @@ export function isWatchedChoice(choice: LetterboxdPendingChoice): boolean {
   return choice.target === 'watched';
 }
 
-export interface ReportedLists {
-  watchlist: boolean;
-  watched: boolean;
+export function reportedLists(report: LetterboxdSyncReport): LetterboxdListReport[] {
+  return report.lists.filter((list) => !list.incomplete || changed(list));
 }
 
-export function reportedLists(
-  report: LetterboxdSyncReport,
-  user: UserProfile | null | undefined
-): ReportedLists {
-  return {
-    watchlist:
-      report.removed > 0 ||
-      (letterboxdSyncEnabled(user, 'watchlist') &&
-        report.error !== API_ERROR_REASONS.letterboxdWatchlistIncomplete),
-    watched:
-      letterboxdSyncEnabled(user, 'watched') &&
-      report.error !== API_ERROR_REASONS.letterboxdWatchedIncomplete,
-  };
+export function listChangesText(list: LetterboxdListReport, t: Translate): string {
+  return t(LIST_REPORT_KEYS[list.target].changes, {
+    added: String(list.added),
+    removed: String(list.removed),
+  });
+}
+
+export function truncatedLists(report: LetterboxdSyncReport): LetterboxdListReport[] {
+  return report.lists.filter((list) => list.totalTruncated > 0);
+}
+
+export function listTruncatedText(list: LetterboxdListReport, t: Translate): string {
+  return t(LIST_REPORT_KEYS[list.target].truncated, { count: String(list.totalTruncated) });
 }
 
 export function unmatchedTitlesOf(report: LetterboxdSyncReport): string[] {
-  return [...new Set([...report.unmatchedTitles, ...report.watchedUnmatchedTitles])];
+  return [...new Set(report.lists.flatMap((list) => list.unmatchedTitles))];
 }
 
 const SYNC_ERROR_KEYS: Record<string, TranslationKey> = {

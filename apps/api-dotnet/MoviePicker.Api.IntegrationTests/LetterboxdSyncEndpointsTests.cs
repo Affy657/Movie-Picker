@@ -112,13 +112,21 @@ public sealed class LetterboxdSyncEndpointsTests : IClassFixture<MoviePickerAppl
 
         var report = await SyncAsync(client);
 
+        var lists = report.GetProperty("lists").EnumerateArray().ToList();
         Assert.Equal(
-            (1, 1, 1, 2),
-            (report.GetProperty("added").GetInt32(), report.GetProperty("watchedAdded").GetInt32(),
-                report.GetProperty("removed").GetInt32(), report.GetProperty("watchedTotalOnLetterboxd").GetInt32()));
-        Assert.Empty(report.GetProperty("pendingChoices").EnumerateArray());
-        var choice = Assert.Single(report.GetProperty("watchedPendingChoices").EnumerateArray());
+            [("watchlist", 1, 1, 1, 0), ("watched", 1, 0, 2, 1)],
+            lists.Select(list => (
+                list.GetProperty("target").GetString(),
+                list.GetProperty("added").GetInt32(),
+                list.GetProperty("removed").GetInt32(),
+                list.GetProperty("totalOnLetterboxd").GetInt32(),
+                list.GetProperty("pendingChoices").GetArrayLength())));
+        var choice = Assert.Single(lists[1].GetProperty("pendingChoices").EnumerateArray());
         Assert.Equal(("watched", 5), (choice.GetProperty("target").GetString(), choice.GetProperty("rating").GetInt32()));
+        Assert.Equal(
+            (1, 1, 1),
+            (report.GetProperty("watchedAdded").GetInt32(), report.GetProperty("removed").GetInt32(),
+                report.GetProperty("watchedPendingChoices").GetArrayLength()));
 
         var status = await WatchedStatusAsync(client, OtherStubFilmId);
         Assert.Equal(("elsewhere", 8), (status.GetProperty("status").GetString(), status.GetProperty("rating").GetInt32()));

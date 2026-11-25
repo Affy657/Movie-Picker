@@ -14,13 +14,12 @@ public sealed record LetterboxdWatchedOutcome(
     int TotalOnLetterboxd,
     int TotalTruncated)
 {
-    public static readonly LetterboxdWatchedOutcome None = new(0, 0, 0, [], [], 0, 0);
+    public LetterboxdListOutcome ToListOutcome() =>
+        new(LetterboxdImportTarget.Watched, Added, Removed, UnmatchedTitles, PendingChoices, TotalOnLetterboxd, TotalTruncated);
 }
 
 public sealed class LetterboxdWatchedSynchronizer
 {
-    private const int FirstRowIndex = LetterboxdImportLimits.MaxRows;
-
     private readonly IWatchedTitleRepository _watched;
     private readonly LetterboxdTitleResolver _resolver;
     private readonly LetterboxdWatchedWriter _writer;
@@ -97,7 +96,7 @@ public sealed class LetterboxdWatchedSynchronizer
         CancellationToken ct)
     {
         var result = new AdditionResult();
-        var rowIndex = FirstRowIndex;
+        var rowIndex = 0;
         foreach (var film in unknown.Take(LetterboxdImportLimits.MaxRows))
         {
             ct.ThrowIfCancellationRequested();

@@ -85,8 +85,8 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
         if (outcome.Error is not null)
             await _users.SetLetterboxdSyncStatusAsync(userId, now, outcome.Error, ct);
 
-        var pendingChoices = outcome.PendingChoices.Concat(outcome.WatchedPendingChoices).ToList();
-        var keptKeys = KeysOfTheUnreadList(user, outcome.Error);
+        var pendingChoices = outcome.Lists.SelectMany(list => list.PendingChoices).ToList();
+        var keptKeys = KeysOfTheUnreadLists(user, outcome);
         var pendingChoiceKeys = pendingChoices
             .Select(LetterboxdPendingChoiceKey.Of)
             .Concat(keptKeys)
@@ -111,24 +111,46 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
 
         await _usage.RecordAsync(UsageCount.LetterboxdSynced(force), ct);
 
+        return Report(outcome, now);
+    }
+
+    private static LetterboxdSyncResponse Report(LetterboxdSyncOutcome outcome, DateTimeOffset syncedAt)
+    {
+        var watchlist = outcome.Of(LetterboxdImportTarget.Watchlist);
+        var watched = outcome.Of(LetterboxdImportTarget.Watched);
         return new LetterboxdSyncResponse
         {
             Skipped = false,
             Error = outcome.Error,
-            Added = outcome.Added,
-            Removed = outcome.Removed,
-            UnmatchedTitles = outcome.UnmatchedTitles,
-            PendingChoices = outcome.PendingChoices,
-            TotalOnLetterboxd = outcome.TotalOnLetterboxd,
-            TotalTruncated = outcome.TotalTruncated,
-            WatchedAdded = outcome.WatchedAdded,
-            WatchedRemoved = outcome.WatchedRemoved,
-            WatchedUnmatchedTitles = outcome.WatchedUnmatchedTitles,
-            WatchedPendingChoices = outcome.WatchedPendingChoices,
-            WatchedTotalOnLetterboxd = outcome.WatchedTotalOnLetterboxd,
-            WatchedTotalTruncated = outcome.WatchedTotalTruncated
+            Lists = outcome.Lists.Select(list => ReportOf(list, syncedAt)).ToList(),
+            Added = watchlist.Added,
+            Removed = watchlist.Removed,
+            UnmatchedTitles = watchlist.UnmatchedTitles,
+            PendingChoices = watchlist.PendingChoices,
+            TotalOnLetterboxd = watchlist.TotalOnLetterboxd,
+            TotalTruncated = watchlist.TotalTruncated,
+            WatchedAdded = watched.Added,
+            WatchedRemoved = watched.Removed,
+            WatchedUnmatchedTitles = watched.UnmatchedTitles,
+            WatchedPendingChoices = watched.PendingChoices,
+            WatchedTotalOnLetterboxd = watched.TotalOnLetterboxd,
+            WatchedTotalTruncated = watched.TotalTruncated
         };
     }
+
+    private static LetterboxdListSyncResponse ReportOf(LetterboxdListOutcome list, DateTimeOffset syncedAt) => new()
+    {
+        Target = list.Target,
+        Added = list.Added,
+        Removed = list.Removed,
+        UnmatchedTitles = list.UnmatchedTitles,
+        PendingChoices = list.PendingChoices,
+        TotalOnLetterboxd = list.TotalOnLetterboxd,
+        TotalTruncated = list.TotalTruncated,
+        Incomplete = list.Incomplete,
+        LastSyncAt = list.Synced ? syncedAt : null,
+        Error = list.Error
+    };
 
     private static bool IsTooSoon(User user, bool force, DateTimeOffset now) =>
         user.LetterboxdLastSyncAt is { } last && now - last < IntervalFor(user, force);
@@ -162,15 +184,12 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
         }
     }
 
-    private static List<string> KeysOfTheUnreadList(User user, string? error)
+    private static List<string> KeysOfTheUnreadLists(User user, LetterboxdSyncOutcome outcome)
     {
-        var reported = user.LetterboxdPendingChoiceKeys ?? [];
-        return error switch
-        {
-            ErrorCodes.LetterboxdWatchedIncomplete => reported.Where(LetterboxdPendingChoiceKey.IsWatched).ToList(),
-            ErrorCodes.LetterboxdWatchlistIncomplete => reported.Where(key => !LetterboxdPendingChoiceKey.IsWatched(key)).ToList(),
-            _ => []
-        };
+        var unread = outcome.Lists.Where(list => list.Incomplete).Select(list => list.Target).ToHashSet();
+        return (user.LetterboxdPendingChoiceKeys ?? [])
+            .Where(key => unread.Contains(LetterboxdPendingChoiceKey.TargetOf(key)))
+            .ToList();
     }
 
     private static bool HasPendingChoiceNotYetReported(User user, int pendingCount, List<string> pendingChoiceKeys)

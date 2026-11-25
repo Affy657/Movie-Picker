@@ -4,7 +4,7 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { queryKeys } from '@/shared/hooks/queryKeys';
-import { createLetterboxdSyncHandler, TEST_API_V1 } from '@/mocks/handlers';
+import { createLetterboxdSyncHandler, letterboxdListReport, TEST_API_V1 } from '@/mocks/handlers';
 import { useLetterboxdAutoSync } from './useLetterboxdAutoSync';
 
 const { track } = vi.hoisted(() => ({ track: vi.fn() }));
@@ -34,12 +34,21 @@ function meHandler(letterboxdUsername: string | null) {
 
 const NOTHING_CHANGED_REPORT = {
   skipped: false,
-  added: 0,
-  removed: 0,
-  unmatchedTitles: [],
-  pendingChoices: [],
-  totalOnLetterboxd: 0,
-  totalTruncated: 0,
+  error: null,
+  lists: [
+    {
+      target: 'watchlist',
+      added: 0,
+      removed: 0,
+      unmatchedTitles: [],
+      pendingChoices: [],
+      totalOnLetterboxd: 0,
+      totalTruncated: 0,
+      incomplete: false,
+      lastSyncAt: null,
+      error: null,
+    },
+  ],
 };
 
 function Probe() {
@@ -73,12 +82,21 @@ describe('useLetterboxdAutoSync', () => {
         sawForceFalse = request.url.includes('force=false');
         return HttpResponse.json({
           skipped: false,
-          added: 0,
-          removed: 0,
-          unmatchedTitles: [],
-          pendingChoices: [],
-          totalOnLetterboxd: 0,
-          totalTruncated: 0,
+          error: null,
+          lists: [
+            {
+              target: 'watchlist',
+              added: 0,
+              removed: 0,
+              unmatchedTitles: [],
+              pendingChoices: [],
+              totalOnLetterboxd: 0,
+              totalTruncated: 0,
+              incomplete: false,
+              lastSyncAt: null,
+              error: null,
+            },
+          ],
         });
       })
     );
@@ -102,20 +120,29 @@ describe('useLetterboxdAutoSync', () => {
       http.post(`${TEST_API_V1}/letterboxd/sync`, () =>
         HttpResponse.json({
           skipped: false,
-          added: 0,
-          removed: 0,
-          unmatchedTitles: [],
-          pendingChoices: [
+          error: null,
+          lists: [
             {
-              rowIndex: 1,
-              title: 'Dune',
-              year: '2024',
-              letterboxdSlug: 'dune-2024',
-              candidates: [],
+              target: 'watchlist',
+              added: 0,
+              removed: 0,
+              unmatchedTitles: [],
+              pendingChoices: [
+                {
+                  rowIndex: 1,
+                  title: 'Dune',
+                  year: '2024',
+                  letterboxdSlug: 'dune-2024',
+                  candidates: [],
+                },
+              ],
+              totalOnLetterboxd: 1,
+              totalTruncated: 0,
+              incomplete: false,
+              lastSyncAt: null,
+              error: null,
             },
           ],
-          totalOnLetterboxd: 1,
-          totalTruncated: 0,
         })
       )
     );
@@ -131,7 +158,10 @@ describe('useLetterboxdAutoSync', () => {
   });
 
   it('refreshes Films vus, the lists and the film pages when Letterboxd changed the films vus', async () => {
-    server.use(meHandler('affy657'), createLetterboxdSyncHandler({ watchedAdded: 2 }));
+    server.use(
+      meHandler('affy657'),
+      createLetterboxdSyncHandler({ lists: [letterboxdListReport('watched', { added: 2 })] })
+    );
     const client = createTestQueryClient();
     const invalidateSpy = vi.spyOn(client, 'invalidateQueries');
 
@@ -145,7 +175,10 @@ describe('useLetterboxdAutoSync', () => {
   });
 
   it('leaves Films vus alone when Letterboxd changed none of them', async () => {
-    server.use(meHandler('affy657'), createLetterboxdSyncHandler({ added: 1 }));
+    server.use(
+      meHandler('affy657'),
+      createLetterboxdSyncHandler({ lists: [letterboxdListReport('watchlist', { added: 1 })] })
+    );
     const client = createTestQueryClient();
     const invalidateSpy = vi.spyOn(client, 'invalidateQueries');
 
@@ -161,17 +194,21 @@ describe('useLetterboxdAutoSync', () => {
     server.use(
       meHandler('affy657'),
       createLetterboxdSyncHandler({
-        watchedPendingChoices: [
-          {
-            rowIndex: 5000,
-            title: 'Alien',
-            year: '1979',
-            letterboxdSlug: null,
-            target: 'watched',
-            rating: null,
-            watchedOn: null,
-            candidates: [],
-          },
+        lists: [
+          letterboxdListReport('watched', {
+            pendingChoices: [
+              {
+                rowIndex: 5000,
+                title: 'Alien',
+                year: '1979',
+                letterboxdSlug: null,
+                target: 'watched',
+                rating: null,
+                watchedOn: null,
+                candidates: [],
+              },
+            ],
+          }),
         ],
       })
     );

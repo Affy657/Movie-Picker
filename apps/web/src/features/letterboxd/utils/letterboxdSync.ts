@@ -1,11 +1,9 @@
-import type { ApiSchemas } from '@/shared/api/contract';
 import type { UserProfile } from '@/features/auth/types';
-
-export type LetterboxdSyncTarget = ApiSchemas['LetterboxdImportTarget'];
+import type { LetterboxdList } from '@/features/letterboxd/api/letterboxdApi';
 
 export function letterboxdSyncEnabled(
   user: UserProfile | null | undefined,
-  target: LetterboxdSyncTarget
+  target: LetterboxdList
 ): boolean {
   if (!user) return false;
   return target === 'watchlist'
@@ -15,7 +13,7 @@ export function letterboxdSyncEnabled(
 
 export function syncsWithLetterboxd(
   user: UserProfile | null | undefined,
-  target: LetterboxdSyncTarget
+  target: LetterboxdList
 ): boolean {
   return !!user?.letterboxdUsername && letterboxdSyncEnabled(user, target);
 }

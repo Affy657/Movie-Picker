@@ -16,11 +16,12 @@ import {
   type LetterboxdSyncReport,
 } from '@/features/letterboxd/api/letterboxdApi';
 import {
+  listChanged,
+  listChangesText,
   pendingChoicesOf,
   reportedLists,
   syncErrorMessage,
   unmatchedTitlesOf,
-  watchedChanged,
 } from '@/features/letterboxd/utils/syncReport';
 import type { UserProfile } from '@/features/auth/types';
 import LetterboxdChoicesModal from './LetterboxdChoicesModal';
@@ -58,7 +59,7 @@ function ConnectFormModal({
     track('letterboxd_connected');
     const result = await syncLetterboxd(true);
     await queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
-    if (watchedChanged(result)) void invalidateWatched(queryClient);
+    if (listChanged(result, 'watched')) void invalidateWatched(queryClient);
     else void invalidateWatchlist(queryClient);
     return result;
   }, [patchProfile, queryClient, username, track]);
@@ -207,9 +208,7 @@ function DoneModal({
   undecidedTitles: string[];
 }>) {
   const { t } = useTranslation();
-  const { user } = useAuth();
   const titleId = useId();
-  const lists = reportedLists(report, user);
   const syncError = syncErrorMessage(report.error, t);
   const unmatchedTitles = unmatchedTitlesOf(report);
   const unmatchedCount = unmatchedTitles.length;
@@ -234,22 +233,9 @@ function DoneModal({
               <span>{syncError}</span>
             </span>
           )}
-          {lists.watchlist && (
-            <ReportChangesRow
-              text={t('auth.account.letterboxd.reportChanges', {
-                added: String(report.added),
-                removed: String(report.removed),
-              })}
-            />
-          )}
-          {lists.watched && (
-            <ReportChangesRow
-              text={t('auth.account.letterboxd.reportWatchedChanges', {
-                added: String(report.watchedAdded),
-                removed: String(report.watchedRemoved),
-              })}
-            />
-          )}
+          {reportedLists(report).map((list) => (
+            <ReportChangesRow key={list.target} text={listChangesText(list, t)} />
+          ))}
           {confirmedCount > 0 && (
             <span className={styles.reportRow}>
               <span className={styles.reportIconOk}>

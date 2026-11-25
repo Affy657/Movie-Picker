@@ -173,6 +173,9 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
             u => u.SetLetterboxdSyncStatusAsync(UserId, Now, error, It.IsAny<CancellationToken>()),
             Times.Once);
 
+    private static LetterboxdListSyncResponse ListOf(LetterboxdSyncResponse result, LetterboxdImportTarget target) =>
+        Assert.Single(result.Lists, list => list.Target == target);
+
     private void VerifyLetterboxdRead(Times times) =>
         _letterboxd.Verify(
             l => l.GetWatchlistAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
@@ -526,9 +529,9 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
 
         var result = await _sut.HandleAsync(UserId, force: false);
 
-        Assert.Empty(result.PendingChoices);
-        var choice = Assert.Single(result.WatchedPendingChoices);
-        Assert.Equal((LetterboxdImportTarget.Watched, (int?)9), (choice.Target, choice.Rating));
+        Assert.Empty(ListOf(result, LetterboxdImportTarget.Watchlist).PendingChoices);
+        var choice = Assert.Single(ListOf(result, LetterboxdImportTarget.Watched).PendingChoices);
+        Assert.Equal((LetterboxdImportTarget.Watched, (int?)9, 1), (choice.Target, choice.Rating, choice.RowIndex));
         VerifyPendingKeysRecorded("watched:dune-part-two");
         _notifications.Verify(
             n => n.AddAsync(
@@ -561,7 +564,9 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
 
         var result = await _sut.HandleAsync(UserId, force: true);
 
-        Assert.Equal((1, 1), (result.PendingChoices.Count, result.WatchedPendingChoices.Count));
+        Assert.Equal(
+            (1, 1),
+            (ListOf(result, LetterboxdImportTarget.Watchlist).PendingChoices.Count, ListOf(result, LetterboxdImportTarget.Watched).PendingChoices.Count));
         VerifyPendingKeysRecorded("dune-part-two", "watched:dune-part-two");
     }
 
@@ -580,8 +585,63 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
 
         var result = await _sut.HandleAsync(UserId, force: true);
 
-        Assert.Equal((1, 0, 2), (result.WatchedAdded, result.WatchedRemoved, result.WatchedTotalOnLetterboxd));
+        var watched = ListOf(result, LetterboxdImportTarget.Watched);
+        Assert.Equal((1, 0, 2), (watched.Added, watched.Removed, watched.TotalOnLetterboxd));
         _users.Verify(u => u.SetLetterboxdLinkedCountsAsync(UserId, 3, 2, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_Success_ReportsEachListItSynced_WithItsOwnCountsAndDate()
+    {
+        _letterboxd
+            .Setup(l => l.GetWatchlistAsync(Username, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new LetterboxdFilmsSnapshot([new LetterboxdFilm("unknown", "Unknown", "1999")], true));
+        GivenWatchedOnLetterboxd(new LetterboxdFilmsSnapshot(
+            [new LetterboxdFilm("akira", "Akira", "1988", Rating: 10), new LetterboxdFilm("solaris", "Solaris", "1972")], true));
+        _tmdb
+            .Setup(t => t.SearchTitlesAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<TmdbSearchItem>)[]);
+        _tmdb
+            .Setup(t => t.SearchTitlesAsync("Akira", true, It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<TmdbSearchItem>)[new TmdbSearchItem(149, MovieMediaType.Movie, "Akira", "1988", null, 8.0, "Akira")]);
+
+        var result = await _sut.HandleAsync(UserId, force: true);
+
+        Assert.Equal(
+            [
+                (LetterboxdImportTarget.Watchlist, 0, 1, 1, false, (DateTimeOffset?)Now, (string?)null),
+                (LetterboxdImportTarget.Watched, 1, 1, 2, false, (DateTimeOffset?)Now, (string?)null)
+            ],
+            result.Lists.Select(list => (list.Target, list.Added, list.UnmatchedTitles.Count, list.TotalOnLetterboxd, list.Incomplete, list.LastSyncAt, list.Error)));
+    }
+
+    [Fact]
+    public async Task HandleAsync_Success_KeepsTheFlatFieldsTheOlderFrontStillReads()
+    {
+        GivenAmbiguousLetterboxdFilm();
+        GivenWatchedOnLetterboxd(new LetterboxdFilmsSnapshot(
+            [new LetterboxdFilm("dune-part-two", "Dune : Deuxième partie", "2024")], true));
+
+        var result = await _sut.HandleAsync(UserId, force: true);
+
+        var watchlist = ListOf(result, LetterboxdImportTarget.Watchlist);
+        var watched = ListOf(result, LetterboxdImportTarget.Watched);
+        Assert.Equal(
+            (watchlist.Added, watchlist.Removed, watchlist.PendingChoices, watchlist.TotalOnLetterboxd),
+            (result.Added, result.Removed, result.PendingChoices, result.TotalOnLetterboxd));
+        Assert.Equal(
+            (watched.Added, watched.Removed, watched.PendingChoices, watched.TotalOnLetterboxd),
+            (result.WatchedAdded, result.WatchedRemoved, result.WatchedPendingChoices, result.WatchedTotalOnLetterboxd));
+    }
+
+    [Fact]
+    public async Task HandleAsync_WatchlistSwitchedOff_ReportsTheWatchedFilmsAlone()
+    {
+        GivenUser(Username, null, syncWatchlist: false);
+
+        var result = await _sut.HandleAsync(UserId, force: true);
+
+        Assert.Equal(LetterboxdImportTarget.Watched, Assert.Single(result.Lists).Target);
     }
 
     [Fact]
@@ -647,6 +707,9 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
 
         Assert.False(result.Skipped);
         Assert.Equal(ErrorCodes.LetterboxdWatchedIncomplete, result.Error);
+        Assert.Equal(
+            [(LetterboxdImportTarget.Watchlist, false, (string?)null), (LetterboxdImportTarget.Watched, true, ErrorCodes.LetterboxdWatchedIncomplete)],
+            result.Lists.Select(list => (list.Target, list.Incomplete, list.Error)));
         VerifyStatusRecorded(ErrorCodes.LetterboxdWatchedIncomplete);
         _users.Verify(u => u.SetLetterboxdLinkedCountsAsync(UserId, 0, 0, It.IsAny<CancellationToken>()), Times.Once);
     }

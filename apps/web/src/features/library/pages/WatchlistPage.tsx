@@ -2,7 +2,7 @@ import { useMemo, useState, type ComponentProps } from 'react';
 import { Bookmark, Import } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import { syncsWithLetterboxd } from '@/features/auth/utils/letterboxdSync';
+import { syncsWithLetterboxd } from '@/features/letterboxd/utils/letterboxdSync';
 import { ROUTES } from '@/app/routes';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';

@@ -12,7 +12,10 @@ public static class LetterboxdPendingChoiceKey
         return choice.Target == LetterboxdImportTarget.Watched ? WatchedPrefix + film : film;
     }
 
-    public static bool IsWatched(string key) => key.StartsWith(WatchedPrefix, StringComparison.Ordinal);
+    public static LetterboxdImportTarget TargetOf(string key) =>
+        IsWatched(key) ? LetterboxdImportTarget.Watched : LetterboxdImportTarget.Watchlist;
+
+    private static bool IsWatched(string key) => key.StartsWith(WatchedPrefix, StringComparison.Ordinal);
 
     public static HashSet<string> WatchedSlugsOf(IEnumerable<string>? keys) =>
         (keys ?? [])

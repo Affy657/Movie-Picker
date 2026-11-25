@@ -3,11 +3,18 @@ import type { ApiSchemas } from '@/shared/api/contract';
 import type { TitleSummary } from '@/shared/types/movie';
 import { blobToBase64 } from '@/shared/utils/blobToBase64';
 
+export type LetterboxdList = ApiSchemas['LetterboxdImportTarget'];
+
 export type LetterboxdCandidate = ApiSchemas['LetterboxdImportCandidateResponse'];
 
 export type LetterboxdPendingChoice = ApiSchemas['LetterboxdImportRowResponse'];
 
-export type LetterboxdSyncReport = ApiSchemas['LetterboxdSyncResponse'];
+export type LetterboxdListReport = ApiSchemas['LetterboxdListSyncResponse'];
+
+export type LetterboxdSyncReport = Pick<
+  ApiSchemas['LetterboxdSyncResponse'],
+  'skipped' | 'error' | 'lists'
+>;
 
 export type LetterboxdSelection = TitleSummary & { letterboxdSlug: string | null };
 
@@ -23,8 +30,6 @@ export type LetterboxdExport = ApiSchemas['LetterboxdExportResponse'];
 
 export type LetterboxdExportRow = ApiSchemas['LetterboxdExportRowRequest'];
 
-export type LetterboxdExportTarget = 'watchlist' | 'watched';
-
 export type LetterboxdExportBatchReport = ApiSchemas['LetterboxdExportImportResponse'];
 
 export const LETTERBOXD_EXPORT_BATCH = 50;
@@ -39,21 +44,10 @@ export async function syncLetterboxd(force: boolean): Promise<LetterboxdSyncRepo
   return {
     skipped: report.skipped ?? false,
     error: report.error ?? null,
-    added: report.added ?? 0,
-    removed: report.removed ?? 0,
-    unmatchedTitles: report.unmatchedTitles ?? [],
-    pendingChoices: report.pendingChoices ?? [],
-    totalOnLetterboxd: report.totalOnLetterboxd ?? 0,
-    totalTruncated: report.totalTruncated ?? 0,
-    watchedAdded: report.watchedAdded ?? 0,
-    watchedRemoved: report.watchedRemoved ?? 0,
-    watchedUnmatchedTitles: report.watchedUnmatchedTitles ?? [],
-    watchedPendingChoices: (report.watchedPendingChoices ?? []).map((choice) => ({
-      ...choice,
-      target: 'watched',
+    lists: (report.lists ?? []).map((list) => ({
+      ...list,
+      pendingChoices: list.pendingChoices.map((choice) => ({ ...choice, target: list.target })),
     })),
-    watchedTotalOnLetterboxd: report.watchedTotalOnLetterboxd ?? 0,
-    watchedTotalTruncated: report.watchedTotalTruncated ?? 0,
   };
 }
 
@@ -95,7 +89,7 @@ export async function readLetterboxdExport(files: readonly File[]): Promise<Lett
 }
 
 export async function importLetterboxdExportRows(
-  target: LetterboxdExportTarget,
+  target: LetterboxdList,
   rows: readonly LetterboxdExportRow[]
 ): Promise<LetterboxdExportBatchReport> {
   const report = await fetchApi<Partial<LetterboxdExportBatchReport>>('/letterboxd/export/import', {

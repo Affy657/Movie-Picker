@@ -12816,9 +12816,27 @@ export interface components {
         };
         /** @enum {string} */
         LetterboxdImportTarget: "watchlist" | "watched";
+        LetterboxdListSyncResponse: {
+            target: components["schemas"]["LetterboxdImportTarget"];
+            /** Format: int32 */
+            added: number;
+            /** Format: int32 */
+            removed: number;
+            unmatchedTitles: string[];
+            pendingChoices: components["schemas"]["LetterboxdImportRowResponse"][];
+            /** Format: int32 */
+            totalOnLetterboxd: number;
+            /** Format: int32 */
+            totalTruncated: number;
+            incomplete: boolean;
+            /** Format: date-time */
+            lastSyncAt: string | null;
+            error: string | null;
+        };
         LetterboxdSyncResponse: {
             skipped: boolean;
             error: string | null;
+            lists: components["schemas"]["LetterboxdListSyncResponse"][];
             /** Format: int32 */
             added: number;
             /** Format: int32 */
