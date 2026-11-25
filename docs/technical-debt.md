@@ -19,11 +19,10 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 
 ## Sommaire
 
-### Pour un agent (2)
+### Pour un agent (1)
 
 | Dette | Zone | Sujet |
 |---|---|---|
-| DEBT-108 | Front | quatre pages publiques restent sous le plancher Lighthouse mobile, hors de la porte |
 | DEBT-102 | Tests, CI et outillage | les doublures de l'API dans les tests front restent écrites à la main |
 
 ### Geste humain (9)
@@ -53,16 +52,6 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 # Pour un agent
 
 Se traite en autonomie, sans attendre personne.
-
-## DEBT-108 quatre pages publiques restent sous le plancher Lighthouse mobile, hors de la porte
-
-- state: agent
-- impact: la porte Lighthouse ne mesure ni la fiche film, ni `/films/tendances`, ni un profil rempli, ni `/tech`. Mesurées en local avec le stub réaliste (vraies tailles d'affiches, `scripts/lighthouse-stub.mjs`), elles font 62, 62, 56 et 71 sur mobile (LCP de 5,7 à 6,1 s pour les trois premières, TBT d'environ 690 ms pour `/tech`), sous le plancher de 85. C'est le premier chiffre qu'obtient quelqu'un qui lance Lighthouse sur le site (constats M03 et M08 de `docs/audits/2026-11-23-new-user-and-recruiter.md`). Sur un téléphone de 360 px, le LCP de l'accueil reste aussi la première affiche.
-- ou: `scripts/lighthouse-run.mjs` (`URLS`), `scripts/lighthouse-stub.mjs`, `configs/lighthouse-budgets.json`, `apps/web/src/app/pages/tech/`
-- verify: `LH_CANDIDATES=1 LH_ONLY=movie,trending,profile-active pnpm run lighthouse` ; encore ouvert tant qu'une de ces pages reste sous 85 ou absente de `URLS`
-- fix: pour `/tech`, `content-visibility` par section avec une hauteur estimée par section, ou hydrater le prérendu au lieu de le remplacer ; pour les trois autres, le LCP de l'affiche (préchargement annoncé dès le document, ou première rangée moins haute)
-- fini-quand: chaque page atteint 85 en médiane sur le runner et entre dans `URLS`, sans desserrer la porte (I4)
-- piege: avec ces quatre pages, sept shards mesurent trois pages chacun : surveiller la durée du job
 
 ## DEBT-102 les doublures de l'API dans les tests front restent écrites à la main
 
@@ -410,3 +399,4 @@ Arbitré le 2026-11-25 : la dette existe, mais le geste coûte plus qu'il ne rap
 - **E16 date et heure d'une soirée en `DateOnly` et `TimeOnly`** (reste de DEBT-041) : depuis le 2026-11-25 chaque écriture refuse une date ou une heure hors format (`Errors.InvalidTimeFormat()`), donc plus aucune soirée ne reste `Upcoming` à vie ; changer le type toucherait environ 240 affectations dans 72 fichiers pour des microsecondes de parsing. Rouvrir si une lecture de ces chaînes apparaît dans un profil de performance.
 - **E17 l'inscription révèle qu'une adresse a un compte** (reste de DEBT-065) : `email_taken` le dit, parce qu'une inscription qui connecte tout de suite ne peut pas répondre neutre ; l'inscription reste bornée à 20 essais par heure et par adresse IP. Depuis le 2026-11-25 un compte non confirmé ne bloque plus l'adresse d'un tiers, qui le reprend par Google, GitHub ou « Mot de passe oublié ». Rouvrir si une énumération d'adresses apparaît dans les journaux.
 - **E18 `Retry-After` du limiteur sur le flux temps réel** (reste de DEBT-008) : `EventSource` ne donne ni le statut ni les en-têtes d'un refus ; le refus de `EventStreamGate` impose déjà 30 s, et le repli sonde toutes les 15 s depuis le 2026-11-25. Seul le limiteur de débit (jusqu'à 60 s) n'est pas lu, et le lire demanderait un transport par `fetch` en flux, risqué sur Safari. Rouvrir sur des rafales de 429 du flux dans les journaux.
+- **E19 fiche film, `/films/tendances`, profil rempli et `/tech` hors de la porte Lighthouse** (ex-DEBT-108) : le 2026-11-26, `/tech` gagne par un rendu du prérendu en transition (blocage du fil principal de 409 à 59 ms, score local de 69 à 81) et la fiche film précharge son affiche (LCP local de 6,1 à 5,8 s), mais aucune des quatre pages n'atteint 85 sur le poste, environ dix points sous le runner. Le profil rempli attend la section des films, dont l'avance a déjà coûté 5 points au profil vide (`acece7ea4`). Mesurées sans effet : `content-visibility` par section de `/tech` et le préchargement des feuilles de la page depuis les documents prérendus. Rouvrir avec une mesure sur le runner (`LH_CANDIDATES=1`, aujourd'hui seulement dans `deploy.yml`) ou une piste neuve pour le LCP d'une affiche.
