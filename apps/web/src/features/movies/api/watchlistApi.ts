@@ -24,21 +24,76 @@ export async function fetchWatchlist(signal?: AbortSignal): Promise<WatchlistIte
   );
 }
 
-type WatchlistAvailability = Pick<WatchlistAvailabilityResponse, 'items' | 'partial'>;
+interface WatchlistAvailabilityPage {
+  skip: number;
+  items: WatchlistAvailabilityItem[];
+  partial: boolean;
+}
+
+export interface WatchlistAvailability extends Pick<
+  WatchlistAvailabilityResponse,
+  'items' | 'partial'
+> {
+  pages: WatchlistAvailabilityPage[];
+  completionAttempts: number;
+}
+
+function fetchAvailabilityPage(
+  skip: number,
+  signal?: AbortSignal
+): Promise<Partial<WatchlistAvailabilityResponse> | null> {
+  return fetchApi<Partial<WatchlistAvailabilityResponse> | null>(
+    `/watchlist/availability?skip=${skip}&take=${WATCHLIST_PAGE_SIZE}`,
+    signal ? { signal } : undefined
+  );
+}
+
+function toPage(
+  skip: number,
+  response: Partial<WatchlistAvailabilityResponse> | null
+): WatchlistAvailabilityPage {
+  return {
+    skip,
+    items: Array.isArray(response?.items) ? response.items : [],
+    partial: response?.partial === true,
+  };
+}
+
+function assemble(
+  pages: WatchlistAvailabilityPage[],
+  completionAttempts: number
+): WatchlistAvailability {
+  return {
+    items: pages.flatMap((page) => page.items),
+    partial: pages.some((page) => page.partial),
+    pages,
+    completionAttempts,
+  };
+}
 
 export async function fetchWatchlistAvailability(
   signal?: AbortSignal
 ): Promise<WatchlistAvailability> {
-  let partial = false;
-  const items = await readAllPages(async (skip) => {
-    const page = await fetchApi<Partial<WatchlistAvailabilityResponse> | null>(
-      `/watchlist/availability?skip=${skip}&take=${WATCHLIST_PAGE_SIZE}`,
-      signal ? { signal } : undefined
-    );
-    partial = partial || page?.partial === true;
-    return page;
+  const pages: WatchlistAvailabilityPage[] = [];
+  await readAllPages(async (skip) => {
+    const response = await fetchAvailabilityPage(skip, signal);
+    pages.push(toPage(skip, response));
+    return response;
   });
-  return { items, partial };
+  return assemble(pages, 0);
+}
+
+export async function completeWatchlistAvailability(
+  previous: WatchlistAvailability,
+  signal?: AbortSignal
+): Promise<WatchlistAvailability> {
+  const pages: WatchlistAvailabilityPage[] = [];
+  for (const page of previous.pages) {
+    pages.push(
+      page.partial ? toPage(page.skip, await fetchAvailabilityPage(page.skip, signal)) : page
+    );
+  }
+  return assemble(pages, previous.completionAttempts + 1);
 }
 
 export async function addToWatchlist(body: AddWatchlistItemBody): Promise<void> {

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fetchApi } from '@/shared/api/client';
 import {
   addToWatchlist,
+  completeWatchlistAvailability,
   fetchWatchlist,
   fetchWatchlistAvailability,
   removeFromWatchlist,
@@ -87,7 +88,7 @@ describe('fetchWatchlistAvailability', () => {
     expect(mockFetchApi).toHaveBeenCalledWith('/watchlist/availability?skip=0&take=500', {
       signal: controller.signal,
     });
-    expect(res).toEqual({ items: [{ tmdbId: 1, watchProviders: [] }], partial: true });
+    expect(res).toMatchObject({ items: [{ tmdbId: 1, watchProviders: [] }], partial: true });
   });
 
   it('reads the availability of the titles past the first 500 through the next pages', async () => {
@@ -116,16 +117,60 @@ describe('fetchWatchlistAvailability', () => {
     expect((await fetchWatchlistAvailability()).partial).toBe(true);
   });
 
+  it('remembers which page is still incomplete, and starts counting the retries from zero', async () => {
+    mockFetchApi
+      .mockResolvedValueOnce({ items: [{ tmdbId: 1 }], partial: false, hasMore: true })
+      .mockResolvedValueOnce({ items: [{ tmdbId: 2 }], partial: true, hasMore: false });
+
+    const res = await fetchWatchlistAvailability();
+
+    expect(res.pages.map((page) => [page.skip, page.partial])).toEqual([
+      [0, false],
+      [1, true],
+    ]);
+    expect(res.completionAttempts).toBe(0);
+  });
+
   it('reads an empty or malformed answer as complete and empty', async () => {
     mockFetchApi.mockResolvedValue({});
-    expect(await fetchWatchlistAvailability()).toEqual({ items: [], partial: false });
+    expect(await fetchWatchlistAvailability()).toMatchObject({ items: [], partial: false });
 
     mockFetchApi.mockResolvedValue(null);
-    expect(await fetchWatchlistAvailability()).toEqual({ items: [], partial: false });
+    expect(await fetchWatchlistAvailability()).toMatchObject({ items: [], partial: false });
     expect(mockFetchApi).toHaveBeenLastCalledWith(
       '/watchlist/availability?skip=0&take=500',
       undefined
     );
+  });
+});
+
+describe('completeWatchlistAvailability', () => {
+  it('reads again only the pages still incomplete, keeps the others and counts the retry', async () => {
+    const controller = new AbortController();
+    const previous = {
+      items: [{ tmdbId: 1 }, { tmdbId: 501 }],
+      partial: true,
+      completionAttempts: 2,
+      pages: [
+        { skip: 0, items: [{ tmdbId: 1 }], partial: false },
+        { skip: 500, items: [{ tmdbId: 501 }], partial: true },
+      ],
+    } as unknown as Parameters<typeof completeWatchlistAvailability>[0];
+    mockFetchApi.mockResolvedValue({
+      items: [{ tmdbId: 501 }, { tmdbId: 502 }],
+      partial: false,
+      hasMore: false,
+    });
+
+    const res = await completeWatchlistAvailability(previous, controller.signal);
+
+    expect(mockFetchApi).toHaveBeenCalledExactlyOnceWith(
+      '/watchlist/availability?skip=500&take=500',
+      { signal: controller.signal }
+    );
+    expect(res.items.map((item) => item.tmdbId)).toEqual([1, 501, 502]);
+    expect(res.partial).toBe(false);
+    expect(res.completionAttempts).toBe(3);
   });
 });
 
