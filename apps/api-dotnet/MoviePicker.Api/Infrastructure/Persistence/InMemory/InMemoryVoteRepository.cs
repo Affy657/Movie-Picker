@@ -177,6 +177,14 @@ public sealed class InMemoryVoteRepository : IVoteRepository
         return Task.FromResult(result);
     }
 
+    public async Task<IReadOnlyList<string>> ListEventIdsVotedByAsync(
+        IReadOnlyCollection<string> participantIds,
+        CancellationToken ct = default)
+    {
+        var votes = await ListByParticipantIdsAsync(participantIds, ct);
+        return votes.Select(v => v.EventId).Distinct(StringComparer.Ordinal).ToList();
+    }
+
     public Task<int> CountDistinctVotersByEventIdAsync(string eventId, CancellationToken ct = default)
     {
         var n = _byId.Values.Where(v => v.EventId == eventId).Select(v => v.ParticipantId).Distinct().Count();

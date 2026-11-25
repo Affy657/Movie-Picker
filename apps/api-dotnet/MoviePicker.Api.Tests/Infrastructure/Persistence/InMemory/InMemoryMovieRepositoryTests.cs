@@ -292,4 +292,29 @@ public sealed class InMemoryMovieRepositoryTests
         Assert.Equal(2L, await _repo.DeleteByEventIdAsync("evt1"));
         Assert.Empty(await _repo.ListByEventIdAsync("evt1"));
     }
+
+    [Fact]
+    public async Task ListTopVotedByEventIdsAsync_RanksEachNightByScore_ThenProposalTime_AndKeepsOnlyItsBest()
+    {
+        var votes = new InMemoryVoteRepository();
+        var repo = new InMemoryMovieRepository(votes);
+        var start = DateTimeOffset.Parse("2026-06-01T00:00:00Z");
+        await repo.InsertAsync(Mk(id: "0000000000000000000000a1", title: "early", createdAt: start));
+        await repo.InsertAsync(Mk(id: "0000000000000000000000a2", title: "liked", createdAt: start.AddMinutes(1)));
+        await repo.InsertAsync(Mk(id: "0000000000000000000000a4", title: "tied later id", createdAt: start.AddMinutes(2)));
+        await repo.InsertAsync(Mk(id: "0000000000000000000000a3", title: "tied", createdAt: start.AddMinutes(2)));
+        await repo.InsertAsync(Mk(id: "0000000000000000000000a5", title: "disliked", createdAt: start.AddMinutes(3)));
+        await repo.InsertAsync(Mk(id: "0000000000000000000000b1", eventId: "evt2", title: "other night", createdAt: start));
+        await repo.InsertAsync(Mk(id: "0000000000000000000000c1", eventId: "evt3", title: "not asked", createdAt: start));
+        await votes.UpsertAsync(new Vote { EventId = "evt1", MovieId = "0000000000000000000000a2", ParticipantId = "p1", Value = 1 });
+        await votes.UpsertAsync(new Vote { EventId = "evt1", MovieId = "0000000000000000000000a2", ParticipantId = "p2", Value = 1 });
+        await votes.UpsertAsync(new Vote { EventId = "evt1", MovieId = "0000000000000000000000a5", ParticipantId = "p1", Value = -1 });
+
+        var top = await repo.ListTopVotedByEventIdsAsync(["evt1", "evt2", "missing"], 3);
+
+        Assert.Equal(
+            [("evt1", "liked"), ("evt1", "early"), ("evt1", "tied"), ("evt2", "other night")],
+            top.Select(preview => (preview.EventId, preview.Title)).OrderBy(row => row.EventId, StringComparer.Ordinal));
+        Assert.Empty(await repo.ListTopVotedByEventIdsAsync([], 3));
+    }
 }

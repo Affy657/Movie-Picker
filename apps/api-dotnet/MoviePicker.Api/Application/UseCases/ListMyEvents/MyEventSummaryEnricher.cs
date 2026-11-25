@@ -31,7 +31,7 @@ public sealed class MyEventSummaryEnricher
         string userId,
         List<MyEventSummaryDto> slice,
         IReadOnlyDictionary<string, IReadOnlyList<string>> winnerMovieIdByEventId,
-        bool finishedScope,
+        MyEventSummaryDetail detail,
         IReadOnlySet<string> ratingOpenEventIds,
         CancellationToken ct)
     {
@@ -52,13 +52,13 @@ public sealed class MyEventSummaryEnricher
             ? _movies.ListByIdsAsync(sliceWinnerIds, ct)
             : Task.FromResult<IReadOnlyList<Movie>>(Array.Empty<Movie>());
 
-        var ratingsTask = finishedScope
+        var ratingsTask = detail == MyEventSummaryDetail.Ratings
             ? LoadRatingsAsync(userId, sliceIds.Where(winnerMovieIdByEventId.ContainsKey).ToList(), ratingOpenEventIds, ct)
             : Task.FromResult(MyEventRatings.None);
 
-        var previewsTask = finishedScope
-            ? Task.FromResult(MyEventPreviews.None)
-            : LoadPreviewsAsync(userId, sliceIds, ct);
+        var previewsTask = detail == MyEventSummaryDetail.Previews
+            ? LoadPreviewsAsync(userId, sliceIds, ct)
+            : Task.FromResult(MyEventPreviews.None);
 
         await Task.WhenAll(participantCountsTask, movieCountsTask, winnerMoviesTask, ratingsTask, previewsTask);
 
@@ -76,33 +76,37 @@ public sealed class MyEventSummaryEnricher
         List<string> eventIds,
         CancellationToken ct)
     {
-        var moviesTask = _movies.ListByEventIdsAsync(eventIds, ct);
-        var participantsTask = _participants.ListByEventIdsAsync(eventIds, ct);
-        await Task.WhenAll(moviesTask, participantsTask);
-        var movies = await moviesTask;
+        var moviesTask = _movies.ListTopVotedByEventIdsAsync(eventIds, MyEventPreviews.PosterCount, ct);
+        var participantsTask = _participants.ListFirstByEventIdsAsync(eventIds, MyEventPreviews.ParticipantCount, ct);
+        var votedTask = ListEventIdsVotedByViewerAsync(userId, eventIds, ct);
+        await Task.WhenAll(moviesTask, participantsTask, votedTask);
         var participants = await participantsTask;
 
-        var viewerParticipantIds = participants.Where(p => p.UserId == userId).Select(p => p.Id).ToList();
-        var previewedUserIds = MyEventPreviews.PreviewedParticipants(participants)
-            .Values
-            .SelectMany(previewed => previewed)
+        var previewedUserIds = participants
             .Select(p => p.UserId)
             .OfType<string>()
             .Distinct()
             .ToList();
+        var cards = previewedUserIds.Count > 0
+            ? await _users.ListCardsByIdsAsync(previewedUserIds, ct)
+            : [];
 
-        var scoresTask = movies.Count > 0
-            ? _votes.AggregateScoresByMovieIdsAsync(movies.Select(m => m.Id).ToList(), ct)
-            : Task.FromResult<IReadOnlyDictionary<string, VoteScoreAggregate>>(new Dictionary<string, VoteScoreAggregate>());
-        var votesTask = viewerParticipantIds.Count > 0
-            ? _votes.ListByParticipantIdsAsync(viewerParticipantIds, ct)
-            : Task.FromResult<IReadOnlyList<Vote>>([]);
-        var cardsTask = previewedUserIds.Count > 0
-            ? _users.ListCardsByIdsAsync(previewedUserIds, ct)
-            : Task.FromResult<IReadOnlyList<UserCard>>([]);
-        await Task.WhenAll(scoresTask, votesTask, cardsTask);
+        return new MyEventPreviews(await moviesTask, participants, await votedTask, cards);
+    }
 
-        return new MyEventPreviews(movies, participants, await scoresTask, await votesTask, await cardsTask);
+    private async Task<IReadOnlyList<string>> ListEventIdsVotedByViewerAsync(
+        string userId,
+        List<string> eventIds,
+        CancellationToken ct)
+    {
+        var pageEventIds = eventIds.ToHashSet(StringComparer.Ordinal);
+        var viewerParticipantIds = (await _participants.ListByUserIdAsync(userId, ct: ct))
+            .Where(p => pageEventIds.Contains(p.EventId))
+            .Select(p => p.Id)
+            .ToList();
+        return viewerParticipantIds.Count > 0
+            ? await _votes.ListEventIdsVotedByAsync(viewerParticipantIds, ct)
+            : [];
     }
 
     private async Task<MyEventRatings> LoadRatingsAsync(

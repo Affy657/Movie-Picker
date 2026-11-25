@@ -56,10 +56,11 @@ public sealed class EventsController : ControllerBase
         [FromQuery] int? limit,
         [FromQuery] int? offset,
         [FromQuery] string? q,
+        [FromQuery] bool? previews,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var result = await handler.HandleAsync(userId, scope, limit, offset, q, ct);
+        var result = await handler.HandleAsync(userId, scope, limit, offset, q, previews ?? true, ct);
         return Ok(result);
     }
 

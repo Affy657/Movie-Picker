@@ -25,6 +25,11 @@ public interface IParticipantRepository
 
     Task<IReadOnlyList<Participant>> ListByEventIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default);
 
+    Task<IReadOnlyList<Participant>> ListFirstByEventIdsAsync(
+        IReadOnlyCollection<string> eventIds,
+        int perEvent,
+        CancellationToken ct = default);
+
     Task<bool> DeleteAsync(string participantId, string eventId, CancellationToken ct = default);
 
     Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default);

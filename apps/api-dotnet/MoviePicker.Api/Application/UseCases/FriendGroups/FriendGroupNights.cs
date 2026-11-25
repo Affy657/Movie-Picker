@@ -51,12 +51,12 @@ public sealed class FriendGroupNightsReader
         var finishedWithFilm = await ShownPastNightsAsync(held, ct);
         var past = viewer.Summarize(finishedWithFilm, now).ToList();
 
-        var enrichedUpcoming = await _summaries.EnrichAsync(viewerId, upcoming, NoWinners, false, NoRatingOpen, ct);
+        var enrichedUpcoming = await _summaries.EnrichAsync(viewerId, upcoming, NoWinners, MyEventSummaryDetail.Previews, NoRatingOpen, ct);
         var enrichedPast = await _summaries.EnrichAsync(
             viewerId,
             past,
             finishedWithFilm.ToDictionary(night => night.Id, night => night.GetWinnerMovieIds()),
-            true,
+            MyEventSummaryDetail.Ratings,
             finishedWithFilm.Where(night => night.IsRatingOpen(now)).Select(night => night.Id).ToHashSet(),
             ct);
 
@@ -93,7 +93,7 @@ public sealed class FriendGroupNightsReader
             .OrderBy(MyEventSummaryEnricher.StartInstant)
             .ToList();
         return new FriendGroupListNights(
-            await _summaries.EnrichAsync(viewerId, next, NoWinners, false, NoRatingOpen, ct),
+            await _summaries.EnrichAsync(viewerId, next, NoWinners, MyEventSummaryDetail.Previews, NoRatingOpen, ct),
             showcases);
     }
 

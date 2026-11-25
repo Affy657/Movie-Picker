@@ -2443,6 +2443,7 @@ export interface paths {
                     limit?: number;
                     offset?: number;
                     q?: string;
+                    previews?: boolean;
                 };
                 header?: never;
                 path?: never;
