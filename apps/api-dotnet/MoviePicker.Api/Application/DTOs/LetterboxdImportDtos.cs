@@ -3,12 +3,6 @@ using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.DTOs;
 
-public enum LetterboxdImportTarget
-{
-    Watchlist,
-    Watched
-}
-
 public sealed class LetterboxdImportCandidateResponse
 {
     public int TmdbId { get; init; }

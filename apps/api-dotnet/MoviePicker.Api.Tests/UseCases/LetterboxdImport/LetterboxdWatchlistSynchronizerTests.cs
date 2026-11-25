@@ -589,7 +589,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
                 return new LetterboxdFilmsSnapshot([], true);
             });
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => _sut.SyncAsync(TheUser(), caller.Token));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => _sut.SyncAsync(TheUser(), ct: caller.Token));
 
         _letterboxd.Verify(l => l.GetWatchedFilmsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }

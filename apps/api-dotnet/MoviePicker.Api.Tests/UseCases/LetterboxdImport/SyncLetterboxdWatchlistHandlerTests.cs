@@ -140,7 +140,8 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
         int pendingReconciliationCount = 0,
         IReadOnlyList<string>? pendingChoiceKeys = null,
         bool syncWatchlist = true,
-        bool syncWatched = true) =>
+        bool syncWatched = true,
+        Dictionary<LetterboxdImportTarget, LetterboxdListSync>? listSyncs = null) =>
         _users
             .Setup(u => u.GetByIdAsync(UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User
@@ -153,7 +154,8 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
                 LetterboxdPendingReconciliationCount = pendingReconciliationCount,
                 LetterboxdPendingChoiceKeys = pendingChoiceKeys,
                 LetterboxdSyncWatchlist = syncWatchlist,
-                LetterboxdSyncWatched = syncWatched
+                LetterboxdSyncWatched = syncWatched,
+                LetterboxdListSyncs = listSyncs ?? []
             });
 
     private void GivenTmdbTimesOut()
@@ -170,8 +172,30 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
 
     private void VerifyStatusRecorded(string? error) =>
         _users.Verify(
-            u => u.SetLetterboxdSyncStatusAsync(UserId, Now, error, It.IsAny<CancellationToken>()),
+            u => u.SetLetterboxdSyncStatusAsync(UserId, Now, error, It.IsAny<IReadOnlyDictionary<LetterboxdImportTarget, LetterboxdListSync>>(), It.IsAny<CancellationToken>()),
             Times.Once);
+
+    private void VerifyListsRecorded(string? error, params (LetterboxdImportTarget List, string? Error)[] lists) =>
+        _users.Verify(
+            u => u.SetLetterboxdSyncStatusAsync(
+                UserId,
+                Now,
+                error,
+                It.Is<IReadOnlyDictionary<LetterboxdImportTarget, LetterboxdListSync>>(stored => SameLists(stored, lists)),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+    private static bool SameLists(
+        IReadOnlyDictionary<LetterboxdImportTarget, LetterboxdListSync> stored,
+        (LetterboxdImportTarget List, string? Error)[] expected) =>
+        stored.OrderBy(entry => entry.Key)
+            .Select(entry => (entry.Key, entry.Value.At, entry.Value.Error))
+            .SequenceEqual(expected.Select(list => (list.List, Now, list.Error)));
+
+    private void VerifyWatchedFilmsRead(Times times) =>
+        _letterboxd.Verify(
+            l => l.GetWatchedFilmsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            times);
 
     private static LetterboxdListSyncResponse ListOf(LetterboxdSyncResponse result, LetterboxdImportTarget target) =>
         Assert.Single(result.Lists, list => list.Target == target);
@@ -243,7 +267,7 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
         Assert.True(result.Skipped);
         VerifyLetterboxdRead(Times.Never());
         _users.Verify(
-            u => u.SetLetterboxdSyncStatusAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
+            u => u.SetLetterboxdSyncStatusAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<string?>(), It.IsAny<IReadOnlyDictionary<LetterboxdImportTarget, LetterboxdListSync>>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -314,7 +338,7 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
 
         Assert.False(result.Skipped);
         _users.Verify(
-            u => u.SetLetterboxdSyncStatusAsync(UserId, Now, null, It.IsAny<CancellationToken>()),
+            u => u.SetLetterboxdSyncStatusAsync(UserId, Now, null, It.IsAny<IReadOnlyDictionary<LetterboxdImportTarget, LetterboxdListSync>>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -331,6 +355,7 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
         _users.Verify(
             u => u.SetLetterboxdSyncStatusAsync(
                 UserId, Now, ErrorCodes.LetterboxdWatchlistIncomplete,
+                It.IsAny<IReadOnlyDictionary<LetterboxdImportTarget, LetterboxdListSync>>(),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -517,7 +542,7 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
         _letterboxd.Verify(l => l.GetWatchlistAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         _letterboxd.Verify(l => l.GetWatchedFilmsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         _users.Verify(
-            u => u.SetLetterboxdSyncStatusAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
+            u => u.SetLetterboxdSyncStatusAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<string?>(), It.IsAny<IReadOnlyDictionary<LetterboxdImportTarget, LetterboxdListSync>>(), It.IsAny<CancellationToken>()),
             Times.Never);
         Assert.Empty(_quota.Calls);
     }
@@ -613,6 +638,69 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
                 (LetterboxdImportTarget.Watched, 1, 1, 2, false, (DateTimeOffset?)Now, (string?)null)
             ],
             result.Lists.Select(list => (list.Target, list.Added, list.UnmatchedTitles.Count, list.TotalOnLetterboxd, list.Incomplete, list.LastSyncAt, list.Error)));
+    }
+
+    [Fact]
+    public async Task HandleAsync_UnreadableWatchedFilms_RecordsTheDateAndErrorOfEachList()
+    {
+        GivenWatchedOnLetterboxd(LetterboxdFilmsSnapshot.Failed());
+
+        await _sut.HandleAsync(UserId, force: true);
+
+        VerifyListsRecorded(
+            ErrorCodes.LetterboxdWatchedIncomplete,
+            (LetterboxdImportTarget.Watchlist, null),
+            (LetterboxdImportTarget.Watched, ErrorCodes.LetterboxdWatchedIncomplete));
+    }
+
+    [Fact]
+    public async Task HandleAsync_WatchedFilmsFailedAloneTwoHoursAgo_RetriesThemWithoutRereadingTheWatchlist()
+    {
+        GivenUser(
+            Username,
+            Now.AddHours(-2),
+            ErrorCodes.LetterboxdWatchedIncomplete,
+            listSyncs: new()
+            {
+                [LetterboxdImportTarget.Watchlist] = new LetterboxdListSync(Now.AddHours(-2), null),
+                [LetterboxdImportTarget.Watched] = new LetterboxdListSync(Now.AddHours(-2), ErrorCodes.LetterboxdWatchedIncomplete)
+            });
+
+        var result = await _sut.HandleAsync(UserId, force: false);
+
+        Assert.Equal(LetterboxdImportTarget.Watched, Assert.Single(result.Lists).Target);
+        VerifyLetterboxdRead(Times.Never());
+        VerifyWatchedFilmsRead(Times.Once());
+        VerifyListsRecorded(null, (LetterboxdImportTarget.Watched, null));
+    }
+
+    [Fact]
+    public async Task HandleAsync_SharedStatusOfAnOlderRevision_StillRetriesOnlyTheListThatFailed()
+    {
+        GivenUser(Username, Now.AddHours(-2), ErrorCodes.LetterboxdWatchedIncomplete);
+
+        await _sut.HandleAsync(UserId, force: false);
+
+        VerifyLetterboxdRead(Times.Never());
+        VerifyWatchedFilmsRead(Times.Once());
+    }
+
+    [Fact]
+    public async Task HandleAsync_ListSyncedMinutesAgo_IsLeftOutOfAForcedSync()
+    {
+        GivenUser(
+            Username,
+            Now.AddMinutes(-2),
+            listSyncs: new()
+            {
+                [LetterboxdImportTarget.Watchlist] = new LetterboxdListSync(Now.AddHours(-3), null),
+                [LetterboxdImportTarget.Watched] = new LetterboxdListSync(Now.AddMinutes(-2), null)
+            });
+
+        var result = await _sut.HandleAsync(UserId, force: true);
+
+        Assert.Equal(LetterboxdImportTarget.Watchlist, Assert.Single(result.Lists).Target);
+        VerifyWatchedFilmsRead(Times.Never());
     }
 
     [Fact]

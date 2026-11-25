@@ -1,4 +1,5 @@
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.UseCases.LetterboxdImport;
 

@@ -43,6 +43,7 @@ public interface IUserRepository
         string userId,
         DateTimeOffset syncedAt,
         string? error,
+        IReadOnlyDictionary<LetterboxdImportTarget, LetterboxdListSync> lists,
         CancellationToken ct = default);
     Task SetLetterboxdPendingReconciliationCountAsync(
         string userId,

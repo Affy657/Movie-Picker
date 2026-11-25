@@ -151,6 +151,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             LetterboxdUsername = letterboxdUsername,
             LetterboxdLastSyncAt = letterboxdChanged ? null : user.LetterboxdLastSyncAt,
             LetterboxdLastSyncError = letterboxdChanged ? null : user.LetterboxdLastSyncError,
+            LetterboxdListSyncs = letterboxdChanged ? new Dictionary<LetterboxdImportTarget, LetterboxdListSync>() : user.LetterboxdListSyncs,
             LetterboxdPendingReconciliationCount = letterboxdChanged ? 0 : user.LetterboxdPendingReconciliationCount,
             LetterboxdPendingChoiceKeys = letterboxdChanged ? null : user.LetterboxdPendingChoiceKeys,
             LetterboxdSyncWatchlist = request.LetterboxdSyncWatchlist ?? user.LetterboxdSyncWatchlist,

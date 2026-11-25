@@ -159,12 +159,21 @@ public sealed class MongoUserRepository : IUserRepository
         string userId,
         DateTimeOffset syncedAt,
         string? error,
+        IReadOnlyDictionary<LetterboxdImportTarget, LetterboxdListSync> lists,
         CancellationToken ct = default)
     {
         var update = Builders<UserDocument>.Update
             .Set(x => x.LetterboxdLastSyncAt, syncedAt.UtcDateTime)
             .Set(x => x.LetterboxdLastSyncError, error)
             .Inc(x => x.Version, 1);
+        foreach (var (list, sync) in lists)
+        {
+            update = update.Set(
+                new StringFieldDefinition<UserDocument, LetterboxdListSyncDocument>(
+                    $"{UserDocument.LetterboxdListSyncsElement}.{UserDocumentMapper.ListSyncKey(list)}"),
+                UserDocumentMapper.ToListSyncDocument(sync));
+        }
+
         await _collection.UpdateOneAsync(x => x.Id == userId, update, cancellationToken: ct);
     }
 
