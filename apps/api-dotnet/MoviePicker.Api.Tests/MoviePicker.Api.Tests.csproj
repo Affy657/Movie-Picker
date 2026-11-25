@@ -38,6 +38,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MoviePicker.Api\MoviePicker.Api.csproj" />
+    <ProjectReference Include="..\MoviePicker.Api.TestSupport\MoviePicker.Api.TestSupport.csproj" />
   </ItemGroup>
 
 </Project>

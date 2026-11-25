@@ -158,22 +158,22 @@ technique détaille ce fonctionnement.
 
 ## Démarrer
 
-Node 20.19+, 22.13+ ou 24+, pnpm, et le SDK .NET 10. Rien d’autre.
+Node 20.19+, 22.13+ ou 24+, pnpm, le SDK .NET 10, et Docker pour la base MongoDB.
 
 ```bash
 pnpm install
+node scripts/mongo-replica-set.mjs --container movie-picker-mongo-test --port 27018
 pnpm dev:full     # API sur :4000, front sur :5173
 ```
 
-Sans aucune configuration, l’API tourne entièrement en mémoire et sème comptes et soirées de
-démonstration : l’application est cliquable immédiatement, la page de connexion offrant un accès
-direct au compte de démonstration. En contrepartie les données repartent de zéro à chaque
-redémarrage, et la recherche de films reste vide faute de clé TMDB.
-
-Pour une vraie base et la recherche de films, copier `.env.example` en `.env` puis renseigner
-`MONGODB_URI` et `TMDB_READ_ACCESS_TOKEN` (ou `TMDB_API_KEY`). Le reste (lancer Mongo en
-conteneur, identifiants de démonstration, catalogue des scripts, structure du dépôt) est dans
-[`docs/development.md`](docs/development.md).
+L’API ne tourne que sur MongoDB : copier `.env.example` en `.env` et y poser
+`MONGODB_URI=mongodb://127.0.0.1:27018/moviepicker_local?directConnection=true`, la base du
+conteneur lancé juste au-dessus. Sans `MONGODB_URI`, elle refuse de démarrer et dit comment lancer
+ce conteneur. Au premier démarrage, elle sème comptes et soirées de démonstration : l’application
+est cliquable immédiatement, la page de connexion offrant un accès direct au compte de
+démonstration. La recherche de films demande en plus `TMDB_READ_ACCESS_TOKEN` (ou `TMDB_API_KEY`)
+dans le même fichier. Le reste (identifiants de démonstration, catalogue des scripts, structure du
+dépôt) est dans [`docs/development.md`](docs/development.md).
 
 ## Qualité
 

@@ -29,16 +29,12 @@ public sealed class MoviePickerApplicationFactory : WebApplicationFactory<Progra
 
     public MoviePickerApplicationFactory()
     {
-        Environment.SetEnvironmentVariable(
-            "MONGODB_URI",
-            _mongoUri.Length > 0 ? _mongoUri : null);
+        Environment.SetEnvironmentVariable("MONGODB_URI", _mongoUri);
     }
 
     public FakeEmailSender FakeEmail { get; } = new();
     public FakeGitHubIssueClient FakeGitHubIssues { get; } = new();
     public FakeWebShellSource FakeWebShell { get; } = new();
-
-    public bool RunsAgainstMongo => _mongoUri.Length > 0;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -101,7 +97,7 @@ public sealed class MoviePickerApplicationFactory : WebApplicationFactory<Progra
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing && RunsAgainstMongo)
+        if (disposing)
         {
             IntegrationTestMongo.DropDatabase(_mongoUri);
             Environment.SetEnvironmentVariable("MONGODB_URI", null);
@@ -115,11 +111,18 @@ public static class IntegrationTestMongo
 {
     private const string DatabasePrefix = "moviepicker_it_";
 
+    internal const string MissingTestUriMessage =
+        "MONGODB_TEST_URI is not set: the integration suite only runs on a MongoDB replica set. "
+        + "Run it with `pnpm run test:api:mongo`, which starts the movie-picker-mongo-test container on 27018 "
+        + "and sets the variable, or start that container with "
+        + "`node scripts/mongo-replica-set.mjs --container movie-picker-mongo-test --port 27018` "
+        + "and set MONGODB_TEST_URI=mongodb://127.0.0.1:27018/?directConnection=true.";
+
     public static string BuildIsolatedDatabaseUri()
     {
         var configured = Environment.GetEnvironmentVariable("MONGODB_TEST_URI");
         if (string.IsNullOrWhiteSpace(configured))
-            return string.Empty;
+            throw new InvalidOperationException(MissingTestUriMessage);
 
         var url = new MongoUrlBuilder(configured.Trim())
         {

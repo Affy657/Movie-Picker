@@ -170,7 +170,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         Assert.Equal(expected, declared);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task EveryCollection_CarriesExactlyTheDeclaredIndexes()
     {
         foreach (var group in Expected.GroupBy(index => index.Collection))
@@ -187,7 +187,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         }
     }
 
-    [MongoFact]
+    [Fact]
     public async Task Startup_RecordsTheIndexSpecificationMarker_SoTheNextStartSkipsCreation()
     {
         using var scope = _factory.Services.CreateScope();
@@ -198,7 +198,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         Assert.True(await history.IsAppliedAsync(initializer.MarkerId));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task DropIfExists_DropsThePresentIndex_AndSkipsTheMissingOne()
     {
         using var scope = _factory.Services.CreateScope();
@@ -225,7 +225,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         }
     }
 
-    [MongoFact]
+    [Fact]
     public async Task Plan_OnADatabaseStillCarryingTheRetiredIndexes_DropsThem_AndCanRunAgain()
     {
         using var scope = _factory.Services.CreateScope();
@@ -255,7 +255,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         }
     }
 
-    [MongoFact]
+    [Fact]
     public async Task QueriesOfTheRetiredIndexes_StayOnAnIndex()
     {
         var id = ObjectId.GenerateNewId();
@@ -271,7 +271,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
             await WinningPlanAsync("push_subscriptions", new BsonDocument("userId", id)));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task PushSubscriptionHandover_FindsTheEndpointThroughItsIndex()
     {
         var otherOwners = new BsonDocument { { "endpoint", "https://push.test/a" }, { "userId", new BsonDocument("$ne", ObjectId.GenerateNewId()) } };
@@ -279,7 +279,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         Assert.Contains("push_subscriptions_endpoint", await WinningPlanAsync("push_subscriptions", otherOwners));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task ForgettingARemovedUser_FindsTheNightsThroughTheirIndex()
     {
         var removedUser = new BsonDocument("removedUserIds", ObjectId.GenerateNewId().ToString());
@@ -287,7 +287,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         Assert.Contains("events_removedUserIds", await WinningPlanAsync("events", removedUser));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task ForgettingACoHost_FindsTheNightsThroughTheirIndex()
     {
         var userId = ObjectId.GenerateNewId().ToString();
@@ -316,7 +316,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         return explained["queryPlanner"]["winningPlan"].ToJson();
     }
 
-    [MongoFact]
+    [Fact]
     public async Task UniqueIndexes_AreDeclaredUnique()
     {
         foreach (var group in Expected.GroupBy(index => index.Collection))
@@ -330,7 +330,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         }
     }
 
-    [MongoFact]
+    [Fact]
     public async Task ExpiringIndexes_CarryTheirRetention()
     {
         foreach (var group in Expected.GroupBy(index => index.Collection))

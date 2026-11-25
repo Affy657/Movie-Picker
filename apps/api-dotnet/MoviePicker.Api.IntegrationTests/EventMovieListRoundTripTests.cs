@@ -112,7 +112,7 @@ public sealed class EventMovieListRoundTripTests : IClassFixture<MoviePickerAppl
         return evt;
     }
 
-    [MongoFact]
+    [Fact]
     public async Task ColdInstance_ReadsThirtyEnrichedMoviesInOneQueryPerCollection()
     {
         var evt = await SeedEventWithEnrichedMoviesAsync();

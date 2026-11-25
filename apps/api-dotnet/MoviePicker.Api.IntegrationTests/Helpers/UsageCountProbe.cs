@@ -1,9 +1,7 @@
 using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
-using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain;
-using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 namespace MoviePicker.Api.IntegrationTests.Helpers;
@@ -14,10 +12,6 @@ public static class UsageCountProbe
     {
         using var scope = factory.Services.CreateScope();
         var day = EventRecurrence.TodayInParis(scope.ServiceProvider.GetRequiredService<TimeProvider>().GetUtcNow());
-        var repository = scope.ServiceProvider.GetRequiredService<IUsageCountRepository>();
-        if (repository is InMemoryUsageCountRepository memory)
-            return memory.CountOf(day, metric, variant);
-
         var id = $"{day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}|{metric}|{variant}";
         var stored = await scope.ServiceProvider.GetRequiredService<IMongoDatabase>()
             .GetCollection<UsageCountDocument>(MongoUsageCountRepository.CollectionName)

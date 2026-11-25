@@ -47,11 +47,20 @@ public sealed class MongoDatabaseGuardTests
         Assert.Null(record);
     }
 
-    [Fact]
-    public void Development_without_mongo_uri_is_allowed()
+    [Theory]
+    [InlineData("Development", null, false)]
+    [InlineData("Development", "", false)]
+    [InlineData("Development", "   ", true)]
+    [InlineData("Production", "", false)]
+    public void Missing_mongo_uri_throws_and_says_how_to_start_mongo_locally(
+        string environment,
+        string? mongoUri,
+        bool testContext)
     {
-        var record = Record.Exception(() => AddWith(Environments.Development, ""));
-        Assert.Null(record);
+        var ex = Assert.Throws<InvalidOperationException>(() => AddWith(environment, mongoUri, testContext));
+        Assert.Contains("MONGODB_URI", ex.Message);
+        Assert.Contains("scripts/mongo-replica-set.mjs", ex.Message);
+        Assert.Contains("docs/development.md", ex.Message);
     }
 
     [Fact]
@@ -74,13 +83,6 @@ public sealed class MongoDatabaseGuardTests
     {
         var record = Record.Exception(
             () => AddWith(Environments.Development, $"{ProdCluster}/moviepicker_it_abc123", testContext: true));
-        Assert.Null(record);
-    }
-
-    [Fact]
-    public void TestContext_without_mongo_uri_is_allowed()
-    {
-        var record = Record.Exception(() => AddWith(Environments.Development, "", testContext: true));
         Assert.Null(record);
     }
 

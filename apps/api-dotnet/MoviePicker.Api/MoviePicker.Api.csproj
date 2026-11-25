@@ -14,6 +14,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="MoviePicker.Api.Tests" />
     <InternalsVisibleTo Include="MoviePicker.Api.IntegrationTests" />
+    <InternalsVisibleTo Include="MoviePicker.Api.TestSupport" />
   </ItemGroup>
 
   <ItemGroup>

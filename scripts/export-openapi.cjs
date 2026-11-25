@@ -1,4 +1,8 @@
-/** ASPNETCORE_ENVIRONMENT=Development is required to bypass ProductionStartupValidation (ALLOWED_ORIGINS). */
+/**
+ * ASPNETCORE_ENVIRONMENT=Development is required to bypass ProductionStartupValidation (ALLOWED_ORIGINS).
+ * The API refuses to register its services without MONGODB_URI, and the swagger tool builds the
+ * host without starting it: an address nobody connects to is enough, unless one is already set.
+ */
 const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -17,7 +21,13 @@ const dll = path.join(
   'MoviePicker.Api.dll'
 );
 
-const env = { ...process.env, ASPNETCORE_ENVIRONMENT: 'Development' };
+const OPENAPI_MONGODB_URI = 'mongodb://127.0.0.1:27017/moviepicker_openapi';
+
+const env = {
+  ...process.env,
+  ASPNETCORE_ENVIRONMENT: 'Development',
+  MONGODB_URI: process.env.MONGODB_URI || OPENAPI_MONGODB_URI,
+};
 const sharingViolations = new Set(['EBUSY', 'EPERM']);
 
 function pause(ms) {

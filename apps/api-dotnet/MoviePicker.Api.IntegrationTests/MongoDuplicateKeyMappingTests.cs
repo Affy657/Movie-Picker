@@ -42,7 +42,7 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
         return await body(scope.ServiceProvider.GetRequiredService<IUserRepository>());
     }
 
-    [MongoFact]
+    [Fact]
     public async Task InsertingTheSameHandleTwice_IsRejectedAsHandleConflict()
     {
         var taken = "pseudopris" + Guid.NewGuid().ToString("N")[..8];
@@ -54,7 +54,7 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
         Assert.Equal(ErrorCodes.HandleTaken, conflict.Reason);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task InsertingTheSameIdentityTwice_IsRejectedAsIdentityConflict()
     {
         var subject = Guid.NewGuid().ToString("N");
@@ -76,7 +76,7 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
         Assert.Equal(ErrorCodes.IdentityConflict, conflict.Reason);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task InsertingTheSameEmailTwice_IsRejectedAsEmailConflict()
     {
         var suffix = Guid.NewGuid().ToString("N")[..8];
@@ -89,7 +89,7 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
         Assert.Equal(ErrorCodes.EmailTaken, conflict.Reason);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task UpdatingTowardsATakenHandle_IsRejectedAsHandleConflict()
     {
         var taken = "deja" + Guid.NewGuid().ToString("N")[..8];
@@ -116,7 +116,7 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
         return await body(scope.ServiceProvider.GetRequiredService<IMovieListRepository>());
     }
 
-    [MongoFact]
+    [Fact]
     public async Task InsertingTheSameListNameKeyTwiceForAnOwner_IsRejectedAsListNameTaken()
     {
         var ownerId = ObjectId.GenerateNewId().ToString();
@@ -131,7 +131,7 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
         Assert.Equal("Été 2026", otherOwner.Name);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task RenamingAListTowardsANameKeyItsOwnerHolds_IsRejectedAsListNameTaken()
     {
         var ownerId = ObjectId.GenerateNewId().ToString();
@@ -225,7 +225,7 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
         LinkedAt = DateTimeOffset.UtcNow
     };
 
-    [MongoFact]
+    [Fact]
     public async Task OAuthFirstSignIn_LosingTheRaceToCreateTheAccount_SignsInTheAccountThatWon()
     {
         using var scope = _factory.Services.CreateScope();
@@ -248,7 +248,7 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
         Assert.Equal(winner.Id, outcome.User!.Id);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task OAuthFirstSignIn_LosingTheRaceToLinkAnExistingAccount_SignsInTheAccountThatWon()
     {
         using var scope = _factory.Services.CreateScope();

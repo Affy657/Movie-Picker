@@ -29,7 +29,7 @@ public sealed class MongoAuthTicketStoreTests : IClassFixture<MoviePickerApplica
             new AuthenticationProperties { IsPersistent = true, IssuedUtc = issued, ExpiresUtc = expires },
             CookieAuthenticationDefaults.AuthenticationScheme);
 
-    [MongoFact]
+    [Fact]
     public async Task RetrieveAfterARenewal_StartsTheSlidingWindowAtTheRenewal()
     {
         var store = Store();
@@ -45,7 +45,7 @@ public sealed class MongoAuthTicketStoreTests : IClassFixture<MoviePickerApplica
         Assert.True(window <= AuthConstants.SessionLifetime + TimeSpan.FromSeconds(1), $"window {window}");
     }
 
-    [MongoFact]
+    [Fact]
     public async Task RenewalOfARemovedSession_DoesNotBringItBack()
     {
         var store = Store();
@@ -58,7 +58,7 @@ public sealed class MongoAuthTicketStoreTests : IClassFixture<MoviePickerApplica
         Assert.Null(await store.RetrieveAsync(key));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task RetrieveAnExpiredSession_ReturnsNothingAndForgetsIt()
     {
         var store = Store();
@@ -69,7 +69,7 @@ public sealed class MongoAuthTicketStoreTests : IClassFixture<MoviePickerApplica
         Assert.Null(await store.RetrieveAsync(key));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task StoredSession_KeepsTheSignInTimeThroughRetrievalAndRenewal()
     {
         using var scope = _factory.Services.CreateScope();
@@ -111,7 +111,7 @@ public sealed class MongoAuthTicketStoreTests : IClassFixture<MoviePickerApplica
             CookieAuthenticationDefaults.AuthenticationScheme);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task InvalidateOthersForUser_KeepsTheNamedSession_AndEveryOtherUsersSessions()
     {
         var store = Store();
