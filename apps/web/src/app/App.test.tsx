@@ -4,7 +4,10 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
+import { buildPublicProfile } from '@/test-utils/publicProfile';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { AppRoutes } from '@/app/App';
 import brandStyles from '@/shared/brand/Brand.module.css';
@@ -30,15 +33,17 @@ function renderRoutes(initialEntries: string[]) {
 }
 
 const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
-  HttpResponse.json({
-    userId: 'u1',
-    displayName: 'Alice',
-    emailMasked: 'a***@test.local',
-    uiTheme: 'system',
-    accentColor: 'default',
-    handle: 'alice',
-    isProfilePublic: true,
-  })
+  apiJson<'UserProfileResponse'>(
+    buildUserProfile({
+      userId: 'u1',
+      displayName: 'Alice',
+      emailMasked: 'a***@test.local',
+      uiTheme: 'system',
+      accentColor: 'default',
+      handle: 'alice',
+      isProfilePublic: true,
+    })
+  )
 );
 
 describe('App (routes)', () => {
@@ -296,21 +301,23 @@ describe('App (routes)', () => {
       server.use(
         authMeGuestHandler,
         http.get(`${TEST_API_V1}/users/alice`, () =>
-          HttpResponse.json({
-            handle: 'alice',
-            displayName: 'Alice',
-            avatarId: 'alpha',
-            bio: 'Grande cinéphile',
-            memberSince: '2024-03-15T00:00:00Z',
-            followingCount: 3,
-            followersCount: 7,
-            isSupporter: false,
-            isFollowedByMe: null,
-          })
+          apiJson<'PublicProfileResponse'>(
+            buildPublicProfile({
+              handle: 'alice',
+              displayName: 'Alice',
+              avatarId: 'alpha',
+              bio: 'Grande cinéphile',
+              memberSince: '2024-03-15T00:00:00Z',
+              followingCount: 3,
+              followersCount: 7,
+              isSupporter: false,
+              isFollowedByMe: null,
+            })
+          )
         ),
         createUserStatsHandler('alice'),
         http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-          HttpResponse.json({ items: [] })
+          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null })
         )
       );
       renderRoutes(['/u/alice']);
@@ -324,20 +331,22 @@ describe('App (routes)', () => {
       server.use(
         authMeGuestHandler,
         http.get(`${TEST_API_V1}/users/alice`, () =>
-          HttpResponse.json({
-            handle: 'alice',
-            displayName: 'Alice',
-            avatarId: 'alpha',
-            bio: null,
-            memberSince: '2024-03-15T00:00:00Z',
-            followingCount: 0,
-            followersCount: 0,
-            isSupporter: false,
-            isFollowedByMe: null,
-          })
+          apiJson<'PublicProfileResponse'>(
+            buildPublicProfile({
+              handle: 'alice',
+              displayName: 'Alice',
+              avatarId: 'alpha',
+              bio: null,
+              memberSince: '2024-03-15T00:00:00Z',
+              followingCount: 0,
+              followersCount: 0,
+              isSupporter: false,
+              isFollowedByMe: null,
+            })
+          )
         ),
         http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-          HttpResponse.json({ items: [] })
+          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null })
         )
       );
       renderRoutes(['/u/alice/films']);
@@ -355,17 +364,19 @@ describe('App (routes)', () => {
       server.use(
         authMeGuestHandler,
         http.get(`${TEST_API_V1}/users/alice`, () =>
-          HttpResponse.json({
-            handle: 'alice',
-            displayName: 'Alice',
-            avatarId: 'alpha',
-            bio: null,
-            memberSince: '2024-03-15T00:00:00Z',
-            followingCount: 0,
-            followersCount: 0,
-            isSupporter: false,
-            isFollowedByMe: null,
-          })
+          apiJson<'PublicProfileResponse'>(
+            buildPublicProfile({
+              handle: 'alice',
+              displayName: 'Alice',
+              avatarId: 'alpha',
+              bio: null,
+              memberSince: '2024-03-15T00:00:00Z',
+              followingCount: 0,
+              followersCount: 0,
+              isSupporter: false,
+              isFollowedByMe: null,
+            })
+          )
         ),
         ...createPublicListsHandlers(
           { handle: 'alice', displayName: 'Alice', avatarId: null },
@@ -503,7 +514,14 @@ describe('App (routes)', () => {
     it("route / sert la page d'exploration au lieu de rediriger", async () => {
       server.use(
         authedUserHandler,
-        http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
+        http.get(`${TEST_API_V1}/events/mine`, () =>
+          apiJson<'MyEventsListResponse'>({
+            events: [],
+            hasMore: false,
+            totalActive: 0,
+            totalFinished: 0,
+          })
+        )
       );
       renderRoutes(['/']);
       expect(
@@ -521,7 +539,14 @@ describe('App (routes)', () => {
     it('exposes Explore in the nav once signed in', async () => {
       server.use(
         authedUserHandler,
-        http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
+        http.get(`${TEST_API_V1}/events/mine`, () =>
+          apiJson<'MyEventsListResponse'>({
+            events: [],
+            hasMore: false,
+            totalActive: 0,
+            totalFinished: 0,
+          })
+        )
       );
       renderRoutes(['/my-events']);
       const exploreLinks = await screen.findAllByRole('link', { name: /explorer/i });
@@ -534,7 +559,14 @@ describe('App (routes)', () => {
     it('AppShell exposes My movie nights and the creation shortcut in the nav (Settings lives in the avatar menu)', async () => {
       server.use(
         authedUserHandler,
-        http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
+        http.get(`${TEST_API_V1}/events/mine`, () =>
+          apiJson<'MyEventsListResponse'>({
+            events: [],
+            hasMore: false,
+            totalActive: 0,
+            totalFinished: 0,
+          })
+        )
       );
       renderRoutes(['/my-events']);
       await screen.findByRole('button', { name: /menu du compte/i }, { timeout: 20000 });
@@ -579,7 +611,14 @@ describe('App (routes)', () => {
       const user = userEvent.setup();
       server.use(
         authedUserHandler,
-        http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
+        http.get(`${TEST_API_V1}/events/mine`, () =>
+          apiJson<'MyEventsListResponse'>({
+            events: [],
+            hasMore: false,
+            totalActive: 0,
+            totalFinished: 0,
+          })
+        )
       );
       renderRoutes(['/my-events']);
       await user.click(
@@ -593,17 +632,26 @@ describe('App (routes)', () => {
     it('AppShell points the mobile Profil tab to the settings while my profile is private', async () => {
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () =>
-          HttpResponse.json({
-            userId: 'u1',
-            displayName: 'Alice',
-            emailMasked: 'a***@test.local',
-            uiTheme: 'system',
-            accentColor: 'default',
-            handle: 'alice',
-            isProfilePublic: false,
-          })
+          apiJson<'UserProfileResponse'>(
+            buildUserProfile({
+              userId: 'u1',
+              displayName: 'Alice',
+              emailMasked: 'a***@test.local',
+              uiTheme: 'system',
+              accentColor: 'default',
+              handle: 'alice',
+              isProfilePublic: false,
+            })
+          )
         ),
-        http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
+        http.get(`${TEST_API_V1}/events/mine`, () =>
+          apiJson<'MyEventsListResponse'>({
+            events: [],
+            hasMore: false,
+            totalActive: 0,
+            totalFinished: 0,
+          })
+        )
       );
       renderRoutes(['/my-events']);
       await screen.findByRole('button', { name: /menu du compte/i }, { timeout: 20000 });
@@ -621,16 +669,25 @@ describe('App (routes)', () => {
       vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-11-07T12:00:00.000Z'));
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () =>
-          HttpResponse.json({
-            userId: 'u1',
-            displayName: 'Alice',
-            emailMasked: 'a***@test.local',
-            uiTheme: 'system',
-            accentColor: 'default',
-            createdAt: '2026-06-01T00:00:00.000Z',
-          })
+          apiJson<'UserProfileResponse'>(
+            buildUserProfile({
+              userId: 'u1',
+              displayName: 'Alice',
+              emailMasked: 'a***@test.local',
+              uiTheme: 'system',
+              accentColor: 'default',
+              createdAt: '2026-06-01T00:00:00.000Z',
+            })
+          )
         ),
-        http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
+        http.get(`${TEST_API_V1}/events/mine`, () =>
+          apiJson<'MyEventsListResponse'>({
+            events: [],
+            hasMore: false,
+            totalActive: 0,
+            totalFinished: 0,
+          })
+        )
       );
       renderRoutes(['/my-events']);
       await screen.findByRole('button', { name: /menu du compte/i }, { timeout: 20000 });

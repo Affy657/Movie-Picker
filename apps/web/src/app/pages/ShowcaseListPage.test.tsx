@@ -10,11 +10,18 @@ import {
   type InitialEntry,
 } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { stubHoverCapability } from '@/test-utils/matchMedia';
 import { authMeGuestHandler, createWatchedHandlers, TEST_API_V1 } from '@/mocks/handlers';
 import { apiErrorJson, apiJson, type ApiSchemas } from '@/mocks/apiJson';
+import {
+  buildShowcaseItem,
+  buildWatchedMovie,
+  requestedShowcaseSection,
+  buildSearchItem,
+} from '@/test-utils/titleItems';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import ShowcaseListPage, { type ShowcaseListVariant } from '@/app/pages/ShowcaseListPage';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { MOVIE_PAGE_CHUNK } from '@/app/moviePageChunk';
@@ -23,7 +30,7 @@ const ACTION_GENRE = 28;
 const DRAMA_GENRE = 18;
 
 function item(index: number, genreId: number, rank?: number) {
-  return {
+  return buildShowcaseItem({
     id: 2000 + index,
     mediaType: 'movie',
     title: `Film ${index}`,
@@ -33,12 +40,12 @@ function item(index: number, genreId: number, rank?: number) {
     genreIds: [genreId],
     rank: rank ?? null,
     eventCount: rank != null ? 5 : null,
-  };
+  });
 }
 
 const showcaseHandler = http.get(`${TEST_API_V1}/movies/showcase`, ({ request }) => {
-  const section = new URL(request.url).searchParams.get('section') ?? 'trending';
-  return HttpResponse.json({
+  const section = requestedShowcaseSection(request);
+  return apiJson<'MovieShowcaseListResponse'>({
     section,
     theme: null,
     items: [item(1, ACTION_GENRE), item(2, DRAMA_GENRE), item(3, ACTION_GENRE)],
@@ -74,27 +81,29 @@ function searchHandler(results: (query: string) => ApiSchemas['MovieSearchItemRe
 }
 
 const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
-  HttpResponse.json({
-    userId: 'u1',
-    displayName: 'Alice',
-    emailMasked: 'a***@test.local',
-    uiTheme: 'system',
-    accentColor: 'default',
-    ratingScale: 'ten',
-  })
+  apiJson<'UserProfileResponse'>(
+    buildUserProfile({
+      userId: 'u1',
+      displayName: 'Alice',
+      emailMasked: 'a***@test.local',
+      uiTheme: 'system',
+      accentColor: 'default',
+      ratingScale: 'ten',
+    })
+  )
 );
 
 const emptyWatchlistHandler = http.get(`${TEST_API_V1}/watchlist`, () =>
-  HttpResponse.json({ items: [] })
+  apiJson<'WatchlistResponse'>({ items: [], total: 0, hasMore: false })
 );
 
 const KEBAB_FILM_1 = /plus d.actions.*film 1/i;
 const POSTER_FILM_1 = /voir les détails de « film 1 »/i;
 
 const lastWatchedInceptionHandler = http.get(`${TEST_API_V1}/users/me/watched-movies`, () =>
-  HttpResponse.json({
+  apiJson<'UserWatchedMoviesResponse'>({
     items: [
-      {
+      buildWatchedMovie({
         tmdbId: 27205,
         mediaType: 'movie',
         title: 'Inception',
@@ -102,8 +111,9 @@ const lastWatchedInceptionHandler = http.get(`${TEST_API_V1}/users/me/watched-mo
         posterPath: null,
         genreIds: [28],
         watchedAt: '2026-03-01T00:00:00Z',
-      },
+      }),
     ],
+    total: null,
   })
 );
 
@@ -122,7 +132,7 @@ function FilmPageStub() {
 }
 
 const longShowcaseHandler = http.get(`${TEST_API_V1}/movies/showcase`, () =>
-  HttpResponse.json({
+  apiJson<'MovieShowcaseListResponse'>({
     section: 'trending',
     theme: null,
     items: Array.from({ length: 30 }, (_, index) => item(index + 1, ACTION_GENRE)),
@@ -189,7 +199,7 @@ describe('ShowcaseListPage', () => {
     server.use(
       authMeGuestHandler,
       http.get(`${TEST_API_V1}/movies/showcase`, () =>
-        HttpResponse.json({
+        apiJson<'MovieShowcaseListResponse'>({
           section: 'trending',
           theme: null,
           items: Array.from({ length: 6 }, (_, index) => ({
@@ -251,7 +261,7 @@ describe('ShowcaseListPage', () => {
   it('signale une section en panne', async () => {
     server.use(
       authMeGuestHandler,
-      http.get(`${TEST_API_V1}/movies/showcase`, () => HttpResponse.json({}, { status: 503 }))
+      http.get(`${TEST_API_V1}/movies/showcase`, () => apiErrorJson(503, 'showcase_unavailable'))
     );
     renderPage('trending', '/films/tendances', '/films/tendances');
 
@@ -269,8 +279,16 @@ describe('ShowcaseListPage', () => {
     server.use(
       authMeGuestHandler,
       http.get(`${TEST_API_V1}/movies/search`, () =>
-        HttpResponse.json({
-          items: [item(9, ACTION_GENRE)],
+        apiJson<'MovieSearchListResponse'>({
+          items: [
+            buildSearchItem({
+              id: 2009,
+              title: 'Film 9',
+              year: '2009',
+              voteAverage: 7,
+              genreIds: [ACTION_GENRE],
+            }),
+          ],
           watchProvidersRegion: 'FR',
           disclaimer: '',
           tmdbAttributionUrl: '',
@@ -364,7 +382,7 @@ describe('ShowcaseListPage', () => {
     server.use(
       authMeGuestHandler,
       http.get(`${TEST_API_V1}/movies/showcase`, () =>
-        HttpResponse.json({
+        apiJson<'MovieShowcaseListResponse'>({
           section: 'most-proposed',
           theme: null,
           items: [],
@@ -384,7 +402,7 @@ describe('ShowcaseListPage', () => {
       authMeGuestHandler,
       http.get(`${TEST_API_V1}/movies/showcase`, ({ request }) => {
         requestedGenres = new URL(request.url).searchParams.get('genreIds');
-        return HttpResponse.json({
+        return apiJson<'MovieShowcaseListResponse'>({
           section: 'trending',
           theme: null,
           items: [item(1, ACTION_GENRE)],
@@ -407,7 +425,7 @@ describe('ShowcaseListPage', () => {
       http.get(`${TEST_API_V1}/movies/showcase`, ({ request }) => {
         const params = new URL(request.url).searchParams;
         requested.push({ seed: params.get('seedTmdbId'), mediaType: params.get('seedMediaType') });
-        return HttpResponse.json({
+        return apiJson<'MovieShowcaseListResponse'>({
           section: 'recommendations',
           theme: null,
           items: [item(1, DRAMA_GENRE)],
@@ -501,7 +519,7 @@ describe('ShowcaseListPage', () => {
     server.use(
       authMeGuestHandler,
       http.get(`${TEST_API_V1}/movies/showcase`, () =>
-        HttpResponse.json({
+        apiJson<'MovieShowcaseListResponse'>({
           section: 'most-proposed',
           theme: null,
           items: [item(1, DRAMA_GENRE, 1), item(2, DRAMA_GENRE, 2)],

@@ -3,13 +3,16 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiJson, type ApiSchemas } from '@/mocks/apiJson';
+import type { UserProfile } from '@/features/auth/types';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import AccountPage from '@/app/pages/account/AccountPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import { setSessionHint } from '@/features/auth/session-hint';
 
-const baseUser = {
+const baseUser = buildUserProfile({
   userId: 'u1',
   displayName: 'Alice',
   emailMasked: 'a***@test.local',
@@ -22,9 +25,9 @@ const baseUser = {
   isWatchlistPublic: true,
   banner: null,
   bannerPhotoUrl: null,
-};
+});
 
-const DUNE = {
+const DUNE: ApiSchemas['ProfileBannerResponse'] = {
   source: 'film',
   imageUrl: 'https://image.tmdb.org/t/p/w1280/sunset.jpg',
   tmdbId: 693134,
@@ -45,7 +48,7 @@ function renderPage() {
 
 describe('ProfileEditPreview (MSW)', () => {
   const server = setupServer();
-  let me: Record<string, unknown>;
+  let me: UserProfile;
 
   beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   afterEach(() => server.resetHandlers());
@@ -54,7 +57,7 @@ describe('ProfileEditPreview (MSW)', () => {
   beforeEach(() => {
     setSessionHint();
     me = { ...baseUser };
-    server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(me)));
+    server.use(http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(me)));
   });
 
   it('previews the profile in my colour, avatar ringed', async () => {

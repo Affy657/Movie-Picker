@@ -2,7 +2,8 @@ import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import HomeCollectionsRow from './HomeCollectionsRow';
@@ -29,7 +30,7 @@ describe('HomeCollectionsRow', () => {
   it('stacks the saga posters under its name and film count, leading to the saga', async () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/collections`, () =>
-        HttpResponse.json({
+        apiJson<'MovieCollectionListResponse'>({
           items: [
             {
               id: 10,
@@ -38,6 +39,7 @@ describe('HomeCollectionsRow', () => {
               posterPath: poster('cover'),
               movieCount: 5,
               previewPosterPaths: [poster('a'), poster('b'), poster('c')],
+              movieIds: [],
             },
             {
               id: 11,
@@ -46,6 +48,7 @@ describe('HomeCollectionsRow', () => {
               posterPath: poster('duo'),
               movieCount: 2,
               previewPosterPaths: [poster('d'), poster('e')],
+              movieIds: [],
             },
             {
               id: 12,
@@ -53,6 +56,8 @@ describe('HomeCollectionsRow', () => {
               overview: null,
               posterPath: poster('old'),
               movieCount: 3,
+              previewPosterPaths: [],
+              movieIds: [],
             },
           ],
           disclaimer: '',

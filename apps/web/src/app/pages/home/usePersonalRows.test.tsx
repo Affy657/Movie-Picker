@@ -3,25 +3,30 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
+import { buildWatchedMovie } from '@/test-utils/titleItems';
 import { createTestQueryClient } from '@/test-utils/queryWrapper';
-import { TEST_API_V1 } from '@/mocks/handlers';
+import { TEST_API_V1, mockWatchlistItem } from '@/mocks/handlers';
 import {
   useFriendsWatchedRow,
   useRecommendationSeed,
   useWatchlistRow,
 } from '@/app/pages/home/usePersonalRows';
 
-const matrix = {
+const matrixToWatch = mockWatchlistItem({
   tmdbId: 603,
-  mediaType: 'movie',
   title: 'Matrix',
   year: '1999',
-  posterPath: null,
-  genreIds: [],
   createdAt: '2026-01-01T00:00:00Z',
+});
+
+const matrixWatched = buildWatchedMovie({
+  tmdbId: 603,
+  title: 'Matrix',
+  year: '1999',
   watchedAt: '2026-01-02T00:00:00Z',
-};
+});
 
 function freshWrapper() {
   const client = createTestQueryClient();
@@ -33,12 +38,14 @@ function freshWrapper() {
 describe('home personal rows once the account is gone', () => {
   const server = setupServer(
     http.get(`${TEST_API_V1}/watchlist`, () =>
-      HttpResponse.json({ items: [matrix], total: 1, hasMore: false })
+      apiJson<'WatchlistResponse'>({ items: [matrixToWatch], total: 1, hasMore: false })
     ),
     http.get(`${TEST_API_V1}/users/me/following-watched-movies`, () =>
-      HttpResponse.json({ items: [matrix] })
+      apiJson<'UserWatchedMoviesResponse'>({ items: [matrixWatched], total: null })
     ),
-    http.get(`${TEST_API_V1}/users/me/watched-movies`, () => HttpResponse.json({ items: [matrix] }))
+    http.get(`${TEST_API_V1}/users/me/watched-movies`, () =>
+      apiJson<'UserWatchedMoviesResponse'>({ items: [matrixWatched], total: null })
+    )
   );
 
   beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));

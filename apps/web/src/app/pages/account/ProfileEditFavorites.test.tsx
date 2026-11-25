@@ -4,9 +4,13 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import type { UserProfile } from '@/features/auth/types';
+import { buildUserProfile } from '@/test-utils/userProfile';
+import { mockWatchlistItem, TEST_API_V1 } from '@/mocks/handlers';
+import { buildSearchItem, buildWatchedMovie } from '@/test-utils/titleItems';
 import AccountPage from '@/app/pages/account/AccountPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
-import { TEST_API_V1 } from '@/mocks/handlers';
 import { setSessionHint } from '@/features/auth/session-hint';
 import type { FavoriteTitle } from '@/shared/types/movie';
 
@@ -32,7 +36,7 @@ const INCEPTION: FavoriteTitle = {
   posterPath: null,
 };
 
-const baseUser = {
+const baseUser = buildUserProfile({
   userId: 'u1',
   displayName: 'Alice',
   emailMasked: 'a***@test.local',
@@ -43,22 +47,27 @@ const baseUser = {
   bio: 'Ma bio',
   isProfilePublic: true,
   isWatchlistPublic: true,
-};
+});
 
 function searchItem(favorite: FavoriteTitle) {
-  return {
+  return buildSearchItem({
     id: favorite.tmdbId,
     mediaType: favorite.mediaType,
     title: favorite.title,
     year: favorite.year,
     posterPath: favorite.posterPath,
     genreIds: [],
-  };
+  });
 }
 
 function searchReturns(...favorites: FavoriteTitle[]) {
   return http.get(`${TEST_API_V1}/movies/search`, () =>
-    HttpResponse.json({ items: favorites.map(searchItem) })
+    apiJson<'MovieSearchListResponse'>({
+      items: favorites.map(searchItem),
+      watchProvidersRegion: 'FR',
+      disclaimer: 'TMDB',
+      tmdbAttributionUrl: 'https://www.themoviedb.org/',
+    })
   );
 }
 
@@ -90,7 +99,7 @@ async function openSearch(user: ReturnType<typeof userEvent.setup>, query: strin
 
 describe('ProfileEditFavorites (MSW)', () => {
   const server = setupServer();
-  let me: Record<string, unknown>;
+  let me: UserProfile;
 
   beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   afterEach(() => {
@@ -103,14 +112,16 @@ describe('ProfileEditFavorites (MSW)', () => {
     setSessionHint();
     me = { ...baseUser, favorites: [HEAT, TWIN_PEAKS] };
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(me)),
+      http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(me)),
       http.get(`${TEST_API_V1}/users/me/watched-movies`, () =>
-        HttpResponse.json({ items: [], total: 0 })
+        apiJson<'UserWatchedMoviesResponse'>({ items: [], total: 0 })
       ),
       http.get(`${TEST_API_V1}/watchlist`, () =>
-        HttpResponse.json({ items: [], total: 0, hasMore: false })
+        apiJson<'WatchlistResponse'>({ items: [], total: 0, hasMore: false })
       ),
-      http.get(`${TEST_API_V1}/watchlist/availability`, () => HttpResponse.json({ items: [] }))
+      http.get(`${TEST_API_V1}/watchlist/availability`, () =>
+        apiJson<'WatchlistAvailabilityResponse'>({ items: [], partial: false })
+      )
     );
   });
 
@@ -163,9 +174,9 @@ describe('ProfileEditFavorites (MSW)', () => {
     me = { ...me, favorites: [HEAT] };
     server.use(
       http.get(`${TEST_API_V1}/users/me/watched-movies`, () =>
-        HttpResponse.json({
+        apiJson<'UserWatchedMoviesResponse'>({
           items: [
-            {
+            buildWatchedMovie({
               tmdbId: INCEPTION.tmdbId,
               mediaType: 'movie',
               title: 'Inception',
@@ -177,15 +188,15 @@ describe('ProfileEditFavorites (MSW)', () => {
               watchedAt: '2026-11-01T20:00:00Z',
               myRating: 9,
               source: 'night',
-            },
+            }),
           ],
           total: 1,
         })
       ),
       http.get(`${TEST_API_V1}/watchlist`, () =>
-        HttpResponse.json({
+        apiJson<'WatchlistResponse'>({
           items: [
-            {
+            mockWatchlistItem({
               tmdbId: 603,
               mediaType: 'movie',
               title: 'Matrix',
@@ -193,7 +204,7 @@ describe('ProfileEditFavorites (MSW)', () => {
               posterPath: null,
               genreIds: [],
               createdAt: '2026-11-02T20:00:00Z',
-            },
+            }),
           ],
           total: 1,
           hasMore: false,
@@ -221,7 +232,7 @@ describe('ProfileEditFavorites (MSW)', () => {
       searchReturns(INCEPTION),
       http.post(`${TEST_API_V1}/users/me/favorites`, async ({ request }) => {
         posted = await request.json();
-        return HttpResponse.json({ items: [HEAT, INCEPTION] });
+        return apiJson<'FavoriteListResponse'>({ items: [HEAT, INCEPTION] });
       })
     );
 
@@ -254,7 +265,7 @@ describe('ProfileEditFavorites (MSW)', () => {
     server.use(
       searchReturns(INCEPTION),
       http.post(`${TEST_API_V1}/users/me/favorites`, () =>
-        HttpResponse.json({ items: [HEAT, TWIN_PEAKS, INCEPTION] })
+        apiJson<'FavoriteListResponse'>({ items: [HEAT, TWIN_PEAKS, INCEPTION] })
       )
     );
 
@@ -275,7 +286,12 @@ describe('ProfileEditFavorites (MSW)', () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, ({ request }) => {
         searchedSeries = new URL(request.url).searchParams.get('includeSeries');
-        return HttpResponse.json({ items: [searchItem(TWIN_PEAKS)] });
+        return apiJson<'MovieSearchListResponse'>({
+          items: [searchItem(TWIN_PEAKS)],
+          watchProvidersRegion: 'FR',
+          disclaimer: 'TMDB',
+          tmdbAttributionUrl: 'https://www.themoviedb.org/',
+        });
       })
     );
 
@@ -312,7 +328,7 @@ describe('ProfileEditFavorites (MSW)', () => {
     server.use(
       http.delete(`${TEST_API_V1}/users/me/favorites/:tmdbId`, ({ request }) => {
         removedUrl = request.url;
-        return HttpResponse.json({ items: [HEAT] });
+        return apiJson<'FavoriteListResponse'>({ items: [HEAT] });
       })
     );
 
@@ -331,7 +347,7 @@ describe('ProfileEditFavorites (MSW)', () => {
     const user = userEvent.setup();
     server.use(
       http.delete(`${TEST_API_V1}/users/me/favorites/:tmdbId`, () =>
-        HttpResponse.json({ error: 'Boom' }, { status: 500 })
+        apiErrorJson(500, 'internal_error')
       )
     );
 
@@ -373,15 +389,7 @@ describe('ProfileEditFavorites (MSW)', () => {
           ...me,
           favorites: [HEAT, TWIN_PEAKS, { ...INCEPTION, tmdbId: 603, title: 'Matrix' }],
         };
-        return HttpResponse.json(
-          {
-            error: 'You already have 3 favorites, remove one to add another',
-            reason: 'favorites_limit_reached',
-            code: 409,
-            params: { max: 3 },
-          },
-          { status: 409 }
-        );
+        return apiErrorJson(409, 'favorites_limit_reached', { max: 3 });
       })
     );
 
