@@ -35,7 +35,7 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
     public async Task<WatchlistItemResponse> HandleAsync(string userId, AddWatchlistItemRequest request, CancellationToken ct = default)
     {
         var poster = await TmdbPosterPathResolver.ResolveAsync(_posterImageStore, request.PosterPath, ct);
-        var details = await TmdbTitleFacts.FetchDetailsBestEffortAsync(_tmdb, _logger, request.TmdbId, request.MediaType, ct);
+        var details = await TmdbTitleFacts.FetchKnownDetailsAsync(_tmdb, _logger, request.TmdbId, request.MediaType, ct);
 
         var item = new WatchlistItem
         {

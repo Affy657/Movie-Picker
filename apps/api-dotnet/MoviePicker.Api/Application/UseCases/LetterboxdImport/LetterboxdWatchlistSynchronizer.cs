@@ -338,7 +338,12 @@ public sealed class LetterboxdWatchlistSynchronizer
             if (alreadyWatched.Contains((confident.Id, confident.MediaType)))
                 continue;
 
-            await _addToWatchlist.HandleAsync(userId, ToAddRequest(confident, film.Slug), ct);
+            if (!await _addToWatchlist.TryAddKnownTitleAsync(userId, ToAddRequest(confident, film.Slug), ct))
+            {
+                _logger.LogInformation("Letterboxd watchlist film skipped, TMDB no longer knows {TmdbId}", confident.Id);
+                continue;
+            }
+
             knownTmdbKeys.Add((confident.Id, confident.MediaType));
             added++;
         }

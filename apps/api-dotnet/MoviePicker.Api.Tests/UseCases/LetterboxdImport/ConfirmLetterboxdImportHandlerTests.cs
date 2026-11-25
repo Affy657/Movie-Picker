@@ -134,6 +134,23 @@ public sealed class ConfirmLetterboxdImportHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_SelectionUnknownToTmdb_IsSkipped_AndTheOthersAreAdded()
+    {
+        _addToWatchlist
+            .Setup(a => a.HandleAsync(UserId, It.Is<AddWatchlistItemRequest>(r => r.TmdbId == 404), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(Errors.MovieNotFound());
+
+        var result = await _sut.HandleAsync(
+            UserId,
+            new LetterboxdImportConfirmRequest { Selections = [Selection(404), Selection(42)] });
+
+        Assert.Equal((1, 0), (result.Added, result.AlreadyPresent));
+        _addToWatchlist.Verify(
+            a => a.HandleAsync(UserId, It.Is<AddWatchlistItemRequest>(r => r.TmdbId == 42), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task HandleAsync_SelectionAlreadyInWatchlist_SkipsAdd()
     {
         _watchlist

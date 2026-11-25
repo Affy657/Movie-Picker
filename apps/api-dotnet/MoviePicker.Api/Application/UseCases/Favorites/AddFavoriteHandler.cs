@@ -39,7 +39,7 @@ public sealed class AddFavoriteHandler : IAddFavoriteHandler
             throw Errors.FavoritesLimitReached(FavoriteTitle.MaxPerUser);
 
         var requestedPoster = await TmdbPosterPathResolver.ResolveAsync(_posterImageStore, request.PosterPath, ct);
-        var details = await TmdbTitleFacts.FetchDetailsBestEffortAsync(_tmdb, _logger, request.TmdbId, request.MediaType, ct);
+        var details = await TmdbTitleFacts.FetchKnownDetailsAsync(_tmdb, _logger, request.TmdbId, request.MediaType, ct);
         var favorite = new FavoriteTitle
         {
             TmdbId = request.TmdbId,

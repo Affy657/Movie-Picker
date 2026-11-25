@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.Shared;
 
@@ -25,6 +26,30 @@ public static class TmdbTitleFacts
                 tmdbId);
             return null;
         }
+    }
+
+    public static async Task<TmdbMovieDetails?> FetchKnownDetailsAsync(
+        ITmdbMovieSearch tmdb,
+        ILogger logger,
+        int tmdbId,
+        MovieMediaType mediaType,
+        CancellationToken ct)
+    {
+        TmdbMovieDetails? details;
+        try
+        {
+            details = await tmdb.GetDetailsAsync(tmdbId, mediaType, ct);
+        }
+        catch (Exception ex) when (!ct.IsCancellationRequested)
+        {
+            logger.LogWarning(
+                ex,
+                "TMDB details lookup failed for {TmdbId}, title saved with the title and year sent by the browser",
+                tmdbId);
+            return null;
+        }
+
+        return details ?? throw Errors.MovieNotFound();
     }
 
     private const int YearLength = 4;

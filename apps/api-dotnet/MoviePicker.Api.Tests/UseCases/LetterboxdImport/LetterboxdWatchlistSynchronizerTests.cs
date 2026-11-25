@@ -313,6 +313,42 @@ public sealed class LetterboxdWatchlistSynchronizerTests
     }
 
     [Fact]
+    public async Task SyncAsync_FilmUnknownToTmdbDetails_IsSkipped_AndTheOthersAreImported()
+    {
+        var watchlist = new InMemoryWatchlistRepository();
+        var posters = new Mock<IPosterImageStore>();
+        posters.Setup(p => p.ToPublicPosterPath(It.IsAny<string?>())).Returns((string? path) => path);
+        _tmdb
+            .Setup(t => t.GetDetailsAsync(149, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TmdbMovieDetails(149, "Akira", null, null, null, [], 124, [], AnimationSciFiGenreIds, "1988-07-16"));
+        _tmdb
+            .Setup(t => t.GetDetailsAsync(5255, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TmdbMovieDetails?)null);
+        GivenLetterboxd(
+            true,
+            new LetterboxdFilm("the-polar-express", "The Polar Express", "2004"),
+            new LetterboxdFilm("akira", "Akira", "1988"));
+        GivenTmdbResults(
+            "The Polar Express",
+            new TmdbSearchItem(5255, MovieMediaType.Movie, "Le Pôle express", "2004", null, 6.8, "The Polar Express"));
+        GivenTmdbResults(
+            "Akira",
+            new TmdbSearchItem(149, MovieMediaType.Movie, "Akira", "1988", null, 8.0, "Akira"));
+        var sut = Synchronizer(
+            watchlist,
+            _watched,
+            new AddToWatchlistHandler(
+                watchlist, _users.Object, posters.Object, TimeProvider.System, _tmdb.Object, NullLogger<AddToWatchlistHandler>.Instance));
+
+        var outcome = await sut.SyncAsync(TheUser() with { LetterboxdSyncWatched = false });
+
+        Assert.True(outcome.Succeeded);
+        Assert.Equal(1, ToWatch(outcome).Added);
+        Assert.NotNull(await watchlist.GetOneAsync(UserId, 149, MovieMediaType.Movie));
+        Assert.Null(await watchlist.GetOneAsync(UserId, 5255, MovieMediaType.Movie));
+    }
+
+    [Fact]
     public async Task SyncAsync_FilmAddedInMoviePickerOnly_IsNeverRemoved()
     {
         GivenWatchlist(Item(5255, "Le Pôle express", null));

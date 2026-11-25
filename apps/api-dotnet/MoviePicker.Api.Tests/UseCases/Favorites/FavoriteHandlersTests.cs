@@ -48,7 +48,7 @@ public sealed class AddFavoriteHandlerTests
             .Callback((string _, FavoriteTitle favorite, int _, DateTimeOffset _, CancellationToken _) => _written.Add(favorite))
             .ReturnsAsync(true);
         _tmdb.Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((TmdbMovieDetails?)null);
+            .ReturnsAsync((int tmdbId, MovieMediaType _, CancellationToken _) => HeatOnTmdb() with { Id = tmdbId });
         _sut = new AddFavoriteHandler(
             _users.Object,
             _posters.Object,
@@ -115,6 +115,19 @@ public sealed class AddFavoriteHandlerTests
 
         var written = Assert.Single(_written);
         Assert.Equal(("Heat", "1995"), (written.Title, written.Year));
+    }
+
+    [Fact]
+    public async Task HandleAsync_TitleUnknownToTmdb_IsRefusedAsMovieNotFound()
+    {
+        StoredUser(FavoriteFixtures.UserWith());
+        _tmdb.Setup(t => t.GetDetailsAsync(949, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TmdbMovieDetails?)null);
+
+        var error = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("u1", FavoriteFixtures.Request()));
+
+        Assert.Equal(ErrorCodes.MovieNotFound, error.Reason);
+        Assert.Empty(_written);
     }
 
     [Fact]
