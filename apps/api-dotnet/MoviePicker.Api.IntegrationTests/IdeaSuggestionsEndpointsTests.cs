@@ -36,6 +36,28 @@ public sealed class IdeaSuggestionsEndpointsTests : IClassFixture<MoviePickerApp
     }
 
     [Fact]
+    public async Task Create_FromAFrontThatStillSendsScreenshots_OpensTheIssueWithoutThem()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "IdeaOldFront");
+        var body = new
+        {
+            category = IdeaSuggestionCategory.Bug,
+            title = "Capture jointe par un ancien front",
+            description = "Le bouton ne répond plus.",
+            attachments = new[]
+            {
+                new { fileName = "a.png", contentType = "image/png", base64Content = "iVBORw0KGgo=" }
+            }
+        };
+
+        var res = await client.PostAsJsonAsync("/api/v1/idea-suggestions", body);
+
+        Assert.Equal(HttpStatusCode.NoContent, res.StatusCode);
+        var issue = Assert.Single(_factory.FakeGitHubIssues.CreatedIssues, i => i.Title.Contains("Capture jointe par un ancien front"));
+        Assert.DoesNotContain("![", issue.Body, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Create_Unauthenticated_Returns401()
     {
         var anon = _factory.CreateClient();

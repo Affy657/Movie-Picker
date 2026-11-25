@@ -12450,7 +12450,6 @@ export interface components {
             description: string;
             pagePath?: string | null;
             appVersion?: string | null;
-            attachments?: components["schemas"]["IdeaSuggestionAttachmentDto"][] | null;
         };
         CreateMovieListRequest: {
             name: string;
@@ -12679,6 +12678,12 @@ export interface components {
             ownerDisplayName: string;
             /** Format: date-time */
             joinedAt: string;
+        };
+        ExportedListContribution: {
+            listId: string;
+            name: string;
+            ownerDisplayName: string;
+            items: components["schemas"]["ExportedMovieListItem"][];
         };
         ExportedListInvitation: {
             listId: string;
@@ -13111,12 +13116,6 @@ export interface components {
             service: string;
             release: string;
             dependencies: components["schemas"]["HealthDependencyStatus"][];
-        };
-        IdeaSuggestionAttachmentDto: {
-            fileName: string;
-            /** @enum {string} */
-            contentType: "image/png" | "image/jpeg" | "image/webp" | "image/gif";
-            base64Content: string;
         };
         /** @enum {string} */
         IdeaSuggestionCategory: "idea" | "bug" | "improvement";
@@ -14146,6 +14145,7 @@ export interface components {
             watchlist: components["schemas"]["ExportedWatchlistItem"][];
             movieLists: components["schemas"]["ExportedMovieList"][];
             joinedMovieLists: components["schemas"]["ExportedJoinedMovieList"][];
+            titlesAddedToOthersLists: components["schemas"]["ExportedListContribution"][];
             pendingListInvitations: components["schemas"]["ExportedListInvitation"][];
             friendGroups: components["schemas"]["ExportedFriendGroup"][];
             joinedFriendGroups: components["schemas"]["ExportedJoinedFriendGroup"][];

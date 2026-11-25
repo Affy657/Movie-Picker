@@ -294,7 +294,7 @@ public sealed class InMemoryMovieRepositoryTests
     }
 
     [Fact]
-    public async Task ListTopVotedByEventIdsAsync_RanksEachNightByScore_ThenProposalTime_AndKeepsOnlyItsBest()
+    public async Task ListTopVotedByEventIdsAsync_RanksEachNightByScore_ThenIdentifier_AndKeepsOnlyItsBest()
     {
         var votes = new InMemoryVoteRepository();
         var repo = new InMemoryMovieRepository(votes);
@@ -316,5 +316,19 @@ public sealed class InMemoryMovieRepositoryTests
             [("evt1", "liked"), ("evt1", "early"), ("evt1", "tied"), ("evt2", "other night")],
             top.Select(preview => (preview.EventId, preview.Title)).OrderBy(row => row.EventId, StringComparer.Ordinal));
         Assert.Empty(await repo.ListTopVotedByEventIdsAsync([], 3));
+    }
+
+    [Fact]
+    public async Task ListTopVotedByEventIdsAsync_BreaksTiesByIdentifier_NotByProposalTime()
+    {
+        var repo = new InMemoryMovieRepository(new InMemoryVoteRepository());
+        var start = DateTimeOffset.Parse("2026-06-01T00:00:00Z");
+        await repo.InsertAsync(Mk(id: "0000000000000000000000c3", title: "proposed first", createdAt: start));
+        await repo.InsertAsync(Mk(id: "0000000000000000000000c1", title: "proposed last", createdAt: start.AddMinutes(2)));
+        await repo.InsertAsync(Mk(id: "0000000000000000000000c2", title: "proposed second", createdAt: start.AddMinutes(1)));
+
+        var top = await repo.ListTopVotedByEventIdsAsync(["evt1"], 3);
+
+        Assert.Equal(["proposed last", "proposed second", "proposed first"], top.Select(preview => preview.Title));
     }
 }

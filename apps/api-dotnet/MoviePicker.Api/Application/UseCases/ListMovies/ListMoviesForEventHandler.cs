@@ -138,7 +138,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         var enrichmentByKey = await BuildEnrichmentMapAsync(movies, ct);
 
         var list = new List<MovieWithScoreResponse>(movies.Count);
-        foreach (var m in movies)
+        foreach (var m in evt.InListOrder(movies))
         {
             var votes = voteSummaries.GetValueOrDefault(m.Id, MovieVoteSummary.None);
             participantById.TryGetValue(m.ParticipantId, out var proposer);
@@ -153,8 +153,9 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
                 ResolvePseudos(votes.UpVoterIds, participantById),
                 ratingsByMovie.TryGetValue(m.Id, out var ratings) ? ratings : []);
             var concealed = Conceals(m);
+            var shown = evt.HideProposalTime(m);
             list.Add(MovieWithScoreResponse.From(
-                concealed ? m with { ParticipantId = string.Empty } : m,
+                concealed ? shown with { ParticipantId = string.Empty } : shown,
                 _posterImageStore,
                 ProposerOf(concealed ? null : proposer, userById),
                 activity,

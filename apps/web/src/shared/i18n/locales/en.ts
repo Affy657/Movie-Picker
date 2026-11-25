@@ -1533,12 +1533,14 @@ export const en: Locale = {
       sortTmdbVote: 'Rating',
       sortDuration: 'Duration',
       sortAddedAt: 'Added',
+      sortShuffled: 'Shuffled',
       sortAvailability: 'Availability',
       sortSeen: 'Already seen',
       sortReleaseDate: 'Release date',
       sortTitle: 'Title',
       columnTitle: 'Title',
       columnAddedOrder: 'Order added',
+      columnShuffledOrder: 'Shuffled order',
       columnFilm: 'Film',
       sortFilmAria: 'Sort by film',
       columnTmdbVote: 'Rating',
@@ -2766,11 +2768,6 @@ export const en: Locale = {
     unknown_theme: 'Unknown theme',
     unknown_genre: 'Unknown genre',
     unknown_collection: 'Unknown collection',
-    too_many_attachments: 'Too many attachments (maximum {{max}}).',
-    attachment_content_invalid: 'Invalid content (malformed base64) for “{{name}}”.',
-    attachment_content_mismatch:
-      'The content of “{{name}}” does not match the declared format ({{type}}).',
-    attachment_image_unreadable: 'The image “{{name}}” could not be read. Try another screenshot.',
     invite_only_followed: 'You can only invite users you follow.',
     no_movie_proposed: 'No movie proposed. Propose at least one movie to spin the wheel.',
     all_movies_excluded:
@@ -3002,7 +2999,7 @@ export const en: Locale = {
       'Payments are handled entirely by Ko-fi, which acts as the data controller for payment data: Movie Picker never has access to it. For each donation, Ko-fi notifies our server and passes on the donor’s email address. That address is used in memory only, to find the matching Movie Picker account and show the supporter badge on it; it is never stored. No amount, donor name or message is kept: only the date of the first donation is stored on the account concerned, along with a technical notification identifier that prevents the same donation from being processed twice.',
     privacyIdeasTitle: 'Idea suggestions',
     privacyIdeasBody:
-      'A suggestion sent from the “Suggest an idea” button becomes a public issue of the project’s GitHub repository, readable by anyone: its title, description, screenshots (without their metadata), the kind of page it was sent from and the app version. Your name, handle and email are not included, only a technical identifier that lets us reach you. Deleting your account does not remove that issue: write to the contact address to have it taken down.',
+      'A suggestion sent from the “Suggest an idea” button becomes a public issue of the project’s GitHub repository, readable by anyone: its title, description, the kind of page it was sent from and the app version. Your name, handle and email are not included, only a technical identifier that lets us reach you. Deleting your account does not remove that issue: write to the contact address to have it taken down.',
     privacyPurposesTitle: 'Purposes and legal bases',
     privacyPurposesBody: 'Each processing rests on a legal basis of the GDPR:',
     privacyPurposeService:
@@ -3041,7 +3038,7 @@ export const en: Locale = {
       'Google, MongoDB, Resend, Sentry, PostHog and GitHub are companies established in the United States. Your data is stored in the European Union where the service allows it, but these companies may access it from the United States. These transfers are covered by the European Commission’s standard contractual clauses included in their data processing agreements and, for certified companies, by the EU-US Data Privacy Framework. Ko-fi is established in the United Kingdom, which the European Commission recognises as offering an adequate level of protection.',
     privacyRetentionTitle: 'Data retention',
     privacyRetentionBody:
-      'Your data is kept for as long as your account exists. Deleting your account, available from the Settings page, erases your profile and your photo from the live database; events you created, your votes and your ratings are kept but anonymised.',
+      'Your data is kept for as long as your account exists. Deleting your account, available from the Settings page, erases your profile and your photo from the live database; events you created, your votes and your ratings are kept but anonymised, and the titles you added to other members’ lists stay there, without your name.',
     privacyRetentionBackups:
       'Backups: the database is backed up every day. Daily archives are kept 30 days and one archive per month 400 days, then remain recoverable for 7 more days before being erased for good. Data deleted from the database can therefore remain in a backup for up to 407 days. These backups are only used to restore the service after an incident.',
     privacyRetentionLogs: 'Technical logs of the API: 30 days.',
@@ -3116,17 +3113,8 @@ export const en: Locale = {
     titleLabel: 'Title',
     descriptionLabel: 'Description',
     descriptionHint: '{{count}} characters left',
-    attachmentsLabel: 'Screenshots (optional)',
-    attachmentsAddButton: 'Add an image',
-    attachmentsDropHint:
-      'Drag and drop, paste, or choose up to {{max}} images (PNG, JPEG, WebP or GIF, 4 MB max)',
-    attachmentsRemove: 'Remove this image',
-    attachmentsTooMany: 'You can only attach up to {{max}} images.',
-    attachmentsTooLarge: 'Image too large (4 MB max): {{name}}',
-    attachmentsUnsupportedType: 'Unsupported format (PNG, JPEG, WebP or GIF only): {{name}}',
-    attachmentsUnreadable: 'Could not read the image {{name}}. Remove it, then add it again.',
     publicNotice:
-      'Your suggestion and screenshots will be published in a public GitHub issue, without your name. Do not include anything personal.',
+      'Your suggestion will be published in a public GitHub issue, without your name. Do not include anything personal.',
     submit: 'Send',
     submitting: 'Sending…',
     submitError: 'Could not send your suggestion right now. Please try again.',
@@ -3665,7 +3653,7 @@ export const en: Locale = {
         'Google Cloud scheduler: it calls an address at the appointed time, which replaces a timer living inside the server.',
       issues: 'GitHub Issues',
       issuesValue:
-        'A suggestion sent from the app opens an issue, screenshot included. With no token the send is skipped and logged rather than returned as an error.',
+        'A suggestion sent from the app opens an issue. With no token the send is skipped and logged rather than returned as an error.',
       issuesHint:
         "GitHub's bug tracker, fed directly by the suggestion form inside the application.",
     },
@@ -4024,7 +4012,7 @@ export const en: Locale = {
       pipelineHeading: 'What holds the pipeline together',
       trigger: 'Trigger',
       triggerValue:
-        'Every push to master and every pull request towards master starts the pipeline. The code has no other long-lived branch: each delivery starts from a short branch, joins master the day it is ready and reaches production within the day, with its own version. The only other branch, feedback-attachments, holds no code: the server stores there the screenshots attached to suggestions.',
+        'Every push to master and every pull request towards master starts the pipeline. The code has no other long-lived branch: each delivery starts from a short branch, joins master the day it is ready and reaches production within the day, with its own version. The only other branch, feedback-attachments, holds no code: it keeps the screenshots that could be attached to suggestions until November 2026.',
       triggerHint:
         'A push only starts the pipeline on master: a short branch is only run through its pull request, dependency bot included, so the pipeline never runs twice on the same commit.',
       scope: 'Computed scope',

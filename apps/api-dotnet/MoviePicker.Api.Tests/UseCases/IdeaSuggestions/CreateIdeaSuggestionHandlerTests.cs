@@ -15,8 +15,6 @@ public sealed partial class CreateIdeaSuggestionHandlerTests
 {
     private const string UserId = "6512bd43d9caa6e02c990b0a";
 
-    private const string ValidPngBase64 = "iVBORw0KGgo=";
-
     private readonly Mock<IGitHubIssueClient> _github = new();
     private readonly RecordingLogger _logger = new();
     private readonly CreateIdeaSuggestionHandler _sut;
@@ -41,7 +39,6 @@ public sealed partial class CreateIdeaSuggestionHandlerTests
 
     private static CreateIdeaSuggestionRequest Request(
         IdeaSuggestionCategory category = IdeaSuggestionCategory.Idea,
-        IReadOnlyList<IdeaSuggestionAttachmentDto>? attachments = null,
         string? pagePath = "/e/abc123",
         string? appVersion = "1.4.0") => new()
         {
@@ -49,8 +46,7 @@ public sealed partial class CreateIdeaSuggestionHandlerTests
             Title = "Ajouter un mode battle",
             Description = "Ce serait top d'avoir un mode tournoi.",
             PagePath = pagePath,
-            AppVersion = appVersion,
-            Attachments = attachments
+            AppVersion = appVersion
         };
 
     [Fact]
@@ -187,120 +183,28 @@ public sealed partial class CreateIdeaSuggestionHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_WithAttachments_UploadsEachAndAppendsScreenshotsSectionToBody()
+    public void GitHubPort_OnlyOpensIssues_SoNothingAUserSendsIsWrittenInTheRepository()
     {
-        _github.Setup(g => g.UploadAttachmentAsync(It.IsAny<GitHubAttachmentUpload>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((GitHubAttachmentUpload a, CancellationToken _) => $"https://raw.githubusercontent.com/x/{a.FileName}");
-        GitHubIssueDraft? captured = null;
-        _github.Setup(g => g.CreateIssueAsync(It.IsAny<GitHubIssueDraft>(), It.IsAny<CancellationToken>()))
-            .Callback<GitHubIssueDraft, CancellationToken>((d, _) => captured = d)
-            .Returns(Task.CompletedTask);
-
-        var request = Request(attachments:
-        [
-            new IdeaSuggestionAttachmentDto { FileName = "a.png", ContentType = "image/png", Base64Content = ValidPngBase64 },
-            new IdeaSuggestionAttachmentDto { FileName = "b.png", ContentType = "image/png", Base64Content = ValidPngBase64 },
-        ]);
-
-        await _sut.HandleAsync(UserId, request);
-
-        Assert.NotNull(captured);
-        Assert.Contains("### Captures d'écran", captured!.Body);
-        Assert.Contains("![capture 1](https://raw.githubusercontent.com/x/a.png)", captured.Body);
-        Assert.Contains("![capture 2](https://raw.githubusercontent.com/x/b.png)", captured.Body);
-        _github.Verify(
-            g => g.UploadAttachmentAsync(It.IsAny<GitHubAttachmentUpload>(), It.IsAny<CancellationToken>()),
-            Times.Exactly(2));
+        Assert.Equal(
+            [nameof(IGitHubIssueClient.CreateIssueAsync)],
+            typeof(IGitHubIssueClient).GetMethods().Select(method => method.Name));
     }
 
     [Fact]
-    public async Task HandleAsync_WithAttachments_UploadsThemOneAfterTheOther()
+    public void Request_CarriesNoAttachment()
     {
-        var inFlight = 0;
-        var mostAtOnce = 0;
-        _github.Setup(g => g.UploadAttachmentAsync(It.IsAny<GitHubAttachmentUpload>(), It.IsAny<CancellationToken>()))
-            .Returns(async (GitHubAttachmentUpload a, CancellationToken ct) =>
-            {
-                mostAtOnce = Math.Max(mostAtOnce, Interlocked.Increment(ref inFlight));
-                await Task.Delay(20, ct);
-                Interlocked.Decrement(ref inFlight);
-                return $"https://raw.githubusercontent.com/x/{a.FileName}";
-            });
-
-        await _sut.HandleAsync(UserId, Request(attachments:
-        [
-            new IdeaSuggestionAttachmentDto { FileName = "a.png", ContentType = "image/png", Base64Content = ValidPngBase64 },
-            new IdeaSuggestionAttachmentDto { FileName = "b.png", ContentType = "image/png", Base64Content = ValidPngBase64 },
-            new IdeaSuggestionAttachmentDto { FileName = "c.png", ContentType = "image/png", Base64Content = ValidPngBase64 },
-        ]));
-
-        Assert.Equal(1, mostAtOnce);
+        Assert.DoesNotContain(
+            typeof(CreateIdeaSuggestionRequest).GetProperties(),
+            property => property.Name.Contains("Attachment", StringComparison.Ordinal));
     }
 
     [Fact]
-    public async Task HandleAsync_AttachmentUploadFails_SkipsItButStillCreatesIssue()
+    public async Task HandleAsync_PublishesNoScreenshotSection()
     {
-        _github.Setup(g => g.UploadAttachmentAsync(It.IsAny<GitHubAttachmentUpload>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((string?)null);
-        GitHubIssueDraft? captured = null;
-        _github.Setup(g => g.CreateIssueAsync(It.IsAny<GitHubIssueDraft>(), It.IsAny<CancellationToken>()))
-            .Callback<GitHubIssueDraft, CancellationToken>((d, _) => captured = d)
-            .Returns(Task.CompletedTask);
+        var draft = await CaptureDraftAsync(Request());
 
-        var request = Request(attachments:
-        [
-            new IdeaSuggestionAttachmentDto { FileName = "a.png", ContentType = "image/png", Base64Content = ValidPngBase64 },
-        ]);
-
-        await _sut.HandleAsync(UserId, request);
-
-        Assert.NotNull(captured);
-        Assert.DoesNotContain("Captures d'écran", captured!.Body);
-    }
-
-    [Fact]
-    public async Task HandleAsync_TooManyAttachments_ThrowsBadRequest_WithoutCallingGitHub()
-    {
-        var request = Request(attachments: Enumerable.Range(0, 5)
-            .Select(i => new IdeaSuggestionAttachmentDto
-            {
-                FileName = $"{i}.png",
-                ContentType = "image/png",
-                Base64Content = "QQ=="
-            })
-            .ToList());
-
-        await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(UserId, request));
-
-        _github.Verify(g => g.CreateIssueAsync(It.IsAny<GitHubIssueDraft>(), It.IsAny<CancellationToken>()), Times.Never);
-        _github.Verify(g => g.UploadAttachmentAsync(It.IsAny<GitHubAttachmentUpload>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task HandleAsync_AttachmentContentDoesNotMatchDeclaredType_ThrowsBadRequest_WithoutCallingGitHub()
-    {
-        var request = Request(attachments:
-        [
-            new IdeaSuggestionAttachmentDto { FileName = "fake.png", ContentType = "image/png", Base64Content = "QQ==" },
-        ]);
-
-        await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(UserId, request));
-
-        _github.Verify(g => g.CreateIssueAsync(It.IsAny<GitHubIssueDraft>(), It.IsAny<CancellationToken>()), Times.Never);
-        _github.Verify(g => g.UploadAttachmentAsync(It.IsAny<GitHubAttachmentUpload>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task HandleAsync_AttachmentBase64Malformed_ThrowsBadRequest_WithoutCallingGitHub()
-    {
-        var request = Request(attachments:
-        [
-            new IdeaSuggestionAttachmentDto { FileName = "bad.png", ContentType = "image/png", Base64Content = "not-base64!!" },
-        ]);
-
-        await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(UserId, request));
-
-        _github.Verify(g => g.UploadAttachmentAsync(It.IsAny<GitHubAttachmentUpload>(), It.IsAny<CancellationToken>()), Times.Never);
+        Assert.DoesNotContain("Captures", draft.Body, StringComparison.Ordinal);
+        Assert.DoesNotContain("![", draft.Body, StringComparison.Ordinal);
     }
 
     private async Task<GitHubIssueDraft> CaptureDraftAsync(CreateIdeaSuggestionRequest request)
@@ -322,8 +226,8 @@ public sealed partial class CreateIdeaSuggestionHandlerTests
     [InlineData("/u/alice/watchlist", "/u/:handle/watchlist")]
     [InlineData("/u/films", "/u/:handle")]
     [InlineData("/e/settings", "/e/:slug")]
-    [InlineData("/films/theme/horreur", "/films/theme/:param")]
-    [InlineData("/films/similaires/603", "/films/similaires/:param")]
+    [InlineData("/films/theme/horreur", "/films/theme/:theme")]
+    [InlineData("/films/similaires/603", "/films/similaires/:seedTmdbId")]
     [InlineData("/settings/securite", "/settings/securite")]
     [InlineData("/", "/")]
     [InlineData("/invite/Zx81Qp", "/:param/:param")]
@@ -407,54 +311,6 @@ public sealed partial class CreateIdeaSuggestionHandlerTests
             .Where(method => typeof(Regex).IsAssignableFrom(method.ReturnType) && method.GetParameters().Length == 0)
             .Select(method => (Regex)method.Invoke(null, null)!);
         return fields.Concat(factories).ToList();
-    }
-
-    [Fact]
-    public async Task HandleAsync_UploadsTheScreenshotWithoutItsMetadata()
-    {
-        var jpegWithExif = new byte[] { 0xFF, 0xD8, 0xFF, 0xE1, 0x00, 0x0C }
-            .Concat("Exif\0\0GPS!"u8.ToArray())
-            .Concat(new byte[] { 0xFF, 0xDA, 0x00, 0x02, 0x01, 0x02, 0xFF, 0xD9 })
-            .ToArray();
-        GitHubAttachmentUpload? uploaded = null;
-        _github.Setup(g => g.UploadAttachmentAsync(It.IsAny<GitHubAttachmentUpload>(), It.IsAny<CancellationToken>()))
-            .Callback<GitHubAttachmentUpload, CancellationToken>((u, _) => uploaded = u)
-            .ReturnsAsync("https://raw.githubusercontent.com/x/a.jpg");
-
-        await CaptureDraftAsync(Request(attachments:
-        [
-            new IdeaSuggestionAttachmentDto
-            {
-                FileName = "photo.jpg",
-                ContentType = "image/jpeg",
-                Base64Content = Convert.ToBase64String(jpegWithExif)
-            }
-        ]));
-
-        Assert.NotNull(uploaded);
-        var bytes = Convert.FromBase64String(uploaded!.Base64Content);
-        Assert.Equal(new byte[] { 0xFF, 0xD8, 0xFF, 0xDA, 0x00, 0x02, 0x01, 0x02, 0xFF, 0xD9 }, bytes);
-    }
-
-    [Fact]
-    public async Task HandleAsync_AnImageThatCannotBeCleaned_ThrowsBadRequest_WithoutCallingGitHub()
-    {
-        var truncatedJpeg = new byte[] { 0xFF, 0xD8, 0xFF, 0xE1, 0x10, 0x00, 0x45, 0x78 };
-        var request = Request(attachments:
-        [
-            new IdeaSuggestionAttachmentDto
-            {
-                FileName = "broken.jpg",
-                ContentType = "image/jpeg",
-                Base64Content = Convert.ToBase64String(truncatedJpeg)
-            }
-        ]);
-
-        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(UserId, request));
-
-        Assert.Equal(ErrorCodes.AttachmentImageUnreadable, ex.Reason);
-        _github.Verify(g => g.UploadAttachmentAsync(It.IsAny<GitHubAttachmentUpload>(), It.IsAny<CancellationToken>()), Times.Never);
-        _github.Verify(g => g.CreateIssueAsync(It.IsAny<GitHubIssueDraft>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [GeneratedRegex("^Référence : [0-9a-f]{12}$", RegexOptions.Multiline)]

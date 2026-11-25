@@ -164,6 +164,23 @@ public sealed class GetMyNightMoviesHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_FilmsOfAnAnonymousNight_AreDatedFromTheNightNotFromTheirProposal()
+    {
+        var night = await NightAsync("Anonyme", Friend);
+        night = await _events.UpdateAsync(night with { Config = new EventConfig { AnonymousProposals = true } });
+        await JoinAsync(night, "Moi", Me);
+        var friend = await JoinAsync(night, "Ami", Friend);
+        await ProposeAsync(night, friend, tmdbId: Inception, daysAgo: 20);
+        await ProposeAsync(night, friend, tmdbId: Matrix, daysAgo: 2);
+        await ProposeAsync(night, friend, tmdbId: 680, daysAgo: 10);
+
+        var items = (await CreateSut().HandleAsync(Me)).Items;
+
+        Assert.Equal(3, items.Count);
+        Assert.All(items, item => Assert.Equal(night.CreatedAt, item.LastProposedAt));
+    }
+
+    [Fact]
     public async Task HandleAsync_SameIdButAnotherMediaType_IsAnotherTitle()
     {
         var night = await NightAsync("Séries et films", Me);

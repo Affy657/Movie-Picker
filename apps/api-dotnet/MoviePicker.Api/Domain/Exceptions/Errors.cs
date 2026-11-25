@@ -470,18 +470,6 @@ public static class Errors
     public static BadRequestException ListSourceNotSavable() =>
         new("Only a saga, an Explorer selection or the public list of a member can be saved", ErrorCodes.ListSourceNotSavable);
 
-    public static BadRequestException TooManyAttachments(int max) =>
-        new($"Too many attachments (maximum {max})", ErrorCodes.TooManyAttachments, Params(("max", max)));
-
-    public static BadRequestException AttachmentContentInvalid(string fileName) =>
-        new($"Invalid content (malformed base64) for \"{fileName}\"", ErrorCodes.AttachmentContentInvalid, Params(("name", fileName)));
-
-    public static BadRequestException AttachmentImageUnreadable(string fileName) =>
-        new($"The image \"{fileName}\" could not be read", ErrorCodes.AttachmentImageUnreadable, Params(("name", fileName)));
-
-    public static BadRequestException AttachmentContentMismatch(string fileName, string contentType) =>
-        new($"The content of \"{fileName}\" does not match the declared format ({contentType})", ErrorCodes.AttachmentContentMismatch, Params(("name", fileName), ("type", contentType)));
-
     public static BadRequestException InviteOnlyFollowed() =>
         new("You can only invite users you follow", ErrorCodes.InviteOnlyFollowed);
 

@@ -396,4 +396,51 @@ public abstract class MovieListMembershipContract
         Assert.Empty((await Lists.FindAsync(inviting.Id))!.Invitations);
         Assert.NotNull(await Lists.FindAsync(own.Id));
     }
+
+    private async Task<(string Author, MovieList Joined, MovieList Left, MovieList Own, MovieList Unrelated)> TitlesAddedToOthersListsAsync()
+    {
+        var author = NewUserId();
+        var lea = NewUserId();
+        var sam = NewUserId();
+        var joined = await SharedAsync(lea, "Rejointe", author, sam);
+        await Lists.AddItemAsync(author, joined.Id, Item(603, author), MovieList.MaxItems);
+        await Lists.AddItemAsync(sam, joined.Id, Item(680, sam), MovieList.MaxItems);
+        await Lists.AddItemAsync(author, joined.Id, Item(1920, author), MovieList.MaxItems);
+        var left = await SharedAsync(sam, "Quittée", author);
+        await Lists.AddItemAsync(author, left.Id, Item(550, author), MovieList.MaxItems);
+        await Lists.RemoveMemberAsync(left.Id, author, disableInviteLink: false);
+        var own = await CreateAsync(author, "La sienne", null, Item(13, author));
+        var unrelated = await CreateAsync(lea, "Sans lui", null, Item(78, lea));
+        return (author, (await Lists.FindAsync(joined.Id))!, (await Lists.FindAsync(left.Id))!, own, unrelated);
+    }
+
+    [Fact]
+    public async Task ListOthersWithItemsAddedBy_FindsEveryOtherListHoldingTheirTitles_EvenOnesTheyLeft()
+    {
+        var (author, joined, left, _, _) = await TitlesAddedToOthersListsAsync();
+
+        var found = await Lists.ListOthersWithItemsAddedByAsync(author);
+
+        Assert.Equal(
+            new[] { joined.Id, left.Id }.Order(StringComparer.Ordinal),
+            found.Select(list => list.Id).Order(StringComparer.Ordinal));
+        Assert.Empty(await Lists.ListOthersWithItemsAddedByAsync(NewUserId()));
+    }
+
+    [Fact]
+    public async Task ForgetItemAuthor_KeepsTheTitlesWhereTheyAre_WithoutTheirAuthor()
+    {
+        var (author, joined, left, own, unrelated) = await TitlesAddedToOthersListsAsync();
+
+        Assert.Equal(3, await Lists.ForgetItemAuthorAsync(author));
+
+        var keptJoined = (await Lists.FindAsync(joined.Id))!;
+        Assert.Equal([603, 680, 1920], keptJoined.Items.Select(item => item.TmdbId).Order());
+        Assert.All(keptJoined.Items.Where(item => item.TmdbId != 680), item => Assert.Null(item.AddedByUserId));
+        Assert.Equal(joined.Items.Single(item => item.TmdbId == 680).AddedByUserId, keptJoined.Items.Single(item => item.TmdbId == 680).AddedByUserId);
+        Assert.Null(Assert.Single((await Lists.FindAsync(left.Id))!.Items).AddedByUserId);
+        Assert.Null(Assert.Single((await Lists.FindAsync(own.Id))!.Items).AddedByUserId);
+        Assert.Equal(unrelated.Items.Single().AddedByUserId, Assert.Single((await Lists.FindAsync(unrelated.Id))!.Items).AddedByUserId);
+        Assert.Empty(await Lists.ListOthersWithItemsAddedByAsync(author));
+    }
 }

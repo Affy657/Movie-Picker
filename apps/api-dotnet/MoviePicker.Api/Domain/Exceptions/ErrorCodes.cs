@@ -162,10 +162,6 @@ public static class ErrorCodes
     public const string UnknownGenre = "unknown_genre";
     public const string UnknownCollection = "unknown_collection";
     public const string ListSourceNotSavable = "list_source_not_savable";
-    public const string TooManyAttachments = "too_many_attachments";
-    public const string AttachmentContentInvalid = "attachment_content_invalid";
-    public const string AttachmentContentMismatch = "attachment_content_mismatch";
-    public const string AttachmentImageUnreadable = "attachment_image_unreadable";
     public const string InviteOnlyFollowed = "invite_only_followed";
     public const string NoMovieProposed = "no_movie_proposed";
     public const string AllMoviesExcluded = "all_movies_excluded";

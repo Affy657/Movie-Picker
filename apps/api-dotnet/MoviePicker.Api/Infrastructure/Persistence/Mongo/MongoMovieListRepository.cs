@@ -24,6 +24,8 @@ public sealed class MongoMovieListRepository : IMovieListRepository
     private const string MemberUserIdField = "members.userId";
     private const string InvitationUserIdField = "invitations.userId";
     private const string InviteTokenField = "inviteLink.token";
+    private const string ItemAuthorField = "items.addedByUserId";
+    private const string AuthoredItem = "authored";
     private const string FilterOperator = "$filter";
     private const string InputField = "input";
     private const string IfNullOperator = "$ifNull";
@@ -412,6 +414,31 @@ public sealed class MongoMovieListRepository : IMovieListRepository
             filter,
             Update.Combine(PullMember(userId), PullInvitation(userId)),
             cancellationToken: ct);
+        return result.ModifiedCount;
+    }
+
+    public Task<IReadOnlyList<MovieList>> ListOthersWithItemsAddedByAsync(string userId, CancellationToken ct = default)
+    {
+        if (!MongoObjectIds.IsValid(userId))
+            return Task.FromResult<IReadOnlyList<MovieList>>([]);
+
+        var user = ObjectId.Parse(userId);
+        return ListAsync(Filter.Eq(ItemAuthorField, user) & Filter.Ne(OwnerIdField, user), ct);
+    }
+
+    public async Task<long> ForgetItemAuthorAsync(string userId, CancellationToken ct = default)
+    {
+        if (!MongoObjectIds.IsValid(userId))
+            return 0;
+
+        var user = ObjectId.Parse(userId);
+        var authoredByTheUser = new BsonDocumentArrayFilterDefinition<BsonDocument>(
+            new BsonDocument(AuthoredItem + ".addedByUserId", user));
+        var result = await _collection.UpdateManyAsync(
+            Filter.Eq(ItemAuthorField, user),
+            Update.Unset($"items.$[{AuthoredItem}].addedByUserId"),
+            new UpdateOptions { ArrayFilters = [authoredByTheUser] },
+            ct);
         return result.ModifiedCount;
     }
 

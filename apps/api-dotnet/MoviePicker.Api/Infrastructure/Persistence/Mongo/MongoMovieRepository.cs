@@ -102,7 +102,7 @@ public sealed class MongoMovieRepository : IMovieRepository
             new BsonDocument("$match", new BsonDocument("eventId", new BsonDocument("$in", ids))),
             new BsonDocument(
                 "$project",
-                new BsonDocument { { "eventId", 1 }, { "title", 1 }, { "posterPath", 1 }, { "createdAt", 1 } }),
+                new BsonDocument { { "eventId", 1 }, { "title", 1 }, { "posterPath", 1 } }),
             new BsonDocument(
                 "$lookup",
                 new BsonDocument
@@ -138,7 +138,7 @@ public sealed class MongoMovieRepository : IMovieRepository
                             new BsonDocument
                             {
                                 { "n", perEvent },
-                                { "sortBy", new BsonDocument { { "score", -1 }, { "createdAt", 1 }, { "_id", 1 } } },
+                                { "sortBy", new BsonDocument { { "score", -1 }, { "_id", 1 } } },
                                 { "output", new BsonDocument { { "title", "$title" }, { "posterPath", "$posterPath" } } }
                             })
                     }
@@ -234,6 +234,9 @@ public sealed class MongoMovieRepository : IMovieRepository
 
         return MovieMapper.ToDomain(doc);
     }
+
+    public Task<Movie> InsertWithUntimedIdAsync(Movie movie, CancellationToken ct = default) =>
+        InsertAsync(movie with { Id = MongoObjectIds.NewUntimed() }, ct);
 
     public async Task<long> DeleteByIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
     {

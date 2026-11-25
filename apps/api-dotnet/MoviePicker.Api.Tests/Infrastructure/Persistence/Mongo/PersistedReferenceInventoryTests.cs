@@ -105,8 +105,8 @@ public sealed class PersistedReferenceInventoryTests
             Handling.Through<IMovieListRepository>(),
             Handling.Through<IMovieListRepository>()),
         ["MovieListItemDocument.AddedByUserId"] = new(
-            Handling.Exempt("the title stays in the list of its owner, and an author whose account is gone resolves to no card"),
-            Handling.Exempt("a title added to a list someone else owns belongs to that list; the joined list itself is exported")),
+            Handling.Through<IMovieListRepository>(),
+            Handling.Through<IMovieListRepository>()),
         ["ParticipantDocument.UserId"] = new(
             Handling.Through<IParticipantRepository>(),
             Handling.Through<IParticipantRepository>()),

@@ -1,119 +1,28 @@
-import {
-  type ChangeEvent,
-  type ClipboardEvent,
-  type DragEvent,
-  type ReactNode,
-  type SubmitEvent,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { type ReactNode, type SubmitEvent, useEffect, useId, useMemo, useState } from 'react';
 import { useLocation } from 'react-router';
-import { ImagePlus, X } from 'lucide-react';
-import { useTranslation, type Translate } from '@/shared/i18n';
+import { useTranslation } from '@/shared/i18n';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { APP_VERSION } from '@/shared/appVersion';
-import { blobToBase64 } from '@/shared/utils/blobToBase64';
 import Dropdown from '@/shared/components/Dropdown';
-import {
-  createIdeaSuggestion,
-  type IdeaAttachmentContentType,
-  type IdeaSuggestionCategory,
-} from '@/shared/api/ideaSuggestionsApi';
+import { createIdeaSuggestion, type IdeaSuggestionCategory } from '@/shared/api/ideaSuggestionsApi';
 import styles from './ProposeIdeaButton.module.css';
 import { useCloseOnPageChange } from '@/shared/hooks/useCloseOnPageChange';
 import { ModalActions } from '@/shared/components/Modal';
 import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
 import Button from '@/shared/components/Button';
-import clsx from 'clsx';
-import { ICON_SIZE } from '@/shared/components/iconSize';
 import Field from '@/shared/components/Field';
 
 const TITLE_MAX_LENGTH = 100;
 const DESCRIPTION_MAX_LENGTH = 2000;
 const PAGE_PATH_MAX_LENGTH = 300;
-const ATTACHMENT_FILE_NAME_MAX_LENGTH = 150;
-const MAX_ATTACHMENTS = 4;
-const MAX_ATTACHMENT_SIZE_BYTES = 4 * 1024 * 1024;
-const ACCEPTED_ATTACHMENT_TYPES: readonly IdeaAttachmentContentType[] = [
-  'image/png',
-  'image/jpeg',
-  'image/webp',
-  'image/gif',
-];
-
-function acceptedContentType(type: string): IdeaAttachmentContentType | undefined {
-  return ACCEPTED_ATTACHMENT_TYPES.find((accepted) => accepted === type);
-}
 
 type Status = 'idle' | 'submitting' | 'success' | 'error';
-
-type Attachment = {
-  id: string;
-  file: File;
-  contentType: IdeaAttachmentContentType;
-  previewUrl: string;
-};
 
 type DialogProps = {
   open: boolean;
   onClose: () => void;
   title?: string;
 };
-
-class UnreadableAttachmentError extends Error {
-  constructor(
-    readonly fileName: string,
-    options?: ErrorOptions
-  ) {
-    super(`Attachment ${fileName} could not be read`, options);
-    this.name = 'UnreadableAttachmentError';
-  }
-}
-
-function revokePreviewUrls(attachments: readonly Attachment[]) {
-  for (const attachment of attachments) URL.revokeObjectURL(attachment.previewUrl);
-}
-
-function leadingCodeUnits(text: string, maxLength: number): string {
-  let kept = '';
-  for (const character of text) {
-    if (kept.length + character.length > maxLength) break;
-    kept += character;
-  }
-  return kept;
-}
-
-function fileNameWithinApiLimit(fileName: string): string {
-  if (fileName.length <= ATTACHMENT_FILE_NAME_MAX_LENGTH) return fileName;
-  const extensionStart = fileName.lastIndexOf('.');
-  const extension = extensionStart > 0 ? fileName.slice(extensionStart) : '';
-  const keptExtension = extension.length < ATTACHMENT_FILE_NAME_MAX_LENGTH ? extension : '';
-  const stem = fileName.slice(0, fileName.length - keptExtension.length);
-  return (
-    leadingCodeUnits(stem, ATTACHMENT_FILE_NAME_MAX_LENGTH - keptExtension.length) + keptExtension
-  );
-}
-
-async function toAttachmentPayload(attachment: Attachment) {
-  try {
-    return {
-      fileName: fileNameWithinApiLimit(attachment.file.name),
-      contentType: attachment.contentType,
-      base64Content: await blobToBase64(attachment.file),
-    };
-  } catch (readError) {
-    throw new UnreadableAttachmentError(attachment.file.name, { cause: readError });
-  }
-}
-
-function submitErrorMessage(err: unknown, t: Translate): string {
-  if (err instanceof UnreadableAttachmentError)
-    return t('proposeIdea.attachmentsUnreadable', { name: err.fileName });
-  return getErrorMessage(err, t('proposeIdea.submitError'));
-}
 
 export function ProposeIdeaDialog({ open, onClose, title: dialogTitle }: Readonly<DialogProps>) {
   const { t } = useTranslation();
@@ -123,86 +32,10 @@ export function ProposeIdeaDialog({ open, onClose, title: dialogTitle }: Readonl
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<string | null>(null);
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const attachmentsRef = useRef(attachments);
-  attachmentsRef.current = attachments;
-  const [attachmentError, setAttachmentError] = useState<string | null>(null);
-  const [isDraggingOver, setIsDraggingOver] = useState(false);
   const formId = useId();
   const categoryFieldId = useId();
   const titleFieldId = useId();
   const descriptionFieldId = useId();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const dragCounterRef = useRef(0);
-  const addAttachments = (files: FileList | File[]) => {
-    setAttachmentError(null);
-    const incoming = Array.from(files).filter((f) => f.type.startsWith('image/'));
-    if (incoming.length === 0) return;
-
-    const accepted: Attachment[] = [];
-    for (const file of incoming) {
-      if (attachments.length + accepted.length >= MAX_ATTACHMENTS) {
-        setAttachmentError(t('proposeIdea.attachmentsTooMany', { max: MAX_ATTACHMENTS }));
-        break;
-      }
-      const contentType = acceptedContentType(file.type);
-      if (!contentType) {
-        setAttachmentError(t('proposeIdea.attachmentsUnsupportedType', { name: file.name }));
-        continue;
-      }
-      if (file.size > MAX_ATTACHMENT_SIZE_BYTES) {
-        setAttachmentError(t('proposeIdea.attachmentsTooLarge', { name: file.name }));
-        continue;
-      }
-      accepted.push({
-        id: crypto.randomUUID(),
-        file,
-        contentType,
-        previewUrl: URL.createObjectURL(file),
-      });
-    }
-    if (accepted.length > 0) setAttachments((prev) => [...prev, ...accepted]);
-  };
-
-  const removeAttachment = (id: string) => {
-    setAttachments((prev) => {
-      const target = prev.find((a) => a.id === id);
-      if (target) URL.revokeObjectURL(target.previewUrl);
-      return prev.filter((a) => a.id !== id);
-    });
-  };
-
-  const handleFileInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) addAttachments(e.target.files);
-    e.target.value = '';
-  };
-
-  const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    dragCounterRef.current += 1;
-    setIsDraggingOver(true);
-  };
-
-  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    dragCounterRef.current = Math.max(0, dragCounterRef.current - 1);
-    if (dragCounterRef.current === 0) setIsDraggingOver(false);
-  };
-
-  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    dragCounterRef.current = 0;
-    setIsDraggingOver(false);
-    addAttachments(e.dataTransfer.files);
-  };
-
-  const handlePaste = (e: ClipboardEvent<HTMLElement>) => {
-    const files = Array.from(e.clipboardData.items)
-      .filter((item) => item.kind === 'file' && item.type.startsWith('image/'))
-      .map((item) => item.getAsFile())
-      .filter((f): f is File => f !== null);
-    if (files.length > 0) addAttachments(files);
-  };
 
   const categoryOptions = useMemo(
     () => [
@@ -213,8 +46,6 @@ export function ProposeIdeaDialog({ open, onClose, title: dialogTitle }: Readonl
     [t]
   );
 
-  useEffect(() => () => revokePreviewUrls(attachmentsRef.current), []);
-
   useEffect(() => {
     if (!open) return;
     setCategory('idea');
@@ -222,11 +53,6 @@ export function ProposeIdeaDialog({ open, onClose, title: dialogTitle }: Readonl
     setDescription('');
     setStatus('idle');
     setError(null);
-    setAttachments((prev) => {
-      for (const a of prev) URL.revokeObjectURL(a.previewUrl);
-      return [];
-    });
-    setAttachmentError(null);
   }, [open]);
 
   const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
@@ -234,23 +60,17 @@ export function ProposeIdeaDialog({ open, onClose, title: dialogTitle }: Readonl
     setStatus('submitting');
     setError(null);
     try {
-      const attachmentPayload = await Promise.all(
-        attachments.map((attachment) => toAttachmentPayload(attachment))
-      );
       await createIdeaSuggestion({
         category,
         title: title.trim(),
         description: description.trim(),
         pagePath: location.pathname.slice(0, PAGE_PATH_MAX_LENGTH),
         appVersion: APP_VERSION,
-        attachments: attachmentPayload.length > 0 ? attachmentPayload : undefined,
       });
       setStatus('success');
-      revokePreviewUrls(attachmentsRef.current);
-      setAttachments([]);
     } catch (err) {
       setStatus('error');
-      setError(submitErrorMessage(err, t));
+      setError(getErrorMessage(err, t('proposeIdea.submitError')));
     }
   };
 
@@ -324,7 +144,6 @@ export function ProposeIdeaDialog({ open, onClose, title: dialogTitle }: Readonl
                 className={`input ${styles.descriptionInput}`}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                onPaste={handlePaste}
                 maxLength={DESCRIPTION_MAX_LENGTH}
                 rows={5}
                 required
@@ -332,62 +151,6 @@ export function ProposeIdeaDialog({ open, onClose, title: dialogTitle }: Readonl
               />
             )}
           </Field>
-
-          <fieldset className={styles.attachmentsSection}>
-            <legend className={clsx('label', styles.attachmentsLegend)}>
-              {t('proposeIdea.attachmentsLabel')}
-            </legend>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept={ACCEPTED_ATTACHMENT_TYPES.join(',')}
-              multiple
-              hidden
-              onChange={handleFileInputChange}
-            />
-            <div
-              className={clsx(styles.dropZone, isDraggingOver && styles.dropZoneActive)}
-              onDragOver={(e) => e.preventDefault()}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              <Button
-                type="button"
-
-                onClick={() => fileInputRef.current?.click()}
-                disabled={attachments.length >= MAX_ATTACHMENTS}
-              >
-                <ImagePlus size={ICON_SIZE.md} aria-hidden />
-                {t('proposeIdea.attachmentsAddButton')}
-              </Button>
-              <p className={`hint ${styles.attachmentsHint}`}>
-                {t('proposeIdea.attachmentsDropHint', { max: MAX_ATTACHMENTS })}
-              </p>
-              {attachments.length > 0 ? (
-                <div className={styles.thumbnails}>
-                  {attachments.map((a, index) => (
-                    <div key={a.id} className={styles.thumbnail}>
-                      <img src={a.previewUrl} alt="" className={styles.thumbnailImage} />
-                      <button
-                        type="button"
-                        className={styles.thumbnailRemove}
-                        onClick={() => removeAttachment(a.id)}
-                        aria-label={`${t('proposeIdea.attachmentsRemove')} ${index + 1}`}
-                      >
-                        <X size={ICON_SIZE.xs} aria-hidden />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-            {attachmentError ? (
-              <p className={`error ${styles.attachmentsError}`} role="alert">
-                {attachmentError}
-              </p>
-            ) : null}
-          </fieldset>
 
           <p className="hint">{t('proposeIdea.publicNotice')}</p>
 

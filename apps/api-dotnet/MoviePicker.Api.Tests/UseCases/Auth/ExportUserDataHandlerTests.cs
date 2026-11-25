@@ -326,6 +326,38 @@ public sealed class ExportUserDataHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_ExportsTheTitlesAddedToTheListsOfOthers_EvenListsLeftSince()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User { Email = "neo@example.com", DisplayName = "Neo", Handle = "neo" });
+        var lea = await f.Users.AddAsync(new User { Email = "lea@example.com", DisplayName = "Léa", Handle = "lea" });
+        var joined = await f.MovieLists.AddAsync(new MovieList { OwnerId = lea.Id, Name = "Ciné du dimanche" });
+        await f.MovieLists.AddInvitationAsync(joined.Id, new MovieListInvitation(user.Id, TestEpoch.AddDays(-6)), MovieList.MaxMembers);
+        await f.MovieLists.AcceptInvitationAsync(joined.Id, new MovieListMember(user.Id, TestEpoch.AddDays(-5)));
+        await f.MovieLists.AddItemAsync(user.Id, joined.Id, new MovieListItem { TmdbId = 603, Title = "Matrix", Year = "1999", AddedAt = TestEpoch.AddDays(-4), AddedByUserId = user.Id }, MovieList.MaxItems);
+        await f.MovieLists.AddItemAsync(lea.Id, joined.Id, new MovieListItem { TmdbId = 680, Title = "Pulp Fiction", Year = "1994", AddedAt = TestEpoch.AddDays(-3), AddedByUserId = lea.Id }, MovieList.MaxItems);
+        var left = await f.MovieLists.AddAsync(new MovieList { OwnerId = lea.Id, Name = "Nanars" });
+        await f.MovieLists.AddInvitationAsync(left.Id, new MovieListInvitation(user.Id, TestEpoch.AddDays(-6)), MovieList.MaxMembers);
+        await f.MovieLists.AcceptInvitationAsync(left.Id, new MovieListMember(user.Id, TestEpoch.AddDays(-5)));
+        await f.MovieLists.AddItemAsync(user.Id, left.Id, new MovieListItem { TmdbId = 1920, MediaType = MovieMediaType.Tv, Title = "Twin Peaks", Year = "1990", AddedAt = TestEpoch.AddDays(-2), AddedByUserId = user.Id }, MovieList.MaxItems);
+        await f.MovieLists.RemoveMemberAsync(left.Id, user.Id, disableInviteLink: false);
+        await f.MovieLists.AddAsync(new MovieList { OwnerId = user.Id, Name = "La mienne", Items = [new MovieListItem { TmdbId = 13, Title = "Forrest Gump", AddedAt = TestEpoch, AddedByUserId = user.Id }] });
+
+        var export = await f.CreateHandler().HandleAsync(user.Id);
+
+        var contributions = export.TitlesAddedToOthersLists.OrderBy(list => list.Name, StringComparer.Ordinal).ToList();
+        Assert.Equal(
+            [(joined.Id, "Ciné du dimanche", "Léa"), (left.Id, "Nanars", "Léa")],
+            contributions.Select(list => (list.ListId, list.Name, list.OwnerDisplayName)));
+        Assert.Equal(
+            [(603, MovieMediaType.Movie, "Matrix", "1999", TestEpoch.AddDays(-4))],
+            contributions[0].Items.Select(x => (x.TmdbId, x.MediaType, x.Title, x.Year, x.AddedAt)));
+        Assert.Equal(
+            [(1920, MovieMediaType.Tv, "Twin Peaks", "1990", TestEpoch.AddDays(-2))],
+            contributions[1].Items.Select(x => (x.TmdbId, x.MediaType, x.Title, x.Year, x.AddedAt)));
+    }
+
+    [Fact]
     public async Task HandleAsync_ExportsTheGroupsOwnedJoined_AndTheInvitationsWaitingForAnAnswer()
     {
         var f = new Fixture();

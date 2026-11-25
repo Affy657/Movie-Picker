@@ -45,7 +45,7 @@ public sealed class MyEventPreviewReadsTests : IClassFixture<MoviePickerApplicat
     };
 
     [Fact]
-    public async Task TopVotedMovies_RankEachNightByScore_ThenProposalTime_AndBringOnlyTheBestOnes()
+    public async Task TopVotedMovies_RankEachNightByScore_ThenIdentifier_AndBringOnlyTheBestOnes()
     {
         using var scope = _factory.Services.CreateScope();
         var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();

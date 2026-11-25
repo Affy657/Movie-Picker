@@ -93,7 +93,6 @@ public sealed class InMemoryMovieRepository : IMovieRepository
             .GroupBy(m => m.EventId, StringComparer.Ordinal)
             .SelectMany(perNight => perNight
                 .OrderByDescending(m => scores.TryGetValue(m.Id, out var aggregate) ? aggregate.Score : 0)
-                .ThenBy(m => m.CreatedAt)
                 .ThenBy(m => m.Id, StringComparer.Ordinal)
                 .Take(perEvent))
             .Select(m => new EventMoviePreview(m.EventId, m.Title, m.PosterPath))
@@ -172,6 +171,9 @@ public sealed class InMemoryMovieRepository : IMovieRepository
         _byId[id] = created;
         return Task.FromResult(created);
     }
+
+    public Task<Movie> InsertWithUntimedIdAsync(Movie movie, CancellationToken ct = default) =>
+        InsertAsync(movie with { Id = string.Empty }, ct);
 
     public Task<long> DeleteByIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
     {

@@ -113,7 +113,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         var key = (created.TmdbId, created.MediaType);
         var enrichments = await TmdbEnrichments.LoadAsync([key], _tmdb, _options, ct);
         return MovieWithScoreResponse.From(
-            created,
+            night.HideProposalTime(created),
             _posterImageStore,
             new MovieProposer(participant.Pseudo, proposer is null ? null : DisplayedPerson.From(proposer).PublicHandle),
             MovieNightActivity.None,
@@ -144,7 +144,9 @@ public sealed class AddMovieHandler : IAddMovieHandler
                     if (count >= maxProp)
                         throw Errors.ProposalLimitReached(maxProp);
                 }
-                created = await _movieRepository.InsertAsync(movie, token);
+                created = night.HasAnonymousProposals
+                    ? await _movieRepository.InsertWithUntimedIdAsync(movie, token)
+                    : await _movieRepository.InsertAsync(movie, token);
             },
             ct);
         return (created, night!);
