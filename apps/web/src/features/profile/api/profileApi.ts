@@ -1,5 +1,5 @@
 import { apiPath, fetchApi } from '@/shared/api/client';
-import { readAllWatchlistPages } from '@/features/movies/api/watchlistApi';
+import { readAllPages } from '@/shared/api/readAllPages';
 import type { ApiSchemas } from '@/shared/api/contract';
 import type { FavoriteTitle, MovieMediaType } from '@/shared/types/movie';
 
@@ -69,35 +69,33 @@ export type UserWatchedMovieItem = ApiSchemas['UserWatchedMovieItem'];
 
 export type UserWatchedMoviesResponse = ApiSchemas['UserWatchedMoviesResponse'];
 
-export type CountedUserWatchedMovies = Omit<UserWatchedMoviesResponse, 'total'> & { total: number };
+export type CountedUserWatchedMovies = Pick<UserWatchedMoviesResponse, 'items'> & { total: number };
 
-export async function fetchUserWatchedMovies(
+function fetchUserWatchedMovies(
   handle: string,
+  skip: number,
   take: number,
   signal?: AbortSignal
 ): Promise<UserWatchedMoviesResponse> {
   return fetchApi<UserWatchedMoviesResponse>(
-    `/users/${encodeURIComponent(handle)}/watched-movies?take=${take}`,
+    `/users/${encodeURIComponent(handle)}/watched-movies?skip=${skip}&take=${take}`,
     { signal }
   );
 }
 
-async function fetchCountedUserWatchedMovies(
-  handle: string,
-  take: number,
-  signal?: AbortSignal
-): Promise<CountedUserWatchedMovies> {
-  const res = await fetchUserWatchedMovies(handle, take, signal);
-  return { items: res.items, total: res.total ?? res.items.length };
-}
-
 export const WATCHED_MOVIES_TAKE = 1000;
 
-export function fetchUserWatchedMovieCollection(
+export async function fetchUserWatchedMovieCollection(
   handle: string,
   signal?: AbortSignal
 ): Promise<CountedUserWatchedMovies> {
-  return fetchCountedUserWatchedMovies(handle, WATCHED_MOVIES_TAKE, signal);
+  let total = 0;
+  const items = await readAllPages(async (skip) => {
+    const page = await fetchUserWatchedMovies(handle, skip, WATCHED_MOVIES_TAKE, signal);
+    total = page.total ?? 0;
+    return page;
+  });
+  return { items, total: Math.max(total, items.length) };
 }
 
 export type UserProposedMovieItem = ApiSchemas['UserProposedMovieItem'];
@@ -118,11 +116,12 @@ export async function fetchUserProposedMovieItems(
 
 export const PROFILE_WATCHED_PREVIEW_TAKE = 24;
 
-export function fetchUserWatchedMoviesPreview(
+export async function fetchUserWatchedMoviesPreview(
   handle: string,
   signal?: AbortSignal
 ): Promise<CountedUserWatchedMovies> {
-  return fetchCountedUserWatchedMovies(handle, PROFILE_WATCHED_PREVIEW_TAKE, signal);
+  const res = await fetchUserWatchedMovies(handle, 0, PROFILE_WATCHED_PREVIEW_TAKE, signal);
+  return { items: res.items, total: res.total ?? res.items.length };
 }
 
 export type UserWatchlistItem = ApiSchemas['WatchlistItemResponse'];
@@ -134,7 +133,7 @@ export async function fetchUserWatchlist(
   pageSize: number,
   signal?: AbortSignal
 ): Promise<UserWatchlistItem[]> {
-  const items = await readAllWatchlistPages((skip) =>
+  const items = await readAllPages((skip) =>
     fetchApi<UserWatchlistResponse>(
       `/users/${encodeURIComponent(handle)}/watchlist?skip=${skip}&take=${pageSize}`,
       { signal }

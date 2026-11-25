@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Infrastructure.Tmdb;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -26,6 +27,8 @@ public sealed class FavoritesEndpointsTests : IClassFixture<MoviePickerApplicati
     private readonly MoviePickerApplicationFactory _factory;
 
     public FavoritesEndpointsTests(MoviePickerApplicationFactory factory) => _factory = factory;
+
+    private static string OnTmdb(int tmdbId) => StubTmdbMovieSearch.TitleOf(tmdbId);
 
     private static AddFavoriteRequest Payload(
         int tmdbId,
@@ -91,9 +94,9 @@ public sealed class FavoritesEndpointsTests : IClassFixture<MoviePickerApplicati
         await AddAsync(client, Payload(949, "Heat", posterPath: TmdbPoster));
         var list = await AddAsync(client, Payload(1920, "Twin Peaks", MovieMediaType.Tv));
 
-        Assert.Equal(["Heat", "Twin Peaks"], list.Items.Select(i => i.Title));
+        Assert.Equal([OnTmdb(949), OnTmdb(1920)], list.Items.Select(i => i.Title));
         var me = await MeAsync(client);
-        Assert.Equal(["Heat", "Twin Peaks"], me.Favorites.Select(f => f.Title));
+        Assert.Equal([OnTmdb(949), OnTmdb(1920)], me.Favorites.Select(f => f.Title));
         var profile = await PublicProfileAsync(me.Handle);
         Assert.Equal([MovieMediaType.Movie, MovieMediaType.Tv], profile.Favorites.Select(f => f.MediaType));
         Assert.StartsWith("/api/v1/posters/", profile.Favorites[0].PosterPath, StringComparison.Ordinal);
@@ -113,7 +116,20 @@ public sealed class FavoritesEndpointsTests : IClassFixture<MoviePickerApplicati
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         var body = JsonElement.Parse(await response.Content.ReadAsStringAsync());
         Assert.Equal(ErrorCodes.FavoritesLimitReached, body.GetProperty("reason").GetString());
-        Assert.Equal(["Un", "Deux", "Trois"], (await MeAsync(client)).Favorites.Select(f => f.Title));
+        Assert.Equal([OnTmdb(1), OnTmdb(2), OnTmdb(3)], (await MeAsync(client)).Favorites.Select(f => f.Title));
+    }
+
+    [Fact]
+    public async Task Add_StoresTheTitleAndYearOfTmdb_NotThoseTheClientSent()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Favoris Forges");
+
+        var list = await AddAsync(client, Payload(949, "Faux titre"));
+
+        var favorite = Assert.Single(list.Items);
+        Assert.Equal((OnTmdb(949), "2024"), (favorite.Title, favorite.Year));
+        var me = await MeAsync(client);
+        Assert.Equal([OnTmdb(949)], (await PublicProfileAsync(me.Handle)).Favorites.Select(f => f.Title));
     }
 
     [Fact]
@@ -180,7 +196,7 @@ public sealed class FavoritesEndpointsTests : IClassFixture<MoviePickerApplicati
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var list = await response.Content.ReadFromJsonAsync<FavoriteListResponse>(Json);
-        Assert.Equal(["Heat"], list!.Items.Select(i => i.Title));
+        Assert.Equal([OnTmdb(949)], list!.Items.Select(i => i.Title));
     }
 
     [Fact]
@@ -195,7 +211,7 @@ public sealed class FavoritesEndpointsTests : IClassFixture<MoviePickerApplicati
         var response = await _factory.CreateClient().GetAsync($"/api/v1/users/{me.Handle}");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        Assert.Equal(["Heat"], (await MeAsync(client)).Favorites.Select(f => f.Title));
+        Assert.Equal([OnTmdb(949)], (await MeAsync(client)).Favorites.Select(f => f.Title));
     }
 
     [Fact]
@@ -208,7 +224,7 @@ public sealed class FavoritesEndpointsTests : IClassFixture<MoviePickerApplicati
 
         Assert.Equal(HttpStatusCode.OK, patch.StatusCode);
         var updated = await patch.Content.ReadFromJsonAsync<UserProfileResponse>(Json);
-        Assert.Equal(["Heat"], updated!.Favorites.Select(f => f.Title));
-        Assert.Equal(["Heat"], (await MeAsync(client)).Favorites.Select(f => f.Title));
+        Assert.Equal([OnTmdb(949)], updated!.Favorites.Select(f => f.Title));
+        Assert.Equal([OnTmdb(949)], (await MeAsync(client)).Favorites.Select(f => f.Title));
     }
 }

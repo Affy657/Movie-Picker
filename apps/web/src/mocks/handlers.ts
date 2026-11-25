@@ -48,7 +48,11 @@ export function createWatchlistHandlers(
       })
     ),
     http.get(`${V1}/watchlist/availability`, () =>
-      apiJson<'WatchlistAvailabilityResponse'>({ items: availability, partial: false })
+      apiJson<'WatchlistAvailabilityResponse'>({
+        items: availability,
+        partial: false,
+        hasMore: false,
+      })
     ),
   ];
 }
@@ -713,11 +717,16 @@ export function createWatchedHandlers(initial: MockWatchedMovie[] = []) {
     );
 
   return [
-    http.get(`${V1}/users/me/watched-movies`, () => {
+    http.get(`${V1}/users/me/watched-movies`, ({ request }) => {
+      const params = new URL(request.url).searchParams;
+      const skip = Number(params.get('skip') ?? 0);
+      const take = Number(params.get('take') ?? films.length);
       const latestFirst = [...films].sort((a, b) => b.watchedAt.localeCompare(a.watchedAt));
+      const page = latestFirst.slice(skip, skip + take);
       return apiJson<'UserWatchedMoviesResponse'>({
-        items: latestFirst.map(mockWatchedItem),
+        items: page.map(mockWatchedItem),
         total: films.length,
+        hasMore: skip + page.length < films.length,
       });
     }),
     http.get(`${V1}/watched/:tmdbId`, ({ params, request }) =>
