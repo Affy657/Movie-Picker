@@ -90,6 +90,14 @@ describe('ProfileBanner', () => {
     expect(onEdit).toHaveBeenCalled();
   });
 
+  it('draws an image on the edit button, so it is not mistaken for the profile pencil', () => {
+    renderBanner(FILM, true);
+
+    const edit = screen.getByRole('button', { name: 'Modifier la bannière' });
+    expect(edit.querySelector('.lucide-image')).not.toBeNull();
+    expect(edit.querySelector('.lucide-pencil')).toBeNull();
+  });
+
   it('shows no edit button to a visitor', () => {
     renderBanner(FILM);
 

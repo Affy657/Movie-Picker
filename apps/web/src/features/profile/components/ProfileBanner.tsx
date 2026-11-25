@@ -1,4 +1,4 @@
-import { Pencil } from 'lucide-react';
+import { Image as ImageIcon } from 'lucide-react';
 import FadedBanner from '@/shared/components/FadedBanner';
 import IconButton from '@/shared/components/IconButton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -46,7 +46,7 @@ export default function ProfileBanner({
             expandHitArea
             onClick={onEdit}
           >
-            <Pencil size={ICON_SIZE.md} aria-hidden />
+            <ImageIcon size={ICON_SIZE.md} aria-hidden />
           </IconButton>
         ) : null
       }
