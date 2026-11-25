@@ -134,33 +134,33 @@ public sealed class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionHandler
     {
         var (prefix, label) = request.Category switch
         {
-            IdeaSuggestionCategory.Bug => ("Bug", "bug"),
-            IdeaSuggestionCategory.Improvement => ("Amélioration", "enhancement"),
-            _ => ("Idée", "idée-utilisateur")
+            IdeaSuggestionCategory.Bug => (ServerCopy.IdeaIssue.BugPrefix, "bug"),
+            IdeaSuggestionCategory.Improvement => (ServerCopy.IdeaIssue.ImprovementPrefix, "enhancement"),
+            _ => (ServerCopy.IdeaIssue.IdeaPrefix, "idée-utilisateur")
         };
 
-        var title = $"[{prefix}] {NeutralizeGitHubReferences(request.Title.Trim())}";
+        var title = ServerCopy.IdeaIssue.Title(prefix, NeutralizeGitHubReferences(request.Title.Trim()));
 
         var bodyLines = new List<string>
         {
             EscapeHtmlCommentOpeners(NeutralizeGitHubReferences(request.Description.Trim())),
             string.Empty,
             "---",
-            $"Référence : {reference}"
+            ServerCopy.IdeaIssue.Reference(reference)
         };
         var page = PublishablePageTemplate(request.PagePath);
         if (page is not null)
-            bodyLines.Add($"Page : {page}");
+            bodyLines.Add(ServerCopy.IdeaIssue.Page(page));
         var version = PublishableAppVersion(request.AppVersion);
         if (version is not null)
-            bodyLines.Add($"Version : {version}");
+            bodyLines.Add(ServerCopy.IdeaIssue.Version(version));
 
         if (screenshotUrls.Count > 0)
         {
             bodyLines.Add(string.Empty);
-            bodyLines.Add("### Captures d'écran");
+            bodyLines.Add(ServerCopy.IdeaIssue.ScreenshotsHeading);
             for (var i = 0; i < screenshotUrls.Count; i++)
-                bodyLines.Add($"![capture {i + 1}]({screenshotUrls[i]})");
+                bodyLines.Add(ServerCopy.IdeaIssue.Screenshot(i + 1, screenshotUrls[i]));
         }
 
         return new GitHubIssueDraft(title, string.Join('\n', bodyLines), [label, "user-feedback"]);

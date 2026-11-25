@@ -14,8 +14,7 @@ public static class ApiStatusCodePage
             return;
         }
 
-        var (message, reason) = ApiErrorClientErrorFactory.Describe(response.StatusCode);
         response.ContentType = "application/json";
-        await response.WriteAsync(ApiErrorJson.Serialize(context.HttpContext, response.StatusCode, message, reason));
+        await response.WriteAsync(GenericApiErrors.Json(context.HttpContext, response.StatusCode));
     }
 }

@@ -124,7 +124,8 @@ const nodeLane = () =>
 // is done, then run side by side. Unit tests reuse that build (`--no-build`): the API has no
 // `#if DEBUG` nor `Debug.Assert`, so the Debug configuration would only rebuild the same code a
 // second time. The integration suite runs on MongoDB through `test:api:mongo`, as the CI
-// `test-api` job does, Debug build and Mongo adapters coverage gate included.
+// `test-api` job does, Debug build, Mongo adapters coverage gate and the script queries of
+// `scripts/mongo-tests/` included.
 const dotnetLane = () =>
   sequence([
     () => run('dotnet restore', 'dotnet', ['restore', 'apps/api-dotnet/MoviePicker.slnx']),
@@ -157,7 +158,7 @@ const dotnetLane = () =>
               { env: envMongoEmpty }
             ),
           () =>
-            run('API integration tests on MongoDB + coverage gate', 'pnpm', [
+            run('API integration tests on MongoDB + coverage gate + script queries', 'pnpm', [
               'run',
               'test:api:mongo',
             ]),

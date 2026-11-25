@@ -6,7 +6,6 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using MoviePicker.Api.Application.UseCases.MovieShare;
-using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Infrastructure.Web;
 
@@ -195,11 +194,7 @@ public static class RateLimitingExtensions
         }
 
         context.HttpContext.Response.ContentType = "application/json";
-        var json = ApiErrorJson.Serialize(
-            context.HttpContext,
-            StatusCodes.Status429TooManyRequests,
-            "Too many requests, please retry in a moment",
-            ErrorCodes.RateLimited);
+        var json = GenericApiErrors.Json(context.HttpContext, StatusCodes.Status429TooManyRequests);
         await context.HttpContext.Response.WriteAsync(json, cancellationToken);
     }
 

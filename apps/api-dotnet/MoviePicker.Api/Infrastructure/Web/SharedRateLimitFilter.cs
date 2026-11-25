@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Infrastructure.Web;
 
@@ -92,11 +91,7 @@ public sealed class SharedRateLimitFilter : IAsyncActionFilter
         {
             StatusCode = StatusCodes.Status429TooManyRequests,
             ContentType = "application/json",
-            Content = ApiErrorJson.Serialize(
-                context.HttpContext,
-                StatusCodes.Status429TooManyRequests,
-                "Too many requests, please retry in a moment",
-                ErrorCodes.RateLimited)
+            Content = GenericApiErrors.Json(context.HttpContext, StatusCodes.Status429TooManyRequests)
         };
         return true;
     }

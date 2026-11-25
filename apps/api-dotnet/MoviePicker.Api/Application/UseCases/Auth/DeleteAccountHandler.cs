@@ -9,8 +9,6 @@ namespace MoviePicker.Api.Application.UseCases.Auth;
 
 public sealed class DeleteAccountHandler : IDeleteAccountHandler
 {
-    public const string AnonymizedParticipantPseudo = "Compte supprimé";
-
     private readonly IUserRepository _users;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IEventRepository _events;
@@ -117,11 +115,11 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
                 await _events.ForgetUserAsync(userId, token);
                 var joinedEventIds = await _participants.ListDistinctEventIdsByUserIdAsync(userId, token);
                 anonymizedParticipations = await _participants.AnonymizeByUserIdAsync(
-                    userId, AnonymizedParticipantPseudo, token);
+                    userId, ServerCopy.DeletedAccount.Pseudo, token);
                 await MarkJoinedEventsChangedAsync(joinedEventIds, token);
                 await _notifications.DeleteByUserIdAsync(userId, token);
                 if (!string.IsNullOrWhiteSpace(user.Handle))
-                    await _notifications.AnonymizeActorAsync(user.Handle, AnonymizedParticipantPseudo, token);
+                    await _notifications.AnonymizeActorAsync(user.Handle, ServerCopy.DeletedAccount.Pseudo, token);
                 await _pushSubscriptions.DeleteByUserIdAsync(userId, token);
                 await _follows.DeleteAllForUserAsync(userId, token);
                 await _watchlist.DeleteAllForUserAsync(userId, token);

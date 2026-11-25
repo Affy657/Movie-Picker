@@ -148,6 +148,29 @@ public static class ServerCopy
                 : $"de {name}";
     }
 
+    public static class DeletedAccount
+    {
+        public const string Pseudo = "Compte supprimé";
+    }
+
+    public static class IdeaIssue
+    {
+        public const string BugPrefix = "Bug";
+        public const string ImprovementPrefix = "Amélioration";
+        public const string IdeaPrefix = "Idée";
+        public const string ScreenshotsHeading = "### Captures d'écran";
+
+        public static string Title(string prefix, string title) => $"[{prefix}] {title}";
+
+        public static string Reference(string reference) => $"Référence : {reference}";
+
+        public static string Page(string page) => $"Page : {page}";
+
+        public static string Version(string version) => $"Version : {version}";
+
+        public static string Screenshot(int number, string url) => $"![capture {number}]({url})";
+    }
+
     public static class PasswordResetEmail
     {
         public const string Subject = "Réinitialisez votre mot de passe Movie Picker";

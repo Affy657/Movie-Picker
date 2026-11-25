@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Infrastructure.Web;
 
@@ -45,23 +44,13 @@ public sealed class MoviePickerCookieAuthenticationConfigurer : IConfigureNamedO
         {
             ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
             ctx.Response.ContentType = "application/json";
-            await ctx.Response.WriteAsync(
-                ApiErrorJson.Serialize(
-                    ctx.HttpContext,
-                    StatusCodes.Status401Unauthorized,
-                    "Authentication required",
-                    ErrorCodes.Unauthorized));
+            await ctx.Response.WriteAsync(GenericApiErrors.Json(ctx.HttpContext, StatusCodes.Status401Unauthorized));
         };
         options.Events.OnRedirectToAccessDenied = async ctx =>
         {
             ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
             ctx.Response.ContentType = "application/json";
-            await ctx.Response.WriteAsync(
-                ApiErrorJson.Serialize(
-                    ctx.HttpContext,
-                    StatusCodes.Status403Forbidden,
-                    "Access denied",
-                    ErrorCodes.Forbidden));
+            await ctx.Response.WriteAsync(GenericApiErrors.Json(ctx.HttpContext, StatusCodes.Status403Forbidden));
         };
     }
 

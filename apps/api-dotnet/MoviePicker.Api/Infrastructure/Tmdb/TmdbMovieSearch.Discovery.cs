@@ -5,6 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 
@@ -68,7 +69,7 @@ public sealed partial class TmdbMovieSearch
         CancellationToken ct = default)
     {
         RequireCredentials();
-        var r = string.IsNullOrWhiteSpace(region) ? "FR" : region.Trim().ToUpperInvariant();
+        var r = WatchRegion.Of(region);
         return FetchPagesAsync(
             page => $"{ApiBase}/movie/now_playing?language=fr-FR&region={r}&page={page}",
             pages,
