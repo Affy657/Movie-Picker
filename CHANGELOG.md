@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.31.3] - 2026-11-25
+
 ### Changed
 
 - **Un en-tête de soirée plus court sur téléphone** : le compte à rebours suit la date, et le nombre de films suit les participants, ce qui fait gagner une ligne.
@@ -1112,7 +1114,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.31.2...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.31.3...HEAD
+[1.31.3]: https://github.com/Affy657/Movie-Picker/compare/v1.31.2...v1.31.3
 [1.31.2]: https://github.com/Affy657/Movie-Picker/compare/v1.31.1...v1.31.2
 [1.31.1]: https://github.com/Affy657/Movie-Picker/compare/v1.31.0...v1.31.1
 [1.31.0]: https://github.com/Affy657/Movie-Picker/compare/v1.30.4...v1.31.0
