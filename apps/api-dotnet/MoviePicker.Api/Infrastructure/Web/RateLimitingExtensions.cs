@@ -254,10 +254,13 @@ public static class RateLimitingExtensions
 
     private static bool IsPoster(HttpContext httpContext) => PolicyNameOf(httpContext) == PostersPolicy;
 
+    internal static string? ShareDocumentPolicyOf(HttpContext httpContext) =>
+        PolicyNameOf(httpContext) is { } policyName && FindPolicy(policyName) is { Scope: QuotaScope.Slug }
+            ? policyName
+            : null;
+
     private static bool IsProxied(HttpContext httpContext) =>
-        PolicyNameOf(httpContext) is { } policyName
-        && FindPolicy(policyName) is { Scope: QuotaScope.Slug }
-        && FirebaseHostingRelay.Carries(httpContext);
+        ShareDocumentPolicyOf(httpContext) is not null && FirebaseHostingRelay.Carries(httpContext);
 
     internal static RateLimitPartition<string> CreatePartition(HttpContext httpContext, PolicySpec spec)
     {
