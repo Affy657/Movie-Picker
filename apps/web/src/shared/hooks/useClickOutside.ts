@@ -32,7 +32,7 @@ function escapeBelongsToADialog(refs: readonly ElementRef[], target: EventTarget
 const openedPopovers: symbol[] = [];
 
 function isLastOpened(popover: symbol): boolean {
-  return openedPopovers[openedPopovers.length - 1] === popover;
+  return openedPopovers.at(-1) === popover;
 }
 
 function forget(popover: symbol) {

@@ -294,9 +294,23 @@ describe('CreateEventDialog', () => {
       expect(
         screen.getByText('Cette date est trop ancienne : la soirée serait aussitôt terminée.')
       ).toBeInTheDocument();
-      expect(whenTrigger()).toHaveAttribute('aria-invalid', 'true');
+      expect(whenTrigger()).toHaveAccessibleDescription(/trop ancienne/);
       await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
       expect(createBodies()).toEqual([]);
+    });
+
+    it('offers the last days of the week just after midnight in Paris', async () => {
+      vi.setSystemTime(new Date('2026-11-24T23:45:00Z'));
+      const user = userEvent.setup();
+      renderDialog();
+
+      await user.click(whenTrigger());
+      const panel = screen.getByRole('group', { name: 'Date et heure' });
+
+      expect(within(panel).getByText('Novembre 2026')).toBeInTheDocument();
+      expect(
+        within(panel).getByRole('button', { name: 'dimanche 22 novembre 2026' })
+      ).toBeEnabled();
     });
 
     it('keeps the calendar between the last start still open and two years ahead', async () => {

@@ -165,54 +165,52 @@ export default function ThemeField({
   );
 
   return (
-    <>
-      <div className={styles.inputRow}>
-        <div className={styles.pickerWrap} ref={pickerRef}>
-          <button
-            ref={emojiButtonRef}
-            type="button"
-            className={styles.emojiBtn}
-            onClick={() => setPickerOpen((o) => !o)}
-            disabled={disabled}
-            aria-label={t('events.settings.emojiPickerLabel')}
-            aria-expanded={pickerOpen}
-            aria-haspopup={isMobile ? 'dialog' : undefined}
-            aria-controls={pickerOpen ? gridId : undefined}
-          >
-            {emoji || '🎬'}
-          </button>
-          {popoverOpen && (
-            <div
-              ref={emojiGridRef}
-              className={styles.emojiPopover}
-              data-placement={position?.placement}
-              style={fixedPopoverStyle(position)}
-            >
-              {emojiGrid}
-            </div>
-          )}
-          {isMobile && (
-            <Sheet
-              open={pickerOpen}
-              title={t('events.settings.emojiPickerLabel')}
-              onClose={() => setPickerOpen(false)}
-            >
-              <div ref={emojiGridRef}>{emojiGrid}</div>
-            </Sheet>
-          )}
-        </div>
-        <input
-          id={textInputId}
-          className={clsx('input', styles.textInput)}
-          type="text"
-          autoComplete="off"
-          maxLength={THEME_TEXT_MAX_LENGTH}
-          placeholder={t('events.settings.themeFieldPlaceholder')}
-          value={text}
-          onChange={(e) => onTextChange(e.target.value)}
+    <div className={styles.inputRow}>
+      <div className={styles.pickerWrap} ref={pickerRef}>
+        <button
+          ref={emojiButtonRef}
+          type="button"
+          className={styles.emojiBtn}
+          onClick={() => setPickerOpen((o) => !o)}
           disabled={disabled}
-        />
+          aria-label={t('events.settings.emojiPickerLabel')}
+          aria-expanded={pickerOpen}
+          aria-haspopup={isMobile ? 'dialog' : undefined}
+          aria-controls={pickerOpen ? gridId : undefined}
+        >
+          {emoji || '🎬'}
+        </button>
+        {popoverOpen && (
+          <div
+            ref={emojiGridRef}
+            className={styles.emojiPopover}
+            data-placement={position?.placement}
+            style={fixedPopoverStyle(position)}
+          >
+            {emojiGrid}
+          </div>
+        )}
+        {isMobile && (
+          <Sheet
+            open={pickerOpen}
+            title={t('events.settings.emojiPickerLabel')}
+            onClose={() => setPickerOpen(false)}
+          >
+            <div ref={emojiGridRef}>{emojiGrid}</div>
+          </Sheet>
+        )}
       </div>
-    </>
+      <input
+        id={textInputId}
+        className={clsx('input', styles.textInput)}
+        type="text"
+        autoComplete="off"
+        maxLength={THEME_TEXT_MAX_LENGTH}
+        placeholder={t('events.settings.themeFieldPlaceholder')}
+        value={text}
+        onChange={(e) => onTextChange(e.target.value)}
+        disabled={disabled}
+      />
+    </div>
   );
 }

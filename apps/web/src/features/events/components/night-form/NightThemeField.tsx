@@ -41,25 +41,27 @@ function ThemePanelBody({ inputId, theme, onTheme, onPresetPicked }: Readonly<Th
   const { t } = useTranslation();
   return (
     <>
-      <div className={styles.chips} role="group" aria-label={t('events.form.moreThemes')}>
-        {MORE_PRESETS.map((preset) => {
-          const selected = isPreset(preset, theme);
-          const next = presetTheme(preset, t);
-          return (
-            <Chip
-              key={preset.slug}
-              size="md"
-              selected={selected}
-              onClick={() => {
-                onTheme(selected ? NO_THEME : next);
-                onPresetPicked?.();
-              }}
-            >
-              {next.emoji} {next.text}
-            </Chip>
-          );
-        })}
-      </div>
+      <fieldset className={styles.chipsFieldset} aria-label={t('events.form.moreThemes')}>
+        <div className={styles.chips}>
+          {MORE_PRESETS.map((preset) => {
+            const selected = isPreset(preset, theme);
+            const next = presetTheme(preset, t);
+            return (
+              <Chip
+                key={preset.slug}
+                size="md"
+                selected={selected}
+                onClick={() => {
+                  onTheme(selected ? NO_THEME : next);
+                  onPresetPicked?.();
+                }}
+              >
+                {next.emoji} {next.text}
+              </Chip>
+            );
+          })}
+        </div>
+      </fieldset>
       <hr className={styles.separator} />
       <div>
         <label className="visually-hidden" htmlFor={inputId}>

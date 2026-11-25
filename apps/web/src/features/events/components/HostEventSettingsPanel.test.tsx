@@ -665,7 +665,7 @@ describe('HostEventSettingsPanel', () => {
           { timeout: 3000 }
         )
       ).toBeInTheDocument();
-      expect(whenTrigger()).toHaveAttribute('aria-invalid', 'true');
+      expect(whenTrigger()).toHaveAccessibleDescription(/trop ancienne/);
       expect(screen.getByText('Non enregistré')).toBeInTheDocument();
     });
   });

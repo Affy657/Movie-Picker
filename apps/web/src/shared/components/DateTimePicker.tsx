@@ -97,7 +97,7 @@ function Calendar({ selected, today, min, max, onPick }: Readonly<CalendarProps>
     setView(monthOf(next));
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     const step = ARROW_DAY_STEPS[event.key];
     if (step !== undefined) {
       event.preventDefault();
@@ -147,7 +147,7 @@ function Calendar({ selected, today, min, max, onPick }: Readonly<CalendarProps>
           </span>
         ))}
       </div>
-      <div ref={gridRef} className={styles.days} onKeyDown={onKeyDown}>
+      <div ref={gridRef} className={styles.days}>
         {monthWeeks(view).map((week) =>
           week.map((day, index) =>
             day === null ? (
@@ -168,6 +168,7 @@ function Calendar({ selected, today, min, max, onPick }: Readonly<CalendarProps>
                 tabIndex={day.iso === focused ? 0 : -1}
                 disabled={isDayOutside(day.iso, min, max)}
                 onFocus={() => setFocused(day.iso)}
+                onKeyDown={onKeyDown}
                 onClick={() => onPick(day.iso)}
               >
                 {day.day}
@@ -226,7 +227,7 @@ const TIME_STEPS: Record<string, number> = {
 
 function nextTimeSlot(key: string, slots: readonly string[], current: string): string | undefined {
   if (key === 'Home') return slots[0];
-  if (key === 'End') return slots[slots.length - 1];
+  if (key === 'End') return slots.at(-1);
   const step = TIME_STEPS[key];
   return step === undefined ? undefined : slots[slots.indexOf(current) + step];
 }
@@ -239,7 +240,7 @@ function TimeOptions({ selected, layout, onPick }: Readonly<TimeOptionsProps>) {
   const slots = timeSlots(selected);
   const tabbable = roving?.from === selected ? roving.to : selected || slots[0];
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     const next = nextTimeSlot(event.key, slots, tabbable ?? '');
     if (next === undefined) return;
     event.preventDefault();
@@ -248,31 +249,28 @@ function TimeOptions({ selected, layout, onPick }: Readonly<TimeOptionsProps>) {
   };
 
   return (
-    <div
-      ref={listRef}
-      role="group"
-      aria-label={t('common.dateTimePicker.timeList')}
-      className={layout === 'column' ? styles.timeColumnList : styles.timeRow}
-      onKeyDown={onKeyDown}
-    >
-      {slots.map((slot) => (
-        <button
-          key={slot}
-          type="button"
-          data-time={slot}
-          className={clsx(
-            layout === 'column' ? styles.timeOption : styles.timeChip,
-            slot === selected && styles.timeSelected
-          )}
-          aria-pressed={slot === selected}
-          tabIndex={slot === tabbable ? 0 : -1}
-          onFocus={() => setRoving({ from: selected, to: slot })}
-          onClick={() => onPick(slot)}
-        >
-          {slot}
-        </button>
-      ))}
-    </div>
+    <fieldset className={styles.timeFieldset} aria-label={t('common.dateTimePicker.timeList')}>
+      <div ref={listRef} className={layout === 'column' ? styles.timeColumnList : styles.timeRow}>
+        {slots.map((slot) => (
+          <button
+            key={slot}
+            type="button"
+            data-time={slot}
+            className={clsx(
+              layout === 'column' ? styles.timeOption : styles.timeChip,
+              slot === selected && styles.timeSelected
+            )}
+            aria-pressed={slot === selected}
+            tabIndex={slot === tabbable ? 0 : -1}
+            onFocus={() => setRoving({ from: selected, to: slot })}
+            onKeyDown={onKeyDown}
+            onClick={() => onPick(slot)}
+          >
+            {slot}
+          </button>
+        ))}
+      </div>
+    </fieldset>
   );
 }
 
@@ -377,7 +375,6 @@ export default function DateTimePicker({
         aria-controls={popoverOpen ? panelId : undefined}
         aria-labelledby={ariaLabelledBy ? `${ariaLabelledBy} ${valueId}` : undefined}
         aria-describedby={ariaDescribedBy}
-        aria-invalid={invalid || undefined}
         disabled={disabled}
         onClick={toggle}
       >
@@ -395,30 +392,32 @@ export default function DateTimePicker({
         <div
           ref={panelRef}
           id={panelId}
-          role="group"
-          aria-label={label}
           className={styles.panel}
           data-placement={position?.placement}
           style={fixedPopoverStyle(position)}
         >
-          <Calendar
-            selected={value.date}
-            today={today}
-            min={min}
-            max={max}
-            onPick={(date) => onChange({ date, time: value.time })}
-          />
-          <div className={styles.timeColumn}>
-            <span className={styles.timeTitle} aria-hidden="true">
-              {t('common.dateTimePicker.time')}
-            </span>
-            <TypedTime key={value.time} time={value.time} onTime={pickTime} />
-            <TimeOptions
-              selected={value.time}
-              layout="column"
-              onPick={(time) => pickTime(time, true)}
-            />
-          </div>
+          <fieldset className={styles.panelFieldset} aria-label={label}>
+            <div className={styles.panelLayout}>
+              <Calendar
+                selected={value.date}
+                today={today}
+                min={min}
+                max={max}
+                onPick={(date) => onChange({ date, time: value.time })}
+              />
+              <div className={styles.timeColumn}>
+                <span className={styles.timeTitle} aria-hidden="true">
+                  {t('common.dateTimePicker.time')}
+                </span>
+                <TypedTime key={value.time} time={value.time} onTime={pickTime} />
+                <TimeOptions
+                  selected={value.time}
+                  layout="column"
+                  onPick={(time) => pickTime(time, true)}
+                />
+              </div>
+            </div>
+          </fieldset>
         </div>
       ) : null}
       {isMobile ? (

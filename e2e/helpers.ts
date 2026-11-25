@@ -41,10 +41,14 @@ async function pickNightStart(page: Page, date: string, time: string): Promise<v
   const sheet = page.getByRole('dialog', { name: 'Date et heure' });
   const picker = page.getByRole('group', { name: 'Date et heure' }).or(sheet);
   await expect(picker).toBeVisible();
+  await expect(picker.locator('[data-day]').first()).toBeVisible();
   const day = picker.getByRole('button', { name: dayLabel, exact: true });
-  const towards = date < isoDateDaysFromNow(0) ? 'Mois précédent' : 'Mois suivant';
-  for (let month = 0; month < MONTHS_TO_SEARCH && !(await day.isVisible()); month += 1) {
-    await picker.getByRole('button', { name: towards }).click();
+  const towards = picker.getByRole('button', {
+    name: date < isoDateDaysFromNow(0) ? 'Mois précédent' : 'Mois suivant',
+  });
+  for (let month = 0; month < MONTHS_TO_SEARCH && (await day.count()) === 0; month += 1) {
+    if (await towards.isDisabled()) throw new Error(`${dayLabel} is outside the calendar`);
+    await towards.click();
   }
   await day.click();
   if (await sheet.isVisible()) {

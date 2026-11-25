@@ -77,6 +77,13 @@
   min-height: var(--space-8);
 }
 
+.chipsFieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
 .chips {
   display: flex;
   flex-wrap: wrap;
