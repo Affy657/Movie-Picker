@@ -37,6 +37,7 @@ import {
   tapTargetViolations,
 } from './architecture/primitives.mjs';
 import { isTestFile, readTexts, rel, root, walk, webSrc } from './architecture/sources.mjs';
+import { handWrittenJsonResponseViolations } from './architecture/testDoubles.mjs';
 import { undeclaredTokenViolations } from './architecture/tokenDeclarations.mjs';
 import {
   AVATAR_TSX,
@@ -106,6 +107,7 @@ function collectViolations(sources) {
   eachPath(components, buttonClassViolations);
   violations.push(...tapTargetViolations(sheets, components, foundation));
   eachPath(scripts, inlineStyleViolations);
+  eachPath(scripts, handWrittenJsonResponseViolations);
   violations.push(...iconScaleViolations(foundation, web.get(join(root, ICON_SIZE_TS)) ?? ''));
   violations.push(...avatarScaleViolations(foundation, web.get(join(root, AVATAR_TSX)) ?? ''));
   violations.push(...globalTargetViolations(sheets, markup));
@@ -141,7 +143,7 @@ function main() {
     process.exit(1);
   }
   console.log(
-    'Architecture: no violation (comments, API layers, writeSeq of the event view, front paths and generic error messages written once, shared/ as a leaf, feature layers, app/ above features and shared, import cycles through import() included, design system tokens, CSS and browser APIs the oldest supported Safari knows, tokens read by ::backdrop, colours in TypeScript, hover and reduced motion, icon, avatar and size scales, Modal, Button and ARIA primitives, tap targets, dead CSS classes, :global targets and tokens).'
+    'Architecture: no violation (comments, API layers, writeSeq of the event view, front paths and generic error messages written once, shared/ as a leaf, feature layers, app/ above features and shared, import cycles through import() included, design system tokens, CSS and browser APIs the oldest supported Safari knows, tokens read by ::backdrop, colours in TypeScript, hover and reduced motion, icon, avatar and size scales, Modal, Button and ARIA primitives, typed fake API answers in tests, tap targets, dead CSS classes, :global targets and tokens).'
   );
   if (cssModulesExcluded.length > 0)
     console.log(
