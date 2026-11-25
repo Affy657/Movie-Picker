@@ -2,20 +2,11 @@ import { useEffect, useState } from 'react';
 import type { EventData } from '@/features/events/types';
 import { eventScheduledStartUtcMs } from '@/shared/utils/eventScheduled';
 
-export const EVENT_LIVE_POLL_INTERVAL_UPCOMING_MS = 12_000;
-
-export const EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS = 15_000;
+export const EVENT_LIVE_POLL_INTERVAL_MS = 15_000;
 
 export type EventLiveStrategy = 'polling';
 
 export type EventLivePhase = 'finished' | 'upcoming' | 'active' | 'pending';
-
-type EventLikeForSchedule = {
-  isFinished?: boolean;
-  lifecycle?: string;
-  date?: string;
-  time?: string;
-};
 
 export function getEventLivePhase(
   event: { isFinished?: boolean; lifecycle?: string; date?: string; time?: string } | undefined,
@@ -30,33 +21,23 @@ export function getEventLivePhase(
   return 'active';
 }
 
-function livePollIntervalMs(
-  event: EventLikeForSchedule | undefined,
-  nowMs: number
-): number | false {
+function livePollIntervalMs(event: { isFinished?: boolean } | undefined): number | false {
   if (!event || event.isFinished) return false;
-  if (event.lifecycle === 'pending') return EVENT_LIVE_POLL_INTERVAL_UPCOMING_MS;
-  if (!event.date || !event.time) return EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS;
-  const start = eventScheduledStartUtcMs({ date: event.date, time: event.time });
-  if (start === null) return EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS;
-  if (nowMs < start) return EVENT_LIVE_POLL_INTERVAL_UPCOMING_MS;
-  return EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS;
+  return EVENT_LIVE_POLL_INTERVAL_MS;
 }
 
 export function getLivePollingRefetchIntervalForEventQuery(
-  data: EventData | undefined,
-  nowMs: number = Date.now()
+  data: EventData | undefined
 ): number | false {
-  return livePollIntervalMs(data, nowMs);
+  return livePollIntervalMs(data);
 }
 
 export function getLivePollingRefetchIntervalForMoviesQuery(
-  event: { isFinished?: boolean; lifecycle?: string; date?: string; time?: string } | undefined,
-  moviesQueryEnabled: boolean,
-  nowMs: number = Date.now()
+  event: { isFinished?: boolean } | undefined,
+  moviesQueryEnabled: boolean
 ): number | false {
-  if (!moviesQueryEnabled || !event || event.isFinished) return false;
-  return livePollIntervalMs(event, nowMs);
+  if (!moviesQueryEnabled) return false;
+  return livePollIntervalMs(event);
 }
 
 export type UseEventLiveOptions = {
@@ -94,19 +75,9 @@ export function useEventLive(
   const livePhase = getEventLivePhase(event, nowMs);
   const moviesRefetchInterval = getLivePollingRefetchIntervalForMoviesQuery(
     event,
-    options.moviesQueryEnabled,
-    nowMs
+    options.moviesQueryEnabled
   );
-
-  const eventOnlyInterval = getLivePollingRefetchIntervalForEventQuery(event, nowMs);
-  let pollIntervalMs: number;
-  if (typeof moviesRefetchInterval === 'number') {
-    pollIntervalMs = moviesRefetchInterval;
-  } else if (typeof eventOnlyInterval === 'number') {
-    pollIntervalMs = eventOnlyInterval;
-  } else {
-    pollIntervalMs = EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS;
-  }
+  const pollIntervalMs = EVENT_LIVE_POLL_INTERVAL_MS;
 
   return {
     strategy,
