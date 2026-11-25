@@ -3842,15 +3842,9 @@ export const fr = {
       nextWhen: 'Ensuite',
       nextWhat: 'Prochainement',
       nextDetail:
-        'Les entrées en tête du backlog, prises dans l’ordre. L’ordre suit l’usage mesuré : ce qui fait entrer du monde dans une soirée passe avant les nouvelles surfaces.',
+        'Rien n’est en file pour l’instant : la prochaine entrée sortira du backlog quand un retour d’usage la justifiera. Ce qui fait entrer du monde dans une soirée passe avant les nouvelles surfaces.',
       nextHint:
         'L’usage se mesure depuis la 1.16.0 : chaque entrée se juge ensuite sur ce qu’elle change dans les chiffres.',
-      nextItem1: 'Plateformes de streaming par compte',
-      nextItem2: 'Déjà vu automatique en soirée',
-      nextItem3: 'Une liste en vitrine sur le profil',
-      nextItem4: 'Cadres d’avatar à débloquer',
-      nextItem5: 'Sondage de disponibilité dans un groupe',
-      nextItem6: 'Une liste pour chaque groupe',
       v2When: 'Sans date annoncée',
       v2What: 'V2',
       v2Detail:

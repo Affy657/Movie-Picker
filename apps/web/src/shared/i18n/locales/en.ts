@@ -3796,15 +3796,9 @@ export const en: Locale = {
       nextWhen: 'Next',
       nextWhat: 'Coming up',
       nextDetail:
-        'The entries at the top of the backlog, taken in order. The order follows measured usage: what brings people into a night comes before new surfaces.',
+        'Nothing is queued for now: the next entry will come out of the backlog when real usage calls for it. What brings people into a night comes before new surfaces.',
       nextHint:
         'Usage has been measured since 1.16.0: each entry is then judged on what it changes in the numbers.',
-      nextItem1: 'Streaming services per account',
-      nextItem2: 'Automatic "already seen" in a night',
-      nextItem3: 'A showcase list on the profile',
-      nextItem4: 'Avatar frames to unlock',
-      nextItem5: 'Availability poll in a group',
-      nextItem6: 'A list for every group',
       v2When: 'No date announced',
       v2What: 'V2',
       v2Detail:

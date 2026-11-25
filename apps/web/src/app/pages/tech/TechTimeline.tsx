@@ -21,7 +21,7 @@ const MILESTONES: readonly { key: string; items: number; state: MilestoneState }
   { key: 'v17', items: 7, state: 'shipped' },
   { key: 'since17', items: 7, state: 'shipped' },
   { key: 'flow', items: 3, state: 'current' },
-  { key: 'next', items: 6, state: 'planned' },
+  { key: 'next', items: 0, state: 'planned' },
   { key: 'v2', items: 3, state: 'planned' },
 ];
 
@@ -72,15 +72,17 @@ export default function TechTimeline() {
             <p className={styles.timelineDetail}>
               {t(`tech.trajectory.${key}Detail` as TranslationKey)}
             </p>
-            <ul className={clsx(shared.tags, styles.timelineChips)}>
-              {Array.from({ length: items }, (_, index) => (
-                <li key={index}>
-                  <span className={shared.tag}>
-                    {t(`tech.trajectory.${key}Item${index + 1}` as TranslationKey)}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            {items > 0 ? (
+              <ul className={clsx(shared.tags, styles.timelineChips)}>
+                {Array.from({ length: items }, (_, index) => (
+                  <li key={index}>
+                    <span className={shared.tag}>
+                      {t(`tech.trajectory.${key}Item${index + 1}` as TranslationKey)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </li>
         </Fragment>
       ))}

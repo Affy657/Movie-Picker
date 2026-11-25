@@ -288,7 +288,7 @@ describe('TechPage', () => {
 
     for (const step of steps.filter((step) => step.getAttribute('data-state') !== 'unplanned')) {
       const title = step.querySelector('h3')?.textContent ?? '';
-      const minimumItems = title.includes('Prochainement') ? 1 : 3;
+      const minimumItems = title.includes('Prochainement') ? 0 : 3;
       expect(step.querySelector('h3')).not.toBeNull();
       expect(step.querySelectorAll(':scope > ul > li').length).toBeGreaterThanOrEqual(minimumItems);
     }
