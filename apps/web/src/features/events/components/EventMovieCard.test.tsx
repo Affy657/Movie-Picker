@@ -109,6 +109,20 @@ describe('EventMovieCard, the film sheet', () => {
     expect(eye).toHaveTextContent('');
   });
 
+  it('reserves no room for the note when there is none', () => {
+    const { card } = renderCard({ pitchNote: null });
+
+    expect(within(card).queryByTestId('movie-card-note')).not.toBeInTheDocument();
+  });
+
+  it('keeps the note zone when the film has a note', () => {
+    const { card } = renderCard({ pitchNote: 'Un casse dans les rêves' });
+
+    expect(within(card).getByTestId('movie-card-note')).toHaveTextContent(
+      'Un casse dans les rêves'
+    );
+  });
+
   it('shows the vote error in place of the note, with a retry', async () => {
     const onRetryVote = vi.fn();
     const { card } = renderCard(

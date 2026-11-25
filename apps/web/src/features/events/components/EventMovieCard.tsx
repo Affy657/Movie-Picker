@@ -225,22 +225,24 @@ export const EventMovieCard = memo(function EventMovieCard({
         </div>
       </dl>
 
-      <div className={styles.note} inert={selecting}>
-        {voteError && !s.noteEditing ? (
-          <VoteErrorNotice voteError={voteError} title={m.title} t={t} />
-        ) : (
-          <CardNote
-            s={s}
-            m={m}
-            slug={slug}
-            participantId={participantId}
-            refresh={refresh}
-            onActionError={onActionError}
-            lines={2}
-            t={t}
-          />
-        )}
-      </div>
+      {voteError || m.pitchNote || s.noteEditing ? (
+        <div className={styles.note} inert={selecting} data-testid="movie-card-note">
+          {voteError && !s.noteEditing ? (
+            <VoteErrorNotice voteError={voteError} title={m.title} t={t} />
+          ) : (
+            <CardNote
+              s={s}
+              m={m}
+              slug={slug}
+              participantId={participantId}
+              refresh={refresh}
+              onActionError={onActionError}
+              lines={2}
+              t={t}
+            />
+          )}
+        </div>
+      ) : null}
 
       <div ref={bar.ref} className={styles.bar} inert={selecting}>
         {s.canVote ? (
