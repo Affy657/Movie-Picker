@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -31,7 +32,7 @@ public sealed class GetEligibleFollowsForEventHandler : IGetEligibleFollowsForEv
     {
         var evt = await _events.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
-        if (evt.CreatorUserId != currentUserId)
+        if (!HostedEvent.IsHostAccount(evt, currentUserId))
             throw Errors.HostOnlyList();
 
         var followingIds = await _follows.GetFollowingIdsAsync(currentUserId, ct: ct);

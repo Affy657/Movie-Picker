@@ -40,10 +40,11 @@ public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
 
     public async Task<WheelResponse> HandleAsync(string idOrSlug, SetManualWinnerRequest request, CancellationToken ct = default)
     {
+        var userId = _currentUserAccessor.GetUserId();
         var evt = await HostedEvent.LoadForHostAsync(
             _eventRepository,
             _hostTokenAccessor,
-            _currentUserAccessor.GetUserId(),
+            userId,
             idOrSlug,
             _clock.GetUtcNow(),
             ct);
@@ -76,13 +77,13 @@ public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
         await _eventRepository.UpdateAsync(updated, ct);
         _logger.LogInformation("Manual winner set for event {EventId}, winner: {MovieId}", evt.Id, winner.Id);
 
-        await _winnerAnnouncer.AnnounceAsync(evt, winner.Title, WinnerPickMethod.Manual, CancellationToken.None);
+        await _winnerAnnouncer.AnnounceAsync(evt, winner.Title, WinnerPickMethod.Manual, userId, CancellationToken.None);
 
         var winnerPoster = _posterImageStore.ToPublicPosterPath(winner.PosterPath);
 
         return new WheelResponse
         {
-            Winner = WinnerMovieResponse.FromDomain(winner, winnerPoster),
+            Winner = WinnerMovieResponse.Of(evt, winner, winnerPoster),
             Message = "Movie picked by the host"
         };
     }

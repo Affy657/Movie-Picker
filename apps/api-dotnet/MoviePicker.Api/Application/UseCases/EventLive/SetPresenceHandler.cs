@@ -38,7 +38,7 @@ public sealed class SetPresenceHandler : ISetPresenceHandler
             evt.Id,
             participant.Id,
             seenUntil,
-            request.Proposing ? seenUntil : null,
+            request.Proposing && !evt.HasAnonymousProposals ? seenUntil : null,
             ct);
     }
 }

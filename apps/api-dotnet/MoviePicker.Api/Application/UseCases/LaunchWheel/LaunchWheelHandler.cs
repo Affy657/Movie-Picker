@@ -106,7 +106,7 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         var winnerPoster = _posterImageStore.ToPublicPosterPath(winner.PosterPath);
         return new WheelResponse
         {
-            Winner = WinnerMovieResponse.FromDomain(winner, winnerPoster),
+            Winner = WinnerMovieResponse.Of(evt, winner, winnerPoster),
             Message = message
         };
     }
@@ -119,7 +119,7 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
 
         return new WheelResponse
         {
-            Winner = WinnerMovieResponse.FromDomain(latest, _posterImageStore.ToPublicPosterPath(latest.PosterPath)),
+            Winner = WinnerMovieResponse.Of(evt, latest, _posterImageStore.ToPublicPosterPath(latest.PosterPath)),
             Message = "Wheel already spun"
         };
     }

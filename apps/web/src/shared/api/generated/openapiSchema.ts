@@ -3397,6 +3397,188 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{idOrSlug}/co-hosts/{participantId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    idOrSlug: string;
+                    participantId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    idOrSlug: string;
+                    participantId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{idOrSlug}/invitations/eligible-follows": {
         parameters: {
             query?: never;
@@ -12114,6 +12296,7 @@ export interface components {
             wheelMode: components["schemas"]["WheelMode"];
             richSharePreview: boolean;
             allowSeries: boolean;
+            anonymousProposals: boolean;
             /** Format: int32 */
             winnerCount: number;
             recurrence: components["schemas"]["RecurrenceFrequency"] | null;
@@ -12153,6 +12336,7 @@ export interface components {
             _id: string;
             pseudo: string;
             isCreator: boolean;
+            isCoHost: boolean;
             avatarId: string;
             handle: string | null;
             accentColor: components["schemas"]["AccentColor"] | null;
@@ -12187,6 +12371,7 @@ export interface components {
             wheelMode: components["schemas"]["WheelMode"];
             richSharePreview: boolean;
             allowSeries: boolean;
+            anonymousProposals: boolean;
             /** Format: int32 */
             winnerCount: number;
         };
@@ -13412,6 +13597,7 @@ export interface components {
             wheelMode?: components["schemas"]["WheelMode"] | null;
             richSharePreview?: boolean | null;
             allowSeries?: boolean | null;
+            anonymousProposals?: boolean | null;
             /** Format: int32 */
             winnerCount?: number | null;
             recurrence?: components["schemas"]["RecurrenceFrequency"] | null;
@@ -13569,6 +13755,7 @@ export interface components {
             wheelMode?: components["schemas"]["WheelMode"] | null;
             richSharePreview?: boolean | null;
             allowSeries?: boolean | null;
+            anonymousProposals?: boolean | null;
             /** Format: int32 */
             winnerCount?: number | null;
         };

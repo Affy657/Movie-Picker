@@ -106,9 +106,9 @@ public sealed class AddMovieHandler : IAddMovieHandler
             UpdatedAt = now
         };
 
-        var created = await InsertWithinProposalLimitAsync(evt, participant, movie, ct);
+        var (created, night) = await InsertWithinProposalLimitAsync(idOrSlug, evt.Id, participant, movie, ct);
 
-        await _audience.NotifyParticipantsAsync(MovieAddedMessage(evt, created.Title, proposer), participant.UserId, CancellationToken.None);
+        await _audience.NotifyParticipantsAsync(MovieAddedMessage(night, created.Title, proposer), participant.UserId, CancellationToken.None);
 
         var key = (created.TmdbId, created.MediaType);
         var enrichments = await TmdbEnrichments.LoadAsync([key], _tmdb, _options, ct);
@@ -120,32 +120,34 @@ public sealed class AddMovieHandler : IAddMovieHandler
             enrichments.GetValueOrDefault(key));
     }
 
-    private async Task<Movie> InsertWithinProposalLimitAsync(
-        Event evt,
+    private async Task<(Movie Created, Event Night)> InsertWithinProposalLimitAsync(
+        string idOrSlug,
+        string eventId,
         Participant participant,
         Movie movie,
         CancellationToken ct)
     {
-        var maxProp = evt.Config?.MaxProposalsPerParticipant;
         Movie created = movie;
+        Event? night = null;
         await _unitOfWork.ExecuteAsync(
             async token =>
             {
-                await _eventRepository.LockForWriteAsync(evt.Id, token);
-                if (await _participantRepository.FindByIdAndEventIdAsync(participant.Id, evt.Id, token) is null)
+                await _eventRepository.LockForWriteAsync(eventId, token);
+                night = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, token);
+                if (await _participantRepository.FindByIdAndEventIdAsync(participant.Id, eventId, token) is null)
                     throw Errors.InvalidParticipant();
-                if (await _movieRepository.CountByEventIdAsync(evt.Id, token) >= EventConfig.MaxMoviesPerEventCap)
+                if (await _movieRepository.CountByEventIdAsync(eventId, token) >= EventConfig.MaxMoviesPerEventCap)
                     throw Errors.EventMovieLimitReached(EventConfig.MaxMoviesPerEventCap);
-                if (maxProp is > 0)
+                if (night.Config?.MaxProposalsPerParticipant is > 0 and var maxProp)
                 {
-                    var count = await _movieRepository.CountByEventAndParticipantAsync(evt.Id, participant.Id, token);
+                    var count = await _movieRepository.CountByEventAndParticipantAsync(eventId, participant.Id, token);
                     if (count >= maxProp)
-                        throw Errors.ProposalLimitReached(maxProp.Value);
+                        throw Errors.ProposalLimitReached(maxProp);
                 }
                 created = await _movieRepository.InsertAsync(movie, token);
             },
             ct);
-        return created;
+        return (created, night!);
     }
 
     private async Task<TmdbLookup> LookUpOnTmdbAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct)
@@ -196,7 +198,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
             EventSlug = evt.Slug,
             EventTitle = evt.Title,
             MovieTitle = movieTitle
-        }.WithActor(proposer),
+        }.WithActor(evt.HasAnonymousProposals ? null : proposer),
         ServerCopy.Push.MovieAdded(movieTitle, evt.Title).ToMessage(
             tag: $"movie-add-{evt.Id}",
             url: FrontRoutes.EventDetail(evt.Slug)));

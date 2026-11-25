@@ -469,4 +469,32 @@ public sealed class GetUserStatsHandlerTests
         Assert.Equal(2, res.CurrentStreakWeeks);
         Assert.Equal(2, res.BestStreakWeeks);
     }
+
+    [Fact]
+    public async Task ProposalsOfAnonymousNights_AreLeftOutOfTheProfileFigures()
+    {
+        var handler = Build();
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
+        var at = new DateTimeOffset(2026, 5, 20, 0, 0, 0, TimeSpan.Zero);
+        _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([Part("p-open", "open", at), Part("p-anon", "anon", at)]);
+        _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                Evt("open", winnerMovieId: "m-open"),
+                Evt("anon", winnerMovieId: "m-anon") with { Config = new EventConfig { AnonymousProposals = true } }
+            ]);
+        _movies.Setup(r => r.ListByParticipantIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                Mov("m-open", "p-open", 27) with { EventId = "open" },
+                Mov("m-anon", "p-anon", 35) with { EventId = "anon" }
+            ]);
+
+        var res = await handler.HandleAsync("alice");
+
+        Assert.Equal(1, res.MoviesProposed);
+        Assert.Equal(1, res.WinningProposals);
+        Assert.Equal([27], res.FavoriteGenres.Select(g => g.GenreId));
+    }
 }

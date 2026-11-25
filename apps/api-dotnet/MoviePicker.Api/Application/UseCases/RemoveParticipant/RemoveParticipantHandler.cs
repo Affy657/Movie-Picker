@@ -71,11 +71,19 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
             && !string.IsNullOrEmpty(participant.UserId)
             && participant.UserId == currentUserId;
 
-        if (!isHost && !isSelfConnected)
-            throw Errors.HostOrSelfOnly();
+        void EnsureMayRemove(Event night)
+        {
+            if (isSelfConnected)
+                return;
+            if (!HostedEvent.IsHost(night, _hostTokenAccessor, currentUserId))
+                throw Errors.HostOrSelfOnly();
+            if (night.IsCoHost(participant.UserId) && !HostedEvent.IsCreator(night, _hostTokenAccessor, currentUserId))
+                throw Errors.CoHostCannotRemoveCoHost();
+        }
 
+        EnsureMayRemove(evt);
         var keptOutUserId = isHost && !isSelfConnected ? participant.UserId : null;
-        var movieIds = await RemoveWithItsMoviesAsync(idOrSlug, evt.Id, participant.Id, keptOutUserId, ct);
+        var movieIds = await RemoveWithItsMoviesAsync(idOrSlug, evt.Id, participant, keptOutUserId, EnsureMayRemove, ct);
         if (!string.IsNullOrEmpty(keptOutUserId))
             await _audience.NotifyUsersAsync([keptOutUserId], RemovedMessage(evt), CancellationToken.None);
 
@@ -108,8 +116,9 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
     private async Task<IReadOnlyList<string>> RemoveWithItsMoviesAsync(
         string idOrSlug,
         string eventId,
-        string participantId,
+        Participant participant,
         string? keptOutUserId,
+        Action<Event> ensureMayRemove,
         CancellationToken ct)
     {
         IReadOnlyList<string> movieIds = [];
@@ -118,6 +127,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
             {
                 var current = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, token);
                 EnsureParticipantsCanChange(current);
+                ensureMayRemove(current);
 
                 movieIds = await EventChildData.PurgeParticipantTracesAsync(
                     _voteRepository,
@@ -125,11 +135,12 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
                     _ratingRepository,
                     _movieRepository,
                     eventId,
-                    participantId,
+                    participant.Id,
                     token);
-                if (!await _participantRepository.DeleteAsync(participantId, eventId, token))
+                if (!await _participantRepository.DeleteAsync(participant.Id, eventId, token))
                     throw Errors.ParticipantNotFound();
-                var updated = string.IsNullOrEmpty(keptOutUserId) ? current : current.KeepingOut(keptOutUserId);
+                var updated = (string.IsNullOrEmpty(keptOutUserId) ? current : current.KeepingOut(keptOutUserId))
+                    .WithoutCoHost(participant.UserId);
                 await _eventRepository.UpdateAsync(updated with { UpdatedAt = _clock.GetUtcNow() }, token);
             },
             ct);

@@ -6,6 +6,7 @@ interface Props {
   disabled?: boolean;
   ariaLabel?: string;
   ariaLabelledBy?: string;
+  ariaDescribedBy?: string;
 }
 
 export default function Toggle({
@@ -14,6 +15,7 @@ export default function Toggle({
   disabled,
   ariaLabel,
   ariaLabelledBy,
+  ariaDescribedBy,
 }: Readonly<Props>) {
   return (
     <button
@@ -22,6 +24,7 @@ export default function Toggle({
       aria-checked={checked}
       aria-label={ariaLabelledBy ? undefined : ariaLabel}
       aria-labelledby={ariaLabelledBy}
+      aria-describedby={ariaDescribedBy}
       className={styles.toggle}
       disabled={disabled}
       onClick={() => onChange(!checked)}

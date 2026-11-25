@@ -101,6 +101,17 @@ describe('MovieNightBar', () => {
     expect(container.querySelector('.accent-teal')).not.toBeNull();
   });
 
+  it('names nobody when the film was proposed anonymously', () => {
+    vi.mocked(useMovieNight).mockReturnValue(
+      night({ movie: { ...movie, proposerPseudo: '', participantId: '' } })
+    );
+    renderBar();
+
+    const bar = screen.getByRole('region', { name: 'Ce film dans Ciné-club du mercredi' });
+    expect(within(bar).getByText('Proposition anonyme')).toBeInTheDocument();
+    expect(within(bar).queryByText(/Proposé par/)).not.toBeInTheDocument();
+  });
+
   it('names the night, the proposer and the score, and goes back to the night', async () => {
     const onBack = vi.fn();
     vi.mocked(useMovieNight).mockReturnValue(night());

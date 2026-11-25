@@ -71,6 +71,17 @@ public sealed class InviteUserHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_CoHost_GetsPastTheHostCheck()
+    {
+        SetupEvent(Evt() with { CoHostUserIds = ["co-host"] });
+        _follows.Setup(f => f.IsFollowingAsync("co-host", TargetId, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("co-host", "evt1", Request()));
+
+        Assert.Equal(ErrorCodes.InviteOnlyFollowed, ex.Reason);
+    }
+
+    [Fact]
     public async Task HandleAsync_NotFollowingTarget_Throws()
     {
         SetupEvent(Evt());

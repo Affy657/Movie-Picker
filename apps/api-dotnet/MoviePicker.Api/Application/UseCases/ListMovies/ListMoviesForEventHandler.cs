@@ -118,7 +118,12 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
             : new Dictionary<string, int>();
 
         var participantById = eventParticipants.ToDictionary(p => p.Id);
+        var viewerUserId = _currentUserAccessor.GetUserId();
+        bool Conceals(Movie movie) => evt.ConcealsProposer(
+            participantById.GetValueOrDefault(movie.ParticipantId)?.UserId,
+            viewerUserId);
         var proposerUserIds = movies
+            .Where(m => !Conceals(m))
             .Select(m => participantById.TryGetValue(m.ParticipantId, out var pp) ? pp.UserId : null)
             .Where(id => !string.IsNullOrEmpty(id))
             .Select(id => id!)
@@ -147,7 +152,13 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
                 seenByPseudos,
                 ResolvePseudos(votes.UpVoterIds, participantById),
                 ratingsByMovie.TryGetValue(m.Id, out var ratings) ? ratings : []);
-            list.Add(MovieWithScoreResponse.From(m, _posterImageStore, ProposerOf(proposer, userById), activity, enr));
+            var concealed = Conceals(m);
+            list.Add(MovieWithScoreResponse.From(
+                concealed ? m with { ParticipantId = string.Empty } : m,
+                _posterImageStore,
+                ProposerOf(concealed ? null : proposer, userById),
+                activity,
+                enr));
         }
 
         return list;
@@ -155,7 +166,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
 
     private static MovieProposer ProposerOf(Participant? proposer, Dictionary<string, UserCard> userById) =>
         proposer is null
-            ? new MovieProposer(string.Empty, null)
+            ? MovieProposer.None
             : new MovieProposer(proposer.Pseudo, DisplayedPerson.LinkedTo(proposer, userById)?.PublicHandle);
 
     private Task<IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>> BuildEnrichmentMapAsync(

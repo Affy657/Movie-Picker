@@ -25,6 +25,7 @@ const body: SaveEventTemplateBody = {
   wheelMode: 'strictRandom',
   richSharePreview: false,
   allowSeries: false,
+  anonymousProposals: false,
   winnerCount: 1,
 };
 

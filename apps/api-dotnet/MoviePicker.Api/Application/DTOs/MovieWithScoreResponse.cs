@@ -4,7 +4,10 @@ using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.DTOs;
 
-public sealed record MovieProposer(string Pseudo, string? Handle);
+public sealed record MovieProposer(string Pseudo, string? Handle)
+{
+    public static MovieProposer None { get; } = new(string.Empty, null);
+}
 
 public sealed record MovieNightActivity(
     MovieVoteSummary Votes,

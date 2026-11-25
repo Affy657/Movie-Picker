@@ -309,4 +309,85 @@ public sealed class EventTests
 
         Assert.Equal(["m1", "m2", "m3"], evt.GetWinnerMovieIds());
     }
+
+    [Fact]
+    public void WithCoHost_AddsTheAccountOnce()
+    {
+        var evt = new Event().WithCoHost("u1").WithCoHost("u1");
+
+        Assert.Equal(["u1"], evt.CoHostUserIds);
+        Assert.True(evt.IsCoHost("u1"));
+    }
+
+    [Fact]
+    public void WithoutCoHost_RemovesOnlyThatAccount()
+    {
+        var evt = new Event { CoHostUserIds = ["u1", "u2"] }.WithoutCoHost("u1");
+
+        Assert.Equal(["u2"], evt.CoHostUserIds);
+        Assert.False(evt.IsCoHost("u1"));
+    }
+
+    [Fact]
+    public void WithoutCoHost_UnknownAccount_KeepsTheSameNight()
+    {
+        var evt = new Event { CoHostUserIds = ["u1"] };
+
+        Assert.Same(evt, evt.WithoutCoHost("u2"));
+        Assert.Same(evt, evt.WithoutCoHost(null));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void IsCoHost_NoAccount_False(string? userId)
+    {
+        Assert.False(new Event { CoHostUserIds = [""] }.IsCoHost(userId));
+    }
+
+    [Fact]
+    public void ConcealsProposer_OpenNight_NeverConceals()
+    {
+        var evt = new Event { Config = new EventConfig { AnonymousProposals = false } };
+
+        Assert.False(evt.ConcealsProposer("proposer", "viewer"));
+        Assert.False(new Event().ConcealsProposer("proposer", viewerUserId: null));
+    }
+
+    [Fact]
+    public void ConcealsProposer_AnonymousNight_ShowsTheProposerOnlyToThemselves()
+    {
+        var evt = new Event { Config = new EventConfig { AnonymousProposals = true } };
+
+        Assert.False(evt.ConcealsProposer("proposer", "proposer"));
+        Assert.True(evt.ConcealsProposer("proposer", "viewer"));
+        Assert.True(evt.ConcealsProposer("proposer", viewerUserId: null));
+        Assert.True(evt.ConcealsProposer(proposerUserId: null, viewerUserId: null));
+    }
+
+    [Fact]
+    public void ConcealsProposer_AnonymousNightWithWinner_StillConceals()
+    {
+        var evt = new Event
+        {
+            Config = new EventConfig { AnonymousProposals = true },
+            Winners = [Winner("m1")],
+            ClosedAt = new DateTimeOffset(2026, 6, 30, 23, 0, 0, TimeSpan.Zero)
+        };
+
+        Assert.True(evt.ConcealsProposer("proposer", "viewer"));
+    }
+
+    [Theory]
+    [InlineData("creator", true)]
+    [InlineData("co-host", true)]
+    [InlineData("guest", false)]
+    [InlineData(null, false)]
+    [InlineData("", false)]
+    public void IsHostedBy_CreatorOrCoHostAccount(string? userId, bool expected)
+    {
+        var evt = new Event { CreatorUserId = "creator", CoHostUserIds = ["co-host"] };
+
+        Assert.Equal(expected, evt.IsHostedBy(userId));
+    }
 }

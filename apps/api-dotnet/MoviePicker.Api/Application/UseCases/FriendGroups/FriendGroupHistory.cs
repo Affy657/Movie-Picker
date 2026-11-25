@@ -1,4 +1,5 @@
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.UseCases.FriendGroups;
@@ -26,7 +27,7 @@ public sealed class FriendGroupHistory
     {
         _nights = nights;
         _participants = participants;
-        _movies = movies;
+        _movies = AttributedProposals.Among(movies, nights);
         _upVotes = votes.Where(vote => vote.Value > 0).ToList();
         _seenByMovie = seenMarks.ToLookup(mark => mark.MovieId, mark => mark.ParticipantId);
         _ratings = ratings;

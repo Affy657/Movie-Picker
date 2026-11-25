@@ -369,6 +369,14 @@ export function ProposerBadge({
   accent?: AccentColor;
   t: Translate;
 }>) {
+  if (!pseudo) {
+    return (
+      <span className={styles.proposer}>
+        <Avatar avatarId={null} size="xs" />
+        <span className={styles.proposerName}>{t('movies.list.anonymousProposer')}</span>
+      </span>
+    );
+  }
   const content = (
     <>
       <Avatar avatarId={avatarId} pseudo={pseudo} size="xs" accent={accent} />

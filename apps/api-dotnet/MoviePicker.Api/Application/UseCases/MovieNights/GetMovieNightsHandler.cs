@@ -75,7 +75,7 @@ public sealed class GetMovieNightsHandler : IGetMovieNightsHandler
                 .OrderByDescending(SortInstant)
                 .ThenByDescending(night => night.CreatedAt)
                 .Take(MaxNights)
-                .Select(night => ToNight(night, proposalByEventId[night.Id], proposalIds, participantById, utcNow))
+                .Select(night => ToNight(night, proposalByEventId[night.Id], proposalIds, participantById, userId, utcNow))
                 .ToList(),
             ProposalCount = nights.Count,
             WinCount = nights.Count(night => IsWonByTheTitle(night, proposalIds)),
@@ -149,9 +149,11 @@ public sealed class GetMovieNightsHandler : IGetMovieNightsHandler
         Movie proposal,
         HashSet<string> proposalIds,
         Dictionary<string, Participant> participantById,
+        string viewerUserId,
         DateTimeOffset utcNow)
     {
         var isFinished = night.IsFinished(utcNow);
+        var proposer = participantById.GetValueOrDefault(proposal.ParticipantId);
         return new MovieNightResponse
         {
             Slug = night.Slug,
@@ -160,7 +162,9 @@ public sealed class GetMovieNightsHandler : IGetMovieNightsHandler
             IsWinner = IsWonByTheTitle(night, proposalIds),
             IsFinished = isFinished,
             RecapSlug = isFinished && night.HasWinner && !string.IsNullOrWhiteSpace(night.RecapSlug) ? night.RecapSlug : null,
-            ProposerPseudo = participantById.TryGetValue(proposal.ParticipantId, out var proposer) ? proposer.Pseudo : string.Empty,
+            ProposerPseudo = proposer is null || night.ConcealsProposer(proposer.UserId, viewerUserId)
+                ? string.Empty
+                : proposer.Pseudo,
         };
     }
 

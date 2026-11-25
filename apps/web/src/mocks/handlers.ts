@@ -804,7 +804,7 @@ export interface MockEventOptions {
 }
 
 function mockParticipant(_id: string, pseudo: string, isCreator = false) {
-  return { _id, pseudo, isCreator, avatarId: '', handle: null, accentColor: null };
+  return { _id, pseudo, isCreator, isCoHost: false, avatarId: '', handle: null, accentColor: null };
 }
 
 export function createEventDetailHandlers(opts: MockEventOptions) {
@@ -850,6 +850,7 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
           winnerCount: opts.winnerCount ?? 1,
           richSharePreview: false,
           allowSeries: false,
+          anonymousProposals: false,
           hasNextOccurrence: false,
           groupId: null,
         },

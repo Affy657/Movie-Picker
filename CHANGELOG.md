@@ -8,6 +8,11 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Des propositions anonymes** : une règle de la soirée, à choisir avant la première proposition, cache pour de bon qui a proposé chaque film, hôte compris ; seul le proposant voit son nom sur ses films, et ces films ne comptent plus dans les chiffres des profils et des groupes.
+- **Des co-hôtes** : l’hôte nomme un ou plusieurs participants co-hôtes depuis la liste des participants ; ils lancent la roue, règlent la soirée, invitent et retirent des participants comme lui, sans pouvoir la supprimer.
+
 ## [1.31.3] - 2026-11-25
 
 ### Changed

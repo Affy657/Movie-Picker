@@ -51,6 +51,7 @@ function readFields(raw: unknown): TemplateFormFields {
     wheelMode: WHEEL_MODES.has(raw.wheelMode) ? (raw.wheelMode as WheelMode) : fields.wheelMode,
     richSharePreview: pick(raw, fields, 'richSharePreview'),
     allowSeries: pick(raw, fields, 'allowSeries'),
+    anonymousProposals: pick(raw, fields, 'anonymousProposals'),
     winnerCount: pick(raw, fields, 'winnerCount'),
   };
 }

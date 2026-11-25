@@ -407,4 +407,27 @@ public sealed class GetEventDetailHandlerTests
         Assert.Equal(AccentColor.Green, result.Participants[1].AccentColor);
         Assert.Null(result.Participants[2].AccentColor);
     }
+
+    [Fact]
+    public async Task HandleAsync_CoHostViewer_IsHost_AndTheListMarksEveryCoHost()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var evt = Event() with { CreatorUserId = "creator", CoHostUserIds = ["u-co"] };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _currentUserAccessor.Setup(c => c.GetUserId()).Returns("u-co");
+        _participantRepo
+            .Setup(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<ParticipantEntity>)
+            [
+                new ParticipantEntity { Id = "p-creator", EventId = "evt1", Pseudo = "Adrien", UserId = "creator", CreatedAt = now, UpdatedAt = now },
+                new ParticipantEntity { Id = "p-co", EventId = "evt1", Pseudo = "Léa", UserId = "u-co", CreatedAt = now, UpdatedAt = now },
+                new ParticipantEntity { Id = "p-guest", EventId = "evt1", Pseudo = "Tom", UserId = "u-guest", CreatedAt = now, UpdatedAt = now }
+            ]);
+
+        var result = await _sut.HandleAsync("evt1");
+
+        Assert.True(result.IsHost);
+        Assert.Equal([false, true, false], result.Participants.Select(p => p.IsCoHost));
+        Assert.True(result.Participants[0].IsCreator);
+    }
 }

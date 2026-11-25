@@ -13,6 +13,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
 {
     private readonly IEventRepository _events;
     private readonly IParticipantRepository _participants;
+    private readonly IMovieRepository _movies;
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly EventAudienceNotifier _audience;
@@ -24,6 +25,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
     public PatchEventConfigHandler(
         IEventRepository events,
         IParticipantRepository participants,
+        IMovieRepository movies,
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
         EventAudienceNotifier audience,
@@ -34,6 +36,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
     {
         _events = events;
         _participants = participants;
+        _movies = movies;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _audience = audience;
@@ -62,6 +65,8 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         var date = ResolveDate(request, evt.Date);
         var time = ResolveTime(request, evt.Time);
         EnsurePatchAllowed(evt, evt with { Date = date, Time = time }, now, hasConfigChange, hasDateTimeChange, hasTitleChange, hasRecurrenceChange);
+        if (hasGroupChange && !HostedEvent.IsCreator(evt, _hostTokenAccessor, userId))
+            throw Errors.CreatorOnlyNightGroup();
         var chosenGroup = hasGroupChange ? await ResolveChosenGroupAsync(evt, request, userId, now, ct) : null;
 
         if (hasWinnerCountChange)
@@ -83,6 +88,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
             WheelMode = request.WheelMode ?? current.WheelMode,
             RichSharePreview = request.RichSharePreview ?? current.RichSharePreview,
             AllowSeries = request.AllowSeries ?? current.AllowSeries,
+            AnonymousProposals = request.AnonymousProposals ?? current.AnonymousProposals,
             WinnerCount = request.WinnerCount ?? current.WinnerCount
         };
 
@@ -101,8 +107,10 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
             UpdatedAt = now
         };
 
-        var saved = request.MaxParticipants.HasValue && nextConfig.MaxParticipants is { } participantLimit
-            ? await SaveWithinParticipantLimitAsync(updated, participantLimit, ct)
+        var participantLimit = request.MaxParticipants.HasValue ? nextConfig.MaxParticipants : null;
+        var changesAnonymity = evt.HasAnonymousProposals != nextConfig.AnonymousProposals;
+        var saved = participantLimit is not null || changesAnonymity
+            ? await SaveUnderEventLockAsync(updated, participantLimit, changesAnonymity, ct)
             : await _events.UpdateAsync(updated, ct);
 
         var dateChanged = date != evt.Date || time != evt.Time;
@@ -151,7 +159,8 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         || request.MaxVotesPerParticipant.HasValue
         || request.WheelMode.HasValue
         || request.RichSharePreview.HasValue
-        || request.AllowSeries.HasValue;
+        || request.AllowSeries.HasValue
+        || request.AnonymousProposals.HasValue;
 
     private static RecurrenceFrequency? ResolveRecurrence(PatchEventConfigRequest request, RecurrenceFrequency? current)
     {
@@ -251,16 +260,25 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
                 "maxParticipants")
             : current;
 
-    private async Task<Event> SaveWithinParticipantLimitAsync(Event updated, int limit, CancellationToken ct)
+    private async Task<Event> SaveUnderEventLockAsync(
+        Event updated,
+        int? participantLimit,
+        bool changesAnonymity,
+        CancellationToken ct)
     {
         var saved = updated;
         await _unitOfWork.ExecuteAsync(
             async token =>
             {
                 await _events.LockForWriteAsync(updated.Id, token);
-                var currentCount = await _participants.CountByEventIdAsync(updated.Id, token);
-                if (limit < currentCount)
-                    throw Errors.ParticipantLimitBelowCurrent(limit, currentCount);
+                if (participantLimit is { } limit)
+                {
+                    var currentCount = await _participants.CountByEventIdAsync(updated.Id, token);
+                    if (limit < currentCount)
+                        throw Errors.ParticipantLimitBelowCurrent(limit, currentCount);
+                }
+                if (changesAnonymity && await _movies.CountByEventIdAsync(updated.Id, token) > 0)
+                    throw Errors.AnonymousProposalsLocked();
                 saved = await _events.UpdateAsync(updated, token);
             },
             ct);

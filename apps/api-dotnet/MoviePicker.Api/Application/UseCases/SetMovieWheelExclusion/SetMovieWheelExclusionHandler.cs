@@ -53,6 +53,8 @@ public sealed class SetMovieWheelExclusionHandler : ISetMovieWheelExclusionHandl
             async token =>
             {
                 var current = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, token);
+                if (!HostedEvent.IsHost(current, _hostTokenAccessor, userId))
+                    throw Errors.HostOnly();
                 await _movieRepository.UpdateWheelExclusionAsync(movieId, request.Excluded, token);
                 await _eventRepository.UpdateAsync(current with { UpdatedAt = _clock.GetUtcNow() }, token);
             },

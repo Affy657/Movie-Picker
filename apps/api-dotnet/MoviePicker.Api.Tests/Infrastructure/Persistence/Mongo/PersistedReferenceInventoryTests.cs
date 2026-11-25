@@ -68,6 +68,9 @@ public sealed class PersistedReferenceInventoryTests
         ["BannerPhotoBlobDocument.UserId"] = new(
             Handling.Through<IBannerPhotoRepository>(),
             Handling.Through<IBannerPhotoRepository>()),
+        ["EventDocument.CoHostUserIds"] = new(
+            Handling.Through<IEventRepository>(),
+            Handling.Exempt("a co-host role is a decision of the creator about their event, and the user still sees it on the event")),
         ["EventDocument.CreatorUserId"] = new(
             Handling.Through<IEventRepository>(),
             Handling.Through<IEventRepository>()),

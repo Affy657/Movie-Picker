@@ -59,6 +59,7 @@ type Props = {
   onVote: (movieId: string, value: 1) => Promise<void>;
   allowSeries?: boolean;
   maxProposals?: number | null;
+  anonymous?: boolean;
 };
 
 function keyOf(tmdbId: number, mediaType?: MovieMediaType | null): string {
@@ -147,6 +148,7 @@ export default function ProposeMovieDialog({
   onVote,
   allowSeries = false,
   maxProposals = null,
+  anonymous = false,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -248,7 +250,9 @@ export default function ProposeMovieDialog({
     return {
       status: (
         <span className={styles.by}>
-          {t('events.propose.byOther', { name: movie.proposerPseudo })}
+          {movie.proposerPseudo
+            ? t('events.propose.byOther', { name: movie.proposerPseudo })
+            : t('events.propose.byAnonymous')}
         </span>
       ),
       action: (
@@ -283,6 +287,12 @@ export default function ProposeMovieDialog({
           t
         )}
       </span>
+      {anonymous ? (
+        <>
+          <span className={styles.sep} aria-hidden="true" />
+          <span>{t('events.propose.anonymousNotice')}</span>
+        </>
+      ) : null}
     </p>
   );
 

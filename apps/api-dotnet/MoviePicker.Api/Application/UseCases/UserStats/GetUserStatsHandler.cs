@@ -104,7 +104,7 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
         var seenTask = _seenMarks.CountByParticipantIdsAsync(participantIds, ct);
         await Task.WhenAll(proposedMoviesTask, votesTask, seenTask);
 
-        var proposedMovies = proposedMoviesTask.Result;
+        var proposedMovies = AttributedProposals.Among(proposedMoviesTask.Result, participantEvents);
         var canSeeWatched = PublicProfileGuard.CanSeeWatched(user, currentUserId);
         IReadOnlyList<Movie> winningProposals = canSeeWatched
             ? WinnerMovies.AmongProposals(proposedMovies, participantEvents)

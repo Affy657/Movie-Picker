@@ -156,17 +156,19 @@ public sealed class InMemoryEventRepositoryTests
     }
 
     [Fact]
-    public async Task ForgetRemovedUserAsync_TakesTheUserOutOfEveryRemovalList()
+    public async Task ForgetUserAsync_TakesTheUserOutOfEveryRemovalAndCoHostList()
     {
         var first = await _repo.AddAsync(Mk(slug: "premiere") with { RemovedUserIds = ["u2", "u3"] });
         var second = await _repo.AddAsync(Mk(slug: "seconde") with { RemovedUserIds = ["u2"] });
-        var untouched = await _repo.AddAsync(Mk(slug: "autre") with { RemovedUserIds = ["u3"] });
+        var coHosted = await _repo.AddAsync(Mk(slug: "cohote") with { CoHostUserIds = ["u2", "u3"] });
+        var untouched = await _repo.AddAsync(Mk(slug: "autre") with { RemovedUserIds = ["u3"], CoHostUserIds = ["u3"] });
 
-        Assert.Equal(0L, await _repo.ForgetRemovedUserAsync(""));
-        Assert.Equal(2L, await _repo.ForgetRemovedUserAsync("u2"));
+        Assert.Equal(0L, await _repo.ForgetUserAsync(""));
+        Assert.Equal(3L, await _repo.ForgetUserAsync("u2"));
 
         Assert.Equal(["u3"], (await _repo.GetByIdOrSlugAsync(first.Slug))!.RemovedUserIds);
         Assert.Empty((await _repo.GetByIdOrSlugAsync(second.Slug))!.RemovedUserIds);
+        Assert.Equal(["u3"], (await _repo.GetByIdOrSlugAsync(coHosted.Slug))!.CoHostUserIds);
         Assert.Equal(untouched.WriteSeq, (await _repo.GetByIdOrSlugAsync(untouched.Slug))!.WriteSeq);
     }
 

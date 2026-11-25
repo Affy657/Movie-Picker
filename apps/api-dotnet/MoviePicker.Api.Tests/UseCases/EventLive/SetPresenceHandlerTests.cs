@@ -82,4 +82,23 @@ public sealed class SetPresenceHandlerTests
             null,
             It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact]
+    public async Task HandleAsync_AnonymousNight_KeepsThePresenceButNeverTellsWhoIsProposing()
+    {
+        _events
+            .Setup(r => r.GetByIdOrSlugAsync("soiree", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new EventEntityBuilder().WithId("evt-1").WithSlug("soiree")
+                .WithConfig(new EventConfig { AnonymousProposals = true })
+                .Build());
+
+        await _sut.HandleAsync("user-1", "soiree", new PresenceRequest { Proposing = true });
+
+        _presence.Verify(r => r.SetProposingAsync(
+            "evt-1",
+            "p-1",
+            Now.AddSeconds(30),
+            null,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
 }

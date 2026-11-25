@@ -143,6 +143,7 @@ describe('HostEventSettingsPanel', () => {
           wheelMode: 'strictRandom',
           richSharePreview: false,
           allowSeries: false,
+          anonymousProposals: false,
         });
       })
     );
@@ -191,6 +192,73 @@ describe('HostEventSettingsPanel', () => {
 
     await waitFor(() => expect(bodies).toHaveLength(2));
     expect(bodies).toEqual([{ allowSeries: true }, { allowSeries: false }]);
+  });
+
+  it('turns anonymous proposals on and saves it', async () => {
+    const user = userEvent.setup();
+    const bodies: Record<string, unknown>[] = [];
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        bodies.push((await request.json()) as Record<string, unknown>);
+        return HttpResponse.json({ ...baseEvent.config, anonymousProposals: true });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        slug={slug}
+        hostToken={null}
+        event={baseEvent}
+        open
+        onClose={() => {}}
+      />
+    );
+
+    await user.click(screen.getByRole('switch', { name: 'Propositions anonymes' }));
+
+    await waitFor(() => expect(bodies).toEqual([{ anonymousProposals: true }]));
+  });
+
+  it('keeps anonymous proposals on once a movie has been proposed', () => {
+    renderWithRouter(
+      <HostEventSettingsPanel
+        slug={slug}
+        hostToken={null}
+        event={{
+          ...baseEvent,
+          movieCount: 2,
+          config: { ...baseEvent.config!, anonymousProposals: true },
+        }}
+        open
+        onClose={() => {}}
+      />
+    );
+
+    const anonymous = screen.getByRole('switch', { name: 'Propositions anonymes' });
+    expect(anonymous).toBeChecked();
+    expect(anonymous).toBeDisabled();
+    expect(
+      screen.getByText('Des films sont déjà proposés : l’anonymat ne change plus.')
+    ).toBeInTheDocument();
+  });
+
+  it('keeps anonymous proposals off once a movie has been proposed', () => {
+    renderWithRouter(
+      <HostEventSettingsPanel
+        slug={slug}
+        hostToken={null}
+        event={{ ...baseEvent, movieCount: 2 }}
+        open
+        onClose={() => {}}
+      />
+    );
+
+    const anonymous = screen.getByRole('switch', { name: 'Propositions anonymes' });
+    expect(anonymous).not.toBeChecked();
+    expect(anonymous).toBeDisabled();
+    expect(
+      screen.getByText('Des films sont déjà proposés : l’anonymat ne change plus.')
+    ).toBeInTheDocument();
   });
 
   it('sends nothing when a change is undone before it is saved', async () => {
@@ -1042,6 +1110,7 @@ describe('HostEventSettingsPanel', () => {
     wheelMode: 'weightedByVotes',
     richSharePreview: false,
     allowSeries: true,
+    anonymousProposals: false,
     winnerCount: 1,
   };
 
@@ -1085,6 +1154,7 @@ describe('HostEventSettingsPanel', () => {
           wheelMode: 'weightedByVotes',
           richSharePreview: false,
           allowSeries: true,
+          anonymousProposals: false,
         });
       })
     );
@@ -1110,6 +1180,76 @@ describe('HostEventSettingsPanel', () => {
       richSharePreview: true,
       allowSeries: true,
     });
+  });
+
+  it('keeps an anonymous night anonymous when a template applies once movies are proposed', async () => {
+    const user = userEvent.setup();
+    let patchedBody: Record<string, unknown> | null = null;
+    server.use(
+      http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
+        HttpResponse.json({ items: [templateFixture] })
+      ),
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        patchedBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ ...templateFixture, anonymousProposals: true });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={{
+          ...creatorEvent,
+          movieCount: 3,
+          config: { ...creatorEvent.config!, anonymousProposals: true },
+        }}
+      />
+    );
+
+    await user.click(await screen.findByRole('button', { name: /Soirée horreur/ }));
+
+    await waitFor(() => expect(patchedBody).not.toBeNull());
+    expect(patchedBody).toMatchObject({ theme: '🎃 Halloween', allowSeries: true });
+    expect(patchedBody).not.toHaveProperty('anonymousProposals');
+    expect(screen.getByRole('switch', { name: 'Propositions anonymes' })).toBeChecked();
+  });
+
+  it('keeps an anonymous night anonymous when the default rules apply once movies are proposed', async () => {
+    const user = userEvent.setup();
+    let patchedBody: Record<string, unknown> | null = null;
+    server.use(
+      http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
+        HttpResponse.json({ items: [templateFixture] })
+      ),
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        patchedBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ ...creatorEvent.config, anonymousProposals: true });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={{
+          ...creatorEvent,
+          movieCount: 3,
+          config: { ...creatorEvent.config!, allowSeries: true, anonymousProposals: true },
+        }}
+      />
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Par défaut' }));
+
+    await waitFor(() => expect(patchedBody).not.toBeNull());
+    expect(patchedBody).toMatchObject({ allowSeries: false });
+    expect(patchedBody).not.toHaveProperty('anonymousProposals');
+    expect(screen.getByRole('switch', { name: 'Propositions anonymes' })).toBeChecked();
   });
 
   it('refuses to save a template with a cleared limit instead of saving the default', async () => {
@@ -1226,6 +1366,7 @@ describe('HostEventSettingsPanel', () => {
           wheelMode: 'weightedByVotes',
           richSharePreview: false,
           allowSeries: true,
+          anonymousProposals: false,
         })
       ),
       http.put(`${TEST_API_V1}/users/me/event-templates/tpl1`, async ({ request }) => {
@@ -1261,6 +1402,7 @@ describe('HostEventSettingsPanel', () => {
       wheelMode: 'strictRandom',
       richSharePreview: false,
       allowSeries: true,
+      anonymousProposals: false,
     });
   });
 
@@ -1283,6 +1425,7 @@ describe('HostEventSettingsPanel', () => {
           wheelMode: 'weightedByVotes',
           richSharePreview: false,
           allowSeries: true,
+          anonymousProposals: false,
         })
       )
     );

@@ -187,4 +187,76 @@ describe('EventParticipantsList', () => {
 
     expect(screen.getByText('Personne n’a encore rejoint la soirée.')).toBeInTheDocument();
   });
+
+  describe('co-hosts', () => {
+    const night: EventParticipantSummary[] = [
+      { id: 'p-creator', pseudo: 'Hôte', isCreator: true },
+      { id: 'p-lea', pseudo: 'Léa', isCreator: false, isCoHost: true },
+      { id: 'p-tom', pseudo: 'Tom', isCreator: false },
+    ];
+
+    it('marks every co-host for everyone', () => {
+      renderList({ participants: night, currentParticipantId: 'p-tom' });
+
+      expect(screen.getByTestId('participant-p-lea')).toHaveTextContent('Co-hôte');
+      expect(screen.getByTestId('participant-p-tom')).not.toHaveTextContent('Co-hôte');
+      expect(screen.queryByRole('button', { name: /co-hôte/ })).not.toBeInTheDocument();
+    });
+
+    it('lets the creator name or withdraw a co-host, never on their own row', async () => {
+      const onToggleCoHost = vi.fn();
+      renderList({
+        participants: night,
+        currentParticipantId: 'p-creator',
+        isHost: true,
+        viewerIsCreator: true,
+        onRemoveParticipant: vi.fn(),
+        onToggleCoHost,
+      });
+
+      expect(
+        within(screen.getByTestId('participant-p-creator')).queryByRole('button')
+      ).not.toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Nommer Tom co-hôte' }));
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Retirer le rôle de co-hôte à Léa' })
+      );
+
+      expect(onToggleCoHost).toHaveBeenNthCalledWith(1, 'p-tom', true);
+      expect(onToggleCoHost).toHaveBeenNthCalledWith(2, 'p-lea', false);
+      expect(screen.getByRole('button', { name: 'Retirer Léa de la soirée' })).toBeInTheDocument();
+    });
+
+    it('lets a co-host remove a plain participant but neither the creator nor another co-host', () => {
+      renderList({
+        participants: [...night, { id: 'p-sam', pseudo: 'Sam', isCreator: false, isCoHost: true }],
+        currentParticipantId: 'p-lea',
+        isHost: true,
+        onRemoveParticipant: vi.fn(),
+      });
+
+      expect(screen.getByRole('button', { name: 'Retirer Tom de la soirée' })).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Retirer Sam de la soirée' })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Retirer Hôte de la soirée' })
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /co-hôte/ })).not.toBeInTheDocument();
+    });
+
+    it('waits on the row whose role is changing', () => {
+      renderList({
+        participants: night,
+        currentParticipantId: 'p-creator',
+        isHost: true,
+        viewerIsCreator: true,
+        onToggleCoHost: vi.fn(),
+        pendingCoHostId: 'p-tom',
+      });
+
+      expect(screen.getByRole('button', { name: 'Nommer Tom co-hôte' })).toBeDisabled();
+    });
+  });
 });

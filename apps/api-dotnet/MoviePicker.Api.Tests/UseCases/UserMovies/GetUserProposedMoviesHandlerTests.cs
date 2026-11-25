@@ -274,4 +274,21 @@ public sealed class GetUserProposedMoviesHandlerTests
         Assert.All(res.Items, i => Assert.Equal(1, i.ProposalCount));
         _users.Verify(r => r.GetByHandleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
+
+    [Fact]
+    public async Task ProposalsOfAnonymousNights_AreNotListed()
+    {
+        var handler = Build(
+            participants: [Part("p1", "open"), Part("p2", "anon")],
+            proposals:
+            [
+                Proposal("m1", "open", "p1", tmdbId: 530385, daysAfterDay1: 0),
+                Proposal("m2", "anon", "p2", tmdbId: 25237, daysAfterDay1: 7),
+            ],
+            events: [Evt("open"), Evt("anon") with { Config = new EventConfig { AnonymousProposals = true } }]);
+
+        var res = await handler.HandleAsync("alice", currentUserId: "u1", winningOnly: false);
+
+        Assert.Equal([530385], res.Items.Select(item => item.TmdbId));
+    }
 }

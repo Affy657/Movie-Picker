@@ -355,6 +355,31 @@ public sealed class EventDocumentMapperTests
     }
 
     [Fact]
+    public void ToDocument_CoHostsRoundTrip_AndANightWithoutAnyWritesNone()
+    {
+        var night = new EventEntityBuilder().WithId("507f1f77bcf86cd799439011").WithSlug("s").Build() with
+        {
+            CoHostUserIds = ["507f1f77bcf86cd799439014", "507f1f77bcf86cd799439015"]
+        };
+
+        Assert.Equal(night.CoHostUserIds, EventDocumentMapper.ToDomain(EventDocumentMapper.ToDocument(night)).CoHostUserIds);
+        Assert.False(EventDocumentMapper.ToDocument(night with { CoHostUserIds = [] }).ToBsonDocument().Contains("coHostUserIds"));
+        Assert.Empty(EventDocumentMapper.ToDomain(new EventDocument { Id = night.Id, Slug = "s" }).CoHostUserIds);
+    }
+
+    [Fact]
+    public void ToDocument_AnonymousProposalsRoundTrip_AndAnOpenNightWritesNone()
+    {
+        var night = new EventEntityBuilder().WithId("507f1f77bcf86cd799439011").WithSlug("s")
+            .WithConfig(new EventConfig { AnonymousProposals = true })
+            .Build();
+
+        Assert.True(EventDocumentMapper.ToDomain(EventDocumentMapper.ToDocument(night)).Config!.AnonymousProposals);
+        var open = EventDocumentMapper.ToDocument(night with { Config = new EventConfig() }).ToBsonDocument();
+        Assert.False(open["config"].AsBsonDocument.Contains("anonymousProposals"));
+    }
+
+    [Fact]
     public void ToDocument_GroupRoundTrips_AndANightWithoutGroupWritesNone()
     {
         var grouped = new Event

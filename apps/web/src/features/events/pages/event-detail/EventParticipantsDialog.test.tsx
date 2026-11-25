@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import EventParticipantsDialog from '@/features/events/pages/event-detail/EventParticipantsDialog';
@@ -34,6 +34,9 @@ function panel(overrides: Partial<ParticipantsPanelState> = {}): ParticipantsPan
     onRemove: vi.fn(),
     onInviteFriends: vi.fn(),
     onLeave: vi.fn(),
+    pendingCoHostId: null,
+    coHostError: null,
+    onToggleCoHost: vi.fn(),
     ...overrides,
   };
 }
@@ -120,5 +123,82 @@ describe('EventParticipantsDialog', () => {
     );
 
     expect(within(dialog).getByTestId('leave-event-button')).toBeDisabled();
+  });
+
+  it('lets the creator name a co-host while the night is running', async () => {
+    const state = panel({ canRemove: true });
+    const dialog = renderDialog(
+      { ...EVENT, isHost: true, myParticipant: { id: 'p-host', pseudo: 'Adrien' } } as EventData,
+      state,
+      'p-host'
+    );
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Nommer Alice co-hôte' }));
+
+    expect(state.onToggleCoHost).toHaveBeenCalledWith('p-alice', true);
+  });
+
+  it('shows a failed co-host change inside the dialog', () => {
+    const dialog = renderDialog(
+      { ...EVENT, isHost: true, myParticipant: { id: 'p-host', pseudo: 'Adrien' } } as EventData,
+      panel({ coHostError: 'Ce participant ne peut pas devenir co-hôte.' }),
+      'p-host'
+    );
+
+    expect(within(dialog).getByRole('alert')).toHaveTextContent(
+      'Ce participant ne peut pas devenir co-hôte.'
+    );
+  });
+
+  it('offers no co-host change to a co-host, and only withdrawals once the night is over', () => {
+    const asCoHost = renderDialog(
+      {
+        ...EVENT,
+        isHost: true,
+        myParticipant: { id: 'p-lea', pseudo: 'Léa' },
+        participants: [...EVENT.participants!, { id: 'p-lea', pseudo: 'Léa', isCoHost: true }],
+      } as EventData,
+      panel({ canRemove: true }),
+      'p-lea'
+    );
+    expect(within(asCoHost).queryByRole('button', { name: /co-hôte/ })).not.toBeInTheDocument();
+    cleanup();
+
+    const over = renderDialog(
+      {
+        ...EVENT,
+        isHost: true,
+        isFinished: true,
+        myParticipant: { id: 'p-host', pseudo: 'Adrien' },
+        participants: [...EVENT.participants!, { id: 'p-lea', pseudo: 'Léa', isCoHost: true }],
+      } as EventData,
+      panel({ canRemove: true }),
+      'p-host'
+    );
+    expect(
+      within(over).queryByRole('button', { name: 'Nommer Alice co-hôte' })
+    ).not.toBeInTheDocument();
+    expect(
+      within(over).getByRole('button', { name: 'Retirer le rôle de co-hôte à Léa' })
+    ).toBeInTheDocument();
+  });
+
+  it('trusts the server, not the participant the browser remembers, to know who created the night', () => {
+    const dialog = renderDialog(
+      {
+        ...EVENT,
+        isHost: true,
+        myParticipant: { id: 'p-alice', pseudo: 'Alice' },
+        participants: [
+          { id: 'p-host', pseudo: 'Adrien', isCreator: true },
+          { id: 'p-alice', pseudo: 'Alice', isCoHost: true },
+          { id: 'p-bob', pseudo: 'Bob' },
+        ],
+      } as EventData,
+      panel({ canRemove: true }),
+      'p-host'
+    );
+
+    expect(within(dialog).queryByRole('button', { name: /co-hôte/ })).not.toBeInTheDocument();
   });
 });

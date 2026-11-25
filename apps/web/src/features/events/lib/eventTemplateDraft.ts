@@ -22,6 +22,7 @@ export interface TemplateConfigDraft {
   wheelMode: WheelMode;
   richSharePreview: boolean;
   allowSeries: boolean;
+  anonymousProposals: boolean;
   winnerCount: number;
 }
 
@@ -34,6 +35,7 @@ export type ApplicableConfig = Pick<
   | 'wheelMode'
   | 'richSharePreview'
   | 'allowSeries'
+  | 'anonymousProposals'
   | 'winnerCount'
 >;
 
@@ -49,6 +51,7 @@ export interface TemplateFormFields {
   wheelMode: WheelMode;
   richSharePreview: boolean;
   allowSeries: boolean;
+  anonymousProposals: boolean;
   winnerCount: string;
 }
 
@@ -101,6 +104,7 @@ export function buildTemplateDraft(fields: TemplateFormFields): TemplateConfigDr
     wheelMode: fields.wheelMode,
     richSharePreview: fields.richSharePreview,
     allowSeries: fields.allowSeries,
+    anonymousProposals: fields.anonymousProposals,
     winnerCount: parseWinnerCount(fields.winnerCount),
   };
 }
@@ -121,6 +125,7 @@ export function configToFields(config: ApplicableConfig): TemplateFormFields {
     wheelMode: config.wheelMode,
     richSharePreview: config.richSharePreview ?? true,
     allowSeries: config.allowSeries ?? false,
+    anonymousProposals: config.anonymousProposals ?? false,
     winnerCount: String(config.winnerCount),
   };
 }
@@ -142,6 +147,7 @@ export function draftToConfigPatch(draft: TemplateConfigDraft): EventConfigPatch
     wheelMode: draft.wheelMode,
     richSharePreview: draft.richSharePreview,
     allowSeries: draft.allowSeries,
+    anonymousProposals: draft.anonymousProposals,
     winnerCount: draft.winnerCount,
   };
 }
@@ -155,6 +161,7 @@ export function templateToDraft(template: EventTemplateData): TemplateConfigDraf
     wheelMode: template.wheelMode,
     richSharePreview: template.richSharePreview,
     allowSeries: template.allowSeries,
+    anonymousProposals: template.anonymousProposals,
     winnerCount: template.winnerCount,
   };
 }
@@ -168,6 +175,7 @@ export function isSameTemplateConfig(a: TemplateConfigDraft, b: TemplateConfigDr
     a.wheelMode === b.wheelMode &&
     a.richSharePreview === b.richSharePreview &&
     a.allowSeries === b.allowSeries &&
+    a.anonymousProposals === b.anonymousProposals &&
     a.winnerCount === b.winnerCount
   );
 }

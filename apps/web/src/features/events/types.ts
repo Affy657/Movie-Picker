@@ -21,6 +21,7 @@ export const DEFAULT_EVENT_CONFIG: EventConfigData = {
   wheelMode: 'weightedByVotes',
   richSharePreview: true,
   allowSeries: false,
+  anonymousProposals: false,
   recurrence: null,
   winnerCount: 1,
 };
@@ -44,6 +45,7 @@ export type EventConfigPatchPayload = {
   wheelMode?: WheelMode;
   richSharePreview?: boolean;
   allowSeries?: boolean;
+  anonymousProposals?: boolean;
   winnerCount?: number;
   recurrence?: EventRecurrence;
   clearRecurrence?: boolean;

@@ -181,6 +181,7 @@ public sealed class RecurringEventPass : IRecurringEventPass
             Winners = [],
             WinnerAnnouncedAt = null,
             WatchlistCleanedAt = null,
+            CoHostUserIds = [],
             RecurrenceParentEventId = parent.Id,
             NextOccurrenceEventId = null,
             CreationRequestId = null,

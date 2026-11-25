@@ -19,6 +19,8 @@ public sealed class EventTemplateResponse
 
     public bool AllowSeries { get; init; }
 
+    public bool AnonymousProposals { get; init; }
+
     public int WinnerCount { get; init; }
 
     public static EventTemplateResponse FromTemplate(EventTemplate template)
@@ -35,6 +37,7 @@ public sealed class EventTemplateResponse
             WheelMode = config.WheelMode,
             RichSharePreview = config.RichSharePreview,
             AllowSeries = config.AllowSeries,
+            AnonymousProposals = config.AnonymousProposals,
             WinnerCount = config.WinnerCount
         };
     }
@@ -60,6 +63,8 @@ public sealed class SaveEventTemplateRequest
     public bool? RichSharePreview { get; init; }
 
     public bool? AllowSeries { get; init; }
+
+    public bool? AnonymousProposals { get; init; }
 
     public int? WinnerCount { get; init; }
 }

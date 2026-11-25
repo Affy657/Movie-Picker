@@ -177,7 +177,7 @@ public sealed class EventReminderPassTests
     public async Task RunAsync_WheelPickOfANightBeyondTheReminderWindow_IsStillAnnounced()
     {
         var evt = OpenNightWithAWheelPick(pickedAt: Now.AddMinutes(-10), startUtc: Now.AddDays(10));
-        _wheelAnnouncement.Setup(a => a.AnnounceAwaitingPicksAsync(evt, It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _wheelAnnouncement.Setup(a => a.AnnounceAwaitingPicksAsync(evt, null, It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
         var result = await CreatePass().RunAsync();
 
@@ -201,11 +201,11 @@ public sealed class EventReminderPassTests
     public async Task RunAsync_WheelPickTheHostPageNeverAnnounced_AnnouncesItOnceTheSpinIsLongOver()
     {
         var evt = OpenNightWithAWheelPick(pickedAt: Now.AddMinutes(-10));
-        _wheelAnnouncement.Setup(a => a.AnnounceAwaitingPicksAsync(evt, It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _wheelAnnouncement.Setup(a => a.AnnounceAwaitingPicksAsync(evt, null, It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
         var result = await CreatePass().RunAsync();
 
-        _wheelAnnouncement.Verify(a => a.AnnounceAwaitingPicksAsync(evt, It.IsAny<CancellationToken>()), Times.Once);
+        _wheelAnnouncement.Verify(a => a.AnnounceAwaitingPicksAsync(evt, null, It.IsAny<CancellationToken>()), Times.Once);
         Assert.Equal(1, result.WheelWinnersAnnounced);
     }
 
@@ -217,7 +217,7 @@ public sealed class EventReminderPassTests
         await CreatePass().RunAsync();
 
         _wheelAnnouncement.Verify(
-            a => a.AnnounceAwaitingPicksAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
+            a => a.AnnounceAwaitingPicksAsync(It.IsAny<Event>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -228,14 +228,14 @@ public sealed class EventReminderPassTests
         await CreatePass().RunAsync();
 
         _wheelAnnouncement.Verify(
-            a => a.AnnounceAwaitingPicksAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
+            a => a.AnnounceAwaitingPicksAsync(It.IsAny<Event>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task RunAsync_WheelAnnouncementRacesTheHostPage_CarriesOnWithoutFailing()
     {
         var evt = OpenNightWithAWheelPick(pickedAt: Now.AddMinutes(-10));
-        _wheelAnnouncement.Setup(a => a.AnnounceAwaitingPicksAsync(evt, It.IsAny<CancellationToken>()))
+        _wheelAnnouncement.Setup(a => a.AnnounceAwaitingPicksAsync(evt, null, It.IsAny<CancellationToken>()))
             .ThrowsAsync(Errors.ConcurrentUpdate());
 
         var result = await CreatePass().RunAsync();

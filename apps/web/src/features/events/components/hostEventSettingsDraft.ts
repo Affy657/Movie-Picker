@@ -80,6 +80,7 @@ export function normalizeConfig(c: EventConfigData | undefined): EventConfigData
     wheelMode: c?.wheelMode ?? DEFAULT_EVENT_CONFIG.wheelMode,
     richSharePreview: c?.richSharePreview ?? DEFAULT_EVENT_CONFIG.richSharePreview,
     allowSeries: c?.allowSeries ?? DEFAULT_EVENT_CONFIG.allowSeries,
+    anonymousProposals: c?.anonymousProposals ?? DEFAULT_EVENT_CONFIG.anonymousProposals,
     recurrence: c?.recurrence ?? null,
     hasNextOccurrence: c?.hasNextOccurrence ?? false,
     groupId: c?.groupId ?? null,
@@ -95,6 +96,7 @@ export type SavedSettings = {
   maxVotesPerParticipant: number | null;
   wheelMode: WheelMode;
   allowSeries: boolean;
+  anonymousProposals: boolean;
   richSharePreview: boolean;
   winnerCount: number;
   recurrence: EventRecurrence | null;
@@ -112,6 +114,7 @@ export function savedSettingsOf(event: EventData): SavedSettings {
     maxVotesPerParticipant: cfg.maxVotesPerParticipant ?? null,
     wheelMode: cfg.wheelMode,
     allowSeries: cfg.allowSeries ?? false,
+    anonymousProposals: cfg.anonymousProposals ?? false,
     richSharePreview: cfg.richSharePreview ?? true,
     winnerCount: cfg.winnerCount,
     recurrence: cfg.recurrence ?? null,
@@ -129,7 +132,13 @@ function limitPatch(
 }
 
 function valuePatch(
-  key: 'theme' | 'wheelMode' | 'allowSeries' | 'richSharePreview' | 'winnerCount',
+  key:
+    | 'theme'
+    | 'wheelMode'
+    | 'allowSeries'
+    | 'anonymousProposals'
+    | 'richSharePreview'
+    | 'winnerCount',
   next: SavedSettings,
   saved: SavedSettings
 ): Partial<EventConfigPatchPayload> {
@@ -149,6 +158,7 @@ export function settingsPatch(
     ...limitPatch('maxVotesPerParticipant', next, saved),
     ...valuePatch('wheelMode', next, saved),
     ...valuePatch('allowSeries', next, saved),
+    ...valuePatch('anonymousProposals', next, saved),
     ...valuePatch('richSharePreview', next, saved),
     ...valuePatch('winnerCount', next, saved),
     ...recurrencePatch(next.recurrence, saved.recurrence),

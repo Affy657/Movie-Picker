@@ -35,6 +35,7 @@ public static class EventDocumentMapper
             NextOccurrenceEventId = doc.NextOccurrenceEventId,
             GroupId = doc.GroupId,
             RemovedUserIds = doc.RemovedUserIds ?? [],
+            CoHostUserIds = doc.CoHostUserIds ?? [],
             CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero),
             UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero),
             Version = doc.Version,
@@ -75,6 +76,7 @@ public static class EventDocumentMapper
             NextOccurrenceEventId = evt.NextOccurrenceEventId,
             GroupId = string.IsNullOrEmpty(evt.GroupId) ? null : evt.GroupId,
             RemovedUserIds = evt.RemovedUserIds.Count > 0 ? [.. evt.RemovedUserIds] : null,
+            CoHostUserIds = evt.CoHostUserIds.Count > 0 ? [.. evt.CoHostUserIds] : null,
             StartAtUtc = EventSchedule.TryGetStartUtc(evt.Date, evt.Time, out var startAt)
                 ? startAt.UtcDateTime
                 : null,
@@ -95,6 +97,7 @@ public static class EventDocumentMapper
         WheelMode = ParseWheelMode(doc.WheelMode),
         RichSharePreview = doc.RichSharePreview,
         AllowSeries = doc.AllowSeries,
+        AnonymousProposals = doc.AnonymousProposals,
         WinnerCount = doc.WinnerCount ?? EventConfig.DefaultWinnerCount
     };
 
@@ -108,6 +111,7 @@ public static class EventDocumentMapper
         WheelMode = ToWheelModeString(config.WheelMode),
         RichSharePreview = config.RichSharePreview,
         AllowSeries = config.AllowSeries,
+        AnonymousProposals = config.AnonymousProposals,
         WinnerCount = config.WinnerCount
     };
 

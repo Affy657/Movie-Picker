@@ -49,6 +49,7 @@ export function describeTemplateConfig(draft: TemplateConfigDraft, t: Translate)
   }
   if (draft.wheelMode === 'strictRandom') parts.push(t('events.settings.summary.strictRandom'));
   if (draft.allowSeries) parts.push(t('events.settings.summary.series'));
+  if (draft.anonymousProposals) parts.push(t('events.settings.summary.anonymous'));
 
   return parts.length > 0 ? parts.join(PART_SEPARATOR) : t('events.settings.summary.defaults');
 }

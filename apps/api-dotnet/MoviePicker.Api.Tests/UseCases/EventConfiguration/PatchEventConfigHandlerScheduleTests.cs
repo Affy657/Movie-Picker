@@ -31,6 +31,7 @@ public sealed class PatchEventConfigHandlerScheduleTests
         _sut = new PatchEventConfigHandler(
             _events.Object,
             _participants.Object,
+            Mock.Of<IMovieRepository>(),
             _hostToken.Object,
             Mock.Of<ICurrentUserAccessor>(),
             TestAudienceNotifier.Over(

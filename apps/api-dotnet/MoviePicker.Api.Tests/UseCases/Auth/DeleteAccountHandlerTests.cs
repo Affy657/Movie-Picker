@@ -591,6 +591,35 @@ public sealed class DeleteAccountHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_HeirWhoWasCoHost_BecomesTheCreatorAndLeavesTheCoHostList()
+    {
+        var f = new Fixture();
+        var host = await SeedUserAsync(f, "abcd1234");
+        var heir = await SeedGuestAsync(f, "heir");
+        var other = await SeedGuestAsync(f, "other");
+        await f.Events.AddAsync(new Event
+        {
+            Title = "Nuit Nolan",
+            Slug = "nuit-nolan",
+            Date = TestDates.Upcoming,
+            Time = "20:00",
+            CreatorUserId = host.Id,
+            CoHostUserIds = [heir.Id, other.Id]
+        });
+        var night = (await f.Events.GetByIdOrSlugAsync("nuit-nolan"))!;
+        var start = DateTimeOffset.UtcNow.AddDays(-3);
+        await JoinAsync(f, night.Id, host.Id, "Neo", start);
+        await JoinAsync(f, night.Id, heir.Id, "Heir", start.AddHours(1));
+        await JoinAsync(f, night.Id, other.Id, "Other", start.AddHours(2));
+
+        await f.CreateHandler().HandleAsync(host.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
+
+        var handedOver = await f.Events.GetByIdOrSlugAsync("nuit-nolan");
+        Assert.Equal(heir.Id, handedOver!.CreatorUserId);
+        Assert.Equal([other.Id], handedOver.CoHostUserIds);
+    }
+
+    [Fact]
     public async Task HandleAsync_HostAloneOnAnUpcomingNight_ClosesTheNight()
     {
         var f = new Fixture();

@@ -45,4 +45,28 @@ public sealed class EventHostTests
 
         Assert.False(EventHost.IsHost(evt, hostToken: string.Empty, currentUserId: null));
     }
+
+    [Fact]
+    public void IsHost_CoHostAccount_True()
+    {
+        var evt = Evt() with { CoHostUserIds = ["co-host"] };
+
+        Assert.True(EventHost.IsHost(evt, hostToken: null, "co-host"));
+    }
+
+    [Fact]
+    public void IsCreator_CoHostAccount_False()
+    {
+        var evt = Evt() with { CoHostUserIds = ["co-host"] };
+
+        Assert.False(EventHost.IsCreator(evt, hostToken: null, "co-host"));
+    }
+
+    [Fact]
+    public void IsCreator_TokenOrCreatorAccount_True()
+    {
+        Assert.True(EventHost.IsCreator(Evt(), "ht1", currentUserId: null));
+        Assert.True(EventHost.IsCreator(Evt(), hostToken: null, "creator"));
+        Assert.False(EventHost.IsCreator(Evt(), "wrong", "someone-else"));
+    }
 }

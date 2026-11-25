@@ -366,15 +366,18 @@ public sealed class MongoEventRepository : IEventRepository
         return result.ModifiedCount > 0;
     }
 
-    public async Task<long> ForgetRemovedUserAsync(string userId, CancellationToken ct = default)
+    public async Task<long> ForgetUserAsync(string userId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(userId))
             return 0;
         var update = Builders<EventDocument>.Update
             .Pull(x => x.RemovedUserIds, userId)
+            .Pull(x => x.CoHostUserIds, userId)
             .Inc(x => x.Version, 1)
             .Inc(x => x.WriteSeq, 1);
-        var filter = Builders<EventDocument>.Filter.AnyEq(x => x.RemovedUserIds, userId);
+        var filter = Builders<EventDocument>.Filter.Or(
+            Builders<EventDocument>.Filter.AnyEq(x => x.RemovedUserIds, userId),
+            Builders<EventDocument>.Filter.AnyEq(x => x.CoHostUserIds, userId));
         var res = await _collection.UpdateManyAsync(filter, update, cancellationToken: ct);
         return res.IsAcknowledged ? res.ModifiedCount : 0;
     }

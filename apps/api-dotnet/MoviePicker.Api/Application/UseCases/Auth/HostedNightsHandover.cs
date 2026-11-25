@@ -43,7 +43,7 @@ public sealed class HostedNightsHandover
             }
 
             var handedOver = await _events.UpdateAsync(
-                night with { CreatorUserId = heir, HostToken = SlugGenerator.NewHostToken(), UpdatedAt = now },
+                night.WithoutCoHost(heir) with { CreatorUserId = heir, HostToken = SlugGenerator.NewHostToken(), UpdatedAt = now },
                 ct);
             handovers.Add(new HostHandover(handedOver, heir));
         }

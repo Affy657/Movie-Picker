@@ -1,5 +1,6 @@
 import EventParticipantsList from '@/features/events/components/EventParticipantsList';
 import { eventFrontendUrl } from '@/features/events/api/eventsApi';
+import { isCreatorParticipant } from '@/features/events/components/hostEventSettingsDraft';
 import type { EventData } from '@/features/events/types';
 import Button from '@/shared/components/Button';
 import { ModalActions } from '@/shared/components/Modal';
@@ -29,6 +30,8 @@ export default function EventParticipantsDialog({
   );
   const hostCanInvite = !!event.isHost && !event.isFinished;
   const currentParticipantId = participant?.participantId ?? null;
+  const viewerIsCreator = isCreatorParticipant(event.myParticipant, event.participants);
+
   const leavePending =
     panel.isConnectedSelf && panel.removePending && panel.pendingRemovalId === currentParticipantId;
 
@@ -71,12 +74,21 @@ export default function EventParticipantsDialog({
         </>
       }
     >
+      {panel.coHostError ? (
+        <p className="error" role="alert">
+          {panel.coHostError}
+        </p>
+      ) : null}
       <EventParticipantsList
         participants={event.participants}
         currentParticipantId={currentParticipantId}
         isHost={!!event.isHost}
         pendingRemovalId={panel.pendingRemovalId}
         onRemoveParticipant={panel.canRemove ? panel.onRemove : undefined}
+        viewerIsCreator={viewerIsCreator}
+        pendingCoHostId={panel.pendingCoHostId}
+        onToggleCoHost={viewerIsCreator ? panel.onToggleCoHost : undefined}
+        coHostNamingClosed={!!event.isFinished}
         onlineIds={panel.onlineIds}
         proposingIds={panel.proposingIds}
       />

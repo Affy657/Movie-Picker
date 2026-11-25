@@ -79,6 +79,9 @@ export type ParticipantsPanelState = {
   canRemove: boolean;
   isConnectedSelf: boolean;
   onRemove: (participantId: string, pseudo: string) => void;
+  pendingCoHostId: string | null;
+  coHostError: string | null;
+  onToggleCoHost: (participantId: string, coHost: boolean) => void;
   onInviteFriends: () => void;
   onLeave: () => void;
   onlineIds?: ReadonlySet<string>;

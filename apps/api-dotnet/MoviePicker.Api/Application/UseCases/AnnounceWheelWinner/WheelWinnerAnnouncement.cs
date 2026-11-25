@@ -7,7 +7,7 @@ namespace MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
 
 public interface IWheelWinnerAnnouncement
 {
-    Task<int> AnnounceAwaitingPicksAsync(Event evt, CancellationToken ct = default);
+    Task<int> AnnounceAwaitingPicksAsync(Event evt, string? pickedBy, CancellationToken ct = default);
 }
 
 public sealed class WheelWinnerAnnouncement : IWheelWinnerAnnouncement
@@ -41,7 +41,7 @@ public sealed class WheelWinnerAnnouncement : IWheelWinnerAnnouncement
             .ToList();
     }
 
-    public async Task<int> AnnounceAwaitingPicksAsync(Event evt, CancellationToken ct = default)
+    public async Task<int> AnnounceAwaitingPicksAsync(Event evt, string? pickedBy, CancellationToken ct = default)
     {
         var pending = PicksAwaitingAnnouncement(evt);
         if (pending.Count == 0)
@@ -60,7 +60,7 @@ public sealed class WheelWinnerAnnouncement : IWheelWinnerAnnouncement
 
         foreach (var winner in winners)
         {
-            await _winnerAnnouncer.AnnounceAsync(evt, winner.Title, WinnerPickMethod.Wheel, CancellationToken.None);
+            await _winnerAnnouncer.AnnounceAsync(evt, winner.Title, WinnerPickMethod.Wheel, pickedBy, CancellationToken.None);
             _logger.LogInformation(
                 "Wheel winner announced for event {EventId}, winner: {MovieId}", evt.Id, winner.Id);
         }

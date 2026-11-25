@@ -26,6 +26,7 @@ type NightRulesProps = {
   errors: NightRuleErrors;
   onChange: (patch: Partial<TemplateFormFields>) => void;
   locked?: boolean;
+  anonymousLocked?: boolean;
   winnerMin?: number;
   showTitle: boolean;
   titleAction?: ReactNode;
@@ -40,6 +41,7 @@ export default function NightRules({
   errors,
   onChange,
   locked = false,
+  anonymousLocked = false,
   winnerMin = 1,
   showTitle,
   titleAction,
@@ -51,6 +53,8 @@ export default function NightRules({
   const headingId = useId();
   const drawLabelId = useId();
   const seriesLabelId = useId();
+  const anonymousLabelId = useId();
+  const anonymousHintId = useId();
   const unlimitedLabel = t('events.create.rules.unlimited');
   const lockedRow = locked && styles.lockedRow;
 
@@ -158,6 +162,23 @@ export default function NightRules({
             disabled={locked}
             ariaLabelledBy={seriesLabelId}
           />
+        </div>
+        <div className={clsx(styles.ruleRow, (locked || anonymousLocked) && styles.lockedRow)}>
+          <span id={anonymousLabelId} className={styles.ruleLabel}>
+            {t('events.create.rules.anonymous')}
+          </span>
+          <Toggle
+            checked={fields.anonymousProposals}
+            onChange={(anonymousProposals) => onChange({ anonymousProposals })}
+            disabled={locked || anonymousLocked}
+            ariaLabelledBy={anonymousLabelId}
+            ariaDescribedBy={anonymousLocked ? anonymousHintId : undefined}
+          />
+          {anonymousLocked ? (
+            <p id={anonymousHintId} className={clsx('hint', styles.ruleHint)}>
+              {t('events.create.rules.anonymousLocked')}
+            </p>
+          ) : null}
         </div>
       </div>
       {end ? <div className={styles.rulesEnd}>{end}</div> : null}

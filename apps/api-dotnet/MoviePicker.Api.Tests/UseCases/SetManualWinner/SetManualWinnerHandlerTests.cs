@@ -147,8 +147,24 @@ public sealed class SetManualWinnerHandlerTests
         Assert.Equal("mov1", winner.MovieId);
         Assert.Equal(WinnerPickMethod.Manual, winner.Method);
         _winnerAnnouncer.Verify(
-            a => a.AnnounceAsync(It.IsAny<Event>(), "Choisi", WinnerPickMethod.Manual, It.IsAny<CancellationToken>()),
+            a => a.AnnounceAsync(It.IsAny<Event>(), "Choisi", WinnerPickMethod.Manual, It.IsAny<string?>(), It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AnonymousNight_DoesNotRevealWhoProposedTheWinner()
+    {
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ActiveEvent() with { Config = new EventConfig { AnonymousProposals = true } });
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
+        _movieRepo.Setup(r => r.GetByIdAsync("mov1", It.IsAny<CancellationToken>())).ReturnsAsync(MovieOf("mov1", "evt1"));
+        _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+
+        var result = await _sut.HandleAsync("evt1", Request("mov1"));
+
+        Assert.Equal("mov1", result.Winner.Id);
+        Assert.Equal(string.Empty, result.Winner.ParticipantId);
     }
 
     [Fact]

@@ -60,6 +60,7 @@ public static class EventTemplatePolicy
         WheelMode = request.WheelMode ?? WheelMode.WeightedByVotes,
         RichSharePreview = request.RichSharePreview ?? true,
         AllowSeries = request.AllowSeries ?? false,
+        AnonymousProposals = request.AnonymousProposals ?? false,
         WinnerCount = EventConfigLimits.ResolveWinnerCount(request.WinnerCount ?? EventConfig.DefaultWinnerCount)
     };
 }

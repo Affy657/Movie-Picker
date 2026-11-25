@@ -14,6 +14,7 @@ const draft: TemplateConfigDraft = {
   wheelMode: 'weightedByVotes',
   richSharePreview: true,
   allowSeries: false,
+  anonymousProposals: false,
   winnerCount: 1,
 };
 
@@ -28,6 +29,7 @@ function makeTemplate(overrides: Partial<EventTemplateData> = {}): EventTemplate
     wheelMode: 'weightedByVotes',
     richSharePreview: true,
     allowSeries: false,
+    anonymousProposals: false,
     winnerCount: 1,
     ...overrides,
   };
