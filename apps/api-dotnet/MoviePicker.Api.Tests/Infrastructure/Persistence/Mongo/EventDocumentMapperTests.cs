@@ -204,6 +204,29 @@ public sealed class EventDocumentMapperTests
     }
 
     [Fact]
+    public void ToDomain_LimitsStoredAboveTheCurrentCaps_ReadAsTheCaps()
+    {
+        var doc = new EventDocument
+        {
+            Id = "evt1",
+            Title = "Soirée",
+            Date = "2026-01-01",
+            Time = "20:00",
+            HostToken = "ht",
+            Slug = "s",
+            Config = new EventConfigDocument { MaxParticipants = 300, MaxProposalsPerParticipant = 100 },
+            Winners = [],
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        var domain = EventDocumentMapper.ToDomain(doc);
+
+        Assert.Equal(EventConfig.MaxParticipantsCap, domain.Config?.MaxParticipants);
+        Assert.Equal(EventConfig.MaxProposalsPerParticipantCap, domain.Config?.MaxProposalsPerParticipant);
+    }
+
+    [Fact]
     public void ToDocument_WithWinnerPickedAt_RoundTrips()
     {
         var pickedAt = new DateTimeOffset(2026, 5, 1, 18, 30, 0, TimeSpan.Zero);

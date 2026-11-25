@@ -101,9 +101,9 @@ public sealed record Event
 
 public sealed record EventConfig
 {
-    public const int MaxParticipantsCap = 500;
+    public const int MaxParticipantsCap = 50;
 
-    public const int MaxProposalsPerParticipantCap = 100;
+    public const int MaxProposalsPerParticipantCap = 15;
 
     public const int MaxMoviesPerEventCap = 1000;
 
@@ -115,11 +115,22 @@ public sealed record EventConfig
         RichSharePreview = true
     };
 
+    private readonly int? _maxProposalsPerParticipant;
+    private readonly int? _maxParticipants;
+
     public string? Theme { get; init; }
     public int? ThemeColor { get; init; }
-    public int? MaxProposalsPerParticipant { get; init; }
+    public int? MaxProposalsPerParticipant
+    {
+        get => _maxProposalsPerParticipant;
+        init => _maxProposalsPerParticipant = AtMost(value, MaxProposalsPerParticipantCap);
+    }
 
-    public int? MaxParticipants { get; init; }
+    public int? MaxParticipants
+    {
+        get => _maxParticipants;
+        init => _maxParticipants = AtMost(value, MaxParticipantsCap);
+    }
 
     public int? MaxVotesPerParticipant { get; init; }
 
@@ -136,4 +147,6 @@ public sealed record EventConfig
     public const int WinnerCountCap = 10;
 
     public int WinnerCount { get; init; } = DefaultWinnerCount;
+
+    private static int? AtMost(int? value, int cap) => value > cap ? cap : value;
 }

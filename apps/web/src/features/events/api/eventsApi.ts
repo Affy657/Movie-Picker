@@ -6,6 +6,7 @@ import type {
   EventConfigData,
   EventConfigPatchPayload,
   EventData,
+  EventLimitCaps,
   MyEventsListResponse,
   MyEventsScope,
 } from '@/features/events/types';
@@ -100,6 +101,10 @@ export async function joinEvent(slug: string, pseudo: string): Promise<JoinEvent
     isNew: raw.isNew,
     message: raw.message,
   };
+}
+
+export function fetchEventLimits(): Promise<EventLimitCaps> {
+  return fetchApi<ApiSchemas['EventLimitsResponse']>(apiPath('events', 'limits'));
 }
 
 export function fetchEventConfig(slug: string): Promise<EventConfigData> {

@@ -16,6 +16,15 @@ export const authMeGuestHandler = http.get(`${V1}/auth/me`, () =>
   )
 );
 
+const MOCK_EVENT_LIMITS: Schemas['EventLimitsResponse'] = {
+  maxParticipants: 50,
+  maxProposalsPerParticipant: 15,
+};
+
+export const eventLimitsHandler = http.get(`${V1}/events/limits`, () =>
+  apiJson<'EventLimitsResponse'>(MOCK_EVENT_LIMITS)
+);
+
 type MockTitle<T extends { tmdbId: number; title: string }> = Pick<T, 'tmdbId' | 'title'> &
   Partial<T>;
 

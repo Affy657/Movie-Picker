@@ -28,6 +28,8 @@ namespace MoviePicker.Api.Controllers;
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 public sealed class EventsController : ControllerBase
 {
+    private const string LimitsCacheControl = "public, max-age=3600";
+
     [HttpPost]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.CreateEventPolicy)]
@@ -61,6 +63,14 @@ public sealed class EventsController : ControllerBase
     {
         var result = await handler.HandleAsync(userId, scope, limit, offset, q, ct);
         return Ok(result);
+    }
+
+    [HttpGet("limits")]
+    [ProducesResponseType(typeof(EventLimitsResponse), StatusCodes.Status200OK)]
+    public IActionResult GetLimits()
+    {
+        Response.Headers.CacheControl = LimitsCacheControl;
+        return Ok(EventLimitsResponse.Current);
     }
 
     [HttpGet("{idOrSlug}/config")]

@@ -7,7 +7,6 @@ import {
   type SettingsDraft,
   groupPatch,
 } from './hostEventSettingsDraft';
-import { MAX_EVENT_PARTICIPANTS, MAX_PROPOSALS_PER_PARTICIPANT } from '@/features/events/types';
 
 const draft: SettingsDraft = {
   eventTitle: 'Soirée',
@@ -21,6 +20,7 @@ const draft: SettingsDraft = {
   winnerCount: '1',
   currentParticipantCount: 2,
   drawnWinnerCount: 0,
+  caps: { maxParticipants: 50, maxProposalsPerParticipant: 15 },
 };
 
 const planningDay = new Date('2029-06-01T12:00:00Z');
@@ -76,16 +76,16 @@ describe('validateSettingsDraft', () => {
     const result = validateSettingsDraft(
       {
         ...draft,
-        maxProposals: String(MAX_PROPOSALS_PER_PARTICIPANT),
-        maxParticipants: String(MAX_EVENT_PARTICIPANTS),
+        maxProposals: '15',
+        maxParticipants: '50',
       },
       t,
       planningDay
     );
 
     expect(result.errors).toEqual({});
-    expect(result.maxProposalsPerParticipant).toBe(MAX_PROPOSALS_PER_PARTICIPANT);
-    expect(result.maxParticipantsValue).toBe(MAX_EVENT_PARTICIPANTS);
+    expect(result.maxProposalsPerParticipant).toBe(15);
+    expect(result.maxParticipantsValue).toBe(50);
   });
 
   it('flags an enabled limit that is empty or out of bounds', () => {
@@ -95,11 +95,9 @@ describe('validateSettingsDraft', () => {
       planningDay
     );
 
-    expect(result.errors.maxProposals).toBe(
-      `Films par personne : nombre entier entre 1 et ${MAX_PROPOSALS_PER_PARTICIPANT}.`
-    );
+    expect(result.errors.maxProposals).toBe('Films par personne : nombre entier entre 1 et 15.');
     expect(result.errors.maxParticipants).toBe(
-      `Nombre maximum de participants : entier entre 1 et ${MAX_EVENT_PARTICIPANTS}.`
+      'Nombre maximum de participants : entier entre 1 et 50.'
     );
   });
 

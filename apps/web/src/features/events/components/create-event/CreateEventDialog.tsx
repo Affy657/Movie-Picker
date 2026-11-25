@@ -25,6 +25,7 @@ import {
   patchEventConfig,
 } from '@/features/events/api/eventsApi';
 import type { FriendGroupSummary } from '@/features/events/api/myGroupsApi';
+import { loadEventLimits, useEventLimits } from '@/features/events/hooks/useEventLimits';
 import { useEventTemplates } from '@/features/events/hooks/useEventTemplates';
 import {
   earliestOpenStartLocal,
@@ -49,7 +50,7 @@ import {
   type TemplateConfigDraft,
   type TemplateFormFields,
 } from '@/features/events/lib/eventTemplateDraft';
-import type { EventTemplateData } from '@/features/events/types';
+import type { EventLimitCaps, EventTemplateData } from '@/features/events/types';
 import EventTemplateSaveBar from '@/features/events/components/EventTemplateSaveBar';
 import NightDateField from '@/features/events/components/night-form/NightDateField';
 import NightFormLayout, {
@@ -246,6 +247,7 @@ export default function CreateEventDialog({
   const [origin, setOrigin] = useState<RulesOrigin>({ kind: 'defaults' });
   const [reuseTarget, setReuseTarget] = useState<CreateEventReuse | null>(reuse);
   const [pickedGroupId, setPickedGroupId] = useState<string | null>(initial.groupId);
+  const limitCaps = useEventLimits();
   const myGroupsQuery = useMyGroups(open && !!user);
   const myGroups = myGroupsQuery.data?.groups ?? [];
   const chosenGroup = myGroups.find((group) => group.id === pickedGroupId) ?? null;
@@ -408,7 +410,7 @@ export default function CreateEventDialog({
     if (!loading && step !== 'invitation') closeAndForget();
   });
 
-  const limitErrors = () =>
+  const limitErrors = (caps: EventLimitCaps | null) =>
     validateEventLimits(
       {
         proposalLimitEnabled: fields.proposalLimitEnabled,
@@ -418,6 +420,7 @@ export default function CreateEventDialog({
         voteLimitEnabled: fields.voteLimitEnabled,
         maxVotes: fields.maxVotes,
         currentParticipantCount: 0,
+        caps,
       },
       t
     ).errors;
@@ -431,10 +434,11 @@ export default function CreateEventDialog({
     if (target) document.getElementById(target.inputId)?.focus();
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    const caps = limitCaps ?? (await loadEventLimits(queryClient));
     const errors = {
       ...validateCreateEventDraft({ title, date, time }, t, new Date()),
-      ...limitErrors(),
+      ...limitErrors(caps),
     };
     setFieldErrors(errors);
     const invalidPart = firstInvalidPart(errors);
@@ -444,7 +448,7 @@ export default function CreateEventDialog({
   };
 
   const limitsAreValid = () => {
-    const errors = limitErrors();
+    const errors = limitErrors(limitCaps);
     setFieldErrors((current) => ({ ...current, ...errors }));
     return !hasLimitError(errors);
   };
@@ -512,7 +516,7 @@ export default function CreateEventDialog({
                 if (event.target.value.trim() === '') setTypedTitle(null);
               }}
               onKeyDown={(event) => {
-                if (event.key === 'Enter') handleSubmit();
+                if (event.key === 'Enter') void handleSubmit();
               }}
               maxLength={200}
               placeholder={t('events.create.titlePlaceholder')}
@@ -544,6 +548,7 @@ export default function CreateEventDialog({
     <NightRules
       idPrefix="create"
       fields={fields}
+      caps={limitCaps}
       errors={fieldErrors}
       onChange={updateFields}
       showTitle={!isMobile}
@@ -610,7 +615,7 @@ export default function CreateEventDialog({
             </p>
           ) : null}
           <span className={nightStyles.footerSpacer} />
-          <Button variant="primary" loading={loading} onClick={handleSubmit}>
+          <Button variant="primary" loading={loading} onClick={() => void handleSubmit()}>
             {loading ? t('events.create.submitting') : t('events.create.submit')}
           </Button>
         </div>

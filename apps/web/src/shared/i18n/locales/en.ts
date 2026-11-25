@@ -1171,6 +1171,7 @@ export const en: Locale = {
         anonymous: 'anonymous proposals',
       },
       maxProposalsInvalid: 'Movies per person: whole number between 1 and {{max}}.',
+      maxProposalsNotWhole: 'Movies per person: whole number of 1 or more.',
       maxVotesInvalid: 'Votes per participant: whole number of 1 or more.',
       winnerCountInvalid: 'Enter a number between 1 and {{max}}.',
       winnerCountLockedHint:
@@ -1187,6 +1188,7 @@ export const en: Locale = {
       saveStatusError: 'Not saved',
       fallbackError: 'Save failed.',
       maxParticipantsInvalid: 'Maximum number of participants: whole number between 1 and {{max}}.',
+      maxParticipantsNotWhole: 'Maximum number of participants: whole number of 1 or more.',
       maxParticipantsBelowCurrent:
         'Cannot lower the capacity to {{value}}: {{count}} participants are already joined.',
     },

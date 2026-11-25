@@ -2,22 +2,31 @@ import { describe, expect, it } from 'vitest';
 import { t } from '@/shared/i18n';
 import {
   EVENT_LIMIT_KINDS,
-  EVENT_LIMITS,
   eventLimitInputId,
   eventLimitLabel,
+  eventLimitMax,
   firstRuleError,
 } from './eventLimits';
-import { MAX_EVENT_PARTICIPANTS, MAX_PROPOSALS_PER_PARTICIPANT } from '@/features/events/types';
 
 describe('event limits', () => {
   it('lists the three limits in the order both forms show them', () => {
     expect(EVENT_LIMIT_KINDS).toEqual(['participants', 'proposals', 'votes']);
   });
 
-  it('caps participants and proposals, never votes', () => {
-    expect(EVENT_LIMITS.participants.max).toBe(MAX_EVENT_PARTICIPANTS);
-    expect(EVENT_LIMITS.proposals.max).toBe(MAX_PROPOSALS_PER_PARTICIPANT);
-    expect(EVENT_LIMITS.votes.max).toBeUndefined();
+  it('caps participants and proposals at what the API serves, never votes', () => {
+    const caps = { maxParticipants: 50, maxProposalsPerParticipant: 15 };
+
+    expect(eventLimitMax('participants', caps)).toBe(50);
+    expect(eventLimitMax('proposals', caps)).toBe(15);
+    expect(eventLimitMax('votes', caps)).toBeUndefined();
+  });
+
+  it('leaves every counter open until the API has served its caps', () => {
+    expect(EVENT_LIMIT_KINDS.map((kind) => eventLimitMax(kind, null))).toEqual([
+      undefined,
+      undefined,
+      undefined,
+    ]);
   });
 
   it('names the counter of each form after its prefix', () => {

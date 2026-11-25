@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEventLimits } from '@/features/events/hooks/useEventLimits';
 import { useEventTemplates } from '@/features/events/hooks/useEventTemplates';
 import {
   buildTemplateDraft,
@@ -77,6 +78,7 @@ export function useHostEventSettingsDraft({
 }: HostEventSettingsDraftInput) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const limitCaps = useEventLimits();
   const cfg = normalizeConfig(event.config);
   const drawnWinnerCount = event.winners?.length ?? 0;
   const initialFields = configToFields(cfg);
@@ -232,6 +234,7 @@ export function useHostEventSettingsDraft({
         voteLimitEnabled,
         maxVotes,
         currentParticipantCount: 0,
+        caps: limitCaps,
       },
       t
     );
@@ -315,6 +318,7 @@ export function useHostEventSettingsDraft({
         winnerCount,
         currentParticipantCount: event.participantCount ?? 0,
         drawnWinnerCount,
+        caps: limitCaps,
       },
       t,
       new Date()
@@ -403,6 +407,7 @@ export function useHostEventSettingsDraft({
     anonymousLocked,
     recurrenceLocked,
     fieldErrors: shownFieldErrors,
+    limitCaps,
     saveError,
     saveState: shownSaveState(saveState, liveDateError, dateAwaitingSave),
     scheduleAutoSave,

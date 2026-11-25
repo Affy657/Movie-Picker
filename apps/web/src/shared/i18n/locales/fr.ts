@@ -1182,6 +1182,7 @@ export const fr = {
         anonymous: 'propositions anonymes',
       },
       maxProposalsInvalid: 'Films par personne : nombre entier entre 1 et {{max}}.',
+      maxProposalsNotWhole: 'Films par personne : nombre entier à partir de 1.',
       maxVotesInvalid: 'Votes par participant : nombre entier à partir de 1.',
       winnerCountInvalid: 'Indiquez un nombre entre 1 et {{max}}.',
       winnerCountLockedHint:
@@ -1198,6 +1199,7 @@ export const fr = {
       saveStatusError: 'Non enregistré',
       fallbackError: 'Enregistrement impossible.',
       maxParticipantsInvalid: 'Nombre maximum de participants : entier entre 1 et {{max}}.',
+      maxParticipantsNotWhole: 'Nombre maximum de participants : entier à partir de 1.',
       maxParticipantsBelowCurrent:
         'Impossible de réduire la capacité à {{value}} : {{count}} participants sont déjà inscrits.',
     },
