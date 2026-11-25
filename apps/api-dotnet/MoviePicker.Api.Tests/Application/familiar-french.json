@@ -1,0 +1,25 @@
+{
+  "secondPersonPronoun": [
+    "(?:^|[\\s«(])",
+    "(?:(?:[Tt]u|[Tt]e|[Tt]oi|[Tt]on|[Tt]a|[Tt]es|[Tt]iens?|[Tt]iennes?)(?=[\\s.,!?…'’»):;]|$)|[Tt]['’]\\p{L})"
+  ],
+  "imperativeBeforeAHyphenatedPronoun": [
+    "(?:^|[\\s«(])",
+    "(?!\\p{L}*(?:tes|ons)-)",
+    "\\p{L}*[a-yà-ÿ]-(?:toi|moi|nous|en|y|la|le|les|lui|leur)",
+    "(?=[\\s.,!?…'’»):;]|$)"
+  ],
+  "imperativeOpeningASentence": [
+    "(?:(?:^|[.!?…]\\s+|[«(]\\s*|\\n\\s*)(?=\\p{Lu})|[:;]\\s+(?=\\p{Ll}))",
+    "(?!(?:[Dd]e|[Jj]e|[Mm]e|[Tt]e|[Ss]e|[Ll]e|[Nn]e|[Qq]ue|[Cc]e|[Uu]ne|[Cc]ette|[Vv]otre|[Nn]otre|[Cc]omme|[Tt]oute|[Tt]outes|[Tt]ous|[Ss]eule|[Ss]eules|[Ss]euls|[Qq]uelque|[Qq]uelques|[Cc]haque|[Aa]ucune|[Ee]ntre|[Cc]ontre|[Pp]resque|[Ll]orsque|[Pp]uisque|[Jj]usque|[Ee]nsuite|[Mm]ême|[Mm]êmes|[Aa]utre|[Aa]utres|[Ee]lle|[Ee]lles|[Cc]elle|[Cc]elles|[Qq]uelle|[Qq]uelles|[Dd]ans|[Ss]ans|[Ss]ous|[Vv]ers|[Dd]ès|[Aa]près|[Dd]epuis|[Pp]lus|[Mm]oins|[Tt]rès|[Pp]uis|[Mm]ais|[Aa]lors|[Jj]amais|[Tt]oujours|[Pp]arfois|[Dd]ésormais|[Pp]as|[Vv]ous|[Nn]ous|[Ll]es|[Dd]es|[Cc]es|[Mm]es|[Ss]es|[Nn]os|[Vv]os|[Ll]eurs|[Ll]ors|[Hh]ors|[Cc]ertes|[Aa]illeurs|[Pp]ourtant)\\s)",
+    "(?!\\p{L}*(?:aire|uire|crire|[Ll]ire|[Dd]ire|[Rr]ire|fire|dre|ttre|aître|oître|oire|ivre|clure|ompre|aincre|ble|ons|tes|és|ées)\\s)",
+    "\\p{L}\\p{Ll}*[es]\\s+",
+    "(?:(?:à|de)\\s+\\p{Ll}+\\s+|d['’]\\p{Ll}+\\s+)?",
+    "(?!l(?:e|a|es)\\s+(?:plus|moins|mieux)(?!\\p{L}))",
+    "(?:(?:le|la|les|un|une|ce|cet|cette|ces|mon|ma|mes|ton|ta|tes|son|sa|ses|notre|nos|votre|vos|leur|leurs)(?=\\s)|l['’](?=\\p{L}))"
+  ],
+  "imperativeOfAVerbInAyerOyerUyer": [
+    "(?:(?:^|[.!?…]\\s+|[«(]\\s*|\\n\\s*)(?=\\p{Lu})|[:;]\\s+(?=\\p{Ll}))",
+    "\\p{L}*(?:aie|oie|uie)(?=[\\s.,!?…]|$)"
+  ]
+}
