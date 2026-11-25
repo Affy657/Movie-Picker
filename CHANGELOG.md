@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.32.0] - 2026-11-25
+
 ### Added
 
 - **Des propositions anonymes** : une règle de la soirée, à choisir avant la première proposition, cache pour de bon qui a proposé chaque film, hôte compris ; seul le proposant voit son nom sur ses films, et ces films ne comptent plus dans les chiffres des profils et des groupes.
@@ -1119,7 +1121,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.31.3...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.32.0...HEAD
+[1.32.0]: https://github.com/Affy657/Movie-Picker/compare/v1.31.3...v1.32.0
 [1.31.3]: https://github.com/Affy657/Movie-Picker/compare/v1.31.2...v1.31.3
 [1.31.2]: https://github.com/Affy657/Movie-Picker/compare/v1.31.1...v1.31.2
 [1.31.1]: https://github.com/Affy657/Movie-Picker/compare/v1.31.0...v1.31.1
