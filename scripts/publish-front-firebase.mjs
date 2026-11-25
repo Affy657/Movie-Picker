@@ -18,7 +18,8 @@
  *   - every file of the build but the source maps, `route-assets.json` and the prerender manifest;
  *   - each prerendered route as `<route>/index.html`: Hosting serves that file for the route
  *     itself (`trailingSlashBehavior: REMOVE` in the config redirects the slashed form to it). The
- *     generic shell keeps answering every other path through the `**` rewrite.
+ *     shell answers the other routes of the router through the rewrites of the config, and
+ *     Hosting serves `404.html`, the same shell, with a 404 on every path no rewrite knows.
  * The cache tiers and the security headers are the config's, not the script's: they live in
  * `infra/`, and a change there is reviewed as infrastructure. `--header` adds a header to every
  * answer of this publication on top of them: what the staging uses for `X-Robots-Tag: noindex`,

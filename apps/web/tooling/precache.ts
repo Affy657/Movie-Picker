@@ -13,6 +13,7 @@ export function chunkFileName(chunk: { facadeModuleId: string | null }): string 
 export const PRECACHE_IGNORES = [
   '**/node_modules/**/*',
   'invitations/**',
+  '404.html',
   'assets/sentry-*.js',
   'assets/posthog-*.js',
   'assets/ReleaseNotesPage-*',
