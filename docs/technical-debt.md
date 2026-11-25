@@ -48,7 +48,7 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-053 | Sécurité et accès | l'API et la sauvegarde parlent à Atlas en administrateur du cluster, le même que le poste de dev |
 | DEBT-065 | Sécurité et accès | l'inscription ne vérifie pas que l'adresse e-mail appartient à l'inscrit |
 
-### Différées (20)
+### Différées (18)
 
 | Dette | Zone | Sujet |
 |---|---|---|
@@ -63,10 +63,8 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-064 | API et données | `GetByIdOrSlugAsync` ne résout plus que le slug |
 | DEBT-066 | API et données | les disponibilités en streaming de Ma liste s'arrêtent aux 500 films les plus récents |
 | DEBT-072 | API et données | le serveur croit le titre et l'année d'un favori envoyés par le client |
-| DEBT-090 | API et données | les aperçus de Mes soirées lisent tous les films et tous les participants de chaque soirée de la page |
 | DEBT-092 | API et données | le rapport de synchronisation Letterboxd garde ses anciens champs à plat à côté de `lists` |
 | DEBT-097 | API et données | six migrations terminées et huit méthodes de port attendent la fin de la rétention des sauvegardes |
-| DEBT-107 | API et données | les chiffres d'un groupe relisent toutes ses soirées passées |
 | DEBT-026 | Front | le flou de fond des barres collantes n'a jamais été mesuré au défilement |
 | DEBT-111 | Front | les schémas de `/tech` n'ont pas de variante verticale sur téléphone |
 | DEBT-075 | Infra et déploiement | juste après un déploiement du front, `/r/<slug>` et `/e/<slug>` peuvent servir une coquille périmée |
@@ -391,17 +389,6 @@ Ne se traitent que quand leur `declencheur` survient.
 - verify: `grep -c "ITmdbMovieSearch" apps/api-dotnet/MoviePicker.Api/Application/UseCases/Favorites/AddFavoriteHandler.cs` ; encore ouvert tant que la commande rend `0`
 - fix: relire titre, année et affiche chez TMDB par l'identifiant et le type, en ignorant ceux du client
 
-## DEBT-090 les aperçus de Mes soirées lisent tous les films et tous les participants de chaque soirée de la page
-
-- state: differe
-- declencheur: une soirée active à plus d'une centaine de films ou de participants, ou une latence p95 de `GET /me/events?scope=active` qui monte
-- impact: pour garder trois affiches et quatre pseudos par soirée, `MyEventSummaryEnricher.LoadPreviewsAsync` charge tous les films et tous les participants des soirées de la page, puis agrège les votes sur tous ces films. Au plafond (1 000 films, 500 participants, `limit` à 100), une requête lit 100 000 films. `scope=active` sert aussi l'accueil (`useNextEvent`) et la fenêtre « Proposer un film » (`useEligibleEventsForPropose`), qui n'affichent pas ces aperçus. Négligeable au volume mesuré le 2026-11-10.
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/ListMyEvents/MyEventSummaryEnricher.cs` (`LoadPreviewsAsync`), `MongoMovieRepository.ListByEventIdsAsync`, `MongoParticipantRepository.ListByEventIdsAsync`
-- verify: `grep -n "_participants.ListByEventIdsAsync(eventIds" apps/api-dotnet/MoviePicker.Api/Application/UseCases/ListMyEvents/MyEventSummaryEnricher.cs` ; encore ouvert tant que la liste complète est lue
-- fix: participants par agrégation `$match` / `$sort createdAt` / `$group` avec `$firstN: 4` (les participations du lecteur par `ListByUserIdAsync`, index `userId`) ; films projetés sur `_id`, `eventId`, `title`, `posterPath`, `createdAt` ; un paramètre `previews=false` pour les deux appelants qui ne les montrent pas
-- piege: l'adaptateur InMemory doit suivre la même forme, et `test:api:mongo` est le seul à exécuter l'agrégation
-- fini-quand: la lecture d'une page de Mes soirées ne dépend plus du nombre de films ni de participants des soirées
-
 ## DEBT-092 le rapport de synchronisation Letterboxd garde ses anciens champs à plat à côté de `lists`
 
 - state: differe
@@ -422,16 +409,6 @@ Ne se traitent que quand leur `declencheur` survient.
 - verify: `grep -rlE "ListMissing(Handle|Genres|StartAt|Facts|RecapSlug)Async|ListWithLegacyPosterPathAsync" apps/api-dotnet/MoviePicker.Api/Application/Ports`
 - fix: à chaque date, supprimer la migration, ses méthodes de port, leurs implémentations, leurs tests et son enregistrement ; lire avant le contenu réel du bucket de sauvegarde, une copie mensuelle plus récente que prévu peut avancer la date
 - fini-quand: la commande `verify` ne rend plus rien
-
-## DEBT-107 les chiffres d'un groupe relisent toutes ses soirées passées
-
-- state: differe
-- declencheur: un groupe à plusieurs centaines de soirées passées, ou une latence p95 de la page d'un groupe ou de Mes groupes qui monte
-- impact: depuis le 2026-11-25, Mes soirées et les prochaines soirées ne lisent plus que les soirées encore ouvertes (`ListOpenByGroupIdsAsync`), et la page d'un groupe ne charge en entier que les soirées qu'elle affiche. Les chiffres du groupe et ceux de Mes groupes lisent encore toutes les soirées passées, en projection de cinq champs (`ListHeldByGroupIdsAsync`, `HeldGroupNight`) ; une soirée hebdomadaire en ajoute une cinquantaine par an. La requête passe par l'index `events_groupId`, sans index composé `(groupId, startAtUtc)`
-- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/Mongo/MongoEventRepository.cs` (`ListHeldByGroupIdsAsync`), `apps/api-dotnet/MoviePicker.Api/Application/UseCases/FriendGroups/FriendGroupNights.cs`
-- verify: `grep -n "ListHeldByGroupIdsAsync" apps/api-dotnet/MoviePicker.Api/Application/UseCases/FriendGroups/FriendGroupNights.cs` ; encore ouvert tant que les chiffres passent par cette lecture
-- fix: des compteurs tenus sur le groupe à la clôture d'une soirée, ou une agrégation `$group` côté Mongo qui rend les chiffres sans rendre les soirées
-- fini-quand: aucun affichage ne lit une soirée de groupe close depuis plus d'une semaine, hors celles que la page du groupe montre
 
 ## DEBT-026 le flou de fond des barres collantes n'a jamais été mesuré au défilement
 
@@ -678,3 +655,4 @@ Arbitré le 2026-11-25 : la dette existe, mais le geste coûte plus qu'il ne rap
 - **E12 `crossorigin` sur les images pour la story** (ex-DEBT-057) : depuis DEBT-110 la page affiche les affiches en w92 à w342 et la story lit la w500, elles ne partagent plus d'entrée de cache ; le gain se réduit aux avatars, pour le risque qu'une origine sans CORS casse l'image sur la page. Rouvrir sur une ouverture de la fenêtre de partage mesurée lente.
 - **E13 recherche de comptes par expression régulière** (ex-DEBT-061) : à 29 comptes, le parcours de `users` coûte quelques millisecondes. Rouvrir à 10 000 comptes ou à un p95 de `GET /api/v1/users/search` au-delà de 300 ms.
 - **E14 canal d'alerte SMS** (ex-DEBT-049) : le canal existe dans le module `monitoring` et ne se crée qu'avec un numéro, donnée personnelle que seul son titulaire choisit ; l'adresse d'alerte suffit à ce volume. Rouvrir en posant `ALERT_SMS_NUMBER` (voir le module).
+- **E15 classement d'un groupe relu depuis les soirées des membres** (relevé le 2026-11-25 en réglant DEBT-107) : `GetFriendGroupRankingHandler` relit jusqu'à 500 soirées passées par membre ; un seul groupe existe. Rouvrir sur une latence p95 du classement qui monte, avec la même agrégation que les chiffres du groupe (`TallyHeldByGroupIdsAsync`).

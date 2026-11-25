@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Changed
+
+- **Mes soirées, la fenêtre pour proposer un film et les pages de groupe** ne chargent plus tous les films, participants et soirées passées pour leurs aperçus et leurs chiffres : elles restent rapides quand une soirée compte des centaines de films ou qu’un groupe se réunit depuis des années.
+
 ### Fixed
 
 - **Une adresse qui n’existe pas répond enfin « introuvable » aux moteurs de recherche** : le visiteur voit toujours la page introuvable, mais elle n’est plus présentée comme une page valide.
