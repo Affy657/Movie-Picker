@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -352,6 +353,60 @@ public sealed partial class CreateIdeaSuggestionHandlerTests
         Assert.DoesNotContain("torvalds", draft.Body);
         Assert.DoesNotContain("admin", draft.Body);
         Assert.DoesNotContain("phish.example", draft.Body);
+    }
+
+    [Theory]
+    [InlineData("1.31.0")]
+    [InlineData(" 1.31.0 ")]
+    [InlineData("2.0.0-rc.1+build.7")]
+    [InlineData("12345678901234567890")]
+    public async Task HandleAsync_PublishesAVersionMadeOfAsciiLettersDigitsAndSeparators(string appVersion)
+    {
+        var draft = await CaptureDraftAsync(Request(appVersion: appVersion));
+
+        Assert.Contains($"Version : {appVersion.Trim()}\n", draft.Body + "\n");
+    }
+
+    [Theory]
+    [InlineData("123456789012345678901")]
+    [InlineData("1_0")]
+    [InlineData("١.٢.٣")]
+    [InlineData("1.0\n## Hi")]
+    [InlineData("   ")]
+    public async Task HandleAsync_LeavesOutAVersionWithAnyOtherCharacterOrOverTwentyLong(string appVersion)
+    {
+        var draft = await CaptureDraftAsync(Request(appVersion: appVersion));
+
+        Assert.DoesNotContain("Version :", draft.Body);
+    }
+
+    [Fact]
+    public void EveryRegexOfTheHandler_IsPrecompiledAndGivesALoadedMachineAtLeastASecond()
+    {
+        var regexes = RegexesDeclaredBy(typeof(CreateIdeaSuggestionHandler));
+
+        Assert.NotEmpty(regexes);
+        Assert.All(regexes, regex =>
+        {
+            Assert.False(
+                regex.GetType() == typeof(Regex) && !regex.Options.HasFlag(RegexOptions.Compiled),
+                $"interpreted regex {regex}");
+            Assert.True(
+                regex.MatchTimeout == Regex.InfiniteMatchTimeout || regex.MatchTimeout >= TimeSpan.FromSeconds(1),
+                $"regex {regex} gives up after {regex.MatchTimeout.TotalMilliseconds} ms");
+        });
+    }
+
+    private static List<Regex> RegexesDeclaredBy(Type type)
+    {
+        const BindingFlags everyStatic = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+        var fields = type.GetFields(everyStatic)
+            .Where(field => typeof(Regex).IsAssignableFrom(field.FieldType))
+            .Select(field => (Regex)field.GetValue(null)!);
+        var factories = type.GetMethods(everyStatic)
+            .Where(method => typeof(Regex).IsAssignableFrom(method.ReturnType) && method.GetParameters().Length == 0)
+            .Select(method => (Regex)method.Invoke(null, null)!);
+        return fields.Concat(factories).ToList();
     }
 
     [Fact]
