@@ -78,12 +78,13 @@ public sealed class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> GetUserWatchedMovies(
         string handle,
+        [FromQuery] int skip,
         [FromQuery] int take,
         [FromServices] IGetUserWatchedMoviesHandler handler,
         CancellationToken ct)
     {
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var result = await handler.HandleAsync(handle, currentUserId, take, ct);
+        var result = await handler.HandleAsync(handle, currentUserId, skip, take, ct);
         return Ok(result);
     }
 
@@ -146,12 +147,13 @@ public sealed class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> GetMyWatchedMovies(
+        [FromQuery] int skip,
         [FromQuery] int take,
         [FromServices] IGetUserWatchedMoviesHandler handler,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var result = await handler.HandleForUserAsync(userId, take, ct);
+        var result = await handler.HandleForUserAsync(userId, skip, take, ct);
         return Ok(result);
     }
 

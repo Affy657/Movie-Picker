@@ -9886,6 +9886,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    skip?: number;
                     take?: number;
                 };
                 header?: never;
@@ -10166,6 +10167,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    skip?: number;
                     take?: number;
                 };
                 header?: never;
@@ -14048,6 +14050,7 @@ export interface components {
             items: components["schemas"]["UserWatchedMovieItem"][];
             /** Format: int32 */
             total: number | null;
+            hasMore: boolean;
         };
         VoteRequest: {
             participantId: string;

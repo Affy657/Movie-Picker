@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fetchApi } from '@/shared/api/client';
 import {
+  fetchAllMyWatchedMovies,
   fetchMyWatchedMovies,
   fetchWatchedStatus,
   markWatched,
@@ -106,7 +107,7 @@ describe('unmarkWatched', () => {
 });
 
 describe('fetchMyWatchedMovies', () => {
-  it('reads every watched film of the account with where it was seen', async () => {
+  it('reads the latest watched films of the account with where they were seen', async () => {
     mockFetchApi.mockResolvedValue({
       items: [
         {
@@ -123,13 +124,11 @@ describe('fetchMyWatchedMovies', () => {
       total: 1,
     });
 
-    const result = await fetchMyWatchedMovies();
+    const result = await fetchMyWatchedMovies(12);
 
-    expect(mockFetchApi).toHaveBeenCalledWith(
-      `/users/me/watched-movies?take=${WATCHED_MOVIES_TAKE}`,
-      { signal: undefined }
-    );
-    expect(WATCHED_MOVIES_TAKE).toBe(1000);
+    expect(mockFetchApi).toHaveBeenCalledWith('/users/me/watched-movies?skip=0&take=12', {
+      signal: undefined,
+    });
     expect(result.total).toBe(1);
     expect(result.items[0]).toMatchObject({ title: 'Alien', source: 'night', genreIds: [] });
   });
@@ -137,6 +136,48 @@ describe('fetchMyWatchedMovies', () => {
   it('counts the items when the total is missing', async () => {
     mockFetchApi.mockResolvedValue({ items: null });
 
-    expect(await fetchMyWatchedMovies()).toEqual({ items: [], total: 0 });
+    expect(await fetchMyWatchedMovies(12)).toEqual({ items: [], total: 0 });
+  });
+});
+
+describe('fetchAllMyWatchedMovies', () => {
+  const film = (tmdbId: number) => ({
+    tmdbId,
+    mediaType: 'movie',
+    title: `Film ${tmdbId}`,
+    year: '2001',
+    posterPath: null,
+    watchedAt: '2026-10-12T20:00:00Z',
+    source: 'elsewhere',
+  });
+
+  it('reads the films past the first thousand through the next pages', async () => {
+    const controller = new AbortController();
+    const firstPage = Array.from({ length: WATCHED_MOVIES_TAKE }, (_, index) => film(index + 1));
+    mockFetchApi
+      .mockResolvedValueOnce({ items: firstPage, total: 1001, hasMore: true })
+      .mockResolvedValueOnce({ items: [film(1001)], total: 1001, hasMore: false });
+
+    const result = await fetchAllMyWatchedMovies(controller.signal);
+
+    expect(WATCHED_MOVIES_TAKE).toBe(1000);
+    expect(mockFetchApi).toHaveBeenNthCalledWith(1, '/users/me/watched-movies?skip=0&take=1000', {
+      signal: controller.signal,
+    });
+    expect(mockFetchApi).toHaveBeenNthCalledWith(
+      2,
+      '/users/me/watched-movies?skip=1000&take=1000',
+      { signal: controller.signal }
+    );
+    expect(result.total).toBe(1001);
+    expect(result.items).toHaveLength(1001);
+    expect(result.items[1000]).toMatchObject({ title: 'Film 1001', genreIds: [] });
+  });
+
+  it('counts what it read when the API sends no total', async () => {
+    mockFetchApi.mockResolvedValue({ items: [film(1), film(2)] });
+
+    expect((await fetchAllMyWatchedMovies()).total).toBe(2);
+    expect(mockFetchApi).toHaveBeenCalledTimes(1);
   });
 });
