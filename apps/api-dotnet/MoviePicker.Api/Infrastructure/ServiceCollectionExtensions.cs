@@ -477,6 +477,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<FriendGroupNightsReader>();
         services.AddScoped<IUsageRecorder, UsageRecorder>();
         services.AddScoped<IWinnerAnnouncer, WinnerAnnouncer>();
+        services.AddScoped<IWinnerRuntimes, TmdbWinnerRuntimes>();
         services.AddScoped<IWheelWinnerAnnouncement, WheelWinnerAnnouncement>();
 
         var handlerNamespace = "MoviePicker.Api.Application.UseCases";

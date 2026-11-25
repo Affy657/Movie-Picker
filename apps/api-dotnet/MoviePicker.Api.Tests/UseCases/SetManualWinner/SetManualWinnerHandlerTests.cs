@@ -19,6 +19,7 @@ public sealed class SetManualWinnerHandlerTests
     private readonly Mock<ICurrentUserAccessor> _currentUserAccessor = new();
     private readonly Mock<IPosterImageStore> _posterStore = new();
     private readonly Mock<IWinnerAnnouncer> _winnerAnnouncer = new();
+    private readonly Mock<IWinnerRuntimes> _runtimes = new();
     private readonly SetManualWinnerHandler _sut;
 
     private static Event ActiveEvent(string hostToken = "ht1") => new()
@@ -60,6 +61,7 @@ public sealed class SetManualWinnerHandlerTests
             _currentUserAccessor.Object,
             _posterStore.Object,
             _winnerAnnouncer.Object,
+            _runtimes.Object,
             NullLogger<SetManualWinnerHandler>.Instance,
             TimeProvider.System);
     }
@@ -148,6 +150,22 @@ public sealed class SetManualWinnerHandlerTests
         Assert.Equal(WinnerPickMethod.Manual, winner.Method);
         _winnerAnnouncer.Verify(
             a => a.AnnounceAsync(It.IsAny<Event>(), "Choisi", WinnerPickMethod.Manual, It.IsAny<string?>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_Success_KeepsTheRuntimeOfThePickedFilmSoTheNightEndsWithIt()
+    {
+        var chosen = MovieOf("mov1", "evt1", "Interstellar");
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
+        _movieRepo.Setup(r => r.GetByIdAsync("mov1", It.IsAny<CancellationToken>())).ReturnsAsync(chosen);
+        _runtimes.Setup(r => r.LookUpAsync(chosen, It.IsAny<CancellationToken>())).ReturnsAsync(169);
+
+        await _sut.HandleAsync("evt1", Request("mov1"));
+
+        _eventRepo.Verify(
+            r => r.UpdateAsync(It.Is<Event>(e => e.Winners.Single().RuntimeMinutes == 169), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

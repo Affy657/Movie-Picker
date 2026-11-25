@@ -183,6 +183,10 @@ export async function deleteEventWinner(
 
 export type RemoveParticipantResponse = ApiSchemas['RemoveParticipantResponse'];
 
+export async function markRatingPrompted(slug: string): Promise<void> {
+  await fetchApi(apiPath('events', slug, 'rating-prompt'), { method: 'PUT' });
+}
+
 export async function setEventCoHost(
   idOrSlug: string,
   participantId: string,

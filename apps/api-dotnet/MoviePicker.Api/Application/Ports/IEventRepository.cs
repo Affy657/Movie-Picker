@@ -62,9 +62,9 @@ public interface IEventRepository
 
     Task<IReadOnlyList<Event>> ListMissingRecapSlugAsync(int limit, CancellationToken ct = default);
 
-    Task<IReadOnlyList<Event>> ListWithWinnerStartingBetweenAsync(
-        DateTimeOffset fromInclusive,
-        DateTimeOffset toExclusive,
+    Task<IReadOnlyList<Event>> ListWithWinnerEndingBetweenAsync(
+        DateTimeOffset fromExclusive,
+        DateTimeOffset toInclusive,
         CancellationToken ct = default);
 
     Task<IReadOnlyList<Event>> ListRecurringAwaitingNextOccurrenceAsync(

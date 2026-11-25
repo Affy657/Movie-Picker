@@ -22,6 +22,10 @@ public sealed class ParticipantDocument
     [BsonRepresentation(BsonType.ObjectId)]
     public string? UserId { get; set; }
 
+    [BsonElement("ratingPromptedAt")]
+    [BsonIgnoreIfNull]
+    public DateTime? RatingPromptedAt { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 

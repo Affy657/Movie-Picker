@@ -189,6 +189,7 @@ function nightWithBob(): ApiSchemas['EventDetailResponse'] {
     isHost: false,
     isFinished: false,
     lifecycle: 'live',
+    ratingPromptDue: false,
     winners: [],
     participantCount: 2,
     movieCount: 0,

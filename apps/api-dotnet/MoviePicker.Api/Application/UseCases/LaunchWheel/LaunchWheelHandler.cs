@@ -16,6 +16,7 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IPosterImageStore _posterImageStore;
+    private readonly IWinnerRuntimes _winnerRuntimes;
     private readonly ILogger<LaunchWheelHandler> _logger;
     private readonly TimeProvider _clock;
 
@@ -26,6 +27,7 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
         IPosterImageStore posterImageStore,
+        IWinnerRuntimes winnerRuntimes,
         ILogger<LaunchWheelHandler> logger,
         TimeProvider clock)
     {
@@ -35,6 +37,7 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _posterImageStore = posterImageStore;
+        _winnerRuntimes = winnerRuntimes;
         _logger = logger;
         _clock = clock;
     }
@@ -83,6 +86,7 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
             Random.Shared,
             excludedMovieIds: alreadyPicked);
 
+        var runtimeMinutes = await _winnerRuntimes.LookUpAsync(winner, ct);
         var now = _clock.GetUtcNow();
         var updated = evt with
         {
@@ -90,7 +94,8 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
             {
                 MovieId = winner.Id,
                 Method = WinnerPickMethod.Wheel,
-                PickedAt = now
+                PickedAt = now,
+                RuntimeMinutes = runtimeMinutes
             }],
             UpdatedAt = now
         };

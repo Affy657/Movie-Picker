@@ -177,6 +177,19 @@ public sealed class MongoParticipantRepository : IParticipantRepository
         return docs.ConvertAll(ParticipantDocumentMapper.ToDomain);
     }
 
+    public async Task<bool> MarkRatingPromptedAsync(
+        string participantId,
+        string eventId,
+        DateTimeOffset promptedAt,
+        CancellationToken ct = default)
+    {
+        var res = await _collection.UpdateOneAsync(
+            x => x.Id == participantId && x.EventId == eventId,
+            Builders<ParticipantDocument>.Update.Set(x => x.RatingPromptedAt, promptedAt.UtcDateTime),
+            cancellationToken: ct);
+        return res.MatchedCount > 0;
+    }
+
     public async Task<bool> DeleteAsync(string participantId, string eventId, CancellationToken ct = default)
     {
         var res = await _collection.DeleteOneAsync(

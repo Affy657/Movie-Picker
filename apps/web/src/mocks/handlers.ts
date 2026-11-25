@@ -848,6 +848,7 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
         isHost: !!host,
         isFinished: opts.isFinished ?? false,
         lifecycle: opts.lifecycle ?? (opts.isFinished ? 'finished' : 'live'),
+        ratingPromptDue: false,
         winners: [],
         viewerRemoved: opts.viewerRemoved ?? false,
         participantCount: 4,
@@ -878,6 +879,7 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
     }),
     http.get(`${V1}/events/${slug}/movies`, () => apiJson<'MovieWithScoreResponse[]'>([])),
     http.put(`${V1}/events/${slug}/presence`, () => new HttpResponse(null, { status: 204 })),
+    http.put(`${V1}/events/${slug}/rating-prompt`, () => new HttpResponse(null, { status: 204 })),
   ];
 }
 

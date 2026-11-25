@@ -31,15 +31,7 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
     public Task<Participant> AddAsync(Participant participant, CancellationToken ct = default)
     {
         var id = string.IsNullOrEmpty(participant.Id) ? Guid.NewGuid().ToString("N")[..24] : participant.Id;
-        var created = new Participant
-        {
-            Id = id,
-            EventId = participant.EventId,
-            Pseudo = participant.Pseudo,
-            UserId = participant.UserId,
-            CreatedAt = participant.CreatedAt,
-            UpdatedAt = participant.UpdatedAt
-        };
+        var created = participant with { Id = id };
         var createdUserId = created.UserId;
         if (!string.IsNullOrWhiteSpace(createdUserId) && !_eventUserToId.TryAdd((created.EventId, createdUserId), id))
             throw new ParticipantConflictException(ParticipantCollision.SameAccount);
@@ -144,6 +136,19 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
             .GroupBy(p => p.EventId, StringComparer.Ordinal)
             .SelectMany(perNight => perNight.Take(perEvent))
             .ToList();
+    }
+
+    public Task<bool> MarkRatingPromptedAsync(
+        string participantId,
+        string eventId,
+        DateTimeOffset promptedAt,
+        CancellationToken ct = default)
+    {
+        if (!_byId.TryGetValue(participantId, out var p) || p.EventId != eventId)
+            return Task.FromResult(false);
+
+        _byId[participantId] = p with { RatingPromptedAt = promptedAt };
+        return Task.FromResult(true);
     }
 
     public Task<bool> DeleteAsync(string participantId, string eventId, CancellationToken ct = default)

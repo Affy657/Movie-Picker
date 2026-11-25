@@ -30,6 +30,12 @@ public interface IParticipantRepository
         int perEvent,
         CancellationToken ct = default);
 
+    Task<bool> MarkRatingPromptedAsync(
+        string participantId,
+        string eventId,
+        DateTimeOffset promptedAt,
+        CancellationToken ct = default);
+
     Task<bool> DeleteAsync(string participantId, string eventId, CancellationToken ct = default);
 
     Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default);

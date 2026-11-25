@@ -8,6 +8,8 @@ public sealed record Participant
 
     public string? UserId { get; init; }
 
+    public DateTimeOffset? RatingPromptedAt { get; init; }
+
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
 }

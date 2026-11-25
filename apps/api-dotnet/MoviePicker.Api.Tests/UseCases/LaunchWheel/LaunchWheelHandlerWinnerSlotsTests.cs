@@ -40,6 +40,7 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
             _hostToken.Object,
             _currentUser.Object,
             _posters.Object,
+            Mock.Of<IWinnerRuntimes>(),
             NullLogger<LaunchWheelHandler>.Instance,
             TimeProvider.System);
     }
