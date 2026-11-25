@@ -9,7 +9,7 @@ import { ROUTES } from '@/app/routes';
 
 declare const self: ServiceWorkerGlobalScope;
 
-const RETIRED_CACHES = ['api-cache-v2', 'tmdb-images-v2'];
+const RETIRED_CACHES = ['api-cache-v2', 'tmdb-images-v2', 'showcase-cache-v1'];
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
@@ -29,7 +29,7 @@ const PUBLIC_SHOWCASE_PATHS = new Set(['/api/v1/movies/showcase', '/api/v1/movie
 registerRoute(
   ({ url }) => PUBLIC_SHOWCASE_PATHS.has(url.pathname),
   new StaleWhileRevalidate({
-    cacheName: 'showcase-cache-v1',
+    cacheName: 'showcase-cache-v2',
     plugins: [
       new ExpirationPlugin({ maxEntries: 40, maxAgeSeconds: 60 * 60 * 6 }),
       new CacheableResponsePlugin({ statuses: [0, 200] }),

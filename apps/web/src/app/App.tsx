@@ -17,6 +17,7 @@ import { ConsentProvider } from '@/shared/contexts/ConsentContext';
 import { LocaleProvider } from '@/shared/i18n';
 import { AuthProvider } from '@/features/auth/contexts/AuthContext';
 import UserThemeSync from '@/app/components/UserThemeSync';
+import LocaleQuerySync from '@/app/components/LocaleQuerySync';
 import AnalyticsSync from '@/app/components/AnalyticsSync';
 import PushSubscriptionSync from '@/app/components/PushSubscriptionSync';
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
@@ -331,6 +332,7 @@ export function AppProviders({ children }: Readonly<{ children: ReactNode }>) {
           <ConsentProvider>
             <AuthProvider>
               <UserThemeSync />
+              <LocaleQuerySync />
               <AnalyticsSync />
               <PushSubscriptionSync />
               {children}

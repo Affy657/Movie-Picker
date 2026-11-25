@@ -694,6 +694,26 @@ describe('fetchApi', () => {
     }
   });
 
+  it('asks the API for the catalog in the interface language', async () => {
+    const fetchMock = globalThis.fetch as ReturnType<typeof vi.fn>;
+    const emptyAnswer = () => ({
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      text: () => Promise.resolve('{}'),
+    });
+    fetchMock.mockResolvedValueOnce(emptyAnswer());
+    await fetchApi('/events');
+    localStorage.setItem('moviepicker-locale', 'en');
+    fetchMock.mockResolvedValueOnce(emptyAnswer());
+    await fetchApi('/events');
+
+    expect(fetchMock.mock.calls.map(([, init]) => (init as RequestInit).headers)).toEqual([
+      expect.objectContaining({ 'Accept-Language': 'fr-FR' }),
+      expect.objectContaining({ 'Accept-Language': 'en-US' }),
+    ]);
+  });
+
   it('merges the native Headers with a JSON Content-Type when there is a body', async () => {
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,

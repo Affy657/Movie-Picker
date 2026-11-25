@@ -68,6 +68,7 @@ const installation = {
   expirationOptions: [] as unknown[],
   cacheableResponseOptions: [] as unknown[],
   cacheFirstOptions: [] as StrategyOptions[],
+  staleWhileRevalidateOptions: [] as StrategyOptions[],
   networkOnlyOptions: [] as StrategyOptions[],
   precacheCalls: 0,
   cleanupCalls: 0,
@@ -143,6 +144,9 @@ beforeAll(async () => {
     (call) => call[0]
   );
   installation.cacheFirstOptions = workbox.CacheFirst.mock.calls.map(
+    (call) => call[0] as StrategyOptions
+  );
+  installation.staleWhileRevalidateOptions = workbox.StaleWhileRevalidate.mock.calls.map(
     (call) => call[0] as StrategyOptions
   );
   installation.networkOnlyOptions = workbox.NetworkOnly.mock.calls.map(
@@ -290,6 +294,14 @@ describe('service worker — cycle de vie', () => {
     listeners.get('activate')!(event as unknown as Record<string, unknown>);
     await event.settled();
     expect(deleteCache).toHaveBeenCalledWith('api-cache-v2');
+  });
+
+  it('keeps the selections in a cache that tells the interface languages apart', async () => {
+    expect(installation.staleWhileRevalidateOptions[0]?.cacheName).toBe('showcase-cache-v2');
+    const event = pending();
+    listeners.get('activate')!(event as unknown as Record<string, unknown>);
+    await event.settled();
+    expect(deleteCache).toHaveBeenCalledWith('showcase-cache-v1');
   });
 
   it('purges the TMDB image cache filled with opaque responses by earlier versions', async () => {
