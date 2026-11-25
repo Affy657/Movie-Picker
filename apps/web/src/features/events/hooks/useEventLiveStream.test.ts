@@ -139,6 +139,29 @@ describe('useEventLiveStream', () => {
     expect(result.current.connected).toBe(true);
   });
 
+  it('reloads the night on every reconnection, so a change missed while the stream was down shows up', () => {
+    vi.useFakeTimers();
+    const onChanged = vi.fn();
+    renderHook(() => useEventLiveStream({ slug: 'soiree', enabled: true, onChanged }));
+    act(() => latest().emit('ready'));
+    expect(onChanged).toHaveBeenCalledTimes(1);
+
+    act(() => latest().fail(FakeEventSource.CONNECTING));
+    act(() => latest().emit('ready'));
+    expect(onChanged).toHaveBeenCalledTimes(2);
+
+    act(() => latest().fail(FakeEventSource.CLOSED));
+    act(() => vi.advanceTimersByTime(EVENT_STREAM_REOPEN_AFTER_FAILURE_MS));
+    expect(FakeEventSource.instances).toHaveLength(2);
+    act(() => latest().emit('ready'));
+    expect(onChanged).toHaveBeenCalledTimes(3);
+
+    act(() => vi.advanceTimersByTime(EVENT_STREAM_STALE_AFTER_MS + 5_000));
+    expect(FakeEventSource.instances).toHaveLength(3);
+    act(() => latest().emit('ready'));
+    expect(onChanged).toHaveBeenCalledTimes(4);
+  });
+
   it('reopens a stream the browser gave up on, after a pause', () => {
     vi.useFakeTimers();
     renderHook(() => useEventLiveStream({ slug: 'soiree', enabled: true, onChanged: vi.fn() }));

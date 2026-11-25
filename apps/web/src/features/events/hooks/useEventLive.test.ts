@@ -58,14 +58,22 @@ describe('useEventLive / polling helpers', () => {
     expect(getLivePollingRefetchIntervalForEventQuery(finishedEvent, 0)).toBe(false);
   });
 
-  it('event query: active poll (short interval) after the slot', () => {
+  it('polls an active night every 15 seconds while the live stream is missing', () => {
+    const t0 = eventScheduledStartUtcMs({ date: '2030-06-01', time: '20:00' })!;
+
+    expect(EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS).toBe(15_000);
+    expect(getLivePollingRefetchIntervalForEventQuery(activeEvent, t0 + 1)).toBe(15_000);
+    expect(getLivePollingRefetchIntervalForMoviesQuery(activeEvent, true, t0 + 1)).toBe(15_000);
+  });
+
+  it('event query: active poll after the slot', () => {
     const t0 = eventScheduledStartUtcMs({ date: '2030-06-01', time: '20:00' })!;
     expect(getLivePollingRefetchIntervalForEventQuery(activeEvent, t0 + 1)).toBe(
       EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS
     );
   });
 
-  it('event query: upcoming poll (long interval) before the slot', () => {
+  it('event query: upcoming poll before the slot', () => {
     const t0 = eventScheduledStartUtcMs({ date: '2030-06-01', time: '20:00' })!;
     expect(getLivePollingRefetchIntervalForEventQuery(activeEvent, t0 - 1)).toBe(
       EVENT_LIVE_POLL_INTERVAL_UPCOMING_MS

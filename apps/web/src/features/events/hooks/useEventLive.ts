@@ -4,7 +4,7 @@ import { eventScheduledStartUtcMs } from '@/shared/utils/eventScheduled';
 
 export const EVENT_LIVE_POLL_INTERVAL_UPCOMING_MS = 12_000;
 
-export const EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS = 3_500;
+export const EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS = 15_000;
 
 export type EventLiveStrategy = 'polling';
 
