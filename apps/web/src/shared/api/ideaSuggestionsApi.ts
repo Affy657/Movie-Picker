@@ -5,6 +5,8 @@ export type IdeaSuggestionCategory = ApiSchemas['IdeaSuggestionCategory'];
 
 export type CreateIdeaSuggestionBody = ApiSchemas['CreateIdeaSuggestionRequest'];
 
+export type IdeaAttachmentContentType = ApiSchemas['IdeaSuggestionAttachmentDto']['contentType'];
+
 export async function createIdeaSuggestion(body: CreateIdeaSuggestionBody): Promise<void> {
   await fetchApi('/idea-suggestions', {
     method: 'POST',

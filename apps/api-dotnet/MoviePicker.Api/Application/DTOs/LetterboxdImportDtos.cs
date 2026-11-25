@@ -3,12 +3,6 @@ using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.DTOs;
 
-public enum LetterboxdImportTarget
-{
-    Watchlist,
-    Watched
-}
-
 public sealed class LetterboxdImportCandidateResponse
 {
     public int TmdbId { get; init; }
@@ -33,10 +27,25 @@ public sealed class LetterboxdImportRowResponse
     public IReadOnlyList<LetterboxdImportCandidateResponse> Candidates { get; init; } = [];
 }
 
+public sealed class LetterboxdListSyncResponse
+{
+    public LetterboxdImportTarget Target { get; init; }
+    public int Added { get; init; }
+    public int Removed { get; init; }
+    public IReadOnlyList<string> UnmatchedTitles { get; init; } = [];
+    public IReadOnlyList<LetterboxdImportRowResponse> PendingChoices { get; init; } = [];
+    public int TotalOnLetterboxd { get; init; }
+    public int TotalTruncated { get; init; }
+    public bool Incomplete { get; init; }
+    public DateTimeOffset? LastSyncAt { get; init; }
+    public string? Error { get; init; }
+}
+
 public sealed class LetterboxdSyncResponse
 {
     public bool Skipped { get; init; }
     public string? Error { get; init; }
+    public IReadOnlyList<LetterboxdListSyncResponse> Lists { get; init; } = [];
     public int Added { get; init; }
     public int Removed { get; init; }
     public IReadOnlyList<string> UnmatchedTitles { get; init; } = [];

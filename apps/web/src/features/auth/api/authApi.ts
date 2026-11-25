@@ -86,7 +86,9 @@ export async function postAuthLogout(): Promise<void> {
   clearSessionHint();
 }
 
-export async function fetchOAuthProviders(): Promise<string[]> {
+export type OAuthProvider = ApiSchemas['OAuthProvidersResponse']['providers'][number];
+
+export async function fetchOAuthProviders(): Promise<OAuthProvider[]> {
   const res = await fetchApi<ApiSchemas['OAuthProvidersResponse']>('/auth/oauth/providers');
   return res.providers;
 }

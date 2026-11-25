@@ -664,7 +664,7 @@ public sealed class InMemoryUserRepositoryTests
 
     private Task TargetedWriteAsync(string writer, string userId, int write) => writer switch
     {
-        "letterboxdSyncStatus" => _repo.SetLetterboxdSyncStatusAsync(userId, TemplateNow.AddSeconds(write), null),
+        "letterboxdSyncStatus" => _repo.SetLetterboxdSyncStatusAsync(userId, TemplateNow.AddSeconds(write), null, new Dictionary<LetterboxdImportTarget, LetterboxdListSync>()),
         "letterboxdPendingCount" => _repo.SetLetterboxdPendingReconciliationCountAsync(userId, write),
         "letterboxdLinkedCounts" => _repo.SetLetterboxdLinkedCountsAsync(userId, write, write),
         "addTemplate" => _repo.AddEventTemplateAsync(userId, Template($"t{write}", "Ajout"), int.MaxValue, TemplateNow),

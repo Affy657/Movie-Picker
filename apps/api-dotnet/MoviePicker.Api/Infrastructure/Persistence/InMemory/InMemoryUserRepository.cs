@@ -102,12 +102,17 @@ public sealed class InMemoryUserRepository : IUserRepository
         string userId,
         DateTimeOffset syncedAt,
         string? error,
+        IReadOnlyDictionary<LetterboxdImportTarget, LetterboxdListSync> lists,
         CancellationToken ct = default)
     {
         _byId.SwapIfPresent(userId, user => user with
         {
             LetterboxdLastSyncAt = syncedAt,
             LetterboxdLastSyncError = error,
+            LetterboxdListSyncs = user.LetterboxdListSyncs
+                .Where(entry => !lists.ContainsKey(entry.Key))
+                .Concat(lists)
+                .ToDictionary(entry => entry.Key, entry => entry.Value),
             Version = user.Version + 1
         });
         return Task.CompletedTask;
@@ -364,6 +369,7 @@ public sealed class InMemoryUserRepository : IUserRepository
             LetterboxdUsername = user.LetterboxdUsername,
             LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,
             LetterboxdLastSyncError = user.LetterboxdLastSyncError,
+            LetterboxdListSyncs = new Dictionary<LetterboxdImportTarget, LetterboxdListSync>(user.LetterboxdListSyncs),
             LetterboxdPendingReconciliationCount = user.LetterboxdPendingReconciliationCount,
             LetterboxdPendingChoiceKeys = user.LetterboxdPendingChoiceKeys,
             LetterboxdSyncWatchlist = user.LetterboxdSyncWatchlist,

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
@@ -39,6 +40,7 @@ public static class UserDocumentMapper
                 ? null
                 : new DateTimeOffset(doc.LetterboxdLastSyncAt.Value, TimeSpan.Zero),
             LetterboxdLastSyncError = doc.LetterboxdLastSyncError,
+            LetterboxdListSyncs = ToListSyncsDomain(doc.LetterboxdListSyncs),
             LetterboxdPendingReconciliationCount = doc.LetterboxdPendingReconciliationCount,
             LetterboxdPendingChoiceKeys = doc.LetterboxdPendingChoiceKeys,
             LetterboxdSyncWatchlist = doc.LetterboxdSyncWatchlist ?? true,
@@ -89,6 +91,7 @@ public static class UserDocumentMapper
             LetterboxdUsername = string.IsNullOrEmpty(user.LetterboxdUsername) ? null : user.LetterboxdUsername,
             LetterboxdLastSyncAt = user.LetterboxdLastSyncAt?.UtcDateTime,
             LetterboxdLastSyncError = user.LetterboxdLastSyncError,
+            LetterboxdListSyncs = ToListSyncsDocument(user.LetterboxdListSyncs),
             LetterboxdPendingReconciliationCount = user.LetterboxdPendingReconciliationCount,
             LetterboxdPendingChoiceKeys = user.LetterboxdPendingChoiceKeys?.ToList(),
             LetterboxdSyncWatchlist = user.LetterboxdSyncWatchlist,
@@ -99,6 +102,31 @@ public static class UserDocumentMapper
             UpdatedAt = user.UpdatedAt.UtcDateTime,
             Version = user.Version
         };
+
+    internal static string ListSyncKey(LetterboxdImportTarget list) =>
+        JsonNamingPolicy.CamelCase.ConvertName(list.ToString());
+
+    internal static LetterboxdListSyncDocument ToListSyncDocument(LetterboxdListSync sync) =>
+        new() { At = sync.At.UtcDateTime, Error = sync.Error };
+
+    private static Dictionary<LetterboxdImportTarget, LetterboxdListSync> ToListSyncsDomain(
+        Dictionary<string, LetterboxdListSyncDocument>? docs)
+    {
+        var syncs = new Dictionary<LetterboxdImportTarget, LetterboxdListSync>();
+        foreach (var (key, doc) in docs ?? [])
+        {
+            if (Enum.TryParse<LetterboxdImportTarget>(key, ignoreCase: true, out var list))
+                syncs[list] = new LetterboxdListSync(new DateTimeOffset(doc.At, TimeSpan.Zero), doc.Error);
+        }
+
+        return syncs;
+    }
+
+    private static Dictionary<string, LetterboxdListSyncDocument>? ToListSyncsDocument(
+        IReadOnlyDictionary<LetterboxdImportTarget, LetterboxdListSync> syncs) =>
+        syncs.Count == 0
+            ? null
+            : syncs.ToDictionary(entry => ListSyncKey(entry.Key), entry => ToListSyncDocument(entry.Value));
 
     private static EventTemplate ToTemplateDomain(EventTemplateDocument doc) => new()
     {

@@ -105,7 +105,7 @@ public sealed class ExportUserDataHandlerTests
 
         var export = await f.CreateHandler().HandleAsync(user.Id);
 
-        Assert.Equal("film", export.Banner!.Source);
+        Assert.Equal(ProfileBannerSource.Film, export.Banner!.Source);
         Assert.Equal(693134, export.Banner.TmdbId);
         Assert.Equal("Dune", export.Banner.Title);
         Assert.Equal("/sunset.jpg", export.Banner.ImagePath);
@@ -186,8 +186,8 @@ public sealed class ExportUserDataHandlerTests
         Assert.Equal(TestEpoch, export.ExportedAt);
         Assert.Equal("neo@example.com", export.Profile.Email);
         Assert.Equal("neo", export.Profile.Handle);
-        Assert.Equal("Purple", export.Profile.AccentColor);
-        Assert.Equal("Dark", export.Profile.UiTheme);
+        Assert.Equal(AccentColor.Purple, export.Profile.AccentColor);
+        Assert.Equal(UiThemePreference.Dark, export.Profile.UiTheme);
 
         Assert.Single(export.CreatedEvents);
         Assert.Equal("Ma soirée", export.CreatedEvents[0].Title);
@@ -205,7 +205,7 @@ public sealed class ExportUserDataHandlerTests
         Assert.Equal("trinity", following.Handle);
 
         Assert.Single(export.Notifications);
-        Assert.Equal("NewFollower", export.Notifications[0].Type);
+        Assert.Equal("newfollower", export.Notifications[0].Type);
 
         var push = Assert.Single(export.PushSubscriptions);
         Assert.Equal("https://push.example/abc", push.Endpoint);
@@ -226,7 +226,7 @@ public sealed class ExportUserDataHandlerTests
         var export = await f.CreateHandler().HandleAsync(user.Id);
 
         Assert.Equal(
-            [(603, "movie", "Matrix", "1999"), (1920, "tv", "Twin Peaks", "1990")],
+            [(603, MovieMediaType.Movie, "Matrix", "1999"), (1920, MovieMediaType.Tv, "Twin Peaks", "1990")],
             export.Favorites.Select(x => (x.TmdbId, x.MediaType, x.Title, x.Year)));
     }
 
@@ -280,7 +280,7 @@ public sealed class ExportUserDataHandlerTests
         Assert.Equal(TestEpoch.AddDays(-4), list.CreatedAt);
         Assert.Equal(TestEpoch.AddDays(-2), list.UpdatedAt);
         Assert.Equal(
-            [(603, "movie", "Matrix", "1999", TestEpoch.AddDays(-3)), (1920, "tv", "Twin Peaks", "1990", TestEpoch.AddDays(-2))],
+            [(603, MovieMediaType.Movie, "Matrix", "1999", TestEpoch.AddDays(-3)), (1920, MovieMediaType.Tv, "Twin Peaks", "1990", TestEpoch.AddDays(-2))],
             list.Items.Select(x => (x.TmdbId, x.MediaType, x.Title, x.Year, x.AddedAt)));
     }
 
@@ -348,7 +348,7 @@ public sealed class ExportUserDataHandlerTests
         var export = await f.CreateHandler().HandleAsync(user.Id);
 
         var notice = Assert.Single(export.Notifications);
-        Assert.Equal(("GroupInvitation", "Le club du jeudi", (string?)null), (notice.Type, notice.GroupName, notice.ListName));
+        Assert.Equal(("groupinvitation", "Le club du jeudi", (string?)null), (notice.Type, notice.GroupName, notice.ListName));
     }
 
     [Fact]
@@ -406,9 +406,9 @@ public sealed class ExportUserDataHandlerTests
 
         Assert.Equal(
             [
-                ("memberList", "abc123", "Hitchcock", TestEpoch),
-                ("explorerTheme", "frissons", "frissons", TestEpoch.AddDays(-1)),
-                ("tmdbCollection", "1241", "Harry Potter - Saga", TestEpoch.AddDays(-2))
+                (ListSourceType.MemberList, "abc123", "Hitchcock", TestEpoch),
+                (ListSourceType.ExplorerTheme, "frissons", "frissons", TestEpoch.AddDays(-1)),
+                (ListSourceType.TmdbCollection, "1241", "Harry Potter - Saga", TestEpoch.AddDays(-2))
             ],
             export.SavedLists.Select(x => (x.SourceType, x.SourceId, x.Name, x.CreatedAt)));
     }
@@ -442,7 +442,7 @@ public sealed class ExportUserDataHandlerTests
 
         Assert.True(export.Profile.DimWatched);
         Assert.Equal(
-            [(1920, "tv", "Twin Peaks", "1990", TestEpoch.AddDays(-1), (int?)null), (603, "movie", "Matrix", "1999", TestEpoch.AddDays(-3), (int?)8)],
+            [(1920, MovieMediaType.Tv, "Twin Peaks", "1990", TestEpoch.AddDays(-1), (int?)null), (603, MovieMediaType.Movie, "Matrix", "1999", TestEpoch.AddDays(-3), (int?)8)],
             export.WatchedTitles.Select(x => (x.TmdbId, x.MediaType, x.Title, x.Year, x.WatchedAt, x.Rating)));
     }
 
@@ -495,7 +495,7 @@ public sealed class ExportUserDataHandlerTests
 
         Assert.Equal((false, true), (export.Profile.LetterboxdSyncWatchlist, export.Profile.LetterboxdSyncWatched));
         Assert.Equal(
-            [(680, "manual", (string?)null, (string?)"manual"), (603, "letterboxd", "the-matrix", "letterboxd")],
+            [(680, WatchedOrigin.Manual, (string?)null, (WatchedOrigin?)WatchedOrigin.Manual), (603, WatchedOrigin.Letterboxd, "the-matrix", WatchedOrigin.Letterboxd)],
             export.WatchedTitles.Select(x => (x.TmdbId, x.Origin, x.LetterboxdSlug, x.RatingOrigin)));
         Assert.Equal("blade-runner", Assert.Single(export.Watchlist).LetterboxdSlug);
     }
@@ -537,7 +537,7 @@ public sealed class ExportUserDataHandlerTests
 
         var export = await f.CreateHandler().HandleAsync(user.Id);
 
-        Assert.Equal("Ten", export.Profile.RatingScale);
+        Assert.Equal(RatingScale.Ten, export.Profile.RatingScale);
         Assert.Equal("neo-lb", export.Profile.LetterboxdUsername);
         var template = Assert.Single(export.Profile.EventTemplates);
         Assert.Equal("Vendredi frissons", template.Name);
@@ -545,7 +545,7 @@ public sealed class ExportUserDataHandlerTests
         var proposed = Assert.Single(Assert.Single(export.Participations).ProposedMovies);
         Assert.Equal("Matrix", proposed.Title);
         Assert.Equal(603, proposed.TmdbId);
-        Assert.Equal("movie", proposed.MediaType);
+        Assert.Equal(MovieMediaType.Movie, proposed.MediaType);
         Assert.Equal("Pilule rouge ou bleue ?", proposed.PitchNote);
 
     }

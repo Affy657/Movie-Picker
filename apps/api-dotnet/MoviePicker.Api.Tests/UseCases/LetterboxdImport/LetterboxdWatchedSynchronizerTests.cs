@@ -321,7 +321,7 @@ public sealed class LetterboxdWatchedSynchronizerTests
             (LetterboxdImportTarget.Watched, "solaris", (int?)10, (DateOnly?)new DateOnly(2026, 10, 1)),
             (choice.Target, choice.LetterboxdSlug, choice.Rating, choice.WatchedOn));
         Assert.Equal([593, 2_103], choice.Candidates.Select(c => c.TmdbId));
-        Assert.True(choice.RowIndex > LetterboxdImportLimits.MaxRows);
+        Assert.Equal(1, choice.RowIndex);
         Assert.Equal(["Lost Film (1931)"], outcome.UnmatchedTitles);
         Assert.Empty(await _watched.ListByOwnerAsync(UserId));
     }

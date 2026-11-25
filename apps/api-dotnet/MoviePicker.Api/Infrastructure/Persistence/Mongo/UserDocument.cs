@@ -6,6 +6,8 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 [BsonIgnoreExtraElements]
 public sealed class UserDocument
 {
+    public const string LetterboxdListSyncsElement = "letterboxdListSyncs";
+
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; } = string.Empty;
@@ -117,6 +119,10 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public string? LetterboxdLastSyncError { get; set; }
 
+    [BsonElement(LetterboxdListSyncsElement)]
+    [BsonIgnoreIfNull]
+    public Dictionary<string, LetterboxdListSyncDocument>? LetterboxdListSyncs { get; set; }
+
     [BsonElement("letterboxdPendingReconciliationCount")]
     [BsonIgnoreIfDefault]
     public int LetterboxdPendingReconciliationCount { get; set; }
@@ -197,6 +203,17 @@ public sealed class FavoriteTitleDocument
     [BsonElement("posterPath")]
     [BsonIgnoreIfNull]
     public string? PosterPath { get; set; }
+}
+
+[BsonIgnoreExtraElements]
+public sealed class LetterboxdListSyncDocument
+{
+    [BsonElement("at")]
+    public DateTime At { get; set; }
+
+    [BsonElement("error")]
+    [BsonIgnoreIfNull]
+    public string? Error { get; set; }
 }
 
 [BsonIgnoreExtraElements]

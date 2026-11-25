@@ -172,8 +172,13 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
         public Task<User?> GetByHandleAsync(string handle, CancellationToken ct = default) => inner.GetByHandleAsync(handle, ct);
         public Task<IReadOnlyList<User>> ListMissingHandleAsync(CancellationToken ct = default) => inner.ListMissingHandleAsync(ct);
         public Task<IReadOnlyList<User>> SearchPublicAsync(string query, int limit, CancellationToken ct = default) => inner.SearchPublicAsync(query, limit, ct);
-        public Task SetLetterboxdSyncStatusAsync(string userId, DateTimeOffset syncedAt, string? error, CancellationToken ct = default) =>
-            inner.SetLetterboxdSyncStatusAsync(userId, syncedAt, error, ct);
+        public Task SetLetterboxdSyncStatusAsync(
+            string userId,
+            DateTimeOffset syncedAt,
+            string? error,
+            IReadOnlyDictionary<LetterboxdImportTarget, LetterboxdListSync> lists,
+            CancellationToken ct = default) =>
+            inner.SetLetterboxdSyncStatusAsync(userId, syncedAt, error, lists, ct);
         public Task SetLetterboxdPendingReconciliationCountAsync(string userId, int pendingCount, CancellationToken ct = default) =>
             inner.SetLetterboxdPendingReconciliationCountAsync(userId, pendingCount, ct);
 

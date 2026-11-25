@@ -3,13 +3,11 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Watchlist;
 using MoviePicker.Api.Domain.Entities;
-using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.LetterboxdImport;
 
-public sealed record LetterboxdSyncOutcome(
-    bool Succeeded,
-    string? Error,
+public sealed record LetterboxdListOutcome(
+    LetterboxdImportTarget Target,
     int Added,
     int Removed,
     IReadOnlyList<string> UnmatchedTitles,
@@ -17,17 +15,26 @@ public sealed record LetterboxdSyncOutcome(
     int TotalOnLetterboxd,
     int TotalTruncated)
 {
-    public int WatchedAdded { get; init; }
-    public int WatchedRemoved { get; init; }
-    public IReadOnlyList<string> WatchedUnmatchedTitles { get; init; } = [];
-    public IReadOnlyList<LetterboxdImportRowResponse> WatchedPendingChoices { get; init; } = [];
-    public int WatchedTotalOnLetterboxd { get; init; }
-    public int WatchedTotalTruncated { get; init; }
+    public string? Error { get; init; }
+
+    public bool Synced { get; init; } = true;
+
+    public bool Incomplete => Error is not null;
+
+    public static LetterboxdListOutcome Nothing(LetterboxdImportTarget target) => new(target, 0, 0, [], [], 0, 0);
+
+    public static LetterboxdListOutcome Unread(LetterboxdImportTarget target, string error) =>
+        Nothing(target) with { Error = error };
+}
+
+public sealed record LetterboxdSyncOutcome(bool Succeeded, string? Error, IReadOnlyList<LetterboxdListOutcome> Lists)
+{
+    public LetterboxdListOutcome Of(LetterboxdImportTarget target) =>
+        Lists.FirstOrDefault(list => list.Target == target) ?? LetterboxdListOutcome.Nothing(target);
 }
 
 public sealed class LetterboxdWatchlistSynchronizer
 {
-    private static readonly LetterboxdSyncOutcome NothingToWatch = new(true, null, 0, 0, [], [], 0, 0);
 
     private readonly IWatchlistRepository _watchlist;
     private readonly IWatchedTitleRepository _watchedTitles;
@@ -67,41 +74,70 @@ public sealed class LetterboxdWatchlistSynchronizer
         _logger = logger;
     }
 
-    public async Task<LetterboxdSyncOutcome> SyncAsync(User user, CancellationToken ct = default)
+    public async Task<LetterboxdSyncOutcome> SyncAsync(
+        User user,
+        IReadOnlyCollection<LetterboxdImportTarget>? lists = null,
+        CancellationToken ct = default)
     {
+        var due = lists ?? LetterboxdListStatus.EnabledListsOf(user);
+        var syncWatchlist = due.Contains(LetterboxdImportTarget.Watchlist);
+        var syncWatched = due.Contains(LetterboxdImportTarget.Watched);
         var username = user.LetterboxdUsername ?? string.Empty;
         using var syncBudget = CancellationTokenSource.CreateLinkedTokenSource(ct);
         syncBudget.CancelAfter(_budget.Total);
-        var watchlistShare = user.LetterboxdSyncWatched ? _budget.FirstList : _budget.Total;
+        var watchlistShare = syncWatched ? _budget.FirstList : _budget.Total;
 
-        var watchlist = user.LetterboxdSyncWatchlist
+        var watchlist = syncWatchlist
             ? await SyncWatchlistAsync(user, username, watchlistShare, syncBudget.Token, ct)
             : null;
-        var watched = user.LetterboxdSyncWatched
-            ? await SyncWatchedFilmsAsync(user, username, watchlist?.Snapshot, syncBudget.Token, ct)
+        var watched = syncWatched
+            ? await SyncWatchedFilmsAsync(user, username, WatchlistSeenBy(user, watchlist), syncBudget.Token, ct)
             : null;
 
-        var error = SyncError(watchlist?.Outcome, watched, user);
-        if (error is not null && watchlist?.Outcome is null && watched is null)
-            return Failed(error);
-
-        var toWatch = watchlist?.Outcome ?? NothingToWatch;
-        var watchedOutcome = watched ?? LetterboxdWatchedOutcome.None;
-        return toWatch with
-        {
-            Error = error,
-            Removed = toWatch.Removed + watchedOutcome.RemovedFromWatchlist,
-            WatchedAdded = watchedOutcome.Added,
-            WatchedRemoved = watchedOutcome.Removed,
-            WatchedUnmatchedTitles = watchedOutcome.UnmatchedTitles,
-            WatchedPendingChoices = watchedOutcome.PendingChoices,
-            WatchedTotalOnLetterboxd = watchedOutcome.TotalOnLetterboxd,
-            WatchedTotalTruncated = watchedOutcome.TotalTruncated
-        };
+        var outcomes = ListsOf(syncWatchlist, syncWatched, watchlist?.Outcome, watched);
+        var error = outcomes.Select(list => list.Error).FirstOrDefault(listError => listError is not null);
+        var nothingRead = outcomes.Count > 0 && outcomes.TrueForAll(list => list.Incomplete);
+        return new LetterboxdSyncOutcome(!nothingRead, error, outcomes);
     }
 
-    public static LetterboxdSyncOutcome Failed(string error) =>
-        new(false, error, 0, 0, [], [], 0, 0);
+    public static LetterboxdSyncOutcome Failed(string error) => new(false, error, []);
+
+    private static LetterboxdFilmsSnapshot? WatchlistSeenBy(User user, WatchlistPass? pass)
+    {
+        if (pass is not null)
+            return pass.Snapshot;
+        return user.LetterboxdSyncWatchlist ? LetterboxdFilmsSnapshot.Failed() : null;
+    }
+
+    private static List<LetterboxdListOutcome> ListsOf(
+        bool syncWatchlist,
+        bool syncWatched,
+        LetterboxdListOutcome? watchlist,
+        LetterboxdWatchedOutcome? watched)
+    {
+        var lists = new List<LetterboxdListOutcome>();
+        var removedFromWatchlist = watched?.RemovedFromWatchlist ?? 0;
+        if (syncWatchlist)
+        {
+            var toWatch = watchlist ?? Unread(LetterboxdImportTarget.Watchlist);
+            lists.Add(toWatch with { Removed = toWatch.Removed + removedFromWatchlist });
+        }
+        else if (removedFromWatchlist > 0)
+        {
+            lists.Add(LetterboxdListOutcome.Nothing(LetterboxdImportTarget.Watchlist) with
+            {
+                Removed = removedFromWatchlist,
+                Synced = false
+            });
+        }
+
+        if (syncWatched)
+            lists.Add(watched?.ToListOutcome() ?? Unread(LetterboxdImportTarget.Watched));
+        return lists;
+    }
+
+    private static LetterboxdListOutcome Unread(LetterboxdImportTarget target) =>
+        LetterboxdListOutcome.Unread(target, LetterboxdListStatus.UnreadError(target));
 
     private async Task<WatchlistPass> SyncWatchlistAsync(
         User user,
@@ -162,13 +198,6 @@ public sealed class LetterboxdWatchlistSynchronizer
             username,
             budget);
 
-    private static string? SyncError(LetterboxdSyncOutcome? watchlist, LetterboxdWatchedOutcome? watched, User user)
-    {
-        if (user.LetterboxdSyncWatchlist && watchlist is null)
-            return ErrorCodes.LetterboxdWatchlistIncomplete;
-        return user.LetterboxdSyncWatched && watched is null ? ErrorCodes.LetterboxdWatchedIncomplete : null;
-    }
-
     private async Task<LetterboxdFilmsSnapshot> ReadAsync(
         Func<string, CancellationToken, Task<LetterboxdFilmsSnapshot>> read,
         string list,
@@ -203,7 +232,7 @@ public sealed class LetterboxdWatchlistSynchronizer
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
 
-    private async Task<LetterboxdSyncOutcome> ApplyWatchlistAsync(
+    private async Task<LetterboxdListOutcome> ApplyWatchlistAsync(
         User user,
         LetterboxdFilmsSnapshot snapshot,
         CancellationToken ct)
@@ -228,9 +257,8 @@ public sealed class LetterboxdWatchlistSynchronizer
             ? await RemoveDepartedAsync(user.Id, items, onLetterboxd, addition.Relinked, ct)
             : 0;
 
-        return new LetterboxdSyncOutcome(
-            Succeeded: true,
-            Error: null,
+        return new LetterboxdListOutcome(
+            Target: LetterboxdImportTarget.Watchlist,
             Added: addition.Added,
             Removed: removed,
             UnmatchedTitles: addition.UnmatchedTitles,
@@ -360,7 +388,7 @@ public sealed class LetterboxdWatchlistSynchronizer
         LetterboxdSlug = slug
     };
 
-    private sealed record WatchlistPass(LetterboxdFilmsSnapshot Snapshot, LetterboxdSyncOutcome? Outcome);
+    private sealed record WatchlistPass(LetterboxdFilmsSnapshot Snapshot, LetterboxdListOutcome? Outcome);
 
     private sealed record AdditionResult(
         int Added,

@@ -6,9 +6,9 @@ import { invalidateWatchlist } from '@/features/movies/hooks/useWatchlist';
 import { invalidateWatched } from '@/features/movies/hooks/invalidateWatched';
 import { syncLetterboxd } from '@/features/letterboxd/api/letterboxdApi';
 import {
+  listChanged,
   pendingChoicesOf,
   syncMeasureOf,
-  watchedChanged,
 } from '@/features/letterboxd/utils/syncReport';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 
@@ -34,8 +34,8 @@ export function useLetterboxdAutoSync(): void {
         if (report.skipped) return;
         track('letterboxd_synced', { mode: 'auto', ...syncMeasureOf(report) });
         void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
-        if (watchedChanged(report)) void invalidateWatched(queryClient);
-        else if (report.added > 0 || report.removed > 0) void invalidateWatchlist(queryClient);
+        if (listChanged(report, 'watched')) void invalidateWatched(queryClient);
+        else if (listChanged(report, 'watchlist')) void invalidateWatchlist(queryClient);
         if (pendingChoicesOf(report).length > 0)
           void queryClient.invalidateQueries({ queryKey: queryKeys.notifications.inbox });
       })

@@ -768,7 +768,14 @@ internal static partial class DevelopmentScenarioSeed
 
         await watchlist.SetLetterboxdSlugAsync(actors.Dev.Id, 693134, MovieMediaType.Movie, "dune-part-two", ct).ConfigureAwait(false);
         await watchlist.SetLetterboxdSlugAsync(actors.Dev.Id, 1022789, MovieMediaType.Movie, "inside-out-2", ct).ConfigureAwait(false);
-        await users.SetLetterboxdSyncStatusAsync(actors.Dev.Id, clock.GetUtcNow(), null, ct).ConfigureAwait(false);
+        var syncedAt = clock.GetUtcNow();
+        await users.SetLetterboxdSyncStatusAsync(
+                actors.Dev.Id,
+                syncedAt,
+                null,
+                Enum.GetValues<LetterboxdImportTarget>().ToDictionary(list => list, _ => new LetterboxdListSync(syncedAt, null)),
+                ct)
+            .ConfigureAwait(false);
         await counter.RefreshAsync(actors.Dev.Id, ct).ConfigureAwait(false);
 
         logger.LogInformation(

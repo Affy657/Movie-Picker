@@ -11,7 +11,7 @@ import type { RatingScale } from '@/shared/types/theme';
 import { toTitleSummary } from '@/shared/utils/titleSummary';
 import { ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import { syncsWithLetterboxd } from '@/features/auth/utils/letterboxdSync';
+import { syncsWithLetterboxd } from '@/features/letterboxd/utils/letterboxdSync';
 import type { ToolbarExtraFilter } from '@/features/movies/hooks/useCollectionToolbar';
 import OwnerRatingBadge, { ProfileCardBadge } from '@/features/movies/components/OwnerRatingBadge';
 import ListMoviesPage, {

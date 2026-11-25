@@ -279,7 +279,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    provider: string;
+                    provider: "google" | "github";
                 };
                 cookie?: never;
             };
@@ -332,7 +332,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    provider: string;
+                    provider: "google" | "github";
                 };
                 cookie?: never;
             };
@@ -379,7 +379,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    provider: string;
+                    provider: "google" | "github";
                 };
                 cookie?: never;
             };
@@ -7679,7 +7679,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    section?: string;
+                    section?: "trending" | "now-playing" | "most-proposed" | "theme" | "collection" | "provider" | "recommendations" | "director";
                     theme?: string;
                     genreIds?: string;
                     collectionId?: number;
@@ -8743,7 +8743,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    sourceType?: string;
+                    sourceType?: "tmdbCollection" | "explorerTheme" | "memberList" | "memberWatched" | "memberProposals" | "memberWinningProposals";
                     sourceId?: string;
                 };
                 header?: never;
@@ -12419,7 +12419,7 @@ export interface components {
         ExportedFavorite: {
             /** Format: int32 */
             tmdbId: number;
-            mediaType: string;
+            mediaType: components["schemas"]["MovieMediaType"];
             title: string;
             year: string;
         };
@@ -12471,14 +12471,15 @@ export interface components {
         ExportedMovieListItem: {
             /** Format: int32 */
             tmdbId: number;
-            mediaType: string;
+            mediaType: components["schemas"]["MovieMediaType"];
             title: string;
             year: string;
             /** Format: date-time */
             addedAt: string;
         };
         ExportedNotification: {
-            type: string;
+            /** @enum {string} */
+            type: "newfollower" | "movieadded" | "moviepicked" | "participantjoined" | "eventdeleted" | "eventreminder1h" | "eventreminder24h" | "eventinvitation" | "eventpending" | "moviepickedmanually" | "letterboxdreconciliationpending" | "eventdatechanged" | "ratingreminder" | "listinvitation" | "groupinvitation" | "groupnight" | "removedfromevent" | "hostrolereceived";
             actorHandle?: string | null;
             actorDisplayName?: string | null;
             eventTitle?: string | null;
@@ -12509,17 +12510,17 @@ export interface components {
             isProfilePublic: boolean;
             isWatchlistPublic: boolean;
             isWatchedPublic: boolean;
-            uiTheme: string;
-            accentColor: string;
+            uiTheme: components["schemas"]["UiThemePreference"];
+            accentColor: components["schemas"]["AccentColor"];
             avatarId: string;
             hasPassword: boolean;
-            linkedProviders: string[];
+            linkedProviders: ("google" | "github")[];
             notificationPreferences: {
                 [key: string]: boolean;
             };
             /** Format: date-time */
             supporterSince?: string | null;
-            ratingScale: string;
+            ratingScale: components["schemas"]["RatingScale"];
             dimWatched: boolean;
             letterboxdUsername?: string | null;
             letterboxdSyncWatchlist: boolean;
@@ -12531,7 +12532,7 @@ export interface components {
             updatedAt: string;
         };
         ExportedProfileBanner: {
-            source: string;
+            source: components["schemas"]["ProfileBannerSource"];
             /** Format: int32 */
             tmdbId?: number | null;
             title?: string | null;
@@ -12543,7 +12544,7 @@ export interface components {
             movieId: string;
             /** Format: int32 */
             tmdbId: number;
-            mediaType: string;
+            mediaType: components["schemas"]["MovieMediaType"];
             title: string;
             year: string;
             pitchNote?: string | null;
@@ -12563,7 +12564,7 @@ export interface components {
             updatedAt: string;
         };
         ExportedSavedList: {
-            sourceType: string;
+            sourceType: components["schemas"]["ListSourceType"];
             sourceId: string;
             name: string;
             /** Format: date-time */
@@ -12584,21 +12585,21 @@ export interface components {
         ExportedWatchedTitle: {
             /** Format: int32 */
             tmdbId: number;
-            mediaType: string;
+            mediaType: components["schemas"]["MovieMediaType"];
             title: string;
             year: string;
             /** Format: date-time */
             watchedAt: string;
             /** Format: int32 */
             rating?: number | null;
-            ratingOrigin?: string | null;
-            origin: string;
+            ratingOrigin?: components["schemas"]["WatchedOrigin"] | null;
+            origin: components["schemas"]["WatchedOrigin"];
             letterboxdSlug?: string | null;
         };
         ExportedWatchlistItem: {
             /** Format: int32 */
             tmdbId: number;
-            mediaType: string;
+            mediaType: components["schemas"]["MovieMediaType"];
             title: string;
             year: string;
             letterboxdSlug?: string | null;
@@ -12882,7 +12883,8 @@ export interface components {
         };
         IdeaSuggestionAttachmentDto: {
             fileName: string;
-            contentType: string;
+            /** @enum {string} */
+            contentType: "image/png" | "image/jpeg" | "image/webp" | "image/gif";
             base64Content: string;
         };
         /** @enum {string} */
@@ -12999,9 +13001,27 @@ export interface components {
         };
         /** @enum {string} */
         LetterboxdImportTarget: "watchlist" | "watched";
+        LetterboxdListSyncResponse: {
+            target: components["schemas"]["LetterboxdImportTarget"];
+            /** Format: int32 */
+            added: number;
+            /** Format: int32 */
+            removed: number;
+            unmatchedTitles: string[];
+            pendingChoices: components["schemas"]["LetterboxdImportRowResponse"][];
+            /** Format: int32 */
+            totalOnLetterboxd: number;
+            /** Format: int32 */
+            totalTruncated: number;
+            incomplete: boolean;
+            /** Format: date-time */
+            lastSyncAt: string | null;
+            error: string | null;
+        };
         LetterboxdSyncResponse: {
             skipped: boolean;
             error: string | null;
+            lists: components["schemas"]["LetterboxdListSyncResponse"][];
             /** Format: int32 */
             added: number;
             /** Format: int32 */
@@ -13549,7 +13569,8 @@ export interface components {
             enabled: boolean;
         };
         NotificationTypePreferencePatch: {
-            type: string;
+            /** @enum {string} */
+            type: "newfollower" | "movieadded" | "moviepicked" | "participantjoined" | "eventdeleted" | "eventreminder1h" | "eventreminder24h" | "eventinvitation" | "eventpending" | "moviepickedmanually" | "letterboxdreconciliationpending" | "eventdatechanged" | "ratingreminder" | "listinvitation" | "groupinvitation" | "groupnight" | "removedfromevent" | "hostrolereceived";
             enabled: boolean;
         };
         NotificationUnreadCountResponse: {
@@ -13557,7 +13578,7 @@ export interface components {
             unreadCount: number;
         };
         OAuthProvidersResponse: {
-            providers: string[];
+            providers: ("google" | "github")[];
         };
         ParticipantResponse: {
             _id: string;
@@ -13613,11 +13634,15 @@ export interface components {
         };
         PatchUserProfileRequest: {
             displayName?: string | null;
-            uiTheme?: string | null;
-            accentColor?: string | null;
-            ratingScale?: string | null;
+            /** @enum {string|null} */
+            uiTheme?: "system" | "light" | "dark" | null;
+            /** @enum {string|null} */
+            accentColor?: "default" | "blue" | "teal" | "green" | "lime" | "gold" | "orange" | "pink" | "purple" | "red" | "cyan" | "indigo" | null;
+            /** @enum {string|null} */
+            ratingScale?: "five" | "ten" | null;
             dimWatched?: boolean | null;
-            avatarId?: string | null;
+            /** @enum {string|null} */
+            avatarId?: "alpha" | "beta" | "bolt" | "byte" | "crux" | "delta" | "flux" | "forge" | "gamma" | "jolt" | "kilo" | "laser" | "dex" | "sigma" | "droid" | "theta" | "chip" | "vibe" | "cute" | "wink" | "hero" | "halo" | "grin" | "cool" | "keen" | "jazz" | "fizz" | "zest" | "bold" | "epic" | "bask" | "nod" | "glow" | "zoom" | "snap" | "luxe" | null;
             useAvatarPhoto?: boolean | null;
             handle?: string | null;
             bio?: string | null;
@@ -13632,12 +13657,15 @@ export interface components {
             proposing: boolean;
         };
         ProfileBannerResponse: {
-            source: string;
+            /** @enum {string} */
+            source: "film" | "photo";
             imageUrl: string;
             /** Format: int32 */
             tmdbId: number | null;
             title: string | null;
         };
+        /** @enum {string} */
+        ProfileBannerSource: "film" | "photo";
         PublicListResponse: {
             id: string;
             name: string;
@@ -13760,7 +13788,8 @@ export interface components {
             winnerCount?: number | null;
         };
         SaveListRequest: {
-            sourceType: string;
+            /** @enum {string} */
+            sourceType: "tmdbCollection" | "explorerTheme" | "memberList" | "memberWatched" | "memberProposals" | "memberWinningProposals";
             sourceId: string;
         };
         SavedListResponse: {
@@ -13829,7 +13858,8 @@ export interface components {
             excluded: boolean;
         };
         SetProfileBannerRequest: {
-            source: string;
+            /** @enum {string} */
+            source: "film" | "photo";
             /** Format: int32 */
             tmdbId?: number | null;
             imagePath?: string | null;
@@ -13862,11 +13892,13 @@ export interface components {
             isPublic?: boolean | null;
         };
         UploadAvatarPhotoRequest: {
-            contentType: string;
+            /** @enum {string} */
+            contentType: "image/jpeg" | "image/png" | "image/webp";
             base64Content: string;
         };
         UploadBannerPhotoRequest: {
-            contentType: string;
+            /** @enum {string} */
+            contentType: "image/jpeg" | "image/png" | "image/webp";
             base64Content: string;
         };
         UserDataExportResponse: {
@@ -13943,7 +13975,7 @@ export interface components {
             /** Format: int32 */
             letterboxdWatchedCount: number;
             hasPassword: boolean;
-            linkedProviders: string[];
+            linkedProviders: ("google" | "github")[];
             favorites: components["schemas"]["FavoriteTitleResponse"][];
             banner: components["schemas"]["ProfileBannerResponse"] | null;
             bannerPhotoUrl: string | null;
@@ -14041,6 +14073,8 @@ export interface components {
             logoPath: string | null;
             type: string;
         };
+        /** @enum {string} */
+        WatchedOrigin: "manual" | "letterboxd";
         /** @enum {string} */
         WatchedSource: "night" | "elsewhere";
         /** @enum {string} */

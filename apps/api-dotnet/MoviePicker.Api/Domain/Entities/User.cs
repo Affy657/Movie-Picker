@@ -91,6 +91,8 @@ public sealed record User
     public string? LetterboxdUsername { get; init; }
     public DateTimeOffset? LetterboxdLastSyncAt { get; init; }
     public string? LetterboxdLastSyncError { get; init; }
+    public IReadOnlyDictionary<LetterboxdImportTarget, LetterboxdListSync> LetterboxdListSyncs { get; init; }
+        = new Dictionary<LetterboxdImportTarget, LetterboxdListSync>();
     public int LetterboxdPendingReconciliationCount { get; init; }
     public IReadOnlyList<string>? LetterboxdPendingChoiceKeys { get; init; }
     public bool LetterboxdSyncWatchlist { get; init; } = true;

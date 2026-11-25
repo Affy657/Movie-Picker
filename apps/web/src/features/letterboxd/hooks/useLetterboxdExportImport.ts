@@ -7,7 +7,7 @@ import {
   type LetterboxdConfirmResult,
   type LetterboxdExport,
   type LetterboxdExportRow,
-  type LetterboxdExportTarget,
+  type LetterboxdList,
   type LetterboxdPendingChoice,
 } from '@/features/letterboxd/api/letterboxdApi';
 import { invalidateWatched } from '@/features/movies/hooks/invalidateWatched';
@@ -41,14 +41,14 @@ export type ExportImportStep =
   | { kind: 'importing'; done: number; total: number }
   | { kind: 'done'; report: LetterboxdExportReport };
 
-export type ExportTargets = Record<LetterboxdExportTarget, boolean>;
+export type ExportTargets = Record<LetterboxdList, boolean>;
 
 interface Batch {
-  target: LetterboxdExportTarget;
+  target: LetterboxdList;
   rows: LetterboxdExportRow[];
 }
 
-const TARGET_ORDER: readonly LetterboxdExportTarget[] = ['watched', 'watchlist'];
+const TARGET_ORDER: readonly LetterboxdList[] = ['watched', 'watchlist'];
 
 function batchesOf(exported: LetterboxdExport, targets: ExportTargets): Batch[] {
   const batches: Batch[] = [];

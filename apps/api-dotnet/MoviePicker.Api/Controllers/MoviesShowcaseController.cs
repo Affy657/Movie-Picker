@@ -5,6 +5,7 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Web;
+using MoviePicker.Api.Infrastructure.Web.OpenApi;
 
 namespace MoviePicker.Api.Controllers;
 
@@ -25,7 +26,7 @@ public sealed class MoviesShowcaseController : ControllerBase
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> GetShowcase(
-        [FromQuery] string? section,
+        [FromQuery, ValuesOf(typeof(MovieShowcaseSections))] string? section,
         [FromQuery] string? theme,
         [FromQuery] string? genreIds,
         [FromQuery] int? collectionId,

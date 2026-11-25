@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Entities;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -89,11 +90,22 @@ public sealed class LetterboxdSyncEndpointsTests : IClassFixture<MoviePickerAppl
             .EnumerateArray()
             .ToDictionary(item => item.GetProperty("tmdbId").GetInt32(), item => item.GetProperty("onLetterboxd").GetBoolean());
 
-    private async Task AllowAnotherSyncAsync(string userId)
+    private Task AllowAnotherSyncAsync(string userId) => BackdateSyncAsync(userId, null);
+
+    private async Task BackdateSyncAsync(string userId, string? watchedError)
     {
+        var twoHoursAgo = DateTimeOffset.UtcNow.AddHours(-2);
         using var scope = _host.Services.CreateScope();
         await scope.ServiceProvider.GetRequiredService<IUserRepository>()
-            .SetLetterboxdSyncStatusAsync(userId, DateTimeOffset.UtcNow.AddHours(-2), null);
+            .SetLetterboxdSyncStatusAsync(
+                userId,
+                twoHoursAgo,
+                watchedError,
+                new Dictionary<LetterboxdImportTarget, LetterboxdListSync>
+                {
+                    [LetterboxdImportTarget.Watchlist] = new(twoHoursAgo, null),
+                    [LetterboxdImportTarget.Watched] = new(twoHoursAgo, watchedError)
+                });
     }
 
     [Fact]
@@ -112,13 +124,21 @@ public sealed class LetterboxdSyncEndpointsTests : IClassFixture<MoviePickerAppl
 
         var report = await SyncAsync(client);
 
+        var lists = report.GetProperty("lists").EnumerateArray().ToList();
         Assert.Equal(
-            (1, 1, 1, 2),
-            (report.GetProperty("added").GetInt32(), report.GetProperty("watchedAdded").GetInt32(),
-                report.GetProperty("removed").GetInt32(), report.GetProperty("watchedTotalOnLetterboxd").GetInt32()));
-        Assert.Empty(report.GetProperty("pendingChoices").EnumerateArray());
-        var choice = Assert.Single(report.GetProperty("watchedPendingChoices").EnumerateArray());
+            [("watchlist", 1, 1, 1, 0), ("watched", 1, 0, 2, 1)],
+            lists.Select(list => (
+                list.GetProperty("target").GetString(),
+                list.GetProperty("added").GetInt32(),
+                list.GetProperty("removed").GetInt32(),
+                list.GetProperty("totalOnLetterboxd").GetInt32(),
+                list.GetProperty("pendingChoices").GetArrayLength())));
+        var choice = Assert.Single(lists[1].GetProperty("pendingChoices").EnumerateArray());
         Assert.Equal(("watched", 5), (choice.GetProperty("target").GetString(), choice.GetProperty("rating").GetInt32()));
+        Assert.Equal(
+            (1, 1, 1),
+            (report.GetProperty("watchedAdded").GetInt32(), report.GetProperty("removed").GetInt32(),
+                report.GetProperty("watchedPendingChoices").GetArrayLength()));
 
         var status = await WatchedStatusAsync(client, OtherStubFilmId);
         Assert.Equal(("elsewhere", 8), (status.GetProperty("status").GetString(), status.GetProperty("rating").GetInt32()));
@@ -240,6 +260,24 @@ public sealed class LetterboxdSyncEndpointsTests : IClassFixture<MoviePickerAppl
         var me = await MeAsync(client);
         Assert.Equal("letterboxd_watched_incomplete", me.GetProperty("letterboxdLastSyncError").GetString());
         Assert.True(me.GetProperty("letterboxdLastSyncAt").GetDateTimeOffset() > DateTimeOffset.UtcNow.AddMinutes(-5));
+    }
+
+    [Fact]
+    public async Task Sync_WatchedFilmsThatFailedAlone_AreRetriedWithoutRereadingTheWatchlist()
+    {
+        var (client, userId) = await ConnectedUserAsync();
+        _letterboxd.Watched = LetterboxdFilmsSnapshot.Failed();
+        await SyncAsync(client);
+        await BackdateSyncAsync(userId, "letterboxd_watched_incomplete");
+        _letterboxd.Watched = new([new LetterboxdFilm("film-e2e-stub", StubFilm, "2024", Rating: 7)], true);
+        var readsBefore = _letterboxd.Reads;
+
+        var report = await BodyAsync(await client.PostAsync("/api/v1/letterboxd/sync?force=false", null));
+
+        var list = Assert.Single(report.GetProperty("lists").EnumerateArray());
+        Assert.Equal(("watched", 1, false), (list.GetProperty("target").GetString(), list.GetProperty("added").GetInt32(), list.GetProperty("incomplete").GetBoolean()));
+        Assert.Equal(readsBefore + 1, _letterboxd.Reads);
+        Assert.Equal(JsonValueKind.Null, (await MeAsync(client)).GetProperty("letterboxdLastSyncError").ValueKind);
     }
 
     [Fact]

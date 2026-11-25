@@ -10,6 +10,7 @@ public static class ServedJsonContract
         options.UseAllOfToExtendReferenceSchemas();
         options.SchemaFilter<AlwaysWrittenResponsePropertiesSchemaFilter>();
         options.SchemaFilter<ServedStringValuesSchemaFilter>();
+        options.ParameterFilter<ServedParameterValuesFilter>();
         options.OperationFilter<ApiErrorResponseOperationFilter>();
     }
 }

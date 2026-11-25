@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.SavedLists;
 using MoviePicker.Api.Infrastructure.Web;
+using MoviePicker.Api.Infrastructure.Web.OpenApi;
 
 namespace MoviePicker.Api.Controllers;
 
@@ -20,7 +21,7 @@ public sealed class SavedListsController : ControllerBase
     [ProducesResponseType(typeof(SavedListsResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> List(
-        [FromQuery] string? sourceType,
+        [FromQuery, ValuesOf(typeof(ListSourceNames))] string? sourceType,
         [FromQuery] string? sourceId,
         [FromServices] IListSavedListsHandler handler,
         [CurrentUserId] string userId,

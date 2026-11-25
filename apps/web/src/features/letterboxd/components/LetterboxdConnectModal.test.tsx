@@ -10,6 +10,7 @@ import { AppTestProviders } from '@/test-utils/queryWrapper';
 import {
   createLetterboxdConfirmHandler,
   createLetterboxdSyncHandler,
+  letterboxdListReport,
   TEST_API_V1,
 } from '@/mocks/handlers';
 
@@ -107,12 +108,21 @@ describe('LetterboxdConnectModal (MSW)', () => {
       http.post(`${TEST_API_V1}/letterboxd/sync`, () =>
         HttpResponse.json({
           skipped: false,
-          added: 3,
-          removed: 0,
-          unmatchedTitles: [],
-          pendingChoices: [],
-          totalOnLetterboxd: 3,
-          totalTruncated: 0,
+          error: null,
+          lists: [
+            {
+              target: 'watchlist',
+              added: 3,
+              removed: 0,
+              unmatchedTitles: [],
+              pendingChoices: [],
+              totalOnLetterboxd: 3,
+              totalTruncated: 0,
+              incomplete: false,
+              lastSyncAt: null,
+              error: null,
+            },
+          ],
         })
       )
     );
@@ -144,45 +154,54 @@ describe('LetterboxdConnectModal (MSW)', () => {
       http.post(`${TEST_API_V1}/letterboxd/sync`, () =>
         HttpResponse.json({
           skipped: false,
-          added: 2,
-          removed: 0,
-          unmatchedTitles: ['Unfindable Movie'],
-          pendingChoices: [
+          error: null,
+          lists: [
             {
-              rowIndex: 1,
-              title: 'Midnight Mass',
-              year: '2021',
-              letterboxdSlug: 'midnight-mass-2021',
-              candidates: [
+              target: 'watchlist',
+              added: 2,
+              removed: 0,
+              unmatchedTitles: ['Unfindable Movie'],
+              pendingChoices: [
                 {
-                  tmdbId: 97400,
-                  mediaType: 'tv',
-                  title: 'Sermons de minuit',
+                  rowIndex: 1,
+                  title: 'Midnight Mass',
                   year: '2021',
-                  posterPath: null,
-                  voteAverage: 7.5,
+                  letterboxdSlug: 'midnight-mass-2021',
+                  candidates: [
+                    {
+                      tmdbId: 97400,
+                      mediaType: 'tv',
+                      title: 'Sermons de minuit',
+                      year: '2021',
+                      posterPath: null,
+                      voteAverage: 7.5,
+                    },
+                  ],
                 },
-              ],
-            },
-            {
-              rowIndex: 2,
-              title: 'Spider-Man',
-              year: '1977',
-              letterboxdSlug: 'spider-man-1977',
-              candidates: [
                 {
-                  tmdbId: 1,
-                  mediaType: 'movie',
+                  rowIndex: 2,
                   title: 'Spider-Man',
                   year: '1977',
-                  posterPath: null,
-                  voteAverage: 5.1,
+                  letterboxdSlug: 'spider-man-1977',
+                  candidates: [
+                    {
+                      tmdbId: 1,
+                      mediaType: 'movie',
+                      title: 'Spider-Man',
+                      year: '1977',
+                      posterPath: null,
+                      voteAverage: 5.1,
+                    },
+                  ],
                 },
               ],
+              totalOnLetterboxd: 10,
+              totalTruncated: 0,
+              incomplete: false,
+              lastSyncAt: null,
+              error: null,
             },
           ],
-          totalOnLetterboxd: 10,
-          totalTruncated: 0,
         })
       ),
       http.post(`${TEST_API_V1}/letterboxd/confirm`, () =>
@@ -231,9 +250,13 @@ describe('LetterboxdConnectModal (MSW)', () => {
       authedUserHandler,
       patchMeHandler(),
       createLetterboxdSyncHandler({
-        added: 0,
-        watchedAdded: 42,
-        watchedUnmatchedTitles: ['Court Oublié (1981)'],
+        lists: [
+          letterboxdListReport('watchlist'),
+          letterboxdListReport('watched', {
+            added: 42,
+            unmatchedTitles: ['Court Oublié (1981)'],
+          }),
+        ],
       })
     );
 
@@ -255,7 +278,13 @@ describe('LetterboxdConnectModal (MSW)', () => {
       patchMeHandler(),
       createLetterboxdSyncHandler({
         error: 'letterboxd_watchlist_incomplete',
-        watchedAdded: 5,
+        lists: [
+          letterboxdListReport('watchlist', {
+            incomplete: true,
+            error: 'letterboxd_watchlist_incomplete',
+          }),
+          letterboxdListReport('watched', { added: 5 }),
+        ],
       })
     );
 
@@ -277,28 +306,32 @@ describe('LetterboxdConnectModal (MSW)', () => {
       authedUserHandler,
       patchMeHandler(),
       createLetterboxdSyncHandler({
-        watchedPendingChoices: [
-          {
-            rowIndex: 5000,
-            title: 'Alien',
-            year: '1979',
-            letterboxdSlug: 'alien',
-            target: 'watched',
-            rating: 8,
-            watchedOn: '2019-10-12',
-            candidates: [
+        lists: [
+          letterboxdListReport('watched', {
+            pendingChoices: [
               {
-                tmdbId: 348,
-                mediaType: 'movie',
-                title: 'Alien, le huitième passager',
+                rowIndex: 5000,
+                title: 'Alien',
                 year: '1979',
-                posterPath: null,
-                genreIds: [],
-                voteAverage: null,
-                runtimeMinutes: null,
+                letterboxdSlug: 'alien',
+                target: 'watched',
+                rating: 8,
+                watchedOn: '2019-10-12',
+                candidates: [
+                  {
+                    tmdbId: 348,
+                    mediaType: 'movie',
+                    title: 'Alien, le huitième passager',
+                    year: '1979',
+                    posterPath: null,
+                    genreIds: [],
+                    voteAverage: null,
+                    runtimeMinutes: null,
+                  },
+                ],
               },
             ],
-          },
+          }),
         ],
       }),
       createLetterboxdConfirmHandler(undefined, { added: 0, watchedAdded: 1 })
@@ -319,28 +352,32 @@ describe('LetterboxdConnectModal (MSW)', () => {
       authedUserHandler,
       patchMeHandler(),
       createLetterboxdSyncHandler({
-        watchedPendingChoices: [
-          {
-            rowIndex: 5000,
-            title: 'Alien',
-            year: '1979',
-            letterboxdSlug: 'alien',
-            target: 'watched',
-            rating: 8,
-            watchedOn: '2019-10-12',
-            candidates: [
+        lists: [
+          letterboxdListReport('watched', {
+            pendingChoices: [
               {
-                tmdbId: 348,
-                mediaType: 'movie',
-                title: 'Alien, le huitième passager',
+                rowIndex: 5000,
+                title: 'Alien',
                 year: '1979',
-                posterPath: null,
-                genreIds: [],
-                voteAverage: null,
-                runtimeMinutes: null,
+                letterboxdSlug: 'alien',
+                target: 'watched',
+                rating: 8,
+                watchedOn: '2019-10-12',
+                candidates: [
+                  {
+                    tmdbId: 348,
+                    mediaType: 'movie',
+                    title: 'Alien, le huitième passager',
+                    year: '1979',
+                    posterPath: null,
+                    genreIds: [],
+                    voteAverage: null,
+                    runtimeMinutes: null,
+                  },
+                ],
               },
             ],
-          },
+          }),
         ],
       })
     );

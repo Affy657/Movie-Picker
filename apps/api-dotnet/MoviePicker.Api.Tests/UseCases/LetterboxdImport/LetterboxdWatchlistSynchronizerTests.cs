@@ -78,6 +78,10 @@ public sealed class LetterboxdWatchlistSynchronizerTests
             NullLogger<LetterboxdWatchedSynchronizer>.Instance);
     }
 
+    private static LetterboxdListOutcome ToWatch(LetterboxdSyncOutcome outcome) => outcome.Of(LetterboxdImportTarget.Watchlist);
+
+    private static LetterboxdListOutcome Watched(LetterboxdSyncOutcome outcome) => outcome.Of(LetterboxdImportTarget.Watched);
+
     private void GivenWatchedOnLetterboxd(bool isComplete, params LetterboxdFilm[] films) =>
         _letterboxd
             .Setup(l => l.GetWatchedFilmsAsync(Username, It.IsAny<CancellationToken>()))
@@ -159,10 +163,10 @@ public sealed class LetterboxdWatchlistSynchronizerTests
         var outcome = await _sut.SyncAsync(TheUser());
 
         Assert.True(outcome.Succeeded);
-        Assert.Equal(1, outcome.Added);
-        Assert.Equal(0, outcome.Removed);
-        Assert.Equal(announced, outcome.TotalOnLetterboxd);
-        Assert.Equal(announced - 1, outcome.TotalTruncated);
+        Assert.Equal(1, ToWatch(outcome).Added);
+        Assert.Equal(0, ToWatch(outcome).Removed);
+        Assert.Equal(announced, ToWatch(outcome).TotalOnLetterboxd);
+        Assert.Equal(announced - 1, ToWatch(outcome).TotalTruncated);
         _watchlist.Verify(
             w => w.RemoveAsync(
                 It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()),
@@ -179,8 +183,8 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
         var outcome = await _sut.SyncAsync(TheUser());
 
-        Assert.Equal(1, outcome.Added);
-        Assert.Empty(outcome.PendingChoices);
+        Assert.Equal(1, ToWatch(outcome).Added);
+        Assert.Empty(ToWatch(outcome).PendingChoices);
         _addToWatchlist.Verify(
             a => a.HandleAsync(
                 UserId,
@@ -200,9 +204,9 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
         var outcome = await _sut.SyncAsync(TheUser());
 
-        Assert.Equal(0, outcome.Added);
+        Assert.Equal(0, ToWatch(outcome).Added);
         VerifyNothingAdded();
-        var pending = Assert.Single(outcome.PendingChoices);
+        var pending = Assert.Single(ToWatch(outcome).PendingChoices);
         Assert.Equal("Midnight Mass", pending.Title);
         Assert.Equal("midnight-mass-2021", pending.LetterboxdSlug);
         Assert.Equal(2, pending.Candidates.Count);
@@ -224,7 +228,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
         var outcome = await _sut.SyncAsync(TheUser());
 
-        var pending = Assert.Single(outcome.PendingChoices);
+        var pending = Assert.Single(ToWatch(outcome).PendingChoices);
         var withRuntime = pending.Candidates.Single(c => c.TmdbId == 97400);
         Assert.Equal(62, withRuntime.RuntimeMinutes);
         Assert.Equal(DramaMysteryGenreIds, withRuntime.GenreIds);
@@ -241,8 +245,8 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
         var outcome = await _sut.SyncAsync(TheUser());
 
-        Assert.Equal("Film Obscur (1974)", Assert.Single(outcome.UnmatchedTitles));
-        Assert.Empty(outcome.PendingChoices);
+        Assert.Equal("Film Obscur (1974)", Assert.Single(ToWatch(outcome).UnmatchedTitles));
+        Assert.Empty(ToWatch(outcome).PendingChoices);
         VerifyNothingAdded();
     }
 
@@ -254,7 +258,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
         var outcome = await _sut.SyncAsync(TheUser());
 
-        Assert.Equal(1, outcome.Removed);
+        Assert.Equal(1, ToWatch(outcome).Removed);
         _watchlist.Verify(
             w => w.RemoveAsync(UserId, 5255, MovieMediaType.Movie, It.IsAny<CancellationToken>()),
             Times.Once);
@@ -278,8 +282,8 @@ public sealed class LetterboxdWatchlistSynchronizerTests
         Assert.NotNull(kept);
         Assert.Equal("the-polar-express-2004", kept.LetterboxdSlug);
         Assert.Equal(createdAt, kept.CreatedAt);
-        Assert.Equal(0, outcome.Removed);
-        Assert.Equal(0, outcome.Added);
+        Assert.Equal(0, ToWatch(outcome).Removed);
+        Assert.Equal(0, ToWatch(outcome).Added);
     }
 
     [Fact]
@@ -303,7 +307,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
         var outcome = await sut.SyncAsync(TheUser());
 
-        Assert.Equal(1, outcome.Added);
+        Assert.Equal(1, ToWatch(outcome).Added);
         var added = await watchlist.GetOneAsync(UserId, 149, MovieMediaType.Movie);
         Assert.Equal(AnimationSciFiGenreIds, added!.GenreIds);
     }
@@ -316,7 +320,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
         var outcome = await _sut.SyncAsync(TheUser());
 
-        Assert.Equal(0, outcome.Removed);
+        Assert.Equal(0, ToWatch(outcome).Removed);
         _watchlist.Verify(
             w => w.RemoveAsync(
                 It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()),
@@ -335,8 +339,8 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
         var outcome = await _sut.SyncAsync(TheUser());
 
-        Assert.Equal(0, outcome.Added);
-        Assert.Equal("Midnight Mass", Assert.Single(outcome.PendingChoices).Title);
+        Assert.Equal(0, ToWatch(outcome).Added);
+        Assert.Equal("Midnight Mass", Assert.Single(ToWatch(outcome).PendingChoices).Title);
         VerifyNothingAdded();
         _watchlist.Verify(
             w => w.SetLetterboxdSlugAsync(
@@ -359,7 +363,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
         var outcome = await _sut.SyncAsync(TheUser());
 
-        Assert.Equal(0, outcome.Added);
+        Assert.Equal(0, ToWatch(outcome).Added);
         VerifyNothingAdded();
         _watchlist.Verify(
             w => w.SetLetterboxdSlugAsync(
@@ -375,8 +379,8 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
         var outcome = await _sut.SyncAsync(TheUser());
 
-        Assert.Equal(0, outcome.Added);
-        Assert.Equal(0, outcome.Removed);
+        Assert.Equal(0, ToWatch(outcome).Added);
+        Assert.Equal(0, ToWatch(outcome).Removed);
         _tmdb.Verify(
             t => t.SearchTitlesAsync(
                 It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
@@ -394,9 +398,9 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
         var outcome = await _sut.SyncAsync(TheUser());
 
-        Assert.Equal(LetterboxdImportLimits.MaxRows + 4, outcome.TotalOnLetterboxd);
-        Assert.Equal(4, outcome.TotalTruncated);
-        Assert.Equal(LetterboxdImportLimits.MaxRows, outcome.UnmatchedTitles.Count);
+        Assert.Equal(LetterboxdImportLimits.MaxRows + 4, ToWatch(outcome).TotalOnLetterboxd);
+        Assert.Equal(4, ToWatch(outcome).TotalTruncated);
+        Assert.Equal(LetterboxdImportLimits.MaxRows, ToWatch(outcome).UnmatchedTitles.Count);
     }
 
     private void GivenWatchedAtAMovieNight(int tmdbId, bool cleanedUp)
@@ -439,7 +443,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
         var outcome = await _sut.SyncAsync(TheUser());
 
-        Assert.Equal(0, outcome.Added);
+        Assert.Equal(0, ToWatch(outcome).Added);
         VerifyNothingAdded();
     }
 
@@ -463,7 +467,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
         var outcome = await sut.SyncAsync(TheUser() with { LetterboxdSyncWatched = false });
 
         Assert.True(outcome.Succeeded);
-        Assert.Equal(0, outcome.Added);
+        Assert.Equal(0, ToWatch(outcome).Added);
         Assert.Null(await kit.Watchlist.GetOneAsync(UserId, 5255, MovieMediaType.Movie));
         Assert.NotNull(await kit.Watched.GetAsync(UserId, 5255, MovieMediaType.Movie));
     }
@@ -490,7 +494,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
         Assert.True(outcome.Succeeded);
         Assert.Equal(ErrorCodes.LetterboxdWatchlistIncomplete, outcome.Error);
-        Assert.Equal(1, outcome.WatchedAdded);
+        Assert.Equal(1, Watched(outcome).Added);
         Assert.NotNull(await _watched.GetAsync(UserId, 149, MovieMediaType.Movie));
         VerifyNothingAdded();
     }
@@ -515,7 +519,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
         var outcome = await _sut.SyncAsync(user);
 
-        Assert.Equal(1, outcome.WatchedAdded);
+        Assert.Equal(1, Watched(outcome).Added);
     }
 
     [Fact]
@@ -540,7 +544,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
         Assert.True(outcome.Succeeded);
         Assert.Equal(ErrorCodes.LetterboxdWatchedIncomplete, outcome.Error);
-        Assert.Equal((1, 0), (outcome.Added, outcome.WatchedAdded));
+        Assert.Equal((1, 0), (ToWatch(outcome).Added, Watched(outcome).Added));
     }
 
     [Fact]
@@ -585,7 +589,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
                 return new LetterboxdFilmsSnapshot([], true);
             });
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => _sut.SyncAsync(TheUser(), caller.Token));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => _sut.SyncAsync(TheUser(), ct: caller.Token));
 
         _letterboxd.Verify(l => l.GetWatchedFilmsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -611,7 +615,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
         var outcome = await _sut.SyncAsync(TheUser());
 
-        Assert.Equal(1, outcome.Added);
+        Assert.Equal(1, ToWatch(outcome).Added);
     }
 
     [Fact]
@@ -638,7 +642,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
         var outcome = await _sut.SyncAsync(TheUser() with { LetterboxdSyncWatchlist = false });
 
         Assert.True(outcome.Succeeded);
-        Assert.Equal((0, 1), (outcome.Added, outcome.WatchedAdded));
+        Assert.Equal((0, 1), (ToWatch(outcome).Added, Watched(outcome).Added));
         _letterboxd.Verify(l => l.GetWatchlistAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         VerifyNothingAdded();
         Assert.Equal(WatchedOrigin.Letterboxd, (await _watched.GetAsync(UserId, 5255, MovieMediaType.Movie))!.Origin);
@@ -668,7 +672,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
         Assert.True(outcome.Succeeded);
         Assert.Equal(ErrorCodes.LetterboxdWatchedIncomplete, outcome.Error);
-        Assert.Equal((1, 1, 0, 0), (outcome.Added, outcome.Removed, outcome.WatchedAdded, outcome.WatchedRemoved));
+        Assert.Equal((1, 1, 0, 0), (ToWatch(outcome).Added, ToWatch(outcome).Removed, Watched(outcome).Added, Watched(outcome).Removed));
         Assert.NotNull(await _watched.GetAsync(UserId, 1, MovieMediaType.Movie));
     }
 
@@ -690,7 +694,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
         Assert.True(outcome.Succeeded);
         Assert.Equal(ErrorCodes.LetterboxdWatchlistIncomplete, outcome.Error);
-        Assert.Equal((0, 1, 2), (outcome.Added, outcome.Removed, outcome.WatchedAdded));
+        Assert.Equal((0, 1, 2), (ToWatch(outcome).Added, ToWatch(outcome).Removed, Watched(outcome).Added));
         VerifyRemovedFromWatchlist(5255, Times.Never());
         VerifyRemovedFromWatchlist(78, Times.Never());
         VerifyRemovedFromWatchlist(149, Times.Once());
@@ -725,13 +729,13 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
         var outcome = await _sut.SyncAsync(TheUser());
 
-        Assert.Equal((2, 1), (outcome.WatchedAdded, outcome.Removed));
+        Assert.Equal((2, 1), (Watched(outcome).Added, ToWatch(outcome).Removed));
         VerifyRemovedFromWatchlist(5255, Times.Never());
         VerifyRemovedFromWatchlist(149, Times.Once());
     }
 
     [Fact]
-    public async Task SyncAsync_PendingChoicesOfBothLists_KeepDistinctRowsAndSayWhichListTheyFeed()
+    public async Task SyncAsync_PendingChoicesOfBothLists_AreNumberedWithinTheirListAndSayWhichListTheyFeed()
     {
         GivenLetterboxd(true, new LetterboxdFilm("solaris", "Solaris", "1972"));
         GivenWatchedOnLetterboxd(true, new LetterboxdFilm("solaris", "Solaris", "1972", Rating: 8));
@@ -742,10 +746,10 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
         var outcome = await _sut.SyncAsync(TheUser());
 
-        var toWatch = Assert.Single(outcome.PendingChoices);
-        var watched = Assert.Single(outcome.WatchedPendingChoices);
+        var toWatch = Assert.Single(ToWatch(outcome).PendingChoices);
+        var watched = Assert.Single(Watched(outcome).PendingChoices);
         Assert.Equal((LetterboxdImportTarget.Watchlist, LetterboxdImportTarget.Watched), (toWatch.Target, watched.Target));
-        Assert.NotEqual(toWatch.RowIndex, watched.RowIndex);
+        Assert.Equal((1, 1), (toWatch.RowIndex, watched.RowIndex));
         Assert.Equal((int?)8, watched.Rating);
     }
 
@@ -763,6 +767,6 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
         var outcome = await _sut.SyncAsync(TheUser());
 
-        Assert.Equal((1, 0), (outcome.Added, outcome.TotalTruncated));
+        Assert.Equal((1, 0), (ToWatch(outcome).Added, ToWatch(outcome).TotalTruncated));
     }
 }

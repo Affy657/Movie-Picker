@@ -1,6 +1,5 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Application.UseCases.SavedLists;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -205,12 +204,10 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
             .ToDictionary(card => card.Id, card => card.DisplayName, StringComparer.Ordinal);
     }
 
-    private static string MediaTypeName(MovieMediaType mediaType) => mediaType == MovieMediaType.Tv ? "tv" : "movie";
-
     private static ExportedWatchlistItem MapWatchlistItem(WatchlistItem item) => new()
     {
         TmdbId = item.TmdbId,
-        MediaType = MediaTypeName(item.MediaType),
+        MediaType = item.MediaType,
         Title = item.Title,
         Year = item.Year,
         LetterboxdSlug = item.LetterboxdSlug,
@@ -228,7 +225,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
             .Select(item => new ExportedMovieListItem
             {
                 TmdbId = item.TmdbId,
-                MediaType = MediaTypeName(item.MediaType),
+                MediaType = item.MediaType,
                 Title = item.Title,
                 Year = item.Year,
                 AddedAt = item.AddedAt
@@ -238,7 +235,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
 
     private static ExportedSavedList MapSavedList(SavedList list) => new()
     {
-        SourceType = ListSourceNames.Of(list.SourceType),
+        SourceType = list.SourceType,
         SourceId = list.SourceId,
         Name = list.Name,
         CreatedAt = list.CreatedAt
@@ -247,23 +244,20 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
     private static ExportedWatchedTitle MapWatchedTitle(WatchedTitle title) => new()
     {
         TmdbId = title.TmdbId,
-        MediaType = MediaTypeName(title.MediaType),
+        MediaType = title.MediaType,
         Title = title.Title,
         Year = title.Year,
         WatchedAt = title.WatchedAt,
         Rating = title.Rating,
-        RatingOrigin = title.Rating is null ? null : OriginName(title.RatingOrigin ?? WatchedOrigin.Manual),
-        Origin = OriginName(title.Origin),
+        RatingOrigin = title.Rating is null ? null : title.RatingOrigin ?? WatchedOrigin.Manual,
+        Origin = title.Origin,
         LetterboxdSlug = title.LetterboxdSlug
     };
-
-    private static string OriginName(WatchedOrigin origin) =>
-        origin == WatchedOrigin.Letterboxd ? "letterboxd" : "manual";
 
     private static ExportedFavorite MapFavorite(FavoriteTitle favorite) => new()
     {
         TmdbId = favorite.TmdbId,
-        MediaType = MediaTypeName(favorite.MediaType),
+        MediaType = favorite.MediaType,
         Title = favorite.Title,
         Year = favorite.Year
     };
@@ -309,15 +303,15 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         IsProfilePublic = user.IsProfilePublic,
         IsWatchlistPublic = user.IsWatchlistPublic,
         IsWatchedPublic = user.IsWatchedPublic,
-        UiTheme = user.UiTheme.ToString(),
-        AccentColor = user.AccentColor.ToString(),
+        UiTheme = user.UiTheme,
+        AccentColor = user.AccentColor,
         AvatarId = user.AvatarId,
         HasPassword = !string.IsNullOrEmpty(user.PasswordHash),
         LinkedProviders = user.Identities.Select(i => i.Provider).ToList(),
         NotificationPreferences = user.NotificationPreferences
             .ToDictionary(kv => kv.Key.ToString().ToLowerInvariant(), kv => kv.Value),
         SupporterSince = user.SupporterSince,
-        RatingScale = user.RatingScale.ToString(),
+        RatingScale = user.RatingScale,
         DimWatched = user.DimWatched,
         LetterboxdUsername = user.LetterboxdUsername,
         LetterboxdSyncWatchlist = user.LetterboxdSyncWatchlist,
@@ -331,7 +325,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
 
     private static ExportedNotification MapNotification(UserNotification n) => new()
     {
-        Type = n.Type.ToString(),
+        Type = n.Type.ToString().ToLowerInvariant(),
         ActorHandle = n.ActorHandle,
         ActorDisplayName = n.ActorDisplayName,
         EventTitle = n.EventTitle,
@@ -390,7 +384,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
                 {
                     MovieId = x.Id,
                     TmdbId = x.TmdbId,
-                    MediaType = MediaTypeName(x.MediaType),
+                    MediaType = x.MediaType,
                     Title = x.Title,
                     Year = x.Year,
                     PitchNote = x.PitchNote,
