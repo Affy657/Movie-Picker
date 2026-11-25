@@ -81,7 +81,7 @@ public sealed class WinnerAnnouncerTests
         Users(new User { Id = "u1", NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.MoviePicked] = true } });
         Subscriptions("u1");
 
-        await AnnouncerAt(utcNow).AnnounceAsync(Soiree with { Date = nightDate }, "Matrix", WinnerPickMethod.Wheel);
+        await AnnouncerAt(utcNow).AnnounceAsync(Soiree with { Date = nightDate }, "Matrix", WinnerPickMethod.Wheel, pickedBy: null);
 
         _pushSender.Verify(
             s => s.SendAsync(It.IsAny<PushSubscription>(), It.Is<PushMessage>(m => m.Body == expectedBody), It.IsAny<CancellationToken>()),
@@ -95,7 +95,7 @@ public sealed class WinnerAnnouncerTests
         Users(new User { Id = "u1", NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.MoviePicked] = true } });
         Subscriptions("u1");
 
-        await _sut.AnnounceAsync(Soiree, "Winner", WinnerPickMethod.Wheel);
+        await _sut.AnnounceAsync(Soiree, "Winner", WinnerPickMethod.Wheel, pickedBy: null);
 
         _pushSender.Verify(
             s => s.SendAsync(It.Is<PushSubscription>(x => x.UserId == "u1"), It.Is<PushMessage>(m => m.Title.Contains("tiré au sort")), It.IsAny<CancellationToken>()),
@@ -117,7 +117,7 @@ public sealed class WinnerAnnouncerTests
             new User { Id = "u2", NotificationPreferences = opted });
         Subscriptions("u-host", "u2");
 
-        await _sut.AnnounceAsync(Soiree with { CreatorUserId = "u-host" }, "Winner", method);
+        await _sut.AnnounceAsync(Soiree with { CreatorUserId = "u-host" }, "Winner", method, pickedBy: null);
 
         _notifications.Verify(n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "u2"), It.IsAny<CancellationToken>()), Times.Once);
         _notifications.Verify(n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "u-host"), It.IsAny<CancellationToken>()), Times.Never);
@@ -127,13 +127,34 @@ public sealed class WinnerAnnouncerTests
     }
 
     [Fact]
+    public async Task AnnounceAsync_PickMadeByACoHost_TellsTheCreatorButNotTheCoHost()
+    {
+        HasParticipants("u-host", "u-co", "u2");
+        var opted = new Dictionary<UserNotificationType, bool> { [UserNotificationType.MoviePicked] = true };
+        Users(
+            new User { Id = "u-host", NotificationPreferences = opted },
+            new User { Id = "u-co", NotificationPreferences = opted },
+            new User { Id = "u2", NotificationPreferences = opted });
+
+        await _sut.AnnounceAsync(
+            Soiree with { CreatorUserId = "u-host", CoHostUserIds = ["u-co"] },
+            "Winner",
+            WinnerPickMethod.Wheel,
+            pickedBy: "u-co");
+
+        _notifications.Verify(n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "u-host"), It.IsAny<CancellationToken>()), Times.Once);
+        _notifications.Verify(n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "u2"), It.IsAny<CancellationToken>()), Times.Once);
+        _notifications.Verify(n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "u-co"), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task AnnounceAsync_ManualPick_UsesManualTypeAndWording()
     {
         HasParticipants("u1");
         Users(new User { Id = "u1", NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.MoviePickedManually] = true } });
         Subscriptions("u1");
 
-        await _sut.AnnounceAsync(Soiree, "Winner", WinnerPickMethod.Manual);
+        await _sut.AnnounceAsync(Soiree, "Winner", WinnerPickMethod.Manual, pickedBy: null);
 
         _pushSender.Verify(
             s => s.SendAsync(It.IsAny<PushSubscription>(), It.Is<PushMessage>(m => m.Title.Contains("choisi par l'hôte")), It.IsAny<CancellationToken>()),
@@ -149,7 +170,7 @@ public sealed class WinnerAnnouncerTests
         HasParticipants("u1");
         Users(new User { Id = "u1", NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.MoviePicked] = false } });
 
-        await _sut.AnnounceAsync(Soiree, "Winner", WinnerPickMethod.Wheel);
+        await _sut.AnnounceAsync(Soiree, "Winner", WinnerPickMethod.Wheel, pickedBy: null);
 
         _pushSender.Verify(s => s.SendAsync(It.IsAny<PushSubscription>(), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()), Times.Never);
         _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -158,7 +179,7 @@ public sealed class WinnerAnnouncerTests
     [Fact]
     public async Task AnnounceAsync_NoParticipants_CompletesWithoutNotifying()
     {
-        await _sut.AnnounceAsync(Soiree, "Winner", WinnerPickMethod.Wheel);
+        await _sut.AnnounceAsync(Soiree, "Winner", WinnerPickMethod.Wheel, pickedBy: null);
 
         _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -177,7 +198,7 @@ public sealed class WinnerAnnouncerTests
             .Setup(n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "u1"), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("boom"));
 
-        await _sut.AnnounceAsync(Soiree, "Winner", WinnerPickMethod.Wheel);
+        await _sut.AnnounceAsync(Soiree, "Winner", WinnerPickMethod.Wheel, pickedBy: null);
 
         _notifications.Verify(n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "u2"), It.IsAny<CancellationToken>()), Times.Once);
         _notifications.Verify(n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "u3"), It.IsAny<CancellationToken>()), Times.Once);
@@ -193,7 +214,7 @@ public sealed class WinnerAnnouncerTests
             .Setup(s => s.SendAsync(It.IsAny<PushSubscription>(), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("boom"));
 
-        await _sut.AnnounceAsync(Soiree, "Winner", WinnerPickMethod.Wheel);
+        await _sut.AnnounceAsync(Soiree, "Winner", WinnerPickMethod.Wheel, pickedBy: null);
 
         _notifications.Verify(n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "u1"), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -204,7 +225,7 @@ public sealed class WinnerAnnouncerTests
         _participantRepo.Setup(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("boom"));
 
-        await _sut.AnnounceAsync(Soiree, "Winner", WinnerPickMethod.Manual);
+        await _sut.AnnounceAsync(Soiree, "Winner", WinnerPickMethod.Manual, pickedBy: null);
 
         _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
     }

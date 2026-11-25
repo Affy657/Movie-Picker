@@ -79,6 +79,11 @@ public static class ErrorCodes
     public const string EventFull = "event_full";
     public const string WinnersAllDrawn = "winners_all_drawn";
     public const string CreatorCannotBeRemoved = "creator_cannot_be_removed";
+    public const string AnonymousProposalsLocked = "anonymous_proposals_locked";
+    public const string CreatorOnlyCoHosts = "creator_only_co_hosts";
+    public const string CoHostCannotRemoveCoHost = "co_host_cannot_remove_co_host";
+    public const string CoHostTargetInvalid = "co_host_target_invalid";
+    public const string CreatorOnlyNightGroup = "creator_only_night_group";
     public const string MovieExcludedFromWheel = "movie_excluded_from_wheel";
     public const string MovieAlreadyAWinner = "movie_already_a_winner";
     public const string WheelLocked = "wheel_locked";

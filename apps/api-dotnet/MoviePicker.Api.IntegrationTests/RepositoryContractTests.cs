@@ -678,19 +678,23 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
-    public async Task ForgetRemovedUser_TakesTheUserOutOfTheRemovalLists_AndBumpsTheWriteSequence()
+    public async Task ForgetUser_TakesTheUserOutOfTheRemovalAndCoHostLists_AndBumpsTheWriteSequence()
     {
         using var scope = _factory.Services.CreateScope();
         var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
         var gone = ObjectId.GenerateNewId().ToString();
         var kept = ObjectId.GenerateNewId().ToString();
         var created = await events.AddAsync(NewEvent("Retraits") with { RemovedUserIds = [kept, gone] });
+        var coHosted = await events.AddAsync(NewEvent("Co-hôtes") with { CoHostUserIds = [gone, kept] });
 
-        Assert.Equal(1, await events.ForgetRemovedUserAsync(gone));
+        Assert.Equal(2, await events.ForgetUserAsync(gone));
         var reloaded = await events.GetByIdOrSlugAsync(created.Slug);
+        var reloadedCoHosted = await events.GetByIdOrSlugAsync(coHosted.Slug);
 
         Assert.Equal([kept], reloaded!.RemovedUserIds);
         Assert.Equal(created.WriteSeq + 1, reloaded.WriteSeq);
+        Assert.Equal([kept], reloadedCoHosted!.CoHostUserIds);
+        Assert.Equal(coHosted.WriteSeq + 1, reloadedCoHosted.WriteSeq);
     }
 
     [Fact]

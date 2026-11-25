@@ -181,6 +181,16 @@ export async function deleteEventWinner(
 
 export type RemoveParticipantResponse = ApiSchemas['RemoveParticipantResponse'];
 
+export async function setEventCoHost(
+  idOrSlug: string,
+  participantId: string,
+  coHost: boolean
+): Promise<void> {
+  await fetchApi(apiPath('events', idOrSlug, 'co-hosts', participantId), {
+    method: coHost ? 'PUT' : 'DELETE',
+  });
+}
+
 export async function removeEventParticipant(
   idOrSlug: string,
   participantId: string,

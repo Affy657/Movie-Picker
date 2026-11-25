@@ -60,6 +60,14 @@ describe('EventMovieCard, the film sheet', () => {
     expect(within(field(card, 'Déjà vu')).getByText('Personne')).toBeInTheDocument();
   });
 
+  it('names nobody as the proposer of a film proposed anonymously', () => {
+    const { card } = renderCard({ proposerPseudo: '', participantId: '', seenByPseudos: [] });
+
+    const proposer = field(card, 'Proposé par');
+    expect(within(proposer).getByText('Anonyme')).toBeInTheDocument();
+    expect(within(proposer).queryByRole('link')).not.toBeInTheDocument();
+  });
+
   it('lists everyone who has seen the film, me included', () => {
     const { card } = renderCard({ seenByPseudos: ['Bob', 'Alice'] });
 

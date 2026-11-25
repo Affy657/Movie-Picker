@@ -84,6 +84,10 @@ public sealed class EventDocument
     [BsonIgnoreIfNull]
     public List<string>? RemovedUserIds { get; set; }
 
+    [BsonElement("coHostUserIds")]
+    [BsonIgnoreIfNull]
+    public List<string>? CoHostUserIds { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 
@@ -134,6 +138,10 @@ public sealed class EventConfigDocument
     [BsonElement("allowSeries")]
     [BsonIgnoreIfDefault]
     public bool AllowSeries { get; set; }
+
+    [BsonElement("anonymousProposals")]
+    [BsonIgnoreIfDefault]
+    public bool AnonymousProposals { get; set; }
 
     [BsonElement("winnerCount")]
     [BsonIgnoreIfNull]

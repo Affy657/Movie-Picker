@@ -132,6 +132,9 @@ public sealed class MongoIndexInitializer : IHostedService
         var removedUsers = new CreateIndexModel<EventDocument>(
             Builders<EventDocument>.IndexKeys.Ascending(x => x.RemovedUserIds),
             new CreateIndexOptions { Name = "events_removedUserIds", Sparse = true });
+        var coHosts = new CreateIndexModel<EventDocument>(
+            Builders<EventDocument>.IndexKeys.Ascending(x => x.CoHostUserIds),
+            new CreateIndexOptions { Name = "events_coHostUserIds", Sparse = true });
         var creationRequest = new CreateIndexModel<EventDocument>(
             Builders<EventDocument>.IndexKeys.Ascending(x => x.CreatorUserId).Ascending(x => x.CreationRequestId),
             new CreateIndexOptions<EventDocument>
@@ -140,7 +143,7 @@ public sealed class MongoIndexInitializer : IHostedService
                 Unique = true,
                 PartialFilterExpression = Builders<EventDocument>.Filter.Exists(x => x.CreationRequestId, true)
             });
-        plan.Create("events", slug, recapSlug, creator, recurrence, group, startAt, removedUsers, creationRequest);
+        plan.Create("events", slug, recapSlug, creator, recurrence, group, startAt, removedUsers, coHosts, creationRequest);
         plan.DropIfExists<EventDocument>("events", "events_winners_movieId");
     }
 

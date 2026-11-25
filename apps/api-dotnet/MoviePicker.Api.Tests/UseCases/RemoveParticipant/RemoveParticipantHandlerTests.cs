@@ -27,6 +27,9 @@ public sealed class RemoveParticipantHandlerTests
     private readonly RemoveParticipantHandler _sut;
     private static readonly string[] value = new[] { "m1", "m2" };
     private static readonly string[] KeptOut = ["earlier", "user-2"];
+    private static readonly string[] KeptOutGuest = ["guest"];
+    private static readonly string[] RemainingCoHost = ["other"];
+    private static readonly string[] KeptOutCoHost = ["co-host"];
 
     public RemoveParticipantHandlerTests()
     {
@@ -378,5 +381,99 @@ public sealed class RemoveParticipantHandlerTests
 
         Assert.Equal("p1", result.ParticipantId);
         Assert.Equal("Participant removed", result.Message);
+    }
+
+    [Fact]
+    public async Task HandleAsync_CoHostRemovesAPlainParticipant_KeepsItOut()
+    {
+        SetupEvent(ActiveEvent(creatorUserId: "creator") with { CoHostUserIds = ["co-host"] });
+        SetupParticipant(Participant(userId: "guest"));
+        _currentUser.Setup(c => c.GetUserId()).Returns("co-host");
+        _participantRepo.Setup(r => r.DeleteAsync("p1", "evt1", It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        await _sut.HandleAsync("evt1", "p1");
+
+        _eventRepo.Verify(r => r.UpdateAsync(
+            It.Is<Event>(e => e.RemovedUserIds.SequenceEqual(KeptOutGuest)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_CoHostRemovesAnotherCoHost_IsRefused()
+    {
+        SetupEvent(ActiveEvent(creatorUserId: "creator") with { CoHostUserIds = ["co-host", "other-co-host"] });
+        SetupParticipant(Participant(userId: "other-co-host"));
+        _currentUser.Setup(c => c.GetUserId()).Returns("co-host");
+
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1", "p1"));
+
+        Assert.Equal(ErrorCodes.CoHostCannotRemoveCoHost, ex.Reason);
+        _participantRepo.Verify(r => r.DeleteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_CreatorRemovesACoHost_WithdrawsTheRoleToo()
+    {
+        SetupEvent(ActiveEvent(creatorUserId: "creator") with { CoHostUserIds = ["co-host", "other"] });
+        SetupParticipant(Participant(userId: "co-host"));
+        _currentUser.Setup(c => c.GetUserId()).Returns("creator");
+        _participantRepo.Setup(r => r.DeleteAsync("p1", "evt1", It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        await _sut.HandleAsync("evt1", "p1");
+
+        _eventRepo.Verify(r => r.UpdateAsync(
+            It.Is<Event>(e => e.CoHostUserIds.SequenceEqual(RemainingCoHost) && e.RemovedUserIds.SequenceEqual(KeptOutCoHost)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_CoHostWhoLeaves_LosesTheRole()
+    {
+        SetupEvent(ActiveEvent(creatorUserId: "creator") with { CoHostUserIds = ["co-host"] });
+        SetupParticipant(Participant(userId: "co-host"));
+        _currentUser.Setup(c => c.GetUserId()).Returns("co-host");
+        _participantRepo.Setup(r => r.DeleteAsync("p1", "evt1", It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        await _sut.HandleAsync("evt1", "p1");
+
+        _eventRepo.Verify(r => r.UpdateAsync(
+            It.Is<Event>(e => e.CoHostUserIds.Count == 0 && e.RemovedUserIds.Count == 0),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TargetNamedCoHostWhileACoHostRemovesIt_IsRefused()
+    {
+        var before = ActiveEvent(creatorUserId: "creator") with { CoHostUserIds = ["co-host"] };
+        _eventRepo
+            .SetupSequence(r => r.GetByIdOrSlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(before)
+            .ReturnsAsync(before with { CoHostUserIds = ["co-host", "guest"] });
+        SetupParticipant(Participant(userId: "guest"));
+        _currentUser.Setup(c => c.GetUserId()).Returns("co-host");
+        _participantRepo.Setup(r => r.DeleteAsync("p1", "evt1", It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1", "p1"));
+
+        Assert.Equal(ErrorCodes.CoHostCannotRemoveCoHost, ex.Reason);
+        _participantRepo.Verify(r => r.DeleteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_CoHostWithdrawnWhileRemoving_IsRefused()
+    {
+        var before = ActiveEvent(creatorUserId: "creator") with { CoHostUserIds = ["co-host"] };
+        _eventRepo
+            .SetupSequence(r => r.GetByIdOrSlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(before)
+            .ReturnsAsync(before with { CoHostUserIds = [] });
+        SetupParticipant(Participant(userId: "guest"));
+        _currentUser.Setup(c => c.GetUserId()).Returns("co-host");
+        _participantRepo.Setup(r => r.DeleteAsync("p1", "evt1", It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1", "p1"));
+
+        Assert.Equal(ErrorCodes.HostOrSelfOnly, ex.Reason);
+        _participantRepo.Verify(r => r.DeleteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

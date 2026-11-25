@@ -6,6 +6,7 @@ using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
 using MoviePicker.Api.Application.UseCases.CloseEvent;
 using MoviePicker.Api.Application.UseCases.CreateEvent;
 using MoviePicker.Api.Application.UseCases.DeleteEvent;
+using MoviePicker.Api.Application.UseCases.EventCoHosts;
 using MoviePicker.Api.Application.UseCases.EventConfiguration;
 using MoviePicker.Api.Application.UseCases.EventViewTag;
 using MoviePicker.Api.Application.UseCases.GetEligibleFollowsForEvent;
@@ -253,6 +254,48 @@ public sealed class EventsController : ControllerBase
     {
         var result = await handler.HandleAsync(idOrSlug, participantId, ct);
         return Ok(result);
+    }
+
+    [HttpPut("{idOrSlug}/co-hosts/{participantId}")]
+    [Authorize]
+    [EnableRateLimiting(RateLimitingExtensions.RemoveParticipantPolicy)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> NameCoHost(
+        string idOrSlug,
+        string participantId,
+        [FromServices] ISetEventCoHostHandler handler,
+        [CurrentUserId] string userId,
+        CancellationToken ct)
+    {
+        await handler.HandleAsync(userId, idOrSlug, participantId, coHost: true, ct);
+        return NoContent();
+    }
+
+    [HttpDelete("{idOrSlug}/co-hosts/{participantId}")]
+    [Authorize]
+    [EnableRateLimiting(RateLimitingExtensions.RemoveParticipantPolicy)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> WithdrawCoHost(
+        string idOrSlug,
+        string participantId,
+        [FromServices] ISetEventCoHostHandler handler,
+        [CurrentUserId] string userId,
+        CancellationToken ct)
+    {
+        await handler.HandleAsync(userId, idOrSlug, participantId, coHost: false, ct);
+        return NoContent();
     }
 
     [HttpGet("{idOrSlug}/invitations/eligible-follows")]

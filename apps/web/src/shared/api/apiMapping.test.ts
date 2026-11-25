@@ -68,6 +68,7 @@ describe('mapEventData', () => {
         id: 'p1',
         pseudo: 'Bob',
         isCreator: false,
+        isCoHost: false,
         avatarId: undefined,
         handle: null,
         accentColor: null,
@@ -85,5 +86,17 @@ describe('mapEventData', () => {
     } as unknown as RawEventData);
 
     expect(res.participants?.map((p) => p.accentColor)).toEqual(['pink', null]);
+  });
+
+  it('keeps who is co-host of the night', () => {
+    const res = mapEventData({
+      _id: 'e1',
+      participants: [
+        { _id: 'p1', pseudo: 'Léa', isCoHost: true },
+        { _id: 'p2', pseudo: 'Tom', isCoHost: false },
+      ],
+    } as unknown as RawEventData);
+
+    expect(res.participants?.map((p) => p.isCoHost)).toEqual([true, false]);
   });
 });

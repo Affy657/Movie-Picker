@@ -20,6 +20,7 @@ export type EventConfigData = Pick<
       | 'maxVotesPerParticipant'
       | 'richSharePreview'
       | 'allowSeries'
+      | 'anonymousProposals'
       | 'recurrence'
       | 'hasNextOccurrence'
       | 'themeColor'
@@ -30,7 +31,9 @@ export type EventConfigData = Pick<
 type ServedParticipant = ApiSchemas['EventParticipantSummaryResponse'];
 
 export type EventParticipantSummary = Pick<ServedParticipant, 'pseudo'> &
-  Partial<Pick<ServedParticipant, 'isCreator' | 'avatarId' | 'handle' | 'accentColor'>> & {
+  Partial<
+    Pick<ServedParticipant, 'isCreator' | 'isCoHost' | 'avatarId' | 'handle' | 'accentColor'>
+  > & {
     id: string;
   };
 

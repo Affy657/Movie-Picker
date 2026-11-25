@@ -12,6 +12,7 @@ const defaults: TemplateConfigDraft = {
   wheelMode: 'weightedByVotes',
   richSharePreview: true,
   allowSeries: false,
+  anonymousProposals: false,
   winnerCount: 1,
 };
 
@@ -29,6 +30,7 @@ describe('describeTemplateConfig', () => {
       wheelMode: 'strictRandom',
       richSharePreview: true,
       allowSeries: true,
+      anonymousProposals: false,
       winnerCount: 3,
     };
 

@@ -87,7 +87,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
 
         await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1"));
         _winnerAnnouncer.Verify(
-            a => a.AnnounceAsync(It.IsAny<Event>(), It.IsAny<string>(), It.IsAny<WinnerPickMethod>(), It.IsAny<CancellationToken>()),
+            a => a.AnnounceAsync(It.IsAny<Event>(), It.IsAny<string>(), It.IsAny<WinnerPickMethod>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -104,7 +104,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
         await _sut.HandleAsync("evt1");
 
         _winnerAnnouncer.Verify(
-            a => a.AnnounceAsync(It.IsAny<Event>(), "Winner", WinnerPickMethod.Wheel, It.IsAny<CancellationToken>()),
+            a => a.AnnounceAsync(It.IsAny<Event>(), "Winner", WinnerPickMethod.Wheel, It.IsAny<string?>(), It.IsAny<CancellationToken>()),
             Times.Once);
         Assert.NotNull(captured);
         Assert.NotNull(captured.WinnerAnnouncedAt);
@@ -121,7 +121,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
         await _sut.HandleAsync("evt1");
 
         _winnerAnnouncer.Verify(
-            a => a.AnnounceAsync(It.IsAny<Event>(), It.IsAny<string>(), It.IsAny<WinnerPickMethod>(), It.IsAny<CancellationToken>()),
+            a => a.AnnounceAsync(It.IsAny<Event>(), It.IsAny<string>(), It.IsAny<WinnerPickMethod>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
             Times.Never);
         _eventRepo.Verify(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -136,7 +136,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
         await _sut.HandleAsync("evt1");
 
         _winnerAnnouncer.Verify(
-            a => a.AnnounceAsync(It.IsAny<Event>(), "Winner", WinnerPickMethod.Wheel, It.IsAny<CancellationToken>()),
+            a => a.AnnounceAsync(It.IsAny<Event>(), "Winner", WinnerPickMethod.Wheel, It.IsAny<string?>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -161,7 +161,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
         await _sut.HandleAsync("evt1");
 
         _winnerAnnouncer.Verify(
-            a => a.AnnounceAsync(It.IsAny<Event>(), It.IsAny<string>(), It.IsAny<WinnerPickMethod>(), It.IsAny<CancellationToken>()),
+            a => a.AnnounceAsync(It.IsAny<Event>(), It.IsAny<string>(), It.IsAny<WinnerPickMethod>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -183,10 +183,10 @@ public sealed class AnnounceWheelWinnerHandlerTests
         await _sut.HandleAsync("evt1");
 
         _winnerAnnouncer.Verify(
-            a => a.AnnounceAsync(It.IsAny<Event>(), "Winner", WinnerPickMethod.Wheel, It.IsAny<CancellationToken>()),
+            a => a.AnnounceAsync(It.IsAny<Event>(), "Winner", WinnerPickMethod.Wheel, It.IsAny<string?>(), It.IsAny<CancellationToken>()),
             Times.Once);
         _winnerAnnouncer.Verify(
-            a => a.AnnounceAsync(It.IsAny<Event>(), "Manual", It.IsAny<WinnerPickMethod>(), It.IsAny<CancellationToken>()),
+            a => a.AnnounceAsync(It.IsAny<Event>(), "Manual", It.IsAny<WinnerPickMethod>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -207,8 +207,8 @@ public sealed class AnnounceWheelWinnerHandlerTests
         _movies.Add(Winner() with { Id = "mov2", Title = "Second" });
         var announced = new List<string>();
         _winnerAnnouncer
-            .Setup(a => a.AnnounceAsync(It.IsAny<Event>(), It.IsAny<string>(), It.IsAny<WinnerPickMethod>(), It.IsAny<CancellationToken>()))
-            .Callback<Event, string, WinnerPickMethod, CancellationToken>((_, title, _, _) => announced.Add(title))
+            .Setup(a => a.AnnounceAsync(It.IsAny<Event>(), It.IsAny<string>(), It.IsAny<WinnerPickMethod>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .Callback<Event, string, WinnerPickMethod, string?, CancellationToken>((_, title, _, _, _) => announced.Add(title))
             .Returns(Task.CompletedTask);
 
         await _sut.HandleAsync("evt1");
@@ -225,7 +225,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
         await _sut.HandleAsync("evt1");
 
         _winnerAnnouncer.Verify(
-            a => a.AnnounceAsync(It.IsAny<Event>(), It.IsAny<string>(), It.IsAny<WinnerPickMethod>(), It.IsAny<CancellationToken>()),
+            a => a.AnnounceAsync(It.IsAny<Event>(), It.IsAny<string>(), It.IsAny<WinnerPickMethod>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
             Times.Never);
         _eventRepo.Verify(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -239,7 +239,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
         await _sut.HandleAsync("evt1");
 
         _winnerAnnouncer.Verify(
-            a => a.AnnounceAsync(It.IsAny<Event>(), It.IsAny<string>(), It.IsAny<WinnerPickMethod>(), It.IsAny<CancellationToken>()),
+            a => a.AnnounceAsync(It.IsAny<Event>(), It.IsAny<string>(), It.IsAny<WinnerPickMethod>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 }

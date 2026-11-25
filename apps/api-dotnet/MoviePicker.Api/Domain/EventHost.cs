@@ -7,8 +7,10 @@ namespace MoviePicker.Api.Domain;
 public static class EventHost
 {
     public static bool IsHost(Event evt, string? hostToken, string? currentUserId) =>
-        TokenMatches(hostToken, evt.HostToken)
-        || (!string.IsNullOrEmpty(currentUserId) && currentUserId == evt.CreatorUserId);
+        TokenMatches(hostToken, evt.HostToken) || evt.IsHostedBy(currentUserId);
+
+    public static bool IsCreator(Event evt, string? hostToken, string? currentUserId) =>
+        TokenMatches(hostToken, evt.HostToken) || evt.IsCreatedBy(currentUserId);
 
     private static bool TokenMatches(string? presented, string expected)
     {

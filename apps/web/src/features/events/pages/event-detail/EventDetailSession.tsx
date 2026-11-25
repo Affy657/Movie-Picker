@@ -152,7 +152,6 @@ export default function EventDetailSession({
   const addMovieTriggerRef = useRef<HTMLButtonElement>(null);
   const moviesSectionRef = useRef<HTMLDivElement>(null);
   const [participantsOpen, setParticipantsOpen] = useState(false);
-  const closeParticipants = useCallback(() => setParticipantsOpen(false), []);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [viewMode, setViewMode] = useState<MoviesViewMode>(readMoviesViewMode);
@@ -198,6 +197,10 @@ export default function EventDetailSession({
     closeConfirm,
     pendingRemovalId,
     removePending,
+    pendingCoHostId,
+    coHostError,
+    resetCoHost,
+    handleToggleCoHost,
     actionSuccess,
     handleRemoveParticipant,
     handleRequestRemoveMovie,
@@ -216,6 +219,10 @@ export default function EventDetailSession({
     refreshAll,
     wheel,
   });
+  const closeParticipants = useCallback(() => {
+    setParticipantsOpen(false);
+    resetCoHost();
+  }, [resetCoHost]);
 
   const timeFormatted = formatEventTime(event.time);
   const dateLabel = formatMyEventsListDate(event.date, locale);
@@ -347,6 +354,9 @@ export default function EventDetailSession({
           proposingIds: presence.proposingIds,
           isConnectedSelf,
           onRemove: handleRemoveParticipant,
+          pendingCoHostId,
+          coHostError,
+          onToggleCoHost: handleToggleCoHost,
           onInviteFriends: () => openShare('friends'),
           onLeave: handleLeaveEvent,
         }}

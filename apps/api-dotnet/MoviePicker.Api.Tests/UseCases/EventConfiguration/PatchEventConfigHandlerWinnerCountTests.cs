@@ -33,6 +33,7 @@ public sealed class PatchEventConfigHandlerWinnerCountTests
         _sut = new PatchEventConfigHandler(
             _events.Object,
             _participants.Object,
+            Mock.Of<IMovieRepository>(),
             _hostToken.Object,
             _user.Object,
             TestAudienceNotifier.Over(_participants.Object, _userRepo.Object, _pushSubRepo.Object, _pushSender.Object, _notifications.Object),

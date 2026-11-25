@@ -136,6 +136,24 @@ public sealed class GetMovieNightsHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_AnonymousNight_NamesOnlyMyOwnProposal()
+    {
+        var byFriend = await NightAsync("Anonyme ami", Friend, date: "2026-11-01");
+        var byMe = await NightAsync("Anonyme moi", Friend, date: "2026-10-01");
+        foreach (var night in new[] { byFriend, byMe })
+            await _events.UpdateAsync((await _events.GetByIdOrSlugAsync(night.Slug))! with { Config = new EventConfig { AnonymousProposals = true } });
+        await JoinAsync(byFriend, "Moi", Me);
+        await ProposeAsync(byFriend, await JoinAsync(byFriend, "Ami", Friend));
+        await ProposeAsync(byMe, await JoinAsync(byMe, "Moi", Me));
+
+        var result = await CreateSut().HandleAsync(Me, Inception, MovieMediaType.Movie);
+
+        Assert.Equal(["Anonyme ami", "Anonyme moi"], result.Nights.Select(night => night.Title));
+        Assert.Equal(string.Empty, result.Nights[0].ProposerPseudo);
+        Assert.Equal("Moi", result.Nights[1].ProposerPseudo);
+    }
+
+    [Fact]
     public async Task HandleAsync_NightWithoutADate_HasNoDateAndSortsByItsCreation()
     {
         var dated = await NightAsync("Datée", Me, date: "2026-09-01");

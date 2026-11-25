@@ -24,6 +24,7 @@ public sealed record Event
     public string? NextOccurrenceEventId { get; init; }
     public string? GroupId { get; init; }
     public IReadOnlyList<string> RemovedUserIds { get; init; } = [];
+    public IReadOnlyList<string> CoHostUserIds { get; init; } = [];
 
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
@@ -72,6 +73,25 @@ public sealed record Event
     public Event LettingBackIn(string userId) =>
         this with { RemovedUserIds = [.. RemovedUserIds.Where(id => id != userId)] };
 
+    public bool IsCoHost(string? userId) =>
+        !string.IsNullOrEmpty(userId) && CoHostUserIds.Contains(userId);
+
+    public bool IsCreatedBy(string? userId) =>
+        !string.IsNullOrEmpty(userId) && userId == CreatorUserId;
+
+    public bool IsHostedBy(string? userId) => IsCreatedBy(userId) || IsCoHost(userId);
+
+    public Event WithCoHost(string userId) =>
+        IsCoHost(userId) ? this : this with { CoHostUserIds = [.. CoHostUserIds, userId] };
+
+    public Event WithoutCoHost(string? userId) =>
+        IsCoHost(userId) ? this with { CoHostUserIds = [.. CoHostUserIds.Where(id => id != userId)] } : this;
+
+    public bool HasAnonymousProposals => Config?.AnonymousProposals == true;
+
+    public bool ConcealsProposer(string? proposerUserId, string? viewerUserId) =>
+        HasAnonymousProposals && (string.IsNullOrEmpty(viewerUserId) || proposerUserId != viewerUserId);
+
     public IReadOnlyList<string> GetWinnerMovieIds() => Winners.Select(w => w.MovieId).ToList();
 
     public int TargetWinnerCount => Math.Max(1, Config?.WinnerCount ?? EventConfig.DefaultWinnerCount);
@@ -108,6 +128,8 @@ public sealed record EventConfig
     public bool RichSharePreview { get; init; }
 
     public bool AllowSeries { get; init; }
+
+    public bool AnonymousProposals { get; init; }
 
     public const int DefaultWinnerCount = 1;
 

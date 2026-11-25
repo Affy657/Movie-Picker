@@ -1,6 +1,6 @@
-import { Crown, UserMinus, UserPlus } from 'lucide-react';
+import { Crown, ShieldMinus, ShieldPlus, UserMinus, UserPlus } from 'lucide-react';
 import type { EventParticipantSummary } from '@/shared/types/event';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type Translate } from '@/shared/i18n';
 import { withElision } from '@/shared/i18n/withElision';
 import Avatar from '@/shared/components/Avatar';
 import Chip from '@/shared/components/Chip';
@@ -17,6 +17,10 @@ type Props = {
   isHost?: boolean;
   pendingRemovalId?: string | null;
   onRemoveParticipant?: (participantId: string, pseudo: string) => void;
+  viewerIsCreator?: boolean;
+  pendingCoHostId?: string | null;
+  onToggleCoHost?: (participantId: string, coHost: boolean) => void;
+  coHostNamingClosed?: boolean;
   onlineIds?: ReadonlySet<string>;
   proposingIds?: ReadonlySet<string>;
 };
@@ -27,6 +31,10 @@ export default function EventParticipantsList({
   isHost,
   pendingRemovalId,
   onRemoveParticipant,
+  viewerIsCreator = false,
+  pendingCoHostId,
+  onToggleCoHost,
+  coHostNamingClosed = false,
   onlineIds,
   proposingIds,
 }: Readonly<Props>) {
@@ -48,7 +56,15 @@ export default function EventParticipantsList({
       {participants.map((p) => {
         const isMe = p.id === currentParticipantId;
         const isCreator = !!p.isCreator;
-        const canHostRemove = !!isHost && !!onRemoveParticipant && !isCreator && !isMe;
+        const isCoHost = !!p.isCoHost;
+        const canHostRemove =
+          !!isHost &&
+          !!onRemoveParticipant &&
+          !isCreator &&
+          !isMe &&
+          (viewerIsCreator || !isCoHost);
+        const canToggleCoHost =
+          !!onToggleCoHost && !isCreator && !isMe && (isCoHost || !coHostNamingClosed);
         const isProposing = proposingIds?.has(p.id) ?? false;
         const isOnline = isProposing || (onlineIds?.has(p.id) ?? false);
         const presenceLabel = t(
@@ -56,24 +72,10 @@ export default function EventParticipantsList({
         );
         const states = [
           isCreator ? t('events.participants.hostBadge') : null,
+          isCoHost ? t('events.participants.coHostState') : null,
           isMe ? t('events.participants.youState') : null,
           isOnline ? presenceLabel : null,
         ].filter((state): state is string => state !== null);
-        const profileLinkLabel =
-          states.length > 0
-            ? withElision(
-                p.pseudo,
-                'events.participants.viewProfilePresenceAriaLabel',
-                'events.participants.viewProfilePresenceAriaLabelElided',
-                t,
-                { presence: states.join(', ') }
-              )
-            : withElision(
-                p.pseudo,
-                'events.participants.viewProfileAriaLabel',
-                'events.participants.viewProfileAriaLabelElided',
-                t
-              );
 
         return (
           <PersonRow
@@ -90,42 +92,135 @@ export default function EventParticipantsList({
             }
             name={p.pseudo}
             badges={
-              <>
-                {isCreator ? (
-                  <span
-                    className={styles.hostBadge}
-                    role="img"
-                    aria-label={t('events.participants.hostBadge')}
-                    title={t('events.participants.hostBadge')}
-                  >
-                    <Crown aria-hidden size={ICON_SIZE.md} />
-                  </span>
-                ) : null}
-                {isMe ? <Chip size="sm">{t('events.participants.youBadge')}</Chip> : null}
-                {isOnline ? <span className="visually-hidden">{presenceLabel}</span> : null}
-              </>
+              <ParticipantBadges
+                isCreator={isCreator}
+                isCoHost={isCoHost}
+                isMe={isMe}
+                presenceLabel={isOnline ? presenceLabel : null}
+              />
             }
             online={isOnline}
             to={p.handle ? ROUTES.profile(p.handle) : undefined}
-            linkAriaLabel={p.handle ? profileLinkLabel : undefined}
+            linkAriaLabel={p.handle ? profileLinkLabelOf(p.pseudo, states, t) : undefined}
             className={styles.row}
             action={
-              canHostRemove ? (
-                <IconButton
-                  tone="danger"
-                  className={styles.remove}
-                  ariaLabel={t('events.participants.removeAriaLabel', { pseudo: p.pseudo })}
-                  disabled={pendingRemovalId === p.id}
-                  onClick={() => onRemoveParticipant(p.id, p.pseudo)}
-                  data-testid={`remove-participant-${p.id}`}
-                >
-                  <UserMinus aria-hidden size={ICON_SIZE.xl} />
-                </IconButton>
+              canToggleCoHost || canHostRemove ? (
+                <ParticipantActions
+                  participant={p}
+                  onToggleCoHost={canToggleCoHost ? onToggleCoHost : undefined}
+                  coHostPending={pendingCoHostId === p.id}
+                  onRemove={canHostRemove ? onRemoveParticipant : undefined}
+                  removalPending={pendingRemovalId === p.id}
+                />
               ) : null
             }
           />
         );
       })}
     </ul>
+  );
+}
+
+function ParticipantBadges({
+  isCreator,
+  isCoHost,
+  isMe,
+  presenceLabel,
+}: Readonly<{
+  isCreator: boolean;
+  isCoHost: boolean;
+  isMe: boolean;
+  presenceLabel: string | null;
+}>) {
+  const { t } = useTranslation();
+  return (
+    <>
+      {isCreator ? (
+        <span
+          className={styles.hostBadge}
+          role="img"
+          aria-label={t('events.participants.hostBadge')}
+          title={t('events.participants.hostBadge')}
+        >
+          <Crown aria-hidden size={ICON_SIZE.md} />
+        </span>
+      ) : null}
+      {isCoHost ? <Chip size="sm">{t('events.participants.coHostBadge')}</Chip> : null}
+      {isMe ? <Chip size="sm">{t('events.participants.youBadge')}</Chip> : null}
+      {presenceLabel ? <span className="visually-hidden">{presenceLabel}</span> : null}
+    </>
+  );
+}
+
+function profileLinkLabelOf(pseudo: string, states: string[], t: Translate): string {
+  if (states.length === 0) {
+    return withElision(
+      pseudo,
+      'events.participants.viewProfileAriaLabel',
+      'events.participants.viewProfileAriaLabelElided',
+      t
+    );
+  }
+  return withElision(
+    pseudo,
+    'events.participants.viewProfilePresenceAriaLabel',
+    'events.participants.viewProfilePresenceAriaLabelElided',
+    t,
+    { presence: states.join(', ') }
+  );
+}
+
+function ParticipantActions({
+  participant,
+  onToggleCoHost,
+  coHostPending,
+  onRemove,
+  removalPending,
+}: Readonly<{
+  participant: EventParticipantSummary;
+  onToggleCoHost?: (participantId: string, coHost: boolean) => void;
+  coHostPending: boolean;
+  onRemove?: (participantId: string, pseudo: string) => void;
+  removalPending: boolean;
+}>) {
+  const { t } = useTranslation();
+  const isCoHost = !!participant.isCoHost;
+  const { id, pseudo } = participant;
+
+  return (
+    <>
+      {onToggleCoHost ? (
+        <IconButton
+          className={styles.coHost}
+          ariaLabel={t(
+            isCoHost
+              ? 'events.participants.withdrawCoHostAriaLabel'
+              : 'events.participants.nameCoHostAriaLabel',
+            { pseudo }
+          )}
+          disabled={coHostPending}
+          onClick={() => onToggleCoHost(id, !isCoHost)}
+          data-testid={`co-host-${id}`}
+        >
+          {isCoHost ? (
+            <ShieldMinus aria-hidden size={ICON_SIZE.xl} />
+          ) : (
+            <ShieldPlus aria-hidden size={ICON_SIZE.xl} />
+          )}
+        </IconButton>
+      ) : null}
+      {onRemove ? (
+        <IconButton
+          tone="danger"
+          className={styles.remove}
+          ariaLabel={t('events.participants.removeAriaLabel', { pseudo })}
+          disabled={removalPending}
+          onClick={() => onRemove(id, pseudo)}
+          data-testid={`remove-participant-${id}`}
+        >
+          <UserMinus aria-hidden size={ICON_SIZE.xl} />
+        </IconButton>
+      ) : null}
+    </>
   );
 }

@@ -147,6 +147,23 @@ public sealed class GetMyNightMoviesHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_LatestProposalInAnAnonymousNight_NamesNobodyButMe()
+    {
+        var byFriend = await NightAsync("Anonyme", Friend);
+        await _events.UpdateAsync((await _events.GetByIdOrSlugAsync(byFriend.Slug))! with { Config = new EventConfig { AnonymousProposals = true } });
+        await JoinAsync(byFriend, "Moi", Me);
+        await ProposeAsync(byFriend, await JoinAsync(byFriend, "Ami", Friend), daysAgo: 5);
+        var mine = await NightAsync("Anonyme aussi", Friend);
+        await _events.UpdateAsync((await _events.GetByIdOrSlugAsync(mine.Slug))! with { Config = new EventConfig { AnonymousProposals = true } });
+        await ProposeAsync(mine, await JoinAsync(mine, "Moi", Me), tmdbId: Matrix, daysAgo: 3);
+
+        var items = (await CreateSut().HandleAsync(Me)).Items;
+
+        Assert.Null(items.Single(item => item.TmdbId == Inception).LastProposer);
+        Assert.True(items.Single(item => item.TmdbId == Matrix).LastProposer?.IsMe);
+    }
+
+    [Fact]
     public async Task HandleAsync_SameIdButAnotherMediaType_IsAnotherTitle()
     {
         var night = await NightAsync("Séries et films", Me);

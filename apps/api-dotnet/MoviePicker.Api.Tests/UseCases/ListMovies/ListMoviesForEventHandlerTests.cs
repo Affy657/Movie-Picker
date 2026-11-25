@@ -532,4 +532,64 @@ public sealed class ListMoviesForEventHandlerTests
             r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
+
+    private void GivenAnonymousNightWithTwoProposers()
+    {
+        var evt = ActiveEvent() with { Config = new EventConfig { AnonymousProposals = true } };
+        var now = DateTimeOffset.UtcNow;
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(
+        [
+            new Movie { Id = "mov-alice", EventId = evt.Id, ParticipantId = "p1", TmdbId = 1, Title = "Film A", Year = "2020", CreatedAt = now, UpdatedAt = now },
+            new Movie { Id = "mov-bob", EventId = evt.Id, ParticipantId = "p2", TmdbId = 2, Title = "Film B", Year = "2021", CreatedAt = now, UpdatedAt = now }
+        ]);
+        _participantRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(
+        [
+            new Participant { Id = "p1", EventId = evt.Id, Pseudo = "Alice", UserId = "u1", CreatedAt = now, UpdatedAt = now },
+            new Participant { Id = "p2", EventId = evt.Id, Pseudo = "Bob", UserId = "u2", CreatedAt = now, UpdatedAt = now }
+        ]);
+        _userRepo
+            .Setup(r => r.ListCardsByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<UserCard>)
+            [
+                new UserCard("u1", "avatar-1", "alice", IsProfilePublic: true),
+                new UserCard("u2", "avatar-2", "bob", IsProfilePublic: true)
+            ]);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AnonymousNight_ShowsTheViewerOnlyTheirOwnProposals()
+    {
+        GivenAnonymousNightWithTwoProposers();
+        _currentUser.Setup(c => c.GetUserId()).Returns("u1");
+
+        var result = await _sut.HandleAsync("evt1");
+
+        var own = result.Single(m => m.Id == "mov-alice");
+        Assert.Equal("Alice", own.ProposerPseudo);
+        Assert.Equal("alice", own.ProposerHandle);
+        Assert.Equal("p1", own.ParticipantId);
+        var other = result.Single(m => m.Id == "mov-bob");
+        Assert.Equal(string.Empty, other.ProposerPseudo);
+        Assert.Null(other.ProposerHandle);
+        Assert.Equal(string.Empty, other.ParticipantId);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("host-user")]
+    public async Task HandleAsync_AnonymousNight_HidesEveryProposerFromAnyoneElse(string? viewer)
+    {
+        GivenAnonymousNightWithTwoProposers();
+        _currentUser.Setup(c => c.GetUserId()).Returns(viewer);
+
+        var result = await _sut.HandleAsync("evt1");
+
+        Assert.All(result, movie =>
+        {
+            Assert.Equal(string.Empty, movie.ProposerPseudo);
+            Assert.Null(movie.ProposerHandle);
+            Assert.Equal(string.Empty, movie.ParticipantId);
+        });
+    }
 }

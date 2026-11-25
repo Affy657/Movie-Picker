@@ -203,4 +203,21 @@ public sealed class DeleteMovieHandlerTests
 
         _movieRepo.Verify(r => r.DeleteByIdsAsync(OnlyMov1(), It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact]
+    public async Task HandleAsync_CoHostWithdrawnWhileDeleting_IsRefused()
+    {
+        var evt = ActiveEvent() with { CreatorUserId = "user-42", CoHostUserIds = [OtherUserId] };
+        var movie = new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = "other-id", TmdbId = 1, Title = "X", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        _eventRepo
+            .SetupSequence(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(evt)
+            .ReturnsAsync(evt with { CoHostUserIds = [] });
+        _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
+
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync(OtherUserId, "evt1", "mov1", "p123456789012345678901234"));
+
+        Assert.Equal(ErrorCodes.MovieRemovalRestricted, ex.Reason);
+        _movieRepo.Verify(r => r.DeleteByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 }

@@ -64,4 +64,16 @@ public sealed class HostedEventTests
 
         Assert.Equal(ErrorCodes.HostOnly, ex.Reason);
     }
+
+    [Theory]
+    [InlineData("creator", true)]
+    [InlineData("co-host", true)]
+    [InlineData("guest", false)]
+    [InlineData(null, false)]
+    public void IsHostAccount_ChecksTheSignedInAccountWithoutAnyHostLink(string? userId, bool expected)
+    {
+        var evt = new Event { HostToken = "host-token", CreatorUserId = "creator", CoHostUserIds = ["co-host"] };
+
+        Assert.Equal(expected, HostedEvent.IsHostAccount(evt, userId));
+    }
 }

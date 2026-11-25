@@ -58,9 +58,13 @@ public sealed class GetUserProposedMoviesHandler : IGetUserProposedMoviesHandler
         if (participants.Count == 0)
             return new UserProposedMoviesResponse();
 
-        var proposals = await _movies.ListByParticipantIdsAsync(participants.Select(p => p.Id).ToList(), ct);
+        var proposalsTask = _movies.ListByParticipantIdsAsync(participants.Select(p => p.Id).ToList(), ct);
+        var nightsTask = _events.ListByIdsAsync(participants.Select(p => p.EventId).Distinct().ToList(), ct);
+        await Task.WhenAll(proposalsTask, nightsTask);
+        var nights = await nightsTask;
+        IReadOnlyList<Movie> proposals = AttributedProposals.Among(await proposalsTask, nights);
         if (winningOnly)
-            proposals = await KeepWinnersAsync(proposals, ct);
+            proposals = WinnerMovies.AmongProposals(proposals, nights);
 
         var films = proposals
             .GroupBy(m => (m.TmdbId, m.MediaType))
@@ -75,12 +79,6 @@ public sealed class GetUserProposedMoviesHandler : IGetUserProposedMoviesHandler
         {
             Items = films.ConvertAll(x => ToItem(x.Latest, x.Count, enrichments.GetValueOrDefault((x.Latest.TmdbId, x.Latest.MediaType)))),
         };
-    }
-
-    private async Task<IReadOnlyList<Movie>> KeepWinnersAsync(IReadOnlyList<Movie> proposals, CancellationToken ct)
-    {
-        var events = await _events.ListByIdsAsync(proposals.Select(m => m.EventId).Distinct().ToList(), ct);
-        return WinnerMovies.AmongProposals(proposals, events);
     }
 
     private static UserProposedMovieItem ToItem(Movie latest, int proposalCount, TmdbMovieEnrichment? enrichment) => new()

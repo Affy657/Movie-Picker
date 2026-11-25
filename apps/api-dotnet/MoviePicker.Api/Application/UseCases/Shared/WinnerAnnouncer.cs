@@ -18,7 +18,12 @@ public sealed class WinnerAnnouncer : IWinnerAnnouncer
         _clock = clock;
     }
 
-    public Task AnnounceAsync(Event evt, string winnerTitle, WinnerPickMethod method, CancellationToken ct = default)
+    public Task AnnounceAsync(
+        Event evt,
+        string winnerTitle,
+        WinnerPickMethod method,
+        string? pickedBy,
+        CancellationToken ct = default)
     {
         var message = new EventAudienceMessage(
             evt.Id,
@@ -38,7 +43,10 @@ public sealed class WinnerAnnouncer : IWinnerAnnouncer
                 Tag: $"wheel-{evt.Id}",
                 Url: FrontRoutes.EventDetail(evt.Slug)));
 
-        return _audience.NotifyParticipantsAsync(message, exceptUserId: evt.CreatorUserId, ct: ct);
+        return _audience.NotifyParticipantsAsync(
+            message,
+            exceptUserId: string.IsNullOrEmpty(pickedBy) ? evt.CreatorUserId : pickedBy,
+            ct: ct);
     }
 
     private string PushBody(Event evt, string winnerTitle)

@@ -31,6 +31,7 @@ const baseFields = {
   wheelMode: 'weightedByVotes' as const,
   richSharePreview: true,
   allowSeries: false,
+  anonymousProposals: false,
   winnerCount: '1',
 };
 
@@ -42,6 +43,7 @@ const baseDraft: TemplateConfigDraft = {
   wheelMode: 'weightedByVotes',
   richSharePreview: true,
   allowSeries: false,
+  anonymousProposals: false,
   winnerCount: 1,
 };
 
@@ -121,6 +123,7 @@ describe('buildTemplateDraft', () => {
       wheelMode: 'strictRandom',
       richSharePreview: false,
       allowSeries: true,
+      anonymousProposals: false,
       winnerCount: 3,
     });
 
@@ -136,6 +139,7 @@ describe('buildTemplateDraft', () => {
       wheelMode: 'strictRandom',
       richSharePreview: false,
       allowSeries: true,
+      anonymousProposals: false,
       winnerCount: '3',
     });
     expect(buildTemplateDraft(fields).maxProposalsPerParticipant).toBeNull();
@@ -165,6 +169,7 @@ describe('buildTemplateDraft', () => {
       wheelMode: 'weightedByVotes',
       richSharePreview: true,
       allowSeries: false,
+      anonymousProposals: false,
       winnerCount: 1,
     });
 
@@ -181,6 +186,7 @@ describe('buildTemplateDraft', () => {
       wheelMode: 'weightedByVotes',
       richSharePreview: true,
       allowSeries: false,
+      anonymousProposals: false,
       winnerCount: 1,
     });
   });
@@ -204,6 +210,7 @@ describe('buildTemplateDraft', () => {
       wheelMode: 'strictRandom',
       richSharePreview: true,
       allowSeries: true,
+      anonymousProposals: false,
     });
 
     expect(draft.wheelMode).toBe('strictRandom');
@@ -223,6 +230,7 @@ describe('templateToDraft', () => {
       wheelMode: 'strictRandom',
       richSharePreview: true,
       allowSeries: true,
+      anonymousProposals: false,
       winnerCount: 2,
     };
 
@@ -234,6 +242,7 @@ describe('templateToDraft', () => {
       wheelMode: 'strictRandom',
       richSharePreview: true,
       allowSeries: true,
+      anonymousProposals: false,
       winnerCount: 2,
     });
   });

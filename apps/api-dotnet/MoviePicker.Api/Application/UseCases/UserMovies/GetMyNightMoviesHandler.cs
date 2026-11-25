@@ -37,7 +37,7 @@ public sealed class GetMyNightMoviesHandler : IGetMyNightMoviesHandler
 
     public async Task<MyNightMoviesResponse> HandleAsync(string userId, CancellationToken ct = default)
     {
-        var (winnerMovieIds, proposals) = await LoadProposalsAsync(userId, ct);
+        var (winnerMovieIds, proposals, anonymousNightIds) = await LoadProposalsAsync(userId, ct);
         if (proposals.Count == 0)
             return new MyNightMoviesResponse();
 
@@ -56,6 +56,7 @@ public sealed class GetMyNightMoviesHandler : IGetMyNightMoviesHandler
         var (participantById, avatars) = await proposersTask;
         var context = new FilmContext(
             userId,
+            anonymousNightIds,
             participantById,
             winnerMovieIds,
             await watchedTask,
@@ -65,13 +66,13 @@ public sealed class GetMyNightMoviesHandler : IGetMyNightMoviesHandler
         return new MyNightMoviesResponse { Items = films.ConvertAll(context.ToItem) };
     }
 
-    private async Task<(HashSet<string> WinnerMovieIds, List<Movie> Proposals)> LoadProposalsAsync(
+    private async Task<(HashSet<string> WinnerMovieIds, List<Movie> Proposals, HashSet<string> AnonymousNightIds)> LoadProposalsAsync(
         string userId,
         CancellationToken ct)
     {
         var nightIds = (await MyNights.ListIdsAsync(_events, _participants, userId, ct)).ToList();
         if (nightIds.Count == 0)
-            return ([], []);
+            return ([], [], []);
 
         var nightsTask = _events.ListByIdsAsync(nightIds, ct);
         var proposalsTask = _movies.ListByEventIdsAsync(nightIds, ct);
@@ -82,7 +83,11 @@ public sealed class GetMyNightMoviesHandler : IGetMyNightMoviesHandler
         var winnerMovieIds = WinnerMovies.AmongProposals(proposals, nights)
             .Select(m => m.Id)
             .ToHashSet(StringComparer.Ordinal);
-        return (winnerMovieIds, proposals);
+        var anonymousNightIds = nights
+            .Where(n => n.HasAnonymousProposals)
+            .Select(n => n.Id)
+            .ToHashSet(StringComparer.Ordinal);
+        return (winnerMovieIds, proposals, anonymousNightIds);
     }
 
     private async Task<(Dictionary<string, Participant> ById, ParticipantAvatars Avatars)> LoadProposersAsync(
@@ -102,6 +107,7 @@ public sealed class GetMyNightMoviesHandler : IGetMyNightMoviesHandler
 
     private sealed record FilmContext(
         string UserId,
+        HashSet<string> AnonymousNightIds,
         Dictionary<string, Participant> ParticipantById,
         HashSet<string> WinnerMovieIds,
         WatchedKeys Watched,
@@ -127,6 +133,7 @@ public sealed class GetMyNightMoviesHandler : IGetMyNightMoviesHandler
                 IsWinner = proposals.Any(m => WinnerMovieIds.Contains(m.Id)),
                 IsWatched = Watched.Contains(latest.TmdbId, latest.MediaType),
                 LastProposer = ParticipantById.TryGetValue(latest.ParticipantId, out var proposer)
+                    && (!AnonymousNightIds.Contains(latest.EventId) || IsMine(proposer))
                     ? ToProposer(proposer)
                     : null,
             };

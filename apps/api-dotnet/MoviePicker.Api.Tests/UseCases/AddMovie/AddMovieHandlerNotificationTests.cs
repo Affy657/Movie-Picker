@@ -102,6 +102,81 @@ public sealed class AddMovieHandlerNotificationTests
     }
 
     [Fact]
+    public async Task HandleAsync_NightTurnedAnonymousMeanwhile_NotifiesWithoutNamingTheProposer()
+    {
+        var night = new Event
+        {
+            Id = "evt1",
+            Title = "Soirée",
+            Date = TestDates.Upcoming,
+            Time = "20:00",
+            Slug = "soiree",
+            HostToken = "ht1",
+            Config = new EventConfig(),
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        _eventRepo.SetupSequence(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(night)
+            .ReturnsAsync(night with { Config = new EventConfig { AnonymousProposals = true } });
+        OwnerParticipant();
+        _participantRepo.Setup(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                new() { Id = ParticipantId, EventId = "evt1", Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
+                new() { Id = "p2", EventId = "evt1", Pseudo = "Bob", UserId = "other", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
+            ]);
+        _userRepo.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new() { Id = "other", NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.MovieAdded] = true } }]);
+        _userRepo.Setup(r => r.GetByIdAsync(OwnerUserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = OwnerUserId, DisplayName = "Alice", Handle = "alice", AvatarId = "avatar-1" });
+
+        await _sut.HandleAsync(OwnerUserId, "evt1", Request());
+
+        _notifications.Verify(
+            n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "other"
+                && u.ActorHandle == null && u.ActorDisplayName == null && u.ActorAvatarId == null), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AnonymousNight_NotifiesWithoutNamingTheProposer()
+    {
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Event
+            {
+                Id = "evt1",
+                Title = "Soirée",
+                Date = TestDates.Upcoming,
+                Time = "20:00",
+                Slug = "soiree",
+                HostToken = "ht1",
+                Config = new EventConfig { AnonymousProposals = true },
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow
+            });
+        OwnerParticipant();
+        _participantRepo.Setup(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                new() { Id = ParticipantId, EventId = "evt1", Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
+                new() { Id = "p2", EventId = "evt1", Pseudo = "Bob", UserId = "other", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
+            ]);
+        _userRepo.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new() { Id = "other", NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.MovieAdded] = true } }]);
+        _userRepo.Setup(r => r.GetByIdAsync(OwnerUserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = OwnerUserId, DisplayName = "Alice", Handle = "alice", AvatarId = "avatar-1" });
+
+        var result = await _sut.HandleAsync(OwnerUserId, "evt1", Request());
+
+        Assert.Equal("Alice", result.ProposerPseudo);
+        _notifications.Verify(
+            n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "other"
+                && u.ActorHandle == null && u.ActorDisplayName == null && u.ActorAvatarId == null), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task HandleAsync_ForgedTitle_NotifiesWithTheTmdbTitle()
     {
         OwnerParticipant();

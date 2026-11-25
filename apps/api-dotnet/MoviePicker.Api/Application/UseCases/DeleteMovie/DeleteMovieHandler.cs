@@ -74,6 +74,8 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
                 var current = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, token);
                 if (current.HasWinner)
                     throw Errors.WheelLockedDelete();
+                if (!isProposer && !HostedEvent.IsHost(current, _hostTokenAccessor, userId))
+                    throw Errors.MovieRemovalRestricted();
 
                 await EventChildData.PurgeMoviesAsync(
                     _voteRepository,

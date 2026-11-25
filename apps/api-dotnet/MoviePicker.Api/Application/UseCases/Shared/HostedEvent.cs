@@ -10,6 +10,12 @@ internal static class HostedEvent
     public static bool IsHost(Event evt, IHostTokenAccessor hostTokens, string? userId) =>
         EventHost.IsHost(evt, hostTokens.GetHostToken(), userId);
 
+    public static bool IsCreator(Event evt, IHostTokenAccessor hostTokens, string? userId) =>
+        EventHost.IsCreator(evt, hostTokens.GetHostToken(), userId);
+
+    public static bool IsHostAccount(Event evt, string? userId) =>
+        EventHost.IsHost(evt, hostToken: null, userId);
+
     public static Task<Event> LoadForHostAsync(
         IEventRepository events,
         IHostTokenAccessor hostTokens,

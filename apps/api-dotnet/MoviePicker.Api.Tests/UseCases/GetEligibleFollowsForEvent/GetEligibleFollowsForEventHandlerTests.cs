@@ -100,4 +100,25 @@ public sealed class GetEligibleFollowsForEventHandlerTests
 
         Assert.False(result.Follows.Single().IsAlreadyInvited);
     }
+
+    [Fact]
+    public async Task HandleAsync_CoHost_ListsTheirOwnFollows()
+    {
+        _events
+            .Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Event { Id = "evt1", CreatorUserId = HostId, CoHostUserIds = ["co-host"] });
+        _follows.Setup(f => f.GetFollowingIdsAsync("co-host", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(["u7"]);
+        _follows.Setup(f => f.GetFollowingIdsAsync(HostId, It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(["u1"]);
+        _users.Setup(u => u.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<string> ids, CancellationToken _) => ids.Select(U).ToList());
+        _participants.Setup(p => p.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _notifications.Setup(n => n.ListUserIdsByTypeAndEventAsync(UserNotificationType.EventInvitation, "evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new HashSet<string>());
+
+        var result = await _sut.HandleAsync("co-host", "evt1");
+
+        Assert.Equal("u7", Assert.Single(result.Follows).UserId);
+    }
 }

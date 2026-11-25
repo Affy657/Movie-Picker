@@ -118,7 +118,7 @@ public sealed class EventReminderPass : IEventReminderPass
 
             try
             {
-                announced += await _wheelAnnouncement.AnnounceAwaitingPicksAsync(evt, ct);
+                announced += await _wheelAnnouncement.AnnounceAwaitingPicksAsync(evt, pickedBy: null, ct);
             }
             catch (ConflictException ex)
             {

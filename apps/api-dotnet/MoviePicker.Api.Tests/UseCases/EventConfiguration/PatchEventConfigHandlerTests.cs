@@ -15,6 +15,7 @@ public sealed class PatchEventConfigHandlerTests
 {
     private readonly Mock<IEventRepository> _events;
     private readonly Mock<IParticipantRepository> _participants;
+    private readonly Mock<IMovieRepository> _movies = new();
     private readonly Mock<IHostTokenAccessor> _hostToken;
     private readonly Mock<ICurrentUserAccessor> _user;
     private readonly Mock<IUserRepository> _userRepo = new();
@@ -33,6 +34,7 @@ public sealed class PatchEventConfigHandlerTests
         _sut = new PatchEventConfigHandler(
             _events.Object,
             _participants.Object,
+            _movies.Object,
             _hostToken.Object,
             _user.Object,
             TestAudienceNotifier.Over(_participants.Object, _userRepo.Object, _pushSubRepo.Object, _pushSender.Object, _notifications.Object),
@@ -115,6 +117,104 @@ public sealed class PatchEventConfigHandlerTests
         var res = await _sut.HandleAsync("s", new PatchEventConfigRequest { RichSharePreview = true });
 
         Assert.True(res.RichSharePreview);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AnonymousProposals_TurnsOn()
+    {
+        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(Evt());
+        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
+        _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+
+        var res = await _sut.HandleAsync("s", new PatchEventConfigRequest { AnonymousProposals = true });
+
+        Assert.True(res.AnonymousProposals);
+        _events.Verify(r => r.UpdateAsync(
+            It.Is<Event>(e => e.Config!.AnonymousProposals),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AnonymousProposals_CannotTurnOffOnceAMovieWasProposed()
+    {
+        var evt = Evt() with { Config = new EventConfig { AnonymousProposals = true } };
+        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
+        _movies.Setup(r => r.CountByEventIdAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(() =>
+            _sut.HandleAsync("s", new PatchEventConfigRequest { AnonymousProposals = false }));
+
+        Assert.Equal(ErrorCodes.AnonymousProposalsLocked, ex.Reason);
+        _events.Verify(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AnonymousProposals_CannotTurnOnOnceAMovieWasProposed()
+    {
+        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(Evt());
+        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
+        _movies.Setup(r => r.CountByEventIdAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(() =>
+            _sut.HandleAsync("s", new PatchEventConfigRequest { AnonymousProposals = true }));
+
+        Assert.Equal(ErrorCodes.AnonymousProposalsLocked, ex.Reason);
+        _events.Verify(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AnonymousProposals_CountsTheMoviesUnderTheEventLockBeforeTurningOff()
+    {
+        var evt = Evt() with { Config = new EventConfig { AnonymousProposals = true } };
+        var locked = false;
+        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
+        _events.Setup(r => r.LockForWriteAsync("evt1", It.IsAny<CancellationToken>()))
+            .Callback(() => locked = true)
+            .Returns(Task.CompletedTask);
+        _movies.Setup(r => r.CountByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
+            .Callback(() => Assert.True(locked && _unitOfWork.IsExecuting))
+            .ReturnsAsync(0);
+        _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .Callback(() => Assert.True(_unitOfWork.IsExecuting))
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+
+        var res = await _sut.HandleAsync("s", new PatchEventConfigRequest { AnonymousProposals = false });
+
+        Assert.False(res.AnonymousProposals);
+        _movies.Verify(r => r.CountByEventIdAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AnonymousNight_OtherChangesKeepItAnonymous()
+    {
+        var evt = Evt() with { Config = new EventConfig { AnonymousProposals = true } };
+        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
+        _movies.Setup(r => r.CountByEventIdAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(3);
+        _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+
+        var res = await _sut.HandleAsync("s", new PatchEventConfigRequest { Theme = "Polars", AnonymousProposals = true });
+
+        Assert.True(res.AnonymousProposals);
+        Assert.Equal("Polars", res.Theme);
+    }
+
+    [Fact]
+    public async Task HandleAsync_CoHost_ChangesTheRules()
+    {
+        var evt = Evt() with { CreatorUserId = "creator", CoHostUserIds = ["co-host"] };
+        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _user.Setup(u => u.GetUserId()).Returns("co-host");
+        _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+
+        var res = await _sut.HandleAsync("s", new PatchEventConfigRequest { MaxVotesPerParticipant = 2 });
+
+        Assert.Equal(2, res.MaxVotesPerParticipant);
     }
 
     [Fact]

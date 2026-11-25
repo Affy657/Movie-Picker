@@ -16,11 +16,11 @@ public sealed class WinnerMovieResponse
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
 
-    public static WinnerMovieResponse FromDomain(Movie m, string? posterPath = null) => new()
+    public static WinnerMovieResponse Of(Event evt, Movie m, string? posterPath) => new()
     {
         Id = m.Id,
         EventId = m.EventId,
-        ParticipantId = m.ParticipantId,
+        ParticipantId = evt.HasAnonymousProposals ? string.Empty : m.ParticipantId,
         TmdbId = m.TmdbId,
         Title = m.Title,
         Year = m.Year,

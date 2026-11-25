@@ -199,4 +199,20 @@ public sealed class SetMovieWheelExclusionHandlerTests
         _movieRepo.Verify(r => r.UpdateWheelExclusionAsync("mov1", true, It.IsAny<CancellationToken>()), Times.Once);
         _eventRepo.Verify(r => r.UpdateAsync(It.Is<Event>(e => e.Id == "evt1"), It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact]
+    public async Task HandleAsync_CoHostWithdrawnMeanwhile_IsRefused()
+    {
+        var evt = ActiveEvent() with { CreatorUserId = "creator", CoHostUserIds = [OtherUserId] };
+        _eventRepo
+            .SetupSequence(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(evt)
+            .ReturnsAsync(evt with { CoHostUserIds = [] });
+        _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", "evt1", It.IsAny<CancellationToken>())).ReturnsAsync(MovieOf("mov1"));
+
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync(OtherUserId, "evt1", "mov1", Request(true)));
+
+        Assert.Equal(ErrorCodes.HostOnly, ex.Reason);
+        _movieRepo.Verify(r => r.UpdateWheelExclusionAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 }

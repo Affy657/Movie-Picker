@@ -209,6 +209,21 @@ public static class Errors
     public static ConflictException CreatorCannotBeRemoved() =>
         new("The creator of the movie night cannot be removed", ErrorCodes.CreatorCannotBeRemoved);
 
+    public static ConflictException AnonymousProposalsLocked() =>
+        new("Anonymous proposals can no longer change once a movie has been proposed", ErrorCodes.AnonymousProposalsLocked);
+
+    public static ForbiddenException CreatorOnlyCoHosts() =>
+        new("Only the creator of the movie night can manage its co-hosts", ErrorCodes.CreatorOnlyCoHosts);
+
+    public static ForbiddenException CoHostCannotRemoveCoHost() =>
+        new("A co-host cannot remove another co-host", ErrorCodes.CoHostCannotRemoveCoHost);
+
+    public static ForbiddenException CreatorOnlyNightGroup() =>
+        new("Only the creator of the movie night can choose its friend group", ErrorCodes.CreatorOnlyNightGroup);
+
+    public static BadRequestException CoHostTargetInvalid() =>
+        new("Only a participant with an account other than the creator can be a co-host", ErrorCodes.CoHostTargetInvalid);
+
     public static ConflictException MovieExcludedFromWheel() =>
         new("This movie is excluded from the draw, put it back in to pick it", ErrorCodes.MovieExcludedFromWheel);
 

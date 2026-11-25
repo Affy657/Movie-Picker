@@ -180,6 +180,7 @@ function SettingsRules({
       errors={draft.fieldErrors}
       onChange={draft.applyRulesPatch}
       locked={draft.configLocked}
+      anonymousLocked={draft.anonymousLocked}
       winnerMin={Math.max(1, draft.drawnWinnerCount)}
       showTitle={showTitle}
       notice={lockNotice}

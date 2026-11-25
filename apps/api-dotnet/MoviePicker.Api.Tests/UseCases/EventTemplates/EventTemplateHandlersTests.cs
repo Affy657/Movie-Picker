@@ -111,11 +111,13 @@ public sealed class ListEventTemplatesHandlerTests
                     MaxParticipants = 8,
                     MaxVotesPerParticipant = 2,
                     WheelMode = WheelMode.StrictRandom,
-                    AllowSeries = true
+                    AllowSeries = true,
+                    AnonymousProposals = true
                 })));
 
         var listed = await _sut.HandleAsync("u1");
         var item = Assert.Single(listed.Items);
+        Assert.True(item.AnonymousProposals);
 
         Assert.Equal("t1", item.Id);
         Assert.Equal("🎃 Halloween", item.Theme);
@@ -175,6 +177,22 @@ public sealed class CreateEventTemplateHandlerTests
             u => u.AddEventTemplateAsync("u1", It.IsAny<EventTemplate>(), EventTemplate.MaxPerUser, TemplateFixtures.Now, It.IsAny<CancellationToken>()),
             Times.Once);
         _users.Verify(u => u.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_KeepsTheAnonymousProposalsRule()
+    {
+        HasUser(new User { Id = "u1" });
+        var request = TemplateFixtures.Request();
+
+        await _sut.HandleAsync("u1", new SaveEventTemplateRequest
+        {
+            Name = request.Name,
+            Theme = request.Theme,
+            AnonymousProposals = true
+        });
+
+        Assert.True(_added!.Config.AnonymousProposals);
     }
 
     [Fact]

@@ -406,6 +406,7 @@ export default function EventMoviesSection({
               onVote={submitVote}
               allowSeries={!!event.config?.allowSeries}
               maxProposals={event.config?.maxProposalsPerParticipant ?? null}
+              anonymous={!!event.config?.anonymousProposals}
             />
           </Suspense>
         )}

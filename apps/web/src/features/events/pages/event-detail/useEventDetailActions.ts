@@ -9,7 +9,11 @@ import {
 import { useNavigate } from 'react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ROUTES } from '@/app/routes';
-import { removeEventParticipant, postEventClose } from '@/features/events/api/eventsApi';
+import {
+  removeEventParticipant,
+  postEventClose,
+  setEventCoHost,
+} from '@/features/events/api/eventsApi';
 import { deleteMoviePitchNote, removeMovieFromEvent } from '@/features/events/api/eventMoviesApi';
 import { removeStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 import { invalidateMyNights } from '@/shared/api/invalidateMyNights';
@@ -77,6 +81,24 @@ export function useEventDetailActions({
       void invalidateMyNights(queryClient);
     },
   });
+
+  const coHostMutation = useMutation({
+    mutationFn: (variables: { participantId: string; coHost: boolean }) =>
+      setEventCoHost(slug, variables.participantId, variables.coHost),
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) }),
+  });
+  const pendingCoHostId = coHostMutation.isPending ? coHostMutation.variables.participantId : null;
+  const coHostError = coHostMutation.error
+    ? getErrorMessage(coHostMutation.error, t('events.participants.coHostError'))
+    : null;
+  const resetCoHost = coHostMutation.reset;
+  const toggleCoHost = coHostMutation.mutate;
+
+  const handleToggleCoHost = useCallback(
+    (participantId: string, coHost: boolean) => toggleCoHost({ participantId, coHost }),
+    [toggleCoHost]
+  );
 
   const removeMovieMutation = useMutation({
     mutationFn: (movieId: string) => {
@@ -292,6 +314,10 @@ export function useEventDetailActions({
     closeConfirm,
     pendingRemovalId,
     removePending: removeParticipantMutation.isPending,
+    pendingCoHostId,
+    coHostError,
+    resetCoHost,
+    handleToggleCoHost,
     actionSuccess,
     handleRemoveParticipant,
     handleRequestRemoveMovie,

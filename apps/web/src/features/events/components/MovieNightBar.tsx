@@ -239,7 +239,9 @@ function NightIdentity({ night, t }: Readonly<{ night: Night; t: Translate }>) {
             size="xs"
             accent={proposer?.accentColor}
           />
-          {t('moviePage.night.proposedBy', { pseudo: movie.proposerPseudo })}
+          {movie.proposerPseudo
+            ? t('moviePage.night.proposedBy', { pseudo: movie.proposerPseudo })
+            : t('moviePage.night.anonymous')}
         </span>
       ) : null}
       {night.loaded && !movie ? (

@@ -28,6 +28,7 @@ public sealed class GroupNightSettingsTests : FriendGroupTestBase
         return new PatchEventConfigHandler(
             _events,
             _participants,
+            Mock.Of<IMovieRepository>(),
             _hostToken.Object,
             _currentUser.Object,
             TestAudienceNotifier.Over(_participants, Kit.Users, Kit.PushSubscriptions, Kit.Push.Object, Kit.Notifications),
@@ -81,6 +82,22 @@ public sealed class GroupNightSettingsTests : FriendGroupTestBase
             .HandleAsync(night.Slug, new PatchEventConfigRequest { GroupId = group.Id }));
 
         Assert.Equal(ErrorCodes.GroupNotFound, ex.Reason);
+        Assert.Null((await _events.GetByIdOrSlugAsync(night.Slug))!.GroupId);
+    }
+
+    [Fact]
+    public async Task ACoHost_CannotMoveTheNightIntoTheirGroup()
+    {
+        var group = await SharedGroupAsync(FriendGroupTestKit.Member);
+        var night = await NightAsync(FriendGroupTestKit.Stranger);
+        await _events.UpdateAsync((await _events.GetByIdOrSlugAsync(night.Slug))! with { CoHostUserIds = [FriendGroupTestKit.Member] });
+        var handler = Handler(FriendGroupTestKit.Member);
+        _hostToken.Setup(h => h.GetHostToken()).Returns((string?)null);
+
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(() =>
+            handler.HandleAsync(night.Slug, new PatchEventConfigRequest { GroupId = group.Id }));
+
+        Assert.Equal(ErrorCodes.CreatorOnlyNightGroup, ex.Reason);
         Assert.Null((await _events.GetByIdOrSlugAsync(night.Slug))!.GroupId);
     }
 

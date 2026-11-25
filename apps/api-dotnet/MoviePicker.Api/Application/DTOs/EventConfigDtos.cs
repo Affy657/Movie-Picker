@@ -18,6 +18,7 @@ public sealed class EventConfigResponse
 
     public bool RichSharePreview { get; init; }
     public bool AllowSeries { get; init; }
+    public bool AnonymousProposals { get; init; }
 
     public int WinnerCount { get; init; }
 
@@ -38,6 +39,7 @@ public sealed class EventConfigResponse
             WheelMode = c?.WheelMode ?? EventConfig.SavedWithoutSettings.WheelMode,
             RichSharePreview = c?.RichSharePreview ?? EventConfig.SavedWithoutSettings.RichSharePreview,
             AllowSeries = c?.AllowSeries ?? false,
+            AnonymousProposals = c?.AnonymousProposals ?? false,
             WinnerCount = evt.TargetWinnerCount,
             Recurrence = evt.Recurrence,
             HasNextOccurrence = !string.IsNullOrEmpty(evt.NextOccurrenceEventId),
@@ -63,6 +65,7 @@ public sealed class PatchEventConfigRequest
 
     public bool? RichSharePreview { get; init; }
     public bool? AllowSeries { get; init; }
+    public bool? AnonymousProposals { get; init; }
 
     public int? WinnerCount { get; init; }
 

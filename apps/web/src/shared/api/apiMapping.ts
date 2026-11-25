@@ -36,6 +36,7 @@ export function mapEventData(raw: RawEventData): EventData {
         id: p._id,
         pseudo: p.pseudo,
         isCreator: p.isCreator ?? false,
+        isCoHost: p.isCoHost ?? false,
         avatarId: p.avatarId,
         handle: p.handle ?? null,
         accentColor: p.accentColor ?? null,

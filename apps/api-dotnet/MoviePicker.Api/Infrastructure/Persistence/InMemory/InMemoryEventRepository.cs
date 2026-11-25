@@ -256,16 +256,18 @@ public sealed class InMemoryEventRepository : IEventRepository
         return Task.FromResult(result);
     }
 
-    public Task<long> ForgetRemovedUserAsync(string userId, CancellationToken ct = default)
+    public Task<long> ForgetUserAsync(string userId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(userId))
             return Task.FromResult(0L);
 
+        static bool Remembers(Event e, string id) => e.RemovedUserIds.Contains(id) || e.IsCoHost(id);
+
         long count = 0;
-        foreach (var eventId in _byId.Values.Where(e => e.RemovedUserIds.Contains(userId)).Select(e => e.Id).ToList())
+        foreach (var eventId in _byId.Values.Where(e => Remembers(e, userId)).Select(e => e.Id).ToList())
         {
-            var forgotten = _byId.SwapIfPresent(eventId, e => e.RemovedUserIds.Contains(userId)
-                ? e.LettingBackIn(userId) with { Version = e.Version + 1, WriteSeq = e.WriteSeq + 1 }
+            var forgotten = _byId.SwapIfPresent(eventId, e => Remembers(e, userId)
+                ? e.LettingBackIn(userId).WithoutCoHost(userId) with { Version = e.Version + 1, WriteSeq = e.WriteSeq + 1 }
                 : null);
             if (forgotten is not null)
                 count++;

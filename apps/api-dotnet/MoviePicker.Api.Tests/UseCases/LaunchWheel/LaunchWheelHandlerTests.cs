@@ -182,6 +182,26 @@ public sealed class LaunchWheelHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_AnonymousNight_DoesNotRevealWhoProposedTheWinner()
+    {
+        var evt = ActiveEvent() with { Config = new EventConfig { AnonymousProposals = true } };
+        var movies = new List<Movie>
+        {
+            new() { Id = "mov2", EventId = evt.Id, ParticipantId = "p2", TmdbId = 2, Title = "Seul candidat", Year = "2021", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
+        };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
+        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movies);
+        _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+
+        var result = await _sut.HandleAsync("evt1");
+
+        Assert.Equal("mov2", result.Winner.Id);
+        Assert.Equal(string.Empty, result.Winner.ParticipantId);
+    }
+
+    [Fact]
     public async Task HandleAsync_Success_UpdatesEventWithWinnerAndReturnsResponse()
     {
         var evt = ActiveEvent();

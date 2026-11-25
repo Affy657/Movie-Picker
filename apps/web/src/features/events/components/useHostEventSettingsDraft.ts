@@ -104,6 +104,7 @@ export function useHostEventSettingsDraft({
   const [maxVotes, setMaxVotes] = useState(initialFields.maxVotes);
   const [wheelMode, setWheelMode] = useState<WheelMode>(initialFields.wheelMode);
   const [allowSeries, setAllowSeries] = useState(initialFields.allowSeries);
+  const [anonymousProposals, setAnonymousProposals] = useState(initialFields.anonymousProposals);
   const [richSharePreview, setRichSharePreview] = useState(initialFields.richSharePreview);
   const [recurrence, setRecurrence] = useState<EventRecurrence | null>(cfg.recurrence ?? null);
   const [groupId, setGroupId] = useState<string | null>(cfg.groupId ?? null);
@@ -123,6 +124,9 @@ export function useHostEventSettingsDraft({
     [event.myParticipant, event.participants]
   );
 
+  const anonymousLocked = (event.movieCount ?? 0) > 0;
+  const anonymousRule = anonymousLocked ? !!event.config?.anonymousProposals : anonymousProposals;
+
   const ruleFields: TemplateFormFields = {
     themeEmoji,
     themeText,
@@ -135,6 +139,7 @@ export function useHostEventSettingsDraft({
     wheelMode,
     richSharePreview,
     allowSeries,
+    anonymousProposals: anonymousRule,
     winnerCount,
   };
   const templateDraft = buildTemplateDraft(ruleFields);
@@ -151,6 +156,7 @@ export function useHostEventSettingsDraft({
     setMaxVotes(next.maxVotes);
     setWheelMode(next.wheelMode);
     setAllowSeries(next.allowSeries);
+    setAnonymousProposals(next.anonymousProposals);
     setRichSharePreview(next.richSharePreview);
     setWinnerCount(next.winnerCount);
   }, []);
@@ -200,6 +206,7 @@ export function useHostEventSettingsDraft({
     if (patch.maxVotes !== undefined) setMaxVotes(patch.maxVotes);
     if (patch.wheelMode !== undefined) setWheelMode(patch.wheelMode);
     if (patch.allowSeries !== undefined) setAllowSeries(patch.allowSeries);
+    if (patch.anonymousProposals !== undefined) setAnonymousProposals(patch.anonymousProposals);
     if (patch.richSharePreview !== undefined) setRichSharePreview(patch.richSharePreview);
     if (patch.winnerCount !== undefined) setWinnerCount(patch.winnerCount);
     if (patch.themeEmoji !== undefined) setThemeEmoji(patch.themeEmoji);
@@ -328,6 +335,7 @@ export function useHostEventSettingsDraft({
       maxVotesPerParticipant,
       wheelMode,
       allowSeries,
+      anonymousProposals: anonymousRule,
       richSharePreview,
       winnerCount: winnerCountValue ?? savedRef.current.winnerCount,
       recurrence,
@@ -392,6 +400,7 @@ export function useHostEventSettingsDraft({
     setWinnerCount,
     drawnWinnerCount,
     configLocked,
+    anonymousLocked,
     recurrenceLocked,
     fieldErrors: shownFieldErrors,
     saveError,

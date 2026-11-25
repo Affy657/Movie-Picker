@@ -76,9 +76,8 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             : [];
         var cardById = cards.ToDictionary(c => c.Id);
 
-        var creatorUserId = evt.CreatorUserId;
         var participantsSummary = participants
-            .Select(p => ToParticipantSummary(p, cardById, creatorUserId))
+            .Select(p => ToParticipantSummary(p, cardById, evt))
             .ToList();
 
         return new EventDetailResponse
@@ -124,14 +123,15 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
     private static EventParticipantSummaryResponse ToParticipantSummary(
         Participant p,
         Dictionary<string, UserCard> cardById,
-        string? creatorUserId)
+        Event evt)
     {
         var person = DisplayedPerson.LinkedTo(p, cardById);
         return new EventParticipantSummaryResponse
         {
             Id = p.Id,
             Pseudo = p.Pseudo,
-            IsCreator = !string.IsNullOrEmpty(creatorUserId) && p.UserId == creatorUserId,
+            IsCreator = evt.IsCreatedBy(p.UserId),
+            IsCoHost = evt.IsCoHost(p.UserId),
             AvatarId = person?.AvatarId ?? string.Empty,
             Handle = person?.PublicHandle,
             AccentColor = person?.AccentColor,

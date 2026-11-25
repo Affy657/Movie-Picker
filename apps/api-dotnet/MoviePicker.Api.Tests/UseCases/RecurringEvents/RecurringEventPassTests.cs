@@ -152,6 +152,27 @@ public sealed class RecurringEventPassTests
     }
 
     [Fact]
+    public async Task RunAsync_AnonymousSeries_KeepsTheNextOccurrenceAnonymous()
+    {
+        var parent = FinishedWeekly();
+        GivenCandidates(parent with { Config = parent.Config! with { AnonymousProposals = true } });
+
+        await _sut.RunAsync();
+
+        Assert.True(CapturedNewEvent().Config!.AnonymousProposals);
+    }
+
+    [Fact]
+    public async Task RunAsync_NewOccurrence_StartsWithoutCoHosts()
+    {
+        GivenCandidates(FinishedWeekly() with { CoHostUserIds = ["co-host"] });
+
+        await _sut.RunAsync();
+
+        Assert.Empty(CapturedNewEvent().CoHostUserIds);
+    }
+
+    [Fact]
     public async Task RunAsync_NewOccurrence_InheritsTheRecurrenceSoTheSeriesKeepsGoing()
     {
         GivenCandidates(FinishedWeekly());

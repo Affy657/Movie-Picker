@@ -309,6 +309,22 @@ describe('ProposeMovieDialog', () => {
     expect(within(marley).queryByRole('button', { name: /^(Proposer|Voter)/ })).toBeNull();
   });
 
+  it('names nobody behind a movie already proposed in an anonymous night, and says mine stays anonymous', async () => {
+    const user = userEvent.setup();
+    renderDialog({
+      anonymous: true,
+      movies: [movie({ id: 'm-jaws', tmdbId: 578, participantId: '', proposerPseudo: '' })],
+    });
+
+    expect(screen.getByText('Votre proposition restera anonyme.')).toBeInTheDocument();
+    await search(user, 'dents');
+
+    const results = await screen.findByRole('list', { name: 'Résultats de la recherche' });
+    const jaws = within(results).getAllByRole('listitem')[0]!;
+    expect(jaws).toHaveTextContent('Déjà proposé');
+    expect(jaws).not.toHaveTextContent('Proposé par');
+  });
+
   it('opens a preview from the title and proposes with a word to convince', async () => {
     api.fetchMovieDetails.mockResolvedValue(DUNE_DETAILS);
     const user = userEvent.setup();

@@ -36,6 +36,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         new("events", "events_startAtUtc"),
         new("events", "events_creator_creationRequest_unique", Unique: true),
         new("events", "events_removedUserIds"),
+        new("events", "events_coHostUserIds"),
 
         new("movies", "movies_participantId"),
         new("movies", "movies_eventId_tmdbId_mediaType_unique", Unique: true),
@@ -284,6 +285,23 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         var removedUser = new BsonDocument("removedUserIds", ObjectId.GenerateNewId().ToString());
 
         Assert.Contains("events_removedUserIds", await WinningPlanAsync("events", removedUser));
+    }
+
+    [MongoFact]
+    public async Task ForgettingACoHost_FindsTheNightsThroughTheirIndex()
+    {
+        var userId = ObjectId.GenerateNewId().ToString();
+        var forgotten = new BsonDocument("$or", new BsonArray
+        {
+            new BsonDocument("removedUserIds", userId),
+            new BsonDocument("coHostUserIds", userId)
+        });
+
+        var plan = await WinningPlanAsync("events", forgotten);
+
+        Assert.Contains("events_removedUserIds", plan);
+        Assert.Contains("events_coHostUserIds", plan);
+        Assert.DoesNotContain("COLLSCAN", plan);
     }
 
     private async Task<string> WinningPlanAsync(string collection, BsonDocument filter)

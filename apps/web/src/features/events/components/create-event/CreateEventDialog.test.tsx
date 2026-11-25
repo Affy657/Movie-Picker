@@ -35,6 +35,7 @@ const HORROR_TEMPLATE = {
   wheelMode: 'strictRandom',
   richSharePreview: true,
   allowSeries: true,
+  anonymousProposals: false,
   winnerCount: 1,
 };
 
@@ -578,6 +579,7 @@ describe('CreateEventDialog', () => {
         wheelMode: 'weightedByVotes',
         winnerCount: 1,
         allowSeries: false,
+        anonymousProposals: false,
       });
       expect(mockTrack).toHaveBeenCalledWith('event_created');
     });
@@ -777,6 +779,7 @@ describe('CreateEventDialog', () => {
           maxParticipants: 12,
           wheelMode: 'strictRandom',
           allowSeries: true,
+          anonymousProposals: false,
         })
       );
     });
@@ -793,6 +796,7 @@ describe('CreateEventDialog', () => {
           wheelMode: 'weightedByVotes',
           winnerCount: 1,
           allowSeries: false,
+          anonymousProposals: false,
         },
       });
       renderDialog();
@@ -822,6 +826,7 @@ describe('CreateEventDialog', () => {
           wheelMode: 'strictRandom',
           winnerCount: 1,
           allowSeries: false,
+          anonymousProposals: false,
         },
       });
       renderDialog({ reuse: { slug: 'old', title: 'Soirée du 31 octobre' } });

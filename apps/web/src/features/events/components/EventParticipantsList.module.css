@@ -11,12 +11,17 @@
   color: var(--color-badge-host-text);
 }
 
-.row .remove {
+.row .remove,
+.row .coHost {
   color: var(--color-text-muted);
 }
 
 @media (hover: hover) {
   .row .remove:hover:not(:disabled) {
     color: var(--color-error);
+  }
+
+  .row .coHost:hover:not(:disabled) {
+    color: var(--color-primary-text);
   }
 }
