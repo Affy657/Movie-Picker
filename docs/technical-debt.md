@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière et sa ligne du sommaire, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-120`. Elle se range dans la partie de son `state`, avec les entrées de sa zone, et gagne sa ligne au sommaire dans le même commit. Une entrée qui change de `state` change de partie et de tableau.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-121`. Elle se range dans la partie de son `state`, avec les entrées de sa zone, et gagne sa ligne au sommaire dans le même commit. Une entrée qui change de `state` change de partie et de tableau.
 5. Deux dettes qui se règlent par le même geste n'en font qu'une, sous l'identifiant le plus ancien ; les identifiants absorbés restent cités dans `refs`.
 6. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 7. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
@@ -44,11 +44,12 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-116 | Tests, CI et outillage | la porte Lighthouse mesure un profil que l'API ne renvoie pas |
 | DEBT-118 | Tests, CI et outillage | la passation d'hôte à la suppression d'un compte n'est testée qu'en mémoire |
 
-### Geste humain (19)
+### Geste humain (20)
 
 | Dette | Zone | Sujet |
 |---|---|---|
 | DEBT-033 | Produit | le plafond de participants promet plus que le flux et la base n'encaissent, et le front en tient un autre |
+| DEBT-120 | Produit | l'heure de création d'un film trahit son proposant dans une soirée anonyme |
 | DEBT-096 | API et données | l'adaptateur en mémoire reste dans l'assembly de production |
 | DEBT-101 | API et données | les titres ajoutés par un membre à la liste d'un autre ne suivent pas la suppression de son compte |
 | DEBT-009 | Infra et déploiement | palier Atlas jamais confirmé |
@@ -306,6 +307,17 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 - fini-quand: le plafond est aligné sur une mesure réelle du flux en production et n'est écrit qu'une fois, côté API
 - piege: le flux vit 270 s (`EventLiveOptions.StreamLifetime`) parce que le service Cloud Run coupe toute requête à 300 s ; `EventSource` reconnecte seul après 2 s et la page recharge la soirée sur `ready`. `UseResponseCompression` exclut `text/event-stream`, sinon le flux part en tampon. Un flux ouvert garde l'instance allumée et facturée tant qu'un participant a la page visible : le front ferme le flux dès que l'onglet est masqué ou la soirée finie. Les plafonds d'`EventStreamGate` sont comptés par instance, pas globalement.
 - refs: C3 ; absorbe DEBT-083 (2026-11-25)
+
+## DEBT-120 l'heure de création d'un film trahit son proposant dans une soirée anonyme
+
+- state: humain
+- bloque: décision produit, garder la limite ou rendre aléatoire l'ordre d'ajout des soirées anonymes
+- impact: dans une soirée anonyme, l'identifiant de chaque film (un ObjectId) et son `createdAt` portent son heure de création, et l'identifiant de chaque participant porte son heure d'arrivée. Avec les outils du navigateur, recouper les deux désigne le proposant de certains films, d'abord ceux que l'hôte propose avant de partager le lien. La même déduction se fait sans outil en regardant la soirée en direct
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/ListMovies/ListMoviesForEventHandler.cs`, `apps/api-dotnet/MoviePicker.Api/Application/DTOs/MovieWithScoreResponse.cs`, identifiants générés dans `apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/Mongo/MongoMovieRepository.cs`
+- verify: `GET /api/v1/events/<slug>/movies` d'une soirée anonyme ; encore ouvert tant que les films y portent un `createdAt` et un `_id` horodaté
+- fix: pour une soirée anonyme, des identifiants de film à horodatage aléatoire et aucun `createdAt` dans les réponses ; le tri « Ajout » y devient aléatoire
+- fini-quand: rien dans les réponses d'une soirée anonyme ne situe un film dans le temps
+- refs: revue des co-hôtes et des propositions anonymes (2026-11-25)
 
 ## DEBT-096 l'adaptateur en mémoire reste dans l'assembly de production
 
