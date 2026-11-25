@@ -19,7 +19,7 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 
 ## Sommaire
 
-### Pour un agent (20)
+### Pour un agent (14)
 
 | Dette | Zone | Sujet |
 |---|---|---|
@@ -29,13 +29,7 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-103 | API et données | le contrat ne décrit pas encore les chaînes libres des requêtes |
 | DEBT-107 | API et données | les soirées d'un groupe sont toutes relues à chaque affichage |
 | DEBT-113 | API et données | une soirée récurrente close faute de participant garde sa récurrence |
-| DEBT-057 | Front | les images de la page bloquent la lecture CORS du canvas de la story |
-| DEBT-104 | Front | quelques règles de soirée restent calculées à deux endroits côté front |
 | DEBT-108 | Front | quatre pages publiques restent sous le plancher Lighthouse mobile, hors de la porte |
-| DEBT-110 | Front | quelques affiches passent encore par le relais en w500 |
-| DEBT-117 | Front | la suggestion d'anglais charge la langue anglaise dès l'ouverture |
-| DEBT-119 | Front | la fenêtre Membres d'une liste ou d'un groupe garde sa propre ligne de personne |
-| DEBT-037 | Infra et déploiement | les jobs Cloud Scheduler restent décrits par le pipeline, et le secret de l'ancien jeton partagé survit |
 | DEBT-089 | Tests, CI et outillage | un test de suggestion d'idée tombe sur le délai de 100 ms d'une regex quand le poste est chargé |
 | DEBT-098 | Tests, CI et outillage | deux tests d'intégration échouent parfois sous charge |
 | DEBT-099 | Tests, CI et outillage | la garde anti-tutoiement ne connaît qu'une liste de mots |
@@ -44,7 +38,7 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-116 | Tests, CI et outillage | la porte Lighthouse mesure un profil que l'API ne renvoie pas |
 | DEBT-118 | Tests, CI et outillage | la passation d'hôte à la suppression d'un compte n'est testée qu'en mémoire |
 
-### Geste humain (19)
+### Geste humain (20)
 
 | Dette | Zone | Sujet |
 |---|---|---|
@@ -52,6 +46,7 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-096 | API et données | l'adaptateur en mémoire reste dans l'assembly de production |
 | DEBT-101 | API et données | les titres ajoutés par un membre à la liste d'un autre ne suivent pas la suppression de son compte |
 | DEBT-009 | Infra et déploiement | palier Atlas jamais confirmé |
+| DEBT-037 | Infra et déploiement | les jobs Cloud Scheduler restent décrits par le pipeline, et le secret de l'ancien jeton partagé survit |
 | DEBT-049 | Infra et déploiement | les alertes n'ont qu'un canal, une boîte de réception |
 | DEBT-054 | Infra et déploiement | l'apex porte deux revendications Hosting, et les quatre domaines servent encore un certificat temporaire |
 | DEBT-062 | Infra et déploiement | les sauvegardes vivent dans le projet de production |
@@ -68,7 +63,7 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-065 | Sécurité et accès | l'inscription ne vérifie pas que l'adresse e-mail appartient à l'inscrit |
 | DEBT-115 | Tests, CI et outillage | les mises à jour de sécurité Dependabot des dépendances transitives échouent |
 
-### Différées (30)
+### Différées (31)
 
 | Dette | Zone | Sujet |
 |---|---|---|
@@ -91,6 +86,7 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-090 | API et données | les aperçus de Mes soirées lisent tous les films et tous les participants de chaque soirée de la page |
 | DEBT-097 | API et données | six migrations terminées et huit méthodes de port attendent la fin de la rétention des sauvegardes |
 | DEBT-026 | Front | le flou de fond des barres collantes n'a jamais été mesuré au défilement |
+| DEBT-057 | Front | les images de la page bloquent la lecture CORS du canvas de la story |
 | DEBT-111 | Front | les schémas de `/tech` n'ont pas de variante verticale sur téléphone |
 | DEBT-043 | Infra et déploiement | toute adresse inconnue répond 200 |
 | DEBT-044 | Infra et déploiement | le conteneur de l'API est décrit à deux endroits, le pipeline et Terraform |
@@ -163,24 +159,6 @@ Se traite en autonomie, sans attendre personne.
 - verify: `grep -rl "Recurr" apps/api-dotnet/MoviePicker.Api.Tests/UseCases/Auth` ; encore ouvert tant que la commande ne rend rien
 - fix: un test qui ferme une soirée récurrente par passation impossible et vérifie qu'aucune occurrence ne naît, ou couper la récurrence à la clôture
 
-## DEBT-057 les images de la page bloquent la lecture CORS du canvas de la story
-
-- state: agent
-- impact: les `<img>` de l'app chargent affiches et avatars sans attribut `crossorigin`, donc le navigateur range une réponse inutilisable par un canvas dans son cache HTTP. La génération d'une story doit rappeler chaque ressource avec `cache: 'reload'` (`apps/web/src/features/events/story/storyAssets.ts`) pour éviter cette entrée, soit jusqu'à onze requêtes revalidées par ouverture de la fenêtre de partage. Un cache de ressources par session de dialogue absorbe déjà le coût des slides suivantes
-- ou: `apps/web/src/shared/components/` et les composants d'affiche et d'avatar qui rendent un `<img>`
-- verify: `grep -rn "posterImageSrc\|avatarUrl" apps/web/src --include=*.tsx` ; encore ouvert tant qu'un de ces `<img>` n'a pas `crossOrigin="anonymous"`
-- fix: poser `crossOrigin="anonymous"` sur les `<img>` d'affiche et d'avatar, vérifier que l'API et DiceBear répondent bien `Access-Control-Allow-Origin` sur ces routes, puis repasser la story en `cache: 'default'`
-- piege: une seule route sans en-tête CORS et l'image ne s'affiche plus du tout sur la page, pas seulement dans la story : contrôler chaque origine avant de basculer
-
-## DEBT-104 quelques règles de soirée restent calculées à deux endroits côté front
-
-- state: agent
-- impact: l'hôte se calcule `event.isHost === true || (event.isHost == null && hostToken)` dans `useEventWheel` et `!!event.isHost` dans les cartes et la barre de soirée ; la bascule « exclure du tirage » est appelée depuis `EventMoviesSection` et `useMovieNight` ; une proposition depuis le dialogue invalide deux fois les mêmes requêtes ; `MovieBrowseCard` prend par défaut des libellés de liste quand `ListMoviesPage` n'en passe pas
-- ou: `apps/web/src/features/events/`, `apps/web/src/features/movies/components/MovieBrowseCard.tsx`
-- verify: `grep -rn "isHost == null" apps/web/src/features/events`
-- fix: l'hôte dans `nightRules.ts` (aligner le comportement demande de vérifier le cas d'un ancien client sans `isHost`) ; la bascule dans `useNightMovieActions` ; une seule invalidation ; libellés toujours passés par la page
-- fini-quand: chaque règle d'un film en soirée n'a qu'une définition
-
 ## DEBT-108 quatre pages publiques restent sous le plancher Lighthouse mobile, hors de la porte
 
 - state: agent
@@ -190,41 +168,6 @@ Se traite en autonomie, sans attendre personne.
 - fix: pour `/tech`, `content-visibility` par section avec une hauteur estimée par section, ou hydrater le prérendu au lieu de le remplacer ; pour les trois autres, le LCP de l'affiche (préchargement annoncé dès le document, ou première rangée moins haute)
 - fini-quand: chaque page atteint 85 en médiane sur le runner et entre dans `URLS`, sans desserrer la porte (I4)
 - piege: avec ces quatre pages, sept shards mesurent trois pages chacun : surveiller la durée du job
-
-## DEBT-110 quelques affiches passent encore par le relais en w500
-
-- state: agent
-- impact: le relais sert w92, w185, w342 et w500 depuis le 2026-11-23, mais `HistoryEventRow`, `UpcomingEventCard`, `GroupFilms`, `GroupNextNight` et `MovieRatingDialog` demandent encore la w500 pour une petite vignette, et `HomeMostProposed` pourrait passer en w92. Chaque taille a sa propre entrée de cache : jusqu'à quatre par affiche, pour un plafond `PosterCacheMaxEntries` de 2 000.
-- ou: les composants cités (`features/events/pages/my-events/`, `features/groups/components/`, `features/events/components/MovieRatingDialog.tsx`, `app/pages/home/HomeMostProposed.tsx`), `apps/web/src/shared/utils/posterUrl.ts`, le relais d'affiches de l'API
-- verify: `grep -L "posterSrcAtSize" apps/web/src/features/events/pages/my-events/HistoryEventRow.tsx apps/web/src/features/events/pages/my-events/UpcomingEventCard.tsx apps/web/src/features/groups/components/GroupFilms.tsx apps/web/src/features/groups/components/GroupNextNight.tsx apps/web/src/features/events/components/MovieRatingDialog.tsx` ; encore ouvert tant que la commande rend un fichier
-- fix: `posterSrcAtSize` à la taille d'affichage dans chaque composant cité, puis relever le plafond du cache s'il se remplit
-
-## DEBT-117 la suggestion d'anglais charge la langue anglaise dès l'ouverture
-
-- state: agent
-- impact: pour un premier visiteur dont le navigateur n'est pas en français, `LanguageSuggestion` télécharge et lit la langue anglaise (environ 69 Ko compressés) dès le montage de l'app, en concurrence avec l'élément LCP de la page. La porte Lighthouse ne le voit pas (le run de la CI ne la déclenche pas, vérifié le 2026-11-24 : aucune requête `i18n-en`)
-- ou: `apps/web/src/app/components/LanguageSuggestion.tsx`
-- verify: ouvrir le site dans un Chrome en anglais sans `moviepicker-locale`, onglet Réseau : `i18n-en` ne doit partir qu'après les images de la page
-- fix: charger la langue et afficher la suggestion après `whenPageImagesSettle`
-
-## DEBT-119 la fenêtre Membres d'une liste ou d'un groupe garde sa propre ligne de personne
-
-- state: agent
-- impact: `MembersDialog` dessine encore ses lignes avec un `PersonRow` local (avatar 28 px, nom et @pseudo plus petits, sans filet entre deux lignes) au lieu de la primitive `shared/components/PersonRow` des fenêtres Participants, Partager et Abonnés : les mêmes personnes n'ont pas la même ligne d'une fenêtre à l'autre, ce que AGENTS.md interdit désormais
-- ou: `apps/web/src/features/library/components/MembersDialog.tsx` (fonction locale `PersonRow`, ses classes `row`, `rowText`, `rowName`, `rowDetail`, `rowAction` dans `MembersDialog.module.css`), `apps/web/src/shared/components/PersonRow.tsx`
-- verify: `grep -n "^function PersonRow" apps/web/src/features/library/components/MembersDialog.tsx` ; encore ouvert tant que la fonction locale existe
-- fix: faire passer les lignes de membres et d'invitations par la primitive, puis supprimer la fonction locale et ses classes
-- piege: `useFocusAfterLeaving` rend le focus à la ligne suivante quand un membre part, par une référence et un `tabIndex={-1}` posés sur le `<li>` : la primitive doit d'abord regagner les props `rowRef` et `tabIndex` (retirées le 2026-11-24 faute d'appelant), avec leur style `:focus-visible` sur la ligne
-
-## DEBT-037 les jobs Cloud Scheduler restent décrits par le pipeline, et le secret de l'ancien jeton partagé survit
-
-- state: agent
-- impact: l'API n'accepte plus qu'un jeton OIDC signé par le compte du planificateur (`GoogleOidcSchedulerTokenValidator`, `SchedulerCallerAuthenticator`) : le chemin `X-Scheduler-Token` et `SchedulerTokenValidator` ont été retirés le 2026-09-24, après vérification que les trois jobs de production envoient le jeton OIDC sans en-tête partagé. Deux restes : les cinq jobs (rappels, soirées récurrentes, soirées terminées, rechargement du catalogue, relance de notation) sont encore créés par `deploy.yml` et non décrits en Terraform, et le secret `SCHEDULER_TOKEN` existe toujours dans Secret Manager et dans `api_secret_names`.
-- ou: `.github/workflows/deploy.yml` (étape « Scheduled passes: Cloud Scheduler »), `infra/terraform/environments/production/main.tf` (`api_secret_names` porte encore `SCHEDULER_TOKEN`, `module.ci` porte encore `roles/cloudscheduler.admin` et `serviceAccountUser` sur le compte du planificateur)
-- verify: `grep -c "Scheduled passes: Cloud Scheduler" .github/workflows/deploy.yml` ; encore ouvert tant que la commande rend autre chose que 0
-- fix: en un seul lot : décrire les cinq jobs en Terraform (`google_cloud_scheduler_job`, `http_target` avec `oidc_token { service_account_email, audience }`, schedules `*/30 * * * *`, `15 3 * * *`, `45 3 * * *`, `20 */5 * * *` et `0 10 * * *`, fuseau `Europe/Paris`, `attempt_deadline` 300 s, `retry_config { retry_count = 3, min_backoff_duration = "30s", max_backoff_duration = "300s" }`, comme `deploy.yml` les pose, URI `<URL run.app du service>/api/v1/scheduler/<passe>`) et les importer (`pnpm run terraform -- import 'google_cloud_scheduler_job.<nom>' projects/<PROJET_GCP>/locations/europe-west1/jobs/<job>`, geste qui écrit l'état : à faire avec l'accord de l'utilisateur, puis `apply` par `infra.yml`) ; retirer l'étape de `deploy.yml`, `roles/cloudscheduler.admin` et le `serviceAccountUser` sur le planificateur de `module.ci`. Le secret se détruit en dernier, à partir du 2026-10-21 (voir `piege`) : `pnpm run terraform -- state rm 'module.api_secrets.google_secret_manager_secret_iam_member.accessor["SCHEDULER_TOKEN"]'`, idem pour `google_secret_manager_secret.this["SCHEDULER_TOKEN"]`, `gcloud secrets delete SCHEDULER_TOKEN`, retrait de `api_secret_names`.
-- fini-quand: `SCHEDULER_TOKEN` n'existe plus dans Secret Manager, ni dans `main.tf`, les jobs sont dans l'état Terraform, `deploy.yml` ne les crée plus et `plan` est vide
-- piege: une révision antérieure au 2026-09-21 ramenée par `rollback.yml` monte encore `SCHEDULER_TOKEN:latest` et attend l'en-tête : le secret doit survivre tant qu'une telle révision est dans le dépôt d'images (30 jours), et les jobs, qui n'envoient plus l'en-tête, recevraient de toute façon un 401 d'une telle révision. L'audience attendue est `VITE_API_URL` sans barre finale (`SCHEDULER_OIDC_AUDIENCE`), pas l'URL `run.app` que les jobs appellent. Le service est public (`allUsers` en `run.invoker`, tenu par Terraform dans le module `cloud-run-api`, plus par `deploy.yml`), la vérification du jeton se fait dans l'API, pas par IAM Cloud Run ; le webhook Ko-fi reste sur son jeton, Ko-fi ne signe pas.
 
 ## DEBT-089 un test de suggestion d'idée tombe sur le délai de 100 ms d'une regex quand le poste est chargé
 
@@ -335,6 +278,17 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 - verify: lire le palier dans la console Atlas, onglet du cluster ; encore ouvert tant que la lecture n'a pas été faite. `atlas-list-clusters` via le MCP mongodb le rend aussi, une fois l'accès IA activé.
 - fini-quand: le palier est lu et le mot « présumé » retiré de DEBT-008 et DEBT-033
 - piege: sans le MCP, tout ce que le cluster dit de lui-même se lit par `mongosh` sans rien installer : `docker run --rm mongo:8 mongosh --quiet "$MONGODB_URI" --eval 'db.serverStatus().connections'`, et `db.stats()` par base pour les tailles. Le palier lui-même ne se lit que dans la console, `serverStatus` ne le dit pas.
+
+## DEBT-037 les jobs Cloud Scheduler restent décrits par le pipeline, et le secret de l'ancien jeton partagé survit
+
+- state: humain
+- bloque: trois gestes que l'agent ne fait pas seul : l'import Terraform des cinq jobs écrit l'état de production, l'`apply` attend le relecteur requis de l'environnement `infra-apply`, et `gcloud secrets delete SCHEDULER_TOKEN` est irréversible. L'agent peut écrire les ressources Terraform et retirer l'étape de `deploy.yml` sur une branche, à ne fusionner qu'avec l'import fait le même jour, sinon le `plan` suivant voudrait recréer des jobs qui existent
+- impact: l'API n'accepte plus qu'un jeton OIDC signé par le compte du planificateur (`GoogleOidcSchedulerTokenValidator`, `SchedulerCallerAuthenticator`) : le chemin `X-Scheduler-Token` et `SchedulerTokenValidator` ont été retirés le 2026-09-24, après vérification que les trois jobs de production envoient le jeton OIDC sans en-tête partagé. Deux restes : les cinq jobs (rappels, soirées récurrentes, soirées terminées, rechargement du catalogue, relance de notation) sont encore créés par `deploy.yml` et non décrits en Terraform, et le secret `SCHEDULER_TOKEN` existe toujours dans Secret Manager et dans `api_secret_names`.
+- ou: `.github/workflows/deploy.yml` (étape « Scheduled passes: Cloud Scheduler »), `infra/terraform/environments/production/main.tf` (`api_secret_names` porte encore `SCHEDULER_TOKEN`, `module.ci` porte encore `roles/cloudscheduler.admin` et `serviceAccountUser` sur le compte du planificateur)
+- verify: `grep -c "Scheduled passes: Cloud Scheduler" .github/workflows/deploy.yml` ; encore ouvert tant que la commande rend autre chose que 0
+- fix: en un seul lot : décrire les cinq jobs en Terraform (`google_cloud_scheduler_job`, `http_target` avec `oidc_token { service_account_email, audience }`, schedules `*/30 * * * *`, `15 3 * * *`, `45 3 * * *`, `20 */5 * * *` et `0 10 * * *`, fuseau `Europe/Paris`, `attempt_deadline` 300 s, `retry_config { retry_count = 3, min_backoff_duration = "30s", max_backoff_duration = "300s" }`, comme `deploy.yml` les pose, URI `<URL run.app du service>/api/v1/scheduler/<passe>`) et les importer (`pnpm run terraform -- import 'google_cloud_scheduler_job.<nom>' projects/<PROJET_GCP>/locations/europe-west1/jobs/<job>`, geste qui écrit l'état : à faire avec l'accord de l'utilisateur, puis `apply` par `infra.yml`) ; retirer l'étape de `deploy.yml`, `roles/cloudscheduler.admin` et le `serviceAccountUser` sur le planificateur de `module.ci`. Le secret se détruit en dernier, à partir du 2026-10-21 (voir `piege`) : `pnpm run terraform -- state rm 'module.api_secrets.google_secret_manager_secret_iam_member.accessor["SCHEDULER_TOKEN"]'`, idem pour `google_secret_manager_secret.this["SCHEDULER_TOKEN"]`, `gcloud secrets delete SCHEDULER_TOKEN`, retrait de `api_secret_names`.
+- fini-quand: `SCHEDULER_TOKEN` n'existe plus dans Secret Manager, ni dans `main.tf`, les jobs sont dans l'état Terraform, `deploy.yml` ne les crée plus et `plan` est vide
+- piege: une révision antérieure au 2026-09-21 ramenée par `rollback.yml` monte encore `SCHEDULER_TOKEN:latest` et attend l'en-tête : le secret doit survivre tant qu'une telle révision est dans le dépôt d'images (30 jours), et les jobs, qui n'envoient plus l'en-tête, recevraient de toute façon un 401 d'une telle révision. L'audience attendue est `VITE_API_URL` sans barre finale (`SCHEDULER_OIDC_AUDIENCE`), pas l'URL `run.app` que les jobs appellent. Le service est public (`allUsers` en `run.invoker`, tenu par Terraform dans le module `cloud-run-api`, plus par `deploy.yml`), la vérification du jeton se fait dans l'API, pas par IAM Cloud Run ; le webhook Ko-fi reste sur son jeton, Ko-fi ne signe pas.
 
 ## DEBT-049 les alertes n'ont qu'un canal, une boîte de réception
 
@@ -696,6 +650,16 @@ Ne se traitent que quand leur `declencheur` survient.
 - verify: `grep -rn "backdrop-filter" apps/web/src --include=*.css`
 - fix: mesurer d'abord (Performance panel, frames longues au défilement) ; si confirmé, fond opaque légèrement translucide sans flou, ou flou réservé à `(hover: hover)`
 - piege: ne pas retirer le flou sur une intuition, c'est un choix visuel de l'utilisateur. Mesure avant geste.
+
+## DEBT-057 les images de la page bloquent la lecture CORS du canvas de la story
+
+- state: differe
+- declencheur: une ouverture de la fenêtre de partage mesurée lente sur téléphone, ou une story qui sort avec des affiches ou des avatars manquants
+- impact: les `<img>` de l'app chargent affiches et avatars sans attribut `crossorigin`, donc le navigateur range une réponse inutilisable par un canvas dans son cache HTTP. La génération d'une story doit rappeler chaque ressource avec `cache: 'reload'` (`apps/web/src/features/events/story/storyAssets.ts`) pour éviter cette entrée, soit jusqu'à onze requêtes revalidées par ouverture de la fenêtre de partage. Un cache de ressources par session de dialogue absorbe déjà le coût des slides suivantes. Mesuré le 2026-11-25 : l'API de production et celle de recette répondent `Access-Control-Allow-Origin` (l'origine du front) avec `Vary: Origin` sur `/api/v1/posters/*` et `/api/v1/avatars/*`, TMDB et DiceBear répondent `*`, et le service worker range déjà les images TMDB en CORS. Depuis DEBT-110, la page affiche les affiches en w92 à w342 quand la story lit la w500 : elles ne partagent plus d'entrée de cache, et le gain du correctif se réduit aux avatars, pour une quarantaine de `<img>` à toucher
+- ou: `apps/web/src/shared/components/` et les composants d'affiche et d'avatar qui rendent un `<img>`
+- verify: `grep -rn "posterImageSrc\|avatarUrl" apps/web/src --include=*.tsx` ; encore ouvert tant qu'un de ces `<img>` n'a pas `crossOrigin="anonymous"`
+- fix: poser `crossOrigin="anonymous"` sur les `<img>` d'affiche et d'avatar, vérifier que l'API et DiceBear répondent bien `Access-Control-Allow-Origin` sur ces routes, puis repasser la story en `cache: 'default'`
+- piege: une seule route sans en-tête CORS et l'image ne s'affiche plus du tout sur la page, pas seulement dans la story : contrôler chaque origine avant de basculer
 
 ## DEBT-111 les schémas de `/tech` n'ont pas de variante verticale sur téléphone
 
