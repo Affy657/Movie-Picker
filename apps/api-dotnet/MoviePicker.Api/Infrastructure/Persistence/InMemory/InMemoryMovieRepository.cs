@@ -144,6 +144,9 @@ public sealed class InMemoryMovieRepository : IMovieRepository
         return Task.FromResult(created);
     }
 
+    public Task<Movie> InsertWithUntimedIdAsync(Movie movie, CancellationToken ct = default) =>
+        InsertAsync(movie with { Id = string.Empty }, ct);
+
     public Task<long> DeleteByIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
     {
         long deleted = 0;

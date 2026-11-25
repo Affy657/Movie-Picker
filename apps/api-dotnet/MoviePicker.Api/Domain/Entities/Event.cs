@@ -92,6 +92,12 @@ public sealed record Event
     public bool ConcealsProposer(string? proposerUserId, string? viewerUserId) =>
         HasAnonymousProposals && (string.IsNullOrEmpty(viewerUserId) || proposerUserId != viewerUserId);
 
+    public Movie HideProposalTime(Movie movie) =>
+        HasAnonymousProposals ? movie with { CreatedAt = CreatedAt, UpdatedAt = CreatedAt } : movie;
+
+    public IReadOnlyList<Movie> InListOrder(IReadOnlyList<Movie> movies) =>
+        HasAnonymousProposals ? [.. movies.OrderBy(movie => movie.Id, StringComparer.Ordinal)] : movies;
+
     public IReadOnlyList<string> GetWinnerMovieIds() => Winners.Select(w => w.MovieId).ToList();
 
     public int TargetWinnerCount => Math.Max(1, Config?.WinnerCount ?? EventConfig.DefaultWinnerCount);

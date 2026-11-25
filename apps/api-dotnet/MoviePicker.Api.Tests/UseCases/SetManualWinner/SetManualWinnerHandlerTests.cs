@@ -154,8 +154,12 @@ public sealed class SetManualWinnerHandlerTests
     [Fact]
     public async Task HandleAsync_AnonymousNight_DoesNotRevealWhoProposedTheWinner()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(ActiveEvent() with { Config = new EventConfig { AnonymousProposals = true } });
+        var night = ActiveEvent() with
+        {
+            Config = new EventConfig { AnonymousProposals = true },
+            CreatedAt = DateTimeOffset.UtcNow.AddDays(-3)
+        };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(night);
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
         _movieRepo.Setup(r => r.GetByIdAsync("mov1", It.IsAny<CancellationToken>())).ReturnsAsync(MovieOf("mov1", "evt1"));
         _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
@@ -165,6 +169,7 @@ public sealed class SetManualWinnerHandlerTests
 
         Assert.Equal("mov1", result.Winner.Id);
         Assert.Equal(string.Empty, result.Winner.ParticipantId);
+        Assert.Equal((night.CreatedAt, night.CreatedAt), (result.Winner.CreatedAt, result.Winner.UpdatedAt));
     }
 
     [Fact]

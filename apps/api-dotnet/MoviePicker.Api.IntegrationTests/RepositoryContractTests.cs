@@ -106,6 +106,36 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task MovieInsertedWithAnUntimedId_IsStoredButItsIdTellsNoProposalOrder()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var eventId = ObjectId.GenerateNewId().ToString();
+        var proposed = new List<Movie>();
+        for (var tmdbId = 1; tmdbId <= 16; tmdbId++)
+        {
+            proposed.Add(await movies.InsertWithUntimedIdAsync(new Movie
+            {
+                EventId = eventId,
+                ParticipantId = ObjectId.GenerateNewId().ToString(),
+                TmdbId = tmdbId,
+                Title = $"Film {tmdbId}",
+                Year = "2001",
+                CreatedAt = Now.AddMinutes(tmdbId),
+                UpdatedAt = Now.AddMinutes(tmdbId)
+            }));
+        }
+
+        var listed = await movies.ListByEventIdAsync(eventId);
+        var ids = proposed.ConvertAll(movie => ObjectId.Parse(movie.Id));
+
+        Assert.Equal(proposed.Select(m => m.Id).Order(), listed.Select(m => m.Id).Order());
+        Assert.NotEqual(ids.Order(), ids);
+        Assert.NotEqual(ids.Select(id => id.Timestamp).Order(), ids.Select(id => id.Timestamp));
+        Assert.Equal(proposed[0].TmdbId, (await movies.GetByIdAndEventIdAsync(proposed[0].Id, eventId))?.TmdbId);
+    }
+
+    [Fact]
     public async Task MovieTitles_ListOnlyTheTitleOfEachRequestedProposal()
     {
         using var scope = _factory.Services.CreateScope();

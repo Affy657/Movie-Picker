@@ -164,6 +164,9 @@ public sealed class MongoMovieRepository : IMovieRepository
         return MovieMapper.ToDomain(doc);
     }
 
+    public Task<Movie> InsertWithUntimedIdAsync(Movie movie, CancellationToken ct = default) =>
+        InsertAsync(movie with { Id = MongoObjectIds.NewUntimed() }, ct);
+
     public async Task<long> DeleteByIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
     {
         if (movieIds.Count == 0)

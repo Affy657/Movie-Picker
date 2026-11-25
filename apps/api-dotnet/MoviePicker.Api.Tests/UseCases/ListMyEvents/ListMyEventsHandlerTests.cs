@@ -615,25 +615,49 @@ public sealed class ListMyEventsHandlerTests
             .Setup(r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(
             [
-                ProposedMovie("e1", "early", start),
-                ProposedMovie("e1", "liked", start.AddMinutes(1)),
-                ProposedMovie("e1", "later", start.AddMinutes(2)),
-                ProposedMovie("e1", "disliked", start.AddMinutes(3)),
-                ProposedMovie("e1", "last", start.AddMinutes(4)),
+                ProposedMovie("e1", "1-early", start),
+                ProposedMovie("e1", "2-liked", start.AddMinutes(1)),
+                ProposedMovie("e1", "3-later", start.AddMinutes(2)),
+                ProposedMovie("e1", "4-disliked", start.AddMinutes(3)),
+                ProposedMovie("e1", "5-last", start.AddMinutes(4)),
             ]);
         _voteRepo
             .Setup(r => r.AggregateScoresByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<string, VoteScoreAggregate>
             {
-                ["liked"] = new(2, 2, 0),
-                ["disliked"] = new(-1, 0, 1),
+                ["2-liked"] = new(2, 2, 0),
+                ["4-disliked"] = new(-1, 0, 1),
             });
 
         var result = await _sut.HandleAsync("u1", MyEventListScope.Active, limit: 10, offset: 0, q: null);
 
         var row = Assert.Single(result.Events);
-        Assert.Equal(["liked", "early", "later"], row.TopMovies.Select(m => m.Title));
-        Assert.Equal("/posters/liked.jpg", row.TopMovies[0].PosterPath);
+        Assert.Equal(["2-liked", "1-early", "3-later"], row.TopMovies.Select(m => m.Title));
+        Assert.Equal("/posters/2-liked.jpg", row.TopMovies[0].PosterPath);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ActiveScope_BreaksPosterTiesByTheNightListOrder_NotByProposalTime()
+    {
+        GivenCreatedNights(UpcomingNight("e1"));
+        var start = DateTimeOffset.Parse("2026-06-01T00:00:00Z");
+        _movieRepo
+            .Setup(r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                ProposedMovie("e1", "c-proposed-first", start),
+                ProposedMovie("e1", "a-proposed-last", start.AddMinutes(2)),
+                ProposedMovie("e1", "b-proposed-second", start.AddMinutes(1)),
+            ]);
+        _voteRepo
+            .Setup(r => r.AggregateScoresByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, VoteScoreAggregate>());
+
+        var result = await _sut.HandleAsync("u1", MyEventListScope.Active, limit: 10, offset: 0, q: null);
+
+        Assert.Equal(
+            ["a-proposed-last", "b-proposed-second", "c-proposed-first"],
+            Assert.Single(result.Events).TopMovies.Select(m => m.Title));
     }
 
     [Fact]

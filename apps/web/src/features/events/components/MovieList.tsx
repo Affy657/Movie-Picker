@@ -48,6 +48,7 @@ interface MovieListProps {
   sortBy?: MovieRowSortKey;
   sortDir?: 'asc' | 'desc';
   onSetSort?: (key: MovieRowSortKey) => void;
+  hidesAddedOrder?: boolean;
   voteErrors?: Record<string, { message: string }>;
   onRetryVote?: (movieId: string) => void;
   emptyState?: ReactNode;
@@ -83,6 +84,7 @@ export default function MovieList({
   sortBy,
   sortDir,
   onSetSort,
+  hidesAddedOrder = false,
   voteErrors,
   onRetryVote,
   emptyState = null,
@@ -147,7 +149,14 @@ export default function MovieList({
             <EventMovieRowHeader
               columns={[
                 { key: 'title', label: t('movies.list.columnTitle') },
-                { key: 'createdAt', label: t('movies.list.columnAddedOrder') },
+                {
+                  key: 'createdAt',
+                  label: t(
+                    hidesAddedOrder
+                      ? 'movies.list.columnShuffledOrder'
+                      : 'movies.list.columnAddedOrder'
+                  ),
+                },
                 { key: 'voteAverage', label: t('movies.list.columnTmdbVote') },
                 { key: 'duration', label: t('movies.list.columnDuration') },
                 { key: 'releaseDate', label: t('movies.list.columnReleaseDate') },

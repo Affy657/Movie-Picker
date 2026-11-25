@@ -557,6 +557,66 @@ public sealed class ListMoviesForEventHandlerTests
             ]);
     }
 
+    private List<Movie> GivenMoviesProposedOneAfterTheOther(Event night)
+    {
+        var proposed = Enumerable.Range(0, 12)
+            .Select(i => StoredMovie($"6720f00000000000000000{i:x2}", 100 + i) with
+            {
+                CreatedAt = night.CreatedAt.AddMinutes(i + 1),
+                UpdatedAt = night.CreatedAt.AddMinutes(i + 2)
+            })
+            .ToList();
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(night);
+        _movieRepo.Setup(r => r.ListByEventIdAsync(night.Id, It.IsAny<CancellationToken>())).ReturnsAsync(proposed);
+        return proposed;
+    }
+
+    [Fact]
+    public async Task HandleAsync_OpenNight_KeepsTheProposalTimesAndOrder()
+    {
+        var proposed = GivenMoviesProposedOneAfterTheOther(ActiveEvent());
+
+        var result = await _sut.HandleAsync("evt1");
+
+        Assert.Equal(proposed.Select(m => m.Id), result.Select(m => m.Id));
+        Assert.Equal(proposed.Select(m => m.CreatedAt), result.Select(m => m.CreatedAt));
+        Assert.Equal(proposed.Select(m => m.UpdatedAt), result.Select(m => m.UpdatedAt));
+    }
+
+    [Fact]
+    public async Task HandleAsync_AnonymousNight_NothingDatesAMovie()
+    {
+        var night = ActiveEvent() with { Config = new EventConfig { AnonymousProposals = true } };
+        var proposed = GivenMoviesProposedOneAfterTheOther(night);
+        proposed.Reverse();
+
+        var result = await _sut.HandleAsync("evt1");
+
+        Assert.Equal(proposed.Select(m => m.Id).Order(StringComparer.Ordinal), result.Select(m => m.Id));
+        Assert.All(result, movie =>
+        {
+            Assert.Equal(night.CreatedAt, movie.CreatedAt);
+            Assert.Equal(night.CreatedAt, movie.UpdatedAt);
+        });
+    }
+
+    [Fact]
+    public async Task HandleSelectionAsync_AnonymousNight_NothingDatesAMovie()
+    {
+        var night = ActiveEvent() with { Config = new EventConfig { AnonymousProposals = true } };
+        var stored = StoredMovie("6720f0000000000000000001", 603) with
+        {
+            CreatedAt = night.CreatedAt.AddHours(3),
+            UpdatedAt = night.CreatedAt.AddHours(4)
+        };
+        GivenSelectionOf(stored);
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(night);
+
+        var movie = Assert.Single(await _sut.HandleSelectionAsync("soiree", [stored.Id]));
+
+        Assert.Equal((night.CreatedAt, night.CreatedAt), (movie.CreatedAt, movie.UpdatedAt));
+    }
+
     [Fact]
     public async Task HandleAsync_AnonymousNight_ShowsTheViewerOnlyTheirOwnProposals()
     {

@@ -43,7 +43,6 @@ public sealed class MyEventPreviews
     public IReadOnlyList<MyEventMoviePreviewDto> TopMoviesOf(string eventId) =>
         _moviesByEvent[eventId]
             .OrderByDescending(m => _scores.TryGetValue(m.Id, out var aggregate) ? aggregate.Score : 0)
-            .ThenBy(m => m.CreatedAt)
             .ThenBy(m => m.Id, StringComparer.Ordinal)
             .Take(PosterCount)
             .Select(m => new MyEventMoviePreviewDto { Title = m.Title, PosterPath = m.PosterPath })

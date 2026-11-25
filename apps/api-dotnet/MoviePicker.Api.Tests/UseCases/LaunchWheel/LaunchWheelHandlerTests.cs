@@ -184,7 +184,11 @@ public sealed class LaunchWheelHandlerTests
     [Fact]
     public async Task HandleAsync_AnonymousNight_DoesNotRevealWhoProposedTheWinner()
     {
-        var evt = ActiveEvent() with { Config = new EventConfig { AnonymousProposals = true } };
+        var evt = ActiveEvent() with
+        {
+            Config = new EventConfig { AnonymousProposals = true },
+            CreatedAt = DateTimeOffset.UtcNow.AddDays(-3)
+        };
         var movies = new List<Movie>
         {
             new() { Id = "mov2", EventId = evt.Id, ParticipantId = "p2", TmdbId = 2, Title = "Seul candidat", Year = "2021", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
@@ -199,6 +203,7 @@ public sealed class LaunchWheelHandlerTests
 
         Assert.Equal("mov2", result.Winner.Id);
         Assert.Equal(string.Empty, result.Winner.ParticipantId);
+        Assert.Equal((evt.CreatedAt, evt.CreatedAt), (result.Winner.CreatedAt, result.Winner.UpdatedAt));
     }
 
     [Fact]

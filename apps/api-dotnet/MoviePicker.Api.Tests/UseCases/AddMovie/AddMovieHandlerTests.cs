@@ -249,6 +249,43 @@ public sealed class AddMovieHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_OpenNight_StoresTheMovieUnderAnOrdinaryIdAndShowsItsTime()
+    {
+        var evt = ActiveEvent();
+        var participant = ProposingParticipant(evt);
+        var inserted = CaptureInsertedMovie();
+
+        var result = await _sut.HandleAsync(OwnerUserId, "evt1", Request(participant.Id));
+
+        Assert.Equal(inserted()!.CreatedAt, result.CreatedAt);
+        _movieRepo.Verify(r => r.InsertWithUntimedIdAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AnonymousNight_StoresTheMovieUnderAnUntimedIdAndDatesItFromTheNight()
+    {
+        var evt = ActiveEvent() with
+        {
+            Config = new EventConfig { AnonymousProposals = true },
+            CreatedAt = DateTimeOffset.UtcNow.AddDays(-2)
+        };
+        var participant = ProposingParticipant(evt);
+        Movie? inserted = null;
+        _movieRepo
+            .Setup(r => r.InsertWithUntimedIdAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>()))
+            .Callback<Movie, CancellationToken>((m, _) => inserted = m)
+            .ReturnsAsync((Movie m, CancellationToken _) => m with { Id = "a1b2c3d4e5f6a1b2c3d4e5f6" });
+
+        var result = await _sut.HandleAsync(OwnerUserId, "evt1", Request(participant.Id));
+
+        Assert.NotNull(inserted);
+        Assert.Equal("a1b2c3d4e5f6a1b2c3d4e5f6", result.Id);
+        Assert.Equal(evt.CreatedAt, result.CreatedAt);
+        Assert.Equal(evt.CreatedAt, result.UpdatedAt);
+        _movieRepo.Verify(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task HandleAsync_IdUnknownToTmdb_IsRefused()
     {
         var participant = ProposingParticipant(ActiveEvent());
