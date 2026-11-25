@@ -1,6 +1,6 @@
 ---
 name: auto-maintenance
-description: Passe de maintenance autonome de Movie Picker, sans aucun go de l'utilisateur. CVE, PR Dependabot, erreurs Sentry et GCP, issues SonarCloud, correctifs poussés sur master, déploiement en recette puis en production, surveillance et retour arrière automatique. Lancée par deux tâches planifiées locales, déclenchée avec « /auto-maintenance quotidien » ou « /auto-maintenance hebdo ».
+description: Passe de maintenance autonome de Movie Picker, sans aucun go de l'utilisateur. CVE, PR Dependabot, erreurs Sentry et GCP, issues SonarCloud, correctifs poussés sur master, déploiement en recette puis en production, surveillance et retour arrière automatique. Ses deux tâches planifiées locales sont désactivées depuis le 2026-11-25 : elle ne part qu'à la main, avec « /auto-maintenance quotidien » ou « /auto-maintenance hebdo ».
 ---
 
 # /auto-maintenance : la maintenance sans l'utilisateur

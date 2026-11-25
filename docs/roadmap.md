@@ -42,6 +42,7 @@ Rien pour l'instant.
 
 ### La soirée, du vote à la note
 
+- `L` **Rejoindre une soirée sans compte** : un invité entre dans une soirée avec un simple prénom, propose des films et vote sans s'inscrire. Le compte lui est proposé après le recap, pour garder ses notes et retrouver la soirée.
 - `L` **Plateformes de streaming par compte** : chacun renseigne dans son profil ses abonnements, et une soirée marque disponible un film présent sur la plateforme d'au moins un participant. Un panneau de la soirée liste les plateformes retenues, à cocher ou décocher à la main.
 - `M` **Déjà vu automatique en soirée** : dans une soirée, un film qui figure dans les films vus d'un participant est marqué « Déjà vu » pour lui, sans qu'il ait à le faire. Seulement pour qui a rendu ses films vus visibles, pour ne rien dévoiler d'une liste privée.
 - `L` **Thème imposé par l'hôte** : contrainte de proposition posée par l'hôte (genre, décennie, acteur, réalisateur ou classification d'âge maximale) ; les films qui ne la respectent pas sont refusés avec un message explicite, et la contrainte s'affiche en bannière sur la page soirée.
@@ -68,6 +69,7 @@ Rien pour l'instant.
 
 ### Profil et social
 
+- `L` **Bilan de l'année** : en décembre, chaque membre et chaque groupe reçoit une page à partager qui résume son année : films vus ensemble, meilleure et pire note, qui a gagné le plus de tirages, le film qui a le plus divisé.
 - `M` **Une liste en vitrine sur le profil** : un membre épingle l'une de ses listes publiques en haut de son profil, avec ses affiches et son nombre de films, pour la montrer à ceux qui le visitent.
 - `M` **Cadres d'avatar à débloquer** : un contour autour de l'avatar, gagné avec la flamme de soirées, le soutien Ko-fi ou un nombre de soirées, que le membre choisit d'afficher et que tous voient, sur son profil comme en soirée.
 - `L` **Sondage de disponibilité dans un groupe** : sur la page d'un groupe, un membre propose plusieurs créneaux et chacun coche ceux où il est libre. Le créneau retenu devient une soirée du groupe, annoncée à tous ses membres.

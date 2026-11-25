@@ -15,7 +15,7 @@ Les commandes brutes de chaque étape sont dans [references/commandes.md](refere
 - **Tout le reste vit sur une branche unique**, `chore/maintenance-<AAAA-MM-JJ>`, et part en une seule PR. Elle est créée **après** le merge des PR Dependabot, pour partir d'un master à jour.
 - Rien de ce qui est écrit pendant la passe ne va sur master sans le go de l'utilisateur.
 
-La même passe tourne aussi sans l'utilisateur, tous ses STOP retirés et le déploiement compris : c'est [/auto-maintenance](../auto-maintenance/SKILL.md), lancée par deux tâches planifiées locales. Ce skill-ci reste la passe accompagnée, à la demande.
+La même passe tourne aussi sans l'utilisateur, tous ses STOP retirés et le déploiement compris : c'est [/auto-maintenance](../auto-maintenance/SKILL.md), lancée à la main depuis que ses deux tâches planifiées locales sont désactivées (2026-11-25). Ce skill-ci reste la passe accompagnée, à la demande.
 
 Hors périmètre : corriger les bug reports GitHub. La passe les liste et les priorise, les traiter relève de `/dev-feature`.
 

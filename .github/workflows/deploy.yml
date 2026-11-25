@@ -2,9 +2,10 @@
 #
 # **Triggered, never automatic, but right after each delivery.** A push to master only runs the
 # gates of `ci-cd.yml`. The session that delivers a change triggers this workflow once that run is
-# green, and the daily `/auto-maintenance` pass deploys whatever master holds: production follows
-# master within the day, one small delivery at a time, and its version is the one the delivered
-# commit carries (`pnpm run release`, `publish-release` below).
+# green; the `/auto-maintenance` pass, run by hand since its scheduled tasks were disabled on
+# 2026-11-25, deploys whatever master holds. Production follows master one small delivery at a
+# time, and its version is the one the delivered commit carries (`pnpm run release`,
+# `publish-release` below).
 #
 # **Through the staging first.** The same workflow deploys two stages, chosen at trigger time:
 # `staging` (the recette, `staging.movie-picker.fr`) then `production`. Production refuses to
