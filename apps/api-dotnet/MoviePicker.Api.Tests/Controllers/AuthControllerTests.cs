@@ -632,6 +632,39 @@ public sealed class AuthControllerTests
     }
 
     [Fact]
+    public async Task ExportMyData_WritesItsEnumsWithTheNamesTheApiServes()
+    {
+        var handler = new Mock<IExportUserDataHandler>();
+        handler.Setup(h => h.HandleAsync("u1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UserDataExportResponse
+            {
+                ExportedAt = DateTimeOffset.UtcNow,
+                Profile = new ExportedProfile
+                {
+                    UiTheme = UiThemePreference.Dark,
+                    AccentColor = AccentColor.Purple,
+                    RatingScale = RatingScale.Ten
+                },
+                SavedLists = [new ExportedSavedList { SourceType = ListSourceType.TmdbCollection, SourceId = "1241" }],
+                WatchedTitles =
+                [
+                    new ExportedWatchedTitle { MediaType = MovieMediaType.Tv, Origin = WatchedOrigin.Letterboxd }
+                ]
+            });
+
+        var result = await Controller("u1").ExportMyData(handler.Object, "u1", CancellationToken.None);
+
+        using var json = System.Text.Json.JsonDocument.Parse(Assert.IsType<FileContentResult>(result).FileContents);
+        var profile = json.RootElement.GetProperty("profile");
+        Assert.Equal(
+            ("dark", "purple", "ten"),
+            (profile.GetProperty("uiTheme").GetString(), profile.GetProperty("accentColor").GetString(), profile.GetProperty("ratingScale").GetString()));
+        Assert.Equal("tmdbCollection", json.RootElement.GetProperty("savedLists")[0].GetProperty("sourceType").GetString());
+        var watched = json.RootElement.GetProperty("watchedTitles")[0];
+        Assert.Equal(("tv", "letterboxd"), (watched.GetProperty("mediaType").GetString(), watched.GetProperty("origin").GetString()));
+    }
+
+    [Fact]
     public async Task DeleteMe_NullBody_ReturnsBadRequest()
     {
         var result = await Controller("u1").DeleteMe(null, new Mock<IDeleteAccountHandler>().Object, Clock, "u1", CancellationToken.None);

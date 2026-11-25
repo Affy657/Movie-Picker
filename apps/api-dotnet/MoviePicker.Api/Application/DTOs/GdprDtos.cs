@@ -29,7 +29,7 @@ public sealed record UserDataExportResponse
 
 public sealed record ExportedProfileBanner
 {
-    public string Source { get; init; } = string.Empty;
+    public ProfileBannerSource Source { get; init; }
     public int? TmdbId { get; init; }
     public string? Title { get; init; }
     public string? ImagePath { get; init; }
@@ -39,12 +39,9 @@ public sealed record ExportedProfileBanner
     {
         if (banner is null)
             return null;
-        var source = banner.Source == ProfileBannerSource.Photo
-            ? ProfileBannerResponse.PhotoSource
-            : ProfileBannerResponse.FilmSource;
         return new()
         {
-            Source = source,
+            Source = banner.Source,
             TmdbId = banner.TmdbId,
             Title = banner.Title,
             ImagePath = banner.ImagePath,
@@ -78,15 +75,15 @@ public sealed record ExportedProfile
     public bool IsProfilePublic { get; init; }
     public bool IsWatchlistPublic { get; init; }
     public bool IsWatchedPublic { get; init; }
-    public string UiTheme { get; init; } = string.Empty;
-    public string AccentColor { get; init; } = string.Empty;
+    public UiThemePreference UiTheme { get; init; }
+    public AccentColor AccentColor { get; init; }
     public string AvatarId { get; init; } = string.Empty;
     public bool HasPassword { get; init; }
     public IReadOnlyList<string> LinkedProviders { get; init; } = Array.Empty<string>();
     public IReadOnlyDictionary<string, bool> NotificationPreferences { get; init; } =
         new Dictionary<string, bool>();
     public DateTimeOffset? SupporterSince { get; init; }
-    public string RatingScale { get; init; } = string.Empty;
+    public RatingScale RatingScale { get; init; }
     public bool DimWatched { get; init; }
     public string? LetterboxdUsername { get; init; }
     public bool LetterboxdSyncWatchlist { get; init; }
@@ -149,7 +146,7 @@ public sealed record ExportedProposedMovie
 {
     public string MovieId { get; init; } = string.Empty;
     public int TmdbId { get; init; }
-    public string MediaType { get; init; } = string.Empty;
+    public MovieMediaType MediaType { get; init; }
     public string Title { get; init; } = string.Empty;
     public string Year { get; init; } = string.Empty;
     public string? PitchNote { get; init; }
@@ -185,7 +182,7 @@ public sealed record ExportedPushSubscription
 public sealed record ExportedFavorite
 {
     public int TmdbId { get; init; }
-    public string MediaType { get; init; } = string.Empty;
+    public MovieMediaType MediaType { get; init; }
     public string Title { get; init; } = string.Empty;
     public string Year { get; init; } = string.Empty;
 }
@@ -193,7 +190,7 @@ public sealed record ExportedFavorite
 public sealed record ExportedWatchlistItem
 {
     public int TmdbId { get; init; }
-    public string MediaType { get; init; } = string.Empty;
+    public MovieMediaType MediaType { get; init; }
     public string Title { get; init; } = string.Empty;
     public string Year { get; init; } = string.Empty;
     public string? LetterboxdSlug { get; init; }
@@ -213,7 +210,7 @@ public sealed record ExportedMovieList
 public sealed record ExportedMovieListItem
 {
     public int TmdbId { get; init; }
-    public string MediaType { get; init; } = string.Empty;
+    public MovieMediaType MediaType { get; init; }
     public string Title { get; init; } = string.Empty;
     public string Year { get; init; } = string.Empty;
     public DateTimeOffset AddedAt { get; init; }
@@ -221,7 +218,7 @@ public sealed record ExportedMovieListItem
 
 public sealed record ExportedSavedList
 {
-    public string SourceType { get; init; } = string.Empty;
+    public ListSourceType SourceType { get; init; }
     public string SourceId { get; init; } = string.Empty;
     public string Name { get; init; } = string.Empty;
     public DateTimeOffset CreatedAt { get; init; }
@@ -230,13 +227,13 @@ public sealed record ExportedSavedList
 public sealed record ExportedWatchedTitle
 {
     public int TmdbId { get; init; }
-    public string MediaType { get; init; } = string.Empty;
+    public MovieMediaType MediaType { get; init; }
     public string Title { get; init; } = string.Empty;
     public string Year { get; init; } = string.Empty;
     public DateTimeOffset WatchedAt { get; init; }
     public int? Rating { get; init; }
-    public string? RatingOrigin { get; init; }
-    public string Origin { get; init; } = string.Empty;
+    public WatchedOrigin? RatingOrigin { get; init; }
+    public WatchedOrigin Origin { get; init; }
     public string? LetterboxdSlug { get; init; }
 }
 

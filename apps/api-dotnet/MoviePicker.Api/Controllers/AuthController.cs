@@ -21,6 +21,7 @@ using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Web;
+using MoviePicker.Api.Infrastructure.Web.OpenApi;
 
 namespace MoviePicker.Api.Controllers;
 
@@ -66,7 +67,8 @@ public sealed class AuthController : ControllerBase
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = true,
         DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
-        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
     };
 
     [HttpPost("register")]
@@ -143,7 +145,7 @@ public sealed class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status302Found)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult OAuthStart(
-        string provider,
+        [ValuesOf(typeof(OAuthProviders))] string provider,
         [FromQuery] string? returnTo,
         [FromServices] OAuthProviderCatalog catalog,
         [FromServices] IOptions<MoviePickerOptions> options,
@@ -168,7 +170,7 @@ public sealed class AuthController : ControllerBase
     [EnableRateLimiting(RateLimitingExtensions.AuthLoginPolicy)]
     [ProducesResponseType(StatusCodes.Status302Found)]
     public async Task<IActionResult> OAuthCallback(
-        string provider,
+        [ValuesOf(typeof(OAuthProviders))] string provider,
         [FromServices] IOAuthLoginHandler loginHandler,
         [FromServices] IOAuthLinkHandler linkHandler,
         [FromServices] IUsageRecorder usage,
@@ -297,7 +299,7 @@ public sealed class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UnlinkIdentity(
-        string provider,
+        [ValuesOf(typeof(OAuthProviders))] string provider,
         [FromServices] IOAuthUnlinkHandler handler,
         [FromServices] TimeProvider clock,
         [CurrentUserId] string userId,

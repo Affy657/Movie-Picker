@@ -77,42 +77,78 @@ export function parseContract(text) {
   return { schemas, operations };
 }
 
-function resolveShape(contract, type) {
-  if (!type) return { kind: 'none' };
-  if (ts.isParenthesizedTypeNode(type)) return resolveShape(contract, type.type);
-  if (ts.isUnionTypeNode(type)) {
-    const values = type.types.filter((member) => !isNull(member));
-    if (values.length === 1) return resolveShape(contract, values[0]);
-    return { kind: 'scalar' };
+const KEYWORD_KINDS = new Map([
+  [ts.SyntaxKind.StringKeyword, 'string'],
+  [ts.SyntaxKind.NumberKeyword, 'number'],
+  [ts.SyntaxKind.BooleanKeyword, 'boolean'],
+]);
+
+const LITERAL_KINDS = new Map([
+  [ts.SyntaxKind.StringLiteral, 'string'],
+  [ts.SyntaxKind.NumericLiteral, 'number'],
+  [ts.SyntaxKind.TrueKeyword, 'boolean'],
+  [ts.SyntaxKind.FalseKeyword, 'boolean'],
+]);
+
+const UNTYPED_KINDS = new Set(['none', 'unknown']);
+
+function scalarKind(type) {
+  if (ts.isLiteralTypeNode(type)) return LITERAL_KINDS.get(type.literal.kind) ?? 'unknown';
+  return KEYWORD_KINDS.get(type.kind) ?? 'unknown';
+}
+
+function unionShape(contract, type) {
+  const values = type.types.filter((member) => !isNull(member));
+  const nullable = values.length < type.types.length;
+  if (values.length === 1) {
+    const shape = resolveShape(contract, values[0]);
+    return { ...shape, nullable: nullable || shape.nullable };
   }
-  if (ts.isArrayTypeNode(type)) return { kind: 'array', items: type.elementType };
-  if (ts.isTypeLiteralNode(type)) return { kind: 'object', properties: members(type) };
+  const kinds = new Set(values.map((member) => resolveShape(contract, member).kind));
+  return { kind: kinds.size === 1 ? [...kinds][0] : 'union', nullable };
+}
+
+function resolveShape(contract, type) {
+  if (!type) return { kind: 'none', nullable: false };
+  if (ts.isParenthesizedTypeNode(type)) return resolveShape(contract, type.type);
+  if (ts.isUnionTypeNode(type)) return unionShape(contract, type);
+  if (ts.isArrayTypeNode(type)) return { kind: 'array', items: type.elementType, nullable: false };
+  if (ts.isTypeLiteralNode(type))
+    return { kind: 'object', properties: members(type), nullable: false };
   const reference = SCHEMA_REF.exec(type.getText());
   if (reference) {
     const schema = contract.schemas.get(reference[1]);
     return { ...resolveShape(contract, schema?.type), schema: reference[1] };
   }
-  return { kind: 'scalar' };
+  if (ts.isTypeReferenceNode(type) && type.typeName.getText() === 'Record')
+    return { kind: 'object', properties: new Map(), nullable: false };
+  return { kind: scalarKind(type), nullable: false };
+}
+
+function kindChanged(old, current) {
+  return (
+    old.kind !== current.kind && !UNTYPED_KINDS.has(old.kind) && !UNTYPED_KINDS.has(current.kind)
+  );
 }
 
 function compareShapes(before, after, beforeType, afterType, location, seen, breaks) {
   const old = resolveShape(before, beforeType);
   const current = resolveShape(after, afterType);
+  if (!old.nullable && current.nullable) breaks.push(`${location}: may now be null`);
   const pair = old.schema && `${old.schema}>${current.schema ?? ''}`;
   if (pair) {
     if (seen.has(pair)) return;
     seen.add(pair);
   }
+  if (kindChanged(old, current)) {
+    breaks.push(`${location}: type changed from ${old.kind} to ${current.kind}`);
+    return;
+  }
   if (old.kind === 'array') {
-    if (current.kind !== 'array') breaks.push(`${location}: no longer an array`);
-    else compareShapes(before, after, old.items, current.items, `${location}[]`, seen, breaks);
+    compareShapes(before, after, old.items, current.items, `${location}[]`, seen, breaks);
     return;
   }
-  if (old.kind !== 'object') return;
-  if (current.kind !== 'object') {
-    breaks.push(`${location}: no longer an object`);
-    return;
-  }
+  if (old.kind !== 'object' || !old.properties || !current.properties) return;
   for (const [name, property] of old.properties) {
     const next = current.properties.get(name);
     const at = `${location}.${name}`;

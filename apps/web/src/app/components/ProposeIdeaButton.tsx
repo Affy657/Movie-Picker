@@ -17,7 +17,11 @@ import { getErrorMessage } from '@/shared/api/apiError';
 import { APP_VERSION } from '@/shared/appVersion';
 import { blobToBase64 } from '@/shared/utils/blobToBase64';
 import Dropdown from '@/shared/components/Dropdown';
-import { createIdeaSuggestion, type IdeaSuggestionCategory } from '@/shared/api/ideaSuggestionsApi';
+import {
+  createIdeaSuggestion,
+  type IdeaAttachmentContentType,
+  type IdeaSuggestionCategory,
+} from '@/shared/api/ideaSuggestionsApi';
 import styles from './ProposeIdeaButton.module.css';
 import { useCloseOnPageChange } from '@/shared/hooks/useCloseOnPageChange';
 import { ModalActions } from '@/shared/components/Modal';
@@ -33,13 +37,23 @@ const PAGE_PATH_MAX_LENGTH = 300;
 const ATTACHMENT_FILE_NAME_MAX_LENGTH = 150;
 const MAX_ATTACHMENTS = 4;
 const MAX_ATTACHMENT_SIZE_BYTES = 4 * 1024 * 1024;
-const ACCEPTED_ATTACHMENT_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+const ACCEPTED_ATTACHMENT_TYPES: readonly IdeaAttachmentContentType[] = [
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'image/gif',
+];
+
+function acceptedContentType(type: string): IdeaAttachmentContentType | undefined {
+  return ACCEPTED_ATTACHMENT_TYPES.find((accepted) => accepted === type);
+}
 
 type Status = 'idle' | 'submitting' | 'success' | 'error';
 
 type Attachment = {
   id: string;
   file: File;
+  contentType: IdeaAttachmentContentType;
   previewUrl: string;
 };
 
@@ -87,7 +101,7 @@ async function toAttachmentPayload(attachment: Attachment) {
   try {
     return {
       fileName: fileNameWithinApiLimit(attachment.file.name),
-      contentType: attachment.file.type,
+      contentType: attachment.contentType,
       base64Content: await blobToBase64(attachment.file),
     };
   } catch (readError) {
@@ -131,7 +145,8 @@ export function ProposeIdeaDialog({ open, onClose, title: dialogTitle }: Readonl
         setAttachmentError(t('proposeIdea.attachmentsTooMany', { max: MAX_ATTACHMENTS }));
         break;
       }
-      if (!ACCEPTED_ATTACHMENT_TYPES.includes(file.type)) {
+      const contentType = acceptedContentType(file.type);
+      if (!contentType) {
         setAttachmentError(t('proposeIdea.attachmentsUnsupportedType', { name: file.name }));
         continue;
       }
@@ -139,7 +154,12 @@ export function ProposeIdeaDialog({ open, onClose, title: dialogTitle }: Readonl
         setAttachmentError(t('proposeIdea.attachmentsTooLarge', { name: file.name }));
         continue;
       }
-      accepted.push({ id: crypto.randomUUID(), file, previewUrl: URL.createObjectURL(file) });
+      accepted.push({
+        id: crypto.randomUUID(),
+        file,
+        contentType,
+        previewUrl: URL.createObjectURL(file),
+      });
     }
     if (accepted.length > 0) setAttachments((prev) => [...prev, ...accepted]);
   };

@@ -136,6 +136,44 @@ describe('findBreakingChanges', () => {
     ]);
   });
 
+  it('flags a response property whose type changed, nested ones included', () => {
+    const current = PUBLISHED.replace('{ id: string;', '{ id: number;').replace(
+      'owner?: components["schemas"]["Person"] }',
+      'owner?: string }'
+    );
+
+    assert.deepEqual(breaksBetween(PUBLISHED, current), [
+      'GET /api/v1/lists 200.items[].id: type changed from string to number',
+      'GET /api/v1/lists 200.items[].owner: type changed from object to string',
+    ]);
+  });
+
+  it('flags a response property that may now be null', () => {
+    const current = PUBLISHED.replace('displayName: string }', 'displayName: string | null }');
+
+    assert.deepEqual(breaksBetween(PUBLISHED, current), [
+      'GET /api/v1/lists 200.items[].owner.displayName: may now be null',
+    ]);
+  });
+
+  it('passes a free string narrowed to the enum of its values and a property that lost its null', () => {
+    const current = contract({
+      paths: {
+        '/api/v1/lists': { get: { 200: 'ListsResponse' } },
+        '/api/v1/lists/{id}': { post: { 201: 'ListResponse' } },
+      },
+      schemas: {
+        ListsResponse: '{ items: components["schemas"]["ListResponse"][] }',
+        ListResponse:
+          '{ id: "a" | "b"; name: components["schemas"]["ListName"]; owner?: components["schemas"]["Person"] }',
+        ListName: '"first" | "second"',
+        Person: '{ handle?: string | null; displayName: string }',
+      },
+    });
+
+    assert.deepEqual(breaksBetween(PUBLISHED, current), []);
+  });
+
   it('compares a success response moved to another status with the body it serves now', () => {
     const current = PUBLISHED.replace('responses: { 201:', 'responses: { 200:');
 

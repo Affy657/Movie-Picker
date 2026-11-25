@@ -5,12 +5,13 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using MoviePicker.Api.Application.DTOs;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
 
-public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationFactory>
+public sealed partial class OpenApiContractTests : IClassFixture<MoviePickerApplicationFactory>
 {
     private const string SchemaRefPrefix = "#/components/schemas/";
 
@@ -22,6 +23,14 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
     ];
 
     private static readonly string[] Lifecycles = ["upcoming", "live", "pending", "finished"];
+
+    private static readonly string[] ShowcaseSections =
+        ["trending", "now-playing", "most-proposed", "theme", "collection", "provider", "recommendations", "director"];
+
+    private static readonly string[] ListSourceTypes =
+        ["tmdbCollection", "explorerTheme", "memberList", "memberWatched", "memberProposals", "memberWinningProposals"];
+
+    private static readonly string[] OAuthProviders = ["google", "github"];
 
     private readonly MoviePickerApplicationFactory _factory;
     private readonly HttpClient _client;
@@ -115,9 +124,27 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
             : [];
 
     private static string[] EnumOf(JsonElement schemas, string schema, string property) =>
-        schemas.GetProperty(schema).GetProperty("properties").GetProperty(property).TryGetProperty("enum", out var values)
+        EnumValues(schemas.GetProperty(schema).GetProperty("properties").GetProperty(property));
+
+    private static string[] ItemsEnumOf(JsonElement schemas, string schema, string property) =>
+        EnumValues(schemas.GetProperty(schema).GetProperty("properties").GetProperty(property).GetProperty("items"));
+
+    private static string[] ParameterEnumOf(JsonDocument contract, string path, string method, string parameter) =>
+        EnumValues(contract.RootElement.GetProperty("paths").GetProperty(path).GetProperty(method).GetProperty("parameters")
+            .EnumerateArray()
+            .Single(p => p.GetProperty("name").GetString() == parameter)
+            .GetProperty("schema"));
+
+    private static string[] EnumValues(JsonElement schema) =>
+        schema.TryGetProperty("enum", out var values)
             ? values.EnumerateArray().Select(value => value.GetString()!).ToArray()
             : [];
+
+    private static string PropertySchemaRef(JsonElement schemas, string schema, string property) =>
+        Assert.Single(SchemaRefs(schemas.GetProperty(schema).GetProperty("properties").GetProperty(property)));
+
+    [GeneratedRegex(@"^\^(?<prefix>[A-Za-z0-9/_-]*)\((?<values>[A-Za-z0-9_-]+(?:\|[A-Za-z0-9_-]+)*)\)(?<suffix>[A-Za-z0-9/_-]*)\$$")]
+    private static partial Regex ClosedListPattern();
 
     private static bool IsValidatedAsRequired(PropertyInfo property) =>
         property.GetCustomAttribute<RequiredAttribute>() is not null
@@ -226,9 +253,74 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
         Assert.Equal(
             ["creator", "director", "writer", "composer", "photography"],
             EnumOf(schemas, "MovieCrewMemberResponse", "job"));
-        Assert.Equal(
-            ["trending", "now-playing", "most-proposed", "theme", "collection", "provider", "recommendations", "director"],
-            EnumOf(schemas, "MovieShowcaseListResponse", "section"));
+        Assert.Equal(ShowcaseSections, EnumOf(schemas, "MovieShowcaseListResponse", "section"));
+        Assert.Equal(["film", "photo"], EnumOf(schemas, "ProfileBannerResponse", "source"));
+        Assert.Equal(OAuthProviders, ItemsEnumOf(schemas, "OAuthProvidersResponse", "providers"));
+        Assert.Equal(OAuthProviders, ItemsEnumOf(schemas, "UserProfileResponse", "linkedProviders"));
+    }
+
+    [Fact]
+    public async Task ClosedRequestValues_AreEnumsOfTheValuesTheServerAccepts()
+    {
+        using var contract = await ContractAsync();
+        var schemas = Schemas(contract);
+
+        Assert.Equal(NotificationTypes, EnumOf(schemas, "NotificationTypePreferencePatch", "type"));
+        Assert.Equal(ListSourceTypes, EnumOf(schemas, "SaveListRequest", "sourceType"));
+        Assert.Equal(["system", "light", "dark"], EnumOf(schemas, "PatchUserProfileRequest", "uiTheme"));
+        Assert.Equal(["five", "ten"], EnumOf(schemas, "PatchUserProfileRequest", "ratingScale"));
+        Assert.Contains("purple", EnumOf(schemas, "PatchUserProfileRequest", "accentColor"));
+        Assert.Equal(["film", "photo"], EnumOf(schemas, "SetProfileBannerRequest", "source"));
+        Assert.Equal(ShowcaseSections, ParameterEnumOf(contract, "/api/v1/movies/showcase", "get", "section"));
+        Assert.Equal(ListSourceTypes, ParameterEnumOf(contract, "/api/v1/saved-lists", "get", "sourceType"));
+        Assert.Equal(OAuthProviders, ParameterEnumOf(contract, "/api/v1/auth/oauth/{provider}/start", "get", "provider"));
+        Assert.Equal(OAuthProviders, ParameterEnumOf(contract, "/api/v1/auth/oauth/{provider}/callback", "get", "provider"));
+        Assert.Equal(OAuthProviders, ParameterEnumOf(contract, "/api/v1/auth/me/identities/{provider}", "delete", "provider"));
+    }
+
+    [Fact]
+    public async Task RequestPropertiesValidatedAgainstAClosedList_AreEnumsOfThatList()
+    {
+        using var contract = await ContractAsync();
+        var schemas = Schemas(contract);
+        var dtoTypes = typeof(AddMovieRequest).Assembly.GetTypes()
+            .GroupBy(type => type.Name, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+
+        var describedAsFree = (
+            from name in RequestSchemas(contract)
+            let type = dtoTypes.GetValueOrDefault(name)
+            where type is not null && !type.IsEnum
+            from property in type.GetProperties()
+            let pattern = property.GetCustomAttribute<RegularExpressionAttribute>()?.Pattern
+            where pattern is not null && ClosedListPattern().IsMatch(pattern)
+            let jsonName = JsonNamingPolicy.CamelCase.ConvertName(property.Name)
+            let match = ClosedListPattern().Match(pattern)
+            let expected = match.Groups["values"].Value.Split('|').Select(value => match.Groups["prefix"].Value + value + match.Groups["suffix"].Value)
+            where !EnumOf(schemas, name, jsonName).SequenceEqual(expected)
+            select $"{name}.{jsonName}").ToList();
+
+        Assert.Empty(describedAsFree);
+        Assert.Equal(["image/jpeg", "image/png", "image/webp"], EnumOf(schemas, "UploadBannerPhotoRequest", "contentType"));
+    }
+
+    [Fact]
+    public async Task ExportSchema_DescribesItsClosedValuesAsTheEnumsTheApiServes()
+    {
+        using var contract = await ContractAsync();
+        var schemas = Schemas(contract);
+
+        Assert.Equal("UiThemePreference", PropertySchemaRef(schemas, "ExportedProfile", "uiTheme"));
+        Assert.Equal("AccentColor", PropertySchemaRef(schemas, "ExportedProfile", "accentColor"));
+        Assert.Equal("RatingScale", PropertySchemaRef(schemas, "ExportedProfile", "ratingScale"));
+        Assert.Equal(OAuthProviders, ItemsEnumOf(schemas, "ExportedProfile", "linkedProviders"));
+        Assert.Equal(NotificationTypes, EnumOf(schemas, "ExportedNotification", "type"));
+        Assert.Equal("ListSourceType", PropertySchemaRef(schemas, "ExportedSavedList", "sourceType"));
+        Assert.Equal("ProfileBannerSource", PropertySchemaRef(schemas, "ExportedProfileBanner", "source"));
+        Assert.Equal("WatchedOrigin", PropertySchemaRef(schemas, "ExportedWatchedTitle", "origin"));
+        Assert.Equal("WatchedOrigin", PropertySchemaRef(schemas, "ExportedWatchedTitle", "ratingOrigin"));
+        foreach (var exported in new[] { "ExportedWatchlistItem", "ExportedMovieListItem", "ExportedWatchedTitle", "ExportedFavorite", "ExportedProposedMovie" })
+            Assert.Equal("MovieMediaType", PropertySchemaRef(schemas, exported, "mediaType"));
     }
 
     [Fact]

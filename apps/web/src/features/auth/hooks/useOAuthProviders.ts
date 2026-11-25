@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { fetchOAuthProviders } from '@/features/auth/api/authApi';
+import { fetchOAuthProviders, type OAuthProvider } from '@/features/auth/api/authApi';
 
-export function useOAuthProviders(): string[] {
-  const [providers, setProviders] = useState<string[]>([]);
+export function useOAuthProviders(): OAuthProvider[] {
+  const [providers, setProviders] = useState<OAuthProvider[]>([]);
 
   useEffect(() => {
     let active = true;
