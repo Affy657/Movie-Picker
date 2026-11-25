@@ -1,5 +1,7 @@
+using System.Reflection;
 using Moq;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.FriendGroups;
 using MoviePicker.Api.Domain.Entities;
 using Xunit;
 
@@ -175,5 +177,64 @@ public sealed class GroupShowcaseTests : FriendGroupTestBase
         var bare = mine.Showcases.Single(showcase => showcase.GroupId == quiet.Id);
         Assert.Equal(0, bare.NightCount);
         Assert.Null(bare.Cover);
+    }
+
+    [Fact]
+    public async Task TheGroupScreens_KeepTheirFigures_WithoutLoadingTheNightsLongOver()
+    {
+        var group = await SharedGroupAsync(FriendGroupTestKit.Member);
+        var first = new DateOnly(2025, 1, 2);
+        var longOver = new HashSet<string>(StringComparer.Ordinal);
+        for (var week = 0; week < 70; week++)
+            longOver.Add((await WonAsync(await NightAsync(group.Id, first.AddDays(7 * week).ToString("yyyy-MM-dd")), $"Film {week}", 100 + week)).EventId);
+        longOver.Add((await NightAsync(group.Id, "2026-06-04")).Id);
+        var upcoming = await NightAsync(group.Id, "2026-11-26");
+        var (events, recorder) = LoadedNightsRecorder.Over(Kit.Events);
+
+        var mine = await Kit.ListHandler(events).HandleAsync(FriendGroupTestKit.Member);
+        var myNights = await Kit.MyNightsHandler(events).HandleAsync(FriendGroupTestKit.Member, "active", null, null, null);
+
+        Assert.Equal(70, mine.Showcases.Single(showcase => showcase.GroupId == group.Id).NightCount);
+        Assert.Equal([upcoming.Slug], myNights.Events.Select(night => night.Slug));
+        Assert.DoesNotContain(recorder.LoadedIds, longOver.Contains);
+
+        var page = await Kit.GetHandler(events).HandleAsync(FriendGroupTestKit.Member, group.Id);
+
+        Assert.Equal(70, page.Stats.NightCount);
+        Assert.Equal(FriendGroupNightsReader.PastNightsShown, page.PastNights.Count);
+        Assert.Equal(first.AddDays(7 * 69).ToString("yyyy-MM-dd"), page.PastNights[0].Date);
+        Assert.Equal(FriendGroupNightsReader.PastNightsShown, recorder.LoadedIds.Count(longOver.Contains));
+    }
+
+    internal class LoadedNightsRecorder : DispatchProxy
+    {
+        private readonly HashSet<string> _loadedIds = new(StringComparer.Ordinal);
+        private IEventRepository _inner = null!;
+
+        public IReadOnlyCollection<string> LoadedIds => _loadedIds;
+
+        public static (IEventRepository Events, LoadedNightsRecorder Recorder) Over(IEventRepository inner)
+        {
+            var events = Create<IEventRepository, LoadedNightsRecorder>();
+            var recorder = (LoadedNightsRecorder)(object)events;
+            recorder._inner = inner;
+            return (events, recorder);
+        }
+
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
+        {
+            var result = targetMethod!.Invoke(_inner, args);
+            switch (result)
+            {
+                case Task<Event> { IsCompletedSuccessfully: true } one when one.Result is not null:
+                    _loadedIds.Add(one.Result.Id);
+                    break;
+                case Task<IReadOnlyList<Event>> { IsCompletedSuccessfully: true } many:
+                    _loadedIds.UnionWith(many.Result.Select(night => night.Id));
+                    break;
+            }
+
+            return result;
+        }
     }
 }

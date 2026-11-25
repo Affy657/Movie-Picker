@@ -192,21 +192,69 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         var otherNight = await events.AddAsync(NewEvent("Famille") with { GroupId = otherGroupId });
         await events.AddAsync(NewEvent("Sans groupe"));
 
-        Assert.Equal([night.Id], (await events.ListByGroupIdsAsync([groupId])).Select(e => e.Id));
+        Assert.Equal([night.Id], (await events.ListOpenByGroupIdsAsync([groupId], Now)).Select(e => e.Id));
 
         var renamed = await events.UpdateAsync(night with { Title = "Jeudi ciné bis" });
 
         Assert.Equal(groupId, renamed.GroupId);
         Assert.Equal(
             new[] { night.Id, otherNight.Id }.Order(),
-            (await events.ListByGroupIdsAsync([groupId, otherGroupId])).Select(e => e.Id).Order());
-        Assert.Empty(await events.ListByGroupIdsAsync([]));
+            (await events.ListOpenByGroupIdsAsync([groupId, otherGroupId], Now)).Select(e => e.Id).Order());
+        Assert.Empty(await events.ListOpenByGroupIdsAsync([], Now));
 
         Assert.Equal(1, await events.DetachGroupsAsync([groupId]));
 
-        Assert.Empty(await events.ListByGroupIdsAsync([groupId]));
+        Assert.Empty(await events.ListOpenByGroupIdsAsync([groupId], Now));
         Assert.Null(Assert.Single(await events.ListByIdsAsync([night.Id])).GroupId);
-        Assert.Equal([otherNight.Id], (await events.ListByGroupIdsAsync([otherGroupId])).Select(e => e.Id));
+        Assert.Equal([otherNight.Id], (await events.ListOpenByGroupIdsAsync([otherGroupId], Now)).Select(e => e.Id));
+    }
+
+    [Fact]
+    public async Task OpenGroupNights_LeaveOutTheClosedOnes_AndThoseOverForLongerThanTheAutoCloseDelay()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var groupId = ObjectId.GenerateNewId().ToString();
+        Event OfTheGroup(string title, string date) => NewEvent(title) with { GroupId = groupId, Date = date, Time = "20:00" };
+        var upcoming = await events.AddAsync(OfTheGroup("upcoming", "2026-09-20"));
+        var onHold = await events.AddAsync(OfTheGroup("on hold", "2026-09-14"));
+        var lastWeek = await events.AddAsync(OfTheGroup("last week", "2026-09-08"));
+        var undated = await events.AddAsync(OfTheGroup("undated", string.Empty));
+        await events.AddAsync(OfTheGroup("long over", "2026-09-01"));
+        await events.AddAsync(OfTheGroup("closed", "2026-09-20") with { ClosedAt = Now });
+        await events.AddAsync(NewEvent("other group") with { GroupId = ObjectId.GenerateNewId().ToString(), Date = "2026-09-20" });
+
+        var open = await events.ListOpenByGroupIdsAsync([groupId], Now);
+
+        Assert.Equal(
+            new[] { upcoming.Id, onHold.Id, lastWeek.Id, undated.Id }.Order(),
+            open.Select(night => night.Id).Order());
+    }
+
+    [Fact]
+    public async Task HeldGroupNights_AreTheFinishedOnesWithAFilm_LatestFirst_WithTheirFilms()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var groupId = ObjectId.GenerateNewId().ToString();
+        EventWinner Pick() => new() { MovieId = ObjectId.GenerateNewId().ToString(), Method = WinnerPickMethod.Wheel, PickedAt = Now };
+        Event OfTheGroup(string title, string date, string time, params EventWinner[] winners) =>
+            NewEvent(title) with { GroupId = groupId, Date = date, Time = time, Winners = winners };
+        var closed = await events.AddAsync(OfTheGroup("closed", "2026-09-10", "20:30", Pick()) with { ClosedAt = Now });
+        var autoClosed = await events.AddAsync(OfTheGroup("auto closed", "2026-08-01", "20:30", Pick()));
+        var endedThreeHoursAgo = await events.AddAsync(OfTheGroup("ended", "2026-09-15", "11:00", Pick()));
+        await events.AddAsync(OfTheGroup("live", "2026-09-15", "13:00", Pick()));
+        await events.AddAsync(OfTheGroup("closed without film", "2026-09-10", "20:30") with { ClosedAt = Now });
+        await events.AddAsync(OfTheGroup("one draw left", "2026-09-15", "11:00", Pick()) with { Config = new EventConfig { WinnerCount = 2 } });
+        await events.AddAsync(NewEvent("other group") with { GroupId = ObjectId.GenerateNewId().ToString(), Winners = [Pick()], ClosedAt = Now });
+
+        var held = await events.ListHeldByGroupIdsAsync([groupId], Now);
+
+        Assert.Equal([endedThreeHoursAgo.Id, closed.Id, autoClosed.Id], held.Select(night => night.Id));
+        Assert.All(held, night => Assert.Equal(groupId, night.GroupId));
+        Assert.Equal(("2026-09-10", "20:30"), (held[1].Date, held[1].Time));
+        Assert.Equal(closed.GetWinnerMovieIds(), held[1].WinnerMovieIds);
+        Assert.Empty(await events.ListHeldByGroupIdsAsync([], Now));
     }
 
     [Fact]

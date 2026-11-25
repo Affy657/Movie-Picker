@@ -4,6 +4,7 @@ using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Auth;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Tests.Builders;
 using Xunit;
@@ -357,6 +358,105 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         var participant = Assert.Single(await participants.ListByEventIdAsync(fixture.EventId));
         Assert.Equal(ServerCopy.DeletedAccount.Pseudo, participant.Pseudo);
         Assert.True(string.IsNullOrEmpty(participant.UserId));
+    }
+
+    private static async Task<User> AddMemberAsync(IServiceProvider services, string name, string? password = null)
+    {
+        var suffix = Guid.NewGuid().ToString("N")[..8];
+        var now = DateTimeOffset.UtcNow;
+        return await services.GetRequiredService<IUserRepository>().AddAsync(new User
+        {
+            Id = string.Empty,
+            Email = $"{name}-{suffix}@example.test",
+            PasswordHash = password is null ? string.Empty : services.GetRequiredService<IPasswordHasher>().Hash(password),
+            DisplayName = name,
+            Handle = name + suffix,
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+    }
+
+    private static async Task<Event> AddUpcomingNightAsync(
+        IServiceProvider services, string hostId, string hostToken, RecurrenceFrequency? recurrence = null)
+    {
+        var now = DateTimeOffset.UtcNow;
+        return await services.GetRequiredService<IEventRepository>().AddAsync(new Event
+        {
+            Id = string.Empty,
+            Title = "Soirée à reprendre",
+            Date = TestDates.Upcoming,
+            Time = "20:30",
+            HostToken = hostToken,
+            Slug = "handover-" + Guid.NewGuid().ToString("N")[..8],
+            CreatorUserId = hostId,
+            Recurrence = recurrence,
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+    }
+
+    private static Task<Participant> JoinAsync(IServiceProvider services, string eventId, string? userId, string pseudo, DateTimeOffset at) =>
+        services.GetRequiredService<IParticipantRepository>().AddAsync(new Participant
+        {
+            Id = string.Empty,
+            EventId = eventId,
+            Pseudo = pseudo,
+            UserId = userId,
+            CreatedAt = at,
+            UpdatedAt = at
+        });
+
+    [MongoFact]
+    public async Task SuccessfulDeletion_HandsAnUpcomingNightToTheOldestRemainingMember()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var services = scope.ServiceProvider;
+        var host = await AddMemberAsync(services, "hote", "MotDePasse1!");
+        var heir = await AddMemberAsync(services, "heritier");
+        var latecomer = await AddMemberAsync(services, "retardataire");
+        var night = await AddUpcomingNightAsync(services, host.Id, "old-host-token");
+        var joinedAt = DateTimeOffset.UtcNow.AddDays(-3);
+        await JoinAsync(services, night.Id, host.Id, "Hôte", joinedAt);
+        await JoinAsync(services, night.Id, null, "Invité", joinedAt.AddMinutes(1));
+        await JoinAsync(services, night.Id, latecomer.Id, "Retardataire", joinedAt.AddHours(2));
+        await JoinAsync(services, night.Id, heir.Id, "Héritier", joinedAt.AddHours(1));
+
+        await services.GetRequiredService<IDeleteAccountHandler>()
+            .HandleAsync(host.Id, new DeleteAccountRequest { Password = "MotDePasse1!" }, recentlyAuthenticated: true);
+
+        var handedOver = (await services.GetRequiredService<IEventRepository>().GetByIdOrSlugAsync(night.Slug))!;
+        Assert.Equal(heir.Id, handedOver.CreatorUserId);
+        Assert.NotEqual("old-host-token", handedOver.HostToken);
+        Assert.Null(handedOver.ClosedAt);
+        Assert.True(handedOver.Version > night.Version);
+        var notifications = services.GetRequiredService<IUserNotificationRepository>();
+        var notice = Assert.Single(await notifications.ListByUserIdAsync(heir.Id));
+        Assert.Equal((UserNotificationType.HostRoleReceived, night.Id, night.Slug), (notice.Type, notice.EventId, notice.EventSlug));
+        Assert.Empty(await notifications.ListByUserIdAsync(latecomer.Id));
+        var formerHost = Assert.Single(
+            await services.GetRequiredService<IParticipantRepository>().ListByEventIdAsync(night.Id),
+            participant => participant.Pseudo.StartsWith(DeleteAccountHandler.AnonymizedParticipantPseudo, StringComparison.Ordinal));
+        Assert.True(string.IsNullOrEmpty(formerHost.UserId));
+    }
+
+    [MongoFact]
+    public async Task SuccessfulDeletion_ClosesARecurringNightNobodyCanTakeOver_AndEndsItsSeries()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var services = scope.ServiceProvider;
+        var host = await AddMemberAsync(services, "seul", "MotDePasse1!");
+        var night = await AddUpcomingNightAsync(services, host.Id, "lonely-host-token", RecurrenceFrequency.Weekly);
+        await JoinAsync(services, night.Id, host.Id, "Seul", DateTimeOffset.UtcNow);
+
+        await services.GetRequiredService<IDeleteAccountHandler>()
+            .HandleAsync(host.Id, new DeleteAccountRequest { Password = "MotDePasse1!" }, recentlyAuthenticated: true);
+
+        var events = services.GetRequiredService<IEventRepository>();
+        var closed = (await events.GetByIdOrSlugAsync(night.Slug))!;
+        Assert.NotNull(closed.ClosedAt);
+        Assert.True(string.IsNullOrEmpty(closed.CreatorUserId));
+        Assert.Null(closed.Recurrence);
+        Assert.DoesNotContain(night.Id, (await events.ListRecurringAwaitingNextOccurrenceAsync(null)).Select(evt => evt.Id));
     }
 
     [MongoFact]

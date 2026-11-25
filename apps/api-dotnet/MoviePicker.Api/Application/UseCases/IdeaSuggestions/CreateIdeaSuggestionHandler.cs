@@ -9,10 +9,12 @@ using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.IdeaSuggestions;
 
-public sealed class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionHandler
+public sealed partial class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionHandler
 {
     private const int MaxAttachments = 4;
     private const int ReferenceLength = 12;
+    private const int MaxAppVersionLength = 20;
+    private const int NeutralizationTimeoutMilliseconds = 1000;
     private const string AnyIdentifier = ":param";
 
     private static readonly HashSet<string> StaticPathSegments = new(StringComparer.Ordinal)
@@ -29,11 +31,6 @@ public sealed class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionHandler
         ["r"] = ":slug",
         ["u"] = ":handle"
     };
-
-    private static readonly Regex PublishableAppVersionPattern = new(
-        @"^[0-9A-Za-z.+-]{1,20}\z",
-        RegexOptions.CultureInvariant,
-        TimeSpan.FromMilliseconds(100));
 
     private readonly IGitHubIssueClient _github;
     private readonly ILogger<CreateIdeaSuggestionHandler> _logger;
@@ -126,8 +123,11 @@ public sealed class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionHandler
     private static string? PublishableAppVersion(string? appVersion)
     {
         var version = appVersion?.Trim();
-        return !string.IsNullOrEmpty(version) && PublishableAppVersionPattern.IsMatch(version) ? version : null;
+        return version is { Length: > 0 and <= MaxAppVersionLength } && version.All(IsAppVersionCharacter) ? version : null;
     }
+
+    private static bool IsAppVersionCharacter(char character) =>
+        char.IsAsciiLetterOrDigit(character) || character is '.' or '+' or '-';
 
     private static GitHubIssueDraft BuildDraft(
         CreateIdeaSuggestionRequest request, string reference, List<string> screenshotUrls)
@@ -166,32 +166,24 @@ public sealed class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionHandler
         return new GitHubIssueDraft(title, string.Join('\n', bodyLines), [label, "user-feedback"]);
     }
 
-    private static readonly Regex MentionPattern = new(
-        @"@(?=\w)",
-        RegexOptions.Compiled,
-        TimeSpan.FromMilliseconds(100));
+    [GeneratedRegex(@"@(?=\w)", RegexOptions.None, NeutralizationTimeoutMilliseconds)]
+    private static partial Regex MentionPattern();
 
-    private static readonly Regex IssueNumberPattern = new(
-        @"#(?=\d)",
-        RegexOptions.Compiled,
-        TimeSpan.FromMilliseconds(100));
+    [GeneratedRegex(@"#(?=\d)", RegexOptions.None, NeutralizationTimeoutMilliseconds)]
+    private static partial Regex IssueNumberPattern();
 
-    private static readonly Regex GitHubShorthandPattern = new(
-        @"\bGH(?=-\d)",
-        RegexOptions.Compiled | RegexOptions.IgnoreCase,
-        TimeSpan.FromMilliseconds(100));
+    [GeneratedRegex(@"\bGH(?=-\d)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, NeutralizationTimeoutMilliseconds)]
+    private static partial Regex GitHubShorthandPattern();
 
-    private static readonly Regex GitHubHostPattern = new(
-        @"github(?=\.com)",
-        RegexOptions.Compiled | RegexOptions.IgnoreCase,
-        TimeSpan.FromMilliseconds(100));
+    [GeneratedRegex(@"github(?=\.com)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, NeutralizationTimeoutMilliseconds)]
+    private static partial Regex GitHubHostPattern();
 
     private static string NeutralizeGitHubReferences(string text)
     {
-        var neutralized = MentionPattern.Replace(text, "@\u200b");
-        neutralized = IssueNumberPattern.Replace(neutralized, "#\u200b");
-        neutralized = GitHubShorthandPattern.Replace(neutralized, match => match.Value + "\u200b");
-        return GitHubHostPattern.Replace(neutralized, match => match.Value + "\u200b");
+        var neutralized = MentionPattern().Replace(text, "@\u200b");
+        neutralized = IssueNumberPattern().Replace(neutralized, "#\u200b");
+        neutralized = GitHubShorthandPattern().Replace(neutralized, match => match.Value + "\u200b");
+        return GitHubHostPattern().Replace(neutralized, match => match.Value + "\u200b");
     }
 
     private static string EscapeHtmlCommentOpeners(string markdown) =>

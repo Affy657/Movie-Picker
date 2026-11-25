@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http.Features;
@@ -55,11 +54,12 @@ public sealed class EventStreamResult : IActionResult
         response.Headers["X-Accel-Buffering"] = "no";
         http.Features.Get<IHttpResponseBodyFeature>()?.DisableBuffering();
 
+        var clock = http.RequestServices.GetRequiredService<TimeProvider>();
         var presence = _access.ParticipantId is null
             ? null
             : new PresenceKeeper(
                 http.RequestServices.GetRequiredService<IEventPresenceRepository>(),
-                http.RequestServices.GetRequiredService<TimeProvider>(),
+                clock,
                 logger,
                 _access,
                 _options.PresenceTtl);
@@ -68,47 +68,54 @@ public sealed class EventStreamResult : IActionResult
         await TouchAsync(presence, ct);
         await WriteAsync(response, $"retry: {(long)_options.ReconnectDelay.TotalMilliseconds}\n\n", ct);
         await WriteEventAsync(response, "ready", new { }, ct);
-        await PumpAsync(response, subscription, presence, ct);
+        await PumpAsync(response, subscription, presence, clock, ct);
     }
 
     private async Task PumpAsync(
         HttpResponse response,
         EventLiveSubscription subscription,
         PresenceKeeper? presence,
+        TimeProvider clock,
         CancellationToken ct)
     {
-        var elapsed = Stopwatch.StartNew();
+        var startedAt = clock.GetTimestamp();
         var nextPing = _options.KeepAliveInterval;
         var nextTouch = _options.PresenceRefresh;
 
-        while (elapsed.Elapsed < _options.StreamLifetime && !_lease.IsReplaced)
+        while (Elapsed() < _options.StreamLifetime && !_lease.IsReplaced)
         {
-            if (presence is not null && elapsed.Elapsed >= nextTouch)
+            if (presence is not null && Elapsed() >= nextTouch)
             {
                 await TouchAsync(presence, ct);
-                nextTouch = elapsed.Elapsed + _options.PresenceRefresh;
+                nextTouch = Elapsed() + _options.PresenceRefresh;
             }
 
-            if (elapsed.Elapsed >= nextPing)
+            if (Elapsed() >= nextPing)
             {
                 await WriteEventAsync(response, "ping", new { }, ct);
-                nextPing = elapsed.Elapsed + _options.KeepAliveInterval;
+                nextPing = Elapsed() + _options.KeepAliveInterval;
             }
 
             var deadline = Min(_options.StreamLifetime, nextPing, presence is null ? nextPing : nextTouch);
-            var wait = deadline - elapsed.Elapsed;
-            if (wait > TimeSpan.Zero && !await WaitForSignalAsync(subscription, wait, ct))
+            var wait = deadline - Elapsed();
+            if (wait > TimeSpan.Zero && !await WaitForSignalAsync(subscription, wait, clock, ct))
                 return;
 
             while (subscription.Signals.TryRead(out var signal))
                 await WriteSignalAsync(response, signal, ct);
         }
+
+        TimeSpan Elapsed() => clock.GetElapsedTime(startedAt);
     }
 
-    private static async Task<bool> WaitForSignalAsync(EventLiveSubscription subscription, TimeSpan wait, CancellationToken ct)
+    private static async Task<bool> WaitForSignalAsync(
+        EventLiveSubscription subscription,
+        TimeSpan wait,
+        TimeProvider clock,
+        CancellationToken ct)
     {
-        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        timeout.CancelAfter(wait);
+        using var delay = new CancellationTokenSource(wait, clock);
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct, delay.Token);
         try
         {
             return await subscription.Signals.WaitToReadAsync(timeout.Token);

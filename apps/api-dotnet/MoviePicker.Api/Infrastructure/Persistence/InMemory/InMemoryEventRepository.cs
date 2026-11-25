@@ -203,13 +203,40 @@ public sealed class InMemoryEventRepository : IEventRepository
         return Task.FromResult(result);
     }
 
-    public Task<IReadOnlyList<Event>> ListByGroupIdsAsync(IReadOnlyCollection<string> groupIds, CancellationToken ct = default)
+    public Task<IReadOnlyList<Event>> ListOpenByGroupIdsAsync(
+        IReadOnlyCollection<string> groupIds,
+        DateTimeOffset utcNow,
+        CancellationToken ct = default)
+    {
+        var startedAfter = utcNow - EventSchedule.PendingDelay - EventSchedule.AutoCloseDelay;
+        IReadOnlyList<Event> result = NightsOfGroups(groupIds)
+            .Where(e => !e.ClosedAt.HasValue
+                && (!EventSchedule.TryGetStartUtc(e.Date, e.Time, out var startAt) || startAt >= startedAfter))
+            .ToList();
+        return Task.FromResult(result);
+    }
+
+    public Task<IReadOnlyList<HeldGroupNight>> ListHeldByGroupIdsAsync(
+        IReadOnlyCollection<string> groupIds,
+        DateTimeOffset utcNow,
+        CancellationToken ct = default)
+    {
+        IReadOnlyList<HeldGroupNight> result = NightsOfGroups(groupIds)
+            .Where(e => e.HasWinner && e.IsFinished(utcNow))
+            .OrderByDescending(e => e.Date, StringComparer.Ordinal)
+            .ThenByDescending(e => e.Time, StringComparer.Ordinal)
+            .ThenByDescending(e => e.Id, StringComparer.Ordinal)
+            .Select(e => new HeldGroupNight(e.Id, e.GroupId!, e.Date, e.Time, e.GetWinnerMovieIds()))
+            .ToList();
+        return Task.FromResult(result);
+    }
+
+    private IEnumerable<Event> NightsOfGroups(IReadOnlyCollection<string> groupIds)
     {
         var ids = groupIds.Where(id => !string.IsNullOrWhiteSpace(id)).ToHashSet(StringComparer.Ordinal);
-        IReadOnlyList<Event> result = ids.Count == 0
+        return ids.Count == 0
             ? []
-            : _byId.Values.Where(e => e.GroupId is { } groupId && ids.Contains(groupId)).ToList();
-        return Task.FromResult(result);
+            : _byId.Values.Where(e => e.GroupId is { } groupId && ids.Contains(groupId));
     }
 
     public Task<IReadOnlyList<Event>> ListTitleMatchesAsync(

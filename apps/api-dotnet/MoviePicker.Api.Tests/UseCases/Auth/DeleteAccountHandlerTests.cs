@@ -4,7 +4,10 @@ using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Auth;
+using MoviePicker.Api.Application.UseCases.RecurringEvents;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Application.UseCases.UsageCounts;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
@@ -44,6 +47,17 @@ public sealed class DeleteAccountHandlerTests
                 Participants,
                 TestAudienceNotifier.Over(Participants, Users, Push, PushSender.Object, Notifications),
                 TimeProvider.System);
+
+        public RecurringEventPass RecurringPass() =>
+            new(
+                Events,
+                Participants,
+                Users,
+                Groups,
+                Mock.Of<IGroupNightAnnouncer>(),
+                new InMemoryUnitOfWork(),
+                TimeProvider.System,
+                NullLogger<RecurringEventPass>.Instance);
 
         public DeleteAccountHandler CreateHandler() =>
             new(
@@ -633,6 +647,44 @@ public sealed class DeleteAccountHandlerTests
         var closed = await f.Events.GetByIdOrSlugAsync("seul");
         Assert.NotNull(closed!.ClosedAt);
         Assert.Null(closed.CreatorUserId);
+    }
+
+    [Fact]
+    public async Task HandleAsync_HostAloneOnARecurringNight_ClosesTheNightAndEndsTheSeries()
+    {
+        var f = new Fixture();
+        var host = await SeedUserAsync(f, "abcd1234");
+        var night = await f.Events.AddAsync(new Event { Title = "Chaque jeudi", Slug = "chaque-jeudi", Date = TestDates.Upcoming, Time = "20:00", CreatorUserId = host.Id, Recurrence = RecurrenceFrequency.Weekly });
+        await JoinAsync(f, night.Id, host.Id, "Neo", DateTimeOffset.UtcNow);
+
+        await f.CreateHandler().HandleAsync(host.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
+
+        var closed = await f.Events.GetByIdOrSlugAsync("chaque-jeudi");
+        Assert.NotNull(closed!.ClosedAt);
+        Assert.Null(closed.Recurrence);
+
+        var pass = await f.RecurringPass().RunAsync();
+
+        Assert.Equal(new RecurringEventPassResult(0, 0, 0), pass);
+        Assert.Null((await f.Events.GetByIdOrSlugAsync("chaque-jeudi"))!.NextOccurrenceEventId);
+    }
+
+    [Fact]
+    public async Task HandleAsync_HostOfARecurringNight_HandsTheSeriesOverWithTheNight()
+    {
+        var f = new Fixture();
+        var host = await SeedUserAsync(f, "abcd1234");
+        var heir = await SeedGuestAsync(f, "heir");
+        var night = await f.Events.AddAsync(new Event { Title = "Chaque mardi", Slug = "chaque-mardi", Date = TestDates.Upcoming, Time = "20:00", CreatorUserId = host.Id, Recurrence = RecurrenceFrequency.Weekly });
+        await JoinAsync(f, night.Id, host.Id, "Neo", DateTimeOffset.UtcNow.AddHours(-2));
+        await JoinAsync(f, night.Id, heir.Id, "Heir", DateTimeOffset.UtcNow.AddHours(-1));
+
+        await f.CreateHandler().HandleAsync(host.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
+
+        var handedOver = await f.Events.GetByIdOrSlugAsync("chaque-mardi");
+        Assert.Equal(heir.Id, handedOver!.CreatorUserId);
+        Assert.Equal(RecurrenceFrequency.Weekly, handedOver.Recurrence);
+        Assert.Null(handedOver.ClosedAt);
     }
 
     [Fact]

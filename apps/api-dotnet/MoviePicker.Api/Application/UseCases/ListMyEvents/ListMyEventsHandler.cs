@@ -50,7 +50,7 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
         var groupNames = myGroups.ToDictionary(g => g.Id, g => g.Name);
         var groupNights = groupNames.Count == 0
             ? []
-            : FriendGroup.NightsKeptBy(await _eventRepository.ListByGroupIdsAsync(groupNames.Keys, ct), myGroups).ToList();
+            : FriendGroup.NightsKeptBy(await _eventRepository.ListOpenByGroupIdsAsync(groupNames.Keys, utcNow, ct), myGroups).ToList();
 
         var (merged, winnerMovieIdByEventId) = BuildMergedEvents(
             new MyNightSources(created, onlyJoined, groupNights), joinedSet, groupNames, utcNow);

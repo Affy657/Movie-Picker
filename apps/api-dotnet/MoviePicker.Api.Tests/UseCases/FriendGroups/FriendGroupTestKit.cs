@@ -50,18 +50,21 @@ internal sealed class FriendGroupTestKit
 
     public SteppingClock Clock { get; } = new(Start);
 
-    public FriendGroupNightsReader NightsReader() => new(
-        Events,
+    public FriendGroupNightsReader NightsReader(IEventRepository? events = null) => new(
+        events ?? Events,
         Participants,
         new MyEventSummaryEnricher(Participants, Movies, Ratings, Votes, Users),
         new FriendGroupShowcaseReader(Movies, Ratings, Tmdb.Object),
         Clock);
 
-    public ListFriendGroupsHandler ListHandler() => new(Groups, Users, NightsReader(), Clock);
+    public ListFriendGroupsHandler ListHandler(IEventRepository? events = null) => new(Groups, Users, NightsReader(events), Clock);
+
+    public ListMyEventsHandler MyNightsHandler(IEventRepository events) =>
+        new(events, Participants, Movies, Ratings, Votes, Users, Groups, Clock);
 
     public CreateFriendGroupHandler CreateHandler() => new(Groups, Users, Clock);
 
-    public GetFriendGroupHandler GetHandler() => new(Groups, Users, NightsReader());
+    public GetFriendGroupHandler GetHandler(IEventRepository? events = null) => new(Groups, Users, NightsReader(events));
 
     public GetFriendGroupRankingHandler RankingHandler() =>
         new(Groups, Events, Participants, Movies, Votes, SeenMarks, Ratings, Clock);

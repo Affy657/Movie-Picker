@@ -23,19 +23,12 @@ public sealed class FriendGroupShowcaseReader
         _tmdb = tmdb;
     }
 
-    public static IReadOnlyList<Event> HeldNights(IEnumerable<Event> nights, DateTimeOffset now) =>
-        nights
-            .Where(night => night.IsFinished(now) && night.HasWinner)
-            .OrderByDescending(night => night.Date, StringComparer.Ordinal)
-            .ThenByDescending(night => night.Time, StringComparer.Ordinal)
-            .ToList();
-
-    public async Task<FriendGroupStatsResponse> StatsAsync(IReadOnlyList<Event> held, CancellationToken ct)
+    public async Task<FriendGroupStatsResponse> StatsAsync(IReadOnlyList<HeldGroupNight> held, CancellationToken ct)
     {
         if (held.Count == 0)
             return FriendGroupStatsResponse.None;
 
-        var filmIds = held.SelectMany(night => night.GetWinnerMovieIds()).ToHashSet(StringComparer.Ordinal);
+        var filmIds = held.SelectMany(night => night.WinnerMovieIds).ToHashSet(StringComparer.Ordinal);
         var ratings = await _ratings.ListByEventIdsAsync(held.Select(night => night.Id).ToList(), ct);
         var filmAverages = ratings
             .Where(rating => filmIds.Contains(rating.MovieId))
@@ -54,13 +47,13 @@ public sealed class FriendGroupShowcaseReader
     }
 
     public async Task<IReadOnlyDictionary<string, FriendGroupCoverResponse>> CoversAsync(
-        IReadOnlyList<Event> lastNights,
+        IReadOnlyList<HeldGroupNight> lastNights,
         CancellationToken ct)
     {
         if (lastNights.Count == 0)
             return NoCovers;
 
-        var filmIds = lastNights.ToDictionary(night => night.Id, night => night.GetWinnerMovieIds()[0], StringComparer.Ordinal);
+        var filmIds = lastNights.ToDictionary(night => night.Id, night => night.WinnerMovieIds[0], StringComparer.Ordinal);
         var films = (await _movies.ListByIdsAsync(filmIds.Values.Distinct(StringComparer.Ordinal).ToList(), ct))
             .ToDictionary(film => film.Id, StringComparer.Ordinal);
         var covers = await Task.WhenAll(filmIds.Select(async pair =>
@@ -97,7 +90,7 @@ public sealed class FriendGroupShowcaseReader
         };
     }
 
-    private static int? UsualWeekday(IReadOnlyList<Event> held)
+    private static int? UsualWeekday(IReadOnlyList<HeldGroupNight> held)
     {
         var byDay = held
             .Select(night => DateOnly.TryParseExact(night.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
