@@ -359,30 +359,34 @@ export default function EventDetailHeader({
       </div>
 
       <div className={styles.recap}>
-        <span className={styles.date}>{dateFormatted}</span>
-        <span className={styles.sep} aria-hidden />
-        <ParticipantsButton
-          participants={stacked}
-          hiddenCount={hiddenCount}
-          label={participantsLabel}
-          onOpen={onOpenParticipants}
-          testId="participants-toggle"
-        />
-        {onlineCount > 0 ? (
-          <span className={styles.online} data-testid="participants-online">
-            <StatusDot />
-            <span className={styles.onlineLabel}>{onlineCountLabel(onlineCount, t)}</span>
-          </span>
-        ) : null}
-        <span className={styles.stats}>
-          <span className={styles.sep} aria-hidden />
-          <span>{moviesLabel}</span>
+        <span className={styles.when}>
+          <span className={styles.date}>{dateFormatted}</span>
           {showStatus ? (
-            <>
+            <span className={styles.status}>
               <span className={styles.sep} aria-hidden />
               <LifecycleStatus lifecycle={lifecycle} countdownLabel={countdownLabel} t={t} />
-            </>
+            </span>
           ) : null}
+        </span>
+        <span className={styles.sep} aria-hidden />
+        <span className={styles.who}>
+          <ParticipantsButton
+            participants={stacked}
+            hiddenCount={hiddenCount}
+            label={participantsLabel}
+            onOpen={onOpenParticipants}
+            testId="participants-toggle"
+          />
+          {onlineCount > 0 ? (
+            <span className={styles.online} data-testid="participants-online">
+              <StatusDot />
+              <span className={styles.onlineLabel}>{onlineCountLabel(onlineCount, t)}</span>
+            </span>
+          ) : null}
+          <span className={styles.movies}>
+            <span className={styles.sep} aria-hidden />
+            <span className={styles.moviesLabel}>{moviesLabel}</span>
+          </span>
         </span>
         {onViewModeChange && viewMode ? (
           <ViewModeToggle

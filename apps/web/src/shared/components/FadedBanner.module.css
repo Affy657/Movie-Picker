@@ -13,22 +13,23 @@
 }
 
 .backdrop::after {
+  --banner-fade-end: calc(100% - var(--banner-overlap) + var(--banner-fade-reach));
   content: '';
   position: absolute;
   inset: 0;
   background: linear-gradient(
     to bottom,
-    transparent calc(100% - var(--banner-overlap) - var(--space-16)),
-    var(--color-bg) calc(100% - var(--banner-overlap))
+    transparent calc(var(--banner-fade-end) - var(--space-20)),
+    var(--color-bg) var(--banner-fade-end)
   );
 }
 
 .tinted .backdrop::after {
   background: linear-gradient(
     to bottom,
-    transparent calc(100% - var(--banner-overlap) - var(--space-16)),
-    var(--color-primary-soft) calc(100% - var(--banner-overlap) - var(--space-6)),
-    var(--color-bg) calc(100% - var(--banner-overlap))
+    transparent calc(var(--banner-fade-end) - var(--space-20)),
+    var(--color-primary-soft) calc(var(--banner-fade-end) - var(--space-6)),
+    var(--color-bg) var(--banner-fade-end)
   );
 }
 
@@ -121,6 +122,7 @@
 
 .pageWithBanner {
   --banner-overlap: calc(var(--space-24) + var(--space-8));
+  --banner-fade-reach: var(--space-16);
   max-width: none;
   padding-top: 0;
   padding-left: 0;
@@ -145,5 +147,6 @@
 @media (max-width: 47.9375rem) {
   .pageWithBanner {
     --banner-overlap: var(--space-24);
+    --banner-fade-reach: var(--space-12);
   }
 }

@@ -8,6 +8,7 @@ import EventDetailHeader, {
 } from '@/features/events/pages/event-detail/EventDetailHeader';
 import { LocaleProvider } from '@/shared/i18n';
 import { ConsentProvider } from '@/shared/contexts/ConsentContext';
+import styles from '@/features/events/pages/event-detail/EventDetailHeader.module.css';
 
 function stubDesktopViewport(matches: boolean) {
   vi.stubGlobal(
@@ -105,18 +106,21 @@ describe('EventDetailHeader', () => {
     expect(document.documentElement.style.getPropertyValue('--event-sticky-bar-height')).toBe('');
   });
 
-  it('shows the movie night summary and the start countdown at the end of the line', () => {
+  it('shows the movie night summary and the start countdown', () => {
     renderHeader(<EventDetailHeader {...baseProps} countdownLabel="2 j 06 h" />);
     expect(screen.getByRole('heading', { name: 'Soirée ciné' })).toBeInTheDocument();
-    const date = screen.getByText('lundi 15 juin à 19h00');
-    const movies = screen.getByText('2 films');
-    const countdown = screen.getByText('Commence dans');
-    expect(countdown).toHaveTextContent('Commence dans 2 j 06 h');
-    expect(date.compareDocumentPosition(movies) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(
-      movies.compareDocumentPosition(countdown) & Node.DOCUMENT_POSITION_FOLLOWING
-    ).toBeTruthy();
+    expect(screen.getByText('lundi 15 juin à 19h00')).toBeInTheDocument();
+    expect(screen.getByText('2 films')).toBeInTheDocument();
+    expect(screen.getByText('Commence dans')).toHaveTextContent('Commence dans 2 j 06 h');
     expect(screen.queryByText(/votants/)).not.toBeInTheDocument();
+  });
+
+  it('keeps the countdown beside the date and the movie count beside the participants', () => {
+    renderHeader(<EventDetailHeader {...baseProps} countdownLabel="2 j 06 h" />);
+    const when = screen.getByText('lundi 15 juin à 19h00').closest(`.${styles.when}`);
+    const who = screen.getByTestId('participants-toggle').closest(`.${styles.who}`);
+    expect(when).toContainElement(screen.getByText('Commence dans'));
+    expect(who).toContainElement(screen.getByText('2 films'));
   });
 
   it('shows no countdown when the movie night is in progress', () => {
