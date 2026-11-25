@@ -22,7 +22,15 @@ public interface IEventRepository
 
     Task<IReadOnlyList<Event>> ListByIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default);
 
-    Task<IReadOnlyList<Event>> ListByGroupIdsAsync(IReadOnlyCollection<string> groupIds, CancellationToken ct = default);
+    Task<IReadOnlyList<Event>> ListOpenByGroupIdsAsync(
+        IReadOnlyCollection<string> groupIds,
+        DateTimeOffset utcNow,
+        CancellationToken ct = default);
+
+    Task<IReadOnlyList<HeldGroupNight>> ListHeldByGroupIdsAsync(
+        IReadOnlyCollection<string> groupIds,
+        DateTimeOffset utcNow,
+        CancellationToken ct = default);
 
     Task<IReadOnlyList<Event>> ListTitleMatchesAsync(
         string creatorUserId,
@@ -68,3 +76,5 @@ public interface IEventRepository
 
     Task<bool> MarkWatchlistCleanedAsync(string eventId, DateTimeOffset cleanedAt, CancellationToken ct = default);
 }
+
+public sealed record HeldGroupNight(string Id, string GroupId, string Date, string Time, IReadOnlyList<string> WinnerMovieIds);

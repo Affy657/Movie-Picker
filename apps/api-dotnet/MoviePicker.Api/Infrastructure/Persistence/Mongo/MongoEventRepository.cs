@@ -274,14 +274,66 @@ public sealed class MongoEventRepository : IEventRepository
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
     }
 
-    public async Task<IReadOnlyList<Event>> ListByGroupIdsAsync(IReadOnlyCollection<string> groupIds, CancellationToken ct = default)
+    public async Task<IReadOnlyList<Event>> ListOpenByGroupIdsAsync(
+        IReadOnlyCollection<string> groupIds,
+        DateTimeOffset utcNow,
+        CancellationToken ct = default)
     {
         var ids = groupIds.Where(MongoObjectIds.IsValid).Distinct().ToList();
         if (ids.Count == 0)
             return [];
 
-        var docs = await _collection.Find(Builders<EventDocument>.Filter.In(x => x.GroupId, ids)).ToListAsync(ct);
+        var startedAfter = (utcNow - EventSchedule.PendingDelay - EventSchedule.AutoCloseDelay).UtcDateTime;
+        var builder = Builders<EventDocument>.Filter;
+        var filter = builder.And(
+            builder.In(x => x.GroupId, ids),
+            builder.Eq(x => x.ClosedAt, (DateTime?)null),
+            builder.Or(
+                builder.Gte(x => x.StartAtUtc, startedAfter),
+                builder.Eq(x => x.StartAtUtc, (DateTime?)null)));
+        var docs = await _collection.Find(filter).ToListAsync(ct);
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
+    }
+
+    public async Task<IReadOnlyList<HeldGroupNight>> ListHeldByGroupIdsAsync(
+        IReadOnlyCollection<string> groupIds,
+        DateTimeOffset utcNow,
+        CancellationToken ct = default)
+    {
+        var ids = groupIds.Where(MongoObjectIds.IsValid).Distinct().ToList();
+        if (ids.Count == 0)
+            return [];
+
+        var builder = Builders<EventDocument>.Filter;
+        var filter = builder.And(
+            builder.In(x => x.GroupId, ids),
+            builder.SizeGt(x => x.Winners, 0),
+            FinishedBy(utcNow));
+        var docs = await _collection.Find(filter)
+            .Sort(Builders<EventDocument>.Sort.Descending(x => x.Date).Descending(x => x.Time).Descending(x => x.Id))
+            .Project<EventDocument>(Builders<EventDocument>.Projection
+                .Include(x => x.GroupId)
+                .Include(x => x.Date)
+                .Include(x => x.Time)
+                .Include("winners.movieId"))
+            .ToListAsync(ct);
+        return docs.ConvertAll(doc => new HeldGroupNight(
+            doc.Id,
+            doc.GroupId ?? string.Empty,
+            doc.Date,
+            doc.Time,
+            (doc.Winners ?? []).ConvertAll(winner => winner.MovieId)));
+    }
+
+    private static FilterDefinition<EventDocument> FinishedBy(DateTimeOffset utcNow)
+    {
+        var pendingSinceStartedBefore = (utcNow - EventSchedule.PendingDelay).UtcDateTime;
+        var autoClosedStartedBefore = (utcNow - EventSchedule.PendingDelay - EventSchedule.AutoCloseDelay).UtcDateTime;
+        var builder = Builders<EventDocument>.Filter;
+        return builder.Or(
+            builder.Ne(x => x.ClosedAt, (DateTime?)null),
+            builder.Lte(x => x.StartAtUtc, autoClosedStartedBefore),
+            builder.And(builder.Lte(x => x.StartAtUtc, pendingSinceStartedBefore), EveryWinnerDrawn));
     }
 
     public async Task<IReadOnlyList<Event>> ListTitleMatchesAsync(
@@ -334,16 +386,11 @@ public sealed class MongoEventRepository : IEventRepository
         if (limit <= 0)
             return [];
 
-        var pendingSinceStartedBefore = (utcNow - EventSchedule.PendingDelay).UtcDateTime;
-        var autoClosedStartedBefore = (utcNow - EventSchedule.PendingDelay - EventSchedule.AutoCloseDelay).UtcDateTime;
         var builder = Builders<EventDocument>.Filter;
         var filter = builder.And(
             builder.SizeGt(x => x.Winners, 0),
             builder.Eq(x => x.WatchlistCleanedAt, (DateTime?)null),
-            builder.Or(
-                builder.Ne(x => x.ClosedAt, (DateTime?)null),
-                builder.Lte(x => x.StartAtUtc, autoClosedStartedBefore),
-                builder.And(builder.Lte(x => x.StartAtUtc, pendingSinceStartedBefore), EveryWinnerDrawn)));
+            FinishedBy(utcNow));
         var docs = await _collection.Find(filter).Limit(limit).ToListAsync(ct);
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
     }

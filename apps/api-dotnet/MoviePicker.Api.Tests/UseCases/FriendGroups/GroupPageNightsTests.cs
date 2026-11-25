@@ -178,7 +178,7 @@ public sealed class GroupPageNightsTests : FriendGroupTestBase
 
         await Kit.DeleteHandler().HandleAsync(FriendGroupTestKit.Owner, group.Id);
 
-        Assert.Empty(await Kit.Events.ListByGroupIdsAsync([group.Id]));
+        Assert.Empty(await Kit.Events.ListOpenByGroupIdsAsync([group.Id], Kit.Clock.GetUtcNow()));
         Assert.Null(Assert.Single(await Kit.Events.ListByIdsAsync([night.Id])).GroupId);
     }
 }
