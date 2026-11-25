@@ -2778,12 +2778,6 @@ export const fr = {
     unknown_theme: 'Thème inconnu',
     unknown_genre: 'Genre inconnu',
     unknown_collection: 'Collection inconnue',
-    too_many_attachments: 'Trop de pièces jointes (maximum {{max}}).',
-    attachment_content_invalid: 'Contenu invalide (base64 malformé) pour « {{name}} ».',
-    attachment_content_mismatch:
-      'Le contenu de « {{name}} » ne correspond pas au format déclaré ({{type}}).',
-    attachment_image_unreadable:
-      'Impossible de lire l’image « {{name}} ». Essayez une autre capture.',
     invite_only_followed: 'Vous ne pouvez inviter que des utilisateurs que vous suivez.',
     no_movie_proposed: 'Aucun film proposé. Proposez au moins un film pour lancer la roue.',
     all_movies_excluded:
@@ -3020,7 +3014,7 @@ export const fr = {
       'Les paiements sont traités intégralement par Ko-fi, qui agit comme responsable de traitement pour les données de paiement : Movie Picker n’y a jamais accès. À chaque don, Ko-fi notifie notre serveur et transmet l’adresse e-mail du donateur. Cette adresse est utilisée uniquement, en mémoire, pour retrouver le compte Movie Picker correspondant et y afficher le badge de soutien ; elle n’est jamais enregistrée. Aucun montant, nom de donateur ni message n’est conservé : seule la date du premier don est stockée sur le compte concerné, ainsi qu’un identifiant technique de notification qui évite de traiter deux fois le même don.',
     privacyIdeasTitle: 'Suggestions d’idées',
     privacyIdeasBody:
-      'Une suggestion envoyée depuis le bouton « Proposer une idée » devient un ticket public du dépôt GitHub du projet, lisible par tous : son titre, sa description, ses captures d’écran (sans leurs métadonnées), le type de page d’où elle part et la version de l’application. Votre nom, votre pseudo et votre e-mail n’y figurent pas, seulement un identifiant technique qui permet de vous recontacter. La suppression de votre compte n’efface pas ce ticket : écrivez à l’adresse de contact pour le faire retirer.',
+      'Une suggestion envoyée depuis le bouton « Proposer une idée » devient un ticket public du dépôt GitHub du projet, lisible par tous : son titre, sa description, le type de page d’où elle part et la version de l’application. Votre nom, votre pseudo et votre e-mail n’y figurent pas, seulement un identifiant technique qui permet de vous recontacter. La suppression de votre compte n’efface pas ce ticket : écrivez à l’adresse de contact pour le faire retirer.',
     privacyPurposesTitle: 'Finalités et bases légales',
     privacyPurposesBody: 'Chaque traitement repose sur une base légale du RGPD :',
     privacyPurposeService:
@@ -3134,19 +3128,8 @@ export const fr = {
     titleLabel: 'Titre',
     descriptionLabel: 'Description',
     descriptionHint: '{{count}} caractères restants',
-    attachmentsLabel: 'Captures d’écran (optionnel)',
-    attachmentsAddButton: 'Ajouter une image',
-    attachmentsDropHint:
-      'Glissez-déposez, collez ou choisissez jusqu’à {{max}} images (PNG, JPEG, WebP ou GIF, 4 Mo max)',
-    attachmentsRemove: 'Retirer cette image',
-    attachmentsTooMany: 'Vous ne pouvez joindre que {{max}} images maximum.',
-    attachmentsTooLarge: 'Image trop lourde (4 Mo maximum) : {{name}}',
-    attachmentsUnsupportedType:
-      'Format non supporté (PNG, JPEG, WebP ou GIF uniquement) : {{name}}',
-    attachmentsUnreadable:
-      'Impossible de lire l’image {{name}}. Retirez-la puis ajoutez-la de nouveau.',
     publicNotice:
-      'Votre suggestion et vos captures seront publiées dans un ticket public sur GitHub, sans votre nom. N’y mettez rien de personnel.',
+      'Votre suggestion sera publiée dans un ticket public sur GitHub, sans votre nom. N’y mettez rien de personnel.',
     submit: 'Envoyer',
     submitting: 'Envoi…',
     submitError: 'Impossible d’envoyer votre suggestion pour le moment. Réessayez.',
@@ -3691,7 +3674,7 @@ export const fr = {
         'Planificateur de Google Cloud : il appelle une adresse à l’heure dite, ce qui remplace une minuterie vivant dans le serveur.',
       issues: 'GitHub Issues',
       issuesValue:
-        'Une suggestion envoyée dans l’app ouvre une issue, capture d’écran comprise. Sans jeton, l’envoi est ignoré et journalisé plutôt que renvoyé en erreur.',
+        'Une suggestion envoyée dans l’app ouvre une issue. Sans jeton, l’envoi est ignoré et journalisé plutôt que renvoyé en erreur.',
       issuesHint:
         'Le suivi de bugs de GitHub, alimenté directement par le formulaire de suggestion de l’app.',
     },
@@ -4052,7 +4035,7 @@ export const fr = {
       pipelineHeading: 'Ce qui tient la chaîne',
       trigger: 'Déclenchement',
       triggerValue:
-        'Toute poussée sur master et toute demande de fusion vers master lancent la chaîne. Le code n’a pas d’autre branche durable : chaque livraison part d’une branche courte, rejoint master le jour où elle est prête et part en production dans la journée, avec sa propre version. La seule autre branche, feedback-attachments, ne contient pas de code : le serveur y range les captures d’écran jointes aux suggestions.',
+        'Toute poussée sur master et toute demande de fusion vers master lancent la chaîne. Le code n’a pas d’autre branche durable : chaque livraison part d’une branche courte, rejoint master le jour où elle est prête et part en production dans la journée, avec sa propre version. La seule autre branche, feedback-attachments, ne contient pas de code : elle garde les captures d’écran que l’on pouvait joindre aux suggestions jusqu’en novembre 2026.',
       triggerHint:
         'Une poussée ne déclenche la chaîne que sur master : une branche courte n’est jouée que par sa demande de fusion, robot de dépendances compris, pour ne pas lancer deux fois la chaîne sur le même commit.',
       scope: 'Périmètre calculé',

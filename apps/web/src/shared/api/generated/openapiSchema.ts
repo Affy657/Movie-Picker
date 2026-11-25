@@ -12228,7 +12228,6 @@ export interface components {
             description: string;
             pagePath?: string | null;
             appVersion?: string | null;
-            attachments?: components["schemas"]["IdeaSuggestionAttachmentDto"][] | null;
         };
         CreateMovieListRequest: {
             name: string;
@@ -12886,12 +12885,6 @@ export interface components {
             service: string;
             release: string;
             dependencies: components["schemas"]["HealthDependencyStatus"][];
-        };
-        IdeaSuggestionAttachmentDto: {
-            fileName: string;
-            /** @enum {string} */
-            contentType: "image/png" | "image/jpeg" | "image/webp" | "image/gif";
-            base64Content: string;
         };
         /** @enum {string} */
         IdeaSuggestionCategory: "idea" | "bug" | "improvement";
