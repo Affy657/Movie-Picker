@@ -71,19 +71,11 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
             && !string.IsNullOrEmpty(participant.UserId)
             && participant.UserId == currentUserId;
 
-        void EnsureMayRemove(Event night)
-        {
-            if (isSelfConnected)
-                return;
-            if (!HostedEvent.IsHost(night, _hostTokenAccessor, currentUserId))
-                throw Errors.HostOrSelfOnly();
-            if (night.IsCoHost(participant.UserId) && !HostedEvent.IsCreator(night, _hostTokenAccessor, currentUserId))
-                throw Errors.CoHostCannotRemoveCoHost();
-        }
+        void EnsureMayRemoveFrom(Event night) => EnsureMayRemove(night, participant, currentUserId, isSelfConnected);
 
-        EnsureMayRemove(evt);
+        EnsureMayRemoveFrom(evt);
         var keptOutUserId = isHost && !isSelfConnected ? participant.UserId : null;
-        var movieIds = await RemoveWithItsMoviesAsync(idOrSlug, evt.Id, participant, keptOutUserId, EnsureMayRemove, ct);
+        var movieIds = await RemoveWithItsMoviesAsync(idOrSlug, evt.Id, participant, keptOutUserId, EnsureMayRemoveFrom, ct);
         if (!string.IsNullOrEmpty(keptOutUserId))
             await _audience.NotifyUsersAsync([keptOutUserId], RemovedMessage(evt), CancellationToken.None);
 
@@ -102,6 +94,16 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
             RemovedMovies = movieIds.Count,
             Message = isSelfConnected && !isHost ? "You left the movie night" : "Participant removed"
         };
+    }
+
+    private void EnsureMayRemove(Event night, Participant participant, string? currentUserId, bool isSelfConnected)
+    {
+        if (isSelfConnected)
+            return;
+        if (!HostedEvent.IsHost(night, _hostTokenAccessor, currentUserId))
+            throw Errors.HostOrSelfOnly();
+        if (night.IsCoHost(participant.UserId) && !HostedEvent.IsCreator(night, _hostTokenAccessor, currentUserId))
+            throw Errors.CoHostCannotRemoveCoHost();
     }
 
     private static void EnsureParticipantsCanChange(Event evt)

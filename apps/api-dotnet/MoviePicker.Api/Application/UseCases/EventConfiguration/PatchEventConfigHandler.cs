@@ -65,8 +65,6 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         var date = ResolveDate(request, evt.Date);
         var time = ResolveTime(request, evt.Time);
         EnsurePatchAllowed(evt, evt with { Date = date, Time = time }, now, hasConfigChange, hasDateTimeChange, hasTitleChange, hasRecurrenceChange);
-        if (hasGroupChange && !HostedEvent.IsCreator(evt, _hostTokenAccessor, userId))
-            throw Errors.CreatorOnlyNightGroup();
         var chosenGroup = hasGroupChange ? await ResolveChosenGroupAsync(evt, request, userId, now, ct) : null;
 
         if (hasWinnerCountChange)
@@ -108,10 +106,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         };
 
         var participantLimit = request.MaxParticipants.HasValue ? nextConfig.MaxParticipants : null;
-        var changesAnonymity = evt.HasAnonymousProposals != nextConfig.AnonymousProposals;
-        var saved = participantLimit is not null || changesAnonymity
-            ? await SaveUnderEventLockAsync(updated, participantLimit, changesAnonymity, ct)
-            : await _events.UpdateAsync(updated, ct);
+        var saved = await SaveAsync(evt, updated, participantLimit, ct);
 
         var dateChanged = date != evt.Date || time != evt.Time;
         if (dateChanged && request.NotifyParticipantsOfDateChange == true)
@@ -130,6 +125,8 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         DateTimeOffset now,
         CancellationToken ct)
     {
+        if (!HostedEvent.IsCreator(evt, _hostTokenAccessor, userId))
+            throw Errors.CreatorOnlyNightGroup();
         if (evt.IsFinished(now))
             throw Errors.EventConfigLockedFinished();
         if (request.ClearGroup == true || string.IsNullOrWhiteSpace(request.GroupId))
@@ -259,6 +256,14 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
                 EventConfig.MaxParticipantsCap,
                 "maxParticipants")
             : current;
+
+    private Task<Event> SaveAsync(Event evt, Event updated, int? participantLimit, CancellationToken ct)
+    {
+        var changesAnonymity = evt.HasAnonymousProposals != updated.HasAnonymousProposals;
+        return participantLimit is not null || changesAnonymity
+            ? SaveUnderEventLockAsync(updated, participantLimit, changesAnonymity, ct)
+            : _events.UpdateAsync(updated, ct);
+    }
 
     private async Task<Event> SaveUnderEventLockAsync(
         Event updated,
