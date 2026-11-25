@@ -3,6 +3,7 @@ using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Auth;
+using MoviePicker.Api.Application.UseCases.Auth.EmailVerification;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
@@ -27,7 +28,7 @@ public sealed class RegisterUserHandlerTests
                 UpdatedAt = DateTimeOffset.UtcNow
             });
         var hasher = new Mock<IPasswordHasher>();
-        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System);
+        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System, Mock.Of<IEmailVerificationMailer>());
 
         await Assert.ThrowsAsync<ConflictException>(() =>
             handler.HandleAsync(
@@ -41,7 +42,7 @@ public sealed class RegisterUserHandlerTests
         users.Setup(x => x.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
         var hasher = new Mock<IPasswordHasher>();
-        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System);
+        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System, Mock.Of<IEmailVerificationMailer>());
 
         await Assert.ThrowsAsync<BadRequestException>(() =>
             handler.HandleAsync(
@@ -55,7 +56,7 @@ public sealed class RegisterUserHandlerTests
         users.Setup(x => x.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
         var hasher = new Mock<IPasswordHasher>();
-        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System);
+        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System, Mock.Of<IEmailVerificationMailer>());
 
         await Assert.ThrowsAsync<BadRequestException>(() =>
             handler.HandleAsync(
@@ -66,7 +67,7 @@ public sealed class RegisterUserHandlerTests
     public async Task HandleAsync_EmailWithoutTopLevelDomain_IsRefusedBeforeAnyLookup()
     {
         var users = new Mock<IUserRepository>();
-        var handler = new RegisterUserHandler(users.Object, Mock.Of<IPasswordHasher>(), NullLogger<RegisterUserHandler>.Instance, TimeProvider.System);
+        var handler = new RegisterUserHandler(users.Object, Mock.Of<IPasswordHasher>(), NullLogger<RegisterUserHandler>.Instance, TimeProvider.System, Mock.Of<IEmailVerificationMailer>());
 
         var ex = await Assert.ThrowsAsync<BadRequestException>(() =>
             handler.HandleAsync(
@@ -86,7 +87,7 @@ public sealed class RegisterUserHandlerTests
             .ReturnsAsync((User u, CancellationToken _) => u with { Id = "new" });
         var hasher = new Mock<IPasswordHasher>();
         hasher.Setup(h => h.Hash(It.IsAny<string>())).Returns("hash");
-        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System);
+        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System, Mock.Of<IEmailVerificationMailer>());
 
         var res = await handler.HandleAsync(
             new RegisterRequest { Email = "rtl@b.co", Password = "abcd1234", DisplayName = "\u202Eecila" });
@@ -101,7 +102,7 @@ public sealed class RegisterUserHandlerTests
         users.Setup(x => x.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
         var hasher = new Mock<IPasswordHasher>();
-        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System);
+        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System, Mock.Of<IEmailVerificationMailer>());
 
         await Assert.ThrowsAsync<BadRequestException>(() =>
             handler.HandleAsync(
@@ -136,7 +137,7 @@ public sealed class RegisterUserHandlerTests
             .Setup(x => x.Hash("abcd1234"))
             .Returns("HASH_FROM_HASHER");
 
-        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System);
+        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System, Mock.Of<IEmailVerificationMailer>());
         var res = await handler.HandleAsync(
             new RegisterRequest { Email = "new@b.co", Password = "abcd1234", DisplayName = "Neo" });
 
@@ -165,7 +166,7 @@ public sealed class RegisterUserHandlerTests
         var hasher = new Mock<IPasswordHasher>();
         hasher.Setup(x => x.Hash(It.IsAny<string>())).Returns("HASH");
 
-        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System);
+        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System, Mock.Of<IEmailVerificationMailer>());
         await handler.HandleAsync(
             new RegisterRequest { Email = "jean@b.co", Password = "abcd1234", DisplayName = "Jean Dupont" });
 
@@ -192,11 +193,67 @@ public sealed class RegisterUserHandlerTests
         var hasher = new Mock<IPasswordHasher>();
         hasher.Setup(x => x.Hash(It.IsAny<string>())).Returns("HASH");
 
-        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System);
+        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System, Mock.Of<IEmailVerificationMailer>());
         await handler.HandleAsync(
             new RegisterRequest { Email = "alice@b.co", Password = "abcd1234", DisplayName = "Alice" });
 
         Assert.NotNull(captured);
         Assert.Equal("alice2", captured!.Handle);
+    }
+
+    private static Mock<IUserRepository> AcceptingUsers()
+    {
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
+        users.Setup(x => x.GetByHandleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
+        users.Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User u, CancellationToken _) => u with { Id = "created-id" });
+        return users;
+    }
+
+    private static RegisterUserHandler HandlerSendingThrough(IUserRepository users, IEmailVerificationMailer mailer) =>
+        new(users, Mock.Of<IPasswordHasher>(h => h.Hash(It.IsAny<string>()) == "HASH"), NullLogger<RegisterUserHandler>.Instance, TimeProvider.System, mailer);
+
+    [Fact]
+    public async Task HandleAsync_NewAccount_StartsUnconfirmedAndIsSentAConfirmationEmailInTheAskedLanguage()
+    {
+        var mailer = new Mock<IEmailVerificationMailer>();
+
+        await HandlerSendingThrough(AcceptingUsers().Object, mailer.Object).HandleAsync(
+            new RegisterRequest { Email = "neo@b.co", Password = "abcd1234", DisplayName = "Neo", Locale = "en" });
+
+        mailer.Verify(
+            m => m.SendAsync(
+                It.Is<User>(u => u.Id == "created-id" && u.Email == "neo@b.co" && u.EmailVerifiedAt == null),
+                "en",
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ConfirmationEmailCannotBeIssued_StillOpensTheAccount()
+    {
+        var mailer = new Mock<IEmailVerificationMailer>();
+        mailer.Setup(m => m.SendAsync(It.IsAny<User>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new TimeoutException("token store unavailable"));
+
+        var response = await HandlerSendingThrough(AcceptingUsers().Object, mailer.Object).HandleAsync(
+            new RegisterRequest { Email = "neo@b.co", Password = "abcd1234", DisplayName = "Neo" });
+
+        Assert.Equal("created-id", response.UserId);
+    }
+
+    [Fact]
+    public async Task HandleAsync_RefusedRegistration_SendsNoConfirmationEmail()
+    {
+        var users = AcceptingUsers();
+        users.Setup(x => x.GetByEmailAsync("neo@b.co", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = "occupant", Email = "neo@b.co" });
+        var mailer = new Mock<IEmailVerificationMailer>();
+
+        await Assert.ThrowsAsync<ConflictException>(() => HandlerSendingThrough(users.Object, mailer.Object).HandleAsync(
+            new RegisterRequest { Email = "neo@b.co", Password = "abcd1234", DisplayName = "Neo" }));
+
+        mailer.VerifyNoOtherCalls();
     }
 }

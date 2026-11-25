@@ -22,7 +22,7 @@ public sealed partial class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionH
         "au-cinema", "auth", "callback", "collection", "collections", "decouvrir", "e", "films", "forgot-password",
         "integrations", "les-plus-proposes", "login", "mentions-legales", "my-events", "new", "notifications",
         "politique-de-confidentialite", "preferences", "profil", "r", "recherche", "register", "reset", "securite",
-        "settings", "similaires", "soutenir", "streaming", "tech", "tendances", "theme", "u", "watchlist"
+        "settings", "similaires", "soutenir", "streaming", "tech", "tendances", "theme", "u", "verify-email", "watchlist"
     };
 
     private static readonly Dictionary<string, string> IdentifierAfterSegment = new(StringComparer.Ordinal)

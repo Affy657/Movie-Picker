@@ -11,6 +11,7 @@ using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
 using MoviePicker.Api.Application.UseCases.Auth;
+using MoviePicker.Api.Application.UseCases.Auth.EmailVerification;
 using MoviePicker.Api.Application.UseCases.EventLive;
 using MoviePicker.Api.Application.UseCases.FinishedEvents;
 using MoviePicker.Api.Application.UseCases.FriendGroups;
@@ -305,6 +306,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IParticipantRepository, InMemoryParticipantRepository>();
             services.AddSingleton<IUserRepository, InMemoryUserRepository>();
             services.AddSingleton<IPasswordResetTokenRepository, InMemoryPasswordResetTokenRepository>();
+            services.AddSingleton<IEmailVerificationTokenRepository, InMemoryEmailVerificationTokenRepository>();
             services.AddSingleton<IAvatarPhotoRepository, InMemoryAvatarPhotoRepository>();
             services.AddSingleton<IBannerPhotoRepository, InMemoryBannerPhotoRepository>();
             services.AddSingleton<IMovieRepository, InMemoryMovieRepository>();
@@ -364,6 +366,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IParticipantRepository, MongoParticipantRepository>();
         services.AddScoped<IUserRepository, MongoUserRepository>();
         services.AddScoped<IPasswordResetTokenRepository, MongoPasswordResetTokenRepository>();
+        services.AddScoped<IEmailVerificationTokenRepository, MongoEmailVerificationTokenRepository>();
         services.AddScoped<IAvatarPhotoRepository, MongoAvatarPhotoRepository>();
         services.AddScoped<IBannerPhotoRepository, MongoBannerPhotoRepository>();
         services.AddScoped<IMovieRepository, MongoMovieRepository>();
@@ -467,6 +470,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<AvatarPhotoWriter>();
         services.AddScoped<ProfileBannerWriter>();
         services.AddScoped<IOAuthProfilePhotoImporter, OAuthProfilePhotoImporter>();
+        services.AddScoped<IEmailVerificationMailer, EmailVerificationMailer>();
         services.AddScoped<EventAudienceNotifier>();
         services.AddScoped<HostedNightsHandover>();
         services.AddScoped<IGroupNightAnnouncer, GroupNightAnnouncer>();

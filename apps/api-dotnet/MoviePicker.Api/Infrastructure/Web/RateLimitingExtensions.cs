@@ -22,6 +22,8 @@ public static class RateLimitingExtensions
     public const string AuthLoginPolicy = "auth-login";
     public const string AuthPasswordResetRequestPolicy = "auth-password-reset-request";
     public const string AuthPasswordResetConfirmPolicy = "auth-password-reset-confirm";
+    public const string AuthEmailVerificationRequestPolicy = "auth-email-verification-request";
+    public const string AuthEmailVerificationConfirmPolicy = "auth-email-verification-confirm";
     public const string AuthChangePasswordPolicy = "auth-change-password";
     public const string AuthPatchProfilePolicy = "auth-patch-profile";
     public const string AuthExportDataPolicy = "auth-export-data";
@@ -101,6 +103,8 @@ public static class RateLimitingExtensions
         new(AuthLoginPolicy, 30, 1, QuotaScope.Address),
         new(AuthPasswordResetRequestPolicy, 5, 1, QuotaScope.Address),
         new(AuthPasswordResetConfirmPolicy, 30, 1, QuotaScope.Address),
+        new(AuthEmailVerificationRequestPolicy, 5, 1),
+        new(AuthEmailVerificationConfirmPolicy, 30, 1, QuotaScope.Address),
         new(AuthChangePasswordPolicy, 10, 1),
         new(AuthPatchProfilePolicy, 60, 1),
         new(AuthExportDataPolicy, 5, 1),

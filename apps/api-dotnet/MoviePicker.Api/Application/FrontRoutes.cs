@@ -7,6 +7,7 @@ public static class FrontRoutes
     public const string Home = "/";
     public const string Login = "/login";
     public const string Reset = "/reset";
+    public const string VerifyEmail = "/verify-email";
     public const string OAuthCallback = "/auth/callback";
     public const string AccountIntegrations = "/settings/integrations";
     public const string Notifications = "/notifications";
@@ -30,7 +31,7 @@ public static class FrontRoutes
 
     public const string RateQueryParam = "rate";
     public const string ReturnToQueryParam = "returnTo";
-    public const string ResetTokenQueryParam = "token";
+    public const string TokenQueryParam = "token";
     public const string EntryOriginQueryParam = "from";
     public const string OAuthErrorQueryParam = "oauthError";
     public const string OAuthLinkedQueryParam = "oauthLinked";
@@ -51,10 +52,14 @@ public static class FrontRoutes
     public static string LoginReturningTo(string path) =>
         $"{Login}?{ReturnToQueryParam}={Uri.EscapeDataString(path)}";
 
-    public static string ResetWithToken(string token) =>
-        $"{Reset}?{ResetTokenQueryParam}={Uri.EscapeDataString(token)}";
+    public static string ResetWithToken(string token) => WithToken(Reset, token);
+
+    public static string VerifyEmailWithToken(string token) => WithToken(VerifyEmail, token);
 
     public static string PrefixOf(string pattern) => pattern[..pattern.IndexOf(':')];
+
+    private static string WithToken(string path, string token) =>
+        $"{path}?{TokenQueryParam}={Uri.EscapeDataString(token)}";
 
     private static string Fill(string pattern, string value) => pattern[..pattern.LastIndexOf(':')] + value;
 }

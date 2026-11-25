@@ -51,7 +51,7 @@ public sealed class ServerCopyTests
     {
         var groups = FrenchCopy().Select(entry => entry.Member.Split('.')[0]).Distinct().Order().ToList();
 
-        Assert.Equal(["DeletedAccount", "IdeaIssue", "PasswordResetEmail", "Push", "SharePreviews"], groups);
+        Assert.Equal(["DeletedAccount", "EmailVerificationEmail", "IdeaIssue", "PasswordResetEmail", "Push", "SharePreviews"], groups);
     }
 
     private static (string Form, Regex Pattern)[] LoadFamiliarForms()

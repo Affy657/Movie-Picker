@@ -289,6 +289,32 @@ public sealed class ConfirmPasswordResetHandlerTests
         Assert.Empty(capturedUpdate!.Identities);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task HandleAsync_HappyPath_ConfirmsTheAddressTheLinkWasSentTo(bool confirmedBefore)
+    {
+        var confirmedAt = TestEpoch.AddDays(-30);
+        var user = SampleUser() with { EmailVerifiedAt = confirmedBefore ? confirmedAt : null };
+        var hash = PasswordResetTokenFactory.Hash(PlainToken);
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        User? capturedUpdate = null;
+        users
+            .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User u, CancellationToken _) => capturedUpdate = u);
+        var tokens = new Mock<IPasswordResetTokenRepository>();
+        tokens.Setup(x => x.GetByTokenHashAsync(hash, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PasswordResetToken { Id = "tok-1", UserId = user.Id, TokenHash = hash, CreatedAt = TestEpoch, ExpiresAtUtc = TestEpoch.AddMinutes(30) });
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Hash("abcd1234")).Returns("NEW_HASH");
+
+        await CreateHandler(users.Object, tokens.Object, hasher.Object, new Mock<IAuthSessionInvalidator>().Object, new FakeTimeProvider(TestEpoch))
+            .HandleAsync(new PasswordResetConfirmRequest { Token = PlainToken, NewPassword = "abcd1234" });
+
+        Assert.Equal(confirmedBefore ? confirmedAt : TestEpoch, capturedUpdate!.EmailVerifiedAt);
+    }
+
     [Fact]
     public async Task HandleAsync_HappyPath_MarksTokenConsumedAndInvalidatesOtherTokens()
     {

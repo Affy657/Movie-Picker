@@ -231,6 +231,25 @@ public sealed class ExportUserDataHandlerTests
     }
 
     [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task HandleAsync_ExportsWhenTheAddressWasConfirmed(bool confirmed)
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User
+        {
+            Email = "neo@example.com",
+            DisplayName = "Neo",
+            Handle = "neo",
+            EmailVerifiedAt = confirmed ? TestEpoch : null
+        });
+
+        var export = await f.CreateHandler().HandleAsync(user.Id);
+
+        Assert.Equal(confirmed ? TestEpoch : (DateTimeOffset?)null, export.Profile.EmailVerifiedAt);
+    }
+
+    [Theory]
     [InlineData(true, false)]
     [InlineData(false, true)]
     public async Task HandleAsync_ExportsTheVisibilityOfTheWatchlistAndOfTheWatchedFilms(bool watchlist, bool watched)

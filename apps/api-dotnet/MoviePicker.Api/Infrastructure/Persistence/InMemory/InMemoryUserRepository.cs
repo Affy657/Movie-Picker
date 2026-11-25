@@ -169,6 +169,14 @@ public sealed class InMemoryUserRepository : IUserRepository
         return Task.FromResult(marked is not null);
     }
 
+    public Task<bool> MarkEmailVerifiedAsync(string userId, DateTimeOffset verifiedAt, CancellationToken ct = default)
+    {
+        var confirmed = _byId.SwapIfPresent(userId, user => user.EmailVerifiedAt is null
+            ? user with { EmailVerifiedAt = verifiedAt, Version = user.Version + 1 }
+            : null);
+        return Task.FromResult(confirmed is not null);
+    }
+
     public Task<bool> AddEventTemplateAsync(
         string userId,
         EventTemplate template,
@@ -345,6 +353,7 @@ public sealed class InMemoryUserRepository : IUserRepository
         {
             Id = id,
             Email = email,
+            EmailVerifiedAt = user.EmailVerifiedAt,
             PasswordHash = user.PasswordHash,
             DisplayName = user.DisplayName,
             Identities = user.Identities,

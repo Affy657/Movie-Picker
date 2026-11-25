@@ -66,6 +66,21 @@ public sealed class GetUserProfileHandlerTests
         Assert.Equal("bob@example.com", res.Email);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task HandleAsync_ReturnsWhenTheAddressWasConfirmed(bool confirmed)
+    {
+        var confirmedAt = new DateTimeOffset(2026, 11, 25, 9, 0, 0, TimeSpan.Zero);
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("id1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = "id1", Email = "bob@example.com", EmailVerifiedAt = confirmed ? confirmedAt : null });
+
+        var res = await new GetUserProfileHandler(users.Object).HandleAsync("id1");
+
+        Assert.Equal(confirmed ? confirmedAt : (DateTimeOffset?)null, res.EmailVerifiedAt);
+    }
+
     [Fact]
     public async Task HandleAsync_ReturnsLetterboxdUsername()
     {

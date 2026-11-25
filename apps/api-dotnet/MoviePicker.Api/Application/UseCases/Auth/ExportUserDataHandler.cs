@@ -297,6 +297,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
     {
         UserId = user.Id,
         Email = user.Email,
+        EmailVerifiedAt = user.EmailVerifiedAt,
         DisplayName = user.DisplayName,
         Handle = user.Handle,
         Bio = user.Bio,

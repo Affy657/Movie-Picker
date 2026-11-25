@@ -23,6 +23,9 @@ public sealed class RegisterRequest
 
     [MaxLength(2048)]
     public string? ReturnTo { get; init; }
+
+    [MaxLength(16)]
+    public string? Locale { get; init; }
 }
 
 public sealed class RegisterResponse
@@ -58,6 +61,7 @@ public sealed class UserProfileResponse
 
     public string EmailMasked { get; init; } = string.Empty;
     public string Email { get; init; } = string.Empty;
+    public DateTimeOffset? EmailVerifiedAt { get; init; }
     public UiThemePreference UiTheme { get; init; }
     public AccentColor AccentColor { get; init; }
     public RatingScale RatingScale { get; init; }

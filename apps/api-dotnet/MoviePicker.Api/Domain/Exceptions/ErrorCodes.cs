@@ -135,6 +135,7 @@ public static class ErrorCodes
     public const string HandleReserved = "handle_reserved";
     public const string BioTooLong = "bio_too_long";
     public const string InvalidResetToken = "invalid_reset_token";
+    public const string InvalidEmailVerificationToken = "invalid_email_verification_token";
     public const string LetterboxdUsernameInvalid = "letterboxd_username_invalid";
     public const string LetterboxdUsernameMissing = "letterboxd_username_missing";
     public const string LetterboxdSyncFailed = "letterboxd_sync_failed";
