@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using Moq;
 using MoviePicker.Api.Application.UseCases.ProfileShare;
 using MoviePicker.Api.Application.UseCases.Shared;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Controllers;
 using MoviePicker.Api.Infrastructure.Web;
 using Xunit;
@@ -14,13 +16,16 @@ public sealed class ProfileShareDocumentControllerTests
     private static readonly string[] SharedDocumentPolicies =
         [RateLimitingExtensions.ProfileDocumentPolicy, RateLimitingExtensions.ProfileDocumentCeilingPolicy];
 
+    private static readonly IOptions<MoviePickerOptions> PublicApi =
+        Options.Create(new MoviePickerOptions { PublicApiBaseUrl = "https://api.example/" });
+
     private readonly Mock<IGetProfileShareDocumentHandler> _handler = new();
     private readonly ProfileShareDocumentController _sut = new ProfileShareDocumentController().WithContext();
 
     public ProfileShareDocumentControllerTests()
     {
         _sut.Request.Scheme = "https";
-        _sut.Request.Host = new Microsoft.AspNetCore.Http.HostString("api.example");
+        _sut.Request.Host = new Microsoft.AspNetCore.Http.HostString("service-hash-ew.a.run.app");
     }
 
     [Theory]
@@ -31,7 +36,7 @@ public sealed class ProfileShareDocumentControllerTests
         _handler.Setup(h => h.HandleAsync("lea", "https://api.example", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ShareDocument(status, "<html><div id=\"root\"></div>lea</html>"));
 
-        var result = await _sut.GetProfile("lea", _handler.Object, CancellationToken.None);
+        var result = await _sut.GetProfile("lea", _handler.Object, PublicApi, CancellationToken.None);
 
         var content = Assert.IsType<ContentResult>(result);
         Assert.Equal(status, content.StatusCode);

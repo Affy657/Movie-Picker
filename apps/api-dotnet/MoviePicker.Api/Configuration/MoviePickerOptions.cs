@@ -56,6 +56,13 @@ public sealed class MoviePickerOptions
             ? "https://www.movie-picker.fr"
             : PublicWebBaseUrl.Trim().TrimEnd('/');
 
+    public string PublicApiBaseUrl { get; set; } = "https://api.movie-picker.fr";
+
+    public string ResolvedApiBaseUrl() =>
+        string.IsNullOrWhiteSpace(PublicApiBaseUrl)
+            ? "https://api.movie-picker.fr"
+            : PublicApiBaseUrl.Trim().TrimEnd('/');
+
     public string EmailProvider { get; set; } = "log";
 
     public string EmailFromAddress { get; set; } = "noreply@movie-picker.fr";
