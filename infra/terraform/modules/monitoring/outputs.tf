@@ -5,6 +5,9 @@ output "uptime_check_ids" {
     api_readiness = google_monitoring_uptime_check_config.api_readiness.uptime_check_id
     web           = google_monitoring_uptime_check_config.web.uptime_check_id
     staging_api   = google_monitoring_uptime_check_config.staging_api_health.uptime_check_id
+    search        = google_monitoring_uptime_check_config.journey_search.uptime_check_id
+    showcase      = google_monitoring_uptime_check_config.journey_showcase.uptime_check_id
+    movie_page    = google_monitoring_uptime_check_config.journey_movie_page.uptime_check_id
   }
 }
 

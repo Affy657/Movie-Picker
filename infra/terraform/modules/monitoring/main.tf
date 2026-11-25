@@ -9,6 +9,10 @@ locals {
   api_ready_passed  = "${local.uptime_passed} AND metric.label.check_id = \"${google_monitoring_uptime_check_config.api_readiness.uptime_check_id}\""
   web_passed        = "${local.uptime_passed} AND metric.label.check_id = \"${google_monitoring_uptime_check_config.web.uptime_check_id}\""
   staging_passed    = "${local.uptime_passed} AND metric.label.check_id = \"${google_monitoring_uptime_check_config.staging_api_health.uptime_check_id}\""
+  search_passed     = "${local.uptime_passed} AND metric.label.check_id = \"${google_monitoring_uptime_check_config.journey_search.uptime_check_id}\""
+  showcase_passed   = "${local.uptime_passed} AND metric.label.check_id = \"${google_monitoring_uptime_check_config.journey_showcase.uptime_check_id}\""
+  movie_page_passed = "${local.uptime_passed} AND metric.label.check_id = \"${google_monitoring_uptime_check_config.journey_movie_page.uptime_check_id}\""
+  journey_movie     = { query = "Inception", tmdb_id = 27205, page = "/film/27205-inception" }
   channels          = concat([google_monitoring_notification_channel.email.name], google_monitoring_notification_channel.sms[*].name)
   backup_published  = "storage_googleapis_com:api_request_count{monitored_resource=\"gcs_bucket\", bucket_name=\"${var.backup_bucket}\", method=\"MoveObject\", response_code=\"OK\"}"
 }
@@ -166,6 +170,110 @@ resource "google_monitoring_uptime_check_config" "staging_api_health" {
     accepted_response_status_codes {
       status_class = "STATUS_CLASS_2XX"
     }
+  }
+}
+
+resource "google_monitoring_uptime_check_config" "journey_search" {
+  project          = var.project_id
+  display_name     = "Parcours - recherche de film (API puis TMDB)"
+  period           = "900s"
+  timeout          = "15s"
+  selected_regions = var.regions
+
+  monitored_resource {
+    type = "uptime_url"
+    labels = {
+      host       = var.api_host
+      project_id = var.project_id
+    }
+  }
+
+  http_check {
+    path           = "/api/v1/movies/search?q=${local.journey_movie.query}"
+    port           = 443
+    request_method = "GET"
+    use_ssl        = true
+    validate_ssl   = true
+
+    accepted_response_status_codes {
+      status_class = "STATUS_CLASS_2XX"
+    }
+  }
+
+  content_matchers {
+    content = "\"id\":${local.journey_movie.tmdb_id},\"mediaType\":\"movie\""
+    matcher = "CONTAINS_STRING"
+  }
+}
+
+resource "google_monitoring_uptime_check_config" "journey_showcase" {
+  project          = var.project_id
+  display_name     = "Parcours - catalogue de l'accueil (tendances)"
+  period           = "900s"
+  timeout          = "15s"
+  selected_regions = var.regions
+
+  monitored_resource {
+    type = "uptime_url"
+    labels = {
+      host       = var.api_host
+      project_id = var.project_id
+    }
+  }
+
+  http_check {
+    path           = "/api/v1/movies/showcase?section=trending"
+    port           = 443
+    request_method = "GET"
+    use_ssl        = true
+    validate_ssl   = true
+
+    accepted_response_status_codes {
+      status_class = "STATUS_CLASS_2XX"
+    }
+  }
+
+  content_matchers {
+    content = "\"movie\""
+    matcher = "MATCHES_JSON_PATH"
+
+    json_path_matcher {
+      json_path    = "$.items[0].mediaType"
+      json_matcher = "EXACT_MATCH"
+    }
+  }
+}
+
+resource "google_monitoring_uptime_check_config" "journey_movie_page" {
+  project          = var.project_id
+  display_name     = "Parcours - page de film partagee (${var.web_host}, Hosting puis Cloud Run)"
+  period           = "900s"
+  timeout          = "15s"
+  selected_regions = var.regions
+
+  monitored_resource {
+    type = "uptime_url"
+    labels = {
+      host       = var.web_host
+      project_id = var.project_id
+    }
+  }
+
+  http_check {
+    path           = local.journey_movie.page
+    port           = 443
+    request_method = "GET"
+    use_ssl        = true
+    validate_ssl   = true
+
+    accepted_response_status_codes {
+      status_class = "STATUS_CLASS_2XX"
+    }
+  }
+
+  content_matchers {
+    content = "content=\"video.movie\""
+    matcher = "CONTAINS_STRING"
   }
 }
 
@@ -622,6 +730,106 @@ resource "google_monitoring_alert_policy" "staging_down" {
       **Conduite à tenir** :
       1. Vérifier `https://${var.staging_api_host}/health` et les journaux Cloud Run du service de recette.
       2. Relancer `deploy.yml` avec l'étape `staging` : la recette se remet en état en redéployant, il n'y a pas de retour arrière dédié.
+    EOT
+    )
+  }
+}
+
+resource "google_monitoring_alert_policy" "journey_down" {
+  project               = var.project_id
+  display_name          = "Parcours public en echec (recherche, catalogue, page de film)"
+  combiner              = "OR"
+  severity              = "ERROR"
+  notification_channels = local.channels
+
+  alert_strategy {
+    auto_close = "3600s"
+  }
+
+  conditions {
+    display_name = "Recherche de film en echec sur au moins 2 points de controle"
+
+    condition_threshold {
+      filter          = local.search_passed
+      comparison      = "COMPARISON_GT"
+      threshold_value = 1
+      duration        = "60s"
+
+      aggregations {
+        alignment_period     = "1800s"
+        per_series_aligner   = "ALIGN_NEXT_OLDER"
+        cross_series_reducer = "REDUCE_COUNT_FALSE"
+        group_by_fields      = ["resource.label.host"]
+      }
+
+      trigger {
+        count = 1
+      }
+    }
+  }
+
+  conditions {
+    display_name = "Catalogue de l'accueil en echec sur au moins 2 points de controle"
+
+    condition_threshold {
+      filter          = local.showcase_passed
+      comparison      = "COMPARISON_GT"
+      threshold_value = 1
+      duration        = "60s"
+
+      aggregations {
+        alignment_period     = "1800s"
+        per_series_aligner   = "ALIGN_NEXT_OLDER"
+        cross_series_reducer = "REDUCE_COUNT_FALSE"
+        group_by_fields      = ["resource.label.host"]
+      }
+
+      trigger {
+        count = 1
+      }
+    }
+  }
+
+  conditions {
+    display_name = "Page de film partagee en echec sur au moins 2 points de controle"
+
+    condition_threshold {
+      filter          = local.movie_page_passed
+      comparison      = "COMPARISON_GT"
+      threshold_value = 1
+      duration        = "60s"
+
+      aggregations {
+        alignment_period     = "1800s"
+        per_series_aligner   = "ALIGN_NEXT_OLDER"
+        cross_series_reducer = "REDUCE_COUNT_FALSE"
+        group_by_fields      = ["resource.label.host"]
+      }
+
+      trigger {
+        count = 1
+      }
+    }
+  }
+
+  documentation {
+    mime_type = "text/markdown"
+    content = chomp(<<-EOT
+      **Sondes** : trois uptime checks en lecture seule, toutes les 15 minutes depuis l'Europe, les USA et l'Asie-Pacifique, chacune avec un contrôle du contenu et non du seul code HTTP. Aucun compte de test : rien n'est écrit en production.
+
+      1. `Parcours - recherche de film` : `GET https://${var.api_host}/api/v1/movies/search?q=${local.journey_movie.query}` doit répondre 2xx avec le film TMDB `${local.journey_movie.tmdb_id}` dans `items`. La recherche interroge TMDB à chaque appel : c'est le chemin qu'emprunte l'ajout d'un film à une soirée.
+      2. `Parcours - catalogue de l'accueil` : `GET https://${var.api_host}/api/v1/movies/showcase?section=trending` doit répondre 2xx avec au moins un film (`$.items[0].mediaType` vaut `movie`). C'est la première rangée de l'accueil, servie depuis l'instantané que la passe `movie-picker-warm-catalog` recharge toutes les 5 heures.
+      3. `Parcours - page de film partagee` : `GET https://${var.web_host}${local.journey_movie.page}` doit répondre 2xx avec `og:type` à `video.movie`. Le document passe par la réécriture `/film/*` de Firebase Hosting vers Cloud Run, puis par l'API, qui lit le film chez TMDB et la coquille du site sur Hosting : un 404 veut dire que TMDB n'a pas répondu, un 5xx que la réécriture ou le service ont échoué.
+
+      **Pourquoi** : les sondes `/health`, `/health/ready` et de la page d'accueil restent vertes quand le service répond mais qu'un parcours est cassé (clé TMDB révoquée, réécriture Hosting perdue, instantané du catalogue vide, coquille illisible). Sans ces trois sondes, ces pannes ne se voyaient que dans Sentry ou par le premier utilisateur qui écrit.
+
+      **Déclenchement** : pour chaque sonde, au moins 2 points de contrôle en échec sur une fenêtre de 30 minutes.
+
+      **Conduite à tenir** :
+      1. Lire la condition qui a déclenché, puis rejouer la requête de la sonde concernée avec `curl -sS -i` pour voir le code et le corps.
+      2. Recherche ou page de film en échec ensemble : vérifier TMDB (état du service, quota, clé `TMDB_API_KEY` dans Secret Manager). Une panne de TMDB ne demande aucun geste de notre côté, l'alerte se ferme d'elle-même.
+      3. Page de film seule : vérifier la réécriture `/film/*` de `infra/firebase-hosting.json` dans la version servie et la journalisation du service `${var.api_service_name}` ; `rollback-front.yml` ou `rollback.yml` si l'échec suit un déploiement.
+      4. Catalogue seul : vérifier la dernière exécution du job `movie-picker-warm-catalog` et la readiness de l'API.
     EOT
     )
   }
