@@ -5,7 +5,7 @@ import { fetchMyEventsList } from '@/features/events/api/eventsApi';
 export function useEligibleEventsForPropose(enabled: boolean) {
   const { data, isLoading } = useQuery({
     queryKey: ['events', 'mine', 'propose-target-list'],
-    queryFn: () => fetchMyEventsList('active', 0),
+    queryFn: () => fetchMyEventsList('active', 0, undefined, { previews: false }),
     enabled,
   });
 

@@ -10,6 +10,7 @@ import modalStyles from '@/shared/components/Modal.module.css';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
+import { apiJson } from '@/mocks/apiJson';
 import type { WatchlistItem } from '@/features/movies/api/watchlistApi';
 
 const MOVIE: WatchlistItem = {
@@ -67,6 +68,28 @@ describe('ProposeToEventModal (MSW)', () => {
     expect(
       await screen.findByText(/proposer «\s*un film\s*» dans une soirée/i)
     ).toBeInTheDocument();
+  });
+
+  it('asks for the active nights without the posters and faces it never shows', async () => {
+    const requested: URL[] = [];
+    server.use(
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/events/mine`, ({ request }) => {
+        requested.push(new URL(request.url));
+        return apiJson<'MyEventsListResponse'>({
+          events: [],
+          hasMore: false,
+          totalActive: 0,
+          totalFinished: 0,
+        });
+      })
+    );
+
+    renderModal();
+
+    await screen.findByText(/aucune soirée active/i);
+    expect(requested.map((url) => url.searchParams.get('scope'))).toEqual(['active']);
+    expect(requested.map((url) => url.searchParams.get('previews'))).toEqual(['false']);
   });
 
   it('shows a message when there is no eligible movie night', async () => {
