@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Fixed
+
+- **Une adresse qui n’existe pas répond enfin « introuvable » aux moteurs de recherche** : le visiteur voit toujours la page introuvable, mais elle n’est plus présentée comme une page valide.
+
 ## [1.32.1] - 2026-11-25
 
 ### Changed
