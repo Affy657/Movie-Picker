@@ -27,11 +27,10 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-102 | Tests, CI et outillage | les doublures de l'API dans les tests front restent écrites à la main |
 | DEBT-116 | Tests, CI et outillage | la porte Lighthouse mesure un profil que l'API ne renvoie pas |
 
-### Geste humain (10)
+### Geste humain (9)
 
 | Dette | Zone | Sujet |
 |---|---|---|
-| DEBT-033 | Produit | le plafond de participants promet plus que le flux et la base n'encaissent, et le front en tient un autre |
 | DEBT-074 | API et données | un client qui passe par Hosting n'a que le quota par slug sur les documents de partage |
 | DEBT-096 | API et données | l'adaptateur en mémoire reste dans l'assembly de production |
 | DEBT-037 | Infra et déploiement | les jobs Cloud Scheduler décrits en Terraform attendent leur import, et le secret de l'ancien jeton partagé survit |
@@ -42,14 +41,12 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-052 | Sécurité et accès | le secret `GITHUB_TOKEN` de l'API est le jeton du `gh` CLI du poste |
 | DEBT-053 | Sécurité et accès | l'API et la sauvegarde parlent à Atlas en administrateur du cluster, le même que le poste de dev |
 
-### Différées (10)
+### Différées (8)
 
 | Dette | Zone | Sujet |
 |---|---|---|
 | DEBT-068 | Produit | les photos de profil ne sont ni modérées ni signalables |
 | DEBT-109 | Produit | les titres de films restent en français dans l'interface anglaise |
-| DEBT-112 | Produit | un participant retiré ne revient que par une invitation qui exige de le suivre |
-| DEBT-008 | API et données | le sondage de repli à 3,5 s fixe encore le plafond de la base quand le flux manque |
 | DEBT-040 | API et données | le seed de développement est compilé dans l'assembly de production |
 | DEBT-064 | API et données | `GetByIdOrSlugAsync` ne résout plus que le slug |
 | DEBT-026 | Front | le flou de fond des barres collantes n'a jamais été mesuré au défilement |
@@ -96,18 +93,6 @@ Se traite en autonomie, sans attendre personne.
 # Geste humain
 
 L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
-
-## DEBT-033 le plafond de participants promet plus que le flux et la base n'encaissent, et le front en tient un autre
-
-- state: humain
-- bloque: décision produit sur le plafond de participants
-- impact: `EventConfig.MaxParticipantsCap = 500`. Avec le flux temps réel (1.14.0), la base ne dépend plus du nombre de participants, mais chaque participant connecté occupe une requête Cloud Run : `EventStreamGate` accepte 60 flux par instance (sur 80 requêtes simultanées), 6 par compte et 20 par adresse anonyme, et la production plafonne à 5 instances (C12), soit 300 flux. Au-delà, les participants refusés retombent sur le sondage de DEBT-008, à environ 4,3 opérations Mongo par seconde chacun sur une soirée active : une soirée de 500 participants rouvrirait le problème d'avant sur le palier M0 du cluster. Le front plafonne de son côté à 300 participants et 15 propositions (`MAX_EVENT_PARTICIPANTS`), l'API à 500 et 100 : une valeur plus haute, posée par l'API directe, s'affiche telle quelle et le panneau d'hôte refuse d'enregistrer tant qu'elle n'est pas baissée. Aucun client publié n'écrit une telle valeur.
-- ou: `apps/api-dotnet/MoviePicker.Api/Domain/Entities/Event.cs` (`MaxParticipantsCap`), `apps/api-dotnet/MoviePicker.Api/Application/UseCases/EventLive/EventLiveOptions.cs` (plafonds du flux), `apps/web/src/features/events/types.ts` (`MAX_EVENT_PARTICIPANTS`)
-- verify: `grep -n "MaxParticipantsCap = \|MAX_EVENT_PARTICIPANTS = " apps/api-dotnet/MoviePicker.Api/Domain/Entities/Event.cs apps/web/src/features/events/types.ts` ; encore ouvert tant que le plafond de l'API dépasse 50 ou que le front garde sa propre constante
-- fix: aligner `MaxParticipantsCap` sur ce que le flux tient sans repli massif (50 laisse de la marge à six soirées pleines simultanées), ou monter `max_instance_count` en baissant le pool Mongo par instance (C12) ; puis un seul plafond, rendu par l'API et lu par le front
-- fini-quand: le plafond est aligné sur une mesure réelle du flux en production et n'est écrit qu'une fois, côté API
-- piege: le flux vit 270 s (`EventLiveOptions.StreamLifetime`) parce que le service Cloud Run coupe toute requête à 300 s ; `EventSource` reconnecte seul après 2 s et la page recharge la soirée sur `ready`. `UseResponseCompression` exclut `text/event-stream`, sinon le flux part en tampon. Un flux ouvert garde l'instance allumée et facturée tant qu'un participant a la page visible : le front ferme le flux dès que l'onglet est masqué ou la soirée finie. Les plafonds d'`EventStreamGate` sont comptés par instance, pas globalement.
-- refs: C3 ; absorbe DEBT-083 (2026-11-25)
 
 ## DEBT-074 un client qui passe par Hosting n'a que le quota par slug sur les documents de partage
 
@@ -227,25 +212,6 @@ Ne se traitent que quand leur `declencheur` survient.
 - verify: `grep -rn "language=fr-FR" apps/api-dotnet/MoviePicker.Api/Infrastructure/Tmdb`
 - fix: passer la langue de l'interface jusqu'aux appels TMDB, la mettre dans la clé de chaque cache, et garder le titre enregistré d'une soirée comme repli
 
-## DEBT-112 un participant retiré ne revient que par une invitation qui exige de le suivre
-
-- state: differe
-- declencheur: un hôte qui demande comment laisser revenir quelqu'un
-- impact: depuis le 2026-11-23, une personne retirée par l'hôte ne peut plus rejoindre par le lien ; seule une nouvelle invitation lève le blocage, et inviter exige que l'hôte suive la personne. La liste des participants n'a pas de bouton pour la laisser revenir, et une soirée de groupe reste proposée à un membre retiré, dont la tentative est refusée avec un message.
-- ou: `apps/web/src/features/events/components/EventParticipantsList.tsx`, le cas d'usage `InviteUser`, `Event.RemovedUserIds`
-- verify: `grep -rln "LettingBackIn" apps/api-dotnet/MoviePicker.Api --include=*.cs | grep -v InMemory` ; encore ouvert tant que seuls `Event.cs` et l'invitation l'appellent
-- fix: une action « Laisser revenir » dans le menu de l'hôte, et les soirées de groupe filtrées pour un membre retiré
-
-## DEBT-008 le sondage de repli à 3,5 s fixe encore le plafond de la base quand le flux manque
-
-- state: differe
-- declencheur: le flux temps réel tombe souvent en repli (429 de `GET /events/{slug}/stream` ou reconnexions en rafale dans les journaux), ou la base approche la moitié du plafond d'opérations du palier Atlas, soit 50 opérations par seconde sur le palier M0
-- impact: depuis la 1.14.0, la page soirée écoute `GET /api/v1/events/{slug}/stream` et ne sonde plus tant que le flux répond. Le sondage reste le repli quand le flux manque : navigateur sans `EventSource`, onglet de retour au premier plan avant la reconnexion, flux refusé par `EventStreamGate` au-delà de ses plafonds, flux muet plus de 25 s. En repli, le coût est celui d'avant : environ 13 allers-retours Mongo par cycle et par participant quand la soirée a bougé, 2 lectures par cycle sinon (304 de `EventViewTagHandler`). En régime nominal, une soirée coûte 2 lectures par seconde et par instance qui la diffuse (`EventLiveHub` : le document soirée, puis `event_presence`), quel que soit le nombre de participants.
-- verify: `grep -n EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS apps/web/src/features/events/hooks/useEventLive.ts` ; encore ouvert tant que la constante existe, c'est-à-dire tant que le repli sonde
-- fix: une fois le flux mesuré fiable en production, ralentir le repli (30 s) ou le retirer, la reprise sur `ready` rechargeant déjà la soirée à chaque reconnexion
-- piege: le 304 tient à une règle d'`AGENTS.md` : toute mutation de la vue soirée fait bouger `writeSeq` (`UpdateAsync`, `LockForWriteAsync` ou `MarkChangedAsync`). `check:architecture` la vérifie fichier par fichier (`scripts/architecture/apiWriteSeq.mjs`) : un handler qui écrit sans aucun des trois appels est refusé, mais un second chemin d'écriture du même fichier qui oublie l'appel passe, seul le test du handler le voit. Le flux lit le même compteur : une écriture qui l'oublie n'arrive plus en direct non plus, seulement au prochain rechargement complet.
-- refs: DEBT-033 pour le plafond de participants
-
 ## DEBT-040 le seed de développement est compilé dans l'assembly de production
 
 - state: differe
@@ -329,7 +295,7 @@ Les trois préchargements de police portent `fetchpriority="low"` : à priorité
 
 La configuration de build ne peut pas importer `src/` : `activeLocalePreloadScript` (`apps/web/vite.config.ts`) et le script de `index.html` (pour `<html lang>`) réécrivent la clé `moviepicker-locale`, la liste des langues et la langue par défaut, et `index.html` duplique le titre de l'accueil et `home.seoTitle`. `apps/web/src/startShell.test.ts` compare ces chaînes aux locales. Si `preferredLocale()` change, changer les deux copies.
 
-Depuis le 2026-11-06, trois autres copies sont gardées de la même façon : `BOOT_FAILURE_COPY` duplique les locales pour le repli d'avant React (`bootFailure.test.ts`), les plafonds du front restent sous ceux de `Event.cs` (`eventLimitValidation.test.ts`, qui lit le fichier C#), et les poids de la roue sont comparés entre `WheelWinnerPicker` et `wheelSliceWeights` par la fixture `wheel-slice-weights.json`, lue par les deux suites.
+Deux autres copies sont gardées de la même façon : `BOOT_FAILURE_COPY` duplique les locales pour le repli d'avant React (`bootFailure.test.ts`), et les poids de la roue sont comparés entre `WheelWinnerPicker` et `wheelSliceWeights` par la fixture `wheel-slice-weights.json`, lue par les deux suites.
 
 La langue ne se lit **jamais** dans `navigator.language` : sans choix mémorisé, l'application est en français. Googlebot rend le JavaScript en `en-US`, et la détection faisait indexer l'accueil et les profils en anglais, contre le prérendu, `og:locale` et le sitemap.
 
@@ -505,3 +471,4 @@ Arbitré le 2026-11-25 : la dette existe, mais le geste coûte plus qu'il ne rap
 - **E15 classement d'un groupe relu depuis les soirées des membres** (relevé le 2026-11-25 en réglant DEBT-107) : `GetFriendGroupRankingHandler` relit jusqu'à 500 soirées passées par membre ; un seul groupe existe. Rouvrir sur une latence p95 du classement qui monte, avec la même agrégation que les chiffres du groupe (`TallyHeldByGroupIdsAsync`).
 - **E16 date et heure d'une soirée en `DateOnly` et `TimeOnly`** (reste de DEBT-041) : depuis le 2026-11-25 chaque écriture refuse une date ou une heure hors format (`Errors.InvalidTimeFormat()`), donc plus aucune soirée ne reste `Upcoming` à vie ; changer le type toucherait environ 240 affectations dans 72 fichiers pour des microsecondes de parsing. Rouvrir si une lecture de ces chaînes apparaît dans un profil de performance.
 - **E17 l'inscription révèle qu'une adresse a un compte** (reste de DEBT-065) : `email_taken` le dit, parce qu'une inscription qui connecte tout de suite ne peut pas répondre neutre ; l'inscription reste bornée à 20 essais par heure et par adresse IP. Depuis le 2026-11-25 un compte non confirmé ne bloque plus l'adresse d'un tiers, qui le reprend par Google, GitHub ou « Mot de passe oublié ». Rouvrir si une énumération d'adresses apparaît dans les journaux.
+- **E18 `Retry-After` du limiteur sur le flux temps réel** (reste de DEBT-008) : `EventSource` ne donne ni le statut ni les en-têtes d'un refus ; le refus de `EventStreamGate` impose déjà 30 s, et le repli sonde toutes les 15 s depuis le 2026-11-25. Seul le limiteur de débit (jusqu'à 60 s) n'est pas lu, et le lire demanderait un transport par `fetch` en flux, risqué sur Safari. Rouvrir sur des rafales de 429 du flux dans les journaux.

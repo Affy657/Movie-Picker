@@ -10,10 +10,13 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Added
 
+- **Laisser revenir une personne retirée** : la fenêtre Participants montre à l’hôte et aux co-hôtes les personnes retirées de la soirée, avec un bouton « Laisser revenir » qui leur rouvre le lien de la soirée.
 - **Confirmez votre adresse e-mail** : après une inscription par mot de passe, un courriel vous envoie un lien de confirmation. Votre compte marche tout de suite, et Compte et sécurité vous le rappelle discrètement, avec un bouton pour renvoyer le courriel.
 
 ### Changed
 
+- **Au plus 50 participants et 15 films par personne** : les règles d’une soirée et de ses modèles s’arrêtent à ces plafonds, et une soirée réglée au-delà garde 50 places.
+- **Quand le temps réel ne répond pas**, une soirée se met à jour toutes les 15 secondes au lieu de 3,5, et se recharge toujours dès qu’il revient.
 - **Mes soirées, la fenêtre pour proposer un film et les pages de groupe** ne chargent plus tous les films, participants et soirées passées pour leurs aperçus et leurs chiffres : elles restent rapides quand une soirée compte des centaines de films ou qu’un groupe se réunit depuis des années.
 
 ### Removed
@@ -22,6 +25,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Fixed
 
+- **Une soirée de groupe dont l’hôte vous a retiré** ne vous est plus proposée, ni dans Mes soirées, ni sur la page du groupe, ni par une annonce.
 - **Juste après une mise à jour du site**, une invitation, un récap, une fiche de film ou un profil partagés ne restent plus bloqués sur l’écran qui demande de recharger la page.
 - **Au-delà de 1 000 films vus**, la page Films vus et celle d’un profil les affichent tous, et la recherche trouve aussi les plus anciens.
 - **Les plateformes et la note TMDB de Ma liste** s’affichent pour tous les films, au-delà des 500 ajoutés le plus récemment.
