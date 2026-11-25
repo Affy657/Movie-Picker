@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Auth;
@@ -290,7 +291,7 @@ public sealed class DeleteAccountHandlerTests
         var keptParticipants = await f.Participants.ListByEventIdAsync(joinedEvent.Id);
         var anonymized = Assert.Single(keptParticipants);
         Assert.Null(anonymized.UserId);
-        Assert.Equal(DeleteAccountHandler.AnonymizedParticipantPseudo, anonymized.Pseudo);
+        Assert.Equal(ServerCopy.DeletedAccount.Pseudo, anonymized.Pseudo);
 
         var keptVotes = await f.Votes.ListByParticipantIdsAsync(new[] { participant.Id });
         Assert.Single(keptVotes);
@@ -531,7 +532,7 @@ public sealed class DeleteAccountHandlerTests
         var kept = Assert.Single(await f.Notifications.ListByUserIdAsync("someone-else"));
         Assert.Null(kept.ActorHandle);
         Assert.Null(kept.ActorAvatarId);
-        Assert.Equal(DeleteAccountHandler.AnonymizedParticipantPseudo, kept.ActorDisplayName);
+        Assert.Equal(ServerCopy.DeletedAccount.Pseudo, kept.ActorDisplayName);
     }
 
     [Fact]
@@ -556,7 +557,7 @@ public sealed class DeleteAccountHandlerTests
         var kept = Assert.Single(await f.Notifications.ListByUserIdAsync("someone-else"));
         Assert.Null(kept.ActorHandle);
         Assert.Null(kept.ActorAvatarId);
-        Assert.Equal(DeleteAccountHandler.AnonymizedParticipantPseudo, kept.ActorDisplayName);
+        Assert.Equal(ServerCopy.DeletedAccount.Pseudo, kept.ActorDisplayName);
     }
 
     private static async Task<User> SeedGuestAsync(Fixture f, string handle) =>
@@ -575,7 +576,7 @@ public sealed class DeleteAccountHandlerTests
         var night = await f.Events.AddAsync(new Event { Title = "Nuit Nolan", Slug = "nuit-nolan", Date = TestDates.Upcoming, Time = "20:00", HostToken = "old-token", CreatorUserId = host.Id });
         var start = DateTimeOffset.UtcNow.AddDays(-3);
         await JoinAsync(f, night.Id, host.Id, "Neo", start);
-        await JoinAsync(f, night.Id, null, DeleteAccountHandler.AnonymizedParticipantPseudo, start.AddMinutes(1));
+        await JoinAsync(f, night.Id, null, ServerCopy.DeletedAccount.Pseudo, start.AddMinutes(1));
         await JoinAsync(f, night.Id, second.Id, "Second", start.AddHours(2));
         await JoinAsync(f, night.Id, first.Id, "First", start.AddHours(1));
 
@@ -713,6 +714,6 @@ public sealed class DeleteAccountHandlerTests
 
         var pseudos = (await f.Participants.ListByEventIdAsync(evt.Id)).Select(p => p.Pseudo).ToList();
         Assert.Equal(2, pseudos.Distinct().Count());
-        Assert.All(pseudos, p => Assert.StartsWith(DeleteAccountHandler.AnonymizedParticipantPseudo, p));
+        Assert.All(pseudos, p => Assert.StartsWith(ServerCopy.DeletedAccount.Pseudo, p));
     }
 }

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Auth;
@@ -287,7 +288,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         var eventParticipants = await participants.ListByEventIdAsync(fixture.EventId);
         var participant = Assert.Single(eventParticipants);
         Assert.Equal(fixture.UserId, participant.UserId);
-        Assert.NotEqual(DeleteAccountHandler.AnonymizedParticipantPseudo, participant.Pseudo);
+        Assert.NotEqual(ServerCopy.DeletedAccount.Pseudo, participant.Pseudo);
 
         Assert.NotEmpty(await notifications.ListByUserIdAsync(fixture.UserId));
         Assert.NotEmpty(await pushSubscriptions.ListByUserIdAsync(fixture.UserId));
@@ -354,7 +355,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         Assert.True(string.IsNullOrEmpty(evt!.CreatorUserId));
 
         var participant = Assert.Single(await participants.ListByEventIdAsync(fixture.EventId));
-        Assert.Equal(DeleteAccountHandler.AnonymizedParticipantPseudo, participant.Pseudo);
+        Assert.Equal(ServerCopy.DeletedAccount.Pseudo, participant.Pseudo);
         Assert.True(string.IsNullOrEmpty(participant.UserId));
     }
 
@@ -418,6 +419,6 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         Assert.True(watch.Elapsed < TimeSpan.FromSeconds(10), $"second deletion took {watch.Elapsed}");
         var pseudos = (await participants.ListByEventIdAsync(fixture.EventId)).Select(p => p.Pseudo).ToList();
         Assert.Equal(2, pseudos.Distinct().Count());
-        Assert.All(pseudos, p => Assert.StartsWith(DeleteAccountHandler.AnonymizedParticipantPseudo, p));
+        Assert.All(pseudos, p => Assert.StartsWith(ServerCopy.DeletedAccount.Pseudo, p));
     }
 }

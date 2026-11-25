@@ -86,7 +86,7 @@ public sealed class AuthController : ControllerBase
     {
         var result = await handler.HandleAsync(request, ct);
         await SignInAsync(result.UserId, result.DisplayName, clock);
-        await usage.RecordAsync(UsageCount.SignedUp(UsageCount.FormMethod, request.ReturnTo), ct);
+        await usage.RecordAsync(UsageCount.SignedUp(UsageCount.FormMethod, EntryOrigin.Of(request.ReturnTo)), ct);
         return CreatedAtAction(nameof(Me), null, result);
     }
 
@@ -106,7 +106,7 @@ public sealed class AuthController : ControllerBase
     {
         var result = await handler.HandleAsync(request, ct);
         await SignInAsync(result.UserId, result.DisplayName, clock);
-        await usage.RecordAsync(UsageCount.LoggedIn(UsageCount.FormMethod, request.ReturnTo), ct);
+        await usage.RecordAsync(UsageCount.LoggedIn(UsageCount.FormMethod, EntryOrigin.Of(request.ReturnTo)), ct);
         return Ok(result);
     }
 
@@ -130,7 +130,6 @@ public sealed class AuthController : ControllerBase
     private const string FrontCallbackPath = FrontRoutes.OAuthCallback;
     private const string ReturnToItemKey = "returnTo";
     internal const string ProviderItemKey = "oauthProvider";
-    private const string OauthErrorQueryKey = "oauthError";
     private const string ReauthenticationRequiredError = "reauthentication_required";
 
     [HttpGet("oauth/providers")]
@@ -153,7 +152,7 @@ public sealed class AuthController : ControllerBase
             return NotFound();
 
         if (User.Identity?.IsAuthenticated == true && !IsRecentlyAuthenticated(clock))
-            return Redirect(BuildFrontUrl(options.Value.ResolvedWebBaseUrl(), FrontIntegrationsPath, (OauthErrorQueryKey, ReauthenticationRequiredError)));
+            return Redirect(BuildFrontUrl(options.Value.ResolvedWebBaseUrl(), FrontIntegrationsPath, (FrontRoutes.OAuthErrorQueryParam, ReauthenticationRequiredError)));
 
         var props = new AuthenticationProperties
         {
@@ -181,18 +180,18 @@ public sealed class AuthController : ControllerBase
         var webBase = options.Value.ResolvedWebBaseUrl();
 
         if (!OAuthProviders.TryResolve(provider, out var knownProvider) || !catalog.IsEnabled(knownProvider))
-            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (OauthErrorQueryKey, "provider_disabled")));
+            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (FrontRoutes.OAuthErrorQueryParam, "provider_disabled")));
 
         var externalResult = await HttpContext.AuthenticateAsync(AuthConstants.ExternalCookieScheme);
         await HttpContext.SignOutAsync(AuthConstants.ExternalCookieScheme);
 
         if (!externalResult.Succeeded || externalResult.Principal is null)
-            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (OauthErrorQueryKey, "external_auth_failed")));
+            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (FrontRoutes.OAuthErrorQueryParam, "external_auth_failed")));
 
         if (!WasIssuedBy(externalResult.Properties, knownProvider))
         {
             logger.LogWarning("OAuth callback: the external ticket does not come from {Provider}", knownProvider);
-            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (OauthErrorQueryKey, "external_auth_failed")));
+            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (FrontRoutes.OAuthErrorQueryParam, "external_auth_failed")));
         }
 
         var returnTo = ReturnToPolicy.Sanitize(
@@ -202,7 +201,7 @@ public sealed class AuthController : ControllerBase
 
         var info = ExtractExternalLoginInfo(knownProvider, externalResult.Principal);
         if (info is null)
-            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (OauthErrorQueryKey, "provider_error"), (ReturnToItemKey, returnTo)));
+            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (FrontRoutes.OAuthErrorQueryParam, "provider_error"), (FrontRoutes.ReturnToQueryParam, returnTo)));
 
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!string.IsNullOrEmpty(currentUserId))
@@ -219,8 +218,8 @@ public sealed class AuthController : ControllerBase
             return Redirect(BuildFrontUrl(
                 webBase,
                 FrontLoginPath,
-                (OauthErrorQueryKey, ex.Reason ?? ErrorCodes.OAuthLinkFailed),
-                (ReturnToItemKey, returnTo)));
+                (FrontRoutes.OAuthErrorQueryParam, ex.Reason ?? ErrorCodes.OAuthLinkFailed),
+                (FrontRoutes.ReturnToQueryParam, returnTo)));
         }
 
         if (loginOutcome.Kind != OAuthOutcomeKind.SignedIn || loginOutcome.User is null)
@@ -231,22 +230,22 @@ public sealed class AuthController : ControllerBase
                 OAuthOutcomeKind.UnlinkedIdentityRequiresManualLink => "identity_unlinked",
                 _ => "email_not_verified"
             };
-            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (OauthErrorQueryKey, errorCode), (ReturnToItemKey, returnTo)));
+            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (FrontRoutes.OAuthErrorQueryParam, errorCode), (FrontRoutes.ReturnToQueryParam, returnTo)));
         }
 
         await SignInAsync(loginOutcome.User.Id, loginOutcome.User.DisplayName, clock);
         await usage.RecordAsync(
             loginOutcome.IsNewAccount
-                ? UsageCount.SignedUp(knownProvider, returnTo)
-                : UsageCount.LoggedIn(knownProvider, returnTo),
+                ? UsageCount.SignedUp(knownProvider, EntryOrigin.Of(returnTo))
+                : UsageCount.LoggedIn(knownProvider, EntryOrigin.Of(returnTo)),
             ct);
 
         return Redirect(BuildFrontUrl(
             webBase,
             FrontCallbackPath,
-            (ReturnToItemKey, returnTo),
-            ("provider", knownProvider),
-            ("event", loginOutcome.IsNewAccount ? "signup" : "login")));
+            (FrontRoutes.ReturnToQueryParam, returnTo),
+            (FrontRoutes.OAuthProviderQueryParam, knownProvider),
+            (FrontRoutes.OAuthOutcomeQueryParam, loginOutcome.IsNewAccount ? "signup" : "login")));
     }
 
     private static bool WasIssuedBy(AuthenticationProperties? ticket, string provider) =>
@@ -264,7 +263,7 @@ public sealed class AuthController : ControllerBase
         CancellationToken ct)
     {
         if (!IsRecentlyAuthenticated(clock))
-            return Redirect(BuildFrontUrl(webBase, FrontIntegrationsPath, (OauthErrorQueryKey, ReauthenticationRequiredError)));
+            return Redirect(BuildFrontUrl(webBase, FrontIntegrationsPath, (FrontRoutes.OAuthErrorQueryParam, ReauthenticationRequiredError)));
 
         OAuthOutcome linkOutcome;
         try
@@ -277,14 +276,14 @@ public sealed class AuthController : ControllerBase
             return Redirect(BuildFrontUrl(
                 webBase,
                 FrontIntegrationsPath,
-                (OauthErrorQueryKey, ex.Reason ?? ErrorCodes.OAuthLinkFailed)));
+                (FrontRoutes.OAuthErrorQueryParam, ex.Reason ?? ErrorCodes.OAuthLinkFailed)));
         }
 
         return linkOutcome.Kind switch
         {
-            OAuthOutcomeKind.Linked => Redirect(BuildFrontUrl(webBase, FrontIntegrationsPath, ("oauthLinked", provider))),
-            OAuthOutcomeKind.ProviderAlreadyLinked => Redirect(BuildFrontUrl(webBase, FrontIntegrationsPath, (OauthErrorQueryKey, "provider_already_linked"))),
-            _ => Redirect(BuildFrontUrl(webBase, FrontIntegrationsPath, (OauthErrorQueryKey, "identity_taken")))
+            OAuthOutcomeKind.Linked => Redirect(BuildFrontUrl(webBase, FrontIntegrationsPath, (FrontRoutes.OAuthLinkedQueryParam, provider))),
+            OAuthOutcomeKind.ProviderAlreadyLinked => Redirect(BuildFrontUrl(webBase, FrontIntegrationsPath, (FrontRoutes.OAuthErrorQueryParam, "provider_already_linked"))),
+            _ => Redirect(BuildFrontUrl(webBase, FrontIntegrationsPath, (FrontRoutes.OAuthErrorQueryParam, "identity_taken")))
         };
     }
 

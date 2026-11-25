@@ -359,6 +359,66 @@ public sealed class TmdbMovieSearchTests
         Assert.Null(r);
     }
 
+    [Theory]
+    [InlineData("", MoviePickerOptions.DefaultWatchProvidersRegion)]
+    [InlineData("   ", MoviePickerOptions.DefaultWatchProvidersRegion)]
+    [InlineData(" be ", "BE")]
+    public async Task GetNowPlayingMoviesAsync_AsksTmdbForTheWatchRegion_OrTheDefaultOne(string region, string expected)
+    {
+        var capturedRequests = new System.Collections.Concurrent.ConcurrentBag<HttpRequestMessage>();
+        var options = Options.Create(new MoviePickerOptions { TmdbApiKey = "key" });
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Callback<HttpRequestMessage, CancellationToken>((req, _) => capturedRequests.Add(req))
+            .Returns(() => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{\"results\":[]}") }));
+        var sut = CreateSut(CreateHttpClient(mockHandler.Object), options);
+
+        await sut.GetNowPlayingMoviesAsync(region, 1);
+
+        var request = Assert.Single(capturedRequests);
+        Assert.Contains($"region={expected}&", request.RequestUri!.Query, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("  ")]
+    public async Task GetEnrichmentAsync_WithoutARegion_ReadsTheProvidersOfTheDefaultWatchRegion(string region)
+    {
+        var watchJson = $$"""
+            {
+              "id": 550,
+              "results": {
+                "{{MoviePickerOptions.DefaultWatchProvidersRegion}}": {
+                  "link": "https://www.themoviedb.org/movie/550/watch",
+                  "flatrate": [{ "logo_path": "/netflix.png", "provider_id": 8, "provider_name": "Netflix", "display_priority": 0 }]
+                },
+                "US": {
+                  "link": "https://www.themoviedb.org/movie/550/watch",
+                  "flatrate": [{ "logo_path": "/hulu.png", "provider_id": 15, "provider_name": "Hulu", "display_priority": 0 }]
+                }
+              }
+            }
+            """;
+        var options = Options.Create(new MoviePickerOptions { TmdbApiKey = "key" });
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Returns<HttpRequestMessage, CancellationToken>(
+                (req, _) =>
+                {
+                    var body = req.RequestUri!.AbsolutePath.Contains("/watch/providers", StringComparison.Ordinal)
+                        ? watchJson
+                        : """{"vote_average": 8.4, "runtime": 139}""";
+                    return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(body) });
+                });
+        var sut = CreateSut(CreateHttpClient(mockHandler.Object), options);
+
+        var enrichment = await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, region);
+
+        Assert.Equal("Netflix", Assert.Single(enrichment!.WatchProviders).ProviderName);
+    }
+
     [Fact]
     public async Task GetEnrichmentAsync_CachesSecondCall_SingleHttpPair()
     {

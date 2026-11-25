@@ -19,20 +19,18 @@ public sealed record UsageCount
 
     public static readonly TimeSpan NewAccountWindow = TimeSpan.FromDays(1);
 
+    public const string EventOrigin = "event";
+    public const string RecapOrigin = "recap";
+    public const string ListOrigin = "list";
+    public const string ProfileOrigin = "profile";
+    public const string OtherOrigin = OtherValue;
+
     private const string OtherValue = "other";
-    private const string DeclaredOriginParameter = "from=";
 
     private static readonly string[] Viewers = ["visitor", "account"];
     private static readonly string[] EventStates = ["open", "full", "closed"];
     private static readonly string[] AuthMethods = [FormMethod, "google", "github"];
-
-    private static readonly (string Prefix, string Origin)[] OriginsByReturnPath =
-    [
-        ("/e/", "event"),
-        ("/r/", "recap"),
-        ("/l/", "list"),
-        ("/u/", "profile")
-    ];
+    private static readonly string[] EntryOrigins = [EventOrigin, RecapOrigin, ListOrigin, ProfileOrigin];
 
     private static readonly Dictionary<string, HashSet<string>> ReportedVariants = new(StringComparer.Ordinal)
     {
@@ -68,35 +66,14 @@ public sealed record UsageCount
         return true;
     }
 
-    public static string EntryOriginOf(string? returnTo)
-    {
-        if (string.IsNullOrEmpty(returnTo) || !returnTo.StartsWith('/') || returnTo.StartsWith("//", StringComparison.Ordinal))
-            return OtherValue;
-        foreach (var (prefix, origin) in OriginsByReturnPath)
-        {
-            if (returnTo.StartsWith(prefix, StringComparison.Ordinal) && returnTo.Length > prefix.Length)
-                return origin;
-        }
-        return DeclaredOriginOf(returnTo);
-    }
+    public static bool IsEntryOrigin([NotNullWhen(true)] string? origin) =>
+        origin is not null && Array.Exists(EntryOrigins, known => known == origin);
 
-    private static string DeclaredOriginOf(string returnTo)
-    {
-        var queryStart = returnTo.IndexOf('?', StringComparison.Ordinal);
-        if (queryStart < 0)
-            return OtherValue;
-        var declared = returnTo[(queryStart + 1)..]
-            .Split('&')
-            .FirstOrDefault(parameter => parameter.StartsWith(DeclaredOriginParameter, StringComparison.Ordinal))?
-            [DeclaredOriginParameter.Length..];
-        return Array.Exists(OriginsByReturnPath, known => known.Origin == declared) ? declared! : OtherValue;
-    }
+    public static UsageCount SignedUp(string method, string entryOrigin) =>
+        new(UserSignedUpMetric, AuthVariant(method, entryOrigin));
 
-    public static UsageCount SignedUp(string method, string? returnTo) =>
-        new(UserSignedUpMetric, AuthVariant(method, returnTo));
-
-    public static UsageCount LoggedIn(string method, string? returnTo) =>
-        new(UserLoggedInMetric, AuthVariant(method, returnTo));
+    public static UsageCount LoggedIn(string method, string entryOrigin) =>
+        new(UserLoggedInMetric, AuthVariant(method, entryOrigin));
 
     public static UsageCount EventJoined(DateTimeOffset accountCreatedAt, DateTimeOffset now) =>
         new(EventJoinedMetric, now - accountCreatedAt < NewAccountWindow ? "new_account" : "existing_account");
@@ -110,9 +87,10 @@ public sealed record UsageCount
     public static UsageCount LetterboxdChoicesConfirmed(int selectedCount) =>
         new(LetterboxdChoicesConfirmedMetric, selectedCount > 0 ? "selected" : "none");
 
-    private static string AuthVariant(string method, string? returnTo)
+    private static string AuthVariant(string method, string entryOrigin)
     {
         var knownMethod = AuthMethods.Contains(method, StringComparer.Ordinal) ? method : OtherValue;
-        return $"{knownMethod}.{EntryOriginOf(returnTo)}";
+        var knownOrigin = IsEntryOrigin(entryOrigin) ? entryOrigin : OtherOrigin;
+        return $"{knownMethod}.{knownOrigin}";
     }
 }

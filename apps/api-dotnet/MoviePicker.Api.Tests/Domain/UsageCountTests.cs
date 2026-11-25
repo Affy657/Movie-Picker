@@ -63,39 +63,14 @@ public sealed class UsageCountTests
     }
 
     [Theory]
-    [InlineData("/e/abc123", "event")]
-    [InlineData("/e/abc123?rate", "event")]
-    [InlineData("/r/abc123", "recap")]
-    [InlineData("/l/token/rejoindre", "list")]
-    [InlineData("/u/ad0", "profile")]
-    [InlineData("/new?from=recap", "recap")]
-    [InlineData("/new?step=2&from=list", "list")]
-    [InlineData("/e/abc123?from=recap", "event")]
-    [InlineData("/new?from=other", "other")]
-    [InlineData("/new?from=elsewhere", "other")]
-    [InlineData("/new?source=recap", "other")]
-    [InlineData("https://evil.example/new?from=recap", "other")]
-    [InlineData("/", "other")]
-    [InlineData("/films", "other")]
-    [InlineData("/events", "other")]
-    [InlineData("/e", "other")]
-    [InlineData("https://evil.example/e/abc", "other")]
-    [InlineData("//evil.example/e/abc", "other")]
-    [InlineData("", "other")]
-    [InlineData(null, "other")]
-    public void EntryOrigin_ReadsWhereTheAccountWasHeadingFromTheReturnPath(string? returnTo, string origin)
+    [InlineData("email", "event", "email.event")]
+    [InlineData("google", "recap", "google.recap")]
+    [InlineData("github", "other", "github.other")]
+    [InlineData("twitter", "event", "other.event")]
+    [InlineData("email", "elsewhere", "email.other")]
+    public void SignedUp_CombinesTheMethodAndTheOrigin(string method, string entryOrigin, string variant)
     {
-        Assert.Equal(origin, UsageCount.EntryOriginOf(returnTo));
-    }
-
-    [Theory]
-    [InlineData("email", "/e/abc", "email.event")]
-    [InlineData("google", "/r/abc", "google.recap")]
-    [InlineData("github", null, "github.other")]
-    [InlineData("twitter", "/e/abc", "other.event")]
-    public void SignedUp_CombinesTheMethodAndTheOrigin(string method, string? returnTo, string variant)
-    {
-        var count = UsageCount.SignedUp(method, returnTo);
+        var count = UsageCount.SignedUp(method, entryOrigin);
 
         Assert.Equal(UsageCount.UserSignedUpMetric, count.Metric);
         Assert.Equal(variant, count.Variant);
@@ -104,7 +79,7 @@ public sealed class UsageCountTests
     [Fact]
     public void LoggedIn_CombinesTheMethodAndTheOrigin()
     {
-        var count = UsageCount.LoggedIn("github", "/l/token/rejoindre");
+        var count = UsageCount.LoggedIn("github", UsageCount.ListOrigin);
 
         Assert.Equal(UsageCount.UserLoggedInMetric, count.Metric);
         Assert.Equal("github.list", count.Variant);

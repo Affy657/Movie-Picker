@@ -6,6 +6,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 
@@ -22,7 +23,7 @@ public sealed partial class TmdbMovieSearch
         if (!_options.HasTmdbCredentials)
             return null;
 
-        var r = NormalizeRegion(region);
+        var r = WatchRegion.Of(region);
         var cacheKey = EnrichmentCacheKey(tmdbId, mediaType, r);
 
         if (TryGetEnrichmentFromMemory(cacheKey, out var cached))
@@ -47,7 +48,7 @@ public sealed partial class TmdbMovieSearch
         if (!_options.HasTmdbCredentials || keys.Count == 0)
             return result;
 
-        var r = NormalizeRegion(region);
+        var r = WatchRegion.Of(region);
         var misses = new List<(int TmdbId, MovieMediaType MediaType, string CacheKey)>();
         foreach (var key in keys.Distinct())
         {
@@ -94,9 +95,6 @@ public sealed partial class TmdbMovieSearch
     }
 
     private const int MaxBatchEnrichmentFetch = 500;
-
-    private static string NormalizeRegion(string region) =>
-        string.IsNullOrWhiteSpace(region) ? "FR" : region.Trim().ToUpperInvariant();
 
     private static string EnrichmentCacheKey(int tmdbId, MovieMediaType mediaType, string region) =>
         $"tmdb-enrich-v2:{MediaTypeSegment(mediaType)}:{region}:{tmdbId}";

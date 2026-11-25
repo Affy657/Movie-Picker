@@ -26,10 +26,16 @@ public static class FrontRoutes
     public const string ShowPagePattern = "/serie/:movieRef";
     public const string GroupPattern = "/groupes/:groupId";
     public const string GroupJoinPattern = "/g/:token/rejoindre";
+    public const string ListJoinPattern = "/l/:token/rejoindre";
 
     public const string RateQueryParam = "rate";
     public const string ReturnToQueryParam = "returnTo";
     public const string ResetTokenQueryParam = "token";
+    public const string EntryOriginQueryParam = "from";
+    public const string OAuthErrorQueryParam = "oauthError";
+    public const string OAuthLinkedQueryParam = "oauthLinked";
+    public const string OAuthProviderQueryParam = "provider";
+    public const string OAuthOutcomeQueryParam = "event";
 
     public static string EventDetail(string slug) => Fill(EventDetailPattern, slug);
 
@@ -47,6 +53,8 @@ public static class FrontRoutes
 
     public static string ResetWithToken(string token) =>
         $"{Reset}?{ResetTokenQueryParam}={Uri.EscapeDataString(token)}";
+
+    public static string PrefixOf(string pattern) => pattern[..pattern.IndexOf(':')];
 
     private static string Fill(string pattern, string value) => pattern[..pattern.LastIndexOf(':')] + value;
 }
