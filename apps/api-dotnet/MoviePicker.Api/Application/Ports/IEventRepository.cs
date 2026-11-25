@@ -27,9 +27,15 @@ public interface IEventRepository
         DateTimeOffset utcNow,
         CancellationToken ct = default);
 
-    Task<IReadOnlyList<HeldGroupNight>> ListHeldByGroupIdsAsync(
+    Task<IReadOnlyList<HeldGroupNightTally>> TallyHeldByGroupIdsAsync(
         IReadOnlyCollection<string> groupIds,
         DateTimeOffset utcNow,
+        CancellationToken ct = default);
+
+    Task<IReadOnlyList<Event>> ListLatestHeldByGroupIdAsync(
+        string groupId,
+        DateTimeOffset utcNow,
+        int limit,
         CancellationToken ct = default);
 
     Task<IReadOnlyList<Event>> ListTitleMatchesAsync(
@@ -78,3 +84,12 @@ public interface IEventRepository
 }
 
 public sealed record HeldGroupNight(string Id, string GroupId, string Date, string Time, IReadOnlyList<string> WinnerMovieIds);
+
+public sealed record HeldGroupNightTally(
+    string GroupId,
+    int NightCount,
+    int FilmCount,
+    string FirstNightDate,
+    double? AverageFilmRating,
+    IReadOnlyDictionary<DayOfWeek, int> NightsByWeekday,
+    HeldGroupNight LastNight);

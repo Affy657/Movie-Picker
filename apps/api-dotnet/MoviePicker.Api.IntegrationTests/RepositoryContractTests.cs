@@ -232,32 +232,6 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
-    public async Task HeldGroupNights_AreTheFinishedOnesWithAFilm_LatestFirst_WithTheirFilms()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
-        var groupId = ObjectId.GenerateNewId().ToString();
-        EventWinner Pick() => new() { MovieId = ObjectId.GenerateNewId().ToString(), Method = WinnerPickMethod.Wheel, PickedAt = Now };
-        Event OfTheGroup(string title, string date, string time, params EventWinner[] winners) =>
-            NewEvent(title) with { GroupId = groupId, Date = date, Time = time, Winners = winners };
-        var closed = await events.AddAsync(OfTheGroup("closed", "2026-09-10", "20:30", Pick()) with { ClosedAt = Now });
-        var autoClosed = await events.AddAsync(OfTheGroup("auto closed", "2026-08-01", "20:30", Pick()));
-        var endedThreeHoursAgo = await events.AddAsync(OfTheGroup("ended", "2026-09-15", "11:00", Pick()));
-        await events.AddAsync(OfTheGroup("live", "2026-09-15", "13:00", Pick()));
-        await events.AddAsync(OfTheGroup("closed without film", "2026-09-10", "20:30") with { ClosedAt = Now });
-        await events.AddAsync(OfTheGroup("one draw left", "2026-09-15", "11:00", Pick()) with { Config = new EventConfig { WinnerCount = 2 } });
-        await events.AddAsync(NewEvent("other group") with { GroupId = ObjectId.GenerateNewId().ToString(), Winners = [Pick()], ClosedAt = Now });
-
-        var held = await events.ListHeldByGroupIdsAsync([groupId], Now);
-
-        Assert.Equal([endedThreeHoursAgo.Id, closed.Id, autoClosed.Id], held.Select(night => night.Id));
-        Assert.All(held, night => Assert.Equal(groupId, night.GroupId));
-        Assert.Equal(("2026-09-10", "20:30"), (held[1].Date, held[1].Time));
-        Assert.Equal(closed.GetWinnerMovieIds(), held[1].WinnerMovieIds);
-        Assert.Empty(await events.ListHeldByGroupIdsAsync([], Now));
-    }
-
-    [Fact]
     public async Task NightWithoutRecapSlug_IsListedForTheBackfill_UntilItKeepsOne()
     {
         using var scope = _factory.Services.CreateScope();

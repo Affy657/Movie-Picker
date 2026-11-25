@@ -44,10 +44,20 @@ public sealed class EventsControllerTests
     {
         var handler = new Mock<IListMyEventsHandler>();
 
-        var result = await Controller("u1").ListMine(handler.Object, null, null, null, null, "u1", CancellationToken.None);
+        var result = await Controller("u1").ListMine(handler.Object, null, null, null, null, null, "u1", CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
-        handler.Verify(h => h.HandleAsync("u1", null, null, null, null, It.IsAny<CancellationToken>()), Times.Once);
+        handler.Verify(h => h.HandleAsync("u1", null, null, null, null, true, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ListMine_WithoutPreviews_PassesTheChoiceToTheHandler()
+    {
+        var handler = new Mock<IListMyEventsHandler>();
+
+        await Controller("u1").ListMine(handler.Object, "active", null, null, null, false, "u1", CancellationToken.None);
+
+        handler.Verify(h => h.HandleAsync("u1", "active", null, null, null, false, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

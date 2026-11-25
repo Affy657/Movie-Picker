@@ -1,4 +1,3 @@
-using System.Globalization;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
@@ -13,36 +12,26 @@ public sealed class FriendGroupShowcaseReader
         new Dictionary<string, FriendGroupCoverResponse>();
 
     private readonly IMovieRepository _movies;
-    private readonly IMovieRatingRepository _ratings;
     private readonly ITmdbMovieSearch _tmdb;
 
-    public FriendGroupShowcaseReader(IMovieRepository movies, IMovieRatingRepository ratings, ITmdbMovieSearch tmdb)
+    public FriendGroupShowcaseReader(IMovieRepository movies, ITmdbMovieSearch tmdb)
     {
         _movies = movies;
-        _ratings = ratings;
         _tmdb = tmdb;
     }
 
-    public async Task<FriendGroupStatsResponse> StatsAsync(IReadOnlyList<HeldGroupNight> held, CancellationToken ct)
+    public static FriendGroupStatsResponse Stats(HeldGroupNightTally? tally)
     {
-        if (held.Count == 0)
+        if (tally is null)
             return FriendGroupStatsResponse.None;
-
-        var filmIds = held.SelectMany(night => night.WinnerMovieIds).ToHashSet(StringComparer.Ordinal);
-        var ratings = await _ratings.ListByEventIdsAsync(held.Select(night => night.Id).ToList(), ct);
-        var filmAverages = ratings
-            .Where(rating => filmIds.Contains(rating.MovieId))
-            .GroupBy(rating => rating.MovieId, StringComparer.Ordinal)
-            .Select(perFilm => perFilm.Average(rating => rating.Value))
-            .ToList();
 
         return new FriendGroupStatsResponse
         {
-            NightCount = held.Count,
-            FilmCount = filmIds.Count,
-            FirstNightDate = held[^1].Date,
-            AverageRating = filmAverages.Count == 0 ? null : Math.Round(filmAverages.Average(), 2),
-            UsualWeekday = UsualWeekday(held)
+            NightCount = tally.NightCount,
+            FilmCount = tally.FilmCount,
+            FirstNightDate = tally.FirstNightDate,
+            AverageRating = tally.AverageFilmRating is { } average ? Math.Round(average, 2) : null,
+            UsualWeekday = UsualWeekday(tally.NightsByWeekday)
         };
     }
 
@@ -90,15 +79,11 @@ public sealed class FriendGroupShowcaseReader
         };
     }
 
-    private static int? UsualWeekday(IReadOnlyList<HeldGroupNight> held)
+    private static int? UsualWeekday(IReadOnlyDictionary<DayOfWeek, int> nightsByWeekday)
     {
-        var byDay = held
-            .Select(night => DateOnly.TryParseExact(night.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
-                ? date.DayOfWeek
-                : (DayOfWeek?)null)
-            .OfType<DayOfWeek>()
-            .GroupBy(day => day)
-            .Select(perDay => (Day: perDay.Key, Count: perDay.Count()))
+        var byDay = nightsByWeekday
+            .Where(perDay => perDay.Value > 0)
+            .Select(perDay => (Day: perDay.Key, Count: perDay.Value))
             .OrderByDescending(perDay => perDay.Count)
             .ToList();
 

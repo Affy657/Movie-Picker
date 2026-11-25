@@ -124,8 +124,8 @@ public sealed class MongoIndexInitializer : IHostedService
             Builders<EventDocument>.IndexKeys.Ascending(x => x.Recurrence).Ascending(x => x.CreatorUserId),
             new CreateIndexOptions { Name = "events_recurrence_creatorUserId", Sparse = true });
         var group = new CreateIndexModel<EventDocument>(
-            Builders<EventDocument>.IndexKeys.Ascending(x => x.GroupId),
-            new CreateIndexOptions { Name = "events_groupId", Sparse = true });
+            Builders<EventDocument>.IndexKeys.Ascending(x => x.GroupId).Ascending(x => x.StartAtUtc),
+            new CreateIndexOptions { Name = "events_groupId_startAtUtc" });
         var startAt = new CreateIndexModel<EventDocument>(
             Builders<EventDocument>.IndexKeys.Ascending(x => x.StartAtUtc),
             new CreateIndexOptions { Name = "events_startAtUtc", Sparse = true });
@@ -145,6 +145,7 @@ public sealed class MongoIndexInitializer : IHostedService
             });
         plan.Create("events", slug, recapSlug, creator, recurrence, group, startAt, removedUsers, coHosts, creationRequest);
         plan.DropIfExists<EventDocument>("events", "events_winners_movieId");
+        plan.DropIfExists<EventDocument>("events", "events_groupId");
     }
 
     private static void EnsureMovieIndexes(MongoIndexPlan plan)

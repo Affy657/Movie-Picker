@@ -148,6 +148,35 @@ public sealed class MongoParticipantRepository : IParticipantRepository
         return docs.Select(ParticipantDocumentMapper.ToDomain).ToList();
     }
 
+    public async Task<IReadOnlyList<Participant>> ListFirstByEventIdsAsync(
+        IReadOnlyCollection<string> eventIds,
+        int perEvent,
+        CancellationToken ct = default)
+    {
+        var ids = MongoObjectIds.ParseValid(eventIds);
+        if (ids.Count == 0 || perEvent <= 0)
+            return [];
+
+        var pipeline = new[]
+        {
+            new BsonDocument("$match", new BsonDocument("eventId", new BsonDocument("$in", ids))),
+            new BsonDocument("$sort", new BsonDocument { { "eventId", 1 }, { "createdAt", 1 } }),
+            new BsonDocument(
+                "$group",
+                new BsonDocument
+                {
+                    { "_id", "$eventId" },
+                    { "first", new BsonDocument("$firstN", new BsonDocument { { "n", perEvent }, { "input", "$$ROOT" } }) }
+                }),
+            new BsonDocument("$unwind", "$first"),
+            new BsonDocument("$replaceWith", "$first")
+        };
+
+        using var cursor = await _collection.AggregateAsync<ParticipantDocument>(pipeline, cancellationToken: ct);
+        var docs = await cursor.ToListAsync(ct);
+        return docs.ConvertAll(ParticipantDocumentMapper.ToDomain);
+    }
+
     public async Task<bool> DeleteAsync(string participantId, string eventId, CancellationToken ct = default)
     {
         var res = await _collection.DeleteOneAsync(

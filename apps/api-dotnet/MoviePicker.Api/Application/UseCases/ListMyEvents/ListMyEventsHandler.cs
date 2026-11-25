@@ -34,7 +34,7 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
     }
 
     public async Task<MyEventsListResponse> HandleAsync(
-        string userId, string? scope, int? limit, int? offset, string? q, CancellationToken ct = default)
+        string userId, string? scope, int? limit, int? offset, string? q, bool previews = true, CancellationToken ct = default)
     {
         var normalizedScope = MyEventListScope.Normalize(scope);
         var lim = limit is null ? 20 : Math.Clamp(limit.Value, 1, 100);
@@ -92,7 +92,7 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
             userId,
             orderedSlice,
             winnerMovieIdByEventId,
-            normalizedScope == MyEventListScope.Finished,
+            DetailOf(normalizedScope, previews),
             ratingOpenEventIds,
             ct);
 
@@ -103,6 +103,13 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
             TotalActive = totalActive,
             TotalFinished = totalFinished,
         };
+    }
+
+    private static MyEventSummaryDetail DetailOf(string scope, bool previews)
+    {
+        if (scope == MyEventListScope.Finished)
+            return MyEventSummaryDetail.Ratings;
+        return previews ? MyEventSummaryDetail.Previews : MyEventSummaryDetail.Counts;
     }
 
     private async Task<List<MyEventSummaryDto>> FilterBySearchAsync(

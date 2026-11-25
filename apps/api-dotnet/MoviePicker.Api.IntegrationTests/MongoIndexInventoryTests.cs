@@ -32,7 +32,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         new("events", "events_recapSlug_unique", Unique: true),
         new("events", "events_creatorUserId"),
         new("events", "events_recurrence_creatorUserId"),
-        new("events", "events_groupId"),
+        new("events", "events_groupId_startAtUtc"),
         new("events", "events_startAtUtc"),
         new("events", "events_creator_creationRequest_unique", Unique: true),
         new("events", "events_removedUserIds"),
@@ -116,6 +116,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
     private static readonly (string Collection, string Name, string Field)[] RetiredIndexes =
     [
         ("events", "events_winners_movieId", "winners.movieId"),
+        ("events", "events_groupId", "groupId"),
         ("movies", "movies_eventId", "eventId"),
         ("seen_marks", "seen_marks_movieId", "movieId"),
         ("push_subscriptions", "push_subscriptions_userId", "userId"),
@@ -269,6 +270,32 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         Assert.Contains(
             "push_subscriptions_userId_endpoint_unique",
             await WinningPlanAsync("push_subscriptions", new BsonDocument("userId", id)));
+        Assert.Contains(
+            "events_groupId_startAtUtc",
+            await WinningPlanAsync("events", new BsonDocument("groupId", new BsonDocument("$in", new BsonArray { id }))));
+    }
+
+    [MongoFact]
+    public async Task OpenGroupNights_SkipTheNightsLongOverThroughTheGroupAndStartIndex()
+    {
+        var openNights = new BsonDocument
+        {
+            { "groupId", new BsonDocument("$in", new BsonArray { ObjectId.GenerateNewId() }) },
+            { "closedAt", BsonNull.Value },
+            {
+                "$or",
+                new BsonArray
+                {
+                    new BsonDocument("startAtUtc", new BsonDocument("$gte", new DateTime(2026, 9, 8, 0, 0, 0, DateTimeKind.Utc))),
+                    new BsonDocument("startAtUtc", BsonNull.Value)
+                }
+            }
+        };
+
+        var plan = await WinningPlanAsync("events", openNights);
+
+        Assert.Contains("events_groupId_startAtUtc", plan);
+        Assert.DoesNotContain("COLLSCAN", plan);
     }
 
     [MongoFact]

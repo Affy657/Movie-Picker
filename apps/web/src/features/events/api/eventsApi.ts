@@ -74,11 +74,13 @@ export async function createEvent(body: CreateEventBody): Promise<CreateEventRes
 export function fetchMyEventsList(
   scope: MyEventsScope,
   offset = 0,
-  q?: string
+  q?: string,
+  { previews = true }: { previews?: boolean } = {}
 ): Promise<MyEventsListResponse> {
   const params = new URLSearchParams({ scope });
   if (offset > 0) params.set('offset', String(offset));
   if (q) params.set('q', q);
+  if (!previews) params.set('previews', 'false');
   return fetchApi<MyEventsListResponse>(`/events/mine?${params.toString()}`);
 }
 
