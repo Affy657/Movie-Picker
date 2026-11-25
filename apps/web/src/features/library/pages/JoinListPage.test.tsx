@@ -3,20 +3,24 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { authMeGuestHandler, createListJoinHandlers, TEST_API_V1 } from '@/mocks/handlers';
 import buttonStyles from '@/shared/components/Button.module.css';
 import JoinListPage from './JoinListPage';
 
 const authedAlice = http.get(`${TEST_API_V1}/auth/me`, () =>
-  HttpResponse.json({
-    userId: 'u1',
-    displayName: 'Alice',
-    emailMasked: 'a***@test.local',
-    uiTheme: 'system',
-    accentColor: 'default',
-  })
+  apiJson<'UserProfileResponse'>(
+    buildUserProfile({
+      userId: 'u1',
+      displayName: 'Alice',
+      emailMasked: 'a***@test.local',
+      uiTheme: 'system',
+      accentColor: 'default',
+    })
+  )
 );
 
 const PREVIEW = {
@@ -110,15 +114,7 @@ describe('JoinListPage', () => {
     server.use(
       authedAlice,
       http.post(`${TEST_API_V1}/lists/join/tok`, () =>
-        HttpResponse.json(
-          {
-            error: 'full',
-            code: 409,
-            reason: 'list_members_limit_reached',
-            params: { max: 20 },
-          },
-          { status: 409 }
-        )
+        apiErrorJson(409, 'list_members_limit_reached', { max: 20 })
       ),
       ...createListJoinHandlers('tok', PREVIEW)
     );
@@ -138,10 +134,7 @@ describe('JoinListPage', () => {
     server.use(
       authedAlice,
       http.post(`${TEST_API_V1}/lists/join/tok`, () =>
-        HttpResponse.json(
-          { error: 'invalid', code: 404, reason: 'list_invite_link_invalid' },
-          { status: 404 }
-        )
+        apiErrorJson(404, 'list_invite_link_invalid')
       ),
       ...createListJoinHandlers('tok', PREVIEW)
     );

@@ -4,6 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router';
 import { setupServer } from 'msw/node';
 import { delay, http, HttpResponse } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
 import {
@@ -24,15 +26,17 @@ import MyListsPage from './MyListsPage';
 
 function authedUser(extra: Record<string, unknown> = {}) {
   return http.get(`${TEST_API_V1}/auth/me`, () =>
-    HttpResponse.json({
-      userId: 'u1',
-      displayName: 'Alice',
-      emailMasked: 'a***@test.local',
-      uiTheme: 'system',
-      accentColor: 'default',
-      ratingScale: 'ten',
-      ...extra,
-    })
+    apiJson<'UserProfileResponse'>(
+      buildUserProfile({
+        userId: 'u1',
+        displayName: 'Alice',
+        emailMasked: 'a***@test.local',
+        uiTheme: 'system',
+        accentColor: 'default',
+        ratingScale: 'ten',
+        ...extra,
+      })
+    )
   );
 }
 
@@ -275,7 +279,7 @@ describe('MyListsPage', () => {
     server.use(
       http.get(`${TEST_API_V1}/users/me/night-movies`, async () => {
         await delay('infinite');
-        return HttpResponse.json({ items: [] });
+        return apiJson<'MyNightMoviesResponse'>({ items: [] });
       }),
       ...fullServer()
     );
@@ -552,7 +556,7 @@ describe('MyListsPage', () => {
         calls += 1;
         return calls === 1
           ? new HttpResponse(null, { status: 500 })
-          : HttpResponse.json({ items: [] });
+          : apiJson<'MovieListsResponse'>({ items: [] });
       })
     );
     const user = userEvent.setup();

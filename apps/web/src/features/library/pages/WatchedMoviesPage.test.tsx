@@ -3,7 +3,10 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
+import { buildSearchItem } from '@/test-utils/titleItems';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { openSortMenu, sortChoices } from '@/test-utils/sortMenu';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubHoverCapability, stubMatchMedia } from '@/test-utils/matchMedia';
@@ -17,16 +20,18 @@ import WatchedMoviesPage from './WatchedMoviesPage';
 
 function authedUserWith(extra: Record<string, unknown>) {
   return http.get(`${TEST_API_V1}/auth/me`, () =>
-    HttpResponse.json({
-      userId: 'u1',
-      displayName: 'Alice',
-      emailMasked: 'a***@test.local',
-      uiTheme: 'system',
-      accentColor: 'default',
-      ratingScale: 'ten',
-      handle: 'alice',
-      ...extra,
-    })
+    apiJson<'UserProfileResponse'>(
+      buildUserProfile({
+        userId: 'u1',
+        displayName: 'Alice',
+        emailMasked: 'a***@test.local',
+        uiTheme: 'system',
+        accentColor: 'default',
+        ratingScale: 'ten',
+        handle: 'alice',
+        ...extra,
+      })
+    )
   );
 }
 
@@ -150,7 +155,7 @@ describe('WatchedMoviesPage', () => {
     server.use(
       http.post(`${TEST_API_V1}/watched`, async ({ request }) => {
         marked = (await request.json()) as Record<string, unknown>;
-        return HttpResponse.json({
+        return apiJson<'WatchedStatusResponse'>({
           status: 'elsewhere',
           watchedAt: '2026-11-13T10:00:00Z',
           rating: null,
@@ -159,9 +164,9 @@ describe('WatchedMoviesPage', () => {
         });
       }),
       http.get(`${TEST_API_V1}/movies/search`, () =>
-        HttpResponse.json({
+        apiJson<'MovieSearchListResponse'>({
           items: [
-            {
+            buildSearchItem({
               id: 100,
               title: 'Film Test',
               year: '2024',
@@ -171,7 +176,7 @@ describe('WatchedMoviesPage', () => {
               genreIds: [27],
               watchProviders: [],
               tmdbWatchPageUrl: null,
-            },
+            }),
           ],
           watchProvidersRegion: 'FR',
           disclaimer: '',
@@ -270,7 +275,9 @@ describe('WatchedMoviesPage', () => {
       ...createWatchedHandlers(WATCHED),
       http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
         body = await request.json();
-        return HttpResponse.json({ userId: 'u1', displayName: 'Alice', isWatchedPublic: false });
+        return apiJson<'UserProfileResponse'>(
+          buildUserProfile({ userId: 'u1', displayName: 'Alice', isWatchedPublic: false })
+        );
       })
     );
     const user = userEvent.setup();

@@ -2,7 +2,9 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
 import {
@@ -108,13 +110,15 @@ describe('AddToListMenu', () => {
     const tom = { userId: 'u3', handle: 'tom', displayName: 'Tom', avatarId: null };
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u1',
-          displayName: 'Alice',
-          emailMasked: 'a***@test.local',
-          uiTheme: 'system',
-          accentColor: 'default',
-        })
+        apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'u1',
+            displayName: 'Alice',
+            emailMasked: 'a***@test.local',
+            uiTheme: 'system',
+            accentColor: 'default',
+          })
+        )
       ),
       ...createListsHandlers([
         { ...LISTS[0]!, memberCount: 3, memberPreview: [alice, lea, tom] },
@@ -235,7 +239,7 @@ describe('AddToListMenu', () => {
       authMeGuestHandler,
       http.get(`${TEST_API_V1}/lists`, () => {
         if (failures-- <= 0) return undefined;
-        return HttpResponse.json({ error: 'down', code: 503 }, { status: 503 });
+        return apiErrorJson(503, 'internal_error');
       }),
       ...createListsHandlers(LISTS)
     );

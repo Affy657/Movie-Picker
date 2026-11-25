@@ -3,10 +3,11 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
 import { openSortMenu, sortChoices } from '@/test-utils/sortMenu';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
-import { apiErrorJson } from '@/mocks/apiJson';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import {
   createMyProposedMoviesHandlers,
   createWatchlistHandlers,
@@ -16,15 +17,17 @@ import {
 import MyProposalsPage from './MyProposalsPage';
 
 const authedUser = http.get(`${TEST_API_V1}/auth/me`, () =>
-  HttpResponse.json({
-    userId: 'u1',
-    displayName: 'Alice',
-    emailMasked: 'a***@test.local',
-    uiTheme: 'system',
-    accentColor: 'default',
-    ratingScale: 'ten',
-    handle: 'alice',
-  })
+  apiJson<'UserProfileResponse'>(
+    buildUserProfile({
+      userId: 'u1',
+      displayName: 'Alice',
+      emailMasked: 'a***@test.local',
+      uiTheme: 'system',
+      accentColor: 'default',
+      ratingScale: 'ten',
+      handle: 'alice',
+    })
+  )
 );
 
 const PROPOSED: MockProposedMovie[] = [
