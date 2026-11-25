@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.31.1] - 2026-11-25
+
 ### Fixed
 
 - **Une fiche de film sans mot pour convaincre** n’a plus d’espace vide entre « Proposé par, Score, Déjà vu » et ses boutons.
@@ -1098,7 +1100,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.31.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.31.1...HEAD
+[1.31.1]: https://github.com/Affy657/Movie-Picker/compare/v1.31.0...v1.31.1
 [1.31.0]: https://github.com/Affy657/Movie-Picker/compare/v1.30.4...v1.31.0
 [1.30.4]: https://github.com/Affy657/Movie-Picker/compare/v1.30.3...v1.30.4
 [1.30.3]: https://github.com/Affy657/Movie-Picker/compare/v1.30.2...v1.30.3
