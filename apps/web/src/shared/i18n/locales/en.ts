@@ -3022,7 +3022,7 @@ export const en: Locale = {
       'Google, MongoDB, Resend, Sentry, PostHog and GitHub are companies established in the United States. Your data is stored in the European Union where the service allows it, but these companies may access it from the United States. These transfers are covered by the European Commission’s standard contractual clauses included in their data processing agreements and, for certified companies, by the EU-US Data Privacy Framework. Ko-fi is established in the United Kingdom, which the European Commission recognises as offering an adequate level of protection.',
     privacyRetentionTitle: 'Data retention',
     privacyRetentionBody:
-      'Your data is kept for as long as your account exists. Deleting your account, available from the Settings page, erases your profile and your photo from the live database; events you created, your votes and your ratings are kept but anonymised.',
+      'Your data is kept for as long as your account exists. Deleting your account, available from the Settings page, erases your profile and your photo from the live database; events you created, your votes and your ratings are kept but anonymised, and the titles you added to other members’ lists stay there, without your name.',
     privacyRetentionBackups:
       'Backups: the database is backed up every day. Daily archives are kept 30 days and one archive per month 400 days, then remain recoverable for 7 more days before being erased for good. Data deleted from the database can therefore remain in a backup for up to 407 days. These backups are only used to restore the service after an incident.',
     privacyRetentionLogs: 'Technical logs of the API: 30 days.',
