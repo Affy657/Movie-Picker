@@ -4,7 +4,15 @@ public static class EventSchedule
 {
     public static readonly TimeSpan PendingDelay = TimeSpan.FromHours(2);
     public static readonly TimeSpan AutoCloseDelay = TimeSpan.FromDays(7);
+    public static readonly TimeSpan LongestNight = TimeSpan.FromHours(12);
+    public static readonly TimeSpan RatingCatchUpWindow = TimeSpan.FromDays(7);
     public const int MaxYearsAhead = 2;
+
+    public static TimeSpan NightLength(int? longestRuntimeMinutes)
+    {
+        var film = TimeSpan.FromMinutes(Math.Clamp(longestRuntimeMinutes ?? 0, 0, (int)LongestNight.TotalMinutes));
+        return film > PendingDelay ? film : PendingDelay;
+    }
 
     private static readonly DateTime LatestStartWithAWholeLifecycle = DateTime.MaxValue - PendingDelay - AutoCloseDelay;
 

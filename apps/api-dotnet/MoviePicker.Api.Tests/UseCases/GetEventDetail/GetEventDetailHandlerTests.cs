@@ -100,6 +100,54 @@ public sealed class GetEventDetailHandlerTests
         Assert.Equal(expected, result.ViewerRemoved);
     }
 
+    private static Event NightEndedTwoDaysAgo() =>
+        new EventEntityBuilder().WithId("evt-1").WithSlug("soiree").Build() with
+        {
+            Date = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-2).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+            Time = "20:00",
+            Winners = [new EventWinner { MovieId = "m1", Method = WinnerPickMethod.Wheel, PickedAt = DateTimeOffset.UtcNow.AddDays(-3) }]
+        };
+
+    private void GivenSignedInParticipant(Event evt, DateTimeOffset? ratingPromptedAt)
+    {
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _currentUserAccessor.Setup(c => c.GetUserId()).Returns("u1");
+        _participantRepo
+            .Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new ParticipantEntity { Id = "p1", EventId = evt.Id, Pseudo = "Léa", UserId = "u1", RatingPromptedAt = ratingPromptedAt }]);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ParticipantOnceTheNightIsOver_IsDueToBeAskedForARating()
+    {
+        GivenSignedInParticipant(NightEndedTwoDaysAgo(), ratingPromptedAt: null);
+
+        var result = await _sut.HandleAsync("soiree");
+
+        Assert.True(result.RatingPromptDue);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ParticipantAlreadyAskedOnAnotherDevice_IsNotAskedAgain()
+    {
+        GivenSignedInParticipant(NightEndedTwoDaysAgo(), ratingPromptedAt: DateTimeOffset.UtcNow.AddHours(-1));
+
+        var result = await _sut.HandleAsync("soiree");
+
+        Assert.False(result.RatingPromptDue);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ViewerWhoDidNotTakePart_IsNeverAskedForARating()
+    {
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(NightEndedTwoDaysAgo());
+        _currentUserAccessor.Setup(c => c.GetUserId()).Returns("u1");
+
+        var result = await _sut.HandleAsync("soiree");
+
+        Assert.False(result.RatingPromptDue);
+    }
+
     [Fact]
     public async Task HandleAsync_GivesTheRecapLinkOfTheNight()
     {

@@ -58,13 +58,10 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         var movieCount = await movieCountTask;
         var votersCount = await votersCountTask;
 
-        ParticipantResponse? myParticipant = null;
-        if (!string.IsNullOrEmpty(currentUserId))
-        {
-            var mine = participants.FirstOrDefault(p => p.UserId == currentUserId);
-            if (mine is not null)
-                myParticipant = ParticipantResponse.FromDomain(mine);
-        }
+        var mine = string.IsNullOrEmpty(currentUserId)
+            ? null
+            : participants.FirstOrDefault(p => p.UserId == currentUserId);
+        var myParticipant = mine is null ? null : ParticipantResponse.FromDomain(mine);
 
         var participantUserIds = participants
             .Where(p => !string.IsNullOrEmpty(p.UserId))
@@ -95,6 +92,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             IsHost = isHost,
             IsFinished = isFinished,
             Lifecycle = lifecycle,
+            RatingPromptDue = mine is not null && evt.IsRatingPromptDue(now, mine.RatingPromptedAt),
             Winners = evt.Winners.Select(ToWinnerResponse).ToList(),
             MyParticipant = myParticipant,
             ViewerRemoved = evt.HasRemoved(currentUserId),

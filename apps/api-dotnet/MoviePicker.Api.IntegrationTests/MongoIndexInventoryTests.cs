@@ -34,6 +34,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         new("events", "events_recurrence_creatorUserId"),
         new("events", "events_groupId"),
         new("events", "events_startAtUtc"),
+        new("events", "events_winners_pickedAt"),
         new("events", "events_creator_creationRequest_unique", Unique: true),
         new("events", "events_removedUserIds"),
         new("events", "events_coHostUserIds"),
@@ -301,6 +302,23 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
 
         Assert.Contains("events_removedUserIds", plan);
         Assert.Contains("events_coHostUserIds", plan);
+        Assert.DoesNotContain("COLLSCAN", plan);
+    }
+
+    [MongoFact]
+    public async Task RatingReminderPass_FindsTheNightsThroughTheStartAndPickIndexes()
+    {
+        var since = new BsonDateTime(DateTime.UtcNow.AddDays(-7));
+        var endedOrDrawnLately = new BsonDocument("$or", new BsonArray
+        {
+            new BsonDocument("startAtUtc", new BsonDocument("$gt", since)),
+            new BsonDocument("winners", new BsonDocument("$elemMatch", new BsonDocument("pickedAt", new BsonDocument("$gt", since))))
+        });
+
+        var plan = await WinningPlanAsync("events", endedOrDrawnLately);
+
+        Assert.Contains("events_startAtUtc", plan);
+        Assert.Contains("events_winners_pickedAt", plan);
         Assert.DoesNotContain("COLLSCAN", plan);
     }
 

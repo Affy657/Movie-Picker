@@ -919,6 +919,31 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task FinishedNightQueries_WaitForTheLongestFilmToEnd()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var marker = Guid.NewGuid().ToString("N")[..8];
+        var groupId = ObjectId.GenerateNewId().ToString();
+        EventWinner Lasting(int? runtimeMinutes) =>
+            new() { MovieId = ObjectId.GenerateNewId().ToString(), Method = WinnerPickMethod.Wheel, PickedAt = Now.AddDays(-1), RuntimeMinutes = runtimeMinutes };
+        Event StartedThreeHoursAgo(string title, params EventWinner[] winners) =>
+            NewEvent(title + "-" + marker) with { GroupId = groupId, Date = "2026-09-15", Time = "11:00", Winners = winners };
+        var shortFilm = await events.AddAsync(StartedThreeHoursAgo("short", Lasting(95)));
+        var longFilmOver = await events.AddAsync(StartedThreeHoursAgo("long-over", Lasting(170)));
+        var unknownRuntime = await events.AddAsync(StartedThreeHoursAgo("unknown", Lasting(null)));
+        await events.AddAsync(StartedThreeHoursAgo("long-playing", Lasting(200)));
+        await events.AddAsync(StartedThreeHoursAgo("double-bill", Lasting(95), Lasting(200)) with { Config = new EventConfig { WinnerCount = 2 } });
+
+        var awaitingCleanup = await events.ListAwaitingWatchlistCleanupAsync(Now, 1000);
+        var held = await events.ListHeldByGroupIdsAsync([groupId], Now);
+
+        HashSet<string> expected = [shortFilm.Id, longFilmOver.Id, unknownRuntime.Id];
+        Assert.Equal(expected, awaitingCleanup.Where(e => e.Title.EndsWith(marker, StringComparison.Ordinal)).Select(e => e.Id).ToHashSet());
+        Assert.Equal(expected, held.Select(night => night.Id).ToHashSet());
+    }
+
+    [Fact]
     public async Task ListAwaitingWatchlistCleanup_NightWithADrawLeft_WaitsForItsLastDrawOrItsEnd()
     {
         using var scope = _factory.Services.CreateScope();
@@ -965,26 +990,80 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
-    public async Task ListWithWinnerStartingBetween_KeepsTheWinnersOfTheWindow_WhetherClosedOrNot()
+    public async Task ListWithWinnerEndingBetween_KeepsTheNightsWhoseFilmEndedInTheWindow()
     {
         using var scope = _factory.Services.CreateScope();
         var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
         var marker = Guid.NewGuid().ToString("N")[..8];
-        var winners = new[] { new EventWinner { MovieId = ObjectId.GenerateNewId().ToString(), Method = WinnerPickMethod.Wheel, PickedAt = Now } };
-        var yesterday = await events.AddAsync(NewEvent("yesterday-" + marker) with { Winners = winners, Date = "2041-03-09" });
-        var threeDaysAgo = await events.AddAsync(NewEvent("three-days-" + marker) with { Winners = winners, Date = "2041-03-07", Time = "00:00" });
-        var closedByHost = await events.AddAsync(NewEvent("closed-" + marker) with { Winners = winners, Date = "2041-03-08", ClosedAt = Now });
-        await events.AddAsync(NewEvent("four-days-" + marker) with { Winners = winners, Date = "2041-03-06", Time = "23:30" });
-        await events.AddAsync(NewEvent("today-" + marker) with { Winners = winners, Date = "2041-03-10", Time = "00:00" });
+        static EventWinner Drawn(DateTimeOffset pickedAt, int? runtimeMinutes = null) =>
+            new() { MovieId = ObjectId.GenerateNewId().ToString(), Method = WinnerPickMethod.Wheel, PickedAt = pickedAt, RuntimeMinutes = runtimeMinutes };
+        var from = new DateTimeOffset(2041, 3, 3, 9, 0, 0, TimeSpan.Zero);
+        var to = new DateTimeOffset(2041, 3, 10, 9, 0, 0, TimeSpan.Zero);
+        var endedYesterday = await events.AddAsync(NewEvent("yesterday-" + marker) with
+        {
+            Date = "2041-03-09",
+            Time = "20:00",
+            Winners = [Drawn(new DateTimeOffset(2041, 3, 9, 19, 30, 0, TimeSpan.Zero))]
+        });
+        var longFilmEnded = await events.AddAsync(NewEvent("long-ended-" + marker) with
+        {
+            Date = "2041-03-10",
+            Time = "03:00",
+            Winners = [Drawn(new DateTimeOffset(2041, 3, 9, 12, 0, 0, TimeSpan.Zero), 300)]
+        });
+        var drawnLate = await events.AddAsync(NewEvent("drawn-late-" + marker) with
+        {
+            Date = "2041-02-20",
+            Time = "20:00",
+            Winners = [Drawn(new DateTimeOffset(2041, 3, 8, 12, 0, 0, TimeSpan.Zero))]
+        });
+        var closedEarly = await events.AddAsync(NewEvent("closed-early-" + marker) with
+        {
+            Date = "2041-03-05",
+            Time = "20:00",
+            Winners = [Drawn(new DateTimeOffset(2041, 3, 5, 19, 0, 0, TimeSpan.Zero), 169)],
+            ClosedAt = new DateTimeOffset(2041, 3, 5, 19, 30, 0, TimeSpan.Zero)
+        });
+        await events.AddAsync(NewEvent("long-playing-" + marker) with
+        {
+            Date = "2041-03-10",
+            Time = "06:00",
+            Winners = [Drawn(new DateTimeOffset(2041, 3, 9, 12, 0, 0, TimeSpan.Zero), 300)]
+        });
+        await events.AddAsync(NewEvent("too-long-ago-" + marker) with
+        {
+            Date = "2041-03-01",
+            Time = "20:00",
+            Winners = [Drawn(new DateTimeOffset(2041, 3, 1, 19, 0, 0, TimeSpan.Zero))]
+        });
+        await events.AddAsync(NewEvent("upcoming-" + marker) with
+        {
+            Date = "2041-03-20",
+            Time = "20:00",
+            Winners = [Drawn(new DateTimeOffset(2041, 3, 9, 12, 0, 0, TimeSpan.Zero))]
+        });
         await events.AddAsync(NewEvent("no-winner-" + marker) with { Date = "2041-03-09" });
 
-        var found = await events.ListWithWinnerStartingBetweenAsync(
-            new DateTimeOffset(2041, 3, 6, 23, 0, 0, TimeSpan.Zero),
-            new DateTimeOffset(2041, 3, 9, 23, 0, 0, TimeSpan.Zero));
+        var found = await events.ListWithWinnerEndingBetweenAsync(from, to);
 
         var mine = found.Where(e => e.Title.EndsWith(marker, StringComparison.Ordinal)).Select(e => e.Id).ToHashSet();
-        HashSet<string> expected = [yesterday.Id, threeDaysAgo.Id, closedByHost.Id];
+        HashSet<string> expected = [endedYesterday.Id, longFilmEnded.Id, drawnLate.Id, closedEarly.Id];
         Assert.Equal(expected, mine);
+    }
+
+    [Fact]
+    public async Task WinnerRuntime_SurvivesTheRoundTrip()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var winner = new EventWinner { MovieId = ObjectId.GenerateNewId().ToString(), Method = WinnerPickMethod.Manual, PickedAt = Now, RuntimeMinutes = 169 };
+        var unknownRuntime = winner with { MovieId = ObjectId.GenerateNewId().ToString(), RuntimeMinutes = null };
+
+        var added = await events.AddAsync(NewEvent("runtime") with { Winners = [winner, unknownRuntime] });
+        var read = await events.GetByIdOrSlugAsync(added.Slug);
+
+        Assert.NotNull(read);
+        Assert.Equal([169, null], read.Winners.Select(w => w.RuntimeMinutes));
     }
 
     [Fact]
@@ -1042,6 +1121,26 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
             marks.Select(mark => mark.Id).Order(StringComparer.Ordinal));
         Assert.Empty(await seenMarks.ListByEventAndMovieIdsAsync([], [film]));
         Assert.Empty(await seenMarks.ListByEventAndMovieIdsAsync([night], []));
+    }
+
+    [Fact]
+    public async Task MarkRatingPrompted_IsReadBackWithTheParticipationOnly()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var participants = scope.ServiceProvider.GetRequiredService<IParticipantRepository>();
+        var evt = await events.AddAsync(NewEvent("Prompted"));
+        var otherNight = await events.AddAsync(NewEvent("Other"));
+        var userId = ObjectId.GenerateNewId().ToString();
+        var prompted = await participants.AddAsync(new Participant { EventId = evt.Id, Pseudo = "Léa", UserId = userId, CreatedAt = Now, UpdatedAt = Now });
+        var neighbour = await participants.AddAsync(new Participant { EventId = evt.Id, Pseudo = "Hugo", CreatedAt = Now, UpdatedAt = Now });
+
+        Assert.True(await participants.MarkRatingPromptedAsync(prompted.Id, evt.Id, Now.AddHours(3)));
+        Assert.False(await participants.MarkRatingPromptedAsync(prompted.Id, otherNight.Id, Now.AddHours(4)));
+
+        var read = await participants.FindByEventAndUserIdAsync(evt.Id, userId);
+        Assert.Equal(Now.AddHours(3), read?.RatingPromptedAt);
+        Assert.Null((await participants.FindByIdAndEventIdAsync(neighbour.Id, evt.Id))?.RatingPromptedAt);
     }
 
     [Fact]

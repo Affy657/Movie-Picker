@@ -13,6 +13,7 @@ using MoviePicker.Api.Application.UseCases.InviteUser;
 using MoviePicker.Api.Application.UseCases.JoinEvent;
 using MoviePicker.Api.Application.UseCases.LaunchWheel;
 using MoviePicker.Api.Application.UseCases.ListMyEvents;
+using MoviePicker.Api.Application.UseCases.MovieRatings;
 using MoviePicker.Api.Application.UseCases.RemoveParticipant;
 using MoviePicker.Api.Application.UseCases.ResetWheel;
 using MoviePicker.Api.Controllers;
@@ -189,6 +190,17 @@ public sealed class EventsControllerTests
         var result = await Controller(null).Close("e", new CsrfGuardRequest(), handler.Object, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task MarkRatingPrompted_RemembersItForTheSignedInParticipant()
+    {
+        var handler = new Mock<IMarkRatingPromptedHandler>();
+
+        var result = await Controller("u1").MarkRatingPrompted("e", handler.Object, "u1", CancellationToken.None);
+
+        Assert.IsType<NoContentResult>(result);
+        handler.Verify(h => h.HandleAsync("u1", "e", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

@@ -21,6 +21,7 @@ public sealed class EventDetailResponse
     public bool IsHost { get; init; }
     public bool IsFinished { get; init; }
     public string Lifecycle { get; init; } = string.Empty;
+    public bool RatingPromptDue { get; init; }
 
 
     public ParticipantResponse? MyParticipant { get; init; }

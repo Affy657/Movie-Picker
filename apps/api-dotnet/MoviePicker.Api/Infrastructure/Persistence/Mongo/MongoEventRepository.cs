@@ -260,18 +260,21 @@ public sealed class MongoEventRepository : IEventRepository
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
     }
 
-    public async Task<IReadOnlyList<Event>> ListWithWinnerStartingBetweenAsync(
-        DateTimeOffset fromInclusive,
-        DateTimeOffset toExclusive,
+    public async Task<IReadOnlyList<Event>> ListWithWinnerEndingBetweenAsync(
+        DateTimeOffset fromExclusive,
+        DateTimeOffset toInclusive,
         CancellationToken ct = default)
     {
         var builder = Builders<EventDocument>.Filter;
         var filter = builder.And(
             builder.SizeGt(x => x.Winners, 0),
-            builder.Gte(x => x.StartAtUtc, fromInclusive.UtcDateTime),
-            builder.Lt(x => x.StartAtUtc, toExclusive.UtcDateTime));
+            builder.Or(
+                builder.Gt(x => x.StartAtUtc, (fromExclusive - EventSchedule.LongestNight).UtcDateTime),
+                builder.ElemMatch(x => x.Winners, winner => winner.PickedAt > fromExclusive.UtcDateTime)));
         var docs = await _collection.Find(filter).ToListAsync(ct);
-        return docs.ConvertAll(EventDocumentMapper.ToDomain);
+        return docs
+            .ConvertAll(EventDocumentMapper.ToDomain)
+            .FindAll(evt => evt.TryGetEndUtc(out var endUtc) && endUtc > fromExclusive && endUtc <= toInclusive);
     }
 
     public async Task<IReadOnlyList<Event>> ListOpenByGroupIdsAsync(
@@ -333,8 +336,39 @@ public sealed class MongoEventRepository : IEventRepository
         return builder.Or(
             builder.Ne(x => x.ClosedAt, (DateTime?)null),
             builder.Lte(x => x.StartAtUtc, autoClosedStartedBefore),
-            builder.And(builder.Lte(x => x.StartAtUtc, pendingSinceStartedBefore), EveryWinnerDrawn));
+            builder.And(builder.Lte(x => x.StartAtUtc, pendingSinceStartedBefore), EveryWinnerDrawn, NightOverBy(utcNow)));
     }
+
+    private static BsonDocumentFilterDefinition<EventDocument> NightOverBy(DateTimeOffset utcNow) => new(
+        new BsonDocument(
+            "$expr",
+            new BsonDocument(
+                "$lte",
+                new BsonArray
+                {
+                    new BsonDocument("$add", new BsonArray { "$startAtUtc", NightLengthMilliseconds }),
+                    utcNow.UtcDateTime
+                })));
+
+    private static readonly BsonDocument NightLengthMilliseconds = new(
+        "$multiply",
+        new BsonArray
+        {
+            new BsonDocument(
+                "$min",
+                new BsonArray
+                {
+                    (int)EventSchedule.LongestNight.TotalMinutes,
+                    new BsonDocument(
+                        "$max",
+                        new BsonArray
+                        {
+                            (int)EventSchedule.PendingDelay.TotalMinutes,
+                            new BsonDocument("$ifNull", new BsonArray { new BsonDocument("$max", "$winners.runtimeMinutes"), 0 })
+                        })
+                }),
+            (long)TimeSpan.FromMinutes(1).TotalMilliseconds
+        });
 
     public async Task<IReadOnlyList<Event>> ListTitleMatchesAsync(
         string creatorUserId,

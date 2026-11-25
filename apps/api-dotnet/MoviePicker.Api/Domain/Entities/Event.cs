@@ -39,13 +39,13 @@ public sealed record Event
         if (!EventSchedule.TryGetStartUtc(Date, Time, out var startUtc))
             return EventLifecycle.Upcoming;
 
-        var pendingAt = startUtc + EventSchedule.PendingDelay;
-        var autoCloseAt = pendingAt + EventSchedule.AutoCloseDelay;
+        var scheduledEndAt = startUtc + NightLength;
+        var autoCloseAt = startUtc + EventSchedule.PendingDelay + EventSchedule.AutoCloseDelay;
 
         if (utcNow >= autoCloseAt)
             return EventLifecycle.Finished;
 
-        if (utcNow >= pendingAt)
+        if (utcNow >= scheduledEndAt)
             return RemainingWinnerSlots == 0 ? EventLifecycle.Finished : EventLifecycle.Pending;
 
         if (utcNow >= startUtc)
@@ -53,6 +53,36 @@ public sealed record Event
 
         return EventLifecycle.Upcoming;
     }
+
+    public TimeSpan NightLength => EventSchedule.NightLength(Winners.Max(w => w.RuntimeMinutes));
+
+    public bool TryGetEndUtc(out DateTimeOffset endUtc)
+    {
+        DateTimeOffset? end = null;
+        if (EventSchedule.TryGetStartUtc(Date, Time, out var startUtc))
+        {
+            var scheduledEndAt = startUtc + NightLength;
+            var lastPickedAt = Winners.Count == 0 ? scheduledEndAt : Winners.Max(w => w.PickedAt);
+            end = lastPickedAt > scheduledEndAt ? lastPickedAt : scheduledEndAt;
+        }
+
+        if (ClosedAt is { } closedAt && (end is null || closedAt < end))
+            end = closedAt;
+
+        endUtc = end ?? default;
+        return end.HasValue;
+    }
+
+    public bool HasEndedWithinTheCatchUpWindow(DateTimeOffset utcNow) =>
+        HasWinner
+        && TryGetEndUtc(out var endUtc)
+        && utcNow >= endUtc
+        && utcNow - EventSchedule.RatingCatchUpWindow < endUtc;
+
+    public bool IsRatingPromptDue(DateTimeOffset utcNow, DateTimeOffset? promptedAt) =>
+        HasEndedWithinTheCatchUpWindow(utcNow)
+        && TryGetEndUtc(out var endUtc)
+        && (promptedAt is null || promptedAt < endUtc);
 
     public bool IsFinished(DateTimeOffset utcNow) => Lifecycle(utcNow) == EventLifecycle.Finished;
 

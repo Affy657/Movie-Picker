@@ -15,6 +15,7 @@ using MoviePicker.Api.Application.UseCases.InviteUser;
 using MoviePicker.Api.Application.UseCases.JoinEvent;
 using MoviePicker.Api.Application.UseCases.LaunchWheel;
 using MoviePicker.Api.Application.UseCases.ListMyEvents;
+using MoviePicker.Api.Application.UseCases.MovieRatings;
 using MoviePicker.Api.Application.UseCases.RemoveParticipant;
 using MoviePicker.Api.Application.UseCases.RemoveWinner;
 using MoviePicker.Api.Application.UseCases.ResetWheel;
@@ -236,6 +237,23 @@ public sealed class EventsController : ControllerBase
     {
         var result = await handler.HandleAsync(idOrSlug, ct);
         return Ok(result);
+    }
+
+    [HttpPut("{idOrSlug}/rating-prompt")]
+    [Authorize]
+    [EnableRateLimiting(RateLimitingExtensions.RatingMutationPolicy)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> MarkRatingPrompted(
+        string idOrSlug,
+        [FromServices] IMarkRatingPromptedHandler handler,
+        [CurrentUserId] string userId,
+        CancellationToken ct)
+    {
+        await handler.HandleAsync(userId, idOrSlug, ct);
+        return NoContent();
     }
 
     [HttpDelete("{idOrSlug}/participants/{participantId}")]

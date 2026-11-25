@@ -65,7 +65,8 @@ public static class EventDocumentMapper
                 {
                     MovieId = w.MovieId,
                     PickMethod = ToWinnerPickMethodString(w.Method) ?? "wheel",
-                    PickedAt = w.PickedAt.UtcDateTime
+                    PickedAt = w.PickedAt.UtcDateTime,
+                    RuntimeMinutes = w.RuntimeMinutes
                 })
                 .ToList(),
             WinnerAnnouncedAt = evt.WinnerAnnouncedAt?.UtcDateTime,
@@ -150,7 +151,8 @@ public static class EventDocumentMapper
                 {
                     MovieId = w.MovieId,
                     Method = ParseWinnerPickMethod(w.PickMethod) ?? WinnerPickMethod.Wheel,
-                    PickedAt = new DateTimeOffset(w.PickedAt, TimeSpan.Zero)
+                    PickedAt = new DateTimeOffset(w.PickedAt, TimeSpan.Zero),
+                    RuntimeMinutes = w.RuntimeMinutes
                 })
                 .ToList()
             : [];
