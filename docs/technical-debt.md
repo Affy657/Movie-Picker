@@ -9,7 +9,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 3. Fin de traitement : supprimer l'entrée entière et sa ligne du sommaire, git porte l'historique.
 4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-123`. Elle se range dans la partie de son `state`, avec les entrées de sa zone, et gagne sa ligne au sommaire dans le même commit. Une entrée qui change de `state` change de partie et de tableau.
 5. Deux dettes qui se règlent par le même geste n'en font qu'une, sous l'identifiant le plus ancien ; les identifiants absorbés restent cités dans `refs`.
-6. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
+6. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`. Un retrait qui n'attend qu'une date (rétention des sauvegardes, ancien front encore en circulation) va dans `scripts/removal-schedule.json`, que `pnpm run check:removal-schedule` fait respecter.
 7. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
 8. **Contraintes** (ce qui casse en silence si on y touche), **Impasses** (essayé, mesuré, sans gain) et **Écartées** (arbitré, ne se fait pas à cette échelle), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
 
@@ -42,7 +42,7 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-052 | Sécurité et accès | le secret `GITHUB_TOKEN` de l'API est le jeton du `gh` CLI du poste |
 | DEBT-053 | Sécurité et accès | l'API et la sauvegarde parlent à Atlas en administrateur du cluster, le même que le poste de dev |
 
-### Différées (12)
+### Différées (10)
 
 | Dette | Zone | Sujet |
 |---|---|---|
@@ -52,8 +52,6 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-008 | API et données | le sondage de repli à 3,5 s fixe encore le plafond de la base quand le flux manque |
 | DEBT-040 | API et données | le seed de développement est compilé dans l'assembly de production |
 | DEBT-064 | API et données | `GetByIdOrSlugAsync` ne résout plus que le slug |
-| DEBT-092 | API et données | le rapport de synchronisation Letterboxd garde ses anciens champs à plat à côté de `lists` |
-| DEBT-097 | API et données | six migrations terminées et huit méthodes de port attendent la fin de la rétention des sauvegardes |
 | DEBT-026 | Front | le flou de fond des barres collantes n'a jamais été mesuré au défilement |
 | DEBT-111 | Front | les schémas de `/tech` n'ont pas de variante verticale sur téléphone |
 | DEBT-073 | Sécurité et accès | une photo de profil envoyée hors de l'app garde ses métadonnées, et l'ancienne disparaît trop tôt |
@@ -267,27 +265,6 @@ Ne se traitent que quand leur `declencheur` survient.
 - verify: `grep -rln "ByIdOrSlug" apps/api-dotnet --include=*.cs | grep -v /obj/` ; encore ouvert tant qu'il rend un fichier
 - fix: renommer en `GetBySlugAsync` et `GetRequiredBySlugAsync`, `idOrSlug` en `slug` partout, y compris le segment de route, puis `pnpm run openapi:export` et `pnpm run openapi:types`
 - piege: renommer le segment de route change les clés de `paths` dans le contrat OpenAPI, donc le schéma généré et `apiContract.test.ts` côté front ; les faire dans le même commit. La fusion de `v1.7` apporte aussi une trentaine de chemins d'API construits sans `apiPath` (dont `setMovieRating` et `deleteMovieRating`, aujourd'hui dans `features/events/api/eventMoviesApi.ts`) : les convertir dans le même geste, `grep -rln '/events/\${' apps/web/src --include=*.ts | grep -v test` ne doit plus rien rendre.
-
-## DEBT-092 le rapport de synchronisation Letterboxd garde ses anciens champs à plat à côté de `lists`
-
-- state: differe
-- declencheur: la version qui sert `lists` est en production depuis 30 jours, le temps qu'aucun ancien front ne tourne plus derrière son service worker
-- impact: depuis le 2026-11-25, `LetterboxdSyncResponse` rend une entrée par liste dans `lists`, la date et l'erreur de synchronisation sont tenues par liste (`letterboxdListSyncs` du document utilisateur, les anciens champs restant écrits et lus en repli) et le front boucle sur les listes. Le rapport recopie encore ses champs à plat d'avant (`Added`, `WatchedAdded` et les autres) pour l'ancien front, et `check:contract-compat` refuse toute propriété de réponse retirée sans offrir de moyen d'en autoriser une, même une fois l'ancien front disparu. Le préfixe `watched:` reste dans les clés de choix stockées en base, encapsulé dans `LetterboxdPendingChoiceKey.TargetOf`.
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/DTOs/LetterboxdImportDtos.cs` (`LetterboxdSyncResponse`), `scripts/check-contract-compat.mjs`, `apps/api-dotnet/MoviePicker.Api/Application/UseCases/LetterboxdImport/LetterboxdPendingChoiceKey.cs`
-- verify: `grep -n "public int WatchedAdded" apps/api-dotnet/MoviePicker.Api/Application/DTOs/LetterboxdImportDtos.cs` ; encore ouvert tant qu'une ligne tombe dans `LetterboxdSyncResponse` (celle de `LetterboxdImportConfirmResponse` n'en fait pas partie)
-- fix: une liste datée de retraits autorisés dans `check:contract-compat`, avec son test, puis le retrait des champs à plat du rapport et des anciens champs `letterboxdLastSyncAt` et `letterboxdLastSyncError`
-- piege: la forme change le contrat OpenAPI, régénérer `openapiSchema.ts`
-- fini-quand: plus aucun champ à plat dans `LetterboxdSyncResponse`, et la date de synchronisation n'est plus écrite qu'une fois par liste
-
-## DEBT-097 six migrations terminées et huit méthodes de port attendent la fin de la rétention des sauvegardes
-
-- state: differe
-- declencheur: 2027-10-20 pour les premières (identifiant de la migration plus 410 jours : 400 jours de copies mensuelles et 7 jours de suppression réversible, règle de retrait de la section « Migrations de données » d'`AGENTS.md`)
-- impact: `ListMissingHandleAsync` (2027-10-20), `ListMissingGenresAsync` films et watchlist (2027-10-20), `ListMissingStartAtAsync` (2027-10-30), `ListMissingFactsAsync` (2027-11-04), `ListWithLegacyPosterPathAsync` films et watchlist (2027-11-07), `ListMissingRecapSlugAsync` (2027-11-28) ne servent qu'à leurs migrations, avec leurs deux implémentations et leurs tests
-- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Migrations/`, `Application/Ports/`
-- verify: `grep -rlE "ListMissing(Handle|Genres|StartAt|Facts|RecapSlug)Async|ListWithLegacyPosterPathAsync" apps/api-dotnet/MoviePicker.Api/Application/Ports`
-- fix: à chaque date, supprimer la migration, ses méthodes de port, leurs implémentations, leurs tests et son enregistrement ; lire avant le contenu réel du bucket de sauvegarde, une copie mensuelle plus récente que prévu peut avancer la date
-- fini-quand: la commande `verify` ne rend plus rien
 
 ## DEBT-026 le flou de fond des barres collantes n'a jamais été mesuré au défilement
 
