@@ -25,6 +25,7 @@ interface Props {
   onOpenFollowModal: (tab: FollowTab) => void;
   accent?: AccentColor;
   overBanner?: boolean;
+  tools?: ReactNode;
   children?: ReactNode;
 }
 
@@ -36,6 +37,7 @@ export default function ProfileHeader({
   onOpenFollowModal,
   accent,
   overBanner = false,
+  tools,
   children,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -57,10 +59,13 @@ export default function ProfileHeader({
 
       <div className={styles.identity}>
         <div className={styles.nameRow}>
-          <h1 id="profile-heading" className={styles.name}>
-            {profile.displayName}
-          </h1>
-          {profile.isSupporter && <SupporterBadge />}
+          <div className={styles.nameLine}>
+            <h1 id="profile-heading" className={styles.name}>
+              {profile.displayName}
+            </h1>
+            {profile.isSupporter && <SupporterBadge />}
+          </div>
+          {tools ? <div className={styles.tools}>{tools}</div> : null}
         </div>
 
         <p className={styles.meta}>

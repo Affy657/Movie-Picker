@@ -19,7 +19,7 @@ import ProfileStatsSection, {
   PROFILE_STATS_ID,
 } from '@/features/profile/components/ProfileStatsSection';
 import ProfileStatsSummary from '@/features/profile/components/ProfileStatsSummary';
-import ProfileActions from '@/features/profile/components/ProfileActions';
+import ProfileActions, { ProfileTools } from '@/features/profile/components/ProfileActions';
 import ProfileBanner from '@/features/profile/components/ProfileBanner';
 import ProfilePageSkeleton, {
   ProfileStatsSkeleton,
@@ -277,6 +277,7 @@ export default function ProfilePage() {
           accent={profileAccent}
           overBanner={bannerView.banner !== null}
           onOpenFollowModal={setFollowModal}
+          tools={<ProfileTools profile={profile} isOwnProfile={isOwnProfile} />}
         >
           <ProfileActions
             profile={profile}

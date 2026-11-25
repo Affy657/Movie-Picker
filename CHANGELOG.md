@@ -8,6 +8,12 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Changed
+
+- **Un en-tête de soirée plus court sur téléphone** : le compte à rebours suit la date, et le nombre de films suit les participants, ce qui fait gagner une ligne.
+- **La bannière descend plus bas** : sur un profil, l’image se fond derrière le pseudo, et dans un groupe derrière son nom.
+- **Modifier et partager votre profil à côté de votre pseudo** : un crayon et l’icône de partage s’alignent à droite du nom, et « Suivre » ou « Ajouter une bannière » restent en dessous sur téléphone. Le bouton qui change la bannière montre désormais une image, pour ne plus le confondre avec le crayon du profil.
+
 ## [1.31.2] - 2026-11-25
 
 ### Fixed

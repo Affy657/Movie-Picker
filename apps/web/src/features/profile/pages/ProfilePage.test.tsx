@@ -842,6 +842,44 @@ describe('ProfilePage (MSW)', () => {
     expect(link).toHaveAttribute('href', '/settings/profil');
   });
 
+  it('puts the edit pencil and Share beside my name, the pencil as an icon alone', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+      http.get(`${TEST_API_V1}/users/moi`, () =>
+        HttpResponse.json({ ...ALICE_PROFILE, handle: 'moi', displayName: 'Moi' })
+      )
+    );
+
+    renderProfile('moi');
+
+    const edit = await screen.findByRole('link', { name: 'Modifier mon profil' });
+    expect(edit.textContent).toBe('');
+    expect(edit).toHaveAttribute('title', 'Modifier mon profil');
+    const tools = edit.closest(`.${headerStyles.tools}`);
+    expect(tools).toContainElement(screen.getByRole('button', { name: 'Partager' }));
+    expect(tools).not.toContainElement(
+      screen.getByRole('button', { name: 'Ajouter une bannière' })
+    );
+  });
+
+  it('keeps Follow under the profile and Share beside the name of someone else', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+      http.get(`${TEST_API_V1}/users/alice`, () =>
+        HttpResponse.json({ ...ALICE_PROFILE, isFollowedByMe: false })
+      )
+    );
+
+    renderProfile('alice');
+
+    const follow = await screen.findByRole('button', { name: /suivre/i });
+    const tools = screen
+      .getByRole('button', { name: 'Partager' })
+      .closest(`.${headerStyles.tools}`);
+    expect(tools).not.toBeNull();
+    expect(tools).not.toContainElement(follow);
+  });
+
   describe('member colour', () => {
     it('shows any visitor the profile in the colour its member picked, avatar ringed', async () => {
       server.use(

@@ -31,13 +31,7 @@
 
 @media (max-width: 47.9375rem) {
   .addBanner {
-    flex: none;
-    width: var(--tap-target-min);
-    padding-inline: 0;
-  }
-
-  .addBannerLabel {
-    display: none;
+    flex: 1 1 auto;
   }
 }
 

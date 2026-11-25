@@ -6,7 +6,7 @@ import { LocaleProvider } from '@/shared/i18n';
 import { ConsentProvider } from '@/shared/contexts/ConsentContext';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
 import type { PublicProfile } from '@/features/profile/api/profileApi';
-import ProfileActions from './ProfileActions';
+import { ProfileTools } from './ProfileActions';
 
 vi.mock('@/shared/hooks/useAnalytics', () => ({
   useAnalytics: () => ({ track: vi.fn() }),
@@ -19,7 +19,7 @@ const profile = {
   isFollowedByMe: null,
 } as unknown as PublicProfile;
 
-describe('ProfileActions', () => {
+describe('ProfileTools', () => {
   beforeEach(() => {
     localStorage.setItem('moviepicker-locale', 'fr');
     stubMatchMedia(false);
@@ -31,14 +31,7 @@ describe('ProfileActions', () => {
       <LocaleProvider>
         <ConsentProvider>
           <MemoryRouter>
-            <ProfileActions
-              profile={profile}
-              isOwnProfile
-              isLoggedIn
-              followPending={false}
-              onFollow={vi.fn()}
-              onUnfollow={vi.fn()}
-            />
+            <ProfileTools profile={profile} isOwnProfile />
           </MemoryRouter>
         </ConsentProvider>
       </LocaleProvider>

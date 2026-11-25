@@ -8,7 +8,7 @@ import type { PublicProfile } from '@/features/profile/api/profileApi';
 import { useEverOpened } from '@/shared/hooks/useEverOpened';
 import styles from './ProfileActions.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
-import IconButton from '@/shared/components/IconButton';
+import IconButton, { iconButtonClass } from '@/shared/components/IconButton';
 import clsx from 'clsx';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
@@ -45,6 +45,51 @@ function FollowButtonIcon({
   return <UserPlus size={ICON_SIZE.md} aria-hidden />;
 }
 
+interface ToolsProps {
+  profile: PublicProfile;
+  isOwnProfile: boolean;
+}
+
+export function ProfileTools({ profile, isOwnProfile }: Readonly<ToolsProps>) {
+  const { t } = useTranslation();
+  const [shareOpen, setShareOpen] = useState(false);
+  const shareMounted = useEverOpened(shareOpen);
+
+  return (
+    <>
+      {isOwnProfile && (
+        <Link
+          to={ROUTES.accountProfile}
+          className={iconButtonClass({ size: 'md' })}
+          aria-label={t('profile.editProfile')}
+          title={t('profile.editProfile')}
+        >
+          <Pencil size={ICON_SIZE.md} aria-hidden />
+        </Link>
+      )}
+
+      <IconButton
+        size="md"
+        ariaLabel={t('share.trigger')}
+        aria-haspopup="dialog"
+        onClick={() => setShareOpen(true)}
+      >
+        <Share2 size={ICON_SIZE.md} aria-hidden />
+      </IconButton>
+
+      {shareMounted ? (
+        <Suspense fallback={null}>
+          <ProfileShareDialog
+            profile={profile}
+            open={shareOpen}
+            onClose={() => setShareOpen(false)}
+          />
+        </Suspense>
+      ) : null}
+    </>
+  );
+}
+
 interface Props {
   profile: PublicProfile;
   isOwnProfile: boolean;
@@ -65,14 +110,14 @@ export default function ProfileActions({
   onAddBanner,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [shareOpen, setShareOpen] = useState(false);
-  const shareMounted = useEverOpened(shareOpen);
+
+  if (isOwnProfile && !onAddBanner) return null;
 
   return (
     <div className={styles.actions}>
       {onAddBanner && (
         <Button
-          variant="ghost"
+          variant="secondary"
           className={styles.addBanner}
           aria-label={t('profile.banner.add')}
           onClick={onAddBanner}
@@ -80,12 +125,6 @@ export default function ProfileActions({
           <ImagePlus size={ICON_SIZE.md} aria-hidden />
           <span className={styles.addBannerLabel}>{t('profile.banner.add')}</span>
         </Button>
-      )}
-      {isOwnProfile && (
-        <Link to={ROUTES.accountProfile} className={buttonClass({ className: styles.primary })}>
-          <Pencil size={ICON_SIZE.md} aria-hidden />
-          <span className={styles.btnLabel}>{t('profile.editProfile')}</span>
-        </Link>
       )}
 
       {!isOwnProfile && !isLoggedIn && (
@@ -131,25 +170,6 @@ export default function ProfileActions({
           </span>
         </Button>
       )}
-
-      <IconButton
-        size="lg"
-        ariaLabel={t('share.trigger')}
-        aria-haspopup="dialog"
-        onClick={() => setShareOpen(true)}
-      >
-        <Share2 size={ICON_SIZE.md} aria-hidden />
-      </IconButton>
-
-      {shareMounted ? (
-        <Suspense fallback={null}>
-          <ProfileShareDialog
-            profile={profile}
-            open={shareOpen}
-            onClose={() => setShareOpen(false)}
-          />
-        </Suspense>
-      ) : null}
     </div>
   );
 }
