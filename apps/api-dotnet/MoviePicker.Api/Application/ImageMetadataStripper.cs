@@ -1,7 +1,7 @@
 using System.Buffers.Binary;
 using System.Text;
 
-namespace MoviePicker.Api.Application.UseCases.IdeaSuggestions;
+namespace MoviePicker.Api.Application;
 
 public static class ImageMetadataStripper
 {
