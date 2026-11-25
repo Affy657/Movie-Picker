@@ -16,6 +16,9 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Changed
 
+- **Les schémas du dossier technique se lisent de haut en bas sur téléphone** : les cinq flots les plus larges ne défilent plus de côté sous 768 px.
+- **La fiche d’un film arrive plus vite** : son contenu et son affiche se chargent dès l’ouverture de l’application, en même temps que la page.
+- **Le dossier technique répond plus vite à son ouverture**, surtout sur téléphone.
 - **Au plus 50 participants et 15 films par personne** : les règles d’une soirée et de ses modèles s’arrêtent à ces plafonds, et une soirée réglée au-delà garde 50 places.
 - **Quand le temps réel ne répond pas**, une soirée se met à jour toutes les 15 secondes au lieu de 3,5, et se recharge toujours dès qu’il revient.
 - **Mes soirées, la fenêtre pour proposer un film et les pages de groupe** ne chargent plus tous les films, participants et soirées passées pour leurs aperçus et leurs chiffres : elles restent rapides quand une soirée compte des centaines de films ou qu’un groupe se réunit depuis des années.
@@ -26,6 +29,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Fixed
 
+- **Les titres et résumés des films suivent la langue de l’interface** : en anglais, la recherche, l’accueil, les sagas, la fiche d’un film et la liste des films d’une soirée affichent les titres TMDB en anglais.
 - **Après un changement de photo de profil ou de bannière**, l’ancienne image reste affichée quelques minutes là où elle était encore à l’écran (participants d’une soirée, vos listes), au lieu de laisser place aux initiales jusqu’au prochain rechargement.
 - **Une soirée de groupe dont l’hôte vous a retiré** ne vous est plus proposée, ni dans Mes soirées, ni sur la page du groupe, ni par une annonce.
 - **Juste après une mise à jour du site**, une invitation, un récap, une fiche de film ou un profil partagés ne restent plus bloqués sur l’écran qui demande de recharger la page.

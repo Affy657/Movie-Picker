@@ -19,13 +19,12 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 
 ## Sommaire
 
-### Pour un agent (3)
+### Pour un agent (2)
 
 | Dette | Zone | Sujet |
 |---|---|---|
 | DEBT-108 | Front | quatre pages publiques restent sous le plancher Lighthouse mobile, hors de la porte |
 | DEBT-102 | Tests, CI et outillage | les doublures de l'API dans les tests front restent écrites à la main |
-| DEBT-116 | Tests, CI et outillage | la porte Lighthouse mesure un profil que l'API ne renvoie pas |
 
 ### Geste humain (9)
 
@@ -41,15 +40,13 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-052 | Sécurité et accès | le secret `GITHUB_TOKEN` de l'API est le jeton du `gh` CLI du poste |
 | DEBT-053 | Sécurité et accès | l'API et la sauvegarde parlent à Atlas en administrateur du cluster, le même que le poste de dev |
 
-### Différées (6)
+### Différées (4)
 
 | Dette | Zone | Sujet |
 |---|---|---|
-| DEBT-109 | Produit | les titres de films restent en français dans l'interface anglaise |
 | DEBT-040 | API et données | le seed de développement est compilé dans l'assembly de production |
 | DEBT-064 | API et données | `GetByIdOrSlugAsync` ne résout plus que le slug |
 | DEBT-026 | Front | le flou de fond des barres collantes n'a jamais été mesuré au défilement |
-| DEBT-111 | Front | les schémas de `/tech` n'ont pas de variante verticale sur téléphone |
 | DEBT-114 | Tests, CI et outillage | trois règles SonarJS ne tournent qu'en CI |
 
 ---
@@ -76,15 +73,6 @@ Se traite en autonomie, sans attendre personne.
 - verify: `grep -rl "HttpResponse.json(" apps/web/src --include=*.test.ts --include=*.test.tsx | wc -l` ; encore ouvert tant que la commande rend plus de `0`
 - fix: passer chaque fichier de test touché à `apiJson` au fil de l'eau, puis une règle de `scripts/architecture/` qui refuse `HttpResponse.json(` dans un test
 - fini-quand: aucune réponse simulée hors de `apiJson` et `apiErrorJson`
-
-## DEBT-116 la porte Lighthouse mesure un profil que l'API ne renvoie pas
-
-- state: agent
-- impact: le stub de `scripts/lighthouse-stub.mjs` renvoie pour `/u/lighthouse` des statistiques sans `publicListCount` ni `proposalsAverageRating` et un profil sans six champs que l'API envoie toujours. `hasNothingToShow` y calcule `NaN` et n'affiche jamais l'état vide qu'un vrai profil vide montre : la porte mesure une page que personne ne reçoit. Une route inconnue du stub rend un 404 muet, car `lighthouse-run.mjs` ne passe pas `onUnknownRequest`. En prod, `/u/*` est servi par Cloud Run (document de partage), alors que le serveur local de Lighthouse sert `index.html`
-- ou: `scripts/lighthouse-stub.mjs` (`minimalStats`, profil du stub), `scripts/lighthouse-run.mjs` (démarrage du stub, réécritures locales)
-- verify: `node -e` sur le stub, ou lire le rapport `report-profile.json` : l'état vide doit apparaître pour le profil vide
-- fix: renvoyer les objets complets de l'API (générés depuis le schéma OpenAPI si possible), faire échouer le run sur une requête inconnue, et documenter ou imiter le rendu `/u/*` de Cloud Run
-- piege: l'état vide peut devenir l'élément LCP du profil et faire bouger son score : mesurer sur le runner avant de fusionner (le PC local est environ trois fois plus lent, `benchmarkIndex`)
 
 ---
 
@@ -190,15 +178,6 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 
 Ne se traitent que quand leur `declencheur` survient.
 
-## DEBT-109 les titres de films restent en français dans l'interface anglaise
-
-- state: differe
-- declencheur: un usage réel de l'interface anglaise (part des sessions `en` dans PostHog)
-- impact: `language=fr-FR` est écrit en dur dans les appels TMDB ; les caches mémoire et partagé ne tiennent pas compte de la langue, et les films d'une soirée gardent le titre français enregistré à la proposition
-- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Tmdb/TmdbMovieSearch.*.cs`
-- verify: `grep -rn "language=fr-FR" apps/api-dotnet/MoviePicker.Api/Infrastructure/Tmdb`
-- fix: passer la langue de l'interface jusqu'aux appels TMDB, la mettre dans la clé de chaque cache, et garder le titre enregistré d'une soirée comme repli
-
 ## DEBT-040 le seed de développement est compilé dans l'assembly de production
 
 - state: differe
@@ -228,15 +207,6 @@ Ne se traitent que quand leur `declencheur` survient.
 - verify: `grep -rn "backdrop-filter" apps/web/src --include=*.css`
 - fix: mesurer d'abord (Performance panel, frames longues au défilement) ; si confirmé, fond opaque légèrement translucide sans flou, ou flou réservé à `(hover: hover)`
 - piege: ne pas retirer le flou sur une intuition, c'est un choix visuel de l'utilisateur. Mesure avant geste.
-
-## DEBT-111 les schémas de `/tech` n'ont pas de variante verticale sur téléphone
-
-- state: differe
-- declencheur: un retour d'un lecteur sur téléphone
-- impact: sous 768 px, chaque schéma garde sa largeur de bureau dans un cadre qui défile ; le fondu et « Faites glisser » le signalent, le texte ne descend plus sous 12 px, mais on n'en voit qu'un tiers à la fois
-- ou: `apps/web/src/app/pages/tech/TechDiagrams.tsx`, `TechBlocks.tsx`
-- verify: `grep -c "vertical" apps/web/src/app/pages/tech/TechDiagrams.tsx` ; encore ouvert tant que la commande rend `0`
-- fix: une disposition verticale des schémas les plus larges sous 768 px, boîtes de texte revérifiées par `getBBox`
 
 ## DEBT-114 trois règles SonarJS ne tournent qu'en CI
 
