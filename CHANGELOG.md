@@ -22,6 +22,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Fixed
 
+- **Juste après une mise à jour du site**, une invitation, un récap, une fiche de film ou un profil partagés ne restent plus bloqués sur l’écran qui demande de recharger la page.
 - **Au-delà de 1 000 films vus**, la page Films vus et celle d’un profil les affichent tous, et la recherche trouve aussi les plus anciens.
 - **Les plateformes et la note TMDB de Ma liste** s’affichent pour tous les films, au-delà des 500 ajoutés le plus récemment.
 - **Les favoris et les films de Ma liste** prennent le titre et l’année de TMDB, comme les listes, et un favori sans affiche reçoit celle de TMDB.

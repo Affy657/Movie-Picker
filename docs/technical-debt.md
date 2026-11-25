@@ -19,21 +19,20 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 
 ## Sommaire
 
-### Pour un agent (5)
+### Pour un agent (3)
 
 | Dette | Zone | Sujet |
 |---|---|---|
-| DEBT-074 | API et données | les documents `/r/<slug>`, `/e/<slug>`, `/film/<slug>` et `/serie/<slug>` échappent au plafond par adresse |
-| DEBT-121 | API et données | une inscription partie d'une soirée terminée est comptée sans provenance |
 | DEBT-108 | Front | quatre pages publiques restent sous le plancher Lighthouse mobile, hors de la porte |
 | DEBT-102 | Tests, CI et outillage | les doublures de l'API dans les tests front restent écrites à la main |
 | DEBT-116 | Tests, CI et outillage | la porte Lighthouse mesure un profil que l'API ne renvoie pas |
 
-### Geste humain (9)
+### Geste humain (10)
 
 | Dette | Zone | Sujet |
 |---|---|---|
 | DEBT-033 | Produit | le plafond de participants promet plus que le flux et la base n'encaissent, et le front en tient un autre |
+| DEBT-074 | API et données | un client qui passe par Hosting n'a que le quota par slug sur les documents de partage |
 | DEBT-096 | API et données | l'adaptateur en mémoire reste dans l'assembly de production |
 | DEBT-037 | Infra et déploiement | les jobs Cloud Scheduler décrits en Terraform attendent leur import, et le secret de l'ancien jeton partagé survit |
 | DEBT-045 | Infra et déploiement | le secret du porte-clés Data Protection survit à son montage |
@@ -43,7 +42,7 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-052 | Sécurité et accès | le secret `GITHUB_TOKEN` de l'API est le jeton du `gh` CLI du poste |
 | DEBT-053 | Sécurité et accès | l'API et la sauvegarde parlent à Atlas en administrateur du cluster, le même que le poste de dev |
 
-### Différées (13)
+### Différées (12)
 
 | Dette | Zone | Sujet |
 |---|---|---|
@@ -57,7 +56,6 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-097 | API et données | six migrations terminées et huit méthodes de port attendent la fin de la rétention des sauvegardes |
 | DEBT-026 | Front | le flou de fond des barres collantes n'a jamais été mesuré au défilement |
 | DEBT-111 | Front | les schémas de `/tech` n'ont pas de variante verticale sur téléphone |
-| DEBT-075 | Infra et déploiement | juste après un déploiement du front, `/r/<slug>` et `/e/<slug>` peuvent servir une coquille périmée |
 | DEBT-073 | Sécurité et accès | une photo de profil envoyée hors de l'app garde ses métadonnées, et l'ancienne disparaît trop tôt |
 | DEBT-114 | Tests, CI et outillage | trois règles SonarJS ne tournent qu'en CI |
 
@@ -66,24 +64,6 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 # Pour un agent
 
 Se traite en autonomie, sans attendre personne.
-
-## DEBT-074 les documents `/r/<slug>`, `/e/<slug>`, `/film/<slug>` et `/serie/<slug>` échappent au plafond par adresse
-
-- state: agent
-- impact: les documents `/r/<slug>` (recap), `/e/<slug>` (invitation), `/film/<slug>` et `/serie/<slug>` (page d'un film), page et aperçu de partage, échappent au plafond par adresse et au limiteur global, parce que derrière Firebase Hosting toutes les requêtes arrivent des adresses de Google. Les routes répondent pourtant aussi en direct sur l'adresse de l'API. Pour `/r/` et `/e/`, seul compte un quota de 120 requêtes par minute et par slug, partagé dans Mongo : un client peut boucler sur des slugs au hasard sans frein (une lecture `events` et un upsert de compteur à chaque fois). Pour `/film/` et `/serie/`, la boucle est bornée depuis le 2026-11-12 : le quota de 120 par minute se compte par identifiant TMDB (`movie:<id>`, changer le titre du slug n'ouvre plus de seau neuf), un plafond de 600 requêtes par minute couvre toute la route (`MovieDocumentCeilingPolicy`, portée `Endpoint`) et un identifiant inconnu de TMDB reste 15 minutes en cache négatif. Reste, sur les quatre routes, qu'un seul client peut épuiser le quota d'une soirée ou d'un film connus, et pour `/film/` et `/serie/` le plafond de toute la route : chaque visiteur sans cache CDN reçoit alors un 429 brut au lieu de la page.
-- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/RateLimitingExtensions.cs` (`IsProxied`, `RecapDocumentPolicy`, `InvitationDocumentPolicy`, `MovieDocumentPolicy`, `MovieDocumentCeilingPolicy`), `Infrastructure/Web/SharedRateLimitFilter.cs`, `Controllers/EventRecapController.cs`, `Controllers/EventInvitationController.cs`, `Controllers/MovieShareDocumentController.cs`
-- verify: `grep -n "Scope: QuotaScope.Slug }" apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/RateLimitingExtensions.cs` ; encore ouvert tant que la ligne sort
-- fix: distinguer l'appel relayé par Hosting de l'appel direct (en-tête posé par la réécriture, ou entrée réservée à Hosting) et garder le plafond par adresse pour l'appel direct
-- piege: le plafond de route et le cache négatif de `/film/` et `/serie/` bornent le coût TMDB, ils ne règlent pas la dette ; ne pas fermer l'entrée en les voyant, `/r/` et `/e/` n'en ont pas.
-
-## DEBT-121 une inscription partie d'une soirée terminée est comptée sans provenance
-
-- state: agent
-- impact: le bouton d'inscription de la scène du gagnant (`EventWinnerStage`) renvoie vers `/new?from=night`, mais le serveur ne connaît que les provenances `event`, `recap`, `list` et `profile` (`EntryOrigin`, `UsageCount`) : ces inscriptions et connexions tombent dans `other` de `pnpm run usage`, alors qu'elles viennent d'une soirée
-- ou: `apps/web/src/features/events/pages/event-detail/EventWinnerStage.tsx`, `apps/api-dotnet/MoviePicker.Api/Application/EntryOrigin.cs`, `apps/api-dotnet/MoviePicker.Api/Domain/UsageCount.cs`, `scripts/usage.mjs`
-- verify: `grep -n "=night" apps/web/src/features/events/pages/event-detail/EventWinnerStage.tsx` ; encore ouvert tant que la ligne sort et que `UsageCount` ne connaît pas cette provenance
-- fix: déclarer la provenance côté serveur (constante, variante rapportée, ligne du rapport d'usage) ou envoyer une provenance que le serveur connaît déjà ; un test d'`EntryOrigin` qui part du `returnTo` réel du bouton
-- fini-quand: une inscription depuis la scène du gagnant apparaît sous sa provenance dans `pnpm run usage`
 
 ## DEBT-108 quatre pages publiques restent sous le plancher Lighthouse mobile, hors de la porte
 
@@ -130,6 +110,16 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 - fini-quand: le plafond est aligné sur une mesure réelle du flux en production et n'est écrit qu'une fois, côté API
 - piege: le flux vit 270 s (`EventLiveOptions.StreamLifetime`) parce que le service Cloud Run coupe toute requête à 300 s ; `EventSource` reconnecte seul après 2 s et la page recharge la soirée sur `ready`. `UseResponseCompression` exclut `text/event-stream`, sinon le flux part en tampon. Un flux ouvert garde l'instance allumée et facturée tant qu'un participant a la page visible : le front ferme le flux dès que l'onglet est masqué ou la soirée finie. Les plafonds d'`EventStreamGate` sont comptés par instance, pas globalement.
 - refs: C3 ; absorbe DEBT-083 (2026-11-25)
+
+## DEBT-074 un client qui passe par Hosting n'a que le quota par slug sur les documents de partage
+
+- state: humain
+- bloque: la mesure ne se lit qu'après un déploiement de production, geste que l'utilisateur déclenche
+- impact: depuis le 2026-11-25, un appel direct à `api.movie-picker.fr/r|e|film|serie|u/...` est compté par adresse (dernier saut de X-Forwarded-For, posé par le frontal de Cloud Run) avec le plafond par adresse et le limiteur global ; un appel relayé par Hosting (dernier saut dans les cinq plages Google relevées dans `RateLimitingExtensions.cs`) garde le seul quota de 120 par minute et par slug. Un client qui boucle par `www.movie-picker.fr` sur une soirée ou un film connus peut encore épuiser ce quota, et chaque visiteur reçoit alors un 429.
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/RateLimitingExtensions.cs`, `ShareDocumentForwardedHopsLoggingMiddleware.cs`, `AddMoviePickerForwardedHeaders`
+- verify: après un déploiement, `gcloud logging read 'resource.type="cloud_run_revision" AND jsonPayload.Category="MoviePicker.Api.Infrastructure.Web.ShareDocumentForwardedHopsLoggingMiddleware" AND jsonPayload.State.LastForwardedHopInGoogleFrontEnd=true' --project <PROJET_GCP> --freshness 7d --format='value(jsonPayload.State.ForwardedHopCount,jsonPayload.State.ForwardedHopsInGoogleFrontEnd)'` ; la journalisation ne porte aucune adresse
+- fix: si les documents relayés arrivent avec au moins deux sauts et `false` juste avant le dernier `true`, Hosting transmet l'adresse du client : `KnownIPNetworks` sur les cinq plages et `ForwardLimit = 2`, puis le même plafond par adresse pour les deux chemins ; retirer ensuite le middleware de mesure
+- fini-quand: un client qui passe par Hosting est plafonné par son adresse, et le middleware de mesure a disparu
 
 ## DEBT-096 l'adaptateur en mémoire reste dans l'assembly de production
 
@@ -317,15 +307,6 @@ Ne se traitent que quand leur `declencheur` survient.
 - ou: `apps/web/src/app/pages/tech/TechDiagrams.tsx`, `TechBlocks.tsx`
 - verify: `grep -c "vertical" apps/web/src/app/pages/tech/TechDiagrams.tsx` ; encore ouvert tant que la commande rend `0`
 - fix: une disposition verticale des schémas les plus larges sous 768 px, boîtes de texte revérifiées par `getBBox`
-
-## DEBT-075 juste après un déploiement du front, `/r/<slug>` et `/e/<slug>` peuvent servir une coquille périmée
-
-- state: differe
-- declencheur: un recap ou une invitation signalés bloqués sur l'écran « recharger », ou des 404 sur `/assets/index-*.js` dans les journaux de Hosting après un déploiement
-- impact: l'API garde `index.html` 60 s en mémoire et sert les documents du recap et de l'invitation en `public, max-age=60`. `deploy-front` passe après `deploy-api`, et les anciens `/assets/index-<hash>.js` répondent 404 sur la nouvelle version de Hosting : pendant une à deux minutes après chaque déploiement du front (ou retour arrière), un visiteur qui ouvre un recap ou un lien d'invitation voit le panneau « recharger » de `index.html`, et le rechargement retombe sur la même coquille tant que les deux caches n'ont pas expiré.
-- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/HttpWebShellSource.cs` (`CacheTtl`), `Controllers/ShareDocumentResults.cs`, `.github/workflows/deploy.yml`
-- verify: `grep -n "CacheTtl = TimeSpan.FromSeconds(60)" apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/HttpWebShellSource.cs` ; encore ouvert tant que la ligne sort
-- fix: relire la coquille quand elle désigne un fichier absent (un 404 sur ses assets vide le cache), ou garder les assets de la version précédente servis quelques minutes après le déploiement
 
 ## DEBT-073 une photo de profil envoyée hors de l'app garde ses métadonnées, et l'ancienne disparaît trop tôt
 
