@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
-import { removeMovieFromEvent, setMovieWheelExclusion } from '@/features/events/api/eventMoviesApi';
+import { removeMovieFromEvent } from '@/features/events/api/eventMoviesApi';
 import { useEventDetailPage } from '@/features/events/hooks/useEventDetailPage';
 import { useNightMovieActions } from '@/features/events/hooks/useNightMovieActions';
-import { isWheelLocked, wheelExclusionErrorKey } from '@/features/events/lib/nightRules';
+import { isWheelLocked, isNightHost } from '@/features/events/lib/nightRules';
 import { useEventMovieVoting } from '@/features/events/pages/event-detail/useEventMovieVoting';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useTranslation } from '@/shared/i18n';
@@ -37,7 +37,8 @@ export function useMovieNight({ slug, tmdbId, mediaType }: MovieNightTarget) {
     slug,
     movie,
     isFinished: !!event?.isFinished,
-    isHost: !!event?.isHost,
+    isHost: isNightHost(event),
+    hostToken,
     wheelLocked: isWheelLocked((event?.winners ?? []).map((w) => w.movieId)),
     participantId: participant?.participantId ?? null,
     participantPseudo: participant?.pseudo ?? null,
@@ -52,18 +53,6 @@ export function useMovieNight({ slug, tmdbId, mediaType }: MovieNightTarget) {
     },
     [movie, voting]
   );
-
-  const toggleWheel = useCallback(async () => {
-    if (!movie) return;
-    const excluded = !movie.excludedFromWheel;
-    setActionError(null);
-    try {
-      await setMovieWheelExclusion(slug, movie.id, excluded, hostToken);
-      refreshAll();
-    } catch (e) {
-      setActionError(getErrorMessage(e, t(wheelExclusionErrorKey(excluded))));
-    }
-  }, [movie, slug, hostToken, refreshAll, setActionError, t]);
 
   const remove = useCallback(async (): Promise<boolean> => {
     if (!movie || !participant) return false;
@@ -101,7 +90,7 @@ export function useMovieNight({ slug, tmdbId, mediaType }: MovieNightTarget) {
     removePending,
     vote,
     toggleSeen: actions.toggleSeen,
-    toggleWheel,
+    toggleWheel: actions.toggleWheel,
     remove,
   };
 }

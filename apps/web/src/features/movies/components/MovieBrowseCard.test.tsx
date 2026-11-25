@@ -128,7 +128,16 @@ describe('MovieBrowseCard', () => {
   it('row layout in a created list: the kebab takes the movie out of that list', async () => {
     const user = userEvent.setup();
     const onRemoveFromList = vi.fn();
-    renderCard({ layout: 'row', hasHover: true, isLoggedIn: true, onRemoveFromList });
+    renderCard({
+      layout: 'row',
+      hasHover: true,
+      isLoggedIn: true,
+      removeFromList: {
+        label: 'Retirer de la liste',
+        ariaLabel: 'Retirer « Dune » de la liste',
+        onSelect: onRemoveFromList,
+      },
+    });
 
     await user.click(kebabTrigger());
     const remove = screen.getByRole('menuitem', { name: 'Retirer « Dune » de la liste' });
@@ -220,9 +229,11 @@ describe('MovieBrowseCard', () => {
       layout: 'row',
       hasHover: true,
       isLoggedIn: true,
-      onRemoveFromList: vi.fn(),
-      removeLabel: 'Retirer des films vus',
-      removeAriaLabel: 'Retirer « Dune » des films vus',
+      removeFromList: {
+        label: 'Retirer des films vus',
+        ariaLabel: 'Retirer « Dune » des films vus',
+        onSelect: vi.fn(),
+      },
     });
 
     await user.click(kebabTrigger());

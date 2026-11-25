@@ -250,9 +250,12 @@ export interface ListMoviesCardActions<T extends LibraryEntry> {
   inWatchlist: (entry: T) => boolean;
   showListBadge: boolean;
   onToggleWatchlist: (entry: T) => void;
-  onRemoveFromList?: (entry: T) => void;
+  remove?: {
+    label: string;
+    ariaLabel: (title: string) => string;
+    onSelect: (entry: T) => void;
+  };
   canRemove?: (entry: T) => boolean;
-  removeLabels?: { label: string; ariaLabel: (title: string) => string };
   leadingBadge?: (entry: T) => ReactNode;
   isWatched?: (entry: T) => boolean;
   contributor?: {
@@ -521,8 +524,8 @@ export default function ListMoviesPage<T extends LibraryEntry>({
   const isItemAlreadyAdded = (item: Parameters<AddMovieFormProps['onAddItem']>[0]) =>
     entriesByKey.has(itemKey(item.id, item.mediaType));
   const renderItem = (item: T, index: number) => {
-    const removeFromList = card.onRemoveFromList;
-    const removable = !!removeFromList && (card.canRemove?.(item) ?? true);
+    const remove = card.remove;
+    const removable = !!remove && (card.canRemove?.(item) ?? true);
     return (
       <MovieBrowseCard
         key={itemKey(item.tmdbId, item.mediaType)}
@@ -539,9 +542,15 @@ export default function ListMoviesPage<T extends LibraryEntry>({
         leadingBadge={card.leadingBadge?.(item)}
         contributor={card.contributor ? card.contributor.of(item) : undefined}
         onToggleWatchlist={() => card.onToggleWatchlist(item)}
-        onRemoveFromList={removable ? () => removeFromList(item) : undefined}
-        removeLabel={card.removeLabels?.label}
-        removeAriaLabel={card.removeLabels?.ariaLabel(item.title)}
+        removeFromList={
+          removable
+            ? {
+                label: remove.label,
+                ariaLabel: remove.ariaLabel(item.title),
+                onSelect: () => remove.onSelect(item),
+              }
+            : undefined
+        }
         onProposeToEvent={() => setProposeTarget(item)}
         onOpenDetails={() => openMoviePage(item)}
         onOpenAvailability={() => openMoviePage(item)}

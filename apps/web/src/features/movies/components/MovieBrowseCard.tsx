@@ -52,9 +52,7 @@ interface MovieBrowseCardProps {
   onProposeToEvent: () => void;
   onOpenDetails: () => void;
   onOpenAvailability?: () => void;
-  onRemoveFromList?: () => void;
-  removeLabel?: string;
-  removeAriaLabel?: string;
+  removeFromList?: { label: string; ariaLabel: string; onSelect: () => void };
   dimmed?: boolean;
   leadingBadge?: ReactNode;
   ratingScale?: RatingScale;
@@ -175,9 +173,7 @@ function BrowseMovieRow({
   onProposeToEvent,
   onOpenDetails,
   onOpenAvailability,
-  onRemoveFromList,
-  removeLabel,
-  removeAriaLabel,
+  removeFromList,
   dimmed,
   ratingScale,
   eager,
@@ -192,16 +188,7 @@ function BrowseMovieRow({
         title={item.title}
         tmdbId={item.tmdbId}
         mediaType={item.mediaType}
-        remove={
-          onRemoveFromList
-            ? {
-                label: removeLabel ?? t('lists.page.removeFromList'),
-                ariaLabel:
-                  removeAriaLabel ?? t('lists.page.removeFromListFor', { title: item.title }),
-                onSelect: onRemoveFromList,
-              }
-            : undefined
-        }
+        remove={removeFromList}
         inWatchlist={isLoggedIn ? inWatchlist : undefined}
         onToggleWatchlist={isLoggedIn ? onToggleWatchlist : undefined}
         onProposeToEvent={isLoggedIn ? onProposeToEvent : undefined}

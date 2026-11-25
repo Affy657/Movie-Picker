@@ -3,7 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { LocaleProvider } from '@/shared/i18n';
-import { QueryClientWrapper } from '@/test-utils/queryWrapper';
+import { createTestQueryClient, QueryClientWrapper } from '@/test-utils/queryWrapper';
 import type { MovieData } from '@/shared/types/movie';
 import type { MovieSearchItem } from '@/features/movies/api/moviesApi';
 import ProposeMovieDialog from '@/features/events/components/ProposeMovieDialog';
@@ -174,7 +174,10 @@ function searchResponse(items: MovieSearchItem[]) {
   };
 }
 
-function renderDialog(overrides: Partial<Parameters<typeof ProposeMovieDialog>[0]> = {}) {
+function renderDialog(
+  overrides: Partial<Parameters<typeof ProposeMovieDialog>[0]> = {},
+  client = createTestQueryClient()
+) {
   const props = {
     open: true,
     onClose: vi.fn(),
@@ -188,7 +191,7 @@ function renderDialog(overrides: Partial<Parameters<typeof ProposeMovieDialog>[0
   };
   render(
     <MemoryRouter>
-      <QueryClientWrapper>
+      <QueryClientWrapper client={client}>
         <LocaleProvider>
           <ProposeMovieDialog {...props} />
         </LocaleProvider>
@@ -271,6 +274,19 @@ describe('ProposeMovieDialog', () => {
     expect(screen.getByText('« Dune » est proposé à la soirée.').tagName).toBe('OUTPUT');
     expect(screen.getByText('Vous avez proposé 1 film')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Terminé' })).toBeInTheDocument();
+  });
+
+  it('leaves the refresh of the night to the page, which asks for it once', async () => {
+    const client = createTestQueryClient();
+    const invalidate = vi.spyOn(client, 'invalidateQueries');
+    const user = userEvent.setup();
+    const props = renderDialog({}, client);
+    await search(user, 'dune');
+
+    await user.click(await screen.findByRole('button', { name: 'Proposer « Dune »' }));
+
+    await waitFor(() => expect(props.onChanged).toHaveBeenCalledTimes(1));
+    expect(invalidate).not.toHaveBeenCalled();
   });
 
   it('takes a proposal back from the confirmation message', async () => {

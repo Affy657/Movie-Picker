@@ -8,6 +8,7 @@ import { useShareAction } from '@/shared/hooks/useShareAction';
 import { useTranslation } from '@/shared/i18n';
 import type { ParticipantRef, ParticipantsPanelState } from './eventDetailSessionTypes';
 import styles from './EventParticipantsDialog.module.css';
+import { isNightHost } from '@/features/events/lib/nightRules';
 
 export default function EventParticipantsDialog({
   slug,
@@ -27,7 +28,7 @@ export default function EventParticipantsDialog({
     undefined,
     'event'
   );
-  const hostCanInvite = !!event.isHost && !event.isFinished;
+  const hostCanInvite = isNightHost(event) && !event.isFinished;
   const currentParticipantId = participant?.participantId ?? null;
   const leavePending =
     panel.isConnectedSelf && panel.removePending && panel.pendingRemovalId === currentParticipantId;
@@ -74,7 +75,7 @@ export default function EventParticipantsDialog({
       <EventParticipantsList
         participants={event.participants}
         currentParticipantId={currentParticipantId}
-        isHost={!!event.isHost}
+        isHost={isNightHost(event)}
         pendingRemovalId={panel.pendingRemovalId}
         onRemoveParticipant={panel.canRemove ? panel.onRemove : undefined}
         onlineIds={panel.onlineIds}

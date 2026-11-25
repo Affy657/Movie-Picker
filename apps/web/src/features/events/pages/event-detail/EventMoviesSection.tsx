@@ -16,9 +16,8 @@ import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { MOVIES_HEADING_ID } from '@/features/events/joinedAnnouncement';
 import { useHistoryEntryState } from '@/shared/hooks/useHistoryEntryState';
 import { MOVIE_PAGE_CHUNKS } from '@/app/moviePageChunk';
-import { setMovieWheelExclusion } from '@/features/events/api/eventMoviesApi';
-import { canToggleWheel, wheelExclusionErrorKey } from '@/features/events/lib/nightRules';
-import { getErrorMessage } from '@/shared/api/apiError';
+import { useWheelExclusionToggle } from '@/features/events/hooks/useNightMovieActions';
+import { canToggleWheel, isNightHost } from '@/features/events/lib/nightRules';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 import MovieList, { type MovieRowSortKey } from '@/features/events/components/MovieList';
@@ -153,7 +152,7 @@ function emptyStateMessageKey(input: {
 }
 
 function isHostAlone(event: EventData, offline: boolean): boolean {
-  if (!event.isHost || event.isFinished || offline) return false;
+  if (!isNightHost(event) || event.isFinished || offline) return false;
   return (event.participantCount ?? event.participants?.length ?? 0) <= 1;
 }
 
@@ -273,17 +272,19 @@ export default function EventMoviesSection({
   const voteQuota = voteQuotaFor(maxVotes, !!participant, isFinished, votesUsed);
   const voteQuotaLockedHint = lockedVoteQuotaHint(voteQuota, t);
 
+  const clearActionError = useCallback(() => setActionError(null), [setActionError]);
+  const toggleWheelExclusion = useWheelExclusionToggle({
+    slug,
+    hostToken,
+    refresh: refreshAll,
+    onError: setActionError,
+    onActionStart: clearActionError,
+  });
   const handleToggleWheelExclusion = useCallback(
     (m: MovieData) => {
-      setActionError(null);
-      const excluded = !m.excludedFromWheel;
-      void setMovieWheelExclusion(slug, m.id, excluded, hostToken)
-        .then(refreshAll)
-        .catch((e: unknown) => {
-          setActionError(getErrorMessage(e, t(wheelExclusionErrorKey(excluded))));
-        });
+      void toggleWheelExclusion(m);
     },
-    [slug, hostToken, setActionError, refreshAll, t]
+    [toggleWheelExclusion]
   );
 
   const handleActionError = useCallback((msg: string) => setActionError(msg), [setActionError]);
@@ -364,7 +365,7 @@ export default function EventMoviesSection({
     participantPseudo: participant?.pseudo ?? null,
     isFinished,
     wheelLocked,
-    isHost: !!event.isHost,
+    isHost: isNightHost(event),
     onActionError: handleActionError,
     onVote: handleVote,
     onRemove: onRequestRemove,
@@ -377,7 +378,7 @@ export default function EventMoviesSection({
     isMobile: compactRows,
     isInWatchlist: user ? isInWatchlist : undefined,
     onToggleWatchlist: user ? toggleWatchlist : undefined,
-    onToggleWheelExclusion: canToggleWheel({ isHost: !!event.isHost, isFinished, wheelLocked })
+    onToggleWheelExclusion: canToggleWheel({ isHost: isNightHost(event), isFinished, wheelLocked })
       ? handleToggleWheelExclusion
       : undefined,
     voteErrors,

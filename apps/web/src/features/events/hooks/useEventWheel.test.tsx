@@ -704,3 +704,21 @@ describe('useEventWheel: two tabs of the host', () => {
     expect(result.current.error).toBeNull();
   });
 });
+
+describe('useEventWheel : hôte', () => {
+  it('takes the host from the night the API served, never from a host link alone', () => {
+    const { result } = renderHook(
+      () =>
+        useEventWheel({
+          slug: 'soiree',
+          event: { isFinished: false, date: '2030-06-01', time: '20:00' } as EventData,
+          movies: [winner],
+          hostToken: 'ht1',
+          onWheelDone: () => {},
+        }),
+      { wrapper }
+    );
+
+    expect(result.current.isHost).toBe(false);
+  });
+});

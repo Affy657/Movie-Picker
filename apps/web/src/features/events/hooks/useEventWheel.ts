@@ -18,7 +18,7 @@ import {
   WHEEL_SPIN_DURATION_MS,
 } from '@/shared/utils/wheelSpin';
 import { wheelSliceWeights } from '@/features/events/lib/wheelSliceWeights';
-import { isWheelLocked } from '@/features/events/lib/nightRules';
+import { isWheelLocked, isNightHost } from '@/features/events/lib/nightRules';
 
 export type EventPrimaryAction = 'add' | 'spin' | null;
 
@@ -174,7 +174,7 @@ export function useEventWheel({
   const [manualMode, setManualMode] = useState(false);
   const [removalMode, setRemovalMode] = useState(false);
 
-  const isHost = event?.isHost === true || (event?.isHost == null && !!hostToken);
+  const isHost = isNightHost(event);
   const safeMovies = useMemo(() => movies ?? [], [movies]);
   const moviesCount = safeMovies.length;
   const eligibleMovies = useMemo(

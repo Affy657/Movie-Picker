@@ -14,6 +14,24 @@ export interface ProposeOptions {
   pitchNote?: string;
 }
 
+export function addProposalToEvent(
+  slug: string,
+  movie: ProposableMovie,
+  participantId: string,
+  pitchNote?: string
+): Promise<MovieData> {
+  return addMovieToEvent(slug, {
+    tmdbId: movie.tmdbId,
+    mediaType: movie.mediaType,
+    title: movie.title,
+    year: movie.year,
+    posterPath: movie.posterPath,
+    participantId,
+    genreIds: movie.genreIds,
+    ...(pitchNote ? { pitchNote } : {}),
+  });
+}
+
 export function useProposeMovieToEvent() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -32,16 +50,7 @@ export function useProposeMovieToEvent() {
   return useCallback(
     async (slug: string, movie: ProposableMovie, options?: ProposeOptions): Promise<MovieData> => {
       const participantId = options?.participantId ?? (await myParticipantId(slug));
-      const created = await addMovieToEvent(slug, {
-        tmdbId: movie.tmdbId,
-        mediaType: movie.mediaType,
-        title: movie.title,
-        year: movie.year,
-        posterPath: movie.posterPath,
-        participantId,
-        genreIds: movie.genreIds,
-        ...(options?.pitchNote ? { pitchNote: options.pitchNote } : {}),
-      });
+      const created = await addProposalToEvent(slug, movie, participantId, options?.pitchNote);
       void invalidateMyNights(queryClient);
       void queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.event.detailForAnyHostToken(slug) });

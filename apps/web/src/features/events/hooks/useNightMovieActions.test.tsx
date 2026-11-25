@@ -3,15 +3,21 @@ import { act, renderHook } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { LocaleProvider } from '@/shared/i18n';
 import type { MovieData } from '@/shared/types/movie';
-import { markMovieAsSeen, unmarkMovieAsSeen } from '@/features/events/api/eventMoviesApi';
+import {
+  markMovieAsSeen,
+  setMovieWheelExclusion,
+  unmarkMovieAsSeen,
+} from '@/features/events/api/eventMoviesApi';
 import {
   useNightMovieActions,
+  useWheelExclusionToggle,
   type NightMovieActionsInput,
 } from '@/features/events/hooks/useNightMovieActions';
 
 vi.mock('@/features/events/api/eventMoviesApi', () => ({
   markMovieAsSeen: vi.fn(),
   unmarkMovieAsSeen: vi.fn(),
+  setMovieWheelExclusion: vi.fn(),
 }));
 
 const film: MovieData = {
@@ -125,5 +131,49 @@ describe('useNightMovieActions', () => {
 
     expect(markMovieAsSeen).not.toHaveBeenCalled();
     expect(result.current.canAct).toBe(false);
+  });
+
+  it('puts the movie out of the draw with the host link, then refreshes the night', async () => {
+    const onActionStart = vi.fn();
+    const { result } = render({ isHost: true, hostToken: 'ht1', onActionStart });
+
+    await act(() => result.current.toggleWheel());
+
+    expect(onActionStart).toHaveBeenCalledTimes(1);
+    expect(setMovieWheelExclusion).toHaveBeenCalledWith('Ab3x', 'm1', true, 'ht1');
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('useWheelExclusionToggle', () => {
+  beforeEach(() => {
+    vi.mocked(setMovieWheelExclusion).mockReset().mockResolvedValue(undefined);
+    refresh.mockReset();
+    onError.mockReset();
+  });
+
+  it('brings an excluded movie back into the draw from any row of the night', async () => {
+    const { result } = renderHook(
+      () => useWheelExclusionToggle({ slug: 'Ab3x', hostToken: null, refresh, onError }),
+      { wrapper }
+    );
+
+    await act(() => result.current({ ...film, excludedFromWheel: true }));
+
+    expect(setMovieWheelExclusion).toHaveBeenCalledWith('Ab3x', 'm1', false, null);
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it('says the movie could not be put back in the draw, without refreshing', async () => {
+    vi.mocked(setMovieWheelExclusion).mockRejectedValue('offline');
+    const { result } = renderHook(
+      () => useWheelExclusionToggle({ slug: 'Ab3x', hostToken: null, refresh, onError }),
+      { wrapper }
+    );
+
+    await act(() => result.current({ ...film, excludedFromWheel: true }));
+
+    expect(onError).toHaveBeenCalledWith('Réintégration impossible');
+    expect(refresh).not.toHaveBeenCalled();
   });
 });

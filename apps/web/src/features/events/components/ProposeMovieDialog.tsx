@@ -13,7 +13,7 @@ import clsx from 'clsx';
 import { Link } from 'react-router';
 import { AlertCircle, ArrowLeft, Check, Film, Plus, ThumbsUp } from 'lucide-react';
 import { removeMovieFromEvent } from '@/features/events/api/eventMoviesApi';
-import { useProposeMovieToEvent } from '@/features/events/hooks/useProposeMovieToEvent';
+import { addProposalToEvent } from '@/features/events/hooks/useProposeMovieToEvent';
 import type { MovieSearchItem } from '@/features/movies/api/moviesApi';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useWatchlist, useWatchlistAvailability } from '@/features/movies/hooks/useWatchlist';
@@ -175,22 +175,22 @@ export default function ProposeMovieDialog({
     setError(message);
   }, []);
 
-  const proposeToEvent = useProposeMovieToEvent();
-
   const propose = useCallback(
     async (item: MovieSearchItem, pitchNote?: string) => {
       setError(null);
-      const created = await proposeToEvent(slug, toTitleSummary(item), {
-        participantId: participant.participantId,
-        pitchNote,
-      });
+      const created = await addProposalToEvent(
+        slug,
+        toTitleSummary(item),
+        participant.participantId,
+        pitchNote
+      );
       track('movie_added', { mediaType: item.mediaType });
       const entry = { key: keyOf(item.id, item.mediaType), id: created.id, title: item.title };
       setProposed((prev) => [...prev.filter((p) => p.key !== entry.key), entry]);
       setToast(entry);
       onChanged();
     },
-    [proposeToEvent, slug, participant.participantId, track, onChanged]
+    [slug, participant.participantId, track, onChanged]
   );
 
   const undo = async () => {

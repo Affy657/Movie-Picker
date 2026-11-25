@@ -165,19 +165,19 @@ export default function WatchedMoviesPage() {
         onToggleWatchlist: (entry) => watchlistToggle.toggle(entry),
         leadingBadge: watchedBadgesSlot(scale),
         canRemove: (entry) => entry.source === 'elsewhere',
-        removeLabels: {
+        remove: {
           label: t('watched.page.remove'),
           ariaLabel: (title) => t('watched.page.removeFor', { title }),
-        },
-        onRemoveFromList: (entry) => {
-          setRemoveError(null);
-          unmarkWatched.mutate(
-            { tmdbId: entry.tmdbId, mediaType: entry.mediaType },
-            {
-              onError: (error) =>
-                setRemoveError(getErrorMessage(error, t('watched.errors.unmark'))),
-            }
-          );
+          onSelect: (entry) => {
+            setRemoveError(null);
+            unmarkWatched.mutate(
+              { tmdbId: entry.tmdbId, mediaType: entry.mediaType },
+              {
+                onError: (error) =>
+                  setRemoveError(getErrorMessage(error, t('watched.errors.unmark'))),
+              }
+            );
+          },
         },
         error: removeError ?? visibility.error ?? watchlistToggle.error,
       }}

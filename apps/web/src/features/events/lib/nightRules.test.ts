@@ -7,6 +7,7 @@ import {
   canToggleWheel,
   iMarkedSeen,
   isMine,
+  isNightHost,
   isWheelLocked,
   nightMovieRules,
   wheelExclusionErrorKey,
@@ -139,5 +140,14 @@ describe('wheelExclusionErrorKey', () => {
   it('names the action that failed', () => {
     expect(wheelExclusionErrorKey(true)).toBe('movies.list.excludeFromWheelError');
     expect(wheelExclusionErrorKey(false)).toBe('movies.list.includeInWheelError');
+  });
+});
+
+describe('isNightHost', () => {
+  it('trusts the API, which already weighs the host link and the account', () => {
+    expect(isNightHost({ isHost: true })).toBe(true);
+    expect(isNightHost({ isHost: false })).toBe(false);
+    expect(isNightHost({})).toBe(false);
+    expect(isNightHost(undefined)).toBe(false);
   });
 });
