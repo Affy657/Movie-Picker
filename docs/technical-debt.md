@@ -19,23 +19,16 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 
 ## Sommaire
 
-### Pour un agent (13)
+### Pour un agent (6)
 
 | Dette | Zone | Sujet |
 |---|---|---|
 | DEBT-074 | API et données | les documents `/r/<slug>`, `/e/<slug>`, `/film/<slug>` et `/serie/<slug>` échappent au plafond par adresse |
-| DEBT-092 | API et données | le rapport de synchronisation Letterboxd double chaque champ par liste |
-| DEBT-103 | API et données | le contrat ne décrit pas encore les chaînes libres des requêtes |
-| DEBT-107 | API et données | les soirées d'un groupe sont toutes relues à chaque affichage |
-| DEBT-113 | API et données | une soirée récurrente close faute de participant garde sa récurrence |
 | DEBT-121 | API et données | une inscription partie d'une soirée terminée est comptée sans provenance |
 | DEBT-122 | API et données | l'anonymisation du chemin d'une suggestion d'idée recopie les routes du front |
 | DEBT-108 | Front | quatre pages publiques restent sous le plancher Lighthouse mobile, hors de la porte |
-| DEBT-089 | Tests, CI et outillage | un test de suggestion d'idée tombe sur le délai de 100 ms d'une regex quand le poste est chargé |
-| DEBT-098 | Tests, CI et outillage | deux tests d'intégration échouent parfois sous charge |
 | DEBT-102 | Tests, CI et outillage | les doublures de l'API dans les tests front restent écrites à la main |
 | DEBT-116 | Tests, CI et outillage | la porte Lighthouse mesure un profil que l'API ne renvoie pas |
-| DEBT-118 | Tests, CI et outillage | la passation d'hôte à la suppression d'un compte n'est testée qu'en mémoire |
 
 ### Geste humain (21)
 
@@ -63,7 +56,7 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-065 | Sécurité et accès | l'inscription ne vérifie pas que l'adresse e-mail appartient à l'inscrit |
 | DEBT-115 | Tests, CI et outillage | les mises à jour de sécurité Dependabot des dépendances transitives échouent |
 
-### Différées (31)
+### Différées (33)
 
 | Dette | Zone | Sujet |
 |---|---|---|
@@ -84,7 +77,9 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-066 | API et données | les disponibilités en streaming de Ma liste s'arrêtent aux 500 films les plus récents |
 | DEBT-072 | API et données | le serveur croit le titre et l'année d'un favori envoyés par le client |
 | DEBT-090 | API et données | les aperçus de Mes soirées lisent tous les films et tous les participants de chaque soirée de la page |
+| DEBT-092 | API et données | le rapport de synchronisation Letterboxd garde ses anciens champs à plat à côté de `lists` |
 | DEBT-097 | API et données | six migrations terminées et huit méthodes de port attendent la fin de la rétention des sauvegardes |
+| DEBT-107 | API et données | les chiffres d'un groupe relisent toutes ses soirées passées |
 | DEBT-026 | Front | le flou de fond des barres collantes n'a jamais été mesuré au défilement |
 | DEBT-057 | Front | les images de la page bloquent la lecture CORS du canvas de la story |
 | DEBT-111 | Front | les schémas de `/tech` n'ont pas de variante verticale sur téléphone |
@@ -113,42 +108,6 @@ Se traite en autonomie, sans attendre personne.
 - verify: `grep -n "Scope: QuotaScope.Slug }" apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/RateLimitingExtensions.cs` ; encore ouvert tant que la ligne sort
 - fix: distinguer l'appel relayé par Hosting de l'appel direct (en-tête posé par la réécriture, ou entrée réservée à Hosting) et garder le plafond par adresse pour l'appel direct
 - piege: le plafond de route et le cache négatif de `/film/` et `/serie/` bornent le coût TMDB, ils ne règlent pas la dette ; ne pas fermer l'entrée en les voyant, `/r/` et `/e/` n'en ont pas.
-
-## DEBT-092 le rapport de synchronisation Letterboxd double chaque champ par liste
-
-- state: agent
-- impact: À voir et Films vus partagent un rapport à plat, chaque champ en deux exemplaires (`WatchedAdded` à côté d'`Added`, etc.) dans l'API et le front. La liste concernée se retrouve par trois chemins différents : un code d'erreur par liste, un préfixe `watched:` sur les clés de choix et un décalage de lignes `FirstRowIndex`. Le bilan est dessiné deux fois (`LetterboxdConnectModal`, `LetterboxdSyncSection`), l'union des listes est déclarée deux fois (`LetterboxdSyncTarget`, `LetterboxdImportTarget`), et les préférences de synchronisation vivent dans `features/auth`. Une troisième liste ou un nouveau chiffre touche une dizaine de fichiers. La date et l'erreur de dernière synchronisation restent communes aux deux listes, si bien qu'un échec des seuls films vus relance les deux.
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/DTOs/LetterboxdImportDtos.cs`, `UseCases/LetterboxdImport/LetterboxdWatchlistSynchronizer.cs`, `SyncLetterboxdWatchlistHandler.cs`, `apps/web/src/features/letterboxd/api/letterboxdApi.ts`, `features/letterboxd/utils/syncReport.ts`, `features/auth/utils/letterboxdSync.ts`
-- verify: `grep -n "public int WatchedAdded" apps/api-dotnet/MoviePicker.Api/Application/DTOs/LetterboxdImportDtos.cs`
-- fix: un résultat par liste `{ target, added, removed, unmatchedTitles, pendingChoices, totalOnLetterboxd, totalTruncated, incomplete, lastSyncAt, error }`, en gardant les champs à plat d'À voir le temps qu'un ancien front tourne encore ; le front boucle sur les listes ; `letterboxdSync.ts` rejoint `features/letterboxd`
-- piege: la forme change le contrat OpenAPI, régénérer `openapiSchema.ts`
-- fini-quand: plus aucun champ `Watched*` dans le rapport, et la date de synchronisation est tenue par liste
-
-## DEBT-103 le contrat ne décrit pas encore les chaînes libres des requêtes
-
-- state: agent
-- impact: côté requêtes, `NotificationTypePreferencePatch.type`, `SaveListRequest.sourceType` et le paramètre `section` restent des chaînes libres dans le contrat, l'export des données écrit ses énumérations en PascalCase (`ToString()`), et `check:contract-compat` ne compare ni le type d'un champ ni l'apparition d'un `null`
-- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/OpenApi/`, `Application/UseCases/Auth/ExportUserDataHandler.cs`, `scripts/check-contract-compat.mjs`
-- verify: `grep -n "sourceType" apps/web/src/shared/api/generated/openapiSchema.ts`
-- fix: décrire ces valeurs en enums de schéma avec les valeurs acceptées aujourd'hui ; étendre `check:contract-compat` aux types et à la nullabilité des propriétés de réponse
-- fini-quand: plus aucune chaîne à valeurs fermées décrite comme libre dans le contrat
-
-## DEBT-107 les soirées d'un groupe sont toutes relues à chaque affichage
-
-- state: agent
-- impact: `ListByGroupIdsAsync` rend toutes les soirées jamais rattachées aux groupes du lecteur, documents entiers, filtrées ensuite en mémoire ; Mes soirées, Mes groupes et la page d'un groupe la jouent à chaque chargement, et une soirée hebdomadaire de groupe en ajoute une cinquantaine par an
-- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/Mongo/MongoEventRepository.cs` (`ListByGroupIdsAsync`), `Application/UseCases/ListMyEvents/ListMyEventsHandler.cs`, `Application/UseCases/FriendGroups/FriendGroupNights.cs`
-- verify: `grep -n "ListByGroupIdsAsync" apps/api-dotnet/MoviePicker.Api/Application/Ports/IEventRepository.cs`
-- fix: une variante bornée aux soirées encore ouvertes (début après maintenant moins le délai de clôture automatique, champ `startAtUtc` déjà indexé) pour Mes soirées et les prochaines soirées, et les soirées passées de la page d'un groupe plafonnées dans la requête
-- fini-quand: aucune lecture d'affichage ne charge une soirée de groupe close depuis plus d'une semaine, hors les douze films de la page du groupe
-
-## DEBT-113 une soirée récurrente close faute de participant garde sa récurrence
-
-- state: agent
-- impact: quand l'hôte supprime son compte et que personne ne reste pour reprendre sa soirée, elle est close ; sa récurrence reste inscrite. Le planificateur ne crée pas d'occurrence pour une soirée terminée, mais aucun test ne le vérifie
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Auth/HostedNightsHandover.cs`, planificateur des récurrences
-- verify: `grep -rl "Recurr" apps/api-dotnet/MoviePicker.Api.Tests/UseCases/Auth` ; encore ouvert tant que la commande ne rend rien
-- fix: un test qui ferme une soirée récurrente par passation impossible et vérifie qu'aucune occurrence ne naît, ou couper la récurrence à la clôture
 
 ## DEBT-121 une inscription partie d'une soirée terminée est comptée sans provenance
 
@@ -179,24 +138,6 @@ Se traite en autonomie, sans attendre personne.
 - fini-quand: chaque page atteint 85 en médiane sur le runner et entre dans `URLS`, sans desserrer la porte (I4)
 - piege: avec ces quatre pages, sept shards mesurent trois pages chacun : surveiller la durée du job
 
-## DEBT-089 un test de suggestion d'idée tombe sur le délai de 100 ms d'une regex quand le poste est chargé
-
-- state: agent
-- impact: le 2026-11-11, `verify:local` a échoué une fois sur `CreateIdeaSuggestionHandlerTests.HandleAsync_MapsCategoryToExpectedPrefixAndLabel` (`RegexMatchTimeoutException` sur `PublishableAppVersionPattern`, interprétée, 100 ms) pendant que les trois voies tournaient ensemble ; le run précédent sur le même code était vert. La même regex peut aussi rejeter une suggestion en production sur une instance saturée.
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/IdeaSuggestions/CreateIdeaSuggestionHandler.cs`
-- verify: `grep -n "PublishableAppVersionPattern = new" apps/api-dotnet/MoviePicker.Api/Application/UseCases/IdeaSuggestions/CreateIdeaSuggestionHandler.cs`
-- fix: une regex générée (`[GeneratedRegex]`, comme les autres motifs du dépôt sous `SYSLIB1045`) ou un contrôle sans regex de la forme `x.y.z`, et un délai qui laisse de la marge à une machine chargée
-- fini-quand: plus de regex interprétée à 100 ms dans ce handler, et la suite API passe sous charge
-
-## DEBT-098 deux tests d'intégration échouent parfois sous charge
-
-- state: agent
-- impact: `EventUpdate_RacingCopiesOfTheSameVersion_LetExactlyOneWin` (MongoDB : une manche sans gagnant alors que la version a avancé d'un cran) et `EventStreamResultTests.ExecuteResultAsync_PresenceStoreDown_KeepsStreamingAndReleasesTheLease` (délai) ont chacun échoué une fois le 2026-11-18 sur un poste chargé, et passent rejoués seuls
-- ou: `apps/api-dotnet/MoviePicker.Api.IntegrationTests/`, `apps/api-dotnet/MoviePicker.Api.Tests/`
-- verify: `grep -rln "RacingCopiesOfTheSameVersion_LetExactlyOneWin\|PresenceStoreDown_KeepsStreamingAndReleasesTheLease" apps/api-dotnet --include=*.cs`
-- fix: pour la course, établir si un conflit d'écriture peut être vu par tous les participants alors que l'écriture est appliquée (bug du repository) ou si c'est le test qui conclut trop tôt ; pour le flux, remplacer l'attente en temps réel par une horloge contrôlée
-- fini-quand: les deux tests passent vingt fois de suite pendant une suite complète en parallèle
-
 ## DEBT-102 les doublures de l'API dans les tests front restent écrites à la main
 
 - state: agent
@@ -214,14 +155,6 @@ Se traite en autonomie, sans attendre personne.
 - verify: `node -e` sur le stub, ou lire le rapport `report-profile.json` : l'état vide doit apparaître pour le profil vide
 - fix: renvoyer les objets complets de l'API (générés depuis le schéma OpenAPI si possible), faire échouer le run sur une requête inconnue, et documenter ou imiter le rendu `/u/*` de Cloud Run
 - piege: l'état vide peut devenir l'élément LCP du profil et faire bouger son score : mesurer sur le runner avant de fusionner (le PC local est environ trois fois plus lent, `benchmarkIndex`)
-
-## DEBT-118 la passation d'hôte à la suppression d'un compte n'est testée qu'en mémoire
-
-- state: agent
-- impact: la remise du rôle d'hôte quand l'hôte supprime son compte tourne dans la transaction Mongo de la suppression, mais ses tests passent par les dépôts en mémoire. Un écart de comportement Mongo (filtre, transaction, ordre des écritures) ne serait vu qu'en prod
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Account/DeleteAccountHandler.cs`, `MoviePicker.Api.IntegrationTests`
-- verify: un test d'intégration Mongo qui supprime le compte d'un hôte et relit la soirée avec son nouvel hôte
-- fix: ajouter ce test à la suite `test:api:mongo`
 
 ---
 
@@ -633,6 +566,17 @@ Ne se traitent que quand leur `declencheur` survient.
 - piege: l'adaptateur InMemory doit suivre la même forme, et `test:api:mongo` est le seul à exécuter l'agrégation
 - fini-quand: la lecture d'une page de Mes soirées ne dépend plus du nombre de films ni de participants des soirées
 
+## DEBT-092 le rapport de synchronisation Letterboxd garde ses anciens champs à plat à côté de `lists`
+
+- state: differe
+- declencheur: la version qui sert `lists` est en production depuis 30 jours, le temps qu'aucun ancien front ne tourne plus derrière son service worker
+- impact: depuis le 2026-11-25, `LetterboxdSyncResponse` rend une entrée par liste dans `lists`, la date et l'erreur de synchronisation sont tenues par liste (`letterboxdListSyncs` du document utilisateur, les anciens champs restant écrits et lus en repli) et le front boucle sur les listes. Le rapport recopie encore ses champs à plat d'avant (`Added`, `WatchedAdded` et les autres) pour l'ancien front, et `check:contract-compat` refuse toute propriété de réponse retirée sans offrir de moyen d'en autoriser une, même une fois l'ancien front disparu. Le préfixe `watched:` reste dans les clés de choix stockées en base, encapsulé dans `LetterboxdPendingChoiceKey.TargetOf`.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/DTOs/LetterboxdImportDtos.cs` (`LetterboxdSyncResponse`), `scripts/check-contract-compat.mjs`, `apps/api-dotnet/MoviePicker.Api/Application/UseCases/LetterboxdImport/LetterboxdPendingChoiceKey.cs`
+- verify: `grep -n "public int WatchedAdded" apps/api-dotnet/MoviePicker.Api/Application/DTOs/LetterboxdImportDtos.cs` ; encore ouvert tant qu'une ligne tombe dans `LetterboxdSyncResponse` (celle de `LetterboxdImportConfirmResponse` n'en fait pas partie)
+- fix: une liste datée de retraits autorisés dans `check:contract-compat`, avec son test, puis le retrait des champs à plat du rapport et des anciens champs `letterboxdLastSyncAt` et `letterboxdLastSyncError`
+- piege: la forme change le contrat OpenAPI, régénérer `openapiSchema.ts`
+- fini-quand: plus aucun champ à plat dans `LetterboxdSyncResponse`, et la date de synchronisation n'est plus écrite qu'une fois par liste
+
 ## DEBT-097 six migrations terminées et huit méthodes de port attendent la fin de la rétention des sauvegardes
 
 - state: differe
@@ -642,6 +586,16 @@ Ne se traitent que quand leur `declencheur` survient.
 - verify: `grep -rlE "ListMissing(Handle|Genres|StartAt|Facts|RecapSlug)Async|ListWithLegacyPosterPathAsync" apps/api-dotnet/MoviePicker.Api/Application/Ports`
 - fix: à chaque date, supprimer la migration, ses méthodes de port, leurs implémentations, leurs tests et son enregistrement ; lire avant le contenu réel du bucket de sauvegarde, une copie mensuelle plus récente que prévu peut avancer la date
 - fini-quand: la commande `verify` ne rend plus rien
+
+## DEBT-107 les chiffres d'un groupe relisent toutes ses soirées passées
+
+- state: differe
+- declencheur: un groupe à plusieurs centaines de soirées passées, ou une latence p95 de la page d'un groupe ou de Mes groupes qui monte
+- impact: depuis le 2026-11-25, Mes soirées et les prochaines soirées ne lisent plus que les soirées encore ouvertes (`ListOpenByGroupIdsAsync`), et la page d'un groupe ne charge en entier que les soirées qu'elle affiche. Les chiffres du groupe et ceux de Mes groupes lisent encore toutes les soirées passées, en projection de cinq champs (`ListHeldByGroupIdsAsync`, `HeldGroupNight`) ; une soirée hebdomadaire en ajoute une cinquantaine par an. La requête passe par l'index `events_groupId`, sans index composé `(groupId, startAtUtc)`
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/Mongo/MongoEventRepository.cs` (`ListHeldByGroupIdsAsync`), `apps/api-dotnet/MoviePicker.Api/Application/UseCases/FriendGroups/FriendGroupNights.cs`
+- verify: `grep -n "ListHeldByGroupIdsAsync" apps/api-dotnet/MoviePicker.Api/Application/UseCases/FriendGroups/FriendGroupNights.cs` ; encore ouvert tant que les chiffres passent par cette lecture
+- fix: des compteurs tenus sur le groupe à la clôture d'une soirée, ou une agrégation `$group` côté Mongo qui rend les chiffres sans rendre les soirées
+- fini-quand: aucun affichage ne lit une soirée de groupe close depuis plus d'une semaine, hors celles que la page du groupe montre
 
 ## DEBT-026 le flou de fond des barres collantes n'a jamais été mesuré au défilement
 
