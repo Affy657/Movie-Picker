@@ -43,7 +43,7 @@ public sealed class FriendGroupNightsReader
             return FriendGroupNightsView.None;
 
         var viewer = await ViewerOfAsync(viewerId, [group], ct);
-        var upcoming = viewer.Summarize(open.Where(night => !night.IsFinished(now) && group.KeepsNight(night)), now)
+        var upcoming = viewer.Summarize(open.Where(night => viewer.IsOffered(night, now) && group.KeepsNight(night)), now)
             .Where(MyEventSummaryEnricher.IsStillJoinable)
             .OrderBy(IsOnHold)
             .ThenBy(MyEventSummaryEnricher.StartInstant)
@@ -81,7 +81,9 @@ public sealed class FriendGroupNightsReader
         var groupIds = groups.Select(group => group.Id).ToList();
         var showcases = await ShowcasesAsync(groups, await _events.ListHeldByGroupIdsAsync(groupIds, now, ct), ct);
         var open = await _events.ListOpenByGroupIdsAsync(groupIds, now, ct);
-        var upcoming = FriendGroup.NightsKeptBy(open, groups).Where(night => !night.IsFinished(now)).ToList();
+        var upcoming = FriendGroup.NightsKeptBy(open, groups)
+            .Where(night => !night.IsFinished(now) && !night.HasRemoved(viewerId))
+            .ToList();
         if (upcoming.Count == 0)
             return new FriendGroupListNights([], showcases);
 
@@ -162,5 +164,7 @@ public sealed class FriendGroupNightsReader
 
         public IEnumerable<MyEventSummaryDto> Summarize(IEnumerable<Event> nights, DateTimeOffset now) =>
             nights.Select(night => Summarize(night, now));
+
+        public bool IsOffered(Event night, DateTimeOffset now) => !night.IsFinished(now) && !night.HasRemoved(UserId);
     }
 }

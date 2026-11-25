@@ -37,6 +37,9 @@ function panel(overrides: Partial<ParticipantsPanelState> = {}): ParticipantsPan
     pendingCoHostId: null,
     coHostError: null,
     onToggleCoHost: vi.fn(),
+    pendingLetBackInId: null,
+    letBackInError: null,
+    onLetBackIn: vi.fn(),
     ...overrides,
   };
 }

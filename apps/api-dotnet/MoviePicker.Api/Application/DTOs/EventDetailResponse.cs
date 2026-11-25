@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.DTOs;
@@ -35,6 +36,9 @@ public sealed class EventDetailResponse
 
     public IReadOnlyList<EventParticipantSummaryResponse> Participants { get; init; } =
         Array.Empty<EventParticipantSummaryResponse>();
+
+    public IReadOnlyList<RemovedPersonResponse> RemovedPeople { get; init; } =
+        Array.Empty<RemovedPersonResponse>();
 }
 
 public sealed class EventWinnerResponse
@@ -55,4 +59,26 @@ public sealed class EventParticipantSummaryResponse
 
     public string? Handle { get; init; }
     public AccentColor? AccentColor { get; init; }
+}
+
+public sealed class RemovedPersonResponse
+{
+    public string Id { get; init; } = string.Empty;
+    public string DisplayName { get; init; } = string.Empty;
+    public string AvatarId { get; init; } = string.Empty;
+    public string? Handle { get; init; }
+    public AccentColor AccentColor { get; init; }
+
+    public static RemovedPersonResponse From(UserCard card)
+    {
+        var person = DisplayedPerson.From(card);
+        return new RemovedPersonResponse
+        {
+            Id = person.UserId,
+            DisplayName = person.DisplayName,
+            AvatarId = person.AvatarId,
+            Handle = person.PublicHandle,
+            AccentColor = person.AccentColor
+        };
+    }
 }

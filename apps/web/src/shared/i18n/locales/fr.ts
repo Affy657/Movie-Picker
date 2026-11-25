@@ -954,7 +954,7 @@ export const fr = {
       viewProfilePresenceAriaLabelElided: 'Voir le profil d’{{name}}, {{presence}}',
       removeConfirmTitle: 'Retirer un participant',
       removeConfirm:
-        'Retirer {{pseudo}} de la soirée\u00a0? Ses films, votes et marques seront supprimés, et seule une nouvelle invitation de votre part permettra de revenir.',
+        'Retirer {{pseudo}} de la soirée\u00a0? Ses films, votes et marques seront supprimés, et seule une invitation ou « Laisser revenir » dans cette liste lui permettra de revenir.',
       removeConfirmAction: 'Retirer',
       removeError: 'Impossible de retirer ce participant.',
       removeSuccess: '{{pseudo}} a été retiré(e) de la soirée.',
@@ -967,6 +967,12 @@ export const fr = {
       inviteAction: 'Inviter',
       online: 'en ligne',
       proposing: 'propose un film…',
+      removedTitle: 'Retirés de la soirée',
+      removedHint: 'Ces personnes ne peuvent plus rejoindre la soirée par son lien.',
+      letBackIn: 'Laisser revenir',
+      letBackInAriaLabel: 'Laisser revenir {{name}}',
+      letBackInSuccess: '{{name}} peut de nouveau rejoindre la soirée.',
+      letBackInError: 'Impossible de laisser revenir cette personne.',
     },
     detail: {
       loading: 'Chargement\u2026',

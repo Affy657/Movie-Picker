@@ -181,4 +181,32 @@ public sealed class GroupPageNightsTests : FriendGroupTestBase
         Assert.Empty(await Kit.Events.ListOpenByGroupIdsAsync([group.Id], Kit.Clock.GetUtcNow()));
         Assert.Null(Assert.Single(await Kit.Events.ListByIdsAsync([night.Id])).GroupId);
     }
+
+    [Fact]
+    public async Task TheGroupPage_NoLongerOffersAMemberTheNightsTheyWereRemovedFrom()
+    {
+        var group = await SharedGroupAsync(FriendGroupTestKit.Member);
+        var removedFrom = await GroupNightAsync(group.Id, "jeudi", "2026-11-26");
+        await GroupNightAsync(group.Id, "halloween", "2026-11-28");
+        await Kit.Events.UpdateAsync(removedFrom.KeepingOut(FriendGroupTestKit.Member));
+
+        var page = await Kit.GetHandler().HandleAsync(FriendGroupTestKit.Member, group.Id);
+        var ownerPage = await Kit.GetHandler().HandleAsync(FriendGroupTestKit.Owner, group.Id);
+
+        Assert.Equal(["halloween"], page.UpcomingNights.Select(n => n.Slug));
+        Assert.Equal(["jeudi", "halloween"], ownerPage.UpcomingNights.Select(n => n.Slug));
+    }
+
+    [Fact]
+    public async Task TheGroupList_OffersAMemberTheNextNightTheyWereNotRemovedFrom()
+    {
+        var group = await SharedGroupAsync(FriendGroupTestKit.Member);
+        var removedFrom = await GroupNightAsync(group.Id, "jeudi", "2026-11-26");
+        await GroupNightAsync(group.Id, "halloween", "2026-11-28");
+        await Kit.Events.UpdateAsync(removedFrom.KeepingOut(FriendGroupTestKit.Member));
+
+        var list = await Kit.ListHandler().HandleAsync(FriendGroupTestKit.Member);
+
+        Assert.Equal(["halloween"], list.NextNights.Select(n => n.Slug));
+    }
 }

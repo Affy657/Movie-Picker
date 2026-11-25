@@ -259,4 +259,62 @@ describe('EventParticipantsList', () => {
       expect(screen.getByRole('button', { name: 'Nommer Tom co-hôte' })).toBeDisabled();
     });
   });
+
+  describe('people the host removed', () => {
+    const removedPeople = [
+      {
+        id: 'u-lea',
+        displayName: 'Léa',
+        avatarId: 'avatar-4',
+        handle: 'lea',
+        accentColor: 'pink' as const,
+      },
+      {
+        id: 'u-tom',
+        displayName: 'Tom',
+        avatarId: '',
+        handle: null,
+        accentColor: 'default' as const,
+      },
+    ];
+
+    it('lists them apart from the participants, each with a way to let them back in', async () => {
+      const user = userEvent.setup();
+      const onLetBackIn = vi.fn();
+      renderList({ isHost: true, removedPeople, onLetBackIn });
+
+      const removed = screen.getByRole('list', { name: 'Retirés de la soirée' });
+      expect(within(removed).getAllByRole('listitem')).toHaveLength(2);
+      expect(within(screen.getByTestId('event-participants')).queryByText('Léa')).toBeNull();
+
+      await user.click(within(removed).getByRole('button', { name: 'Laisser revenir Léa' }));
+
+      expect(onLetBackIn).toHaveBeenCalledWith('u-lea', 'Léa');
+    });
+
+    it('still lists them when nobody is left in the night', () => {
+      renderList({ isHost: true, participants: [], removedPeople, onLetBackIn: vi.fn() });
+
+      expect(screen.getByText('Personne n’a encore rejoint la soirée.')).toBeInTheDocument();
+      expect(screen.getByRole('list', { name: 'Retirés de la soirée' })).toBeInTheDocument();
+    });
+
+    it('holds the button of the person being let back in', () => {
+      renderList({
+        isHost: true,
+        removedPeople,
+        onLetBackIn: vi.fn(),
+        pendingLetBackInId: 'u-lea',
+      });
+
+      expect(screen.getByRole('button', { name: 'Laisser revenir Léa' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Laisser revenir Tom' })).toBeEnabled();
+    });
+
+    it('shows nothing of them without a way to let them back in', () => {
+      renderList({ isHost: true, removedPeople });
+
+      expect(screen.queryByRole('list', { name: 'Retirés de la soirée' })).toBeNull();
+    });
+  });
 });

@@ -945,7 +945,7 @@ export const en: Locale = {
       viewProfilePresenceAriaLabelElided: 'View {{name}}’s profile, {{presence}}',
       removeConfirmTitle: 'Remove a participant',
       removeConfirm:
-        'Remove {{pseudo}} from the event? Their movies, votes and marks will be deleted, and only a new invitation from you will let them back.',
+        'Remove {{pseudo}} from the event? Their movies, votes and marks will be deleted, and only an invitation or “Let back in” in this list will let them come back.',
       removeConfirmAction: 'Remove',
       removeError: 'Unable to remove this participant.',
       removeSuccess: '{{pseudo}} was removed from the event.',
@@ -958,6 +958,12 @@ export const en: Locale = {
       inviteAction: 'Invite',
       online: 'online',
       proposing: 'proposing a movie…',
+      removedTitle: 'Removed from the event',
+      removedHint: 'These people can no longer join the event with its link.',
+      letBackIn: 'Let back in',
+      letBackInAriaLabel: 'Let {{name}} back in',
+      letBackInSuccess: '{{name}} can join the event again.',
+      letBackInError: 'Unable to let this person back in.',
     },
     detail: {
       loading: 'Loading\u2026',

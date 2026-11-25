@@ -1,8 +1,10 @@
+import { useId } from 'react';
 import { Crown, ShieldMinus, ShieldPlus, UserMinus, UserPlus } from 'lucide-react';
-import type { EventParticipantSummary } from '@/shared/types/event';
+import type { EventParticipantSummary, RemovedPerson } from '@/shared/types/event';
 import { useTranslation, type Translate } from '@/shared/i18n';
 import { withElision } from '@/shared/i18n/withElision';
 import Avatar from '@/shared/components/Avatar';
+import Button from '@/shared/components/Button';
 import Chip from '@/shared/components/Chip';
 import EmptyState from '@/shared/components/EmptyState';
 import IconButton from '@/shared/components/IconButton';
@@ -23,6 +25,9 @@ type Props = {
   coHostNamingClosed?: boolean;
   onlineIds?: ReadonlySet<string>;
   proposingIds?: ReadonlySet<string>;
+  removedPeople?: RemovedPerson[];
+  pendingLetBackInId?: string | null;
+  onLetBackIn?: (userId: string, name: string) => void;
 };
 
 export default function EventParticipantsList({
@@ -37,20 +42,129 @@ export default function EventParticipantsList({
   coHostNamingClosed = false,
   onlineIds,
   proposingIds,
+  removedPeople,
+  pendingLetBackInId,
+  onLetBackIn,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   if (!participants) return null;
 
+  const removed =
+    isHost && onLetBackIn && removedPeople && removedPeople.length > 0 ? (
+      <RemovedPeopleList
+        people={removedPeople}
+        pendingId={pendingLetBackInId ?? null}
+        onLetBackIn={onLetBackIn}
+      />
+    ) : null;
+
   if (participants.length === 0) {
     return (
-      <EmptyState
-        compact
-        icon={<UserPlus size={ICON_SIZE['2xl']} aria-hidden />}
-        message={t('events.participants.empty')}
-      />
+      <>
+        <EmptyState
+          compact
+          icon={<UserPlus size={ICON_SIZE['2xl']} aria-hidden />}
+          message={t('events.participants.empty')}
+        />
+        {removed}
+      </>
     );
   }
 
+  return (
+    <>
+      <ParticipantRows
+        participants={participants}
+        currentParticipantId={currentParticipantId}
+        isHost={isHost}
+        pendingRemovalId={pendingRemovalId}
+        onRemoveParticipant={onRemoveParticipant}
+        viewerIsCreator={viewerIsCreator}
+        pendingCoHostId={pendingCoHostId}
+        onToggleCoHost={onToggleCoHost}
+        coHostNamingClosed={coHostNamingClosed}
+        onlineIds={onlineIds}
+        proposingIds={proposingIds}
+      />
+      {removed}
+    </>
+  );
+}
+
+function RemovedPeopleList({
+  people,
+  pendingId,
+  onLetBackIn,
+}: Readonly<{
+  people: RemovedPerson[];
+  pendingId: string | null;
+  onLetBackIn: (userId: string, name: string) => void;
+}>) {
+  const { t } = useTranslation();
+  const titleId = useId();
+  return (
+    <section className={styles.removed}>
+      <h3 id={titleId} className={styles.removedTitle}>
+        {t('events.participants.removedTitle')}
+      </h3>
+      <p className={styles.removedHint}>{t('events.participants.removedHint')}</p>
+      <ul className={styles.list} aria-labelledby={titleId} data-testid="event-removed-people">
+        {people.map((person) => {
+          const name = person.displayName || person.handle || '';
+          return (
+            <PersonRow
+              key={person.id}
+              data-testid={`removed-person-${person.id}`}
+              muted
+              avatar={
+                <Avatar
+                  avatarId={person.avatarId}
+                  pseudo={name}
+                  size="md"
+                  accent={person.accentColor}
+                />
+              }
+              name={name}
+              to={person.handle ? ROUTES.profile(person.handle) : undefined}
+              linkAriaLabel={person.handle ? profileLinkLabelOf(name, [], t) : undefined}
+              className={styles.row}
+              action={
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  aria-label={t('events.participants.letBackInAriaLabel', { name })}
+                  disabled={pendingId === person.id}
+                  onClick={() => onLetBackIn(person.id, name)}
+                >
+                  {t('events.participants.letBackIn')}
+                </Button>
+              }
+            />
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+function ParticipantRows({
+  participants,
+  currentParticipantId,
+  isHost,
+  pendingRemovalId,
+  onRemoveParticipant,
+  viewerIsCreator = false,
+  pendingCoHostId,
+  onToggleCoHost,
+  coHostNamingClosed = false,
+  onlineIds,
+  proposingIds,
+}: Readonly<
+  Omit<Props, 'participants' | 'removedPeople' | 'pendingLetBackInId' | 'onLetBackIn'> & {
+    participants: EventParticipantSummary[];
+  }
+>) {
+  const { t } = useTranslation();
   return (
     <ul className={styles.list} data-testid="event-participants">
       {participants.map((p) => {

@@ -196,6 +196,17 @@ export async function setEventCoHost(
   });
 }
 
+export async function letRemovedPersonBackIn(
+  idOrSlug: string,
+  userId: string,
+  hostToken: string | null
+): Promise<void> {
+  await fetchApi(
+    apiPath('events', idOrSlug, 'removed-people', userId),
+    withHostToken(hostToken, { method: 'DELETE' })
+  );
+}
+
 export async function removeEventParticipant(
   idOrSlug: string,
   participantId: string,

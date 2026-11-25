@@ -266,6 +266,23 @@ public sealed class EventsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpDelete("{idOrSlug}/removed-people/{userId}")]
+    [EnableRateLimiting(RateLimitingExtensions.RemoveParticipantPolicy)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> LetBackIn(
+        string idOrSlug,
+        string userId,
+        [FromServices] ILetBackInHandler handler,
+        CancellationToken ct)
+    {
+        await handler.HandleAsync(idOrSlug, userId, ct);
+        return NoContent();
+    }
+
     [HttpPut("{idOrSlug}/co-hosts/{participantId}")]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.RemoveParticipantPolicy)]

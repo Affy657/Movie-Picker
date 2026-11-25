@@ -830,6 +830,7 @@ export interface MockEventOptions {
 
   theme?: string | null;
   viewerRemoved?: boolean;
+  removedPeople?: Schemas['RemovedPersonResponse'][];
 }
 
 function mockParticipant(_id: string, pseudo: string, isCreator = false) {
@@ -868,6 +869,7 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
           mockParticipant('p-msw-bob', 'Bob'),
           mockParticipant('p-msw-chloe', 'Chloé'),
         ],
+        removedPeople: host ? [...(opts.removedPeople ?? [])] : [],
         config: {
           theme: opts.theme ?? null,
           maxProposalsPerParticipant: null,

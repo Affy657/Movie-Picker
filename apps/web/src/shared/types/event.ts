@@ -39,6 +39,8 @@ export type EventParticipantSummary = Pick<ServedParticipant, 'pseudo'> &
 
 type ServedEvent = ApiSchemas['EventDetailResponse'];
 
+export type RemovedPerson = ApiSchemas['RemovedPersonResponse'];
+
 export type EventData = Pick<ServedEvent, 'title' | 'date' | 'time' | 'slug'> &
   Partial<
     Pick<
@@ -53,6 +55,7 @@ export type EventData = Pick<ServedEvent, 'title' | 'date' | 'time' | 'slug'> &
       | 'votersCount'
       | 'movieCount'
       | 'viewerRemoved'
+      | 'removedPeople'
     >
   > & {
     id: string;

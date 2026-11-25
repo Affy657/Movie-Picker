@@ -203,6 +203,10 @@ export default function EventDetailSession({
     coHostError,
     resetCoHost,
     handleToggleCoHost,
+    pendingLetBackInId,
+    letBackInError,
+    resetLetBackIn,
+    handleLetBackIn,
     actionSuccess,
     handleRemoveParticipant,
     handleRequestRemoveMovie,
@@ -224,7 +228,8 @@ export default function EventDetailSession({
   const closeParticipants = useCallback(() => {
     setParticipantsOpen(false);
     resetCoHost();
-  }, [resetCoHost]);
+    resetLetBackIn();
+  }, [resetCoHost, resetLetBackIn]);
 
   const timeFormatted = formatEventTime(event.time);
   const dateLabel = formatMyEventsListDate(event.date, locale);
@@ -359,6 +364,9 @@ export default function EventDetailSession({
           pendingCoHostId,
           coHostError,
           onToggleCoHost: handleToggleCoHost,
+          pendingLetBackInId,
+          letBackInError,
+          onLetBackIn: handleLetBackIn,
           onInviteFriends: () => openShare('friends'),
           onLeave: handleLeaveEvent,
         }}

@@ -66,13 +66,15 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
                 myParticipant = ParticipantResponse.FromDomain(mine);
         }
 
-        var participantUserIds = participants
+        IReadOnlyList<string> removedUserIds = isHost ? evt.RemovedUserIds : [];
+        var shownUserIds = participants
             .Where(p => !string.IsNullOrEmpty(p.UserId))
             .Select(p => p.UserId!)
+            .Concat(removedUserIds)
             .Distinct()
             .ToList();
-        var cards = participantUserIds.Count > 0
-            ? await _userRepository.ListCardsByIdsAsync(participantUserIds, ct)
+        var cards = shownUserIds.Count > 0
+            ? await _userRepository.ListCardsByIdsAsync(shownUserIds, ct)
             : [];
         var cardById = cards.ToDictionary(c => c.Id);
 
@@ -102,6 +104,11 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             MovieCount = movieCount,
             VotersCount = votersCount,
             Participants = participantsSummary,
+            RemovedPeople = removedUserIds
+                .Select(cardById.GetValueOrDefault)
+                .OfType<UserCard>()
+                .Select(RemovedPersonResponse.From)
+                .ToList(),
         };
     }
 

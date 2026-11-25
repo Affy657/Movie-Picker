@@ -53,7 +53,9 @@ public sealed class GroupNightAnnouncer : IGroupNightAnnouncer
     private async Task AnnounceOnceAsync(Event night, FriendGroup group, string hostUserId, CancellationToken ct)
     {
         var told = await _notifications.ListUserIdsByTypeAndEventAsync(UserNotificationType.GroupNight, night.Id, ct);
-        var recipients = Recipients(group, hostUserId).Where(userId => !told.Contains(userId)).ToList();
+        var recipients = Recipients(group, hostUserId)
+            .Where(userId => !told.Contains(userId) && !night.HasRemoved(userId))
+            .ToList();
         if (recipients.Count == 0)
             return;
         if (!await _quota.TryConsumeAsync(
