@@ -55,7 +55,7 @@ public sealed class AvatarPhotoWriter
                     },
                     token);
                 if (current.AvatarPhoto is { } previous)
-                    await _photos.DeleteAsync(previous.Key, token);
+                    await _photos.ScheduleDeletionAsync(previous.Key, now + StoredPhoto.ReplacedPhotoLifetime, token);
             },
             ct);
         return saved!;

@@ -71,7 +71,7 @@ public sealed class ProfileBannerWriter
                     },
                     token);
                 if (current.BannerPhoto is { } previous)
-                    await _photos.DeleteAsync(previous.Key, token);
+                    await _photos.ScheduleDeletionAsync(previous.Key, now + StoredPhoto.ReplacedPhotoLifetime, token);
             },
             ct);
         return saved!;

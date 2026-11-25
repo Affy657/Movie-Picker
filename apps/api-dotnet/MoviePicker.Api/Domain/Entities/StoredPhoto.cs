@@ -2,6 +2,8 @@ namespace MoviePicker.Api.Domain.Entities;
 
 public sealed record StoredPhoto
 {
+    public static readonly TimeSpan ReplacedPhotoLifetime = TimeSpan.FromMinutes(10);
+
     public string Key { get; init; } = string.Empty;
     public string UserId { get; init; } = string.Empty;
     public string ContentType { get; init; } = string.Empty;
