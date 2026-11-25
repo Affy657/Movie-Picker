@@ -34,42 +34,6 @@
   overflow-y: auto;
 }
 
-.row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: var(--tap-target-min);
-  padding: var(--space-1-5) 0;
-}
-
-.rowText {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  gap: var(--space-0-5);
-  min-width: 0;
-}
-
-.rowName {
-  overflow: hidden;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.rowDetail {
-  font-size: var(--font-size-2xs);
-  color: var(--color-text-muted);
-}
-
-.rowAction {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: var(--space-1);
-}
-
 .rowTag {
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);

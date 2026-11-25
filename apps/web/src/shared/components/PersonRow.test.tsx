@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import { createRef, type ReactElement } from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -63,5 +63,16 @@ describe('PersonRow', () => {
     renderRow(<PersonRow avatar={<span />} name="Bob" muted />);
 
     expect(screen.getByRole('listitem')).toHaveClass(styles.muted!);
+  });
+
+  it('hands its row to a ref, so a window can focus it once the person above leaves', () => {
+    const rowRef = createRef<HTMLLIElement>();
+    renderRow(<PersonRow avatar={<span />} name="Tom" rowRef={rowRef} tabIndex={-1} />);
+
+    const row = screen.getByRole('listitem');
+    expect(rowRef.current).toBe(row);
+    expect(row).toHaveAttribute('tabindex', '-1');
+    row.focus();
+    expect(row).toHaveFocus();
   });
 });

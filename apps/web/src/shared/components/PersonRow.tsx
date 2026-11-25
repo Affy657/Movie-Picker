@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 import clsx from 'clsx';
 import { Link } from 'react-router';
 import StatusDot from './StatusDot';
@@ -15,6 +15,8 @@ export interface PersonRowProps {
   linkAriaLabel?: string;
   onNavigate?: () => void;
   muted?: boolean;
+  rowRef?: Ref<HTMLLIElement>;
+  tabIndex?: number;
   className?: string;
   'data-testid'?: string;
 }
@@ -30,6 +32,8 @@ export default function PersonRow({
   linkAriaLabel,
   onNavigate,
   muted = false,
+  rowRef,
+  tabIndex,
   className,
   'data-testid': testId,
 }: Readonly<PersonRowProps>) {
@@ -50,7 +54,12 @@ export default function PersonRow({
   );
 
   return (
-    <li className={clsx(styles.row, muted && styles.muted, className)} data-testid={testId}>
+    <li
+      ref={rowRef}
+      tabIndex={tabIndex}
+      className={clsx(styles.row, muted && styles.muted, className)}
+      data-testid={testId}
+    >
       {to ? (
         <Link
           to={to}

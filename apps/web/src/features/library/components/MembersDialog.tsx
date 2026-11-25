@@ -6,6 +6,7 @@ import Button from '@/shared/components/Button';
 import InlineError from '@/shared/components/InlineError';
 import LinkButton from '@/shared/components/LinkButton';
 import { ModalActions } from '@/shared/components/Modal';
+import PersonRow from '@/shared/components/PersonRow';
 import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
 import SearchField from '@/shared/components/SearchField';
 import Spinner from '@/shared/components/Spinner';
@@ -157,7 +158,7 @@ function useFocusAfterLeaving() {
 
 type LeavingFocus = ReturnType<typeof useFocusAfterLeaving>;
 
-function PersonRow({
+function MemberRow({
   person,
   name,
   detail,
@@ -171,14 +172,14 @@ function PersonRow({
   rowRef: RowRef;
 }>) {
   return (
-    <li ref={rowRef} tabIndex={-1} className={styles.row}>
-      <Avatar avatarId={person.avatarId} pseudo={person.displayName} size="sm" />
-      <span className={styles.rowText}>
-        <span className={styles.rowName}>{name}</span>
-        {detail ? <span className={styles.rowDetail}>{detail}</span> : null}
-      </span>
-      {action ? <span className={styles.rowAction}>{action}</span> : null}
-    </li>
+    <PersonRow
+      rowRef={rowRef}
+      tabIndex={-1}
+      avatar={<Avatar avatarId={person.avatarId} pseudo={person.displayName} size="md" />}
+      name={name}
+      detail={detail}
+      action={action}
+    />
   );
 }
 
@@ -295,7 +296,7 @@ function MembersSection({
       ) : null}
       <ul className={styles.rows} aria-labelledby={headingId}>
         {members.map((member) => (
-          <PersonRow
+          <MemberRow
             key={member.userId}
             rowRef={focus.rowRef(member.userId)}
             person={member}
@@ -305,7 +306,7 @@ function MembersSection({
           />
         ))}
         {data.invitations.map((invitation) => (
-          <PersonRow
+          <MemberRow
             key={invitation.userId}
             rowRef={focus.rowRef(invitation.userId)}
             person={invitation}
@@ -376,7 +377,7 @@ function InviteResults({
       ) : (
         <ul className={styles.results}>
           {visible.map((person) => (
-            <PersonRow
+            <MemberRow
               key={person.userId}
               rowRef={focus.rowRef(person.userId)}
               person={person}
