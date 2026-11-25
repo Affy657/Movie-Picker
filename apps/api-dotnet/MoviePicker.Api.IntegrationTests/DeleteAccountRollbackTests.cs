@@ -297,6 +297,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         Assert.NotEmpty(await watchlist.ListByUserIdAsync(fixture.UserId));
         Assert.NotEmpty(await services.GetRequiredService<IMovieListRepository>().ListByOwnerAsync(fixture.UserId));
         Assert.Equal([fixture.JoinedListId], (await services.GetRequiredService<IMovieListRepository>().ListJoinedAsync(fixture.UserId)).Select(list => list.Id));
+        Assert.Equal(fixture.UserId, Assert.Single((await services.GetRequiredService<IMovieListRepository>().FindAsync(fixture.JoinedListId))!.Items).AddedByUserId);
         Assert.Equal([fixture.InvitingListId], (await services.GetRequiredService<IMovieListRepository>().ListInvitingAsync(fixture.UserId)).Select(list => list.Id));
         var groupsKept = services.GetRequiredService<IFriendGroupRepository>();
         Assert.NotEmpty(await groupsKept.ListByOwnerAsync(fixture.UserId));
@@ -338,7 +339,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         Assert.Empty(await movieLists.ListJoinedAsync(fixture.UserId));
         Assert.Empty(await movieLists.ListInvitingAsync(fixture.UserId));
         var kept = (await movieLists.FindAsync(fixture.JoinedListId))!;
-        Assert.Equal(fixture.UserId, Assert.Single(kept.Items).AddedByUserId);
+        Assert.Null(Assert.Single(kept.Items).AddedByUserId);
         Assert.Empty((await movieLists.FindAsync(fixture.InvitingListId))!.Invitations);
         var groups = services.GetRequiredService<IFriendGroupRepository>();
         Assert.Empty(await groups.ListByOwnerAsync(fixture.UserId));

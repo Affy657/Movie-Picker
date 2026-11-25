@@ -12451,6 +12451,12 @@ export interface components {
             /** Format: date-time */
             joinedAt: string;
         };
+        ExportedListContribution: {
+            listId: string;
+            name: string;
+            ownerDisplayName: string;
+            items: components["schemas"]["ExportedMovieListItem"][];
+        };
         ExportedListInvitation: {
             listId: string;
             name: string;
@@ -13914,6 +13920,7 @@ export interface components {
             watchlist: components["schemas"]["ExportedWatchlistItem"][];
             movieLists: components["schemas"]["ExportedMovieList"][];
             joinedMovieLists: components["schemas"]["ExportedJoinedMovieList"][];
+            titlesAddedToOthersLists: components["schemas"]["ExportedListContribution"][];
             pendingListInvitations: components["schemas"]["ExportedListInvitation"][];
             friendGroups: components["schemas"]["ExportedFriendGroup"][];
             joinedFriendGroups: components["schemas"]["ExportedJoinedFriendGroup"][];

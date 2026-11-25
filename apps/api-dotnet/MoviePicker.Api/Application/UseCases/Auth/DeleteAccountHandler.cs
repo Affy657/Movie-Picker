@@ -126,6 +126,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
                 await WithdrawTheListsOfAsync(userId, token);
                 await _movieLists.DeleteAllForOwnerAsync(userId, token);
                 await _movieLists.RemoveFromOthersListsAsync(userId, token);
+                await _movieLists.ForgetItemAuthorAsync(userId, token);
                 await WithdrawTheGroupsOfAsync(userId, token);
                 await _groups.DeleteAllForOwnerAsync(userId, token);
                 await _groups.RemoveFromOthersGroupsAsync(userId, token);

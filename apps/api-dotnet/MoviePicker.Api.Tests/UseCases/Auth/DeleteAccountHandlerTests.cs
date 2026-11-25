@@ -382,7 +382,9 @@ public sealed class DeleteAccountHandlerTests
 
         var kept = (await f.MovieLists.FindAsync(joined.Id))!;
         Assert.Empty(kept.Members);
-        Assert.Equal(603, Assert.Single(kept.Items).TmdbId);
+        var title = Assert.Single(kept.Items);
+        Assert.Equal(603, title.TmdbId);
+        Assert.Null(title.AddedByUserId);
         Assert.Empty((await f.MovieLists.FindAsync(inviting.Id))!.Invitations);
     }
 
