@@ -10,6 +10,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Added
 
+- **Signaler une photo** : sur le profil d’un autre membre, « Plus d’actions » à côté du partage signale sa photo de profil ou sa bannière à l’équipe de Movie Picker, qui peut la retirer.
 - **Laisser revenir une personne retirée** : la fenêtre Participants montre à l’hôte et aux co-hôtes les personnes retirées de la soirée, avec un bouton « Laisser revenir » qui leur rouvre le lien de la soirée.
 - **Confirmez votre adresse e-mail** : après une inscription par mot de passe, un courriel vous envoie un lien de confirmation. Votre compte marche tout de suite, et Compte et sécurité vous le rappelle discrètement, avec un bouton pour renvoyer le courriel.
 
@@ -25,6 +26,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Fixed
 
+- **Après un changement de photo de profil ou de bannière**, l’ancienne image reste affichée quelques minutes là où elle était encore à l’écran (participants d’une soirée, vos listes), au lieu de laisser place aux initiales jusqu’au prochain rechargement.
 - **Une soirée de groupe dont l’hôte vous a retiré** ne vous est plus proposée, ni dans Mes soirées, ni sur la page du groupe, ni par une annonce.
 - **Juste après une mise à jour du site**, une invitation, un récap, une fiche de film ou un profil partagés ne restent plus bloqués sur l’écran qui demande de recharger la page.
 - **Au-delà de 1 000 films vus**, la page Films vus et celle d’un profil les affichent tous, et la recherche trouve aussi les plus anciens.
@@ -38,6 +40,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Security
 
+- **Une photo de profil ou une bannière perd ses métadonnées** (position GPS comprise) avant d’être enregistrée, même envoyée en dehors de l’application.
 - **Dans une soirée à propositions anonymes, plus rien ne date un film** : son heure d’ajout n’apparaît plus nulle part, et le tri « Ajout » y devient un ordre mélangé qui ne suit pas l’ordre des propositions.
 - **Une adresse prise par quelqu’un d’autre se récupère avec Google ou GitHub** : si un compte à mot de passe jamais confirmé utilise votre adresse, vous connecter avec Google ou GitHub (même adresse, vérifiée par le fournisseur) vous rend le compte et en déconnecte l’autre personne.
 - **Le badge Ko-fi** ne va plus qu’à un compte dont l’adresse est confirmée.

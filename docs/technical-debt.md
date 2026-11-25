@@ -41,17 +41,15 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-052 | Sécurité et accès | le secret `GITHUB_TOKEN` de l'API est le jeton du `gh` CLI du poste |
 | DEBT-053 | Sécurité et accès | l'API et la sauvegarde parlent à Atlas en administrateur du cluster, le même que le poste de dev |
 
-### Différées (8)
+### Différées (6)
 
 | Dette | Zone | Sujet |
 |---|---|---|
-| DEBT-068 | Produit | les photos de profil ne sont ni modérées ni signalables |
 | DEBT-109 | Produit | les titres de films restent en français dans l'interface anglaise |
 | DEBT-040 | API et données | le seed de développement est compilé dans l'assembly de production |
 | DEBT-064 | API et données | `GetByIdOrSlugAsync` ne résout plus que le slug |
 | DEBT-026 | Front | le flou de fond des barres collantes n'a jamais été mesuré au défilement |
 | DEBT-111 | Front | les schémas de `/tech` n'ont pas de variante verticale sur téléphone |
-| DEBT-073 | Sécurité et accès | une photo de profil envoyée hors de l'app garde ses métadonnées, et l'ancienne disparaît trop tôt |
 | DEBT-114 | Tests, CI et outillage | trois règles SonarJS ne tournent qu'en CI |
 
 ---
@@ -192,17 +190,6 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 
 Ne se traitent que quand leur `declencheur` survient.
 
-## DEBT-068 les photos de profil ne sont ni modérées ni signalables
-
-- state: differe
-- declencheur: un premier signalement d'une photo choquante, ou l'ouverture de la soirée publique et du fil d'actualité qui montrent les photos à des inconnus
-- impact: une photo téléversée s'affiche sans contrôle sur le profil public, dans les participants des soirées, sur le recap public et dans l'image story ; personne ne peut la signaler, et l'administrateur ne peut la retirer qu'à la main en base
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/AvatarPhotos/`, collection `avatar_photos`
-- verify: `grep -rlE "Report|Flag" apps/api-dotnet/MoviePicker.Api/Application/UseCases/AvatarPhotos` ; encore ouvert tant que la commande ne sort rien
-- fix: un « Signaler cette photo » sur le profil public qui prévient l'administrateur, et un geste de retrait qui supprime la photo et rend l'avatar généré
-- piege: retirer une photo à la main demande d'effacer le document de `avatar_photos` et de remettre `avatarPhoto` à `null` sur l'utilisateur ; sans le second geste, le profil pointe vers une image en 404 et retombe sans bruit sur les initiales
-- refs: cadrage du 2026-10-03 de la feature « Photo de profil personnalisée » (modération écartée de la V1.7)
-
 ## DEBT-109 les titres de films restent en français dans l'interface anglaise
 
 - state: differe
@@ -250,15 +237,6 @@ Ne se traitent que quand leur `declencheur` survient.
 - ou: `apps/web/src/app/pages/tech/TechDiagrams.tsx`, `TechBlocks.tsx`
 - verify: `grep -c "vertical" apps/web/src/app/pages/tech/TechDiagrams.tsx` ; encore ouvert tant que la commande rend `0`
 - fix: une disposition verticale des schémas les plus larges sous 768 px, boîtes de texte revérifiées par `getBBox`
-
-## DEBT-073 une photo de profil envoyée hors de l'app garde ses métadonnées, et l'ancienne disparaît trop tôt
-
-- state: differe
-- declencheur: une photo servie avec ses coordonnées GPS, ou un signalement d'avatars passés aux initiales juste après un changement de photo
-- impact: le serveur vérifie le format, l'en-tête et les dimensions, mais stocke les octets reçus. L'app réencode toujours sur canvas, donc l'usage normal n'est pas touché ; un envoi forgé garde EXIF et GPS, et peut glisser jusqu'à 512 Ko de données arbitraires derrière un en-tête valide, servies en `public, immutable`. Au remplacement, l'ancienne image est supprimée aussitôt : les vues qui ont encore l'ancienne clé (participants d'une soirée jusqu'à une minute, listes du propriétaire en cache) affichent les initiales jusqu'au prochain rechargement.
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/Avatars/AvatarPhotoImage.cs`, `Application/Avatars/AvatarPhotoWriter.cs`, `Application/UseCases/AvatarPhotos/UploadAvatarPhotoHandler.cs`
-- verify: `grep -c "ImageMetadataStripper" apps/api-dotnet/MoviePicker.Api/Application/UseCases/AvatarPhotos/UploadAvatarPhotoHandler.cs` ; encore ouvert tant que la commande rend `0`
-- fix: passer les octets par `ImageMetadataStripper` (déjà utilisé pour les pièces jointes des suggestions) ou les réencoder côté serveur ; garder l'ancienne image quelques minutes avant de la supprimer
 
 ## DEBT-114 trois règles SonarJS ne tournent qu'en CI
 
