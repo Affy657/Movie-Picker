@@ -2640,6 +2640,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/limits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EventLimitsResponse"];
+                        "application/json": components["schemas"]["EventLimitsResponse"];
+                        "text/json": components["schemas"]["EventLimitsResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{idOrSlug}/config": {
         parameters: {
             query?: never;
@@ -3566,6 +3612,87 @@ export interface paths {
                     content: {
                         "application/json": components["schemas"]["ApiErrorResponse"];
                     };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{idOrSlug}/removed-people/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    idOrSlug: string;
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
                 /** @description Forbidden */
                 403: {
@@ -12564,6 +12691,13 @@ export interface components {
             /** Format: int32 */
             votersCount: number;
             participants: components["schemas"]["EventParticipantSummaryResponse"][];
+            removedPeople: components["schemas"]["RemovedPersonResponse"][];
+        };
+        EventLimitsResponse: {
+            /** Format: int32 */
+            maxParticipants: number;
+            /** Format: int32 */
+            maxProposalsPerParticipant: number;
         };
         EventParticipantSummaryResponse: {
             _id: string;
@@ -13999,6 +14133,13 @@ export interface components {
             message: string;
             /** Format: int32 */
             removedMovies: number;
+        };
+        RemovedPersonResponse: {
+            id: string;
+            displayName: string;
+            avatarId: string;
+            handle: string | null;
+            accentColor: components["schemas"]["AccentColor"];
         };
         ReportUsageCountRequest: {
             metric: string;

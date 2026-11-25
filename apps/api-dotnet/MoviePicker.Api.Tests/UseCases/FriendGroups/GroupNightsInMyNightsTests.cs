@@ -149,4 +149,17 @@ public sealed class GroupNightsInMyNightsTests : FriendGroupTestBase
 
         Assert.Equal(["Brume"], Assert.Single(mine.Events).WinnerMovies.Select(m => m.Title));
     }
+
+    [Fact]
+    public async Task ANightOfTheirGroupTheHostRemovedThemFrom_IsNoLongerOfferedToAMember()
+    {
+        var group = await SharedGroupAsync(FriendGroupTestKit.Member);
+        var night = await GroupNightAsync(FriendGroupTestKit.Owner, group.Id);
+        await _events.UpdateAsync(night.KeepingOut(FriendGroupTestKit.Member));
+
+        var mine = await Handler().HandleAsync(FriendGroupTestKit.Member, "active", null, null, null);
+
+        Assert.Empty(mine.Events);
+        Assert.Equal(0, mine.TotalActive);
+    }
 }

@@ -3,9 +3,7 @@ import type { EventConfigData, EventRecurrence, WheelMode } from '@/shared/types
 
 export type { WheelMode, EventConfigData, EventData, EventRecurrence } from '@/shared/types/event';
 
-export const MAX_EVENT_PARTICIPANTS = 300;
-
-export const MAX_PROPOSALS_PER_PARTICIPANT = 15;
+export type EventLimitCaps = ApiSchemas['EventLimitsResponse'];
 
 export const DEFAULT_VOTE_LIMIT = 3;
 

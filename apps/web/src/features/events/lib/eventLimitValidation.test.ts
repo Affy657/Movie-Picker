@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import eventEntitySource from '../../../../../api-dotnet/MoviePicker.Api/Domain/Entities/Event.cs?raw';
 import { t } from '@/shared/i18n';
-import { MAX_EVENT_PARTICIPANTS, MAX_PROPOSALS_PER_PARTICIPANT } from '@/features/events/types';
+import type { EventLimitCaps } from '@/features/events/types';
 import { validateEventLimits, type EventLimitDraft } from './eventLimitValidation';
+
+const servedCaps: EventLimitCaps = { maxParticipants: 50, maxProposalsPerParticipant: 15 };
 
 const draft: EventLimitDraft = {
   proposalLimitEnabled: true,
@@ -12,13 +13,8 @@ const draft: EventLimitDraft = {
   voteLimitEnabled: true,
   maxVotes: '2',
   currentParticipantCount: 0,
+  caps: servedCaps,
 };
-
-function apiCap(constantName: string): number {
-  const match = new RegExp(`const int ${constantName} = (\\d+);`).exec(eventEntitySource);
-  if (!match?.[1]) throw new Error(`${constantName} not found in Event.cs`);
-  return Number(match[1]);
-}
 
 describe('validateEventLimits', () => {
   it('hands back the typed values', () => {
@@ -54,19 +50,15 @@ describe('validateEventLimits', () => {
     });
   });
 
-  it('keeps a value at the cap as a limit', () => {
+  it('keeps a value at the cap the API serves as a limit', () => {
     const { errors, values } = validateEventLimits(
-      {
-        ...draft,
-        maxProposals: String(MAX_PROPOSALS_PER_PARTICIPANT),
-        maxParticipants: String(MAX_EVENT_PARTICIPANTS),
-      },
+      { ...draft, maxProposals: '15', maxParticipants: '50' },
       t
     );
 
     expect(errors).toEqual({});
-    expect(values.maxProposalsPerParticipant).toBe(MAX_PROPOSALS_PER_PARTICIPANT);
-    expect(values.maxParticipants).toBe(MAX_EVENT_PARTICIPANTS);
+    expect(values.maxProposalsPerParticipant).toBe(15);
+    expect(values.maxParticipants).toBe(50);
   });
 
   it.each(['', '0', '1.5', 'abc'])('refuses the counter value %j on every limit', (value) => {
@@ -78,18 +70,49 @@ describe('validateEventLimits', () => {
     expect(Object.keys(errors).sort()).toEqual(['maxParticipants', 'maxProposals', 'maxVotes']);
   });
 
-  it('refuses a value above the cap', () => {
+  it('refuses a value above the cap the API serves, naming that cap', () => {
+    const { errors } = validateEventLimits(
+      { ...draft, maxProposals: '16', maxParticipants: '51' },
+      t
+    );
+
+    expect(errors.maxProposals).toBe('Films par personne : nombre entier entre 1 et 15.');
+    expect(errors.maxParticipants).toBe('Nombre maximum de participants : entier entre 1 et 50.');
+  });
+
+  it('follows the caps the API serves, whatever they are', () => {
     const { errors } = validateEventLimits(
       {
         ...draft,
-        maxProposals: String(MAX_PROPOSALS_PER_PARTICIPANT + 1),
-        maxParticipants: String(MAX_EVENT_PARTICIPANTS + 1),
+        maxProposals: '16',
+        maxParticipants: '51',
+        caps: { maxParticipants: 80, maxProposalsPerParticipant: 20 },
       },
       t
     );
 
-    expect(errors.maxProposals).toBeDefined();
-    expect(errors.maxParticipants).toBeDefined();
+    expect(errors).toEqual({});
+  });
+
+  it('leaves the upper bound to the API until it has served its caps', () => {
+    const { errors, values } = validateEventLimits(
+      { ...draft, maxProposals: '400', maxParticipants: '9000', caps: null },
+      t
+    );
+
+    expect(errors).toEqual({});
+    expect(values.maxProposalsPerParticipant).toBe(400);
+    expect(values.maxParticipants).toBe(9000);
+  });
+
+  it('still refuses an unusable value before the caps are known, without naming a cap', () => {
+    const { errors } = validateEventLimits(
+      { ...draft, maxProposals: '1.5', maxParticipants: '0', caps: null },
+      t
+    );
+
+    expect(errors.maxProposals).toBe('Films par personne : nombre entier à partir de 1.');
+    expect(errors.maxParticipants).toBe('Nombre maximum de participants : entier à partir de 1.');
   });
 
   it('refuses a capacity below the people already in', () => {
@@ -99,17 +122,5 @@ describe('validateEventLimits', () => {
     );
 
     expect(errors.maxParticipants).toBeDefined();
-  });
-});
-
-describe('caps of the limit fields', () => {
-  it('never promises more participants than the API accepts', () => {
-    expect(MAX_EVENT_PARTICIPANTS).toBeLessThanOrEqual(apiCap('MaxParticipantsCap'));
-  });
-
-  it('never promises more proposals than the API accepts', () => {
-    expect(MAX_PROPOSALS_PER_PARTICIPANT).toBeLessThanOrEqual(
-      apiCap('MaxProposalsPerParticipantCap')
-    );
   });
 });

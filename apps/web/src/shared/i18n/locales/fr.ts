@@ -976,7 +976,7 @@ export const fr = {
       viewProfilePresenceAriaLabelElided: 'Voir le profil d’{{name}}, {{presence}}',
       removeConfirmTitle: 'Retirer un participant',
       removeConfirm:
-        'Retirer {{pseudo}} de la soirée\u00a0? Ses films, votes et marques seront supprimés, et seule une nouvelle invitation de votre part permettra de revenir.',
+        'Retirer {{pseudo}} de la soirée\u00a0? Ses films, votes et marques seront supprimés, et seule une invitation ou « Laisser revenir » dans cette liste lui permettra de revenir.',
       removeConfirmAction: 'Retirer',
       removeError: 'Impossible de retirer ce participant.',
       removeSuccess: '{{pseudo}} a été retiré(e) de la soirée.',
@@ -989,6 +989,12 @@ export const fr = {
       inviteAction: 'Inviter',
       online: 'en ligne',
       proposing: 'propose un film…',
+      removedTitle: 'Retirés de la soirée',
+      removedHint: 'Ces personnes ne peuvent plus rejoindre la soirée par son lien.',
+      letBackIn: 'Laisser revenir',
+      letBackInAriaLabel: 'Laisser revenir {{name}}',
+      letBackInSuccess: '{{name}} peut de nouveau rejoindre la soirée.',
+      letBackInError: 'Impossible de laisser revenir cette personne.',
     },
     detail: {
       loading: 'Chargement\u2026',
@@ -1204,6 +1210,7 @@ export const fr = {
         anonymous: 'propositions anonymes',
       },
       maxProposalsInvalid: 'Films par personne : nombre entier entre 1 et {{max}}.',
+      maxProposalsNotWhole: 'Films par personne : nombre entier à partir de 1.',
       maxVotesInvalid: 'Votes par participant : nombre entier à partir de 1.',
       winnerCountInvalid: 'Indiquez un nombre entre 1 et {{max}}.',
       winnerCountLockedHint:
@@ -1220,6 +1227,7 @@ export const fr = {
       saveStatusError: 'Non enregistré',
       fallbackError: 'Enregistrement impossible.',
       maxParticipantsInvalid: 'Nombre maximum de participants : entier entre 1 et {{max}}.',
+      maxParticipantsNotWhole: 'Nombre maximum de participants : entier à partir de 1.',
       maxParticipantsBelowCurrent:
         'Impossible de réduire la capacité à {{value}} : {{count}} participants sont déjà inscrits.',
     },

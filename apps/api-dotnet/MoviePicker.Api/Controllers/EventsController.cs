@@ -29,6 +29,8 @@ namespace MoviePicker.Api.Controllers;
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 public sealed class EventsController : ControllerBase
 {
+    private const string LimitsCacheControl = "public, max-age=3600";
+
     [HttpPost]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.CreateEventPolicy)]
@@ -63,6 +65,14 @@ public sealed class EventsController : ControllerBase
     {
         var result = await handler.HandleAsync(userId, scope, limit, offset, q, previews ?? true, ct);
         return Ok(result);
+    }
+
+    [HttpGet("limits")]
+    [ProducesResponseType(typeof(EventLimitsResponse), StatusCodes.Status200OK)]
+    public IActionResult GetLimits()
+    {
+        Response.Headers.CacheControl = LimitsCacheControl;
+        return Ok(EventLimitsResponse.Current);
     }
 
     [HttpGet("{idOrSlug}/config")]
@@ -273,6 +283,23 @@ public sealed class EventsController : ControllerBase
     {
         var result = await handler.HandleAsync(idOrSlug, participantId, ct);
         return Ok(result);
+    }
+
+    [HttpDelete("{idOrSlug}/removed-people/{userId}")]
+    [EnableRateLimiting(RateLimitingExtensions.RemoveParticipantPolicy)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> LetBackIn(
+        string idOrSlug,
+        string userId,
+        [FromServices] ILetBackInHandler handler,
+        CancellationToken ct)
+    {
+        await handler.HandleAsync(idOrSlug, userId, ct);
+        return NoContent();
     }
 
     [HttpPut("{idOrSlug}/co-hosts/{participantId}")]

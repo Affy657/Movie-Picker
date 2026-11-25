@@ -6,6 +6,7 @@ import type {
   EventConfigData,
   EventConfigPatchPayload,
   EventData,
+  EventLimitCaps,
   MyEventsListResponse,
   MyEventsScope,
 } from '@/features/events/types';
@@ -104,6 +105,10 @@ export async function joinEvent(slug: string, pseudo: string): Promise<JoinEvent
   };
 }
 
+export function fetchEventLimits(): Promise<EventLimitCaps> {
+  return fetchApi<ApiSchemas['EventLimitsResponse']>(apiPath('events', 'limits'));
+}
+
 export function fetchEventConfig(slug: string): Promise<EventConfigData> {
   return fetchApi<EventConfigData>(apiPath('events', slug, 'config'));
 }
@@ -195,6 +200,17 @@ export async function setEventCoHost(
   await fetchApi(apiPath('events', idOrSlug, 'co-hosts', participantId), {
     method: coHost ? 'PUT' : 'DELETE',
   });
+}
+
+export async function letRemovedPersonBackIn(
+  idOrSlug: string,
+  userId: string,
+  hostToken: string | null
+): Promise<void> {
+  await fetchApi(
+    apiPath('events', idOrSlug, 'removed-people', userId),
+    withHostToken(hostToken, { method: 'DELETE' })
+  );
 }
 
 export async function removeEventParticipant(

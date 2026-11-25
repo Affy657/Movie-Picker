@@ -14,8 +14,6 @@ import {
   DEFAULT_PARTICIPANT_LIMIT,
   DEFAULT_PROPOSAL_LIMIT,
   DEFAULT_VOTE_LIMIT,
-  MAX_EVENT_PARTICIPANTS,
-  MAX_PROPOSALS_PER_PARTICIPANT,
   type EventTemplateData,
 } from '@/features/events/types';
 
@@ -81,25 +79,17 @@ describe('buildTemplateDraft', () => {
   });
 
   it('reads a limit at the cap as a limit, only the switch means no limit', () => {
-    const draft = buildTemplateDraft({
-      ...baseFields,
-      maxProposals: String(MAX_PROPOSALS_PER_PARTICIPANT),
-      maxParticipants: String(MAX_EVENT_PARTICIPANTS),
-    });
+    const draft = buildTemplateDraft({ ...baseFields, maxProposals: '15', maxParticipants: '50' });
 
-    expect(draft.maxProposalsPerParticipant).toBe(MAX_PROPOSALS_PER_PARTICIPANT);
-    expect(draft.maxParticipants).toBe(MAX_EVENT_PARTICIPANTS);
+    expect(draft.maxProposalsPerParticipant).toBe(15);
+    expect(draft.maxParticipants).toBe(50);
   });
 
-  it('falls back to the default limit above the cap, the form refuses such a value', () => {
-    const draft = buildTemplateDraft({
-      ...baseFields,
-      maxProposals: String(MAX_PROPOSALS_PER_PARTICIPANT + 1),
-      maxParticipants: String(MAX_EVENT_PARTICIPANTS + 1),
-    });
+  it('keeps a limit above the cap as typed, the validation against the served caps refuses it', () => {
+    const draft = buildTemplateDraft({ ...baseFields, maxProposals: '16', maxParticipants: '51' });
 
-    expect(draft.maxProposalsPerParticipant).toBe(DEFAULT_PROPOSAL_LIMIT);
-    expect(draft.maxParticipants).toBe(DEFAULT_PARTICIPANT_LIMIT);
+    expect(draft.maxProposalsPerParticipant).toBe(16);
+    expect(draft.maxParticipants).toBe(51);
   });
 
   it('reads the vote budget only when the limit is enabled, falling back to the default', () => {
@@ -163,8 +153,8 @@ describe('buildTemplateDraft', () => {
   it('reads a limit stored at the cap as enabled', () => {
     const fields = configToFields({
       theme: null,
-      maxProposalsPerParticipant: MAX_PROPOSALS_PER_PARTICIPANT,
-      maxParticipants: MAX_EVENT_PARTICIPANTS,
+      maxProposalsPerParticipant: 15,
+      maxParticipants: 50,
       maxVotesPerParticipant: null,
       wheelMode: 'weightedByVotes',
       richSharePreview: true,
@@ -284,8 +274,8 @@ describe('isSameTemplateConfig', () => {
     };
     const atCap: TemplateConfigDraft = {
       ...baseDraft,
-      maxProposalsPerParticipant: MAX_PROPOSALS_PER_PARTICIPANT,
-      maxParticipants: MAX_EVENT_PARTICIPANTS,
+      maxProposalsPerParticipant: 15,
+      maxParticipants: 50,
     };
 
     expect(isSameTemplateConfig(noLimit, atCap)).toBe(false);
@@ -318,9 +308,7 @@ describe('isDefaultTemplateDraft', () => {
   it('counts a limit written at the cap as a choice of the host', () => {
     const defaults = buildTemplateDraft(defaultTemplateFields());
 
-    expect(isDefaultTemplateDraft({ ...defaults, maxParticipants: MAX_EVENT_PARTICIPANTS })).toBe(
-      false
-    );
+    expect(isDefaultTemplateDraft({ ...defaults, maxParticipants: 50 })).toBe(false);
   });
 });
 

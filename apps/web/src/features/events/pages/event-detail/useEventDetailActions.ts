@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ROUTES } from '@/app/routes';
 import {
+  letRemovedPersonBackIn,
   removeEventParticipant,
   postEventClose,
   setEventCoHost,
@@ -98,6 +99,28 @@ export function useEventDetailActions({
   const handleToggleCoHost = useCallback(
     (participantId: string, coHost: boolean) => toggleCoHost({ participantId, coHost }),
     [toggleCoHost]
+  );
+
+  const letBackInMutation = useMutation({
+    mutationFn: (variables: { userId: string; name: string }) =>
+      letRemovedPersonBackIn(slug, variables.userId, hostToken),
+    onSuccess: (_, { name }) =>
+      setActionSuccess(t('events.participants.letBackInSuccess', { name })),
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) }),
+  });
+  const pendingLetBackInId = letBackInMutation.isPending
+    ? letBackInMutation.variables.userId
+    : null;
+  const letBackInError = letBackInMutation.error
+    ? getErrorMessage(letBackInMutation.error, t('events.participants.letBackInError'))
+    : null;
+  const resetLetBackIn = letBackInMutation.reset;
+  const letBackIn = letBackInMutation.mutate;
+
+  const handleLetBackIn = useCallback(
+    (userId: string, name: string) => letBackIn({ userId, name }),
+    [letBackIn]
   );
 
   const removeMovieMutation = useMutation({
@@ -318,6 +341,10 @@ export function useEventDetailActions({
     coHostError,
     resetCoHost,
     handleToggleCoHost,
+    pendingLetBackInId,
+    letBackInError,
+    resetLetBackIn,
+    handleLetBackIn,
     actionSuccess,
     handleRemoveParticipant,
     handleRequestRemoveMovie,

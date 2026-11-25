@@ -348,6 +348,25 @@ describe('useEventDetailPage', () => {
       await waitFor(() => expect(counts.movies).toBeGreaterThan(before.movies));
     });
 
+    it('reloads the movie night and its movies each time the stream comes back', async () => {
+      const counts = { event: 0, movies: 0 };
+      serveCountedEvent(counts);
+      const { result } = renderWithClient(createTestQueryClient());
+      await waitFor(() => expect(result.current.event).not.toBeNull());
+      act(() => FakeEventSource.latest().emit('ready'));
+      await waitFor(() => expect(result.current.liveConnected).toBe(true));
+      await waitFor(() => expect(counts.event).toBe(2));
+      await waitFor(() => expect(counts.movies).toBe(2));
+
+      act(() => FakeEventSource.latest().fail(FakeEventSource.CONNECTING));
+      await waitFor(() => expect(result.current.liveConnected).toBe(false));
+      act(() => FakeEventSource.latest().emit('ready'));
+
+      await waitFor(() => expect(result.current.liveConnected).toBe(true));
+      await waitFor(() => expect(counts.event).toBe(3));
+      await waitFor(() => expect(counts.movies).toBe(3));
+    });
+
     it('exposes who is online on the movie night', async () => {
       server.use(...createEventDetailHandlers({ slug }));
       const { result } = renderWithClient(createTestQueryClient());

@@ -195,6 +195,7 @@ function nightWithBob(): ApiSchemas['EventDetailResponse'] {
     movieCount: 0,
     votersCount: 0,
     participants: [person('p-host', 'Hôte', true), person('p-bob', 'Bob', false)],
+    removedPeople: [],
     config: {
       theme: null,
       maxProposalsPerParticipant: null,

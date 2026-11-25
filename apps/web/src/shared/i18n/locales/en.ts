@@ -965,7 +965,7 @@ export const en: Locale = {
       viewProfilePresenceAriaLabelElided: 'View {{name}}’s profile, {{presence}}',
       removeConfirmTitle: 'Remove a participant',
       removeConfirm:
-        'Remove {{pseudo}} from the event? Their movies, votes and marks will be deleted, and only a new invitation from you will let them back.',
+        'Remove {{pseudo}} from the event? Their movies, votes and marks will be deleted, and only an invitation or “Let back in” in this list will let them come back.',
       removeConfirmAction: 'Remove',
       removeError: 'Unable to remove this participant.',
       removeSuccess: '{{pseudo}} was removed from the event.',
@@ -978,6 +978,12 @@ export const en: Locale = {
       inviteAction: 'Invite',
       online: 'online',
       proposing: 'proposing a movie…',
+      removedTitle: 'Removed from the event',
+      removedHint: 'These people can no longer join the event with its link.',
+      letBackIn: 'Let back in',
+      letBackInAriaLabel: 'Let {{name}} back in',
+      letBackInSuccess: '{{name}} can join the event again.',
+      letBackInError: 'Unable to let this person back in.',
     },
     detail: {
       loading: 'Loading\u2026',
@@ -1191,6 +1197,7 @@ export const en: Locale = {
         anonymous: 'anonymous proposals',
       },
       maxProposalsInvalid: 'Movies per person: whole number between 1 and {{max}}.',
+      maxProposalsNotWhole: 'Movies per person: whole number of 1 or more.',
       maxVotesInvalid: 'Votes per participant: whole number of 1 or more.',
       winnerCountInvalid: 'Enter a number between 1 and {{max}}.',
       winnerCountLockedHint:
@@ -1207,6 +1214,7 @@ export const en: Locale = {
       saveStatusError: 'Not saved',
       fallbackError: 'Save failed.',
       maxParticipantsInvalid: 'Maximum number of participants: whole number between 1 and {{max}}.',
+      maxParticipantsNotWhole: 'Maximum number of participants: whole number of 1 or more.',
       maxParticipantsBelowCurrent:
         'Cannot lower the capacity to {{value}}: {{count}} participants are already joined.',
     },

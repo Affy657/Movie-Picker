@@ -82,6 +82,9 @@ export type ParticipantsPanelState = {
   pendingCoHostId: string | null;
   coHostError: string | null;
   onToggleCoHost: (participantId: string, coHost: boolean) => void;
+  pendingLetBackInId: string | null;
+  letBackInError: string | null;
+  onLetBackIn: (userId: string, name: string) => void;
   onInviteFriends: () => void;
   onLeave: () => void;
   onlineIds?: ReadonlySet<string>;

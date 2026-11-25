@@ -16,6 +16,15 @@ export const authMeGuestHandler = http.get(`${V1}/auth/me`, () =>
   )
 );
 
+const MOCK_EVENT_LIMITS: Schemas['EventLimitsResponse'] = {
+  maxParticipants: 50,
+  maxProposalsPerParticipant: 15,
+};
+
+export const eventLimitsHandler = http.get(`${V1}/events/limits`, () =>
+  apiJson<'EventLimitsResponse'>(MOCK_EVENT_LIMITS)
+);
+
 type MockTitle<T extends { tmdbId: number; title: string }> = Pick<T, 'tmdbId' | 'title'> &
   Partial<T>;
 
@@ -830,6 +839,7 @@ export interface MockEventOptions {
 
   theme?: string | null;
   viewerRemoved?: boolean;
+  removedPeople?: Schemas['RemovedPersonResponse'][];
 }
 
 function mockParticipant(_id: string, pseudo: string, isCreator = false) {
@@ -869,6 +879,7 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
           mockParticipant('p-msw-bob', 'Bob'),
           mockParticipant('p-msw-chloe', 'Chloé'),
         ],
+        removedPeople: host ? [...(opts.removedPeople ?? [])] : [],
         config: {
           theme: opts.theme ?? null,
           maxProposalsPerParticipant: null,

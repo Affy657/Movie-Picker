@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { t } from '@/shared/i18n';
 import { describeTemplateConfig } from './describeTemplateConfig';
 import type { TemplateConfigDraft } from './eventTemplateDraft';
-import { MAX_EVENT_PARTICIPANTS, MAX_PROPOSALS_PER_PARTICIPANT } from '@/features/events/types';
 
 const defaults: TemplateConfigDraft = {
   theme: null,
@@ -55,12 +54,10 @@ describe('describeTemplateConfig', () => {
   it('names a limit written at the cap', () => {
     const draft: TemplateConfigDraft = {
       ...defaults,
-      maxProposalsPerParticipant: MAX_PROPOSALS_PER_PARTICIPANT,
-      maxParticipants: MAX_EVENT_PARTICIPANTS,
+      maxProposalsPerParticipant: 15,
+      maxParticipants: 50,
     };
 
-    expect(describeTemplateConfig(draft, t)).toBe(
-      `${MAX_PROPOSALS_PER_PARTICIPANT} films par personne, ${MAX_EVENT_PARTICIPANTS} participants max`
-    );
+    expect(describeTemplateConfig(draft, t)).toBe('15 films par personne, 50 participants max');
   });
 });

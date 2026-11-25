@@ -29,6 +29,7 @@ public sealed class AnonymousMutatingEndpointsTests
     [
         "EventsController.AnnounceWheelWinner",
         "EventsController.Close",
+        "EventsController.LetBackIn",
         "EventsController.PatchConfig",
         "EventsController.RemoveParticipant",
         "EventsController.RemoveWinner",

@@ -48,6 +48,19 @@ public sealed class EventConfigResponse
     }
 }
 
+public sealed class EventLimitsResponse
+{
+    public static readonly EventLimitsResponse Current = new()
+    {
+        MaxParticipants = EventConfig.MaxParticipantsCap,
+        MaxProposalsPerParticipant = EventConfig.MaxProposalsPerParticipantCap
+    };
+
+    public int MaxParticipants { get; init; }
+
+    public int MaxProposalsPerParticipant { get; init; }
+}
+
 public sealed class PatchEventConfigRequest
 {
     public string? Title { get; init; }

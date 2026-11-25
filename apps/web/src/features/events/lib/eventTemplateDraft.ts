@@ -3,9 +3,7 @@ import {
   DEFAULT_PARTICIPANT_LIMIT,
   DEFAULT_PROPOSAL_LIMIT,
   DEFAULT_VOTE_LIMIT,
-  MAX_EVENT_PARTICIPANTS,
   MAX_EVENT_TEMPLATE_NAME_LENGTH,
-  MAX_PROPOSALS_PER_PARTICIPANT,
   MAX_WINNERS_PER_EVENT,
   DEFAULT_EVENT_CONFIG,
   type EventConfigData,
@@ -65,14 +63,9 @@ export function positiveLimit(value: number | null | undefined): number | null {
   return value != null && value > 0 ? value : null;
 }
 
-function parseCappedLimit(raw: string, cap: number): number | null {
-  const value = parseLimit(raw);
-  return value !== null && value <= cap ? value : null;
-}
-
-function draftLimit(enabled: boolean, raw: string, cap: number, fallback: number): number | null {
+function draftLimit(enabled: boolean, raw: string, fallback: number): number | null {
   if (!enabled) return null;
-  return parseCappedLimit(raw, cap) ?? fallback;
+  return parseLimit(raw) ?? fallback;
 }
 
 function parseWinnerCount(raw: string): number {
@@ -89,13 +82,11 @@ export function buildTemplateDraft(fields: TemplateFormFields): TemplateConfigDr
     maxProposalsPerParticipant: draftLimit(
       fields.proposalLimitEnabled,
       fields.maxProposals,
-      MAX_PROPOSALS_PER_PARTICIPANT,
       DEFAULT_PROPOSAL_LIMIT
     ),
     maxParticipants: draftLimit(
       fields.participantLimitEnabled,
       fields.maxParticipants,
-      MAX_EVENT_PARTICIPANTS,
       DEFAULT_PARTICIPANT_LIMIT
     ),
     maxVotesPerParticipant: fields.voteLimitEnabled
