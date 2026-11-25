@@ -9,6 +9,7 @@ describe('entryOriginOf', () => {
     ['/l/token/rejoindre', 'list'],
     ['/u/ad0', 'profile'],
     ['/new?from=recap', 'recap'],
+    ['/new?from=event', 'event'],
     ['/new?step=2&from=list', 'list'],
     ['/e/abc123?from=recap', 'event'],
     ['/new?from=other', 'other'],

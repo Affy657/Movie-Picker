@@ -12,6 +12,7 @@ public sealed class EntryOriginTests
     [InlineData("/l/token/rejoindre", "list")]
     [InlineData("/u/ad0", "profile")]
     [InlineData("/new?from=recap", "recap")]
+    [InlineData("/new?from=event", "event")]
     [InlineData("/new?step=2&from=list", "list")]
     [InlineData("/e/abc123?from=recap", "event")]
     [InlineData("/new?from=other", "other")]

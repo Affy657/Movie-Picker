@@ -494,16 +494,16 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           RUNTIME_SA="${API_RUNTIME_SERVICE_ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
           SCHEDULER_ENV=""
+          if [ -z "$PUBLIC_API_URL" ]; then
+            echo "::error::VITE_API_URL (secret) is empty: it is the public API URL the shared documents link to and the audience of the Cloud Scheduler OIDC tokens."
+            exit 1
+          fi
           if [ "$STAGE" = "production" ]; then
             SECRETS="MONGODB_URI=MONGODB_URI:latest,TMDB_API_KEY=TMDB_API_KEY:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest,RESEND_API_KEY=RESEND_API_KEY:latest,KOFI_WEBHOOK_TOKEN=KOFI_WEBHOOK_TOKEN:latest,OAUTH_GOOGLE_CLIENT_ID=OAUTH_GOOGLE_CLIENT_ID:latest,OAUTH_GOOGLE_CLIENT_SECRET=OAUTH_GOOGLE_CLIENT_SECRET:latest,OAUTH_GITHUB_CLIENT_ID=OAUTH_GITHUB_CLIENT_ID:latest,OAUTH_GITHUB_CLIENT_SECRET=OAUTH_GITHUB_CLIENT_SECRET:latest,GITHUB_TOKEN=GITHUB_TOKEN:latest"
             # Optional: once the v4 read access token exists in Secret Manager, the API sends it as
             # a Bearer header and stops appending TMDB_API_KEY to its outbound URLs.
             if gcloud secrets describe TMDB_READ_ACCESS_TOKEN >/dev/null 2>&1; then
               SECRETS="$SECRETS,TMDB_READ_ACCESS_TOKEN=TMDB_READ_ACCESS_TOKEN:latest"
-            fi
-            if [ -z "$PUBLIC_API_URL" ]; then
-              echo "::error::VITE_API_URL (secret) is empty: it is the audience of the Cloud Scheduler OIDC tokens."
-              exit 1
             fi
             SCHEDULER_ENV="##SCHEDULER_OIDC_AUDIENCE=${PUBLIC_API_URL%/}##SCHEDULER_OIDC_SERVICE_ACCOUNT=${SCHEDULER_SERVICE_ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
           else
@@ -512,6 +512,8 @@ jobs:
           # --set-env-vars dict parsing treats ':' and ',' specially; ^##^ sets an alternate delimiter (gcloud topic escaping).
           # PUBLIC_WEB_BASE_URL is the first allowed origin, the web app of this stage: the API
           # reads its shell there for the night recaps and writes its links (recap, password reset).
+          # PUBLIC_API_BASE_URL is the API URL the web app is built against: the shared documents
+          # write their absolute image URLs on it, never on the host Hosting called (the run.app one).
           # No `--allow-unauthenticated`: the public `run.invoker` binding of `allUsers` is held by
           # Terraform (module `cloud-run-api`), and the flag made every deployment call
           # `setIamPolicy`, which this identity is refused (43 audit errors in 14 days, noise that
@@ -527,7 +529,7 @@ jobs:
             --no-traffic \
             --tag "$TAG" \
             --set-secrets "$SECRETS" \
-            --set-env-vars "^##^ALLOWED_ORIGINS=$CORS##PUBLIC_WEB_BASE_URL=${CORS%%,*}##SENTRY_ENVIRONMENT=$STAGE##SENTRY_RELEASE=${GITHUB_SHA}##EMAIL_PROVIDER=resend${SCHEDULER_ENV}"
+            --set-env-vars "^##^ALLOWED_ORIGINS=$CORS##PUBLIC_WEB_BASE_URL=${CORS%%,*}##PUBLIC_API_BASE_URL=${PUBLIC_API_URL%/}##SENTRY_ENVIRONMENT=$STAGE##SENTRY_RELEASE=${GITHUB_SHA}##EMAIL_PROVIDER=resend${SCHEDULER_ENV}"
           TAG_URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format=json \
             | jq -r --arg t "$TAG" '[.status.traffic[]? | select(.tag == $t) | .url] | first // ""')"
           if [ -z "$TAG_URL" ]; then

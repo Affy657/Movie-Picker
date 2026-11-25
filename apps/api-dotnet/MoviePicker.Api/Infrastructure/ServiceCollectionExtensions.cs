@@ -185,11 +185,7 @@ public static class ServiceCollectionExtensions
         ConfigureTmdbOptions(opts, cfg);
         ConfigureShowcaseOptions(opts, cfg);
         ConfigurePosterOptions(opts, cfg);
-
-        var webBase = cfg["PUBLIC_WEB_BASE_URL"];
-        if (!string.IsNullOrWhiteSpace(webBase))
-            opts.PublicWebBaseUrl = webBase.Trim().TrimEnd('/');
-
+        ConfigurePublicBaseUrls(opts, cfg);
         ConfigureEmailOptions(opts, cfg);
         ConfigureVapidOptions(opts, cfg);
 
@@ -205,6 +201,16 @@ public static class ServiceCollectionExtensions
         opts.InProcessRemindersEnabled = IsInProcessRemindersEnabled(cfg);
 
         ConfigureGitHubOptions(opts, cfg);
+    }
+
+    private static void ConfigurePublicBaseUrls(MoviePickerOptions opts, IConfiguration cfg)
+    {
+        var webBase = cfg["PUBLIC_WEB_BASE_URL"];
+        if (!string.IsNullOrWhiteSpace(webBase))
+            opts.PublicWebBaseUrl = webBase.Trim().TrimEnd('/');
+        var apiBase = cfg["PUBLIC_API_BASE_URL"];
+        if (!string.IsNullOrWhiteSpace(apiBase))
+            opts.PublicApiBaseUrl = apiBase.Trim().TrimEnd('/');
     }
 
     private static void ConfigureGitHubOptions(MoviePickerOptions opts, IConfiguration cfg)

@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using Moq;
 using MoviePicker.Api.Application.UseCases.MovieShare;
 using MoviePicker.Api.Application.UseCases.Shared;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Controllers;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Web;
@@ -15,13 +17,16 @@ public sealed class MovieShareDocumentControllerTests
     private static readonly string[] SharedDocumentPolicies =
         [RateLimitingExtensions.MovieDocumentPolicy, RateLimitingExtensions.MovieDocumentCeilingPolicy];
 
+    private static readonly IOptions<MoviePickerOptions> PublicApi =
+        Options.Create(new MoviePickerOptions { PublicApiBaseUrl = "https://api.example/" });
+
     private readonly Mock<IGetMovieShareDocumentHandler> _handler = new();
     private readonly MovieShareDocumentController _sut = new MovieShareDocumentController().WithContext();
 
     public MovieShareDocumentControllerTests()
     {
         _sut.Request.Scheme = "https";
-        _sut.Request.Host = new Microsoft.AspNetCore.Http.HostString("api.example");
+        _sut.Request.Host = new Microsoft.AspNetCore.Http.HostString("service-hash-ew.a.run.app");
         _sut.Response.Headers.ContentSecurityPolicy = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'";
     }
 
@@ -47,7 +52,7 @@ public sealed class MovieShareDocumentControllerTests
     {
         GivenDocument("27205-inception", MovieMediaType.Movie, status);
 
-        var result = await _sut.GetFilm("27205-inception", _handler.Object, CancellationToken.None);
+        var result = await _sut.GetFilm("27205-inception", _handler.Object, PublicApi, CancellationToken.None);
 
         AssertServedWithTheSiteHeaders(result, status, MovieMediaType.Movie);
     }
@@ -59,7 +64,7 @@ public sealed class MovieShareDocumentControllerTests
     {
         GivenDocument("1399-game-of-thrones", MovieMediaType.Tv, status);
 
-        var result = await _sut.GetSeries("1399-game-of-thrones", _handler.Object, CancellationToken.None);
+        var result = await _sut.GetSeries("1399-game-of-thrones", _handler.Object, PublicApi, CancellationToken.None);
 
         AssertServedWithTheSiteHeaders(result, status, MovieMediaType.Tv);
     }
