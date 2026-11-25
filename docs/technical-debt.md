@@ -30,7 +30,7 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-102 | Tests, CI et outillage | les doublures de l'API dans les tests front restent écrites à la main |
 | DEBT-116 | Tests, CI et outillage | la porte Lighthouse mesure un profil que l'API ne renvoie pas |
 
-### Geste humain (13)
+### Geste humain (12)
 
 | Dette | Zone | Sujet |
 |---|---|---|
@@ -46,20 +46,17 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-048 | Sécurité et accès | la zone DNS n'a pas de CAA et sa politique DMARC n'observe rien |
 | DEBT-052 | Sécurité et accès | le secret `GITHUB_TOKEN` de l'API est le jeton du `gh` CLI du poste |
 | DEBT-053 | Sécurité et accès | l'API et la sauvegarde parlent à Atlas en administrateur du cluster, le même que le poste de dev |
-| DEBT-065 | Sécurité et accès | l'inscription ne vérifie pas que l'adresse e-mail appartient à l'inscrit |
 
-### Différées (18)
+### Différées (16)
 
 | Dette | Zone | Sujet |
 |---|---|---|
 | DEBT-068 | Produit | les photos de profil ne sont ni modérées ni signalables |
-| DEBT-071 | Produit | l'invitation à noter un film suit quatre règles qui ne s'accordent pas |
 | DEBT-095 | Produit | la page des films vus d'un profil ne liste que les 1 000 premiers |
 | DEBT-109 | Produit | les titres de films restent en français dans l'interface anglaise |
 | DEBT-112 | Produit | un participant retiré ne revient que par une invitation qui exige de le suivre |
 | DEBT-008 | API et données | le sondage de repli à 3,5 s fixe encore le plafond de la base quand le flux manque |
 | DEBT-040 | API et données | le seed de développement est compilé dans l'assembly de production |
-| DEBT-041 | API et données | la date et l'heure d'une soirée sont des chaînes reparsées à chaque lecture |
 | DEBT-064 | API et données | `GetByIdOrSlugAsync` ne résout plus que le slug |
 | DEBT-066 | API et données | les disponibilités en streaming de Ma liste s'arrêtent aux 500 films les plus récents |
 | DEBT-072 | API et données | le serveur croit le titre et l'année d'un favori envoyés par le client |
@@ -264,16 +261,6 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 - fix: (humain) dans le projet de production, Database Access / Add new database user, mot de passe autogénéré, « Specific Privileges » : `moviepicker_api` `readWrite` sur `moviepicker`, `moviepicker_backup` `read` sur `moviepicker` ; un second projet Atlas « Movie Picker non-prod » avec un cluster M0 (AWS, eu-west-1), Network Access `0.0.0.0/0` (Cloud Run n'a pas d'IP fixe), et deux utilisateurs `moviepicker_staging` `readWrite` sur `moviepicker_staging`, `moviepicker_dev` `readWrite` sur `moviepicker_dev` ; les quatre mots de passe et l'hôte du nouveau cluster dans `Downloads\atlas-users.txt`, une ligne `nom=valeur` chacun, `host=<cluster>.<id>.mongodb.net` pour l'hôte. (agent) construire les URI (`urllib.parse.quote(mot_de_passe, safe='')`) : production `mongodb+srv://moviepicker_api:<mdp>@<HOTE_CLUSTER_PROD>/?appName=Cluster0` (l'hôte est celui de l'URI en place ; pas de base dans le chemin, l'API prend `moviepicker` par défaut), sauvegarde `mongodb+srv://moviepicker_backup:<mdp>@<HOTE_CLUSTER_PROD>/moviepicker?appName=Cluster0` (la base dans le chemin, `mongodump` la prend comme `--db`), recette `mongodb+srv://moviepicker_staging:<mdp>@<hôte>/moviepicker_staging?retryWrites=true&w=majority&appName=Cluster0&maxPoolSize=10`, dev `mongodb+srv://moviepicker_dev:<mdp>@<hôte>/moviepicker_dev?retryWrites=true&w=majority&appName=Cluster0` ; prouver chacune par `mongosh --eval` (`connectionStatus` rend le seul rôle attendu, `ping` sur sa base, un `insertOne` puis `drop` d'une collection `_rotation_probe` pour les `readWrite`, `estimatedDocumentCount` de `users` pour la lecture, et `listDatabases` refusé) ; `gcloud secrets versions add` pour `MONGODB_URI`, `MONGODB_BACKUP_URI`, `STAGING_MONGODB_URI` depuis des fichiers temporaires écrasés puis supprimés ; `MONGODB_URI=` du `.env` réécrit avec l'URI de dev ; écraser et supprimer `atlas-users.txt` ; déployer recette puis production (`target=all`), `gh workflow run backup-mongo.yml --ref master` et lire « Dump taken with MONGODB_BACKUP_URI » dans son journal ; retirer `"MONGODB_URI"` de `readable_secrets` du `module "backup"` et le repli de `backup-mongo.yml` (`infra.yml` applique, un clic) ; `gcloud secrets versions destroy` des anciennes versions de `MONGODB_URI` et `STAGING_MONGODB_URI` ; `pnpm run seed` sur la nouvelle base de dev. (humain, en dernier) supprimer l'ancien administrateur (l'utilisateur de l'URI remplacée) et `moviepicker_staging` du projet de production, et la base `moviepicker_staging` qui y reste.
 - piege: une archive de sauvegarde contient aussi des secrets d'authentification, le porte-clés Data Protection (`MongoXmlRepository`, aucun `XmlEncryptor`) et les sessions. Tant que l'utilisateur de la sauvegarde est administrateur, lire une archive ne donne rien de plus que ce qu'il a déjà ; dès qu'il n'aura plus que la lecture, l'archive vaudra plus que son accès. Traiter dans le même chantier : exclure `data_protection_keys` et `auth_sessions` du dump (`--excludeCollection`, au prix d'une déconnexion générale après une restauration), ou chiffrer le porte-clés par un `IXmlEncryptor` adossé à Cloud KMS dont seule l'identité d'exécution de l'API peut déchiffrer. Ne rien supprimer côté Atlas avant que les deux étapes servent des révisions nées après les nouvelles versions : `MONGODB_URI:latest` est lu au démarrage de chaque instance, une instance déjà debout garde l'ancienne valeur jusqu'à sa fin. Un utilisateur limité à une base ne peut pas `serverStatus` ni `listDatabases` : la preuve d'accès est l'`insertOne`, pas un état du serveur. La base de recette repart vide sur le nouveau cluster, l'API y recrée index et migrations au premier démarrage.
 
-## DEBT-065 l'inscription ne vérifie pas que l'adresse e-mail appartient à l'inscrit
-
-- state: humain
-- bloque: décision produit, une confirmation d'adresse à l'inscription (courriel de confirmation, compte limité tant qu'il n'est pas confirmé)
-- impact: n'importe qui peut ouvrir un compte à mot de passe sur l'adresse d'un tiers. Le vrai titulaire ne peut alors ni s'inscrire ni se connecter par Google ou GitHub (`account_exists`) tant qu'il n'a pas repris le compte par « mot de passe oublié », et le badge Ko-fi, attribué par adresse, peut aller au squatteur. Pas de prise de compte : la connexion OAuth ne fusionne jamais un compte à mot de passe, et la réinitialisation coupe sessions, identités liées et abonnements push de l'occupant. Le code `email_taken` révèle aussi si une adresse a un compte, ce qui affaiblit le 202 constant de la réinitialisation : depuis le 2026-11-06, l'inscription est bornée à 20 essais par heure et par adresse IP (`AuthRegisterHourlyPolicy`), mais la réponse ne peut devenir neutre qu'avec ce flux de confirmation.
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Auth/RegisterUserHandler.cs`, `Application/UseCases/Auth/OAuth/OAuthLoginHandler.cs` (`PasswordAccountRequiresManualLink`), `Application/UseCases/Donations/ProcessKofiWebhookHandler.cs`
-- verify: `grep -c "EmailVerified" apps/api-dotnet/MoviePicker.Api/Domain/Entities/User.cs` ; encore ouvert tant que la commande rend `0`
-- fix: un `EmailVerifiedAt` sur `User` et un courriel de confirmation (même mécanique de jeton que la réinitialisation) ; côté OAuth, un e-mail vérifié par le fournisseur qui tombe sur un compte non confirmé vaut preuve de possession : purger mot de passe, identités, sessions et abonnements push de l'occupant au lieu de refuser ; ne pas attribuer le badge Ko-fi à une adresse non confirmée
-- fini-quand: un compte non confirmé ne peut plus bloquer l'adresse d'un tiers
-
 ---
 
 # Différées
@@ -290,17 +277,6 @@ Ne se traitent que quand leur `declencheur` survient.
 - fix: un « Signaler cette photo » sur le profil public qui prévient l'administrateur, et un geste de retrait qui supprime la photo et rend l'avatar généré
 - piege: retirer une photo à la main demande d'effacer le document de `avatar_photos` et de remettre `avatarPhoto` à `null` sur l'utilisateur ; sans le second geste, le profil pointe vers une image en 404 et retombe sans bruit sur les initiales
 - refs: cadrage du 2026-10-03 de la feature « Photo de profil personnalisée » (modération écartée de la V1.7)
-
-## DEBT-071 l'invitation à noter un film suit quatre règles qui ne s'accordent pas
-
-- state: differe
-- declencheur: un participant qui voit la feuille de note s'ouvrir pendant un film long, qui n'est jamais relancé après un tirage tardif, qui reçoit la relance sans la feuille (ou l'inverse) sur une soirée de 4 à 7 jours, ou qui voit la feuille revenir sur un autre appareil
-- impact: quatre règles décident quand inviter à noter. (1) Fin à 2 h fixes : `Event.Lifecycle` rend `Finished` à début + `EventSchedule.PendingDelay` (2 h) dès qu'un film est tiré ; pour Interstellar (2 h 49) lancé à 20 h 30, la feuille de note s'ouvre d'elle-même à 22 h 30 si quelqu'un ouvre la page, et le titre de l'encadré change en plein film (la note est ouverte dès le début, seule l'invitation arrive trop tôt). (2) Relance bornée sur le début : la passe de 10 h ne regarde que les soirées commencées dans les trois jours de Paris précédents, donc une soirée en suspens (sept jours possibles) dont le film est tiré trois jours ou plus après la date n'est jamais relancée, alors qu'elle vient de se terminer. (3) Deux fenêtres : la relance rattrape 3 jours (`RatingReminderPass.CatchUpDays`), la feuille automatique 7 (`RECENT_NIGHT_DAYS`), et la note reste possible sans limite. (4) Mémoire par appareil : les films déjà proposés sont gardés dans `localStorage` (`moviepicker_rating_prompted`), la feuille s'ouvre donc une fois de plus sur chaque appareil, sans effet si le film est déjà noté.
-- ou: `apps/api-dotnet/MoviePicker.Api/Domain/Entities/Event.cs` (`Lifecycle`), `apps/api-dotnet/MoviePicker.Api/Domain/EventSchedule.cs`, `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Notifications/RatingReminderPass.cs`, `ListWithWinnerStartingBetweenAsync` de `MongoEventRepository`, `apps/web/src/features/events/hooks/useRatingLink.ts`
-- verify: `grep -n "PendingDelay = TimeSpan.FromHours(2)\|CatchUpDays = 3\|ListWithWinnerStartingBetweenAsync\|moviepicker_rating_prompted" apps/api-dotnet/MoviePicker.Api/Domain/EventSchedule.cs apps/api-dotnet/MoviePicker.Api/Application/UseCases/Notifications/RatingReminderPass.cs apps/web/src/features/events/hooks/useRatingLink.ts` ; chaque ligne qui sort est une règle encore ouverte
-- fix: une seule fin de soirée, début + max(2 h, durée du plus long film tiré), qui déclenche la feuille automatique ; la relance bornée sur cette fin (ou sur `Winners[].PickedAt`) plutôt que sur le début, avec l'index qui va avec ; une seule fenêtre de rattrapage, portée par une constante côté API et rendue au front ; la date de la dernière proposition gardée côté serveur, sur la participation, et rendue avec la soirée
-- fini-quand: la feuille et la relance partent de la même fin de soirée, sur la même fenêtre, une fois par personne et par film quel que soit l'appareil
-- refs: absorbe DEBT-076, DEBT-077 et DEBT-078 (2026-11-25)
 
 ## DEBT-095 la page des films vus d'un profil ne liste que les 1 000 premiers
 
@@ -349,16 +325,6 @@ Ne se traitent que quand leur `declencheur` survient.
 - verify: `ls apps/api-dotnet/MoviePicker.Api/Infrastructure/Development/` ; encore ouvert tant que le dossier est dans le projet `MoviePicker.Api`
 - fix: sortir le dossier dans un projet `MoviePicker.Api.DevelopmentSeed` que `MoviePicker.Api` référence seulement en `Debug` (`<ProjectReference Condition="'$(Configuration)' == 'Debug'">`), l'enregistrement DI passant par une extension de ce projet appelée derrière `#if DEBUG` ; déplacer `DevelopmentScenarioSeedTests` et la moitié seed de `ServiceCollectionExtensionsBranchTests` dans un projet de tests lui aussi Debug. Mesurer avant et après par `dotnet publish -c Release` et la taille de `MoviePicker.Api.dll`.
 - piege: `verify:local` et la CI compilent et testent en **Release**, et `DevelopmentScenarioSeedTests.cs` comme `ServiceCollectionExtensionsBranchTests.cs` référencent le seed : un simple `<Compile Remove>` conditionnel casse la suite. `launchSettings.json`, `playwright.config.ts` et `scripts/verify-local.cjs` lancent l'API en `Development` avec `DevelopmentSeed__Enabled=false` : vérifier qu'un `dotnet run` sans configuration explicite construit bien en Debug, sinon le seed disparaît du poste de travail sans erreur.
-
-## DEBT-041 la date et l'heure d'une soirée sont des chaînes reparsées à chaque lecture
-
-- state: differe
-- declencheur: une feature repasse dans `EventSchedule` ou dans la création et la modification d'une soirée
-- impact: `Event.Date` et `Event.Time` sont des `string` (`"2026-09-20"`, `"20:30"`) que `EventSchedule.TryGetStartUtc` reparse à chaque appel de `Event.Lifecycle()`, donc pour chaque soirée listée et à chaque cycle de sondage. Un format invalide ne se découvre qu'à la lecture, la soirée reste `Upcoming` pour toujours au lieu d'être refusée à l'écriture. Lisibilité et robustesse, pas une lenteur mesurée : le parsing coûte des microsecondes.
-- ou: `apps/api-dotnet/MoviePicker.Api/Domain/Entities/Event.cs`, `Domain/EventSchedule.cs`, `Infrastructure/Persistence/Mongo/EventDocument`, les DTOs et les fichiers qui lisent `.Date` (`grep -rln "\.Date\b" apps/api-dotnet/MoviePicker.Api --include=*.cs`)
-- verify: `grep -n "public string Date\|public string Time" apps/api-dotnet/MoviePicker.Api/Domain/Entities/Event.cs` ; encore ouvert tant que les deux lignes sortent
-- fix: `DateOnly Date` et `TimeOnly Time` sur l'entité, ou un `StartUtc` calculé et validé à l'écriture, avec conversion aux frontières (document Mongo, DTO) pour ne changer ni le contrat OpenAPI ni les documents existants ; la validation du format remonte dans le handler de création et rend une `Errors.<Cas>()` au lieu d'un `Upcoming` silencieux
-- piege: les documents de production portent les chaînes : garder la lecture de l'ancien format ou passer par une `IDataMigration`, jamais les deux à moitié. Le seed (`DevelopmentScenarioSeed`, DEBT-040), les fixtures et les tests écrivent ces chaînes en dur : compter les occurrences avant de changer le type, le chantier est plus large qu'il ne paraît depuis `Event.cs`.
 
 ## DEBT-064 `GetByIdOrSlugAsync` ne résout plus que le slug
 
@@ -656,3 +622,5 @@ Arbitré le 2026-11-25 : la dette existe, mais le geste coûte plus qu'il ne rap
 - **E13 recherche de comptes par expression régulière** (ex-DEBT-061) : à 29 comptes, le parcours de `users` coûte quelques millisecondes. Rouvrir à 10 000 comptes ou à un p95 de `GET /api/v1/users/search` au-delà de 300 ms.
 - **E14 canal d'alerte SMS** (ex-DEBT-049) : le canal existe dans le module `monitoring` et ne se crée qu'avec un numéro, donnée personnelle que seul son titulaire choisit ; l'adresse d'alerte suffit à ce volume. Rouvrir en posant `ALERT_SMS_NUMBER` (voir le module).
 - **E15 classement d'un groupe relu depuis les soirées des membres** (relevé le 2026-11-25 en réglant DEBT-107) : `GetFriendGroupRankingHandler` relit jusqu'à 500 soirées passées par membre ; un seul groupe existe. Rouvrir sur une latence p95 du classement qui monte, avec la même agrégation que les chiffres du groupe (`TallyHeldByGroupIdsAsync`).
+- **E16 date et heure d'une soirée en `DateOnly` et `TimeOnly`** (reste de DEBT-041) : depuis le 2026-11-25 chaque écriture refuse une date ou une heure hors format (`Errors.InvalidTimeFormat()`), donc plus aucune soirée ne reste `Upcoming` à vie ; changer le type toucherait environ 240 affectations dans 72 fichiers pour des microsecondes de parsing. Rouvrir si une lecture de ces chaînes apparaît dans un profil de performance.
+- **E17 l'inscription révèle qu'une adresse a un compte** (reste de DEBT-065) : `email_taken` le dit, parce qu'une inscription qui connecte tout de suite ne peut pas répondre neutre ; l'inscription reste bornée à 20 essais par heure et par adresse IP. Depuis le 2026-11-25 un compte non confirmé ne bloque plus l'adresse d'un tiers, qui le reprend par Google, GitHub ou « Mot de passe oublié ». Rouvrir si une énumération d'adresses apparaît dans les journaux.

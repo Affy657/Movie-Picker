@@ -8,13 +8,25 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Confirmez votre adresse e-mail** : après une inscription par mot de passe, un courriel vous envoie un lien de confirmation. Votre compte marche tout de suite, et Compte et sécurité vous le rappelle discrètement, avec un bouton pour renvoyer le courriel.
+
 ### Changed
 
 - **Mes soirées, la fenêtre pour proposer un film et les pages de groupe** ne chargent plus tous les films, participants et soirées passées pour leurs aperçus et leurs chiffres : elles restent rapides quand une soirée compte des centaines de films ou qu’un groupe se réunit depuis des années.
 
 ### Fixed
 
+- **Une soirée dure le temps de son film** : quand le film tiré dépasse deux heures, la soirée reste en cours jusqu’à la fin du film, et l’invitation à le noter n’arrive plus en plein milieu.
+- **L’invitation à noter ne revient plus sur chaque appareil** : une fois proposée, la feuille de note ne s’ouvre plus d’elle-même sur votre téléphone puis sur votre ordinateur.
+- **Un film tiré tard reçoit aussi son rappel** : même tiré plusieurs jours après la date de la soirée, il donne lieu au rappel pour le noter, et rappel comme feuille de note partent de la même fin de soirée, pendant sept jours.
 - **Une adresse qui n’existe pas répond enfin « introuvable » aux moteurs de recherche** : le visiteur voit toujours la page introuvable, mais elle n’est plus présentée comme une page valide.
+
+### Security
+
+- **Une adresse prise par quelqu’un d’autre se récupère avec Google ou GitHub** : si un compte à mot de passe jamais confirmé utilise votre adresse, vous connecter avec Google ou GitHub (même adresse, vérifiée par le fournisseur) vous rend le compte et en déconnecte l’autre personne.
+- **Le badge Ko-fi** ne va plus qu’à un compte dont l’adresse est confirmée.
 
 ## [1.32.1] - 2026-11-25
 
