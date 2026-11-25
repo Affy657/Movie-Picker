@@ -73,6 +73,7 @@ const CANDIDATE_URLS = [
   { path: `/u/${STUB_ACTIVE_HANDLE}`, slug: 'profile-active', indexable: true },
   { path: `/film/${STUB_MOVIE_ID}-film-de-demonstration-1`, slug: 'movie', indexable: false },
   { path: '/films/tendances', slug: 'trending', indexable: true },
+  { path: '/tech', slug: 'tech', indexable: true },
 ].map((page) => ({ ...page, skipPerformance: true }));
 
 const MEASURED_URLS = process.env.LH_CANDIDATES === '1' ? [...URLS, ...CANDIDATE_URLS] : URLS;

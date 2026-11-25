@@ -1,4 +1,4 @@
-import { StrictMode } from 'react';
+import { StrictMode, startTransition } from 'react';
 import { createRoot } from 'react-dom/client';
 import { startPwaInstallRuntime } from '@/shared/hooks/usePwaInstall';
 import { showBootFailure } from '@/shared/pwa/bootFailure';
@@ -51,11 +51,14 @@ async function mountApp(): Promise<void> {
     translationsReady,
     renderableStartupRoute,
   ]);
-  createRoot(document.getElementById('root')!).render(
+  const root = createRoot(document.getElementById('root')!);
+  const app = (
     <StrictMode>
       <App />
     </StrictMode>
   );
+  if (isPrerenderedDocument()) startTransition(() => root.render(app));
+  else root.render(app);
 }
 
 function boot(): void {

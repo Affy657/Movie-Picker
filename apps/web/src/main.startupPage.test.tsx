@@ -14,6 +14,13 @@ vi.mock('@/shared/observability/sentry', () => ({
   scheduleSentryStart: vi.fn(),
   captureException: vi.fn(),
 }));
+vi.mock('react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react')>()),
+  startTransition: (scope: () => void) => {
+    order.push('transition');
+    scope();
+  },
+}));
 vi.mock('@/app/App', () => ({ default: () => null }));
 vi.mock('@/shared/hooks/usePwaInstall', () => ({ startPwaInstallRuntime: vi.fn() }));
 vi.mock('@/shared/i18n', async (importOriginal) => ({
@@ -49,7 +56,7 @@ describe('startup page', () => {
     vi.restoreAllMocks();
   });
 
-  it('keeps a prerendered document on screen until its page has loaded', async () => {
+  it('keeps a prerendered document on screen until its page has loaded, then renders it in a transition', async () => {
     const pageLoads = await bootOnDonatePage(
       '<div id="root"><main><h1>Soutenir Movie Picker</h1></main></div>'
     );
@@ -58,7 +65,7 @@ describe('startup page', () => {
     pageLoads();
     await vi.waitFor(() => expect(order).toContain('render'));
 
-    expect(order).toEqual(['page', 'render']);
+    expect(order).toEqual(['page', 'transition', 'render']);
   });
 
   it('paints the shell before the page when the document carries the splash screen', async () => {
