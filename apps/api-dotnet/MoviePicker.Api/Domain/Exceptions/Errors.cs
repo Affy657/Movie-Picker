@@ -377,6 +377,9 @@ public static class Errors
     public static BadRequestException InvalidResetToken() =>
         new("Invalid or expired token", ErrorCodes.InvalidResetToken);
 
+    public static BadRequestException InvalidEmailVerificationToken() =>
+        new("Invalid or expired confirmation link", ErrorCodes.InvalidEmailVerificationToken);
+
     public static BadRequestException LetterboxdUsernameInvalid() =>
         new("Letterboxd username can only contain letters, digits and underscores", ErrorCodes.LetterboxdUsernameInvalid);
 

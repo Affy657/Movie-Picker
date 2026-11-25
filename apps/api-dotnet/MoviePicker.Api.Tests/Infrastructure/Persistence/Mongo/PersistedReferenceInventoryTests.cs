@@ -68,6 +68,9 @@ public sealed class PersistedReferenceInventoryTests
         ["BannerPhotoBlobDocument.UserId"] = new(
             Handling.Through<IBannerPhotoRepository>(),
             Handling.Through<IBannerPhotoRepository>()),
+        ["EmailVerificationTokenDocument.UserId"] = new(
+            Handling.Through<IEmailVerificationTokenRepository>(),
+            Handling.Exempt("only the hash of a single-use secret, meaningless outside the confirmation flow; the confirmation date itself is exported with the profile")),
         ["EventDocument.CoHostUserIds"] = new(
             Handling.Through<IEventRepository>(),
             Handling.Exempt("a co-host role is a decision of the creator about their event, and the user still sees it on the event")),

@@ -17,6 +17,7 @@ public sealed class AnonymousMutatingEndpointsTests
 
     private static readonly string[] PublicAccountActions =
     [
+        "AuthController.ConfirmEmailVerification",
         "AuthController.ConfirmPasswordReset",
         "AuthController.Login",
         "AuthController.Register",

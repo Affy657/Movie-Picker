@@ -56,6 +56,28 @@ public sealed class OAuthLinkHandlerTests
         Assert.Equal("github", reloaded.Identities[0].Provider);
     }
 
+    [Theory]
+    [InlineData("Neo@Example.com", true, true)]
+    [InlineData("neo@github.example", true, false)]
+    [InlineData("neo@example.com", false, false)]
+    public async Task HandleAsync_IdentityAddress_ConfirmsTheAccountOnlyWhenTheProviderVouchesForTheSameAddress(
+        string identityEmail, bool verifiedByProvider, bool confirmed)
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User { Email = "neo@example.com", Handle = "neo", PasswordHash = "hash" });
+
+        await f.CreateHandler().HandleAsync(user.Id, new ExternalLoginInfo
+        {
+            Provider = "github",
+            Subject = "gh-1",
+            Email = identityEmail,
+            EmailVerified = verifiedByProvider
+        });
+
+        var reloaded = await f.Users.GetByIdAsync(user.Id);
+        Assert.Equal(confirmed ? TestEpoch : (DateTimeOffset?)null, reloaded!.EmailVerifiedAt);
+    }
+
     [Fact]
     public async Task HandleAsync_LinkingAnUnlinkedIdentityAgain_ForgetsTheUnlink()
     {

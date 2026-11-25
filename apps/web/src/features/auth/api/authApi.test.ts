@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { postAuthLogin, postAuthLogout, postAuthRegister } from '@/features/auth/api/authApi';
+import {
+  postAuthLogin,
+  postAuthLogout,
+  postAuthRegister,
+  postEmailVerificationConfirm,
+  postEmailVerificationResend,
+} from '@/features/auth/api/authApi';
 import { hasSessionHint, setSessionHint } from '@/features/auth/session-hint';
 import { ApiError } from '@/shared/api/apiError';
 
@@ -139,5 +145,48 @@ describe('sign-in and sign-up destination', () => {
     await postAuthLogin('a@test.local', 'secret1');
 
     expect(bodyOf('/auth/login')).not.toHaveProperty('returnTo');
+  });
+});
+
+describe('email confirmation', () => {
+  beforeEach(() => {
+    mockFetchApi.mockReset();
+    mockFetchApi.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    localStorage.clear();
+  });
+
+  function callTo(path: string): { method?: string; body: unknown } {
+    const [, init] = mockFetchApi.mock.calls.find(([called]) => called === path)!;
+    const { method, body } = init as { method?: string; body: string };
+    return { method, body: JSON.parse(body) };
+  }
+
+  it('asks for the confirmation email in the language of the interface when signing up', async () => {
+    localStorage.setItem('moviepicker-locale', 'en');
+
+    await postAuthRegister('a@test.local', 'secret1', 'Alice');
+
+    expect(callTo('/auth/register').body).toMatchObject({ locale: 'en' });
+  });
+
+  it('sends the token of the link to confirm the address', async () => {
+    await postEmailVerificationConfirm('token-from-the-email');
+
+    expect(callTo('/auth/email-verification/confirm')).toEqual({
+      method: 'POST',
+      body: { token: 'token-from-the-email' },
+    });
+  });
+
+  it('asks for a new confirmation email in the given language', async () => {
+    await postEmailVerificationResend('fr');
+
+    expect(callTo('/auth/me/email-verification')).toEqual({
+      method: 'POST',
+      body: { locale: 'fr' },
+    });
   });
 });

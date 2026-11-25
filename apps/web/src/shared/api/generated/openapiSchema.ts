@@ -823,6 +823,156 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/me/email-verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["EmailVerificationRequest"];
+                    "text/json": components["schemas"]["EmailVerificationRequest"];
+                    "application/*+json": components["schemas"]["EmailVerificationRequest"];
+                };
+            };
+            responses: {
+                /** @description Accepted */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/email-verification/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["EmailVerificationConfirmRequest"];
+                    "text/json": components["schemas"]["EmailVerificationConfirmRequest"];
+                    "application/*+json": components["schemas"]["EmailVerificationConfirmRequest"];
+                };
+            };
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/password-reset/request": {
         parameters: {
             query?: never;
@@ -12355,6 +12505,12 @@ export interface components {
         EligibleFollowsResponse: {
             follows: components["schemas"]["EligibleFollowItem"][];
         };
+        EmailVerificationConfirmRequest: {
+            token?: string;
+        };
+        EmailVerificationRequest: {
+            locale?: string | null;
+        };
         EventConfigResponse: {
             theme: string | null;
             /** Format: int32 */
@@ -12577,6 +12733,8 @@ export interface components {
         ExportedProfile: {
             userId: string;
             email: string;
+            /** Format: date-time */
+            emailVerifiedAt?: string | null;
             displayName: string;
             handle: string;
             bio?: string | null;
@@ -13825,6 +13983,7 @@ export interface components {
             password: string;
             displayName: string;
             returnTo?: string | null;
+            locale?: string | null;
         };
         RegisterResponse: {
             userId: string;
@@ -14023,6 +14182,8 @@ export interface components {
             displayName: string;
             emailMasked: string;
             email: string;
+            /** Format: date-time */
+            emailVerifiedAt: string | null;
             uiTheme: components["schemas"]["UiThemePreference"];
             accentColor: components["schemas"]["AccentColor"];
             ratingScale: components["schemas"]["RatingScale"];

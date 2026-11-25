@@ -58,6 +58,7 @@ public sealed class ProcessKofiWebhookHandlerTests
         {
             Id = id,
             Email = "donor@example.com",
+            EmailVerifiedAt = TestEpoch.AddMonths(-11),
             DisplayName = "Donor",
             CreatedAt = TestEpoch.AddYears(-1),
             UpdatedAt = TestEpoch.AddYears(-1)
@@ -215,5 +216,21 @@ public sealed class ProcessKofiWebhookHandlerTests
         var outcome = await CreateSut().HandleAsync(Payload());
 
         Assert.Equal(KofiWebhookOutcome.AlreadySupporter, outcome);
+    }
+
+    [Fact]
+    public async Task HandleAsync_DonorAddressNotConfirmedByItsAccount_GrantsNoBadge()
+    {
+        AcceptNewMessages();
+        _users.Setup(r => r.GetByEmailAsync("donor@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SampleUser() with { EmailVerifiedAt = null });
+
+        var outcome = await CreateSut().HandleAsync(Payload());
+
+        Assert.Equal(KofiWebhookOutcome.UnconfirmedAccountEmail, outcome);
+        _users.Verify(
+            r => r.MarkSupporterAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        _log.Verify(r => r.RecordAsync("msg-1", TestEpoch, It.IsAny<CancellationToken>()), Times.Once);
     }
 }

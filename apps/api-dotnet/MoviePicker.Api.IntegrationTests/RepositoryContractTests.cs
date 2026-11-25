@@ -2571,4 +2571,54 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Null(await savedLists.GetAsync(eventId, malformedId));
         Assert.False(await savedLists.DeleteAsync(eventId, malformedId));
     }
+
+    [Fact]
+    public async Task EmailVerificationTokens_AreFoundUntilTheyExpire_ConsumedPerAccount_AndForgottenWithIt()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var tokens = scope.ServiceProvider.GetRequiredService<IEmailVerificationTokenRepository>();
+        var owner = ObjectId.GenerateNewId().ToString();
+        var other = ObjectId.GenerateNewId().ToString();
+        var prefix = Guid.NewGuid().ToString("N");
+        EmailVerificationToken Issued(string userId, string hash, DateTimeOffset at) =>
+            new() { UserId = userId, TokenHash = prefix + hash, CreatedAt = at, ExpiresAtUtc = at.AddHours(48) };
+        var older = await tokens.AddAsync(Issued(owner, "older", Now.AddHours(-2)));
+        var latest = await tokens.AddAsync(Issued(owner, "latest", Now));
+        await tokens.AddAsync(Issued(other, "other", Now));
+
+        Assert.Equal(latest.Id, (await tokens.GetLatestForUserAsync(owner))!.Id);
+        Assert.Equal(older.Id, (await tokens.FindUnexpiredAsync(prefix + "older", Now))!.Id);
+        Assert.Null(await tokens.FindUnexpiredAsync(prefix + "older", Now.AddHours(46)));
+        Assert.Null(await tokens.FindUnexpiredAsync(prefix + "unknown", Now));
+
+        await tokens.ConsumeAllForUserAsync(owner, Now.AddMinutes(1));
+        await tokens.ConsumeAllForUserAsync(owner, Now.AddMinutes(2));
+
+        Assert.Equal(Now.AddMinutes(1), (await tokens.FindUnexpiredAsync(prefix + "latest", Now))!.ConsumedAt);
+        Assert.Null((await tokens.FindUnexpiredAsync(prefix + "other", Now))!.ConsumedAt);
+        Assert.Equal(2, await tokens.DeleteByUserIdAsync(owner));
+        Assert.Null(await tokens.GetLatestForUserAsync(owner));
+        Assert.NotNull(await tokens.GetLatestForUserAsync(other));
+        Assert.Equal(0, await tokens.DeleteByUserIdAsync(" "));
+    }
+
+    [Fact]
+    public async Task MarkEmailVerified_KeepsTheFirstConfirmation_AndMovesTheVersion()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var created = await users.AddAsync(NewUser("confirm"));
+
+        Assert.True(await users.MarkEmailVerifiedAsync(created.Id, Now));
+        Assert.False(await users.MarkEmailVerifiedAsync(created.Id, Now.AddDays(1)));
+        Assert.False(await users.MarkEmailVerifiedAsync(ObjectId.GenerateNewId().ToString(), Now));
+        Assert.False(await users.MarkEmailVerifiedAsync(" ", Now));
+
+        var reloaded = (await users.GetByIdAsync(created.Id))!;
+        Assert.Equal(Now, reloaded.EmailVerifiedAt);
+        Assert.Equal(created.Version + 1, reloaded.Version);
+        var renamed = await users.UpdateAsync(reloaded with { DisplayName = "Renamed" });
+        Assert.Equal(Now, renamed.EmailVerifiedAt);
+        Assert.Equal(Now, (await users.GetByIdAsync(created.Id))!.EmailVerifiedAt);
+    }
 }

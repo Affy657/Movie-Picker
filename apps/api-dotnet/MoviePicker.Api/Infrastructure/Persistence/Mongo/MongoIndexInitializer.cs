@@ -66,6 +66,7 @@ public sealed class MongoIndexInitializer : IHostedService
         EnsureSeenMarkIndexes(plan);
         EnsureMovieRatingIndexes(plan);
         EnsurePasswordResetTokenIndexes(plan);
+        EnsureEmailVerificationTokenIndexes(plan);
         EnsurePushSubscriptionIndexes(plan);
         EnsureFollowIndexes(plan);
         EnsureWatchlistIndexes(plan);
@@ -235,6 +236,22 @@ public sealed class MongoIndexInitializer : IHostedService
             Builders<PasswordResetTokenDocument>.IndexKeys.Ascending(x => x.ExpiresAtUtc),
             new CreateIndexOptions { Name = "password_reset_tokens_expires_ttl", ExpireAfter = TimeSpan.Zero });
         plan.Create("password_reset_tokens", tokenHash, byUser, ttl);
+    }
+
+    private static void EnsureEmailVerificationTokenIndexes(MongoIndexPlan plan)
+    {
+        var keys = Builders<EmailVerificationTokenDocument>.IndexKeys;
+        plan.Create(
+            MongoEmailVerificationTokenRepository.CollectionName,
+            new CreateIndexModel<EmailVerificationTokenDocument>(
+                keys.Ascending(token => token.TokenHash),
+                new CreateIndexOptions { Name = "email_verification_tokens_tokenHash_unique", Unique = true }),
+            new CreateIndexModel<EmailVerificationTokenDocument>(
+                keys.Ascending(token => token.UserId),
+                new CreateIndexOptions { Name = "email_verification_tokens_userId" }),
+            new CreateIndexModel<EmailVerificationTokenDocument>(
+                keys.Ascending(token => token.ExpiresAtUtc),
+                new CreateIndexOptions { Name = "email_verification_tokens_expires_ttl", ExpireAfter = TimeSpan.Zero }));
     }
 
     private static void EnsureSeenMarkIndexes(MongoIndexPlan plan)

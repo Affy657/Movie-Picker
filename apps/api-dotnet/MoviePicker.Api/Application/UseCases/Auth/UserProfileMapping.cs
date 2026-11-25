@@ -11,6 +11,7 @@ public static class UserProfileMapping
         DisplayName = user.DisplayName,
         EmailMasked = EmailMasking.Mask(user.Email),
         Email = user.Email,
+        EmailVerifiedAt = user.EmailVerifiedAt,
         UiTheme = user.UiTheme,
         AccentColor = user.AccentColor,
         RatingScale = user.RatingScale,

@@ -69,6 +69,7 @@ public sealed record ExportedProfile
 {
     public string UserId { get; init; } = string.Empty;
     public string Email { get; init; } = string.Empty;
+    public DateTimeOffset? EmailVerifiedAt { get; init; }
     public string DisplayName { get; init; } = string.Empty;
     public string Handle { get; init; } = string.Empty;
     public string? Bio { get; init; }

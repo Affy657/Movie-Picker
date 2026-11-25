@@ -65,6 +65,7 @@ public sealed record User
 {
     public string Id { get; init; } = string.Empty;
     public string Email { get; init; } = string.Empty;
+    public DateTimeOffset? EmailVerifiedAt { get; init; }
     public string PasswordHash { get; init; } = string.Empty;
     public string DisplayName { get; init; } = string.Empty;
     public IReadOnlyList<LinkedIdentity> Identities { get; init; } = Array.Empty<LinkedIdentity>();

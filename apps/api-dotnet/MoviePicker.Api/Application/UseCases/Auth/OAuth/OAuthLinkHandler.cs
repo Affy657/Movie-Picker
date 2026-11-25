@@ -58,6 +58,7 @@ public sealed class OAuthLinkHandler : IOAuthLinkHandler
             UnlinkedIdentities = user.UnlinkedIdentities
                 .Where(u => !(u.Provider == info.Provider && u.Subject == info.Subject))
                 .ToList(),
+            EmailVerifiedAt = user.EmailVerifiedAt ?? (info.VouchesFor(user.Email) ? now : null),
             UpdatedAt = now
         };
         User saved;

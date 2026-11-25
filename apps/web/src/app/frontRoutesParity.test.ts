@@ -25,6 +25,7 @@ const routesOfTheWebApp = {
   Home: ROUTES.home,
   Login: ROUTES.login,
   Reset: ROUTES.resetPassword,
+  VerifyEmail: ROUTES.verifyEmail,
   OAuthCallback: ROUTES.oauthCallback,
   AccountIntegrations: ROUTES.accountIntegrations,
   Notifications: ROUTES.notifications,
@@ -46,7 +47,7 @@ const routesOfTheWebApp = {
   ListJoinPattern: ROUTES.joinListPattern,
   RateQueryParam: RATE_QUERY_PARAM,
   ReturnToQueryParam: firstQueryKeyOf(withReturnTo(ROUTES.login, ROUTES.eventDetail('soiree'))),
-  ResetTokenQueryParam: 'token',
+  TokenQueryParam: 'token',
   EntryOriginQueryParam: ENTRY_ORIGIN_QUERY_PARAM,
   OAuthErrorQueryParam: OAUTH_ERROR_QUERY_PARAM,
   OAuthLinkedQueryParam: OAUTH_LINKED_QUERY_PARAM,
@@ -79,7 +80,7 @@ describe('front routes built by the API', () => {
     );
   });
 
-  it('carries the reset token in a query parameter redacted from logs', () => {
-    expect(SENSITIVE_QUERY_PARAMETERS).toContain(declaredByTheApi.ResetTokenQueryParam);
+  it('carries the reset and confirmation tokens in a query parameter redacted from logs', () => {
+    expect(SENSITIVE_QUERY_PARAMETERS).toContain(declaredByTheApi.TokenQueryParam);
   });
 });

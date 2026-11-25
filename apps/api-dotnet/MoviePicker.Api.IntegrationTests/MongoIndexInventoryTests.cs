@@ -57,6 +57,9 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         new("password_reset_tokens", "password_reset_tokens_tokenHash_unique", Unique: true),
         new("password_reset_tokens", "password_reset_tokens_userId"),
         new("password_reset_tokens", "password_reset_tokens_expires_ttl", ExpireAfterSeconds: 0),
+        new("email_verification_tokens", "email_verification_tokens_tokenHash_unique", Unique: true),
+        new("email_verification_tokens", "email_verification_tokens_userId"),
+        new("email_verification_tokens", "email_verification_tokens_expires_ttl", ExpireAfterSeconds: 0),
 
         new("seen_marks", "seen_marks_event_movie_participant_unique", Unique: true),
         new("movie_ratings", "movie_ratings_event_movie_participant_unique", Unique: true),

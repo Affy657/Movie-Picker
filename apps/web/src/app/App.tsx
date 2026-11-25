@@ -42,6 +42,7 @@ const LoginPage = routeLazy('login');
 const RegisterPage = routeLazy('register');
 const ForgotPasswordPage = routeLazy('forgotPassword');
 const ResetPasswordPage = routeLazy('resetPassword');
+const VerifyEmailPage = routeLazy('verifyEmail');
 const OAuthCallbackPage = routeLazy('oauthCallback');
 const AccountPage = routeLazy('account');
 const LegalNoticePage = routeLazy('legalNotice');
@@ -148,6 +149,7 @@ export function AppRoutes() {
         <Route path={ROUTES.register} element={<RegisterPage />} />
         <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
         <Route path={ROUTES.resetPassword} element={<ResetPasswordPage />} />
+        <Route path={ROUTES.verifyEmail} element={<VerifyEmailPage />} />
         <Route path={ROUTES.oauthCallback} element={<OAuthCallbackPage />} />
         <Route path={ROUTES.legalNotice} element={<LegalNoticePage />} />
         <Route path={ROUTES.privacyPolicy} element={<PrivacyPolicyPage />} />

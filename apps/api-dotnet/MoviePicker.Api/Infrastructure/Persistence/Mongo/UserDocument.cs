@@ -15,6 +15,10 @@ public sealed class UserDocument
     [BsonElement("email")]
     public string Email { get; set; } = string.Empty;
 
+    [BsonElement("emailVerifiedAt")]
+    [BsonIgnoreIfNull]
+    public DateTime? EmailVerifiedAt { get; set; }
+
     [BsonElement("passwordHash")]
     public string PasswordHash { get; set; } = string.Empty;
 

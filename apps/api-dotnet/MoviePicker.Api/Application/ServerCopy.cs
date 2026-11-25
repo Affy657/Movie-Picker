@@ -205,8 +205,82 @@ public static class ServerCopy
             """;
     }
 
+    public static class EmailVerificationEmail
+    {
+        public const string Subject = "Confirmez votre adresse e-mail Movie Picker";
+
+        private const string NotYourAccount =
+            "Si vous n’avez pas créé ce compte, quelqu’un a saisi votre adresse par erreur : ignorez cet e-mail, ou reprenez le compte avec « Mot de passe oublié » sur la page de connexion.";
+
+        public static string HtmlBody(string url, string siteUrl) => BrandedEmailHtml.Render(new BrandedEmail(
+            Lang: "fr",
+            Title: Subject,
+            Heading: "Confirmez votre adresse e-mail",
+            Intro:
+            [
+                "Bonjour,",
+                "Votre compte Movie Picker est prêt. Confirmez que cette adresse est bien la vôtre en cliquant sur le bouton ci-dessous, le lien reste valable 48 heures."
+            ],
+            ButtonLabel: "Confirmer mon adresse",
+            ButtonUrl: url,
+            FallbackIntro: "Si le bouton ne fonctionne pas, copiez cette adresse dans votre navigateur :",
+            Outro: [NotYourAccount],
+            Signature: "L’équipe Movie Picker",
+            SiteUrl: siteUrl));
+
+        public static string TextBody(string url) => $"""
+            Bonjour,
+
+            Votre compte Movie Picker est prêt.
+            Confirmez que cette adresse est bien la vôtre en ouvrant le lien ci-dessous (valide 48 heures) :
+
+            {url}
+
+            {NotYourAccount}
+
+            L’équipe Movie Picker
+            """;
+    }
+
     public static class English
     {
+        public static class VerificationEmail
+        {
+            public const string Subject = "Confirm your Movie Picker email address";
+
+            private const string NotYourAccount =
+                "If you didn't create this account, someone typed your address by mistake: ignore this email, or take the account back with “Forgot password” on the sign-in page.";
+
+            public static string HtmlBody(string url, string siteUrl) => BrandedEmailHtml.Render(new BrandedEmail(
+                Lang: "en",
+                Title: Subject,
+                Heading: "Confirm your email address",
+                Intro:
+                [
+                    "Hi,",
+                    "Your Movie Picker account is ready. Confirm this address is yours by clicking the button below, the link stays valid for 48 hours."
+                ],
+                ButtonLabel: "Confirm my address",
+                ButtonUrl: url,
+                FallbackIntro: "If the button doesn't work, copy this address into your browser:",
+                Outro: [NotYourAccount],
+                Signature: "The Movie Picker team",
+                SiteUrl: siteUrl));
+
+            public static string TextBody(string url) => $"""
+                Hi,
+
+                Your Movie Picker account is ready.
+                Confirm this address is yours by opening the link below (valid for 48 hours):
+
+                {url}
+
+                {NotYourAccount}
+
+                The Movie Picker team
+                """;
+        }
+
         public static class ResetEmail
         {
             public const string Subject = "Reset your Movie Picker password";
