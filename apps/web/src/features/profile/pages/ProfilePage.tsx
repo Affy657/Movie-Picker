@@ -277,7 +277,7 @@ export default function ProfilePage() {
           accent={profileAccent}
           overBanner={bannerView.banner !== null}
           onOpenFollowModal={setFollowModal}
-          tools={<ProfileTools profile={profile} isOwnProfile={isOwnProfile} />}
+          tools={<ProfileTools profile={profile} isOwnProfile={isOwnProfile} isLoggedIn={!!user} />}
         >
           <ProfileActions
             profile={profile}

@@ -446,6 +446,9 @@ public static class Errors
     public static BadRequestException SelfFollow() =>
         new("You cannot follow yourself", ErrorCodes.SelfFollow);
 
+    public static BadRequestException SelfPhotoReport() =>
+        new("You cannot report your own photo", ErrorCodes.SelfPhotoReport);
+
     public static BadRequestException UnknownSection() =>
         new("Unknown section", ErrorCodes.UnknownSection);
 

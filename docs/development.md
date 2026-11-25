@@ -141,7 +141,7 @@ Tous se lancent à la racine du dépôt.
 | `pnpm run format:dotnet`, `pnpm run format:dotnet:check` | Style C#, après `dotnet restore` ; la vérification joue les passes `whitespace` et `style`, les analyseurs étant ceux du build |
 | `pnpm test`, `pnpm run test:coverage` | Tests front, Vitest |
 | `pnpm run test:changed` | Tests front touchés par le diff depuis `origin/master`, la boucle d'avant push |
-| `pnpm run test:api:mongo` | Tests d'intégration API contre une vraie MongoDB, avec la porte de couverture des adaptateurs Mongo, puis les tests des scripts qui interrogent MongoDB (`scripts/mongo-tests/`, la requête de `pnpm run usage` sur des documents semés) ; joué tel quel par le job `test-api` |
+| `pnpm run test:api:mongo` | Tests d'intégration API contre une vraie MongoDB, avec la porte de couverture des adaptateurs Mongo, puis les tests des scripts qui interrogent MongoDB (`scripts/mongo-tests/`, la requête de `pnpm run usage` et le retrait de `pnpm run photo:remove` sur des documents semés) ; joué tel quel par le job `test-api` |
 | `pnpm run test:api:mutation` | Passe Stryker.NET, rapport dans `artifacts/stryker` |
 | `pnpm run test:e2e`, `pnpm run test:e2e:ci` | Playwright, la seconde forme construisant le front avec un stub TMDB ; l'API tourne sur la base de `E2E_MONGODB_URI` quand elle est posée (le job `e2e`), en mémoire sinon |
 | `pnpm run test:e2e:local` | La suite Playwright depuis le poste, serveurs de dev allumés : API de test en Release sur 5010, sur MongoDB (le conteneur de test sur 27018, base `moviepicker_e2e` vidée à chaque run, ou `E2E_MONGODB_URI`), front construit contre elle ; `--in-memory` pour la base en mémoire |
@@ -153,6 +153,7 @@ Tous se lancent à la racine du dépôt.
 | `pnpm run lighthouse` | Lighthouse sur le build, demande Node 22+ et Chrome |
 | `pnpm run capture:screenshots` | Captures du README, sur l'application lancée en local |
 | `pnpm run usage [-- --days 30 \| --since AAAA-MM-JJ] [--db <base>] [--json]` | Ce qui sert sur une période de jours de Paris : l'entonnoir du lien d'une soirée, lu dans les totaux anonymes que l'API tient par jour (`usage_counts`), et l'usage des fonctionnalités, lu dans la base (notes, recaps, pioches, « À voir », Letterboxd). Lecture seule, par l'image MongoDB épinglée dans Docker ; l'URI vient de `MONGODB_URI` ou du secret du même nom par gcloud. La requête est testée par `scripts/mongo-tests/usage.test.mjs`, que joue `pnpm run test:api:mongo`, et ce test refuse un champ semé que les documents de l'API ne déclarent plus. Le tableau de bord PostHog « Ce qui sert » montre le détail des visiteurs qui acceptent la mesure |
+| `pnpm run photo:remove -- --handle <handle> --photo avatar\|banner [--db <base>]` | Retire une photo de profil ou une bannière signalée : efface le pointeur du compte et les images stockées, en une transaction, **en production** sans `--db`. Même accès que `pnpm run usage` (Docker, `MONGODB_URI` ou le secret par gcloud). Procédure complète dans [`runbook-photo-moderation.md`](runbook-photo-moderation.md) |
 | `pnpm run verify:local` | La chaîne complète, quatorze étapes en trois voies concurrentes puis la suite front seule, durées affichées en fin de run ; chaque porte qu'elle partage avec la CI y passe par le même `pnpm run` |
 
 ## Captures du README

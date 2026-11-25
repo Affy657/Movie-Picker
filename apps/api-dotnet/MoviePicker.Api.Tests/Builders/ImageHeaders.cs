@@ -5,6 +5,8 @@ namespace MoviePicker.Api.Tests.Builders;
 
 internal static class ImageHeaders
 {
+    private const int PngHeaderEnd = 33;
+
     public static byte[] Png(int width, int height, bool animated = false)
     {
         var bytes = new List<byte> { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D };
@@ -73,6 +75,21 @@ internal static class ImageHeaders
 
     public static byte[] Svg() =>
         Encoding.UTF8.GetBytes("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"256\" height=\"256\"></svg>");
+
+    public static byte[] WithExif(byte[] jpeg, string exif, string trailer = "")
+    {
+        var payload = Encoding.ASCII.GetBytes("Exif\0\0" + exif);
+        var segment = new List<byte> { 0xFF, 0xE1 };
+        segment.AddRange(BigEndian16(payload.Length + 2));
+        segment.AddRange(payload);
+        return [.. jpeg[..2], .. segment, .. jpeg[2..], .. Encoding.ASCII.GetBytes(trailer)];
+    }
+
+    public static byte[] WithTextChunk(byte[] png, string text) =>
+        [.. png[..PngHeaderEnd], .. PngChunk("tEXt", Encoding.ASCII.GetBytes(text)), .. png[PngHeaderEnd..]];
+
+    public static byte[] PngWithTruncatedChunk(int width, int height) =>
+        [.. Png(width, height)[..PngHeaderEnd], .. BigEndian32(1_000), .. Encoding.ASCII.GetBytes("IDAT"), 0x78, 0x9C];
 
     private static List<byte> PngChunk(string type, byte[] data)
     {

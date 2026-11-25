@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router';
 import { LocaleProvider } from '@/shared/i18n';
 import { ConsentProvider } from '@/shared/contexts/ConsentContext';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
+import { QueryClientWrapper } from '@/test-utils/queryWrapper';
 import type { PublicProfile } from '@/features/profile/api/profileApi';
 import { ProfileTools } from './ProfileActions';
 
@@ -31,7 +32,7 @@ describe('ProfileTools', () => {
       <LocaleProvider>
         <ConsentProvider>
           <MemoryRouter>
-            <ProfileTools profile={profile} isOwnProfile />
+            <ProfileTools profile={profile} isOwnProfile isLoggedIn />
           </MemoryRouter>
         </ConsentProvider>
       </LocaleProvider>
@@ -42,5 +43,34 @@ describe('ProfileTools', () => {
 
     const dialog = await screen.findByRole('dialog', { name: 'Partager ce profil' });
     expect(within(dialog).getByText('@adrien', { selector: 'span' })).toBeInTheDocument();
+  });
+
+  const withPhoto = { ...profile, avatarId: `photo:${'a'.repeat(32)}` } as PublicProfile;
+
+  function renderTools(isOwnProfile: boolean, isLoggedIn: boolean) {
+    return render(
+      <LocaleProvider>
+        <QueryClientWrapper>
+          <MemoryRouter>
+            <ProfileTools profile={withPhoto} isOwnProfile={isOwnProfile} isLoggedIn={isLoggedIn} />
+          </MemoryRouter>
+        </QueryClientWrapper>
+      </LocaleProvider>
+    );
+  }
+
+  it('offers a signed-in visitor to report the photo of the profile', () => {
+    renderTools(false, true);
+
+    expect(screen.getByRole('button', { name: 'Plus d’actions' })).toBeInTheDocument();
+  });
+
+  it.each([
+    ['on your own profile', true, true],
+    ['to a signed-out visitor', false, false],
+  ])('never offers to report a photo %s', (_case, isOwnProfile, isLoggedIn) => {
+    renderTools(isOwnProfile, isLoggedIn);
+
+    expect(screen.queryByRole('button', { name: 'Plus d’actions' })).not.toBeInTheDocument();
   });
 });

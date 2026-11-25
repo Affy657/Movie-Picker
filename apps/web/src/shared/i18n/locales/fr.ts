@@ -2802,6 +2802,7 @@ export const fr = {
     event_template_name_required: 'Le nom du modèle ne peut pas être vide.',
     event_template_name_too_long: 'Le nom du modèle ne peut pas dépasser {{max}} caractères.',
     self_follow: 'Vous ne pouvez pas vous suivre vous-même.',
+    self_photo_report: 'Vous ne pouvez pas signaler votre propre photo.',
     unknown_section: 'Section inconnue',
     unknown_platform: 'Plateforme inconnue',
     reference_movie_missing: 'Film de référence manquant',
@@ -3242,6 +3243,19 @@ export const fr = {
       settingsEmpty: 'Aucune bannière pour le moment.',
       settingsEdit: 'Modifier',
       settingsAdd: 'Ajouter',
+    },
+    report: {
+      moreActions: 'Plus d’actions',
+      avatar: 'Signaler la photo de profil',
+      banner: 'Signaler la bannière',
+      avatarTitle: 'Signaler la photo de profil ?',
+      bannerTitle: 'Signaler la bannière ?',
+      message:
+        'L’équipe de Movie Picker reçoit un lien vers ce profil et retire l’image si elle n’a pas sa place ici. {{name}} ne saura pas qui l’a signalée.',
+      confirm: 'Signaler',
+      sentTitle: 'Merci pour votre signalement',
+      sentMessage: 'L’équipe de Movie Picker va regarder cette image.',
+      failed: 'Le signalement n’a pas été envoyé. Vérifiez votre connexion, puis réessayez.',
     },
     seoDescription:
       'Profil de {{name}} (@{{handle}}) sur Movie Picker : statistiques de soirées ciné, films proposés et abonnements.',

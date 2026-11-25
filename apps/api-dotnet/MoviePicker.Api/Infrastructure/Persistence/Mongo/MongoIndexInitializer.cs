@@ -495,7 +495,10 @@ public sealed class MongoIndexInitializer : IHostedService
         var userId = new CreateIndexModel<AvatarPhotoBlobDocument>(
             Builders<AvatarPhotoBlobDocument>.IndexKeys.Ascending(x => x.UserId),
             new CreateIndexOptions { Name = "avatar_photos_userId" });
-        plan.Create(MongoAvatarPhotoRepository.CollectionName, userId);
+        var ttl = new CreateIndexModel<AvatarPhotoBlobDocument>(
+            Builders<AvatarPhotoBlobDocument>.IndexKeys.Ascending(x => x.ExpiresAt),
+            new CreateIndexOptions { Name = "avatar_photos_expiresAt_ttl", ExpireAfter = TimeSpan.Zero });
+        plan.Create(MongoAvatarPhotoRepository.CollectionName, userId, ttl);
     }
 
     private static void EnsureBannerPhotoIndexes(MongoIndexPlan plan)
@@ -503,7 +506,10 @@ public sealed class MongoIndexInitializer : IHostedService
         var userId = new CreateIndexModel<BannerPhotoBlobDocument>(
             Builders<BannerPhotoBlobDocument>.IndexKeys.Ascending(x => x.UserId),
             new CreateIndexOptions { Name = "banner_photos_userId" });
-        plan.Create(MongoBannerPhotoRepository.CollectionName, userId);
+        var ttl = new CreateIndexModel<BannerPhotoBlobDocument>(
+            Builders<BannerPhotoBlobDocument>.IndexKeys.Ascending(x => x.ExpiresAt),
+            new CreateIndexOptions { Name = "banner_photos_expiresAt_ttl", ExpireAfter = TimeSpan.Zero });
+        plan.Create(MongoBannerPhotoRepository.CollectionName, userId, ttl);
     }
 
     private static void EnsureEventPresenceIndexes(MongoIndexPlan plan)

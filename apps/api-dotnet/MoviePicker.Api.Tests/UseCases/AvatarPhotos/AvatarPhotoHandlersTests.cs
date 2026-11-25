@@ -12,7 +12,6 @@ using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Tests.Builders;
 using MoviePicker.Api.Tests.Logging;
-using MoviePicker.Api.Tests.UseCases.EventTemplates;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.AvatarPhotos;
@@ -22,7 +21,8 @@ public sealed class AvatarPhotoHandlersTests
     private static readonly DateTimeOffset Now = new(2026, 10, 3, 9, 0, 0, TimeSpan.Zero);
 
     private readonly InMemoryUserRepository _users = new();
-    private readonly InMemoryAvatarPhotoRepository _photos = new();
+    private readonly MovableClock _clock = new(Now);
+    private readonly InMemoryAvatarPhotoRepository _photos;
     private readonly MoviePickerOptions _options = new();
     private readonly CapturingLogger<AvatarPhotoWriter> _writerLogs = new();
     private readonly UploadAvatarPhotoHandler _upload;
@@ -31,11 +31,11 @@ public sealed class AvatarPhotoHandlersTests
 
     public AvatarPhotoHandlersTests()
     {
-        var clock = new FrozenClock(Now);
-        var writer = new AvatarPhotoWriter(_users, _photos, new InMemoryUnitOfWork(), clock, Options.Create(_options), _writerLogs);
+        _photos = new InMemoryAvatarPhotoRepository(_clock);
+        var writer = new AvatarPhotoWriter(_users, _photos, new InMemoryUnitOfWork(), _clock, Options.Create(_options), _writerLogs);
         _upload = new UploadAvatarPhotoHandler(writer);
         _delete = new DeleteAvatarPhotoHandler(writer);
-        _patch = new PatchUserProfileHandler(_users, new InMemoryUserNotificationRepository(), new InMemoryUnitOfWork(), Mock.Of<IUsageRecorder>(), clock);
+        _patch = new PatchUserProfileHandler(_users, new InMemoryUserNotificationRepository(), new InMemoryUnitOfWork(), Mock.Of<IUsageRecorder>(), _clock);
     }
 
     private async Task<User> UserAsync(string avatarId = "bolt") =>
@@ -73,6 +73,29 @@ public sealed class AvatarPhotoHandlersTests
     }
 
     [Fact]
+    public async Task Upload_JpegFromOutsideTheApp_IsStoredWithoutItsMetadataNorTheBytesAfterTheImage()
+    {
+        var user = await UserAsync();
+        var clean = ImageHeaders.Jpeg(256, 256);
+        var forged = ImageHeaders.WithExif(clean, "GPS 44.8378N 0.5792W", trailer: "<script>alert(1)</script>");
+
+        var profile = await _upload.HandleAsync(user.Id, Request(forged, "image/jpeg"));
+
+        Assert.Equal(clean, (await _photos.GetByKeyAsync(KeyOf(profile.AvatarId)))!.Data);
+    }
+
+    [Fact]
+    public async Task Upload_PngWithATextChunk_IsStoredWithoutIt()
+    {
+        var user = await UserAsync();
+        var clean = ImageHeaders.Png(200, 200);
+
+        var profile = await _upload.HandleAsync(user.Id, Request(ImageHeaders.WithTextChunk(clean, "Author: Lea Moreau"), "image/png"));
+
+        Assert.Equal(clean, (await _photos.GetByKeyAsync(KeyOf(profile.AvatarId)))!.Data);
+    }
+
+    [Fact]
     public async Task Upload_KeepsTheGeneratedAvatarToFallBackOn()
     {
         var user = await UserAsync("bolt");
@@ -84,7 +107,7 @@ public sealed class AvatarPhotoHandlersTests
     }
 
     [Fact]
-    public async Task Upload_ReplacingThePhoto_DeletesThePreviousOne()
+    public async Task Upload_ReplacingThePhoto_KeepsServingThePreviousOneForTheViewsStillShowingIt()
     {
         var user = await UserAsync();
         var first = await _upload.HandleAsync(user.Id, Request(Webp()));
@@ -92,6 +115,8 @@ public sealed class AvatarPhotoHandlersTests
         var second = await _upload.HandleAsync(user.Id, Request(ImageHeaders.Png(200, 200), "image/png"));
 
         Assert.NotEqual(first.AvatarId, second.AvatarId);
+        Assert.NotNull(await _photos.GetByKeyAsync(KeyOf(first.AvatarId)));
+        _clock.Advance(StoredPhoto.ReplacedPhotoLifetime);
         Assert.Null(await _photos.GetByKeyAsync(KeyOf(first.AvatarId)));
         Assert.NotNull(await _photos.GetByKeyAsync(KeyOf(second.AvatarId)));
     }
@@ -106,6 +131,7 @@ public sealed class AvatarPhotoHandlersTests
         { ImageHeaders.Png(1024, 1024), "image/png" },
         { [.. ImageHeaders.Png(256, 256), .. new byte[256 * 1024]], "image/png" },
         { ImageHeaders.Png(256, 256), "image/webp" },
+        { ImageHeaders.PngWithTruncatedChunk(256, 256), "image/png" },
         { [.. ImageHeaders.Png(256, 256), .. new byte[AvatarPhotoImage.MaxBytes]], "image/png" }
     };
 
@@ -154,6 +180,7 @@ public sealed class AvatarPhotoHandlersTests
         var second = await _upload.HandleAsync(owner.Id, Request(ImageHeaders.Png(200, 200), "image/png"));
 
         Assert.NotEqual(first.AvatarId, second.AvatarId);
+        _clock.Advance(StoredPhoto.ReplacedPhotoLifetime);
         Assert.Equal(1, await _photos.EstimatedCountAsync());
     }
 

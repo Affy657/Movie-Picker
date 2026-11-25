@@ -78,6 +78,7 @@ public static class RateLimitingExtensions
     public const string AvatarPhotosPolicy = "avatar-photos-get";
     public const string BannerPhotoUploadPolicy = "banner-photo-upload";
     public const string BannerPhotosPolicy = "banner-photos-get";
+    public const string ProfilePhotoReportPolicy = "profile-photo-report";
     public const string UsageCountPolicy = "usage-count";
 
     private const string ProxiedPartition = "proxied";
@@ -159,6 +160,7 @@ public static class RateLimitingExtensions
         new(AvatarPhotosPolicy, 300, 1),
         new(BannerPhotoUploadPolicy, 10, 60),
         new(BannerPhotosPolicy, 300, 1),
+        new(ProfilePhotoReportPolicy, 5, 60),
         new(UsageCountPolicy, 60, 1, QuotaScope.Address)
     ];
 

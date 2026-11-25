@@ -72,6 +72,19 @@ public sealed class OAuthProfilePhotoImporterTests
     }
 
     [Fact]
+    public async Task Google_PhotoWithMetadata_IsStoredWithoutIt()
+    {
+        var user = await NewUserAsync();
+        var clean = ImageHeaders.Jpeg(256, 256);
+        _google.Setup(g => g.FetchAsync(AccessToken, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ImageHeaders.WithExif(clean, "GPS 44.8378N 0.5792W"));
+
+        var imported = await _sut.ImportAsync(user, Login(), AccessToken);
+
+        Assert.Equal(clean, (await _photos.GetByKeyAsync(imported.AvatarPhoto!.Key))!.Data);
+    }
+
+    [Fact]
     public async Task Google_WithoutAPersonalPhoto_KeepsTheInitials()
     {
         var user = await NewUserAsync();

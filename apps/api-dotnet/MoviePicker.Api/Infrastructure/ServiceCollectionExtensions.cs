@@ -275,6 +275,9 @@ public static class ServiceCollectionExtensions
         var fromName = cfg["EMAIL_FROM_NAME"];
         if (!string.IsNullOrWhiteSpace(fromName))
             opts.EmailFromName = fromName.Trim();
+        var contactAddress = cfg["CONTACT_EMAIL_ADDRESS"];
+        if (!string.IsNullOrWhiteSpace(contactAddress))
+            opts.ContactEmailAddress = contactAddress.Trim();
         var resendKey = cfg["RESEND_API_KEY"];
         opts.ResendApiKey = string.IsNullOrWhiteSpace(resendKey) ? null : resendKey;
         var resendBase = cfg["RESEND_API_BASE_URL"];

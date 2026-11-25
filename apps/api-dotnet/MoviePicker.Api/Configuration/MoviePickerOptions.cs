@@ -69,6 +69,8 @@ public sealed class MoviePickerOptions
 
     public string EmailFromName { get; set; } = "Movie Picker";
 
+    public string ContactEmailAddress { get; set; } = "contact@movie-picker.fr";
+
     public string? ResendApiKey { get; set; }
 
     public string ResendApiBaseUrl { get; set; } = "https://api.resend.com";

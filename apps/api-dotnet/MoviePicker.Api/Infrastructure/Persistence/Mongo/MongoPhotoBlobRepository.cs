@@ -52,6 +52,14 @@ public abstract class MongoPhotoBlobRepository<TDocument> : IPhotoBlobRepository
         await _collection.DeleteOneAsync(d => d.Key == key, ct);
     }
 
+    public async Task ScheduleDeletionAsync(string key, DateTimeOffset deleteAt, CancellationToken ct = default)
+    {
+        await _collection.UpdateOneAsync(
+            d => d.Key == key,
+            Builders<TDocument>.Update.Set(d => d.ExpiresAt, deleteAt.UtcDateTime),
+            cancellationToken: ct);
+    }
+
     public async Task<long> DeleteByUserIdAsync(string userId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(userId))
@@ -78,4 +86,8 @@ public abstract class PhotoBlobDocument
 
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
+
+    [BsonElement("expiresAt")]
+    [BsonIgnoreIfNull]
+    public DateTime? ExpiresAt { get; set; }
 }

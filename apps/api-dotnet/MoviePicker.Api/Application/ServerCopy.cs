@@ -239,6 +239,64 @@ public static class ServerCopy
             """;
     }
 
+    public static class PhotoReportEmail
+    {
+        public const string AvatarPhoto = "Photo de profil";
+        public const string BannerPhoto = "Bannière";
+
+        private const string Intro = "Un membre l’a signalée depuis le profil public. Elle reste affichée tant qu’elle n’est pas retirée.";
+
+        public static string Subject(string photo, string handle) => $"[modération] {photo} signalée : @{handle}";
+
+        public static string HtmlBody(
+            string photo,
+            string handle,
+            string profileUrl,
+            string imageUrl,
+            string reporterId,
+            string removal,
+            string siteUrl) => BrandedEmailHtml.Render(new BrandedEmail(
+            Lang: "fr",
+            Title: Subject(photo, handle),
+            Heading: Heading(photo, handle),
+            Intro: [Intro, ImageLine(imageUrl)],
+            ButtonLabel: "Voir le profil",
+            ButtonUrl: profileUrl,
+            FallbackIntro: "Si le bouton ne fonctionne pas, copiez cette adresse dans votre navigateur :",
+            Outro: [ReporterLine(reporterId), RemovalLine(removal)],
+            Signature: "Movie Picker",
+            SiteUrl: siteUrl));
+
+        public static string TextBody(
+            string photo,
+            string handle,
+            string profileUrl,
+            string imageUrl,
+            string reporterId,
+            string removal) => $"""
+            {Heading(photo, handle)}
+
+            {Intro}
+
+            Profil : {profileUrl}
+            {ImageLine(imageUrl)}
+
+            {ReporterLine(reporterId)}
+
+            {RemovalLine(removal)}
+            """;
+
+        private static string Heading(string photo, string handle) => $"{photo} de @{handle} signalée";
+
+        private static string ImageLine(string imageUrl) => $"Image signalée : {imageUrl}";
+
+        private static string ReporterLine(string reporterId) =>
+            $"Signalement envoyé par le compte {reporterId}, seule donnée transmise sur son auteur.";
+
+        private static string RemovalLine(string removal) =>
+            $"Pour la retirer : {removal} (procédure dans docs/runbook-photo-moderation.md).";
+    }
+
     public static class English
     {
         public static class VerificationEmail
