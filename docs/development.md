@@ -128,8 +128,9 @@ Tous se lancent à la racine du dépôt.
 | `pnpm dev:full`, `pnpm dev:web`, `pnpm dev:api-dotnet` | Démarrage local |
 | `pnpm build` | Build du front par Turbo |
 | `pnpm lint`, `pnpm run lint:eslint` | Types puis règles ESLint côté front ; la seconde forme ne joue que les règles |
-| `pnpm run check:static` | Toutes les portes statiques : architecture, tests des scripts, compatibilité du contrat avec la version publiée, `pnpm lint`, Prettier, knip ; c'est le hook pre-push, le job `lint-web` et la voie node de `verify:local` |
+| `pnpm run check:static` | Toutes les portes statiques : architecture, tests des scripts, accord des secrets montés, compatibilité du contrat avec la version publiée, `pnpm lint`, Prettier, knip ; c'est le hook pre-push, le job `lint-web` et la voie node de `verify:local` |
 | `pnpm run check:architecture` | Règles d'architecture |
+| `pnpm run check:secret-mounts` | Compare, pour la production et la recette, les secrets que `deploy.yml` monte aux listes de `infra/terraform` ; échoue sur tout écart absent de `ALLOWED_GAPS`, et sur un écart autorisé qui n'existe plus |
 | `pnpm run check:unused` | Fichiers, exports et dépendances inutilisés (knip) |
 | `pnpm run check:workflows` | actionlint (+ shellcheck) et zizmor sur `.github/`, par Docker, joué tel quel par le job `lint-workflows` |
 | `pnpm run check:terraform` | `terraform fmt -check` puis `validate` sur chaque module racine de `infra/terraform/`, par Docker, joué tel quel par le job `lint-terraform` |
