@@ -1,0 +1,32 @@
+{
+  "removals": [
+    {
+      "what": "The flat fields of LetterboxdSyncResponse (added, removed, unmatchedTitles, pendingChoices, totalOnLetterboxd, totalTruncated and their watched twins), copies of what lists carries per list. ALLOWED_REMOVALS in scripts/check-contract-compat.mjs lets the contract drop them on the same date. Regenerate the contract with pnpm run openapi:sync",
+      "why": "The front of 1.31.1 and older reads them, deploy.yml publishes the API before the front, and a service worker keeps an old front for days: the API N serves the front N-1 (AGENTS.md, Compatible avec la version d'avant)",
+      "after": { "release": "v1.32.1", "days": 30 },
+      "exists": {
+        "path": "apps/api-dotnet/MoviePicker.Api/Application/DTOs/LetterboxdImportDtos.cs",
+        "pattern": "class LetterboxdSyncResponse\\b(?:(?!\\n\\})[\\s\\S])*\\bpublic int (?:Watched)?Added\\b"
+      }
+    },
+    {
+      "what": "The user document fields letterboxdLastSyncAt and letterboxdLastSyncError, still written next to letterboxdListSyncs and read as a fallback by LetterboxdListStatus.Of. For an account that has not synced since 1.32.1 the fallback holds its only sync date: copy it into letterboxdListSyncs by a migration, then stop writing and reading the two fields. UserProfileResponse keeps letterboxdLastSyncAt and letterboxdLastSyncError, derived from the per-list syncs, as long as a front reads them",
+      "why": "The API of 1.31.1 reads only these two fields: a revision of that version still serving, or brought back by a rollback, would show a stale sync date and error (AGENTS.md, Compatible avec la version d'avant)",
+      "after": { "release": "v1.32.1", "days": 30 },
+      "exists": {
+        "path": "apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/Mongo/UserDocument.cs",
+        "pattern": "\\[BsonElement\\(\"letterboxdLastSync(?:At|Error)\"\\)\\]"
+      }
+    },
+    {
+      "what": "The request size limit RequestBodyLimits.AttachmentsBytes (25 MB) on the idea suggestion route, kept after the suggestions lost their attachments; the route falls back to the default limit. The Letterboxd import keeps its own use of the constant",
+      "why": "A front from before the attachments were removed, kept by its service worker, can still send screenshots and would get a 413 under the default limit: the API N serves the front N-1 (AGENTS.md, Compatible avec la version d'avant). The removal ships in the first release after v1.32.1",
+      "after": { "firstReleaseAfter": "v1.32.1", "days": 30 },
+      "exists": {
+        "path": "apps/api-dotnet/MoviePicker.Api/Controllers/IdeaSuggestionsController.cs",
+        "pattern": "RequestBodyLimits\\.AttachmentsBytes\\b"
+      }
+    }
+  ],
+  "migrationAppliedAt": {}
+}
