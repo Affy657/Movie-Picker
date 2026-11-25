@@ -40,13 +40,12 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-052 | Sécurité et accès | le secret `GITHUB_TOKEN` de l'API est le jeton du `gh` CLI du poste |
 | DEBT-053 | Sécurité et accès | l'API et la sauvegarde parlent à Atlas en administrateur du cluster, le même que le poste de dev |
 
-### Différées (4)
+### Différées (3)
 
 | Dette | Zone | Sujet |
 |---|---|---|
 | DEBT-040 | API et données | le seed de développement est compilé dans l'assembly de production |
 | DEBT-064 | API et données | `GetByIdOrSlugAsync` ne résout plus que le slug |
-| DEBT-026 | Front | le flou de fond des barres collantes n'a jamais été mesuré au défilement |
 | DEBT-114 | Tests, CI et outillage | trois règles SonarJS ne tournent qu'en CI |
 
 ---
@@ -197,16 +196,6 @@ Ne se traitent que quand leur `declencheur` survient.
 - verify: `grep -rln "ByIdOrSlug" apps/api-dotnet --include=*.cs | grep -v /obj/` ; encore ouvert tant qu'il rend un fichier
 - fix: renommer en `GetBySlugAsync` et `GetRequiredBySlugAsync`, `idOrSlug` en `slug` partout, y compris le segment de route, puis `pnpm run openapi:export` et `pnpm run openapi:types`
 - piege: renommer le segment de route change les clés de `paths` dans le contrat OpenAPI, donc le schéma généré et `apiContract.test.ts` côté front ; les faire dans le même commit. La fusion de `v1.7` apporte aussi une trentaine de chemins d'API construits sans `apiPath` (dont `setMovieRating` et `deleteMovieRating`, aujourd'hui dans `features/events/api/eventMoviesApi.ts`) : les convertir dans le même geste, `grep -rln '/events/\${' apps/web/src --include=*.ts | grep -v test` ne doit plus rien rendre.
-
-## DEBT-026 le flou de fond des barres collantes n'a jamais été mesuré au défilement
-
-- state: differe
-- declencheur: un signalement de défilement saccadé sur mobile, ou une mesure de fluidité posée sur un Android milieu de gamme
-- impact: `backdrop-filter: blur(12px)` sur la barre de `AppShell` et `blur(10px)` sur `EventDetailHeader` recomposent la zone floutée à chaque image pendant le défilement ; premier suspect connu de saccades sur mobile, sans preuve ici
-- ou: `apps/web/src/app/components/AppShell.module.css`, `apps/web/src/features/events/pages/event-detail/EventDetailHeader.module.css` (les deux barres collantes ; les deux autres occurrences, `Modal` et un badge de la démo de la landing, n'en sont pas)
-- verify: `grep -rn "backdrop-filter" apps/web/src --include=*.css`
-- fix: mesurer d'abord (Performance panel, frames longues au défilement) ; si confirmé, fond opaque légèrement translucide sans flou, ou flou réservé à `(hover: hover)`
-- piege: ne pas retirer le flou sur une intuition, c'est un choix visuel de l'utilisateur. Mesure avant geste.
 
 ## DEBT-114 trois règles SonarJS ne tournent qu'en CI
 
@@ -397,6 +386,7 @@ Mesuré, sans gain, retiré. Ne pas rejouer sans une raison neuve.
 - **I11 accélérer la suite Vitest** : fait le 2026-11-16 par le pool `vmForks`, qui crée jsdom une fois par worker au lieu d'une fois par fichier (53 % du temps mesuré) en gardant l'isolation des modules : 515 s vers 169 s sans couverture, 134 s avec. Il exige `apps/web/vitest.vm-globals.ts` (Web Streams et `crypto`, absents du contexte vm, MSW en a besoin) et interdit de remplacer `location` entier (`PwaAutoUpdate` reçoit son rechargement en prop). Toujours rejetés : `--no-isolate` (casse 147 tests), happy-dom (diverge de la CI). Mesuré sans gain : brider les workers, 6 workers donnent 1 071 s.
 - **I12 rapprocher le cluster Atlas (AWS eu-west-1) de Cloud Run (europe-west1)** : 60 sondes `/health/ready` en production, p50 6 ms, p90 9 ms. Un cluster GCP gagnerait au plus 5 ms par opération et ≈ 30 ms par cycle de sondage, contre une migration avec interruption. Le temps va à TMDB (E1) et au nombre d'allers-retours (DEBT-008).
 - **I13 vérification de validité du secret scanning** (ex-DEBT-056) : l'API répond 200 et laisse le réglage désactivé, et la page Settings / Advanced Security du dépôt ne le propose plus (relu le 2026-11-25 : Secret Protection n'offre que la protection au push, active). Rien à cocher.
+- **I14 retirer le flou des barres collantes pour fluidifier le défilement** (ex-DEBT-026) : mesuré le 2026-11-26 sur `/films/tendances`, Pixel 5 émulé, CPU ralenti 4 et 6 fois, cinq passages alternés, flou réellement actif dans Chromium : aucune pénalité (CPU 6x, p95 33,4 ms avec flou contre 66,7 ms sans, LoAF 865 contre 1 149 ms). Limite : Chromium sans écran compose en logiciel. Rouvrir sur une mesure faite sur un vrai téléphone Android.
 
 # Écartées
 

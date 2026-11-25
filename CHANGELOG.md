@@ -29,6 +29,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Fixed
 
+- **Le flou derrière la barre du haut, les barres d’une soirée et les fenêtres** est de retour dans Chrome, Edge et Firefox : il ne s’affichait plus que dans Safari.
 - **Les titres et résumés des films suivent la langue de l’interface** : en anglais, la recherche, l’accueil, les sagas, la fiche d’un film et la liste des films d’une soirée affichent les titres TMDB en anglais.
 - **Après un changement de photo de profil ou de bannière**, l’ancienne image reste affichée quelques minutes là où elle était encore à l’écran (participants d’une soirée, vos listes), au lieu de laisser place aux initiales jusqu’au prochain rechargement.
 - **Une soirée de groupe dont l’hôte vous a retiré** ne vous est plus proposée, ni dans Mes soirées, ni sur la page du groupe, ni par une annonce.
