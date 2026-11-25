@@ -11,7 +11,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 5. Deux dettes qui se règlent par le même geste n'en font qu'une, sous l'identifiant le plus ancien ; les identifiants absorbés restent cités dans `refs`.
 6. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 7. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
-8. **Contraintes** (ce qui casse en silence si on y touche) et **Impasses** (essayé, mesuré, sans gain), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
+8. **Contraintes** (ce qui casse en silence si on y touche), **Impasses** (essayé, mesuré, sans gain) et **Écartées** (arbitré, ne se fait pas à cette échelle), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
 
 Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state: differe`) / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` / `refs`. Champs absents = sans objet.
 
@@ -30,7 +30,7 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-102 | Tests, CI et outillage | les doublures de l'API dans les tests front restent écrites à la main |
 | DEBT-116 | Tests, CI et outillage | la porte Lighthouse mesure un profil que l'API ne renvoie pas |
 
-### Geste humain (21)
+### Geste humain (12)
 
 | Dette | Zone | Sujet |
 |---|---|---|
@@ -38,25 +38,16 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-120 | Produit | l'heure de création d'un film trahit son proposant dans une soirée anonyme |
 | DEBT-096 | API et données | l'adaptateur en mémoire reste dans l'assembly de production |
 | DEBT-101 | API et données | les titres ajoutés par un membre à la liste d'un autre ne suivent pas la suppression de son compte |
-| DEBT-009 | Infra et déploiement | palier Atlas jamais confirmé |
 | DEBT-037 | Infra et déploiement | les jobs Cloud Scheduler restent décrits par le pipeline, et le secret de l'ancien jeton partagé survit |
-| DEBT-049 | Infra et déploiement | les alertes n'ont qu'un canal, une boîte de réception |
 | DEBT-054 | Infra et déploiement | l'apex porte deux revendications Hosting, et les quatre domaines servent encore un certificat temporaire |
-| DEBT-062 | Infra et déploiement | les sauvegardes vivent dans le projet de production |
-| DEBT-027 | Sécurité et accès | `SENTRY_AUTH_TOKEN` est encore un secret de dépôt |
 | DEBT-030 | Sécurité et accès | les captures des suggestions d'idées sont hébergées sur une branche du dépôt public |
 | DEBT-032 | Sécurité et accès | deux modèles d'autorisation hôte coexistent, le jeton porteur et le compte créateur |
-| DEBT-039 | Sécurité et accès | le jeton d'accès en lecture TMDB n'existe pas encore dans Secret Manager |
 | DEBT-048 | Sécurité et accès | la zone DNS n'a pas de CAA et sa politique DMARC n'observe rien |
-| DEBT-050 | Sécurité et accès | le projet vit hors organisation, sous un seul compte personnel |
-| DEBT-051 | Sécurité et accès | le poste de développement porte la clé TMDB de production |
 | DEBT-052 | Sécurité et accès | le secret `GITHUB_TOKEN` de l'API est le jeton du `gh` CLI du poste |
 | DEBT-053 | Sécurité et accès | l'API et la sauvegarde parlent à Atlas en administrateur du cluster, le même que le poste de dev |
-| DEBT-056 | Sécurité et accès | le secret scanning ne vérifie pas la validité des secrets qu'il trouve |
 | DEBT-065 | Sécurité et accès | l'inscription ne vérifie pas que l'adresse e-mail appartient à l'inscrit |
-| DEBT-115 | Tests, CI et outillage | les mises à jour de sécurité Dependabot des dépendances transitives échouent |
 
-### Différées (33)
+### Différées (25)
 
 | Dette | Zone | Sujet |
 |---|---|---|
@@ -65,14 +56,9 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-095 | Produit | la page des films vus d'un profil ne liste que les 1 000 premiers |
 | DEBT-109 | Produit | les titres de films restent en français dans l'interface anglaise |
 | DEBT-112 | Produit | un participant retiré ne revient que par une invitation qui exige de le suivre |
-| DEBT-005 | API et données | enrichissement TMDB sur le chemin sondé |
-| DEBT-006 | API et données | cache en mémoire local à l'instance |
-| DEBT-007 | API et données | affiches servies en octets depuis Mongo à travers Cloud Run |
 | DEBT-008 | API et données | le sondage de repli à 3,5 s fixe encore le plafond de la base quand le flux manque |
-| DEBT-035 | API et données | la diffusion push se fait dans la requête, sans file ni reprise |
 | DEBT-040 | API et données | le seed de développement est compilé dans l'assembly de production |
 | DEBT-041 | API et données | la date et l'heure d'une soirée sont des chaînes reparsées à chaque lecture |
-| DEBT-061 | API et données | la recherche de comptes parcourt la collection `users` à chaque frappe |
 | DEBT-064 | API et données | `GetByIdOrSlugAsync` ne résout plus que le slug |
 | DEBT-066 | API et données | les disponibilités en streaming de Ma liste s'arrêtent aux 500 films les plus récents |
 | DEBT-072 | API et données | le serveur croit le titre et l'année d'un favori envoyés par le client |
@@ -81,16 +67,13 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-097 | API et données | six migrations terminées et huit méthodes de port attendent la fin de la rétention des sauvegardes |
 | DEBT-107 | API et données | les chiffres d'un groupe relisent toutes ses soirées passées |
 | DEBT-026 | Front | le flou de fond des barres collantes n'a jamais été mesuré au défilement |
-| DEBT-057 | Front | les images de la page bloquent la lecture CORS du canvas de la story |
 | DEBT-111 | Front | les schémas de `/tech` n'ont pas de variante verticale sur téléphone |
 | DEBT-043 | Infra et déploiement | toute adresse inconnue répond 200 |
 | DEBT-044 | Infra et déploiement | le conteneur de l'API est décrit à deux endroits, le pipeline et Terraform |
 | DEBT-045 | Infra et déploiement | la production monte un porte-clés Data Protection qu'elle ne lit jamais |
-| DEBT-046 | Infra et déploiement | les secrets sont répliqués hors de l'Union européenne et les journaux vivent en `global` |
 | DEBT-047 | Infra et déploiement | le service Cloud Run n'a qu'une sonde de démarrage TCP |
 | DEBT-060 | Infra et déploiement | aucun parcours utilisateur n'est vérifié en production |
 | DEBT-075 | Infra et déploiement | juste après un déploiement du front, `/r/<slug>` et `/e/<slug>` peuvent servir une coquille périmée |
-| DEBT-055 | Sécurité et accès | l'identité de recette peut publier sur le site web de production |
 | DEBT-073 | Sécurité et accès | une photo de profil envoyée hors de l'app garde ses métadonnées, et l'ancienne disparaît trop tôt |
 | DEBT-114 | Tests, CI et outillage | trois règles SonarJS ne tournent qu'en CI |
 
@@ -166,7 +149,7 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 
 - state: humain
 - bloque: décision produit sur le plafond de participants
-- impact: `EventConfig.MaxParticipantsCap = 500`. Avec le flux temps réel (1.14.0), la base ne dépend plus du nombre de participants, mais chaque participant connecté occupe une requête Cloud Run : `EventStreamGate` accepte 60 flux par instance (sur 80 requêtes simultanées), 6 par compte et 20 par adresse anonyme, et la production plafonne à 5 instances (C12), soit 300 flux. Au-delà, les participants refusés retombent sur le sondage de DEBT-008, à environ 4,3 opérations Mongo par seconde chacun sur une soirée active : une soirée de 500 participants rouvrirait le problème d'avant sur le M0 présumé (DEBT-009). Le front plafonne de son côté à 300 participants et 15 propositions (`MAX_EVENT_PARTICIPANTS`), l'API à 500 et 100 : une valeur plus haute, posée par l'API directe, s'affiche telle quelle et le panneau d'hôte refuse d'enregistrer tant qu'elle n'est pas baissée. Aucun client publié n'écrit une telle valeur.
+- impact: `EventConfig.MaxParticipantsCap = 500`. Avec le flux temps réel (1.14.0), la base ne dépend plus du nombre de participants, mais chaque participant connecté occupe une requête Cloud Run : `EventStreamGate` accepte 60 flux par instance (sur 80 requêtes simultanées), 6 par compte et 20 par adresse anonyme, et la production plafonne à 5 instances (C12), soit 300 flux. Au-delà, les participants refusés retombent sur le sondage de DEBT-008, à environ 4,3 opérations Mongo par seconde chacun sur une soirée active : une soirée de 500 participants rouvrirait le problème d'avant sur le palier M0 du cluster. Le front plafonne de son côté à 300 participants et 15 propositions (`MAX_EVENT_PARTICIPANTS`), l'API à 500 et 100 : une valeur plus haute, posée par l'API directe, s'affiche telle quelle et le panneau d'hôte refuse d'enregistrer tant qu'elle n'est pas baissée. Aucun client publié n'écrit une telle valeur.
 - ou: `apps/api-dotnet/MoviePicker.Api/Domain/Entities/Event.cs` (`MaxParticipantsCap`), `apps/api-dotnet/MoviePicker.Api/Application/UseCases/EventLive/EventLiveOptions.cs` (plafonds du flux), `apps/web/src/features/events/types.ts` (`MAX_EVENT_PARTICIPANTS`)
 - verify: `grep -n "MaxParticipantsCap = \|MAX_EVENT_PARTICIPANTS = " apps/api-dotnet/MoviePicker.Api/Domain/Entities/Event.cs apps/web/src/features/events/types.ts` ; encore ouvert tant que le plafond de l'API dépasse 50 ou que le front garde sa propre constante
 - fix: aligner `MaxParticipantsCap` sur ce que le flux tient sans repli massif (50 laisse de la marge à six soirées pleines simultanées), ou monter `max_instance_count` en baissant le pool Mongo par instance (C12) ; puis un seul plafond, rendu par l'API et lu par le front
@@ -205,15 +188,6 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 - fix: selon la décision, l'ajouter à la cascade de `DeleteAccountHandler` ou à l'export, et retirer l'exemption
 - fini-quand: plus d'exemption pour `AddedByUserId`
 
-## DEBT-009 palier Atlas jamais confirmé
-
-- state: humain
-- bloque: l'accès MCP Atlas est désactivé pour les deux organisations du compte, un Organization Owner doit activer l'accès client IA dans les réglages de l'organisation ; la console Atlas est refusée à l'agent même par l'extension Chrome
-- impact: limites par palier (documentation Atlas) : **M0** 100 opérations par seconde, 0,5 Go, 500 connexions, 10 Go de transfert par semaine glissante ; **Flex** 500 opérations par seconde, 5 Go, 500 connexions. Tout indique un M0 (cluster `cluster0`, replica set de 3 nœuds en MongoDB 8.0, 61 Mo occupés par dev et prod ensemble, AWS eu-west-1, voir I12), sans lecture directe du palier. DEBT-008 et DEBT-033 sont chiffrées sur M0 ; sur un Flex leurs seuils sont cinq fois plus larges.
-- verify: lire le palier dans la console Atlas, onglet du cluster ; encore ouvert tant que la lecture n'a pas été faite. `atlas-list-clusters` via le MCP mongodb le rend aussi, une fois l'accès IA activé.
-- fini-quand: le palier est lu et le mot « présumé » retiré de DEBT-008 et DEBT-033
-- piege: sans le MCP, tout ce que le cluster dit de lui-même se lit par `mongosh` sans rien installer : `docker run --rm mongo:8 mongosh --quiet "$MONGODB_URI" --eval 'db.serverStatus().connections'`, et `db.stats()` par base pour les tailles. Le palier lui-même ne se lit que dans la console, `serverStatus` ne le dit pas.
-
 ## DEBT-037 les jobs Cloud Scheduler restent décrits par le pipeline, et le secret de l'ancien jeton partagé survit
 
 - state: humain
@@ -225,16 +199,6 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 - fini-quand: `SCHEDULER_TOKEN` n'existe plus dans Secret Manager, ni dans `main.tf`, les jobs sont dans l'état Terraform, `deploy.yml` ne les crée plus et `plan` est vide
 - piege: une révision antérieure au 2026-09-21 ramenée par `rollback.yml` monte encore `SCHEDULER_TOKEN:latest` et attend l'en-tête : le secret doit survivre tant qu'une telle révision est dans le dépôt d'images (30 jours), et les jobs, qui n'envoient plus l'en-tête, recevraient de toute façon un 401 d'une telle révision. L'audience attendue est `VITE_API_URL` sans barre finale (`SCHEDULER_OIDC_AUDIENCE`), pas l'URL `run.app` que les jobs appellent. Le service est public (`allUsers` en `run.invoker`, tenu par Terraform dans le module `cloud-run-api`, plus par `deploy.yml`), la vérification du jeton se fait dans l'API, pas par IAM Cloud Run ; le webhook Ko-fi reste sur son jeton, Ko-fi ne signe pas.
 
-## DEBT-049 les alertes n'ont qu'un canal, une boîte de réception
-
-- state: humain
-- bloque: le canal SMS existe dans le module `monitoring` mais n'est créé que si `alert_sms_number` est renseigné, et seul le propriétaire du numéro peut le choisir
-- impact: les huit politiques (API, base et front indisponibles, erreurs 5xx, latence, nouveau compte, sauvegarde périmée, échec d'une passe planifiée) n'atteignent qu'une adresse e-mail. Une nuit de soirée sans lecture de la boîte, c'est une panne vue le lendemain.
-- ou: `infra/terraform/modules/monitoring/main.tf` (`google_monitoring_notification_channel.sms`, `count` sur la variable vide), `infra/terraform/environments/production/variables.tf` (`alert_sms_number`), `scripts/terraform.mjs` (`ALERT_SMS_NUMBER`), `.github/actions/terraform-plan/action.yml` (`alert-sms-number`)
-- verify: `gh secret list --env infra-apply | grep -c ALERT_SMS_NUMBER` ; encore ouvert tant que la commande rend 0
-- fix: un numéro en E.164 dans `.env` (`ALERT_SMS_NUMBER`) et dans les secrets des environnements GitHub `infra-apply` et `infra-plan` ainsi que Dependabot, puis `apply` par `infra.yml` : la ressource se crée, les politiques la prennent par `local.channels`
-- piege: le numéro est une donnée personnelle : la variable est `sensitive`, il ne va ni dans un `.tf`, ni dans un `tfvars` suivi, ni dans ce fichier. Le canal SMS de Cloud Monitoring demande une vérification du numéro après création (console, Canaux de notification) : tant qu'elle n'est pas faite, le canal existe et ne sonne pas.
-
 ## DEBT-054 l'apex porte deux revendications Hosting, et les quatre domaines servent encore un certificat temporaire
 
 - state: humain
@@ -244,33 +208,6 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 - verify: `curl -s -H 'accept: application/dns-json' 'https://cloudflare-dns.com/dns-query?name=movie-picker.fr&type=TXT' | grep -o 'hosting-site=[a-z-]*' | sort -u | wc -l` ; encore ouvert tant que la commande rend autre chose que 1
 - fix: (humain) supprimer le TXT `hosting-site=movie-picker-web-legacy` de l'apex dans le manager OVH, garder `hosting-site=movie-picker-web`. (agent) une heure plus tard, lire `pnpm run terraform -- output web_dns` : `web.movie-picker.fr` doit rester `OWNERSHIP_ACTIVE` (sinon remettre le TXT et chercher pourquoi le CNAME ne suffit pas), l'apex doit perdre son `issues` (`GET https://firebasehosting.googleapis.com/v1beta1/projects/<PROJET_GCP>/sites/movie-picker-web/customDomains/movie-picker.fr` avec un jeton gcloud et `x-goog-user-project`), puis `cert_type` doit passer `GROUPED` sur les quatre domaines dans les 24 heures ; s'il reste `TEMPORARY` au 2026-10-01, ouvrir un ticket Firebase depuis la console (le certificat temporaire n'est pas renouvelé par le projet).
 - piege: ne pas supprimer le TXT `hosting-site=movie-picker-web`, il prouve l'apex lui-même (A `199.36.158.100`). Ne pas sonder `web.movie-picker.fr` en boucle pendant la vérification : l'edge garde les 404 déjà servis, et seule une nouvelle release du site legacy (`gh workflow run web-legacy.yml --ref master`) purge ce cache.
-
-## DEBT-062 les sauvegardes vivent dans le projet de production
-
-- state: humain
-- bloque: créer un second projet GCP, avec sa facturation, est un geste du propriétaire du compte
-- impact: les archives quotidiennes et mensuelles sont dans un bucket du projet de production : une compromission du projet (propriétaire, identité Terraform) atteint la production et ses sauvegardes d'un même geste. Depuis le 2026-09-23 l'identité de sauvegarde ne supprime plus rien hors `pending/` (liaison conditionnelle), et le versioning plus la suppression douce de 7 jours restent la seule défense contre une suppression par le propriétaire.
-- ou: `infra/terraform/environments/production/main.tf` (bucket de sauvegarde, module `backup`), `.github/workflows/backup-mongo.yml`
-- verify: `grep -c "google_storage_bucket\" \"backups" infra/terraform/environments/production/main.tf` ; encore ouvert tant que la commande rend 1
-- fix: copier chaque archive vérifiée vers un bucket d'un second projet, en écriture seule pour l'identité de sauvegarde, avec une rétention verrouillée (`retention_policy` et `is_locked`) de 30 jours
-- piege: une rétention verrouillée ne se raccourcit plus, pas même par le propriétaire, et empêche la suppression du bucket jusqu'à son terme : la poser d'abord sur un bucket d'essai
-- refs: A17 de l'audit de conception du 2026-09-22, DEBT-050 (projet hors organisation)
-
-## DEBT-027 `SENTRY_AUTH_TOKEN` est encore un secret de dépôt
-
-- state: humain
-- bloque: un jeton d'organisation Sentry ne se crée que dans son interface (`Settings / Auth Tokens`), l'API MCP ne l'expose pas ; la valeur d'un secret GitHub ne se relit pas, donc il faut le ressaisir. L'agent ne manipule pas de jeton en clair, le geste entier est humain.
-- impact: le seul secret de déploiement lisible par n'importe quel workflow sur n'importe quelle branche, tout le reste vit dans les environnements `production` et `staging` (politique de branche `master`). Portée annoncée : créer des releases et des deploys Sentry ; si la valeur est encore le jeton personnel posé à la mise en place de Sentry, elle lit aussi les issues et les événements, à confirmer dans `Settings / Auth Tokens` au moment du remplacement.
-- ou: `Settings / Secrets and variables / Actions`, secret de dépôt `SENTRY_AUTH_TOKEN` ; jobs `deploy-api`, `deploy-front` de `deploy.yml` et `rollback` de `rollback-front.yml`
-- verify: `gh secret list --json name --jq '[.[].name] | join(",")'` rend `SENTRY_AUTH_TOKEN,SONAR_TOKEN` ; réglé quand il ne rend plus que `SONAR_TOKEN`
-- fix: créer un nouveau jeton d'organisation Sentry (scopes `project:releases` et `org:read`), puis :
-  ```bash
-  gh secret set SENTRY_AUTH_TOKEN --env production
-  gh secret set SENTRY_AUTH_TOKEN --env staging
-  gh secret delete SENTRY_AUTH_TOKEN
-  ```
-  révoquer l'ancien jeton dans Sentry. Les jobs `build-front`, `deploy-front` et `deploy-api` tournent dans `environment: ${{ inputs.stage }}` : sans le secret dans `staging`, la recette perd ses source maps sans le signaler.
-- piege: `SONAR_TOKEN` reste volontairement au niveau du dépôt, le job `sonar` tourne sur les PR, que la politique de branche de `production` exclurait. Tout job qui lit un secret de déploiement porte `environment: production` ; sans cette ligne il lirait une valeur vide.
 
 ## DEBT-030 les captures des suggestions d'idées sont hébergées sur une branche du dépôt public
 
@@ -293,21 +230,6 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 - fini-quand: plus aucun `hostToken` hors `archive/`, et `EventHost.IsHost` ne prend qu'un identifiant de compte
 - piege: les soirées créées avant le compte obligatoire n'ont pas de `CreatorUserId` (`events_creatorUserId` est `Sparse` pour cette raison), leur hôte perdrait ses commandes. Compter avant de retirer le jeton, par `mongosh` : `db.events.countDocuments({creatorUserId:{$exists:false}, closedAt:null})` ; si le compte n'est pas nul, attendre la clôture de ces soirées ou les rattacher par migration.
 
-## DEBT-039 le jeton d'accès en lecture TMDB n'existe pas encore dans Secret Manager
-
-- state: humain
-- bloque: créer le secret `TMDB_READ_ACCESS_TOKEN` (le « API Read Access Token » de la page API du compte TMDB) dans Secret Manager ; l'agent ne manipule pas de jeton en clair et les écritures Secret Manager lui sont refusées (`AGENTS.md`, accès outils)
-- impact: `TmdbAuthenticationHandler` envoie le jeton v4 en `Authorization: Bearer` quand il existe et retombe sur la clé v3 en `api_key` dans la query string à défaut. Tant que le secret manque, le repli tourne en production : la clé traverse l'adresse de chaque requête sortante vers TMDB. `SensitiveQueryRedaction` et `SentryBeforeSend.RedactBreadcrumb` la masquent côté API et Sentry, le risque restant est toute trace hors de l'API (proxy, capture réseau, journal d'un intermédiaire).
-- ou: `.github/workflows/deploy.yml` (le bloc `gcloud secrets describe TMDB_READ_ACCESS_TOKEN`), `apps/api-dotnet/MoviePicker.Api/Infrastructure/Tmdb/TmdbAuthenticationHandler.cs`
-- verify: `gcloud secrets describe TMDB_READ_ACCESS_TOKEN --format='value(name)'` ; encore ouvert tant que la commande échoue
-- fix: ajouter `TMDB_READ_ACCESS_TOKEN` à `api_secret_names` dans `infra/terraform/environments/production/main.tf`, `pnpm run terraform -- apply` (crée le secret vide et son `secretAccessor` pour l'identité d'exécution), puis relever le jeton dans TMDB et, sans jamais le coller dans un fichier ni dans la conversation :
-  ```bash
-  gcloud secrets versions add TMDB_READ_ACCESS_TOKEN --data-file=<FICHIER_TEMPORAIRE_SUPPRIME_ENSUITE>
-  ```
-  puis `gh workflow run deploy.yml --ref master -f target=api` (geste de l'utilisateur), vérifier que la révision active porte la variable (`gcloud run services describe <SERVICE> --region <REGION> --format=yaml | grep -A2 TMDB_READ_ACCESS_TOKEN`), enfin révoquer la clé v3 côté TMDB et retirer `TMDB_API_KEY` de `deploy.yml`, puis de `api_secret_names` (lever d'abord `deletion_protection` dans `modules/secrets/main.tf` pour cet `apply`, qui détruit le secret). Le code garde le repli `api_key` pour le poste de travail, `.env.example` documente les deux.
-- fini-quand: le secret existe, la révision active le porte, la clé v3 est révoquée et `TMDB_API_KEY` n'apparaît plus dans `deploy.yml`
-- piege: ne pas révoquer la clé v3 avant que la révision qui porte le jeton serve le trafic : `deploy.yml` ne passe le secret que s'il existe au moment du déploiement, une révision antérieure n'a que la clé. Le jeton v4 est accepté par l'API v3 de TMDB, c'est documenté et `TmdbAuthenticationHandlerTests` le suppose, mais seul un appel réel le prouve : après le déploiement, une recherche de film dans l'application est la vérification.
-
 ## DEBT-048 la zone DNS n'a pas de CAA et sa politique DMARC n'observe rien
 
 - state: humain
@@ -317,26 +239,6 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 - verify: `curl -s -H 'accept: application/dns-json' 'https://cloudflare-dns.com/dns-query?name=movie-picker.fr&type=CAA' | grep -c '"Answer"'` puis `curl -s -H 'accept: application/dns-json' 'https://cloudflare-dns.com/dns-query?name=_dmarc.movie-picker.fr&type=TXT' | grep -c 'rua='` ; encore ouvert tant que l'une des deux commandes rend 0
 - fix: deux CAA sur l'apex, indicateur `0`, étiquette `issue`, cibles `pki.goog` (Google Trust Services, qui émet pour Hosting et Cloud Run) et `letsencrypt.org` (le secours que Hosting sait demander) ; `_dmarc` en `v=DMARC1; p=none; rua=mailto:contact@movie-picker.fr`, puis `p=quarantine` après quelques semaines de rapports sans faux positif ; au passage, supprimer le CNAME `_acme-challenge` de l'apex, qui vise encore la validation de certificat d'AWS et n'a plus rien à valider. Une fois posés, les noter dans `infra/README.md` à côté des enregistrements que Hosting dicte.
 - piege: l'adresse de rapport doit être sur la zone elle-même : un `rua=` vers un autre domaine exige un TXT d'autorisation `movie-picker.fr._report._dmarc.<autre domaine>` chez ce domaine, que Gmail ne publie pas, donc Google n'y livrerait aucun rapport. `contact@` est l'adresse publique de `SECURITY.md` et l'apex a des MX. Durcir vers `p=quarantine` puis `p=reject` seulement après avoir lu les rapports : les seuls émetteurs alignés sont Resend (DKIM sur le domaine, chemin de retour `send.`) et les serveurs de messagerie OVH (SPF de l'apex) ; un « envoyer en tant que » depuis Gmail ou tout autre relais passerait en indésirable puis serait rejeté.
-
-## DEBT-050 le projet vit hors organisation, sous un seul compte personnel
-
-- state: humain
-- bloque: créer une organisation Cloud Identity gratuite demande de prouver la propriété du domaine et de migrer le projet depuis la console, sous le compte propriétaire ; les réglages du compte lui-même (passkeys, options de récupération) ne se font qu'en session humaine
-- impact: sans organisation, ni politique d'organisation (`iam.disableServiceAccountKeyCreation`, `iam.allowedPolicyMemberDomains`) ni deny policy ne sont possibles : `pnpm run check:iam` reste le seul filet contre une clé de compte de service ou une liaison posée à la main, et l'identité Terraform garde le chemin vers les valeurs de secret (`setIamPolicy` sur un secret, ou `projectIamAdmin`, lui donnerait `secretAccessor` en un appel), ce que la description du rôle `secretsOperator` dit. Le projet n'a qu'un propriétaire, un compte Google personnel : sa compromission ou sa perte est celle de toute l'infrastructure, et rien d'autre ne peut la récupérer.
-- ou: `gcloud projects describe <PROJECT_ID>`, `scripts/check-iam.mjs`, `infra/README.md` (Identités)
-- verify: `gcloud projects describe <PROJECT_ID> --format='value(parent.type)'` ; encore ouvert tant que la commande ne rend rien
-- fix: d'abord le compte (passkeys, deux options de récupération vérifiées, revue des sessions et des applications tierces), puis une organisation Cloud Identity Free sur `movie-picker.fr`, la migration du projet sous elle, les deux politiques d'organisation ci-dessus, une deny policy sur le projet qui refuse `secretmanager.googleapis.com/versions.access` aux identités Terraform `apply` et `plan` quels que soient leurs rôles (`roles/iam.denyAdmin` ne se pose que sur une organisation : `gcloud` répond « not supported for this resource », la console donne « Ressource cible : Organisation »), un second propriétaire ou un rôle de récupération sur un compte distinct ; la liaison anti-suppression déjà en place reste
-- piege: la migration change le `parent` que Terraform ne décrit pas mais que les rôles personnalisés et la fédération d'identité citent par numéro de projet, inchangé ; rejouer `infra.yml` après la migration pour prouver un plan vide, et `cloud-auth-check.yml` pour les cinq environnements. Une politique `allowedPolicyMemberDomains` bloque `allUsers` sur les deux services Cloud Run tant qu'elle n'est pas assouplie pour le projet.
-
-## DEBT-051 le poste de développement porte la clé TMDB de production
-
-- state: humain
-- bloque: une seconde clé TMDB se crée dans le compte TMDB de l'utilisateur (Settings / API), et le `.env` du poste est le sien
-- impact: le `.env` du checkout principal porte `TMDB_API_KEY` à sa valeur de production (constaté par l'audit du 2026-09-21, qui a tourné le même jour l'URI Mongo et les clés VAPID que le poste partageait aussi avec la production). Une fuite du poste ou d'une transcription de session est une fuite de production, et les essais locaux consomment le quota de la production.
-- ou: `C:\dev\movie-picker\.env` (hors dépôt), `.env.example` (le nom), Secret Manager (`TMDB_API_KEY`)
-- verify: `[ "$(grep -E '^TMDB_API_KEY=' .env | cut -d= -f2- | tr -d '"')" = "$(gcloud secrets versions access latest --secret=TMDB_API_KEY)" ] && echo shared` depuis le checkout principal ; encore ouvert tant que la commande imprime `shared`
-- fix: une clé TMDB de développement dans `.env`, rien d'autre : la clé de production reste où elle est
-- piege: ne pas tourner la clé de production « au passage » sans redéploiement : la révision active la lit au démarrage de chaque instance (`TMDB_API_KEY:latest`), une clé révoquée avant le déploiement coupe les recherches de films
 
 ## DEBT-052 le secret `GITHUB_TOKEN` de l'API est le jeton du `gh` CLI du poste
 
@@ -351,22 +253,12 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 ## DEBT-053 l'API et la sauvegarde parlent à Atlas en administrateur du cluster, le même que le poste de dev
 
 - state: humain
-- bloque: les utilisateurs Atlas et le second projet se créent dans la console Atlas (l'accès MCP est refusé au niveau de l'organisation, DEBT-009 ; le poste n'a ni `atlas` CLI ni clé d'API, et la session Chrome est déconnectée d'Atlas). Le reste est agent.
+- bloque: les utilisateurs Atlas et le second projet se créent dans la console Atlas (l'accès MCP est refusé au niveau de l'organisation ; le poste n'a ni `atlas` CLI ni clé d'API, et la session Chrome est déconnectée d'Atlas). Le reste est agent.
 - impact: `MONGODB_URI` (version du 2026-03-19) désigne un utilisateur au rôle `atlasAdmin@admin` (celui de l'URI en place, à lire dans Secret Manager), même utilisateur et même mot de passe que `MONGODB_URI` du `.env` du poste, exposé en transcription de session avant le 2026-09-15 ; la sauvegarde lit la même URI et archive toutes les bases du cluster. La recette (`moviepicker_staging`) et la dev (`moviepicker_dev`) partagent le cluster M0 de la production (100 opérations par seconde) : une charge de recette dégrade la production.
 - ou: Secret Manager `MONGODB_URI`, `STAGING_MONGODB_URI`, `MONGODB_BACKUP_URI` (créé vide le 2026-09-21) ; `.github/workflows/backup-mongo.yml` (repli sur `MONGODB_URI` avec avertissement) ; `infra/terraform/environments/production/main.tf` (`module "backup"`, `readable_secrets` porte encore `MONGODB_URI`) ; `C:\dev\movie-picker\.env` (hors dépôt) ; console Atlas, projet de production (cluster0) et le second projet à créer
 - verify: `docker run --rm mongo:8 mongosh --quiet "$(gcloud secrets versions access latest --secret=MONGODB_URI --project <PROJET_GCP>)" --eval 'print(db.runCommand({connectionStatus: 1}).authInfo.authenticatedUserRoles.map(r => r.role).join(","))'` ; encore ouvert tant que la commande imprime `atlasAdmin`
 - fix: (humain) dans le projet de production, Database Access / Add new database user, mot de passe autogénéré, « Specific Privileges » : `moviepicker_api` `readWrite` sur `moviepicker`, `moviepicker_backup` `read` sur `moviepicker` ; un second projet Atlas « Movie Picker non-prod » avec un cluster M0 (AWS, eu-west-1), Network Access `0.0.0.0/0` (Cloud Run n'a pas d'IP fixe), et deux utilisateurs `moviepicker_staging` `readWrite` sur `moviepicker_staging`, `moviepicker_dev` `readWrite` sur `moviepicker_dev` ; les quatre mots de passe et l'hôte du nouveau cluster dans `Downloads\atlas-users.txt`, une ligne `nom=valeur` chacun, `host=<cluster>.<id>.mongodb.net` pour l'hôte. (agent) construire les URI (`urllib.parse.quote(mot_de_passe, safe='')`) : production `mongodb+srv://moviepicker_api:<mdp>@<HOTE_CLUSTER_PROD>/?appName=Cluster0` (l'hôte est celui de l'URI en place ; pas de base dans le chemin, l'API prend `moviepicker` par défaut), sauvegarde `mongodb+srv://moviepicker_backup:<mdp>@<HOTE_CLUSTER_PROD>/moviepicker?appName=Cluster0` (la base dans le chemin, `mongodump` la prend comme `--db`), recette `mongodb+srv://moviepicker_staging:<mdp>@<hôte>/moviepicker_staging?retryWrites=true&w=majority&appName=Cluster0&maxPoolSize=10`, dev `mongodb+srv://moviepicker_dev:<mdp>@<hôte>/moviepicker_dev?retryWrites=true&w=majority&appName=Cluster0` ; prouver chacune par `mongosh --eval` (`connectionStatus` rend le seul rôle attendu, `ping` sur sa base, un `insertOne` puis `drop` d'une collection `_rotation_probe` pour les `readWrite`, `estimatedDocumentCount` de `users` pour la lecture, et `listDatabases` refusé) ; `gcloud secrets versions add` pour `MONGODB_URI`, `MONGODB_BACKUP_URI`, `STAGING_MONGODB_URI` depuis des fichiers temporaires écrasés puis supprimés ; `MONGODB_URI=` du `.env` réécrit avec l'URI de dev ; écraser et supprimer `atlas-users.txt` ; déployer recette puis production (`target=all`), `gh workflow run backup-mongo.yml --ref master` et lire « Dump taken with MONGODB_BACKUP_URI » dans son journal ; retirer `"MONGODB_URI"` de `readable_secrets` du `module "backup"` et le repli de `backup-mongo.yml` (`infra.yml` applique, un clic) ; `gcloud secrets versions destroy` des anciennes versions de `MONGODB_URI` et `STAGING_MONGODB_URI` ; `pnpm run seed` sur la nouvelle base de dev. (humain, en dernier) supprimer l'ancien administrateur (l'utilisateur de l'URI remplacée) et `moviepicker_staging` du projet de production, et la base `moviepicker_staging` qui y reste.
 - piege: une archive de sauvegarde contient aussi des secrets d'authentification, le porte-clés Data Protection (`MongoXmlRepository`, aucun `XmlEncryptor`) et les sessions. Tant que l'utilisateur de la sauvegarde est administrateur, lire une archive ne donne rien de plus que ce qu'il a déjà ; dès qu'il n'aura plus que la lecture, l'archive vaudra plus que son accès. Traiter dans le même chantier : exclure `data_protection_keys` et `auth_sessions` du dump (`--excludeCollection`, au prix d'une déconnexion générale après une restauration), ou chiffrer le porte-clés par un `IXmlEncryptor` adossé à Cloud KMS dont seule l'identité d'exécution de l'API peut déchiffrer. Ne rien supprimer côté Atlas avant que les deux étapes servent des révisions nées après les nouvelles versions : `MONGODB_URI:latest` est lu au démarrage de chaque instance, une instance déjà debout garde l'ancienne valeur jusqu'à sa fin. Un utilisateur limité à une base ne peut pas `serverStatus` ni `listDatabases` : la preuve d'accès est l'`insertOne`, pas un état du serveur. La base de recette repart vide sur le nouveau cluster, l'API y recrée index et migrations au premier démarrage.
-
-## DEBT-056 le secret scanning ne vérifie pas la validité des secrets qu'il trouve
-
-- state: humain
-- bloque: `PATCH repos/<owner>/<repo>` avec `security_and_analysis.secret_scanning_validity_checks.status = enabled` répond 200 et laisse `disabled` (même comportement que `secret_scanning_non_provider_patterns`) : le réglage ne se coche que dans l'interface, Settings / Code security
-- impact: une alerte de secret scanning dit qu'un jeton a été poussé, pas s'il est encore actif : sans vérification de validité, un jeton révoqué et un jeton vivant se lisent pareil, et le tri d'une alerte demande d'aller tester le jeton à la main. Gratuit sur un dépôt public. La détection des motifs hors fournisseurs (`non_provider_patterns`, mots de passe génériques, chaînes de connexion) reste elle aussi désactivée, au même endroit, à activer dans le même geste si l'interface la propose sans abonnement.
-- ou: GitHub, Settings / Code security / Secret scanning (« Validity checks », « Non-provider patterns »)
-- verify: `gh api repos/Affy657/Movie-Picker --jq '.security_and_analysis.secret_scanning_validity_checks.status'` ; encore ouvert tant que la commande rend `disabled`
-- fix: cocher « Validity checks » (et « Non-provider patterns » si elle est proposée) dans Settings / Code security, puis rejouer `verify`
-- piege: une alerte marquée « active » par la vérification est à traiter comme une fuite en cours, pas comme un rappel
 
 ## DEBT-065 l'inscription ne vérifie pas que l'adresse e-mail appartient à l'inscrit
 
@@ -377,15 +269,6 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 - verify: `grep -c "EmailVerified" apps/api-dotnet/MoviePicker.Api/Domain/Entities/User.cs` ; encore ouvert tant que la commande rend `0`
 - fix: un `EmailVerifiedAt` sur `User` et un courriel de confirmation (même mécanique de jeton que la réinitialisation) ; côté OAuth, un e-mail vérifié par le fournisseur qui tombe sur un compte non confirmé vaut preuve de possession : purger mot de passe, identités, sessions et abonnements push de l'occupant au lieu de refuser ; ne pas attribuer le badge Ko-fi à une adresse non confirmée
 - fini-quand: un compte non confirmé ne peut plus bloquer l'adresse d'un tiers
-
-## DEBT-115 les mises à jour de sécurité Dependabot des dépendances transitives échouent
-
-- state: humain
-- bloque: c'est un réglage du dépôt (Settings, Code security, Dependabot security updates), pas un fichier
-- impact: les runs « Dependabot Updates » de sécurité sur des dépendances transitives pnpm échouent : Dependabot ne sait pas les monter seul, et son pnpm refuse certaines versions trop récentes (`minimumReleaseAge`). Chaque échec ajoute un run rouge à l'historique public
-- ou: réglages du dépôt GitHub, `.github/dependabot.yml`
-- verify: `gh run list --workflow "Dependabot Updates" --limit 20 --json conclusion -q '[.[] | select(.conclusion=="failure")] | length'` ; encore ouvert tant que la commande rend autre chose que `0`
-- fix: (humain) couper les mises à jour de sécurité automatiques et garder les alertes ; les montées transitives passent par `pnpm.overrides` pendant `/weekly-maintenance`
 
 ---
 
@@ -443,57 +326,15 @@ Ne se traitent que quand leur `declencheur` survient.
 - verify: `grep -rln "LettingBackIn" apps/api-dotnet/MoviePicker.Api --include=*.cs | grep -v InMemory` ; encore ouvert tant que seuls `Event.cs` et l'invitation l'appellent
 - fix: une action « Laisser revenir » dans le menu de l'hôte, et les soirées de groupe filtrées pour un membre retiré
 
-## DEBT-005 enrichissement TMDB sur le chemin sondé
-
-- state: differe
-- declencheur: une latence p95 de la liste de films qui suit les incidents TMDB
-- impact: la liste d'une soirée dépend de TMDB à chaque cycle de sondage, soit toutes les 3,5 s par participant
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/ListMovies/ListMoviesForEventHandler.cs` (`BuildEnrichmentMapAsync`, appelé depuis le handler)
-- verify: `grep -n "BuildEnrichmentMapAsync" apps/api-dotnet/MoviePicker.Api/Application/UseCases/ListMovies/ListMoviesForEventHandler.cs` ; encore ouvert tant que l'appel est dans le chemin de lecture
-- fix: figer l'enrichissement sur le document du film au moment de l'ajout, le rafraîchir hors requête
-- piege: le timeout de 3 s et le cache négatif **bornent** le pire cas, ils ne l'enlèvent pas. Ne pas conclure que c'est réglé en les voyant.
-
-## DEBT-006 cache en mémoire local à l'instance
-
-- state: differe
-- declencheur: la mise à l'échelle devient routinière au lieu d'être exceptionnelle
-- impact: jusqu'à 5 instances (`max_instance_count`, C12), donc jusqu'à 5 caches froids indépendants. Les sélections de la home, les collections et l'enrichissement TMDB passent par `ISharedCache` (Mongo, collection `shared_cache`, index TTL) en second niveau, une instance neuve relit ces snapshots au lieu de refaire le fan-out TMDB (6 à 10 s par requête). Depuis le 2026-09-23 le job `movie-picker-warm-catalog` réécrit le catalogue de la home toutes les 5 heures, avant l'expiration de 6 h, et un chargement incomplet (TMDB en 429) n'écrase plus un instantané complet. Les `IMemoryCache` restants (recherche TMDB, détails) sont locaux et plafonnés (`TmdbEntryCache`, `CatalogEntryCache`, 10 000 et 500 entrées).
-- ou: `Infrastructure/Tmdb/TmdbMovieSearch.Details.cs` et `TmdbMovieSearch.Search.cs` pour ce qui reste en mémoire seule ; `Application/Caching/SharedCacheReadThrough.cs` pour le modèle à réutiliser
-- verify: `grep -rln IMemoryCache apps/api-dotnet --include=*.cs`
-- fix: passer les caches restants par `SharedCacheReadThrough`, ou un cache hors processus dédié
-- piege: `min-instances` reste à 0, donc le démarrage à froid (3,5 s en prod, 0,7 s en local avec ReadyToRun) subsiste ; le poser à 1 coûte environ 8 à 10 $ par mois, décision de l'utilisateur, jamais de l'agent. Deux règles du cache partagé : seules les clés de catalogue (sections à liste fermée, au plus un genre) s'écrivent dans Mongo, parce que `recommendations` et les combinaisons de genres ouvrent un espace de clés illimité à 24 Ko le document sur un palier de 512 Mo (`collection` est une liste fermée depuis le 2026-11-06, les graines de `recommendations` restent ouvertes par nature, tout film TMDB en étant une, et chaque adresse IP est bornée à 300 clés libres par heure, `MovieShowcaseFreeKeyHourlyPolicy`) ; `tmdb-enrich-v2` fait exception, bornée par `TmdbEnrichmentSharedCacheMaxEntries` sur le compte estimé de la collection ; et chaque famille de clés porte une version (`showcase-v1`, `showcase-collections-v1`, `tmdb-enrich-v2`) à incrémenter quand le DTO sérialisé change, sinon les instances relisent d'anciens documents pendant tout le TTL après un déploiement.
-- refs: même racine que DEBT-007 et DEBT-008, la contrainte Cloud Run
-
-## DEBT-007 affiches servies en octets depuis Mongo à travers Cloud Run
-
-- state: differe
-- declencheur: la ligne de sortie réseau devient visible sur la facture GCP
-- impact: chaque affiche traverse Cloud Run au lieu d'un CDN ; Firebase Hosting ne couvre que le front, pas `api.movie-picker.fr`
-- ou: `apps/api-dotnet/MoviePicker.Api/Controllers/PostersController.cs`
-- verify: `grep -n 'return File(' apps/api-dotnet/MoviePicker.Api/Controllers/PostersController.cs` ; encore ouvert tant que la ligne sort
-- fix: stockage objet plus CDN devant
-- piege: `Cache-Control: public,max-age=86400,immutable` et l'ETag sont posés, le trafic est déjà amorti côté navigateur : le coût restant est la sortie réseau, pas le nombre de requêtes. `poster_cache` est la seule courbe de croissance de la base (31,5 Mo sur 32,3 le 2026-09-15, ~56 Ko par affiche) ; l'index TTL `poster_cache_expiresAtUtc_ttl` (30 jours glissants) borne sa taille au nombre d'affiches vues dans le mois. Ce n'est plus qu'un cache depuis le 2026-09-23 : l'adresse d'une affiche porte le chemin TMDB validé (`/api/v1/posters/tmdb/<taille>/<fichier>`), et l'ancienne forme `/api/v1/posters/<sha256>`, qui dépendait d'un document de `poster_cache` et disparaissait avec lui, est réécrite par la migration `RewriteLegacyPosterPathsMigration`. Vider la collection ne coûte qu'un nouveau téléchargement depuis TMDB. Depuis le 2026-11-17, les affiches ont leur propre budget (`posters-get`, 3 000 par minute et par adresse) et sortent du limiteur global et du plafond par adresse : une liste de 1 000 films se parcourt sans 429 (164 affiches refusées en production le jour même, sur une liste de 460 films). Ne pas les remettre dans les compteurs partagés.
-
 ## DEBT-008 le sondage de repli à 3,5 s fixe encore le plafond de la base quand le flux manque
 
 - state: differe
-- declencheur: le flux temps réel tombe souvent en repli (429 de `GET /events/{slug}/stream` ou reconnexions en rafale dans les journaux), ou la base approche la moitié du plafond d'opérations du palier Atlas, soit 50 opérations par seconde sur le M0 présumé (DEBT-009)
+- declencheur: le flux temps réel tombe souvent en repli (429 de `GET /events/{slug}/stream` ou reconnexions en rafale dans les journaux), ou la base approche la moitié du plafond d'opérations du palier Atlas, soit 50 opérations par seconde sur le palier M0
 - impact: depuis la 1.14.0, la page soirée écoute `GET /api/v1/events/{slug}/stream` et ne sonde plus tant que le flux répond. Le sondage reste le repli quand le flux manque : navigateur sans `EventSource`, onglet de retour au premier plan avant la reconnexion, flux refusé par `EventStreamGate` au-delà de ses plafonds, flux muet plus de 25 s. En repli, le coût est celui d'avant : environ 13 allers-retours Mongo par cycle et par participant quand la soirée a bougé, 2 lectures par cycle sinon (304 de `EventViewTagHandler`). En régime nominal, une soirée coûte 2 lectures par seconde et par instance qui la diffuse (`EventLiveHub` : le document soirée, puis `event_presence`), quel que soit le nombre de participants.
 - verify: `grep -n EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS apps/web/src/features/events/hooks/useEventLive.ts` ; encore ouvert tant que la constante existe, c'est-à-dire tant que le repli sonde
 - fix: une fois le flux mesuré fiable en production, ralentir le repli (30 s) ou le retirer, la reprise sur `ready` rechargeant déjà la soirée à chaque reconnexion
 - piege: le 304 tient à une règle d'`AGENTS.md` : toute mutation de la vue soirée fait bouger `writeSeq` (`UpdateAsync`, `LockForWriteAsync` ou `MarkChangedAsync`). `check:architecture` la vérifie fichier par fichier (`scripts/architecture/apiWriteSeq.mjs`) : un handler qui écrit sans aucun des trois appels est refusé, mais un second chemin d'écriture du même fichier qui oublie l'appel passe, seul le test du handler le voit. Le flux lit le même compteur : une écriture qui l'oublie n'arrive plus en direct non plus, seulement au prochain rechargement complet.
 - refs: DEBT-033 pour le plafond de participants
-
-## DEBT-035 la diffusion push se fait dans la requête, sans file ni reprise
-
-- state: differe
-- declencheur: un p95 des `POST` de soirée (`join`, `movies`, `vote`, `wheel`) au-dessus de 500 ms dans les logs Cloud Run, ou un premier incident Web Push visible dans Sentry
-- impact: `PushFanOut.SendToAllAsync` (8 envois en parallèle) est attendu dans `AddMovieHandler`, `DeleteEventHandler`, `PatchEventConfigHandler` et `WinnerAnnouncer`, et `JoinEventHandler` attend `IPushNotificationSender.SendAsync` : la latence d'un vote ou d'un tirage inclut ⌈abonnés / 8⌉ vagues vers le service push, que le plafond de DEBT-033 multiplie. Un échec autre que 410 / 404 est journalisé puis perdu, sans compteur ni reprise. Correct sous les règles Cloud Run (pas de tire-et-oublie), c'est le prix de l'absence de file.
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Shared/PushFanOut.cs`, `Infrastructure/Push/WebPushSender.cs` (les `catch`), appelants par `grep -rn "PushFanOut.SendToAllAsync" apps/api-dotnet/MoviePicker.Api --include=*.cs`
-- verify: `grep -rln "PushFanOut.SendToAllAsync" apps/api-dotnet/MoviePicker.Api/Application/UseCases --include=*.cs` ; encore ouvert tant qu'un handler de mutation apparaît dans la liste
-- fix: une collection `push_outbox` (un document par notification, `status`, `attempts`, index TTL), écrite dans la même transaction que la mutation, puis drainée hors requête : d'abord par le motif scheduler existant (`POST /api/v1/scheduler/push-outbox`, Cloud Scheduler chaque minute), puis par Cloud Tasks (cible HTTP sur Cloud Run, jeton OIDC) une fois les jobs Scheduler décrits en Terraform (DEBT-037), pour une latence en secondes
-- fini-quand: aucun handler de mutation n'attend le service push, et une panne push d'une heure se rattrape sans perte
-- piege: ne pas remplacer l'attente par un `_ = SendAsync(...)`, c'est exactement le tire-et-oublie que Cloud Run ne reprend jamais. Le rappel de soirée (`EventReminderPass`) est déjà hors requête, hors périmètre.
 
 ## DEBT-040 le seed de développement est compilé dans l'assembly de production
 
@@ -514,17 +355,6 @@ Ne se traitent que quand leur `declencheur` survient.
 - verify: `grep -n "public string Date\|public string Time" apps/api-dotnet/MoviePicker.Api/Domain/Entities/Event.cs` ; encore ouvert tant que les deux lignes sortent
 - fix: `DateOnly Date` et `TimeOnly Time` sur l'entité, ou un `StartUtc` calculé et validé à l'écriture, avec conversion aux frontières (document Mongo, DTO) pour ne changer ni le contrat OpenAPI ni les documents existants ; la validation du format remonte dans le handler de création et rend une `Errors.<Cas>()` au lieu d'un `Upcoming` silencieux
 - piege: les documents de production portent les chaînes : garder la lecture de l'ancien format ou passer par une `IDataMigration`, jamais les deux à moitié. Le seed (`DevelopmentScenarioSeed`, DEBT-040), les fixtures et les tests écrivent ces chaînes en dur : compter les occurrences avant de changer le type, le chantier est plus large qu'il ne paraît depuis `Event.cs`.
-
-## DEBT-061 la recherche de comptes parcourt la collection `users` à chaque frappe
-
-- state: differe
-- declencheur: plus de 10 000 comptes, ou un p95 de `GET /api/v1/users/search` au-delà de 300 ms dans les journaux de requêtes
-- impact: `SearchPublicAsync` fait deux requêtes par expression régulière insensible à la casse et aux accents sur `handle` et `displayName` (préfixe, puis n'importe où) ; aucune ne peut utiliser d'index, chaque recherche lit toute la collection. Les statistiques de profil, l'autre lecture en parcours complet relevée par l'audit, ont reçu leurs index le 2026-09-23 (`votes_participantId`, `seen_marks_participantId`, `movies_participantId`, `events_winners_movieId`).
-- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/Mongo/MongoUserRepository.cs` (`SearchPublicAsync`, `FindPublicMatchesAsync`), `apps/api-dotnet/MoviePicker.Api/Application/UseCases/SearchUsers/UserSearchPolicy.cs`
-- verify: `grep -n 'new BsonRegularExpression' apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/Mongo/MongoUserRepository.cs` ; encore ouvert tant que la recherche passe par une expression régulière insensible
-- fix: un champ de recherche normalisé (minuscules, sans accents) écrit avec le compte, indexé, interrogé par préfixe ancré sensible à la casse, que l'index sert ; la recherche « n'importe où » passe par Atlas Search (un index de recherche est permis sur le palier gratuit) ou disparaît
-- piege: le champ s'écrit d'abord dans `AddAsync` et `UpdateAsync`, la migration de remplissage vient ensuite (règle « compatible avec la version d'avant » d'`AGENTS.md`), et la recherche ne le lit qu'une version plus tard
-- refs: A18 de l'audit de conception du 2026-09-22
 
 ## DEBT-064 `GetByIdOrSlugAsync` ne résout plus que le slug
 
@@ -607,16 +437,6 @@ Ne se traitent que quand leur `declencheur` survient.
 - fix: mesurer d'abord (Performance panel, frames longues au défilement) ; si confirmé, fond opaque légèrement translucide sans flou, ou flou réservé à `(hover: hover)`
 - piege: ne pas retirer le flou sur une intuition, c'est un choix visuel de l'utilisateur. Mesure avant geste.
 
-## DEBT-057 les images de la page bloquent la lecture CORS du canvas de la story
-
-- state: differe
-- declencheur: une ouverture de la fenêtre de partage mesurée lente sur téléphone, ou une story qui sort avec des affiches ou des avatars manquants
-- impact: les `<img>` de l'app chargent affiches et avatars sans attribut `crossorigin`, donc le navigateur range une réponse inutilisable par un canvas dans son cache HTTP. La génération d'une story doit rappeler chaque ressource avec `cache: 'reload'` (`apps/web/src/features/events/story/storyAssets.ts`) pour éviter cette entrée, soit jusqu'à onze requêtes revalidées par ouverture de la fenêtre de partage. Un cache de ressources par session de dialogue absorbe déjà le coût des slides suivantes. Mesuré le 2026-11-25 : l'API de production et celle de recette répondent `Access-Control-Allow-Origin` (l'origine du front) avec `Vary: Origin` sur `/api/v1/posters/*` et `/api/v1/avatars/*`, TMDB et DiceBear répondent `*`, et le service worker range déjà les images TMDB en CORS. Depuis DEBT-110, la page affiche les affiches en w92 à w342 quand la story lit la w500 : elles ne partagent plus d'entrée de cache, et le gain du correctif se réduit aux avatars, pour une quarantaine de `<img>` à toucher
-- ou: `apps/web/src/shared/components/` et les composants d'affiche et d'avatar qui rendent un `<img>`
-- verify: `grep -rn "posterImageSrc\|avatarUrl" apps/web/src --include=*.tsx` ; encore ouvert tant qu'un de ces `<img>` n'a pas `crossOrigin="anonymous"`
-- fix: poser `crossOrigin="anonymous"` sur les `<img>` d'affiche et d'avatar, vérifier que l'API et DiceBear répondent bien `Access-Control-Allow-Origin` sur ces routes, puis repasser la story en `cache: 'default'`
-- piege: une seule route sans en-tête CORS et l'image ne s'affiche plus du tout sur la page, pas seulement dans la story : contrôler chaque origine avant de basculer
-
 ## DEBT-111 les schémas de `/tech` n'ont pas de variante verticale sur téléphone
 
 - state: differe
@@ -659,16 +479,6 @@ Ne se traitent que quand leur `declencheur` survient.
 - fix: retirer le montage de `deploy.yml`, redéployer, puis retirer le nom d'`api_secret_names` (lever `deletion_protection` dans `modules/secrets/main.tf` pour cet `apply`, qui détruit le secret et sa version) ; garder le repli fichier du code, il sert au poste sans base et aux tests
 - piege: vérifier d'abord qu'aucune révision de production ne tourne sans `MONGODB_URI` (elle ne démarre pas sans, `ProductionStartupValidation`), et que la collection des clés existe dans la base de production avant de retirer le secret : une session signée par une clé absente serait invalidée pour tout le monde
 
-## DEBT-046 les secrets sont répliqués hors de l'Union européenne et les journaux vivent en `global`
-
-- state: differe
-- declencheur: une exigence de résidence des données écrite noir sur blanc (client, école, mention légale), ou la création d'un nouveau secret
-- impact: tous les secrets ont la réplication `auto` (module `secrets`), donc des copies dans des régions hors UE, et le bucket de journaux `_Default` de Cloud Logging est en `global`. Aucun secret n'est une donnée personnelle et les journaux de l'API n'en portent pas (identifiants Mongo, jamais d'e-mail) : question de résidence, pas de sécurité.
-- ou: `infra/terraform/modules/secrets/main.tf` (`replication { auto {} }`), `gcloud logging buckets list`
-- verify: `grep -c "auto {}" infra/terraform/modules/secrets/main.tf` ; encore ouvert tant que la commande rend autre chose que 0
-- fix: la réplication d'un secret ne se modifie pas : chaque secret se recrée (`user_managed` avec `replicas { location = "europe-west1" }`), sa version se rajoute à la main, `deploy.yml` bascule dessus, l'ancien se détruit ; pour les journaux, un bucket `europe-west1` et le sink `_Default` réorienté dessus. Secret par secret, un déploiement entre chaque.
-- piege: un secret sans version fait échouer la révision qui le monte : créer et remplir le nouveau avant de changer `deploy.yml`
-
 ## DEBT-047 le service Cloud Run n'a qu'une sonde de démarrage TCP
 
 - state: differe
@@ -698,16 +508,6 @@ Ne se traitent que quand leur `declencheur` survient.
 - ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/HttpWebShellSource.cs` (`CacheTtl`), `Controllers/ShareDocumentResults.cs`, `.github/workflows/deploy.yml`
 - verify: `grep -n "CacheTtl = TimeSpan.FromSeconds(60)" apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/HttpWebShellSource.cs` ; encore ouvert tant que la ligne sort
 - fix: relire la coquille quand elle désigne un fichier absent (un 404 sur ses assets vide le cache), ou garder les assets de la version précédente servis quelques minutes après le déploiement
-
-## DEBT-055 l'identité de recette peut publier sur le site web de production
-
-- state: differe
-- declencheur: un second projet Firebase (ou GCP) pour la recette, ou une IAM par site chez Firebase Hosting (`roles/firebasehosting.*` ne se pose aujourd'hui que sur le projet)
-- impact: l'identité CI de recette porte `roles/firebasehosting.admin` sur le projet (`infra/terraform/environments/staging/main.tf`, `module "ci"`), parce que Hosting n'a pas de rôle par site : l'identité que le job `deploy-front` de la recette assume peut créer une version et une release sur `movie-picker-web` (la production) et sur `movie-picker-web-legacy`, exactement comme l'identité de production. La frontière entre les deux étapes tient pour Cloud Run (rôle sur le seul service de recette), l'image (`writer` sur le dépôt partagé, la production ne redéploie que le digest que la recette sert) et les secrets, pas pour Hosting. Ce qui l'exploiterait : du code exécuté dans un job de l'environnement `staging` sur master, ce que le découpage de `deploy.yml` (build sans `id-token`, publication sans dépendance du lockfile) rend improbable.
-- ou: `infra/terraform/environments/staging/main.tf` (`project_roles` de `module "ci"`), `infra/terraform/environments/production/main.tf` (`module "ci"`, même rôle), `.github/workflows/deploy.yml` (`deploy-front`)
-- verify: `gcloud projects get-iam-policy <PROJET_GCP> --flatten='bindings[].members' --filter='bindings.role=roles/firebasehosting.admin' --format='value(bindings.members)' | grep -c staging` ; encore ouvert tant que la commande rend autre chose que 0
-- fix: un projet Firebase dédié à la recette (site `movie-picker-web-staging` recréé dedans, `firebasehosting.admin` de l'identité de recette sur ce projet seul, `x-goog-user-project` du script de publication sur ce projet) ; ou, si Hosting expose un jour une IAM par site, la liaison sur le seul site de recette
-- piege: un site Hosting ne se déplace pas d'un projet à l'autre : le recréer change son adresse `web.app`, donc le CNAME de `staging.movie-picker.fr` et l'URL de `verify-front` dans `deploy.yml`
 
 ## DEBT-073 une photo de profil envoyée hors de l'app garde ses métadonnées, et l'ancienne disparaît trop tôt
 
@@ -905,4 +705,24 @@ Mesuré, sans gain, retiré. Ne pas rejouer sans une raison neuve.
 - **I9 annoncer d'avance la fermeture des imports statiques de la coquille** (`modulepreload` sur six chunks de plus) : les douze pages dont le LCP vient de React gagnent 1 point, `home` et `profile`, dont il n'en vient pas, perdent 2 et 8 (retiré, `profile` repasse de 88 à 97). Avant d'ajouter quoi que ce soit à la première vague, regarder les pages dont le LCP n'attend pas React.
 - **I10 regrouper les petits modules partagés en chunks « entries-aware »** (rolldown `codeSplitting.groups`, `entriesAware: true`) : à 12 Ko de seuil, `login` passe de 111,7 à 141,9 Ko brotli et la première vague de 5 à 16 fichiers (I9) ; à 3 Ko, `my-events` prend 14 Ko et `home` 8. Seul gain sans perdant : la fermeture statique de `App` dans son chunk (`appShellClosurePlugin`, 6 à 7 fichiers et 3 à 4 Ko de moins par page).
 - **I11 accélérer la suite Vitest** : fait le 2026-11-16 par le pool `vmForks`, qui crée jsdom une fois par worker au lieu d'une fois par fichier (53 % du temps mesuré) en gardant l'isolation des modules : 515 s vers 169 s sans couverture, 134 s avec. Il exige `apps/web/vitest.vm-globals.ts` (Web Streams et `crypto`, absents du contexte vm, MSW en a besoin) et interdit de remplacer `location` entier (`PwaAutoUpdate` reçoit son rechargement en prop). Toujours rejetés : `--no-isolate` (casse 147 tests), happy-dom (diverge de la CI). Mesuré sans gain : brider les workers, 6 workers donnent 1 071 s.
-- **I12 rapprocher le cluster Atlas (AWS eu-west-1) de Cloud Run (europe-west1)** : 60 sondes `/health/ready` en production, p50 6 ms, p90 9 ms. Un cluster GCP gagnerait au plus 5 ms par opération et ≈ 30 ms par cycle de sondage, contre une migration avec interruption. Le temps va à TMDB (DEBT-005) et au nombre d'allers-retours (DEBT-008).
+- **I12 rapprocher le cluster Atlas (AWS eu-west-1) de Cloud Run (europe-west1)** : 60 sondes `/health/ready` en production, p50 6 ms, p90 9 ms. Un cluster GCP gagnerait au plus 5 ms par opération et ≈ 30 ms par cycle de sondage, contre une migration avec interruption. Le temps va à TMDB (E1) et au nombre d'allers-retours (DEBT-008).
+- **I13 vérification de validité du secret scanning** (ex-DEBT-056) : l'API répond 200 et laisse le réglage désactivé, et la page Settings / Advanced Security du dépôt ne le propose plus (relu le 2026-11-25 : Secret Protection n'offre que la protection au push, active). Rien à cocher.
+
+# Écartées
+
+Arbitré le 2026-11-25 : la dette existe, mais le geste coûte plus qu'il ne rapporte à l'échelle mesurée ce jour-là (29 comptes, 45 soirées, 8 participants au plus par soirée). Chaque ligne dit ce qui la rouvrirait ; rouverte, elle repart en entrée `DEBT-NNN` avec un nouvel identifiant.
+
+- **E1 enrichissement TMDB sur le chemin de lecture des films d'une soirée** (ex-DEBT-005) : depuis la 1.14.0 la liste n'est plus sondée en régime nominal (flux temps réel), et l'enrichissement passe par le cache partagé, le cache négatif et un délai de 3 s. Le figer sur le document demanderait une passe de rafraîchissement pour des plateformes qui changent. Rouvrir si la latence p95 de la liste suit les incidents TMDB.
+- **E2 caches en mémoire locaux à l'instance** (ex-DEBT-006) : voulu. Seules les familles de clés fermées vont dans Mongo ; la recherche et les détails TMDB ouvrent un espace de clés illimité et restent en mémoire, plafonnés. Rouvrir si `min-instances` passe au-dessus de 1 ou si la mise à l'échelle devient routinière.
+- **E3 affiches servies par Cloud Run plutôt que par un CDN** (ex-DEBT-007) : cache navigateur `immutable`, TTL de 30 jours sur `poster_cache`, sortie réseau invisible sur la facture. Rouvrir quand elle y apparaît.
+- **E4 diffusion push dans la requête** (ex-DEBT-035) : correcte sous les règles de Cloud Run ; une file `push_outbox` drainée par le planificateur est disproportionnée à ce volume. Rouvrir sur un p95 des `POST` de soirée au-dessus de 500 ms ou un incident Web Push.
+- **E5 secrets répliqués hors UE et journaux en `global`** (ex-DEBT-046) : aucune exigence de résidence écrite, aucune donnée personnelle dans les secrets ni dans les journaux ; recréer chaque secret coûte un déploiement par secret. Rouvrir sur une exigence écrite.
+- **E6 projet GCP hors organisation** (ex-DEBT-050) : projet personnel à un seul propriétaire ; `pnpm run check:iam` reste le filet. Le durcissement du compte Google (passkeys, options de récupération) relève de son titulaire, pas du dépôt. Rouvrir si un second contributeur ou un client arrive.
+- **E7 sauvegardes dans un second projet** (ex-DEBT-062) : le même propriétaire tiendrait les deux projets ; versioning, suppression douce de 7 jours et liaison conditionnelle de l'identité de sauvegarde restent la défense. Une rétention verrouillée est irréversible. Rouvrir avec E6.
+- **E8 l'identité de recette peut publier sur le Hosting de production** (ex-DEBT-055) : l'exploiter demande du code exécuté dans un job de recette sur master, donc un accès propriétaire. Rouvrir si Hosting expose une IAM par site, ou avec E6.
+- **E9 clé TMDB de production sur le poste** (ex-DEBT-051) : TMDB ne délivre qu'une clé par compte ; elle est gratuite, en lecture seule et révocable. Rouvrir si le quota de production souffre des essais locaux.
+- **E10 jeton de lecture TMDB dans Secret Manager** (ex-DEBT-039) : la clé v3 ne voyage qu'en HTTPS vers TMDB et l'API la masque dans ses journaux et dans Sentry. Rouvrir si un intermédiaire journalisant apparaît entre l'API et TMDB.
+- **E11 `SENTRY_AUTH_TOKEN` en secret de dépôt** (ex-DEBT-027) : seuls les jobs qui le citent le reçoivent, seul le propriétaire peut pousser un workflow modifié, et ni Dependabot ni une PR de fork ne reçoivent les secrets du dépôt. Rouvrir à la prochaine rotation du jeton, qui se fera directement en secret d'environnement `production` et `staging`.
+- **E12 `crossorigin` sur les images pour la story** (ex-DEBT-057) : depuis DEBT-110 la page affiche les affiches en w92 à w342 et la story lit la w500, elles ne partagent plus d'entrée de cache ; le gain se réduit aux avatars, pour le risque qu'une origine sans CORS casse l'image sur la page. Rouvrir sur une ouverture de la fenêtre de partage mesurée lente.
+- **E13 recherche de comptes par expression régulière** (ex-DEBT-061) : à 29 comptes, le parcours de `users` coûte quelques millisecondes. Rouvrir à 10 000 comptes ou à un p95 de `GET /api/v1/users/search` au-delà de 300 ms.
+- **E14 canal d'alerte SMS** (ex-DEBT-049) : le canal existe dans le module `monitoring` et ne se crée qu'avec un numéro, donnée personnelle que seul son titulaire choisit ; l'adresse d'alerte suffit à ce volume. Rouvrir en posant `ALERT_SMS_NUMBER` (voir le module).
