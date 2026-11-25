@@ -6,9 +6,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Infrastructure;
+using MoviePicker.Api.Infrastructure.Migrations;
 using MoviePicker.Api.Infrastructure.Tmdb;
 using MoviePicker.Api.IntegrationTests.Helpers;
 
@@ -67,7 +69,34 @@ public sealed class MoviePickerApplicationFactory : WebApplicationFactory<Progra
 
             services.RemoveAll<ITmdbMovieSearch>();
             services.AddSingleton<ITmdbMovieSearch, StubTmdbMovieSearch>();
+
+            RunDataMigrationsBeforeTheTests(services);
         });
+    }
+
+    private static void RunDataMigrationsBeforeTheTests(IServiceCollection services)
+    {
+        var delayedRunner = services.SingleOrDefault(descriptor =>
+            descriptor.ServiceType == typeof(IHostedService) && descriptor.ImplementationType == typeof(DataMigrationRunner));
+        if (delayedRunner is null)
+            return;
+
+        services.Remove(delayedRunner);
+        services.AddSingleton(provider => new DataMigrationRunner(
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            provider.GetRequiredService<TimeProvider>(),
+            provider.GetRequiredService<ILogger<DataMigrationRunner>>(),
+            startupDelay: TimeSpan.Zero));
+        services.AddHostedService(provider => provider.GetRequiredService<DataMigrationRunner>());
+        services.AddHostedService(provider => new DataMigrationsCompleted(provider.GetRequiredService<DataMigrationRunner>()));
+    }
+
+    private sealed class DataMigrationsCompleted(DataMigrationRunner runner) : IHostedService
+    {
+        public Task StartAsync(CancellationToken cancellationToken) =>
+            (runner.ExecuteTask ?? Task.CompletedTask).WaitAsync(cancellationToken);
+
+        public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
     protected override void Dispose(bool disposing)

@@ -35,11 +35,115 @@ public sealed class EventStreamResultTests
         public void Dispose() => Disposals += 1;
     }
 
-    private static (ActionContext Context, MemoryStream Body) Context(IEventPresenceRepository presence)
+    private sealed class SteppedClock : TimeProvider
+    {
+        private static readonly DateTimeOffset Epoch = new(2026, 11, 25, 20, 0, 0, TimeSpan.Zero);
+
+        private readonly object _gate = new();
+        private readonly List<SteppedTimer> _armed = [];
+        private TaskCompletionSource _nextArming = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private long _ticks;
+
+        public override long TimestampFrequency => TimeSpan.TicksPerSecond;
+
+        public override long GetTimestamp()
+        {
+            lock (_gate)
+                return _ticks;
+        }
+
+        public override DateTimeOffset GetUtcNow() => Epoch.AddTicks(GetTimestamp());
+
+        public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period)
+        {
+            var timer = new SteppedTimer(this, callback, state);
+            timer.Change(dueTime, period);
+            return timer;
+        }
+
+        public Task UntilATimerIsArmedAsync()
+        {
+            lock (_gate)
+                return _armed.Count > 0 ? Task.CompletedTask : _nextArming.Task;
+        }
+
+        public void Advance(TimeSpan by)
+        {
+            List<SteppedTimer> due;
+            lock (_gate)
+            {
+                _ticks += by.Ticks;
+                due = _armed.Where(timer => timer.DueAt <= _ticks).ToList();
+                _armed.RemoveAll(due.Contains);
+            }
+
+            foreach (var timer in due)
+                timer.Fire();
+        }
+
+        private void Arm(SteppedTimer timer, TimeSpan dueTime)
+        {
+            TaskCompletionSource armed;
+            lock (_gate)
+            {
+                _armed.Remove(timer);
+                if (dueTime == Timeout.InfiniteTimeSpan)
+                    return;
+                timer.DueAt = _ticks + dueTime.Ticks;
+                _armed.Add(timer);
+                armed = _nextArming;
+                _nextArming = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            }
+
+            armed.TrySetResult();
+        }
+
+        private void Disarm(SteppedTimer timer)
+        {
+            lock (_gate)
+                _armed.Remove(timer);
+        }
+
+        private sealed class SteppedTimer(SteppedClock clock, TimerCallback callback, object? state) : ITimer
+        {
+            public long DueAt { get; set; }
+
+            public bool Change(TimeSpan dueTime, TimeSpan period)
+            {
+                clock.Arm(this, dueTime);
+                return true;
+            }
+
+            public void Fire() => callback(state);
+
+            public void Dispose() => clock.Disarm(this);
+
+            public ValueTask DisposeAsync()
+            {
+                Dispose();
+                return ValueTask.CompletedTask;
+            }
+        }
+    }
+
+    private static readonly TimeSpan StalledAfter = TimeSpan.FromSeconds(10);
+
+    private static async Task RunUntilDoneAsync(Task streaming, SteppedClock clock, TimeSpan step)
+    {
+        while (!streaming.IsCompleted)
+        {
+            await Task.WhenAny(clock.UntilATimerIsArmedAsync(), streaming).WaitAsync(StalledAfter);
+            clock.Advance(step);
+        }
+
+        await streaming;
+    }
+
+    private static (ActionContext Context, MemoryStream Body) Context(IEventPresenceRepository presence, TimeProvider? clock = null)
     {
         var services = new ServiceCollection()
             .AddSingleton(presence)
-            .AddSingleton(TimeProvider.System)
+            .AddSingleton(clock ?? TimeProvider.System)
             .AddSingleton(typeof(ILogger<>), typeof(NullLogger<>))
             .BuildServiceProvider();
         var body = new MemoryStream();
@@ -62,15 +166,21 @@ public sealed class EventStreamResultTests
         presence
             .Setup(r => r.TouchAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new TimeoutException("mongo down"));
-        var (context, body) = Context(presence.Object);
+        var clock = new SteppedClock();
+        var (context, body) = Context(presence.Object, clock);
         var lease = new CountingLease();
         var result = new EventStreamResult(
             new EventStreamAccess("evt-1", "soiree", "p-1"),
             new SilentFeed(),
-            ShortStream(lifetimeMs: 1500),
+            new EventLiveOptions
+            {
+                StreamLifetime = TimeSpan.FromMinutes(10),
+                PresenceRefresh = TimeSpan.FromMinutes(1),
+                KeepAliveInterval = TimeSpan.FromMinutes(2)
+            },
             lease);
 
-        await result.ExecuteResultAsync(context);
+        await RunUntilDoneAsync(result.ExecuteResultAsync(context), clock, step: TimeSpan.FromMinutes(1));
 
         var written = Encoding.UTF8.GetString(body.ToArray());
         Assert.Contains("event: ready", written);
