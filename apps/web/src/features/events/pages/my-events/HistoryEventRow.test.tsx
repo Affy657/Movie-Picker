@@ -103,6 +103,22 @@ describe('HistoryEventRow', () => {
     expect(images[2]!.getAttribute('src')).toContain('second.jpg');
   });
 
+  it('asks the poster relay for small posters, not the stored w500', () => {
+    renderRow({
+      ...base,
+      winnerMovies: [
+        { title: 'Parasite', posterPath: '/api/v1/posters/tmdb/w500/premier.jpg' },
+        { title: 'Whiplash', posterPath: '/api/v1/posters/tmdb/w500/second.jpg' },
+      ],
+    });
+
+    const stacked = [...document.querySelectorAll('img')].slice(1);
+    expect(stacked.map((image) => image.getAttribute('src'))).toEqual([
+      expect.stringMatching(/\/api\/v1\/posters\/tmdb\/w185\/premier\.jpg$/),
+      expect.stringMatching(/\/api\/v1\/posters\/tmdb\/w185\/second\.jpg$/),
+    ]);
+  });
+
   it('carries the date block and the host mark, without the counts', () => {
     renderRow({ ...base, ...won, maxParticipants: 8 });
 

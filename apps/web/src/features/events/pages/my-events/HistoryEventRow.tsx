@@ -1,6 +1,6 @@
 import { Link } from 'react-router';
 import { Crown, Film, Star } from 'lucide-react';
-import { posterImageSrc } from '@/shared/utils/posterUrl';
+import { posterImageSrc, posterSrcAtSize } from '@/shared/utils/posterUrl';
 import { formatEventDateLong } from '@/shared/utils/formatMyEventsListDate';
 import { formatRating } from '@/shared/utils/formatRating';
 import EventCardMenu from '@/features/events/components/EventCardMenu';
@@ -97,7 +97,7 @@ function WinnerPosters({ winners }: Readonly<{ winners: readonly MyEventWinnerMo
   return (
     <span className={styles.posters} aria-hidden="true">
       {winners.slice(0, 2).map((movie, index) => {
-        const src = posterImageSrc(movie.posterPath);
+        const src = posterSrcAtSize(posterImageSrc(movie.posterPath), 'w185');
         return (
           <span
             key={`${index}-${movie.title}`}

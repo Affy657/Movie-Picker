@@ -12,7 +12,7 @@ import type { RatingScale } from '@/shared/types/theme';
 import { formatRating } from '@/shared/utils/formatRating';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { keepPunctuationAttached } from '@/shared/utils/keepPunctuationAttached';
-import { posterImageSrc } from '@/shared/utils/posterUrl';
+import { posterImageSrc, posterSrcAtSize } from '@/shared/utils/posterUrl';
 import { useAutoSavedRating } from './useAutoSavedRating';
 import styles from './MovieRatingDialog.module.css';
 
@@ -38,7 +38,7 @@ type Props = {
 };
 
 function SheetPoster({ posterPath }: Readonly<{ posterPath?: string | null }>) {
-  const src = posterImageSrc(posterPath);
+  const src = posterSrcAtSize(posterImageSrc(posterPath), 'w342');
   if (!src) {
     return (
       <span className={styles.posterPlaceholder} aria-hidden>

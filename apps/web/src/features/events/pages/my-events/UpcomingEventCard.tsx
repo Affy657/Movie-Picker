@@ -16,7 +16,7 @@ import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { formatEventDateLong } from '@/shared/utils/formatMyEventsListDate';
 import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
-import { posterImageSrc } from '@/shared/utils/posterUrl';
+import { posterImageSrc, posterSrcAtSize } from '@/shared/utils/posterUrl';
 import styles from './UpcomingEventCard.module.css';
 
 export function upcomingCardPosters(event: MyEventSummary): MyEventMoviePreview[] {
@@ -161,7 +161,7 @@ export default function UpcomingEventCard({
         </span>
         <PosterFan
           layout="spread"
-          srcs={posters.map((poster) => posterImageSrc(poster.posterPath))}
+          srcs={posters.map((poster) => posterSrcAtSize(posterImageSrc(poster.posterPath), 'w185'))}
         />
       </Card>
       {onLeave ? (

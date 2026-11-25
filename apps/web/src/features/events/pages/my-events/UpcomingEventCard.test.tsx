@@ -82,6 +82,22 @@ describe('UpcomingEventCard', () => {
     expect(images[2]!.getAttribute('src')).toContain('/b.jpg');
   });
 
+  it('asks the poster relay for small posters in the fan, not the stored w500', () => {
+    renderCard({
+      ...base,
+      topMovies: [
+        { title: 'Le Dernier Projectionniste', posterPath: '/api/v1/posters/tmdb/w500/a.jpg' },
+        { title: 'Orbite basse', posterPath: '/api/v1/posters/tmdb/w500/b.jpg' },
+      ],
+    });
+
+    const fan = [...document.querySelectorAll('img')].slice(1);
+    expect(fan.map((image) => image.getAttribute('src'))).toEqual([
+      expect.stringMatching(/\/api\/v1\/posters\/tmdb\/w185\/a\.jpg$/),
+      expect.stringMatching(/\/api\/v1\/posters\/tmdb\/w185\/b\.jpg$/),
+    ]);
+  });
+
   it('puts the winners before the other movies in the fan', () => {
     expect(
       upcomingCardPosters({

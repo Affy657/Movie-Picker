@@ -519,6 +519,40 @@ describe('GroupPage', () => {
     expect(kyoto).toHaveTextContent('À noter');
   });
 
+  it('asks the poster relay for posters at their display size, not the stored w500', async () => {
+    const relayed = (name: string) => `/api/v1/posters/tmdb/w500/${name}.jpg`;
+    server.use(
+      signedInAs(ALICE),
+      ...createGroupsHandlers([
+        {
+          ...JEUDIS,
+          upcomingNights: [
+            { ...JEUDI, topMovies: [{ title: 'Heat', posterPath: relayed('heat') }] },
+          ],
+          pastNights: [
+            {
+              ...PAST,
+              winnerMovies: [{ title: 'Les Enfants du phare', posterPath: relayed('phare') }],
+            },
+          ],
+        },
+      ])
+    );
+    renderPage();
+
+    const upcoming = await screen.findByRole('region', { name: 'À venir' });
+    const proposed = within(upcoming).getByRole('list', { name: 'Films proposés' });
+    expect(proposed.querySelector('img')?.getAttribute('src')).toMatch(
+      /\/api\/v1\/posters\/tmdb\/w185\/heat\.jpg$/
+    );
+    const phare = within(screen.getByRole('tabpanel')).getByRole('link', {
+      name: /Les Enfants du phare/,
+    });
+    expect(phare.querySelector('img')?.getAttribute('src')).toMatch(
+      /\/api\/v1\/posters\/tmdb\/w342\/phare\.jpg$/
+    );
+  });
+
   it('tells which members come to the next night', async () => {
     server.use(signedInAs(ALICE), ...createGroupsHandlers([JEUDIS]));
     const user = userEvent.setup();

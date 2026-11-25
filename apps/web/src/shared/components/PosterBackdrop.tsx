@@ -1,6 +1,8 @@
 import clsx from 'clsx';
-import { posterImageSrc } from '@/shared/utils/posterUrl';
+import { posterImageSrc, posterSrcAtSize } from '@/shared/utils/posterUrl';
 import styles from './PosterBackdrop.module.css';
+
+const BLURRED_POSTER_SIZE = 'w92';
 
 type PosterBackdropProps = {
   posterPath: string | null | undefined;
@@ -15,7 +17,7 @@ export default function PosterBackdrop({
   glow = false,
   className,
 }: Readonly<PosterBackdropProps>) {
-  const src = posterImageSrc(posterPath);
+  const src = posterSrcAtSize(posterImageSrc(posterPath), BLURRED_POSTER_SIZE);
   if (glow) {
     if (!src) return null;
     return (
