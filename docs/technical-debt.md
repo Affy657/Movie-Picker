@@ -19,47 +19,40 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 
 ## Sommaire
 
-### Pour un agent (6)
+### Pour un agent (5)
 
 | Dette | Zone | Sujet |
 |---|---|---|
 | DEBT-074 | API et données | les documents `/r/<slug>`, `/e/<slug>`, `/film/<slug>` et `/serie/<slug>` échappent au plafond par adresse |
 | DEBT-121 | API et données | une inscription partie d'une soirée terminée est comptée sans provenance |
-| DEBT-122 | API et données | l'anonymisation du chemin d'une suggestion d'idée recopie les routes du front |
 | DEBT-108 | Front | quatre pages publiques restent sous le plancher Lighthouse mobile, hors de la porte |
 | DEBT-102 | Tests, CI et outillage | les doublures de l'API dans les tests front restent écrites à la main |
 | DEBT-116 | Tests, CI et outillage | la porte Lighthouse mesure un profil que l'API ne renvoie pas |
 
-### Geste humain (12)
+### Geste humain (9)
 
 | Dette | Zone | Sujet |
 |---|---|---|
 | DEBT-033 | Produit | le plafond de participants promet plus que le flux et la base n'encaissent, et le front en tient un autre |
-| DEBT-120 | Produit | l'heure de création d'un film trahit son proposant dans une soirée anonyme |
 | DEBT-096 | API et données | l'adaptateur en mémoire reste dans l'assembly de production |
-| DEBT-101 | API et données | les titres ajoutés par un membre à la liste d'un autre ne suivent pas la suppression de son compte |
 | DEBT-037 | Infra et déploiement | les jobs Cloud Scheduler décrits en Terraform attendent leur import, et le secret de l'ancien jeton partagé survit |
 | DEBT-045 | Infra et déploiement | le secret du porte-clés Data Protection survit à son montage |
 | DEBT-054 | Infra et déploiement | l'apex porte deux revendications Hosting, et les quatre domaines servent encore un certificat temporaire |
-| DEBT-030 | Sécurité et accès | les captures des suggestions d'idées sont hébergées sur une branche du dépôt public |
 | DEBT-032 | Sécurité et accès | deux modèles d'autorisation hôte coexistent, le jeton porteur et le compte créateur |
 | DEBT-048 | Sécurité et accès | la zone DNS n'a pas de CAA et sa politique DMARC n'observe rien |
 | DEBT-052 | Sécurité et accès | le secret `GITHUB_TOKEN` de l'API est le jeton du `gh` CLI du poste |
 | DEBT-053 | Sécurité et accès | l'API et la sauvegarde parlent à Atlas en administrateur du cluster, le même que le poste de dev |
 
-### Différées (16)
+### Différées (13)
 
 | Dette | Zone | Sujet |
 |---|---|---|
 | DEBT-068 | Produit | les photos de profil ne sont ni modérées ni signalables |
-| DEBT-095 | Produit | la page des films vus d'un profil ne liste que les 1 000 premiers |
 | DEBT-109 | Produit | les titres de films restent en français dans l'interface anglaise |
 | DEBT-112 | Produit | un participant retiré ne revient que par une invitation qui exige de le suivre |
 | DEBT-008 | API et données | le sondage de repli à 3,5 s fixe encore le plafond de la base quand le flux manque |
 | DEBT-040 | API et données | le seed de développement est compilé dans l'assembly de production |
 | DEBT-064 | API et données | `GetByIdOrSlugAsync` ne résout plus que le slug |
-| DEBT-066 | API et données | les disponibilités en streaming de Ma liste s'arrêtent aux 500 films les plus récents |
-| DEBT-072 | API et données | le serveur croit le titre et l'année d'un favori envoyés par le client |
 | DEBT-092 | API et données | le rapport de synchronisation Letterboxd garde ses anciens champs à plat à côté de `lists` |
 | DEBT-097 | API et données | six migrations terminées et huit méthodes de port attendent la fin de la rétention des sauvegardes |
 | DEBT-026 | Front | le flou de fond des barres collantes n'a jamais été mesuré au défilement |
@@ -91,16 +84,6 @@ Se traite en autonomie, sans attendre personne.
 - verify: `grep -n "=night" apps/web/src/features/events/pages/event-detail/EventWinnerStage.tsx` ; encore ouvert tant que la ligne sort et que `UsageCount` ne connaît pas cette provenance
 - fix: déclarer la provenance côté serveur (constante, variante rapportée, ligne du rapport d'usage) ou envoyer une provenance que le serveur connaît déjà ; un test d'`EntryOrigin` qui part du `returnTo` réel du bouton
 - fini-quand: une inscription depuis la scène du gagnant apparaît sous sa provenance dans `pnpm run usage`
-
-## DEBT-122 l'anonymisation du chemin d'une suggestion d'idée recopie les routes du front
-
-- state: agent
-- impact: `CreateIdeaSuggestionHandler` anonymise le chemin joint à une issue GitHub avec sa propre liste de segments du front (`StaticPathSegments`, `IdentifierAfterSegment`), écrite sans barre oblique, donc invisible pour la règle `apiSingleSource` qui garde `FrontRoutes`. Une route du front renommée ou ajoutée laisse passer un identifiant dans l'issue publique, ou masque un segment fixe
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/IdeaSuggestions/CreateIdeaSuggestionHandler.cs`, `apps/api-dotnet/MoviePicker.Api/Application/FrontRoutes.cs`
-- verify: `grep -n "StaticPathSegments = new" apps/api-dotnet/MoviePicker.Api/Application/UseCases/IdeaSuggestions/CreateIdeaSuggestionHandler.cs` ; encore ouvert tant que la ligne sort
-- fix: dériver les segments fixes et les positions d'identifiant des motifs de `FrontRoutes`, et un test qui anonymise chaque motif
-- fini-quand: les segments du front ne sont écrits que dans `FrontRoutes`
-- refs: reste de DEBT-100 (2026-11-25)
 
 ## DEBT-108 quatre pages publiques restent sous le plancher Lighthouse mobile, hors de la porte
 
@@ -148,17 +131,6 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 - piege: le flux vit 270 s (`EventLiveOptions.StreamLifetime`) parce que le service Cloud Run coupe toute requête à 300 s ; `EventSource` reconnecte seul après 2 s et la page recharge la soirée sur `ready`. `UseResponseCompression` exclut `text/event-stream`, sinon le flux part en tampon. Un flux ouvert garde l'instance allumée et facturée tant qu'un participant a la page visible : le front ferme le flux dès que l'onglet est masqué ou la soirée finie. Les plafonds d'`EventStreamGate` sont comptés par instance, pas globalement.
 - refs: C3 ; absorbe DEBT-083 (2026-11-25)
 
-## DEBT-120 l'heure de création d'un film trahit son proposant dans une soirée anonyme
-
-- state: humain
-- bloque: décision produit, garder la limite ou rendre aléatoire l'ordre d'ajout des soirées anonymes
-- impact: dans une soirée anonyme, l'identifiant de chaque film (un ObjectId) et son `createdAt` portent son heure de création, et l'identifiant de chaque participant porte son heure d'arrivée. Avec les outils du navigateur, recouper les deux désigne le proposant de certains films, d'abord ceux que l'hôte propose avant de partager le lien. La même déduction se fait sans outil en regardant la soirée en direct
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/ListMovies/ListMoviesForEventHandler.cs`, `apps/api-dotnet/MoviePicker.Api/Application/DTOs/MovieWithScoreResponse.cs`, identifiants générés dans `apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/Mongo/MongoMovieRepository.cs`
-- verify: `GET /api/v1/events/<slug>/movies` d'une soirée anonyme ; encore ouvert tant que les films y portent un `createdAt` et un `_id` horodaté
-- fix: pour une soirée anonyme, des identifiants de film à horodatage aléatoire et aucun `createdAt` dans les réponses ; le tri « Ajout » y devient aléatoire
-- fini-quand: rien dans les réponses d'une soirée anonyme ne situe un film dans le temps
-- refs: revue des co-hôtes et des propositions anonymes (2026-11-25)
-
 ## DEBT-096 l'adaptateur en mémoire reste dans l'assembly de production
 
 - state: humain
@@ -168,16 +140,6 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 - verify: `grep -c "InMemory" apps/api-dotnet/MoviePicker.Api/Infrastructure/ServiceCollectionExtensions.cs` ; encore ouvert tant que la commande rend plus de `0`
 - fix: si le mode ne sert plus, déplacer les adaptateurs en mémoire dans le projet de tests comme faux des kits (`MovieListTestKit`, `SavedListTestKit`, `WatchedTestKit`), une méthode qu'aucun kit n'appelle levant `NotSupportedException`, et les retirer de l'enregistrement
 - fini-quand: une nouvelle méthode de port ne s'implémente plus qu'une fois dans le code de production
-
-## DEBT-101 les titres ajoutés par un membre à la liste d'un autre ne suivent pas la suppression de son compte
-
-- state: humain
-- bloque: décision produit : effacer ces titres, anonymiser leur auteur, ou les exporter avec ses données
-- impact: `MovieListItemDocument.AddedByUserId` est exempté dans `PersistedReferenceInventoryTests` : à la suppression du compte, les titres restent dans la liste de l'autre membre, affichés sans auteur, et l'export des données de l'auteur ne les contient pas
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Auth/DeleteAccountHandler.cs`, `ExportUserDataHandler.cs`, `PersistedReferenceInventoryTests` dans `apps/api-dotnet/MoviePicker.Api.Tests/`
-- verify: `grep -rn "AddedByUserId" apps/api-dotnet/MoviePicker.Api.Tests --include=PersistedReferenceInventoryTests.cs`
-- fix: selon la décision, l'ajouter à la cascade de `DeleteAccountHandler` ou à l'export, et retirer l'exemption
-- fini-quand: plus d'exemption pour `AddedByUserId`
 
 ## DEBT-037 les jobs Cloud Scheduler décrits en Terraform attendent leur import, et le secret de l'ancien jeton partagé survit
 
@@ -210,16 +172,6 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 - fix: (humain) supprimer le TXT `hosting-site=movie-picker-web-legacy` de l'apex dans le manager OVH, garder `hosting-site=movie-picker-web`. (agent) une heure plus tard, lire `pnpm run terraform -- output web_dns` : `web.movie-picker.fr` doit rester `OWNERSHIP_ACTIVE` (sinon remettre le TXT et chercher pourquoi le CNAME ne suffit pas), l'apex doit perdre son `issues` (`GET https://firebasehosting.googleapis.com/v1beta1/projects/<PROJET_GCP>/sites/movie-picker-web/customDomains/movie-picker.fr` avec un jeton gcloud et `x-goog-user-project`), puis `cert_type` doit passer `GROUPED` sur les quatre domaines dans les 24 heures ; s'il reste `TEMPORARY` au 2026-10-01, ouvrir un ticket Firebase depuis la console (le certificat temporaire n'est pas renouvelé par le projet).
 - piege: ne pas supprimer le TXT `hosting-site=movie-picker-web`, il prouve l'apex lui-même (A `199.36.158.100`). Ne pas sonder `web.movie-picker.fr` en boucle pendant la vérification : l'edge garde les 404 déjà servis, et seule une nouvelle release du site legacy (`gh workflow run web-legacy.yml --ref master`) purge ce cache.
 
-## DEBT-030 les captures des suggestions d'idées sont hébergées sur une branche du dépôt public
-
-- state: humain
-- bloque: décision produit, garder ou non les pièces jointes des suggestions
-- impact: tout compte connecté peut publier jusqu'à 40 images par heure (10 suggestions de 4 pièces jointes, `IdeaSuggestionPolicy` de `RateLimitingExtensions.cs`) sur la branche `GITHUB_ATTACHMENTS_BRANCH` du dépôt public. Les octets magiques et le type MIME sont vérifiés et les métadonnées JPEG, PNG, WebP et GIF retirées avant l'envoi (`ImageMetadataStripper`, liste blanche des blocs de rendu), pas le contenu : le dépôt devient un hébergeur d'images sous le nom du projet, et une image retirée reste dans l'historique git. Le ticket lui-même ne porte plus ni nom, ni handle, ni identifiant de compte (une référence aléatoire, que l'API journalise avec le compte : `IdeaSuggestion: published reference`), ni identifiant de soirée ou de profil (`Page : /e/:slug`, tout segment inconnu devient `:param`).
-- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/GitHub/GitHubIssueClient.cs`, `UploadAttachmentAsync`
-- verify: `grep -n "UploadAttachmentAsync" apps/api-dotnet/MoviePicker.Api/Infrastructure/GitHub/GitHubIssueClient.cs` ; encore ouvert tant que la méthode pousse un blob dans le dépôt
-- fix: soit retirer les pièces jointes du formulaire de suggestion, soit les héberger hors dépôt (bucket privé, lien signé dans le ticket)
-- fini-quand: aucune écriture du serveur dans le dépôt GitHub ne vient d'un utilisateur
-
 ## DEBT-032 deux modèles d'autorisation hôte coexistent, le jeton porteur et le compte créateur
 
 - state: humain
@@ -245,10 +197,10 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 
 - state: humain
 - bloque: un jeton fine-grained se crée dans l'interface GitHub, derrière le mode sudo (passkey ou code par courriel), que l'agent n'a pas le droit de franchir (« Confirm access » sur `settings/personal-access-tokens/new`). Le reste est agent.
-- impact: la valeur montée dans les révisions de production et de recette (`GITHUB_TOKEN=GITHUB_TOKEN:latest` dans les deux listes `SECRETS` de `deploy.yml`) est un jeton OAuth `gho_` de l'application « GitHub CLI », identique à `gh auth token` sur le poste, scopes `repo, workflow, gist, project, read:org` (en-tête `X-OAuth-Scopes` de `curl -sS -D - -H "Authorization: Bearer $T" https://api.github.com/user`). L'API n'en a besoin que pour créer des issues et pousser des pièces jointes sur la branche `feedback-attachments` (`GitHubIssueClient.cs`). Depuis un conteneur compromis, ce jeton pousse sur master, réécrit les workflows et assume donc toutes les identités fédérées, `infra-apply` comprise.
+- impact: la valeur montée dans les révisions de production et de recette (`GITHUB_TOKEN=GITHUB_TOKEN:latest` dans les deux listes `SECRETS` de `deploy.yml`) est un jeton OAuth `gho_` de l'application « GitHub CLI », identique à `gh auth token` sur le poste, scopes `repo, workflow, gist, project, read:org` (en-tête `X-OAuth-Scopes` de `curl -sS -D - -H "Authorization: Bearer $T" https://api.github.com/user`). L'API n'en a besoin que pour créer des issues (`GitHubIssueClient.cs`) : depuis le 2026-11-25 elle ne pousse plus aucune pièce jointe dans le dépôt. Depuis un conteneur compromis, ce jeton pousse sur master, réécrit les workflows et assume donc toutes les identités fédérées, `infra-apply` comprise.
 - ou: Secret Manager `GITHUB_TOKEN` (version 1 du 2026-09-02), `.github/workflows/deploy.yml` (les deux `SECRETS`), `apps/api-dotnet/MoviePicker.Api/Infrastructure/GitHub/GitHubIssueClient.cs`, GitHub Settings / Developer settings / Personal access tokens / Fine-grained tokens
 - verify: `gcloud secrets versions access latest --secret=GITHUB_TOKEN --project <PROJET_GCP> | cut -c1-4` ; encore ouvert tant que la commande rend `gho_` (réglé quand elle rend `gith`, le préfixe `github_pat_`)
-- fix: (humain) un jeton fine-grained nommé `movie-picker-api-feedback`, expiration un an, « Only select repositories » : `Affy657/Movie-Picker`, permissions Issues « Read and write », Contents « Read and write », Metadata en lecture ; sa valeur seule dans `Downloads\github-pat.txt`. (agent) prouver le jeton sans l'afficher : `GET repos/Affy657/Movie-Picker` en 200, `GET .../issues?per_page=1` en 200, un `PUT .../contents/_probe/<horodatage>.txt` sur la branche `feedback-attachments` puis son `DELETE`, et `GET user/repos` qui ne rend que ce dépôt ; puis `gcloud secrets versions add GITHUB_TOKEN --data-file=Downloads\github-pat.txt`, écraser et supprimer le fichier, déployer (`stage=staging` puis `stage=production`, `target=api` suffit si `verify-ci` l'accepte, sinon `all`), vérifier `/health/ready` sur les deux étapes, puis `gcloud secrets versions destroy 1 --secret=GITHUB_TOKEN`. (humain, en dernier) révoquer l'autorisation « GitHub CLI » dans Settings / Applications / Authorized OAuth Apps et refaire `gh auth login` : le jeton `gho_` est dans Secret Manager et dans chaque révision depuis le 2026-09-02.
+- fix: (humain) un jeton fine-grained nommé `movie-picker-api-feedback`, expiration un an, « Only select repositories » : `Affy657/Movie-Picker`, permissions Issues « Read and write » et Metadata en lecture, rien d'autre ; sa valeur seule dans `Downloads\github-pat.txt`. (agent) prouver le jeton sans l'afficher : `GET repos/Affy657/Movie-Picker` en 200, `GET .../issues?per_page=1` en 200, un `PUT .../contents/_probe.txt` refusé en 403, et `GET user/repos` qui ne rend que ce dépôt ; puis `gcloud secrets versions add GITHUB_TOKEN --data-file=Downloads\github-pat.txt`, écraser et supprimer le fichier, déployer (`stage=staging` puis `stage=production`, `target=api` suffit si `verify-ci` l'accepte, sinon `all`), vérifier `/health/ready` sur les deux étapes, puis `gcloud secrets versions destroy 1 --secret=GITHUB_TOKEN`. (humain, en dernier) révoquer l'autorisation « GitHub CLI » dans Settings / Applications / Authorized OAuth Apps et refaire `gh auth login` : le jeton `gho_` est dans Secret Manager et dans chaque révision depuis le 2026-09-02.
 - piege: ne pas révoquer le `gho_` avant le déploiement des deux étapes : les révisions actives le lisent au démarrage de chaque instance, et le `gh` du poste s'arrête aussi. Un jeton fine-grained expire : `pnpm run check:iam` signale une version de secret de plus d'un an, c'est le rappel.
 
 ## DEBT-053 l'API et la sauvegarde parlent à Atlas en administrateur du cluster, le même que le poste de dev
@@ -277,16 +229,6 @@ Ne se traitent que quand leur `declencheur` survient.
 - fix: un « Signaler cette photo » sur le profil public qui prévient l'administrateur, et un geste de retrait qui supprime la photo et rend l'avatar généré
 - piege: retirer une photo à la main demande d'effacer le document de `avatar_photos` et de remettre `avatarPhoto` à `null` sur l'utilisateur ; sans le second geste, le profil pointe vers une image en 404 et retombe sans bruit sur les initiales
 - refs: cadrage du 2026-10-03 de la feature « Photo de profil personnalisée » (modération écartée de la V1.7)
-
-## DEBT-095 la page des films vus d'un profil ne liste que les 1 000 premiers
-
-- state: differe
-- declencheur: un membre dépasse 1 000 films vus (la synchronisation Letterboxd en ajoute jusqu'à 300 par passage)
-- impact: `GET /users/{handle}/watched-movies` n'a pas de `skip` ; le front demande le plafond de l'API (`MaxTake`, 1 000) et tire le compte de `total`. Au-delà, la page annonce le bon nombre mais n'en liste que 1 000, et la recherche ne trouve pas les autres.
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/UserMovies/GetUserWatchedMoviesHandler.cs`, `apps/web/src/features/profile/api/profileApi.ts`
-- verify: `grep -c "skip" apps/api-dotnet/MoviePicker.Api/Application/UseCases/UserMovies/GetUserWatchedMoviesHandler.cs` ; encore ouvert tant que la commande rend `0`
-- fix: pagination `skip`/`take` côté API, chargement page par page derrière « Afficher plus » côté front
-- fini-quand: le millième et unième film d'un profil s'affiche
 
 ## DEBT-109 les titres de films restent en français dans l'interface anglaise
 
@@ -335,25 +277,6 @@ Ne se traitent que quand leur `declencheur` survient.
 - verify: `grep -rln "ByIdOrSlug" apps/api-dotnet --include=*.cs | grep -v /obj/` ; encore ouvert tant qu'il rend un fichier
 - fix: renommer en `GetBySlugAsync` et `GetRequiredBySlugAsync`, `idOrSlug` en `slug` partout, y compris le segment de route, puis `pnpm run openapi:export` et `pnpm run openapi:types`
 - piege: renommer le segment de route change les clés de `paths` dans le contrat OpenAPI, donc le schéma généré et `apiContract.test.ts` côté front ; les faire dans le même commit. La fusion de `v1.7` apporte aussi une trentaine de chemins d'API construits sans `apiPath` (dont `setMovieRating` et `deleteMovieRating`, aujourd'hui dans `features/events/api/eventMoviesApi.ts`) : les convertir dans le même geste, `grep -rln '/events/\${' apps/web/src --include=*.ts | grep -v test` ne doit plus rien rendre.
-
-## DEBT-066 les disponibilités en streaming de Ma liste s'arrêtent aux 500 films les plus récents
-
-- state: differe
-- declencheur: un compte dépasse 500 films dans Ma liste, ou un signalement de films sans plateforme en vue liste
-- impact: depuis le 2026-09-24, Ma liste et la liste publique du profil lisent toutes les pages de la watchlist, mais `GET /api/v1/watchlist/availability` n'enrichit que la première, `GetWatchlistHandler.MaxTake` (500) : au-delà, les films s'affichent sans plateforme ni note TMDB en vue liste. Le plafond borne le fan-out TMDB d'une seule requête, ce n'est pas un oubli.
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Watchlist/GetWatchlistAvailabilityHandler.cs`, `apps/web/src/features/movies/api/watchlistApi.ts` (`fetchWatchlistAvailability`)
-- verify: `grep -n "ListPageByUserIdAsync(userId, 0, GetWatchlistHandler.MaxTake" apps/api-dotnet/MoviePicker.Api/Application/UseCases/Watchlist/GetWatchlistAvailabilityHandler.cs` ; encore ouvert tant que la ligne sort
-- fix: paginer la route (`skip`, `take`) comme `GET /watchlist` et laisser le front la lire page par page, ou n'enrichir que les films visibles
-- piege: chaque page enrichie coûte jusqu'à 500 appels TMDB en cache froid ; garder le plafond par requête, ne pas le relever d'un coup
-
-## DEBT-072 le serveur croit le titre et l'année d'un favori envoyés par le client
-
-- state: differe
-- declencheur: un favori au titre fantaisiste vu sur un profil public
-- impact: `POST /api/v1/users/me/favorites` enregistre `title` et `year` tels quels ; seuls l'identifiant TMDB et l'affiche sont contrôlés. Un appel forgé à la main affiche n'importe quel texte (500 caractères au plus) sous « Ses favoris » pour tous les visiteurs, et la fiche ouverte au clic est celle de l'identifiant, pas du titre affiché. La watchlist fait la même confiance au client. Les listes et les films vus prennent le titre, l'année, la note et la durée de TMDB depuis le 2026-11-17 (`MovieListItemFactory`), et les films proposés dans une soirée depuis le 2026-11-23 (`AddMovieHandler`, constat C03 de `docs/audits/2026-11-23-new-user-and-recruiter.md`) : restent les favoris et la watchlist.
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Favorites/AddFavoriteHandler.cs`
-- verify: `grep -c "ITmdbMovieSearch" apps/api-dotnet/MoviePicker.Api/Application/UseCases/Favorites/AddFavoriteHandler.cs` ; encore ouvert tant que la commande rend `0`
-- fix: relire titre, année et affiche chez TMDB par l'identifiant et le type, en ignorant ceux du client
 
 ## DEBT-092 le rapport de synchronisation Letterboxd garde ses anciens champs à plat à côté de `lists`
 
@@ -476,7 +399,7 @@ Publié sciemment, ne pas y revenir comme si c'était un oubli :
 
 1. Le courriel personnel de l'auteur est l'adresse de 916 commits sur 1 003. Réécrire l'historique changerait tous les SHA et casserait les liens des PR pour une adresse déjà publiée. `user.email` est posé en `noreply` en local sur ce dépôt ; un clone neuf hérite de la configuration globale, à reposer.
 2. `archive/docs/_ynov/` (consigne de module) est publié. Le dossier du titre (`archive/docs/RNCP/`, livrables notés et slides) a été retiré de l'arbre le 2026-09-22 et exporté en PDF hors dépôt : il reste lisible dans l'historique, ce qui est sans conséquence, l'audit ci-dessus n'y a trouvé aucune donnée personnelle.
-3. Les branches distantes sont visibles : `master`, `feedback-attachments` (où `GitHubIssueClient` publie les captures jointes aux signalements, lisibles via `raw.githubusercontent.com`) et les branches Dependabot de passage. Les branches de worktree restent locales.
+3. Les branches distantes sont visibles : `master`, `feedback-attachments` (où `GitHubIssueClient` publiait jusqu'au 2026-11-25 les captures jointes aux signalements, lisibles via `raw.githubusercontent.com` ; plus rien n'y écrit) et les branches Dependabot de passage. Les branches de worktree restent locales.
 4. Les journaux et artefacts des runs Actions sont publics. Aucun `set -x` ni `echo` de secret dans les workflows ; `playwright-traces` (corps de requêtes et cookies) n'existe que sur un run rouge et vit 7 jours, `sbom-api` (`deploy.yml`, étape de recette) 30 jours. Ne pas allonger ces rétentions.
 
 Traité le 2026-09-10, ne pas refaire : identifiants d'infrastructure remplacés par des gabarits `<COMME_CECI>` (table dans `infra/README.md`) ; aucune contribution externe sans geste de l'auteur (`CONTRIBUTING.md`, licence, jobs d'entrée de `ci-cd.yml` conditionnés par `head.repo.fork != true`, ce qui n'est qu'un confort : la vraie barrière est l'approbation `all_external_contributors` ci-dessous, et `rollback-front.yml` ne republie que les archives d'un run de `deploy.yml` sur `master`) ; `SECURITY.md` détourne les failles vers un canal privé.

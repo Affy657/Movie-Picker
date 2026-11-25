@@ -16,8 +16,16 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 - **Mes soirées, la fenêtre pour proposer un film et les pages de groupe** ne chargent plus tous les films, participants et soirées passées pour leurs aperçus et leurs chiffres : elles restent rapides quand une soirée compte des centaines de films ou qu’un groupe se réunit depuis des années.
 
+### Removed
+
+- **Les captures d’écran des suggestions** : « Proposer une idée » n’envoie plus que le texte, et plus aucune image n’est publiée sur GitHub.
+
 ### Fixed
 
+- **Au-delà de 1 000 films vus**, la page Films vus et celle d’un profil les affichent tous, et la recherche trouve aussi les plus anciens.
+- **Les plateformes et la note TMDB de Ma liste** s’affichent pour tous les films, au-delà des 500 ajoutés le plus récemment.
+- **Les favoris et les films de Ma liste** prennent le titre et l’année de TMDB, comme les listes, et un favori sans affiche reçoit celle de TMDB.
+- **L’export de vos données liste les titres que vous avez ajoutés aux listes d’autres membres**, même celles que vous avez quittées ; à la suppression de votre compte, ces titres restent dans leurs listes, sans votre nom.
 - **Une soirée dure le temps de son film** : quand le film tiré dépasse deux heures, la soirée reste en cours jusqu’à la fin du film, et l’invitation à le noter n’arrive plus en plein milieu.
 - **L’invitation à noter ne revient plus sur chaque appareil** : une fois proposée, la feuille de note ne s’ouvre plus d’elle-même sur votre téléphone puis sur votre ordinateur.
 - **Un film tiré tard reçoit aussi son rappel** : même tiré plusieurs jours après la date de la soirée, il donne lieu au rappel pour le noter, et rappel comme feuille de note partent de la même fin de soirée, pendant sept jours.
@@ -25,6 +33,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Security
 
+- **Dans une soirée à propositions anonymes, plus rien ne date un film** : son heure d’ajout n’apparaît plus nulle part, et le tri « Ajout » y devient un ordre mélangé qui ne suit pas l’ordre des propositions.
 - **Une adresse prise par quelqu’un d’autre se récupère avec Google ou GitHub** : si un compte à mot de passe jamais confirmé utilise votre adresse, vous connecter avec Google ou GitHub (même adresse, vérifiée par le fournisseur) vous rend le compte et en déconnecte l’autre personne.
 - **Le badge Ko-fi** ne va plus qu’à un compte dont l’adresse est confirmée.
 
