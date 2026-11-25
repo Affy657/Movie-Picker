@@ -12,6 +12,10 @@ import type { UserProfile } from '@/features/auth/types';
 import LetterboxdExportSection from '@/features/letterboxd/components/LetterboxdExportSection';
 import LetterboxdSyncSection from '@/features/letterboxd/components/LetterboxdSyncSection';
 import { ROUTES } from '@/app/routes';
+import {
+  OAUTH_ERROR_QUERY_PARAM,
+  OAUTH_LINKED_QUERY_PARAM,
+} from '@/features/auth/oauthQueryParams';
 import sharedStyles from '@/shared/components/SettingsSection.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
 
@@ -48,8 +52,8 @@ export default function AccountIntegrationsPage({ user }: Readonly<{ user: UserP
     error: unlinkError,
   } = useAsyncAction(unlinkAction, t('auth.account.connectionsUnlinkFallbackError'));
 
-  const oauthLinked = params.get('oauthLinked');
-  const oauthErrorKey = resolveOAuthErrorKey(params.get('oauthError'));
+  const oauthLinked = params.get(OAUTH_LINKED_QUERY_PARAM);
+  const oauthErrorKey = resolveOAuthErrorKey(params.get(OAUTH_ERROR_QUERY_PARAM));
   const linked = user.linkedProviders;
   const unlinkable = availableProviders.filter((p) => !linked.includes(p));
   const isLastProvider = (provider: string) => linked.length === 1 && linked[0] === provider;

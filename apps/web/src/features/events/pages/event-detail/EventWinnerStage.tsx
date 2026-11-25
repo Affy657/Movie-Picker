@@ -11,6 +11,7 @@ import { useTranslation } from '@/shared/i18n';
 import type { MovieData } from '@/shared/types/movie';
 import EventWinnerSummary, { type WinnerRatingContext } from './EventWinnerSummary';
 import { useEventMovieRating } from './useEventMovieRating';
+import { ENTRY_ORIGIN_QUERY_PARAM } from '@/shared/analytics/entryOrigin';
 
 type Props = {
   slug: string;
@@ -63,7 +64,7 @@ function useWinnerRating({
 
 function hostYourOwnHref(signedIn: boolean): string {
   if (signedIn) return ROUTES.createEvent;
-  return withReturnTo(ROUTES.register, `${ROUTES.createEvent}?from=night`);
+  return withReturnTo(ROUTES.register, `${ROUTES.createEvent}?${ENTRY_ORIGIN_QUERY_PARAM}=night`);
 }
 
 export default function EventWinnerStage({

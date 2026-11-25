@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import frontRoutesSource from '../../../api-dotnet/MoviePicker.Api/Application/FrontRoutes.cs?raw';
 import { SENSITIVE_QUERY_PARAMETERS } from '@/shared/utils/sensitiveUrl';
+import { ENTRY_ORIGIN_QUERY_PARAM } from '@/shared/analytics/entryOrigin';
+import {
+  OAUTH_ERROR_QUERY_PARAM,
+  OAUTH_LINKED_QUERY_PARAM,
+  OAUTH_OUTCOME_QUERY_PARAM,
+  OAUTH_PROVIDER_QUERY_PARAM,
+} from '@/features/auth/oauthQueryParams';
 import { RATE_QUERY_PARAM, ROUTES, withReturnTo } from './routes';
 
 const declaredByTheApi = Object.fromEntries(
@@ -36,9 +43,15 @@ const routesOfTheWebApp = {
   Groups: ROUTES.groups,
   GroupPattern: ROUTES.groupPattern,
   GroupJoinPattern: ROUTES.groupJoinPattern,
+  ListJoinPattern: ROUTES.joinListPattern,
   RateQueryParam: RATE_QUERY_PARAM,
   ReturnToQueryParam: firstQueryKeyOf(withReturnTo(ROUTES.login, ROUTES.eventDetail('soiree'))),
   ResetTokenQueryParam: 'token',
+  EntryOriginQueryParam: ENTRY_ORIGIN_QUERY_PARAM,
+  OAuthErrorQueryParam: OAUTH_ERROR_QUERY_PARAM,
+  OAuthLinkedQueryParam: OAUTH_LINKED_QUERY_PARAM,
+  OAuthProviderQueryParam: OAUTH_PROVIDER_QUERY_PARAM,
+  OAuthOutcomeQueryParam: OAUTH_OUTCOME_QUERY_PARAM,
 };
 
 describe('front routes built by the API', () => {

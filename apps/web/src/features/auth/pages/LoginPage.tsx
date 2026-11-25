@@ -9,6 +9,7 @@ import {
 } from '@/features/auth/devQuickLoginCredentials';
 import OAuthProviderButtons from '@/features/auth/components/OAuthProviderButtons';
 import { resolveOAuthErrorKey } from '@/features/auth/utils/oauthErrors';
+import { OAUTH_ERROR_QUERY_PARAM } from '@/features/auth/oauthQueryParams';
 import { returnsToEvent } from '@/features/auth/utils/eventReturn';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
@@ -37,7 +38,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState<LoginFieldErrors>({});
-  const oauthErrorKey = resolveOAuthErrorKey(params.get('oauthError'));
+  const oauthErrorKey = resolveOAuthErrorKey(params.get(OAUTH_ERROR_QUERY_PARAM));
 
   const loginAction = useCallback(
     async (mode: LoginSubmitMode) => {

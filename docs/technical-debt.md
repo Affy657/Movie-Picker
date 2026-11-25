@@ -155,7 +155,7 @@ Se traite en autonomie, sans attendre personne.
 - state: agent
 - impact: le bouton d'inscription de la scène du gagnant (`EventWinnerStage`) renvoie vers `/new?from=night`, mais le serveur ne connaît que les provenances `event`, `recap`, `list` et `profile` (`EntryOrigin`, `UsageCount`) : ces inscriptions et connexions tombent dans `other` de `pnpm run usage`, alors qu'elles viennent d'une soirée
 - ou: `apps/web/src/features/events/pages/event-detail/EventWinnerStage.tsx`, `apps/api-dotnet/MoviePicker.Api/Application/EntryOrigin.cs`, `apps/api-dotnet/MoviePicker.Api/Domain/UsageCount.cs`, `scripts/usage.mjs`
-- verify: `grep -n "from=night" apps/web/src/features/events/pages/event-detail/EventWinnerStage.tsx` ; encore ouvert tant que la ligne sort et que `UsageCount` ne connaît pas cette provenance
+- verify: `grep -n "=night" apps/web/src/features/events/pages/event-detail/EventWinnerStage.tsx` ; encore ouvert tant que la ligne sort et que `UsageCount` ne connaît pas cette provenance
 - fix: déclarer la provenance côté serveur (constante, variante rapportée, ligne du rapport d'usage) ou envoyer une provenance que le serveur connaît déjà ; un test d'`EntryOrigin` qui part du `returnTo` réel du bouton
 - fini-quand: une inscription depuis la scène du gagnant apparaît sous sa provenance dans `pnpm run usage`
 

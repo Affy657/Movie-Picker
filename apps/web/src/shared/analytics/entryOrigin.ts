@@ -7,7 +7,9 @@ const ORIGINS_BY_RETURN_PATH: ReadonlyArray<readonly [string, EntryOrigin]> = [
   ['/u/', 'profile'],
 ];
 
-const DECLARED_ORIGIN_PARAMETER = 'from=';
+export const ENTRY_ORIGIN_QUERY_PARAM = 'from';
+
+const DECLARED_ORIGIN_PARAMETER = `${ENTRY_ORIGIN_QUERY_PARAM}=`;
 
 function declaredOriginOf(returnTo: string): EntryOrigin {
   const query = returnTo.split('?')[1] ?? '';

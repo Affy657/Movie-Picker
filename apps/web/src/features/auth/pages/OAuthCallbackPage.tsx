@@ -11,6 +11,10 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { entryOriginOf } from '@/shared/analytics/entryOrigin';
 import { useTranslation } from '@/shared/i18n';
+import {
+  OAUTH_OUTCOME_QUERY_PARAM,
+  OAUTH_PROVIDER_QUERY_PARAM,
+} from '@/features/auth/oauthQueryParams';
 
 export default function OAuthCallbackPage() {
   const { t } = useTranslation();
@@ -26,8 +30,8 @@ export default function OAuthCallbackPage() {
     startedRef.current = true;
 
     const returnTo = safeReturnTo(params.get('returnTo'));
-    const provider = params.get('provider');
-    const event = params.get('event');
+    const provider = params.get(OAUTH_PROVIDER_QUERY_PARAM);
+    const event = params.get(OAUTH_OUTCOME_QUERY_PARAM);
 
     setSessionHint();
     if (provider && (event === 'signup' || event === 'login')) {
