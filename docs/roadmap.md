@@ -53,11 +53,9 @@ Rien pour l'instant.
 - `L` **Co-hôte** : l'hôte désigne un ou plusieurs participants comme co-hôtes, avec les mêmes droits que lui (lancer la roue, expulser un participant, modifier les paramètres) sauf supprimer la soirée.
 - `M` **Soirée à distance synchronisée** : une fois le film gagnant désigné, la page soirée guide l'hôte pour lancer une session de visionnage synchronisé avec une extension existante (Teleparty, Scener…) et en partage le lien aux participants.
 - `L` **Chat de soirée** : panneau de discussion en temps réel sur la page soirée, latéral sur ordinateur et en onglet sur mobile, pour remplacer les mini-commentaires par film par un seul espace d'échange.
-- `XL` **Mode Battle / Tournoi** : alternative à la roue, l'hôte lance un tournoi en duels ; deux films s'affrontent, les participants votent, et le gagnant passe au tour suivant jusqu'au champion.
 
 ### Accueil, aide et contact
 
-- `L` **Soirée de démo sans compte** : un bouton de l'accueil ouvre une soirée déjà remplie de participants fictifs, de films proposés et de votes, où le visiteur vote et lance la roue sans créer de compte. De quoi comprendre le produit seul, en une minute, avant de s'inscrire.
 - `S` **Serveur Discord Movie Picker** : un serveur communautaire pour les retours, les idées et l'annonce des versions, avec un lien d'invitation dans le pied de page et la page « Comment ça marche », sans remplacer les tickets GitHub.
 - `M` **Statut du service** : page publique indiquant si l'API et le site sont opérationnels.
 - `?` **Événements hebdomadaires** : un rendez-vous qui change chaque semaine sur l'accueil, sous une forme à définir : thème à respecter par le film gagnant d'une soirée, événement saisonnier comme Halloween ou Noël.
@@ -105,3 +103,5 @@ Rien pour l'instant.
 ## 🗄️ Rejetée
 
 - `S` **Description de soirée** : champ libre en complément du titre, à la création comme ensuite par l'hôte, affiché en tête de la page soirée pour dire à l'invité dans quoi il entre (thème, consignes, lieu). Écartée : la fenêtre de création garde le moins de champs possible, et le titre et le thème disent déjà à l'invité dans quoi il entre.
+- `XL` **Mode Battle / Tournoi** : alternative à la roue, l'hôte lance un tournoi en duels ; deux films s'affrontent, les participants votent, et le gagnant passe au tour suivant jusqu'au champion. Écartée : les votes, la roue et le choix de l'hôte suffisent à trancher.
+- `L` **Soirée de démo sans compte** : un bouton de l'accueil ouvre une soirée déjà remplie de participants fictifs, de films proposés et de votes, où le visiteur vote et lance la roue sans créer de compte. Écartée : la page « Comment ça marche » a déjà une roue jouable sans compte.
