@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière et sa ligne du sommaire, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-121`. Elle se range dans la partie de son `state`, avec les entrées de sa zone, et gagne sa ligne au sommaire dans le même commit. Une entrée qui change de `state` change de partie et de tableau.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-123`. Elle se range dans la partie de son `state`, avec les entrées de sa zone, et gagne sa ligne au sommaire dans le même commit. Une entrée qui change de `state` change de partie et de tableau.
 5. Deux dettes qui se règlent par le même geste n'en font qu'une, sous l'identifiant le plus ancien ; les identifiants absorbés restent cités dans `refs`.
 6. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 7. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
@@ -19,26 +19,25 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 
 ## Sommaire
 
-### Pour un agent (14)
+### Pour un agent (13)
 
 | Dette | Zone | Sujet |
 |---|---|---|
 | DEBT-074 | API et données | les documents `/r/<slug>`, `/e/<slug>`, `/film/<slug>` et `/serie/<slug>` échappent au plafond par adresse |
 | DEBT-092 | API et données | le rapport de synchronisation Letterboxd double chaque champ par liste |
-| DEBT-100 | API et données | du texte et des chemins du serveur vivent encore hors de leurs tables |
 | DEBT-103 | API et données | le contrat ne décrit pas encore les chaînes libres des requêtes |
 | DEBT-107 | API et données | les soirées d'un groupe sont toutes relues à chaque affichage |
 | DEBT-113 | API et données | une soirée récurrente close faute de participant garde sa récurrence |
+| DEBT-121 | API et données | une inscription partie d'une soirée terminée est comptée sans provenance |
+| DEBT-122 | API et données | l'anonymisation du chemin d'une suggestion d'idée recopie les routes du front |
 | DEBT-108 | Front | quatre pages publiques restent sous le plancher Lighthouse mobile, hors de la porte |
 | DEBT-089 | Tests, CI et outillage | un test de suggestion d'idée tombe sur le délai de 100 ms d'une regex quand le poste est chargé |
 | DEBT-098 | Tests, CI et outillage | deux tests d'intégration échouent parfois sous charge |
-| DEBT-099 | Tests, CI et outillage | la garde anti-tutoiement ne connaît qu'une liste de mots |
 | DEBT-102 | Tests, CI et outillage | les doublures de l'API dans les tests front restent écrites à la main |
-| DEBT-106 | Tests, CI et outillage | la requête Mongo de `pnpm run usage` n'est couverte par aucun test |
 | DEBT-116 | Tests, CI et outillage | la porte Lighthouse mesure un profil que l'API ne renvoie pas |
 | DEBT-118 | Tests, CI et outillage | la passation d'hôte à la suppression d'un compte n'est testée qu'en mémoire |
 
-### Geste humain (20)
+### Geste humain (21)
 
 | Dette | Zone | Sujet |
 |---|---|---|
@@ -125,15 +124,6 @@ Se traite en autonomie, sans attendre personne.
 - piege: la forme change le contrat OpenAPI, régénérer `openapiSchema.ts`
 - fini-quand: plus aucun champ `Watched*` dans le rapport, et la date de synchronisation est tenue par liste
 
-## DEBT-100 du texte et des chemins du serveur vivent encore hors de leurs tables
-
-- state: agent
-- impact: rien n'empêche d'écrire un chemin du front en dur hors de `FrontRoutes` (les clés `oauthError` et `oauthLinked` d'`AuthController` n'y sont pas) ; le pseudo « Compte supprimé » et le texte des issues GitHub sont hors de `ServerCopy` ; les messages « Authentication required », « Access denied », « Resource not found » et « Too many requests » sont écrits à quatre endroits (`ApiErrorClientErrorFactory`, configuration des cookies, pages de statut de `Program.cs`, limiteur de débit) ; le repli de région `"FR"` reste recopié dans `Infrastructure/Tmdb` (`TmdbMovieSearch.Discovery`, `TmdbMovieSearch.Enrichment`)
-- ou: `apps/api-dotnet/MoviePicker.Api/`
-- verify: `grep -rn "\"FR\"" apps/api-dotnet/MoviePicker.Api/Infrastructure/Tmdb`
-- fix: une règle de `scripts/architecture/` qui refuse un littéral commençant par un chemin de `FrontRoutes` hors de ce fichier ; une table unique des messages d'erreur génériques ; `WatchRegion.Of` dans `Infrastructure/Tmdb`
-- fini-quand: chaque texte et chaque chemin destiné au front n'est écrit qu'une fois
-
 ## DEBT-103 le contrat ne décrit pas encore les chaînes libres des requêtes
 
 - state: agent
@@ -159,6 +149,25 @@ Se traite en autonomie, sans attendre personne.
 - ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Auth/HostedNightsHandover.cs`, planificateur des récurrences
 - verify: `grep -rl "Recurr" apps/api-dotnet/MoviePicker.Api.Tests/UseCases/Auth` ; encore ouvert tant que la commande ne rend rien
 - fix: un test qui ferme une soirée récurrente par passation impossible et vérifie qu'aucune occurrence ne naît, ou couper la récurrence à la clôture
+
+## DEBT-121 une inscription partie d'une soirée terminée est comptée sans provenance
+
+- state: agent
+- impact: le bouton d'inscription de la scène du gagnant (`EventWinnerStage`) renvoie vers `/new?from=night`, mais le serveur ne connaît que les provenances `event`, `recap`, `list` et `profile` (`EntryOrigin`, `UsageCount`) : ces inscriptions et connexions tombent dans `other` de `pnpm run usage`, alors qu'elles viennent d'une soirée
+- ou: `apps/web/src/features/events/pages/event-detail/EventWinnerStage.tsx`, `apps/api-dotnet/MoviePicker.Api/Application/EntryOrigin.cs`, `apps/api-dotnet/MoviePicker.Api/Domain/UsageCount.cs`, `scripts/usage.mjs`
+- verify: `grep -n "from=night" apps/web/src/features/events/pages/event-detail/EventWinnerStage.tsx` ; encore ouvert tant que la ligne sort et que `UsageCount` ne connaît pas cette provenance
+- fix: déclarer la provenance côté serveur (constante, variante rapportée, ligne du rapport d'usage) ou envoyer une provenance que le serveur connaît déjà ; un test d'`EntryOrigin` qui part du `returnTo` réel du bouton
+- fini-quand: une inscription depuis la scène du gagnant apparaît sous sa provenance dans `pnpm run usage`
+
+## DEBT-122 l'anonymisation du chemin d'une suggestion d'idée recopie les routes du front
+
+- state: agent
+- impact: `CreateIdeaSuggestionHandler` anonymise le chemin joint à une issue GitHub avec sa propre liste de segments du front (`StaticPathSegments`, `IdentifierAfterSegment`), écrite sans barre oblique, donc invisible pour la règle `apiSingleSource` qui garde `FrontRoutes`. Une route du front renommée ou ajoutée laisse passer un identifiant dans l'issue publique, ou masque un segment fixe
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/IdeaSuggestions/CreateIdeaSuggestionHandler.cs`, `apps/api-dotnet/MoviePicker.Api/Application/FrontRoutes.cs`
+- verify: `grep -n "StaticPathSegments = new" apps/api-dotnet/MoviePicker.Api/Application/UseCases/IdeaSuggestions/CreateIdeaSuggestionHandler.cs` ; encore ouvert tant que la ligne sort
+- fix: dériver les segments fixes et les positions d'identifiant des motifs de `FrontRoutes`, et un test qui anonymise chaque motif
+- fini-quand: les segments du front ne sont écrits que dans `FrontRoutes`
+- refs: reste de DEBT-100 (2026-11-25)
 
 ## DEBT-108 quatre pages publiques restent sous le plancher Lighthouse mobile, hors de la porte
 
@@ -188,15 +197,6 @@ Se traite en autonomie, sans attendre personne.
 - fix: pour la course, établir si un conflit d'écriture peut être vu par tous les participants alors que l'écriture est appliquée (bug du repository) ou si c'est le test qui conclut trop tôt ; pour le flux, remplacer l'attente en temps réel par une horloge contrôlée
 - fini-quand: les deux tests passent vingt fois de suite pendant une suite complète en parallèle
 
-## DEBT-099 la garde anti-tutoiement ne connaît qu'une liste de mots
-
-- state: agent
-- impact: `localeParity.test.ts` et `ServerCopyTests` refusent `tu`, `te`, `toi`, `ton`, `ta`, `tes` et quelques impératifs nommés (`Rejoins`, `Indique`, `Demande`) ; tout autre impératif à la deuxième personne du singulier (« Prépare », « donne-lui ») passe
-- ou: `apps/web/src/shared/i18n/localeParity.test.ts`, `apps/api-dotnet/MoviePicker.Api.Tests/Application/ServerCopyTests.cs`
-- verify: `grep -c "Rejoins-la" apps/web/src/shared/i18n/localeParity.test.ts` ; encore ouvert tant que la garde liste des impératifs un par un
-- fix: une règle sur les impératifs en tête de phrase ou suivis d'un pronom (`-lui`, `-la`, `-toi`), partagée par les deux gardes, validée sur les locales actuelles sans faux positif
-- fini-quand: un impératif à la deuxième personne ajouté dans une locale ou dans `ServerCopy` fait échouer la garde
-
 ## DEBT-102 les doublures de l'API dans les tests front restent écrites à la main
 
 - state: agent
@@ -205,16 +205,6 @@ Se traite en autonomie, sans attendre personne.
 - verify: `grep -rl "HttpResponse.json(" apps/web/src --include=*.test.ts --include=*.test.tsx | wc -l` ; encore ouvert tant que la commande rend plus de `0`
 - fix: passer chaque fichier de test touché à `apiJson` au fil de l'eau, puis une règle de `scripts/architecture/` qui refuse `HttpResponse.json(` dans un test
 - fini-quand: aucune réponse simulée hors de `apiJson` et `apiErrorJson`
-
-## DEBT-106 la requête Mongo de `pnpm run usage` n'est couverte par aucun test
-
-- state: agent
-- impact: `scripts/usage.test.mjs` teste le calcul et la mise en forme du rapport, pas la requête `MONGOSH_QUERY` qui lit la base ; un champ renommé dans une des collections lues (`participantId`, `creatorUserId`, `letterboxdSlug`, `letterboxdLastSyncAt`) fait sortir des zéros sans aucune erreur
-- ou: `scripts/usage.mjs` (`MONGOSH_QUERY`, `readUsage`)
-- verify: `grep -L "readUsage" scripts/usage.test.mjs`
-- fix: un test qui sème quelques documents dans le Mongo de test (`startWorkstationMongo`, port 27018) et compare ce que rend `readUsage`, joué là où la CI lance déjà un conteneur Mongo
-- fini-quand: renommer un champ lu par la requête fait échouer un test
-- piege: `readUsage` lance mongosh dans l'image `mongo:8` épinglée, par Docker ; la voie de CI qui joue ce test doit pouvoir lancer un conteneur
 
 ## DEBT-116 la porte Lighthouse mesure un profil que l'API ne renvoie pas
 
