@@ -45,6 +45,7 @@ import type {
   ShareTab,
 } from './eventDetailSessionTypes';
 import { useEventLinkOpenedCount } from '@/features/events/hooks/useEventLinkOpenedCount';
+import { isNightHost } from '@/features/events/lib/nightRules';
 
 type EventDetailSessionProps = {
   slug: string;
@@ -107,7 +108,7 @@ function sessionCapabilities(input: {
     needsJoin: open && !participant && reachable,
     canShowLeave: !participantsLocked && !!participant && !mine?.isCreator && reachable,
     canRemoveParticipants: !participantsLocked && reachable,
-    canConfigure: !!event.isHost && open && reachable,
+    canConfigure: isNightHost(event) && open && reachable,
     canAddMovie: open && !!participant && !moviesShownEmpty && reachable,
   };
 }
@@ -167,11 +168,12 @@ export default function EventDetailSession({
     return () => globalThis.clearInterval(id);
   }, [event.isFinished]);
 
+  const isHost = isNightHost(event);
   useEffect(() => {
-    if (!event.isHost || event.isFinished) {
+    if (!isHost || event.isFinished) {
       setSettingsOpen(false);
     }
-  }, [event.isHost, event.isFinished]);
+  }, [isHost, event.isFinished]);
 
   const wheel = useEventWheel({
     slug,

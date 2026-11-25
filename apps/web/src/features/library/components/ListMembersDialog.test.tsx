@@ -14,6 +14,7 @@ import { copyTextToClipboard } from '@/shared/utils/copyTextToClipboard';
 import type { MovieListDetail, MovieListPerson } from '@/features/library/api/listsApi';
 import { cancelListInvitation } from '@/features/library/api/listMembersApi';
 import modalStyles from '@/shared/components/Modal.module.css';
+import personRowStyles from '@/shared/components/PersonRow.module.css';
 import ListMembersDialog from './ListMembersDialog';
 
 vi.mock('@/shared/utils/copyTextToClipboard', () => ({ copyTextToClipboard: vi.fn() }));
@@ -166,6 +167,7 @@ describe('ListMembersDialog', () => {
     expect(
       within(rows[3]!).getByRole('button', { name: 'Annuler l’invitation de Sam Roux' })
     ).toBeInTheDocument();
+    for (const row of rows) expect(row).toHaveClass(personRowStyles.row!);
   });
 
   it('shows a member who is in the list, without inviting nor removing anyone', async () => {

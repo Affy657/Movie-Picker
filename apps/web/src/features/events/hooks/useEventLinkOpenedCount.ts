@@ -3,6 +3,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import type { EventLinkState } from '@/shared/analytics/usageCounts';
 import type { EventData } from '@/features/events/types';
+import { isNightHost } from '@/features/events/lib/nightRules';
 
 interface EventLinkOpenedInput {
   slug: string;
@@ -24,7 +25,7 @@ export function useEventLinkOpenedCount({
 }: EventLinkOpenedInput): void {
   const { track } = useAnalytics();
   const { user, isLoading } = useAuth();
-  const newcomer = !event.isHost && !event.myParticipant && !participant;
+  const newcomer = !isNightHost(event) && !event.myParticipant && !participant;
   const state = linkStateOf(event, isFull);
   const viewer = user ? 'account' : 'visitor';
 

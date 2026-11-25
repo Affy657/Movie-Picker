@@ -310,16 +310,20 @@ export default function MovieListPage() {
         showListBadge: true,
         contributor,
         onToggleWatchlist: (entry) => watchlistToggle.toggle(entry),
-        onRemoveFromList: (entry) => {
-          if (!list) return;
-          setRemoveError(null);
-          removeItem.mutate(
-            { listId: list.id, tmdbId: entry.tmdbId, mediaType: entry.mediaType },
-            {
-              onError: (error) =>
-                setRemoveError(getErrorMessage(error, t('lists.page.removeError'))),
-            }
-          );
+        remove: {
+          label: t('lists.page.removeFromList'),
+          ariaLabel: (title) => t('lists.page.removeFromListFor', { title }),
+          onSelect: (entry) => {
+            if (!list) return;
+            setRemoveError(null);
+            removeItem.mutate(
+              { listId: list.id, tmdbId: entry.tmdbId, mediaType: entry.mediaType },
+              {
+                onError: (error) =>
+                  setRemoveError(getErrorMessage(error, t('lists.page.removeError'))),
+              }
+            );
+          },
         },
         error: removeError ?? watchlistToggle.error,
       }}

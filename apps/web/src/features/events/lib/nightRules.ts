@@ -44,6 +44,10 @@ export function canEditNote(movie: MovieData, night: NightState, viewer: NightVi
   return canAct(night, viewer) && !night.wheelLocked && isMine(movie, viewer);
 }
 
+export function isNightHost(event: { isHost?: boolean } | null | undefined): boolean {
+  return event?.isHost === true;
+}
+
 export function canToggleWheel(night: NightState): boolean {
   return night.isHost && !night.isFinished;
 }

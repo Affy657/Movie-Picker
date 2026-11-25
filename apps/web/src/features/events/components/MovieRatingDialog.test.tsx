@@ -41,6 +41,16 @@ describe('MovieRatingDialog', () => {
     expect(screen.queryByRole('button', { name: 'Effacer' })).not.toBeInTheDocument();
   });
 
+  it('asks the poster relay for a poster at the size of the dialog, not the stored w500', () => {
+    renderDialog({ movie: { ...movie, posterPath: '/api/v1/posters/tmdb/w500/matrix.jpg' } });
+
+    const sources = [...document.querySelectorAll('img')].map((image) => image.getAttribute('src'));
+    expect(sources).toContainEqual(
+      expect.stringMatching(/\/api\/v1\/posters\/tmdb\/w342\/matrix\.jpg$/)
+    );
+    expect(sources).not.toContainEqual(expect.stringMatching(/\/w500\//));
+  });
+
   it('saves as soon as a star is picked, without a save button', async () => {
     const { onSave } = renderDialog();
 

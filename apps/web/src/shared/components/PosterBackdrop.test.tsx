@@ -17,6 +17,16 @@ describe('PosterBackdrop', () => {
     expect(glow?.querySelector('img')).toHaveAttribute('alt', '');
   });
 
+  it('blurs the smallest poster the relay serves, behind the page as in a glow', () => {
+    const relayed = '/api/v1/posters/tmdb/w500/cars.jpg';
+    const { container: backdrop } = render(<PosterBackdrop posterPath={relayed} />);
+    const { container: glow } = render(<PosterBackdrop posterPath={relayed} glow />);
+
+    for (const image of [backdrop.querySelector('img'), glow.querySelector('img')]) {
+      expect(image?.getAttribute('src')).toMatch(/\/api\/v1\/posters\/tmdb\/w92\/cars\.jpg$/);
+    }
+  });
+
   it('draws no glow without a poster', () => {
     const { container } = render(<PosterBackdrop posterPath={null} glow />);
     expect(container).toBeEmptyDOMElement();

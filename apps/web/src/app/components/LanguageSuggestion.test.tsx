@@ -1,8 +1,13 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import LanguageSuggestion, { shouldSuggestEnglish } from '@/app/components/LanguageSuggestion';
-import { LocaleProvider } from '@/shared/i18n';
+import { LocaleProvider, loadLocale } from '@/shared/i18n';
+
+vi.mock('@/shared/i18n', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/shared/i18n')>();
+  return { ...actual, loadLocale: vi.fn(actual.loadLocale) };
+});
 
 const BROWSER = {
   languages: ['en-US', 'en'],
@@ -37,16 +42,43 @@ describe('shouldSuggestEnglish', () => {
   });
 });
 
-function renderSuggestion() {
+type PageWait = (onSettled: () => void) => () => void;
+
+const pageAlreadySettled: PageWait = (onSettled) => {
+  onSettled();
+  return () => undefined;
+};
+
+function renderSuggestion(waitForPage: PageWait = pageAlreadySettled) {
   return render(
     <LocaleProvider>
-      <LanguageSuggestion browser={BROWSER} />
+      <LanguageSuggestion browser={BROWSER} waitForPage={waitForPage} />
     </LocaleProvider>
   );
 }
 
 describe('LanguageSuggestion', () => {
-  beforeEach(() => localStorage.removeItem('moviepicker-locale'));
+  beforeEach(() => {
+    localStorage.removeItem('moviepicker-locale');
+    vi.mocked(loadLocale).mockClear();
+  });
+
+  it('loads English only once the images of the page have settled', async () => {
+    let settlePage = () => undefined as void;
+    renderSuggestion((onSettled) => {
+      settlePage = onSettled;
+      return () => undefined;
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(loadLocale).not.toHaveBeenCalledWith('en');
+    expect(screen.queryByText('View Movie Picker in English?')).not.toBeInTheDocument();
+
+    act(() => settlePage());
+
+    expect(await screen.findByText('View Movie Picker in English?')).toBeInTheDocument();
+    expect(loadLocale).toHaveBeenCalledWith('en');
+  });
 
   it('offers English in English, and switches the site when accepted', async () => {
     const user = userEvent.setup();

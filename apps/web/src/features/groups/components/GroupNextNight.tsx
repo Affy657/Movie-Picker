@@ -12,7 +12,7 @@ import { useLocale, useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { formatEventDateLong, formatEventTime } from '@/shared/utils/formatMyEventsListDate';
 import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
-import { posterImageSrc } from '@/shared/utils/posterUrl';
+import { posterImageSrc, posterSrcAtSize } from '@/shared/utils/posterUrl';
 import { ROUTES } from '@/app/routes';
 import EventDateBlock from '@/features/events/components/EventDateBlock';
 import type { MyEventSummary } from '@/features/events/types';
@@ -53,7 +53,7 @@ function PosterStrip({ night }: Readonly<{ night: MyEventSummary }>) {
   return (
     <ul className={styles.strip} aria-label={t('groups.page.proposedFilms')}>
       {movies.map((movie, index) => {
-        const src = posterImageSrc(movie.posterPath);
+        const src = posterSrcAtSize(posterImageSrc(movie.posterPath), 'w185');
         return (
           <li key={`${index}-${movie.title}`} className={styles.film}>
             <span className={styles.poster}>

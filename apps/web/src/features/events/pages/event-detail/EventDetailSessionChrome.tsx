@@ -1,3 +1,4 @@
+import { isNightHost } from '@/features/events/lib/nightRules';
 import { Suspense } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import JoinForm from '@/features/events/components/JoinForm';
@@ -57,7 +58,7 @@ function EventDetailSessionOverlays({
   join: JoinGate;
   wheelError: string | null;
 }>) {
-  const hostCanInvite = !!event.isHost && !event.isFinished;
+  const hostCanInvite = isNightHost(event) && !event.isFinished;
 
   const settingsEverOpened = useEverOpened(settings.open);
   const shareEverOpened = useEverOpened(share.open);
@@ -171,7 +172,7 @@ export default function EventDetailSessionChrome({
   const hasDrawnFilm = (event.winners?.length ?? 0) > 0;
   const pendingWithoutFilm = pending && !hasDrawnFilm;
   const plan = eventHeaderActions({
-    isHost: !!event.isHost,
+    isHost: isNightHost(event),
     isFinished: !!event.isFinished,
     lifecycle,
     canAddMovie: addMovie.canAdd,
@@ -227,7 +228,7 @@ export default function EventDetailSessionChrome({
         onRetry={onRetryConnection}
       />
       <EventProposingNotice names={proposerNames} />
-      {pendingWithoutFilm ? <EventPendingBanner isHost={!!event.isHost} /> : null}
+      {pendingWithoutFilm ? <EventPendingBanner isHost={isNightHost(event)} /> : null}
       <EventDetailSessionOverlays
         slug={slug}
         hostToken={hostToken}

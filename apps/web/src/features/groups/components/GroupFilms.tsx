@@ -4,7 +4,7 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { formatRating } from '@/shared/utils/formatRating';
 import { formatShortDate } from '@/shared/utils/formatMyEventsListDate';
-import { posterImageSrc } from '@/shared/utils/posterUrl';
+import { posterImageSrc, posterSrcAtSize } from '@/shared/utils/posterUrl';
 import { ROUTES } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import type { MyEventSummary } from '@/features/events/types';
@@ -48,7 +48,7 @@ export default function GroupFilms({ nights }: Readonly<{ nights: readonly MyEve
     <ul className={styles.grid}>
       {nights.map((night) => {
         const winner = night.winnerMovies[0];
-        const src = posterImageSrc(winner?.posterPath);
+        const src = posterSrcAtSize(posterImageSrc(winner?.posterPath), 'w342');
         return (
           <li key={night.id}>
             <Link to={ROUTES.eventDetail(night.slug)} className={styles.tile}>

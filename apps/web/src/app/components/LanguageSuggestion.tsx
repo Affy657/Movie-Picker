@@ -4,6 +4,9 @@ import Notice from '@/shared/components/Notice';
 import { loadLocale, t, useLocale } from '@/shared/i18n';
 import { safeLocalStorageGet } from '@/shared/utils/safeStorage';
 import { useTopNoticeTurn } from './topNoticeQueue';
+import { whenPageImagesSettle } from './whenPageImagesSettle';
+
+type PageWait = (onSettled: () => void) => () => void;
 
 const LOCALE_STORAGE_KEY = 'moviepicker-locale';
 const AUTOMATED_AGENT = /bot|crawl|spider|slurp|lighthouse|headless|preview/i;
@@ -32,8 +35,10 @@ function currentBrowser(): BrowserLanguageContext {
 
 export default function LanguageSuggestion({
   browser,
-}: Readonly<{ browser?: BrowserLanguageContext }>) {
+  waitForPage = whenPageImagesSettle,
+}: Readonly<{ browser?: BrowserLanguageContext; waitForPage?: PageWait }>) {
   const { locale, setLocale } = useLocale();
+  const [pageSettled, setPageSettled] = useState(false);
   const [englishReady, setEnglishReady] = useState(false);
   const [suggested] = useState(() => shouldSuggestEnglish(browser ?? currentBrowser()));
   const [answered, setAnswered] = useState(false);
@@ -42,6 +47,11 @@ export default function LanguageSuggestion({
 
   useEffect(() => {
     if (!visible) return;
+    return waitForPage(() => setPageSettled(true));
+  }, [visible, waitForPage]);
+
+  useEffect(() => {
+    if (!visible || !pageSettled) return;
     let cancelled = false;
     loadLocale('en')
       .then(() => {
@@ -51,7 +61,7 @@ export default function LanguageSuggestion({
     return () => {
       cancelled = true;
     };
-  }, [visible]);
+  }, [visible, pageSettled]);
 
   if (!shown) return null;
 

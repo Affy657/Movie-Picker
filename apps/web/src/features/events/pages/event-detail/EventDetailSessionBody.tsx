@@ -1,3 +1,4 @@
+import { isNightHost } from '@/features/events/lib/nightRules';
 import { Suspense, type Dispatch, type SetStateAction } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import EventParticipantsDialog from '@/features/events/pages/event-detail/EventParticipantsDialog';
@@ -133,7 +134,7 @@ export default function EventDetailSessionBody({
         />
       </div>
       {event.isFinished && (event.winners?.length ?? 0) === 0 ? (
-        <EventClosedWithoutMovieState isHost={!!event.isHost} />
+        <EventClosedWithoutMovieState isHost={isNightHost(event)} />
       ) : null}
     </>
   );
