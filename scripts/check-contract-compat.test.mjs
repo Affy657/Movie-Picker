@@ -1,11 +1,16 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  ALLOWED_REMOVALS,
+  allowedRemovalReleases,
+  applyAllowedRemovals,
+  findBreakingChangeRecords,
   findBreakingChanges,
   latestReleaseTag,
   parseContract,
   tagFetchArgs,
 } from './check-contract-compat.mjs';
+import { parseAfter } from './removal-dates.mjs';
 
 function json(schema) {
   return `{ headers: { [name: string]: unknown }; content: { "application/json": components["schemas"]["${schema}"] } }`;
@@ -179,6 +184,120 @@ describe('findBreakingChanges', () => {
 
     assert.notEqual(current, PUBLISHED);
     assert.deepEqual(breaksBetween(PUBLISHED, current), []);
+  });
+});
+
+describe('applyAllowedRemovals', () => {
+  const WITHOUT_NAME = PUBLISHED.replace('name?: string | null; ', '');
+  const NAME_GOES = [
+    {
+      schema: 'ListResponse',
+      properties: ['name'],
+      after: { date: '2027-01-15' },
+      why: 'no front in circulation reads it any more',
+    },
+  ];
+
+  function check(current, { today = '2027-01-15', allowed = NAME_GOES, releaseDates } = {}) {
+    const published = parseContract(PUBLISHED);
+    return applyAllowedRemovals(
+      findBreakingChangeRecords(published, parseContract(current)),
+      allowed,
+      { published, today, releaseDates: releaseDates ?? new Map() }
+    );
+  }
+
+  it('lets a listed property go once its date has come', () => {
+    assert.notEqual(WITHOUT_NAME, PUBLISHED);
+    assert.deepEqual(check(WITHOUT_NAME), {
+      breaks: [],
+      allowed: ['GET /api/v1/lists 200.items[].name'],
+      stale: [],
+    });
+  });
+
+  it('keeps the break before the date and says when the removal is allowed', () => {
+    assert.deepEqual(check(WITHOUT_NAME, { today: '2027-01-14' }).breaks, [
+      'GET /api/v1/lists 200.items[].name: property removed (ALLOWED_REMOVALS lets it go on 2027-01-15, fixed date)',
+    ]);
+  });
+
+  it('keeps the break while the release it waits for has not reached production', () => {
+    const allowed = [{ ...NAME_GOES[0], after: { release: 'v1.32.1', days: 30 } }];
+
+    assert.deepEqual(
+      check(WITHOUT_NAME, {
+        allowed,
+        today: '2030-01-01',
+        releaseDates: new Map([['v1.32.1', { unpublished: true }]]),
+      }).breaks,
+      [
+        'GET /api/v1/lists 200.items[].name: property removed (ALLOWED_REMOVALS lets it go 30 days after v1.32.1 reaches production, not there yet)',
+      ]
+    );
+  });
+
+  it('lets only the listed properties of the listed schema go', () => {
+    const current = WITHOUT_NAME.replace(
+      '{ handle?: string | null; displayName: string }',
+      '{ handle?: string | null }'
+    );
+
+    assert.deepEqual(check(current).breaks, [
+      'GET /api/v1/lists 200.items[].owner.displayName: property removed',
+    ]);
+  });
+
+  it('never lets a listed property change its type', () => {
+    const current = PUBLISHED.replace('name?: string | null;', 'name?: number | null;');
+
+    assert.deepEqual(check(current).breaks, [
+      'GET /api/v1/lists 200.items[].name: type changed from string to number',
+    ]);
+  });
+
+  it('reports an allowed removal the published contract no longer serves', () => {
+    const allowed = [
+      { ...NAME_GOES[0], properties: ['name', 'nickname'] },
+      { ...NAME_GOES[0], schema: 'Gone', properties: ['flag'] },
+    ];
+
+    assert.deepEqual(check(PUBLISHED, { allowed }).stale, ['ListResponse.nickname', 'Gone.flag']);
+  });
+});
+
+describe('allowedRemovalReleases', () => {
+  it('asks for a production date only when the contract drops an allowed property', () => {
+    const published = parseContract(PUBLISHED);
+    const allowed = [
+      {
+        schema: 'ListResponse',
+        properties: ['name'],
+        after: { release: 'v1.32.1', days: 30 },
+        why: 'no front in circulation reads it any more',
+      },
+    ];
+    const dropped = findBreakingChangeRecords(
+      published,
+      parseContract(PUBLISHED.replace('name?: string | null; ', ''))
+    );
+
+    assert.deepEqual(
+      allowedRemovalReleases(findBreakingChangeRecords(published, published), allowed),
+      []
+    );
+    assert.deepEqual(allowedRemovalReleases(dropped, allowed), [{ release: 'v1.32.1', days: 30 }]);
+  });
+});
+
+describe('ALLOWED_REMOVALS', () => {
+  it('gives each entry a schema, properties, a reason and a date the check can read', () => {
+    for (const entry of ALLOWED_REMOVALS) {
+      assert.match(entry.schema, /^\w+$/);
+      assert.ok(entry.properties.length > 0);
+      assert.ok(entry.why.trim().length > 0);
+      assert.doesNotThrow(() => parseAfter(entry.after, entry.schema));
+    }
   });
 });
 
