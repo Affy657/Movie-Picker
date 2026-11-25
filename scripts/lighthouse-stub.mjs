@@ -205,6 +205,12 @@ function minimalProfile() {
     followersCount: 0,
     isSupporter: false,
     isFollowedByMe: null,
+    isWatchlistPublic: true,
+    watchlistCount: 0,
+    isWatchedPublic: true,
+    favorites: [],
+    banner: null,
+    accentColor: 'default',
   };
 }
 
@@ -215,7 +221,9 @@ function minimalStats() {
     moviesProposed: 0,
     votesCast: 0,
     winningProposals: 0,
+    proposalsAverageRating: null,
     moviesSeen: 0,
+    publicListCount: 0,
     currentStreakWeeks: 0,
     bestStreakWeeks: 0,
     favoriteGenres: [],
@@ -244,9 +252,13 @@ function activeProfile() {
       year: '2026',
       posterPath: relayStoredPoster(`favorite-${index}`),
     })),
+    /**
+     * The API answers a TMDB w1280 URL, for which `FadedBanner` offers w780 and w1280: a phone
+     * downloads the w780. The stub cannot serve image.tmdb.org, so it names that file directly.
+     */
     banner: {
       source: 'film',
-      imageUrl: relayPoster('w1280', 'banner'),
+      imageUrl: relayPoster('w780', 'banner'),
       tmdbId: STUB_MOVIE_ID,
       title: 'Film de démonstration 1',
     },
@@ -298,6 +310,7 @@ function watchlist(take) {
       onLetterboxd: false,
     })),
     total: 146,
+    hasMore: take < 146,
   };
 }
 
@@ -383,51 +396,100 @@ function event(slug) {
     date: '2030-12-15',
     time: '21:00',
     slug,
-    isHost: false,
-    isFinished: false,
-    lifecycle: 'live',
-    winnerMovie: null,
-    participantCount: 0,
-    movieCount: 0,
-    participants: [],
+    recapSlug: null,
     config: {
       theme: null,
+      themeColor: null,
       maxProposalsPerParticipant: null,
       maxParticipants: null,
+      maxVotesPerParticipant: null,
       wheelMode: 'strictRandom',
+      richSharePreview: false,
+      allowSeries: false,
+      anonymousProposals: false,
+      winnerCount: 1,
+      recurrence: null,
+      hasNextOccurrence: false,
+      groupId: null,
     },
+    closedAt: null,
+    winners: [],
+    createdAt: '2026-11-20T18:00:00Z',
+    updatedAt: '2026-11-20T18:00:00Z',
+    isHost: false,
+    isFinished: false,
+    lifecycle: 'upcoming',
+    myParticipant: null,
+    viewerRemoved: false,
+    participantCount: 0,
+    movieCount: 0,
+    votersCount: 0,
+    participants: [],
   };
 }
 
-const MINIMAL_USER_PATH = `/api/v1/users/${STUB_HANDLE}`;
-const ACTIVE_USER_PATH = `/api/v1/users/${STUB_ACTIVE_HANDLE}`;
-const MOVIE_DETAILS_PATH = /^\/api\/v1\/movies\/tmdb\/(\d+)\/details$/;
+const STUB_MEMBERS = {
+  [STUB_HANDLE]: {
+    profile: minimalProfile,
+    stats: minimalStats,
+    watched: () => ({ items: [], total: 0 }),
+    watchlist: () => ({ items: [], total: 0, hasMore: false }),
+    lists: () => ({ items: [] }),
+  },
+  [STUB_ACTIVE_HANDLE]: {
+    profile: activeProfile,
+    stats,
+    watched: watchedMovies,
+    watchlist: ({ query }) => watchlist(Number(query.get('take') ?? 4)),
+    lists: publicLists,
+  },
+};
+
+function member(part) {
+  return (request) => STUB_MEMBERS[request.params.handle]?.[part](request);
+}
+
+/**
+ * Each route is the contract path it answers for: `lighthouse-stub.test.mjs` checks every payload
+ * against the response `openapiSchema.ts` declares for that path, so a field the API adds, renames
+ * or makes nullable fails `test:scripts` instead of leaving the gate on a page nobody receives.
+ */
+export const STUB_JSON_ROUTES = [
+  { path: '/api/v1/auth/oauth/providers', respond: () => ({ providers: [] }) },
+  {
+    path: '/api/v1/movies/showcase',
+    respond: ({ query }) => showcase(query.get('section') ?? 'trending'),
+  },
+  { path: '/api/v1/movies/showcase/themes', respond: themes },
+  { path: '/api/v1/movies/collections', respond: collections },
+  {
+    path: '/api/v1/movies/tmdb/{tmdbId}/details',
+    respond: ({ params, query }) =>
+      movieDetails(Number(params.tmdbId), query.get('mediaType') ?? 'movie'),
+  },
+  { path: '/api/v1/users/{handle}', respond: member('profile') },
+  { path: '/api/v1/users/{handle}/stats', respond: member('stats') },
+  { path: '/api/v1/users/{handle}/watched-movies', respond: member('watched') },
+  { path: '/api/v1/users/{handle}/watchlist', respond: member('watchlist') },
+  { path: '/api/v1/users/{handle}/lists', respond: member('lists') },
+  { path: '/api/v1/events/slug/{idOrSlug}', respond: ({ params }) => event(params.idOrSlug) },
+  { path: '/api/v1/events/{idOrSlug}/movies', respond: () => [] },
+].map((route) => ({
+  ...route,
+  pattern: new RegExp(`^${route.path.replaceAll(/\{(\w+)\}/g, (_, name) => `(?<${name}>[^/]+)`)}$`),
+}));
+
+export function stubJsonRouteFor(pathname) {
+  return STUB_JSON_ROUTES.find((route) => route.pattern.test(pathname));
+}
+
 const POSTER_PATH = /^\/api\/v1\/posters\/tmdb\/(w\d+)\/([\w.-]+)$/;
 
 function jsonRoutes(url) {
-  const path = url.pathname;
-  const params = url.searchParams;
-  const routes = {
-    '/api/v1/auth/oauth/providers': () => ({ providers: [] }),
-    '/api/v1/movies/showcase': () => showcase(params.get('section') ?? 'trending'),
-    '/api/v1/movies/showcase/themes': themes,
-    '/api/v1/movies/collections': collections,
-    [MINIMAL_USER_PATH]: minimalProfile,
-    [`${MINIMAL_USER_PATH}/stats`]: minimalStats,
-    [`${MINIMAL_USER_PATH}/watched-movies`]: () => ({ items: [] }),
-    [ACTIVE_USER_PATH]: activeProfile,
-    [`${ACTIVE_USER_PATH}/stats`]: stats,
-    [`${ACTIVE_USER_PATH}/watched-movies`]: watchedMovies,
-    [`${ACTIVE_USER_PATH}/watchlist`]: () => watchlist(Number(params.get('take') ?? 4)),
-    [`${ACTIVE_USER_PATH}/lists`]: publicLists,
-  };
-  if (routes[path]) return routes[path]();
-  const details = MOVIE_DETAILS_PATH.exec(path);
-  if (details) return movieDetails(Number(details[1]), params.get('mediaType') ?? 'movie');
-  if (path.startsWith('/api/v1/events/slug/'))
-    return event(path.slice('/api/v1/events/slug/'.length));
-  if (/^\/api\/v1\/events\/[^/]+\/movies$/.test(path)) return [];
-  return undefined;
+  const route = stubJsonRouteFor(url.pathname);
+  if (!route) return undefined;
+  const params = route.pattern.exec(url.pathname).groups ?? {};
+  return route.respond({ params, query: url.searchParams });
 }
 
 let sharedImageBank;

@@ -93,6 +93,26 @@ describe('TechPage', () => {
     ).toBeInTheDocument();
   });
 
+  it('redraws the widest flows top to bottom for a phone, saying the same words', () => {
+    const { container } = renderTechPage();
+    const words = (svg: Element) =>
+      [...svg.querySelectorAll('title, text')]
+        .flatMap((node) => (node.textContent ?? '').split(/\s+/))
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b));
+    for (const diagram of ['contract', 'requestpath', 'productflow', 'featureflow', 'bugflow']) {
+      const wide = container.querySelector(`svg[aria-labelledby="tech-${diagram}-title"]`);
+      const vertical = container.querySelector(
+        `svg[aria-labelledby="tech-${diagram}-vertical-title"]`
+      );
+      expect(wide, diagram).not.toBeNull();
+      expect(vertical, diagram).not.toBeNull();
+      const [, , width, height] = (vertical?.getAttribute('viewBox') ?? '').split(' ').map(Number);
+      expect(height, diagram).toBeGreaterThan(width as number);
+      expect(words(vertical as Element), diagram).toEqual(words(wide as Element));
+    }
+  });
+
   it('gives every diagram an accessible title', () => {
     renderTechPage();
     const diagrams = screen.getAllByRole('img');
@@ -801,6 +821,19 @@ describe('TechPage', () => {
     expect(architecture.textContent).toMatch(/catalogue de l.accueil/i);
     expect(fr.tech.trajectory.containerTwiceHint).toMatch(/cinq jobs planifiés/);
     expect(JSON.stringify(fr.tech)).not.toMatch(/trois jobs/);
+  });
+
+  it('says the scheduled jobs are described in Terraform, no longer created by the pipeline', () => {
+    for (const hint of [fr.tech.infra.schedulerHint, fr.tech.trajectory.containerTwiceHint]) {
+      expect(hint).toMatch(/Terraform/);
+      expect(hint).not.toMatch(/créés par la chaîne|que dans la chaîne/);
+    }
+    for (const hint of [en.tech.infra.schedulerHint, en.tech.trajectory.containerTwiceHint]) {
+      expect(hint).toMatch(/Terraform/);
+      expect(hint).not.toMatch(/created by the deployment pipeline|live in the pipeline only/);
+    }
+    expect(fr.tech.infra.iacValue).toMatch(/jobs planifiés/);
+    expect(en.tech.infra.iacValue).toMatch(/scheduled jobs/);
   });
 
   it('observe la production aussi depuis Cloud Monitoring, sondes et alertes comprises', () => {

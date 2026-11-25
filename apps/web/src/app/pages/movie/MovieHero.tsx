@@ -12,6 +12,7 @@ import type { RatingScale } from '@/shared/types/theme';
 import { safeTmdbWatchUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import { countLabel, scoreParts, type Audience } from '@/app/pages/movie/moviePageFacts';
+import { HERO_POSTER_SIZES } from '@/app/pages/movie/heroPoster';
 import styles from './MovieHero.module.css';
 
 export interface MovieHeroView {
@@ -185,7 +186,7 @@ function Poster({ view }: Readonly<{ view: MovieHeroView }>) {
     <img
       src={view.posterSrc}
       srcSet={view.posterSrcSet}
-      sizes="(max-width: 47.9375rem) 120px, 264px"
+      sizes={HERO_POSTER_SIZES}
       alt=""
       className={styles.poster}
       fetchPriority="high"

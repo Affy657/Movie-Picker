@@ -29,6 +29,7 @@ import { ROUTES } from '@/app/routes';
 import { routeLazy } from '@/app/routeChunks';
 import { useHomeShowcasePrefetch } from '@/features/movies/homeShowcasePrefetch';
 import { usePublicProfilePrefetch } from '@/features/profile/publicProfilePrefetch';
+import { useMoviePagePrefetch } from '@/app/pages/movie/moviePagePrefetch';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const HomePage = routeLazy('home');
@@ -312,6 +313,7 @@ export function AppRoutes() {
 export function AppRoutesWithErrorBoundary() {
   useHomeShowcasePrefetch();
   usePublicProfilePrefetch();
+  useMoviePagePrefetch();
   return (
     <>
       <ScrollToTop />

@@ -3737,7 +3737,7 @@ export const fr = {
         'Les recherches et les fiches TMDB vivent encore dans la mémoire de chaque instance : deux instances refont le même appel, et un redémarrage repart à froid. L’accueil, les collections et l’enrichissement des films passent déjà par un cache commun en base, le modèle à reprendre pour le reste.',
       containerTwice: 'Le conteneur décrit à deux endroits',
       containerTwiceHint:
-        'Les secrets montés et les variables du serveur sont décrits dans la chaîne de déploiement et dans Terraform, et les cinq jobs planifiés ne vivent encore que dans la chaîne ; tant que la version voyage en variable plutôt que dans l’image, la chaîne fait foi et la description suit.',
+        'Les secrets montés et les variables du serveur sont décrits dans la chaîne de déploiement et dans Terraform, qui décrit seul les cinq jobs planifiés ; tant que la version voyage en variable plutôt que dans l’image, la chaîne fait foi et la description suit.',
       sentryToken: 'Un jeton de dépôt reste',
       sentryTokenHint:
         'Tout le reste est sans clé ; le jeton qui envoie les source maps à Sentry est encore un secret de dépôt, à ranger derrière un environnement.',
@@ -4346,7 +4346,7 @@ export const fr = {
       schedulerValue:
         'Aucune tâche de fond ne vit dans le processus. Un planificateur externe appelle le serveur toutes les 30 minutes pour les rappels de soirée, toutes les cinq heures pour recharger le catalogue de l’accueil, et une fois par jour pour faire naître l’occurrence suivante des soirées récurrentes, retirer le film gagnant de la liste à voir des participants une fois la soirée finie, et relancer ceux qui n’ont pas encore noté le film de la veille, sur des routes protégées par jeton.',
       schedulerHint:
-        'Les cinq jobs sont créés par la chaîne de déploiement en production, après chaque promotion, et retentent trois fois un appel tombé sur un démarrage à froid ou une erreur ; une tentative en échec remonte en alerte. La recette n’en a aucun.',
+        'Les cinq jobs sont décrits en Terraform avec le reste de la production, et retentent trois fois un appel tombé sur un démarrage à froid ou une erreur ; une tentative en échec remonte en alerte. La recette n’en a aucun.',
       origins: 'Origines',
       originsValue:
         'Le serveur n’accepte que les origines déclarées. Le déploiement échoue si la liste n’est pas renseignée.',
@@ -4359,7 +4359,7 @@ export const fr = {
         'La recette n’est pas indexée par les moteurs de recherche, n’a pas de sauvegarde et une seule sonde, sur son serveur, et tourne dans le même projet sous ses propres identités.',
       iac: 'Infrastructure décrite',
       iacValue:
-        'Registre, secrets, services, sites, identités, fédération, alertes et journaux d’audit sont décrits en Terraform, avec un état distant versionné et verrouillé. Un changement se planifie sur sa pull request, et ne s’applique sur master qu’après l’accord d’un relecteur, quand il change une ressource.',
+        'Registre, secrets, services, sites, identités, fédération, jobs planifiés, alertes et journaux d’audit sont décrits en Terraform, avec un état distant versionné et verrouillé. Un changement se planifie sur sa pull request, et ne s’applique sur master qu’après l’accord d’un relecteur, quand il change une ressource.',
       iacHint:
         'La production a été importée, jamais recréée : le plan est vide tant que le code et la réalité coïncident. Chaque lundi, le même plan rejoué en lecture seule passe au rouge si l’infrastructure a bougé hors du dépôt : une dérive se lit en revue plutôt qu’en incident.',
       identities: 'Identités sans clé',

@@ -7,7 +7,7 @@ import ts from 'typescript';
 import { dueDateOf, parseAfter, releaseDatesFor, releaseKey, todayUtc } from './removal-dates.mjs';
 
 const root = resolve(import.meta.dirname, '..');
-const CONTRACT = 'apps/web/src/shared/api/generated/openapiSchema.ts';
+export const CONTRACT = 'apps/web/src/shared/api/generated/openapiSchema.ts';
 const METHODS = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace'];
 const SCHEMA_REF = /^components\["schemas"\]\["([^"]+)"\]$/;
 const PROPERTY_REMOVED = 'property removed';

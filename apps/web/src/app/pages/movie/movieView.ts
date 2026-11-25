@@ -11,11 +11,8 @@ import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { MovieMediaType, TitleSummary } from '@/shared/types/movie';
 import { formatReleaseDate, yearFromDate } from '@/shared/utils/formatReleaseDate';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
-import {
-  posterImageSrc,
-  tmdbBackdropSrcSet,
-  tmdbPosterSrcSetForList,
-} from '@/shared/utils/posterUrl';
+import { tmdbBackdropSrcSet } from '@/shared/utils/posterUrl';
+import { heroPosterSources } from '@/app/pages/movie/heroPoster';
 import { extractYouTubeId } from '@/shared/utils/youtube';
 import { genreLabel } from '@/shared/utils/tmdbGenres';
 import type { MovieHeroView } from '@/app/pages/movie/MovieHero';
@@ -64,7 +61,7 @@ export function yearOf(details: MovieDetails | undefined, seed: MoviePageSeed | 
 export function buildHeroView(input: ViewInput, detailsPending: boolean): MovieHeroView {
   const { details, seed, mediaType } = input;
   const title = titleOf(details, seed);
-  const posterSrc = posterImageSrc(details?.posterPath ?? seed?.posterPath);
+  const poster = heroPosterSources(details?.posterPath ?? seed?.posterPath);
   const originalTitle = details?.originalTitle;
   return {
     title,
@@ -72,8 +69,8 @@ export function buildHeroView(input: ViewInput, detailsPending: boolean): MovieH
     facts: [yearOf(details, seed), lengthLabel(input)].filter((fact): fact is string => !!fact),
     genres: genresOf(input),
     audience: audienceOf(details?.certification ?? null),
-    posterSrc,
-    posterSrcSet: tmdbPosterSrcSetForList(posterSrc),
+    posterSrc: poster.src,
+    posterSrcSet: poster.srcSet,
     backdropSrc: details?.backdropPath ?? null,
     backdropSrcSet: tmdbBackdropSrcSet(details?.backdropPath),
     voteAverage: details?.voteAverage ?? seed?.voteAverage ?? null,
