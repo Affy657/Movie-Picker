@@ -28,6 +28,7 @@ const LANE_PATHS = {
     'apps/web/',
     'e2e/',
     'eslint.config.mjs',
+    'scripts/eslint-sonar-a11y.mjs',
     'playwright.config.ts',
     'package.json',
     'pnpm-lock.yaml',

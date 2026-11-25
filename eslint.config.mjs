@@ -6,8 +6,22 @@ import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
 import sonarjs from 'eslint-plugin-sonarjs';
 import tseslint from 'typescript-eslint';
+import { sonarA11yPlugin, sonarA11yRules } from './scripts/eslint-sonar-a11y.mjs';
 
 const FEATURE_DETECTED_BROWSER_APIS = ['Notification'];
+
+const SONAR_EXCLUDED_WEB_SOURCES = [
+  'apps/web/src/**/*.test.{ts,tsx}',
+  'apps/web/src/**/*.stub.ts',
+  'apps/web/src/test-setup.ts',
+  'apps/web/src/test-utils/**',
+  'apps/web/src/mocks/**',
+  'apps/web/src/__mocks__/**',
+  'apps/web/src/vite-env.d.ts',
+  'apps/web/src/features/auth/devQuickLoginCredentials.ts',
+  'apps/web/src/shared/i18n/locales/*.ts',
+  'apps/web/src/**/generated/**',
+];
 
 export default defineConfig(
   eslint.configs.recommended,
@@ -60,18 +74,16 @@ export default defineConfig(
   {
     ...sonarjs.configs.recommended,
     files: ['apps/web/src/**/*.{ts,tsx}'],
-    ignores: [
-      'apps/web/src/**/*.test.{ts,tsx}',
-      'apps/web/src/**/*.stub.ts',
-      'apps/web/src/test-setup.ts',
-      'apps/web/src/test-utils/**',
-      'apps/web/src/mocks/**',
-      'apps/web/src/__mocks__/**',
-      'apps/web/src/vite-env.d.ts',
-      'apps/web/src/features/auth/devQuickLoginCredentials.ts',
-      'apps/web/src/shared/i18n/locales/*.ts',
-      'apps/web/src/**/generated/**',
-    ],
+    ignores: SONAR_EXCLUDED_WEB_SOURCES,
+  },
+  {
+    files: ['apps/web/src/**/*.{ts,tsx}'],
+    ignores: SONAR_EXCLUDED_WEB_SOURCES,
+    plugins: { 'sonar-a11y': sonarA11yPlugin },
+    rules: {
+      ...sonarA11yRules,
+      'no-duplicate-imports': ['error', { allowSeparateTypeImports: true }],
+    },
   },
   {
     files: ['apps/web/src/**/*.test.{ts,tsx}'],
