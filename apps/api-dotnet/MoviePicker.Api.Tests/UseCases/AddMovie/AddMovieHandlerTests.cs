@@ -97,8 +97,8 @@ public sealed class AddMovieHandlerTests
         _pushSender = new Mock<IPushNotificationSender>();
         _tmdb = new Mock<ITmdbMovieSearch>();
         _tmdb
-            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((int id, MovieMediaType _, CancellationToken _) => KnownTitle(id));
+            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((int id, MovieMediaType _, CatalogLanguage _, CancellationToken _) => KnownTitle(id));
         _posterStore.Setup(s => s.ToPublicPosterPath(It.IsAny<string?>())).Returns((string? u) => u);
         _participantRepo
             .Setup(r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -214,7 +214,7 @@ public sealed class AddMovieHandlerTests
             .Callback<Movie, CancellationToken>((m, _) => inserted = m)
             .ReturnsAsync((Movie m, CancellationToken _) => m with { Id = "mov1" });
         _tmdb
-            .Setup(t => t.GetDetailsAsync(27205, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(27205, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TmdbMovieDetails(27205, "Inception", null, null, null, Array.Empty<string>(), 148, Genres, GenreIds, "2010-07-16"));
 
         var result = await _sut.HandleAsync(OwnerUserId, "evt1", Request(participant.Id));
@@ -230,7 +230,7 @@ public sealed class AddMovieHandlerTests
         var participant = ProposingParticipant(ActiveEvent());
         var inserted = CaptureInsertedMovie();
         _tmdb
-            .Setup(t => t.GetDetailsAsync(27205, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(27205, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TmdbMovieDetails(27205, "Inception", null, null, null, [], 148, [], GenreIds, "2010-07-16", PosterUrl: "https://image.tmdb.org/t/p/w500/real.jpg"));
         var forged = new AddMovieRequest
         {
@@ -303,7 +303,7 @@ public sealed class AddMovieHandlerTests
         var participant = ProposingParticipant(ActiveEvent());
         var inserted = CaptureInsertedMovie();
         _tmdb
-            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("TMDB unavailable"));
         var request = new AddMovieRequest { TmdbId = 27205, Title = " \u202EInception ", Year = "2010", ParticipantId = participant.Id };
 
@@ -319,7 +319,7 @@ public sealed class AddMovieHandlerTests
     public async Task HandleAsync_TmdbUnavailable_StoresTheBrowserYearTrimmed(string requestedYear, string storedYear)
     {
         _tmdb
-            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("TMDB unavailable"));
         var evt = ActiveEvent();
         var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
@@ -354,7 +354,7 @@ public sealed class AddMovieHandlerTests
             .Callback<Movie, CancellationToken>((m, _) => inserted = m)
             .ReturnsAsync((Movie m, CancellationToken _) => m with { Id = "mov1" });
         _tmdb
-            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("TMDB indisponible"));
 
         var result = await _sut.HandleAsync(OwnerUserId, "evt1", Request(participant.Id));
@@ -379,7 +379,7 @@ public sealed class AddMovieHandlerTests
             .Callback<Movie, CancellationToken>((m, _) => inserted = m)
             .ReturnsAsync((Movie m, CancellationToken _) => m with { Id = "mov1" });
         _tmdb
-            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("TMDB unavailable"));
 
         var result = await _sut.HandleAsync(OwnerUserId, "evt1", Request(participant.Id, genreIds: SearchResultGenreIds));

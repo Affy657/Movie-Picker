@@ -47,8 +47,8 @@ public sealed class AddFavoriteHandlerTests
                 It.IsAny<string>(), It.IsAny<FavoriteTitle>(), It.IsAny<int>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .Callback((string _, FavoriteTitle favorite, int _, DateTimeOffset _, CancellationToken _) => _written.Add(favorite))
             .ReturnsAsync(true);
-        _tmdb.Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((int tmdbId, MovieMediaType _, CancellationToken _) => HeatOnTmdb() with { Id = tmdbId });
+        _tmdb.Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((int tmdbId, MovieMediaType _, CatalogLanguage _, CancellationToken _) => HeatOnTmdb() with { Id = tmdbId });
         _sut = new AddFavoriteHandler(
             _users.Object,
             _posters.Object,
@@ -95,7 +95,7 @@ public sealed class AddFavoriteHandlerTests
     public async Task HandleAsync_StoresTheTitleAndYearOfTmdb_NotThoseTheClientSent()
     {
         StoredUser(FavoriteFixtures.UserWith(), FavoriteFixtures.UserWith(FavoriteFixtures.Favorite(949, "Heat")));
-        _tmdb.Setup(t => t.GetDetailsAsync(949, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetDetailsAsync(949, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(HeatOnTmdb());
 
         await _sut.HandleAsync("u1", FavoriteFixtures.Request(title: "Faux titre", year: "1066"));
@@ -108,7 +108,7 @@ public sealed class AddFavoriteHandlerTests
     public async Task HandleAsync_TmdbDown_KeepsTheTitleAndYearOfTheRequest()
     {
         StoredUser(FavoriteFixtures.UserWith(), FavoriteFixtures.UserWith(FavoriteFixtures.Favorite(949, "Heat")));
-        _tmdb.Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("TMDB unavailable"));
 
         await _sut.HandleAsync("u1", FavoriteFixtures.Request(title: " Heat ", year: " 1995 "));
@@ -121,7 +121,7 @@ public sealed class AddFavoriteHandlerTests
     public async Task HandleAsync_TitleUnknownToTmdb_IsRefusedAsMovieNotFound()
     {
         StoredUser(FavoriteFixtures.UserWith());
-        _tmdb.Setup(t => t.GetDetailsAsync(949, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetDetailsAsync(949, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TmdbMovieDetails?)null);
 
         var error = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("u1", FavoriteFixtures.Request()));
@@ -134,7 +134,7 @@ public sealed class AddFavoriteHandlerTests
     public async Task HandleAsync_WithoutPoster_TakesThePosterOfTmdb()
     {
         StoredUser(FavoriteFixtures.UserWith(), FavoriteFixtures.UserWith(FavoriteFixtures.Favorite(949, "Heat")));
-        _tmdb.Setup(t => t.GetDetailsAsync(949, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetDetailsAsync(949, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(HeatOnTmdb(FavoriteFixtures.TmdbPoster));
 
         await _sut.HandleAsync("u1", FavoriteFixtures.Request(posterPath: null));
@@ -176,7 +176,7 @@ public sealed class AddFavoriteHandlerTests
 
         Assert.Equal(["Heat"], result.Items.Select(i => i.Title));
         Assert.Empty(_written);
-        _tmdb.Verify(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()), Times.Never);
+        _tmdb.Verify(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

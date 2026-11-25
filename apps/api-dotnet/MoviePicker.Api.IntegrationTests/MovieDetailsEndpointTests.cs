@@ -177,6 +177,28 @@ public sealed class MovieDetailsEndpointTests : IClassFixture<MoviePickerApplica
         Assert.Equal(HttpStatusCode.ServiceUnavailable, res.StatusCode);
     }
 
+    [Theory]
+    [InlineData(null, CatalogLanguage.French)]
+    [InlineData("fr-FR", CatalogLanguage.French)]
+    [InlineData("en-US", CatalogLanguage.English)]
+    public async Task GetDetails_FollowsTheLanguageOfTheInterface(string? acceptLanguage, CatalogLanguage expected)
+    {
+        var fake = new FakeTmdb
+        {
+            Details = new TmdbMovieDetails(129, "Spirited Away", null, null, null, [], 125, [], [], "2001-07-20")
+        };
+        using var client = CreateClientWith(fake);
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/movies/tmdb/129/details");
+        if (acceptLanguage is not null)
+            request.Headers.AcceptLanguage.ParseAdd(acceptLanguage);
+
+        var res = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        Assert.Equal(expected, Assert.Single(fake.DetailsLanguages));
+        Assert.Contains("Accept-Language", res.Headers.Vary);
+    }
+
     [Fact]
     public async Task GetDetails_InvalidIdZero_Returns404()
     {
@@ -193,23 +215,25 @@ public sealed class MovieDetailsEndpointTests : IClassFixture<MoviePickerApplica
         public TmdbMovieDetails? Details { get; set; }
         public bool ThrowOnDetails { get; set; }
         public bool HangOnDetails { get; set; }
+        public System.Collections.Concurrent.ConcurrentQueue<CatalogLanguage> DetailsLanguages { get; } = new();
 
-        public Task<IReadOnlyList<TmdbSearchItem>> SearchAsync(string query, bool allowSeries, IReadOnlyList<int>? genreIds = null, int? yearFrom = null, int? yearTo = null, double? voteMin = null, string? originalLanguage = null, int? runtimeMin = null, int? runtimeMax = null, CancellationToken ct = default)
+        public Task<IReadOnlyList<TmdbSearchItem>> SearchAsync(string query, bool allowSeries, CatalogLanguage language, IReadOnlyList<int>? genreIds = null, int? yearFrom = null, int? yearTo = null, double? voteMin = null, string? originalLanguage = null, int? runtimeMin = null, int? runtimeMax = null, CancellationToken ct = default)
             => Task.FromResult<IReadOnlyList<TmdbSearchItem>>(Array.Empty<TmdbSearchItem>());
 
-        public Task<IReadOnlyList<TmdbSearchItem>> SearchTitlesAsync(string query, bool allowSeries, int? yearFrom = null, int? yearTo = null, CancellationToken ct = default)
+        public Task<IReadOnlyList<TmdbSearchItem>> SearchTitlesAsync(string query, bool allowSeries, CatalogLanguage language, int? yearFrom = null, int? yearTo = null, CancellationToken ct = default)
             => Task.FromResult<IReadOnlyList<TmdbSearchItem>>(Array.Empty<TmdbSearchItem>());
 
-        public Task<TmdbMovieEnrichment?> GetEnrichmentAsync(int tmdbId, MovieMediaType mediaType, string region, CancellationToken ct = default)
+        public Task<TmdbMovieEnrichment?> GetEnrichmentAsync(int tmdbId, MovieMediaType mediaType, string region, CatalogLanguage language, CancellationToken ct = default)
             => Task.FromResult<TmdbMovieEnrichment?>(null);
 
         public Task<IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>> GetEnrichmentsAsync(
-            IReadOnlyCollection<(int TmdbId, MovieMediaType MediaType)> keys, string region, CancellationToken ct = default)
+            IReadOnlyCollection<(int TmdbId, MovieMediaType MediaType)> keys, string region, CatalogLanguage language, CancellationToken ct = default)
             => Task.FromResult<IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>>(
                 new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>());
 
-        public async Task<TmdbMovieDetails?> GetDetailsAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct = default)
+        public async Task<TmdbMovieDetails?> GetDetailsAsync(int tmdbId, MovieMediaType mediaType, CatalogLanguage language, CancellationToken ct = default)
         {
+            DetailsLanguages.Enqueue(language);
             if (ThrowOnDetails)
                 throw new HttpRequestException("tmdb down");
             if (HangOnDetails)
@@ -220,25 +244,25 @@ public sealed class MovieDetailsEndpointTests : IClassFixture<MoviePickerApplica
         public Task<IReadOnlyList<TmdbBackdrop>?> GetBackdropsAsync(int tmdbId, CancellationToken ct = default)
             => Task.FromResult<IReadOnlyList<TmdbBackdrop>?>([]);
 
-        public Task<IReadOnlyList<TmdbSearchItem>> GetTrendingMoviesAsync(int pages, CancellationToken ct = default)
+        public Task<IReadOnlyList<TmdbSearchItem>> GetTrendingMoviesAsync(int pages, CatalogLanguage language, CancellationToken ct = default)
             => Task.FromResult<IReadOnlyList<TmdbSearchItem>>(Array.Empty<TmdbSearchItem>());
 
-        public Task<IReadOnlyList<TmdbSearchItem>> GetNowPlayingMoviesAsync(string region, int pages, CancellationToken ct = default)
+        public Task<IReadOnlyList<TmdbSearchItem>> GetNowPlayingMoviesAsync(string region, int pages, CatalogLanguage language, CancellationToken ct = default)
             => Task.FromResult<IReadOnlyList<TmdbSearchItem>>(Array.Empty<TmdbSearchItem>());
 
-        public Task<IReadOnlyList<TmdbSearchItem>> DiscoverMoviesAsync(TmdbDiscoveryCriteria criteria, int pages, CancellationToken ct = default)
+        public Task<IReadOnlyList<TmdbSearchItem>> DiscoverMoviesAsync(TmdbDiscoveryCriteria criteria, int pages, CatalogLanguage language, CancellationToken ct = default)
             => Task.FromResult<IReadOnlyList<TmdbSearchItem>>(Array.Empty<TmdbSearchItem>());
 
-        public Task<TmdbCollectionSummary?> GetCollectionAsync(int collectionId, CancellationToken ct = default)
+        public Task<TmdbCollectionSummary?> GetCollectionAsync(int collectionId, CatalogLanguage language, CancellationToken ct = default)
             => Task.FromResult<TmdbCollectionSummary?>(null);
 
-        public Task<IReadOnlyList<TmdbSearchItem>> GetCollectionMoviesAsync(int collectionId, CancellationToken ct = default)
+        public Task<IReadOnlyList<TmdbSearchItem>> GetCollectionMoviesAsync(int collectionId, CatalogLanguage language, CancellationToken ct = default)
             => Task.FromResult<IReadOnlyList<TmdbSearchItem>>(Array.Empty<TmdbSearchItem>());
 
-        public Task<IReadOnlyList<TmdbSearchItem>> GetRecommendationsAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct = default)
+        public Task<IReadOnlyList<TmdbSearchItem>> GetRecommendationsAsync(int tmdbId, MovieMediaType mediaType, CatalogLanguage language, CancellationToken ct = default)
             => Task.FromResult<IReadOnlyList<TmdbSearchItem>>(Array.Empty<TmdbSearchItem>());
 
-        public Task<IReadOnlyList<TmdbSearchItem>> GetDirectedMoviesAsync(int personId, CancellationToken ct = default)
+        public Task<IReadOnlyList<TmdbSearchItem>> GetDirectedMoviesAsync(int personId, CatalogLanguage language, CancellationToken ct = default)
             => Task.FromResult<IReadOnlyList<TmdbSearchItem>>(Array.Empty<TmdbSearchItem>());
     }
 }

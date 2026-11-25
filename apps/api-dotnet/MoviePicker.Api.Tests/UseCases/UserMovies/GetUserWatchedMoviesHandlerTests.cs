@@ -99,6 +99,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
         _tmdb.Setup(s => s.GetEnrichmentsAsync(
                 It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(),
                 It.IsAny<string>(),
+                It.IsAny<CatalogLanguage>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>());
         var history = new WatchedHistoryReader(
@@ -334,6 +335,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
         _tmdb.Setup(s => s.GetEnrichmentsAsync(
                 It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(),
                 It.IsAny<string>(),
+                It.IsAny<CatalogLanguage>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>
             {
@@ -486,8 +488,9 @@ public sealed class GetUserWatchedMoviesHandlerTests
         _tmdb.Setup(s => s.GetEnrichmentsAsync(
                 It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(),
                 It.IsAny<string>(),
+                It.IsAny<CatalogLanguage>(),
                 It.IsAny<CancellationToken>()))
-            .Callback((IReadOnlyCollection<(int, MovieMediaType)> keys, string _, CancellationToken _) => enriched = keys)
+            .Callback((IReadOnlyCollection<(int, MovieMediaType)> keys, string _, CatalogLanguage _, CancellationToken _) => enriched = keys)
             .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>());
 
         var res = await handler.HandleForUserAsync("u1", 0, 0);

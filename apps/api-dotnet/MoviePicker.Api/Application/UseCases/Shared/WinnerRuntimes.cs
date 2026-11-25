@@ -29,7 +29,7 @@ public sealed class TmdbWinnerRuntimes : IWinnerRuntimes
         var key = (winner.TmdbId, winner.MediaType);
         try
         {
-            var enrichments = await TmdbEnrichments.LoadAsync([key], _tmdb, _options, ct);
+            var enrichments = await TmdbEnrichments.LoadAsync([key], _tmdb, _options, CatalogLanguage.French, ct);
             var runtime = enrichments.GetValueOrDefault(key)?.RuntimeMinutes;
             return runtime > 0 ? runtime : null;
         }

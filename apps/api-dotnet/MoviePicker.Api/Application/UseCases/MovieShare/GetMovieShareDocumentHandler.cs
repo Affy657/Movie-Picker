@@ -34,10 +34,11 @@ public sealed class GetMovieShareDocumentHandler : IGetMovieShareDocumentHandler
         string movieRef,
         MovieMediaType mediaType,
         string apiPublicBaseUrl,
+        CatalogLanguage language,
         CancellationToken ct = default)
     {
         var webBase = _options.ResolvedWebBaseUrl();
-        var details = await FindAsync(movieRef, mediaType, ct);
+        var details = await FindAsync(movieRef, mediaType, language, ct);
         var preview = details is null
             ? SharePreview.Generic(webBase)
             : await DescribeAsync(details, movieRef, mediaType, webBase, apiPublicBaseUrl.Trim().TrimEnd('/'), ct);
@@ -45,14 +46,18 @@ public sealed class GetMovieShareDocumentHandler : IGetMovieShareDocumentHandler
         return new ShareDocument(details is null ? 404 : 200, html);
     }
 
-    private async Task<TmdbMovieDetails?> FindAsync(string movieRef, MovieMediaType mediaType, CancellationToken ct)
+    private async Task<TmdbMovieDetails?> FindAsync(
+        string movieRef,
+        MovieMediaType mediaType,
+        CatalogLanguage language,
+        CancellationToken ct)
     {
         if (MovieSlug.TmdbIdOf(movieRef) is not int tmdbId)
             return null;
 
         try
         {
-            var details = await _tmdb.GetDetailsAsync(tmdbId, mediaType, ct);
+            var details = await _tmdb.GetDetailsAsync(tmdbId, mediaType, language, ct);
             return details is null || string.IsNullOrWhiteSpace(details.Title) ? null : details;
         }
         catch (HttpRequestException)

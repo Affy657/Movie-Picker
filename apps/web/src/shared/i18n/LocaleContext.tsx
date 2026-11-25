@@ -24,6 +24,10 @@ const TMDB_LANGUAGE_MAP: Record<LocaleCode, string> = {
   en: 'en-US',
 };
 
+export function tmdbLanguageOf(code: LocaleCode): string {
+  return TMDB_LANGUAGE_MAP[code];
+}
+
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
 const DEFAULT_LOCALE: LocaleCode = 'fr';
@@ -94,7 +98,7 @@ export function LocaleProvider({ children }: Readonly<{ children: ReactNode }>) 
     };
   }, [localeState]);
 
-  const tmdbLanguage = TMDB_LANGUAGE_MAP[localeState];
+  const tmdbLanguage = tmdbLanguageOf(localeState);
 
   const value = useMemo<LocaleContextValue>(
     () => ({ locale: localeState, setLocale, tmdbLanguage, translations }),

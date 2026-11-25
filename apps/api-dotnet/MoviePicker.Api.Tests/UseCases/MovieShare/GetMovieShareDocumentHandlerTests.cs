@@ -45,7 +45,7 @@ public sealed class GetMovieShareDocumentHandlerTests
         string? overview = "Un voleur qui explore les rêves.",
         string? posterUrl = "https://image.tmdb.org/t/p/w154/inception.jpg",
         string? backdropUrl = "https://image.tmdb.org/t/p/w780/inception-wide.jpg") =>
-        _tmdb.Setup(t => t.GetDetailsAsync(tmdbId, mediaType, It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetDetailsAsync(tmdbId, mediaType, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TmdbMovieDetails(
                 tmdbId, title, overview, null, null, [], null, [], [], releaseDate,
                 PosterUrl: posterUrl,
@@ -60,7 +60,7 @@ public sealed class GetMovieShareDocumentHandlerTests
 
     private void VerifyTmdbNeverAsked() =>
         _tmdb.Verify(
-            t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()),
+            t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()),
             Times.Never);
 
     [Fact]
@@ -171,7 +171,7 @@ public sealed class GetMovieShareDocumentHandlerTests
     [Fact]
     public async Task HandleAsync_TitleUnknownToTmdb_Returns404WithTheGenericPreview()
     {
-        _tmdb.Setup(t => t.GetDetailsAsync(42, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetDetailsAsync(42, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TmdbMovieDetails?)null);
 
         var document = await CreateSut().HandleAsync("42-nope", MovieMediaType.Movie, "https://api.example", default);
@@ -186,7 +186,7 @@ public sealed class GetMovieShareDocumentHandlerTests
     [Fact]
     public async Task HandleAsync_TmdbUnavailable_Returns404WithTheGenericPreview()
     {
-        _tmdb.Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("TMDB unavailable"));
 
         var document = await CreateSut().HandleAsync("27205-inception", MovieMediaType.Movie, "https://api.example", default);
@@ -237,5 +237,17 @@ public sealed class GetMovieShareDocumentHandlerTests
         Assert.DoesNotContain("<img src=x>", document.Html);
         Assert.DoesNotContain("<b>", document.Html);
         Assert.Equal("https://web.example/film/27205-%22%3E%3Cb%3E", Meta(document.Html, "og:url"));
+    }
+
+    [Fact]
+    public async Task HandleAsync_DescribesTheFilmInTheRequestedLanguage()
+    {
+        _tmdb.Setup(t => t.GetDetailsAsync(129, MovieMediaType.Movie, CatalogLanguage.English, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TmdbMovieDetails(129, "Spirited Away", "A girl wanders into a world of spirits.", null, null, [], null, [], [], "2001-07-20"));
+
+        var document = await CreateSut().HandleAsync("129-le-voyage-de-chihiro", MovieMediaType.Movie, "https://api.example/", CatalogLanguage.English, default);
+
+        Assert.Equal("Spirited Away (2001)", Meta(document.Html, "og:title"));
+        Assert.Equal("A girl wanders into a world of spirits.", Meta(document.Html, "og:description"));
     }
 }

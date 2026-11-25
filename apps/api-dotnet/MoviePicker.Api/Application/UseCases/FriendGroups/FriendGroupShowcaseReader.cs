@@ -60,7 +60,7 @@ public sealed class FriendGroupShowcaseReader
         TmdbMovieDetails? details;
         try
         {
-            details = await _tmdb.GetDetailsAsync(film.TmdbId, film.MediaType, ct);
+            details = await _tmdb.GetDetailsAsync(film.TmdbId, film.MediaType, CatalogLanguage.French, ct);
         }
         catch (HttpRequestException)
         {

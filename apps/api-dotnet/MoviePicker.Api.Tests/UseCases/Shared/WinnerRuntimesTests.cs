@@ -24,6 +24,7 @@ public sealed class WinnerRuntimesTests
         _tmdb.Setup(t => t.GetEnrichmentsAsync(
                 It.Is<IReadOnlyCollection<(int TmdbId, MovieMediaType MediaType)>>(keys => keys.Single().TmdbId == 157336),
                 It.IsAny<string>(),
+                It.IsAny<CatalogLanguage>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>
             {
@@ -54,6 +55,7 @@ public sealed class WinnerRuntimesTests
         _tmdb.Setup(t => t.GetEnrichmentsAsync(
                 It.IsAny<IReadOnlyCollection<(int TmdbId, MovieMediaType MediaType)>>(),
                 It.IsAny<string>(),
+                It.IsAny<CatalogLanguage>(),
                 It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("TMDB down"));
 

@@ -60,7 +60,7 @@ public sealed class GroupShowcaseTests : FriendGroupTestBase
 
     private void BackdropOf(int tmdbId, string title, string? backdropUrl) =>
         Kit.Tmdb
-            .Setup(tmdb => tmdb.GetDetailsAsync(tmdbId, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .Setup(tmdb => tmdb.GetDetailsAsync(tmdbId, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TmdbMovieDetails(tmdbId, title, null, null, null, [], null, [], [], null, BackdropUrl: backdropUrl));
 
     [Fact]
@@ -122,7 +122,7 @@ public sealed class GroupShowcaseTests : FriendGroupTestBase
         var group = await SharedGroupAsync(FriendGroupTestKit.Member);
         await WonAsync(await NightAsync(group.Id, "2026-11-05"), "Minuit à Kyoto", 12);
         Kit.Tmdb
-            .Setup(tmdb => tmdb.GetDetailsAsync(12, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .Setup(tmdb => tmdb.GetDetailsAsync(12, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("TMDB unavailable"));
 
         var page = await Kit.GetHandler().HandleAsync(FriendGroupTestKit.Member, group.Id);

@@ -38,7 +38,7 @@ internal sealed class SavedListTestKit
             .Setup(s => s.HandleAsync(It.IsAny<MovieShowcaseQuery>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(Errors.ShowcaseUnavailable());
         Tmdb
-            .Setup(t => t.GetCollectionAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetCollectionAsync(It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TmdbCollectionSummary?)null);
         WatchedReads
             .Setup(w => w.ListTitlesByOwnerAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -106,7 +106,7 @@ internal sealed class SavedListTestKit
     public void SagaHas(int collectionId, string name, params MovieShowcaseItemResponse[] films)
     {
         Tmdb
-            .Setup(t => t.GetCollectionAsync(collectionId, It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetCollectionAsync(collectionId, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TmdbCollectionSummary(collectionId, name, null, null, films.Length, [], []));
         SagaFilmsAre(collectionId, films);
     }

@@ -89,7 +89,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
         try
         {
             var rows = await FetchTmdbSectionAsync(section, ct);
-            return await WithRuntimesAsync(rows.Select(MapItem).ToList(), ct);
+            return await WithRuntimesAsync(rows.Select(MapItem).ToList(), section.Language, ct);
         }
         catch (Exception ex) when (ex is HttpRequestException or System.Text.Json.JsonException)
         {
@@ -109,34 +109,37 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
                 return _tmdb.DiscoverMoviesAsync(
                     providerCriteria,
                     MovieShowcaseCatalog.PagesPerSection,
+                    section.Language,
                     ct);
 
             case MovieShowcaseSections.Recommendations:
-                return _tmdb.GetRecommendationsAsync(section.SeedTmdbId ?? 0, section.SeedMediaType, ct);
+                return _tmdb.GetRecommendationsAsync(section.SeedTmdbId ?? 0, section.SeedMediaType, section.Language, ct);
 
             case MovieShowcaseSections.NowPlaying:
                 return _tmdb.GetNowPlayingMoviesAsync(
                     _options.TmdbWatchProvidersRegion,
                     MovieShowcaseCatalog.PagesPerSection,
+                    section.Language,
                     ct);
 
             case MovieShowcaseSections.Collection:
-                return _tmdb.GetCollectionMoviesAsync(section.CollectionId ?? 0, ct);
+                return _tmdb.GetCollectionMoviesAsync(section.CollectionId ?? 0, section.Language, ct);
 
             case MovieShowcaseSections.Director:
-                return _tmdb.GetDirectedMoviesAsync(section.PersonId ?? 0, ct);
+                return _tmdb.GetDirectedMoviesAsync(section.PersonId ?? 0, section.Language, ct);
 
             case MovieShowcaseSections.Theme:
                 var criteria = MovieShowcaseCatalog.CriteriaForTheme(section.Theme)
                     ?? throw Errors.UnknownTheme();
-                return _tmdb.DiscoverMoviesAsync(criteria, MovieShowcaseCatalog.PagesPerSection, ct);
+                return _tmdb.DiscoverMoviesAsync(criteria, MovieShowcaseCatalog.PagesPerSection, section.Language, ct);
 
             default:
                 if (section.GenreIds.Count == 0)
-                    return _tmdb.GetTrendingMoviesAsync(MovieShowcaseCatalog.PagesPerSection, ct);
+                    return _tmdb.GetTrendingMoviesAsync(MovieShowcaseCatalog.PagesPerSection, section.Language, ct);
                 return _tmdb.DiscoverMoviesAsync(
                     new TmdbDiscoveryCriteria(GenreIds: section.GenreIds),
                     MovieShowcaseCatalog.PagesPerSection,
+                    section.Language,
                     ct);
         }
     }
@@ -168,6 +171,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
 
     private async Task<CacheLoad<IReadOnlyList<MovieShowcaseItemResponse>>> WithRuntimesAsync(
         List<MovieShowcaseItemResponse> items,
+        CatalogLanguage language,
         CancellationToken ct)
     {
         var count = Math.Clamp(_options.MovieShowcaseEnrichedCount, 0, 60);
@@ -185,7 +189,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
             new ParallelOptions { MaxDegreeOfParallelism = parallelism, CancellationToken = ct },
             async (pair, token) =>
             {
-                var enrichment = await _tmdb.GetEnrichmentAsync(pair.Id, pair.MediaType, region, token);
+                var enrichment = await _tmdb.GetEnrichmentAsync(pair.Id, pair.MediaType, region, language, token);
                 if (enrichment is null)
                     Interlocked.Increment(ref missing);
                 else if (enrichment.RuntimeMinutes is int runtime)
@@ -254,7 +258,8 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
         string? Provider = null,
         int? SeedTmdbId = null,
         MovieMediaType SeedMediaType = MovieMediaType.Movie,
-        int? PersonId = null)
+        int? PersonId = null,
+        CatalogLanguage Language = CatalogLanguage.French)
     {
         public IReadOnlyList<int> GenreIds => Genres ?? [];
 
@@ -266,7 +271,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
         };
 
         public string CacheKey =>
-            $"showcase-v1:{Section}:{Theme ?? "-"}:{(GenreIds.Count == 0 ? "-" : string.Join(",", GenreIds))}"
+            $"showcase-v2:{Language.TmdbCode()}:{Section}:{Theme ?? "-"}:{(GenreIds.Count == 0 ? "-" : string.Join(",", GenreIds))}"
             + $":{CollectionId?.ToString() ?? "-"}:{Provider ?? "-"}:{SeedKey}{PersonKey}";
 
         private string PersonKey => PersonId is int id ? $":person-{id}" : string.Empty;
@@ -278,7 +283,10 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
             _ => "-",
         };
 
-        public static SectionRequest From(MovieShowcaseQuery query)
+        public static SectionRequest From(MovieShowcaseQuery query) =>
+            Parse(query) with { Language = query.Language };
+
+        private static SectionRequest Parse(MovieShowcaseQuery query)
         {
             var section = (query.Section ?? string.Empty).Trim().ToLowerInvariant();
             return section switch

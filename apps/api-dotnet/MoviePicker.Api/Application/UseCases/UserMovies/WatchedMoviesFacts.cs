@@ -71,7 +71,7 @@ internal static class WatchedMoviesFacts
         CancellationToken ct)
     {
         var enrichments = await TmdbEnrichments.LoadAsync(
-            items.Where(NeedsTmdbFacts).Select(item => (item.TmdbId, item.MediaType)), tmdb, options, ct);
+            items.Where(NeedsTmdbFacts).Select(item => (item.TmdbId, item.MediaType)), tmdb, options, CatalogLanguage.French, ct);
         if (enrichments.Count == 0)
             return items;
 

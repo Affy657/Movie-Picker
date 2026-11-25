@@ -103,7 +103,7 @@ public sealed class ListMoviesForEventHandlerTests
 
     private void GivenEnrichments(params ((int TmdbId, MovieMediaType MediaType) Key, TmdbMovieEnrichment? Enrichment)[] rows) =>
         _tmdb
-            .Setup(t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), "FR", It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), "FR", It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(rows.ToDictionary(row => row.Key, row => row.Enrichment));
 
     private void GivenSelectionOf(params Movie[] stored)
@@ -135,7 +135,7 @@ public sealed class ListMoviesForEventHandlerTests
         GivenSelectionOf(StoredMovie("m1", 101), StoredMovie("m2", 102), StoredMovie("m3", 103));
         GivenEnrichments(((101, MovieMediaType.Movie), new TmdbMovieEnrichment(null, [], null, 118)));
 
-        var movies = await SutWithTmdbKey().HandleSelectionAsync("soiree", ["m1"]);
+        var movies = await SutWithTmdbKey().HandleSelectionAsync("soiree", ["m1"], CatalogLanguage.French);
 
         var movie = Assert.Single(movies);
         Assert.Equal("m1", movie.Id);
@@ -145,6 +145,7 @@ public sealed class ListMoviesForEventHandlerTests
             t => t.GetEnrichmentsAsync(
                 It.Is<IReadOnlyCollection<(int, MovieMediaType)>>(keys => keys.Count == 1 && keys.Contains(selectedKey)),
                 "FR",
+                It.IsAny<CatalogLanguage>(),
                 It.IsAny<CancellationToken>()),
             Times.Once);
         _movieRepo.Verify(r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -155,7 +156,7 @@ public sealed class ListMoviesForEventHandlerTests
     {
         GivenSelectionOf(StoredMovie("m1", 101), StoredMovie("foreign", 102, eventId: "evt2"));
 
-        var movies = await _sut.HandleSelectionAsync("soiree", ["m1", "foreign"]);
+        var movies = await _sut.HandleSelectionAsync("soiree", ["m1", "foreign"], CatalogLanguage.French);
 
         Assert.Equal("m1", Assert.Single(movies).Id);
     }
@@ -165,7 +166,7 @@ public sealed class ListMoviesForEventHandlerTests
     {
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
-        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad"));
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad", CatalogLanguage.French));
         Assert.Equal(ErrorCodes.EventNotFound, ex.Reason);
     }
 
@@ -188,7 +189,7 @@ public sealed class ListMoviesForEventHandlerTests
         _voteRepo.Setup(r => r.AggregateSummariesByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(votes);
         GivenParticipants(("p1", "Alice"), ("p2", "Bob"));
 
-        var result = await _sut.HandleAsync("evt1");
+        var result = await _sut.HandleAsync("evt1", CatalogLanguage.French);
 
         Assert.Equal(2, result.Count);
         var a = result.First(m => m.Id == "mov1");
@@ -223,7 +224,7 @@ public sealed class ListMoviesForEventHandlerTests
         ]);
         GivenParticipants(("p1", "Alice"));
 
-        await _sut.HandleAsync("evt1");
+        await _sut.HandleAsync("evt1", CatalogLanguage.French);
 
         _voteRepo.Verify(
             r => r.AggregateSummariesByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()),
@@ -248,7 +249,7 @@ public sealed class ListMoviesForEventHandlerTests
             .Setup(r => r.AggregateSummariesByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<string, MovieVoteSummary> { ["mov1"] = new(1, 1, 0, ["gone"]) });
 
-        var movie = Assert.Single(await _sut.HandleAsync("evt1"));
+        var movie = Assert.Single(await _sut.HandleAsync("evt1", CatalogLanguage.French));
 
         Assert.Equal(string.Empty, movie.ProposerPseudo);
         Assert.Equal(1, movie.Up);
@@ -274,7 +275,7 @@ public sealed class ListMoviesForEventHandlerTests
             });
         GivenParticipants(("p1", "Alice"), ("p2", "Bob"), ("p3", "Chloé"));
 
-        var result = await _sut.HandleAsync("evt1");
+        var result = await _sut.HandleAsync("evt1", CatalogLanguage.French);
 
         var m = Assert.Single(result);
         Assert.Equal(2, m.SeenCount);
@@ -298,7 +299,7 @@ public sealed class ListMoviesForEventHandlerTests
             .ReturnsAsync(new Dictionary<string, MovieVoteSummary> { ["mov1"] = new(2, 2, 0, ParticipantIds) });
         GivenParticipants(("p1", "Alice"), ("p2", "Bob"), ("p3", "Chloé"));
 
-        var result = await _sut.HandleAsync("evt1");
+        var result = await _sut.HandleAsync("evt1", CatalogLanguage.French);
 
         var a = result.First(m => m.Id == "mov1");
         Assert.Equal(expected, a.VotersUpPseudos);
@@ -317,7 +318,7 @@ public sealed class ListMoviesForEventHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movies);
 
-        var result = await _sut.HandleAsync("evt1");
+        var result = await _sut.HandleAsync("evt1", CatalogLanguage.French);
 
         var m = Assert.Single(result);
         Assert.Null(m.MyVote);
@@ -346,7 +347,7 @@ public sealed class ListMoviesForEventHandlerTests
             .Setup(r => r.GetParticipantVotesByEventAsync(evt.Id, "me", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<string, int> { ["mov1"] = 1, ["mov3"] = -1 });
 
-        var result = await _sut.HandleAsync("evt1", "me");
+        var result = await _sut.HandleAsync("evt1", CatalogLanguage.French, "me");
 
         Assert.Equal(1, result.First(m => m.Id == "mov1").MyVote);
         Assert.Null(result.First(m => m.Id == "mov2").MyVote);
@@ -374,7 +375,7 @@ public sealed class ListMoviesForEventHandlerTests
             .Setup(r => r.GetParticipantVotesByEventAsync(evt.Id, "p1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<string, int> { ["mov1"] = 1 });
 
-        var result = await _sut.HandleAsync("evt1", "p1");
+        var result = await _sut.HandleAsync("evt1", CatalogLanguage.French, "p1");
 
         Assert.Null(Assert.Single(result).MyVote);
         _voteRepo.Verify(
@@ -402,7 +403,7 @@ public sealed class ListMoviesForEventHandlerTests
                 new() { Id = "r2", EventId = evt.Id, MovieId = "mov1", ParticipantId = "p2", Value = 9, CreatedAt = updatedAt, UpdatedAt = updatedAt }
             ]);
 
-        var result = await _sut.HandleAsync("evt1");
+        var result = await _sut.HandleAsync("evt1", CatalogLanguage.French);
 
         var a = result.First(m => m.Id == "mov1");
         Assert.Collection(
@@ -423,7 +424,7 @@ public sealed class ListMoviesForEventHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movies);
 
-        var result = await _sut.HandleAsync("evt1");
+        var result = await _sut.HandleAsync("evt1", CatalogLanguage.French);
 
         Assert.Empty(Assert.Single(result).Ratings);
         _ratingRepo.Verify(r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -436,7 +437,7 @@ public sealed class ListMoviesForEventHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync([]);
 
-        var result = await _sut.HandleAsync("evt1");
+        var result = await _sut.HandleAsync("evt1", CatalogLanguage.French);
 
         Assert.Empty(result);
     }
@@ -468,7 +469,7 @@ public sealed class ListMoviesForEventHandlerTests
         _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movies);
         GivenEnrichments(((42, MovieMediaType.Movie), enrichment));
 
-        var result = await SutWithTmdbKey().HandleAsync("evt1");
+        var result = await SutWithTmdbKey().HandleAsync("evt1", CatalogLanguage.French);
 
         var m = Assert.Single(result);
         Assert.Equal(7.2, m.VoteAverage);
@@ -479,7 +480,7 @@ public sealed class ListMoviesForEventHandlerTests
         Assert.Equal("Netflix", p.Name);
         Assert.Equal("flatrate", p.Type);
         _tmdb.Verify(
-            t => t.GetEnrichmentAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            t => t.GetEnrichmentAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<string>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -496,7 +497,7 @@ public sealed class ListMoviesForEventHandlerTests
         ]);
         GivenEnrichments(((1, MovieMediaType.Movie), new TmdbMovieEnrichment(7.2, [], null, 148)));
 
-        var result = await SutWithTmdbKey().HandleAsync("evt1");
+        var result = await SutWithTmdbKey().HandleAsync("evt1", CatalogLanguage.French);
 
         Assert.Equal(2, result.Count);
         Assert.Equal(148, result.First(m => m.TmdbId == 1).RuntimeMinutes);
@@ -525,7 +526,7 @@ public sealed class ListMoviesForEventHandlerTests
             .Setup(r => r.ListCardsByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<UserCard>)[new UserCard("u1", "avatar-1", "alice", IsProfilePublic: true)]);
 
-        var result = await _sut.HandleAsync("evt1");
+        var result = await _sut.HandleAsync("evt1", CatalogLanguage.French);
 
         Assert.Equal("alice", Assert.Single(result).ProposerHandle);
         _userRepo.Verify(
@@ -576,7 +577,7 @@ public sealed class ListMoviesForEventHandlerTests
     {
         var proposed = GivenMoviesProposedOneAfterTheOther(ActiveEvent());
 
-        var result = await _sut.HandleAsync("evt1");
+        var result = await _sut.HandleAsync("evt1", CatalogLanguage.French);
 
         Assert.Equal(proposed.Select(m => m.Id), result.Select(m => m.Id));
         Assert.Equal(proposed.Select(m => m.CreatedAt), result.Select(m => m.CreatedAt));
@@ -590,7 +591,7 @@ public sealed class ListMoviesForEventHandlerTests
         var proposed = GivenMoviesProposedOneAfterTheOther(night);
         proposed.Reverse();
 
-        var result = await _sut.HandleAsync("evt1");
+        var result = await _sut.HandleAsync("evt1", CatalogLanguage.French);
 
         Assert.Equal(proposed.Select(m => m.Id).Order(StringComparer.Ordinal), result.Select(m => m.Id));
         Assert.All(result, movie =>
@@ -612,7 +613,7 @@ public sealed class ListMoviesForEventHandlerTests
         GivenSelectionOf(stored);
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(night);
 
-        var movie = Assert.Single(await _sut.HandleSelectionAsync("soiree", [stored.Id]));
+        var movie = Assert.Single(await _sut.HandleSelectionAsync("soiree", [stored.Id], CatalogLanguage.French));
 
         Assert.Equal((night.CreatedAt, night.CreatedAt), (movie.CreatedAt, movie.UpdatedAt));
     }
@@ -623,7 +624,7 @@ public sealed class ListMoviesForEventHandlerTests
         GivenAnonymousNightWithTwoProposers();
         _currentUser.Setup(c => c.GetUserId()).Returns("u1");
 
-        var result = await _sut.HandleAsync("evt1");
+        var result = await _sut.HandleAsync("evt1", CatalogLanguage.French);
 
         var own = result.Single(m => m.Id == "mov-alice");
         Assert.Equal("Alice", own.ProposerPseudo);
@@ -643,7 +644,7 @@ public sealed class ListMoviesForEventHandlerTests
         GivenAnonymousNightWithTwoProposers();
         _currentUser.Setup(c => c.GetUserId()).Returns(viewer);
 
-        var result = await _sut.HandleAsync("evt1");
+        var result = await _sut.HandleAsync("evt1", CatalogLanguage.French);
 
         Assert.All(result, movie =>
         {
@@ -651,5 +652,50 @@ public sealed class ListMoviesForEventHandlerTests
             Assert.Null(movie.ProposerHandle);
             Assert.Equal(string.Empty, movie.ParticipantId);
         });
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShowsTheTitleOfTheInterfaceLanguageAndKeepsTheStoredOneOtherwise()
+    {
+        var evt = ActiveEvent();
+        var now = DateTimeOffset.UtcNow;
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(
+        [
+            new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = "p1", TmdbId = 129, Title = "Le Voyage de Chihiro", Year = "2001", CreatedAt = now, UpdatedAt = now },
+            new Movie { Id = "mov2", EventId = evt.Id, ParticipantId = "p1", TmdbId = 8392, Title = "Mon voisin Totoro", Year = "1988", CreatedAt = now, UpdatedAt = now },
+            new Movie { Id = "mov3", EventId = evt.Id, ParticipantId = "p1", TmdbId = 4935, Title = "Le Château ambulant", Year = "2004", CreatedAt = now, UpdatedAt = now }
+        ]);
+        _tmdb
+            .Setup(t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), "FR", CatalogLanguage.English, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>
+            {
+                [(129, MovieMediaType.Movie)] = new TmdbMovieEnrichment(8.5, [], null, 125, Title: "Spirited Away"),
+                [(8392, MovieMediaType.Movie)] = new TmdbMovieEnrichment(8.0, [], null, 86, Title: " "),
+            });
+
+        var result = await SutWithTmdbKey().HandleAsync("evt1", CatalogLanguage.English);
+
+        Assert.Equal("Spirited Away", result.Single(m => m.TmdbId == 129).Title);
+        Assert.Equal("Mon voisin Totoro", result.Single(m => m.TmdbId == 8392).Title);
+        Assert.Equal("Le Château ambulant", result.Single(m => m.TmdbId == 4935).Title);
+    }
+
+    [Fact]
+    public async Task HandleSelectionAsync_ReadsTheEnrichmentsInTheInterfaceLanguage()
+    {
+        var now = DateTimeOffset.UtcNow;
+        GivenSelectionOf(
+            new Movie { Id = "mov1", EventId = "evt1", ParticipantId = "p1", TmdbId = 129, Title = "Le Voyage de Chihiro", Year = "2001", CreatedAt = now, UpdatedAt = now });
+        _tmdb
+            .Setup(t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), "FR", CatalogLanguage.English, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>
+            {
+                [(129, MovieMediaType.Movie)] = new TmdbMovieEnrichment(8.5, [], null, 125, Title: "Spirited Away"),
+            });
+
+        var result = await SutWithTmdbKey().HandleSelectionAsync("soiree", ["mov1"], CatalogLanguage.English);
+
+        Assert.Equal("Spirited Away", Assert.Single(result).Title);
     }
 }

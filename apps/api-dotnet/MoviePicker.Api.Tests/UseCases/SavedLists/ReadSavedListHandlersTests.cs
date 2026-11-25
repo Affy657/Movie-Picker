@@ -1,4 +1,5 @@
 using Moq;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
@@ -99,7 +100,7 @@ public sealed class ListSavedListsHandlerTests
     {
         _kit.SagaFilmsAre(HarryPotter, HarryPotterFilms());
         _kit.Tmdb
-            .Setup(t => t.GetCollectionAsync(HarryPotter, It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetCollectionAsync(HarryPotter, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("TMDB down"));
         await _kit.SavedSagaAsync("Ancien nom");
 

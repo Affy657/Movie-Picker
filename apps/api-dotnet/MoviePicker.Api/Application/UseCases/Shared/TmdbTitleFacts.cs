@@ -16,7 +16,7 @@ public static class TmdbTitleFacts
     {
         try
         {
-            return await tmdb.GetDetailsAsync(tmdbId, mediaType, ct);
+            return await tmdb.GetDetailsAsync(tmdbId, mediaType, CatalogLanguage.French, ct);
         }
         catch (Exception ex)
         {
@@ -38,7 +38,7 @@ public static class TmdbTitleFacts
         TmdbMovieDetails? details;
         try
         {
-            details = await tmdb.GetDetailsAsync(tmdbId, mediaType, ct);
+            details = await tmdb.GetDetailsAsync(tmdbId, mediaType, CatalogLanguage.French, ct);
         }
         catch (Exception ex) when (!ct.IsCancellationRequested)
         {

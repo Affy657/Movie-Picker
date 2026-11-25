@@ -40,7 +40,7 @@ public sealed class EventViewTagHandlerTests
     {
         _events.Setup(r => r.GetByIdOrSlugAsync("missing", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
-        Assert.Null(await Handler(Noon).HandleAsync("missing"));
+        Assert.Null(await Handler(Noon).HandleAsync("missing", CatalogLanguage.French));
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public sealed class EventViewTagHandlerTests
     {
         Stored(EventWith(writeSeq: 7));
 
-        var tag = await Handler(Noon).HandleAsync("soiree");
+        var tag = await Handler(Noon).HandleAsync("soiree", CatalogLanguage.French);
 
         Assert.StartsWith("W/\"", tag);
         Assert.EndsWith("\"", tag);
@@ -85,7 +85,7 @@ public sealed class EventViewTagHandlerTests
     {
         var tags = new List<string?>();
         for (var second = 0; second <= EventViewTagHandler.FreshnessWindow.TotalSeconds; second++)
-            tags.Add(await Handler(Noon.AddSeconds(second)).HandleAsync("soiree"));
+            tags.Add(await Handler(Noon.AddSeconds(second)).HandleAsync("soiree", CatalogLanguage.French));
         return tags;
     }
 
@@ -93,10 +93,10 @@ public sealed class EventViewTagHandlerTests
     public async Task HandleAsync_ChangesWhenTheWriteSequenceMoves()
     {
         Stored(EventWith(writeSeq: 7));
-        var before = await Handler(Noon).HandleAsync("soiree");
+        var before = await Handler(Noon).HandleAsync("soiree", CatalogLanguage.French);
 
         Stored(EventWith(writeSeq: 8));
-        var after = await Handler(Noon).HandleAsync("soiree");
+        var after = await Handler(Noon).HandleAsync("soiree", CatalogLanguage.French);
 
         Assert.NotEqual(before, after);
     }
@@ -105,10 +105,10 @@ public sealed class EventViewTagHandlerTests
     public async Task HandleAsync_ChangesWhenTheVersionMoves()
     {
         Stored(EventWith(writeSeq: 7, version: 3));
-        var before = await Handler(Noon).HandleAsync("soiree");
+        var before = await Handler(Noon).HandleAsync("soiree", CatalogLanguage.French);
 
         Stored(EventWith(writeSeq: 7, version: 4));
-        var after = await Handler(Noon).HandleAsync("soiree");
+        var after = await Handler(Noon).HandleAsync("soiree", CatalogLanguage.French);
 
         Assert.NotEqual(before, after);
     }
@@ -118,8 +118,8 @@ public sealed class EventViewTagHandlerTests
     {
         Stored(EventWith(writeSeq: 7));
 
-        var first = await Handler(Noon).HandleAsync("soiree");
-        var nextMinute = await Handler(Noon.Add(EventViewTagHandler.FreshnessWindow)).HandleAsync("soiree");
+        var first = await Handler(Noon).HandleAsync("soiree", CatalogLanguage.French);
+        var nextMinute = await Handler(Noon.Add(EventViewTagHandler.FreshnessWindow)).HandleAsync("soiree", CatalogLanguage.French);
 
         Assert.NotEqual(first, nextMinute);
     }
@@ -130,9 +130,9 @@ public sealed class EventViewTagHandlerTests
         Stored(EventWith(writeSeq: 7));
 
         _currentUser.Setup(u => u.GetUserId()).Returns("user-a");
-        var forA = await Handler(Noon).HandleAsync("soiree");
+        var forA = await Handler(Noon).HandleAsync("soiree", CatalogLanguage.French);
         _currentUser.Setup(u => u.GetUserId()).Returns("user-b");
-        var forB = await Handler(Noon).HandleAsync("soiree");
+        var forB = await Handler(Noon).HandleAsync("soiree", CatalogLanguage.French);
 
         Assert.NotEqual(forA, forB);
     }
@@ -142,9 +142,9 @@ public sealed class EventViewTagHandlerTests
     {
         Stored(EventWith(writeSeq: 7));
 
-        var asGuest = await Handler(Noon).HandleAsync("soiree");
+        var asGuest = await Handler(Noon).HandleAsync("soiree", CatalogLanguage.French);
         _hostToken.Setup(h => h.GetHostToken()).Returns("host-token");
-        var asHost = await Handler(Noon).HandleAsync("soiree");
+        var asHost = await Handler(Noon).HandleAsync("soiree", CatalogLanguage.French);
 
         Assert.NotEqual(asGuest, asHost);
     }
@@ -156,9 +156,21 @@ public sealed class EventViewTagHandlerTests
         _currentUser.Setup(u => u.GetUserId()).Returns("user-a");
         _hostToken.Setup(h => h.GetHostToken()).Returns("host-token");
 
-        var tag = await Handler(Noon).HandleAsync("soiree");
+        var tag = await Handler(Noon).HandleAsync("soiree", CatalogLanguage.French);
 
         Assert.DoesNotContain("user-a", tag);
         Assert.DoesNotContain("host-token", tag);
+    }
+
+    [Fact]
+    public async Task HandleAsync_SameViewerInAnotherLanguage_GetsAnotherTag()
+    {
+        Stored(EventWith(writeSeq: 7));
+        _currentUser.Setup(u => u.GetUserId()).Returns("user-a");
+
+        var french = await Handler(Noon).HandleAsync("soiree", CatalogLanguage.French);
+        var english = await Handler(Noon).HandleAsync("soiree", CatalogLanguage.English);
+
+        Assert.NotEqual(french, english);
     }
 }

@@ -13,10 +13,10 @@ namespace MoviePicker.Api.Infrastructure.Tmdb;
 
 public sealed partial class TmdbMovieSearch
 {
-    private static string BuildDiscoverUrl(TmdbDiscoveryCriteria criteria, int page)
+    private static string BuildDiscoverUrl(TmdbDiscoveryCriteria criteria, int page, CatalogLanguage language)
     {
         var sortBy = string.IsNullOrWhiteSpace(criteria.SortBy) ? "popularity.desc" : criteria.SortBy.Trim();
-        var url = $"{ApiBase}/discover/movie?language=fr-FR"
+        var url = $"{ApiBase}/discover/movie?language={language.TmdbCode()}"
             + $"&sort_by={Uri.EscapeDataString(sortBy)}&page={page}";
         if (criteria.GenreIds?.Count > 0)
             url += $"&with_genres={string.Join(",", criteria.GenreIds)}";
@@ -47,17 +47,21 @@ public sealed partial class TmdbMovieSearch
     public Task<IReadOnlyList<TmdbSearchItem>> DiscoverMoviesAsync(
         TmdbDiscoveryCriteria criteria,
         int pages,
+        CatalogLanguage language,
         CancellationToken ct = default)
     {
         RequireCredentials();
-        return FetchPagesAsync(page => BuildDiscoverUrl(criteria, page), pages, MovieMediaType.Movie, ct);
+        return FetchPagesAsync(page => BuildDiscoverUrl(criteria, page, language), pages, MovieMediaType.Movie, ct);
     }
 
-    public Task<IReadOnlyList<TmdbSearchItem>> GetTrendingMoviesAsync(int pages, CancellationToken ct = default)
+    public Task<IReadOnlyList<TmdbSearchItem>> GetTrendingMoviesAsync(
+        int pages,
+        CatalogLanguage language,
+        CancellationToken ct = default)
     {
         RequireCredentials();
         return FetchPagesAsync(
-            page => $"{ApiBase}/trending/movie/week?language=fr-FR&page={page}",
+            page => $"{ApiBase}/trending/movie/week?language={language.TmdbCode()}&page={page}",
             pages,
             MovieMediaType.Movie,
             ct);
@@ -66,12 +70,13 @@ public sealed partial class TmdbMovieSearch
     public Task<IReadOnlyList<TmdbSearchItem>> GetNowPlayingMoviesAsync(
         string region,
         int pages,
+        CatalogLanguage language,
         CancellationToken ct = default)
     {
         RequireCredentials();
         var r = WatchRegion.Of(region);
         return FetchPagesAsync(
-            page => $"{ApiBase}/movie/now_playing?language=fr-FR&region={r}&page={page}",
+            page => $"{ApiBase}/movie/now_playing?language={language.TmdbCode()}&region={r}&page={page}",
             pages,
             MovieMediaType.Movie,
             ct);
@@ -80,6 +85,7 @@ public sealed partial class TmdbMovieSearch
     public async Task<IReadOnlyList<TmdbSearchItem>> GetRecommendationsAsync(
         int tmdbId,
         MovieMediaType mediaType,
+        CatalogLanguage language,
         CancellationToken ct = default)
     {
         RequireCredentials();
@@ -87,7 +93,7 @@ public sealed partial class TmdbMovieSearch
         try
         {
             return await FetchPagesAsync(
-                page => $"{ApiBase}/{typeSegment}/{tmdbId}/recommendations?language=fr-FR&page={page}",
+                page => $"{ApiBase}/{typeSegment}/{tmdbId}/recommendations?language={language.TmdbCode()}&page={page}",
                 2,
                 mediaType,
                 ct).ConfigureAwait(false);
@@ -98,9 +104,12 @@ public sealed partial class TmdbMovieSearch
         }
     }
 
-    public async Task<TmdbCollectionSummary?> GetCollectionAsync(int collectionId, CancellationToken ct = default)
+    public async Task<TmdbCollectionSummary?> GetCollectionAsync(
+        int collectionId,
+        CatalogLanguage language,
+        CancellationToken ct = default)
     {
-        var root = await FetchCollectionRootAsync(collectionId, ct).ConfigureAwait(false);
+        var root = await FetchCollectionRootAsync(collectionId, language, ct).ConfigureAwait(false);
         if (root is null)
             return null;
 
@@ -139,9 +148,10 @@ public sealed partial class TmdbMovieSearch
 
     public async Task<IReadOnlyList<TmdbSearchItem>> GetCollectionMoviesAsync(
         int collectionId,
+        CatalogLanguage language,
         CancellationToken ct = default)
     {
-        var root = await FetchCollectionRootAsync(collectionId, ct).ConfigureAwait(false);
+        var root = await FetchCollectionRootAsync(collectionId, language, ct).ConfigureAwait(false);
         if (root is null)
             return [];
 
@@ -159,10 +169,13 @@ public sealed partial class TmdbMovieSearch
         return list;
     }
 
-    public async Task<IReadOnlyList<TmdbSearchItem>> GetDirectedMoviesAsync(int personId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<TmdbSearchItem>> GetDirectedMoviesAsync(
+        int personId,
+        CatalogLanguage language,
+        CancellationToken ct = default)
     {
         RequireCredentials();
-        var url = $"{ApiBase}/person/{personId}/movie_credits?language=fr-FR";
+        var url = $"{ApiBase}/person/{personId}/movie_credits?language={language.TmdbCode()}";
 
         using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
         if (res.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -188,10 +201,10 @@ public sealed partial class TmdbMovieSearch
             .ToList();
     }
 
-    private async Task<JsonDocument?> FetchCollectionRootAsync(int collectionId, CancellationToken ct)
+    private async Task<JsonDocument?> FetchCollectionRootAsync(int collectionId, CatalogLanguage language, CancellationToken ct)
     {
         RequireCredentials();
-        var url = $"{ApiBase}/collection/{collectionId}?language=fr-FR";
+        var url = $"{ApiBase}/collection/{collectionId}?language={language.TmdbCode()}";
 
         using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
         if (res.StatusCode == System.Net.HttpStatusCode.NotFound)

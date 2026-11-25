@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Moq;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.MovieShare;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Configuration;
@@ -30,8 +31,8 @@ public sealed class MovieShareDocumentControllerTests
         _sut.Response.Headers.ContentSecurityPolicy = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'";
     }
 
-    private void GivenDocument(string movieRef, MovieMediaType mediaType, int status) =>
-        _handler.Setup(h => h.HandleAsync(movieRef, mediaType, "https://api.example", It.IsAny<CancellationToken>()))
+    private void GivenDocument(string movieRef, MovieMediaType mediaType, int status, CatalogLanguage language = CatalogLanguage.French) =>
+        _handler.Setup(h => h.HandleAsync(movieRef, mediaType, "https://api.example", language, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ShareDocument(status, $"<html><div id=\"root\"></div>{mediaType}</html>"));
 
     private void AssertServedWithTheSiteHeaders(IActionResult result, int status, MovieMediaType mediaType)
@@ -52,7 +53,7 @@ public sealed class MovieShareDocumentControllerTests
     {
         GivenDocument("27205-inception", MovieMediaType.Movie, status);
 
-        var result = await _sut.GetFilm("27205-inception", _handler.Object, PublicApi, CancellationToken.None);
+        var result = await _sut.GetFilm("27205-inception", null, _handler.Object, PublicApi, CancellationToken.None);
 
         AssertServedWithTheSiteHeaders(result, status, MovieMediaType.Movie);
     }
@@ -64,7 +65,7 @@ public sealed class MovieShareDocumentControllerTests
     {
         GivenDocument("1399-game-of-thrones", MovieMediaType.Tv, status);
 
-        var result = await _sut.GetSeries("1399-game-of-thrones", _handler.Object, PublicApi, CancellationToken.None);
+        var result = await _sut.GetSeries("1399-game-of-thrones", null, _handler.Object, PublicApi, CancellationToken.None);
 
         AssertServedWithTheSiteHeaders(result, status, MovieMediaType.Tv);
     }
@@ -86,5 +87,40 @@ public sealed class MovieShareDocumentControllerTests
         var spec = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.MovieDocumentPolicy)!.Value;
         var invitation = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.InvitationDocumentPolicy)!.Value;
         Assert.Equal((invitation.PermitLimit, invitation.WindowMinutes, invitation.Scope), (spec.PermitLimit, spec.WindowMinutes, spec.Scope));
+    }
+
+    [Fact]
+    public async Task GetFilm_ACrawlerSpeakingEnglish_StillGetsTheFrenchDocument()
+    {
+        _sut.Request.Headers.AcceptLanguage = "en-US,en;q=0.9";
+        GivenDocument("27205-inception", MovieMediaType.Movie, 200);
+
+        var result = await _sut.GetFilm("27205-inception", null, _handler.Object, PublicApi, CancellationToken.None);
+
+        AssertServedWithTheSiteHeaders(result, 200, MovieMediaType.Movie);
+    }
+
+    [Theory]
+    [InlineData("en", CatalogLanguage.English)]
+    [InlineData("en-US", CatalogLanguage.English)]
+    [InlineData("fr", CatalogLanguage.French)]
+    [InlineData("de", CatalogLanguage.French)]
+    public async Task GetFilm_TheLangQuery_ChoosesTheLanguageOfTheDocument(string lang, CatalogLanguage expected)
+    {
+        GivenDocument("27205-inception", MovieMediaType.Movie, 200, expected);
+
+        var result = await _sut.GetFilm("27205-inception", lang, _handler.Object, PublicApi, CancellationToken.None);
+
+        AssertServedWithTheSiteHeaders(result, 200, MovieMediaType.Movie);
+    }
+
+    [Fact]
+    public async Task GetSeries_TheLangQuery_ChoosesTheLanguageOfTheDocument()
+    {
+        GivenDocument("1399-game-of-thrones", MovieMediaType.Tv, 200, CatalogLanguage.English);
+
+        var result = await _sut.GetSeries("1399-game-of-thrones", "en", _handler.Object, PublicApi, CancellationToken.None);
+
+        AssertServedWithTheSiteHeaders(result, 200, MovieMediaType.Tv);
     }
 }

@@ -1,4 +1,5 @@
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.UseCases.GetMovieShowcase;
@@ -11,7 +12,8 @@ public sealed record MovieShowcaseQuery(
     string? Provider = null,
     int? SeedTmdbId = null,
     MovieMediaType SeedMediaType = MovieMediaType.Movie,
-    int? PersonId = null);
+    int? PersonId = null,
+    CatalogLanguage Language = CatalogLanguage.French);
 
 public interface IGetMovieShowcaseHandler
 {
@@ -22,12 +24,12 @@ public interface IGetMovieShowcaseHandler
 
 public interface IGetMovieCollectionsHandler
 {
-    Task<MovieCollectionListResponse> HandleAsync(CancellationToken ct = default);
+    Task<MovieCollectionListResponse> HandleAsync(CatalogLanguage language, CancellationToken ct = default);
 
-    Task<bool> RefreshAsync(CancellationToken ct = default);
+    Task<bool> RefreshAsync(CatalogLanguage language, CancellationToken ct = default);
 }
 
 public interface IGetMovieShowcaseThemesHandler
 {
-    Task<MovieShowcaseThemeListResponse> HandleAsync(CancellationToken ct = default);
+    Task<MovieShowcaseThemeListResponse> HandleAsync(CatalogLanguage language, CancellationToken ct = default);
 }

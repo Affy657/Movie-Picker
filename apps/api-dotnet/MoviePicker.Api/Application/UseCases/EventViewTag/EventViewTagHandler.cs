@@ -27,7 +27,7 @@ public sealed class EventViewTagHandler : IEventViewTagHandler
         _clock = clock;
     }
 
-    public async Task<string?> HandleAsync(string idOrSlug, CancellationToken ct = default)
+    public async Task<string?> HandleAsync(string idOrSlug, CatalogLanguage language, CancellationToken ct = default)
     {
         var evt = await _eventRepository.GetByIdOrSlugAsync(idOrSlug, ct);
         if (evt is null)
@@ -35,7 +35,7 @@ public sealed class EventViewTagHandler : IEventViewTagHandler
 
         var currentUserId = _currentUserAccessor.GetUserId();
         var isHost = HostedEvent.IsHost(evt, _hostTokenAccessor, currentUserId);
-        var digest = ViewerDigest(currentUserId, isHost);
+        var digest = ViewerDigest(currentUserId, isHost, language);
         var windowSeconds = (long)FreshnessWindow.TotalSeconds;
         var viewerOffsetSeconds = BinaryPrimitives.ReadUInt16BigEndian(digest.AsSpan(6, 2)) % windowSeconds;
         var freshnessBucket = (_clock.GetUtcNow().ToUnixTimeSeconds() + viewerOffsetSeconds) / windowSeconds;
@@ -44,9 +44,9 @@ public sealed class EventViewTagHandler : IEventViewTagHandler
         return $"W/\"{evt.WriteSeq}.{evt.Version}.{freshnessBucket}.{viewer}\"";
     }
 
-    private static byte[] ViewerDigest(string? currentUserId, bool isHost)
+    private static byte[] ViewerDigest(string? currentUserId, bool isHost, CatalogLanguage language)
     {
-        var identity = $"{currentUserId ?? string.Empty}|{(isHost ? "host" : "guest")}";
+        var identity = $"{currentUserId ?? string.Empty}|{(isHost ? "host" : "guest")}|{language.TmdbCode()}";
         return SHA256.HashData(Encoding.UTF8.GetBytes(identity));
     }
 }

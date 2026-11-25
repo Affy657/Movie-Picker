@@ -43,7 +43,7 @@ public sealed class BackfillWatchlistFactsMigration : IDataMigration
 
     private async Task<bool> BackfillFactsAsync(WatchlistItem item, CancellationToken ct)
     {
-        var details = await _tmdb.GetDetailsAsync(item.TmdbId, item.MediaType, ct);
+        var details = await _tmdb.GetDetailsAsync(item.TmdbId, item.MediaType, CatalogLanguage.French, ct);
         if (details is null)
             return false;
 

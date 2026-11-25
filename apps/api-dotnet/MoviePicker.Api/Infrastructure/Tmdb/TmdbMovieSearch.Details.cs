@@ -15,12 +15,13 @@ public sealed partial class TmdbMovieSearch
     public Task<TmdbMovieDetails?> GetDetailsAsync(
         int tmdbId,
         MovieMediaType mediaType,
+        CatalogLanguage language,
         CancellationToken ct = default)
     {
         var typeSegment = MediaTypeSegment(mediaType);
         return CachedLookupAsync(
-            $"tmdb-details:{typeSegment}:{tmdbId}",
-            () => FetchDetailsUncachedAsync(tmdbId, mediaType, ct),
+            $"tmdb-details:{typeSegment}:{language.TmdbCode()}:{tmdbId}",
+            () => FetchDetailsUncachedAsync(tmdbId, mediaType, language, ct),
             ex => _logger.LogWarning(ex, "TMDB details failed for {MediaType} {TmdbId}", typeSegment, tmdbId),
             ct);
     }
@@ -28,10 +29,11 @@ public sealed partial class TmdbMovieSearch
     private async Task<TmdbMovieDetails?> FetchDetailsUncachedAsync(
         int tmdbId,
         MovieMediaType mediaType,
+        CatalogLanguage language,
         CancellationToken ct)
     {
         var typeSegment = MediaTypeSegment(mediaType);
-        var url = $"{ApiBase}/{typeSegment}/{tmdbId}?language=fr-FR&append_to_response={AppendedResponses(mediaType)}"
+        var url = $"{ApiBase}/{typeSegment}/{tmdbId}?language={language.TmdbCode()}&append_to_response={AppendedResponses(mediaType)}"
             + "&include_video_language=fr,en,null";
 
         using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
@@ -63,7 +65,7 @@ public sealed partial class TmdbMovieSearch
         if (mediaType == MovieMediaType.Tv)
             director ??= ReadCreators(root);
 
-        var trailerUrl = ExtractTrailerUrl(root);
+        var trailerUrl = ExtractTrailerUrl(root, language);
 
         return new TmdbMovieDetails(
             tmdbId,
@@ -82,7 +84,7 @@ public sealed partial class TmdbMovieSearch
             ReadBackdropUrl(root),
             mediaType == MovieMediaType.Tv ? ReadPositiveInt(root, "number_of_seasons") : null,
             mediaType == MovieMediaType.Tv ? ReadPositiveInt(root, "number_of_episodes") : null,
-            ReadDetailsExtras(root, mediaType));
+            ReadDetailsExtras(root, mediaType, language));
     }
 
     private static string? ReadBackdropUrl(JsonElement root)

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.GetMovieDetails;
 using MoviePicker.Api.Application.UseCases.ProfileBanners;
 using MoviePicker.Api.Application.UseCases.SearchMovies;
@@ -29,6 +30,7 @@ public sealed class MoviesSearchController : ControllerBase
         [FromQuery] string? language,
         [FromQuery] int? runtimeMin,
         [FromQuery] int? runtimeMax,
+        [RequestLanguage] CatalogLanguage interfaceLanguage,
         [FromServices] ISearchMoviesHandler handler,
         CancellationToken ct,
         [FromQuery] bool includeSeries = false)
@@ -40,7 +42,7 @@ public sealed class MoviesSearchController : ControllerBase
             filters = new MovieSearchFilters(
                 parsedGenreIds, yearFrom, yearTo, voteMin, language?.Trim().ToLowerInvariant(), runtimeMin, runtimeMax);
 
-        var results = await handler.HandleAsync(q ?? string.Empty, eventSlug, filters, includeSeries, ct);
+        var results = await handler.HandleAsync(q ?? string.Empty, eventSlug, interfaceLanguage, filters, includeSeries, ct);
         return Ok(results);
     }
 
@@ -65,10 +67,11 @@ public sealed class MoviesSearchController : ControllerBase
     public async Task<IActionResult> GetDetails(
         int tmdbId,
         [FromQuery] MovieMediaType mediaType,
+        [RequestLanguage] CatalogLanguage interfaceLanguage,
         [FromServices] IGetMovieDetailsHandler handler,
         CancellationToken ct)
     {
-        var details = await handler.HandleAsync(tmdbId, mediaType, ct);
+        var details = await handler.HandleAsync(tmdbId, mediaType, interfaceLanguage, ct);
         if (details is null)
             return NotFound();
         return Ok(details);

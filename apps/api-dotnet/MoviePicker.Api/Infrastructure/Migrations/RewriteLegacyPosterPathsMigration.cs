@@ -77,7 +77,7 @@ public sealed class RewriteLegacyPosterPathsMigration : IDataMigration
 
     private async Task<string?> FetchTmdbPosterAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct)
     {
-        var details = await _tmdb.GetDetailsAsync(tmdbId, mediaType, ct);
+        var details = await _tmdb.GetDetailsAsync(tmdbId, mediaType, CatalogLanguage.French, ct);
         return details?.PosterUrl is { } posterUrl
             ? TmdbPosterUrlNormalizer.UpgradeTmdbSize(posterUrl, TmdbPosterUrlNormalizer.PreferredPosterSize)
             : null;

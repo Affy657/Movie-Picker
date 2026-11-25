@@ -39,8 +39,8 @@ public sealed class GetWatchlistAvailabilityHandlerTests
     }
 
     private void TmdbKnowsNothing() =>
-        _tmdb.Setup(t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), "FR", It.IsAny<CancellationToken>()))
-            .ReturnsAsync((IReadOnlyCollection<(int TmdbId, MovieMediaType MediaType)> keys, string _, CancellationToken _) =>
+        _tmdb.Setup(t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), "FR", It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<(int TmdbId, MovieMediaType MediaType)> keys, string _, CatalogLanguage _, CancellationToken _) =>
                 keys.ToDictionary(key => key, _ => (TmdbMovieEnrichment?)null));
 
     [Fact]
@@ -60,8 +60,8 @@ public sealed class GetWatchlistAvailabilityHandlerTests
     {
         PageReturns(500, 500, 501, Item(501));
         IReadOnlyCollection<(int TmdbId, MovieMediaType MediaType)>? requested = null;
-        _tmdb.Setup(t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), "FR", It.IsAny<CancellationToken>()))
-            .Callback<IReadOnlyCollection<(int TmdbId, MovieMediaType MediaType)>, string, CancellationToken>((keys, _, _) => requested = keys)
+        _tmdb.Setup(t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), "FR", It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
+            .Callback<IReadOnlyCollection<(int TmdbId, MovieMediaType MediaType)>, string, CatalogLanguage, CancellationToken>((keys, _, _, _) => requested = keys)
             .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>
             {
                 [(501, MovieMediaType.Movie)] = new TmdbMovieEnrichment(6.9, [], null, 98)
@@ -124,8 +124,8 @@ public sealed class GetWatchlistAvailabilityHandlerTests
     {
         ListReturns(Item(1), Item(2, MovieMediaType.Tv), Item(3));
         IReadOnlyCollection<(int TmdbId, MovieMediaType MediaType)>? requested = null;
-        _tmdb.Setup(t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), "BE", It.IsAny<CancellationToken>()))
-            .Callback<IReadOnlyCollection<(int TmdbId, MovieMediaType MediaType)>, string, CancellationToken>((keys, _, _) => requested = keys)
+        _tmdb.Setup(t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), "BE", It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
+            .Callback<IReadOnlyCollection<(int TmdbId, MovieMediaType MediaType)>, string, CatalogLanguage, CancellationToken>((keys, _, _, _) => requested = keys)
             .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>
             {
                 [(1, MovieMediaType.Movie)] = new TmdbMovieEnrichment(
@@ -161,7 +161,7 @@ public sealed class GetWatchlistAvailabilityHandlerTests
     public async Task HandleAsync_EveryTitleResolved_IsNotPartial()
     {
         ListReturns(Item(1), Item(2));
-        _tmdb.Setup(t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), "FR", It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), "FR", It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>
             {
                 [(1, MovieMediaType.Movie)] = new TmdbMovieEnrichment(7.5, [], null, 112),
@@ -178,7 +178,7 @@ public sealed class GetWatchlistAvailabilityHandlerTests
     public async Task HandleAsync_DuplicateTitles_AreRequestedOnce()
     {
         ListReturns(Item(1), Item(1));
-        _tmdb.Setup(t => t.GetEnrichmentsAsync(It.Is<IReadOnlyCollection<(int, MovieMediaType)>>(k => k.Count == 1), "FR", It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetEnrichmentsAsync(It.Is<IReadOnlyCollection<(int, MovieMediaType)>>(k => k.Count == 1), "FR", It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>
             {
                 [(1, MovieMediaType.Movie)] = null
@@ -188,6 +188,6 @@ public sealed class GetWatchlistAvailabilityHandlerTests
 
         Assert.Equal(2, result.Items.Count);
         Assert.False(result.Partial);
-        _tmdb.Verify(t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), "FR", It.IsAny<CancellationToken>()), Times.Once);
+        _tmdb.Verify(t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), "FR", It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

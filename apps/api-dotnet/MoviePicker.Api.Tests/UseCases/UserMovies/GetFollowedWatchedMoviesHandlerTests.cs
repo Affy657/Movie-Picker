@@ -81,6 +81,7 @@ public sealed class GetFollowedWatchedMoviesHandlerTests
         _tmdb.Setup(s => s.GetEnrichmentsAsync(
                 It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(),
                 It.IsAny<string>(),
+                It.IsAny<CatalogLanguage>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>());
         return new GetFollowedWatchedMoviesHandler(
@@ -119,6 +120,7 @@ public sealed class GetFollowedWatchedMoviesHandlerTests
         _tmdb.Setup(s => s.GetEnrichmentsAsync(
                 It.Is<IReadOnlyCollection<(int, MovieMediaType)>>(keys => keys.Count == 2),
                 "FR",
+                It.IsAny<CatalogLanguage>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>
             {
@@ -152,6 +154,7 @@ public sealed class GetFollowedWatchedMoviesHandlerTests
             s => s.GetEnrichmentsAsync(
                 It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(),
                 It.IsAny<string>(),
+                It.IsAny<CatalogLanguage>(),
                 It.IsAny<CancellationToken>()),
             Times.Never);
     }
