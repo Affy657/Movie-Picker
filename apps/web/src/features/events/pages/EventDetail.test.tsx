@@ -1018,7 +1018,7 @@ describe('EventDetail (MSW)', () => {
       const hostYourOwn = await screen.findByRole('link', { name: 'Organisez la vôtre' });
       expect(hostYourOwn).toHaveAttribute(
         'href',
-        `/register?returnTo=${encodeURIComponent('/new?from=night')}`
+        `/register?returnTo=${encodeURIComponent('/new?from=event')}`
       );
       const signIn = screen.getByRole('link', { name: 'Se connecter pour noter' });
       expect(
