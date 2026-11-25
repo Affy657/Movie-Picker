@@ -3662,7 +3662,7 @@ export const en: Locale = {
         'TMDB searches and entries still live in the memory of each instance: two instances repeat the same call, and a restart starts cold. The home page, the collections and the film enrichment already go through a shared cache in the database, the model to follow for the rest.',
       containerTwice: 'The container described in two places',
       containerTwiceHint:
-        'The mounted secrets and the server variables are described in the deployment pipeline and in Terraform, and the five scheduled jobs still live in the pipeline only; as long as the version travels as a variable rather than in the image, the pipeline rules and the description follows.',
+        'The mounted secrets and the server variables are described in the deployment pipeline and in Terraform, which alone describes the five scheduled jobs; as long as the version travels as a variable rather than in the image, the pipeline rules and the description follows.',
       sentryToken: 'One repository token remains',
       sentryTokenHint:
         'Everything else is keyless; the token that uploads source maps to Sentry is still a repository secret, to be moved behind an environment.',
@@ -4264,7 +4264,7 @@ export const en: Locale = {
       schedulerValue:
         'No background work lives in the process. An external scheduler calls the server every 30 minutes for the event reminders, every five hours to reload the home page catalogue, and once a day to spawn the next occurrence of recurring nights, remove the winning film from the participants’ to-watch list once the night is over, and remind those who have not yet rated the previous night’s film, on routes protected by a token.',
       schedulerHint:
-        'The five jobs are created by the deployment pipeline in production, after every promotion, and retry three times a call that hit a cold start or an error; a failed attempt raises an alert. The staging has none.',
+        'The five jobs are described in Terraform with the rest of the production, and retry three times a call that hit a cold start or an error; a failed attempt raises an alert. The staging has none.',
       origins: 'Origins',
       originsValue:
         'The server only accepts declared origins. The deployment fails if the list is not set.',
@@ -4277,7 +4277,7 @@ export const en: Locale = {
         'The staging is not indexed by search engines, has no backup and a single probe, on its server, and runs in the same project under identities of its own.',
       iac: 'Infrastructure described',
       iacValue:
-        'Registry, secrets, services, sites, identities, federation, alerts and audit logs are described in Terraform, with a versioned and locked remote state. A change is planned on its pull request, and applied on master only after a reviewer agrees, when it changes a resource.',
+        'Registry, secrets, services, sites, identities, federation, scheduled jobs, alerts and audit logs are described in Terraform, with a versioned and locked remote state. A change is planned on its pull request, and applied on master only after a reviewer agrees, when it changes a resource.',
       iacHint:
         'Production was imported, never recreated: the plan is empty as long as code and reality agree. Every Monday the same plan is replayed read-only and turns red if the infrastructure moved outside the repository: a drift shows up in a review rather than in an incident.',
       identities: 'Keyless identities',
