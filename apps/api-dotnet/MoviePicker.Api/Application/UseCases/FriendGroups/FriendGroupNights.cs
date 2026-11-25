@@ -38,8 +38,8 @@ public sealed class FriendGroupNightsReader
     {
         var now = _clock.GetUtcNow();
         var open = await _events.ListOpenByGroupIdsAsync([group.Id], now, ct);
-        var held = await _events.ListHeldByGroupIdsAsync([group.Id], now, ct);
-        if (open.Count == 0 && held.Count == 0)
+        var tally = (await _events.TallyHeldByGroupIdsAsync([group.Id], now, ct)).FirstOrDefault();
+        if (open.Count == 0 && tally is null)
             return FriendGroupNightsView.None;
 
         var viewer = await ViewerOfAsync(viewerId, [group], ct);
@@ -48,7 +48,9 @@ public sealed class FriendGroupNightsReader
             .OrderBy(IsOnHold)
             .ThenBy(MyEventSummaryEnricher.StartInstant)
             .ToList();
-        var finishedWithFilm = await ShownPastNightsAsync(held, ct);
+        var finishedWithFilm = tally is null
+            ? []
+            : await _events.ListLatestHeldByGroupIdAsync(group.Id, now, PastNightsShown, ct);
         var past = viewer.Summarize(finishedWithFilm, now).ToList();
 
         var enrichedUpcoming = await _summaries.EnrichAsync(viewerId, upcoming, NoWinners, MyEventSummaryDetail.Previews, NoRatingOpen, ct);
@@ -60,13 +62,13 @@ public sealed class FriendGroupNightsReader
             finishedWithFilm.Where(night => night.IsRatingOpen(now)).Select(night => night.Id).ToHashSet(),
             ct);
 
-        var covers = await _showcases.CoversAsync(held.Take(1).ToList(), ct);
+        var covers = await _showcases.CoversAsync(tally is null ? [] : [tally.LastNight], ct);
         return new FriendGroupNightsView(
             enrichedUpcoming,
             enrichedPast,
             await ParticipantIdsAsync(upcoming, ct),
-            await _showcases.StatsAsync(held, ct),
-            held.Count == 0 ? null : covers.GetValueOrDefault(held[0].Id));
+            FriendGroupShowcaseReader.Stats(tally),
+            tally is null ? null : covers.GetValueOrDefault(tally.LastNight.Id));
     }
 
     public async Task<FriendGroupListNights> ReadListAsync(
@@ -79,7 +81,7 @@ public sealed class FriendGroupNightsReader
 
         var now = _clock.GetUtcNow();
         var groupIds = groups.Select(group => group.Id).ToList();
-        var showcases = await ShowcasesAsync(groups, await _events.ListHeldByGroupIdsAsync(groupIds, now, ct), ct);
+        var showcases = await ShowcasesAsync(groups, await _events.TallyHeldByGroupIdsAsync(groupIds, now, ct), ct);
         var open = await _events.ListOpenByGroupIdsAsync(groupIds, now, ct);
         var upcoming = FriendGroup.NightsKeptBy(open, groups).Where(night => !night.IsFinished(now)).ToList();
         if (upcoming.Count == 0)
@@ -97,33 +99,22 @@ public sealed class FriendGroupNightsReader
             showcases);
     }
 
-    private async Task<IReadOnlyList<Event>> ShownPastNightsAsync(IReadOnlyList<HeldGroupNight> held, CancellationToken ct)
-    {
-        var shownIds = held.Take(PastNightsShown).Select(night => night.Id).ToList();
-        if (shownIds.Count == 0)
-            return [];
-
-        var loaded = (await _events.ListByIdsAsync(shownIds, ct)).ToDictionary(night => night.Id, StringComparer.Ordinal);
-        return shownIds.Select(loaded.GetValueOrDefault).OfType<Event>().ToList();
-    }
-
     private async Task<IReadOnlyList<FriendGroupShowcaseResponse>> ShowcasesAsync(
         IReadOnlyList<FriendGroup> groups,
-        IReadOnlyList<HeldGroupNight> heldNights,
+        IReadOnlyList<HeldGroupNightTally> tallies,
         CancellationToken ct)
     {
-        var heldByGroup = heldNights.ToLookup(night => night.GroupId);
-        var lastNights = groups.Select(group => heldByGroup[group.Id].FirstOrDefault()).OfType<HeldGroupNight>().ToList();
-        var covers = await _showcases.CoversAsync(lastNights, ct);
+        var tallyByGroup = tallies.ToDictionary(tally => tally.GroupId, StringComparer.Ordinal);
+        var covers = await _showcases.CoversAsync(tallies.Select(tally => tally.LastNight).ToList(), ct);
         return groups
             .Select(group =>
             {
-                var held = heldByGroup[group.Id].ToList();
+                var tally = tallyByGroup.GetValueOrDefault(group.Id);
                 return new FriendGroupShowcaseResponse
                 {
                     GroupId = group.Id,
-                    NightCount = held.Count,
-                    Cover = held.Count == 0 ? null : covers.GetValueOrDefault(held[0].Id)
+                    NightCount = tally?.NightCount ?? 0,
+                    Cover = tally is null ? null : covers.GetValueOrDefault(tally.LastNight.Id)
                 };
             })
             .ToList();

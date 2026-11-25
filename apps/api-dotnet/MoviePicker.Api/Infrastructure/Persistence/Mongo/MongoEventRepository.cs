@@ -1,3 +1,4 @@
+using System.Globalization;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
@@ -295,7 +296,7 @@ public sealed class MongoEventRepository : IEventRepository
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
     }
 
-    public async Task<IReadOnlyList<HeldGroupNight>> ListHeldByGroupIdsAsync(
+    public async Task<IReadOnlyList<HeldGroupNightTally>> TallyHeldByGroupIdsAsync(
         IReadOnlyCollection<string> groupIds,
         DateTimeOffset utcNow,
         CancellationToken ct = default)
@@ -304,26 +305,157 @@ public sealed class MongoEventRepository : IEventRepository
         if (ids.Count == 0)
             return [];
 
+        var rows = await _collection.Aggregate()
+            .Match(HeldNightsOf(ids, utcNow))
+            .AppendStage<BsonDocument>(HeldNightFieldsStage)
+            .AppendStage<BsonDocument>(RatedWinnersStage)
+            .AppendStage<BsonDocument>(HeldNightTallyStage)
+            .ToListAsync(ct);
+        return rows.ConvertAll(ToHeldGroupNightTally);
+    }
+
+    public async Task<IReadOnlyList<Event>> ListLatestHeldByGroupIdAsync(
+        string groupId,
+        DateTimeOffset utcNow,
+        int limit,
+        CancellationToken ct = default)
+    {
+        if (!MongoObjectIds.IsValid(groupId) || limit <= 0)
+            return [];
+
+        var docs = await _collection.Find(HeldNightsOf([groupId], utcNow))
+            .Sort(Builders<EventDocument>.Sort.Descending(x => x.Date).Descending(x => x.Time).Descending(x => x.Id))
+            .Limit(limit)
+            .ToListAsync(ct);
+        return docs.ConvertAll(EventDocumentMapper.ToDomain);
+    }
+
+    private static FilterDefinition<EventDocument> HeldNightsOf(IReadOnlyCollection<string> groupIds, DateTimeOffset utcNow)
+    {
         var builder = Builders<EventDocument>.Filter;
-        var filter = builder.And(
-            builder.In(x => x.GroupId, ids),
+        return builder.And(
+            builder.In(x => x.GroupId, groupIds),
             builder.SizeGt(x => x.Winners, 0),
             FinishedBy(utcNow));
-        var docs = await _collection.Find(filter)
-            .Sort(Builders<EventDocument>.Sort.Descending(x => x.Date).Descending(x => x.Time).Descending(x => x.Id))
-            .Project<EventDocument>(Builders<EventDocument>.Projection
-                .Include(x => x.GroupId)
-                .Include(x => x.Date)
-                .Include(x => x.Time)
-                .Include("winners.movieId"))
-            .ToListAsync(ct);
-        return docs.ConvertAll(doc => new HeldGroupNight(
-            doc.Id,
-            doc.GroupId ?? string.Empty,
-            doc.Date,
-            doc.Time,
-            (doc.Winners ?? []).ConvertAll(winner => winner.MovieId)));
     }
+
+    private static readonly BsonDocument HeldNightFieldsStage = new(
+        "$project",
+        new BsonDocument
+        {
+            { "groupId", 1 },
+            { "date", 1 },
+            { "time", 1 },
+            { "winnerIds", "$winners.movieId" },
+            {
+                "weekday",
+                new BsonDocument(
+                    "$dayOfWeek",
+                    new BsonDocument(
+                        "$dateFromString",
+                        new BsonDocument
+                        {
+                            { "dateString", "$date" },
+                            { "format", "%Y-%m-%d" },
+                            { "onError", BsonNull.Value },
+                            { "onNull", BsonNull.Value }
+                        }))
+            }
+        });
+
+    private static readonly BsonDocument RatedWinnersStage = new(
+        "$lookup",
+        new BsonDocument
+        {
+            { "from", MongoMovieRatingRepository.CollectionName },
+            { "localField", "_id" },
+            { "foreignField", "eventId" },
+            { "let", new BsonDocument("winnerIds", "$winnerIds") },
+            {
+                "pipeline",
+                new BsonArray
+                {
+                    new BsonDocument(
+                        "$match",
+                        new BsonDocument("$expr", new BsonDocument("$in", new BsonArray { "$movieId", "$$winnerIds" }))),
+                    new BsonDocument(
+                        "$group",
+                        new BsonDocument { { "_id", "$movieId" }, { "average", new BsonDocument("$avg", "$value") } })
+                }
+            },
+            { "as", "ratedFilms" }
+        });
+
+    private static readonly BsonDocument HeldNightTallyStage = BuildHeldNightTallyStage();
+
+    private static BsonDocument BuildHeldNightTallyStage()
+    {
+        var tally = new BsonDocument
+        {
+            { "_id", "$groupId" },
+            { "nightCount", new BsonDocument("$sum", 1) },
+            {
+                "filmCount",
+                new BsonDocument("$sum", new BsonDocument("$size", new BsonDocument("$setUnion", new BsonArray { "$winnerIds", new BsonArray() })))
+            },
+            { "firstNightDate", new BsonDocument("$min", "$date") },
+            { "ratedFilmCount", new BsonDocument("$sum", new BsonDocument("$size", "$ratedFilms")) },
+            { "ratedFilmAverageSum", new BsonDocument("$sum", new BsonDocument("$sum", "$ratedFilms.average")) },
+            {
+                "lastNight",
+                new BsonDocument(
+                    "$top",
+                    new BsonDocument
+                    {
+                        { "sortBy", new BsonDocument { { "date", -1 }, { "time", -1 }, { "_id", -1 } } },
+                        {
+                            "output",
+                            new BsonDocument { { "id", "$_id" }, { "date", "$date" }, { "time", "$time" }, { "winnerIds", "$winnerIds" } }
+                        }
+                    })
+            }
+        };
+        foreach (var day in Enum.GetValues<DayOfWeek>())
+        {
+            tally.Add(
+                WeekdayField(day),
+                new BsonDocument(
+                    "$sum",
+                    new BsonDocument("$cond", new BsonArray { new BsonDocument("$eq", new BsonArray { "$weekday", MongoDayOfWeek(day) }), 1, 0 })));
+        }
+
+        return new BsonDocument("$group", tally);
+    }
+
+    private static string WeekdayField(DayOfWeek day) => "weekday" + MongoDayOfWeek(day).ToString(CultureInfo.InvariantCulture);
+
+    private static int MongoDayOfWeek(DayOfWeek day) => (int)day + 1;
+
+    private static HeldGroupNightTally ToHeldGroupNightTally(BsonDocument row)
+    {
+        var last = row["lastNight"].AsBsonDocument;
+        var groupId = row["_id"].AsObjectId.ToString();
+        var ratedFilmCount = row["ratedFilmCount"].ToInt32();
+        var nightsByWeekday = Enum.GetValues<DayOfWeek>()
+            .Select(day => (Day: day, Count: row[WeekdayField(day)].ToInt32()))
+            .Where(perDay => perDay.Count > 0)
+            .ToDictionary(perDay => perDay.Day, perDay => perDay.Count);
+        return new HeldGroupNightTally(
+            groupId,
+            row["nightCount"].ToInt32(),
+            row["filmCount"].ToInt32(),
+            StringOrEmpty(row.GetValue("firstNightDate", BsonNull.Value)),
+            ratedFilmCount == 0 ? null : row["ratedFilmAverageSum"].ToDouble() / ratedFilmCount,
+            nightsByWeekday,
+            new HeldGroupNight(
+                last["id"].AsObjectId.ToString(),
+                groupId,
+                StringOrEmpty(last.GetValue("date", BsonNull.Value)),
+                StringOrEmpty(last.GetValue("time", BsonNull.Value)),
+                last.GetValue("winnerIds", new BsonArray()).AsBsonArray.Select(id => id.AsObjectId.ToString()).ToList()));
+    }
+
+    private static string StringOrEmpty(BsonValue value) => value.IsString ? value.AsString : string.Empty;
 
     private static FilterDefinition<EventDocument> FinishedBy(DateTimeOffset utcNow)
     {

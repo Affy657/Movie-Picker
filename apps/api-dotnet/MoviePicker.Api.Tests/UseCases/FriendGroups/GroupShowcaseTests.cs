@@ -185,8 +185,12 @@ public sealed class GroupShowcaseTests : FriendGroupTestBase
         var group = await SharedGroupAsync(FriendGroupTestKit.Member);
         var first = new DateOnly(2025, 1, 2);
         var longOver = new HashSet<string>(StringComparer.Ordinal);
+        var lastHeld = string.Empty;
         for (var week = 0; week < 70; week++)
-            longOver.Add((await WonAsync(await NightAsync(group.Id, first.AddDays(7 * week).ToString("yyyy-MM-dd")), $"Film {week}", 100 + week)).EventId);
+        {
+            lastHeld = (await WonAsync(await NightAsync(group.Id, first.AddDays(7 * week).ToString("yyyy-MM-dd")), $"Film {week}", 100 + week)).EventId;
+            longOver.Add(lastHeld);
+        }
         longOver.Add((await NightAsync(group.Id, "2026-06-04")).Id);
         var upcoming = await NightAsync(group.Id, "2026-11-26");
         var (events, recorder) = LoadedNightsRecorder.Over(Kit.Events);
@@ -196,11 +200,13 @@ public sealed class GroupShowcaseTests : FriendGroupTestBase
 
         Assert.Equal(70, mine.Showcases.Single(showcase => showcase.GroupId == group.Id).NightCount);
         Assert.Equal([upcoming.Slug], myNights.Events.Select(night => night.Slug));
-        Assert.DoesNotContain(recorder.LoadedIds, longOver.Contains);
+        Assert.Equal([lastHeld], recorder.LoadedIds.Where(longOver.Contains));
 
         var page = await Kit.GetHandler(events).HandleAsync(FriendGroupTestKit.Member, group.Id);
 
         Assert.Equal(70, page.Stats.NightCount);
+        Assert.Equal(70, page.Stats.FilmCount);
+        Assert.Equal(first.ToString("yyyy-MM-dd"), page.Stats.FirstNightDate);
         Assert.Equal(FriendGroupNightsReader.PastNightsShown, page.PastNights.Count);
         Assert.Equal(first.AddDays(7 * 69).ToString("yyyy-MM-dd"), page.PastNights[0].Date);
         Assert.Equal(FriendGroupNightsReader.PastNightsShown, recorder.LoadedIds.Count(longOver.Contains));
@@ -231,6 +237,12 @@ public sealed class GroupShowcaseTests : FriendGroupTestBase
                     break;
                 case Task<IReadOnlyList<Event>> { IsCompletedSuccessfully: true } many:
                     _loadedIds.UnionWith(many.Result.Select(night => night.Id));
+                    break;
+                case Task<IReadOnlyList<HeldGroupNight>> { IsCompletedSuccessfully: true } held:
+                    _loadedIds.UnionWith(held.Result.Select(night => night.Id));
+                    break;
+                case Task<IReadOnlyList<HeldGroupNightTally>> { IsCompletedSuccessfully: true } tallies:
+                    _loadedIds.UnionWith(tallies.Result.Select(tally => tally.LastNight.Id));
                     break;
             }
 

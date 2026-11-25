@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Linq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
@@ -13,6 +14,12 @@ public sealed class InMemoryEventRepository : IEventRepository
 {
     private readonly ConcurrentDictionary<string, Event> _byId = new();
     private readonly ConcurrentDictionary<string, string> _idBySlug = new();
+    private readonly IMovieRatingRepository? _ratings;
+
+    public InMemoryEventRepository(IMovieRatingRepository? ratings = null)
+    {
+        _ratings = ratings;
+    }
 
     public Task<Event?> GetByIdOrSlugAsync(string slug, CancellationToken ct = default)
     {
@@ -216,19 +223,66 @@ public sealed class InMemoryEventRepository : IEventRepository
         return Task.FromResult(result);
     }
 
-    public Task<IReadOnlyList<HeldGroupNight>> ListHeldByGroupIdsAsync(
+    public async Task<IReadOnlyList<HeldGroupNightTally>> TallyHeldByGroupIdsAsync(
         IReadOnlyCollection<string> groupIds,
         DateTimeOffset utcNow,
         CancellationToken ct = default)
     {
-        IReadOnlyList<HeldGroupNight> result = NightsOfGroups(groupIds)
+        var held = LatestHeldFirst(NightsOfGroups(groupIds), utcNow).ToList();
+        if (held.Count == 0)
+            return [];
+
+        var ratings = _ratings is null ? [] : await _ratings.ListByEventIdsAsync(held.ConvertAll(night => night.Id), ct);
+        return held
+            .GroupBy(night => night.GroupId!, StringComparer.Ordinal)
+            .Select(perGroup => Tally(perGroup.ToList(), ratings))
+            .ToList();
+    }
+
+    public Task<IReadOnlyList<Event>> ListLatestHeldByGroupIdAsync(
+        string groupId,
+        DateTimeOffset utcNow,
+        int limit,
+        CancellationToken ct = default)
+    {
+        IReadOnlyList<Event> result = limit <= 0
+            ? []
+            : LatestHeldFirst(NightsOfGroups([groupId]), utcNow).Take(limit).ToList();
+        return Task.FromResult(result);
+    }
+
+    private static IEnumerable<Event> LatestHeldFirst(IEnumerable<Event> nights, DateTimeOffset utcNow) =>
+        nights
             .Where(e => e.HasWinner && e.IsFinished(utcNow))
             .OrderByDescending(e => e.Date, StringComparer.Ordinal)
             .ThenByDescending(e => e.Time, StringComparer.Ordinal)
-            .ThenByDescending(e => e.Id, StringComparer.Ordinal)
-            .Select(e => new HeldGroupNight(e.Id, e.GroupId!, e.Date, e.Time, e.GetWinnerMovieIds()))
+            .ThenByDescending(e => e.Id, StringComparer.Ordinal);
+
+    private static HeldGroupNightTally Tally(List<Event> latestFirst, IReadOnlyList<MovieRating> ratings)
+    {
+        var last = latestFirst[0];
+        var filmIds = latestFirst.SelectMany(night => night.GetWinnerMovieIds()).ToHashSet(StringComparer.Ordinal);
+        var nightIds = latestFirst.Select(night => night.Id).ToHashSet(StringComparer.Ordinal);
+        var filmAverages = ratings
+            .Where(rating => nightIds.Contains(rating.EventId) && filmIds.Contains(rating.MovieId))
+            .GroupBy(rating => rating.MovieId, StringComparer.Ordinal)
+            .Select(perFilm => perFilm.Average(rating => rating.Value))
             .ToList();
-        return Task.FromResult(result);
+        var nightsByWeekday = latestFirst
+            .Select(night => DateOnly.TryParseExact(night.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+                ? date.DayOfWeek
+                : (DayOfWeek?)null)
+            .OfType<DayOfWeek>()
+            .GroupBy(day => day)
+            .ToDictionary(perDay => perDay.Key, perDay => perDay.Count());
+        return new HeldGroupNightTally(
+            last.GroupId!,
+            latestFirst.Count,
+            filmIds.Count,
+            latestFirst.Select(night => night.Date).Min(StringComparer.Ordinal)!,
+            filmAverages.Count == 0 ? null : filmAverages.Average(),
+            nightsByWeekday,
+            new HeldGroupNight(last.Id, last.GroupId!, last.Date, last.Time, last.GetWinnerMovieIds()));
     }
 
     private IEnumerable<Event> NightsOfGroups(IReadOnlyCollection<string> groupIds)
