@@ -16,7 +16,8 @@
  * The URI comes from `MONGODB_URI`, or else from the `MONGODB_URI` secret through gcloud (the
  * project of `GCP_PROJECT_ID`, or the active gcloud project). The queries run in the MongoDB
  * image pinned by `scripts/mongo-replica-set.mjs`, through Docker: no driver to install.
- * Read-only. The report itself is pure and tested by `scripts/usage.test.mjs`.
+ * Read-only. The report itself is pure and tested by `scripts/usage.test.mjs`; the query is played
+ * against seeded documents in the MongoDB test container by `scripts/mongo-tests/usage.test.mjs`.
  */
 import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
@@ -402,11 +403,11 @@ function mongoUri() {
   return uri;
 }
 
-function readUsage({ since, until, database }) {
+export function readUsage({ since, until, database, uri = mongoUri(), dockerNetwork }) {
   const { from, to } = parisDayBounds(since, until);
   const env = {
     ...process.env,
-    MONGODB_URI: mongoUri(),
+    MONGODB_URI: uri,
     USAGE_DB: database,
     USAGE_FROM: from,
     USAGE_TO: to,
@@ -426,6 +427,7 @@ function readUsage({ since, until, database }) {
     [
       'run',
       '--rm',
+      ...(dockerNetwork ? ['--network', dockerNetwork] : []),
       '-e',
       'HOME=/tmp',
       ...passed,

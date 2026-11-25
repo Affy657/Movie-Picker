@@ -4,7 +4,9 @@
  * `scripts/check-mongo-coverage.mjs` on the Mongo adapters. The same entry point on the
  * workstation, in `verify:local` and in the CI `test-api` job: the container is the one of
  * `scripts/mongo-replica-set.mjs` (`movie-picker-mongo-test`, port `MONGO_TEST_PORT`, 27018 by
- * default), started or reused, and every test class gets its own disposable database.
+ * default), started or reused, and every test class gets its own disposable database. The script
+ * tests that query MongoDB (`scripts/mongo-tests/`, the query of `pnpm run usage`) run last on the
+ * same container: `test:scripts` stays without MongoDB for the pre-push hook.
  */
 import { spawnSync } from 'node:child_process';
 import { rmSync } from 'node:fs';
@@ -53,4 +55,11 @@ const gate = spawnSync(process.execPath, ['scripts/check-mongo-coverage.mjs', co
   stdio: 'inherit',
 });
 
-process.exit(gate.status ?? 1);
+if (gate.status !== 0) process.exit(gate.status ?? 1);
+
+const scriptQueries = spawnSync(process.execPath, ['--test', 'scripts/mongo-tests/*.test.mjs'], {
+  cwd: root,
+  stdio: 'inherit',
+});
+
+process.exit(scriptQueries.status ?? 1);

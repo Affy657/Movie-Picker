@@ -399,7 +399,9 @@ jobs:
   #     `scripts/mongo-replica-set.mjs`, collects its own report
   #     (`coverlet.integration.runsettings`) and holds the `Infrastructure.Persistence.Mongo`
   #     namespace to its thresholds (`scripts/check-mongo-coverage.mjs`): without that gate the
-  #     only layer that runs solely in production would be measured nowhere.
+  #     only layer that runs solely in production would be measured nowhere. It then plays the
+  #     script tests that query MongoDB (`scripts/mongo-tests/`, the query of `pnpm run usage`) on
+  #     the same container, since `test:scripts` runs without a database.
   test-api:
     name: 🧪 API .NET tests (unit, then integration on MongoDB) + coverage
     needs: changes
@@ -452,7 +454,7 @@ jobs:
           path: coverage-unit
           if-no-files-found: warn
           retention-days: 7
-      - name: Integration tests on MongoDB + Mongo adapters coverage gate
+      - name: Integration tests on MongoDB + Mongo adapters coverage gate + script queries
         run: pnpm run test:api:mongo
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
