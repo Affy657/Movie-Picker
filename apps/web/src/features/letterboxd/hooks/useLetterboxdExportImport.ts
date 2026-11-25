@@ -15,6 +15,7 @@ import { invalidateWatchlist } from '@/features/movies/hooks/useWatchlist';
 import { ApiError } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
+import { useHoldPage } from '@/shared/pwa/pageHold';
 
 export const LETTERBOXD_EXPORT_MAX_FILE_BYTES = 12_000_000;
 
@@ -101,6 +102,7 @@ export function useLetterboxdExportImport() {
   const queryClient = useQueryClient();
   const [step, setStep] = useState<ExportImportStep>({ kind: 'choose', error: null });
   const stopRequested = useRef(false);
+  useHoldPage(step.kind === 'importing');
 
   useEffect(
     () => () => {

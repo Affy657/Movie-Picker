@@ -6,6 +6,7 @@ import { http, HttpResponse } from 'msw';
 import LetterboxdExportSection from '@/features/letterboxd/components/LetterboxdExportSection';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { createLetterboxdConfirmHandler, TEST_API_V1 } from '@/mocks/handlers';
+import { isPageHeld } from '@/shared/pwa/pageHold';
 
 vi.mock('@/shared/hooks/useAnalytics', () => ({ useAnalytics: () => ({ track: vi.fn() }) }));
 
@@ -132,6 +133,33 @@ describe('LetterboxdExportSection (MSW)', () => {
       expect.objectContaining({ fromExport: true, remainingUnresolvedCount: 0 }),
     ]);
     expect(screen.queryByRole('button', { name: /Choisir pour/ })).not.toBeInTheDocument();
+  });
+
+  it('keeps the app from reloading for an update while the batches are sent', async () => {
+    const heldDuringBatches: boolean[] = [];
+    server.use(
+      http.post(`${TEST_API_V1}/letterboxd/export/import`, async ({ request }) => {
+        const batch = (await request.json()) as (typeof batches)[number];
+        heldDuringBatches.push(isPageHeld());
+        return HttpResponse.json({
+          added: batch.rows.length,
+          alreadyPresent: 0,
+          pendingChoices: [],
+          unmatchedTitles: [],
+        });
+      })
+    );
+    const user = userEvent.setup();
+    renderSection();
+
+    const dialog = await chooseExport(user);
+    await within(dialog).findByText('60 films');
+    expect(isPageHeld()).toBe(false);
+    await user.click(within(dialog).getByRole('button', { name: 'Importer' }));
+
+    expect(await within(dialog).findByText('Import terminé : 61 films lus.')).toBeInTheDocument();
+    expect(heldDuringBatches).toEqual([true, true, true]);
+    await vi.waitFor(() => expect(isPageHeld()).toBe(false));
   });
 
   it('imports only the lists left switched on', async () => {
