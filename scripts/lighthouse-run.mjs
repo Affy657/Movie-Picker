@@ -38,6 +38,14 @@ const OUT = path.join(ROOT, 'artifacts', 'lighthouse');
  * otherwise penalise what the indexing policy wants).
  * `skipPerformance: true` => the EventDetail chunk exceeds the landing budget of 80;
  * performance is still measured and logged, without failing the job.
+ *
+ * In production `/u/*`, `/film/*` and `/e/*` are not served by Hosting but by the API on Cloud Run
+ * (rewrites of `infra/firebase-hosting.json`): `SharePreviewHead.IntoShell` takes this same
+ * `index.html` and only rewrites its head (title, description, canonical, Open Graph, `noindex` for
+ * a profile with nothing to show and no bio), served with `Cache-Control: public, max-age=60`. The
+ * body, the scripts and the styles are the ones measured here, so the performance score follows the
+ * same startup, and the SEO score reads the tags `usePageSeo` sets once the page has rendered. What
+ * the run does not see is the response time of Cloud Run when Hosting's cache is cold.
  */
 const URLS = [
   { path: '/', slug: 'home', indexable: true },
@@ -188,12 +196,46 @@ const serve = spawn(`pnpm exec serve "${DIST}" -l ${PORT} -c "${serveConfigPath}
   stdio: 'ignore',
   shell: true,
 });
-const apiStub = startApiStub({ port: API_PORT, webOrigin: BASE });
+/**
+ * A request the stub does not know used to answer a silent 404: the page then rendered an error or
+ * an empty state nobody receives in production, and the score measured that page instead. The run
+ * fails instead, naming the page and the request, so the stub follows the front.
+ */
+const unknownApiRequests = new Set();
+let measuredSlug = '';
+const apiStub = startApiStub({
+  port: API_PORT,
+  webOrigin: BASE,
+  onUnknownRequest: (method, url) => unknownApiRequests.add(`${measuredSlug}: ${method} ${url}`),
+});
 
 let failed = false;
 
+/**
+ * `serve` exits quietly when its port is taken, and `waitForServer` then accepts whoever holds it:
+ * on a machine where another checkout measures too, the run scored that checkout's build, wired to
+ * its own API. The shell this port answers with must be the one just built.
+ */
+function readServedShell() {
+  return new Promise((resolve, reject) => {
+    http
+      .get(`${BASE}/`, (res) => {
+        let body = '';
+        res.setEncoding('utf8');
+        res.on('data', (chunk) => (body += chunk));
+        res.on('end', () => resolve(body));
+      })
+      .on('error', reject);
+  });
+}
+
 try {
   await waitForServer('127.0.0.1', PORT);
+  if ((await readServedShell()) !== fs.readFileSync(path.join(DIST, 'index.html'), 'utf8')) {
+    throw new Error(
+      `Port ${PORT} serves another build than ${DIST}: another server holds it. Pick free ports with LH_PORT and LH_API_PORT.`
+    );
+  }
 
   const chrome = await launchChrome({
     chromeFlags: ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'],
@@ -212,6 +254,7 @@ try {
 
   try {
     for (const { path: pth, slug, indexable, skipPerformance } of selected) {
+      measuredSlug = slug;
       const url = BASE + pth;
       const lhrs = [];
       for (let i = 0; i < RUNS; i++) {
@@ -251,6 +294,15 @@ try {
     }
   } finally {
     await chrome.kill();
+  }
+
+  if (unknownApiRequests.size > 0) {
+    console.error(
+      `✗ The API stub does not serve ${unknownApiRequests.size} request(s) the pages made:\n` +
+        [...unknownApiRequests].map((line) => `  - ${line}`).join('\n') +
+        '\nServe them from scripts/lighthouse-stub.mjs with the payload the API returns.'
+    );
+    failed = true;
   }
 } finally {
   killServe(serve);
