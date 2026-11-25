@@ -13,22 +13,6 @@ public sealed partial class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionH
     private const int ReferenceLength = 12;
     private const int MaxAppVersionLength = 20;
     private const int NeutralizationTimeoutMilliseconds = 1000;
-    private const string AnyIdentifier = ":param";
-
-    private static readonly HashSet<string> StaticPathSegments = new(StringComparer.Ordinal)
-    {
-        "au-cinema", "auth", "callback", "collection", "collections", "decouvrir", "e", "films", "forgot-password",
-        "integrations", "les-plus-proposes", "login", "mentions-legales", "my-events", "new", "notifications",
-        "politique-de-confidentialite", "preferences", "profil", "r", "recherche", "register", "reset", "securite",
-        "settings", "similaires", "soutenir", "streaming", "tech", "tendances", "theme", "u", "watchlist"
-    };
-
-    private static readonly Dictionary<string, string> IdentifierAfterSegment = new(StringComparer.Ordinal)
-    {
-        ["e"] = ":slug",
-        ["r"] = ":slug",
-        ["u"] = ":handle"
-    };
 
     private readonly IGitHubIssueClient _github;
     private readonly ILogger<CreateIdeaSuggestionHandler> _logger;
@@ -45,32 +29,6 @@ public sealed partial class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionH
         var draft = BuildDraft(request, reference);
         await _github.CreateIssueAsync(draft, ct);
         _logger.LogInformation("IdeaSuggestion: published reference {Reference} for {UserId}", reference, LogText.SingleLine(userId));
-    }
-
-    private static string? PublishablePageTemplate(string? pagePath)
-    {
-        if (string.IsNullOrWhiteSpace(pagePath))
-            return null;
-
-        var path = pagePath.Trim();
-        var queryOrFragment = path.IndexOfAny(['?', '#']);
-        if (queryOrFragment >= 0)
-            path = path[..queryOrFragment];
-        if (!path.StartsWith('/'))
-            return null;
-
-        var template = new List<string>();
-        foreach (var segment in path.Split('/', StringSplitOptions.RemoveEmptyEntries))
-        {
-            var word = segment.ToLowerInvariant();
-            var previous = template.Count > 0 ? template[^1] : null;
-            if (previous is not null && IdentifierAfterSegment.TryGetValue(previous, out var identifier))
-                template.Add(identifier);
-            else
-                template.Add(StaticPathSegments.Contains(word) ? word : AnyIdentifier);
-        }
-
-        return "/" + string.Join('/', template);
     }
 
     private static string? PublishableAppVersion(string? appVersion)
@@ -100,7 +58,7 @@ public sealed partial class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionH
             "---",
             ServerCopy.IdeaIssue.Reference(reference)
         };
-        var page = PublishablePageTemplate(request.PagePath);
+        var page = PublishablePage.TemplateOf(request.PagePath);
         if (page is not null)
             bodyLines.Add(ServerCopy.IdeaIssue.Page(page));
         var version = PublishableAppVersion(request.AppVersion);
