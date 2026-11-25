@@ -212,8 +212,8 @@
   color: var(--color-on-dark);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
-  backdrop-filter: var(--backdrop-blur-overlay);
   -webkit-backdrop-filter: var(--backdrop-blur-overlay);
+  backdrop-filter: var(--backdrop-blur-overlay);
   animation: bob var(--demo-float-duration) var(--ease-in-out) infinite;
 }
 
