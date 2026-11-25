@@ -50,6 +50,7 @@ export const ROUTES = {
   register: '/register',
   forgotPassword: '/forgot-password',
   resetPassword: '/reset',
+  verifyEmail: '/verify-email',
   oauthCallback: '/auth/callback',
   account: '/settings',
   accountProfile: '/settings/profil',

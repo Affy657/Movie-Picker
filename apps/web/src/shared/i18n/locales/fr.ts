@@ -564,6 +564,21 @@ export const fr = {
       missingTokenError:
         'Ce lien est incomplet. Ouvrez en entier le lien reçu par e-mail, ou demandez-en un nouveau.',
     },
+    verifyEmail: {
+      title: 'Confirmation de votre adresse',
+      pendingDescription: 'Un instant, nous vérifions le lien reçu par e-mail.',
+      successTitle: 'Adresse confirmée',
+      successMessage: 'Merci, votre adresse e-mail est confirmée.',
+      invalidTitle: 'Lien invalide ou expiré',
+      invalidMessage:
+        'Ce lien de confirmation n’est plus valable. Un nouveau courriel se demande depuis Compte et sécurité, dans vos paramètres.',
+      missingTokenMessage: 'Ce lien est incomplet. Ouvrez en entier le lien reçu par e-mail.',
+      errorMessage: 'La confirmation n’a pas abouti. Réessayez dans quelques instants.',
+      retry: 'Réessayer',
+      goToSecurity: 'Ouvrir Compte et sécurité',
+      goHome: 'Aller à l’accueil',
+      goToLogin: 'Aller à la connexion',
+    },
     account: {
       title: 'Paramètres',
       loadingPlaceholder: 'Chargement du profil\u2026',
@@ -576,6 +591,13 @@ export const fr = {
       backToAccount: 'Paramètres',
       savedChip: 'Enregistré',
       attentionSuffix: ', action requise',
+      emailUnconfirmed: 'Adresse non confirmée : ouvrez le lien reçu par e-mail pour la confirmer.',
+      emailConfirmationResend: 'Renvoyer le courriel',
+      emailConfirmationResending: 'Envoi…',
+      emailConfirmationSent:
+        'Courriel envoyé à {{email}}. Pensez à regarder dans les indésirables.',
+      emailConfirmationResendError:
+        'Impossible d’envoyer le courriel. Réessayez dans quelques instants.',
       profileVisibilityHint:
         'Votre pseudo, votre bio et vos films sont visibles à l’adresse {{url}}. Votre e-mail n’apparaît jamais.',
       navSummaryProfile: 'Pseudo, bio, favoris, visibilité',
@@ -2746,6 +2768,7 @@ export const fr = {
     handle_reserved: 'Ce pseudo est réservé.',
     bio_too_long: 'La bio ne peut pas dépasser {{max}} caractères.',
     invalid_reset_token: 'Lien invalide ou expiré.',
+    invalid_email_verification_token: 'Lien de confirmation invalide ou expiré.',
     letterboxd_username_invalid:
       'Le pseudo Letterboxd ne peut contenir que des lettres, chiffres et underscores.',
     letterboxd_username_missing: 'Aucun pseudo Letterboxd enregistré sur votre compte.',

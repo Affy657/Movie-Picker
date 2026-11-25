@@ -109,4 +109,20 @@ describe('AccountIndexPage (MSW)', () => {
     expect(await screen.findByText('Idx')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Voir mon profil public' })).not.toBeInTheDocument();
   });
+
+  it('flags the security section on mobile while my address is not confirmed', async () => {
+    stubMatchMedia(true);
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({ ...ME, letterboxdPendingReconciliationCount: 0, emailVerifiedAt: null })
+      )
+    );
+
+    renderAccount();
+
+    expect(
+      await screen.findByRole('link', { name: /compte et sécurité.*action requise/i })
+    ).toBeInTheDocument();
+    expect(screen.getAllByText(', action requise')).toHaveLength(1);
+  });
 });

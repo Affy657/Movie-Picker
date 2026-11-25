@@ -560,6 +560,21 @@ export const en: Locale = {
       missingTokenError:
         'This link is incomplete. Open the whole link from the email, or ask for a new one.',
     },
+    verifyEmail: {
+      title: 'Confirming your address',
+      pendingDescription: 'One moment, we are checking the link from the email.',
+      successTitle: 'Address confirmed',
+      successMessage: 'Thanks, your email address is confirmed.',
+      invalidTitle: 'Invalid or expired link',
+      invalidMessage:
+        'This confirmation link is no longer valid. You can ask for a new email from Account and security, in your settings.',
+      missingTokenMessage: 'This link is incomplete. Open the whole link from the email.',
+      errorMessage: 'The confirmation did not go through. Please try again in a moment.',
+      retry: 'Try again',
+      goToSecurity: 'Open Account and security',
+      goHome: 'Go to home',
+      goToLogin: 'Go to login',
+    },
     account: {
       title: 'Settings',
       loadingPlaceholder: 'Loading profile\u2026',
@@ -572,6 +587,11 @@ export const en: Locale = {
       backToAccount: 'Settings',
       savedChip: 'Saved',
       attentionSuffix: ', action required',
+      emailUnconfirmed: 'Address not confirmed: open the link from the email to confirm it.',
+      emailConfirmationResend: 'Send the email again',
+      emailConfirmationResending: 'Sending…',
+      emailConfirmationSent: 'Email sent to {{email}}. Check your spam folder too.',
+      emailConfirmationResendError: 'Could not send the email. Please try again in a moment.',
       profileVisibilityHint:
         'Your nickname, bio and movies are visible at {{url}}. Your email never appears.',
       navSummaryProfile: 'Nickname, bio, favorites, visibility',
@@ -2714,6 +2734,7 @@ export const en: Locale = {
     handle_reserved: 'This username is reserved.',
     bio_too_long: 'Bio cannot exceed {{max}} characters.',
     invalid_reset_token: 'Invalid or expired link.',
+    invalid_email_verification_token: 'Invalid or expired confirmation link.',
     letterboxd_username_invalid:
       'Letterboxd username can only contain letters, digits and underscores.',
     letterboxd_username_missing: 'No Letterboxd username saved on your account.',

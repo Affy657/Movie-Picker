@@ -6,6 +6,7 @@ export function buildUserProfile(overrides: Partial<UserProfile> = {}): UserProf
     displayName: 'Léa',
     emailMasked: 'l***@test.local',
     email: 'lea@test.local',
+    emailVerifiedAt: '2026-01-01T00:05:00Z',
     uiTheme: 'system',
     accentColor: 'default',
     ratingScale: 'five',

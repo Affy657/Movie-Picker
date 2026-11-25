@@ -70,6 +70,7 @@ describe('routeChunkForPath', () => {
       '/register': 'register',
       '/forgot-password': 'forgotPassword',
       '/reset': 'resetPassword',
+      '/verify-email': 'verifyEmail',
       '/auth/callback': 'oauthCallback',
       '/mentions-legales': 'legalNotice',
       '/politique-de-confidentialite': 'privacyPolicy',
