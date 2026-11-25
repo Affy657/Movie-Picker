@@ -38,8 +38,8 @@
 # rehearsed.
 #
 # Two identities per stage on GCP, never the same one. The workflows impersonate the CI service
-# account of their environment (`gcloud-auth`), which can push images, create revisions and manage
-# the Scheduler jobs. The revision itself runs as `movie-picker-api@<project>.iam.gserviceaccount.com`
+# account of their environment (`gcloud-auth`), which can push images and create revisions. The
+# Scheduler jobs are described in `infra/terraform`. The revision itself runs as `movie-picker-api@<project>.iam.gserviceaccount.com`
 # (`movie-picker-api-staging@` for the staging), which can only read the secrets mounted below: an
 # API compromised at runtime cannot redeploy itself, rewrite the Scheduler jobs or read a secret it
 # does not use. `cloud-auth-check.yml` checks that the runtime accounts exist before a deployment
@@ -459,8 +459,8 @@ jobs:
       # holds the keys, DEBT-045) nor a scheduler configuration (no Scheduler job targets the
       # staging, its `/scheduler/*` routes answer 503).
       #
-      # The scheduled passes authenticate by a Google OIDC token: the jobs sign it with
-      # `movie-picker-scheduler@` (step below) and the API checks the issuer, the audience (the
+      # The scheduled passes authenticate by a Google OIDC token: the jobs (`infra/terraform`) sign it
+      # with `movie-picker-scheduler@` and the API checks the issuer, the audience (the
       # public API URL) and that e-mail, `SCHEDULER_OIDC_AUDIENCE` and
       # `SCHEDULER_OIDC_SERVICE_ACCOUNT`. No shared secret travels any more: `SCHEDULER_TOKEN`
       # is not mounted, the transition path of the API that still reads the header stays inert
@@ -548,77 +548,6 @@ jobs:
         run: |
           set -eo pipefail
           gcloud run services update-traffic "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --to-latest
-      # Taken from master. Moved after the promotion: the job targets the service URL, so it must
-      # only be (re)configured for a revision that is really live. A revision rejected at validation
-      # leaves the job pointing at the unchanged production.
-      # Closing an event still creates its next occurrence and cleans the winners out of the
-      # participants' watchlists on the spot; the two nightly sweeps catch up the series nobody
-      # reopened and the events that finished on their own. Reads no longer write (DEBT-029).
-      # Production only: the staging has no Scheduler job, its scheduler routes answer 503. Three
-      # jobs fit in the free tier of Cloud Scheduler; the catalog warm-up and the rating reminders
-      # cost 0.10 USD a month each. The warm-up rewrites the home catalog every five hours, before
-      # the six-hour cache expires, so no visitor pays the reload from TMDB; a pass that keeps an
-      # older snapshot answers 503 and is retried.
-      # The jobs sign a Google OIDC token with `movie-picker-scheduler@` for the audience the
-      # revision just promoted was given (`SCHEDULER_OIDC_AUDIENCE`, the public API URL): the
-      # switch from the shared header to the token is made here, on a revision that already
-      # accepts it, never on one that does not. `--clear-headers` drops the header of the jobs
-      # created before this step existed. Attaching the identity needs `iam.serviceAccountUser`
-      # on it, granted to the CI account in `infra/terraform` (`acts_as_service_accounts`).
-      # Three retries with a short backoff: without them (the Scheduler default), an attempt
-      # that hits a cold start past its deadline or a 503 is lost, and a nightly pass waits
-      # for the next night; the "Passe planifiee en echec" alert still reports the attempt.
-      - name: "Scheduled passes: Cloud Scheduler"
-        if: inputs.stage == 'production'
-        env:
-          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          PUBLIC_API_URL: ${{ secrets.VITE_API_URL }}
-        run: |
-          set -eo pipefail
-          # This guard cost a red deployment on 2026-09-10: the Cloud Scheduler API can be disabled
-          # on the project. `gcloud scheduler jobs describe` then exits with SERVICE_DISABLED, and
-          # without it the step failed the job **after** the revision had taken 100% of the
-          # traffic. A missing schedule is a warning: it says nothing about the health of the
-          # deployed API. Only an answer that does not list the service means that, though: a
-          # `gcloud` that fails has said nothing, and reading it as "disabled" would leave the jobs
-          # on their previous configuration behind a green run.
-          if ! ENABLED="$(gcloud services list --enabled --filter="config.name:cloudscheduler.googleapis.com" --format='value(config.name)')"; then
-            echo "::error::gcloud could not list the enabled services, so the Scheduler jobs were not updated. The revision is already promoted: rerun this deployment."
-            exit 1
-          fi
-          if ! printf '%s' "$ENABLED" | grep -q cloudscheduler; then
-            echo "::warning::Cloud Scheduler API disabled on the project: jobs not configured, event reminders will not leave, recurring events will only be renewed on closing, watchlists will only be cleaned on closing and the home catalog will only be reloaded on demand. Run 'gcloud services enable cloudscheduler.googleapis.com' then rerun this deployment."
-            exit 0
-          fi
-          URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format='value(status.url)')"
-          SCHEDULER_SA="${SCHEDULER_SERVICE_ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
-          AUDIENCE="${PUBLIC_API_URL%/}"
-          upsert_job() {
-            local job="$1" schedule="$2" path="$3"
-            local common=(
-              --location "$GCP_REGION"
-              --schedule "$schedule"
-              --time-zone "Europe/Paris"
-              --uri "$URL$path"
-              --http-method POST
-              --attempt-deadline 300s
-              --max-retry-attempts 3
-              --min-backoff 30s
-              --max-backoff 300s
-              --oidc-service-account-email "$SCHEDULER_SA"
-              --oidc-token-audience "$AUDIENCE"
-            )
-            if gcloud scheduler jobs describe "$job" --location "$GCP_REGION" >/dev/null 2>&1; then
-              gcloud scheduler jobs update http "$job" "${common[@]}" --clear-headers
-            else
-              gcloud scheduler jobs create http "$job" "${common[@]}"
-            fi
-          }
-          upsert_job movie-picker-event-reminders "*/30 * * * *" /api/v1/scheduler/event-reminders
-          upsert_job movie-picker-recurring-events "15 3 * * *" /api/v1/scheduler/recurring-events
-          upsert_job movie-picker-finished-events "45 3 * * *" /api/v1/scheduler/finished-events
-          upsert_job movie-picker-rating-reminders "0 10 * * *" /api/v1/scheduler/rating-reminders
-          upsert_job movie-picker-warm-catalog "20 */5 * * *" /api/v1/scheduler/warm-catalog
       # The revision is already proven: what is checked here is that the traffic really switched and
       # that the public domain leads to it. A failure is routing, DNS or certificate, not code, hence
       # no rollback. PUBLIC_API_URL derives from VITE_API_URL, the URL the web app is built against:
