@@ -435,7 +435,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         Assert.Empty(await notifications.ListByUserIdAsync(latecomer.Id));
         var formerHost = Assert.Single(
             await services.GetRequiredService<IParticipantRepository>().ListByEventIdAsync(night.Id),
-            participant => participant.Pseudo.StartsWith(DeleteAccountHandler.AnonymizedParticipantPseudo, StringComparison.Ordinal));
+            participant => participant.Pseudo.StartsWith(ServerCopy.DeletedAccount.Pseudo, StringComparison.Ordinal));
         Assert.True(string.IsNullOrEmpty(formerHost.UserId));
     }
 
