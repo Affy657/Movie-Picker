@@ -330,6 +330,15 @@ public sealed class ServiceCollectionExtensionsBranchTests
     }
 
     [Fact]
+    public void ContactEmailAddress_IsThePublicContactUnlessConfigured()
+    {
+        Assert.Equal("contact@movie-picker.fr", OptionsFrom([]).ContactEmailAddress);
+        Assert.Equal(
+            "moderation@example.test",
+            OptionsFrom(new Dictionary<string, string?> { ["CONTACT_EMAIL_ADDRESS"] = " moderation@example.test " }).ContactEmailAddress);
+    }
+
+    [Fact]
     public void VapidKeys_AreStrippedOfTheNewlinesSecretManagerAdds()
     {
         var options = OptionsFrom(new Dictionary<string, string?>

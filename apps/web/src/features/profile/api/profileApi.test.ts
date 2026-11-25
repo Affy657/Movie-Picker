@@ -8,6 +8,7 @@ import {
   fetchUserWatchedMoviesPreview,
   fetchUserWatchlist,
   followUser,
+  reportProfilePhoto,
   unfollowUser,
 } from '@/features/profile/api/profileApi';
 import { fetchUserStats } from '@/features/events/api/userStatsApi';
@@ -37,6 +38,15 @@ describe('profileApi', () => {
     await followUser('bob');
 
     expect(mockFetchApi).toHaveBeenCalledWith('/users/bob/follow', { method: 'POST' });
+  });
+
+  it('reportProfilePhoto posts which photo of the profile is reported', async () => {
+    await reportProfilePhoto('a b', 'banner');
+
+    expect(mockFetchApi).toHaveBeenCalledWith('/users/a%20b/photo-reports', {
+      method: 'POST',
+      body: JSON.stringify({ photo: 'banner' }),
+    });
   });
 
   it('unfollowUser deletes the follow relation', async () => {

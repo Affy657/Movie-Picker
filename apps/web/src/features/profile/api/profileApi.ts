@@ -17,6 +17,8 @@ export type ProfileBanner = ApiSchemas['ProfileBannerResponse'];
 
 export type MovieBackdrops = ApiSchemas['MovieBackdropsResponse'];
 
+export type ProfilePhotoKind = ApiSchemas['ReportProfilePhotoRequest']['photo'];
+
 export async function fetchMovieBackdrops(tmdbId: number): Promise<MovieBackdrops> {
   return fetchApi<MovieBackdrops>(apiPath('movies', 'tmdb', String(tmdbId), 'backdrops'));
 }
@@ -31,6 +33,13 @@ export async function followUser(handle: string): Promise<void> {
 
 export async function unfollowUser(handle: string): Promise<void> {
   await fetchApi(apiPath('users', handle, 'follow'), { method: 'DELETE' });
+}
+
+export async function reportProfilePhoto(handle: string, photo: ProfilePhotoKind): Promise<void> {
+  await fetchApi(apiPath('users', handle, 'photo-reports'), {
+    method: 'POST',
+    body: JSON.stringify({ photo }),
+  });
 }
 
 export async function addFavorite(favorite: FavoriteTitle): Promise<FavoriteListResponse> {

@@ -2738,6 +2738,7 @@ export const en: Locale = {
     event_template_name_required: 'The template name cannot be empty.',
     event_template_name_too_long: 'The template name cannot exceed {{max}} characters.',
     self_follow: 'You cannot follow yourself.',
+    self_photo_report: 'You cannot report your own photo.',
     unknown_section: 'Unknown section',
     unknown_platform: 'Unknown platform',
     reference_movie_missing: 'Reference movie missing',
@@ -3185,6 +3186,19 @@ export const en: Locale = {
       settingsEmpty: 'No banner yet.',
       settingsEdit: 'Edit',
       settingsAdd: 'Add',
+    },
+    report: {
+      moreActions: 'More actions',
+      avatar: 'Report the profile photo',
+      banner: 'Report the banner',
+      avatarTitle: 'Report the profile photo?',
+      bannerTitle: 'Report the banner?',
+      message:
+        'The Movie Picker team receives a link to this profile and removes the image if it does not belong here. {{name}} will not know who reported it.',
+      confirm: 'Report',
+      sentTitle: 'Thank you for your report',
+      sentMessage: 'The Movie Picker team will look at this image.',
+      failed: 'The report was not sent. Check your connection, then try again.',
     },
     seoDescription:
       '{{name}} (@{{handle}}) on Movie Picker: movie night stats, proposed films and follows.',

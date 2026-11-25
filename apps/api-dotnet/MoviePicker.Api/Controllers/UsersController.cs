@@ -399,6 +399,26 @@ public sealed class UsersController : ControllerBase
         return Ok(await handler.HandleAsync(userId, ct));
     }
 
+    [HttpPost("{handle}/photo-reports")]
+    [Authorize]
+    [EnableRateLimiting(RateLimitingExtensions.ProfilePhotoReportPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.ProfilePhotoReportPolicy)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> ReportPhoto(
+        string handle,
+        [FromBody] ReportProfilePhotoRequest request,
+        [FromServices] IReportProfilePhotoHandler handler,
+        [CurrentUserId] string userId,
+        CancellationToken ct)
+    {
+        await handler.HandleAsync(userId, handle, request, this.PublicApiBase(), ct);
+        return NoContent();
+    }
+
     [HttpPost("{handle}/follow")]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.FollowMutationPolicy)]

@@ -153,6 +153,7 @@ public static class ErrorCodes
     public const string EventTemplateNameRequired = "event_template_name_required";
     public const string EventTemplateNameTooLong = "event_template_name_too_long";
     public const string SelfFollow = "self_follow";
+    public const string SelfPhotoReport = "self_photo_report";
     public const string UnknownSection = "unknown_section";
     public const string UnknownPlatform = "unknown_platform";
     public const string ReferenceMovieMissing = "reference_movie_missing";

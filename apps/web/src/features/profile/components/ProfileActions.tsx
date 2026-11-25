@@ -11,6 +11,7 @@ import Button, { buttonClass } from '@/shared/components/Button';
 import IconButton, { iconButtonClass } from '@/shared/components/IconButton';
 import clsx from 'clsx';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import ProfilePhotoReportMenu from './ProfilePhotoReportMenu';
 
 const ProfileShareDialog = lazy(() => import('./ProfileShareDialog'));
 
@@ -48,9 +49,10 @@ function FollowButtonIcon({
 interface ToolsProps {
   profile: PublicProfile;
   isOwnProfile: boolean;
+  isLoggedIn: boolean;
 }
 
-export function ProfileTools({ profile, isOwnProfile }: Readonly<ToolsProps>) {
+export function ProfileTools({ profile, isOwnProfile, isLoggedIn }: Readonly<ToolsProps>) {
   const { t } = useTranslation();
   const [shareOpen, setShareOpen] = useState(false);
   const shareMounted = useEverOpened(shareOpen);
@@ -76,6 +78,8 @@ export function ProfileTools({ profile, isOwnProfile }: Readonly<ToolsProps>) {
       >
         <Share2 size={ICON_SIZE.md} aria-hidden />
       </IconButton>
+
+      {!isOwnProfile && isLoggedIn ? <ProfilePhotoReportMenu profile={profile} /> : null}
 
       {shareMounted ? (
         <Suspense fallback={null}>
