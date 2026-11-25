@@ -8,6 +8,17 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Changed
+
+- **Des affiches plus légères** : les vignettes de Mes soirées, des groupes et de la feuille de note, comme les fonds flous derrière elles, se chargent à leur taille d’affichage au lieu de la grande image.
+- **La fenêtre Membres d’une liste ou d’un groupe** présente chaque personne comme les fenêtres Participants et Abonnés : avatar plus grand, nom en gras et un filet entre deux lignes.
+- **L’export de vos données** écrit le thème, la couleur, l’échelle de note et le type de notification en minuscules, comme le reste de l’application.
+
+### Fixed
+
+- **Une synchronisation Letterboxd qui n’échoue que sur vos films vus** ne relit plus votre liste « À voir » à la relance suivante.
+- **Proposer une idée ou signaler un bug** n’échoue plus quand le serveur est très sollicité.
+
 ## [1.32.0] - 2026-11-25
 
 ### Added
