@@ -38,7 +38,7 @@ public sealed class HostedNightsHandover
             var heir = await OldestRemainingParticipantAsync(night.Id, leavingUserId, ct);
             if (heir is null)
             {
-                await _events.UpdateAsync(night with { ClosedAt = now, UpdatedAt = now }, ct);
+                await _events.UpdateAsync(night with { ClosedAt = now, Recurrence = null, UpdatedAt = now }, ct);
                 continue;
             }
 
