@@ -554,7 +554,7 @@ public sealed class FriendGroupsEndpointsTests : IClassFixture<MoviePickerApplic
         Assert.Contains(
             "Le club du dimanche",
             export.GetProperty("notifications").EnumerateArray()
-                .Where(n => n.GetProperty("type").GetString() == "GroupInvitation")
+                .Where(n => n.GetProperty("type").GetString() == "groupinvitation")
                 .Select(n => n.GetProperty("groupName").GetString()));
     }
 
