@@ -16,6 +16,10 @@ namespace MoviePicker.Api.Tests.Infrastructure.Web;
 
 public sealed class RateLimitingExtensionsTests
 {
+    private const string HostingAddress = "66.249.93.69";
+    private const string OtherHostingAddress = "142.250.32.37";
+    private const string DirectAddress = "203.0.113.9";
+
     [Fact]
     public void AddMoviePickerRateLimiter_Development_RegistersService()
     {
@@ -400,10 +404,9 @@ public sealed class RateLimitingExtensionsTests
     private static RateLimiter Limiter(RateLimitPartition<string> partition) => partition.Factory(partition.PartitionKey);
 
     [Fact]
-    public void CreatePartition_BySlug_UsesTheRouteSlugAndNotTheAddress()
+    public void CreatePartition_BySlug_RelayedByHosting_UsesTheRouteSlugAndNotTheAddress()
     {
-        var http = new DefaultHttpContext();
-        http.Connection.RemoteIpAddress = IPAddress.Parse("192.0.2.8");
+        var http = From(HostingAddress);
         http.Request.RouteValues["slug"] = "7fKq2p";
         var spec = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.RecapDocumentPolicy)!.Value;
 
@@ -413,7 +416,7 @@ public sealed class RateLimitingExtensionsTests
         Assert.Equal("slug:7fKq2p", RateLimitingExtensions.PartitionKeyFor(http, spec));
     }
 
-    private static DefaultHttpContext MovieDocumentRequest(string slug, string address = "192.0.2.8")
+    private static DefaultHttpContext MovieDocumentRequest(string slug, string address = HostingAddress)
     {
         var http = From(address);
         http.Request.RouteValues["slug"] = slug;
@@ -428,7 +431,7 @@ public sealed class RateLimitingExtensionsTests
         var spec = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.MovieDocumentPolicy)!.Value;
 
         var firstPartition = RateLimitingExtensions.CreatePartition(MovieDocumentRequest(first), spec);
-        var secondPartition = RateLimitingExtensions.CreatePartition(MovieDocumentRequest(second, "198.51.100.2"), spec);
+        var secondPartition = RateLimitingExtensions.CreatePartition(MovieDocumentRequest(second, OtherHostingAddress), spec);
 
         Assert.Equal("movie:27205", firstPartition.PartitionKey);
         Assert.Equal(firstPartition.PartitionKey, secondPartition.PartitionKey);
@@ -462,13 +465,11 @@ public sealed class RateLimitingExtensionsTests
     }
 
     [Fact]
-    public void CreatePartition_BySlug_WithoutSlug_FallsBackToTheAddress()
+    public void CreatePartition_BySlug_RelayedWithoutSlug_FallsBackToTheAddress()
     {
-        var http = new DefaultHttpContext();
-        http.Connection.RemoteIpAddress = IPAddress.Parse("192.0.2.8");
         var spec = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.RecapDocumentPolicy)!.Value;
 
-        Assert.Equal("ip:192.0.2.8", RateLimitingExtensions.CreatePartition(http, spec).PartitionKey);
+        Assert.Equal($"ip:{HostingAddress}", RateLimitingExtensions.CreatePartition(From(HostingAddress), spec).PartitionKey);
     }
 
     [Fact]
@@ -482,14 +483,9 @@ public sealed class RateLimitingExtensionsTests
     }
 
     [Fact]
-    public void CreateGlobalPartition_LeavesTheProxiedDocumentsToTheirOwnPolicy()
+    public void CreateGlobalPartition_LeavesTheDocumentsRelayedByHostingToTheirOwnPolicy()
     {
-        var http = new DefaultHttpContext();
-        http.Connection.RemoteIpAddress = IPAddress.Parse("192.0.2.8");
-        http.SetEndpoint(new Endpoint(
-            null,
-            new EndpointMetadataCollection(new EnableRateLimitingAttribute(RateLimitingExtensions.RecapDocumentPolicy)),
-            "recap"));
+        var http = DocumentRequest(RateLimitingExtensions.RecapDocumentPolicy, HostingAddress);
 
         var partition = RateLimitingExtensions.CreateGlobalPartition(http);
 
@@ -512,16 +508,90 @@ public sealed class RateLimitingExtensionsTests
     }
 
     [Fact]
-    public void CreateAddressCeilingPartition_LeavesTheProxiedDocumentsToTheirOwnPolicy()
+    public void CreateAddressCeilingPartition_LeavesTheDocumentsRelayedByHostingToTheirOwnPolicy()
     {
-        var http = new DefaultHttpContext();
-        http.Connection.RemoteIpAddress = IPAddress.Parse("192.0.2.8");
-        http.SetEndpoint(new Endpoint(
-            null,
-            new EndpointMetadataCollection(new EnableRateLimitingAttribute(RateLimitingExtensions.RecapDocumentPolicy)),
-            "recap"));
+        var http = DocumentRequest(RateLimitingExtensions.RecapDocumentPolicy, HostingAddress);
 
         Assert.Equal("proxied", RateLimitingExtensions.CreateAddressCeilingPartition(http).PartitionKey);
+    }
+
+    public static TheoryData<string> DocumentPolicies =>
+    [
+        RateLimitingExtensions.RecapDocumentPolicy,
+        RateLimitingExtensions.InvitationDocumentPolicy,
+        RateLimitingExtensions.MovieDocumentPolicy,
+        RateLimitingExtensions.ProfileDocumentPolicy
+    ];
+
+    [Theory]
+    [MemberData(nameof(DocumentPolicies))]
+    public void CreatePartition_DocumentCalledDirectly_CountsPerAddressWhateverTheSlug(string policy)
+    {
+        var spec = RateLimitingExtensions.FindPolicy(policy)!.Value;
+        var first = DocumentRequest(policy, DirectAddress);
+        first.Request.RouteValues["slug"] = "27205-inception";
+        var second = DocumentRequest(policy, DirectAddress);
+        second.Request.RouteValues["slug"] = "603-matrix";
+
+        Assert.Equal($"ip:{DirectAddress}", RateLimitingExtensions.CreatePartition(first, spec).PartitionKey);
+        Assert.Equal($"ip:{DirectAddress}", RateLimitingExtensions.PartitionKeyFor(second, spec));
+    }
+
+    [Theory]
+    [MemberData(nameof(DocumentPolicies))]
+    public void SharedCeilings_DocumentCalledDirectly_KeepTheAddressCeilings(string policy)
+    {
+        var http = DocumentRequest(policy, DirectAddress);
+        var ceiling = RateLimitingExtensions.CreateAddressCeilingPartition(http);
+        var global = RateLimitingExtensions.CreateGlobalPartition(http);
+        using var globalLimiter = Limiter(global);
+
+        Assert.Equal($"ip:{DirectAddress}", ceiling.PartitionKey);
+        Assert.Equal($"ip:{DirectAddress}", global.PartitionKey);
+        Assert.Equal(
+            RateLimitingExtensions.GlobalPermitLimitPerMinute,
+            Enumerable.Range(0, RateLimitingExtensions.GlobalPermitLimitPerMinute + 1).Count(_ => globalLimiter.AttemptAcquire().IsAcquired));
+    }
+
+    [Theory]
+    [InlineData("66.249.93.69")]
+    [InlineData("66.102.8.194")]
+    [InlineData("74.125.210.10")]
+    [InlineData("142.250.32.37")]
+    [InlineData("192.178.15.7")]
+    [InlineData("::ffff:66.249.93.69")]
+    public void FirebaseHostingRelay_AnAddressHostingCallsCloudRunFrom_IsRelayed(string address)
+    {
+        Assert.True(FirebaseHostingRelay.Carries(From(address)));
+    }
+
+    [Theory]
+    [InlineData("203.0.113.9")]
+    [InlineData("2a02:8434:b6b4:a101::1")]
+    [InlineData("35.198.224.104")]
+    [InlineData("34.159.197.47")]
+    [InlineData("107.178.196.5")]
+    [InlineData("66.249.96.1")]
+    [InlineData("142.252.0.1")]
+    public void FirebaseHostingRelay_AnyOtherAddress_IsADirectCall(string address)
+    {
+        Assert.False(FirebaseHostingRelay.Carries(From(address)));
+    }
+
+    [Fact]
+    public void FirebaseHostingRelay_UnknownAddress_IsADirectCall()
+    {
+        Assert.False(FirebaseHostingRelay.Carries(new DefaultHttpContext()));
+    }
+
+    private static DefaultHttpContext DocumentRequest(string policy, string address)
+    {
+        var http = From(address);
+        http.SetEndpoint(new Endpoint(
+            null,
+            new EndpointMetadataCollection(new EnableRateLimitingAttribute(policy)),
+            policy));
+        return http;
     }
 
     [Fact]
