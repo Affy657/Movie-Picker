@@ -28,6 +28,7 @@
     "check:tools": "node scripts/check-tool-versions.mjs",
     "check:iam": "node scripts/check-iam.mjs",
     "usage": "node scripts/usage.mjs",
+    "photo:remove": "node scripts/remove-photo.mjs",
     "test:scripts": "node --test scripts/*.test.mjs scripts/architecture/*.test.mjs",
     "release": "node scripts/release.mjs",
     "check:sonar": "node scripts/check-sonar.mjs",
