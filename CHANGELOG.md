@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Fixed
+
+- **Un import Letterboxd va jusqu’au bout même si vous changez d’onglet** : une mise à jour de Movie Picker attend la fin de l’import au lieu de recharger la page en plein milieu.
+
 ## [1.31.1] - 2026-11-25
 
 ### Fixed

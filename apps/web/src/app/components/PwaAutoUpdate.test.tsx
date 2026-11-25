@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, act } from '@testing-library/react';
 import PwaAutoUpdate from '@/app/components/PwaAutoUpdate';
+import { holdPage } from '@/shared/pwa/pageHold';
 
 const { mockUseRegisterSW, mockUpdateSW } = vi.hoisted(() => ({
   mockUseRegisterSW: vi.fn(),
@@ -18,16 +19,21 @@ function settledAtOnce(onSettled: () => void) {
   return () => undefined;
 }
 
+let workerTookControl: (() => void) | undefined;
+
 function setupHook(needRefresh: boolean): () => RegisteredCallback | undefined {
   let captured: RegisteredCallback | undefined;
-  mockUseRegisterSW.mockImplementation((opts?: { onRegisteredSW?: RegisteredCallback }) => {
-    captured = opts?.onRegisteredSW;
-    return {
-      needRefresh: [needRefresh, vi.fn()] as [boolean, (v: boolean) => void],
-      offlineReady: [false, vi.fn()] as [boolean, (v: boolean) => void],
-      updateServiceWorker: mockUpdateSW,
-    };
-  });
+  mockUseRegisterSW.mockImplementation(
+    (opts?: { onRegisteredSW?: RegisteredCallback; onNeedReload?: () => void }) => {
+      captured = opts?.onRegisteredSW;
+      workerTookControl = opts?.onNeedReload;
+      return {
+        needRefresh: [needRefresh, vi.fn()] as [boolean, (v: boolean) => void],
+        offlineReady: [false, vi.fn()] as [boolean, (v: boolean) => void],
+        updateServiceWorker: mockUpdateSW,
+      };
+    }
+  );
   return () => captured;
 }
 
@@ -49,25 +55,6 @@ function stubVisibility(state: DocumentVisibilityState) {
   return vi.spyOn(document, 'visibilityState', 'get').mockReturnValue(state);
 }
 
-let restoreServiceWorker: (() => void) | null = null;
-
-function stubServiceWorkerContainer() {
-  const container = {
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-  };
-  const original = Object.getOwnPropertyDescriptor(navigator, 'serviceWorker');
-  Object.defineProperty(navigator, 'serviceWorker', {
-    configurable: true,
-    value: container,
-  });
-  restoreServiceWorker = () => {
-    if (original) Object.defineProperty(navigator, 'serviceWorker', original);
-    else delete (navigator as { serviceWorker?: unknown }).serviceWorker;
-  };
-  return container;
-}
-
 describe('PwaAutoUpdate', () => {
   beforeEach(() => {
     mockUseRegisterSW.mockReset();
@@ -77,8 +64,7 @@ describe('PwaAutoUpdate', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
-    restoreServiceWorker?.();
-    restoreServiceWorker = null;
+    workerTookControl = undefined;
   });
 
   it("n'affiche aucune interface", async () => {
@@ -197,21 +183,22 @@ describe('PwaAutoUpdate', () => {
 
     it('reloads the page as soon as the new worker takes control', async () => {
       stubVisibility('hidden');
-      const container = stubServiceWorkerContainer();
-      const { unmount } = await renderWithRegistration(vi.fn().mockResolvedValue(undefined), true);
+      const reload = vi.fn();
+      const { unmount } = await renderWithRegistration(
+        vi.fn().mockResolvedValue(undefined),
+        true,
+        reload
+      );
 
       expect(mockUpdateSW).toHaveBeenCalledWith(true);
-      expect(container.addEventListener).toHaveBeenCalledWith(
-        'controllerchange',
-        expect.any(Function)
-      );
+      workerTookControl?.();
+      expect(reload).toHaveBeenCalledTimes(1);
 
       unmount();
     });
 
     it('reloads even when another tab triggered the update, without ever going to the background itself', async () => {
       stubVisibility('visible');
-      const container = stubServiceWorkerContainer();
       const reload = vi.fn();
       const { unmount } = await renderWithRegistration(
         vi.fn().mockResolvedValue(undefined),
@@ -220,21 +207,47 @@ describe('PwaAutoUpdate', () => {
       );
 
       expect(mockUpdateSW).not.toHaveBeenCalled();
-
-      const controllerChangeCall = container.addEventListener.mock.calls.find(
-        ([event]) => event === 'controllerchange'
-      );
-      expect(controllerChangeCall).toBeDefined();
-      const controllerChangeHandler = controllerChangeCall?.[1] as () => void;
-      controllerChangeHandler();
+      workerTookControl?.();
 
       expect(reload).toHaveBeenCalledTimes(1);
 
       unmount();
     });
 
-    it('ne laisse pas le stub de navigator.serviceWorker fuiter vers les tests suivants', () => {
-      expect(navigator.serviceWorker).toBeUndefined();
+    it('waits for a long task to end before applying the update, even in the background', async () => {
+      stubVisibility('hidden');
+      const release = holdPage();
+      const { unmount } = await renderWithRegistration(vi.fn().mockResolvedValue(undefined), true);
+
+      await act(async () => {
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+      expect(mockUpdateSW).not.toHaveBeenCalled();
+
+      await act(async () => release());
+      expect(mockUpdateSW).toHaveBeenCalledWith(true);
+
+      unmount();
+    });
+
+    it('keeps a worker another tab activated from reloading the page during a long task', async () => {
+      stubVisibility('visible');
+      const reload = vi.fn();
+      const release = holdPage();
+      const { unmount } = await renderWithRegistration(
+        vi.fn().mockResolvedValue(undefined),
+        true,
+        reload
+      );
+
+      workerTookControl?.();
+      workerTookControl?.();
+      expect(reload).not.toHaveBeenCalled();
+
+      release();
+      expect(reload).toHaveBeenCalledTimes(1);
+
+      unmount();
     });
 
     it('applies the update only once', async () => {
