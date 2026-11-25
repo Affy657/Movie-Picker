@@ -12003,7 +12003,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    skip?: number;
+                    take?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -14105,6 +14108,7 @@ export interface components {
         WatchlistAvailabilityResponse: {
             items: components["schemas"]["WatchlistAvailabilityItemResponse"][];
             partial: boolean;
+            hasMore: boolean;
         };
         WatchlistItemResponse: {
             /** Format: int32 */

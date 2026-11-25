@@ -84,10 +84,36 @@ describe('fetchWatchlistAvailability', () => {
 
     const res = await fetchWatchlistAvailability(controller.signal);
 
-    expect(mockFetchApi).toHaveBeenCalledWith('/watchlist/availability', {
+    expect(mockFetchApi).toHaveBeenCalledWith('/watchlist/availability?skip=0&take=500', {
       signal: controller.signal,
     });
     expect(res).toEqual({ items: [{ tmdbId: 1, watchProviders: [] }], partial: true });
+  });
+
+  it('reads the availability of the titles past the first 500 through the next pages', async () => {
+    const firstPage = Array.from({ length: 500 }, (_, index) => ({ tmdbId: index + 1 }));
+    mockFetchApi
+      .mockResolvedValueOnce({ items: firstPage, partial: false, hasMore: true })
+      .mockResolvedValueOnce({ items: [{ tmdbId: 501 }], partial: false, hasMore: false });
+
+    const res = await fetchWatchlistAvailability();
+
+    expect(mockFetchApi).toHaveBeenNthCalledWith(
+      2,
+      '/watchlist/availability?skip=500&take=500',
+      undefined
+    );
+    expect(res.items).toHaveLength(501);
+    expect(res.items.at(-1)).toEqual({ tmdbId: 501 });
+    expect(res.partial).toBe(false);
+  });
+
+  it('says the answer is partial when any page is', async () => {
+    mockFetchApi
+      .mockResolvedValueOnce({ items: [{ tmdbId: 1 }], partial: true, hasMore: true })
+      .mockResolvedValueOnce({ items: [{ tmdbId: 2 }], partial: false, hasMore: false });
+
+    expect((await fetchWatchlistAvailability()).partial).toBe(true);
   });
 
   it('reads an empty or malformed answer as complete and empty', async () => {
@@ -96,7 +122,10 @@ describe('fetchWatchlistAvailability', () => {
 
     mockFetchApi.mockResolvedValue(null);
     expect(await fetchWatchlistAvailability()).toEqual({ items: [], partial: false });
-    expect(mockFetchApi).toHaveBeenLastCalledWith('/watchlist/availability', undefined);
+    expect(mockFetchApi).toHaveBeenLastCalledWith(
+      '/watchlist/availability?skip=0&take=500',
+      undefined
+    );
   });
 });
 

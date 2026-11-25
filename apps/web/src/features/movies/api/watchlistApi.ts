@@ -24,14 +24,21 @@ export async function fetchWatchlist(signal?: AbortSignal): Promise<WatchlistIte
   );
 }
 
+type WatchlistAvailability = Pick<WatchlistAvailabilityResponse, 'items' | 'partial'>;
+
 export async function fetchWatchlistAvailability(
   signal?: AbortSignal
-): Promise<WatchlistAvailabilityResponse> {
-  const res = await fetchApi<Partial<WatchlistAvailabilityResponse> | null>(
-    '/watchlist/availability',
-    signal ? { signal } : undefined
-  );
-  return { items: Array.isArray(res?.items) ? res.items : [], partial: res?.partial === true };
+): Promise<WatchlistAvailability> {
+  let partial = false;
+  const items = await readAllPages(async (skip) => {
+    const page = await fetchApi<Partial<WatchlistAvailabilityResponse> | null>(
+      `/watchlist/availability?skip=${skip}&take=${WATCHLIST_PAGE_SIZE}`,
+      signal ? { signal } : undefined
+    );
+    partial = partial || page?.partial === true;
+    return page;
+  });
+  return { items, partial };
 }
 
 export async function addToWatchlist(body: AddWatchlistItemBody): Promise<void> {

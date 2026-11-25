@@ -48,7 +48,11 @@ export function createWatchlistHandlers(
       })
     ),
     http.get(`${V1}/watchlist/availability`, () =>
-      apiJson<'WatchlistAvailabilityResponse'>({ items: availability, partial: false })
+      apiJson<'WatchlistAvailabilityResponse'>({
+        items: availability,
+        partial: false,
+        hasMore: false,
+      })
     ),
   ];
 }
