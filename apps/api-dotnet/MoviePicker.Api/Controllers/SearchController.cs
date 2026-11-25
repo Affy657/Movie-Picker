@@ -20,8 +20,9 @@ public sealed class SearchController : ControllerBase
     [ProducesResponseType(typeof(GlobalSearchResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Search(
         [FromQuery] string? q,
+        [RequestLanguage] CatalogLanguage interfaceLanguage,
         [FromServices] IGlobalSearchHandler handler,
         [FromServices] ICurrentUserAccessor currentUser,
         CancellationToken ct) =>
-        Ok(await handler.HandleAsync(q, currentUser.GetUserId(), ct));
+        Ok(await handler.HandleAsync(q, currentUser.GetUserId(), interfaceLanguage, ct));
 }

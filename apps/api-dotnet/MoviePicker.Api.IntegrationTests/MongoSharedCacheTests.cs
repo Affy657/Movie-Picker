@@ -77,7 +77,7 @@ public sealed class MongoSharedCacheTests : IClassFixture<MoviePickerApplication
     [MongoFact]
     public async Task SetWithinCapacityAsync_BelowTheCap_WritesTheEntry()
     {
-        var key = "tmdb-enrich-v2:movie:FR:" + Guid.NewGuid().ToString("N");
+        var key = "tmdb-enrich-v3:movie:FR:fr-FR:" + Guid.NewGuid().ToString("N");
 
         await Cache().SetWithinCapacityAsync(key, new Snapshot("Heat", 170), TimeSpan.FromMinutes(5), await StoredEntriesAsync() + 1);
 
@@ -88,7 +88,7 @@ public sealed class MongoSharedCacheTests : IClassFixture<MoviePickerApplication
     public async Task SetWithinCapacityAsync_AtTheCap_WritesNothing()
     {
         await Cache().SetAsync("snapshot:" + Guid.NewGuid().ToString("N"), new Snapshot("Heat", 170), TimeSpan.FromMinutes(5));
-        var key = "tmdb-enrich-v2:movie:FR:" + Guid.NewGuid().ToString("N");
+        var key = "tmdb-enrich-v3:movie:FR:fr-FR:" + Guid.NewGuid().ToString("N");
 
         await Cache().SetWithinCapacityAsync(key, new Snapshot("Heat", 170), TimeSpan.FromMinutes(5), await StoredEntriesAsync());
 

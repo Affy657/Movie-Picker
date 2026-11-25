@@ -1,4 +1,5 @@
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Application.Ports;
 
 namespace MoviePicker.Api.Application.UseCases.SearchMovies;
 
@@ -16,6 +17,7 @@ public interface ISearchMoviesHandler
     Task<MovieSearchListResponse> HandleAsync(
         string query,
         string? eventSlug,
+        CatalogLanguage language,
         MovieSearchFilters? filters = null,
         bool includeSeries = false,
         CancellationToken ct = default);

@@ -15,7 +15,7 @@ public sealed class StubTmdbMovieSearchTests
     [InlineData("   ")]
     public async Task SearchAsync_BlankQuery_ReturnsEmpty(string query)
     {
-        var result = await _sut.SearchAsync(query, allowSeries: true);
+        var result = await _sut.SearchAsync(query, allowSeries: true, CatalogLanguage.French);
 
         Assert.Empty(result);
     }
@@ -23,7 +23,7 @@ public sealed class StubTmdbMovieSearchTests
     [Fact]
     public async Task SearchAsync_WithQuery_ReturnsStubItems()
     {
-        var result = await _sut.SearchAsync("inception", allowSeries: false);
+        var result = await _sut.SearchAsync("inception", allowSeries: false, CatalogLanguage.French);
 
         Assert.Equal(2, result.Count);
         Assert.Equal(999_001, result[0].Id);
@@ -34,7 +34,7 @@ public sealed class StubTmdbMovieSearchTests
     [Fact]
     public async Task GetEnrichmentAsync_ReturnsStubEnrichment()
     {
-        var enrichment = await _sut.GetEnrichmentAsync(999_001, MovieMediaType.Movie, "FR");
+        var enrichment = await _sut.GetEnrichmentAsync(999_001, MovieMediaType.Movie, "FR", CatalogLanguage.French);
 
         Assert.NotNull(enrichment);
         Assert.Equal(8.0, enrichment!.VoteAverage);
@@ -45,7 +45,7 @@ public sealed class StubTmdbMovieSearchTests
     [Fact]
     public async Task GetDetailsAsync_ReturnsStubDetails()
     {
-        var details = await _sut.GetDetailsAsync(42, MovieMediaType.Movie);
+        var details = await _sut.GetDetailsAsync(42, MovieMediaType.Movie, CatalogLanguage.French);
 
         Assert.NotNull(details);
         Assert.Equal(42, details!.Id);
@@ -59,7 +59,7 @@ public sealed class StubTmdbMovieSearchTests
     [Fact]
     public async Task GetDetailsAsync_Tv_ReturnsSeasonAndEpisodeCounts()
     {
-        var details = await _sut.GetDetailsAsync(42, MovieMediaType.Tv);
+        var details = await _sut.GetDetailsAsync(42, MovieMediaType.Tv, CatalogLanguage.French);
 
         Assert.Equal(2, details!.SeasonCount);
         Assert.Equal(16, details.EpisodeCount);
@@ -68,7 +68,7 @@ public sealed class StubTmdbMovieSearchTests
     [Fact]
     public async Task GetDetailsAsync_Film_DescribesTheFilmPageFacts()
     {
-        var extras = (await _sut.GetDetailsAsync(42, MovieMediaType.Movie))!.Extras;
+        var extras = (await _sut.GetDetailsAsync(42, MovieMediaType.Movie, CatalogLanguage.French))!.Extras;
 
         Assert.NotNull(extras);
         Assert.Equal("en", extras!.OriginalLanguage);
@@ -83,7 +83,7 @@ public sealed class StubTmdbMovieSearchTests
     [Fact]
     public async Task GetDetailsAsync_Film_BelongsToASagaTheShowcaseKnows()
     {
-        var extras = (await _sut.GetDetailsAsync(42, MovieMediaType.Movie))!.Extras;
+        var extras = (await _sut.GetDetailsAsync(42, MovieMediaType.Movie, CatalogLanguage.French))!.Extras;
 
         Assert.True(MovieShowcaseCatalog.IsCatalogCollection(extras!.Collection!.Id));
     }
@@ -91,7 +91,7 @@ public sealed class StubTmdbMovieSearchTests
     [Fact]
     public async Task GetDetailsAsync_Series_HasCreatorsButNoBudgetSagaOrDirector()
     {
-        var extras = (await _sut.GetDetailsAsync(42, MovieMediaType.Tv))!.Extras;
+        var extras = (await _sut.GetDetailsAsync(42, MovieMediaType.Tv, CatalogLanguage.French))!.Extras;
 
         Assert.NotNull(extras);
         Assert.Null(extras!.Budget);
@@ -104,9 +104,9 @@ public sealed class StubTmdbMovieSearchTests
     [Fact]
     public async Task GetDirectedMoviesAsync_ListsFilmsTiedToThePerson()
     {
-        var details = await _sut.GetDetailsAsync(42, MovieMediaType.Movie);
+        var details = await _sut.GetDetailsAsync(42, MovieMediaType.Movie, CatalogLanguage.French);
 
-        var films = await _sut.GetDirectedMoviesAsync(details!.Extras!.DirectorId!.Value);
+        var films = await _sut.GetDirectedMoviesAsync(details!.Extras!.DirectorId!.Value, CatalogLanguage.French);
 
         Assert.NotEmpty(films);
         Assert.All(films, film => Assert.Equal(MovieMediaType.Movie, film.MediaType));

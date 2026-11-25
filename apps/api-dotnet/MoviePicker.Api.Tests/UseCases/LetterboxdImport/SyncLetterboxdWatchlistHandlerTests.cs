@@ -123,6 +123,7 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
             .Setup(t => t.SearchTitlesAsync(
                 "Dune : Deuxième partie",
                 true,
+                It.IsAny<CatalogLanguage>(),
                 It.IsAny<int?>(),
                 It.IsAny<int?>(),
                 It.IsAny<CancellationToken>()))
@@ -166,7 +167,7 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
                 [new LetterboxdFilm("the-polar-express", "The Polar Express", "2004")], true));
         _tmdb
             .Setup(t => t.SearchTitlesAsync(
-                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CatalogLanguage>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new TaskCanceledException("TMDB did not answer in time"));
     }
 
@@ -605,7 +606,7 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
         GivenWatchedOnLetterboxd(new LetterboxdFilmsSnapshot(
             [new LetterboxdFilm("one", "One", "2001"), new LetterboxdFilm("akira", "Akira", "1988", Rating: 10)], true));
         _tmdb
-            .Setup(t => t.SearchTitlesAsync("Akira", true, It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.SearchTitlesAsync("Akira", true, It.IsAny<CatalogLanguage>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<TmdbSearchItem>)[new TmdbSearchItem(149, MovieMediaType.Movie, "Akira", "1988", null, 8.0, "Akira")]);
 
         var result = await _sut.HandleAsync(UserId, force: true);
@@ -624,10 +625,10 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
         GivenWatchedOnLetterboxd(new LetterboxdFilmsSnapshot(
             [new LetterboxdFilm("akira", "Akira", "1988", Rating: 10), new LetterboxdFilm("solaris", "Solaris", "1972")], true));
         _tmdb
-            .Setup(t => t.SearchTitlesAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.SearchTitlesAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CatalogLanguage>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<TmdbSearchItem>)[]);
         _tmdb
-            .Setup(t => t.SearchTitlesAsync("Akira", true, It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.SearchTitlesAsync("Akira", true, It.IsAny<CatalogLanguage>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<TmdbSearchItem>)[new TmdbSearchItem(149, MovieMediaType.Movie, "Akira", "1988", null, 8.0, "Akira")]);
 
         var result = await _sut.HandleAsync(UserId, force: true);
@@ -738,7 +739,7 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
         var deleted = GivenAccountDeletedOnWatchedFilmsRead(
             new LetterboxdFilmsSnapshot([new LetterboxdFilm("akira", "Akira", "1988", Rating: 10)], true));
         _tmdb
-            .Setup(t => t.SearchTitlesAsync("Akira", true, It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.SearchTitlesAsync("Akira", true, It.IsAny<CatalogLanguage>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<TmdbSearchItem>)[new TmdbSearchItem(149, MovieMediaType.Movie, "Akira", "1988", null, 8.0, "Akira")]);
 
         var refusal = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(UserId, force: true));

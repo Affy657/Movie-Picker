@@ -50,7 +50,7 @@ public sealed class GetMyNightMoviesHandler : IGetMyNightMoviesHandler
         var proposersTask = LoadProposersAsync(proposals, films, ct);
         var watchedTask = _history.ReadKeysAsync(userId, ct);
         var enrichmentsTask = TmdbEnrichments.LoadAsync(
-            films.Select(g => (g[0].TmdbId, g[0].MediaType)), _tmdb, _options, ct);
+            films.Select(g => (g[0].TmdbId, g[0].MediaType)), _tmdb, _options, CatalogLanguage.French, ct);
         await Task.WhenAll(proposersTask, watchedTask, enrichmentsTask);
 
         var (participantById, avatars) = await proposersTask;

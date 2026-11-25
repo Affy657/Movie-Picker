@@ -34,7 +34,7 @@ public sealed class GetWatchlistAvailabilityHandler : IGetWatchlistAvailabilityH
 
         var region = WatchRegion.Of(_options.TmdbWatchProvidersRegion);
         var keys = items.Select(item => (item.TmdbId, item.MediaType)).Distinct().ToList();
-        var enrichments = await _tmdbMovieSearch.GetEnrichmentsAsync(keys, region, ct);
+        var enrichments = await _tmdbMovieSearch.GetEnrichmentsAsync(keys, region, CatalogLanguage.French, ct);
         var resolved = items.Where(item => enrichments.ContainsKey((item.TmdbId, item.MediaType))).ToList();
 
         return new WatchlistAvailabilityResponse

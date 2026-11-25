@@ -41,7 +41,7 @@ public sealed partial class TmdbMovieSearch
     private static string AppendedResponses(MovieMediaType mediaType) =>
         mediaType == MovieMediaType.Tv ? "credits,videos,content_ratings" : "credits,videos,release_dates";
 
-    private static TmdbMovieDetailsExtras ReadDetailsExtras(JsonElement root, MovieMediaType mediaType)
+    private static TmdbMovieDetailsExtras ReadDetailsExtras(JsonElement root, MovieMediaType mediaType, CatalogLanguage language)
     {
         var isFilm = mediaType == MovieMediaType.Movie;
         JsonElement? credits = root.TryGetProperty("credits", out var creditsEl) && creditsEl.ValueKind == JsonValueKind.Object
@@ -59,7 +59,7 @@ public sealed partial class TmdbMovieSearch
             isFilm && credits is { } filmCredits ? ReadDirectorId(filmCredits) : null,
             credits is { } castCredits ? ReadCastMembers(castCredits) : [],
             ReadCrew(root, credits, mediaType),
-            ReadVideos(root));
+            ReadVideos(root, language));
     }
 
     private static string? ReadText(JsonElement el, string name) =>
@@ -222,7 +222,7 @@ public sealed partial class TmdbMovieSearch
             names.Add(name);
     }
 
-    private static List<TmdbVideo> ReadVideos(JsonElement root)
+    private static List<TmdbVideo> ReadVideos(JsonElement root, CatalogLanguage language)
     {
         if (!root.TryGetProperty("videos", out var videos) || videos.ValueKind != JsonValueKind.Object
             || ReadArray(videos, ResultsProperty) is not { } results)
@@ -232,7 +232,7 @@ public sealed partial class TmdbMovieSearch
             .Select(ReadYouTubeVideo)
             .OfType<TmdbVideo>()
             .OrderBy(video => VideoTypeRank(video.Type))
-            .ThenBy(video => VideoLanguageRank(video.Language))
+            .ThenBy(video => VideoLanguageRank(video.Language, language))
             .Take(MaxVideos)
             .ToList();
     }
@@ -258,10 +258,10 @@ public sealed partial class TmdbMovieSearch
         _ => 2,
     };
 
-    private static int VideoLanguageRank(string? language) => language switch
+    private static int VideoLanguageRank(string? videoLanguage, CatalogLanguage language)
     {
-        "fr" => 0,
-        "en" => 1,
-        _ => 2,
-    };
+        if (string.Equals(videoLanguage, language.IsoCode(), StringComparison.Ordinal))
+            return 0;
+        return videoLanguage is "fr" or "en" ? 1 : 2;
+    }
 }

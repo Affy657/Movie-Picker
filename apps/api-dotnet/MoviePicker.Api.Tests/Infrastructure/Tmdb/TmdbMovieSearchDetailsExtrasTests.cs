@@ -152,7 +152,7 @@ public sealed class TmdbMovieSearchDetailsExtrasTests
 
     private static async Task<TmdbMovieDetailsExtras> ExtrasOfAsync(string json, MovieMediaType mediaType)
     {
-        var details = await CreateSut(CreateHttpClient(Answering(json).Object)).GetDetailsAsync(42, mediaType);
+        var details = await CreateSut(CreateHttpClient(Answering(json).Object)).GetDetailsAsync(42, mediaType, CatalogLanguage.French);
         Assert.NotNull(details);
         Assert.NotNull(details!.Extras);
         return details.Extras!;
@@ -241,7 +241,7 @@ public sealed class TmdbMovieSearchDetailsExtrasTests
     [Fact]
     public async Task GetDetailsAsync_Film_StillServesTheFieldsTheModalReads()
     {
-        var details = await CreateSut(CreateHttpClient(Answering(InceptionJson).Object)).GetDetailsAsync(27_205, MovieMediaType.Movie);
+        var details = await CreateSut(CreateHttpClient(Answering(InceptionJson).Object)).GetDetailsAsync(27_205, MovieMediaType.Movie, CatalogLanguage.French);
 
         Assert.Equal("Christopher Nolan", details!.Director);
         Assert.Equal(8, details.Cast.Count);
@@ -306,7 +306,7 @@ public sealed class TmdbMovieSearchDetailsExtrasTests
         var requested = new List<string>();
         var sut = CreateSut(CreateHttpClient(Answering("""{"id":42,"title":"T","name":"T"}""", requested).Object));
 
-        await sut.GetDetailsAsync(42, mediaType);
+        await sut.GetDetailsAsync(42, mediaType, CatalogLanguage.French);
 
         var url = new Uri(Assert.Single(requested));
         Assert.Equal(path, url.AbsolutePath);
@@ -319,8 +319,8 @@ public sealed class TmdbMovieSearchDetailsExtrasTests
         var requested = new List<string>();
         var sut = CreateSut(CreateHttpClient(Answering(InceptionJson, requested).Object));
 
-        await sut.GetDetailsAsync(27_205, MovieMediaType.Movie);
-        var cached = await sut.GetDetailsAsync(27_205, MovieMediaType.Movie);
+        await sut.GetDetailsAsync(27_205, MovieMediaType.Movie, CatalogLanguage.French);
+        var cached = await sut.GetDetailsAsync(27_205, MovieMediaType.Movie, CatalogLanguage.French);
 
         Assert.Single(requested);
         Assert.Equal(525, cached!.Extras!.DirectorId);

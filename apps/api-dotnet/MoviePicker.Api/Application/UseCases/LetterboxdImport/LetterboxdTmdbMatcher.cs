@@ -24,6 +24,7 @@ public static class LetterboxdTmdbMatcher
             var results = await tmdb.SearchTitlesAsync(
                 title,
                 allowSeries: true,
+                CatalogLanguage.French,
                 yearFrom: parsedYear is null ? null : parsedYear - YearTolerance,
                 yearTo: parsedYear is null ? null : parsedYear + YearTolerance,
                 ct: ct);

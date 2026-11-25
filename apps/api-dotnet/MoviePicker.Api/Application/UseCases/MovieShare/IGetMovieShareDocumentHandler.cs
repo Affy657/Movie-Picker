@@ -1,3 +1,4 @@
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 
@@ -9,5 +10,6 @@ public interface IGetMovieShareDocumentHandler
         string movieRef,
         MovieMediaType mediaType,
         string apiPublicBaseUrl,
+        CatalogLanguage language,
         CancellationToken ct = default);
 }

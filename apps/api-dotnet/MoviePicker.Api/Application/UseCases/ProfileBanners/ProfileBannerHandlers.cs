@@ -93,7 +93,7 @@ public sealed class SetProfileBannerHandler : ISetProfileBannerHandler
         if (!backdrops.Any(b => string.Equals(b.Path, request.ImagePath, StringComparison.Ordinal)))
             throw Errors.ProfileBannerInvalid();
 
-        var details = await TmdbCalls.OrUnavailableAsync(() => _tmdb.GetDetailsAsync(tmdbId, MovieMediaType.Movie, ct))
+        var details = await TmdbCalls.OrUnavailableAsync(() => _tmdb.GetDetailsAsync(tmdbId, MovieMediaType.Movie, CatalogLanguage.French, ct))
             ?? throw Errors.MovieNotFound();
         return UserProfileMapping.ToResponse(await _writer.UseFilmAsync(userId, tmdbId, details.Title, request.ImagePath, ct));
     }

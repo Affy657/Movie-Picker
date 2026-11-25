@@ -21,7 +21,7 @@ public sealed class GetMovieDetailsHandlerTests
     {
         var tmdb = new Mock<ITmdbMovieSearch>(MockBehavior.Strict);
 
-        var result = await Build(tmdb).HandleAsync(tmdbId, MovieMediaType.Movie);
+        var result = await Build(tmdb).HandleAsync(tmdbId, MovieMediaType.Movie, CatalogLanguage.French);
 
         Assert.Null(result);
         tmdb.VerifyNoOtherCalls();
@@ -31,10 +31,10 @@ public sealed class GetMovieDetailsHandlerTests
     public async Task HandleAsync_TmdbReturnsNull_ReturnsNull()
     {
         var tmdb = new Mock<ITmdbMovieSearch>();
-        tmdb.Setup(t => t.GetDetailsAsync(42, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+        tmdb.Setup(t => t.GetDetailsAsync(42, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TmdbMovieDetails?)null);
 
-        var result = await Build(tmdb).HandleAsync(42, MovieMediaType.Movie);
+        var result = await Build(tmdb).HandleAsync(42, MovieMediaType.Movie, CatalogLanguage.French);
 
         Assert.Null(result);
     }
@@ -62,17 +62,17 @@ public sealed class GetMovieDetailsHandlerTests
             VoteAverage: 8.4,
             PosterUrl: "https://image.tmdb.org/t/p/w154/inception.jpg",
             BackdropUrl: "https://image.tmdb.org/t/p/w780/inception-wide.jpg");
-        tmdb.Setup(t => t.GetDetailsAsync(27205, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+        tmdb.Setup(t => t.GetDetailsAsync(27205, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(details);
         var enrichment = new TmdbMovieEnrichment(
             VoteAverage: 8.4,
             WatchProviders: new[] { new TmdbWatchProviderOffer(8, "Netflix", "/netflix.png", "flatrate") },
             TmdbWatchPageUrl: "https://www.themoviedb.org/movie/27205/watch",
             RuntimeMinutes: 148);
-        tmdb.Setup(t => t.GetEnrichmentAsync(27205, MovieMediaType.Movie, "FR", It.IsAny<CancellationToken>()))
+        tmdb.Setup(t => t.GetEnrichmentAsync(27205, MovieMediaType.Movie, "FR", It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(enrichment);
 
-        var result = await Build(tmdb).HandleAsync(27205, MovieMediaType.Movie);
+        var result = await Build(tmdb).HandleAsync(27205, MovieMediaType.Movie, CatalogLanguage.French);
 
         Assert.NotNull(result);
         Assert.Equal(27205, result!.TmdbId);
@@ -99,10 +99,10 @@ public sealed class GetMovieDetailsHandlerTests
     public async Task HandleAsync_TmdbHttpError_ThrowsServiceUnavailable()
     {
         var tmdb = new Mock<ITmdbMovieSearch>();
-        tmdb.Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+        tmdb.Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("boom"));
 
-        await Assert.ThrowsAsync<ServiceUnavailableException>(() => Build(tmdb).HandleAsync(42, MovieMediaType.Movie));
+        await Assert.ThrowsAsync<ServiceUnavailableException>(() => Build(tmdb).HandleAsync(42, MovieMediaType.Movie, CatalogLanguage.French));
     }
 
     private static readonly string[] ProductionCountries = ["GB", "US"];
@@ -110,7 +110,7 @@ public sealed class GetMovieDetailsHandlerTests
     private static Mock<ITmdbMovieSearch> TmdbAnswering(TmdbMovieDetailsExtras? extras)
     {
         var tmdb = new Mock<ITmdbMovieSearch>();
-        tmdb.Setup(t => t.GetDetailsAsync(27205, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+        tmdb.Setup(t => t.GetDetailsAsync(27205, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TmdbMovieDetails(
                 27205, "Inception", null, null, "Christopher Nolan", Cast, 148, Genres, GenreIds, "2010-07-16",
                 Extras: extras));
@@ -133,7 +133,7 @@ public sealed class GetMovieDetailsHandlerTests
             Crew: [new TmdbCrewCredit(TmdbCrewJobs.Director, "Christopher Nolan"), new TmdbCrewCredit(TmdbCrewJobs.Composer, "Hans Zimmer")],
             Videos: [new TmdbVideo("abc", "Bande-annonce VF", "Trailer", "fr"), new TmdbVideo("def", "Clip", "Clip", null)]));
 
-        var result = await Build(tmdb).HandleAsync(27205, MovieMediaType.Movie);
+        var result = await Build(tmdb).HandleAsync(27205, MovieMediaType.Movie, CatalogLanguage.French);
 
         Assert.NotNull(result);
         Assert.Equal("Christopher Nolan", result!.Director);
@@ -164,7 +164,7 @@ public sealed class GetMovieDetailsHandlerTests
     [Fact]
     public async Task HandleAsync_DetailsWithoutFilmPageFacts_AnswersEmptyListsAndNulls()
     {
-        var result = await Build(TmdbAnswering(null)).HandleAsync(27205, MovieMediaType.Movie);
+        var result = await Build(TmdbAnswering(null)).HandleAsync(27205, MovieMediaType.Movie, CatalogLanguage.French);
 
         Assert.NotNull(result);
         Assert.Null(result!.OriginalTitle);

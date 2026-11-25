@@ -104,7 +104,7 @@ public sealed class EventMovieListRoundTripTests : IClassFixture<MoviePickerAppl
             });
             await votes.UpsertAsync(new Vote { EventId = evt.Id, MovieId = movie.Id, ParticipantId = bob.Id, Value = 1 });
             await cache.SetAsync(
-                $"tmdb-enrich-v2:movie:FR:{tmdbId}",
+                $"tmdb-enrich-v3:movie:FR:fr-FR:{tmdbId}",
                 new TmdbMovieEnrichment(7.5, [], null, 100 + tmdbId),
                 TimeSpan.FromHours(1));
         }
@@ -121,7 +121,7 @@ public sealed class EventMovieListRoundTripTests : IClassFixture<MoviePickerAppl
         var handler = scope.ServiceProvider.GetRequiredService<IListMoviesForEventHandler>();
         _commands.Clear();
 
-        var list = await handler.HandleAsync(evt.Slug);
+        var list = await handler.HandleAsync(evt.Slug, CatalogLanguage.French);
 
         Assert.Equal(MovieCount, list.Count);
         Assert.All(list, movie =>

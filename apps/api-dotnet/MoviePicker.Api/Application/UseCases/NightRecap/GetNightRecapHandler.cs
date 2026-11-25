@@ -19,7 +19,7 @@ public sealed class GetNightRecapHandler : IGetNightRecapHandler
         _movies = movies;
     }
 
-    public async Task<NightRecapResponse> HandleAsync(string recapSlug, CancellationToken ct = default)
+    public async Task<NightRecapResponse> HandleAsync(string recapSlug, CatalogLanguage language, CancellationToken ct = default)
     {
         var evt = await _events.GetByRecapSlugAsync(recapSlug, ct) ?? throw Errors.EventNotFound();
         var detail = await _detail.HandleAsync(evt.Slug, ct);
@@ -41,20 +41,21 @@ public sealed class GetNightRecapHandler : IGetNightRecapHandler
             ParticipantCount = detail.ParticipantCount,
             MovieCount = detail.MovieCount,
             Participants = detail.Participants,
-            WinnerMovies = await WinnerMoviesAsync(evt.Slug, detail, ct),
+            WinnerMovies = await WinnerMoviesAsync(evt.Slug, detail, language, ct),
         };
     }
 
     private async Task<IReadOnlyList<MovieWithScoreResponse>> WinnerMoviesAsync(
         string eventSlug,
         EventDetailResponse detail,
+        CatalogLanguage language,
         CancellationToken ct)
     {
         if (detail.Winners.Count == 0)
             return [];
 
         var winnerIds = detail.Winners.Select(w => w.MovieId).ToList();
-        var byId = (await _movies.HandleSelectionAsync(eventSlug, winnerIds, detail.MyParticipant?.Id, ct))
+        var byId = (await _movies.HandleSelectionAsync(eventSlug, winnerIds, language, detail.MyParticipant?.Id, ct))
             .ToDictionary(m => m.Id);
         return detail.Winners
             .Select(w => byId.GetValueOrDefault(w.MovieId))

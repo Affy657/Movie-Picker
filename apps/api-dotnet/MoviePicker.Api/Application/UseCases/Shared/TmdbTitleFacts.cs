@@ -15,7 +15,7 @@ public static class TmdbTitleFacts
     {
         try
         {
-            return await tmdb.GetDetailsAsync(tmdbId, mediaType, ct);
+            return await tmdb.GetDetailsAsync(tmdbId, mediaType, CatalogLanguage.French, ct);
         }
         catch (Exception ex)
         {

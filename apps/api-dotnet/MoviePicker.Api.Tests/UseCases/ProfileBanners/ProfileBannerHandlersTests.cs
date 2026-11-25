@@ -50,7 +50,7 @@ public sealed class ProfileBannerHandlersTests
 
         _tmdb.Setup(t => t.GetBackdropsAsync(DuneId, It.IsAny<CancellationToken>()))
             .ReturnsAsync([new TmdbBackdrop(SunsetPath, 3840, 2160), new TmdbBackdrop(DuelPath, 1920, 1080)]);
-        _tmdb.Setup(t => t.GetDetailsAsync(DuneId, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetDetailsAsync(DuneId, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Details(DuneId, "Dune : Deuxième partie"));
     }
 

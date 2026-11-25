@@ -25,7 +25,7 @@ public sealed class AddToWatchlistHandlerTests
         _posterImageStore.Setup(p => p.ToPublicPosterPath(It.IsAny<string?>()))
             .Returns((string? p) => p);
         _tmdb
-            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TmdbMovieDetails?)null);
         _users
             .Setup(u => u.GetByIdAsync(UserId, It.IsAny<CancellationToken>()))
@@ -67,7 +67,7 @@ public sealed class AddToWatchlistHandlerTests
             .Callback<WatchlistItem, CancellationToken>((item, _) => stored = item)
             .ReturnsAsync(true);
         _tmdb
-            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("TMDB unavailable"));
 
         var result = await _sut.HandleAsync(UserId, Request(genreIds: SearchResultGenreIds));
@@ -84,7 +84,7 @@ public sealed class AddToWatchlistHandlerTests
             .Callback<WatchlistItem, CancellationToken>((item, _) => stored = item)
             .ReturnsAsync(true);
         _tmdb
-            .Setup(t => t.GetDetailsAsync(42, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(42, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(MatrixDetails(136));
 
         await _sut.HandleAsync(UserId, Request(genreIds: DocumentaryGenreIds));
@@ -160,7 +160,7 @@ public sealed class AddToWatchlistHandlerTests
     {
         WatchlistItem? inserted = null;
         _tmdb
-            .Setup(t => t.GetDetailsAsync(42, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(42, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TmdbMovieDetails(42, "Matrix", null, null, null, [], 136, [], GenreIds, "1999-03-31"));
         _watchlist
             .Setup(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>()))
@@ -179,7 +179,7 @@ public sealed class AddToWatchlistHandlerTests
     {
         WatchlistItem? inserted = null;
         _tmdb
-            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("TMDB indisponible"));
         _watchlist
             .Setup(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>()))
@@ -198,7 +198,7 @@ public sealed class AddToWatchlistHandlerTests
     {
         WatchlistItem? inserted = null;
         _tmdb
-            .Setup(t => t.GetDetailsAsync(42, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(42, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(MatrixDetails(136, 8.2));
         _watchlist
             .Setup(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>()))
@@ -218,7 +218,7 @@ public sealed class AddToWatchlistHandlerTests
     {
         WatchlistItem? inserted = null;
         _tmdb
-            .Setup(t => t.GetDetailsAsync(42, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(42, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(MatrixDetails(150, 7.0));
         _watchlist
             .Setup(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>()))
@@ -236,7 +236,7 @@ public sealed class AddToWatchlistHandlerTests
     {
         WatchlistItem? inserted = null;
         _tmdb
-            .Setup(t => t.GetDetailsAsync(42, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(42, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(MatrixDetails(136));
         _watchlist
             .Setup(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>()))

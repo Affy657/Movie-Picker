@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using MoviePicker.Api.Application.Ports;
 
 namespace MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 
@@ -46,7 +47,7 @@ public sealed class CatalogWarmPass : ICatalogWarmPass
                 failed++;
         }
 
-        if (await _collections.RefreshAsync(ct))
+        if (await _collections.RefreshAsync(CatalogLanguage.French, ct))
             refreshed++;
         else
             failed++;

@@ -15,6 +15,7 @@ public sealed partial class TmdbMovieSearch
     public async Task<IReadOnlyList<TmdbSearchItem>> SearchAsync(
         string query,
         bool allowSeries,
+        CatalogLanguage language,
         IReadOnlyList<int>? genreIds = null,
         int? yearFrom = null,
         int? yearTo = null,
@@ -39,14 +40,19 @@ public sealed partial class TmdbMovieSearch
             return await DiscoverMoviesAsync(
                 new TmdbDiscoveryCriteria(genreIds, yearFrom, yearTo, voteMin, originalLanguage, runtimeMin, runtimeMax),
                 1,
+                language,
                 ct);
 
         var titleMatchesTask = FetchAndMapResultsAsync(
-            TitleSearchUrl(trimmedQuery, allowSeries),
+            TitleSearchUrl(trimmedQuery, allowSeries, language),
             item => TryMapSearchItem(item, allowSeries, genreIds, yearFrom, yearTo, voteMin, originalLanguage),
             ct);
         var creditMatchesTask = SearchByPersonCreditsAsync(
-            trimmedQuery, allowSeries, genreIds, yearFrom, yearTo, voteMin, originalLanguage, ct);
+            trimmedQuery,
+            allowSeries,
+            language,
+            new TmdbDiscoveryCriteria(genreIds, yearFrom, yearTo, voteMin, originalLanguage),
+            ct);
 
         await Task.WhenAll(titleMatchesTask, creditMatchesTask);
 
@@ -56,6 +62,7 @@ public sealed partial class TmdbMovieSearch
     public async Task<IReadOnlyList<TmdbSearchItem>> SearchTitlesAsync(
         string query,
         bool allowSeries,
+        CatalogLanguage language,
         int? yearFrom = null,
         int? yearTo = null,
         CancellationToken ct = default)
@@ -67,14 +74,14 @@ public sealed partial class TmdbMovieSearch
             return [];
 
         var titleMatches = await FetchAndMapResultsAsync(
-            TitleSearchUrl(trimmedQuery, allowSeries),
+            TitleSearchUrl(trimmedQuery, allowSeries, language),
             item => TryMapSearchItem(item, allowSeries, null, yearFrom, yearTo, null, null),
             ct);
         return RankByTitleResemblance(trimmedQuery, titleMatches);
     }
 
-    private static string TitleSearchUrl(string query, bool allowSeries) =>
-        $"{ApiBase}/{(allowSeries ? "search/multi" : "search/movie")}?query={Uri.EscapeDataString(query)}&language=fr-FR";
+    private static string TitleSearchUrl(string query, bool allowSeries, CatalogLanguage language) =>
+        $"{ApiBase}/{(allowSeries ? "search/multi" : "search/movie")}?query={Uri.EscapeDataString(query)}&language={language.TmdbCode()}";
 
     private async Task<List<TmdbSearchItem>> FetchAndMapResultsAsync(
         string url,
@@ -106,11 +113,8 @@ public sealed partial class TmdbMovieSearch
     private async Task<PersonCreditMatches> SearchByPersonCreditsAsync(
         string query,
         bool allowSeries,
-        IReadOnlyList<int>? genreIds,
-        int? yearFrom,
-        int? yearTo,
-        double? voteMin,
-        string? originalLanguage,
+        CatalogLanguage language,
+        TmdbDiscoveryCriteria filters,
         CancellationToken ct)
     {
         var normalizedQuery = NormalizeSearchText(query);
@@ -119,12 +123,11 @@ public sealed partial class TmdbMovieSearch
 
         try
         {
-            var person = await FindBestMatchingPersonAsync(normalizedQuery, query, ct);
+            var person = await FindBestMatchingPersonAsync(normalizedQuery, query, language, ct);
             if (person is null)
                 return PersonCreditMatches.None;
 
-            var credits = await FetchPersonCreditsAsync(
-                person.Id, allowSeries, genreIds, yearFrom, yearTo, voteMin, originalLanguage, ct);
+            var credits = await FetchPersonCreditsAsync(person.Id, allowSeries, language, filters, ct);
 
             return credits.Count == 0
                 ? PersonCreditMatches.None
@@ -140,10 +143,11 @@ public sealed partial class TmdbMovieSearch
     private async Task<PersonMatch?> FindBestMatchingPersonAsync(
         string normalizedQuery,
         string rawQuery,
+        CatalogLanguage language,
         CancellationToken ct)
     {
         var url = $"{ApiBase}/search/person"
-            + $"?query={Uri.EscapeDataString(rawQuery)}&language=fr-FR";
+            + $"?query={Uri.EscapeDataString(rawQuery)}&language={language.TmdbCode()}";
 
         using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
         res.EnsureSuccessStatusCode();
@@ -197,14 +201,11 @@ public sealed partial class TmdbMovieSearch
     private async Task<IReadOnlyList<TmdbSearchItem>> FetchPersonCreditsAsync(
         int personId,
         bool allowSeries,
-        IReadOnlyList<int>? genreIds,
-        int? yearFrom,
-        int? yearTo,
-        double? voteMin,
-        string? originalLanguage,
+        CatalogLanguage language,
+        TmdbDiscoveryCriteria filters,
         CancellationToken ct)
     {
-        var url = $"{ApiBase}/person/{personId}/combined_credits?language=fr-FR";
+        var url = $"{ApiBase}/person/{personId}/combined_credits?language={language.TmdbCode()}";
 
         using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
         res.EnsureSuccessStatusCode();
@@ -225,7 +226,8 @@ public sealed partial class TmdbMovieSearch
                 if (!keepCredit(credit))
                     continue;
 
-                var mapped = TryMapSearchItem(credit, true, genreIds, yearFrom, yearTo, voteMin, originalLanguage);
+                var mapped = TryMapSearchItem(
+                    credit, true, filters.GenreIds, filters.YearFrom, filters.YearTo, filters.VoteMin, filters.OriginalLanguage);
                 if (mapped is null)
                     continue;
                 if (!allowSeries && mapped.MediaType != MovieMediaType.Movie)

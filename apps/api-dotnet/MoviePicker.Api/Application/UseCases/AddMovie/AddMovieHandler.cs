@@ -111,7 +111,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         await _audience.NotifyParticipantsAsync(MovieAddedMessage(night, created.Title, proposer), participant.UserId, CancellationToken.None);
 
         var key = (created.TmdbId, created.MediaType);
-        var enrichments = await TmdbEnrichments.LoadAsync([key], _tmdb, _options, ct);
+        var enrichments = await TmdbEnrichments.LoadAsync([key], _tmdb, _options, CatalogLanguage.French, ct);
         return MovieWithScoreResponse.From(
             created,
             _posterImageStore,
@@ -154,7 +154,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
     {
         try
         {
-            return new TmdbLookup(true, await _tmdb.GetDetailsAsync(tmdbId, mediaType, ct));
+            return new TmdbLookup(true, await _tmdb.GetDetailsAsync(tmdbId, mediaType, CatalogLanguage.French, ct));
         }
         catch (Exception ex) when (!ct.IsCancellationRequested)
         {

@@ -119,13 +119,13 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
     private void GivenTmdbResults(string query, params TmdbSearchItem[] results) =>
         _tmdb
-            .Setup(t => t.SearchTitlesAsync(query, true, It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.SearchTitlesAsync(query, true, It.IsAny<CatalogLanguage>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<TmdbSearchItem>)results);
 
     private void GivenTmdbFindsNothing() =>
         _tmdb
             .Setup(t => t.SearchTitlesAsync(
-                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CatalogLanguage>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<TmdbSearchItem>)[]);
 
     private void VerifyNothingAdded() =>
@@ -223,7 +223,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
                 GenreIds: DramaMysteryGenreIds),
             new TmdbSearchItem(714995, MovieMediaType.Movie, "The Manson Brothers", "2021", null, 4.2, "The Manson Brothers"));
         _tmdb
-            .Setup(t => t.GetDetailsAsync(97400, MovieMediaType.Tv, It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(97400, MovieMediaType.Tv, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TmdbMovieDetails(97400, "Sermons de minuit", null, null, null, [], 62, [], DramaMysteryGenreIds, null));
 
         var outcome = await _sut.SyncAsync(TheUser());
@@ -293,7 +293,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
         var posters = new Mock<IPosterImageStore>();
         posters.Setup(p => p.ToPublicPosterPath(It.IsAny<string?>())).Returns((string? path) => path);
         _tmdb
-            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("TMDB unavailable"));
         GivenLetterboxd(true, new LetterboxdFilm("akira", "Akira", "1988"));
         GivenTmdbResults(
@@ -383,7 +383,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
         Assert.Equal(0, ToWatch(outcome).Removed);
         _tmdb.Verify(
             t => t.SearchTitlesAsync(
-                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
+                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CatalogLanguage>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 

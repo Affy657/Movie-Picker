@@ -33,6 +33,7 @@ public sealed class GetMyNightMoviesHandlerTests
         _tmdb.Setup(s => s.GetEnrichmentsAsync(
                 It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(),
                 It.IsAny<string>(),
+                It.IsAny<CatalogLanguage>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>());
     }
@@ -279,6 +280,7 @@ public sealed class GetMyNightMoviesHandlerTests
         _tmdb.Setup(s => s.GetEnrichmentsAsync(
                 It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(),
                 It.IsAny<string>(),
+                It.IsAny<CatalogLanguage>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>
             {

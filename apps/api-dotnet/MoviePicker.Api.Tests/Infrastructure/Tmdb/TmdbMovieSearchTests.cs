@@ -28,7 +28,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(new Mock<HttpMessageHandler>().Object);
         var sut = CreateSut(client, options);
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => sut.SearchAsync("inception", false));
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => sut.SearchAsync("inception", false, CatalogLanguage.French));
         Assert.Contains("TMDB_API_KEY", ex.Message);
     }
 
@@ -39,7 +39,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(new Mock<HttpMessageHandler>().Object);
         var sut = CreateSut(client, options);
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => sut.SearchAsync("x", false));
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => sut.SearchAsync("x", false, CatalogLanguage.French));
         Assert.Contains("TMDB_API_KEY", ex.Message);
     }
 
@@ -54,7 +54,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(mockHandler.Object);
         var sut = CreateSut(client, options);
 
-        var result = await sut.SearchAsync("   ", false);
+        var result = await sut.SearchAsync("   ", false, CatalogLanguage.French);
 
         Assert.Empty(result);
         mockHandler.Protected().Verify("SendAsync", Times.Never(), ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>());
@@ -90,7 +90,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(mockHandler.Object);
         var sut = CreateSut(client, options);
 
-        var result = await sut.SearchAsync("inception", false);
+        var result = await sut.SearchAsync("inception", false, CatalogLanguage.French);
 
         Assert.Equal(2, result.Count);
         var first = result[0];
@@ -119,7 +119,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(mockHandler.Object);
         var sut = CreateSut(client, options);
 
-        var result = await sut.SearchAsync("xyz", false);
+        var result = await sut.SearchAsync("xyz", false, CatalogLanguage.French);
 
         Assert.Empty(result);
     }
@@ -135,7 +135,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(mockHandler.Object);
         var sut = CreateSut(client, options);
 
-        await Assert.ThrowsAsync<HttpRequestException>(() => sut.SearchAsync("inception", false));
+        await Assert.ThrowsAsync<HttpRequestException>(() => sut.SearchAsync("inception", false, CatalogLanguage.French));
     }
 
     [Fact]
@@ -151,7 +151,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(mockHandler.Object);
         var sut = CreateSut(client, options);
 
-        await sut.SearchAsync("matrix", false);
+        await sut.SearchAsync("matrix", false, CatalogLanguage.French);
 
         var capturedRequest = Assert.Single(
             capturedRequests,
@@ -178,7 +178,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(new TmdbAuthenticationHandler(options) { InnerHandler = mockHandler.Object });
         var sut = CreateSut(client, options);
 
-        await sut.SearchAsync("matrix", false);
+        await sut.SearchAsync("matrix", false, CatalogLanguage.French);
 
         Assert.All(capturedRequests, request =>
             Assert.Contains("api_key=my-secret-key", request.RequestUri!.Query));
@@ -196,16 +196,16 @@ public sealed class TmdbMovieSearchTests
             .Returns(() => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{\"results\":[],\"id\":1,\"parts\":[],\"title\":\"x\",\"name\":\"x\"}") }));
         var sut = CreateSut(CreateHttpClient(mockHandler.Object), options);
 
-        await sut.SearchAsync("Christopher Nolan", true);
-        await sut.DiscoverMoviesAsync(new TmdbDiscoveryCriteria([28], null, null, null, null, null, null), 1);
-        await sut.GetTrendingMoviesAsync(1);
-        await sut.GetNowPlayingMoviesAsync("FR", 1);
-        await sut.GetRecommendationsAsync(550, MovieMediaType.Movie);
-        await sut.GetRecommendationsAsync(1399, MovieMediaType.Tv);
-        await sut.GetCollectionAsync(10);
-        await sut.GetDirectedMoviesAsync(525);
-        await sut.GetDetailsAsync(550, MovieMediaType.Movie);
-        await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR");
+        await sut.SearchAsync("Christopher Nolan", true, CatalogLanguage.French);
+        await sut.DiscoverMoviesAsync(new TmdbDiscoveryCriteria([28], null, null, null, null, null, null), 1, CatalogLanguage.French);
+        await sut.GetTrendingMoviesAsync(1, CatalogLanguage.French);
+        await sut.GetNowPlayingMoviesAsync("FR", 1, CatalogLanguage.French);
+        await sut.GetRecommendationsAsync(550, MovieMediaType.Movie, CatalogLanguage.French);
+        await sut.GetRecommendationsAsync(1399, MovieMediaType.Tv, CatalogLanguage.French);
+        await sut.GetCollectionAsync(10, CatalogLanguage.French);
+        await sut.GetDirectedMoviesAsync(525, CatalogLanguage.French);
+        await sut.GetDetailsAsync(550, MovieMediaType.Movie, CatalogLanguage.French);
+        await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR", CatalogLanguage.French);
 
         Assert.NotEmpty(capturedRequests);
         Assert.All(capturedRequests, request =>
@@ -229,7 +229,7 @@ public sealed class TmdbMovieSearchTests
             });
         var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
 
-        var result = await sut.GetRecommendationsAsync(1399, MovieMediaType.Tv);
+        var result = await sut.GetRecommendationsAsync(1399, MovieMediaType.Tv, CatalogLanguage.French);
 
         var item = Assert.Single(result);
         Assert.Equal(MovieMediaType.Tv, item.MediaType);
@@ -247,7 +247,7 @@ public sealed class TmdbMovieSearchTests
             .ReturnsAsync(() => new HttpResponseMessage(HttpStatusCode.NotFound));
         var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
 
-        Assert.Empty(await sut.GetRecommendationsAsync(1399, MovieMediaType.Movie));
+        Assert.Empty(await sut.GetRecommendationsAsync(1399, MovieMediaType.Movie, CatalogLanguage.French));
     }
 
     [Fact]
@@ -259,7 +259,7 @@ public sealed class TmdbMovieSearchTests
             .ReturnsAsync(() => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
         var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
 
-        await Assert.ThrowsAsync<HttpRequestException>(() => sut.GetRecommendationsAsync(550, MovieMediaType.Movie));
+        await Assert.ThrowsAsync<HttpRequestException>(() => sut.GetRecommendationsAsync(550, MovieMediaType.Movie, CatalogLanguage.French));
     }
 
     private static readonly int[] NolanFilmsMostVotedFirst = [11, 10, 13];
@@ -292,7 +292,7 @@ public sealed class TmdbMovieSearchTests
             });
         var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
 
-        var films = await sut.GetDirectedMoviesAsync(525);
+        var films = await sut.GetDirectedMoviesAsync(525, CatalogLanguage.French);
 
         Assert.Equal(NolanFilmsMostVotedFirst, films.Select(film => film.Id));
         Assert.All(films, film => Assert.Equal(MovieMediaType.Movie, film.MediaType));
@@ -316,7 +316,7 @@ public sealed class TmdbMovieSearchTests
             .ReturnsAsync(() => new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent($$"""{"crew":[{{crew}}]}""") });
         var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
 
-        var films = await sut.GetDirectedMoviesAsync(525);
+        var films = await sut.GetDirectedMoviesAsync(525, CatalogLanguage.French);
 
         Assert.Equal(20, films.Count);
         Assert.Equal(25, films[0].Id);
@@ -332,7 +332,7 @@ public sealed class TmdbMovieSearchTests
             .ReturnsAsync(() => new HttpResponseMessage(HttpStatusCode.NotFound));
         var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
 
-        Assert.Empty(await sut.GetDirectedMoviesAsync(525));
+        Assert.Empty(await sut.GetDirectedMoviesAsync(525, CatalogLanguage.French));
     }
 
     [Fact]
@@ -344,7 +344,7 @@ public sealed class TmdbMovieSearchTests
             .ReturnsAsync(() => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
         var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
 
-        await Assert.ThrowsAsync<HttpRequestException>(() => sut.GetDirectedMoviesAsync(525));
+        await Assert.ThrowsAsync<HttpRequestException>(() => sut.GetDirectedMoviesAsync(525, CatalogLanguage.French));
     }
 
     [Fact]
@@ -354,7 +354,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(new Mock<HttpMessageHandler>().Object);
         var sut = CreateSut(client, options);
 
-        var r = await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR");
+        var r = await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR", CatalogLanguage.French);
 
         Assert.Null(r);
     }
@@ -374,7 +374,7 @@ public sealed class TmdbMovieSearchTests
             .Returns(() => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{\"results\":[]}") }));
         var sut = CreateSut(CreateHttpClient(mockHandler.Object), options);
 
-        await sut.GetNowPlayingMoviesAsync(region, 1);
+        await sut.GetNowPlayingMoviesAsync(region, 1, CatalogLanguage.French);
 
         var request = Assert.Single(capturedRequests);
         Assert.Contains($"region={expected}&", request.RequestUri!.Query, StringComparison.Ordinal);
@@ -414,7 +414,7 @@ public sealed class TmdbMovieSearchTests
                 });
         var sut = CreateSut(CreateHttpClient(mockHandler.Object), options);
 
-        var enrichment = await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, region);
+        var enrichment = await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, region, CatalogLanguage.French);
 
         Assert.Equal("Netflix", Assert.Single(enrichment!.WatchProviders).ProviderName);
     }
@@ -456,8 +456,8 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(mockHandler.Object);
         var sut = CreateSut(client, options);
 
-        var a = await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR");
-        var b = await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR");
+        var a = await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR", CatalogLanguage.French);
+        var b = await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR", CatalogLanguage.French);
 
         Assert.NotNull(a);
         Assert.NotNull(b);
@@ -479,7 +479,7 @@ public sealed class TmdbMovieSearchTests
     {
         var shared = new InMemorySharedCache();
         var enrichment = new TmdbMovieEnrichment(7.1, [], null, 95);
-        await shared.SetAsync("tmdb-enrich-v2:movie:FR:550", enrichment, TimeSpan.FromHours(1));
+        await shared.SetAsync("tmdb-enrich-v3:movie:FR:fr-FR:550", enrichment, TimeSpan.FromHours(1));
         var mockHandler = new Mock<HttpMessageHandler>();
         var sut = new TmdbMovieSearch(
             CreateHttpClient(mockHandler.Object),
@@ -489,7 +489,7 @@ public sealed class TmdbMovieSearchTests
             new SingleFlight(),
             NullLogger<TmdbMovieSearch>.Instance);
 
-        var result = await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR");
+        var result = await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR", CatalogLanguage.French);
 
         Assert.Equal(95, result?.RuntimeMinutes);
         mockHandler.Protected().Verify(
@@ -518,9 +518,9 @@ public sealed class TmdbMovieSearchTests
             new SingleFlight(),
             NullLogger<TmdbMovieSearch>.Instance);
 
-        await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR");
+        await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR", CatalogLanguage.French);
 
-        var published = await shared.TryGetAsync<TmdbMovieEnrichment>("tmdb-enrich-v2:movie:FR:550");
+        var published = await shared.TryGetAsync<TmdbMovieEnrichment>("tmdb-enrich-v3:movie:FR:fr-FR:550");
         Assert.Equal(139, published?.Value.RuntimeMinutes);
     }
 
@@ -542,10 +542,10 @@ public sealed class TmdbMovieSearchTests
             new SingleFlight(),
             NullLogger<TmdbMovieSearch>.Instance);
 
-        var result = await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR");
+        var result = await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR", CatalogLanguage.French);
 
         Assert.Null(result);
-        Assert.Null(await shared.TryGetAsync<TmdbMovieEnrichment>("tmdb-enrich-v2:movie:FR:550"));
+        Assert.Null(await shared.TryGetAsync<TmdbMovieEnrichment>("tmdb-enrich-v3:movie:FR:fr-FR:550"));
     }
 
     private sealed class HeldTmdb : HttpMessageHandler
@@ -575,8 +575,8 @@ public sealed class TmdbMovieSearchTests
         var flight = new SingleFlight();
         TmdbMovieSearch TypedClient() => new(new HttpClient(tmdb), options, memory, shared, flight, NullLogger<TmdbMovieSearch>.Instance);
 
-        var first = TypedClient().GetEnrichmentAsync(7, MovieMediaType.Movie, "FR");
-        var second = TypedClient().GetEnrichmentAsync(7, MovieMediaType.Movie, "FR");
+        var first = TypedClient().GetEnrichmentAsync(7, MovieMediaType.Movie, "FR", CatalogLanguage.French);
+        var second = TypedClient().GetEnrichmentAsync(7, MovieMediaType.Movie, "FR", CatalogLanguage.French);
         tmdb.Release();
 
         Assert.Equal(7, (await first)?.RuntimeMinutes);
@@ -591,8 +591,8 @@ public sealed class TmdbMovieSearchTests
         var sut = CreateSut(new HttpClient(tmdb), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
         using var abandoned = new CancellationTokenSource();
 
-        var leaving = sut.GetEnrichmentAsync(7, MovieMediaType.Movie, "FR", abandoned.Token);
-        var staying = sut.GetEnrichmentAsync(7, MovieMediaType.Movie, "FR");
+        var leaving = sut.GetEnrichmentAsync(7, MovieMediaType.Movie, "FR", CatalogLanguage.French, abandoned.Token);
+        var staying = sut.GetEnrichmentAsync(7, MovieMediaType.Movie, "FR", CatalogLanguage.French);
         abandoned.Cancel();
         tmdb.Release();
 
@@ -614,12 +614,12 @@ public sealed class TmdbMovieSearchTests
             new SingleFlight(),
             NullLogger<TmdbMovieSearch>.Instance);
 
-        var first = await sut.GetEnrichmentAsync(7, MovieMediaType.Movie, "FR");
-        var second = await sut.GetEnrichmentAsync(7, MovieMediaType.Movie, "FR");
+        var first = await sut.GetEnrichmentAsync(7, MovieMediaType.Movie, "FR", CatalogLanguage.French);
+        var second = await sut.GetEnrichmentAsync(7, MovieMediaType.Movie, "FR", CatalogLanguage.French);
 
         Assert.Equal(7, first?.RuntimeMinutes);
         Assert.Equal(7, second?.RuntimeMinutes);
-        Assert.Null(await shared.TryGetAsync<TmdbMovieEnrichment>("tmdb-enrich-v2:movie:FR:7"));
+        Assert.Null(await shared.TryGetAsync<TmdbMovieEnrichment>("tmdb-enrich-v3:movie:FR:fr-FR:7"));
         mockHandler.Protected().Verify(
             "SendAsync",
             Times.Exactly(2),
@@ -643,11 +643,11 @@ public sealed class TmdbMovieSearchTests
             new SingleFlight(),
             NullLogger<TmdbMovieSearch>.Instance);
 
-        var result = await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR");
+        var result = await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR", CatalogLanguage.French);
 
         Assert.NotNull(result);
         Assert.Null(result!.VoteAverage);
-        Assert.NotNull(await shared.TryGetAsync<TmdbMovieEnrichment>("tmdb-enrich-v2:movie:FR:550"));
+        Assert.NotNull(await shared.TryGetAsync<TmdbMovieEnrichment>("tmdb-enrich-v3:movie:FR:fr-FR:550"));
     }
 
     [Fact]
@@ -659,7 +659,7 @@ public sealed class TmdbMovieSearchTests
             .ReturnsAsync(() => new HttpResponseMessage(HttpStatusCode.TooManyRequests));
         var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
 
-        await Assert.ThrowsAsync<HttpRequestException>(() => sut.GetCollectionAsync(10));
+        await Assert.ThrowsAsync<HttpRequestException>(() => sut.GetCollectionAsync(10, CatalogLanguage.French));
     }
 
     [Fact]
@@ -685,7 +685,7 @@ public sealed class TmdbMovieSearchTests
             .ReturnsAsync(() => new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(collectionJson) });
         var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
 
-        var summary = await sut.GetCollectionAsync(10);
+        var summary = await sut.GetCollectionAsync(10, CatalogLanguage.French);
 
         Assert.NotNull(summary);
         Assert.Equal(5, summary!.MovieCount);
@@ -709,7 +709,7 @@ public sealed class TmdbMovieSearchTests
             .ReturnsAsync(() => new HttpResponseMessage(HttpStatusCode.NotFound));
         var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
 
-        Assert.Null(await sut.GetCollectionAsync(10));
+        Assert.Null(await sut.GetCollectionAsync(10, CatalogLanguage.French));
     }
 
     [Fact]
@@ -757,7 +757,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(mockHandler.Object);
         var sut = CreateSut(client, options);
 
-        var a = await sut.GetEnrichmentAsync(1, MovieMediaType.Movie, "FR");
+        var a = await sut.GetEnrichmentAsync(1, MovieMediaType.Movie, "FR", CatalogLanguage.French);
 
         Assert.NotNull(a);
         var p = Assert.Single(a!.WatchProviders);
@@ -817,7 +817,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(mockHandler.Object);
         var sut = CreateSut(client, options);
 
-        var a = await sut.GetEnrichmentAsync(1, MovieMediaType.Movie, "FR");
+        var a = await sut.GetEnrichmentAsync(1, MovieMediaType.Movie, "FR", CatalogLanguage.French);
 
         Assert.NotNull(a);
         Assert.Equal(3, a!.WatchProviders.Count);
@@ -848,7 +848,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(mockHandler.Object);
         var sut = CreateSut(client, options);
 
-        var a = await sut.GetEnrichmentAsync(1, MovieMediaType.Movie, "FR");
+        var a = await sut.GetEnrichmentAsync(1, MovieMediaType.Movie, "FR", CatalogLanguage.French);
 
         Assert.NotNull(a);
         Assert.Null(a!.RuntimeMinutes);
@@ -866,7 +866,7 @@ public sealed class TmdbMovieSearchTests
         var client = CreateHttpClient(mockHandler.Object);
         var sut = CreateSut(client, options);
 
-        var a = await sut.GetEnrichmentAsync(1, MovieMediaType.Movie, "FR");
+        var a = await sut.GetEnrichmentAsync(1, MovieMediaType.Movie, "FR", CatalogLanguage.French);
 
         Assert.Null(a);
     }
@@ -898,7 +898,7 @@ public sealed class TmdbMovieSearchTests
         var mockHandler = new Mock<HttpMessageHandler>();
         var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = null }));
 
-        var result = await sut.GetEnrichmentsAsync([(550, MovieMediaType.Movie)], "FR");
+        var result = await sut.GetEnrichmentsAsync([(550, MovieMediaType.Movie)], "FR", CatalogLanguage.French);
 
         Assert.Empty(result);
     }
@@ -907,9 +907,9 @@ public sealed class TmdbMovieSearchTests
     public async Task GetEnrichmentsAsync_ServesEachKeyFromTheCheapestLayer_AndFetchesTheRest()
     {
         var shared = new InMemorySharedCache();
-        await shared.SetAsync("tmdb-enrich-v2:movie:FR:2", new TmdbMovieEnrichment(6.0, [], null, 92), TimeSpan.FromHours(1));
+        await shared.SetAsync("tmdb-enrich-v3:movie:FR:fr-FR:2", new TmdbMovieEnrichment(6.0, [], null, 92), TimeSpan.FromHours(1));
         var memory = new MemoryCache(new MemoryCacheOptions());
-        memory.Set("tmdb-enrich-v2:movie:FR:1", new TmdbMovieEnrichment(5.0, [], null, 91));
+        memory.Set("tmdb-enrich-v3:movie:FR:fr-FR:1", new TmdbMovieEnrichment(5.0, [], null, 91));
         var mockHandler = EnrichmentHandler(RuntimeBodyFromPath);
         var sut = new TmdbMovieSearch(
             CreateHttpClient(mockHandler.Object),
@@ -921,7 +921,8 @@ public sealed class TmdbMovieSearchTests
 
         var result = await sut.GetEnrichmentsAsync(
             [(1, MovieMediaType.Movie), (2, MovieMediaType.Movie), (3, MovieMediaType.Movie), (3, MovieMediaType.Movie), (4, MovieMediaType.Tv)],
-            "fr");
+            "fr",
+            CatalogLanguage.French);
 
         Assert.Equal(4, result.Count);
         Assert.Equal(91, result[(1, MovieMediaType.Movie)]?.RuntimeMinutes);
@@ -933,9 +934,9 @@ public sealed class TmdbMovieSearchTests
             Times.Exactly(4),
             ItExpr.IsAny<HttpRequestMessage>(),
             ItExpr.IsAny<CancellationToken>());
-        Assert.Equal(92, memory.Get<TmdbMovieEnrichment>("tmdb-enrich-v2:movie:FR:2")?.RuntimeMinutes);
-        Assert.Equal(3, (await shared.TryGetAsync<TmdbMovieEnrichment>("tmdb-enrich-v2:movie:FR:3"))?.Value.RuntimeMinutes);
-        Assert.Equal(4, (await shared.TryGetAsync<TmdbMovieEnrichment>("tmdb-enrich-v2:tv:FR:4"))?.Value.RuntimeMinutes);
+        Assert.Equal(92, memory.Get<TmdbMovieEnrichment>("tmdb-enrich-v3:movie:FR:fr-FR:2")?.RuntimeMinutes);
+        Assert.Equal(3, (await shared.TryGetAsync<TmdbMovieEnrichment>("tmdb-enrich-v3:movie:FR:fr-FR:3"))?.Value.RuntimeMinutes);
+        Assert.Equal(4, (await shared.TryGetAsync<TmdbMovieEnrichment>("tmdb-enrich-v3:tv:FR:fr-FR:4"))?.Value.RuntimeMinutes);
     }
 
     [Fact]
@@ -946,8 +947,8 @@ public sealed class TmdbMovieSearchTests
             CreateHttpClient(mockHandler.Object),
             Options.Create(new MoviePickerOptions { TmdbApiKey = "key", TmdbBatchEnrichmentMaxFetch = 1 }));
 
-        var first = await sut.GetEnrichmentsAsync([(1, MovieMediaType.Movie), (2, MovieMediaType.Movie)], "FR");
-        var second = await sut.GetEnrichmentsAsync([(1, MovieMediaType.Movie), (2, MovieMediaType.Movie)], "FR");
+        var first = await sut.GetEnrichmentsAsync([(1, MovieMediaType.Movie), (2, MovieMediaType.Movie)], "FR", CatalogLanguage.French);
+        var second = await sut.GetEnrichmentsAsync([(1, MovieMediaType.Movie), (2, MovieMediaType.Movie)], "FR", CatalogLanguage.French);
 
         var only = Assert.Single(first);
         Assert.Equal((1, MovieMediaType.Movie), only.Key);
@@ -979,8 +980,8 @@ public sealed class TmdbMovieSearchTests
         aborted.Cancel();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
-            () => sut.GetEnrichmentAsync(7, MovieMediaType.Movie, "FR", aborted.Token));
-        var afterwards = await sut.GetEnrichmentAsync(7, MovieMediaType.Movie, "FR");
+            () => sut.GetEnrichmentAsync(7, MovieMediaType.Movie, "FR", CatalogLanguage.French, aborted.Token));
+        var afterwards = await sut.GetEnrichmentAsync(7, MovieMediaType.Movie, "FR", CatalogLanguage.French);
 
         Assert.Equal(7, afterwards?.RuntimeMinutes);
     }
@@ -1003,8 +1004,8 @@ public sealed class TmdbMovieSearchTests
             });
         var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
 
-        var result = await sut.GetEnrichmentsAsync([(1, MovieMediaType.Movie), (2, MovieMediaType.Movie)], "FR");
-        var again = await sut.GetEnrichmentsAsync([(2, MovieMediaType.Movie)], "FR");
+        var result = await sut.GetEnrichmentsAsync([(1, MovieMediaType.Movie), (2, MovieMediaType.Movie)], "FR", CatalogLanguage.French);
+        var again = await sut.GetEnrichmentsAsync([(2, MovieMediaType.Movie)], "FR", CatalogLanguage.French);
 
         Assert.Equal(1, result[(1, MovieMediaType.Movie)]?.RuntimeMinutes);
         Assert.True(result.ContainsKey((2, MovieMediaType.Movie)));
