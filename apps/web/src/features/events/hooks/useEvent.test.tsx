@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildEventDetail } from '@/test-utils/eventDetail';
 import { setupServer } from 'msw/node';
 import { QueryClientWrapper, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
@@ -8,23 +10,16 @@ import { useEvent } from '@/features/events/hooks/useEvent';
 import { ApiError } from '@/shared/api/apiError';
 
 const server = setupServer(
-  http.get(`${TEST_API_V1}/events/slug/:slug`, ({ params }) =>
-    HttpResponse.json({
-      _id: 'e1',
-      title: 'Hook test',
-      date: '2030-01-01',
-      time: '20:00',
-      slug: params.slug,
-      isHost: false,
-      isFinished: false,
-      winnerMovie: null,
-      config: {
-        theme: null,
-        maxProposalsPerParticipant: null,
-        maxParticipants: null,
-        wheelMode: 'strictRandom',
-      },
-    })
+  http.get<{ slug: string }>(`${TEST_API_V1}/events/slug/:slug`, ({ params }) =>
+    apiJson<'EventDetailResponse'>(
+      buildEventDetail({
+        _id: 'e1',
+        title: 'Hook test',
+        date: '2030-01-01',
+        time: '20:00',
+        slug: params.slug,
+      })
+    )
   )
 );
 
@@ -49,17 +44,16 @@ describe('useEvent', () => {
 
   it('polls a night that is live and stays quiet when asked not to follow it', async () => {
     const liveNight = () =>
-      HttpResponse.json({
-        _id: 'e2',
-        title: 'Live',
-        date: new Date().toISOString().slice(0, 10),
-        time: `${String(new Date().getHours()).padStart(2, '0')}:00`,
-        slug: 'live',
-        isHost: false,
-        isFinished: false,
-        lifecycle: 'live',
-        config: { theme: null, maxProposalsPerParticipant: null, maxParticipants: null },
-      });
+      apiJson<'EventDetailResponse'>(
+        buildEventDetail({
+          _id: 'e2',
+          title: 'Live',
+          date: new Date().toISOString().slice(0, 10),
+          time: `${String(new Date().getHours()).padStart(2, '0')}:00`,
+          slug: 'live',
+          lifecycle: 'live',
+        })
+      );
     server.use(http.get(`${TEST_API_V1}/events/slug/:slug`, liveNight));
     const client = createTestQueryClient();
     const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -80,9 +74,7 @@ describe('useEvent', () => {
 
   it('passe en erreur sur un 404', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/events/slug/:slug`, () =>
-        HttpResponse.json({ error: 'Soirée introuvable' }, { status: 404 })
-      )
+      http.get(`${TEST_API_V1}/events/slug/:slug`, () => apiErrorJson(404, 'event_not_found'))
     );
     const client = createTestQueryClient();
     const { result } = renderHook(() => useEvent('unknown', null), {
@@ -96,9 +88,7 @@ describe('useEvent', () => {
 
   it('passe en erreur sur un 500', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/events/slug/:slug`, () =>
-        HttpResponse.json({ error: 'Erreur serveur' }, { status: 500 })
-      )
+      http.get(`${TEST_API_V1}/events/slug/:slug`, () => apiErrorJson(500, 'internal_error'))
     );
     const client = createTestQueryClient();
     const { result } = renderHook(() => useEvent('broken', null), {

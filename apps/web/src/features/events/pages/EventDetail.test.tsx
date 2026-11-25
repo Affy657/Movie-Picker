@@ -22,6 +22,10 @@ import {
   createSearchAndAddHandlers,
 } from '@/mocks/handlers';
 import { http, HttpResponse } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildEventMovie } from '@/test-utils/eventMovie';
+import { buildEventDetail } from '@/test-utils/eventDetail';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import {
   getStoredHostToken,
@@ -116,8 +120,8 @@ describe('EventDetail (MSW)', () => {
     const user = userEvent.setup();
     server.use(
       http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
-        HttpResponse.json([
-          {
+        apiJson<'MovieWithScoreResponse[]'>([
+          buildEventMovie({
             _id: 'm-msw-1',
             eventId: 'evt-msw',
             participantId: 'p-msw-host',
@@ -130,7 +134,7 @@ describe('EventDetail (MSW)', () => {
             score: 2,
             up: 2,
             down: 0,
-          },
+          }),
         ])
       )
     );
@@ -153,10 +157,8 @@ describe('EventDetail (MSW)', () => {
 
   it('shows "Movie night not found" even with the production retry policy', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/events/slug/:s`, () =>
-        HttpResponse.json({ error: 'Soirée introuvable' }, { status: 404 })
-      ),
-      http.get(`${TEST_API_V1}/events/:s/movies`, () => HttpResponse.json([]))
+      http.get(`${TEST_API_V1}/events/slug/:s`, () => apiErrorJson(404, 'event_not_found')),
+      http.get(`${TEST_API_V1}/events/:s/movies`, () => apiJson<'MovieWithScoreResponse[]'>([]))
     );
     const productionLikeClient = new QueryClient({
       defaultOptions: { queries: { retry: 1, staleTime: 1000 * 60 * 5, gcTime: 1000 * 60 * 30 } },
@@ -171,10 +173,8 @@ describe('EventDetail (MSW)', () => {
 
   it('leaves the skeleton when the network is down, instead of loading forever', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/events/slug/:s`, () =>
-        HttpResponse.json({ error: 'nope' }, { status: 404 })
-      ),
-      http.get(`${TEST_API_V1}/events/:s/movies`, () => HttpResponse.json([]))
+      http.get(`${TEST_API_V1}/events/slug/:s`, () => apiErrorJson(404, 'event_not_found')),
+      http.get(`${TEST_API_V1}/events/:s/movies`, () => apiJson<'MovieWithScoreResponse[]'>([]))
     );
     const productionLikeClient = new QueryClient({
       defaultOptions: { queries: { retry: 1, staleTime: 1000 * 60 * 5 } },
@@ -197,10 +197,8 @@ describe('EventDetail (MSW)', () => {
 
   it('shows an error when the movie night is not found (404)', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/events/slug/:s`, () =>
-        HttpResponse.json({ error: 'introuvable' }, { status: 404 })
-      ),
-      http.get(`${TEST_API_V1}/events/:s/movies`, () => HttpResponse.json([]))
+      http.get(`${TEST_API_V1}/events/slug/:s`, () => apiErrorJson(404, 'event_not_found')),
+      http.get(`${TEST_API_V1}/events/:s/movies`, () => apiJson<'MovieWithScoreResponse[]'>([]))
     );
     renderEventDetail(`/e/inconnu`);
     expect(await screen.findByText(/n'existe pas|introuvable/i)).toBeInTheDocument();
@@ -209,9 +207,7 @@ describe('EventDetail (MSW)', () => {
 
   it('shows a missing movie night like the other missing pages: heading, message, filled way home', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/events/slug/:s`, () =>
-        HttpResponse.json({ error: 'introuvable' }, { status: 404 })
-      )
+      http.get(`${TEST_API_V1}/events/slug/:s`, () => apiErrorJson(404, 'event_not_found'))
     );
     renderEventDetail('/e/inconnu');
 
@@ -227,21 +223,23 @@ describe('EventDetail (MSW)', () => {
     server.use(
       http.get(`${TEST_API_V1}/events/slug/soiree-503`, () => {
         attempts += 1;
-        if (attempts === 1) return HttpResponse.json({ message: 'down' }, { status: 503 });
-        return HttpResponse.json({
-          _id: 'evt-503',
-          title: 'Soirée revenue',
-          date: '2030-12-15',
-          time: '21:00',
-          slug: 'soiree-503',
-          isHost: false,
-          isFinished: false,
-          lifecycle: 'live',
-          winners: [],
-          participantCount: 1,
-          movieCount: 0,
-          participants: [],
-        });
+        if (attempts === 1) return apiErrorJson(503, 'internal_error');
+        return apiJson<'EventDetailResponse'>(
+          buildEventDetail({
+            _id: 'evt-503',
+            title: 'Soirée revenue',
+            date: '2030-12-15',
+            time: '21:00',
+            slug: 'soiree-503',
+            isHost: false,
+            isFinished: false,
+            lifecycle: 'live',
+            winners: [],
+            participantCount: 1,
+            movieCount: 0,
+            participants: [],
+          })
+        );
       }),
       ...createEventDetailHandlers({ slug: 'soiree-503' })
     );
@@ -255,9 +253,11 @@ describe('EventDetail (MSW)', () => {
   it('offers no retry for a movie night that does not exist', async () => {
     server.use(
       http.get(`${TEST_API_V1}/events/slug/soiree-absente`, () =>
-        HttpResponse.json({ message: 'nope' }, { status: 404 })
+        apiErrorJson(404, 'event_not_found')
       ),
-      http.get(`${TEST_API_V1}/events/soiree-absente/movies`, () => HttpResponse.json([]))
+      http.get(`${TEST_API_V1}/events/soiree-absente/movies`, () =>
+        apiJson<'MovieWithScoreResponse[]'>([])
+      )
     );
 
     renderEventDetail('/e/soiree-absente');
@@ -279,7 +279,7 @@ describe('EventDetail (MSW)', () => {
     server.use(
       http.all(`${TEST_API_V1}/events/*`, ({ request }) => {
         requested.push(request.url);
-        return HttpResponse.json({ error: 'unexpected' }, { status: 500 });
+        return apiErrorJson(500, 'internal_error');
       })
     );
     renderEventDetail('/e/abc%3Fx%23y');
@@ -292,8 +292,8 @@ describe('EventDetail (MSW)', () => {
     const user = userEvent.setup();
     server.use(
       http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
-        HttpResponse.json([
-          {
+        apiJson<'MovieWithScoreResponse[]'>([
+          buildEventMovie({
             _id: 'm-stale-1',
             eventId: 'evt-msw',
             participantId: 'p-msw-host',
@@ -306,7 +306,7 @@ describe('EventDetail (MSW)', () => {
             score: 2,
             up: 2,
             down: 0,
-          },
+          }),
         ])
       )
     );
@@ -315,12 +315,8 @@ describe('EventDetail (MSW)', () => {
     expect(await screen.findByRole('heading', { name: 'Matrix' })).toBeInTheDocument();
 
     server.use(
-      http.get(`${TEST_API_V1}/events/slug/:s`, () =>
-        HttpResponse.json({ error: 'down' }, { status: 503 })
-      ),
-      http.get(`${TEST_API_V1}/events/:s/movies`, () =>
-        HttpResponse.json({ error: 'down' }, { status: 503 })
-      )
+      http.get(`${TEST_API_V1}/events/slug/:s`, () => apiErrorJson(503, 'internal_error')),
+      http.get(`${TEST_API_V1}/events/:s/movies`, () => apiErrorJson(503, 'internal_error'))
     );
     await client.refetchQueries();
 
@@ -341,9 +337,7 @@ describe('EventDetail (MSW)', () => {
     expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
 
     server.use(
-      http.get(`${TEST_API_V1}/events/slug/:s`, () =>
-        HttpResponse.json({ error: 'introuvable' }, { status: 404 })
-      )
+      http.get(`${TEST_API_V1}/events/slug/:s`, () => apiErrorJson(404, 'event_not_found'))
     );
     await client.refetchQueries();
 
@@ -438,7 +432,19 @@ describe('EventDetail (MSW)', () => {
       server.use(
         http.post(`${TEST_API_V1}/events/${slug}/close`, () => {
           closed += 1;
-          return HttpResponse.json({ message: 'closed' });
+          return apiJson<'CloseEventResponse'>({
+            _id: 'evt-msw',
+            title: 'Soirée démo',
+            date: '2030-12-15',
+            time: '21:00',
+            slug,
+            config: null,
+            closedAt: '2030-12-15T23:00:00Z',
+            winnerMovieIds: [],
+            createdAt: '2030-12-01T00:00:00Z',
+            updatedAt: '2030-12-15T23:00:00Z',
+            message: 'closed',
+          });
         })
       );
       renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
@@ -476,7 +482,7 @@ describe('EventDetail (MSW)', () => {
     }
 
     function proposed(id: string, title: string, tmdbId: number) {
-      return {
+      return buildEventMovie({
         _id: id,
         eventId: 'evt-msw',
         participantId: 'p-msw-host',
@@ -490,43 +496,50 @@ describe('EventDetail (MSW)', () => {
         up: 0,
         down: 0,
         ratings: [],
-      };
+      });
     }
 
     function servePartlyDrawnNight() {
       server.use(
         http.get(`${TEST_API_V1}/events/slug/${slug}`, () =>
-          HttpResponse.json({
-            _id: 'evt-msw',
-            title: 'Soirée à deux films',
-            date: lastNight(),
-            time: '21:00',
-            slug,
-            isHost: true,
-            isFinished: false,
-            lifecycle: 'pending',
-            winners: [{ movieId: 'm-win', pickMethod: 'wheel', pickedAt: '2026-01-01T20:00:00Z' }],
-            participantCount: 1,
-            movieCount: 2,
-            participants: [{ _id: 'p-msw-host', pseudo: 'Hôte', isCreator: true }],
-            config: {
-              theme: null,
-              maxProposalsPerParticipant: null,
-              maxParticipants: null,
-              wheelMode: 'strictRandom',
-              winnerCount: 2,
-            },
-          })
+          apiJson<'EventDetailResponse'>(
+            buildEventDetail({
+              _id: 'evt-msw',
+              title: 'Soirée à deux films',
+              date: lastNight(),
+              time: '21:00',
+              slug,
+              isHost: true,
+              isFinished: false,
+              lifecycle: 'pending',
+              winners: [
+                { movieId: 'm-win', pickMethod: 'wheel', pickedAt: '2026-01-01T20:00:00Z' },
+              ],
+              participantCount: 1,
+              movieCount: 2,
+              participants: [{ _id: 'p-msw-host', pseudo: 'Hôte', isCreator: true }],
+              config: {
+                theme: null,
+                maxProposalsPerParticipant: null,
+                maxParticipants: null,
+                wheelMode: 'strictRandom',
+                winnerCount: 2,
+              },
+            })
+          )
         ),
         http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
-          HttpResponse.json([proposed('m-win', 'Matrix', 42), proposed('m-next', 'Alien', 43)])
+          apiJson<'MovieWithScoreResponse[]'>([
+            proposed('m-win', 'Matrix', 42),
+            proposed('m-next', 'Alien', 43),
+          ])
         ),
         http.put(
           `${TEST_API_V1}/events/${slug}/presence`,
           () => new HttpResponse(null, { status: 204 })
         ),
         http.get(`${TEST_API_V1}/events/${slug}/invitations/eligible-follows`, () =>
-          HttpResponse.json({ follows: [] })
+          apiJson<'EligibleFollowsResponse'>({ follows: [] })
         )
       );
     }
@@ -555,7 +568,19 @@ describe('EventDetail (MSW)', () => {
       server.use(
         http.post(`${TEST_API_V1}/events/${slug}/close`, () => {
           closed += 1;
-          return HttpResponse.json({ message: 'closed' });
+          return apiJson<'CloseEventResponse'>({
+            _id: 'evt-msw',
+            title: 'Soirée démo',
+            date: '2030-12-15',
+            time: '21:00',
+            slug,
+            config: null,
+            closedAt: '2030-12-15T23:00:00Z',
+            winnerMovieIds: [],
+            createdAt: '2030-12-01T00:00:00Z',
+            updatedAt: '2030-12-15T23:00:00Z',
+            message: 'closed',
+          });
         })
       );
       renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
@@ -574,26 +599,26 @@ describe('EventDetail (MSW)', () => {
 
   it('shows the movies error and Retry when loading the movies fails', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/events/:slug/movies`, () =>
-        HttpResponse.json({ error: 'Service indisponible' }, { status: 503 })
-      )
+      http.get(`${TEST_API_V1}/events/:slug/movies`, () => apiErrorJson(503, 'internal_error'))
     );
     renderEventDetail(`/e/${slug}`);
     expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     expect(await screen.findByRole('button', { name: /réessayer/i })).toBeInTheDocument();
-    expect(screen.getByText(/indisponible|Service/i)).toBeInTheDocument();
+    expect(screen.getByText(/erreur interne/i)).toBeInTheDocument();
   });
 
   it('tells an account the host removed that it is out, instead of offering to join again', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u1',
-          displayName: 'Bob',
-          emailMasked: 'b***@test.local',
-          uiTheme: 'system',
-          accentColor: 'default',
-        })
+        apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'u1',
+            displayName: 'Bob',
+            emailMasked: 'b***@test.local',
+            uiTheme: 'system',
+            accentColor: 'default',
+          })
+        )
       ),
       ...createEventDetailHandlers({ slug, title: 'Soirée démo', viewerRemoved: true })
     );
@@ -610,13 +635,15 @@ describe('EventDetail (MSW)', () => {
     const user = userEvent.setup();
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u1',
-          displayName: 'Bob',
-          emailMasked: 'b***@test.local',
-          uiTheme: 'system',
-          accentColor: 'default',
-        })
+        apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'u1',
+            displayName: 'Bob',
+            emailMasked: 'b***@test.local',
+            uiTheme: 'system',
+            accentColor: 'default',
+          })
+        )
       )
     );
     renderEventDetail(`/e/${slug}`);
@@ -647,8 +674,8 @@ describe('EventDetail (MSW)', () => {
     setStoredHostToken(slug, 'host-token');
     server.use(
       http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
-        HttpResponse.json([
-          {
+        apiJson<'MovieWithScoreResponse[]'>([
+          buildEventMovie({
             _id: '507f1f77bcf86cd799439011',
             eventId: 'evt-msw',
             participantId: 'p-msw-bob',
@@ -661,7 +688,7 @@ describe('EventDetail (MSW)', () => {
             up: 0,
             down: 0,
             pitchNote: 'Un casse dans les rêves',
-          },
+          }),
         ])
       ),
       http.delete(
@@ -751,8 +778,8 @@ describe('EventDetail (MSW)', () => {
           deleteCalled = true;
           deleteUrl = request.url;
           deleteHostToken = request.headers.get('X-Host-Token');
-          return HttpResponse.json({
-            participantId: params.pid,
+          return apiJson<'RemoveParticipantResponse'>({
+            participantId: String(params.pid),
             eventId: 'evt-msw',
             removedMovies: 0,
             message: 'Participant retiré.',
@@ -787,7 +814,12 @@ describe('EventDetail (MSW)', () => {
       server.use(
         http.delete(`${TEST_API_V1}/events/${slug}/participants/:pid`, () => {
           deleteCalled = true;
-          return HttpResponse.json({});
+          return apiJson<'RemoveParticipantResponse'>({
+            participantId: 'p-msw-alice',
+            eventId: 'evt-msw',
+            removedMovies: 0,
+            message: '',
+          });
         })
       );
 
@@ -807,14 +839,7 @@ describe('EventDetail (MSW)', () => {
       setupHostJoined();
       server.use(
         http.delete(`${TEST_API_V1}/events/${slug}/participants/:pid`, () =>
-          HttpResponse.json(
-            {
-              error:
-                'La roue a déjà été lancée : la liste des participants ne peut plus être modifiée.',
-              code: 409,
-            },
-            { status: 409 }
-          )
+          apiErrorJson(409, 'participants_locked_wheel')
         )
       );
 
@@ -843,47 +868,53 @@ describe('EventDetail (MSW)', () => {
       if (signedIn) {
         server.use(
           http.get(`${TEST_API_V1}/auth/me`, () =>
-            HttpResponse.json({
-              userId: 'u-alice',
-              displayName: 'Alice',
-              emailMasked: 'a***@test.local',
-              uiTheme: 'system',
-              accentColor: 'default',
-            })
+            apiJson<'UserProfileResponse'>(
+              buildUserProfile({
+                userId: 'u-alice',
+                displayName: 'Alice',
+                emailMasked: 'a***@test.local',
+                uiTheme: 'system',
+                accentColor: 'default',
+              })
+            )
           )
         );
       }
       server.use(
         http.get(`${TEST_API_V1}/events/slug/${slug}`, () =>
-          HttpResponse.json({
-            _id: 'evt-msw',
-            title: 'Soirée démo',
-            date,
-            time: '21:00',
-            slug,
-            isHost: false,
-            isFinished: lifecycle === 'finished',
-            lifecycle,
-            winners: [{ movieId: 'm-win', pickMethod: 'wheel', pickedAt: '2026-09-19T20:00:00Z' }],
-            participantCount: 2,
-            movieCount: 1,
-            myParticipant: asParticipant ? { _id: myPid, pseudo: 'Alice' } : null,
-            participants: [
-              { _id: 'p-msw-host', pseudo: 'Hôte', isCreator: true },
-              { _id: myPid, pseudo: 'Alice' },
-            ],
-            config: {
-              theme: null,
-              maxProposalsPerParticipant: null,
-              maxParticipants: null,
-              wheelMode: 'strictRandom',
-              winnerCount: 1,
-            },
-          })
+          apiJson<'EventDetailResponse'>(
+            buildEventDetail({
+              _id: 'evt-msw',
+              title: 'Soirée démo',
+              date,
+              time: '21:00',
+              slug,
+              isHost: false,
+              isFinished: lifecycle === 'finished',
+              lifecycle,
+              winners: [
+                { movieId: 'm-win', pickMethod: 'wheel', pickedAt: '2026-09-19T20:00:00Z' },
+              ],
+              participantCount: 2,
+              movieCount: 1,
+              myParticipant: asParticipant ? { _id: myPid, pseudo: 'Alice' } : null,
+              participants: [
+                { _id: 'p-msw-host', pseudo: 'Hôte', isCreator: true },
+                { _id: myPid, pseudo: 'Alice' },
+              ],
+              config: {
+                theme: null,
+                maxProposalsPerParticipant: null,
+                maxParticipants: null,
+                wheelMode: 'strictRandom',
+                winnerCount: 1,
+              },
+            })
+          )
         ),
         http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
-          HttpResponse.json([
-            {
+          apiJson<'MovieWithScoreResponse[]'>([
+            buildEventMovie({
               _id: 'm-win',
               eventId: 'evt-msw',
               participantId: 'p-msw-host',
@@ -899,7 +930,7 @@ describe('EventDetail (MSW)', () => {
               ratings: ratedByMe
                 ? [{ participantId: myPid, value: 8, updatedAt: '2026-09-20T08:00:00Z' }]
                 : [],
-            },
+            }),
           ])
         )
       );
@@ -1084,38 +1115,40 @@ describe('EventDetail (MSW)', () => {
     function serveNightWithWinner(isFinished: boolean, withWinner = true) {
       server.use(
         http.get(`${TEST_API_V1}/events/slug/${slug}`, () =>
-          HttpResponse.json({
-            _id: 'evt-msw',
-            title: 'Soirée démo',
-            date: '2026-09-19',
-            time: '21:00',
-            slug,
-            recapSlug,
-            isHost: false,
-            isFinished,
-            lifecycle: isFinished ? 'finished' : 'live',
-            winners: withWinner
-              ? [{ movieId: 'm-win', pickMethod: 'wheel', pickedAt: '2026-09-19T20:00:00Z' }]
-              : [],
-            participantCount: 2,
-            movieCount: 1,
-            myParticipant: { _id: myPid, pseudo: 'Alice' },
-            participants: [
-              { _id: 'p-msw-host', pseudo: 'Hôte', isCreator: true },
-              { _id: myPid, pseudo: 'Alice' },
-            ],
-            config: {
-              theme: null,
-              maxProposalsPerParticipant: null,
-              maxParticipants: null,
-              wheelMode: 'strictRandom',
-              winnerCount: 1,
-            },
-          })
+          apiJson<'EventDetailResponse'>(
+            buildEventDetail({
+              _id: 'evt-msw',
+              title: 'Soirée démo',
+              date: '2026-09-19',
+              time: '21:00',
+              slug,
+              recapSlug,
+              isHost: false,
+              isFinished,
+              lifecycle: isFinished ? 'finished' : 'live',
+              winners: withWinner
+                ? [{ movieId: 'm-win', pickMethod: 'wheel', pickedAt: '2026-09-19T20:00:00Z' }]
+                : [],
+              participantCount: 2,
+              movieCount: 1,
+              myParticipant: { _id: myPid, pseudo: 'Alice' },
+              participants: [
+                { _id: 'p-msw-host', pseudo: 'Hôte', isCreator: true },
+                { _id: myPid, pseudo: 'Alice' },
+              ],
+              config: {
+                theme: null,
+                maxProposalsPerParticipant: null,
+                maxParticipants: null,
+                wheelMode: 'strictRandom',
+                winnerCount: 1,
+              },
+            })
+          )
         ),
         http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
-          HttpResponse.json([
-            {
+          apiJson<'MovieWithScoreResponse[]'>([
+            buildEventMovie({
               _id: 'm-win',
               eventId: 'evt-msw',
               participantId: 'p-msw-host',
@@ -1129,7 +1162,7 @@ describe('EventDetail (MSW)', () => {
               up: 2,
               down: 0,
               ratings: [{ participantId: myPid, value: 8, updatedAt: '2026-09-20T08:00:00Z' }],
-            },
+            }),
           ])
         )
       );
@@ -1235,29 +1268,30 @@ describe('EventDetail (MSW)', () => {
       setStoredParticipant(slug, myPid, 'Hôte');
       server.use(
         http.get(`${TEST_API_V1}/events/slug/${slug}`, () =>
-          HttpResponse.json({
-            _id: 'evt-msw',
-            title: 'Soirée démo',
-            date: '2030-12-15',
-            time: '21:00',
-            slug,
-            isHost: true,
-            isFinished: false,
-            winnerMovie: null,
-            participantCount: 2,
-            movieCount: 0,
-            myParticipant: { _id: myPid, pseudo: 'Hôte' },
-            participants: [
-              { _id: myPid, pseudo: 'Hôte', isCreator: true },
-              { _id: 'p-msw-alice', pseudo: 'Alice' },
-            ],
-            config: {
-              theme: null,
-              maxProposalsPerParticipant: null,
-              maxParticipants: null,
-              wheelMode: 'strictRandom',
-            },
-          })
+          apiJson<'EventDetailResponse'>(
+            buildEventDetail({
+              _id: 'evt-msw',
+              title: 'Soirée démo',
+              date: '2030-12-15',
+              time: '21:00',
+              slug,
+              isHost: true,
+              isFinished: false,
+              participantCount: 2,
+              movieCount: 0,
+              myParticipant: { _id: myPid, pseudo: 'Hôte' },
+              participants: [
+                { _id: myPid, pseudo: 'Hôte', isCreator: true },
+                { _id: 'p-msw-alice', pseudo: 'Alice' },
+              ],
+              config: {
+                theme: null,
+                maxProposalsPerParticipant: null,
+                maxParticipants: null,
+                wheelMode: 'strictRandom',
+              },
+            })
+          )
         )
       );
 
@@ -1278,39 +1312,42 @@ describe('EventDetail (MSW)', () => {
       let deleteUrl = '';
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () =>
-          HttpResponse.json({ id: 'user-1', email: 'me@example.com', displayName: 'Moi' })
+          apiJson<'UserProfileResponse'>(
+            buildUserProfile({ userId: 'user-1', email: 'me@example.com', displayName: 'Moi' })
+          )
         ),
         http.get(`${TEST_API_V1}/events/slug/${slug}`, () =>
-          HttpResponse.json({
-            _id: 'evt-msw',
-            title: 'Soirée démo',
-            date: '2030-12-15',
-            time: '21:00',
-            slug,
-            isHost: false,
-            isFinished: false,
-            winnerMovie: null,
-            participantCount: 4,
-            movieCount: 0,
-            myParticipant: { _id: myPid, pseudo: 'Moi' },
-            participants: [
-              { _id: 'p-msw-alice', pseudo: 'Alice' },
-              { _id: 'p-msw-bob', pseudo: 'Bob' },
-              { _id: myPid, pseudo: 'Moi' },
-            ],
-            config: {
-              theme: null,
-              maxProposalsPerParticipant: null,
-              maxParticipants: null,
-              wheelMode: 'strictRandom',
-            },
-          })
+          apiJson<'EventDetailResponse'>(
+            buildEventDetail({
+              _id: 'evt-msw',
+              title: 'Soirée démo',
+              date: '2030-12-15',
+              time: '21:00',
+              slug,
+              isHost: false,
+              isFinished: false,
+              participantCount: 4,
+              movieCount: 0,
+              myParticipant: { _id: myPid, pseudo: 'Moi' },
+              participants: [
+                { _id: 'p-msw-alice', pseudo: 'Alice' },
+                { _id: 'p-msw-bob', pseudo: 'Bob' },
+                { _id: myPid, pseudo: 'Moi' },
+              ],
+              config: {
+                theme: null,
+                maxProposalsPerParticipant: null,
+                maxParticipants: null,
+                wheelMode: 'strictRandom',
+              },
+            })
+          )
         ),
         http.delete(`${TEST_API_V1}/events/${slug}/participants/:pid`, ({ request, params }) => {
           deleteCalled = true;
           deleteUrl = request.url;
-          return HttpResponse.json({
-            participantId: params.pid,
+          return apiJson<'RemoveParticipantResponse'>({
+            participantId: String(params.pid),
             eventId: 'evt-msw',
             removedMovies: 0,
             message: 'Participant retiré.',
@@ -1336,38 +1373,42 @@ describe('EventDetail (MSW)', () => {
   describe('after a draw on a movie night still open', () => {
     function drawnEventHandler(isHost: boolean, myParticipantId: string) {
       return http.get(`${TEST_API_V1}/events/slug/${slug}`, () =>
-        HttpResponse.json({
-          _id: 'evt-msw',
-          title: 'Soirée démo',
-          date: '2030-12-15',
-          time: '21:00',
-          slug,
-          isHost,
-          isFinished: false,
-          lifecycle: 'live',
-          winners: [{ movieId: 'm-msw-1', pickMethod: 'manual', pickedAt: '2020-01-01T00:00:00Z' }],
-          participantCount: 3,
-          movieCount: 1,
-          myParticipant: { _id: myParticipantId, pseudo: 'Moi' },
-          participants: [
-            { _id: 'p-msw-host', pseudo: 'Hôte', isCreator: true },
-            { _id: 'p-msw-alice', pseudo: 'Alice' },
-            { _id: 'p-msw-bob', pseudo: 'Bob' },
-          ],
-          config: {
-            theme: null,
-            maxProposalsPerParticipant: null,
-            maxParticipants: null,
-            wheelMode: 'strictRandom',
-            winnerCount: 1,
-          },
-        })
+        apiJson<'EventDetailResponse'>(
+          buildEventDetail({
+            _id: 'evt-msw',
+            title: 'Soirée démo',
+            date: '2030-12-15',
+            time: '21:00',
+            slug,
+            isHost,
+            isFinished: false,
+            lifecycle: 'live',
+            winners: [
+              { movieId: 'm-msw-1', pickMethod: 'manual', pickedAt: '2020-01-01T00:00:00Z' },
+            ],
+            participantCount: 3,
+            movieCount: 1,
+            myParticipant: { _id: myParticipantId, pseudo: 'Moi' },
+            participants: [
+              { _id: 'p-msw-host', pseudo: 'Hôte', isCreator: true },
+              { _id: 'p-msw-alice', pseudo: 'Alice' },
+              { _id: 'p-msw-bob', pseudo: 'Bob' },
+            ],
+            config: {
+              theme: null,
+              maxProposalsPerParticipant: null,
+              maxParticipants: null,
+              wheelMode: 'strictRandom',
+              winnerCount: 1,
+            },
+          })
+        )
       );
     }
 
     const drawnMoviesHandler = http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
-      HttpResponse.json([
-        {
+      apiJson<'MovieWithScoreResponse[]'>([
+        buildEventMovie({
           _id: 'm-msw-1',
           eventId: 'evt-msw',
           participantId: 'p-msw-host',
@@ -1380,7 +1421,7 @@ describe('EventDetail (MSW)', () => {
           score: 2,
           up: 2,
           down: 0,
-        },
+        }),
       ])
     );
 
@@ -1390,7 +1431,7 @@ describe('EventDetail (MSW)', () => {
         drawnEventHandler(true, 'p-msw-host'),
         drawnMoviesHandler,
         http.get(`${TEST_API_V1}/events/${slug}/invitations/eligible-follows`, () =>
-          HttpResponse.json({ follows: [] })
+          apiJson<'EligibleFollowsResponse'>({ follows: [] })
         )
       );
 
@@ -1415,7 +1456,7 @@ describe('EventDetail (MSW)', () => {
         drawnEventHandler(true, 'p-msw-host'),
         drawnMoviesHandler,
         http.get(`${TEST_API_V1}/events/${slug}/invitations/eligible-follows`, () =>
-          HttpResponse.json({ follows: [] })
+          apiJson<'EligibleFollowsResponse'>({ follows: [] })
         )
       );
 
@@ -1482,24 +1523,21 @@ describe('EventDetail (MSW)', () => {
   describe('retrait d’un film (menu de la carte → confirmation)', () => {
     function movieHandler(removed: () => boolean) {
       return http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
-        HttpResponse.json(
+        apiJson<'MovieWithScoreResponse[]'>(
           removed()
             ? []
             : [
-                {
+                buildEventMovie({
                   _id: 'm-msw-1',
                   eventId: 'evt-msw',
                   participantId: 'p-msw-host',
                   tmdbId: 42,
-                  mediaType: 'movie',
                   title: 'Matrix',
                   year: '1999',
-                  posterPath: null,
                   proposerPseudo: 'Hôte',
                   score: 2,
                   up: 2,
-                  down: 0,
-                },
+                }),
               ]
         )
       );

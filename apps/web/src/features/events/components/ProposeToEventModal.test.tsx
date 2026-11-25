@@ -3,7 +3,11 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
-import { delay, http, HttpResponse } from 'msw';
+import { delay, http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildEventMovie } from '@/test-utils/eventMovie';
+import { buildMyEventSummary } from '@/test-utils/myEventSummary';
+import { buildEventDetail } from '@/test-utils/eventDetail';
 import type { QueryClient } from '@tanstack/react-query';
 import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
 import modalStyles from '@/shared/components/Modal.module.css';
@@ -59,7 +63,14 @@ describe('ProposeToEventModal (MSW)', () => {
   it('affiche le titre avec le nom du film', async () => {
     server.use(
       authMeGuestHandler,
-      http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
+      http.get(`${TEST_API_V1}/events/mine`, () =>
+        apiJson<'MyEventsListResponse'>({
+          events: [],
+          hasMore: false,
+          totalActive: 0,
+          totalFinished: 0,
+        })
+      )
     );
 
     renderModal();
@@ -72,7 +83,14 @@ describe('ProposeToEventModal (MSW)', () => {
   it('shows a message when there is no eligible movie night', async () => {
     server.use(
       authMeGuestHandler,
-      http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
+      http.get(`${TEST_API_V1}/events/mine`, () =>
+        apiJson<'MyEventsListResponse'>({
+          events: [],
+          hasMore: false,
+          totalActive: 0,
+          totalFinished: 0,
+        })
+      )
     );
 
     renderModal();
@@ -85,7 +103,12 @@ describe('ProposeToEventModal (MSW)', () => {
       authMeGuestHandler,
       http.get(`${TEST_API_V1}/events/mine`, async () => {
         await delay('infinite');
-        return HttpResponse.json({ events: [] });
+        return apiJson<'MyEventsListResponse'>({
+          events: [],
+          hasMore: false,
+          totalActive: 0,
+          totalFinished: 0,
+        });
       })
     );
 
@@ -97,7 +120,14 @@ describe('ProposeToEventModal (MSW)', () => {
   it('shows the empty state inside the same body as the list', async () => {
     server.use(
       authMeGuestHandler,
-      http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
+      http.get(`${TEST_API_V1}/events/mine`, () =>
+        apiJson<'MyEventsListResponse'>({
+          events: [],
+          hasMore: false,
+          totalActive: 0,
+          totalFinished: 0,
+        })
+      )
     );
 
     renderModal();
@@ -110,9 +140,9 @@ describe('ProposeToEventModal (MSW)', () => {
     server.use(
       authMeGuestHandler,
       http.get(`${TEST_API_V1}/events/mine`, () =>
-        HttpResponse.json({
+        apiJson<'MyEventsListResponse'>({
           events: [
-            {
+            buildMyEventSummary({
               id: 'e1',
               slug: 'ma-soiree',
               title: 'Chez moi',
@@ -125,9 +155,11 @@ describe('ProposeToEventModal (MSW)', () => {
               lifecycle: 'upcoming',
               participantCount: 1,
               movieCount: 0,
-            },
+            }),
           ],
           hasMore: true,
+          totalActive: 1,
+          totalFinished: 0,
         })
       )
     );
@@ -145,9 +177,9 @@ describe('ProposeToEventModal (MSW)', () => {
     server.use(
       authMeGuestHandler,
       http.get(`${TEST_API_V1}/events/mine`, () =>
-        HttpResponse.json({
+        apiJson<'MyEventsListResponse'>({
           events: [
-            {
+            buildMyEventSummary({
               id: 'e1',
               slug: 'ma-soiree',
               title: 'Chez moi',
@@ -160,27 +192,32 @@ describe('ProposeToEventModal (MSW)', () => {
               lifecycle: 'upcoming',
               participantCount: 1,
               movieCount: 0,
-            },
+            }),
           ],
+          hasMore: false,
+          totalActive: 1,
+          totalFinished: 0,
         })
       ),
       http.get(`${TEST_API_V1}/events/slug/ma-soiree`, () =>
-        HttpResponse.json({
-          _id: 'e1',
-          title: 'Chez moi',
-          date: '2035-08-01',
-          time: '22:00',
-          slug: 'ma-soiree',
-          isFinished: false,
-          myParticipant: { _id: 'p1', pseudo: 'Alice' },
-          participantCount: 1,
-          movieCount: 0,
-          participants: [],
-          config: {},
-        })
+        apiJson<'EventDetailResponse'>(
+          buildEventDetail({
+            _id: 'e1',
+            title: 'Chez moi',
+            date: '2035-08-01',
+            time: '22:00',
+            slug: 'ma-soiree',
+            isFinished: false,
+            myParticipant: { _id: 'p1', pseudo: 'Alice' },
+            participantCount: 1,
+            movieCount: 0,
+            participants: [],
+            config: {},
+          })
+        )
       ),
       http.post(`${TEST_API_V1}/events/ma-soiree/movies`, () =>
-        HttpResponse.json({ error: 'Déjà proposé', code: 409 }, { status: 409 })
+        apiErrorJson(409, 'movie_already_proposed')
       )
     );
 
@@ -196,9 +233,9 @@ describe('ProposeToEventModal (MSW)', () => {
     server.use(
       authMeGuestHandler,
       http.get(`${TEST_API_V1}/events/mine`, () =>
-        HttpResponse.json({
+        apiJson<'MyEventsListResponse'>({
           events: [
-            {
+            buildMyEventSummary({
               id: 'e1',
               slug: 'ma-soiree',
               title: 'Chez moi',
@@ -211,27 +248,34 @@ describe('ProposeToEventModal (MSW)', () => {
               lifecycle: 'upcoming',
               participantCount: 1,
               movieCount: 0,
-            },
+            }),
           ],
+          hasMore: false,
+          totalActive: 1,
+          totalFinished: 0,
         })
       ),
       http.get(`${TEST_API_V1}/events/slug/ma-soiree`, () =>
-        HttpResponse.json({
-          _id: 'e1',
-          title: 'Chez moi',
-          date: '2035-08-01',
-          time: '22:00',
-          slug: 'ma-soiree',
-          isFinished: false,
-          myParticipant: { _id: 'p1', pseudo: 'Alice' },
-          participantCount: 1,
-          movieCount: 0,
-          participants: [],
-          config: {},
-        })
+        apiJson<'EventDetailResponse'>(
+          buildEventDetail({
+            _id: 'e1',
+            title: 'Chez moi',
+            date: '2035-08-01',
+            time: '22:00',
+            slug: 'ma-soiree',
+            isFinished: false,
+            myParticipant: { _id: 'p1', pseudo: 'Alice' },
+            participantCount: 1,
+            movieCount: 0,
+            participants: [],
+            config: {},
+          })
+        )
       ),
       http.post(`${TEST_API_V1}/events/ma-soiree/movies`, () =>
-        HttpResponse.json({ ok: true }, { status: 201 })
+        apiJson<'MovieWithScoreResponse'>(buildEventMovie({ _id: 'm1', title: 'Matrix' }), {
+          status: 201,
+        })
       )
     );
     const client = createTestQueryClient();
@@ -257,7 +301,14 @@ describe('ProposeToEventModal (MSW)', () => {
   it('appelle onClose depuis le bouton fermer', async () => {
     server.use(
       authMeGuestHandler,
-      http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
+      http.get(`${TEST_API_V1}/events/mine`, () =>
+        apiJson<'MyEventsListResponse'>({
+          events: [],
+          hasMore: false,
+          totalActive: 0,
+          totalFinished: 0,
+        })
+      )
     );
     const onClose = vi.fn();
 
