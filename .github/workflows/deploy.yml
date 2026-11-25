@@ -523,6 +523,7 @@ jobs:
             --platform managed \
             --service-account "$RUNTIME_SA" \
             --cpu-boost \
+            --startup-probe "httpGet.path=/health,httpGet.port=8080,periodSeconds=5,failureThreshold=12" \
             --no-traffic \
             --tag "$TAG" \
             --set-secrets "$SECRETS" \
