@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.32.1] - 2026-11-25
+
 ### Changed
 
 - **Des affiches plus légères** : les vignettes de Mes soirées, des groupes et de la feuille de note, comme les fonds flous derrière elles, se chargent à leur taille d’affichage au lieu de la grande image.
@@ -1132,7 +1134,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.32.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.32.1...HEAD
+[1.32.1]: https://github.com/Affy657/Movie-Picker/compare/v1.32.0...v1.32.1
 [1.32.0]: https://github.com/Affy657/Movie-Picker/compare/v1.31.3...v1.32.0
 [1.31.3]: https://github.com/Affy657/Movie-Picker/compare/v1.31.2...v1.31.3
 [1.31.2]: https://github.com/Affy657/Movie-Picker/compare/v1.31.1...v1.31.2
