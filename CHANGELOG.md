@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Fixed
+
+- **Une fiche de film sans mot pour convaincre** n’a plus d’espace vide entre « Proposé par, Score, Déjà vu » et ses boutons.
+
 ## [1.31.0] - 2026-11-25
 
 ### Added
