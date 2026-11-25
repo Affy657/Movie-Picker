@@ -210,6 +210,42 @@ public sealed class ProfileBannerHandlersTests
     }
 
     [Fact]
+    public async Task Upload_JpegFromOutsideTheApp_IsStoredWithoutItsMetadataNorTheBytesAfterTheImage()
+    {
+        var user = await UserAsync();
+        var clean = Jpeg();
+        var forged = ImageHeaders.WithExif(clean, "GPS 44.8378N 0.5792W", trailer: "<script>alert(1)</script>");
+
+        var profile = await _upload.HandleAsync(user.Id, Upload(forged));
+
+        Assert.Equal(clean, (await _photos.GetByKeyAsync(KeyOf(profile.BannerPhotoUrl!)))!.Data);
+    }
+
+    [Fact]
+    public async Task Upload_PngWithATextChunk_IsStoredWithoutIt()
+    {
+        var user = await UserAsync();
+        var clean = ImageHeaders.Png(1600, 900);
+
+        var profile = await _upload.HandleAsync(user.Id, Upload(ImageHeaders.WithTextChunk(clean, "Author: Lea Moreau"), "image/png"));
+
+        Assert.Equal(clean, (await _photos.GetByKeyAsync(KeyOf(profile.BannerPhotoUrl!)))!.Data);
+    }
+
+    [Fact]
+    public async Task Upload_ImageTheCleanerCannotRead_IsRefusedAndChangesNothing()
+    {
+        var user = await UserAsync();
+
+        var error = await Assert.ThrowsAsync<BadRequestException>(
+            () => _upload.HandleAsync(user.Id, Upload(ImageHeaders.PngWithTruncatedChunk(1600, 900), "image/png")));
+
+        Assert.Equal(ErrorCodes.BannerPhotoInvalid, error.Reason);
+        Assert.Null((await _users.GetByIdAsync(user.Id))!.BannerPhoto);
+        Assert.Equal(0, await _photos.EstimatedCountAsync());
+    }
+
+    [Fact]
     public async Task Upload_ReplacingThePhoto_DeletesThePreviousOne()
     {
         var user = await UserAsync();

@@ -73,6 +73,29 @@ public sealed class AvatarPhotoHandlersTests
     }
 
     [Fact]
+    public async Task Upload_JpegFromOutsideTheApp_IsStoredWithoutItsMetadataNorTheBytesAfterTheImage()
+    {
+        var user = await UserAsync();
+        var clean = ImageHeaders.Jpeg(256, 256);
+        var forged = ImageHeaders.WithExif(clean, "GPS 44.8378N 0.5792W", trailer: "<script>alert(1)</script>");
+
+        var profile = await _upload.HandleAsync(user.Id, Request(forged, "image/jpeg"));
+
+        Assert.Equal(clean, (await _photos.GetByKeyAsync(KeyOf(profile.AvatarId)))!.Data);
+    }
+
+    [Fact]
+    public async Task Upload_PngWithATextChunk_IsStoredWithoutIt()
+    {
+        var user = await UserAsync();
+        var clean = ImageHeaders.Png(200, 200);
+
+        var profile = await _upload.HandleAsync(user.Id, Request(ImageHeaders.WithTextChunk(clean, "Author: Lea Moreau"), "image/png"));
+
+        Assert.Equal(clean, (await _photos.GetByKeyAsync(KeyOf(profile.AvatarId)))!.Data);
+    }
+
+    [Fact]
     public async Task Upload_KeepsTheGeneratedAvatarToFallBackOn()
     {
         var user = await UserAsync("bolt");
@@ -106,6 +129,7 @@ public sealed class AvatarPhotoHandlersTests
         { ImageHeaders.Png(1024, 1024), "image/png" },
         { [.. ImageHeaders.Png(256, 256), .. new byte[256 * 1024]], "image/png" },
         { ImageHeaders.Png(256, 256), "image/webp" },
+        { ImageHeaders.PngWithTruncatedChunk(256, 256), "image/png" },
         { [.. ImageHeaders.Png(256, 256), .. new byte[AvatarPhotoImage.MaxBytes]], "image/png" }
     };
 
