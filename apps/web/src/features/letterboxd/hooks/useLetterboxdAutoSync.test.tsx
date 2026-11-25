@@ -1,17 +1,24 @@
 import { describe, it, expect, vi, beforeAll, afterEach, afterAll } from 'vitest';
 import { act, render, waitFor } from '@testing-library/react';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
+import {
+  letterboxdSyncReport,
+  createLetterboxdSyncHandler,
+  letterboxdListReport,
+  TEST_API_V1,
+} from '@/mocks/handlers';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { queryKeys } from '@/shared/hooks/queryKeys';
-import { createLetterboxdSyncHandler, letterboxdListReport, TEST_API_V1 } from '@/mocks/handlers';
 import { useLetterboxdAutoSync } from './useLetterboxdAutoSync';
 
 const { track } = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock('@/shared/hooks/useAnalytics', () => ({ useAnalytics: () => ({ track }) }));
 
 function meBody(letterboxdUsername: string | null, userId = 'u-acc') {
-  return {
+  return buildUserProfile({
     userId,
     displayName: 'Pat',
     emailMasked: 'p***@test.local',
@@ -25,14 +32,16 @@ function meBody(letterboxdUsername: string | null, userId = 'u-acc') {
     letterboxdUsername,
     letterboxdLastSyncAt: null,
     letterboxdLastSyncError: null,
-  };
+  });
 }
 
 function meHandler(letterboxdUsername: string | null) {
-  return http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(meBody(letterboxdUsername)));
+  return http.get(`${TEST_API_V1}/auth/me`, () =>
+    apiJson<'UserProfileResponse'>(meBody(letterboxdUsername))
+  );
 }
 
-const NOTHING_CHANGED_REPORT = {
+const NOTHING_CHANGED_REPORT = letterboxdSyncReport({
   skipped: false,
   error: null,
   lists: [
@@ -49,7 +58,7 @@ const NOTHING_CHANGED_REPORT = {
       error: null,
     },
   ],
-};
+});
 
 function Probe() {
   useLetterboxdAutoSync();
@@ -80,24 +89,26 @@ describe('useLetterboxdAutoSync', () => {
       http.post(`${TEST_API_V1}/letterboxd/sync`, ({ request }) => {
         calls++;
         sawForceFalse = request.url.includes('force=false');
-        return HttpResponse.json({
-          skipped: false,
-          error: null,
-          lists: [
-            {
-              target: 'watchlist',
-              added: 0,
-              removed: 0,
-              unmatchedTitles: [],
-              pendingChoices: [],
-              totalOnLetterboxd: 0,
-              totalTruncated: 0,
-              incomplete: false,
-              lastSyncAt: null,
-              error: null,
-            },
-          ],
-        });
+        return apiJson<'LetterboxdSyncResponse'>(
+          letterboxdSyncReport({
+            skipped: false,
+            error: null,
+            lists: [
+              {
+                target: 'watchlist',
+                added: 0,
+                removed: 0,
+                unmatchedTitles: [],
+                pendingChoices: [],
+                totalOnLetterboxd: 0,
+                totalTruncated: 0,
+                incomplete: false,
+                lastSyncAt: null,
+                error: null,
+              },
+            ],
+          })
+        );
       })
     );
 
@@ -118,32 +129,37 @@ describe('useLetterboxdAutoSync', () => {
     server.use(
       meHandler('affy657'),
       http.post(`${TEST_API_V1}/letterboxd/sync`, () =>
-        HttpResponse.json({
-          skipped: false,
-          error: null,
-          lists: [
-            {
-              target: 'watchlist',
-              added: 0,
-              removed: 0,
-              unmatchedTitles: [],
-              pendingChoices: [
-                {
-                  rowIndex: 1,
-                  title: 'Dune',
-                  year: '2024',
-                  letterboxdSlug: 'dune-2024',
-                  candidates: [],
-                },
-              ],
-              totalOnLetterboxd: 1,
-              totalTruncated: 0,
-              incomplete: false,
-              lastSyncAt: null,
-              error: null,
-            },
-          ],
-        })
+        apiJson<'LetterboxdSyncResponse'>(
+          letterboxdSyncReport({
+            skipped: false,
+            error: null,
+            lists: [
+              {
+                target: 'watchlist',
+                added: 0,
+                removed: 0,
+                unmatchedTitles: [],
+                pendingChoices: [
+                  {
+                    rowIndex: 1,
+                    title: 'Dune',
+                    year: '2024',
+                    letterboxdSlug: 'dune-2024',
+                    target: 'watchlist',
+                    rating: null,
+                    watchedOn: null,
+                    candidates: [],
+                  },
+                ],
+                totalOnLetterboxd: 1,
+                totalTruncated: 0,
+                incomplete: false,
+                lastSyncAt: null,
+                error: null,
+              },
+            ],
+          })
+        )
       )
     );
 
@@ -226,10 +242,10 @@ describe('useLetterboxdAutoSync', () => {
     const forcedFlags: string[] = [];
     let serverMe = meBody('affy657');
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(serverMe)),
+      http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(serverMe)),
       http.post(`${TEST_API_V1}/letterboxd/sync`, ({ request }) => {
         forcedFlags.push(new URL(request.url).searchParams.get('force') ?? '');
-        return HttpResponse.json(NOTHING_CHANGED_REPORT);
+        return apiJson<'LetterboxdSyncResponse'>(NOTHING_CHANGED_REPORT);
       })
     );
     const client = createTestQueryClient();
@@ -253,7 +269,7 @@ describe('useLetterboxdAutoSync', () => {
       meHandler(null),
       http.post(`${TEST_API_V1}/letterboxd/sync`, () => {
         calls++;
-        return HttpResponse.json(NOTHING_CHANGED_REPORT);
+        return apiJson<'LetterboxdSyncResponse'>(NOTHING_CHANGED_REPORT);
       })
     );
     const client = createTestQueryClient();
@@ -274,15 +290,17 @@ describe('useLetterboxdAutoSync', () => {
       meHandler(null),
       http.post(`${TEST_API_V1}/letterboxd/sync`, () => {
         calls++;
-        return HttpResponse.json({
-          skipped: true,
-          added: 0,
-          removed: 0,
-          unmatchedTitles: [],
-          pendingChoices: [],
-          totalOnLetterboxd: 0,
-          totalTruncated: 0,
-        });
+        return apiJson<'LetterboxdSyncResponse'>(
+          letterboxdSyncReport({
+            skipped: true,
+            added: 0,
+            removed: 0,
+            unmatchedTitles: [],
+            pendingChoices: [],
+            totalOnLetterboxd: 0,
+            totalTruncated: 0,
+          })
+        );
       })
     );
 

@@ -3,10 +3,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import LoginPage from '@/features/auth/pages/LoginPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
-import { TEST_API_V1 } from '@/mocks/handlers';
+import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
 
 function renderLogin(initialPath = '/login') {
   return render(
@@ -41,18 +43,20 @@ describe('LoginPage (MSW)', () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
         sessionActive
-          ? HttpResponse.json({
-              userId: 'u-login',
-              displayName: 'Lee',
-              emailMasked: 'l***@test.local',
-              uiTheme: 'system',
-              accentColor: 'default',
-            })
-          : HttpResponse.json({ error: '401' }, { status: 401 })
+          ? apiJson<'UserProfileResponse'>(
+              buildUserProfile({
+                userId: 'u-login',
+                displayName: 'Lee',
+                emailMasked: 'l***@test.local',
+                uiTheme: 'system',
+                accentColor: 'default',
+              })
+            )
+          : apiErrorJson(401, 'unauthorized')
       ),
       http.post(`${TEST_API_V1}/auth/login`, async () => {
         sessionActive = true;
-        return HttpResponse.json({});
+        return apiJson<'LoginResponse'>({ userId: 'u1', displayName: 'Alice' });
       })
     );
 
@@ -73,17 +77,19 @@ describe('LoginPage (MSW)', () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
         sessionActive
-          ? HttpResponse.json({
-              userId: 'u-login',
-              displayName: 'Lee',
-              emailMasked: 'l***@test.local',
-            })
-          : HttpResponse.json({ error: '401' }, { status: 401 })
+          ? apiJson<'UserProfileResponse'>(
+              buildUserProfile({
+                userId: 'u-login',
+                displayName: 'Lee',
+                emailMasked: 'l***@test.local',
+              })
+            )
+          : apiErrorJson(401, 'unauthorized')
       ),
       http.post(`${TEST_API_V1}/auth/login`, async ({ request }) => {
         body = await request.json();
         sessionActive = true;
-        return HttpResponse.json({});
+        return apiJson<'LoginResponse'>({ userId: 'u1', displayName: 'Alice' });
       })
     );
 
@@ -104,21 +110,23 @@ describe('LoginPage (MSW)', () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
         sessionActive
-          ? HttpResponse.json({
-              userId: 'u-dev',
-              displayName: 'Utilisateur dev',
-              emailMasked: 'd***@test.local',
-              uiTheme: 'system',
-              accentColor: 'default',
-            })
-          : HttpResponse.json({ error: '401' }, { status: 401 })
+          ? apiJson<'UserProfileResponse'>(
+              buildUserProfile({
+                userId: 'u-dev',
+                displayName: 'Utilisateur dev',
+                emailMasked: 'd***@test.local',
+                uiTheme: 'system',
+                accentColor: 'default',
+              })
+            )
+          : apiErrorJson(401, 'unauthorized')
       ),
       http.post(`${TEST_API_V1}/auth/login`, async ({ request }) => {
         const body = (await request.json()) as { email?: string; password?: string };
         expect(body.email).toBe('dev@test.local');
         expect(body.password).toBe('DevTest123!');
         sessionActive = true;
-        return HttpResponse.json({});
+        return apiJson<'LoginResponse'>({ userId: 'u1', displayName: 'Alice' });
       })
     );
 
@@ -145,7 +153,9 @@ describe('LoginPage (MSW)', () => {
 
   it('leads back to the movie night the visitor came from and says why to sign in', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/oauth/providers`, () => HttpResponse.json({ providers: [] }))
+      http.get(`${TEST_API_V1}/auth/oauth/providers`, () =>
+        apiJson<'OAuthProvidersResponse'>({ providers: [] })
+      )
     );
     renderLogin('/login?returnTo=%2Fe%2Fsoiree-horreur');
 
@@ -183,7 +193,7 @@ describe('LoginPage (MSW)', () => {
     server.use(
       http.post(`${TEST_API_V1}/auth/login`, () => {
         loginPosts += 1;
-        return HttpResponse.json({}, { status: 200 });
+        return apiJson<'LoginResponse'>({ userId: 'u1', displayName: 'Alice' }, { status: 200 });
       })
     );
     renderLogin();
@@ -207,10 +217,10 @@ describe('LoginPage (MSW)', () => {
 
   it('shows a message when oauthError=email_not_verified is present', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({ error: '401' }, { status: 401 })
-      ),
-      http.get(`${TEST_API_V1}/auth/oauth/providers`, () => HttpResponse.json({ providers: [] }))
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/auth/oauth/providers`, () =>
+        apiJson<'OAuthProvidersResponse'>({ providers: [] })
+      )
     );
 
     renderLogin('/login?oauthError=email_not_verified');

@@ -2,7 +2,9 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson, apiJson, type ApiSchemas } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import LetterboxdExportSection from '@/features/letterboxd/components/LetterboxdExportSection';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { createLetterboxdConfirmHandler, TEST_API_V1 } from '@/mocks/handlers';
@@ -19,16 +21,28 @@ const WATCHED = Array.from({ length: 60 }, (_, index) => ({
 
 const TO_WATCH = [{ title: 'Heat', year: '1995', rating: null, watchedOn: null }];
 
-const AMBIGUOUS = {
+function candidate(tmdbId: number, year: string): ApiSchemas['LetterboxdImportCandidateResponse'] {
+  return {
+    tmdbId,
+    mediaType: 'movie',
+    title: 'Film 2',
+    year,
+    posterPath: null,
+    voteAverage: null,
+    genreIds: [],
+    runtimeMinutes: null,
+  };
+}
+
+const AMBIGUOUS: ApiSchemas['LetterboxdImportRowResponse'] = {
   rowIndex: 2,
   title: 'Film 2',
   year: '2001',
   letterboxdSlug: '',
   target: 'watched',
-  candidates: [
-    { tmdbId: 11, mediaType: 'movie', title: 'Film 2', year: '2001', genreIds: [] },
-    { tmdbId: 12, mediaType: 'movie', title: 'Film 2', year: '2002', genreIds: [] },
-  ],
+  rating: null,
+  watchedOn: null,
+  candidates: [candidate(11, '2001'), candidate(12, '2002')],
 };
 
 function renderSection() {
@@ -72,16 +86,16 @@ describe('LetterboxdExportSection (MSW)', () => {
     batches.length = 0;
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({ userId: 'u1', displayName: 'Pat' })
+        apiJson<'UserProfileResponse'>(buildUserProfile({ userId: 'u1', displayName: 'Pat' }))
       ),
       http.post(`${TEST_API_V1}/letterboxd/export/read`, () =>
-        HttpResponse.json({ watched: WATCHED, watchlist: TO_WATCH })
+        apiJson<'LetterboxdExportResponse'>({ watched: WATCHED, watchlist: TO_WATCH })
       ),
       http.post(`${TEST_API_V1}/letterboxd/export/import`, async ({ request }) => {
         const batch = (await request.json()) as (typeof batches)[number];
         batches.push(batch);
         const ambiguous = batch.rows.some((row) => row.rowIndex === AMBIGUOUS.rowIndex);
-        return HttpResponse.json({
+        return apiJson<'LetterboxdExportImportResponse'>({
           added: batch.rows.length - (ambiguous ? 1 : 0),
           alreadyPresent: 0,
           pendingChoices: ambiguous ? [AMBIGUOUS] : [],
@@ -141,7 +155,7 @@ describe('LetterboxdExportSection (MSW)', () => {
       http.post(`${TEST_API_V1}/letterboxd/export/import`, async ({ request }) => {
         const batch = (await request.json()) as (typeof batches)[number];
         heldDuringBatches.push(isPageHeld());
-        return HttpResponse.json({
+        return apiJson<'LetterboxdExportImportResponse'>({
           added: batch.rows.length,
           alreadyPresent: 0,
           pendingChoices: [],
@@ -178,10 +192,7 @@ describe('LetterboxdExportSection (MSW)', () => {
     const user = userEvent.setup();
     server.use(
       http.post(`${TEST_API_V1}/letterboxd/export/read`, () =>
-        HttpResponse.json(
-          { code: 400, message: 'unreadable', reason: 'letterboxd_export_unreadable' },
-          { status: 400 }
-        )
+        apiErrorJson(400, 'letterboxd_export_unreadable')
       )
     );
     renderSection();

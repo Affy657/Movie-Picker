@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
 import ResetPasswordPage from '@/features/auth/pages/ResetPasswordPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1, authMeGuestHandler } from '@/mocks/handlers';
@@ -72,10 +73,7 @@ describe('ResetPasswordPage', () => {
     server.use(
       http.post(`${TEST_API_V1}/auth/password-reset/verify`, async ({ request }) => {
         verified = (await request.json()) as { token: string };
-        return HttpResponse.json(
-          { error: 'Invalid or expired token', reason: 'invalid_reset_token' },
-          { status: 400 }
-        );
+        return apiErrorJson(400, 'invalid_reset_token');
       })
     );
     renderReset('/reset?token=alreadyUsed');
@@ -90,7 +88,7 @@ describe('ResetPasswordPage', () => {
     server.use(
       http.post(`${TEST_API_V1}/auth/password-reset/verify`, () => {
         checks += 1;
-        return HttpResponse.json({ error: 'oops' }, { status: 500 });
+        return apiErrorJson(500, 'internal_error');
       })
     );
     renderReset('/reset?token=abc');
@@ -125,7 +123,7 @@ describe('ResetPasswordPage', () => {
     server.use(
       http.post(`${TEST_API_V1}/auth/password-reset/confirm`, async ({ request }) => {
         captured = (await request.json()) as { token: string; newPassword: string };
-        return HttpResponse.json({ message: 'Mot de passe réinitialisé.' });
+        return apiJson<'PasswordResetConfirmResponse'>({ message: 'Mot de passe réinitialisé.' });
       })
     );
     renderReset('/reset?token=plainTokenABC');
@@ -148,7 +146,7 @@ describe('ResetPasswordPage', () => {
     server.use(
       http.post(`${TEST_API_V1}/auth/password-reset/confirm`, async ({ request }) => {
         captured = (await request.json()) as { token: string };
-        return HttpResponse.json({ message: 'Mot de passe réinitialisé.' });
+        return apiJson<'PasswordResetConfirmResponse'>({ message: 'Mot de passe réinitialisé.' });
       })
     );
     renderReset('/reset?token=plainTokenABC&lang=fr');
@@ -167,10 +165,7 @@ describe('ResetPasswordPage', () => {
     const user = userEvent.setup();
     server.use(
       http.post(`${TEST_API_V1}/auth/password-reset/confirm`, () =>
-        HttpResponse.json(
-          { error: 'Invalid or expired token', reason: 'invalid_reset_token' },
-          { status: 400 }
-        )
+        apiErrorJson(400, 'invalid_reset_token')
       )
     );
     renderReset('/reset?token=expired');
@@ -190,7 +185,7 @@ describe('ResetPasswordPage', () => {
     const user = userEvent.setup();
     server.use(
       http.post(`${TEST_API_V1}/auth/password-reset/confirm`, () =>
-        HttpResponse.json({ error: 'oops' }, { status: 500 })
+        apiErrorJson(500, 'internal_error')
       )
     );
     renderReset('/reset?token=abc');
@@ -209,7 +204,7 @@ describe('ResetPasswordPage', () => {
     server.use(
       http.post(`${TEST_API_V1}/auth/password-reset/confirm`, async ({ request }) => {
         captured = (await request.json()) as { token: string };
-        return HttpResponse.json({ message: 'Mot de passe réinitialisé.' });
+        return apiJson<'PasswordResetConfirmResponse'>({ message: 'Mot de passe réinitialisé.' });
       })
     );
     const firstVisit = renderReset('/reset?token=plainTokenABC');
@@ -230,7 +225,7 @@ describe('ResetPasswordPage', () => {
     const user = userEvent.setup();
     server.use(
       http.post(`${TEST_API_V1}/auth/password-reset/confirm`, () =>
-        HttpResponse.json({ message: 'Mot de passe réinitialisé.' })
+        apiJson<'PasswordResetConfirmResponse'>({ message: 'Mot de passe réinitialisé.' })
       )
     );
     const firstVisit = renderReset('/reset?token=plainTokenABC');
@@ -248,10 +243,7 @@ describe('ResetPasswordPage', () => {
     const user = userEvent.setup();
     server.use(
       http.post(`${TEST_API_V1}/auth/password-reset/confirm`, () =>
-        HttpResponse.json(
-          { error: 'Invalid or expired token', reason: 'invalid_reset_token' },
-          { status: 400 }
-        )
+        apiErrorJson(400, 'invalid_reset_token')
       )
     );
     const firstVisit = renderReset('/reset?token=expired');
@@ -270,7 +262,7 @@ describe('ResetPasswordPage', () => {
     server.use(
       http.post(`${TEST_API_V1}/auth/password-reset/confirm`, async ({ request }) => {
         captured = (await request.json()) as { token: string };
-        return HttpResponse.json({ message: 'Mot de passe réinitialisé.' });
+        return apiJson<'PasswordResetConfirmResponse'>({ message: 'Mot de passe réinitialisé.' });
       })
     );
     const blocked = (): never => {

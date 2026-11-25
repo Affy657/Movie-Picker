@@ -7,7 +7,9 @@ import { QueryClientWrapper } from '@/test-utils/queryWrapper';
 import AddMovieForm from '@/features/movies/components/AddMovieForm';
 import type { MovieSearchItem } from '@/features/movies/api/moviesApi';
 import { TEST_API_V1, createSearchAndAddHandlers } from '@/mocks/handlers';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildSearchItem } from '@/test-utils/titleItems';
 
 vi.mock('@/features/auth/contexts/AuthContext', () => ({
   useAuth: () => ({ user: { userId: 'test-user' }, isLoading: false }),
@@ -37,7 +39,7 @@ function SwitchToEnglishButton() {
 
 const FILM_TEST_RESPONSE = {
   items: [
-    {
+    buildSearchItem({
       id: 100,
       title: 'Film Test',
       year: '2024',
@@ -45,7 +47,7 @@ const FILM_TEST_RESPONSE = {
       voteAverage: 7.5,
       watchProviders: [],
       tmdbWatchPageUrl: null,
-    },
+    }),
   ],
   watchProvidersRegion: 'FR',
   disclaimer: '',
@@ -62,7 +64,7 @@ function recordSearches(searches: RecordedSearch[]) {
       genreIds: params.get('genreIds'),
       lang: params.get('lang'),
     });
-    return HttpResponse.json(FILM_TEST_RESPONSE);
+    return apiJson<'MovieSearchListResponse'>(FILM_TEST_RESPONSE);
   });
 }
 
@@ -94,14 +96,14 @@ describe('AddMovieForm (MSW)', () => {
 
   it('shows an error when the search fails (2 characters or more)', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/movies/search`, () =>
-        HttpResponse.json({ error: 'TMDB down' }, { status: 503 })
-      )
+      http.get(`${TEST_API_V1}/movies/search`, () => apiErrorJson(503, 'search_unavailable'))
     );
     const user = userEvent.setup();
     renderWithLocale(<AddMovieForm onAddItem={onAddItem} onAdded={onAdded} />);
     await user.type(screen.getByRole('searchbox', { name: 'Chercher un film' }), 'xx');
-    expect(await screen.findByText(/TMDB down|503/i, {}, { timeout: 3000 })).toBeInTheDocument();
+    expect(
+      await screen.findByText(/recherche films temporairement indisponible/i, {}, { timeout: 3000 })
+    ).toBeInTheDocument();
   });
 
   it('a single request when typing continues before the end of the debounce', async () => {
@@ -109,9 +111,9 @@ describe('AddMovieForm (MSW)', () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () => {
         searchCalls += 1;
-        return HttpResponse.json({
+        return apiJson<'MovieSearchListResponse'>({
           items: [
-            {
+            buildSearchItem({
               id: 100,
               title: 'Film Test',
               year: '2024',
@@ -119,7 +121,7 @@ describe('AddMovieForm (MSW)', () => {
               voteAverage: 7.5,
               watchProviders: [],
               tmdbWatchPageUrl: null,
-            },
+            }),
           ],
           watchProvidersRegion: 'FR',
           disclaimer: '',
@@ -142,9 +144,9 @@ describe('AddMovieForm (MSW)', () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, ({ request }) => {
         searchedRuntimeMax.push(new URL(request.url).searchParams.get('runtimeMax'));
-        return HttpResponse.json({
+        return apiJson<'MovieSearchListResponse'>({
           items: [
-            {
+            buildSearchItem({
               id: 100,
               title: 'Film Test',
               year: '2024',
@@ -152,7 +154,7 @@ describe('AddMovieForm (MSW)', () => {
               voteAverage: 7.5,
               watchProviders: [],
               tmdbWatchPageUrl: null,
-            },
+            }),
           ],
           watchProvidersRegion: 'FR',
           disclaimer: '',
@@ -181,9 +183,9 @@ describe('AddMovieForm (MSW)', () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, ({ request }) => {
         searchedGenres.push(new URL(request.url).searchParams.get('genreIds'));
-        return HttpResponse.json({
+        return apiJson<'MovieSearchListResponse'>({
           items: [
-            {
+            buildSearchItem({
               id: 100,
               title: 'Film Test',
               year: '2024',
@@ -191,7 +193,7 @@ describe('AddMovieForm (MSW)', () => {
               voteAverage: 7.5,
               watchProviders: [],
               tmdbWatchPageUrl: null,
-            },
+            }),
           ],
           watchProvidersRegion: 'FR',
           disclaimer: '',
@@ -256,9 +258,9 @@ describe('AddMovieForm (MSW)', () => {
   it('a movie and a series sharing a TMDB id both get their own result row', async () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () =>
-        HttpResponse.json({
+        apiJson<'MovieSearchListResponse'>({
           items: [
-            {
+            buildSearchItem({
               id: 1399,
               mediaType: 'movie',
               title: 'Homonyme Film',
@@ -266,8 +268,8 @@ describe('AddMovieForm (MSW)', () => {
               posterPath: null,
               voteAverage: 7.1,
               tmdbWatchPageUrl: null,
-            },
-            {
+            }),
+            buildSearchItem({
               id: 1399,
               mediaType: 'tv',
               title: 'Homonyme Série',
@@ -275,7 +277,7 @@ describe('AddMovieForm (MSW)', () => {
               posterPath: null,
               voteAverage: 8.4,
               tmdbWatchPageUrl: null,
-            },
+            }),
           ],
           watchProvidersRegion: 'FR',
           disclaimer: '',
@@ -303,7 +305,7 @@ describe('AddMovieForm (MSW)', () => {
   it('affiche un message si la recherche ne retourne aucun film', async () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () =>
-        HttpResponse.json({
+        apiJson<'MovieSearchListResponse'>({
           items: [],
           watchProvidersRegion: 'FR',
           disclaimer: '',
@@ -322,9 +324,9 @@ describe('AddMovieForm (MSW)', () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () => {
         searchCalls += 1;
-        return HttpResponse.json({
+        return apiJson<'MovieSearchListResponse'>({
           items: [
-            {
+            buildSearchItem({
               id: 100,
               title: 'Film Test',
               year: '2024',
@@ -332,7 +334,7 @@ describe('AddMovieForm (MSW)', () => {
               voteAverage: 7.5,
               watchProviders: [],
               tmdbWatchPageUrl: null,
-            },
+            }),
           ],
           watchProvidersRegion: 'FR',
           disclaimer: '',
@@ -450,9 +452,9 @@ describe('AddMovieForm (MSW)', () => {
   it('hides the streaming providers and the region reminder when showWatchProviders is off', async () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () =>
-        HttpResponse.json({
+        apiJson<'MovieSearchListResponse'>({
           items: [
-            {
+            buildSearchItem({
               id: 103,
               title: 'Film Sans Providers Affichés',
               year: '2024',
@@ -462,7 +464,7 @@ describe('AddMovieForm (MSW)', () => {
                 { providerId: 1, name: 'Netflix Abonnement', logoPath: null, type: 'flatrate' },
               ],
               tmdbWatchPageUrl: null,
-            },
+            }),
           ],
           watchProvidersRegion: 'FR',
           disclaimer: '',
@@ -517,9 +519,9 @@ describe('AddMovieForm (MSW)', () => {
   it('tells on each result whether the movie streams, with no rental or purchase detail', async () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () =>
-        HttpResponse.json({
+        apiJson<'MovieSearchListResponse'>({
           items: [
-            {
+            buildSearchItem({
               id: 100,
               title: 'Film Abonnement',
               year: '2024',
@@ -531,8 +533,8 @@ describe('AddMovieForm (MSW)', () => {
                 { providerId: 2, name: 'Louer Ici', logoPath: null, type: 'rent' },
               ],
               tmdbWatchPageUrl: null,
-            },
-            {
+            }),
+            buildSearchItem({
               id: 101,
               title: 'Film Location Seule',
               year: '2023',
@@ -540,7 +542,7 @@ describe('AddMovieForm (MSW)', () => {
               voteAverage: 6.1,
               watchProviders: [{ providerId: 5, name: 'Louer Là', logoPath: null, type: 'rent' }],
               tmdbWatchPageUrl: null,
-            },
+            }),
           ],
           watchProvidersRegion: 'FR',
           disclaimer: '',
@@ -648,24 +650,24 @@ describe('AddMovieForm (MSW)', () => {
   it('says nothing about streaming for a result whose offers were not looked up, and keeps it under the streaming filter', async () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () =>
-        HttpResponse.json({
+        apiJson<'MovieSearchListResponse'>({
           items: [
-            {
+            buildSearchItem({
               id: 100,
               title: 'Film Non Vérifié',
               year: '2024',
               posterPath: null,
               watchProviders: null,
               tmdbWatchPageUrl: null,
-            },
-            {
+            }),
+            buildSearchItem({
               id: 101,
               title: 'Film Hors Streaming',
               year: '2023',
               posterPath: null,
               watchProviders: [],
               tmdbWatchPageUrl: null,
-            },
+            }),
           ],
           watchProvidersRegion: 'FR',
           disclaimer: '',
@@ -695,9 +697,9 @@ describe('AddMovieForm (MSW)', () => {
   it('announces how many results stay on screen once the streaming filter hides some', async () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () =>
-        HttpResponse.json({
+        apiJson<'MovieSearchListResponse'>({
           items: [
-            {
+            buildSearchItem({
               id: 100,
               title: 'Film Abonnement',
               year: '2024',
@@ -706,15 +708,15 @@ describe('AddMovieForm (MSW)', () => {
                 { providerId: 1, name: 'Netflix', logoPath: null, type: 'flatrate' },
               ],
               tmdbWatchPageUrl: null,
-            },
-            {
+            }),
+            buildSearchItem({
               id: 101,
               title: 'Film Location Seule',
               year: '2023',
               posterPath: null,
               watchProviders: [{ providerId: 5, name: 'Louer Là', logoPath: null, type: 'rent' }],
               tmdbWatchPageUrl: null,
-            },
+            }),
           ],
           watchProvidersRegion: 'FR',
           disclaimer: '',
@@ -838,7 +840,7 @@ describe('AddMovieForm (MSW)', () => {
   it('does not remember a search that found nothing', async () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () =>
-        HttpResponse.json({
+        apiJson<'MovieSearchListResponse'>({
           items: [],
           watchProvidersRegion: 'FR',
           disclaimer: '',

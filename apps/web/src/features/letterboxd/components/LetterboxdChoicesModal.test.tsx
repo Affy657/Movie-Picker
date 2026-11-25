@@ -2,11 +2,16 @@ import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
+import {
+  letterboxdConfirmResult,
+  createLetterboxdConfirmHandler,
+  TEST_API_V1,
+} from '@/mocks/handlers';
 import LetterboxdChoicesModal from './LetterboxdChoicesModal';
 import modalStyles from '@/shared/components/Modal.module.css';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
-import { createLetterboxdConfirmHandler, TEST_API_V1 } from '@/mocks/handlers';
 import type { LetterboxdPendingChoice } from '@/features/letterboxd/api/letterboxdApi';
 
 const { track } = vi.hoisted(() => ({ track: vi.fn() }));
@@ -166,7 +171,9 @@ describe('LetterboxdChoicesModal (MSW)', () => {
     server.use(
       http.post(`${TEST_API_V1}/letterboxd/confirm`, async ({ request }) => {
         received = (await request.json()) as { selections: unknown };
-        return HttpResponse.json({ added: 1, alreadyPresent: 0, pendingReconciliationCount: 0 });
+        return apiJson<'LetterboxdImportConfirmResponse'>(
+          letterboxdConfirmResult({ added: 1, alreadyPresent: 0, pendingReconciliationCount: 0 })
+        );
       })
     );
 
@@ -222,7 +229,9 @@ describe('LetterboxdChoicesModal (MSW)', () => {
     server.use(
       http.post(`${TEST_API_V1}/letterboxd/confirm`, async ({ request }) => {
         received = (await request.json()) as { selections: unknown };
-        return HttpResponse.json({ added: 1, alreadyPresent: 0, pendingReconciliationCount: 0 });
+        return apiJson<'LetterboxdImportConfirmResponse'>(
+          letterboxdConfirmResult({ added: 1, alreadyPresent: 0, pendingReconciliationCount: 0 })
+        );
       })
     );
 
@@ -275,7 +284,9 @@ describe('LetterboxdChoicesModal (MSW)', () => {
       server.use(
         http.post(`${TEST_API_V1}/letterboxd/confirm`, async ({ request }) => {
           received = (await request.json()) as { remainingUnresolvedCount: number };
-          return HttpResponse.json({ added: 1, alreadyPresent: 0, pendingReconciliationCount: 1 });
+          return apiJson<'LetterboxdImportConfirmResponse'>(
+            letterboxdConfirmResult({ added: 1, alreadyPresent: 0, pendingReconciliationCount: 1 })
+          );
         })
       );
 
@@ -369,7 +380,9 @@ describe('LetterboxdChoicesModal (MSW)', () => {
     server.use(
       http.post(`${TEST_API_V1}/letterboxd/confirm`, async ({ request }) => {
         received = (await request.json()) as { selections: unknown };
-        return HttpResponse.json({ added: 1, alreadyPresent: 0, pendingReconciliationCount: 1 });
+        return apiJson<'LetterboxdImportConfirmResponse'>(
+          letterboxdConfirmResult({ added: 1, alreadyPresent: 0, pendingReconciliationCount: 1 })
+        );
       })
     );
 

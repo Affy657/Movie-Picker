@@ -1,7 +1,8 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
 import type { ReactNode } from 'react';
 import { useAvatarPhotoActions } from '@/features/auth/hooks/useAvatarPhotoActions';
 import { QueryClientWrapper, createTestQueryClient } from '@/test-utils/queryWrapper';
@@ -38,7 +39,11 @@ describe('useAvatarPhotoActions', () => {
     server.use(
       http.put(`${TEST_API_V1}/users/me/avatar-photo`, async ({ request }) => {
         received.push(await request.json());
-        return HttpResponse.json({ ...profile, avatarId: PHOTO_ID, avatarPhotoId: PHOTO_ID });
+        return apiJson<'UserProfileResponse'>({
+          ...profile,
+          avatarId: PHOTO_ID,
+          avatarPhotoId: PHOTO_ID,
+        });
       })
     );
     const { client, result } = renderActions();
@@ -52,7 +57,7 @@ describe('useAvatarPhotoActions', () => {
   it('deletes the photo and refreshes the account with the answer', async () => {
     server.use(
       http.delete(`${TEST_API_V1}/users/me/avatar-photo`, () =>
-        HttpResponse.json({ ...profile, avatarPhotoId: null })
+        apiJson<'UserProfileResponse'>({ ...profile, avatarPhotoId: null })
       )
     );
     const { client, result } = renderActions();
@@ -69,9 +74,7 @@ describe('useAvatarPhotoActions', () => {
 
   it('lets an upload failure reach the caller', async () => {
     server.use(
-      http.put(`${TEST_API_V1}/users/me/avatar-photo`, () =>
-        HttpResponse.json({ reason: 'rate_limited' }, { status: 429 })
-      )
+      http.put(`${TEST_API_V1}/users/me/avatar-photo`, () => apiErrorJson(429, 'rate_limited'))
     );
     const { result } = renderActions();
 

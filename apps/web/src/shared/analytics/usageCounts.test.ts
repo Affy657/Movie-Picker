@@ -1,6 +1,7 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { apiErrorJson } from '@/mocks/apiJson';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import { reportUsage } from '@/shared/analytics/usageCounts';
 
@@ -33,7 +34,7 @@ describe('reportUsage', () => {
       server.use(
         http.post(`${TEST_API_V1}/usage-counts`, () => {
           resolve();
-          return HttpResponse.json({ reason: 'unknown_usage_count' }, { status: 400 });
+          return apiErrorJson(400, 'unknown_usage_count');
         })
       );
     });
