@@ -31,7 +31,6 @@ using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.BackgroundServices;
 using MoviePicker.Api.Infrastructure.Caching;
-using MoviePicker.Api.Infrastructure.Development;
 using MoviePicker.Api.Infrastructure.Email;
 using MoviePicker.Api.Infrastructure.GitHub;
 using MoviePicker.Api.Infrastructure.Google;
@@ -150,12 +149,10 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ValidationErrorFilter>();
         services.AddSingleton<MoviePickerExceptionFilter>();
 
+#if DEBUG
         if (environment.IsDevelopment())
-        {
-            services.Configure<DevelopmentSeedOptions>(
-                configuration.GetSection(DevelopmentSeedOptions.SectionName));
-            services.AddHostedService<DevelopmentDataSeedHostedService>();
-        }
+            services.AddDevelopmentSeed(configuration);
+#endif
 
         return services;
     }

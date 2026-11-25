@@ -97,6 +97,7 @@ public sealed class SeededDevelopmentFixture : IAsyncLifetime
         services.AddSingleton<IHostEnvironment>(new DevelopmentEnv());
         services.AddLogging(builder => builder.AddProvider(Logs));
         services.AddMoviePicker(configuration, new DevelopmentEnv());
+        services.AddDevelopmentSeed(configuration);
         services.ReplacePersistenceWithInMemoryDoubles();
         Provider = services.BuildServiceProvider();
         await RunSeedAsync();

@@ -45,7 +45,7 @@ curl -s -b "$cookiejar" -X POST http://localhost:<port>/api/v1/<endpoint> \
   -H "Content-Type: application/json" --data-binary @payload.json -w "\n%{http_code}\n"
 ```
 
-Construire en `-c Release` pour éviter le verrou de fichier d'un build Debug tenu par une autre session (`bin/Debug/**` ouvert) :
+Construire en `-c Release` pour éviter le verrou de fichier d'un build Debug tenu par une autre session (`bin/Debug/**` ouvert). Le seed de démonstration n'existe qu'en Debug : cette instance ne crée aucun compte et se connecte sur ceux que la base contient déjà, ce qui est le cas de `moviepicker_dev`, pas d'une base neuve du conteneur de test :
 
 ```bash
 cd apps/api-dotnet && dotnet build MoviePicker.Api/MoviePicker.Api.csproj -c Release

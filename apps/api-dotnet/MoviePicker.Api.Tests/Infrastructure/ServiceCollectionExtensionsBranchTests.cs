@@ -8,7 +8,6 @@ using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Infrastructure;
 using MoviePicker.Api.Infrastructure.BackgroundServices;
-using MoviePicker.Api.Infrastructure.Development;
 using MoviePicker.Api.Infrastructure.Letterboxd;
 using MoviePicker.Api.Infrastructure.Persistence;
 using MoviePicker.Api.Infrastructure.Posters;
@@ -89,18 +88,6 @@ public sealed class ServiceCollectionExtensionsBranchTests
             expected,
             OptionsFrom(new Dictionary<string, string?> { ["IN_PROCESS_REMINDERS_ENABLED"] = flag })
                 .InProcessRemindersEnabled);
-    }
-
-    [Fact]
-    public void Development_SeedsDemoData()
-    {
-        Assert.True(HasHostedService<DevelopmentDataSeedHostedService>(Wire([], Environments.Development)));
-    }
-
-    [Fact]
-    public void Production_NeverSeedsDemoData()
-    {
-        Assert.False(HasHostedService<DevelopmentDataSeedHostedService>(Wire([], Environments.Production)));
     }
 
     [Fact]

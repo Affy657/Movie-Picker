@@ -6,7 +6,7 @@
         <Configuration>
           <Format>opencover</Format>
           <Exclude>[MoviePicker.Api.TestSupport]*</Exclude>
-          <ExcludeByFile>**/Program.cs,**/Contracts/**/*.cs,**/Configuration/**/*.cs,**/Infrastructure/Development/**/*.cs</ExcludeByFile>
+          <ExcludeByFile>**/Program.cs,**/Contracts/**/*.cs,**/Configuration/**/*.cs,**/MoviePicker.Api.DevelopmentSeed/**/*.cs</ExcludeByFile>
         </Configuration>
       </DataCollector>
     </DataCollectors>

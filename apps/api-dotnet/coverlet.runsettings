@@ -6,7 +6,7 @@
         <Configuration>
           <Format>opencover</Format>
           <Exclude>[MoviePicker.Api.TestSupport]*</Exclude>
-          <ExcludeByFile>**/Program.cs,**/Contracts/**/*.cs,**/Configuration/**/*.cs,**/Persistence/Mongo/Mongo*.cs,**/Persistence/Mongo/*Document.cs,**/Infrastructure/Posters/MongoPosterImageStore.cs,**/BackgroundServices/**/*.cs,**/Infrastructure/Development/**/*.cs</ExcludeByFile>
+          <ExcludeByFile>**/Program.cs,**/Contracts/**/*.cs,**/Configuration/**/*.cs,**/Persistence/Mongo/Mongo*.cs,**/Persistence/Mongo/*Document.cs,**/Infrastructure/Posters/MongoPosterImageStore.cs,**/BackgroundServices/**/*.cs,**/MoviePicker.Api.DevelopmentSeed/**/*.cs</ExcludeByFile>
         </Configuration>
       </DataCollector>
     </DataCollectors>

@@ -98,6 +98,18 @@ En Development, l'API crée des comptes et des données de démonstration au dé
 configuration est dans `apps/api-dotnet/MoviePicker.Api/appsettings.Development.json`, section
 `DevelopmentSeed`, surchargeable par variables `DevelopmentSeed__*`.
 
+Le seed vit dans `apps/api-dotnet/MoviePicker.Api.DevelopmentSeed/` et n'entre dans
+`MoviePicker.Api.dll` qu'en **build Debug** : le fichier `MoviePicker.Api.DevelopmentSeed.projitems`
+n'est importé par l'API qu'en Debug, et son enregistrement (`AddDevelopmentSeed`) est derrière
+`#if DEBUG`. L'assembly publiée (`dotnet publish -c Release`, l'image Docker) n'en contient rien.
+`pnpm dev:api-dotnet`, `pnpm dev:full` et les configurations de `.claude/launch.json` passent par
+`dotnet run` sans `-c`, donc en Debug, seed compris ; une API lancée en `-c Release` (celle de
+`pnpm run test:e2e:local`, l'instance isolée du skill `/verify`) démarre sans seed, sur les comptes
+que la base contient déjà. Ce n'est pas un projet `.csproj` que l'API référencerait : le seed
+appelle les cas d'usage de l'API, une référence dans l'autre sens ferait un cycle. Le projet de
+tests unitaires importe les mêmes sources en Release, pour que leurs tests tournent dans les deux
+configurations ; en Debug, il les lit dans l'API.
+
 | Compte | E-mail | Mot de passe | Particularité |
 | --- | --- | --- | --- |
 | Principal | `dev@test.local` | `DevTest123!` | Hôte de plusieurs soirées |
@@ -118,8 +130,8 @@ Chaque compte n'est créé que si son adresse est absente de la base.
   l'occurrence précédente est close et la suivante créée par la vraie passe de récurrence. Plus
   quatre modèles de soirée (trois sur le compte principal, un chez Alice), des watchlists (Alice
   publique, Bob masquée, Zoé publique, trois films sur le compte principal), un graphe de suivi
-  entre comptes et des notifications. `DevelopmentScenarioSeedTests` rejoue toute la seed en mémoire
-  et refuse une étape qui journalise un avertissement.
+  entre comptes et des notifications. `DevelopmentScenarioSeedTests` rejoue toute la seed sur les
+  doublures en mémoire et refuse une étape qui journalise un avertissement.
 
 Pour couper : `DevelopmentSeed__Enabled=false`, ou finement `DevelopmentSeed__SeedSampleEvents=false`
 et `DevelopmentSeed__SeedScenarioDemos=false`.
@@ -224,7 +236,9 @@ movie-picker/
 │  ├─ web/            Front React, Vite, TypeScript, PWA
 │  └─ api-dotnet/     API ASP.NET Core, solution MoviePicker.slnx : MoviePicker.Api, ses tests
 │                     unitaires (MoviePicker.Api.Tests) et d'intégration (MoviePicker.Api.IntegrationTests),
-│                     les doublures en mémoire qu'ils partagent (MoviePicker.Api.TestSupport)
+│                     les doublures en mémoire qu'ils partagent (MoviePicker.Api.TestSupport) et le
+│                     seed de démonstration, compilé dans l'API en Debug seulement
+│                     (MoviePicker.Api.DevelopmentSeed)
 ├─ archive/           Application Expo du cursus et documents gelés, plus construits
 ├─ artifacts/         Contrat OpenAPI, rapports Lighthouse et Stryker, généré et ignoré par git
 ├─ configs/           tsconfig et Prettier partagés, budgets Lighthouse, exclusions Sonar
