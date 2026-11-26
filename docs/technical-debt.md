@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière et sa ligne du sommaire, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-123`. Elle se range dans la partie de son `state`, avec les entrées de sa zone, et gagne sa ligne au sommaire dans le même commit. Une entrée qui change de `state` change de partie et de tableau.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-124`. Elle se range dans la partie de son `state`, avec les entrées de sa zone, et gagne sa ligne au sommaire dans le même commit. Une entrée qui change de `state` change de partie et de tableau.
 5. Deux dettes qui se règlent par le même geste n'en font qu'une, sous l'identifiant le plus ancien ; les identifiants absorbés restent cités dans `refs`.
 6. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`. Un retrait qui n'attend qu'une date (rétention des sauvegardes, ancien front encore en circulation) va dans `scripts/removal-schedule.json`, que `pnpm run check:removal-schedule` fait respecter.
 7. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
@@ -19,10 +19,11 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 
 ## Sommaire
 
-### Pour un agent (0)
+### Pour un agent (1)
 
 | Dette | Zone | Sujet |
 |---|---|---|
+| DEBT-123 | Front | la page Réglages tient la porte Lighthouse à 85 pile, sans marge |
 
 ### Geste humain (0)
 
@@ -39,6 +40,23 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 # Pour un agent
 
 Se traite en autonomie, sans attendre personne.
+
+## DEBT-123 la page Réglages tient la porte Lighthouse à 85 pile, sans marge
+
+- state: agent
+- impact: `/settings` mesure 85 de performance, le plancher exact, à chaque déploiement en recette depuis des semaines. Une passe à 84 a fait échouer la recette deux fois le 2026-11-26, sur des commits sans rapport avec la page, et la relance est passée. Une porte qui tombe au hasard apprend à relancer sans lire.
+- ou: `apps/web/src/app/pages/account/AccountPage.tsx` (état déconnecté : `GuestPreferencesSection`), `scripts/lighthouse-run.mjs` (entrée `/settings`).
+- verify: liste les scores de Réglages sous 88 des derniers déploiements en recette ; vide quand la marge est revenue.
+
+  ```bash
+  for id in $(gh run list --workflow deploy.yml --limit 15 --json databaseId --jq '.[].databaseId'); do
+    gh run view "$id" --log 2>/dev/null | grep -oE "settings performance: [0-9]+" | awk -F': ' '$2 < 88'
+  done
+  ```
+
+- fix: l'élément LCP est le paragraphe `p.lead` de la page (« Ces préférences s’appliquent à cet appareil… »), peint seulement une fois le chunk paresseux de la route chargé et évalué : 4,3 s simulées pour un LCP de 2,7 s sur l’accueil, à premier octet et FCP égaux (rapport `lighthouse-reports-1` du run de recette du 2026-11-26 à 15 h 35). Mesurer ce que le chunk de `/settings` emporte et le réduire, ou rendre l’en-tête de la page hors du chunk. `SessionGate` ne s’applique pas (C9, point 2) et peindre un titre dans la coquille échoue sur la taille (C2).
+- fini-quand: médiane de Réglages à 88 ou plus sur trois déploiements en recette de suite, `verify` vide.
+- piege: un gain mesuré en local ne compte pas, le runner seul fait foi (C8, I2) ; ne jamais baisser le plancher de la page pour faire passer la porte.
 
 
 
