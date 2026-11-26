@@ -16,6 +16,13 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 - **Le badge de soutien Ko-fi revient aux comptes Google et GitHub** : leur adresse, déjà vérifiée par le fournisseur à l’inscription, compte maintenant comme confirmée.
 - **Les pages d’un profil et les listes publiques réapparaissent dans Google** : depuis le 24 novembre, le moteur ne pouvait plus lire les films d’une watchlist, d’une liste ou des propositions d’un membre, et voyait une page vide sans adresse de référence.
+- **Les plateformes de streaming de toute la watchlist** : sur une grande watchlist, les titres les plus anciens restaient sans plateforme et sortaient du filtre par service.
+- **La fenêtre de note ne se rouvre plus** quand vous revenez sur une soirée terminée après l’avoir fermée sans noter.
+- **Vos propositions anonymes restent dans Mes propositions** : elles n’y apparaissaient plus, alors qu’elles ne sont cachées qu’aux autres.
+- **Les choix Letterboxd en attente ne disparaissent plus** quand une seule de vos listes se synchronise, et chaque liste se resynchronise à son rythme même si l’autre échoue.
+- **Une soirée récurrente ne s’arrête plus** parce que son heure a été enregistrée avec une espace en trop.
+- **Accessibilité** : dans la fenêtre Participants, « Laisser revenir » et « Retirer » gardent le focus et annoncent leur résultat ; le renvoi du courriel de confirmation et le nouvel essai de confirmation d’adresse sont annoncés sans relire toute la page.
+- **L’affiche de la fenêtre de note est nette** sur les écrans haute densité.
 
 ## [1.33.2] - 2026-11-26
 
