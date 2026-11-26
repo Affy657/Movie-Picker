@@ -115,7 +115,8 @@ public sealed class RecurringEventPass : IRecurringEventPass
             return SeriesStep.Stopped;
         }
 
-        if (!EventSchedule.IsWellFormedTime(parent.Time))
+        var nextDay = nextDate.ToString(EventSchedule.DateFormat, CultureInfo.InvariantCulture);
+        if (EventSchedule.WellFormedTimeOn(nextDay, parent.Time) is not { } nextTime)
         {
             await StopSeriesAsync(parent, now, "time of the series unreadable", ct);
             return SeriesStep.Stopped;
@@ -131,7 +132,7 @@ public sealed class RecurringEventPass : IRecurringEventPass
             return SeriesStep.Stopped;
         }
 
-        return await TryCreateNextOccurrenceAsync(parent, host, nextDate, now, ct) switch
+        return await TryCreateNextOccurrenceAsync(parent, host, nextDay, nextTime, now, ct) switch
         {
             OccurrenceOutcome.Created => SeriesStep.Created,
             OccurrenceOutcome.Failed => SeriesStep.Failed,
@@ -161,7 +162,8 @@ public sealed class RecurringEventPass : IRecurringEventPass
     private async Task<OccurrenceOutcome> TryCreateNextOccurrenceAsync(
         Event parent,
         User host,
-        DateOnly nextDate,
+        string nextDay,
+        string nextTime,
         DateTimeOffset now,
         CancellationToken ct)
     {
@@ -179,7 +181,8 @@ public sealed class RecurringEventPass : IRecurringEventPass
         var next = parent with
         {
             Id = string.Empty,
-            Date = nextDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            Date = nextDay,
+            Time = nextTime,
             Slug = SlugGenerator.NewSlug(),
             RecapSlug = SlugGenerator.NewSlug(),
             ClosedAt = null,

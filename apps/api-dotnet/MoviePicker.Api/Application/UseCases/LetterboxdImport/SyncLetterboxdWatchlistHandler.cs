@@ -84,7 +84,7 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
             await StampAsync(user, now, due, list => ErrorOf(outcome, list), ct);
 
         var pendingChoices = outcome.Lists.SelectMany(list => list.PendingChoices).ToList();
-        var keptKeys = KeysOfTheUnreadLists(user, outcome);
+        var keptKeys = KeysOfTheListsNotRead(user, outcome);
         var pendingChoiceKeys = pendingChoices
             .Select(LetterboxdPendingChoiceKey.Of)
             .Concat(keptKeys)
@@ -119,7 +119,9 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
         Func<LetterboxdImportTarget, string?> errorOf,
         CancellationToken ct)
     {
-        var stamped = lists.ToDictionary(list => list, list => new LetterboxdListSync(at, errorOf(list)));
+        var stamped = LetterboxdListStatus.FollowingTheSharedStatus(user);
+        foreach (var list in lists)
+            stamped[list] = new LetterboxdListSync(at, errorOf(list));
         return _users.SetLetterboxdSyncStatusAsync(
             user.Id,
             at,
@@ -209,11 +211,15 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
         }
     }
 
-    private static List<string> KeysOfTheUnreadLists(User user, LetterboxdSyncOutcome outcome)
+    private static List<string> KeysOfTheListsNotRead(User user, LetterboxdSyncOutcome outcome)
     {
-        var unread = outcome.Lists.Where(list => list.Incomplete).Select(list => list.Target).ToHashSet();
+        var read = outcome.Lists
+            .Where(list => list.Synced && !list.Incomplete)
+            .Select(list => list.Target)
+            .ToHashSet();
+        var notRead = LetterboxdListStatus.EnabledListsOf(user).Where(list => !read.Contains(list)).ToHashSet();
         return (user.LetterboxdPendingChoiceKeys ?? [])
-            .Where(key => unread.Contains(LetterboxdPendingChoiceKey.TargetOf(key)))
+            .Where(key => notRead.Contains(LetterboxdPendingChoiceKey.TargetOf(key)))
             .ToList();
     }
 

@@ -171,7 +171,7 @@ public sealed class UsersController : ControllerBase
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var result = await handler.HandleForUserAsync(userId, winningOnly, ct);
+        var result = await handler.HandleForOwnerAsync(userId, winningOnly, ct);
         return Ok(result);
     }
 

@@ -14,4 +14,9 @@ public interface IGetUserProposedMoviesHandler
         string userId,
         bool winningOnly,
         CancellationToken ct = default);
+
+    Task<UserProposedMoviesResponse> HandleForOwnerAsync(
+        string userId,
+        bool winningOnly,
+        CancellationToken ct = default);
 }

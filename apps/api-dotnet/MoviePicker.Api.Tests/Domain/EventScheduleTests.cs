@@ -7,6 +7,23 @@ namespace MoviePicker.Api.Tests.Domain;
 public sealed class EventScheduleTests
 {
     [Theory]
+    [InlineData("2026-09-23", "20:30", "20:30")]
+    [InlineData("2026-09-23", " 20:30", "20:30")]
+    [InlineData("2026-09-23", "20:30 ", "20:30")]
+    [InlineData("2026-03-29", "02:30", "02:30")]
+    public void WellFormedTimeOn_TimeTheScheduleReads_IsWrittenHHmm(string date, string time, string expected) =>
+        Assert.Equal(expected, EventSchedule.WellFormedTimeOn(date, time));
+
+    [Theory]
+    [InlineData("25:99")]
+    [InlineData("vingt heures")]
+    [InlineData("")]
+    [InlineData("20:30:00")]
+    [InlineData("8:30")]
+    public void WellFormedTimeOn_TimeTheScheduleCannotRead_IsNull(string time) =>
+        Assert.Null(EventSchedule.WellFormedTimeOn("2026-09-23", time));
+
+    [Theory]
     [InlineData("2026-03-29", "02:00", 1, 0)]
     [InlineData("2026-03-29", "02:30", 1, 30)]
     [InlineData("2026-03-29", "02:59", 1, 59)]
