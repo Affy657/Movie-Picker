@@ -110,8 +110,6 @@ var app = builder.Build();
 
 ProductionStartupValidation.Validate(app);
 
-app.UseMiddleware<ShareDocumentForwardedHopsLoggingMiddleware>();
-
 app.UseForwardedHeaders();
 
 app.UseResponseCompression();
