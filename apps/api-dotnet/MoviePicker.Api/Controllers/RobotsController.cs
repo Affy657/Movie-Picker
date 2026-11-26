@@ -10,15 +10,12 @@ namespace MoviePicker.Api.Controllers;
 [Route("")]
 public sealed class RobotsController : ControllerBase
 {
-    private const string Rules =
+    private static readonly string[] CrawlableApiPrefixes = ["posters", "banners", "avatars", "movies", "users", "recaps"];
+
+    private static readonly string Rules =
         "User-agent: *\n"
-        + "Allow: /" + ApiRoutePrefix.V1 + "/posters/\n"
-        + "Allow: /" + ApiRoutePrefix.V1 + "/banners/\n"
-        + "Allow: /" + ApiRoutePrefix.V1 + "/avatars/\n"
-        + "Allow: /" + ApiRoutePrefix.V1 + "/movies/\n"
-        + "Allow: /" + ApiRoutePrefix.V1 + "/users/\n"
-        + "Allow: /" + ApiRoutePrefix.V1 + "/recaps/\n"
-        + "Disallow: /" + ApiRoutePrefix.V1 + "/users/me/\n"
+        + string.Concat(CrawlableApiPrefixes.Select(prefix => $"Allow: /{ApiRoutePrefix.V1}/{prefix}/\n"))
+        + $"Disallow: /{ApiRoutePrefix.V1}/users/me/\n"
         + "Disallow: /\n";
 
     [HttpGet("robots.txt")]
