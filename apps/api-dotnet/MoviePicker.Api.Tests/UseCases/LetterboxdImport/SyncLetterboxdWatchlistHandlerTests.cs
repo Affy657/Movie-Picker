@@ -856,6 +856,49 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
         VerifyPendingKeysRecorded("dune-part-two");
     }
 
+    [Fact]
+    public async Task HandleAsync_WatchedFilmsRetriedAlone_KeepThePendingChoicesOfTheWatchlistLeftOut()
+    {
+        GivenUser(
+            Username,
+            Now.AddHours(-1),
+            ErrorCodes.LetterboxdWatchedIncomplete,
+            pendingReconciliationCount: 3,
+            pendingChoiceKeys: ["dune-part-two", "solaris", "stalker"],
+            listSyncs: new()
+            {
+                [LetterboxdImportTarget.Watchlist] = new LetterboxdListSync(Now.AddHours(-1), null),
+                [LetterboxdImportTarget.Watched] = new LetterboxdListSync(Now.AddHours(-1), ErrorCodes.LetterboxdWatchedIncomplete)
+            });
+
+        await _sut.HandleAsync(UserId, force: false);
+
+        VerifyLetterboxdRead(Times.Never());
+        VerifyPendingKeysRecorded("dune-part-two", "solaris", "stalker");
+        _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WatchlistSyncedAlone_KeepsThePendingChoicesOfTheWatchedFilmsLeftOut()
+    {
+        GivenUser(
+            Username,
+            Now.AddDays(-2),
+            pendingReconciliationCount: 1,
+            pendingChoiceKeys: ["watched:solaris"],
+            listSyncs: new()
+            {
+                [LetterboxdImportTarget.Watchlist] = new LetterboxdListSync(Now.AddDays(-2), null),
+                [LetterboxdImportTarget.Watched] = new LetterboxdListSync(Now.AddHours(-3), null)
+            });
+        GivenAmbiguousLetterboxdFilm();
+
+        await _sut.HandleAsync(UserId, force: false);
+
+        VerifyWatchedFilmsRead(Times.Never());
+        VerifyPendingKeysRecorded("dune-part-two", "watched:solaris");
+    }
+
     [Theory]
     [InlineData(true, "manual")]
     [InlineData(false, "auto")]

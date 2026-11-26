@@ -281,6 +281,22 @@ public sealed class LetterboxdSyncEndpointsTests : IClassFixture<MoviePickerAppl
     }
 
     [Fact]
+    public async Task Sync_WatchedFilmsRetriedAlone_KeepThePendingChoicesOfTheWatchlist()
+    {
+        var (client, userId) = await ConnectedUserAsync();
+        _letterboxd.Watchlist = new([new LetterboxdFilm("titre-ambigu", "Titre ambigu", "2020")], true);
+        _letterboxd.Watched = LetterboxdFilmsSnapshot.Failed();
+        await SyncAsync(client);
+        await BackdateSyncAsync(userId, "letterboxd_watched_incomplete");
+        _letterboxd.Watched = new([], true);
+
+        var report = await BodyAsync(await client.PostAsync("/api/v1/letterboxd/sync?force=false", null));
+
+        Assert.Equal("watched", Assert.Single(report.GetProperty("lists").EnumerateArray()).GetProperty("target").GetString());
+        Assert.Equal(1, (await MeAsync(client)).GetProperty("letterboxdPendingReconciliationCount").GetInt32());
+    }
+
+    [Fact]
     public async Task Sync_UnreadableWatchlist_StillSyncsTheWatchedFilms_AndRecordsTheWatchlistError()
     {
         var (client, _) = await ConnectedUserAsync();
