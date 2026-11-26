@@ -196,7 +196,7 @@ public sealed class ReportProfilePhotoHandlerTests
         Assert.Empty(_sent);
         Assert.Contains(
             _logs.States.SelectMany(state => state),
-            pair => pair.Key == "{OriginalFormat}" && Equals(pair.Value, ReportProfilePhotoHandler.ReportedLogTemplate));
+            pair => pair.Key == "{OriginalFormat}" && Equals(pair.Value, ReportProfilePhotoHandler.ReportedLogMessage));
     }
 
     [Fact]
