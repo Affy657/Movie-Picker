@@ -1,7 +1,14 @@
 import { ApiError } from '@/shared/api/apiError';
 import { noteRateLimit, retryDelayOf } from '@/shared/api/rateLimitCooldown';
 import type { ApiRequestPath, ApiRoute, ApiRouteSegments } from '@/shared/api/apiRoutes';
-import { interpolate, loadedLocale, preferredLocale, t, type TranslationKey } from '@/shared/i18n';
+import {
+  interpolate,
+  loadedLocale,
+  preferredLocale,
+  t,
+  tmdbLanguageOf,
+  type TranslationKey,
+} from '@/shared/i18n';
 
 function hostLooksLocal(host: string): boolean {
   const h = (host.split(':')[0] ?? host).toLowerCase();
@@ -148,7 +155,10 @@ function looksLikeHtml(isJson: boolean, text: string): boolean {
 }
 
 function buildRequestHeaders(options?: RequestInit): Record<string, string> {
-  const headers: Record<string, string> = { ...mergeRequestHeaders(options?.headers) };
+  const headers: Record<string, string> = {
+    'Accept-Language': tmdbLanguageOf(preferredLocale()),
+    ...mergeRequestHeaders(options?.headers),
+  };
   if (options?.body != null && options.body !== '') {
     headers['Content-Type'] = 'application/json';
   }

@@ -1,5 +1,5 @@
 name: "Verify the served web build"
-description: "Checks that Firebase Hosting answers on the site address with the expected headers and, for a fresh build, a 404 on a missing asset, then that the public domain serves the entry point of the build that was just released. Shared by the deployment and the rollback."
+description: "Checks that Firebase Hosting answers on the site address with the expected headers and, for a fresh build, a 404 on a missing asset, a 404 with the application shell on an unknown path and a 200 on the routes, then that the public domain serves the entry point of the build that was just released. Shared by the deployment and the rollback."
 inputs:
   dist:
     description: "Folder of the build that was just released, to compare its index.html with the one the domain serves; empty to only check that the public domain answers"
@@ -69,6 +69,33 @@ runs:
           echo "::error::A missing file under /assets answers $code instead of 404: a tab running the previous build would load index.html as a script instead of reloading."
           exit 1
         fi
+    - name: Unknown path answers 404 with the shell, routes answer 200 (Hosting site)
+      if: inputs.dist != ''
+      shell: bash
+      env:
+        HOSTING_URL: ${{ inputs.hosting-url }}
+        DIST: ${{ inputs.dist }}
+      run: |
+        set -eo pipefail
+        ENTRY="$(grep -oE '/assets/[A-Za-z0-9._-]+\.js' "$DIST/index.html" | head -1 || true)"
+        if [ -z "$ENTRY" ] || [ ! -f "$DIST/404.html" ]; then
+          echo "::error::The build has no entry point or no 404.html: Hosting would answer unknown paths with its own page, without the application."
+          exit 1
+        fi
+        code="$(curl -sS -o "$RUNNER_TEMP/unknown-path.html" -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 "$HOSTING_URL/page-inexistante-probe")"
+        echo "GET $HOSTING_URL/page-inexistante-probe -> $code"
+        if [ "$code" != "404" ] || ! grep -qF "$ENTRY" "$RUNNER_TEMP/unknown-path.html"; then
+          echo "::error::An unknown path answers $code, or without the application shell: it must answer 404 with 404.html, so that no engine indexes it and the visitor still gets the not-found page."
+          exit 1
+        fi
+        for path in /login /films/recherche /settings/preferences /listes/probe /u/probe/films; do
+          code="$(curl -sS -o "$RUNNER_TEMP/route.html" -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 "$HOSTING_URL$path")"
+          echo "GET $HOSTING_URL$path -> $code"
+          if [ "$code" != "200" ] || ! grep -qF "$ENTRY" "$RUNNER_TEMP/route.html"; then
+            echo "::error::$path answers $code, or without the application shell: a route of the router lost its rewrite in infra/firebase-hosting.json."
+            exit 1
+          fi
+        done
     # The previous smoke tests query the site address: they say nothing about the public domain
     # served to users, whose DNS or certificate can be broken while the site answers perfectly.
     # A 200 does not say which version is served either: the hashed entry point of the build that

@@ -115,6 +115,12 @@ public sealed class RecurringEventPass : IRecurringEventPass
             return SeriesStep.Stopped;
         }
 
+        if (!EventSchedule.IsWellFormedTime(parent.Time))
+        {
+            await StopSeriesAsync(parent, now, "time of the series unreadable", ct);
+            return SeriesStep.Stopped;
+        }
+
         var host = string.IsNullOrWhiteSpace(parent.CreatorUserId)
             ? null
             : await _users.GetByIdAsync(parent.CreatorUserId, ct);

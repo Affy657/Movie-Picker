@@ -16,8 +16,8 @@
 
 .dialog::backdrop {
   background: var(--color-overlay-backdrop);
-  backdrop-filter: var(--backdrop-blur-overlay);
   -webkit-backdrop-filter: var(--backdrop-blur-overlay);
+  backdrop-filter: var(--backdrop-blur-overlay);
 }
 
 .dialog:where([open])::backdrop {

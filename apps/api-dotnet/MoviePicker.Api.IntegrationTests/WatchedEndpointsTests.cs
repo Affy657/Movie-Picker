@@ -269,6 +269,24 @@ public sealed class WatchedEndpointsTests : IClassFixture<MoviePickerApplication
     }
 
     [Fact]
+    public async Task WatchedMovies_ArePagedBySkipAndTake_OnTheAccountAndTheProfile()
+    {
+        var client = await NewUserAsync("WatchedPages");
+        var me = await MeAsync(client);
+        await WinNightAsync(me.UserId, 603, "Matrix", "2025-01-10");
+        await WinNightAsync(me.UserId, 680, "Pulp Fiction", "2025-02-10");
+        await WinNightAsync(me.UserId, 27_205, "Inception", "2025-03-10");
+
+        var mine = await client.GetFromJsonAsync<UserWatchedMoviesResponse>("/api/v1/users/me/watched-movies?skip=1&take=1", Json);
+        var visitor = await _factory.CreateClient().GetFromJsonAsync<UserWatchedMoviesResponse>(
+            $"/api/v1/users/{me.Handle}/watched-movies?skip=2&take=1",
+            Json);
+
+        Assert.Equal((680, 3, true), (Assert.Single(mine!.Items).TmdbId, mine.Total, mine.HasMore));
+        Assert.Equal((603, 3, false), (Assert.Single(visitor!.Items).TmdbId, visitor.Total, visitor.HasMore));
+    }
+
+    [Fact]
     public async Task Lists_CountTheirWatchedTitles_AndFlagEachOne()
     {
         var client = await NewUserAsync("WatchedLists");

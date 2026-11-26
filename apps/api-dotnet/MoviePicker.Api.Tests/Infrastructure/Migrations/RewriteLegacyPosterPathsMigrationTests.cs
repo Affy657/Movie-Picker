@@ -76,14 +76,14 @@ public sealed class RewriteLegacyPosterPathsMigrationTests
 
         Assert.Equal(1, updated);
         _movies.Verify(r => r.UpdatePosterPathAsync("m1", "/api/v1/posters/tmdb/w500/cached.jpg", It.IsAny<CancellationToken>()), Times.Once);
-        _tmdb.Verify(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()), Times.Never);
+        _tmdb.Verify(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task ExecuteAsync_SourceLostWithTheCache_ResolvesThePosterFromTmdb()
     {
         GivenLegacyMovies(LegacyMovie("m1", 11, "https://image.tmdb.org/t/p/w500/lost.jpg"));
-        _tmdb.Setup(t => t.GetDetailsAsync(11, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetDetailsAsync(11, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(DetailsWithPoster("https://image.tmdb.org/t/p/w185/fresh.jpg"));
 
         var updated = await _sut.ExecuteAsync();
@@ -96,7 +96,7 @@ public sealed class RewriteLegacyPosterPathsMigrationTests
     public async Task ExecuteAsync_TitleGoneFromTmdb_ClearsThePoster()
     {
         GivenLegacyMovies(LegacyMovie("m1", 11, "https://image.tmdb.org/t/p/w500/lost.jpg"));
-        _tmdb.Setup(t => t.GetDetailsAsync(11, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetDetailsAsync(11, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TmdbMovieDetails?)null);
 
         await _sut.ExecuteAsync();
@@ -111,7 +111,7 @@ public sealed class RewriteLegacyPosterPathsMigrationTests
             LegacyMovie("m1", 11, "https://image.tmdb.org/t/p/w500/lost.jpg"),
             LegacyMovie("m2", 22, CachedSource));
         GivenCachedSource(CachedSource);
-        _tmdb.Setup(t => t.GetDetailsAsync(11, It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetDetailsAsync(11, It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("TMDB unavailable"));
 
         var ex = await Assert.ThrowsAsync<BackfillIncompleteException>(() => _sut.ExecuteAsync());
@@ -125,7 +125,7 @@ public sealed class RewriteLegacyPosterPathsMigrationTests
     public async Task ExecuteAsync_WatchlistItems_AreRewrittenWithTheirOwnMediaType()
     {
         GivenLegacyWatchlistItems(LegacyItem("w1", 33, "https://image.tmdb.org/t/p/w500/lost.jpg"));
-        _tmdb.Setup(t => t.GetDetailsAsync(33, MovieMediaType.Tv, It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetDetailsAsync(33, MovieMediaType.Tv, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(DetailsWithPoster("https://image.tmdb.org/t/p/w500/series.jpg"));
 
         var updated = await _sut.ExecuteAsync();

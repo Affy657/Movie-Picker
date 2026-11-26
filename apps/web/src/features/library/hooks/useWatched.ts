@@ -10,8 +10,7 @@ import {
 import { watchlistItemKey } from '@/features/movies/utils/watchlistItemKey';
 import {
   UNSEEN_STATUS,
-  WATCHED_MOVIES_TAKE,
-  fetchMyWatchedMovies,
+  fetchAllMyWatchedMovies,
   fetchWatchedStatus,
   markWatched,
   setWatchedRating,
@@ -24,7 +23,7 @@ import {
 export function useWatchedMovies(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.watched.movies,
-    queryFn: ({ signal }) => fetchMyWatchedMovies(WATCHED_MOVIES_TAKE, signal),
+    queryFn: ({ signal }) => fetchAllMyWatchedMovies(signal),
     enabled: options?.enabled ?? true,
   });
 }

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
 using MoviePicker.Api.Application.UseCases.CloseEvent;
 using MoviePicker.Api.Application.UseCases.CreateEvent;
@@ -15,6 +16,7 @@ using MoviePicker.Api.Application.UseCases.InviteUser;
 using MoviePicker.Api.Application.UseCases.JoinEvent;
 using MoviePicker.Api.Application.UseCases.LaunchWheel;
 using MoviePicker.Api.Application.UseCases.ListMyEvents;
+using MoviePicker.Api.Application.UseCases.MovieRatings;
 using MoviePicker.Api.Application.UseCases.RemoveParticipant;
 using MoviePicker.Api.Application.UseCases.RemoveWinner;
 using MoviePicker.Api.Application.UseCases.ResetWheel;
@@ -28,6 +30,8 @@ namespace MoviePicker.Api.Controllers;
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 public sealed class EventsController : ControllerBase
 {
+    private const string LimitsCacheControl = "public, max-age=3600";
+
     [HttpPost]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.CreateEventPolicy)]
@@ -56,11 +60,20 @@ public sealed class EventsController : ControllerBase
         [FromQuery] int? limit,
         [FromQuery] int? offset,
         [FromQuery] string? q,
+        [FromQuery] bool? previews,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var result = await handler.HandleAsync(userId, scope, limit, offset, q, ct);
+        var result = await handler.HandleAsync(userId, scope, limit, offset, q, previews ?? true, ct);
         return Ok(result);
+    }
+
+    [HttpGet("limits")]
+    [ProducesResponseType(typeof(EventLimitsResponse), StatusCodes.Status200OK)]
+    public IActionResult GetLimits()
+    {
+        Response.Headers.CacheControl = LimitsCacheControl;
+        return Ok(EventLimitsResponse.Current);
     }
 
     [HttpGet("{slug}/config")]
@@ -101,11 +114,12 @@ public sealed class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> GetBySlug(
         string slug,
+        [RequestLanguage] CatalogLanguage interfaceLanguage,
         [FromServices] IEventViewTagHandler viewTag,
         [FromServices] IGetEventDetailHandler handler,
         CancellationToken ct)
     {
-        var entityTag = await viewTag.HandleAsync(slug, ct);
+        var entityTag = await viewTag.HandleAsync(slug, interfaceLanguage, ct);
         ConditionalGet.Stamp(Response, entityTag);
         if (ConditionalGet.IsNotModified(Request, entityTag))
             return StatusCode(StatusCodes.Status304NotModified);
@@ -238,6 +252,23 @@ public sealed class EventsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPut("{slug}/rating-prompt")]
+    [Authorize]
+    [EnableRateLimiting(RateLimitingExtensions.RatingMutationPolicy)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> MarkRatingPrompted(
+        string slug,
+        [FromServices] IMarkRatingPromptedHandler handler,
+        [CurrentUserId] string userId,
+        CancellationToken ct)
+    {
+        await handler.HandleAsync(userId, slug, ct);
+        return NoContent();
+    }
+
     [HttpDelete("{slug}/participants/{participantId}")]
     [EnableRateLimiting(RateLimitingExtensions.RemoveParticipantPolicy)]
     [ProducesResponseType(typeof(RemoveParticipantResponse), StatusCodes.Status200OK)]
@@ -254,6 +285,23 @@ public sealed class EventsController : ControllerBase
     {
         var result = await handler.HandleAsync(slug, participantId, ct);
         return Ok(result);
+    }
+
+    [HttpDelete("{slug}/removed-people/{userId}")]
+    [EnableRateLimiting(RateLimitingExtensions.RemoveParticipantPolicy)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> LetBackIn(
+        string slug,
+        string userId,
+        [FromServices] ILetBackInHandler handler,
+        CancellationToken ct)
+    {
+        await handler.HandleAsync(slug, userId, ct);
+        return NoContent();
     }
 
     [HttpPut("{slug}/co-hosts/{participantId}")]

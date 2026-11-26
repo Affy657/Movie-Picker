@@ -232,6 +232,32 @@ public sealed class InMemoryUserRepositoryTests
     }
 
     [Fact]
+    public async Task MarkEmailVerifiedAsync_KeepsTheFirstConfirmationDate()
+    {
+        var first = new DateTimeOffset(2026, 11, 25, 9, 0, 0, TimeSpan.Zero);
+        var created = await _repo.AddAsync(Mk());
+
+        Assert.True(await _repo.MarkEmailVerifiedAsync(created.Id, first));
+        Assert.False(await _repo.MarkEmailVerifiedAsync(created.Id, first.AddDays(1)));
+        Assert.False(await _repo.MarkEmailVerifiedAsync("ghost", first));
+
+        var reloaded = await _repo.GetByIdAsync(created.Id);
+        Assert.Equal(first, reloaded!.EmailVerifiedAt);
+        Assert.Equal(created.Version + 1, reloaded.Version);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_PreservesTheConfirmationDate()
+    {
+        var confirmedAt = new DateTimeOffset(2026, 11, 25, 9, 0, 0, TimeSpan.Zero);
+        var created = await _repo.AddAsync(Mk() with { EmailVerifiedAt = confirmedAt });
+
+        await _repo.UpdateAsync(created with { DisplayName = "Alice renamed" });
+
+        Assert.Equal(confirmedAt, (await _repo.GetByIdAsync(created.Id))!.EmailVerifiedAt);
+    }
+
+    [Fact]
     public async Task DeleteAsync_RemovesUserAndIndexes()
     {
         var created = await _repo.AddAsync(Mk(email: "alice@test.local", handle: "alice"));

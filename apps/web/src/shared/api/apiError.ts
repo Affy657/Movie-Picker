@@ -4,6 +4,7 @@ export const API_ERROR_REASONS = {
   voteLimitReached: 'vote-limit-reached',
   concurrentUpdate: 'concurrent_update',
   invalidResetToken: 'invalid_reset_token',
+  invalidEmailVerificationToken: 'invalid_email_verification_token',
   letterboxdWatchlistIncomplete: 'letterboxd_watchlist_incomplete',
   letterboxdWatchedIncomplete: 'letterboxd_watched_incomplete',
   letterboxdExportUnreadable: 'letterboxd_export_unreadable',

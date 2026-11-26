@@ -105,7 +105,14 @@ function compareMovies(a: MovieData, b: MovieData, sortBy: MovieRowSortKey): num
   }
 }
 
-function sortMovies(movies: MovieData[], sortBy: MovieRowSortKey, sortDir: 'asc' | 'desc') {
+function sortMovies(
+  movies: MovieData[],
+  sortBy: MovieRowSortKey,
+  sortDir: 'asc' | 'desc',
+  hidesAddedOrder: boolean
+) {
+  if (hidesAddedOrder && sortBy === 'createdAt')
+    return sortDir === 'desc' ? [...movies].reverse() : [...movies];
   const dir = sortDir === 'desc' ? -1 : 1;
   return [...movies].sort((a, b) => compareMovies(a, b, sortBy) * dir);
 }
@@ -243,6 +250,7 @@ export default function EventMoviesSection({
   wheelLocked = false,
 }: Readonly<EventMoviesSectionProps>) {
   const isFinished = !!event.isFinished;
+  const hidesAddedOrder = !!event.config?.anonymousProposals;
   const { user } = useAuth();
   const ratingScale = user?.ratingScale;
   const { t } = useTranslation();
@@ -292,8 +300,8 @@ export default function EventMoviesSection({
   }, [onAddMovieOpenChange, addMovieTriggerRef]);
 
   const sortedMovies = useMemo(
-    () => sortMovies(movies, sortBy, sortDir),
-    [movies, sortBy, sortDir]
+    () => sortMovies(movies, sortBy, sortDir, hidesAddedOrder),
+    [movies, sortBy, sortDir, hidesAddedOrder]
   );
   const inWheelMovies = useMemo(
     () =>
@@ -326,7 +334,10 @@ export default function EventMoviesSection({
 
   const sortOptions = [
     { key: 'title' as const, label: t('movies.list.sortTitle') },
-    { key: 'createdAt' as const, label: t('movies.list.sortAddedAt') },
+    {
+      key: 'createdAt' as const,
+      label: t(hidesAddedOrder ? 'movies.list.sortShuffled' : 'movies.list.sortAddedAt'),
+    },
     { key: 'score' as const, label: t('movies.list.sortScore') },
     { key: 'voteAverage' as const, label: t('movies.list.sortTmdbVote') },
     { key: 'duration' as const, label: t('movies.list.sortDuration') },
@@ -357,6 +368,7 @@ export default function EventMoviesSection({
 
   const sharedListProps: SharedMovieListProps = {
     slug,
+    hidesAddedOrder,
     participantId: participant?.participantId ?? null,
     canVote: !isFinished,
     participantPseudo: participant?.pseudo ?? null,

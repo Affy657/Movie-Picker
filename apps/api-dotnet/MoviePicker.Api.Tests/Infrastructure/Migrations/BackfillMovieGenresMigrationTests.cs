@@ -53,7 +53,7 @@ public sealed class BackfillMovieGenresMigrationTests
     }
 
     private void GivenTmdbDetails(int tmdbId, TmdbMovieDetails? details) =>
-        _tmdb.Setup(t => t.GetDetailsAsync(tmdbId, It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetDetailsAsync(tmdbId, It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(details);
 
     [Fact]
@@ -131,7 +131,7 @@ public sealed class BackfillMovieGenresMigrationTests
             MovieWithoutGenres("m2", 22),
             MovieWithoutGenres("m3", 33));
         GivenTmdbDetails(11, Details(28));
-        _tmdb.Setup(t => t.GetDetailsAsync(22, It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetDetailsAsync(22, It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("TMDB indisponible"));
         GivenTmdbDetails(33, Details(18));
 
@@ -189,7 +189,7 @@ public sealed class BackfillMovieGenresMigrationTests
         await _sut.ExecuteAsync();
 
         _tmdb.Verify(
-            t => t.GetDetailsAsync(11, MovieMediaType.Tv, It.IsAny<CancellationToken>()),
+            t => t.GetDetailsAsync(11, MovieMediaType.Tv, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

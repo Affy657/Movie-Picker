@@ -53,8 +53,8 @@ public sealed class LetterboxdSelectionsWriter
                 continue;
             }
 
-            await _addToWatchlist.HandleAsync(userId, selection, ct);
-            added++;
+            if (await _addToWatchlist.TryAddKnownTitleAsync(userId, selection, ct))
+                added++;
         }
 
         return new LetterboxdWriteCount(added, alreadyPresent);

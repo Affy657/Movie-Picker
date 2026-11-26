@@ -1,5 +1,5 @@
 /**
- * Usage: `pnpm run test:e2e:local [--in-memory] [playwright arguments]`, from the root.
+ * Usage: `pnpm run test:e2e:local [playwright arguments]`, from the root.
  *
  * Plays the Playwright suite on the workstation while the development servers keep running: the
  * API is built and started in Release on its own port (5010), so it never fights the Debug build
@@ -10,7 +10,7 @@
  * The API runs on MongoDB, as the CI `e2e` job does: by default the workstation test container of
  * `scripts/mongo-replica-set.mjs` (27018), started if needed, whose `moviepicker_e2e` database is
  * dropped first so every run starts as empty as the CI one; `E2E_MONGODB_URI` points elsewhere,
- * and nothing is dropped there. `--in-memory` keeps the in-memory store instead.
+ * and nothing is dropped there.
  * The web build rewrites the versioned `techMetrics.ts`; it is put back as it was.
  */
 import { spawn, spawnSync } from 'node:child_process';
@@ -33,12 +33,9 @@ const isWindows = process.platform === 'win32';
 const E2E_DATABASE = 'moviepicker_e2e';
 const HEALTH_TIMEOUT_MS = 120_000;
 
-const args = process.argv.slice(2);
-const inMemory = args.includes('--in-memory');
-const playwrightArgs = args.filter((arg) => arg !== '--in-memory');
+const playwrightArgs = process.argv.slice(2);
 
 async function resolveMongoUri() {
-  if (inMemory) return '';
   if (process.env.E2E_MONGODB_URI) return process.env.E2E_MONGODB_URI;
   console.log(`▶ MongoDB test container ${WORKSTATION_CONTAINER} on ${WORKSTATION_PORT}`);
   await startWorkstationMongo();
@@ -111,7 +108,7 @@ try {
     }),
     run('API build (Release)', 'dotnet', ['build', E2E_API_PROJECT, '-c', 'Release']),
   ]);
-  console.log(`▶ Test API on ${E2E_API_URL} (${mongoUri ? 'MongoDB' : 'in memory'})`);
+  console.log(`▶ Test API on ${E2E_API_URL}`);
   api = spawn(
     'dotnet',
     ['run', '--project', E2E_API_PROJECT, '-c', 'Release', '--no-build', '--no-launch-profile'],

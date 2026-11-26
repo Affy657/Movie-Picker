@@ -101,7 +101,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
         var titles = TitleResults(FuzzyTitle, expectedFirst);
         var sut = CreateSut(CreateHttpClient(RouteBy(titles, Person(personName), CastCredits(20)).Object));
 
-        var result = await sut.SearchAsync(query, false);
+        var result = await sut.SearchAsync(query, false, CatalogLanguage.French);
 
         Assert.Equal(expectedFirst, result[0].Title);
         Assert.Contains(result, item => item.Title == FuzzyTitle);
@@ -113,7 +113,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
         var titles = TitleResults(FuzzyTitles(15));
         var sut = CreateSut(CreateHttpClient(RouteBy(titles, Person("Rocky Carroll"), CastCredits(20)).Object));
 
-        var result = await sut.SearchAsync("rocky", false);
+        var result = await sut.SearchAsync("rocky", false, CatalogLanguage.French);
 
         Assert.Equal(20, result.Count);
         Assert.Equal(10, result.Count(IsCredit));
@@ -126,7 +126,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
         var titles = TitleResults(FuzzyTitles(15));
         var sut = CreateSut(CreateHttpClient(RouteBy(titles, Person("Christopher Nolan"), CastCredits(12)).Object));
 
-        var result = await sut.SearchAsync("nolan", false);
+        var result = await sut.SearchAsync("nolan", false, CatalogLanguage.French);
 
         Assert.Equal(20, result.Count);
         Assert.All(result.Take(12), item => Assert.True(IsCredit(item)));
@@ -139,7 +139,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
         var titles = TitleResults("Facing Nolan", "Finding Nolan", "Apocalypse Nolan");
         var sut = CreateSut(CreateHttpClient(RouteBy(titles, Person("Christopher Nolan"), CastCredits(12)).Object));
 
-        var result = await sut.SearchAsync("nolan", false);
+        var result = await sut.SearchAsync("nolan", false, CatalogLanguage.French);
 
         Assert.All(result.Take(12), item => Assert.True(IsCredit(item)));
         Assert.Equal(["Facing Nolan", "Finding Nolan", "Apocalypse Nolan"], result.Skip(12).Select(item => item.Title));
@@ -156,7 +156,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
         var titles = TitleResults($"{exactTitle} : le documentaire", exactTitle);
         var sut = CreateSut(CreateHttpClient(RouteBy(titles, Person(personName), CastCredits(12)).Object));
 
-        var result = await sut.SearchAsync(query, false);
+        var result = await sut.SearchAsync(query, false, CatalogLanguage.French);
 
         Assert.Equal(exactTitle, result[0].Title);
         Assert.All(result.Skip(1).Take(12), item => Assert.True(IsCredit(item)));
@@ -168,7 +168,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
         var titles = TitleResults("Anatomie d'une chute", "Dune", "La Revanche d'une blonde", "Dune : Deuxième partie");
         var sut = CreateSut(CreateHttpClient(RouteBy(titles, NoPeopleJson, NoCreditsJson).Object));
 
-        var result = await sut.SearchAsync("dune", false);
+        var result = await sut.SearchAsync("dune", false, CatalogLanguage.French);
 
         Assert.Equal(DuneTitlesByResemblance, result.Select(item => item.Title));
     }
@@ -184,7 +184,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
             """;
         var sut = CreateSut(CreateHttpClient(RouteBy(titles, NoPeopleJson, NoCreditsJson).Object));
 
-        var result = await sut.SearchAsync("it", false);
+        var result = await sut.SearchAsync("it", false, CatalogLanguage.French);
 
         Assert.Equal("Ça", result[0].Title);
     }
@@ -195,7 +195,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
         var titles = TitleResults("Anatomie d'une chute", "Dune");
         var sut = CreateSut(CreateHttpClient(RouteBy(titles, NoPeopleJson, NoCreditsJson).Object));
 
-        var result = await sut.SearchTitlesAsync("Dune", false);
+        var result = await sut.SearchTitlesAsync("Dune", false, CatalogLanguage.French);
 
         Assert.Equal("Dune", result[0].Title);
     }
@@ -214,7 +214,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
             """;
         var sut = CreateSut(CreateHttpClient(RouteBy(TitleMatchesJson, people, credits).Object));
 
-        var result = await sut.SearchAsync("Bong Joon-ho", false);
+        var result = await sut.SearchAsync("Bong Joon-ho", false, CatalogLanguage.French);
 
         Assert.Equal(ParasiteSnowpiercerAndFuzzyTitles, result.Select(item => item.Title));
     }
@@ -230,7 +230,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
             """;
         var sut = CreateSut(CreateHttpClient(RouteBy(TitleMatchesJson, people, credits).Object));
 
-        var result = await sut.SearchAsync("Nolan", false);
+        var result = await sut.SearchAsync("Nolan", false, CatalogLanguage.French);
 
         Assert.Equal(InceptionThenFuzzyTitles, result.Select(item => item.Title));
     }
@@ -246,7 +246,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
             """;
         var sut = CreateSut(CreateHttpClient(RouteBy(TitleMatchesJson, people, credits).Object));
 
-        var result = await sut.SearchAsync("Christoph", false);
+        var result = await sut.SearchAsync("Christoph", false, CatalogLanguage.French);
 
         Assert.Equal(FuzzyThenInceptionTitles, result.Select(item => item.Title));
     }
@@ -268,7 +268,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
             """;
         var sut = CreateSut(CreateHttpClient(RouteBy(TitleMatchesJson, people, credits).Object));
 
-        var result = await sut.SearchAsync("Nolan", false);
+        var result = await sut.SearchAsync("Nolan", false, CatalogLanguage.French);
 
         Assert.DoesNotContain(result, item => item.Title == "Produit seulement");
         Assert.Contains(result, item => item.Title == "Inception");
@@ -288,7 +288,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
             """;
         var sut = CreateSut(CreateHttpClient(RouteBy(TitleMatchesJson, people, credits).Object));
 
-        var result = await sut.SearchAsync("Pedro Pascal", false);
+        var result = await sut.SearchAsync("Pedro Pascal", false, CatalogLanguage.French);
 
         Assert.All(result, item => Assert.Equal(MovieMediaType.Movie, item.MediaType));
         Assert.DoesNotContain(result, item => item.Title == "Une série");
@@ -310,7 +310,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
             """;
         var sut = CreateSut(CreateHttpClient(RouteBy(titles, people, credits).Object));
 
-        var result = await sut.SearchAsync("Pedro Pascal", allowSeries: true);
+        var result = await sut.SearchAsync("Pedro Pascal", allowSeries: true, CatalogLanguage.French);
 
         Assert.Contains(result, item => item.MediaType == MovieMediaType.Tv && item.Title == "Une série");
     }
@@ -324,7 +324,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
                 : Json(TitleMatchesJson));
         var sut = CreateSut(CreateHttpClient(handler.Object));
 
-        var result = await sut.SearchAsync("Bong Joon-ho", false);
+        var result = await sut.SearchAsync("Bong Joon-ho", false, CatalogLanguage.French);
 
         Assert.Equal(FuzzyTitleOnly, result.Select(item => item.Title));
     }
@@ -340,7 +340,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
             """;
         var sut = CreateSut(CreateHttpClient(RouteBy(TitleMatchesJson, people, credits).Object));
 
-        var result = await sut.SearchAsync("Dune", false);
+        var result = await sut.SearchAsync("Dune", false, CatalogLanguage.French);
 
         Assert.Equal(FuzzyTitleOnly, result.Select(item => item.Title));
     }
@@ -356,7 +356,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
             """;
         var sut = CreateSut(CreateHttpClient(RouteBy(TitleMatchesJson, people, credits).Object));
 
-        var result = await sut.SearchAsync("Bong Joon-ho", false);
+        var result = await sut.SearchAsync("Bong Joon-ho", false, CatalogLanguage.French);
 
         Assert.Equal(FuzzyTitleOnly, result.Select(item => item.Title));
     }
@@ -367,7 +367,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
         var handler = RouteBy(TitleMatchesJson, """{"results":[]}""", """{"cast":[]}""");
         var sut = CreateSut(CreateHttpClient(handler.Object));
 
-        await sut.SearchAsync("ab", false);
+        await sut.SearchAsync("ab", false, CatalogLanguage.French);
 
         handler.Protected().Verify(
             "SendAsync",
@@ -389,7 +389,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
         var handler = RouteBy(TitleMatchesJson, people, credits);
         var sut = CreateSut(CreateHttpClient(handler.Object));
 
-        var result = await sut.SearchTitlesAsync("Bong Joon-ho", false);
+        var result = await sut.SearchTitlesAsync("Bong Joon-ho", false, CatalogLanguage.French);
 
         Assert.Equal(FuzzyTitleOnly, result.Select(item => item.Title));
         handler.Protected().Verify(
@@ -416,7 +416,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
             """;
         var sut = CreateSut(CreateHttpClient(RouteBy(titles, """{"results":[]}""", """{"cast":[]}""").Object));
 
-        var result = await sut.SearchTitlesAsync("Jackie", true, yearFrom: 2015, yearTo: 2017);
+        var result = await sut.SearchTitlesAsync("Jackie", true, CatalogLanguage.French, yearFrom: 2015, yearTo: 2017);
 
         Assert.Equal(1, Assert.Single(result).Id);
     }

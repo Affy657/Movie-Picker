@@ -55,21 +55,20 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         var movieCount = await movieCountTask;
         var votersCount = await votersCountTask;
 
-        ParticipantResponse? myParticipant = null;
-        if (!string.IsNullOrEmpty(currentUserId))
-        {
-            var mine = participants.FirstOrDefault(p => p.UserId == currentUserId);
-            if (mine is not null)
-                myParticipant = ParticipantResponse.FromDomain(mine);
-        }
+        var mine = string.IsNullOrEmpty(currentUserId)
+            ? null
+            : participants.FirstOrDefault(p => p.UserId == currentUserId);
+        var myParticipant = mine is null ? null : ParticipantResponse.FromDomain(mine);
 
-        var participantUserIds = participants
+        IReadOnlyList<string> removedUserIds = isHost ? evt.RemovedUserIds : [];
+        var shownUserIds = participants
             .Where(p => !string.IsNullOrEmpty(p.UserId))
             .Select(p => p.UserId!)
+            .Concat(removedUserIds)
             .Distinct()
             .ToList();
-        var cards = participantUserIds.Count > 0
-            ? await _userRepository.ListCardsByIdsAsync(participantUserIds, ct)
+        var cards = shownUserIds.Count > 0
+            ? await _userRepository.ListCardsByIdsAsync(shownUserIds, ct)
             : [];
         var cardById = cards.ToDictionary(c => c.Id);
 
@@ -92,6 +91,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             IsHost = isHost,
             IsFinished = isFinished,
             Lifecycle = lifecycle,
+            RatingPromptDue = mine is not null && evt.IsRatingPromptDue(now, mine.RatingPromptedAt),
             Winners = evt.Winners.Select(ToWinnerResponse).ToList(),
             MyParticipant = myParticipant,
             ViewerRemoved = evt.HasRemoved(currentUserId),
@@ -99,6 +99,11 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             MovieCount = movieCount,
             VotersCount = votersCount,
             Participants = participantsSummary,
+            RemovedPeople = removedUserIds
+                .Select(cardById.GetValueOrDefault)
+                .OfType<UserCard>()
+                .Select(RemovedPersonResponse.From)
+                .ToList(),
         };
     }
 

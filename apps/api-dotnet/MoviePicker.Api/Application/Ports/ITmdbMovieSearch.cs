@@ -19,7 +19,8 @@ public sealed record TmdbMovieEnrichment(
     IReadOnlyList<TmdbWatchProviderOffer> WatchProviders,
     string? TmdbWatchPageUrl,
     int? RuntimeMinutes,
-    string? ReleaseDate = null);
+    string? ReleaseDate = null,
+    string? Title = null);
 
 public sealed record TmdbMovieDetails(
     int Id,
@@ -100,6 +101,7 @@ public interface ITmdbMovieSearch
     Task<IReadOnlyList<TmdbSearchItem>> SearchAsync(
         string query,
         bool allowSeries,
+        CatalogLanguage language,
         IReadOnlyList<int>? genreIds = null,
         int? yearFrom = null,
         int? yearTo = null,
@@ -112,35 +114,55 @@ public interface ITmdbMovieSearch
     Task<IReadOnlyList<TmdbSearchItem>> SearchTitlesAsync(
         string query,
         bool allowSeries,
+        CatalogLanguage language,
         int? yearFrom = null,
         int? yearTo = null,
         CancellationToken ct = default);
 
-    Task<TmdbMovieEnrichment?> GetEnrichmentAsync(int tmdbId, MovieMediaType mediaType, string region, CancellationToken ct = default);
+    Task<TmdbMovieEnrichment?> GetEnrichmentAsync(
+        int tmdbId,
+        MovieMediaType mediaType,
+        string region,
+        CatalogLanguage language,
+        CancellationToken ct = default);
 
     Task<IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>> GetEnrichmentsAsync(
         IReadOnlyCollection<(int TmdbId, MovieMediaType MediaType)> keys,
         string region,
+        CatalogLanguage language,
         CancellationToken ct = default);
 
-    Task<TmdbMovieDetails?> GetDetailsAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct = default);
+    Task<TmdbMovieDetails?> GetDetailsAsync(
+        int tmdbId,
+        MovieMediaType mediaType,
+        CatalogLanguage language,
+        CancellationToken ct = default);
 
     Task<IReadOnlyList<TmdbBackdrop>?> GetBackdropsAsync(int tmdbId, CancellationToken ct = default);
 
-    Task<IReadOnlyList<TmdbSearchItem>> GetTrendingMoviesAsync(int pages, CancellationToken ct = default);
+    Task<IReadOnlyList<TmdbSearchItem>> GetTrendingMoviesAsync(int pages, CatalogLanguage language, CancellationToken ct = default);
 
-    Task<IReadOnlyList<TmdbSearchItem>> GetNowPlayingMoviesAsync(string region, int pages, CancellationToken ct = default);
+    Task<IReadOnlyList<TmdbSearchItem>> GetNowPlayingMoviesAsync(
+        string region,
+        int pages,
+        CatalogLanguage language,
+        CancellationToken ct = default);
 
-    Task<IReadOnlyList<TmdbSearchItem>> DiscoverMoviesAsync(TmdbDiscoveryCriteria criteria, int pages, CancellationToken ct = default);
+    Task<IReadOnlyList<TmdbSearchItem>> DiscoverMoviesAsync(
+        TmdbDiscoveryCriteria criteria,
+        int pages,
+        CatalogLanguage language,
+        CancellationToken ct = default);
 
     Task<IReadOnlyList<TmdbSearchItem>> GetRecommendationsAsync(
         int tmdbId,
         MovieMediaType mediaType,
+        CatalogLanguage language,
         CancellationToken ct = default);
 
-    Task<TmdbCollectionSummary?> GetCollectionAsync(int collectionId, CancellationToken ct = default);
+    Task<TmdbCollectionSummary?> GetCollectionAsync(int collectionId, CatalogLanguage language, CancellationToken ct = default);
 
-    Task<IReadOnlyList<TmdbSearchItem>> GetCollectionMoviesAsync(int collectionId, CancellationToken ct = default);
+    Task<IReadOnlyList<TmdbSearchItem>> GetCollectionMoviesAsync(int collectionId, CatalogLanguage language, CancellationToken ct = default);
 
-    Task<IReadOnlyList<TmdbSearchItem>> GetDirectedMoviesAsync(int personId, CancellationToken ct = default);
+    Task<IReadOnlyList<TmdbSearchItem>> GetDirectedMoviesAsync(int personId, CatalogLanguage language, CancellationToken ct = default);
 }

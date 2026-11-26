@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using Xunit;
 
@@ -29,7 +30,7 @@ public sealed class CatalogWarmPassTests
     public async Task RunAsync_RefreshesEverySectionAndTheCollections()
     {
         _showcase.Setup(s => s.RefreshAsync(It.IsAny<MovieShowcaseQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
-        _collections.Setup(c => c.RefreshAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _collections.Setup(c => c.RefreshAsync(CatalogLanguage.French, It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         var result = await Build().RunAsync();
 
@@ -42,7 +43,7 @@ public sealed class CatalogWarmPassTests
         _showcase.Setup(s => s.RefreshAsync(It.IsAny<MovieShowcaseQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _showcase.Setup(s => s.RefreshAsync(It.Is<MovieShowcaseQuery>(q => q.Section == MovieShowcaseSections.NowPlaying), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
-        _collections.Setup(c => c.RefreshAsync(It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _collections.Setup(c => c.RefreshAsync(CatalogLanguage.French, It.IsAny<CancellationToken>())).ReturnsAsync(false);
 
         var result = await Build().RunAsync();
 

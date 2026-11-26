@@ -111,9 +111,9 @@ public sealed class AddMovieHandler : IAddMovieHandler
         await _audience.NotifyParticipantsAsync(MovieAddedMessage(night, created.Title, proposer), participant.UserId, CancellationToken.None);
 
         var key = (created.TmdbId, created.MediaType);
-        var enrichments = await TmdbEnrichments.LoadAsync([key], _tmdb, _options, ct);
+        var enrichments = await TmdbEnrichments.LoadAsync([key], _tmdb, _options, CatalogLanguage.French, ct);
         return MovieWithScoreResponse.From(
-            created,
+            night.HideProposalTime(created),
             _posterImageStore,
             new MovieProposer(participant.Pseudo, proposer is null ? null : DisplayedPerson.From(proposer).PublicHandle),
             MovieNightActivity.None,
@@ -144,7 +144,9 @@ public sealed class AddMovieHandler : IAddMovieHandler
                     if (count >= maxProp)
                         throw Errors.ProposalLimitReached(maxProp);
                 }
-                created = await _movieRepository.InsertAsync(movie, token);
+                created = night.HasAnonymousProposals
+                    ? await _movieRepository.InsertWithUntimedIdAsync(movie, token)
+                    : await _movieRepository.InsertAsync(movie, token);
             },
             ct);
         return (created, night!);
@@ -154,7 +156,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
     {
         try
         {
-            return new TmdbLookup(true, await _tmdb.GetDetailsAsync(tmdbId, mediaType, ct));
+            return new TmdbLookup(true, await _tmdb.GetDetailsAsync(tmdbId, mediaType, CatalogLanguage.French, ct));
         }
         catch (Exception ex) when (!ct.IsCancellationRequested)
         {

@@ -66,6 +66,7 @@ public sealed class MongoIndexInitializer : IHostedService
         EnsureSeenMarkIndexes(plan);
         EnsureMovieRatingIndexes(plan);
         EnsurePasswordResetTokenIndexes(plan);
+        EnsureEmailVerificationTokenIndexes(plan);
         EnsurePushSubscriptionIndexes(plan);
         EnsureFollowIndexes(plan);
         EnsureWatchlistIndexes(plan);
@@ -124,11 +125,14 @@ public sealed class MongoIndexInitializer : IHostedService
             Builders<EventDocument>.IndexKeys.Ascending(x => x.Recurrence).Ascending(x => x.CreatorUserId),
             new CreateIndexOptions { Name = "events_recurrence_creatorUserId", Sparse = true });
         var group = new CreateIndexModel<EventDocument>(
-            Builders<EventDocument>.IndexKeys.Ascending(x => x.GroupId),
-            new CreateIndexOptions { Name = "events_groupId", Sparse = true });
+            Builders<EventDocument>.IndexKeys.Ascending(x => x.GroupId).Ascending(x => x.StartAtUtc),
+            new CreateIndexOptions { Name = "events_groupId_startAtUtc" });
         var startAt = new CreateIndexModel<EventDocument>(
             Builders<EventDocument>.IndexKeys.Ascending(x => x.StartAtUtc),
             new CreateIndexOptions { Name = "events_startAtUtc", Sparse = true });
+        var winnersPickedAt = new CreateIndexModel<EventDocument>(
+            Builders<EventDocument>.IndexKeys.Ascending("winners.pickedAt"),
+            new CreateIndexOptions { Name = "events_winners_pickedAt", Sparse = true });
         var removedUsers = new CreateIndexModel<EventDocument>(
             Builders<EventDocument>.IndexKeys.Ascending(x => x.RemovedUserIds),
             new CreateIndexOptions { Name = "events_removedUserIds", Sparse = true });
@@ -143,8 +147,9 @@ public sealed class MongoIndexInitializer : IHostedService
                 Unique = true,
                 PartialFilterExpression = Builders<EventDocument>.Filter.Exists(x => x.CreationRequestId, true)
             });
-        plan.Create("events", slug, recapSlug, creator, recurrence, group, startAt, removedUsers, coHosts, creationRequest);
+        plan.Create("events", slug, recapSlug, creator, recurrence, group, startAt, winnersPickedAt, removedUsers, coHosts, creationRequest);
         plan.DropIfExists<EventDocument>("events", "events_winners_movieId");
+        plan.DropIfExists<EventDocument>("events", "events_groupId");
     }
 
     private static void EnsureMovieIndexes(MongoIndexPlan plan)
@@ -231,6 +236,22 @@ public sealed class MongoIndexInitializer : IHostedService
             Builders<PasswordResetTokenDocument>.IndexKeys.Ascending(x => x.ExpiresAtUtc),
             new CreateIndexOptions { Name = "password_reset_tokens_expires_ttl", ExpireAfter = TimeSpan.Zero });
         plan.Create("password_reset_tokens", tokenHash, byUser, ttl);
+    }
+
+    private static void EnsureEmailVerificationTokenIndexes(MongoIndexPlan plan)
+    {
+        var keys = Builders<EmailVerificationTokenDocument>.IndexKeys;
+        plan.Create(
+            MongoEmailVerificationTokenRepository.CollectionName,
+            new CreateIndexModel<EmailVerificationTokenDocument>(
+                keys.Ascending(token => token.TokenHash),
+                new CreateIndexOptions { Name = "email_verification_tokens_tokenHash_unique", Unique = true }),
+            new CreateIndexModel<EmailVerificationTokenDocument>(
+                keys.Ascending(token => token.UserId),
+                new CreateIndexOptions { Name = "email_verification_tokens_userId" }),
+            new CreateIndexModel<EmailVerificationTokenDocument>(
+                keys.Ascending(token => token.ExpiresAtUtc),
+                new CreateIndexOptions { Name = "email_verification_tokens_expires_ttl", ExpireAfter = TimeSpan.Zero }));
     }
 
     private static void EnsureSeenMarkIndexes(MongoIndexPlan plan)
@@ -474,7 +495,10 @@ public sealed class MongoIndexInitializer : IHostedService
         var userId = new CreateIndexModel<AvatarPhotoBlobDocument>(
             Builders<AvatarPhotoBlobDocument>.IndexKeys.Ascending(x => x.UserId),
             new CreateIndexOptions { Name = "avatar_photos_userId" });
-        plan.Create(MongoAvatarPhotoRepository.CollectionName, userId);
+        var ttl = new CreateIndexModel<AvatarPhotoBlobDocument>(
+            Builders<AvatarPhotoBlobDocument>.IndexKeys.Ascending(x => x.ExpiresAt),
+            new CreateIndexOptions { Name = "avatar_photos_expiresAt_ttl", ExpireAfter = TimeSpan.Zero });
+        plan.Create(MongoAvatarPhotoRepository.CollectionName, userId, ttl);
     }
 
     private static void EnsureBannerPhotoIndexes(MongoIndexPlan plan)
@@ -482,7 +506,10 @@ public sealed class MongoIndexInitializer : IHostedService
         var userId = new CreateIndexModel<BannerPhotoBlobDocument>(
             Builders<BannerPhotoBlobDocument>.IndexKeys.Ascending(x => x.UserId),
             new CreateIndexOptions { Name = "banner_photos_userId" });
-        plan.Create(MongoBannerPhotoRepository.CollectionName, userId);
+        var ttl = new CreateIndexModel<BannerPhotoBlobDocument>(
+            Builders<BannerPhotoBlobDocument>.IndexKeys.Ascending(x => x.ExpiresAt),
+            new CreateIndexOptions { Name = "banner_photos_expiresAt_ttl", ExpireAfter = TimeSpan.Zero });
+        plan.Create(MongoBannerPhotoRepository.CollectionName, userId, ttl);
     }
 
     private static void EnsureEventPresenceIndexes(MongoIndexPlan plan)

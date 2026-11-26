@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Moq;
 using MoviePicker.Api.Application.UseCases.EventInvitation;
 using MoviePicker.Api.Application.UseCases.Shared;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Controllers;
 using Xunit;
 
@@ -9,13 +11,16 @@ namespace MoviePicker.Api.Tests.Controllers;
 
 public sealed class EventInvitationControllerTests
 {
+    private static readonly IOptions<MoviePickerOptions> PublicApi =
+        Options.Create(new MoviePickerOptions { PublicApiBaseUrl = "https://api.example/" });
+
     private readonly Mock<IGetEventInvitationDocumentHandler> _handler = new();
     private readonly EventInvitationController _sut = new EventInvitationController().WithContext();
 
     public EventInvitationControllerTests()
     {
         _sut.Request.Scheme = "https";
-        _sut.Request.Host = new Microsoft.AspNetCore.Http.HostString("api.example");
+        _sut.Request.Host = new Microsoft.AspNetCore.Http.HostString("service-hash-ew.a.run.app");
         _sut.Response.Headers.ContentSecurityPolicy = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'";
     }
 
@@ -27,7 +32,7 @@ public sealed class EventInvitationControllerTests
         _handler.Setup(h => h.HandleAsync("Ab3dE_9xYz", "https://api.example", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ShareDocument(status, "<html><div id=\"root\"></div></html>"));
 
-        var result = await _sut.Get("Ab3dE_9xYz", _handler.Object, CancellationToken.None);
+        var result = await _sut.Get("Ab3dE_9xYz", _handler.Object, PublicApi, CancellationToken.None);
 
         var content = Assert.IsType<ContentResult>(result);
         Assert.Equal(status, content.StatusCode);

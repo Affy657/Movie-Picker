@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using MoviePicker.Api.Controllers;
 using MoviePicker.Api.Domain.Entities;
@@ -34,7 +35,7 @@ public sealed class MoviesShowcaseControllerTests
         MovieMediaType? seedMediaType = null,
         int? personId = null) =>
         _controller.GetShowcase(
-            section, theme, genreIds, collectionId, provider, seedTmdbId, seedMediaType, personId, _showcase.Object, CancellationToken.None);
+            section, theme, genreIds, collectionId, provider, seedTmdbId, seedMediaType, personId, CatalogLanguage.English, _showcase.Object, CancellationToken.None);
 
     [Fact]
     public async Task GetShowcase_WithoutSection_FallsBackToTrending()
@@ -120,10 +121,10 @@ public sealed class MoviesShowcaseControllerTests
     {
         var payload = new MovieCollectionListResponse { Items = [] };
         _collections
-            .Setup(h => h.HandleAsync(It.IsAny<CancellationToken>()))
+            .Setup(h => h.HandleAsync(CatalogLanguage.English, It.IsAny<CancellationToken>()))
             .ReturnsAsync(payload);
 
-        var result = await _controller.GetCollections(_collections.Object, CancellationToken.None);
+        var result = await _controller.GetCollections(CatalogLanguage.English, _collections.Object, CancellationToken.None);
 
         Assert.Same(payload, Assert.IsType<OkObjectResult>(result).Value);
     }
@@ -136,9 +137,9 @@ public sealed class MoviesShowcaseControllerTests
             Items = [new MovieShowcaseThemeResponse { Theme = "frissons", Posters = [new MovieShowcasePosterResponse { Title = "Alien", PosterPath = "/alien.jpg" }] }],
         };
         var themes = new Mock<IGetMovieShowcaseThemesHandler>();
-        themes.Setup(h => h.HandleAsync(It.IsAny<CancellationToken>())).ReturnsAsync(payload);
+        themes.Setup(h => h.HandleAsync(CatalogLanguage.English, It.IsAny<CancellationToken>())).ReturnsAsync(payload);
 
-        var result = await _controller.GetShowcaseThemes(themes.Object, CancellationToken.None);
+        var result = await _controller.GetShowcaseThemes(CatalogLanguage.English, themes.Object, CancellationToken.None);
 
         Assert.Same(payload, Assert.IsType<OkObjectResult>(result).Value);
         Assert.Equal("public, max-age=300, stale-while-revalidate=3600", _controller.Response.Headers.CacheControl.ToString());
@@ -153,9 +154,9 @@ public sealed class MoviesShowcaseControllerTests
             Items = [new MovieShowcaseThemeResponse { Theme = "frissons", Posters = [new MovieShowcasePosterResponse { Title = "Alien", PosterPath = "/alien.jpg" }] }],
         };
         var themes = new Mock<IGetMovieShowcaseThemesHandler>();
-        themes.Setup(h => h.HandleAsync(It.IsAny<CancellationToken>())).ReturnsAsync(payload);
+        themes.Setup(h => h.HandleAsync(CatalogLanguage.English, It.IsAny<CancellationToken>())).ReturnsAsync(payload);
 
-        await _controller.GetShowcaseThemes(themes.Object, CancellationToken.None);
+        await _controller.GetShowcaseThemes(CatalogLanguage.English, themes.Object, CancellationToken.None);
 
         Assert.Equal("public, max-age=60", _controller.Response.Headers.CacheControl.ToString());
     }
@@ -165,14 +166,24 @@ public sealed class MoviesShowcaseControllerTests
     {
         CaptureQuery();
         _collections
-            .Setup(h => h.HandleAsync(It.IsAny<CancellationToken>()))
+            .Setup(h => h.HandleAsync(CatalogLanguage.English, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MovieCollectionListResponse { Items = [] });
 
         await GetShowcaseAsync();
         var showcaseHeader = _controller.Response.Headers.CacheControl.ToString();
-        await _controller.GetCollections(_collections.Object, CancellationToken.None);
+        await _controller.GetCollections(CatalogLanguage.English, _collections.Object, CancellationToken.None);
 
         Assert.Equal("public, max-age=300, stale-while-revalidate=3600", showcaseHeader);
         Assert.Equal("public, max-age=300, stale-while-revalidate=3600", _controller.Response.Headers.CacheControl.ToString());
+    }
+
+    [Fact]
+    public async Task GetShowcase_ForwardsTheInterfaceLanguage()
+    {
+        CaptureQuery();
+
+        await GetShowcaseAsync(section: MovieShowcaseSections.Trending);
+
+        Assert.Equal(CatalogLanguage.English, _captured!.Language);
     }
 }

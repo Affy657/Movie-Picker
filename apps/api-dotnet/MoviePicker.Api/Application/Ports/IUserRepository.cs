@@ -60,6 +60,7 @@ public interface IUserRepository
         int watchedCount,
         CancellationToken ct = default);
     Task<bool> MarkSupporterAsync(string userId, DateTimeOffset since, CancellationToken ct = default);
+    Task<bool> MarkEmailVerifiedAsync(string userId, DateTimeOffset verifiedAt, CancellationToken ct = default);
     Task<bool> AddEventTemplateAsync(
         string userId,
         EventTemplate template,

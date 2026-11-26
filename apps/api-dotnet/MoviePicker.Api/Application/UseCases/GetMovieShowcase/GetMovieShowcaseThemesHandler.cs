@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.GetMovieShowcase;
@@ -15,9 +16,9 @@ public sealed class GetMovieShowcaseThemesHandler : IGetMovieShowcaseThemesHandl
         _logger = logger;
     }
 
-    public async Task<MovieShowcaseThemeListResponse> HandleAsync(CancellationToken ct = default)
+    public async Task<MovieShowcaseThemeListResponse> HandleAsync(CatalogLanguage language, CancellationToken ct = default)
     {
-        var loads = await Task.WhenAll(MovieShowcaseCatalog.ThemeKeys.Select(theme => LoadPreviewAsync(theme, ct)));
+        var loads = await Task.WhenAll(MovieShowcaseCatalog.ThemeKeys.Select(theme => LoadPreviewAsync(theme, language, ct)));
         if (Array.TrueForAll(loads, load => load.Failed))
             throw Errors.ShowcaseUnavailable();
 
@@ -31,11 +32,13 @@ public sealed class GetMovieShowcaseThemesHandler : IGetMovieShowcaseThemesHandl
         };
     }
 
-    private async Task<ThemePreviewLoad> LoadPreviewAsync(string theme, CancellationToken ct)
+    private async Task<ThemePreviewLoad> LoadPreviewAsync(string theme, CatalogLanguage language, CancellationToken ct)
     {
         try
         {
-            var list = await _showcase.HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Theme, Theme: theme), ct);
+            var list = await _showcase.HandleAsync(
+                new MovieShowcaseQuery(MovieShowcaseSections.Theme, Theme: theme, Language: language),
+                ct);
             var posters = list.Items
                 .Where(item => !string.IsNullOrEmpty(item.PosterPath))
                 .Take(MovieShowcaseCatalog.PreviewPosterCount)

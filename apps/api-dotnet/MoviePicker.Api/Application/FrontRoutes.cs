@@ -7,6 +7,7 @@ public static class FrontRoutes
     public const string Home = "/";
     public const string Login = "/login";
     public const string Reset = "/reset";
+    public const string VerifyEmail = "/verify-email";
     public const string OAuthCallback = "/auth/callback";
     public const string AccountIntegrations = "/settings/integrations";
     public const string Notifications = "/notifications";
@@ -28,9 +29,42 @@ public static class FrontRoutes
     public const string GroupJoinPattern = "/g/:token/rejoindre";
     public const string ListJoinPattern = "/l/:token/rejoindre";
 
+    public const string CreateEvent = "/new";
+    public const string Register = "/register";
+    public const string ForgotPassword = "/forgot-password";
+    public const string Account = "/settings";
+    public const string AccountProfile = "/settings/profil";
+    public const string AccountPreferences = "/settings/preferences";
+    public const string AccountNotifications = "/settings/notifications";
+    public const string AccountSecurity = "/settings/securite";
+    public const string MyEvents = "/my-events";
+    public const string Watchlist = "/watchlist";
+    public const string Lists = "/listes";
+    public const string WatchedMovies = "/listes/films-vus";
+    public const string MyProposals = "/listes/propositions";
+    public const string MyWinningProposals = "/listes/propositions-gagnantes";
+    public const string NightMovies = "/listes/films-des-soirees";
+    public const string LegalNotice = "/mentions-legales";
+    public const string PrivacyPolicy = "/politique-de-confidentialite";
+    public const string ReleaseNotes = "/nouveautes";
+    public const string MovieSearch = "/films/recherche";
+
+    public const string ListPattern = "/listes/:listId";
+    public const string SavedListPattern = "/listes/enregistrees/:savedListId";
+    public const string ShowcaseRecommendationsPattern = "/films/similaires/:seedTmdbId";
+    public const string ShowcaseProviderPattern = "/films/streaming/:provider";
+    public const string ShowcaseThemePattern = "/films/theme/:theme";
+    public const string MovieCollectionPattern = "/films/collection/:collectionId";
+    public const string ProfileMoviesPattern = "/u/:handle/films";
+    public const string ProfileProposalsPattern = "/u/:handle/propositions";
+    public const string ProfileWinningProposalsPattern = "/u/:handle/propositions-gagnantes";
+    public const string ProfileWatchlistPattern = "/u/:handle/watchlist";
+    public const string ProfileListsPattern = "/u/:handle/listes";
+    public const string PublicListPattern = "/u/:handle/listes/:listId";
+
     public const string RateQueryParam = "rate";
     public const string ReturnToQueryParam = "returnTo";
-    public const string ResetTokenQueryParam = "token";
+    public const string TokenQueryParam = "token";
     public const string EntryOriginQueryParam = "from";
     public const string OAuthErrorQueryParam = "oauthError";
     public const string OAuthLinkedQueryParam = "oauthLinked";
@@ -51,10 +85,14 @@ public static class FrontRoutes
     public static string LoginReturningTo(string path) =>
         $"{Login}?{ReturnToQueryParam}={Uri.EscapeDataString(path)}";
 
-    public static string ResetWithToken(string token) =>
-        $"{Reset}?{ResetTokenQueryParam}={Uri.EscapeDataString(token)}";
+    public static string ResetWithToken(string token) => WithToken(Reset, token);
+
+    public static string VerifyEmailWithToken(string token) => WithToken(VerifyEmail, token);
 
     public static string PrefixOf(string pattern) => pattern[..pattern.IndexOf(':')];
+
+    private static string WithToken(string path, string token) =>
+        $"{path}?{TokenQueryParam}={Uri.EscapeDataString(token)}";
 
     private static string Fill(string pattern, string value) => pattern[..pattern.LastIndexOf(':')] + value;
 }

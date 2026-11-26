@@ -16,16 +16,20 @@ public sealed class WinnerMovieResponse
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
 
-    public static WinnerMovieResponse Of(Event evt, Movie m, string? posterPath) => new()
+    public static WinnerMovieResponse Of(Event evt, Movie m, string? posterPath)
     {
-        Id = m.Id,
-        EventId = m.EventId,
-        ParticipantId = evt.HasAnonymousProposals ? string.Empty : m.ParticipantId,
-        TmdbId = m.TmdbId,
-        Title = m.Title,
-        Year = m.Year,
-        PosterPath = posterPath ?? m.PosterPath,
-        CreatedAt = m.CreatedAt,
-        UpdatedAt = m.UpdatedAt
-    };
+        var shown = evt.HideProposalTime(m);
+        return new()
+        {
+            Id = shown.Id,
+            EventId = shown.EventId,
+            ParticipantId = evt.HasAnonymousProposals ? string.Empty : shown.ParticipantId,
+            TmdbId = shown.TmdbId,
+            Title = shown.Title,
+            Year = shown.Year,
+            PosterPath = posterPath ?? shown.PosterPath,
+            CreatedAt = shown.CreatedAt,
+            UpdatedAt = shown.UpdatedAt
+        };
+    }
 }

@@ -158,7 +158,6 @@ public static class ServerCopy
         public const string BugPrefix = "Bug";
         public const string ImprovementPrefix = "Amélioration";
         public const string IdeaPrefix = "Idée";
-        public const string ScreenshotsHeading = "### Captures d'écran";
 
         public static string Title(string prefix, string title) => $"[{prefix}] {title}";
 
@@ -167,8 +166,6 @@ public static class ServerCopy
         public static string Page(string page) => $"Page : {page}";
 
         public static string Version(string version) => $"Version : {version}";
-
-        public static string Screenshot(int number, string url) => $"![capture {number}]({url})";
     }
 
     public static class PasswordResetEmail
@@ -205,8 +202,140 @@ public static class ServerCopy
             """;
     }
 
+    public static class EmailVerificationEmail
+    {
+        public const string Subject = "Confirmez votre adresse e-mail Movie Picker";
+
+        private const string NotYourAccount =
+            "Si vous n’avez pas créé ce compte, quelqu’un a saisi votre adresse par erreur : ignorez cet e-mail, ou reprenez le compte avec « Mot de passe oublié » sur la page de connexion.";
+
+        public static string HtmlBody(string url, string siteUrl) => BrandedEmailHtml.Render(new BrandedEmail(
+            Lang: "fr",
+            Title: Subject,
+            Heading: "Confirmez votre adresse e-mail",
+            Intro:
+            [
+                "Bonjour,",
+                "Votre compte Movie Picker est prêt. Confirmez que cette adresse est bien la vôtre en cliquant sur le bouton ci-dessous, le lien reste valable 48 heures."
+            ],
+            ButtonLabel: "Confirmer mon adresse",
+            ButtonUrl: url,
+            FallbackIntro: "Si le bouton ne fonctionne pas, copiez cette adresse dans votre navigateur :",
+            Outro: [NotYourAccount],
+            Signature: "L’équipe Movie Picker",
+            SiteUrl: siteUrl));
+
+        public static string TextBody(string url) => $"""
+            Bonjour,
+
+            Votre compte Movie Picker est prêt.
+            Confirmez que cette adresse est bien la vôtre en ouvrant le lien ci-dessous (valide 48 heures) :
+
+            {url}
+
+            {NotYourAccount}
+
+            L’équipe Movie Picker
+            """;
+    }
+
+    public static class PhotoReportEmail
+    {
+        public const string AvatarPhoto = "Photo de profil";
+        public const string BannerPhoto = "Bannière";
+
+        private const string Intro = "Un membre l’a signalée depuis le profil public. Elle reste affichée tant qu’elle n’est pas retirée.";
+
+        public static string Subject(string photo, string handle) => $"[modération] {photo} signalée : @{handle}";
+
+        public static string HtmlBody(
+            string photo,
+            string handle,
+            string profileUrl,
+            string imageUrl,
+            string reporterId,
+            string removal,
+            string siteUrl) => BrandedEmailHtml.Render(new BrandedEmail(
+            Lang: "fr",
+            Title: Subject(photo, handle),
+            Heading: Heading(photo, handle),
+            Intro: [Intro, ImageLine(imageUrl)],
+            ButtonLabel: "Voir le profil",
+            ButtonUrl: profileUrl,
+            FallbackIntro: "Si le bouton ne fonctionne pas, copiez cette adresse dans votre navigateur :",
+            Outro: [ReporterLine(reporterId), RemovalLine(removal)],
+            Signature: "Movie Picker",
+            SiteUrl: siteUrl));
+
+        public static string TextBody(
+            string photo,
+            string handle,
+            string profileUrl,
+            string imageUrl,
+            string reporterId,
+            string removal) => $"""
+            {Heading(photo, handle)}
+
+            {Intro}
+
+            Profil : {profileUrl}
+            {ImageLine(imageUrl)}
+
+            {ReporterLine(reporterId)}
+
+            {RemovalLine(removal)}
+            """;
+
+        private static string Heading(string photo, string handle) => $"{photo} de @{handle} signalée";
+
+        private static string ImageLine(string imageUrl) => $"Image signalée : {imageUrl}";
+
+        private static string ReporterLine(string reporterId) =>
+            $"Signalement envoyé par le compte {reporterId}, seule donnée transmise sur son auteur.";
+
+        private static string RemovalLine(string removal) =>
+            $"Pour la retirer : {removal} (procédure dans docs/runbook-photo-moderation.md).";
+    }
+
     public static class English
     {
+        public static class VerificationEmail
+        {
+            public const string Subject = "Confirm your Movie Picker email address";
+
+            private const string NotYourAccount =
+                "If you didn't create this account, someone typed your address by mistake: ignore this email, or take the account back with “Forgot password” on the sign-in page.";
+
+            public static string HtmlBody(string url, string siteUrl) => BrandedEmailHtml.Render(new BrandedEmail(
+                Lang: "en",
+                Title: Subject,
+                Heading: "Confirm your email address",
+                Intro:
+                [
+                    "Hi,",
+                    "Your Movie Picker account is ready. Confirm this address is yours by clicking the button below, the link stays valid for 48 hours."
+                ],
+                ButtonLabel: "Confirm my address",
+                ButtonUrl: url,
+                FallbackIntro: "If the button doesn't work, copy this address into your browser:",
+                Outro: [NotYourAccount],
+                Signature: "The Movie Picker team",
+                SiteUrl: siteUrl));
+
+            public static string TextBody(string url) => $"""
+                Hi,
+
+                Your Movie Picker account is ready.
+                Confirm this address is yours by opening the link below (valid for 48 hours):
+
+                {url}
+
+                {NotYourAccount}
+
+                The Movie Picker team
+                """;
+        }
+
         public static class ResetEmail
         {
             public const string Subject = "Reset your Movie Picker password";

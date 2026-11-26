@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Download, KeyRound, LogOut, Mail, Trash2 } from 'lucide-react';
+import { Download, KeyRound, LogOut, Mail, Trash2, TriangleAlert } from 'lucide-react';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
 import type { TranslationKey } from '@/shared/i18n';
@@ -11,10 +11,13 @@ import {
   deleteAccount,
   downloadMyDataExport,
   patchChangePassword,
+  postEmailVerificationResend,
 } from '@/features/auth/api/authApi';
 import type { UserProfile } from '@/features/auth/types';
 import { isRegisterPasswordCompliant } from '@/shared/utils/authPasswordRules';
+import clsx from 'clsx';
 import sharedStyles from '@/shared/components/SettingsSection.module.css';
+import styles from './AccountSecurityPage.module.css';
 import Button from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -246,6 +249,67 @@ function PasswordRow({ user }: Readonly<{ user: UserProfile }>) {
   );
 }
 
+function EmailConfirmationReminder({ email }: Readonly<{ email: string }>) {
+  const { t, locale } = useTranslation();
+  const [sent, setSent] = useState(false);
+  const resendAction = useCallback(async () => {
+    setSent(false);
+    await postEmailVerificationResend(locale);
+    setSent(true);
+  }, [locale]);
+  const {
+    run: resend,
+    loading: resending,
+    error: resendError,
+  } = useAsyncAction(resendAction, t('auth.account.emailConfirmationResendError'));
+
+  return (
+    <>
+      <output className={clsx(sharedStyles.attention, styles.confirmationReminder)}>
+        <TriangleAlert size={ICON_SIZE.md} aria-hidden />
+        <span className={sharedStyles.attentionText}>{t('auth.account.emailUnconfirmed')}</span>
+        <Button
+          type="button"
+          size="sm"
+          tone="warning"
+          loading={resending}
+          onClick={() => void resend()}
+        >
+          {resending
+            ? t('auth.account.emailConfirmationResending')
+            : t('auth.account.emailConfirmationResend')}
+        </Button>
+      </output>
+      {sent && (
+        <p className={sharedStyles.rowSub} role="status">
+          {t('auth.account.emailConfirmationSent', { email })}
+        </p>
+      )}
+      {resendError && (
+        <p className="error" role="alert">
+          {resendError}
+        </p>
+      )}
+    </>
+  );
+}
+
+function EmailRow({ user }: Readonly<{ user: UserProfile }>) {
+  const { t } = useTranslation();
+  const email = user.email ?? user.emailMasked;
+
+  return (
+    <div className={sharedStyles.row}>
+      <Mail size={ICON_SIZE.xl} aria-hidden className={sharedStyles.rowIcon} />
+      <div className={sharedStyles.rowMain}>
+        <p className={sharedStyles.rowLabel}>{t('auth.account.emailLabel')}</p>
+        <p className={sharedStyles.rowSub}>{email}</p>
+        {user.emailVerifiedAt === null && <EmailConfirmationReminder email={email} />}
+      </div>
+    </div>
+  );
+}
+
 function DataExportRow() {
   const { t } = useTranslation();
   const exportAction = useCallback(() => downloadMyDataExport(), []);
@@ -428,13 +492,7 @@ export default function AccountSecurityPage({ user }: Readonly<{ user: UserProfi
       </div>
 
       <Card padding="none" elevation="sm" className={sharedStyles.card}>
-        <div className={sharedStyles.row}>
-          <Mail size={ICON_SIZE.xl} aria-hidden className={sharedStyles.rowIcon} />
-          <div className={sharedStyles.rowMain}>
-            <p className={sharedStyles.rowLabel}>{t('auth.account.emailLabel')}</p>
-            <p className={sharedStyles.rowSub}>{user.email ?? user.emailMasked}</p>
-          </div>
-        </div>
+        <EmailRow user={user} />
 
         <PasswordRow user={user} />
         <DataExportRow />

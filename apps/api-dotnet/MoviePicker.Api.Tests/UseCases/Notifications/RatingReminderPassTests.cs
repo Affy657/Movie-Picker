@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Notifications;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using Xunit;
 
@@ -32,7 +33,7 @@ public sealed class RatingReminderPassTests
 
     public RatingReminderPassTests()
     {
-        _events.Setup(r => r.ListWithWinnerStartingBetweenAsync(
+        _events.Setup(r => r.ListWithWinnerEndingBetweenAsync(
                 It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
         _participants.Setup(r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -82,7 +83,7 @@ public sealed class RatingReminderPassTests
     };
 
     private void GivenNights(params Event[] events) =>
-        _events.Setup(r => r.ListWithWinnerStartingBetweenAsync(
+        _events.Setup(r => r.ListWithWinnerEndingBetweenAsync(
                 It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(events);
 
@@ -139,35 +140,68 @@ public sealed class RatingReminderPassTests
     }
 
     [Fact]
-    public async Task RunAsync_QueriesTheWinnersOfTheThreeParisDaysBeforeToday()
+    public async Task RunAsync_QueriesTheNightsEndedWithinTheCatchUpWindowSharedWithTheRatingSheet()
     {
         DateTimeOffset? from = null;
         DateTimeOffset? to = null;
-        _events.Setup(r => r.ListWithWinnerStartingBetweenAsync(
+        _events.Setup(r => r.ListWithWinnerEndingBetweenAsync(
                 It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .Callback((DateTimeOffset f, DateTimeOffset t, CancellationToken _) => { from = f; to = t; })
             .ReturnsAsync([]);
 
         await CreatePass().RunAsync();
 
-        Assert.Equal(new DateTimeOffset(2026, 3, 6, 23, 0, 0, TimeSpan.Zero), from);
-        Assert.Equal(new DateTimeOffset(2026, 3, 9, 23, 0, 0, TimeSpan.Zero), to);
+        Assert.Equal(TenInParis - EventSchedule.RatingCatchUpWindow, from);
+        Assert.Equal(TenInParis, to);
     }
 
     [Fact]
-    public async Task RunAsync_SummerTime_StillCutsTheWindowAtParisMidnight()
+    public async Task RunAsync_FilmDrawnFourDaysAfterTheDate_IsRemindedOnceItEnds()
     {
-        DateTimeOffset? from = null;
-        DateTimeOffset? to = null;
-        _events.Setup(r => r.ListWithWinnerStartingBetweenAsync(
-                It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
-            .Callback((DateTimeOffset f, DateTimeOffset t, CancellationToken _) => { from = f; to = t; })
-            .ReturnsAsync([]);
+        GivenNights(FinishedNight("e1", "2026-03-05", "m1"));
+        GivenWinners("e1", ("m1", "Inception"));
+        GivenParticipants("e1", ("p1", "u1"));
+        GivenUsers(Member("u1"));
 
-        await CreatePass(new DateTimeOffset(2026, 7, 15, 8, 0, 0, TimeSpan.Zero)).RunAsync();
+        var result = await CreatePass().RunAsync();
 
-        Assert.Equal(new DateTimeOffset(2026, 7, 11, 22, 0, 0, TimeSpan.Zero), from);
-        Assert.Equal(new DateTimeOffset(2026, 7, 14, 22, 0, 0, TimeSpan.Zero), to);
+        Assert.Equal(new RatingReminderPassResult(1, 1), result);
+    }
+
+    [Fact]
+    public async Task RunAsync_LongFilmStillPlaying_WaitsForItsEnd()
+    {
+        var startedTwoHoursAgo = FinishedNight("e1", "2026-03-10", "m1") with
+        {
+            Time = "08:00",
+            Winners = [new EventWinner { MovieId = "m1", Method = WinnerPickMethod.Wheel, PickedAt = TenInParis.AddDays(-1), RuntimeMinutes = 169 }]
+        };
+        GivenNights(startedTwoHoursAgo);
+        GivenWinners("e1", ("m1", "Interstellar"));
+        GivenParticipants("e1", ("p1", "u1"));
+        GivenUsers(Member("u1"));
+
+        var result = await CreatePass().RunAsync();
+
+        Assert.Equal(new RatingReminderPassResult(0, 0), result);
+        VerifyNothingSent();
+    }
+
+    [Fact]
+    public async Task RunAsync_NightEndedBeforeTheCatchUpWindow_IsLeftAlone()
+    {
+        GivenNights(FinishedNight("e1", "2026-03-01", "m1") with
+        {
+            Winners = [new EventWinner { MovieId = "m1", Method = WinnerPickMethod.Wheel, PickedAt = TenInParis.AddDays(-10) }]
+        });
+        GivenWinners("e1", ("m1", "Inception"));
+        GivenParticipants("e1", ("p1", "u1"));
+        GivenUsers(Member("u1"));
+
+        var result = await CreatePass().RunAsync();
+
+        Assert.Equal(new RatingReminderPassResult(0, 0), result);
+        VerifyNothingSent();
     }
 
     [Fact]

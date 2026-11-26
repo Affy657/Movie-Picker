@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.DTOs;
@@ -47,4 +48,14 @@ public sealed class HandleAvailabilityResponse
     public string Handle { get; init; } = string.Empty;
     public bool Available { get; init; }
     public string? Reason { get; init; }
+}
+
+public sealed class ReportProfilePhotoRequest
+{
+    public const string AvatarPhoto = "avatar";
+    public const string BannerPhoto = "banner";
+
+    [Required(ErrorMessage = "photo is required")]
+    [RegularExpression("^(avatar|banner)$", ErrorMessage = "photo must be avatar or banner")]
+    public string Photo { get; init; } = string.Empty;
 }

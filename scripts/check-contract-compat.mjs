@@ -4,11 +4,35 @@ import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import ts from 'typescript';
+import { dueDateOf, parseAfter, releaseDatesFor, releaseKey, todayUtc } from './removal-dates.mjs';
 
 const root = resolve(import.meta.dirname, '..');
-const CONTRACT = 'apps/web/src/shared/api/generated/openapiSchema.ts';
+export const CONTRACT = 'apps/web/src/shared/api/generated/openapiSchema.ts';
 const METHODS = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace'];
 const SCHEMA_REF = /^components\["schemas"\]\["([^"]+)"\]$/;
+const PROPERTY_REMOVED = 'property removed';
+
+export const ALLOWED_REMOVALS = [
+  {
+    schema: 'LetterboxdSyncResponse',
+    properties: [
+      'added',
+      'removed',
+      'unmatchedTitles',
+      'pendingChoices',
+      'totalOnLetterboxd',
+      'totalTruncated',
+      'watchedAdded',
+      'watchedRemoved',
+      'watchedUnmatchedTitles',
+      'watchedPendingChoices',
+      'watchedTotalOnLetterboxd',
+      'watchedTotalTruncated',
+    ],
+    after: { release: 'v1.32.1', days: 30 },
+    why: 'flat copies of lists, read by the front of 1.31.1 that a service worker keeps serving for days',
+  },
+];
 
 function propertyName(member) {
   const { name } = member;
@@ -134,14 +158,14 @@ function kindChanged(old, current) {
 function compareShapes(before, after, beforeType, afterType, location, seen, breaks) {
   const old = resolveShape(before, beforeType);
   const current = resolveShape(after, afterType);
-  if (!old.nullable && current.nullable) breaks.push(`${location}: may now be null`);
+  if (!old.nullable && current.nullable) breaks.push({ location, reason: 'may now be null' });
   const pair = old.schema && `${old.schema}>${current.schema ?? ''}`;
   if (pair) {
     if (seen.has(pair)) return;
     seen.add(pair);
   }
   if (kindChanged(old, current)) {
-    breaks.push(`${location}: type changed from ${old.kind} to ${current.kind}`);
+    breaks.push({ location, reason: `type changed from ${old.kind} to ${current.kind}` });
     return;
   }
   if (old.kind === 'array') {
@@ -153,11 +177,11 @@ function compareShapes(before, after, beforeType, afterType, location, seen, bre
     const next = current.properties.get(name);
     const at = `${location}.${name}`;
     if (!next) {
-      breaks.push(`${at}: property removed`);
+      breaks.push({ location: at, reason: PROPERTY_REMOVED, schema: old.schema, property: name });
       continue;
     }
     if (!property.questionToken && next.questionToken)
-      breaks.push(`${at}: property became optional`);
+      breaks.push({ location: at, reason: 'property became optional' });
     compareShapes(before, after, property.type, next.type, at, seen, breaks);
   }
 }
@@ -168,7 +192,7 @@ function calledUrl(operation) {
   return operation.replace(PATH_PARAMETER, '{}');
 }
 
-export function findBreakingChanges(before, after) {
+export function findBreakingChangeRecords(before, after) {
   const breaks = [];
   const seen = new Set();
   const served = new Map(
@@ -177,7 +201,7 @@ export function findBreakingChanges(before, after) {
   for (const [operation, responses] of before.operations) {
     const current = served.get(calledUrl(operation));
     if (!current) {
-      breaks.push(`${operation}: operation removed`);
+      breaks.push({ location: operation, reason: 'operation removed' });
       continue;
     }
     for (const [status, body] of responses) {
@@ -185,13 +209,66 @@ export function findBreakingChanges(before, after) {
       const fallback = [...current.values()].find(Boolean);
       const next = current.get(status) ?? fallback;
       if (!next) {
-        breaks.push(`${operation} ${status}: response body removed`);
+        breaks.push({ location: `${operation} ${status}`, reason: 'response body removed' });
         continue;
       }
       compareShapes(before, after, body, next, `${operation} ${status}`, seen, breaks);
     }
   }
   return breaks;
+}
+
+export function findBreakingChanges(before, after) {
+  return findBreakingChangeRecords(before, after).map(
+    ({ location, reason }) => `${location}: ${reason}`
+  );
+}
+
+function allowanceFor(record, allowed) {
+  if (record.reason !== PROPERTY_REMOVED) return undefined;
+  return allowed.find(
+    (entry) => entry.schema === record.schema && entry.properties.includes(record.property)
+  );
+}
+
+function afterOf(entry) {
+  return parseAfter(entry.after, `ALLOWED_REMOVALS ${entry.schema}`);
+}
+
+export function allowedRemovalReleases(records, allowed) {
+  const afters = records
+    .map((record) => allowanceFor(record, allowed))
+    .filter(Boolean)
+    .map(afterOf)
+    .filter((after) => !after.date);
+  return [...new Map(afters.map((after) => [releaseKey(after), after])).values()];
+}
+
+export function applyAllowedRemovals(records, allowed, { published, today, releaseDates }) {
+  const breaks = [];
+  const removedOnPurpose = [];
+  for (const record of records) {
+    const text = `${record.location}: ${record.reason}`;
+    const entry = allowanceFor(record, allowed);
+    if (!entry) {
+      breaks.push(text);
+      continue;
+    }
+    const due = dueDateOf(afterOf(entry), releaseDates);
+    if (due.date && due.date <= today) {
+      removedOnPurpose.push(record.location);
+      continue;
+    }
+    const when = due.date ? `on ${due.date}, ${due.basis}` : due.basis;
+    breaks.push(`${text} (ALLOWED_REMOVALS lets it go ${when})`);
+  }
+  const stale = allowed.flatMap((entry) => {
+    const served = members(published.schemas.get(entry.schema)?.type);
+    return entry.properties
+      .filter((property) => !served.has(property))
+      .map((property) => `${entry.schema}.${property}`);
+  });
+  return { breaks, allowed: removedOnPurpose, stale };
 }
 
 function git(args) {
@@ -233,7 +310,7 @@ function publishedContract(ref) {
   return git(['show', `${ref}:${CONTRACT}`]);
 }
 
-function main() {
+async function main() {
   const ref =
     process.argv[2] ?? latestReleaseTag(git(['ls-remote', '--tags', '--refs', 'origin', 'v*']));
   if (!ref) {
@@ -242,16 +319,42 @@ function main() {
   }
   const before = parseContract(publishedContract(ref));
   const after = parseContract(readFileSync(join(root, CONTRACT), 'utf8'));
-  const breaks = findBreakingChanges(before, after);
+  const records = findBreakingChangeRecords(before, after);
+  const releaseDates = await releaseDatesFor(
+    allowedRemovalReleases(records, ALLOWED_REMOVALS),
+    root
+  );
+  const { breaks, allowed, stale } = applyAllowedRemovals(records, ALLOWED_REMOVALS, {
+    published: before,
+    today: todayUtc(),
+    releaseDates,
+  });
+  if (stale.length > 0) {
+    console.error(
+      `\nALLOWED_REMOVALS in scripts/check-contract-compat.mjs names properties the contract of ${ref} no longer serves: their removal has shipped, delete them from the list.\n` +
+        stale.map((line) => `  - ${line}`).join('\n')
+    );
+    process.exitCode = 1;
+  }
   if (breaks.length > 0) {
     console.error(
       `\nThe contract breaks what the front of ${ref} reads (the API N serves the front N-1):\n` +
         breaks.map((line) => `  - ${line}`).join('\n') +
         '\nKeep the route or the field one more version, or make the old front stop reading it first.\n'
     );
-    process.exit(1);
+    process.exitCode = 1;
   }
+  if (process.exitCode) return;
+  if (allowed.length > 0)
+    console.log(
+      `Removed on purpose, as ALLOWED_REMOVALS allows:\n${allowed.map((line) => `  - ${line}`).join('\n')}`
+    );
   console.log(`The contract still serves what the front of ${ref} reads.`);
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    console.error(error.message);
+    process.exitCode = 1;
+  });
+}

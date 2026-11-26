@@ -11,6 +11,10 @@ export const ENTRY_ORIGIN_QUERY_PARAM = 'from';
 
 const DECLARED_ORIGIN_PARAMETER = `${ENTRY_ORIGIN_QUERY_PARAM}=`;
 
+export function declaringEntryOrigin(path: string, origin: Exclude<EntryOrigin, 'other'>): string {
+  return `${path}?${DECLARED_ORIGIN_PARAMETER}${origin}`;
+}
+
 function declaredOriginOf(returnTo: string): EntryOrigin {
   const query = returnTo.split('?')[1] ?? '';
   const declared = query

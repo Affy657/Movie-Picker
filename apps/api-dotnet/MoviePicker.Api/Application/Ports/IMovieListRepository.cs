@@ -95,6 +95,10 @@ public interface IMovieListRepository
     Task<bool> DisableInviteLinkAsync(string ownerId, string listId, CancellationToken ct = default);
 
     Task<long> RemoveFromOthersListsAsync(string userId, CancellationToken ct = default);
+
+    Task<IReadOnlyList<MovieList>> ListOthersWithItemsAddedByAsync(string userId, CancellationToken ct = default);
+
+    Task<long> ForgetItemAuthorAsync(string userId, CancellationToken ct = default);
 }
 
 public sealed record MovieListTitle(int TmdbId, MovieMediaType MediaType);

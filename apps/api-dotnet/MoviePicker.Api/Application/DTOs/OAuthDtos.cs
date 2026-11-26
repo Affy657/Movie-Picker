@@ -7,6 +7,11 @@ public sealed record ExternalLoginInfo
     public string? Email { get; init; }
     public bool EmailVerified { get; init; }
     public string DisplayName { get; init; } = string.Empty;
+
+    public bool VouchesFor(string accountEmail) =>
+        EmailVerified
+        && !string.IsNullOrWhiteSpace(Email)
+        && string.Equals(Email.Trim(), accountEmail.Trim(), StringComparison.OrdinalIgnoreCase);
 }
 
 public enum OAuthOutcomeKind

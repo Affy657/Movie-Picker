@@ -1,0 +1,216 @@
+using System.Collections.Concurrent;
+using System.Linq;
+using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Entities;
+
+namespace MoviePicker.Api.Infrastructure.Persistence.InMemory;
+
+public sealed class InMemoryParticipantRepository : IParticipantRepository
+{
+    private readonly ConcurrentDictionary<string, Participant> _byId = new();
+    private readonly ConcurrentDictionary<(string EventId, string Pseudo), string> _eventPseudoToId = new();
+    private readonly ConcurrentDictionary<(string EventId, string UserId), string> _eventUserToId = new();
+
+    public Task<Participant?> FindByIdAndEventIdAsync(string participantId, string eventId, CancellationToken ct = default)
+    {
+        if (_byId.TryGetValue(participantId, out var p) && p.EventId == eventId)
+            return Task.FromResult<Participant?>(p);
+        return Task.FromResult<Participant?>(null);
+    }
+
+    public Task<Participant?> FindByEventAndUserIdAsync(string eventId, string userId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return Task.FromResult<Participant?>(null);
+        var key = (eventId, userId);
+        if (_eventUserToId.TryGetValue(key, out var id) && _byId.TryGetValue(id, out var p))
+            return Task.FromResult<Participant?>(p);
+        return Task.FromResult<Participant?>(null);
+    }
+
+    public Task<Participant> AddAsync(Participant participant, CancellationToken ct = default)
+    {
+        var id = string.IsNullOrEmpty(participant.Id) ? Guid.NewGuid().ToString("N")[..24] : participant.Id;
+        var created = participant with { Id = id };
+        var createdUserId = created.UserId;
+        if (!string.IsNullOrWhiteSpace(createdUserId) && !_eventUserToId.TryAdd((created.EventId, createdUserId), id))
+            throw new ParticipantConflictException(ParticipantCollision.SameAccount);
+        if (!_eventPseudoToId.TryAdd((created.EventId, created.Pseudo), id))
+        {
+            if (!string.IsNullOrWhiteSpace(createdUserId))
+                _eventUserToId.TryRemove((created.EventId, createdUserId), out _);
+            throw new ParticipantConflictException(ParticipantCollision.SamePseudo);
+        }
+
+        _byId[id] = created;
+        return Task.FromResult(created);
+    }
+
+    public Task<IReadOnlyList<string>> ListDistinctEventIdsByUserIdAsync(string userId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return Task.FromResult<IReadOnlyList<string>>(Array.Empty<string>());
+
+        var ids = _byId.Values
+            .Where(p => p.UserId == userId)
+            .Select(p => p.EventId)
+            .Distinct()
+            .ToList();
+        return Task.FromResult<IReadOnlyList<string>>(ids);
+    }
+
+    public Task<IReadOnlyList<Participant>> ListByUserIdAsync(string userId, int limit = 0, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return Task.FromResult<IReadOnlyList<Participant>>(Array.Empty<Participant>());
+
+        var query = _byId.Values.Where(p => p.UserId == userId).OrderByDescending(p => p.CreatedAt);
+        var result = limit > 0 ? query.Take(limit) : query;
+        return Task.FromResult<IReadOnlyList<Participant>>(result.ToList());
+    }
+
+    public Task<IReadOnlyList<Participant>> ListByUserIdsAsync(
+        IReadOnlyCollection<string> userIds,
+        int limit = 0,
+        CancellationToken ct = default)
+    {
+        var ids = userIds.Where(id => !string.IsNullOrWhiteSpace(id)).ToHashSet();
+        if (ids.Count == 0)
+            return Task.FromResult<IReadOnlyList<Participant>>(Array.Empty<Participant>());
+
+        var query = _byId.Values
+            .Where(p => p.UserId is not null && ids.Contains(p.UserId))
+            .OrderByDescending(p => p.CreatedAt);
+        var result = limit > 0 ? query.Take(limit) : query;
+        return Task.FromResult<IReadOnlyList<Participant>>(result.ToList());
+    }
+
+    public Task<int> CountByEventIdAsync(string eventId, CancellationToken ct = default)
+    {
+        var n = _byId.Values.Count(p => p.EventId == eventId);
+        return Task.FromResult(n);
+    }
+
+    public Task<IReadOnlyDictionary<string, int>> CountByEventIdsAsync(
+        IReadOnlyCollection<string> eventIds,
+        CancellationToken ct = default)
+    {
+        var map = eventIds.Distinct().ToDictionary(id => id, _ => 0);
+        foreach (var p in _byId.Values.Where(p => map.ContainsKey(p.EventId)))
+            map[p.EventId]++;
+
+        return Task.FromResult<IReadOnlyDictionary<string, int>>(map);
+    }
+
+    public Task<IReadOnlyList<Participant>> ListByEventIdAsync(string eventId, CancellationToken ct = default)
+    {
+        var list = _byId.Values
+            .Where(p => p.EventId == eventId)
+            .OrderBy(p => p.CreatedAt)
+            .ToList();
+        return Task.FromResult<IReadOnlyList<Participant>>(list);
+    }
+
+    public Task<IReadOnlyList<Participant>> ListByEventIdsAsync(
+        IReadOnlyCollection<string> eventIds,
+        CancellationToken ct = default)
+    {
+        var wanted = eventIds.ToHashSet();
+        var list = _byId.Values
+            .Where(p => wanted.Contains(p.EventId))
+            .OrderBy(p => p.CreatedAt)
+            .ToList();
+        return Task.FromResult<IReadOnlyList<Participant>>(list);
+    }
+
+    public async Task<IReadOnlyList<Participant>> ListFirstByEventIdsAsync(
+        IReadOnlyCollection<string> eventIds,
+        int perEvent,
+        CancellationToken ct = default)
+    {
+        if (perEvent <= 0)
+            return [];
+
+        var joined = await ListByEventIdsAsync(eventIds, ct);
+        return joined
+            .GroupBy(p => p.EventId, StringComparer.Ordinal)
+            .SelectMany(perNight => perNight.Take(perEvent))
+            .ToList();
+    }
+
+    public Task<bool> MarkRatingPromptedAsync(
+        string participantId,
+        string eventId,
+        DateTimeOffset promptedAt,
+        CancellationToken ct = default)
+    {
+        if (!_byId.TryGetValue(participantId, out var p) || p.EventId != eventId)
+            return Task.FromResult(false);
+
+        _byId[participantId] = p with { RatingPromptedAt = promptedAt };
+        return Task.FromResult(true);
+    }
+
+    public Task<bool> DeleteAsync(string participantId, string eventId, CancellationToken ct = default)
+    {
+        if (!_byId.TryGetValue(participantId, out var p) || p.EventId != eventId)
+            return Task.FromResult(false);
+
+        _byId.TryRemove(participantId, out _);
+        _eventPseudoToId.TryRemove((p.EventId, p.Pseudo), out _);
+        var deletedUserId = p.UserId;
+        if (!string.IsNullOrWhiteSpace(deletedUserId))
+            _eventUserToId.TryRemove((p.EventId, deletedUserId), out _);
+        return Task.FromResult(true);
+    }
+
+    public Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(eventId))
+            return Task.FromResult(0L);
+
+        var toRemove = _byId.Values.Where(p => p.EventId == eventId).ToList();
+        foreach (var p in toRemove)
+        {
+            _byId.TryRemove(p.Id, out _);
+            _eventPseudoToId.TryRemove((p.EventId, p.Pseudo), out _);
+            var removedUserId = p.UserId;
+            if (!string.IsNullOrWhiteSpace(removedUserId))
+                _eventUserToId.TryRemove((p.EventId, removedUserId), out _);
+        }
+
+        return Task.FromResult((long)toRemove.Count);
+    }
+
+    public Task<long> AnonymizeByUserIdAsync(string userId, string anonymizedPseudo, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return Task.FromResult(0L);
+
+        var targets = _byId.Values.Where(p => p.UserId == userId).ToList();
+        long count = 0;
+        foreach (var p in targets)
+        {
+            var pseudo = anonymizedPseudo;
+            if (_eventPseudoToId.ContainsKey((p.EventId, pseudo)))
+                pseudo = $"{anonymizedPseudo} {p.Id[^6..]}";
+
+            var anonymized = new Participant
+            {
+                Id = p.Id,
+                EventId = p.EventId,
+                Pseudo = pseudo,
+                UserId = null,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = DateTimeOffset.UtcNow
+            };
+            _byId[p.Id] = anonymized;
+            _eventPseudoToId.TryRemove((p.EventId, p.Pseudo), out _);
+            _eventPseudoToId[(p.EventId, pseudo)] = p.Id;
+            _eventUserToId.TryRemove((p.EventId, userId), out _);
+            count++;
+        }
+
+        return Task.FromResult(count);
+    }
+}

@@ -324,6 +324,24 @@ public sealed class RecurringEventPassTests
         _events.Verify(r => r.AddAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Theory]
+    [InlineData("25:99")]
+    [InlineData("vingt heures")]
+    [InlineData("")]
+    public async Task RunAsync_SeriesWithAnUnreadableTime_StopsInsteadOfCreatingANightThatNeverStarts(string time)
+    {
+        GivenCandidates(FinishedWeekly() with { Time = time });
+
+        var result = await _sut.RunAsync();
+
+        Assert.Equal(0, result.Created);
+        Assert.Equal(1, result.Stopped);
+        _events.Verify(r => r.AddAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
+        _events.Verify(
+            r => r.UpdateAsync(It.Is<Event>(e => e.Id == "evt-1" && e.Recurrence == null), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
     [Fact]
     public async Task RunForCreatorAsync_NarrowsTheSweepToThatHostOwnSeries()
     {

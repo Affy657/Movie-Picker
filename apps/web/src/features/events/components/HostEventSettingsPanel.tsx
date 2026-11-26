@@ -176,6 +176,7 @@ function SettingsRules({
     <NightRules
       idPrefix="host-cfg"
       fields={draft.ruleFields}
+      caps={draft.limitCaps}
       errors={draft.fieldErrors}
       onChange={draft.applyRulesPatch}
       locked={draft.configLocked}

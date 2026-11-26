@@ -15,8 +15,6 @@ public sealed record RatingReminderPassResult(int FinishedNights, int Reminded, 
 
 public sealed class RatingReminderPass : IRatingReminderPass
 {
-    private const int CatchUpDays = 3;
-
     private readonly IEventRepository _events;
     private readonly IParticipantRepository _participants;
     private readonly IUserRepository _users;
@@ -56,12 +54,12 @@ public sealed class RatingReminderPass : IRatingReminderPass
         var now = _clock.GetUtcNow();
         var today = EventRecurrence.TodayInParis(now);
         var todayStartUtc = ParisMidnightUtc(today);
-        var candidates = await _events.ListWithWinnerStartingBetweenAsync(
-            ParisMidnightUtc(today.AddDays(-CatchUpDays)),
-            todayStartUtc,
+        var candidates = await _events.ListWithWinnerEndingBetweenAsync(
+            now - EventSchedule.RatingCatchUpWindow,
+            now,
             ct);
         var finishedNights = candidates
-            .Where(e => e.HasWinner && e.IsOver(now))
+            .Where(e => e.HasEndedWithinTheCatchUpWindow(now))
             .ToList();
 
         if (finishedNights.Count == 0)

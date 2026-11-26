@@ -191,10 +191,10 @@ public sealed class SentryBeforeSendTests
     [Theory]
     [InlineData("X-Host-Token", "X-Forwarded-For")]
     [InlineData("x-host-token", "x-forwarded-for")]
-    public void Prepare_DropsHostTokenAndClientAddressHeaders(string hostTokenHeader, string forwardedForHeader)
+    public void Prepare_DropsTheLegacyHostHeaderAndClientAddressHeaders(string legacyHostHeader, string forwardedForHeader)
     {
         var request = new SentryRequest();
-        request.Headers[hostTokenHeader] = "SECRET-TOKEN";
+        request.Headers[legacyHostHeader] = "SECRET-TOKEN";
         request.Headers[forwardedForHeader] = "203.0.113.7, 10.0.0.1";
         request.Headers["Accept"] = "application/json";
         var sentryEvent = new SentryEvent(new InvalidOperationException("boom")) { Request = request };

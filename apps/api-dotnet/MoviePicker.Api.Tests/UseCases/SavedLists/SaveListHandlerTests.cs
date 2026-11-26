@@ -1,4 +1,5 @@
 using Moq;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
@@ -132,7 +133,7 @@ public sealed class SaveListHandlerTests
     public async Task HandleAsync_WhileTmdbIsDown_IsUnavailable_AndKeepsNothing()
     {
         _kit.Tmdb
-            .Setup(t => t.GetCollectionAsync(HarryPotter, It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetCollectionAsync(HarryPotter, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("TMDB down"));
 
         var ex = await Assert.ThrowsAsync<ServiceUnavailableException>(() => _kit.SaveSagaAsync());

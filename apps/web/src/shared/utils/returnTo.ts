@@ -1,4 +1,4 @@
-const AUTH_PATHS = new Set(['/login', '/register', '/forgot-password', '/reset']);
+const AUTH_PATHS = new Set(['/login', '/register', '/forgot-password', '/reset', '/verify-email']);
 
 function normalizedAuthCandidate(path: string): string {
   let stripped = path;

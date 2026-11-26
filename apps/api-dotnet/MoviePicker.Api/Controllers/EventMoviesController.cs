@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AddMovie;
 using MoviePicker.Api.Application.UseCases.DeleteMovie;
 using MoviePicker.Api.Application.UseCases.DeleteMoviePitchNote;
@@ -33,17 +34,18 @@ public sealed class EventMoviesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> List(
         string slug,
+        [RequestLanguage] CatalogLanguage interfaceLanguage,
         [FromServices] IEventViewTagHandler viewTag,
         [FromServices] IListMoviesForEventHandler handler,
         CancellationToken ct,
         [FromQuery] string? participantId = null)
     {
-        var entityTag = await viewTag.HandleAsync(slug, ct);
+        var entityTag = await viewTag.HandleAsync(slug, interfaceLanguage, ct);
         ConditionalGet.Stamp(Response, entityTag);
         if (ConditionalGet.IsNotModified(Request, entityTag))
             return StatusCode(StatusCodes.Status304NotModified);
 
-        var list = await handler.HandleAsync(slug, participantId, ct);
+        var list = await handler.HandleAsync(slug, interfaceLanguage, participantId, ct);
         return Ok(list);
     }
 

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Moq;
 using Moq.Protected;
 using MoviePicker.Api.Application.Caching;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Caching;
@@ -55,7 +56,7 @@ public sealed class TmdbMovieSearchAdvancedTests
             """;
         var sut = CreateSut(CreateHttpClient(AlwaysReturns(json).Object));
 
-        var result = await sut.SearchAsync("x", false, genreIds: singleGenreIdFilter);
+        var result = await sut.SearchAsync("x", false, CatalogLanguage.French, genreIds: singleGenreIdFilter);
 
         var item = Assert.Single(result);
         Assert.Equal(1, item.Id);
@@ -74,7 +75,7 @@ public sealed class TmdbMovieSearchAdvancedTests
             """;
         var sut = CreateSut(CreateHttpClient(AlwaysReturns(json).Object));
 
-        var result = await sut.SearchAsync("x", false, yearFrom: 2000, yearTo: 2025);
+        var result = await sut.SearchAsync("x", false, CatalogLanguage.French, yearFrom: 2000, yearTo: 2025);
 
         var item = Assert.Single(result);
         Assert.Equal(2, item.Id);
@@ -91,7 +92,7 @@ public sealed class TmdbMovieSearchAdvancedTests
             """;
         var sut = CreateSut(CreateHttpClient(AlwaysReturns(json).Object));
 
-        var result = await sut.SearchAsync("x", false, voteMin: 7.0);
+        var result = await sut.SearchAsync("x", false, CatalogLanguage.French, voteMin: 7.0);
 
         var item = Assert.Single(result);
         Assert.Equal(2, item.Id);
@@ -108,7 +109,7 @@ public sealed class TmdbMovieSearchAdvancedTests
             """;
         var sut = CreateSut(CreateHttpClient(AlwaysReturns(json).Object));
 
-        var result = await sut.SearchAsync("x", false, originalLanguage: "fr");
+        var result = await sut.SearchAsync("x", false, CatalogLanguage.French, originalLanguage: "fr");
 
         var item = Assert.Single(result);
         Assert.Equal(1, item.Id);
@@ -126,7 +127,7 @@ public sealed class TmdbMovieSearchAdvancedTests
             """;
         var sut = CreateSut(CreateHttpClient(AlwaysReturns(json).Object));
 
-        var result = await sut.SearchAsync("x", allowSeries: true);
+        var result = await sut.SearchAsync("x", allowSeries: true, CatalogLanguage.French);
 
         Assert.Equal(2, result.Count);
         Assert.Equal(MovieMediaType.Movie, result[0].MediaType);
@@ -151,7 +152,7 @@ public sealed class TmdbMovieSearchAdvancedTests
         var sut = CreateSut(CreateHttpClient(handler.Object));
 
         var result = await sut.SearchAsync(
-            "   ", false, genreIds: multiGenreIdsFilter, yearFrom: 2000, yearTo: 2025, voteMin: 5.0, originalLanguage: "en");
+            "   ", false, CatalogLanguage.French, genreIds: multiGenreIdsFilter, yearFrom: 2000, yearTo: 2025, voteMin: 5.0, originalLanguage: "en");
 
         var item = Assert.Single(result);
         Assert.Equal(10, item.Id);
@@ -176,7 +177,7 @@ public sealed class TmdbMovieSearchAdvancedTests
         });
         var sut = CreateSut(CreateHttpClient(handler.Object));
 
-        await sut.SearchAsync("   ", false, runtimeMin: 90, runtimeMax: 150);
+        await sut.SearchAsync("   ", false, CatalogLanguage.French, runtimeMin: 90, runtimeMax: 150);
 
         Assert.NotNull(capturedUrl);
         Assert.Contains("discover/movie", capturedUrl);
@@ -189,7 +190,7 @@ public sealed class TmdbMovieSearchAdvancedTests
     {
         var sut = CreateSut(CreateHttpClient(new Mock<HttpMessageHandler>().Object), apiKey: null);
 
-        await Assert.ThrowsAsync<HttpRequestException>(() => sut.GetDetailsAsync(550, MovieMediaType.Movie));
+        await Assert.ThrowsAsync<HttpRequestException>(() => sut.GetDetailsAsync(550, MovieMediaType.Movie, CatalogLanguage.French));
     }
 
     [Fact]
@@ -198,7 +199,7 @@ public sealed class TmdbMovieSearchAdvancedTests
         var handler = Handler(_ => new HttpResponseMessage(HttpStatusCode.NotFound));
         var sut = CreateSut(CreateHttpClient(handler.Object));
 
-        var result = await sut.GetDetailsAsync(999, MovieMediaType.Movie);
+        var result = await sut.GetDetailsAsync(999, MovieMediaType.Movie, CatalogLanguage.French);
 
         Assert.Null(result);
     }
@@ -216,8 +217,8 @@ public sealed class TmdbMovieSearchAdvancedTests
             new SingleFlight(),
             NullLogger<TmdbMovieSearch>.Instance);
 
-        Assert.Null(await sut.GetDetailsAsync(999, MovieMediaType.Movie));
-        Assert.Null(await sut.GetDetailsAsync(999, MovieMediaType.Movie));
+        Assert.Null(await sut.GetDetailsAsync(999, MovieMediaType.Movie, CatalogLanguage.French));
+        Assert.Null(await sut.GetDetailsAsync(999, MovieMediaType.Movie, CatalogLanguage.French));
 
         handler.Protected().Verify(
             "SendAsync", Times.Once(), ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>());
@@ -231,8 +232,8 @@ public sealed class TmdbMovieSearchAdvancedTests
             : new HttpResponseMessage(HttpStatusCode.NotFound));
         var sut = CreateSut(CreateHttpClient(handler.Object));
 
-        Assert.Null(await sut.GetDetailsAsync(999, MovieMediaType.Movie));
-        Assert.Equal("Une série", (await sut.GetDetailsAsync(999, MovieMediaType.Tv))?.Title);
+        Assert.Null(await sut.GetDetailsAsync(999, MovieMediaType.Movie, CatalogLanguage.French));
+        Assert.Equal("Une série", (await sut.GetDetailsAsync(999, MovieMediaType.Tv, CatalogLanguage.French))?.Title);
     }
 
     private static readonly string[] expected = new[] { "Drame", "Thriller" };
@@ -264,7 +265,7 @@ public sealed class TmdbMovieSearchAdvancedTests
             """;
         var sut = CreateSut(CreateHttpClient(AlwaysReturns(json).Object));
 
-        var details = await sut.GetDetailsAsync(550, MovieMediaType.Movie);
+        var details = await sut.GetDetailsAsync(550, MovieMediaType.Movie, CatalogLanguage.French);
 
         Assert.NotNull(details);
         Assert.Equal(550, details!.Id);
@@ -300,7 +301,7 @@ public sealed class TmdbMovieSearchAdvancedTests
             """;
         var sut = CreateSut(CreateHttpClient(AlwaysReturns(json).Object));
 
-        var details = await sut.GetDetailsAsync(1, MovieMediaType.Movie);
+        var details = await sut.GetDetailsAsync(1, MovieMediaType.Movie, CatalogLanguage.French);
 
         Assert.Equal("https://www.youtube.com/watch?v=trailer-fr", details!.TrailerUrl);
     }
@@ -326,7 +327,7 @@ public sealed class TmdbMovieSearchAdvancedTests
             """);
         var sut = CreateSut(CreateHttpClient(handler.Object));
 
-        var details = await sut.GetDetailsAsync(1, MovieMediaType.Movie);
+        var details = await sut.GetDetailsAsync(1, MovieMediaType.Movie, CatalogLanguage.French);
 
         Assert.Equal("https://www.youtube.com/watch?v=trailer-en", details!.TrailerUrl);
     }
@@ -342,7 +343,7 @@ public sealed class TmdbMovieSearchAdvancedTests
             """);
         var sut = CreateSut(CreateHttpClient(handler.Object));
 
-        var details = await sut.GetDetailsAsync(1, MovieMediaType.Movie);
+        var details = await sut.GetDetailsAsync(1, MovieMediaType.Movie, CatalogLanguage.French);
 
         Assert.Equal("https://www.youtube.com/watch?v=trailer-fr", details!.TrailerUrl);
     }
@@ -355,7 +356,7 @@ public sealed class TmdbMovieSearchAdvancedTests
             """;
         var sut = CreateSut(CreateHttpClient(AlwaysReturns(json).Object));
 
-        var details = await sut.GetDetailsAsync(1399, MovieMediaType.Tv);
+        var details = await sut.GetDetailsAsync(1399, MovieMediaType.Tv, CatalogLanguage.French);
 
         Assert.NotNull(details);
         Assert.Equal("Game of Thrones", details!.Title);
@@ -382,7 +383,7 @@ public sealed class TmdbMovieSearchAdvancedTests
             """;
         var sut = CreateSut(CreateHttpClient(AlwaysReturns(json).Object));
 
-        var details = await sut.GetDetailsAsync(1399, MovieMediaType.Tv);
+        var details = await sut.GetDetailsAsync(1399, MovieMediaType.Tv, CatalogLanguage.French);
 
         Assert.Equal("David Benioff, D. B. Weiss", details!.Director);
         Assert.Equal(8, details.SeasonCount);
@@ -398,7 +399,7 @@ public sealed class TmdbMovieSearchAdvancedTests
             """;
         var sut = CreateSut(CreateHttpClient(AlwaysReturns(json).Object));
 
-        var details = await sut.GetDetailsAsync(2, MovieMediaType.Movie);
+        var details = await sut.GetDetailsAsync(2, MovieMediaType.Movie, CatalogLanguage.French);
 
         Assert.Null(details!.SeasonCount);
         Assert.Null(details.EpisodeCount);
@@ -412,8 +413,8 @@ public sealed class TmdbMovieSearchAdvancedTests
         var handler = AlwaysReturns("""{"id":550,"title":"Fight Club"}""");
         var sut = CreateSut(CreateHttpClient(handler.Object));
 
-        await sut.GetDetailsAsync(550, MovieMediaType.Movie);
-        await sut.GetDetailsAsync(550, MovieMediaType.Movie);
+        await sut.GetDetailsAsync(550, MovieMediaType.Movie, CatalogLanguage.French);
+        await sut.GetDetailsAsync(550, MovieMediaType.Movie, CatalogLanguage.French);
 
         handler.Protected().Verify(
             "SendAsync", Times.Once(), ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>());
@@ -424,7 +425,7 @@ public sealed class TmdbMovieSearchAdvancedTests
     {
         var sut = CreateSut(CreateHttpClient(AlwaysReturns("not a json").Object));
 
-        await Assert.ThrowsAsync<HttpRequestException>(() => sut.GetDetailsAsync(550, MovieMediaType.Movie));
+        await Assert.ThrowsAsync<HttpRequestException>(() => sut.GetDetailsAsync(550, MovieMediaType.Movie, CatalogLanguage.French));
     }
 
     [Fact]
@@ -439,7 +440,7 @@ public sealed class TmdbMovieSearchAdvancedTests
         });
         var sut = CreateSut(CreateHttpClient(handler.Object));
 
-        var enrichment = await sut.GetEnrichmentAsync(1, MovieMediaType.Tv, "FR");
+        var enrichment = await sut.GetEnrichmentAsync(1, MovieMediaType.Tv, "FR", CatalogLanguage.French);
 
         Assert.NotNull(enrichment);
         Assert.Equal(42, enrichment!.RuntimeMinutes);

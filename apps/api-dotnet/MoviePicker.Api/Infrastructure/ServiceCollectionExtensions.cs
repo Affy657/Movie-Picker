@@ -11,6 +11,7 @@ using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
 using MoviePicker.Api.Application.UseCases.Auth;
+using MoviePicker.Api.Application.UseCases.Auth.EmailVerification;
 using MoviePicker.Api.Application.UseCases.EventLive;
 using MoviePicker.Api.Application.UseCases.FinishedEvents;
 using MoviePicker.Api.Application.UseCases.FriendGroups;
@@ -31,14 +32,12 @@ using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.BackgroundServices;
 using MoviePicker.Api.Infrastructure.Caching;
-using MoviePicker.Api.Infrastructure.Development;
 using MoviePicker.Api.Infrastructure.Email;
 using MoviePicker.Api.Infrastructure.GitHub;
 using MoviePicker.Api.Infrastructure.Google;
 using MoviePicker.Api.Infrastructure.Letterboxd;
 using MoviePicker.Api.Infrastructure.Migrations;
 using MoviePicker.Api.Infrastructure.Persistence;
-using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
 using MoviePicker.Api.Infrastructure.Posters;
 using MoviePicker.Api.Infrastructure.Push;
@@ -92,7 +91,7 @@ public static class ServiceCollectionExtensions
             .ConfigurePrimaryHttpMessageHandler(
                 static () => new SocketsHttpHandler { AllowAutoRedirect = false });
 
-        RegisterPosterStore(services, configuration, mongoUri);
+        RegisterPosterStore(services, configuration);
 
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
@@ -150,12 +149,10 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ValidationErrorFilter>();
         services.AddSingleton<MoviePickerExceptionFilter>();
 
+#if DEBUG
         if (environment.IsDevelopment())
-        {
-            services.Configure<DevelopmentSeedOptions>(
-                configuration.GetSection(DevelopmentSeedOptions.SectionName));
-            services.AddHostedService<DevelopmentDataSeedHostedService>();
-        }
+            services.AddDevelopmentSeed(configuration);
+#endif
 
         return services;
     }
@@ -183,11 +180,7 @@ public static class ServiceCollectionExtensions
         ConfigureTmdbOptions(opts, cfg);
         ConfigureShowcaseOptions(opts, cfg);
         ConfigurePosterOptions(opts, cfg);
-
-        var webBase = cfg["PUBLIC_WEB_BASE_URL"];
-        if (!string.IsNullOrWhiteSpace(webBase))
-            opts.PublicWebBaseUrl = webBase.Trim().TrimEnd('/');
-
+        ConfigurePublicBaseUrls(opts, cfg);
         ConfigureEmailOptions(opts, cfg);
         ConfigureVapidOptions(opts, cfg);
 
@@ -205,6 +198,16 @@ public static class ServiceCollectionExtensions
         ConfigureGitHubOptions(opts, cfg);
     }
 
+    private static void ConfigurePublicBaseUrls(MoviePickerOptions opts, IConfiguration cfg)
+    {
+        var webBase = cfg["PUBLIC_WEB_BASE_URL"];
+        if (!string.IsNullOrWhiteSpace(webBase))
+            opts.PublicWebBaseUrl = webBase.Trim().TrimEnd('/');
+        var apiBase = cfg["PUBLIC_API_BASE_URL"];
+        if (!string.IsNullOrWhiteSpace(apiBase))
+            opts.PublicApiBaseUrl = apiBase.Trim().TrimEnd('/');
+    }
+
     private static void ConfigureGitHubOptions(MoviePickerOptions opts, IConfiguration cfg)
     {
         var token = cfg["GITHUB_TOKEN"];
@@ -215,9 +218,6 @@ public static class ServiceCollectionExtensions
         var repo = cfg["GITHUB_REPO_NAME"];
         if (!string.IsNullOrWhiteSpace(repo))
             opts.GitHubRepoName = repo.Trim();
-        var attachmentsBranch = cfg["GITHUB_ATTACHMENTS_BRANCH"];
-        if (!string.IsNullOrWhiteSpace(attachmentsBranch))
-            opts.GitHubAttachmentsBranch = attachmentsBranch.Trim();
     }
 
     private static void ConfigureTmdbOptions(MoviePickerOptions opts, IConfiguration cfg)
@@ -270,6 +270,9 @@ public static class ServiceCollectionExtensions
         var fromName = cfg["EMAIL_FROM_NAME"];
         if (!string.IsNullOrWhiteSpace(fromName))
             opts.EmailFromName = fromName.Trim();
+        var contactAddress = cfg["CONTACT_EMAIL_ADDRESS"];
+        if (!string.IsNullOrWhiteSpace(contactAddress))
+            opts.ContactEmailAddress = contactAddress.Trim();
         var resendKey = cfg["RESEND_API_KEY"];
         opts.ResendApiKey = string.IsNullOrWhiteSpace(resendKey) ? null : resendKey;
         var resendBase = cfg["RESEND_API_BASE_URL"];
@@ -292,6 +295,14 @@ public static class ServiceCollectionExtensions
 
     private static readonly string[] SharedDatabaseNames = ["moviepicker", "moviepicker_dev"];
 
+    internal const string MissingMongoUriMessage =
+        "MONGODB_URI is not set: the API only runs on MongoDB. "
+        + "On a workstation, start the local replica set with "
+        + "`node scripts/mongo-replica-set.mjs --container movie-picker-mongo-test --port 27018` "
+        + "(the container of `pnpm run test:api:mongo`), then set "
+        + "MONGODB_URI=mongodb://127.0.0.1:27018/moviepicker_local?directConnection=true, "
+        + "in the root .env or on the command line. See docs/development.md.";
+
     private static void RegisterRepositories(
         IServiceCollection services,
         string mongoUri,
@@ -299,37 +310,7 @@ public static class ServiceCollectionExtensions
         bool isTestContext)
     {
         if (string.IsNullOrWhiteSpace(mongoUri))
-        {
-            services.AddSingleton<IEventRepository, InMemoryEventRepository>();
-            services.AddSingleton<IParticipantRepository, InMemoryParticipantRepository>();
-            services.AddSingleton<IUserRepository, InMemoryUserRepository>();
-            services.AddSingleton<IPasswordResetTokenRepository, InMemoryPasswordResetTokenRepository>();
-            services.AddSingleton<IAvatarPhotoRepository, InMemoryAvatarPhotoRepository>();
-            services.AddSingleton<IBannerPhotoRepository, InMemoryBannerPhotoRepository>();
-            services.AddSingleton<IMovieRepository, InMemoryMovieRepository>();
-            services.AddSingleton<IVoteRepository, InMemoryVoteRepository>();
-            services.AddSingleton<ISeenMarkRepository, InMemorySeenMarkRepository>();
-            services.AddSingleton<IMovieRatingRepository, InMemoryMovieRatingRepository>();
-            services.AddSingleton<IAuthSessionInvalidator, InMemoryAuthSessionInvalidator>();
-            services.AddSingleton<IPushSubscriptionRepository, InMemoryPushSubscriptionRepository>();
-            services.AddSingleton<IFollowRepository, InMemoryFollowRepository>();
-            services.AddSingleton<IWatchlistRepository, InMemoryWatchlistRepository>();
-            services.AddSingleton<IMovieListRepository, InMemoryMovieListRepository>();
-            services.AddSingleton<IFriendGroupRepository, InMemoryFriendGroupRepository>();
-            services.AddSingleton<IWatchedTitleRepository, InMemoryWatchedTitleRepository>();
-            services.AddSingleton<ISavedListRepository, InMemorySavedListRepository>();
-            services.AddSingleton<IUserNotificationRepository, InMemoryUserNotificationRepository>();
-            services.AddSingleton<IKofiWebhookLogRepository, InMemoryKofiWebhookLogRepository>();
-            services.AddSingleton<IUsageCountRepository, InMemoryUsageCountRepository>();
-            services.AddSingleton<INotificationDedupRepository, InMemoryNotificationDedupRepository>();
-            services.AddSingleton<IRateLimitCounterStore, InMemoryRateLimitCounterStore>();
-            services.AddSingleton<IDatabaseHealthProbe, InMemoryDatabaseHealthProbe>();
-            services.AddSingleton<IMigrationHistoryRepository, InMemoryMigrationHistoryRepository>();
-            services.AddSingleton<IUnitOfWork, InMemoryUnitOfWork>();
-            services.AddSingleton<ISharedCache, InMemorySharedCache>();
-            services.AddSingleton<IEventPresenceRepository, InMemoryEventPresenceRepository>();
-            return;
-        }
+            throw new InvalidOperationException(MissingMongoUriMessage);
 
         var mongoUrl = new MongoUrl(mongoUri);
         var databaseName = mongoUrl.DatabaseName ?? "moviepicker";
@@ -339,8 +320,7 @@ public static class ServiceCollectionExtensions
             throw new InvalidOperationException(
                 $"Guard: a test suite targets the shared database '{databaseName}'. "
                 + "The 'moviepicker' and 'moviepicker_dev' databases are never reachable from tests. "
-                + "Provide a disposable database through MONGODB_TEST_URI or E2E_MONGODB_URI, "
-                + "or leave MONGODB_URI empty to run in memory.");
+                + "Provide a disposable database through MONGODB_TEST_URI or E2E_MONGODB_URI.");
         }
         if (environment.IsDevelopment()
             && string.Equals(databaseName, "moviepicker", StringComparison.OrdinalIgnoreCase))
@@ -363,6 +343,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IParticipantRepository, MongoParticipantRepository>();
         services.AddScoped<IUserRepository, MongoUserRepository>();
         services.AddScoped<IPasswordResetTokenRepository, MongoPasswordResetTokenRepository>();
+        services.AddScoped<IEmailVerificationTokenRepository, MongoEmailVerificationTokenRepository>();
         services.AddScoped<IAvatarPhotoRepository, MongoAvatarPhotoRepository>();
         services.AddScoped<IBannerPhotoRepository, MongoBannerPhotoRepository>();
         services.AddScoped<IMovieRepository, MongoMovieRepository>();
@@ -433,17 +414,12 @@ public static class ServiceCollectionExtensions
                 sp.GetRequiredService<ILogger<TmdbMovieSearch>>()));
     }
 
-    private static void RegisterPosterStore(
-        IServiceCollection services,
-        IConfiguration configuration,
-        string mongoUri)
+    private static void RegisterPosterStore(IServiceCollection services, IConfiguration configuration)
     {
-        if (!GetPosterCacheEnabledFlag(configuration))
-            services.AddSingleton<IPosterImageStore, DisabledPosterImageStore>();
-        else if (string.IsNullOrWhiteSpace(mongoUri))
-            services.AddSingleton<IPosterImageStore, MemoryPosterImageStore>();
-        else
+        if (GetPosterCacheEnabledFlag(configuration))
             services.AddSingleton<IPosterImageStore, MongoPosterImageStore>();
+        else
+            services.AddSingleton<IPosterImageStore, DisabledPosterImageStore>();
     }
 
     private static bool GetPosterCacheEnabledFlag(IConfiguration configuration) =>
@@ -466,6 +442,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<AvatarPhotoWriter>();
         services.AddScoped<ProfileBannerWriter>();
         services.AddScoped<IOAuthProfilePhotoImporter, OAuthProfilePhotoImporter>();
+        services.AddScoped<IEmailVerificationMailer, EmailVerificationMailer>();
         services.AddScoped<EventAudienceNotifier>();
         services.AddScoped<HostedNightsHandover>();
         services.AddScoped<IGroupNightAnnouncer, GroupNightAnnouncer>();
@@ -476,6 +453,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<FriendGroupNightsReader>();
         services.AddScoped<IUsageRecorder, UsageRecorder>();
         services.AddScoped<IWinnerAnnouncer, WinnerAnnouncer>();
+        services.AddScoped<IWinnerRuntimes, TmdbWinnerRuntimes>();
         services.AddScoped<IWheelWinnerAnnouncement, WheelWinnerAnnouncement>();
 
         var handlerNamespace = "MoviePicker.Api.Application.UseCases";

@@ -6,6 +6,7 @@ import type {
   EventConfigData,
   EventConfigPatchPayload,
   EventData,
+  EventLimitCaps,
   MyEventsListResponse,
   MyEventsScope,
 } from '@/features/events/types';
@@ -71,11 +72,13 @@ export async function createEvent(body: CreateEventBody): Promise<CreateEventRes
 export function fetchMyEventsList(
   scope: MyEventsScope,
   offset = 0,
-  q?: string
+  q?: string,
+  { previews = true }: { previews?: boolean } = {}
 ): Promise<MyEventsListResponse> {
   const params = new URLSearchParams({ scope });
   if (offset > 0) params.set('offset', String(offset));
   if (q) params.set('q', q);
+  if (!previews) params.set('previews', 'false');
   return fetchApi<MyEventsListResponse>(`/events/mine?${params.toString()}`);
 }
 
@@ -97,6 +100,10 @@ export async function joinEvent(slug: string, pseudo: string): Promise<JoinEvent
     isNew: raw.isNew,
     message: raw.message,
   };
+}
+
+export function fetchEventLimits(): Promise<EventLimitCaps> {
+  return fetchApi<ApiSchemas['EventLimitsResponse']>(apiPath('events', 'limits'));
 }
 
 export function fetchEventConfig(slug: string): Promise<EventConfigData> {
@@ -159,6 +166,10 @@ export async function deleteEventWinner(slug: string, movieId: string): Promise<
 
 export type RemoveParticipantResponse = ApiSchemas['RemoveParticipantResponse'];
 
+export async function markRatingPrompted(slug: string): Promise<void> {
+  await fetchApi(apiPath('events', slug, 'rating-prompt'), { method: 'PUT' });
+}
+
 export async function setEventCoHost(
   slug: string,
   participantId: string,
@@ -167,6 +178,10 @@ export async function setEventCoHost(
   await fetchApi(apiPath('events', slug, 'co-hosts', participantId), {
     method: coHost ? 'PUT' : 'DELETE',
   });
+}
+
+export async function letRemovedPersonBackIn(slug: string, userId: string): Promise<void> {
+  await fetchApi(apiPath('events', slug, 'removed-people', userId), { method: 'DELETE' });
 }
 
 export async function removeEventParticipant(

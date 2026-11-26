@@ -1,0 +1,406 @@
+using System.Collections.Concurrent;
+using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.SearchUsers;
+using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
+
+namespace MoviePicker.Api.Infrastructure.Persistence.InMemory;
+
+public sealed class InMemoryUserRepository : IUserRepository
+{
+    private readonly ConcurrentDictionary<string, User> _byId = new();
+    private readonly ConcurrentDictionary<string, string> _emailToId = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, string> _handleToId = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Lock _uniqueKeysGate = new();
+
+    public Task<User?> GetByIdAsync(string id, CancellationToken ct = default) =>
+        Task.FromResult(_byId.TryGetValue(id, out var u) ? u : null);
+
+    public Task<IReadOnlyList<User>> ListByIdsAsync(IReadOnlyCollection<string> ids, CancellationToken ct = default)
+    {
+        IReadOnlyList<User> result = ids
+            .Select(id => _byId.TryGetValue(id, out var u) ? u : null)
+            .OfType<User>()
+            .ToList();
+        return Task.FromResult(result);
+    }
+
+    public async Task<IReadOnlyList<UserCard>> ListCardsByIdsAsync(IReadOnlyCollection<string> ids, CancellationToken ct = default) =>
+        (await ListByIdsAsync(ids, ct)).Select(ToCard).ToList();
+
+    public Task<IReadOnlyList<UserCard>> ListCardsByHandlesAsync(IReadOnlyCollection<string> handles, CancellationToken ct = default)
+    {
+        IReadOnlyList<UserCard> cards = handles
+            .Select(NormalizeHandle)
+            .OfType<string>()
+            .Distinct(StringComparer.Ordinal)
+            .Select(handle => _handleToId.TryGetValue(handle, out var id) && _byId.TryGetValue(id, out var user) ? user : null)
+            .OfType<User>()
+            .Select(ToCard)
+            .ToList();
+        return Task.FromResult(cards);
+    }
+
+    private static UserCard ToCard(User user) =>
+        new(user.Id, user.DisplayedAvatarId, user.Handle, user.IsProfilePublic, user.DisplayName, user.AccentColor);
+
+    public Task<User?> GetByEmailAsync(string email, CancellationToken ct = default)
+    {
+        var n = Normalize(email);
+        if (n is null)
+            return Task.FromResult<User?>(null);
+        return Task.FromResult(_emailToId.TryGetValue(n, out var id) && _byId.TryGetValue(id, out var u) ? u : null);
+    }
+
+    public Task<User?> GetByHandleAsync(string handle, CancellationToken ct = default)
+    {
+        var n = NormalizeHandle(handle);
+        if (n is null)
+            return Task.FromResult<User?>(null);
+        return Task.FromResult(_handleToId.TryGetValue(n, out var id) && _byId.TryGetValue(id, out var u) ? u : null);
+    }
+
+    public Task<User?> GetByIdentityAsync(string provider, string subject, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(provider) || string.IsNullOrWhiteSpace(subject))
+            return Task.FromResult<User?>(null);
+        var match = _byId.Values.FirstOrDefault(u =>
+            u.Identities.Any(i =>
+                string.Equals(i.Provider, provider, StringComparison.Ordinal)
+                && string.Equals(i.Subject, subject, StringComparison.Ordinal)));
+        return Task.FromResult(match);
+    }
+
+    public Task<IReadOnlyList<User>> ListMissingHandleAsync(CancellationToken ct = default)
+    {
+        IReadOnlyList<User> result = _byId.Values
+            .Where(u => string.IsNullOrEmpty(u.Handle))
+            .ToList();
+        return Task.FromResult(result);
+    }
+
+    public Task<IReadOnlyList<User>> SearchPublicAsync(string query, int limit, CancellationToken ct = default)
+    {
+        var normalized = UserSearchPolicy.Normalize(query);
+        if (normalized.Length < UserSearchPolicy.MinQueryLength)
+            return Task.FromResult<IReadOnlyList<User>>([]);
+
+        IReadOnlyList<User> result = _byId.Values
+            .Where(u => u.IsProfilePublic
+                && !string.IsNullOrEmpty(u.Handle)
+                && (UserSearchPolicy.Contains(u.DisplayName, normalized)
+                    || UserSearchPolicy.Contains(u.Handle, normalized)))
+            .OrderByDescending(u => UserSearchPolicy.StartsWith(u.DisplayName, normalized)
+                || UserSearchPolicy.StartsWith(u.Handle, normalized))
+            .ThenBy(u => u.Handle, StringComparer.OrdinalIgnoreCase)
+            .Take(limit)
+            .ToList();
+        return Task.FromResult(result);
+    }
+
+    public Task SetLetterboxdSyncStatusAsync(
+        string userId,
+        DateTimeOffset syncedAt,
+        string? error,
+        IReadOnlyDictionary<LetterboxdImportTarget, LetterboxdListSync> lists,
+        CancellationToken ct = default)
+    {
+        _byId.SwapIfPresent(userId, user => user with
+        {
+            LetterboxdLastSyncAt = syncedAt,
+            LetterboxdLastSyncError = error,
+            LetterboxdListSyncs = user.LetterboxdListSyncs
+                .Where(entry => !lists.ContainsKey(entry.Key))
+                .Concat(lists)
+                .ToDictionary(entry => entry.Key, entry => entry.Value),
+            Version = user.Version + 1
+        });
+        return Task.CompletedTask;
+    }
+
+    public Task SetLetterboxdPendingReconciliationCountAsync(
+        string userId,
+        int pendingCount,
+        CancellationToken ct = default)
+    {
+        _byId.SwapIfPresent(userId, user => user with
+        {
+            LetterboxdPendingReconciliationCount = pendingCount,
+            Version = user.Version + 1
+        });
+        return Task.CompletedTask;
+    }
+
+    public Task RecordLetterboxdPendingChoicesAsync(
+        string userId,
+        int pendingCount,
+        IReadOnlyList<string> pendingChoiceKeys,
+        CancellationToken ct = default)
+    {
+        _byId.SwapIfPresent(userId, user => user with
+        {
+            LetterboxdPendingReconciliationCount = pendingCount,
+            LetterboxdPendingChoiceKeys = [.. pendingChoiceKeys],
+            Version = user.Version + 1
+        });
+        return Task.CompletedTask;
+    }
+
+    public Task SetLetterboxdLinkedCountsAsync(
+        string userId,
+        int watchlistCount,
+        int watchedCount,
+        CancellationToken ct = default)
+    {
+        _byId.SwapIfPresent(userId, user => user with
+        {
+            LetterboxdWatchlistCount = watchlistCount,
+            LetterboxdWatchedCount = watchedCount,
+            Version = user.Version + 1
+        });
+        return Task.CompletedTask;
+    }
+
+    public Task<bool> MarkSupporterAsync(string userId, DateTimeOffset since, CancellationToken ct = default)
+    {
+        var marked = _byId.SwapIfPresent(userId, user => user.SupporterSince is not null
+            ? null
+            : user with { SupporterSince = since, UpdatedAt = since, Version = user.Version + 1 });
+        return Task.FromResult(marked is not null);
+    }
+
+    public Task<bool> MarkEmailVerifiedAsync(string userId, DateTimeOffset verifiedAt, CancellationToken ct = default)
+    {
+        var confirmed = _byId.SwapIfPresent(userId, user => user.EmailVerifiedAt is null
+            ? user with { EmailVerifiedAt = verifiedAt, Version = user.Version + 1 }
+            : null);
+        return Task.FromResult(confirmed is not null);
+    }
+
+    public Task<bool> AddEventTemplateAsync(
+        string userId,
+        EventTemplate template,
+        int maxPerUser,
+        DateTimeOffset now,
+        CancellationToken ct = default)
+    {
+        var added = _byId.SwapIfPresent(userId, user => user.EventTemplates.Count >= maxPerUser
+            ? null
+            : WithEventTemplates(user, [.. user.EventTemplates, template], now));
+        return Task.FromResult(added is not null);
+    }
+
+    public Task<bool> ReplaceEventTemplateAsync(
+        string userId,
+        EventTemplate template,
+        DateTimeOffset now,
+        CancellationToken ct = default)
+    {
+        var replaced = _byId.SwapIfPresent(userId, user =>
+        {
+            var next = user.EventTemplates.ToList();
+            var index = next.FindIndex(t => t.Id == template.Id);
+            if (index < 0)
+                return null;
+
+            next[index] = template;
+            return WithEventTemplates(user, next, now);
+        });
+        return Task.FromResult(replaced is not null);
+    }
+
+    public Task<bool> RemoveEventTemplateAsync(
+        string userId,
+        string templateId,
+        DateTimeOffset now,
+        CancellationToken ct = default)
+    {
+        var removed = _byId.SwapIfPresent(userId, user =>
+        {
+            var next = user.EventTemplates.Where(t => t.Id != templateId).ToList();
+            return next.Count == user.EventTemplates.Count ? null : WithEventTemplates(user, next, now);
+        });
+        return Task.FromResult(removed is not null);
+    }
+
+    private static User WithEventTemplates(User user, IReadOnlyList<EventTemplate> templates, DateTimeOffset now) =>
+        user with { EventTemplates = templates, UpdatedAt = now, Version = user.Version + 1 };
+
+    public Task<bool> AddFavoriteAsync(
+        string userId,
+        FavoriteTitle favorite,
+        int maxPerUser,
+        DateTimeOffset now,
+        CancellationToken ct = default)
+    {
+        var added = _byId.SwapIfPresent(userId, user =>
+            user.Favorites.Count >= maxPerUser || user.Favorites.Any(f => f.Is(favorite.TmdbId, favorite.MediaType))
+                ? null
+                : WithFavorites(user, [.. user.Favorites, favorite], now));
+        return Task.FromResult(added is not null);
+    }
+
+    public Task<bool> RemoveFavoriteAsync(
+        string userId,
+        int tmdbId,
+        MovieMediaType mediaType,
+        DateTimeOffset now,
+        CancellationToken ct = default)
+    {
+        var removed = _byId.SwapIfPresent(userId, user =>
+        {
+            var next = user.Favorites.Where(f => !f.Is(tmdbId, mediaType)).ToList();
+            return next.Count == user.Favorites.Count ? null : WithFavorites(user, next, now);
+        });
+        return Task.FromResult(removed is not null);
+    }
+
+    private static User WithFavorites(User user, IReadOnlyList<FavoriteTitle> favorites, DateTimeOffset now) =>
+        user with { Favorites = favorites, UpdatedAt = now, Version = user.Version + 1 };
+
+
+    public Task<IReadOnlyList<PublicProfileRef>> ListPublicProfilesAsync(int limit, CancellationToken ct = default)
+    {
+        IReadOnlyList<PublicProfileRef> result = _byId.Values
+            .Where(u => u.IsProfilePublic && !string.IsNullOrWhiteSpace(u.Handle))
+            .OrderByDescending(u => u.UpdatedAt)
+            .Take(limit > 0 ? limit : int.MaxValue)
+            .Select(PublicProfileRef.Of)
+            .ToList();
+        return Task.FromResult(result);
+    }
+
+    public Task<User> AddAsync(User user, CancellationToken ct = default)
+    {
+        var id = string.IsNullOrEmpty(user.Id) ? Guid.NewGuid().ToString("N")[..24] : user.Id;
+        var email = Normalize(user.Email) ?? user.Email.Trim();
+        var handle = NormalizeHandle(user.Handle);
+        var created = Copy(user, id, email, handle);
+        lock (_uniqueKeysGate)
+        {
+            EnsureUniqueKeysAreFree(id, email, handle, created.Identities);
+            _byId[id] = created;
+            _emailToId[email] = id;
+            if (handle is not null)
+                _handleToId[handle] = id;
+        }
+
+        return Task.FromResult(created);
+    }
+
+    public Task<User> UpdateAsync(User user, CancellationToken ct = default)
+    {
+        lock (_uniqueKeysGate)
+        {
+            if (!_byId.TryGetValue(user.Id, out var previous))
+                throw Errors.UserNotFound();
+            if (previous.Version != user.Version)
+                throw Errors.ConcurrentUpdate();
+
+            var email = Normalize(user.Email) ?? user.Email.Trim();
+            var handle = NormalizeHandle(user.Handle);
+            EnsureUniqueKeysAreFree(user.Id, email, handle, user.Identities);
+            var updated = Copy(user with { Version = user.Version + 1 }, user.Id, email, handle);
+            if (!_byId.TryUpdate(user.Id, updated, previous))
+                throw Errors.ConcurrentUpdate();
+
+            ReleaseUniqueKeys(previous);
+            _emailToId[email] = user.Id;
+            if (handle is not null)
+                _handleToId[handle] = user.Id;
+            return Task.FromResult(updated);
+        }
+    }
+
+    public Task<bool> DeleteAsync(string id, CancellationToken ct = default)
+    {
+        lock (_uniqueKeysGate)
+        {
+            if (!_byId.TryRemove(id, out var removed))
+                return Task.FromResult(false);
+
+            ReleaseUniqueKeys(removed);
+            return Task.FromResult(true);
+        }
+    }
+
+    private void EnsureUniqueKeysAreFree(string userId, string email, string? handle, IReadOnlyList<LinkedIdentity> identities)
+    {
+        if (_emailToId.TryGetValue(email, out var emailOwner) && emailOwner != userId)
+            throw Errors.EmailTaken();
+        if (handle is not null && _handleToId.TryGetValue(handle, out var handleOwner) && handleOwner != userId)
+            throw Errors.HandleTaken();
+        if (identities.Count > 0 && _byId.Values.Any(other => other.Id != userId && SharesAnIdentity(other, identities)))
+            throw Errors.IdentityConflict();
+    }
+
+    private static bool SharesAnIdentity(User other, IReadOnlyList<LinkedIdentity> identities) =>
+        other.Identities.Any(owned => identities.Any(wanted =>
+            string.Equals(owned.Provider, wanted.Provider, StringComparison.Ordinal)
+            && string.Equals(owned.Subject, wanted.Subject, StringComparison.Ordinal)));
+
+    private void ReleaseUniqueKeys(User user)
+    {
+        var email = Normalize(user.Email) ?? user.Email.Trim();
+        _emailToId.TryRemove(new KeyValuePair<string, string>(email, user.Id));
+        var handle = NormalizeHandle(user.Handle);
+        if (handle is not null)
+            _handleToId.TryRemove(new KeyValuePair<string, string>(handle, user.Id));
+    }
+
+    private static User Copy(User user, string id, string email, string? handle) =>
+        new()
+        {
+            Id = id,
+            Email = email,
+            EmailVerifiedAt = user.EmailVerifiedAt,
+            PasswordHash = user.PasswordHash,
+            DisplayName = user.DisplayName,
+            Identities = user.Identities,
+            UnlinkedIdentities = user.UnlinkedIdentities,
+            Handle = handle ?? string.Empty,
+            Bio = user.Bio,
+            IsProfilePublic = user.IsProfilePublic,
+            IsWatchlistPublic = user.IsWatchlistPublic,
+            IsWatchedPublic = user.IsWatchedPublic,
+            UiTheme = user.UiTheme,
+            AccentColor = user.AccentColor,
+            RatingScale = user.RatingScale,
+            DimWatched = user.DimWatched,
+            AvatarId = user.AvatarId,
+            AvatarPhoto = user.AvatarPhoto,
+            Banner = user.Banner,
+            BannerPhoto = user.BannerPhoto,
+            NotificationPreferences = user.NotificationPreferences,
+            EventTemplates = user.EventTemplates,
+            Favorites = user.Favorites,
+            SupporterSince = user.SupporterSince,
+            LetterboxdUsername = user.LetterboxdUsername,
+            LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,
+            LetterboxdLastSyncError = user.LetterboxdLastSyncError,
+            LetterboxdListSyncs = new Dictionary<LetterboxdImportTarget, LetterboxdListSync>(user.LetterboxdListSyncs),
+            LetterboxdPendingReconciliationCount = user.LetterboxdPendingReconciliationCount,
+            LetterboxdPendingChoiceKeys = user.LetterboxdPendingChoiceKeys,
+            LetterboxdSyncWatchlist = user.LetterboxdSyncWatchlist,
+            LetterboxdSyncWatched = user.LetterboxdSyncWatched,
+            LetterboxdWatchlistCount = user.LetterboxdWatchlistCount,
+            LetterboxdWatchedCount = user.LetterboxdWatchedCount,
+            CreatedAt = user.CreatedAt,
+            UpdatedAt = user.UpdatedAt,
+            Version = user.Version
+        };
+
+    private static string? Normalize(string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return null;
+        return email.Trim().ToLowerInvariant();
+    }
+
+    private static string? NormalizeHandle(string? handle)
+    {
+        if (string.IsNullOrWhiteSpace(handle))
+            return null;
+        return handle.Trim().ToLowerInvariant();
+    }
+}

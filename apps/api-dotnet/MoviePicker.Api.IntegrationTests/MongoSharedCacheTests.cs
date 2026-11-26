@@ -30,13 +30,13 @@ public sealed class MongoSharedCacheTests : IClassFixture<MoviePickerApplication
             .FirstOrDefaultAsync();
     }
 
-    [MongoFact]
+    [Fact]
     public void ProductionCache_IsTheMongoBackedOne()
     {
         Assert.IsType<MongoSharedCache>(Cache());
     }
 
-    [MongoFact]
+    [Fact]
     public async Task SetAsync_ThenTryGet_RoundTripsThroughJson()
     {
         var key = "snapshot:" + Guid.NewGuid().ToString("N");
@@ -48,7 +48,7 @@ public sealed class MongoSharedCacheTests : IClassFixture<MoviePickerApplication
         Assert.InRange(entry.ExpiresAt, DateTimeOffset.UtcNow.AddMinutes(4), DateTimeOffset.UtcNow.AddMinutes(6));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task TryGetManyAsync_ReadsTheLiveKeysInOneQuery_AndSkipsExpiredAndUnknownOnes()
     {
         var live = "snapshot:" + Guid.NewGuid().ToString("N");
@@ -74,28 +74,28 @@ public sealed class MongoSharedCacheTests : IClassFixture<MoviePickerApplication
             .EstimatedDocumentCountAsync();
     }
 
-    [MongoFact]
+    [Fact]
     public async Task SetWithinCapacityAsync_BelowTheCap_WritesTheEntry()
     {
-        var key = "tmdb-enrich-v2:movie:FR:" + Guid.NewGuid().ToString("N");
+        var key = "tmdb-enrich-v3:movie:FR:fr-FR:" + Guid.NewGuid().ToString("N");
 
         await Cache().SetWithinCapacityAsync(key, new Snapshot("Heat", 170), TimeSpan.FromMinutes(5), await StoredEntriesAsync() + 1);
 
         Assert.NotNull(await ReadAsync(key));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task SetWithinCapacityAsync_AtTheCap_WritesNothing()
     {
         await Cache().SetAsync("snapshot:" + Guid.NewGuid().ToString("N"), new Snapshot("Heat", 170), TimeSpan.FromMinutes(5));
-        var key = "tmdb-enrich-v2:movie:FR:" + Guid.NewGuid().ToString("N");
+        var key = "tmdb-enrich-v3:movie:FR:fr-FR:" + Guid.NewGuid().ToString("N");
 
         await Cache().SetWithinCapacityAsync(key, new Snapshot("Heat", 170), TimeSpan.FromMinutes(5), await StoredEntriesAsync());
 
         Assert.Null(await ReadAsync(key));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task SetAsync_Twice_ReplacesTheEntry()
     {
         var key = "snapshot:" + Guid.NewGuid().ToString("N");
@@ -107,7 +107,7 @@ public sealed class MongoSharedCacheTests : IClassFixture<MoviePickerApplication
         Assert.NotNull(await ReadAsync(key));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task TryGetAsync_ExpiredEntry_ReturnsNullBeforeMongoReapsIt()
     {
         var key = "snapshot:" + Guid.NewGuid().ToString("N");
@@ -118,7 +118,7 @@ public sealed class MongoSharedCacheTests : IClassFixture<MoviePickerApplication
         Assert.NotNull(await ReadAsync(key));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task SetAsync_InsideARolledBackTransaction_StillPersistsTheEntry()
     {
         var key = "snapshot:" + Guid.NewGuid().ToString("N");
@@ -135,7 +135,7 @@ public sealed class MongoSharedCacheTests : IClassFixture<MoviePickerApplication
         Assert.Equal("cached-anyway", (await Cache().TryGetAsync<string>(key))?.Value);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task TryGetAsync_UnknownKey_ReturnsNull()
     {
         Assert.Null(await Cache().TryGetAsync<string>("snapshot:" + Guid.NewGuid().ToString("N")));

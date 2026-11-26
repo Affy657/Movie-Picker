@@ -38,13 +38,13 @@ public sealed record Event
         if (!EventSchedule.TryGetStartUtc(Date, Time, out var startUtc))
             return EventLifecycle.Upcoming;
 
-        var pendingAt = startUtc + EventSchedule.PendingDelay;
-        var autoCloseAt = pendingAt + EventSchedule.AutoCloseDelay;
+        var scheduledEndAt = startUtc + NightLength;
+        var autoCloseAt = startUtc + EventSchedule.PendingDelay + EventSchedule.AutoCloseDelay;
 
         if (utcNow >= autoCloseAt)
             return EventLifecycle.Finished;
 
-        if (utcNow >= pendingAt)
+        if (utcNow >= scheduledEndAt)
             return RemainingWinnerSlots == 0 ? EventLifecycle.Finished : EventLifecycle.Pending;
 
         if (utcNow >= startUtc)
@@ -52,6 +52,36 @@ public sealed record Event
 
         return EventLifecycle.Upcoming;
     }
+
+    public TimeSpan NightLength => EventSchedule.NightLength(Winners.Max(w => w.RuntimeMinutes));
+
+    public bool TryGetEndUtc(out DateTimeOffset endUtc)
+    {
+        DateTimeOffset? end = null;
+        if (EventSchedule.TryGetStartUtc(Date, Time, out var startUtc))
+        {
+            var scheduledEndAt = startUtc + NightLength;
+            var lastPickedAt = Winners.Count == 0 ? scheduledEndAt : Winners.Max(w => w.PickedAt);
+            end = lastPickedAt > scheduledEndAt ? lastPickedAt : scheduledEndAt;
+        }
+
+        if (ClosedAt is { } closedAt && (end is null || closedAt < end))
+            end = closedAt;
+
+        endUtc = end ?? default;
+        return end.HasValue;
+    }
+
+    public bool HasEndedWithinTheCatchUpWindow(DateTimeOffset utcNow) =>
+        HasWinner
+        && TryGetEndUtc(out var endUtc)
+        && utcNow >= endUtc
+        && utcNow - EventSchedule.RatingCatchUpWindow < endUtc;
+
+    public bool IsRatingPromptDue(DateTimeOffset utcNow, DateTimeOffset? promptedAt) =>
+        HasEndedWithinTheCatchUpWindow(utcNow)
+        && TryGetEndUtc(out var endUtc)
+        && (promptedAt is null || promptedAt < endUtc);
 
     public bool IsFinished(DateTimeOffset utcNow) => Lifecycle(utcNow) == EventLifecycle.Finished;
 
@@ -91,6 +121,12 @@ public sealed record Event
     public bool ConcealsProposer(string? proposerUserId, string? viewerUserId) =>
         HasAnonymousProposals && (string.IsNullOrEmpty(viewerUserId) || proposerUserId != viewerUserId);
 
+    public Movie HideProposalTime(Movie movie) =>
+        HasAnonymousProposals ? movie with { CreatedAt = CreatedAt, UpdatedAt = CreatedAt } : movie;
+
+    public IReadOnlyList<Movie> InListOrder(IReadOnlyList<Movie> movies) =>
+        HasAnonymousProposals ? [.. movies.OrderBy(movie => movie.Id, StringComparer.Ordinal)] : movies;
+
     public IReadOnlyList<string> GetWinnerMovieIds() => Winners.Select(w => w.MovieId).ToList();
 
     public int TargetWinnerCount => Math.Max(1, Config?.WinnerCount ?? EventConfig.DefaultWinnerCount);
@@ -100,9 +136,9 @@ public sealed record Event
 
 public sealed record EventConfig
 {
-    public const int MaxParticipantsCap = 500;
+    public const int MaxParticipantsCap = 50;
 
-    public const int MaxProposalsPerParticipantCap = 100;
+    public const int MaxProposalsPerParticipantCap = 15;
 
     public const int MaxMoviesPerEventCap = 1000;
 
@@ -114,11 +150,22 @@ public sealed record EventConfig
         RichSharePreview = true
     };
 
+    private readonly int? _maxProposalsPerParticipant;
+    private readonly int? _maxParticipants;
+
     public string? Theme { get; init; }
     public int? ThemeColor { get; init; }
-    public int? MaxProposalsPerParticipant { get; init; }
+    public int? MaxProposalsPerParticipant
+    {
+        get => _maxProposalsPerParticipant;
+        init => _maxProposalsPerParticipant = AtMost(value, MaxProposalsPerParticipantCap);
+    }
 
-    public int? MaxParticipants { get; init; }
+    public int? MaxParticipants
+    {
+        get => _maxParticipants;
+        init => _maxParticipants = AtMost(value, MaxParticipantsCap);
+    }
 
     public int? MaxVotesPerParticipant { get; init; }
 
@@ -135,4 +182,6 @@ public sealed record EventConfig
     public const int WinnerCountCap = 10;
 
     public int WinnerCount { get; init; } = DefaultWinnerCount;
+
+    private static int? AtMost(int? value, int cap) => value > cap ? cap : value;
 }

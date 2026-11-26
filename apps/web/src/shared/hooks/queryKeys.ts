@@ -43,6 +43,7 @@ export const queryKeys = {
   eventTemplates: {
     list: ['event-templates', 'list'] as const,
   },
+  eventLimits: ['event-limits'] as const,
   event: {
     all: ['event'] as const,
 

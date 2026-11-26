@@ -5,12 +5,6 @@ namespace MoviePicker.Api.Controllers;
 
 internal static class ShareDocumentResults
 {
-    public static string PublicApiBase(this ControllerBase controller)
-    {
-        var request = controller.Request;
-        return $"{request.Scheme}://{request.Host.Value}{request.PathBase.Value}";
-    }
-
     public static ContentResult ShareDocument(this ControllerBase controller, ShareDocument document)
     {
         var headers = controller.Response.Headers;

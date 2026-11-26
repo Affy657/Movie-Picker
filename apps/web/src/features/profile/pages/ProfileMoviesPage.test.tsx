@@ -213,8 +213,10 @@ describe('ProfileMoviesPage (MSW)', () => {
         })
       );
       return http.get(`${TEST_API_V1}/users/:handle/watched-movies`, ({ request }) => {
-        const take = Number(new URL(request.url).searchParams.get('take'));
-        return HttpResponse.json({ items: history.slice(0, take), total });
+        const params = new URL(request.url).searchParams;
+        const skip = Number(params.get('skip'));
+        const page = history.slice(skip, skip + Number(params.get('take')));
+        return HttpResponse.json({ items: page, total, hasMore: skip + page.length < total });
       });
     }
 
@@ -236,6 +238,22 @@ describe('ProfileMoviesPage (MSW)', () => {
       renderPage('alice');
 
       expect(await screen.findByText('1200 films vus')).toBeInTheDocument();
+    });
+
+    it('lists the film past the first thousand and finds it by the search', async () => {
+      server.use(watchedHistory(1_001));
+      const user = userEvent.setup();
+      renderPage('alice');
+
+      expect(await screen.findByText('1001 films vus')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /charger les 977 films restants/i })
+      ).toBeInTheDocument();
+      await user.type(
+        screen.getByRole('searchbox', { name: /rechercher parmi les films/i }),
+        'Titre 1001'
+      );
+      expect(await screen.findByText('Titre 1001')).toBeInTheDocument();
     });
   });
 

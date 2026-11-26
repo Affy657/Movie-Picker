@@ -37,5 +37,7 @@ public interface IVoteRepository
 
     Task<IReadOnlyList<Vote>> ListByParticipantIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default);
 
+    Task<IReadOnlyList<string>> ListEventIdsVotedByAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default);
+
     Task<int> CountDistinctVotersByEventIdAsync(string eventId, CancellationToken ct = default);
 }

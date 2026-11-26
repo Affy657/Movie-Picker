@@ -569,6 +569,49 @@ describe('EventMoviesSection (MSW)', () => {
     ]);
   });
 
+  describe('night that hides who proposed what', () => {
+    const ANONYMOUS_NIGHT: EventData = {
+      ...EVENT,
+      config: {
+        theme: null,
+        maxProposalsPerParticipant: null,
+        maxParticipants: null,
+        wheelMode: 'weightedByVotes',
+        winnerCount: 1,
+        anonymousProposals: true,
+      },
+    };
+    const SAME_TIME = '2035-07-01T18:00:00Z';
+    const SERVED = [
+      { ...MOVIE, id: 'm1', title: 'Whiplash', createdAt: SAME_TIME },
+      { ...MOVIE, id: 'm2', title: 'Amélie', createdAt: SAME_TIME },
+      { ...MOVIE, id: 'm3', title: 'Matrix', createdAt: SAME_TIME },
+    ];
+    const titles = () =>
+      screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent);
+
+    it('replaces the added order with the order the night is served in, both ways', async () => {
+      server.use(authedUserHandler, watchlistHandler([]));
+      renderSection({ event: ANONYMOUS_NIGHT, movies: SERVED, viewMode: 'grid' });
+      const user = userEvent.setup();
+
+      expect(screen.queryByRole('button', { name: /^ajout$/i })).not.toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: /^mélange$/i }));
+      expect(titles()).toEqual(['Whiplash', 'Amélie', 'Matrix']);
+
+      await user.click(screen.getByRole('button', { name: /^mélange$/i }));
+      expect(titles()).toEqual(['Matrix', 'Amélie', 'Whiplash']);
+    });
+
+    it('keeps the added order in a night that shows its proposers', () => {
+      server.use(authedUserHandler, watchlistHandler([]));
+      renderSection({ movies: SERVED, viewMode: 'grid' });
+
+      expect(screen.getByRole('button', { name: /^ajout$/i })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^mélange$/i })).not.toBeInTheDocument();
+    });
+  });
+
   it('pins the winners in draw order, not in sort order', () => {
     server.use(authedUserHandler, watchlistHandler([]));
     const second: MovieData = { ...MOVIE, id: 'm2', title: 'Inception', createdAt: '2030-01-02' };

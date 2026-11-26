@@ -81,6 +81,41 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
     }
 
     [Fact]
+    public async Task GetLimits_Anonymous_ServesTheCapsTheApiEnforces()
+    {
+        var anonymous = _factory.CreateClient();
+
+        var res = await anonymous.GetAsync("/api/v1/events/limits");
+
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        var limits = await res.Content.ReadFromJsonAsync<EventLimitsResponse>(JsonOptions);
+        Assert.NotNull(limits);
+        Assert.Equal(EventConfig.MaxParticipantsCap, limits!.MaxParticipants);
+        Assert.Equal(EventConfig.MaxProposalsPerParticipantCap, limits.MaxProposalsPerParticipant);
+    }
+
+    [Fact]
+    public async Task PatchConfig_AboveTheServedParticipantCap_Returns400()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
+        var create = await client.PostAsJsonAsync(
+            "/api/v1/events",
+            new { title = "Cap", date = TestDates.Upcoming, time = "20:00" });
+        var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
+        Assert.NotNull(created);
+
+        var atCap = await client.PatchAsJsonAsync(
+            $"/api/v1/events/{created!.Slug}/config",
+            new { maxParticipants = EventConfig.MaxParticipantsCap });
+        var aboveCap = await client.PatchAsJsonAsync(
+            $"/api/v1/events/{created.Slug}/config",
+            new { maxParticipants = EventConfig.MaxParticipantsCap + 1 });
+
+        Assert.Equal(HttpStatusCode.OK, atCap.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, aboveCap.StatusCode);
+    }
+
+    [Fact]
     public async Task PatchConfig_WithoutHost_Returns403()
     {
         var owner = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);

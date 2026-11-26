@@ -18,6 +18,7 @@ import {
 } from './tooling/colorMixFallback';
 import { securityTxtPlugin } from './tooling/securityTxt';
 import { invitationDocumentsPlugin } from './tooling/invitationDocuments';
+import { notFoundDocumentPlugin } from './tooling/notFoundDocument';
 import {
   buildContentSecurityPolicy,
   inlineScriptHashes,
@@ -429,6 +430,7 @@ export default defineConfig(({ mode }) => {
       preloadCriticalAssetsPlugin(),
       cspMetaPlugin(apiOrigin, sentryOrigin),
       invitationDocumentsPlugin(),
+      notFoundDocumentPlugin(),
       ...(sentryAuthToken
         ? sentryVitePlugin({
             org: process.env.SENTRY_ORG,

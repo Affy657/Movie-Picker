@@ -157,4 +157,8 @@ public sealed class EventWinnerDocument
 
     [BsonElement("pickedAt")]
     public DateTime PickedAt { get; set; }
+
+    [BsonElement("runtimeMinutes")]
+    [BsonIgnoreIfNull]
+    public int? RuntimeMinutes { get; set; }
 }

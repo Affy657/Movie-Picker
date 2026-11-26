@@ -1,5 +1,4 @@
 using System.Net;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -32,10 +31,15 @@ public sealed class HttpWebShellSourceTests
         factory.Setup(f => f.CreateClient(HttpWebShellSource.HttpClientName)).Returns(() => new HttpClient(handler.Object));
         return new HttpWebShellSource(
             factory.Object,
-            new MemoryCache(new MemoryCacheOptions()),
             Options.Create(new MoviePickerOptions { PublicWebBaseUrl = "https://web.example/" }),
             NullLogger<HttpWebShellSource>.Instance);
     }
+
+    private static string ShellOfRelease(string entryHash) =>
+        $"<html><head><script type=\"module\" src=\"/assets/index-{entryHash}.js\"></script></head><body><div id=\"root\"></div></body></html>";
+
+    private static Func<Task<HttpResponseMessage>> Serving(string shell) =>
+        () => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(shell) });
 
     [Fact]
     public async Task GetShellAsync_FetchesTheShellOfThePublicSite()
@@ -49,14 +53,17 @@ public sealed class HttpWebShellSourceTests
     }
 
     [Fact]
-    public async Task GetShellAsync_ServesTheSecondCallFromMemory()
+    public async Task GetShellAsync_RightAfterAFrontDeploy_ServesTheShellOfTheNewRelease()
     {
         var sut = CreateSut();
-
+        _respond = Serving(ShellOfRelease("old"));
         await sut.GetShellAsync();
-        await sut.GetShellAsync();
 
-        Assert.Single(_requests);
+        _respond = Serving(ShellOfRelease("new"));
+        var shell = await sut.GetShellAsync();
+
+        Assert.Contains("/assets/index-new.js", shell);
+        Assert.Equal(2, _requests.Count);
     }
 
     [Fact]

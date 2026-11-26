@@ -8,6 +8,48 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Signaler une photo** : sur le profil d’un autre membre, « Plus d’actions » à côté du partage signale sa photo de profil ou sa bannière à l’équipe de Movie Picker, qui peut la retirer.
+- **Laisser revenir une personne retirée** : la fenêtre Participants montre à l’hôte et aux co-hôtes les personnes retirées de la soirée, avec un bouton « Laisser revenir » qui leur rouvre le lien de la soirée.
+- **Confirmez votre adresse e-mail** : après une inscription par mot de passe, un courriel vous envoie un lien de confirmation. Votre compte marche tout de suite, et Compte et sécurité vous le rappelle discrètement, avec un bouton pour renvoyer le courriel.
+
+### Changed
+
+- **Les schémas du dossier technique se lisent de haut en bas sur téléphone** : les cinq flots les plus larges ne défilent plus de côté sous 768 px.
+- **La fiche d’un film arrive plus vite** : son contenu et son affiche se chargent dès l’ouverture de l’application, en même temps que la page.
+- **Le dossier technique répond plus vite à son ouverture**, surtout sur téléphone.
+- **Au plus 50 participants et 15 films par personne** : les règles d’une soirée et de ses modèles s’arrêtent à ces plafonds, et une soirée réglée au-delà garde 50 places.
+- **Quand le temps réel ne répond pas**, une soirée se met à jour toutes les 15 secondes au lieu de 3,5, et se recharge toujours dès qu’il revient.
+- **Mes soirées, la fenêtre pour proposer un film et les pages de groupe** ne chargent plus tous les films, participants et soirées passées pour leurs aperçus et leurs chiffres : elles restent rapides quand une soirée compte des centaines de films ou qu’un groupe se réunit depuis des années.
+
+### Removed
+
+- **Les captures d’écran des suggestions** : « Proposer une idée » n’envoie plus que le texte, et plus aucune image n’est publiée sur GitHub.
+
+### Fixed
+
+- **Le flou derrière la barre du haut, les barres d’une soirée et les fenêtres** est de retour dans Chrome, Edge et Firefox : il ne s’affichait plus que dans Safari.
+- **Les titres et résumés des films suivent la langue de l’interface** : en anglais, la recherche, l’accueil, les sagas, la fiche d’un film et la liste des films d’une soirée affichent les titres TMDB en anglais.
+- **Après un changement de photo de profil ou de bannière**, l’ancienne image reste affichée quelques minutes là où elle était encore à l’écran (participants d’une soirée, vos listes), au lieu de laisser place aux initiales jusqu’au prochain rechargement.
+- **Une soirée de groupe dont l’hôte vous a retiré** ne vous est plus proposée, ni dans Mes soirées, ni sur la page du groupe, ni par une annonce.
+- **Juste après une mise à jour du site**, une invitation, un récap, une fiche de film ou un profil partagés ne restent plus bloqués sur l’écran qui demande de recharger la page.
+- **Au-delà de 1 000 films vus**, la page Films vus et celle d’un profil les affichent tous, et la recherche trouve aussi les plus anciens.
+- **Les plateformes et la note TMDB de Ma liste** s’affichent pour tous les films, au-delà des 500 ajoutés le plus récemment.
+- **Les favoris et les films de Ma liste** prennent le titre et l’année de TMDB, comme les listes, et un favori sans affiche reçoit celle de TMDB.
+- **L’export de vos données liste les titres que vous avez ajoutés aux listes d’autres membres**, même celles que vous avez quittées ; à la suppression de votre compte, ces titres restent dans leurs listes, sans votre nom.
+- **Une soirée dure le temps de son film** : quand le film tiré dépasse deux heures, la soirée reste en cours jusqu’à la fin du film, et l’invitation à le noter n’arrive plus en plein milieu.
+- **L’invitation à noter ne revient plus sur chaque appareil** : une fois proposée, la feuille de note ne s’ouvre plus d’elle-même sur votre téléphone puis sur votre ordinateur.
+- **Un film tiré tard reçoit aussi son rappel** : même tiré plusieurs jours après la date de la soirée, il donne lieu au rappel pour le noter, et rappel comme feuille de note partent de la même fin de soirée, pendant sept jours.
+- **Une adresse qui n’existe pas répond enfin « introuvable » aux moteurs de recherche** : le visiteur voit toujours la page introuvable, mais elle n’est plus présentée comme une page valide.
+
+### Security
+
+- **Une photo de profil ou une bannière perd ses métadonnées** (position GPS comprise) avant d’être enregistrée, même envoyée en dehors de l’application.
+- **Dans une soirée à propositions anonymes, plus rien ne date un film** : son heure d’ajout n’apparaît plus nulle part, et le tri « Ajout » y devient un ordre mélangé qui ne suit pas l’ordre des propositions.
+- **Une adresse prise par quelqu’un d’autre se récupère avec Google ou GitHub** : si un compte à mot de passe jamais confirmé utilise votre adresse, vous connecter avec Google ou GitHub (même adresse, vérifiée par le fournisseur) vous rend le compte et en déconnecte l’autre personne.
+- **Le badge Ko-fi** ne va plus qu’à un compte dont l’adresse est confirmée.
+
 ## [1.32.1] - 2026-11-25
 
 ### Changed

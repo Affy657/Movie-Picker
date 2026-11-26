@@ -64,32 +64,25 @@ public sealed class ConfirmPasswordResetHandler : IConfirmPasswordResetHandler
 
         var now = _clock.GetUtcNow();
         var newPasswordHash = _passwordHasher.Hash(request.NewPassword);
-        var updated = user with { PasswordHash = newPasswordHash, Identities = [], UpdatedAt = now };
+        var updated = user with
+        {
+            PasswordHash = newPasswordHash,
+            Identities = [],
+            EmailVerifiedAt = user.EmailVerifiedAt ?? now,
+            UpdatedAt = now
+        };
         await _users.UpdateAsync(updated, ct);
 
         await _tokens.MarkConsumedAsync(stored.Id, now, ct);
         await _tokens.InvalidateActiveForUserAsync(stored.UserId, now, ct);
 
-        var invalidatedSessions = await _sessionInvalidator.InvalidateAllForUserAsync(stored.UserId, ct);
-        var revokedPushSubscriptions = await RevokePushSubscriptionsAsync(stored.UserId, ct);
+        var revoked = await AccountAccessRevocation.RevokeEveryDeviceAsync(
+            stored.UserId, _sessionInvalidator, _pushSubscriptions, _logger, ct);
 
         _logger.LogInformation(
             "PasswordReset.Confirm: success for {EmailMasked} (userId={UserId}, tokenId={TokenId}, invalidatedSessions={Sessions}, unlinkedIdentities={Identities}, revokedPushSubscriptions={PushSubscriptions})",
-            EmailMasking.Mask(user.Email), user.Id, stored.Id, invalidatedSessions, user.Identities.Count, revokedPushSubscriptions);
+            EmailMasking.Mask(user.Email), user.Id, stored.Id, revoked.Sessions, user.Identities.Count, revoked.PushSubscriptions);
 
         return new PasswordResetConfirmResponse { Message = SuccessMessage };
-    }
-
-    private async Task<long> RevokePushSubscriptionsAsync(string userId, CancellationToken ct)
-    {
-        try
-        {
-            return await _pushSubscriptions.DeleteByUserIdAsync(userId, ct);
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            _logger.LogError(ex, "PasswordReset.Confirm: push subscriptions not revoked for {UserId}", userId);
-            return 0;
-        }
     }
 }

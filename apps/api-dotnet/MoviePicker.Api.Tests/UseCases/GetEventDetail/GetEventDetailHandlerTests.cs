@@ -97,6 +97,54 @@ public sealed class GetEventDetailHandlerTests
         Assert.Equal(expected, result.ViewerRemoved);
     }
 
+    private static Event NightEndedTwoDaysAgo() =>
+        new EventEntityBuilder().WithId("evt-1").WithSlug("soiree").Build() with
+        {
+            Date = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-2).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+            Time = "20:00",
+            Winners = [new EventWinner { MovieId = "m1", Method = WinnerPickMethod.Wheel, PickedAt = DateTimeOffset.UtcNow.AddDays(-3) }]
+        };
+
+    private void GivenSignedInParticipant(Event evt, DateTimeOffset? ratingPromptedAt)
+    {
+        _eventRepo.Setup(r => r.GetBySlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _currentUserAccessor.Setup(c => c.GetUserId()).Returns("u1");
+        _participantRepo
+            .Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new ParticipantEntity { Id = "p1", EventId = evt.Id, Pseudo = "Léa", UserId = "u1", RatingPromptedAt = ratingPromptedAt }]);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ParticipantOnceTheNightIsOver_IsDueToBeAskedForARating()
+    {
+        GivenSignedInParticipant(NightEndedTwoDaysAgo(), ratingPromptedAt: null);
+
+        var result = await _sut.HandleAsync("soiree");
+
+        Assert.True(result.RatingPromptDue);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ParticipantAlreadyAskedOnAnotherDevice_IsNotAskedAgain()
+    {
+        GivenSignedInParticipant(NightEndedTwoDaysAgo(), ratingPromptedAt: DateTimeOffset.UtcNow.AddHours(-1));
+
+        var result = await _sut.HandleAsync("soiree");
+
+        Assert.False(result.RatingPromptDue);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ViewerWhoDidNotTakePart_IsNeverAskedForARating()
+    {
+        _eventRepo.Setup(r => r.GetBySlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(NightEndedTwoDaysAgo());
+        _currentUserAccessor.Setup(c => c.GetUserId()).Returns("u1");
+
+        var result = await _sut.HandleAsync("soiree");
+
+        Assert.False(result.RatingPromptDue);
+    }
+
     [Fact]
     public async Task HandleAsync_GivesTheRecapLinkOfTheNight()
     {
@@ -358,5 +406,71 @@ public sealed class GetEventDetailHandlerTests
         Assert.True(result.IsHost);
         Assert.Equal([false, true, false], result.Participants.Select(p => p.IsCoHost));
         Assert.True(result.Participants[0].IsCreator);
+    }
+
+    [Theory]
+    [InlineData("creator")]
+    [InlineData("u-co")]
+    public async Task HandleAsync_HostViewer_SeesWhoWasRemoved_WithTheirCard(string host)
+    {
+        var evt = Event() with { CreatorUserId = "creator", CoHostUserIds = ["u-co"], RemovedUserIds = ["u-out", "u-deleted"] };
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _currentUserAccessor.Setup(c => c.GetUserId()).Returns(host);
+        _userRepo
+            .Setup(r => r.ListCardsByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<UserCard>)
+            [
+                new UserCard("u-out", "avatar-4", "lea", IsProfilePublic: true, DisplayName: "Léa", AccentColor: AccentColor.Pink)
+            ]);
+
+        var result = await _sut.HandleAsync("evt1");
+
+        var removed = Assert.Single(result.RemovedPeople);
+        Assert.Equal("u-out", removed.Id);
+        Assert.Equal("Léa", removed.DisplayName);
+        Assert.Equal("avatar-4", removed.AvatarId);
+        Assert.Equal("lea", removed.Handle);
+        Assert.Equal(AccentColor.Pink, removed.AccentColor);
+    }
+
+    [Fact]
+    public async Task HandleAsync_HostViewer_ReadsParticipantsAndRemovedPeopleInOneLookup()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var evt = Event() with { CreatorUserId = "creator", RemovedUserIds = ["u-out"] };
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _currentUserAccessor.Setup(c => c.GetUserId()).Returns("creator");
+        _participantRepo
+            .Setup(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<ParticipantEntity>)
+            [
+                new ParticipantEntity { Id = "p-creator", EventId = "evt1", Pseudo = "Adrien", UserId = "creator", CreatedAt = now, UpdatedAt = now }
+            ]);
+
+        await _sut.HandleAsync("evt1");
+
+        _userRepo.Verify(
+            r => r.ListCardsByIdsAsync(
+                It.Is<IReadOnlyCollection<string>>(ids => ids.Count == 2 && ids.Contains("creator") && ids.Contains("u-out")),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Theory]
+    [InlineData("u-guest")]
+    [InlineData("u-out")]
+    [InlineData(null)]
+    public async Task HandleAsync_ViewerWhoDoesNotHost_SeesNobodyRemoved(string? viewer)
+    {
+        var evt = Event() with { CreatorUserId = "creator", RemovedUserIds = ["u-out"] };
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _currentUserAccessor.Setup(c => c.GetUserId()).Returns(viewer);
+
+        var result = await _sut.HandleAsync("evt1");
+
+        Assert.Empty(result.RemovedPeople);
+        _userRepo.Verify(
+            r => r.ListCardsByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }

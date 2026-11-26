@@ -98,6 +98,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
         _tmdb.Setup(s => s.GetEnrichmentsAsync(
                 It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(),
                 It.IsAny<string>(),
+                It.IsAny<CatalogLanguage>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>());
         var history = new WatchedHistoryReader(
@@ -169,7 +170,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
     {
         var handler = Build();
         _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser(isPublic: false));
-        await Assert.ThrowsAsync<NotFoundException>(() => handler.HandleAsync("alice", null, 6));
+        await Assert.ThrowsAsync<NotFoundException>(() => handler.HandleAsync("alice", null, 0, 6));
     }
 
     [Fact]
@@ -177,7 +178,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
     {
         var handler = Build();
         _users.Setup(r => r.GetByHandleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
-        await Assert.ThrowsAsync<NotFoundException>(() => handler.HandleAsync("ghost", null, 6));
+        await Assert.ThrowsAsync<NotFoundException>(() => handler.HandleAsync("ghost", null, 0, 6));
     }
 
     [Theory]
@@ -188,7 +189,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
         var handler = Build();
         _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser(isWatchedPublic: false));
 
-        var ex = await Assert.ThrowsAsync<NotFoundException>(() => handler.HandleAsync("alice", viewerId, 6));
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() => handler.HandleAsync("alice", viewerId, 0, 6));
 
         Assert.Equal(ErrorCodes.WatchedNotFound, ex.Reason);
     }
@@ -199,7 +200,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
         var handler = Build();
         _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser(isWatchedPublic: false));
 
-        var res = await handler.HandleAsync("alice", "u1", 6);
+        var res = await handler.HandleAsync("alice", "u1", 0, 6);
 
         Assert.Empty(res.Items);
     }
@@ -210,7 +211,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
         var handler = Build();
         _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
 
-        var res = await handler.HandleAsync("alice", null, 6);
+        var res = await handler.HandleAsync("alice", null, 0, 6);
 
         Assert.Empty(res.Items);
     }
@@ -225,7 +226,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
         _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Evt("A", winnerMovieId: null) });
 
-        var res = await handler.HandleAsync("alice", null, 6);
+        var res = await handler.HandleAsync("alice", null, 0, 6);
 
         Assert.Empty(res.Items);
         _movies.Verify(
@@ -243,7 +244,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
         _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Evt("A", date: NightAfterNow, winnerMovieId: "m1") });
 
-        var res = await handler.HandleAsync("alice", null, 6);
+        var res = await handler.HandleAsync("alice", null, 0, 6);
 
         Assert.Empty(res.Items);
     }
@@ -257,7 +258,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
         ParticipatesIn(lastNight);
         WinnerMoviesAre(Mov("m1", tmdbId: 10));
 
-        var res = await handler.HandleAsync("alice", null, 6);
+        var res = await handler.HandleAsync("alice", null, 0, 6);
 
         Assert.Equal(10, Assert.Single(res.Items).TmdbId);
     }
@@ -278,7 +279,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
         _movies.Setup(m => m.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Mov("m-old", tmdbId: 10), Mov("m-recent", tmdbId: 20) });
 
-        var res = await handler.HandleAsync("alice", null, 6);
+        var res = await handler.HandleAsync("alice", null, 0, 6);
 
         Assert.Equal(2, res.Items.Count);
         Assert.Equal(20, res.Items[0].TmdbId);
@@ -308,7 +309,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
                 new MovieRating { Id = "r1", EventId = "A", MovieId = "m-rated", ParticipantId = "p1", Value = 7, CreatedAt = _now, UpdatedAt = _now }
             });
 
-        var res = await handler.HandleAsync("alice", null, 6);
+        var res = await handler.HandleAsync("alice", null, 0, 6);
 
         Assert.Null(res.Items.Single(i => i.TmdbId == 20).MyRating);
         Assert.Equal(7, res.Items.Single(i => i.TmdbId == 10).MyRating);
@@ -333,13 +334,14 @@ public sealed class GetUserWatchedMoviesHandlerTests
         _tmdb.Setup(s => s.GetEnrichmentsAsync(
                 It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(),
                 It.IsAny<string>(),
+                It.IsAny<CatalogLanguage>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>
             {
                 [(10, MovieMediaType.Movie)] = new TmdbMovieEnrichment(8.1, [], null, 112)
             });
 
-        var item = Assert.Single((await handler.HandleAsync("alice", null, 6)).Items);
+        var item = Assert.Single((await handler.HandleAsync("alice", null, 0, 6)).Items);
 
         Assert.Equal(8.1, item.VoteAverage);
         Assert.Equal(112, item.RuntimeMinutes);
@@ -358,7 +360,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
         _movies.Setup(m => m.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Movie>());
 
-        var res = await handler.HandleAsync("alice", null, 6);
+        var res = await handler.HandleAsync("alice", null, 0, 6);
 
         Assert.Empty(res.Items);
     }
@@ -379,10 +381,73 @@ public sealed class GetUserWatchedMoviesHandlerTests
             .ReturnsAsync((IReadOnlyCollection<string> ids, CancellationToken _) =>
                 ids.Select(id => Mov(id, tmdbId: int.Parse(id[1..]) + 1)).ToList());
 
-        var res = await handler.HandleAsync("alice", null, 5_000);
+        var res = await handler.HandleAsync("alice", null, 0, 5_000);
 
         Assert.Equal(1_000, res.Items.Count);
         Assert.Equal(1_200, res.Total);
+        Assert.True(res.HasMore);
+    }
+
+    private async Task WatchedElsewhereOneByOneAsync(int count)
+    {
+        var first = new DateTimeOffset(2020, 1, 1, 12, 0, 0, TimeSpan.Zero);
+        for (var index = 0; index < count; index++)
+            await WatchElsewhereAsync(index + 1, first.AddDays(index));
+    }
+
+    [Fact]
+    public async Task TheFilmsPastTheFirstThousand_AreReadThroughTheNextPage()
+    {
+        var handler = Build();
+        await WatchedElsewhereOneByOneAsync(1_001);
+
+        var first = await handler.HandleForUserAsync("u1", 0, 1_000);
+        var next = await handler.HandleForUserAsync("u1", first.Items.Count, 1_000);
+
+        Assert.Equal((1_000, 1_001, true), (first.Items.Count, first.Total, first.HasMore));
+        Assert.Equal((1, 1_001, false), (next.Items.Count, next.Total, next.HasMore));
+        Assert.Equal(1, Assert.Single(next.Items).TmdbId);
+        Assert.Equal(1_001, first.Items.Concat(next.Items).Select(item => item.TmdbId).Distinct().Count());
+    }
+
+    [Fact]
+    public async Task APagePastTheEnd_IsEmpty_AndHasNoMore()
+    {
+        var handler = Build();
+        await WatchedElsewhereOneByOneAsync(3);
+
+        var res = await handler.HandleForUserAsync("u1", 3, 6);
+
+        Assert.Equal((0, 3, false), (res.Items.Count, res.Total, res.HasMore));
+    }
+
+    [Fact]
+    public async Task ANegativeSkip_ReadsFromTheFirstFilm()
+    {
+        var handler = Build();
+        await WatchedElsewhereOneByOneAsync(3);
+
+        var res = await handler.HandleForUserAsync("u1", -5, 2);
+
+        Assert.Equal([3, 2], res.Items.Select(item => item.TmdbId));
+        Assert.True(res.HasMore);
+    }
+
+    [Fact]
+    public async Task ThePublicProfile_PagesThroughTheNightsToo()
+    {
+        var handler = Build();
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
+        ParticipatesIn(
+            Evt("A", date: "2026-01-01", winnerMovieId: "m-old"),
+            Evt("B", date: "2026-03-01", winnerMovieId: "m-middle"),
+            Evt("C", date: "2026-05-01", winnerMovieId: "m-recent"));
+        WinnerMoviesAre(Mov("m-old", tmdbId: 10), Mov("m-middle", tmdbId: 20), Mov("m-recent", tmdbId: 30));
+
+        var res = await handler.HandleAsync("alice", null, 1, 1);
+
+        Assert.Equal(20, Assert.Single(res.Items).TmdbId);
+        Assert.Equal((3, true), (res.Total, res.HasMore));
     }
 
     [Fact]
@@ -402,7 +467,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
             Mov("m-again-later", tmdbId: 2),
             Mov("m-upcoming", tmdbId: 3));
 
-        var res = await handler.HandleAsync("alice", null, 1);
+        var res = await handler.HandleAsync("alice", null, 0, 1);
 
         var item = Assert.Single(res.Items);
         Assert.Equal(2, item.TmdbId);
@@ -422,11 +487,12 @@ public sealed class GetUserWatchedMoviesHandlerTests
         _tmdb.Setup(s => s.GetEnrichmentsAsync(
                 It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(),
                 It.IsAny<string>(),
+                It.IsAny<CatalogLanguage>(),
                 It.IsAny<CancellationToken>()))
-            .Callback((IReadOnlyCollection<(int, MovieMediaType)> keys, string _, CancellationToken _) => enriched = keys)
+            .Callback((IReadOnlyCollection<(int, MovieMediaType)> keys, string _, CatalogLanguage _, CancellationToken _) => enriched = keys)
             .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>());
 
-        var res = await handler.HandleForUserAsync("u1", 0);
+        var res = await handler.HandleForUserAsync("u1", 0, 0);
 
         Assert.Equal([(20, WatchedSource.Elsewhere), (10, WatchedSource.Night)], res.Items.Select(i => (i.TmdbId, i.Source)));
         Assert.Equal(2, res.Total);
@@ -447,7 +513,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
         RatedAtNights(("p0", "m-night", 7));
         await WatchElsewhereAsync(10, new DateTimeOffset(2026, 5, 1, 12, 0, 0, TimeSpan.Zero), rating: 3);
 
-        var res = await handler.HandleForUserAsync("u1", 6);
+        var res = await handler.HandleForUserAsync("u1", 0, 6);
 
         var item = Assert.Single(res.Items);
         Assert.Equal((WatchedSource.Night, NightStart("2026-01-01"), (int?)7), (item.Source, item.WatchedAt, item.MyRating));
@@ -463,7 +529,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
         WinnerMoviesAre(Mov("m-night", tmdbId: 10));
         await WatchElsewhereAsync(10, new DateTimeOffset(2026, 5, 1, 12, 0, 0, TimeSpan.Zero), rating: 3);
 
-        var item = Assert.Single((await handler.HandleForUserAsync("u1", 6)).Items);
+        var item = Assert.Single((await handler.HandleForUserAsync("u1", 0, 6)).Items);
 
         Assert.Equal((WatchedSource.Night, (int?)3), (item.Source, item.MyRating));
     }
@@ -479,7 +545,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
         WinnerMoviesAre(Mov("m-first", tmdbId: 10), Mov("m-second", tmdbId: 10), Mov("m-third", tmdbId: 10));
         RatedAtNights(("p0", "m-first", 4), ("p1", "m-second", 8));
 
-        var res = await handler.HandleForUserAsync("u1", 6);
+        var res = await handler.HandleForUserAsync("u1", 0, 6);
 
         var item = Assert.Single(res.Items);
         Assert.Equal((NightStart("2026-05-01"), (int?)8), (item.WatchedAt, item.MyRating));
@@ -493,7 +559,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
         await WatchElsewhereAsync(20, new DateTimeOffset(2026, 3, 1, 12, 0, 0, TimeSpan.Zero));
         await WatchElsewhereAsync(30, new DateTimeOffset(2026, 4, 1, 12, 0, 0, TimeSpan.Zero));
 
-        var res = await handler.HandleForUserAsync("u1", 1);
+        var res = await handler.HandleForUserAsync("u1", 0, 1);
 
         var item = Assert.Single(res.Items);
         Assert.Equal((30, WatchedSource.Elsewhere), (item.TmdbId, item.Source));
@@ -506,12 +572,12 @@ public sealed class GetUserWatchedMoviesHandlerTests
         var handler = Build();
         _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
 
-        Assert.Equal(0, (await handler.HandleAsync("alice", null, 6)).Total);
+        Assert.Equal(0, (await handler.HandleAsync("alice", null, 0, 6)).Total);
         _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Part("p1", "A") });
         _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Evt("A", winnerMovieId: null) });
-        Assert.Equal(0, (await handler.HandleAsync("alice", null, 6)).Total);
+        Assert.Equal(0, (await handler.HandleAsync("alice", null, 0, 6)).Total);
     }
 
     [Fact]
@@ -526,7 +592,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
         await WatchElsewhereAsync(11, new DateTimeOffset(2026, 5, 1, 12, 0, 0, TimeSpan.Zero));
         await WatchElsewhereAsync(20, new DateTimeOffset(2026, 6, 1, 12, 0, 0, TimeSpan.Zero));
 
-        var res = await handler.HandleAsync("alice", null, 6);
+        var res = await handler.HandleAsync("alice", null, 0, 6);
 
         Assert.Equal([(11, WatchedSource.Night), (10, WatchedSource.Night)], res.Items.Select(i => (i.TmdbId, i.Source)));
         Assert.Equal(2, res.Total);
@@ -557,7 +623,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
         _movies.Setup(m => m.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Mov("m1", tmdbId: 27_205) });
 
-        var res = await handler.HandleForUserAsync("u1", 1);
+        var res = await handler.HandleForUserAsync("u1", 0, 1);
 
         Assert.Equal(27_205, Assert.Single(res.Items).TmdbId);
         _users.Verify(

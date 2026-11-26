@@ -9,6 +9,7 @@ public enum KofiWebhookOutcome
     UnsupportedType,
     NoDonorEmail,
     NoMatchingAccount,
+    UnconfirmedAccountEmail,
     AlreadySupporter,
     SupporterMarked
 }

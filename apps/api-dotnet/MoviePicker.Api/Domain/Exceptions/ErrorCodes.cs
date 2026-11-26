@@ -135,6 +135,7 @@ public static class ErrorCodes
     public const string HandleReserved = "handle_reserved";
     public const string BioTooLong = "bio_too_long";
     public const string InvalidResetToken = "invalid_reset_token";
+    public const string InvalidEmailVerificationToken = "invalid_email_verification_token";
     public const string LetterboxdUsernameInvalid = "letterboxd_username_invalid";
     public const string LetterboxdUsernameMissing = "letterboxd_username_missing";
     public const string LetterboxdSyncFailed = "letterboxd_sync_failed";
@@ -153,6 +154,7 @@ public static class ErrorCodes
     public const string EventTemplateNameRequired = "event_template_name_required";
     public const string EventTemplateNameTooLong = "event_template_name_too_long";
     public const string SelfFollow = "self_follow";
+    public const string SelfPhotoReport = "self_photo_report";
     public const string UnknownSection = "unknown_section";
     public const string UnknownPlatform = "unknown_platform";
     public const string ReferenceMovieMissing = "reference_movie_missing";
@@ -161,10 +163,6 @@ public static class ErrorCodes
     public const string UnknownGenre = "unknown_genre";
     public const string UnknownCollection = "unknown_collection";
     public const string ListSourceNotSavable = "list_source_not_savable";
-    public const string TooManyAttachments = "too_many_attachments";
-    public const string AttachmentContentInvalid = "attachment_content_invalid";
-    public const string AttachmentContentMismatch = "attachment_content_mismatch";
-    public const string AttachmentImageUnreadable = "attachment_image_unreadable";
     public const string InviteOnlyFollowed = "invite_only_followed";
     public const string NoMovieProposed = "no_movie_proposed";
     public const string AllMoviesExcluded = "all_movies_excluded";

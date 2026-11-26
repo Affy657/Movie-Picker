@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import {
   addToWatchlist,
+  completeWatchlistAvailability,
   fetchWatchlist,
   fetchWatchlistAvailability,
   removeFromWatchlist,
   type AddWatchlistItemBody,
+  type WatchlistAvailability,
 } from '@/features/movies/api/watchlistApi';
 import type { MovieMediaType } from '@/shared/types/movie';
 import type { UserProfile } from '@/features/auth/types';
@@ -31,16 +33,33 @@ export function useWatchlist(options?: { enabled?: boolean }) {
   });
 }
 
-export const AVAILABILITY_PARTIAL_REFETCH_MS = 1500;
+const AVAILABILITY_FIRST_RETRY_MS = 2000;
+
+const AVAILABILITY_LONGEST_RETRY_MS = 30_000;
+
+export function availabilityRetryDelay(completionAttempts: number): number {
+  return Math.min(
+    AVAILABILITY_FIRST_RETRY_MS * 2 ** completionAttempts,
+    AVAILABILITY_LONGEST_RETRY_MS
+  );
+}
 
 export function useWatchlistAvailability(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.watchlist.availability,
-    queryFn: ({ signal }) => fetchWatchlistAvailability(signal),
+    queryFn: ({ client, queryKey, signal }) => {
+      const state = client.getQueryState<WatchlistAvailability>(queryKey);
+      const incomplete = state?.isInvalidated ? undefined : state?.data;
+      return incomplete?.partial
+        ? completeWatchlistAvailability(incomplete, signal)
+        : fetchWatchlistAvailability(signal);
+    },
     enabled: options?.enabled ?? true,
     staleTime: 60 * 60 * 1000,
     refetchInterval: (query) =>
-      query.state.data?.partial ? AVAILABILITY_PARTIAL_REFETCH_MS : false,
+      query.state.data?.partial
+        ? availabilityRetryDelay(query.state.data.completionAttempts)
+        : false,
   });
 }
 

@@ -58,8 +58,9 @@ EXCL=$(sonar_join \
   'apps/web/src/shared/i18n/locales/*.ts' \
   'apps/api-dotnet/*.Tests/**' \
   'apps/api-dotnet/*.IntegrationTests/**' \
+  'apps/api-dotnet/MoviePicker.Api.TestSupport/**' \
   'apps/api-dotnet/MoviePicker.ToolGenDpKey/**' \
-  'apps/api-dotnet/**/Infrastructure/Development/**'
+  'apps/api-dotnet/MoviePicker.Api.DevelopmentSeed/**'
 )
 
 TEST_EXCL=$(sonar_join \
@@ -70,7 +71,7 @@ TEST_EXCL=$(sonar_join \
 CPD=$(sonar_join \
   'apps/web/src/**/locales/fr.ts' \
   'apps/web/src/**/locales/en.ts' \
-  'apps/api-dotnet/**/Development/**'
+  'apps/api-dotnet/MoviePicker.Api.DevelopmentSeed/**'
 )
 
 COV_EXCL=$(sonar_join \

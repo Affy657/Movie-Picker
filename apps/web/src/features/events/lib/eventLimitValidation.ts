@@ -1,5 +1,5 @@
 import type { Translate } from '@/shared/i18n';
-import { MAX_EVENT_PARTICIPANTS, MAX_PROPOSALS_PER_PARTICIPANT } from '@/features/events/types';
+import type { EventLimitCaps } from '@/features/events/types';
 
 export type EventLimitDraft = {
   proposalLimitEnabled: boolean;
@@ -9,6 +9,7 @@ export type EventLimitDraft = {
   voteLimitEnabled: boolean;
   maxVotes: string;
   currentParticipantCount: number;
+  caps: EventLimitCaps | null;
 };
 
 export type EventLimitErrors = {
@@ -28,8 +29,17 @@ function isWholeNumberFrom1(raw: string): boolean {
   return raw.trim() !== '' && Number.isInteger(value) && value >= 1;
 }
 
-function isWholeNumberWithin(raw: string, max: number): boolean {
-  return isWholeNumberFrom1(raw) && Number(raw) <= max;
+function isWholeNumberWithin(raw: string, max: number | undefined): boolean {
+  return isWholeNumberFrom1(raw) && (max === undefined || Number(raw) <= max);
+}
+
+function outOfRangeMessage(
+  t: Translate,
+  withinCap: 'events.settings.maxProposalsInvalid' | 'events.settings.maxParticipantsInvalid',
+  fromOne: 'events.settings.maxProposalsNotWhole' | 'events.settings.maxParticipantsNotWhole',
+  max: number | undefined
+): string {
+  return max === undefined ? t(fromOne) : t(withinCap, { max });
 }
 
 function validateMaxProposals(
@@ -38,12 +48,14 @@ function validateMaxProposals(
   errors: EventLimitErrors
 ): number | null {
   if (!draft.proposalLimitEnabled) return null;
-  if (isWholeNumberWithin(draft.maxProposals, MAX_PROPOSALS_PER_PARTICIPANT)) {
-    return Number(draft.maxProposals);
-  }
-  errors.maxProposals = t('events.settings.maxProposalsInvalid', {
-    max: MAX_PROPOSALS_PER_PARTICIPANT,
-  });
+  const max = draft.caps?.maxProposalsPerParticipant;
+  if (isWholeNumberWithin(draft.maxProposals, max)) return Number(draft.maxProposals);
+  errors.maxProposals = outOfRangeMessage(
+    t,
+    'events.settings.maxProposalsInvalid',
+    'events.settings.maxProposalsNotWhole',
+    max
+  );
   return null;
 }
 
@@ -53,10 +65,14 @@ function validateMaxParticipants(
   errors: EventLimitErrors
 ): number | null {
   if (!draft.participantLimitEnabled) return null;
-  if (!isWholeNumberWithin(draft.maxParticipants, MAX_EVENT_PARTICIPANTS)) {
-    errors.maxParticipants = t('events.settings.maxParticipantsInvalid', {
-      max: MAX_EVENT_PARTICIPANTS,
-    });
+  const max = draft.caps?.maxParticipants;
+  if (!isWholeNumberWithin(draft.maxParticipants, max)) {
+    errors.maxParticipants = outOfRangeMessage(
+      t,
+      'events.settings.maxParticipantsInvalid',
+      'events.settings.maxParticipantsNotWhole',
+      max
+    );
     return null;
   }
 

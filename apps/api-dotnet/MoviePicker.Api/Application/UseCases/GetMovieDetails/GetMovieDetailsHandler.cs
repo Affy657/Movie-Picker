@@ -20,7 +20,11 @@ public sealed class GetMovieDetailsHandler : IGetMovieDetailsHandler
         _options = options.Value;
     }
 
-    public async Task<MovieDetailsResponse?> HandleAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct = default)
+    public async Task<MovieDetailsResponse?> HandleAsync(
+        int tmdbId,
+        MovieMediaType mediaType,
+        CatalogLanguage language,
+        CancellationToken ct = default)
     {
         if (tmdbId <= 0)
             return null;
@@ -28,7 +32,7 @@ public sealed class GetMovieDetailsHandler : IGetMovieDetailsHandler
         TmdbMovieDetails? details;
         try
         {
-            details = await _tmdb.GetDetailsAsync(tmdbId, mediaType, ct).ConfigureAwait(false);
+            details = await _tmdb.GetDetailsAsync(tmdbId, mediaType, language, ct).ConfigureAwait(false);
         }
         catch (HttpRequestException)
         {
@@ -39,7 +43,7 @@ public sealed class GetMovieDetailsHandler : IGetMovieDetailsHandler
             return null;
 
         var region = WatchRegion.Of(_options.TmdbWatchProvidersRegion);
-        var enrichment = await _tmdb.GetEnrichmentAsync(tmdbId, mediaType, region, ct).ConfigureAwait(false);
+        var enrichment = await _tmdb.GetEnrichmentAsync(tmdbId, mediaType, region, language, ct).ConfigureAwait(false);
         var extras = details.Extras;
 
         return new MovieDetailsResponse

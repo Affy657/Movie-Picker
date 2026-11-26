@@ -35,7 +35,7 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
     public async Task<WatchlistItemResponse> HandleAsync(string userId, AddWatchlistItemRequest request, CancellationToken ct = default)
     {
         var poster = await TmdbPosterPathResolver.ResolveAsync(_posterImageStore, request.PosterPath, ct);
-        var details = await TmdbTitleFacts.FetchDetailsBestEffortAsync(_tmdb, _logger, request.TmdbId, request.MediaType, ct);
+        var details = await TmdbTitleFacts.FetchKnownDetailsAsync(_tmdb, _logger, request.TmdbId, request.MediaType, ct);
 
         var item = new WatchlistItem
         {
@@ -43,8 +43,8 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
             UserId = userId,
             TmdbId = request.TmdbId,
             MediaType = request.MediaType,
-            Title = request.Title.Trim(),
-            Year = request.Year,
+            Title = TmdbTitleFacts.Title(request.Title, details),
+            Year = TmdbTitleFacts.Year(request.Year, details),
             PosterPath = poster,
             VoteAverage = request.VoteAverage ?? details?.VoteAverage,
             RuntimeMinutes = TmdbTitleFacts.RuntimeMinutes(request.RuntimeMinutes, details),

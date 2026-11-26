@@ -83,7 +83,7 @@ public sealed class ListSourceReaderTests
     public async Task RequireFallbackName_WhileTmdbIsDown_IsUnavailable()
     {
         _kit.Tmdb
-            .Setup(t => t.GetCollectionAsync(HarryPotter, It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetCollectionAsync(HarryPotter, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("TMDB down"));
 
         var ex = await Assert.ThrowsAsync<ServiceUnavailableException>(() => _kit.Reader().RequireFallbackNameAsync(Saga));
@@ -99,7 +99,7 @@ public sealed class ListSourceReaderTests
         var ex = await Assert.ThrowsAsync<ServiceUnavailableException>(() => _kit.Reader().RequireFallbackNameAsync(Saga));
 
         Assert.Equal(ErrorCodes.ListSourceUnavailable, ex.Reason);
-        _kit.Tmdb.Verify(t => t.GetCollectionAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+        _kit.Tmdb.Verify(t => t.GetCollectionAsync(It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -140,7 +140,7 @@ public sealed class ListSourceReaderTests
         var again = await _kit.Reader().ReadAsync(Saga);
 
         Assert.Equal(HarryPotterName, again.Name);
-        _kit.Tmdb.Verify(t => t.GetCollectionAsync(HarryPotter, It.IsAny<CancellationToken>()), Times.Once);
+        _kit.Tmdb.Verify(t => t.GetCollectionAsync(HarryPotter, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -148,7 +148,7 @@ public sealed class ListSourceReaderTests
     {
         _kit.SagaFilmsAre(HarryPotter, HarryPotterFilms());
         _kit.Tmdb
-            .Setup(t => t.GetCollectionAsync(HarryPotter, It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetCollectionAsync(HarryPotter, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("TMDB down"));
 
         var content = await _kit.Reader().ReadAsync(Saga);

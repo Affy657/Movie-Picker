@@ -378,6 +378,63 @@ public sealed class EventTests
         Assert.True(evt.ConcealsProposer("proposer", "viewer"));
     }
 
+    private static readonly DateTimeOffset NightCreatedAt = new(2026, 11, 1, 18, 0, 0, TimeSpan.Zero);
+
+    private static Event AnonymousNight() => new()
+    {
+        Config = new EventConfig { AnonymousProposals = true },
+        CreatedAt = NightCreatedAt
+    };
+
+    private static Movie ProposedAt(int minutesAfterTheNight) => new()
+    {
+        Id = "m1",
+        CreatedAt = NightCreatedAt.AddMinutes(minutesAfterTheNight),
+        UpdatedAt = NightCreatedAt.AddMinutes(minutesAfterTheNight + 1)
+    };
+
+    [Fact]
+    public void HideProposalTime_OpenNight_KeepsTheMovieTimes()
+    {
+        var movie = ProposedAt(42);
+
+        var shown = new Event { CreatedAt = NightCreatedAt }.HideProposalTime(movie);
+
+        Assert.Equal(movie, shown);
+    }
+
+    [Fact]
+    public void HideProposalTime_AnonymousNight_DatesEveryMovieFromTheNightItself()
+    {
+        var shown = AnonymousNight().HideProposalTime(ProposedAt(42));
+
+        Assert.Equal(NightCreatedAt, shown.CreatedAt);
+        Assert.Equal(NightCreatedAt, shown.UpdatedAt);
+    }
+
+    private static readonly Movie[] StoredInProposalOrder =
+    [
+        new() { Id = "c3" },
+        new() { Id = "a1" },
+        new() { Id = "b2" }
+    ];
+
+    [Fact]
+    public void InListOrder_OpenNight_KeepsTheProposalOrder()
+    {
+        var listed = new Event().InListOrder(StoredInProposalOrder);
+
+        Assert.Equal(["c3", "a1", "b2"], listed.Select(m => m.Id));
+    }
+
+    [Fact]
+    public void InListOrder_AnonymousNight_FollowsTheIdsWhichCarryNoTime()
+    {
+        var listed = AnonymousNight().InListOrder(StoredInProposalOrder);
+
+        Assert.Equal(["a1", "b2", "c3"], listed.Select(m => m.Id));
+    }
+
     [Theory]
     [InlineData("creator", true)]
     [InlineData("co-host", true)]

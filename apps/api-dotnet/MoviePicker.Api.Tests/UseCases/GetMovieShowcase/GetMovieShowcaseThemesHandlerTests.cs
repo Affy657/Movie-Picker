@@ -56,7 +56,7 @@ public sealed class GetMovieShowcaseThemesHandlerTests
     {
         GivenEveryThemeHasPosters();
 
-        var result = await Build().HandleAsync();
+        var result = await Build().HandleAsync(CatalogLanguage.French);
 
         Assert.Equal(MovieShowcaseCatalog.ThemeKeys, result.Items.Select(item => item.Theme).ToList());
     }
@@ -75,7 +75,7 @@ public sealed class GetMovieShowcaseThemesHandlerTests
             Item("Halloween", "/halloween.jpg"),
             Item("Scream", "/scream.jpg"));
 
-        var result = await Build().HandleAsync();
+        var result = await Build().HandleAsync(CatalogLanguage.French);
 
         var preview = result.Items.Single(item => item.Theme == theme);
         Assert.Equal(
@@ -90,7 +90,7 @@ public sealed class GetMovieShowcaseThemesHandlerTests
         var theme = MovieShowcaseCatalog.ThemeKeys[1];
         GivenTheme(theme, Item("Sans affiche", null), Item("Toujours rien", null));
 
-        var result = await Build().HandleAsync();
+        var result = await Build().HandleAsync(CatalogLanguage.French);
 
         Assert.Equal(MovieShowcaseCatalog.ThemeKeys.Count - 1, result.Items.Count);
         Assert.DoesNotContain(result.Items, item => item.Theme == theme);
@@ -102,7 +102,7 @@ public sealed class GetMovieShowcaseThemesHandlerTests
         foreach (var theme in MovieShowcaseCatalog.ThemeKeys)
             GivenTheme(theme);
 
-        var result = await Build().HandleAsync();
+        var result = await Build().HandleAsync(CatalogLanguage.French);
 
         Assert.Empty(result.Items);
         Assert.True(result.IsComplete);
@@ -125,7 +125,7 @@ public sealed class GetMovieShowcaseThemesHandlerTests
         var theme = MovieShowcaseCatalog.ThemeKeys[2];
         GivenThemeFails(theme, LoadFailure(kind));
 
-        var result = await Build().HandleAsync();
+        var result = await Build().HandleAsync(CatalogLanguage.French);
 
         Assert.Equal(MovieShowcaseCatalog.ThemeKeys.Count - 1, result.Items.Count);
         Assert.DoesNotContain(result.Items, item => item.Theme == theme);
@@ -138,7 +138,7 @@ public sealed class GetMovieShowcaseThemesHandlerTests
         foreach (var theme in MovieShowcaseCatalog.ThemeKeys)
             GivenThemeFails(theme, Errors.ShowcaseUnavailable());
 
-        await Assert.ThrowsAsync<ServiceUnavailableException>(() => Build().HandleAsync());
+        await Assert.ThrowsAsync<ServiceUnavailableException>(() => Build().HandleAsync(CatalogLanguage.French));
     }
 
     [Fact]
@@ -150,16 +150,16 @@ public sealed class GetMovieShowcaseThemesHandlerTests
             .Setup(s => s.HandleAsync(It.IsAny<MovieShowcaseQuery>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new TaskCanceledException());
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => Build().HandleAsync(abandoned.Token));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => Build().HandleAsync(CatalogLanguage.French, abandoned.Token));
     }
 
     [Fact]
     public async Task HandleAsync_ThemeListsAlreadyCached_CostsNoTmdbCall()
     {
         var tmdb = new Mock<ITmdbMovieSearch>();
-        tmdb.Setup(t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        tmdb.Setup(t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([new TmdbSearchItem(1, MovieMediaType.Movie, "Alien", "1979", "/alien.jpg")]);
-        tmdb.Setup(t => t.GetEnrichmentAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        tmdb.Setup(t => t.GetEnrichmentAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<string>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TmdbMovieEnrichment(7.5, [], null, 117));
         var showcase = new GetMovieShowcaseHandler(
             tmdb.Object,
@@ -171,9 +171,24 @@ public sealed class GetMovieShowcaseThemesHandlerTests
 
         var tmdbCallsBeforePreviews = tmdb.Invocations.Count;
 
-        var result = await Build(showcase).HandleAsync();
+        var result = await Build(showcase).HandleAsync(CatalogLanguage.French);
 
         Assert.Equal(MovieShowcaseCatalog.ThemeKeys.Count, result.Items.Count);
         Assert.Equal(tmdbCallsBeforePreviews, tmdb.Invocations.Count);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AsksEveryThemeInTheInterfaceLanguage()
+    {
+        GivenEveryThemeHasPosters();
+
+        await Build().HandleAsync(CatalogLanguage.English);
+
+        _showcase.Verify(
+            s => s.HandleAsync(It.Is<MovieShowcaseQuery>(q => q.Language == CatalogLanguage.English), It.IsAny<CancellationToken>()),
+            Times.Exactly(MovieShowcaseCatalog.ThemeKeys.Count));
+        _showcase.Verify(
+            s => s.HandleAsync(It.Is<MovieShowcaseQuery>(q => q.Language != CatalogLanguage.English), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }

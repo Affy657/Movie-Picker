@@ -77,7 +77,7 @@ public sealed class LetterboxdTitleResolver
     {
         try
         {
-            var details = await _tmdb.GetDetailsAsync(tmdbId, mediaType, ct);
+            var details = await _tmdb.GetDetailsAsync(tmdbId, mediaType, CatalogLanguage.French, ct);
             return details?.Runtime;
         }
         catch (HttpRequestException)

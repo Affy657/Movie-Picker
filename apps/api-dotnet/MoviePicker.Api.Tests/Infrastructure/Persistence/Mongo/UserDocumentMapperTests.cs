@@ -37,6 +37,19 @@ public sealed class UserDocumentMapperTests
         Assert.Equal(["dune-part-two"], back.LetterboxdPendingChoiceKeys);
     }
 
+    [Fact]
+    public void EmailVerifiedAt_IsStoredOnlyOnceTheAddressIsConfirmed()
+    {
+        var confirmedAt = new DateTimeOffset(2026, 11, 25, 9, 0, 0, TimeSpan.Zero);
+
+        var unconfirmed = UserDocumentMapper.ToDocument(new User { Email = "neo@example.com" });
+        var confirmed = UserDocumentMapper.ToDocument(new User { Email = "neo@example.com", EmailVerifiedAt = confirmedAt });
+
+        Assert.Null(unconfirmed.EmailVerifiedAt);
+        Assert.Null(UserDocumentMapper.ToDomain(unconfirmed).EmailVerifiedAt);
+        Assert.Equal(confirmedAt, UserDocumentMapper.ToDomain(confirmed).EmailVerifiedAt);
+    }
+
     [Theory]
     [InlineData("light", UiThemePreference.Light)]
     [InlineData("dark", UiThemePreference.Dark)]

@@ -1,0 +1,193 @@
+using System.Collections.Concurrent;
+using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Entities;
+
+namespace MoviePicker.Api.Infrastructure.Persistence.InMemory;
+
+public sealed class InMemoryVoteRepository : IVoteRepository
+{
+    private readonly ConcurrentDictionary<string, Vote> _byId = new();
+    private readonly ConcurrentDictionary<string, List<Vote>> _byMovieId = new();
+
+    public Task<long> DeleteByMovieIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
+    {
+        long deleted = 0;
+        foreach (var movieId in movieIds)
+            deleted += RemoveVotesOf(movieId);
+        return Task.FromResult(deleted);
+    }
+
+    private long RemoveVotesOf(string movieId)
+    {
+        if (!_byMovieId.TryGetValue(movieId, out var list))
+            return 0;
+
+        lock (list)
+        {
+            long removed = list.Count;
+            foreach (var v in list)
+                _byId.TryRemove(v.Id, out _);
+            list.Clear();
+            return removed;
+        }
+    }
+
+    public Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(eventId))
+            return Task.FromResult(0L);
+
+        var toRemove = _byId.Values.Where(v => v.EventId == eventId).ToList();
+        foreach (var v in toRemove)
+        {
+            _byId.TryRemove(v.Id, out _);
+            if (_byMovieId.TryGetValue(v.MovieId, out var list))
+            {
+                lock (list) { list.RemoveAll(x => x.Id == v.Id); }
+            }
+        }
+
+        return Task.FromResult((long)toRemove.Count);
+    }
+
+    public Task DeleteByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default)
+    {
+        var toRemove = _byId.Values
+            .Where(v => v.EventId == eventId && v.ParticipantId == participantId)
+            .ToList();
+
+        foreach (var v in toRemove)
+        {
+            _byId.TryRemove(v.Id, out _);
+            if (_byMovieId.TryGetValue(v.MovieId, out var list))
+            {
+                lock (list)
+                {
+                    list.RemoveAll(x => x.Id == v.Id);
+                }
+            }
+        }
+        return Task.CompletedTask;
+    }
+
+    public Task<bool> DeleteByMovieAndParticipantAsync(string movieId, string participantId, CancellationToken ct = default)
+    {
+        if (!_byMovieId.TryGetValue(movieId, out var list))
+            return Task.FromResult(false);
+
+        Vote? toRemove;
+        lock (list)
+        {
+            toRemove = list.FirstOrDefault(v => v.ParticipantId == participantId);
+            if (toRemove is null)
+                return Task.FromResult(false);
+            list.RemoveAll(v => v.ParticipantId == participantId);
+        }
+        _byId.TryRemove(toRemove.Id, out _);
+        return Task.FromResult(true);
+    }
+
+    public Task<Vote> UpsertAsync(Vote vote, CancellationToken ct = default)
+    {
+        var id = string.IsNullOrEmpty(vote.Id) ? Guid.NewGuid().ToString("N")[..24] : vote.Id;
+        var created = new Vote { Id = id, EventId = vote.EventId, MovieId = vote.MovieId, ParticipantId = vote.ParticipantId, Value = vote.Value, CreatedAt = vote.CreatedAt, UpdatedAt = vote.UpdatedAt };
+        _byId[id] = created;
+        var list = _byMovieId.GetOrAdd(vote.MovieId, _ => []);
+        lock (list)
+        {
+            foreach (var previous in list.Where(v => v.ParticipantId == vote.ParticipantId))
+                _byId.TryRemove(previous.Id, out _);
+            list.RemoveAll(v => v.ParticipantId == vote.ParticipantId);
+            list.Add(created);
+        }
+        return Task.FromResult(created);
+    }
+
+    public Task<IReadOnlyDictionary<string, VoteScoreAggregate>> AggregateScoresByMovieIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
+    {
+        var result = new Dictionary<string, VoteScoreAggregate>();
+        foreach (var movieId in movieIds)
+        {
+            if (!_byMovieId.TryGetValue(movieId, out var list))
+                continue;
+            int up = 0, down = 0;
+            lock (list)
+            {
+                foreach (var value in list.Select(v => v.Value))
+                {
+                    if (value == 1) up++;
+                    else if (value == -1) down++;
+                }
+            }
+            result[movieId] = new VoteScoreAggregate(up - down, up, down);
+        }
+        return Task.FromResult<IReadOnlyDictionary<string, VoteScoreAggregate>>(result);
+    }
+
+    public Task<IReadOnlyDictionary<string, MovieVoteSummary>> AggregateSummariesByMovieIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
+    {
+        var result = new Dictionary<string, MovieVoteSummary>();
+        foreach (var movieId in movieIds)
+        {
+            if (!_byMovieId.TryGetValue(movieId, out var list))
+                continue;
+            List<Vote> votes;
+            lock (list)
+            {
+                votes = list.ToList();
+            }
+            var upVoterIds = votes.Where(v => v.Value == 1).Select(v => v.ParticipantId).ToList();
+            var down = votes.Count(v => v.Value == -1);
+            result[movieId] = new MovieVoteSummary(upVoterIds.Count - down, upVoterIds.Count, down, upVoterIds);
+        }
+        return Task.FromResult<IReadOnlyDictionary<string, MovieVoteSummary>>(result);
+    }
+
+    public Task<IReadOnlyDictionary<string, int>> GetParticipantVotesByEventAsync(
+        string eventId,
+        string participantId,
+        CancellationToken ct = default)
+    {
+        var result = new Dictionary<string, int>();
+        foreach (var v in _byId.Values)
+        {
+            if (v.EventId == eventId && v.ParticipantId == participantId)
+                result[v.MovieId] = v.Value;
+        }
+        return Task.FromResult<IReadOnlyDictionary<string, int>>(result);
+    }
+
+    public Task<int> CountByParticipantIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default)
+    {
+        if (participantIds.Count == 0)
+            return Task.FromResult(0);
+
+        var set = participantIds.Where(id => !string.IsNullOrWhiteSpace(id)).ToHashSet();
+        var n = _byId.Values.Count(v => set.Contains(v.ParticipantId));
+        return Task.FromResult(n);
+    }
+
+    public Task<IReadOnlyList<Vote>> ListByParticipantIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default)
+    {
+        if (participantIds.Count == 0)
+            return Task.FromResult<IReadOnlyList<Vote>>(Array.Empty<Vote>());
+
+        var set = participantIds.Where(id => !string.IsNullOrWhiteSpace(id)).ToHashSet();
+        IReadOnlyList<Vote> result = _byId.Values.Where(v => set.Contains(v.ParticipantId)).ToList();
+        return Task.FromResult(result);
+    }
+
+    public async Task<IReadOnlyList<string>> ListEventIdsVotedByAsync(
+        IReadOnlyCollection<string> participantIds,
+        CancellationToken ct = default)
+    {
+        var votes = await ListByParticipantIdsAsync(participantIds, ct);
+        return votes.Select(v => v.EventId).Distinct(StringComparer.Ordinal).ToList();
+    }
+
+    public Task<int> CountDistinctVotersByEventIdAsync(string eventId, CancellationToken ct = default)
+    {
+        var n = _byId.Values.Where(v => v.EventId == eventId).Select(v => v.ParticipantId).Distinct().Count();
+        return Task.FromResult(n);
+    }
+}

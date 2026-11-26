@@ -32,8 +32,9 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         new("events", "events_recapSlug_unique", Unique: true),
         new("events", "events_creatorUserId"),
         new("events", "events_recurrence_creatorUserId"),
-        new("events", "events_groupId"),
+        new("events", "events_groupId_startAtUtc"),
         new("events", "events_startAtUtc"),
+        new("events", "events_winners_pickedAt"),
         new("events", "events_creator_creationRequest_unique", Unique: true),
         new("events", "events_removedUserIds"),
         new("events", "events_coHostUserIds"),
@@ -56,6 +57,9 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         new("password_reset_tokens", "password_reset_tokens_tokenHash_unique", Unique: true),
         new("password_reset_tokens", "password_reset_tokens_userId"),
         new("password_reset_tokens", "password_reset_tokens_expires_ttl", ExpireAfterSeconds: 0),
+        new("email_verification_tokens", "email_verification_tokens_tokenHash_unique", Unique: true),
+        new("email_verification_tokens", "email_verification_tokens_userId"),
+        new("email_verification_tokens", "email_verification_tokens_expires_ttl", ExpireAfterSeconds: 0),
 
         new("seen_marks", "seen_marks_event_movie_participant_unique", Unique: true),
         new("movie_ratings", "movie_ratings_event_movie_participant_unique", Unique: true),
@@ -105,7 +109,9 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         new("poster_cache", "poster_cache_expiresAtUtc_ttl", ExpireAfterSeconds: 0),
 
         new("avatar_photos", "avatar_photos_userId"),
+        new("avatar_photos", "avatar_photos_expiresAt_ttl", ExpireAfterSeconds: 0),
         new("banner_photos", "banner_photos_userId"),
+        new("banner_photos", "banner_photos_expiresAt_ttl", ExpireAfterSeconds: 0),
 
         new("event_presence", "event_presence_eventId_participantId"),
         new("event_presence", "event_presence_expiresAt_ttl", ExpireAfterSeconds: 0),
@@ -116,6 +122,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
     private static readonly (string Collection, string Name, string Field)[] RetiredIndexes =
     [
         ("events", "events_winners_movieId", "winners.movieId"),
+        ("events", "events_groupId", "groupId"),
         ("movies", "movies_eventId", "eventId"),
         ("seen_marks", "seen_marks_movieId", "movieId"),
         ("push_subscriptions", "push_subscriptions_userId", "userId"),
@@ -170,7 +177,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         Assert.Equal(expected, declared);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task EveryCollection_CarriesExactlyTheDeclaredIndexes()
     {
         foreach (var group in Expected.GroupBy(index => index.Collection))
@@ -187,7 +194,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         }
     }
 
-    [MongoFact]
+    [Fact]
     public async Task Startup_RecordsTheIndexSpecificationMarker_SoTheNextStartSkipsCreation()
     {
         using var scope = _factory.Services.CreateScope();
@@ -198,7 +205,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         Assert.True(await history.IsAppliedAsync(initializer.MarkerId));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task DropIfExists_DropsThePresentIndex_AndSkipsTheMissingOne()
     {
         using var scope = _factory.Services.CreateScope();
@@ -225,7 +232,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         }
     }
 
-    [MongoFact]
+    [Fact]
     public async Task Plan_OnADatabaseStillCarryingTheRetiredIndexes_DropsThem_AndCanRunAgain()
     {
         using var scope = _factory.Services.CreateScope();
@@ -255,7 +262,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         }
     }
 
-    [MongoFact]
+    [Fact]
     public async Task QueriesOfTheRetiredIndexes_StayOnAnIndex()
     {
         var id = ObjectId.GenerateNewId();
@@ -269,9 +276,35 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         Assert.Contains(
             "push_subscriptions_userId_endpoint_unique",
             await WinningPlanAsync("push_subscriptions", new BsonDocument("userId", id)));
+        Assert.Contains(
+            "events_groupId_startAtUtc",
+            await WinningPlanAsync("events", new BsonDocument("groupId", new BsonDocument("$in", new BsonArray { id }))));
     }
 
-    [MongoFact]
+    [Fact]
+    public async Task OpenGroupNights_SkipTheNightsLongOverThroughTheGroupAndStartIndex()
+    {
+        var openNights = new BsonDocument
+        {
+            { "groupId", new BsonDocument("$in", new BsonArray { ObjectId.GenerateNewId() }) },
+            { "closedAt", BsonNull.Value },
+            {
+                "$or",
+                new BsonArray
+                {
+                    new BsonDocument("startAtUtc", new BsonDocument("$gte", new DateTime(2026, 9, 8, 0, 0, 0, DateTimeKind.Utc))),
+                    new BsonDocument("startAtUtc", BsonNull.Value)
+                }
+            }
+        };
+
+        var plan = await WinningPlanAsync("events", openNights);
+
+        Assert.Contains("events_groupId_startAtUtc", plan);
+        Assert.DoesNotContain("COLLSCAN", plan);
+    }
+
+    [Fact]
     public async Task PushSubscriptionHandover_FindsTheEndpointThroughItsIndex()
     {
         var otherOwners = new BsonDocument { { "endpoint", "https://push.test/a" }, { "userId", new BsonDocument("$ne", ObjectId.GenerateNewId()) } };
@@ -279,7 +312,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         Assert.Contains("push_subscriptions_endpoint", await WinningPlanAsync("push_subscriptions", otherOwners));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task ForgettingARemovedUser_FindsTheNightsThroughTheirIndex()
     {
         var removedUser = new BsonDocument("removedUserIds", ObjectId.GenerateNewId().ToString());
@@ -287,7 +320,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         Assert.Contains("events_removedUserIds", await WinningPlanAsync("events", removedUser));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task ForgettingACoHost_FindsTheNightsThroughTheirIndex()
     {
         var userId = ObjectId.GenerateNewId().ToString();
@@ -304,6 +337,23 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         Assert.DoesNotContain("COLLSCAN", plan);
     }
 
+    [Fact]
+    public async Task RatingReminderPass_FindsTheNightsThroughTheStartAndPickIndexes()
+    {
+        var since = new BsonDateTime(DateTime.UtcNow.AddDays(-7));
+        var endedOrDrawnLately = new BsonDocument("$or", new BsonArray
+        {
+            new BsonDocument("startAtUtc", new BsonDocument("$gt", since)),
+            new BsonDocument("winners", new BsonDocument("$elemMatch", new BsonDocument("pickedAt", new BsonDocument("$gt", since))))
+        });
+
+        var plan = await WinningPlanAsync("events", endedOrDrawnLately);
+
+        Assert.Contains("events_startAtUtc", plan);
+        Assert.Contains("events_winners_pickedAt", plan);
+        Assert.DoesNotContain("COLLSCAN", plan);
+    }
+
     private async Task<string> WinningPlanAsync(string collection, BsonDocument filter)
     {
         using var scope = _factory.Services.CreateScope();
@@ -316,7 +366,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         return explained["queryPlanner"]["winningPlan"].ToJson();
     }
 
-    [MongoFact]
+    [Fact]
     public async Task UniqueIndexes_AreDeclaredUnique()
     {
         foreach (var group in Expected.GroupBy(index => index.Collection))
@@ -330,7 +380,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         }
     }
 
-    [MongoFact]
+    [Fact]
     public async Task ExpiringIndexes_CarryTheirRetention()
     {
         foreach (var group in Expected.GroupBy(index => index.Collection))

@@ -14,6 +14,7 @@ using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.Auth;
+using MoviePicker.Api.Application.UseCases.Auth.EmailVerification;
 using MoviePicker.Api.Application.UseCases.Auth.OAuth;
 using MoviePicker.Api.Application.UseCases.Auth.PasswordReset;
 using MoviePicker.Api.Application.UseCases.UsageCounts;
@@ -454,6 +455,40 @@ public sealed class AuthController : ControllerBase
 
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
+        return NoContent();
+    }
+
+    [HttpPost("me/email-verification")]
+    [Authorize]
+    [EnableRateLimiting(RateLimitingExtensions.AuthEmailVerificationRequestPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.AuthEmailVerificationRequestPolicy)]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> ResendEmailVerification(
+        [FromBody] EmailVerificationRequest request,
+        [FromServices] IResendEmailVerificationHandler handler,
+        [CurrentUserId] string userId,
+        CancellationToken ct)
+    {
+        await handler.HandleAsync(userId, request, ct);
+        return Accepted();
+    }
+
+    [HttpPost("email-verification/confirm")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthEmailVerificationConfirmPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.AuthEmailVerificationConfirmPolicy)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> ConfirmEmailVerification(
+        [FromBody] EmailVerificationConfirmRequest request,
+        [FromServices] IConfirmEmailVerificationHandler handler,
+        CancellationToken ct)
+    {
+        await handler.HandleAsync(request, ct);
         return NoContent();
     }
 

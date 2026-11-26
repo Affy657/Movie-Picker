@@ -56,11 +56,20 @@ public sealed class MoviePickerOptions
             ? "https://www.movie-picker.fr"
             : PublicWebBaseUrl.Trim().TrimEnd('/');
 
+    public string PublicApiBaseUrl { get; set; } = "https://api.movie-picker.fr";
+
+    public string ResolvedApiBaseUrl() =>
+        string.IsNullOrWhiteSpace(PublicApiBaseUrl)
+            ? "https://api.movie-picker.fr"
+            : PublicApiBaseUrl.Trim().TrimEnd('/');
+
     public string EmailProvider { get; set; } = "log";
 
     public string EmailFromAddress { get; set; } = "noreply@movie-picker.fr";
 
     public string EmailFromName { get; set; } = "Movie Picker";
+
+    public string ContactEmailAddress { get; set; } = "contact@movie-picker.fr";
 
     public string? ResendApiKey { get; set; }
 
@@ -87,6 +96,4 @@ public sealed class MoviePickerOptions
     public string GitHubRepoName { get; set; } = "Movie-Picker";
 
     public string GitHubApiBaseUrl { get; set; } = "https://api.github.com/";
-
-    public string GitHubAttachmentsBranch { get; set; } = "feedback-attachments";
 }

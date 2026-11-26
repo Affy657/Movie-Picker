@@ -7,11 +7,13 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoMovieRatingRepository : IMovieRatingRepository
 {
+    internal const string CollectionName = "movie_ratings";
+
     private readonly TransactionalCollection<MovieRatingDocument> _collection;
 
     public MongoMovieRatingRepository(MongoCollectionFactory collections)
     {
-        _collection = collections.GetCollection<MovieRatingDocument>("movie_ratings");
+        _collection = collections.GetCollection<MovieRatingDocument>(CollectionName);
     }
 
     private static FilterDefinition<MovieRatingDocument> OwnFilter(string eventId, string movieId, string participantId) =>

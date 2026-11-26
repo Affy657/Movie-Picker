@@ -11,11 +11,16 @@ import {
   EVENT_LIMITS,
   eventLimitInputId,
   eventLimitLabel,
+  eventLimitMax,
   winnerCountInputId,
   type EventLimitKind,
   type RuleErrors,
 } from '@/features/events/lib/eventLimits';
-import { MAX_WINNERS_PER_EVENT, type WheelMode } from '@/features/events/types';
+import {
+  MAX_WINNERS_PER_EVENT,
+  type EventLimitCaps,
+  type WheelMode,
+} from '@/features/events/types';
 import styles from './NightForm.module.css';
 
 export type NightRuleErrors = RuleErrors;
@@ -23,6 +28,7 @@ export type NightRuleErrors = RuleErrors;
 type NightRulesProps = {
   idPrefix: string;
   fields: TemplateFormFields;
+  caps: EventLimitCaps | null;
   errors: NightRuleErrors;
   onChange: (patch: Partial<TemplateFormFields>) => void;
   locked?: boolean;
@@ -38,6 +44,7 @@ type NightRulesProps = {
 export default function NightRules({
   idPrefix,
   fields,
+  caps,
   errors,
   onChange,
   locked = false,
@@ -81,7 +88,7 @@ export default function NightRules({
               )
             }
             min={1}
-            max={limit.max}
+            max={eventLimitMax(kind, caps)}
             unlimited={{ label: unlimitedLabel, fallback: limit.fallback }}
             invalid={invalid}
             disabled={locked}

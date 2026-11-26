@@ -27,7 +27,7 @@ public sealed class DataProtectionKeyRingTests : IClassFixture<MoviePickerApplic
             new XAttribute("id", id),
             new XElement("creationDate", "2026-01-01T00:00:00Z"));
 
-    [MongoFact]
+    [Fact]
     public void StoredKey_IsReadBackIdentically()
     {
         var repository = CreateRepository();
@@ -42,7 +42,7 @@ public sealed class DataProtectionKeyRingTests : IClassFixture<MoviePickerApplic
         Assert.Equal(element.ToString(SaveOptions.DisableFormatting), stored.ToString(SaveOptions.DisableFormatting));
     }
 
-    [MongoFact]
+    [Fact]
     public void SecondInstanceStartingCold_SeesTheKeysWrittenByTheFirst()
     {
         var friendlyName = "key-" + Guid.NewGuid().ToString("N");
@@ -55,7 +55,7 @@ public sealed class DataProtectionKeyRingTests : IClassFixture<MoviePickerApplic
             e => (string?)e.Attribute("id") == friendlyName);
     }
 
-    [MongoFact]
+    [Fact]
     public void StoringTheSameFriendlyNameTwice_ReplacesInsteadOfDuplicating()
     {
         var repository = CreateRepository();
@@ -74,7 +74,7 @@ public sealed class DataProtectionKeyRingTests : IClassFixture<MoviePickerApplic
         Assert.NotNull(matching[0].Element("activationDate"));
     }
 
-    [MongoFact]
+    [Fact]
     public void StoringWithoutAFriendlyName_KeepsEveryKey()
     {
         var repository = CreateRepository();
@@ -86,7 +86,7 @@ public sealed class DataProtectionKeyRingTests : IClassFixture<MoviePickerApplic
         Assert.Equal(before + 2, repository.GetAllElements().Count);
     }
 
-    [MongoFact]
+    [Fact]
     public void DataProtectionOfTheHost_UsesTheMongoBackedKeyRing()
     {
         var options = _factory.Services.GetRequiredService<IOptions<KeyManagementOptions>>().Value;
@@ -94,7 +94,7 @@ public sealed class DataProtectionKeyRingTests : IClassFixture<MoviePickerApplic
         Assert.IsType<MongoXmlRepository>(options.XmlRepository);
     }
 
-    [MongoFact]
+    [Fact]
     public void PayloadProtectedByOneInstance_IsUnprotectedByAnother()
     {
         var repository = CreateRepository();

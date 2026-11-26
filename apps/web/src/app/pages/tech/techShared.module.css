@@ -115,6 +115,26 @@
   min-width: 55rem;
 }
 
+.figureScroll .wideLayout {
+  display: none;
+}
+
+.figureScroll .verticalLayout {
+  min-width: 18rem;
+  max-width: 26rem;
+  margin-inline: auto;
+}
+
+@media (min-width: 48rem) {
+  .figureScroll .wideLayout {
+    display: block;
+  }
+
+  .figureScroll .verticalLayout {
+    display: none;
+  }
+}
+
 .figureHint {
   position: absolute;
   right: var(--space-2);

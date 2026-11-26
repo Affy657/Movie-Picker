@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.CloseEvent;
 using MoviePicker.Api.Application.UseCases.CreateEvent;
 using MoviePicker.Api.Application.UseCases.DeleteEvent;
@@ -13,6 +14,7 @@ using MoviePicker.Api.Application.UseCases.InviteUser;
 using MoviePicker.Api.Application.UseCases.JoinEvent;
 using MoviePicker.Api.Application.UseCases.LaunchWheel;
 using MoviePicker.Api.Application.UseCases.ListMyEvents;
+using MoviePicker.Api.Application.UseCases.MovieRatings;
 using MoviePicker.Api.Application.UseCases.RemoveParticipant;
 using MoviePicker.Api.Application.UseCases.ResetWheel;
 using MoviePicker.Api.Controllers;
@@ -44,10 +46,20 @@ public sealed class EventsControllerTests
     {
         var handler = new Mock<IListMyEventsHandler>();
 
-        var result = await Controller("u1").ListMine(handler.Object, null, null, null, null, "u1", CancellationToken.None);
+        var result = await Controller("u1").ListMine(handler.Object, null, null, null, null, null, "u1", CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
-        handler.Verify(h => h.HandleAsync("u1", null, null, null, null, It.IsAny<CancellationToken>()), Times.Once);
+        handler.Verify(h => h.HandleAsync("u1", null, null, null, null, true, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ListMine_WithoutPreviews_PassesTheChoiceToTheHandler()
+    {
+        var handler = new Mock<IListMyEventsHandler>();
+
+        await Controller("u1").ListMine(handler.Object, "active", null, null, null, false, "u1", CancellationToken.None);
+
+        handler.Verify(h => h.HandleAsync("u1", "active", null, null, null, false, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -75,11 +87,11 @@ public sealed class EventsControllerTests
     public async Task GetBySlug_ReturnsOk_StampedWithTheViewTag()
     {
         var viewTag = new Mock<IEventViewTagHandler>();
-        viewTag.Setup(v => v.HandleAsync("e", It.IsAny<CancellationToken>())).ReturnsAsync("W/\"tag\"");
+        viewTag.Setup(v => v.HandleAsync("e", CatalogLanguage.English, It.IsAny<CancellationToken>())).ReturnsAsync("W/\"tag\"");
         var handler = new Mock<IGetEventDetailHandler>();
         var controller = Controller(null);
 
-        var result = await controller.GetBySlug("e", viewTag.Object, handler.Object, CancellationToken.None);
+        var result = await controller.GetBySlug("e", CatalogLanguage.English, viewTag.Object, handler.Object, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
         Assert.Equal("W/\"tag\"", controller.Response.Headers.ETag);
@@ -91,12 +103,12 @@ public sealed class EventsControllerTests
     public async Task GetBySlug_WithAMatchingIfNoneMatch_Returns304WithoutRunningTheHandler()
     {
         var viewTag = new Mock<IEventViewTagHandler>();
-        viewTag.Setup(v => v.HandleAsync("e", It.IsAny<CancellationToken>())).ReturnsAsync("W/\"tag\"");
+        viewTag.Setup(v => v.HandleAsync("e", CatalogLanguage.English, It.IsAny<CancellationToken>())).ReturnsAsync("W/\"tag\"");
         var handler = new Mock<IGetEventDetailHandler>();
         var controller = Controller(null);
         controller.Request.Headers.IfNoneMatch = "W/\"tag\"";
 
-        var result = await controller.GetBySlug("e", viewTag.Object, handler.Object, CancellationToken.None);
+        var result = await controller.GetBySlug("e", CatalogLanguage.English, viewTag.Object, handler.Object, CancellationToken.None);
 
         var status = Assert.IsType<StatusCodeResult>(result);
         Assert.Equal(StatusCodes.Status304NotModified, status.StatusCode);
@@ -108,12 +120,12 @@ public sealed class EventsControllerTests
     public async Task GetBySlug_WithAStaleIfNoneMatch_RunsTheHandler()
     {
         var viewTag = new Mock<IEventViewTagHandler>();
-        viewTag.Setup(v => v.HandleAsync("e", It.IsAny<CancellationToken>())).ReturnsAsync("W/\"new\"");
+        viewTag.Setup(v => v.HandleAsync("e", CatalogLanguage.English, It.IsAny<CancellationToken>())).ReturnsAsync("W/\"new\"");
         var handler = new Mock<IGetEventDetailHandler>();
         var controller = Controller(null);
         controller.Request.Headers.IfNoneMatch = "W/\"old\"";
 
-        var result = await controller.GetBySlug("e", viewTag.Object, handler.Object, CancellationToken.None);
+        var result = await controller.GetBySlug("e", CatalogLanguage.English, viewTag.Object, handler.Object, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
         Assert.Equal("W/\"new\"", controller.Response.Headers.ETag);
@@ -124,12 +136,12 @@ public sealed class EventsControllerTests
     public async Task GetBySlug_WhenTheEventIsUnknownToTheTag_LetsTheHandlerAnswer()
     {
         var viewTag = new Mock<IEventViewTagHandler>();
-        viewTag.Setup(v => v.HandleAsync("missing", It.IsAny<CancellationToken>())).ReturnsAsync((string?)null);
+        viewTag.Setup(v => v.HandleAsync("missing", CatalogLanguage.English, It.IsAny<CancellationToken>())).ReturnsAsync((string?)null);
         var handler = new Mock<IGetEventDetailHandler>();
         var controller = Controller(null);
         controller.Request.Headers.IfNoneMatch = "W/\"any\"";
 
-        var result = await controller.GetBySlug("missing", viewTag.Object, handler.Object, CancellationToken.None);
+        var result = await controller.GetBySlug("missing", CatalogLanguage.English, viewTag.Object, handler.Object, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
         Assert.False(controller.Response.Headers.ContainsKey("ETag"));
@@ -189,6 +201,17 @@ public sealed class EventsControllerTests
         var result = await Controller(null).Close("e", new CsrfGuardRequest(), handler.Object, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task MarkRatingPrompted_RemembersItForTheSignedInParticipant()
+    {
+        var handler = new Mock<IMarkRatingPromptedHandler>();
+
+        var result = await Controller("u1").MarkRatingPrompted("e", handler.Object, "u1", CancellationToken.None);
+
+        Assert.IsType<NoContentResult>(result);
+        handler.Verify(h => h.HandleAsync("u1", "e", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

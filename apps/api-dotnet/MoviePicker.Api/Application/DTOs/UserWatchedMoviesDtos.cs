@@ -6,6 +6,7 @@ public sealed class UserWatchedMoviesResponse
 {
     public IReadOnlyList<UserWatchedMovieItem> Items { get; init; } = [];
     public int? Total { get; init; }
+    public bool HasMore { get; init; }
 }
 
 public sealed class UserWatchedMovieItem

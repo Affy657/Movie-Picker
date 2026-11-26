@@ -88,6 +88,77 @@ public sealed class MongoMovieRepository : IMovieRepository
         return list.ConvertAll(MovieMapper.ToDomain);
     }
 
+    public async Task<IReadOnlyList<EventMoviePreview>> ListTopVotedByEventIdsAsync(
+        IReadOnlyCollection<string> eventIds,
+        int perEvent,
+        CancellationToken ct = default)
+    {
+        var ids = MongoObjectIds.ParseValid(eventIds);
+        if (ids.Count == 0 || perEvent <= 0)
+            return [];
+
+        var pipeline = new[]
+        {
+            new BsonDocument("$match", new BsonDocument("eventId", new BsonDocument("$in", ids))),
+            new BsonDocument(
+                "$project",
+                new BsonDocument { { "eventId", 1 }, { "title", 1 }, { "posterPath", 1 } }),
+            new BsonDocument(
+                "$lookup",
+                new BsonDocument
+                {
+                    { "from", MongoVoteRepository.CollectionName },
+                    { "localField", "_id" },
+                    { "foreignField", "movieId" },
+                    {
+                        "pipeline",
+                        new BsonArray
+                        {
+                            new BsonDocument(
+                                "$group",
+                                new BsonDocument { { "_id", BsonNull.Value }, { "score", new BsonDocument("$sum", "$value") } })
+                        }
+                    },
+                    { "as", "votes" }
+                }),
+            new BsonDocument(
+                "$set",
+                new BsonDocument(
+                    "score",
+                    new BsonDocument("$ifNull", new BsonArray { new BsonDocument("$first", "$votes.score"), 0 }))),
+            new BsonDocument(
+                "$group",
+                new BsonDocument
+                {
+                    { "_id", "$eventId" },
+                    {
+                        "top",
+                        new BsonDocument(
+                            "$topN",
+                            new BsonDocument
+                            {
+                                { "n", perEvent },
+                                { "sortBy", new BsonDocument { { "score", -1 }, { "_id", 1 } } },
+                                { "output", new BsonDocument { { "title", "$title" }, { "posterPath", "$posterPath" } } }
+                            })
+                    }
+                }),
+            new BsonDocument("$unwind", "$top")
+        };
+
+        using var cursor = await _collection.AggregateAsync<BsonDocument>(pipeline, cancellationToken: ct);
+        var rows = await cursor.ToListAsync(ct);
+        return rows.ConvertAll(row =>
+        {
+            var top = row["top"].AsBsonDocument;
+            var posterPath = top.GetValue("posterPath", BsonNull.Value);
+            return new EventMoviePreview(
+                row["_id"].AsObjectId.ToString(),
+                top.GetValue("title", string.Empty).AsString,
+                posterPath.IsString ? posterPath.AsString : null);
+        });
+    }
+
     public async Task<IReadOnlyList<Movie>> ListByEventIdsAndTmdbIdAsync(
         IReadOnlyCollection<string> eventIds,
         int tmdbId,
@@ -163,6 +234,9 @@ public sealed class MongoMovieRepository : IMovieRepository
 
         return MovieMapper.ToDomain(doc);
     }
+
+    public Task<Movie> InsertWithUntimedIdAsync(Movie movie, CancellationToken ct = default) =>
+        InsertAsync(movie with { Id = MongoObjectIds.NewUntimed() }, ct);
 
     public async Task<long> DeleteByIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
     {

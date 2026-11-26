@@ -8,6 +8,9 @@ locals {
   bucket_iam_editor_role_id         = "bucketIamEditor"
   bucket_viewer_role_id             = "bucketViewer"
   plan_iam_viewer_role_id           = "planIamViewer"
+  api_domain                        = "api.movie-picker.fr"
+  scheduler_oidc_audience           = "https://${local.api_domain}"
+  scheduled_pass_uri                = "${module.api.uri}/api/v1/scheduler"
 
   api_secret_names = toset([
     "AUTH_DATAPROTECTION_KEYRING",
@@ -55,6 +58,151 @@ resource "google_service_account" "scheduler" {
   account_id   = var.scheduler_service_account_name
   display_name = "Movie Picker Cloud Scheduler caller"
   description  = "Identity Cloud Scheduler signs its OIDC tokens with when it calls the /scheduler routes of the API, which checks the issuer, the audience and this e-mail. No role anywhere."
+}
+
+resource "google_cloud_scheduler_job" "event_reminders" {
+  project          = var.project_id
+  region           = var.region
+  name             = "movie-picker-event-reminders"
+  schedule         = "*/30 * * * *"
+  time_zone        = "Europe/Paris"
+  attempt_deadline = "300s"
+
+  retry_config {
+    retry_count          = 3
+    min_backoff_duration = "30s"
+    max_backoff_duration = "300s"
+    max_doublings        = 5
+    max_retry_duration   = "0s"
+  }
+
+  http_target {
+    http_method = "POST"
+    uri         = "${local.scheduled_pass_uri}/event-reminders"
+
+    oidc_token {
+      service_account_email = google_service_account.scheduler.email
+      audience              = local.scheduler_oidc_audience
+    }
+  }
+
+  depends_on = [google_project_service.platform]
+}
+
+resource "google_cloud_scheduler_job" "recurring_events" {
+  project          = var.project_id
+  region           = var.region
+  name             = "movie-picker-recurring-events"
+  schedule         = "15 3 * * *"
+  time_zone        = "Europe/Paris"
+  attempt_deadline = "300s"
+
+  retry_config {
+    retry_count          = 3
+    min_backoff_duration = "30s"
+    max_backoff_duration = "300s"
+    max_doublings        = 5
+    max_retry_duration   = "0s"
+  }
+
+  http_target {
+    http_method = "POST"
+    uri         = "${local.scheduled_pass_uri}/recurring-events"
+
+    oidc_token {
+      service_account_email = google_service_account.scheduler.email
+      audience              = local.scheduler_oidc_audience
+    }
+  }
+
+  depends_on = [google_project_service.platform]
+}
+
+resource "google_cloud_scheduler_job" "finished_events" {
+  project          = var.project_id
+  region           = var.region
+  name             = "movie-picker-finished-events"
+  schedule         = "45 3 * * *"
+  time_zone        = "Europe/Paris"
+  attempt_deadline = "300s"
+
+  retry_config {
+    retry_count          = 3
+    min_backoff_duration = "30s"
+    max_backoff_duration = "300s"
+    max_doublings        = 5
+    max_retry_duration   = "0s"
+  }
+
+  http_target {
+    http_method = "POST"
+    uri         = "${local.scheduled_pass_uri}/finished-events"
+
+    oidc_token {
+      service_account_email = google_service_account.scheduler.email
+      audience              = local.scheduler_oidc_audience
+    }
+  }
+
+  depends_on = [google_project_service.platform]
+}
+
+resource "google_cloud_scheduler_job" "rating_reminders" {
+  project          = var.project_id
+  region           = var.region
+  name             = "movie-picker-rating-reminders"
+  schedule         = "0 10 * * *"
+  time_zone        = "Europe/Paris"
+  attempt_deadline = "300s"
+
+  retry_config {
+    retry_count          = 3
+    min_backoff_duration = "30s"
+    max_backoff_duration = "300s"
+    max_doublings        = 5
+    max_retry_duration   = "0s"
+  }
+
+  http_target {
+    http_method = "POST"
+    uri         = "${local.scheduled_pass_uri}/rating-reminders"
+
+    oidc_token {
+      service_account_email = google_service_account.scheduler.email
+      audience              = local.scheduler_oidc_audience
+    }
+  }
+
+  depends_on = [google_project_service.platform]
+}
+
+resource "google_cloud_scheduler_job" "warm_catalog" {
+  project          = var.project_id
+  region           = var.region
+  name             = "movie-picker-warm-catalog"
+  schedule         = "20 */5 * * *"
+  time_zone        = "Europe/Paris"
+  attempt_deadline = "300s"
+
+  retry_config {
+    retry_count          = 3
+    min_backoff_duration = "30s"
+    max_backoff_duration = "300s"
+    max_doublings        = 5
+    max_retry_duration   = "0s"
+  }
+
+  http_target {
+    http_method = "POST"
+    uri         = "${local.scheduled_pass_uri}/warm-catalog"
+
+    oidc_token {
+      service_account_email = google_service_account.scheduler.email
+      audience              = local.scheduler_oidc_audience
+    }
+  }
+
+  depends_on = [google_project_service.platform]
 }
 
 data "google_project" "this" {
@@ -137,17 +285,16 @@ module "ci" {
 
   project_roles = [
     "roles/run.developer",
-    "roles/cloudscheduler.admin",
     "roles/firebasehosting.admin",
     "roles/secretmanager.viewer",
     "roles/serviceusage.serviceUsageConsumer",
   ]
-  acts_as_service_accounts = [google_service_account.api_runtime.name, local.scheduler_service_account_name]
+  acts_as_service_accounts = [google_service_account.api_runtime.name]
   image_repositories = {
     api = { location = var.region, repository_id = module.api_images.repository_id, role = "roles/artifactregistry.reader" }
   }
 
-  depends_on = [google_project_service.platform, google_service_account.scheduler, module.api_secrets]
+  depends_on = [google_project_service.platform, module.api_secrets]
 }
 
 module "backup" {
@@ -378,7 +525,7 @@ module "api" {
   location              = var.region
   name                  = "movie-picker-api"
   service_account_email = local.api_runtime_service_account_email
-  domain                = "api.movie-picker.fr"
+  domain                = local.api_domain
   secret_env            = local.api_secret_names
   max_instance_count    = 5
 
@@ -431,7 +578,7 @@ module "monitoring" {
   project_id       = var.project_id
   alert_email      = var.alert_email
   alert_sms_number = var.alert_sms_number
-  api_host         = "api.movie-picker.fr"
+  api_host         = local.api_domain
   staging_api_host = "api.staging.movie-picker.fr"
   web_host         = "www.movie-picker.fr"
   api_service_name = module.api.name

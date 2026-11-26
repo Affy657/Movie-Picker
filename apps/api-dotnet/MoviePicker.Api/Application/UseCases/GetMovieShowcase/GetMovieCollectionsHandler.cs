@@ -9,7 +9,6 @@ namespace MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 
 public sealed class GetMovieCollectionsHandler : IGetMovieCollectionsHandler
 {
-    private const string CacheKey = "showcase-collections-v3";
 
     private readonly ITmdbMovieSearch _tmdb;
     private readonly SharedCacheReadThrough _cache;
@@ -25,11 +24,15 @@ public sealed class GetMovieCollectionsHandler : IGetMovieCollectionsHandler
         _options = options.Value;
     }
 
-    public async Task<MovieCollectionListResponse> HandleAsync(CancellationToken ct = default)
+    public async Task<MovieCollectionListResponse> HandleAsync(CatalogLanguage language, CancellationToken ct = default)
     {
         try
         {
-            var items = await _cache.GetOrLoadCheckedAsync(CacheKey, CacheTtl(), LoadCollectionsAsync, ct: ct);
+            var items = await _cache.GetOrLoadCheckedAsync(
+                CacheKeyFor(language),
+                CacheTtl(),
+                token => LoadCollectionsAsync(language, token),
+                ct: ct);
             return Build(items);
         }
         catch (TimeoutException)
@@ -38,11 +41,15 @@ public sealed class GetMovieCollectionsHandler : IGetMovieCollectionsHandler
         }
     }
 
-    public async Task<bool> RefreshAsync(CancellationToken ct = default)
+    public async Task<bool> RefreshAsync(CatalogLanguage language, CancellationToken ct = default)
     {
         try
         {
-            return await _cache.RefreshAsync(CacheKey, CacheTtl(), LoadCollectionsAsync, ct);
+            return await _cache.RefreshAsync(
+                CacheKeyFor(language),
+                CacheTtl(),
+                token => LoadCollectionsAsync(language, token),
+                ct);
         }
         catch (MoviePickerException)
         {
@@ -50,9 +57,13 @@ public sealed class GetMovieCollectionsHandler : IGetMovieCollectionsHandler
         }
     }
 
+    private static string CacheKeyFor(CatalogLanguage language) => $"showcase-collections-v4:{language.TmdbCode()}";
+
     private TimeSpan CacheTtl() => TimeSpan.FromHours(Math.Clamp(_options.MovieShowcaseCacheHours, 1, 168));
 
-    private async Task<CacheLoad<IReadOnlyList<MovieCollectionResponse>>> LoadCollectionsAsync(CancellationToken ct)
+    private async Task<CacheLoad<IReadOnlyList<MovieCollectionResponse>>> LoadCollectionsAsync(
+        CatalogLanguage language,
+        CancellationToken ct)
     {
         if (!_options.HasTmdbCredentials)
             throw Errors.ShowcaseUnavailable();
@@ -69,7 +80,7 @@ public sealed class GetMovieCollectionsHandler : IGetMovieCollectionsHandler
             },
             async (index, token) =>
             {
-                var (summary, failed) = await TryGetCollectionAsync(ids[index], token);
+                var (summary, failed) = await TryGetCollectionAsync(ids[index], language, token);
                 summaries[index] = summary;
                 if (failed)
                     Interlocked.Increment(ref failures);
@@ -95,11 +106,14 @@ public sealed class GetMovieCollectionsHandler : IGetMovieCollectionsHandler
         return new CacheLoad<IReadOnlyList<MovieCollectionResponse>>(items, IsComplete: failures == 0);
     }
 
-    private async Task<(TmdbCollectionSummary? Summary, bool Failed)> TryGetCollectionAsync(int id, CancellationToken ct)
+    private async Task<(TmdbCollectionSummary? Summary, bool Failed)> TryGetCollectionAsync(
+        int id,
+        CatalogLanguage language,
+        CancellationToken ct)
     {
         try
         {
-            return (await _tmdb.GetCollectionAsync(id, ct), false);
+            return (await _tmdb.GetCollectionAsync(id, language, ct), false);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException && !ct.IsCancellationRequested)
         {

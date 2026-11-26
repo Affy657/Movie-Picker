@@ -20,13 +20,19 @@ internal sealed class FriendGroupTestKit
 
     public static readonly DateTimeOffset Start = new(2026, 11, 13, 20, 0, 0, TimeSpan.Zero);
 
+    public FriendGroupTestKit()
+    {
+        Events = new InMemoryEventRepository(Ratings);
+        Movies = new InMemoryMovieRepository(Votes);
+    }
+
     public InMemoryFriendGroupRepository Groups { get; } = new();
 
-    public InMemoryEventRepository Events { get; } = new();
+    public InMemoryEventRepository Events { get; }
 
     public InMemoryParticipantRepository Participants { get; } = new();
 
-    public InMemoryMovieRepository Movies { get; } = new();
+    public InMemoryMovieRepository Movies { get; }
 
     public InMemoryVoteRepository Votes { get; } = new();
 
@@ -54,7 +60,7 @@ internal sealed class FriendGroupTestKit
         events ?? Events,
         Participants,
         new MyEventSummaryEnricher(Participants, Movies, Ratings, Votes, Users),
-        new FriendGroupShowcaseReader(Movies, Ratings, Tmdb.Object),
+        new FriendGroupShowcaseReader(Movies, Tmdb.Object),
         Clock);
 
     public ListFriendGroupsHandler ListHandler(IEventRepository? events = null) => new(Groups, Users, NightsReader(events), Clock);

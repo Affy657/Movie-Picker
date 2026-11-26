@@ -80,6 +80,11 @@ export default function EventParticipantsDialog({
           {panel.coHostError}
         </p>
       ) : null}
+      {panel.letBackInError ? (
+        <p className="error" role="alert">
+          {panel.letBackInError}
+        </p>
+      ) : null}
       <EventParticipantsList
         participants={event.participants}
         currentParticipantId={currentParticipantId}
@@ -92,6 +97,9 @@ export default function EventParticipantsDialog({
         coHostNamingClosed={!!event.isFinished}
         onlineIds={panel.onlineIds}
         proposingIds={panel.proposingIds}
+        removedPeople={event.removedPeople}
+        pendingLetBackInId={panel.pendingLetBackInId}
+        onLetBackIn={panel.canRemove ? panel.onLetBackIn : undefined}
       />
     </ResponsiveDialog>
   );

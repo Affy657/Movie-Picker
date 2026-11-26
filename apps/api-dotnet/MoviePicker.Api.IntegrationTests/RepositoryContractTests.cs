@@ -105,6 +105,36 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task MovieInsertedWithAnUntimedId_IsStoredButItsIdTellsNoProposalOrder()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var eventId = ObjectId.GenerateNewId().ToString();
+        var proposed = new List<Movie>();
+        for (var tmdbId = 1; tmdbId <= 16; tmdbId++)
+        {
+            proposed.Add(await movies.InsertWithUntimedIdAsync(new Movie
+            {
+                EventId = eventId,
+                ParticipantId = ObjectId.GenerateNewId().ToString(),
+                TmdbId = tmdbId,
+                Title = $"Film {tmdbId}",
+                Year = "2001",
+                CreatedAt = Now.AddMinutes(tmdbId),
+                UpdatedAt = Now.AddMinutes(tmdbId)
+            }));
+        }
+
+        var listed = await movies.ListByEventIdAsync(eventId);
+        var ids = proposed.ConvertAll(movie => ObjectId.Parse(movie.Id));
+
+        Assert.Equal(proposed.Select(m => m.Id).Order(), listed.Select(m => m.Id).Order());
+        Assert.NotEqual(ids.Order(), ids);
+        Assert.NotEqual(ids.Select(id => id.Timestamp).Order(), ids.Select(id => id.Timestamp));
+        Assert.Equal(proposed[0].TmdbId, (await movies.GetByIdAndEventIdAsync(proposed[0].Id, eventId))?.TmdbId);
+    }
+
+    [Fact]
     public async Task MovieTitles_ListOnlyTheTitleOfEachRequestedProposal()
     {
         using var scope = _factory.Services.CreateScope();
@@ -228,32 +258,6 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal(
             new[] { upcoming.Id, onHold.Id, lastWeek.Id, undated.Id }.Order(),
             open.Select(night => night.Id).Order());
-    }
-
-    [Fact]
-    public async Task HeldGroupNights_AreTheFinishedOnesWithAFilm_LatestFirst_WithTheirFilms()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
-        var groupId = ObjectId.GenerateNewId().ToString();
-        EventWinner Pick() => new() { MovieId = ObjectId.GenerateNewId().ToString(), Method = WinnerPickMethod.Wheel, PickedAt = Now };
-        Event OfTheGroup(string title, string date, string time, params EventWinner[] winners) =>
-            NewEvent(title) with { GroupId = groupId, Date = date, Time = time, Winners = winners };
-        var closed = await events.AddAsync(OfTheGroup("closed", "2026-09-10", "20:30", Pick()) with { ClosedAt = Now });
-        var autoClosed = await events.AddAsync(OfTheGroup("auto closed", "2026-08-01", "20:30", Pick()));
-        var endedThreeHoursAgo = await events.AddAsync(OfTheGroup("ended", "2026-09-15", "11:00", Pick()));
-        await events.AddAsync(OfTheGroup("live", "2026-09-15", "13:00", Pick()));
-        await events.AddAsync(OfTheGroup("closed without film", "2026-09-10", "20:30") with { ClosedAt = Now });
-        await events.AddAsync(OfTheGroup("one draw left", "2026-09-15", "11:00", Pick()) with { Config = new EventConfig { WinnerCount = 2 } });
-        await events.AddAsync(NewEvent("other group") with { GroupId = ObjectId.GenerateNewId().ToString(), Winners = [Pick()], ClosedAt = Now });
-
-        var held = await events.ListHeldByGroupIdsAsync([groupId], Now);
-
-        Assert.Equal([endedThreeHoursAgo.Id, closed.Id, autoClosed.Id], held.Select(night => night.Id));
-        Assert.All(held, night => Assert.Equal(groupId, night.GroupId));
-        Assert.Equal(("2026-09-10", "20:30"), (held[1].Date, held[1].Time));
-        Assert.Equal(closed.GetWinnerMovieIds(), held[1].WinnerMovieIds);
-        Assert.Empty(await events.ListHeldByGroupIdsAsync([], Now));
     }
 
     [Fact]
@@ -536,7 +540,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.True(stored.Version > updated.Version);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task WatchedDefaults_MissingFromAnOlderDocument_KeepTheVisibilityAndLeaveTheWatchedSyncOff()
     {
         using var scope = _factory.Services.CreateScope();
@@ -918,6 +922,31 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task FinishedNightQueries_WaitForTheLongestFilmToEnd()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var marker = Guid.NewGuid().ToString("N")[..8];
+        var groupId = ObjectId.GenerateNewId().ToString();
+        EventWinner Lasting(int? runtimeMinutes) =>
+            new() { MovieId = ObjectId.GenerateNewId().ToString(), Method = WinnerPickMethod.Wheel, PickedAt = Now.AddDays(-1), RuntimeMinutes = runtimeMinutes };
+        Event StartedThreeHoursAgo(string title, params EventWinner[] winners) =>
+            NewEvent(title + "-" + marker) with { GroupId = groupId, Date = "2026-09-15", Time = "11:00", Winners = winners };
+        var shortFilm = await events.AddAsync(StartedThreeHoursAgo("short", Lasting(95)));
+        var longFilmOver = await events.AddAsync(StartedThreeHoursAgo("long-over", Lasting(170)));
+        var unknownRuntime = await events.AddAsync(StartedThreeHoursAgo("unknown", Lasting(null)));
+        await events.AddAsync(StartedThreeHoursAgo("long-playing", Lasting(200)));
+        await events.AddAsync(StartedThreeHoursAgo("double-bill", Lasting(95), Lasting(200)) with { Config = new EventConfig { WinnerCount = 2 } });
+
+        var awaitingCleanup = await events.ListAwaitingWatchlistCleanupAsync(Now, 1000);
+        var held = await events.ListLatestHeldByGroupIdAsync(groupId, Now, 100);
+
+        HashSet<string> expected = [shortFilm.Id, longFilmOver.Id, unknownRuntime.Id];
+        Assert.Equal(expected, awaitingCleanup.Where(e => e.Title.EndsWith(marker, StringComparison.Ordinal)).Select(e => e.Id).ToHashSet());
+        Assert.Equal(expected, held.Select(night => night.Id).ToHashSet());
+    }
+
+    [Fact]
     public async Task ListAwaitingWatchlistCleanup_NightWithADrawLeft_WaitsForItsLastDrawOrItsEnd()
     {
         using var scope = _factory.Services.CreateScope();
@@ -964,26 +993,80 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
-    public async Task ListWithWinnerStartingBetween_KeepsTheWinnersOfTheWindow_WhetherClosedOrNot()
+    public async Task ListWithWinnerEndingBetween_KeepsTheNightsWhoseFilmEndedInTheWindow()
     {
         using var scope = _factory.Services.CreateScope();
         var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
         var marker = Guid.NewGuid().ToString("N")[..8];
-        var winners = new[] { new EventWinner { MovieId = ObjectId.GenerateNewId().ToString(), Method = WinnerPickMethod.Wheel, PickedAt = Now } };
-        var yesterday = await events.AddAsync(NewEvent("yesterday-" + marker) with { Winners = winners, Date = "2041-03-09" });
-        var threeDaysAgo = await events.AddAsync(NewEvent("three-days-" + marker) with { Winners = winners, Date = "2041-03-07", Time = "00:00" });
-        var closedByHost = await events.AddAsync(NewEvent("closed-" + marker) with { Winners = winners, Date = "2041-03-08", ClosedAt = Now });
-        await events.AddAsync(NewEvent("four-days-" + marker) with { Winners = winners, Date = "2041-03-06", Time = "23:30" });
-        await events.AddAsync(NewEvent("today-" + marker) with { Winners = winners, Date = "2041-03-10", Time = "00:00" });
+        static EventWinner Drawn(DateTimeOffset pickedAt, int? runtimeMinutes = null) =>
+            new() { MovieId = ObjectId.GenerateNewId().ToString(), Method = WinnerPickMethod.Wheel, PickedAt = pickedAt, RuntimeMinutes = runtimeMinutes };
+        var from = new DateTimeOffset(2041, 3, 3, 9, 0, 0, TimeSpan.Zero);
+        var to = new DateTimeOffset(2041, 3, 10, 9, 0, 0, TimeSpan.Zero);
+        var endedYesterday = await events.AddAsync(NewEvent("yesterday-" + marker) with
+        {
+            Date = "2041-03-09",
+            Time = "20:00",
+            Winners = [Drawn(new DateTimeOffset(2041, 3, 9, 19, 30, 0, TimeSpan.Zero))]
+        });
+        var longFilmEnded = await events.AddAsync(NewEvent("long-ended-" + marker) with
+        {
+            Date = "2041-03-10",
+            Time = "03:00",
+            Winners = [Drawn(new DateTimeOffset(2041, 3, 9, 12, 0, 0, TimeSpan.Zero), 300)]
+        });
+        var drawnLate = await events.AddAsync(NewEvent("drawn-late-" + marker) with
+        {
+            Date = "2041-02-20",
+            Time = "20:00",
+            Winners = [Drawn(new DateTimeOffset(2041, 3, 8, 12, 0, 0, TimeSpan.Zero))]
+        });
+        var closedEarly = await events.AddAsync(NewEvent("closed-early-" + marker) with
+        {
+            Date = "2041-03-05",
+            Time = "20:00",
+            Winners = [Drawn(new DateTimeOffset(2041, 3, 5, 19, 0, 0, TimeSpan.Zero), 169)],
+            ClosedAt = new DateTimeOffset(2041, 3, 5, 19, 30, 0, TimeSpan.Zero)
+        });
+        await events.AddAsync(NewEvent("long-playing-" + marker) with
+        {
+            Date = "2041-03-10",
+            Time = "06:00",
+            Winners = [Drawn(new DateTimeOffset(2041, 3, 9, 12, 0, 0, TimeSpan.Zero), 300)]
+        });
+        await events.AddAsync(NewEvent("too-long-ago-" + marker) with
+        {
+            Date = "2041-03-01",
+            Time = "20:00",
+            Winners = [Drawn(new DateTimeOffset(2041, 3, 1, 19, 0, 0, TimeSpan.Zero))]
+        });
+        await events.AddAsync(NewEvent("upcoming-" + marker) with
+        {
+            Date = "2041-03-20",
+            Time = "20:00",
+            Winners = [Drawn(new DateTimeOffset(2041, 3, 9, 12, 0, 0, TimeSpan.Zero))]
+        });
         await events.AddAsync(NewEvent("no-winner-" + marker) with { Date = "2041-03-09" });
 
-        var found = await events.ListWithWinnerStartingBetweenAsync(
-            new DateTimeOffset(2041, 3, 6, 23, 0, 0, TimeSpan.Zero),
-            new DateTimeOffset(2041, 3, 9, 23, 0, 0, TimeSpan.Zero));
+        var found = await events.ListWithWinnerEndingBetweenAsync(from, to);
 
         var mine = found.Where(e => e.Title.EndsWith(marker, StringComparison.Ordinal)).Select(e => e.Id).ToHashSet();
-        HashSet<string> expected = [yesterday.Id, threeDaysAgo.Id, closedByHost.Id];
+        HashSet<string> expected = [endedYesterday.Id, longFilmEnded.Id, drawnLate.Id, closedEarly.Id];
         Assert.Equal(expected, mine);
+    }
+
+    [Fact]
+    public async Task WinnerRuntime_SurvivesTheRoundTrip()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var winner = new EventWinner { MovieId = ObjectId.GenerateNewId().ToString(), Method = WinnerPickMethod.Manual, PickedAt = Now, RuntimeMinutes = 169 };
+        var unknownRuntime = winner with { MovieId = ObjectId.GenerateNewId().ToString(), RuntimeMinutes = null };
+
+        var added = await events.AddAsync(NewEvent("runtime") with { Winners = [winner, unknownRuntime] });
+        var read = await events.GetBySlugAsync(added.Slug);
+
+        Assert.NotNull(read);
+        Assert.Equal([169, null], read.Winners.Select(w => w.RuntimeMinutes));
     }
 
     [Fact]
@@ -1041,6 +1124,26 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
             marks.Select(mark => mark.Id).Order(StringComparer.Ordinal));
         Assert.Empty(await seenMarks.ListByEventAndMovieIdsAsync([], [film]));
         Assert.Empty(await seenMarks.ListByEventAndMovieIdsAsync([night], []));
+    }
+
+    [Fact]
+    public async Task MarkRatingPrompted_IsReadBackWithTheParticipationOnly()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var participants = scope.ServiceProvider.GetRequiredService<IParticipantRepository>();
+        var evt = await events.AddAsync(NewEvent("Prompted"));
+        var otherNight = await events.AddAsync(NewEvent("Other"));
+        var userId = ObjectId.GenerateNewId().ToString();
+        var prompted = await participants.AddAsync(new Participant { EventId = evt.Id, Pseudo = "Léa", UserId = userId, CreatedAt = Now, UpdatedAt = Now });
+        var neighbour = await participants.AddAsync(new Participant { EventId = evt.Id, Pseudo = "Hugo", CreatedAt = Now, UpdatedAt = Now });
+
+        Assert.True(await participants.MarkRatingPromptedAsync(prompted.Id, evt.Id, Now.AddHours(3)));
+        Assert.False(await participants.MarkRatingPromptedAsync(prompted.Id, otherNight.Id, Now.AddHours(4)));
+
+        var read = await participants.FindByEventAndUserIdAsync(evt.Id, userId);
+        Assert.Equal(Now.AddHours(3), read?.RatingPromptedAt);
+        Assert.Null((await participants.FindByIdAndEventIdAsync(neighbour.Id, evt.Id))?.RatingPromptedAt);
     }
 
     [Fact]
@@ -1138,7 +1241,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal("La série", series.Title);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task MoviesOfATitle_IncludeAFilmStoredBeforeSeriesSupport()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1159,7 +1262,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal(series.Id, Assert.Single(seriesList).Id);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task MostProposed_CountsAFilmStoredBeforeSeriesSupportWithTheSameFilm()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1178,7 +1281,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal(2, row.EventCount);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task MostProposed_RanksASeriesStoredWithALegacyMediaTypeAsTheSeriesItIsReadAs()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1404,7 +1507,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal(unrelatedHandle, Assert.Single(await notifications.ListByUserIdAsync(unrelated)).ActorHandle);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task NotificationRead_KeepsWorkingOnAFieldWrittenByANewerApiVersion()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1467,7 +1570,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
             Builders<BsonDocument>.Update.Unset(field));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task EventUpdate_KeepsTheFieldsWrittenByANewerApiVersion()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1482,7 +1585,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal("Rewritten by the older version", stored["title"].AsString);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task EventUpdate_ClearingAnOptionalField_RemovesItFromTheDocument()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1496,7 +1599,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.False(stored.Contains("winnerAnnouncedAt"));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task UserUpdate_KeepsTheFieldsWrittenByANewerApiVersion()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1511,7 +1614,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal("Rewritten by the older version", stored["bio"].AsString);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task UserUpdate_ClearingAnOptionalField_RemovesItFromTheDocument()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1525,7 +1628,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.False(stored.Contains("bio"));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task EventUpdate_KeepsTheFieldsANewerApiVersionWroteInsideTheConfig()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1540,7 +1643,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal("Comédie", config["theme"].AsString);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task EventUpdate_ClearingAnOptionalConfigField_RemovesItFromTheSubDocument()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1558,7 +1661,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.True(config.Contains("wheelMode"));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task EventUpdate_ConfigStoredAsNull_IsReplacedByTheNewConfig()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1572,7 +1675,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal("Comédie", reloaded!.Config?.Theme);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task EventUpdate_ConfigAbsentFromTheStoredEvent_WritesTheWholeConfig()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1587,7 +1690,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal(3, reloaded.Config?.WinnerCount);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task EventUpdate_ClearingTheConfig_RemovesTheSubDocument()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1599,7 +1702,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.False((await ReadRawAsync("events", created.Id)).Contains("config"));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task EventUpdate_TextLookingLikeAnExpression_IsStoredVerbatim()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1617,7 +1720,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal("$$ROOT", stored["config"]["theme"].AsString);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task EventUpdate_EventStoredWithoutAWriteSequence_StartsCountingAtOne()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1631,7 +1734,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal(1L, stored["writeSeq"].AsInt64);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task EventUpdate_ArrayElements_AreRewrittenWhole_TheirUnknownFieldsAreLost()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1649,7 +1752,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal("wheel", winner["pickMethod"].AsString);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task UserUpdate_KeepsTheFieldsANewerApiVersionWroteInsideTheAvatarPhoto()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1668,7 +1771,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.False(photo["isActive"].AsBoolean);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task UserUpdate_AvatarPhotoStoredAsNull_IsReplacedByTheNewPhoto()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1682,7 +1785,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal("fresh", stored["avatarPhoto"]["key"].AsString);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task UserUpdate_ClearingTheAvatarPhoto_RemovesTheSubDocument()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1715,12 +1818,9 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         var cleared = await users.GetByIdAsync(created.Id);
         Assert.Null(cleared!.Banner);
         Assert.Null(cleared.BannerPhoto);
-        if (_factory.RunsAgainstMongo)
-        {
-            var raw = await ReadRawAsync("users", created.Id);
-            Assert.False(raw.Contains("banner"));
-            Assert.False(raw.Contains("bannerPhoto"));
-        }
+        var raw = await ReadRawAsync("users", created.Id);
+        Assert.False(raw.Contains("banner"));
+        Assert.False(raw.Contains("bannerPhoto"));
     }
 
     [Fact]
@@ -2113,7 +2213,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal((int?)7, (await watched.GetAsync(ownerId, 680, MovieMediaType.Movie))!.Rating);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task WatchedTitles_AnOlderDocumentWithoutOrigins_IsManualAndKeepsItsRating()
     {
         using var scope = _factory.Services.CreateScope();
@@ -2496,5 +2596,55 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         var savedLists = scope.ServiceProvider.GetRequiredService<ISavedListRepository>();
         Assert.Null(await savedLists.GetAsync(eventId, malformedId));
         Assert.False(await savedLists.DeleteAsync(eventId, malformedId));
+    }
+
+    [Fact]
+    public async Task EmailVerificationTokens_AreFoundUntilTheyExpire_ConsumedPerAccount_AndForgottenWithIt()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var tokens = scope.ServiceProvider.GetRequiredService<IEmailVerificationTokenRepository>();
+        var owner = ObjectId.GenerateNewId().ToString();
+        var other = ObjectId.GenerateNewId().ToString();
+        var prefix = Guid.NewGuid().ToString("N");
+        EmailVerificationToken Issued(string userId, string hash, DateTimeOffset at) =>
+            new() { UserId = userId, TokenHash = prefix + hash, CreatedAt = at, ExpiresAtUtc = at.AddHours(48) };
+        var older = await tokens.AddAsync(Issued(owner, "older", Now.AddHours(-2)));
+        var latest = await tokens.AddAsync(Issued(owner, "latest", Now));
+        await tokens.AddAsync(Issued(other, "other", Now));
+
+        Assert.Equal(latest.Id, (await tokens.GetLatestForUserAsync(owner))!.Id);
+        Assert.Equal(older.Id, (await tokens.FindUnexpiredAsync(prefix + "older", Now))!.Id);
+        Assert.Null(await tokens.FindUnexpiredAsync(prefix + "older", Now.AddHours(46)));
+        Assert.Null(await tokens.FindUnexpiredAsync(prefix + "unknown", Now));
+
+        await tokens.ConsumeAllForUserAsync(owner, Now.AddMinutes(1));
+        await tokens.ConsumeAllForUserAsync(owner, Now.AddMinutes(2));
+
+        Assert.Equal(Now.AddMinutes(1), (await tokens.FindUnexpiredAsync(prefix + "latest", Now))!.ConsumedAt);
+        Assert.Null((await tokens.FindUnexpiredAsync(prefix + "other", Now))!.ConsumedAt);
+        Assert.Equal(2, await tokens.DeleteByUserIdAsync(owner));
+        Assert.Null(await tokens.GetLatestForUserAsync(owner));
+        Assert.NotNull(await tokens.GetLatestForUserAsync(other));
+        Assert.Equal(0, await tokens.DeleteByUserIdAsync(" "));
+    }
+
+    [Fact]
+    public async Task MarkEmailVerified_KeepsTheFirstConfirmation_AndMovesTheVersion()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var created = await users.AddAsync(NewUser("confirm"));
+
+        Assert.True(await users.MarkEmailVerifiedAsync(created.Id, Now));
+        Assert.False(await users.MarkEmailVerifiedAsync(created.Id, Now.AddDays(1)));
+        Assert.False(await users.MarkEmailVerifiedAsync(ObjectId.GenerateNewId().ToString(), Now));
+        Assert.False(await users.MarkEmailVerifiedAsync(" ", Now));
+
+        var reloaded = (await users.GetByIdAsync(created.Id))!;
+        Assert.Equal(Now, reloaded.EmailVerifiedAt);
+        Assert.Equal(created.Version + 1, reloaded.Version);
+        var renamed = await users.UpdateAsync(reloaded with { DisplayName = "Renamed" });
+        Assert.Equal(Now, renamed.EmailVerifiedAt);
+        Assert.Equal(Now, (await users.GetByIdAsync(created.Id))!.EmailVerifiedAt);
     }
 }

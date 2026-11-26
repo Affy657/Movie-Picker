@@ -37,6 +37,7 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
             _votes.Object,
             _currentUser.Object,
             _posters.Object,
+            Mock.Of<IWinnerRuntimes>(),
             NullLogger<LaunchWheelHandler>.Instance,
             TimeProvider.System);
     }

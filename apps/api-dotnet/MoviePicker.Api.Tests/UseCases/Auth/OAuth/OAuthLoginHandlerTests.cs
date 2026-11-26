@@ -36,9 +36,11 @@ public sealed class OAuthLoginHandlerTests
     {
         public InMemoryUserRepository Users { get; } = new();
         public Mock<IOAuthProfilePhotoImporter> Importer { get; } = PassThroughImporter();
+        public Mock<IAuthSessionInvalidator> Sessions { get; } = new();
+        public InMemoryPushSubscriptionRepository Push { get; } = new();
 
         public OAuthLoginHandler CreateHandler() =>
-            new(Users, Importer.Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
+            new(Users, Importer.Object, Sessions.Object, Push, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
     }
 
     [Fact]
@@ -157,12 +159,13 @@ public sealed class OAuthLoginHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_VerifiedEmailMatchesPasswordAccount_RefusesToLinkAndDoesNotSignIn()
+    public async Task HandleAsync_VerifiedEmailMatchesConfirmedPasswordAccount_RefusesToLinkAndDoesNotSignIn()
     {
         var f = new Fixture();
         var user = await f.Users.AddAsync(new User
         {
             Email = "neo@example.com",
+            EmailVerifiedAt = TestEpoch.AddDays(-9),
             DisplayName = "Neo",
             Handle = "neo",
             PasswordHash = "existing-hash",
@@ -184,6 +187,153 @@ public sealed class OAuthLoginHandlerTests
         var reloaded = await f.Users.GetByIdAsync(user.Id);
         Assert.Empty(reloaded!.Identities);
         Assert.Equal("existing-hash", reloaded.PasswordHash);
+    }
+
+    private static User UnconfirmedPasswordAccountOfASquatter() => new()
+    {
+        Email = "neo@example.com",
+        DisplayName = "Squatter",
+        Handle = "squatter",
+        PasswordHash = "squatter-hash",
+        Identities = [new LinkedIdentity { Provider = "github", Subject = "gh-squatter", Email = "squatter@example.com", LinkedAt = TestEpoch.AddDays(-5) }],
+        UnlinkedIdentities = [new UnlinkedIdentity { Provider = "google", Subject = "g-old", UnlinkedAt = TestEpoch.AddDays(-4) }],
+        CreatedAt = TestEpoch.AddDays(-10),
+        UpdatedAt = TestEpoch.AddDays(-10)
+    };
+
+    private static ExternalLoginInfo GoogleSignInOfTheAddressOwner() => new()
+    {
+        Provider = "google",
+        Subject = "g-owner",
+        Email = "neo@example.com",
+        EmailVerified = true,
+        DisplayName = "Neo"
+    };
+
+    [Fact]
+    public async Task HandleAsync_VerifiedEmailMatchesUnconfirmedPasswordAccount_SignsInTheAddressOwner()
+    {
+        var f = new Fixture();
+        var occupied = await f.Users.AddAsync(UnconfirmedPasswordAccountOfASquatter());
+
+        var outcome = await f.CreateHandler().HandleAsync(GoogleSignInOfTheAddressOwner());
+
+        Assert.Equal(OAuthOutcomeKind.SignedIn, outcome.Kind);
+        Assert.Equal(occupied.Id, outcome.User!.Id);
+        Assert.False(outcome.IsNewAccount);
+    }
+
+    [Fact]
+    public async Task HandleAsync_VerifiedEmailMatchesUnconfirmedPasswordAccount_TakesEveryAccessAwayFromTheOccupant()
+    {
+        var f = new Fixture();
+        var occupied = await f.Users.AddAsync(UnconfirmedPasswordAccountOfASquatter());
+        await f.Push.UpsertAsync(new PushSubscription { UserId = occupied.Id, Endpoint = "https://push.example/squatter" });
+
+        await f.CreateHandler().HandleAsync(GoogleSignInOfTheAddressOwner());
+
+        var reloaded = await f.Users.GetByIdAsync(occupied.Id);
+        Assert.Equal(string.Empty, reloaded!.PasswordHash);
+        var identity = Assert.Single(reloaded.Identities);
+        Assert.Equal(("google", "g-owner"), (identity.Provider, identity.Subject));
+        Assert.Empty(reloaded.UnlinkedIdentities);
+        Assert.Null(await f.Users.GetByIdentityAsync("github", "gh-squatter"));
+        f.Sessions.Verify(s => s.InvalidateAllForUserAsync(occupied.Id, It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Empty(await f.Push.ListByUserIdAsync(occupied.Id));
+    }
+
+    [Fact]
+    public async Task HandleAsync_VerifiedEmailMatchesUnconfirmedPasswordAccount_ConfirmsTheAddress()
+    {
+        var f = new Fixture();
+        var occupied = await f.Users.AddAsync(UnconfirmedPasswordAccountOfASquatter());
+
+        var outcome = await f.CreateHandler().HandleAsync(GoogleSignInOfTheAddressOwner());
+
+        Assert.Equal(TestEpoch, outcome.User!.EmailVerifiedAt);
+        Assert.Equal(TestEpoch, (await f.Users.GetByIdAsync(occupied.Id))!.EmailVerifiedAt);
+    }
+
+    [Fact]
+    public async Task HandleAsync_UnverifiedEmailMatchesUnconfirmedPasswordAccount_LeavesTheAccountAlone()
+    {
+        var f = new Fixture();
+        var occupied = await f.Users.AddAsync(UnconfirmedPasswordAccountOfASquatter());
+
+        var outcome = await f.CreateHandler().HandleAsync(GoogleSignInOfTheAddressOwner() with { EmailVerified = false });
+
+        Assert.Equal(OAuthOutcomeKind.EmailNotVerified, outcome.Kind);
+        var reloaded = await f.Users.GetByIdAsync(occupied.Id);
+        Assert.Equal("squatter-hash", reloaded!.PasswordHash);
+        Assert.Null(reloaded.EmailVerifiedAt);
+        f.Sessions.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task HandleAsync_VerifiedEmailMatchesConfirmedPasswordAccount_KeepsItsSessionsAndPassword()
+    {
+        var f = new Fixture();
+        var confirmed = await f.Users.AddAsync(UnconfirmedPasswordAccountOfASquatter() with { EmailVerifiedAt = TestEpoch.AddDays(-9) });
+
+        await f.CreateHandler().HandleAsync(GoogleSignInOfTheAddressOwner());
+
+        Assert.Equal("squatter-hash", (await f.Users.GetByIdAsync(confirmed.Id))!.PasswordHash);
+        f.Sessions.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task HandleAsync_VerifiedEmailNoExistingAccount_CreatesAConfirmedAccount()
+    {
+        var f = new Fixture();
+
+        var outcome = await f.CreateHandler().HandleAsync(GoogleSignInOfTheAddressOwner());
+
+        Assert.True(outcome.IsNewAccount);
+        Assert.Equal(TestEpoch, outcome.User!.EmailVerifiedAt);
+    }
+
+    [Fact]
+    public async Task HandleAsync_KnownIdentityWithTheAccountAddress_ConfirmsAnUnconfirmedAccount()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User
+        {
+            Email = "neo@example.com",
+            Handle = "neo",
+            Identities = [new LinkedIdentity { Provider = "google", Subject = "g-owner", Email = "neo@example.com", LinkedAt = TestEpoch.AddDays(-3) }]
+        });
+
+        var outcome = await f.CreateHandler().HandleAsync(GoogleSignInOfTheAddressOwner() with { Email = "NEO@example.com" });
+
+        Assert.Equal(TestEpoch, outcome.User!.EmailVerifiedAt);
+        Assert.Equal(TestEpoch, (await f.Users.GetByIdAsync(user.Id))!.EmailVerifiedAt);
+    }
+
+    [Fact]
+    public async Task HandleAsync_KnownIdentityWithAnotherAddress_LeavesTheAccountUnconfirmed()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User
+        {
+            Email = "neo@example.com",
+            Handle = "neo",
+            Identities = [new LinkedIdentity { Provider = "google", Subject = "g-owner", Email = "other@example.com", LinkedAt = TestEpoch.AddDays(-3) }]
+        });
+
+        await f.CreateHandler().HandleAsync(GoogleSignInOfTheAddressOwner() with { Email = "other@example.com" });
+
+        Assert.Null((await f.Users.GetByIdAsync(user.Id))!.EmailVerifiedAt);
+    }
+
+    [Fact]
+    public async Task HandleAsync_VerifiedEmailMatchesPasswordlessAccount_ConfirmsTheAddress()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(PasswordlessWithGoogleAndGitHub());
+
+        await f.CreateHandler().HandleAsync(GitHubSignIn("gh-new"));
+
+        Assert.Equal(TestEpoch, (await f.Users.GetByIdAsync(user.Id))!.EmailVerifiedAt);
     }
 
     [Fact]
@@ -349,7 +499,7 @@ public sealed class OAuthLoginHandlerTests
         users.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(Errors.IdentityConflict());
 
-        var handler = new OAuthLoginHandler(users.Object, PassThroughImporter().Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
+        var handler = new OAuthLoginHandler(users.Object, PassThroughImporter().Object, Mock.Of<IAuthSessionInvalidator>(), Mock.Of<IPushSubscriptionRepository>(), new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
 
         var outcome = await handler.HandleAsync(new ExternalLoginInfo
         {
@@ -377,7 +527,7 @@ public sealed class OAuthLoginHandlerTests
         users.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(Errors.ConcurrentUpdate());
 
-        var handler = new OAuthLoginHandler(users.Object, PassThroughImporter().Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
+        var handler = new OAuthLoginHandler(users.Object, PassThroughImporter().Object, Mock.Of<IAuthSessionInvalidator>(), Mock.Of<IPushSubscriptionRepository>(), new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
 
         var outcome = await handler.HandleAsync(new ExternalLoginInfo
         {
@@ -405,7 +555,7 @@ public sealed class OAuthLoginHandlerTests
         users.Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(Errors.EmailTaken());
 
-        var handler = new OAuthLoginHandler(users.Object, PassThroughImporter().Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
+        var handler = new OAuthLoginHandler(users.Object, PassThroughImporter().Object, Mock.Of<IAuthSessionInvalidator>(), Mock.Of<IPushSubscriptionRepository>(), new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
 
         var outcome = await handler.HandleAsync(new ExternalLoginInfo
         {
@@ -431,7 +581,7 @@ public sealed class OAuthLoginHandlerTests
         users.Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(Errors.EmailTaken());
 
-        var handler = new OAuthLoginHandler(users.Object, PassThroughImporter().Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
+        var handler = new OAuthLoginHandler(users.Object, PassThroughImporter().Object, Mock.Of<IAuthSessionInvalidator>(), Mock.Of<IPushSubscriptionRepository>(), new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => handler.HandleAsync(new ExternalLoginInfo
         {
@@ -458,7 +608,7 @@ public sealed class OAuthLoginHandlerTests
         users.Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(Errors.IdentityConflict());
 
-        var handler = new OAuthLoginHandler(users.Object, PassThroughImporter().Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
+        var handler = new OAuthLoginHandler(users.Object, PassThroughImporter().Object, Mock.Of<IAuthSessionInvalidator>(), Mock.Of<IPushSubscriptionRepository>(), new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
 
         var outcome = await handler.HandleAsync(new ExternalLoginInfo
         {

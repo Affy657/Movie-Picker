@@ -231,6 +231,22 @@ public sealed class MongoUserRepository : IUserRepository
         return result.ModifiedCount > 0;
     }
 
+    public async Task<bool> MarkEmailVerifiedAsync(string userId, DateTimeOffset verifiedAt, CancellationToken ct = default)
+    {
+        if (!ObjectId.TryParse(userId, out _))
+            return false;
+
+        var stillUnconfirmed = Builders<UserDocument>.Filter.And(
+            Builders<UserDocument>.Filter.Eq(x => x.Id, userId),
+            Builders<UserDocument>.Filter.Eq(x => x.EmailVerifiedAt, null));
+        var confirm = Builders<UserDocument>.Update
+            .Set(x => x.EmailVerifiedAt, verifiedAt.UtcDateTime)
+            .Inc(x => x.Version, 1);
+
+        var result = await _collection.UpdateOneAsync(stillUnconfirmed, confirm, cancellationToken: ct);
+        return result.ModifiedCount > 0;
+    }
+
     public async Task<bool> AddEventTemplateAsync(
         string userId,
         EventTemplate template,

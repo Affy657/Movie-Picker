@@ -8,6 +8,7 @@ import type { AccentColor, RatingScale, UiThemePreference } from '@/shared/types
 import type { UserProfile } from '@/features/auth/types';
 import { clearSessionHint, hasSessionHint, setSessionHint } from '@/features/auth/session-hint';
 import { currentBrowserPushSubscription } from '@/shared/utils/browserPushSubscription';
+import { preferredLocale } from '@/shared/i18n';
 
 export async function fetchAuthMeForSession(): Promise<UserProfile | null> {
   if (!hasSessionHint()) return null;
@@ -62,7 +63,13 @@ export async function postAuthRegister(
 ): Promise<void> {
   await fetchApi('/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ email, password, displayName, returnTo: boundedReturnTo(returnTo) }),
+    body: JSON.stringify({
+      email,
+      password,
+      displayName,
+      returnTo: boundedReturnTo(returnTo),
+      locale: preferredLocale(),
+    }),
   });
   setSessionHint();
 }
@@ -216,6 +223,20 @@ export async function postPasswordResetConfirm(
   return fetchApi<PasswordResetConfirmResponse>('/auth/password-reset/confirm', {
     method: 'POST',
     body: JSON.stringify({ token, newPassword }),
+  });
+}
+
+export async function postEmailVerificationResend(locale: string): Promise<void> {
+  await fetchApi(apiPath('auth', 'me', 'email-verification'), {
+    method: 'POST',
+    body: JSON.stringify({ locale }),
+  });
+}
+
+export async function postEmailVerificationConfirm(token: string): Promise<void> {
+  await fetchApi(apiPath('auth', 'email-verification', 'confirm'), {
+    method: 'POST',
+    body: JSON.stringify({ token }),
   });
 }
 

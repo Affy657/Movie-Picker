@@ -24,11 +24,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MoviePicker.Api\MoviePicker.Api.csproj" />
+    <ProjectReference Include="..\MoviePicker.Api.TestSupport\MoviePicker.Api.TestSupport.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="..\MoviePicker.Api.Tests\Builders\ImageHeaders.cs" Link="Builders\ImageHeaders.cs" />
     <Compile Include="..\MoviePicker.Api.Tests\Builders\TestDates.cs" Link="Builders\TestDates.cs" />
+    <Compile Include="..\MoviePicker.Api.Tests\Logging\CapturingLogger.cs" Link="Logging\CapturingLogger.cs" />
     <Compile Include="..\MoviePicker.Api.Tests\Infrastructure\Persistence\MovieListMembershipContract.cs" Link="Contracts\MovieListMembershipContract.cs" />
     <Compile Include="..\MoviePicker.Api.Tests\Infrastructure\Persistence\FriendGroupMembershipContract.cs" Link="Contracts\FriendGroupMembershipContract.cs" />
   </ItemGroup>

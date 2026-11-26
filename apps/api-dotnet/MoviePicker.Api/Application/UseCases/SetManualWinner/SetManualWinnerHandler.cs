@@ -14,6 +14,7 @@ public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IPosterImageStore _posterImageStore;
     private readonly IWinnerAnnouncer _winnerAnnouncer;
+    private readonly IWinnerRuntimes _winnerRuntimes;
     private readonly ILogger<SetManualWinnerHandler> _logger;
     private readonly TimeProvider _clock;
 
@@ -23,6 +24,7 @@ public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
         ICurrentUserAccessor currentUserAccessor,
         IPosterImageStore posterImageStore,
         IWinnerAnnouncer winnerAnnouncer,
+        IWinnerRuntimes winnerRuntimes,
         ILogger<SetManualWinnerHandler> logger,
         TimeProvider clock)
     {
@@ -31,6 +33,7 @@ public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
         _currentUserAccessor = currentUserAccessor;
         _posterImageStore = posterImageStore;
         _winnerAnnouncer = winnerAnnouncer;
+        _winnerRuntimes = winnerRuntimes;
         _logger = logger;
         _clock = clock;
     }
@@ -58,6 +61,7 @@ public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
         if (evt.GetWinnerMovieIds().Contains(winner.Id))
             throw Errors.MovieAlreadyAWinner();
 
+        var runtimeMinutes = await _winnerRuntimes.LookUpAsync(winner, ct);
         var now = _clock.GetUtcNow();
         var updated = evt with
         {
@@ -65,7 +69,8 @@ public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
             {
                 MovieId = winner.Id,
                 Method = WinnerPickMethod.Manual,
-                PickedAt = now
+                PickedAt = now,
+                RuntimeMinutes = runtimeMinutes
             }],
             UpdatedAt = now
         };

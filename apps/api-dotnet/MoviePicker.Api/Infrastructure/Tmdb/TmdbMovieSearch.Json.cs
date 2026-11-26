@@ -99,7 +99,7 @@ public sealed partial class TmdbMovieSearch
         return null;
     }
 
-    private static string? ExtractTrailerUrl(JsonElement root)
+    private static string? ExtractTrailerUrl(JsonElement root, CatalogLanguage language)
     {
         if (!root.TryGetProperty("videos", out var videos) || videos.ValueKind != JsonValueKind.Object)
             return null;
@@ -110,7 +110,7 @@ public sealed partial class TmdbMovieSearch
         var bestRank = int.MaxValue;
         foreach (var v in results.EnumerateArray())
         {
-            if (ReadYouTubeTrailerCandidate(v) is { } candidate && candidate.Rank < bestRank)
+            if (ReadYouTubeTrailerCandidate(v, language) is { } candidate && candidate.Rank < bestRank)
             {
                 bestRank = candidate.Rank;
                 bestKey = candidate.Key;
@@ -120,7 +120,7 @@ public sealed partial class TmdbMovieSearch
         return bestKey is null ? null : YoutubeWatchBase + Uri.EscapeDataString(bestKey);
     }
 
-    private static (string Key, int Rank)? ReadYouTubeTrailerCandidate(JsonElement v)
+    private static (string Key, int Rank)? ReadYouTubeTrailerCandidate(JsonElement v, CatalogLanguage language)
     {
         var site = v.TryGetProperty("site", out var s) ? s.GetString() : null;
         if (!string.Equals(site, "YouTube", StringComparison.OrdinalIgnoreCase))
@@ -134,10 +134,10 @@ public sealed partial class TmdbMovieSearch
         var lang = v.TryGetProperty("iso_639_1", out var lg) ? lg.GetString() : null;
         var official = v.TryGetProperty("official", out var of) && of.ValueKind == JsonValueKind.True;
 
-        return (key, TrailerRank(type, lang, official));
+        return (key, TrailerRank(type, VideoLanguageRank(lang, language), official));
     }
 
-    private static int TrailerRank(string? type, string? lang, bool official)
+    private static int TrailerRank(string? type, int langRank, bool official)
     {
         var typeRank = type switch
         {
@@ -146,12 +146,6 @@ public sealed partial class TmdbMovieSearch
             "Clip" => 20,
             "Featurette" => 30,
             _ => 40
-        };
-        var langRank = lang switch
-        {
-            "fr" => 0,
-            "en" => 1,
-            _ => 2
         };
         return typeRank + langRank + (official ? 0 : 5);
     }

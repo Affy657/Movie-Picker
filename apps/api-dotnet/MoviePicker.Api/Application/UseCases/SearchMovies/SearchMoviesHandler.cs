@@ -30,6 +30,7 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
     public async Task<MovieSearchListResponse> HandleAsync(
         string query,
         string? eventSlug,
+        CatalogLanguage language,
         MovieSearchFilters? filters = null,
         bool includeSeries = false,
         CancellationToken ct = default)
@@ -47,6 +48,7 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
             rows = await _tmdb.SearchAsync(
                 query,
                 allowSeries,
+                language,
                 filters?.GenreIds,
                 filters?.YearFrom,
                 filters?.YearTo,
@@ -71,7 +73,7 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
 
         var toEnrich = rows.Take(lookupCount).Select(r => (r.Id, r.MediaType)).Distinct().ToList();
         IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?> enrichmentsByKey = toEnrich.Count > 0
-            ? await _tmdb.GetEnrichmentsAsync(toEnrich, region, ct).ConfigureAwait(false)
+            ? await _tmdb.GetEnrichmentsAsync(toEnrich, region, language, ct).ConfigureAwait(false)
             : new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>();
 
         var items = new List<MovieSearchItemResponse>(rows.Count);

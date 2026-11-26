@@ -32,6 +32,9 @@ public sealed partial class PasswordResetEndpointsTests : IClassFixture<MoviePic
         return email;
     }
 
+    private EmailMessage[] ResetEmails() =>
+        _factory.FakeEmail.SentMessages.Where(m => m.Tag == "password-reset").ToArray();
+
     private static string ExtractTokenFromEmail(EmailMessage msg)
     {
         var m = ResetUrlRegex.Match(msg.HtmlBody);
@@ -59,8 +62,8 @@ public sealed partial class PasswordResetEndpointsTests : IClassFixture<MoviePic
         var resp = await client.PostAsJsonAsync("/api/v1/auth/password-reset/request",
             new PasswordResetRequest { Email = email, Locale = "fr" });
         Assert.Equal(HttpStatusCode.Accepted, resp.StatusCode);
-        Assert.Single(_factory.FakeEmail.SentMessages);
-        var msg = _factory.FakeEmail.SentMessages.First();
+        Assert.Single(ResetEmails());
+        var msg = ResetEmails().First();
         Assert.Equal("password-reset", msg.Tag);
         Assert.Contains("/reset?token=", msg.HtmlBody);
     }
@@ -74,7 +77,7 @@ public sealed partial class PasswordResetEndpointsTests : IClassFixture<MoviePic
 
         await client.PostAsJsonAsync("/api/v1/auth/password-reset/request",
             new PasswordResetRequest { Email = email, Locale = "fr" });
-        var msg = _factory.FakeEmail.SentMessages.First();
+        var msg = ResetEmails().First();
         var plainToken = ExtractTokenFromEmail(msg);
 
         var confirmClient = _factory.CreateClient();
@@ -102,7 +105,7 @@ public sealed partial class PasswordResetEndpointsTests : IClassFixture<MoviePic
         var email = await RegisterUserAsync(client);
         await client.PostAsJsonAsync("/api/v1/auth/password-reset/request",
             new PasswordResetRequest { Email = email, Locale = "fr" });
-        var token = ExtractTokenFromEmail(_factory.FakeEmail.SentMessages.First());
+        var token = ExtractTokenFromEmail(ResetEmails().First());
 
         var first = await client.PostAsJsonAsync("/api/v1/auth/password-reset/confirm",
             new PasswordResetConfirmRequest { Token = token, NewPassword = "first1AAA" });
@@ -121,7 +124,7 @@ public sealed partial class PasswordResetEndpointsTests : IClassFixture<MoviePic
         var email = await RegisterUserAsync(client);
         await client.PostAsJsonAsync("/api/v1/auth/password-reset/request",
             new PasswordResetRequest { Email = email, Locale = "fr" });
-        var token = ExtractTokenFromEmail(_factory.FakeEmail.SentMessages.First());
+        var token = ExtractTokenFromEmail(ResetEmails().First());
 
         var live = await client.PostAsJsonAsync("/api/v1/auth/password-reset/verify",
             new PasswordResetVerifyRequest { Token = token });
@@ -154,7 +157,7 @@ public sealed partial class PasswordResetEndpointsTests : IClassFixture<MoviePic
         var email = await RegisterUserAsync(client);
         await client.PostAsJsonAsync("/api/v1/auth/password-reset/request",
             new PasswordResetRequest { Email = email });
-        var token = ExtractTokenFromEmail(_factory.FakeEmail.SentMessages.First());
+        var token = ExtractTokenFromEmail(ResetEmails().First());
 
         var resp = await client.PostAsJsonAsync("/api/v1/auth/password-reset/confirm",
             new PasswordResetConfirmRequest { Token = token, NewPassword = "abc" });
@@ -169,11 +172,11 @@ public sealed partial class PasswordResetEndpointsTests : IClassFixture<MoviePic
         var email = await RegisterUserAsync(client);
         await client.PostAsJsonAsync("/api/v1/auth/password-reset/request",
             new PasswordResetRequest { Email = email });
-        var firstCount = _factory.FakeEmail.SentMessages.Count;
+        var firstCount = ResetEmails().Length;
 
         await client.PostAsJsonAsync("/api/v1/auth/password-reset/request",
             new PasswordResetRequest { Email = email });
-        Assert.Equal(firstCount, _factory.FakeEmail.SentMessages.Count);
+        Assert.Equal(firstCount, ResetEmails().Length);
     }
 
     [GeneratedRegex(@"https?://[^/\s]+/reset\?token=([A-Za-z0-9_-]+)", RegexOptions.Compiled)]

@@ -1,0 +1,393 @@
+using System.Collections.Concurrent;
+using System.Globalization;
+using System.Linq;
+using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
+using MoviePicker.Api.Application.UseCases.SearchUsers;
+using MoviePicker.Api.Domain;
+using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
+
+namespace MoviePicker.Api.Infrastructure.Persistence.InMemory;
+
+public sealed class InMemoryEventRepository : IEventRepository
+{
+    private readonly ConcurrentDictionary<string, Event> _byId = new();
+    private readonly ConcurrentDictionary<string, string> _idBySlug = new();
+    private readonly IMovieRatingRepository? _ratings;
+
+    public InMemoryEventRepository(IMovieRatingRepository? ratings = null)
+    {
+        _ratings = ratings;
+    }
+
+    public Task<Event?> GetBySlugAsync(string slug, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(slug))
+            return Task.FromResult<Event?>(null);
+        return Task.FromResult(
+            _idBySlug.TryGetValue(slug, out var id) && _byId.TryGetValue(id, out var e) && e.Slug == slug ? e : null);
+    }
+
+    public Task<Event> AddAsync(Event evt, CancellationToken ct = default)
+    {
+        if (evt.CreationRequestId is { } requestId
+            && _byId.Values.Any(e => e.CreatorUserId == evt.CreatorUserId && e.CreationRequestId == requestId))
+            throw new EventCreationReplayedException();
+
+        var id = string.IsNullOrEmpty(evt.Id) ? Guid.NewGuid().ToString("N")[..24] : evt.Id;
+        var created = evt with { Id = id };
+        _byId[id] = created;
+        if (!string.IsNullOrEmpty(created.Slug))
+            _idBySlug[created.Slug] = id;
+        return Task.FromResult(created);
+    }
+
+    public Task<Event?> FindByCreationRequestAsync(
+        string creatorUserId,
+        string creationRequestId,
+        CancellationToken ct = default) =>
+        Task.FromResult(_byId.Values.FirstOrDefault(e =>
+            e.CreatorUserId == creatorUserId && e.CreationRequestId == creationRequestId));
+
+    public Task<bool> MarkWatchlistCleanedAsync(string eventId, DateTimeOffset cleanedAt, CancellationToken ct = default)
+    {
+        var stamped = _byId.SwapIfPresent(eventId, evt => evt.WatchlistCleanedAt is not null
+            ? null
+            : evt with
+            {
+                WatchlistCleanedAt = cleanedAt,
+                UpdatedAt = cleanedAt,
+                Version = evt.Version + 1,
+                WriteSeq = evt.WriteSeq + 1
+            });
+        return Task.FromResult(stamped is not null);
+    }
+
+    public Task<Event> UpdateAsync(Event evt, CancellationToken ct = default)
+    {
+        var saved = _byId.SwapIfPresent(evt.Id, current => current.Version == evt.Version
+            ? evt with { Version = evt.Version + 1, WriteSeq = current.WriteSeq + 1 }
+            : throw Errors.ConcurrentUpdate());
+        if (saved is null)
+            throw Errors.EventNotFound();
+        if (!string.IsNullOrEmpty(saved.Slug))
+            _idBySlug.TryAdd(saved.Slug, saved.Id);
+        return Task.FromResult(saved);
+    }
+
+    public Task LockForWriteAsync(string eventId, CancellationToken ct = default) =>
+        IncrementWriteSeqAsync(eventId);
+
+    public Task MarkChangedAsync(string eventId, CancellationToken ct = default) =>
+        IncrementWriteSeqAsync(eventId);
+
+    private Task IncrementWriteSeqAsync(string eventId)
+    {
+        if (_byId.SwapIfPresent(eventId, evt => evt with { WriteSeq = evt.WriteSeq + 1 }) is null)
+            throw Errors.EventNotFound();
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<Event>> ListAllByCreatorUserIdAsync(string creatorUserId, CancellationToken ct = default) =>
+        ListByCreatorUserIdAsync(creatorUserId, int.MaxValue, ct);
+
+    public Task<IReadOnlyList<string>> ListIdsByCreatorUserIdAsync(string creatorUserId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(creatorUserId))
+            return Task.FromResult<IReadOnlyList<string>>(Array.Empty<string>());
+
+        IReadOnlyList<string> ids = _byId.Values
+            .Where(e => e.CreatorUserId == creatorUserId)
+            .Select(e => e.Id)
+            .ToList();
+        return Task.FromResult(ids);
+    }
+
+    public Task<IReadOnlyList<Event>> ListByCreatorUserIdAsync(string creatorUserId, int limit, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(creatorUserId) || limit <= 0)
+            return Task.FromResult<IReadOnlyList<Event>>(Array.Empty<Event>());
+
+        var list = _byId.Values
+            .Where(e => e.CreatorUserId == creatorUserId)
+            .OrderByDescending(e => e.UpdatedAt)
+            .Take(limit)
+            .ToList();
+        return Task.FromResult<IReadOnlyList<Event>>(list);
+    }
+
+    public Task<Event?> FindByCreatorAndTitleAsync(string creatorUserId, string title, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(creatorUserId) || string.IsNullOrEmpty(title))
+            return Task.FromResult<Event?>(null);
+
+        var match = _byId.Values.FirstOrDefault(e =>
+            e.CreatorUserId == creatorUserId && string.Equals(e.Title, title, StringComparison.Ordinal));
+        return Task.FromResult<Event?>(match);
+    }
+
+    public Task<IReadOnlyList<Event>> ListByIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default)
+    {
+        if (eventIds.Count == 0)
+            return Task.FromResult<IReadOnlyList<Event>>(Array.Empty<Event>());
+
+        var list = new List<Event>();
+        foreach (var id in eventIds.Distinct())
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                continue;
+            if (_byId.TryGetValue(id, out var e))
+                list.Add(e);
+        }
+
+        return Task.FromResult<IReadOnlyList<Event>>(list);
+    }
+
+    public Task<bool> DeleteAsync(string eventId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(eventId))
+            return Task.FromResult(false);
+
+        if (!_byId.TryRemove(eventId, out var removed))
+            return Task.FromResult(false);
+
+        if (!string.IsNullOrEmpty(removed.Slug))
+            _idBySlug.TryRemove(new KeyValuePair<string, string>(removed.Slug, removed.Id));
+
+        return Task.FromResult(true);
+    }
+
+    public Task<IReadOnlyList<Event>> ListMissingStartAtAsync(int limit, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<Event>>([]);
+
+    public Task<Event?> GetByRecapSlugAsync(string recapSlug, CancellationToken ct = default) =>
+        Task.FromResult(string.IsNullOrWhiteSpace(recapSlug)
+            ? null
+            : _byId.Values.FirstOrDefault(e => e.RecapSlug == recapSlug));
+
+    public Task<IReadOnlyList<Event>> ListMissingRecapSlugAsync(int limit, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<Event>>(_byId.Values.Where(e => e.RecapSlug is null).Take(Math.Max(limit, 0)).ToList());
+
+    public Task<IReadOnlyList<Event>> ListOpenEventsStartingBetweenAsync(
+        DateTimeOffset fromInclusive,
+        DateTimeOffset toInclusive,
+        CancellationToken ct = default)
+    {
+        IReadOnlyList<Event> result = _byId.Values
+            .Where(e => !e.ClosedAt.HasValue
+                && EventSchedule.TryGetStartUtc(e.Date, e.Time, out var startAt)
+                && startAt >= fromInclusive
+                && startAt <= toInclusive)
+            .ToList();
+        return Task.FromResult(result);
+    }
+
+    public Task<IReadOnlyList<Event>> ListOpenWithUnannouncedWheelPickAsync(
+        DateTimeOffset startingFrom,
+        CancellationToken ct = default)
+    {
+        IReadOnlyList<Event> result = _byId.Values
+            .Where(e => !e.ClosedAt.HasValue
+                && EventSchedule.TryGetStartUtc(e.Date, e.Time, out var startAt)
+                && startAt >= startingFrom
+                && WheelWinnerAnnouncement.PicksAwaitingAnnouncement(e).Count > 0)
+            .ToList();
+        return Task.FromResult(result);
+    }
+
+    public Task<IReadOnlyList<Event>> ListWithWinnerEndingBetweenAsync(
+        DateTimeOffset fromExclusive,
+        DateTimeOffset toInclusive,
+        CancellationToken ct = default)
+    {
+        IReadOnlyList<Event> result = _byId.Values
+            .Where(e => e.HasWinner
+                && e.TryGetEndUtc(out var endUtc)
+                && endUtc > fromExclusive
+                && endUtc <= toInclusive)
+            .ToList();
+        return Task.FromResult(result);
+    }
+
+    public Task<IReadOnlyList<Event>> ListOpenByGroupIdsAsync(
+        IReadOnlyCollection<string> groupIds,
+        DateTimeOffset utcNow,
+        CancellationToken ct = default)
+    {
+        var startedAfter = utcNow - EventSchedule.PendingDelay - EventSchedule.AutoCloseDelay;
+        IReadOnlyList<Event> result = NightsOfGroups(groupIds)
+            .Where(e => !e.ClosedAt.HasValue
+                && (!EventSchedule.TryGetStartUtc(e.Date, e.Time, out var startAt) || startAt >= startedAfter))
+            .ToList();
+        return Task.FromResult(result);
+    }
+
+    public async Task<IReadOnlyList<HeldGroupNightTally>> TallyHeldByGroupIdsAsync(
+        IReadOnlyCollection<string> groupIds,
+        DateTimeOffset utcNow,
+        CancellationToken ct = default)
+    {
+        var held = LatestHeldFirst(NightsOfGroups(groupIds), utcNow).ToList();
+        if (held.Count == 0)
+            return [];
+
+        var ratings = _ratings is null ? [] : await _ratings.ListByEventIdsAsync(held.ConvertAll(night => night.Id), ct);
+        return held
+            .GroupBy(night => night.GroupId!, StringComparer.Ordinal)
+            .Select(perGroup => Tally(perGroup.ToList(), ratings))
+            .ToList();
+    }
+
+    public Task<IReadOnlyList<Event>> ListLatestHeldByGroupIdAsync(
+        string groupId,
+        DateTimeOffset utcNow,
+        int limit,
+        CancellationToken ct = default)
+    {
+        IReadOnlyList<Event> result = limit <= 0
+            ? []
+            : LatestHeldFirst(NightsOfGroups([groupId]), utcNow).Take(limit).ToList();
+        return Task.FromResult(result);
+    }
+
+    private static IEnumerable<Event> LatestHeldFirst(IEnumerable<Event> nights, DateTimeOffset utcNow) =>
+        nights
+            .Where(e => e.HasWinner && e.IsFinished(utcNow))
+            .OrderByDescending(e => e.Date, StringComparer.Ordinal)
+            .ThenByDescending(e => e.Time, StringComparer.Ordinal)
+            .ThenByDescending(e => e.Id, StringComparer.Ordinal);
+
+    private static HeldGroupNightTally Tally(List<Event> latestFirst, IReadOnlyList<MovieRating> ratings)
+    {
+        var last = latestFirst[0];
+        var filmIds = latestFirst.SelectMany(night => night.GetWinnerMovieIds()).ToHashSet(StringComparer.Ordinal);
+        var nightIds = latestFirst.Select(night => night.Id).ToHashSet(StringComparer.Ordinal);
+        var filmAverages = ratings
+            .Where(rating => nightIds.Contains(rating.EventId) && filmIds.Contains(rating.MovieId))
+            .GroupBy(rating => rating.MovieId, StringComparer.Ordinal)
+            .Select(perFilm => perFilm.Average(rating => rating.Value))
+            .ToList();
+        var nightsByWeekday = latestFirst
+            .Select(night => DateOnly.TryParseExact(night.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+                ? date.DayOfWeek
+                : (DayOfWeek?)null)
+            .OfType<DayOfWeek>()
+            .GroupBy(day => day)
+            .ToDictionary(perDay => perDay.Key, perDay => perDay.Count());
+        return new HeldGroupNightTally(
+            last.GroupId!,
+            latestFirst.Count,
+            filmIds.Count,
+            latestFirst.Select(night => night.Date).Min(StringComparer.Ordinal)!,
+            filmAverages.Count == 0 ? null : filmAverages.Average(),
+            nightsByWeekday,
+            new HeldGroupNight(last.Id, last.GroupId!, last.Date, last.Time, last.GetWinnerMovieIds()));
+    }
+
+    private IEnumerable<Event> NightsOfGroups(IReadOnlyCollection<string> groupIds)
+    {
+        var ids = groupIds.Where(id => !string.IsNullOrWhiteSpace(id)).ToHashSet(StringComparer.Ordinal);
+        return ids.Count == 0
+            ? []
+            : _byId.Values.Where(e => e.GroupId is { } groupId && ids.Contains(groupId));
+    }
+
+    public Task<IReadOnlyList<Event>> ListTitleMatchesAsync(
+        string creatorUserId,
+        IReadOnlyCollection<string> eventIds,
+        IReadOnlyCollection<string> groupIds,
+        string query,
+        CancellationToken ct = default)
+    {
+        var normalized = UserSearchPolicy.Normalize(query);
+        var ids = eventIds.ToHashSet(StringComparer.Ordinal);
+        var groups = groupIds.ToHashSet(StringComparer.Ordinal);
+        IReadOnlyList<Event> result = normalized.Length == 0
+            ? []
+            : _byId.Values
+                .Where(e => (!string.IsNullOrWhiteSpace(creatorUserId) && e.CreatorUserId == creatorUserId)
+                            || ids.Contains(e.Id)
+                            || (e.GroupId is { } groupId && groups.Contains(groupId)))
+                .Where(e => UserSearchPolicy.Contains(e.Title, normalized))
+                .ToList();
+        return Task.FromResult(result);
+    }
+
+    public Task<IReadOnlyList<Event>> ListRecurringAwaitingNextOccurrenceAsync(
+        string? creatorUserId,
+        CancellationToken ct = default)
+    {
+        IReadOnlyList<Event> result = _byId.Values
+            .Where(e => e.Recurrence.HasValue && string.IsNullOrEmpty(e.NextOccurrenceEventId))
+            .Where(e => string.IsNullOrEmpty(creatorUserId) || e.CreatorUserId == creatorUserId)
+            .ToList();
+        return Task.FromResult(result);
+    }
+
+    public Task<IReadOnlyList<Event>> ListAwaitingWatchlistCleanupAsync(
+        DateTimeOffset utcNow,
+        int limit,
+        CancellationToken ct = default)
+    {
+        IReadOnlyList<Event> result = _byId.Values
+            .Where(e => e.HasWinner && e.WatchlistCleanedAt is null && e.IsFinished(utcNow))
+            .Take(Math.Max(0, limit))
+            .ToList();
+        return Task.FromResult(result);
+    }
+
+    public Task<long> ForgetUserAsync(string userId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return Task.FromResult(0L);
+
+        static bool Remembers(Event e, string id) => e.RemovedUserIds.Contains(id) || e.IsCoHost(id);
+
+        long count = 0;
+        foreach (var eventId in _byId.Values.Where(e => Remembers(e, userId)).Select(e => e.Id).ToList())
+        {
+            var forgotten = _byId.SwapIfPresent(eventId, e => Remembers(e, userId)
+                ? e.LettingBackIn(userId).WithoutCoHost(userId) with { Version = e.Version + 1, WriteSeq = e.WriteSeq + 1 }
+                : null);
+            if (forgotten is not null)
+                count++;
+        }
+
+        return Task.FromResult(count);
+    }
+
+    public Task<long> AnonymizeCreatorAsync(string creatorUserId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(creatorUserId))
+            return Task.FromResult(0L);
+
+        long count = 0;
+        foreach (var eventId in _byId.Values.Where(e => e.CreatorUserId == creatorUserId).Select(e => e.Id).ToList())
+        {
+            var anonymized = _byId.SwapIfPresent(eventId, e => e.CreatorUserId == creatorUserId
+                ? e with { CreatorUserId = null, Version = e.Version + 1, WriteSeq = e.WriteSeq + 1 }
+                : null);
+            if (anonymized is not null)
+                count++;
+        }
+
+        return Task.FromResult(count);
+    }
+
+    public Task<long> DetachGroupsAsync(IReadOnlyCollection<string> groupIds, CancellationToken ct = default)
+    {
+        var ids = groupIds.Where(id => !string.IsNullOrWhiteSpace(id)).ToHashSet(StringComparer.Ordinal);
+        long count = 0;
+        foreach (var eventId in _byId.Values.Where(e => e.GroupId is { } groupId && ids.Contains(groupId)).Select(e => e.Id).ToList())
+        {
+            var detached = _byId.SwapIfPresent(eventId, e => e.GroupId is { } groupId && ids.Contains(groupId)
+                ? e with { GroupId = null, Version = e.Version + 1, WriteSeq = e.WriteSeq + 1 }
+                : null);
+            if (detached is not null)
+                count++;
+        }
+
+        return Task.FromResult(count);
+    }
+}

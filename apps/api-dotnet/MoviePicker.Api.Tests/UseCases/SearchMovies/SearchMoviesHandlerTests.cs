@@ -31,13 +31,13 @@ public sealed class SearchMoviesHandlerTests
     {
         var sut = Build(new MoviePickerOptions { TmdbApiKey = null });
 
-        await Assert.ThrowsAsync<ServiceUnavailableException>(() => sut.HandleAsync("inception", SeriesEventSlug));
+        await Assert.ThrowsAsync<ServiceUnavailableException>(() => sut.HandleAsync("inception", SeriesEventSlug, CatalogLanguage.French));
     }
 
     [Fact]
     public async Task HandleAsync_ReadAccessTokenOnly_IsEnoughToSearch()
     {
-        _tmdb.Setup(t => t.SearchAsync("inception", true, It.IsAny<IReadOnlyList<int>?>(),
+        _tmdb.Setup(t => t.SearchAsync("inception", true, It.IsAny<CatalogLanguage>(), It.IsAny<IReadOnlyList<int>?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([new TmdbSearchItem(1, MovieMediaType.Movie, "Inception", "2010", "/p.jpg", 8.4)]);
@@ -48,7 +48,7 @@ public sealed class SearchMoviesHandlerTests
             TmdbSearchMaxWatchProviderLookups = 0
         });
 
-        var result = await sut.HandleAsync("inception", SeriesEventSlug);
+        var result = await sut.HandleAsync("inception", SeriesEventSlug, CatalogLanguage.French);
 
         Assert.Single(result.Items);
     }
@@ -56,25 +56,25 @@ public sealed class SearchMoviesHandlerTests
     [Fact]
     public async Task HandleAsync_TmdbHttpFailure_ThrowsServiceUnavailable()
     {
-        _tmdb.Setup(t => t.SearchAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<int>?>(),
+        _tmdb.Setup(t => t.SearchAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CatalogLanguage>(), It.IsAny<IReadOnlyList<int>?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("boom"));
         var sut = Build();
 
-        await Assert.ThrowsAsync<ServiceUnavailableException>(() => sut.HandleAsync("inception", SeriesEventSlug));
+        await Assert.ThrowsAsync<ServiceUnavailableException>(() => sut.HandleAsync("inception", SeriesEventSlug, CatalogLanguage.French));
     }
 
     [Fact]
     public async Task HandleAsync_WithoutEnrichment_MapsRowsAndDefaults()
     {
-        _tmdb.Setup(t => t.SearchAsync("inception", true, It.IsAny<IReadOnlyList<int>?>(),
+        _tmdb.Setup(t => t.SearchAsync("inception", true, It.IsAny<CatalogLanguage>(), It.IsAny<IReadOnlyList<int>?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([new TmdbSearchItem(1, MovieMediaType.Movie, "Inception", "2010", "/p.jpg", 8.4)]);
         var sut = Build(new MoviePickerOptions { TmdbApiKey = "key", TmdbSearchMaxWatchProviderLookups = 0 });
 
-        var result = await sut.HandleAsync("inception", SeriesEventSlug);
+        var result = await sut.HandleAsync("inception", SeriesEventSlug, CatalogLanguage.French);
 
         var item = Assert.Single(result.Items);
         Assert.Equal(1, item.Id);
@@ -86,14 +86,14 @@ public sealed class SearchMoviesHandlerTests
         Assert.Equal("FR", result.WatchProvidersRegion);
         Assert.False(string.IsNullOrEmpty(result.Disclaimer));
         _tmdb.Verify(
-            t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), It.IsAny<string>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
     [Fact]
     public async Task HandleAsync_MapsGenreIdsFromTmdbRow()
     {
-        _tmdb.Setup(t => t.SearchAsync("inception", true, It.IsAny<IReadOnlyList<int>?>(),
+        _tmdb.Setup(t => t.SearchAsync("inception", true, It.IsAny<CatalogLanguage>(), It.IsAny<IReadOnlyList<int>?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([
@@ -101,20 +101,20 @@ public sealed class SearchMoviesHandlerTests
             ]);
         var sut = Build(new MoviePickerOptions { TmdbApiKey = "key", TmdbSearchMaxWatchProviderLookups = 0 });
 
-        var result = await sut.HandleAsync("inception", SeriesEventSlug);
+        var result = await sut.HandleAsync("inception", SeriesEventSlug, CatalogLanguage.French);
 
         var item = Assert.Single(result.Items);
         Assert.Equal([28, 878], item.GenreIds);
     }
 
     private void GivenEnrichments(params (int TmdbId, TmdbMovieEnrichment? Enrichment)[] rows) =>
-        _tmdb.Setup(t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), "FR", It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), "FR", It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(rows.ToDictionary(row => (row.TmdbId, MovieMediaType.Movie), row => row.Enrichment));
 
     [Fact]
     public async Task HandleAsync_WithEnrichment_FillsProvidersRuntimeAndVoteFallback()
     {
-        _tmdb.Setup(t => t.SearchAsync("inception", true, It.IsAny<IReadOnlyList<int>?>(),
+        _tmdb.Setup(t => t.SearchAsync("inception", true, It.IsAny<CatalogLanguage>(), It.IsAny<IReadOnlyList<int>?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([new TmdbSearchItem(1, MovieMediaType.Movie, "Inception", "2010", "/p.jpg", VoteAverage: null)]);
@@ -125,7 +125,7 @@ public sealed class SearchMoviesHandlerTests
             148)));
         var sut = Build();
 
-        var result = await sut.HandleAsync("inception", SeriesEventSlug);
+        var result = await sut.HandleAsync("inception", SeriesEventSlug, CatalogLanguage.French);
 
         var item = Assert.Single(result.Items);
         Assert.Equal(7.9, item.VoteAverage);
@@ -140,7 +140,7 @@ public sealed class SearchMoviesHandlerTests
     [Fact]
     public async Task HandleAsync_RowsNotLookedUp_LeaveTheirProvidersUnknownInsteadOfEmpty()
     {
-        _tmdb.Setup(t => t.SearchAsync("dune", true, It.IsAny<IReadOnlyList<int>?>(),
+        _tmdb.Setup(t => t.SearchAsync("dune", true, It.IsAny<CatalogLanguage>(), It.IsAny<IReadOnlyList<int>?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(
@@ -154,7 +154,7 @@ public sealed class SearchMoviesHandlerTests
             (2, null));
         var sut = Build(new MoviePickerOptions { TmdbApiKey = "key", TmdbSearchMaxWatchProviderLookups = 2 });
 
-        var result = await sut.HandleAsync("dune", SeriesEventSlug);
+        var result = await sut.HandleAsync("dune", SeriesEventSlug, CatalogLanguage.French);
 
         Assert.Collection(
             result.Items,
@@ -170,7 +170,7 @@ public sealed class SearchMoviesHandlerTests
     [Fact]
     public async Task HandleAsync_TextQueryWithRuntimeFilter_EnrichesAllRowsAndDropsOutOfRange()
     {
-        _tmdb.Setup(t => t.SearchAsync("inception", true, It.IsAny<IReadOnlyList<int>?>(),
+        _tmdb.Setup(t => t.SearchAsync("inception", true, It.IsAny<CatalogLanguage>(), It.IsAny<IReadOnlyList<int>?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
                 90, 120, It.IsAny<CancellationToken>()))
             .ReturnsAsync(
@@ -186,26 +186,26 @@ public sealed class SearchMoviesHandlerTests
         var sut = Build(new MoviePickerOptions { TmdbApiKey = "key", TmdbSearchMaxWatchProviderLookups = 0 });
         var filters = new MovieSearchFilters(Array.Empty<int>(), null, null, RuntimeMin: 90, RuntimeMax: 120);
 
-        var result = await sut.HandleAsync("inception", SeriesEventSlug, filters);
+        var result = await sut.HandleAsync("inception", SeriesEventSlug, CatalogLanguage.French, filters);
 
         var item = Assert.Single(result.Items);
         Assert.Equal(1, item.Id);
         Assert.Equal(100, item.RuntimeMinutes);
         _tmdb.Verify(
-            t => t.GetEnrichmentsAsync(It.Is<IReadOnlyCollection<(int, MovieMediaType)>>(keys => keys.Count == 3), "FR", It.IsAny<CancellationToken>()),
+            t => t.GetEnrichmentsAsync(It.Is<IReadOnlyCollection<(int, MovieMediaType)>>(keys => keys.Count == 3), "FR", It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
     [Fact]
     public async Task HandleAsync_NormalizesRegionFromOptions()
     {
-        _tmdb.Setup(t => t.SearchAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<int>?>(),
+        _tmdb.Setup(t => t.SearchAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CatalogLanguage>(), It.IsAny<IReadOnlyList<int>?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
         var sut = Build(new MoviePickerOptions { TmdbApiKey = "key", TmdbWatchProvidersRegion = " us " });
 
-        var result = await sut.HandleAsync("x", null);
+        var result = await sut.HandleAsync("x", null, CatalogLanguage.French);
 
         Assert.Equal("US", result.WatchProvidersRegion);
     }
@@ -213,16 +213,16 @@ public sealed class SearchMoviesHandlerTests
     [Fact]
     public async Task HandleAsync_UnknownEventSlug_SearchesMoviesOnly()
     {
-        _tmdb.Setup(t => t.SearchAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<int>?>(),
+        _tmdb.Setup(t => t.SearchAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CatalogLanguage>(), It.IsAny<IReadOnlyList<int>?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
         var sut = Build();
 
-        await sut.HandleAsync("inception", "slug-inconnu");
+        await sut.HandleAsync("inception", "slug-inconnu", CatalogLanguage.French);
 
         _tmdb.Verify(
-            t => t.SearchAsync("inception", false, It.IsAny<IReadOnlyList<int>?>(),
+            t => t.SearchAsync("inception", false, It.IsAny<CatalogLanguage>(), It.IsAny<IReadOnlyList<int>?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
             Times.Once);
@@ -231,16 +231,16 @@ public sealed class SearchMoviesHandlerTests
     [Fact]
     public async Task HandleAsync_EventAllowingSeries_SearchesMoviesAndSeries()
     {
-        _tmdb.Setup(t => t.SearchAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<int>?>(),
+        _tmdb.Setup(t => t.SearchAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CatalogLanguage>(), It.IsAny<IReadOnlyList<int>?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
         var sut = Build();
 
-        await sut.HandleAsync("inception", SeriesEventSlug);
+        await sut.HandleAsync("inception", SeriesEventSlug, CatalogLanguage.French);
 
         _tmdb.Verify(
-            t => t.SearchAsync("inception", true, It.IsAny<IReadOnlyList<int>?>(),
+            t => t.SearchAsync("inception", true, It.IsAny<CatalogLanguage>(), It.IsAny<IReadOnlyList<int>?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
             Times.Once);
@@ -252,16 +252,16 @@ public sealed class SearchMoviesHandlerTests
         _events
             .Setup(r => r.GetBySlugAsync("soiree-films", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Event { Slug = "soiree-films", Config = new EventConfig { AllowSeries = false } });
-        _tmdb.Setup(t => t.SearchAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<int>?>(),
+        _tmdb.Setup(t => t.SearchAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CatalogLanguage>(), It.IsAny<IReadOnlyList<int>?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
         var sut = Build();
 
-        await sut.HandleAsync("twin peaks", "soiree-films", includeSeries: true);
+        await sut.HandleAsync("twin peaks", "soiree-films", CatalogLanguage.French, includeSeries: true);
 
         _tmdb.Verify(
-            t => t.SearchAsync("twin peaks", false, It.IsAny<IReadOnlyList<int>?>(),
+            t => t.SearchAsync("twin peaks", false, It.IsAny<CatalogLanguage>(), It.IsAny<IReadOnlyList<int>?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
             Times.Once);
@@ -270,16 +270,16 @@ public sealed class SearchMoviesHandlerTests
     [Fact]
     public async Task HandleAsync_SeriesAskedOutsideAnEvent_SearchesMoviesAndSeries()
     {
-        _tmdb.Setup(t => t.SearchAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<int>?>(),
+        _tmdb.Setup(t => t.SearchAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CatalogLanguage>(), It.IsAny<IReadOnlyList<int>?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
         var sut = Build();
 
-        await sut.HandleAsync("twin peaks", null, includeSeries: true);
+        await sut.HandleAsync("twin peaks", null, CatalogLanguage.French, includeSeries: true);
 
         _tmdb.Verify(
-            t => t.SearchAsync("twin peaks", true, It.IsAny<IReadOnlyList<int>?>(),
+            t => t.SearchAsync("twin peaks", true, It.IsAny<CatalogLanguage>(), It.IsAny<IReadOnlyList<int>?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
             Times.Once);

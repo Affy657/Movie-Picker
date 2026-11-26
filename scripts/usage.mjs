@@ -387,7 +387,7 @@ export function gcloudSecretCommand(project) {
   return `${command} --project=${project}`;
 }
 
-function mongoUri() {
+export function mongoUri() {
   const fromEnvironment = process.env.MONGODB_URI?.trim();
   if (fromEnvironment) return fromEnvironment;
   const result = spawnSync(gcloudSecretCommand(process.env.GCP_PROJECT_ID), {

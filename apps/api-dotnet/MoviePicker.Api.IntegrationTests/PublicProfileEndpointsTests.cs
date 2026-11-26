@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Infrastructure.Tmdb;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -192,7 +193,7 @@ public sealed class PublicProfileEndpointsTests : IClassFixture<MoviePickerAppli
         var page = await res.Content.ReadFromJsonAsync<WatchlistResponse>(JsonOptions);
         Assert.NotNull(page);
         Assert.Equal(1, page!.Total);
-        Assert.Equal("Inception", Assert.Single(page.Items).Title);
+        Assert.Equal(StubTmdbMovieSearch.TitleOf(27205), Assert.Single(page.Items).Title);
     }
 
     [Fact]

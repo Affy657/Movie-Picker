@@ -7,5 +7,5 @@ export {
   loadLocale,
   loadedLocale,
 } from './locales';
-export { LocaleProvider, useLocale, preferredLocale } from './LocaleContext';
+export { LocaleProvider, useLocale, preferredLocale, tmdbLanguageOf } from './LocaleContext';
 export { useTranslation } from './useTranslation';

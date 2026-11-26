@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Web;
@@ -34,6 +35,7 @@ public sealed class MoviesShowcaseController : ControllerBase
         [FromQuery] int? seedTmdbId,
         [FromQuery] MovieMediaType? seedMediaType,
         [FromQuery] int? personId,
+        [RequestLanguage] CatalogLanguage interfaceLanguage,
         [FromServices] IGetMovieShowcaseHandler handler,
         CancellationToken ct)
     {
@@ -45,7 +47,8 @@ public sealed class MoviesShowcaseController : ControllerBase
             provider,
             seedTmdbId,
             seedMediaType ?? MovieMediaType.Movie,
-            personId);
+            personId,
+            interfaceLanguage);
         var result = await handler.HandleAsync(query, ct);
         Response.Headers.CacheControl = PublicCacheControl;
         return Ok(result);
@@ -58,10 +61,11 @@ public sealed class MoviesShowcaseController : ControllerBase
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> GetShowcaseThemes(
+        [RequestLanguage] CatalogLanguage interfaceLanguage,
         [FromServices] IGetMovieShowcaseThemesHandler handler,
         CancellationToken ct)
     {
-        var result = await handler.HandleAsync(ct);
+        var result = await handler.HandleAsync(interfaceLanguage, ct);
         Response.Headers.CacheControl = result.IsComplete ? PublicCacheControl : IncompleteCacheControl;
         return Ok(result);
     }
@@ -73,10 +77,11 @@ public sealed class MoviesShowcaseController : ControllerBase
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> GetCollections(
+        [RequestLanguage] CatalogLanguage interfaceLanguage,
         [FromServices] IGetMovieCollectionsHandler handler,
         CancellationToken ct)
     {
-        var result = await handler.HandleAsync(ct);
+        var result = await handler.HandleAsync(interfaceLanguage, ct);
         Response.Headers.CacheControl = PublicCacheControl;
         return Ok(result);
     }

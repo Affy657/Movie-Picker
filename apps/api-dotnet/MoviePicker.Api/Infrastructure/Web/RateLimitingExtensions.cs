@@ -22,6 +22,8 @@ public static class RateLimitingExtensions
     public const string AuthLoginPolicy = "auth-login";
     public const string AuthPasswordResetRequestPolicy = "auth-password-reset-request";
     public const string AuthPasswordResetConfirmPolicy = "auth-password-reset-confirm";
+    public const string AuthEmailVerificationRequestPolicy = "auth-email-verification-request";
+    public const string AuthEmailVerificationConfirmPolicy = "auth-email-verification-confirm";
     public const string AuthChangePasswordPolicy = "auth-change-password";
     public const string AuthPatchProfilePolicy = "auth-patch-profile";
     public const string AuthExportDataPolicy = "auth-export-data";
@@ -76,6 +78,7 @@ public static class RateLimitingExtensions
     public const string AvatarPhotosPolicy = "avatar-photos-get";
     public const string BannerPhotoUploadPolicy = "banner-photo-upload";
     public const string BannerPhotosPolicy = "banner-photos-get";
+    public const string ProfilePhotoReportPolicy = "profile-photo-report";
     public const string UsageCountPolicy = "usage-count";
 
     private const string ProxiedPartition = "proxied";
@@ -101,6 +104,8 @@ public static class RateLimitingExtensions
         new(AuthLoginPolicy, 30, 1, QuotaScope.Address),
         new(AuthPasswordResetRequestPolicy, 5, 1, QuotaScope.Address),
         new(AuthPasswordResetConfirmPolicy, 30, 1, QuotaScope.Address),
+        new(AuthEmailVerificationRequestPolicy, 5, 1),
+        new(AuthEmailVerificationConfirmPolicy, 30, 1, QuotaScope.Address),
         new(AuthChangePasswordPolicy, 10, 1),
         new(AuthPatchProfilePolicy, 60, 1),
         new(AuthExportDataPolicy, 5, 1),
@@ -155,6 +160,7 @@ public static class RateLimitingExtensions
         new(AvatarPhotosPolicy, 300, 1),
         new(BannerPhotoUploadPolicy, 10, 60),
         new(BannerPhotosPolicy, 300, 1),
+        new(ProfilePhotoReportPolicy, 5, 60),
         new(UsageCountPolicy, 60, 1, QuotaScope.Address)
     ];
 
@@ -213,6 +219,7 @@ public static class RateLimitingExtensions
     internal static string PartitionKeyFor(HttpContext httpContext, PolicySpec spec) => spec.Scope switch
     {
         QuotaScope.Address => AddressPartitionKey(httpContext),
+        QuotaScope.Slug when !FirebaseHostingRelay.Carries(httpContext) => AddressPartitionKey(httpContext),
         QuotaScope.Slug when spec.Name == MovieDocumentPolicy => RouteMoviePartitionKey.Get(httpContext),
         QuotaScope.Slug => RouteSlugPartitionKey.Get(httpContext) ?? AddressPartitionKey(httpContext),
         QuotaScope.Endpoint => EndpointPartition,
@@ -253,8 +260,13 @@ public static class RateLimitingExtensions
 
     private static bool IsPoster(HttpContext httpContext) => PolicyNameOf(httpContext) == PostersPolicy;
 
+    internal static string? ShareDocumentPolicyOf(HttpContext httpContext) =>
+        PolicyNameOf(httpContext) is { } policyName && FindPolicy(policyName) is { Scope: QuotaScope.Slug }
+            ? policyName
+            : null;
+
     private static bool IsProxied(HttpContext httpContext) =>
-        PolicyNameOf(httpContext) is { } policyName && FindPolicy(policyName) is { Scope: QuotaScope.Slug };
+        ShareDocumentPolicyOf(httpContext) is not null && FirebaseHostingRelay.Carries(httpContext);
 
     internal static RateLimitPartition<string> CreatePartition(HttpContext httpContext, PolicySpec spec)
     {

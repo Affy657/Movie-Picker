@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.UseCases.ProfileShare;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Infrastructure.Web;
 
 namespace MoviePicker.Api.Controllers;
@@ -20,6 +22,7 @@ public sealed class ProfileShareDocumentController : ControllerBase
     public async Task<IActionResult> GetProfile(
         string slug,
         [FromServices] IGetProfileShareDocumentHandler handler,
+        [FromServices] IOptions<MoviePickerOptions> options,
         CancellationToken ct) =>
-        this.ShareDocument(await handler.HandleAsync(slug, this.PublicApiBase(), ct));
+        this.ShareDocument(await handler.HandleAsync(slug, options.Value.ResolvedApiBaseUrl(), ct));
 }

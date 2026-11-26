@@ -39,7 +39,7 @@ output "backup_service_account_email" {
 }
 
 output "scheduler_service_account_email" {
-  description = "Identity Cloud Scheduler signs its OIDC tokens with, the one deploy.yml gives the jobs and the SCHEDULER_OIDC_SERVICE_ACCOUNT variable of the API."
+  description = "Identity Cloud Scheduler signs its OIDC tokens with, the one the scheduled jobs described here carry and the SCHEDULER_OIDC_SERVICE_ACCOUNT variable deploy.yml gives the API."
   value       = google_service_account.scheduler.email
 }
 
