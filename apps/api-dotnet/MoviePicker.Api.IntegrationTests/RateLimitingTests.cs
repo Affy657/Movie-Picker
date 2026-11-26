@@ -56,7 +56,7 @@ public sealed class RateLimitingTests
                         app.UseRouting();
                         app.UseRateLimiter();
                         app.UseEndpoints(endpoints =>
-                            endpoints.MapGet("/r/{slug}", () => "ok")
+                            endpoints.MapGet("/r/{slug}", (string slug) => $"ok {slug}")
                                 .RequireRateLimiting(RateLimitingExtensions.RecapDocumentPolicy));
                     })
             )

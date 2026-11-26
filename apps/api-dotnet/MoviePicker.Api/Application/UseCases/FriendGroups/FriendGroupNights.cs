@@ -38,7 +38,8 @@ public sealed class FriendGroupNightsReader
     {
         var now = _clock.GetUtcNow();
         var open = await _events.ListOpenByGroupIdsAsync([group.Id], now, ct);
-        var tally = (await _events.TallyHeldByGroupIdsAsync([group.Id], now, ct)).FirstOrDefault();
+        var tallies = await _events.TallyHeldByGroupIdsAsync([group.Id], now, ct);
+        var tally = tallies.Count > 0 ? tallies[0] : null;
         if (open.Count == 0 && tally is null)
             return FriendGroupNightsView.None;
 
