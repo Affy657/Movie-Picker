@@ -109,6 +109,7 @@ describe('RegisterPage (MSW)', () => {
         password: 'abcd1234',
         displayName: 'Sam',
         returnTo: '/e/soiree',
+        locale: 'fr',
       })
     );
   });
