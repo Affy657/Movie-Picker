@@ -599,11 +599,36 @@ public sealed class RateLimitingExtensionsTests
     [InlineData("142.250.32.37, 203.0.113.9", "203.0.113.9")]
     [InlineData("203.0.113.9", "203.0.113.9")]
     [InlineData("142.250.32.37", "142.250.32.37")]
-    public async Task ClientIpPartitionKey_AfterTheForwardedHeadersMiddleware_KeysTheClientCloudRunOrHostingSaw(
+    public async Task ClientIpPartitionKey_AfterTheForwardedHeadersMiddleware_KeysTheClientCloudRunOrHostingSawOnAShareDocument(
         string forwardedFor,
         string expectedKey)
     {
-        var http = From(CloudRunPeerAddress);
+        var http = await AfterTheForwardedHeadersMiddleware(
+            DocumentRequest(RateLimitingExtensions.ProfileDocumentPolicy, CloudRunPeerAddress),
+            forwardedFor);
+
+        Assert.Equal(expectedKey, ClientIpPartitionKey.Get(http));
+    }
+
+    [Theory]
+    [InlineData("203.0.113.7, 142.250.32.37", "142.250.32.37")]
+    [InlineData("2001:db8:1:2::1, 66.249.93.69", "66.249.93.69")]
+    [InlineData("198.51.100.4, 203.0.113.9", "203.0.113.9")]
+    [InlineData("203.0.113.9", "203.0.113.9")]
+    public async Task ClientIpPartitionKey_AnApiRouteCalledFromAGoogleAddress_KeysThatAddressNotAHopItWrote(
+        string forwardedFor,
+        string expectedKey)
+    {
+        var http = await AfterTheForwardedHeadersMiddleware(
+            DocumentRequest(RateLimitingExtensions.AuthRegisterPolicy, CloudRunPeerAddress),
+            forwardedFor);
+
+        Assert.Equal(expectedKey, ClientIpPartitionKey.Get(http));
+        Assert.Equal($"ip:{expectedKey}", RateLimitingExtensions.PartitionKeyFor(http));
+    }
+
+    private static async Task<DefaultHttpContext> AfterTheForwardedHeadersMiddleware(DefaultHttpContext http, string forwardedFor)
+    {
         http.Request.Headers[ForwardedHeadersDefaults.XForwardedForHeaderName] = forwardedFor;
         using var services = new ServiceCollection().AddMoviePickerForwardedHeaders().BuildServiceProvider();
         var middleware = new ForwardedHeadersMiddleware(
@@ -612,8 +637,7 @@ public sealed class RateLimitingExtensionsTests
             services.GetRequiredService<IOptions<ForwardedHeadersOptions>>());
 
         await middleware.Invoke(http);
-
-        Assert.Equal(expectedKey, ClientIpPartitionKey.Get(http));
+        return http;
     }
 
     private static DefaultHttpContext RelayedDocumentRequest(string policy, string? forwardedHopsLeft, string slug = RelayedSlug)

@@ -260,7 +260,7 @@ public static class RateLimitingExtensions
 
     private static bool IsPoster(HttpContext httpContext) => PolicyNameOf(httpContext) == PostersPolicy;
 
-    private static bool IsShareDocument(HttpContext httpContext) =>
+    internal static bool IsShareDocument(HttpContext httpContext) =>
         PolicyNameOf(httpContext) is { } policyName && FindPolicy(policyName) is { Scope: QuotaScope.Slug };
 
     private static bool IsRelayedForAnUnknownClient(HttpContext httpContext) =>
@@ -324,7 +324,8 @@ internal static class ClientIpPartitionKey
 
     internal static string Get(HttpContext httpContext)
     {
-        var ip = FirebaseHostingRelay.ClientOf(httpContext) ?? httpContext.Connection.RemoteIpAddress;
+        var relayedClient = RateLimitingExtensions.IsShareDocument(httpContext) ? FirebaseHostingRelay.ClientOf(httpContext) : null;
+        var ip = relayedClient ?? httpContext.Connection.RemoteIpAddress;
         if (ip is null)
             return "unknown";
         if (ip.IsIPv4MappedToIPv6)
