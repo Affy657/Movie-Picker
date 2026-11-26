@@ -1,4 +1,4 @@
-using MoviePicker.Api.Domain.Entities;
+using System.Text.Json.Serialization;
 
 namespace MoviePicker.Api.Application.DTOs;
 
@@ -7,20 +7,18 @@ public sealed class MyNightMoviesResponse
     public IReadOnlyList<MyNightMovieItem> Items { get; init; } = [];
 }
 
-public sealed class MyNightMovieItem
+public sealed class MyNightMovieItem : ProposedMovieItem
 {
-    public int TmdbId { get; init; }
-    public string Title { get; init; } = string.Empty;
-    public string Year { get; init; } = string.Empty;
-    public string? PosterPath { get; init; }
-    public double? VoteAverage { get; init; }
-    public int? RuntimeMinutes { get; init; }
-    public IReadOnlyList<int> GenreIds { get; init; } = [];
-    public MovieMediaType MediaType { get; init; } = MovieMediaType.Movie;
-    public DateTimeOffset LastProposedAt { get; init; }
+    [JsonPropertyOrder(1)]
     public bool ProposedByMe { get; init; }
+
+    [JsonPropertyOrder(2)]
     public bool IsWinner { get; init; }
+
+    [JsonPropertyOrder(3)]
     public bool IsWatched { get; init; }
+
+    [JsonPropertyOrder(4)]
     public NightMovieProposerResponse? LastProposer { get; init; }
 }
 
