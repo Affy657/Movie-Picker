@@ -4034,7 +4034,7 @@ export const en: Locale = {
       pipelineHeading: 'What holds the pipeline together',
       trigger: 'Trigger',
       triggerValue:
-        'Every push to master and every pull request towards master starts the pipeline. The code has no other long-lived branch: each delivery starts from a short branch, joins master the day it is ready and reaches production within the day, with its own version. The only other branch, feedback-attachments, holds no code: it keeps the screenshots that could be attached to suggestions until November 2026.',
+        'Every push to master and every pull request towards master starts the pipeline. The code has no other long-lived branch: each delivery starts from a short branch, joins master the day it is ready and reaches production within the day, with its own version.',
       triggerHint:
         'A push only starts the pipeline on master: a short branch is only run through its pull request, dependency bot included, so the pipeline never runs twice on the same commit.',
       scope: 'Computed scope',

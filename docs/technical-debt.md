@@ -24,11 +24,10 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | Dette | Zone | Sujet |
 |---|---|---|
 
-### Geste humain (1)
+### Geste humain (0)
 
 | Dette | Zone | Sujet |
 |---|---|---|
-| DEBT-052 | Sécurité et accès | le jeton OAuth du `gh` CLI du poste a servi de secret à l'API pendant trois mois |
 
 ### Différées (0)
 
@@ -49,16 +48,6 @@ Se traite en autonomie, sans attendre personne.
 
 L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 
-## DEBT-052 le jeton OAuth du `gh` CLI du poste a servi de secret à l'API pendant trois mois
-
-- state: humain
-- bloque: révoquer une autorisation OAuth du compte GitHub est refusé à l'agent (garde-fou des actions destructives), et `gh auth login` demande l'utilisateur
-- impact: du 2026-09-02 au 2026-11-26, la version 1 du secret `GITHUB_TOKEN` était le jeton `gho_` du `gh` CLI du poste (scopes `repo, workflow, gist, project, read:org`), lisible par l'identité d'exécution de l'API et monté dans chaque révision. Depuis le 2026-11-26 l'API lit un jeton fine-grained `movie-picker-api-feedback` (Issues en écriture et Metadata en lecture sur ce seul dépôt, expire le 2027-11-26, prouvé : écriture de fichier refusée en 403), les deux étapes ont été redéployées et la version 1 est détruite. Mais le jeton `gho_` lui-même reste valide sur le poste : une copie lue pendant ces trois mois pousserait encore sur master.
-- ou: GitHub, Settings / Applications / Authorized OAuth Apps / GitHub CLI
-- verify: `gh auth status` ; encore ouvert tant que l'autorisation « GitHub CLI » date d'avant le 2026-11-26 (colonne « Last used » de la page, ou la date du jeton dans `gh auth status --show-token` sans l'afficher)
-- fix: (humain) « Revoke » sur « GitHub CLI » dans Authorized OAuth Apps, puis `gh auth login --web --git-protocol https` sur le poste. Git n'est pas touché, il passe par « Git Credential Manager ».
-- fini-quand: le jeton `gho_` d'avant le 2026-11-26 est révoqué et `gh auth status` répond avec un nouveau jeton
-- piege: un jeton fine-grained expire : `pnpm run check:iam` signale une version de secret de plus d'un an, c'est le rappel de recréer `movie-picker-api-feedback` avant le 2027-11-26.
 ---
 
 # Différées
@@ -121,7 +110,7 @@ Publié sciemment, ne pas y revenir comme si c'était un oubli :
 
 1. Le courriel personnel de l'auteur est l'adresse de 916 commits sur 1 003. Réécrire l'historique changerait tous les SHA et casserait les liens des PR pour une adresse déjà publiée. `user.email` est posé en `noreply` en local sur ce dépôt ; un clone neuf hérite de la configuration globale, à reposer.
 2. `archive/docs/_ynov/` (consigne de module) est publié. Le dossier du titre (`archive/docs/RNCP/`, livrables notés et slides) a été retiré de l'arbre le 2026-09-22 et exporté en PDF hors dépôt : il reste lisible dans l'historique, ce qui est sans conséquence, l'audit ci-dessus n'y a trouvé aucune donnée personnelle.
-3. Les branches distantes sont visibles : `master`, `feedback-attachments` (où `GitHubIssueClient` publiait jusqu'au 2026-11-25 les captures jointes aux signalements, lisibles via `raw.githubusercontent.com` ; plus rien n'y écrit) et les branches Dependabot de passage. Les branches de worktree restent locales.
+3. Les branches distantes sont visibles : `master` et les branches Dependabot de passage. `feedback-attachments`, où `GitHubIssueClient` publiait jusqu'au 2026-11-25 les captures jointes aux signalements, a été supprimée le 2026-11-26 : les anciennes issues qui les affichaient n'ont plus d'image. Les branches de worktree restent locales.
 4. Les journaux et artefacts des runs Actions sont publics. Aucun `set -x` ni `echo` de secret dans les workflows ; `playwright-traces` (corps de requêtes et cookies) n'existe que sur un run rouge et vit 7 jours, `sbom-api` (`deploy.yml`, étape de recette) 30 jours. Ne pas allonger ces rétentions.
 
 Traité le 2026-09-10, ne pas refaire : identifiants d'infrastructure remplacés par des gabarits `<COMME_CECI>` (table dans `infra/README.md`) ; aucune contribution externe sans geste de l'auteur (`CONTRIBUTING.md`, licence, jobs d'entrée de `ci-cd.yml` conditionnés par `head.repo.fork != true`, ce qui n'est qu'un confort : la vraie barrière est l'approbation `all_external_contributors` ci-dessous, et `rollback-front.yml` ne republie que les archives d'un run de `deploy.yml` sur `master`) ; `SECURITY.md` détourne les failles vers un canal privé.

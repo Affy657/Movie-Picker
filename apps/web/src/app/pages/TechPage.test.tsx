@@ -793,7 +793,7 @@ describe('TechPage', () => {
     expect(section.textContent).toMatch(/chaque lundi/i);
     expect(section.textContent).toMatch(/36 heures/);
     expect(section.textContent).toMatch(/pas d.autre branche durable/i);
-    expect(section.textContent).toMatch(/feedback-attachments/);
+    expect(section.textContent).not.toMatch(/feedback-attachments/);
     expect(section.textContent).not.toMatch(/branche de version/i);
   });
 

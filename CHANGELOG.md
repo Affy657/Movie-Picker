@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Removed
+
+- **Les captures d’écran jointes aux anciennes suggestions** ne sont plus publiées sur GitHub : la branche du dépôt qui les gardait est supprimée, et le dossier technique ne la mentionne plus.
+
 ## [1.33.1] - 2026-11-26
 
 ### Security

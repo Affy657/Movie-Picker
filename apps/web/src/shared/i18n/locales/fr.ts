@@ -4080,7 +4080,7 @@ export const fr = {
       pipelineHeading: 'Ce qui tient la chaîne',
       trigger: 'Déclenchement',
       triggerValue:
-        'Toute poussée sur master et toute demande de fusion vers master lancent la chaîne. Le code n’a pas d’autre branche durable : chaque livraison part d’une branche courte, rejoint master le jour où elle est prête et part en production dans la journée, avec sa propre version. La seule autre branche, feedback-attachments, ne contient pas de code : elle garde les captures d’écran que l’on pouvait joindre aux suggestions jusqu’en novembre 2026.',
+        'Toute poussée sur master et toute demande de fusion vers master lancent la chaîne. Le code n’a pas d’autre branche durable : chaque livraison part d’une branche courte, rejoint master le jour où elle est prête et part en production dans la journée, avec sa propre version.',
       triggerHint:
         'Une poussée ne déclenche la chaîne que sur master : une branche courte n’est jouée que par sa demande de fusion, robot de dépendances compris, pour ne pas lancer deux fois la chaîne sur le même commit.',
       scope: 'Périmètre calculé',
