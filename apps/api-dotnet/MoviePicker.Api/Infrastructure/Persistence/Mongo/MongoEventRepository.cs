@@ -14,10 +14,13 @@ public sealed class MongoEventRepository : IEventRepository
     internal const string CreationRequestIndexName = "events_creator_creationRequest_unique";
 
     private const string WriteSeqElement = "writeSeq";
+    private const string ExprOperator = "$expr";
+    private const string IfNullOperator = "$ifNull";
+    private const string WinnerIdsField = "winnerIds";
 
     private static readonly BsonDocumentFilterDefinition<EventDocument> WheelPickNewerThanTheLastAnnouncement = new(
         new BsonDocument(
-            "$expr",
+            ExprOperator,
             new BsonDocument(
                 "$anyElementTrue",
                 new BsonArray
@@ -26,7 +29,7 @@ public sealed class MongoEventRepository : IEventRepository
                         "$map",
                         new BsonDocument
                         {
-                            { "input", new BsonDocument("$ifNull", new BsonArray { "$winners", new BsonArray() }) },
+                            { "input", new BsonDocument(IfNullOperator, new BsonArray { "$winners", new BsonArray() }) },
                             {
                                 "in",
                                 new BsonDocument(
@@ -42,18 +45,18 @@ public sealed class MongoEventRepository : IEventRepository
 
     private static readonly BsonDocumentFilterDefinition<EventDocument> EveryWinnerDrawn = new(
         new BsonDocument(
-            "$expr",
+            ExprOperator,
             new BsonDocument(
                 "$gte",
                 new BsonArray
                 {
-                    new BsonDocument("$size", new BsonDocument("$ifNull", new BsonArray { "$winners", new BsonArray() })),
+                    new BsonDocument("$size", new BsonDocument(IfNullOperator, new BsonArray { "$winners", new BsonArray() })),
                     new BsonDocument(
                         "$max",
                         new BsonArray
                         {
                             1,
-                            new BsonDocument("$ifNull", new BsonArray { "$config.winnerCount", EventConfig.DefaultWinnerCount })
+                            new BsonDocument(IfNullOperator, new BsonArray { "$config.winnerCount", EventConfig.DefaultWinnerCount })
                         })
                 })));
 
@@ -349,7 +352,7 @@ public sealed class MongoEventRepository : IEventRepository
             { "groupId", 1 },
             { "date", 1 },
             { "time", 1 },
-            { "winnerIds", "$winners.movieId" },
+            { WinnerIdsField, "$winners.movieId" },
             {
                 "weekday",
                 new BsonDocument(
@@ -373,14 +376,14 @@ public sealed class MongoEventRepository : IEventRepository
             { "from", MongoMovieRatingRepository.CollectionName },
             { "localField", "_id" },
             { "foreignField", "eventId" },
-            { "let", new BsonDocument("winnerIds", "$winnerIds") },
+            { "let", new BsonDocument(WinnerIdsField, "$winnerIds") },
             {
                 "pipeline",
                 new BsonArray
                 {
                     new BsonDocument(
                         "$match",
-                        new BsonDocument("$expr", new BsonDocument("$in", new BsonArray { "$movieId", "$$winnerIds" }))),
+                        new BsonDocument(ExprOperator, new BsonDocument("$in", new BsonArray { "$movieId", "$$winnerIds" }))),
                     new BsonDocument(
                         "$group",
                         new BsonDocument { { "_id", "$movieId" }, { "average", new BsonDocument("$avg", "$value") } })
@@ -413,7 +416,7 @@ public sealed class MongoEventRepository : IEventRepository
                         { "sortBy", new BsonDocument { { "date", -1 }, { "time", -1 }, { "_id", -1 } } },
                         {
                             "output",
-                            new BsonDocument { { "id", "$_id" }, { "date", "$date" }, { "time", "$time" }, { "winnerIds", "$winnerIds" } }
+                            new BsonDocument { { "id", "$_id" }, { "date", "$date" }, { "time", "$time" }, { WinnerIdsField, "$winnerIds" } }
                         }
                     })
             }
@@ -455,7 +458,7 @@ public sealed class MongoEventRepository : IEventRepository
                 groupId,
                 StringOrEmpty(last.GetValue("date", BsonNull.Value)),
                 StringOrEmpty(last.GetValue("time", BsonNull.Value)),
-                last.GetValue("winnerIds", new BsonArray()).AsBsonArray.Select(id => id.AsObjectId.ToString()).ToList()));
+                last.GetValue(WinnerIdsField, new BsonArray()).AsBsonArray.Select(id => id.AsObjectId.ToString()).ToList()));
     }
 
     private static string StringOrEmpty(BsonValue value) => value.IsString ? value.AsString : string.Empty;
@@ -473,7 +476,7 @@ public sealed class MongoEventRepository : IEventRepository
 
     private static BsonDocumentFilterDefinition<EventDocument> NightOverBy(DateTimeOffset utcNow) => new(
         new BsonDocument(
-            "$expr",
+            ExprOperator,
             new BsonDocument(
                 "$lte",
                 new BsonArray
@@ -496,7 +499,7 @@ public sealed class MongoEventRepository : IEventRepository
                         new BsonArray
                         {
                             (int)EventSchedule.PendingDelay.TotalMinutes,
-                            new BsonDocument("$ifNull", new BsonArray { new BsonDocument("$max", "$winners.runtimeMinutes"), 0 })
+                            new BsonDocument(IfNullOperator, new BsonArray { new BsonDocument("$max", "$winners.runtimeMinutes"), 0 })
                         })
                 }),
             (long)TimeSpan.FromMinutes(1).TotalMilliseconds

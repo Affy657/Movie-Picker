@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.DTOs;
@@ -7,7 +8,7 @@ public sealed class UserProposedMoviesResponse
     public IReadOnlyList<UserProposedMovieItem> Items { get; init; } = [];
 }
 
-public sealed class UserProposedMovieItem
+public abstract class ProposedMovieItem
 {
     public int TmdbId { get; init; }
     public string Title { get; init; } = string.Empty;
@@ -18,5 +19,10 @@ public sealed class UserProposedMovieItem
     public IReadOnlyList<int> GenreIds { get; init; } = [];
     public MovieMediaType MediaType { get; init; } = MovieMediaType.Movie;
     public DateTimeOffset LastProposedAt { get; init; }
+}
+
+public sealed class UserProposedMovieItem : ProposedMovieItem
+{
+    [JsonPropertyOrder(1)]
     public int ProposalCount { get; init; }
 }

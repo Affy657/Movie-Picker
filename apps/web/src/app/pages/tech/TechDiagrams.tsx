@@ -333,9 +333,7 @@ function ContractVertical() {
         label: t('tech.diagram.contractApi'),
         sub: [t('tech.diagram.contractApiSub')],
         heading: 'title',
-        logo: (top) => (
-          <DotNetLogo x={VERTICAL_W / 2 - ICON_SIZE.lg / 2} y={top} size={ICON_SIZE.lg} />
-        ),
+        Logo: DotNetLogo,
       },
       {
         key: 'file',
@@ -1192,7 +1190,7 @@ type VerticalStepSpec = {
   dashed?: boolean;
   detached?: boolean;
   arrow?: { stroke: string; width: number };
-  logo?: (top: number) => ReactNode;
+  Logo?: (props: { x: number; y: number; size: number }) => React.ReactElement;
 };
 
 type StepLine = WrappedLine & { key: string; className: string | undefined; part: 'label' | 'sub' };
@@ -1235,7 +1233,7 @@ function placeSteps(
   let y = top;
   for (const step of steps) {
     const lines = stepLines(step, width);
-    const height = stepHeight(lines.length) + (step.logo ? STEP_LOGO_ROOM : 0);
+    const height = stepHeight(lines.length) + (step.Logo ? STEP_LOGO_ROOM : 0);
     placed.push({ ...step, y, height, lines });
     y += height + VERTICAL_GAP;
   }
@@ -1247,7 +1245,8 @@ function VerticalStep({
   width = VERTICAL_BOX_W,
 }: Readonly<{ step: PlacedStep; width?: number }>) {
   const tone = STEP_TONES[step.tone ?? 'plain'];
-  const textTop = step.y + (step.logo ? STEP_LOGO_ROOM : 0);
+  const Logo = step.Logo;
+  const textTop = step.y + (Logo ? STEP_LOGO_ROOM : 0);
   const firstBaseline = step.lines.length > 1 ? 21 : 27;
   return (
     <g>
@@ -1262,7 +1261,9 @@ function VerticalStep({
         strokeWidth={(step.tone ?? 'plain') === 'plain' ? 1 : 1.5}
         strokeDasharray={step.dashed ? '4 3' : undefined}
       />
-      {step.logo?.(step.y + 10)}
+      {Logo ? (
+        <Logo x={VERTICAL_X + width / 2 - ICON_SIZE.lg / 2} y={step.y + 10} size={ICON_SIZE.lg} />
+      ) : null}
       {step.lines.map((line, lineIndex) => (
         <text
           key={line.key}

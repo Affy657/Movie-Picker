@@ -181,49 +181,70 @@ public sealed partial class TmdbMovieSearch
         var watchTask = _http.GetAsync(watchUrl, HttpCompletionOption.ResponseHeadersRead, ct);
         await Task.WhenAll(detailTask, watchTask).ConfigureAwait(false);
 
-        double? voteAverage = null;
-        int? runtimeMinutes = null;
-        string? releaseDate = null;
-        string? title = null;
         using var detailRes = await detailTask.ConfigureAwait(false);
         using var watchRes = await watchTask.ConfigureAwait(false);
         EnsureUsableAnswer(detailRes);
         EnsureUsableAnswer(watchRes);
-        if (detailRes.IsSuccessStatusCode)
-        {
-            await using var detailStream = await detailRes.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
-            using var detailDoc = await JsonDocument.ParseAsync(detailStream, cancellationToken: ct).ConfigureAwait(false);
-            if (detailDoc.RootElement.TryGetProperty("vote_average", out var va) && va.ValueKind == JsonValueKind.Number)
-                voteAverage = va.GetDouble();
-            runtimeMinutes = ReadRuntimeMinutes(detailDoc.RootElement, mediaType);
-            releaseDate = mediaType == MovieMediaType.Tv
-                ? ReadStringProp(detailDoc.RootElement, "first_air_date")
-                : ReadStringProp(detailDoc.RootElement, "release_date");
-            title = ReadTitle(detailDoc.RootElement, mediaType) is { Length: > 0 } read ? read : null;
-        }
+        var detail = detailRes.IsSuccessStatusCode
+            ? await ReadEnrichmentDetailAsync(detailRes, mediaType, ct).ConfigureAwait(false)
+            : EnrichmentDetail.Unknown;
+        var watch = watchRes.IsSuccessStatusCode
+            ? await ReadWatchProvidersAsync(watchRes, catalog.Region, ct).ConfigureAwait(false)
+            : WatchProviders.None();
+        return new TmdbMovieEnrichment(
+            detail.VoteAverage,
+            watch.Offers,
+            watch.PageUrl,
+            detail.RuntimeMinutes,
+            detail.ReleaseDate,
+            detail.Title);
+    }
 
-        string? watchPageUrl = null;
+    private sealed record EnrichmentDetail(double? VoteAverage, int? RuntimeMinutes, string? ReleaseDate, string? Title)
+    {
+        public static readonly EnrichmentDetail Unknown = new(null, null, null, null);
+    }
+
+    private sealed record WatchProviders(string? PageUrl, List<TmdbWatchProviderOffer> Offers)
+    {
+        public static WatchProviders None() => new(null, []);
+    }
+
+    private static async Task<EnrichmentDetail> ReadEnrichmentDetailAsync(
+        HttpResponseMessage response,
+        MovieMediaType mediaType,
+        CancellationToken ct)
+    {
+        await using var stream = await response.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+        using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
+        var root = doc.RootElement;
+        return new EnrichmentDetail(
+            root.TryGetProperty("vote_average", out var va) && va.ValueKind == JsonValueKind.Number ? va.GetDouble() : null,
+            ReadRuntimeMinutes(root, mediaType),
+            ReadStringProp(root, mediaType == MovieMediaType.Tv ? "first_air_date" : "release_date"),
+            ReadTitle(root, mediaType) is { Length: > 0 } title ? title : null);
+    }
+
+    private static async Task<WatchProviders> ReadWatchProvidersAsync(
+        HttpResponseMessage response,
+        string region,
+        CancellationToken ct)
+    {
+        await using var stream = await response.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+        using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
+        if (!doc.RootElement.TryGetProperty(ResultsProperty, out var results)
+            || !results.TryGetProperty(region, out var regionObj)
+            || regionObj.ValueKind != JsonValueKind.Object)
+            return WatchProviders.None();
+
+        var pageUrl = regionObj.TryGetProperty("link", out var linkEl) && linkEl.ValueKind == JsonValueKind.String
+            ? linkEl.GetString()
+            : null;
         var offers = new List<TmdbWatchProviderOffer>();
-        if (watchRes.IsSuccessStatusCode)
-        {
-            await using var watchStream = await watchRes.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
-            using var watchDoc = await JsonDocument.ParseAsync(watchStream, cancellationToken: ct).ConfigureAwait(false);
-            if (!watchDoc.RootElement.TryGetProperty(ResultsProperty, out var results))
-                return new TmdbMovieEnrichment(voteAverage, offers, null, runtimeMinutes, releaseDate, title);
-
-            if (!results.TryGetProperty(catalog.Region, out var regionObj) || regionObj.ValueKind != JsonValueKind.Object)
-                return new TmdbMovieEnrichment(voteAverage, offers, null, runtimeMinutes, releaseDate, title);
-
-            if (regionObj.TryGetProperty("link", out var linkEl) && linkEl.ValueKind == JsonValueKind.String)
-                watchPageUrl = linkEl.GetString();
-
-            AppendProviders(regionObj, "flatrate", "flatrate", offers);
-            AppendProviders(regionObj, "rent", "rent", offers);
-            AppendProviders(regionObj, "buy", "buy", offers);
-        }
-
-        var deduped = DedupeProviders(offers);
-        return new TmdbMovieEnrichment(voteAverage, deduped, watchPageUrl, runtimeMinutes, releaseDate, title);
+        AppendProviders(regionObj, "flatrate", "flatrate", offers);
+        AppendProviders(regionObj, "rent", "rent", offers);
+        AppendProviders(regionObj, "buy", "buy", offers);
+        return new WatchProviders(pageUrl, DedupeProviders(offers));
     }
 
     private static void EnsureUsableAnswer(HttpResponseMessage response)

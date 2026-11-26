@@ -52,7 +52,7 @@ public sealed class ShareDocumentForwardedHopsLoggingMiddlewareTests
         Assert.Equal(LogLevel.Information, Assert.Single(logger.Entries).Level);
         Assert.Equal(2, StateOf(logger, "ForwardedHopCount"));
         Assert.Equal("false,true", StateOf(logger, "ForwardedHopsInGoogleFrontEnd"));
-        Assert.Equal(true, StateOf(logger, "LastForwardedHopInGoogleFrontEnd"));
+        Assert.True(Assert.IsType<bool>(StateOf(logger, "LastForwardedHopInGoogleFrontEnd")));
         Assert.Equal(RateLimitingExtensions.InvitationDocumentPolicy, StateOf(logger, "ShareDocumentPolicy"));
     }
 
@@ -62,7 +62,7 @@ public sealed class ShareDocumentForwardedHopsLoggingMiddlewareTests
         var logger = await ServeAsync($"{HostingAddress}, {ClientAddress}");
 
         Assert.Equal("true,false", StateOf(logger, "ForwardedHopsInGoogleFrontEnd"));
-        Assert.Equal(false, StateOf(logger, "LastForwardedHopInGoogleFrontEnd"));
+        Assert.False(Assert.IsType<bool>(StateOf(logger, "LastForwardedHopInGoogleFrontEnd")));
     }
 
     [Fact]
@@ -72,7 +72,7 @@ public sealed class ShareDocumentForwardedHopsLoggingMiddlewareTests
 
         Assert.Equal(3, StateOf(logger, "ForwardedHopCount"));
         Assert.Equal("false,false,true", StateOf(logger, "ForwardedHopsInGoogleFrontEnd"));
-        Assert.Equal(true, StateOf(logger, "LastForwardedHopInGoogleFrontEnd"));
+        Assert.True(Assert.IsType<bool>(StateOf(logger, "LastForwardedHopInGoogleFrontEnd")));
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public sealed class ShareDocumentForwardedHopsLoggingMiddlewareTests
 
         Assert.Equal(0, StateOf(logger, "ForwardedHopCount"));
         Assert.Equal(string.Empty, StateOf(logger, "ForwardedHopsInGoogleFrontEnd"));
-        Assert.Equal(false, StateOf(logger, "LastForwardedHopInGoogleFrontEnd"));
+        Assert.False(Assert.IsType<bool>(StateOf(logger, "LastForwardedHopInGoogleFrontEnd")));
     }
 
     [Fact]
