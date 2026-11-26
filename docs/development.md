@@ -128,8 +128,9 @@ Tous se lancent à la racine du dépôt.
 | `pnpm dev:full`, `pnpm dev:web`, `pnpm dev:api-dotnet` | Démarrage local |
 | `pnpm build` | Build du front par Turbo |
 | `pnpm lint`, `pnpm run lint:eslint` | Types puis règles ESLint côté front ; la seconde forme ne joue que les règles |
-| `pnpm run check:static` | Toutes les portes statiques : architecture, tests des scripts, compatibilité du contrat avec la version publiée, `pnpm lint`, Prettier, knip ; c'est le hook pre-push, le job `lint-web` et la voie node de `verify:local` |
+| `pnpm run check:static` | Toutes les portes statiques : architecture, tests des scripts, accord des secrets montés, compatibilité du contrat avec la version publiée, `pnpm lint`, Prettier, knip ; c'est le hook pre-push, le job `lint-web` et la voie node de `verify:local` |
 | `pnpm run check:architecture` | Règles d'architecture |
+| `pnpm run check:secret-mounts` | Compare, pour la production et la recette, les secrets que `deploy.yml` monte aux listes de `infra/terraform` ; échoue sur tout écart absent de `ALLOWED_GAPS`, et sur un écart autorisé qui n'existe plus |
 | `pnpm run check:unused` | Fichiers, exports et dépendances inutilisés (knip) |
 | `pnpm run check:workflows` | actionlint (+ shellcheck) et zizmor sur `.github/`, par Docker, joué tel quel par le job `lint-workflows` |
 | `pnpm run check:terraform` | `terraform fmt -check` puis `validate` sur chaque module racine de `infra/terraform/`, par Docker, joué tel quel par le job `lint-terraform` |
@@ -140,17 +141,19 @@ Tous se lancent à la racine du dépôt.
 | `pnpm run format:dotnet`, `pnpm run format:dotnet:check` | Style C#, après `dotnet restore` ; la vérification joue les passes `whitespace` et `style`, les analyseurs étant ceux du build |
 | `pnpm test`, `pnpm run test:coverage` | Tests front, Vitest |
 | `pnpm run test:changed` | Tests front touchés par le diff depuis `origin/master`, la boucle d'avant push |
-| `pnpm run test:api:mongo` | Tests d'intégration API contre une vraie MongoDB, avec la porte de couverture des adaptateurs Mongo, puis les tests des scripts qui interrogent MongoDB (`scripts/mongo-tests/`, la requête de `pnpm run usage` sur des documents semés) ; joué tel quel par le job `test-api` |
+| `pnpm run test:api:mongo` | Tests d'intégration API contre une vraie MongoDB, avec la porte de couverture des adaptateurs Mongo, puis les tests des scripts qui interrogent MongoDB (`scripts/mongo-tests/`, la requête de `pnpm run usage` et le retrait de `pnpm run photo:remove` sur des documents semés) ; joué tel quel par le job `test-api` |
 | `pnpm run test:api:mutation` | Passe Stryker.NET, rapport dans `artifacts/stryker` |
 | `pnpm run test:e2e`, `pnpm run test:e2e:ci` | Playwright, la seconde forme construisant le front avec un stub TMDB ; l'API tourne sur la base de `E2E_MONGODB_URI` quand elle est posée (le job `e2e`), en mémoire sinon |
 | `pnpm run test:e2e:local` | La suite Playwright depuis le poste, serveurs de dev allumés : API de test en Release sur 5010, sur MongoDB (le conteneur de test sur 27018, base `moviepicker_e2e` vidée à chaque run, ou `E2E_MONGODB_URI`), front construit contre elle ; `--in-memory` pour la base en mémoire |
 | `pnpm run openapi:sync` | Régénère le contrat OpenAPI (`openapi:export`) puis les types du front (`openapi:types`), à committer avec le changement d'API qui les a fait bouger |
 | `pnpm run openapi:types:check` | Dérive des types générés par rapport au contrat exporté |
-| `pnpm run check:contract-compat [<ref>]` | Compare le contrat de la dernière version publiée (dernier tag `v*` d'`origin`, ou `<ref>`) à l'arbre courant : échoue si une route, une méthode ou une propriété de réponse lue par le front N-1 a disparu ou est devenue optionnelle |
+| `pnpm run check:contract-compat [<ref>]` | Compare le contrat de la dernière version publiée (dernier tag `v*` d'`origin`, ou `<ref>`) à l'arbre courant : échoue si une route, une méthode ou une propriété de réponse lue par le front N-1 a disparu ou est devenue optionnelle, sauf retrait daté de `ALLOWED_REMOVALS` |
+| `pnpm run check:removal-schedule` | Échéancier des retraits datés (`scripts/removal-schedule.json` et migrations de données) : échoue quand une date est passée et que la chose existe encore, ou quand une ligne ne prouve plus rien ; règles dans la section « Migrations de données » d'`AGENTS.md` |
 | `pnpm --filter web prerender` | Prérendu des routes publiques indexables, à lancer après un build |
 | `pnpm run lighthouse` | Lighthouse sur le build, demande Node 22+ et Chrome |
 | `pnpm run capture:screenshots` | Captures du README, sur l'application lancée en local |
 | `pnpm run usage [-- --days 30 \| --since AAAA-MM-JJ] [--db <base>] [--json]` | Ce qui sert sur une période de jours de Paris : l'entonnoir du lien d'une soirée, lu dans les totaux anonymes que l'API tient par jour (`usage_counts`), et l'usage des fonctionnalités, lu dans la base (notes, recaps, pioches, « À voir », Letterboxd). Lecture seule, par l'image MongoDB épinglée dans Docker ; l'URI vient de `MONGODB_URI` ou du secret du même nom par gcloud. La requête est testée par `scripts/mongo-tests/usage.test.mjs`, que joue `pnpm run test:api:mongo`, et ce test refuse un champ semé que les documents de l'API ne déclarent plus. Le tableau de bord PostHog « Ce qui sert » montre le détail des visiteurs qui acceptent la mesure |
+| `pnpm run photo:remove -- --handle <handle> --photo avatar\|banner [--db <base>]` | Retire une photo de profil ou une bannière signalée : efface le pointeur du compte et les images stockées, en une transaction, **en production** sans `--db`. Même accès que `pnpm run usage` (Docker, `MONGODB_URI` ou le secret par gcloud). Procédure complète dans [`runbook-photo-moderation.md`](runbook-photo-moderation.md) |
 | `pnpm run verify:local` | La chaîne complète, quatorze étapes en trois voies concurrentes puis la suite front seule, durées affichées en fin de run ; chaque porte qu'elle partage avec la CI y passe par le même `pnpm run` |
 
 ## Captures du README

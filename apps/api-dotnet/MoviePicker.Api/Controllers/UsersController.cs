@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.AvatarPhotos;
 using MoviePicker.Api.Application.UseCases.EventTemplates;
@@ -12,6 +13,7 @@ using MoviePicker.Api.Application.UseCases.ProfileBanners;
 using MoviePicker.Api.Application.UseCases.SearchUsers;
 using MoviePicker.Api.Application.UseCases.UserMovies;
 using MoviePicker.Api.Application.UseCases.UserStats;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Web;
 
@@ -78,12 +80,13 @@ public sealed class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> GetUserWatchedMovies(
         string handle,
+        [FromQuery] int skip,
         [FromQuery] int take,
         [FromServices] IGetUserWatchedMoviesHandler handler,
         CancellationToken ct)
     {
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var result = await handler.HandleAsync(handle, currentUserId, take, ct);
+        var result = await handler.HandleAsync(handle, currentUserId, skip, take, ct);
         return Ok(result);
     }
 
@@ -146,12 +149,13 @@ public sealed class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> GetMyWatchedMovies(
+        [FromQuery] int skip,
         [FromQuery] int take,
         [FromServices] IGetUserWatchedMoviesHandler handler,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var result = await handler.HandleForUserAsync(userId, take, ct);
+        var result = await handler.HandleForUserAsync(userId, skip, take, ct);
         return Ok(result);
     }
 
@@ -397,6 +401,27 @@ public sealed class UsersController : ControllerBase
         CancellationToken ct)
     {
         return Ok(await handler.HandleAsync(userId, ct));
+    }
+
+    [HttpPost("{handle}/photo-reports")]
+    [Authorize]
+    [EnableRateLimiting(RateLimitingExtensions.ProfilePhotoReportPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.ProfilePhotoReportPolicy)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> ReportPhoto(
+        string handle,
+        [FromBody] ReportProfilePhotoRequest request,
+        [FromServices] IReportProfilePhotoHandler handler,
+        [FromServices] IOptions<MoviePickerOptions> options,
+        [CurrentUserId] string userId,
+        CancellationToken ct)
+    {
+        await handler.HandleAsync(userId, handle, request, options.Value.ResolvedApiBaseUrl(), ct);
+        return NoContent();
     }
 
     [HttpPost("{handle}/follow")]

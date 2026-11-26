@@ -58,7 +58,9 @@ public sealed class AddMovieHandlerNotificationTests
         _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _movieRepo.Setup(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Movie m, CancellationToken _) => m with { Id = "mov1" });
-        _tmdb.Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+        _movieRepo.Setup(r => r.InsertWithUntimedIdAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Movie m, CancellationToken _) => m with { Id = "mov1" });
+        _tmdb.Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TmdbMovieDetails(27205, "Inception", null, null, null, [], 148, [], [], "2010-07-16"));
 
         _sut = new AddMovieHandler(

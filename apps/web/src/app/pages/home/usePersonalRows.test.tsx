@@ -41,10 +41,10 @@ describe('home personal rows once the account is gone', () => {
       apiJson<'WatchlistResponse'>({ items: [matrixToWatch], total: 1, hasMore: false })
     ),
     http.get(`${TEST_API_V1}/users/me/following-watched-movies`, () =>
-      apiJson<'UserWatchedMoviesResponse'>({ items: [matrixWatched], total: null })
+      apiJson<'UserWatchedMoviesResponse'>({ items: [matrixWatched], total: null, hasMore: false })
     ),
     http.get(`${TEST_API_V1}/users/me/watched-movies`, () =>
-      apiJson<'UserWatchedMoviesResponse'>({ items: [matrixWatched], total: null })
+      apiJson<'UserWatchedMoviesResponse'>({ items: [matrixWatched], total: null, hasMore: false })
     )
   );
 

@@ -11,7 +11,6 @@ using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Tests.Builders;
 using MoviePicker.Api.Tests.Logging;
-using MoviePicker.Api.Tests.UseCases.EventTemplates;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.ProfileBanners;
@@ -25,7 +24,8 @@ public sealed class ProfileBannerHandlersTests
     private static readonly DateTimeOffset Now = new(2026, 11, 20, 9, 0, 0, TimeSpan.Zero);
 
     private readonly InMemoryUserRepository _users = new();
-    private readonly InMemoryBannerPhotoRepository _photos = new();
+    private readonly MovableClock _clock = new(Now);
+    private readonly InMemoryBannerPhotoRepository _photos;
     private readonly MoviePickerOptions _options = new();
     private readonly Mock<ITmdbMovieSearch> _tmdb = new();
     private readonly CapturingLogger<ProfileBannerWriter> _writerLogs = new();
@@ -36,11 +36,12 @@ public sealed class ProfileBannerHandlersTests
 
     public ProfileBannerHandlersTests()
     {
+        _photos = new InMemoryBannerPhotoRepository(_clock);
         var writer = new ProfileBannerWriter(
             _users,
             _photos,
             new InMemoryUnitOfWork(),
-            new FrozenClock(Now),
+            _clock,
             Options.Create(_options),
             _writerLogs);
         _set = new SetProfileBannerHandler(writer, _tmdb.Object);
@@ -50,7 +51,7 @@ public sealed class ProfileBannerHandlersTests
 
         _tmdb.Setup(t => t.GetBackdropsAsync(DuneId, It.IsAny<CancellationToken>()))
             .ReturnsAsync([new TmdbBackdrop(SunsetPath, 3840, 2160), new TmdbBackdrop(DuelPath, 1920, 1080)]);
-        _tmdb.Setup(t => t.GetDetailsAsync(DuneId, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetDetailsAsync(DuneId, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Details(DuneId, "Dune : Deuxième partie"));
     }
 
@@ -210,7 +211,43 @@ public sealed class ProfileBannerHandlersTests
     }
 
     [Fact]
-    public async Task Upload_ReplacingThePhoto_DeletesThePreviousOne()
+    public async Task Upload_JpegFromOutsideTheApp_IsStoredWithoutItsMetadataNorTheBytesAfterTheImage()
+    {
+        var user = await UserAsync();
+        var clean = Jpeg();
+        var forged = ImageHeaders.WithExif(clean, "GPS 44.8378N 0.5792W", trailer: "<script>alert(1)</script>");
+
+        var profile = await _upload.HandleAsync(user.Id, Upload(forged));
+
+        Assert.Equal(clean, (await _photos.GetByKeyAsync(KeyOf(profile.BannerPhotoUrl!)))!.Data);
+    }
+
+    [Fact]
+    public async Task Upload_PngWithATextChunk_IsStoredWithoutIt()
+    {
+        var user = await UserAsync();
+        var clean = ImageHeaders.Png(1600, 900);
+
+        var profile = await _upload.HandleAsync(user.Id, Upload(ImageHeaders.WithTextChunk(clean, "Author: Lea Moreau"), "image/png"));
+
+        Assert.Equal(clean, (await _photos.GetByKeyAsync(KeyOf(profile.BannerPhotoUrl!)))!.Data);
+    }
+
+    [Fact]
+    public async Task Upload_ImageTheCleanerCannotRead_IsRefusedAndChangesNothing()
+    {
+        var user = await UserAsync();
+
+        var error = await Assert.ThrowsAsync<BadRequestException>(
+            () => _upload.HandleAsync(user.Id, Upload(ImageHeaders.PngWithTruncatedChunk(1600, 900), "image/png")));
+
+        Assert.Equal(ErrorCodes.BannerPhotoInvalid, error.Reason);
+        Assert.Null((await _users.GetByIdAsync(user.Id))!.BannerPhoto);
+        Assert.Equal(0, await _photos.EstimatedCountAsync());
+    }
+
+    [Fact]
+    public async Task Upload_ReplacingThePhoto_KeepsServingThePreviousOneForTheViewsStillShowingIt()
     {
         var user = await UserAsync();
         var first = await _upload.HandleAsync(user.Id, Upload(Jpeg()));
@@ -218,6 +255,8 @@ public sealed class ProfileBannerHandlersTests
         var second = await _upload.HandleAsync(user.Id, Upload(ImageHeaders.WebpLossy(1920, 1080), "image/webp"));
 
         Assert.NotEqual(first.BannerPhotoUrl, second.BannerPhotoUrl);
+        Assert.NotNull(await _photos.GetByKeyAsync(KeyOf(first.BannerPhotoUrl!)));
+        _clock.Advance(StoredPhoto.ReplacedPhotoLifetime);
         Assert.Null(await _photos.GetByKeyAsync(KeyOf(first.BannerPhotoUrl!)));
         Assert.NotNull(await _photos.GetByKeyAsync(KeyOf(second.BannerPhotoUrl!)));
     }

@@ -35,11 +35,13 @@ public sealed class WatchlistController : ControllerBase
     [ProducesResponseType(typeof(WatchlistAvailabilityResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> GetAvailability(
+        [FromQuery] int skip,
+        [FromQuery] int? take,
         [FromServices] IGetWatchlistAvailabilityHandler handler,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var result = await handler.HandleAsync(userId, ct);
+        var result = await handler.HandleAsync(userId, skip, take, ct);
         return Ok(result);
     }
 

@@ -72,6 +72,8 @@ export function buildEventDetail({
     isHost: false,
     isFinished: false,
     lifecycle: overrides.isFinished ? 'finished' : 'upcoming',
+    ratingPromptDue: false,
+    removedPeople: [],
     viewerRemoved: false,
     participantCount: participants.length,
     movieCount: 0,

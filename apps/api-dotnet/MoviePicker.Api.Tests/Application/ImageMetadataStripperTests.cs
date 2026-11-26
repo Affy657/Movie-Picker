@@ -1,9 +1,9 @@
 using System.Buffers.Binary;
 using System.Text;
-using MoviePicker.Api.Application.UseCases.IdeaSuggestions;
+using MoviePicker.Api.Application;
 using Xunit;
 
-namespace MoviePicker.Api.Tests.UseCases.IdeaSuggestions;
+namespace MoviePicker.Api.Tests.Application;
 
 public sealed class ImageMetadataStripperTests
 {

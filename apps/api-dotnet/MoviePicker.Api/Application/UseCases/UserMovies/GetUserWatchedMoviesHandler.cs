@@ -33,6 +33,7 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
     public async Task<UserWatchedMoviesResponse> HandleAsync(
         string handle,
         string? currentUserId,
+        int skip,
         int take,
         CancellationToken ct = default)
     {
@@ -40,34 +41,42 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
         if (!PublicProfileGuard.CanSeeWatched(user, currentUserId))
             throw Errors.WatchedNotFound();
 
-        return await HandleNightsForUserAsync(user.Id, take, ct);
+        return await ListAsync(user.Id, skip, take, nightsOnly: true, ct);
     }
 
     public Task<UserWatchedMoviesResponse> HandleForUserAsync(
         string userId,
+        int skip,
         int take,
         CancellationToken ct = default) =>
-        ListAsync(userId, take, nightsOnly: false, ct);
+        ListAsync(userId, skip, take, nightsOnly: false, ct);
 
     public Task<UserWatchedMoviesResponse> HandleNightsForUserAsync(
         string userId,
         int take,
         CancellationToken ct = default) =>
-        ListAsync(userId, take, nightsOnly: true, ct);
+        ListAsync(userId, 0, take, nightsOnly: true, ct);
 
-    private async Task<UserWatchedMoviesResponse> ListAsync(string userId, int take, bool nightsOnly, CancellationToken ct)
+    private async Task<UserWatchedMoviesResponse> ListAsync(
+        string userId,
+        int skip,
+        int take,
+        bool nightsOnly,
+        CancellationToken ct)
     {
+        var effectiveSkip = Math.Max(0, skip);
         var effectiveTake = take <= 0 ? DefaultTake : Math.Min(take, MaxTake);
         var history = await _history.ReadRatedAsync(userId, ct);
         var films = nightsOnly
             ? history.Films.Where(film => film.LatestNight is not null).ToList()
             : history.Films;
-        var page = films.Take(effectiveTake).Select(ToItem).ToList();
+        var page = films.Skip(effectiveSkip).Take(effectiveTake).Select(ToItem).ToList();
 
         return new UserWatchedMoviesResponse
         {
             Items = await WatchedMoviesFacts.WithTmdbFactsAsync(page, _tmdb, _options, ct),
             Total = films.Count,
+            HasMore = effectiveSkip + page.Count < films.Count,
         };
     }
 

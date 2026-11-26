@@ -306,6 +306,26 @@ public sealed class ServiceCollectionExtensionsBranchTests
     }
 
     [Fact]
+    public void PublicApiBaseUrl_IsTrimmedOfItsTrailingSlash()
+    {
+        var options = OptionsFrom(new Dictionary<string, string?>
+        {
+            ["PUBLIC_API_BASE_URL"] = "  https://api.staging.example/  "
+        });
+
+        Assert.Equal("https://api.staging.example", options.ResolvedApiBaseUrl());
+    }
+
+    [Fact]
+    public void PublicApiBaseUrl_BlankKeepsThePublicApiOfProduction()
+    {
+        Assert.Equal("https://api.movie-picker.fr", OptionsFrom([]).ResolvedApiBaseUrl());
+        Assert.Equal(
+            "https://api.movie-picker.fr",
+            OptionsFrom(new Dictionary<string, string?> { ["PUBLIC_API_BASE_URL"] = "  " }).ResolvedApiBaseUrl());
+    }
+
+    [Fact]
     public void SchedulerOidc_BlankReadsAsAbsent_AudienceLosesItsTrailingSlash()
     {
         Assert.Null(OptionsFrom([]).SchedulerOidcAudience);
@@ -327,6 +347,15 @@ public sealed class ServiceCollectionExtensionsBranchTests
         Assert.Equal(
             "jeton",
             OptionsFrom(new Dictionary<string, string?> { ["KOFI_WEBHOOK_TOKEN"] = " jeton " }).KofiWebhookToken);
+    }
+
+    [Fact]
+    public void ContactEmailAddress_IsThePublicContactUnlessConfigured()
+    {
+        Assert.Equal("contact@movie-picker.fr", OptionsFrom([]).ContactEmailAddress);
+        Assert.Equal(
+            "moderation@example.test",
+            OptionsFrom(new Dictionary<string, string?> { ["CONTACT_EMAIL_ADDRESS"] = " moderation@example.test " }).ContactEmailAddress);
     }
 
     [Fact]

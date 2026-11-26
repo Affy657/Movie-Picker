@@ -37,11 +37,16 @@ public sealed class SharedRateLimitFilterTests
             new FakeHostEnvironment { EnvironmentName = environmentName ?? Environments.Production },
             NullLogger<SharedRateLimitFilter>.Instance);
 
-    private static ActionExecutingContext BuildContext(params object[] endpointMetadata)
+    private const string HostingAddress = "66.249.93.69";
+
+    private static ActionExecutingContext BuildContext(params object[] endpointMetadata) =>
+        BuildContextFrom("203.0.113.7", endpointMetadata);
+
+    private static ActionExecutingContext BuildContextFrom(string address, params object[] endpointMetadata)
     {
         var httpContext = new DefaultHttpContext();
         httpContext.Response.Body = new MemoryStream();
-        httpContext.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("203.0.113.7");
+        httpContext.Connection.RemoteIpAddress = System.Net.IPAddress.Parse(address);
 
         var actionDescriptor = new ActionDescriptor { EndpointMetadata = endpointMetadata };
         var actionContext = new ActionContext(httpContext, new RouteData(), actionDescriptor);
@@ -165,7 +170,7 @@ public sealed class SharedRateLimitFilterTests
     [Theory]
     [InlineData(nameof(MovieShareDocumentController.GetFilm))]
     [InlineData(nameof(MovieShareDocumentController.GetSeries))]
-    public async Task MovieDocument_DistinctMoviesPastTheRouteCeiling_AreRefused(string action)
+    public async Task MovieDocument_DistinctMoviesRelayedByHostingPastTheRouteCeiling_AreRefused(string action)
     {
         var ceiling = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.MovieDocumentCeilingPolicy)!.Value;
         var attributes = typeof(MovieShareDocumentController).GetMethod(action)!
@@ -179,7 +184,7 @@ public sealed class SharedRateLimitFilterTests
         var served = 0;
         for (var tmdbId = 1; tmdbId <= ceiling.PermitLimit + 1; tmdbId++)
         {
-            var context = BuildContext(attributes);
+            var context = BuildContextFrom(HostingAddress, attributes);
             context.HttpContext.Request.RouteValues["slug"] = $"{tmdbId}-x";
             var (next, wasCalled) = TrackedNext();
             await filter.OnActionExecutionAsync(context, next);
@@ -191,7 +196,7 @@ public sealed class SharedRateLimitFilterTests
     }
 
     [Fact]
-    public async Task MovieDocument_OneMovieUnderTwoTitles_CountsInOneBucket()
+    public async Task MovieDocument_OneMovieUnderTwoTitlesRelayedByHosting_CountsInOneBucket()
     {
         var policy = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.MovieDocumentPolicy)!.Value;
         var filter = new SharedRateLimitFilter(
@@ -203,8 +208,37 @@ public sealed class SharedRateLimitFilterTests
         var served = 0;
         for (var attempt = 0; attempt <= policy.PermitLimit; attempt++)
         {
-            var context = BuildContext(new SharedRateLimitAttribute(policy.Name));
+            var context = BuildContextFrom(HostingAddress, new SharedRateLimitAttribute(policy.Name));
             context.HttpContext.Request.RouteValues["slug"] = $"27205-titre-{attempt}";
+            var (next, wasCalled) = TrackedNext();
+            await filter.OnActionExecutionAsync(context, next);
+            if (wasCalled())
+                served++;
+        }
+
+        Assert.Equal(policy.PermitLimit, served);
+    }
+
+    [Theory]
+    [InlineData(typeof(EventRecapController), nameof(EventRecapController.Get), RateLimitingExtensions.RecapDocumentPolicy)]
+    [InlineData(typeof(EventInvitationController), nameof(EventInvitationController.Get), RateLimitingExtensions.InvitationDocumentPolicy)]
+    [InlineData(typeof(MovieShareDocumentController), nameof(MovieShareDocumentController.GetFilm), RateLimitingExtensions.MovieDocumentPolicy)]
+    [InlineData(typeof(ProfileShareDocumentController), nameof(ProfileShareDocumentController.GetProfile), RateLimitingExtensions.ProfileDocumentPolicy)]
+    public async Task Document_CalledDirectlyOnRandomSlugs_IsRefusedPastTheAddressQuota(Type controller, string action, string policyName)
+    {
+        var policy = RateLimitingExtensions.FindPolicy(policyName)!.Value;
+        var attributes = controller.GetMethod(action)!.GetCustomAttributes(typeof(SharedRateLimitAttribute), inherit: false);
+        var filter = new SharedRateLimitFilter(
+            new InMemoryRateLimitCounterStore(new FakeTimeProvider(Now)),
+            new FakeTimeProvider(Now),
+            new FakeHostEnvironment { EnvironmentName = Environments.Production },
+            NullLogger<SharedRateLimitFilter>.Instance);
+
+        var served = 0;
+        for (var attempt = 1; attempt <= policy.PermitLimit + 1; attempt++)
+        {
+            var context = BuildContextFrom("203.0.113.9", attributes);
+            context.HttpContext.Request.RouteValues["slug"] = $"{attempt}-random";
             var (next, wasCalled) = TrackedNext();
             await filter.OnActionExecutionAsync(context, next);
             if (wasCalled())

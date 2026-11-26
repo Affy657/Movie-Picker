@@ -72,7 +72,7 @@ public sealed class MarkWatchedHandlerTests
     public async Task HandleAsync_MissingFacts_AreTakenFromTmdb()
     {
         _kit.Tmdb
-            .Setup(t => t.GetDetailsAsync(603, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(603, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TmdbMovieDetails(603, "Matrix", null, null, null, [], 136, [], DetailGenres, "1999-03-31", VoteAverage: 8.2));
 
         await _kit.MarkAsync(603);
@@ -86,7 +86,7 @@ public sealed class MarkWatchedHandlerTests
     public async Task HandleAsync_StoresTheTitleYearAndFactsOfTmdb_NotThoseTheClientSent()
     {
         _kit.Tmdb
-            .Setup(t => t.GetDetailsAsync(550, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(550, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TmdbMovieDetails(550, "Fight Club", null, null, null, [], 139, [], DetailGenres, "1999-10-15", VoteAverage: 8.4));
         await _kit.AccountAsync(Me);
 

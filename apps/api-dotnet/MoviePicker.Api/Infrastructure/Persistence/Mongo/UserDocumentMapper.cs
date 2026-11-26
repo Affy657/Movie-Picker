@@ -10,6 +10,7 @@ public static class UserDocumentMapper
         {
             Id = doc.Id,
             Email = doc.Email,
+            EmailVerifiedAt = doc.EmailVerifiedAt is { } verifiedAt ? new DateTimeOffset(verifiedAt, TimeSpan.Zero) : null,
             PasswordHash = doc.PasswordHash,
             DisplayName = doc.DisplayName,
             Identities = (doc.Identities ?? []).ConvertAll(ToIdentityDomain),
@@ -57,6 +58,7 @@ public static class UserDocumentMapper
         {
             Id = user.Id,
             Email = user.Email,
+            EmailVerifiedAt = user.EmailVerifiedAt?.UtcDateTime,
             PasswordHash = user.PasswordHash,
             DisplayName = user.DisplayName,
             Identities = user.Identities.Count == 0 ? null : user.Identities.Select(ToIdentityDocument).ToList(),

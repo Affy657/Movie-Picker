@@ -80,7 +80,7 @@ describe('ProfilePage (MSW)', () => {
   const server = setupServer(
     http.get(`${TEST_API_V1}/users/:handle/stats`, () => apiJson<'UserStatsResponse'>(EMPTY_STATS)),
     http.get(`${TEST_API_V1}/users/:handle/watched-movies`, () =>
-      apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null })
+      apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
     ),
     http.get(`${TEST_API_V1}/users/:handle/watchlist`, () =>
       apiJson<'WatchlistResponse'>({ items: [], total: 0, hasMore: false })
@@ -353,7 +353,7 @@ describe('ProfilePage (MSW)', () => {
       http.get(`${TEST_API_V1}/users/alice`, () => new Promise<never>(() => undefined)),
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () => {
         asked = true;
-        return apiJson<'UserWatchedMoviesResponse'>({ items: [], total: 0 });
+        return apiJson<'UserWatchedMoviesResponse'>({ items: [], total: 0, hasMore: false });
       })
     );
 
@@ -470,6 +470,7 @@ describe('ProfilePage (MSW)', () => {
             }),
           ],
           total: 1,
+          hasMore: false,
         })
       )
     );
@@ -512,6 +513,7 @@ describe('ProfilePage (MSW)', () => {
             }),
           ],
           total: 12,
+          hasMore: false,
         })
       )
     );
@@ -564,7 +566,7 @@ describe('ProfilePage (MSW)', () => {
       }),
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, async () => {
         await new Promise<void>((resolve) => (answerWatched = resolve));
-        return apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null });
+        return apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false });
       })
     );
 
@@ -1255,6 +1257,7 @@ describe('ProfilePage (MSW)', () => {
               }),
             ],
             total: null,
+            hasMore: false,
           })
         )
       );
@@ -1293,6 +1296,7 @@ describe('ProfilePage (MSW)', () => {
               }),
             ],
             total: null,
+            hasMore: false,
           })
         )
       );

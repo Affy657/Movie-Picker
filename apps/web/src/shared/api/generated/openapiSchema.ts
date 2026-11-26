@@ -823,6 +823,156 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/me/email-verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["EmailVerificationRequest"];
+                    "text/json": components["schemas"]["EmailVerificationRequest"];
+                    "application/*+json": components["schemas"]["EmailVerificationRequest"];
+                };
+            };
+            responses: {
+                /** @description Accepted */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/email-verification/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["EmailVerificationConfirmRequest"];
+                    "text/json": components["schemas"]["EmailVerificationConfirmRequest"];
+                    "application/*+json": components["schemas"]["EmailVerificationConfirmRequest"];
+                };
+            };
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/password-reset/request": {
         parameters: {
             query?: never;
@@ -2443,6 +2593,7 @@ export interface paths {
                     limit?: number;
                     offset?: number;
                     q?: string;
+                    previews?: boolean;
                 };
                 header?: never;
                 path?: never;
@@ -2468,6 +2619,52 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/limits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EventLimitsResponse"];
+                        "application/json": components["schemas"]["EventLimitsResponse"];
+                        "text/json": components["schemas"]["EventLimitsResponse"];
                     };
                 };
                 /** @description Internal Server Error */
@@ -3303,6 +3500,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{idOrSlug}/rating-prompt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    idOrSlug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{idOrSlug}/participants/{participantId}": {
         parameters: {
             query?: never;
@@ -3344,6 +3612,87 @@ export interface paths {
                     content: {
                         "application/json": components["schemas"]["ApiErrorResponse"];
                     };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{idOrSlug}/removed-people/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    idOrSlug: string;
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
                 /** @description Forbidden */
                 403: {
@@ -9886,6 +10235,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    skip?: number;
                     take?: number;
                 };
                 header?: never;
@@ -10166,6 +10516,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    skip?: number;
                     take?: number;
                 };
                 header?: never;
@@ -11308,6 +11659,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/{handle}/photo-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    handle: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReportProfilePhotoRequest"];
+                    "text/json": components["schemas"]["ReportProfilePhotoRequest"];
+                    "application/*+json": components["schemas"]["ReportProfilePhotoRequest"];
+                };
+            };
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/{handle}/follow": {
         parameters: {
             query?: never;
@@ -12001,7 +12438,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    skip?: number;
+                    take?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -12228,7 +12668,6 @@ export interface components {
             description: string;
             pagePath?: string | null;
             appVersion?: string | null;
-            attachments?: components["schemas"]["IdeaSuggestionAttachmentDto"][] | null;
         };
         CreateMovieListRequest: {
             name: string;
@@ -12283,6 +12722,12 @@ export interface components {
         EligibleFollowsResponse: {
             follows: components["schemas"]["EligibleFollowItem"][];
         };
+        EmailVerificationConfirmRequest: {
+            token?: string;
+        };
+        EmailVerificationRequest: {
+            locale?: string | null;
+        };
         EventConfigResponse: {
             theme: string | null;
             /** Format: int32 */
@@ -12322,6 +12767,7 @@ export interface components {
             isFinished: boolean;
             /** @enum {string} */
             lifecycle: "upcoming" | "live" | "pending" | "finished";
+            ratingPromptDue: boolean;
             myParticipant: components["schemas"]["ParticipantResponse"] | null;
             viewerRemoved: boolean;
             /** Format: int32 */
@@ -12331,6 +12777,13 @@ export interface components {
             /** Format: int32 */
             votersCount: number;
             participants: components["schemas"]["EventParticipantSummaryResponse"][];
+            removedPeople: components["schemas"]["RemovedPersonResponse"][];
+        };
+        EventLimitsResponse: {
+            /** Format: int32 */
+            maxParticipants: number;
+            /** Format: int32 */
+            maxProposalsPerParticipant: number;
         };
         EventParticipantSummaryResponse: {
             _id: string;
@@ -12451,6 +12904,12 @@ export interface components {
             /** Format: date-time */
             joinedAt: string;
         };
+        ExportedListContribution: {
+            listId: string;
+            name: string;
+            ownerDisplayName: string;
+            items: components["schemas"]["ExportedMovieListItem"][];
+        };
         ExportedListInvitation: {
             listId: string;
             name: string;
@@ -12504,6 +12963,8 @@ export interface components {
         ExportedProfile: {
             userId: string;
             email: string;
+            /** Format: date-time */
+            emailVerifiedAt?: string | null;
             displayName: string;
             handle: string;
             bio?: string | null;
@@ -12880,12 +13341,6 @@ export interface components {
             service: string;
             release: string;
             dependencies: components["schemas"]["HealthDependencyStatus"][];
-        };
-        IdeaSuggestionAttachmentDto: {
-            fileName: string;
-            /** @enum {string} */
-            contentType: "image/png" | "image/jpeg" | "image/webp" | "image/gif";
-            base64Content: string;
         };
         /** @enum {string} */
         IdeaSuggestionCategory: "idea" | "bug" | "improvement";
@@ -13752,6 +14207,7 @@ export interface components {
             password: string;
             displayName: string;
             returnTo?: string | null;
+            locale?: string | null;
         };
         RegisterResponse: {
             userId: string;
@@ -13763,6 +14219,17 @@ export interface components {
             message: string;
             /** Format: int32 */
             removedMovies: number;
+        };
+        RemovedPersonResponse: {
+            id: string;
+            displayName: string;
+            avatarId: string;
+            handle: string | null;
+            accentColor: components["schemas"]["AccentColor"];
+        };
+        ReportProfilePhotoRequest: {
+            /** @enum {string} */
+            photo: "avatar" | "banner";
         };
         ReportUsageCountRequest: {
             metric: string;
@@ -13914,6 +14381,7 @@ export interface components {
             watchlist: components["schemas"]["ExportedWatchlistItem"][];
             movieLists: components["schemas"]["ExportedMovieList"][];
             joinedMovieLists: components["schemas"]["ExportedJoinedMovieList"][];
+            titlesAddedToOthersLists: components["schemas"]["ExportedListContribution"][];
             pendingListInvitations: components["schemas"]["ExportedListInvitation"][];
             friendGroups: components["schemas"]["ExportedFriendGroup"][];
             joinedFriendGroups: components["schemas"]["ExportedJoinedFriendGroup"][];
@@ -13950,6 +14418,8 @@ export interface components {
             displayName: string;
             emailMasked: string;
             email: string;
+            /** Format: date-time */
+            emailVerifiedAt: string | null;
             uiTheme: components["schemas"]["UiThemePreference"];
             accentColor: components["schemas"]["AccentColor"];
             ratingScale: components["schemas"]["RatingScale"];
@@ -14048,6 +14518,7 @@ export interface components {
             items: components["schemas"]["UserWatchedMovieItem"][];
             /** Format: int32 */
             total: number | null;
+            hasMore: boolean;
         };
         VoteRequest: {
             participantId: string;
@@ -14102,6 +14573,7 @@ export interface components {
         WatchlistAvailabilityResponse: {
             items: components["schemas"]["WatchlistAvailabilityItemResponse"][];
             partial: boolean;
+            hasMore: boolean;
         };
         WatchlistItemResponse: {
             /** Format: int32 */

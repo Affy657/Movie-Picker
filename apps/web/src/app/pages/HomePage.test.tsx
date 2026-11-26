@@ -106,6 +106,7 @@ const personalHandlers = [
         }),
       ],
       total: null,
+      hasMore: false,
     })
   ),
   http.get(`${TEST_API_V1}/users/me/watched-movies`, () =>
@@ -122,6 +123,7 @@ const personalHandlers = [
         }),
       ],
       total: null,
+      hasMore: false,
     })
   ),
 ];
@@ -567,10 +569,10 @@ describe('HomePage', () => {
       collectionsHandler,
       ...personalHandlers.slice(0, 1),
       http.get(`${TEST_API_V1}/users/me/following-watched-movies`, () =>
-        apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null })
+        apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
       ),
       http.get(`${TEST_API_V1}/users/me/watched-movies`, () =>
-        apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null })
+        apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
       )
     );
     renderPage();

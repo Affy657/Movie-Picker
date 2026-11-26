@@ -51,6 +51,24 @@ public sealed class InMemoryParticipantRepositoryTests
     }
 
     [Fact]
+    public async Task ListFirstByEventIdsAsync_KeepsTheEarliestJoinersOfEachRequestedEvent()
+    {
+        var start = DateTimeOffset.Parse("2026-06-01T00:00:00Z");
+        await _repo.AddAsync(Mk(eventId: "evt1", pseudo: "Third", createdAt: start.AddMinutes(3)));
+        await _repo.AddAsync(Mk(eventId: "evt1", pseudo: "First", createdAt: start));
+        await _repo.AddAsync(Mk(eventId: "evt1", pseudo: "Second", createdAt: start.AddMinutes(1)));
+        await _repo.AddAsync(Mk(eventId: "evt2", pseudo: "Alone", createdAt: start.AddMinutes(5)));
+        await _repo.AddAsync(Mk(eventId: "other", pseudo: "Elsewhere", createdAt: start));
+
+        var first = await _repo.ListFirstByEventIdsAsync(["evt1", "evt2"], 2);
+
+        Assert.Equal(
+            [("evt1", "First"), ("evt1", "Second"), ("evt2", "Alone")],
+            first.Select(p => (p.EventId, p.Pseudo)).OrderBy(row => row.EventId, StringComparer.Ordinal));
+        Assert.Empty(await _repo.ListFirstByEventIdsAsync([], 2));
+    }
+
+    [Fact]
     public async Task FindByIdAndEventIdAsync_MatchesEvent()
     {
         var created = await _repo.AddAsync(Mk(eventId: "evt1"));

@@ -604,6 +604,7 @@ describe('WatchlistPage (MSW)', () => {
             },
           ],
           partial: false,
+          hasMore: false,
         });
       })
     );
@@ -660,8 +661,16 @@ describe('WatchlistPage (MSW)', () => {
       http.get(`${TEST_API_V1}/watchlist/availability`, () => {
         calls += 1;
         return calls === 1
-          ? apiJson<'WatchlistAvailabilityResponse'>({ items: [netflix], partial: true })
-          : apiJson<'WatchlistAvailabilityResponse'>({ items: [netflix, nowhere], partial: false });
+          ? apiJson<'WatchlistAvailabilityResponse'>({
+              items: [netflix],
+              partial: true,
+              hasMore: false,
+            })
+          : apiJson<'WatchlistAvailabilityResponse'>({
+              items: [netflix, nowhere],
+              partial: false,
+              hasMore: false,
+            });
       })
     );
 

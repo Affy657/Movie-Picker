@@ -11,6 +11,8 @@ public sealed record ProposedMovieRanking(
     IReadOnlyList<int> GenreIds,
     int EventCount);
 
+public sealed record EventMoviePreview(string EventId, string Title, string? PosterPath);
+
 public interface IMovieRepository
 {
     Task<Movie?> GetByIdAsync(string movieId, CancellationToken ct = default);
@@ -19,6 +21,11 @@ public interface IMovieRepository
     Task<Movie?> GetByIdAndEventIdAsync(string movieId, string eventId, CancellationToken ct = default);
     Task<IReadOnlyList<Movie>> ListByEventIdAsync(string eventId, CancellationToken ct = default);
     Task<IReadOnlyList<Movie>> ListByEventIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default);
+
+    Task<IReadOnlyList<EventMoviePreview>> ListTopVotedByEventIdsAsync(
+        IReadOnlyCollection<string> eventIds,
+        int perEvent,
+        CancellationToken ct = default);
 
     Task<IReadOnlyList<Movie>> ListByEventIdsAndTmdbIdAsync(
         IReadOnlyCollection<string> eventIds,
@@ -29,6 +36,8 @@ public interface IMovieRepository
     Task<bool> ExistsByEventAndTitleCaseInsensitiveAsync(string eventId, string title, string? year, CancellationToken ct = default);
     Task<int> CountByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default);
     Task<Movie> InsertAsync(Movie movie, CancellationToken ct = default);
+
+    Task<Movie> InsertWithUntimedIdAsync(Movie movie, CancellationToken ct = default);
 
     Task<long> DeleteByIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default);
     Task UpdatePitchNoteAsync(string movieId, string? pitchNote, CancellationToken ct = default);

@@ -16,6 +16,15 @@ export const authMeGuestHandler = http.get(`${V1}/auth/me`, () =>
   )
 );
 
+const MOCK_EVENT_LIMITS: Schemas['EventLimitsResponse'] = {
+  maxParticipants: 50,
+  maxProposalsPerParticipant: 15,
+};
+
+export const eventLimitsHandler = http.get(`${V1}/events/limits`, () =>
+  apiJson<'EventLimitsResponse'>(MOCK_EVENT_LIMITS)
+);
+
 type MockTitle<T extends { tmdbId: number; title: string }> = Pick<T, 'tmdbId' | 'title'> &
   Partial<T>;
 
@@ -54,7 +63,11 @@ export function createWatchlistHandlers(
       })
     ),
     http.get(`${V1}/watchlist/availability`, () =>
-      apiJson<'WatchlistAvailabilityResponse'>({ items: availability, partial: false })
+      apiJson<'WatchlistAvailabilityResponse'>({
+        items: availability,
+        partial: false,
+        hasMore: false,
+      })
     ),
   ];
 }
@@ -753,11 +766,16 @@ export function createWatchedHandlers(initial: MockWatchedMovie[] = []) {
     );
 
   return [
-    http.get(`${V1}/users/me/watched-movies`, () => {
+    http.get(`${V1}/users/me/watched-movies`, ({ request }) => {
+      const params = new URL(request.url).searchParams;
+      const skip = Number(params.get('skip') ?? 0);
+      const take = Number(params.get('take') ?? films.length);
       const latestFirst = [...films].sort((a, b) => b.watchedAt.localeCompare(a.watchedAt));
+      const page = latestFirst.slice(skip, skip + take);
       return apiJson<'UserWatchedMoviesResponse'>({
-        items: latestFirst.map(mockWatchedItem),
+        items: page.map(mockWatchedItem),
         total: films.length,
+        hasMore: skip + page.length < films.length,
       });
     }),
     http.get(`${V1}/watched/:tmdbId`, ({ params, request }) =>
@@ -861,6 +879,7 @@ export interface MockEventOptions {
 
   theme?: string | null;
   viewerRemoved?: boolean;
+  removedPeople?: Schemas['RemovedPersonResponse'][];
 }
 
 function mockParticipant(_id: string, pseudo: string, isCreator = false) {
@@ -888,6 +907,7 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
         isHost: !!host,
         isFinished: opts.isFinished ?? false,
         lifecycle: opts.lifecycle ?? (opts.isFinished ? 'finished' : 'live'),
+        ratingPromptDue: false,
         winners: [],
         viewerRemoved: opts.viewerRemoved ?? false,
         participantCount: 4,
@@ -899,6 +919,7 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
           mockParticipant('p-msw-bob', 'Bob'),
           mockParticipant('p-msw-chloe', 'Chloé'),
         ],
+        removedPeople: host ? [...(opts.removedPeople ?? [])] : [],
         config: {
           theme: opts.theme ?? null,
           maxProposalsPerParticipant: null,
@@ -918,6 +939,7 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
     }),
     http.get(`${V1}/events/${slug}/movies`, () => apiJson<'MovieWithScoreResponse[]'>([])),
     http.put(`${V1}/events/${slug}/presence`, () => new HttpResponse(null, { status: 204 })),
+    http.put(`${V1}/events/${slug}/rating-prompt`, () => new HttpResponse(null, { status: 204 })),
   ];
 }
 

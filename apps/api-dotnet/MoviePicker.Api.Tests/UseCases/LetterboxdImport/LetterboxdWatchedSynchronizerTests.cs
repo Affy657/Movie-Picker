@@ -27,10 +27,10 @@ public sealed class LetterboxdWatchedSynchronizerTests
     public LetterboxdWatchedSynchronizerTests()
     {
         _tmdb
-            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TmdbMovieDetails?)null);
         _tmdb
-            .Setup(t => t.SearchTitlesAsync(It.IsAny<string>(), true, It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.SearchTitlesAsync(It.IsAny<string>(), true, It.IsAny<CatalogLanguage>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<TmdbSearchItem>)[]);
         var facts = new MovieListItemFactory(_posters.Object, _tmdb.Object, NullLogger<MovieListItemFactory>.Instance);
         var users = new Mock<IUserRepository>();
@@ -50,14 +50,14 @@ public sealed class LetterboxdWatchedSynchronizerTests
     private void GivenTmdbMovie(string title, int tmdbId, string year)
     {
         _tmdb
-            .Setup(t => t.SearchTitlesAsync(title, true, It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.SearchTitlesAsync(title, true, It.IsAny<CatalogLanguage>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<TmdbSearchItem>)[new TmdbSearchItem(tmdbId, MovieMediaType.Movie, title, year, null, 7.5, title)]);
     }
 
     private void GivenTmdbAmbiguous(string title, params int[] tmdbIds)
     {
         _tmdb
-            .Setup(t => t.SearchTitlesAsync(title, true, It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.SearchTitlesAsync(title, true, It.IsAny<CatalogLanguage>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<TmdbSearchItem>)tmdbIds
                 .Select(id => new TmdbSearchItem(id, MovieMediaType.Movie, $"{title} {id}", "2001", null))
                 .ToList());
@@ -193,7 +193,7 @@ public sealed class LetterboxdWatchedSynchronizerTests
         Assert.Equal(9, (await StoredAsync(2))!.Rating);
         Assert.Null((await StoredAsync(3))!.Rating);
         _tmdb.Verify(
-            t => t.SearchTitlesAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
+            t => t.SearchTitlesAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CatalogLanguage>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -337,7 +337,7 @@ public sealed class LetterboxdWatchedSynchronizerTests
         var outcome = await _sut.ApplyAsync(UserId, Complete(films), null);
 
         _tmdb.Verify(
-            t => t.SearchTitlesAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
+            t => t.SearchTitlesAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CatalogLanguage>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
             Times.Exactly(LetterboxdImportLimits.MaxRows));
         Assert.Equal(5, outcome.TotalTruncated);
         Assert.Equal(LetterboxdImportLimits.MaxRows, outcome.UnmatchedTitles.Count);

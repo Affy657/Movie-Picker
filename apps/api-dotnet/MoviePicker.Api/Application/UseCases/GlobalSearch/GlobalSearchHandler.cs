@@ -37,14 +37,18 @@ public sealed class GlobalSearchHandler : IGlobalSearchHandler
         _options = options.Value;
     }
 
-    public async Task<GlobalSearchResponse> HandleAsync(string? query, string? currentUserId, CancellationToken ct = default)
+    public async Task<GlobalSearchResponse> HandleAsync(
+        string? query,
+        string? currentUserId,
+        CatalogLanguage language,
+        CancellationToken ct = default)
     {
         var normalized = UserSearchPolicy.Normalize(query);
         if (normalized.Length < UserSearchPolicy.MinQueryLength)
             return new GlobalSearchResponse();
 
-        var titles = SearchTitlesAsync(normalized, ct);
-        var sagas = SearchSagasAsync(normalized, ct);
+        var titles = SearchTitlesAsync(normalized, language, ct);
+        var sagas = SearchSagasAsync(normalized, language, ct);
         var publicLists = _publicLists.FindAsync(normalized, currentUserId, ct);
 
         if (currentUserId is null)
@@ -76,7 +80,10 @@ public sealed class GlobalSearchHandler : IGlobalSearchHandler
         };
     }
 
-    private async Task<IReadOnlyList<GlobalSearchTitleItem>> SearchTitlesAsync(string query, CancellationToken ct)
+    private async Task<IReadOnlyList<GlobalSearchTitleItem>> SearchTitlesAsync(
+        string query,
+        CatalogLanguage language,
+        CancellationToken ct)
     {
         if (!_options.HasTmdbCredentials)
             return [];
@@ -84,7 +91,7 @@ public sealed class GlobalSearchHandler : IGlobalSearchHandler
         IReadOnlyList<TmdbSearchItem> rows;
         try
         {
-            rows = await _tmdb.SearchTitlesAsync(query, allowSeries: true, ct: ct);
+            rows = await _tmdb.SearchTitlesAsync(query, allowSeries: true, language, ct: ct);
         }
         catch (Exception ex) when (ex is HttpRequestException or JsonException)
         {
@@ -104,12 +111,15 @@ public sealed class GlobalSearchHandler : IGlobalSearchHandler
             .ToList();
     }
 
-    private async Task<IReadOnlyList<GlobalSearchSagaItem>> SearchSagasAsync(string query, CancellationToken ct)
+    private async Task<IReadOnlyList<GlobalSearchSagaItem>> SearchSagasAsync(
+        string query,
+        CatalogLanguage language,
+        CancellationToken ct)
     {
         MovieCollectionListResponse catalog;
         try
         {
-            catalog = await _sagas.HandleAsync(ct);
+            catalog = await _sagas.HandleAsync(language, ct);
         }
         catch (MoviePickerException)
         {

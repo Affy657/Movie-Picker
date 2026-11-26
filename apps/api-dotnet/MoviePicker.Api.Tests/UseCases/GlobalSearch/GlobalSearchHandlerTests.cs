@@ -34,7 +34,7 @@ public sealed class GlobalSearchHandlerTests
     public GlobalSearchHandlerTests()
     {
         _tmdb
-            .Setup(t => t.SearchTitlesAsync(It.IsAny<string>(), It.IsAny<bool>(), null, null, It.IsAny<CancellationToken>()))
+            .Setup(t => t.SearchTitlesAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CatalogLanguage>(), null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
         _members
             .Setup(m => m.HandleAsync(It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
@@ -63,7 +63,7 @@ public sealed class GlobalSearchHandlerTests
         _users
             .Setup(u => u.ListCardsByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
-        _sagas.Setup(s => s.HandleAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new MovieCollectionListResponse());
+        _sagas.Setup(s => s.HandleAsync(It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>())).ReturnsAsync(new MovieCollectionListResponse());
 
         _sut = Build(new MoviePickerOptions { TmdbApiKey = "key" });
     }
@@ -104,7 +104,7 @@ public sealed class GlobalSearchHandlerTests
 
     private void TitlesAre(params TmdbSearchItem[] rows) =>
         _tmdb
-            .Setup(t => t.SearchTitlesAsync(It.IsAny<string>(), true, null, null, It.IsAny<CancellationToken>()))
+            .Setup(t => t.SearchTitlesAsync(It.IsAny<string>(), true, It.IsAny<CatalogLanguage>(), null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(rows);
 
     private void ICreated(params Event[] nights) => _nights.AddRange(nights);
@@ -125,13 +125,13 @@ public sealed class GlobalSearchHandlerTests
     [InlineData("  a  ")]
     public async Task HandleAsync_QueryTooShort_ReturnsNothingWithoutSearching(string? query)
     {
-        var result = await _sut.HandleAsync(query, Me);
+        var result = await _sut.HandleAsync(query, Me, CatalogLanguage.French);
 
         Assert.Empty(result.Titles);
         Assert.Empty(result.Members);
         Assert.Empty(result.Nights);
         _tmdb.Verify(
-            t => t.SearchTitlesAsync(It.IsAny<string>(), It.IsAny<bool>(), null, null, It.IsAny<CancellationToken>()),
+            t => t.SearchTitlesAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CatalogLanguage>(), null, null, It.IsAny<CancellationToken>()),
             Times.Never);
         _events.Verify(
             e => e.ListTitleMatchesAsync(
@@ -150,9 +150,9 @@ public sealed class GlobalSearchHandlerTests
             new TmdbSearchItem(603, MovieMediaType.Movie, "Matrix", "1999", "/matrix.jpg"),
             new TmdbSearchItem(1399, MovieMediaType.Tv, "Game of Thrones", "2011", null));
 
-        var result = await _sut.HandleAsync("  matrix  ", null);
+        var result = await _sut.HandleAsync("  matrix  ", null, CatalogLanguage.French);
 
-        _tmdb.Verify(t => t.SearchTitlesAsync("matrix", true, null, null, It.IsAny<CancellationToken>()), Times.Once);
+        _tmdb.Verify(t => t.SearchTitlesAsync("matrix", true, It.IsAny<CatalogLanguage>(), null, null, It.IsAny<CancellationToken>()), Times.Once);
         Assert.Collection(
             result.Titles,
             movie =>
@@ -177,7 +177,7 @@ public sealed class GlobalSearchHandlerTests
             .Select(id => new TmdbSearchItem(id, MovieMediaType.Movie, $"Dune {id}", "2021", null))
             .ToArray());
 
-        var result = await _sut.HandleAsync("dune", null);
+        var result = await _sut.HandleAsync("dune", null, CatalogLanguage.French);
 
         Assert.Equal([1, 2, 3, 4, 5], result.Titles.Select(t => t.TmdbId));
     }
@@ -189,11 +189,11 @@ public sealed class GlobalSearchHandlerTests
     {
         Exception failure = garbledAnswer ? new JsonException("garbled") : new HttpRequestException("down");
         _tmdb
-            .Setup(t => t.SearchTitlesAsync(It.IsAny<string>(), It.IsAny<bool>(), null, null, It.IsAny<CancellationToken>()))
+            .Setup(t => t.SearchTitlesAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CatalogLanguage>(), null, null, It.IsAny<CancellationToken>()))
             .ThrowsAsync(failure);
         ICreated(Night("n1", "Soirée Dune"));
 
-        var result = await _sut.HandleAsync("dune", Me);
+        var result = await _sut.HandleAsync("dune", Me, CatalogLanguage.French);
 
         Assert.Empty(result.Titles);
         Assert.Single(result.Nights);
@@ -204,18 +204,18 @@ public sealed class GlobalSearchHandlerTests
     {
         var sut = Build(new MoviePickerOptions { TmdbApiKey = null });
 
-        var result = await sut.HandleAsync("dune", null);
+        var result = await sut.HandleAsync("dune", null, CatalogLanguage.French);
 
         Assert.Empty(result.Titles);
         _tmdb.Verify(
-            t => t.SearchTitlesAsync(It.IsAny<string>(), It.IsAny<bool>(), null, null, It.IsAny<CancellationToken>()),
+            t => t.SearchTitlesAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CatalogLanguage>(), null, null, It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
     [Fact]
     public async Task HandleAsync_Anonymous_SearchesNeitherMembersNorNights()
     {
-        var result = await _sut.HandleAsync("dune", null);
+        var result = await _sut.HandleAsync("dune", null, CatalogLanguage.French);
 
         Assert.Empty(result.Members);
         Assert.Empty(result.Nights);
@@ -244,7 +244,7 @@ public sealed class GlobalSearchHandlerTests
                     .ToList()
             });
 
-        var result = await _sut.HandleAsync("lea", Me);
+        var result = await _sut.HandleAsync("lea", Me, CatalogLanguage.French);
 
         Assert.Equal(["lea1", "lea2", "lea3", "lea4"], result.Members.Select(m => m.Handle));
         _members.Verify(m => m.HandleAsync(It.IsAny<string?>(), Me, It.IsAny<CancellationToken>()), Times.Never);
@@ -256,7 +256,7 @@ public sealed class GlobalSearchHandlerTests
         ICreated(Night("n1", "Soirée Ghibli"), Night("n2", "Marathon Marvel"));
         IJoined(Night("n3", "GHIBLI encore", creator: "host"));
 
-        var result = await _sut.HandleAsync("ghîbli", Me);
+        var result = await _sut.HandleAsync("ghîbli", Me, CatalogLanguage.French);
 
         Assert.Equal(["slug-n1", "slug-n3"], result.Nights.Select(n => n.Slug).Order());
         var night = result.Nights.Single(n => n.Slug == "slug-n1");
@@ -275,7 +275,7 @@ public sealed class GlobalSearchHandlerTests
             Night("recent", "Ciné récent", finished: true, date: "2025-06-10"),
             Night("soon", "Ciné bientôt", date: TestDates.Upcoming));
 
-        var result = await _sut.HandleAsync("cine", Me);
+        var result = await _sut.HandleAsync("cine", Me, CatalogLanguage.French);
 
         Assert.Equal(["slug-soon", "slug-later", "slug-recent", "slug-old"], result.Nights.Select(n => n.Slug));
         Assert.True(result.Nights[2].IsFinished);
@@ -288,7 +288,7 @@ public sealed class GlobalSearchHandlerTests
         ICreated([mine, .. Enumerable.Range(1, 5).Select(i => Night($"n{i}", $"Ciné {i}", date: TestDates.UpcomingPlusDays(i)))]);
         IJoined(mine);
 
-        var result = await _sut.HandleAsync("cine", Me);
+        var result = await _sut.HandleAsync("cine", Me, CatalogLanguage.French);
 
         Assert.Equal(["slug-n0", "slug-n1", "slug-n2", "slug-n3"], result.Nights.Select(n => n.Slug));
     }
@@ -310,7 +310,7 @@ public sealed class GlobalSearchHandlerTests
             Night("left", "Ciné d'un ancien membre", creator: "gone", groupId: "g1"),
             Night("elsewhere", "Ciné d'un inconnu", creator: "stranger"));
 
-        var result = await _sut.HandleAsync("cine", Me);
+        var result = await _sut.HandleAsync("cine", Me, CatalogLanguage.French);
 
         Assert.Equal(["slug-open"], result.Nights.Select(n => n.Slug));
     }
@@ -322,7 +322,7 @@ public sealed class GlobalSearchHandlerTests
             new FriendGroup { Id = "g2", OwnerId = "u3", Name = "Foot du mardi" }
         ]);
 
-        var result = await _sut.HandleAsync("cinephile", Me);
+        var result = await _sut.HandleAsync("cinephile", Me, CatalogLanguage.French);
 
         var group = Assert.Single(result.Groups);
         Assert.Equal(("g1", "Les Cinéphiles", 2), (group.Id, group.Name, group.MemberCount));
@@ -336,7 +336,7 @@ public sealed class GlobalSearchHandlerTests
             ListSummary("l2", "À revoir"),
             ListSummary("l3", "Coréens partagés", ownerId: "friend"));
 
-        var result = await _sut.HandleAsync("coreens", Me);
+        var result = await _sut.HandleAsync("coreens", Me, CatalogLanguage.French);
 
         Assert.Equal(["l1", "l3"], result.Lists.Select(list => list.Id));
         Assert.Equal(("Polars coréens", 7, "/a.jpg"), (result.Lists[0].Name, result.Lists[0].ItemCount, result.Lists[0].PosterPath));
@@ -349,7 +349,7 @@ public sealed class GlobalSearchHandlerTests
         PublicListsAre(ListSummary("p1", "Polars", ownerId: "alice", itemCount: 3, posters: ["/p.jpg"]));
         OwnersAre(new UserCard("alice", "🎬", "alice_m", IsProfilePublic: true, DisplayName: "Alice Martin"));
 
-        var result = await _sut.HandleAsync("polar", null);
+        var result = await _sut.HandleAsync("polar", null, CatalogLanguage.French);
 
         var list = Assert.Single(result.PublicLists);
         Assert.Equal(("p1", "Polars", 3, "/p.jpg"), (list.Id, list.Name, list.ItemCount, list.PosterPath));
@@ -374,7 +374,7 @@ public sealed class GlobalSearchHandlerTests
             new UserCard("dana", "🎬", "dana", IsProfilePublic: true, DisplayName: "Dana"),
             new UserCard("erin", "🎬", "erin", IsProfilePublic: true, DisplayName: "Erin"));
 
-        var result = await _sut.HandleAsync("polars", Me);
+        var result = await _sut.HandleAsync("polars", Me, CatalogLanguage.French);
 
         Assert.Equal(["shown"], result.PublicLists.Select(list => list.Id));
         Assert.Equal(["mine", "joined"], result.Lists.Select(list => list.Id));
@@ -383,7 +383,7 @@ public sealed class GlobalSearchHandlerTests
     [Fact]
     public async Task HandleAsync_FindsSagasByNameIgnoringAccents()
     {
-        _sagas.Setup(s => s.HandleAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new MovieCollectionListResponse
+        _sagas.Setup(s => s.HandleAsync(It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>())).ReturnsAsync(new MovieCollectionListResponse
         {
             Items =
             [
@@ -393,7 +393,7 @@ public sealed class GlobalSearchHandlerTests
             ]
         });
 
-        var result = await _sut.HandleAsync("stâr", null);
+        var result = await _sut.HandleAsync("stâr", null, CatalogLanguage.French);
 
         var saga = Assert.Single(result.Sagas);
         Assert.Equal((10, "Star Wars", "/sw.jpg", 9), (saga.Id, saga.Name, saga.PosterPath, saga.MovieCount));
@@ -402,10 +402,10 @@ public sealed class GlobalSearchHandlerTests
     [Fact]
     public async Task HandleAsync_SagasUnavailable_StillReturnsTheOtherSections()
     {
-        _sagas.Setup(s => s.HandleAsync(It.IsAny<CancellationToken>())).ThrowsAsync(Errors.ShowcaseUnavailable());
+        _sagas.Setup(s => s.HandleAsync(It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>())).ThrowsAsync(Errors.ShowcaseUnavailable());
         TitlesAre(new TmdbSearchItem(11, MovieMediaType.Movie, "Star Wars", "1977", null));
 
-        var result = await _sut.HandleAsync("star", null);
+        var result = await _sut.HandleAsync("star", null, CatalogLanguage.French);
 
         Assert.Empty(result.Sagas);
         Assert.Single(result.Titles);

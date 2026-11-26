@@ -51,6 +51,7 @@ public sealed class ProfileBannerWriter
 
     public async Task<User> ReplacePhotoAsync(string userId, byte[] bytes, AvatarPhotoFormat format, CancellationToken ct = default)
     {
+        var cleaned = ImageMetadataStripper.Strip(bytes, format.ContentType) ?? throw Errors.BannerPhotoInvalid();
         await EnsureRoomForNewOwnerAsync(userId, ct);
 
         var now = _clock.GetUtcNow();
@@ -60,7 +61,7 @@ public sealed class ProfileBannerWriter
             async token =>
             {
                 var current = await _users.GetByIdAsync(userId, token) ?? throw Errors.UserNotFound();
-                await _photos.SaveAsync(StoredPhoto.Create(key, userId, format.ContentType, bytes, now), token);
+                await _photos.SaveAsync(StoredPhoto.Create(key, userId, format.ContentType, cleaned, now), token);
                 saved = await _users.UpdateAsync(
                     current with
                     {
@@ -70,7 +71,7 @@ public sealed class ProfileBannerWriter
                     },
                     token);
                 if (current.BannerPhoto is { } previous)
-                    await _photos.DeleteAsync(previous.Key, token);
+                    await _photos.ScheduleDeletionAsync(previous.Key, now + StoredPhoto.ReplacedPhotoLifetime, token);
             },
             ct);
         return saved!;

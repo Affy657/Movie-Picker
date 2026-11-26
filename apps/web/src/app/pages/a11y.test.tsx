@@ -69,7 +69,7 @@ describe('accessibility (axe)', () => {
       apiJson<'OAuthProvidersResponse'>({ providers: [] })
     ),
     http.get(`${TEST_API_V1}/users/:handle/watched-movies`, () =>
-      apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null })
+      apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
     ),
     createUserStatsHandler('alice')
   );
@@ -447,6 +447,7 @@ describe('accessibility (axe)', () => {
             }),
           ],
           total: null,
+          hasMore: false,
         })
       )
     );

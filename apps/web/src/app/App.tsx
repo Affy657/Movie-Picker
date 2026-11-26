@@ -17,6 +17,7 @@ import { ConsentProvider } from '@/shared/contexts/ConsentContext';
 import { LocaleProvider } from '@/shared/i18n';
 import { AuthProvider } from '@/features/auth/contexts/AuthContext';
 import UserThemeSync from '@/app/components/UserThemeSync';
+import LocaleQuerySync from '@/app/components/LocaleQuerySync';
 import AnalyticsSync from '@/app/components/AnalyticsSync';
 import PushSubscriptionSync from '@/app/components/PushSubscriptionSync';
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
@@ -28,6 +29,7 @@ import { ROUTES } from '@/app/routes';
 import { routeLazy } from '@/app/routeChunks';
 import { useHomeShowcasePrefetch } from '@/features/movies/homeShowcasePrefetch';
 import { usePublicProfilePrefetch } from '@/features/profile/publicProfilePrefetch';
+import { useMoviePagePrefetch } from '@/app/pages/movie/moviePagePrefetch';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const HomePage = routeLazy('home');
@@ -42,6 +44,7 @@ const LoginPage = routeLazy('login');
 const RegisterPage = routeLazy('register');
 const ForgotPasswordPage = routeLazy('forgotPassword');
 const ResetPasswordPage = routeLazy('resetPassword');
+const VerifyEmailPage = routeLazy('verifyEmail');
 const OAuthCallbackPage = routeLazy('oauthCallback');
 const AccountPage = routeLazy('account');
 const LegalNoticePage = routeLazy('legalNotice');
@@ -148,6 +151,7 @@ export function AppRoutes() {
         <Route path={ROUTES.register} element={<RegisterPage />} />
         <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
         <Route path={ROUTES.resetPassword} element={<ResetPasswordPage />} />
+        <Route path={ROUTES.verifyEmail} element={<VerifyEmailPage />} />
         <Route path={ROUTES.oauthCallback} element={<OAuthCallbackPage />} />
         <Route path={ROUTES.legalNotice} element={<LegalNoticePage />} />
         <Route path={ROUTES.privacyPolicy} element={<PrivacyPolicyPage />} />
@@ -309,6 +313,7 @@ export function AppRoutes() {
 export function AppRoutesWithErrorBoundary() {
   useHomeShowcasePrefetch();
   usePublicProfilePrefetch();
+  useMoviePagePrefetch();
   return (
     <>
       <ScrollToTop />
@@ -331,6 +336,7 @@ export function AppProviders({ children }: Readonly<{ children: ReactNode }>) {
           <ConsentProvider>
             <AuthProvider>
               <UserThemeSync />
+              <LocaleQuerySync />
               <AnalyticsSync />
               <PushSubscriptionSync />
               {children}

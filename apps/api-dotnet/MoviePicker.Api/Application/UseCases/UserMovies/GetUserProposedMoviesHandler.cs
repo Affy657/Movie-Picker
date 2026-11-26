@@ -73,7 +73,7 @@ public sealed class GetUserProposedMoviesHandler : IGetUserProposedMoviesHandler
             .ToList();
 
         var enrichments = await TmdbEnrichments.LoadAsync(
-            films.Select(x => (x.Latest.TmdbId, x.Latest.MediaType)), _tmdb, _options, ct);
+            films.Select(x => (x.Latest.TmdbId, x.Latest.MediaType)), _tmdb, _options, CatalogLanguage.French, ct);
 
         return new UserProposedMoviesResponse
         {

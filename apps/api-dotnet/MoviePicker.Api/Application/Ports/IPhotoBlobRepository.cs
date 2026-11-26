@@ -8,5 +8,6 @@ public interface IPhotoBlobRepository
     Task<StoredPhoto?> GetByKeyAsync(string key, CancellationToken ct = default);
     Task<long> EstimatedCountAsync(CancellationToken ct = default);
     Task DeleteAsync(string key, CancellationToken ct = default);
+    Task ScheduleDeletionAsync(string key, DateTimeOffset deleteAt, CancellationToken ct = default);
     Task<long> DeleteByUserIdAsync(string userId, CancellationToken ct = default);
 }

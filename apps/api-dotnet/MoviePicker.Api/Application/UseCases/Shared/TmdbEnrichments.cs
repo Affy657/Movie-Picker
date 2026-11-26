@@ -10,6 +10,7 @@ internal static class TmdbEnrichments
         IEnumerable<(int TmdbId, MovieMediaType MediaType)> films,
         ITmdbMovieSearch tmdb,
         MoviePickerOptions options,
+        CatalogLanguage language,
         CancellationToken ct)
     {
         var keys = films.Distinct().ToList();
@@ -17,6 +18,6 @@ internal static class TmdbEnrichments
             return new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>();
 
         var region = WatchRegion.Of(options.TmdbWatchProvidersRegion);
-        return await tmdb.GetEnrichmentsAsync(keys, region, ct);
+        return await tmdb.GetEnrichmentsAsync(keys, region, language, ct);
     }
 }

@@ -3,8 +3,7 @@ import {
   DEFAULT_PARTICIPANT_LIMIT,
   DEFAULT_PROPOSAL_LIMIT,
   DEFAULT_VOTE_LIMIT,
-  MAX_EVENT_PARTICIPANTS,
-  MAX_PROPOSALS_PER_PARTICIPANT,
+  type EventLimitCaps,
 } from '@/features/events/types';
 
 export type EventLimitKind = 'participants' | 'proposals' | 'votes';
@@ -14,7 +13,6 @@ export interface EventLimitSpec {
   valueField: 'maxParticipants' | 'maxProposals' | 'maxVotes';
   idSuffix: string;
   fallback: number;
-  max?: number;
 }
 
 export const EVENT_LIMIT_KINDS: readonly EventLimitKind[] = ['participants', 'proposals', 'votes'];
@@ -25,14 +23,12 @@ export const EVENT_LIMITS: Readonly<Record<EventLimitKind, EventLimitSpec>> = {
     valueField: 'maxParticipants',
     idSuffix: 'max-participants',
     fallback: DEFAULT_PARTICIPANT_LIMIT,
-    max: MAX_EVENT_PARTICIPANTS,
   },
   proposals: {
     enabledField: 'proposalLimitEnabled',
     valueField: 'maxProposals',
     idSuffix: 'max-proposals',
     fallback: DEFAULT_PROPOSAL_LIMIT,
-    max: MAX_PROPOSALS_PER_PARTICIPANT,
   },
   votes: {
     enabledField: 'voteLimitEnabled',
@@ -41,6 +37,15 @@ export const EVENT_LIMITS: Readonly<Record<EventLimitKind, EventLimitSpec>> = {
     fallback: DEFAULT_VOTE_LIMIT,
   },
 };
+
+export function eventLimitMax(
+  kind: EventLimitKind,
+  caps: EventLimitCaps | null
+): number | undefined {
+  if (kind === 'participants') return caps?.maxParticipants;
+  if (kind === 'proposals') return caps?.maxProposalsPerParticipant;
+  return undefined;
+}
 
 export function eventLimitInputId(idPrefix: string, kind: EventLimitKind): string {
   return `${idPrefix}-${EVENT_LIMITS[kind].idSuffix}`;

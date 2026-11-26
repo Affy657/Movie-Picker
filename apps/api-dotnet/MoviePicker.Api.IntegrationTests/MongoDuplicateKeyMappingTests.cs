@@ -192,6 +192,7 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
         public Task SetLetterboxdLinkedCountsAsync(string userId, int watchlistCount, int watchedCount, CancellationToken ct = default) =>
             inner.SetLetterboxdLinkedCountsAsync(userId, watchlistCount, watchedCount, ct);
         public Task<bool> MarkSupporterAsync(string userId, DateTimeOffset since, CancellationToken ct = default) => inner.MarkSupporterAsync(userId, since, ct);
+        public Task<bool> MarkEmailVerifiedAsync(string userId, DateTimeOffset verifiedAt, CancellationToken ct = default) => inner.MarkEmailVerifiedAsync(userId, verifiedAt, ct);
         public Task<bool> AddEventTemplateAsync(string userId, EventTemplate template, int maxPerUser, DateTimeOffset now, CancellationToken ct = default) =>
             inner.AddEventTemplateAsync(userId, template, maxPerUser, now, ct);
         public Task<bool> ReplaceEventTemplateAsync(string userId, EventTemplate template, DateTimeOffset now, CancellationToken ct = default) =>
@@ -239,6 +240,8 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
         var loser = new OAuthLoginHandler(
             new RaceLosingUsers(users, null),
             new NoPhotoImporter(),
+            scope.ServiceProvider.GetRequiredService<IAuthSessionInvalidator>(),
+            scope.ServiceProvider.GetRequiredService<IPushSubscriptionRepository>(),
             TimeProvider.System,
             NullLogger<OAuthLoginHandler>.Instance);
 
@@ -263,6 +266,8 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
         var loser = new OAuthLoginHandler(
             new RaceLosingUsers(users, readBeforeTheWinner),
             new NoPhotoImporter(),
+            scope.ServiceProvider.GetRequiredService<IAuthSessionInvalidator>(),
+            scope.ServiceProvider.GetRequiredService<IPushSubscriptionRepository>(),
             TimeProvider.System,
             NullLogger<OAuthLoginHandler>.Instance);
 

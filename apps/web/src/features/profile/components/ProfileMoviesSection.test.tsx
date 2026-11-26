@@ -79,6 +79,7 @@ describe('ProfileMoviesSection (MSW)', () => {
         }),
       ],
       total: null,
+      hasMore: false,
     })
   );
 
@@ -98,7 +99,7 @@ describe('ProfileMoviesSection (MSW)', () => {
   it('ne rend rien si la liste est vide', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-        apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null })
+        apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
       )
     );
 
@@ -110,7 +111,7 @@ describe('ProfileMoviesSection (MSW)', () => {
   it('shows the favorites even when nothing was watched yet', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-        apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null })
+        apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
       )
     );
 
@@ -129,7 +130,7 @@ describe('ProfileMoviesSection (MSW)', () => {
       ),
       http.post(`${TEST_API_V1}/watchlist`, () => apiErrorJson(500, 'internal_error')),
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-        apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null })
+        apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
       )
     );
     const user = userEvent.setup();
@@ -168,6 +169,7 @@ describe('ProfileMoviesSection (MSW)', () => {
             }),
           ],
           total: null,
+          hasMore: false,
         })
       )
     );
@@ -213,6 +215,7 @@ describe('ProfileMoviesSection (MSW)', () => {
             }),
           ],
           total: null,
+          hasMore: false,
         })
       )
     );
@@ -239,6 +242,7 @@ describe('ProfileMoviesSection (MSW)', () => {
             }),
           ],
           total: null,
+          hasMore: false,
         })
       )
     );
@@ -280,6 +284,7 @@ describe('ProfileMoviesSection (MSW)', () => {
             }),
           ],
           total: null,
+          hasMore: false,
         })
       )
     );
@@ -307,6 +312,7 @@ describe('ProfileMoviesSection (MSW)', () => {
             }),
           ],
           total: null,
+          hasMore: false,
         })
       )
     );
@@ -385,6 +391,7 @@ describe('ProfileMoviesSection (MSW)', () => {
             }),
           ],
           total: null,
+          hasMore: false,
         })
       )
     );
@@ -404,6 +411,7 @@ describe('ProfileMoviesSection (MSW)', () => {
             watched(27205, 'Inception', '2026-04-01T00:00:00Z'),
           ],
           total: null,
+          hasMore: false,
         })
       )
     );
@@ -425,6 +433,7 @@ describe('ProfileMoviesSection (MSW)', () => {
             watched(i + 1, `Film ${i + 1}`, `2026-06-${String(20 - i).padStart(2, '0')}T00:00:00Z`)
           ),
           total: null,
+          hasMore: false,
         })
       )
     );
@@ -446,6 +455,7 @@ describe('ProfileMoviesSection (MSW)', () => {
         return apiJson<'UserWatchedMoviesResponse'>({
           items: [watched(949, 'Heat', '2026-05-01T00:00:00Z')],
           total: null,
+          hasMore: false,
         });
       })
     );
@@ -462,6 +472,7 @@ describe('ProfileMoviesSection (MSW)', () => {
         apiJson<'UserWatchedMoviesResponse'>({
           items: [watched(949, 'Heat', '2026-05-01T00:00:00Z')],
           total: 250,
+          hasMore: false,
         })
       )
     );
@@ -482,6 +493,7 @@ describe('ProfileMoviesSection (MSW)', () => {
         return apiJson<'UserWatchedMoviesResponse'>({
           items: [watched(949, 'Heat', '2026-05-01T00:00:00Z')],
           total: null,
+          hasMore: false,
         });
       })
     );
@@ -553,6 +565,7 @@ describe('ProfileMoviesSection (MSW)', () => {
         apiJson<'UserWatchedMoviesResponse'>({
           items: [watched(27205, 'Inception', '2026-06-01T00:00:00Z')],
           total: null,
+          hasMore: false,
         })
       ),
       http.get(`${TEST_API_V1}/users/alice/watchlist`, () =>
@@ -596,7 +609,7 @@ describe('ProfileMoviesSection (MSW)', () => {
     it('shows a visitor the latest titles of the watchlist with its count and a way to the full list', async () => {
       server.use(
         http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null })
+          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
         ),
         watchlistPage
       );
@@ -614,7 +627,7 @@ describe('ProfileMoviesSection (MSW)', () => {
     it('holds the place of the posters while the watchlist loads', async () => {
       server.use(
         http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null })
+          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
         ),
         http.get(`${TEST_API_V1}/users/alice/watchlist`, async () => {
           await delay('infinite');
@@ -632,7 +645,7 @@ describe('ProfileMoviesSection (MSW)', () => {
       let calls = 0;
       server.use(
         http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null })
+          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
         ),
         http.get(`${TEST_API_V1}/users/alice/watchlist`, () => {
           calls += 1;
@@ -671,6 +684,7 @@ describe('ProfileMoviesSection (MSW)', () => {
           apiJson<'UserWatchedMoviesResponse'>({
             items: [watched(949, 'Heat', '2026-05-01T00:00:00Z')],
             total: null,
+            hasMore: false,
           })
         )
       );
@@ -684,7 +698,7 @@ describe('ProfileMoviesSection (MSW)', () => {
     it('flags my hidden watchlist and leads to the setting that shows it', async () => {
       server.use(
         http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null })
+          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
         ),
         watchlistPage
       );
@@ -707,7 +721,7 @@ describe('ProfileMoviesSection (MSW)', () => {
       stubMatchMedia((query) => query.includes('767px'));
       server.use(
         http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null })
+          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
         ),
         watchlistPage
       );
@@ -723,7 +737,7 @@ describe('ProfileMoviesSection (MSW)', () => {
     it('tells me my watchlist is empty instead of hiding it from me', async () => {
       server.use(
         http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null })
+          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
         )
       );
 

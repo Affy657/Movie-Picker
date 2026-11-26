@@ -23,7 +23,7 @@ public sealed class GetMovieShowcaseHandlerTests
     public GetMovieShowcaseHandlerTests() => GivenEnrichment(new TmdbMovieEnrichment(7.5, [], null, 120));
 
     private void GivenEnrichment(TmdbMovieEnrichment? enrichment) =>
-        _tmdb.Setup(t => t.GetEnrichmentAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetEnrichmentAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<string>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(enrichment);
 
     private static readonly MoviePickerOptions DefaultOptions = new();
@@ -44,7 +44,7 @@ public sealed class GetMovieShowcaseHandlerTests
 
     private void VerifyDiscoveries(Times times) =>
         _tmdb.Verify(
-            t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CancellationToken>()),
+            t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()),
             times);
 
     private void VerifySharedWrites(Times times) =>
@@ -73,7 +73,7 @@ public sealed class GetMovieShowcaseHandlerTests
     [Fact]
     public async Task HandleAsync_TrendingWithoutGenre_UsesTrendingEndpoint()
     {
-        _tmdb.Setup(t => t.GetTrendingMoviesAsync(MovieShowcaseCatalog.PagesPerSection, It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(MovieShowcaseCatalog.PagesPerSection, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(100));
 
         var result = await Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending));
@@ -81,7 +81,7 @@ public sealed class GetMovieShowcaseHandlerTests
         Assert.Equal(100, result.Items.Count);
         Assert.Equal(MovieShowcaseSections.Trending, result.Section);
         _tmdb.Verify(
-            t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CancellationToken>()),
+            t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -91,6 +91,7 @@ public sealed class GetMovieShowcaseHandlerTests
         _tmdb.Setup(t => t.DiscoverMoviesAsync(
                 It.Is<TmdbDiscoveryCriteria>(c => c.GenreIds != null && c.GenreIds.Contains(35)),
                 MovieShowcaseCatalog.PagesPerSection,
+                It.IsAny<CatalogLanguage>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(40));
 
@@ -116,7 +117,7 @@ public sealed class GetMovieShowcaseHandlerTests
     public async Task HandleAsync_KnownTheme_Discovers(string theme)
     {
         _tmdb.Setup(t => t.DiscoverMoviesAsync(
-                It.IsAny<TmdbDiscoveryCriteria>(), MovieShowcaseCatalog.PagesPerSection, It.IsAny<CancellationToken>()))
+                It.IsAny<TmdbDiscoveryCriteria>(), MovieShowcaseCatalog.PagesPerSection, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(60));
 
         var result = await Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Theme, theme));
@@ -142,7 +143,7 @@ public sealed class GetMovieShowcaseHandlerTests
     [Fact]
     public async Task HandleAsync_TmdbDown_ThrowsServiceUnavailable()
     {
-        _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("tmdb down"));
 
         await Assert.ThrowsAsync<ServiceUnavailableException>(
@@ -152,7 +153,7 @@ public sealed class GetMovieShowcaseHandlerTests
     [Fact]
     public async Task HandleAsync_TmdbAnswersUnreadableBody_ThrowsServiceUnavailable()
     {
-        _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new System.Text.Json.JsonException("not json"));
 
         await Assert.ThrowsAsync<ServiceUnavailableException>(
@@ -162,7 +163,7 @@ public sealed class GetMovieShowcaseHandlerTests
     [Fact]
     public async Task HandleAsync_LoadOutlivingItsBudget_AnswersServiceUnavailable()
     {
-        _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .Returns(new TaskCompletionSource<IReadOnlyList<TmdbSearchItem>>().Task);
         var handler = new GetMovieShowcaseHandler(
             _tmdb.Object,
@@ -178,21 +179,21 @@ public sealed class GetMovieShowcaseHandlerTests
     [Fact]
     public async Task HandleAsync_SecondCall_ServedFromCache()
     {
-        _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(20));
 
         var handler = Build();
         await handler.HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending));
         await handler.HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending));
 
-        _tmdb.Verify(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
+        _tmdb.Verify(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task HandleAsync_DifferentGenres_UseDistinctCacheEntries()
     {
         _tmdb.Setup(t => t.DiscoverMoviesAsync(
-                It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+                It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(20));
 
         var handler = Build();
@@ -200,7 +201,7 @@ public sealed class GetMovieShowcaseHandlerTests
         await handler.HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending, GenreIds: [18]));
 
         _tmdb.Verify(
-            t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CancellationToken>()),
+            t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()),
             Times.Exactly(2));
     }
 
@@ -305,6 +306,7 @@ public sealed class GetMovieShowcaseHandlerTests
                     && c.WatchProviderIds.Contains(8)
                     && c.WatchRegion == "FR"),
                 MovieShowcaseCatalog.PagesPerSection,
+                It.IsAny<CatalogLanguage>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(30));
 
@@ -325,7 +327,7 @@ public sealed class GetMovieShowcaseHandlerTests
     [Fact]
     public async Task HandleAsync_Recommendations_UsesSeedMovie()
     {
-        _tmdb.Setup(t => t.GetRecommendationsAsync(27_205, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetRecommendationsAsync(27_205, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(12));
 
         var result = await Build().HandleAsync(
@@ -337,7 +339,7 @@ public sealed class GetMovieShowcaseHandlerTests
     [Fact]
     public async Task HandleAsync_RecommendationsForASeries_AsksForSeriesLikeIt()
     {
-        _tmdb.Setup(t => t.GetRecommendationsAsync(1_399, MovieMediaType.Tv, It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetRecommendationsAsync(1_399, MovieMediaType.Tv, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(4));
 
         var result = await Build().HandleAsync(new MovieShowcaseQuery(
@@ -345,14 +347,14 @@ public sealed class GetMovieShowcaseHandlerTests
 
         Assert.Equal(4, result.Items.Count);
         _tmdb.Verify(
-            t => t.GetRecommendationsAsync(It.IsAny<int>(), MovieMediaType.Movie, It.IsAny<CancellationToken>()),
+            t => t.GetRecommendationsAsync(It.IsAny<int>(), MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
     [Fact]
     public async Task HandleAsync_FilmAndSeriesSeedsSharingAnId_DoNotShareAnEntry()
     {
-        _tmdb.Setup(t => t.GetRecommendationsAsync(1_399, It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetRecommendationsAsync(1_399, It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(2));
         var handler = Build();
 
@@ -361,7 +363,7 @@ public sealed class GetMovieShowcaseHandlerTests
             MovieShowcaseSections.Recommendations, SeedTmdbId: 1_399, SeedMediaType: MovieMediaType.Tv));
 
         _tmdb.Verify(
-            t => t.GetRecommendationsAsync(1_399, It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()),
+            t => t.GetRecommendationsAsync(1_399, It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()),
             Times.Exactly(2));
     }
 
@@ -383,6 +385,7 @@ public sealed class GetMovieShowcaseHandlerTests
         _tmdb.Setup(t => t.DiscoverMoviesAsync(
                 It.IsAny<TmdbDiscoveryCriteria>(),
                 MovieShowcaseCatalog.PagesPerSection,
+                It.IsAny<CatalogLanguage>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(20));
 
@@ -399,8 +402,9 @@ public sealed class GetMovieShowcaseHandlerTests
         _tmdb.Setup(t => t.DiscoverMoviesAsync(
                 It.IsAny<TmdbDiscoveryCriteria>(),
                 It.IsAny<int>(),
+                It.IsAny<CatalogLanguage>(),
                 It.IsAny<CancellationToken>()))
-            .Callback<TmdbDiscoveryCriteria, int, CancellationToken>((c, _, _) => seen = c)
+            .Callback<TmdbDiscoveryCriteria, int, CatalogLanguage, CancellationToken>((c, _, _, _) => seen = c)
             .ReturnsAsync(Items(5));
 
         await Build().HandleAsync(
@@ -415,6 +419,7 @@ public sealed class GetMovieShowcaseHandlerTests
         _tmdb.Setup(t => t.DiscoverMoviesAsync(
                 It.IsAny<TmdbDiscoveryCriteria>(),
                 It.IsAny<int>(),
+                It.IsAny<CatalogLanguage>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(7));
 
@@ -426,6 +431,7 @@ public sealed class GetMovieShowcaseHandlerTests
             t => t.DiscoverMoviesAsync(
                 It.IsAny<TmdbDiscoveryCriteria>(),
                 It.IsAny<int>(),
+                It.IsAny<CatalogLanguage>(),
                 It.IsAny<CancellationToken>()),
             Times.Exactly(2));
     }
@@ -443,13 +449,13 @@ public sealed class GetMovieShowcaseHandlerTests
         var result = await Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending));
 
         Assert.Equal("Depuis le cache", Assert.Single(result.Items).Title);
-        _tmdb.Verify(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+        _tmdb.Verify(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task HandleAsync_SharedCacheMiss_PublishesTheLoadedSection()
     {
-        _tmdb.Setup(t => t.GetTrendingMoviesAsync(MovieShowcaseCatalog.PagesPerSection, It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(MovieShowcaseCatalog.PagesPerSection, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(3));
 
         await Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending));
@@ -467,7 +473,7 @@ public sealed class GetMovieShowcaseHandlerTests
     public async Task HandleAsync_ConcurrentRequestsOnTheSameSection_HitTmdbOnce()
     {
         var gate = new TaskCompletionSource<IReadOnlyList<TmdbSearchItem>>();
-        _tmdb.Setup(t => t.GetTrendingMoviesAsync(MovieShowcaseCatalog.PagesPerSection, It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(MovieShowcaseCatalog.PagesPerSection, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .Returns(gate.Task);
         var handler = Build();
         var query = new MovieShowcaseQuery(MovieShowcaseSections.Trending);
@@ -478,7 +484,7 @@ public sealed class GetMovieShowcaseHandlerTests
 
         Assert.Equal(2, (await first).Items.Count);
         Assert.Equal(2, (await second).Items.Count);
-        _tmdb.Verify(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
+        _tmdb.Verify(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Theory]
@@ -487,11 +493,11 @@ public sealed class GetMovieShowcaseHandlerTests
     [InlineData(MovieShowcaseSections.Director)]
     public async Task HandleAsync_SectionKeyedOnAnArbitraryId_StaysOutOfTheSharedCache(string section)
     {
-        _tmdb.Setup(t => t.GetRecommendationsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetRecommendationsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(2));
-        _tmdb.Setup(t => t.GetCollectionMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetCollectionMoviesAsync(It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(2));
-        _tmdb.Setup(t => t.GetDirectedMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetDirectedMoviesAsync(It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(2));
 
         var result = await Build().HandleAsync(new MovieShowcaseQuery(
@@ -510,7 +516,7 @@ public sealed class GetMovieShowcaseHandlerTests
     [Fact]
     public async Task HandleAsync_TrendingWithSeveralGenres_StaysOutOfTheSharedCache()
     {
-        _tmdb.Setup(t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(2));
 
         await Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending, GenreIds: [28, 12]));
@@ -523,7 +529,7 @@ public sealed class GetMovieShowcaseHandlerTests
     [Fact]
     public async Task HandleAsync_TrendingWithOneGenre_IsSharedAcrossInstances()
     {
-        _tmdb.Setup(t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(2));
 
         await Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending, GenreIds: [28]));
@@ -536,7 +542,7 @@ public sealed class GetMovieShowcaseHandlerTests
     [Fact]
     public async Task HandleAsync_ParametersTheSectionIgnores_ReuseOneEntry()
     {
-        _tmdb.Setup(t => t.GetTrendingMoviesAsync(MovieShowcaseCatalog.PagesPerSection, It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(MovieShowcaseCatalog.PagesPerSection, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(3));
         var handler = Build();
 
@@ -545,7 +551,7 @@ public sealed class GetMovieShowcaseHandlerTests
         var crafted = await handler.HandleAsync(new MovieShowcaseQuery(
             MovieShowcaseSections.Trending, Theme: "nawak", CollectionId: 7, Provider: "nawak", SeedTmdbId: 43));
 
-        _tmdb.Verify(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
+        _tmdb.Verify(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()), Times.Once);
         VerifySharedWrites(Times.Once());
         Assert.Equal(3, crafted.Items.Count);
         Assert.Null(crafted.Theme);
@@ -556,7 +562,7 @@ public sealed class GetMovieShowcaseHandlerTests
     [InlineData(MovieShowcaseSections.MostProposed)]
     public async Task HandleAsync_GenresOnASectionWithoutGenres_ReuseTheSectionEntry(string section)
     {
-        _tmdb.Setup(t => t.GetNowPlayingMoviesAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetNowPlayingMoviesAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(3));
         _movies.Setup(r => r.ListMostProposedAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Ranking(DefaultOptions.MostProposedMinDistinctMovies));
@@ -579,7 +585,7 @@ public sealed class GetMovieShowcaseHandlerTests
         string variant)
     {
         var shared = new InMemorySharedCache();
-        _tmdb.Setup(t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(3));
         Assert.True(await BuildAnotherInstanceOn(shared).RefreshAsync(CatalogQuery(section, catalogKey)));
 
@@ -605,7 +611,7 @@ public sealed class GetMovieShowcaseHandlerTests
 
         Assert.Equal(ErrorCodes.UnknownGenre, ex.Reason);
         _tmdb.Verify(
-            t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CancellationToken>()),
+            t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()),
             Times.Never);
         VerifySharedWrites(Times.Never());
     }
@@ -613,7 +619,7 @@ public sealed class GetMovieShowcaseHandlerTests
     [Fact]
     public async Task HandleAsync_CollectionOutOfTheCatalog_IsReadFromTmdb()
     {
-        _tmdb.Setup(t => t.GetCollectionMoviesAsync(4242, It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetCollectionMoviesAsync(4242, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(3));
 
         var result = await Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Collection, CollectionId: 4242));
@@ -628,7 +634,7 @@ public sealed class GetMovieShowcaseHandlerTests
             () => Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Collection, CollectionId: 2_000_000_000)));
 
         Assert.Equal(ErrorCodes.UnknownCollection, ex.Reason);
-        _tmdb.Verify(t => t.GetCollectionMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+        _tmdb.Verify(t => t.GetCollectionMoviesAsync(It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -639,14 +645,14 @@ public sealed class GetMovieShowcaseHandlerTests
 
         Assert.Equal(ErrorCodes.ReferenceMovieMissing, ex.Reason);
         _tmdb.Verify(
-            t => t.GetRecommendationsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()),
+            t => t.GetRecommendationsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
     [Fact]
     public async Task HandleAsync_Director_ListsTheFilmsOfThatPerson()
     {
-        _tmdb.Setup(t => t.GetDirectedMoviesAsync(525, It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetDirectedMoviesAsync(525, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(7, idBase: 27_205));
 
         var result = await Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Director, PersonId: 525));
@@ -661,8 +667,8 @@ public sealed class GetMovieShowcaseHandlerTests
     [Fact]
     public async Task HandleAsync_TwoDirectors_DoNotShareAnEntry()
     {
-        _tmdb.Setup(t => t.GetDirectedMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((int personId, CancellationToken _) => Items(1, idBase: personId));
+        _tmdb.Setup(t => t.GetDirectedMoviesAsync(It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((int personId, CatalogLanguage _, CancellationToken _) => Items(1, idBase: personId));
         var handler = Build();
 
         var first = await handler.HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Director, PersonId: 525));
@@ -672,13 +678,13 @@ public sealed class GetMovieShowcaseHandlerTests
         Assert.Equal(525, first.Items[0].Id);
         Assert.Equal(1_032, second.Items[0].Id);
         Assert.Equal(525, again.Items[0].Id);
-        _tmdb.Verify(t => t.GetDirectedMoviesAsync(525, It.IsAny<CancellationToken>()), Times.Once);
+        _tmdb.Verify(t => t.GetDirectedMoviesAsync(525, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task HandleAsync_DirectorTmdbDown_ThrowsServiceUnavailable()
     {
-        _tmdb.Setup(t => t.GetDirectedMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetDirectedMoviesAsync(It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("tmdb down"));
 
         await Assert.ThrowsAsync<ServiceUnavailableException>(
@@ -696,27 +702,27 @@ public sealed class GetMovieShowcaseHandlerTests
             new MovieShowcaseQuery(MovieShowcaseSections.Director, SeedTmdbId: 27_205, PersonId: personId)));
 
         Assert.Equal(ErrorCodes.ReferenceMovieMissing, ex.Reason);
-        _tmdb.Verify(t => t.GetDirectedMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+        _tmdb.Verify(t => t.GetDirectedMoviesAsync(It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task HandleAsync_APersonOnAnotherSection_ReusesTheSectionEntry()
     {
-        _tmdb.Setup(t => t.GetTrendingMoviesAsync(MovieShowcaseCatalog.PagesPerSection, It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(MovieShowcaseCatalog.PagesPerSection, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(3));
         var handler = Build();
 
         await handler.HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending));
         await handler.HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending, PersonId: 525));
 
-        _tmdb.Verify(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
-        _tmdb.Verify(t => t.GetDirectedMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+        _tmdb.Verify(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()), Times.Once);
+        _tmdb.Verify(t => t.GetDirectedMoviesAsync(It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task HandleAsync_SeedAtTheEdgeOfTheRange_IsStillServed()
     {
-        _tmdb.Setup(t => t.GetRecommendationsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetRecommendationsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(2));
 
         var result = await Build().HandleAsync(new MovieShowcaseQuery(
@@ -738,7 +744,7 @@ public sealed class GetMovieShowcaseHandlerTests
     {
         var shared = new InMemorySharedCache();
         var trending = new MovieShowcaseQuery(MovieShowcaseSections.Trending);
-        _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(Items(3));
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>())).ReturnsAsync(Items(3));
         Assert.True(await BuildAnotherInstanceOn(shared).RefreshAsync(trending));
         GivenEnrichment(null);
 
@@ -752,8 +758,8 @@ public sealed class GetMovieShowcaseHandlerTests
     [Fact]
     public async Task RefreshAsync_ASingleEnrichmentMissing_DoesNotPublishTheSection()
     {
-        _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(Items(3));
-        _tmdb.Setup(t => t.GetEnrichmentAsync(2, MovieMediaType.Movie, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>())).ReturnsAsync(Items(3));
+        _tmdb.Setup(t => t.GetEnrichmentAsync(2, MovieMediaType.Movie, It.IsAny<string>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TmdbMovieEnrichment?)null);
 
         var refreshed = await Build().RefreshAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending));
@@ -765,7 +771,7 @@ public sealed class GetMovieShowcaseHandlerTests
     [Fact]
     public async Task RefreshAsync_TitleTmdbKnowsWithoutARuntime_IsComplete()
     {
-        _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(Items(3));
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>())).ReturnsAsync(Items(3));
         GivenEnrichment(new TmdbMovieEnrichment(null, [], null, null));
 
         var refreshed = await Build().RefreshAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending));
@@ -777,7 +783,7 @@ public sealed class GetMovieShowcaseHandlerTests
     [Fact]
     public async Task HandleAsync_TmdbThrottlingTheEnrichments_ServesTheListWithoutPublishingIt()
     {
-        _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(Items(3));
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>())).ReturnsAsync(Items(3));
         GivenEnrichment(null);
 
         var result = await Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending));
@@ -789,7 +795,7 @@ public sealed class GetMovieShowcaseHandlerTests
     [Fact]
     public async Task RefreshAsync_TrendingOnAGenreTmdbDoesNotHave_IsNotPublished()
     {
-        _tmdb.Setup(t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(2));
 
         var refreshed = await Build().RefreshAsync(
@@ -816,6 +822,47 @@ public sealed class GetMovieShowcaseHandlerTests
 
         _shared.Verify(
             c => c.TryGetAsync<IReadOnlyList<MovieShowcaseItemResponse>>(It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_EachInterfaceLanguage_LoadsAndSharesItsOwnSection()
+    {
+        var shared = new InMemorySharedCache();
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(MovieShowcaseCatalog.PagesPerSection, CatalogLanguage.English, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new TmdbSearchItem(129, MovieMediaType.Movie, "Spirited Away", "2001", null)]);
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(MovieShowcaseCatalog.PagesPerSection, CatalogLanguage.French, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new TmdbSearchItem(129, MovieMediaType.Movie, "Le Voyage de Chihiro", "2001", null)]);
+
+        var english = await BuildAnotherInstanceOn(shared)
+            .HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending, Language: CatalogLanguage.English));
+        var french = await BuildAnotherInstanceOn(shared)
+            .HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending, Language: CatalogLanguage.French));
+
+        Assert.Equal("Spirited Away", Assert.Single(english.Items).Title);
+        Assert.Equal("Le Voyage de Chihiro", Assert.Single(french.Items).Title);
+        Assert.Equal(
+            "Spirited Away",
+            Assert.Single((await shared.TryGetAsync<IReadOnlyList<MovieShowcaseItemResponse>>("showcase-v2:en-US:trending:-:-:-:-:-"))!.Value).Title);
+        Assert.Equal(
+            "Le Voyage de Chihiro",
+            Assert.Single((await shared.TryGetAsync<IReadOnlyList<MovieShowcaseItemResponse>>("showcase-v2:fr-FR:trending:-:-:-:-:-"))!.Value).Title);
+        _tmdb.Verify(
+            t => t.GetEnrichmentAsync(129, MovieMediaType.Movie, It.IsAny<string>(), CatalogLanguage.English, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithoutALanguage_ReadsTheCatalogInFrench()
+    {
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(MovieShowcaseCatalog.PagesPerSection, CatalogLanguage.French, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Items(3));
+
+        var result = await Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending));
+
+        Assert.Equal(3, result.Items.Count);
+        _tmdb.Verify(
+            t => t.GetTrendingMoviesAsync(It.IsAny<int>(), CatalogLanguage.English, It.IsAny<CancellationToken>()),
             Times.Never);
     }
 }

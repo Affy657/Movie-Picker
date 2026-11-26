@@ -1,6 +1,7 @@
 import { apiPath, fetchApi } from '@/shared/api/client';
 import type { ApiRequestPath, ApiRoute } from '@/shared/api/apiRoutes';
 import type { ApiSchemas } from '@/shared/api/contract';
+import { readAllPages } from '@/shared/api/readAllPages';
 import type { MovieMediaType } from '@/shared/types/movie';
 
 export type WatchedSource = ApiSchemas['WatchedSource'];
@@ -18,7 +19,7 @@ export type WatchedMovie = ApiSchemas['UserWatchedMovieItem'];
 
 type WatchedMoviesResponse = ApiSchemas['UserWatchedMoviesResponse'];
 
-export type WatchedMovies = Omit<WatchedMoviesResponse, 'total'> & { total: number };
+export type WatchedMovies = Pick<WatchedMoviesResponse, 'items'> & { total: number };
 
 export const WATCHED_MOVIES_TAKE = 1000;
 
@@ -84,14 +85,36 @@ export async function unmarkWatched(ref: WatchedTitleRef): Promise<void> {
   await fetchApi(titlePath(ref), { method: 'DELETE' });
 }
 
-export async function fetchMyWatchedMovies(
-  take = WATCHED_MOVIES_TAKE,
+function fetchWatchedPage(
+  skip: number,
+  take: number,
   signal?: AbortSignal
-): Promise<WatchedMovies> {
-  const response = await fetchApi<WatchedMoviesResponse | null>(
-    `${apiPath('users', 'me', 'watched-movies')}?take=${take}`,
+): Promise<WatchedMoviesResponse | null> {
+  return fetchApi<WatchedMoviesResponse | null>(
+    `${apiPath('users', 'me', 'watched-movies')}?skip=${skip}&take=${take}`,
     { signal }
   );
-  const items = (response?.items ?? []).map((item) => ({ ...item, genreIds: item.genreIds ?? [] }));
+}
+
+function withGenres(items: readonly WatchedMovie[]): WatchedMovie[] {
+  return items.map((item) => ({ ...item, genreIds: item.genreIds ?? [] }));
+}
+
+export async function fetchMyWatchedMovies(
+  take: number,
+  signal?: AbortSignal
+): Promise<WatchedMovies> {
+  const response = await fetchWatchedPage(0, take, signal);
+  const items = withGenres(response?.items ?? []);
   return { items, total: response?.total ?? items.length };
+}
+
+export async function fetchAllMyWatchedMovies(signal?: AbortSignal): Promise<WatchedMovies> {
+  let total = 0;
+  const items = await readAllPages(async (skip) => {
+    const page = await fetchWatchedPage(skip, WATCHED_MOVIES_TAKE, signal);
+    total = page?.total ?? 0;
+    return page;
+  });
+  return { items: withGenres(items), total: Math.max(total, items.length) };
 }

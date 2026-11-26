@@ -807,6 +807,65 @@ describe('EventDetail (MSW)', () => {
       expect(screen.getByTestId('participants-action-success')).toHaveTextContent('Alice');
     });
 
+    it('lets a removed person back in from the participants window, with the host token', async () => {
+      const user = userEvent.setup();
+      setupHostJoined();
+      const removedPeople = [
+        {
+          id: 'u-lea',
+          displayName: 'Léa',
+          avatarId: '',
+          handle: null,
+          accentColor: 'default' as const,
+        },
+      ];
+      let letBackInUrl = '';
+      let letBackInHostToken: string | null = null;
+      server.use(
+        ...createEventDetailHandlers({ slug, title: 'Soirée démo', removedPeople }),
+        http.delete(`${TEST_API_V1}/events/${slug}/removed-people/:userId`, ({ request }) => {
+          letBackInUrl = request.url;
+          letBackInHostToken = request.headers.get('X-Host-Token');
+          removedPeople.length = 0;
+          return new HttpResponse(null, { status: 204 });
+        })
+      );
+
+      renderEventDetail(`/e/${slug}?host=host-token`);
+      await openParticipantsPanel(user);
+      const removed = await screen.findByRole('list', { name: 'Retirés de la soirée' });
+      await user.click(within(removed).getByRole('button', { name: 'Laisser revenir Léa' }));
+
+      await waitFor(() =>
+        expect(screen.queryByRole('list', { name: 'Retirés de la soirée' })).toBeNull()
+      );
+      expect(letBackInUrl).toContain(`/events/${slug}/removed-people/u-lea`);
+      expect(letBackInHostToken).toBe('host-token');
+    });
+
+    it('says so when the API refuses to let a removed person back in', async () => {
+      const user = userEvent.setup();
+      setupHostJoined();
+      server.use(
+        ...createEventDetailHandlers({
+          slug,
+          title: 'Soirée démo',
+          removedPeople: [
+            { id: 'u-lea', displayName: 'Léa', avatarId: '', handle: null, accentColor: 'default' },
+          ],
+        }),
+        http.delete(`${TEST_API_V1}/events/${slug}/removed-people/:userId`, () =>
+          apiErrorJson(409, 'event_finished')
+        )
+      );
+
+      renderEventDetail(`/e/${slug}?host=host-token`);
+      await openParticipantsPanel(user);
+      await user.click(await screen.findByRole('button', { name: 'Laisser revenir Léa' }));
+
+      expect(await screen.findByText('Soirée terminée. Lecture seule.')).toBeInTheDocument();
+    });
+
     it('cancelling the modal: no DELETE sent', async () => {
       const user = userEvent.setup();
       setupHostJoined();
@@ -863,7 +922,8 @@ describe('EventDetail (MSW)', () => {
       {
         signedIn = asParticipant,
         lifecycle = 'finished',
-      }: { signedIn?: boolean; lifecycle?: 'finished' | 'live' } = {}
+        ratingPromptDue = false,
+      }: { signedIn?: boolean; lifecycle?: 'finished' | 'live'; ratingPromptDue?: boolean } = {}
     ) {
       if (signedIn) {
         server.use(
@@ -892,6 +952,7 @@ describe('EventDetail (MSW)', () => {
               isHost: false,
               isFinished: lifecycle === 'finished',
               lifecycle,
+              ratingPromptDue,
               winners: [
                 { movieId: 'm-win', pickMethod: 'wheel', pickedAt: '2026-09-19T20:00:00Z' },
               ],
@@ -983,10 +1044,21 @@ describe('EventDetail (MSW)', () => {
       ].join('-');
     }
 
+    function recordRatingPrompts(): string[] {
+      const calls: string[] = [];
+      server.use(
+        http.put(`${TEST_API_V1}/events/${slug}/rating-prompt`, ({ request }) => {
+          calls.push(request.url);
+          return new HttpResponse(null, { status: 204 });
+        })
+      );
+      return calls;
+    }
+
     it('opens the rating by itself when a participant comes back after the night', async () => {
-      localStorage.removeItem('moviepicker_rating_prompted');
       setStoredParticipant(slug, myPid, 'Alice');
-      serveFinishedNightWithWinner(false, true, yesterday());
+      serveFinishedNightWithWinner(false, true, yesterday(), { ratingPromptDue: true });
+      recordRatingPrompts();
 
       renderEventDetail(`/e/${slug}`);
 
@@ -994,13 +1066,20 @@ describe('EventDetail (MSW)', () => {
       expect(within(dialog).getByText('Matrix')).toBeInTheDocument();
     });
 
-    it('opens the rating by itself only once for a movie', async () => {
-      localStorage.removeItem('moviepicker_rating_prompted');
+    it('tells the server it has asked, so no other device asks again', async () => {
       setStoredParticipant(slug, myPid, 'Alice');
-      serveFinishedNightWithWinner(false, true, yesterday());
-      const firstVisit = renderEventDetail(`/e/${slug}`);
+      serveFinishedNightWithWinner(false, true, yesterday(), { ratingPromptDue: true });
+      const prompts = recordRatingPrompts();
+
+      renderEventDetail(`/e/${slug}`);
+
       await screen.findByRole('dialog', { name: 'Noter ce film' });
-      firstVisit.unmount();
+      await waitFor(() => expect(prompts).toHaveLength(1));
+    });
+
+    it('opens nothing by itself once the server says the participant was already asked', async () => {
+      setStoredParticipant(slug, myPid, 'Alice');
+      serveFinishedNightWithWinner(false, true, yesterday(), { ratingPromptDue: false });
 
       renderEventDetail(`/e/${slug}`);
 
@@ -1011,7 +1090,6 @@ describe('EventDetail (MSW)', () => {
     });
 
     it('lets a participant rate while the night is underway, without opening it by itself', async () => {
-      localStorage.removeItem('moviepicker_rating_prompted');
       setStoredParticipant(slug, myPid, 'Alice');
       serveFinishedNightWithWinner(false, true, yesterday(), { lifecycle: 'live' });
 
@@ -1024,7 +1102,6 @@ describe('EventDetail (MSW)', () => {
     });
 
     it('asks a participant who is signed out to sign in before rating', async () => {
-      localStorage.removeItem('moviepicker_rating_prompted');
       setStoredParticipant(slug, myPid, 'Alice');
       serveFinishedNightWithWinner(false, true, yesterday(), { signedIn: false });
 
@@ -1049,7 +1126,7 @@ describe('EventDetail (MSW)', () => {
       const hostYourOwn = await screen.findByRole('link', { name: 'Organisez la vôtre' });
       expect(hostYourOwn).toHaveAttribute(
         'href',
-        `/register?returnTo=${encodeURIComponent('/new?from=night')}`
+        `/register?returnTo=${encodeURIComponent('/new?from=event')}`
       );
       const signIn = screen.getByRole('link', { name: 'Se connecter pour noter' });
       expect(
@@ -1070,7 +1147,6 @@ describe('EventDetail (MSW)', () => {
     });
 
     it('leaves hosting out for a participant who only has to sign in to rate', async () => {
-      localStorage.removeItem('moviepicker_rating_prompted');
       setStoredParticipant(slug, myPid, 'Alice');
       serveFinishedNightWithWinner(false, true, yesterday(), { signedIn: false });
 
@@ -1080,8 +1156,7 @@ describe('EventDetail (MSW)', () => {
       expect(screen.queryByRole('link', { name: 'Organisez la vôtre' })).toBeNull();
     });
 
-    it('leaves the rating closed on a night older than a week', async () => {
-      localStorage.removeItem('moviepicker_rating_prompted');
+    it('leaves the rating closed once the catch-up window of the night is over', async () => {
       setStoredParticipant(slug, myPid, 'Alice');
       serveFinishedNightWithWinner(false);
 

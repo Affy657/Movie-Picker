@@ -7,14 +7,14 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { ROUTES, withReturnTo } from '@/app/routes';
 import { useTranslation } from '@/shared/i18n';
 import styles from './NightRecap.module.css';
-import { ENTRY_ORIGIN_QUERY_PARAM } from '@/shared/analytics/entryOrigin';
+import { declaringEntryOrigin } from '@/shared/analytics/entryOrigin';
 
 export default function NightRecapCta({ eventSlug }: Readonly<{ eventSlug: string | null }>) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const hostYourOwn = user
     ? ROUTES.createEvent
-    : withReturnTo(ROUTES.register, `${ROUTES.createEvent}?${ENTRY_ORIGIN_QUERY_PARAM}=recap`);
+    : withReturnTo(ROUTES.register, declaringEntryOrigin(ROUTES.createEvent, 'recap'));
 
   return (
     <Card as="section" padding="lg" className={styles.cta} aria-label={t('events.recap.ctaTitle')}>

@@ -165,6 +165,32 @@ describe('MovieList', () => {
       expect(screen.queryByRole('menu')).not.toBeInTheDocument();
     });
 
+    it('in a night that hides who proposed what, offers a shuffled order instead of the added order', async () => {
+      renderWithLocale(
+        <MovieList
+          movies={movies}
+          {...baseProps()}
+          viewMode="list"
+          showHeader
+          sortBy="createdAt"
+          sortDir="asc"
+          onSetSort={vi.fn()}
+          hidesAddedOrder
+        />
+      );
+
+      await userEvent.setup().click(screen.getByRole('button', { name: 'Trier par film' }));
+
+      const menu = screen.getByRole('menu', { name: 'Trier par film' });
+      expect(within(menu).getByRole('menuitemradio', { name: 'Ordre mélangé' })).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
+      expect(
+        within(menu).queryByRole('menuitemradio', { name: 'Ordre d’ajout' })
+      ).not.toBeInTheDocument();
+    });
+
     it('shows logos instead of provider names, three at most before a +N button', () => {
       const six: WatchProviderOffer[] = [
         'Netflix',

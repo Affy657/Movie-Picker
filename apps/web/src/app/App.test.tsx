@@ -317,7 +317,7 @@ describe('App (routes)', () => {
         ),
         createUserStatsHandler('alice'),
         http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null })
+          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
         )
       );
       renderRoutes(['/u/alice']);
@@ -346,7 +346,7 @@ describe('App (routes)', () => {
           )
         ),
         http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null })
+          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
         )
       );
       renderRoutes(['/u/alice/films']);

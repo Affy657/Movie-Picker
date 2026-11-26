@@ -26,6 +26,18 @@ public sealed class WatchlistControllerTests
     }
 
     [Fact]
+    public async Task GetAvailability_ForwardsTheSkipAndTakeOfThePage()
+    {
+        var handler = new Mock<IGetWatchlistAvailabilityHandler>();
+        var response = new WatchlistAvailabilityResponse { Items = [], HasMore = true };
+        handler.Setup(h => h.HandleAsync("u1", 500, 500, It.IsAny<CancellationToken>())).ReturnsAsync(response);
+
+        var result = await _sut.GetAvailability(500, 500, handler.Object, "u1", CancellationToken.None);
+
+        Assert.Same(response, Assert.IsType<OkObjectResult>(result).Value);
+    }
+
+    [Fact]
     public async Task Add_Authenticated_ReturnsCreatedWithItem()
     {
         var handler = new Mock<IAddToWatchlistHandler>();

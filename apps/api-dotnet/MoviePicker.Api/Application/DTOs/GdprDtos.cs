@@ -15,6 +15,7 @@ public sealed record UserDataExportResponse
     public IReadOnlyList<ExportedWatchlistItem> Watchlist { get; init; } = Array.Empty<ExportedWatchlistItem>();
     public IReadOnlyList<ExportedMovieList> MovieLists { get; init; } = Array.Empty<ExportedMovieList>();
     public IReadOnlyList<ExportedJoinedMovieList> JoinedMovieLists { get; init; } = Array.Empty<ExportedJoinedMovieList>();
+    public IReadOnlyList<ExportedListContribution> TitlesAddedToOthersLists { get; init; } = Array.Empty<ExportedListContribution>();
     public IReadOnlyList<ExportedListInvitation> PendingListInvitations { get; init; } = Array.Empty<ExportedListInvitation>();
     public IReadOnlyList<ExportedFriendGroup> FriendGroups { get; init; } = Array.Empty<ExportedFriendGroup>();
     public IReadOnlyList<ExportedJoinedFriendGroup> JoinedFriendGroups { get; init; } = Array.Empty<ExportedJoinedFriendGroup>();
@@ -69,6 +70,7 @@ public sealed record ExportedProfile
 {
     public string UserId { get; init; } = string.Empty;
     public string Email { get; init; } = string.Empty;
+    public DateTimeOffset? EmailVerifiedAt { get; init; }
     public string DisplayName { get; init; } = string.Empty;
     public string Handle { get; init; } = string.Empty;
     public string? Bio { get; init; }
@@ -243,6 +245,14 @@ public sealed record ExportedJoinedMovieList
     public string Name { get; init; } = string.Empty;
     public string OwnerDisplayName { get; init; } = string.Empty;
     public DateTimeOffset JoinedAt { get; init; }
+}
+
+public sealed record ExportedListContribution
+{
+    public string ListId { get; init; } = string.Empty;
+    public string Name { get; init; } = string.Empty;
+    public string OwnerDisplayName { get; init; } = string.Empty;
+    public IReadOnlyList<ExportedMovieListItem> Items { get; init; } = Array.Empty<ExportedMovieListItem>();
 }
 
 public sealed record ExportedListInvitation

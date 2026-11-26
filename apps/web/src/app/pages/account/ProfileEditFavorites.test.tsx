@@ -114,13 +114,13 @@ describe('ProfileEditFavorites (MSW)', () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(me)),
       http.get(`${TEST_API_V1}/users/me/watched-movies`, () =>
-        apiJson<'UserWatchedMoviesResponse'>({ items: [], total: 0 })
+        apiJson<'UserWatchedMoviesResponse'>({ items: [], total: 0, hasMore: false })
       ),
       http.get(`${TEST_API_V1}/watchlist`, () =>
         apiJson<'WatchlistResponse'>({ items: [], total: 0, hasMore: false })
       ),
       http.get(`${TEST_API_V1}/watchlist/availability`, () =>
-        apiJson<'WatchlistAvailabilityResponse'>({ items: [], partial: false })
+        apiJson<'WatchlistAvailabilityResponse'>({ items: [], partial: false, hasMore: false })
       )
     );
   });
@@ -191,6 +191,7 @@ describe('ProfileEditFavorites (MSW)', () => {
             }),
           ],
           total: 1,
+          hasMore: false,
         })
       ),
       http.get(`${TEST_API_V1}/watchlist`, () =>

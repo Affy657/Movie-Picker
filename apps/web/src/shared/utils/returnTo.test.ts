@@ -32,6 +32,7 @@ describe('safeReturnTo', () => {
     expect(safeReturnTo('/register')).toBe('/');
     expect(safeReturnTo('/forgot-password')).toBe('/');
     expect(safeReturnTo('/reset?token=abc')).toBe('/');
+    expect(safeReturnTo('/verify-email?token=abc')).toBe('/');
   });
 
   it('rejects the authentication pages even with a trailing slash or a different case (react-router resolves them to the same route)', () => {

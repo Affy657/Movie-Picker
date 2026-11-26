@@ -10,6 +10,7 @@ import {
   Ruler,
   Workflow,
 } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { TECH_METRICS } from './generated/techMetrics';
 import {
@@ -323,10 +324,86 @@ export function LayersDiagram() {
   );
 }
 
+function ContractVertical() {
+  const { t } = useTranslation();
+  const { placed, bottom } = placeSteps(
+    [
+      {
+        key: 'api',
+        label: t('tech.diagram.contractApi'),
+        sub: [t('tech.diagram.contractApiSub')],
+        heading: 'title',
+        logo: (top) => (
+          <DotNetLogo x={VERTICAL_W / 2 - ICON_SIZE.lg / 2} y={top} size={ICON_SIZE.lg} />
+        ),
+      },
+      {
+        key: 'file',
+        label: t('tech.diagram.contractFile'),
+        sub: [t('tech.diagram.contractFileSub')],
+        heading: 'title',
+        arrow: { stroke: META, width: 1.5 },
+      },
+      {
+        key: 'types',
+        label: t('tech.diagram.contractTypes'),
+        sub: [t('tech.diagram.contractTypesSub')],
+        heading: 'title',
+        arrow: { stroke: META, width: 1.5 },
+      },
+      {
+        key: 'test',
+        label: t('tech.diagram.contractTest'),
+        sub: [t('tech.diagram.contractTestSub1'), t('tech.diagram.contractTestSub2')],
+        heading: 'title',
+        tone: 'primary',
+        arrow: { stroke: PRIMARY, width: 2 },
+      },
+      {
+        key: 'fail',
+        label: t('tech.diagram.contractFail'),
+        tone: 'alert',
+        arrow: { stroke: DANGER, width: 2 },
+      },
+      { key: 'drift', sub: [t('tech.diagram.contractDrift')], dashed: true, detached: true },
+    ],
+    10
+  );
+  return (
+    <VerticalSvg
+      id="tech-contract-vertical"
+      title={t('tech.diagram.contractTitle')}
+      height={bottom + VERTICAL_X}
+    >
+      <defs>
+        <ArrowMarker id="tech-arrow-contract-vertical" fill={META} />
+      </defs>
+      <StepArrows steps={placed} marker="tech-arrow-contract-vertical" x={VERTICAL_W / 2} />
+      {placed.map((step) => (
+        <VerticalStep key={step.key} step={step} />
+      ))}
+    </VerticalSvg>
+  );
+}
+
 export function ContractDiagram() {
+  return (
+    <>
+      <ContractWide />
+      <ContractVertical />
+    </>
+  );
+}
+
+function ContractWide() {
   const { t } = useTranslation();
   return (
-    <svg viewBox="0 0 880 220" role="img" aria-labelledby="tech-contract-title">
+    <svg
+      viewBox="0 0 880 220"
+      role="img"
+      aria-labelledby="tech-contract-title"
+      className={styles.wideLayout}
+    >
       <title id="tech-contract-title">{t('tech.diagram.contractTitle')}</title>
       <defs>
         <ArrowMarker id="tech-arrow-contract" fill={META} />
@@ -1031,17 +1108,340 @@ function FlowBox({
   );
 }
 
+const VERTICAL_W = 288;
+const VERTICAL_X = 10;
+const VERTICAL_BOX_W = VERTICAL_W - 2 * VERTICAL_X;
+const VERTICAL_LANE = 12;
+const VERTICAL_INSET = 12;
+const VERTICAL_LINE = 15;
+const VERTICAL_GAP = 26;
+const MONO_ADVANCE = 7.4;
+const TITLE_ADVANCE = 8.6;
+const STEP_LOGO_ROOM = ICON_SIZE.lg + 8;
+
+function charsWithin(width: number, advance = MONO_ADVANCE): number {
+  return Math.floor(width / advance);
+}
+
+type WrappedLine = { text: string; start: number };
+
+function wrapWords(text: string, maxChars: number): WrappedLine[] {
+  const lines: WrappedLine[] = [];
+  let current: WrappedLine | undefined;
+  let offset = 0;
+  for (const word of text.split(' ')) {
+    if (current && current.text.length + 1 + word.length <= maxChars) {
+      current.text = `${current.text} ${word}`;
+    } else {
+      current = { text: word, start: offset };
+      lines.push(current);
+    }
+    offset += word.length + 1;
+  }
+  return lines;
+}
+
+function WrappedText({
+  x,
+  y,
+  text,
+  width,
+  className,
+  fill,
+}: Readonly<{
+  x: number;
+  y: number;
+  text: string;
+  width: number;
+  className: string | undefined;
+  fill: string;
+}>) {
+  return wrapWords(text, charsWithin(width)).map((line, lineIndex) => (
+    <text
+      key={line.start}
+      x={x}
+      y={y + lineIndex * VERTICAL_LINE}
+      className={className}
+      fill={fill}
+    >
+      {line.text}
+    </text>
+  ));
+}
+
+function wrappedHeight(text: string, width: number): number {
+  return wrapWords(text, charsWithin(width)).length * VERTICAL_LINE;
+}
+
+type StepTone = 'plain' | 'danger' | 'alert' | 'done' | 'primary';
+
+const STEP_TONES: Record<StepTone, { fill: string; stroke: string; label: string; sub: string }> = {
+  plain: { fill: SURFACE, stroke: BORDER, label: TEXT, sub: META },
+  danger: { fill: DANGER_SOFT, stroke: DANGER, label: TEXT, sub: DANGER },
+  alert: { fill: DANGER_SOFT, stroke: DANGER, label: DANGER, sub: DANGER },
+  done: { fill: SUCCESS_SOFT, stroke: SUCCESS, label: SUCCESS, sub: SUCCESS },
+  primary: { fill: PRIMARY_SOFT, stroke: PRIMARY, label: TEXT, sub: META },
+};
+
+type VerticalStepSpec = {
+  key: string;
+  label?: string;
+  sub?: readonly string[];
+  tone?: StepTone;
+  heading?: 'label' | 'title';
+  dashed?: boolean;
+  detached?: boolean;
+  arrow?: { stroke: string; width: number };
+  logo?: (top: number) => ReactNode;
+};
+
+type StepLine = WrappedLine & { key: string; className: string | undefined; part: 'label' | 'sub' };
+
+type PlacedStep = VerticalStepSpec & { y: number; height: number; lines: StepLine[] };
+
+function stepLines(step: VerticalStepSpec, width: number): StepLine[] {
+  const inner = width - 2 * VERTICAL_INSET;
+  const title = step.heading === 'title';
+  const headingAdvance = title ? TITLE_ADVANCE : MONO_ADVANCE;
+  const heading = wrapWords(step.label ?? '', charsWithin(inner, headingAdvance))
+    .filter((line) => line.text !== '')
+    .map((line) => ({
+      ...line,
+      key: `label-${line.start}`,
+      className: title ? styles.svgTitle : styles.svgLabel,
+      part: 'label' as const,
+    }));
+  const subs = (step.sub ?? []).flatMap((sub) =>
+    wrapWords(sub, charsWithin(inner)).map((line) => ({
+      ...line,
+      key: `${sub}-${line.start}`,
+      className: styles.svgSub,
+      part: 'sub' as const,
+    }))
+  );
+  return [...heading, ...subs];
+}
+
+function stepHeight(lineCount: number): number {
+  return 44 + Math.max(0, lineCount - 2) * VERTICAL_LINE;
+}
+
+function placeSteps(
+  steps: readonly VerticalStepSpec[],
+  top: number,
+  width = VERTICAL_BOX_W
+): { placed: PlacedStep[]; bottom: number } {
+  const placed: PlacedStep[] = [];
+  let y = top;
+  for (const step of steps) {
+    const lines = stepLines(step, width);
+    const height = stepHeight(lines.length) + (step.logo ? STEP_LOGO_ROOM : 0);
+    placed.push({ ...step, y, height, lines });
+    y += height + VERTICAL_GAP;
+  }
+  return { placed, bottom: y - VERTICAL_GAP };
+}
+
+function VerticalStep({
+  step,
+  width = VERTICAL_BOX_W,
+}: Readonly<{ step: PlacedStep; width?: number }>) {
+  const tone = STEP_TONES[step.tone ?? 'plain'];
+  const textTop = step.y + (step.logo ? STEP_LOGO_ROOM : 0);
+  const firstBaseline = step.lines.length > 1 ? 21 : 27;
+  return (
+    <g>
+      <rect
+        x={VERTICAL_X}
+        y={step.y}
+        width={width}
+        height={step.height}
+        rx="10"
+        fill={tone.fill}
+        stroke={tone.stroke}
+        strokeWidth={(step.tone ?? 'plain') === 'plain' ? 1 : 1.5}
+        strokeDasharray={step.dashed ? '4 3' : undefined}
+      />
+      {step.logo?.(step.y + 10)}
+      {step.lines.map((line, lineIndex) => (
+        <text
+          key={line.key}
+          x={VERTICAL_X + width / 2}
+          y={textTop + firstBaseline + lineIndex * VERTICAL_LINE}
+          textAnchor="middle"
+          className={line.className}
+          fill={line.part === 'label' ? tone.label : tone.sub}
+        >
+          {line.text}
+        </text>
+      ))}
+    </g>
+  );
+}
+
+function StepArrows({
+  steps,
+  marker,
+  x,
+}: Readonly<{ steps: readonly PlacedStep[]; marker: string; x: number }>) {
+  return steps.slice(1).map((step, stepIndex) => {
+    const previous = steps[stepIndex] as PlacedStep;
+    if (step.detached) return null;
+    const arrow = step.arrow ?? { stroke: BORDER, width: 1.4 };
+    return (
+      <path
+        key={step.key}
+        d={`M ${x} ${previous.y + previous.height + 1} L ${x} ${step.y - 4}`}
+        stroke={arrow.stroke}
+        strokeWidth={arrow.width}
+        fill="none"
+        markerEnd={`url(#${marker})`}
+      />
+    );
+  });
+}
+
+function VerticalSvg({
+  id,
+  title,
+  height,
+  children,
+}: Readonly<{ id: string; title: string; height: number; children: ReactNode }>) {
+  return (
+    <svg
+      viewBox={`0 0 ${VERTICAL_W} ${Math.ceil(height)}`}
+      role="img"
+      aria-labelledby={`${id}-title`}
+      className={styles.verticalLayout}
+    >
+      <title id={`${id}-title`}>{title}</title>
+      {children}
+    </svg>
+  );
+}
+
 const PRODUCT_STEPS = [
   { key: 'flowSignals', sub: 'flowSignalsSub', x: 44 },
   { key: 'flowBrainstorm', sub: 'flowBrainstormSub', x: 324 },
   { key: 'flowRoadmap', sub: 'flowRoadmapSub', x: 604 },
 ] as const;
 
+const PRODUCT_STEP_W = VERTICAL_BOX_W - 2 * VERTICAL_LANE;
+const PRODUCT_LANE_X = VERTICAL_X + PRODUCT_STEP_W + VERTICAL_LANE;
+const MODEL_TEXT_X = VERTICAL_X + 48;
+const MODEL_TEXT_W = VERTICAL_X + VERTICAL_BOX_W - VERTICAL_INSET - MODEL_TEXT_X;
+
+function ProductFlowVertical() {
+  const { t } = useTranslation();
+  const { placed, bottom } = placeSteps(
+    PRODUCT_STEPS.map((step) => ({
+      key: step.key,
+      label: t(`tech.diagram.${step.key}` as TranslationKey),
+      sub: [t(`tech.diagram.${step.sub}` as TranslationKey)],
+    })),
+    34,
+    PRODUCT_STEP_W
+  );
+  const model = t('tech.diagram.frontierModel');
+  const modelSub = t('tech.diagram.frontierModelSub');
+  const modelTop = bottom + VERTICAL_GAP;
+  const modelLines = wrappedHeight(model, MODEL_TEXT_W) + wrappedHeight(modelSub, MODEL_TEXT_W);
+  const modelHeight = modelLines + 2 * VERTICAL_INSET + 4;
+  const handoffTop = modelTop + modelHeight + 26;
+  const handoff = t('tech.diagram.flowHandoff');
+  const middle = (step: PlacedStep) => step.y + step.height / 2;
+  const first = placed[0] as PlacedStep;
+  return (
+    <VerticalSvg
+      id="tech-productflow-vertical"
+      title={t('tech.diagram.productFlowTitle')}
+      height={handoffTop + wrappedHeight(handoff, VERTICAL_BOX_W)}
+    >
+      <defs>
+        <ArrowMarker id="tech-arrow-product-flow-vertical" fill={BORDER} />
+      </defs>
+      <text x={VERTICAL_X} y="20" className={styles.svgSub} fill={META}>
+        {t('tech.diagram.productFlowLabel')}
+      </text>
+      <StepArrows
+        steps={placed}
+        marker="tech-arrow-product-flow-vertical"
+        x={VERTICAL_X + PRODUCT_STEP_W / 2}
+      />
+      {placed.map((step) => (
+        <VerticalStep key={step.key} step={step} width={PRODUCT_STEP_W} />
+      ))}
+      <g stroke={PRIMARY} strokeWidth="1.2" strokeDasharray="4 3" fill="none">
+        {placed.map((step) => (
+          <path
+            key={step.key}
+            d={`M ${VERTICAL_X + PRODUCT_STEP_W} ${middle(step)} L ${PRODUCT_LANE_X} ${middle(step)}`}
+          />
+        ))}
+        <path d={`M ${PRODUCT_LANE_X} ${middle(first)} L ${PRODUCT_LANE_X} ${modelTop}`} />
+      </g>
+      <rect
+        x={VERTICAL_X}
+        y={modelTop}
+        width={VERTICAL_BOX_W}
+        height={modelHeight}
+        rx="10"
+        fill={PRIMARY_SOFT}
+        stroke={PRIMARY}
+        strokeWidth="1.5"
+      />
+      <AnthropicLogo
+        x={VERTICAL_X + 16}
+        y={modelTop + modelHeight / 2 - ICON_SIZE.xl / 2}
+        size={ICON_SIZE.xl}
+      />
+      <WrappedText
+        x={MODEL_TEXT_X}
+        y={modelTop + VERTICAL_INSET + 12}
+        text={model}
+        width={MODEL_TEXT_W}
+        className={styles.svgLabel}
+        fill={TEXT}
+      />
+      <WrappedText
+        x={MODEL_TEXT_X}
+        y={modelTop + VERTICAL_INSET + 12 + wrappedHeight(model, MODEL_TEXT_W)}
+        text={modelSub}
+        width={MODEL_TEXT_W}
+        className={styles.svgSub}
+        fill={META}
+      />
+      <WrappedText
+        x={VERTICAL_X}
+        y={handoffTop}
+        text={handoff}
+        width={VERTICAL_BOX_W}
+        className={styles.svgSub}
+        fill={META}
+      />
+    </VerticalSvg>
+  );
+}
+
 export function ProductFlowDiagram() {
+  return (
+    <>
+      <ProductFlowWide />
+      <ProductFlowVertical />
+    </>
+  );
+}
+
+function ProductFlowWide() {
   const { t } = useTranslation();
 
   return (
-    <svg viewBox="0 0 880 218" role="img" aria-labelledby="tech-productflow-title">
+    <svg
+      viewBox="0 0 880 218"
+      role="img"
+      aria-labelledby="tech-productflow-title"
+      className={styles.wideLayout}
+    >
       <title id="tech-productflow-title">{t('tech.diagram.productFlowTitle')}</title>
       <defs>
         <ArrowMarker id="tech-arrow-product-flow" fill={BORDER} />
@@ -1144,11 +1544,185 @@ const LAST_PHASE_CENTER = (PHASE_X[3] as number) + PHASE_W / 2;
 const MONITORING_X = PHASE_X[2] as number;
 const MONITORING_W = (PHASE_X[3] as number) + PHASE_W - MONITORING_X;
 
+const PHASE_H = 132;
+const VERTICAL_PHASE_X = VERTICAL_X + VERTICAL_LANE;
+const VERTICAL_PHASE_W = VERTICAL_BOX_W - VERTICAL_LANE;
+const LOOP_X = VERTICAL_X + VERTICAL_LANE / 2;
+
+function FeatureFlowVertical() {
+  const { t } = useTranslation();
+  const phaseTop = (index: number) => 34 + index * (PHASE_H + VERTICAL_GAP);
+  const monitoringTop = phaseTop(DEV_PHASES.length);
+  const monitoringMiddle = monitoringTop + 22;
+  const loopText = t('tech.diagram.flowLoopProduct');
+  const noteText = t('tech.diagram.flowNoteDev');
+  const textWidth = VERTICAL_PHASE_W;
+  const loopTop = monitoringTop + 44 + 22;
+  const noteTop = loopTop + wrappedHeight(loopText, textWidth) + 16;
+  const noteTextX = VERTICAL_PHASE_X + 20;
+  return (
+    <VerticalSvg
+      id="tech-featureflow-vertical"
+      title={t('tech.diagram.featureFlowTitle')}
+      height={noteTop + wrappedHeight(noteText, VERTICAL_X + VERTICAL_BOX_W - noteTextX)}
+    >
+      <defs>
+        <ArrowMarker id="tech-arrow-feature-vertical" fill={BORDER} />
+        <ArrowMarker id="tech-arrow-back-vertical" fill={PRIMARY} />
+      </defs>
+      <text x={VERTICAL_X} y="20" className={styles.svgSub} fill={META}>
+        {t('tech.diagram.featureFlowLabel')}
+      </text>
+      <g
+        stroke={BORDER}
+        strokeWidth="1.4"
+        fill="none"
+        markerEnd="url(#tech-arrow-feature-vertical)"
+      >
+        {DEV_PHASES.map((phase, phaseIndex) => (
+          <path
+            key={phase.key}
+            d={`M ${VERTICAL_PHASE_X + VERTICAL_PHASE_W / 2} ${phaseTop(phaseIndex) + PHASE_H + 1} L ${VERTICAL_PHASE_X + VERTICAL_PHASE_W / 2} ${phaseTop(phaseIndex + 1) - 4}`}
+          />
+        ))}
+      </g>
+      {DEV_PHASES.map((phase, phaseIndex) => {
+        const top = phaseTop(phaseIndex);
+        return (
+          <g key={phase.key}>
+            <rect
+              x={VERTICAL_PHASE_X}
+              y={top}
+              width={VERTICAL_PHASE_W}
+              height={PHASE_H}
+              rx="10"
+              fill={SURFACE}
+              stroke={BORDER}
+            />
+            <text x={VERTICAL_PHASE_X + 16} y={top + 22} className={styles.svgSub} fill={PRIMARY}>
+              {`0${phaseIndex + 1}`}
+            </text>
+            <text x={VERTICAL_PHASE_X + 40} y={top + 22} className={styles.svgLabel} fill={TEXT}>
+              {t(`tech.diagram.${phase.key}` as TranslationKey)}
+            </text>
+            <line
+              x1={VERTICAL_PHASE_X + 16}
+              y1={top + 32}
+              x2={VERTICAL_PHASE_X + VERTICAL_PHASE_W - 16}
+              y2={top + 32}
+              stroke={BORDER}
+            />
+            {phase.steps.map((step, stepIndex) => (
+              <g key={step.key}>
+                {step.approved ? (
+                  <rect
+                    x={VERTICAL_PHASE_X + 16}
+                    y={top + 48 + stepIndex * 22}
+                    width="8"
+                    height="8"
+                    rx="2"
+                    fill={WARN_SOFT}
+                    stroke={WARN}
+                  />
+                ) : (
+                  <circle
+                    cx={VERTICAL_PHASE_X + 20}
+                    cy={top + 52 + stepIndex * 22}
+                    r="2"
+                    fill={META}
+                  />
+                )}
+                <text
+                  x={VERTICAL_PHASE_X + 32}
+                  y={top + 56 + stepIndex * 22}
+                  className={styles.svgSub}
+                  fill={step.approved ? TEXT : MUTED}
+                >
+                  {t(`tech.diagram.${step.key}` as TranslationKey, {
+                    jobs: TECH_METRICS.ciJobs,
+                  })}
+                </text>
+              </g>
+            ))}
+          </g>
+        );
+      })}
+      <rect
+        x={VERTICAL_PHASE_X}
+        y={monitoringTop}
+        width={VERTICAL_PHASE_W}
+        height="44"
+        rx="10"
+        fill={SURFACE}
+        stroke={BORDER}
+      />
+      <text
+        x={VERTICAL_PHASE_X + 16}
+        y={monitoringTop + 21}
+        className={styles.svgLabel}
+        fill={TEXT}
+      >
+        {t('tech.diagram.devSignals')}
+      </text>
+      <text x={VERTICAL_PHASE_X + 16} y={monitoringTop + 36} className={styles.svgSub} fill={META}>
+        {t('tech.diagram.devSignalsSub')}
+      </text>
+      <path
+        d={`M ${VERTICAL_PHASE_X} ${monitoringMiddle} L ${LOOP_X} ${monitoringMiddle} L ${LOOP_X} ${phaseTop(0) + 22} L ${VERTICAL_PHASE_X - 4} ${phaseTop(0) + 22}`}
+        stroke={PRIMARY}
+        strokeWidth="1.4"
+        strokeDasharray="5 4"
+        fill="none"
+        markerEnd="url(#tech-arrow-back-vertical)"
+      />
+      <WrappedText
+        x={VERTICAL_PHASE_X}
+        y={loopTop}
+        text={loopText}
+        width={textWidth}
+        className={styles.svgSub}
+        fill={PRIMARY}
+      />
+      <rect
+        x={VERTICAL_PHASE_X}
+        y={noteTop - 8}
+        width="8"
+        height="8"
+        rx="2"
+        fill={WARN_SOFT}
+        stroke={WARN}
+      />
+      <WrappedText
+        x={noteTextX}
+        y={noteTop}
+        text={noteText}
+        width={VERTICAL_X + VERTICAL_BOX_W - noteTextX}
+        className={styles.svgSub}
+        fill={WARN}
+      />
+    </VerticalSvg>
+  );
+}
+
 export function FeatureFlowDiagram() {
+  return (
+    <>
+      <FeatureFlowWide />
+      <FeatureFlowVertical />
+    </>
+  );
+}
+
+function FeatureFlowWide() {
   const { t } = useTranslation();
 
   return (
-    <svg viewBox="0 0 880 306" role="img" aria-labelledby="tech-featureflow-title">
+    <svg
+      viewBox="0 0 880 306"
+      role="img"
+      aria-labelledby="tech-featureflow-title"
+      className={styles.wideLayout}
+    >
       <title id="tech-featureflow-title">{t('tech.diagram.featureFlowTitle')}</title>
       <defs>
         <ArrowMarker id="tech-arrow-feature" fill={BORDER} />
@@ -1357,10 +1931,61 @@ export function AssistantToolingDiagram() {
   );
 }
 
+function BugFlowVertical() {
+  const { t } = useTranslation();
+  const { placed, bottom } = placeSteps(
+    [
+      { key: 'reproduce', label: t('tech.diagram.bugReproduce') },
+      {
+        key: 'failing',
+        label: t('tech.diagram.bugFailingTest'),
+        sub: [t('tech.diagram.bugFailingTestSub')],
+        tone: 'danger',
+      },
+      { key: 'fix', label: t('tech.diagram.bugFix') },
+      { key: 'green', label: t('tech.diagram.bugGreen'), tone: 'done' },
+      { key: 'note', label: t('tech.diagram.bugNote'), sub: [t('tech.diagram.bugNoteSub')] },
+    ],
+    34
+  );
+  return (
+    <VerticalSvg
+      id="tech-bugflow-vertical"
+      title={t('tech.diagram.bugFlowTitle')}
+      height={bottom + VERTICAL_X}
+    >
+      <defs>
+        <ArrowMarker id="tech-arrow-bug-vertical" fill={BORDER} />
+      </defs>
+      <text x={VERTICAL_X} y="20" className={styles.svgSub} fill={META}>
+        {t('tech.diagram.bugFlowLabel')}
+      </text>
+      <StepArrows steps={placed} marker="tech-arrow-bug-vertical" x={VERTICAL_W / 2} />
+      {placed.map((step) => (
+        <VerticalStep key={step.key} step={step} />
+      ))}
+    </VerticalSvg>
+  );
+}
+
 export function BugFlowDiagram() {
+  return (
+    <>
+      <BugFlowWide />
+      <BugFlowVertical />
+    </>
+  );
+}
+
+function BugFlowWide() {
   const { t } = useTranslation();
   return (
-    <svg viewBox="0 0 880 150" role="img" aria-labelledby="tech-bugflow-title">
+    <svg
+      viewBox="0 0 880 150"
+      role="img"
+      aria-labelledby="tech-bugflow-title"
+      className={styles.wideLayout}
+    >
       <title id="tech-bugflow-title">{t('tech.diagram.bugFlowTitle')}</title>
       <defs>
         <ArrowMarker id="tech-arrow-bug" fill={BORDER} />
@@ -1996,11 +2621,166 @@ const REQUEST_STAGES = [
   { key: 'Repository', x: 712, w: 152, layer: 'Infrastructure', core: false },
 ] as const;
 
+const REQUEST_STAGE_H = 88;
+const REQUEST_STAGE_W = VERTICAL_BOX_W - 2 * VERTICAL_LANE;
+const REQUEST_LANE_X = VERTICAL_X + REQUEST_STAGE_W + VERTICAL_LANE;
+const REQUEST_PORT_STAGES = new Set(['Handler', 'Domain', 'Repository']);
+
+function RequestPathVertical() {
+  const { t } = useTranslation();
+  const stageTop = (index: number) => 34 + index * (REQUEST_STAGE_H + VERTICAL_GAP);
+  const stageMiddle = (index: number) => stageTop(index) + REQUEST_STAGE_H / 2;
+  const portsTop = stageTop(REQUEST_STAGES.length) + 4;
+  const portsSub = t('tech.diagram.requestPortsSub', {
+    ports: TECH_METRICS.ports,
+    useCases: TECH_METRICS.useCases,
+  });
+  const portsTextW = VERTICAL_BOX_W - 2 * VERTICAL_INSET;
+  const portsHeight = 26 + wrappedHeight(portsSub, portsTextW) + 10;
+  const noteTop = portsTop + portsHeight + 26;
+  const note = t('tech.diagram.requestPathNote');
+  const firstPortStage = REQUEST_STAGES.findIndex((stage) => REQUEST_PORT_STAGES.has(stage.key));
+  return (
+    <VerticalSvg
+      id="tech-requestpath-vertical"
+      title={t('tech.diagram.requestPathTitle')}
+      height={noteTop + wrappedHeight(note, VERTICAL_BOX_W)}
+    >
+      <defs>
+        <ArrowMarker id="tech-arrow-request-vertical" fill={META} />
+      </defs>
+      <text x={VERTICAL_X} y="20" className={styles.svgSub} fill={META}>
+        {t('tech.diagram.requestPathLabel')}
+      </text>
+      <g stroke={META} strokeWidth="1.3" fill="none" markerEnd="url(#tech-arrow-request-vertical)">
+        {REQUEST_STAGES.slice(1).map((stage, stageIndex) => (
+          <path
+            key={stage.key}
+            d={`M ${VERTICAL_X + REQUEST_STAGE_W / 2} ${stageTop(stageIndex) + REQUEST_STAGE_H + 1} L ${VERTICAL_X + REQUEST_STAGE_W / 2} ${stageTop(stageIndex + 1) - 4}`}
+          />
+        ))}
+      </g>
+      <g stroke={BORDER} strokeWidth="1.2" strokeDasharray="4 3" fill="none">
+        {REQUEST_STAGES.map((stage, stageIndex) =>
+          REQUEST_PORT_STAGES.has(stage.key) ? (
+            <path
+              key={stage.key}
+              d={`M ${VERTICAL_X + REQUEST_STAGE_W} ${stageMiddle(stageIndex)} L ${REQUEST_LANE_X} ${stageMiddle(stageIndex)}`}
+            />
+          ) : null
+        )}
+        <path
+          d={`M ${REQUEST_LANE_X} ${stageMiddle(firstPortStage)} L ${REQUEST_LANE_X} ${portsTop}`}
+        />
+      </g>
+      {REQUEST_STAGES.map((stage, stageIndex) => {
+        const top = stageTop(stageIndex);
+        return (
+          <g key={stage.key}>
+            <rect
+              x={VERTICAL_X}
+              y={top}
+              width={REQUEST_STAGE_W}
+              height={REQUEST_STAGE_H}
+              rx="10"
+              fill={stage.core ? PRIMARY_SOFT : SURFACE}
+              stroke={stage.core ? PRIMARY : BORDER}
+            />
+            <text
+              x={VERTICAL_X + VERTICAL_INSET}
+              y={top + 22}
+              className={styles.svgSub}
+              fill={PRIMARY}
+            >
+              {t(`tech.diagram.requestLayer${stage.layer}` as TranslationKey)}
+            </text>
+            <text
+              x={VERTICAL_X + REQUEST_STAGE_W - VERTICAL_INSET}
+              y={top + 22}
+              textAnchor="end"
+              className={styles.svgLabel}
+              fill={TEXT}
+            >
+              {t(`tech.diagram.request${stage.key}` as TranslationKey)}
+            </text>
+            <line
+              x1={VERTICAL_X + VERTICAL_INSET}
+              y1={top + 32}
+              x2={VERTICAL_X + REQUEST_STAGE_W - VERTICAL_INSET}
+              y2={top + 32}
+              stroke={BORDER}
+            />
+            {REQUEST_STAGE_POINTS.map((line) => (
+              <text
+                key={line}
+                x={VERTICAL_X + VERTICAL_INSET}
+                y={top + 50 + (line - 1) * VERTICAL_LINE}
+                className={styles.svgSub}
+                fill={META}
+              >
+                {t(`tech.diagram.request${stage.key}${line}` as TranslationKey)}
+              </text>
+            ))}
+          </g>
+        );
+      })}
+      <rect
+        x={VERTICAL_X}
+        y={portsTop}
+        width={VERTICAL_BOX_W}
+        height={portsHeight}
+        rx="10"
+        fill={SURFACE}
+        stroke={BORDER}
+        strokeDasharray="4 4"
+      />
+      <text
+        x={VERTICAL_X + VERTICAL_INSET}
+        y={portsTop + 22}
+        className={styles.svgLabel}
+        fill={TEXT}
+      >
+        {t('tech.diagram.requestPorts')}
+      </text>
+      <WrappedText
+        x={VERTICAL_X + VERTICAL_INSET}
+        y={portsTop + 38}
+        text={portsSub}
+        width={portsTextW}
+        className={styles.svgSub}
+        fill={META}
+      />
+      <WrappedText
+        x={VERTICAL_X}
+        y={noteTop}
+        text={note}
+        width={VERTICAL_BOX_W}
+        className={styles.svgSub}
+        fill={META}
+      />
+    </VerticalSvg>
+  );
+}
+
 export function RequestPathDiagram() {
+  return (
+    <>
+      <RequestPathWide />
+      <RequestPathVertical />
+    </>
+  );
+}
+
+function RequestPathWide() {
   const { t } = useTranslation();
 
   return (
-    <svg viewBox="0 0 880 268" role="img" aria-labelledby="tech-requestpath-title">
+    <svg
+      viewBox="0 0 880 268"
+      role="img"
+      aria-labelledby="tech-requestpath-title"
+      className={styles.wideLayout}
+    >
       <title id="tech-requestpath-title">{t('tech.diagram.requestPathTitle')}</title>
       <defs>
         <ArrowMarker id="tech-arrow-request" fill={META} />

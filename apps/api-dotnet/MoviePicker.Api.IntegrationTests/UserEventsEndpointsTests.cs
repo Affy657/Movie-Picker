@@ -136,6 +136,12 @@ public sealed class UserEventsEndpointsTests : IClassFixture<MoviePickerApplicat
 
         var after = await client.GetFromJsonAsync<MyEventsListResponse>("/api/v1/events/mine", JsonOptions);
         Assert.True(Assert.Single(after!.Events, e => e.Slug == slug).HasVoted);
+
+        var bare = await client.GetFromJsonAsync<MyEventsListResponse>("/api/v1/events/mine?scope=active&previews=false", JsonOptions);
+        var bareRow = Assert.Single(bare!.Events, e => e.Slug == slug);
+        Assert.Equal((1, 1), (bareRow.ParticipantCount, bareRow.MovieCount));
+        Assert.Empty(bareRow.TopMovies);
+        Assert.Empty(bareRow.ParticipantsPreview);
     }
 
     [Fact]

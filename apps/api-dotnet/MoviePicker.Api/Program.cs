@@ -2,7 +2,6 @@ using System.IO.Compression;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Logging.Console;
 using MoviePicker.Api.Infrastructure;
@@ -78,12 +77,7 @@ builder.Services.AddMoviePickerAuthentication(builder.Configuration);
 builder.Services.AddMoviePickerRateLimiter(builder.Environment);
 builder.Services.AddMoviePickerRequestTimeouts();
 
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    options.KnownIPNetworks.Clear();
-    options.KnownProxies.Clear();
-});
+builder.Services.AddMoviePickerForwardedHeaders();
 builder.Services
     .AddControllers(o =>
     {
@@ -115,6 +109,8 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 
 ProductionStartupValidation.Validate(app);
+
+app.UseMiddleware<ShareDocumentForwardedHopsLoggingMiddleware>();
 
 app.UseForwardedHeaders();
 

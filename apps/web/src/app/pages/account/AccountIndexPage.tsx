@@ -5,14 +5,13 @@ import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useTranslation } from '@/shared/i18n';
 import type { UserProfile } from '@/features/auth/types';
 import AccountIdentityHeader from './AccountIdentityHeader';
-import { ACCOUNT_RUBRIQUES } from './accountRubriques';
+import { ACCOUNT_RUBRIQUES, rubriqueNeedsAttention } from './accountRubriques';
 import styles from './AccountIndexPage.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export default function AccountIndexPage({ user }: Readonly<{ user: UserProfile }>) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
-  const needsAttention = user.letterboxdPendingReconciliationCount > 0;
 
   if (!isMobile) {
     return <Navigate to={ROUTES.accountPreferences} replace />;
@@ -25,7 +24,7 @@ export default function AccountIndexPage({ user }: Readonly<{ user: UserProfile 
       <ul className={styles.navList}>
         {ACCOUNT_RUBRIQUES.map((rubrique) => {
           const Icon = rubrique.icon;
-          const showDot = rubrique.key === 'integrations' && needsAttention;
+          const showDot = rubriqueNeedsAttention(rubrique.key, user);
           return (
             <li key={rubrique.key}>
               <Link to={rubrique.to} className={styles.navItem}>

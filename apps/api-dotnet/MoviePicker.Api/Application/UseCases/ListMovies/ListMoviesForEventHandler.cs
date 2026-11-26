@@ -73,29 +73,32 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
 
     public async Task<IReadOnlyList<MovieWithScoreResponse>> HandleAsync(
         string idOrSlug,
+        CatalogLanguage language,
         string? participantId = null,
         CancellationToken ct = default)
     {
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
         var movies = await _movieRepository.ListByEventIdAsync(evt.Id, ct);
-        return await ToResponsesAsync(evt, movies, participantId, ct);
+        return await ToResponsesAsync(evt, movies, participantId, language, ct);
     }
 
     public async Task<IReadOnlyList<MovieWithScoreResponse>> HandleSelectionAsync(
         string idOrSlug,
         IReadOnlyCollection<string> movieIds,
+        CatalogLanguage language,
         string? participantId = null,
         CancellationToken ct = default)
     {
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
         var selected = await _movieRepository.ListByIdsAsync(movieIds, ct);
-        return await ToResponsesAsync(evt, selected.Where(m => m.EventId == evt.Id).ToList(), participantId, ct);
+        return await ToResponsesAsync(evt, selected.Where(m => m.EventId == evt.Id).ToList(), participantId, language, ct);
     }
 
     private async Task<IReadOnlyList<MovieWithScoreResponse>> ToResponsesAsync(
         Event evt,
         IReadOnlyList<Movie> movies,
         string? participantId,
+        CatalogLanguage language,
         CancellationToken ct)
     {
         var movieIds = movies.Select(m => m.Id).ToList();
@@ -135,10 +138,10 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
             : [];
         var userById = proposerUsers.ToDictionary(u => u.Id);
 
-        var enrichmentByKey = await BuildEnrichmentMapAsync(movies, ct);
+        var enrichmentByKey = await BuildEnrichmentMapAsync(movies, language, ct);
 
         var list = new List<MovieWithScoreResponse>(movies.Count);
-        foreach (var m in movies)
+        foreach (var m in evt.InListOrder(movies))
         {
             var votes = voteSummaries.GetValueOrDefault(m.Id, MovieVoteSummary.None);
             participantById.TryGetValue(m.ParticipantId, out var proposer);
@@ -153,8 +156,9 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
                 ResolvePseudos(votes.UpVoterIds, participantById),
                 ratingsByMovie.TryGetValue(m.Id, out var ratings) ? ratings : []);
             var concealed = Conceals(m);
+            var shown = TitledInTheReadersLanguage(evt.HideProposalTime(m), enr);
             list.Add(MovieWithScoreResponse.From(
-                concealed ? m with { ParticipantId = string.Empty } : m,
+                concealed ? shown with { ParticipantId = string.Empty } : shown,
                 _posterImageStore,
                 ProposerOf(concealed ? null : proposer, userById),
                 activity,
@@ -164,6 +168,9 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         return list;
     }
 
+    private static Movie TitledInTheReadersLanguage(Movie movie, TmdbMovieEnrichment? enrichment) =>
+        string.IsNullOrWhiteSpace(enrichment?.Title) ? movie : movie with { Title = enrichment.Title };
+
     private static MovieProposer ProposerOf(Participant? proposer, Dictionary<string, UserCard> userById) =>
         proposer is null
             ? MovieProposer.None
@@ -171,8 +178,9 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
 
     private Task<IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>> BuildEnrichmentMapAsync(
         IReadOnlyList<Movie> movies,
+        CatalogLanguage language,
         CancellationToken ct) =>
-        TmdbEnrichments.LoadAsync(movies.Select(m => (m.TmdbId, m.MediaType)), _tmdbMovieSearch, _options, ct);
+        TmdbEnrichments.LoadAsync(movies.Select(m => (m.TmdbId, m.MediaType)), _tmdbMovieSearch, _options, language, ct);
 
     private static List<string> ResolvePseudos(
         IEnumerable<string> participantIds,

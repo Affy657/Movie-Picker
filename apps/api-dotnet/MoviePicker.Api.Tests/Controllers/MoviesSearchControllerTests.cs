@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.GetMovieDetails;
 using MoviePicker.Api.Application.UseCases.SearchMovies;
 using MoviePicker.Api.Controllers;
@@ -18,10 +19,10 @@ public sealed class MoviesSearchControllerTests
         var controller = new MoviesSearchController().WithContext();
 
         var result = await controller.Search(
-            null, null, null, null, null, null, null, null, null, handler.Object, CancellationToken.None);
+            null, null, null, null, null, null, null, null, null, CatalogLanguage.English, handler.Object, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
-        handler.Verify(h => h.HandleAsync("", null, null, false, It.IsAny<CancellationToken>()), Times.Once);
+        handler.Verify(h => h.HandleAsync("", null, CatalogLanguage.English, null, false, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private static readonly int[] expected = new[] { 28, 12 };
@@ -33,13 +34,13 @@ public sealed class MoviesSearchControllerTests
         var handler = new Mock<ISearchMoviesHandler>();
         handler
             .Setup(h => h.HandleAsync(
-                It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MovieSearchFilters?>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-            .Callback<string, string?, MovieSearchFilters?, bool, CancellationToken>((_, _, f, _, _) => captured = f);
+                It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CatalogLanguage>(), It.IsAny<MovieSearchFilters?>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .Callback<string, string?, CatalogLanguage, MovieSearchFilters?, bool, CancellationToken>((_, _, _, f, _, _) => captured = f);
         var controller = new MoviesSearchController().WithContext();
 
         await controller.Search(
             "bat", null, "28, 12, x, -3, 0", 2000, 2010, 7.5, "EN", 60, 150,
-            handler.Object, CancellationToken.None);
+            CatalogLanguage.English, handler.Object, CancellationToken.None);
 
         Assert.NotNull(captured);
         Assert.Equal(expected, captured!.GenreIds);
@@ -58,12 +59,12 @@ public sealed class MoviesSearchControllerTests
         var handler = new Mock<ISearchMoviesHandler>();
         handler
             .Setup(h => h.HandleAsync(
-                It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MovieSearchFilters?>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-            .Callback<string, string?, MovieSearchFilters?, bool, CancellationToken>((_, _, f, _, _) => captured = f);
+                It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CatalogLanguage>(), It.IsAny<MovieSearchFilters?>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .Callback<string, string?, CatalogLanguage, MovieSearchFilters?, bool, CancellationToken>((_, _, _, f, _, _) => captured = f);
         var controller = new MoviesSearchController().WithContext();
 
         await controller.Search(
-            "bat", null, null, null, null, null, null, 60, null, handler.Object, CancellationToken.None);
+            "bat", null, null, null, null, null, null, 60, null, CatalogLanguage.English, handler.Object, CancellationToken.None);
 
         Assert.NotNull(captured);
         Assert.Equal(60, captured!.RuntimeMin);
@@ -76,10 +77,10 @@ public sealed class MoviesSearchControllerTests
         var handler = new Mock<ISearchMoviesHandler>();
         var controller = new MoviesSearchController().WithContext();
 
-        await controller.Search("q", "soiree", null, null, null, null, null, null, null, handler.Object, CancellationToken.None);
+        await controller.Search("q", "soiree", null, null, null, null, null, null, null, CatalogLanguage.English, handler.Object, CancellationToken.None);
 
         handler.Verify(
-            h => h.HandleAsync("q", "soiree", It.IsAny<MovieSearchFilters?>(), false, It.IsAny<CancellationToken>()), Times.Once);
+            h => h.HandleAsync("q", "soiree", CatalogLanguage.English, It.IsAny<MovieSearchFilters?>(), false, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -89,21 +90,21 @@ public sealed class MoviesSearchControllerTests
         var controller = new MoviesSearchController().WithContext();
 
         await controller.Search(
-            "twin", null, null, null, null, null, null, null, null, handler.Object, CancellationToken.None, includeSeries: true);
+            "twin", null, null, null, null, null, null, null, null, CatalogLanguage.English, handler.Object, CancellationToken.None, includeSeries: true);
 
         handler.Verify(
-            h => h.HandleAsync("twin", null, null, true, It.IsAny<CancellationToken>()), Times.Once);
+            h => h.HandleAsync("twin", null, CatalogLanguage.English, null, true, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task GetDetails_Found_ReturnsOk()
     {
         var handler = new Mock<IGetMovieDetailsHandler>();
-        handler.Setup(h => h.HandleAsync(42, It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+        handler.Setup(h => h.HandleAsync(42, It.IsAny<MovieMediaType>(), CatalogLanguage.English, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MovieDetailsResponse { TmdbId = 42 });
         var controller = new MoviesSearchController().WithContext();
 
-        var result = await controller.GetDetails(42, MovieMediaType.Movie, handler.Object, CancellationToken.None);
+        var result = await controller.GetDetails(42, MovieMediaType.Movie, CatalogLanguage.English, handler.Object, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
     }
@@ -114,7 +115,7 @@ public sealed class MoviesSearchControllerTests
         var handler = new Mock<IGetMovieDetailsHandler>();
         var controller = new MoviesSearchController().WithContext();
 
-        var result = await controller.GetDetails(99, MovieMediaType.Tv, handler.Object, CancellationToken.None);
+        var result = await controller.GetDetails(99, MovieMediaType.Tv, CatalogLanguage.English, handler.Object, CancellationToken.None);
 
         Assert.IsType<NotFoundResult>(result);
     }

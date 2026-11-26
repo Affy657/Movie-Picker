@@ -96,7 +96,8 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         var movieLists = await _movieLists.ListByOwnerAsync(userId, ct);
         var joinedLists = await _movieLists.ListJoinedAsync(userId, ct);
         var invitingLists = await _movieLists.ListInvitingAsync(userId, ct);
-        var listOwnerNames = await ListOwnerNamesAsync(joinedLists.Concat(invitingLists), ct);
+        var contributedLists = await _movieLists.ListOthersWithItemsAddedByAsync(userId, ct);
+        var listOwnerNames = await ListOwnerNamesAsync(joinedLists.Concat(invitingLists).Concat(contributedLists), ct);
         var ownedGroups = await _groups.ListByOwnerAsync(userId, ct);
         var joinedGroups = await _groups.ListJoinedAsync(userId, ct);
         var invitingGroups = await _groups.ListInvitingAsync(userId, ct);
@@ -150,6 +151,18 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
                     Name = list.Name,
                     OwnerDisplayName = listOwnerNames.GetValueOrDefault(list.OwnerId, string.Empty),
                     JoinedAt = list.Members.First(member => member.UserId == userId).JoinedAt
+                })
+                .ToList(),
+            TitlesAddedToOthersLists = contributedLists
+                .Select(list => new ExportedListContribution
+                {
+                    ListId = list.Id,
+                    Name = list.Name,
+                    OwnerDisplayName = listOwnerNames.GetValueOrDefault(list.OwnerId, string.Empty),
+                    Items = list.Items
+                        .Where(item => item.AddedByUserId == userId)
+                        .Select(MapMovieListItem)
+                        .ToList()
                 })
                 .ToList(),
             PendingListInvitations = invitingLists
@@ -221,16 +234,16 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         IsPublic = list.IsPublic,
         CreatedAt = list.CreatedAt,
         UpdatedAt = list.UpdatedAt,
-        Items = list.Items
-            .Select(item => new ExportedMovieListItem
-            {
-                TmdbId = item.TmdbId,
-                MediaType = item.MediaType,
-                Title = item.Title,
-                Year = item.Year,
-                AddedAt = item.AddedAt
-            })
-            .ToList()
+        Items = list.Items.Select(MapMovieListItem).ToList()
+    };
+
+    private static ExportedMovieListItem MapMovieListItem(MovieListItem item) => new()
+    {
+        TmdbId = item.TmdbId,
+        MediaType = item.MediaType,
+        Title = item.Title,
+        Year = item.Year,
+        AddedAt = item.AddedAt
     };
 
     private static ExportedSavedList MapSavedList(SavedList list) => new()
@@ -297,6 +310,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
     {
         UserId = user.Id,
         Email = user.Email,
+        EmailVerifiedAt = user.EmailVerifiedAt,
         DisplayName = user.DisplayName,
         Handle = user.Handle,
         Bio = user.Bio,

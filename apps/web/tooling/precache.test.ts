@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { INVITATION_DOCUMENTS } from './invitationDocuments';
+import { NOT_FOUND_DOCUMENT } from './notFoundDocument';
 import { PRECACHE_IGNORES, chunkFileName } from './precache';
 
 const precached = (file: string) =>
@@ -45,6 +46,10 @@ describe('PRECACHE_IGNORES', () => {
     for (const { fileName } of INVITATION_DOCUMENTS) {
       expect(precached(fileName), fileName).toBe(false);
     }
+  });
+
+  it('leaves out the 404 document, a copy of the shell that only Hosting serves', () => {
+    expect(precached(NOT_FOUND_DOCUMENT)).toBe(false);
   });
 
   it('keeps what the application needs offline, both locales included', () => {

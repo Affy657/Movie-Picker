@@ -65,6 +65,34 @@ public sealed class CreateEventScheduleBoundsTests
     }
 
     [Theory]
+    [InlineData("8:30")]
+    [InlineData("20:30:00")]
+    [InlineData("20h30")]
+    [InlineData(" 20:30")]
+    [InlineData("24:00")]
+    public async Task HandleAsync_TimeOutsideTheHourMinuteFormat_IsRefusedAsATimeError(string time)
+    {
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() =>
+            _sut.HandleAsync(new CreateEventRequestBuilder().WithDate("2026-12-05").WithTime(time).Build(), "u"));
+
+        Assert.Equal(ErrorCodes.InvalidTimeFormat, ex.Reason);
+        _events.Verify(r => r.AddAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData("2026-12-5")]
+    [InlineData("05/12/2026")]
+    [InlineData("2026-02-30")]
+    public async Task HandleAsync_DateOutsideTheIsoFormat_IsRefusedAsADateError(string date)
+    {
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() =>
+            _sut.HandleAsync(new CreateEventRequestBuilder().WithDate(date).WithTime("20:30").Build(), "u"));
+
+        Assert.Equal(ErrorCodes.InvalidDateFormat, ex.Reason);
+        _events.Verify(r => r.AddAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
     [InlineData("2028-11-24")]
     [InlineData("9999-12-31")]
     public async Task HandleAsync_NightMoreThanTwoYearsAhead_IsRefused(string date)

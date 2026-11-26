@@ -178,6 +178,20 @@ public sealed class InMemoryVoteRepositoryTests
     }
 
     [Fact]
+    public async Task ListEventIdsVotedByAsync_NamesEachNightTheParticipantsVotedOnOnce()
+    {
+        await _repo.UpsertAsync(Mk(eventId: "evt1", movieId: "m1", participantId: "p1"));
+        await _repo.UpsertAsync(Mk(eventId: "evt1", movieId: "m2", participantId: "p1", value: -1));
+        await _repo.UpsertAsync(Mk(eventId: "evt2", movieId: "m3", participantId: "p2"));
+        await _repo.UpsertAsync(Mk(eventId: "evt3", movieId: "m4", participantId: "someone-else"));
+
+        var voted = await _repo.ListEventIdsVotedByAsync(["p1", "p2", "p-silent"]);
+
+        Assert.Equal(["evt1", "evt2"], voted.Order(StringComparer.Ordinal));
+        Assert.Empty(await _repo.ListEventIdsVotedByAsync([]));
+    }
+
+    [Fact]
     public async Task CountDistinctVotersByEventIdAsync_CountsEachParticipantOnce_AcrossDifferentMovies()
     {
         await _repo.UpsertAsync(Mk(eventId: "evt1", movieId: "m1", participantId: "p1"));

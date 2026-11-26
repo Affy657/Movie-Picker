@@ -71,7 +71,7 @@ public sealed class AddMovieListItemHandlerTests
         Assert.Single(stored.Items);
         Assert.Equal(Start, stored.UpdatedAt);
         _kit.Tmdb.Verify(
-            t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()),
+            t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -133,7 +133,7 @@ public sealed class AddMovieListItemHandlerTests
     public async Task HandleAsync_TakesTheMissingFactsGenresAndPosterFromTmdb()
     {
         _kit.Tmdb
-            .Setup(t => t.GetDetailsAsync(603, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(603, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(MatrixDetails(poster: Poster(603)));
         var list = await _kit.CreateAsync("Films cultes");
 
@@ -149,7 +149,7 @@ public sealed class AddMovieListItemHandlerTests
     public async Task HandleAsync_PrefersTheTmdbFacts_ButKeepsThePosterOfTheRequest()
     {
         _kit.Tmdb
-            .Setup(t => t.GetDetailsAsync(603, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(603, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(MatrixDetails(runtime: 150, vote: 7.0, poster: Poster(999)));
         var list = await _kit.CreateAsync("Films cultes");
 
@@ -164,7 +164,7 @@ public sealed class AddMovieListItemHandlerTests
     public async Task HandleAsync_StoresTheTitleYearRatingAndRuntimeOfTmdb_NotThoseTheClientSent()
     {
         _kit.Tmdb
-            .Setup(t => t.GetDetailsAsync(550, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(550, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TmdbMovieDetails(550, "Fight Club", null, null, null, [], 139, [], [18], "1999-10-15", VoteAverage: 8.4));
         var list = await _kit.CreateAsync("Films cultes");
         var forged = new AddWatchlistItemRequest { TmdbId = 550, Title = "Faux titre", Year = "1066", RuntimeMinutes = 1, VoteAverage = 0.5 };
@@ -180,7 +180,7 @@ public sealed class AddMovieListItemHandlerTests
     public async Task HandleAsync_TmdbWithoutReleaseDateNorFacts_FallsBackOnTheRequest()
     {
         _kit.Tmdb
-            .Setup(t => t.GetDetailsAsync(550, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(550, MovieMediaType.Movie, It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TmdbMovieDetails(550, " ", null, null, null, [], null, [], [18], null));
         var list = await _kit.CreateAsync("Films cultes");
 
@@ -193,7 +193,7 @@ public sealed class AddMovieListItemHandlerTests
     public async Task HandleAsync_TmdbDown_KeepsTheTitleYearAndFactsOfTheRequest()
     {
         _kit.Tmdb
-            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("TMDB unavailable"));
         var list = await _kit.CreateAsync("Films cultes");
 
@@ -206,7 +206,7 @@ public sealed class AddMovieListItemHandlerTests
     public async Task HandleAsync_TmdbDown_KeepsTheSearchResultGenres()
     {
         _kit.Tmdb
-            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("TMDB unavailable"));
         var list = await _kit.CreateAsync("Films cultes");
 

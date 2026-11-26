@@ -117,4 +117,16 @@ public sealed class GroupNightAnnouncerTests : FriendGroupTestBase
         Assert.Equal(["owner", "ines"], GroupNightAnnouncer.Recipients(group, "sam"));
         Assert.Equal(["sam", "ines"], GroupNightAnnouncer.Recipients(group, "owner"));
     }
+
+    [Fact]
+    public async Task ANightAMemberWasRemovedFrom_IsNotAnnouncedToThem()
+    {
+        var group = await GroupOfThreeAsync();
+        var night = Night(group.Id).KeepingOut(FriendGroupTestKit.Invitee);
+
+        await Announcer().AnnounceAsync(night, group, FriendGroupTestKit.Member);
+
+        Assert.Single(await Kit.Notifications.ListByUserIdAsync(FriendGroupTestKit.Owner));
+        Assert.Empty(await Kit.Notifications.ListByUserIdAsync(FriendGroupTestKit.Invitee));
+    }
 }

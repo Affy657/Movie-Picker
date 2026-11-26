@@ -7,11 +7,13 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoVoteRepository : IVoteRepository
 {
+    internal const string CollectionName = "votes";
+
     private readonly TransactionalCollection<VoteDocument> _collection;
 
     public MongoVoteRepository(MongoCollectionFactory collections)
     {
-        _collection = collections.GetCollection<VoteDocument>("votes");
+        _collection = collections.GetCollection<VoteDocument>(CollectionName);
     }
 
     public async Task<long> DeleteByMovieIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
@@ -197,6 +199,19 @@ public sealed class MongoVoteRepository : IVoteRepository
         var filter = Builders<VoteDocument>.Filter.In(x => x.ParticipantId, ids);
         var docs = await _collection.Find(filter).ToListAsync(ct);
         return docs.ConvertAll(VoteMapper.ToDomain);
+    }
+
+    public async Task<IReadOnlyList<string>> ListEventIdsVotedByAsync(
+        IReadOnlyCollection<string> participantIds,
+        CancellationToken ct = default)
+    {
+        var ids = participantIds.Where(MongoObjectIds.IsValid).Distinct(StringComparer.Ordinal).ToList();
+        if (ids.Count == 0)
+            return [];
+
+        var filter = Builders<VoteDocument>.Filter.In(x => x.ParticipantId, ids);
+        using var cursor = await _collection.DistinctAsync(x => x.EventId, filter, cancellationToken: ct);
+        return await cursor.ToListAsync(ct);
     }
 
     public async Task<int> CountDistinctVotersByEventIdAsync(string eventId, CancellationToken ct = default)

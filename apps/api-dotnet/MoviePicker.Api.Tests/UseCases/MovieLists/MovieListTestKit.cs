@@ -36,7 +36,7 @@ internal sealed class MovieListTestKit
     {
         Posters.Setup(p => p.ToPublicPosterPath(It.IsAny<string?>())).Returns((string? path) => path);
         Tmdb
-            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CatalogLanguage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TmdbMovieDetails?)null);
     }
 

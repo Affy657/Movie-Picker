@@ -30,6 +30,16 @@ resource "google_cloud_run_v2_service" "this" {
         container_port = 8080
       }
 
+      startup_probe {
+        period_seconds    = 5
+        failure_threshold = 12
+
+        http_get {
+          path = "/health"
+          port = 8080
+        }
+      }
+
       dynamic "env" {
         for_each = var.plain_env
 
@@ -68,6 +78,7 @@ resource "google_cloud_run_v2_service" "this" {
       template[0].revision,
       template[0].containers[0].image,
       template[0].containers[0].env,
+      template[0].containers[0].startup_probe,
       traffic,
     ]
   }

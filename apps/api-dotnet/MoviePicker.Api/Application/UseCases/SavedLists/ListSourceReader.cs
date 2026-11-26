@@ -237,7 +237,7 @@ public sealed class ListSourceReader
         _cache.GetOrLoadAsync(
             CollectionNameCacheKeyPrefix + collectionId.ToString(CultureInfo.InvariantCulture),
             TimeSpan.FromHours(Math.Clamp(_options.MovieShowcaseCacheHours, 1, 168)),
-            async token => new CollectionNameLookup((await _tmdb.GetCollectionAsync(collectionId, token))?.Name),
+            async token => new CollectionNameLookup((await _tmdb.GetCollectionAsync(collectionId, CatalogLanguage.French, token))?.Name),
             shareAcrossInstances: false,
             ct);
 

@@ -88,6 +88,15 @@ public sealed class ProcessKofiWebhookHandler : IProcessKofiWebhookHandler
             return KofiWebhookOutcome.NoMatchingAccount;
         }
 
+        if (user.EmailVerifiedAt is null)
+        {
+            _logger.LogWarning(
+                "Ko-fi webhook without badge: the donor e-mail matches user {UserId}, who has not confirmed it (message {MessageId})",
+                user.Id,
+                payload.MessageId);
+            return KofiWebhookOutcome.UnconfirmedAccountEmail;
+        }
+
         if (!await _users.MarkSupporterAsync(user.Id, now, ct))
         {
             _logger.LogInformation("Ko-fi webhook: user {UserId} was already flagged as a supporter", user.Id);

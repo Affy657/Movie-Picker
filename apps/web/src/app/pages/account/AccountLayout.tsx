@@ -4,7 +4,7 @@ import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import type { UserProfile } from '@/features/auth/types';
 import AccountIdentityHeader from './AccountIdentityHeader';
-import { ACCOUNT_RUBRIQUES } from './accountRubriques';
+import { ACCOUNT_RUBRIQUES, rubriqueNeedsAttention } from './accountRubriques';
 import styles from './AccountLayout.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import BackLink from '@/shared/components/BackLink';
@@ -13,7 +13,6 @@ export default function AccountLayout({ user }: Readonly<{ user: UserProfile }>)
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const needsAttention = user.letterboxdPendingReconciliationCount > 0;
 
   return (
     <div className={styles.account}>
@@ -29,7 +28,7 @@ export default function AccountLayout({ user }: Readonly<{ user: UserProfile }>)
         <nav className={styles.rubrics} aria-label={t('auth.account.rubricsNavAriaLabel')}>
           {ACCOUNT_RUBRIQUES.map((rubrique) => {
             const Icon = rubrique.icon;
-            const showDot = rubrique.key === 'integrations' && needsAttention;
+            const showDot = rubriqueNeedsAttention(rubrique.key, user);
             return (
               <NavLink
                 key={rubrique.key}

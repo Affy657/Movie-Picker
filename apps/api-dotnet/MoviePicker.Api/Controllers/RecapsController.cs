@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.NightRecap;
 using MoviePicker.Api.Infrastructure.Web;
 
@@ -19,7 +20,8 @@ public sealed class RecapsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Get(
         string recapSlug,
+        [RequestLanguage] CatalogLanguage interfaceLanguage,
         [FromServices] IGetNightRecapHandler handler,
         CancellationToken ct) =>
-        Ok(await handler.HandleAsync(recapSlug, ct));
+        Ok(await handler.HandleAsync(recapSlug, interfaceLanguage, ct));
 }

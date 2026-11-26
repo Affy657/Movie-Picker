@@ -10,6 +10,7 @@ internal static class ParticipantDocumentMapper
         EventId = doc.EventId,
         Pseudo = doc.Pseudo,
         UserId = doc.UserId,
+        RatingPromptedAt = doc.RatingPromptedAt.HasValue ? new DateTimeOffset(doc.RatingPromptedAt.Value, TimeSpan.Zero) : null,
         CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero),
         UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)
     };
@@ -20,6 +21,7 @@ internal static class ParticipantDocumentMapper
         EventId = p.EventId,
         Pseudo = p.Pseudo,
         UserId = string.IsNullOrWhiteSpace(p.UserId) ? null : p.UserId,
+        RatingPromptedAt = p.RatingPromptedAt?.UtcDateTime,
         CreatedAt = p.CreatedAt.UtcDateTime,
         UpdatedAt = p.UpdatedAt.UtcDateTime
     };

@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.LaunchWheel;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Tests.Builders;
@@ -17,6 +18,7 @@ public sealed class LaunchWheelHandlerTests
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor;
     private readonly Mock<ICurrentUserAccessor> _currentUserAccessor;
     private readonly Mock<IPosterImageStore> _posterStore;
+    private readonly Mock<IWinnerRuntimes> _runtimes = new();
     private readonly LaunchWheelHandler _sut;
 
     private static Event ActiveEvent(string hostToken = "ht1") => new()
@@ -50,6 +52,7 @@ public sealed class LaunchWheelHandlerTests
             _hostTokenAccessor.Object,
             _currentUserAccessor.Object,
             _posterStore.Object,
+            _runtimes.Object,
             NullLogger<LaunchWheelHandler>.Instance,
             TimeProvider.System);
     }
@@ -184,7 +187,11 @@ public sealed class LaunchWheelHandlerTests
     [Fact]
     public async Task HandleAsync_AnonymousNight_DoesNotRevealWhoProposedTheWinner()
     {
-        var evt = ActiveEvent() with { Config = new EventConfig { AnonymousProposals = true } };
+        var evt = ActiveEvent() with
+        {
+            Config = new EventConfig { AnonymousProposals = true },
+            CreatedAt = DateTimeOffset.UtcNow.AddDays(-3)
+        };
         var movies = new List<Movie>
         {
             new() { Id = "mov2", EventId = evt.Id, ParticipantId = "p2", TmdbId = 2, Title = "Seul candidat", Year = "2021", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
@@ -199,6 +206,7 @@ public sealed class LaunchWheelHandlerTests
 
         Assert.Equal("mov2", result.Winner.Id);
         Assert.Equal(string.Empty, result.Winner.ParticipantId);
+        Assert.Equal((evt.CreatedAt, evt.CreatedAt), (result.Winner.CreatedAt, result.Winner.UpdatedAt));
     }
 
     [Fact]
@@ -228,6 +236,26 @@ public sealed class LaunchWheelHandlerTests
         Assert.Equal(WinnerPickMethod.Wheel, winner.Method);
         Assert.Contains("direct winner", result.Message);
         Assert.Null(captured.WinnerAnnouncedAt);
+    }
+
+    [Fact]
+    public async Task HandleAsync_Success_KeepsTheRuntimeOfTheDrawnFilmSoTheNightEndsWithIt()
+    {
+        var evt = ActiveEvent();
+        var interstellar = new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = "p1", TmdbId = 157336, Title = "Interstellar", Year = "2014" };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
+        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync([interstellar]);
+        _runtimes.Setup(r => r.LookUpAsync(interstellar, It.IsAny<CancellationToken>())).ReturnsAsync(169);
+        Event? captured = null;
+        _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .Callback<Event, CancellationToken>((e, _) => captured = e)
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+
+        await _sut.HandleAsync("evt1");
+
+        Assert.NotNull(captured);
+        Assert.Equal(169, Assert.Single(captured.Winners).RuntimeMinutes);
     }
 
     [Fact]
@@ -292,6 +320,7 @@ public sealed class LaunchWheelHandlerTests
             _hostTokenAccessor.Object,
             _currentUserAccessor.Object,
             _posterStore.Object,
+            _runtimes.Object,
             NullLogger<LaunchWheelHandler>.Instance,
             new FixedClock(threeHoursAfterTheStart));
 

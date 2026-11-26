@@ -107,6 +107,26 @@ describe('WatchedMoviesPage', () => {
     expect(screen.queryByRole('switch', { name: 'Griser les vus' })).toBeNull();
   });
 
+  it('lists the film past the first thousand and finds it by the search', async () => {
+    const history: MockWatchedMovie[] = Array.from({ length: 1001 }, (_, index) => ({
+      tmdbId: 10_000 + index,
+      title: `Titre ${String(index + 1).padStart(4, '0')}`,
+      source: 'elsewhere',
+      watchedAt: new Date(Date.UTC(2026, 0, 1) - index * 86_400_000).toISOString(),
+    }));
+    server.use(...useServer(history));
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(await screen.findByText('1001 films vus')).toBeInTheDocument();
+    await user.type(
+      screen.getByRole('searchbox', { name: 'Rechercher dans Films vus' }),
+      'Titre 1001'
+    );
+
+    expect(await titles()).toEqual(['Titre 1001']);
+  });
+
   it('sorts by watch date, title and year', async () => {
     server.use(...useServer());
     const user = userEvent.setup();

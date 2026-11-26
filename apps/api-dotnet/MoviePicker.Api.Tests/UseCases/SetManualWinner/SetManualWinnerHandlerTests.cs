@@ -19,6 +19,7 @@ public sealed class SetManualWinnerHandlerTests
     private readonly Mock<ICurrentUserAccessor> _currentUserAccessor = new();
     private readonly Mock<IPosterImageStore> _posterStore = new();
     private readonly Mock<IWinnerAnnouncer> _winnerAnnouncer = new();
+    private readonly Mock<IWinnerRuntimes> _runtimes = new();
     private readonly SetManualWinnerHandler _sut;
 
     private static Event ActiveEvent(string hostToken = "ht1") => new()
@@ -60,6 +61,7 @@ public sealed class SetManualWinnerHandlerTests
             _currentUserAccessor.Object,
             _posterStore.Object,
             _winnerAnnouncer.Object,
+            _runtimes.Object,
             NullLogger<SetManualWinnerHandler>.Instance,
             TimeProvider.System);
     }
@@ -152,10 +154,30 @@ public sealed class SetManualWinnerHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_Success_KeepsTheRuntimeOfThePickedFilmSoTheNightEndsWithIt()
+    {
+        var chosen = MovieOf("mov1", "evt1", "Interstellar");
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
+        _movieRepo.Setup(r => r.GetByIdAsync("mov1", It.IsAny<CancellationToken>())).ReturnsAsync(chosen);
+        _runtimes.Setup(r => r.LookUpAsync(chosen, It.IsAny<CancellationToken>())).ReturnsAsync(169);
+
+        await _sut.HandleAsync("evt1", Request("mov1"));
+
+        _eventRepo.Verify(
+            r => r.UpdateAsync(It.Is<Event>(e => e.Winners.Single().RuntimeMinutes == 169), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task HandleAsync_AnonymousNight_DoesNotRevealWhoProposedTheWinner()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(ActiveEvent() with { Config = new EventConfig { AnonymousProposals = true } });
+        var night = ActiveEvent() with
+        {
+            Config = new EventConfig { AnonymousProposals = true },
+            CreatedAt = DateTimeOffset.UtcNow.AddDays(-3)
+        };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(night);
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
         _movieRepo.Setup(r => r.GetByIdAsync("mov1", It.IsAny<CancellationToken>())).ReturnsAsync(MovieOf("mov1", "evt1"));
         _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
@@ -165,6 +187,7 @@ public sealed class SetManualWinnerHandlerTests
 
         Assert.Equal("mov1", result.Winner.Id);
         Assert.Equal(string.Empty, result.Winner.ParticipantId);
+        Assert.Equal((night.CreatedAt, night.CreatedAt), (result.Winner.CreatedAt, result.Winner.UpdatedAt));
     }
 
     [Fact]

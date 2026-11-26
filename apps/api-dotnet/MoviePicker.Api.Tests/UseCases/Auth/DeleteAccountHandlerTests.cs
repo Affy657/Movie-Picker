@@ -33,6 +33,7 @@ public sealed class DeleteAccountHandlerTests
         public InMemoryWatchedTitleRepository WatchedTitles { get; } = new();
         public InMemorySavedListRepository SavedLists { get; } = new();
         public InMemoryPasswordResetTokenRepository ResetTokens { get; } = new();
+        public InMemoryEmailVerificationTokenRepository VerificationTokens { get; } = new();
         public InMemoryVoteRepository Votes { get; } = new();
         public InMemorySeenMarkRepository SeenMarks { get; } = new();
         public InMemoryAvatarPhotoRepository AvatarPhotos { get; } = new();
@@ -74,6 +75,7 @@ public sealed class DeleteAccountHandlerTests
                 WatchedTitles,
                 SavedLists,
                 ResetTokens,
+                VerificationTokens,
                 AvatarPhotos,
                 BannerPhotos,
                 Sessions.Object,
@@ -293,6 +295,13 @@ public sealed class DeleteAccountHandlerTests
             ExpiresAtUtc = DateTimeOffset.UtcNow.AddHours(1),
             CreatedAt = DateTimeOffset.UtcNow
         });
+        await f.VerificationTokens.AddAsync(new EmailVerificationToken
+        {
+            UserId = user.Id,
+            TokenHash = "verification-hash",
+            ExpiresAtUtc = DateTimeOffset.UtcNow.AddHours(1),
+            CreatedAt = DateTimeOffset.UtcNow
+        });
 
         await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
 
@@ -318,6 +327,7 @@ public sealed class DeleteAccountHandlerTests
         Assert.Equal(0, following);
         Assert.Equal(0, followers);
         Assert.Null(await f.ResetTokens.GetMostRecentForUserAsync(user.Id));
+        Assert.Null(await f.VerificationTokens.GetLatestForUserAsync(user.Id));
         f.Sessions.Verify(
             x => x.InvalidateAllForUserAsync(user.Id, It.IsAny<CancellationToken>()),
             Times.Once);
@@ -382,7 +392,9 @@ public sealed class DeleteAccountHandlerTests
 
         var kept = (await f.MovieLists.FindAsync(joined.Id))!;
         Assert.Empty(kept.Members);
-        Assert.Equal(603, Assert.Single(kept.Items).TmdbId);
+        var title = Assert.Single(kept.Items);
+        Assert.Equal(603, title.TmdbId);
+        Assert.Null(title.AddedByUserId);
         Assert.Empty((await f.MovieLists.FindAsync(inviting.Id))!.Invitations);
     }
 
@@ -733,6 +745,7 @@ public sealed class DeleteAccountHandlerTests
             f.WatchedTitles,
             f.SavedLists,
             f.ResetTokens,
+            f.VerificationTokens,
             f.AvatarPhotos,
             f.BannerPhotos,
             f.Sessions.Object,

@@ -22,6 +22,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
     private readonly IWatchedTitleRepository _watchedTitles;
     private readonly ISavedListRepository _savedLists;
     private readonly IPasswordResetTokenRepository _resetTokens;
+    private readonly IEmailVerificationTokenRepository _verificationTokens;
     private readonly IAvatarPhotoRepository _avatarPhotos;
     private readonly IBannerPhotoRepository _bannerPhotos;
     private readonly IAuthSessionInvalidator _sessionInvalidator;
@@ -43,6 +44,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         IWatchedTitleRepository watchedTitles,
         ISavedListRepository savedLists,
         IPasswordResetTokenRepository resetTokens,
+        IEmailVerificationTokenRepository verificationTokens,
         IAvatarPhotoRepository avatarPhotos,
         IBannerPhotoRepository bannerPhotos,
         IAuthSessionInvalidator sessionInvalidator,
@@ -63,6 +65,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         _watchedTitles = watchedTitles;
         _savedLists = savedLists;
         _resetTokens = resetTokens;
+        _verificationTokens = verificationTokens;
         _avatarPhotos = avatarPhotos;
         _bannerPhotos = bannerPhotos;
         _sessionInvalidator = sessionInvalidator;
@@ -126,12 +129,14 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
                 await WithdrawTheListsOfAsync(userId, token);
                 await _movieLists.DeleteAllForOwnerAsync(userId, token);
                 await _movieLists.RemoveFromOthersListsAsync(userId, token);
+                await _movieLists.ForgetItemAuthorAsync(userId, token);
                 await WithdrawTheGroupsOfAsync(userId, token);
                 await _groups.DeleteAllForOwnerAsync(userId, token);
                 await _groups.RemoveFromOthersGroupsAsync(userId, token);
                 await _watchedTitles.DeleteAllForOwnerAsync(userId, token);
                 await _savedLists.DeleteAllForOwnerAsync(userId, token);
                 await _resetTokens.DeleteByUserIdAsync(userId, token);
+                await _verificationTokens.DeleteByUserIdAsync(userId, token);
                 await _avatarPhotos.DeleteByUserIdAsync(userId, token);
                 await _bannerPhotos.DeleteByUserIdAsync(userId, token);
                 await _users.DeleteAsync(userId, token);

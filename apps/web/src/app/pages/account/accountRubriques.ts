@@ -2,6 +2,7 @@ import { Bell, Link2, Shield, Sliders, User } from 'lucide-react';
 import type { ComponentType } from 'react';
 import { ROUTES } from '@/app/routes';
 import type { TranslationKey } from '@/shared/i18n';
+import type { UserProfile } from '@/features/auth/types';
 
 export interface AccountRubrique {
   key: 'profil' | 'preferences' | 'notifications' | 'integrations' | 'securite';
@@ -48,3 +49,9 @@ export const ACCOUNT_RUBRIQUES: readonly AccountRubrique[] = [
     summaryKey: 'auth.account.navSummarySecurity',
   },
 ] as const;
+
+export function rubriqueNeedsAttention(key: AccountRubrique['key'], user: UserProfile): boolean {
+  if (key === 'integrations') return user.letterboxdPendingReconciliationCount > 0;
+  if (key === 'securite') return user.emailVerifiedAt === null;
+  return false;
+}

@@ -11,6 +11,7 @@ using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
 using MoviePicker.Api.Application.UseCases.Auth;
+using MoviePicker.Api.Application.UseCases.Auth.EmailVerification;
 using MoviePicker.Api.Application.UseCases.EventLive;
 using MoviePicker.Api.Application.UseCases.FinishedEvents;
 using MoviePicker.Api.Application.UseCases.FriendGroups;
@@ -184,11 +185,7 @@ public static class ServiceCollectionExtensions
         ConfigureTmdbOptions(opts, cfg);
         ConfigureShowcaseOptions(opts, cfg);
         ConfigurePosterOptions(opts, cfg);
-
-        var webBase = cfg["PUBLIC_WEB_BASE_URL"];
-        if (!string.IsNullOrWhiteSpace(webBase))
-            opts.PublicWebBaseUrl = webBase.Trim().TrimEnd('/');
-
+        ConfigurePublicBaseUrls(opts, cfg);
         ConfigureEmailOptions(opts, cfg);
         ConfigureVapidOptions(opts, cfg);
 
@@ -206,6 +203,16 @@ public static class ServiceCollectionExtensions
         ConfigureGitHubOptions(opts, cfg);
     }
 
+    private static void ConfigurePublicBaseUrls(MoviePickerOptions opts, IConfiguration cfg)
+    {
+        var webBase = cfg["PUBLIC_WEB_BASE_URL"];
+        if (!string.IsNullOrWhiteSpace(webBase))
+            opts.PublicWebBaseUrl = webBase.Trim().TrimEnd('/');
+        var apiBase = cfg["PUBLIC_API_BASE_URL"];
+        if (!string.IsNullOrWhiteSpace(apiBase))
+            opts.PublicApiBaseUrl = apiBase.Trim().TrimEnd('/');
+    }
+
     private static void ConfigureGitHubOptions(MoviePickerOptions opts, IConfiguration cfg)
     {
         var token = cfg["GITHUB_TOKEN"];
@@ -216,9 +223,6 @@ public static class ServiceCollectionExtensions
         var repo = cfg["GITHUB_REPO_NAME"];
         if (!string.IsNullOrWhiteSpace(repo))
             opts.GitHubRepoName = repo.Trim();
-        var attachmentsBranch = cfg["GITHUB_ATTACHMENTS_BRANCH"];
-        if (!string.IsNullOrWhiteSpace(attachmentsBranch))
-            opts.GitHubAttachmentsBranch = attachmentsBranch.Trim();
     }
 
     private static void ConfigureTmdbOptions(MoviePickerOptions opts, IConfiguration cfg)
@@ -271,6 +275,9 @@ public static class ServiceCollectionExtensions
         var fromName = cfg["EMAIL_FROM_NAME"];
         if (!string.IsNullOrWhiteSpace(fromName))
             opts.EmailFromName = fromName.Trim();
+        var contactAddress = cfg["CONTACT_EMAIL_ADDRESS"];
+        if (!string.IsNullOrWhiteSpace(contactAddress))
+            opts.ContactEmailAddress = contactAddress.Trim();
         var resendKey = cfg["RESEND_API_KEY"];
         opts.ResendApiKey = string.IsNullOrWhiteSpace(resendKey) ? null : resendKey;
         var resendBase = cfg["RESEND_API_BASE_URL"];
@@ -305,6 +312,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IParticipantRepository, InMemoryParticipantRepository>();
             services.AddSingleton<IUserRepository, InMemoryUserRepository>();
             services.AddSingleton<IPasswordResetTokenRepository, InMemoryPasswordResetTokenRepository>();
+            services.AddSingleton<IEmailVerificationTokenRepository, InMemoryEmailVerificationTokenRepository>();
             services.AddSingleton<IAvatarPhotoRepository, InMemoryAvatarPhotoRepository>();
             services.AddSingleton<IBannerPhotoRepository, InMemoryBannerPhotoRepository>();
             services.AddSingleton<IMovieRepository, InMemoryMovieRepository>();
@@ -364,6 +372,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IParticipantRepository, MongoParticipantRepository>();
         services.AddScoped<IUserRepository, MongoUserRepository>();
         services.AddScoped<IPasswordResetTokenRepository, MongoPasswordResetTokenRepository>();
+        services.AddScoped<IEmailVerificationTokenRepository, MongoEmailVerificationTokenRepository>();
         services.AddScoped<IAvatarPhotoRepository, MongoAvatarPhotoRepository>();
         services.AddScoped<IBannerPhotoRepository, MongoBannerPhotoRepository>();
         services.AddScoped<IMovieRepository, MongoMovieRepository>();
@@ -467,6 +476,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<AvatarPhotoWriter>();
         services.AddScoped<ProfileBannerWriter>();
         services.AddScoped<IOAuthProfilePhotoImporter, OAuthProfilePhotoImporter>();
+        services.AddScoped<IEmailVerificationMailer, EmailVerificationMailer>();
         services.AddScoped<EventAudienceNotifier>();
         services.AddScoped<HostedNightsHandover>();
         services.AddScoped<IGroupNightAnnouncer, GroupNightAnnouncer>();
@@ -477,6 +487,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<FriendGroupNightsReader>();
         services.AddScoped<IUsageRecorder, UsageRecorder>();
         services.AddScoped<IWinnerAnnouncer, WinnerAnnouncer>();
+        services.AddScoped<IWinnerRuntimes, TmdbWinnerRuntimes>();
         services.AddScoped<IWheelWinnerAnnouncement, WheelWinnerAnnouncement>();
 
         var handlerNamespace = "MoviePicker.Api.Application.UseCases";

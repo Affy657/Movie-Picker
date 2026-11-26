@@ -72,6 +72,7 @@ type Routes = {
   create?: () => Promise<unknown>;
   config?: () => Promise<unknown>;
   reusedConfig?: unknown;
+  limits?: unknown;
 };
 
 function routeApi({
@@ -86,9 +87,11 @@ function routeApi({
     }),
   config = () => Promise.resolve({}),
   reusedConfig = {},
+  limits = { maxParticipants: 50, maxProposalsPerParticipant: 15 },
 }: Routes = {}) {
   mockFetchApi.mockImplementation((path: unknown, init?: { method?: string }) => {
     if (typeof path !== 'string') return Promise.resolve({});
+    if (path === '/events/limits') return Promise.resolve(limits);
     if (path === '/groups') return Promise.resolve({ groups, invitations: [], nextNights: [] });
     if (path.startsWith('/users/me/event-templates')) {
       return init?.method === 'POST'
@@ -891,12 +894,32 @@ describe('CreateEventDialog', () => {
     it('refuses an out-of-range limit, shows it beside the rule and takes the focus there', async () => {
       const user = userEvent.setup();
       renderDialog();
+      await waitFor(() =>
+        expect(screen.getByLabelText('Films par personne')).toHaveAttribute('max', '15')
+      );
 
       fireEvent.change(screen.getByLabelText('Films par personne'), { target: { value: '99' } });
       await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
 
       expect(screen.getByText(/entre 1 et 15/)).toBeInTheDocument();
       expect(screen.getByLabelText('Films par personne')).toHaveFocus();
+      expect(createBodies()).toHaveLength(0);
+    });
+
+    it('refuses more participants than the API accepts, with the cap it serves', async () => {
+      const user = userEvent.setup();
+      routeApi({ limits: { maxParticipants: 20, maxProposalsPerParticipant: 15 } });
+      renderDialog();
+      await waitFor(() =>
+        expect(screen.getByLabelText('Participants')).toHaveAttribute('max', '20')
+      );
+
+      fireEvent.change(screen.getByLabelText('Participants'), { target: { value: '21' } });
+      await user.click(screen.getByRole('button', { name: 'Créer la soirée' }));
+
+      expect(
+        screen.getByText('Nombre maximum de participants : entier entre 1 et 20.')
+      ).toBeInTheDocument();
       expect(createBodies()).toHaveLength(0);
     });
 

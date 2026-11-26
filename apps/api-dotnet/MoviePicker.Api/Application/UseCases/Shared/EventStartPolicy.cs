@@ -9,8 +9,11 @@ public static class EventStartPolicy
 {
     public static void EnsureSchedulable(Event scheduled, DateTimeOffset utcNow)
     {
-        if (!DateOnly.TryParseExact(scheduled.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var day))
+        if (!DateOnly.TryParseExact(scheduled.Date, EventSchedule.DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var day))
             throw Errors.InvalidDateFormat();
+
+        if (!EventSchedule.IsWellFormedTime(scheduled.Time))
+            throw Errors.InvalidTimeFormat();
 
         if (day > EventRecurrence.TodayInParis(utcNow).AddYears(EventSchedule.MaxYearsAhead))
             throw Errors.EventDateTooFar(EventSchedule.MaxYearsAhead);

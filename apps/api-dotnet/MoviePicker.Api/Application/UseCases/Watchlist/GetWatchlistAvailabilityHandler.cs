@@ -23,24 +23,33 @@ public sealed class GetWatchlistAvailabilityHandler : IGetWatchlistAvailabilityH
         _options = options.Value;
     }
 
-    public async Task<WatchlistAvailabilityResponse> HandleAsync(string userId, CancellationToken ct = default)
+    public async Task<WatchlistAvailabilityResponse> HandleAsync(
+        string userId,
+        int skip = 0,
+        int? take = null,
+        CancellationToken ct = default)
     {
         if (!_options.HasTmdbCredentials)
             return new WatchlistAvailabilityResponse();
 
-        var items = await _watchlist.ListPageByUserIdAsync(userId, 0, GetWatchlistHandler.MaxTake, ct);
+        var effectiveSkip = Math.Max(0, skip);
+        var effectiveTake = Math.Clamp(take ?? GetWatchlistHandler.MaxTake, 1, GetWatchlistHandler.MaxTake);
+        var items = await _watchlist.ListPageByUserIdAsync(userId, effectiveSkip, effectiveTake, ct);
+        var total = await _watchlist.CountByUserIdAsync(userId, ct);
+        var hasMore = effectiveSkip + items.Count < total;
         if (items.Count == 0)
-            return new WatchlistAvailabilityResponse();
+            return new WatchlistAvailabilityResponse { HasMore = hasMore };
 
         var region = WatchRegion.Of(_options.TmdbWatchProvidersRegion);
         var keys = items.Select(item => (item.TmdbId, item.MediaType)).Distinct().ToList();
-        var enrichments = await _tmdbMovieSearch.GetEnrichmentsAsync(keys, region, ct);
+        var enrichments = await _tmdbMovieSearch.GetEnrichmentsAsync(keys, region, CatalogLanguage.French, ct);
         var resolved = items.Where(item => enrichments.ContainsKey((item.TmdbId, item.MediaType))).ToList();
 
         return new WatchlistAvailabilityResponse
         {
             Items = resolved.Select(item => ToResponse(item, enrichments[(item.TmdbId, item.MediaType)])).ToList(),
-            Partial = resolved.Count < items.Count
+            Partial = resolved.Count < items.Count,
+            HasMore = hasMore
         };
     }
 

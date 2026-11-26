@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Link } from 'react-router';
 import { ArrowRight } from 'lucide-react';
 import { ROUTES, withReturnTo } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import { isRatingOpen, isRecentNight, useRatingLink } from '@/features/events/hooks/useRatingLink';
+import { markRatingPrompted } from '@/features/events/api/eventsApi';
+import { isRatingOpen, useRatingLink } from '@/features/events/hooks/useRatingLink';
 import type { EventData } from '@/features/events/types';
 import { buttonClass } from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -11,7 +12,7 @@ import { useTranslation } from '@/shared/i18n';
 import type { MovieData } from '@/shared/types/movie';
 import EventWinnerSummary, { type WinnerRatingContext } from './EventWinnerSummary';
 import { useEventMovieRating } from './useEventMovieRating';
-import { ENTRY_ORIGIN_QUERY_PARAM } from '@/shared/analytics/entryOrigin';
+import { declaringEntryOrigin } from '@/shared/analytics/entryOrigin';
 
 type Props = {
   slug: string;
@@ -40,11 +41,15 @@ function useWinnerRating({
   const { user } = useAuth();
   const movieRating = useEventMovieRating({ slug, participant, refreshAll });
   const signedInParticipantId = user ? (participant?.participantId ?? null) : null;
+  const rememberPrompted = useCallback(() => {
+    markRatingPrompted(slug).catch(() => undefined);
+  }, [slug]);
   const ratingLink = useRatingLink(
     winners,
     signedInParticipantId,
     isRatingOpen(event),
-    !!event.isFinished && isRecentNight(event.date)
+    !!event.ratingPromptDue,
+    rememberPrompted
   );
   return {
     scale: user?.ratingScale ?? 'five',
@@ -62,9 +67,9 @@ function useWinnerRating({
   };
 }
 
-function hostYourOwnHref(signedIn: boolean): string {
+export function hostYourOwnHref(signedIn: boolean): string {
   if (signedIn) return ROUTES.createEvent;
-  return withReturnTo(ROUTES.register, `${ROUTES.createEvent}?${ENTRY_ORIGIN_QUERY_PARAM}=night`);
+  return withReturnTo(ROUTES.register, declaringEntryOrigin(ROUTES.createEvent, 'event'));
 }
 
 export default function EventWinnerStage({

@@ -80,6 +80,28 @@ describe('ProposeToEventModal (MSW)', () => {
     ).toBeInTheDocument();
   });
 
+  it('asks for the active nights without the posters and faces it never shows', async () => {
+    const requested: URL[] = [];
+    server.use(
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/events/mine`, ({ request }) => {
+        requested.push(new URL(request.url));
+        return apiJson<'MyEventsListResponse'>({
+          events: [],
+          hasMore: false,
+          totalActive: 0,
+          totalFinished: 0,
+        });
+      })
+    );
+
+    renderModal();
+
+    await screen.findByText(/aucune soirée active/i);
+    expect(requested.map((url) => url.searchParams.get('scope'))).toEqual(['active']);
+    expect(requested.map((url) => url.searchParams.get('previews'))).toEqual(['false']);
+  });
+
   it('shows a message when there is no eligible movie night', async () => {
     server.use(
       authMeGuestHandler,

@@ -313,6 +313,28 @@ public sealed class InMemoryMovieListRepository : IMovieListRepository
         }
     }
 
+    public Task<IReadOnlyList<MovieList>> ListOthersWithItemsAddedByAsync(string userId, CancellationToken ct = default) =>
+        Select(list => list.OwnerId != userId && HoldsItemAddedBy(list, userId));
+
+    public Task<long> ForgetItemAuthorAsync(string userId, CancellationToken ct = default)
+    {
+        lock (_gate)
+        {
+            var touched = _store.Values.Where(list => HoldsItemAddedBy(list, userId)).ToList();
+            foreach (var list in touched)
+            {
+                _store[list.Id] = list with
+                {
+                    Items = [.. list.Items.Select(item => item.AddedByUserId == userId ? item with { AddedByUserId = null } : item)]
+                };
+            }
+            return Task.FromResult((long)touched.Count);
+        }
+    }
+
+    private static bool HoldsItemAddedBy(MovieList list, string userId) =>
+        list.Items.Any(item => item.AddedByUserId == userId);
+
     private Task<IReadOnlyList<MovieList>> Select(Func<MovieList, bool> predicate)
     {
         lock (_gate)

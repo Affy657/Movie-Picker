@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Auth.EmailVerification;
 using MoviePicker.Api.Application.UseCases.Profile;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -13,13 +14,20 @@ public sealed class RegisterUserHandler : IRegisterUserHandler
     private readonly IPasswordHasher _passwordHasher;
     private readonly ILogger<RegisterUserHandler> _logger;
     private readonly TimeProvider _clock;
+    private readonly IEmailVerificationMailer _verificationMailer;
 
-    public RegisterUserHandler(IUserRepository users, IPasswordHasher passwordHasher, ILogger<RegisterUserHandler> logger, TimeProvider clock)
+    public RegisterUserHandler(
+        IUserRepository users,
+        IPasswordHasher passwordHasher,
+        ILogger<RegisterUserHandler> logger,
+        TimeProvider clock,
+        IEmailVerificationMailer verificationMailer)
     {
         _users = users;
         _passwordHasher = passwordHasher;
         _logger = logger;
         _clock = clock;
+        _verificationMailer = verificationMailer;
     }
 
     public async Task<RegisterResponse> HandleAsync(RegisterRequest request, CancellationToken ct = default)
@@ -61,6 +69,19 @@ public sealed class RegisterUserHandler : IRegisterUserHandler
             ct);
 
         _logger.LogInformation("User registered: {UserId}", created.Id);
+        await SendConfirmationEmailAsync(created, request.Locale, ct);
         return new RegisterResponse { UserId = created.Id, DisplayName = created.DisplayName };
+    }
+
+    private async Task SendConfirmationEmailAsync(User created, string? locale, CancellationToken ct)
+    {
+        try
+        {
+            await _verificationMailer.SendAsync(created, locale, ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "Confirmation email not issued for {UserId}, the account stays open", created.Id);
+        }
     }
 }

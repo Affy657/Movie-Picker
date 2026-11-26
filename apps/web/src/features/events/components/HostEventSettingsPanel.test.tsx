@@ -6,7 +6,7 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http } from 'msw';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
-import { TEST_API_V1, authMeGuestHandler } from '@/mocks/handlers';
+import { TEST_API_V1, authMeGuestHandler, eventLimitsHandler } from '@/mocks/handlers';
 import { apiErrorJson, apiJson, type ApiSchemas } from '@/mocks/apiJson';
 import { buildEventConfig } from '@/test-utils/eventDetail';
 import { queryKeys } from '@/shared/hooks/queryKeys';
@@ -87,7 +87,7 @@ const baseEvent: EventData = {
 };
 
 describe('HostEventSettingsPanel', () => {
-  const server = setupServer(authMeGuestHandler);
+  const server = setupServer(authMeGuestHandler, eventLimitsHandler);
 
   beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   beforeEach(() => {
@@ -438,13 +438,69 @@ describe('HostEventSettingsPanel', () => {
         hostToken={null}
         event={{
           ...baseEvent,
-          config: { ...baseEvent.config!, maxParticipants: 300, maxProposalsPerParticipant: 15 },
+          config: { ...baseEvent.config!, maxParticipants: 50, maxProposalsPerParticipant: 15 },
         }}
       />
     );
 
-    expect(screen.getByLabelText('Participants')).toHaveValue(300);
+    expect(screen.getByLabelText('Participants')).toHaveValue(50);
     expect(screen.getByLabelText('Films par personne')).toHaveValue(15);
+  });
+
+  it('stops the counters at the caps the API serves', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/events/limits`, () =>
+        apiJson<'EventLimitsResponse'>({ maxParticipants: 40, maxProposalsPerParticipant: 12 })
+      )
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={{
+          ...baseEvent,
+          config: { ...baseEvent.config!, maxParticipants: 8, maxProposalsPerParticipant: 3 },
+        }}
+      />
+    );
+
+    await waitFor(() => expect(screen.getByLabelText('Participants')).toHaveAttribute('max', '40'));
+    expect(screen.getByLabelText('Films par personne')).toHaveAttribute('max', '12');
+  });
+
+  it('refuses more participants than the API accepts, naming its cap, without calling it', async () => {
+    let patchCalled = false;
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, () => {
+        patchCalled = true;
+        return apiJson<'EventConfigResponse'>(buildEventConfig());
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={{ ...baseEvent, config: { ...baseEvent.config!, maxParticipants: 8 } }}
+      />
+    );
+    await waitFor(() => expect(screen.getByLabelText('Participants')).toHaveAttribute('max', '50'));
+
+    fireEvent.change(screen.getByLabelText('Participants'), { target: { value: '51' } });
+
+    expect(
+      await screen.findByText(
+        'Nombre maximum de participants : entier entre 1 et 50.',
+        {},
+        { timeout: 3000 }
+      )
+    ).toBeInTheDocument();
+    expect(patchCalled).toBe(false);
   });
 
   it('stepping the vote limit down from unlimited sends the default value, then the typed value', async () => {

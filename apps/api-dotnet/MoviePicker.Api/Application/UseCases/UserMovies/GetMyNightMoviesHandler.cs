@@ -50,7 +50,7 @@ public sealed class GetMyNightMoviesHandler : IGetMyNightMoviesHandler
         var proposersTask = LoadProposersAsync(proposals, films, ct);
         var watchedTask = _history.ReadKeysAsync(userId, ct);
         var enrichmentsTask = TmdbEnrichments.LoadAsync(
-            films.Select(g => (g[0].TmdbId, g[0].MediaType)), _tmdb, _options, ct);
+            films.Select(g => (g[0].TmdbId, g[0].MediaType)), _tmdb, _options, CatalogLanguage.French, ct);
         await Task.WhenAll(proposersTask, watchedTask, enrichmentsTask);
 
         var (participantById, avatars) = await proposersTask;
@@ -78,8 +78,11 @@ public sealed class GetMyNightMoviesHandler : IGetMyNightMoviesHandler
         var proposalsTask = _movies.ListByEventIdsAsync(nightIds, ct);
         await Task.WhenAll(nightsTask, proposalsTask);
         var nights = await nightsTask;
-        var liveNightIds = nights.Select(n => n.Id).ToHashSet(StringComparer.Ordinal);
-        var proposals = (await proposalsTask).Where(m => liveNightIds.Contains(m.EventId)).ToList();
+        var nightById = nights.DistinctBy(n => n.Id).ToDictionary(n => n.Id, StringComparer.Ordinal);
+        var proposals = (await proposalsTask)
+            .Where(m => nightById.ContainsKey(m.EventId))
+            .Select(m => nightById[m.EventId].HideProposalTime(m))
+            .ToList();
         var winnerMovieIds = WinnerMovies.AmongProposals(proposals, nights)
             .Select(m => m.Id)
             .ToHashSet(StringComparer.Ordinal);

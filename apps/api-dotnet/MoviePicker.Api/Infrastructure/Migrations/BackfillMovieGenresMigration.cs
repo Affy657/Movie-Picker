@@ -58,7 +58,7 @@ public sealed class BackfillMovieGenresMigration : IDataMigration
 
     private async Task<bool> BackfillMovieAsync(Movie movie, CancellationToken ct)
     {
-        var details = await _tmdb.GetDetailsAsync(movie.TmdbId, movie.MediaType, ct);
+        var details = await _tmdb.GetDetailsAsync(movie.TmdbId, movie.MediaType, CatalogLanguage.French, ct);
         if (details is not { GenreIds.Count: > 0 })
             return false;
 
@@ -68,7 +68,7 @@ public sealed class BackfillMovieGenresMigration : IDataMigration
 
     private async Task<bool> BackfillWatchlistItemAsync(WatchlistItem item, CancellationToken ct)
     {
-        var details = await _tmdb.GetDetailsAsync(item.TmdbId, item.MediaType, ct);
+        var details = await _tmdb.GetDetailsAsync(item.TmdbId, item.MediaType, CatalogLanguage.French, ct);
         if (details is not { GenreIds.Count: > 0 })
             return false;
 

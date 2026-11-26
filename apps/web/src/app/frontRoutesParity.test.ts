@@ -25,6 +25,7 @@ const routesOfTheWebApp = {
   Home: ROUTES.home,
   Login: ROUTES.login,
   Reset: ROUTES.resetPassword,
+  VerifyEmail: ROUTES.verifyEmail,
   OAuthCallback: ROUTES.oauthCallback,
   AccountIntegrations: ROUTES.accountIntegrations,
   Notifications: ROUTES.notifications,
@@ -44,9 +45,40 @@ const routesOfTheWebApp = {
   GroupPattern: ROUTES.groupPattern,
   GroupJoinPattern: ROUTES.groupJoinPattern,
   ListJoinPattern: ROUTES.joinListPattern,
+  CreateEvent: ROUTES.createEvent,
+  Register: ROUTES.register,
+  ForgotPassword: ROUTES.forgotPassword,
+  Account: ROUTES.account,
+  AccountProfile: ROUTES.accountProfile,
+  AccountPreferences: ROUTES.accountPreferences,
+  AccountNotifications: ROUTES.accountNotifications,
+  AccountSecurity: ROUTES.accountSecurity,
+  MyEvents: ROUTES.myEvents,
+  Watchlist: ROUTES.watchlist,
+  Lists: ROUTES.lists,
+  WatchedMovies: ROUTES.watchedMovies,
+  MyProposals: ROUTES.myProposals,
+  MyWinningProposals: ROUTES.myWinningProposals,
+  NightMovies: ROUTES.nightMovies,
+  LegalNotice: ROUTES.legalNotice,
+  PrivacyPolicy: ROUTES.privacyPolicy,
+  ReleaseNotes: ROUTES.releaseNotes,
+  MovieSearch: ROUTES.movieSearch,
+  ListPattern: ROUTES.listPattern,
+  SavedListPattern: ROUTES.savedListPattern,
+  ShowcaseRecommendationsPattern: ROUTES.showcaseRecommendationsPattern,
+  ShowcaseProviderPattern: ROUTES.showcaseProviderPattern,
+  ShowcaseThemePattern: ROUTES.showcaseThemePattern,
+  MovieCollectionPattern: ROUTES.movieCollectionPattern,
+  ProfileMoviesPattern: ROUTES.profileMoviesPattern,
+  ProfileProposalsPattern: ROUTES.profileProposalsPattern,
+  ProfileWinningProposalsPattern: ROUTES.profileWinningProposalsPattern,
+  ProfileWatchlistPattern: ROUTES.profileWatchlistPattern,
+  ProfileListsPattern: ROUTES.profileListsPattern,
+  PublicListPattern: ROUTES.publicListPattern,
   RateQueryParam: RATE_QUERY_PARAM,
   ReturnToQueryParam: firstQueryKeyOf(withReturnTo(ROUTES.login, ROUTES.eventDetail('soiree'))),
-  ResetTokenQueryParam: 'token',
+  TokenQueryParam: 'token',
   EntryOriginQueryParam: ENTRY_ORIGIN_QUERY_PARAM,
   OAuthErrorQueryParam: OAUTH_ERROR_QUERY_PARAM,
   OAuthLinkedQueryParam: OAUTH_LINKED_QUERY_PARAM,
@@ -79,7 +111,7 @@ describe('front routes built by the API', () => {
     );
   });
 
-  it('carries the reset token in a query parameter redacted from logs', () => {
-    expect(SENSITIVE_QUERY_PARAMETERS).toContain(declaredByTheApi.ResetTokenQueryParam);
+  it('carries the reset and confirmation tokens in a query parameter redacted from logs', () => {
+    expect(SENSITIVE_QUERY_PARAMETERS).toContain(declaredByTheApi.TokenQueryParam);
   });
 });

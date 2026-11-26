@@ -157,7 +157,7 @@ describe('watched hooks', () => {
       }),
       http.get(`${TEST_API_V1}/users/me/watched-movies`, () => {
         watchedReads += 1;
-        return apiJson<'UserWatchedMoviesResponse'>({ items: [], total: 0 });
+        return apiJson<'UserWatchedMoviesResponse'>({ items: [], total: 0, hasMore: false });
       }),
       ...createWatchedHandlers([{ ...dune, source: 'elsewhere' }])
     );

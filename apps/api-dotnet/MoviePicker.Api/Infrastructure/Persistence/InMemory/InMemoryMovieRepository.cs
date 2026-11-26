@@ -11,6 +11,12 @@ public sealed class InMemoryMovieRepository : IMovieRepository
 {
     private readonly ConcurrentDictionary<string, Movie> _byId = new();
     private readonly ConcurrentDictionary<string, List<Movie>> _byEventId = new();
+    private readonly IVoteRepository? _votes;
+
+    public InMemoryMovieRepository(IVoteRepository? votes = null)
+    {
+        _votes = votes;
+    }
 
     public Task<Movie?> GetByIdAsync(string movieId, CancellationToken ct = default) =>
         Task.FromResult(_byId.TryGetValue(movieId, out var m) ? m : null);
@@ -69,6 +75,28 @@ public sealed class InMemoryMovieRepository : IMovieRepository
             }
         }
         return Task.FromResult<IReadOnlyList<Movie>>(movies);
+    }
+
+    public async Task<IReadOnlyList<EventMoviePreview>> ListTopVotedByEventIdsAsync(
+        IReadOnlyCollection<string> eventIds,
+        int perEvent,
+        CancellationToken ct = default)
+    {
+        var movies = await ListByEventIdsAsync(eventIds, ct);
+        if (movies.Count == 0 || perEvent <= 0)
+            return [];
+
+        var scores = _votes is null
+            ? new Dictionary<string, VoteScoreAggregate>()
+            : await _votes.AggregateScoresByMovieIdsAsync(movies.Select(m => m.Id).ToList(), ct);
+        return movies
+            .GroupBy(m => m.EventId, StringComparer.Ordinal)
+            .SelectMany(perNight => perNight
+                .OrderByDescending(m => scores.TryGetValue(m.Id, out var aggregate) ? aggregate.Score : 0)
+                .ThenBy(m => m.Id, StringComparer.Ordinal)
+                .Take(perEvent))
+            .Select(m => new EventMoviePreview(m.EventId, m.Title, m.PosterPath))
+            .ToList();
     }
 
     public Task<IReadOnlyList<Movie>> ListByEventIdsAndTmdbIdAsync(
@@ -143,6 +171,9 @@ public sealed class InMemoryMovieRepository : IMovieRepository
         _byId[id] = created;
         return Task.FromResult(created);
     }
+
+    public Task<Movie> InsertWithUntimedIdAsync(Movie movie, CancellationToken ct = default) =>
+        InsertAsync(movie with { Id = string.Empty }, ct);
 
     public Task<long> DeleteByIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
     {

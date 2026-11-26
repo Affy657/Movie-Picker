@@ -114,6 +114,7 @@ const lastWatchedInceptionHandler = http.get(`${TEST_API_V1}/users/me/watched-mo
       }),
     ],
     total: null,
+    hasMore: false,
   })
 );
 

@@ -18,13 +18,14 @@ public sealed partial class TmdbMovieSearch
         int tmdbId,
         MovieMediaType mediaType,
         string region,
+        CatalogLanguage language,
         CancellationToken ct = default)
     {
         if (!_options.HasTmdbCredentials)
             return null;
 
-        var r = WatchRegion.Of(region);
-        var cacheKey = EnrichmentCacheKey(tmdbId, mediaType, r);
+        var catalog = new EnrichmentCatalog(WatchRegion.Of(region), language);
+        var cacheKey = EnrichmentCacheKey(tmdbId, mediaType, catalog);
 
         if (TryGetEnrichmentFromMemory(cacheKey, out var cached))
             return cached;
@@ -36,23 +37,24 @@ public sealed partial class TmdbMovieSearch
             return shared.Value;
         }
 
-        return await FetchEnrichmentThroughCachesAsync(tmdbId, mediaType, r, cacheKey, ct).ConfigureAwait(false);
+        return await FetchEnrichmentThroughCachesAsync(tmdbId, mediaType, catalog, cacheKey, ct).ConfigureAwait(false);
     }
 
     public async Task<IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>> GetEnrichmentsAsync(
         IReadOnlyCollection<(int TmdbId, MovieMediaType MediaType)> keys,
         string region,
+        CatalogLanguage language,
         CancellationToken ct = default)
     {
         var result = new ConcurrentDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>();
         if (!_options.HasTmdbCredentials || keys.Count == 0)
             return result;
 
-        var r = WatchRegion.Of(region);
+        var catalog = new EnrichmentCatalog(WatchRegion.Of(region), language);
         var misses = new List<(int TmdbId, MovieMediaType MediaType, string CacheKey)>();
         foreach (var key in keys.Distinct())
         {
-            var cacheKey = EnrichmentCacheKey(key.TmdbId, key.MediaType, r);
+            var cacheKey = EnrichmentCacheKey(key.TmdbId, key.MediaType, catalog);
             if (TryGetEnrichmentFromMemory(cacheKey, out var cached))
                 result[key] = cached;
             else
@@ -88,7 +90,7 @@ public sealed partial class TmdbMovieSearch
                 async (miss, c) =>
                 {
                     result[(miss.TmdbId, miss.MediaType)] = await FetchEnrichmentThroughCachesAsync(
-                        miss.TmdbId, miss.MediaType, r, miss.CacheKey, c).ConfigureAwait(false);
+                        miss.TmdbId, miss.MediaType, catalog, miss.CacheKey, c).ConfigureAwait(false);
                 })
             .ConfigureAwait(false);
         return result;
@@ -96,8 +98,10 @@ public sealed partial class TmdbMovieSearch
 
     private const int MaxBatchEnrichmentFetch = 500;
 
-    private static string EnrichmentCacheKey(int tmdbId, MovieMediaType mediaType, string region) =>
-        $"tmdb-enrich-v2:{MediaTypeSegment(mediaType)}:{region}:{tmdbId}";
+    private sealed record EnrichmentCatalog(string Region, CatalogLanguage Language);
+
+    private static string EnrichmentCacheKey(int tmdbId, MovieMediaType mediaType, EnrichmentCatalog catalog) =>
+        $"tmdb-enrich-v3:{MediaTypeSegment(mediaType)}:{catalog.Region}:{catalog.Language.TmdbCode()}:{tmdbId}";
 
     private bool TryGetEnrichmentFromMemory(string cacheKey, out TmdbMovieEnrichment? enrichment)
     {
@@ -115,26 +119,26 @@ public sealed partial class TmdbMovieSearch
     private async Task<TmdbMovieEnrichment?> FetchEnrichmentThroughCachesAsync(
         int tmdbId,
         MovieMediaType mediaType,
-        string region,
+        EnrichmentCatalog catalog,
         string cacheKey,
         CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         return await _singleFlight
-            .RunAsync(cacheKey, () => FetchAndStoreEnrichmentAsync(tmdbId, mediaType, region, cacheKey), ct)
+            .RunAsync(cacheKey, () => FetchAndStoreEnrichmentAsync(tmdbId, mediaType, catalog, cacheKey), ct)
             .ConfigureAwait(false);
     }
 
     private async Task<TmdbMovieEnrichment?> FetchAndStoreEnrichmentAsync(
         int tmdbId,
         MovieMediaType mediaType,
-        string region,
+        EnrichmentCatalog catalog,
         string cacheKey)
     {
         var ttl = TimeSpan.FromHours(Math.Clamp(_options.TmdbEnrichmentCacheHours, 1, 168));
         try
         {
-            var fresh = await FetchEnrichmentUncachedAsync(tmdbId, mediaType, region, CancellationToken.None).ConfigureAwait(false);
+            var fresh = await FetchEnrichmentUncachedAsync(tmdbId, mediaType, catalog, CancellationToken.None).ConfigureAwait(false);
             _cache.Set(cacheKey, fresh, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl, Size = 1 });
             await _sharedCache
                 .SetWithinCapacityAsync(cacheKey, fresh, ttl, _options.TmdbEnrichmentSharedCacheMaxEntries, CancellationToken.None)
@@ -150,10 +154,11 @@ public sealed partial class TmdbMovieSearch
         {
             _logger.LogWarning(
                 ex,
-                "TMDB enrichment failed for {MediaType} {TmdbId} region {Region}",
+                "TMDB enrichment failed for {MediaType} {TmdbId} region {Region} language {Language}",
                 MediaTypeSegment(mediaType),
                 tmdbId,
-                region);
+                catalog.Region,
+                catalog.Language.TmdbCode());
             _cache.Set(
                 cacheKey,
                 TmdbUnavailableMarker.Instance,
@@ -165,11 +170,11 @@ public sealed partial class TmdbMovieSearch
     private async Task<TmdbMovieEnrichment> FetchEnrichmentUncachedAsync(
         int tmdbId,
         MovieMediaType mediaType,
-        string region,
+        EnrichmentCatalog catalog,
         CancellationToken ct)
     {
         var typeSegment = MediaTypeSegment(mediaType);
-        var detailUrl = $"{ApiBase}/{typeSegment}/{tmdbId}?language=fr-FR";
+        var detailUrl = $"{ApiBase}/{typeSegment}/{tmdbId}?language={catalog.Language.TmdbCode()}";
         var watchUrl = $"{ApiBase}/{typeSegment}/{tmdbId}/watch/providers";
 
         var detailTask = _http.GetAsync(detailUrl, HttpCompletionOption.ResponseHeadersRead, ct);
@@ -179,6 +184,7 @@ public sealed partial class TmdbMovieSearch
         double? voteAverage = null;
         int? runtimeMinutes = null;
         string? releaseDate = null;
+        string? title = null;
         using var detailRes = await detailTask.ConfigureAwait(false);
         using var watchRes = await watchTask.ConfigureAwait(false);
         EnsureUsableAnswer(detailRes);
@@ -193,6 +199,7 @@ public sealed partial class TmdbMovieSearch
             releaseDate = mediaType == MovieMediaType.Tv
                 ? ReadStringProp(detailDoc.RootElement, "first_air_date")
                 : ReadStringProp(detailDoc.RootElement, "release_date");
+            title = ReadTitle(detailDoc.RootElement, mediaType) is { Length: > 0 } read ? read : null;
         }
 
         string? watchPageUrl = null;
@@ -202,10 +209,10 @@ public sealed partial class TmdbMovieSearch
             await using var watchStream = await watchRes.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
             using var watchDoc = await JsonDocument.ParseAsync(watchStream, cancellationToken: ct).ConfigureAwait(false);
             if (!watchDoc.RootElement.TryGetProperty(ResultsProperty, out var results))
-                return new TmdbMovieEnrichment(voteAverage, offers, null, runtimeMinutes, releaseDate);
+                return new TmdbMovieEnrichment(voteAverage, offers, null, runtimeMinutes, releaseDate, title);
 
-            if (!results.TryGetProperty(region, out var regionObj) || regionObj.ValueKind != JsonValueKind.Object)
-                return new TmdbMovieEnrichment(voteAverage, offers, null, runtimeMinutes, releaseDate);
+            if (!results.TryGetProperty(catalog.Region, out var regionObj) || regionObj.ValueKind != JsonValueKind.Object)
+                return new TmdbMovieEnrichment(voteAverage, offers, null, runtimeMinutes, releaseDate, title);
 
             if (regionObj.TryGetProperty("link", out var linkEl) && linkEl.ValueKind == JsonValueKind.String)
                 watchPageUrl = linkEl.GetString();
@@ -216,7 +223,7 @@ public sealed partial class TmdbMovieSearch
         }
 
         var deduped = DedupeProviders(offers);
-        return new TmdbMovieEnrichment(voteAverage, deduped, watchPageUrl, runtimeMinutes, releaseDate);
+        return new TmdbMovieEnrichment(voteAverage, deduped, watchPageUrl, runtimeMinutes, releaseDate, title);
     }
 
     private static void EnsureUsableAnswer(HttpResponseMessage response)

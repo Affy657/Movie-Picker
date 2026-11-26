@@ -38,6 +38,66 @@ public sealed class RateLimitingTests
             )
             .StartAsync();
 
+    private static Task<IHost> StartRecapDocumentServerAsync() =>
+        new HostBuilder()
+            .ConfigureWebHost(webHost =>
+                webHost
+                    .UseTestServer()
+                    .UseEnvironment(LimitedEnvironment)
+                    .ConfigureServices((context, services) =>
+                    {
+                        services.AddRouting();
+                        services.AddMoviePickerForwardedHeaders();
+                        services.AddMoviePickerRateLimiter(context.HostingEnvironment);
+                    })
+                    .Configure(app =>
+                    {
+                        app.UseForwardedHeaders();
+                        app.UseRouting();
+                        app.UseRateLimiter();
+                        app.UseEndpoints(endpoints =>
+                            endpoints.MapGet("/r/{slug}", () => "ok")
+                                .RequireRateLimiting(RateLimitingExtensions.RecapDocumentPolicy));
+                    })
+            )
+            .StartAsync();
+
+    private static async Task<int> ServedRandomRecapsAsync(HttpClient client, string forwardedFor, int attempts)
+    {
+        var served = 0;
+        for (var attempt = 0; attempt < attempts; attempt++)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"/r/random-{attempt}");
+            request.Headers.Add("X-Forwarded-For", forwardedFor);
+            using var response = await client.SendAsync(request);
+            if (response.StatusCode == HttpStatusCode.OK)
+                served++;
+        }
+        return served;
+    }
+
+    [Fact]
+    public async Task RecapDocument_CalledDirectly_IsCappedPerAddress_EvenWhenTheClientWritesAHostingAddressFirst()
+    {
+        using var host = await StartRecapDocumentServerAsync();
+        var quota = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.RecapDocumentPolicy)!.Value.PermitLimit;
+
+        var served = await ServedRandomRecapsAsync(host.GetTestClient(), "66.249.93.69, 203.0.113.9", quota + 1);
+
+        Assert.Equal(quota, served);
+    }
+
+    [Fact]
+    public async Task RecapDocument_RelayedByHosting_IsCountedPerRecapAndNotPerHostingAddress()
+    {
+        using var host = await StartRecapDocumentServerAsync();
+        var quota = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.RecapDocumentPolicy)!.Value.PermitLimit;
+
+        var served = await ServedRandomRecapsAsync(host.GetTestClient(), "203.0.113.9, 66.249.93.69", quota + 1);
+
+        Assert.Equal(quota + 1, served);
+    }
+
     [Fact]
     public async Task GlobalLimiter_CapsARouteWithoutPolicy_PerClient()
     {

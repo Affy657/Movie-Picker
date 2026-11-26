@@ -564,6 +564,21 @@ export const fr = {
       missingTokenError:
         'Ce lien est incomplet. Ouvrez en entier le lien reçu par e-mail, ou demandez-en un nouveau.',
     },
+    verifyEmail: {
+      title: 'Confirmation de votre adresse',
+      pendingDescription: 'Un instant, nous vérifions le lien reçu par e-mail.',
+      successTitle: 'Adresse confirmée',
+      successMessage: 'Merci, votre adresse e-mail est confirmée.',
+      invalidTitle: 'Lien invalide ou expiré',
+      invalidMessage:
+        'Ce lien de confirmation n’est plus valable. Un nouveau courriel se demande depuis Compte et sécurité, dans vos paramètres.',
+      missingTokenMessage: 'Ce lien est incomplet. Ouvrez en entier le lien reçu par e-mail.',
+      errorMessage: 'La confirmation n’a pas abouti. Réessayez dans quelques instants.',
+      retry: 'Réessayer',
+      goToSecurity: 'Ouvrir Compte et sécurité',
+      goHome: 'Aller à l’accueil',
+      goToLogin: 'Aller à la connexion',
+    },
     account: {
       title: 'Paramètres',
       loadingPlaceholder: 'Chargement du profil\u2026',
@@ -576,6 +591,13 @@ export const fr = {
       backToAccount: 'Paramètres',
       savedChip: 'Enregistré',
       attentionSuffix: ', action requise',
+      emailUnconfirmed: 'Adresse non confirmée : ouvrez le lien reçu par e-mail pour la confirmer.',
+      emailConfirmationResend: 'Renvoyer le courriel',
+      emailConfirmationResending: 'Envoi…',
+      emailConfirmationSent:
+        'Courriel envoyé à {{email}}. Pensez à regarder dans les indésirables.',
+      emailConfirmationResendError:
+        'Impossible d’envoyer le courriel. Réessayez dans quelques instants.',
       profileVisibilityHint:
         'Votre pseudo, votre bio et vos films sont visibles à l’adresse {{url}}. Votre e-mail n’apparaît jamais.',
       navSummaryProfile: 'Pseudo, bio, favoris, visibilité',
@@ -954,7 +976,7 @@ export const fr = {
       viewProfilePresenceAriaLabelElided: 'Voir le profil d’{{name}}, {{presence}}',
       removeConfirmTitle: 'Retirer un participant',
       removeConfirm:
-        'Retirer {{pseudo}} de la soirée\u00a0? Ses films, votes et marques seront supprimés, et seule une nouvelle invitation de votre part permettra de revenir.',
+        'Retirer {{pseudo}} de la soirée\u00a0? Ses films, votes et marques seront supprimés, et seule une invitation ou « Laisser revenir » dans cette liste lui permettra de revenir.',
       removeConfirmAction: 'Retirer',
       removeError: 'Impossible de retirer ce participant.',
       removeSuccess: '{{pseudo}} a été retiré(e) de la soirée.',
@@ -967,6 +989,12 @@ export const fr = {
       inviteAction: 'Inviter',
       online: 'en ligne',
       proposing: 'propose un film…',
+      removedTitle: 'Retirés de la soirée',
+      removedHint: 'Ces personnes ne peuvent plus rejoindre la soirée par son lien.',
+      letBackIn: 'Laisser revenir',
+      letBackInAriaLabel: 'Laisser revenir {{name}}',
+      letBackInSuccess: '{{name}} peut de nouveau rejoindre la soirée.',
+      letBackInError: 'Impossible de laisser revenir cette personne.',
     },
     detail: {
       loading: 'Chargement\u2026',
@@ -1182,6 +1210,7 @@ export const fr = {
         anonymous: 'propositions anonymes',
       },
       maxProposalsInvalid: 'Films par personne : nombre entier entre 1 et {{max}}.',
+      maxProposalsNotWhole: 'Films par personne : nombre entier à partir de 1.',
       maxVotesInvalid: 'Votes par participant : nombre entier à partir de 1.',
       winnerCountInvalid: 'Indiquez un nombre entre 1 et {{max}}.',
       winnerCountLockedHint:
@@ -1198,6 +1227,7 @@ export const fr = {
       saveStatusError: 'Non enregistré',
       fallbackError: 'Enregistrement impossible.',
       maxParticipantsInvalid: 'Nombre maximum de participants : entier entre 1 et {{max}}.',
+      maxParticipantsNotWhole: 'Nombre maximum de participants : entier à partir de 1.',
       maxParticipantsBelowCurrent:
         'Impossible de réduire la capacité à {{value}} : {{count}} participants sont déjà inscrits.',
     },
@@ -1526,12 +1556,14 @@ export const fr = {
       sortTmdbVote: 'Note',
       sortDuration: 'Dur\u00e9e',
       sortAddedAt: 'Ajout',
+      sortShuffled: 'Mélange',
       sortAvailability: 'Disponibilit\u00e9',
       sortSeen: 'D\u00e9j\u00e0 vu',
       sortReleaseDate: 'Date de sortie',
       sortTitle: 'Titre',
       columnTitle: 'Titre',
       columnAddedOrder: 'Ordre d’ajout',
+      columnShuffledOrder: 'Ordre mélangé',
       columnFilm: 'Film',
       sortFilmAria: 'Trier par film',
       columnTmdbVote: 'Note',
@@ -2746,6 +2778,7 @@ export const fr = {
     handle_reserved: 'Ce pseudo est réservé.',
     bio_too_long: 'La bio ne peut pas dépasser {{max}} caractères.',
     invalid_reset_token: 'Lien invalide ou expiré.',
+    invalid_email_verification_token: 'Lien de confirmation invalide ou expiré.',
     letterboxd_username_invalid:
       'Le pseudo Letterboxd ne peut contenir que des lettres, chiffres et underscores.',
     letterboxd_username_missing: 'Aucun pseudo Letterboxd enregistré sur votre compte.',
@@ -2769,6 +2802,7 @@ export const fr = {
     event_template_name_required: 'Le nom du modèle ne peut pas être vide.',
     event_template_name_too_long: 'Le nom du modèle ne peut pas dépasser {{max}} caractères.',
     self_follow: 'Vous ne pouvez pas vous suivre vous-même.',
+    self_photo_report: 'Vous ne pouvez pas signaler votre propre photo.',
     unknown_section: 'Section inconnue',
     unknown_platform: 'Plateforme inconnue',
     reference_movie_missing: 'Film de référence manquant',
@@ -2776,12 +2810,6 @@ export const fr = {
     unknown_theme: 'Thème inconnu',
     unknown_genre: 'Genre inconnu',
     unknown_collection: 'Collection inconnue',
-    too_many_attachments: 'Trop de pièces jointes (maximum {{max}}).',
-    attachment_content_invalid: 'Contenu invalide (base64 malformé) pour « {{name}} ».',
-    attachment_content_mismatch:
-      'Le contenu de « {{name}} » ne correspond pas au format déclaré ({{type}}).',
-    attachment_image_unreadable:
-      'Impossible de lire l’image « {{name}} ». Essayez une autre capture.',
     invite_only_followed: 'Vous ne pouvez inviter que des utilisateurs que vous suivez.',
     no_movie_proposed: 'Aucun film proposé. Proposez au moins un film pour lancer la roue.',
     all_movies_excluded:
@@ -3018,7 +3046,7 @@ export const fr = {
       'Les paiements sont traités intégralement par Ko-fi, qui agit comme responsable de traitement pour les données de paiement : Movie Picker n’y a jamais accès. À chaque don, Ko-fi notifie notre serveur et transmet l’adresse e-mail du donateur. Cette adresse est utilisée uniquement, en mémoire, pour retrouver le compte Movie Picker correspondant et y afficher le badge de soutien ; elle n’est jamais enregistrée. Aucun montant, nom de donateur ni message n’est conservé : seule la date du premier don est stockée sur le compte concerné, ainsi qu’un identifiant technique de notification qui évite de traiter deux fois le même don.',
     privacyIdeasTitle: 'Suggestions d’idées',
     privacyIdeasBody:
-      'Une suggestion envoyée depuis le bouton « Proposer une idée » devient un ticket public du dépôt GitHub du projet, lisible par tous : son titre, sa description, ses captures d’écran (sans leurs métadonnées), le type de page d’où elle part et la version de l’application. Votre nom, votre pseudo et votre e-mail n’y figurent pas, seulement un identifiant technique qui permet de vous recontacter. La suppression de votre compte n’efface pas ce ticket : écrivez à l’adresse de contact pour le faire retirer.',
+      'Une suggestion envoyée depuis le bouton « Proposer une idée » devient un ticket public du dépôt GitHub du projet, lisible par tous : son titre, sa description, le type de page d’où elle part et la version de l’application. Votre nom, votre pseudo et votre e-mail n’y figurent pas, seulement un identifiant technique qui permet de vous recontacter. La suppression de votre compte n’efface pas ce ticket : écrivez à l’adresse de contact pour le faire retirer.',
     privacyPurposesTitle: 'Finalités et bases légales',
     privacyPurposesBody: 'Chaque traitement repose sur une base légale du RGPD :',
     privacyPurposeService:
@@ -3057,7 +3085,7 @@ export const fr = {
       'Google, MongoDB, Resend, Sentry, PostHog et GitHub sont des sociétés établies aux États-Unis. Vos données sont stockées dans l’Union européenne quand le service le permet, mais ces sociétés peuvent y accéder depuis les États-Unis. Ces transferts sont encadrés par les clauses contractuelles types de la Commission européenne prévues par leurs accords de traitement des données et, pour les sociétés certifiées, par le cadre de protection des données UE-États-Unis (Data Privacy Framework). Ko-fi est établi au Royaume-Uni, que la Commission européenne reconnaît comme offrant un niveau de protection adéquat.',
     privacyRetentionTitle: 'Durée de conservation',
     privacyRetentionBody:
-      'Vos données sont conservées tant que votre compte existe. La suppression de compte, disponible depuis la page Paramètres, efface votre profil et votre photo de la base en service ; les soirées créées, vos votes et vos notes sont conservés mais anonymisés.',
+      'Vos données sont conservées tant que votre compte existe. La suppression de compte, disponible depuis la page Paramètres, efface votre profil et votre photo de la base en service ; les soirées créées, vos votes et vos notes sont conservés mais anonymisés, et les titres que vous avez ajoutés aux listes d’autres membres y restent, sans votre nom.',
     privacyRetentionBackups:
       'Sauvegardes : la base est sauvegardée chaque jour. Les archives quotidiennes sont gardées 30 jours et une archive par mois 400 jours, puis restent 7 jours récupérables avant leur effacement définitif. Une donnée supprimée de la base peut donc subsister dans une sauvegarde jusqu’à 407 jours. Ces sauvegardes ne servent qu’à remettre le service en état après un incident.',
     privacyRetentionLogs: 'Journaux techniques de l’API : 30 jours.',
@@ -3132,19 +3160,8 @@ export const fr = {
     titleLabel: 'Titre',
     descriptionLabel: 'Description',
     descriptionHint: '{{count}} caractères restants',
-    attachmentsLabel: 'Captures d’écran (optionnel)',
-    attachmentsAddButton: 'Ajouter une image',
-    attachmentsDropHint:
-      'Glissez-déposez, collez ou choisissez jusqu’à {{max}} images (PNG, JPEG, WebP ou GIF, 4 Mo max)',
-    attachmentsRemove: 'Retirer cette image',
-    attachmentsTooMany: 'Vous ne pouvez joindre que {{max}} images maximum.',
-    attachmentsTooLarge: 'Image trop lourde (4 Mo maximum) : {{name}}',
-    attachmentsUnsupportedType:
-      'Format non supporté (PNG, JPEG, WebP ou GIF uniquement) : {{name}}',
-    attachmentsUnreadable:
-      'Impossible de lire l’image {{name}}. Retirez-la puis ajoutez-la de nouveau.',
     publicNotice:
-      'Votre suggestion et vos captures seront publiées dans un ticket public sur GitHub, sans votre nom. N’y mettez rien de personnel.',
+      'Votre suggestion sera publiée dans un ticket public sur GitHub, sans votre nom. N’y mettez rien de personnel.',
     submit: 'Envoyer',
     submitting: 'Envoi…',
     submitError: 'Impossible d’envoyer votre suggestion pour le moment. Réessayez.',
@@ -3226,6 +3243,19 @@ export const fr = {
       settingsEmpty: 'Aucune bannière pour le moment.',
       settingsEdit: 'Modifier',
       settingsAdd: 'Ajouter',
+    },
+    report: {
+      moreActions: 'Plus d’actions',
+      avatar: 'Signaler la photo de profil',
+      banner: 'Signaler la bannière',
+      avatarTitle: 'Signaler la photo de profil ?',
+      bannerTitle: 'Signaler la bannière ?',
+      message:
+        'L’équipe de Movie Picker reçoit un lien vers ce profil et retire l’image si elle n’a pas sa place ici. {{name}} ne saura pas qui l’a signalée.',
+      confirm: 'Signaler',
+      sentTitle: 'Merci pour votre signalement',
+      sentMessage: 'L’équipe de Movie Picker va regarder cette image.',
+      failed: 'Le signalement n’a pas été envoyé. Vérifiez votre connexion, puis réessayez.',
     },
     seoDescription:
       'Profil de {{name}} (@{{handle}}) sur Movie Picker : statistiques de soirées ciné, films proposés et abonnements.',
@@ -3689,7 +3719,7 @@ export const fr = {
         'Planificateur de Google Cloud : il appelle une adresse à l’heure dite, ce qui remplace une minuterie vivant dans le serveur.',
       issues: 'GitHub Issues',
       issuesValue:
-        'Une suggestion envoyée dans l’app ouvre une issue, capture d’écran comprise. Sans jeton, l’envoi est ignoré et journalisé plutôt que renvoyé en erreur.',
+        'Une suggestion envoyée dans l’app ouvre une issue. Sans jeton, l’envoi est ignoré et journalisé plutôt que renvoyé en erreur.',
       issuesHint:
         'Le suivi de bugs de GitHub, alimenté directement par le formulaire de suggestion de l’app.',
     },
@@ -3707,7 +3737,7 @@ export const fr = {
         'Les recherches et les fiches TMDB vivent encore dans la mémoire de chaque instance : deux instances refont le même appel, et un redémarrage repart à froid. L’accueil, les collections et l’enrichissement des films passent déjà par un cache commun en base, le modèle à reprendre pour le reste.',
       containerTwice: 'Le conteneur décrit à deux endroits',
       containerTwiceHint:
-        'Les secrets montés et les variables du serveur sont décrits dans la chaîne de déploiement et dans Terraform, et les cinq jobs planifiés ne vivent encore que dans la chaîne ; tant que la version voyage en variable plutôt que dans l’image, la chaîne fait foi et la description suit.',
+        'Les secrets montés et les variables du serveur sont décrits dans la chaîne de déploiement et dans Terraform, qui décrit seul les cinq jobs planifiés ; tant que la version voyage en variable plutôt que dans l’image, la chaîne fait foi et la description suit.',
       sentryToken: 'Un jeton de dépôt reste',
       sentryTokenHint:
         'Tout le reste est sans clé ; le jeton qui envoie les source maps à Sentry est encore un secret de dépôt, à ranger derrière un environnement.',
@@ -4050,7 +4080,7 @@ export const fr = {
       pipelineHeading: 'Ce qui tient la chaîne',
       trigger: 'Déclenchement',
       triggerValue:
-        'Toute poussée sur master et toute demande de fusion vers master lancent la chaîne. Le code n’a pas d’autre branche durable : chaque livraison part d’une branche courte, rejoint master le jour où elle est prête et part en production dans la journée, avec sa propre version. La seule autre branche, feedback-attachments, ne contient pas de code : le serveur y range les captures d’écran jointes aux suggestions.',
+        'Toute poussée sur master et toute demande de fusion vers master lancent la chaîne. Le code n’a pas d’autre branche durable : chaque livraison part d’une branche courte, rejoint master le jour où elle est prête et part en production dans la journée, avec sa propre version. La seule autre branche, feedback-attachments, ne contient pas de code : elle garde les captures d’écran que l’on pouvait joindre aux suggestions jusqu’en novembre 2026.',
       triggerHint:
         'Une poussée ne déclenche la chaîne que sur master : une branche courte n’est jouée que par sa demande de fusion, robot de dépendances compris, pour ne pas lancer deux fois la chaîne sur le même commit.',
       scope: 'Périmètre calculé',
@@ -4316,7 +4346,7 @@ export const fr = {
       schedulerValue:
         'Aucune tâche de fond ne vit dans le processus. Un planificateur externe appelle le serveur toutes les 30 minutes pour les rappels de soirée, toutes les cinq heures pour recharger le catalogue de l’accueil, et une fois par jour pour faire naître l’occurrence suivante des soirées récurrentes, retirer le film gagnant de la liste à voir des participants une fois la soirée finie, et relancer ceux qui n’ont pas encore noté le film de la veille, sur des routes protégées par jeton.',
       schedulerHint:
-        'Les cinq jobs sont créés par la chaîne de déploiement en production, après chaque promotion, et retentent trois fois un appel tombé sur un démarrage à froid ou une erreur ; une tentative en échec remonte en alerte. La recette n’en a aucun.',
+        'Les cinq jobs sont décrits en Terraform avec le reste de la production, et retentent trois fois un appel tombé sur un démarrage à froid ou une erreur ; une tentative en échec remonte en alerte. La recette n’en a aucun.',
       origins: 'Origines',
       originsValue:
         'Le serveur n’accepte que les origines déclarées. Le déploiement échoue si la liste n’est pas renseignée.',
@@ -4329,7 +4359,7 @@ export const fr = {
         'La recette n’est pas indexée par les moteurs de recherche, n’a pas de sauvegarde et une seule sonde, sur son serveur, et tourne dans le même projet sous ses propres identités.',
       iac: 'Infrastructure décrite',
       iacValue:
-        'Registre, secrets, services, sites, identités, fédération, alertes et journaux d’audit sont décrits en Terraform, avec un état distant versionné et verrouillé. Un changement se planifie sur sa pull request, et ne s’applique sur master qu’après l’accord d’un relecteur, quand il change une ressource.',
+        'Registre, secrets, services, sites, identités, fédération, jobs planifiés, alertes et journaux d’audit sont décrits en Terraform, avec un état distant versionné et verrouillé. Un changement se planifie sur sa pull request, et ne s’applique sur master qu’après l’accord d’un relecteur, quand il change une ressource.',
       iacHint:
         'La production a été importée, jamais recréée : le plan est vide tant que le code et la réalité coïncident. Chaque lundi, le même plan rejoué en lecture seule passe au rouge si l’infrastructure a bougé hors du dépôt : une dérive se lit en revue plutôt qu’en incident.',
       identities: 'Identités sans clé',
