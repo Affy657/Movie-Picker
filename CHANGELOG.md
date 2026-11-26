@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.33.1] - 2026-11-26
+
 ### Security
 
 - **Un lien partagé ne peut plus être rendu indisponible par une seule personne** : une soirée, un récap, une fiche de film ou un profil ouverts par movie-picker.fr comptent maintenant les visites de chaque visiteur à part, comme les appels directs, au lieu de partager un seul quota entre tous ceux qui ouvrent le même lien.
@@ -1183,7 +1185,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.33.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.33.1...HEAD
+[1.33.1]: https://github.com/Affy657/Movie-Picker/compare/v1.33.0...v1.33.1
 [1.33.0]: https://github.com/Affy657/Movie-Picker/compare/v1.32.1...v1.33.0
 [1.32.1]: https://github.com/Affy657/Movie-Picker/compare/v1.32.0...v1.32.1
 [1.32.0]: https://github.com/Affy657/Movie-Picker/compare/v1.31.3...v1.32.0
