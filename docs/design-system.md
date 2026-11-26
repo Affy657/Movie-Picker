@@ -204,7 +204,7 @@ Le bandeau d'information flottant : `title`, `description`, `placement` `top` (d
 
 ### FormPageShell
 
-La page d'un formulaire seul : `back` (`to`, `label`) rend le `BackLink`, puis une `Card` `lg` élevée avec sa barre `--gradient-accent`, le `<h1>` (`title`, `pageTitle`) et `description`, puis les enfants. C'est la connexion, l'inscription, le mot de passe oublié et sa réinitialisation. La création de soirée, elle, est une fenêtre (`CreateEventDialog` sur `ResponsiveDialog`), ouverte depuis l'en-tête, la barre du bas ou l'adresse `/new`.
+La page d'un formulaire seul : `back` (`to`, `label`) rend le `BackLink`, puis une `Card` `lg` élevée avec sa barre `--gradient-accent`, le `<h1>` (`title`, `pageTitle`) et `description`, puis les enfants. C'est la connexion, l'inscription, le mot de passe oublié et sa réinitialisation. Une page dont l'état change sans navigation (confirmation d'adresse) passe `titleRef`, qui rend le `<h1>` focalisable (`tabIndex={-1}`) pour y ramener le focus quand le bouton qui le portait disparaît, et `announceDescription`, qui fait de la description une région `status` polie : son nouveau texte est lu à chaque changement d'état. La création de soirée, elle, est une fenêtre (`CreateEventDialog` sur `ResponsiveDialog`), ouverte depuis l'en-tête, la barre du bas ou l'adresse `/new`.
 
 ### InlineError
 

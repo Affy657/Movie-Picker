@@ -135,4 +135,29 @@ describe('VerifyEmailPage', () => {
     expect(await screen.findByRole('heading', { name: /adresse confirmée/i })).toBeInTheDocument();
     expect(attempts).toBe(2);
   });
+
+  it('keeps focus on the page heading while trying again, and announces the outcome where the page describes it', async () => {
+    let attempts = 0;
+    server.use(
+      http.post(CONFIRM_URL, () => {
+        attempts += 1;
+        return attempts === 1
+          ? apiErrorJson(503, 'service_unavailable')
+          : new HttpResponse(null, { status: 204 });
+      })
+    );
+    const user = userEvent.setup();
+
+    renderVerify('/verify-email?token=tokenFromTheEmail');
+    const retry = await screen.findByRole('button', { name: /réessayer/i });
+    const description = screen.getByText(/la confirmation n’a pas abouti/i);
+    expect(description).toHaveAttribute('aria-live', 'polite');
+
+    await user.click(retry);
+
+    expect(screen.getByRole('heading', { level: 1 })).toHaveFocus();
+    await screen.findByRole('heading', { name: /adresse confirmée/i });
+    expect(screen.getByRole('heading', { level: 1 })).toHaveFocus();
+    expect(description).toHaveTextContent('Merci, votre adresse e-mail est confirmée.');
+  });
 });

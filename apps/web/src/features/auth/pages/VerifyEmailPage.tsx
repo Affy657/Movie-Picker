@@ -10,7 +10,7 @@ import Spinner from '@/shared/components/Spinner';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { queryKeys } from '@/shared/hooks/queryKeys';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { API_ERROR_REASONS, ApiError } from '@/shared/api/apiError';
 import { ROUTES } from '@/app/routes';
 
@@ -62,84 +62,89 @@ function useConfirmation(token: string) {
   return { status, retry };
 }
 
+const STATUS_COPY: Record<
+  Exclude<ConfirmationStatus, 'invalid'>,
+  { title: TranslationKey; description: TranslationKey }
+> = {
+  pending: { title: 'auth.verifyEmail.title', description: 'auth.verifyEmail.pendingDescription' },
+  failed: { title: 'auth.verifyEmail.title', description: 'auth.verifyEmail.errorMessage' },
+  confirmed: {
+    title: 'auth.verifyEmail.successTitle',
+    description: 'auth.verifyEmail.successMessage',
+  },
+};
+
+function confirmationCopy(
+  status: ConfirmationStatus,
+  hasToken: boolean
+): { title: TranslationKey; description: TranslationKey } {
+  if (status !== 'invalid') return STATUS_COPY[status];
+  return {
+    title: 'auth.verifyEmail.invalidTitle',
+    description: hasToken
+      ? 'auth.verifyEmail.invalidMessage'
+      : 'auth.verifyEmail.missingTokenMessage',
+  };
+}
+
+function nextStepLink(
+  status: 'confirmed' | 'invalid',
+  signedIn: boolean
+): { to: string; label: TranslationKey } {
+  if (!signedIn) return { to: ROUTES.login, label: 'auth.verifyEmail.goToLogin' };
+  if (status === 'invalid') {
+    return { to: ROUTES.accountSecurity, label: 'auth.verifyEmail.goToSecurity' };
+  }
+  return { to: ROUTES.home, label: 'auth.verifyEmail.goHome' };
+}
+
+function ConfirmationAction({
+  status,
+  signedIn,
+  onRetry,
+}: Readonly<{ status: ConfirmationStatus; signedIn: boolean; onRetry: () => void }>) {
+  const { t } = useTranslation();
+  if (status === 'pending') return <Spinner />;
+  if (status === 'failed') {
+    return (
+      <Button variant="primary" onClick={onRetry}>
+        {t('auth.verifyEmail.retry')}
+      </Button>
+    );
+  }
+  const next = nextStepLink(status, signedIn);
+  return (
+    <p>
+      <Link className={buttonClass({ variant: 'primary' })} to={next.to}>
+        {t(next.label)}
+      </Link>
+    </p>
+  );
+}
+
 export default function VerifyEmailPage() {
   const { t } = useTranslation();
   useNoindexPage(pageTitle(t('auth.verifyEmail.title')), ROUTES.verifyEmail);
   const { user } = useAuth();
   const token = useTokenHiddenFromTheAddressBar();
   const { status, retry } = useConfirmation(token);
-  const primaryLink = buttonClass({ variant: 'primary' });
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const copy = confirmationCopy(status, token !== '');
 
-  if (status === 'pending') {
-    return (
-      <PageLayout className={authPageShellStyles.layout}>
-        <AuthPageShell
-          title={t('auth.verifyEmail.title')}
-          description={t('auth.verifyEmail.pendingDescription')}
-        >
-          <Spinner />
-        </AuthPageShell>
-      </PageLayout>
-    );
-  }
-
-  if (status === 'failed') {
-    return (
-      <PageLayout className={authPageShellStyles.layout}>
-        <AuthPageShell
-          title={t('auth.verifyEmail.title')}
-          description={t('auth.verifyEmail.errorMessage')}
-        >
-          <Button variant="primary" onClick={retry}>
-            {t('auth.verifyEmail.retry')}
-          </Button>
-        </AuthPageShell>
-      </PageLayout>
-    );
-  }
-
-  if (status === 'invalid') {
-    return (
-      <PageLayout className={authPageShellStyles.layout}>
-        <AuthPageShell
-          title={t('auth.verifyEmail.invalidTitle')}
-          description={t(
-            token ? 'auth.verifyEmail.invalidMessage' : 'auth.verifyEmail.missingTokenMessage'
-          )}
-        >
-          <p>
-            {user ? (
-              <Link className={primaryLink} to={ROUTES.accountSecurity}>
-                {t('auth.verifyEmail.goToSecurity')}
-              </Link>
-            ) : (
-              <Link className={primaryLink} to={ROUTES.login}>
-                {t('auth.verifyEmail.goToLogin')}
-              </Link>
-            )}
-          </p>
-        </AuthPageShell>
-      </PageLayout>
-    );
-  }
+  const retryFromTheHeading = () => {
+    titleRef.current?.focus();
+    retry();
+  };
 
   return (
     <PageLayout className={authPageShellStyles.layout}>
       <AuthPageShell
-        title={t('auth.verifyEmail.successTitle')}
-        description={t('auth.verifyEmail.successMessage')}
+        title={t(copy.title)}
+        description={t(copy.description)}
+        titleRef={titleRef}
+        announceDescription
       >
-        <p>
-          {user ? (
-            <Link className={primaryLink} to={ROUTES.home}>
-              {t('auth.verifyEmail.goHome')}
-            </Link>
-          ) : (
-            <Link className={primaryLink} to={ROUTES.login}>
-              {t('auth.verifyEmail.goToLogin')}
-            </Link>
-          )}
-        </p>
+        <ConfirmationAction status={status} signedIn={!!user} onRetry={retryFromTheHeading} />
       </AuthPageShell>
     </PageLayout>
   );
