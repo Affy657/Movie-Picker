@@ -1,4 +1,5 @@
-import { Navigate, Route, Routes, useLocation } from 'react-router';
+import { lazy, Suspense, useEffect } from 'react';
+import { useLocation } from 'react-router';
 import PageLayout from '@/shared/components/PageLayout';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { hasSessionHint } from '@/features/auth/session-hint';
@@ -11,18 +12,13 @@ import LanguageSelector from '@/app/components/LanguageSelector';
 import AccentColorPicker from '@/app/components/AccentColorPicker';
 import { ROUTES } from '@/app/routes';
 import { returnToOf } from '@/shared/utils/returnTo';
-import type { UserProfile } from '@/features/auth/types';
-import AccountLayout from '@/app/pages/account/AccountLayout';
-import AccountIndexPage from '@/app/pages/account/AccountIndexPage';
-import ProfileEditPage from '@/app/pages/account/ProfileEditPage';
-import AccountPreferencesPage from '@/app/pages/account/AccountPreferencesPage';
-import AccountNotificationsPage from '@/app/pages/account/AccountNotificationsPage';
-import AccountIntegrationsPage from '@/app/pages/account/AccountIntegrationsPage';
-import AccountSecurityPage from '@/app/pages/account/AccountSecurityPage';
 import AccountLoadingSkeleton from '@/app/pages/account/AccountLoadingSkeleton';
 import styles from './AccountPage.module.css';
 import AccountChoiceLinks from '@/shared/components/AccountChoiceLinks';
 import Field from '@/shared/components/Field';
+
+const loadAccountSettingsRoutes = () => import('@/app/pages/account/AccountSettingsRoutes');
+const AccountSettingsRoutes = lazy(loadAccountSettingsRoutes);
 
 function GuestPreferencesSection() {
   const { t } = useTranslation();
@@ -53,31 +49,10 @@ function GuestPreferencesSection() {
   );
 }
 
-function AccountAuthenticated({ user }: Readonly<{ user: UserProfile }>) {
-  return (
-    <Routes>
-      <Route path="profil" element={<ProfileEditPage user={user} />} />
-      <Route path="*" element={<AccountSettings user={user} />} />
-    </Routes>
-  );
-}
-
-function AccountSettings({ user }: Readonly<{ user: UserProfile }>) {
-  const { t } = useTranslation();
-
+function AccountLoading() {
   return (
     <PageLayout className={styles.layoutWide}>
-      <h1 className="visually-hidden">{t('auth.account.title')}</h1>
-      <Routes>
-        <Route index element={<AccountIndexPage user={user} />} />
-        <Route element={<AccountLayout user={user} />}>
-          <Route path="preferences" element={<AccountPreferencesPage />} />
-          <Route path="notifications" element={<AccountNotificationsPage />} />
-          <Route path="integrations" element={<AccountIntegrationsPage user={user} />} />
-          <Route path="securite" element={<AccountSecurityPage user={user} />} />
-        </Route>
-        <Route path="*" element={<Navigate to={ROUTES.accountPreferences} replace />} />
-      </Routes>
+      <AccountLoadingSkeleton />
     </PageLayout>
   );
 }
@@ -87,16 +62,15 @@ export default function AccountPage() {
   useNoindexPage(pageTitle(t('auth.account.title')), ROUTES.account);
   const { user, isLoading, authCheckFailed } = useAuth();
   const returnTo = returnToOf(useLocation());
+  const sessionHinted = hasSessionHint();
 
-  if (isLoading) {
-    return (
-      <PageLayout className={styles.layoutWide}>
-        <AccountLoadingSkeleton />
-      </PageLayout>
-    );
-  }
+  useEffect(() => {
+    if (sessionHinted) loadAccountSettingsRoutes().catch(() => undefined);
+  }, [sessionHinted]);
 
-  if (!user && authCheckFailed && hasSessionHint()) return <SessionCheckErrorState />;
+  if (isLoading && sessionHinted) return <AccountLoading />;
+
+  if (!user && authCheckFailed && sessionHinted) return <SessionCheckErrorState />;
 
   if (!user) {
     return (
@@ -115,5 +89,9 @@ export default function AccountPage() {
     );
   }
 
-  return <AccountAuthenticated user={user} />;
+  return (
+    <Suspense fallback={<AccountLoading />}>
+      <AccountSettingsRoutes user={user} />
+    </Suspense>
+  );
 }

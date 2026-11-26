@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Changed
+
+- **La page Paramètres s’affiche plus vite sans compte** : un visiteur ne télécharge plus les sections réservées aux membres (profil, sécurité, intégrations), et la page n’attend plus de vérifier une session qui n’existe pas.
+
 ## [1.33.4] - 2026-11-26
 
 ### Fixed
