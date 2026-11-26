@@ -12,7 +12,7 @@ import type { RatingScale } from '@/shared/types/theme';
 import { formatRating } from '@/shared/utils/formatRating';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { keepPunctuationAttached } from '@/shared/utils/keepPunctuationAttached';
-import { posterImageSrc, posterSrcAtSize } from '@/shared/utils/posterUrl';
+import { posterImageSrc, posterSrcAtSize, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
 import { useAutoSavedRating } from './useAutoSavedRating';
 import styles from './MovieRatingDialog.module.css';
 
@@ -37,8 +37,11 @@ type Props = {
   previous?: { title: string; value: number } | null;
 };
 
+const SHEET_POSTER_SIZES = '(max-width: 47.9375rem) 192px, 176px';
+
 function SheetPoster({ posterPath }: Readonly<{ posterPath?: string | null }>) {
-  const src = posterSrcAtSize(posterImageSrc(posterPath), 'w342');
+  const stored = posterImageSrc(posterPath);
+  const src = posterSrcAtSize(stored, 'w342');
   if (!src) {
     return (
       <span className={styles.posterPlaceholder} aria-hidden>
@@ -46,7 +49,16 @@ function SheetPoster({ posterPath }: Readonly<{ posterPath?: string | null }>) {
       </span>
     );
   }
-  return <img src={src} alt="" className={styles.poster} decoding="async" />;
+  return (
+    <img
+      src={src}
+      srcSet={tmdbPosterSrcSetForList(stored)}
+      sizes={SHEET_POSTER_SIZES}
+      alt=""
+      className={styles.poster}
+      decoding="async"
+    />
+  );
 }
 
 function SheetActions({

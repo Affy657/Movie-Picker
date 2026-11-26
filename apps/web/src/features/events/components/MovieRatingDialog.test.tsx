@@ -51,6 +51,22 @@ describe('MovieRatingDialog', () => {
     expect(sources).not.toContainEqual(expect.stringMatching(/\/w500\//));
   });
 
+  it('offers the relay w342 and w500 posters at the width the sheet draws, so a dense screen stays sharp', () => {
+    renderDialog({ movie: { ...movie, posterPath: '/api/v1/posters/tmdb/w500/matrix.jpg' } });
+
+    const poster = [...document.querySelectorAll('img')].find((image) =>
+      image.getAttribute('src')?.endsWith('/w342/matrix.jpg')
+    );
+    const candidates = (poster?.getAttribute('srcset') ?? '').split(', ');
+    expect(candidates).toContainEqual(
+      expect.stringMatching(/\/api\/v1\/posters\/tmdb\/w342\/matrix\.jpg 342w$/)
+    );
+    expect(candidates).toContainEqual(
+      expect.stringMatching(/\/api\/v1\/posters\/tmdb\/w500\/matrix\.jpg 500w$/)
+    );
+    expect(poster).toHaveAttribute('sizes', '(max-width: 47.9375rem) 192px, 176px');
+  });
+
   it('saves as soon as a star is picked, without a save button', async () => {
     const { onSave } = renderDialog();
 
