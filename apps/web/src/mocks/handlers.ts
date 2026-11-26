@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw';
 import { apiErrorJson, apiJson, type ApiSchemas as Schemas } from './apiJson';
+import { apiPath } from '@/shared/api/client';
 
 export const TEST_API_BASE = 'http://127.0.0.1:3999';
 
@@ -876,13 +877,18 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
         },
       });
     }),
-    http.get(`${V1}/events/${slug}/movies`, () => apiJson<'MovieWithScoreResponse[]'>([])),
-    http.put(`${V1}/events/${slug}/presence`, () => new HttpResponse(null, { status: 204 })),
+    http.get(`${V1}${apiPath('events', slug, 'movies')}`, () =>
+      apiJson<'MovieWithScoreResponse[]'>([])
+    ),
+    http.put(
+      `${V1}${apiPath('events', slug, 'presence')}`,
+      () => new HttpResponse(null, { status: 204 })
+    ),
   ];
 }
 
 export function createJoinHandler(slug: string) {
-  return http.post(`${V1}/events/${slug}/join`, async () =>
+  return http.post(`${V1}${apiPath('events', slug, 'join')}`, async () =>
     apiJson<'JoinEventResult'>(
       {
         participant: {
@@ -959,7 +965,7 @@ export function createSearchAndAddHandlers(slug: string) {
         tmdbAttributionUrl: 'https://www.themoviedb.org/',
       })
     ),
-    http.post(`${V1}/events/${slug}/movies`, async () =>
+    http.post(`${V1}${apiPath('events', slug, 'movies')}`, async () =>
       apiJson<'MovieWithScoreResponse'>(
         {
           _id: 'm-new',
