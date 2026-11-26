@@ -55,7 +55,6 @@ export default function EventDetailSessionBody({
   actionError,
   setActionError,
   refreshAll,
-  actionSuccess,
   wheel,
   participantsPanel,
   moviesSection,
@@ -68,7 +67,6 @@ export default function EventDetailSessionBody({
   actionError: string | null;
   setActionError: Dispatch<SetStateAction<string | null>>;
   refreshAll: () => void;
-  actionSuccess: string | null;
   wheel: WheelApi;
   participantsPanel: ParticipantsPanelState;
   moviesSection: MoviesSectionState;
@@ -83,16 +81,6 @@ export default function EventDetailSessionBody({
           participant={participant}
           panel={participantsPanel}
         />
-      ) : null}
-      {actionSuccess ? (
-        <p
-          className="success"
-          role="status"
-          aria-live="polite"
-          data-testid="participants-action-success"
-        >
-          {actionSuccess}
-        </p>
       ) : null}
       <EventWheelModalGate wheel={wheel} />
       <div ref={moviesSection.ref} className={styles.moviesSection}>

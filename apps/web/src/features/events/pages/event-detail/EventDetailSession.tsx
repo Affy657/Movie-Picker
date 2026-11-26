@@ -202,10 +202,10 @@ export default function EventDetailSession({
     handleToggleCoHost,
     pendingLetBackInId,
     letBackInError,
-    letBackInSuccess,
     resetLetBackIn,
     handleLetBackIn,
-    actionSuccess,
+    participantsOutcome,
+    dismissParticipantsOutcome,
     handleRemoveParticipant,
     handleRequestRemoveMovie,
     handleRequestRemoveNote,
@@ -226,7 +226,8 @@ export default function EventDetailSession({
     setParticipantsOpen(false);
     resetCoHost();
     resetLetBackIn();
-  }, [resetCoHost, resetLetBackIn]);
+    dismissParticipantsOutcome();
+  }, [resetCoHost, resetLetBackIn, dismissParticipantsOutcome]);
 
   const timeFormatted = formatEventTime(event.time);
   const dateLabel = formatMyEventsListDate(event.date, locale);
@@ -343,7 +344,6 @@ export default function EventDetailSession({
         actionError={actionError}
         setActionError={setActionError}
         refreshAll={refreshAll}
-        actionSuccess={actionSuccess}
         wheel={wheel}
         participantsPanel={{
           open: participantsOpen,
@@ -361,7 +361,7 @@ export default function EventDetailSession({
           onToggleCoHost: handleToggleCoHost,
           pendingLetBackInId,
           letBackInError,
-          letBackInSuccess,
+          outcome: participantsOutcome,
           onLetBackIn: handleLetBackIn,
           onInviteFriends: () => openShare('friends'),
           onLeave: handleLeaveEvent,

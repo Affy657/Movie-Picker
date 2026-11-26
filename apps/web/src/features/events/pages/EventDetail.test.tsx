@@ -777,7 +777,7 @@ describe('EventDetail (MSW)', () => {
       server.use(...createEventDetailHandlers({ slug, title: 'Soirée démo', isHost: true }));
     }
 
-    it('confirming the modal: DELETE called and success message shown', async () => {
+    it('confirming the modal: DELETE called and the outcome announced inside the participants window', async () => {
       const user = userEvent.setup();
       setupHostJoined();
       let deleteCalled = false;
@@ -812,8 +812,15 @@ describe('EventDetail (MSW)', () => {
       expect(deleteUrl).toContain('/participants/p-msw-alice');
       expect(deleteHostToken).toBeNull();
 
-      expect(await screen.findByTestId('participants-action-success')).toBeInTheDocument();
-      expect(screen.getByTestId('participants-action-success')).toHaveTextContent('Alice');
+      const participantsWindow = screen.getByRole('dialog', { name: 'Participants' });
+      await waitFor(() =>
+        expect(within(participantsWindow).getByRole('status')).toHaveTextContent(
+          'Alice a été retiré(e) de la soirée.'
+        )
+      );
+      expect(participantsWindow).toContainElement(
+        screen.getByTestId('participants-action-success')
+      );
     });
 
     it('lets a removed person back in from the participants window, without a host token, and says so inside the window', async () => {
@@ -855,7 +862,7 @@ describe('EventDetail (MSW)', () => {
       expect(within(dialog).getByRole('status')).toHaveTextContent(
         'Léa peut de nouveau rejoindre la soirée.'
       );
-      expect(screen.queryByTestId('participants-action-success')).toBeNull();
+      expect(dialog).toContainElement(screen.getByTestId('participants-action-success'));
     });
 
     it('says so when the API refuses to let a removed person back in', async () => {

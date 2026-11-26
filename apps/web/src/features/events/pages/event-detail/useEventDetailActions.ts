@@ -23,6 +23,7 @@ import { getErrorMessage } from '@/shared/api/apiError';
 import { useTranslation } from '@/shared/i18n';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import type { MovieData } from '@/shared/types/movie';
+import type { ParticipantsOutcome } from '@/features/events/components/EventParticipantsList';
 import { buildConfirmDialogContent } from './eventDetailConfirmContent';
 import type {
   ConfirmBusyByKind,
@@ -30,8 +31,6 @@ import type {
   ParticipantRef,
   WheelApi,
 } from './eventDetailSessionTypes';
-
-const SUCCESS_AUTO_DISMISS_MS = 3500;
 
 type EventDetailActionsInput = {
   slug: string;
@@ -59,13 +58,8 @@ export function useEventDetailActions({
 
   const [pendingRemovalId, setPendingRemovalId] = useState<string | null>(null);
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
-  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!actionSuccess) return;
-    const id = globalThis.setTimeout(() => setActionSuccess(null), SUCCESS_AUTO_DISMISS_MS);
-    return () => globalThis.clearTimeout(id);
-  }, [actionSuccess]);
+  const [participantsOutcome, setParticipantsOutcome] = useState<ParticipantsOutcome | null>(null);
+  const dismissParticipantsOutcome = useCallback(() => setParticipantsOutcome(null), []);
 
   const removeParticipantMutation = useMutation({
     mutationFn: (variables: { participantId: string }) =>
@@ -101,13 +95,16 @@ export function useEventDetailActions({
   const letBackInMutation = useMutation({
     mutationFn: (variables: { userId: string; name: string }) =>
       letRemovedPersonBackIn(slug, variables.userId),
+    onMutate: () => setParticipantsOutcome(null),
+    onSuccess: (_, { name }) =>
+      setParticipantsOutcome({
+        kind: 'letBackIn',
+        message: t('events.participants.letBackInSuccess', { name }),
+      }),
     onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug) }),
   });
   const pendingLetBackInId = letBackInMutation.isPending
     ? letBackInMutation.variables.userId
-    : null;
-  const letBackInSuccess = letBackInMutation.isSuccess
-    ? t('events.participants.letBackInSuccess', { name: letBackInMutation.variables.name })
     : null;
   const letBackInError = letBackInMutation.error
     ? getErrorMessage(letBackInMutation.error, t('events.participants.letBackInError'))
@@ -180,11 +177,15 @@ export function useEventDetailActions({
   const confirmRemove = useCallback(
     (participantId: string, pseudo: string) => {
       setActionError(null);
+      setParticipantsOutcome(null);
       removeParticipant(
         { participantId },
         {
           onSuccess: () => {
-            setActionSuccess(t('events.participants.removeSuccess', { pseudo }));
+            setParticipantsOutcome({
+              kind: 'removed',
+              message: t('events.participants.removeSuccess', { pseudo }),
+            });
           },
           onError: (err) => {
             setActionError(getErrorMessage(err, t('events.participants.removeError')));
@@ -340,10 +341,10 @@ export function useEventDetailActions({
     handleToggleCoHost,
     pendingLetBackInId,
     letBackInError,
-    letBackInSuccess,
     resetLetBackIn,
     handleLetBackIn,
-    actionSuccess,
+    participantsOutcome,
+    dismissParticipantsOutcome,
     handleRemoveParticipant,
     handleRequestRemoveMovie,
     handleRequestRemoveNote,

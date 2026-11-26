@@ -49,13 +49,13 @@
   margin-top: var(--space-2);
 }
 
-.removedStatus {
+.outcome {
   display: block;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--color-success);
 }
 
-.removedStatus:not(:empty) {
+.outcome:not(:empty) {
   margin-top: var(--space-2);
 }

@@ -29,8 +29,10 @@ type Props = {
   removedPeople?: RemovedPerson[];
   pendingLetBackInId?: string | null;
   onLetBackIn?: (userId: string, name: string) => void;
-  letBackInStatus?: string | null;
+  outcome?: ParticipantsOutcome | null;
 };
+
+export type ParticipantsOutcome = { kind: 'removed' | 'letBackIn'; message: string };
 
 export default function EventParticipantsList({
   participants,
@@ -47,20 +49,25 @@ export default function EventParticipantsList({
   removedPeople,
   pendingLetBackInId,
   onLetBackIn,
-  letBackInStatus = null,
+  outcome = null,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   if (!participants) return null;
 
+  const keepRemovedSection = outcome?.kind === 'letBackIn';
   const removed =
-    isHost && onLetBackIn && removedPeople && (removedPeople.length > 0 || letBackInStatus) ? (
+    isHost && onLetBackIn && removedPeople && (removedPeople.length > 0 || keepRemovedSection) ? (
       <RemovedPeopleList
         people={removedPeople}
         pendingId={pendingLetBackInId ?? null}
         onLetBackIn={onLetBackIn}
-        status={letBackInStatus}
       />
     ) : null;
+  const announcement = (
+    <output className={styles.outcome} data-testid="participants-action-success">
+      {outcome?.message}
+    </output>
+  );
 
   if (participants.length === 0) {
     return (
@@ -71,6 +78,7 @@ export default function EventParticipantsList({
           message={t('events.participants.empty')}
         />
         {removed}
+        {announcement}
       </>
     );
   }
@@ -91,57 +99,64 @@ export default function EventParticipantsList({
         proposingIds={proposingIds}
       />
       {removed}
+      {announcement}
     </>
   );
 }
 
-function focusTargetAfterLeaving(order: readonly string[], leavingId: string): string | undefined {
-  const remaining = order.filter((id) => id !== leavingId);
-  return remaining[Math.max(order.indexOf(leavingId), 0)] ?? remaining.at(-1);
+type Leaving = { id: string; order: readonly string[] };
+
+function neighbourOf(
+  leaving: Leaving,
+  targetOf: (id: string) => HTMLElement | undefined
+): HTMLElement | undefined {
+  const index = leaving.order.indexOf(leaving.id);
+  const after = leaving.order.slice(index + 1);
+  const before = leaving.order.slice(0, Math.max(index, 0)).reverse();
+  return [...after, ...before].map(targetOf).find((target) => target !== undefined);
 }
 
-function useFocusAfterLetBackIn(people: RemovedPerson[], status: string | null) {
-  const headingRef = useRef<HTMLHeadingElement>(null);
-  const buttons = useRef(new Map<string, HTMLButtonElement>());
-  const leavingId = useRef<string | null>(null);
-  const buttonRef = (userId: string) => (element: HTMLButtonElement | null) => {
-    if (element) buttons.current.set(userId, element);
-    else buttons.current.delete(userId);
+function focusIsLost(): boolean {
+  const active = document.activeElement;
+  return active === null || active === document.body || active instanceof HTMLDialogElement;
+}
+
+function useFocusAfterLeaving<Fallback extends HTMLElement>(items: readonly { id: string }[]) {
+  const fallbackRef = useRef<Fallback>(null);
+  const targets = useRef(new Map<string, HTMLElement>());
+  const leaving = useRef<Leaving | null>(null);
+  const targetRef = (id: string) => (element: HTMLElement | null) => {
+    if (element) targets.current.set(id, element);
+    else targets.current.delete(id);
+  };
+  const markLeaving = (id: string) => {
+    leaving.current = { id, order: items.map((item) => item.id) };
   };
   useEffect(() => {
-    const leaving = leavingId.current;
-    if (!status || leaving === null) return;
-    leavingId.current = null;
-    const targetId = focusTargetAfterLeaving(
-      people.map((person) => person.id),
-      leaving
-    );
-    const target = targetId === undefined ? undefined : buttons.current.get(targetId);
-    (target ?? headingRef.current)?.focus();
-  }, [status, people]);
-  const markLeaving = (userId: string) => {
-    leavingId.current = userId;
-  };
-  return { headingRef, buttonRef, markLeaving };
+    const pending = leaving.current;
+    if (!pending || items.some((item) => item.id === pending.id)) return;
+    leaving.current = null;
+    if (!focusIsLost()) return;
+    (neighbourOf(pending, (id) => targets.current.get(id)) ?? fallbackRef.current)?.focus();
+  }, [items]);
+  return { fallbackRef, targetRef, markLeaving };
 }
 
 function RemovedPeopleList({
   people,
   pendingId,
   onLetBackIn,
-  status,
 }: Readonly<{
   people: RemovedPerson[];
   pendingId: string | null;
   onLetBackIn: (userId: string, name: string) => void;
-  status: string | null;
 }>) {
   const { t } = useTranslation();
   const titleId = useId();
-  const focus = useFocusAfterLetBackIn(people, status);
+  const focus = useFocusAfterLeaving<HTMLHeadingElement>(people);
   return (
     <section className={styles.removed}>
-      <h3 id={titleId} ref={focus.headingRef} tabIndex={-1} className={styles.removedTitle}>
+      <h3 id={titleId} ref={focus.fallbackRef} tabIndex={-1} className={styles.removedTitle}>
         {t('events.participants.removedTitle')}
       </h3>
       {people.length > 0 ? (
@@ -173,7 +188,7 @@ function RemovedPeopleList({
                   className={styles.row}
                   action={
                     <Button
-                      ref={focus.buttonRef(person.id)}
+                      ref={focus.targetRef(person.id)}
                       variant="secondary"
                       size="sm"
                       aria-label={t('events.participants.letBackInAriaLabel', { name })}
@@ -192,7 +207,6 @@ function RemovedPeopleList({
           </ul>
         </>
       ) : null}
-      <output className={styles.removedStatus}>{status}</output>
     </section>
   );
 }
@@ -210,11 +224,21 @@ function ParticipantRows({
   onlineIds,
   proposingIds,
 }: Readonly<
-  Omit<Props, 'participants' | 'removedPeople' | 'pendingLetBackInId' | 'onLetBackIn'> & {
+  Omit<
+    Props,
+    'participants' | 'removedPeople' | 'pendingLetBackInId' | 'onLetBackIn' | 'outcome'
+  > & {
     participants: EventParticipantSummary[];
   }
 >) {
   const { t } = useTranslation();
+  const focus = useFocusAfterLeaving(participants);
+  const removeParticipant = onRemoveParticipant
+    ? (participantId: string, pseudo: string) => {
+        focus.markLeaving(participantId);
+        onRemoveParticipant(participantId, pseudo);
+      }
+    : undefined;
   return (
     <ul className={styles.list} data-testid="event-participants">
       {participants.map((p) => {
@@ -245,6 +269,8 @@ function ParticipantRows({
           <PersonRow
             key={p.id}
             data-testid={`participant-${p.id}`}
+            rowRef={focus.targetRef(p.id)}
+            tabIndex={-1}
             avatar={
               <Avatar
                 avatarId={p.avatarId}
@@ -273,7 +299,7 @@ function ParticipantRows({
                   participant={p}
                   onToggleCoHost={canToggleCoHost ? onToggleCoHost : undefined}
                   coHostPending={pendingCoHostId === p.id}
-                  onRemove={canHostRemove ? onRemoveParticipant : undefined}
+                  onRemove={canHostRemove ? removeParticipant : undefined}
                   removalPending={pendingRemovalId === p.id}
                 />
               ) : null

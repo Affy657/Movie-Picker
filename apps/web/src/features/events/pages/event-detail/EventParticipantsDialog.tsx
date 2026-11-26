@@ -100,7 +100,7 @@ export default function EventParticipantsDialog({
         removedPeople={event.removedPeople}
         pendingLetBackInId={panel.pendingLetBackInId}
         onLetBackIn={panel.canRemove ? panel.onLetBackIn : undefined}
-        letBackInStatus={panel.letBackInSuccess}
+        outcome={panel.outcome}
       />
     </ResponsiveDialog>
   );

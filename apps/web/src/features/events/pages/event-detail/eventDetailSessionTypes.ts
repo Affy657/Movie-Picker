@@ -1,6 +1,7 @@
 import type { Dispatch, RefObject, SetStateAction } from 'react';
 import type { useEventWheel } from '@/features/events/hooks/useEventWheel';
 import type { MovieCardSelection } from '@/features/events/components/eventMovieCardParts';
+import type { ParticipantsOutcome } from '@/features/events/components/EventParticipantsList';
 import type { MovieData } from '@/shared/types/movie';
 
 export type ParticipantRef = { participantId: string; pseudo: string };
@@ -84,7 +85,7 @@ export type ParticipantsPanelState = {
   onToggleCoHost: (participantId: string, coHost: boolean) => void;
   pendingLetBackInId: string | null;
   letBackInError: string | null;
-  letBackInSuccess: string | null;
+  outcome: ParticipantsOutcome | null;
   onLetBackIn: (userId: string, name: string) => void;
   onInviteFriends: () => void;
   onLeave: () => void;
