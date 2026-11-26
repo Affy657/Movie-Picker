@@ -281,7 +281,7 @@ function EmailConfirmationReminder({ email }: Readonly<{ email: string }>) {
         </Button>
       </output>
       {sent && (
-        <p className={sharedStyles.rowSub} role="status">
+        <p className={sharedStyles.rowSub} role="status" aria-live="polite">
           {t('auth.account.emailConfirmationSent', { email })}
         </p>
       )}
