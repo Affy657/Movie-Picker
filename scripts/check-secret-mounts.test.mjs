@@ -196,9 +196,9 @@ describe('reviewGaps', () => {
     assert.deepEqual(review.stale, allowed);
   });
 
-  it('gives every allowance of the repository a reason that names its debt', () => {
+  it('gives every allowance of the repository a reason that names its debt or its set-aside entry', () => {
     for (const entry of ALLOWED_GAPS) {
-      assert.match(entry.reason, /^DEBT-\d{3}: \S/, `${entry.stage} ${entry.secret}`);
+      assert.match(entry.reason, /^(DEBT-\d{3}|E\d+): \S/, `${entry.stage} ${entry.secret}`);
     }
   });
 });

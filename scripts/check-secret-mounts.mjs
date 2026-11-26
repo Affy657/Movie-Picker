@@ -18,7 +18,7 @@ export const ALLOWED_GAPS = [
     secret: 'TMDB_READ_ACCESS_TOKEN',
     kind: 'mounted-not-described',
     reason:
-      'E10 (ex-DEBT-039, set aside): created by hand, mounted only once it exists (deploy.yml asks Secret Manager first); described in Terraform if that entry is reopened.',
+      'E10: set aside (ex-DEBT-039), created by hand and mounted only once it exists (deploy.yml asks Secret Manager first); described in Terraform if that entry is reopened.',
   },
 ];
 
