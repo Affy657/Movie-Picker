@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.33.0] - 2026-11-26
+
 ### Added
 
 - **Signaler une photo** : sur le profil d’un autre membre, « Plus d’actions » à côté du partage signale sa photo de profil ou sa bannière à l’équipe de Movie Picker, qui peut la retirer.
@@ -1177,7 +1179,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.32.1...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.33.0...HEAD
+[1.33.0]: https://github.com/Affy657/Movie-Picker/compare/v1.32.1...v1.33.0
 [1.32.1]: https://github.com/Affy657/Movie-Picker/compare/v1.32.0...v1.32.1
 [1.32.0]: https://github.com/Affy657/Movie-Picker/compare/v1.31.3...v1.32.0
 [1.31.3]: https://github.com/Affy657/Movie-Picker/compare/v1.31.2...v1.31.3
