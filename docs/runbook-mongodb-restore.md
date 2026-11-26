@@ -17,7 +17,8 @@ Pas pour un bug de code : une révision Cloud Run se retire en une minute avec `
 - **L'archive n'est pas transactionnelle.** `mongodump` sans `--oplog` lit les collections l'une après l'autre : une transaction validée pendant le dump peut y être à moitié. Le dump est pris vers 10 h Paris (GitHub retarde le cron de cinq heures), pendant l'activité.
 - **`--drop` vide chaque collection avant de la recharger.** Entre le drop et la fin du chargement, l'API lit une base partielle : couper les écritures avant, ne pas restaurer en plein trafic.
 - **Les index sont dans l'archive.** `mongodump` emporte leurs définitions, `mongorestore` les recrée, y compris les TTL (compteurs de rate limiting, jetons de réinitialisation). La collection `migrations` est restaurée avec le reste, donc l'empreinte d'index `MongoIndexPlan.MarkerId` et les migrations de données appliquées restent cohérentes avec les documents.
-- **Les sessions et le porte-clés ne sont pas dans l'archive.** `backup-mongo.yml` exclut `auth_sessions` et `data_protection_keys` : avec eux, l'archive permettrait de forger une session. Restaurées par-dessus la base de production, ces deux collections restent telles quelles (`--drop` ne vide que les collections de l'archive) ; dans une base vide, tout le monde est déconnecté et l'API crée un nouveau porte-clés à son premier démarrage.
+- **Les sessions et le porte-clés ne sont jamais restaurés.** `backup-mongo.yml` exclut `auth_sessions` et `data_protection_keys` depuis le 2026-11-26 : avec eux, l'archive permettrait de forger une session. Les archives plus anciennes (mensuelles surtout) les contiennent encore, d'où les deux `--nsExclude` de l'étape 4 : sans eux, une vieille archive remplacerait le porte-clés vivant (tout le monde déconnecté) et rendrait valides des sessions révoquées depuis. Par-dessus la base de production, ces deux collections restent telles quelles ; dans une base vide, tout le monde est déconnecté et l'API crée un nouveau porte-clés à son premier démarrage.
+- **Les index des sessions sont recréés par l'API, pas par l'archive.** La collection `migrations` revient avec l'empreinte d'index déjà marquée appliquée, alors que `auth_sessions` n'a pas d'index dans l'archive : l'étape 4 efface cette empreinte pour que la révision neuve de l'étape 5 rejoue le plan (`createIndex` ne change rien à un index déjà présent).
 - **L'archive porte des données personnelles** (adresses e-mail, empreintes de mot de passe) : jamais dans le dépôt, jamais dans un artefact, supprimée du poste dès la fin.
 - Sous Git Bash, poser `export MSYS_NO_PATHCONV=1` avant les commandes `docker` : sans quoi `/tmp/...` est réécrit en chemin Windows et `mongodump` ne trouve pas son fichier.
 
@@ -66,9 +67,14 @@ L'URI de production se lit dans Secret Manager, jamais recopiée dans un fichier
 export MSYS_NO_PATHCONV=1
 URI="$(gcloud secrets versions access latest --secret=MONGODB_URI --project <PROJET_GCP>)"
 docker run --rm -v "$PWD/restore.archive.gz:/tmp/restore.archive.gz:ro" "<MONGO_IMAGE>" \
-  mongorestore --uri="$URI" --archive=/tmp/restore.archive.gz --gzip --drop --nsInclude='moviepicker.*'
+  mongorestore --uri="$URI" --archive=/tmp/restore.archive.gz --gzip --drop --nsInclude='moviepicker.*' \
+  --nsExclude='moviepicker.auth_sessions' --nsExclude='moviepicker.data_protection_keys'
+docker run --rm "<MONGO_IMAGE>" mongosh "$URI" --quiet --eval \
+  'printjson(db.getSiblingDB("moviepicker").migrations.deleteMany({ _id: /^indexes-/ }))'
 unset URI
 ```
+
+La seconde commande efface l'empreinte d'index restaurée (`deletedCount` à 1) : sans elle, une base vide garderait `auth_sessions` sans son TTL ni son index par compte.
 
 `--nsInclude='moviepicker.*'` est le garde-fou : l'archive ne contient que cette base, et la commande refuse d'écrire ailleurs même si une archive d'une autre base lui était donnée par erreur. La dernière ligne de `mongorestore` donne le nombre de documents restaurés et le nombre d'échecs ; un échec autre que 0 arrête la procédure ici, la cause se lit dans les lignes précédentes (le plus souvent une violation d'index unique sur une collection que `--drop` n'a pas pu vider).
 
