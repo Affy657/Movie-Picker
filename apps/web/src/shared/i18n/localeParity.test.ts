@@ -121,6 +121,12 @@ describe('locale parity', () => {
     'Envoie un rappel à la veille.',
     'Léa t’invite à sa soirée.',
     'Vas-y !',
+    'Clique ici.',
+    'Reviens plus tard.',
+    'Viens voir la soirée.',
+    'Choisis parmi les films proposés.',
+    'Fais attention.',
+    'Indique combien de films.',
   ])('the formal "vous" guard catches an imperative it was never given: %s', (text) => {
     expect(isFamiliar(text)).toBe(true);
   });
@@ -136,6 +142,14 @@ describe('locale parity', () => {
     'Au programme : Dune le samedi.',
     'Impossible de charger la liste.',
     'De l’invitation au générique',
+    'Cliquez ici.',
+    'Revenez plus tard.',
+    'Venez voir la soirée.',
+    'Choisissez parmi les films proposés.',
+    'Faites attention.',
+    'Indiquez combien de films.',
+    'Demandes d’amis',
+    '{{count}} films choisis',
   ])('the formal "vous" guard lets the formal and impersonal French through: %s', (text) => {
     expect(isFamiliar(text)).toBe(false);
   });

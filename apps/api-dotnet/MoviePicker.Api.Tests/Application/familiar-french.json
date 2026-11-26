@@ -18,6 +18,11 @@
     "(?!l(?:e|a|es)\\s+(?:plus|moins|mieux)(?!\\p{L}))",
     "(?:(?:le|la|les|un|une|ce|cet|cette|ces|mon|ma|mes|ton|ta|tes|son|sa|ses|notre|nos|votre|vos|leur|leurs)(?=\\s)|l['’](?=\\p{L}))"
   ],
+  "imperativeOfAListedVerb": [
+    "(?:^|[\\s«(])",
+    "(?:Ajoute|Choisis|Clique|Confirme|Crée|Demande|Découvre|Essaie|Fais|Indique|Organise|Pense|Prends|Regarde|Rejoins|Retrouve|Reviens|Réessaie|Saisis|Utilise|Viens|Vérifie)",
+    "(?=[\\s.,!?…'’»):;]|$)"
+  ],
   "imperativeOfAVerbInAyerOyerUyer": [
     "(?:(?:^|[.!?…]\\s+|[«(]\\s*|\\n\\s*)(?=\\p{Lu})|[:;]\\s+(?=\\p{Ll}))",
     "\\p{L}*(?:aie|oie|uie)(?=[\\s.,!?…]|$)"
