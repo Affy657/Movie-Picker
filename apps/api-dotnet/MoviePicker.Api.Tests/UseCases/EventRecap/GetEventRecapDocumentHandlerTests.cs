@@ -69,7 +69,6 @@ public sealed class GetEventRecapDocumentHandlerTests
         Title = title,
         Slug = "night-" + slug,
         RecapSlug = slug,
-        HostToken = "h",
         Date = "2026-09-18",
         Time = "20:30",
         Winners = winnerMovieIds
@@ -221,7 +220,7 @@ public sealed class GetEventRecapDocumentHandlerTests
     [Fact]
     public async Task HandleAsync_UnknownSlug_Returns404WithTheGenericShellTags()
     {
-        _events.Setup(r => r.GetByIdOrSlugAsync("nope", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
+        _events.Setup(r => r.GetBySlugAsync("nope", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         var document = await CreateSut().HandleAsync("nope", "https://api.example", default);
 
@@ -255,7 +254,7 @@ public sealed class GetEventRecapDocumentHandlerTests
     public async Task HandleAsync_ShellUnavailableAndUnknownSlug_SendsHome()
     {
         _shell.Setup(s => s.GetShellAsync(It.IsAny<CancellationToken>())).ReturnsAsync((string?)null);
-        _events.Setup(r => r.GetByIdOrSlugAsync("nope", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
+        _events.Setup(r => r.GetBySlugAsync("nope", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         var document = await CreateSut().HandleAsync("nope", "https://api.example", default);
 

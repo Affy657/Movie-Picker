@@ -58,7 +58,7 @@ public sealed class MarkAsSeenHandlerTests
     [Fact]
     public async Task HandleAsync_EventNotFound_ThrowsNotFoundException()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
+        _eventRepo.Setup(r => r.GetBySlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
         var request = new MarkAsSeenRequest { ParticipantId = "p1" };
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(OwnerUserId, "bad", "mov1", request));
@@ -69,7 +69,7 @@ public sealed class MarkAsSeenHandlerTests
     public async Task HandleAsync_EventFinished_ThrowsConflictException()
     {
         var evt = new EventEntityBuilder().WithId("evt1").Closed().Build();
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         var request = new MarkAsSeenRequest { ParticipantId = "p1" };
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync(OwnerUserId, "evt1", "mov1", request));
@@ -80,7 +80,7 @@ public sealed class MarkAsSeenHandlerTests
     public async Task HandleAsync_MovieNotFound_ThrowsNotFoundException()
     {
         var evt = ActiveEvent();
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync((Movie?)null);
         var request = new MarkAsSeenRequest { ParticipantId = "p1" };
 
@@ -93,7 +93,7 @@ public sealed class MarkAsSeenHandlerTests
     {
         var evt = ActiveEvent();
         var movie = MovieFor(evt);
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync("ghost", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync((Participant?)null);
         var request = new MarkAsSeenRequest { ParticipantId = "ghost" };
@@ -118,7 +118,7 @@ public sealed class MarkAsSeenHandlerTests
             CreatedAt = now,
             UpdatedAt = now
         };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
         _seenMarkRepo
@@ -140,7 +140,7 @@ public sealed class MarkAsSeenHandlerTests
         var evt = ActiveEvent();
         var movie = MovieFor(evt);
         var participant = ParticipantFor(evt);
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         var steps = new List<string>();
         void Step(string name)
         {
@@ -170,7 +170,7 @@ public sealed class MarkAsSeenHandlerTests
         var evt = ActiveEvent();
         var movie = MovieFor(evt);
         var participant = ParticipantFor(evt);
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.SetupSequence(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(movie)
             .ReturnsAsync((Movie?)null);
@@ -189,7 +189,7 @@ public sealed class MarkAsSeenHandlerTests
         var evt = ActiveEvent();
         var movie = MovieFor(evt);
         var participant = ParticipantFor(evt);
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
         _participantRepo.SetupSequence(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(participant)
@@ -208,7 +208,7 @@ public sealed class MarkAsSeenHandlerTests
         var evt = ActiveEvent();
         var movie = MovieFor(evt);
         var participant = ParticipantFor(evt);
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
         var seenMarks = new InMemorySeenMarkRepository();

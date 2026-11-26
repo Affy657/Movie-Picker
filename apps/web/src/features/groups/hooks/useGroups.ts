@@ -181,7 +181,7 @@ export function useJoinGroupNight() {
       track('event_joined');
       return Promise.all([
         invalidateMyNights(queryClient),
-        queryClient.invalidateQueries({ queryKey: queryKeys.event.detailForAnyHostToken(slug) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug) }),
       ]).then(() => undefined);
     },
   });

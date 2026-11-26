@@ -15,7 +15,6 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
     private readonly IVoteRepository _voteRepository;
     private readonly ISeenMarkRepository _seenMarkRepository;
     private readonly IMovieRatingRepository _ratingRepository;
-    private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly EventAudienceNotifier _audience;
     private readonly IUnitOfWork _unitOfWork;
@@ -29,7 +28,6 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         IVoteRepository voteRepository,
         ISeenMarkRepository seenMarkRepository,
         IMovieRatingRepository ratingRepository,
-        IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
         EventAudienceNotifier audience,
         IUnitOfWork unitOfWork,
@@ -42,7 +40,6 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         _voteRepository = voteRepository;
         _seenMarkRepository = seenMarkRepository;
         _ratingRepository = ratingRepository;
-        _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _audience = audience;
         _unitOfWork = unitOfWork;
@@ -50,12 +47,12 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         _logger = logger;
     }
 
-    public async Task<RemoveParticipantResponse> HandleAsync(string idOrSlug, string participantId, CancellationToken ct = default)
+    public async Task<RemoveParticipantResponse> HandleAsync(string slug, string participantId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(participantId))
             throw Errors.ParticipantRequired();
 
-        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
+        var evt = await _eventRepository.GetRequiredBySlugAsync(slug, ct);
         EnsureParticipantsCanChange(evt);
 
         var participant = await _participantRepository.FindByIdAndEventIdAsync(participantId, evt.Id, ct);
@@ -66,7 +63,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
             throw Errors.CreatorCannotBeRemoved();
 
         var currentUserId = _currentUserAccessor.GetUserId();
-        var isHost = HostedEvent.IsHost(evt, _hostTokenAccessor, currentUserId);
+        var isHost = HostedEvent.IsHost(evt, currentUserId);
         var isSelfConnected = !string.IsNullOrEmpty(currentUserId)
             && !string.IsNullOrEmpty(participant.UserId)
             && participant.UserId == currentUserId;
@@ -75,7 +72,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
 
         EnsureMayRemoveFrom(evt);
         var keptOutUserId = isHost && !isSelfConnected ? participant.UserId : null;
-        var movieIds = await RemoveWithItsMoviesAsync(idOrSlug, evt.Id, participant, keptOutUserId, EnsureMayRemoveFrom, ct);
+        var movieIds = await RemoveWithItsMoviesAsync(slug, evt.Id, participant, keptOutUserId, EnsureMayRemoveFrom, ct);
         if (!string.IsNullOrEmpty(keptOutUserId))
             await _audience.NotifyUsersAsync([keptOutUserId], RemovedMessage(evt), CancellationToken.None);
 
@@ -96,13 +93,13 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         };
     }
 
-    private void EnsureMayRemove(Event night, Participant participant, string? currentUserId, bool isSelfConnected)
+    private static void EnsureMayRemove(Event night, Participant participant, string? currentUserId, bool isSelfConnected)
     {
         if (isSelfConnected)
             return;
-        if (!HostedEvent.IsHost(night, _hostTokenAccessor, currentUserId))
+        if (!HostedEvent.IsHost(night, currentUserId))
             throw Errors.HostOrSelfOnly();
-        if (night.IsCoHost(participant.UserId) && !HostedEvent.IsCreator(night, _hostTokenAccessor, currentUserId))
+        if (night.IsCoHost(participant.UserId) && !HostedEvent.IsCreator(night, currentUserId))
             throw Errors.CoHostCannotRemoveCoHost();
     }
 
@@ -116,7 +113,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
     }
 
     private async Task<IReadOnlyList<string>> RemoveWithItsMoviesAsync(
-        string idOrSlug,
+        string slug,
         string eventId,
         Participant participant,
         string? keptOutUserId,
@@ -127,7 +124,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         await _unitOfWork.ExecuteAsync(
             async token =>
             {
-                var current = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, token);
+                var current = await _eventRepository.GetRequiredBySlugAsync(slug, token);
                 EnsureParticipantsCanChange(current);
                 ensureMayRemove(current);
 

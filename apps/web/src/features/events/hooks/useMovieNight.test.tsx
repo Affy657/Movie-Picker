@@ -58,7 +58,6 @@ function page(
     event: { id: 'e1', title: 'Ciné-club', slug: 'Ab3x', isHost: false, ...overrides.event },
     movies: overrides.movies ?? [film],
     participant: overrides.mine === false ? null : { participantId: 'p1', pseudo: 'Alice' },
-    hostToken: 'host',
     refreshAll,
     setActionError,
     actionError: null,
@@ -182,7 +181,7 @@ describe('useMovieNight', () => {
 
     await act(() => result.current.toggleWheel());
 
-    expect(setMovieWheelExclusion).toHaveBeenCalledWith('Ab3x', 'm1', true, 'host');
+    expect(setMovieWheelExclusion).toHaveBeenCalledWith('Ab3x', 'm1', true);
   });
 
   it('reports a draw toggle that failed', async () => {
@@ -192,7 +191,7 @@ describe('useMovieNight', () => {
 
     await act(() => result.current.toggleWheel());
 
-    expect(setMovieWheelExclusion).toHaveBeenCalledWith('Ab3x', 'm1', false, 'host');
+    expect(setMovieWheelExclusion).toHaveBeenCalledWith('Ab3x', 'm1', false);
     expect(setActionError).toHaveBeenLastCalledWith('nope');
   });
 
@@ -204,7 +203,7 @@ describe('useMovieNight', () => {
     await act(async () => {
       removed = await result.current.remove();
     });
-    expect(removeMovieFromEvent).toHaveBeenCalledWith('Ab3x', 'm1', 'p1', 'host');
+    expect(removeMovieFromEvent).toHaveBeenCalledWith('Ab3x', 'm1', 'p1');
     expect(removed).toBe(true);
 
     vi.mocked(removeMovieFromEvent).mockRejectedValueOnce(new Error('locked'));

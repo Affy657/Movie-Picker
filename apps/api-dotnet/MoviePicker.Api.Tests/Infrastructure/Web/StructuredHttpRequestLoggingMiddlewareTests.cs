@@ -85,20 +85,20 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
     }
 
     [Fact]
-    public async Task InvokeAsync_RedactsHostTokenInQueryString()
+    public async Task InvokeAsync_RedactsASecretTokenInQueryString()
     {
         var logger = new CapturingLogger<StructuredHttpRequestLoggingMiddleware>();
         var ctx = new DefaultHttpContext();
         ctx.Request.Method = "POST";
-        ctx.Request.Path = "/api/v1/events/abc/wheel";
-        ctx.Request.QueryString = new QueryString("?host=SECRET-TOKEN&participantId=p1");
+        ctx.Request.Path = "/api/v1/auth/password-reset/verify";
+        ctx.Request.QueryString = new QueryString("?token=SECRET-TOKEN&participantId=p1");
         var mw = new StructuredHttpRequestLoggingMiddleware(_ => Task.CompletedTask, logger);
 
         await mw.InvokeAsync(ctx);
 
         var entry = Assert.Single(logger.Entries);
         Assert.DoesNotContain("SECRET-TOKEN", entry.Message);
-        Assert.Contains("?host=***&participantId=p1", entry.Message);
+        Assert.Contains("?token=***&participantId=p1", entry.Message);
     }
 
     [Theory]
@@ -274,7 +274,7 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
     }
 
     [Theory]
-    [InlineData("?host=SECRET&x=1", "?host=***&x=1")]
+    [InlineData("?host=LEGACY&x=1", "?host=LEGACY&x=1")]
     [InlineData("?token=SECRET", "?token=***")]
     [InlineData("?api_key=SECRET&language=fr-FR", "?api_key=***&language=fr-FR")]
     [InlineData("?API_KEY=SECRET", "?API_KEY=***")]
@@ -284,7 +284,7 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
     [InlineData("?returnTo=%2Fl%2FSECRET%2Frejoindre", "?returnTo=***")]
     [InlineData("?ReturnTo=/l/SECRET/rejoindre&x=1", "?ReturnTo=***&x=1")]
     [InlineData("?returnTo=%2Fl%2FSECRET", "?returnTo=***")]
-    [InlineData("?returnTo=%2Fsoiree%2Fabc%3Fhost%3DSECRET", "?returnTo=***")]
+    [InlineData("?returnTo=%2Freset-password%3Ftoken%3DSECRET", "?returnTo=***")]
     [InlineData("?returnTo=%2Fg%2FSECRET%2Frejoindre", "?returnTo=***")]
     [InlineData("?ReturnTo=/g/SECRET/rejoindre&x=1", "?ReturnTo=***&x=1")]
     [InlineData("?returnTo=%2Fgroupes%2F66f0a1", "?returnTo=%2Fgroupes%2F66f0a1")]

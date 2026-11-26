@@ -28,7 +28,7 @@ public sealed class UnmarkAsSeenHandler : IUnmarkAsSeenHandler
 
     public async Task HandleAsync(
         string userId,
-        string idOrSlug,
+        string slug,
         string movieId,
         string participantId,
         CancellationToken ct = default)
@@ -39,7 +39,7 @@ public sealed class UnmarkAsSeenHandler : IUnmarkAsSeenHandler
             _participantRepository,
             userId,
             _clock.GetUtcNow(),
-            idOrSlug,
+            slug,
             movieId,
             participantId,
             Errors.SeenMarkOwnOnly,

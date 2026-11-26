@@ -104,7 +104,6 @@ function renderSection(
               ? { participantId: 'p1', pseudo: 'Alice' }
               : props.participant
           }
-          hostToken={null}
           movies={props.movies ?? [MOVIE]}
           moviesQuery={
             props.moviesQuery ?? {

@@ -23,7 +23,6 @@ public sealed class PatchEventConfigHandlerRecurrenceTests
 
     private readonly Mock<IEventRepository> _events = new();
     private readonly Mock<IParticipantRepository> _participants = new();
-    private readonly Mock<IHostTokenAccessor> _hostToken = new();
     private readonly Mock<ICurrentUserAccessor> _user = new();
     private readonly Mock<IUserRepository> _userRepo = new();
     private readonly Mock<IPushSubscriptionRepository> _pushSubRepo = new();
@@ -33,8 +32,7 @@ public sealed class PatchEventConfigHandlerRecurrenceTests
 
     public PatchEventConfigHandlerRecurrenceTests()
     {
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
-        _user.Setup(u => u.GetUserId()).Returns((string?)null);
+        _user.Setup(u => u.GetUserId()).Returns("host");
         _events
             .Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
@@ -42,7 +40,6 @@ public sealed class PatchEventConfigHandlerRecurrenceTests
             _events.Object,
             _participants.Object,
             Mock.Of<IMovieRepository>(),
-            _hostToken.Object,
             _user.Object,
             TestAudienceNotifier.Over(_participants.Object, _userRepo.Object, _pushSubRepo.Object, _pushSender.Object, _notifications.Object),
             new InMemoryFriendGroupRepository(),
@@ -52,7 +49,7 @@ public sealed class PatchEventConfigHandlerRecurrenceTests
     }
 
     private void GivenEvent(Event evt) =>
-        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _events.Setup(r => r.GetBySlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
     private static Event Upcoming() => new()
     {
@@ -61,7 +58,7 @@ public sealed class PatchEventConfigHandlerRecurrenceTests
         Date = "2026-01-01",
         Time = "20:00",
         Slug = "s",
-        HostToken = "ht",
+        CreatorUserId = "host",
         CreatedAt = Now,
         UpdatedAt = Now
     };
@@ -183,7 +180,7 @@ public sealed class PatchEventConfigHandlerRecurrenceTests
     public async Task HandleAsync_NotHost_CannotTouchTheRecurrence()
     {
         GivenEvent(Upcoming());
-        _hostToken.Setup(h => h.GetHostToken()).Returns((string?)null);
+        _user.Setup(u => u.GetUserId()).Returns((string?)null);
 
         await Assert.ThrowsAsync<ForbiddenException>(() =>
             _sut.HandleAsync("s", new PatchEventConfigRequest { Recurrence = RecurrenceFrequency.Weekly }));

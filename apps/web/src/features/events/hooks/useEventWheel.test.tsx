@@ -44,7 +44,6 @@ function renderWheel() {
         slug: 'soiree',
         event: hostEvent,
         movies: [winner],
-        hostToken: 'ht1',
         onWheelDone: () => {},
       }),
     { wrapper }
@@ -78,7 +77,6 @@ describe('useEventWheel : annonce du gagnant', () => {
           slug: 'soiree',
           event: { ...hostEvent, winners: [{ movieId: 'mov0' }] } as EventData,
           movies: [winner],
-          hostToken: 'ht1',
           onWheelDone: () => {},
         }),
       { wrapper }
@@ -86,7 +84,7 @@ describe('useEventWheel : annonce du gagnant', () => {
 
     act(() => result.current.launch());
 
-    await waitFor(() => expect(postEventWheel).toHaveBeenCalledWith('soiree', 'ht1', 1));
+    await waitFor(() => expect(postEventWheel).toHaveBeenCalledWith('soiree', 1));
   });
 
   it('counts its own draw before the next poll, so a relaunch asks for a new film', async () => {
@@ -97,7 +95,6 @@ describe('useEventWheel : annonce du gagnant', () => {
           slug: 'soiree',
           event: { ...hostEvent, winners: [], config: { winnerCount: 3 } } as unknown as EventData,
           movies: [winner, second],
-          hostToken: 'ht1',
           onWheelDone: () => {},
         }),
       { wrapper }
@@ -108,7 +105,7 @@ describe('useEventWheel : annonce du gagnant', () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
     act(() => result.current.launch());
 
-    await waitFor(() => expect(postEventWheel).toHaveBeenLastCalledWith('soiree', 'ht1', 1));
+    await waitFor(() => expect(postEventWheel).toHaveBeenLastCalledWith('soiree', 1));
   });
 
   it('shows a replayed draw as it is instead of spinning onto another film', async () => {
@@ -118,7 +115,6 @@ describe('useEventWheel : annonce du gagnant', () => {
           slug: 'soiree',
           event: { ...hostEvent, winners: [], config: { winnerCount: 3 } } as unknown as EventData,
           movies: [{ id: 'mov2', title: 'Alien', tmdbId: 2 } as MovieData],
-          hostToken: 'ht1',
           onWheelDone: () => {},
         }),
       { wrapper }
@@ -147,7 +143,6 @@ describe('useEventWheel : annonce du gagnant', () => {
             config: { winnerCount: 1, wheelMode: mode.wheelMode },
           } as unknown as EventData,
           movies: [liked, unvoted],
-          hostToken: 'ht1',
           onWheelDone: () => {},
         }),
       { wrapper }
@@ -168,7 +163,7 @@ describe('useEventWheel : annonce du gagnant', () => {
 
     act(() => result.current.revealWinner());
 
-    await waitFor(() => expect(postEventWheelAnnounce).toHaveBeenCalledWith('soiree', 'ht1'));
+    await waitFor(() => expect(postEventWheelAnnounce).toHaveBeenCalledWith('soiree'));
   });
 
   it('announces only once, even when the reveal and the fallback add up', async () => {
@@ -210,7 +205,7 @@ describe('useEventWheel : annonce du gagnant', () => {
     await vi.advanceTimersByTimeAsync(WHEEL_SPIN_DURATION_MS + 100);
 
     expect(postEventWheelAnnounce).toHaveBeenCalledTimes(1);
-    expect(postEventWheelAnnounce).toHaveBeenCalledWith('soiree', 'ht1');
+    expect(postEventWheelAnnounce).toHaveBeenCalledWith('soiree');
   });
 
   it('does not announce again on leaving the page once the winner is out', async () => {
@@ -278,7 +273,6 @@ describe('useEventWheel: reveal after the host closes the modal', () => {
           slug: 'soiree',
           event,
           movies: [winner],
-          hostToken: null,
           onWheelDone: () => {},
         });
         winnerIdsOfEachRender.push(wheel.winnerIds);
@@ -304,7 +298,6 @@ describe('useEventWheel: reveal after the host closes the modal', () => {
           slug: 'soiree',
           event,
           movies: [winner],
-          hostToken: 'ht1',
           onWheelDone: () => {},
         }),
       { wrapper, initialProps: { event: hostEvent } }
@@ -344,7 +337,6 @@ describe('useEventWheel: remaining slots', () => {
           slug: 'soiree',
           event,
           movies: [winner, second],
-          hostToken: 'ht1',
           onWheelDone: () => {},
         }),
       { wrapper, initialProps: { event: initial } }
@@ -405,7 +397,6 @@ describe('useEventWheel: pending movie night', () => {
           slug: 'soiree',
           event: pendingNight,
           movies: [winner, second],
-          hostToken: 'ht1',
           onWheelDone: () => {},
         }),
       { wrapper }
@@ -434,7 +425,6 @@ describe('useEventWheel: pending movie night', () => {
           slug: 'soiree',
           event: oneDrawn,
           movies: [winner, second],
-          hostToken: 'ht1',
           onWheelDone: () => {},
         }),
       { wrapper }
@@ -466,7 +456,6 @@ describe('useEventWheel: winner shown in the modal', () => {
           slug: 'soiree',
           event: hostEvent,
           movies: [listedDune],
-          hostToken: 'ht1',
           onWheelDone: () => {},
         }),
       { wrapper }
@@ -519,7 +508,6 @@ describe('useEventWheel: taking a winner out', () => {
           slug: 'soiree',
           event: drawn,
           movies: [winner],
-          hostToken: 'ht1',
           onWheelDone: () => {},
         }),
       { wrapper }
@@ -531,7 +519,7 @@ describe('useEventWheel: taking a winner out', () => {
     act(() => result.current.removeWinner(winner));
 
     await waitFor(() => expect(result.current.removalMode).toBe(false));
-    expect(deleteEventWinner).toHaveBeenCalledWith('soiree', 'mov1', 'ht1');
+    expect(deleteEventWinner).toHaveBeenCalledWith('soiree', 'mov1');
     expect(result.current.canSpin).toBe(true);
   });
 });
@@ -555,7 +543,6 @@ describe('useEventWheel: a draw made elsewhere', () => {
           slug: 'soiree',
           event,
           movies,
-          hostToken: initial.isHost ? 'ht1' : null,
           onWheelDone: () => {},
         }),
       { wrapper, initialProps: { event: initial } }
@@ -685,7 +672,6 @@ describe('useEventWheel: two tabs of the host', () => {
           slug: 'soiree',
           event,
           movies: [winner],
-          hostToken: 'ht1',
           onWheelDone: () => {},
         }),
       { wrapper, initialProps: { event: hostEvent } }
@@ -713,7 +699,6 @@ describe('useEventWheel : hôte', () => {
           slug: 'soiree',
           event: { isFinished: false, date: '2030-06-01', time: '20:00' } as EventData,
           movies: [winner],
-          hostToken: 'ht1',
           onWheelDone: () => {},
         }),
       { wrapper }

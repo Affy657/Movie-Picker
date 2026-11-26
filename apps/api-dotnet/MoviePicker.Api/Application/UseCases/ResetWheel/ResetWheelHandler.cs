@@ -9,32 +9,28 @@ namespace MoviePicker.Api.Application.UseCases.ResetWheel;
 public sealed class ResetWheelHandler : IResetWheelHandler
 {
     private readonly IEventRepository _eventRepository;
-    private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly ILogger<ResetWheelHandler> _logger;
     private readonly TimeProvider _clock;
 
     public ResetWheelHandler(
         IEventRepository eventRepository,
-        IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
         ILogger<ResetWheelHandler> logger,
         TimeProvider clock)
     {
         _eventRepository = eventRepository;
-        _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _logger = logger;
         _clock = clock;
     }
 
-    public async Task<ResetWheelResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
+    public async Task<ResetWheelResponse> HandleAsync(string slug, CancellationToken ct = default)
     {
         var evt = await HostedEvent.LoadForHostAsync(
             _eventRepository,
-            _hostTokenAccessor,
             _currentUserAccessor.GetUserId(),
-            idOrSlug,
+            slug,
             _clock.GetUtcNow(),
             ct);
 

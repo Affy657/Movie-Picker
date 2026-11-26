@@ -14,20 +14,21 @@ namespace MoviePicker.Api.Tests.UseCases.CloseEvent;
 public sealed class CloseEventHandlerTests
 {
     private readonly Mock<IEventRepository> _eventRepo;
-    private readonly Mock<IHostTokenAccessor> _hostTokenAccessor;
     private readonly Mock<ICurrentUserAccessor> _currentUser;
     private readonly Mock<IFinishedEventWatchlistPass> _watchlistCleanup = new();
     private readonly Mock<IRecurringEventPass> _recurringEvents = new();
     private readonly CloseEventHandler _sut;
 
-    private static Event ActiveEvent(string hostToken = "ht1") => new()
+    private const string HostUserId = "host-user";
+
+    private static Event ActiveEvent() => new()
     {
         Id = "evt1",
         Title = "Soirée",
         Date = TestDates.Upcoming,
         Time = "20:00",
         Slug = "soiree",
-        HostToken = hostToken,
+        CreatorUserId = HostUserId,
         CreatedAt = DateTimeOffset.UtcNow,
         UpdatedAt = DateTimeOffset.UtcNow
     };
@@ -35,12 +36,10 @@ public sealed class CloseEventHandlerTests
     public CloseEventHandlerTests()
     {
         _eventRepo = new Mock<IEventRepository>();
-        _hostTokenAccessor = new Mock<IHostTokenAccessor>();
         _currentUser = new Mock<ICurrentUserAccessor>();
-        _currentUser.Setup(c => c.GetUserId()).Returns((string?)null);
+        _currentUser.Setup(c => c.GetUserId()).Returns(HostUserId);
         _sut = new CloseEventHandler(
             _eventRepo.Object,
-            _hostTokenAccessor.Object,
             _currentUser.Object,
             _watchlistCleanup.Object,
             _recurringEvents.Object,
@@ -51,29 +50,29 @@ public sealed class CloseEventHandlerTests
     [Fact]
     public async Task HandleAsync_EventNotFound_ThrowsNotFoundException()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
+        _eventRepo.Setup(r => r.GetBySlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad"));
         Assert.Equal(ErrorCodes.EventNotFound, ex.Reason);
     }
 
     [Fact]
-    public async Task HandleAsync_NoHostToken_ThrowsForbiddenException()
+    public async Task HandleAsync_Anonymous_ThrowsForbiddenException()
     {
         var evt = ActiveEvent();
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _currentUser.Setup(c => c.GetUserId()).Returns((string?)null);
 
         var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1"));
         Assert.Equal(ErrorCodes.HostOnly, ex.Reason);
     }
 
     [Fact]
-    public async Task HandleAsync_WrongHostToken_ThrowsForbiddenException()
+    public async Task HandleAsync_AnotherAccount_ThrowsForbiddenException()
     {
-        var evt = ActiveEvent("real");
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("wrong");
+        var evt = ActiveEvent();
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _currentUser.Setup(c => c.GetUserId()).Returns("someone-else");
 
         var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1"));
         Assert.Equal(ErrorCodes.HostOnly, ex.Reason);
@@ -83,9 +82,8 @@ public sealed class CloseEventHandlerTests
     public async Task HandleAsync_AlreadyClosed_ReturnsMessageWithoutUpdating()
     {
         var now = DateTimeOffset.UtcNow;
-        var evt = new Event { Id = "evt1", Title = "Soirée", Date = TestDates.Upcoming, Time = "20:00", Slug = "soiree", HostToken = "ht1", ClosedAt = now, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
+        var evt = new Event { Id = "evt1", Title = "Soirée", Date = TestDates.Upcoming, Time = "20:00", Slug = "soiree", CreatorUserId = HostUserId, ClosedAt = now, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
         var result = await _sut.HandleAsync("evt1");
 
@@ -98,8 +96,7 @@ public sealed class CloseEventHandlerTests
     public async Task HandleAsync_Success_UpdatesEventWithClosedAt()
     {
         var evt = ActiveEvent();
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         Event? captured = null;
         _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .Callback<Event, CancellationToken>((e, _) => captured = e)
@@ -129,15 +126,13 @@ public sealed class CloseEventHandlerTests
             Winners = TestWinners.Won("mov1")
         };
         Assert.Equal(EventLifecycle.Pending, evt.Lifecycle(threeHoursAfterTheStart));
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         Event? captured = null;
         _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .Callback<Event, CancellationToken>((e, _) => captured = e)
             .ReturnsAsync((Event e, CancellationToken _) => e);
         var sut = new CloseEventHandler(
             _eventRepo.Object,
-            _hostTokenAccessor.Object,
             _currentUser.Object,
             _watchlistCleanup.Object,
             _recurringEvents.Object,
@@ -154,36 +149,9 @@ public sealed class CloseEventHandlerTests
             Times.Once);
     }
 
-    [Fact]
-    public async Task HandleAsync_CreatorWithoutHostToken_Succeeds()
-    {
-        var evt = new Event
-        {
-            Id = "evt1",
-            Title = "Soirée",
-            Date = TestDates.Upcoming,
-            Time = "20:00",
-            Slug = "soiree",
-            HostToken = "ht1",
-            CreatorUserId = "user-1",
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow
-        };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
-        _currentUser.Setup(c => c.GetUserId()).Returns("user-1");
-        _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Event e, CancellationToken _) => e);
-
-        var result = await _sut.HandleAsync("evt1");
-
-        Assert.Equal("Movie night closed", result.Message);
-    }
-
     private void GivenHostClosing(Event evt)
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns(evt.HostToken);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
     }
@@ -219,8 +187,7 @@ public sealed class CloseEventHandlerTests
     public async Task HandleAsync_AlreadyClosed_DoesNotRunTheWatchlistCleanupAgain()
     {
         var closed = ActiveEvent() with { Winners = TestWinners.Won("m-win"), ClosedAt = DateTimeOffset.UtcNow };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(closed);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(closed);
 
         await _sut.HandleAsync("evt1");
 

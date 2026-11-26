@@ -7,7 +7,6 @@ public sealed class EventEntityBuilder
     private string _id = "evt-1";
     private string _title = "Soirée test";
     private string _slug = "soiree-test";
-    private string _hostToken = "host-token";
     private string _date = TestDates.Upcoming;
     private string _time = "20:00";
     private DateTimeOffset? _closedAt;
@@ -51,7 +50,6 @@ public sealed class EventEntityBuilder
             Id = _id,
             Title = _title,
             Slug = _slug,
-            HostToken = _hostToken,
             Date = _date,
             Time = _time,
             Config = _config,

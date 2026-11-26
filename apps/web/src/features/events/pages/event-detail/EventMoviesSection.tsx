@@ -121,7 +121,6 @@ export type EventMoviesSectionProps = {
   slug: string;
   event: EventData;
   participant: { participantId: string; pseudo: string } | null;
-  hostToken: string | null;
   movies: MovieData[];
   moviesQuery: Pick<
     UseQueryResult<MovieData[]>,
@@ -232,7 +231,6 @@ export default function EventMoviesSection({
   slug,
   event,
   participant,
-  hostToken,
   movies,
   moviesQuery,
   actionError,
@@ -283,7 +281,6 @@ export default function EventMoviesSection({
   const clearActionError = useCallback(() => setActionError(null), [setActionError]);
   const toggleWheelExclusion = useWheelExclusionToggle({
     slug,
-    hostToken,
     refresh: refreshAll,
     onError: setActionError,
     onActionStart: clearActionError,

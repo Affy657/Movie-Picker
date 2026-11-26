@@ -39,7 +39,7 @@ describe('writeSeq', () => {
       '    private readonly IParticipantRepository _participants;',
       '    public async Task HandleAsync(string userId, CancellationToken ct)',
       '    {',
-      '        var evt = await _events.GetByIdOrSlugAsync(userId, ct);',
+      '        var evt = await _events.GetBySlugAsync(userId, ct);',
       '        await _participants.AnonymizeByUserIdAsync(userId, ct);',
       '    }',
       '}',

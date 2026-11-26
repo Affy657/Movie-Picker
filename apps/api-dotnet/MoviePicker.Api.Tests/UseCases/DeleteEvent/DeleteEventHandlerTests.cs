@@ -69,7 +69,6 @@ public sealed class DeleteEventHandlerTests
         Date = TestDates.Upcoming,
         Time = "20:00",
         Slug = "soiree",
-        HostToken = "ht1",
         CreatorUserId = creatorUserId,
         Winners = TestWinners.Won(winnerMovieId),
         ClosedAt = closedAt,
@@ -79,7 +78,7 @@ public sealed class DeleteEventHandlerTests
 
     private void SetupEvent(Event evt) =>
         _eventRepo
-            .Setup(r => r.GetByIdOrSlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetBySlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(evt);
 
     [Fact]
@@ -129,7 +128,7 @@ public sealed class DeleteEventHandlerTests
     public async Task HandleAsync_EventNotFound_ThrowsNotFound()
     {
         _eventRepo
-            .Setup(r => r.GetByIdOrSlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetBySlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event?)null);
 
         await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("user-1", "missing"));

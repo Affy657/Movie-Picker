@@ -26,14 +26,13 @@ public sealed class SetMoviePitchNoteHandlerTests
     private static Event ActiveEvent(string? winnerMovieId = null, DateTimeOffset? closedAt = null) => new()
     {
         Id = "evt1",
-        HostToken = "ht",
         CreatorUserId = "host",
         Winners = TestWinners.Won(winnerMovieId),
         ClosedAt = closedAt
     };
 
     private void SetupEvent(Event evt) =>
-        _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _events.Setup(e => e.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
     private static SetMoviePitchNoteRequest Request(string participantId = "p1", string note = "Top film") =>
         new() { ParticipantId = participantId, PitchNote = note };
@@ -41,7 +40,7 @@ public sealed class SetMoviePitchNoteHandlerTests
     [Fact]
     public async Task HandleAsync_EventNotFound_Throws()
     {
-        _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
+        _events.Setup(e => e.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(UserId, "evt1", "m1", Request()));
     }

@@ -26,7 +26,7 @@ public sealed class ClearMovieVoteHandler : IClearMovieVoteHandler
         _clock = clock;
     }
 
-    public async Task HandleAsync(string userId, string idOrSlug, string movieId, string participantId, CancellationToken ct = default)
+    public async Task HandleAsync(string userId, string slug, string movieId, string participantId, CancellationToken ct = default)
     {
         var (evt, movie, participant) = await MovieActionContext.ResolveOwnedMovieAsync(
             _eventRepository,
@@ -34,7 +34,7 @@ public sealed class ClearMovieVoteHandler : IClearMovieVoteHandler
             _participantRepository,
             userId,
             _clock.GetUtcNow(),
-            idOrSlug,
+            slug,
             movieId,
             participantId,
             Errors.VoteOwnOnly,

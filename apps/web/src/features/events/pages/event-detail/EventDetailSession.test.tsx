@@ -112,7 +112,6 @@ function SessionUnderTest({
   return (
     <EventDetailSession
       slug="soiree"
-      hostToken={null}
       event={event}
       moviesQuery={
         {
@@ -199,6 +198,7 @@ describe('EventDetailSession: the chosen movie and the wheel', () => {
       isHost: true,
       isFinished: true,
       lifecycle: 'finished',
+      ratingPromptDue: true,
       date: new Date().toISOString().slice(0, 10),
       winners: [{ movieId: MOVIE.id, pickMethod: 'manual', pickedAt: new Date().toISOString() }],
     };

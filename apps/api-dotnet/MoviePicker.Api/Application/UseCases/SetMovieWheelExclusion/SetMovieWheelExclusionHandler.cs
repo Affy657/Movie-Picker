@@ -9,36 +9,32 @@ public sealed class SetMovieWheelExclusionHandler : ISetMovieWheelExclusionHandl
 {
     private readonly IEventRepository _eventRepository;
     private readonly IMovieRepository _movieRepository;
-    private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly IUnitOfWork _unitOfWork;
     private readonly TimeProvider _clock;
 
     public SetMovieWheelExclusionHandler(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
-        IHostTokenAccessor hostTokenAccessor,
         IUnitOfWork unitOfWork,
         TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
-        _hostTokenAccessor = hostTokenAccessor;
         _unitOfWork = unitOfWork;
         _clock = clock;
     }
 
     public async Task HandleAsync(
         string userId,
-        string idOrSlug,
+        string slug,
         string movieId,
         SetMovieWheelExclusionRequest request,
         CancellationToken ct = default)
     {
         var evt = await HostedEvent.LoadForHostAsync(
             _eventRepository,
-            _hostTokenAccessor,
             userId,
-            idOrSlug,
+            slug,
             _clock.GetUtcNow(),
             ct);
 
@@ -52,8 +48,8 @@ public sealed class SetMovieWheelExclusionHandler : ISetMovieWheelExclusionHandl
         await _unitOfWork.ExecuteAsync(
             async token =>
             {
-                var current = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, token);
-                if (!HostedEvent.IsHost(current, _hostTokenAccessor, userId))
+                var current = await _eventRepository.GetRequiredBySlugAsync(slug, token);
+                if (!HostedEvent.IsHost(current, userId))
                     throw Errors.HostOnly();
                 await _movieRepository.UpdateWheelExclusionAsync(movieId, request.Excluded, token);
                 await _eventRepository.UpdateAsync(current with { UpdatedAt = _clock.GetUtcNow() }, token);

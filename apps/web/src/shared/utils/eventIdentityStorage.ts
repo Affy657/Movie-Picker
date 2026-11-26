@@ -27,35 +27,13 @@ export function removeStoredParticipant(slug: string): void {
   } catch {}
 }
 
-const HOST_KEY = 'moviepicker_host_';
-
-export function getStoredHostToken(slug: string): string | null {
-  try {
-    return sessionStorage.getItem(HOST_KEY + slug);
-  } catch {
-    return null;
-  }
-}
-
-export function setStoredHostToken(slug: string, token: string): void {
-  try {
-    sessionStorage.setItem(HOST_KEY + slug, token);
-  } catch {}
-}
-
-export function clearStoredHostToken(slug: string): void {
-  try {
-    sessionStorage.removeItem(HOST_KEY + slug);
-  } catch {}
-}
-
 export function clearStoredEventIdentities(): void {
   clearOfflineEventData();
   try {
     const identityKeys: string[] = [];
     for (let index = 0; index < sessionStorage.length; index++) {
       const key = sessionStorage.key(index);
-      if (key?.startsWith(PARTICIPANT_KEY) || key?.startsWith(HOST_KEY)) identityKeys.push(key);
+      if (key?.startsWith(PARTICIPANT_KEY)) identityKeys.push(key);
     }
     for (const key of identityKeys) sessionStorage.removeItem(key);
   } catch {}

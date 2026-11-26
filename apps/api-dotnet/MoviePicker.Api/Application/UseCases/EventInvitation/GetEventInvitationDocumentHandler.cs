@@ -35,7 +35,7 @@ public sealed class GetEventInvitationDocumentHandler : IGetEventInvitationDocum
     public async Task<ShareDocument> HandleAsync(string slug, string apiPublicBaseUrl, CancellationToken ct = default)
     {
         var webBase = _options.ResolvedWebBaseUrl();
-        var evt = await _events.GetByIdOrSlugAsync(slug, ct);
+        var evt = await _events.GetBySlugAsync(slug, ct);
         var preview = evt is null
             ? SharePreview.Generic(webBase)
             : await DescribeAsync(evt, webBase, apiPublicBaseUrl.Trim().TrimEnd('/'), ct);

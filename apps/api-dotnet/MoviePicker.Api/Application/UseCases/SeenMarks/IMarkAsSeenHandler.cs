@@ -4,5 +4,5 @@ namespace MoviePicker.Api.Application.UseCases.SeenMarks;
 
 public interface IMarkAsSeenHandler
 {
-    Task<SeenMarkResponse> HandleAsync(string userId, string idOrSlug, string movieId, MarkAsSeenRequest request, CancellationToken ct = default);
+    Task<SeenMarkResponse> HandleAsync(string userId, string slug, string movieId, MarkAsSeenRequest request, CancellationToken ct = default);
 }

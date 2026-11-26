@@ -16,7 +16,6 @@ import type { MovieData } from '@/shared/types/movie';
 
 export interface WheelExclusionToggleInput {
   slug: string;
-  hostToken: string | null;
   refresh: () => void;
   onError: (message: string) => void;
   onActionStart?: () => void;
@@ -24,7 +23,6 @@ export interface WheelExclusionToggleInput {
 
 export function useWheelExclusionToggle({
   slug,
-  hostToken,
   refresh,
   onError,
   onActionStart,
@@ -35,13 +33,13 @@ export function useWheelExclusionToggle({
       const excluded = !movie.excludedFromWheel;
       onActionStart?.();
       try {
-        await setMovieWheelExclusion(slug, movie.id, excluded, hostToken);
+        await setMovieWheelExclusion(slug, movie.id, excluded);
         refresh();
       } catch (e) {
         onError(getErrorMessage(e, t(wheelExclusionErrorKey(excluded))));
       }
     },
-    [slug, hostToken, refresh, onError, onActionStart, t]
+    [slug, refresh, onError, onActionStart, t]
   );
 }
 
@@ -50,7 +48,6 @@ export interface NightMovieActionsInput {
   movie: MovieData | null;
   isFinished: boolean;
   isHost: boolean;
-  hostToken?: string | null;
   wheelLocked: boolean;
   participantId: string | null;
   participantPseudo: string | null;
@@ -64,7 +61,6 @@ export function useNightMovieActions({
   movie,
   isFinished,
   isHost,
-  hostToken = null,
   wheelLocked,
   participantId,
   participantPseudo,
@@ -76,7 +72,6 @@ export function useNightMovieActions({
   const [seenPending, setSeenPending] = useState(false);
   const toggleWheelExclusion = useWheelExclusionToggle({
     slug,
-    hostToken,
     refresh,
     onError,
     onActionStart,

@@ -94,7 +94,6 @@ public static class ServiceCollectionExtensions
         RegisterPosterStore(services, configuration);
 
         services.AddHttpContextAccessor();
-        services.AddScoped<IHostTokenAccessor, HostTokenAccessor>();
         services.AddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
         services.AddScoped<IClientAddressAccessor, ClientAddressAccessor>();
         services.AddSingleton<IClientErrorFactory, ApiErrorClientErrorFactory>();

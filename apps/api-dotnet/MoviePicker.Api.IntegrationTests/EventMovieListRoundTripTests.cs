@@ -82,7 +82,6 @@ public sealed class EventMovieListRoundTripTests : IClassFixture<MoviePickerAppl
             Title = "Round trips",
             Date = "2026-12-24",
             Time = "20:30",
-            HostToken = Guid.NewGuid().ToString("N"),
             Slug = "round-trips-" + Guid.NewGuid().ToString("N")[..10],
             CreatedAt = Now,
             UpdatedAt = Now

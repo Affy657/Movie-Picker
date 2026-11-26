@@ -41,7 +41,6 @@ public sealed class GetFollowedWatchedMoviesHandlerTests
         Date = date,
         Time = "20:00",
         Slug = id,
-        HostToken = "ht",
         CreatorUserId = "friend",
         Winners = TestWinners.Won(winnerMovieId),
         CreatedAt = DateTimeOffset.UtcNow,

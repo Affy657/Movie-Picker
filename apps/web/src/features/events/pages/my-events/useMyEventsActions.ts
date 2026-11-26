@@ -50,7 +50,7 @@ export function useMyEventsActions() {
   });
   const leaveMutation = useMutation({
     mutationFn: ({ slug, participantId }: { slug: string; participantId: string }) =>
-      removeEventParticipant(slug, participantId, null),
+      removeEventParticipant(slug, participantId),
     onSuccess: (_, { slug }) => {
       removeStoredParticipant(slug);
       invalidateMyEvents();
@@ -65,7 +65,7 @@ export function useMyEventsActions() {
     },
   });
   const closeMutation = useMutation({
-    mutationFn: (slug: string) => postEventClose(slug, null),
+    mutationFn: (slug: string) => postEventClose(slug),
     onSuccess: () => {
       invalidateMyEvents();
       setCloseError(null);

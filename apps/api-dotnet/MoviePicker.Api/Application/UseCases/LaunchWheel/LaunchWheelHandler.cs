@@ -13,7 +13,6 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
     private readonly IEventRepository _eventRepository;
     private readonly IMovieRepository _movieRepository;
     private readonly IVoteRepository _voteRepository;
-    private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IPosterImageStore _posterImageStore;
     private readonly IWinnerRuntimes _winnerRuntimes;
@@ -24,7 +23,6 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
         IVoteRepository voteRepository,
-        IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
         IPosterImageStore posterImageStore,
         IWinnerRuntimes winnerRuntimes,
@@ -34,7 +32,6 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _voteRepository = voteRepository;
-        _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _posterImageStore = posterImageStore;
         _winnerRuntimes = winnerRuntimes;
@@ -42,13 +39,12 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         _clock = clock;
     }
 
-    public async Task<WheelResponse> HandleAsync(string idOrSlug, int? expectedWinnerCount = null, CancellationToken ct = default)
+    public async Task<WheelResponse> HandleAsync(string slug, int? expectedWinnerCount = null, CancellationToken ct = default)
     {
         var evt = await HostedEvent.LoadForHostEvenFinishedAsync(
             _eventRepository,
-            _hostTokenAccessor,
             _currentUserAccessor.GetUserId(),
-            idOrSlug,
+            slug,
             ct);
 
         if (expectedWinnerCount is { } expected && evt.Winners.Count > expected

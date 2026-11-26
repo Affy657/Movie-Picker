@@ -25,7 +25,7 @@ public sealed class AnonymousMutatingEndpointsTests
         "AuthController.VerifyPasswordReset"
     ];
 
-    private static readonly string[] HostTokenActions =
+    private static readonly string[] HostOnlyActions =
     [
         "EventsController.AnnounceWheelWinner",
         "EventsController.Close",
@@ -79,7 +79,7 @@ public sealed class AnonymousMutatingEndpointsTests
             .ToList();
 
         var declared = PublicAccountActions
-            .Concat(HostTokenActions)
+            .Concat(HostOnlyActions)
             .Concat(SignedMachineCallbacks)
             .Concat(AnonymousAudienceCounts)
             .OrderBy(name => name, StringComparer.Ordinal);

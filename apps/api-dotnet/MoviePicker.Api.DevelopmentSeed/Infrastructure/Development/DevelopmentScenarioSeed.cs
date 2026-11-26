@@ -997,7 +997,7 @@ internal static partial class DevelopmentScenarioSeed
         await VoteAsync(vote, httpContext, slug, m2.Id, joinAlice.Participant.Id, actors.Alice.Id, 1, ct).ConfigureAwait(false);
         await VoteAsync(vote, httpContext, slug, m3.Id, bobPart, actors.Bob.Id, -1, ct).ConfigureAwait(false);
 
-        var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
+        var evt = await events.GetBySlugAsync(slug, ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException("Seed wheel movie night not found.");
 
         var movies = await sp.GetRequiredService<IMovieRepository>().ListByEventIdAsync(evt.Id, ct).ConfigureAwait(false);
@@ -1207,7 +1207,7 @@ internal static partial class DevelopmentScenarioSeed
         await VoteAsync(vote, httpContext, slug, m2.Id, joinAlice.Participant.Id, actors.Alice.Id, 1, ct).ConfigureAwait(false);
         await VoteAsync(vote, httpContext, slug, m3.Id, joinBob.Participant.Id, actors.Bob.Id, 1, ct).ConfigureAwait(false);
 
-        var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
+        var evt = await events.GetBySlugAsync(slug, ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException("Seed wheel-spun movie night not found.");
 
         var movies = await sp.GetRequiredService<IMovieRepository>().ListByEventIdAsync(evt.Id, ct).ConfigureAwait(false);
@@ -1271,7 +1271,7 @@ internal static partial class DevelopmentScenarioSeed
         await VoteAsync(vote, httpContext, slug, m1.Id, joinBob.Participant.Id, actors.Bob.Id, 1, ct).ConfigureAwait(false);
         await VoteAsync(vote, httpContext, slug, m2.Id, alicePart, actors.Alice.Id, 1, ct).ConfigureAwait(false);
 
-        var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
+        var evt = await events.GetBySlugAsync(slug, ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException("Seed past movie night not found.");
 
         var movies = await sp.GetRequiredService<IMovieRepository>().ListByEventIdAsync(evt.Id, ct).ConfigureAwait(false);
@@ -1352,7 +1352,7 @@ internal static partial class DevelopmentScenarioSeed
         await AddMovieAsync(addMovie, slug, 694, "The Shining", "1980", bobPart, actors.Bob.Id, ct).ConfigureAwait(false);
         await AddMovieAsync(addMovie, slug, 539, "Psycho", "1960", joinDev.Participant.Id, actors.Dev.Id, ct).ConfigureAwait(false);
 
-        var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
+        var evt = await events.GetBySlugAsync(slug, ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException("Seed pending movie night not found.");
 
         var startedParis = TimeZoneInfo.ConvertTime(utc.AddHours(-3), EventSchedule.ParisTimeZone);
@@ -1453,7 +1453,7 @@ internal static partial class DevelopmentScenarioSeed
         await join.HandleAsync(slug, new JoinEventRequest { Pseudo = "Dev invité" }, actors.Dev.Id, ct).ConfigureAwait(false);
         await join.HandleAsync(slug, new JoinEventRequest { Pseudo = "Alice invitée" }, actors.Alice.Id, ct).ConfigureAwait(false);
 
-        var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
+        var evt = await events.GetBySlugAsync(slug, ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException("Seed cancelled movie night not found.");
 
         var participants = await participantsRepo.ListByEventIdAsync(evt.Id, ct).ConfigureAwait(false);
@@ -1748,7 +1748,7 @@ internal static partial class DevelopmentScenarioSeed
         await AddMovieAsync(addMovie, slug, 807, "Se7en", "1995", devPart, actors.Dev.Id, ct).ConfigureAwait(false);
         await AddMovieAsync(addMovie, slug, 274, "The Silence of the Lambs", "1991", joinBob.Participant.Id, actors.Bob.Id, ct).ConfigureAwait(false);
 
-        var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
+        var evt = await events.GetBySlugAsync(slug, ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException("Pending showcase movie night not found.");
 
         var startedParis = TimeZoneInfo.ConvertTime(utc.AddHours(-3), EventSchedule.ParisTimeZone);
@@ -1804,7 +1804,7 @@ internal static partial class DevelopmentScenarioSeed
 
         await join.HandleAsync(slug, new JoinEventRequest { Pseudo = "Bob invité" }, actors.Bob.Id, ct).ConfigureAwait(false);
 
-        var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
+        var evt = await events.GetBySlugAsync(slug, ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException("Pending, no-movie showcase movie night not found.");
 
         var startedParis = TimeZoneInfo.ConvertTime(utc.AddHours(-3), EventSchedule.ParisTimeZone);
@@ -1862,7 +1862,7 @@ internal static partial class DevelopmentScenarioSeed
         var winnerMovie = await AddMovieAsync(addMovie, slug, 155, "The Dark Knight", "2008", devPart, actors.Dev.Id, ct).ConfigureAwait(false);
         await AddMovieAsync(addMovie, slug, 496243, "Parasite", "2019", joinAlice.Participant.Id, actors.Alice.Id, ct).ConfigureAwait(false);
 
-        var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
+        var evt = await events.GetBySlugAsync(slug, ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException("Recently finished showcase movie night not found.");
 
         var now = DateTimeOffset.UtcNow;
@@ -1909,7 +1909,7 @@ internal static partial class DevelopmentScenarioSeed
             .ConfigureAwait(false);
 
         var slug = created.Slug;
-        var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
+        var evt = await events.GetBySlugAsync(slug, ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException("Finished-without-movie showcase movie night not found.");
 
         var now = DateTimeOffset.UtcNow;
@@ -1968,7 +1968,7 @@ internal static partial class DevelopmentScenarioSeed
         var winnerMovie = await AddMovieAsync(addMovie, slug, 424, "Schindler's List", "1993", carlaPart, actors.Carla.Id, ct).ConfigureAwait(false);
         await AddMovieAsync(addMovie, slug, 129, "Spirited Away", "2001", joinDev.Participant.Id, actors.Dev.Id, ct).ConfigureAwait(false);
 
-        var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
+        var evt = await events.GetBySlugAsync(slug, ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException("Finished, joined-only showcase movie night not found.");
 
         var now = DateTimeOffset.UtcNow;
@@ -2298,7 +2298,7 @@ internal static partial class DevelopmentScenarioSeed
         await VoteAsync(vote, httpContext, slug, mTowers.Id, bobPart, actors.Bob.Id, 1, ct).ConfigureAwait(false);
         await VoteAsync(vote, httpContext, slug, mReturn.Id, alicePart, actors.Alice.Id, 1, ct).ConfigureAwait(false);
 
-        var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
+        var evt = await events.GetBySlugAsync(slug, ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException("Seed trilogy movie night not found.");
 
         var closedDate = utc.AddDays(-10);
@@ -2392,7 +2392,7 @@ internal static partial class DevelopmentScenarioSeed
         await VoteAsync(vote, httpContext, slug, mHaine.Id, bobPart, actors.Bob.Id, 1, ct).ConfigureAwait(false);
         await VoteAsync(vote, httpContext, slug, mIntouchables.Id, alicePart, actors.Alice.Id, 1, ct).ConfigureAwait(false);
 
-        var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
+        var evt = await events.GetBySlugAsync(slug, ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException("Seed series movie night not found.");
 
         var movies = await sp.GetRequiredService<IMovieRepository>().ListByEventIdAsync(evt.Id, ct).ConfigureAwait(false);
@@ -2508,7 +2508,7 @@ internal static partial class DevelopmentScenarioSeed
 
     private static async Task ApplyConfigAsync(IEventRepository events, string slug, EventConfig config, CancellationToken ct)
     {
-        var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
+        var evt = await events.GetBySlugAsync(slug, ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException("Seed movie night not found after creation.");
 
         await events.UpdateAsync(CloneEvent(evt, config: config), ct).ConfigureAwait(false);

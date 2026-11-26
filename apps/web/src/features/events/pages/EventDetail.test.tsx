@@ -27,12 +27,7 @@ import { buildEventMovie } from '@/test-utils/eventMovie';
 import { buildEventDetail } from '@/test-utils/eventDetail';
 import { buildUserProfile } from '@/test-utils/userProfile';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
-import {
-  getStoredHostToken,
-  setStoredHostToken,
-  setStoredParticipant,
-  getStoredParticipant,
-} from '@/shared/utils/eventIdentityStorage';
+import { setStoredParticipant, getStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 import { JOIN_PROMPT_ANCHOR_ID } from '@/features/events/joinPrompt';
 
 beforeAll(() => {
@@ -266,12 +261,19 @@ describe('EventDetail (MSW)', () => {
     expect(screen.queryByRole('button', { name: 'Réessayer' })).toBeNull();
   });
 
-  it('moves a legacy host token out of the address bar into the session', async () => {
+  it('opens a legacy host link as a guest, without sending its host token', async () => {
+    const hostHeaders: Array<string | null> = [];
+    server.use(
+      http.get(`${TEST_API_V1}/events/slug/${slug}`, ({ request }) => {
+        hostHeaders.push(request.headers.get('X-Host-Token'));
+      })
+    );
     renderEventDetail(`/e/${slug}?host=legacy-host-token&tab=movies`);
-    await waitFor(() => {
-      expect(screen.getByTestId('location-search').textContent).toBe('?tab=movies');
-    });
-    expect(getStoredHostToken(slug)).toBe('legacy-host-token');
+
+    expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
+    expect(hostHeaders.length).toBeGreaterThan(0);
+    expect(hostHeaders.every((header) => header === null)).toBe(true);
+    expect(screen.queryByRole('button', { name: 'Paramètres de la soirée' })).toBeNull();
   });
 
   it('treats a malformed slug as a missing movie night without calling the API', async () => {
@@ -359,8 +361,8 @@ describe('EventDetail (MSW)', () => {
 
   it('as the host, no longer shows a separate "host" link (only the public link)', async () => {
     const user = userEvent.setup();
-    const token = 'host-secret-token';
-    renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
+    server.use(...createEventDetailHandlers({ slug, title: 'Soirée démo', isHost: true }));
+    renderEventDetail(`/e/${slug}`);
     expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     expect(document.title).toBe(pageTitle('Soirée démo'));
     await user.click(screen.getByRole('button', { name: /^partager$/i }));
@@ -370,7 +372,8 @@ describe('EventDetail (MSW)', () => {
 
   it('as the host arriving from the creation, warns when the options could not be saved', async () => {
     const user = userEvent.setup();
-    renderEventDetail(`/e/${slug}?host=host-secret-token`, undefined, {
+    server.use(...createEventDetailHandlers({ slug, title: 'Soirée démo', isHost: true }));
+    renderEventDetail(`/e/${slug}`, undefined, {
       justCreated: true,
       configNotSaved: true,
     });
@@ -383,13 +386,17 @@ describe('EventDetail (MSW)', () => {
   });
 
   it('as the host, shows the theme banner and the settings panel', async () => {
-    const token = 'host-secret-token';
     server.use(
-      ...createEventDetailHandlers({ slug, title: 'Soirée démo', theme: 'Comédie noire' }),
+      ...createEventDetailHandlers({
+        slug,
+        title: 'Soirée démo',
+        theme: 'Comédie noire',
+        isHost: true,
+      }),
       createJoinHandler(slug),
       ...createSearchAndAddHandlers(slug)
     );
-    renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
+    renderEventDetail(`/e/${slug}`);
     expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     expect(screen.getByText('Thème de soirée : Comédie noire')).toBeInTheDocument();
 
@@ -405,11 +412,14 @@ describe('EventDetail (MSW)', () => {
   });
 
   describe('pending movie night (host)', () => {
-    const token = 'host-secret-token';
-
     function usePendingHandlers() {
       server.use(
-        ...createEventDetailHandlers({ slug, title: 'Soirée en suspens', lifecycle: 'pending' }),
+        ...createEventDetailHandlers({
+          slug,
+          title: 'Soirée en suspens',
+          lifecycle: 'pending',
+          isHost: true,
+        }),
         createJoinHandler(slug),
         ...createSearchAndAddHandlers(slug)
       );
@@ -417,7 +427,7 @@ describe('EventDetail (MSW)', () => {
 
     it('keeps the banner as text and moves the ways out to the header', async () => {
       usePendingHandlers();
-      renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
+      renderEventDetail(`/e/${slug}`);
       const banner = await screen.findByRole('status', { name: /en suspens/i });
       expect(within(banner).queryByRole('button')).toBeNull();
       expect(screen.getByRole('button', { name: 'Gérer le tirage' })).toBeInTheDocument();
@@ -447,7 +457,7 @@ describe('EventDetail (MSW)', () => {
           });
         })
       );
-      renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
+      renderEventDetail(`/e/${slug}`);
       await user.click(await screen.findByRole('button', { name: 'Gérer le tirage' }));
       await user.click(screen.getByRole('menuitem', { name: 'Clôturer sans film' }));
       const dialog = await screen.findByRole('dialog', { name: /clôturer sans choisir de film/i });
@@ -459,7 +469,7 @@ describe('EventDetail (MSW)', () => {
     it('reschedules from the settings cog', async () => {
       const user = userEvent.setup();
       usePendingHandlers();
-      renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
+      renderEventDetail(`/e/${slug}`);
       await user.click(await screen.findByRole('button', { name: 'Paramètres de la soirée' }));
       const settings = await screen.findByRole('dialog', { name: 'Paramètres de la soirée' });
       expect(
@@ -469,8 +479,6 @@ describe('EventDetail (MSW)', () => {
   });
 
   describe('pending movie night with one film drawn out of two (host)', () => {
-    const token = 'host-secret-token';
-
     function lastNight(): string {
       const day = new Date();
       day.setDate(day.getDate() - 1);
@@ -547,7 +555,7 @@ describe('EventDetail (MSW)', () => {
     it('shows the drawn film and the next draw, without the notice of a night with no film', async () => {
       const user = userEvent.setup();
       servePartlyDrawnNight();
-      renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
+      renderEventDetail(`/e/${slug}`);
 
       const stage = await screen.findByRole('region', { name: 'Le film de la soirée' });
       expect(within(stage).getAllByText('Matrix').length).toBeGreaterThan(0);
@@ -583,7 +591,7 @@ describe('EventDetail (MSW)', () => {
           });
         })
       );
-      renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
+      renderEventDetail(`/e/${slug}`);
 
       await user.click(await screen.findByRole('button', { name: 'Gérer le tirage' }));
       await user.click(screen.getByRole('menuitem', { name: 'Terminer la soirée' }));
@@ -668,10 +676,9 @@ describe('EventDetail (MSW)', () => {
     expect(within(dialog).getByText('Vous avez proposé 1 film')).toBeInTheDocument();
   });
 
-  it('as the host, takes a pitch note down after confirming, with the host token', async () => {
+  it('as the host, takes a pitch note down after confirming, without any host token', async () => {
     const user = userEvent.setup();
     const hostHeaders: Array<string | null> = [];
-    setStoredHostToken(slug, 'host-token');
     server.use(
       http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
         apiJson<'MovieWithScoreResponse[]'>([
@@ -697,7 +704,8 @@ describe('EventDetail (MSW)', () => {
           hostHeaders.push(request.headers.get('X-Host-Token'));
           return new HttpResponse(null, { status: 204 });
         }
-      )
+      ),
+      ...createEventDetailHandlers({ slug, title: 'Soirée démo', isHost: true })
     );
 
     stubHoverCapability();
@@ -710,18 +718,20 @@ describe('EventDetail (MSW)', () => {
       })
     );
 
-    await waitFor(() => expect(hostHeaders).toEqual(['host-token']));
+    await waitFor(() => expect(hostHeaders).toEqual([null]));
   });
 
   it('opens the proposal window straight away when arriving from the creation', async () => {
     setStoredParticipant(slug, 'p-msw-host', 'Hôte');
-    renderEventDetail(`/e/${slug}?host=host-token`, undefined, { openPropose: true });
+    server.use(...createEventDetailHandlers({ slug, title: 'Soirée démo', isHost: true }));
+    renderEventDetail(`/e/${slug}`, undefined, { openPropose: true });
 
     expect(await screen.findByRole('dialog', { name: 'Proposer un film' })).toBeInTheDocument();
   });
 
   it('plays the arrival from the creation once: coming back to the night replays nothing', async () => {
     setStoredParticipant(slug, 'p-msw-host', 'Hôte');
+    server.use(...createEventDetailHandlers({ slug, title: 'Soirée démo', isHost: true }));
     let navigateTo: NavigateFunction = () => undefined;
     function Navigator() {
       navigateTo = useNavigate();
@@ -733,7 +743,6 @@ describe('EventDetail (MSW)', () => {
           initialEntries={[
             {
               pathname: `/e/${slug}`,
-              search: '?host=host-token',
               state: { openPropose: true, configNotSaved: true, justCreated: true },
             },
           ]}
@@ -765,6 +774,7 @@ describe('EventDetail (MSW)', () => {
   describe('participant removal flow (host)', () => {
     function setupHostJoined() {
       setStoredParticipant(slug, 'p-msw-host', 'Hôte');
+      server.use(...createEventDetailHandlers({ slug, title: 'Soirée démo', isHost: true }));
     }
 
     it('confirming the modal: DELETE called and success message shown', async () => {
@@ -787,7 +797,7 @@ describe('EventDetail (MSW)', () => {
         })
       );
 
-      renderEventDetail(`/e/${slug}?host=host-token`);
+      renderEventDetail(`/e/${slug}`);
       expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
 
       await openParticipantsPanel(user);
@@ -800,8 +810,7 @@ describe('EventDetail (MSW)', () => {
 
       await waitFor(() => expect(deleteCalled).toBe(true));
       expect(deleteUrl).toContain('/participants/p-msw-alice');
-      expect(deleteUrl).not.toContain('host-token');
-      expect(deleteHostToken).toBe('host-token');
+      expect(deleteHostToken).toBeNull();
 
       expect(await screen.findByTestId('participants-action-success')).toBeInTheDocument();
       expect(screen.getByTestId('participants-action-success')).toHaveTextContent('Alice');
@@ -822,7 +831,7 @@ describe('EventDetail (MSW)', () => {
       let letBackInUrl = '';
       let letBackInHostToken: string | null = null;
       server.use(
-        ...createEventDetailHandlers({ slug, title: 'Soirée démo', removedPeople }),
+        ...createEventDetailHandlers({ slug, title: 'Soirée démo', removedPeople, isHost: true }),
         http.delete(`${TEST_API_V1}/events/${slug}/removed-people/:userId`, ({ request }) => {
           letBackInUrl = request.url;
           letBackInHostToken = request.headers.get('X-Host-Token');
@@ -831,7 +840,7 @@ describe('EventDetail (MSW)', () => {
         })
       );
 
-      renderEventDetail(`/e/${slug}?host=host-token`);
+      renderEventDetail(`/e/${slug}`);
       await openParticipantsPanel(user);
       const removed = await screen.findByRole('list', { name: 'Retirés de la soirée' });
       await user.click(within(removed).getByRole('button', { name: 'Laisser revenir Léa' }));
@@ -840,7 +849,7 @@ describe('EventDetail (MSW)', () => {
         expect(screen.queryByRole('list', { name: 'Retirés de la soirée' })).toBeNull()
       );
       expect(letBackInUrl).toContain(`/events/${slug}/removed-people/u-lea`);
-      expect(letBackInHostToken).toBe('host-token');
+      expect(letBackInHostToken).toBeNull();
     });
 
     it('says so when the API refuses to let a removed person back in', async () => {
@@ -850,6 +859,7 @@ describe('EventDetail (MSW)', () => {
         ...createEventDetailHandlers({
           slug,
           title: 'Soirée démo',
+          isHost: true,
           removedPeople: [
             { id: 'u-lea', displayName: 'Léa', avatarId: '', handle: null, accentColor: 'default' },
           ],
@@ -859,7 +869,7 @@ describe('EventDetail (MSW)', () => {
         )
       );
 
-      renderEventDetail(`/e/${slug}?host=host-token`);
+      renderEventDetail(`/e/${slug}`);
       await openParticipantsPanel(user);
       await user.click(await screen.findByRole('button', { name: 'Laisser revenir Léa' }));
 
@@ -882,7 +892,7 @@ describe('EventDetail (MSW)', () => {
         })
       );
 
-      renderEventDetail(`/e/${slug}?host=host-token`);
+      renderEventDetail(`/e/${slug}`);
       await openParticipantsPanel(user);
       const removeButton = await screen.findByTestId('remove-participant-p-msw-alice');
       await user.click(removeButton);
@@ -902,7 +912,7 @@ describe('EventDetail (MSW)', () => {
         )
       );
 
-      renderEventDetail(`/e/${slug}?host=host-token`);
+      renderEventDetail(`/e/${slug}`);
       await openParticipantsPanel(user);
       const removeButton = await screen.findByTestId('remove-participant-p-msw-alice');
       await user.click(removeButton);
@@ -1370,7 +1380,7 @@ describe('EventDetail (MSW)', () => {
         )
       );
 
-      renderEventDetail(`/e/${slug}?host=host-token`);
+      renderEventDetail(`/e/${slug}`);
       expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
       await openParticipantsPanel(user);
 
@@ -1510,7 +1520,7 @@ describe('EventDetail (MSW)', () => {
         )
       );
 
-      renderEventDetail(`/e/${slug}?host=host-token`);
+      renderEventDetail(`/e/${slug}`);
 
       const nightTitle = await screen.findByRole('heading', { level: 1, name: 'Soirée démo' });
       const movieTitle = await screen.findByRole('heading', { level: 2, name: 'Matrix' });
@@ -1535,7 +1545,7 @@ describe('EventDetail (MSW)', () => {
         )
       );
 
-      renderEventDetail(`/e/${slug}?host=host-token`);
+      renderEventDetail(`/e/${slug}`);
       expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
       await openParticipantsPanel(user);
 
@@ -1575,8 +1585,9 @@ describe('EventDetail (MSW)', () => {
     it('open remove, cancel, open leave: consistent labels', async () => {
       const user = userEvent.setup();
       setStoredParticipant(slug, 'p-msw-bob', 'Bob');
+      server.use(...createEventDetailHandlers({ slug, title: 'Soirée démo', isHost: true }));
 
-      renderEventDetail(`/e/${slug}?host=host-token`);
+      renderEventDetail(`/e/${slug}`);
       expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
 
       await openParticipantsPanel(user);

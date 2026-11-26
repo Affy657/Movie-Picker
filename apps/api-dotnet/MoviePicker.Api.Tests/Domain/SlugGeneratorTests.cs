@@ -23,12 +23,6 @@ public sealed class SlugGeneratorTests
     }
 
     [Fact]
-    public void NewHostToken_DefaultLength_Is32()
-    {
-        Assert.Equal(32, SlugGenerator.NewHostToken().Length);
-    }
-
-    [Fact]
     public void NewSlug_UsesOnlyUrlSafeAlphabet()
     {
         var slug = SlugGenerator.NewSlug(256);

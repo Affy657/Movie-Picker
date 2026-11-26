@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw';
 import { apiErrorJson, apiJson, type ApiSchemas as Schemas } from './apiJson';
+import { apiPath } from '@/shared/api/client';
 
 export const TEST_API_BASE = 'http://127.0.0.1:3999';
 
@@ -879,6 +880,7 @@ export interface MockEventOptions {
 
   theme?: string | null;
   viewerRemoved?: boolean;
+  isHost?: boolean;
   removedPeople?: Schemas['RemovedPersonResponse'][];
 }
 
@@ -891,8 +893,7 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
   const slug = opts.slug;
 
   return [
-    http.get(`${V1}/events/slug/${slug}`, ({ request }) => {
-      const host = request.headers.get('X-Host-Token');
+    http.get(`${V1}/events/slug/${slug}`, () => {
       return apiJson<'EventDetailResponse'>({
         _id: 'evt-msw',
         title,
@@ -904,7 +905,7 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
         myParticipant: null,
         createdAt: MOCK_DATE,
         updatedAt: MOCK_DATE,
-        isHost: !!host,
+        isHost: opts.isHost ?? false,
         isFinished: opts.isFinished ?? false,
         lifecycle: opts.lifecycle ?? (opts.isFinished ? 'finished' : 'live'),
         ratingPromptDue: false,
@@ -919,7 +920,7 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
           mockParticipant('p-msw-bob', 'Bob'),
           mockParticipant('p-msw-chloe', 'Chloé'),
         ],
-        removedPeople: host ? [...(opts.removedPeople ?? [])] : [],
+        removedPeople: opts.isHost ? [...(opts.removedPeople ?? [])] : [],
         config: {
           theme: opts.theme ?? null,
           maxProposalsPerParticipant: null,
@@ -937,14 +938,22 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
         },
       });
     }),
-    http.get(`${V1}/events/${slug}/movies`, () => apiJson<'MovieWithScoreResponse[]'>([])),
-    http.put(`${V1}/events/${slug}/presence`, () => new HttpResponse(null, { status: 204 })),
-    http.put(`${V1}/events/${slug}/rating-prompt`, () => new HttpResponse(null, { status: 204 })),
+    http.get(`${V1}${apiPath('events', slug, 'movies')}`, () =>
+      apiJson<'MovieWithScoreResponse[]'>([])
+    ),
+    http.put(
+      `${V1}${apiPath('events', slug, 'presence')}`,
+      () => new HttpResponse(null, { status: 204 })
+    ),
+    http.put(
+      `${V1}${apiPath('events', slug, 'rating-prompt')}`,
+      () => new HttpResponse(null, { status: 204 })
+    ),
   ];
 }
 
 export function createJoinHandler(slug: string) {
-  return http.post(`${V1}/events/${slug}/join`, async () =>
+  return http.post(`${V1}${apiPath('events', slug, 'join')}`, async () =>
     apiJson<'JoinEventResult'>(
       {
         participant: {
@@ -1021,7 +1030,7 @@ export function createSearchAndAddHandlers(slug: string) {
         tmdbAttributionUrl: 'https://www.themoviedb.org/',
       })
     ),
-    http.post(`${V1}/events/${slug}/movies`, async () =>
+    http.post(`${V1}${apiPath('events', slug, 'movies')}`, async () =>
       apiJson<'MovieWithScoreResponse'>(
         {
           _id: 'm-new',

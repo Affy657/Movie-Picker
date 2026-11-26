@@ -16,9 +16,9 @@ public sealed class MarkRatingPromptedHandler : IMarkRatingPromptedHandler
         _clock = clock;
     }
 
-    public async Task HandleAsync(string userId, string idOrSlug, CancellationToken ct = default)
+    public async Task HandleAsync(string userId, string slug, CancellationToken ct = default)
     {
-        var evt = await _events.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
+        var evt = await _events.GetRequiredBySlugAsync(slug, ct);
         var participant = await _participants.FindByEventAndUserIdAsync(evt.Id, userId, ct)
             ?? throw Errors.ParticipantNotFound();
 

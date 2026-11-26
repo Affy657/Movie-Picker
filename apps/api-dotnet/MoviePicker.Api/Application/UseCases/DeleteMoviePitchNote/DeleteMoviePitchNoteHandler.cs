@@ -10,32 +10,28 @@ public sealed class DeleteMoviePitchNoteHandler : IDeleteMoviePitchNoteHandler
     private readonly IEventRepository _eventRepository;
     private readonly IMovieRepository _movieRepository;
     private readonly IParticipantRepository _participantRepository;
-    private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly TimeProvider _clock;
 
     public DeleteMoviePitchNoteHandler(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
         IParticipantRepository participantRepository,
-        IHostTokenAccessor hostTokenAccessor,
         TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _participantRepository = participantRepository;
-        _hostTokenAccessor = hostTokenAccessor;
         _clock = clock;
     }
 
-    public async Task HandleAsync(string userId, string idOrSlug, string movieId, DeleteMoviePitchNoteRequest request, CancellationToken ct = default)
+    public async Task HandleAsync(string userId, string slug, string movieId, DeleteMoviePitchNoteRequest request, CancellationToken ct = default)
     {
         var (evt, movie, isHost) = await MovieActionContext.ResolveMovieForHostActionAsync(
             _eventRepository,
             _movieRepository,
-            _hostTokenAccessor,
             userId,
             _clock.GetUtcNow(),
-            idOrSlug,
+            slug,
             movieId,
             Errors.WheelLocked,
             ct);

@@ -68,7 +68,6 @@ type UseEventWheelOptions = {
   slug: string;
   event: EventData | undefined;
   movies: MovieData[];
-  hostToken: string | null;
   onWheelDone: () => void;
 };
 
@@ -108,14 +107,13 @@ function isConcurrentUpdate(error: unknown): boolean {
 
 async function drawRetryingAConcurrentWrite(
   slug: string,
-  hostToken: string | null,
   seenWinners: number
 ): ReturnType<typeof postEventWheel> {
   try {
-    return await postEventWheel(slug, hostToken, seenWinners);
+    return await postEventWheel(slug, seenWinners);
   } catch (error) {
     if (!isConcurrentUpdate(error)) throw error;
-    return postEventWheel(slug, hostToken, seenWinners);
+    return postEventWheel(slug, seenWinners);
   }
 }
 
@@ -147,7 +145,6 @@ export function useEventWheel({
   slug,
   event,
   movies,
-  hostToken,
   onWheelDone,
 }: UseEventWheelOptions): EventWheelState {
   const { t } = useTranslation();
@@ -277,8 +274,8 @@ export function useEventWheel({
     }
     if (pending.sent) return;
     pending.sent = true;
-    postEventWheelAnnounce(slug, hostToken).catch(() => undefined);
-  }, [slug, hostToken]);
+    postEventWheelAnnounce(slug).catch(() => undefined);
+  }, [slug]);
 
   const latestAnnounceWinnerRef = useRef(announceWinner);
   useEffect(() => {
@@ -319,7 +316,7 @@ export function useEventWheel({
     launchInFlightRef.current = true;
     setError(null);
     setLoading(true);
-    drawRetryingAConcurrentWrite(slug, hostToken, drawnIds.length)
+    drawRetryingAConcurrentWrite(slug, drawnIds.length)
       .then((res) => {
         const drawn = listedMovieOrWinner(res.winner, safeMovies);
         const drawnNow = drawableMovies.some((m) => m.id === drawn.id);
@@ -343,13 +340,13 @@ export function useEventWheel({
         launchInFlightRef.current = false;
         setLoading(false);
       });
-  }, [slug, hostToken, drawnIds.length, safeMovies, drawableMovies, announceWinner, track, t]);
+  }, [slug, drawnIds.length, safeMovies, drawableMovies, announceWinner, track, t]);
 
   const pickWinnerManually = useCallback(
     (movie: MovieData) => {
       setError(null);
       setLoading(true);
-      postEventWinner(slug, movie.id, hostToken)
+      postEventWinner(slug, movie.id)
         .then((res) => {
           const picked = listedMovieOrWinner(res.winner, [movie]);
           setPendingRevealId(null);
@@ -367,14 +364,14 @@ export function useEventWheel({
         .catch((err) => setError(getErrorMessage(err, t('events.wheel.manualPickError'))))
         .finally(() => setLoading(false));
     },
-    [slug, hostToken, track, t]
+    [slug, track, t]
   );
 
   const removeWinner = useCallback(
     (movie: MovieData) => {
       setError(null);
       setLoading(true);
-      deleteEventWinner(slug, movie.id, hostToken)
+      deleteEventWinner(slug, movie.id)
         .then(() => {
           setPendingRevealId(null);
           setSpinWinner(null);
@@ -385,13 +382,13 @@ export function useEventWheel({
         .catch((err) => setError(getErrorMessage(err, t('events.wheel.removeWinnerError'))))
         .finally(() => setLoading(false));
     },
-    [slug, hostToken, onWheelDone, t]
+    [slug, onWheelDone, t]
   );
 
   const reset = useCallback(() => {
     setError(null);
     setLoading(true);
-    deleteEventWheel(slug, hostToken)
+    deleteEventWheel(slug)
       .then(() => {
         setPendingRevealId(null);
         setSpinWinner(null);
@@ -401,7 +398,7 @@ export function useEventWheel({
       })
       .catch((err) => setError(getErrorMessage(err, t('events.wheel.resetError'))))
       .finally(() => setLoading(false));
-  }, [slug, hostToken, onWheelDone, t]);
+  }, [slug, onWheelDone, t]);
 
   const revealWinner = useCallback(() => {
     revealedHereIdRef.current = spinWinnerId;

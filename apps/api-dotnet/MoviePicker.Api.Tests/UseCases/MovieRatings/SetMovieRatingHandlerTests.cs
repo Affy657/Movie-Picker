@@ -66,7 +66,7 @@ public sealed class SetMovieRatingHandlerTests
 
     private void Arrange(Event evt, Movie? movie, Participant? participant)
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync(evt.Slug, It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync(evt.Slug, It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo
             .Setup(r => r.GetByIdAndEventIdAsync(It.IsAny<string>(), evt.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(movie);
@@ -81,7 +81,7 @@ public sealed class SetMovieRatingHandlerTests
     [Fact]
     public async Task HandleAsync_EventNotFound_ThrowsNotFound()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("ghost", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
+        _eventRepo.Setup(r => r.GetBySlugAsync("ghost", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(OwnerUserId, "ghost", WinnerMovieId, Request()));
         Assert.Equal(ErrorCodes.EventNotFound, ex.Reason);

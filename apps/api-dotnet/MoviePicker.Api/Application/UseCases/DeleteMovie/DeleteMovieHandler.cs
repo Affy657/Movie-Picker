@@ -12,7 +12,6 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
     private readonly ISeenMarkRepository _seenMarkRepository;
     private readonly IMovieRatingRepository _ratingRepository;
     private readonly IParticipantRepository _participantRepository;
-    private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly IUnitOfWork _unitOfWork;
     private readonly TimeProvider _clock;
 
@@ -23,7 +22,6 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
         ISeenMarkRepository seenMarkRepository,
         IMovieRatingRepository ratingRepository,
         IParticipantRepository participantRepository,
-        IHostTokenAccessor hostTokenAccessor,
         IUnitOfWork unitOfWork,
         TimeProvider clock)
     {
@@ -33,14 +31,13 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
         _seenMarkRepository = seenMarkRepository;
         _ratingRepository = ratingRepository;
         _participantRepository = participantRepository;
-        _hostTokenAccessor = hostTokenAccessor;
         _unitOfWork = unitOfWork;
         _clock = clock;
     }
 
     public async Task HandleAsync(
         string userId,
-        string idOrSlug,
+        string slug,
         string movieId,
         string participantId,
         CancellationToken ct = default)
@@ -48,10 +45,9 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
         var (evt, movie, isHost) = await MovieActionContext.ResolveMovieForHostActionAsync(
             _eventRepository,
             _movieRepository,
-            _hostTokenAccessor,
             userId,
             _clock.GetUtcNow(),
-            idOrSlug,
+            slug,
             movieId,
             Errors.WheelLockedDelete,
             ct);
@@ -71,10 +67,10 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
         await _unitOfWork.ExecuteAsync(
             async token =>
             {
-                var current = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, token);
+                var current = await _eventRepository.GetRequiredBySlugAsync(slug, token);
                 if (current.HasWinner)
                     throw Errors.WheelLockedDelete();
-                if (!isProposer && !HostedEvent.IsHost(current, _hostTokenAccessor, userId))
+                if (!isProposer && !HostedEvent.IsHost(current, userId))
                     throw Errors.MovieRemovalRestricted();
 
                 await EventChildData.PurgeMoviesAsync(

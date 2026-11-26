@@ -50,12 +50,12 @@ public sealed class JoinEventHandler : IJoinEventHandler
         _clock = clock;
     }
 
-    public async Task<JoinEventResult> HandleAsync(string idOrSlug, JoinEventRequest request, string authenticatedUserId, CancellationToken ct = default)
+    public async Task<JoinEventResult> HandleAsync(string slug, JoinEventRequest request, string authenticatedUserId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(authenticatedUserId))
             throw Errors.AccountRequired();
 
-        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
+        var evt = await _eventRepository.GetRequiredBySlugAsync(slug, ct);
 
         if (evt.IsFinished(_clock.GetUtcNow()))
             throw Errors.EventFinished();
@@ -74,7 +74,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
             var pseudo = await AvailablePseudoAsync(evt.Id, requestedPseudo, ct);
             try
             {
-                var created = await InsertAsync(idOrSlug, evt, NewParticipant(evt.Id, pseudo, userId), ct);
+                var created = await InsertAsync(slug, evt, NewParticipant(evt.Id, pseudo, userId), ct);
                 var joiner = await FindJoinerAsync(evt, userId);
                 await NotifyHostAsync(evt, created.Pseudo, joiner, CancellationToken.None);
                 await CountArrivalAsync(joiner);
@@ -143,14 +143,14 @@ public sealed class JoinEventHandler : IJoinEventHandler
         return candidate;
     }
 
-    private async Task<Participant> InsertAsync(string idOrSlug, Event evt, Participant participant, CancellationToken ct)
+    private async Task<Participant> InsertAsync(string slug, Event evt, Participant participant, CancellationToken ct)
     {
         var inserted = participant;
         await _unitOfWork.ExecuteAsync(
             async token =>
             {
                 await _eventRepository.LockForWriteAsync(evt.Id, token);
-                var current = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, token);
+                var current = await _eventRepository.GetRequiredBySlugAsync(slug, token);
                 if (current.HasRemoved(participant.UserId))
                     throw Errors.RemovedFromEvent();
                 if (current.Config?.MaxParticipants is { } cap && cap > 0)

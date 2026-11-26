@@ -40,7 +40,7 @@ public sealed class AddMovieHandlerNotificationTests
 
     public AddMovieHandlerNotificationTests()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Event
             {
                 Id = "evt1",
@@ -48,7 +48,6 @@ public sealed class AddMovieHandlerNotificationTests
                 Date = TestDates.Upcoming,
                 Time = "20:00",
                 Slug = "soiree",
-                HostToken = "ht1",
                 Config = new EventConfig(),
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow
@@ -113,12 +112,11 @@ public sealed class AddMovieHandlerNotificationTests
             Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "soiree",
-            HostToken = "ht1",
             Config = new EventConfig(),
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
-        _eventRepo.SetupSequence(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
+        _eventRepo.SetupSequence(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(night)
             .ReturnsAsync(night with { Config = new EventConfig { AnonymousProposals = true } });
         OwnerParticipant();
@@ -144,7 +142,7 @@ public sealed class AddMovieHandlerNotificationTests
     [Fact]
     public async Task HandleAsync_AnonymousNight_NotifiesWithoutNamingTheProposer()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Event
             {
                 Id = "evt1",
@@ -152,7 +150,6 @@ public sealed class AddMovieHandlerNotificationTests
                 Date = TestDates.Upcoming,
                 Time = "20:00",
                 Slug = "soiree",
-                HostToken = "ht1",
                 Config = new EventConfig { AnonymousProposals = true },
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow

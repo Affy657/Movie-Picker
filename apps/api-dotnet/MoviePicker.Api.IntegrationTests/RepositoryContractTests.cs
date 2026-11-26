@@ -26,7 +26,6 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Title = title,
         Date = "2026-12-24",
         Time = "20:30",
-        HostToken = Guid.NewGuid().ToString("N"),
         Slug = "contract-" + Guid.NewGuid().ToString("N")[..10],
         CreatedAt = Now,
         UpdatedAt = Now
@@ -173,8 +172,8 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
         var created = await events.AddAsync(NewEvent("Lookup"));
 
-        Assert.Equal(created.Id, (await events.GetByIdOrSlugAsync(created.Slug))?.Id);
-        Assert.Null(await events.GetByIdOrSlugAsync(created.Id));
+        Assert.Equal(created.Id, (await events.GetBySlugAsync(created.Slug))?.Id);
+        Assert.Null(await events.GetBySlugAsync(created.Id));
     }
 
     [Fact]
@@ -274,7 +273,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         await events.UpdateAsync(bare with { RecapSlug = recapSlug });
 
         Assert.DoesNotContain(await events.ListMissingRecapSlugAsync(10_000), e => e.Id == bare.Id);
-        Assert.Equal(recapSlug, (await events.GetByIdOrSlugAsync(bare.Slug))?.RecapSlug);
+        Assert.Equal(recapSlug, (await events.GetBySlugAsync(bare.Slug))?.RecapSlug);
     }
 
     [Fact]
@@ -633,7 +632,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         var updated = await events.UpdateAsync(created with { Title = "Version 1" });
 
         Assert.Equal(created.Version + 1, updated.Version);
-        var reloaded = await events.GetByIdOrSlugAsync(created.Slug);
+        var reloaded = await events.GetBySlugAsync(created.Slug);
         Assert.Equal("Version 1", reloaded!.Title);
         Assert.Equal(updated.Version, reloaded.Version);
     }
@@ -644,15 +643,15 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         using var scope = _factory.Services.CreateScope();
         var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
         var created = await events.AddAsync(NewEvent("Original"));
-        var hostA = await events.GetByIdOrSlugAsync(created.Slug);
-        var hostB = await events.GetByIdOrSlugAsync(created.Slug);
+        var hostA = await events.GetBySlugAsync(created.Slug);
+        var hostB = await events.GetBySlugAsync(created.Slug);
 
         await events.UpdateAsync(hostA! with { Title = "Écrit par A" });
         var ex = await Assert.ThrowsAsync<ConflictException>(() =>
             events.UpdateAsync(hostB! with { Title = "Écrit par B" }));
 
         Assert.Equal("concurrent_update", ex.Reason);
-        var reloaded = await events.GetByIdOrSlugAsync(created.Slug);
+        var reloaded = await events.GetBySlugAsync(created.Slug);
         Assert.Equal("Écrit par A", reloaded!.Title);
     }
 
@@ -662,13 +661,13 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         using var scope = _factory.Services.CreateScope();
         var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
         var created = await events.AddAsync(NewEvent("Nettoyage"));
-        var stale = await events.GetByIdOrSlugAsync(created.Slug);
+        var stale = await events.GetBySlugAsync(created.Slug);
 
         Assert.True(await events.MarkWatchlistCleanedAsync(created.Id, Now.AddHours(1)));
 
         await Assert.ThrowsAsync<ConflictException>(() =>
             events.UpdateAsync(stale! with { Title = "Écrasement" }));
-        var reloaded = await events.GetByIdOrSlugAsync(created.Slug);
+        var reloaded = await events.GetBySlugAsync(created.Slug);
         Assert.NotNull(reloaded!.WatchlistCleanedAt);
         Assert.Equal("Nettoyage", reloaded.Title);
     }
@@ -683,7 +682,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         await events.MarkChangedAsync(created.Id);
         await events.MarkChangedAsync(created.Id);
 
-        var reloaded = await events.GetByIdOrSlugAsync(created.Slug);
+        var reloaded = await events.GetBySlugAsync(created.Slug);
         Assert.Equal(created.WriteSeq + 2, reloaded!.WriteSeq);
         Assert.Equal(created.Version, reloaded.Version);
     }
@@ -703,12 +702,12 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         using var scope = _factory.Services.CreateScope();
         var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
         var created = await events.AddAsync(NewEvent("Seq"));
-        var read = await events.GetByIdOrSlugAsync(created.Slug);
+        var read = await events.GetBySlugAsync(created.Slug);
 
         await events.MarkChangedAsync(created.Id);
         await events.UpdateAsync(read! with { Title = "Seq 2" });
 
-        var reloaded = await events.GetByIdOrSlugAsync(created.Slug);
+        var reloaded = await events.GetBySlugAsync(created.Slug);
         Assert.Equal("Seq 2", reloaded!.Title);
         Assert.Equal(read.WriteSeq + 2, reloaded.WriteSeq);
     }
@@ -721,9 +720,9 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         var created = await events.AddAsync(NewEvent("Targeted") with { CreatorUserId = ObjectId.GenerateNewId().ToString() });
 
         Assert.True(await events.MarkWatchlistCleanedAsync(created.Id, Now.AddHours(1)));
-        var afterCleanup = await events.GetByIdOrSlugAsync(created.Slug);
+        var afterCleanup = await events.GetBySlugAsync(created.Slug);
         Assert.Equal(1, await events.AnonymizeCreatorAsync(created.CreatorUserId!));
-        var afterAnonymize = await events.GetByIdOrSlugAsync(created.Slug);
+        var afterAnonymize = await events.GetBySlugAsync(created.Slug);
 
         Assert.Equal(created.WriteSeq + 1, afterCleanup!.WriteSeq);
         Assert.Equal(created.WriteSeq + 2, afterAnonymize!.WriteSeq);
@@ -740,8 +739,8 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         var coHosted = await events.AddAsync(NewEvent("Co-hôtes") with { CoHostUserIds = [gone, kept] });
 
         Assert.Equal(2, await events.ForgetUserAsync(gone));
-        var reloaded = await events.GetByIdOrSlugAsync(created.Slug);
-        var reloadedCoHosted = await events.GetByIdOrSlugAsync(coHosted.Slug);
+        var reloaded = await events.GetBySlugAsync(created.Slug);
+        var reloadedCoHosted = await events.GetBySlugAsync(coHosted.Slug);
 
         Assert.Equal([kept], reloaded!.RemovedUserIds);
         Assert.Equal(created.WriteSeq + 1, reloaded.WriteSeq);
@@ -856,7 +855,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
             var created = await events.AddAsync(NewEvent($"Race {round}"));
             winnersPerRound.Add(await CountWinnersOfARaceAsync(racer =>
                 events.UpdateAsync(created with { Title = $"Racer {racer}" })));
-            Assert.Equal(created.Version + 1, (await events.GetByIdOrSlugAsync(created.Slug))!.Version);
+            Assert.Equal(created.Version + 1, (await events.GetBySlugAsync(created.Slug))!.Version);
         }
 
         Assert.Equal(Enumerable.Repeat(1, RaceRounds), winnersPerRound);
@@ -1064,7 +1063,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         var unknownRuntime = winner with { MovieId = ObjectId.GenerateNewId().ToString(), RuntimeMinutes = null };
 
         var added = await events.AddAsync(NewEvent("runtime") with { Winners = [winner, unknownRuntime] });
-        var read = await events.GetByIdOrSlugAsync(added.Slug);
+        var read = await events.GetBySlugAsync(added.Slug);
 
         Assert.NotNull(read);
         Assert.Equal([169, null], read.Winners.Select(w => w.RuntimeMinutes));
@@ -1672,7 +1671,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
 
         await events.UpdateAsync(created with { Config = new EventConfig { Theme = "Comédie" } });
 
-        var reloaded = await events.GetByIdOrSlugAsync(created.Slug);
+        var reloaded = await events.GetBySlugAsync(created.Slug);
         Assert.Equal("Comédie", reloaded!.Config?.Theme);
     }
 
@@ -1686,7 +1685,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
 
         await events.UpdateAsync(created with { Config = new EventConfig { Theme = "Comédie", WinnerCount = 3 } });
 
-        var reloaded = await events.GetByIdOrSlugAsync(created.Slug);
+        var reloaded = await events.GetBySlugAsync(created.Slug);
         Assert.Equal("Comédie", reloaded!.Config?.Theme);
         Assert.Equal(3, reloaded.Config?.WinnerCount);
     }

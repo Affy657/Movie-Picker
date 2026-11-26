@@ -72,7 +72,6 @@ public sealed class RatingReminderPassTests
         Id = id,
         Title = "Soirée " + id,
         Slug = "soiree-" + id,
-        HostToken = "ht-" + id,
         CreatorUserId = "host",
         Date = date,
         Time = "20:00",

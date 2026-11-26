@@ -475,8 +475,8 @@ export const STUB_JSON_ROUTES = [
   { path: '/api/v1/users/{handle}/watched-movies', respond: member('watched') },
   { path: '/api/v1/users/{handle}/watchlist', respond: member('watchlist') },
   { path: '/api/v1/users/{handle}/lists', respond: member('lists') },
-  { path: '/api/v1/events/slug/{idOrSlug}', respond: ({ params }) => event(params.idOrSlug) },
-  { path: '/api/v1/events/{idOrSlug}/movies', respond: () => [] },
+  { path: '/api/v1/events/slug/{slug}', respond: ({ params }) => event(params.slug) },
+  { path: '/api/v1/events/{slug}/movies', respond: () => [] },
 ].map((route) => ({
   ...route,
   pattern: new RegExp(`^${route.path.replaceAll(/\{(\w+)\}/g, (_, name) => `(?<${name}>[^/]+)`)}$`),

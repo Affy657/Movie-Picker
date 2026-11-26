@@ -24,7 +24,7 @@ export function useJoinEvent(slug: string): () => Promise<JoinedParticipant> {
     const { id, pseudo } = res.participant;
     setStoredParticipant(slug, id, pseudo);
     void invalidateMyNights(queryClient);
-    void queryClient.invalidateQueries({ queryKey: queryKeys.event.detailForAnyHostToken(slug) });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug) });
     track('event_joined');
     return { participantId: id, pseudo, isNew: res.isNew };
   }, [user, slug, track, queryClient]);

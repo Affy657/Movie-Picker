@@ -60,7 +60,6 @@ function shownSaveState(
 
 type HostEventSettingsDraftInput = {
   slug: string;
-  hostToken: string | null;
   event: EventData;
   open: boolean;
 };
@@ -70,12 +69,7 @@ type SettingsSave = {
   settings: SavedSettings;
 };
 
-export function useHostEventSettingsDraft({
-  slug,
-  hostToken,
-  event,
-  open,
-}: HostEventSettingsDraftInput) {
+export function useHostEventSettingsDraft({ slug, event, open }: HostEventSettingsDraftInput) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const limitCaps = useEventLimits();
@@ -164,13 +158,13 @@ export function useHostEventSettingsDraft({
   }, []);
 
   const mutation = useMutation({
-    mutationFn: ({ body }: SettingsSave) => patchEventConfig(slug, hostToken, body),
+    mutationFn: ({ body }: SettingsSave) => patchEventConfig(slug, body),
     onSuccess: async (_config, { settings }) => {
       savedRef.current = settings;
       if (!saveQueuedRef.current) setSaveState('saved');
       setSaveError(null);
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug) }),
         invalidateMyNights(queryClient),
       ]);
     },

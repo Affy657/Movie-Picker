@@ -25,7 +25,7 @@ public sealed class MarkRatingPromptedHandlerTests
 
     public MarkRatingPromptedHandlerTests()
     {
-        _events.Setup(r => r.GetByIdOrSlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(_night);
+        _events.Setup(r => r.GetBySlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(_night);
         _participants.Setup(r => r.MarkRatingPromptedAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         _sut = new MarkRatingPromptedHandler(_events.Object, _participants.Object, new FixedClock(Now));

@@ -72,7 +72,6 @@ public sealed class GetUserStatsHandlerTests
         Date = date,
         Time = "20:00",
         Slug = id,
-        HostToken = "ht",
         CreatorUserId = "u1",
         Winners = TestWinners.Won(winnerMovieId),
         ClosedAt = closedAt,

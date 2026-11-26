@@ -21,7 +21,7 @@ public sealed class InMemoryEventRepository : IEventRepository
         _ratings = ratings;
     }
 
-    public Task<Event?> GetByIdOrSlugAsync(string slug, CancellationToken ct = default)
+    public Task<Event?> GetBySlugAsync(string slug, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(slug))
             return Task.FromResult<Event?>(null);

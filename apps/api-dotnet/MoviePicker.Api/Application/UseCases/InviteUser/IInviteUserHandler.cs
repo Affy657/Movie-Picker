@@ -4,5 +4,5 @@ namespace MoviePicker.Api.Application.UseCases.InviteUser;
 
 public interface IInviteUserHandler
 {
-    Task<InviteUserResponse> HandleAsync(string userId, string idOrSlug, InviteUserRequest request, CancellationToken ct = default);
+    Task<InviteUserResponse> HandleAsync(string userId, string slug, InviteUserRequest request, CancellationToken ct = default);
 }

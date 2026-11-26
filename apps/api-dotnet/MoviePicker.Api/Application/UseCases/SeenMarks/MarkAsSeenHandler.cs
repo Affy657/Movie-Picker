@@ -33,7 +33,7 @@ public sealed class MarkAsSeenHandler : IMarkAsSeenHandler
 
     public async Task<SeenMarkResponse> HandleAsync(
         string userId,
-        string idOrSlug,
+        string slug,
         string movieId,
         MarkAsSeenRequest request,
         CancellationToken ct = default)
@@ -44,7 +44,7 @@ public sealed class MarkAsSeenHandler : IMarkAsSeenHandler
             _participantRepository,
             userId,
             _clock.GetUtcNow(),
-            idOrSlug,
+            slug,
             movieId,
             request.ParticipantId,
             Errors.SeenMarkOwnParticipationOnly,

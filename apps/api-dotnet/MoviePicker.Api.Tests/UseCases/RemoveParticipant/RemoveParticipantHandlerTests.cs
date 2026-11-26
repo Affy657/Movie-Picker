@@ -17,7 +17,6 @@ public sealed class RemoveParticipantHandlerTests
     private readonly Mock<IVoteRepository> _voteRepo = new();
     private readonly Mock<ISeenMarkRepository> _seenMarkRepo = new();
     private readonly Mock<IMovieRatingRepository> _ratingRepo = new();
-    private readonly Mock<IHostTokenAccessor> _hostTokenAccessor = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<IUserRepository> _users = new();
     private readonly Mock<IPushSubscriptionRepository> _pushSubscriptions = new();
@@ -33,7 +32,6 @@ public sealed class RemoveParticipantHandlerTests
 
     public RemoveParticipantHandlerTests()
     {
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
         _currentUser.Setup(c => c.GetUserId()).Returns((string?)null);
         _movieRepo
             .Setup(r => r.ListIdsByEventAndParticipantAsync(
@@ -47,7 +45,6 @@ public sealed class RemoveParticipantHandlerTests
             _voteRepo.Object,
             _seenMarkRepo.Object,
             _ratingRepo.Object,
-            _hostTokenAccessor.Object,
             _currentUser.Object,
             TestAudienceNotifier.Over(
                 _participantRepo.Object, _users.Object, _pushSubscriptions.Object, _pushSender.Object, _notifications.Object),
@@ -56,14 +53,17 @@ public sealed class RemoveParticipantHandlerTests
             NullLogger<RemoveParticipantHandler>.Instance);
     }
 
-    private static Event ActiveEvent(string hostToken = "ht1", string? creatorUserId = null) => new()
+    private const string HostUserId = "host-user";
+
+    private void AsHost() => _currentUser.Setup(c => c.GetUserId()).Returns(HostUserId);
+
+    private static Event ActiveEvent(string? creatorUserId = HostUserId) => new()
     {
         Id = "evt1",
         Title = "Soirée",
         Date = TestDates.Upcoming,
         Time = "20:00",
         Slug = "soiree",
-        HostToken = hostToken,
         CreatorUserId = creatorUserId,
         CreatedAt = DateTimeOffset.UtcNow,
         UpdatedAt = DateTimeOffset.UtcNow
@@ -81,7 +81,7 @@ public sealed class RemoveParticipantHandlerTests
 
     private void SetupEvent(Event evt) =>
         _eventRepo
-            .Setup(r => r.GetByIdOrSlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetBySlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(evt);
 
     private void SetupParticipant(Participant? p) =>
@@ -99,7 +99,7 @@ public sealed class RemoveParticipantHandlerTests
     public async Task HandleAsync_EventNotFound_ThrowsNotFound()
     {
         _eventRepo
-            .Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetBySlugAsync("bad", It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event?)null);
 
         await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad", "p1"));
@@ -110,7 +110,6 @@ public sealed class RemoveParticipantHandlerTests
     {
         SetupEvent(ActiveEvent());
         SetupParticipant(null);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
 
         await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("evt1", "p1"));
     }
@@ -120,7 +119,6 @@ public sealed class RemoveParticipantHandlerTests
     {
         var closed = ActiveEvent() with { ClosedAt = DateTimeOffset.UtcNow };
         SetupEvent(closed);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
 
         await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", "p1"));
     }
@@ -130,7 +128,6 @@ public sealed class RemoveParticipantHandlerTests
     {
         SetupEvent(ActiveEvent(creatorUserId: "user-creator"));
         SetupParticipant(Participant(userId: "user-creator"));
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", "p1"));
         Assert.Equal(ErrorCodes.CreatorCannotBeRemoved, ex.Reason);
@@ -141,7 +138,6 @@ public sealed class RemoveParticipantHandlerTests
     {
         SetupEvent(ActiveEvent());
         SetupParticipant(Participant(userId: "someone-else"));
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
         _currentUser.Setup(c => c.GetUserId()).Returns("intruder");
 
         await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1", "p1"));
@@ -157,12 +153,12 @@ public sealed class RemoveParticipantHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_HostByToken_RemovesParticipantAndCascades()
+    public async Task HandleAsync_HostAccount_RemovesParticipantAndCascades()
     {
+        AsHost();
         SetupEvent(ActiveEvent());
         var participant = Participant(userId: null);
         SetupParticipant(participant);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
         _movieRepo
             .Setup(r => r.ListIdsByEventAndParticipantAsync("evt1", "p1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(value);
@@ -195,12 +191,12 @@ public sealed class RemoveParticipantHandlerTests
     [Fact]
     public async Task HandleAsync_WinnerDrawnMeanwhile_RefusesInsideTheUnitOfWorkAndDeletesNothing()
     {
+        AsHost();
         var evt = ActiveEvent();
-        _eventRepo.SetupSequence(r => r.GetByIdOrSlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _eventRepo.SetupSequence(r => r.GetBySlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(evt)
             .ReturnsAsync(evt with { Winners = TestWinners.Won("m1") });
         SetupParticipant(Participant(userId: null));
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", "p1"));
 
@@ -212,9 +208,9 @@ public sealed class RemoveParticipantHandlerTests
     [Fact]
     public async Task HandleAsync_RunsEveryDeleteInsideTheUnitOfWork()
     {
+        AsHost();
         SetupEvent(ActiveEvent());
         SetupParticipant(Participant(userId: null));
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
         _movieRepo
             .Setup(r => r.ListIdsByEventAndParticipantAsync("evt1", "p1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(value);
@@ -247,9 +243,9 @@ public sealed class RemoveParticipantHandlerTests
     [Fact]
     public async Task HandleAsync_ListsTheParticipantsFilmsInsideTheUnitOfWork()
     {
+        AsHost();
         SetupEvent(ActiveEvent());
         SetupParticipant(Participant(userId: null));
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
         _participantRepo.Setup(r => r.DeleteAsync("p1", "evt1", It.IsAny<CancellationToken>())).ReturnsAsync(true);
         var listedOutsideUnitOfWork = 0;
         _movieRepo
@@ -339,9 +335,9 @@ public sealed class RemoveParticipantHandlerTests
     [Fact]
     public async Task HandleAsync_DeleteReturnsFalse_ThrowsNotFound()
     {
+        AsHost();
         SetupEvent(ActiveEvent());
         SetupParticipant(Participant());
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
         _participantRepo
             .Setup(r => r.DeleteAsync("p1", "evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
@@ -357,7 +353,6 @@ public sealed class RemoveParticipantHandlerTests
     {
         var withWinner = ActiveEvent() with { Winners = TestWinners.Won("movie-winner") };
         SetupEvent(withWinner);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", "p1"));
         Assert.Equal(ErrorCodes.ParticipantsLockedWheel, ex.Reason);
@@ -365,22 +360,6 @@ public sealed class RemoveParticipantHandlerTests
         _participantRepo.Verify(
             r => r.DeleteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
-    }
-
-    [Fact]
-    public async Task HandleAsync_GuestHostByToken_RemovesItsOwnParticipant_DocumentedV1Behavior()
-    {
-        SetupEvent(ActiveEvent(hostToken: "ht1", creatorUserId: null));
-        SetupParticipant(Participant(userId: null));
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
-        _participantRepo
-            .Setup(r => r.DeleteAsync("p1", "evt1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-
-        var result = await _sut.HandleAsync("evt1", "p1");
-
-        Assert.Equal("p1", result.ParticipantId);
-        Assert.Equal("Participant removed", result.Message);
     }
 
     [Fact]
@@ -446,7 +425,7 @@ public sealed class RemoveParticipantHandlerTests
     {
         var before = ActiveEvent(creatorUserId: "creator") with { CoHostUserIds = ["co-host"] };
         _eventRepo
-            .SetupSequence(r => r.GetByIdOrSlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .SetupSequence(r => r.GetBySlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(before)
             .ReturnsAsync(before with { CoHostUserIds = ["co-host", "guest"] });
         SetupParticipant(Participant(userId: "guest"));
@@ -464,7 +443,7 @@ public sealed class RemoveParticipantHandlerTests
     {
         var before = ActiveEvent(creatorUserId: "creator") with { CoHostUserIds = ["co-host"] };
         _eventRepo
-            .SetupSequence(r => r.GetByIdOrSlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .SetupSequence(r => r.GetBySlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(before)
             .ReturnsAsync(before with { CoHostUserIds = [] });
         SetupParticipant(Participant(userId: "guest"));

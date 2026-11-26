@@ -13,23 +13,18 @@ namespace MoviePicker.Api.Tests.UseCases.FriendGroups;
 
 public sealed class GroupNightSettingsTests : FriendGroupTestBase
 {
-    private const string HostToken = "host-token";
-
     private readonly InMemoryEventRepository _events = new();
     private readonly InMemoryParticipantRepository _participants = new();
     private readonly Mock<IGroupNightAnnouncer> _announcer = new();
-    private readonly Mock<IHostTokenAccessor> _hostToken = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
 
     private PatchEventConfigHandler Handler(string? userId)
     {
-        _hostToken.Setup(h => h.GetHostToken()).Returns(HostToken);
         _currentUser.Setup(u => u.GetUserId()).Returns(userId);
         return new PatchEventConfigHandler(
             _events,
             _participants,
             Mock.Of<IMovieRepository>(),
-            _hostToken.Object,
             _currentUser.Object,
             TestAudienceNotifier.Over(_participants, Kit.Users, Kit.PushSubscriptions, Kit.Push.Object, Kit.Notifications),
             Kit.Groups,
@@ -45,7 +40,6 @@ public sealed class GroupNightSettingsTests : FriendGroupTestBase
             Date = date,
             Time = "21:00",
             Slug = "jeudi-cine",
-            HostToken = HostToken,
             CreatorUserId = hostId,
             GroupId = groupId,
             CreatedAt = FriendGroupTestKit.Start,
@@ -62,7 +56,7 @@ public sealed class GroupNightSettingsTests : FriendGroupTestBase
             .HandleAsync(night.Slug, new PatchEventConfigRequest { GroupId = group.Id });
 
         Assert.Equal(group.Id, config.GroupId);
-        Assert.Equal(group.Id, (await _events.GetByIdOrSlugAsync(night.Slug))!.GroupId);
+        Assert.Equal(group.Id, (await _events.GetBySlugAsync(night.Slug))!.GroupId);
         _announcer.Verify(
             a => a.AnnounceAsync(
                 It.Is<Event>(e => e.Id == night.Id),
@@ -82,7 +76,7 @@ public sealed class GroupNightSettingsTests : FriendGroupTestBase
             .HandleAsync(night.Slug, new PatchEventConfigRequest { GroupId = group.Id }));
 
         Assert.Equal(ErrorCodes.GroupNotFound, ex.Reason);
-        Assert.Null((await _events.GetByIdOrSlugAsync(night.Slug))!.GroupId);
+        Assert.Null((await _events.GetBySlugAsync(night.Slug))!.GroupId);
     }
 
     [Fact]
@@ -90,27 +84,14 @@ public sealed class GroupNightSettingsTests : FriendGroupTestBase
     {
         var group = await SharedGroupAsync(FriendGroupTestKit.Member);
         var night = await NightAsync(FriendGroupTestKit.Stranger);
-        await _events.UpdateAsync((await _events.GetByIdOrSlugAsync(night.Slug))! with { CoHostUserIds = [FriendGroupTestKit.Member] });
+        await _events.UpdateAsync((await _events.GetBySlugAsync(night.Slug))! with { CoHostUserIds = [FriendGroupTestKit.Member] });
         var handler = Handler(FriendGroupTestKit.Member);
-        _hostToken.Setup(h => h.GetHostToken()).Returns((string?)null);
 
         var ex = await Assert.ThrowsAsync<ForbiddenException>(() =>
             handler.HandleAsync(night.Slug, new PatchEventConfigRequest { GroupId = group.Id }));
 
         Assert.Equal(ErrorCodes.CreatorOnlyNightGroup, ex.Reason);
-        Assert.Null((await _events.GetByIdOrSlugAsync(night.Slug))!.GroupId);
-    }
-
-    [Fact]
-    public async Task AHostWithoutAccount_CannotAttachTheNightToAGroup()
-    {
-        var group = await SharedGroupAsync(FriendGroupTestKit.Member);
-        var night = await NightAsync(FriendGroupTestKit.Member);
-
-        var ex = await Assert.ThrowsAsync<NotFoundException>(() => Handler(null)
-            .HandleAsync(night.Slug, new PatchEventConfigRequest { GroupId = group.Id }));
-
-        Assert.Equal(ErrorCodes.GroupNotFound, ex.Reason);
+        Assert.Null((await _events.GetBySlugAsync(night.Slug))!.GroupId);
     }
 
     [Fact]
@@ -123,7 +104,7 @@ public sealed class GroupNightSettingsTests : FriendGroupTestBase
             .HandleAsync(night.Slug, new PatchEventConfigRequest { ClearGroup = true });
 
         Assert.Null(config.GroupId);
-        Assert.Null((await _events.GetByIdOrSlugAsync(night.Slug))!.GroupId);
+        Assert.Null((await _events.GetBySlugAsync(night.Slug))!.GroupId);
         _announcer.VerifyNoOtherCalls();
     }
 
@@ -148,6 +129,6 @@ public sealed class GroupNightSettingsTests : FriendGroupTestBase
             .HandleAsync(night.Slug, new PatchEventConfigRequest { GroupId = group.Id }));
 
         Assert.Equal(ErrorCodes.EventConfigLockedFinished, ex.Reason);
-        Assert.Null((await _events.GetByIdOrSlugAsync(night.Slug))!.GroupId);
+        Assert.Null((await _events.GetBySlugAsync(night.Slug))!.GroupId);
     }
 }

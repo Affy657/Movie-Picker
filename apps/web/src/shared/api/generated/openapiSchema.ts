@@ -1268,7 +1268,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}/stream": {
+    "/api/v1/events/{slug}/stream": {
         parameters: {
             query?: never;
             header?: never;
@@ -1282,7 +1282,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                 };
                 cookie?: never;
             };
@@ -1334,7 +1334,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}/presence": {
+    "/api/v1/events/{slug}/presence": {
         parameters: {
             query?: never;
             header?: never;
@@ -1347,7 +1347,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                 };
                 cookie?: never;
             };
@@ -1420,7 +1420,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}/movies": {
+    "/api/v1/events/{slug}/movies": {
         parameters: {
             query?: never;
             header?: never;
@@ -1434,7 +1434,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                 };
                 cookie?: never;
             };
@@ -1502,7 +1502,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                 };
                 cookie?: never;
             };
@@ -1578,7 +1578,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}/movies/{movieId}": {
+    "/api/v1/events/{slug}/movies/{movieId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1593,7 +1593,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                     movieId: string;
                 };
                 cookie?: never;
@@ -1674,7 +1674,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}/movies/{movieId}/vote": {
+    "/api/v1/events/{slug}/movies/{movieId}/vote": {
         parameters: {
             query?: never;
             header?: never;
@@ -1688,7 +1688,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                     movieId: string;
                 };
                 cookie?: never;
@@ -1775,7 +1775,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                     movieId: string;
                 };
                 cookie?: never;
@@ -1850,7 +1850,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}/movies/{movieId}/seen": {
+    "/api/v1/events/{slug}/movies/{movieId}/seen": {
         parameters: {
             query?: never;
             header?: never;
@@ -1864,7 +1864,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                     movieId: string;
                 };
                 cookie?: never;
@@ -1949,7 +1949,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                     movieId: string;
                 };
                 cookie?: never;
@@ -2030,7 +2030,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}/movies/{movieId}/note": {
+    "/api/v1/events/{slug}/movies/{movieId}/note": {
         parameters: {
             query?: never;
             header?: never;
@@ -2043,7 +2043,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                     movieId: string;
                 };
                 cookie?: never;
@@ -2134,7 +2134,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                     movieId: string;
                 };
                 cookie?: never;
@@ -2224,7 +2224,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}/movies/{movieId}/wheel-exclusion": {
+    "/api/v1/events/{slug}/movies/{movieId}/wheel-exclusion": {
         parameters: {
             query?: never;
             header?: never;
@@ -2237,7 +2237,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                     movieId: string;
                 };
                 cookie?: never;
@@ -2311,7 +2311,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}/movies/{movieId}/rating": {
+    "/api/v1/events/{slug}/movies/{movieId}/rating": {
         parameters: {
             query?: never;
             header?: never;
@@ -2324,7 +2324,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                     movieId: string;
                 };
                 cookie?: never;
@@ -2419,7 +2419,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                     movieId: string;
                 };
                 cookie?: never;
@@ -2686,7 +2686,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}/config": {
+    "/api/v1/events/{slug}/config": {
         parameters: {
             query?: never;
             header?: never;
@@ -2698,7 +2698,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                 };
                 cookie?: never;
             };
@@ -2745,7 +2745,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                 };
                 cookie?: never;
             };
@@ -2826,7 +2826,7 @@ export interface paths {
         };
         trace?: never;
     };
-    "/api/v1/events/slug/{idOrSlug}": {
+    "/api/v1/events/slug/{slug}": {
         parameters: {
             query?: never;
             header?: never;
@@ -2838,7 +2838,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                 };
                 cookie?: never;
             };
@@ -2899,7 +2899,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}/join": {
+    "/api/v1/events/{slug}/join": {
         parameters: {
             query?: never;
             header?: never;
@@ -2913,7 +2913,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                 };
                 cookie?: never;
             };
@@ -3009,7 +3009,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}/wheel": {
+    "/api/v1/events/{slug}/wheel": {
         parameters: {
             query?: never;
             header?: never;
@@ -3023,7 +3023,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                 };
                 cookie?: never;
             };
@@ -3107,7 +3107,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                 };
                 cookie?: never;
             };
@@ -3167,7 +3167,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}/wheel/announce": {
+    "/api/v1/events/{slug}/wheel/announce": {
         parameters: {
             query?: never;
             header?: never;
@@ -3181,7 +3181,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                 };
                 cookie?: never;
             };
@@ -3244,7 +3244,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}/winner": {
+    "/api/v1/events/{slug}/winner": {
         parameters: {
             query?: never;
             header?: never;
@@ -3258,7 +3258,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                 };
                 cookie?: never;
             };
@@ -3343,7 +3343,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}/winners/{movieId}": {
+    "/api/v1/events/{slug}/winners/{movieId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -3358,7 +3358,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                     movieId: string;
                 };
                 cookie?: never;
@@ -3419,7 +3419,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}/close": {
+    "/api/v1/events/{slug}/close": {
         parameters: {
             query?: never;
             header?: never;
@@ -3433,7 +3433,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                 };
                 cookie?: never;
             };
@@ -3500,7 +3500,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}/rating-prompt": {
+    "/api/v1/events/{slug}/rating-prompt": {
         parameters: {
             query?: never;
             header?: never;
@@ -3513,7 +3513,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                 };
                 cookie?: never;
             };
@@ -3571,7 +3571,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}/participants/{participantId}": {
+    "/api/v1/events/{slug}/participants/{participantId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -3586,7 +3586,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                     participantId: string;
                 };
                 cookie?: never;
@@ -3665,7 +3665,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}/removed-people/{userId}": {
+    "/api/v1/events/{slug}/removed-people/{userId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -3680,7 +3680,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                     userId: string;
                 };
                 cookie?: never;
@@ -3746,7 +3746,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}/co-hosts/{participantId}": {
+    "/api/v1/events/{slug}/co-hosts/{participantId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -3759,7 +3759,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                     participantId: string;
                 };
                 cookie?: never;
@@ -3844,7 +3844,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                     participantId: string;
                 };
                 cookie?: never;
@@ -3928,7 +3928,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}/invitations/eligible-follows": {
+    "/api/v1/events/{slug}/invitations/eligible-follows": {
         parameters: {
             query?: never;
             header?: never;
@@ -3940,7 +3940,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                 };
                 cookie?: never;
             };
@@ -4003,7 +4003,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}/invitations": {
+    "/api/v1/events/{slug}/invitations": {
         parameters: {
             query?: never;
             header?: never;
@@ -4017,7 +4017,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                 };
                 cookie?: never;
             };
@@ -4111,7 +4111,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/events/{idOrSlug}": {
+    "/api/v1/events/{slug}": {
         parameters: {
             query?: never;
             header?: never;
@@ -4126,7 +4126,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    idOrSlug: string;
+                    slug: string;
                 };
                 cookie?: never;
             };

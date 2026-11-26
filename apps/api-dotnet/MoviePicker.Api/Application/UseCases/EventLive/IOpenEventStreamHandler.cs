@@ -4,5 +4,5 @@ public sealed record EventStreamAccess(string EventId, string Slug, string? Part
 
 public interface IOpenEventStreamHandler
 {
-    Task<EventStreamAccess> HandleAsync(string idOrSlug, CancellationToken ct = default);
+    Task<EventStreamAccess> HandleAsync(string slug, CancellationToken ct = default);
 }

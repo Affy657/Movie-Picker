@@ -31,7 +31,6 @@ public sealed class GroupNightTallyTests : IClassFixture<MoviePickerApplicationF
         Time = time,
         GroupId = groupId,
         Winners = winnerMovieIds.Select(Won).ToList(),
-        HostToken = Guid.NewGuid().ToString("N"),
         Slug = "tally-" + Guid.NewGuid().ToString("N")[..10],
         CreatedAt = Now,
         UpdatedAt = Now

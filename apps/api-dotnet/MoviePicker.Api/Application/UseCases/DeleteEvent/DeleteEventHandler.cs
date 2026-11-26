@@ -47,9 +47,9 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         _clock = clock;
     }
 
-    public async Task<DeleteEventResponse> HandleAsync(string userId, string idOrSlug, CancellationToken ct = default)
+    public async Task<DeleteEventResponse> HandleAsync(string userId, string slug, CancellationToken ct = default)
     {
-        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
+        var evt = await _eventRepository.GetRequiredBySlugAsync(slug, ct);
 
         if (string.IsNullOrEmpty(evt.CreatorUserId) || evt.CreatorUserId != userId)
             throw Errors.CreatorOnlyDelete();

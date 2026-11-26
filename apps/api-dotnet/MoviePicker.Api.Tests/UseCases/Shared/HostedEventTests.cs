@@ -11,22 +11,20 @@ namespace MoviePicker.Api.Tests.UseCases.Shared;
 public sealed class HostedEventTests
 {
     private readonly Mock<IEventRepository> _events = new();
-    private readonly Mock<IHostTokenAccessor> _hostTokens = new();
 
     private Event Stored(Event evt)
     {
-        _events.Setup(r => r.GetByIdOrSlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _events.Setup(r => r.GetBySlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         return evt;
     }
 
     [Fact]
     public async Task LoadForHostAsync_ANonHostOnAFinishedEvent_IsRefusedAsHostOnly()
     {
-        Stored(new EventEntityBuilder().WithSlug("soiree").Closed().Build());
-        _hostTokens.Setup(h => h.GetHostToken()).Returns("wrong");
+        Stored(new EventEntityBuilder().WithSlug("soiree").Closed().Build() with { CreatorUserId = "creator" });
 
         var ex = await Assert.ThrowsAsync<ForbiddenException>(() => HostedEvent.LoadForHostAsync(
-            _events.Object, _hostTokens.Object, "someone", "soiree", DateTimeOffset.UtcNow, CancellationToken.None));
+            _events.Object, "someone", "soiree", DateTimeOffset.UtcNow, CancellationToken.None));
 
         Assert.Equal(ErrorCodes.HostOnly, ex.Reason);
     }
@@ -34,13 +32,23 @@ public sealed class HostedEventTests
     [Fact]
     public async Task LoadForHostAsync_TheHostOnAFinishedEvent_IsRefusedAsEventFinished()
     {
-        Stored(new EventEntityBuilder().WithSlug("soiree").Closed().Build());
-        _hostTokens.Setup(h => h.GetHostToken()).Returns("host-token");
+        Stored(new EventEntityBuilder().WithSlug("soiree").Closed().Build() with { CreatorUserId = "creator" });
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => HostedEvent.LoadForHostAsync(
-            _events.Object, _hostTokens.Object, null, "soiree", DateTimeOffset.UtcNow, CancellationToken.None));
+            _events.Object, "creator", "soiree", DateTimeOffset.UtcNow, CancellationToken.None));
 
         Assert.Equal(ErrorCodes.EventFinished, ex.Reason);
+    }
+
+    [Fact]
+    public async Task LoadForHostAsync_AnAnonymousCaller_IsRefusedAsHostOnly()
+    {
+        Stored(new EventEntityBuilder().WithSlug("soiree").Build() with { CreatorUserId = "creator" });
+
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(() => HostedEvent.LoadForHostAsync(
+            _events.Object, null, "soiree", DateTimeOffset.UtcNow, CancellationToken.None));
+
+        Assert.Equal(ErrorCodes.HostOnly, ex.Reason);
     }
 
     [Fact]
@@ -49,7 +57,7 @@ public sealed class HostedEventTests
         var evt = Stored(new EventEntityBuilder().WithSlug("soiree").Closed().Build() with { CreatorUserId = "creator" });
 
         var loaded = await HostedEvent.LoadForHostEvenFinishedAsync(
-            _events.Object, _hostTokens.Object, "creator", "soiree", CancellationToken.None);
+            _events.Object, "creator", "soiree", CancellationToken.None);
 
         Assert.Same(evt, loaded);
     }
@@ -60,7 +68,7 @@ public sealed class HostedEventTests
         Stored(new EventEntityBuilder().WithSlug("soiree").Build() with { CreatorUserId = "creator" });
 
         var ex = await Assert.ThrowsAsync<ForbiddenException>(() => HostedEvent.LoadForHostEvenFinishedAsync(
-            _events.Object, _hostTokens.Object, "someone-else", "soiree", CancellationToken.None));
+            _events.Object, "someone-else", "soiree", CancellationToken.None));
 
         Assert.Equal(ErrorCodes.HostOnly, ex.Reason);
     }
@@ -70,10 +78,10 @@ public sealed class HostedEventTests
     [InlineData("co-host", true)]
     [InlineData("guest", false)]
     [InlineData(null, false)]
-    public void IsHostAccount_ChecksTheSignedInAccountWithoutAnyHostLink(string? userId, bool expected)
+    public void IsHost_ChecksTheSignedInAccountOnly(string? userId, bool expected)
     {
-        var evt = new Event { HostToken = "host-token", CreatorUserId = "creator", CoHostUserIds = ["co-host"] };
+        var evt = new Event { CreatorUserId = "creator", CoHostUserIds = ["co-host"] };
 
-        Assert.Equal(expected, HostedEvent.IsHostAccount(evt, userId));
+        Assert.Equal(expected, HostedEvent.IsHost(evt, userId));
     }
 }

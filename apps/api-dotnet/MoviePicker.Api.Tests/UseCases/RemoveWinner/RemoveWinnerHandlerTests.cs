@@ -12,7 +12,6 @@ namespace MoviePicker.Api.Tests.UseCases.RemoveWinner;
 public sealed class RemoveWinnerHandlerTests
 {
     private readonly Mock<IEventRepository> _events = new();
-    private readonly Mock<IHostTokenAccessor> _hostToken = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly CapturingLogger<RemoveWinnerHandler> _logger = new();
     private readonly RemoveWinnerHandler _sut;
@@ -21,7 +20,6 @@ public sealed class RemoveWinnerHandlerTests
     {
         _sut = new RemoveWinnerHandler(
             _events.Object,
-            _hostToken.Object,
             _currentUser.Object,
             _logger, TimeProvider.System);
         _events.Setup(e => e.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
@@ -31,7 +29,6 @@ public sealed class RemoveWinnerHandlerTests
     private static Event Evt(DateTimeOffset? closedAt = null, params string[] winners) => new()
     {
         Id = "evt1",
-        HostToken = "ht",
         CreatorUserId = "host",
         Date = TestDates.Upcoming,
         Time = "20:00",
@@ -40,14 +37,14 @@ public sealed class RemoveWinnerHandlerTests
     };
 
     private void GivenEvent(Event evt) =>
-        _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _events.Setup(e => e.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
     private void AsHost() => _currentUser.Setup(c => c.GetUserId()).Returns("host");
 
     [Fact]
     public async Task HandleAsync_EventNotFound_Throws()
     {
-        _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
+        _events.Setup(e => e.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("evt1", "m1"));
     }
@@ -57,7 +54,6 @@ public sealed class RemoveWinnerHandlerTests
     {
         GivenEvent(Evt(null, "m1"));
         _currentUser.Setup(c => c.GetUserId()).Returns("intruder");
-        _hostToken.Setup(h => h.GetHostToken()).Returns((string?)null);
 
         await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1", "m1"));
     }

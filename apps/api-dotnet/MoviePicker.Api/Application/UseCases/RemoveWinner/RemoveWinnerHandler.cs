@@ -9,35 +9,31 @@ namespace MoviePicker.Api.Application.UseCases.RemoveWinner;
 public sealed class RemoveWinnerHandler : IRemoveWinnerHandler
 {
     private readonly IEventRepository _eventRepository;
-    private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly ILogger<RemoveWinnerHandler> _logger;
     private readonly TimeProvider _clock;
 
     public RemoveWinnerHandler(
         IEventRepository eventRepository,
-        IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
         ILogger<RemoveWinnerHandler> logger,
         TimeProvider clock)
     {
         _eventRepository = eventRepository;
-        _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _logger = logger;
         _clock = clock;
     }
 
     public async Task<ResetWheelResponse> HandleAsync(
-        string idOrSlug,
+        string slug,
         string movieId,
         CancellationToken ct = default)
     {
         var evt = await HostedEvent.LoadForHostAsync(
             _eventRepository,
-            _hostTokenAccessor,
             _currentUserAccessor.GetUserId(),
-            idOrSlug,
+            slug,
             _clock.GetUtcNow(),
             ct);
 

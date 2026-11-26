@@ -21,7 +21,7 @@ public sealed class JoinEventHandlerNotificationTests
 
     public JoinEventHandlerNotificationTests()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Event
             {
                 Id = "evt1",
@@ -29,7 +29,6 @@ public sealed class JoinEventHandlerNotificationTests
                 Date = TestDates.Upcoming,
                 Time = "20:00",
                 Slug = "soiree",
-                HostToken = "ht1",
                 CreatorUserId = "host",
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow
@@ -96,7 +95,7 @@ public sealed class JoinEventHandlerNotificationTests
     [Fact]
     public async Task HandleAsync_NoCreatorUserId_DoesNotNotify()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt2", It.IsAny<CancellationToken>()))
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt2", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Event
             {
                 Id = "evt2",
@@ -104,7 +103,6 @@ public sealed class JoinEventHandlerNotificationTests
                 Date = TestDates.Upcoming,
                 Time = "20:00",
                 Slug = "s2",
-                HostToken = "ht1",
                 CreatorUserId = null,
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow

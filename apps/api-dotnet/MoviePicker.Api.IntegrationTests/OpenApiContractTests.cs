@@ -348,8 +348,8 @@ public sealed partial class OpenApiContractTests : IClassFixture<MoviePickerAppl
         Assert.True(paths.TryGetProperty("/health/ready", out var ready) && ready.TryGetProperty("get", out _));
         Assert.True(paths.TryGetProperty("/api/v1/events", out var events) && events.TryGetProperty("post", out _));
         Assert.True(paths.TryGetProperty("/api/v1/events/mine", out var mine) && mine.TryGetProperty("get", out _));
-        Assert.True(paths.TryGetProperty("/api/v1/events/slug/{idOrSlug}", out _));
-        Assert.False(paths.TryGetProperty("/api/v1/events/slug/{idOrSlug}/share-preview", out _));
+        Assert.True(paths.TryGetProperty("/api/v1/events/slug/{slug}", out _));
+        Assert.False(paths.TryGetProperty("/api/v1/events/slug/{slug}/share-preview", out _));
         Assert.False(paths.TryGetProperty("/e/{slug}", out _));
         Assert.True(paths.TryGetProperty("/api/v1/auth/register", out var reg) && reg.TryGetProperty("post", out _));
         Assert.True(paths.TryGetProperty("/api/v1/auth/login", out var login) && login.TryGetProperty("post", out _));
@@ -359,15 +359,15 @@ public sealed partial class OpenApiContractTests : IClassFixture<MoviePickerAppl
                     && pwdReq.TryGetProperty("post", out _));
         Assert.True(paths.TryGetProperty("/api/v1/auth/password-reset/confirm", out var pwdConfirm)
                     && pwdConfirm.TryGetProperty("post", out _));
-        Assert.True(paths.TryGetProperty("/api/v1/events/{idOrSlug}/config", out var evCfg)
+        Assert.True(paths.TryGetProperty("/api/v1/events/{slug}/config", out var evCfg)
                     && evCfg.TryGetProperty("get", out _)
                     && evCfg.TryGetProperty("patch", out _));
-        Assert.True(paths.TryGetProperty("/api/v1/events/{idOrSlug}", out var evRoot)
+        Assert.True(paths.TryGetProperty("/api/v1/events/{slug}", out var evRoot)
                     && evRoot.TryGetProperty("delete", out _));
-        Assert.True(paths.TryGetProperty("/api/v1/events/{idOrSlug}/movies/{movieId}/seen", out var seen)
+        Assert.True(paths.TryGetProperty("/api/v1/events/{slug}/movies/{movieId}/seen", out var seen)
                     && seen.TryGetProperty("post", out _)
                     && seen.TryGetProperty("delete", out _));
-        Assert.True(paths.TryGetProperty("/api/v1/events/{idOrSlug}/movies/{movieId}/vote", out var voteOps)
+        Assert.True(paths.TryGetProperty("/api/v1/events/{slug}/movies/{movieId}/vote", out var voteOps)
                     && voteOps.TryGetProperty("post", out _)
                     && voteOps.TryGetProperty("delete", out _));
         Assert.True(paths.TryGetProperty("/api/v1/movies/search", out var mSearch) && mSearch.TryGetProperty("get", out _));

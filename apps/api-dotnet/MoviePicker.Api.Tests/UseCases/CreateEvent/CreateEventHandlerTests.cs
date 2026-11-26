@@ -57,7 +57,6 @@ public sealed class CreateEventHandlerTests
                 Title = e.Title,
                 Date = e.Date,
                 Time = e.Time,
-                HostToken = e.HostToken,
                 Slug = e.Slug,
                 CreatorUserId = e.CreatorUserId,
                 Config = e.Config,
@@ -101,7 +100,6 @@ public sealed class CreateEventHandlerTests
         Assert.Equal(TestDates.Upcoming, capturedEvent.Date);
         Assert.Equal("20:00", capturedEvent.Time);
         Assert.False(string.IsNullOrEmpty(capturedEvent.Slug));
-        Assert.False(string.IsNullOrEmpty(capturedEvent.HostToken));
         Assert.Equal("user-1", capturedEvent.CreatorUserId);
         Assert.NotNull(capturedEvent.Config);
         Assert.True(capturedEvent.Config!.RichSharePreview);
@@ -141,7 +139,6 @@ public sealed class CreateEventHandlerTests
                 Title = e.Title,
                 Date = e.Date,
                 Time = e.Time,
-                HostToken = e.HostToken,
                 Slug = e.Slug,
                 CreatorUserId = e.CreatorUserId,
                 Config = e.Config,
@@ -198,7 +195,6 @@ public sealed class CreateEventHandlerTests
                 Title = e.Title,
                 Date = e.Date,
                 Time = e.Time,
-                HostToken = e.HostToken,
                 Slug = e.Slug,
                 CreatorUserId = e.CreatorUserId,
                 Config = e.Config,

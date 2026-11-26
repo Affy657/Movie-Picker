@@ -92,7 +92,7 @@ public sealed class MovieRatingEndpointsTests : IClassFixture<MoviePickerApplica
     {
         using var scope = _factory.Services.CreateScope();
         var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
-        var evt = await events.GetByIdOrSlugAsync(slug);
+        var evt = await events.GetBySlugAsync(slug);
         var startedAt = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow.AddMinutes(-30), EventSchedule.ParisTimeZone);
         await events.UpdateAsync(evt! with
         {
@@ -106,7 +106,7 @@ public sealed class MovieRatingEndpointsTests : IClassFixture<MoviePickerApplica
     {
         using var scope = _factory.Services.CreateScope();
         var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
-        return (await events.GetByIdOrSlugAsync(slug))!;
+        return (await events.GetBySlugAsync(slug))!;
     }
 
     private async Task<IReadOnlyList<MovieRating>> StoredRatingsAsync(string eventId)

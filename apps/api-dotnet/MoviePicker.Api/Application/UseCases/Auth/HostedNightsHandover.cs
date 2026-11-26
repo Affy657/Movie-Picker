@@ -1,7 +1,6 @@
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
-using MoviePicker.Api.Domain.Services;
 
 namespace MoviePicker.Api.Application.UseCases.Auth;
 
@@ -43,7 +42,7 @@ public sealed class HostedNightsHandover
             }
 
             var handedOver = await _events.UpdateAsync(
-                night.WithoutCoHost(heir) with { CreatorUserId = heir, HostToken = SlugGenerator.NewHostToken(), UpdatedAt = now },
+                night.WithoutCoHost(heir) with { CreatorUserId = heir, UpdatedAt = now },
                 ct);
             handovers.Add(new HostHandover(handedOver, heir));
         }

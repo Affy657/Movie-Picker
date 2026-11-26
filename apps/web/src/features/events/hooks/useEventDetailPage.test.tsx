@@ -7,11 +7,7 @@ import type { ReactNode } from 'react';
 import { QueryClientWrapper, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { createEventDetailHandlers, TEST_API_V1 } from '@/mocks/handlers';
-import {
-  getStoredHostToken,
-  getStoredParticipant,
-  setStoredParticipant,
-} from '@/shared/utils/eventIdentityStorage';
+import { getStoredParticipant, setStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 import { useEventDetailPage } from '@/features/events/hooks/useEventDetailPage';
 import { onlineManager, type QueryClient } from '@tanstack/react-query';
 import { FakeEventSource } from '@/test-utils/fakeEventSource';
@@ -254,7 +250,7 @@ describe('useEventDetailPage', () => {
   it('marks the recap of the night stale, so a new rating shows there', async () => {
     serveEventNever();
     const client = createTestQueryClient();
-    client.setQueryData(queryKeys.event.detail(slug, null), { slug, recapSlug: 'recap-perf' });
+    client.setQueryData(queryKeys.event.detail(slug), { slug, recapSlug: 'recap-perf' });
     client.setQueryData(queryKeys.event.recap('recap-perf'), { title: 'Soirée' });
     client.setQueryData(queryKeys.event.recap('recap-other'), { title: 'Autre soirée' });
     const { result } = renderHook(() => useEventDetailPage(slug), {
@@ -292,7 +288,7 @@ describe('useEventDetailPage', () => {
     }
 
     function eventPollingInterval(client: QueryClient): unknown {
-      const query = client.getQueryCache().find({ queryKey: queryKeys.event.detail(slug, null) });
+      const query = client.getQueryCache().find({ queryKey: queryKeys.event.detail(slug) });
       const interval = query?.observers[0]?.options.refetchInterval;
       return typeof interval === 'function' ? interval(query as never) : interval;
     }
@@ -557,37 +553,13 @@ describe('useEventDetailPage', () => {
     });
   });
 
-  it('keeps the fragment and the navigation state when it moves a legacy host token into the session', async () => {
+  it('neither stores nor strips the host key of a legacy link', async () => {
     serveEventNever();
 
-    const { result } = renderPageWithLocation({
-      pathname: `/e/${slug}`,
-      search: '?host=legacy-host-token&tab=movies',
-      hash: '#movies',
-      state: { justCreated: true },
-    });
+    const { result } = renderPageWithLocation(`/e/${slug}?host=legacy-host-token&tab=movies`);
 
-    await waitFor(() => expect(result.current.location.search).toBe('?tab=movies'));
-    expect(result.current.location.pathname).toBe(`/e/${slug}`);
-    expect(result.current.location.hash).toBe('#movies');
-    expect(result.current.location.state).toEqual({ justCreated: true });
-    expect(getStoredHostToken(slug)).toBe('legacy-host-token');
-    expect(result.current.page.hostToken).toBe('legacy-host-token');
-  });
-
-  it('leaves a legacy host token in the address bar when the session refuses to store it', async () => {
-    serveEventNever();
-    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new DOMException('Storage is blocked', 'SecurityError');
-    });
-    try {
-      const { result } = renderPageWithLocation(`/e/${slug}?host=legacy-host-token&tab=movies`);
-
-      await waitFor(() => expect(requested).toContain('event'));
-      expect(result.current.location.search).toBe('?host=legacy-host-token&tab=movies');
-      expect(result.current.page.hostToken).toBe('legacy-host-token');
-    } finally {
-      setItem.mockRestore();
-    }
+    await waitFor(() => expect(requested).toContain('event'));
+    expect(result.current.location.search).toBe('?host=legacy-host-token&tab=movies');
+    expect(sessionStorage.getItem(`moviepicker_host_${slug}`)).toBeNull();
   });
 });

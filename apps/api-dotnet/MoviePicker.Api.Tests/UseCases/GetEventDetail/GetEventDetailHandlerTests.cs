@@ -17,18 +17,17 @@ public sealed class GetEventDetailHandlerTests
     private readonly Mock<IParticipantRepository> _participantRepo;
     private readonly Mock<IVoteRepository> _voteRepo;
     private readonly Mock<IUserRepository> _userRepo;
-    private readonly Mock<IHostTokenAccessor> _hostTokenAccessor;
     private readonly Mock<ICurrentUserAccessor> _currentUserAccessor;
     private readonly GetEventDetailHandler _sut;
 
-    private static Event Event(string hostToken = "ht1") => new()
+    private static Event Event() => new()
     {
         Id = "evt1",
         Title = "Soirée",
         Date = TestDates.Upcoming,
         Time = "20:00",
         Slug = "soiree",
-        HostToken = hostToken,
+        CreatorUserId = "host-user",
         CreatedAt = DateTimeOffset.UtcNow,
         UpdatedAt = DateTimeOffset.UtcNow
     };
@@ -41,7 +40,6 @@ public sealed class GetEventDetailHandlerTests
         _participantRepo
             .Setup(r => r.FindByEventAndUserIdAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((ParticipantEntity?)null);
-        _hostTokenAccessor = new Mock<IHostTokenAccessor>();
         _currentUserAccessor = new Mock<ICurrentUserAccessor>();
         _currentUserAccessor.Setup(c => c.GetUserId()).Returns((string?)null);
         _participantRepo
@@ -67,7 +65,6 @@ public sealed class GetEventDetailHandlerTests
             _participantRepo.Object,
             _voteRepo.Object,
             _userRepo.Object,
-            _hostTokenAccessor.Object,
             _currentUserAccessor.Object,
             TimeProvider.System);
     }
@@ -76,7 +73,7 @@ public sealed class GetEventDetailHandlerTests
     public async Task HandleAsync_ReadsWithoutMarkingTheWatchlistCleanup()
     {
         var evt = new EventEntityBuilder().WithId("evt-1").Build();
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt-1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt-1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
         await _sut.HandleAsync("evt-1");
 
@@ -92,7 +89,7 @@ public sealed class GetEventDetailHandlerTests
     public async Task HandleAsync_TellsOnlyARemovedViewerThatTheHostRemovedThem(string? viewer, bool expected)
     {
         var evt = new EventEntityBuilder().WithId("evt-1").Build() with { RemovedUserIds = ["removed-user"] };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt-1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt-1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _currentUserAccessor.Setup(c => c.GetUserId()).Returns(viewer);
 
         var result = await _sut.HandleAsync("evt-1");
@@ -110,7 +107,7 @@ public sealed class GetEventDetailHandlerTests
 
     private void GivenSignedInParticipant(Event evt, DateTimeOffset? ratingPromptedAt)
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _currentUserAccessor.Setup(c => c.GetUserId()).Returns("u1");
         _participantRepo
             .Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
@@ -140,7 +137,7 @@ public sealed class GetEventDetailHandlerTests
     [Fact]
     public async Task HandleAsync_ViewerWhoDidNotTakePart_IsNeverAskedForARating()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(NightEndedTwoDaysAgo());
+        _eventRepo.Setup(r => r.GetBySlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(NightEndedTwoDaysAgo());
         _currentUserAccessor.Setup(c => c.GetUserId()).Returns("u1");
 
         var result = await _sut.HandleAsync("soiree");
@@ -152,7 +149,7 @@ public sealed class GetEventDetailHandlerTests
     public async Task HandleAsync_GivesTheRecapLinkOfTheNight()
     {
         var evt = new EventEntityBuilder().WithId("evt-1").WithSlug("soiree").Build() with { RecapSlug = "recap-xyz1" };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
         var result = await _sut.HandleAsync("soiree");
 
@@ -162,18 +159,18 @@ public sealed class GetEventDetailHandlerTests
     [Fact]
     public async Task HandleAsync_EventNotFound_ThrowsNotFoundException()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
+        _eventRepo.Setup(r => r.GetBySlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad"));
         Assert.Equal(ErrorCodes.EventNotFound, ex.Reason);
     }
 
     [Fact]
-    public async Task HandleAsync_WithMatchingHostToken_SetsIsHostTrue()
+    public async Task HandleAsync_TheCreatorAccount_SetsIsHostTrue()
     {
-        var evt = Event("secret");
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("secret");
+        var evt = Event();
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _currentUserAccessor.Setup(c => c.GetUserId()).Returns("host-user");
 
         var result = await _sut.HandleAsync("evt1");
 
@@ -184,23 +181,10 @@ public sealed class GetEventDetailHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_WithoutHostToken_SetsIsHostFalse()
+    public async Task HandleAsync_Anonymous_SetsIsHostFalse()
     {
         var evt = Event();
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
-
-        var result = await _sut.HandleAsync("evt1");
-
-        Assert.False(result.IsHost);
-    }
-
-    [Fact]
-    public async Task HandleAsync_WrongHostToken_SetsIsHostFalse()
-    {
-        var evt = Event("real");
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("wrong");
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
         var result = await _sut.HandleAsync("evt1");
 
@@ -211,9 +195,8 @@ public sealed class GetEventDetailHandlerTests
     public async Task HandleAsync_WithAWinner_ProjectsThePickWithoutLoadingTheMovie()
     {
         var pickedAt = new DateTimeOffset(2026, 5, 1, 18, 0, 0, TimeSpan.Zero);
-        var evt = new Event { Id = "evt1", Title = "Soirée", Date = TestDates.Upcoming, Time = "20:00", Slug = "soiree", HostToken = "ht1", Winners = [TestWinners.Pick("mov1", WinnerPickMethod.Wheel, pickedAt)], CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
+        var evt = new Event { Id = "evt1", Title = "Soirée", Date = TestDates.Upcoming, Time = "20:00", Slug = "soiree", Winners = [TestWinners.Pick("mov1", WinnerPickMethod.Wheel, pickedAt)], CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
         var result = await _sut.HandleAsync("evt1");
 
@@ -237,7 +220,6 @@ public sealed class GetEventDetailHandlerTests
             Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "soiree",
-            HostToken = "ht1",
             Winners =
             [
                 TestWinners.Pick("mov1", WinnerPickMethod.Wheel, pickedAt),
@@ -247,8 +229,7 @@ public sealed class GetEventDetailHandlerTests
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
         var result = await _sut.HandleAsync("evt1");
 
@@ -257,7 +238,7 @@ public sealed class GetEventDetailHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_CreatorUserMatchesCurrentUser_SetsIsHostTrueWithoutToken()
+    public async Task HandleAsync_LoggedInButNotCreator_SetsIsHostFalse()
     {
         var evt = new Event
         {
@@ -266,66 +247,16 @@ public sealed class GetEventDetailHandlerTests
             Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "soiree",
-            HostToken = "secret",
-            CreatorUserId = "user-42",
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow
-        };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
-        _currentUserAccessor.Setup(c => c.GetUserId()).Returns("user-42");
-
-        var result = await _sut.HandleAsync("evt1");
-
-        Assert.True(result.IsHost);
-    }
-
-    [Fact]
-    public async Task HandleAsync_LoggedInButNotCreatorAndWrongToken_SetsIsHostFalse()
-    {
-        var evt = new Event
-        {
-            Id = "evt1",
-            Title = "Soirée",
-            Date = TestDates.Upcoming,
-            Time = "20:00",
-            Slug = "soiree",
-            HostToken = "real",
             CreatorUserId = "other-user",
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("wrong");
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _currentUserAccessor.Setup(c => c.GetUserId()).Returns("not-creator");
 
         var result = await _sut.HandleAsync("evt1");
 
         Assert.False(result.IsHost);
-    }
-
-    [Fact]
-    public async Task HandleAsync_MatchingHostToken_SetsIsHostTrueEvenIfNotCreator()
-    {
-        var evt = new Event
-        {
-            Id = "evt1",
-            Title = "Soirée",
-            Date = TestDates.Upcoming,
-            Time = "20:00",
-            Slug = "soiree",
-            HostToken = "tok",
-            CreatorUserId = "alice",
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow
-        };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("tok");
-        _currentUserAccessor.Setup(c => c.GetUserId()).Returns("bob");
-
-        var result = await _sut.HandleAsync("evt1");
-
-        Assert.True(result.IsHost);
     }
 
     [Fact]
@@ -342,8 +273,7 @@ public sealed class GetEventDetailHandlerTests
             CreatedAt = now,
             UpdatedAt = now
         };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _currentUserAccessor.Setup(c => c.GetUserId()).Returns("user-1");
         _participantRepo
             .Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
@@ -374,8 +304,7 @@ public sealed class GetEventDetailHandlerTests
                 UpdatedAt = now.AddSeconds(i),
             })
             .ToList();
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo
             .Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<ParticipantEntity>)participants);
@@ -400,7 +329,7 @@ public sealed class GetEventDetailHandlerTests
     {
         var evt = Event();
         var now = DateTimeOffset.UtcNow;
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo
             .Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<ParticipantEntity>)
@@ -432,7 +361,7 @@ public sealed class GetEventDetailHandlerTests
     {
         var evt = Event();
         var now = DateTimeOffset.UtcNow;
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo
             .Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<ParticipantEntity>)
@@ -461,7 +390,7 @@ public sealed class GetEventDetailHandlerTests
     {
         var now = DateTimeOffset.UtcNow;
         var evt = Event() with { CreatorUserId = "creator", CoHostUserIds = ["u-co"] };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _currentUserAccessor.Setup(c => c.GetUserId()).Returns("u-co");
         _participantRepo
             .Setup(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
@@ -485,7 +414,7 @@ public sealed class GetEventDetailHandlerTests
     public async Task HandleAsync_HostViewer_SeesWhoWasRemoved_WithTheirCard(string host)
     {
         var evt = Event() with { CreatorUserId = "creator", CoHostUserIds = ["u-co"], RemovedUserIds = ["u-out", "u-deleted"] };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _currentUserAccessor.Setup(c => c.GetUserId()).Returns(host);
         _userRepo
             .Setup(r => r.ListCardsByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
@@ -509,7 +438,7 @@ public sealed class GetEventDetailHandlerTests
     {
         var now = DateTimeOffset.UtcNow;
         var evt = Event() with { CreatorUserId = "creator", RemovedUserIds = ["u-out"] };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _currentUserAccessor.Setup(c => c.GetUserId()).Returns("creator");
         _participantRepo
             .Setup(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
@@ -534,7 +463,7 @@ public sealed class GetEventDetailHandlerTests
     public async Task HandleAsync_ViewerWhoDoesNotHost_SeesNobodyRemoved(string? viewer)
     {
         var evt = Event() with { CreatorUserId = "creator", RemovedUserIds = ["u-out"] };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _currentUserAccessor.Setup(c => c.GetUserId()).Returns(viewer);
 
         var result = await _sut.HandleAsync("evt1");

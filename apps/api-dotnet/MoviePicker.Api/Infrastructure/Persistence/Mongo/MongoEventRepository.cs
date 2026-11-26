@@ -64,7 +64,7 @@ public sealed class MongoEventRepository : IEventRepository
         _collection = collections.GetCollection<EventDocument>("events");
     }
 
-    public async Task<Event?> GetByIdOrSlugAsync(string slug, CancellationToken ct = default)
+    public async Task<Event?> GetBySlugAsync(string slug, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(slug))
             return null;

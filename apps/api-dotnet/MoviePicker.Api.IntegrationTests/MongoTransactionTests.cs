@@ -26,7 +26,6 @@ public sealed class MongoTransactionTests : IClassFixture<MoviePickerApplication
         Title = title,
         Date = "2026-12-24",
         Time = "20:30",
-        HostToken = Guid.NewGuid().ToString("N"),
         Slug = "tx-" + Guid.NewGuid().ToString("N")[..8],
         CreatedAt = DateTimeOffset.UtcNow,
         UpdatedAt = DateTimeOffset.UtcNow
@@ -47,7 +46,7 @@ public sealed class MongoTransactionTests : IClassFixture<MoviePickerApplication
                 throw new InvalidOperationException("failure after the update");
             }));
 
-        var reloaded = await events.GetByIdOrSlugAsync(created.Slug);
+        var reloaded = await events.GetBySlugAsync(created.Slug);
         Assert.Equal("Avant la transaction", reloaded!.Title);
         Assert.Equal(created.Version, reloaded.Version);
         Assert.Equal(created.WriteSeq, reloaded.WriteSeq);
@@ -83,7 +82,7 @@ public sealed class MongoTransactionTests : IClassFixture<MoviePickerApplication
             }));
 
         Assert.NotNull(createdEventId);
-        Assert.Null(await events.GetByIdOrSlugAsync(evt.Slug));
+        Assert.Null(await events.GetBySlugAsync(evt.Slug));
         Assert.Empty(await participants.ListByEventIdAsync(createdEventId!));
     }
 
@@ -114,7 +113,7 @@ public sealed class MongoTransactionTests : IClassFixture<MoviePickerApplication
                 token);
         });
 
-        Assert.NotNull(await events.GetByIdOrSlugAsync(evt.Slug));
+        Assert.NotNull(await events.GetBySlugAsync(evt.Slug));
         Assert.Single(await participants.ListByEventIdAsync(createdEventId));
     }
 

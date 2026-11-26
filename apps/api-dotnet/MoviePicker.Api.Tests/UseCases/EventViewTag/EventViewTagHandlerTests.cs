@@ -12,7 +12,6 @@ public sealed class EventViewTagHandlerTests
     private static readonly DateTimeOffset Noon = new(2026, 9, 15, 12, 0, 0, TimeSpan.Zero);
 
     private readonly Mock<IEventRepository> _events = new();
-    private readonly Mock<IHostTokenAccessor> _hostToken = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
 
     private sealed class FakeTimeProvider(DateTimeOffset now) : TimeProvider
@@ -24,21 +23,20 @@ public sealed class EventViewTagHandlerTests
         new EventEntityBuilder().WithId("evt1").WithSlug("soiree").Build() with
         {
             CreatorUserId = "host-user",
-            HostToken = "host-token",
             WriteSeq = writeSeq,
             Version = version
         };
 
     private EventViewTagHandler Handler(DateTimeOffset now) =>
-        new(_events.Object, _hostToken.Object, _currentUser.Object, new FakeTimeProvider(now));
+        new(_events.Object, _currentUser.Object, new FakeTimeProvider(now));
 
     private void Stored(Event evt) =>
-        _events.Setup(r => r.GetByIdOrSlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _events.Setup(r => r.GetBySlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
     [Fact]
     public async Task HandleAsync_UnknownEvent_ReturnsNull()
     {
-        _events.Setup(r => r.GetByIdOrSlugAsync("missing", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
+        _events.Setup(r => r.GetBySlugAsync("missing", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         Assert.Null(await Handler(Noon).HandleAsync("missing", CatalogLanguage.French));
     }
@@ -138,28 +136,27 @@ public sealed class EventViewTagHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_DiffersBetweenAGuestAndTheHostByToken()
+    public async Task HandleAsync_ChangesWhenTheSameViewerBecomesCoHost()
     {
+        _currentUser.Setup(u => u.GetUserId()).Returns("user-a");
+
         Stored(EventWith(writeSeq: 7));
-
         var asGuest = await Handler(Noon).HandleAsync("soiree", CatalogLanguage.French);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("host-token");
-        var asHost = await Handler(Noon).HandleAsync("soiree", CatalogLanguage.French);
+        Stored(EventWith(writeSeq: 7) with { CoHostUserIds = ["user-a"] });
+        var asCoHost = await Handler(Noon).HandleAsync("soiree", CatalogLanguage.French);
 
-        Assert.NotEqual(asGuest, asHost);
+        Assert.NotEqual(asGuest, asCoHost);
     }
 
     [Fact]
-    public async Task HandleAsync_DoesNotEmbedTheUserIdNorTheHostToken()
+    public async Task HandleAsync_DoesNotEmbedTheUserId()
     {
         Stored(EventWith(writeSeq: 7));
         _currentUser.Setup(u => u.GetUserId()).Returns("user-a");
-        _hostToken.Setup(h => h.GetHostToken()).Returns("host-token");
 
         var tag = await Handler(Noon).HandleAsync("soiree", CatalogLanguage.French);
 
         Assert.DoesNotContain("user-a", tag);
-        Assert.DoesNotContain("host-token", tag);
     }
 
     [Fact]

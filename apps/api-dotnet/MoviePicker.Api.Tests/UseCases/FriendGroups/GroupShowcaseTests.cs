@@ -17,7 +17,6 @@ public sealed class GroupShowcaseTests : FriendGroupTestBase
             Date = date,
             Time = "21:00",
             Slug = $"soiree-{groupId}-{date}",
-            HostToken = "host-token",
             CreatorUserId = FriendGroupTestKit.Owner,
             GroupId = groupId,
             CreatedAt = FriendGroupTestKit.Start,

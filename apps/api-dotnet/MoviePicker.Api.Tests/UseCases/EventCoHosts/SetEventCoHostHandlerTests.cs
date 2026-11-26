@@ -1,4 +1,3 @@
-using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.EventCoHosts;
 using MoviePicker.Api.Domain.Entities;
@@ -12,17 +11,15 @@ public sealed class SetEventCoHostHandlerTests
 {
     private const string Creator = "creator";
     private const string Guest = "guest";
-    private const string HostToken = "host-token";
 
     private static readonly DateTimeOffset Now = new(2026, 11, 25, 18, 0, 0, TimeSpan.Zero);
 
     private readonly InMemoryEventRepository _events = new();
     private readonly InMemoryParticipantRepository _participants = new();
-    private readonly Mock<IHostTokenAccessor> _hostToken = new();
     private readonly FixedClock _clock = new(Now);
 
     private SetEventCoHostHandler Handler(IUnitOfWork? unitOfWork = null) =>
-        new(_events, _participants, _hostToken.Object, unitOfWork ?? new InMemoryUnitOfWork(), _clock);
+        new(_events, _participants, unitOfWork ?? new InMemoryUnitOfWork(), _clock);
 
     private async Task<(Event Night, Participant Guest, Participant Creator)> NightAsync(
         DateTimeOffset? closedAt = null,
@@ -34,7 +31,6 @@ public sealed class SetEventCoHostHandlerTests
             Date = "2026-11-27",
             Time = "21:00",
             Slug = "jeudi-cine",
-            HostToken = HostToken,
             CreatorUserId = Creator,
             ClosedAt = closedAt,
             CoHostUserIds = coHosts ?? [],
@@ -55,7 +51,7 @@ public sealed class SetEventCoHostHandlerTests
         UpdatedAt = Now
     };
 
-    private async Task<Event> ReloadAsync() => (await _events.GetByIdOrSlugAsync("jeudi-cine"))!;
+    private async Task<Event> ReloadAsync() => (await _events.GetBySlugAsync("jeudi-cine"))!;
 
     [Fact]
     public async Task AParticipantWhoDeletesTheirAccountMeanwhile_IsNotNamed()
@@ -103,17 +99,6 @@ public sealed class SetEventCoHostHandlerTests
         var reloaded = await ReloadAsync();
         Assert.Empty(reloaded.CoHostUserIds);
         Assert.True(reloaded.WriteSeq > night.WriteSeq);
-    }
-
-    [Fact]
-    public async Task TheHostLinkActsAsTheCreator()
-    {
-        var (_, guest, _) = await NightAsync();
-        _hostToken.Setup(h => h.GetHostToken()).Returns(HostToken);
-
-        await Handler().HandleAsync("someone-else", "jeudi-cine", guest.Id, coHost: true);
-
-        Assert.Equal([Guest], (await ReloadAsync()).CoHostUserIds);
     }
 
     [Fact]

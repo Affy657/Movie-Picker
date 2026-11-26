@@ -14,16 +14,14 @@ public sealed class LetBackInHandlerTests
     private const string CoHost = "co-host";
     private const string Removed = "removed";
     private const string AlsoRemoved = "also-removed";
-    private const string HostToken = "host-token";
 
     private static readonly DateTimeOffset Now = new(2026, 11, 25, 18, 0, 0, TimeSpan.Zero);
 
     private readonly InMemoryEventRepository _events = new();
-    private readonly Mock<IHostTokenAccessor> _hostToken = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
 
     private LetBackInHandler Handler() =>
-        new(_events, _hostToken.Object, _currentUser.Object, new FixedClock(Now));
+        new(_events, _currentUser.Object, new FixedClock(Now));
 
     private Task<Event> NightAsync(DateTimeOffset? closedAt = null) =>
         _events.AddAsync(new Event
@@ -32,7 +30,6 @@ public sealed class LetBackInHandlerTests
             Date = "2026-11-27",
             Time = "21:00",
             Slug = "jeudi-cine",
-            HostToken = HostToken,
             CreatorUserId = Creator,
             CoHostUserIds = [CoHost],
             RemovedUserIds = [Removed, AlsoRemoved],
@@ -41,7 +38,7 @@ public sealed class LetBackInHandlerTests
             UpdatedAt = Now
         });
 
-    private async Task<Event> ReloadAsync() => (await _events.GetByIdOrSlugAsync("jeudi-cine"))!;
+    private async Task<Event> ReloadAsync() => (await _events.GetBySlugAsync("jeudi-cine"))!;
 
     private void SignedInAs(string? userId) => _currentUser.Setup(c => c.GetUserId()).Returns(userId);
 
@@ -58,18 +55,6 @@ public sealed class LetBackInHandlerTests
         var night = await ReloadAsync();
         Assert.Equal([AlsoRemoved], night.RemovedUserIds);
         Assert.Equal(Now, night.UpdatedAt);
-    }
-
-    [Fact]
-    public async Task TheHostLinkLetsARemovedAccountBackIn()
-    {
-        await NightAsync();
-        SignedInAs(null);
-        _hostToken.Setup(h => h.GetHostToken()).Returns(HostToken);
-
-        await Handler().HandleAsync("jeudi-cine", Removed);
-
-        Assert.DoesNotContain(Removed, (await ReloadAsync()).RemovedUserIds);
     }
 
     [Theory]

@@ -38,7 +38,7 @@ export function useProposeMovieToEvent() {
 
   const myParticipantId = useCallback(
     async (slug: string) => {
-      const evt = await fetchEventBySlug(slug, null);
+      const evt = await fetchEventBySlug(slug);
       if (!evt.myParticipant) {
         throw new Error(t('watchlist.propose.proposeError'));
       }
@@ -53,7 +53,7 @@ export function useProposeMovieToEvent() {
       const created = await addProposalToEvent(slug, movie, participantId, options?.pitchNote);
       void invalidateMyNights(queryClient);
       void queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.event.detailForAnyHostToken(slug) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug) });
       void queryClient.invalidateQueries({
         queryKey: queryKeys.movies.nights(movie.tmdbId, movie.mediaType),
       });

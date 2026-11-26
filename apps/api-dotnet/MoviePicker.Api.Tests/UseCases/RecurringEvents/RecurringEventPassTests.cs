@@ -63,7 +63,6 @@ public sealed class RecurringEventPassTests
         Time = "20:30",
         Slug = "cine-club",
         RecapSlug = "cine-recap",
-        HostToken = "host-token",
         CreatorUserId = "user-1",
         Config = new EventConfig
         {
@@ -141,7 +140,6 @@ public sealed class RecurringEventPassTests
 
         var created = CapturedNewEvent();
         Assert.NotEqual("cine-club", created.Slug);
-        Assert.NotEqual("host-token", created.HostToken);
         Assert.Equal(10, created.RecapSlug?.Length);
         Assert.NotEqual("cine-recap", created.RecapSlug);
         Assert.NotEqual(created.Slug, created.RecapSlug);

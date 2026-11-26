@@ -53,9 +53,9 @@ public sealed class AddMovieHandler : IAddMovieHandler
         _options = options.Value;
     }
 
-    public async Task<MovieWithScoreResponse> HandleAsync(string userId, string idOrSlug, AddMovieRequest request, CancellationToken ct = default)
+    public async Task<MovieWithScoreResponse> HandleAsync(string userId, string slug, AddMovieRequest request, CancellationToken ct = default)
     {
-        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
+        var evt = await _eventRepository.GetRequiredBySlugAsync(slug, ct);
 
         if (evt.IsFinished(_clock.GetUtcNow()))
             throw Errors.EventFinished();
@@ -106,7 +106,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
             UpdatedAt = now
         };
 
-        var (created, night) = await InsertWithinProposalLimitAsync(idOrSlug, evt.Id, participant, movie, ct);
+        var (created, night) = await InsertWithinProposalLimitAsync(slug, evt.Id, participant, movie, ct);
 
         await _audience.NotifyParticipantsAsync(MovieAddedMessage(night, created.Title, proposer), participant.UserId, CancellationToken.None);
 
@@ -121,7 +121,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
     }
 
     private async Task<(Movie Created, Event Night)> InsertWithinProposalLimitAsync(
-        string idOrSlug,
+        string slug,
         string eventId,
         Participant participant,
         Movie movie,
@@ -133,7 +133,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
             async token =>
             {
                 await _eventRepository.LockForWriteAsync(eventId, token);
-                night = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, token);
+                night = await _eventRepository.GetRequiredBySlugAsync(slug, token);
                 if (await _participantRepository.FindByIdAndEventIdAsync(participant.Id, eventId, token) is null)
                     throw Errors.InvalidParticipant();
                 if (await _movieRepository.CountByEventIdAsync(eventId, token) >= EventConfig.MaxMoviesPerEventCap)

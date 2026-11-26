@@ -56,7 +56,6 @@ public sealed class GetEventInvitationDocumentHandlerTests
             Title = title,
             Slug = Slug,
             RecapSlug = "7fKq2p",
-            HostToken = "h",
             Date = "2026-09-18",
             Time = time,
             Config = config,
@@ -67,7 +66,7 @@ public sealed class GetEventInvitationDocumentHandlerTests
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
-        _events.Setup(r => r.GetByIdOrSlugAsync(Slug, It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _events.Setup(r => r.GetBySlugAsync(Slug, It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         if (hostName is not null)
         {
             _users.Setup(r => r.GetByIdAsync("host-1", It.IsAny<CancellationToken>()))
@@ -156,7 +155,7 @@ public sealed class GetEventInvitationDocumentHandlerTests
     [Fact]
     public async Task HandleAsync_UnknownSlug_Returns404WithTheGenericShellTags()
     {
-        _events.Setup(r => r.GetByIdOrSlugAsync("nope", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
+        _events.Setup(r => r.GetBySlugAsync("nope", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         var document = await CreateSut().HandleAsync("nope", "https://api.example", default);
 

@@ -39,7 +39,6 @@ function EventConnectionBanners({
 
 function EventDetailSessionOverlays({
   slug,
-  hostToken,
   event,
   settings,
   share,
@@ -49,7 +48,6 @@ function EventDetailSessionOverlays({
   wheelError,
 }: Readonly<{
   slug: string;
-  hostToken: string | null;
   event: EventData;
   settings: SettingsOverlay;
   share: ShareOverlay;
@@ -69,7 +67,6 @@ function EventDetailSessionOverlays({
         <Suspense fallback={null}>
           <HostEventSettingsPanel
             slug={slug}
-            hostToken={hostToken}
             event={event}
             open={settings.open}
             onClose={settings.onClose}
@@ -117,7 +114,6 @@ function EventDetailSessionOverlays({
 
 export default function EventDetailSessionChrome({
   slug,
-  hostToken,
   event,
   moviesQuery,
   lifecycle,
@@ -143,7 +139,6 @@ export default function EventDetailSessionChrome({
   proposerNames,
 }: Readonly<{
   slug: string;
-  hostToken: string | null;
   event: EventData;
   moviesQuery: UseQueryResult<MovieData[]>;
   lifecycle: MyEventLifecycle;
@@ -231,7 +226,6 @@ export default function EventDetailSessionChrome({
       {pendingWithoutFilm ? <EventPendingBanner isHost={isNightHost(event)} /> : null}
       <EventDetailSessionOverlays
         slug={slug}
-        hostToken={hostToken}
         event={event}
         settings={settings}
         share={share}

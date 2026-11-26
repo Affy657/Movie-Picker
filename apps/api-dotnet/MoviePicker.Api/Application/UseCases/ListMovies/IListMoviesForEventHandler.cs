@@ -6,13 +6,13 @@ namespace MoviePicker.Api.Application.UseCases.ListMovies;
 public interface IListMoviesForEventHandler
 {
     Task<IReadOnlyList<MovieWithScoreResponse>> HandleAsync(
-        string idOrSlug,
+        string slug,
         CatalogLanguage language,
         string? participantId = null,
         CancellationToken ct = default);
 
     Task<IReadOnlyList<MovieWithScoreResponse>> HandleSelectionAsync(
-        string idOrSlug,
+        string slug,
         IReadOnlyCollection<string> movieIds,
         CatalogLanguage language,
         string? participantId = null,

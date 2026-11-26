@@ -11,7 +11,6 @@ namespace MoviePicker.Api.Application.UseCases.CloseEvent;
 public sealed class CloseEventHandler : ICloseEventHandler
 {
     private readonly IEventRepository _eventRepository;
-    private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IFinishedEventWatchlistPass _watchlistCleanup;
     private readonly IRecurringEventPass _recurringEvents;
@@ -20,7 +19,6 @@ public sealed class CloseEventHandler : ICloseEventHandler
 
     public CloseEventHandler(
         IEventRepository eventRepository,
-        IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
         IFinishedEventWatchlistPass watchlistCleanup,
         IRecurringEventPass recurringEvents,
@@ -28,7 +26,6 @@ public sealed class CloseEventHandler : ICloseEventHandler
         TimeProvider clock)
     {
         _eventRepository = eventRepository;
-        _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _watchlistCleanup = watchlistCleanup;
         _recurringEvents = recurringEvents;
@@ -36,13 +33,12 @@ public sealed class CloseEventHandler : ICloseEventHandler
         _clock = clock;
     }
 
-    public async Task<CloseEventResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
+    public async Task<CloseEventResponse> HandleAsync(string slug, CancellationToken ct = default)
     {
         var evt = await HostedEvent.LoadForHostEvenFinishedAsync(
             _eventRepository,
-            _hostTokenAccessor,
             _currentUserAccessor.GetUserId(),
-            idOrSlug,
+            slug,
             ct);
 
         if (evt.ClosedAt.HasValue)

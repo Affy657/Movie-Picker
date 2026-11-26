@@ -20,7 +20,6 @@ public sealed class GroupRankingTests : FriendGroupTestBase
             Date = date,
             Time = "21:00",
             Slug = slug,
-            HostToken = "host-token",
             CreatorUserId = hostId,
             GroupId = groupId,
             CreatedAt = Start,

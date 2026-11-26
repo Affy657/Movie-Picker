@@ -72,24 +72,24 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
     }
 
     public async Task<IReadOnlyList<MovieWithScoreResponse>> HandleAsync(
-        string idOrSlug,
+        string slug,
         CatalogLanguage language,
         string? participantId = null,
         CancellationToken ct = default)
     {
-        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
+        var evt = await _eventRepository.GetRequiredBySlugAsync(slug, ct);
         var movies = await _movieRepository.ListByEventIdAsync(evt.Id, ct);
         return await ToResponsesAsync(evt, movies, participantId, language, ct);
     }
 
     public async Task<IReadOnlyList<MovieWithScoreResponse>> HandleSelectionAsync(
-        string idOrSlug,
+        string slug,
         IReadOnlyCollection<string> movieIds,
         CatalogLanguage language,
         string? participantId = null,
         CancellationToken ct = default)
     {
-        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
+        var evt = await _eventRepository.GetRequiredBySlugAsync(slug, ct);
         var selected = await _movieRepository.ListByIdsAsync(movieIds, ct);
         return await ToResponsesAsync(evt, selected.Where(m => m.EventId == evt.Id).ToList(), participantId, language, ct);
     }

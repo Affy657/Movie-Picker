@@ -1,5 +1,5 @@
 import { ROUTES } from '@/app/routes';
-import { fetchApi, apiPath, apiUrl, withHostToken } from '@/shared/api/client';
+import { fetchApi, apiPath, apiUrl } from '@/shared/api/client';
 import type { ApiSchemas } from '@/shared/api/contract';
 import { mapEventData, mapParticipantData, mapMovieData } from '@/shared/api/apiMapping';
 import type {
@@ -12,11 +12,8 @@ import type {
 } from '@/features/events/types';
 import type { MovieData, ParticipantData } from '@/shared/types/movie';
 
-export async function fetchEventBySlug(slug: string, hostToken: string | null): Promise<EventData> {
-  const raw = await fetchApi<ApiSchemas['EventDetailResponse']>(
-    apiPath('events', 'slug', slug),
-    withHostToken(hostToken)
-  );
+export async function fetchEventBySlug(slug: string): Promise<EventData> {
+  const raw = await fetchApi<ApiSchemas['EventDetailResponse']>(apiPath('events', 'slug', slug));
   return mapEventData(raw);
 }
 
@@ -115,13 +112,12 @@ export function fetchEventConfig(slug: string): Promise<EventConfigData> {
 
 export function patchEventConfig(
   slug: string,
-  hostToken: string | null,
   body: EventConfigPatchPayload
 ): Promise<EventConfigData> {
-  return fetchApi<EventConfigData>(
-    apiPath('events', slug, 'config'),
-    withHostToken(hostToken, { method: 'PATCH', body: JSON.stringify(body) })
-  );
+  return fetchApi<EventConfigData>(apiPath('events', slug, 'config'), {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  });
 }
 
 export type RawWinnerMovie = ApiSchemas['WinnerMovieResponse'];
@@ -132,58 +128,40 @@ function mapWinnerMovie(raw: RawWinnerMovie): MovieData {
 
 export async function postEventWheel(
   slug: string,
-  hostToken: string | null,
   expectedWinnerCount?: number
 ): Promise<{ winner: MovieData; message: string }> {
-  const raw = await fetchApi<ApiSchemas['WheelResponse']>(
-    apiPath('events', slug, 'wheel'),
-    withHostToken(hostToken, { method: 'POST', body: JSON.stringify({ expectedWinnerCount }) })
-  );
+  const raw = await fetchApi<ApiSchemas['WheelResponse']>(apiPath('events', slug, 'wheel'), {
+    method: 'POST',
+    body: JSON.stringify({ expectedWinnerCount }),
+  });
   return { winner: mapWinnerMovie(raw.winner), message: raw.message };
 }
 
-export async function postEventWheelAnnounce(
-  slug: string,
-  hostToken: string | null
-): Promise<void> {
-  await fetchApi(
-    apiPath('events', slug, 'wheel', 'announce'),
-    withHostToken(hostToken, { method: 'POST', body: '{}' })
-  );
+export async function postEventWheelAnnounce(slug: string): Promise<void> {
+  await fetchApi(apiPath('events', slug, 'wheel', 'announce'), { method: 'POST', body: '{}' });
 }
 
 export async function postEventWinner(
   slug: string,
-  movieId: string,
-  hostToken: string | null
+  movieId: string
 ): Promise<{ winner: MovieData; message: string }> {
-  const raw = await fetchApi<ApiSchemas['WheelResponse']>(
-    apiPath('events', slug, 'winner'),
-    withHostToken(hostToken, { method: 'POST', body: JSON.stringify({ movieId }) })
-  );
+  const raw = await fetchApi<ApiSchemas['WheelResponse']>(apiPath('events', slug, 'winner'), {
+    method: 'POST',
+    body: JSON.stringify({ movieId }),
+  });
   return { winner: mapWinnerMovie(raw.winner), message: raw.message };
 }
 
-export async function postEventClose(slug: string, hostToken: string | null): Promise<void> {
-  await fetchApi(
-    apiPath('events', slug, 'close'),
-    withHostToken(hostToken, { method: 'POST', body: '{}' })
-  );
+export async function postEventClose(slug: string): Promise<void> {
+  await fetchApi(apiPath('events', slug, 'close'), { method: 'POST', body: '{}' });
 }
 
-export async function deleteEventWheel(slug: string, hostToken: string | null): Promise<void> {
-  await fetchApi(apiPath('events', slug, 'wheel'), withHostToken(hostToken, { method: 'DELETE' }));
+export async function deleteEventWheel(slug: string): Promise<void> {
+  await fetchApi(apiPath('events', slug, 'wheel'), { method: 'DELETE' });
 }
 
-export async function deleteEventWinner(
-  slug: string,
-  movieId: string,
-  hostToken: string | null
-): Promise<void> {
-  await fetchApi(
-    apiPath('events', slug, 'winners', movieId),
-    withHostToken(hostToken, { method: 'DELETE' })
-  );
+export async function deleteEventWinner(slug: string, movieId: string): Promise<void> {
+  await fetchApi(apiPath('events', slug, 'winners', movieId), { method: 'DELETE' });
 }
 
 export type RemoveParticipantResponse = ApiSchemas['RemoveParticipantResponse'];
@@ -193,41 +171,33 @@ export async function markRatingPrompted(slug: string): Promise<void> {
 }
 
 export async function setEventCoHost(
-  idOrSlug: string,
+  slug: string,
   participantId: string,
   coHost: boolean
 ): Promise<void> {
-  await fetchApi(apiPath('events', idOrSlug, 'co-hosts', participantId), {
+  await fetchApi(apiPath('events', slug, 'co-hosts', participantId), {
     method: coHost ? 'PUT' : 'DELETE',
   });
 }
 
-export async function letRemovedPersonBackIn(
-  idOrSlug: string,
-  userId: string,
-  hostToken: string | null
-): Promise<void> {
-  await fetchApi(
-    apiPath('events', idOrSlug, 'removed-people', userId),
-    withHostToken(hostToken, { method: 'DELETE' })
-  );
+export async function letRemovedPersonBackIn(slug: string, userId: string): Promise<void> {
+  await fetchApi(apiPath('events', slug, 'removed-people', userId), { method: 'DELETE' });
 }
 
 export async function removeEventParticipant(
-  idOrSlug: string,
-  participantId: string,
-  hostToken: string | null
+  slug: string,
+  participantId: string
 ): Promise<RemoveParticipantResponse> {
   return fetchApi<RemoveParticipantResponse>(
-    apiPath('events', idOrSlug, 'participants', participantId),
-    withHostToken(hostToken, { method: 'DELETE' })
+    apiPath('events', slug, 'participants', participantId),
+    { method: 'DELETE' }
   );
 }
 
 export type DeleteEventResponse = ApiSchemas['DeleteEventResponse'];
 
-export async function deleteEvent(idOrSlug: string): Promise<DeleteEventResponse> {
-  return fetchApi<DeleteEventResponse>(apiPath('events', idOrSlug), { method: 'DELETE' });
+export async function deleteEvent(slug: string): Promise<DeleteEventResponse> {
+  return fetchApi<DeleteEventResponse>(apiPath('events', slug), { method: 'DELETE' });
 }
 
 export function eventStreamUrl(slug: string, tab: string): string {
@@ -253,14 +223,14 @@ export type EligibleFollowItem = ApiSchemas['EligibleFollowItem'];
 
 export type EligibleFollowsResponse = ApiSchemas['EligibleFollowsResponse'];
 
-export async function getEligibleFollows(idOrSlug: string): Promise<EligibleFollowsResponse> {
+export async function getEligibleFollows(slug: string): Promise<EligibleFollowsResponse> {
   return fetchApi<EligibleFollowsResponse>(
-    apiPath('events', idOrSlug, 'invitations', 'eligible-follows')
+    apiPath('events', slug, 'invitations', 'eligible-follows')
   );
 }
 
-export async function sendEventInvitation(idOrSlug: string, targetUserId: string): Promise<void> {
-  await fetchApi(apiPath('events', idOrSlug, 'invitations'), {
+export async function sendEventInvitation(slug: string, targetUserId: string): Promise<void> {
+  await fetchApi(apiPath('events', slug, 'invitations'), {
     method: 'POST',
     body: JSON.stringify({ targetUserId }),
   });

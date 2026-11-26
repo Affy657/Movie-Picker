@@ -47,7 +47,7 @@ public sealed class EventsController : ControllerBase
         CancellationToken ct)
     {
         var result = await handler.HandleAsync(request, creatorUserId, ct);
-        return CreatedAtAction(nameof(GetBySlug), new { idOrSlug = result.Slug }, result);
+        return CreatedAtAction(nameof(GetBySlug), new { slug = result.Slug }, result);
     }
 
     [HttpGet("mine")]
@@ -76,19 +76,19 @@ public sealed class EventsController : ControllerBase
         return Ok(EventLimitsResponse.Current);
     }
 
-    [HttpGet("{idOrSlug}/config")]
+    [HttpGet("{slug}/config")]
     [ProducesResponseType(typeof(EventConfigResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetConfig(
-        string idOrSlug,
+        string slug,
         [FromServices] IGetEventConfigHandler handler,
         CancellationToken ct)
     {
-        var result = await handler.HandleAsync(idOrSlug, ct);
+        var result = await handler.HandleAsync(slug, ct);
         return Ok(result);
     }
 
-    [HttpPatch("{idOrSlug}/config")]
+    [HttpPatch("{slug}/config")]
     [EnableRateLimiting(RateLimitingExtensions.PatchEventConfigPolicy)]
     [ProducesResponseType(typeof(EventConfigResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -97,38 +97,38 @@ public sealed class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> PatchConfig(
-        string idOrSlug,
+        string slug,
         [FromBody] PatchEventConfigRequest request,
         [FromServices] IPatchEventConfigHandler handler,
         CancellationToken ct)
     {
-        var result = await handler.HandleAsync(idOrSlug, request, ct);
+        var result = await handler.HandleAsync(slug, request, ct);
         return Ok(result);
     }
 
-    [HttpGet("slug/{idOrSlug}")]
+    [HttpGet("slug/{slug}")]
     [EnableRateLimiting(RateLimitingExtensions.EventViewPollPolicy)]
     [ProducesResponseType(typeof(EventDetailResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status304NotModified)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> GetBySlug(
-        string idOrSlug,
+        string slug,
         [RequestLanguage] CatalogLanguage interfaceLanguage,
         [FromServices] IEventViewTagHandler viewTag,
         [FromServices] IGetEventDetailHandler handler,
         CancellationToken ct)
     {
-        var entityTag = await viewTag.HandleAsync(idOrSlug, interfaceLanguage, ct);
+        var entityTag = await viewTag.HandleAsync(slug, interfaceLanguage, ct);
         ConditionalGet.Stamp(Response, entityTag);
         if (ConditionalGet.IsNotModified(Request, entityTag))
             return StatusCode(StatusCodes.Status304NotModified);
 
-        var result = await handler.HandleAsync(idOrSlug, ct);
+        var result = await handler.HandleAsync(slug, ct);
         return Ok(result);
     }
 
-    [HttpPost("{idOrSlug}/join")]
+    [HttpPost("{slug}/join")]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.JoinEventPolicy)]
     [ProducesResponseType(typeof(JoinEventResult), StatusCodes.Status201Created)]
@@ -139,13 +139,13 @@ public sealed class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Join(
-        string idOrSlug,
+        string slug,
         [FromBody] JoinEventRequest request,
         [FromServices] IJoinEventHandler handler,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var result = await handler.HandleAsync(idOrSlug, request, userId, ct);
+        var result = await handler.HandleAsync(slug, request, userId, ct);
 
         if (result.IsNew)
             return Created(string.Empty, result);
@@ -153,7 +153,7 @@ public sealed class EventsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPost("{idOrSlug}/wheel")]
+    [HttpPost("{slug}/wheel")]
     [EnableRateLimiting(RateLimitingExtensions.HostActionPolicy)]
     [ProducesResponseType(typeof(WheelResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -162,32 +162,32 @@ public sealed class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status415UnsupportedMediaType)]
     public async Task<IActionResult> Wheel(
-        string idOrSlug,
+        string slug,
         [FromBody] LaunchWheelRequest request,
         [FromServices] ILaunchWheelHandler handler,
         CancellationToken ct)
     {
-        var result = await handler.HandleAsync(idOrSlug, request.ExpectedWinnerCount, ct);
+        var result = await handler.HandleAsync(slug, request.ExpectedWinnerCount, ct);
         return Ok(result);
     }
 
-    [HttpPost("{idOrSlug}/wheel/announce")]
+    [HttpPost("{slug}/wheel/announce")]
     [EnableRateLimiting(RateLimitingExtensions.HostActionPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status415UnsupportedMediaType)]
     public async Task<IActionResult> AnnounceWheelWinner(
-        string idOrSlug,
+        string slug,
         [FromBody] CsrfGuardRequest _,
         [FromServices] IAnnounceWheelWinnerHandler handler,
         CancellationToken ct)
     {
-        await handler.HandleAsync(idOrSlug, ct);
+        await handler.HandleAsync(slug, ct);
         return NoContent();
     }
 
-    [HttpPost("{idOrSlug}/winner")]
+    [HttpPost("{slug}/winner")]
     [EnableRateLimiting(RateLimitingExtensions.HostActionPolicy)]
     [ProducesResponseType(typeof(WheelResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -196,63 +196,63 @@ public sealed class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status415UnsupportedMediaType)]
     public async Task<IActionResult> SetManualWinner(
-        string idOrSlug,
+        string slug,
         [FromBody] SetManualWinnerRequest request,
         [FromServices] ISetManualWinnerHandler handler,
         CancellationToken ct)
     {
-        var result = await handler.HandleAsync(idOrSlug, request, ct);
+        var result = await handler.HandleAsync(slug, request, ct);
         return Ok(result);
     }
 
-    [HttpDelete("{idOrSlug}/winners/{movieId}")]
+    [HttpDelete("{slug}/winners/{movieId}")]
     [EnableRateLimiting(RateLimitingExtensions.HostActionPolicy)]
     [ProducesResponseType(typeof(ResetWheelResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> RemoveWinner(
-        string idOrSlug,
+        string slug,
         string movieId,
         [FromServices] IRemoveWinnerHandler handler,
         CancellationToken ct)
     {
-        var result = await handler.HandleAsync(idOrSlug, movieId, ct);
+        var result = await handler.HandleAsync(slug, movieId, ct);
         return Ok(result);
     }
 
-    [HttpDelete("{idOrSlug}/wheel")]
+    [HttpDelete("{slug}/wheel")]
     [EnableRateLimiting(RateLimitingExtensions.HostActionPolicy)]
     [ProducesResponseType(typeof(ResetWheelResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> ResetWheel(
-        string idOrSlug,
+        string slug,
         [FromServices] IResetWheelHandler handler,
         CancellationToken ct)
     {
-        var result = await handler.HandleAsync(idOrSlug, ct);
+        var result = await handler.HandleAsync(slug, ct);
         return Ok(result);
     }
 
-    [HttpPost("{idOrSlug}/close")]
+    [HttpPost("{slug}/close")]
     [EnableRateLimiting(RateLimitingExtensions.HostActionPolicy)]
     [ProducesResponseType(typeof(CloseEventResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status415UnsupportedMediaType)]
     public async Task<IActionResult> Close(
-        string idOrSlug,
+        string slug,
         [FromBody] CsrfGuardRequest _,
         [FromServices] ICloseEventHandler handler,
         CancellationToken ct)
     {
-        var result = await handler.HandleAsync(idOrSlug, ct);
+        var result = await handler.HandleAsync(slug, ct);
         return Ok(result);
     }
 
-    [HttpPut("{idOrSlug}/rating-prompt")]
+    [HttpPut("{slug}/rating-prompt")]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.RatingMutationPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -260,16 +260,16 @@ public sealed class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> MarkRatingPrompted(
-        string idOrSlug,
+        string slug,
         [FromServices] IMarkRatingPromptedHandler handler,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        await handler.HandleAsync(userId, idOrSlug, ct);
+        await handler.HandleAsync(userId, slug, ct);
         return NoContent();
     }
 
-    [HttpDelete("{idOrSlug}/participants/{participantId}")]
+    [HttpDelete("{slug}/participants/{participantId}")]
     [EnableRateLimiting(RateLimitingExtensions.RemoveParticipantPolicy)]
     [ProducesResponseType(typeof(RemoveParticipantResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -278,16 +278,16 @@ public sealed class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> RemoveParticipant(
-        string idOrSlug,
+        string slug,
         string participantId,
         [FromServices] IRemoveParticipantHandler handler,
         CancellationToken ct)
     {
-        var result = await handler.HandleAsync(idOrSlug, participantId, ct);
+        var result = await handler.HandleAsync(slug, participantId, ct);
         return Ok(result);
     }
 
-    [HttpDelete("{idOrSlug}/removed-people/{userId}")]
+    [HttpDelete("{slug}/removed-people/{userId}")]
     [EnableRateLimiting(RateLimitingExtensions.RemoveParticipantPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -295,16 +295,16 @@ public sealed class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> LetBackIn(
-        string idOrSlug,
+        string slug,
         string userId,
         [FromServices] ILetBackInHandler handler,
         CancellationToken ct)
     {
-        await handler.HandleAsync(idOrSlug, userId, ct);
+        await handler.HandleAsync(slug, userId, ct);
         return NoContent();
     }
 
-    [HttpPut("{idOrSlug}/co-hosts/{participantId}")]
+    [HttpPut("{slug}/co-hosts/{participantId}")]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.RemoveParticipantPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -315,17 +315,17 @@ public sealed class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> NameCoHost(
-        string idOrSlug,
+        string slug,
         string participantId,
         [FromServices] ISetEventCoHostHandler handler,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        await handler.HandleAsync(userId, idOrSlug, participantId, coHost: true, ct);
+        await handler.HandleAsync(userId, slug, participantId, coHost: true, ct);
         return NoContent();
     }
 
-    [HttpDelete("{idOrSlug}/co-hosts/{participantId}")]
+    [HttpDelete("{slug}/co-hosts/{participantId}")]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.RemoveParticipantPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -336,33 +336,33 @@ public sealed class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> WithdrawCoHost(
-        string idOrSlug,
+        string slug,
         string participantId,
         [FromServices] ISetEventCoHostHandler handler,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        await handler.HandleAsync(userId, idOrSlug, participantId, coHost: false, ct);
+        await handler.HandleAsync(userId, slug, participantId, coHost: false, ct);
         return NoContent();
     }
 
-    [HttpGet("{idOrSlug}/invitations/eligible-follows")]
+    [HttpGet("{slug}/invitations/eligible-follows")]
     [Authorize]
     [ProducesResponseType(typeof(EligibleFollowsResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetEligibleFollows(
-        string idOrSlug,
+        string slug,
         [FromServices] IGetEligibleFollowsForEventHandler handler,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var result = await handler.HandleAsync(userId, idOrSlug, ct);
+        var result = await handler.HandleAsync(userId, slug, ct);
         return Ok(result);
     }
 
-    [HttpPost("{idOrSlug}/invitations")]
+    [HttpPost("{slug}/invitations")]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.InviteUserPolicy)]
     [ProducesResponseType(typeof(InviteUserResponse), StatusCodes.Status201Created)]
@@ -373,17 +373,17 @@ public sealed class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> SendInvitation(
-        string idOrSlug,
+        string slug,
         [FromBody] InviteUserRequest request,
         [FromServices] IInviteUserHandler handler,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var result = await handler.HandleAsync(userId, idOrSlug, request, ct);
+        var result = await handler.HandleAsync(userId, slug, request, ct);
         return Created(string.Empty, result);
     }
 
-    [HttpDelete("{idOrSlug}")]
+    [HttpDelete("{slug}")]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.DeleteEventPolicy)]
     [ProducesResponseType(typeof(DeleteEventResponse), StatusCodes.Status200OK)]
@@ -392,12 +392,12 @@ public sealed class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Delete(
-        string idOrSlug,
+        string slug,
         [FromServices] IDeleteEventHandler handler,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var result = await handler.HandleAsync(userId, idOrSlug, ct);
+        var result = await handler.HandleAsync(userId, slug, ct);
         return Ok(result);
     }
 }

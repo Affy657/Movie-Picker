@@ -4,7 +4,7 @@ public interface ISetEventCoHostHandler
 {
     Task HandleAsync(
         string userId,
-        string idOrSlug,
+        string slug,
         string participantId,
         bool coHost,
         CancellationToken ct = default);

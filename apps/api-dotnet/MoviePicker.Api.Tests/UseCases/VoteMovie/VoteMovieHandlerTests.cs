@@ -35,7 +35,7 @@ public sealed class VoteMovieHandlerTests
     [Fact]
     public async Task HandleAsync_EventNotFound_ThrowsNotFoundException()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
+        _eventRepo.Setup(r => r.GetBySlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
         var request = new VoteRequest { ParticipantId = "p123456789012345678901234", Value = 1 };
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(OwnerUserId, "bad", "mov1", request));
@@ -45,8 +45,8 @@ public sealed class VoteMovieHandlerTests
     [Fact]
     public async Task HandleAsync_EventFinished_ThrowsConflictException()
     {
-        var evt = new Event { Id = "evt1", Title = "Soirée", Date = "2000-01-01", Time = "20:00", Slug = "soiree", HostToken = "ht", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        var evt = new Event { Id = "evt1", Title = "Soirée", Date = "2000-01-01", Time = "20:00", Slug = "soiree", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         var request = new VoteRequest { ParticipantId = "p123456789012345678901234", Value = 1 };
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync(OwnerUserId, "evt1", "mov1", request));
@@ -57,7 +57,7 @@ public sealed class VoteMovieHandlerTests
     public async Task HandleAsync_MovieNotFound_ThrowsNotFoundException()
     {
         var evt = ActiveEvent();
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync((Movie?)null);
         var request = new VoteRequest { ParticipantId = "p123456789012345678901234", Value = 1 };
 
@@ -70,7 +70,7 @@ public sealed class VoteMovieHandlerTests
     {
         var evt = ActiveEvent();
         var movie = new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = "p0", TmdbId = 1, Title = "X", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync("p123456789012345678901234", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync((Participant?)null);
         var request = new VoteRequest { ParticipantId = "p123456789012345678901234", Value = 1 };
@@ -86,7 +86,7 @@ public sealed class VoteMovieHandlerTests
         var movie = new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = "p0", TmdbId = 1, Title = "X", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         var savedVote = new Vote { Id = "v1", EventId = evt.Id, MovieId = movie.Id, ParticipantId = participant.Id, Value = 1, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
         _voteRepo.Setup(r => r.UpsertAsync(It.IsAny<Vote>(), It.IsAny<CancellationToken>())).ReturnsAsync(savedVote);
@@ -108,7 +108,7 @@ public sealed class VoteMovieHandlerTests
         var movie = new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = "p0", TmdbId = 1, Title = "X", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Bob", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         var savedVote = new Vote { Id = "v2", EventId = evt.Id, MovieId = movie.Id, ParticipantId = participant.Id, Value = -1, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
         _voteRepo.Setup(r => r.UpsertAsync(It.IsAny<Vote>(), It.IsAny<CancellationToken>())).ReturnsAsync(savedVote);
@@ -129,7 +129,7 @@ public sealed class VoteMovieHandlerTests
 
     private void GivenVotableMovie(Event evt, Movie movie, Participant participant, IReadOnlyDictionary<string, int> existingVotes)
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync(movie.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
         _voteRepo.Setup(r => r.GetParticipantVotesByEventAsync(evt.Id, participant.Id, It.IsAny<CancellationToken>())).ReturnsAsync(existingVotes);
@@ -292,7 +292,7 @@ public sealed class VoteMovieHandlerTests
         var evt = ActiveEvent();
         var movie = new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = "p0", TmdbId = 1, Title = "X", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         var victim = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Victim", UserId = "another-user", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(victim.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(victim);
         var request = new VoteRequest { ParticipantId = victim.Id, Value = 1 };

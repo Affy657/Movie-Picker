@@ -353,7 +353,7 @@ describe('AuthProvider in several tabs', () => {
 describe('AuthProvider sign in', () => {
   it('forgets what a night looked like signed out, so it knows the participant on return', async () => {
     const client = new QueryClient();
-    const nightKey = queryKeys.event.detail('soiree', null);
+    const nightKey = queryKeys.event.detail('soiree');
     client.setQueryData(nightKey, { slug: 'soiree', myParticipant: null });
     let login: ReturnType<typeof useAuth>['login'] | undefined;
     function ExposeLogin() {

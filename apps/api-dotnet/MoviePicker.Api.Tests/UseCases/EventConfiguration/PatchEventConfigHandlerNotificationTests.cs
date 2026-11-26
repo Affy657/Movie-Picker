@@ -14,7 +14,6 @@ public sealed class PatchEventConfigHandlerNotificationTests
 {
     private readonly Mock<IEventRepository> _events = new();
     private readonly Mock<IParticipantRepository> _participants = new();
-    private readonly Mock<IHostTokenAccessor> _hostToken = new();
     private readonly Mock<ICurrentUserAccessor> _user = new();
     private readonly Mock<IUserRepository> _userRepo = new();
     private readonly Mock<IPushSubscriptionRepository> _pushSubRepo = new();
@@ -31,21 +30,19 @@ public sealed class PatchEventConfigHandlerNotificationTests
             Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "soiree",
-            HostToken = "ht1",
             CreatorUserId = "host",
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
-        _events.Setup(r => r.GetByIdOrSlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _events.Setup(r => r.GetBySlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht1");
+        _user.Setup(u => u.GetUserId()).Returns("host");
 
         _sut = new PatchEventConfigHandler(
             _events.Object,
             _participants.Object,
             Mock.Of<IMovieRepository>(),
-            _hostToken.Object,
             _user.Object,
             TestAudienceNotifier.Over(_participants.Object, _userRepo.Object, _pushSubRepo.Object, _pushSender.Object, _notifications.Object),
             new InMemoryFriendGroupRepository(),

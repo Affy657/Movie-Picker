@@ -55,7 +55,7 @@ public sealed class UnmarkAsSeenHandlerTests
     [Fact]
     public async Task HandleAsync_EventNotFound_ThrowsNotFoundException()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
+        _eventRepo.Setup(r => r.GetBySlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(OwnerUserId, "bad", "mov1", "p1"));
         Assert.Equal(ErrorCodes.EventNotFound, ex.Reason);
@@ -65,7 +65,7 @@ public sealed class UnmarkAsSeenHandlerTests
     public async Task HandleAsync_EventFinished_ThrowsConflictException()
     {
         var evt = new EventEntityBuilder().WithId("evt1").Closed().Build();
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync(OwnerUserId, "evt1", "mov1", "p1"));
         Assert.Equal(ErrorCodes.EventFinished, ex.Reason);
@@ -75,7 +75,7 @@ public sealed class UnmarkAsSeenHandlerTests
     public async Task HandleAsync_MovieNotFound_ThrowsNotFoundException()
     {
         var evt = ActiveEvent();
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync((Movie?)null);
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(OwnerUserId, "evt1", "mov1", "p1"));
@@ -87,7 +87,7 @@ public sealed class UnmarkAsSeenHandlerTests
     {
         var evt = ActiveEvent();
         var movie = MovieFor(evt);
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync("ghost", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync((Participant?)null);
 
@@ -101,7 +101,7 @@ public sealed class UnmarkAsSeenHandlerTests
         var evt = ActiveEvent();
         var movie = MovieFor(evt);
         var participant = ParticipantFor(evt);
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
         _seenMarkRepo
@@ -118,7 +118,7 @@ public sealed class UnmarkAsSeenHandlerTests
         var evt = ActiveEvent();
         var movie = MovieFor(evt);
         var participant = ParticipantFor(evt);
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
         _seenMarkRepo

@@ -49,7 +49,6 @@ import { isNightHost } from '@/features/events/lib/nightRules';
 
 type EventDetailSessionProps = {
   slug: string;
-  hostToken: string | null;
   event: EventData;
   moviesQuery: UseQueryResult<MovieData[]>;
   movies: MovieData[];
@@ -123,7 +122,6 @@ function isNightFull(maxParticipants: number | null, participantCount: number): 
 
 export default function EventDetailSession({
   slug,
-  hostToken,
   event,
   moviesQuery,
   movies,
@@ -179,7 +177,6 @@ export default function EventDetailSession({
     slug,
     event,
     movies,
-    hostToken,
     onWheelDone: refreshAll,
   });
 
@@ -217,7 +214,6 @@ export default function EventDetailSession({
     requestFinishNight,
   } = useEventDetailActions({
     slug,
-    hostToken,
     eventTitle: event.title,
     participant,
     setParticipant,
@@ -284,7 +280,6 @@ export default function EventDetailSession({
     <PageLayout className="page-event">
       <EventDetailSessionChrome
         slug={slug}
-        hostToken={hostToken}
         event={event}
         moviesQuery={moviesQuery}
         lifecycle={lifecycle}
@@ -342,7 +337,6 @@ export default function EventDetailSession({
         slug={slug}
         event={event}
         participant={participant}
-        hostToken={hostToken}
         movies={movies}
         moviesQuery={moviesQuery}
         actionError={actionError}

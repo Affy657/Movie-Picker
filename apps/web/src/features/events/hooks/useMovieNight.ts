@@ -21,7 +21,7 @@ function sameFilm(movie: MovieData, tmdbId: number, mediaType: MovieMediaType): 
 export function useMovieNight({ slug, tmdbId, mediaType }: MovieNightTarget) {
   const { t } = useTranslation();
   const page = useEventDetailPage(slug);
-  const { event, movies, participant, hostToken, refreshAll, setActionError } = page;
+  const { event, movies, participant, refreshAll, setActionError } = page;
   const movie = movies.find((m) => sameFilm(m, tmdbId, mediaType)) ?? null;
   const voting = useEventMovieVoting({
     slug,
@@ -38,7 +38,6 @@ export function useMovieNight({ slug, tmdbId, mediaType }: MovieNightTarget) {
     movie,
     isFinished: !!event?.isFinished,
     isHost: isNightHost(event),
-    hostToken,
     wheelLocked: isWheelLocked((event?.winners ?? []).map((w) => w.movieId)),
     participantId: participant?.participantId ?? null,
     participantPseudo: participant?.pseudo ?? null,
@@ -59,7 +58,7 @@ export function useMovieNight({ slug, tmdbId, mediaType }: MovieNightTarget) {
     setRemovePending(true);
     setActionError(null);
     try {
-      await removeMovieFromEvent(slug, movie.id, participant.participantId, hostToken);
+      await removeMovieFromEvent(slug, movie.id, participant.participantId);
       refreshAll();
       return true;
     } catch (e) {
@@ -68,7 +67,7 @@ export function useMovieNight({ slug, tmdbId, mediaType }: MovieNightTarget) {
     } finally {
       setRemovePending(false);
     }
-  }, [movie, participant, slug, hostToken, refreshAll, setActionError, t]);
+  }, [movie, participant, slug, refreshAll, setActionError, t]);
 
   return {
     event,

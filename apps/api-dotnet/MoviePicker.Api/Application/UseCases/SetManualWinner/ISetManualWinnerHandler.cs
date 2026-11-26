@@ -4,5 +4,5 @@ namespace MoviePicker.Api.Application.UseCases.SetManualWinner;
 
 public interface ISetManualWinnerHandler
 {
-    Task<WheelResponse> HandleAsync(string idOrSlug, SetManualWinnerRequest request, CancellationToken ct = default);
+    Task<WheelResponse> HandleAsync(string slug, SetManualWinnerRequest request, CancellationToken ct = default);
 }

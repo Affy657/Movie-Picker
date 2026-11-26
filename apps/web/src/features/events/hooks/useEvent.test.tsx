@@ -30,7 +30,7 @@ describe('useEvent', () => {
 
   it('loads the event detail for a slug', async () => {
     const client = createTestQueryClient();
-    const { result } = renderHook(() => useEvent('hook-slug', null), {
+    const { result } = renderHook(() => useEvent('hook-slug'), {
       wrapper: ({ children }) => (
         <QueryClientWrapper client={client}>{children}</QueryClientWrapper>
       ),
@@ -60,15 +60,15 @@ describe('useEvent', () => {
       <QueryClientWrapper client={client}>{children}</QueryClientWrapper>
     );
 
-    const following = renderHook(() => useEvent('live', null), { wrapper });
+    const following = renderHook(() => useEvent('live'), { wrapper });
     await waitFor(() => expect(following.result.current.isSuccess).toBe(true));
-    const followed = client.getQueryCache().find({ queryKey: ['event', 'detail', 'live', ''] });
+    const followed = client.getQueryCache().find({ queryKey: ['event', 'detail', 'live'] });
     expect(followed?.observers[0]?.options.refetchInterval).toBeTypeOf('function');
     following.unmount();
 
-    const reading = renderHook(() => useEvent('live', null, { live: false }), { wrapper });
+    const reading = renderHook(() => useEvent('live', { live: false }), { wrapper });
     await waitFor(() => expect(reading.result.current.isSuccess).toBe(true));
-    const read = client.getQueryCache().find({ queryKey: ['event', 'detail', 'live', ''] });
+    const read = client.getQueryCache().find({ queryKey: ['event', 'detail', 'live'] });
     expect(read?.observers[0]?.options.refetchInterval).toBe(false);
   });
 
@@ -77,7 +77,7 @@ describe('useEvent', () => {
       http.get(`${TEST_API_V1}/events/slug/:slug`, () => apiErrorJson(404, 'event_not_found'))
     );
     const client = createTestQueryClient();
-    const { result } = renderHook(() => useEvent('unknown', null), {
+    const { result } = renderHook(() => useEvent('unknown'), {
       wrapper: ({ children }) => (
         <QueryClientWrapper client={client}>{children}</QueryClientWrapper>
       ),
@@ -91,7 +91,7 @@ describe('useEvent', () => {
       http.get(`${TEST_API_V1}/events/slug/:slug`, () => apiErrorJson(500, 'internal_error'))
     );
     const client = createTestQueryClient();
-    const { result } = renderHook(() => useEvent('broken', null), {
+    const { result } = renderHook(() => useEvent('broken'), {
       wrapper: ({ children }) => (
         <QueryClientWrapper client={client}>{children}</QueryClientWrapper>
       ),
@@ -102,7 +102,7 @@ describe('useEvent', () => {
 
   it('sends no request when slug is undefined', () => {
     const client = createTestQueryClient();
-    const { result } = renderHook(() => useEvent(undefined, null), {
+    const { result } = renderHook(() => useEvent(undefined), {
       wrapper: ({ children }) => (
         <QueryClientWrapper client={client}>{children}</QueryClientWrapper>
       ),

@@ -98,17 +98,7 @@ describe('movie mutations', () => {
     });
   });
 
-  it('removeMovieFromEvent includes the host token when provided', async () => {
-    await removeMovieFromEvent('soiree', 'm1', 'p1', 'HT');
-
-    expect(mockFetchApi).toHaveBeenCalledWith('/events/soiree/movies/m1', {
-      method: 'DELETE',
-      body: JSON.stringify({ participantId: 'p1' }),
-      headers: { 'X-Host-Token': 'HT' },
-    });
-  });
-
-  it('removeMovieFromEvent omits the host token when absent', async () => {
+  it('removeMovieFromEvent deletes with the participant in the body and no host header', async () => {
     await removeMovieFromEvent('soiree', 'm1', 'p1');
 
     expect(mockFetchApi).toHaveBeenCalledWith('/events/soiree/movies/m1', {
@@ -117,17 +107,7 @@ describe('movie mutations', () => {
     });
   });
 
-  it('setMovieWheelExclusion puts the flag with the host token', async () => {
-    await setMovieWheelExclusion('soiree', 'm1', true, 'HT');
-
-    expect(mockFetchApi).toHaveBeenCalledWith('/events/soiree/movies/m1/wheel-exclusion', {
-      method: 'PUT',
-      body: JSON.stringify({ excluded: true }),
-      headers: { 'X-Host-Token': 'HT' },
-    });
-  });
-
-  it('setMovieWheelExclusion omits the host token when absent', async () => {
+  it('setMovieWheelExclusion puts the flag with no host header', async () => {
     await setMovieWheelExclusion('soiree', 'm1', false);
 
     expect(mockFetchApi).toHaveBeenCalledWith('/events/soiree/movies/m1/wheel-exclusion', {

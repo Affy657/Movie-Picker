@@ -79,7 +79,7 @@ public sealed class CreateEventIdempotencyTests
     {
         var host = await SeedHostAsync();
         var winner = await Handler().HandleAsync(Request("req-1"), host.Id);
-        var stored = await _events.GetByIdOrSlugAsync(winner.Slug);
+        var stored = await _events.GetBySlugAsync(winner.Slug);
         var racing = new Mock<IEventRepository>();
         racing.SetupSequence(r => r.FindByCreationRequestAsync(host.Id, "req-1", It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event?)null)

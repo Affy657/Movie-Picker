@@ -125,7 +125,6 @@ export default function EventDetail() {
   const slug = isMalformedSlug ? undefined : slugParam;
   const arrival = useArrivalOnce();
   const {
-    hostToken,
     eventQuery,
     event,
     moviesQuery,
@@ -207,7 +206,6 @@ export default function EventDetail() {
     <JoinedAnnouncementContext value={joinedNotice.show}>
       <EventDetailSession
         slug={slug}
-        hostToken={hostToken}
         event={event}
         moviesQuery={moviesQuery}
         movies={movies}

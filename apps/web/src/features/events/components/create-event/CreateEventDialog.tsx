@@ -373,7 +373,7 @@ export default function CreateEventDialog({
     }
     let configNotSaved = false;
     try {
-      await patchEventConfig(res.slug, null, configPatch);
+      await patchEventConfig(res.slug, configPatch);
     } catch {
       configNotSaved = true;
     }

@@ -9,9 +9,9 @@ public sealed class GetEventConfigHandler : IGetEventConfigHandler
 
     public GetEventConfigHandler(IEventRepository events) => _events = events;
 
-    public async Task<EventConfigResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
+    public async Task<EventConfigResponse> HandleAsync(string slug, CancellationToken ct = default)
     {
-        var evt = await _events.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
+        var evt = await _events.GetRequiredBySlugAsync(slug, ct);
         return EventConfigResponse.FromEvent(evt);
     }
 }
