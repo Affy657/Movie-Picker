@@ -29,7 +29,7 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | Dette | Zone | Sujet |
 |---|---|---|
 | DEBT-074 | API et données | un client qui passe par Hosting n'a que le quota par slug sur les documents de partage |
-| DEBT-037 | Infra et déploiement | les jobs Cloud Scheduler décrits en Terraform attendent leur import, et le secret de l'ancien jeton partagé survit |
+| DEBT-037 | Infra et déploiement | l'apply des jobs Cloud Scheduler attend son approbation, et le secret de l'ancien jeton partagé survit |
 | DEBT-045 | Infra et déploiement | le secret du porte-clés Data Protection survit à son montage |
 | DEBT-054 | Infra et déploiement | l'apex porte deux revendications Hosting, et les quatre domaines servent encore un certificat temporaire |
 | DEBT-048 | Sécurité et accès | la zone DNS n'a pas de CAA et sa politique DMARC n'observe rien |
@@ -47,6 +47,8 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 
 Se traite en autonomie, sans attendre personne.
 
+
+
 ---
 
 # Geste humain
@@ -63,16 +65,16 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 - fix: si les documents relayés arrivent avec au moins deux sauts et `false` juste avant le dernier `true`, Hosting transmet l'adresse du client : `KnownIPNetworks` sur les cinq plages et `ForwardLimit = 2`, puis le même plafond par adresse pour les deux chemins ; retirer ensuite le middleware de mesure
 - fini-quand: un client qui passe par Hosting est plafonné par son adresse, et le middleware de mesure a disparu
 
-## DEBT-037 les jobs Cloud Scheduler décrits en Terraform attendent leur import, et le secret de l'ancien jeton partagé survit
+## DEBT-037 l'apply des jobs Cloud Scheduler attend son approbation, et le secret de l'ancien jeton partagé survit
 
 - state: humain
-- bloque: l'import écrit l'état de production et se fait le jour où le code arrive sur master, avant tout `apply` ; l'`apply` attend le relecteur requis de l'environnement `infra-apply` ; `gcloud secrets delete SCHEDULER_TOKEN` est irréversible
-- impact: depuis le 2026-11-25, les cinq jobs sont décrits dans `infra/terraform/environments/production/main.tf` (une ressource nommée par job) et `deploy.yml` ne les crée plus, mais tant qu'ils ne sont pas importés, un `apply` tenterait de les créer et échouerait sur des jobs existants. `module.ci` perd `roles/cloudscheduler.admin` et le `serviceAccountUser` sur le planificateur au même `apply`. Le secret `SCHEDULER_TOKEN` existe toujours dans Secret Manager et dans `api_secret_names` (écart autorisé dans `scripts/check-secret-mounts.mjs`)
-- ou: `infra/terraform/environments/production/main.tf`, `scripts/check-secret-mounts.mjs` (`ALLOWED_GAPS`)
-- verify: `pnpm run terraform -- state list | grep -c google_cloud_scheduler_job` ; encore ouvert tant que la commande rend moins de 5, puis tant que `gcloud secrets describe SCHEDULER_TOKEN` répond
-- fix: les cinq `pnpm run terraform -- import 'google_cloud_scheduler_job.<nom>' projects/<PROJET_GCP>/locations/europe-west1/jobs/movie-picker-<job>` (`event_reminders`, `recurring_events`, `finished_events`, `rating_reminders`, `warm_catalog`), un `plan` vide sur les jobs, l'`apply` par `infra.yml` ; puis retirer `SCHEDULER_TOKEN` d'`api_secret_names` et d'`ALLOWED_GAPS`, sortir ses deux ressources de l'état et `gcloud secrets delete SCHEDULER_TOKEN`
-- fini-quand: les jobs sont dans l'état Terraform, le `plan` est vide et `SCHEDULER_TOKEN` n'existe plus
-- piege: `scripts/terraform.mjs` passe ses arguments par un shell qui retire les guillemets d'une adresse `["clé"]` : un `state rm` sur `...["SCHEDULER_TOKEN"]` se lance directement par `docker run` (voir le script) ou avec des guillemets échappés. Plus aucune révision antérieure au 2026-09-21 ne reste dans le dépôt d'images (30 jours), le secret peut partir.
+- bloque: l'`apply` attend le relecteur requis de l'environnement `infra-apply` ; `gcloud secrets delete SCHEDULER_TOKEN` est irréversible
+- impact: depuis le 2026-11-26, les cinq jobs sont décrits dans `infra/terraform/environments/production/main.tf`, importés dans l'état (le `plan` ne les touche plus) et `deploy.yml` ne les crée plus. Reste à appliquer le retrait de `roles/cloudscheduler.admin` et du `serviceAccountUser` sur le planificateur de `module.ci`, avec les trois sondes de parcours de DEBT-060 (le `plan` de `infra.yml` du 2026-11-26 : 4 créations, 2 suppressions, rien d'autre). Le secret `SCHEDULER_TOKEN` existe toujours dans Secret Manager et dans `api_secret_names` (écart autorisé dans `scripts/check-secret-mounts.mjs`)
+- ou: `.github/workflows/infra.yml`, `infra/terraform/environments/production/main.tf`, `scripts/check-secret-mounts.mjs` (`ALLOWED_GAPS`)
+- verify: `gcloud secrets describe SCHEDULER_TOKEN --project <PROJET_GCP>` ; encore ouvert tant que la commande répond, ou que le dernier run d'`infra.yml` sur master n'a pas appliqué
+- fix: approuver l'`apply` du dernier run d'`infra.yml` ; puis retirer `SCHEDULER_TOKEN` d'`api_secret_names` et d'`ALLOWED_GAPS`, sortir ses deux ressources de l'état et `gcloud secrets delete SCHEDULER_TOKEN`
+- fini-quand: l'`apply` est passé et `SCHEDULER_TOKEN` n'existe plus
+- piege: `scripts/terraform.mjs` passe ses arguments par un shell qui retire les guillemets d'une adresse `["clé"]` : un `state rm` sur `...["SCHEDULER_TOKEN"]` se lance directement par `docker run` (voir le script) ou avec des guillemets échappés. Un `plan` lancé pendant un import voit encore l'ancien état : ne jamais approuver un `apply` dont le `plan` a tourné avant la fin d'un import.
 
 ## DEBT-045 le secret du porte-clés Data Protection survit à son montage
 
@@ -129,6 +131,8 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 # Différées
 
 Ne se traitent que quand leur `declencheur` survient.
+
+
 
 ---
 
