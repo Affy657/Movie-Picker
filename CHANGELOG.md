@@ -16,6 +16,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Changed
 
+- **Les commandes d’hôte ne s’ouvrent plus par un ancien lien d’hôte** : seuls le compte qui a créé la soirée et ses co-hôtes peuvent la gérer.
 - **Les schémas du dossier technique se lisent de haut en bas sur téléphone** : les cinq flots les plus larges ne défilent plus de côté sous 768 px.
 - **La fiche d’un film arrive plus vite** : son contenu et son affiche se chargent dès l’ouverture de l’application, en même temps que la page.
 - **Le dossier technique répond plus vite à son ouverture**, surtout sur téléphone.

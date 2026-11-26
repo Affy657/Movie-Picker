@@ -24,7 +24,7 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | Dette | Zone | Sujet |
 |---|---|---|
 
-### Geste humain (8)
+### Geste humain (7)
 
 | Dette | Zone | Sujet |
 |---|---|---|
@@ -32,16 +32,14 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-037 | Infra et déploiement | les jobs Cloud Scheduler décrits en Terraform attendent leur import, et le secret de l'ancien jeton partagé survit |
 | DEBT-045 | Infra et déploiement | le secret du porte-clés Data Protection survit à son montage |
 | DEBT-054 | Infra et déploiement | l'apex porte deux revendications Hosting, et les quatre domaines servent encore un certificat temporaire |
-| DEBT-032 | Sécurité et accès | deux modèles d'autorisation hôte coexistent, le jeton porteur et le compte créateur |
 | DEBT-048 | Sécurité et accès | la zone DNS n'a pas de CAA et sa politique DMARC n'observe rien |
 | DEBT-052 | Sécurité et accès | le secret `GITHUB_TOKEN` de l'API est le jeton du `gh` CLI du poste |
 | DEBT-053 | Sécurité et accès | l'API et la sauvegarde parlent à Atlas en administrateur du cluster, le même que le poste de dev |
 
-### Différées (1)
+### Différées (0)
 
 | Dette | Zone | Sujet |
 |---|---|---|
-| DEBT-064 | API et données | `GetByIdOrSlugAsync` ne résout plus que le slug |
 
 ---
 
@@ -96,17 +94,6 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 - fix: (humain) supprimer le TXT `hosting-site=movie-picker-web-legacy` de l'apex dans le manager OVH, garder `hosting-site=movie-picker-web`. (agent) une heure plus tard, lire `pnpm run terraform -- output web_dns` : `web.movie-picker.fr` doit rester `OWNERSHIP_ACTIVE` (sinon remettre le TXT et chercher pourquoi le CNAME ne suffit pas), l'apex doit perdre son `issues` (`GET https://firebasehosting.googleapis.com/v1beta1/projects/<PROJET_GCP>/sites/movie-picker-web/customDomains/movie-picker.fr` avec un jeton gcloud et `x-goog-user-project`), puis `cert_type` doit passer `GROUPED` sur les quatre domaines dans les 24 heures ; s'il reste `TEMPORARY` au 2026-10-01, ouvrir un ticket Firebase depuis la console (le certificat temporaire n'est pas renouvelé par le projet).
 - piege: ne pas supprimer le TXT `hosting-site=movie-picker-web`, il prouve l'apex lui-même (A `199.36.158.100`). Ne pas sonder `web.movie-picker.fr` en boucle pendant la vérification : l'edge garde les 404 déjà servis, et seule une nouvelle release du site legacy (`gh workflow run web-legacy.yml --ref master`) purge ce cache.
 
-## DEBT-032 deux modèles d'autorisation hôte coexistent, le jeton porteur et le compte créateur
-
-- state: humain
-- bloque: décision produit, retirer ou non le jeton d'hôte. Le chantier co-hôte, au backlog de la roadmap, est le moment naturel, il ajouterait sinon un troisième chemin.
-- impact: `EventHost.IsHost` accepte le jeton (`X-Host-Token`, ou `?host=` pour les anciens liens, que le front range en `sessionStorage` puis retire de la barre d'adresse) **ou** `CreatorUserId`. Créer une soirée exige un compte depuis la V1.2, donc le jeton est un vestige, et un lien partagé avec le jeton donne les commandes de l'hôte à n'importe qui, sans compte. Dix-sept fichiers front le transportent, l'API le masque dans les logs et Sentry pour compenser. Côté API, tout contrôle d'hôte passe par `HostedEvent` (`IsHost`, `LoadForHostAsync`, `LoadForHostEvenFinishedAsync`), seul appelant d'`EventHost.IsHost` : retirer le jeton ou ajouter des co-hôtes s'y fait en un endroit, plus le retrait d'`IHostTokenAccessor` des treize handlers et de `MovieActionContext` qui le reçoivent.
-- ou: `apps/api-dotnet/MoviePicker.Api/Domain/EventHost.cs`, `Application/UseCases/Shared/HostedEvent.cs`, `Infrastructure/Web/HostTokenAccessor.cs`, `SensitiveQueryRedaction.cs` ; côté front `grep -rl hostToken apps/web/src --include=*.ts --include=*.tsx | grep -v test`
-- verify: `grep -n "TokenMatches" apps/api-dotnet/MoviePicker.Api/Domain/EventHost.cs` ; encore ouvert tant que le jeton compte dans `IsHost`
-- fix: hôte = `CreatorUserId`, co-hôtes = liste d'identifiants sur `Event` posée par le chantier co-hôte, lue par `HostedEvent` ; puis retirer `HostToken` du document, `HostTokenAccessor`, `SensitiveQueryRedaction`, `withHostToken` et le stockage local côté front, et l'en-tête `X-Host-Token` du contrat OpenAPI
-- fini-quand: plus aucun `hostToken` hors `archive/`, et `EventHost.IsHost` ne prend qu'un identifiant de compte
-- piege: les soirées créées avant le compte obligatoire n'ont pas de `CreatorUserId` (`events_creatorUserId` est `Sparse` pour cette raison), leur hôte perdrait ses commandes. Compter avant de retirer le jeton, par `mongosh` : `db.events.countDocuments({creatorUserId:{$exists:false}, closedAt:null})` ; si le compte n'est pas nul, attendre la clôture de ces soirées ou les rattacher par migration.
-
 ## DEBT-048 la zone DNS n'a pas de CAA et sa politique DMARC n'observe rien
 
 - state: humain
@@ -142,16 +129,6 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 # Différées
 
 Ne se traitent que quand leur `declencheur` survient.
-
-## DEBT-064 `GetByIdOrSlugAsync` ne résout plus que le slug
-
-- state: differe
-- declencheur: la fusion de `v1.7` dans `master`
-- impact: depuis le 2026-09-23, une soirée ne se trouve plus par son `ObjectId` (en partie prévisible, il ouvrait la soirée sans son lien). La méthode du port, l'extension `GetRequiredByIdOrSlugAsync`, les paramètres `idOrSlug` du front et le segment de route `{idOrSlug}` gardent l'ancien nom pour ne pas multiplier les conflits avec `v1.7`, qui ajoute ses propres appels : le nom ment.
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/Ports/IEventRepository.cs`, `EventRepositoryExtensions.cs`, `Infrastructure/Persistence/Mongo/MongoEventRepository.cs`, `Infrastructure/Persistence/InMemory/InMemoryEventRepository.cs`, `Controllers/EventsController.cs`, `Controllers/EventMoviesController.cs`, une quarantaine de fichiers de test ; `apps/web/src/features/events/api/eventsApi.ts`
-- verify: `grep -rln "ByIdOrSlug" apps/api-dotnet --include=*.cs | grep -v /obj/` ; encore ouvert tant qu'il rend un fichier
-- fix: renommer en `GetBySlugAsync` et `GetRequiredBySlugAsync`, `idOrSlug` en `slug` partout, y compris le segment de route, puis `pnpm run openapi:export` et `pnpm run openapi:types`
-- piege: renommer le segment de route change les clés de `paths` dans le contrat OpenAPI, donc le schéma généré et `apiContract.test.ts` côté front ; les faire dans le même commit. La fusion de `v1.7` apporte aussi une trentaine de chemins d'API construits sans `apiPath` (dont `setMovieRating` et `deleteMovieRating`, aujourd'hui dans `features/events/api/eventMoviesApi.ts`) : les convertir dans le même geste, `grep -rln '/events/\${' apps/web/src --include=*.ts | grep -v test` ne doit plus rien rendre.
 
 ---
 
