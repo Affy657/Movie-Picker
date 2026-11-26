@@ -34,7 +34,6 @@ const SUCCESS_AUTO_DISMISS_MS = 3500;
 
 type EventDetailActionsInput = {
   slug: string;
-  hostToken: string | null;
   eventTitle: string;
   participant: ParticipantRef | null;
   setParticipant: Dispatch<SetStateAction<ParticipantRef | null>>;
@@ -45,7 +44,6 @@ type EventDetailActionsInput = {
 
 export function useEventDetailActions({
   slug,
-  hostToken,
   eventTitle,
   participant,
   setParticipant,
@@ -70,13 +68,13 @@ export function useEventDetailActions({
 
   const removeParticipantMutation = useMutation({
     mutationFn: (variables: { participantId: string }) =>
-      removeEventParticipant(slug, variables.participantId, hostToken),
+      removeEventParticipant(slug, variables.participantId),
     onMutate: ({ participantId }) => {
       setPendingRemovalId(participantId);
     },
     onSettled: () => {
       setPendingRemovalId(null);
-      void queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
       void invalidateMyNights(queryClient);
     },
@@ -85,8 +83,7 @@ export function useEventDetailActions({
   const coHostMutation = useMutation({
     mutationFn: (variables: { participantId: string; coHost: boolean }) =>
       setEventCoHost(slug, variables.participantId, variables.coHost),
-    onSettled: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug) }),
   });
   const pendingCoHostId = coHostMutation.isPending ? coHostMutation.variables.participantId : null;
   const coHostError = coHostMutation.error
@@ -103,17 +100,17 @@ export function useEventDetailActions({
   const removeMovieMutation = useMutation({
     mutationFn: (movieId: string) => {
       if (!participant) return Promise.reject(new Error('No participant'));
-      return removeMovieFromEvent(slug, movieId, participant.participantId, hostToken);
+      return removeMovieFromEvent(slug, movieId, participant.participantId);
     },
   });
 
   const removeNoteMutation = useMutation({
     mutationFn: (movieId: string) =>
-      deleteMoviePitchNote(slug, movieId, participant?.participantId ?? null, hostToken),
+      deleteMoviePitchNote(slug, movieId, participant?.participantId ?? null),
   });
 
   const closeNightMutation = useMutation({
-    mutationFn: () => postEventClose(slug, hostToken),
+    mutationFn: () => postEventClose(slug),
     onSuccess: () => {
       void invalidateMyNights(queryClient);
       refreshAll();

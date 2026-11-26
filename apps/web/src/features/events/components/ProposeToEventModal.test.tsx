@@ -237,7 +237,7 @@ describe('ProposeToEventModal (MSW)', () => {
     const client = createTestQueryClient();
     const myActiveEvents = queryKeys.myEvents.active;
     const eventMovies = [...queryKeys.movies.list('ma-soiree'), 'p1'];
-    const eventDetail = queryKeys.event.detail('ma-soiree', null);
+    const eventDetail = queryKeys.event.detail('ma-soiree');
     const otherEventMovies = [...queryKeys.movies.list('autre-soiree'), 'p1'];
     for (const key of [myActiveEvents, eventMovies, eventDetail, otherEventMovies]) {
       client.setQueryData(key, { cached: true });

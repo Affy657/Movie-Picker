@@ -46,22 +46,22 @@ public sealed class SentryBeforeSendTests
     }
 
     [Fact]
-    public void Prepare_RedactsHostTokenFromRequestUrlAndQueryString()
+    public void Prepare_RedactsASecretTokenFromRequestUrlAndQueryString()
     {
         var sentryEvent = new SentryEvent(new InvalidOperationException("boom"))
         {
             Request = new SentryRequest
             {
-                Url = "https://api.test/api/v1/events/abc/wheel?host=SECRET-TOKEN&x=1",
-                QueryString = "host=SECRET-TOKEN&x=1"
+                Url = "https://api.test/api/v1/auth/password-reset/verify?token=SECRET-TOKEN&x=1",
+                QueryString = "token=SECRET-TOKEN&x=1"
             }
         };
 
         var prepared = SentryBeforeSend.Prepare(sentryEvent);
 
         Assert.NotNull(prepared);
-        Assert.Equal("https://api.test/api/v1/events/abc/wheel?host=***&x=1", prepared!.Request.Url);
-        Assert.Equal("host=***&x=1", prepared.Request.QueryString);
+        Assert.Equal("https://api.test/api/v1/auth/password-reset/verify?token=***&x=1", prepared!.Request.Url);
+        Assert.Equal("token=***&x=1", prepared.Request.QueryString);
     }
 
     [Fact]
@@ -261,12 +261,12 @@ public sealed class SentryBeforeSendTests
         {
             Request = new SentryRequest
             {
-                Url = "https://api.test/api/v1/events/abc/wheel?host=SECRET-TOKEN&x=1",
-                QueryString = "?host=SECRET-TOKEN&x=1"
+                Url = "https://api.test/api/v1/events/abc/wheel?token=SECRET-TOKEN&x=1",
+                QueryString = "?token=SECRET-TOKEN&x=1"
             },
             User = new SentryUser { Id = "000000000000", IpAddress = "203.0.113.7" }
         };
-        transaction.Request.Headers[HostTokenAccessor.HostHeaderName] = "SECRET-TOKEN";
+        transaction.Request.Headers["X-Host-Token"] = "SECRET-TOKEN";
         transaction.Request.Headers["X-Forwarded-For"] = "203.0.113.7";
         transaction.Request.Headers["Forwarded"] = "for=\"203.0.113.7\"";
         transaction.Request.Headers["X-Unknown"] = "anything";
@@ -275,8 +275,8 @@ public sealed class SentryBeforeSendTests
         var prepared = SentryBeforeSend.PrepareTransaction(transaction);
 
         Assert.Same(transaction, prepared);
-        Assert.Equal("https://api.test/api/v1/events/abc/wheel?host=***&x=1", prepared.Request.Url);
-        Assert.Equal("?host=***&x=1", prepared.Request.QueryString);
+        Assert.Equal("https://api.test/api/v1/events/abc/wheel?token=***&x=1", prepared.Request.Url);
+        Assert.Equal("?token=***&x=1", prepared.Request.QueryString);
         Assert.Equal("User-Agent", Assert.Single(prepared.Request.Headers.Keys));
         Assert.Null(prepared.User.Id);
         Assert.Null(prepared.User.IpAddress);

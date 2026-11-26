@@ -59,7 +59,6 @@ internal static class MovieActionContext
     public static async Task<(Event Event, Movie Movie, bool IsHost)> ResolveMovieForHostActionAsync(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
-        IHostTokenAccessor hostTokenAccessor,
         string? currentUserId,
         DateTimeOffset utcNow,
         string idOrSlug,
@@ -79,7 +78,7 @@ internal static class MovieActionContext
         if (movie is null)
             throw Errors.MovieNotFound();
 
-        var isHost = HostedEvent.IsHost(evt, hostTokenAccessor, currentUserId);
+        var isHost = HostedEvent.IsHost(evt, currentUserId);
 
         return (evt, movie, isHost);
     }

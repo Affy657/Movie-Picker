@@ -611,7 +611,6 @@ describe('accessibility (axe)', () => {
           <MemoryRouter>
             <EventDetailSession
               slug="soiree-a11y"
-              hostToken={null}
               event={event}
               moviesQuery={
                 {

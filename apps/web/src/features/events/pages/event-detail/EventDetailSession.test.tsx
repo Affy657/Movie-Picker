@@ -108,7 +108,6 @@ function SessionUnderTest({
   return (
     <EventDetailSession
       slug="soiree"
-      hostToken={null}
       event={event}
       moviesQuery={
         {

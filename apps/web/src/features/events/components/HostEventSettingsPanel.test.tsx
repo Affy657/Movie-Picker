@@ -14,12 +14,7 @@ import titleBarStyles from '@/shared/components/DialogTitleBar.module.css';
 import modalStyles from '@/shared/components/Modal.module.css';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
 import type { EventData } from '@/features/events/types';
-import {
-  setStoredHostToken,
-  setStoredParticipant,
-  getStoredParticipant,
-  getStoredHostToken,
-} from '@/shared/utils/eventIdentityStorage';
+import { setStoredParticipant, getStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 
 beforeAll(() => {
   if (!HTMLDialogElement.prototype.showModal) {
@@ -104,7 +99,6 @@ describe('HostEventSettingsPanel', () => {
     renderWithRouter(
       <HostEventSettingsPanel
         slug={slug}
-        hostToken={null}
         event={{
           ...baseEvent,
           winners: [{ movieId: 'm1', pickMethod: 'wheel', pickedAt: '2030-01-01T20:00:00Z' }],
@@ -150,13 +144,7 @@ describe('HostEventSettingsPanel', () => {
 
     const qc = createTestQueryClient();
     renderWithRouter(
-      <HostEventSettingsPanel
-        slug={slug}
-        hostToken={null}
-        event={baseEvent}
-        open
-        onClose={() => {}}
-      />,
+      <HostEventSettingsPanel slug={slug} event={baseEvent} open onClose={() => {}} />,
       qc
     );
 
@@ -176,13 +164,7 @@ describe('HostEventSettingsPanel', () => {
     );
 
     renderWithRouter(
-      <HostEventSettingsPanel
-        slug={slug}
-        hostToken={null}
-        event={baseEvent}
-        open
-        onClose={() => {}}
-      />
+      <HostEventSettingsPanel slug={slug} event={baseEvent} open onClose={() => {}} />
     );
     const allowSeries = screen.getByRole('switch', { name: 'Séries TV' });
 
@@ -205,13 +187,7 @@ describe('HostEventSettingsPanel', () => {
     );
 
     renderWithRouter(
-      <HostEventSettingsPanel
-        slug={slug}
-        hostToken={null}
-        event={baseEvent}
-        open
-        onClose={() => {}}
-      />
+      <HostEventSettingsPanel slug={slug} event={baseEvent} open onClose={() => {}} />
     );
 
     await user.click(screen.getByRole('switch', { name: 'Propositions anonymes' }));
@@ -223,7 +199,6 @@ describe('HostEventSettingsPanel', () => {
     renderWithRouter(
       <HostEventSettingsPanel
         slug={slug}
-        hostToken={null}
         event={{
           ...baseEvent,
           movieCount: 2,
@@ -246,7 +221,6 @@ describe('HostEventSettingsPanel', () => {
     renderWithRouter(
       <HostEventSettingsPanel
         slug={slug}
-        hostToken={null}
         event={{ ...baseEvent, movieCount: 2 }}
         open
         onClose={() => {}}
@@ -272,13 +246,7 @@ describe('HostEventSettingsPanel', () => {
     );
 
     renderWithRouter(
-      <HostEventSettingsPanel
-        slug={slug}
-        hostToken={null}
-        event={baseEvent}
-        open
-        onClose={() => {}}
-      />
+      <HostEventSettingsPanel slug={slug} event={baseEvent} open onClose={() => {}} />
     );
     const title = screen.getByLabelText('Nom');
 
@@ -305,13 +273,7 @@ describe('HostEventSettingsPanel', () => {
     );
 
     renderWithRouter(
-      <HostEventSettingsPanel
-        slug={slug}
-        hostToken={null}
-        event={baseEvent}
-        open
-        onClose={() => {}}
-      />
+      <HostEventSettingsPanel slug={slug} event={baseEvent} open onClose={() => {}} />
     );
     const allowSeries = screen.getByRole('switch', { name: 'Séries TV' });
 
@@ -343,13 +305,7 @@ describe('HostEventSettingsPanel', () => {
     qc.setQueryData(queryKeys.myEvents.active, { pages: [], pageParams: [] });
 
     renderWithRouter(
-      <HostEventSettingsPanel
-        slug={slug}
-        hostToken={null}
-        event={baseEvent}
-        open
-        onClose={() => {}}
-      />,
+      <HostEventSettingsPanel slug={slug} event={baseEvent} open onClose={() => {}} />,
       qc
     );
 
@@ -377,7 +333,6 @@ describe('HostEventSettingsPanel', () => {
         open
         onClose={() => {}}
         slug={slug}
-        hostToken={null}
         event={{ ...baseEvent, participantCount: 2 }}
       />
     );
@@ -407,7 +362,6 @@ describe('HostEventSettingsPanel', () => {
         open
         onClose={() => {}}
         slug={slug}
-        hostToken={null}
         event={{ ...baseEvent, config: { ...baseEvent.config!, maxParticipants: 8 } }}
       />
     );
@@ -426,7 +380,6 @@ describe('HostEventSettingsPanel', () => {
         open
         onClose={() => {}}
         slug={slug}
-        hostToken={null}
         event={{
           ...baseEvent,
           config: { ...baseEvent.config!, maxParticipants: 300, maxProposalsPerParticipant: 15 },
@@ -450,13 +403,7 @@ describe('HostEventSettingsPanel', () => {
     );
 
     renderWithRouter(
-      <HostEventSettingsPanel
-        open
-        onClose={() => {}}
-        slug={slug}
-        hostToken={null}
-        event={baseEvent}
-      />
+      <HostEventSettingsPanel open onClose={() => {}} slug={slug} event={baseEvent} />
     );
 
     const field = screen.getByLabelText('Votes par personne');
@@ -486,7 +433,6 @@ describe('HostEventSettingsPanel', () => {
         open
         onClose={() => {}}
         slug={slug}
-        hostToken={null}
         event={{ ...baseEvent, config: { ...baseEvent.config!, maxVotesPerParticipant: 4 } }}
       />
     );
@@ -512,7 +458,6 @@ describe('HostEventSettingsPanel', () => {
         open
         onClose={() => {}}
         slug={slug}
-        hostToken={null}
         event={{ ...baseEvent, config: { ...baseEvent.config!, maxVotesPerParticipant: 4 } }}
       />
     );
@@ -540,7 +485,6 @@ describe('HostEventSettingsPanel', () => {
         open
         onClose={() => {}}
         slug={slug}
-        hostToken={null}
         event={{
           ...baseEvent,
           participantCount: 5,
@@ -567,7 +511,6 @@ describe('HostEventSettingsPanel', () => {
         open
         onClose={() => {}}
         slug={slug}
-        hostToken={null}
         event={{
           ...baseEvent,
           participantCount: 5,
@@ -602,13 +545,7 @@ describe('HostEventSettingsPanel', () => {
     );
 
     renderWithRouter(
-      <HostEventSettingsPanel
-        slug={slug}
-        hostToken={null}
-        event={baseEvent}
-        open
-        onClose={() => {}}
-      />,
+      <HostEventSettingsPanel slug={slug} event={baseEvent} open onClose={() => {}} />,
       createTestQueryClient()
     );
 
@@ -631,7 +568,6 @@ describe('HostEventSettingsPanel', () => {
     renderWithRouter(
       <HostEventSettingsPanel
         slug={slug}
-        hostToken={null}
         event={{
           ...baseEvent,
           winners: [{ movieId: 'm1', pickMethod: 'wheel', pickedAt: '2030-01-01T20:00:00Z' }],
@@ -661,13 +597,7 @@ describe('HostEventSettingsPanel', () => {
     );
 
     renderWithRouter(
-      <HostEventSettingsPanel
-        slug={slug}
-        hostToken={null}
-        event={baseEvent}
-        open
-        onClose={() => {}}
-      />,
+      <HostEventSettingsPanel slug={slug} event={baseEvent} open onClose={() => {}} />,
       createTestQueryClient()
     );
 
@@ -687,13 +617,7 @@ describe('HostEventSettingsPanel', () => {
   describe('dates the night cannot take', () => {
     function renderPanel() {
       renderWithRouter(
-        <HostEventSettingsPanel
-          slug={slug}
-          hostToken={null}
-          event={baseEvent}
-          open
-          onClose={() => {}}
-        />
+        <HostEventSettingsPanel slug={slug} event={baseEvent} open onClose={() => {}} />
       );
     }
 
@@ -752,13 +676,7 @@ describe('HostEventSettingsPanel', () => {
 
     function renderPanel() {
       renderWithRouter(
-        <HostEventSettingsPanel
-          slug={slug}
-          hostToken={null}
-          event={baseEvent}
-          open
-          onClose={() => {}}
-        />
+        <HostEventSettingsPanel slug={slug} event={baseEvent} open onClose={() => {}} />
       );
     }
 
@@ -844,7 +762,6 @@ describe('HostEventSettingsPanel', () => {
       return (
         <HostEventSettingsPanel
           slug={slug}
-          hostToken={null}
           event={baseEvent}
           open={open}
           onClose={() => setOpen(false)}
@@ -861,7 +778,6 @@ describe('HostEventSettingsPanel', () => {
           </button>
           <HostEventSettingsPanel
             slug={slug}
-            hostToken={null}
             event={baseEvent}
             open={open}
             onClose={() => setOpen(false)}
@@ -929,7 +845,6 @@ describe('HostEventSettingsPanel', () => {
     renderWithRouter(
       <HostEventSettingsPanel
         slug={slug}
-        hostToken={null}
         event={{
           ...baseEvent,
           winners: [
@@ -969,13 +884,7 @@ describe('HostEventSettingsPanel', () => {
 
     it('does NOT show the danger zone when the user is not the signed-in creator', async () => {
       renderWithRouter(
-        <HostEventSettingsPanel
-          slug={slug}
-          hostToken="ht-only"
-          event={baseEvent}
-          open
-          onClose={() => {}}
-        />
+        <HostEventSettingsPanel slug={slug} event={baseEvent} open onClose={() => {}} />
       );
       expect(screen.queryByTestId('host-danger-zone')).not.toBeInTheDocument();
       expect(screen.queryByTestId('delete-event-button')).not.toBeInTheDocument();
@@ -985,7 +894,6 @@ describe('HostEventSettingsPanel', () => {
       renderWithRouter(
         <HostEventSettingsPanel
           slug={slug}
-          hostToken={null}
           event={eventAsConnectedCreator()}
           open
           onClose={() => {}}
@@ -1016,12 +924,10 @@ describe('HostEventSettingsPanel', () => {
       );
 
       setStoredParticipant(slug, myPid, 'Hôte');
-      setStoredHostToken(slug, 'ht-1');
 
       renderWithRouter(
         <HostEventSettingsPanel
           slug={slug}
-          hostToken="ht-1"
           event={eventAsConnectedCreator()}
           open
           onClose={() => {}}
@@ -1036,7 +942,6 @@ describe('HostEventSettingsPanel', () => {
       expect(calledUrl).not.toContain('/participants/');
 
       await waitFor(() => expect(getStoredParticipant(slug)).toBeNull());
-      expect(getStoredHostToken(slug)).toBeNull();
 
       expect(await screen.findByTestId('route-my-events')).toBeInTheDocument();
     });
@@ -1054,7 +959,6 @@ describe('HostEventSettingsPanel', () => {
       renderWithRouter(
         <HostEventSettingsPanel
           slug={slug}
-          hostToken={null}
           event={eventAsConnectedCreator()}
           open
           onClose={() => {}}
@@ -1081,7 +985,6 @@ describe('HostEventSettingsPanel', () => {
       renderWithRouter(
         <HostEventSettingsPanel
           slug={slug}
-          hostToken={null}
           event={eventAsConnectedCreator()}
           open
           onClose={() => {}}
@@ -1124,13 +1027,7 @@ describe('HostEventSettingsPanel', () => {
     );
 
     renderWithRouter(
-      <HostEventSettingsPanel
-        open
-        onClose={() => {}}
-        slug={slug}
-        hostToken={null}
-        event={creatorEvent}
-      />
+      <HostEventSettingsPanel open onClose={() => {}} slug={slug} event={creatorEvent} />
     );
 
     await user.click(await screen.findByRole('button', { name: /Soirée horreur/ }));
@@ -1160,13 +1057,7 @@ describe('HostEventSettingsPanel', () => {
     );
 
     renderWithRouter(
-      <HostEventSettingsPanel
-        open
-        onClose={() => {}}
-        slug={slug}
-        hostToken={null}
-        event={creatorEvent}
-      />
+      <HostEventSettingsPanel open onClose={() => {}} slug={slug} event={creatorEvent} />
     );
 
     await user.click(await screen.findByRole('button', { name: /Soirée horreur/ }));
@@ -1200,7 +1091,6 @@ describe('HostEventSettingsPanel', () => {
         open
         onClose={() => {}}
         slug={slug}
-        hostToken={null}
         event={{
           ...creatorEvent,
           movieCount: 3,
@@ -1235,7 +1125,6 @@ describe('HostEventSettingsPanel', () => {
         open
         onClose={() => {}}
         slug={slug}
-        hostToken={null}
         event={{
           ...creatorEvent,
           movieCount: 3,
@@ -1265,13 +1154,7 @@ describe('HostEventSettingsPanel', () => {
     );
 
     renderWithRouter(
-      <HostEventSettingsPanel
-        open
-        onClose={() => {}}
-        slug={slug}
-        hostToken={null}
-        event={creatorEvent}
-      />
+      <HostEventSettingsPanel open onClose={() => {}} slug={slug} event={creatorEvent} />
     );
 
     fireEvent.change(screen.getByLabelText('Votes par personne'), { target: { value: '0' } });
@@ -1293,13 +1176,7 @@ describe('HostEventSettingsPanel', () => {
     );
 
     renderWithRouter(
-      <HostEventSettingsPanel
-        open
-        onClose={() => {}}
-        slug={slug}
-        hostToken={null}
-        event={creatorEvent}
-      />
+      <HostEventSettingsPanel open onClose={() => {}} slug={slug} event={creatorEvent} />
     );
 
     await user.click(await screen.findByRole('button', { name: 'Gérer' }));
@@ -1328,13 +1205,7 @@ describe('HostEventSettingsPanel', () => {
     );
 
     renderWithRouter(
-      <HostEventSettingsPanel
-        open
-        onClose={() => {}}
-        slug={slug}
-        hostToken={null}
-        event={creatorEvent}
-      />
+      <HostEventSettingsPanel open onClose={() => {}} slug={slug} event={creatorEvent} />
     );
 
     await user.click(await screen.findByRole('button', { name: 'Gérer' }));
@@ -1376,13 +1247,7 @@ describe('HostEventSettingsPanel', () => {
     );
 
     renderWithRouter(
-      <HostEventSettingsPanel
-        open
-        onClose={() => {}}
-        slug={slug}
-        hostToken={null}
-        event={creatorEvent}
-      />
+      <HostEventSettingsPanel open onClose={() => {}} slug={slug} event={creatorEvent} />
     );
 
     await user.click(await screen.findByRole('button', { name: /Soirée horreur/ }));
@@ -1431,13 +1296,7 @@ describe('HostEventSettingsPanel', () => {
     );
 
     renderWithRouter(
-      <HostEventSettingsPanel
-        open
-        onClose={() => {}}
-        slug={slug}
-        hostToken={null}
-        event={creatorEvent}
-      />
+      <HostEventSettingsPanel open onClose={() => {}} slug={slug} event={creatorEvent} />
     );
 
     const chip = await screen.findByRole('button', { name: /Soirée horreur/ });
@@ -1465,7 +1324,6 @@ describe('HostEventSettingsPanel', () => {
         open
         onClose={() => {}}
         slug={slug}
-        hostToken={null}
         event={{
           ...creatorEvent,
           winners: [{ movieId: 'm1', pickMethod: 'wheel', pickedAt: '2030-01-01T20:00:00Z' }],
@@ -1492,13 +1350,7 @@ describe('HostEventSettingsPanel', () => {
     );
 
     renderWithRouter(
-      <HostEventSettingsPanel
-        open
-        onClose={() => {}}
-        slug={slug}
-        hostToken={null}
-        event={creatorEvent}
-      />
+      <HostEventSettingsPanel open onClose={() => {}} slug={slug} event={creatorEvent} />
     );
 
     const chip = await screen.findByRole('button', { name: /Soirée horreur/ });
@@ -1551,13 +1403,7 @@ describe('HostEventSettingsPanel', () => {
       const bodies = serveGroupsAndCapturePatch();
 
       renderWithRouter(
-        <HostEventSettingsPanel
-          slug={slug}
-          hostToken="ht-1"
-          event={groupEvent(null)}
-          open
-          onClose={() => {}}
-        />
+        <HostEventSettingsPanel slug={slug} event={groupEvent(null)} open onClose={() => {}} />
       );
 
       await user.click(await screen.findByRole('button', { name: 'Les jeudis ciné' }));
@@ -1571,13 +1417,7 @@ describe('HostEventSettingsPanel', () => {
       const bodies = serveGroupsAndCapturePatch();
 
       renderWithRouter(
-        <HostEventSettingsPanel
-          slug={slug}
-          hostToken="ht-1"
-          event={groupEvent('g1')}
-          open
-          onClose={() => {}}
-        />
+        <HostEventSettingsPanel slug={slug} event={groupEvent('g1')} open onClose={() => {}} />
       );
 
       expect(
@@ -1594,13 +1434,7 @@ describe('HostEventSettingsPanel', () => {
       serveGroupsAndCapturePatch();
 
       renderWithRouter(
-        <HostEventSettingsPanel
-          slug={slug}
-          hostToken="ht-1"
-          event={groupEvent('gone')}
-          open
-          onClose={() => {}}
-        />
+        <HostEventSettingsPanel slug={slug} event={groupEvent('gone')} open onClose={() => {}} />
       );
 
       expect(
@@ -1617,13 +1451,7 @@ describe('HostEventSettingsPanel', () => {
       );
 
       renderWithRouter(
-        <HostEventSettingsPanel
-          slug={slug}
-          hostToken="ht-1"
-          event={groupEvent(null)}
-          open
-          onClose={() => {}}
-        />
+        <HostEventSettingsPanel slug={slug} event={groupEvent(null)} open onClose={() => {}} />
       );
 
       await screen.findByRole('switch', { name: 'Répéter' });
@@ -1652,13 +1480,7 @@ describe('HostEventSettingsPanel', () => {
       const bodies = capturePatchBody();
 
       renderWithRouter(
-        <HostEventSettingsPanel
-          slug={slug}
-          hostToken="ht-1"
-          event={recurringEvent()}
-          open
-          onClose={() => {}}
-        />
+        <HostEventSettingsPanel slug={slug} event={recurringEvent()} open onClose={() => {}} />
       );
 
       await user.click(screen.getByRole('switch', { name: 'Répéter' }));
@@ -1675,7 +1497,6 @@ describe('HostEventSettingsPanel', () => {
       renderWithRouter(
         <HostEventSettingsPanel
           slug={slug}
-          hostToken="ht-1"
           event={recurringEvent({ recurrence: 'weekly' })}
           open
           onClose={() => {}}
@@ -1697,7 +1518,6 @@ describe('HostEventSettingsPanel', () => {
       renderWithRouter(
         <HostEventSettingsPanel
           slug={slug}
-          hostToken="ht-1"
           event={recurringEvent({ recurrence: 'biweekly' })}
           open
           onClose={() => {}}
@@ -1718,7 +1538,6 @@ describe('HostEventSettingsPanel', () => {
       renderWithRouter(
         <HostEventSettingsPanel
           slug={slug}
-          hostToken="ht-1"
           event={recurringEvent({ recurrence: 'weekly' })}
           open
           onClose={() => {}}
@@ -1736,7 +1555,6 @@ describe('HostEventSettingsPanel', () => {
       renderWithRouter(
         <HostEventSettingsPanel
           slug={slug}
-          hostToken="ht-1"
           event={recurringEvent({ recurrence: 'weekly', hasNextOccurrence: true })}
           open
           onClose={() => {}}
@@ -1757,13 +1575,7 @@ describe('HostEventSettingsPanel', () => {
 
     function renderOpenPanel(onClose: () => void = () => {}) {
       renderWithRouter(
-        <HostEventSettingsPanel
-          slug={slug}
-          hostToken={null}
-          event={baseEvent}
-          open
-          onClose={onClose}
-        />
+        <HostEventSettingsPanel slug={slug} event={baseEvent} open onClose={onClose} />
       );
     }
 

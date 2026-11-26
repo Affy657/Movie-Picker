@@ -40,7 +40,6 @@ public sealed class ProfileProposalsEndpointsTests : IClassFixture<MoviePickerAp
             Title = $"Soirée {title}",
             Date = "2025-01-01",
             Time = "20:30",
-            HostToken = Guid.NewGuid().ToString("N"),
             Slug = "proposed-" + Guid.NewGuid().ToString("N")[..10],
             CreatedAt = past,
             UpdatedAt = past

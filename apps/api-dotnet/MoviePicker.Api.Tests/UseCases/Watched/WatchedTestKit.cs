@@ -123,7 +123,6 @@ internal sealed class WatchedTestKit
             Date = date,
             Time = "20:30",
             Slug = slug ?? $"night-{date}-{tmdbId}",
-            HostToken = "host",
             CreatedAt = Start,
             UpdatedAt = Start
         });

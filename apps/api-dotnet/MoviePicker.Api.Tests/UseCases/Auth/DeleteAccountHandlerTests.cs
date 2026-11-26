@@ -587,7 +587,7 @@ public sealed class DeleteAccountHandlerTests
         var host = await SeedUserAsync(f, "abcd1234");
         var first = await SeedGuestAsync(f, "first");
         var second = await SeedGuestAsync(f, "second");
-        var night = await f.Events.AddAsync(new Event { Title = "Nuit Nolan", Slug = "nuit-nolan", Date = TestDates.Upcoming, Time = "20:00", HostToken = "old-token", CreatorUserId = host.Id });
+        var night = await f.Events.AddAsync(new Event { Title = "Nuit Nolan", Slug = "nuit-nolan", Date = TestDates.Upcoming, Time = "20:00", CreatorUserId = host.Id });
         var start = DateTimeOffset.UtcNow.AddDays(-3);
         await JoinAsync(f, night.Id, host.Id, "Neo", start);
         await JoinAsync(f, night.Id, null, ServerCopy.DeletedAccount.Pseudo, start.AddMinutes(1));
@@ -598,7 +598,6 @@ public sealed class DeleteAccountHandlerTests
 
         var handedOver = await f.Events.GetByIdOrSlugAsync("nuit-nolan");
         Assert.Equal(first.Id, handedOver!.CreatorUserId);
-        Assert.NotEqual("old-token", handedOver.HostToken);
         Assert.Null(handedOver.ClosedAt);
         var notice = Assert.Single(await f.Notifications.ListByUserIdAsync(first.Id));
         Assert.Equal((UserNotificationType.HostRoleReceived, night.Id, "Nuit Nolan"), (notice.Type, notice.EventId, notice.EventTitle));

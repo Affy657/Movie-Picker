@@ -34,8 +34,6 @@ const REQUEST_TIMEOUT_REASON = 'request_timeout';
 
 export type ApiRequestOptions = RequestInit & { timeoutMs?: number };
 
-const HOST_TOKEN_HEADER = 'X-Host-Token';
-
 const unauthorizedListeners = new Set<(url: string) => void>();
 
 export function onUnauthorizedResponse(listener: (url: string) => void): () => void {
@@ -47,17 +45,6 @@ export function onUnauthorizedResponse(listener: (url: string) => void): () => v
 
 function reportUnauthorizedResponse(url: string): void {
   for (const listener of unauthorizedListeners) listener(url);
-}
-
-export function withHostToken(
-  hostToken: string | null | undefined,
-  init: RequestInit = {}
-): RequestInit {
-  if (!hostToken) return init;
-  return {
-    ...init,
-    headers: { ...mergeRequestHeaders(init.headers), [HOST_TOKEN_HEADER]: hostToken },
-  };
 }
 
 export function apiUrl(path: string): string {

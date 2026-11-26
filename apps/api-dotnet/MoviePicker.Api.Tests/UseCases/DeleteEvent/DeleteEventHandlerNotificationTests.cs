@@ -32,7 +32,6 @@ public sealed class DeleteEventHandlerNotificationTests
                 Date = TestDates.Upcoming,
                 Time = "20:00",
                 Slug = "soiree",
-                HostToken = "ht1",
                 CreatorUserId = "creator",
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow

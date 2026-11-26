@@ -15,7 +15,6 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
     private readonly Mock<IEventRepository> _events = new();
     private readonly Mock<IMovieRepository> _movies = new();
     private readonly Mock<IVoteRepository> _votes = new();
-    private readonly Mock<IHostTokenAccessor> _hostToken = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<IPosterImageStore> _posters = new();
     private readonly LaunchWheelHandler _sut;
@@ -23,8 +22,7 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
 
     public LaunchWheelHandlerWinnerSlotsTests()
     {
-        _currentUser.Setup(c => c.GetUserId()).Returns((string?)null);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht1");
+        _currentUser.Setup(c => c.GetUserId()).Returns("host-user");
         _votes
             .Setup(r => r.AggregateScoresByMovieIdsAsync(
                 It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
@@ -37,7 +35,6 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
             _events.Object,
             _movies.Object,
             _votes.Object,
-            _hostToken.Object,
             _currentUser.Object,
             _posters.Object,
             NullLogger<LaunchWheelHandler>.Instance,
@@ -71,7 +68,7 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
             Date = date,
             Time = "20:00",
             Slug = "soiree",
-            HostToken = "ht1",
+            CreatorUserId = "host-user",
             Config = new EventConfig { WinnerCount = winnerCount },
             Winners = TestWinners.Won(alreadyWon),
             WinnerAnnouncedAt = announcedAt,

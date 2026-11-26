@@ -51,7 +51,6 @@ public sealed class FinishedEventWatchlistPassTests
         Date = "2026-06-01",
         Time = "20:00",
         Slug = "soiree",
-        HostToken = "ht1",
         Winners = TestWinners.Won("m-win"),
         CreatedAt = Now.AddDays(-3),
         UpdatedAt = Now.AddDays(-1)

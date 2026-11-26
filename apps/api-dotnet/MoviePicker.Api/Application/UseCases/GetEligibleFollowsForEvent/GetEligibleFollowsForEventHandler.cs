@@ -32,7 +32,7 @@ public sealed class GetEligibleFollowsForEventHandler : IGetEligibleFollowsForEv
     {
         var evt = await _events.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
-        if (!HostedEvent.IsHostAccount(evt, currentUserId))
+        if (!HostedEvent.IsHost(evt, currentUserId))
             throw Errors.HostOnlyList();
 
         var followingIds = await _follows.GetFollowingIdsAsync(currentUserId, ct: ct);

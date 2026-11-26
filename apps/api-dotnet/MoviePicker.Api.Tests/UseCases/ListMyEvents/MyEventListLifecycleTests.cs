@@ -14,7 +14,6 @@ public sealed class MyEventListLifecycleTests
         Date = date,
         Time = time,
         Slug = "s",
-        HostToken = "h",
         Winners = TestWinners.Won(winnerMovieId),
         CreatedAt = DateTimeOffset.Parse("2026-01-01T00:00:00Z"),
         UpdatedAt = DateTimeOffset.Parse("2026-01-02T00:00:00Z")
@@ -89,7 +88,6 @@ public sealed class MyEventListLifecycleTests
             Date = b.Date,
             Time = b.Time,
             Slug = b.Slug,
-            HostToken = b.HostToken,
             CreatedAt = b.CreatedAt,
             UpdatedAt = b.UpdatedAt,
             ClosedAt = DateTimeOffset.Parse("2026-05-15T10:00:00Z")
@@ -109,7 +107,6 @@ public sealed class MyEventListLifecycleTests
             Date = "not-a-date",
             Time = "xx",
             Slug = b.Slug,
-            HostToken = b.HostToken,
             CreatedAt = b.CreatedAt,
             UpdatedAt = b.UpdatedAt
         };

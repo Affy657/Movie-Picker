@@ -50,7 +50,6 @@ export default function EventDetailSessionBody({
   slug,
   event,
   participant,
-  hostToken,
   movies,
   moviesQuery,
   actionError,
@@ -64,7 +63,6 @@ export default function EventDetailSessionBody({
   slug: string;
   event: EventData;
   participant: ParticipantRef | null;
-  hostToken: string | null;
   movies: MovieData[];
   moviesQuery: UseQueryResult<MovieData[]>;
   actionError: string | null;
@@ -113,7 +111,6 @@ export default function EventDetailSessionBody({
           slug={slug}
           event={event}
           participant={participant}
-          hostToken={hostToken}
           movies={movies}
           moviesQuery={moviesQuery}
           actionError={actionError}

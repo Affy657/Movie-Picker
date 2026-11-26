@@ -12,12 +12,11 @@ export type UseEventOptions = {
 
 export function useEvent(
   slug: string | undefined,
-  hostToken: string | null,
   { live = true, offlineCopy = null }: UseEventOptions = {}
 ) {
   return useQuery({
-    queryKey: queryKeys.event.detail(slug, hostToken),
-    queryFn: () => fetchEventBySlug(slug!, hostToken),
+    queryKey: queryKeys.event.detail(slug),
+    queryFn: () => fetchEventBySlug(slug!),
     enabled: !!slug,
     initialData: offlineCopy?.event,
     initialDataUpdatedAt: offlineCopy?.savedAt,

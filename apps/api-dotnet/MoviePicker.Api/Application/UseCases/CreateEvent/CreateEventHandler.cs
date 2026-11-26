@@ -64,7 +64,6 @@ public sealed class CreateEventHandler : ICreateEventHandler
             : await FriendGroupPolicy.RequireAsync(_groups, ownerId, request.GroupId.Trim(), ct);
 
         var slug = SlugGenerator.NewSlug();
-        var hostToken = SlugGenerator.NewHostToken();
 
         var evt = new Event
         {
@@ -72,7 +71,6 @@ public sealed class CreateEventHandler : ICreateEventHandler
             Title = title,
             Date = request.Date,
             Time = request.Time,
-            HostToken = hostToken,
             Slug = slug,
             RecapSlug = SlugGenerator.NewSlug(),
             CreatorUserId = ownerId,

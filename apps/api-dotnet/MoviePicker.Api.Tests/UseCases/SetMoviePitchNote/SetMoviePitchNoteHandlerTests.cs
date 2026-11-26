@@ -26,7 +26,6 @@ public sealed class SetMoviePitchNoteHandlerTests
     private static Event ActiveEvent(string? winnerMovieId = null, DateTimeOffset? closedAt = null) => new()
     {
         Id = "evt1",
-        HostToken = "ht",
         CreatorUserId = "host",
         Winners = TestWinners.Won(winnerMovieId),
         ClosedAt = closedAt

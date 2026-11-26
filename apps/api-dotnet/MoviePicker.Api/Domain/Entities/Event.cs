@@ -6,7 +6,6 @@ public sealed record Event
     public string Title { get; init; } = string.Empty;
     public string Date { get; init; } = string.Empty;
     public string Time { get; init; } = string.Empty;
-    public string HostToken { get; init; } = string.Empty;
     public string Slug { get; init; } = string.Empty;
     public string? RecapSlug { get; init; }
 

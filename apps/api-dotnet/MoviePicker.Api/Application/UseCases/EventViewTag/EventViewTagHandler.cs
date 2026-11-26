@@ -11,18 +11,15 @@ public sealed class EventViewTagHandler : IEventViewTagHandler
     public static readonly TimeSpan FreshnessWindow = TimeSpan.FromMinutes(1);
 
     private readonly IEventRepository _eventRepository;
-    private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly TimeProvider _clock;
 
     public EventViewTagHandler(
         IEventRepository eventRepository,
-        IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
         TimeProvider clock)
     {
         _eventRepository = eventRepository;
-        _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _clock = clock;
     }
@@ -34,7 +31,7 @@ public sealed class EventViewTagHandler : IEventViewTagHandler
             return null;
 
         var currentUserId = _currentUserAccessor.GetUserId();
-        var isHost = HostedEvent.IsHost(evt, _hostTokenAccessor, currentUserId);
+        var isHost = HostedEvent.IsHost(evt, currentUserId);
         var digest = ViewerDigest(currentUserId, isHost);
         var windowSeconds = (long)FreshnessWindow.TotalSeconds;
         var viewerOffsetSeconds = BinaryPrimitives.ReadUInt16BigEndian(digest.AsSpan(6, 2)) % windowSeconds;

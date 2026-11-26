@@ -17,13 +17,11 @@ public sealed class PatchEventConfigHandlerScheduleTests
 
     private readonly Mock<IEventRepository> _events = new();
     private readonly Mock<IParticipantRepository> _participants = new();
-    private readonly Mock<IHostTokenAccessor> _hostToken = new();
     private readonly Mock<IUserNotificationRepository> _notifications = new();
     private readonly PatchEventConfigHandler _sut;
 
     public PatchEventConfigHandlerScheduleTests()
     {
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
         _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
         _participants.Setup(r => r.ListByEventIdAsync("evt", It.IsAny<CancellationToken>()))
@@ -32,8 +30,7 @@ public sealed class PatchEventConfigHandlerScheduleTests
             _events.Object,
             _participants.Object,
             Mock.Of<IMovieRepository>(),
-            _hostToken.Object,
-            Mock.Of<ICurrentUserAccessor>(),
+            Mock.Of<ICurrentUserAccessor>(u => u.GetUserId() == "host"),
             TestAudienceNotifier.Over(
                 _participants.Object,
                 Mock.Of<IUserRepository>(),
@@ -55,7 +52,6 @@ public sealed class PatchEventConfigHandlerScheduleTests
                 Date = date,
                 Time = time,
                 Slug = "s",
-                HostToken = "ht",
                 CreatorUserId = "host"
             });
 

@@ -305,8 +305,7 @@ describe('JoinForm', () => {
       throw new Error(`fetchApi inattendu: ${path}`);
     });
     const client = createTestQueryClient();
-    client.setQueryData(queryKeys.event.detail('soiree', null), { slug: 'soiree' });
-    client.setQueryData(queryKeys.event.detail('soiree', 'host-token'), { slug: 'soiree' });
+    client.setQueryData(queryKeys.event.detail('soiree'), { slug: 'soiree' });
     render(
       <AppTestProviders client={client}>
         <MemoryRouter>
@@ -318,10 +317,7 @@ describe('JoinForm', () => {
     await user.click(await screen.findByRole('button', { name: /rejoindre/i }));
 
     await waitFor(() => expect(onJoined).toHaveBeenCalledWith('p1', 'ProfilCompte'));
-    expect(client.getQueryState(queryKeys.event.detail('soiree', null))?.isInvalidated).toBe(true);
-    expect(
-      client.getQueryState(queryKeys.event.detail('soiree', 'host-token'))?.isInvalidated
-    ).toBe(true);
+    expect(client.getQueryState(queryKeys.event.detail('soiree'))?.isInvalidated).toBe(true);
   });
 
   it('signed in without displayName: sends "Participant" by default', async () => {

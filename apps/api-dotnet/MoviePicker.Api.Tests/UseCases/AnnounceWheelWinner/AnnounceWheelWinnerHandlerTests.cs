@@ -14,11 +14,12 @@ public sealed class AnnounceWheelWinnerHandlerTests
 {
     private readonly Mock<IEventRepository> _eventRepo = new();
     private readonly Mock<IMovieRepository> _movieRepo = new();
-    private readonly Mock<IHostTokenAccessor> _hostTokenAccessor = new();
     private readonly Mock<ICurrentUserAccessor> _currentUserAccessor = new();
     private readonly Mock<IWinnerAnnouncer> _winnerAnnouncer = new();
     private readonly List<Movie> _movies = [];
     private readonly AnnounceWheelWinnerHandler _sut;
+
+    private const string HostUserId = "host-user";
 
     private static readonly DateTimeOffset PickedAt = DateTimeOffset.UtcNow.AddSeconds(-8);
 
@@ -29,7 +30,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
         Date = TestDates.Upcoming,
         Time = "20:00",
         Slug = "soiree",
-        HostToken = "ht1",
+        CreatorUserId = HostUserId,
         Winners =
         [
             new EventWinner { MovieId = "mov1", Method = WinnerPickMethod.Wheel, PickedAt = PickedAt }
@@ -52,8 +53,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
 
     public AnnounceWheelWinnerHandlerTests()
     {
-        _currentUserAccessor.Setup(c => c.GetUserId()).Returns((string?)null);
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
+        _currentUserAccessor.Setup(c => c.GetUserId()).Returns(HostUserId);
         _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
         _movieRepo.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
@@ -61,7 +61,6 @@ public sealed class AnnounceWheelWinnerHandlerTests
                 _movies.Where(m => ids.Contains(m.Id)).ToList());
         _sut = new AnnounceWheelWinnerHandler(
             _eventRepo.Object,
-            _hostTokenAccessor.Object,
             _currentUserAccessor.Object,
             new WheelWinnerAnnouncement(
                 _eventRepo.Object,
@@ -83,7 +82,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
     public async Task HandleAsync_NotHost_ThrowsForbiddenException()
     {
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(WheelEvent());
-        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("autre");
+        _currentUserAccessor.Setup(c => c.GetUserId()).Returns("autre");
 
         await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1"));
         _winnerAnnouncer.Verify(

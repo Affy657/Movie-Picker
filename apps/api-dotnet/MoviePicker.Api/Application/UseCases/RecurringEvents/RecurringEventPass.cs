@@ -176,7 +176,6 @@ public sealed class RecurringEventPass : IRecurringEventPass
             Date = nextDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
             Slug = SlugGenerator.NewSlug(),
             RecapSlug = SlugGenerator.NewSlug(),
-            HostToken = SlugGenerator.NewHostToken(),
             ClosedAt = null,
             Winners = [],
             WinnerAnnouncedAt = null,

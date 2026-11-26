@@ -1,4 +1,4 @@
-import { fetchApi, apiPath, withHostToken } from '@/shared/api/client';
+import { fetchApi, apiPath } from '@/shared/api/client';
 import { mapMovieData, type RawMovieData } from '@/shared/api/apiMapping';
 import type { MovieData, MovieMediaType, MovieRating } from '@/shared/types/movie';
 
@@ -61,25 +61,23 @@ export async function clearMovieVote(
 export async function removeMovieFromEvent(
   slug: string,
   movieId: string,
-  participantId: string,
-  hostToken?: string | null
+  participantId: string
 ): Promise<void> {
-  await fetchApi(
-    apiPath('events', slug, 'movies', movieId),
-    withHostToken(hostToken, { method: 'DELETE', body: JSON.stringify({ participantId }) })
-  );
+  await fetchApi(apiPath('events', slug, 'movies', movieId), {
+    method: 'DELETE',
+    body: JSON.stringify({ participantId }),
+  });
 }
 
 export async function setMovieWheelExclusion(
   slug: string,
   movieId: string,
-  excluded: boolean,
-  hostToken?: string | null
+  excluded: boolean
 ): Promise<void> {
-  await fetchApi(
-    apiPath('events', slug, 'movies', movieId, 'wheel-exclusion'),
-    withHostToken(hostToken, { method: 'PUT', body: JSON.stringify({ excluded }) })
-  );
+  await fetchApi(apiPath('events', slug, 'movies', movieId, 'wheel-exclusion'), {
+    method: 'PUT',
+    body: JSON.stringify({ excluded }),
+  });
 }
 
 export async function setMoviePitchNote(
@@ -97,13 +95,12 @@ export async function setMoviePitchNote(
 export async function deleteMoviePitchNote(
   slug: string,
   movieId: string,
-  participantId: string | null,
-  hostToken?: string | null
+  participantId: string | null
 ): Promise<void> {
-  await fetchApi(
-    apiPath('events', slug, 'movies', movieId, 'note'),
-    withHostToken(hostToken, { method: 'DELETE', body: JSON.stringify({ participantId }) })
-  );
+  await fetchApi(apiPath('events', slug, 'movies', movieId, 'note'), {
+    method: 'DELETE',
+    body: JSON.stringify({ participantId }),
+  });
 }
 
 export async function markMovieAsSeen(

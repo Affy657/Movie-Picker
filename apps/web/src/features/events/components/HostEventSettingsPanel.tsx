@@ -34,7 +34,6 @@ import styles from './HostEventSettingsPanel.module.css';
 
 type HostEventSettingsPanelProps = {
   slug: string;
-  hostToken: string | null;
   event: EventData;
   open: boolean;
   onClose: () => void;
@@ -241,7 +240,6 @@ function rulesSummaryOf(draft: SettingsDraft, defaultsSelected: boolean, t: Tran
 
 export default function HostEventSettingsPanel({
   slug,
-  hostToken,
   event,
   open,
   onClose,
@@ -249,7 +247,7 @@ export default function HostEventSettingsPanel({
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   const bodyClassName = useNightFormBodyClass();
-  const draft = useHostEventSettingsDraft({ slug, hostToken, event, open });
+  const draft = useHostEventSettingsDraft({ slug, event, open });
   const [rulesOpen, setRulesOpen] = useState(false);
   const ruleError = firstRuleError('host-cfg', draft.fieldErrors)?.message;
   const [seenRuleError, setSeenRuleError] = useState(ruleError);
@@ -271,7 +269,6 @@ export default function HostEventSettingsPanel({
   const deleteAction = draft.isConnectedCreator ? (
     <HostEventDangerZone
       slug={slug}
-      hostToken={hostToken}
       eventTitle={event.title}
       className={isMobile ? nightStyles.deleteAction : undefined}
     />

@@ -97,7 +97,6 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
             Title = "Soirée à conserver",
             Date = TestDates.Upcoming,
             Time = "20:30",
-            HostToken = Guid.NewGuid().ToString("N"),
             Slug = "rollback-" + suffix,
             CreatorUserId = user.Id,
             CreatedAt = now,
@@ -377,7 +376,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
     }
 
     private static async Task<Event> AddUpcomingNightAsync(
-        IServiceProvider services, string hostId, string hostToken, RecurrenceFrequency? recurrence = null)
+        IServiceProvider services, string hostId, RecurrenceFrequency? recurrence = null)
     {
         var now = DateTimeOffset.UtcNow;
         return await services.GetRequiredService<IEventRepository>().AddAsync(new Event
@@ -386,7 +385,6 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
             Title = "Soirée à reprendre",
             Date = TestDates.Upcoming,
             Time = "20:30",
-            HostToken = hostToken,
             Slug = "handover-" + Guid.NewGuid().ToString("N")[..8],
             CreatorUserId = hostId,
             Recurrence = recurrence,
@@ -414,7 +412,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         var host = await AddMemberAsync(services, "hote", "MotDePasse1!");
         var heir = await AddMemberAsync(services, "heritier");
         var latecomer = await AddMemberAsync(services, "retardataire");
-        var night = await AddUpcomingNightAsync(services, host.Id, "old-host-token");
+        var night = await AddUpcomingNightAsync(services, host.Id);
         var joinedAt = DateTimeOffset.UtcNow.AddDays(-3);
         await JoinAsync(services, night.Id, host.Id, "Hôte", joinedAt);
         await JoinAsync(services, night.Id, null, "Invité", joinedAt.AddMinutes(1));
@@ -426,7 +424,6 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
 
         var handedOver = (await services.GetRequiredService<IEventRepository>().GetByIdOrSlugAsync(night.Slug))!;
         Assert.Equal(heir.Id, handedOver.CreatorUserId);
-        Assert.NotEqual("old-host-token", handedOver.HostToken);
         Assert.Null(handedOver.ClosedAt);
         Assert.True(handedOver.Version > night.Version);
         var notifications = services.GetRequiredService<IUserNotificationRepository>();
@@ -445,7 +442,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         using var scope = _factory.Services.CreateScope();
         var services = scope.ServiceProvider;
         var host = await AddMemberAsync(services, "seul", "MotDePasse1!");
-        var night = await AddUpcomingNightAsync(services, host.Id, "lonely-host-token", RecurrenceFrequency.Weekly);
+        var night = await AddUpcomingNightAsync(services, host.Id, RecurrenceFrequency.Weekly);
         await JoinAsync(services, night.Id, host.Id, "Seul", DateTimeOffset.UtcNow);
 
         await services.GetRequiredService<IDeleteAccountHandler>()

@@ -46,35 +46,27 @@ beforeEach(() => {
 
 describe('event API paths', () => {
   it.each([
-    ['fetchEventBySlug', () => fetchEventBySlug(craftedSlug, null), `/events/slug/${encodedSlug}`],
+    ['fetchEventBySlug', () => fetchEventBySlug(craftedSlug), `/events/slug/${encodedSlug}`],
     ['joinEvent', () => joinEvent(craftedSlug, 'Guest'), `/events/${encodedSlug}/join`],
     ['fetchEventConfig', () => fetchEventConfig(craftedSlug), `/events/${encodedSlug}/config`],
-    [
-      'patchEventConfig',
-      () => patchEventConfig(craftedSlug, null, {}),
-      `/events/${encodedSlug}/config`,
-    ],
-    ['postEventWheel', () => postEventWheel(craftedSlug, null), `/events/${encodedSlug}/wheel`],
+    ['patchEventConfig', () => patchEventConfig(craftedSlug, {}), `/events/${encodedSlug}/config`],
+    ['postEventWheel', () => postEventWheel(craftedSlug), `/events/${encodedSlug}/wheel`],
     [
       'postEventWheelAnnounce',
-      () => postEventWheelAnnounce(craftedSlug, null),
+      () => postEventWheelAnnounce(craftedSlug),
       `/events/${encodedSlug}/wheel/announce`,
     ],
-    [
-      'postEventWinner',
-      () => postEventWinner(craftedSlug, 'm1', null),
-      `/events/${encodedSlug}/winner`,
-    ],
-    ['postEventClose', () => postEventClose(craftedSlug, null), `/events/${encodedSlug}/close`],
-    ['deleteEventWheel', () => deleteEventWheel(craftedSlug, null), `/events/${encodedSlug}/wheel`],
+    ['postEventWinner', () => postEventWinner(craftedSlug, 'm1'), `/events/${encodedSlug}/winner`],
+    ['postEventClose', () => postEventClose(craftedSlug), `/events/${encodedSlug}/close`],
+    ['deleteEventWheel', () => deleteEventWheel(craftedSlug), `/events/${encodedSlug}/wheel`],
     [
       'deleteEventWinner',
-      () => deleteEventWinner(craftedSlug, 'm/1', null),
+      () => deleteEventWinner(craftedSlug, 'm/1'),
       `/events/${encodedSlug}/winners/m%2F1`,
     ],
     [
       'removeEventParticipant',
-      () => removeEventParticipant(craftedSlug, 'p?1', null),
+      () => removeEventParticipant(craftedSlug, 'p?1'),
       `/events/${encodedSlug}/participants/p%3F1`,
     ],
     ['deleteEvent', () => deleteEvent(craftedSlug), `/events/${encodedSlug}`],

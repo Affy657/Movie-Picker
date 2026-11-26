@@ -134,7 +134,7 @@ front en tire (`apps/web/src/shared/api/generated/openapiSchema.ts`) : la liste 
 peut appeler, le type de ses réponses et celui des réponses simulées de ses tests. Une route retirée
 côté API casse donc la compilation du front, et `check:contract-compat` refuse qu’une route ou un
 champ de réponse disparaisse d’une version à la suivante. L’authentification passe par cookie de
-session, les actions d’hôte par un jeton envoyé dans l’en-tête `X-Host-Token`.
+session, et les actions d’hôte sont réservées au compte qui a créé la soirée et à ses co-hôtes.
 
 > **Le dossier technique du projet est publié en ligne, sur
 > [www.movie-picker.fr/tech](https://www.movie-picker.fr/tech).** Quatorze sections : architecture,

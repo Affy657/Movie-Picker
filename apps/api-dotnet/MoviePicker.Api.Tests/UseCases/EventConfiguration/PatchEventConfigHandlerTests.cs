@@ -16,7 +16,6 @@ public sealed class PatchEventConfigHandlerTests
     private readonly Mock<IEventRepository> _events;
     private readonly Mock<IParticipantRepository> _participants;
     private readonly Mock<IMovieRepository> _movies = new();
-    private readonly Mock<IHostTokenAccessor> _hostToken;
     private readonly Mock<ICurrentUserAccessor> _user;
     private readonly Mock<IUserRepository> _userRepo = new();
     private readonly Mock<IPushSubscriptionRepository> _pushSubRepo = new();
@@ -29,13 +28,12 @@ public sealed class PatchEventConfigHandlerTests
     {
         _events = new Mock<IEventRepository>();
         _participants = new Mock<IParticipantRepository>();
-        _hostToken = new Mock<IHostTokenAccessor>();
         _user = new Mock<ICurrentUserAccessor>();
+        _user.Setup(u => u.GetUserId()).Returns("host");
         _sut = new PatchEventConfigHandler(
             _events.Object,
             _participants.Object,
             _movies.Object,
-            _hostToken.Object,
             _user.Object,
             TestAudienceNotifier.Over(_participants.Object, _userRepo.Object, _pushSubRepo.Object, _pushSender.Object, _notifications.Object),
             new InMemoryFriendGroupRepository(),
@@ -51,7 +49,7 @@ public sealed class PatchEventConfigHandlerTests
         Date = TestDates.Upcoming,
         Time = "20:00",
         Slug = "s",
-        HostToken = "ht",
+        CreatorUserId = "host",
         CreatedAt = DateTimeOffset.UtcNow,
         UpdatedAt = DateTimeOffset.UtcNow
     };
@@ -61,7 +59,6 @@ public sealed class PatchEventConfigHandlerTests
     {
         var evt = Evt();
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns((string?)null);
         _user.Setup(u => u.GetUserId()).Returns((string?)null);
 
         await Assert.ThrowsAsync<ForbiddenException>(() =>
@@ -79,13 +76,12 @@ public sealed class PatchEventConfigHandlerTests
             Date = evt.Date,
             Time = evt.Time,
             Slug = evt.Slug,
-            HostToken = evt.HostToken,
+            CreatorUserId = evt.CreatorUserId,
             Winners = TestWinners.Won("m1"),
             CreatedAt = evt.CreatedAt,
             UpdatedAt = evt.UpdatedAt
         };
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
 
         await Assert.ThrowsAsync<ConflictException>(() =>
             _sut.HandleAsync("s", new PatchEventConfigRequest { Theme = "x" }));
@@ -96,7 +92,6 @@ public sealed class PatchEventConfigHandlerTests
     {
         var evt = Evt();
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
         _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
 
@@ -110,7 +105,6 @@ public sealed class PatchEventConfigHandlerTests
     {
         var evt = Evt();
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
         _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
 
@@ -123,7 +117,6 @@ public sealed class PatchEventConfigHandlerTests
     public async Task HandleAsync_AnonymousProposals_TurnsOn()
     {
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(Evt());
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
         _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
 
@@ -140,7 +133,6 @@ public sealed class PatchEventConfigHandlerTests
     {
         var evt = Evt() with { Config = new EventConfig { AnonymousProposals = true } };
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
         _movies.Setup(r => r.CountByEventIdAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() =>
@@ -154,7 +146,6 @@ public sealed class PatchEventConfigHandlerTests
     public async Task HandleAsync_AnonymousProposals_CannotTurnOnOnceAMovieWasProposed()
     {
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(Evt());
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
         _movies.Setup(r => r.CountByEventIdAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() =>
@@ -170,7 +161,6 @@ public sealed class PatchEventConfigHandlerTests
         var evt = Evt() with { Config = new EventConfig { AnonymousProposals = true } };
         var locked = false;
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
         _events.Setup(r => r.LockForWriteAsync("evt1", It.IsAny<CancellationToken>()))
             .Callback(() => locked = true)
             .Returns(Task.CompletedTask);
@@ -192,7 +182,6 @@ public sealed class PatchEventConfigHandlerTests
     {
         var evt = Evt() with { Config = new EventConfig { AnonymousProposals = true } };
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
         _movies.Setup(r => r.CountByEventIdAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(3);
         _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
@@ -222,7 +211,6 @@ public sealed class PatchEventConfigHandlerTests
     {
         var evt = Evt();
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
         _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
 
@@ -236,7 +224,6 @@ public sealed class PatchEventConfigHandlerTests
     {
         var evt = Evt() with { Config = new EventConfig { MaxVotesPerParticipant = 3 } };
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
         _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
 
@@ -250,7 +237,6 @@ public sealed class PatchEventConfigHandlerTests
     {
         var evt = Evt() with { Config = new EventConfig { MaxVotesPerParticipant = 3 } };
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
         _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
 
@@ -264,7 +250,6 @@ public sealed class PatchEventConfigHandlerTests
     {
         var evt = Evt();
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
 
         await Assert.ThrowsAsync<BadRequestException>(() =>
             _sut.HandleAsync("s", new PatchEventConfigRequest { MaxVotesPerParticipant = -1 }));
@@ -276,7 +261,6 @@ public sealed class PatchEventConfigHandlerTests
     {
         var evt = Evt();
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
         _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
 
@@ -290,7 +274,6 @@ public sealed class PatchEventConfigHandlerTests
     {
         var evt = Evt();
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
         _participants.Setup(p => p.CountByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(3);
         _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
@@ -309,7 +292,6 @@ public sealed class PatchEventConfigHandlerTests
             Config = new EventConfig { MaxParticipants = 4 }
         };
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
         _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
 
@@ -323,7 +305,6 @@ public sealed class PatchEventConfigHandlerTests
     {
         var evt = Evt();
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
 
         await Assert.ThrowsAsync<BadRequestException>(() =>
             _sut.HandleAsync("s", new PatchEventConfigRequest { MaxParticipants = 501 }));
@@ -334,7 +315,6 @@ public sealed class PatchEventConfigHandlerTests
     {
         var evt = Evt();
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
         _participants.Setup(p => p.CountByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(7);
 
@@ -348,7 +328,6 @@ public sealed class PatchEventConfigHandlerTests
     {
         var evt = Evt();
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
         var steps = new List<string>();
         _events.Setup(r => r.LockForWriteAsync(evt.Id, It.IsAny<CancellationToken>()))
             .Callback(() => steps.Add(_unitOfWork.IsExecuting ? "lock" : "lock-outside"))
@@ -370,7 +349,6 @@ public sealed class PatchEventConfigHandlerTests
     {
         var evt = Evt();
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
         _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
 
@@ -386,7 +364,6 @@ public sealed class PatchEventConfigHandlerTests
     {
         var evt = Evt();
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
         _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
 
@@ -402,7 +379,6 @@ public sealed class PatchEventConfigHandlerTests
     {
         var evt = Evt();
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
 
         await Assert.ThrowsAsync<BadRequestException>(() =>
             _sut.HandleAsync("s", new PatchEventConfigRequest { Title = "   " }));
@@ -413,7 +389,6 @@ public sealed class PatchEventConfigHandlerTests
     {
         var evt = Evt();
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
 
         var ex = await Assert.ThrowsAsync<BadRequestException>(() =>
             _sut.HandleAsync("s", new PatchEventConfigRequest { Theme = new string('a', EventConfig.ThemeMaxLength + 1) }));
@@ -426,7 +401,6 @@ public sealed class PatchEventConfigHandlerTests
     {
         var evt = Evt();
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
         _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
         var theme = new string('a', EventConfig.ThemeMaxLength);
@@ -441,7 +415,6 @@ public sealed class PatchEventConfigHandlerTests
     {
         var evt = Evt();
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
 
         await Assert.ThrowsAsync<BadRequestException>(() =>
             _sut.HandleAsync("s", new PatchEventConfigRequest { Title = new string('a', 201) }));
@@ -452,7 +425,6 @@ public sealed class PatchEventConfigHandlerTests
     {
         var evt = Evt() with { ClosedAt = DateTimeOffset.UtcNow.AddDays(-1) };
         _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() =>
             _sut.HandleAsync("s", new PatchEventConfigRequest { Title = "Nouveau nom" }));

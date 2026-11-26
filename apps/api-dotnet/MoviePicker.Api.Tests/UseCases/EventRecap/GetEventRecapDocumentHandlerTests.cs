@@ -69,7 +69,6 @@ public sealed class GetEventRecapDocumentHandlerTests
         Title = title,
         Slug = "night-" + slug,
         RecapSlug = slug,
-        HostToken = "h",
         Date = "2026-09-18",
         Time = "20:30",
         Winners = winnerMovieIds

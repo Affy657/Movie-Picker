@@ -7,7 +7,6 @@ public static class SlugGenerator
     private const string UrlSafeAlphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_";
 
     public static string NewSlug(int length = 10) => New(length);
-    public static string NewHostToken(int length = 32) => New(length);
 
     private static string New(int length)
     {

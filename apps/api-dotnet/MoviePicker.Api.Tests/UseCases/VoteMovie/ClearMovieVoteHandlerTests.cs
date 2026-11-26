@@ -50,7 +50,6 @@ public sealed class ClearMovieVoteHandlerTests
             Date = "2000-01-01",
             Time = "20:00",
             Slug = "soiree",
-            HostToken = "ht",
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };

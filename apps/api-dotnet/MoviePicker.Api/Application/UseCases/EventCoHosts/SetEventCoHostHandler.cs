@@ -9,20 +9,17 @@ public sealed class SetEventCoHostHandler : ISetEventCoHostHandler
 {
     private readonly IEventRepository _events;
     private readonly IParticipantRepository _participants;
-    private readonly IHostTokenAccessor _hostTokens;
     private readonly IUnitOfWork _unitOfWork;
     private readonly TimeProvider _clock;
 
     public SetEventCoHostHandler(
         IEventRepository events,
         IParticipantRepository participants,
-        IHostTokenAccessor hostTokens,
         IUnitOfWork unitOfWork,
         TimeProvider clock)
     {
         _events = events;
         _participants = participants;
-        _hostTokens = hostTokens;
         _unitOfWork = unitOfWork;
         _clock = clock;
     }
@@ -35,7 +32,7 @@ public sealed class SetEventCoHostHandler : ISetEventCoHostHandler
         CancellationToken ct = default)
     {
         var evt = await _events.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
-        if (!HostedEvent.IsCreator(evt, _hostTokens, userId))
+        if (!HostedEvent.IsCreator(evt, userId))
             throw Errors.CreatorOnlyCoHosts();
 
         var now = _clock.GetUtcNow();

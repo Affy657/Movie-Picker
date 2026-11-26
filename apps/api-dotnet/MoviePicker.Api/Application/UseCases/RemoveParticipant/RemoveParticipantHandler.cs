@@ -15,7 +15,6 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
     private readonly IVoteRepository _voteRepository;
     private readonly ISeenMarkRepository _seenMarkRepository;
     private readonly IMovieRatingRepository _ratingRepository;
-    private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly EventAudienceNotifier _audience;
     private readonly IUnitOfWork _unitOfWork;
@@ -29,7 +28,6 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         IVoteRepository voteRepository,
         ISeenMarkRepository seenMarkRepository,
         IMovieRatingRepository ratingRepository,
-        IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
         EventAudienceNotifier audience,
         IUnitOfWork unitOfWork,
@@ -42,7 +40,6 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         _voteRepository = voteRepository;
         _seenMarkRepository = seenMarkRepository;
         _ratingRepository = ratingRepository;
-        _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _audience = audience;
         _unitOfWork = unitOfWork;
@@ -66,7 +63,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
             throw Errors.CreatorCannotBeRemoved();
 
         var currentUserId = _currentUserAccessor.GetUserId();
-        var isHost = HostedEvent.IsHost(evt, _hostTokenAccessor, currentUserId);
+        var isHost = HostedEvent.IsHost(evt, currentUserId);
         var isSelfConnected = !string.IsNullOrEmpty(currentUserId)
             && !string.IsNullOrEmpty(participant.UserId)
             && participant.UserId == currentUserId;
@@ -96,13 +93,13 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         };
     }
 
-    private void EnsureMayRemove(Event night, Participant participant, string? currentUserId, bool isSelfConnected)
+    private static void EnsureMayRemove(Event night, Participant participant, string? currentUserId, bool isSelfConnected)
     {
         if (isSelfConnected)
             return;
-        if (!HostedEvent.IsHost(night, _hostTokenAccessor, currentUserId))
+        if (!HostedEvent.IsHost(night, currentUserId))
             throw Errors.HostOrSelfOnly();
-        if (night.IsCoHost(participant.UserId) && !HostedEvent.IsCreator(night, _hostTokenAccessor, currentUserId))
+        if (night.IsCoHost(participant.UserId) && !HostedEvent.IsCreator(night, currentUserId))
             throw Errors.CoHostCannotRemoveCoHost();
     }
 

@@ -65,7 +65,6 @@ public sealed class GetUserProposedMoviesHandlerTests
         Date = "2026-05-01",
         Time = "20:00",
         Slug = id,
-        HostToken = "ht",
         CreatorUserId = "u1",
         Winners = TestWinners.Won(winnerMovieId),
         CreatedAt = Day1,

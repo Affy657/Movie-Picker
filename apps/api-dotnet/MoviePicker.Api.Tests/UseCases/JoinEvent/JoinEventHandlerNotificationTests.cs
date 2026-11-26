@@ -29,7 +29,6 @@ public sealed class JoinEventHandlerNotificationTests
                 Date = TestDates.Upcoming,
                 Time = "20:00",
                 Slug = "soiree",
-                HostToken = "ht1",
                 CreatorUserId = "host",
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow
@@ -104,7 +103,6 @@ public sealed class JoinEventHandlerNotificationTests
                 Date = TestDates.Upcoming,
                 Time = "20:00",
                 Slug = "s2",
-                HostToken = "ht1",
                 CreatorUserId = null,
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow

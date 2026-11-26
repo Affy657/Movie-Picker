@@ -24,7 +24,6 @@ public sealed class WinnerAnnouncerTests
         Date = "2019-01-01",
         Time = "20:00",
         Slug = "soiree",
-        HostToken = "ht1",
         CreatedAt = DateTimeOffset.UtcNow,
         UpdatedAt = DateTimeOffset.UtcNow
     };

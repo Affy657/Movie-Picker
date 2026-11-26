@@ -1,4 +1,5 @@
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
@@ -10,6 +11,37 @@ namespace MoviePicker.Api.Tests.Infrastructure.Persistence.Mongo;
 public sealed class EventDocumentMapperTests
 {
     [Fact]
+    public void ALegacyDocumentStillCarryingAHostToken_IsReadWithoutIt()
+    {
+        var legacy = new BsonDocument
+        {
+            { "_id", ObjectId.GenerateNewId() },
+            { "title", "Soirée" },
+            { "date", "2026-01-01" },
+            { "time", "20:00" },
+            { "hostToken", "legacy-token" },
+            { "slug", "soiree" },
+            { "creatorUserId", new ObjectId("507f1f77bcf86cd799439011") },
+            { "winners", new BsonArray() },
+            { "createdAt", new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            { "updatedAt", new DateTime(2020, 1, 2, 0, 0, 0, DateTimeKind.Utc) }
+        };
+
+        var domain = EventDocumentMapper.ToDomain(BsonSerializer.Deserialize<EventDocument>(legacy));
+
+        Assert.Equal("soiree", domain.Slug);
+        Assert.Equal("507f1f77bcf86cd799439011", domain.CreatorUserId);
+    }
+
+    [Fact]
+    public void ToDocument_NoLongerWritesAHostToken()
+    {
+        var written = EventDocumentMapper.ToDocument(new EventEntityBuilder().WithId(ObjectId.GenerateNewId().ToString()).Build()).ToBsonDocument();
+
+        Assert.False(written.Contains("hostToken"));
+    }
+
+    [Fact]
     public void ToDomain_WithoutConfig_MapsBasicFields()
     {
         var doc = new EventDocument
@@ -18,7 +50,6 @@ public sealed class EventDocumentMapperTests
             Title = "Soirée",
             Date = "2026-01-01",
             Time = "20:00",
-            HostToken = "ht",
             Slug = "soiree",
             Config = null,
             ClosedAt = null,
@@ -33,7 +64,6 @@ public sealed class EventDocumentMapperTests
         Assert.Equal("Soirée", domain.Title);
         Assert.Equal("2026-01-01", domain.Date);
         Assert.Equal("20:00", domain.Time);
-        Assert.Equal("ht", domain.HostToken);
         Assert.Equal("soiree", domain.Slug);
         Assert.Null(domain.Config);
         Assert.Null(domain.ClosedAt);
@@ -52,7 +82,6 @@ public sealed class EventDocumentMapperTests
             Title = "Soirée",
             Date = "2026-01-01",
             Time = "20:00",
-            HostToken = "ht",
             Slug = "s",
             CreatorUserId = "507f1f77bcf86cd799439011",
             Config = null,
@@ -83,7 +112,6 @@ public sealed class EventDocumentMapperTests
             Title = "Soirée",
             Date = "2026-01-01",
             Time = "20:00",
-            HostToken = "ht",
             Slug = "s",
             Config = config,
             ClosedAt = null,
@@ -134,7 +162,6 @@ public sealed class EventDocumentMapperTests
             Title = "Soirée",
             Date = "2026-01-01",
             Time = "20:00",
-            HostToken = "ht",
             Slug = "s",
             Config = new EventConfig { Theme = "Comédie", MaxProposalsPerParticipant = 3, MaxVotesPerParticipant = 4 },
             ClosedAt = null,
@@ -160,7 +187,6 @@ public sealed class EventDocumentMapperTests
             Title = "Soirée",
             Date = "2026-01-01",
             Time = "20:00",
-            HostToken = "ht",
             Slug = "s",
             Config = new EventConfig
             {
@@ -189,7 +215,6 @@ public sealed class EventDocumentMapperTests
             Title = "Soirée",
             Date = "2026-01-01",
             Time = "20:00",
-            HostToken = "ht",
             Slug = "s",
             Config = config,
             ClosedAt = null,
@@ -213,7 +238,6 @@ public sealed class EventDocumentMapperTests
             Title = "Soirée",
             Date = "2026-01-01",
             Time = "20:00",
-            HostToken = "ht",
             Slug = "s",
             Winners = [TestWinners.Pick("mov1", WinnerPickMethod.Wheel, pickedAt)],
             CreatedAt = DateTimeOffset.UtcNow,
@@ -238,7 +262,6 @@ public sealed class EventDocumentMapperTests
             Date = "2026-02-28",
             Time = "20:30",
             Slug = "fin-de-mois",
-            HostToken = "ht",
             Recurrence = RecurrenceFrequency.Monthly,
             RecurrenceAnchorDay = 31,
             CreatedAt = DateTimeOffset.UtcNow,
@@ -260,7 +283,6 @@ public sealed class EventDocumentMapperTests
             Title = "Soirée",
             Date = "2026-01-01",
             Time = "20:00",
-            HostToken = "ht",
             Slug = "s",
             WatchlistCleanedAt = cleanedAt,
             CreatedAt = DateTimeOffset.UtcNow,
@@ -283,7 +305,6 @@ public sealed class EventDocumentMapperTests
             Title = "Soirée",
             Date = "2026-01-01",
             Time = "20:00",
-            HostToken = "ht",
             Slug = "s"
         };
 

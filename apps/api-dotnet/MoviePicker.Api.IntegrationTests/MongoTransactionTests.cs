@@ -35,7 +35,6 @@ public sealed class MongoTransactionTests : IClassFixture<MoviePickerApplication
         Title = title,
         Date = "2026-12-24",
         Time = "20:30",
-        HostToken = Guid.NewGuid().ToString("N"),
         Slug = "tx-" + Guid.NewGuid().ToString("N")[..8],
         CreatedAt = DateTimeOffset.UtcNow,
         UpdatedAt = DateTimeOffset.UtcNow

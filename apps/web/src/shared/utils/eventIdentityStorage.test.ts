@@ -1,8 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   clearStoredEventIdentities,
-  getStoredHostToken,
-  setStoredHostToken,
   getStoredParticipant,
   setStoredParticipant,
 } from '@/shared/utils/eventIdentityStorage';
@@ -18,21 +16,6 @@ describe('event storage', () => {
       clear: vi.fn(),
       length: 0,
       key: vi.fn(),
-    });
-  });
-
-  describe('getStoredHostToken / setStoredHostToken', () => {
-    it('getStoredHostToken retourne null si vide', () => {
-      (sessionStorage.getItem as ReturnType<typeof vi.fn>).mockReturnValue(null);
-      expect(getStoredHostToken(slug)).toBeNull();
-    });
-    it('getStoredHostToken returns the stored value', () => {
-      (sessionStorage.getItem as ReturnType<typeof vi.fn>).mockReturnValue('my-token');
-      expect(getStoredHostToken(slug)).toBe('my-token');
-    });
-    it('setStoredHostToken calls setItem with the key and the value', () => {
-      setStoredHostToken(slug, 'token123');
-      expect(sessionStorage.setItem).toHaveBeenCalledWith('moviepicker_host_' + slug, 'token123');
     });
   });
 
@@ -61,10 +44,9 @@ describe('event storage', () => {
   });
 
   describe('clearStoredEventIdentities', () => {
-    it('removes every participant identity and every host token, nothing else', () => {
+    it('removes every participant identity, nothing else', () => {
       const keys = [
         'moviepicker_participant_abc',
-        'moviepicker_host_abc',
         'moviepicker_participant_xyz',
         'moviepicker-consent',
       ];
@@ -75,9 +57,8 @@ describe('event storage', () => {
 
       clearStoredEventIdentities();
 
-      expect(sessionStorage.removeItem).toHaveBeenCalledTimes(3);
+      expect(sessionStorage.removeItem).toHaveBeenCalledTimes(2);
       expect(sessionStorage.removeItem).toHaveBeenCalledWith('moviepicker_participant_abc');
-      expect(sessionStorage.removeItem).toHaveBeenCalledWith('moviepicker_host_abc');
       expect(sessionStorage.removeItem).toHaveBeenCalledWith('moviepicker_participant_xyz');
       expect(sessionStorage.removeItem).not.toHaveBeenCalledWith('moviepicker-consent');
     });

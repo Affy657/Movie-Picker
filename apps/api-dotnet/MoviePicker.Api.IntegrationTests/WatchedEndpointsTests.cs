@@ -67,7 +67,6 @@ public sealed class WatchedEndpointsTests : IClassFixture<MoviePickerApplication
             Title = $"Soirée {title}",
             Date = date,
             Time = "20:30",
-            HostToken = Guid.NewGuid().ToString("N"),
             Slug = "watched-" + Guid.NewGuid().ToString("N")[..10],
             CreatedAt = past,
             UpdatedAt = past

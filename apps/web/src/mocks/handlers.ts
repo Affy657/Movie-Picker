@@ -821,6 +821,7 @@ export interface MockEventOptions {
 
   theme?: string | null;
   viewerRemoved?: boolean;
+  isHost?: boolean;
 }
 
 function mockParticipant(_id: string, pseudo: string, isCreator = false) {
@@ -832,8 +833,7 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
   const slug = opts.slug;
 
   return [
-    http.get(`${V1}/events/slug/${slug}`, ({ request }) => {
-      const host = request.headers.get('X-Host-Token');
+    http.get(`${V1}/events/slug/${slug}`, () => {
       return apiJson<'EventDetailResponse'>({
         _id: 'evt-msw',
         title,
@@ -845,7 +845,7 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
         myParticipant: null,
         createdAt: MOCK_DATE,
         updatedAt: MOCK_DATE,
-        isHost: !!host,
+        isHost: opts.isHost ?? false,
         isFinished: opts.isFinished ?? false,
         lifecycle: opts.lifecycle ?? (opts.isFinished ? 'finished' : 'live'),
         winners: [],

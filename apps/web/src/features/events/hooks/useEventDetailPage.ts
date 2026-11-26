@@ -1,11 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate, useSearchParams } from 'react-router';
 import { onlineManager, useQueryClient } from '@tanstack/react-query';
 import {
-  getStoredHostToken,
   getStoredParticipant,
   removeStoredParticipant,
-  setStoredHostToken,
   setStoredParticipant,
 } from '@/shared/utils/eventIdentityStorage';
 import type { EventData } from '@/shared/types/event';
@@ -37,24 +34,7 @@ export function useEventDetailPage(
   slug: string | undefined,
   initialActionError: string | null = null
 ) {
-  const [searchParams] = useSearchParams();
-  const location = useLocation();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const hostFromUrl = searchParams.get('host');
-  const hostFromStorage = slug ? getStoredHostToken(slug) : null;
-  const hostToken = hostFromUrl ?? hostFromStorage;
-  useEffect(() => {
-    if (!slug || !hostFromUrl) return;
-    setStoredHostToken(slug, hostFromUrl);
-    if (getStoredHostToken(slug) !== hostFromUrl) return;
-    const withoutHost = new URLSearchParams(searchParams);
-    withoutHost.delete('host');
-    void navigate(
-      { search: `?${withoutHost.toString()}`, hash: location.hash },
-      { replace: true, state: location.state }
-    );
-  }, [slug, hostFromUrl, searchParams, location.hash, location.state, navigate]);
 
   const [unreachableSlug, setUnreachableSlug] = useState<string | null>(null);
   const offlineCopy = useMemo(
@@ -65,7 +45,7 @@ export function useEventDetailPage(
     [slug, unreachableSlug]
   );
   const [liveConnected, setLiveConnected] = useState(false);
-  const eventQuery = useEvent(slug, hostToken, { live: !liveConnected, offlineCopy });
+  const eventQuery = useEvent(slug, { live: !liveConnected, offlineCopy });
   const event = eventQuery.data ?? null;
   const eventUnreachable =
     eventQuery.data === undefined && ApiError.is(eventQuery.error) && eventQuery.error.code === 0;
@@ -101,9 +81,9 @@ export function useEventDetailPage(
 
   const refreshLive = useCallback(() => {
     if (!slug) return;
-    void queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug) });
     void queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
-  }, [slug, hostToken, queryClient]);
+  }, [slug, queryClient]);
   const live = useEventLiveStream({
     slug,
     enabled: !!event && !event.isFinished,
@@ -162,7 +142,7 @@ export function useEventDetailPage(
   const recapSlug = event?.recapSlug;
   const refreshAll = useCallback(() => {
     if (!slug) return;
-    void queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug) });
     void queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
     void invalidateMyNights(queryClient);
     void invalidateWatched(queryClient);
@@ -170,7 +150,7 @@ export function useEventDetailPage(
     if (recapSlug) {
       void queryClient.invalidateQueries({ queryKey: queryKeys.event.recap(recapSlug) });
     }
-  }, [slug, hostToken, recapSlug, queryClient]);
+  }, [slug, recapSlug, queryClient]);
 
   const offlineVotes = useOfflineVoteReplay({
     slug,
@@ -180,7 +160,6 @@ export function useEventDetailPage(
 
   return {
     slug,
-    hostToken,
     eventQuery,
     event,
     moviesQuery,

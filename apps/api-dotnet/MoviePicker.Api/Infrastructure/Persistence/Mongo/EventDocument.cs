@@ -19,9 +19,6 @@ public sealed class EventDocument
     [BsonElement("time")]
     public string Time { get; set; } = string.Empty;
 
-    [BsonElement("hostToken")]
-    public string HostToken { get; set; } = string.Empty;
-
     [BsonElement("slug")]
     public string Slug { get; set; } = string.Empty;
 

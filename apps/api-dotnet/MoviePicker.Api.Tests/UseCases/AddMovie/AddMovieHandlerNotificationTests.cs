@@ -48,7 +48,6 @@ public sealed class AddMovieHandlerNotificationTests
                 Date = TestDates.Upcoming,
                 Time = "20:00",
                 Slug = "soiree",
-                HostToken = "ht1",
                 Config = new EventConfig(),
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow
@@ -111,7 +110,6 @@ public sealed class AddMovieHandlerNotificationTests
             Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "soiree",
-            HostToken = "ht1",
             Config = new EventConfig(),
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
@@ -150,7 +148,6 @@ public sealed class AddMovieHandlerNotificationTests
                 Date = TestDates.Upcoming,
                 Time = "20:00",
                 Slug = "soiree",
-                HostToken = "ht1",
                 Config = new EventConfig { AnonymousProposals = true },
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow

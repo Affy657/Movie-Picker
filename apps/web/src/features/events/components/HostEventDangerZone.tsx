@@ -8,7 +8,7 @@ import { getErrorMessage } from '@/shared/api/apiError';
 import { invalidateMyNights } from '@/shared/api/invalidateMyNights';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { ROUTES } from '@/app/routes';
-import { clearStoredHostToken, removeStoredParticipant } from '@/shared/utils/eventIdentityStorage';
+import { removeStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import Button from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -17,14 +17,12 @@ import styles from './HostEventSettingsPanel.module.css';
 
 type HostEventDangerZoneProps = {
   slug: string;
-  hostToken: string | null;
   eventTitle: string;
   className?: string;
 };
 
 export default function HostEventDangerZone({
   slug,
-  hostToken,
   eventTitle,
   className,
 }: Readonly<HostEventDangerZoneProps>) {
@@ -38,8 +36,7 @@ export default function HostEventDangerZone({
     mutationFn: () => deleteEvent(slug),
     onSuccess: async () => {
       removeStoredParticipant(slug);
-      clearStoredHostToken(slug);
-      queryClient.removeQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
+      queryClient.removeQueries({ queryKey: queryKeys.event.detail(slug) });
       await invalidateMyNights(queryClient);
       void navigate(ROUTES.myEvents);
     },

@@ -12,21 +12,19 @@ namespace MoviePicker.Api.Tests.UseCases.ResetWheel;
 public sealed class ResetWheelHandlerTests
 {
     private readonly Mock<IEventRepository> _events = new();
-    private readonly Mock<IHostTokenAccessor> _hostToken = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly ResetWheelHandler _sut;
 
     public ResetWheelHandlerTests()
     {
         _sut = new ResetWheelHandler(
-            _events.Object, _hostToken.Object, _currentUser.Object, NullLogger<ResetWheelHandler>.Instance,
+            _events.Object, _currentUser.Object, NullLogger<ResetWheelHandler>.Instance,
             TimeProvider.System);
     }
 
     private static Event Evt(string? winnerMovieId = null, DateTimeOffset? closedAt = null) => new()
     {
         Id = "evt1",
-        HostToken = "ht",
         CreatorUserId = "host",
         Winners = TestWinners.Won(winnerMovieId),
         ClosedAt = closedAt
@@ -47,7 +45,6 @@ public sealed class ResetWheelHandlerTests
     {
         _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(Evt(winnerMovieId: "m1"));
         _currentUser.Setup(c => c.GetUserId()).Returns("intruder");
-        _hostToken.Setup(h => h.GetHostToken()).Returns((string?)null);
 
         await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1"));
     }

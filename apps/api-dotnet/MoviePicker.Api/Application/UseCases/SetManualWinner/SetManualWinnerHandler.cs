@@ -11,7 +11,6 @@ public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
 {
     private readonly IEventRepository _eventRepository;
     private readonly IMovieRepository _movieRepository;
-    private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IPosterImageStore _posterImageStore;
     private readonly IWinnerAnnouncer _winnerAnnouncer;
@@ -21,7 +20,6 @@ public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
     public SetManualWinnerHandler(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
-        IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
         IPosterImageStore posterImageStore,
         IWinnerAnnouncer winnerAnnouncer,
@@ -30,7 +28,6 @@ public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
-        _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _posterImageStore = posterImageStore;
         _winnerAnnouncer = winnerAnnouncer;
@@ -43,7 +40,6 @@ public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
         var userId = _currentUserAccessor.GetUserId();
         var evt = await HostedEvent.LoadForHostAsync(
             _eventRepository,
-            _hostTokenAccessor,
             userId,
             idOrSlug,
             _clock.GetUtcNow(),

@@ -61,7 +61,6 @@ public sealed class GetMyNightMoviesHandlerTests
         {
             Title = title,
             Slug = "slug-" + Guid.NewGuid().ToString("N")[..10],
-            HostToken = "host",
             Date = date,
             Time = "20:30",
             CreatorUserId = creatorUserId,

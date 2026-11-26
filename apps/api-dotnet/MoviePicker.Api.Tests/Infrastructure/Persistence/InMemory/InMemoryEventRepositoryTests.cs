@@ -23,7 +23,6 @@ public sealed class InMemoryEventRepositoryTests
             Title = title,
             Date = "2026-01-01",
             Time = "20:00",
-            HostToken = "ht",
             Slug = slug,
             CreatorUserId = creatorUserId,
             Winners = TestWinners.Won(winnerMovieId),

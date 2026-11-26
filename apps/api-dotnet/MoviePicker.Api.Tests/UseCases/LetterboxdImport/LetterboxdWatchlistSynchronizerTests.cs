@@ -419,7 +419,6 @@ public sealed class LetterboxdWatchlistSynchronizerTests
                     Date = "2026-09-01",
                     Time = "20:00",
                     Slug = "soiree",
-                    HostToken = "ht",
                     Winners = [new EventWinner { MovieId = "m-win", PickedAt = DateTimeOffset.UnixEpoch }],
                     WatchlistCleanedAt = cleanedUp ? DateTimeOffset.UnixEpoch : null
                 }

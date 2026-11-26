@@ -14,7 +14,6 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
     private readonly IEventRepository _events;
     private readonly IParticipantRepository _participants;
     private readonly IMovieRepository _movies;
-    private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly EventAudienceNotifier _audience;
     private readonly IFriendGroupRepository _groups;
@@ -26,7 +25,6 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         IEventRepository events,
         IParticipantRepository participants,
         IMovieRepository movies,
-        IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
         EventAudienceNotifier audience,
         IFriendGroupRepository groups,
@@ -37,7 +35,6 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         _events = events;
         _participants = participants;
         _movies = movies;
-        _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _audience = audience;
         _groups = groups;
@@ -52,7 +49,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         CancellationToken ct = default)
     {
         var userId = _currentUserAccessor.GetUserId();
-        var evt = await HostedEvent.LoadForHostEvenFinishedAsync(_events, _hostTokenAccessor, userId, idOrSlug, ct);
+        var evt = await HostedEvent.LoadForHostEvenFinishedAsync(_events, userId, idOrSlug, ct);
 
         var hasConfigChange = HasConfigChange(request);
         var hasDateTimeChange = request.Date is not null || request.Time is not null;
@@ -125,7 +122,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         DateTimeOffset now,
         CancellationToken ct)
     {
-        if (!HostedEvent.IsCreator(evt, _hostTokenAccessor, userId))
+        if (!HostedEvent.IsCreator(evt, userId))
             throw Errors.CreatorOnlyNightGroup();
         if (evt.IsFinished(now))
             throw Errors.EventConfigLockedFinished();

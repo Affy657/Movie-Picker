@@ -377,9 +377,8 @@ describe('UserMenu', () => {
       'moviepicker_participant_abc',
       JSON.stringify({ participantId: 'p1', pseudo: 'Alice' })
     );
-    sessionStorage.setItem('moviepicker_host_abc', 'host-token');
     const client = createTestQueryClient();
-    client.setQueryData(queryKeys.event.detail('abc', null), { slug: 'abc' });
+    client.setQueryData(queryKeys.event.detail('abc'), { slug: 'abc' });
     client.setQueryData(queryKeys.movies.list('abc'), [{ id: 'm1', myVote: 1 }]);
     render(
       <AppTestProviders client={client}>
@@ -394,8 +393,7 @@ describe('UserMenu', () => {
 
     await waitFor(() => expect(client.getQueryData(queryKeys.auth.me)).toBeNull());
     expect(sessionStorage.getItem('moviepicker_participant_abc')).toBeNull();
-    expect(sessionStorage.getItem('moviepicker_host_abc')).toBeNull();
-    expect(client.getQueryData(queryKeys.event.detail('abc', null))).toBeUndefined();
+    expect(client.getQueryData(queryKeys.event.detail('abc'))).toBeUndefined();
     expect(client.getQueryData(queryKeys.movies.list('abc'))).toBeUndefined();
   });
 });

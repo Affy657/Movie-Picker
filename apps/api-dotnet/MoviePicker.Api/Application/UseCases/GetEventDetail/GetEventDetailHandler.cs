@@ -15,7 +15,6 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
     private readonly IParticipantRepository _participantRepository;
     private readonly IVoteRepository _voteRepository;
     private readonly IUserRepository _userRepository;
-    private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly TimeProvider _clock;
 
@@ -25,7 +24,6 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         IParticipantRepository participantRepository,
         IVoteRepository voteRepository,
         IUserRepository userRepository,
-        IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
         TimeProvider clock)
     {
@@ -34,7 +32,6 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         _participantRepository = participantRepository;
         _voteRepository = voteRepository;
         _userRepository = userRepository;
-        _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _clock = clock;
     }
@@ -44,7 +41,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
         var currentUserId = _currentUserAccessor.GetUserId();
-        var isHost = HostedEvent.IsHost(evt, _hostTokenAccessor, currentUserId);
+        var isHost = HostedEvent.IsHost(evt, currentUserId);
         var now = _clock.GetUtcNow();
         var eventLifecycle = evt.Lifecycle(now);
         var isFinished = eventLifecycle == EventLifecycle.Finished;

@@ -29,7 +29,6 @@ public sealed class GroupNightsInMyNightsTests : FriendGroupTestBase
             Date = date,
             Time = "21:00",
             Slug = slug,
-            HostToken = "host-token",
             CreatorUserId = hostId,
             GroupId = groupId,
             CreatedAt = FriendGroupTestKit.Start,

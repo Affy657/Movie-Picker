@@ -19,7 +19,6 @@ public sealed class DeleteMovieHandlerTests
     private readonly Mock<ISeenMarkRepository> _seenMarkRepo;
     private readonly Mock<IMovieRatingRepository> _ratingRepo;
     private readonly Mock<IParticipantRepository> _participantRepo;
-    private readonly Mock<IHostTokenAccessor> _hostToken;
     private readonly RecordingUnitOfWork _unitOfWork = new();
     private readonly DeleteMovieHandler _sut;
 
@@ -30,7 +29,6 @@ public sealed class DeleteMovieHandlerTests
         Date = TestDates.Upcoming,
         Time = "20:00",
         Slug = "soiree",
-        HostToken = "ht",
         CreatedAt = DateTimeOffset.UtcNow,
         UpdatedAt = DateTimeOffset.UtcNow
     };
@@ -46,8 +44,6 @@ public sealed class DeleteMovieHandlerTests
         _seenMarkRepo = new Mock<ISeenMarkRepository>();
         _ratingRepo = new Mock<IMovieRatingRepository>();
         _participantRepo = new Mock<IParticipantRepository>();
-        _hostToken = new Mock<IHostTokenAccessor>();
-        _hostToken.Setup(h => h.GetHostToken()).Returns((string?)null);
         _sut = new DeleteMovieHandler(
             _eventRepo.Object,
             _movieRepo.Object,
@@ -55,7 +51,6 @@ public sealed class DeleteMovieHandlerTests
             _seenMarkRepo.Object,
             _ratingRepo.Object,
             _participantRepo.Object,
-            _hostToken.Object,
             _unitOfWork,
             TimeProvider.System);
     }
@@ -72,7 +67,7 @@ public sealed class DeleteMovieHandlerTests
     [Fact]
     public async Task HandleAsync_EventFinished_ThrowsConflictException()
     {
-        var evt = new Event { Id = "evt1", Title = "Soirée", Date = "2000-01-01", Time = "20:00", Slug = "soiree", HostToken = "ht", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        var evt = new Event { Id = "evt1", Title = "Soirée", Date = "2000-01-01", Time = "20:00", Slug = "soiree", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync(OtherUserId, "evt1", "mov1", "p123456789012345678901234"));
@@ -82,7 +77,7 @@ public sealed class DeleteMovieHandlerTests
     [Fact]
     public async Task HandleAsync_WheelAlreadyLaunched_ThrowsConflictException()
     {
-        var evt = new Event { Id = "evt1", Title = "Soirée", Date = TestDates.Upcoming, Time = "20:00", Slug = "soiree", HostToken = "ht", Winners = TestWinners.Won("mov0"), CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        var evt = new Event { Id = "evt1", Title = "Soirée", Date = TestDates.Upcoming, Time = "20:00", Slug = "soiree", Winners = TestWinners.Won("mov0"), CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync(OtherUserId, "evt1", "mov1", "p123456789012345678901234"));
@@ -144,13 +139,12 @@ public sealed class DeleteMovieHandlerTests
     [Fact]
     public async Task HandleAsync_WinnerDrawnMeanwhile_RefusesInsideTheUnitOfWorkAndDeletesNothing()
     {
-        var evt = ActiveEvent();
+        var evt = ActiveEvent() with { CreatorUserId = OtherUserId };
         var movie = new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = "p1", TmdbId = 1, Title = "X", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _eventRepo.SetupSequence(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(evt)
             .ReturnsAsync(evt with { Winners = TestWinners.Won("mov1") });
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync(OtherUserId, "evt1", "mov1", "p123456789012345678901234"));
 
@@ -176,31 +170,17 @@ public sealed class DeleteMovieHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_HostViaHostToken_CanDeleteOtherParticipantMovie()
+    public async Task HandleAsync_TheHostAccount_CanDeleteOtherParticipantMovie()
     {
-        var evt = ActiveEvent();
+        var evt = ActiveEvent() with { CreatorUserId = OtherUserId };
         var movie = new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = "other-id", TmdbId = 1, Title = "X", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
-        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
 
         await _sut.HandleAsync(OtherUserId, "evt1", "mov1", "p123456789012345678901234");
 
         _voteRepo.Verify(r => r.DeleteByMovieIdsAsync(OnlyMov1(), It.IsAny<CancellationToken>()), Times.Once);
         _seenMarkRepo.Verify(r => r.DeleteByMovieIdsAsync("evt1", OnlyMov1(), It.IsAny<CancellationToken>()), Times.Once);
-        _movieRepo.Verify(r => r.DeleteByIdsAsync(OnlyMov1(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task HandleAsync_HostViaCreatorUserId_CanDeleteOtherParticipantMovie()
-    {
-        var evt = ActiveEvent() with { CreatorUserId = "user-42" };
-        var movie = new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = "other-id", TmdbId = 1, Title = "X", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
-
-        await _sut.HandleAsync("user-42", "evt1", "mov1", "p123456789012345678901234");
-
         _movieRepo.Verify(r => r.DeleteByIdsAsync(OnlyMov1(), It.IsAny<CancellationToken>()), Times.Once);
     }
 

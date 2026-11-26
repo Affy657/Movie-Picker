@@ -69,7 +69,6 @@ public sealed class DeleteEventHandlerTests
         Date = TestDates.Upcoming,
         Time = "20:00",
         Slug = "soiree",
-        HostToken = "ht1",
         CreatorUserId = creatorUserId,
         Winners = TestWinners.Won(winnerMovieId),
         ClosedAt = closedAt,

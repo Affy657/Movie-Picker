@@ -100,7 +100,6 @@ public sealed class ListMyEventsHandlerTests
             Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "c",
-            HostToken = "h",
             CreatorUserId = "u1",
             CreatedAt = DateTimeOffset.Parse("2026-01-02T00:00:00Z"),
             UpdatedAt = DateTimeOffset.Parse("2026-01-03T00:00:00Z")
@@ -112,7 +111,6 @@ public sealed class ListMyEventsHandlerTests
             Date = TestDates.UpcomingPlusDays(31),
             Time = "21:00",
             Slug = "j",
-            HostToken = "h2",
             CreatedAt = DateTimeOffset.Parse("2026-01-01T00:00:00Z"),
             UpdatedAt = DateTimeOffset.Parse("2026-01-04T00:00:00Z")
         };
@@ -146,7 +144,6 @@ public sealed class ListMyEventsHandlerTests
             Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "a",
-            HostToken = "h",
             CreatorUserId = "u1",
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.Parse("2026-06-01T00:00:00Z")
@@ -158,7 +155,6 @@ public sealed class ListMyEventsHandlerTests
             Date = TestDates.UpcomingPlusDays(1),
             Time = "20:00",
             Slug = "b",
-            HostToken = "h",
             CreatorUserId = "u1",
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.Parse("2026-06-02T00:00:00Z")
@@ -196,7 +192,6 @@ public sealed class ListMyEventsHandlerTests
             Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "u",
-            HostToken = "h",
             CreatorUserId = "u1",
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.Parse("2026-06-02T00:00:00Z")
@@ -230,7 +225,6 @@ public sealed class ListMyEventsHandlerTests
             Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "cap",
-            HostToken = "h",
             CreatorUserId = "u1",
             Config = new EventConfig { MaxParticipants = 8 },
             CreatedAt = DateTimeOffset.UtcNow,
@@ -243,7 +237,6 @@ public sealed class ListMyEventsHandlerTests
             Date = TestDates.UpcomingPlusDays(31),
             Time = "21:00",
             Slug = "free",
-            HostToken = "h",
             CreatorUserId = "u1",
             Config = new EventConfig { MaxParticipants = null },
             CreatedAt = DateTimeOffset.UtcNow,
@@ -278,7 +271,6 @@ public sealed class ListMyEventsHandlerTests
             Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "u",
-            HostToken = "h",
             CreatorUserId = "u1",
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
@@ -307,7 +299,6 @@ public sealed class ListMyEventsHandlerTests
             Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "active",
-            HostToken = "h",
             CreatorUserId = "u1",
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
@@ -319,7 +310,6 @@ public sealed class ListMyEventsHandlerTests
             Date = "2025-01-01",
             Time = "20:00",
             Slug = "f1",
-            HostToken = "h",
             CreatorUserId = "u1",
             ClosedAt = DateTimeOffset.Parse("2025-01-02T00:00:00Z"),
             CreatedAt = DateTimeOffset.UtcNow,
@@ -332,7 +322,6 @@ public sealed class ListMyEventsHandlerTests
             Date = "2025-06-01",
             Time = "20:00",
             Slug = "f2",
-            HostToken = "h",
             CreatorUserId = "u1",
             ClosedAt = DateTimeOffset.Parse("2025-06-02T00:00:00Z"),
             CreatedAt = DateTimeOffset.UtcNow,
@@ -364,7 +353,6 @@ public sealed class ListMyEventsHandlerTests
             Date = "2025-01-01",
             Time = "20:00",
             Slug = "f1",
-            HostToken = "h",
             CreatorUserId = "u1",
             ClosedAt = DateTimeOffset.Parse("2025-01-02T00:00:00Z"),
             CreatedAt = DateTimeOffset.UtcNow,
@@ -377,7 +365,6 @@ public sealed class ListMyEventsHandlerTests
             Date = "2025-02-01",
             Time = "20:00",
             Slug = "f2",
-            HostToken = "h",
             CreatorUserId = "u1",
             Winners = TestWinners.Won("m1"),
             ClosedAt = DateTimeOffset.Parse("2025-02-02T00:00:00Z"),
@@ -408,7 +395,6 @@ public sealed class ListMyEventsHandlerTests
         Date = "2025-06-01",
         Time = "20:00",
         Slug = id,
-        HostToken = "h",
         CreatorUserId = "u1",
         Winners = TestWinners.Won(winnerMovieIds),
         ClosedAt = DateTimeOffset.Parse("2025-06-02T00:00:00Z"),
@@ -739,7 +725,6 @@ public sealed class ListMyEventsHandlerTests
         Date = TestDates.Upcoming,
         Time = "20:00",
         Slug = id,
-        HostToken = "h",
         CreatorUserId = "u1",
         CreatedAt = DateTimeOffset.UtcNow,
         UpdatedAt = DateTimeOffset.UtcNow

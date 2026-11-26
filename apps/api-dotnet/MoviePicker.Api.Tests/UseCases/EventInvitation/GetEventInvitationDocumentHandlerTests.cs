@@ -56,7 +56,6 @@ public sealed class GetEventInvitationDocumentHandlerTests
             Title = title,
             Slug = Slug,
             RecapSlug = "7fKq2p",
-            HostToken = "h",
             Date = "2026-09-18",
             Time = time,
             Config = config,

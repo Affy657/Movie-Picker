@@ -60,7 +60,7 @@ public sealed class InviteUserHandler : IInviteUserHandler
         if (evt.IsFinished(_clock.GetUtcNow()))
             throw Errors.InviteEventFinished();
 
-        if (!HostedEvent.IsHostAccount(evt, userId))
+        if (!HostedEvent.IsHost(evt, userId))
             throw Errors.HostOnlyInvite();
 
         var targetUserId = request.TargetUserId;
