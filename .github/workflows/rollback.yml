@@ -168,6 +168,14 @@ jobs:
             echo "::error::The image of $TARGET ($IMAGE) is no longer in the registry: new instances of that revision could not start. Pick a more recent revision, or redeploy the commit."
             exit 1
           fi
+          MISSING=""
+          for SECRET in $(jq -r '[.spec.containers[0].env[]? | .valueFrom.secretKeyRef.name // empty] | unique | .[]' "$RUNNER_TEMP/target.json"); do
+            gcloud secrets describe "$SECRET" --format='value(name)' >/dev/null 2>&1 || MISSING="$MISSING $SECRET"
+          done
+          if [ -n "$MISSING" ]; then
+            echo "::error::$TARGET mounts secrets deleted since it was deployed:$MISSING. New instances of that revision could not start. Pick a more recent revision, or redeploy the commit."
+            exit 1
+          fi
           echo "Rolling back $SERVING -> $TARGET (release ${RELEASE:-unknown}, image still in the registry)"
           {
             echo "target=$TARGET"

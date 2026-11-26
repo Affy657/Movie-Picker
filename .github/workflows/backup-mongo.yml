@@ -130,13 +130,13 @@ jobs:
           fi
           echo "::add-mask::$URI"
           # Database name carried by the URI path. The pattern rejects a host name (it contains
-          # dots): without a database in the path, fall back to the default the API itself applies
-          # (ServiceCollectionExtensions: mongoUrl.DatabaseName ?? "moviepicker").
+          # dots). mongodump needs it to exclude collections, and the backup user reads only that
+          # database, so a URI without one is a broken secret, not a case to guess around.
           DB_NAME="${URI##*/}"
           DB_NAME="${DB_NAME%%\?*}"
           if ! printf '%s' "$DB_NAME" | grep -qE '^[A-Za-z0-9_-]+$'; then
-            DB_NAME="moviepicker"
-            echo "::warning::No database name in the URI, verification aligned with the application default '$DB_NAME'."
+            echo "::error::MONGODB_BACKUP_URI names no database in its path (mongodb+srv://.../moviepicker?...): add it in a new secret version."
+            exit 1
           fi
           echo "Database backed up and verified: $DB_NAME"
           STAMP="$(date -u +%Y%m%dT%H%M%SZ)"

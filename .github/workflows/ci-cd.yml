@@ -121,7 +121,10 @@ jobs:
               - 'configs/**'
               - 'scripts/**'
               - '.github/workflows/ci-cd.yml'
+              - '.github/workflows/deploy.yml'
               - '.github/actions/**'
+              - 'infra/terraform/**'
+              - 'infra/firebase-hosting.json'
             e2e:
               - 'playwright.config.ts'
               - 'e2e/**'
@@ -238,6 +241,8 @@ jobs:
           restore-keys: |
             turbo-lintweb-${{ runner.os }}-
       - run: pnpm run check:static
+        env:
+          GH_TOKEN: ${{ github.token }}
 
   lint-api:
     name: 🧹 Lint API .NET (format + build + OpenAPI)

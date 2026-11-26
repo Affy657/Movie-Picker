@@ -460,8 +460,9 @@ jobs:
       # keyring: MongoDB holds the keys.
       #
       # The scheduled passes authenticate by a Google OIDC token: the jobs (`infra/terraform`) sign it
-      # with `movie-picker-scheduler@` and the API checks the issuer, the audience (the
-      # public API URL) and that e-mail, `SCHEDULER_OIDC_AUDIENCE` and
+      # with `movie-picker-scheduler@` and the API checks the issuer, the audience
+      # (`PRODUCTION_API_URL`, the `api_domain` of Terraform, held equal by
+      # scripts/scheduler-audience.test.mjs) and that e-mail, `SCHEDULER_OIDC_AUDIENCE` and
       # `SCHEDULER_OIDC_SERVICE_ACCOUNT`. No shared secret travels.
       - name: Deploy without traffic (GCP secrets + CORS)
         id: deploy
@@ -493,7 +494,7 @@ jobs:
           RUNTIME_SA="${API_RUNTIME_SERVICE_ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
           SCHEDULER_ENV=""
           if [ -z "$PUBLIC_API_URL" ]; then
-            echo "::error::VITE_API_URL (secret) is empty: it is the public API URL the shared documents link to and the audience of the Cloud Scheduler OIDC tokens."
+            echo "::error::VITE_API_URL (secret) is empty: it is the public API URL the shared documents link to."
             exit 1
           fi
           if [ "$STAGE" = "production" ]; then
@@ -503,7 +504,7 @@ jobs:
             if gcloud secrets describe TMDB_READ_ACCESS_TOKEN >/dev/null 2>&1; then
               SECRETS="$SECRETS,TMDB_READ_ACCESS_TOKEN=TMDB_READ_ACCESS_TOKEN:latest"
             fi
-            SCHEDULER_ENV="##SCHEDULER_OIDC_AUDIENCE=${PUBLIC_API_URL%/}##SCHEDULER_OIDC_SERVICE_ACCOUNT=${SCHEDULER_SERVICE_ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
+            SCHEDULER_ENV="##SCHEDULER_OIDC_AUDIENCE=${PRODUCTION_API_URL}##SCHEDULER_OIDC_SERVICE_ACCOUNT=${SCHEDULER_SERVICE_ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
           else
             SECRETS="MONGODB_URI=STAGING_MONGODB_URI:latest,OAUTH_GOOGLE_CLIENT_ID=STAGING_OAUTH_GOOGLE_CLIENT_ID:latest,OAUTH_GOOGLE_CLIENT_SECRET=STAGING_OAUTH_GOOGLE_CLIENT_SECRET:latest,OAUTH_GITHUB_CLIENT_ID=STAGING_OAUTH_GITHUB_CLIENT_ID:latest,OAUTH_GITHUB_CLIENT_SECRET=STAGING_OAUTH_GITHUB_CLIENT_SECRET:latest,TMDB_API_KEY=TMDB_API_KEY:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest,RESEND_API_KEY=RESEND_API_KEY:latest,GITHUB_TOKEN=GITHUB_TOKEN:latest"
           fi

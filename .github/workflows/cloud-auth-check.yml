@@ -37,23 +37,19 @@ jobs:
           project-id: ${{ secrets.GCP_PROJECT_ID }}
       # The runtime account is the one `deploy.yml` gives to every new revision of the stage: a
       # deployment without it fails at revision creation, so its existence is checked here, where
-      # nothing is at stake. The scheduler identity is production's alone, as its jobs are: the
-      # deployment attaches it to them, which needs `iam.serviceAccountUser` on it.
+      # nothing is at stake. The scheduler jobs and their identity are Terraform's, out of the
+      # deployment identity's reach.
       - name: GCP, read-only calls as the CI service account
         run: |
           gcloud auth list --filter=status:ACTIVE --format='value(account)'
           gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format='value(status.url)'
           gcloud iam service-accounts describe "${API_RUNTIME_SERVICE_ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com" --format='value(email)' >/dev/null
-          if [ "$STAGE" = "production" ]; then
-            gcloud iam service-accounts describe "${SCHEDULER_SERVICE_ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com" --format='value(email)' >/dev/null
-          fi
           echo "GCP federation OK for the $STAGE, runtime service account present"
         env:
           STAGE: ${{ matrix.stage }}
           GCP_REGION: europe-west1
           CLOUD_RUN_SERVICE_NAME: ${{ matrix.stage == 'production' && 'movie-picker-api' || 'movie-picker-api-staging' }}
           API_RUNTIME_SERVICE_ACCOUNT_NAME: ${{ matrix.stage == 'production' && 'movie-picker-api' || 'movie-picker-api-staging' }}
-          SCHEDULER_SERVICE_ACCOUNT_NAME: movie-picker-scheduler
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
 
   # The backup identity reads one secret and writes one bucket: listing the bucket is the
