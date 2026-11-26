@@ -15,7 +15,7 @@ namespace MoviePicker.Api.Tests.UseCases.Auth.OAuth;
 
 public sealed class OAuthLoginHandlerTests
 {
-    private static readonly DateTimeOffset TestEpoch = new(2026, 8, 12, 10, 0, 0, TimeSpan.Zero);
+    private static readonly DateTimeOffset TestEpoch = new(2026, 12, 12, 10, 0, 0, TimeSpan.Zero);
 
     private sealed class FakeTimeProvider : TimeProvider
     {
@@ -278,6 +278,37 @@ public sealed class OAuthLoginHandlerTests
         await f.CreateHandler().HandleAsync(GoogleSignInOfTheAddressOwner());
 
         Assert.Equal("squatter-hash", (await f.Users.GetByIdAsync(confirmed.Id))!.PasswordHash);
+        f.Sessions.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task HandleAsync_VerifiedEmailMatchesPasswordAccountOpenedBeforeAddressesWereConfirmed_AsksForAManualLinkAndKeepsItsAccess()
+    {
+        var f = new Fixture();
+        var older = await f.Users.AddAsync(UnconfirmedPasswordAccountOfASquatter() with
+        {
+            CreatedAt = OAuthLoginHandler.AddressConfirmationRequiredSince.AddDays(-30)
+        });
+
+        var outcome = await f.CreateHandler().HandleAsync(GoogleSignInOfTheAddressOwner());
+
+        Assert.Equal(OAuthOutcomeKind.PasswordAccountRequiresManualLink, outcome.Kind);
+        var reloaded = await f.Users.GetByIdAsync(older.Id);
+        Assert.Equal("squatter-hash", reloaded!.PasswordHash);
+        Assert.Null(reloaded.EmailVerifiedAt);
+        f.Sessions.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task HandleAsync_IdentityTheUnconfirmedPasswordAccountUnlinked_DoesNotTakeItOver()
+    {
+        var f = new Fixture();
+        var occupied = await f.Users.AddAsync(UnconfirmedPasswordAccountOfASquatter());
+
+        var outcome = await f.CreateHandler().HandleAsync(GoogleSignInOfTheAddressOwner() with { Subject = "g-old" });
+
+        Assert.NotEqual(OAuthOutcomeKind.SignedIn, outcome.Kind);
+        Assert.Equal("squatter-hash", (await f.Users.GetByIdAsync(occupied.Id))!.PasswordHash);
         f.Sessions.VerifyNoOtherCalls();
     }
 

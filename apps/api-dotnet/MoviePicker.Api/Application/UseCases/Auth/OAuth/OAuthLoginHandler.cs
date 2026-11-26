@@ -11,6 +11,8 @@ namespace MoviePicker.Api.Application.UseCases.Auth.OAuth;
 
 public sealed class OAuthLoginHandler : IOAuthLoginHandler
 {
+    public static readonly DateTimeOffset AddressConfirmationRequiredSince = new(2026, 11, 26, 12, 0, 0, TimeSpan.Zero);
+
     private readonly IUserRepository _users;
     private readonly IOAuthProfilePhotoImporter _photoImporter;
     private readonly IAuthSessionInvalidator _sessions;
@@ -62,7 +64,7 @@ public sealed class OAuthLoginHandler : IOAuthLoginHandler
         var byEmail = await _users.GetByEmailAsync(email, ct);
         if (byEmail is not null && !string.IsNullOrEmpty(byEmail.PasswordHash))
         {
-            if (byEmail.EmailVerifiedAt is null)
+            if (CanBeTakenOverBy(byEmail, info))
                 return SignedIn(await TakeOverUnconfirmedAccountAsync(byEmail, info, identity, now, ct));
 
             _logger.LogWarning(
@@ -106,6 +108,11 @@ public sealed class OAuthLoginHandler : IOAuthLoginHandler
     }
 
     private static OAuthOutcome SignedIn(User user) => new() { Kind = OAuthOutcomeKind.SignedIn, User = user };
+
+    private static bool CanBeTakenOverBy(User occupied, ExternalLoginInfo info) =>
+        occupied.EmailVerifiedAt is null
+        && occupied.CreatedAt >= AddressConfirmationRequiredSince
+        && !occupied.UnlinkedIdentities.Any(u => u.Provider == info.Provider && u.Subject == info.Subject);
 
     private async Task<User> ConfirmVouchedAddressAsync(User user, ExternalLoginInfo info, CancellationToken ct)
     {
