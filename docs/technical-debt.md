@@ -19,11 +19,10 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 
 ## Sommaire
 
-### Pour un agent (1)
+### Pour un agent (0)
 
 | Dette | Zone | Sujet |
 |---|---|---|
-| DEBT-102 | Tests, CI et outillage | les doublures de l'API dans les tests front restent écrites à la main |
 
 ### Geste humain (8)
 
@@ -38,27 +37,17 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-052 | Sécurité et accès | le secret `GITHUB_TOKEN` de l'API est le jeton du `gh` CLI du poste |
 | DEBT-053 | Sécurité et accès | l'API et la sauvegarde parlent à Atlas en administrateur du cluster, le même que le poste de dev |
 
-### Différées (2)
+### Différées (1)
 
 | Dette | Zone | Sujet |
 |---|---|---|
 | DEBT-064 | API et données | `GetByIdOrSlugAsync` ne résout plus que le slug |
-| DEBT-114 | Tests, CI et outillage | trois règles SonarJS ne tournent qu'en CI |
 
 ---
 
 # Pour un agent
 
 Se traite en autonomie, sans attendre personne.
-
-## DEBT-102 les doublures de l'API dans les tests front restent écrites à la main
-
-- state: agent
-- impact: environ 660 `HttpResponse.json(` dans 73 fichiers de test ne passent pas par `apiJson`, donc un champ renommé côté API les laisse verts ; trois stratégies de doublure coexistent (MSW, `vi.mock` d'un module `*Api`, `vi.mock` de `client`)
-- ou: `apps/web/src/**/*.test.tsx`, `apps/web/src/mocks/apiJson.ts`
-- verify: `grep -rl "HttpResponse.json(" apps/web/src --include=*.test.ts --include=*.test.tsx | wc -l` ; encore ouvert tant que la commande rend plus de `0`
-- fix: passer chaque fichier de test touché à `apiJson` au fil de l'eau, puis une règle de `scripts/architecture/` qui refuse `HttpResponse.json(` dans un test
-- fini-quand: aucune réponse simulée hors de `apiJson` et `apiErrorJson`
 
 ---
 
@@ -163,15 +152,6 @@ Ne se traitent que quand leur `declencheur` survient.
 - verify: `grep -rln "ByIdOrSlug" apps/api-dotnet --include=*.cs | grep -v /obj/` ; encore ouvert tant qu'il rend un fichier
 - fix: renommer en `GetBySlugAsync` et `GetRequiredBySlugAsync`, `idOrSlug` en `slug` partout, y compris le segment de route, puis `pnpm run openapi:export` et `pnpm run openapi:types`
 - piege: renommer le segment de route change les clés de `paths` dans le contrat OpenAPI, donc le schéma généré et `apiContract.test.ts` côté front ; les faire dans le même commit. La fusion de `v1.7` apporte aussi une trentaine de chemins d'API construits sans `apiPath` (dont `setMovieRating` et `deleteMovieRating`, aujourd'hui dans `features/events/api/eventMoviesApi.ts`) : les convertir dans le même geste, `grep -rln '/events/\${' apps/web/src --include=*.ts | grep -v test` ne doit plus rien rendre.
-
-## DEBT-114 trois règles SonarJS ne tournent qu'en CI
-
-- state: differe
-- declencheur: un commit de version rouge sur S6819, S6847 ou S3863
-- impact: SonarCloud reprend des règles de jsx-a11y et d'import (S6819, S6847, S3863) que la vérification préalable de `pnpm run release` ne joue pas : un commit de version peut encore passer rouge sur ces règles
-- ou: `scripts/release.mjs` (`preflight`), `eslint.config.mjs` (racine)
-- verify: `grep -n "jsx-a11y" eslint.config.mjs` ; encore ouvert tant que la commande ne rend rien, puis tant que les trois règles n'y sont pas actives
-- fix: activer les règles équivalentes de `eslint-plugin-jsx-a11y` et d'`eslint-plugin-import` dans l'ESLint du front
 
 ---
 
