@@ -4,6 +4,8 @@ namespace MoviePicker.Api.Infrastructure.Web;
 
 public sealed class SecurityHeadersMiddleware(RequestDelegate next)
 {
+    private static readonly PathString ApiPrefix = "/" + ApiRoutePrefix.V1;
+
     private static readonly string[] SharedImagePrefixes =
     [
         "/" + ApiRoutePrefix.V1 + "/posters/",
@@ -26,7 +28,10 @@ public sealed class SecurityHeadersMiddleware(RequestDelegate next)
             "Content-Security-Policy",
             "default-src 'none'; frame-ancestors 'none'; base-uri 'none'");
         h.Append("Cross-Origin-Opener-Policy", "same-origin");
-        h.Append("Cross-Origin-Resource-Policy", IsSharedImage(context.Request.Path) ? "cross-origin" : "same-site");
+        var isSharedImage = IsSharedImage(context.Request.Path);
+        h.Append("Cross-Origin-Resource-Policy", isSharedImage ? "cross-origin" : "same-site");
+        if (!isSharedImage && context.Request.Path.StartsWithSegments(ApiPrefix, StringComparison.OrdinalIgnoreCase))
+            h.Append("X-Robots-Tag", "noindex");
         h.CacheControl = "no-store";
         context.Response.OnStarting(VaryOnTheOrigin, context.Response);
         return next(context);

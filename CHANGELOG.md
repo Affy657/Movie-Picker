@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Fixed
+
+- **Les pages d’un profil et les listes publiques réapparaissent dans Google** : depuis le 24 novembre, le moteur ne pouvait plus lire les films d’une watchlist, d’une liste ou des propositions d’un membre, et voyait une page vide sans adresse de référence.
+
 ## [1.33.2] - 2026-11-26
 
 ### Removed

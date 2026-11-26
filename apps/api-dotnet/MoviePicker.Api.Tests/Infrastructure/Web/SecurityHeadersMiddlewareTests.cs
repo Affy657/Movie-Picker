@@ -97,4 +97,22 @@ public sealed class SecurityHeadersMiddlewareTests
 
         Assert.False(ctx.Response.Headers.ContainsKey("Strict-Transport-Security"));
     }
+
+    [Theory]
+    [InlineData("/api/v1/users/odech/watchlist", true)]
+    [InlineData("/api/v1/movies/tmdb/27205/details", true)]
+    [InlineData("/api/v1/posters/tmdb/w342/a.jpg", false)]
+    [InlineData("/api/v1/avatars/k1", false)]
+    [InlineData("/u/odech", false)]
+    [InlineData("/film/27205-inception", false)]
+    public async Task InvokeAsync_KeepsTheApiAnswersOutOfTheIndexButNotTheDocumentsOrImages(string path, bool noindex)
+    {
+        var ctx = new DefaultHttpContext();
+        ctx.Request.Path = path;
+        var mw = new SecurityHeadersMiddleware(_ => Task.CompletedTask);
+
+        await mw.InvokeAsync(ctx);
+
+        Assert.Equal(noindex ? "noindex" : string.Empty, ctx.Response.Headers["X-Robots-Tag"].ToString());
+    }
 }

@@ -49,6 +49,18 @@ public sealed class ApiCrawlerAndCacheHeadersTests : IClassFixture<MoviePickerAp
     }
 
     [Fact]
+    public async Task RobotsTxt_LetsCrawlersReadWhatTheIndexablePagesRenderButNotTheAccountOwnReads()
+    {
+        var res = await _factory.CreateClient().GetAsync("/robots.txt");
+
+        var lines = (await res.Content.ReadAsStringAsync()).Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        Assert.Contains("Allow: /api/v1/users/", lines);
+        Assert.Contains("Allow: /api/v1/movies/", lines);
+        Assert.Contains("Allow: /api/v1/recaps/", lines);
+        Assert.Contains("Disallow: /api/v1/users/me/", lines);
+    }
+
+    [Fact]
     public async Task MethodTheRouteDoesNotServe_AnswersTheJsonErrorEnvelope()
     {
         var res = await _factory.CreateClient().PutAsync("/health", new StringContent(string.Empty));

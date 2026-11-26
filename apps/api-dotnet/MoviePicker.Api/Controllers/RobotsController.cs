@@ -15,6 +15,10 @@ public sealed class RobotsController : ControllerBase
         + "Allow: /" + ApiRoutePrefix.V1 + "/posters/\n"
         + "Allow: /" + ApiRoutePrefix.V1 + "/banners/\n"
         + "Allow: /" + ApiRoutePrefix.V1 + "/avatars/\n"
+        + "Allow: /" + ApiRoutePrefix.V1 + "/movies/\n"
+        + "Allow: /" + ApiRoutePrefix.V1 + "/users/\n"
+        + "Allow: /" + ApiRoutePrefix.V1 + "/recaps/\n"
+        + "Disallow: /" + ApiRoutePrefix.V1 + "/users/me/\n"
         + "Disallow: /\n";
 
     [HttpGet("robots.txt")]
