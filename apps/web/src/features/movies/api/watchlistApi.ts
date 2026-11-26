@@ -1,6 +1,6 @@
 import { apiPath, fetchApi } from '@/shared/api/client';
 import type { ApiSchemas } from '@/shared/api/contract';
-import { readAllPages } from '@/shared/api/readAllPages';
+import { READ_ALL_PAGES_MAX, readAllPages } from '@/shared/api/readAllPages';
 import type { AddTitleBody, MovieMediaType } from '@/shared/types/movie';
 
 export type WatchlistItem = ApiSchemas['WatchlistItemResponse'];
@@ -28,6 +28,7 @@ interface WatchlistAvailabilityPage {
   skip: number;
   items: WatchlistAvailabilityItem[];
   partial: boolean;
+  hasMore: boolean;
 }
 
 export interface WatchlistAvailability extends Pick<
@@ -56,6 +57,7 @@ function toPage(
     skip,
     items: Array.isArray(response?.items) ? response.items : [],
     partial: response?.partial === true,
+    hasMore: response?.hasMore === true,
   };
 }
 
@@ -65,22 +67,29 @@ function assemble(
 ): WatchlistAvailability {
   return {
     items: pages.flatMap((page) => page.items),
-    partial: pages.some((page) => page.partial),
+    partial: pages.some((page) => page.partial) || pages.at(-1)?.hasMore === true,
     pages,
     completionAttempts,
   };
 }
 
+async function readAvailabilityPages(
+  skip: number,
+  signal?: AbortSignal,
+  pagesLeft = READ_ALL_PAGES_MAX
+): Promise<WatchlistAvailabilityPage[]> {
+  const page = toPage(skip, await fetchAvailabilityPage(skip, signal));
+  if (!page.hasMore || pagesLeft <= 1) return [page];
+  return [
+    page,
+    ...(await readAvailabilityPages(skip + WATCHLIST_PAGE_SIZE, signal, pagesLeft - 1)),
+  ];
+}
+
 export async function fetchWatchlistAvailability(
   signal?: AbortSignal
 ): Promise<WatchlistAvailability> {
-  const pages: WatchlistAvailabilityPage[] = [];
-  await readAllPages(async (skip) => {
-    const response = await fetchAvailabilityPage(skip, signal);
-    pages.push(toPage(skip, response));
-    return response;
-  });
-  return assemble(pages, 0);
+  return assemble(await readAvailabilityPages(0, signal), 0);
 }
 
 async function refetchPartialPages(
@@ -99,8 +108,13 @@ export async function completeWatchlistAvailability(
   previous: WatchlistAvailability,
   signal?: AbortSignal
 ): Promise<WatchlistAvailability> {
-  const pages = await refetchPartialPages(previous.pages, signal);
-  return assemble(pages, previous.completionAttempts + 1);
+  const completionAttempts = previous.completionAttempts + 1;
+  const settled = await refetchPartialPages(previous.pages, signal);
+  const last = settled.at(-1);
+  const remaining = last?.hasMore
+    ? await readAvailabilityPages(last.skip + WATCHLIST_PAGE_SIZE, signal)
+    : [];
+  return assemble([...settled, ...remaining], completionAttempts);
 }
 
 export async function addToWatchlist(body: AddWatchlistItemBody): Promise<void> {
