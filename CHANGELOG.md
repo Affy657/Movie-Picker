@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.33.2] - 2026-11-26
+
 ### Removed
 
 - **Les captures d’écran jointes aux anciennes suggestions** ne sont plus publiées sur GitHub : la branche du dépôt qui les gardait est supprimée, et le dossier technique ne la mentionne plus.
@@ -1189,7 +1191,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.33.1...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.33.2...HEAD
+[1.33.2]: https://github.com/Affy657/Movie-Picker/compare/v1.33.1...v1.33.2
 [1.33.1]: https://github.com/Affy657/Movie-Picker/compare/v1.33.0...v1.33.1
 [1.33.0]: https://github.com/Affy657/Movie-Picker/compare/v1.32.1...v1.33.0
 [1.32.1]: https://github.com/Affy657/Movie-Picker/compare/v1.32.0...v1.32.1
