@@ -25,12 +25,11 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 |---|---|---|
 | DEBT-102 | Tests, CI et outillage | les doublures de l'API dans les tests front restent écrites à la main |
 
-### Geste humain (9)
+### Geste humain (8)
 
 | Dette | Zone | Sujet |
 |---|---|---|
 | DEBT-074 | API et données | un client qui passe par Hosting n'a que le quota par slug sur les documents de partage |
-| DEBT-096 | API et données | l'adaptateur en mémoire reste dans l'assembly de production |
 | DEBT-037 | Infra et déploiement | les jobs Cloud Scheduler décrits en Terraform attendent leur import, et le secret de l'ancien jeton partagé survit |
 | DEBT-045 | Infra et déploiement | le secret du porte-clés Data Protection survit à son montage |
 | DEBT-054 | Infra et déploiement | l'apex porte deux revendications Hosting, et les quatre domaines servent encore un certificat temporaire |
@@ -39,11 +38,10 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | DEBT-052 | Sécurité et accès | le secret `GITHUB_TOKEN` de l'API est le jeton du `gh` CLI du poste |
 | DEBT-053 | Sécurité et accès | l'API et la sauvegarde parlent à Atlas en administrateur du cluster, le même que le poste de dev |
 
-### Différées (3)
+### Différées (2)
 
 | Dette | Zone | Sujet |
 |---|---|---|
-| DEBT-040 | API et données | le seed de développement est compilé dans l'assembly de production |
 | DEBT-064 | API et données | `GetByIdOrSlugAsync` ne résout plus que le slug |
 | DEBT-114 | Tests, CI et outillage | trois règles SonarJS ne tournent qu'en CI |
 
@@ -78,16 +76,6 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 - fix: si les documents relayés arrivent avec au moins deux sauts et `false` juste avant le dernier `true`, Hosting transmet l'adresse du client : `KnownIPNetworks` sur les cinq plages et `ForwardLimit = 2`, puis le même plafond par adresse pour les deux chemins ; retirer ensuite le middleware de mesure
 - fini-quand: un client qui passe par Hosting est plafonné par son adresse, et le middleware de mesure a disparu
 
-## DEBT-096 l'adaptateur en mémoire reste dans l'assembly de production
-
-- state: humain
-- bloque: décider si l'API sans MongoDB sur le poste sert encore (`docs/development.md`, démarrage sans `MONGODB_URI`)
-- impact: depuis l'audit d'architecture du 2026-11-18, la CI et l'e2e ne tournent plus que sur MongoDB, mais chaque méthode de port s'écrit encore deux fois (37 des 47 commits de port touchaient les deux adaptateurs) pour un mode qui ne sert qu'au poste et aux kits de tests unitaires
-- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/InMemory/`, `Infrastructure/ServiceCollectionExtensions.cs`
-- verify: `grep -c "InMemory" apps/api-dotnet/MoviePicker.Api/Infrastructure/ServiceCollectionExtensions.cs` ; encore ouvert tant que la commande rend plus de `0`
-- fix: si le mode ne sert plus, déplacer les adaptateurs en mémoire dans le projet de tests comme faux des kits (`MovieListTestKit`, `SavedListTestKit`, `WatchedTestKit`), une méthode qu'aucun kit n'appelle levant `NotSupportedException`, et les retirer de l'enregistrement
-- fini-quand: une nouvelle méthode de port ne s'implémente plus qu'une fois dans le code de production
-
 ## DEBT-037 les jobs Cloud Scheduler décrits en Terraform attendent leur import, et le secret de l'ancien jeton partagé survit
 
 - state: humain
@@ -106,7 +94,7 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 - impact: depuis le 2026-11-25, `deploy.yml` ne monte plus `AUTH_DATAPROTECTION_KEYRING` (la production lit ses clés dans la collection `data_protection_keys`, deux clés relevées ce jour-là). Le secret et sa version restent facturés et nommés dans `api_secret_names` (écart autorisé dans `scripts/check-secret-mounts.mjs`) ; la révision active, antérieure, le monte encore
 - ou: `infra/terraform/environments/production/main.tf` (`api_secret_names`), `infra/terraform/modules/secrets/main.tf` (`deletion_protection`), `scripts/check-secret-mounts.mjs`
 - verify: `grep -c AUTH_DATAPROTECTION_KEYRING infra/terraform/environments/production/main.tf` ; encore ouvert tant que la commande rend autre chose que 0
-- fix: après un déploiement de production sur une version qui ne le monte plus, retirer le nom d'`api_secret_names` et d'`ALLOWED_GAPS`, lever `deletion_protection` pour cet `apply`, qui détruit le secret et sa version
+- fix: après un déploiement de production sur une version qui ne le monte plus, retirer le nom d'`api_secret_names` et d'`ALLOWED_GAPS`, lever `deletion_protection` pour cet `apply`, qui détruit le secret et sa version ; retirer en même temps la branche fichier de `DataProtectionConfiguration` (`KeyRingXmlEnvName`) et ses tests, morte depuis que l'API refuse de démarrer sans `MONGODB_URI` (DEBT-096, 2026-11-26)
 - piege: une révision plus ancienne ramenée par `rollback.yml` monte encore le secret : le détruire seulement quand aucune révision qui le monte ne peut plus servir
 
 ## DEBT-054 l'apex porte deux revendications Hosting, et les quatre domaines servent encore un certificat temporaire
@@ -165,16 +153,6 @@ L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
 # Différées
 
 Ne se traitent que quand leur `declencheur` survient.
-
-## DEBT-040 le seed de développement est compilé dans l'assembly de production
-
-- state: differe
-- declencheur: une feature repasse dans `Infrastructure/Development/` ou dans ses tests. Ne jamais en faire un chantier isolé.
-- impact: `DevelopmentScenarioSeed.cs` (2 484 lignes) et `DevelopmentDataSeedHostedService.cs` (329 lignes) sont publiés dans l'image de production, environ 6 % des lignes du projet `MoviePicker.Api` pour du code que seul `environment.IsDevelopment()` enregistre. Aucune surface exposée, du poids d'assembly et du temps de compilation ReadyToRun pour rien.
-- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Development/`, enregistrement dans `ServiceCollectionExtensions.AddMoviePicker` sous `environment.IsDevelopment()`
-- verify: `ls apps/api-dotnet/MoviePicker.Api/Infrastructure/Development/` ; encore ouvert tant que le dossier est dans le projet `MoviePicker.Api`
-- fix: sortir le dossier dans un projet `MoviePicker.Api.DevelopmentSeed` que `MoviePicker.Api` référence seulement en `Debug` (`<ProjectReference Condition="'$(Configuration)' == 'Debug'">`), l'enregistrement DI passant par une extension de ce projet appelée derrière `#if DEBUG` ; déplacer `DevelopmentScenarioSeedTests` et la moitié seed de `ServiceCollectionExtensionsBranchTests` dans un projet de tests lui aussi Debug. Mesurer avant et après par `dotnet publish -c Release` et la taille de `MoviePicker.Api.dll`.
-- piege: `verify:local` et la CI compilent et testent en **Release**, et `DevelopmentScenarioSeedTests.cs` comme `ServiceCollectionExtensionsBranchTests.cs` référencent le seed : un simple `<Compile Remove>` conditionnel casse la suite. `launchSettings.json`, `playwright.config.ts` et `scripts/verify-local.cjs` lancent l'API en `Development` avec `DevelopmentSeed__Enabled=false` : vérifier qu'un `dotnet run` sans configuration explicite construit bien en Debug, sinon le seed disparaît du poste de travail sans erreur.
 
 ## DEBT-064 `GetByIdOrSlugAsync` ne résout plus que le slug
 
