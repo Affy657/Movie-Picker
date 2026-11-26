@@ -49,10 +49,23 @@ public sealed class GetUserProposedMoviesHandler : IGetUserProposedMoviesHandler
         return await HandleForUserAsync(user.Id, winningOnly, ct);
     }
 
-    public async Task<UserProposedMoviesResponse> HandleForUserAsync(
+    public Task<UserProposedMoviesResponse> HandleForUserAsync(
         string userId,
         bool winningOnly,
-        CancellationToken ct = default)
+        CancellationToken ct = default) =>
+        ListAsync(userId, winningOnly, proposerIsReading: false, ct);
+
+    public Task<UserProposedMoviesResponse> HandleForOwnerAsync(
+        string userId,
+        bool winningOnly,
+        CancellationToken ct = default) =>
+        ListAsync(userId, winningOnly, proposerIsReading: true, ct);
+
+    private async Task<UserProposedMoviesResponse> ListAsync(
+        string userId,
+        bool winningOnly,
+        bool proposerIsReading,
+        CancellationToken ct)
     {
         var participants = await _participants.ListByUserIdAsync(userId, ParticipantsCap, ct);
         if (participants.Count == 0)
@@ -62,7 +75,9 @@ public sealed class GetUserProposedMoviesHandler : IGetUserProposedMoviesHandler
         var nightsTask = _events.ListByIdsAsync(participants.Select(p => p.EventId).Distinct().ToList(), ct);
         await Task.WhenAll(proposalsTask, nightsTask);
         var nights = await nightsTask;
-        IReadOnlyList<Movie> proposals = AttributedProposals.Among(await proposalsTask, nights);
+        IReadOnlyList<Movie> proposals = proposerIsReading
+            ? await proposalsTask
+            : AttributedProposals.Among(await proposalsTask, nights);
         if (winningOnly)
             proposals = WinnerMovies.AmongProposals(proposals, nights);
 

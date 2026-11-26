@@ -258,7 +258,7 @@ public sealed class GetUserProposedMoviesHandlerTests
         _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>()))
             .ReturnsAsync(Alice(isPublic: false) with { IsWatchedPublic = false });
 
-        var res = await handler.HandleForUserAsync("u1", winningOnly: false);
+        var res = await handler.HandleForOwnerAsync("u1", winningOnly: false);
 
         Assert.Equal([25237, 530385], res.Items.Select(i => i.TmdbId));
         Assert.Equal(3, res.Items.Sum(i => i.ProposalCount));
@@ -269,7 +269,7 @@ public sealed class GetUserProposedMoviesHandlerTests
     {
         var handler = BuildWithThreeNightsAndTwoWins();
 
-        var res = await handler.HandleForUserAsync("u1", winningOnly: true);
+        var res = await handler.HandleForOwnerAsync("u1", winningOnly: true);
 
         Assert.Equal([25237, 530385], res.Items.Select(i => i.TmdbId));
         Assert.All(res.Items, i => Assert.Equal(1, i.ProposalCount));
@@ -289,6 +289,44 @@ public sealed class GetUserProposedMoviesHandlerTests
             events: [Evt("open"), Evt("anon") with { Config = new EventConfig { AnonymousProposals = true } }]);
 
         var res = await handler.HandleAsync("alice", currentUserId: "u1", winningOnly: false);
+
+        Assert.Equal([530385], res.Items.Select(item => item.TmdbId));
+    }
+
+    private GetUserProposedMoviesHandler BuildWithAnAnonymousNightWon() =>
+        Build(
+            participants: [Part("p1", "open"), Part("p2", "anon")],
+            proposals:
+            [
+                Proposal("m1", "open", "p1", tmdbId: 530385, daysAfterDay1: 0),
+                Proposal("m2", "anon", "p2", tmdbId: 25237, daysAfterDay1: 7),
+            ],
+            events:
+            [
+                Evt("open", winnerMovieId: "m1"),
+                Evt("anon", winnerMovieId: "m2") with { Config = new EventConfig { AnonymousProposals = true } }
+            ]);
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ForItsOwner_ProposalsOfAnonymousNights_StayListed(bool winningOnly)
+    {
+        var handler = BuildWithAnAnonymousNightWon();
+
+        var res = await handler.HandleForOwnerAsync("u1", winningOnly);
+
+        Assert.Equal([25237, 530385], res.Items.Select(item => item.TmdbId));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ForAnotherMember_ProposalsOfAnonymousNights_AreNotListed(bool winningOnly)
+    {
+        var handler = BuildWithAnAnonymousNightWon();
+
+        var res = await handler.HandleForUserAsync("u1", winningOnly);
 
         Assert.Equal([530385], res.Items.Select(item => item.TmdbId));
     }
