@@ -71,6 +71,14 @@ public sealed class InMemoryUserRepository : IUserRepository
         return Task.FromResult(match);
     }
 
+    public Task<IReadOnlyList<User>> ListUnconfirmedPasswordlessAsync(CancellationToken ct = default)
+    {
+        IReadOnlyList<User> result = _byId.Values
+            .Where(u => u.EmailVerifiedAt is null && string.IsNullOrEmpty(u.PasswordHash))
+            .ToList();
+        return Task.FromResult(result);
+    }
+
     public Task<IReadOnlyList<User>> ListMissingHandleAsync(CancellationToken ct = default)
     {
         IReadOnlyList<User> result = _byId.Values

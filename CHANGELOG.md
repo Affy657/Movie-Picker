@@ -8,8 +8,13 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Security
+
+- **Se connecter avec Google ou GitHub ne retire plus le mot de passe d’un compte ancien** : un compte ouvert avant la confirmation des adresses e-mail, ou qui avait détaché cette identité, reste tel quel et demande une liaison depuis Compte et sécurité, comme avant la 1.33.0.
+
 ### Fixed
 
+- **Le badge de soutien Ko-fi revient aux comptes Google et GitHub** : leur adresse, déjà vérifiée par le fournisseur à l’inscription, compte maintenant comme confirmée.
 - **Les pages d’un profil et les listes publiques réapparaissent dans Google** : depuis le 24 novembre, le moteur ne pouvait plus lire les films d’une watchlist, d’une liste ou des propositions d’un membre, et voyait une page vide sans adresse de référence.
 
 ## [1.33.2] - 2026-11-26

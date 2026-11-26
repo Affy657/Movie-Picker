@@ -759,6 +759,22 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task UnconfirmedPasswordlessUsers_LeaveOutConfirmedAndPasswordAccounts()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var passwordless = await users.AddAsync(NewUser("vouched"));
+        var confirmed = await users.AddAsync(NewUser("confirmed") with { EmailVerifiedAt = Now });
+        var withPassword = await users.AddAsync(NewUser("password") with { PasswordHash = "hash" });
+
+        var ids = (await users.ListUnconfirmedPasswordlessAsync()).Select(u => u.Id).ToList();
+
+        Assert.Contains(passwordless.Id, ids);
+        Assert.DoesNotContain(confirmed.Id, ids);
+        Assert.DoesNotContain(withPassword.Id, ids);
+    }
+
+    [Fact]
     public async Task UserUpdate_KeepsTheUnlinkedIdentities()
     {
         using var scope = _factory.Services.CreateScope();

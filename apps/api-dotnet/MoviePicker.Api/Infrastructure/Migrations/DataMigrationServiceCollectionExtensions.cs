@@ -13,6 +13,7 @@ public static class DataMigrationServiceCollectionExtensions
         services.AddScoped<IDataMigration, BackfillEventStartAtMigration>();
         services.AddScoped<IDataMigration, BackfillEventRecapSlugMigration>();
         services.AddScoped<IDataMigration, RewriteLegacyPosterPathsMigration>();
+        services.AddScoped<IDataMigration, ConfirmProviderVouchedAddressesMigration>();
         services.AddHostedService<DataMigrationRunner>();
         return services;
     }
