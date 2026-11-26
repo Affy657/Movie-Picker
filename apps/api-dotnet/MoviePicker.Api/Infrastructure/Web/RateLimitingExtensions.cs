@@ -219,7 +219,7 @@ public static class RateLimitingExtensions
     internal static string PartitionKeyFor(HttpContext httpContext, PolicySpec spec) => spec.Scope switch
     {
         QuotaScope.Address => AddressPartitionKey(httpContext),
-        QuotaScope.Slug when !FirebaseHostingRelay.Carries(httpContext) => AddressPartitionKey(httpContext),
+        QuotaScope.Slug when !FirebaseHostingRelay.HidesTheClientOf(httpContext) => AddressPartitionKey(httpContext),
         QuotaScope.Slug when spec.Name == MovieDocumentPolicy => RouteMoviePartitionKey.Get(httpContext),
         QuotaScope.Slug => RouteSlugPartitionKey.Get(httpContext) ?? AddressPartitionKey(httpContext),
         QuotaScope.Endpoint => EndpointPartition,
@@ -237,7 +237,7 @@ public static class RateLimitingExtensions
     {
         if (IsPoster(httpContext))
             return RateLimitPartition.GetNoLimiter(PostersPolicy);
-        return IsProxied(httpContext)
+        return IsRelayedForAnUnknownClient(httpContext)
             ? RateLimitPartition.GetNoLimiter(ProxiedPartition)
             : BuildFixedWindow(AddressPartitionKey(httpContext), AddressCeilingPerMinute, 1);
     }
@@ -248,7 +248,7 @@ public static class RateLimitingExtensions
             return RateLimitPartition.GetNoLimiter(EventViewPollPolicy);
         if (IsPoster(httpContext))
             return RateLimitPartition.GetNoLimiter(PostersPolicy);
-        return IsProxied(httpContext)
+        return IsRelayedForAnUnknownClient(httpContext)
             ? RateLimitPartition.GetNoLimiter(ProxiedPartition)
             : BuildFixedWindow(PartitionKeyFor(httpContext), GlobalPermitLimitPerMinute, 1);
     }
@@ -265,8 +265,8 @@ public static class RateLimitingExtensions
             ? policyName
             : null;
 
-    private static bool IsProxied(HttpContext httpContext) =>
-        ShareDocumentPolicyOf(httpContext) is not null && FirebaseHostingRelay.Carries(httpContext);
+    private static bool IsRelayedForAnUnknownClient(HttpContext httpContext) =>
+        ShareDocumentPolicyOf(httpContext) is not null && FirebaseHostingRelay.HidesTheClientOf(httpContext);
 
     internal static RateLimitPartition<string> CreatePartition(HttpContext httpContext, PolicySpec spec)
     {
@@ -326,7 +326,7 @@ internal static class ClientIpPartitionKey
 
     internal static string Get(HttpContext httpContext)
     {
-        var ip = httpContext.Connection.RemoteIpAddress;
+        var ip = FirebaseHostingRelay.ClientOf(httpContext) ?? httpContext.Connection.RemoteIpAddress;
         if (ip is null)
             return "unknown";
         if (ip.IsIPv4MappedToIPv6)

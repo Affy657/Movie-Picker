@@ -1,5 +1,6 @@
 using System.Net;
 using Microsoft.Extensions.Primitives;
+using ForwardedHeadersDefaults = Microsoft.AspNetCore.HttpOverrides.ForwardedHeadersDefaults;
 
 namespace MoviePicker.Api.Infrastructure.Web;
 
@@ -22,6 +23,18 @@ internal static class FirebaseHostingRelay
             .SelectMany(line => (line ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
             .Select(hop => IPEndPoint.TryParse(hop, out var endpoint) && IsGoogleFrontEnd(endpoint.Address))
             .ToList();
+
+    internal static IPAddress? ClientOf(HttpContext httpContext) =>
+        Carries(httpContext) ? LastForwardedHopLeftIn(httpContext.Request) : null;
+
+    internal static bool HidesTheClientOf(HttpContext httpContext) =>
+        Carries(httpContext) && LastForwardedHopLeftIn(httpContext.Request) is null;
+
+    private static IPAddress? LastForwardedHopLeftIn(HttpRequest request) =>
+        request.Headers.GetCommaSeparatedValues(ForwardedHeadersDefaults.XForwardedForHeaderName) is [.., { } lastHop]
+        && IPEndPoint.TryParse(lastHop, out var endpoint)
+            ? endpoint.Address
+            : null;
 
     private static bool IsGoogleFrontEnd(IPAddress peer)
     {
