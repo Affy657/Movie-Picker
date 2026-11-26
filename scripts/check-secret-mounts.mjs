@@ -15,24 +15,10 @@ const SECRETS_ASSIGNMENT = /^SECRETS="(\$SECRETS,)?([^"]*)"$/;
 export const ALLOWED_GAPS = [
   {
     stage: 'production',
-    secret: 'AUTH_DATAPROTECTION_KEYRING',
-    kind: 'described-not-mounted',
-    reason:
-      'DEBT-045: unused since MongoDB holds the data protection keys, no longer mounted; the secret is destroyed by an apply once a deployment without the mount is promoted.',
-  },
-  {
-    stage: 'production',
-    secret: 'SCHEDULER_TOKEN',
-    kind: 'described-not-mounted',
-    reason:
-      'DEBT-037: a revision older than 2026-09-21 brought back by rollback.yml still mounts it; it is destroyed once no such revision is left in the image repository.',
-  },
-  {
-    stage: 'production',
     secret: 'TMDB_READ_ACCESS_TOKEN',
     kind: 'mounted-not-described',
     reason:
-      'DEBT-039: created by hand, mounted only once it exists (deploy.yml asks Secret Manager first), described in Terraform when that debt is closed.',
+      'E10 (ex-DEBT-039, set aside): created by hand, mounted only once it exists (deploy.yml asks Secret Manager first); described in Terraform if that entry is reopened.',
   },
 ];
 

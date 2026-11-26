@@ -456,15 +456,13 @@ jobs:
       # The secrets mounted are the ones `infra/terraform` describes for the stage. The staging
       # mounts its own database and OAuth clients (`STAGING_*`) and, under their production name,
       # the shared keys it uses, and no scheduler configuration (no Scheduler job targets the
-      # staging, its `/scheduler/*` routes answer 503). Neither stage mounts the data protection
-      # keyring, unused once MongoDB holds the keys (DEBT-045).
+      # staging, its `/scheduler/*` routes answer 503). Neither stage mounts a data protection
+      # keyring: MongoDB holds the keys.
       #
       # The scheduled passes authenticate by a Google OIDC token: the jobs (`infra/terraform`) sign it
       # with `movie-picker-scheduler@` and the API checks the issuer, the audience (the
       # public API URL) and that e-mail, `SCHEDULER_OIDC_AUDIENCE` and
-      # `SCHEDULER_OIDC_SERVICE_ACCOUNT`. No shared secret travels any more: `SCHEDULER_TOKEN`
-      # is not mounted, the transition path of the API that still reads the header stays inert
-      # until its removal (DEBT-037).
+      # `SCHEDULER_OIDC_SERVICE_ACCOUNT`. No shared secret travels.
       - name: Deploy without traffic (GCP secrets + CORS)
         id: deploy
         env:

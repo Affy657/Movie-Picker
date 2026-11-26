@@ -13,7 +13,6 @@ locals {
   scheduled_pass_uri                = "${module.api.uri}/api/v1/scheduler"
 
   api_secret_names = toset([
-    "AUTH_DATAPROTECTION_KEYRING",
     "GITHUB_TOKEN",
     "KOFI_WEBHOOK_TOKEN",
     "MONGODB_URI",
@@ -22,7 +21,6 @@ locals {
     "OAUTH_GOOGLE_CLIENT_ID",
     "OAUTH_GOOGLE_CLIENT_SECRET",
     "RESEND_API_KEY",
-    "SCHEDULER_TOKEN",
     "SENTRY_DSN",
     "TMDB_API_KEY",
     "VAPID_PRIVATE_KEY",
@@ -308,7 +306,7 @@ module "backup" {
   subject            = module.github.subjects["backup"]
 
   project_roles    = ["roles/serviceusage.serviceUsageConsumer"]
-  readable_secrets = ["MONGODB_URI", google_secret_manager_secret.backup_database_uri.secret_id]
+  readable_secrets = [google_secret_manager_secret.backup_database_uri.secret_id]
   bucket_roles = {
     backups_read    = { bucket = google_storage_bucket.backups.name, role = "roles/storage.objectViewer" }
     backups_write   = { bucket = google_storage_bucket.backups.name, role = "roles/storage.objectCreator" }

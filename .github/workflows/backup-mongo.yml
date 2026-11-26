@@ -19,11 +19,14 @@
 # The URI is read from Secret Manager rather than duplicated as a GitHub secret: a single source.
 # It is `MONGODB_BACKUP_URI`, not the URI of the API: an Atlas user that can only read the
 # production database, with that database in the path, so that the dump covers it and nothing
-# else (`mongodump` takes the database of the URI as its `--db`). Until that secret has a
-# version (DEBT-053, the Atlas user is a console gesture), the dump falls back on `MONGODB_URI`
-# with a warning, as it ran until 2026-09-21: as the cluster administrator the API also used,
-# archiving every database of the cluster. The fallback and the second binding leave with the
-# debt entry.
+# else (`mongodump` takes the database of the URI as its `--db`).
+#
+# Two collections stay out of the archive: `auth_sessions` (the server-side sessions) and
+# `data_protection_keys` (the keyring that signs the session cookies, stored unencrypted). With
+# them, an archive would be worth more than the read-only user that took it: anyone holding it
+# could forge a session. A restore over the production database leaves both collections as they
+# are (`--drop` only empties the collections the archive holds); a restore into an empty database
+# signs everyone out, and the API creates a new keyring on its first start.
 #
 # The job runs in the `backup` environment, whose identity (`module "backup"` of the production
 # root module of `infra/terraform`) can read that one secret and write that one bucket, and
@@ -119,12 +122,10 @@ jobs:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
           set -eo pipefail
-          if URI="$(gcloud secrets versions access latest --secret=MONGODB_BACKUP_URI --project="$GCP_PROJECT_ID" 2>/dev/null)" && [ -n "$URI" ]; then
+          if URI="$(gcloud secrets versions access latest --secret=MONGODB_BACKUP_URI --project="$GCP_PROJECT_ID")" && [ -n "$URI" ]; then
             echo "Dump taken with MONGODB_BACKUP_URI, the read-only user of the production database."
-          elif URI="$(gcloud secrets versions access latest --secret=MONGODB_URI --project="$GCP_PROJECT_ID")"; then
-            echo "::warning::MONGODB_BACKUP_URI has no version yet: the dump runs with MONGODB_URI, the URI of the API. Add the version (DEBT-053), then drop this fallback."
           else
-            echo "::error::Neither MONGODB_BACKUP_URI nor MONGODB_URI could be read: the backup identity needs roles/secretmanager.secretAccessor on the first (module backup of infra/terraform), and the secret a version."
+            echo "::error::MONGODB_BACKUP_URI could not be read: the backup identity needs roles/secretmanager.secretAccessor on it (module backup of infra/terraform), and the secret a version."
             exit 1
           fi
           echo "::add-mask::$URI"
@@ -140,7 +141,7 @@ jobs:
           echo "Database backed up and verified: $DB_NAME"
           STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
           ARCHIVE="$RUNNER_TEMP/moviepicker-${STAMP}.archive.gz"
-          mongodump --uri="$URI" --archive="$ARCHIVE" --gzip 2>&1 | sed -nE '/\t(Failed:|error )/p'
+          mongodump --uri="$URI" --excludeCollection=auth_sessions --excludeCollection=data_protection_keys --archive="$ARCHIVE" --gzip 2>&1 | sed -nE '/\t(Failed:|error )/p'
           SIZE="$(stat -c%s "$ARCHIVE")"
           echo "Archive: $ARCHIVE ($SIZE bytes)"
           if [ "$SIZE" -lt 1024 ]; then
