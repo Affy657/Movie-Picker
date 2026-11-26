@@ -431,7 +431,7 @@ public sealed class MovieListMembersEndpointsTests : IClassFixture<MoviePickerAp
     }
 
     [Fact]
-    public async Task ADeletedMember_LeavesTheirTitlesWithoutAnAuthor()
+    public async Task ADeletedMember_LeavesTheirTitlesToTheListOwner()
     {
         var (owner, member, listId) = await SharedListAsync("Deleted");
         await AddTitleAsync(member, listId, 603, "Matrix");
@@ -443,7 +443,7 @@ public sealed class MovieListMembersEndpointsTests : IClassFixture<MoviePickerAp
 
         Assert.True(deletion.IsSuccessStatusCode, await deletion.Content.ReadAsStringAsync());
         var kept = await owner.Client.GetFromJsonAsync<MovieListResponse>($"{Route}/{listId}", Json);
-        Assert.Null(Assert.Single(kept!.Items).AddedBy);
+        Assert.Equal(owner.Profile.UserId, Assert.Single(kept!.Items).AddedBy?.UserId);
         Assert.Equal(1, kept.MemberCount);
     }
 

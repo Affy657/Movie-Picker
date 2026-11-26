@@ -4,6 +4,7 @@ using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
@@ -125,7 +126,7 @@ public sealed class EventCapacityRaceTests : IClassFixture<MoviePickerApplicatio
     [Fact]
     public async Task VotesAndSeenMarksRacingAMovieRemoval_NeverOutliveTheMovie()
     {
-        var (host, evt) = await CreateEventAsync(new { maxProposalsPerParticipant = 100 });
+        var (host, evt) = await CreateEventAsync(new { maxProposalsPerParticipant = EventConfig.MaxProposalsPerParticipantCap });
         var hostParticipantId = evt.CreatorParticipant!.Id;
         var voter = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Votant");
         var voterParticipantId = await JoinAsync(voter, evt.Slug, "Votant");
@@ -154,7 +155,7 @@ public sealed class EventCapacityRaceTests : IClassFixture<MoviePickerApplicatio
     [Fact]
     public async Task VotesAndSeenMarksRacingAParticipantRemoval_NeverOutliveTheParticipant()
     {
-        var (host, evt) = await CreateEventAsync(new { maxProposalsPerParticipant = 100 });
+        var (host, evt) = await CreateEventAsync(new { maxProposalsPerParticipant = EventConfig.MaxProposalsPerParticipantCap });
         var movieId = await ProposeAsync(host, evt.Slug, evt.CreatorParticipant!.Id, 4000);
         var moviePath = $"/api/v1/events/{evt.Slug}/movies/{movieId}";
         var removedParticipantIds = new List<string>();
@@ -185,7 +186,7 @@ public sealed class EventCapacityRaceTests : IClassFixture<MoviePickerApplicatio
     [Fact]
     public async Task ConcurrentSeenMarks_OfOneParticipant_KeepASingleMark()
     {
-        var (host, evt) = await CreateEventAsync(new { maxProposalsPerParticipant = 100 });
+        var (host, evt) = await CreateEventAsync(new { maxProposalsPerParticipant = EventConfig.MaxProposalsPerParticipantCap });
         var participantId = evt.CreatorParticipant!.Id;
         var movieId = await ProposeAsync(host, evt.Slug, participantId, 5000);
 
