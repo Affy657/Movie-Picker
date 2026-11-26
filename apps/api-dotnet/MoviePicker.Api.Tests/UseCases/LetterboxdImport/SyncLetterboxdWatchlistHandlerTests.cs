@@ -686,6 +686,36 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
         VerifyWatchedFilmsRead(Times.Once());
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task HandleAsync_ListFollowingTheSharedStatus_IsPinnedOnItsOwnDateWhenAnotherListIsStamped(bool watchedHasItsOwnEntry)
+    {
+        var sharedAt = Now.AddHours(-2);
+        GivenUser(
+            Username,
+            sharedAt,
+            ErrorCodes.LetterboxdWatchedIncomplete,
+            listSyncs: watchedHasItsOwnEntry
+                ? new() { [LetterboxdImportTarget.Watched] = new LetterboxdListSync(sharedAt, ErrorCodes.LetterboxdWatchedIncomplete) }
+                : null);
+
+        await _sut.HandleAsync(UserId, force: false);
+
+        VerifyLetterboxdRead(Times.Never());
+        _users.Verify(
+            u => u.SetLetterboxdSyncStatusAsync(
+                UserId,
+                Now,
+                null,
+                It.Is<IReadOnlyDictionary<LetterboxdImportTarget, LetterboxdListSync>>(stored =>
+                    stored.Count == 2
+                    && stored[LetterboxdImportTarget.Watchlist] == new LetterboxdListSync(sharedAt, null)
+                    && stored[LetterboxdImportTarget.Watched] == new LetterboxdListSync(Now, null)),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
     [Fact]
     public async Task HandleAsync_ListSyncedMinutesAgo_IsLeftOutOfAForcedSync()
     {

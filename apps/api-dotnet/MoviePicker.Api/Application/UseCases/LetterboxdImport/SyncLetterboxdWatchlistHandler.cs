@@ -119,7 +119,9 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
         Func<LetterboxdImportTarget, string?> errorOf,
         CancellationToken ct)
     {
-        var stamped = lists.ToDictionary(list => list, list => new LetterboxdListSync(at, errorOf(list)));
+        var stamped = LetterboxdListStatus.FollowingTheSharedStatus(user);
+        foreach (var list in lists)
+            stamped[list] = new LetterboxdListSync(at, errorOf(list));
         return _users.SetLetterboxdSyncStatusAsync(
             user.Id,
             at,

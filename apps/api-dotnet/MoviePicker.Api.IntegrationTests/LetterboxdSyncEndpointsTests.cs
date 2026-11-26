@@ -297,6 +297,27 @@ public sealed class LetterboxdSyncEndpointsTests : IClassFixture<MoviePickerAppl
     }
 
     [Fact]
+    public async Task Sync_OfAStatusSharedByBothLists_PinsTheListLeftOutOnItsOwnDate()
+    {
+        var (client, userId) = await ConnectedUserAsync();
+        var twoHoursAgo = DateTimeOffset.FromUnixTimeSeconds(DateTimeOffset.UtcNow.AddHours(-2).ToUnixTimeSeconds());
+        using var scope = _host.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        await users.SetLetterboxdSyncStatusAsync(
+            userId,
+            twoHoursAgo,
+            "letterboxd_watched_incomplete",
+            new Dictionary<LetterboxdImportTarget, LetterboxdListSync>());
+
+        var report = await BodyAsync(await client.PostAsync("/api/v1/letterboxd/sync?force=false", null));
+
+        Assert.Equal("watched", Assert.Single(report.GetProperty("lists").EnumerateArray()).GetProperty("target").GetString());
+        var stored = (await users.GetByIdAsync(userId))!.LetterboxdListSyncs;
+        Assert.Equal(new LetterboxdListSync(twoHoursAgo, null), stored.GetValueOrDefault(LetterboxdImportTarget.Watchlist));
+        Assert.Null(stored[LetterboxdImportTarget.Watched].Error);
+    }
+
+    [Fact]
     public async Task Sync_UnreadableWatchlist_StillSyncsTheWatchedFilms_AndRecordsTheWatchlistError()
     {
         var (client, _) = await ConnectedUserAsync();
