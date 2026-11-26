@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.33.3] - 2026-11-26
+
 ### Security
 
 - **Se connecter avec Google ou GitHub ne retire plus le mot de passe d’un compte ancien** : un compte ouvert avant la confirmation des adresses e-mail, ou qui avait détaché cette identité, reste tel quel et demande une liaison depuis Compte et sécurité, comme avant la 1.33.0.
@@ -1207,7 +1209,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.33.2...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.33.3...HEAD
+[1.33.3]: https://github.com/Affy657/Movie-Picker/compare/v1.33.2...v1.33.3
 [1.33.2]: https://github.com/Affy657/Movie-Picker/compare/v1.33.1...v1.33.2
 [1.33.1]: https://github.com/Affy657/Movie-Picker/compare/v1.33.0...v1.33.1
 [1.33.0]: https://github.com/Affy657/Movie-Picker/compare/v1.32.1...v1.33.0
