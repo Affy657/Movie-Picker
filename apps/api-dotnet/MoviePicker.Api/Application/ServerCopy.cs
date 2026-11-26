@@ -172,71 +172,38 @@ public static class ServerCopy
     {
         public const string Subject = "Réinitialisez votre mot de passe Movie Picker";
 
-        public static string HtmlBody(string url, string siteUrl) => BrandedEmailHtml.Render(new BrandedEmail(
-            Lang: "fr",
-            Title: Subject,
+        private static readonly AccountEmail Copy = new(
+            AccountEmailVoice.InFrench,
+            Subject,
             Heading: "Réinitialisez votre mot de passe",
-            Intro:
-            [
-                "Bonjour,",
-                "Vous avez demandé à réinitialiser votre mot de passe Movie Picker. Cliquez sur le bouton ci-dessous, le lien reste valable 30 minutes."
-            ],
+            HtmlLead: "Vous avez demandé à réinitialiser votre mot de passe Movie Picker. Cliquez sur le bouton ci-dessous, le lien reste valable 30 minutes.",
+            TextLead: "Vous avez demandé à réinitialiser votre mot de passe Movie Picker.",
+            TextLinkPrompt: "Cliquez sur le lien ci-dessous (valide 30 minutes) :",
             ButtonLabel: "Définir un nouveau mot de passe",
-            ButtonUrl: url,
-            FallbackIntro: "Si le bouton ne fonctionne pas, copiez cette adresse dans votre navigateur :",
-            Outro: ["Si vous n’êtes pas à l’origine de cette demande, ignorez cet e-mail : votre mot de passe restera inchangé."],
-            Signature: "L’équipe Movie Picker",
-            SiteUrl: siteUrl));
+            Outro: "Si vous n’êtes pas à l’origine de cette demande, ignorez cet e-mail : votre mot de passe restera inchangé.");
 
-        public static string TextBody(string url) => $"""
-            Bonjour,
+        public static string HtmlBody(string url, string siteUrl) => Copy.HtmlBody(url, siteUrl);
 
-            Vous avez demandé à réinitialiser votre mot de passe Movie Picker.
-            Cliquez sur le lien ci-dessous (valide 30 minutes) :
-
-            {url}
-
-            Si vous n’êtes pas à l’origine de cette demande, ignorez cet e-mail : votre mot de passe restera inchangé.
-
-            L’équipe Movie Picker
-            """;
+        public static string TextBody(string url) => Copy.TextBody(url);
     }
 
     public static class EmailVerificationEmail
     {
         public const string Subject = "Confirmez votre adresse e-mail Movie Picker";
 
-        private const string NotYourAccount =
-            "Si vous n’avez pas créé ce compte, quelqu’un a saisi votre adresse par erreur : ignorez cet e-mail, ou reprenez le compte avec « Mot de passe oublié » sur la page de connexion.";
-
-        public static string HtmlBody(string url, string siteUrl) => BrandedEmailHtml.Render(new BrandedEmail(
-            Lang: "fr",
-            Title: Subject,
+        private static readonly AccountEmail Copy = new(
+            AccountEmailVoice.InFrench,
+            Subject,
             Heading: "Confirmez votre adresse e-mail",
-            Intro:
-            [
-                "Bonjour,",
-                "Votre compte Movie Picker est prêt. Confirmez que cette adresse est bien la vôtre en cliquant sur le bouton ci-dessous, le lien reste valable 48 heures."
-            ],
+            HtmlLead: "Votre compte Movie Picker est prêt. Confirmez que cette adresse est bien la vôtre en cliquant sur le bouton ci-dessous, le lien reste valable 48 heures.",
+            TextLead: "Votre compte Movie Picker est prêt.",
+            TextLinkPrompt: "Confirmez que cette adresse est bien la vôtre en ouvrant le lien ci-dessous (valide 48 heures) :",
             ButtonLabel: "Confirmer mon adresse",
-            ButtonUrl: url,
-            FallbackIntro: "Si le bouton ne fonctionne pas, copiez cette adresse dans votre navigateur :",
-            Outro: [NotYourAccount],
-            Signature: "L’équipe Movie Picker",
-            SiteUrl: siteUrl));
+            Outro: "Si vous n’avez pas créé ce compte, quelqu’un a saisi votre adresse par erreur : ignorez cet e-mail, ou reprenez le compte avec « Mot de passe oublié » sur la page de connexion.");
 
-        public static string TextBody(string url) => $"""
-            Bonjour,
+        public static string HtmlBody(string url, string siteUrl) => Copy.HtmlBody(url, siteUrl);
 
-            Votre compte Movie Picker est prêt.
-            Confirmez que cette adresse est bien la vôtre en ouvrant le lien ci-dessous (valide 48 heures) :
-
-            {url}
-
-            {NotYourAccount}
-
-            L’équipe Movie Picker
-            """;
+        public static string TextBody(string url) => Copy.TextBody(url);
     }
 
     public static class PhotoReportEmail
@@ -303,71 +270,89 @@ public static class ServerCopy
         {
             public const string Subject = "Confirm your Movie Picker email address";
 
-            private const string NotYourAccount =
-                "If you didn't create this account, someone typed your address by mistake: ignore this email, or take the account back with “Forgot password” on the sign-in page.";
-
-            public static string HtmlBody(string url, string siteUrl) => BrandedEmailHtml.Render(new BrandedEmail(
-                Lang: "en",
-                Title: Subject,
+            private static readonly AccountEmail Copy = new(
+                AccountEmailVoice.InEnglish,
+                Subject,
                 Heading: "Confirm your email address",
-                Intro:
-                [
-                    "Hi,",
-                    "Your Movie Picker account is ready. Confirm this address is yours by clicking the button below, the link stays valid for 48 hours."
-                ],
+                HtmlLead: "Your Movie Picker account is ready. Confirm this address is yours by clicking the button below, the link stays valid for 48 hours.",
+                TextLead: "Your Movie Picker account is ready.",
+                TextLinkPrompt: "Confirm this address is yours by opening the link below (valid for 48 hours):",
                 ButtonLabel: "Confirm my address",
-                ButtonUrl: url,
-                FallbackIntro: "If the button doesn't work, copy this address into your browser:",
-                Outro: [NotYourAccount],
-                Signature: "The Movie Picker team",
-                SiteUrl: siteUrl));
+                Outro: "If you didn't create this account, someone typed your address by mistake: ignore this email, or take the account back with “Forgot password” on the sign-in page.");
 
-            public static string TextBody(string url) => $"""
-                Hi,
+            public static string HtmlBody(string url, string siteUrl) => Copy.HtmlBody(url, siteUrl);
 
-                Your Movie Picker account is ready.
-                Confirm this address is yours by opening the link below (valid for 48 hours):
-
-                {url}
-
-                {NotYourAccount}
-
-                The Movie Picker team
-                """;
+            public static string TextBody(string url) => Copy.TextBody(url);
         }
 
         public static class ResetEmail
         {
             public const string Subject = "Reset your Movie Picker password";
 
-            public static string HtmlBody(string url, string siteUrl) => BrandedEmailHtml.Render(new BrandedEmail(
-                Lang: "en",
-                Title: Subject,
+            private static readonly AccountEmail Copy = new(
+                AccountEmailVoice.InEnglish,
+                Subject,
                 Heading: "Reset your password",
-                Intro:
-                [
-                    "Hi,",
-                    "You asked to reset your Movie Picker password. Click the button below, the link stays valid for 30 minutes."
-                ],
+                HtmlLead: "You asked to reset your Movie Picker password. Click the button below, the link stays valid for 30 minutes.",
+                TextLead: "You asked to reset your Movie Picker password.",
+                TextLinkPrompt: "Click the link below (valid for 30 minutes):",
                 ButtonLabel: "Set a new password",
-                ButtonUrl: url,
-                FallbackIntro: "If the button doesn't work, copy this address into your browser:",
-                Outro: ["If you didn't request this, ignore this email: your password will remain unchanged."],
-                Signature: "The Movie Picker team",
-                SiteUrl: siteUrl));
+                Outro: "If you didn't request this, ignore this email: your password will remain unchanged.");
 
-            public static string TextBody(string url) => $"""
-                Hi,
+            public static string HtmlBody(string url, string siteUrl) => Copy.HtmlBody(url, siteUrl);
 
-                You asked to reset your Movie Picker password.
-                Click the link below (valid for 30 minutes):
-
-                {url}
-
-                If you didn't request this, ignore this email: your password will remain unchanged.
-
-                The Movie Picker team
-                """;
+            public static string TextBody(string url) => Copy.TextBody(url);
         }
+    }
+
+    private sealed record AccountEmailVoice(string Lang, string Greeting, string FallbackIntro, string Signature)
+    {
+        public static readonly AccountEmailVoice InFrench = new(
+            "fr",
+            "Bonjour,",
+            "Si le bouton ne fonctionne pas, copiez cette adresse dans votre navigateur :",
+            "L’équipe Movie Picker");
+
+        public static readonly AccountEmailVoice InEnglish = new(
+            "en",
+            "Hi,",
+            "If the button doesn't work, copy this address into your browser:",
+            "The Movie Picker team");
+    }
+
+    private sealed record AccountEmail(
+        AccountEmailVoice Voice,
+        string Subject,
+        string Heading,
+        string HtmlLead,
+        string TextLead,
+        string TextLinkPrompt,
+        string ButtonLabel,
+        string Outro)
+    {
+        public string HtmlBody(string url, string siteUrl) => BrandedEmailHtml.Render(new BrandedEmail(
+            Lang: Voice.Lang,
+            Title: Subject,
+            Heading: Heading,
+            Intro: [Voice.Greeting, HtmlLead],
+            ButtonLabel: ButtonLabel,
+            ButtonUrl: url,
+            FallbackIntro: Voice.FallbackIntro,
+            Outro: [Outro],
+            Signature: Voice.Signature,
+            SiteUrl: siteUrl));
+
+        public string TextBody(string url) => $"""
+            {Voice.Greeting}
+
+            {TextLead}
+            {TextLinkPrompt}
+
+            {url}
+
+            {Outro}
+
+            {Voice.Signature}
+            """;
     }
 }
