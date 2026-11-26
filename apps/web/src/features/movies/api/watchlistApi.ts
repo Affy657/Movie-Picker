@@ -83,16 +83,23 @@ export async function fetchWatchlistAvailability(
   return assemble(pages, 0);
 }
 
+async function refetchPartialPages(
+  pages: readonly WatchlistAvailabilityPage[],
+  signal?: AbortSignal
+): Promise<WatchlistAvailabilityPage[]> {
+  const [page, ...rest] = pages;
+  if (!page) return [];
+  const settled = page.partial
+    ? toPage(page.skip, await fetchAvailabilityPage(page.skip, signal))
+    : page;
+  return [settled, ...(await refetchPartialPages(rest, signal))];
+}
+
 export async function completeWatchlistAvailability(
   previous: WatchlistAvailability,
   signal?: AbortSignal
 ): Promise<WatchlistAvailability> {
-  const pages: WatchlistAvailabilityPage[] = [];
-  for (const page of previous.pages) {
-    pages.push(
-      page.partial ? toPage(page.skip, await fetchAvailabilityPage(page.skip, signal)) : page
-    );
-  }
+  const pages = await refetchPartialPages(previous.pages, signal);
   return assemble(pages, previous.completionAttempts + 1);
 }
 
