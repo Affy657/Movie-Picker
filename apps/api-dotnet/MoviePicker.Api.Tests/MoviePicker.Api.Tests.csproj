@@ -36,8 +36,11 @@
     </None>
   </ItemGroup>
 
+  <Import Project="..\MoviePicker.Api.DevelopmentSeed\MoviePicker.Api.DevelopmentSeed.projitems" Condition="'$(Configuration)' != 'Debug'" Label="Shared" />
+
   <ItemGroup>
     <ProjectReference Include="..\MoviePicker.Api\MoviePicker.Api.csproj" />
+    <ProjectReference Include="..\MoviePicker.Api.TestSupport\MoviePicker.Api.TestSupport.csproj" />
   </ItemGroup>
 
 </Project>

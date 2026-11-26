@@ -22,13 +22,7 @@ public sealed class TestDatabaseIsolationTests
         using var factory = new MoviePickerApplicationFactory();
         using var client = factory.CreateClient();
 
-        var database = factory.Services.GetService<IMongoDatabase>();
-
-        if (database is null)
-        {
-            Assert.False(factory.RunsAgainstMongo);
-            return;
-        }
+        var database = factory.Services.GetRequiredService<IMongoDatabase>();
 
         Assert.DoesNotContain(
             database.DatabaseNamespace.DatabaseName,
@@ -37,7 +31,7 @@ public sealed class TestDatabaseIsolationTests
         Assert.StartsWith("moviepicker_it_", database.DatabaseNamespace.DatabaseName);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task Booting_the_api_applies_every_data_migration_before_a_test_writes()
     {
         using var factory = new MoviePickerApplicationFactory();

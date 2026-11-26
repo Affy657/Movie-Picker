@@ -11,9 +11,12 @@
     <RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
+  <Import Project="..\MoviePicker.Api.DevelopmentSeed\MoviePicker.Api.DevelopmentSeed.projitems" Condition="'$(Configuration)' == 'Debug' And Exists('..\MoviePicker.Api.DevelopmentSeed\MoviePicker.Api.DevelopmentSeed.projitems')" Label="Shared" />
+
   <ItemGroup>
     <InternalsVisibleTo Include="MoviePicker.Api.Tests" />
     <InternalsVisibleTo Include="MoviePicker.Api.IntegrationTests" />
+    <InternalsVisibleTo Include="MoviePicker.Api.TestSupport" />
   </ItemGroup>
 
   <ItemGroup>

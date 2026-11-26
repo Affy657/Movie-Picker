@@ -261,7 +261,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
             services.GetRequiredService<IUnitOfWork>(),
             NullLogger<DeleteAccountHandler>.Instance);
 
-    [MongoFact]
+    [Fact]
     public async Task FailedDeletion_LeavesTheAccountAndEveryLinkedDocumentIntact()
     {
         using var scope = _factory.Services.CreateScope();
@@ -311,7 +311,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         Assert.NotNull(await services.GetRequiredService<IAvatarPhotoRepository>().GetByKeyAsync(fixture.PhotoKey));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task SuccessfulDeletion_RemovesThePersonalDataAndAnonymizesWhatIsShared()
     {
         using var scope = _factory.Services.CreateScope();
@@ -408,7 +408,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
             UpdatedAt = at
         });
 
-    [MongoFact]
+    [Fact]
     public async Task SuccessfulDeletion_HandsAnUpcomingNightToTheOldestRemainingMember()
     {
         using var scope = _factory.Services.CreateScope();
@@ -441,7 +441,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         Assert.True(string.IsNullOrEmpty(formerHost.UserId));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task SuccessfulDeletion_ClosesARecurringNightNobodyCanTakeOver_AndEndsItsSeries()
     {
         using var scope = _factory.Services.CreateScope();
@@ -461,7 +461,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         Assert.DoesNotContain(night.Id, (await events.ListRecurringAwaitingNextOccurrenceAsync(null)).Select(evt => evt.Id));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task WrongPassword_RefusesBeforeOpeningAnyTransaction()
     {
         using var scope = _factory.Services.CreateScope();
@@ -481,7 +481,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         Assert.NotNull(await services.GetRequiredService<IAvatarPhotoRepository>().GetByKeyAsync(fixture.PhotoKey));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task SecondDeletedAccountSharingTheEvent_IsAnonymizedWithoutReplayingTheTransaction()
     {
         using var scope = _factory.Services.CreateScope();

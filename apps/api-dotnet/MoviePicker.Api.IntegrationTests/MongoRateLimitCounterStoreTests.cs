@@ -35,7 +35,7 @@ public sealed class MongoRateLimitCounterStoreTests : IClassFixture<MoviePickerA
             .FirstOrDefaultAsync();
     }
 
-    [MongoFact]
+    [Fact]
     public void ProductionStore_IsTheMongoBackedOne()
     {
         using var scope = _factory.Services.CreateScope();
@@ -43,7 +43,7 @@ public sealed class MongoRateLimitCounterStoreTests : IClassFixture<MoviePickerA
             scope.ServiceProvider.GetRequiredService<IRateLimitCounterStore>());
     }
 
-    [MongoFact]
+    [Fact]
     public async Task ConcurrentIncrements_CountEveryHitExactlyOnce()
     {
         var key = "concurrent:" + Guid.NewGuid().ToString("N");
@@ -61,7 +61,7 @@ public sealed class MongoRateLimitCounterStoreTests : IClassFixture<MoviePickerA
         Assert.Equal(ParallelHits, stored!.Count);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task FirstIncrement_StampsTheExpiryUsedByTheTtlIndex()
     {
         var key = "expiry:" + Guid.NewGuid().ToString("N");
@@ -74,7 +74,7 @@ public sealed class MongoRateLimitCounterStoreTests : IClassFixture<MoviePickerA
         Assert.Equal(expiresAt.UtcDateTime, stored!.ExpiresAt, TimeSpan.FromMilliseconds(1));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task LaterIncrements_NeverPushTheExpiryBack()
     {
         var key = "window:" + Guid.NewGuid().ToString("N");
@@ -88,7 +88,7 @@ public sealed class MongoRateLimitCounterStoreTests : IClassFixture<MoviePickerA
         Assert.Equal(openedAt.UtcDateTime, stored!.ExpiresAt, TimeSpan.FromMilliseconds(1));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task Decrement_GivesBackAHitWithoutGoingBelowZero()
     {
         var key = "decrement-" + Guid.NewGuid().ToString("N");

@@ -37,7 +37,7 @@ public sealed class MongoPosterImageStoreTests : IClassFixture<MoviePickerApplic
         public HttpClient CreateClient(string name) => new(new TmdbImages());
     }
 
-    [MongoFact]
+    [Fact]
     public async Task GetOrFetchAsync_CacheFull_ServesThePosterWithoutKeepingIt()
     {
         using var scope = _factory.Services.CreateScope();

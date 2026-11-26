@@ -37,7 +37,7 @@ public sealed class MongoUsageCountRepositoryTests : IClassFixture<MoviePickerAp
             .ToListAsync();
     }
 
-    [MongoFact]
+    [Fact]
     public void ProductionRepository_IsTheMongoBackedOne()
     {
         using var scope = _factory.Services.CreateScope();
@@ -45,7 +45,7 @@ public sealed class MongoUsageCountRepositoryTests : IClassFixture<MoviePickerAp
             scope.ServiceProvider.GetRequiredService<IUsageCountRepository>());
     }
 
-    [MongoFact]
+    [Fact]
     public async Task ConcurrentIncrements_LandInASingleDocumentPerDayMetricAndVariant()
     {
         var day = new DateOnly(2001, 1, 1).AddDays(Random.Shared.Next(0, 3000));
@@ -63,7 +63,7 @@ public sealed class MongoUsageCountRepositoryTests : IClassFixture<MoviePickerAp
         Assert.Equal(2, stored.Count);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task StoredDocument_CarriesNoIdentifierOfAPersonOrAnEvent()
     {
         var day = new DateOnly(2001, 1, 1).AddDays(Random.Shared.Next(3000, 6000));

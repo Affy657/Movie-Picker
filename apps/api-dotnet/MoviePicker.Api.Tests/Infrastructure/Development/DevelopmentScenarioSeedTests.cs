@@ -21,6 +21,7 @@ using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure;
 using MoviePicker.Api.Infrastructure.Development;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.Infrastructure.Development;
@@ -84,6 +85,7 @@ public sealed class SeededDevelopmentFixture : IAsyncLifetime
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
+                ["MONGODB_URI"] = "mongodb://127.0.0.1:27017/moviepicker_unit",
                 ["DevelopmentSeed:Enabled"] = "true",
                 ["DevelopmentSeed:Email"] = "dev@test.local",
                 ["DevelopmentSeed:Password"] = "DevTest123!",
@@ -95,6 +97,8 @@ public sealed class SeededDevelopmentFixture : IAsyncLifetime
         services.AddSingleton<IHostEnvironment>(new DevelopmentEnv());
         services.AddLogging(builder => builder.AddProvider(Logs));
         services.AddMoviePicker(configuration, new DevelopmentEnv());
+        services.AddDevelopmentSeed(configuration);
+        services.ReplacePersistenceWithInMemoryDoubles();
         Provider = services.BuildServiceProvider();
         await RunSeedAsync();
     }

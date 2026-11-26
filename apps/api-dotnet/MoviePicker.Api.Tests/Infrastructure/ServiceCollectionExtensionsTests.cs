@@ -5,7 +5,6 @@ using Microsoft.Extensions.Hosting;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Infrastructure;
-using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
 using MoviePicker.Api.Infrastructure.Posters;
 using MoviePicker.Api.Infrastructure.Tmdb;
@@ -24,8 +23,11 @@ public sealed class ServiceCollectionExtensionsTests
         public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
     }
 
+    private const string UnitTestMongoUri = "mongodb://localhost:27017/moviepicker_unit";
+
     private static ServiceCollection Wire(Dictionary<string, string?> config, string environment)
     {
+        config.TryAdd("MONGODB_URI", UnitTestMongoUri);
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(config).Build();
         var services = new ServiceCollection();
         services.AddMoviePicker(configuration, new FakeEnv { EnvironmentName = environment });
@@ -70,23 +72,21 @@ public sealed class ServiceCollectionExtensionsTests
     }
 
     [Fact]
-    public void AddMoviePicker_NoMongoUri_RegistersInMemoryRepositories()
+    public void AddMoviePicker_NoMongoUri_RefusesToStart()
     {
-        var services = Wire([], Environments.Development);
+        var ex = Assert.Throws<InvalidOperationException>(() => Wire(
+            new Dictionary<string, string?> { ["MONGODB_URI"] = "" },
+            Environments.Development));
 
-        Assert.Equal(typeof(InMemoryEventRepository), ImplOf<IEventRepository>(services));
-        Assert.Equal(typeof(InMemoryUserRepository), ImplOf<IUserRepository>(services));
-        Assert.Equal(typeof(InMemoryParticipantRepository), ImplOf<IParticipantRepository>(services));
-        Assert.Equal(typeof(InMemoryFollowRepository), ImplOf<IFollowRepository>(services));
-        Assert.Equal(typeof(InMemoryUserNotificationRepository), ImplOf<IUserNotificationRepository>(services));
+        Assert.Equal(MoviePicker.Api.Infrastructure.ServiceCollectionExtensions.MissingMongoUriMessage, ex.Message);
     }
 
     [Fact]
-    public void AddMoviePicker_NoMongoUri_RegistersMemoryPosterStore()
+    public void AddMoviePicker_PosterCacheEnabled_RegistersMongoPosterStore()
     {
         var services = Wire([], Environments.Development);
 
-        Assert.Equal(typeof(MemoryPosterImageStore), ImplOf<IPosterImageStore>(services));
+        Assert.Equal(typeof(MongoPosterImageStore), ImplOf<IPosterImageStore>(services));
     }
 
     [Fact]

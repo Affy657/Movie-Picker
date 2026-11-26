@@ -27,7 +27,7 @@ public sealed class MongoAvatarPhotoRepositoryTests : IClassFixture<MoviePickerA
         CreatedAt = DateTimeOffset.UtcNow
     };
 
-    [MongoFact]
+    [Fact]
     public async Task EstimatedCount_ReadsTheCollectionEvenInsideATransaction()
     {
         using var scope = _factory.Services.CreateScope();
@@ -44,7 +44,7 @@ public sealed class MongoAvatarPhotoRepositoryTests : IClassFixture<MoviePickerA
         Assert.Equal(before + 2, counted);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task ScheduleDeletion_StampsTheDateTheTtlIndexReadsAndKeepsServingThePhoto()
     {
         using var scope = _factory.Services.CreateScope();

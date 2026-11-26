@@ -9,6 +9,8 @@
 MoviePicker.Api/MoviePicker.Api.http
 MoviePicker.Api.Tests/
 MoviePicker.Api.IntegrationTests/
+MoviePicker.Api.TestSupport/
+MoviePicker.Api.DevelopmentSeed/
 MoviePicker.ToolGenDpKey/
 MoviePicker.slnx
 dotnet-tools.json

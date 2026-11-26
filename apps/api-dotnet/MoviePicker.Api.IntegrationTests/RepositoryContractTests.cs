@@ -541,7 +541,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.True(stored.Version > updated.Version);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task WatchedDefaults_MissingFromAnOlderDocument_KeepTheVisibilityAndLeaveTheWatchedSyncOff()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1242,7 +1242,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal("La série", series.Title);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task MoviesOfATitle_IncludeAFilmStoredBeforeSeriesSupport()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1263,7 +1263,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal(series.Id, Assert.Single(seriesList).Id);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task MostProposed_CountsAFilmStoredBeforeSeriesSupportWithTheSameFilm()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1282,7 +1282,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal(2, row.EventCount);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task MostProposed_RanksASeriesStoredWithALegacyMediaTypeAsTheSeriesItIsReadAs()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1508,7 +1508,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal(unrelatedHandle, Assert.Single(await notifications.ListByUserIdAsync(unrelated)).ActorHandle);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task NotificationRead_KeepsWorkingOnAFieldWrittenByANewerApiVersion()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1571,7 +1571,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
             Builders<BsonDocument>.Update.Unset(field));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task EventUpdate_KeepsTheFieldsWrittenByANewerApiVersion()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1586,7 +1586,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal("Rewritten by the older version", stored["title"].AsString);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task EventUpdate_ClearingAnOptionalField_RemovesItFromTheDocument()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1600,7 +1600,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.False(stored.Contains("winnerAnnouncedAt"));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task UserUpdate_KeepsTheFieldsWrittenByANewerApiVersion()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1615,7 +1615,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal("Rewritten by the older version", stored["bio"].AsString);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task UserUpdate_ClearingAnOptionalField_RemovesItFromTheDocument()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1629,7 +1629,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.False(stored.Contains("bio"));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task EventUpdate_KeepsTheFieldsANewerApiVersionWroteInsideTheConfig()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1644,7 +1644,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal("Comédie", config["theme"].AsString);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task EventUpdate_ClearingAnOptionalConfigField_RemovesItFromTheSubDocument()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1662,7 +1662,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.True(config.Contains("wheelMode"));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task EventUpdate_ConfigStoredAsNull_IsReplacedByTheNewConfig()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1676,7 +1676,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal("Comédie", reloaded!.Config?.Theme);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task EventUpdate_ConfigAbsentFromTheStoredEvent_WritesTheWholeConfig()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1691,7 +1691,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal(3, reloaded.Config?.WinnerCount);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task EventUpdate_ClearingTheConfig_RemovesTheSubDocument()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1703,7 +1703,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.False((await ReadRawAsync("events", created.Id)).Contains("config"));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task EventUpdate_TextLookingLikeAnExpression_IsStoredVerbatim()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1721,7 +1721,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal("$$ROOT", stored["config"]["theme"].AsString);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task EventUpdate_EventStoredWithoutAWriteSequence_StartsCountingAtOne()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1735,7 +1735,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal(1L, stored["writeSeq"].AsInt64);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task EventUpdate_ArrayElements_AreRewrittenWhole_TheirUnknownFieldsAreLost()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1753,7 +1753,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal("wheel", winner["pickMethod"].AsString);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task UserUpdate_KeepsTheFieldsANewerApiVersionWroteInsideTheAvatarPhoto()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1772,7 +1772,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.False(photo["isActive"].AsBoolean);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task UserUpdate_AvatarPhotoStoredAsNull_IsReplacedByTheNewPhoto()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1786,7 +1786,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal("fresh", stored["avatarPhoto"]["key"].AsString);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task UserUpdate_ClearingTheAvatarPhoto_RemovesTheSubDocument()
     {
         using var scope = _factory.Services.CreateScope();
@@ -1819,12 +1819,9 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         var cleared = await users.GetByIdAsync(created.Id);
         Assert.Null(cleared!.Banner);
         Assert.Null(cleared.BannerPhoto);
-        if (_factory.RunsAgainstMongo)
-        {
-            var raw = await ReadRawAsync("users", created.Id);
-            Assert.False(raw.Contains("banner"));
-            Assert.False(raw.Contains("bannerPhoto"));
-        }
+        var raw = await ReadRawAsync("users", created.Id);
+        Assert.False(raw.Contains("banner"));
+        Assert.False(raw.Contains("bannerPhoto"));
     }
 
     [Fact]
@@ -2217,7 +2214,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal((int?)7, (await watched.GetAsync(ownerId, 680, MovieMediaType.Movie))!.Rating);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task WatchedTitles_AnOlderDocumentWithoutOrigins_IsManualAndKeepsItsRating()
     {
         using var scope = _factory.Services.CreateScope();

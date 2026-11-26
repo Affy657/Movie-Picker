@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 namespace MoviePicker.Api.Infrastructure.Web;
@@ -17,10 +16,9 @@ public static class AuthenticationExtensions
         IConfiguration configuration)
     {
         services.AddSingleton<AuthTicketCache>();
-        services.AddSingleton<ITicketStore>(sp =>
-            sp.GetService<MongoCollectionFactory>() is { } collections
-                ? new CachedAuthTicketStore(new MongoAuthTicketStore(collections), sp.GetRequiredService<AuthTicketCache>())
-                : new MemoryAuthTicketStore());
+        services.AddSingleton<ITicketStore>(sp => new CachedAuthTicketStore(
+            new MongoAuthTicketStore(sp.GetRequiredService<MongoCollectionFactory>()),
+            sp.GetRequiredService<AuthTicketCache>()));
 
         services.AddSingleton<IConfigureOptions<CookieAuthenticationOptions>, MoviePickerCookieAuthenticationConfigurer>();
         services.AddSingleton<OAuthProviderCatalog>();

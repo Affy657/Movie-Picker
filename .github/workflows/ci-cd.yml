@@ -389,10 +389,9 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-  # Unit tests, then the integration suite on a real MongoDB replica set: the in-memory store no
-  # longer stands in for the database in any job that reproduces production (audit B4, step 1;
-  # the in-memory adapters keep their unit tests, and the store stays registered for a
-  # workstation without MongoDB). Two reports, two gates:
+  # Unit tests, then the integration suite on a real MongoDB replica set: the API refuses to start
+  # without MONGODB_URI, and the in-memory adapters live in MoviePicker.Api.TestSupport as test
+  # doubles of the unit tests (audit B4, DEBT-096). Two reports, two gates:
   #   - the unit report (`coverlet.runsettings`, the Mongo adapters excluded since only a real
   #     database runs them) carries the API gate below, and is the one `sonar` regenerates;
   #   - `pnpm run test:api:mongo`, the workstation entry point, starts the container through

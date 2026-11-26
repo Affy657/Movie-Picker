@@ -99,6 +99,7 @@ function roundToThousand(value) {
 const TEST_DIRECTORIES = new Set([
   'MoviePicker.Api.Tests',
   'MoviePicker.Api.IntegrationTests',
+  'MoviePicker.Api.TestSupport',
   'test-utils',
   'mocks',
   '__mocks__',
@@ -181,7 +182,7 @@ function computeMetrics(previous) {
 
   const inMemoryDir = join(
     repoRoot,
-    'apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/InMemory'
+    'apps/api-dotnet/MoviePicker.Api.TestSupport/Infrastructure/Persistence/InMemory'
   );
   const doubledRepositories = walk(inMemoryDir, (name) => /Repository\.cs$/.test(name));
 

@@ -8,10 +8,8 @@ using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Infrastructure;
 using MoviePicker.Api.Infrastructure.BackgroundServices;
-using MoviePicker.Api.Infrastructure.Development;
 using MoviePicker.Api.Infrastructure.Letterboxd;
 using MoviePicker.Api.Infrastructure.Persistence;
-using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Posters;
 using MoviePicker.Api.Infrastructure.Push;
 using MoviePicker.Api.Infrastructure.Tmdb;
@@ -29,13 +27,14 @@ public sealed class ServiceCollectionExtensionsBranchTests
         public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
     }
 
-    private const string DevMongoUri = "mongodb://localhost:27017/moviepicker_dev";
+    private const string UnitTestMongoUri = "mongodb://localhost:27017/moviepicker_unit";
 
     private static ServiceCollection Wire(
         Dictionary<string, string?> config,
         string? environmentName = null)
     {
         var environment = environmentName ?? Environments.Development;
+        config.TryAdd("MONGODB_URI", UnitTestMongoUri);
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(config).Build();
         var services = new ServiceCollection();
         services.AddSingleton<IConfiguration>(configuration);
@@ -92,18 +91,6 @@ public sealed class ServiceCollectionExtensionsBranchTests
     }
 
     [Fact]
-    public void Development_SeedsDemoData()
-    {
-        Assert.True(HasHostedService<DevelopmentDataSeedHostedService>(Wire([], Environments.Development)));
-    }
-
-    [Fact]
-    public void Production_NeverSeedsDemoData()
-    {
-        Assert.False(HasHostedService<DevelopmentDataSeedHostedService>(Wire([], Environments.Production)));
-    }
-
-    [Fact]
     public void LetterboxdStubFlag_ReplacesTheRealClient()
     {
         var services = Wire(new Dictionary<string, string?> { ["E2E_STUB_LETTERBOXD"] = "1" });
@@ -121,9 +108,9 @@ public sealed class ServiceCollectionExtensionsBranchTests
     }
 
     [Fact]
-    public void PosterCacheEnabledWithMongo_StoresPostersInMongo()
+    public void PosterCacheEnabled_StoresPostersInMongo()
     {
-        var services = Wire(new Dictionary<string, string?> { ["MONGODB_URI"] = DevMongoUri });
+        var services = Wire([]);
 
         Assert.Equal(typeof(MongoPosterImageStore), ImplOf<IPosterImageStore>(services));
     }
@@ -134,11 +121,7 @@ public sealed class ServiceCollectionExtensionsBranchTests
     [InlineData("FALSE")]
     public void PosterCacheDisabled_BeatsTheMongoBranch(string flag)
     {
-        var services = Wire(new Dictionary<string, string?>
-        {
-            ["MONGODB_URI"] = DevMongoUri,
-            ["POSTER_CACHE_ENABLED"] = flag
-        });
+        var services = Wire(new Dictionary<string, string?> { ["POSTER_CACHE_ENABLED"] = flag });
 
         Assert.Equal(typeof(DisabledPosterImageStore), ImplOf<IPosterImageStore>(services));
     }
@@ -431,16 +414,20 @@ public sealed class ServiceCollectionExtensionsBranchTests
     [Fact]
     public void MongoUri_IsCarriedIntoTheOptions()
     {
-        Assert.Equal(string.Empty, OptionsFrom([]).MongoDbUri);
+        const string otherUri = "mongodb://localhost:27017/moviepicker_other";
+
+        Assert.Equal(UnitTestMongoUri, OptionsFrom([]).MongoDbUri);
         Assert.Equal(
-            DevMongoUri,
-            OptionsFrom(new Dictionary<string, string?> { ["MONGODB_URI"] = DevMongoUri }).MongoDbUri);
+            otherUri,
+            OptionsFrom(new Dictionary<string, string?> { ["MONGODB_URI"] = otherUri }).MongoDbUri);
     }
 
     [Fact]
-    public void EveryRegistrationResolvesWithoutMongo()
+    public void EveryRegistrationResolvesWithoutReachingMongo()
     {
-        using var provider = Wire([]).BuildServiceProvider(new ServiceProviderOptions
+        var services = Wire([]);
+        services.AddSingleton<IHostEnvironment>(new FakeEnv());
+        using var provider = services.BuildServiceProvider(new ServiceProviderOptions
         {
             ValidateOnBuild = false,
             ValidateScopes = true
@@ -479,18 +466,11 @@ public sealed class ServiceCollectionExtensionsBranchTests
     }
 
     [Fact]
-    public void ReadinessProbe_WithMongo_IsCached()
+    public void ReadinessProbe_IsCached()
     {
-        var services = Wire(new Dictionary<string, string?> { ["MONGODB_URI"] = DevMongoUri });
-        using var provider = services.BuildServiceProvider();
+        using var provider = Wire([]).BuildServiceProvider();
 
         Assert.IsType<CachedDatabaseHealthProbe>(provider.GetRequiredService<IDatabaseHealthProbe>());
-    }
-
-    [Fact]
-    public void ReadinessProbe_WithoutMongo_NeedsNoCache()
-    {
-        Assert.Equal(typeof(InMemoryDatabaseHealthProbe), ImplOf<IDatabaseHealthProbe>(Wire([])));
     }
 
     [Fact]

@@ -10,15 +10,6 @@ using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
 
-public sealed class MongoFactAttribute : FactAttribute
-{
-    public MongoFactAttribute()
-    {
-        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("MONGODB_TEST_URI")))
-            Skip = "MONGODB_TEST_URI not set: this test needs a real MongoDB replica set.";
-    }
-}
-
 public sealed class MongoTransactionTests : IClassFixture<MoviePickerApplicationFactory>
 {
     private readonly MoviePickerApplicationFactory _factory;
@@ -41,7 +32,7 @@ public sealed class MongoTransactionTests : IClassFixture<MoviePickerApplication
         UpdatedAt = DateTimeOffset.UtcNow
     };
 
-    [MongoFact]
+    [Fact]
     public async Task FailedUnitOfWork_RollsBackAnEventUpdate()
     {
         using var scope = _factory.Services.CreateScope();
@@ -62,7 +53,7 @@ public sealed class MongoTransactionTests : IClassFixture<MoviePickerApplication
         Assert.Equal(created.WriteSeq, reloaded.WriteSeq);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task FailedUnitOfWork_RollsBackEveryWrite()
     {
         using var scope = _factory.Services.CreateScope();
@@ -96,7 +87,7 @@ public sealed class MongoTransactionTests : IClassFixture<MoviePickerApplication
         Assert.Empty(await participants.ListByEventIdAsync(createdEventId!));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task CommittedUnitOfWork_PersistsEveryWrite()
     {
         using var scope = _factory.Services.CreateScope();
@@ -127,7 +118,7 @@ public sealed class MongoTransactionTests : IClassFixture<MoviePickerApplication
         Assert.Single(await participants.ListByEventIdAsync(createdEventId));
     }
 
-    [MongoFact]
+    [Fact]
     public async Task TransactionRetriedWithoutEnd_GivesUpWithinItsBudgetAsAConcurrentUpdate()
     {
         using var scope = _factory.Services.CreateScope();

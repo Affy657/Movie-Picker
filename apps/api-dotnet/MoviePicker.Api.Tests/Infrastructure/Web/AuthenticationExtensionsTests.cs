@@ -7,6 +7,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using MongoDB.Driver;
+using MoviePicker.Api.Infrastructure.Persistence.Mongo;
 using MoviePicker.Api.Infrastructure.Web;
 using Xunit;
 
@@ -22,6 +24,10 @@ public sealed class AuthenticationExtensionsTests
         services.AddLogging();
         services.AddDataProtection();
         services.AddHttpClient();
+        services.AddMemoryCache();
+        services.AddSingleton(new MongoCollectionFactory(
+            new MongoClient("mongodb://127.0.0.1:27017").GetDatabase("moviepicker_unit"),
+            new MongoSessionAccessor()));
         services.AddMoviePickerAuthentication(configuration);
         return services.BuildServiceProvider();
     }
@@ -41,7 +47,7 @@ public sealed class AuthenticationExtensionsTests
         var options = ResolveCookieOptions();
 
         Assert.Equal(AuthConstants.CookieName, options.Cookie.Name);
-        Assert.NotNull(options.SessionStore);
+        Assert.IsType<CachedAuthTicketStore>(options.SessionStore);
         Assert.Equal(AuthConstants.SessionLifetime, options.ExpireTimeSpan);
     }
 

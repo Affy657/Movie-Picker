@@ -8,12 +8,12 @@ respecter en écrivant du code sont dans [`AGENTS.md`](../AGENTS.md).
 
 - **Node.js** 20.19+, 22.13+ ou 24+, et **pnpm** 10.
 - **SDK .NET 10** pour l'API.
-- **Docker**, pour les tests d'intégration et la suite e2e contre MongoDB, pour la voie docker de
-  `verify:local` (Gitleaks, lint des workflows, Terraform, Trivy) et pour lancer Terraform, qui
-  n'est pas installé sur le poste (voir [`infra/README.md`](../infra/README.md)).
+- **Docker**, pour la base MongoDB de l'API, les tests d'intégration et la suite e2e, pour la voie
+  docker de `verify:local` (Gitleaks, lint des workflows, Terraform, Trivy) et pour lancer
+  Terraform, qui n'est pas installé sur le poste (voir [`infra/README.md`](../infra/README.md)).
 
-MongoDB n'est pas un prérequis : sans configuration l'API tourne en mémoire, la section suivante dit
-quand et comment brancher une vraie base.
+MongoDB est un prérequis : l'API refuse de démarrer sans `MONGODB_URI`. Docker suffit à en lancer
+une, la section suivante dit comment.
 
 Contrôle rapide : `node scripts/check-prereqs.js` et `dotnet --version`.
 
@@ -21,23 +21,28 @@ Contrôle rapide : `node scripts/check-prereqs.js` et `dotnet --version`.
 
 ### La base
 
-**Sans `MONGODB_URI`, l'API tourne entièrement en mémoire**, seed compris. C'est le mode par défaut
-d'un dépôt fraîchement cloné : rien à installer, rien à configurer, et tout disparaît à l'arrêt du
-processus. Passer à une vraie base sert à garder ses données entre deux sessions et à exercer les
-adaptateurs Mongo.
+**L'API ne tourne que sur MongoDB.** Sans `MONGODB_URI`, elle s'arrête au démarrage avec un message
+qui dit comment lancer la base locale. Les adaptateurs en mémoire ne sont plus que des doublures
+de tests, dans le projet `MoviePicker.Api.TestSupport`, et l'API ne les enregistre jamais : une
+méthode de port ne s'écrit qu'une fois dans le code de production.
 
-Dans ce cas, viser une base **dédiée et jetable**, jamais celle de production : le seed de
-Development et les tests E2E écrivent dedans. Un garde-fou refuse d'ailleurs de démarrer en
-Development sur la base `moviepicker`, et les suites de tests refusent en plus `moviepicker_dev`.
+Viser une base **dédiée et jetable**, jamais celle de production : le seed de Development et les
+tests E2E écrivent dedans. Un garde-fou refuse d'ailleurs de démarrer en Development sur la base
+`moviepicker`, et les suites de tests refusent en plus `moviepicker_dev`.
 
-En conteneur :
+Le plus simple est le conteneur des tests, un MongoDB en replica set (la seule topologie où les
+transactions d'`IUnitOfWork` tournent) que `scripts/mongo-replica-set.mjs` démarre avec l'image
+épinglée, recrée s'il tourne sur une autre image, puis attend jusqu'à ce qu'il accepte les écritures :
 
 ```bash
-docker run -d --name moviepicker-mongo -p 27017:27017 mongo:8
+node scripts/mongo-replica-set.mjs --container movie-picker-mongo-test --port 27018
 ```
 
-Ce qui donne `MONGODB_URI=mongodb://localhost:27017/moviepicker_dev`. Sur Atlas, un cluster gratuit
-M0 suffit, la chaîne de connexion se récupère dans la console.
+Ce qui donne `MONGODB_URI=mongodb://127.0.0.1:27018/moviepicker_local?directConnection=true`. Le même
+conteneur sert à `pnpm run test:api:mongo` et à `pnpm run test:e2e:local`, chacun dans ses propres
+bases (`moviepicker_it_*`, `moviepicker_e2e`) : la base locale y survit, mais disparaît avec le
+conteneur quand l'image épinglée change. Sur Atlas, un cluster gratuit M0 suffit, la chaîne de
+connexion se récupère dans la console.
 
 ### La clé TMDB
 
@@ -93,6 +98,18 @@ En Development, l'API crée des comptes et des données de démonstration au dé
 configuration est dans `apps/api-dotnet/MoviePicker.Api/appsettings.Development.json`, section
 `DevelopmentSeed`, surchargeable par variables `DevelopmentSeed__*`.
 
+Le seed vit dans `apps/api-dotnet/MoviePicker.Api.DevelopmentSeed/` et n'entre dans
+`MoviePicker.Api.dll` qu'en **build Debug** : le fichier `MoviePicker.Api.DevelopmentSeed.projitems`
+n'est importé par l'API qu'en Debug, et son enregistrement (`AddDevelopmentSeed`) est derrière
+`#if DEBUG`. L'assembly publiée (`dotnet publish -c Release`, l'image Docker) n'en contient rien.
+`pnpm dev:api-dotnet`, `pnpm dev:full` et les configurations de `.claude/launch.json` passent par
+`dotnet run` sans `-c`, donc en Debug, seed compris ; une API lancée en `-c Release` (celle de
+`pnpm run test:e2e:local`, l'instance isolée du skill `/verify`) démarre sans seed, sur les comptes
+que la base contient déjà. Ce n'est pas un projet `.csproj` que l'API référencerait : le seed
+appelle les cas d'usage de l'API, une référence dans l'autre sens ferait un cycle. Le projet de
+tests unitaires importe les mêmes sources en Release, pour que leurs tests tournent dans les deux
+configurations ; en Debug, il les lit dans l'API.
+
 | Compte | E-mail | Mot de passe | Particularité |
 | --- | --- | --- | --- |
 | Principal | `dev@test.local` | `DevTest123!` | Hôte de plusieurs soirées |
@@ -113,8 +130,8 @@ Chaque compte n'est créé que si son adresse est absente de la base.
   l'occurrence précédente est close et la suivante créée par la vraie passe de récurrence. Plus
   quatre modèles de soirée (trois sur le compte principal, un chez Alice), des watchlists (Alice
   publique, Bob masquée, Zoé publique, trois films sur le compte principal), un graphe de suivi
-  entre comptes et des notifications. `DevelopmentScenarioSeedTests` rejoue toute la seed en mémoire
-  et refuse une étape qui journalise un avertissement.
+  entre comptes et des notifications. `DevelopmentScenarioSeedTests` rejoue toute la seed sur les
+  doublures en mémoire et refuse une étape qui journalise un avertissement.
 
 Pour couper : `DevelopmentSeed__Enabled=false`, ou finement `DevelopmentSeed__SeedSampleEvents=false`
 et `DevelopmentSeed__SeedScenarioDemos=false`.
@@ -143,8 +160,8 @@ Tous se lancent à la racine du dépôt.
 | `pnpm run test:changed` | Tests front touchés par le diff depuis `origin/master`, la boucle d'avant push |
 | `pnpm run test:api:mongo` | Tests d'intégration API contre une vraie MongoDB, avec la porte de couverture des adaptateurs Mongo, puis les tests des scripts qui interrogent MongoDB (`scripts/mongo-tests/`, la requête de `pnpm run usage` et le retrait de `pnpm run photo:remove` sur des documents semés) ; joué tel quel par le job `test-api` |
 | `pnpm run test:api:mutation` | Passe Stryker.NET, rapport dans `artifacts/stryker` |
-| `pnpm run test:e2e`, `pnpm run test:e2e:ci` | Playwright, la seconde forme construisant le front avec un stub TMDB ; l'API tourne sur la base de `E2E_MONGODB_URI` quand elle est posée (le job `e2e`), en mémoire sinon |
-| `pnpm run test:e2e:local` | La suite Playwright depuis le poste, serveurs de dev allumés : API de test en Release sur 5010, sur MongoDB (le conteneur de test sur 27018, base `moviepicker_e2e` vidée à chaque run, ou `E2E_MONGODB_URI`), front construit contre elle ; `--in-memory` pour la base en mémoire |
+| `pnpm run test:e2e`, `pnpm run test:e2e:ci` | Playwright, la seconde forme construisant le front avec un stub TMDB ; l'API tourne sur la base de `E2E_MONGODB_URI`, que le job `e2e` pose et sans laquelle elle refuse de démarrer |
+| `pnpm run test:e2e:local` | La suite Playwright depuis le poste, serveurs de dev allumés : API de test en Release sur 5010, sur MongoDB (le conteneur de test sur 27018, base `moviepicker_e2e` vidée à chaque run, ou `E2E_MONGODB_URI`), front construit contre elle |
 | `pnpm run openapi:sync` | Régénère le contrat OpenAPI (`openapi:export`) puis les types du front (`openapi:types`), à committer avec le changement d'API qui les a fait bouger |
 | `pnpm run openapi:types:check` | Dérive des types générés par rapport au contrat exporté |
 | `pnpm run check:contract-compat [<ref>]` | Compare le contrat de la dernière version publiée (dernier tag `v*` d'`origin`, ou `<ref>`) à l'arbre courant : échoue si une route, une méthode ou une propriété de réponse lue par le front N-1 a disparu ou est devenue optionnelle, sauf retrait daté de `ALLOWED_REMOVALS` |
@@ -164,15 +181,19 @@ soirée propre (six films, quatre participants, des votes, roue selon les votes)
 affiche, puis photographie l'accueil, la soirée, la roue avec les chances de chaque film et le tirage en
 1280 x 800, thème clair. Les films sont proposés par les quatre participants à tour de rôle.
 
-L'API doit tourner **sans base**, sinon la soirée de démonstration est écrite dans MongoDB, et
-**avec une clé TMDB**, sinon les affiches manquent. Depuis un worktree, `MOVIEPICKER_TEST_CONTEXT`
-est nécessaire : sans lui l'API remonte les dossiers parents et charge le `.env` du dépôt
-principal, donc sa base.
+L'API doit tourner **sur une base jetable**, puisque le script y écrit sa soirée de démonstration,
+et **avec une clé TMDB**, sinon les affiches manquent. Le conteneur de test s'y prête, avec une
+base à part que le seed de Development remplit au démarrage des comptes dont le script se sert.
+`MOVIEPICKER_TEST_CONTEXT` empêche l'API de remonter les dossiers parents jusqu'au `.env` du dépôt
+principal, ce qui compte depuis un worktree. La dernière commande vide la base une fois les
+captures faites.
 
 ```bash
-MOVIEPICKER_TEST_CONTEXT=1 TMDB_API_KEY=<clé> pnpm run dev:api-dotnet
+node scripts/mongo-replica-set.mjs --container movie-picker-mongo-test --port 27018
+MOVIEPICKER_TEST_CONTEXT=1 MONGODB_URI="mongodb://127.0.0.1:27018/moviepicker_captures?directConnection=true" TMDB_API_KEY=<clé> pnpm run dev:api-dotnet
 pnpm run dev:web
 pnpm run capture:screenshots
+docker exec -e HOME=/tmp movie-picker-mongo-test mongosh --quiet --eval 'db.getSiblingDB("moviepicker_captures").dropDatabase()'
 ```
 
 Les états qui gâchent une capture sont déjà traités : bandeau de consentement et fenêtre « Quoi de
@@ -182,16 +203,25 @@ neuf » fermés, images paresseuses chargées par un défilement complet, animat
 
 ```bash
 dotnet test apps/api-dotnet/MoviePicker.Api.Tests/MoviePicker.Api.Tests.csproj
-dotnet test apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj
+pnpm run test:api:mongo
 
 pnpm exec playwright install chromium   # une seule fois
-pnpm run test:e2e:ci
+pnpm run test:e2e:local
 ```
 
-Sans `MONGODB_TEST_URI`, la seconde commande joue la suite d'intégration sur la base en mémoire, et
-`pnpm run test:e2e:ci` sans `E2E_MONGODB_URI` en fait autant pour l'API des e2e : pratique pour
-itérer, mais seuls `pnpm run test:api:mongo` et `pnpm run test:e2e:local` jouent ces suites sur
-MongoDB, comme les jobs `test-api` et `e2e` de la CI.
+Les tests unitaires tournent sans base, sur les doublures en mémoire de
+`MoviePicker.Api.TestSupport`. **La suite d'intégration exige MongoDB** : sans `MONGODB_TEST_URI`,
+chaque test qui démarre l'application échoue sur un message qui renvoie à `pnpm run test:api:mongo`.
+C'est un choix : la CI ne la jouait déjà plus que sur MongoDB (job `test-api`), et la garder aussi
+sur les doublures aurait demandé à la fabrique de tests de remplacer tout l'enregistrement Mongo
+de l'API (dépôts, sessions, clés de chiffrement, index, migrations) pour une exécution que rien ne
+vérifie. Les tests d'intégration ne prennent dans `MoviePicker.Api.TestSupport` que de quoi
+remplacer un service précis (le cache partagé, le magasin de sessions). Pour en lancer une seule
+classe, démarrer le conteneur comme plus haut, puis
+`MONGODB_TEST_URI=mongodb://127.0.0.1:27018/?directConnection=true dotnet test
+apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj --filter
+<Classe>` : chaque classe y prend sa base jetable. De même, l'API des e2e refuse de démarrer sans
+`E2E_MONGODB_URI`, que `pnpm run test:e2e:local` fournit et que le job `e2e` pose.
 
 `pnpm run test:api:mongo` et `pnpm run test:e2e:local` partagent le conteneur
 `movie-picker-mongo-test` (port 27018, `MONGO_TEST_PORT` pour un autre) : `scripts/mongo-replica-set.mjs`
@@ -208,7 +238,10 @@ movie-picker/
 ├─ apps/
 │  ├─ web/            Front React, Vite, TypeScript, PWA
 │  └─ api-dotnet/     API ASP.NET Core, solution MoviePicker.slnx : MoviePicker.Api, ses tests
-│                     unitaires (MoviePicker.Api.Tests) et d'intégration (MoviePicker.Api.IntegrationTests)
+│                     unitaires (MoviePicker.Api.Tests) et d'intégration (MoviePicker.Api.IntegrationTests),
+│                     les doublures en mémoire qu'ils partagent (MoviePicker.Api.TestSupport) et le
+│                     seed de démonstration, compilé dans l'API en Debug seulement
+│                     (MoviePicker.Api.DevelopmentSeed)
 ├─ archive/           Application Expo du cursus et documents gelés, plus construits
 ├─ artifacts/         Contrat OpenAPI, rapports Lighthouse et Stryker, généré et ignoré par git
 ├─ configs/           tsconfig et Prettier partagés, budgets Lighthouse, exclusions Sonar
@@ -237,7 +270,7 @@ description du graphe des features.
 L'API suit un découpage hexagonal : `Domain` porte les entités et les règles sans dépendance au
 framework, `Application` les cas d'usage (`UseCases/`, un dossier par cas, `UseCases/Shared/` pour
 ce que plusieurs partagent), les ports et les DTOs, `Infrastructure` les implémentations concrètes
-(MongoDB et la base en mémoire, TMDB, Letterboxd, push, e-mail, cookies), `Controllers` la
+(MongoDB, TMDB, Letterboxd, push, e-mail, cookies), `Controllers` la
 traduction HTTP.
 
 `check:architecture` fait respecter ces deux découpages. `scripts/check-architecture.mjs` n'en est
