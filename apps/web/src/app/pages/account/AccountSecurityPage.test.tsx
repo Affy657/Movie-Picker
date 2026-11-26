@@ -93,6 +93,26 @@ describe('AccountSecurityPage, address confirmation', () => {
     expect(body).toEqual({ locale: 'fr' });
   });
 
+  it('keeps the warning and its button out of any live region, and says the email left from a status already on the page', async () => {
+    server.use(
+      signedInAs(null),
+      http.post(RESEND_URL, () => new HttpResponse(null, { status: 202 }))
+    );
+    const user = userEvent.setup();
+    const liveRegion = 'output, [role="status"], [aria-live]';
+
+    renderSecurity();
+    const resend = await screen.findByRole('button', { name: /renvoyer le courriel/i });
+    expect(resend.closest(liveRegion)).toBeNull();
+    expect(screen.getByText(/adresse non confirmée/i).closest(liveRegion)).toBeNull();
+    const statusesBeforeSending = screen.queryAllByRole('status');
+
+    await user.click(resend);
+
+    const sent = await screen.findByText(/courriel envoyé à lea@test\.local/i);
+    expect(statusesBeforeSending).toContain(sent.closest(liveRegion));
+  });
+
   it('says so when the email could not be sent', async () => {
     server.use(
       signedInAs(null),

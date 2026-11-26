@@ -265,7 +265,7 @@ function EmailConfirmationReminder({ email }: Readonly<{ email: string }>) {
 
   return (
     <>
-      <output className={clsx(sharedStyles.attention, styles.confirmationReminder)}>
+      <div className={clsx(sharedStyles.attention, styles.confirmationReminder)}>
         <TriangleAlert size={ICON_SIZE.md} aria-hidden />
         <span className={sharedStyles.attentionText}>{t('auth.account.emailUnconfirmed')}</span>
         <Button
@@ -279,12 +279,10 @@ function EmailConfirmationReminder({ email }: Readonly<{ email: string }>) {
             ? t('auth.account.emailConfirmationResending')
             : t('auth.account.emailConfirmationResend')}
         </Button>
+      </div>
+      <output className={styles.resendStatus}>
+        {sent ? t('auth.account.emailConfirmationSent', { email }) : null}
       </output>
-      {sent && (
-        <p className={sharedStyles.rowSub} role="status" aria-live="polite">
-          {t('auth.account.emailConfirmationSent', { email })}
-        </p>
-      )}
       {resendError && (
         <p className="error" role="alert">
           {resendError}
