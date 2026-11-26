@@ -132,13 +132,10 @@ function applySeo(seo: ResolvedSeo): void {
   setJsonLd(seo.jsonLdSerialized);
 }
 
-function resolveCanonical(canonical: string | undefined, noindex: boolean): string {
+function resolveCanonical(canonical: string | undefined): string {
   if (canonical) return canonical;
-  if (noindex) {
-    const path = globalThis.location?.pathname;
-    if (path && path !== '/') return absoluteUrl(path);
-  }
-  return LANDING_URL;
+  const path = globalThis.location?.pathname;
+  return path && path !== '/' ? absoluteUrl(path) : LANDING_URL;
 }
 
 export function usePageSeo(seo: PageSeo): void {
@@ -153,7 +150,7 @@ export function usePageSeo(seo: PageSeo): void {
     noindex = false,
     jsonLd = null,
   } = seo;
-  const url = resolveCanonical(canonical, noindex);
+  const url = resolveCanonical(canonical);
   const jsonLdSerialized = jsonLd ? JSON.stringify(jsonLd) : '';
 
   useEffect(() => {

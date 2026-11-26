@@ -61,6 +61,20 @@ describe('usePageSeo', () => {
     expect(meta('meta[property="og:image:alt"]')).toBe(en.landing.ogImageAlt);
   });
 
+  it('declares the page itself, never the home page, while it has no canonical of its own yet', () => {
+    globalThis.history.pushState({}, '', '/u/odech/watchlist');
+    try {
+      renderHook(() => usePageSeo({ title: 'Chargement…' }));
+
+      expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe(
+        `${SITE_URL}/u/odech/watchlist`
+      );
+      expect(meta('meta[property="og:url"]')).toBe(`${SITE_URL}/u/odech/watchlist`);
+    } finally {
+      globalThis.history.pushState({}, '', '/');
+    }
+  });
+
   it('emits noindex when requested', () => {
     renderHook(() => usePageSeo({ title: 'Introuvable', noindex: true }));
     expect(meta('meta[name="robots"]')).toBe('noindex, nofollow');

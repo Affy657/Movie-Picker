@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Fixed
+
+- **Une page qui charge encore ne se présente plus à Google comme une copie de l’accueil** : tant qu’un profil, une liste ou une watchlist n’a pas reçu ses données, la page déclare sa propre adresse comme adresse de référence, et plus celle de l’accueil.
+
 ## [1.33.3] - 2026-11-26
 
 ### Security
