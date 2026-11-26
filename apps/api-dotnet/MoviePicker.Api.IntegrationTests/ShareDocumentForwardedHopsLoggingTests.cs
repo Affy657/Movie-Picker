@@ -30,6 +30,6 @@ public sealed class ShareDocumentForwardedHopsLoggingTests : IClassFixture<Movie
         var state = Assert.Single(hops.States).ToDictionary(pair => pair.Key, pair => pair.Value);
         Assert.Equal(2, state["ForwardedHopCount"]);
         Assert.Equal("false,true", state["ForwardedHopsInGoogleFrontEnd"]);
-        Assert.Equal(true, state["LastForwardedHopInGoogleFrontEnd"]);
+        Assert.True(Assert.IsType<bool>(state["LastForwardedHopInGoogleFrontEnd"]));
     }
 }
