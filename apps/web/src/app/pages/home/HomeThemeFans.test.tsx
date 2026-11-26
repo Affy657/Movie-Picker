@@ -2,7 +2,8 @@ import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import HomeThemeFans from './HomeThemeFans';
@@ -34,7 +35,7 @@ describe('HomeThemeFans', () => {
   it('fans out three posters per theme, in the app order, each leading to its theme', async () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/showcase/themes`, () =>
-        HttpResponse.json({
+        apiJson<'MovieShowcaseThemeListResponse'>({
           items: [
             { theme: 'annees-80', posters: posters('eighties', 3) },
             { theme: 'frissons', posters: posters('chills', 3) },
@@ -57,7 +58,7 @@ describe('HomeThemeFans', () => {
   it('leaves out a theme without poster and a theme the app does not know', async () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/showcase/themes`, () =>
-        HttpResponse.json({
+        apiJson<'MovieShowcaseThemeListResponse'>({
           items: [
             { theme: 'frissons', posters: [] },
             { theme: 'westerns', posters: posters('west', 3) },
@@ -75,7 +76,9 @@ describe('HomeThemeFans', () => {
 
   it('shows nothing when no theme has a poster', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/movies/showcase/themes`, () => HttpResponse.json({ items: [] }))
+      http.get(`${TEST_API_V1}/movies/showcase/themes`, () =>
+        apiJson<'MovieShowcaseThemeListResponse'>({ items: [] })
+      )
     );
     renderFans();
 
@@ -90,7 +93,7 @@ describe('HomeThemeFans', () => {
   it('offers a retry when the themes fail to load', async () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/showcase/themes`, () =>
-        HttpResponse.json({}, { status: 503 })
+        apiErrorJson(503, 'showcase_unavailable')
       )
     );
     renderFans();

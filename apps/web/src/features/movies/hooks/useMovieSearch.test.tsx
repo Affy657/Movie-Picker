@@ -2,6 +2,8 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { onlineManager, QueryClient } from '@tanstack/react-query';
 import { delay, http, HttpResponse } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildSearchItem } from '@/test-utils/titleItems';
 import { setupServer } from 'msw/node';
 import type { ReactNode } from 'react';
 import { QueryClientWrapper } from '@/test-utils/queryWrapper';
@@ -12,7 +14,15 @@ import { useMovieSearch } from '@/features/movies/hooks/useMovieSearch';
 const NO_FILTERS: MovieSearchFilters = {};
 
 const ONE_RESULT = {
-  items: [{ id: 100, title: 'Film Test', year: '2024', posterPath: null, voteAverage: 7.5 }],
+  items: [
+    buildSearchItem({
+      id: 100,
+      title: 'Film Test',
+      year: '2024',
+      posterPath: null,
+      voteAverage: 7.5,
+    }),
+  ],
   watchProvidersRegion: 'FR',
   disclaimer: '',
   tmdbAttributionUrl: 'https://www.themoviedb.org/',
@@ -57,7 +67,7 @@ function serveResults(seen: string[] = []) {
   server.use(
     http.get(`${TEST_API_V1}/movies/search`, ({ request }) => {
       seen.push(new URL(request.url).searchParams.get('q') ?? '');
-      return HttpResponse.json(ONE_RESULT);
+      return apiJson<'MovieSearchListResponse'>(ONE_RESULT);
     })
   );
   return seen;
@@ -123,7 +133,7 @@ describe('useMovieSearch', () => {
           });
           aborted.push(request.signal.aborted);
         }
-        return HttpResponse.json(ONE_RESULT);
+        return apiJson<'MovieSearchListResponse'>(ONE_RESULT);
       })
     );
     const { result, rerender } = renderSearch({ term: 'ab' });
@@ -149,7 +159,7 @@ describe('useMovieSearch', () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, async ({ request }) => {
         if (new URL(request.url).searchParams.get('lang') === 'en-US') await delay(200);
-        return HttpResponse.json(ONE_RESULT);
+        return apiJson<'MovieSearchListResponse'>(ONE_RESULT);
       })
     );
     const { result, rerender } = renderSearch({ term: 'dune', lang: 'fr-FR' });
@@ -168,7 +178,7 @@ describe('useMovieSearch', () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () => {
         attempts += 1;
-        return HttpResponse.json({ error: 'down' }, { status: 503 });
+        return apiErrorJson(503, 'search_unavailable');
       })
     );
     const { result } = renderSearch({ term: 'dune' });
@@ -192,9 +202,9 @@ describe('useMovieSearch', () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, async () => {
         attempts += 1;
-        if (attempts === 1) return HttpResponse.json({ error: 'down' }, { status: 503 });
+        if (attempts === 1) return apiErrorJson(503, 'search_unavailable');
         await delay(200);
-        return HttpResponse.json(ONE_RESULT);
+        return apiJson<'MovieSearchListResponse'>(ONE_RESULT);
       })
     );
     const { result } = renderSearch({ term: 'dune' });
@@ -221,7 +231,7 @@ describe('useMovieSearch', () => {
   it('names the search that came back empty', async () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () =>
-        HttpResponse.json({ ...ONE_RESULT, items: [] })
+        apiJson<'MovieSearchListResponse'>({ ...ONE_RESULT, items: [] })
       )
     );
     const { result } = renderSearch({ term: 'dune' });

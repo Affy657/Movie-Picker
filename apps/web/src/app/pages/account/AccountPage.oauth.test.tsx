@@ -4,6 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import type { QueryClient } from '@tanstack/react-query';
 import AccountPage from '@/app/pages/account/AccountPage';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
@@ -11,7 +13,7 @@ import { TEST_API_V1 } from '@/mocks/handlers';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { getStoredParticipant, setStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 
-const ME_NO_PASSWORD = {
+const ME_NO_PASSWORD = buildUserProfile({
   userId: 'u-oauth-acc',
   displayName: 'OAuth User',
   emailMasked: 'o***@test.local',
@@ -23,7 +25,7 @@ const ME_NO_PASSWORD = {
   avatarId: 'alpha',
   hasPassword: false,
   linkedProviders: ['google'],
-};
+});
 
 function renderAccount(initialPath = '/settings', client?: QueryClient) {
   return render(
@@ -49,9 +51,9 @@ describe('AccountPage — connexions et compte sans mot de passe (MSW)', () => {
     globalThis.URL.createObjectURL = vi.fn(() => 'blob:mock');
     globalThis.URL.revokeObjectURL = vi.fn();
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_NO_PASSWORD)),
+      http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME_NO_PASSWORD)),
       http.get(`${TEST_API_V1}/auth/oauth/providers`, () =>
-        HttpResponse.json({ providers: ['google', 'github'] })
+        apiJson<'OAuthProvidersResponse'>({ providers: ['google', 'github'] })
       )
     );
   });
@@ -101,7 +103,7 @@ describe('AccountPage — connexions et compte sans mot de passe (MSW)', () => {
     let unlinkCalled = false;
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({ ...ME_NO_PASSWORD, linkedProviders: ['google', 'github'] })
+        apiJson<'UserProfileResponse'>({ ...ME_NO_PASSWORD, linkedProviders: ['google', 'github'] })
       ),
       http.delete(`${TEST_API_V1}/auth/me/identities/google`, () => {
         unlinkCalled = true;
@@ -126,10 +128,10 @@ describe('AccountPage — connexions et compte sans mot de passe (MSW)', () => {
     const user = userEvent.setup();
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({ ...ME_NO_PASSWORD, linkedProviders: ['google', 'github'] })
+        apiJson<'UserProfileResponse'>({ ...ME_NO_PASSWORD, linkedProviders: ['google', 'github'] })
       ),
       http.delete(`${TEST_API_V1}/auth/me/identities/google`, () =>
-        HttpResponse.json({ reason: 'reauthentication_required' }, { status: 403 })
+        apiErrorJson(403, 'reauthentication_required')
       )
     );
 
@@ -289,9 +291,7 @@ describe('AccountPage — connexions et compte sans mot de passe (MSW)', () => {
   it('asks for a new sign-in and stays on the page when the session is too old to delete the account', async () => {
     const user = userEvent.setup();
     server.use(
-      http.delete(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({ reason: 'reauthentication_required' }, { status: 403 })
-      )
+      http.delete(`${TEST_API_V1}/auth/me`, () => apiErrorJson(403, 'reauthentication_required'))
     );
 
     renderAccount('/settings/securite');

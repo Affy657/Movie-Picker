@@ -103,8 +103,7 @@ export function useEventDetailActions({
       letRemovedPersonBackIn(slug, variables.userId),
     onSuccess: (_, { name }) =>
       setActionSuccess(t('events.participants.letBackInSuccess', { name })),
-    onSettled: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug) }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug) }),
   });
   const pendingLetBackInId = letBackInMutation.isPending
     ? letBackInMutation.variables.userId

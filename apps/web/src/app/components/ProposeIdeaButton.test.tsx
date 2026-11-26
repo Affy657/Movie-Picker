@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { apiErrorJson } from '@/mocks/apiJson';
 import { LocaleProvider } from '@/shared/i18n';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import ProposeIdeaButton from '@/app/components/ProposeIdeaButton';
@@ -204,10 +205,7 @@ describe('ProposeIdeaButton', () => {
   it('shows an explicit error and keeps the typed text when sending fails', async () => {
     server.use(
       http.post(`${TEST_API_V1}/idea-suggestions`, () =>
-        HttpResponse.json(
-          { error: 'Impossible de créer la suggestion pour le moment.' },
-          { status: 503 }
-        )
+        apiErrorJson(503, 'suggestion_unavailable')
       )
     );
 

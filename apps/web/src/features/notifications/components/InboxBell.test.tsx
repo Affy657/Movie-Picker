@@ -2,10 +2,11 @@ import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
 import InboxBell from '@/features/notifications/components/InboxBell';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
-import { TEST_API_V1 } from '@/mocks/handlers';
+import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
 import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 
@@ -30,8 +31,10 @@ describe('InboxBell (MSW)', () => {
 
   it('affiche un lien vers la page notifications sans badge quand inbox vide', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(UNREAD_COUNT_URL, () => HttpResponse.json({ unreadCount: 0 }))
+      authMeGuestHandler,
+      http.get(UNREAD_COUNT_URL, () =>
+        apiJson<'NotificationUnreadCountResponse'>({ unreadCount: 0 })
+      )
     );
 
     renderBell();
@@ -43,8 +46,10 @@ describe('InboxBell (MSW)', () => {
 
   it('affiche un badge avec le nombre de non lus', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(UNREAD_COUNT_URL, () => HttpResponse.json({ unreadCount: 4 }))
+      authMeGuestHandler,
+      http.get(UNREAD_COUNT_URL, () =>
+        apiJson<'NotificationUnreadCountResponse'>({ unreadCount: 4 })
+      )
     );
 
     renderBell();
@@ -54,8 +59,10 @@ describe('InboxBell (MSW)', () => {
 
   it('shows 9+ when the unread count exceeds 9', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(UNREAD_COUNT_URL, () => HttpResponse.json({ unreadCount: 12 }))
+      authMeGuestHandler,
+      http.get(UNREAD_COUNT_URL, () =>
+        apiJson<'NotificationUnreadCountResponse'>({ unreadCount: 12 })
+      )
     );
 
     renderBell();
@@ -66,11 +73,13 @@ describe('InboxBell (MSW)', () => {
   it('reads the counter route and leaves the list to the notifications page', async () => {
     let listRequests = 0;
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(UNREAD_COUNT_URL, () => HttpResponse.json({ unreadCount: 2 })),
+      authMeGuestHandler,
+      http.get(UNREAD_COUNT_URL, () =>
+        apiJson<'NotificationUnreadCountResponse'>({ unreadCount: 2 })
+      ),
       http.get(`${TEST_API_V1}/notifications/inbox`, () => {
         listRequests += 1;
-        return HttpResponse.json({ items: [], unreadCount: 2, hasMore: false });
+        return apiJson<'NotificationInboxResponse'>({ items: [], unreadCount: 2, hasMore: false });
       })
     );
 

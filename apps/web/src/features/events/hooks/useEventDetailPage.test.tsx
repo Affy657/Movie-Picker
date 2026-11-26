@@ -19,7 +19,9 @@ import {
 } from '@/shared/utils/offlineEventStorage';
 import type { EventData } from '@/shared/types/event';
 import type { MovieData } from '@/shared/types/movie';
-import { apiJson } from '@/mocks/apiJson';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildEventMovie } from '@/test-utils/eventMovie';
+import { buildEventDetail } from '@/test-utils/eventDetail';
 import { clearVoteSending, markVoteSending } from '@/features/events/offline/sendingVotes';
 
 const slug = 'soiree-perf';
@@ -59,11 +61,11 @@ describe('useEventDetailPage', () => {
       http.get(`${TEST_API_V1}/events/slug/${slug}`, async () => {
         requested.push('event');
         await new Promise(() => undefined);
-        return HttpResponse.json({});
+        return apiJson<'EventDetailResponse'>(buildEventDetail({}));
       }),
       http.get(`${TEST_API_V1}/events/${slug}/movies`, ({ request }) => {
         requested.push(`movies:${new URL(request.url).searchParams.get('participantId') ?? ''}`);
-        return HttpResponse.json([]);
+        return apiJson<'MovieWithScoreResponse[]'>([]);
       })
     );
   }
@@ -115,7 +117,7 @@ describe('useEventDetailPage', () => {
     server.use(
       http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
         apiJson<'MovieWithScoreResponse[]'>([
-          {
+          buildEventMovie({
             _id: 'm-1',
             eventId: 'evt-msw',
             participantId: 'p-msw-alice',
@@ -144,7 +146,7 @@ describe('useEventDetailPage', () => {
             votersUpPseudos: [],
             ratings: [],
             watchProviders: [],
-          },
+          }),
         ])
       ),
       ...createEventDetailHandlers({ slug })
@@ -295,21 +297,23 @@ describe('useEventDetailPage', () => {
       server.use(
         http.get(`${TEST_API_V1}/events/slug/${slug}`, () => {
           counts.event += 1;
-          return HttpResponse.json({
-            _id: 'evt-counted',
-            title: 'Comptée',
-            date: '2030-12-15',
-            time: '21:00',
-            slug,
-            isFinished: false,
-            lifecycle: 'live',
-            winners: [],
-            participants: [],
-          });
+          return apiJson<'EventDetailResponse'>(
+            buildEventDetail({
+              _id: 'evt-counted',
+              title: 'Comptée',
+              date: '2030-12-15',
+              time: '21:00',
+              slug,
+              isFinished: false,
+              lifecycle: 'live',
+              winners: [],
+              participants: [],
+            })
+          );
         }),
         http.get(`${TEST_API_V1}/events/${slug}/movies`, () => {
           counts.movies += 1;
-          return HttpResponse.json([]);
+          return apiJson<'MovieWithScoreResponse[]'>([]);
         })
       );
     }
@@ -397,12 +401,23 @@ describe('useEventDetailPage', () => {
       const sent: unknown[] = [];
       server.use(
         ...createEventDetailHandlers({ slug }),
-        http.post(`${TEST_API_V1}/events/${slug}/movies/:movieId/vote`, async ({ request }) => {
-          network.attempts += 1;
-          if (network.down) return HttpResponse.error();
-          sent.push(await request.json());
-          return HttpResponse.json({ ok: true });
-        })
+        http.post(
+          `${TEST_API_V1}/events/${slug}/movies/:movieId/vote`,
+          async ({ request, params }) => {
+            network.attempts += 1;
+            if (network.down) return HttpResponse.error();
+            sent.push(await request.json());
+            return apiJson<'VoteResponse'>({
+              _id: 'v-1',
+              eventId: 'evt-msw',
+              movieId: String(params.movieId),
+              participantId: 'p-msw-bob',
+              value: 1,
+              createdAt: '2030-12-15T21:00:00Z',
+              updatedAt: '2030-12-15T21:00:00Z',
+            });
+          }
+        )
       );
       const { result } = renderWithClient(createTestQueryClient());
       await waitFor(() => expect(result.current.moviesQuery.isSuccess).toBe(true));
@@ -525,10 +540,10 @@ describe('useEventDetailPage', () => {
         movies: [],
       });
       server.use(
-        http.get(`${TEST_API_V1}/events/slug/${slug}`, () =>
-          HttpResponse.json({ error: 'gone' }, { status: 404 })
-        ),
-        http.get(`${TEST_API_V1}/events/${slug}/movies`, () => HttpResponse.json([]))
+        http.get(`${TEST_API_V1}/events/slug/${slug}`, () => apiErrorJson(404, 'event_not_found')),
+        http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
+          apiJson<'MovieWithScoreResponse[]'>([])
+        )
       );
 
       const { result } = renderWithClient(createTestQueryClient());

@@ -4,14 +4,16 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import FollowListModal from '@/features/profile/components/FollowListModal';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
-import { TEST_API_V1 } from '@/mocks/handlers';
+import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import type { QueryClient } from '@tanstack/react-query';
 
-const SIGNED_IN_ALICE = {
+const SIGNED_IN_ALICE = buildUserProfile({
   userId: 'u-alice',
   displayName: 'Alice',
   emailMasked: 'a***@test.local',
@@ -21,13 +23,12 @@ const SIGNED_IN_ALICE = {
   handle: 'alice',
   bio: null,
   isProfilePublic: true,
-};
+});
 
 const signedInAsAlice = () =>
-  http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(SIGNED_IN_ALICE));
+  http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(SIGNED_IN_ALICE));
 
-const signedOut = () =>
-  http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 }));
+const signedOut = () => authMeGuestHandler;
 
 const person = (handle: string, displayName: string, isFollowedByMe: boolean | null = false) => ({
   handle,
@@ -36,7 +37,8 @@ const person = (handle: string, displayName: string, isFollowedByMe: boolean | n
   isFollowedByMe,
 });
 
-const listOf = (items: ReturnType<typeof person>[]) => () => HttpResponse.json({ items });
+const listOf = (items: ReturnType<typeof person>[]) => () =>
+  apiJson<'FollowListResponse'>({ items });
 
 function renderModal(
   overrides: Partial<Parameters<typeof FollowListModal>[0]> = {},
@@ -113,7 +115,7 @@ describe('FollowListModal (MSW)', () => {
       http.get(`${TEST_API_V1}/users/alice/followers`, () => {
         calls += 1;
         if (calls === 1) return new HttpResponse(null, { status: 500 });
-        return HttpResponse.json({ items: [person('bob', 'Bob', null)] });
+        return apiJson<'FollowListResponse'>({ items: [person('bob', 'Bob', null)] });
       })
     );
 
@@ -228,7 +230,7 @@ describe('FollowListModal (MSW)', () => {
   it('shows a "Vous" badge and no button on the viewer own row', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
+        apiJson<'UserProfileResponse'>({
           ...SIGNED_IN_ALICE,
           userId: 'u-bob',
           displayName: 'Bob',
@@ -350,7 +352,7 @@ describe('FollowListModal (MSW)', () => {
     server.use(
       signedInAsAlice(),
       http.get(`${TEST_API_V1}/users/alice/following`, () =>
-        HttpResponse.json({ items: following })
+        apiJson<'FollowListResponse'>({ items: following })
       ),
       http.delete(`${TEST_API_V1}/users/:handle/follow`, ({ params }) => {
         following = following.filter((item) => item.handle !== params.handle);
@@ -461,7 +463,7 @@ describe('FollowListModal (MSW)', () => {
         http.get(`${TEST_API_V1}/users/alice/following`, listOf([])),
         http.get(`${TEST_API_V1}/users/search`, ({ request }) => {
           searchCalls.push(new URL(request.url).searchParams.get('q') ?? '');
-          return HttpResponse.json({ items: [] });
+          return apiJson<'FollowListResponse'>({ items: [] });
         })
       );
 
@@ -483,7 +485,7 @@ describe('FollowListModal (MSW)', () => {
         http.get(`${TEST_API_V1}/users/search`, () => {
           calls += 1;
           if (calls === 1) return new HttpResponse(null, { status: 500 });
-          return HttpResponse.json({ items: [person('sofiamorgane', 'Sofia Benali')] });
+          return apiJson<'FollowListResponse'>({ items: [person('sofiamorgane', 'Sofia Benali')] });
         })
       );
 
@@ -506,7 +508,7 @@ describe('FollowListModal (MSW)', () => {
         http.get(`${TEST_API_V1}/users/alice/followers`, () => {
           followerCalls += 1;
           if (followerCalls === 1) return new HttpResponse(null, { status: 500 });
-          return HttpResponse.json({ items: [person('carla', 'Carla Rossi')] });
+          return apiJson<'FollowListResponse'>({ items: [person('carla', 'Carla Rossi')] });
         }),
         http.get(`${TEST_API_V1}/users/alice/following`, listOf([])),
         http.get(`${TEST_API_V1}/users/search`, listOf([]))

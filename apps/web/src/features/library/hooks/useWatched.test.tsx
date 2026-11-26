@@ -3,6 +3,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { apiErrorJson, apiJson, type ApiSchemas } from '@/mocks/apiJson';
 import { LocaleProvider } from '@/shared/i18n';
 import { createTestQueryClient, withQueryClient } from '@/test-utils/queryWrapper';
 import { createWatchedHandlers, createWatchlistHandlers, TEST_API_V1 } from '@/mocks/handlers';
@@ -23,7 +24,7 @@ function wrapperFor() {
     withQueryClient(<LocaleProvider>{children}</LocaleProvider>, client);
 }
 
-const SEEN_ELSEWHERE = {
+const SEEN_ELSEWHERE: ApiSchemas['WatchedStatusResponse'] = {
   status: 'elsewhere',
   watchedAt: '2026-11-13T10:00:00Z',
   rating: null,
@@ -104,7 +105,7 @@ describe('watched hooks', () => {
     server.use(
       http.get(`${TEST_API_V1}/watchlist`, () => {
         watchlistReads += 1;
-        return HttpResponse.json({ items: [] });
+        return apiJson<'WatchlistResponse'>({ items: [], total: 0, hasMore: false });
       }),
       ...createWatchedHandlers()
     );
@@ -126,9 +127,13 @@ describe('watched hooks', () => {
     server.use(
       http.get(`${TEST_API_V1}/watched/:tmdbId`, () => {
         statusReads += 1;
-        return HttpResponse.json({ ...SEEN_ELSEWHERE, status: 'none', watchedAt: null });
+        return apiJson<'WatchedStatusResponse'>({
+          ...SEEN_ELSEWHERE,
+          status: 'none',
+          watchedAt: null,
+        });
       }),
-      http.post(`${TEST_API_V1}/watched`, () => HttpResponse.json(saved)),
+      http.post(`${TEST_API_V1}/watched`, () => apiJson<'WatchedStatusResponse'>(saved)),
       ...createWatchedHandlers()
     );
     const { result } = renderHook(() => useWatchedTitle(dune, true), { wrapper: wrapperFor() });
@@ -148,11 +153,11 @@ describe('watched hooks', () => {
     server.use(
       http.get(`${TEST_API_V1}/watchlist`, () => {
         watchlistReads += 1;
-        return HttpResponse.json({ items: [] });
+        return apiJson<'WatchlistResponse'>({ items: [], total: 0, hasMore: false });
       }),
       http.get(`${TEST_API_V1}/users/me/watched-movies`, () => {
         watchedReads += 1;
-        return HttpResponse.json({ items: [], total: 0 });
+        return apiJson<'UserWatchedMoviesResponse'>({ items: [], total: 0, hasMore: false });
       }),
       ...createWatchedHandlers([{ ...dune, source: 'elsewhere' }])
     );
@@ -192,10 +197,7 @@ describe('watched hooks', () => {
   it('puts the rating back and says why when the server refuses it', async () => {
     server.use(
       http.put(`${TEST_API_V1}/watched/:tmdbId/rating`, () =>
-        HttpResponse.json(
-          { code: 404, reason: 'watched_title_not_found', error: 'not found' },
-          { status: 404 }
-        )
+        apiErrorJson(404, 'watched_title_not_found')
       ),
       ...createWatchedHandlers([{ ...dune, source: 'elsewhere', myRating: 6 }]),
       ...createWatchlistHandlers([])
@@ -216,7 +218,7 @@ describe('watched hooks', () => {
       http.post(`${TEST_API_V1}/watched`, async () => {
         calls.push('mark');
         await markLanded.promise;
-        return HttpResponse.json({ ...SEEN_ELSEWHERE });
+        return apiJson<'WatchedStatusResponse'>({ ...SEEN_ELSEWHERE });
       }),
       http.delete(`${TEST_API_V1}/watched/:tmdbId`, () => {
         calls.push('unmark');
@@ -245,11 +247,11 @@ describe('watched hooks', () => {
       http.post(`${TEST_API_V1}/watched`, async () => {
         calls.push('mark');
         await markLanded.promise;
-        return HttpResponse.json({ ...SEEN_ELSEWHERE });
+        return apiJson<'WatchedStatusResponse'>({ ...SEEN_ELSEWHERE });
       }),
       http.put(`${TEST_API_V1}/watched/:tmdbId/rating`, () => {
         calls.push('rate');
-        return HttpResponse.json({ ...SEEN_ELSEWHERE, rating: 8 });
+        return apiJson<'WatchedStatusResponse'>({ ...SEEN_ELSEWHERE, rating: 8 });
       }),
       ...createWatchedHandlers()
     );
@@ -268,8 +270,7 @@ describe('watched hooks', () => {
   });
 
   it('shows the film unseen again when the mark fails before its status could be read', async () => {
-    const serverError = () =>
-      HttpResponse.json({ code: 500, reason: 'internal_error', error: 'boom' }, { status: 500 });
+    const serverError = () => apiErrorJson(500, 'internal_error');
     server.use(
       http.get(`${TEST_API_V1}/watched/:tmdbId`, serverError),
       http.post(`${TEST_API_V1}/watched`, serverError),

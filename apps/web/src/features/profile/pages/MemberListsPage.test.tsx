@@ -3,7 +3,10 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildPublicProfile } from '@/test-utils/publicProfile';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import {
   authMeGuestHandler,
@@ -17,15 +20,17 @@ import MemberListsPage from './MemberListsPage';
 const LEA: MockListCreator = { handle: 'lea', displayName: 'Léa Moreau', avatarId: null };
 
 const signedIn = http.get(`${TEST_API_V1}/auth/me`, () =>
-  HttpResponse.json({
-    userId: 'u1',
-    displayName: 'Alice',
-    emailMasked: 'a***@test.local',
-    uiTheme: 'system',
-    accentColor: 'default',
-    ratingScale: 'ten',
-    handle: 'alice',
-  })
+  apiJson<'UserProfileResponse'>(
+    buildUserProfile({
+      userId: 'u1',
+      displayName: 'Alice',
+      emailMasked: 'a***@test.local',
+      uiTheme: 'system',
+      accentColor: 'default',
+      ratingScale: 'ten',
+      handle: 'alice',
+    })
+  )
 );
 
 function film(tmdbId: number, isWatched = false) {
@@ -63,19 +68,21 @@ const HITCHCOCK: MockPublicList = {
 
 function profileOf(creator: MockListCreator) {
   return http.get(`${TEST_API_V1}/users/${creator.handle}`, () =>
-    HttpResponse.json({
-      handle: creator.handle,
-      displayName: creator.displayName,
-      avatarId: 'alpha',
-      bio: null,
-      memberSince: '2024-03-15T00:00:00Z',
-      followingCount: 0,
-      followersCount: 0,
-      isSupporter: false,
-      isFollowedByMe: null,
-      isWatchlistPublic: true,
-      watchlistCount: null,
-    })
+    apiJson<'PublicProfileResponse'>(
+      buildPublicProfile({
+        handle: creator.handle,
+        displayName: creator.displayName,
+        avatarId: 'alpha',
+        bio: null,
+        memberSince: '2024-03-15T00:00:00Z',
+        followingCount: 0,
+        followersCount: 0,
+        isSupporter: false,
+        isFollowedByMe: null,
+        isWatchlistPublic: true,
+        watchlistCount: null,
+      })
+    )
   );
 }
 
@@ -250,12 +257,8 @@ describe('MemberListsPage', () => {
   it('shows the same state for an unknown member', async () => {
     server.use(
       signedIn,
-      http.get(`${TEST_API_V1}/users/nobody`, () =>
-        HttpResponse.json({ reason: 'profile_not_found' }, { status: 404 })
-      ),
-      http.get(`${TEST_API_V1}/users/nobody/lists`, () =>
-        HttpResponse.json({ reason: 'profile_not_found' }, { status: 404 })
-      )
+      http.get(`${TEST_API_V1}/users/nobody`, () => apiErrorJson(404, 'profile_not_found')),
+      http.get(`${TEST_API_V1}/users/nobody/lists`, () => apiErrorJson(404, 'profile_not_found'))
     );
 
     renderPage('nobody');

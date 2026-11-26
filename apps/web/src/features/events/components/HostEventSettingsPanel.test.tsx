@@ -4,10 +4,11 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { TEST_API_V1, authMeGuestHandler, eventLimitsHandler } from '@/mocks/handlers';
-import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { apiErrorJson, apiJson, type ApiSchemas } from '@/mocks/apiJson';
+import { buildEventConfig } from '@/test-utils/eventDetail';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import HostEventSettingsPanel from '@/features/events/components/HostEventSettingsPanel';
 import titleBarStyles from '@/shared/components/DialogTitleBar.module.css';
@@ -130,15 +131,17 @@ describe('HostEventSettingsPanel', () => {
         expect(body.theme).toBeUndefined();
         expect(body.allowSeries).toBeUndefined();
         expect(body.allowedReactionIds).toBeUndefined();
-        return HttpResponse.json({
-          theme: 'SF',
-          maxProposalsPerParticipant: null,
-          maxParticipants: null,
-          wheelMode: 'strictRandom',
-          richSharePreview: false,
-          allowSeries: false,
-          anonymousProposals: false,
-        });
+        return apiJson<'EventConfigResponse'>(
+          buildEventConfig({
+            theme: 'SF',
+            maxProposalsPerParticipant: null,
+            maxParticipants: null,
+            wheelMode: 'strictRandom',
+            richSharePreview: false,
+            allowSeries: false,
+            anonymousProposals: false,
+          })
+        );
       })
     );
 
@@ -159,7 +162,7 @@ describe('HostEventSettingsPanel', () => {
     server.use(
       http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
         bodies.push((await request.json()) as Record<string, unknown>);
-        return HttpResponse.json({ ...baseEvent.config });
+        return apiJson<'EventConfigResponse'>(buildEventConfig({ ...baseEvent.config }));
       })
     );
 
@@ -182,7 +185,9 @@ describe('HostEventSettingsPanel', () => {
     server.use(
       http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
         bodies.push((await request.json()) as Record<string, unknown>);
-        return HttpResponse.json({ ...baseEvent.config, anonymousProposals: true });
+        return apiJson<'EventConfigResponse'>(
+          buildEventConfig({ ...baseEvent.config, anonymousProposals: true })
+        );
       })
     );
 
@@ -241,7 +246,7 @@ describe('HostEventSettingsPanel', () => {
     server.use(
       http.patch(`${TEST_API_V1}/events/${slug}/config`, () => {
         patchCalled = true;
-        return HttpResponse.json({ ...baseEvent.config });
+        return apiJson<'EventConfigResponse'>(buildEventConfig({ ...baseEvent.config }));
       })
     );
 
@@ -268,7 +273,7 @@ describe('HostEventSettingsPanel', () => {
       http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
         bodies.push((await request.json()) as Record<string, unknown>);
         if (bodies.length === 1) await firstSaveHeld;
-        return HttpResponse.json({ ...baseEvent.config });
+        return apiJson<'EventConfigResponse'>(buildEventConfig({ ...baseEvent.config }));
       })
     );
 
@@ -298,7 +303,7 @@ describe('HostEventSettingsPanel', () => {
     server.use(
       http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
         patchedBody = (await request.json()) as Record<string, unknown>;
-        return HttpResponse.json({ ...baseEvent.config });
+        return apiJson<'EventConfigResponse'>(buildEventConfig({ ...baseEvent.config }));
       })
     );
     const qc = createTestQueryClient();
@@ -324,7 +329,9 @@ describe('HostEventSettingsPanel', () => {
       http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
         const body = (await request.json()) as Record<string, unknown>;
         seen.push(body.maxParticipants);
-        return HttpResponse.json({ ...baseEvent.config, maxParticipants: 8 });
+        return apiJson<'EventConfigResponse'>(
+          buildEventConfig({ ...baseEvent.config, maxParticipants: 8 })
+        );
       })
     );
 
@@ -353,7 +360,9 @@ describe('HostEventSettingsPanel', () => {
       http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
         const body = (await request.json()) as Record<string, unknown>;
         seenMax = body.maxParticipants;
-        return HttpResponse.json({ ...baseEvent.config, maxParticipants: null });
+        return apiJson<'EventConfigResponse'>(
+          buildEventConfig({ ...baseEvent.config, maxParticipants: null })
+        );
       })
     );
 
@@ -419,7 +428,7 @@ describe('HostEventSettingsPanel', () => {
     server.use(
       http.patch(`${TEST_API_V1}/events/${slug}/config`, () => {
         patchCalled = true;
-        return HttpResponse.json({});
+        return apiJson<'EventConfigResponse'>(buildEventConfig());
       })
     );
 
@@ -452,7 +461,9 @@ describe('HostEventSettingsPanel', () => {
       http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
         const body = (await request.json()) as Record<string, unknown>;
         seen.push(body.maxVotesPerParticipant);
-        return HttpResponse.json({ ...baseEvent.config, maxVotesPerParticipant: 3 });
+        return apiJson<'EventConfigResponse'>(
+          buildEventConfig({ ...baseEvent.config, maxVotesPerParticipant: 3 })
+        );
       })
     );
 
@@ -478,7 +489,9 @@ describe('HostEventSettingsPanel', () => {
       http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
         const body = (await request.json()) as Record<string, unknown>;
         seenMaxVotes = body.maxVotesPerParticipant;
-        return HttpResponse.json({ ...baseEvent.config, maxVotesPerParticipant: null });
+        return apiJson<'EventConfigResponse'>(
+          buildEventConfig({ ...baseEvent.config, maxVotesPerParticipant: null })
+        );
       })
     );
 
@@ -503,7 +516,7 @@ describe('HostEventSettingsPanel', () => {
     server.use(
       http.patch(`${TEST_API_V1}/events/${slug}/config`, () => {
         patchCalled = true;
-        return HttpResponse.json({});
+        return apiJson<'EventConfigResponse'>(buildEventConfig({}));
       })
     );
 
@@ -530,7 +543,7 @@ describe('HostEventSettingsPanel', () => {
     server.use(
       http.patch(`${TEST_API_V1}/events/${slug}/config`, () => {
         patchCalled = true;
-        return HttpResponse.json({});
+        return apiJson<'EventConfigResponse'>(buildEventConfig({}));
       })
     );
 
@@ -558,7 +571,11 @@ describe('HostEventSettingsPanel', () => {
   it('shows a refused rule on the rules row of a phone and opens the rules again', async () => {
     stubMatchMedia(true);
     const user = userEvent.setup();
-    server.use(http.patch(`${TEST_API_V1}/events/${slug}/config`, () => HttpResponse.json({})));
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, () =>
+        apiJson<'EventConfigResponse'>(buildEventConfig({}))
+      )
+    );
 
     renderWithRouter(
       <HostEventSettingsPanel
@@ -594,7 +611,9 @@ describe('HostEventSettingsPanel', () => {
       http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
         const body = (await request.json()) as Record<string, unknown>;
         seenWinnerCount = body.winnerCount;
-        return HttpResponse.json({ ...baseEvent.config, winnerCount: 3 });
+        return apiJson<'EventConfigResponse'>(
+          buildEventConfig({ ...baseEvent.config, winnerCount: 3 })
+        );
       })
     );
 
@@ -615,7 +634,9 @@ describe('HostEventSettingsPanel', () => {
     server.use(
       http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
         body = (await request.json()) as Record<string, unknown>;
-        return HttpResponse.json({ ...baseEvent.config, winnerCount: 3 });
+        return apiJson<'EventConfigResponse'>(
+          buildEventConfig({ ...baseEvent.config, winnerCount: 3 })
+        );
       })
     );
 
@@ -646,7 +667,7 @@ describe('HostEventSettingsPanel', () => {
     server.use(
       http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
         body = (await request.json()) as Record<string, unknown>;
-        return HttpResponse.json({ ...baseEvent.config });
+        return apiJson<'EventConfigResponse'>(buildEventConfig({ ...baseEvent.config }));
       })
     );
 
@@ -722,7 +743,7 @@ describe('HostEventSettingsPanel', () => {
       server.use(
         http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
           bodies.push((await request.json()) as Record<string, unknown>);
-          return HttpResponse.json({ ...baseEvent.config });
+          return apiJson<'EventConfigResponse'>(buildEventConfig({ ...baseEvent.config }));
         })
       );
       return bodies;
@@ -892,7 +913,7 @@ describe('HostEventSettingsPanel', () => {
     server.use(
       http.patch(`${TEST_API_V1}/events/${slug}/config`, async () => {
         patchCalled = true;
-        return HttpResponse.json({ ...baseEvent.config });
+        return apiJson<'EventConfigResponse'>(buildEventConfig({ ...baseEvent.config }));
       })
     );
 
@@ -965,13 +986,14 @@ describe('HostEventSettingsPanel', () => {
         http.delete(`${TEST_API_V1}/events/${slug}`, ({ request }) => {
           deleteCalled = true;
           calledUrl = request.url;
-          return HttpResponse.json({
+          return apiJson<'DeleteEventResponse'>({
             eventId: 'e1',
             slug,
             removedParticipants: 2,
             removedMovies: 0,
             removedVotes: 0,
             removedSeenMarks: 0,
+            removedRatings: 0,
             message: 'Soirée supprimée.',
           });
         })
@@ -1006,7 +1028,16 @@ describe('HostEventSettingsPanel', () => {
       server.use(
         http.delete(`${TEST_API_V1}/events/${slug}`, () => {
           deleteCalled = true;
-          return HttpResponse.json({});
+          return apiJson<'DeleteEventResponse'>({
+            eventId: 'e1',
+            slug,
+            removedParticipants: 0,
+            removedMovies: 0,
+            removedVotes: 0,
+            removedSeenMarks: 0,
+            removedRatings: 0,
+            message: '',
+          });
         })
       );
 
@@ -1028,12 +1059,7 @@ describe('HostEventSettingsPanel', () => {
     it('API returns 403: error message shown, no redirect', async () => {
       const user = userEvent.setup();
       server.use(
-        http.delete(`${TEST_API_V1}/events/${slug}`, () =>
-          HttpResponse.json(
-            { error: 'Seul le créateur peut supprimer la soirée.', code: 403 },
-            { status: 403 }
-          )
-        )
+        http.delete(`${TEST_API_V1}/events/${slug}`, () => apiErrorJson(403, 'creator_only_delete'))
       );
 
       renderWithRouter(
@@ -1058,12 +1084,13 @@ describe('HostEventSettingsPanel', () => {
     participants: [{ id: 'p1', pseudo: 'Hôte', isCreator: true }],
   };
 
-  const templateFixture = {
+  const templateFixture: ApiSchemas['EventTemplateResponse'] = {
     id: 'tpl1',
     name: 'Soirée horreur',
     theme: '🎃 Halloween',
     maxProposalsPerParticipant: 4,
     maxParticipants: 12,
+    maxVotesPerParticipant: null,
     wheelMode: 'weightedByVotes',
     richSharePreview: false,
     allowSeries: true,
@@ -1075,9 +1102,11 @@ describe('HostEventSettingsPanel', () => {
     const user = userEvent.setup();
     server.use(
       http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
-        HttpResponse.json({ items: [{ ...templateFixture, winnerCount: 3 }] })
+        apiJson<'EventTemplateListResponse'>({ items: [{ ...templateFixture, winnerCount: 3 }] })
       ),
-      http.patch(`${TEST_API_V1}/events/${slug}/config`, () => HttpResponse.json({}))
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, () =>
+        apiJson<'EventConfigResponse'>(buildEventConfig({}))
+      )
     );
 
     renderWithRouter(
@@ -1094,19 +1123,23 @@ describe('HostEventSettingsPanel', () => {
     let patchedBody: Record<string, unknown> | null = null;
     server.use(
       http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
-        HttpResponse.json({ items: [{ ...templateFixture, richSharePreview: true }] })
+        apiJson<'EventTemplateListResponse'>({
+          items: [{ ...templateFixture, richSharePreview: true }],
+        })
       ),
       http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
         patchedBody = (await request.json()) as Record<string, unknown>;
-        return HttpResponse.json({
-          theme: '🎃 Halloween',
-          maxProposalsPerParticipant: 4,
-          maxParticipants: 12,
-          wheelMode: 'weightedByVotes',
-          richSharePreview: false,
-          allowSeries: true,
-          anonymousProposals: false,
-        });
+        return apiJson<'EventConfigResponse'>(
+          buildEventConfig({
+            theme: '🎃 Halloween',
+            maxProposalsPerParticipant: 4,
+            maxParticipants: 12,
+            wheelMode: 'weightedByVotes',
+            richSharePreview: false,
+            allowSeries: true,
+            anonymousProposals: false,
+          })
+        );
       })
     );
 
@@ -1132,11 +1165,20 @@ describe('HostEventSettingsPanel', () => {
     let patchedBody: Record<string, unknown> | null = null;
     server.use(
       http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
-        HttpResponse.json({ items: [templateFixture] })
+        apiJson<'EventTemplateListResponse'>({ items: [templateFixture] })
       ),
       http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
         patchedBody = (await request.json()) as Record<string, unknown>;
-        return HttpResponse.json({ ...templateFixture, anonymousProposals: true });
+        return apiJson<'EventConfigResponse'>(
+          buildEventConfig({
+            theme: templateFixture.theme,
+            maxProposalsPerParticipant: templateFixture.maxProposalsPerParticipant,
+            maxParticipants: templateFixture.maxParticipants,
+            wheelMode: templateFixture.wheelMode,
+            allowSeries: templateFixture.allowSeries,
+            anonymousProposals: true,
+          })
+        );
       })
     );
 
@@ -1166,11 +1208,13 @@ describe('HostEventSettingsPanel', () => {
     let patchedBody: Record<string, unknown> | null = null;
     server.use(
       http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
-        HttpResponse.json({ items: [templateFixture] })
+        apiJson<'EventTemplateListResponse'>({ items: [templateFixture] })
       ),
       http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
         patchedBody = (await request.json()) as Record<string, unknown>;
-        return HttpResponse.json({ ...creatorEvent.config, anonymousProposals: true });
+        return apiJson<'EventConfigResponse'>(
+          buildEventConfig({ ...creatorEvent.config, anonymousProposals: true })
+        );
       })
     );
 
@@ -1199,12 +1243,16 @@ describe('HostEventSettingsPanel', () => {
     const user = userEvent.setup();
     let templateWrites = 0;
     server.use(
-      http.get(`${TEST_API_V1}/users/me/event-templates`, () => HttpResponse.json({ items: [] })),
+      http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
+        apiJson<'EventTemplateListResponse'>({ items: [] })
+      ),
       http.post(`${TEST_API_V1}/users/me/event-templates`, () => {
         templateWrites += 1;
-        return HttpResponse.json({ ...templateFixture, id: 'tpl2' });
+        return apiJson<'EventTemplateResponse'>({ ...templateFixture, id: 'tpl2' });
       }),
-      http.patch(`${TEST_API_V1}/events/${slug}/config`, () => HttpResponse.json({}))
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, () =>
+        apiJson<'EventConfigResponse'>(buildEventConfig({}))
+      )
     );
 
     renderWithRouter(
@@ -1225,7 +1273,7 @@ describe('HostEventSettingsPanel', () => {
     const user = userEvent.setup();
     server.use(
       http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
-        HttpResponse.json({ items: [templateFixture] })
+        apiJson<'EventTemplateListResponse'>({ items: [templateFixture] })
       )
     );
 
@@ -1249,12 +1297,13 @@ describe('HostEventSettingsPanel', () => {
     let putBody: Record<string, unknown> | null = null;
     server.use(
       http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
-        HttpResponse.json({ items: templates })
+        apiJson<'EventTemplateListResponse'>({ items: templates })
       ),
       http.put(`${TEST_API_V1}/users/me/event-templates/tpl1`, async ({ request }) => {
         putBody = (await request.json()) as Record<string, unknown>;
-        templates = [{ ...templateFixture, name: 'Soirée frissons' }];
-        return HttpResponse.json(templates[0]);
+        const renamed = { ...templateFixture, name: 'Soirée frissons' };
+        templates = [renamed];
+        return apiJson<'EventTemplateResponse'>(renamed);
       })
     );
 
@@ -1281,22 +1330,24 @@ describe('HostEventSettingsPanel', () => {
     let putBody: Record<string, unknown> | null = null;
     server.use(
       http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
-        HttpResponse.json({ items: [templateFixture] })
+        apiJson<'EventTemplateListResponse'>({ items: [templateFixture] })
       ),
       http.patch(`${TEST_API_V1}/events/${slug}/config`, () =>
-        HttpResponse.json({
-          theme: '🎃 Halloween',
-          maxProposalsPerParticipant: 4,
-          maxParticipants: 12,
-          wheelMode: 'weightedByVotes',
-          richSharePreview: false,
-          allowSeries: true,
-          anonymousProposals: false,
-        })
+        apiJson<'EventConfigResponse'>(
+          buildEventConfig({
+            theme: '🎃 Halloween',
+            maxProposalsPerParticipant: 4,
+            maxParticipants: 12,
+            wheelMode: 'weightedByVotes',
+            richSharePreview: false,
+            allowSeries: true,
+            anonymousProposals: false,
+          })
+        )
       ),
       http.put(`${TEST_API_V1}/users/me/event-templates/tpl1`, async ({ request }) => {
         putBody = (await request.json()) as Record<string, unknown>;
-        return HttpResponse.json({ ...templateFixture, wheelMode: 'strictRandom' });
+        return apiJson<'EventTemplateResponse'>({ ...templateFixture, wheelMode: 'strictRandom' });
       })
     );
 
@@ -1334,18 +1385,20 @@ describe('HostEventSettingsPanel', () => {
     };
     server.use(
       http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
-        HttpResponse.json({ items: [noLimitTemplate] })
+        apiJson<'EventTemplateListResponse'>({ items: [noLimitTemplate] })
       ),
       http.patch(`${TEST_API_V1}/events/${slug}/config`, () =>
-        HttpResponse.json({
-          theme: '🎃 Halloween',
-          maxProposalsPerParticipant: null,
-          maxParticipants: null,
-          wheelMode: 'weightedByVotes',
-          richSharePreview: false,
-          allowSeries: true,
-          anonymousProposals: false,
-        })
+        apiJson<'EventConfigResponse'>(
+          buildEventConfig({
+            theme: '🎃 Halloween',
+            maxProposalsPerParticipant: null,
+            maxParticipants: null,
+            wheelMode: 'weightedByVotes',
+            richSharePreview: false,
+            allowSeries: true,
+            anonymousProposals: false,
+          })
+        )
       )
     );
 
@@ -1365,11 +1418,11 @@ describe('HostEventSettingsPanel', () => {
     let patched = false;
     server.use(
       http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
-        HttpResponse.json({ items: [templateFixture] })
+        apiJson<'EventTemplateListResponse'>({ items: [templateFixture] })
       ),
       http.patch(`${TEST_API_V1}/events/${slug}/config`, () => {
         patched = true;
-        return HttpResponse.json({ ...baseEvent.config });
+        return apiJson<'EventConfigResponse'>(buildEventConfig({ ...baseEvent.config }));
       })
     );
 
@@ -1399,7 +1452,7 @@ describe('HostEventSettingsPanel', () => {
   it('puts the templates at the top of the rules, before the first rule', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
-        HttpResponse.json({ items: [templateFixture] })
+        apiJson<'EventTemplateListResponse'>({ items: [templateFixture] })
       )
     );
 
@@ -1441,12 +1494,19 @@ describe('HostEventSettingsPanel', () => {
       const bodies: Record<string, unknown>[] = [];
       server.use(
         http.get(`${TEST_API_V1}/groups`, () =>
-          HttpResponse.json({ groups: [thursdayGroup], invitations: [], nextNights: [] })
+          apiJson<'MyGroupsResponse'>({
+            groups: [thursdayGroup],
+            invitations: [],
+            nextNights: [],
+            showcases: [],
+          })
         ),
-        http.get(`${TEST_API_V1}/users/me/event-templates`, () => HttpResponse.json({ items: [] })),
+        http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
+          apiJson<'EventTemplateListResponse'>({ items: [] })
+        ),
         http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
           bodies.push((await request.json()) as Record<string, unknown>);
-          return HttpResponse.json({});
+          return apiJson<'EventConfigResponse'>(buildEventConfig({}));
         })
       );
       return bodies;
@@ -1499,9 +1559,16 @@ describe('HostEventSettingsPanel', () => {
     it('shows no group choice to a host without group', async () => {
       server.use(
         http.get(`${TEST_API_V1}/groups`, () =>
-          HttpResponse.json({ groups: [], invitations: [], nextNights: [] })
+          apiJson<'MyGroupsResponse'>({
+            groups: [],
+            invitations: [],
+            nextNights: [],
+            showcases: [],
+          })
         ),
-        http.get(`${TEST_API_V1}/users/me/event-templates`, () => HttpResponse.json({ items: [] }))
+        http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
+          apiJson<'EventTemplateListResponse'>({ items: [] })
+        )
       );
 
       renderWithRouter(
@@ -1523,7 +1590,7 @@ describe('HostEventSettingsPanel', () => {
       server.use(
         http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
           bodies.push((await request.json()) as Record<string, unknown>);
-          return HttpResponse.json({});
+          return apiJson<'EventConfigResponse'>(buildEventConfig({}));
         })
       );
       return bodies;

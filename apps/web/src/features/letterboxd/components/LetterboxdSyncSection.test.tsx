@@ -3,16 +3,20 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
-import AccountPage from '@/app/pages/account/AccountPage';
-import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
-import { queryKeys } from '@/shared/hooks/queryKeys';
+import { http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
 import {
+  letterboxdConfirmResult,
+  letterboxdSyncReport,
   createLetterboxdConfirmHandler,
   createLetterboxdSyncHandler,
   letterboxdListReport,
   TEST_API_V1,
 } from '@/mocks/handlers';
+import { buildUserProfile } from '@/test-utils/userProfile';
+import AccountPage from '@/app/pages/account/AccountPage';
+import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
+import { queryKeys } from '@/shared/hooks/queryKeys';
 import type { components } from '@/shared/api/generated/openapiSchema';
 
 const { track } = vi.hoisted(() => ({ track: vi.fn() }));
@@ -43,30 +47,32 @@ function meHandler(
   } = {}
 ) {
   return http.get(`${TEST_API_V1}/auth/me`, () =>
-    HttpResponse.json({
-      ...(overrides.letterboxdSyncWatchlist === undefined
-        ? {}
-        : { letterboxdSyncWatchlist: overrides.letterboxdSyncWatchlist }),
-      ...(overrides.letterboxdSyncWatched === undefined
-        ? {}
-        : { letterboxdSyncWatched: overrides.letterboxdSyncWatched }),
-      letterboxdWatchlistCount: overrides.letterboxdWatchlistCount ?? 0,
-      letterboxdWatchedCount: overrides.letterboxdWatchedCount ?? 0,
-      userId: 'u-acc',
-      displayName: 'Pat',
-      emailMasked: 'p***@test.local',
-      uiTheme: 'light',
-      accentColor: 'default',
-      ratingScale: 'five',
-      avatarId: 'alpha',
-      handle: 'pat',
-      bio: null,
-      isProfilePublic: true,
-      letterboxdUsername: overrides.letterboxdUsername ?? null,
-      letterboxdLastSyncAt: overrides.letterboxdLastSyncAt ?? null,
-      letterboxdLastSyncError: overrides.letterboxdLastSyncError ?? null,
-      letterboxdPendingReconciliationCount: overrides.letterboxdPendingReconciliationCount ?? 0,
-    })
+    apiJson<'UserProfileResponse'>(
+      buildUserProfile({
+        ...(overrides.letterboxdSyncWatchlist === undefined
+          ? {}
+          : { letterboxdSyncWatchlist: overrides.letterboxdSyncWatchlist }),
+        ...(overrides.letterboxdSyncWatched === undefined
+          ? {}
+          : { letterboxdSyncWatched: overrides.letterboxdSyncWatched }),
+        letterboxdWatchlistCount: overrides.letterboxdWatchlistCount ?? 0,
+        letterboxdWatchedCount: overrides.letterboxdWatchedCount ?? 0,
+        userId: 'u-acc',
+        displayName: 'Pat',
+        emailMasked: 'p***@test.local',
+        uiTheme: 'light',
+        accentColor: 'default',
+        ratingScale: 'five',
+        avatarId: 'alpha',
+        handle: 'pat',
+        bio: null,
+        isProfilePublic: true,
+        letterboxdUsername: overrides.letterboxdUsername ?? null,
+        letterboxdLastSyncAt: overrides.letterboxdLastSyncAt ?? null,
+        letterboxdLastSyncError: overrides.letterboxdLastSyncError ?? null,
+        letterboxdPendingReconciliationCount: overrides.letterboxdPendingReconciliationCount ?? 0,
+      })
+    )
   );
 }
 
@@ -113,14 +119,16 @@ describe('LetterboxdSyncSection (MSW)', () => {
       http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
         const body = (await request.json()) as { letterboxdUsername?: string | null };
         patched = body.letterboxdUsername;
-        return HttpResponse.json({
-          userId: 'u-acc',
-          displayName: 'Pat',
-          emailMasked: 'p***@test.local',
-          letterboxdUsername: body.letterboxdUsername ?? null,
-          letterboxdLastSyncAt: null,
-          letterboxdLastSyncError: null,
-        });
+        return apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'u-acc',
+            displayName: 'Pat',
+            emailMasked: 'p***@test.local',
+            letterboxdUsername: body.letterboxdUsername ?? null,
+            letterboxdLastSyncAt: null,
+            letterboxdLastSyncError: null,
+          })
+        );
       })
     );
 
@@ -147,14 +155,16 @@ describe('LetterboxdSyncSection (MSW)', () => {
       http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
         const body = (await request.json()) as { letterboxdUsername?: string | null };
         patched = body.letterboxdUsername;
-        return HttpResponse.json({
-          userId: 'u-acc',
-          displayName: 'Pat',
-          emailMasked: 'p***@test.local',
-          letterboxdUsername: null,
-          letterboxdLastSyncAt: null,
-          letterboxdLastSyncError: null,
-        });
+        return apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'u-acc',
+            displayName: 'Pat',
+            emailMasked: 'p***@test.local',
+            letterboxdUsername: null,
+            letterboxdLastSyncAt: null,
+            letterboxdLastSyncError: null,
+          })
+        );
       })
     );
 
@@ -177,7 +187,7 @@ describe('LetterboxdSyncSection (MSW)', () => {
       meHandler({ letterboxdUsername: 'dave_v' }),
       http.patch(`${TEST_API_V1}/auth/me`, () => {
         patchCalled = true;
-        return HttpResponse.json({});
+        return apiJson<'UserProfileResponse'>(buildUserProfile({}));
       })
     );
 
@@ -209,24 +219,26 @@ describe('LetterboxdSyncSection (MSW)', () => {
       meHandler({ letterboxdUsername: 'affy657' }),
       http.post(`${TEST_API_V1}/letterboxd/sync`, ({ request }) => {
         syncUrl = request.url;
-        return HttpResponse.json({
-          skipped: false,
-          error: null,
-          lists: [
-            {
-              target: 'watchlist',
-              added: 3,
-              removed: 1,
-              unmatchedTitles: [],
-              pendingChoices: [],
-              totalOnLetterboxd: 10,
-              totalTruncated: 0,
-              incomplete: false,
-              lastSyncAt: null,
-              error: null,
-            },
-          ],
-        });
+        return apiJson<'LetterboxdSyncResponse'>(
+          letterboxdSyncReport({
+            skipped: false,
+            error: null,
+            lists: [
+              {
+                target: 'watchlist',
+                added: 3,
+                removed: 1,
+                unmatchedTitles: [],
+                pendingChoices: [],
+                totalOnLetterboxd: 10,
+                totalTruncated: 0,
+                incomplete: false,
+                lastSyncAt: null,
+                error: null,
+              },
+            ],
+          })
+        );
       })
     );
 
@@ -255,15 +267,17 @@ describe('LetterboxdSyncSection (MSW)', () => {
     server.use(
       meHandler({ letterboxdUsername: 'affy657', letterboxdLastSyncAt: '2026-08-10T12:00:00Z' }),
       http.post(`${TEST_API_V1}/letterboxd/sync`, () =>
-        HttpResponse.json({
-          skipped: true,
-          added: 0,
-          removed: 0,
-          unmatchedTitles: [],
-          pendingChoices: [],
-          totalOnLetterboxd: 0,
-          totalTruncated: 0,
-        })
+        apiJson<'LetterboxdSyncResponse'>(
+          letterboxdSyncReport({
+            skipped: true,
+            added: 0,
+            removed: 0,
+            unmatchedTitles: [],
+            pendingChoices: [],
+            totalOnLetterboxd: 0,
+            totalTruncated: 0,
+          })
+        )
       )
     );
 
@@ -287,41 +301,48 @@ describe('LetterboxdSyncSection (MSW)', () => {
     server.use(
       meHandler({ letterboxdUsername: 'affy657' }),
       http.post(`${TEST_API_V1}/letterboxd/sync`, () =>
-        HttpResponse.json({
-          skipped: false,
-          error: null,
-          lists: [
-            {
-              target: 'watchlist',
-              added: 0,
-              removed: 0,
-              unmatchedTitles: [],
-              pendingChoices: [
-                {
-                  rowIndex: 1,
-                  title: 'Midnight Mass',
-                  year: '2021',
-                  letterboxdSlug: 'midnight-mass-2021',
-                  candidates: [
-                    {
-                      tmdbId: 97400,
-                      mediaType: 'tv',
-                      title: 'Sermons de minuit',
-                      year: '2021',
-                      posterPath: null,
-                      voteAverage: 7.5,
-                    },
-                  ],
-                },
-              ],
-              totalOnLetterboxd: 1,
-              totalTruncated: 0,
-              incomplete: false,
-              lastSyncAt: null,
-              error: null,
-            },
-          ],
-        })
+        apiJson<'LetterboxdSyncResponse'>(
+          letterboxdSyncReport({
+            skipped: false,
+            error: null,
+            lists: [
+              {
+                target: 'watchlist',
+                added: 0,
+                removed: 0,
+                unmatchedTitles: [],
+                pendingChoices: [
+                  {
+                    rowIndex: 1,
+                    title: 'Midnight Mass',
+                    year: '2021',
+                    letterboxdSlug: 'midnight-mass-2021',
+                    target: 'watchlist',
+                    rating: null,
+                    watchedOn: null,
+                    candidates: [
+                      {
+                        tmdbId: 97400,
+                        mediaType: 'tv',
+                        title: 'Sermons de minuit',
+                        year: '2021',
+                        posterPath: null,
+                        voteAverage: 7.5,
+                        genreIds: [],
+                        runtimeMinutes: null,
+                      },
+                    ],
+                  },
+                ],
+                totalOnLetterboxd: 1,
+                totalTruncated: 0,
+                incomplete: false,
+                lastSyncAt: null,
+                error: null,
+              },
+            ],
+          })
+        )
       )
     );
 
@@ -343,41 +364,48 @@ describe('LetterboxdSyncSection (MSW)', () => {
     server.use(
       meHandler({ letterboxdUsername: 'affy657', letterboxdPendingReconciliationCount: 2 }),
       http.post(`${TEST_API_V1}/letterboxd/sync`, () =>
-        HttpResponse.json({
-          skipped: false,
-          error: null,
-          lists: [
-            {
-              target: 'watchlist',
-              added: 0,
-              removed: 0,
-              unmatchedTitles: [],
-              pendingChoices: [
-                {
-                  rowIndex: 1,
-                  title: 'Midnight Mass',
-                  year: '2021',
-                  letterboxdSlug: 'midnight-mass-2021',
-                  candidates: [
-                    {
-                      tmdbId: 97400,
-                      mediaType: 'tv',
-                      title: 'Sermons de minuit',
-                      year: '2021',
-                      posterPath: null,
-                      voteAverage: 7.5,
-                    },
-                  ],
-                },
-              ],
-              totalOnLetterboxd: 1,
-              totalTruncated: 0,
-              incomplete: false,
-              lastSyncAt: null,
-              error: null,
-            },
-          ],
-        })
+        apiJson<'LetterboxdSyncResponse'>(
+          letterboxdSyncReport({
+            skipped: false,
+            error: null,
+            lists: [
+              {
+                target: 'watchlist',
+                added: 0,
+                removed: 0,
+                unmatchedTitles: [],
+                pendingChoices: [
+                  {
+                    rowIndex: 1,
+                    title: 'Midnight Mass',
+                    year: '2021',
+                    letterboxdSlug: 'midnight-mass-2021',
+                    target: 'watchlist',
+                    rating: null,
+                    watchedOn: null,
+                    candidates: [
+                      {
+                        tmdbId: 97400,
+                        mediaType: 'tv',
+                        title: 'Sermons de minuit',
+                        year: '2021',
+                        posterPath: null,
+                        voteAverage: 7.5,
+                        genreIds: [],
+                        runtimeMinutes: null,
+                      },
+                    ],
+                  },
+                ],
+                totalOnLetterboxd: 1,
+                totalTruncated: 0,
+                incomplete: false,
+                lastSyncAt: null,
+                error: null,
+              },
+            ],
+          })
+        )
       )
     );
 
@@ -401,60 +429,74 @@ describe('LetterboxdSyncSection (MSW)', () => {
     server.use(
       meHandler({ letterboxdUsername: 'affy657', letterboxdPendingReconciliationCount: 2 }),
       http.post(`${TEST_API_V1}/letterboxd/sync`, () =>
-        HttpResponse.json({
-          skipped: false,
-          error: null,
-          lists: [
-            {
-              target: 'watchlist',
-              added: 0,
-              removed: 0,
-              unmatchedTitles: [],
-              pendingChoices: [
-                {
-                  rowIndex: 1,
-                  title: 'Midnight Mass',
-                  year: '2021',
-                  letterboxdSlug: 'midnight-mass-2021',
-                  candidates: [
-                    {
-                      tmdbId: 97400,
-                      mediaType: 'tv',
-                      title: 'Sermons de minuit',
-                      year: '2021',
-                      posterPath: null,
-                      voteAverage: 7.5,
-                    },
-                  ],
-                },
-                {
-                  rowIndex: 2,
-                  title: 'Spider-Man',
-                  year: '1977',
-                  letterboxdSlug: 'spider-man-1977',
-                  candidates: [
-                    {
-                      tmdbId: 1,
-                      mediaType: 'movie',
-                      title: 'Spider-Man',
-                      year: '1977',
-                      posterPath: null,
-                      voteAverage: 5.1,
-                    },
-                  ],
-                },
-              ],
-              totalOnLetterboxd: 2,
-              totalTruncated: 0,
-              incomplete: false,
-              lastSyncAt: null,
-              error: null,
-            },
-          ],
-        })
+        apiJson<'LetterboxdSyncResponse'>(
+          letterboxdSyncReport({
+            skipped: false,
+            error: null,
+            lists: [
+              {
+                target: 'watchlist',
+                added: 0,
+                removed: 0,
+                unmatchedTitles: [],
+                pendingChoices: [
+                  {
+                    rowIndex: 1,
+                    title: 'Midnight Mass',
+                    year: '2021',
+                    letterboxdSlug: 'midnight-mass-2021',
+                    target: 'watchlist',
+                    rating: null,
+                    watchedOn: null,
+                    candidates: [
+                      {
+                        tmdbId: 97400,
+                        mediaType: 'tv',
+                        title: 'Sermons de minuit',
+                        year: '2021',
+                        posterPath: null,
+                        voteAverage: 7.5,
+                        genreIds: [],
+                        runtimeMinutes: null,
+                      },
+                    ],
+                  },
+                  {
+                    rowIndex: 2,
+                    title: 'Spider-Man',
+                    year: '1977',
+                    letterboxdSlug: 'spider-man-1977',
+                    target: 'watchlist',
+                    rating: null,
+                    watchedOn: null,
+                    candidates: [
+                      {
+                        tmdbId: 1,
+                        mediaType: 'movie',
+                        title: 'Spider-Man',
+                        year: '1977',
+                        posterPath: null,
+                        voteAverage: 5.1,
+                        genreIds: [],
+                        runtimeMinutes: null,
+                      },
+                    ],
+                  },
+                ],
+                totalOnLetterboxd: 2,
+                totalTruncated: 0,
+                incomplete: false,
+                lastSyncAt: null,
+                error: null,
+              },
+            ],
+          })
+        )
       ),
       http.post(`${TEST_API_V1}/letterboxd/confirm`, () =>
-        HttpResponse.json({ added: 1, alreadyPresent: 0, pendingReconciliationCount: 1 })
+        apiJson<'LetterboxdImportConfirmResponse'>(
+          letterboxdConfirmResult({ added: 1, alreadyPresent: 0, pendingReconciliationCount: 1 })
+        )
       )
     );
 
@@ -480,24 +522,26 @@ describe('LetterboxdSyncSection (MSW)', () => {
     server.use(
       meHandler({ letterboxdUsername: 'affy657' }),
       http.post(`${TEST_API_V1}/letterboxd/sync`, () =>
-        HttpResponse.json({
-          skipped: false,
-          error: null,
-          lists: [
-            {
-              target: 'watchlist',
-              added: 0,
-              removed: 0,
-              unmatchedTitles: ['Film Obscur (1974)'],
-              pendingChoices: [],
-              totalOnLetterboxd: 1,
-              totalTruncated: 0,
-              incomplete: false,
-              lastSyncAt: null,
-              error: null,
-            },
-          ],
-        })
+        apiJson<'LetterboxdSyncResponse'>(
+          letterboxdSyncReport({
+            skipped: false,
+            error: null,
+            lists: [
+              {
+                target: 'watchlist',
+                added: 0,
+                removed: 0,
+                unmatchedTitles: ['Film Obscur (1974)'],
+                pendingChoices: [],
+                totalOnLetterboxd: 1,
+                totalTruncated: 0,
+                incomplete: false,
+                lastSyncAt: null,
+                error: null,
+              },
+            ],
+          })
+        )
       )
     );
 
@@ -592,13 +636,7 @@ describe('LetterboxdSyncSection (MSW)', () => {
     server.use(
       meHandler({ letterboxdUsername: 'inconnu' }),
       http.post(`${TEST_API_V1}/letterboxd/sync`, () =>
-        HttpResponse.json(
-          {
-            error: 'Letterboxd synchronization failed',
-            reason: 'letterboxd_watchlist_incomplete',
-          },
-          { status: 400 }
-        )
+        apiErrorJson(400, 'letterboxd_watchlist_incomplete')
       )
     );
 
@@ -734,9 +772,7 @@ describe('LetterboxdSyncSection (MSW)', () => {
       const user = userEvent.setup();
       server.use(
         meHandler({ letterboxdUsername: 'affy657', letterboxdSyncWatchlist: false }),
-        http.patch(`${TEST_API_V1}/auth/me`, () =>
-          HttpResponse.json({ code: 500, reason: 'internal_error' }, { status: 500 })
-        )
+        http.patch(`${TEST_API_V1}/auth/me`, () => apiErrorJson(500, 'internal_error'))
       );
 
       renderAccount();

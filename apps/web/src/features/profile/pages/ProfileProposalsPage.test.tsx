@@ -3,13 +3,16 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildPublicProfile } from '@/test-utils/publicProfile';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
-import { createSavedListsHandlers, TEST_API_V1 } from '@/mocks/handlers';
+import { authMeGuestHandler, createSavedListsHandlers, TEST_API_V1 } from '@/mocks/handlers';
 import type { UserProposedMovieItem } from '@/features/profile/api/profileApi';
 import ProfileProposalsPage from './ProfileProposalsPage';
 
-const ALICE_PROFILE = {
+const ALICE_PROFILE = buildPublicProfile({
   handle: 'alice',
   displayName: 'Alice',
   avatarId: 'alpha',
@@ -19,7 +22,7 @@ const ALICE_PROFILE = {
   followersCount: 7,
   isSupporter: false,
   isFollowedByMe: null,
-};
+});
 
 function proposal(
   tmdbId: number,
@@ -50,21 +53,21 @@ const WINNING = [proposal(25237, 'Requiem pour un massacre', 1, '2026-11-10T18:0
 
 function signedInAs(handle: string) {
   return http.get(`${TEST_API_V1}/auth/me`, () =>
-    HttpResponse.json({
-      userId: `id-${handle}`,
-      displayName: handle,
-      emailMasked: 'z***@test.local',
-      uiTheme: 'system',
-      accentColor: 'default',
-      ratingScale: 'ten',
-      handle,
-    })
+    apiJson<'UserProfileResponse'>(
+      buildUserProfile({
+        userId: `id-${handle}`,
+        displayName: handle,
+        emailMasked: 'z***@test.local',
+        uiTheme: 'system',
+        accentColor: 'default',
+        ratingScale: 'ten',
+        handle,
+      })
+    )
   );
 }
 
-const signedOut = http.get(`${TEST_API_V1}/auth/me`, () =>
-  HttpResponse.json({ code: 401, reason: 'unauthorized', error: 'Unauthorized' }, { status: 401 })
-);
+const signedOut = authMeGuestHandler;
 
 function renderAt(path: string) {
   return render(
@@ -85,12 +88,12 @@ function renderAt(path: string) {
 describe('ProfileProposalsPage', () => {
   const requestedWinningOnly: string[] = [];
   const server = setupServer(
-    http.get(`${TEST_API_V1}/users/:handle`, () => HttpResponse.json(ALICE_PROFILE)),
+    http.get(`${TEST_API_V1}/users/:handle`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE)),
     http.get(`${TEST_API_V1}/users/:handle/proposed-movies`, ({ request }) => {
       const winningOnly = new URL(request.url).searchParams.get('winningOnly') ?? '';
       requestedWinningOnly.push(winningOnly);
       const items = winningOnly === 'true' ? WINNING : PROPOSED;
-      return HttpResponse.json({ items });
+      return apiJson<'UserProposedMoviesResponse'>({ items });
     })
   );
 
@@ -136,13 +139,10 @@ describe('ProfileProposalsPage', () => {
   it('says the winning proposals are private when the member hides their watched films', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/:handle`, () =>
-        HttpResponse.json({ ...ALICE_PROFILE, isWatchedPublic: false })
+        apiJson<'PublicProfileResponse'>({ ...ALICE_PROFILE, isWatchedPublic: false })
       ),
       http.get(`${TEST_API_V1}/users/:handle/proposed-movies`, () =>
-        HttpResponse.json(
-          { code: 404, reason: 'watched_not_found', error: 'Watched films not found' },
-          { status: 404 }
-        )
+        apiErrorJson(404, 'watched_not_found')
       )
     );
 

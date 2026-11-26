@@ -3,13 +3,16 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { mockWatchlistItem, authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
+import { buildPublicProfile } from '@/test-utils/publicProfile';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import ProfileWatchlistPage from '@/features/profile/pages/ProfileWatchlistPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubHoverCapability } from '@/test-utils/matchMedia';
-import { TEST_API_V1 } from '@/mocks/handlers';
 
-const ALICE_PROFILE = {
+const ALICE_PROFILE = buildPublicProfile({
   handle: 'alice',
   displayName: 'Alice',
   avatarId: 'alpha',
@@ -21,10 +24,10 @@ const ALICE_PROFILE = {
   isFollowedByMe: null,
   isWatchlistPublic: true,
   watchlistCount: 3,
-};
+});
 
 function watchlistItem(overrides: Record<string, unknown> = {}) {
-  return {
+  return mockWatchlistItem({
     tmdbId: 27205,
     mediaType: 'movie',
     title: 'Inception',
@@ -35,7 +38,7 @@ function watchlistItem(overrides: Record<string, unknown> = {}) {
     genreIds: [28],
     createdAt: '2026-06-01T00:00:00Z',
     ...overrides,
-  };
+  });
 }
 
 function LocationProbe() {
@@ -60,10 +63,10 @@ function renderPage(handle: string) {
 
 describe('ProfileWatchlistPage (MSW)', () => {
   const server = setupServer(
-    http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-    http.get(`${TEST_API_V1}/users/:handle`, () => HttpResponse.json(ALICE_PROFILE)),
+    authMeGuestHandler,
+    http.get(`${TEST_API_V1}/users/:handle`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE)),
     http.get(`${TEST_API_V1}/users/:handle/watchlist`, () =>
-      HttpResponse.json({
+      apiJson<'WatchlistResponse'>({
         items: [
           watchlistItem({ title: 'Inception', year: '2010' }),
           watchlistItem({ tmdbId: 157336, title: 'Interstellar', year: '2014' }),
@@ -134,17 +137,23 @@ describe('ProfileWatchlistPage (MSW)', () => {
     stubHoverCapability();
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u-me',
-          displayName: 'Bob',
-          emailMasked: 'b***@test.local',
-          uiTheme: 'system',
-          accentColor: 'default',
-          ratingScale: 'ten',
-        })
+        apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'u-me',
+            displayName: 'Bob',
+            emailMasked: 'b***@test.local',
+            uiTheme: 'system',
+            accentColor: 'default',
+            ratingScale: 'ten',
+          })
+        )
       ),
       http.get(`${TEST_API_V1}/watchlist`, () =>
-        HttpResponse.json({ items: [watchlistItem({ title: 'Inception', year: '2010' })] })
+        apiJson<'WatchlistResponse'>({
+          items: [watchlistItem({ title: 'Inception', year: '2010' })],
+          total: 1,
+          hasMore: false,
+        })
       )
     );
     const user = userEvent.setup();
@@ -164,7 +173,7 @@ describe('ProfileWatchlistPage (MSW)', () => {
   it('shows an empty state when the watchlist contains nothing', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/:handle/watchlist`, () =>
-        HttpResponse.json({ items: [], total: 0, hasMore: false })
+        apiJson<'WatchlistResponse'>({ items: [], total: 0, hasMore: false })
       )
     );
     renderPage('alice');
@@ -175,13 +184,14 @@ describe('ProfileWatchlistPage (MSW)', () => {
   it('tells a visitor the watchlist is not public, with nothing to retry', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/:handle`, () =>
-        HttpResponse.json({ ...ALICE_PROFILE, isWatchlistPublic: false, watchlistCount: null })
+        apiJson<'PublicProfileResponse'>({
+          ...ALICE_PROFILE,
+          isWatchlistPublic: false,
+          watchlistCount: null,
+        })
       ),
       http.get(`${TEST_API_V1}/users/:handle/watchlist`, () =>
-        HttpResponse.json(
-          { code: 404, reason: 'watchlist_not_found', error: 'Watchlist not found' },
-          { status: 404 }
-        )
+        apiErrorJson(404, 'watchlist_not_found')
       )
     );
     renderPage('alice');
@@ -197,9 +207,7 @@ describe('ProfileWatchlistPage (MSW)', () => {
 
   it('shows not found when the watchlist answers a bare 404', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/users/:handle/watchlist`, () =>
-        HttpResponse.json({ code: 'NOT_FOUND', message: 'Introuvable' }, { status: 404 })
-      )
+      http.get(`${TEST_API_V1}/users/:handle/watchlist`, () => apiErrorJson(404, 'not_found'))
     );
     renderPage('alice');
 
@@ -208,12 +216,8 @@ describe('ProfileWatchlistPage (MSW)', () => {
 
   it("affiche l'introuvable pour un profil inconnu", async () => {
     server.use(
-      http.get(`${TEST_API_V1}/users/:handle`, () =>
-        HttpResponse.json({ code: 'NOT_FOUND', message: 'Introuvable' }, { status: 404 })
-      ),
-      http.get(`${TEST_API_V1}/users/:handle/watchlist`, () =>
-        HttpResponse.json({ code: 'NOT_FOUND', message: 'Introuvable' }, { status: 404 })
-      )
+      http.get(`${TEST_API_V1}/users/:handle`, () => apiErrorJson(404, 'not_found')),
+      http.get(`${TEST_API_V1}/users/:handle/watchlist`, () => apiErrorJson(404, 'not_found'))
     );
     renderPage('ghost');
 

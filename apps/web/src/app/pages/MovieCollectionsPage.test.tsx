@@ -3,7 +3,9 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import {
   authMeGuestHandler,
@@ -15,7 +17,7 @@ import { pickSort } from '@/test-utils/sortMenu';
 import MovieCollectionsPage from '@/app/pages/MovieCollectionsPage';
 
 const collectionsHandler = http.get(`${TEST_API_V1}/movies/collections`, () =>
-  HttpResponse.json({
+  apiJson<'MovieCollectionListResponse'>({
     items: [
       {
         id: 1,
@@ -61,14 +63,16 @@ function renderPage() {
 }
 
 const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
-  HttpResponse.json({
-    userId: 'u1',
-    displayName: 'Alice',
-    emailMasked: 'a***@test.local',
-    uiTheme: 'system',
-    accentColor: 'default',
-    ratingScale: 'ten',
-  })
+  apiJson<'UserProfileResponse'>(
+    buildUserProfile({
+      userId: 'u1',
+      displayName: 'Alice',
+      emailMasked: 'a***@test.local',
+      uiTheme: 'system',
+      accentColor: 'default',
+      ratingScale: 'ten',
+    })
+  )
 );
 
 function sagaRows() {
@@ -205,8 +209,18 @@ describe('MovieCollectionsPage', () => {
       ...createSavedListsHandlers(),
       ...createWatchedHandlers([{ tmdbId: 11, title: 'Un nouvel espoir', source: 'night' }]),
       http.get(`${TEST_API_V1}/movies/collections`, () =>
-        HttpResponse.json({
-          items: [{ id: 1, name: 'Star Wars', overview: null, posterPath: null, movieCount: 9 }],
+        apiJson<'MovieCollectionListResponse'>({
+          items: [
+            {
+              id: 1,
+              name: 'Star Wars',
+              overview: null,
+              posterPath: null,
+              movieCount: 9,
+              previewPosterPaths: [],
+              movieIds: [],
+            },
+          ],
           disclaimer: 'TMDB',
           tmdbAttributionUrl: 'https://www.themoviedb.org/',
         })

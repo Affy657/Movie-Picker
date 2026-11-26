@@ -3,13 +3,17 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildWatchedMovie } from '@/test-utils/titleItems';
+import { buildPublicProfile } from '@/test-utils/publicProfile';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import ProfileMoviesPage from '@/features/profile/pages/ProfileMoviesPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubHoverCapability } from '@/test-utils/matchMedia';
-import { createSavedListsHandlers, TEST_API_V1 } from '@/mocks/handlers';
+import { authMeGuestHandler, createSavedListsHandlers, TEST_API_V1 } from '@/mocks/handlers';
 
-const ALICE_PROFILE = {
+const ALICE_PROFILE = buildPublicProfile({
   handle: 'alice',
   displayName: 'Alice',
   avatarId: 'alpha',
@@ -19,10 +23,10 @@ const ALICE_PROFILE = {
   followersCount: 7,
   isSupporter: false,
   isFollowedByMe: null,
-};
+});
 
 function movieItem(overrides: Record<string, unknown> = {}) {
-  return {
+  return buildWatchedMovie({
     tmdbId: 27205,
     title: 'Inception',
     year: '2010',
@@ -31,7 +35,7 @@ function movieItem(overrides: Record<string, unknown> = {}) {
     mediaType: 'movie',
     watchedAt: '2026-06-01T00:00:00Z',
     ...overrides,
-  };
+  });
 }
 
 function LocationProbe() {
@@ -57,14 +61,16 @@ function renderPage(handle: string) {
 
 describe('ProfileMoviesPage (MSW)', () => {
   const server = setupServer(
-    http.get(`${TEST_API_V1}/users/:handle`, () => HttpResponse.json(ALICE_PROFILE)),
+    http.get(`${TEST_API_V1}/users/:handle`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE)),
     http.get(`${TEST_API_V1}/users/:handle/watched-movies`, () =>
-      HttpResponse.json({
+      apiJson<'UserWatchedMoviesResponse'>({
         items: [
           movieItem({ title: 'Inception', year: '2010' }),
           movieItem({ title: 'Interstellar', year: '2014' }),
           movieItem({ title: 'Arrival', year: '2016' }),
         ],
+        total: null,
+        hasMore: false,
       })
     )
   );
@@ -115,7 +121,7 @@ describe('ProfileMoviesPage (MSW)', () => {
 
   it('hover, visitor: the poster offers no library action', async () => {
     stubHoverCapability();
-    server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })));
+    server.use(authMeGuestHandler);
     renderPage('alice');
 
     const card = (await screen.findByText('Inception')).closest('li') as HTMLElement;
@@ -125,11 +131,7 @@ describe('ProfileMoviesPage (MSW)', () => {
   });
 
   it('shows not found for a private or unknown profile', async () => {
-    server.use(
-      http.get(`${TEST_API_V1}/users/:handle`, () =>
-        HttpResponse.json({ code: 'NOT_FOUND', message: 'Introuvable' }, { status: 404 })
-      )
-    );
+    server.use(http.get(`${TEST_API_V1}/users/:handle`, () => apiErrorJson(404, 'not_found')));
     renderPage('ghost');
 
     expect(await screen.findByText(/ce profil n.existe pas/i)).toBeInTheDocument();
@@ -138,13 +140,10 @@ describe('ProfileMoviesPage (MSW)', () => {
   it('tells a visitor the watched films are not public, with nothing to retry', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/:handle`, () =>
-        HttpResponse.json({ ...ALICE_PROFILE, isWatchedPublic: false })
+        apiJson<'PublicProfileResponse'>({ ...ALICE_PROFILE, isWatchedPublic: false })
       ),
       http.get(`${TEST_API_V1}/users/:handle/watched-movies`, () =>
-        HttpResponse.json(
-          { code: 404, reason: 'watched_not_found', error: 'Watched films not found' },
-          { status: 404 }
-        )
+        apiErrorJson(404, 'watched_not_found')
       )
     );
     renderPage('alice');
@@ -163,19 +162,19 @@ describe('ProfileMoviesPage (MSW)', () => {
   it('takes me to my settings instead of a 404 when my own profile is private', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u-me',
-          displayName: 'Moi',
-          emailMasked: 'm***@test.local',
-          uiTheme: 'system',
-          accentColor: 'default',
-          handle: 'moi',
-          isProfilePublic: false,
-        })
+        apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'u-me',
+            displayName: 'Moi',
+            emailMasked: 'm***@test.local',
+            uiTheme: 'system',
+            accentColor: 'default',
+            handle: 'moi',
+            isProfilePublic: false,
+          })
+        )
       ),
-      http.get(`${TEST_API_V1}/users/:handle`, () =>
-        HttpResponse.json({ code: 'NOT_FOUND', message: 'Introuvable' }, { status: 404 })
-      )
+      http.get(`${TEST_API_V1}/users/:handle`, () => apiErrorJson(404, 'not_found'))
     );
     renderPage('moi');
 
@@ -190,7 +189,9 @@ describe('ProfileMoviesPage (MSW)', () => {
       })
     );
     server.use(
-      http.get(`${TEST_API_V1}/users/:handle/watched-movies`, () => HttpResponse.json({ items }))
+      http.get(`${TEST_API_V1}/users/:handle/watched-movies`, () =>
+        apiJson<'UserWatchedMoviesResponse'>({ items, total: null, hasMore: false })
+      )
     );
     const user = userEvent.setup();
     renderPage('alice');
@@ -216,7 +217,11 @@ describe('ProfileMoviesPage (MSW)', () => {
         const params = new URL(request.url).searchParams;
         const skip = Number(params.get('skip'));
         const page = history.slice(skip, skip + Number(params.get('take')));
-        return HttpResponse.json({ items: page, total, hasMore: skip + page.length < total });
+        return apiJson<'UserWatchedMoviesResponse'>({
+          items: page,
+          total,
+          hasMore: skip + page.length < total,
+        });
       });
     }
 
@@ -261,15 +266,17 @@ describe('ProfileMoviesPage (MSW)', () => {
     const bodies: unknown[] = [];
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'id-zoe',
-          displayName: 'Zoé',
-          emailMasked: 'z***@test.local',
-          uiTheme: 'system',
-          accentColor: 'default',
-          ratingScale: 'ten',
-          handle: 'zoe',
-        })
+        apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'id-zoe',
+            displayName: 'Zoé',
+            emailMasked: 'z***@test.local',
+            uiTheme: 'system',
+            accentColor: 'default',
+            ratingScale: 'ten',
+            handle: 'zoe',
+          })
+        )
       ),
       http.post(`${TEST_API_V1}/saved-lists`, async ({ request }) => {
         bodies.push(await request.clone().json());

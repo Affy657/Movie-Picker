@@ -2,7 +2,8 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { setupServer } from 'msw/node';
-import { delay, http, HttpResponse } from 'msw';
+import { delay, http } from 'msw';
+import { apiErrorJson } from '@/mocks/apiJson';
 import type { QueryClient } from '@tanstack/react-query';
 import { LocaleProvider } from '@/shared/i18n';
 import { queryKeys } from '@/shared/hooks/queryKeys';
@@ -98,10 +99,7 @@ describe('saved lists hooks', () => {
   it('comes back to the previous state and says why when saving fails', async () => {
     server.use(
       http.post(`${TEST_API_V1}/saved-lists`, () =>
-        HttpResponse.json(
-          { error: 'limit', code: 409, reason: 'saved_list_limit_reached', params: { max: 50 } },
-          { status: 409 }
-        )
+        apiErrorJson(409, 'saved_list_limit_reached', { max: 50 })
       ),
       ...createSavedListsHandlers()
     );

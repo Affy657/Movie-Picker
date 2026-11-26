@@ -4,6 +4,10 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
+import { buildEventMovie } from '@/test-utils/eventMovie';
+import { buildEventDetail } from '@/test-utils/eventDetail';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { onlineManager, type QueryClient } from '@tanstack/react-query';
 import EventDetail from '@/features/events/pages/EventDetail';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
@@ -28,7 +32,7 @@ beforeAll(() => {
   }
 });
 
-const eventPayload = {
+const eventPayload = buildEventDetail({
   _id: 'evt-live',
   title: 'Soirée en direct',
   date: '2030-12-15',
@@ -54,9 +58,9 @@ const eventPayload = {
     wheelMode: 'strictRandom',
     winnerCount: 1,
   },
-};
+});
 
-const moviePayload = {
+const moviePayload = buildEventMovie({
   _id: 'm-alien',
   eventId: 'evt-live',
   participantId: 'p-host',
@@ -70,26 +74,41 @@ const moviePayload = {
   up: 1,
   down: 0,
   myVote: null,
-};
+});
 
 const votes: Array<{ movieId: string; body: unknown }> = [];
 const presenceCalls: unknown[] = [];
 
 const server = setupServer(
   http.get(`${TEST_API_V1}/auth/me`, () =>
-    HttpResponse.json({
-      userId: 'u-alice',
-      displayName: 'Alice',
-      emailMasked: 'a***@test.local',
-      uiTheme: 'system',
-      accentColor: 'default',
-    })
+    apiJson<'UserProfileResponse'>(
+      buildUserProfile({
+        userId: 'u-alice',
+        displayName: 'Alice',
+        emailMasked: 'a***@test.local',
+        uiTheme: 'system',
+        accentColor: 'default',
+      })
+    )
   ),
-  http.get(`${TEST_API_V1}/events/slug/${slug}`, () => HttpResponse.json(eventPayload)),
-  http.get(`${TEST_API_V1}/events/${slug}/movies`, () => HttpResponse.json([moviePayload])),
+  http.get(`${TEST_API_V1}/events/slug/${slug}`, () =>
+    apiJson<'EventDetailResponse'>(eventPayload)
+  ),
+  http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
+    apiJson<'MovieWithScoreResponse[]'>([moviePayload])
+  ),
   http.post(`${TEST_API_V1}/events/${slug}/movies/:movieId/vote`, async ({ params, request }) => {
-    votes.push({ movieId: String(params.movieId), body: await request.json() });
-    return HttpResponse.json({ ok: true });
+    const body = (await request.json()) as { participantId: string; value: number };
+    votes.push({ movieId: String(params.movieId), body });
+    return apiJson<'VoteResponse'>({
+      _id: 'v-1',
+      eventId: 'e1',
+      movieId: String(params.movieId),
+      participantId: body.participantId,
+      value: body.value,
+      createdAt: '2030-01-01T20:00:00Z',
+      updatedAt: '2030-01-01T20:00:00Z',
+    });
   }),
   http.put(`${TEST_API_V1}/events/${slug}/presence`, async ({ request }) => {
     presenceCalls.push(await request.json());

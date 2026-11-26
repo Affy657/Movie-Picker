@@ -3,12 +3,14 @@ import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { MemoryRouter, useNavigate, type NavigateFunction } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
+import { letterboxdSyncReport, authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { AppRoutesWithErrorBoundary } from '@/app/App';
 import { ROUTE_CHUNKS } from '@/app/routeChunks';
 import { ROUTES } from '@/app/routes';
-import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
 import { MOVED_ORIGIN_NOTICE_KEY } from '@/shared/pwa/movedOrigin';
 
 type StubbedChunk = 'donate' | 'tech' | 'legalNotice' | 'privacyPolicy';
@@ -45,21 +47,23 @@ function settle(ms: number): Promise<void> {
 
 function memberHandler(letterboxdUsername: string | null) {
   return http.get(`${TEST_API_V1}/auth/me`, () =>
-    HttpResponse.json({
-      userId: 'u-shell',
-      displayName: 'Pat',
-      emailMasked: 'p***@test.local',
-      uiTheme: 'light',
-      accentColor: 'default',
-      ratingScale: 'five',
-      avatarId: 'alpha',
-      handle: 'pat',
-      bio: null,
-      isProfilePublic: true,
-      letterboxdUsername,
-      letterboxdLastSyncAt: null,
-      letterboxdLastSyncError: null,
-    })
+    apiJson<'UserProfileResponse'>(
+      buildUserProfile({
+        userId: 'u-shell',
+        displayName: 'Pat',
+        emailMasked: 'p***@test.local',
+        uiTheme: 'light',
+        accentColor: 'default',
+        ratingScale: 'five',
+        avatarId: 'alpha',
+        handle: 'pat',
+        bio: null,
+        isProfilePublic: true,
+        letterboxdUsername,
+        letterboxdLastSyncAt: null,
+        letterboxdLastSyncError: null,
+      })
+    )
   );
 }
 
@@ -159,7 +163,7 @@ describe('App shell across navigations', () => {
       letterboxdMemberHandler,
       http.post(`${TEST_API_V1}/letterboxd/sync`, () => {
         syncCalls++;
-        return HttpResponse.json({ skipped: true });
+        return apiJson<'LetterboxdSyncResponse'>(letterboxdSyncReport({ skipped: true }));
       })
     );
     stubPage('donate', 'Soutenir');

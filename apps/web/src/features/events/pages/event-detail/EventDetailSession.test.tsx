@@ -2,7 +2,9 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { createWatchlistHandlers, TEST_API_V1 } from '@/mocks/handlers';
@@ -72,25 +74,27 @@ const server = setupServer();
 function serveSignedInAlice() {
   server.use(
     http.get(`${TEST_API_V1}/auth/me`, () =>
-      HttpResponse.json({
-        userId: 'u1',
-        displayName: 'Alice',
-        emailMasked: 'a***@***',
-        uiTheme: 'system',
-        accentColor: 'default',
-        ratingScale: 'five',
-        avatarId: '',
-        handle: 'alice',
-        bio: null,
-        isProfilePublic: true,
-        isWatchlistPublic: true,
-        letterboxdUsername: null,
-        letterboxdLastSyncAt: null,
-        letterboxdLastSyncError: null,
-        letterboxdPendingReconciliationCount: 0,
-        hasPassword: true,
-        linkedProviders: [],
-      })
+      apiJson<'UserProfileResponse'>(
+        buildUserProfile({
+          userId: 'u1',
+          displayName: 'Alice',
+          emailMasked: 'a***@***',
+          uiTheme: 'system',
+          accentColor: 'default',
+          ratingScale: 'five',
+          avatarId: '',
+          handle: 'alice',
+          bio: null,
+          isProfilePublic: true,
+          isWatchlistPublic: true,
+          letterboxdUsername: null,
+          letterboxdLastSyncAt: null,
+          letterboxdLastSyncError: null,
+          letterboxdPendingReconciliationCount: 0,
+          hasPassword: true,
+          linkedProviders: [],
+        })
+      )
     ),
     ...createWatchlistHandlers([])
   );
@@ -194,6 +198,7 @@ describe('EventDetailSession: the chosen movie and the wheel', () => {
       isHost: true,
       isFinished: true,
       lifecycle: 'finished',
+      ratingPromptDue: true,
       date: new Date().toISOString().slice(0, 10),
       winners: [{ movieId: MOVIE.id, pickMethod: 'manual', pickedAt: new Date().toISOString() }],
     };

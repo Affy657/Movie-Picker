@@ -4,6 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import type { QueryClient } from '@tanstack/react-query';
 import AccountPage from '@/app/pages/account/AccountPage';
 import AccountDeletedNotice from '@/app/components/AccountDeletedNotice';
@@ -12,7 +14,7 @@ import { TEST_API_V1 } from '@/mocks/handlers';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { getStoredParticipant, setStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 
-const ME = {
+const ME = buildUserProfile({
   userId: 'u-danger',
   displayName: 'Danger Tester',
   emailMasked: 'd***@test.local',
@@ -22,7 +24,7 @@ const ME = {
   bio: null,
   isProfilePublic: true,
   avatarId: 'alpha',
-};
+});
 
 function renderAccount(initialPath = '/settings/securite', client?: QueryClient) {
   return render(
@@ -55,7 +57,7 @@ describe('AccountPage — zone de danger (MSW)', () => {
     localStorage.setItem('mp.session-hint', '1');
     globalThis.URL.createObjectURL = vi.fn(() => 'blob:mock');
     globalThis.URL.revokeObjectURL = vi.fn();
-    server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME)));
+    server.use(http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME)));
   });
   afterEach(() => {
     server.resetHandlers();
@@ -70,9 +72,47 @@ describe('AccountPage — zone de danger (MSW)', () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me/export`, () => {
         exportCalled = true;
-        return HttpResponse.json({
+        return apiJson<'UserDataExportResponse'>({
           exportedAt: '2026-06-11T09:00:00Z',
-          profile: { email: 'd@test.local' },
+          profile: {
+            userId: 'u1',
+            email: 'd@test.local',
+            displayName: 'Dana',
+            handle: 'dana',
+            isProfilePublic: true,
+            isWatchlistPublic: true,
+            isWatchedPublic: true,
+            uiTheme: 'system',
+            accentColor: 'default',
+            avatarId: 'bolt',
+            hasPassword: true,
+            linkedProviders: [],
+            notificationPreferences: {},
+            ratingScale: 'five',
+            dimWatched: false,
+            letterboxdSyncWatchlist: true,
+            letterboxdSyncWatched: true,
+            eventTemplates: [],
+            createdAt: '2026-01-01T00:00:00Z',
+            updatedAt: '2026-01-01T00:00:00Z',
+          },
+          notifications: [],
+          following: [],
+          followers: [],
+          createdEvents: [],
+          participations: [],
+          pushSubscriptions: [],
+          watchlist: [],
+          movieLists: [],
+          joinedMovieLists: [],
+          pendingListInvitations: [],
+          friendGroups: [],
+          joinedFriendGroups: [],
+          pendingFriendGroupInvitations: [],
+          savedLists: [],
+          watchedTitles: [],
+          favorites: [],
+          titlesAddedToOthersLists: [],
         });
       })
     );

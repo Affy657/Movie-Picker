@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { apiErrorJson } from '@/mocks/apiJson';
 import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
@@ -52,7 +53,7 @@ describe('ForgotPasswordPage', () => {
     server.use(
       http.post(`${TEST_API_V1}/auth/password-reset/request`, () => {
         requests += 1;
-        return HttpResponse.json({}, { status: 202 });
+        return new HttpResponse(null, { status: 202 });
       })
     );
     renderForgot();
@@ -72,7 +73,7 @@ describe('ForgotPasswordPage', () => {
     server.use(
       http.post(`${TEST_API_V1}/auth/password-reset/request`, async ({ request }) => {
         captured = (await request.json()) as { email: string; locale: string };
-        return HttpResponse.json({}, { status: 202 });
+        return new HttpResponse(null, { status: 202 });
       })
     );
     renderForgot();
@@ -87,8 +88,9 @@ describe('ForgotPasswordPage', () => {
   it('after a successful submission, shows the success screen with a back link', async () => {
     const user = userEvent.setup();
     server.use(
-      http.post(`${TEST_API_V1}/auth/password-reset/request`, () =>
-        HttpResponse.json({}, { status: 202 })
+      http.post(
+        `${TEST_API_V1}/auth/password-reset/request`,
+        () => new HttpResponse(null, { status: 202 })
       )
     );
     renderForgot();
@@ -106,7 +108,7 @@ describe('ForgotPasswordPage', () => {
     const user = userEvent.setup();
     server.use(
       http.post(`${TEST_API_V1}/auth/password-reset/request`, () =>
-        HttpResponse.json({ error: 'rate-limited' }, { status: 429 })
+        apiErrorJson(429, 'rate_limited')
       )
     );
     renderForgot();

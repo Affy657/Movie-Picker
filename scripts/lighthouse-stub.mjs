@@ -299,6 +299,7 @@ function watchedMovies() {
       source: 'night',
     })),
     total: 40,
+    hasMore: true,
   };
 }
 
@@ -419,8 +420,10 @@ function event(slug) {
     isHost: false,
     isFinished: false,
     lifecycle: 'upcoming',
+    ratingPromptDue: false,
     myParticipant: null,
     viewerRemoved: false,
+    removedPeople: [],
     participantCount: 0,
     movieCount: 0,
     votersCount: 0,
@@ -432,7 +435,7 @@ const STUB_MEMBERS = {
   [STUB_HANDLE]: {
     profile: minimalProfile,
     stats: minimalStats,
-    watched: () => ({ items: [], total: 0 }),
+    watched: () => ({ items: [], total: 0, hasMore: false }),
     watchlist: () => ({ items: [], total: 0, hasMore: false }),
     lists: () => ({ items: [] }),
   },

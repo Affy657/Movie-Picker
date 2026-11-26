@@ -4,6 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import type { EventMoviesSectionProps } from '@/features/events/pages/event-detail/EventMoviesSection';
 
 const track = vi.fn();
@@ -14,24 +16,32 @@ vi.mock('@/shared/hooks/useAnalytics', () => ({
 import EventMoviesSection from '@/features/events/pages/event-detail/EventMoviesSection';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubHoverCapability, stubMatchMedia } from '@/test-utils/matchMedia';
-import { TEST_API_V1 } from '@/mocks/handlers';
+import { TEST_API_V1, mockWatchlistItem, type MockWatchlistItem } from '@/mocks/handlers';
 import { MOVIE_PAGE_CHUNK } from '@/app/moviePageChunk';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 
 const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
-  HttpResponse.json({
-    userId: 'u1',
-    displayName: 'Alice',
-    emailMasked: 'a***@test.local',
-    uiTheme: 'system',
-    accentColor: 'default',
-    ratingScale: 'ten',
-  })
+  apiJson<'UserProfileResponse'>(
+    buildUserProfile({
+      userId: 'u1',
+      displayName: 'Alice',
+      emailMasked: 'a***@test.local',
+      uiTheme: 'system',
+      accentColor: 'default',
+      ratingScale: 'ten',
+    })
+  )
 );
 
-function watchlistHandler(items: unknown[]) {
-  return http.get(`${TEST_API_V1}/watchlist`, () => HttpResponse.json({ items }));
+function watchlistHandler(items: MockWatchlistItem[]) {
+  return http.get(`${TEST_API_V1}/watchlist`, () =>
+    apiJson<'WatchlistResponse'>({
+      items: items.map(mockWatchlistItem),
+      total: items.length,
+      hasMore: false,
+    })
+  );
 }
 
 const EVENT: EventData = {
@@ -255,8 +265,8 @@ describe('EventMoviesSection (MSW)', () => {
       watchlistHandler([]),
       http.post(`${TEST_API_V1}/watchlist`, async ({ request }) => {
         addedBody = (await request.json()) as Record<string, unknown>;
-        return HttpResponse.json(
-          { tmdbId: 42, mediaType: 'movie', title: 'Matrix', year: '1999' },
+        return apiJson<'WatchlistItemResponse'>(
+          mockWatchlistItem({ tmdbId: 42, title: 'Matrix', year: '1999' }),
           { status: 201 }
         );
       })
@@ -763,14 +773,7 @@ describe('EventMoviesSection (MSW)', () => {
         authedUserHandler,
         watchlistHandler([]),
         http.post(`${TEST_API_V1}/events/soiree-cine/movies/m2/vote`, () =>
-          HttpResponse.json(
-            {
-              error: 'Limite de 2 vote(s) par participant atteinte.',
-              code: 409,
-              reason: 'vote-limit-reached',
-            },
-            { status: 409 }
-          )
+          apiErrorJson(409, 'vote-limit-reached')
         )
       );
       renderSection({
@@ -793,10 +796,7 @@ describe('EventMoviesSection (MSW)', () => {
         authedUserHandler,
         watchlistHandler([]),
         http.post(`${TEST_API_V1}/events/soiree-cine/movies/m2/vote`, () =>
-          HttpResponse.json(
-            { error: 'La roue a déjà été lancée : les votes sont figés.', code: 409 },
-            { status: 409 }
-          )
+          apiErrorJson(409, 'wheel_locked')
         )
       );
       renderSection({
@@ -839,7 +839,7 @@ describe('EventMoviesSection (MSW)', () => {
       http.post(`${TEST_API_V1}/events/soiree-cine/movies/m1/vote`, () => {
         attempts += 1;
         if (attempts === 1) {
-          return HttpResponse.json({ message: 'Erreur serveur' }, { status: 500 });
+          return apiErrorJson(500, 'internal_error');
         }
         return new HttpResponse(null, { status: 204 });
       })

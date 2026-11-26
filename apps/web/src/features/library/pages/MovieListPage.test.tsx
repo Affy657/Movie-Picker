@@ -4,6 +4,9 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { apiJson, type ApiSchemas } from '@/mocks/apiJson';
+import { buildSearchItem } from '@/test-utils/titleItems';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { openSortMenu, sortChoices, pickSort } from '@/test-utils/sortMenu';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubHoverCapability, stubMatchMedia } from '@/test-utils/matchMedia';
@@ -15,20 +18,24 @@ import {
   type MockList,
   type MockListPerson,
   type MockWatchlistItem,
+  listItemFrom,
+  watchlistItemFrom,
 } from '@/mocks/handlers';
 import MovieListPage from './MovieListPage';
 
-const PROFILE = {
+const PROFILE = buildUserProfile({
   userId: 'u1',
   displayName: 'Alice',
   emailMasked: 'a***@test.local',
   uiTheme: 'system',
   accentColor: 'default',
   ratingScale: 'ten',
-};
+});
 
 function authedUserWith(extra: Record<string, unknown> = {}) {
-  return http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({ ...PROFILE, ...extra }));
+  return http.get(`${TEST_API_V1}/auth/me`, () =>
+    apiJson<'UserProfileResponse'>(buildUserProfile({ ...PROFILE, ...extra }))
+  );
 }
 
 const authedUser = authedUserWith();
@@ -287,16 +294,17 @@ describe('MovieListPage', () => {
   });
 
   it('adds a film to this list from the search panel', async () => {
-    let added: Record<string, unknown> | null = null;
+    let added: ApiSchemas['AddWatchlistItemRequest'] | null = null;
     server.use(
       http.post(`${TEST_API_V1}/lists/l1/items`, async ({ request }) => {
-        added = (await request.json()) as Record<string, unknown>;
-        return HttpResponse.json(added, { status: 201 });
+        const body = (await request.json()) as ApiSchemas['AddWatchlistItemRequest'];
+        added = body;
+        return apiJson<'MovieListItemResponse'>(listItemFrom(body), { status: 201 });
       }),
       http.get(`${TEST_API_V1}/movies/search`, () =>
-        HttpResponse.json({
+        apiJson<'MovieSearchListResponse'>({
           items: [
-            {
+            buildSearchItem({
               id: 100,
               title: 'Film Test',
               year: '2024',
@@ -306,7 +314,7 @@ describe('MovieListPage', () => {
               genreIds: [27],
               watchProviders: [],
               tmdbWatchPageUrl: null,
-            },
+            }),
           ],
           watchProvidersRegion: 'FR',
           disclaimer: '',
@@ -330,11 +338,12 @@ describe('MovieListPage', () => {
 
   it('marks the films already in À voir and adds one there from its poster', async () => {
     stubHoverCapability();
-    let addedToWatchlist: Record<string, unknown> | null = null;
+    let addedToWatchlist: ApiSchemas['AddWatchlistItemRequest'] | null = null;
     server.use(
       http.post(`${TEST_API_V1}/watchlist`, async ({ request }) => {
-        addedToWatchlist = (await request.json()) as Record<string, unknown>;
-        return HttpResponse.json(addedToWatchlist, { status: 201 });
+        const body = (await request.json()) as ApiSchemas['AddWatchlistItemRequest'];
+        addedToWatchlist = body;
+        return apiJson<'WatchlistItemResponse'>(watchlistItemFrom(body), { status: 201 });
       }),
       ...useServer([HALLOWEEN], [SCREAM])
     );
@@ -401,7 +410,7 @@ describe('MovieListPage', () => {
     server.use(
       http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
         patched = await request.json();
-        return HttpResponse.json({ ...PROFILE, dimWatched: true });
+        return apiJson<'UserProfileResponse'>({ ...PROFILE, dimWatched: true });
       }),
       ...useServer([HALLOWEEN_HALF_SEEN])
     );
@@ -447,7 +456,7 @@ describe('MovieListPage', () => {
     stubMatchMedia(true);
     server.use(
       http.patch(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({ ...PROFILE, dimWatched: true })
+        apiJson<'UserProfileResponse'>({ ...PROFILE, dimWatched: true })
       ),
       ...useServer([HALLOWEEN_HALF_SEEN])
     );

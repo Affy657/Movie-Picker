@@ -2,13 +2,15 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useDimWatched } from './useDimWatched';
 
-const profile = {
+const profile = buildUserProfile({
   userId: 'u1',
   displayName: 'Alice',
   emailMasked: 'a***@test.local',
@@ -16,9 +18,9 @@ const profile = {
   accentColor: 'default',
   ratingScale: 'ten',
   dimWatched: false,
-};
+});
 
-const signedIn = http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(profile));
+const signedIn = http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(profile));
 
 function wrapper({ children }: { children: ReactNode }) {
   return <AppTestProviders>{children}</AppTestProviders>;
@@ -57,9 +59,7 @@ describe('useDimWatched', () => {
   it('puts the choice back and says so when it is not saved', async () => {
     server.use(
       signedIn,
-      http.patch(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({ code: 500, reason: 'internal_error' }, { status: 500 })
-      )
+      http.patch(`${TEST_API_V1}/auth/me`, () => apiErrorJson(500, 'internal_error'))
     );
     const { result } = renderHook(() => useSignedInDimWatched(), { wrapper });
     await waitFor(() => expect(result.current.signedIn).toBe(true));

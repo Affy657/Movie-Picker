@@ -3,7 +3,9 @@ import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import AppShell from '@/app/components/AppShell';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
@@ -30,15 +32,17 @@ vi.mock(
 );
 
 const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
-  HttpResponse.json({
-    userId: 'u1',
-    displayName: 'Alice',
-    emailMasked: 'a***@test.local',
-    uiTheme: 'system',
-    accentColor: 'default',
-    handle: 'alice',
-    isProfilePublic: true,
-  })
+  apiJson<'UserProfileResponse'>(
+    buildUserProfile({
+      userId: 'u1',
+      displayName: 'Alice',
+      emailMasked: 'a***@test.local',
+      uiTheme: 'system',
+      accentColor: 'default',
+      handle: 'alice',
+      isProfilePublic: true,
+    })
+  )
 );
 
 function renderShell(path = '/') {
@@ -144,21 +148,23 @@ describe('AppShell', () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
         signedIn
-          ? HttpResponse.json({
-              userId: 'u-dev',
-              displayName: 'Dev',
-              emailMasked: 'd***@test.local',
-              uiTheme: 'system',
-              accentColor: 'default',
-              handle: 'dev',
-              isProfilePublic: true,
-            })
-          : HttpResponse.json({ error: '401' }, { status: 401 })
+          ? apiJson<'UserProfileResponse'>(
+              buildUserProfile({
+                userId: 'u-dev',
+                displayName: 'Dev',
+                emailMasked: 'd***@test.local',
+                uiTheme: 'system',
+                accentColor: 'default',
+                handle: 'dev',
+                isProfilePublic: true,
+              })
+            )
+          : apiErrorJson(401, 'unauthorized')
       ),
       http.post(`${TEST_API_V1}/auth/login`, async ({ request }) => {
         body = await request.json();
         signedIn = true;
-        return HttpResponse.json({});
+        return apiJson<'LoginResponse'>({ userId: 'u1', displayName: 'Alice' });
       })
     );
     const user = userEvent.setup();

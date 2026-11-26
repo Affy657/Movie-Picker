@@ -11,6 +11,9 @@ import {
 } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { apiErrorJson, apiJson, type ApiSchemas } from '@/mocks/apiJson';
+import { buildShowcaseItem, requestedShowcaseSection } from '@/test-utils/titleItems';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import {
   authMeGuestHandler,
@@ -36,7 +39,7 @@ vi.mock('@/features/events/components/MovieNightBar', () => ({
 const LONG_OVERVIEW =
   'Paul Atréides suit sa famille sur Arrakis, une planète de sable d’où vient l’épice.';
 
-const dune = {
+const dune: ApiSchemas['MovieDetailsResponse'] = {
   tmdbId: 438631,
   mediaType: 'movie',
   title: 'Dune',
@@ -80,12 +83,12 @@ const dune = {
 };
 
 const detailsHandler = http.get(`${TEST_API_V1}/movies/tmdb/438631/details`, () =>
-  HttpResponse.json(dune)
+  apiJson<'MovieDetailsResponse'>(dune)
 );
 
 const pendingDetailsHandler = http.get(`${TEST_API_V1}/movies/tmdb/438631/details`, async () => {
   await new Promise(() => undefined);
-  return HttpResponse.json(dune);
+  return apiJson<'MovieDetailsResponse'>(dune);
 });
 
 const duneSeedEntry: InitialEntry = {
@@ -94,48 +97,52 @@ const duneSeedEntry: InitialEntry = {
 };
 
 const showcaseHandler = http.get(`${TEST_API_V1}/movies/showcase`, ({ request }) => {
-  const section = new URL(request.url).searchParams.get('section');
+  const section = requestedShowcaseSection(request);
   const items =
     section === 'collection'
       ? [
-          { id: 438631, mediaType: 'movie', title: 'Dune', year: '2021', posterPath: null },
-          {
-            id: 693134,
-            mediaType: 'movie',
-            title: 'Dune : Deuxième partie',
-            year: '2024',
-            posterPath: null,
-          },
+          buildShowcaseItem({ id: 438631, title: 'Dune', year: '2021' }),
+          buildShowcaseItem({ id: 693134, title: 'Dune : Deuxième partie', year: '2024' }),
         ]
-      : [
-          {
-            id: 329865,
-            mediaType: 'movie',
-            title: `Film ${section}`,
-            year: '2016',
-            posterPath: null,
-          },
-        ];
-  return HttpResponse.json({ section, theme: null, items, disclaimer: '', tmdbAttributionUrl: '' });
+      : [buildShowcaseItem({ id: 329865, title: `Film ${section}`, year: '2016' })];
+  return apiJson<'MovieShowcaseListResponse'>({
+    section,
+    theme: null,
+    items,
+    disclaimer: '',
+    tmdbAttributionUrl: '',
+  });
 });
 
 const signedInHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
-  HttpResponse.json({
-    userId: 'u1',
-    displayName: 'Alice',
-    emailMasked: 'a***@test.local',
-    uiTheme: 'system',
-    accentColor: 'default',
-    ratingScale: 'ten',
-  })
+  apiJson<'UserProfileResponse'>(
+    buildUserProfile({
+      userId: 'u1',
+      displayName: 'Alice',
+      emailMasked: 'a***@test.local',
+      uiTheme: 'system',
+      accentColor: 'default',
+      ratingScale: 'ten',
+    })
+  )
 );
 
 const watchlistHandler = http.get(`${TEST_API_V1}/watchlist`, () =>
-  HttpResponse.json({ items: [] })
+  apiJson<'WatchlistResponse'>({ items: [], total: 0, hasMore: false })
 );
 
-function nightsHandler(body: object) {
-  return http.get(`${TEST_API_V1}/movies/tmdb/438631/nights`, () => HttpResponse.json(body));
+function nightsHandler(body: Partial<ApiSchemas['MovieNightsResponse']>) {
+  return http.get(`${TEST_API_V1}/movies/tmdb/438631/nights`, () =>
+    apiJson<'MovieNightsResponse'>({
+      nights: [],
+      proposalCount: 0,
+      winCount: 0,
+      rating: null,
+      seenBy: [],
+      seenCount: 0,
+      ...body,
+    })
+  );
 }
 
 const DUNE_SEEN_ELSEWHERE: MockWatchedMovie = {
@@ -382,7 +389,7 @@ describe('MoviePage', () => {
 
   it('marks the film seen elsewhere, the button turning to Vu and the rating showing up', async () => {
     let marked: Record<string, unknown> | null = null;
-    const statusNow = () => ({
+    const statusNow = (): ApiSchemas['WatchedStatusResponse'] => ({
       status: marked ? 'elsewhere' : 'none',
       watchedAt: marked ? '2026-11-13T10:00:00Z' : null,
       rating: null,
@@ -392,9 +399,11 @@ describe('MoviePage', () => {
     server.use(
       http.post(`${TEST_API_V1}/watched`, async ({ request }) => {
         marked = (await request.json()) as Record<string, unknown>;
-        return HttpResponse.json(statusNow());
+        return apiJson<'WatchedStatusResponse'>(statusNow());
       }),
-      http.get(`${TEST_API_V1}/watched/:tmdbId`, () => HttpResponse.json(statusNow())),
+      http.get(`${TEST_API_V1}/watched/:tmdbId`, () =>
+        apiJson<'WatchedStatusResponse'>(statusNow())
+      ),
       ...signedInWith()
     );
     const user = userEvent.setup();
@@ -431,7 +440,7 @@ describe('MoviePage', () => {
 
   it('rates a film seen elsewhere next to the TMDB score, in the scale of the reader', async () => {
     let rated: unknown = null;
-    const statusNow = () => ({
+    const statusNow = (): ApiSchemas['WatchedStatusResponse'] => ({
       status: 'elsewhere',
       watchedAt: '2026-11-01T20:00:00Z',
       rating: rated ? 6 : 8,
@@ -441,9 +450,11 @@ describe('MoviePage', () => {
     server.use(
       http.put(`${TEST_API_V1}/watched/:tmdbId/rating`, async ({ request }) => {
         rated = await request.json();
-        return HttpResponse.json(statusNow());
+        return apiJson<'WatchedStatusResponse'>(statusNow());
       }),
-      http.get(`${TEST_API_V1}/watched/:tmdbId`, () => HttpResponse.json(statusNow())),
+      http.get(`${TEST_API_V1}/watched/:tmdbId`, () =>
+        apiJson<'WatchedStatusResponse'>(statusNow())
+      ),
       ...signedInWith([DUNE_SEEN_ELSEWHERE])
     );
     const user = userEvent.setup();
@@ -460,7 +471,7 @@ describe('MoviePage', () => {
 
   it('clears the rating of a film seen elsewhere, the way a night rating is cleared', async () => {
     let cleared: unknown = null;
-    const statusNow = () => ({
+    const statusNow = (): ApiSchemas['WatchedStatusResponse'] => ({
       status: 'elsewhere',
       watchedAt: '2026-11-01T20:00:00Z',
       rating: cleared ? null : 8,
@@ -470,9 +481,11 @@ describe('MoviePage', () => {
     server.use(
       http.put(`${TEST_API_V1}/watched/:tmdbId/rating`, async ({ request }) => {
         cleared = await request.json();
-        return HttpResponse.json(statusNow());
+        return apiJson<'WatchedStatusResponse'>(statusNow());
       }),
-      http.get(`${TEST_API_V1}/watched/:tmdbId`, () => HttpResponse.json(statusNow())),
+      http.get(`${TEST_API_V1}/watched/:tmdbId`, () =>
+        apiJson<'WatchedStatusResponse'>(statusNow())
+      ),
       ...signedInWith([DUNE_SEEN_ELSEWHERE])
     );
     const user = userEvent.setup();
@@ -647,7 +660,9 @@ describe('MoviePage', () => {
       showcaseHandler,
       http.get(`${TEST_API_V1}/movies/tmdb/438631/details`, () => {
         calls += 1;
-        return calls === 1 ? new HttpResponse(null, { status: 500 }) : HttpResponse.json(dune);
+        return calls === 1
+          ? new HttpResponse(null, { status: 500 })
+          : apiJson<'MovieDetailsResponse'>(dune);
       })
     );
     renderPage(duneSeedEntry);
@@ -685,9 +700,7 @@ describe('MoviePage', () => {
       detailsHandler,
       showcaseHandler,
       nightsHandler({}),
-      http.post(`${TEST_API_V1}/watchlist`, () =>
-        HttpResponse.json({ message: 'Ajout refusé' }, { status: 400 })
-      )
+      http.post(`${TEST_API_V1}/watchlist`, () => apiErrorJson(400, 'validation_failed'))
     );
     renderPage();
 
@@ -752,15 +765,22 @@ describe('MoviePage', () => {
   });
 
   describe('favorite', () => {
-    const HEAT = { tmdbId: 949, mediaType: 'movie', title: 'Heat', year: '1995', posterPath: null };
-    const ALIEN = {
+    type Favorite = ApiSchemas['FavoriteTitleResponse'];
+    const HEAT: Favorite = {
+      tmdbId: 949,
+      mediaType: 'movie',
+      title: 'Heat',
+      year: '1995',
+      posterPath: null,
+    };
+    const ALIEN: Favorite = {
       tmdbId: 348,
       mediaType: 'movie',
       title: 'Alien',
       year: '1979',
       posterPath: null,
     };
-    const AKIRA = {
+    const AKIRA: Favorite = {
       tmdbId: 149,
       mediaType: 'movie',
       title: 'Akira',
@@ -768,33 +788,34 @@ describe('MoviePage', () => {
       posterPath: null,
     };
     const DUNE = { tmdbId: 438631, mediaType: 'movie', title: 'Dune', year: '2021' };
-    type Favorite = typeof HEAT;
 
     function favoritesServer(initial: Favorite[]) {
       let favorites = [...initial];
       const calls: string[] = [];
       const handlers = [
         http.get(`${TEST_API_V1}/auth/me`, () =>
-          HttpResponse.json({
-            userId: 'u1',
-            displayName: 'Alice',
-            emailMasked: 'a***@test.local',
-            uiTheme: 'system',
-            accentColor: 'default',
-            ratingScale: 'ten',
-            favorites,
-          })
+          apiJson<'UserProfileResponse'>(
+            buildUserProfile({
+              userId: 'u1',
+              displayName: 'Alice',
+              emailMasked: 'a***@test.local',
+              uiTheme: 'system',
+              accentColor: 'default',
+              ratingScale: 'ten',
+              favorites,
+            })
+          )
         ),
         http.post(`${TEST_API_V1}/users/me/favorites`, async ({ request }) => {
           const body = (await request.json()) as Favorite;
           calls.push(`add ${body.tmdbId}`);
           favorites = [...favorites, { ...body, posterPath: body.posterPath ?? null }];
-          return HttpResponse.json({ items: favorites });
+          return apiJson<'FavoriteListResponse'>({ items: favorites });
         }),
         http.delete(`${TEST_API_V1}/users/me/favorites/:tmdbId`, ({ params }) => {
           calls.push(`remove ${String(params.tmdbId)}`);
           favorites = favorites.filter((favorite) => String(favorite.tmdbId) !== params.tmdbId);
-          return HttpResponse.json({ items: favorites });
+          return apiJson<'FavoriteListResponse'>({ items: favorites });
         }),
       ];
       return { handlers, calls };

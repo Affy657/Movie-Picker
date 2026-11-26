@@ -4,10 +4,13 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
-import { delay, http, HttpResponse } from 'msw';
+import { delay, http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { mockWatchlistItem, authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
+import { buildWatchedMovie } from '@/test-utils/titleItems';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import ProfileMoviesSection from './ProfileMoviesSection';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
-import { TEST_API_V1 } from '@/mocks/handlers';
 import { stubHoverCapability, stubMatchMedia } from '@/test-utils/matchMedia';
 import type { FavoriteTitle } from '@/shared/types/movie';
 
@@ -41,7 +44,7 @@ function renderSection(
 }
 
 function watched(tmdbId: number, title: string, watchedAt: string) {
-  return {
+  return buildWatchedMovie({
     tmdbId,
     title,
     year: '2010',
@@ -49,13 +52,11 @@ function watched(tmdbId: number, title: string, watchedAt: string) {
     genreIds: [],
     mediaType: 'movie',
     watchedAt,
-  };
+  });
 }
 
 describe('ProfileMoviesSection (MSW)', () => {
-  const server = setupServer(
-    http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 }))
-  );
+  const server = setupServer(authMeGuestHandler);
 
   beforeAll(() => server.listen({ onUnhandledFrame: 'warn' }));
   afterEach(() => {
@@ -65,9 +66,9 @@ describe('ProfileMoviesSection (MSW)', () => {
   afterAll(() => server.close());
 
   const inceptionHandler = http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-    HttpResponse.json({
+    apiJson<'UserWatchedMoviesResponse'>({
       items: [
-        {
+        buildWatchedMovie({
           tmdbId: 27205,
           title: 'Inception',
           year: '2010',
@@ -75,25 +76,31 @@ describe('ProfileMoviesSection (MSW)', () => {
           genreIds: [28],
           mediaType: 'movie',
           watchedAt: '2026-06-01T00:00:00Z',
-        },
+        }),
       ],
+      total: null,
+      hasMore: false,
     })
   );
 
   const authedBobHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
-    HttpResponse.json({
-      userId: 'u1',
-      displayName: 'Bob',
-      emailMasked: 'b***@test.local',
-      uiTheme: 'system',
-      accentColor: 'default',
-      ratingScale: 'ten',
-    })
+    apiJson<'UserProfileResponse'>(
+      buildUserProfile({
+        userId: 'u1',
+        displayName: 'Bob',
+        emailMasked: 'b***@test.local',
+        uiTheme: 'system',
+        accentColor: 'default',
+        ratingScale: 'ten',
+      })
+    )
   );
 
   it('ne rend rien si la liste est vide', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () => HttpResponse.json({ items: [] }))
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+        apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
+      )
     );
 
     const { container } = renderSection('alice');
@@ -103,7 +110,9 @@ describe('ProfileMoviesSection (MSW)', () => {
 
   it('shows the favorites even when nothing was watched yet', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () => HttpResponse.json({ items: [] }))
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+        apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
+      )
     );
 
     renderSection('alice', [HEAT]);
@@ -116,26 +125,31 @@ describe('ProfileMoviesSection (MSW)', () => {
     stubHoverCapability();
     server.use(
       authedBobHandler,
-      http.get(`${TEST_API_V1}/watchlist`, () => HttpResponse.json({ items: [] })),
-      http.post(`${TEST_API_V1}/watchlist`, () =>
-        HttpResponse.json({ error: 'Ajout impossible' }, { status: 500 })
+      http.get(`${TEST_API_V1}/watchlist`, () =>
+        apiJson<'WatchlistResponse'>({ items: [], total: 0, hasMore: false })
       ),
-      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () => HttpResponse.json({ items: [] }))
+      http.post(`${TEST_API_V1}/watchlist`, () => apiErrorJson(500, 'internal_error')),
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+        apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
+      )
     );
     const user = userEvent.setup();
 
     renderSection('alice', [HEAT]);
     await user.click(await screen.findByRole('button', { name: 'Ajouter « Heat » à ma liste' }));
 
-    expect(await screen.findByText('Ajout impossible')).toHaveAttribute('role', 'alert');
+    expect(await screen.findByText('Une erreur interne s’est produite.')).toHaveAttribute(
+      'role',
+      'alert'
+    );
   });
 
   it('shows the title and the recently watched movies', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-        HttpResponse.json({
+        apiJson<'UserWatchedMoviesResponse'>({
           items: [
-            {
+            buildWatchedMovie({
               tmdbId: 27205,
               title: 'Inception',
               year: '2010',
@@ -143,8 +157,8 @@ describe('ProfileMoviesSection (MSW)', () => {
               genreIds: [28],
               mediaType: 'movie',
               watchedAt: '2026-06-01T00:00:00Z',
-            },
-            {
+            }),
+            buildWatchedMovie({
               tmdbId: 157336,
               title: 'Interstellar',
               year: '2014',
@@ -152,8 +166,10 @@ describe('ProfileMoviesSection (MSW)', () => {
               genreIds: [],
               mediaType: 'movie',
               watchedAt: '2026-05-01T00:00:00Z',
-            },
+            }),
           ],
+          total: null,
+          hasMore: false,
         })
       )
     );
@@ -175,9 +191,9 @@ describe('ProfileMoviesSection (MSW)', () => {
     server.use(
       authedBobHandler,
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-        HttpResponse.json({
+        apiJson<'UserWatchedMoviesResponse'>({
           items: [
-            {
+            buildWatchedMovie({
               tmdbId: 27205,
               title: 'Inception',
               year: '2010',
@@ -186,8 +202,8 @@ describe('ProfileMoviesSection (MSW)', () => {
               mediaType: 'movie',
               watchedAt: '2026-06-01T00:00:00Z',
               myRating: 7,
-            },
-            {
+            }),
+            buildWatchedMovie({
               tmdbId: 157336,
               title: 'Interstellar',
               year: '2014',
@@ -196,8 +212,10 @@ describe('ProfileMoviesSection (MSW)', () => {
               mediaType: 'movie',
               watchedAt: '2026-05-01T00:00:00Z',
               myRating: null,
-            },
+            }),
           ],
+          total: null,
+          hasMore: false,
         })
       )
     );
@@ -211,9 +229,9 @@ describe('ProfileMoviesSection (MSW)', () => {
   it('renders one unified card per movie with its title as a level-three heading and the year', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-        HttpResponse.json({
+        apiJson<'UserWatchedMoviesResponse'>({
           items: [
-            {
+            buildWatchedMovie({
               tmdbId: 27205,
               title: 'Inception',
               year: '2010',
@@ -221,8 +239,10 @@ describe('ProfileMoviesSection (MSW)', () => {
               genreIds: [28],
               mediaType: 'movie',
               watchedAt: '2026-06-01T00:00:00Z',
-            },
+            }),
           ],
+          total: null,
+          hasMore: false,
         })
       )
     );
@@ -237,19 +257,21 @@ describe('ProfileMoviesSection (MSW)', () => {
   it('reads the rating and the runtime on the scale of the signed-in account', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u1',
-          displayName: 'Bob',
-          emailMasked: 'b***@test.local',
-          uiTheme: 'system',
-          accentColor: 'default',
-          ratingScale: 'ten',
-        })
+        apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'u1',
+            displayName: 'Bob',
+            emailMasked: 'b***@test.local',
+            uiTheme: 'system',
+            accentColor: 'default',
+            ratingScale: 'ten',
+          })
+        )
       ),
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-        HttpResponse.json({
+        apiJson<'UserWatchedMoviesResponse'>({
           items: [
-            {
+            buildWatchedMovie({
               tmdbId: 27205,
               title: 'Inception',
               year: '2010',
@@ -259,8 +281,10 @@ describe('ProfileMoviesSection (MSW)', () => {
               genreIds: [28],
               mediaType: 'movie',
               watchedAt: '2026-06-01T00:00:00Z',
-            },
+            }),
           ],
+          total: null,
+          hasMore: false,
         })
       )
     );
@@ -275,9 +299,9 @@ describe('ProfileMoviesSection (MSW)', () => {
   it('clicking a poster opens the film page', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-        HttpResponse.json({
+        apiJson<'UserWatchedMoviesResponse'>({
           items: [
-            {
+            buildWatchedMovie({
               tmdbId: 27205,
               title: 'Inception',
               year: '2010',
@@ -285,8 +309,10 @@ describe('ProfileMoviesSection (MSW)', () => {
               genreIds: [28],
               mediaType: 'movie',
               watchedAt: '2026-06-01T00:00:00Z',
-            },
+            }),
           ],
+          total: null,
+          hasMore: false,
         })
       )
     );
@@ -305,8 +331,17 @@ describe('ProfileMoviesSection (MSW)', () => {
     stubHoverCapability();
     server.use(
       authedBobHandler,
-      http.get(`${TEST_API_V1}/watchlist`, () => HttpResponse.json({ items: [] })),
-      http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] })),
+      http.get(`${TEST_API_V1}/watchlist`, () =>
+        apiJson<'WatchlistResponse'>({ items: [], total: 0, hasMore: false })
+      ),
+      http.get(`${TEST_API_V1}/events/mine`, () =>
+        apiJson<'MyEventsListResponse'>({
+          events: [],
+          hasMore: false,
+          totalActive: 0,
+          totalFinished: 0,
+        })
+      ),
       inceptionHandler
     );
 
@@ -343,9 +378,9 @@ describe('ProfileMoviesSection (MSW)', () => {
   it('affiche un film sans affiche via le placeholder', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/bob/watched-movies`, () =>
-        HttpResponse.json({
+        apiJson<'UserWatchedMoviesResponse'>({
           items: [
-            {
+            buildWatchedMovie({
               tmdbId: 1,
               title: 'Sans affiche',
               year: '2020',
@@ -353,8 +388,10 @@ describe('ProfileMoviesSection (MSW)', () => {
               genreIds: [],
               mediaType: 'movie',
               watchedAt: '2026-01-01T00:00:00Z',
-            },
+            }),
           ],
+          total: null,
+          hasMore: false,
         })
       )
     );
@@ -367,12 +404,14 @@ describe('ProfileMoviesSection (MSW)', () => {
   it('shows each title once, at its latest viewing, while the count keeps every viewing', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-        HttpResponse.json({
+        apiJson<'UserWatchedMoviesResponse'>({
           items: [
             watched(27205, 'Inception', '2026-06-01T00:00:00Z'),
             watched(949, 'Heat', '2026-05-01T00:00:00Z'),
             watched(27205, 'Inception', '2026-04-01T00:00:00Z'),
           ],
+          total: null,
+          hasMore: false,
         })
       )
     );
@@ -389,10 +428,12 @@ describe('ProfileMoviesSection (MSW)', () => {
   it('keeps the preview to eight titles and leaves the rest to the full list', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-        HttpResponse.json({
+        apiJson<'UserWatchedMoviesResponse'>({
           items: Array.from({ length: 10 }, (_, i) =>
             watched(i + 1, `Film ${i + 1}`, `2026-06-${String(20 - i).padStart(2, '0')}T00:00:00Z`)
           ),
+          total: null,
+          hasMore: false,
         })
       )
     );
@@ -411,7 +452,11 @@ describe('ProfileMoviesSection (MSW)', () => {
     server.use(
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, ({ request }) => {
         requestedTakes.push(new URL(request.url).searchParams.get('take'));
-        return HttpResponse.json({ items: [watched(949, 'Heat', '2026-05-01T00:00:00Z')] });
+        return apiJson<'UserWatchedMoviesResponse'>({
+          items: [watched(949, 'Heat', '2026-05-01T00:00:00Z')],
+          total: null,
+          hasMore: false,
+        });
       })
     );
 
@@ -424,7 +469,11 @@ describe('ProfileMoviesSection (MSW)', () => {
   it('counts every viewing from the total the API reports, beyond the page it sends', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-        HttpResponse.json({ items: [watched(949, 'Heat', '2026-05-01T00:00:00Z')], total: 250 })
+        apiJson<'UserWatchedMoviesResponse'>({
+          items: [watched(949, 'Heat', '2026-05-01T00:00:00Z')],
+          total: 250,
+          hasMore: false,
+        })
       )
     );
 
@@ -440,8 +489,12 @@ describe('ProfileMoviesSection (MSW)', () => {
     server.use(
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () => {
         calls += 1;
-        if (calls === 1) return HttpResponse.json({ error: 'Trop de requêtes' }, { status: 429 });
-        return HttpResponse.json({ items: [watched(949, 'Heat', '2026-05-01T00:00:00Z')] });
+        if (calls === 1) return apiErrorJson(429, 'rate_limited');
+        return apiJson<'UserWatchedMoviesResponse'>({
+          items: [watched(949, 'Heat', '2026-05-01T00:00:00Z')],
+          total: null,
+          hasMore: false,
+        });
       })
     );
     const user = userEvent.setup();
@@ -485,7 +538,7 @@ describe('ProfileMoviesSection (MSW)', () => {
   it('keeps a failed read of hidden watched films out of the page', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-        HttpResponse.json({ reason: 'watched_not_found', error: 'hidden' }, { status: 404 })
+        apiErrorJson(404, 'watched_not_found')
       )
     );
     const client = createTestQueryClient();
@@ -509,10 +562,14 @@ describe('ProfileMoviesSection (MSW)', () => {
     stubMatchMedia((query) => query.includes('767px'));
     server.use(
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-        HttpResponse.json({ items: [watched(27205, 'Inception', '2026-06-01T00:00:00Z')] })
+        apiJson<'UserWatchedMoviesResponse'>({
+          items: [watched(27205, 'Inception', '2026-06-01T00:00:00Z')],
+          total: null,
+          hasMore: false,
+        })
       ),
       http.get(`${TEST_API_V1}/users/alice/watchlist`, () =>
-        HttpResponse.json({ items: [], total: 1, hasMore: false })
+        apiJson<'WatchlistResponse'>({ items: [], total: 1, hasMore: false })
       )
     );
 
@@ -532,9 +589,9 @@ describe('ProfileMoviesSection (MSW)', () => {
   describe('watchlist preview', () => {
     const watchlistPage = http.get(`${TEST_API_V1}/users/alice/watchlist`, ({ request }) => {
       const take = new URL(request.url).searchParams.get('take');
-      return HttpResponse.json({
+      return apiJson<'WatchlistResponse'>({
         items: [
-          {
+          mockWatchlistItem({
             tmdbId: 438631,
             mediaType: 'movie',
             title: 'Dune',
@@ -542,7 +599,7 @@ describe('ProfileMoviesSection (MSW)', () => {
             posterPath: null,
             genreIds: [878],
             createdAt: '2026-06-01T00:00:00Z',
-          },
+          }),
         ],
         total: 12,
         hasMore: take !== null,
@@ -552,7 +609,7 @@ describe('ProfileMoviesSection (MSW)', () => {
     it('shows a visitor the latest titles of the watchlist with its count and a way to the full list', async () => {
       server.use(
         http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-          HttpResponse.json({ items: [] })
+          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
         ),
         watchlistPage
       );
@@ -570,11 +627,11 @@ describe('ProfileMoviesSection (MSW)', () => {
     it('holds the place of the posters while the watchlist loads', async () => {
       server.use(
         http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-          HttpResponse.json({ items: [] })
+          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
         ),
         http.get(`${TEST_API_V1}/users/alice/watchlist`, async () => {
           await delay('infinite');
-          return HttpResponse.json({ items: [], total: 12, hasMore: false });
+          return apiJson<'WatchlistResponse'>({ items: [], total: 12, hasMore: false });
         })
       );
 
@@ -588,14 +645,14 @@ describe('ProfileMoviesSection (MSW)', () => {
       let calls = 0;
       server.use(
         http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-          HttpResponse.json({ items: [] })
+          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
         ),
         http.get(`${TEST_API_V1}/users/alice/watchlist`, () => {
           calls += 1;
-          if (calls === 1) return HttpResponse.json({ error: 'Erreur' }, { status: 500 });
-          return HttpResponse.json({
+          if (calls === 1) return apiErrorJson(500, 'internal_error');
+          return apiJson<'WatchlistResponse'>({
             items: [
-              {
+              mockWatchlistItem({
                 tmdbId: 438631,
                 mediaType: 'movie',
                 title: 'Dune',
@@ -603,7 +660,7 @@ describe('ProfileMoviesSection (MSW)', () => {
                 posterPath: null,
                 genreIds: [878],
                 createdAt: '2026-06-01T00:00:00Z',
-              },
+              }),
             ],
             total: 12,
             hasMore: true,
@@ -624,7 +681,11 @@ describe('ProfileMoviesSection (MSW)', () => {
     it('shows nothing to a visitor when the watchlist is empty', async () => {
       server.use(
         http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-          HttpResponse.json({ items: [watched(949, 'Heat', '2026-05-01T00:00:00Z')] })
+          apiJson<'UserWatchedMoviesResponse'>({
+            items: [watched(949, 'Heat', '2026-05-01T00:00:00Z')],
+            total: null,
+            hasMore: false,
+          })
         )
       );
 
@@ -637,7 +698,7 @@ describe('ProfileMoviesSection (MSW)', () => {
     it('flags my hidden watchlist and leads to the setting that shows it', async () => {
       server.use(
         http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-          HttpResponse.json({ items: [] })
+          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
         ),
         watchlistPage
       );
@@ -660,7 +721,7 @@ describe('ProfileMoviesSection (MSW)', () => {
       stubMatchMedia((query) => query.includes('767px'));
       server.use(
         http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-          HttpResponse.json({ items: [] })
+          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
         ),
         watchlistPage
       );
@@ -676,7 +737,7 @@ describe('ProfileMoviesSection (MSW)', () => {
     it('tells me my watchlist is empty instead of hiding it from me', async () => {
       server.use(
         http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-          HttpResponse.json({ items: [] })
+          apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
         )
       );
 

@@ -3,7 +3,9 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
+import { requestedShowcaseSection, buildShowcaseItem } from '@/test-utils/titleItems';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
 import MovieRails from '@/app/pages/movie/MovieRails';
@@ -21,24 +23,58 @@ const library = {
 };
 
 function showcaseItem(id: number, title: string) {
-  return { id, mediaType: 'movie', title, year: '2021', posterPath: null };
+  return buildShowcaseItem({ id, title, year: '2021' });
 }
 
 const handlers = [
   authMeGuestHandler,
   http.get(`${TEST_API_V1}/movies/tmdb/438631/details`, () =>
-    HttpResponse.json({ tmdbId: 438631, mediaType: 'movie', title: 'Dune', genres: [] })
+    apiJson<'MovieDetailsResponse'>({
+      tmdbId: 438631,
+      mediaType: 'movie',
+      title: 'Dune',
+      overview: null,
+      tagline: null,
+      director: null,
+      cast: [],
+      runtimeMinutes: null,
+      genres: [],
+      releaseDate: null,
+      trailerUrl: null,
+      voteAverage: null,
+      posterPath: null,
+      backdropPath: null,
+      seasonCount: null,
+      episodeCount: null,
+      watchProviders: [],
+      tmdbWatchPageUrl: null,
+      originalTitle: null,
+      originalLanguage: null,
+      productionCountries: [],
+      budget: null,
+      voteCount: null,
+      certification: null,
+      collection: null,
+      directorId: null,
+      castMembers: [],
+      crew: [],
+      videos: [],
+    })
   ),
   http.get(`${TEST_API_V1}/movies/collections`, () =>
-    HttpResponse.json({ items: [], disclaimer: 'TMDB', tmdbAttributionUrl: '' })
+    apiJson<'MovieCollectionListResponse'>({
+      items: [],
+      disclaimer: 'TMDB',
+      tmdbAttributionUrl: '',
+    })
   ),
   http.get(`${TEST_API_V1}/movies/showcase`, ({ request }) => {
-    const section = new URL(request.url).searchParams.get('section');
+    const section = requestedShowcaseSection(request);
     const items =
       section === 'collection'
         ? [showcaseItem(438631, 'Dune'), showcaseItem(693134, 'Dune : Deuxième partie')]
         : [showcaseItem(329865, 'Premier Contact'), showcaseItem(335984, 'Blade Runner 2049')];
-    return HttpResponse.json({
+    return apiJson<'MovieShowcaseListResponse'>({
       section,
       theme: null,
       items,

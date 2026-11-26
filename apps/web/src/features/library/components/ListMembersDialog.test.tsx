@@ -2,7 +2,9 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
 import {
@@ -23,10 +25,6 @@ vi.mock('@/features/library/api/listMembersApi', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/features/library/api/listMembersApi')>();
   return { ...actual, cancelListInvitation: vi.fn(actual.cancelListInvitation) };
 });
-
-function listError(status: number, reason: string, params?: Record<string, number>) {
-  return HttpResponse.json({ error: reason, code: status, reason, params }, { status });
-}
 
 function activeLink(token: string) {
   return {
@@ -69,13 +67,15 @@ const MARC: MovieListPerson = {
 };
 
 const authedAlice = http.get(`${TEST_API_V1}/auth/me`, () =>
-  HttpResponse.json({
-    userId: 'u1',
-    displayName: 'Alice',
-    emailMasked: 'a***@test.local',
-    uiTheme: 'system',
-    accentColor: 'default',
-  })
+  apiJson<'UserProfileResponse'>(
+    buildUserProfile({
+      userId: 'u1',
+      displayName: 'Alice',
+      emailMasked: 'a***@test.local',
+      uiTheme: 'system',
+      accentColor: 'default',
+    })
+  )
 );
 
 const HALLOWEEN: MovieListDetail = {
@@ -277,7 +277,7 @@ describe('ListMembersDialog', () => {
     server.use(
       authedAlice,
       http.post(`${TEST_API_V1}/lists/l1/invitations`, () =>
-        listError(409, 'list_members_limit_reached', { max: 5 })
+        apiErrorJson(409, 'list_members_limit_reached', { max: 5 })
       ),
       ...createListMembershipHandlers('l1', { ...OWNER_VIEW, maxMembers: 5 })
     );
@@ -420,7 +420,7 @@ describe('ListMembersDialog', () => {
     server.use(
       authedAlice,
       http.delete(`${TEST_API_V1}/lists/l1/members/:userId`, () =>
-        listError(403, 'list_owner_only')
+        apiErrorJson(403, 'list_owner_only')
       ),
       ...createListMembershipHandlers('l1', OWNER_VIEW)
     );
@@ -515,7 +515,7 @@ describe('ListMembersDialog', () => {
   it('says why the invitation link could not be created', async () => {
     server.use(
       authedAlice,
-      http.post(`${TEST_API_V1}/lists/l1/invite-link`, () => listError(403, 'list_owner_only')),
+      http.post(`${TEST_API_V1}/lists/l1/invite-link`, () => apiErrorJson(403, 'list_owner_only')),
       ...createListMembershipHandlers('l1', OWNER_VIEW)
     );
     const user = userEvent.setup();
@@ -535,7 +535,7 @@ describe('ListMembersDialog', () => {
   it('says why the invitation link could not be turned off, and keeps showing it', async () => {
     server.use(
       authedAlice,
-      http.delete(`${TEST_API_V1}/lists/l1/invite-link`, () => listError(404, 'list_not_found')),
+      http.delete(`${TEST_API_V1}/lists/l1/invite-link`, () => apiErrorJson(404, 'list_not_found')),
       ...createListMembershipHandlers('l1', { ...OWNER_VIEW, inviteLink: activeLink('7xK2pQ') })
     );
     const user = userEvent.setup();

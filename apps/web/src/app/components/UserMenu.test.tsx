@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
 import UserMenu from '@/app/components/UserMenu';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { createGroupsHandlers, TEST_API_V1 } from '@/mocks/handlers';
@@ -210,7 +211,9 @@ describe('UserMenu', () => {
 
   it('changes the theme from the menu and keeps the menu open', async () => {
     const user = userEvent.setup();
-    server.use(http.patch(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(baseUser)));
+    server.use(
+      http.patch(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(baseUser))
+    );
     renderMenu();
 
     await user.click(screen.getByRole('button', { name: /menu du compte/i }));
@@ -341,13 +344,8 @@ describe('UserMenu', () => {
   it('signs out without an error when the server already revoked the session', async () => {
     const user = userEvent.setup();
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(baseUser)),
-      http.post(`${TEST_API_V1}/auth/logout`, () =>
-        HttpResponse.json(
-          { error: 'Authentication required', code: 401, reason: 'unauthorized' },
-          { status: 401 }
-        )
-      )
+      http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(baseUser)),
+      http.post(`${TEST_API_V1}/auth/logout`, () => apiErrorJson(401, 'unauthorized'))
     );
     const client = createTestQueryClient();
     render(
