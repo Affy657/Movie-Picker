@@ -59,7 +59,6 @@ EXCL=$(sonar_join \
   'apps/api-dotnet/*.Tests/**' \
   'apps/api-dotnet/*.IntegrationTests/**' \
   'apps/api-dotnet/MoviePicker.Api.TestSupport/**' \
-  'apps/api-dotnet/MoviePicker.ToolGenDpKey/**' \
   'apps/api-dotnet/MoviePicker.Api.DevelopmentSeed/**'
 )
 
