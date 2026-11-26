@@ -328,6 +328,7 @@ public sealed class RecurringEventPassTests
     [InlineData("25:99")]
     [InlineData("vingt heures")]
     [InlineData("")]
+    [InlineData("8:30")]
     public async Task RunAsync_SeriesWithAnUnreadableTime_StopsInsteadOfCreatingANightThatNeverStarts(string time)
     {
         GivenCandidates(FinishedWeekly() with { Time = time });
@@ -340,6 +341,23 @@ public sealed class RecurringEventPassTests
         _events.Verify(
             r => r.UpdateAsync(It.Is<Event>(e => e.Id == "evt-1" && e.Recurrence == null), It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Theory]
+    [InlineData(" 20:30", "20:30")]
+    [InlineData("20:30 ", "20:30")]
+    public async Task RunAsync_SeriesWithALooseButReadableTime_GoesOnAtThatTimeWrittenHHmm(string time, string written)
+    {
+        GivenCandidates(FinishedWeekly() with { Time = time });
+
+        var result = await _sut.RunAsync();
+
+        Assert.Equal((1, 0), (result.Created, result.Stopped));
+        var created = CapturedNewEvent();
+        Assert.Equal(("2026-09-23", written), (created.Date, created.Time));
+        _events.Verify(
+            r => r.UpdateAsync(It.Is<Event>(e => e.Id == "evt-1" && e.Recurrence == null), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]

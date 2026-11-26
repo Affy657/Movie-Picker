@@ -25,11 +25,7 @@ public static class EventSchedule
 
     public static bool TryGetStartUtc(string date, string time, out DateTimeOffset startUtc)
     {
-        if (!DateTime.TryParse(
-                $"{date}T{time}:00",
-                System.Globalization.CultureInfo.InvariantCulture,
-                System.Globalization.DateTimeStyles.NoCurrentDateDefault,
-                out var local))
+        if (!TryReadParisClock(date, time, out var local))
         {
             startUtc = default;
             return false;
@@ -45,6 +41,18 @@ public static class EventSchedule
         startUtc = new DateTimeOffset(utc, TimeSpan.Zero);
         return true;
     }
+
+    public static string? WellFormedTimeOn(string date, string time) =>
+        TryGetStartUtc(date, time, out _) && TryReadParisClock(date, time, out var local)
+            ? local.ToString(TimeFormat, System.Globalization.CultureInfo.InvariantCulture)
+            : null;
+
+    private static bool TryReadParisClock(string date, string time, out DateTime local) =>
+        DateTime.TryParse(
+            $"{date}T{time}:00",
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.NoCurrentDateDefault,
+            out local);
 
     private static bool TryConvertParisToUtc(DateTime parisTime, out DateTime utc)
     {

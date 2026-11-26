@@ -103,6 +103,26 @@ public sealed class RecurringEventEndpointsTests : IClassFixture<MoviePickerAppl
     }
 
     [Fact]
+    public async Task ClosingARecurringEventStoredWithALooseTime_OpensTheNextOccurrenceAtThatTimeWrittenHHmm()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
+        var start = TwoDaysAgo();
+        var created = await CreateEventAsync(client, "Ciné-club du jeudi", start);
+        await client.PatchAsJsonAsync($"/api/v1/events/{created.Slug}/config", new { recurrence = "weekly" });
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        await events.UpdateAsync((await events.GetBySlugAsync(created.Slug))! with { Time = " 20:30" });
+
+        var close = await client.PostAsJsonAsync($"/api/v1/events/{created.Slug}/close", new { });
+
+        Assert.Equal(HttpStatusCode.OK, close.StatusCode);
+        var mine = await client.GetFromJsonAsync<MyEventsListResponse>("/api/v1/events/mine", JsonOptions);
+        var next = await events.GetBySlugAsync(Assert.Single(mine!.Events, e => e.Date == Iso(start.AddDays(7))).Slug);
+        Assert.Equal("20:30", next!.Time);
+        Assert.Equal(RecurrenceFrequency.Weekly, (await events.GetBySlugAsync(created.Slug))!.Recurrence);
+    }
+
+    [Fact]
     public async Task ClosingARecurringEvent_CreatedLikeTheWebAppWithARequestId_OpensTheNextOccurrence()
     {
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
