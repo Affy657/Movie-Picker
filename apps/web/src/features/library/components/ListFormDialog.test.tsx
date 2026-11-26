@@ -4,15 +4,18 @@ import userEvent from '@testing-library/user-event';
 import type { ComponentProps } from 'react';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
-import { AppTestProviders } from '@/test-utils/queryWrapper';
-import { buildUserProfile } from '@/test-utils/userProfile';
+import { http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
 import {
+  listDetailOf,
+  listSummaryOf,
   authMeGuestHandler,
   createListsHandlers,
   createSavedListsHandlers,
   TEST_API_V1,
 } from '@/mocks/handlers';
+import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import modalStyles from '@/shared/components/Modal.module.css';
 import ListFormDialog from './ListFormDialog';
 
@@ -52,7 +55,9 @@ describe('ListFormDialog', () => {
       authMeGuestHandler,
       http.post(`${TEST_API_V1}/lists`, async ({ request }) => {
         body = await request.json();
-        return HttpResponse.json({ id: 'l9', name: 'Halloween' }, { status: 201 });
+        return apiJson<'MovieListSummaryResponse'>(listSummaryOf({ id: 'l9', name: 'Halloween' }), {
+          status: 201,
+        });
       }),
       ...createListsHandlers()
     );
@@ -109,7 +114,7 @@ describe('ListFormDialog', () => {
   it('says a public list waits for a public profile, links to the setting, and still allows it', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json(buildUserProfile({ isProfilePublic: false }))
+        apiJson<'UserProfileResponse'>(buildUserProfile({ isProfilePublic: false }))
       ),
       ...createListsHandlers()
     );
@@ -139,7 +144,10 @@ describe('ListFormDialog', () => {
       authMeGuestHandler,
       http.post(`${TEST_API_V1}/lists`, async ({ request }) => {
         body = await request.json();
-        return HttpResponse.json({ id: 'l9', name: 'Ciné coréen' }, { status: 201 });
+        return apiJson<'MovieListSummaryResponse'>(
+          listSummaryOf({ id: 'l9', name: 'Ciné coréen' }),
+          { status: 201 }
+        );
       }),
       ...createListsHandlers()
     );
@@ -201,10 +209,7 @@ describe('ListFormDialog', () => {
     server.use(
       authMeGuestHandler,
       http.post(`${TEST_API_V1}/lists`, () =>
-        HttpResponse.json(
-          { reason: 'list_name_taken', error: 'taken', params: { name: 'Ghibli' } },
-          { status: 409 }
-        )
+        apiErrorJson(409, 'list_name_taken', { name: 'Ghibli' })
       ),
       ...createListsHandlers()
     );
@@ -228,12 +233,7 @@ describe('ListFormDialog', () => {
   it('says when the account already holds fifty lists', async () => {
     server.use(
       authMeGuestHandler,
-      http.post(`${TEST_API_V1}/lists`, () =>
-        HttpResponse.json(
-          { reason: 'list_limit_reached', error: 'limit', params: { max: 50 } },
-          { status: 409 }
-        )
-      ),
+      http.post(`${TEST_API_V1}/lists`, () => apiErrorJson(409, 'list_limit_reached', { max: 50 })),
       ...createListsHandlers()
     );
     const user = userEvent.setup();
@@ -254,7 +254,7 @@ describe('ListFormDialog', () => {
       authMeGuestHandler,
       http.patch(`${TEST_API_V1}/lists/l1`, async ({ request }) => {
         body = await request.json();
-        return HttpResponse.json({ id: 'l1', name: 'HALLOWEEN' });
+        return apiJson<'MovieListSummaryResponse'>(listSummaryOf({ id: 'l1', name: 'HALLOWEEN' }));
       }),
       ...createListsHandlers([{ id: 'l1', name: 'Halloween', description: 'La nuit du 31' }])
     );
@@ -282,7 +282,7 @@ describe('ListFormDialog', () => {
       authMeGuestHandler,
       http.patch(`${TEST_API_V1}/lists/l1`, async ({ request }) => {
         body = await request.json();
-        return HttpResponse.json({ id: 'l1', name: 'Halloween' });
+        return apiJson<'MovieListSummaryResponse'>(listSummaryOf({ id: 'l1', name: 'Halloween' }));
       }),
       ...createListsHandlers([{ id: 'l1', name: 'Halloween', isPublic: true }])
     );
@@ -307,7 +307,10 @@ describe('ListFormDialog', () => {
       authMeGuestHandler,
       http.post(`${TEST_API_V1}/lists`, async ({ request }) => {
         body = await request.json();
-        return HttpResponse.json({ id: 'l9', name: 'Denis Villeneuve' }, { status: 201 });
+        return apiJson<'MovieListSummaryResponse'>(
+          listSummaryOf({ id: 'l9', name: 'Denis Villeneuve' }),
+          { status: 201 }
+        );
       }),
       ...createListsHandlers()
     );
@@ -377,7 +380,9 @@ describe('ListFormDialog', () => {
         authMeGuestHandler,
         http.post(`${TEST_API_V1}/users/lea/lists/l7/copy`, async ({ request }) => {
           body = await request.json();
-          return HttpResponse.json({ id: 'l9', name: 'Ciné coréen' }, { status: 201 });
+          return apiJson<'MovieListResponse'>(listDetailOf({ id: 'l9', name: 'Ciné coréen' }), {
+            status: 201,
+          });
         }),
         ...createListsHandlers()
       );
@@ -434,10 +439,7 @@ describe('ListFormDialog', () => {
       server.use(
         authMeGuestHandler,
         http.post(`${TEST_API_V1}/saved-lists/s1/copy`, () =>
-          HttpResponse.json(
-            { reason: 'list_name_taken', error: 'taken', params: { name: 'Harry Potter' } },
-            { status: 409 }
-          )
+          apiErrorJson(409, 'list_name_taken', { name: 'Harry Potter' })
         ),
         ...createListsHandlers()
       );
@@ -458,10 +460,7 @@ describe('ListFormDialog', () => {
       server.use(
         authMeGuestHandler,
         http.post(`${TEST_API_V1}/saved-lists/s1/copy`, () =>
-          HttpResponse.json(
-            { reason: 'list_limit_reached', error: 'limit', params: { max: 50 } },
-            { status: 409 }
-          )
+          apiErrorJson(409, 'list_limit_reached', { max: 50 })
         ),
         ...createListsHandlers()
       );

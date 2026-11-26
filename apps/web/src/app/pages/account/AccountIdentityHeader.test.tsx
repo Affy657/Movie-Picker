@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
 import AccountIdentityHeader from '@/app/pages/account/AccountIdentityHeader';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
@@ -28,7 +29,9 @@ describe('AccountIdentityHeader', () => {
     server.use(
       http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
         patches.push(await request.json());
-        return saveFails ? new HttpResponse(null, { status: 503 }) : HttpResponse.json(user);
+        return saveFails
+          ? new HttpResponse(null, { status: 503 })
+          : apiJson<'UserProfileResponse'>(user);
       })
     );
     render(

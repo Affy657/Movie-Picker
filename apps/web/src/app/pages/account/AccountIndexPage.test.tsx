@@ -2,13 +2,15 @@ import { describe, it, expect, beforeAll, afterEach, afterAll, beforeEach, vi } 
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import AccountPage from '@/app/pages/account/AccountPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import { setSessionHint } from '@/features/auth/session-hint';
 
-const ME = {
+const ME = buildUserProfile({
   userId: 'u-index',
   displayName: 'Idx',
   emailMasked: 'i***@test.local',
@@ -19,7 +21,7 @@ const ME = {
   isProfilePublic: true,
   avatarId: 'alpha',
   letterboxdPendingReconciliationCount: 2,
-};
+});
 
 function stubMatchMedia(matches: boolean) {
   Object.defineProperty(window, 'matchMedia', {
@@ -56,7 +58,7 @@ describe('AccountIndexPage (MSW)', () => {
   beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   beforeEach(() => {
     setSessionHint();
-    server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME)));
+    server.use(http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME)));
   });
   afterEach(() => {
     server.resetHandlers();
@@ -101,7 +103,9 @@ describe('AccountIndexPage (MSW)', () => {
   it('offers no link to my profile on mobile while it is private, since it would lead to a 404', async () => {
     stubMatchMedia(true);
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({ ...ME, isProfilePublic: false }))
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        apiJson<'UserProfileResponse'>({ ...ME, isProfilePublic: false })
+      )
     );
 
     renderAccount();
@@ -114,7 +118,11 @@ describe('AccountIndexPage (MSW)', () => {
     stubMatchMedia(true);
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({ ...ME, letterboxdPendingReconciliationCount: 0, emailVerifiedAt: null })
+        apiJson<'UserProfileResponse'>({
+          ...ME,
+          letterboxdPendingReconciliationCount: 0,
+          emailVerifiedAt: null,
+        })
       )
     );
 

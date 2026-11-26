@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
 import OAuthProviderButtons from '@/features/auth/components/OAuthProviderButtons';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
@@ -19,7 +20,9 @@ describe('OAuthProviderButtons (MSW)', () => {
 
   it('renders nothing when no provider is configured', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/oauth/providers`, () => HttpResponse.json({ providers: [] }))
+      http.get(`${TEST_API_V1}/auth/oauth/providers`, () =>
+        apiJson<'OAuthProvidersResponse'>({ providers: [] })
+      )
     );
 
     render(
@@ -35,7 +38,7 @@ describe('OAuthProviderButtons (MSW)', () => {
   it('shows one link per configured provider, with the right returnTo', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/oauth/providers`, () =>
-        HttpResponse.json({ providers: ['google', 'github'] })
+        apiJson<'OAuthProvidersResponse'>({ providers: ['google', 'github'] })
       )
     );
 

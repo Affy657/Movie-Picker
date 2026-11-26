@@ -3,6 +3,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { Bookmark } from 'lucide-react';
 import SessionGate from '@/app/components/SessionGate';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
@@ -14,14 +16,14 @@ import {
 } from '@/features/auth/session-hint';
 import { ROUTES } from '@/app/routes';
 
-const ME = {
+const ME = buildUserProfile({
   userId: 'u-gate',
   displayName: 'Gate',
   emailMasked: 'g***@test.local',
   uiTheme: 'system',
   accentColor: 'default',
   ratingScale: 'ten',
-};
+});
 
 let pageRenders = 0;
 
@@ -108,7 +110,7 @@ describe('SessionGate', () => {
 
   it('mounts the page when the session is confirmed', async () => {
     setSessionHint();
-    server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME)));
+    server.use(http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME)));
 
     renderGate();
 

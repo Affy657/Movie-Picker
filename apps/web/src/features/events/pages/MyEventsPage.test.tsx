@@ -3,7 +3,11 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { type MyEventSummary } from '@/features/events/types';
+import { buildMyEventSummary } from '@/test-utils/myEventSummary';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import MyEventsPage from '@/features/events/pages/MyEventsPage';
 import CreateEventDialogProvider from '@/features/events/components/create-event/CreateEventDialogProvider';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
@@ -34,26 +38,28 @@ function renderMyEvents() {
 }
 
 const authMeHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
-  HttpResponse.json({
-    userId: 'u1',
-    displayName: 'Alice',
-    handle: 'alice',
-    emailMasked: 'a***@test.local',
-    uiTheme: 'system',
-    accentColor: 'default',
-  })
+  apiJson<'UserProfileResponse'>(
+    buildUserProfile({
+      userId: 'u1',
+      displayName: 'Alice',
+      handle: 'alice',
+      emailMasked: 'a***@test.local',
+      uiTheme: 'system',
+      accentColor: 'default',
+    })
+  )
 );
 
 function myEventsHandler(
-  activeEvents: unknown[],
-  finishedEvents: unknown[],
+  activeEvents: Partial<MyEventSummary>[],
+  finishedEvents: Partial<MyEventSummary>[],
   totals: { active: number; finished: number }
 ) {
   return http.get(`${TEST_API_V1}/events/mine`, ({ request }) => {
     const url = new URL(request.url);
     const scope = url.searchParams.get('scope');
-    return HttpResponse.json({
-      events: scope === 'finished' ? finishedEvents : activeEvents,
+    return apiJson<'MyEventsListResponse'>({
+      events: (scope === 'finished' ? finishedEvents : activeEvents).map(buildMyEventSummary),
       hasMore: false,
       totalActive: totals.active,
       totalFinished: totals.finished,
@@ -216,7 +222,19 @@ describe('MyEventsPage (MSW)', () => {
       authMeHandler,
       http.post(`${TEST_API_V1}/events/deux-films/close`, () => {
         closed += 1;
-        return HttpResponse.json({ message: 'closed' });
+        return apiJson<'CloseEventResponse'>({
+          _id: 'e1',
+          title: 'Soirée',
+          date: '2030-01-01',
+          time: '20:30',
+          slug: 'soiree',
+          config: null,
+          closedAt: '2030-01-01T23:00:00Z',
+          winnerMovieIds: [],
+          createdAt: '2026-01-01T00:00:00Z',
+          updatedAt: '2030-01-01T23:00:00Z',
+          message: 'closed',
+        });
       }),
       myEventsHandler(
         [
@@ -268,7 +286,7 @@ describe('MyEventsPage (MSW)', () => {
   });
 
   it('offers no leave on a joined night whose wheel already picked a movie', async () => {
-    const joinedNight = {
+    const joinedNight: Partial<MyEventSummary> = {
       slug: 'autre',
       createdAt: '2026-01-01T00:00:00Z',
       updatedAt: '2026-01-03T00:00:00Z',
@@ -340,7 +358,7 @@ describe('MyEventsPage (MSW)', () => {
       ),
       http.delete(`${TEST_API_V1}/events/terminee`, () => {
         deleteCalled = true;
-        return HttpResponse.json({
+        return apiJson<'DeleteEventResponse'>({
           eventId: 'e3',
           slug: 'terminee',
           message: 'ok',
@@ -348,6 +366,7 @@ describe('MyEventsPage (MSW)', () => {
           removedMovies: 5,
           removedVotes: 0,
           removedSeenMarks: 0,
+          removedRatings: 0,
         });
       })
     );
@@ -393,7 +412,12 @@ describe('MyEventsPage (MSW)', () => {
       ),
       http.delete(`${TEST_API_V1}/events/rejointe-terminee/participants/part-1`, () => {
         removeCalled = true;
-        return HttpResponse.json({ participantId: 'part-1', eventId: 'e4' });
+        return apiJson<'RemoveParticipantResponse'>({
+          participantId: 'part-1',
+          eventId: 'e4',
+          removedMovies: 0,
+          message: '',
+        });
       })
     );
 
@@ -418,12 +442,12 @@ describe('MyEventsPage (MSW)', () => {
       http.get(`${TEST_API_V1}/events/mine`, ({ request }) => {
         const finished = new URL(request.url).searchParams.get('scope') === 'finished';
         if (finished && ++historyCalls === 1) {
-          return HttpResponse.json({ error: 'Historique indisponible' }, { status: 500 });
+          return apiErrorJson(500, 'internal_error');
         }
-        return HttpResponse.json({
+        return apiJson<'MyEventsListResponse'>({
           events: finished
             ? [
-                {
+                buildMyEventSummary({
                   id: 'e7',
                   slug: 'passee',
                   title: 'Soirée passée',
@@ -436,7 +460,7 @@ describe('MyEventsPage (MSW)', () => {
                   lifecycle: 'finished',
                   participantCount: 2,
                   movieCount: 1,
-                },
+                }),
               ]
             : [],
           hasMore: false,
@@ -449,7 +473,7 @@ describe('MyEventsPage (MSW)', () => {
     renderMyEvents();
 
     expect(await screen.findByRole('alert', {}, { timeout: 5000 })).toHaveTextContent(
-      'Historique indisponible'
+      'Une erreur interne s’est produite.'
     );
     expect(screen.queryByText(/aucune soirée ne correspond/i)).not.toBeInTheDocument();
 

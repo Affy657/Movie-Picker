@@ -4,7 +4,9 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { AppRoutes } from '@/app/App';
 import { resetSessionHintMemoryForTests } from '@/features/auth/session-hint';
@@ -15,13 +17,13 @@ const EVENT_SLUG = 'soiree-invite';
 const INVITE_PATH = `/e/${EVENT_SLUG}`;
 const LOGIN_PATH = `/login?returnTo=${encodeURIComponent(INVITE_PATH)}`;
 
-const USER = {
+const USER = buildUserProfile({
   userId: 'u-invite',
   displayName: 'Invité',
   emailMasked: 'i***@test.local',
   uiTheme: 'system',
   accentColor: 'default',
-};
+});
 
 function renderRoutes(initialEntries: string[]) {
   return render(
@@ -57,16 +59,23 @@ describe('invite link: back to the movie night after authentication', () => {
   function useInviteHandlers() {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        sessionActive
-          ? HttpResponse.json(USER)
-          : HttpResponse.json({ error: 'Non authentifié.', code: 401 }, { status: 401 })
+        sessionActive ? apiJson<'UserProfileResponse'>(USER) : apiErrorJson(401, 'unauthorized')
       ),
       http.post(`${TEST_API_V1}/auth/login`, () => {
         sessionActive = true;
-        return HttpResponse.json({});
+        return apiJson<'LoginResponse'>({ userId: 'u1', displayName: 'Alice' });
       }),
-      http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] })),
-      http.get(`${TEST_API_V1}/auth/oauth/providers`, () => HttpResponse.json({ providers: [] })),
+      http.get(`${TEST_API_V1}/events/mine`, () =>
+        apiJson<'MyEventsListResponse'>({
+          events: [],
+          hasMore: false,
+          totalActive: 0,
+          totalFinished: 0,
+        })
+      ),
+      http.get(`${TEST_API_V1}/auth/oauth/providers`, () =>
+        apiJson<'OAuthProvidersResponse'>({ providers: [] })
+      ),
       ...createEventDetailHandlers({ slug: EVENT_SLUG, title: 'Soirée invitée' })
     );
   }
@@ -152,11 +161,7 @@ describe('invite link: back to the movie night after authentication', () => {
 
   it('failed session check: retry screen on a protected page', async () => {
     localStorage.setItem(SESSION_HINT_KEY, '1');
-    server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({ error: 'Panne' }, { status: 503 })
-      )
-    );
+    server.use(http.get(`${TEST_API_V1}/auth/me`, () => apiErrorJson(503, 'internal_error')));
 
     renderRoutes(['/new']);
 

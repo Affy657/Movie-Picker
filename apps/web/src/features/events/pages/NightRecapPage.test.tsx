@@ -3,7 +3,11 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson, apiJson, type ApiSchemas } from '@/mocks/apiJson';
+import { buildEventConfig, buildEventDetail } from '@/test-utils/eventDetail';
+import { buildEventMovie } from '@/test-utils/eventMovie';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import NightRecapPage from '@/features/events/pages/NightRecapPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1, authMeGuestHandler } from '@/mocks/handlers';
@@ -18,7 +22,7 @@ vi.mock('@/shared/hooks/useAnalytics', () => ({
 
 const slug = 'recap-msw';
 const NIGHT_SLUG = 'soiree-privee';
-const ME = {
+const ME = buildUserProfile({
   userId: 'u-sofia',
   displayName: 'Sofia',
   emailMasked: 's***@test.local',
@@ -29,7 +33,7 @@ const ME = {
   isProfilePublic: true,
   avatarId: 'alpha',
   ratingScale: 'ten',
-};
+});
 
 type NightOptions = {
   winners?: string[];
@@ -41,12 +45,12 @@ type NightOptions = {
   lifecycle?: 'upcoming' | 'live' | 'finished';
 };
 
-function recapPayload(options: NightOptions) {
+function recapPayload(options: NightOptions): ApiSchemas['NightRecapResponse'] {
   const ratings = options.ratings ?? { 'm-heat': RATED };
-  const movies: Record<string, ReturnType<typeof movie>> = {
-    'm-heat': movie('m-heat', 'Heat', '1995', ratings['m-heat'] ?? []),
-    'm-inception': movie('m-inception', 'Inception', '2010', ratings['m-inception'] ?? []),
-  };
+  const movies = [
+    movie('m-heat', 'Heat', '1995', ratings['m-heat'] ?? []),
+    movie('m-inception', 'Inception', '2010', ratings['m-inception'] ?? []),
+  ];
   const winners = options.winners ?? ['m-heat'];
   return {
     recapSlug: slug,
@@ -54,32 +58,35 @@ function recapPayload(options: NightOptions) {
     title: 'Soirée du vendredi',
     date: options.date ?? '2026-09-18',
     time: '20:30',
-    winnerMovies: winners.map((movieId) => movies[movieId]),
+    winnerMovies: winners.flatMap((movieId) => movies.filter((film) => film._id === movieId)),
     isFinished: options.isFinished ?? true,
+    closedAt: null,
     lifecycle: options.lifecycle ?? (options.isFinished === false ? 'live' : 'finished'),
     winners: winners.map((movieId) => ({
       movieId,
-      pickMethod: 'wheel',
+      pickMethod: 'wheel' as const,
       pickedAt: '2026-09-18T19:00:00Z',
     })),
     participantCount: 4,
     movieCount: 12,
     myParticipant: options.myParticipantId
-      ? { _id: options.myParticipantId, pseudo: 'Sofia' }
+      ? {
+          _id: options.myParticipantId,
+          eventId: 'evt-recap',
+          pseudo: 'Sofia',
+          createdAt: '2026-09-18T18:00:00Z',
+          updatedAt: '2026-09-18T18:00:00Z',
+        }
       : null,
-    participants: [
-      { _id: 'p-claire', pseudo: 'Claire', isCreator: true, avatarId: 'alpha', handle: 'claire' },
-      { _id: 'p-marius', pseudo: 'Marius', avatarId: 'beta' },
-      { _id: 'p-yanis', pseudo: 'Yanis' },
-      { _id: 'p-sofia', pseudo: 'Sofia', avatarId: 'gamma' },
-    ],
-    config: {
-      theme: options.theme ?? 'Thriller des années 90',
-      maxProposalsPerParticipant: null,
-      maxParticipants: null,
-      wheelMode: 'strictRandom',
-      winnerCount: 1,
-    },
+    participants: buildEventDetail({
+      participants: [
+        { _id: 'p-claire', pseudo: 'Claire', isCreator: true, avatarId: 'alpha', handle: 'claire' },
+        { _id: 'p-marius', pseudo: 'Marius', avatarId: 'beta' },
+        { _id: 'p-yanis', pseudo: 'Yanis' },
+        { _id: 'p-sofia', pseudo: 'Sofia', avatarId: 'gamma' },
+      ],
+    }).participants,
+    config: buildEventConfig({ theme: options.theme ?? 'Thriller des années 90' }),
   };
 }
 
@@ -89,22 +96,19 @@ function movie(
   year: string,
   ratings: Array<{ participantId: string; value: number }>
 ) {
-  return {
+  return buildEventMovie({
     _id: id,
     eventId: 'evt-recap',
     participantId: 'p-marius',
     tmdbId: 949,
-    mediaType: 'movie',
     title,
     year,
-    posterPath: null,
     proposerPseudo: 'Marius',
     score: 3,
     up: 3,
-    down: 0,
     runtimeMinutes: 170,
     ratings: ratings.map((r) => ({ ...r, updatedAt: '2026-09-19T08:00:00Z' })),
-  };
+  });
 }
 
 const RATED = [
@@ -140,7 +144,9 @@ describe('NightRecapPage (MSW)', () => {
 
   function serveNight(options: NightOptions = {}) {
     server.use(
-      http.get(`${TEST_API_V1}/recaps/${slug}`, () => HttpResponse.json(recapPayload(options)))
+      http.get(`${TEST_API_V1}/recaps/${slug}`, () =>
+        apiJson<'NightRecapResponse'>(recapPayload(options))
+      )
     );
   }
 
@@ -239,7 +245,7 @@ describe('NightRecapPage (MSW)', () => {
 
   it('sends a signed-in reader straight to the night creation', async () => {
     setSessionHint();
-    server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME)));
+    server.use(http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME)));
     serveNight();
     renderRecap();
     await screen.findByRole('heading', { name: 'Soirée du vendredi' });
@@ -252,7 +258,7 @@ describe('NightRecapPage (MSW)', () => {
 
   it('lets a participant who has not rated jump to the rating of that movie, in their own scale', async () => {
     setSessionHint();
-    server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME)));
+    server.use(http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME)));
     serveNight({ myParticipantId: 'p-sofia' });
     renderRecap();
 
@@ -282,7 +288,7 @@ describe('NightRecapPage (MSW)', () => {
 
   it('offers to rate the movie already drawn while the night is underway', async () => {
     setSessionHint();
-    server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME)));
+    server.use(http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME)));
     serveNight({ myParticipantId: 'p-sofia', isFinished: false, ratings: { 'm-heat': [] } });
     renderRecap();
 
@@ -295,7 +301,7 @@ describe('NightRecapPage (MSW)', () => {
 
   it('waits for the night to start before offering to rate the movie already drawn', async () => {
     setSessionHint();
-    server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME)));
+    server.use(http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME)));
     serveNight({
       myParticipantId: 'p-sofia',
       isFinished: false,
@@ -314,7 +320,7 @@ describe('NightRecapPage (MSW)', () => {
 
   it('shows no rating action to a participant who already rated', async () => {
     setSessionHint();
-    server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME)));
+    server.use(http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME)));
     serveNight({
       myParticipantId: 'p-sofia',
       ratings: { 'm-heat': [...RATED, { participantId: 'p-sofia', value: 6 }] },
@@ -420,9 +426,7 @@ describe('NightRecapPage (MSW)', () => {
   it('tells an unknown link apart and sends home', async () => {
     track.mockClear();
     server.use(
-      http.get(`${TEST_API_V1}/recaps/${slug}`, () =>
-        HttpResponse.json({ error: 'Not found', code: 404, reason: 'not_found' }, { status: 404 })
-      )
+      http.get(`${TEST_API_V1}/recaps/${slug}`, () => apiErrorJson(404, 'event_not_found'))
     );
     renderRecap();
 
@@ -451,7 +455,7 @@ describe('NightRecapPage (MSW)', () => {
   it('counts the view of a signed-in reader as an account view', async () => {
     track.mockClear();
     setSessionHint();
-    server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME)));
+    server.use(http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME)));
     serveNight();
 
     renderRecap();
@@ -470,8 +474,8 @@ describe('NightRecapPage (MSW)', () => {
     let failures = 1;
     server.use(
       http.get(`${TEST_API_V1}/recaps/${slug}`, () => {
-        if (failures-- > 0) return HttpResponse.json({ error: 'boom', code: 500 }, { status: 500 });
-        return HttpResponse.json(recapPayload({}));
+        if (failures-- > 0) return apiErrorJson(500, 'internal_error');
+        return apiJson<'NightRecapResponse'>(recapPayload({}));
       })
     );
     renderRecap();

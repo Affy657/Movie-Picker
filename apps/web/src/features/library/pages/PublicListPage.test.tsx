@@ -3,7 +3,9 @@ import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { openSortMenu, sortChoices } from '@/test-utils/sortMenu';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubHoverCapability } from '@/test-utils/matchMedia';
@@ -16,6 +18,7 @@ import {
   TEST_API_V1,
   type MockListCreator,
   type MockPublicList,
+  publicListOf,
 } from '@/mocks/handlers';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import PublicListPage from './PublicListPage';
@@ -23,15 +26,17 @@ import PublicListPage from './PublicListPage';
 const LEA: MockListCreator = { handle: 'lea', displayName: 'Léa Moreau', avatarId: null };
 
 const signedIn = http.get(`${TEST_API_V1}/auth/me`, () =>
-  HttpResponse.json({
-    userId: 'u1',
-    displayName: 'Alice',
-    emailMasked: 'a***@test.local',
-    uiTheme: 'system',
-    accentColor: 'default',
-    ratingScale: 'ten',
-    handle: 'alice',
-  })
+  apiJson<'UserProfileResponse'>(
+    buildUserProfile({
+      userId: 'u1',
+      displayName: 'Alice',
+      emailMasked: 'a***@test.local',
+      uiTheme: 'system',
+      accentColor: 'default',
+      ratingScale: 'ten',
+      handle: 'alice',
+    })
+  )
 );
 
 function film(tmdbId: number, title: string, year: string, isWatched = false) {
@@ -265,7 +270,7 @@ describe('PublicListPage', () => {
     server.use(
       http.get(`${TEST_API_V1}/users/lea/lists/l1`, () => {
         if (failures-- <= 0) return undefined;
-        return HttpResponse.json({ error: 'down', code: 503 }, { status: 503 });
+        return apiErrorJson(503, 'internal_error');
       }),
       ...memberServer()
     );
@@ -292,21 +297,13 @@ describe('PublicListPage', () => {
   it('gives the address under the handle the API returns, as canonical and as copied link', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/LEA/lists/l1`, () =>
-        HttpResponse.json({
-          id: 'l1',
-          name: CLASSICS.name,
-          description: CLASSICS.description,
-          createdAt: '2026-11-01T00:00:00Z',
-          updatedAt: '2026-11-01T00:00:00Z',
-          itemCount: CLASSICS.items?.length ?? 0,
-          memberCount: 1,
-          watchedCount: 1,
-          creator: LEA,
-          items: (CLASSICS.items ?? []).map((item) => ({
-            ...item,
+        apiJson<'PublicListResponse'>(
+          publicListOf(LEA, {
+            ...CLASSICS,
             createdAt: '2026-11-01T00:00:00Z',
-          })),
-        })
+            updatedAt: '2026-11-01T00:00:00Z',
+          })
+        )
       ),
       ...memberServer()
     );
@@ -357,7 +354,9 @@ describe('PublicListPage', () => {
     expect(await screen.findByRole('list', { name: /films de/i })).toBeInTheDocument();
     server.use(
       signedIn,
-      http.post(`${TEST_API_V1}/auth/login`, () => HttpResponse.json({})),
+      http.post(`${TEST_API_V1}/auth/login`, () =>
+        apiJson<'LoginResponse'>({ userId: 'u1', displayName: 'Alice' })
+      ),
       ...createWatchlistHandlers([]),
       ...createListsHandlers([]),
       ...createSavedListsHandlers([]),

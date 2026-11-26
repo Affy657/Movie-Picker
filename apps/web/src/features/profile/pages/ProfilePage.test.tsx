@@ -4,26 +4,34 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { apiErrorJson, apiJson, type ApiSchemas } from '@/mocks/apiJson';
+import { buildWatchedMovie } from '@/test-utils/titleItems';
+import { buildPublicProfile } from '@/test-utils/publicProfile';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import ProfilePage from '@/features/profile/pages/ProfilePage';
 import headerStyles from '@/features/profile/components/ProfileHeader.module.css';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
-import { TEST_API_V1, createUserStatsHandler } from '@/mocks/handlers';
+import { authMeGuestHandler, TEST_API_V1, createUserStatsHandler } from '@/mocks/handlers';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import type { QueryClient } from '@tanstack/react-query';
 
-const EMPTY_STATS = {
+const EMPTY_STATS: ApiSchemas['UserStatsResponse'] = {
   eventsCreated: 0,
   eventsJoined: 0,
   moviesProposed: 0,
   votesCast: 0,
   winningProposals: 0,
+  proposalsAverageRating: null,
   moviesSeen: 0,
+  publicListCount: 0,
+  currentStreakWeeks: 0,
+  bestStreakWeeks: 0,
   favoriteGenres: [],
   dailyActivity: [],
 };
 
-const ALICE_PROFILE = {
+const ALICE_PROFILE = buildPublicProfile({
   handle: 'alice',
   displayName: 'Alice',
   avatarId: 'alpha',
@@ -34,9 +42,9 @@ const ALICE_PROFILE = {
   isFollowedByMe: null,
   isWatchlistPublic: true,
   watchlistCount: 24,
-};
+});
 
-const ME_PROFILE = {
+const ME_PROFILE = buildUserProfile({
   userId: 'u-me',
   displayName: 'Moi',
   emailMasked: 'm***@test.local',
@@ -46,7 +54,7 @@ const ME_PROFILE = {
   handle: 'moi',
   bio: null,
   isProfilePublic: true,
-};
+});
 
 function LocationProbe() {
   const location = useLocation();
@@ -70,10 +78,12 @@ function renderProfile(handle: string, client?: QueryClient, withLocation = fals
 
 describe('ProfilePage (MSW)', () => {
   const server = setupServer(
-    http.get(`${TEST_API_V1}/users/:handle/stats`, () => HttpResponse.json(EMPTY_STATS)),
-    http.get(`${TEST_API_V1}/users/:handle/watched-movies`, () => HttpResponse.json({ items: [] })),
+    http.get(`${TEST_API_V1}/users/:handle/stats`, () => apiJson<'UserStatsResponse'>(EMPTY_STATS)),
+    http.get(`${TEST_API_V1}/users/:handle/watched-movies`, () =>
+      apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
+    ),
     http.get(`${TEST_API_V1}/users/:handle/watchlist`, () =>
-      HttpResponse.json({ items: [], total: 0, hasMore: false })
+      apiJson<'WatchlistResponse'>({ items: [], total: 0, hasMore: false })
     )
   );
 
@@ -83,8 +93,8 @@ describe('ProfilePage (MSW)', () => {
 
   it('affiche le profil public (pseudo, handle, bio, membre depuis)', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE))
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/alice`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE))
     );
 
     renderProfile('alice');
@@ -98,9 +108,9 @@ describe('ProfilePage (MSW)', () => {
 
   it('describes a member without a bio, eliding before a vowel', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authMeGuestHandler,
       http.get(`${TEST_API_V1}/users/alice`, () =>
-        HttpResponse.json({ ...ALICE_PROFILE, bio: null })
+        apiJson<'PublicProfileResponse'>({ ...ALICE_PROFILE, bio: null })
       )
     );
 
@@ -115,9 +125,9 @@ describe('ProfilePage (MSW)', () => {
 
   it('tells a visitor that a member has nothing to show yet', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authMeGuestHandler,
       http.get(`${TEST_API_V1}/users/alice`, () =>
-        HttpResponse.json({ ...ALICE_PROFILE, watchlistCount: 0, favorites: [] })
+        apiJson<'PublicProfileResponse'>({ ...ALICE_PROFILE, watchlistCount: 0, favorites: [] })
       ),
       createUserStatsHandler('alice')
     );
@@ -134,9 +144,14 @@ describe('ProfilePage (MSW)', () => {
 
   it('keeps a profile with nothing to show out of search engines, as the server does', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authMeGuestHandler,
       http.get(`${TEST_API_V1}/users/alice`, () =>
-        HttpResponse.json({ ...ALICE_PROFILE, bio: '', watchlistCount: 0, favorites: [] })
+        apiJson<'PublicProfileResponse'>({
+          ...ALICE_PROFILE,
+          bio: '',
+          watchlistCount: 0,
+          favorites: [],
+        })
       ),
       createUserStatsHandler('alice')
     );
@@ -154,9 +169,9 @@ describe('ProfilePage (MSW)', () => {
 
   it('lets search engines index an otherwise empty profile that has a bio', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authMeGuestHandler,
       http.get(`${TEST_API_V1}/users/alice`, () =>
-        HttpResponse.json({ ...ALICE_PROFILE, watchlistCount: 0, favorites: [] })
+        apiJson<'PublicProfileResponse'>({ ...ALICE_PROFILE, watchlistCount: 0, favorites: [] })
       ),
       createUserStatsHandler('alice')
     );
@@ -171,8 +186,8 @@ describe('ProfilePage (MSW)', () => {
 
   it('leaves the empty state out of a profile with something to show', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/alice`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE)),
       createUserStatsHandler('alice', { eventsJoined: 2 })
     );
 
@@ -184,8 +199,8 @@ describe('ProfilePage (MSW)', () => {
 
   it('groups the identity of the person in a region named after them', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE))
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/alice`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE))
     );
 
     renderProfile('alice');
@@ -196,8 +211,8 @@ describe('ProfilePage (MSW)', () => {
 
   it('offers Share as an icon button that names itself and says it opens a dialog', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE))
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/alice`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE))
     );
 
     renderProfile('alice');
@@ -209,8 +224,8 @@ describe('ProfilePage (MSW)', () => {
 
   it('sums up the statistics under the name, each item leading to them', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/alice`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE)),
       createUserStatsHandler('alice', {
         eventsCreated: 4,
         eventsJoined: 2,
@@ -239,8 +254,8 @@ describe('ProfilePage (MSW)', () => {
 
   it('shows the public lists beside the followers, as a link to them', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/alice`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE)),
       createUserStatsHandler('alice', { eventsCreated: 4, publicListCount: 4 })
     );
 
@@ -255,8 +270,8 @@ describe('ProfilePage (MSW)', () => {
 
   it('names a single public list in the singular', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/alice`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE)),
       createUserStatsHandler('alice', { eventsCreated: 4, publicListCount: 1 })
     );
 
@@ -267,8 +282,8 @@ describe('ProfilePage (MSW)', () => {
 
   it('leaves the lists out while no list is public', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/alice`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE)),
       createUserStatsHandler('alice', { eventsCreated: 4, publicListCount: 0 })
     );
 
@@ -281,14 +296,14 @@ describe('ProfilePage (MSW)', () => {
   it('keeps hidden watched films out of the figures and out of the page', async () => {
     let asked = false;
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authMeGuestHandler,
       http.get(`${TEST_API_V1}/users/alice`, () =>
-        HttpResponse.json({ ...ALICE_PROFILE, isWatchedPublic: false })
+        apiJson<'PublicProfileResponse'>({ ...ALICE_PROFILE, isWatchedPublic: false })
       ),
       createUserStatsHandler('alice', { eventsCreated: 4 }),
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () => {
         asked = true;
-        return HttpResponse.json({ error: 'hidden', reason: 'watched_not_found' }, { status: 404 });
+        return apiErrorJson(404, 'watched_not_found');
       })
     );
 
@@ -302,9 +317,9 @@ describe('ProfilePage (MSW)', () => {
 
   it('leaves the winning proposals out of the figures when the watched films are hidden', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authMeGuestHandler,
       http.get(`${TEST_API_V1}/users/alice`, () =>
-        HttpResponse.json({ ...ALICE_PROFILE, isWatchedPublic: false })
+        apiJson<'PublicProfileResponse'>({ ...ALICE_PROFILE, isWatchedPublic: false })
       ),
       createUserStatsHandler('alice', { eventsCreated: 4, moviesProposed: 9, winningProposals: 0 })
     );
@@ -317,8 +332,8 @@ describe('ProfilePage (MSW)', () => {
 
   it('shows the winning proposals of a member whose watched films are public', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/alice`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE)),
       createUserStatsHandler('alice', { eventsCreated: 4, moviesProposed: 9, winningProposals: 3 })
     );
 
@@ -334,11 +349,11 @@ describe('ProfilePage (MSW)', () => {
   it('asks for the last watched films without waiting for the profile', async () => {
     let asked = false;
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authMeGuestHandler,
       http.get(`${TEST_API_V1}/users/alice`, () => new Promise<never>(() => undefined)),
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () => {
         asked = true;
-        return HttpResponse.json({ items: [], total: 0 });
+        return apiJson<'UserWatchedMoviesResponse'>({ items: [], total: 0, hasMore: false });
       })
     );
 
@@ -349,9 +364,9 @@ describe('ProfilePage (MSW)', () => {
 
   it('shows the banner of a member above their profile, credited to its film', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authMeGuestHandler,
       http.get(`${TEST_API_V1}/users/alice`, () =>
-        HttpResponse.json({
+        apiJson<'PublicProfileResponse'>({
           ...ALICE_PROFILE,
           banner: {
             source: 'film',
@@ -374,8 +389,8 @@ describe('ProfilePage (MSW)', () => {
 
   it('shows nothing in place of a banner to a visitor when the member has none', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE))
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/alice`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE))
     );
 
     renderProfile('alice');
@@ -387,9 +402,9 @@ describe('ProfilePage (MSW)', () => {
 
   it('offers me to add a banner on my own profile, which opens the choice', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+      http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME_PROFILE)),
       http.get(`${TEST_API_V1}/users/moi`, () =>
-        HttpResponse.json({ ...ALICE_PROFILE, handle: 'moi', displayName: 'Moi' })
+        apiJson<'PublicProfileResponse'>({ ...ALICE_PROFILE, handle: 'moi', displayName: 'Moi' })
       )
     );
 
@@ -402,16 +417,23 @@ describe('ProfilePage (MSW)', () => {
   });
 
   it('lets me edit the banner of my own profile', async () => {
-    const banner = {
+    const banner: ApiSchemas['ProfileBannerResponse'] = {
       source: 'film',
       imageUrl: 'https://image.tmdb.org/t/p/w1280/sunset.jpg',
       tmdbId: 693134,
       title: 'Dune : Deuxième partie',
     };
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({ ...ME_PROFILE, banner })),
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        apiJson<'UserProfileResponse'>({ ...ME_PROFILE, banner })
+      ),
       http.get(`${TEST_API_V1}/users/moi`, () =>
-        HttpResponse.json({ ...ALICE_PROFILE, handle: 'moi', displayName: 'Moi', banner })
+        apiJson<'PublicProfileResponse'>({
+          ...ALICE_PROFILE,
+          handle: 'moi',
+          displayName: 'Moi',
+          banner,
+        })
       )
     );
 
@@ -425,9 +447,9 @@ describe('ProfilePage (MSW)', () => {
 
   it('flags on my profile that my watched films are hidden, and leads to the setting', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+      http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME_PROFILE)),
       http.get(`${TEST_API_V1}/users/moi`, () =>
-        HttpResponse.json({
+        apiJson<'PublicProfileResponse'>({
           ...ALICE_PROFILE,
           handle: 'moi',
           displayName: 'Moi',
@@ -435,9 +457,9 @@ describe('ProfilePage (MSW)', () => {
         })
       ),
       http.get(`${TEST_API_V1}/users/moi/watched-movies`, () =>
-        HttpResponse.json({
+        apiJson<'UserWatchedMoviesResponse'>({
           items: [
-            {
+            buildWatchedMovie({
               tmdbId: 27205,
               title: 'Inception',
               year: '2010',
@@ -445,9 +467,10 @@ describe('ProfilePage (MSW)', () => {
               genreIds: [],
               mediaType: 'movie',
               watchedAt: '2026-06-01T00:00:00Z',
-            },
+            }),
           ],
           total: 1,
+          hasMore: false,
         })
       )
     );
@@ -466,9 +489,9 @@ describe('ProfilePage (MSW)', () => {
 
   it('still shows me my own watched films when I keep them hidden', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+      http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME_PROFILE)),
       http.get(`${TEST_API_V1}/users/moi`, () =>
-        HttpResponse.json({
+        apiJson<'PublicProfileResponse'>({
           ...ALICE_PROFILE,
           handle: 'moi',
           displayName: 'Moi',
@@ -477,9 +500,9 @@ describe('ProfilePage (MSW)', () => {
       ),
       createUserStatsHandler('moi', { eventsCreated: 4 }),
       http.get(`${TEST_API_V1}/users/moi/watched-movies`, () =>
-        HttpResponse.json({
+        apiJson<'UserWatchedMoviesResponse'>({
           items: [
-            {
+            buildWatchedMovie({
               tmdbId: 27205,
               title: 'Inception',
               year: '2010',
@@ -487,9 +510,10 @@ describe('ProfilePage (MSW)', () => {
               genreIds: [],
               mediaType: 'movie',
               watchedAt: '2026-06-01T00:00:00Z',
-            },
+            }),
           ],
           total: 12,
+          hasMore: false,
         })
       )
     );
@@ -501,8 +525,8 @@ describe('ProfilePage (MSW)', () => {
 
   it('affiche un squelette pendant le chargement du profil', () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE))
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/alice`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE))
     );
 
     renderProfile('alice');
@@ -513,9 +537,9 @@ describe('ProfilePage (MSW)', () => {
 
   it('shows the films in the same paint as the profile, so nothing pushes the statistics down', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authMeGuestHandler,
       http.get(`${TEST_API_V1}/users/alice`, () =>
-        HttpResponse.json({
+        apiJson<'PublicProfileResponse'>({
           ...ALICE_PROFILE,
           favorites: [
             { tmdbId: 949, mediaType: 'movie', title: 'Heat', year: '1995', posterPath: null },
@@ -534,15 +558,15 @@ describe('ProfilePage (MSW)', () => {
     let answerStats: () => void = () => undefined;
     let answerWatched: () => void = () => undefined;
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/alice`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE)),
       http.get(`${TEST_API_V1}/users/alice/stats`, async () => {
         await new Promise<void>((resolve) => (answerStats = resolve));
-        return HttpResponse.json(EMPTY_STATS);
+        return apiJson<'UserStatsResponse'>(EMPTY_STATS);
       }),
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, async () => {
         await new Promise<void>((resolve) => (answerWatched = resolve));
-        return HttpResponse.json({ items: [] });
+        return apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false });
       })
     );
 
@@ -560,11 +584,11 @@ describe('ProfilePage (MSW)', () => {
 
   it('does not hold the profile for statistics that never answer', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/alice`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE)),
       http.get(`${TEST_API_V1}/users/alice/stats`, async () => {
         await new Promise(() => undefined);
-        return HttpResponse.json(EMPTY_STATS);
+        return apiJson<'UserStatsResponse'>(EMPTY_STATS);
       })
     );
 
@@ -579,14 +603,14 @@ describe('ProfilePage (MSW)', () => {
     const user = userEvent.setup();
     let statsCallCount = 0;
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/alice`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE)),
       http.get(`${TEST_API_V1}/users/alice/stats`, () => {
         statsCallCount += 1;
         if (statsCallCount === 1) {
-          return HttpResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+          return apiErrorJson(500, 'internal_error');
         }
-        return HttpResponse.json(EMPTY_STATS);
+        return apiJson<'UserStatsResponse'>(EMPTY_STATS);
       })
     );
 
@@ -606,8 +630,8 @@ describe('ProfilePage (MSW)', () => {
   it('announces the link copy through an aria-live region', async () => {
     const user = userEvent.setup();
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE))
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/alice`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE))
     );
     vi.stubGlobal('navigator', {
       clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
@@ -630,9 +654,9 @@ describe('ProfilePage (MSW)', () => {
 
   it('affiche le badge soutien uniquement pour un profil soutien', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authMeGuestHandler,
       http.get(`${TEST_API_V1}/users/alice`, () =>
-        HttpResponse.json({ ...ALICE_PROFILE, isSupporter: true })
+        apiJson<'PublicProfileResponse'>({ ...ALICE_PROFILE, isSupporter: true })
       )
     );
 
@@ -645,9 +669,9 @@ describe('ProfilePage (MSW)', () => {
 
   it('n’affiche pas le badge soutien sur un profil sans don', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authMeGuestHandler,
       http.get(`${TEST_API_V1}/users/alice`, () =>
-        HttpResponse.json({ ...ALICE_PROFILE, isSupporter: false })
+        apiJson<'PublicProfileResponse'>({ ...ALICE_PROFILE, isSupporter: false })
       )
     );
 
@@ -659,8 +683,8 @@ describe('ProfilePage (MSW)', () => {
 
   it('affiche les compteurs following/followers cliquables', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE))
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/alice`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE))
     );
 
     renderProfile('alice');
@@ -672,9 +696,11 @@ describe('ProfilePage (MSW)', () => {
   it('ouvre la modal following au clic sur le compteur d’abonnements', async () => {
     const user = userEvent.setup();
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
-      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/alice`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE)),
+      http.get(`${TEST_API_V1}/users/alice/following`, () =>
+        apiJson<'FollowListResponse'>({ items: [] })
+      )
     );
 
     renderProfile('alice');
@@ -693,9 +719,11 @@ describe('ProfilePage (MSW)', () => {
   it('opens the followers modal when clicking the followers counter', async () => {
     const user = userEvent.setup();
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
-      http.get(`${TEST_API_V1}/users/alice/followers`, () => HttpResponse.json({ items: [] }))
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/alice`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE)),
+      http.get(`${TEST_API_V1}/users/alice/followers`, () =>
+        apiJson<'FollowListResponse'>({ items: [] })
+      )
     );
 
     renderProfile('alice');
@@ -710,9 +738,9 @@ describe('ProfilePage (MSW)', () => {
 
   it('asks a signed-out visitor who wants to follow to create an account first', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authMeGuestHandler,
       http.get(`${TEST_API_V1}/users/alice`, () =>
-        HttpResponse.json({ ...ALICE_PROFILE, isFollowedByMe: null })
+        apiJson<'PublicProfileResponse'>({ ...ALICE_PROFILE, isFollowedByMe: null })
       )
     );
     const user = userEvent.setup();
@@ -736,9 +764,9 @@ describe('ProfilePage (MSW)', () => {
 
   it('shows the Follow button when signed in on someone else’s profile', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+      http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME_PROFILE)),
       http.get(`${TEST_API_V1}/users/alice`, () =>
-        HttpResponse.json({ ...ALICE_PROFILE, isFollowedByMe: false })
+        apiJson<'PublicProfileResponse'>({ ...ALICE_PROFILE, isFollowedByMe: false })
       )
     );
 
@@ -749,9 +777,9 @@ describe('ProfilePage (MSW)', () => {
 
   it('shows the Unfollow button when already following', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+      http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME_PROFILE)),
       http.get(`${TEST_API_V1}/users/alice`, () =>
-        HttpResponse.json({ ...ALICE_PROFILE, isFollowedByMe: true })
+        apiJson<'PublicProfileResponse'>({ ...ALICE_PROFILE, isFollowedByMe: true })
       )
     );
 
@@ -783,9 +811,9 @@ describe('ProfilePage (MSW)', () => {
       ];
       for (const key of touchedKeys) client.setQueryData(key, { items: [] });
       server.use(
-        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+        http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME_PROFILE)),
         http.get(`${TEST_API_V1}/users/alice`, () =>
-          HttpResponse.json({ ...ALICE_PROFILE, isFollowedByMe })
+          apiJson<'PublicProfileResponse'>({ ...ALICE_PROFILE, isFollowedByMe })
         ),
         http[method](
           `${TEST_API_V1}/users/alice/follow`,
@@ -806,9 +834,9 @@ describe('ProfilePage (MSW)', () => {
 
   it('n’affiche pas de bouton Suivre sur son propre profil', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+      http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME_PROFILE)),
       http.get(`${TEST_API_V1}/users/moi`, () =>
-        HttpResponse.json({
+        apiJson<'PublicProfileResponse'>({
           ...ALICE_PROFILE,
           handle: 'moi',
           displayName: 'Moi',
@@ -825,9 +853,9 @@ describe('ProfilePage (MSW)', () => {
 
   it('propose Modifier mon profil sur son propre profil', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+      http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME_PROFILE)),
       http.get(`${TEST_API_V1}/users/moi`, () =>
-        HttpResponse.json({
+        apiJson<'PublicProfileResponse'>({
           ...ALICE_PROFILE,
           handle: 'moi',
           displayName: 'Moi',
@@ -844,9 +872,9 @@ describe('ProfilePage (MSW)', () => {
 
   it('puts the edit pencil and Share beside my name, the pencil as an icon alone', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+      http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME_PROFILE)),
       http.get(`${TEST_API_V1}/users/moi`, () =>
-        HttpResponse.json({ ...ALICE_PROFILE, handle: 'moi', displayName: 'Moi' })
+        apiJson<'PublicProfileResponse'>({ ...ALICE_PROFILE, handle: 'moi', displayName: 'Moi' })
       )
     );
 
@@ -864,9 +892,9 @@ describe('ProfilePage (MSW)', () => {
 
   it('keeps Follow under the profile and Share beside the name of someone else', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+      http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME_PROFILE)),
       http.get(`${TEST_API_V1}/users/alice`, () =>
-        HttpResponse.json({ ...ALICE_PROFILE, isFollowedByMe: false })
+        apiJson<'PublicProfileResponse'>({ ...ALICE_PROFILE, isFollowedByMe: false })
       )
     );
 
@@ -883,9 +911,9 @@ describe('ProfilePage (MSW)', () => {
   describe('member colour', () => {
     it('shows any visitor the profile in the colour its member picked, avatar ringed', async () => {
       server.use(
-        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+        authMeGuestHandler,
         http.get(`${TEST_API_V1}/users/alice`, () =>
-          HttpResponse.json({ ...ALICE_PROFILE, accentColor: 'pink' })
+          apiJson<'PublicProfileResponse'>({ ...ALICE_PROFILE, accentColor: 'pink' })
         )
       );
 
@@ -899,10 +927,10 @@ describe('ProfilePage (MSW)', () => {
     it('shows a profile without a chosen colour in the app colour, whatever the visitor picked', async () => {
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () =>
-          HttpResponse.json({ ...ME_PROFILE, accentColor: 'orange' })
+          apiJson<'UserProfileResponse'>({ ...ME_PROFILE, accentColor: 'orange' })
         ),
         http.get(`${TEST_API_V1}/users/alice`, () =>
-          HttpResponse.json({ ...ALICE_PROFILE, accentColor: 'default' })
+          apiJson<'PublicProfileResponse'>({ ...ALICE_PROFILE, accentColor: 'default' })
         )
       );
 
@@ -916,10 +944,10 @@ describe('ProfilePage (MSW)', () => {
     it('follows my current colour on my own profile, not the one the profile was fetched with', async () => {
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () =>
-          HttpResponse.json({ ...ME_PROFILE, accentColor: 'green' })
+          apiJson<'UserProfileResponse'>({ ...ME_PROFILE, accentColor: 'green' })
         ),
         http.get(`${TEST_API_V1}/users/moi`, () =>
-          HttpResponse.json({
+          apiJson<'PublicProfileResponse'>({
             ...ALICE_PROFILE,
             handle: 'moi',
             displayName: 'Moi',
@@ -940,8 +968,10 @@ describe('ProfilePage (MSW)', () => {
   describe('watchlist', () => {
     it('shows a visitor the watchlist of someone else with its count and a way to the full list', async () => {
       server.use(
-        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-        http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE))
+        authMeGuestHandler,
+        http.get(`${TEST_API_V1}/users/alice`, () =>
+          apiJson<'PublicProfileResponse'>(ALICE_PROFILE)
+        )
       );
 
       renderProfile('alice');
@@ -958,9 +988,9 @@ describe('ProfilePage (MSW)', () => {
       ['vide', { isWatchlistPublic: true, watchlistCount: 0 }],
     ])('ne montre rien à un visiteur quand la watchlist est %s', async (_label, overrides) => {
       server.use(
-        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+        authMeGuestHandler,
         http.get(`${TEST_API_V1}/users/alice`, () =>
-          HttpResponse.json({ ...ALICE_PROFILE, ...overrides })
+          apiJson<'PublicProfileResponse'>(buildPublicProfile({ ...ALICE_PROFILE, ...overrides }))
         )
       );
 
@@ -973,9 +1003,9 @@ describe('ProfilePage (MSW)', () => {
 
     it('leads to my own watchlist from my profile', async () => {
       server.use(
-        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+        http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME_PROFILE)),
         http.get(`${TEST_API_V1}/users/moi`, () =>
-          HttpResponse.json({
+          apiJson<'PublicProfileResponse'>({
             ...ALICE_PROFILE,
             handle: 'moi',
             displayName: 'Moi',
@@ -997,9 +1027,9 @@ describe('ProfilePage (MSW)', () => {
 
     it('flags on my profile that my watchlist is hidden, even when empty', async () => {
       server.use(
-        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+        http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME_PROFILE)),
         http.get(`${TEST_API_V1}/users/moi`, () =>
-          HttpResponse.json({
+          apiJson<'PublicProfileResponse'>({
             ...ALICE_PROFILE,
             handle: 'moi',
             displayName: 'Moi',
@@ -1022,9 +1052,9 @@ describe('ProfilePage (MSW)', () => {
 
     it('does not offer the shortcut to the setting when my watchlist is visible', async () => {
       server.use(
-        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+        http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME_PROFILE)),
         http.get(`${TEST_API_V1}/users/moi`, () =>
-          HttpResponse.json({
+          apiJson<'PublicProfileResponse'>({
             ...ALICE_PROFILE,
             handle: 'moi',
             displayName: 'Moi',
@@ -1044,10 +1074,8 @@ describe('ProfilePage (MSW)', () => {
 
   it('shows a not found state when the API returns 404', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/ghost`, () =>
-        HttpResponse.json({ error: 'Profil introuvable' }, { status: 404 })
-      )
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/ghost`, () => apiErrorJson(404, 'profile_not_found'))
     );
 
     renderProfile('ghost');
@@ -1066,11 +1094,9 @@ describe('ProfilePage (MSW)', () => {
     async (urlHandle) => {
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () =>
-          HttpResponse.json({ ...ME_PROFILE, isProfilePublic: false })
+          apiJson<'UserProfileResponse'>({ ...ME_PROFILE, isProfilePublic: false })
         ),
-        http.get(`${TEST_API_V1}/users/:handle`, () =>
-          HttpResponse.json({ error: 'Profil introuvable' }, { status: 404 })
-        )
+        http.get(`${TEST_API_V1}/users/:handle`, () => apiErrorJson(404, 'profile_not_found'))
       );
 
       renderProfile(encodeURIComponent(urlHandle));
@@ -1082,10 +1108,8 @@ describe('ProfilePage (MSW)', () => {
 
   it('still shows the not found state on someone else’s private profile when signed in', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
-      http.get(`${TEST_API_V1}/users/alice`, () =>
-        HttpResponse.json({ error: 'Profil introuvable' }, { status: 404 })
-      )
+      http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME_PROFILE)),
+      http.get(`${TEST_API_V1}/users/alice`, () => apiErrorJson(404, 'profile_not_found'))
     );
 
     renderProfile('alice');
@@ -1096,18 +1120,20 @@ describe('ProfilePage (MSW)', () => {
 
   it('masque la bio quand elle est absente', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authMeGuestHandler,
       http.get(`${TEST_API_V1}/users/bob`, () =>
-        HttpResponse.json({
-          handle: 'bob',
-          displayName: 'Bob',
-          avatarId: '',
-          bio: null,
-          memberSince: '2025-01-01T00:00:00Z',
-          followingCount: 0,
-          followersCount: 0,
-          isFollowedByMe: null,
-        })
+        apiJson<'PublicProfileResponse'>(
+          buildPublicProfile({
+            handle: 'bob',
+            displayName: 'Bob',
+            avatarId: '',
+            bio: null,
+            memberSince: '2025-01-01T00:00:00Z',
+            followingCount: 0,
+            followersCount: 0,
+            isFollowedByMe: null,
+          })
+        )
       )
     );
 
@@ -1119,8 +1145,8 @@ describe('ProfilePage (MSW)', () => {
 
   it('affiche la section statistiques quand les stats sont disponibles', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/alice`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE)),
       createUserStatsHandler('alice', {
         eventsCreated: 4,
         eventsJoined: 2,
@@ -1150,8 +1176,8 @@ describe('ProfilePage (MSW)', () => {
 
   it('affiche la flamme avec le streak courant quand il est > 0', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/alice`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE)),
       createUserStatsHandler('alice', { currentStreakWeeks: 3, bestStreakWeeks: 5 })
     );
 
@@ -1165,8 +1191,8 @@ describe('ProfilePage (MSW)', () => {
 
   it('ne montre pas la flamme quand la série est éteinte, même avec un record', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/alice`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE)),
       createUserStatsHandler('alice', {
         eventsCreated: 1,
         currentStreakWeeks: 0,
@@ -1187,11 +1213,9 @@ describe('ProfilePage (MSW)', () => {
 
   it('hides the stats section when the stats endpoint fails', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
-      http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),
-      http.get(`${TEST_API_V1}/users/alice/stats`, () =>
-        HttpResponse.json({ error: 'Erreur serveur' }, { status: 500 })
-      )
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/users/alice`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE)),
+      http.get(`${TEST_API_V1}/users/alice/stats`, () => apiErrorJson(500, 'internal_error'))
     );
 
     renderProfile('alice');
@@ -1204,19 +1228,25 @@ describe('ProfilePage (MSW)', () => {
   });
 
   describe('favorites', () => {
-    const HEAT = { tmdbId: 949, mediaType: 'movie', title: 'Heat', year: '1995', posterPath: null };
+    const HEAT: ApiSchemas['FavoriteTitleResponse'] = {
+      tmdbId: 949,
+      mediaType: 'movie',
+      title: 'Heat',
+      year: '1995',
+      posterPath: null,
+    };
 
     it('places the favorites first, then the last watched movies, the statistics last', async () => {
       server.use(
-        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+        authMeGuestHandler,
         http.get(`${TEST_API_V1}/users/alice`, () =>
-          HttpResponse.json({ ...ALICE_PROFILE, favorites: [HEAT] })
+          apiJson<'PublicProfileResponse'>({ ...ALICE_PROFILE, favorites: [HEAT] })
         ),
         createUserStatsHandler('alice', { eventsCreated: 4 }),
         http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-          HttpResponse.json({
+          apiJson<'UserWatchedMoviesResponse'>({
             items: [
-              {
+              buildWatchedMovie({
                 tmdbId: 27205,
                 title: 'Inception',
                 year: '2010',
@@ -1224,8 +1254,10 @@ describe('ProfilePage (MSW)', () => {
                 genreIds: [],
                 mediaType: 'movie',
                 watchedAt: '2026-06-01T00:00:00Z',
-              },
+              }),
             ],
+            total: null,
+            hasMore: false,
           })
         )
       );
@@ -1246,14 +1278,14 @@ describe('ProfilePage (MSW)', () => {
     it('opens the film page of a favorite shown beside the watched movies', async () => {
       const user = userEvent.setup();
       server.use(
-        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+        authMeGuestHandler,
         http.get(`${TEST_API_V1}/users/alice`, () =>
-          HttpResponse.json({ ...ALICE_PROFILE, favorites: [HEAT] })
+          apiJson<'PublicProfileResponse'>({ ...ALICE_PROFILE, favorites: [HEAT] })
         ),
         http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-          HttpResponse.json({
+          apiJson<'UserWatchedMoviesResponse'>({
             items: [
-              {
+              buildWatchedMovie({
                 tmdbId: 27205,
                 title: 'Inception',
                 year: '2010',
@@ -1261,8 +1293,10 @@ describe('ProfilePage (MSW)', () => {
                 genreIds: [],
                 mediaType: 'movie',
                 watchedAt: '2026-06-01T00:00:00Z',
-              },
+              }),
             ],
+            total: null,
+            hasMore: false,
           })
         )
       );
@@ -1276,9 +1310,14 @@ describe('ProfilePage (MSW)', () => {
 
     it('invites the owner to pick favorites on their own profile', async () => {
       server.use(
-        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+        http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(ME_PROFILE)),
         http.get(`${TEST_API_V1}/users/moi`, () =>
-          HttpResponse.json({ ...ALICE_PROFILE, handle: 'moi', displayName: 'Moi', favorites: [] })
+          apiJson<'PublicProfileResponse'>({
+            ...ALICE_PROFILE,
+            handle: 'moi',
+            displayName: 'Moi',
+            favorites: [],
+          })
         )
       );
 

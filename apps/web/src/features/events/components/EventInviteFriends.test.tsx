@@ -4,10 +4,12 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import EventInviteFriends from '@/features/events/components/EventInviteFriends';
 import type { EligibleFollowItem } from '@/features/events/api/eventsApi';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
-import { TEST_API_V1 } from '@/mocks/handlers';
+import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
 
 const SLUG = 'soiree-msw';
 
@@ -33,12 +35,11 @@ function follow(overrides: Partial<EligibleFollowItem> = {}): EligibleFollowItem
   };
 }
 
-const guestMe = () =>
-  http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 }));
+const guestMe = () => authMeGuestHandler;
 
 const eligible = (follows: EligibleFollowItem[]) =>
   http.get(`${TEST_API_V1}/events/${SLUG}/invitations/eligible-follows`, () =>
-    HttpResponse.json({ follows })
+    apiJson<'EligibleFollowsResponse'>({ follows })
   );
 
 describe('EventInviteFriends (MSW)', () => {
@@ -112,7 +113,7 @@ describe('EventInviteFriends (MSW)', () => {
       guestMe(),
       eligible([follow()]),
       http.post(`${TEST_API_V1}/events/${SLUG}/invitations`, () =>
-        HttpResponse.json({ error: 'Nope', code: 400 }, { status: 400 })
+        apiErrorJson(400, 'validation_failed')
       )
     );
     renderTab();
@@ -139,7 +140,7 @@ describe('EventInviteFriends (MSW)', () => {
     server.use(
       guestMe(),
       http.get(`${TEST_API_V1}/events/${SLUG}/invitations/eligible-follows`, () =>
-        HttpResponse.json({ error: 'boom', code: 500 }, { status: 500 })
+        apiErrorJson(500, 'internal_error')
       )
     );
     renderTab();
@@ -161,15 +162,17 @@ describe('EventInviteFriends (MSW)', () => {
     async ({ isProfilePublic, href }) => {
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () =>
-          HttpResponse.json({
-            userId: 'u-me',
-            displayName: 'Moi',
-            handle: 'moi',
-            emailMasked: 'm***@x.fr',
-            uiTheme: 'system',
-            accentColor: 'default',
-            isProfilePublic,
-          })
+          apiJson<'UserProfileResponse'>(
+            buildUserProfile({
+              userId: 'u-me',
+              displayName: 'Moi',
+              handle: 'moi',
+              emailMasked: 'm***@x.fr',
+              uiTheme: 'system',
+              accentColor: 'default',
+              isProfilePublic,
+            })
+          )
         ),
         eligible([])
       );

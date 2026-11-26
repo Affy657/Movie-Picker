@@ -6,8 +6,9 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import NotificationsPage from '@/features/notifications/pages/NotificationsPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
-import { TEST_API_V1 } from '@/mocks/handlers';
-import { apiJson, type ApiSchemas } from '@/mocks/apiJson';
+import { TEST_API_V1, listSummaryOf, groupSummaryOf } from '@/mocks/handlers';
+import { apiErrorJson, apiJson, type ApiSchemas } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { ROUTES } from '@/app/routes';
 
 function renderPage() {
@@ -20,9 +21,9 @@ function renderPage() {
   );
 }
 
-const base = { actorAvatarId: '', isRead: false, createdAt: '2026-06-03T10:00:00Z' };
+const base = { actorAvatarId: '' };
 
-const LIST_INVITATION = {
+const LIST_INVITATION = inboxItem({
   ...base,
   id: 'li',
   type: 'listinvitation',
@@ -31,9 +32,9 @@ const LIST_INVITATION = {
   listId: 'l9',
   listName: 'Ciné du dimanche',
   listInvitationPending: true,
-};
+});
 
-const GROUP_INVITATION = {
+const GROUP_INVITATION = inboxItem({
   ...base,
   id: 'gi',
   type: 'groupinvitation',
@@ -42,9 +43,9 @@ const GROUP_INVITATION = {
   groupId: 'g9',
   groupName: 'Les jeudis ciné',
   groupInvitationPending: true,
-};
+});
 
-const GROUP_NIGHT = {
+const GROUP_NIGHT = inboxItem({
   ...base,
   id: 'gn',
   type: 'groupnight',
@@ -54,7 +55,7 @@ const GROUP_NIGHT = {
   eventTitle: 'Halloween en retard',
   groupId: 'g9',
   groupName: 'Les jeudis ciné',
-};
+});
 
 function inboxItem(
   item: Partial<ApiSchemas['UserNotificationItem']> &
@@ -106,25 +107,21 @@ function renderInbox() {
   );
 }
 
-function serveInbox(items: Record<string, unknown>[]) {
-  return http.get(`${TEST_API_V1}/notifications/inbox`, () =>
-    HttpResponse.json({ items, unreadCount: items.length, hasMore: false })
-  );
-}
-
 const ignoreRead = http.post(
   `${TEST_API_V1}/notifications/inbox/:id/read`,
   () => new HttpResponse(null, { status: 204 })
 );
 
 const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
-  HttpResponse.json({
-    userId: 'u1',
-    displayName: 'Alice',
-    emailMasked: 'a***@test.local',
-    uiTheme: 'system',
-    accentColor: 'default',
-  })
+  apiJson<'UserProfileResponse'>(
+    buildUserProfile({
+      userId: 'u1',
+      displayName: 'Alice',
+      emailMasked: 'a***@test.local',
+      uiTheme: 'system',
+      accentColor: 'default',
+    })
+  )
 );
 
 describe('NotificationsPage (MSW)', () => {
@@ -142,8 +139,10 @@ describe('NotificationsPage (MSW)', () => {
       http.get(`${TEST_API_V1}/notifications/inbox`, () => {
         calls += 1;
         if (calls === 1) return new HttpResponse(null, { status: 500 });
-        return HttpResponse.json({
-          items: [{ ...base, id: 'a', type: 'eventdeleted', eventTitle: 'Soiree Rechargee' }],
+        return apiJson<'NotificationInboxResponse'>({
+          items: [
+            inboxItem({ ...base, id: 'a', type: 'eventdeleted', eventTitle: 'Soiree Rechargee' }),
+          ],
           unreadCount: 1,
           hasMore: false,
         });
@@ -165,7 +164,7 @@ describe('NotificationsPage (MSW)', () => {
     server.use(
       authedUserHandler,
       http.get(`${TEST_API_V1}/notifications/inbox`, () =>
-        HttpResponse.json({ items: [], unreadCount: 0 })
+        apiJson<'NotificationInboxResponse'>({ items: [], unreadCount: 0, hasMore: false })
       )
     );
 
@@ -178,26 +177,27 @@ describe('NotificationsPage (MSW)', () => {
     server.use(
       authedUserHandler,
       http.get(`${TEST_API_V1}/notifications/inbox`, () =>
-        HttpResponse.json({
+        apiJson<'NotificationInboxResponse'>({
           items: [
-            {
+            inboxItem({
               ...base,
               id: 'a',
               type: 'movieadded',
               eventSlug: 's1',
               eventTitle: 'Soiree Groupee',
               movieTitle: 'Matrix',
-            },
-            {
+            }),
+            inboxItem({
               ...base,
               id: 'b',
               type: 'participantjoined',
               eventSlug: 's1',
               eventTitle: 'Soiree Groupee',
               actorDisplayName: 'Bob',
-            },
+            }),
           ],
           unreadCount: 2,
+          hasMore: false,
         })
       )
     );
@@ -212,16 +212,19 @@ describe('NotificationsPage (MSW)', () => {
     server.use(
       authedUserHandler,
       http.get(`${TEST_API_V1}/notifications/inbox`, () =>
-        HttpResponse.json({
-          items: ['Matrix', 'Heat', 'Alien', 'Dune'].map((movieTitle, index) => ({
-            ...base,
-            id: `n${index}`,
-            type: 'movieadded',
-            eventSlug: 's1',
-            eventTitle: 'Soiree Groupee',
-            movieTitle,
-          })),
+        apiJson<'NotificationInboxResponse'>({
+          items: ['Matrix', 'Heat', 'Alien', 'Dune'].map((movieTitle, index) =>
+            inboxItem({
+              ...base,
+              id: `n${index}`,
+              type: 'movieadded',
+              eventSlug: 's1',
+              eventTitle: 'Soiree Groupee',
+              movieTitle,
+            })
+          ),
           unreadCount: 4,
+          hasMore: false,
         })
       )
     );
@@ -237,17 +240,18 @@ describe('NotificationsPage (MSW)', () => {
     server.use(
       authedUserHandler,
       http.get(`${TEST_API_V1}/notifications/inbox`, () =>
-        HttpResponse.json({
+        apiJson<'NotificationInboxResponse'>({
           items: [
-            {
+            inboxItem({
               ...base,
               id: 'n1',
               type: 'newfollower',
               actorHandle: 'bob',
               actorDisplayName: 'Bob',
-            },
+            }),
           ],
           unreadCount: 1,
+          hasMore: false,
         })
       ),
       http.post(`${TEST_API_V1}/notifications/inbox/:id/read`, ({ params }) => {
@@ -269,18 +273,19 @@ describe('NotificationsPage (MSW)', () => {
     server.use(
       authedUserHandler,
       http.get(`${TEST_API_V1}/notifications/inbox`, () =>
-        HttpResponse.json({
+        apiJson<'NotificationInboxResponse'>({
           items: [
-            {
+            inboxItem({
               ...base,
               id: 'r1',
               type: 'ratingreminder',
               eventSlug: 'soiree-pizza',
               eventTitle: 'Soiree pizza',
               movieTitle: 'Inception',
-            },
+            }),
           ],
           unreadCount: 1,
+          hasMore: false,
         })
       )
     );
@@ -296,9 +301,10 @@ describe('NotificationsPage (MSW)', () => {
     server.use(
       authedUserHandler,
       http.get(`${TEST_API_V1}/notifications/inbox`, () =>
-        HttpResponse.json({
-          items: [{ ...base, id: 'lb', type: 'letterboxdreconciliationpending' }],
+        apiJson<'NotificationInboxResponse'>({
+          items: [inboxItem({ ...base, id: 'lb', type: 'letterboxdreconciliationpending' })],
           unreadCount: 1,
+          hasMore: false,
         })
       )
     );
@@ -315,9 +321,12 @@ describe('NotificationsPage (MSW)', () => {
     server.use(
       authedUserHandler,
       http.get(`${TEST_API_V1}/notifications/inbox`, () =>
-        HttpResponse.json({
-          items: [{ ...base, id: 'd', type: 'eventdeleted', eventTitle: 'Soiree Annulee' }],
+        apiJson<'NotificationInboxResponse'>({
+          items: [
+            inboxItem({ ...base, id: 'd', type: 'eventdeleted', eventTitle: 'Soiree Annulee' }),
+          ],
           unreadCount: 1,
+          hasMore: false,
         })
       )
     );
@@ -418,7 +427,7 @@ describe('NotificationsPage (MSW)', () => {
 
   describe('invitation to a list', () => {
     it('says who invites to which list, with Accepter and Refuser while it waits', async () => {
-      server.use(authedUserHandler, serveInbox([LIST_INVITATION]));
+      server.use(authedUserHandler, serveTypedInbox([LIST_INVITATION]));
       renderInbox();
 
       expect(
@@ -441,10 +450,12 @@ describe('NotificationsPage (MSW)', () => {
       let markedId: string | null = null;
       server.use(
         authedUserHandler,
-        serveInbox([LIST_INVITATION]),
+        serveTypedInbox([LIST_INVITATION]),
         http.post(`${TEST_API_V1}/lists/l9/invitation/accept`, () => {
           accepted = true;
-          return HttpResponse.json({ id: 'l9', name: 'Ciné du dimanche' });
+          return apiJson<'MovieListSummaryResponse'>(
+            listSummaryOf({ id: 'l9', name: 'Ciné du dimanche' })
+          );
         }),
         http.post(`${TEST_API_V1}/notifications/inbox/:id/read`, ({ params }) => {
           markedId = params.id as string;
@@ -468,7 +479,7 @@ describe('NotificationsPage (MSW)', () => {
       let declined = false;
       server.use(
         authedUserHandler,
-        serveInbox([LIST_INVITATION]),
+        serveTypedInbox([LIST_INVITATION]),
         ignoreRead,
         http.post(`${TEST_API_V1}/lists/l9/invitation/decline`, () => {
           declined = true;
@@ -492,16 +503,9 @@ describe('NotificationsPage (MSW)', () => {
     it('says why an answer failed', async () => {
       server.use(
         authedUserHandler,
-        serveInbox([LIST_INVITATION]),
+        serveTypedInbox([LIST_INVITATION]),
         http.post(`${TEST_API_V1}/lists/l9/invitation/accept`, () =>
-          HttpResponse.json(
-            {
-              error: 'list_invitation_not_found',
-              code: 404,
-              reason: 'list_invitation_not_found',
-            },
-            { status: 404 }
-          )
+          apiErrorJson(404, 'list_invitation_not_found')
         )
       );
       const user = userEvent.setup();
@@ -519,7 +523,7 @@ describe('NotificationsPage (MSW)', () => {
     it('leads to Mes listes once answered, without the answers', async () => {
       server.use(
         authedUserHandler,
-        serveInbox([{ ...LIST_INVITATION, listInvitationPending: false, isRead: true }])
+        serveTypedInbox([{ ...LIST_INVITATION, listInvitationPending: false, isRead: true }])
       );
       renderInbox();
 
@@ -535,9 +539,10 @@ describe('NotificationsPage (MSW)', () => {
     server.use(
       authedUserHandler,
       http.get(`${TEST_API_V1}/notifications/inbox`, () =>
-        HttpResponse.json({
-          items: [{ ...base, id: 'a', type: 'eventdeleted', eventTitle: 'Soiree' }],
+        apiJson<'NotificationInboxResponse'>({
+          items: [inboxItem({ ...base, id: 'a', type: 'eventdeleted', eventTitle: 'Soiree' })],
           unreadCount: 1,
+          hasMore: false,
         })
       ),
       http.post(`${TEST_API_V1}/notifications/inbox/read-all`, () => {
@@ -561,14 +566,23 @@ describe('NotificationsPage (MSW)', () => {
       http.get(`${TEST_API_V1}/notifications/inbox`, ({ request }) => {
         const offset = new URL(request.url).searchParams.get('offset');
         if (offset === '1') {
-          return HttpResponse.json({
-            items: [{ ...base, id: 'page2', type: 'eventdeleted', eventTitle: 'Soiree Page 2' }],
+          return apiJson<'NotificationInboxResponse'>({
+            items: [
+              inboxItem({
+                ...base,
+                id: 'page2',
+                type: 'eventdeleted',
+                eventTitle: 'Soiree Page 2',
+              }),
+            ],
             unreadCount: 2,
             hasMore: false,
           });
         }
-        return HttpResponse.json({
-          items: [{ ...base, id: 'page1', type: 'eventdeleted', eventTitle: 'Soiree Page 1' }],
+        return apiJson<'NotificationInboxResponse'>({
+          items: [
+            inboxItem({ ...base, id: 'page1', type: 'eventdeleted', eventTitle: 'Soiree Page 1' }),
+          ],
           unreadCount: 2,
           hasMore: true,
         });
@@ -588,13 +602,8 @@ describe('NotificationsPage (MSW)', () => {
 
   it('shows a notification once when a new one shifted the next page while the inbox was open', async () => {
     const user = userEvent.setup();
-    const cancelled = (id: string, eventTitle: string, createdAt: string) => ({
-      ...base,
-      id,
-      type: 'eventdeleted',
-      eventTitle,
-      createdAt,
-    });
+    const cancelled = (id: string, eventTitle: string, createdAt: string) =>
+      inboxItem({ ...base, id, type: 'eventdeleted', eventTitle, createdAt });
     const third = cancelled('n3', 'Soiree Trois', '2026-06-03T10:00:00Z');
     const second = cancelled('n2', 'Soiree Deux', '2026-06-02T10:00:00Z');
     const first = cancelled('n1', 'Soiree Une', '2026-06-01T10:00:00Z');
@@ -603,9 +612,17 @@ describe('NotificationsPage (MSW)', () => {
       http.get(`${TEST_API_V1}/notifications/inbox`, ({ request }) => {
         const offset = new URL(request.url).searchParams.get('offset');
         if (offset === '2') {
-          return HttpResponse.json({ items: [second, first], unreadCount: 4, hasMore: false });
+          return apiJson<'NotificationInboxResponse'>({
+            items: [second, first],
+            unreadCount: 4,
+            hasMore: false,
+          });
         }
-        return HttpResponse.json({ items: [third, second], unreadCount: 3, hasMore: true });
+        return apiJson<'NotificationInboxResponse'>({
+          items: [third, second],
+          unreadCount: 3,
+          hasMore: true,
+        });
       })
     );
 
@@ -622,8 +639,8 @@ describe('NotificationsPage (MSW)', () => {
     server.use(
       authedUserHandler,
       http.get(`${TEST_API_V1}/notifications/inbox`, () =>
-        HttpResponse.json({
-          items: [{ ...base, id: 'a', type: 'eventdeleted', eventTitle: 'Soiree' }],
+        apiJson<'NotificationInboxResponse'>({
+          items: [inboxItem({ ...base, id: 'a', type: 'eventdeleted', eventTitle: 'Soiree' })],
           unreadCount: 1,
           hasMore: false,
         })
@@ -640,9 +657,18 @@ describe('NotificationsPage (MSW)', () => {
     server.use(
       authedUserHandler,
       http.get(`${TEST_API_V1}/notifications/inbox`, () =>
-        HttpResponse.json({
-          items: [{ ...base, id: 'a', type: 'eventdeleted', eventTitle: 'Soiree', isRead: true }],
+        apiJson<'NotificationInboxResponse'>({
+          items: [
+            inboxItem({
+              ...base,
+              id: 'a',
+              type: 'eventdeleted',
+              eventTitle: 'Soiree',
+              isRead: true,
+            }),
+          ],
           unreadCount: 0,
+          hasMore: false,
         })
       )
     );
@@ -660,11 +686,13 @@ describe('NotificationsPage (MSW)', () => {
       let accepted = false;
       server.use(
         authedUserHandler,
-        serveInbox([GROUP_INVITATION]),
+        serveTypedInbox([GROUP_INVITATION]),
         ignoreRead,
         http.post(`${TEST_API_V1}/groups/g9/invitation/accept`, () => {
           accepted = true;
-          return HttpResponse.json({ id: 'g9', name: 'Les jeudis ciné' });
+          return apiJson<'FriendGroupSummaryResponse'>(
+            groupSummaryOf({ id: 'g9', name: 'Les jeudis ciné' })
+          );
         })
       );
       const user = userEvent.setup();
@@ -690,7 +718,7 @@ describe('NotificationsPage (MSW)', () => {
       let declined = false;
       server.use(
         authedUserHandler,
-        serveInbox([GROUP_INVITATION]),
+        serveTypedInbox([GROUP_INVITATION]),
         ignoreRead,
         http.post(`${TEST_API_V1}/groups/g9/invitation/decline`, () => {
           declined = true;
@@ -711,7 +739,7 @@ describe('NotificationsPage (MSW)', () => {
     });
 
     it('announces a night of a group and opens it', async () => {
-      server.use(authedUserHandler, serveInbox([GROUP_NIGHT]), ignoreRead);
+      server.use(authedUserHandler, serveTypedInbox([GROUP_NIGHT]), ignoreRead);
       const user = userEvent.setup();
       renderInbox();
 

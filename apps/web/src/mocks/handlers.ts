@@ -30,7 +30,7 @@ type MockTitle<T extends { tmdbId: number; title: string }> = Pick<T, 'tmdbId' |
 
 export type MockWatchlistItem = MockTitle<Schemas['WatchlistItemResponse']>;
 
-function mockWatchlistItem(item: MockWatchlistItem): Schemas['WatchlistItemResponse'] {
+export function mockWatchlistItem(item: MockWatchlistItem): Schemas['WatchlistItemResponse'] {
   return {
     mediaType: 'movie',
     year: '',
@@ -42,6 +42,12 @@ function mockWatchlistItem(item: MockWatchlistItem): Schemas['WatchlistItemRespo
     runtimeMinutes: null,
     ...item,
   };
+}
+
+export function watchlistItemFrom(
+  request: Schemas['AddWatchlistItemRequest']
+): Schemas['WatchlistItemResponse'] {
+  return mockWatchlistItem({ ...request, genreIds: request.genreIds ?? undefined });
 }
 
 export function createWatchlistHandlers(
@@ -111,11 +117,23 @@ export function letterboxdListReport(
   };
 }
 
+export function letterboxdSyncReport(
+  report: Partial<Schemas['LetterboxdSyncResponse']> = {}
+): Schemas['LetterboxdSyncResponse'] {
+  return { ...EMPTY_LETTERBOXD_SYNC, ...report };
+}
+
+export function letterboxdConfirmResult(
+  result: Partial<Schemas['LetterboxdImportConfirmResponse']> = {}
+): Schemas['LetterboxdImportConfirmResponse'] {
+  return { ...EMPTY_LETTERBOXD_CONFIRM, ...result };
+}
+
 export function createLetterboxdSyncHandler(
   report: Partial<Schemas['LetterboxdSyncResponse']> = {}
 ) {
   return http.post(`${V1}/letterboxd/sync`, () =>
-    apiJson<'LetterboxdSyncResponse'>({ ...EMPTY_LETTERBOXD_SYNC, ...report })
+    apiJson<'LetterboxdSyncResponse'>(letterboxdSyncReport(report))
   );
 }
 
@@ -125,7 +143,7 @@ export function createLetterboxdConfirmHandler(
 ) {
   return http.post(`${V1}/letterboxd/confirm`, async ({ request }) => {
     onConfirm((await request.json()) as Schemas['LetterboxdImportConfirmRequest']);
-    return apiJson<'LetterboxdImportConfirmResponse'>({ ...EMPTY_LETTERBOXD_CONFIRM, ...result });
+    return apiJson<'LetterboxdImportConfirmResponse'>(letterboxdConfirmResult(result));
   });
 }
 
@@ -237,6 +255,20 @@ function mockListDetail(list: StoredList): Schemas['MovieListResponse'] {
     updatedAt,
     items: items.map((item) => mockListItem(item)),
   };
+}
+
+export function listItemFrom(
+  request: Schemas['AddWatchlistItemRequest']
+): Schemas['MovieListItemResponse'] {
+  return mockListItem(storedItem(request));
+}
+
+export function listSummaryOf(list: MockList): Schemas['MovieListSummaryResponse'] {
+  return mockListSummary(withListDefaults(list));
+}
+
+export function listDetailOf(list: MockList): Schemas['MovieListResponse'] {
+  return mockListDetail(withListDefaults(list));
 }
 
 function withListDefaults(list: MockList): StoredList {
@@ -605,6 +637,27 @@ function publicWatchedCount(items: MockListItem[], viewerSignedIn: boolean): num
   return viewerSignedIn ? items.filter((item) => item.isWatched).length : null;
 }
 
+export function publicListOf(
+  creator: MockListCreator,
+  list: MockPublicList,
+  viewerSignedIn = true
+): Schemas['PublicListResponse'] {
+  const items = list.items ?? [];
+  return {
+    id: list.id,
+    name: list.name,
+    description: list.description ?? null,
+    createdAt: list.createdAt ?? MOCK_DATE,
+    updatedAt: list.updatedAt ?? MOCK_DATE,
+    itemCount: items.length,
+    memberCount: list.memberCount ?? 1,
+    watchedCount: publicWatchedCount(items, viewerSignedIn),
+    creator: servedAvatar(creator),
+    viewerRole: list.viewerRole ?? null,
+    items: items.map((item) => mockListItem(item)),
+  };
+}
+
 export function createPublicListsHandlers(
   creator: MockListCreator,
   lists: MockPublicList[],
@@ -637,20 +690,7 @@ export function createPublicListsHandlers(
     http.get(`${route}/:listId`, ({ params }) => {
       const list = find(params.listId);
       if (!list) return apiErrorJson(404, 'list_not_found');
-      const items = list.items ?? [];
-      return apiJson<'PublicListResponse'>({
-        id: list.id,
-        name: list.name,
-        description: list.description ?? null,
-        createdAt: list.createdAt ?? MOCK_DATE,
-        updatedAt: list.updatedAt ?? MOCK_DATE,
-        itemCount: items.length,
-        memberCount: list.memberCount ?? 1,
-        watchedCount: publicWatchedCount(items, viewerSignedIn),
-        creator: servedAvatar(creator),
-        viewerRole: list.viewerRole ?? null,
-        items: items.map((item) => mockListItem(item)),
-      });
+      return apiJson<'PublicListResponse'>(publicListOf(creator, list, viewerSignedIn));
     }),
     http.post(`${route}/:listId/copy`, async ({ params, request }) => {
       const list = find(params.listId);
@@ -1070,6 +1110,10 @@ function withGroupDefaults(group: MockGroup): StoredGroup {
     owner,
     members: group.members ?? [{ ...owner, role: 'owner' }],
   };
+}
+
+export function groupSummaryOf(group: MockGroup): Schemas['FriendGroupSummaryResponse'] {
+  return mockGroupSummary(withGroupDefaults(group));
 }
 
 function groupPerson(person: MockListPerson): Schemas['FriendGroupPersonResponse'] {

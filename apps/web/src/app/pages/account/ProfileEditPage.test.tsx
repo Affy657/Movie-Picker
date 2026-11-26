@@ -3,7 +3,9 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import AccountPage from '@/app/pages/account/AccountPage';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
@@ -12,7 +14,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import { setSessionHint } from '@/features/auth/session-hint';
 import { createAppQueryClient } from '@/app/appQueryClient';
 
-const baseUser = {
+const baseUser = buildUserProfile({
   userId: 'u1',
   displayName: 'Alice',
   emailMasked: 'a***@test.local',
@@ -23,7 +25,7 @@ const baseUser = {
   bio: 'Ma bio',
   isProfilePublic: true,
   isWatchlistPublic: true,
-};
+});
 
 function renderProfile(client?: QueryClient) {
   return render(
@@ -47,7 +49,7 @@ describe('ProfileEditPage (MSW)', () => {
   beforeEach(() => {
     setSessionHint();
     sessionStorage.clear();
-    server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(baseUser)));
+    server.use(http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(baseUser)));
   });
 
   it('keeps the bio being typed through an expired session and saves it once back', async () => {
@@ -56,17 +58,15 @@ describe('ProfileEditPage (MSW)', () => {
     const patchBodies: Record<string, unknown>[] = [];
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        sessionAlive
-          ? HttpResponse.json(baseUser)
-          : HttpResponse.json({ reason: 'unauthorized' }, { status: 401 })
+        sessionAlive ? apiJson<'UserProfileResponse'>(baseUser) : apiErrorJson(401, 'unauthorized')
       ),
       http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
         if (!sessionAlive) {
-          return HttpResponse.json({ reason: 'unauthorized' }, { status: 401 });
+          return apiErrorJson(401, 'unauthorized');
         }
         const body = (await request.json()) as Record<string, unknown>;
         patchBodies.push(body);
-        return HttpResponse.json({ ...baseUser, ...body });
+        return apiJson<'UserProfileResponse'>(buildUserProfile({ ...baseUser, ...body }));
       })
     );
     const client = createAppQueryClient();
@@ -109,7 +109,7 @@ describe('ProfileEditPage (MSW)', () => {
     server.use(
       http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
         patchBody = (await request.json()) as Record<string, unknown>;
-        return HttpResponse.json({ ...baseUser, displayName: 'Alicia' });
+        return apiJson<'UserProfileResponse'>({ ...baseUser, displayName: 'Alicia' });
       })
     );
 
@@ -133,7 +133,7 @@ describe('ProfileEditPage (MSW)', () => {
       http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
         const body = (await request.json()) as Record<string, unknown>;
         patchBodies.push(body);
-        return HttpResponse.json({ ...baseUser, ...body });
+        return apiJson<'UserProfileResponse'>(buildUserProfile({ ...baseUser, ...body }));
       })
     );
 
@@ -157,7 +157,7 @@ describe('ProfileEditPage (MSW)', () => {
       http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
         const body = (await request.json()) as Record<string, unknown>;
         patchBodies.push(body);
-        return HttpResponse.json({ ...baseUser, ...body });
+        return apiJson<'UserProfileResponse'>(buildUserProfile({ ...baseUser, ...body }));
       })
     );
 
@@ -179,11 +179,13 @@ describe('ProfileEditPage (MSW)', () => {
       http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
         const body = (await request.json()) as Record<string, unknown>;
         patchBodies.push(body);
-        return HttpResponse.json({
-          ...baseUser,
-          ...body,
-          bio: body.bio === '' ? null : baseUser.bio,
-        });
+        return apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            ...baseUser,
+            ...body,
+            bio: body.bio === '' ? null : baseUser.bio,
+          })
+        );
       })
     );
 
@@ -209,7 +211,7 @@ describe('ProfileEditPage (MSW)', () => {
         const body = (await request.json()) as Record<string, unknown>;
         patchBodies.push(body);
         if (patchBodies.length === 1) await firstSaveReleased;
-        return HttpResponse.json({ ...baseUser, ...body });
+        return apiJson<'UserProfileResponse'>(buildUserProfile({ ...baseUser, ...body }));
       })
     );
 
@@ -244,7 +246,7 @@ describe('ProfileEditPage (MSW)', () => {
         const body = (await request.json()) as Record<string, unknown>;
         patchBodies.push(body);
         if (patchBodies.length === 1) await firstSaveReleased;
-        return HttpResponse.json({ ...baseUser, ...body });
+        return apiJson<'UserProfileResponse'>(buildUserProfile({ ...baseUser, ...body }));
       })
     );
 
@@ -271,7 +273,7 @@ describe('ProfileEditPage (MSW)', () => {
     server.use(
       http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
         patchBody = (await request.json()) as Record<string, unknown>;
-        return HttpResponse.json({ ...baseUser, isProfilePublic: false });
+        return apiJson<'UserProfileResponse'>({ ...baseUser, isProfilePublic: false });
       })
     );
 
@@ -296,7 +298,7 @@ describe('ProfileEditPage (MSW)', () => {
     const user = userEvent.setup();
     server.use(
       http.patch(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({ ...baseUser, isProfilePublic: false })
+        apiJson<'UserProfileResponse'>({ ...baseUser, isProfilePublic: false })
       )
     );
     const client = createTestQueryClient();
@@ -352,7 +354,9 @@ describe('ProfileEditPage (MSW)', () => {
     const user = userEvent.setup();
     server.use(
       http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) =>
-        HttpResponse.json({ ...baseUser, ...((await request.json()) as object) })
+        apiJson<'UserProfileResponse'>(
+          buildUserProfile({ ...baseUser, ...((await request.json()) as object) })
+        )
       )
     );
 
@@ -375,20 +379,20 @@ describe('ProfileEditPage (MSW)', () => {
   });
 
   describe('handle', () => {
-    function availability(body: Record<string, unknown>, status = 200) {
-      return http.get(`${TEST_API_V1}/users/me/handle-availability`, () =>
-        HttpResponse.json(body, { status })
-      );
+    function availability(answer: () => Response) {
+      return http.get(`${TEST_API_V1}/users/me/handle-availability`, answer);
     }
 
     it('says a free handle is available and only takes it when asked', async () => {
       const user = userEvent.setup();
       let patched: Record<string, unknown> | null = null;
       server.use(
-        availability({ handle: 'alicia', available: true, reason: null }),
+        availability(() =>
+          apiJson<'HandleAvailabilityResponse'>({ handle: 'alicia', available: true, reason: null })
+        ),
         http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
           patched = (await request.json()) as Record<string, unknown>;
-          return HttpResponse.json({ ...baseUser, handle: 'alicia' });
+          return apiJson<'UserProfileResponse'>({ ...baseUser, handle: 'alicia' });
         })
       );
 
@@ -411,7 +415,15 @@ describe('ProfileEditPage (MSW)', () => {
 
     it('says when a handle is already taken', async () => {
       const user = userEvent.setup();
-      server.use(availability({ handle: 'bob', available: false, reason: 'handle_taken' }));
+      server.use(
+        availability(() =>
+          apiJson<'HandleAvailabilityResponse'>({
+            handle: 'bob',
+            available: false,
+            reason: 'handle_taken',
+          })
+        )
+      );
 
       renderProfile();
       const field = await screen.findByLabelText('Pseudo');
@@ -424,17 +436,7 @@ describe('ProfileEditPage (MSW)', () => {
 
     it('explains why the rules refuse a handle', async () => {
       const user = userEvent.setup();
-      server.use(
-        availability(
-          {
-            error: 'Handle is too short',
-            reason: 'handle_too_short',
-            code: 400,
-            params: { min: 3 },
-          },
-          400
-        )
-      );
+      server.use(availability(() => apiErrorJson(400, 'handle_too_short', { min: 3 })));
 
       renderProfile();
       const field = await screen.findByLabelText('Pseudo');
@@ -451,7 +453,11 @@ describe('ProfileEditPage (MSW)', () => {
       server.use(
         http.get(`${TEST_API_V1}/users/me/handle-availability`, () => {
           checked = true;
-          return HttpResponse.json({ handle: 'alice', available: true, reason: null });
+          return apiJson<'HandleAvailabilityResponse'>({
+            handle: 'alice',
+            available: true,
+            reason: null,
+          });
         })
       );
 

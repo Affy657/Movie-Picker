@@ -4,11 +4,13 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { CreateEventDialogContext } from '@/features/events/components/create-event/createEventDialogContext';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
 import type { MyEventSummary } from '@/features/events/types';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
-import { apiJson } from '@/mocks/apiJson';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildShowcaseItem } from '@/test-utils/titleItems';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
 import HomeHero from './HomeHero';
 import { useHomeSearchHidden } from './homeSearchVisibility';
@@ -16,27 +18,30 @@ import { buildMyEventSummary } from '@/test-utils/myEventSummary';
 import { markWelcomePending } from '@/features/auth/welcome';
 
 const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
-  HttpResponse.json({
-    userId: 'u1',
-    displayName: 'Alice',
-    handle: 'alice',
-    emailMasked: 'a***@test.local',
-    uiTheme: 'system',
-    accentColor: 'default',
-  })
+  apiJson<'UserProfileResponse'>(
+    buildUserProfile({
+      userId: 'u1',
+      displayName: 'Alice',
+      handle: 'alice',
+      emailMasked: 'a***@test.local',
+      uiTheme: 'system',
+      accentColor: 'default',
+    })
+  )
 );
 
 const trendingHandler = http.get(`${TEST_API_V1}/movies/showcase`, () =>
-  HttpResponse.json({
+  apiJson<'MovieShowcaseListResponse'>({
     section: 'trending',
     theme: null,
-    items: Array.from({ length: 4 }, (_, index) => ({
-      id: 100 + index,
-      mediaType: 'movie',
-      title: `Tendance ${index + 1}`,
-      year: '2024',
-      posterPath: `https://image.tmdb.org/t/p/w500/p${index}.jpg`,
-    })),
+    items: Array.from({ length: 4 }, (_, index) =>
+      buildShowcaseItem({
+        id: 100 + index,
+        title: `Tendance ${index + 1}`,
+        year: '2024',
+        posterPath: `https://image.tmdb.org/t/p/w500/p${index}.jpg`,
+      })
+    ),
     disclaimer: '',
     tmdbAttributionUrl: '',
   })
@@ -63,7 +68,12 @@ function night(overrides: Partial<MyEventSummary>): MyEventSummary {
 
 function eventsHandler(events: MyEventSummary[]) {
   return http.get(`${TEST_API_V1}/events/mine`, () =>
-    HttpResponse.json({ events, hasMore: false, totalActive: events.length, totalFinished: 0 })
+    apiJson<'MyEventsListResponse'>({
+      events,
+      hasMore: false,
+      totalActive: events.length,
+      totalFinished: 0,
+    })
   );
 }
 
@@ -200,7 +210,7 @@ describe('HomeHero', () => {
     server.use(
       authedUserHandler,
       trendingHandler,
-      http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({}, { status: 500 }))
+      http.get(`${TEST_API_V1}/events/mine`, () => apiErrorJson(500, 'internal_error'))
     );
     renderHero();
 

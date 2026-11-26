@@ -3,7 +3,10 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, type InitialEntry } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
+import { buildShowcaseItem, requestedShowcaseSection } from '@/test-utils/titleItems';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import {
   authMeGuestHandler,
@@ -16,7 +19,7 @@ import CatalogListPage from '@/app/pages/CatalogListPage';
 const SUMMARY = 'Les aventures du jeune sorcier, de son arrivée à Poudlard à la bataille finale.';
 
 function item(index: number) {
-  return {
+  return buildShowcaseItem({
     id: 2000 + index,
     mediaType: 'movie',
     title: `Film ${index}`,
@@ -26,12 +29,12 @@ function item(index: number) {
     genreIds: [28],
     rank: null,
     eventCount: null,
-  };
+  });
 }
 
 const showcaseHandler = http.get(`${TEST_API_V1}/movies/showcase`, ({ request }) =>
-  HttpResponse.json({
-    section: new URL(request.url).searchParams.get('section'),
+  apiJson<'MovieShowcaseListResponse'>({
+    section: requestedShowcaseSection(request),
     theme: null,
     items: [item(1), item(2), item(3)],
     disclaimer: 'TMDB',
@@ -40,7 +43,7 @@ const showcaseHandler = http.get(`${TEST_API_V1}/movies/showcase`, ({ request })
 );
 
 const collectionsHandler = http.get(`${TEST_API_V1}/movies/collections`, () =>
-  HttpResponse.json({
+  apiJson<'MovieCollectionListResponse'>({
     items: [
       {
         id: 1241,
@@ -58,18 +61,20 @@ const collectionsHandler = http.get(`${TEST_API_V1}/movies/collections`, () =>
 );
 
 const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
-  HttpResponse.json({
-    userId: 'u1',
-    displayName: 'Alice',
-    emailMasked: 'a***@test.local',
-    uiTheme: 'system',
-    accentColor: 'default',
-    ratingScale: 'ten',
-  })
+  apiJson<'UserProfileResponse'>(
+    buildUserProfile({
+      userId: 'u1',
+      displayName: 'Alice',
+      emailMasked: 'a***@test.local',
+      uiTheme: 'system',
+      accentColor: 'default',
+      ratingScale: 'ten',
+    })
+  )
 );
 
 const emptyWatchlistHandler = http.get(`${TEST_API_V1}/watchlist`, () =>
-  HttpResponse.json({ items: [] })
+  apiJson<'WatchlistResponse'>({ items: [], total: 0, hasMore: false })
 );
 
 const HARRY_POTTER = {
@@ -130,7 +135,11 @@ describe('CatalogListPage', () => {
       authMeGuestHandler,
       showcaseHandler,
       http.get(`${TEST_API_V1}/movies/collections`, () =>
-        HttpResponse.json({ items: [], disclaimer: 'TMDB', tmdbAttributionUrl: '' })
+        apiJson<'MovieCollectionListResponse'>({
+          items: [],
+          disclaimer: 'TMDB',
+          tmdbAttributionUrl: '',
+        })
       )
     );
     renderPage('collection', {
@@ -221,15 +230,17 @@ describe('CatalogListPage', () => {
       showcaseHandler,
       collectionsHandler,
       http.patch(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u1',
-          displayName: 'Alice',
-          emailMasked: 'a***@test.local',
-          uiTheme: 'system',
-          accentColor: 'default',
-          ratingScale: 'ten',
-          dimWatched: true,
-        })
+        apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'u1',
+            displayName: 'Alice',
+            emailMasked: 'a***@test.local',
+            uiTheme: 'system',
+            accentColor: 'default',
+            ratingScale: 'ten',
+            dimWatched: true,
+          })
+        )
       ),
       ...createSavedListsHandlers(),
       ...createWatchedHandlers([{ tmdbId: 2001, title: 'Film 1', source: 'night' }])

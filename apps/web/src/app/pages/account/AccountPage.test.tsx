@@ -3,7 +3,10 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import type { UserProfile } from '@/features/auth/types';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import AccountPage from '@/app/pages/account/AccountPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1, authMeGuestHandler } from '@/mocks/handlers';
@@ -37,23 +40,27 @@ describe('AccountPage (MSW)', () => {
 
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u-acc',
-          displayName: 'Pat',
-          emailMasked: 'p***@test.local',
-          uiTheme: 'light',
-          accentColor: 'default',
-        })
+        apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'u-acc',
+            displayName: 'Pat',
+            emailMasked: 'p***@test.local',
+            uiTheme: 'light',
+            accentColor: 'default',
+          })
+        )
       ),
       http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
-        const body = (await request.json()) as { uiTheme?: string };
+        const body = (await request.json()) as Pick<UserProfile, 'uiTheme'>;
         patchedTheme = body.uiTheme;
-        return HttpResponse.json({
-          userId: 'u-acc',
-          displayName: 'Pat',
-          emailMasked: 'p***@test.local',
-          uiTheme: body.uiTheme ?? 'light',
-        });
+        return apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'u-acc',
+            displayName: 'Pat',
+            emailMasked: 'p***@test.local',
+            uiTheme: body.uiTheme ?? 'light',
+          })
+        );
       })
     );
 
@@ -69,14 +76,16 @@ describe('AccountPage (MSW)', () => {
   it('names my colour in the preferences and sends me to my profile to change it', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u-acc',
-          displayName: 'Pat',
-          emailMasked: 'p***@test.local',
-          uiTheme: 'light',
-          accentColor: 'teal',
-          handle: 'pat',
-        })
+        apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'u-acc',
+            displayName: 'Pat',
+            emailMasked: 'p***@test.local',
+            uiTheme: 'light',
+            accentColor: 'teal',
+            handle: 'pat',
+          })
+        )
       )
     );
 
@@ -96,26 +105,30 @@ describe('AccountPage (MSW)', () => {
 
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u-acc',
-          displayName: 'Pat',
-          emailMasked: 'p***@test.local',
-          uiTheme: 'light',
-          accentColor: 'default',
-          ratingScale: 'five',
-        })
+        apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'u-acc',
+            displayName: 'Pat',
+            emailMasked: 'p***@test.local',
+            uiTheme: 'light',
+            accentColor: 'default',
+            ratingScale: 'five',
+          })
+        )
       ),
       http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
-        const body = (await request.json()) as { ratingScale?: string };
+        const body = (await request.json()) as Pick<UserProfile, 'ratingScale'>;
         patchedRatingScale = body.ratingScale;
-        return HttpResponse.json({
-          userId: 'u-acc',
-          displayName: 'Pat',
-          emailMasked: 'p***@test.local',
-          uiTheme: 'light',
-          accentColor: 'default',
-          ratingScale: body.ratingScale ?? 'five',
-        });
+        return apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'u-acc',
+            displayName: 'Pat',
+            emailMasked: 'p***@test.local',
+            uiTheme: 'light',
+            accentColor: 'default',
+            ratingScale: body.ratingScale ?? 'five',
+          })
+        );
       })
     );
 
@@ -155,11 +168,7 @@ describe('AccountPage (MSW)', () => {
 
   it('failed session check: retry screen instead of the signed-out settings', async () => {
     localStorage.setItem('mp.session-hint', '1');
-    server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({ error: 'Panne' }, { status: 503 })
-      )
-    );
+    server.use(http.get(`${TEST_API_V1}/auth/me`, () => apiErrorJson(503, 'internal_error')));
 
     renderAccount();
 
@@ -173,13 +182,15 @@ describe('AccountPage (MSW)', () => {
   it('sends an unknown section to the preferences without stacking segments', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u-acc',
-          displayName: 'Pat',
-          emailMasked: 'p***@test.local',
-          uiTheme: 'light',
-          accentColor: 'default',
-        })
+        apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'u-acc',
+            displayName: 'Pat',
+            emailMasked: 'p***@test.local',
+            uiTheme: 'light',
+            accentColor: 'default',
+          })
+        )
       )
     );
 

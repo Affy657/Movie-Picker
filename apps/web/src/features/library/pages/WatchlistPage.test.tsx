@@ -4,11 +4,22 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import { apiErrorJson, apiJson, type ApiSchemas } from '@/mocks/apiJson';
+import { buildEventMovie } from '@/test-utils/eventMovie';
+import {
+  mockWatchlistItem,
+  createWatchlistHandlers,
+  TEST_API_V1,
+  type MockWatchlistItem,
+} from '@/mocks/handlers';
+import { buildMyEventSummary } from '@/test-utils/myEventSummary';
+import { buildSearchItem } from '@/test-utils/titleItems';
+import { buildEventDetail } from '@/test-utils/eventDetail';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import WatchlistPage from '@/features/library/pages/WatchlistPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { openSortMenu, pickSort } from '@/test-utils/sortMenu';
 import { stubHoverCapability, stubMatchMedia } from '@/test-utils/matchMedia';
-import { createWatchlistHandlers, TEST_API_V1, type MockWatchlistItem } from '@/mocks/handlers';
 import { MOVIE_PAGE_CHUNK } from '@/app/moviePageChunk';
 
 const { track } = vi.hoisted(() => ({ track: vi.fn() }));
@@ -55,14 +66,16 @@ function renderPageWithFilmPage() {
 }
 
 const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
-  HttpResponse.json({
-    userId: 'u1',
-    displayName: 'Alice',
-    emailMasked: 'a***@test.local',
-    uiTheme: 'system',
-    accentColor: 'default',
-    ratingScale: 'ten',
-  })
+  apiJson<'UserProfileResponse'>(
+    buildUserProfile({
+      userId: 'u1',
+      displayName: 'Alice',
+      emailMasked: 'a***@test.local',
+      uiTheme: 'system',
+      accentColor: 'default',
+      ratingScale: 'ten',
+    })
+  )
 );
 
 const ITEM_A: MockWatchlistItem = {
@@ -96,9 +109,9 @@ const watchlistHandler = createWatchlistHandlers;
 function proposeHandlers(onProposed: (body: Record<string, unknown>) => void) {
   return [
     http.get(`${TEST_API_V1}/events/mine`, () =>
-      HttpResponse.json({
+      apiJson<'MyEventsListResponse'>({
         events: [
-          {
+          buildMyEventSummary({
             id: 'e1',
             slug: 'ma-soiree',
             title: 'Chez moi',
@@ -111,28 +124,36 @@ function proposeHandlers(onProposed: (body: Record<string, unknown>) => void) {
             lifecycle: 'upcoming',
             participantCount: 1,
             movieCount: 0,
-          },
+          }),
         ],
+        hasMore: false,
+        totalActive: 1,
+        totalFinished: 0,
       })
     ),
     http.get(`${TEST_API_V1}/events/slug/ma-soiree`, () =>
-      HttpResponse.json({
-        _id: 'e1',
-        title: 'Chez moi',
-        date: '2035-08-01',
-        time: '22:00',
-        slug: 'ma-soiree',
-        isFinished: false,
-        myParticipant: { _id: 'p1', pseudo: 'Alice' },
-        participantCount: 1,
-        movieCount: 0,
-        participants: [],
-        config: {},
-      })
+      apiJson<'EventDetailResponse'>(
+        buildEventDetail({
+          _id: 'e1',
+          title: 'Chez moi',
+          date: '2035-08-01',
+          time: '22:00',
+          slug: 'ma-soiree',
+          isFinished: false,
+          myParticipant: { _id: 'p1', pseudo: 'Alice' },
+          participantCount: 1,
+          movieCount: 0,
+          participants: [],
+          config: {},
+        })
+      )
     ),
     http.post(`${TEST_API_V1}/events/ma-soiree/movies`, async ({ request }) => {
       onProposed((await request.json()) as Record<string, unknown>);
-      return HttpResponse.json({ _id: 'm1', title: 'Ancien Mais Bien Noté' }, { status: 201 });
+      return apiJson<'MovieWithScoreResponse'>(
+        buildEventMovie({ _id: 'm1', title: 'Ancien Mais Bien Noté' }),
+        { status: 201 }
+      );
     }),
   ];
 }
@@ -354,9 +375,9 @@ describe('WatchlistPage (MSW)', () => {
       authedUserHandler,
       ...watchlistHandler([]),
       http.get(`${TEST_API_V1}/movies/search`, () =>
-        HttpResponse.json({
+        apiJson<'MovieSearchListResponse'>({
           items: [
-            {
+            buildSearchItem({
               id: 100,
               title: 'Film Test',
               year: '2024',
@@ -366,7 +387,7 @@ describe('WatchlistPage (MSW)', () => {
               genreIds: [18, 878],
               watchProviders: [],
               tmdbWatchPageUrl: null,
-            },
+            }),
           ],
           watchProvidersRegion: 'FR',
           disclaimer: '',
@@ -375,8 +396,8 @@ describe('WatchlistPage (MSW)', () => {
       ),
       http.post(`${TEST_API_V1}/watchlist`, async ({ request }) => {
         addedBody = (await request.json()) as Record<string, unknown>;
-        return HttpResponse.json(
-          { tmdbId: 100, mediaType: 'movie', title: 'Film Test', year: '2024' },
+        return apiJson<'WatchlistItemResponse'>(
+          mockWatchlistItem({ tmdbId: 100, title: 'Film Test', year: '2024' }),
           { status: 201 }
         );
       })
@@ -548,11 +569,18 @@ describe('WatchlistPage (MSW)', () => {
     server.use(
       authedUserHandler,
       http.get(`${TEST_API_V1}/watchlist`, () =>
-        HttpResponse.json({ items: [ITEM_A, { ...ITEM_B, runtimeMinutes: null }] })
+        apiJson<'WatchlistResponse'>({
+          items: [
+            mockWatchlistItem(ITEM_A),
+            mockWatchlistItem({ ...ITEM_B, runtimeMinutes: null }),
+          ],
+          total: 2,
+          hasMore: false,
+        })
       ),
       http.get(`${TEST_API_V1}/watchlist/availability`, async () => {
         await availabilityGate;
-        return HttpResponse.json({
+        return apiJson<'WatchlistAvailabilityResponse'>({
           items: [
             {
               tmdbId: 200,
@@ -575,6 +603,8 @@ describe('WatchlistPage (MSW)', () => {
               runtimeMinutes: 125,
             },
           ],
+          partial: false,
+          hasMore: false,
         });
       })
     );
@@ -602,7 +632,7 @@ describe('WatchlistPage (MSW)', () => {
   it('list view: a partial availability keeps the missing rows on their skeleton and asks again until complete', async () => {
     localStorage.removeItem(TOOLBAR_STORAGE_KEY);
     localStorage.setItem('watchlist-view', 'list');
-    const netflix = {
+    const netflix: ApiSchemas['WatchlistAvailabilityItemResponse'] = {
       tmdbId: 200,
       mediaType: 'movie',
       watchProviders: [{ providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' }],
@@ -610,7 +640,7 @@ describe('WatchlistPage (MSW)', () => {
       voteAverage: 9.0,
       runtimeMinutes: 90,
     };
-    const nowhere = {
+    const nowhere: ApiSchemas['WatchlistAvailabilityItemResponse'] = {
       tmdbId: 201,
       mediaType: 'movie',
       watchProviders: [],
@@ -621,12 +651,26 @@ describe('WatchlistPage (MSW)', () => {
     let calls = 0;
     server.use(
       authedUserHandler,
-      http.get(`${TEST_API_V1}/watchlist`, () => HttpResponse.json({ items: [ITEM_A, ITEM_B] })),
+      http.get(`${TEST_API_V1}/watchlist`, () =>
+        apiJson<'WatchlistResponse'>({
+          items: [ITEM_A, ITEM_B].map(mockWatchlistItem),
+          total: 2,
+          hasMore: false,
+        })
+      ),
       http.get(`${TEST_API_V1}/watchlist/availability`, () => {
         calls += 1;
         return calls === 1
-          ? HttpResponse.json({ items: [netflix], partial: true })
-          : HttpResponse.json({ items: [netflix, nowhere], partial: false });
+          ? apiJson<'WatchlistAvailabilityResponse'>({
+              items: [netflix],
+              partial: true,
+              hasMore: false,
+            })
+          : apiJson<'WatchlistAvailabilityResponse'>({
+              items: [netflix, nowhere],
+              partial: false,
+              hasMore: false,
+            });
       })
     );
 
@@ -673,15 +717,17 @@ describe('WatchlistPage (MSW)', () => {
   it('hides the Letterboxd prompt once the username is configured', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u1',
-          displayName: 'Alice',
-          emailMasked: 'a***@test.local',
-          uiTheme: 'system',
-          accentColor: 'default',
-          ratingScale: 'ten',
-          letterboxdUsername: 'alice_lb',
-        })
+        apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'u1',
+            displayName: 'Alice',
+            emailMasked: 'a***@test.local',
+            uiTheme: 'system',
+            accentColor: 'default',
+            ratingScale: 'ten',
+            letterboxdUsername: 'alice_lb',
+          })
+        )
       ),
       ...watchlistHandler([ITEM_A])
     );
@@ -723,16 +769,18 @@ describe('WatchlistPage (MSW)', () => {
   describe('synced with Letterboxd', () => {
     function letterboxdUser(extra: Record<string, unknown> = {}) {
       return http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u1',
-          displayName: 'Alice',
-          emailMasked: 'a***@test.local',
-          uiTheme: 'system',
-          accentColor: 'default',
-          ratingScale: 'ten',
-          letterboxdUsername: 'alice_lb',
-          ...extra,
-        })
+        apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'u1',
+            displayName: 'Alice',
+            emailMasked: 'a***@test.local',
+            uiTheme: 'system',
+            accentColor: 'default',
+            ratingScale: 'ten',
+            letterboxdUsername: 'alice_lb',
+            ...extra,
+          })
+        )
       );
     }
 
@@ -1044,17 +1092,19 @@ describe('WatchlistPage (MSW)', () => {
   describe('visibility', () => {
     function userWith(extra: Record<string, unknown>) {
       return http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u1',
-          displayName: 'Alice',
-          emailMasked: 'a***@test.local',
-          uiTheme: 'system',
-          accentColor: 'default',
-          ratingScale: 'ten',
-          handle: 'alice',
-          isProfilePublic: true,
-          ...extra,
-        })
+        apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'u1',
+            displayName: 'Alice',
+            emailMasked: 'a***@test.local',
+            uiTheme: 'system',
+            accentColor: 'default',
+            ratingScale: 'ten',
+            handle: 'alice',
+            isProfilePublic: true,
+            ...extra,
+          })
+        )
       );
     }
 
@@ -1065,11 +1115,13 @@ describe('WatchlistPage (MSW)', () => {
         ...watchlistHandler([ITEM_A]),
         http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
           body = await request.json();
-          return HttpResponse.json({
-            userId: 'u1',
-            displayName: 'Alice',
-            isWatchlistPublic: false,
-          });
+          return apiJson<'UserProfileResponse'>(
+            buildUserProfile({
+              userId: 'u1',
+              displayName: 'Alice',
+              isWatchlistPublic: false,
+            })
+          );
         })
       );
       const user = userEvent.setup();
@@ -1087,9 +1139,7 @@ describe('WatchlistPage (MSW)', () => {
       server.use(
         userWith({ isWatchlistPublic: false }),
         ...watchlistHandler([ITEM_A]),
-        http.patch(`${TEST_API_V1}/auth/me`, () =>
-          HttpResponse.json({ error: 'boom' }, { status: 500 })
-        )
+        http.patch(`${TEST_API_V1}/auth/me`, () => apiErrorJson(500, 'internal_error'))
       );
       const user = userEvent.setup();
       renderPage();

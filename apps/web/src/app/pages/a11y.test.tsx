@@ -3,7 +3,15 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiJson, type ApiSchemas } from '@/mocks/apiJson';
+import {
+  buildShowcaseItem,
+  buildWatchedMovie,
+  requestedShowcaseSection,
+} from '@/test-utils/titleItems';
+import { buildPublicProfile } from '@/test-utils/publicProfile';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { axe } from 'vitest-axe';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { stubHoverCapability } from '@/test-utils/matchMedia';
@@ -44,21 +52,25 @@ import { clearSessionHint, resetSessionHintMemoryForTests } from '@/features/aut
 
 vi.setConfig({ testTimeout: 60000, hookTimeout: 60000 });
 
-const AUTH_USER = {
+const AUTH_USER = buildUserProfile({
   userId: 'u-a11y',
   displayName: 'TestUser',
   emailMasked: 't***@test.local',
   uiTheme: 'light',
   accentColor: 'default',
-};
+});
 
 const HEAVIEST_PAGE_AXE_BUDGET = 60000;
 
 describe('accessibility (axe)', () => {
   const server = setupServer(
     authMeGuestHandler,
-    http.get(`${TEST_API_V1}/auth/oauth/providers`, () => HttpResponse.json({ providers: [] })),
-    http.get(`${TEST_API_V1}/users/:handle/watched-movies`, () => HttpResponse.json({ items: [] })),
+    http.get(`${TEST_API_V1}/auth/oauth/providers`, () =>
+      apiJson<'OAuthProvidersResponse'>({ providers: [] })
+    ),
+    http.get(`${TEST_API_V1}/users/:handle/watched-movies`, () =>
+      apiJson<'UserWatchedMoviesResponse'>({ items: [], total: null, hasMore: false })
+    ),
     createUserStatsHandler('alice')
   );
 
@@ -113,7 +125,7 @@ describe('accessibility (axe)', () => {
   });
 
   const showcaseItems = [
-    {
+    buildShowcaseItem({
       id: 2001,
       mediaType: 'movie',
       title: 'Film vitrine',
@@ -123,14 +135,14 @@ describe('accessibility (axe)', () => {
       genreIds: [18],
       rank: 1,
       eventCount: 4,
-    },
+    }),
   ];
 
   function showcaseHandlers() {
     return [
       http.get(`${TEST_API_V1}/movies/showcase`, ({ request }) =>
-        HttpResponse.json({
-          section: new URL(request.url).searchParams.get('section') ?? 'trending',
+        apiJson<'MovieShowcaseListResponse'>({
+          section: requestedShowcaseSection(request),
           theme: null,
           items: showcaseItems,
           disclaimer: 'TMDB',
@@ -138,8 +150,18 @@ describe('accessibility (axe)', () => {
         })
       ),
       http.get(`${TEST_API_V1}/movies/collections`, () =>
-        HttpResponse.json({
-          items: [{ id: 10, name: 'Star Wars', overview: null, posterPath: null, movieCount: 9 }],
+        apiJson<'MovieCollectionListResponse'>({
+          items: [
+            {
+              id: 10,
+              name: 'Star Wars',
+              overview: null,
+              posterPath: null,
+              movieCount: 9,
+              previewPosterPaths: [],
+              movieIds: [],
+            },
+          ],
           disclaimer: 'TMDB',
           tmdbAttributionUrl: 'https://www.themoviedb.org/',
         })
@@ -220,8 +242,15 @@ describe('accessibility (axe)', () => {
 
   it("MyEventsPage n'a pas de violations", async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(AUTH_USER)),
-      http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [], total: 0 }))
+      http.get(`${TEST_API_V1}/auth/me`, () => apiJson<'UserProfileResponse'>(AUTH_USER)),
+      http.get(`${TEST_API_V1}/events/mine`, () =>
+        apiJson<'MyEventsListResponse'>({
+          events: [],
+          hasMore: false,
+          totalActive: 0,
+          totalFinished: 0,
+        })
+      )
     );
     const queryClient = createTestQueryClient();
     const { container } = render(
@@ -240,22 +269,24 @@ describe('accessibility (axe)', () => {
 
   it("ProfilePage avec badge soutien n'a pas de violations", async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authMeGuestHandler,
       http.get(`${TEST_API_V1}/users/alice`, () =>
-        HttpResponse.json({
-          handle: 'alice',
-          displayName: 'Alice',
-          avatarId: 'alpha',
-          bio: 'Cinéphile',
-          memberSince: '2024-03-15T00:00:00Z',
-          followingCount: 2,
-          followersCount: 5,
-          isSupporter: true,
-          isFollowedByMe: null,
-        })
+        apiJson<'PublicProfileResponse'>(
+          buildPublicProfile({
+            handle: 'alice',
+            displayName: 'Alice',
+            avatarId: 'alpha',
+            bio: 'Cinéphile',
+            memberSince: '2024-03-15T00:00:00Z',
+            followingCount: 2,
+            followersCount: 5,
+            isSupporter: true,
+            isFollowedByMe: null,
+          })
+        )
       ),
       http.get(`${TEST_API_V1}/users/alice/stats`, () =>
-        HttpResponse.json({
+        apiJson<'UserStatsResponse'>({
           eventsCreated: 0,
           eventsJoined: 0,
           moviesProposed: 0,
@@ -266,6 +297,8 @@ describe('accessibility (axe)', () => {
           bestStreakWeeks: 0,
           favoriteGenres: [],
           dailyActivity: [],
+          proposalsAverageRating: null,
+          publicListCount: 0,
         })
       )
     );
@@ -285,36 +318,49 @@ describe('accessibility (axe)', () => {
   });
 
   describe('favorites', () => {
-    const HEAT = { tmdbId: 949, mediaType: 'movie', title: 'Heat', year: '1995', posterPath: null };
-    const TWIN_PEAKS = {
+    const HEAT: ApiSchemas['FavoriteTitleResponse'] = {
+      tmdbId: 949,
+      mediaType: 'movie',
+      title: 'Heat',
+      year: '1995',
+      posterPath: null,
+    };
+    const TWIN_PEAKS: ApiSchemas['FavoriteTitleResponse'] = {
       tmdbId: 1920,
       mediaType: 'tv',
       title: 'Twin Peaks',
       year: '1990',
       posterPath: null,
     };
-    const OWNER = { ...AUTH_USER, handle: 'alice', isProfilePublic: true, isWatchlistPublic: true };
+    const OWNER = buildUserProfile({
+      ...AUTH_USER,
+      handle: 'alice',
+      isProfilePublic: true,
+      isWatchlistPublic: true,
+    });
 
     it('the profile of an owner with free places has no violations', async () => {
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () =>
-          HttpResponse.json({ ...OWNER, favorites: [HEAT, TWIN_PEAKS] })
+          apiJson<'UserProfileResponse'>({ ...OWNER, favorites: [HEAT, TWIN_PEAKS] })
         ),
         http.get(`${TEST_API_V1}/users/alice`, () =>
-          HttpResponse.json({
-            handle: 'alice',
-            displayName: 'Alice',
-            avatarId: 'alpha',
-            bio: null,
-            memberSince: '2024-03-15T00:00:00Z',
-            followingCount: 0,
-            followersCount: 0,
-            isSupporter: false,
-            isFollowedByMe: null,
-            isWatchlistPublic: true,
-            watchlistCount: 0,
-            favorites: [HEAT, TWIN_PEAKS],
-          })
+          apiJson<'PublicProfileResponse'>(
+            buildPublicProfile({
+              handle: 'alice',
+              displayName: 'Alice',
+              avatarId: 'alpha',
+              bio: null,
+              memberSince: '2024-03-15T00:00:00Z',
+              followingCount: 0,
+              followersCount: 0,
+              isSupporter: false,
+              isFollowedByMe: null,
+              isWatchlistPublic: true,
+              watchlistCount: 0,
+              favorites: [HEAT, TWIN_PEAKS],
+            })
+          )
         )
       );
       const queryClient = createTestQueryClient();
@@ -334,7 +380,7 @@ describe('accessibility (axe)', () => {
     it('the favorites settings with the search open have no violations', async () => {
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () =>
-          HttpResponse.json({ ...OWNER, favorites: [HEAT, TWIN_PEAKS] })
+          apiJson<'UserProfileResponse'>({ ...OWNER, favorites: [HEAT, TWIN_PEAKS] })
         )
       );
       const queryClient = createTestQueryClient();
@@ -355,22 +401,24 @@ describe('accessibility (axe)', () => {
 
   it("ProfileMoviesPage n'a pas de violations", async () => {
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      authMeGuestHandler,
       http.get(`${TEST_API_V1}/users/alice`, () =>
-        HttpResponse.json({
-          handle: 'alice',
-          displayName: 'Alice',
-          avatarId: 'alpha',
-          bio: 'Cinéphile',
-          memberSince: '2024-03-15T00:00:00Z',
-          followingCount: 2,
-          followersCount: 5,
-          isSupporter: false,
-          isFollowedByMe: null,
-        })
+        apiJson<'PublicProfileResponse'>(
+          buildPublicProfile({
+            handle: 'alice',
+            displayName: 'Alice',
+            avatarId: 'alpha',
+            bio: 'Cinéphile',
+            memberSince: '2024-03-15T00:00:00Z',
+            followingCount: 2,
+            followersCount: 5,
+            isSupporter: false,
+            isFollowedByMe: null,
+          })
+        )
       ),
       http.get(`${TEST_API_V1}/users/alice/stats`, () =>
-        HttpResponse.json({
+        apiJson<'UserStatsResponse'>({
           eventsCreated: 1,
           eventsJoined: 1,
           moviesProposed: 2,
@@ -381,12 +429,14 @@ describe('accessibility (axe)', () => {
           bestStreakWeeks: 0,
           favoriteGenres: [],
           dailyActivity: [],
+          proposalsAverageRating: null,
+          publicListCount: 0,
         })
       ),
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
-        HttpResponse.json({
+        apiJson<'UserWatchedMoviesResponse'>({
           items: [
-            {
+            buildWatchedMovie({
               tmdbId: 27205,
               title: 'Inception',
               year: '2010',
@@ -394,8 +444,10 @@ describe('accessibility (axe)', () => {
               genreIds: [28],
               mediaType: 'movie',
               watchedAt: '2026-06-01T00:00:00Z',
-            },
+            }),
           ],
+          total: null,
+          hasMore: false,
         })
       )
     );
@@ -417,14 +469,16 @@ describe('accessibility (axe)', () => {
   it("WatchlistPage n'a pas de violations", async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u1',
-          displayName: 'Alice',
-          emailMasked: 'a***@test.local',
-          uiTheme: 'system',
-          accentColor: 'default',
-          ratingScale: 'ten',
-        })
+        apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'u1',
+            displayName: 'Alice',
+            emailMasked: 'a***@test.local',
+            uiTheme: 'system',
+            accentColor: 'default',
+            ratingScale: 'ten',
+          })
+        )
       ),
       ...createWatchlistHandlers([
         {
@@ -455,14 +509,16 @@ describe('accessibility (axe)', () => {
     stubHoverCapability();
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u1',
-          displayName: 'Alice',
-          emailMasked: 'a***@test.local',
-          uiTheme: 'system',
-          accentColor: 'default',
-          ratingScale: 'ten',
-        })
+        apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'u1',
+            displayName: 'Alice',
+            emailMasked: 'a***@test.local',
+            uiTheme: 'system',
+            accentColor: 'default',
+            ratingScale: 'ten',
+          })
+        )
       ),
       ...createWatchlistHandlers([
         {

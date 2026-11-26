@@ -24,7 +24,7 @@ public sealed class ReportProfilePhotoHandler : IReportProfilePhotoHandler
     public const string ReportedPhotoScope = "photo-report";
     public const string ModerationEmailScope = "photo-report-email";
     public const int MaxModerationEmailsPerDay = 20;
-    public const string ReportedLogTemplate = "PhotoReport: the {Photo} {Key} of {OwnerId} was reported by {ReporterId}";
+    public const string ReportedLogMessage = "PhotoReport: the {Photo} {Key} of {OwnerId} was reported by {ReporterId}";
 
     private const string EmailTag = "photo-report";
     private const string ModerationInbox = "moderation";
@@ -70,7 +70,7 @@ public sealed class ReportProfilePhotoHandler : IReportProfilePhotoHandler
             return;
         }
 
-        _logger.LogInformation(ReportedLogTemplate, photo.Kind, photo.Key, owner.Id, reporterId);
+        _logger.LogInformation(ReportedLogMessage, photo.Kind, photo.Key, owner.Id, reporterId);
         if (!await _quota.TryConsumeAsync(ReportedPhotoScope, photo.Key, 1, Day, ct))
             return;
         if (!await _quota.TryConsumeAsync(ModerationEmailScope, ModerationInbox, MaxModerationEmailsPerDay, Day, ct))

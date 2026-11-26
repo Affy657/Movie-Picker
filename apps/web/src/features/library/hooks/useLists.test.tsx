@@ -2,7 +2,8 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest
 import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson } from '@/mocks/apiJson';
 import { LocaleProvider } from '@/shared/i18n';
 import { createTestQueryClient, withQueryClient } from '@/test-utils/queryWrapper';
 import { createListsHandlers, TEST_API_V1 } from '@/mocks/handlers';
@@ -181,10 +182,7 @@ describe('lists hooks', () => {
     it('unchecks the list again and says why when the list is full', async () => {
       server.use(
         http.post(`${TEST_API_V1}/lists/l1/items`, () =>
-          HttpResponse.json(
-            { reason: 'list_full', error: 'full', params: { max: 500 } },
-            { status: 409 }
-          )
+          apiErrorJson(409, 'list_full', { max: 500 })
         ),
         ...createListsHandlers([{ id: 'l1', name: 'Halloween' }])
       );

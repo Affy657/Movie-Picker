@@ -3,10 +3,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiErrorJson, apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import RegisterPage from '@/features/auth/pages/RegisterPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
-import { TEST_API_V1 } from '@/mocks/handlers';
+import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
 
 function renderRegister(initialPath = '/register') {
   return render(
@@ -41,18 +43,20 @@ describe('RegisterPage (MSW)', () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
         sessionActive
-          ? HttpResponse.json({
-              userId: 'u-reg',
-              displayName: 'Sam',
-              emailMasked: 's***@test.local',
-              uiTheme: 'system',
-              accentColor: 'default',
-            })
-          : HttpResponse.json({ error: '401' }, { status: 401 })
+          ? apiJson<'UserProfileResponse'>(
+              buildUserProfile({
+                userId: 'u-reg',
+                displayName: 'Sam',
+                emailMasked: 's***@test.local',
+                uiTheme: 'system',
+                accentColor: 'default',
+              })
+            )
+          : apiErrorJson(401, 'unauthorized')
       ),
       http.post(`${TEST_API_V1}/auth/register`, async () => {
         sessionActive = true;
-        return HttpResponse.json({}, { status: 201 });
+        return apiJson<'RegisterResponse'>({ userId: 'u1', displayName: 'Alice' }, { status: 201 });
       })
     );
 
@@ -76,17 +80,19 @@ describe('RegisterPage (MSW)', () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
         sessionActive
-          ? HttpResponse.json({
-              userId: 'u-reg',
-              displayName: 'Sam',
-              emailMasked: 's***@test.local',
-            })
-          : HttpResponse.json({ error: '401' }, { status: 401 })
+          ? apiJson<'UserProfileResponse'>(
+              buildUserProfile({
+                userId: 'u-reg',
+                displayName: 'Sam',
+                emailMasked: 's***@test.local',
+              })
+            )
+          : apiErrorJson(401, 'unauthorized')
       ),
       http.post(`${TEST_API_V1}/auth/register`, async ({ request }) => {
         body = await request.json();
         sessionActive = true;
-        return HttpResponse.json({}, { status: 201 });
+        return apiJson<'RegisterResponse'>({ userId: 'u1', displayName: 'Alice' }, { status: 201 });
       })
     );
 
@@ -128,7 +134,7 @@ describe('RegisterPage (MSW)', () => {
   it('shows the Google and GitHub sign-up before the form', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/oauth/providers`, () =>
-        HttpResponse.json({ providers: ['google', 'github'] })
+        apiJson<'OAuthProvidersResponse'>({ providers: ['google', 'github'] })
       )
     );
     renderRegister();
@@ -144,7 +150,7 @@ describe('RegisterPage (MSW)', () => {
     server.use(
       http.post(`${TEST_API_V1}/auth/register`, () => {
         registerPosts += 1;
-        return HttpResponse.json({}, { status: 201 });
+        return apiJson<'RegisterResponse'>({ userId: 'u1', displayName: 'Alice' }, { status: 201 });
       })
     );
     renderRegister();
@@ -199,12 +205,10 @@ describe('RegisterPage (MSW)', () => {
     const user = userEvent.setup();
     let registerPosts = 0;
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({ error: '401' }, { status: 401 })
-      ),
+      authMeGuestHandler,
       http.post(`${TEST_API_V1}/auth/register`, async () => {
         registerPosts += 1;
-        return HttpResponse.json({}, { status: 201 });
+        return apiJson<'RegisterResponse'>({ userId: 'u1', displayName: 'Alice' }, { status: 201 });
       })
     );
 

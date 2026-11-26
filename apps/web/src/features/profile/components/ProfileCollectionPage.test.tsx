@@ -3,7 +3,9 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
+import { buildPublicProfile } from '@/test-utils/publicProfile';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import { MOVIE_PAGE_CHUNK } from '@/app/moviePageChunk';
@@ -12,7 +14,7 @@ import ProfileCollectionPage, {
   type ProfileCollectionTexts,
 } from '@/features/profile/components/ProfileCollectionPage';
 
-const ALICE_PROFILE = {
+const ALICE_PROFILE = buildPublicProfile({
   handle: 'alice',
   displayName: 'Alice',
   avatarId: 'alpha',
@@ -22,7 +24,7 @@ const ALICE_PROFILE = {
   followersCount: 7,
   isSupporter: false,
   isFollowedByMe: null,
-};
+});
 
 const ITEMS: TitleSummary[] = ['Inception', 'Arrival', 'Interstellar'].map((title, i) => ({
   tmdbId: 100 + i,
@@ -72,7 +74,7 @@ function renderCollectionAt(entry: { pathname: string; key: string }) {
 
 describe('ProfileCollectionPage', () => {
   const server = setupServer(
-    http.get(`${TEST_API_V1}/users/:handle`, () => HttpResponse.json(ALICE_PROFILE))
+    http.get(`${TEST_API_V1}/users/:handle`, () => apiJson<'PublicProfileResponse'>(ALICE_PROFILE))
   );
 
   beforeAll(() => server.listen({ onUnhandledFrame: 'bypass' }));

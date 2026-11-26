@@ -2,7 +2,9 @@ import { describe, it, expect, afterAll, afterEach, beforeAll, vi } from 'vitest
 import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import LandingPage from '@/app/pages/LandingPage';
@@ -83,14 +85,16 @@ describe('LandingPage', () => {
   describe('signed in', () => {
     const server = setupServer(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u1',
-          displayName: 'Alice',
-          handle: 'alice',
-          emailMasked: 'a***@test.local',
-          uiTheme: 'system',
-          accentColor: 'default',
-        })
+        apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'u1',
+            displayName: 'Alice',
+            handle: 'alice',
+            emailMasked: 'a***@test.local',
+            uiTheme: 'system',
+            accentColor: 'default',
+          })
+        )
       )
     );
 

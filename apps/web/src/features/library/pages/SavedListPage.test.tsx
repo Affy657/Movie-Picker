@@ -3,7 +3,9 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import { openSortMenu, sortChoices } from '@/test-utils/sortMenu';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubHoverCapability, stubMatchMedia } from '@/test-utils/matchMedia';
@@ -16,16 +18,18 @@ import {
 } from '@/mocks/handlers';
 import SavedListPage from './SavedListPage';
 
-const PROFILE = {
+const PROFILE = buildUserProfile({
   userId: 'u1',
   displayName: 'Alice',
   emailMasked: 'a***@test.local',
   uiTheme: 'system',
   accentColor: 'default',
   ratingScale: 'ten',
-};
+});
 
-const authedUser = http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(PROFILE));
+const authedUser = http.get(`${TEST_API_V1}/auth/me`, () =>
+  apiJson<'UserProfileResponse'>(PROFILE)
+);
 
 function film(tmdbId: number, title: string, year: string, isWatched = false) {
   return {
@@ -84,7 +88,7 @@ const HARRY_POTTER_SUMMARY =
   'Les aventures du jeune sorcier Harry Potter, de son arrivée à Poudlard à sa bataille contre Voldemort.';
 
 const collections = http.get(`${TEST_API_V1}/movies/collections`, () =>
-  HttpResponse.json({
+  apiJson<'MovieCollectionListResponse'>({
     items: [
       {
         id: 1241,
@@ -268,7 +272,7 @@ describe('SavedListPage', () => {
       http.get(`${TEST_API_V1}/saved-lists/s1`, () => {
         reads += 1;
         if (reads > 1) return undefined;
-        return HttpResponse.json({
+        return apiJson<'SavedListResponse'>({
           id: 's1',
           sourceType: 'tmdbCollection',
           sourceId: '1241',
@@ -277,7 +281,11 @@ describe('SavedListPage', () => {
           posterPaths: [],
           watchedCount: 0,
           createdAt: '2026-11-01T00:00:00Z',
+          description: null,
+          creator: null,
           unavailable: true,
+          unavailableReason: null,
+          copyAvailable: false,
           items: [],
         });
       }),

@@ -2,10 +2,12 @@ import { describe, it, expect, beforeAll, afterEach, afterAll, beforeEach, vi } 
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
+import { apiJson } from '@/mocks/apiJson';
+import { buildUserProfile } from '@/test-utils/userProfile';
 import OAuthCallbackPage from '@/features/auth/pages/OAuthCallbackPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
-import { TEST_API_V1 } from '@/mocks/handlers';
+import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
 
 const { track } = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock('@/shared/hooks/useAnalytics', () => ({ useAnalytics: () => ({ track }) }));
@@ -39,13 +41,15 @@ describe('OAuthCallbackPage (MSW)', () => {
   it('pose le session hint puis redirige vers returnTo', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u-oauth',
-          displayName: 'Oa',
-          emailMasked: 'o***@test.local',
-          uiTheme: 'system',
-          accentColor: 'default',
-        })
+        apiJson<'UserProfileResponse'>(
+          buildUserProfile({
+            userId: 'u-oauth',
+            displayName: 'Oa',
+            emailMasked: 'o***@test.local',
+            uiTheme: 'system',
+            accentColor: 'default',
+          })
+        )
       )
     );
 
@@ -58,9 +62,7 @@ describe('OAuthCallbackPage (MSW)', () => {
   });
 
   it('sans returnTo, redirige vers la home', async () => {
-    server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({ error: '401' }, { status: 401 }))
-    );
+    server.use(authMeGuestHandler);
 
     renderCallback('/auth/callback');
 
@@ -76,11 +78,7 @@ describe('OAuthCallbackPage (MSW)', () => {
     'measures a %s with its provider and where the account was heading',
     async (event, name, returnTo, origin) => {
       track.mockClear();
-      server.use(
-        http.get(`${TEST_API_V1}/auth/me`, () =>
-          HttpResponse.json({ error: '401' }, { status: 401 })
-        )
-      );
+      server.use(authMeGuestHandler);
 
       renderCallback(`/auth/callback?returnTo=${returnTo}&provider=github&event=${event}`);
 
