@@ -19,11 +19,10 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 
 ## Sommaire
 
-### Pour un agent (1)
+### Pour un agent (0)
 
 | Dette | Zone | Sujet |
 |---|---|---|
-| DEBT-123 | Front | la page Réglages tient la porte Lighthouse à 85 pile, sans marge |
 
 ### Geste humain (0)
 
@@ -40,24 +39,6 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 # Pour un agent
 
 Se traite en autonomie, sans attendre personne.
-
-## DEBT-123 la page Réglages tient la porte Lighthouse à 85 pile, sans marge
-
-- state: agent
-- impact: `/settings` mesure 85 de performance, le plancher exact, à chaque déploiement en recette depuis des semaines. Une passe à 84 a fait échouer la recette deux fois le 2026-11-26, sur des commits sans rapport avec la page, et la relance est passée. Une porte qui tombe au hasard apprend à relancer sans lire.
-- ou: `apps/web/src/app/pages/account/AccountPage.tsx` (état déconnecté : `GuestPreferencesSection`), `scripts/lighthouse-run.mjs` (entrée `/settings`).
-- verify: liste les scores de Réglages sous 88 des derniers déploiements en recette ; vide quand la marge est revenue.
-
-  ```bash
-  for id in $(gh run list --workflow deploy.yml --limit 15 --json databaseId --jq '.[].databaseId'); do
-    gh run view "$id" --log 2>/dev/null | grep -oE "settings performance: [0-9]+" | awk -F': ' '$2 < 88'
-  done
-  ```
-
-- fix: l'élément LCP est le paragraphe `p.lead` de la page (« Ces préférences s’appliquent à cet appareil… »), peint seulement une fois le chunk paresseux de la route chargé et évalué : 4,3 s simulées pour un LCP de 2,7 s sur l’accueil, à premier octet et FCP égaux (rapport `lighthouse-reports-1` du run de recette du 2026-11-26 à 15 h 35). Mesurer ce que le chunk de `/settings` emporte et le réduire, ou rendre l’en-tête de la page hors du chunk. `SessionGate` ne s’applique pas (C9, point 2) et peindre un titre dans la coquille échoue sur la taille (C2).
-- fini-quand: médiane de Réglages à 88 ou plus sur trois déploiements en recette de suite, `verify` vide.
-- piege: un gain mesuré en local ne compte pas, le runner seul fait foi (C8, I2) ; ne jamais baisser le plancher de la page pour faire passer la porte.
-
 
 
 ---
@@ -170,6 +151,7 @@ Deux pistes de coquille restent mortes : peindre le titre de page échoue sur la
 
 1. **Le discriminant est `hasSessionHint()`, pas `isLoading`** : au premier rendu la requête de session est `isLoading` même sans session possible, et rendre les enfants suffit à déclencher l'import du chunk, avec un affichage juste et une mesure inchangée. `fetchAuthMeForSession` rend `null` sans requête quand l'indice est absent.
 2. **Une page dont l'état déconnecté rend autre chose qu'un `SignedOutState` n'entre pas dans ce portail** : `/settings` rend `GuestPreferencesSection`, une fonctionnalité pour visiteur anonyme.
+3. **`/settings` garde ses sections de membre hors de son chunk** : `AccountPage` ne rend en direct que les préférences de l'appareil, sans attendre la session quand `hasSessionHint()` est faux ; profil, sécurité, intégrations et notifications vivent dans `AccountSettingsRoutes`, chargé à part (`AccountPage.chunks.test.tsx`). Un import statique d'une section dans `AccountPage` remet 23 chunks devant le LCP du visiteur : 85 sur le runner avant le découpage (ex-DEBT-123, deux échecs à 84 le 2026-11-26), 91 après.
 
 ## C10 Sentry se charge à la première interaction ou dix secondes après `load`
 
