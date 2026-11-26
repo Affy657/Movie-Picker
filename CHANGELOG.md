@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.33.4] - 2026-11-26
+
 ### Fixed
 
 - **Une page qui charge encore ne se présente plus à Google comme une copie de l’accueil** : tant qu’un profil, une liste ou une watchlist n’a pas reçu ses données, la page déclare sa propre adresse comme adresse de référence, et plus celle de l’accueil.
@@ -1213,7 +1215,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.33.3...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.33.4...HEAD
+[1.33.4]: https://github.com/Affy657/Movie-Picker/compare/v1.33.3...v1.33.4
 [1.33.3]: https://github.com/Affy657/Movie-Picker/compare/v1.33.2...v1.33.3
 [1.33.2]: https://github.com/Affy657/Movie-Picker/compare/v1.33.1...v1.33.2
 [1.33.1]: https://github.com/Affy657/Movie-Picker/compare/v1.33.0...v1.33.1
