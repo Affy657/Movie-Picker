@@ -42,7 +42,7 @@ public sealed class RecurringGroupNightTests : FriendGroupTestBase
 
     private async Task<Event> NextOccurrenceOfAsync(Event parent)
     {
-        var reloaded = await _events.GetByIdOrSlugAsync(parent.Slug);
+        var reloaded = await _events.GetBySlugAsync(parent.Slug);
         return Assert.Single(await _events.ListByIdsAsync([reloaded!.NextOccurrenceEventId!]));
     }
 

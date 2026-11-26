@@ -4,5 +4,5 @@ namespace MoviePicker.Api.Application.UseCases.ResetWheel;
 
 public interface IResetWheelHandler
 {
-    Task<ResetWheelResponse> HandleAsync(string idOrSlug, CancellationToken ct = default);
+    Task<ResetWheelResponse> HandleAsync(string slug, CancellationToken ct = default);
 }

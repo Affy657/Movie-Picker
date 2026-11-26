@@ -24,9 +24,9 @@ public sealed class EventViewTagHandler : IEventViewTagHandler
         _clock = clock;
     }
 
-    public async Task<string?> HandleAsync(string idOrSlug, CancellationToken ct = default)
+    public async Task<string?> HandleAsync(string slug, CancellationToken ct = default)
     {
-        var evt = await _eventRepository.GetByIdOrSlugAsync(idOrSlug, ct);
+        var evt = await _eventRepository.GetBySlugAsync(slug, ct);
         if (evt is null)
             return null;
 

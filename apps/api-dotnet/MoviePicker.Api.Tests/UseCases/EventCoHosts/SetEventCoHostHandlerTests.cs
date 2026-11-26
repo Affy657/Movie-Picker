@@ -51,7 +51,7 @@ public sealed class SetEventCoHostHandlerTests
         UpdatedAt = Now
     };
 
-    private async Task<Event> ReloadAsync() => (await _events.GetByIdOrSlugAsync("jeudi-cine"))!;
+    private async Task<Event> ReloadAsync() => (await _events.GetBySlugAsync("jeudi-cine"))!;
 
     [Fact]
     public async Task AParticipantWhoDeletesTheirAccountMeanwhile_IsNotNamed()

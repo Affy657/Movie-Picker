@@ -10,7 +10,7 @@ using MoviePicker.Api.Infrastructure.Web;
 namespace MoviePicker.Api.Controllers;
 
 [ApiController]
-[Route(ApiRoutePrefix.V1 + "/events/{idOrSlug}")]
+[Route(ApiRoutePrefix.V1 + "/events/{slug}")]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 public sealed class EventLiveController : ControllerBase
 {
@@ -24,7 +24,7 @@ public sealed class EventLiveController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Stream(
-        string idOrSlug,
+        string slug,
         [FromQuery] string? tab,
         [FromServices] IOpenEventStreamHandler handler,
         [FromServices] IEventLiveFeed feed,
@@ -32,7 +32,7 @@ public sealed class EventLiveController : ControllerBase
         [FromServices] EventStreamGate gate,
         CancellationToken ct)
     {
-        var access = await handler.HandleAsync(idOrSlug, ct);
+        var access = await handler.HandleAsync(slug, ct);
         if (!gate.TryEnter(HttpContext, tab, out var lease))
         {
             Response.Headers.RetryAfter = StreamRetryAfterSeconds;
@@ -50,13 +50,13 @@ public sealed class EventLiveController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> SetPresence(
-        string idOrSlug,
+        string slug,
         [FromBody] PresenceRequest request,
         [FromServices] ISetPresenceHandler handler,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        await handler.HandleAsync(userId, idOrSlug, request, ct);
+        await handler.HandleAsync(userId, slug, request, ct);
         return NoContent();
     }
 }

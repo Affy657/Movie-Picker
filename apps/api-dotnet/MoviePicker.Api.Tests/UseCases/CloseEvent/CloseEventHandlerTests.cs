@@ -50,7 +50,7 @@ public sealed class CloseEventHandlerTests
     [Fact]
     public async Task HandleAsync_EventNotFound_ThrowsNotFoundException()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
+        _eventRepo.Setup(r => r.GetBySlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad"));
         Assert.Equal(ErrorCodes.EventNotFound, ex.Reason);
@@ -60,7 +60,7 @@ public sealed class CloseEventHandlerTests
     public async Task HandleAsync_Anonymous_ThrowsForbiddenException()
     {
         var evt = ActiveEvent();
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _currentUser.Setup(c => c.GetUserId()).Returns((string?)null);
 
         var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1"));
@@ -71,7 +71,7 @@ public sealed class CloseEventHandlerTests
     public async Task HandleAsync_AnotherAccount_ThrowsForbiddenException()
     {
         var evt = ActiveEvent();
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _currentUser.Setup(c => c.GetUserId()).Returns("someone-else");
 
         var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1"));
@@ -83,7 +83,7 @@ public sealed class CloseEventHandlerTests
     {
         var now = DateTimeOffset.UtcNow;
         var evt = new Event { Id = "evt1", Title = "Soirée", Date = TestDates.Upcoming, Time = "20:00", Slug = "soiree", CreatorUserId = HostUserId, ClosedAt = now, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
         var result = await _sut.HandleAsync("evt1");
 
@@ -96,7 +96,7 @@ public sealed class CloseEventHandlerTests
     public async Task HandleAsync_Success_UpdatesEventWithClosedAt()
     {
         var evt = ActiveEvent();
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         Event? captured = null;
         _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .Callback<Event, CancellationToken>((e, _) => captured = e)
@@ -126,7 +126,7 @@ public sealed class CloseEventHandlerTests
             Winners = TestWinners.Won("mov1")
         };
         Assert.Equal(EventLifecycle.Pending, evt.Lifecycle(threeHoursAfterTheStart));
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         Event? captured = null;
         _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .Callback<Event, CancellationToken>((e, _) => captured = e)
@@ -151,7 +151,7 @@ public sealed class CloseEventHandlerTests
 
     private void GivenHostClosing(Event evt)
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
     }
@@ -187,7 +187,7 @@ public sealed class CloseEventHandlerTests
     public async Task HandleAsync_AlreadyClosed_DoesNotRunTheWatchlistCleanupAgain()
     {
         var closed = ActiveEvent() with { Winners = TestWinners.Won("m-win"), ClosedAt = DateTimeOffset.UtcNow };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(closed);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(closed);
 
         await _sut.HandleAsync("evt1");
 

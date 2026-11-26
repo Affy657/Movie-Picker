@@ -19,13 +19,13 @@ public sealed class AnnounceWheelWinnerHandler : IAnnounceWheelWinnerHandler
         _announcement = announcement;
     }
 
-    public async Task HandleAsync(string idOrSlug, CancellationToken ct = default)
+    public async Task HandleAsync(string slug, CancellationToken ct = default)
     {
         var userId = _currentUserAccessor.GetUserId();
         var evt = await HostedEvent.LoadForHostEvenFinishedAsync(
             _eventRepository,
             userId,
-            idOrSlug,
+            slug,
             ct);
 
         await _announcement.AnnounceAwaitingPicksAsync(evt, userId, ct);

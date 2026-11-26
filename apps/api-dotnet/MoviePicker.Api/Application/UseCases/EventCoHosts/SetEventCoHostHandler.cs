@@ -26,12 +26,12 @@ public sealed class SetEventCoHostHandler : ISetEventCoHostHandler
 
     public async Task HandleAsync(
         string userId,
-        string idOrSlug,
+        string slug,
         string participantId,
         bool coHost,
         CancellationToken ct = default)
     {
-        var evt = await _events.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
+        var evt = await _events.GetRequiredBySlugAsync(slug, ct);
         if (!HostedEvent.IsCreator(evt, userId))
             throw Errors.CreatorOnlyCoHosts();
 
@@ -47,7 +47,7 @@ public sealed class SetEventCoHostHandler : ISetEventCoHostHandler
             async token =>
             {
                 await _events.LockForWriteAsync(evt.Id, token);
-                var current = await _events.GetRequiredByIdOrSlugAsync(idOrSlug, token);
+                var current = await _events.GetRequiredBySlugAsync(slug, token);
                 var updated = Applied(current, await CoHostTargetAsync(current, participantId, token), coHost);
                 if (!ReferenceEquals(updated, current))
                     await _events.UpdateAsync(updated with { UpdatedAt = now }, token);

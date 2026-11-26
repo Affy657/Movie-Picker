@@ -6,7 +6,7 @@ public interface ISetMovieRatingHandler
 {
     Task<MovieRatingResponse> HandleAsync(
         string userId,
-        string idOrSlug,
+        string slug,
         string movieId,
         SetMovieRatingRequest request,
         CancellationToken ct = default);

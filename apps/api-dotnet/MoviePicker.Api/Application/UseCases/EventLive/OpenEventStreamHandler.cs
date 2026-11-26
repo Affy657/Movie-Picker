@@ -18,9 +18,9 @@ public sealed class OpenEventStreamHandler : IOpenEventStreamHandler
         _currentUserAccessor = currentUserAccessor;
     }
 
-    public async Task<EventStreamAccess> HandleAsync(string idOrSlug, CancellationToken ct = default)
+    public async Task<EventStreamAccess> HandleAsync(string slug, CancellationToken ct = default)
     {
-        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
+        var evt = await _eventRepository.GetRequiredBySlugAsync(slug, ct);
         var userId = _currentUserAccessor.GetUserId();
         var participant = string.IsNullOrEmpty(userId)
             ? null

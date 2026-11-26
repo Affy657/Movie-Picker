@@ -24,7 +24,7 @@ public sealed class DeleteEventHandlerNotificationTests
 
     public DeleteEventHandlerNotificationTests()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _eventRepo.Setup(r => r.GetBySlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Event
             {
                 Id = "evt1",

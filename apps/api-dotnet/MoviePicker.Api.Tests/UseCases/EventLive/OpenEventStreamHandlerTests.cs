@@ -18,7 +18,7 @@ public sealed class OpenEventStreamHandlerTests
 
     public OpenEventStreamHandlerTests()
     {
-        _events.Setup(r => r.GetByIdOrSlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(_event);
+        _events.Setup(r => r.GetBySlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(_event);
         _sut = new OpenEventStreamHandler(_events.Object, _participants.Object, _currentUser.Object);
     }
 

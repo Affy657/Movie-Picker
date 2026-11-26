@@ -35,13 +35,13 @@ public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
         _clock = clock;
     }
 
-    public async Task<WheelResponse> HandleAsync(string idOrSlug, SetManualWinnerRequest request, CancellationToken ct = default)
+    public async Task<WheelResponse> HandleAsync(string slug, SetManualWinnerRequest request, CancellationToken ct = default)
     {
         var userId = _currentUserAccessor.GetUserId();
         var evt = await HostedEvent.LoadForHostAsync(
             _eventRepository,
             userId,
-            idOrSlug,
+            slug,
             _clock.GetUtcNow(),
             ct);
 

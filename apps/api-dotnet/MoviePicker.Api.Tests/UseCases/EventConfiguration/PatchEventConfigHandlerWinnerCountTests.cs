@@ -41,7 +41,7 @@ public sealed class PatchEventConfigHandlerWinnerCountTests
     }
 
     private void GivenEvent(Event evt) =>
-        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _events.Setup(r => r.GetBySlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
     private static Event Upcoming(params string[] winners) => new()
     {

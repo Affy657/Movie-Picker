@@ -98,7 +98,7 @@ public sealed class EventLiveHub : IEventLiveFeed
             var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
             var presenceRepository = scope.ServiceProvider.GetRequiredService<IEventPresenceRepository>();
 
-            var evt = await events.GetByIdOrSlugAsync(watch.Slug, ct);
+            var evt = await events.GetBySlugAsync(watch.Slug, ct);
             var now = _clock.GetUtcNow();
             var stamp = evt is null ? GoneStamp : Stamp(evt, now);
             var presence = evt is null

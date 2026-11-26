@@ -81,7 +81,7 @@ public sealed class RemoveParticipantHandlerTests
 
     private void SetupEvent(Event evt) =>
         _eventRepo
-            .Setup(r => r.GetByIdOrSlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetBySlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(evt);
 
     private void SetupParticipant(Participant? p) =>
@@ -99,7 +99,7 @@ public sealed class RemoveParticipantHandlerTests
     public async Task HandleAsync_EventNotFound_ThrowsNotFound()
     {
         _eventRepo
-            .Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetBySlugAsync("bad", It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event?)null);
 
         await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad", "p1"));
@@ -193,7 +193,7 @@ public sealed class RemoveParticipantHandlerTests
     {
         AsHost();
         var evt = ActiveEvent();
-        _eventRepo.SetupSequence(r => r.GetByIdOrSlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _eventRepo.SetupSequence(r => r.GetBySlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(evt)
             .ReturnsAsync(evt with { Winners = TestWinners.Won("m1") });
         SetupParticipant(Participant(userId: null));
@@ -425,7 +425,7 @@ public sealed class RemoveParticipantHandlerTests
     {
         var before = ActiveEvent(creatorUserId: "creator") with { CoHostUserIds = ["co-host"] };
         _eventRepo
-            .SetupSequence(r => r.GetByIdOrSlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .SetupSequence(r => r.GetBySlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(before)
             .ReturnsAsync(before with { CoHostUserIds = ["co-host", "guest"] });
         SetupParticipant(Participant(userId: "guest"));
@@ -443,7 +443,7 @@ public sealed class RemoveParticipantHandlerTests
     {
         var before = ActiveEvent(creatorUserId: "creator") with { CoHostUserIds = ["co-host"] };
         _eventRepo
-            .SetupSequence(r => r.GetByIdOrSlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .SetupSequence(r => r.GetBySlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(before)
             .ReturnsAsync(before with { CoHostUserIds = [] });
         SetupParticipant(Participant(userId: "guest"));

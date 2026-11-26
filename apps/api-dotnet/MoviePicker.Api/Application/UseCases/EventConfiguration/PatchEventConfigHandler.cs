@@ -44,12 +44,12 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
     }
 
     public async Task<EventConfigResponse> HandleAsync(
-        string idOrSlug,
+        string slug,
         PatchEventConfigRequest request,
         CancellationToken ct = default)
     {
         var userId = _currentUserAccessor.GetUserId();
-        var evt = await HostedEvent.LoadForHostEvenFinishedAsync(_events, userId, idOrSlug, ct);
+        var evt = await HostedEvent.LoadForHostEvenFinishedAsync(_events, userId, slug, ct);
 
         var hasConfigChange = HasConfigChange(request);
         var hasDateTimeChange = request.Date is not null || request.Time is not null;

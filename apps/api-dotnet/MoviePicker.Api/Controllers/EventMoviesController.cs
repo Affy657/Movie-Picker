@@ -19,7 +19,7 @@ namespace MoviePicker.Api.Controllers;
 
 [ApiController]
 [Authorize]
-[Route(ApiRoutePrefix.V1 + "/events/{idOrSlug}/movies")]
+[Route(ApiRoutePrefix.V1 + "/events/{slug}/movies")]
 [ProducesResponseType(StatusCodes.Status401Unauthorized)]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 public sealed class EventMoviesController : ControllerBase
@@ -32,18 +32,18 @@ public sealed class EventMoviesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> List(
-        string idOrSlug,
+        string slug,
         [FromServices] IEventViewTagHandler viewTag,
         [FromServices] IListMoviesForEventHandler handler,
         CancellationToken ct,
         [FromQuery] string? participantId = null)
     {
-        var entityTag = await viewTag.HandleAsync(idOrSlug, ct);
+        var entityTag = await viewTag.HandleAsync(slug, ct);
         ConditionalGet.Stamp(Response, entityTag);
         if (ConditionalGet.IsNotModified(Request, entityTag))
             return StatusCode(StatusCodes.Status304NotModified);
 
-        var list = await handler.HandleAsync(idOrSlug, participantId, ct);
+        var list = await handler.HandleAsync(slug, participantId, ct);
         return Ok(list);
     }
 
@@ -54,13 +54,13 @@ public sealed class EventMoviesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Add(
-        string idOrSlug,
+        string slug,
         [FromBody] AddMovieRequest request,
         [FromServices] IAddMovieHandler handler,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var movie = await handler.HandleAsync(userId, idOrSlug, request, ct);
+        var movie = await handler.HandleAsync(userId, slug, request, ct);
         return Created(string.Empty, movie);
     }
 
@@ -72,14 +72,14 @@ public sealed class EventMoviesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Delete(
-        string idOrSlug,
+        string slug,
         string movieId,
         [FromBody] DeleteMovieRequest body,
         [FromServices] IDeleteMovieHandler handler,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        await handler.HandleAsync(userId, idOrSlug, movieId, body.ParticipantId, ct);
+        await handler.HandleAsync(userId, slug, movieId, body.ParticipantId, ct);
         return NoContent();
     }
 
@@ -91,14 +91,14 @@ public sealed class EventMoviesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Vote(
-        string idOrSlug,
+        string slug,
         string movieId,
         [FromBody] VoteRequest request,
         [FromServices] IVoteMovieHandler handler,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var vote = await handler.HandleAsync(userId, idOrSlug, movieId, request, ct);
+        var vote = await handler.HandleAsync(userId, slug, movieId, request, ct);
         return Ok(vote);
     }
 
@@ -110,7 +110,7 @@ public sealed class EventMoviesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> ClearVote(
-        string idOrSlug,
+        string slug,
         string movieId,
         [FromQuery] string participantId,
         [FromServices] IClearMovieVoteHandler handler,
@@ -119,7 +119,7 @@ public sealed class EventMoviesController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(participantId))
             throw Errors.ParticipantIdRequired();
-        await handler.HandleAsync(userId, idOrSlug, movieId, participantId, ct);
+        await handler.HandleAsync(userId, slug, movieId, participantId, ct);
         return NoContent();
     }
 
@@ -131,14 +131,14 @@ public sealed class EventMoviesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> MarkAsSeen(
-        string idOrSlug,
+        string slug,
         string movieId,
         [FromBody] MarkAsSeenRequest request,
         [FromServices] IMarkAsSeenHandler handler,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var res = await handler.HandleAsync(userId, idOrSlug, movieId, request, ct);
+        var res = await handler.HandleAsync(userId, slug, movieId, request, ct);
         return Ok(res);
     }
 
@@ -151,14 +151,14 @@ public sealed class EventMoviesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> SetPitchNote(
-        string idOrSlug,
+        string slug,
         string movieId,
         [FromBody] SetMoviePitchNoteRequest request,
         [FromServices] ISetMoviePitchNoteHandler handler,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        await handler.HandleAsync(userId, idOrSlug, movieId, request, ct);
+        await handler.HandleAsync(userId, slug, movieId, request, ct);
         return NoContent();
     }
 
@@ -171,14 +171,14 @@ public sealed class EventMoviesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> DeletePitchNote(
-        string idOrSlug,
+        string slug,
         string movieId,
         [FromBody] DeleteMoviePitchNoteRequest request,
         [FromServices] IDeleteMoviePitchNoteHandler handler,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        await handler.HandleAsync(userId, idOrSlug, movieId, request, ct);
+        await handler.HandleAsync(userId, slug, movieId, request, ct);
         return NoContent();
     }
 
@@ -189,14 +189,14 @@ public sealed class EventMoviesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> SetWheelExclusion(
-        string idOrSlug,
+        string slug,
         string movieId,
         [FromBody] SetMovieWheelExclusionRequest request,
         [FromServices] ISetMovieWheelExclusionHandler handler,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        await handler.HandleAsync(userId, idOrSlug, movieId, request, ct);
+        await handler.HandleAsync(userId, slug, movieId, request, ct);
         return NoContent();
     }
 
@@ -209,14 +209,14 @@ public sealed class EventMoviesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> SetRating(
-        string idOrSlug,
+        string slug,
         string movieId,
         [FromBody] SetMovieRatingRequest request,
         [FromServices] ISetMovieRatingHandler handler,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        var res = await handler.HandleAsync(userId, idOrSlug, movieId, request, ct);
+        var res = await handler.HandleAsync(userId, slug, movieId, request, ct);
         return Ok(res);
     }
 
@@ -228,14 +228,14 @@ public sealed class EventMoviesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> DeleteRating(
-        string idOrSlug,
+        string slug,
         string movieId,
         [FromBody] DeleteMovieRatingRequest request,
         [FromServices] IDeleteMovieRatingHandler handler,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        await handler.HandleAsync(userId, idOrSlug, movieId, request.ParticipantId, ct);
+        await handler.HandleAsync(userId, slug, movieId, request.ParticipantId, ct);
         return NoContent();
     }
 
@@ -247,14 +247,14 @@ public sealed class EventMoviesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> UnmarkAsSeen(
-        string idOrSlug,
+        string slug,
         string movieId,
         [FromBody] UnmarkAsSeenRequest request,
         [FromServices] IUnmarkAsSeenHandler handler,
         [CurrentUserId] string userId,
         CancellationToken ct)
     {
-        await handler.HandleAsync(userId, idOrSlug, movieId, request.ParticipantId, ct);
+        await handler.HandleAsync(userId, slug, movieId, request.ParticipantId, ct);
         return NoContent();
     }
 }

@@ -155,7 +155,7 @@ public sealed class DeleteAccountHandlerTests
 
         await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
 
-        var reloaded = await f.Events.GetByIdOrSlugAsync(other.Slug);
+        var reloaded = await f.Events.GetBySlugAsync(other.Slug);
         Assert.Equal(["someone-else"], reloaded!.RemovedUserIds);
     }
 
@@ -298,7 +298,7 @@ public sealed class DeleteAccountHandlerTests
 
         Assert.Null(await f.Users.GetByIdAsync(user.Id));
 
-        var keptCreatedEvent = await f.Events.GetByIdOrSlugAsync(createdEvent.Slug);
+        var keptCreatedEvent = await f.Events.GetBySlugAsync(createdEvent.Slug);
         Assert.NotNull(keptCreatedEvent);
         Assert.Null(keptCreatedEvent!.CreatorUserId);
 
@@ -596,7 +596,7 @@ public sealed class DeleteAccountHandlerTests
 
         await f.CreateHandler().HandleAsync(host.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
 
-        var handedOver = await f.Events.GetByIdOrSlugAsync("nuit-nolan");
+        var handedOver = await f.Events.GetBySlugAsync("nuit-nolan");
         Assert.Equal(first.Id, handedOver!.CreatorUserId);
         Assert.Null(handedOver.ClosedAt);
         var notice = Assert.Single(await f.Notifications.ListByUserIdAsync(first.Id));
@@ -620,7 +620,7 @@ public sealed class DeleteAccountHandlerTests
             CreatorUserId = host.Id,
             CoHostUserIds = [heir.Id, other.Id]
         });
-        var night = (await f.Events.GetByIdOrSlugAsync("nuit-nolan"))!;
+        var night = (await f.Events.GetBySlugAsync("nuit-nolan"))!;
         var start = DateTimeOffset.UtcNow.AddDays(-3);
         await JoinAsync(f, night.Id, host.Id, "Neo", start);
         await JoinAsync(f, night.Id, heir.Id, "Heir", start.AddHours(1));
@@ -628,7 +628,7 @@ public sealed class DeleteAccountHandlerTests
 
         await f.CreateHandler().HandleAsync(host.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
 
-        var handedOver = await f.Events.GetByIdOrSlugAsync("nuit-nolan");
+        var handedOver = await f.Events.GetBySlugAsync("nuit-nolan");
         Assert.Equal(heir.Id, handedOver!.CreatorUserId);
         Assert.Equal([other.Id], handedOver.CoHostUserIds);
     }
@@ -643,7 +643,7 @@ public sealed class DeleteAccountHandlerTests
 
         await f.CreateHandler().HandleAsync(host.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
 
-        var closed = await f.Events.GetByIdOrSlugAsync("seul");
+        var closed = await f.Events.GetBySlugAsync("seul");
         Assert.NotNull(closed!.ClosedAt);
         Assert.Null(closed.CreatorUserId);
     }
@@ -658,14 +658,14 @@ public sealed class DeleteAccountHandlerTests
 
         await f.CreateHandler().HandleAsync(host.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
 
-        var closed = await f.Events.GetByIdOrSlugAsync("chaque-jeudi");
+        var closed = await f.Events.GetBySlugAsync("chaque-jeudi");
         Assert.NotNull(closed!.ClosedAt);
         Assert.Null(closed.Recurrence);
 
         var pass = await f.RecurringPass().RunAsync();
 
         Assert.Equal(new RecurringEventPassResult(0, 0, 0), pass);
-        Assert.Null((await f.Events.GetByIdOrSlugAsync("chaque-jeudi"))!.NextOccurrenceEventId);
+        Assert.Null((await f.Events.GetBySlugAsync("chaque-jeudi"))!.NextOccurrenceEventId);
     }
 
     [Fact]
@@ -680,7 +680,7 @@ public sealed class DeleteAccountHandlerTests
 
         await f.CreateHandler().HandleAsync(host.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
 
-        var handedOver = await f.Events.GetByIdOrSlugAsync("chaque-mardi");
+        var handedOver = await f.Events.GetBySlugAsync("chaque-mardi");
         Assert.Equal(heir.Id, handedOver!.CreatorUserId);
         Assert.Equal(RecurrenceFrequency.Weekly, handedOver.Recurrence);
         Assert.Null(handedOver.ClosedAt);
@@ -697,7 +697,7 @@ public sealed class DeleteAccountHandlerTests
 
         await f.CreateHandler().HandleAsync(host.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
 
-        var kept = await f.Events.GetByIdOrSlugAsync("passee");
+        var kept = await f.Events.GetBySlugAsync("passee");
         Assert.Null(kept!.CreatorUserId);
         Assert.Null(kept.ClosedAt);
         Assert.Empty(await f.Notifications.ListByUserIdAsync(guest.Id));
@@ -752,11 +752,11 @@ public sealed class DeleteAccountHandlerTests
         var user = await SeedUserAsync(f, "abcd1234");
         var joined = await f.Events.AddAsync(new Event { Title = "Soirée amie", Slug = "soiree-amie", CreatorUserId = "other-1" });
         await f.Participants.AddAsync(new Participant { EventId = joined.Id, Pseudo = "Neo", UserId = user.Id });
-        var before = (await f.Events.GetByIdOrSlugAsync(joined.Slug))!.WriteSeq;
+        var before = (await f.Events.GetBySlugAsync(joined.Slug))!.WriteSeq;
 
         await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
 
-        Assert.True((await f.Events.GetByIdOrSlugAsync(joined.Slug))!.WriteSeq > before);
+        Assert.True((await f.Events.GetBySlugAsync(joined.Slug))!.WriteSeq > before);
     }
 
     [Fact]

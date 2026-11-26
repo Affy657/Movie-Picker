@@ -128,7 +128,7 @@ internal static partial class DevelopmentScenarioSeed
         foreach (var (voter, film) in night.Votes)
             await VoteAsync(vote, httpContext, created.Slug, films[film].Id, participants[voter], people[voter].Id, 1, ct).ConfigureAwait(false);
 
-        var evt = await events.GetByIdOrSlugAsync(created.Slug, ct).ConfigureAwait(false)
+        var evt = await events.GetBySlugAsync(created.Slug, ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException($"Seed group ranking night not found: {created.Slug}");
         var closed = utc.AddDays(-night.DaysAgo);
         foreach (var (viewer, film) in night.Seen)

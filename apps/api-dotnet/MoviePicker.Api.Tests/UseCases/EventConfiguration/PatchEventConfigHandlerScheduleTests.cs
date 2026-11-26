@@ -44,7 +44,7 @@ public sealed class PatchEventConfigHandlerScheduleTests
     }
 
     private void Night(string date, string time) =>
-        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>()))
+        _events.Setup(r => r.GetBySlugAsync("s", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Event
             {
                 Id = "evt",

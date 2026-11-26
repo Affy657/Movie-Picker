@@ -35,7 +35,7 @@ public sealed class DeleteMovieRatingHandlerTests
 
     private void Arrange(Event evt, string? participantUserId = OwnerUserId)
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync(evt.Slug, It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync(evt.Slug, It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo
             .Setup(r => r.FindByIdAndEventIdAsync(ParticipantId, evt.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Participant

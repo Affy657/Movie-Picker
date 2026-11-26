@@ -47,12 +47,12 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         _logger = logger;
     }
 
-    public async Task<RemoveParticipantResponse> HandleAsync(string idOrSlug, string participantId, CancellationToken ct = default)
+    public async Task<RemoveParticipantResponse> HandleAsync(string slug, string participantId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(participantId))
             throw Errors.ParticipantRequired();
 
-        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
+        var evt = await _eventRepository.GetRequiredBySlugAsync(slug, ct);
         EnsureParticipantsCanChange(evt);
 
         var participant = await _participantRepository.FindByIdAndEventIdAsync(participantId, evt.Id, ct);
@@ -72,7 +72,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
 
         EnsureMayRemoveFrom(evt);
         var keptOutUserId = isHost && !isSelfConnected ? participant.UserId : null;
-        var movieIds = await RemoveWithItsMoviesAsync(idOrSlug, evt.Id, participant, keptOutUserId, EnsureMayRemoveFrom, ct);
+        var movieIds = await RemoveWithItsMoviesAsync(slug, evt.Id, participant, keptOutUserId, EnsureMayRemoveFrom, ct);
         if (!string.IsNullOrEmpty(keptOutUserId))
             await _audience.NotifyUsersAsync([keptOutUserId], RemovedMessage(evt), CancellationToken.None);
 
@@ -113,7 +113,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
     }
 
     private async Task<IReadOnlyList<string>> RemoveWithItsMoviesAsync(
-        string idOrSlug,
+        string slug,
         string eventId,
         Participant participant,
         string? keptOutUserId,
@@ -124,7 +124,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         await _unitOfWork.ExecuteAsync(
             async token =>
             {
-                var current = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, token);
+                var current = await _eventRepository.GetRequiredBySlugAsync(slug, token);
                 EnsureParticipantsCanChange(current);
                 ensureMayRemove(current);
 

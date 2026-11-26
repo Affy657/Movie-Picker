@@ -42,7 +42,7 @@ public sealed class GroupNightCreationTests : FriendGroupTestBase
 
         var created = await Handler().HandleAsync(Night(group.Id), FriendGroupTestKit.Member);
 
-        var stored = await _events.GetByIdOrSlugAsync(created.Slug);
+        var stored = await _events.GetBySlugAsync(created.Slug);
         Assert.Equal(group.Id, stored!.GroupId);
         _announcer.Verify(
             a => a.AnnounceAsync(
@@ -73,7 +73,7 @@ public sealed class GroupNightCreationTests : FriendGroupTestBase
 
         var created = await Handler().HandleAsync(Night(null), FriendGroupTestKit.Owner);
 
-        Assert.Null((await _events.GetByIdOrSlugAsync(created.Slug))!.GroupId);
+        Assert.Null((await _events.GetBySlugAsync(created.Slug))!.GroupId);
         _announcer.VerifyNoOtherCalls();
     }
 }

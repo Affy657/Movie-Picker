@@ -67,7 +67,7 @@ public sealed class SetManualWinnerHandlerTests
     [Fact]
     public async Task HandleAsync_EventNotFound_ThrowsNotFoundException()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
+        _eventRepo.Setup(r => r.GetBySlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad", Request("mov1")));
     }
@@ -75,7 +75,7 @@ public sealed class SetManualWinnerHandlerTests
     [Fact]
     public async Task HandleAsync_NotHost_ThrowsForbiddenException()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent("real"));
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent("real"));
 
         var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1", Request("mov1")));
         Assert.Equal(ErrorCodes.HostOnly, ex.Reason);
@@ -85,7 +85,7 @@ public sealed class SetManualWinnerHandlerTests
     public async Task HandleAsync_EventFinished_ThrowsConflictException()
     {
         var evt = ActiveEvent() with { ClosedAt = DateTimeOffset.UtcNow };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request("mov1")));
         Assert.Equal(ErrorCodes.EventFinished, ex.Reason);
@@ -94,7 +94,7 @@ public sealed class SetManualWinnerHandlerTests
     [Fact]
     public async Task HandleAsync_UnknownMovie_ThrowsNotFoundException()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
         _movieRepo.Setup(r => r.GetByIdAsync("mov1", It.IsAny<CancellationToken>())).ReturnsAsync((Movie?)null);
 
         await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("evt1", Request("mov1")));
@@ -104,7 +104,7 @@ public sealed class SetManualWinnerHandlerTests
     [Fact]
     public async Task HandleAsync_MovieFromAnotherEvent_ThrowsNotFoundException()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
         _movieRepo.Setup(r => r.GetByIdAsync("mov1", It.IsAny<CancellationToken>())).ReturnsAsync(MovieOf("mov1", "otherEvent"));
 
         await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("evt1", Request("mov1")));
@@ -114,7 +114,7 @@ public sealed class SetManualWinnerHandlerTests
     [Fact]
     public async Task HandleAsync_MovieExcludedFromWheel_ThrowsConflictException()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
         _movieRepo.Setup(r => r.GetByIdAsync("mov1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(MovieOf("mov1", "evt1") with { ExcludedFromWheel = true });
 
@@ -126,7 +126,7 @@ public sealed class SetManualWinnerHandlerTests
     [Fact]
     public async Task HandleAsync_Success_StoresManualWinnerAndAnnounces()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
         _movieRepo.Setup(r => r.GetByIdAsync("mov1", It.IsAny<CancellationToken>())).ReturnsAsync(MovieOf("mov1", "evt1"));
         Event? captured = null;
         _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
@@ -148,7 +148,7 @@ public sealed class SetManualWinnerHandlerTests
     [Fact]
     public async Task HandleAsync_AnonymousNight_DoesNotRevealWhoProposedTheWinner()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(ActiveEvent() with { Config = new EventConfig { AnonymousProposals = true } });
         _movieRepo.Setup(r => r.GetByIdAsync("mov1", It.IsAny<CancellationToken>())).ReturnsAsync(MovieOf("mov1", "evt1"));
         _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
@@ -168,7 +168,7 @@ public sealed class SetManualWinnerHandlerTests
             Config = new EventConfig { WinnerCount = 3 },
             Winners = TestWinners.Won("mov1")
         };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAsync("mov1", It.IsAny<CancellationToken>())).ReturnsAsync(MovieOf("mov1", "evt1"));
 
         await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request("mov1")));

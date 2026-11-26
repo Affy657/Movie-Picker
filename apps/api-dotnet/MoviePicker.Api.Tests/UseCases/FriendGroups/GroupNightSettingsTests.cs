@@ -56,7 +56,7 @@ public sealed class GroupNightSettingsTests : FriendGroupTestBase
             .HandleAsync(night.Slug, new PatchEventConfigRequest { GroupId = group.Id });
 
         Assert.Equal(group.Id, config.GroupId);
-        Assert.Equal(group.Id, (await _events.GetByIdOrSlugAsync(night.Slug))!.GroupId);
+        Assert.Equal(group.Id, (await _events.GetBySlugAsync(night.Slug))!.GroupId);
         _announcer.Verify(
             a => a.AnnounceAsync(
                 It.Is<Event>(e => e.Id == night.Id),
@@ -76,7 +76,7 @@ public sealed class GroupNightSettingsTests : FriendGroupTestBase
             .HandleAsync(night.Slug, new PatchEventConfigRequest { GroupId = group.Id }));
 
         Assert.Equal(ErrorCodes.GroupNotFound, ex.Reason);
-        Assert.Null((await _events.GetByIdOrSlugAsync(night.Slug))!.GroupId);
+        Assert.Null((await _events.GetBySlugAsync(night.Slug))!.GroupId);
     }
 
     [Fact]
@@ -84,14 +84,14 @@ public sealed class GroupNightSettingsTests : FriendGroupTestBase
     {
         var group = await SharedGroupAsync(FriendGroupTestKit.Member);
         var night = await NightAsync(FriendGroupTestKit.Stranger);
-        await _events.UpdateAsync((await _events.GetByIdOrSlugAsync(night.Slug))! with { CoHostUserIds = [FriendGroupTestKit.Member] });
+        await _events.UpdateAsync((await _events.GetBySlugAsync(night.Slug))! with { CoHostUserIds = [FriendGroupTestKit.Member] });
         var handler = Handler(FriendGroupTestKit.Member);
 
         var ex = await Assert.ThrowsAsync<ForbiddenException>(() =>
             handler.HandleAsync(night.Slug, new PatchEventConfigRequest { GroupId = group.Id }));
 
         Assert.Equal(ErrorCodes.CreatorOnlyNightGroup, ex.Reason);
-        Assert.Null((await _events.GetByIdOrSlugAsync(night.Slug))!.GroupId);
+        Assert.Null((await _events.GetBySlugAsync(night.Slug))!.GroupId);
     }
 
     [Fact]
@@ -104,7 +104,7 @@ public sealed class GroupNightSettingsTests : FriendGroupTestBase
             .HandleAsync(night.Slug, new PatchEventConfigRequest { ClearGroup = true });
 
         Assert.Null(config.GroupId);
-        Assert.Null((await _events.GetByIdOrSlugAsync(night.Slug))!.GroupId);
+        Assert.Null((await _events.GetBySlugAsync(night.Slug))!.GroupId);
         _announcer.VerifyNoOtherCalls();
     }
 
@@ -129,6 +129,6 @@ public sealed class GroupNightSettingsTests : FriendGroupTestBase
             .HandleAsync(night.Slug, new PatchEventConfigRequest { GroupId = group.Id }));
 
         Assert.Equal(ErrorCodes.EventConfigLockedFinished, ex.Reason);
-        Assert.Null((await _events.GetByIdOrSlugAsync(night.Slug))!.GroupId);
+        Assert.Null((await _events.GetBySlugAsync(night.Slug))!.GroupId);
     }
 }

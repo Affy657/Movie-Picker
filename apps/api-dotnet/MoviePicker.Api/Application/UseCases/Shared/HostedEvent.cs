@@ -14,26 +14,26 @@ internal static class HostedEvent
     public static Task<Event> LoadForHostAsync(
         IEventRepository events,
         string? userId,
-        string idOrSlug,
+        string slug,
         DateTimeOffset utcNow,
         CancellationToken ct) =>
-        LoadAsync(events, userId, idOrSlug, utcNow, ct);
+        LoadAsync(events, userId, slug, utcNow, ct);
 
     public static Task<Event> LoadForHostEvenFinishedAsync(
         IEventRepository events,
         string? userId,
-        string idOrSlug,
+        string slug,
         CancellationToken ct) =>
-        LoadAsync(events, userId, idOrSlug, refuseFinishedAt: null, ct);
+        LoadAsync(events, userId, slug, refuseFinishedAt: null, ct);
 
     private static async Task<Event> LoadAsync(
         IEventRepository events,
         string? userId,
-        string idOrSlug,
+        string slug,
         DateTimeOffset? refuseFinishedAt,
         CancellationToken ct)
     {
-        var evt = await events.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
+        var evt = await events.GetRequiredBySlugAsync(slug, ct);
 
         if (!IsHost(evt, userId))
             throw Errors.HostOnly();

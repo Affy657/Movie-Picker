@@ -27,9 +27,9 @@ public sealed class SetPresenceHandler : ISetPresenceHandler
         _options = options.Value;
     }
 
-    public async Task HandleAsync(string userId, string idOrSlug, PresenceRequest request, CancellationToken ct = default)
+    public async Task HandleAsync(string userId, string slug, PresenceRequest request, CancellationToken ct = default)
     {
-        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
+        var evt = await _eventRepository.GetRequiredBySlugAsync(slug, ct);
         var participant = await _participantRepository.FindByEventAndUserIdAsync(evt.Id, userId, ct)
             ?? throw Errors.ParticipantNotFound();
 

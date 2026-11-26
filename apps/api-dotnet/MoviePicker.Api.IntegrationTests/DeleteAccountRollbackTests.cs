@@ -281,7 +281,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
 
         Assert.NotNull(await users.GetByIdAsync(fixture.UserId));
 
-        var evt = await events.GetByIdOrSlugAsync(fixture.EventSlug);
+        var evt = await events.GetBySlugAsync(fixture.EventSlug);
         Assert.NotNull(evt);
         Assert.Equal(fixture.UserId, evt!.CreatorUserId);
 
@@ -350,7 +350,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         Assert.Empty(forgotten.Snapshot);
         Assert.Null(await services.GetRequiredService<IAvatarPhotoRepository>().GetByKeyAsync(fixture.PhotoKey));
 
-        var evt = await events.GetByIdOrSlugAsync(fixture.EventSlug);
+        var evt = await events.GetBySlugAsync(fixture.EventSlug);
         Assert.NotNull(evt);
         Assert.True(string.IsNullOrEmpty(evt!.CreatorUserId));
 
@@ -422,7 +422,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         await services.GetRequiredService<IDeleteAccountHandler>()
             .HandleAsync(host.Id, new DeleteAccountRequest { Password = "MotDePasse1!" }, recentlyAuthenticated: true);
 
-        var handedOver = (await services.GetRequiredService<IEventRepository>().GetByIdOrSlugAsync(night.Slug))!;
+        var handedOver = (await services.GetRequiredService<IEventRepository>().GetBySlugAsync(night.Slug))!;
         Assert.Equal(heir.Id, handedOver.CreatorUserId);
         Assert.Null(handedOver.ClosedAt);
         Assert.True(handedOver.Version > night.Version);
@@ -449,7 +449,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
             .HandleAsync(host.Id, new DeleteAccountRequest { Password = "MotDePasse1!" }, recentlyAuthenticated: true);
 
         var events = services.GetRequiredService<IEventRepository>();
-        var closed = (await events.GetByIdOrSlugAsync(night.Slug))!;
+        var closed = (await events.GetBySlugAsync(night.Slug))!;
         Assert.NotNull(closed.ClosedAt);
         Assert.True(string.IsNullOrEmpty(closed.CreatorUserId));
         Assert.Null(closed.Recurrence);

@@ -160,29 +160,29 @@ export async function deleteEventWinner(slug: string, movieId: string): Promise<
 export type RemoveParticipantResponse = ApiSchemas['RemoveParticipantResponse'];
 
 export async function setEventCoHost(
-  idOrSlug: string,
+  slug: string,
   participantId: string,
   coHost: boolean
 ): Promise<void> {
-  await fetchApi(apiPath('events', idOrSlug, 'co-hosts', participantId), {
+  await fetchApi(apiPath('events', slug, 'co-hosts', participantId), {
     method: coHost ? 'PUT' : 'DELETE',
   });
 }
 
 export async function removeEventParticipant(
-  idOrSlug: string,
+  slug: string,
   participantId: string
 ): Promise<RemoveParticipantResponse> {
   return fetchApi<RemoveParticipantResponse>(
-    apiPath('events', idOrSlug, 'participants', participantId),
+    apiPath('events', slug, 'participants', participantId),
     { method: 'DELETE' }
   );
 }
 
 export type DeleteEventResponse = ApiSchemas['DeleteEventResponse'];
 
-export async function deleteEvent(idOrSlug: string): Promise<DeleteEventResponse> {
-  return fetchApi<DeleteEventResponse>(apiPath('events', idOrSlug), { method: 'DELETE' });
+export async function deleteEvent(slug: string): Promise<DeleteEventResponse> {
+  return fetchApi<DeleteEventResponse>(apiPath('events', slug), { method: 'DELETE' });
 }
 
 export function eventStreamUrl(slug: string, tab: string): string {
@@ -208,14 +208,14 @@ export type EligibleFollowItem = ApiSchemas['EligibleFollowItem'];
 
 export type EligibleFollowsResponse = ApiSchemas['EligibleFollowsResponse'];
 
-export async function getEligibleFollows(idOrSlug: string): Promise<EligibleFollowsResponse> {
+export async function getEligibleFollows(slug: string): Promise<EligibleFollowsResponse> {
   return fetchApi<EligibleFollowsResponse>(
-    apiPath('events', idOrSlug, 'invitations', 'eligible-follows')
+    apiPath('events', slug, 'invitations', 'eligible-follows')
   );
 }
 
-export async function sendEventInvitation(idOrSlug: string, targetUserId: string): Promise<void> {
-  await fetchApi(apiPath('events', idOrSlug, 'invitations'), {
+export async function sendEventInvitation(slug: string, targetUserId: string): Promise<void> {
+  await fetchApi(apiPath('events', slug, 'invitations'), {
     method: 'POST',
     body: JSON.stringify({ targetUserId }),
   });

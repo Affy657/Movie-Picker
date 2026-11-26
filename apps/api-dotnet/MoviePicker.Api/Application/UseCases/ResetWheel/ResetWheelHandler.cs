@@ -25,12 +25,12 @@ public sealed class ResetWheelHandler : IResetWheelHandler
         _clock = clock;
     }
 
-    public async Task<ResetWheelResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
+    public async Task<ResetWheelResponse> HandleAsync(string slug, CancellationToken ct = default)
     {
         var evt = await HostedEvent.LoadForHostAsync(
             _eventRepository,
             _currentUserAccessor.GetUserId(),
-            idOrSlug,
+            slug,
             _clock.GetUtcNow(),
             ct);
 

@@ -26,14 +26,14 @@ public sealed class RemoveWinnerHandler : IRemoveWinnerHandler
     }
 
     public async Task<ResetWheelResponse> HandleAsync(
-        string idOrSlug,
+        string slug,
         string movieId,
         CancellationToken ct = default)
     {
         var evt = await HostedEvent.LoadForHostAsync(
             _eventRepository,
             _currentUserAccessor.GetUserId(),
-            idOrSlug,
+            slug,
             _clock.GetUtcNow(),
             ct);
 

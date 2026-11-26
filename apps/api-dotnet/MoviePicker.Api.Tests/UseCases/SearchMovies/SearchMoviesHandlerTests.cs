@@ -19,7 +19,7 @@ public sealed class SearchMoviesHandlerTests
     public SearchMoviesHandlerTests()
     {
         _events
-            .Setup(r => r.GetByIdOrSlugAsync(SeriesEventSlug, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetBySlugAsync(SeriesEventSlug, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Event { Slug = SeriesEventSlug, Config = new EventConfig { AllowSeries = true } });
     }
 
@@ -250,7 +250,7 @@ public sealed class SearchMoviesHandlerTests
     public async Task HandleAsync_EventWithoutSeries_KeepsThemOutEvenWhenAsked()
     {
         _events
-            .Setup(r => r.GetByIdOrSlugAsync("soiree-films", It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetBySlugAsync("soiree-films", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Event { Slug = "soiree-films", Config = new EventConfig { AllowSeries = false } });
         _tmdb.Setup(t => t.SearchAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<int>?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),

@@ -24,7 +24,7 @@ public sealed class SetPresenceHandlerTests
     {
         _clock.Setup(c => c.GetUtcNow()).Returns(Now);
         _events
-            .Setup(r => r.GetByIdOrSlugAsync("soiree", It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetBySlugAsync("soiree", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new EventEntityBuilder().WithId("evt-1").WithSlug("soiree").Build());
         _participants
             .Setup(r => r.FindByEventAndUserIdAsync("evt-1", "user-1", It.IsAny<CancellationToken>()))
@@ -87,7 +87,7 @@ public sealed class SetPresenceHandlerTests
     public async Task HandleAsync_AnonymousNight_KeepsThePresenceButNeverTellsWhoIsProposing()
     {
         _events
-            .Setup(r => r.GetByIdOrSlugAsync("soiree", It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetBySlugAsync("soiree", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new EventEntityBuilder().WithId("evt-1").WithSlug("soiree")
                 .WithConfig(new EventConfig { AnonymousProposals = true })
                 .Build());

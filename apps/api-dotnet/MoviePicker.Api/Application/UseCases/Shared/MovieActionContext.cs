@@ -12,14 +12,14 @@ internal static class MovieActionContext
         IParticipantRepository participantRepository,
         string? currentUserId,
         DateTimeOffset utcNow,
-        string idOrSlug,
+        string slug,
         string movieId,
         string participantId,
         Func<ForbiddenException> ownershipError,
         CancellationToken ct,
         Func<ConflictException>? wheelLockedError = null)
     {
-        var evt = await eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
+        var evt = await eventRepository.GetRequiredBySlugAsync(slug, ct);
 
         if (evt.IsFinished(utcNow))
             throw Errors.EventFinished();
@@ -61,12 +61,12 @@ internal static class MovieActionContext
         IMovieRepository movieRepository,
         string? currentUserId,
         DateTimeOffset utcNow,
-        string idOrSlug,
+        string slug,
         string movieId,
         Func<ConflictException> wheelLockedError,
         CancellationToken ct)
     {
-        var evt = await eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
+        var evt = await eventRepository.GetRequiredBySlugAsync(slug, ct);
 
         if (evt.IsFinished(utcNow))
             throw Errors.EventFinished();

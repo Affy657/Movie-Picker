@@ -14,7 +14,7 @@ public sealed class InMemoryEventRepository : IEventRepository
     private readonly ConcurrentDictionary<string, Event> _byId = new();
     private readonly ConcurrentDictionary<string, string> _idBySlug = new();
 
-    public Task<Event?> GetByIdOrSlugAsync(string slug, CancellationToken ct = default)
+    public Task<Event?> GetBySlugAsync(string slug, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(slug))
             return Task.FromResult<Event?>(null);

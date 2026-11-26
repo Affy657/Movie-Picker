@@ -24,14 +24,14 @@ public sealed class DeleteMoviePitchNoteHandler : IDeleteMoviePitchNoteHandler
         _clock = clock;
     }
 
-    public async Task HandleAsync(string userId, string idOrSlug, string movieId, DeleteMoviePitchNoteRequest request, CancellationToken ct = default)
+    public async Task HandleAsync(string userId, string slug, string movieId, DeleteMoviePitchNoteRequest request, CancellationToken ct = default)
     {
         var (evt, movie, isHost) = await MovieActionContext.ResolveMovieForHostActionAsync(
             _eventRepository,
             _movieRepository,
             userId,
             _clock.GetUtcNow(),
-            idOrSlug,
+            slug,
             movieId,
             Errors.WheelLocked,
             ct);

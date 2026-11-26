@@ -26,7 +26,7 @@ public sealed class DeleteMoviePitchNoteHandlerTests
 
     private void SetupActiveEventWithMovie(string movieProposer = "p1")
     {
-        _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        _events.Setup(e => e.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
         _movies.Setup(m => m.GetByIdAndEventIdAsync("m1", "evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Movie { Id = "m1", EventId = "evt1", ParticipantId = movieProposer });
     }
@@ -34,7 +34,7 @@ public sealed class DeleteMoviePitchNoteHandlerTests
     [Fact]
     public async Task HandleAsync_EventNotFound_Throws()
     {
-        _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
+        _events.Setup(e => e.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("intruder", "evt1", "m1", new DeleteMoviePitchNoteRequest()));
     }
@@ -42,7 +42,7 @@ public sealed class DeleteMoviePitchNoteHandlerTests
     [Fact]
     public async Task HandleAsync_MovieNotFound_Throws()
     {
-        _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        _events.Setup(e => e.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
         _movies.Setup(m => m.GetByIdAndEventIdAsync("m1", "evt1", It.IsAny<CancellationToken>())).ReturnsAsync((Movie?)null);
 
         await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("intruder", "evt1", "m1", new DeleteMoviePitchNoteRequest()));

@@ -149,11 +149,11 @@ public sealed class GetMyNightMoviesHandlerTests
     public async Task HandleAsync_LatestProposalInAnAnonymousNight_NamesNobodyButMe()
     {
         var byFriend = await NightAsync("Anonyme", Friend);
-        await _events.UpdateAsync((await _events.GetByIdOrSlugAsync(byFriend.Slug))! with { Config = new EventConfig { AnonymousProposals = true } });
+        await _events.UpdateAsync((await _events.GetBySlugAsync(byFriend.Slug))! with { Config = new EventConfig { AnonymousProposals = true } });
         await JoinAsync(byFriend, "Moi", Me);
         await ProposeAsync(byFriend, await JoinAsync(byFriend, "Ami", Friend), daysAgo: 5);
         var mine = await NightAsync("Anonyme aussi", Friend);
-        await _events.UpdateAsync((await _events.GetByIdOrSlugAsync(mine.Slug))! with { Config = new EventConfig { AnonymousProposals = true } });
+        await _events.UpdateAsync((await _events.GetBySlugAsync(mine.Slug))! with { Config = new EventConfig { AnonymousProposals = true } });
         await ProposeAsync(mine, await JoinAsync(mine, "Moi", Me), tmdbId: Matrix, daysAgo: 3);
 
         var items = (await CreateSut().HandleAsync(Me)).Items;

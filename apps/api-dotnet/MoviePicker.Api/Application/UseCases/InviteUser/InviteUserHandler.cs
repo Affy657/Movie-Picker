@@ -51,11 +51,11 @@ public sealed class InviteUserHandler : IInviteUserHandler
 
     public async Task<InviteUserResponse> HandleAsync(
         string userId,
-        string idOrSlug,
+        string slug,
         InviteUserRequest request,
         CancellationToken ct = default)
     {
-        var evt = await _events.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
+        var evt = await _events.GetRequiredBySlugAsync(slug, ct);
 
         if (evt.IsFinished(_clock.GetUtcNow()))
             throw Errors.InviteEventFinished();

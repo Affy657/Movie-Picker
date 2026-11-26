@@ -14,7 +14,7 @@ public sealed class HostedEventTests
 
     private Event Stored(Event evt)
     {
-        _events.Setup(r => r.GetByIdOrSlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _events.Setup(r => r.GetBySlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         return evt;
     }
 

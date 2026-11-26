@@ -25,7 +25,7 @@ public sealed class GetEligibleFollowsForEventHandlerTests
     }
 
     private void SetupOwnedEvent() =>
-        _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
+        _events.Setup(e => e.GetBySlugAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Event { Id = "evt1", CreatorUserId = HostId });
 
     private static User U(string id) => new() { Id = id, Handle = id, DisplayName = id };
@@ -34,7 +34,7 @@ public sealed class GetEligibleFollowsForEventHandlerTests
     [Fact]
     public async Task HandleAsync_EventNotFound_Throws()
     {
-        _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
+        _events.Setup(e => e.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(HostId, "evt1"));
     }
@@ -42,7 +42,7 @@ public sealed class GetEligibleFollowsForEventHandlerTests
     [Fact]
     public async Task HandleAsync_NotCreator_Throws()
     {
-        _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
+        _events.Setup(e => e.GetBySlugAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Event { Id = "evt1", CreatorUserId = "other" });
 
         await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync(HostId, "evt1"));
@@ -86,7 +86,7 @@ public sealed class GetEligibleFollowsForEventHandlerTests
     [Fact]
     public async Task HandleAsync_AFriendTheHostRemoved_CanBeInvitedAgain()
     {
-        _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
+        _events.Setup(e => e.GetBySlugAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Event { Id = "evt1", CreatorUserId = HostId, RemovedUserIds = ["u2"] });
         _follows.Setup(f => f.GetFollowingIdsAsync(HostId, It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(["u2"]);
@@ -105,7 +105,7 @@ public sealed class GetEligibleFollowsForEventHandlerTests
     public async Task HandleAsync_CoHost_ListsTheirOwnFollows()
     {
         _events
-            .Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Event { Id = "evt1", CreatorUserId = HostId, CoHostUserIds = ["co-host"] });
         _follows.Setup(f => f.GetFollowingIdsAsync("co-host", It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(["u7"]);

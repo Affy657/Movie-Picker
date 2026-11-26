@@ -4,5 +4,5 @@ namespace MoviePicker.Api.Application.UseCases.EventConfiguration;
 
 public interface IGetEventConfigHandler
 {
-    Task<EventConfigResponse> HandleAsync(string idOrSlug, CancellationToken ct = default);
+    Task<EventConfigResponse> HandleAsync(string slug, CancellationToken ct = default);
 }

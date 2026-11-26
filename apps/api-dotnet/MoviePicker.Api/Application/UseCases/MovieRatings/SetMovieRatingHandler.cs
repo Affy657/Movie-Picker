@@ -29,12 +29,12 @@ public sealed class SetMovieRatingHandler : ISetMovieRatingHandler
 
     public async Task<MovieRatingResponse> HandleAsync(
         string userId,
-        string idOrSlug,
+        string slug,
         string movieId,
         SetMovieRatingRequest request,
         CancellationToken ct = default)
     {
-        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
+        var evt = await _eventRepository.GetRequiredBySlugAsync(slug, ct);
         var now = _clock.GetUtcNow();
         if (!evt.IsRatingOpen(now))
             throw Errors.RatingOnlyOnceStarted();

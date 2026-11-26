@@ -28,9 +28,9 @@ public sealed class GetEligibleFollowsForEventHandler : IGetEligibleFollowsForEv
         _notifications = notifications;
     }
 
-    public async Task<EligibleFollowsResponse> HandleAsync(string currentUserId, string idOrSlug, CancellationToken ct = default)
+    public async Task<EligibleFollowsResponse> HandleAsync(string currentUserId, string slug, CancellationToken ct = default)
     {
-        var evt = await _events.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
+        var evt = await _events.GetRequiredBySlugAsync(slug, ct);
 
         if (!HostedEvent.IsHost(evt, currentUserId))
             throw Errors.HostOnlyList();

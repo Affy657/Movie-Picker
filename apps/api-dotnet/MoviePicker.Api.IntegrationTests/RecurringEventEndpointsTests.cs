@@ -34,7 +34,7 @@ public sealed class RecurringEventEndpointsTests : IClassFixture<MoviePickerAppl
     {
         using var scope = _factory.Services.CreateScope();
         var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
-        var evt = await events.GetByIdOrSlugAsync(slug);
+        var evt = await events.GetBySlugAsync(slug);
         await events.UpdateAsync(evt! with { Date = Iso(date) });
     }
 

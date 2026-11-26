@@ -73,7 +73,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
     [Fact]
     public async Task HandleAsync_EventNotFound_ThrowsNotFoundException()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
+        _eventRepo.Setup(r => r.GetBySlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad"));
     }
@@ -81,7 +81,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
     [Fact]
     public async Task HandleAsync_NotHost_ThrowsForbiddenException()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(WheelEvent());
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(WheelEvent());
         _currentUserAccessor.Setup(c => c.GetUserId()).Returns("autre");
 
         await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1"));
@@ -93,7 +93,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
     [Fact]
     public async Task HandleAsync_WheelWinnerNotYetAnnounced_AnnouncesAndStampsEvent()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(WheelEvent());
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(WheelEvent());
         _movies.Add(Winner());
         Event? captured = null;
         _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
@@ -114,7 +114,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
     public async Task HandleAsync_CalledTwice_AnnoncesOnlyOnce()
     {
         var announced = WheelEvent() with { WinnerAnnouncedAt = PickedAt.AddSeconds(8) };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(announced);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(announced);
         _movies.Add(Winner());
 
         await _sut.HandleAsync("evt1");
@@ -129,7 +129,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
     public async Task HandleAsync_RelaunchAfterAnAnnouncedPick_AnnouncesTheNewWinner()
     {
         var relaunched = WheelEvent() with { WinnerAnnouncedAt = PickedAt.AddSeconds(-60) };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(relaunched);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(relaunched);
         _movies.Add(Winner());
 
         await _sut.HandleAsync("evt1");
@@ -154,7 +154,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
                 }
             ]
         };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(manual);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(manual);
         _movies.Add(Winner());
 
         await _sut.HandleAsync("evt1");
@@ -175,7 +175,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
                 new EventWinner { MovieId = "mov2", Method = WinnerPickMethod.Manual, PickedAt = PickedAt.AddSeconds(4) }
             ]
         };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(mixed);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(mixed);
         _movies.Add(Winner());
         _movies.Add(Winner() with { Id = "mov2", Title = "Manual" });
 
@@ -201,7 +201,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
                 new EventWinner { MovieId = "mov1", Method = WinnerPickMethod.Wheel, PickedAt = PickedAt }
             ]
         };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(twoPending);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(twoPending);
         _movies.Add(Winner());
         _movies.Add(Winner() with { Id = "mov2", Title = "Second" });
         var announced = new List<string>();
@@ -219,7 +219,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
     [Fact]
     public async Task HandleAsync_PendingPickWhoseMovieIsGone_NeitherAnnouncesNorStamps()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(WheelEvent());
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(WheelEvent());
 
         await _sut.HandleAsync("evt1");
 
@@ -233,7 +233,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
     public async Task HandleAsync_NoWinnerYet_DoesNothing()
     {
         var noWinner = WheelEvent() with { Winners = [] };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(noWinner);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(noWinner);
 
         await _sut.HandleAsync("evt1");
 

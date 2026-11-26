@@ -140,7 +140,7 @@ public sealed class GetMovieNightsHandlerTests
         var byFriend = await NightAsync("Anonyme ami", Friend, date: "2026-11-01");
         var byMe = await NightAsync("Anonyme moi", Friend, date: "2026-10-01");
         foreach (var night in new[] { byFriend, byMe })
-            await _events.UpdateAsync((await _events.GetByIdOrSlugAsync(night.Slug))! with { Config = new EventConfig { AnonymousProposals = true } });
+            await _events.UpdateAsync((await _events.GetBySlugAsync(night.Slug))! with { Config = new EventConfig { AnonymousProposals = true } });
         await JoinAsync(byFriend, "Moi", Me);
         await ProposeAsync(byFriend, await JoinAsync(byFriend, "Ami", Friend));
         await ProposeAsync(byMe, await JoinAsync(byMe, "Moi", Me));

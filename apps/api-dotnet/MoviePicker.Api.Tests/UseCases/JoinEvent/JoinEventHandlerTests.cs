@@ -55,7 +55,7 @@ public sealed class JoinEventHandlerTests
     [Fact]
     public async Task HandleAsync_EventNotFound_ThrowsNotFoundException()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
+        _eventRepo.Setup(r => r.GetBySlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
         var request = new JoinEventRequest { Pseudo = "Alice" };
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad", request, "u1"));
@@ -66,7 +66,7 @@ public sealed class JoinEventHandlerTests
     public async Task HandleAsync_EventFinished_ThrowsConflictException()
     {
         var evt = new Event { Id = "evt1", Title = "Soirée", Date = "2000-01-01", Time = "20:00", Slug = "soiree", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         var request = new JoinEventRequest { Pseudo = "Alice" };
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", request, "u1"));
@@ -77,7 +77,7 @@ public sealed class JoinEventHandlerTests
     public async Task HandleAsync_AccountTheHostRemoved_IsRefusedWithoutJoining()
     {
         var evt = ActiveEvent() with { RemovedUserIds = ["u1"] };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
         var ex = await Assert.ThrowsAsync<ForbiddenException>(
             () => _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Alice" }, "u1"));
@@ -90,7 +90,7 @@ public sealed class JoinEventHandlerTests
     public async Task HandleAsync_RemovedWhileJoining_IsRefusedInsideTheUnitOfWork()
     {
         var evt = ActiveEvent();
-        _eventRepo.SetupSequence(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
+        _eventRepo.SetupSequence(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(evt)
             .ReturnsAsync(evt with { RemovedUserIds = ["u1"] });
 
@@ -105,7 +105,7 @@ public sealed class JoinEventHandlerTests
     public async Task HandleAsync_AnotherAccount_JoinsANightWithRemovedPeople()
     {
         var evt = ActiveEvent() with { RemovedUserIds = ["u-removed"] };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo.Setup(r => r.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Participant p, CancellationToken _) => p with { Id = "p1" });
 
@@ -118,7 +118,7 @@ public sealed class JoinEventHandlerTests
     public async Task HandleAsync_NewParticipant_ReturnsCreatedWithIsNewTrue()
     {
         var evt = ActiveEvent();
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         var newParticipant = new Participant { Id = "p1", EventId = evt.Id, Pseudo = "Alice", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _participantRepo.Setup(r => r.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>())).ReturnsAsync(newParticipant);
         var request = new JoinEventRequest { Pseudo = " Alice " };
@@ -153,7 +153,7 @@ public sealed class JoinEventHandlerTests
     [Fact]
     public async Task HandleAsync_PseudoTakenByAnotherAccount_JoinsUnderADistinctPseudo()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
         GivenParticipants(Existing("p0", "Bob", "u9"));
         GivenInsertEchoesTheParticipant();
 
@@ -170,7 +170,7 @@ public sealed class JoinEventHandlerTests
     [Fact]
     public async Task HandleAsync_PseudoAndFirstSuffixTaken_PicksTheNextFreeSuffixWhateverTheCase()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
         GivenParticipants(Existing("p0", "bob", "u8"), Existing("p1", "Bob 2", "u9"));
         GivenInsertEchoesTheParticipant();
 
@@ -183,7 +183,7 @@ public sealed class JoinEventHandlerTests
     public async Task HandleAsync_LongPseudoTaken_KeepsTheSuffixedPseudoWithinTheMaximumLength()
     {
         var longPseudo = new string('x', 100);
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
         GivenParticipants(Existing("p0", longPseudo, "u9"));
         GivenInsertEchoesTheParticipant();
 
@@ -195,7 +195,7 @@ public sealed class JoinEventHandlerTests
     [Fact]
     public async Task HandleAsync_ConcurrentHomonymWinsThePseudo_RetriesWithTheNextSuffix()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
         _participantRepo.SetupSequence(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync([])
             .ReturnsAsync([Existing("p0", "Bob", "u9")]);
@@ -212,7 +212,7 @@ public sealed class JoinEventHandlerTests
     [Fact]
     public async Task HandleAsync_ConcurrentJoinOfTheSameAccount_ReturnsTheParticipantThatWon()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
         _participantRepo.SetupSequence(r => r.FindByEventAndUserIdAsync("evt1", "u1", It.IsAny<CancellationToken>()))
             .ReturnsAsync((Participant?)null)
             .ReturnsAsync(Existing("p7", "Bob", "u1"));
@@ -228,7 +228,7 @@ public sealed class JoinEventHandlerTests
     [Fact]
     public async Task HandleAsync_PseudoKeepsColliding_GivesUpWithAConcurrentUpdateConflict()
     {
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
         _participantRepo.Setup(r => r.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new ParticipantConflictException(ParticipantCollision.SamePseudo));
 
@@ -251,7 +251,7 @@ public sealed class JoinEventHandlerTests
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo.Setup(r => r.FindByEventAndUserIdAsync(evt.Id, "u1", It.IsAny<CancellationToken>())).ReturnsAsync(existing);
         var request = new JoinEventRequest { Pseudo = "AutrePseudo" };
 
@@ -270,7 +270,7 @@ public sealed class JoinEventHandlerTests
         {
             Config = new EventConfig { MaxParticipants = 3 }
         };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo.Setup(r => r.CountByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(3);
 
@@ -289,7 +289,7 @@ public sealed class JoinEventHandlerTests
         {
             Config = new EventConfig { MaxParticipants = 5 }
         };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo.Setup(r => r.CountByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(2);
         var newParticipant = new Participant { Id = "p1", EventId = evt.Id, Pseudo = "Alice", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
@@ -305,7 +305,7 @@ public sealed class JoinEventHandlerTests
     public async Task HandleAsync_WithCapacity_LocksTheEventThenCountsAndInsertsInsideTheUnitOfWork()
     {
         var evt = ActiveEvent() with { Config = new EventConfig { MaxParticipants = 5 } };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         var steps = new List<string>();
         _eventRepo.Setup(r => r.LockForWriteAsync(evt.Id, It.IsAny<CancellationToken>()))
             .Callback(() => steps.Add(_unitOfWork.IsExecuting ? "lock" : "lock-outside")).Returns(Task.CompletedTask);
@@ -326,7 +326,7 @@ public sealed class JoinEventHandlerTests
     {
         var withoutCap = ActiveEvent();
         var cappedMeanwhile = withoutCap with { Config = new EventConfig { MaxParticipants = 3 } };
-        _eventRepo.SetupSequence(r => r.GetByIdOrSlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _eventRepo.SetupSequence(r => r.GetBySlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(withoutCap)
             .ReturnsAsync(cappedMeanwhile);
         _participantRepo.Setup(r => r.CountByEventIdAsync(withoutCap.Id, It.IsAny<CancellationToken>())).ReturnsAsync(3);
@@ -350,7 +350,7 @@ public sealed class JoinEventHandlerTests
     public async Task HandleAsync_WithAccount_PersistsUserIdOnNewParticipant()
     {
         var evt = ActiveEvent();
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo.Setup(r => r.FindByEventAndUserIdAsync(evt.Id, "u99", It.IsAny<CancellationToken>())).ReturnsAsync((Participant?)null);
         Participant? captured = null;
         _participantRepo
@@ -380,7 +380,7 @@ public sealed class JoinEventHandlerTests
     public async Task HandleAsync_NewParticipant_CountsTheArrivalByAccountAge(int accountAgeHours, string variant)
     {
         var evt = ActiveEvent();
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _users.Setup(r => r.GetByIdAsync("u1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User { Id = "u1", CreatedAt = DateTimeOffset.UtcNow.AddHours(-accountAgeHours) });
         GivenInsertEchoesTheParticipant();
@@ -398,7 +398,7 @@ public sealed class JoinEventHandlerTests
     public async Task HandleAsync_AlreadyJoined_CountsNoArrival()
     {
         var evt = ActiveEvent();
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo.Setup(r => r.FindByEventAndUserIdAsync(evt.Id, "u1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(Existing("p1", "Alice", "u1"));
 
@@ -411,7 +411,7 @@ public sealed class JoinEventHandlerTests
     public async Task HandleAsync_EventFull_CountsNoArrival()
     {
         var evt = ActiveEvent() with { Config = new EventConfig { MaxParticipants = 1 } };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _eventRepo.Setup(r => r.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo.Setup(r => r.CountByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
         await Assert.ThrowsAsync<ConflictException>(

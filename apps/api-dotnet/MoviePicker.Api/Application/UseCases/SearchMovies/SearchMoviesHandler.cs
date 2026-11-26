@@ -123,7 +123,7 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
         if (string.IsNullOrWhiteSpace(eventSlug))
             return false;
 
-        var evt = await _events.GetByIdOrSlugAsync(eventSlug.Trim(), ct);
+        var evt = await _events.GetBySlugAsync(eventSlug.Trim(), ct);
         return evt?.Config?.AllowSeries ?? false;
     }
 

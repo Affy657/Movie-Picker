@@ -19,9 +19,9 @@ public sealed class DeleteMovieRatingHandler : IDeleteMovieRatingHandler
         _ratingRepository = ratingRepository;
     }
 
-    public async Task HandleAsync(string userId, string idOrSlug, string movieId, string participantId, CancellationToken ct = default)
+    public async Task HandleAsync(string userId, string slug, string movieId, string participantId, CancellationToken ct = default)
     {
-        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
+        var evt = await _eventRepository.GetRequiredBySlugAsync(slug, ct);
         var participant = await RatedParticipation.ResolveOwnAsync(
             _participantRepository, userId, evt, participantId, ct);
 

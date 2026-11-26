@@ -37,7 +37,7 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
 
     public async Task HandleAsync(
         string userId,
-        string idOrSlug,
+        string slug,
         string movieId,
         string participantId,
         CancellationToken ct = default)
@@ -47,7 +47,7 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
             _movieRepository,
             userId,
             _clock.GetUtcNow(),
-            idOrSlug,
+            slug,
             movieId,
             Errors.WheelLockedDelete,
             ct);
@@ -67,7 +67,7 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
         await _unitOfWork.ExecuteAsync(
             async token =>
             {
-                var current = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, token);
+                var current = await _eventRepository.GetRequiredBySlugAsync(slug, token);
                 if (current.HasWinner)
                     throw Errors.WheelLockedDelete();
                 if (!isProposer && !HostedEvent.IsHost(current, userId))

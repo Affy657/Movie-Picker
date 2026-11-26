@@ -31,12 +31,12 @@ public sealed class EventViewTagHandlerTests
         new(_events.Object, _currentUser.Object, new FakeTimeProvider(now));
 
     private void Stored(Event evt) =>
-        _events.Setup(r => r.GetByIdOrSlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _events.Setup(r => r.GetBySlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
     [Fact]
     public async Task HandleAsync_UnknownEvent_ReturnsNull()
     {
-        _events.Setup(r => r.GetByIdOrSlugAsync("missing", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
+        _events.Setup(r => r.GetBySlugAsync("missing", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         Assert.Null(await Handler(Noon).HandleAsync("missing"));
     }

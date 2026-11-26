@@ -6,7 +6,7 @@ public interface ISetMovieWheelExclusionHandler
 {
     Task HandleAsync(
         string userId,
-        string idOrSlug,
+        string slug,
         string movieId,
         SetMovieWheelExclusionRequest request,
         CancellationToken ct = default);

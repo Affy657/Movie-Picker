@@ -35,7 +35,7 @@ public sealed class ResetWheelHandlerTests
     [Fact]
     public async Task HandleAsync_EventNotFound_Throws()
     {
-        _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
+        _events.Setup(e => e.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("evt1"));
     }
@@ -43,7 +43,7 @@ public sealed class ResetWheelHandlerTests
     [Fact]
     public async Task HandleAsync_NotHost_Throws()
     {
-        _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(Evt(winnerMovieId: "m1"));
+        _events.Setup(e => e.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(Evt(winnerMovieId: "m1"));
         _currentUser.Setup(c => c.GetUserId()).Returns("intruder");
 
         await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1"));
@@ -52,7 +52,7 @@ public sealed class ResetWheelHandlerTests
     [Fact]
     public async Task HandleAsync_FinishedEvent_Throws()
     {
-        _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
+        _events.Setup(e => e.GetBySlugAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(Evt(winnerMovieId: "m1", closedAt: DateTimeOffset.UtcNow.AddDays(-1)));
         AsHost();
 
@@ -62,7 +62,7 @@ public sealed class ResetWheelHandlerTests
     [Fact]
     public async Task HandleAsync_NoWinner_ReturnsNothingToCancel()
     {
-        _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(Evt(winnerMovieId: null));
+        _events.Setup(e => e.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(Evt(winnerMovieId: null));
         AsHost();
 
         var result = await _sut.HandleAsync("evt1");
@@ -74,7 +74,7 @@ public sealed class ResetWheelHandlerTests
     [Fact]
     public async Task HandleAsync_WithWinner_ClearsWinnerAndReturnsCancelled()
     {
-        _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(Evt(winnerMovieId: "m1"));
+        _events.Setup(e => e.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(Evt(winnerMovieId: "m1"));
         AsHost();
         _events.Setup(e => e.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);

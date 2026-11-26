@@ -257,7 +257,7 @@ public sealed class SentryBeforeSendTests
     [Fact]
     public void PrepareTransaction_RedactsQueryStringHeadersAndUser()
     {
-        var transaction = new SentryTransaction("GET /api/v1/events/{idOrSlug}/wheel", "http.server")
+        var transaction = new SentryTransaction("GET /api/v1/events/{slug}/wheel", "http.server")
         {
             Request = new SentryRequest
             {
@@ -334,7 +334,7 @@ public sealed class SentryBeforeSendTests
     [InlineData("GET /.env", 0)]
     [InlineData("GET /*", 0)]
     [InlineData("GET /fetch", 0)]
-    [InlineData("GET /api/v1/events/{idOrSlug}/movies", 0.1)]
+    [InlineData("GET /api/v1/events/{slug}/movies", 0.1)]
     [InlineData(null, 0.1)]
     public void SampleTrace_DropsHealthAndScannerPaths(string? name, double expected)
     {

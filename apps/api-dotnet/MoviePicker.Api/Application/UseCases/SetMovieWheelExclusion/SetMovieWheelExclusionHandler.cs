@@ -26,7 +26,7 @@ public sealed class SetMovieWheelExclusionHandler : ISetMovieWheelExclusionHandl
 
     public async Task HandleAsync(
         string userId,
-        string idOrSlug,
+        string slug,
         string movieId,
         SetMovieWheelExclusionRequest request,
         CancellationToken ct = default)
@@ -34,7 +34,7 @@ public sealed class SetMovieWheelExclusionHandler : ISetMovieWheelExclusionHandl
         var evt = await HostedEvent.LoadForHostAsync(
             _eventRepository,
             userId,
-            idOrSlug,
+            slug,
             _clock.GetUtcNow(),
             ct);
 
@@ -48,7 +48,7 @@ public sealed class SetMovieWheelExclusionHandler : ISetMovieWheelExclusionHandl
         await _unitOfWork.ExecuteAsync(
             async token =>
             {
-                var current = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, token);
+                var current = await _eventRepository.GetRequiredBySlugAsync(slug, token);
                 if (!HostedEvent.IsHost(current, userId))
                     throw Errors.HostOnly();
                 await _movieRepository.UpdateWheelExclusionAsync(movieId, request.Excluded, token);

@@ -36,12 +36,12 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         _clock = clock;
     }
 
-    public async Task<WheelResponse> HandleAsync(string idOrSlug, int? expectedWinnerCount = null, CancellationToken ct = default)
+    public async Task<WheelResponse> HandleAsync(string slug, int? expectedWinnerCount = null, CancellationToken ct = default)
     {
         var evt = await HostedEvent.LoadForHostEvenFinishedAsync(
             _eventRepository,
             _currentUserAccessor.GetUserId(),
-            idOrSlug,
+            slug,
             ct);
 
         if (expectedWinnerCount is { } expected && evt.Winners.Count > expected

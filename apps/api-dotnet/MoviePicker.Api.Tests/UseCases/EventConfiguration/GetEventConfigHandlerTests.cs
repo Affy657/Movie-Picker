@@ -20,7 +20,7 @@ public sealed class GetEventConfigHandlerTests
     [Fact]
     public async Task HandleAsync_EventNotFound_Throws()
     {
-        _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
+        _events.Setup(e => e.GetBySlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("evt1"));
     }
@@ -28,7 +28,7 @@ public sealed class GetEventConfigHandlerTests
     [Fact]
     public async Task HandleAsync_NoConfig_ReturnsDefaults()
     {
-        _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
+        _events.Setup(e => e.GetBySlugAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Event { Id = "evt1", Config = null });
 
         var result = await _sut.HandleAsync("evt1");
@@ -42,7 +42,7 @@ public sealed class GetEventConfigHandlerTests
     [Fact]
     public async Task HandleAsync_WithConfig_MapsFields()
     {
-        _events.Setup(e => e.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>()))
+        _events.Setup(e => e.GetBySlugAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Event
             {
                 Id = "evt1",

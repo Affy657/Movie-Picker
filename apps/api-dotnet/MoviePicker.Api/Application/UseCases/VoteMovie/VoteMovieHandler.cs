@@ -33,7 +33,7 @@ public sealed class VoteMovieHandler : IVoteMovieHandler
         _clock = clock;
     }
 
-    public async Task<VoteResponse> HandleAsync(string userId, string idOrSlug, string movieId, VoteRequest request, CancellationToken ct = default)
+    public async Task<VoteResponse> HandleAsync(string userId, string slug, string movieId, VoteRequest request, CancellationToken ct = default)
     {
         var (evt, movie, participant) = await MovieActionContext.ResolveOwnedMovieAsync(
             _eventRepository,
@@ -41,7 +41,7 @@ public sealed class VoteMovieHandler : IVoteMovieHandler
             _participantRepository,
             userId,
             _clock.GetUtcNow(),
-            idOrSlug,
+            slug,
             movieId,
             request.ParticipantId,
             Errors.VoteOwnParticipationOnly,

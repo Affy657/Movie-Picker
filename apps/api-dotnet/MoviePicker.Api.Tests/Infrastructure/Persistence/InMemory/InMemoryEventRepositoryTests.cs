@@ -54,18 +54,18 @@ public sealed class InMemoryEventRepositoryTests
         var created = await _repo.AddAsync(Mk(slug: "soiree"));
 
         Assert.Equal(24, created.Id.Length);
-        Assert.Equal(created.Id, (await _repo.GetByIdOrSlugAsync("soiree"))!.Id);
+        Assert.Equal(created.Id, (await _repo.GetBySlugAsync("soiree"))!.Id);
     }
 
     [Fact]
-    public async Task GetByIdOrSlugAsync_ResolvesTheSlugOnly_AndNullWhenBlank()
+    public async Task GetBySlugAsync_ResolvesTheSlugOnly_AndNullWhenBlank()
     {
         var created = await _repo.AddAsync(Mk(slug: "soiree"));
 
-        Assert.Null(await _repo.GetByIdOrSlugAsync(created.Id));
-        Assert.NotNull(await _repo.GetByIdOrSlugAsync("soiree"));
-        Assert.Null(await _repo.GetByIdOrSlugAsync("  "));
-        Assert.Null(await _repo.GetByIdOrSlugAsync("unknown"));
+        Assert.Null(await _repo.GetBySlugAsync(created.Id));
+        Assert.NotNull(await _repo.GetBySlugAsync("soiree"));
+        Assert.Null(await _repo.GetBySlugAsync("  "));
+        Assert.Null(await _repo.GetBySlugAsync("unknown"));
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public sealed class InMemoryEventRepositoryTests
 
         await _repo.UpdateAsync(created with { Title = "Renommée" });
 
-        Assert.Equal("Renommée", (await _repo.GetByIdOrSlugAsync(created.Slug))!.Title);
+        Assert.Equal("Renommée", (await _repo.GetBySlugAsync(created.Slug))!.Title);
     }
 
     [Fact]
@@ -121,7 +121,7 @@ public sealed class InMemoryEventRepositoryTests
         Assert.False(await _repo.DeleteAsync(" "));
         Assert.False(await _repo.DeleteAsync("ghost"));
         Assert.True(await _repo.DeleteAsync(created.Id));
-        Assert.Null(await _repo.GetByIdOrSlugAsync("soiree"));
+        Assert.Null(await _repo.GetBySlugAsync("soiree"));
     }
 
     [Fact]
@@ -149,7 +149,7 @@ public sealed class InMemoryEventRepositoryTests
         Assert.Equal(0L, await _repo.AnonymizeCreatorAsync(""));
         Assert.Equal(1L, await _repo.AnonymizeCreatorAsync("u1"));
 
-        var reloaded = await _repo.GetByIdOrSlugAsync(created.Slug);
+        var reloaded = await _repo.GetBySlugAsync(created.Slug);
         Assert.Null(reloaded!.CreatorUserId);
         Assert.Empty(await _repo.ListByCreatorUserIdAsync("u1", 10));
     }
@@ -165,10 +165,10 @@ public sealed class InMemoryEventRepositoryTests
         Assert.Equal(0L, await _repo.ForgetUserAsync(""));
         Assert.Equal(3L, await _repo.ForgetUserAsync("u2"));
 
-        Assert.Equal(["u3"], (await _repo.GetByIdOrSlugAsync(first.Slug))!.RemovedUserIds);
-        Assert.Empty((await _repo.GetByIdOrSlugAsync(second.Slug))!.RemovedUserIds);
-        Assert.Equal(["u3"], (await _repo.GetByIdOrSlugAsync(coHosted.Slug))!.CoHostUserIds);
-        Assert.Equal(untouched.WriteSeq, (await _repo.GetByIdOrSlugAsync(untouched.Slug))!.WriteSeq);
+        Assert.Equal(["u3"], (await _repo.GetBySlugAsync(first.Slug))!.RemovedUserIds);
+        Assert.Empty((await _repo.GetBySlugAsync(second.Slug))!.RemovedUserIds);
+        Assert.Equal(["u3"], (await _repo.GetBySlugAsync(coHosted.Slug))!.CoHostUserIds);
+        Assert.Equal(untouched.WriteSeq, (await _repo.GetBySlugAsync(untouched.Slug))!.WriteSeq);
     }
 
     [Fact]
@@ -179,7 +179,7 @@ public sealed class InMemoryEventRepositoryTests
 
         var first = await _repo.MarkWatchlistCleanedAsync(evt.Id, at);
         var second = await _repo.MarkWatchlistCleanedAsync(evt.Id, at.AddHours(1));
-        var reloaded = await _repo.GetByIdOrSlugAsync("stamp-me");
+        var reloaded = await _repo.GetBySlugAsync("stamp-me");
 
         Assert.True(first);
         Assert.False(second);
@@ -220,7 +220,7 @@ public sealed class InMemoryEventRepositoryTests
                     await _repo.LockForWriteAsync(created.Id);
             });
 
-        var reloaded = await _repo.GetByIdOrSlugAsync("contended");
+        var reloaded = await _repo.GetBySlugAsync("contended");
         Assert.Equal($"Update {updates}", reloaded!.Title);
         Assert.Equal(created.Version + updates, reloaded.Version);
         Assert.Equal(created.WriteSeq + updates + (2 * bumpsPerRacer), reloaded.WriteSeq);
@@ -262,7 +262,7 @@ public sealed class InMemoryEventRepositoryTests
                 });
 
             Assert.Empty(await _repo.ListByIdsAsync([created.Id]));
-            Assert.Null(await _repo.GetByIdOrSlugAsync(created.Slug));
+            Assert.Null(await _repo.GetBySlugAsync(created.Slug));
         }
     }
 }
