@@ -274,7 +274,7 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
     }
 
     [Theory]
-    [InlineData("?host=LEGACY&x=1", "?host=LEGACY&x=1")]
+    [InlineData("?host=LEGACY&x=1", "?host=***&x=1")]
     [InlineData("?token=SECRET", "?token=***")]
     [InlineData("?api_key=SECRET&language=fr-FR", "?api_key=***&language=fr-FR")]
     [InlineData("?API_KEY=SECRET", "?API_KEY=***")]

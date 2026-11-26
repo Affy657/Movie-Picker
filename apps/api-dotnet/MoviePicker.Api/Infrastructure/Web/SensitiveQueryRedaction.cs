@@ -9,7 +9,7 @@ public static partial class SensitiveQueryRedaction
 
     private const string ReturnToKey = "returnTo";
 
-    private static readonly string[] SensitiveKeys = ["token", "api_key", "code", "state"];
+    private static readonly string[] SensitiveKeys = ["token", "host", "api_key", "code", "state"];
 
     public static string RedactQueryString(string? queryString)
     {
