@@ -14,12 +14,6 @@ namespace MoviePicker.Api.Tests.Infrastructure;
 
 public sealed class DataProtectionConfigurationTests
 {
-    private static readonly string KeyRingDirectory =
-        Path.Combine(Path.GetTempPath(), "moviepicker-dp-keys");
-
-    private const string SampleKeyRing =
-        """<key id="3b1f5a2c-0000-4000-8000-000000000001" version="1"><creationDate>2026-01-01T00:00:00Z</creationDate></key>""";
-
     private static WebApplicationBuilder BuildWith(Dictionary<string, string?> settings)
     {
         var builder = WebApplication.CreateBuilder();
@@ -92,23 +86,7 @@ public sealed class DataProtectionConfigurationTests
     }
 
     [Fact]
-    public void AddSharedDataProtection_MongoConfigured_IgnoresTheEnvironmentKeyRing()
-    {
-        var builder = BuildWith(new Dictionary<string, string?>
-        {
-            ["MONGODB_URI"] = "mongodb://127.0.0.1:27017/moviepicker_test",
-            [DataProtectionConfiguration.KeyRingXmlEnvName] = SampleKeyRing
-        });
-        builder.Services.AddSingleton(FakeCollectionFactory());
-
-        builder.AddSharedDataProtection();
-
-        using var provider = builder.Services.BuildServiceProvider();
-        Assert.IsType<MongoXmlRepository>(ResolveKeyManagementOptions(provider).XmlRepository);
-    }
-
-    [Fact]
-    public void AddSharedDataProtection_NoMongoNoKeyRing_RegistersNoRepository()
+    public void AddSharedDataProtection_NoMongo_RegistersNoRepository()
     {
         var builder = BuildWith([]);
 
@@ -116,42 +94,5 @@ public sealed class DataProtectionConfigurationTests
 
         using var provider = builder.Services.BuildServiceProvider();
         Assert.Null(ResolveKeyManagementOptions(provider).XmlRepository);
-    }
-
-    [Fact]
-    public void AddSharedDataProtection_KeyRingFromConfiguration_WritesItToDiskAndKeepsASingleFile()
-    {
-        Directory.CreateDirectory(KeyRingDirectory);
-        var stale = Path.Combine(KeyRingDirectory, "stale.xml");
-        File.WriteAllText(stale, "<key id=\"périmée\" />");
-
-        var builder = BuildWith(new Dictionary<string, string?>
-        {
-            [DataProtectionConfiguration.KeyRingXmlEnvName] = "  " + SampleKeyRing + "  "
-        });
-
-        builder.AddSharedDataProtection();
-
-        var files = Directory.GetFiles(KeyRingDirectory, "*.xml");
-        Assert.Single(files);
-        Assert.False(File.Exists(stale));
-        Assert.Equal(SampleKeyRing, File.ReadAllText(files[0]));
-    }
-
-    [Fact]
-    public void AddSharedDataProtection_BlankKeyRing_WritesNothing()
-    {
-        Directory.CreateDirectory(KeyRingDirectory);
-        foreach (var existing in Directory.EnumerateFiles(KeyRingDirectory, "*.xml"))
-            File.Delete(existing);
-
-        var builder = BuildWith(new Dictionary<string, string?>
-        {
-            [DataProtectionConfiguration.KeyRingXmlEnvName] = "   "
-        });
-
-        builder.AddSharedDataProtection();
-
-        Assert.Empty(Directory.GetFiles(KeyRingDirectory, "*.xml"));
     }
 }

@@ -56,25 +56,39 @@ public sealed class RateLimitingTests
                         app.UseRouting();
                         app.UseRateLimiter();
                         app.UseEndpoints(endpoints =>
+                        {
                             endpoints.MapGet("/r/{slug}", (string slug) => $"ok {slug}")
-                                .RequireRateLimiting(RateLimitingExtensions.RecapDocumentPolicy));
+                                .RequireRateLimiting(RateLimitingExtensions.RecapDocumentPolicy);
+                            endpoints.MapGet("/unlimited", () => "ok");
+                        });
                     })
             )
             .StartAsync();
 
-    private static async Task<int> ServedRandomRecapsAsync(HttpClient client, string forwardedFor, int attempts)
+    private const string HostingRelayedClient = "203.0.113.7, 142.250.32.37";
+    private const string OtherHostingRelayedClient = "198.51.100.2, 142.250.32.37";
+
+    private static async Task<HttpStatusCode> GetAsync(HttpClient client, string path, string forwardedFor)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, path);
+        request.Headers.Add("X-Forwarded-For", forwardedFor);
+        using var response = await client.SendAsync(request);
+        return response.StatusCode;
+    }
+
+    private static async Task<int> ServedRecapsAsync(HttpClient client, string forwardedFor, int attempts, Func<int, string> slugOf)
     {
         var served = 0;
         for (var attempt = 0; attempt < attempts; attempt++)
         {
-            using var request = new HttpRequestMessage(HttpMethod.Get, $"/r/random-{attempt}");
-            request.Headers.Add("X-Forwarded-For", forwardedFor);
-            using var response = await client.SendAsync(request);
-            if (response.StatusCode == HttpStatusCode.OK)
+            if (await GetAsync(client, $"/r/{slugOf(attempt)}", forwardedFor) == HttpStatusCode.OK)
                 served++;
         }
         return served;
     }
+
+    private static Task<int> ServedRandomRecapsAsync(HttpClient client, string forwardedFor, int attempts) =>
+        ServedRecapsAsync(client, forwardedFor, attempts, attempt => $"random-{attempt}");
 
     [Fact]
     public async Task RecapDocument_CalledDirectly_IsCappedPerAddress_EvenWhenTheClientWritesAHostingAddressFirst()
@@ -88,12 +102,48 @@ public sealed class RateLimitingTests
     }
 
     [Fact]
-    public async Task RecapDocument_RelayedByHosting_IsCountedPerRecapAndNotPerHostingAddress()
+    public async Task RecapDocument_RelayedByHosting_IsCappedPerClientAddress()
     {
         using var host = await StartRecapDocumentServerAsync();
         var quota = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.RecapDocumentPolicy)!.Value.PermitLimit;
 
-        var served = await ServedRandomRecapsAsync(host.GetTestClient(), "203.0.113.9, 66.249.93.69", quota + 1);
+        var served = await ServedRandomRecapsAsync(host.GetTestClient(), HostingRelayedClient, quota + 1);
+
+        Assert.Equal(quota, served);
+    }
+
+    [Fact]
+    public async Task RecapDocument_RelayedByHosting_OneClientLoopingOnARecap_LeavesItServedToTheOthers()
+    {
+        using var host = await StartRecapDocumentServerAsync();
+        var client = host.GetTestClient();
+        var quota = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.RecapDocumentPolicy)!.Value.PermitLimit;
+
+        var servedToTheLooper = await ServedRecapsAsync(client, HostingRelayedClient, quota + 1, _ => "7fKq2p");
+
+        Assert.Equal(quota, servedToTheLooper);
+        Assert.Equal(HttpStatusCode.OK, await GetAsync(client, "/r/7fKq2p", OtherHostingRelayedClient));
+    }
+
+    [Fact]
+    public async Task RecapDocument_RelayedByHosting_SpendsTheGlobalBudgetOfItsClient()
+    {
+        using var host = await StartRecapDocumentServerAsync();
+        var client = host.GetTestClient();
+
+        await ServedRandomRecapsAsync(client, HostingRelayedClient, RateLimitingExtensions.GlobalPermitLimitPerMinute);
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, await GetAsync(client, "/unlimited", HostingRelayedClient));
+        Assert.Equal(HttpStatusCode.OK, await GetAsync(client, "/unlimited", OtherHostingRelayedClient));
+    }
+
+    [Fact]
+    public async Task RecapDocument_RelayedByHostingWithoutAClientHop_IsCountedPerRecapAndNotPerHostingAddress()
+    {
+        using var host = await StartRecapDocumentServerAsync();
+        var quota = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.RecapDocumentPolicy)!.Value.PermitLimit;
+
+        var served = await ServedRandomRecapsAsync(host.GetTestClient(), "142.250.32.37", quota + 1);
 
         Assert.Equal(quota + 1, served);
     }

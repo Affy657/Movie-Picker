@@ -2,11 +2,14 @@ using System.Net;
 using System.Reflection;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Controllers;
 using MoviePicker.Api.Infrastructure.Web;
@@ -19,6 +22,10 @@ public sealed class RateLimitingExtensionsTests
     private const string HostingAddress = "66.249.93.69";
     private const string OtherHostingAddress = "142.250.32.37";
     private const string DirectAddress = "203.0.113.9";
+    private const string RelayedClientAddress = "203.0.113.7";
+    private const string OtherRelayedClientAddress = "198.51.100.2";
+    private const string CloudRunPeerAddress = "169.254.1.1";
+    private const string RelayedSlug = "7fKq2p";
 
     [Fact]
     public void AddMoviePickerRateLimiter_Development_RegistersService()
@@ -404,7 +411,7 @@ public sealed class RateLimitingExtensionsTests
     private static RateLimiter Limiter(RateLimitPartition<string> partition) => partition.Factory(partition.PartitionKey);
 
     [Fact]
-    public void CreatePartition_BySlug_RelayedByHosting_UsesTheRouteSlugAndNotTheAddress()
+    public void CreatePartition_BySlug_RelayedWithoutAClientHop_UsesTheRouteSlugAndNotTheAddress()
     {
         var http = From(HostingAddress);
         http.Request.RouteValues["slug"] = "7fKq2p";
@@ -483,7 +490,7 @@ public sealed class RateLimitingExtensionsTests
     }
 
     [Fact]
-    public void CreateGlobalPartition_LeavesTheDocumentsRelayedByHostingToTheirOwnPolicy()
+    public void CreateGlobalPartition_LeavesTheDocumentsRelayedWithoutAClientHopToTheirOwnPolicy()
     {
         var http = DocumentRequest(RateLimitingExtensions.RecapDocumentPolicy, HostingAddress);
 
@@ -508,7 +515,7 @@ public sealed class RateLimitingExtensionsTests
     }
 
     [Fact]
-    public void CreateAddressCeilingPartition_LeavesTheDocumentsRelayedByHostingToTheirOwnPolicy()
+    public void CreateAddressCeilingPartition_LeavesTheDocumentsRelayedWithoutAClientHopToTheirOwnPolicy()
     {
         var http = DocumentRequest(RateLimitingExtensions.RecapDocumentPolicy, HostingAddress);
 
@@ -582,6 +589,128 @@ public sealed class RateLimitingExtensionsTests
     public void FirebaseHostingRelay_UnknownAddress_IsADirectCall()
     {
         Assert.False(FirebaseHostingRelay.Carries(new DefaultHttpContext()));
+    }
+
+    [Theory]
+    [InlineData("203.0.113.7, 142.250.32.37", "203.0.113.7")]
+    [InlineData("203.0.113.7, 66.249.93.69", "203.0.113.7")]
+    [InlineData("2001:db8:1:2::1, 142.250.32.37", "2001:db8:1:2::/64")]
+    [InlineData("198.51.100.4, 203.0.113.9", "203.0.113.9")]
+    [InlineData("142.250.32.37, 203.0.113.9", "203.0.113.9")]
+    [InlineData("203.0.113.9", "203.0.113.9")]
+    [InlineData("142.250.32.37", "142.250.32.37")]
+    public async Task ClientIpPartitionKey_AfterTheForwardedHeadersMiddleware_KeysTheClientCloudRunOrHostingSaw(
+        string forwardedFor,
+        string expectedKey)
+    {
+        var http = From(CloudRunPeerAddress);
+        http.Request.Headers[ForwardedHeadersDefaults.XForwardedForHeaderName] = forwardedFor;
+        using var services = new ServiceCollection().AddMoviePickerForwardedHeaders().BuildServiceProvider();
+        var middleware = new ForwardedHeadersMiddleware(
+            _ => Task.CompletedTask,
+            NullLoggerFactory.Instance,
+            services.GetRequiredService<IOptions<ForwardedHeadersOptions>>());
+
+        await middleware.Invoke(http);
+
+        Assert.Equal(expectedKey, ClientIpPartitionKey.Get(http));
+    }
+
+    private static DefaultHttpContext RelayedDocumentRequest(string policy, string? forwardedHopsLeft, string slug = RelayedSlug)
+    {
+        var http = DocumentRequest(policy, HostingAddress);
+        http.Request.RouteValues["slug"] = slug;
+        if (forwardedHopsLeft is not null)
+            http.Request.Headers[ForwardedHeadersDefaults.XForwardedForHeaderName] = forwardedHopsLeft;
+        return http;
+    }
+
+    [Theory]
+    [MemberData(nameof(DocumentPolicies))]
+    public void CreatePartition_DocumentRelayedByHosting_CountsPerTheClientHopLeft(string policy)
+    {
+        var spec = RateLimitingExtensions.FindPolicy(policy)!.Value;
+        var http = RelayedDocumentRequest(policy, RelayedClientAddress);
+
+        Assert.Equal($"ip:{RelayedClientAddress}", RateLimitingExtensions.CreatePartition(http, spec).PartitionKey);
+        Assert.Equal($"ip:{RelayedClientAddress}", RateLimitingExtensions.PartitionKeyFor(http, spec));
+    }
+
+    [Theory]
+    [MemberData(nameof(DocumentPolicies))]
+    public void CreatePartition_TwoClientsRelayedOnOneSlug_GetOnePartitionEach(string policy)
+    {
+        var spec = RateLimitingExtensions.FindPolicy(policy)!.Value;
+
+        var first = RateLimitingExtensions.CreatePartition(RelayedDocumentRequest(policy, RelayedClientAddress, "27205-inception"), spec);
+        var second = RateLimitingExtensions.CreatePartition(RelayedDocumentRequest(policy, OtherRelayedClientAddress, "27205-inception"), spec);
+
+        Assert.NotEqual(first.PartitionKey, second.PartitionKey);
+    }
+
+    [Theory]
+    [MemberData(nameof(DocumentPolicies))]
+    public void SharedCeilings_DocumentRelayedByHosting_CapTheClientHopLeft(string policy)
+    {
+        var http = RelayedDocumentRequest(policy, RelayedClientAddress);
+
+        Assert.Equal($"ip:{RelayedClientAddress}", RateLimitingExtensions.CreateAddressCeilingPartition(http).PartitionKey);
+        Assert.Equal($"ip:{RelayedClientAddress}", RateLimitingExtensions.CreateGlobalPartition(http).PartitionKey);
+    }
+
+    [Fact]
+    public void GlobalLimiter_ManyAccountsRelayedFromOneClient_ShareTheAddressCeiling()
+    {
+        using var limiter = RateLimitingExtensions.CreateGlobalLimiter();
+        var accepted = Enumerable.Range(0, RateLimitingExtensions.AddressCeilingPerMinute + 1)
+            .Count(i =>
+            {
+                var http = RelayedDocumentRequest(RateLimitingExtensions.RecapDocumentPolicy, RelayedClientAddress);
+                http.User = SignedIn($"account-{i}", HostingAddress).User;
+                using var lease = limiter.AttemptAcquire(http);
+                return lease.IsAcquired;
+            });
+
+        Assert.Equal(RateLimitingExtensions.AddressCeilingPerMinute, accepted);
+    }
+
+    [Theory]
+    [MemberData(nameof(DocumentPolicies))]
+    public void CreatePartition_DocumentCalledDirectly_IgnoresTheForwardedHopsLeft(string policy)
+    {
+        var spec = RateLimitingExtensions.FindPolicy(policy)!.Value;
+        var http = DocumentRequest(policy, DirectAddress);
+        http.Request.RouteValues["slug"] = RelayedSlug;
+        http.Request.Headers[ForwardedHeadersDefaults.XForwardedForHeaderName] = RelayedClientAddress;
+
+        Assert.Equal($"ip:{DirectAddress}", RateLimitingExtensions.CreatePartition(http, spec).PartitionKey);
+        Assert.Equal($"ip:{DirectAddress}", RateLimitingExtensions.CreateAddressCeilingPartition(http).PartitionKey);
+        Assert.Equal(DirectAddress, ClientIpPartitionKey.Get(http));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("unknown")]
+    [InlineData("_hidden")]
+    [InlineData("203.0.113.7, unknown")]
+    public void SharedCeilings_DocumentRelayedWithoutAReadableClientHop_LeaveItToTheSlugQuota(string? forwardedHopsLeft)
+    {
+        var spec = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.RecapDocumentPolicy)!.Value;
+        var http = RelayedDocumentRequest(RateLimitingExtensions.RecapDocumentPolicy, forwardedHopsLeft);
+
+        Assert.Equal($"slug:{RelayedSlug}", RateLimitingExtensions.CreatePartition(http, spec).PartitionKey);
+        Assert.Equal("proxied", RateLimitingExtensions.CreateAddressCeilingPartition(http).PartitionKey);
+        Assert.Equal("proxied", RateLimitingExtensions.CreateGlobalPartition(http).PartitionKey);
+    }
+
+    [Fact]
+    public void ClientAddressAccessor_RequestRelayedByHosting_ReportsTheClientHopLeft()
+    {
+        var http = RelayedDocumentRequest(RateLimitingExtensions.RecapDocumentPolicy, RelayedClientAddress);
+
+        Assert.Equal(RelayedClientAddress, new ClientAddressAccessor(new HttpContextAccessor { HttpContext = http }).GetClientAddress());
+        Assert.Equal($"ip:{RelayedClientAddress}", UserOrIpPartitionKey.Get(http));
     }
 
     private static DefaultHttpContext DocumentRequest(string policy, string address)

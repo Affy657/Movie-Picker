@@ -10,43 +10,23 @@ public static class DataProtectionConfiguration
 {
     internal const string ApplicationName = "MoviePicker";
 
-    public const string KeyRingXmlEnvName = "AUTH_DATAPROTECTION_KEYRING";
-
     public static void AddSharedDataProtection(this WebApplicationBuilder builder)
     {
-        var dataProtection = builder.Services
+        builder.Services
             .AddDataProtection()
             .SetApplicationName(ApplicationName);
 
-        if (!string.IsNullOrWhiteSpace(builder.Configuration["MONGODB_URI"]))
+        if (string.IsNullOrWhiteSpace(builder.Configuration["MONGODB_URI"]))
+            return;
+
+        builder.Services.AddSingleton<IConfigureOptions<KeyManagementOptions>>(sp =>
         {
-            builder.Services.AddSingleton<IConfigureOptions<KeyManagementOptions>>(sp =>
+            var collections = sp.GetService<MongoCollectionFactory>();
+            return new ConfigureOptions<KeyManagementOptions>(options =>
             {
-                var collections = sp.GetService<MongoCollectionFactory>();
-                return new ConfigureOptions<KeyManagementOptions>(options =>
-                {
-                    if (collections is not null)
-                        options.XmlRepository = new MongoXmlRepository(collections);
-                });
+                if (collections is not null)
+                    options.XmlRepository = new MongoXmlRepository(collections);
             });
-            return;
-        }
-
-        var xml =
-            builder.Configuration[KeyRingXmlEnvName]
-            ?? Environment.GetEnvironmentVariable(KeyRingXmlEnvName);
-
-        if (string.IsNullOrWhiteSpace(xml))
-            return;
-
-        var dir = Path.Combine(Path.GetTempPath(), "moviepicker-dp-keys");
-        Directory.CreateDirectory(dir);
-        foreach (var existing in Directory.EnumerateFiles(dir, "*.xml"))
-            File.Delete(existing);
-
-        var fileName = Path.Combine(dir, Guid.NewGuid() + ".xml");
-        File.WriteAllText(fileName, xml.Trim());
-
-        dataProtection.PersistKeysToFileSystem(new DirectoryInfo(dir));
+        });
     }
 }
