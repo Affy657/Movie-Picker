@@ -162,11 +162,20 @@ function compareShapes(before, after, beforeType, afterType, location, seen, bre
   }
 }
 
+const PATH_PARAMETER = /\{[^}]+\}/g;
+
+function calledUrl(operation) {
+  return operation.replace(PATH_PARAMETER, '{}');
+}
+
 export function findBreakingChanges(before, after) {
   const breaks = [];
   const seen = new Set();
+  const served = new Map(
+    [...after.operations].map(([operation, responses]) => [calledUrl(operation), responses])
+  );
   for (const [operation, responses] of before.operations) {
-    const current = after.operations.get(operation);
+    const current = served.get(calledUrl(operation));
     if (!current) {
       breaks.push(`${operation}: operation removed`);
       continue;

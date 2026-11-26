@@ -90,6 +90,44 @@ describe('findBreakingChanges', () => {
     ]);
   });
 
+  it('passes a path parameter that was only renamed, the front calling the same URL', () => {
+    const renamed = contract({
+      paths: {
+        '/api/v1/lists': { get: { 200: 'ListsResponse', 401: 'ProblemDetails' } },
+        '/api/v1/lists/{listId}': { post: { 201: 'ListResponse' } },
+      },
+      schemas: {
+        ListsResponse: '{ items?: components["schemas"]["ListResponse"][] | null }',
+        ListResponse:
+          '{ id: string; name?: string | null; owner?: components["schemas"]["Person"] }',
+        Person: '{ handle?: string | null; displayName: string }',
+        ProblemDetails: '{ type?: string | null; title?: string | null }',
+      },
+    });
+
+    assert.deepEqual(breaksBetween(PUBLISHED, renamed), []);
+  });
+
+  it('still flags a route whose parameter moved to another segment', () => {
+    const moved = contract({
+      paths: {
+        '/api/v1/lists': { get: { 200: 'ListsResponse', 401: 'ProblemDetails' } },
+        '/api/v1/lists/by/{id}': { post: { 201: 'ListResponse' } },
+      },
+      schemas: {
+        ListsResponse: '{ items?: components["schemas"]["ListResponse"][] | null }',
+        ListResponse:
+          '{ id: string; name?: string | null; owner?: components["schemas"]["Person"] }',
+        Person: '{ handle?: string | null; displayName: string }',
+        ProblemDetails: '{ type?: string | null; title?: string | null }',
+      },
+    });
+
+    assert.deepEqual(breaksBetween(PUBLISHED, moved), [
+      'POST /api/v1/lists/{id}: operation removed',
+    ]);
+  });
+
   it('flags a removed response property, nested ones through arrays and references included', () => {
     const current = contract({
       paths: {
