@@ -1087,6 +1087,47 @@ describe('EventDetail (MSW)', () => {
       await waitFor(() => expect(prompts).toHaveLength(1));
     });
 
+    it('keeps the rating closed when the participant leaves the night and comes back', async () => {
+      const user = userEvent.setup();
+      setStoredParticipant(slug, myPid, 'Alice');
+      serveFinishedNightWithWinner(false, true, yesterday(), { ratingPromptDue: true });
+      const prompts = recordRatingPrompts();
+      const client = createTestQueryClient();
+      client.setDefaultOptions({
+        queries: { ...client.getDefaultOptions().queries, staleTime: 5 * 60 * 1000 },
+      });
+      let navigateTo: NavigateFunction = () => undefined;
+      function Navigator() {
+        navigateTo = useNavigate();
+        return null;
+      }
+      render(
+        <AppTestProviders client={client}>
+          <MemoryRouter initialEntries={[`/e/${slug}`]}>
+            <Routes>
+              <Route path="/e/:slug" element={<EventDetail />} />
+              <Route path="/film" element={<div data-testid="route-film" />} />
+            </Routes>
+            <Navigator />
+          </MemoryRouter>
+        </AppTestProviders>
+      );
+
+      const dialog = await screen.findByRole('dialog', { name: 'Noter ce film' });
+      await waitFor(() => expect(prompts).toHaveLength(1));
+      serveFinishedNightWithWinner(false, true, yesterday(), { ratingPromptDue: false });
+      await user.click(within(dialog).getByRole('button', { name: 'Fermer' }));
+      act(() => navigateTo('/film'));
+      await screen.findByTestId('route-film');
+      act(() => navigateTo(-1));
+
+      expect(
+        await screen.findByRole('button', { name: 'Donner la première note' })
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('dialog', { name: 'Noter ce film' })).not.toBeInTheDocument();
+      expect(prompts).toHaveLength(1);
+    });
+
     it('opens nothing by itself once the server says the participant was already asked', async () => {
       setStoredParticipant(slug, myPid, 'Alice');
       serveFinishedNightWithWinner(false, true, yesterday(), { ratingPromptDue: false });

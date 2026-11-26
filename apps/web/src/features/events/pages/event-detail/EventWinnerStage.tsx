@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { Link } from 'react-router';
 import { ArrowRight } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { ROUTES, withReturnTo } from '@/app/routes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { markRatingPrompted } from '@/features/events/api/eventsApi';
@@ -8,6 +9,7 @@ import { isRatingOpen, useRatingLink } from '@/features/events/hooks/useRatingLi
 import type { EventData } from '@/features/events/types';
 import { buttonClass } from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
 import type { MovieData } from '@/shared/types/movie';
 import EventWinnerSummary, { type WinnerRatingContext } from './EventWinnerSummary';
@@ -40,10 +42,14 @@ function useWinnerRating({
 }: Props): WinnerRatingContext {
   const { user } = useAuth();
   const movieRating = useEventMovieRating({ slug, participant, refreshAll });
+  const queryClient = useQueryClient();
   const signedInParticipantId = user ? (participant?.participantId ?? null) : null;
   const rememberPrompted = useCallback(() => {
+    queryClient.setQueryData<EventData>(queryKeys.event.detail(slug), (cached) =>
+      cached ? { ...cached, ratingPromptDue: false } : cached
+    );
     markRatingPrompted(slug).catch(() => undefined);
-  }, [slug]);
+  }, [queryClient, slug]);
   const ratingLink = useRatingLink(
     winners,
     signedInParticipantId,
