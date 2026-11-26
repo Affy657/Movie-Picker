@@ -278,6 +278,40 @@ describe('completeWatchlistAvailability', () => {
     expect(res.items.map((item) => item.tmdbId)).toEqual([1, 501]);
     expect(res.partial).toBe(false);
   });
+
+  const beforeAMove = {
+    items: [offer(1), offer(2), offer(501), offer(502)],
+    partial: true,
+    completionAttempts: 1,
+    pages: [
+      { skip: 0, items: [offer(1), offer(2)], partial: false, hasMore: true },
+      { skip: 500, items: [offer(501), offer(502)], partial: true, hasMore: false },
+    ],
+  } satisfies WatchlistAvailability;
+
+  it.each([
+    ['lost a title it held', { items: [offer(502), offer(503)], partial: true, hasMore: false }],
+    [
+      'now holds a title of another page',
+      { items: [offer(2), offer(501), offer(502)], partial: true, hasMore: false },
+    ],
+    [
+      'changed whether more remain',
+      { items: [offer(501), offer(502)], partial: true, hasMore: true },
+    ],
+  ])('reads every page again when a page read again %s', async (_case, reread) => {
+    mockFetchApi
+      .mockResolvedValueOnce(reread)
+      .mockResolvedValueOnce({ items: [offer(1)], partial: false, hasMore: true })
+      .mockResolvedValueOnce({ items: [offer(502)], partial: true, hasMore: false });
+
+    const res = await completeWatchlistAvailability(beforeAMove);
+
+    expect(requestedSkips()).toEqual([500, 0, 500]);
+    expect(res.items.map((item) => item.tmdbId)).toEqual([1, 502]);
+    expect(res.pages.map((page) => page.skip)).toEqual([0, 500]);
+    expect(res.completionAttempts).toBe(2);
+  });
 });
 
 describe('addToWatchlist', () => {

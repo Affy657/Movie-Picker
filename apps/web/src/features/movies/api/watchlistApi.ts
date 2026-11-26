@@ -104,12 +104,35 @@ async function refetchPartialPages(
   return [settled, ...(await refetchPartialPages(rest, signal))];
 }
 
+function titleKey(item: WatchlistAvailabilityItem): string {
+  return `${item.mediaType}:${item.tmdbId}`;
+}
+
+function positionsMoved(
+  before: readonly WatchlistAvailabilityPage[],
+  after: readonly WatchlistAvailabilityPage[]
+): boolean {
+  const keys = after.flatMap((page) => page.items.map(titleKey));
+  const held = new Set(keys);
+  return (
+    held.size < keys.length ||
+    before.some(
+      (page, index) =>
+        page.hasMore !== after[index]?.hasMore ||
+        page.items.some((item) => !held.has(titleKey(item)))
+    )
+  );
+}
+
 export async function completeWatchlistAvailability(
   previous: WatchlistAvailability,
   signal?: AbortSignal
 ): Promise<WatchlistAvailability> {
   const completionAttempts = previous.completionAttempts + 1;
   const settled = await refetchPartialPages(previous.pages, signal);
+  if (positionsMoved(previous.pages, settled)) {
+    return assemble(await readAvailabilityPages(0, signal), completionAttempts);
+  }
   const last = settled.at(-1);
   const remaining = last?.hasMore
     ? await readAvailabilityPages(last.skip + WATCHLIST_PAGE_SIZE, signal)
