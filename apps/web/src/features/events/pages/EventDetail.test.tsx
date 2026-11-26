@@ -850,6 +850,12 @@ describe('EventDetail (MSW)', () => {
       );
       expect(letBackInUrl).toContain(`/events/${slug}/removed-people/u-lea`);
       expect(letBackInHostToken).toBeNull();
+      const dialog = screen.getByRole('dialog', { name: 'Participants' });
+      expect(within(dialog).getByRole('heading', { name: 'Retirés de la soirée' })).toHaveFocus();
+      expect(within(dialog).getByRole('status')).toHaveTextContent(
+        'Léa peut de nouveau rejoindre la soirée.'
+      );
+      expect(screen.queryByTestId('participants-action-success')).toBeNull();
     });
 
     it('says so when the API refuses to let a removed person back in', async () => {

@@ -27,9 +27,6 @@
 }
 
 .removed {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
   margin-top: var(--space-5);
   padding-top: var(--space-4);
   border-top: 1px solid var(--color-border-subtle);
@@ -43,7 +40,22 @@
 }
 
 .removedHint {
-  margin: 0;
+  margin: var(--space-2) 0 0;
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
+}
+
+.removedList {
+  margin-top: var(--space-2);
+}
+
+.removedStatus {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-success);
+}
+
+.removedStatus:not(:empty) {
+  margin-top: var(--space-2);
 }

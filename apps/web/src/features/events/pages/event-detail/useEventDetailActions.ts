@@ -101,12 +101,13 @@ export function useEventDetailActions({
   const letBackInMutation = useMutation({
     mutationFn: (variables: { userId: string; name: string }) =>
       letRemovedPersonBackIn(slug, variables.userId),
-    onSuccess: (_, { name }) =>
-      setActionSuccess(t('events.participants.letBackInSuccess', { name })),
     onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug) }),
   });
   const pendingLetBackInId = letBackInMutation.isPending
     ? letBackInMutation.variables.userId
+    : null;
+  const letBackInSuccess = letBackInMutation.isSuccess
+    ? t('events.participants.letBackInSuccess', { name: letBackInMutation.variables.name })
     : null;
   const letBackInError = letBackInMutation.error
     ? getErrorMessage(letBackInMutation.error, t('events.participants.letBackInError'))
@@ -339,6 +340,7 @@ export function useEventDetailActions({
     handleToggleCoHost,
     pendingLetBackInId,
     letBackInError,
+    letBackInSuccess,
     resetLetBackIn,
     handleLetBackIn,
     actionSuccess,

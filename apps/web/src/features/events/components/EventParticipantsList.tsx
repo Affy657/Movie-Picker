@@ -1,4 +1,5 @@
-import { useId } from 'react';
+import { useEffect, useId, useRef } from 'react';
+import clsx from 'clsx';
 import { Crown, ShieldMinus, ShieldPlus, UserMinus, UserPlus } from 'lucide-react';
 import type { EventParticipantSummary, RemovedPerson } from '@/shared/types/event';
 import { useTranslation, type Translate } from '@/shared/i18n';
@@ -28,6 +29,7 @@ type Props = {
   removedPeople?: RemovedPerson[];
   pendingLetBackInId?: string | null;
   onLetBackIn?: (userId: string, name: string) => void;
+  letBackInStatus?: string | null;
 };
 
 export default function EventParticipantsList({
@@ -45,16 +47,18 @@ export default function EventParticipantsList({
   removedPeople,
   pendingLetBackInId,
   onLetBackIn,
+  letBackInStatus = null,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   if (!participants) return null;
 
   const removed =
-    isHost && onLetBackIn && removedPeople && removedPeople.length > 0 ? (
+    isHost && onLetBackIn && removedPeople && (removedPeople.length > 0 || letBackInStatus) ? (
       <RemovedPeopleList
         people={removedPeople}
         pendingId={pendingLetBackInId ?? null}
         onLetBackIn={onLetBackIn}
+        status={letBackInStatus}
       />
     ) : null;
 
@@ -91,58 +95,104 @@ export default function EventParticipantsList({
   );
 }
 
+function focusTargetAfterLeaving(order: readonly string[], leavingId: string): string | undefined {
+  const remaining = order.filter((id) => id !== leavingId);
+  return remaining[Math.max(order.indexOf(leavingId), 0)] ?? remaining.at(-1);
+}
+
+function useFocusAfterLetBackIn(people: RemovedPerson[], status: string | null) {
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const buttons = useRef(new Map<string, HTMLButtonElement>());
+  const leavingId = useRef<string | null>(null);
+  const buttonRef = (userId: string) => (element: HTMLButtonElement | null) => {
+    if (element) buttons.current.set(userId, element);
+    else buttons.current.delete(userId);
+  };
+  useEffect(() => {
+    const leaving = leavingId.current;
+    if (!status || leaving === null) return;
+    leavingId.current = null;
+    const targetId = focusTargetAfterLeaving(
+      people.map((person) => person.id),
+      leaving
+    );
+    const target = targetId === undefined ? undefined : buttons.current.get(targetId);
+    (target ?? headingRef.current)?.focus();
+  }, [status, people]);
+  const markLeaving = (userId: string) => {
+    leavingId.current = userId;
+  };
+  return { headingRef, buttonRef, markLeaving };
+}
+
 function RemovedPeopleList({
   people,
   pendingId,
   onLetBackIn,
+  status,
 }: Readonly<{
   people: RemovedPerson[];
   pendingId: string | null;
   onLetBackIn: (userId: string, name: string) => void;
+  status: string | null;
 }>) {
   const { t } = useTranslation();
   const titleId = useId();
+  const focus = useFocusAfterLetBackIn(people, status);
   return (
     <section className={styles.removed}>
-      <h3 id={titleId} className={styles.removedTitle}>
+      <h3 id={titleId} ref={focus.headingRef} tabIndex={-1} className={styles.removedTitle}>
         {t('events.participants.removedTitle')}
       </h3>
-      <p className={styles.removedHint}>{t('events.participants.removedHint')}</p>
-      <ul className={styles.list} aria-labelledby={titleId} data-testid="event-removed-people">
-        {people.map((person) => {
-          const name = person.displayName || person.handle || '';
-          return (
-            <PersonRow
-              key={person.id}
-              data-testid={`removed-person-${person.id}`}
-              muted
-              avatar={
-                <Avatar
-                  avatarId={person.avatarId}
-                  pseudo={name}
-                  size="md"
-                  accent={person.accentColor}
+      {people.length > 0 ? (
+        <>
+          <p className={styles.removedHint}>{t('events.participants.removedHint')}</p>
+          <ul
+            className={clsx(styles.list, styles.removedList)}
+            aria-labelledby={titleId}
+            data-testid="event-removed-people"
+          >
+            {people.map((person) => {
+              const name = person.displayName || person.handle || '';
+              return (
+                <PersonRow
+                  key={person.id}
+                  data-testid={`removed-person-${person.id}`}
+                  muted
+                  avatar={
+                    <Avatar
+                      avatarId={person.avatarId}
+                      pseudo={name}
+                      size="md"
+                      accent={person.accentColor}
+                    />
+                  }
+                  name={name}
+                  to={person.handle ? ROUTES.profile(person.handle) : undefined}
+                  linkAriaLabel={person.handle ? profileLinkLabelOf(name, [], t) : undefined}
+                  className={styles.row}
+                  action={
+                    <Button
+                      ref={focus.buttonRef(person.id)}
+                      variant="secondary"
+                      size="sm"
+                      aria-label={t('events.participants.letBackInAriaLabel', { name })}
+                      disabled={pendingId === person.id}
+                      onClick={() => {
+                        focus.markLeaving(person.id);
+                        onLetBackIn(person.id, name);
+                      }}
+                    >
+                      {t('events.participants.letBackIn')}
+                    </Button>
+                  }
                 />
-              }
-              name={name}
-              to={person.handle ? ROUTES.profile(person.handle) : undefined}
-              linkAriaLabel={person.handle ? profileLinkLabelOf(name, [], t) : undefined}
-              className={styles.row}
-              action={
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  aria-label={t('events.participants.letBackInAriaLabel', { name })}
-                  disabled={pendingId === person.id}
-                  onClick={() => onLetBackIn(person.id, name)}
-                >
-                  {t('events.participants.letBackIn')}
-                </Button>
-              }
-            />
-          );
-        })}
-      </ul>
+              );
+            })}
+          </ul>
+        </>
+      ) : null}
+      <output className={styles.removedStatus}>{status}</output>
     </section>
   );
 }

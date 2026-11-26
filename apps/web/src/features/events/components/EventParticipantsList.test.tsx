@@ -13,14 +13,18 @@ const participants: EventParticipantSummary[] = [
   { id: 'p-other', pseudo: 'Bob', isCreator: false },
 ];
 
-function renderList(props: Partial<Parameters<typeof EventParticipantsList>[0]> = {}) {
-  return render(
+function listTree(props: Partial<Parameters<typeof EventParticipantsList>[0]> = {}) {
+  return (
     <AppTestProviders>
       <MemoryRouter>
         <EventParticipantsList participants={participants} currentParticipantId="p-me" {...props} />
       </MemoryRouter>
     </AppTestProviders>
   );
+}
+
+function renderList(props: Partial<Parameters<typeof EventParticipantsList>[0]> = {}) {
+  return render(listTree(props));
 }
 
 describe('EventParticipantsList', () => {
@@ -315,6 +319,54 @@ describe('EventParticipantsList', () => {
       renderList({ isHost: true, removedPeople });
 
       expect(screen.queryByRole('list', { name: 'Retirés de la soirée' })).toBeNull();
+    });
+
+    const letBackLea = 'Léa peut de nouveau rejoindre la soirée.';
+
+    it('moves focus to the next removed person, and announces the outcome in a live region mounted beforehand', async () => {
+      const user = userEvent.setup();
+      const props = { isHost: true, removedPeople, onLetBackIn: vi.fn() };
+      const { rerender } = renderList(props);
+      const status = screen.getByRole('status');
+      expect(status).toBeEmptyDOMElement();
+
+      await user.click(screen.getByRole('button', { name: 'Laisser revenir Léa' }));
+      rerender(listTree({ ...props, letBackInStatus: letBackLea }));
+
+      expect(screen.getByRole('button', { name: 'Laisser revenir Tom' })).toHaveFocus();
+      expect(screen.getByRole('status')).toBe(status);
+      expect(status).toHaveTextContent(letBackLea);
+    });
+
+    it('moves focus to the person above when the last one of the list is let back in', async () => {
+      const user = userEvent.setup();
+      const props = { isHost: true, removedPeople, onLetBackIn: vi.fn() };
+      const { rerender } = renderList(props);
+
+      await user.click(screen.getByRole('button', { name: 'Laisser revenir Tom' }));
+      rerender(listTree({ ...props, letBackInStatus: 'Tom peut de nouveau rejoindre la soirée.' }));
+
+      expect(screen.getByRole('button', { name: 'Laisser revenir Léa' })).toHaveFocus();
+    });
+
+    it('moves focus to the heading of the section once nobody is left, and keeps the outcome in view', async () => {
+      const user = userEvent.setup();
+      const props = {
+        isHost: true,
+        removedPeople: removedPeople.slice(0, 1),
+        onLetBackIn: vi.fn(),
+      };
+      const { rerender } = renderList(props);
+      const heading = screen.getByRole('heading', { name: 'Retirés de la soirée' });
+
+      await user.click(screen.getByRole('button', { name: 'Laisser revenir Léa' }));
+      rerender(listTree({ ...props, letBackInStatus: letBackLea }));
+      rerender(listTree({ ...props, removedPeople: [], letBackInStatus: letBackLea }));
+
+      expect(screen.queryByRole('list', { name: 'Retirés de la soirée' })).toBeNull();
+      expect(screen.getByRole('heading', { name: 'Retirés de la soirée' })).toBe(heading);
+      expect(heading).toHaveFocus();
+      expect(screen.getByRole('status')).toHaveTextContent(letBackLea);
     });
   });
 });

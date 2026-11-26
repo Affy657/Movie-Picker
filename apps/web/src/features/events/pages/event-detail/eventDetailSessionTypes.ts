@@ -84,6 +84,7 @@ export type ParticipantsPanelState = {
   onToggleCoHost: (participantId: string, coHost: boolean) => void;
   pendingLetBackInId: string | null;
   letBackInError: string | null;
+  letBackInSuccess: string | null;
   onLetBackIn: (userId: string, name: string) => void;
   onInviteFriends: () => void;
   onLeave: () => void;
