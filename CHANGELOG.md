@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Security
+
+- **Un lien partagé ne peut plus être rendu indisponible par une seule personne** : une soirée, un récap, une fiche de film ou un profil ouverts par movie-picker.fr comptent maintenant les visites de chaque visiteur à part, comme les appels directs, au lieu de partager un seul quota entre tous ceux qui ouvrent le même lien.
+
 ## [1.33.0] - 2026-11-26
 
 ### Added

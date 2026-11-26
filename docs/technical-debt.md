@@ -24,11 +24,10 @@ Zones, dans l'ordre où elles se rangent dans chaque partie : **Produit** (ce qu
 | Dette | Zone | Sujet |
 |---|---|---|
 
-### Geste humain (2)
+### Geste humain (1)
 
 | Dette | Zone | Sujet |
 |---|---|---|
-| DEBT-074 | API et données | un client qui passe par Hosting n'a que le quota par slug sur les documents de partage |
 | DEBT-052 | Sécurité et accès | le jeton OAuth du `gh` CLI du poste a servi de secret à l'API pendant trois mois |
 
 ### Différées (0)
@@ -49,16 +48,6 @@ Se traite en autonomie, sans attendre personne.
 # Geste humain
 
 L'agent prépare, l'utilisateur fait le geste que `bloque` décrit.
-
-## DEBT-074 un client qui passe par Hosting n'a que le quota par slug sur les documents de partage
-
-- state: humain
-- bloque: la mesure ne se lit qu'après un déploiement de production, geste que l'utilisateur déclenche
-- impact: depuis le 2026-11-25, un appel direct à `api.movie-picker.fr/r|e|film|serie|u/...` est compté par adresse (dernier saut de X-Forwarded-For, posé par le frontal de Cloud Run) avec le plafond par adresse et le limiteur global ; un appel relayé par Hosting (dernier saut dans les cinq plages Google relevées dans `RateLimitingExtensions.cs`) garde le seul quota de 120 par minute et par slug. Un client qui boucle par `www.movie-picker.fr` sur une soirée ou un film connus peut encore épuiser ce quota, et chaque visiteur reçoit alors un 429.
-- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/RateLimitingExtensions.cs`, `ShareDocumentForwardedHopsLoggingMiddleware.cs`, `AddMoviePickerForwardedHeaders`
-- verify: après un déploiement, `gcloud logging read 'resource.type="cloud_run_revision" AND jsonPayload.Category="MoviePicker.Api.Infrastructure.Web.ShareDocumentForwardedHopsLoggingMiddleware" AND jsonPayload.State.LastForwardedHopInGoogleFrontEnd=true' --project <PROJET_GCP> --freshness 7d --format='value(jsonPayload.State.ForwardedHopCount,jsonPayload.State.ForwardedHopsInGoogleFrontEnd)'` ; la journalisation ne porte aucune adresse
-- fix: si les documents relayés arrivent avec au moins deux sauts et `false` juste avant le dernier `true`, Hosting transmet l'adresse du client : `KnownIPNetworks` sur les cinq plages et `ForwardLimit = 2`, puis le même plafond par adresse pour les deux chemins ; retirer ensuite le middleware de mesure
-- fini-quand: un client qui passe par Hosting est plafonné par son adresse, et le middleware de mesure a disparu
 
 ## DEBT-052 le jeton OAuth du `gh` CLI du poste a servi de secret à l'API pendant trois mois
 
