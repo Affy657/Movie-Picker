@@ -144,7 +144,7 @@ describe('wheelExclusionErrorKey', () => {
 });
 
 describe('isNightHost', () => {
-  it('trusts the API, which already weighs the host link and the account', () => {
+  it('follows the isHost the API serves, and says no when it is missing', () => {
     expect(isNightHost({ isHost: true })).toBe(true);
     expect(isNightHost({ isHost: false })).toBe(false);
     expect(isNightHost({})).toBe(false);

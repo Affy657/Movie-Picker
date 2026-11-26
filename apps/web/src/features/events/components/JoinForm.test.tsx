@@ -292,7 +292,7 @@ describe('JoinForm', () => {
     expect(client.getQueryState(queryKeys.myEvents.active)?.isInvalidated).toBe(true);
   });
 
-  it('reloads the night after joining, whichever host token it was read with', async () => {
+  it('reloads the night after joining', async () => {
     const user = userEvent.setup();
     mockFetchApi.mockImplementation(async (path: string) => {
       if (path === '/auth/me') return profile;

@@ -346,7 +346,7 @@ describe('EventDetail (MSW)', () => {
     expect(await screen.findByText(/n'existe pas|introuvable/i)).toBeInTheDocument();
   });
 
-  it('shows the link and the QR code for a plain participant (without host token)', async () => {
+  it('shows the link and the QR code to a plain participant, and no host link', async () => {
     const user = userEvent.setup();
     renderEventDetail(`/e/${slug}`);
     expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
@@ -816,7 +816,7 @@ describe('EventDetail (MSW)', () => {
       expect(screen.getByTestId('participants-action-success')).toHaveTextContent('Alice');
     });
 
-    it('lets a removed person back in from the participants window, with the host token', async () => {
+    it('lets a removed person back in from the participants window, without a host token, and says so inside the window', async () => {
       const user = userEvent.setup();
       setupHostJoined();
       const removedPeople = [

@@ -692,7 +692,7 @@ describe('useEventWheel: two tabs of the host', () => {
 });
 
 describe('useEventWheel : hôte', () => {
-  it('takes the host from the night the API served, never from a host link alone', () => {
+  it('is not the host while the night the API served does not say so', () => {
     const { result } = renderHook(
       () =>
         useEventWheel({

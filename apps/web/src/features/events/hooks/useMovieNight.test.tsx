@@ -175,7 +175,7 @@ describe('useMovieNight', () => {
     expect(setActionError).toHaveBeenLastCalledWith('down');
   });
 
-  it('excludes the film from the draw with the host token', async () => {
+  it('excludes the film from the draw when the host toggles it', async () => {
     page({ event: { isHost: true } });
     const { result } = renderNight();
 
