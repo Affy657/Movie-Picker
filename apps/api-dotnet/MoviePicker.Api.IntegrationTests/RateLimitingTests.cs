@@ -126,15 +126,27 @@ public sealed class RateLimitingTests
     }
 
     [Fact]
-    public async Task RecapDocument_RelayedByHosting_SpendsTheGlobalBudgetOfItsClient()
+    public async Task RecapDocument_RelayedByHosting_SpendsTheGlobalBudgetOfItsClientAndNotOfTheRelay()
     {
         using var host = await StartRecapDocumentServerAsync();
         var client = host.GetTestClient();
 
         await ServedRandomRecapsAsync(client, HostingRelayedClient, RateLimitingExtensions.GlobalPermitLimitPerMinute);
 
-        Assert.Equal(HttpStatusCode.TooManyRequests, await GetAsync(client, "/unlimited", HostingRelayedClient));
-        Assert.Equal(HttpStatusCode.OK, await GetAsync(client, "/unlimited", OtherHostingRelayedClient));
+        Assert.Equal(HttpStatusCode.OK, await GetAsync(client, "/r/another-client", OtherHostingRelayedClient));
+        Assert.Equal(HttpStatusCode.OK, await GetAsync(client, "/unlimited", HostingRelayedClient));
+    }
+
+    [Fact]
+    public async Task ApiRoute_CalledFromAGoogleAddress_IsCountedOnThatAddressWhateverHopItWrites()
+    {
+        using var host = await StartRecapDocumentServerAsync();
+        var client = host.GetTestClient();
+
+        for (var i = 0; i < RateLimitingExtensions.GlobalPermitLimitPerMinute; i++)
+            await GetAsync(client, "/unlimited", $"203.0.113.{i % 250}, 142.250.32.37");
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, await GetAsync(client, "/unlimited", "198.51.100.9, 142.250.32.37"));
     }
 
     [Fact]
