@@ -77,6 +77,7 @@ describe('routeChunkForPath', () => {
       '/soutenir': 'donate',
       '/tech': 'tech',
       '/nouveautes': 'releaseNotes',
+      '/statut': 'serviceStatus',
       '/settings/profil': 'account',
       '/my-events': 'myEvents',
       '/watchlist': 'watchlist',

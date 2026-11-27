@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Une page dit si Movie Picker fonctionne** : la page État du service, dans le pied de page, vérifie en direct toutes les 30 secondes que le site, l’API et la base de données répondent, et l’écran d’erreur y renvoie.
+
 ## [1.33.6] - 2026-11-27
 
 ### Fixed

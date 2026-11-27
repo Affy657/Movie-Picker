@@ -22,6 +22,10 @@ describe('apiUrl', () => {
     expect(apiUrl('events')).toMatch(/\/api\/v1\/events$/);
     expect(apiUrl('/health')).toMatch(/\/health$/);
   });
+
+  it('reaches the readiness probe outside the /api/v1 version', () => {
+    expect(apiUrl('/health/ready')).toMatch(/^https?:\/\/[^/]+\/health\/ready$/);
+  });
 });
 
 describe('apiPath', () => {

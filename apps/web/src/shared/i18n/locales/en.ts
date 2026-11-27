@@ -2832,6 +2832,7 @@ export const en: Locale = {
       messageProd: 'An unexpected error occurred. You can retry or reload the page.',
       retryButton: 'Retry',
       homeButton: 'Home',
+      serviceStatusLink: 'Check the service status',
     },
     boot: {
       message: 'Movie Picker could not start. Reload the page to try again.',
@@ -2954,6 +2955,7 @@ export const en: Locale = {
     tmdbLinkAria: 'TMDB: open The Movie Database (new tab)',
     copyright: '© {{year}} Movie Picker v{{version}}',
     tech: 'Engineering dossier',
+    serviceStatus: 'Service status',
     legalTitle: 'Legal information',
     legalNotice: 'Legal notice',
     privacyPolicy: 'Privacy policy',
@@ -3509,6 +3511,70 @@ export const en: Locale = {
       fixed: 'Fixed',
       security: 'Security',
     },
+  },
+  serviceStatus: {
+    title: 'Service status',
+    intro: 'Movie Picker checks its services live, every 30 seconds.',
+    seoDescription: 'See live whether the Movie Picker website, API and database are answering.',
+    overall: {
+      operational: {
+        title: 'All systems working',
+        message: 'The website, the API and the database are answering normally.',
+      },
+      degraded: {
+        title: 'Service disrupted',
+        message:
+          'The database is not answering: nights, lists and sign-in may fail. The rest of the site still loads.',
+      },
+      down: {
+        title: 'Service unavailable',
+        message:
+          'The API is not answering. The site loads, but nothing can be loaded or saved right now.',
+      },
+      checking: {
+        title: 'Checking…',
+        message: 'Movie Picker is checking its services, this takes a second.',
+      },
+      offline: {
+        title: 'You are offline',
+        message:
+          'The service cannot be checked without a connection. This page updates as soon as you are back online.',
+      },
+    },
+    componentsLabel: 'Checked services',
+    components: {
+      site: { name: 'Website', detail: 'Pages and display' },
+      api: { name: 'API', detail: 'Nights, votes and accounts' },
+      database: { name: 'Database', detail: 'Your movies, lists and ratings' },
+    },
+    states: {
+      site: {
+        operational: 'Operational',
+        unavailable: 'Unavailable',
+        unknown: 'Cannot be checked',
+        checking: 'Checking…',
+      },
+      api: {
+        operational: 'Operational',
+        unavailable: 'Unavailable',
+        unknown: 'Cannot be checked',
+        checking: 'Checking…',
+      },
+      database: {
+        operational: 'Operational',
+        unavailable: 'Unavailable',
+        unknown: 'Cannot be checked',
+        checking: 'Checking…',
+      },
+    },
+    checkedJustNow: 'Checked just now',
+    checkedAt: 'Checked {{when}}',
+    lastCheckedAt: 'Last checked {{when}}',
+    checking: 'Checking now',
+    neverChecked: 'Not checked yet',
+    version: 'Version {{version}}',
+    apiRelease: 'API {{release}}',
+    checkNow: 'Check now',
   },
   pwaInstall: {
     trigger: 'Install the app',

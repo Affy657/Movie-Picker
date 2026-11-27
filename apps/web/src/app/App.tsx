@@ -52,6 +52,7 @@ const PrivacyPolicyPage = routeLazy('privacyPolicy');
 const DonatePage = routeLazy('donate');
 const TechPage = routeLazy('tech');
 const ReleaseNotesPage = routeLazy('releaseNotes');
+const ServiceStatusPage = routeLazy('serviceStatus');
 const MyEventsPage = routeLazy('myEvents');
 const WatchlistPage = routeLazy('watchlist');
 const MyListsPage = routeLazy('lists');
@@ -158,6 +159,7 @@ export function AppRoutes() {
         <Route path={ROUTES.donate} element={<DonatePage />} />
         <Route path={ROUTES.tech} element={<TechPage />} />
         <Route path={ROUTES.releaseNotes} element={<ReleaseNotesPage />} />
+        <Route path={ROUTES.serviceStatus} element={<ServiceStatusPage />} />
         <Route path={`${ROUTES.account}/*`} element={<AccountPage />} />
         <Route
           path={ROUTES.myEvents}

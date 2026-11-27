@@ -35,4 +35,20 @@ describe('ErrorState', () => {
 
     expect(screen.getByRole('alert')).toHaveTextContent('Le serveur ne répond pas.');
   });
+
+  it('places a footnote under the actions', () => {
+    render(
+      <ErrorState
+        icon={<svg />}
+        title="Erreur"
+        message="Le serveur ne répond pas."
+        actions={<button type="button">Réessayer</button>}
+        footnote={<a href="/statut">Voir l’état du service</a>}
+      />
+    );
+
+    const retry = screen.getByRole('button', { name: 'Réessayer' });
+    const footnote = screen.getByRole('link', { name: 'Voir l’état du service' });
+    expect(retry.compareDocumentPosition(footnote)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
 });

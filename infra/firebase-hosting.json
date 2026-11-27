@@ -10,7 +10,7 @@
     { "glob": "/l/**", "path": "/invitations/list.html" },
     { "glob": "/g/**", "path": "/invitations/group.html" },
     {
-      "glob": "/@(decouvrir|new|login|register|forgot-password|reset|verify-email|mentions-legales|politique-de-confidentialite|soutenir|tech|nouveautes|my-events|watchlist|listes|groupes|notifications)",
+      "glob": "/@(decouvrir|new|login|register|forgot-password|reset|verify-email|mentions-legales|politique-de-confidentialite|soutenir|tech|nouveautes|statut|my-events|watchlist|listes|groupes|notifications)",
       "path": "/index.html"
     },
     { "glob": "/auth/callback", "path": "/index.html" },
