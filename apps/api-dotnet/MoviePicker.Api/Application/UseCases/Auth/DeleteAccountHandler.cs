@@ -25,6 +25,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
     private readonly IEmailVerificationTokenRepository _verificationTokens;
     private readonly IAvatarPhotoRepository _avatarPhotos;
     private readonly IBannerPhotoRepository _bannerPhotos;
+    private readonly IKnownDeviceRepository _knownDevices;
     private readonly IAuthSessionInvalidator _sessionInvalidator;
     private readonly HostedNightsHandover _handover;
     private readonly IUnitOfWork _unitOfWork;
@@ -47,6 +48,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         IEmailVerificationTokenRepository verificationTokens,
         IAvatarPhotoRepository avatarPhotos,
         IBannerPhotoRepository bannerPhotos,
+        IKnownDeviceRepository knownDevices,
         IAuthSessionInvalidator sessionInvalidator,
         HostedNightsHandover handover,
         IUnitOfWork unitOfWork,
@@ -68,6 +70,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         _verificationTokens = verificationTokens;
         _avatarPhotos = avatarPhotos;
         _bannerPhotos = bannerPhotos;
+        _knownDevices = knownDevices;
         _sessionInvalidator = sessionInvalidator;
         _handover = handover;
         _unitOfWork = unitOfWork;
@@ -139,6 +142,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
                 await _verificationTokens.DeleteByUserIdAsync(userId, token);
                 await _avatarPhotos.DeleteByUserIdAsync(userId, token);
                 await _bannerPhotos.DeleteByUserIdAsync(userId, token);
+                await _knownDevices.DeleteByUserIdAsync(userId, token);
                 await _users.DeleteAsync(userId, token);
             },
             ct);

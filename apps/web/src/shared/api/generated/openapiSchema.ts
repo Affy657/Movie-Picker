@@ -12711,6 +12711,8 @@ export interface components {
         DeleteMovieRequest: {
             participantId: string;
         };
+        /** @enum {string} */
+        DeviceKind: "unknown" | "desktop" | "phone" | "tablet";
         EligibleFollowItem: {
             userId: string;
             handle: string;
@@ -12903,6 +12905,15 @@ export interface components {
             ownerDisplayName: string;
             /** Format: date-time */
             joinedAt: string;
+        };
+        ExportedKnownDevice: {
+            browser?: string | null;
+            operatingSystem?: string | null;
+            kind: components["schemas"]["DeviceKind"];
+            /** Format: date-time */
+            firstSeenAt: string;
+            /** Format: date-time */
+            lastSignInAt: string;
         };
         ExportedListContribution: {
             listId: string;
@@ -14378,6 +14389,7 @@ export interface components {
             createdEvents: components["schemas"]["ExportedCreatedEvent"][];
             participations: components["schemas"]["ExportedParticipation"][];
             pushSubscriptions: components["schemas"]["ExportedPushSubscription"][];
+            knownDevices: components["schemas"]["ExportedKnownDevice"][];
             watchlist: components["schemas"]["ExportedWatchlistItem"][];
             movieLists: components["schemas"]["ExportedMovieList"][];
             joinedMovieLists: components["schemas"]["ExportedJoinedMovieList"][];

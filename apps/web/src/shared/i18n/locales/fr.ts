@@ -3033,7 +3033,7 @@ export const fr = {
       'Adrien Morand, éditeur de Movie Picker, est responsable du traitement de vos données. Vous pouvez le joindre à {{email}}.',
     privacyDataBody: 'Movie Picker traite quatre familles de données :',
     privacyDataTechnical:
-      'Données techniques : adresse IP, date, adresse demandée et identifiant de compte de chaque requête reçue par l’API, dans ses journaux, et rapports d’erreur (voir « Suivi des erreurs »).',
+      'Données techniques : adresse IP, date, adresse demandée et identifiant de compte de chaque requête reçue par l’API, dans ses journaux, et rapports d’erreur (voir « Suivi des erreurs »). Pour vous prévenir par e-mail d’une connexion depuis un appareil inhabituel, un cookie technique reconnaît chaque navigateur où vous vous connectez : Movie Picker en garde le nom du navigateur et du système, et les dates de première et de dernière connexion, sans adresse IP ni localisation, puis l’oublie 400 jours après la dernière connexion.',
     privacyDataAccount:
       'Compte : e-mail, nom affiché, pseudo public, photo de profil si vous en avez une, mot de passe (haché) ou identité liée via Google/GitHub.',
     privacyDataUsage:
@@ -3070,7 +3070,7 @@ export const fr = {
     privacyProcessorAtlas:
       'MongoDB Atlas (MongoDB, Inc., États-Unis) : base de données, hébergée en Irlande.',
     privacyProcessorResend:
-      'Resend (États-Unis) : envoi de l’e-mail de réinitialisation du mot de passe, depuis l’Irlande.',
+      'Resend (États-Unis) : envoi des e-mails liés au compte (confirmation d’adresse, réinitialisation du mot de passe, alerte de nouvelle connexion), depuis l’Irlande.',
     privacyProcessorSentry:
       'Sentry (Functional Software, Inc., États-Unis) : suivi des erreurs, données stockées dans l’Union européenne.',
     privacyProcessorPostHog:

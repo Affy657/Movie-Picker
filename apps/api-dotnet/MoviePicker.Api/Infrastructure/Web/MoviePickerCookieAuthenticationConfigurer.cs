@@ -40,6 +40,7 @@ public sealed class MoviePickerCookieAuthenticationConfigurer : IConfigureNamedO
             options.Cookie.SameSite = SameSiteMode.Lax;
         }
 
+        options.Events.OnSigningIn = SignInDeviceCookie.OnSigningInAsync;
         options.Events.OnRedirectToLogin = async ctx =>
         {
             ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;

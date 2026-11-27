@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Un e-mail vous prévient d’une connexion depuis un nouvel appareil** : quand votre compte s’ouvre sur un navigateur que Movie Picker ne connaît pas encore, vous recevez le nom de l’appareil, l’heure et la méthode de connexion, avec un lien pour réinitialiser votre mot de passe si ce n’était pas vous.
+
 ## [1.34.0] - 2026-11-27
 
 ### Added
