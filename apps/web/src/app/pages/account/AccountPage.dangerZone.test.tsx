@@ -102,6 +102,7 @@ describe('AccountPage — zone de danger (MSW)', () => {
           createdEvents: [],
           participations: [],
           pushSubscriptions: [],
+          signedInDevices: [],
           watchlist: [],
           movieLists: [],
           joinedMovieLists: [],
