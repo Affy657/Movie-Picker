@@ -21,7 +21,7 @@ const MILESTONES: readonly { key: string; items: number; state: MilestoneState }
   { key: 'v17', items: 7, state: 'shipped' },
   { key: 'since17', items: 7, state: 'shipped' },
   { key: 'flow', items: 3, state: 'current' },
-  { key: 'next', items: 11, state: 'planned' },
+  { key: 'next', items: 10, state: 'planned' },
   { key: 'v2', items: 3, state: 'planned' },
 ];
 
