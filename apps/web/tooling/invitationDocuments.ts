@@ -1,5 +1,5 @@
 import type { Plugin } from 'vite';
-import { fr } from '../src/shared/i18n/locales/fr';
+import { fr } from '../src/shared/i18n/locales/fr.ts';
 
 export interface InvitationDocument {
   fileName: string;
