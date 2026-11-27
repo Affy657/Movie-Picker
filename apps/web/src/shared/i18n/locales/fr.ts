@@ -2868,6 +2868,7 @@ export const fr = {
         'Une erreur inattendue s’est produite. Vous pouvez réessayer ou recharger la page.',
       retryButton: 'Réessayer',
       homeButton: 'Accueil',
+      serviceStatusLink: 'Voir l’état du service',
     },
     boot: {
       message: 'Movie Picker n’a pas pu démarrer. Rechargez la page pour réessayer.',
@@ -2991,6 +2992,7 @@ export const fr = {
     tmdbLinkAria: 'TMDB : ouvrir The Movie Database (nouvel onglet)',
     copyright: '© {{year}} Movie Picker v{{version}}',
     tech: 'Dossier technique',
+    serviceStatus: 'État du service',
     legalTitle: 'Informations légales',
     legalNotice: 'Mentions légales',
     privacyPolicy: 'Politique de confidentialité',
@@ -3553,6 +3555,71 @@ export const fr = {
       security: 'Sécurité',
     },
   },
+  serviceStatus: {
+    title: 'État du service',
+    intro: 'Movie Picker vérifie ses services en direct, toutes les 30 secondes.',
+    seoDescription:
+      'Savoir en direct si le site, l’API et la base de données de Movie Picker répondent.',
+    overall: {
+      operational: {
+        title: 'Tout fonctionne',
+        message: 'Le site, l’API et la base de données répondent normalement.',
+      },
+      degraded: {
+        title: 'Service perturbé',
+        message:
+          'La base de données ne répond pas : soirées, listes et connexion peuvent échouer. Le reste du site s’affiche.',
+      },
+      down: {
+        title: 'Service indisponible',
+        message:
+          'L’API ne répond pas. Le site s’affiche, mais rien ne peut se charger ni s’enregistrer pour le moment.',
+      },
+      checking: {
+        title: 'Vérification en cours…',
+        message: 'Movie Picker interroge ses services, cela prend une seconde.',
+      },
+      offline: {
+        title: 'Vous êtes hors ligne',
+        message:
+          'Impossible de vérifier le service sans connexion. La page se met à jour dès votre retour en ligne.',
+      },
+    },
+    componentsLabel: 'Services vérifiés',
+    components: {
+      site: { name: 'Site', detail: 'Pages et affichage' },
+      api: { name: 'API', detail: 'Soirées, votes et comptes' },
+      database: { name: 'Base de données', detail: 'Vos films, listes et notes' },
+    },
+    states: {
+      site: {
+        operational: 'Opérationnel',
+        unavailable: 'Indisponible',
+        unknown: 'Impossible à vérifier',
+        checking: 'Vérification…',
+      },
+      api: {
+        operational: 'Opérationnelle',
+        unavailable: 'Indisponible',
+        unknown: 'Impossible à vérifier',
+        checking: 'Vérification…',
+      },
+      database: {
+        operational: 'Opérationnelle',
+        unavailable: 'Indisponible',
+        unknown: 'Impossible à vérifier',
+        checking: 'Vérification…',
+      },
+    },
+    checkedJustNow: 'Vérifié à l’instant',
+    checkedAt: 'Vérifié {{when}}',
+    lastCheckedAt: 'Dernière vérification {{when}}',
+    checking: 'Vérification en cours',
+    neverChecked: 'Aucune vérification pour l’instant',
+    version: 'Version {{version}}',
+    apiRelease: 'API {{release}}',
+    checkNow: 'Vérifier maintenant',
+  },
   pwaInstall: {
     trigger: 'Installer l’app',
     copyLink: 'Copier le lien',
@@ -3892,18 +3959,17 @@ export const fr = {
         'Douze entrées en file, dans l’ordre où elles se prennent : la fiabilité du service et la sécurité du compte d’abord, puis la palette de commandes, les avertissements sur les fiches films et la vie des groupes.',
       nextHint:
         'L’usage se mesure depuis la 1.16.0 : chaque entrée se juge ensuite sur ce qu’elle change dans les chiffres.',
-      nextItem1: 'Statut du service',
-      nextItem2: 'Alerte de nouvelle connexion',
-      nextItem3: 'Double authentification',
-      nextItem4: 'Sessions actives',
-      nextItem5: 'Palette de commandes',
-      nextItem6: 'Passkeys',
-      nextItem7: 'Avertissements de contenu',
-      nextItem8: 'Trigger warnings',
-      nextItem9: 'Une liste par groupe',
-      nextItem10: 'Réactions rapides',
-      nextItem11: 'Sondage de disponibilité',
-      nextItem12: 'Bilan de l’année',
+      nextItem1: 'Alerte de nouvelle connexion',
+      nextItem2: 'Double authentification',
+      nextItem3: 'Sessions actives',
+      nextItem4: 'Palette de commandes',
+      nextItem5: 'Passkeys',
+      nextItem6: 'Avertissements de contenu',
+      nextItem7: 'Trigger warnings',
+      nextItem8: 'Une liste par groupe',
+      nextItem9: 'Réactions rapides',
+      nextItem10: 'Sondage de disponibilité',
+      nextItem11: 'Bilan de l’année',
       v2When: 'Sans date annoncée',
       v2What: 'V2',
       v2Detail:

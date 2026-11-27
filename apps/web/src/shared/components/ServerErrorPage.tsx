@@ -40,6 +40,7 @@ export default function ServerErrorPage({ error, onRetry }: Readonly<ServerError
           </Link>
         </>
       }
+      footnote={<Link to={ROUTES.serviceStatus}>{t('errors.boundary.serviceStatusLink')}</Link>}
     />
   );
 }
