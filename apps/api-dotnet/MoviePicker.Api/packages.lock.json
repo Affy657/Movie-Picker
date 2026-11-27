@@ -20,12 +20,12 @@
       },
       "MongoDB.Driver": {
         "type": "Direct",
-        "requested": "[3.14.0, )",
-        "resolved": "3.14.0",
-        "contentHash": "fQjD3gFTQqEWplOZ66/jCXxvixFEZjlHgDuziPXK7CxMla7n+O9LTxW3KqfN0/mWWYKsBv1vxmsm0qm07smPzA==",
+        "requested": "[3.14.1, )",
+        "resolved": "3.14.1",
+        "contentHash": "cQcNL4H5XxIPEjkkSvPMl/LBEjqt4mUpaoodwpQq3Z/yxyVjqR6SbFa3ISKeanLfWVgOr50OgJZghOVlOyOMvg==",
         "dependencies": {
           "DnsClient": "1.6.1",
-          "MongoDB.Bson": "3.14.0",
+          "MongoDB.Bson": "3.14.1",
           "SharpCompress": "0.48.1",
           "Snappier": "1.3.1",
           "ZstdSharp.Port": "0.7.3"
@@ -39,18 +39,18 @@
       },
       "Sentry.AspNetCore": {
         "type": "Direct",
-        "requested": "[7.0.0, )",
-        "resolved": "7.0.0",
-        "contentHash": "EazVsMLxwpVVzMnh7iBzl61YO65zlC519Vg9Iof5CQZgk+QdA6+UedCjD6700BdV2nuFl7SrxiHGtLimXNid7A==",
+        "requested": "[7.0.1, )",
+        "resolved": "7.0.1",
+        "contentHash": "FxYSrr9HileJYWR0hWCX3rOdIBYwJpcngOT1oK+TcNenh5Z8m2Sp6kPMUxlminLhnnU4XlTP6RGKEmlfw3AS7Q==",
         "dependencies": {
-          "Sentry.Extensions.Logging": "7.0.0"
+          "Sentry.Extensions.Logging": "7.0.1"
         }
       },
       "SharpCompress": {
         "type": "Direct",
-        "requested": "[0.50.9, )",
-        "resolved": "0.50.9",
-        "contentHash": "Jm32AbptP318P+G4Bew0c72X7R1MXqImenXD9kfkygysZJCTfXfp01CLKuFhGvJGIxSw/dutEAaAlwNOZ8MBlw=="
+        "requested": "[0.50.10, )",
+        "resolved": "0.50.10",
+        "contentHash": "A+qqCaZZKaZajmQG0stkwWKi/VaMrQICf2HitEFJDFtkYnHlIzzrrZ4aRvoY9aqjLN6Abx5xEn43q56I8pHTBQ=="
       },
       "Snappier": {
         "type": "Direct",
@@ -60,9 +60,9 @@
       },
       "SonarAnalyzer.CSharp": {
         "type": "Direct",
-        "requested": "[10.36.0.15337, )",
-        "resolved": "10.36.0.15337",
-        "contentHash": "jGLAZUjheSURfe0T/dJYGUrMOrLt1fxaInpChq75YJvrywsxFoUKK/EM6PSfTjkt4pbaq2ywIQjgQzhrmmj5Ow=="
+        "requested": "[10.37.0.15768, )",
+        "resolved": "10.37.0.15768",
+        "contentHash": "73Qo5UF1HSCwUGqiZ9XOKXWNRAe3WN8dfsj3pWIi5oIuenY1Uo9WuMinGibs3up9zcJ5CFk5Ex/Ei/S17mcBvg=="
       },
       "Swashbuckle.AspNetCore": {
         "type": "Direct",
@@ -145,8 +145,8 @@
       },
       "MongoDB.Bson": {
         "type": "Transitive",
-        "resolved": "3.14.0",
-        "contentHash": "JrfJx2od1ly90rECMNC8z58NQtnOd76nzp8osX3nkI/F8DUjf6sp6CtFJhIIMrrNR6qxuRvn1yly6f45GiJZqQ=="
+        "resolved": "3.14.1",
+        "contentHash": "ljmATiszGAAQC1nYudvdCTBJF96x2nOy1c4CBDw7vfUggDTL9NOdO93b2C8t7IAycerWNveDLwsfeELYRDxhjw=="
       },
       "Portable.BouncyCastle": {
         "type": "Transitive",
@@ -155,15 +155,15 @@
       },
       "Sentry": {
         "type": "Transitive",
-        "resolved": "7.0.0",
-        "contentHash": "aMf7k3poqjVO/Vw1DNxopP9HjCIlfNX3EgJ5pJ8jvwWTYkSXJpkQpERdKwxmQ+WdEkTtkQLdJC4xtsClG/Kk3g=="
+        "resolved": "7.0.1",
+        "contentHash": "4hyExeUWArJdiO6VlmwCUHgWPosvasauNpgB6pVP7swuwyahWHRqgWHKwj3t5h18wFezIMte6BmI4dqEzl1TYw=="
       },
       "Sentry.Extensions.Logging": {
         "type": "Transitive",
-        "resolved": "7.0.0",
-        "contentHash": "4i5HwiwmE9GMVphLLy2nPQmVibthyyfiw1DQGIXXwvomwYFxh8JRy9Mwn8cghPx9b8NAEthjnCyD0AZx923Ouw==",
+        "resolved": "7.0.1",
+        "contentHash": "id2zlzODGIjoU3jqwl/TJ1awJGvAXyI280FdmIMMsPu5lpEN2PbMzBjujDbu8tsLHmDu+sLHDCPbIy8AdGXJOA==",
         "dependencies": {
-          "Sentry": "7.0.0"
+          "Sentry": "7.0.1"
         }
       },
       "Swashbuckle.AspNetCore.Swagger": {
