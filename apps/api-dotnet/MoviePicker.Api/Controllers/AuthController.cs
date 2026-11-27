@@ -265,13 +265,7 @@ public sealed class AuthController : ControllerBase
 
         if (loginOutcome.Kind != OAuthOutcomeKind.SignedIn || loginOutcome.User is null)
         {
-            var errorCode = loginOutcome.Kind switch
-            {
-                OAuthOutcomeKind.PasswordAccountRequiresManualLink => "account_exists",
-                OAuthOutcomeKind.UnlinkedIdentityRequiresManualLink => "identity_unlinked",
-                _ => "email_not_verified"
-            };
-            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (FrontRoutes.OAuthErrorQueryParam, errorCode), (FrontRoutes.ReturnToQueryParam, returnTo)));
+            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (FrontRoutes.OAuthErrorQueryParam, OAuthErrorCodeOf(loginOutcome.Kind)), (FrontRoutes.ReturnToQueryParam, returnTo)));
         }
 
         if (loginOutcome.User.TwoFactor is not null)
@@ -302,6 +296,14 @@ public sealed class AuthController : ControllerBase
             (FrontRoutes.OAuthProviderQueryParam, knownProvider),
             (FrontRoutes.OAuthOutcomeQueryParam, loginOutcome.IsNewAccount ? "signup" : "login")));
     }
+
+    private static string OAuthErrorCodeOf(OAuthOutcomeKind kind) =>
+        kind switch
+        {
+            OAuthOutcomeKind.PasswordAccountRequiresManualLink => "account_exists",
+            OAuthOutcomeKind.UnlinkedIdentityRequiresManualLink => "identity_unlinked",
+            _ => "email_not_verified"
+        };
 
     private static bool WasIssuedBy(AuthenticationProperties? ticket, string provider) =>
         ticket?.Items.TryGetValue(ProviderItemKey, out var issuer) == true
