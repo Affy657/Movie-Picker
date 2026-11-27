@@ -13,6 +13,7 @@ public static class InMemoryPersistenceServiceCollectionExtensions
         Replace<IParticipantRepository, InMemoryParticipantRepository>(services);
         Replace<IUserRepository, InMemoryUserRepository>(services);
         Replace<IPasswordResetTokenRepository, InMemoryPasswordResetTokenRepository>(services);
+        Replace<IKnownDeviceRepository, InMemoryKnownDeviceRepository>(services);
         Replace<IEmailVerificationTokenRepository, InMemoryEmailVerificationTokenRepository>(services);
         Replace<IAvatarPhotoRepository, InMemoryAvatarPhotoRepository>(services);
         Replace<IBannerPhotoRepository, InMemoryBannerPhotoRepository>(services);
