@@ -17,7 +17,7 @@ public sealed class ApiErrorResponseOperationFilter : IOperationFilter
         {
             if (!IsError(status) || response is not OpenApiResponse error)
                 continue;
-            error.Content = new Dictionary<string, OpenApiMediaType>(StringComparer.Ordinal)
+            error.Content = new Dictionary<string, IOpenApiMediaType>(StringComparer.Ordinal)
             {
                 [JsonMediaType] = new OpenApiMediaType
                 {
