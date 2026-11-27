@@ -63,7 +63,11 @@ describe('invite link: back to the movie night after authentication', () => {
       ),
       http.post(`${TEST_API_V1}/auth/login`, () => {
         sessionActive = true;
-        return apiJson<'LoginResponse'>({ userId: 'u1', displayName: 'Alice' });
+        return apiJson<'LoginResponse'>({
+          userId: 'u1',
+          displayName: 'Alice',
+          twoFactorRequired: false,
+        });
       }),
       http.get(`${TEST_API_V1}/events/mine`, () =>
         apiJson<'MyEventsListResponse'>({

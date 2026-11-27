@@ -60,7 +60,7 @@ public sealed class LoginUserHandler : ILoginUserHandler
 
         await _failures.DecrementAsync(attempt.SourceKey, CancellationToken.None);
         await _failures.DecrementAsync(attempt.AccountKey, CancellationToken.None);
-        return new LoginResponse { UserId = user.Id, DisplayName = user.DisplayName };
+        return new LoginResponse { UserId = user.Id, DisplayName = user.DisplayName, TwoFactorRequired = user.TwoFactor is not null };
     }
 
     private async Task ReserveAttemptAsync(FailureCounterKeys attempt, CancellationToken ct)

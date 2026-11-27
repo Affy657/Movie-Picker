@@ -33,6 +33,8 @@ public static class UserProfileMapping
         LetterboxdWatchlistCount = user.LetterboxdWatchlistCount,
         LetterboxdWatchedCount = user.LetterboxdWatchedCount,
         HasPassword = !string.IsNullOrEmpty(user.PasswordHash),
+        TwoFactorEnabled = user.TwoFactor is not null,
+        BackupCodesRemaining = user.TwoFactor?.BackupCodeHashes.Count ?? 0,
         LinkedProviders = user.Identities.Select(i => i.Provider).ToList(),
         Favorites = FavoriteTitleResponse.ListFrom(user.Favorites),
         Banner = ProfileBannerResponse.From(user),

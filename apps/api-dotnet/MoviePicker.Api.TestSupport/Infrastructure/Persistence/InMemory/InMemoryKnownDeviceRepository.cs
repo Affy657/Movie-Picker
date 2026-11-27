@@ -9,7 +9,7 @@ public sealed class InMemoryKnownDeviceRepository : IKnownDeviceRepository
     private readonly ConcurrentDictionary<string, KnownDevice> _byId = new();
     private readonly Lock _gate = new();
 
-    public IReadOnlyCollection<KnownDevice> All => _byId.Values.ToList();
+    public ICollection<KnownDevice> All => _byId.Values;
 
     public Task<KnownDevice?> FindAsync(string userId, string tokenHash, DateTimeOffset now, CancellationToken ct = default) =>
         Task.FromResult(_byId.Values.FirstOrDefault(d => d.UserId == userId && d.TokenHash == tokenHash && d.ForgottenAt > now));

@@ -366,6 +366,7 @@ public sealed class InMemoryUserRepository : IUserRepository
             DisplayName = user.DisplayName,
             Identities = user.Identities,
             UnlinkedIdentities = user.UnlinkedIdentities,
+            TwoFactor = user.TwoFactor,
             Handle = handle ?? string.Empty,
             Bio = user.Bio,
             IsProfilePublic = user.IsProfilePublic,

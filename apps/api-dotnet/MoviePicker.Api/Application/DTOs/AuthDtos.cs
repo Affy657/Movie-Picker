@@ -52,6 +52,7 @@ public sealed class LoginResponse
 {
     public string UserId { get; init; } = string.Empty;
     public string DisplayName { get; init; } = string.Empty;
+    public bool TwoFactorRequired { get; init; }
 }
 
 public sealed class UserProfileResponse
@@ -83,6 +84,8 @@ public sealed class UserProfileResponse
     public int LetterboxdWatchlistCount { get; init; }
     public int LetterboxdWatchedCount { get; init; }
     public bool HasPassword { get; init; } = true;
+    public bool TwoFactorEnabled { get; init; }
+    public int BackupCodesRemaining { get; init; }
     public IReadOnlyList<string> LinkedProviders { get; init; } = Array.Empty<string>();
     public IReadOnlyList<FavoriteTitleResponse> Favorites { get; init; } = [];
     public ProfileBannerResponse? Banner { get; init; }

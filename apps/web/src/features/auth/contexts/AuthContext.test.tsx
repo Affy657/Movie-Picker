@@ -18,12 +18,13 @@ import { takeWelcomePending } from '@/features/auth/welcome';
 import { ApiError } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { dropBrowserPushSubscription } from '@/shared/utils/browserPushSubscription';
+import { postTwoFactorVerify } from '@/features/auth/api/twoFactorApi';
 import { getStoredParticipant, setStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 
 vi.mock('@/features/auth/api/authApi', () => ({
   fetchAuthMeForSession: vi.fn(async () => ({ userId: 'u1' })),
   patchAuthProfile: vi.fn(),
-  postAuthLogin: vi.fn(),
+  postAuthLogin: vi.fn(async () => ({ twoFactorRequired: false })),
   postAuthLogout: vi.fn(async () => undefined),
   postAuthRegister: vi.fn(),
 }));
@@ -36,6 +37,9 @@ vi.mock('@/shared/api/client', async (importOriginal) => ({
     unauthorizedListeners.add(listener);
     return () => unauthorizedListeners.delete(listener);
   },
+}));
+vi.mock('@/features/auth/api/twoFactorApi', () => ({
+  postTwoFactorVerify: vi.fn(),
 }));
 vi.mock('@/shared/utils/browserPushSubscription', () => ({
   dropBrowserPushSubscription: vi.fn(async () => undefined),
@@ -677,6 +681,40 @@ describe('AuthProvider sign-in measure', () => {
 
     expect(postAuthLogin).toHaveBeenCalledWith('a@test.local', 'secret1', '/r/recap');
     expect(track).toHaveBeenCalledWith('user_logged_in', { method: 'email', origin: 'recap' });
+  });
+
+  it('waits for the code before counting a sign-in that needs one', async () => {
+    vi.mocked(postAuthLogin).mockResolvedValueOnce({ twoFactorRequired: true });
+    const auth = await renderAuthProvider();
+
+    let result: Awaited<ReturnType<ReturnType<typeof useAuth>['login']>> | undefined;
+    await act(async () => {
+      result = await auth().login('a@test.local', 'secret1', '/r/recap');
+    });
+
+    expect(result).toEqual({ twoFactorRequired: true });
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['email', 'email'],
+    ['google', 'google'],
+  ])('counts a sign-in finished with a code under its first step (%s)', async (method, counted) => {
+    vi.mocked(postTwoFactorVerify).mockResolvedValueOnce({
+      userId: 'u1',
+      displayName: 'Léa',
+      method,
+      usedBackupCode: false,
+      backupCodesRemaining: 10,
+    });
+    const auth = await renderAuthProvider();
+
+    await act(async () => {
+      await auth().verifyTwoFactor('123456', '/r/recap');
+    });
+
+    expect(postTwoFactorVerify).toHaveBeenCalledWith('123456');
+    expect(track).toHaveBeenCalledWith('user_logged_in', { method: counted, origin: 'recap' });
   });
 
   it('reads a sign-in without destination as coming from elsewhere', async () => {

@@ -6,7 +6,7 @@ import {
   postEmailVerificationConfirm,
   postEmailVerificationResend,
 } from '@/features/auth/api/authApi';
-import { hasSessionHint, setSessionHint } from '@/features/auth/session-hint';
+import { clearSessionHint, hasSessionHint, setSessionHint } from '@/features/auth/session-hint';
 import { ApiError } from '@/shared/api/apiError';
 
 const mockFetchApi = vi.fn();
@@ -188,5 +188,36 @@ describe('email confirmation', () => {
       method: 'POST',
       body: { locale: 'fr' },
     });
+  });
+});
+
+describe('postAuthLogin and two-factor accounts', () => {
+  beforeEach(() => {
+    mockFetchApi.mockReset();
+    clearSessionHint();
+  });
+
+  it('opens the session hint when the password is enough', async () => {
+    mockFetchApi.mockResolvedValue({
+      userId: 'u1',
+      displayName: 'Alice',
+      twoFactorRequired: false,
+    });
+
+    await expect(postAuthLogin('a@test.local', 'secret1')).resolves.toEqual({
+      twoFactorRequired: false,
+    });
+
+    expect(hasSessionHint()).toBe(true);
+  });
+
+  it('waits for the code before keeping a session hint', async () => {
+    mockFetchApi.mockResolvedValue({ userId: '', displayName: '', twoFactorRequired: true });
+
+    await expect(postAuthLogin('a@test.local', 'secret1')).resolves.toEqual({
+      twoFactorRequired: true,
+    });
+
+    expect(hasSessionHint()).toBe(false);
   });
 });

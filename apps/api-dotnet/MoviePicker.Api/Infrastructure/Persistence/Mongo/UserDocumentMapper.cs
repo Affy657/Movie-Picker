@@ -15,6 +15,7 @@ public static class UserDocumentMapper
             DisplayName = doc.DisplayName,
             Identities = (doc.Identities ?? []).ConvertAll(ToIdentityDomain),
             UnlinkedIdentities = (doc.UnlinkedIdentities ?? []).ConvertAll(ToUnlinkedIdentityDomain),
+            TwoFactor = ToTwoFactorDomain(doc.TwoFactor),
             Handle = doc.Handle ?? string.Empty,
             Bio = doc.Bio,
             IsProfilePublic = doc.IsProfilePublic ?? true,
@@ -65,6 +66,7 @@ public static class UserDocumentMapper
             UnlinkedIdentities = user.UnlinkedIdentities.Count == 0
                 ? null
                 : user.UnlinkedIdentities.Select(ToUnlinkedIdentityDocument).ToList(),
+            TwoFactor = ToTwoFactorDocument(user.TwoFactor),
             Handle = string.IsNullOrEmpty(user.Handle) ? null : user.Handle,
             Bio = string.IsNullOrEmpty(user.Bio) ? null : user.Bio,
             IsProfilePublic = user.IsProfilePublic,
@@ -229,6 +231,26 @@ public static class UserDocumentMapper
         Subject = identity.Subject,
         UnlinkedAt = identity.UnlinkedAt.UtcDateTime
     };
+
+    private static TwoFactorSettings? ToTwoFactorDomain(TwoFactorDocument? doc) => doc is null
+        ? null
+        : new TwoFactorSettings
+        {
+            ProtectedSecret = doc.ProtectedSecret,
+            EnabledAt = new DateTimeOffset(doc.EnabledAt, TimeSpan.Zero),
+            LastUsedStep = doc.LastUsedStep,
+            BackupCodeHashes = doc.BackupCodeHashes
+        };
+
+    private static TwoFactorDocument? ToTwoFactorDocument(TwoFactorSettings? settings) => settings is null
+        ? null
+        : new TwoFactorDocument
+        {
+            ProtectedSecret = settings.ProtectedSecret,
+            EnabledAt = settings.EnabledAt.UtcDateTime,
+            LastUsedStep = settings.LastUsedStep,
+            BackupCodeHashes = [.. settings.BackupCodeHashes]
+        };
 
     private static UiThemePreference ParseTheme(string? s) =>
         s?.ToLowerInvariant() switch

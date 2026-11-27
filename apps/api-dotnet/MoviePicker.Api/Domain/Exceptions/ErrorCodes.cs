@@ -118,6 +118,12 @@ public static class ErrorCodes
     public const string CurrentPasswordIncorrect = "current_password_incorrect";
     public const string ConfirmationIncorrect = "confirmation_incorrect";
     public const string ReauthenticationRequired = "reauthentication_required";
+    public const string TwoFactorCodeInvalid = "two_factor_code_invalid";
+    public const string TwoFactorChallengeExpired = "two_factor_challenge_expired";
+    public const string TwoFactorTooManyAttempts = "two_factor_too_many_attempts";
+    public const string TwoFactorAlreadyEnabled = "two_factor_already_enabled";
+    public const string TwoFactorNotEnabled = "two_factor_not_enabled";
+    public const string TwoFactorSetupExpired = "two_factor_setup_expired";
 
     public const string InvalidParticipant = "invalid_participant";
     public const string ParticipantRequired = "participant_required";
