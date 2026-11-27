@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.33.6] - 2026-11-27
+
 ### Fixed
 
 - **Les sélections de films par thème et par plateforme ne tombent plus en erreur** : quand plusieurs sélections se mettent à jour en même temps, l’API étale ses appels à TMDB au lieu de se faire refuser, et réessaie une fois après un refus.
@@ -1225,7 +1227,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.33.5...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.33.6...HEAD
+[1.33.6]: https://github.com/Affy657/Movie-Picker/compare/v1.33.5...v1.33.6
 [1.33.5]: https://github.com/Affy657/Movie-Picker/compare/v1.33.4...v1.33.5
 [1.33.4]: https://github.com/Affy657/Movie-Picker/compare/v1.33.3...v1.33.4
 [1.33.3]: https://github.com/Affy657/Movie-Picker/compare/v1.33.2...v1.33.3
