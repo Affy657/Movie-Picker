@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Profile;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -70,7 +71,7 @@ public sealed class ReportProfilePhotoHandler : IReportProfilePhotoHandler
             return;
         }
 
-        _logger.LogInformation(ReportedLogMessage, photo.Kind, photo.Key, owner.Id, reporterId);
+        _logger.LogInformation(ReportedLogMessage, photo.Kind, photo.Key, owner.Id, LogText.SingleLine(reporterId));
         if (!await _quota.TryConsumeAsync(ReportedPhotoScope, photo.Key, 1, Day, ct))
             return;
         if (!await _quota.TryConsumeAsync(ModerationEmailScope, ModerationInbox, MaxModerationEmailsPerDay, Day, ct))
