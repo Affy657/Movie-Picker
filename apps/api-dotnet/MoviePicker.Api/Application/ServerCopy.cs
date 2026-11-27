@@ -1,3 +1,4 @@
+using System.Globalization;
 using MoviePicker.Api.Application.Ports;
 
 namespace MoviePicker.Api.Application;
@@ -264,6 +265,33 @@ public static class ServerCopy
             $"Pour la retirer : {removal} (procédure dans docs/runbook-photo-moderation.md).";
     }
 
+    public static class NewSignInEmail
+    {
+        public const string Subject = "Nouvelle connexion à votre compte Movie Picker";
+        public const string Heading = "Nouvelle connexion à votre compte";
+        public const string Lead = "Votre compte Movie Picker vient d’être ouvert sur un appareil ou un navigateur que nous ne connaissions pas.";
+        public const string DeviceCaption = "Appareil";
+        public const string DateCaption = "Date";
+        public const string MethodCaption = "Connexion";
+        public const string Warning = "Ce n’était pas vous ? Réinitialisez votre mot de passe : toutes les sessions ouvertes sur votre compte seront fermées.";
+        public const string ButtonLabel = "Réinitialiser mon mot de passe";
+        public const string IfItWasYou = "Si c’était bien vous, vous n’avez rien à faire.";
+        public const string SecurityPrompt = "Vos connexions se gèrent aussi dans Paramètres, Sécurité :";
+        public const string BrowserOnSystem = "{0} sur {1}";
+        public const string SystemOnly = "Navigateur sur {0}";
+        public const string UnrecognisedDevice = "Appareil non reconnu";
+        public const string ParisDate = "{0} à {1} (heure de Paris)";
+        public const string EmailMethod = "avec votre mot de passe";
+        public const string GoogleMethod = "avec Google";
+        public const string GitHubMethod = "avec GitHub";
+
+        internal static readonly SignInAlertEmail Copy = new(
+            AccountEmailVoice.InFrench,
+            [Subject, Heading, Lead, Warning, ButtonLabel, IfItWasYou, SecurityPrompt],
+            new SignInAlertCaptions(DeviceCaption, DateCaption, MethodCaption, " : "),
+            new SignInAlertLabels(BrowserOnSystem, SystemOnly, UnrecognisedDevice, ParisDate, EmailMethod, GoogleMethod, GitHubMethod));
+    }
+
     public static class English
     {
         public static class VerificationEmail
@@ -303,9 +331,25 @@ public static class ServerCopy
 
             public static string TextBody(string url) => Copy.TextBody(url);
         }
+        public static class NewSignInAlert
+        {
+            internal static readonly SignInAlertEmail Copy = new(
+                AccountEmailVoice.InEnglish,
+                [
+                    "New sign-in to your Movie Picker account",
+                    "New sign-in to your account",
+                    "Your Movie Picker account was just opened on a device or browser we didn't know.",
+                    "Wasn't you? Reset your password: every session open on your account will be closed.",
+                    "Reset my password",
+                    "If it was you, there is nothing to do.",
+                    "You can also manage your sign-ins in Settings, Security:"
+                ],
+                new SignInAlertCaptions("Device", "Date", "Sign-in", ": "),
+                new SignInAlertLabels("{0} on {1}", "Browser on {0}", "Unrecognised device", "{0} at {1} (Paris time)", "with your password", "with Google", "with GitHub"));
+        }
     }
 
-    private sealed record AccountEmailVoice(string Lang, string Greeting, string FallbackIntro, string Signature)
+    internal sealed record AccountEmailVoice(string Lang, string Greeting, string FallbackIntro, string Signature)
     {
         public static readonly AccountEmailVoice InFrench = new(
             "fr",
@@ -353,6 +397,102 @@ public static class ServerCopy
             {Outro}
 
             {Voice.Signature}
+            """;
+    }
+
+    internal sealed record SignInAlertFacts(string? Browser, string? System, string Day, string Time, string? Method);
+
+    internal sealed record SignInAlertCaptions(string Device, string Date, string Method, string Separator);
+
+    internal sealed record SignInAlertLabels(
+        string BrowserOnSystem,
+        string SystemOnly,
+        string UnrecognisedDevice,
+        string ParisDate,
+        string Email,
+        string Google,
+        string GitHub);
+
+    internal sealed class SignInAlertEmail
+    {
+        private readonly AccountEmailVoice _voice;
+        private readonly string _heading;
+        private readonly string _lead;
+        private readonly string _warning;
+        private readonly string _buttonLabel;
+        private readonly string _ifItWasYou;
+        private readonly string _securityPrompt;
+        private readonly SignInAlertCaptions _captions;
+        private readonly SignInAlertLabels _labels;
+
+        public SignInAlertEmail(AccountEmailVoice voice, string[] sentences, SignInAlertCaptions captions, SignInAlertLabels labels)
+        {
+            _voice = voice;
+            Subject = sentences[0];
+            _heading = sentences[1];
+            _lead = sentences[2];
+            _warning = sentences[3];
+            _buttonLabel = sentences[4];
+            _ifItWasYou = sentences[5];
+            _securityPrompt = sentences[6];
+            _captions = captions;
+            _labels = labels;
+        }
+
+        public string Subject { get; }
+
+        public SignInAlertLabels Labels => _labels;
+
+        private string Device(SignInAlertFacts facts) => (facts.Browser, facts.System) switch
+        {
+            ({ } browser, { } system) => string.Format(CultureInfo.InvariantCulture, _labels.BrowserOnSystem, browser, system),
+            ({ } browser, null) => browser,
+            (null, { } system) => string.Format(CultureInfo.InvariantCulture, _labels.SystemOnly, system),
+            _ => _labels.UnrecognisedDevice
+        };
+
+        private string Caption(string caption, string value) => caption + _captions.Separator + value;
+
+        private IEnumerable<string> FactLines(SignInAlertFacts facts)
+        {
+            yield return Caption(_captions.Device, Device(facts));
+            yield return Caption(_captions.Date, string.Format(CultureInfo.InvariantCulture, _labels.ParisDate, facts.Day, facts.Time));
+            if (facts.Method is not null)
+                yield return Caption(_captions.Method, facts.Method);
+        }
+
+        private static string ResetUrl(string siteUrl) => siteUrl.TrimEnd('/') + FrontRoutes.ForgotPassword;
+
+        private static string SecurityUrl(string siteUrl) => siteUrl.TrimEnd('/') + FrontRoutes.AccountSecurity;
+
+        public string HtmlBody(SignInAlertFacts facts, string siteUrl) => BrandedEmailHtml.Render(new BrandedEmail(
+            Lang: _voice.Lang,
+            Title: Subject,
+            Heading: _heading,
+            Intro: [_voice.Greeting, _lead, .. FactLines(facts), _warning],
+            ButtonLabel: _buttonLabel,
+            ButtonUrl: ResetUrl(siteUrl),
+            FallbackIntro: _voice.FallbackIntro,
+            Outro: [_ifItWasYou, $"{_securityPrompt} {SecurityUrl(siteUrl)}"],
+            Signature: _voice.Signature,
+            SiteUrl: siteUrl));
+
+        public string TextBody(SignInAlertFacts facts, string siteUrl) => $"""
+            {_voice.Greeting}
+
+            {_lead}
+
+            {string.Join("\n", FactLines(facts))}
+
+            {_warning}
+            {ResetUrl(siteUrl)}
+
+            {_ifItWasYou}
+
+            {_securityPrompt}
+            {SecurityUrl(siteUrl)}
+
+            {_voice.Signature}
             """;
     }
 }

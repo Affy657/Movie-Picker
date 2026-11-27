@@ -22,7 +22,7 @@ public sealed class RequestLanguageModelBinder : IModelBinder
         return Task.CompletedTask;
     }
 
-    private static CatalogLanguage LanguageOf(HttpRequest request)
+    public static CatalogLanguage LanguageOf(HttpRequest request)
     {
         if (!StringWithQualityHeaderValue.TryParseList(request.Headers.AcceptLanguage, out var preferences))
             return CatalogLanguage.French;

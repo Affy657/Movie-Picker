@@ -3019,7 +3019,7 @@ export const en: Locale = {
       'Adrien Morand, publisher of Movie Picker, is the controller of your data. You can reach him at {{email}}.',
     privacyDataBody: 'Movie Picker processes four families of data:',
     privacyDataTechnical:
-      'Technical data: IP address, date, requested address and account identifier of each request the API receives, in its logs, error reports (see “Error tracking”) and, for each device signed in to your account, the browser and system reported by that browser, the sign-in date and the last activity, kept until that device is logged out so you can see your signed-in devices.',
+      'Technical data: IP address, date, requested address and account identifier of each request the API receives, in its logs, and error reports (see “Error tracking”). To warn you by email of a sign-in from an unusual device, a technical cookie recognises each browser you sign in from: Movie Picker keeps the name of the browser and of the system, and the dates of the first and last sign-in, with no IP address or location, then forgets it 400 days after the last sign-in. To show you your signed-in devices, Movie Picker also keeps, for each device signed in to your account, the browser and system reported by that browser, the sign-in date and the last activity, until that device is logged out.',
     privacyDataAccount:
       'Account: email, nickname, public handle, profile photo if you have one, hashed password, or an identity linked via Google/GitHub.',
     privacyDataUsage:
@@ -3056,7 +3056,7 @@ export const en: Locale = {
     privacyProcessorAtlas:
       'MongoDB Atlas (MongoDB, Inc., United States): database, hosted in Ireland.',
     privacyProcessorResend:
-      'Resend (United States): sending the password reset email, from Ireland.',
+      'Resend (United States): sending the account emails (address confirmation, password reset, new sign-in alert), from Ireland.',
     privacyProcessorSentry:
       'Sentry (Functional Software, Inc., United States): error tracking, data stored in the European Union.',
     privacyProcessorPostHog:
@@ -3938,16 +3938,15 @@ export const en: Locale = {
         'The queued entries, in the order they will be taken: account security first, then the command palette, warnings on movie pages and group life.',
       nextHint:
         'Usage has been measured since 1.16.0: each entry is then judged on what it changes in the numbers.',
-      nextItem1: 'New sign-in alert',
-      nextItem2: 'Two-factor authentication',
-      nextItem3: 'Command palette',
-      nextItem4: 'Passkeys',
-      nextItem5: 'Content warnings',
-      nextItem6: 'Trigger warnings',
-      nextItem7: 'A list per group',
-      nextItem8: 'Quick reactions',
-      nextItem9: 'Availability poll',
-      nextItem10: 'Year in review',
+      nextItem1: 'Two-factor authentication',
+      nextItem2: 'Command palette',
+      nextItem3: 'Passkeys',
+      nextItem4: 'Content warnings',
+      nextItem5: 'Trigger warnings',
+      nextItem6: 'A list per group',
+      nextItem7: 'Quick reactions',
+      nextItem8: 'Availability poll',
+      nextItem9: 'Year in review',
       v2When: 'No date announced',
       v2What: 'V2',
       v2Detail:

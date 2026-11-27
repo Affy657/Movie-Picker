@@ -19,6 +19,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
     private readonly ISeenMarkRepository _seenMarks;
     private readonly IMovieRatingRepository _ratings;
     private readonly IPushSubscriptionRepository _pushSubscriptions;
+    private readonly IKnownDeviceRepository _knownDevices;
     private readonly IWatchlistRepository _watchlist;
     private readonly IMovieListRepository _movieLists;
     private readonly IFriendGroupRepository _groups;
@@ -48,6 +49,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         IAvatarPhotoRepository avatarPhotos,
         IBannerPhotoRepository bannerPhotos,
         IMovieRepository movies,
+        IKnownDeviceRepository knownDevices,
         IAuthSessionDirectory sessions,
         TimeProvider clock)
     {
@@ -60,6 +62,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         _seenMarks = seenMarks;
         _ratings = ratings;
         _pushSubscriptions = pushSubscriptions;
+        _knownDevices = knownDevices;
         _watchlist = watchlist;
         _movieLists = movieLists;
         _groups = groups;
@@ -91,6 +94,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         var ratings = await _ratings.ListByParticipantIdsAsync(participantIds, ct);
         var proposedMovies = await _movies.ListByParticipantIdsAsync(participantIds, ct);
         var pushSubscriptions = await _pushSubscriptions.ListByUserIdAsync(userId, ct);
+        var knownDevices = await _knownDevices.ListByUserIdAsync(userId, ct);
         var sessions = await _sessions.ListActiveForUserAsync(userId, ct);
 
         var participationEventIds = participations.Select(p => p.EventId).Distinct().ToList();
@@ -146,6 +150,16 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
                 .ToList(),
             PushSubscriptions = pushSubscriptions
                 .Select(s => new ExportedPushSubscription { Endpoint = s.Endpoint, CreatedAt = s.CreatedAt })
+                .ToList(),
+            KnownDevices = knownDevices
+                .Select(d => new ExportedKnownDevice
+                {
+                    Browser = d.Browser,
+                    OperatingSystem = d.OperatingSystem,
+                    Kind = d.Kind,
+                    FirstSeenAt = d.FirstSeenAt,
+                    LastSignInAt = d.LastSeenAt
+                })
                 .ToList(),
             SignedInDevices = sessions.Select(MapSignedInDevice).ToList(),
             Watchlist = watchlist.Select(MapWatchlistItem).ToList(),

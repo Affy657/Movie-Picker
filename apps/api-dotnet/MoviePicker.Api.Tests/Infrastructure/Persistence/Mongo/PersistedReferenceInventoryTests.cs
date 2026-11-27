@@ -110,6 +110,9 @@ public sealed class PersistedReferenceInventoryTests
         ["ParticipantDocument.UserId"] = new(
             Handling.Through<IParticipantRepository>(),
             Handling.Through<IParticipantRepository>()),
+        ["KnownDeviceDocument.UserId"] = new(
+            Handling.Through<IKnownDeviceRepository>(),
+            Handling.Through<IKnownDeviceRepository>()),
         ["PasswordResetTokenDocument.UserId"] = new(
             Handling.Through<IPasswordResetTokenRepository>(),
             Handling.Exempt("only the hash of a single-use secret, meaningless outside the reset flow")),

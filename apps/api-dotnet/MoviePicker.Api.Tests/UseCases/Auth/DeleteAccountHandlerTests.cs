@@ -38,6 +38,7 @@ public sealed class DeleteAccountHandlerTests
         public InMemorySeenMarkRepository SeenMarks { get; } = new();
         public InMemoryAvatarPhotoRepository AvatarPhotos { get; } = new();
         public InMemoryBannerPhotoRepository BannerPhotos { get; } = new();
+        public InMemoryKnownDeviceRepository KnownDevices { get; } = new();
         public Mock<IAuthSessionInvalidator> Sessions { get; } = new();
         public Mock<IPushNotificationSender> PushSender { get; } = new();
         public IdentityPasswordHasher Hasher { get; } = new IdentityPasswordHasher();
@@ -78,6 +79,7 @@ public sealed class DeleteAccountHandlerTests
                 VerificationTokens,
                 AvatarPhotos,
                 BannerPhotos,
+                KnownDevices,
                 Sessions.Object,
                 Handover(Events),
                 new InMemoryUnitOfWork(),
@@ -140,6 +142,19 @@ public sealed class DeleteAccountHandlerTests
         await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
 
         Assert.Null(await f.BannerPhotos.GetByKeyAsync(key));
+    }
+
+    [Fact]
+    public async Task HandleAsync_ForgetsTheKnownDevices()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        await f.KnownDevices.TryAddAsync(new KnownDevice { UserId = user.Id, TokenHash = "hash", FirstSeenAt = DateTimeOffset.UtcNow, LastSeenAt = DateTimeOffset.UtcNow });
+        await f.KnownDevices.TryAddAsync(new KnownDevice { UserId = "someone-else", TokenHash = "hash", FirstSeenAt = DateTimeOffset.UtcNow, LastSeenAt = DateTimeOffset.UtcNow });
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
+
+        Assert.Equal(["someone-else"], f.KnownDevices.All.Select(device => device.UserId));
     }
 
     [Fact]
@@ -747,6 +762,7 @@ public sealed class DeleteAccountHandlerTests
             f.VerificationTokens,
             f.AvatarPhotos,
             f.BannerPhotos,
+            f.KnownDevices,
             f.Sessions.Object,
             f.Handover(events.Object),
             new InMemoryUnitOfWork(),

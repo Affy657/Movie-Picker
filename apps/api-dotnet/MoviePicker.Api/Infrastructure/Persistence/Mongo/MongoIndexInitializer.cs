@@ -67,6 +67,7 @@ public sealed class MongoIndexInitializer : IHostedService
         EnsureMovieRatingIndexes(plan);
         EnsurePasswordResetTokenIndexes(plan);
         EnsureEmailVerificationTokenIndexes(plan);
+        EnsureKnownDeviceIndexes(plan);
         EnsurePushSubscriptionIndexes(plan);
         EnsureFollowIndexes(plan);
         EnsureWatchlistIndexes(plan);
@@ -252,6 +253,19 @@ public sealed class MongoIndexInitializer : IHostedService
             new CreateIndexModel<EmailVerificationTokenDocument>(
                 keys.Ascending(token => token.ExpiresAtUtc),
                 new CreateIndexOptions { Name = "email_verification_tokens_expires_ttl", ExpireAfter = TimeSpan.Zero }));
+    }
+
+    private static void EnsureKnownDeviceIndexes(MongoIndexPlan plan)
+    {
+        var keys = Builders<KnownDeviceDocument>.IndexKeys;
+        plan.Create(
+            MongoKnownDeviceRepository.CollectionName,
+            new CreateIndexModel<KnownDeviceDocument>(
+                keys.Ascending(device => device.UserId).Ascending(device => device.TokenHash),
+                new CreateIndexOptions { Name = "known_devices_userId_tokenHash_unique", Unique = true }),
+            new CreateIndexModel<KnownDeviceDocument>(
+                keys.Ascending(device => device.ExpiresAtUtc),
+                new CreateIndexOptions { Name = "known_devices_expires_ttl", ExpireAfter = TimeSpan.Zero }));
     }
 
     private static void EnsureSeenMarkIndexes(MongoIndexPlan plan)

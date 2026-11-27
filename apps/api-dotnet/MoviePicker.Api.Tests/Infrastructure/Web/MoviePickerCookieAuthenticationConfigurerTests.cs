@@ -34,6 +34,14 @@ public sealed class MoviePickerCookieAuthenticationConfigurerTests
     }
 
     [Fact]
+    public void Configure_RemembersTheDeviceOnEverySignIn()
+    {
+        var options = Configure(Environments.Production);
+
+        Assert.Equal(SignInDeviceCookie.OnSigningInAsync, options.Events.OnSigningIn);
+    }
+
+    [Fact]
     public void Configure_Development_UsesLaxSameAsRequestCookie()
     {
         var options = Configure(Environments.Development);

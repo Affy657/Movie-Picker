@@ -13088,6 +13088,15 @@ export interface components {
             /** Format: date-time */
             joinedAt: string;
         };
+        ExportedKnownDevice: {
+            browser?: string | null;
+            operatingSystem?: string | null;
+            kind: components["schemas"]["DeviceKind"];
+            /** Format: date-time */
+            firstSeenAt: string;
+            /** Format: date-time */
+            lastSignInAt: string;
+        };
         ExportedListContribution: {
             listId: string;
             name: string;
@@ -14572,6 +14581,7 @@ export interface components {
             createdEvents: components["schemas"]["ExportedCreatedEvent"][];
             participations: components["schemas"]["ExportedParticipation"][];
             pushSubscriptions: components["schemas"]["ExportedPushSubscription"][];
+            knownDevices: components["schemas"]["ExportedKnownDevice"][];
             signedInDevices: components["schemas"]["ExportedSignedInDevice"][];
             watchlist: components["schemas"]["ExportedWatchlistItem"][];
             movieLists: components["schemas"]["ExportedMovieList"][];

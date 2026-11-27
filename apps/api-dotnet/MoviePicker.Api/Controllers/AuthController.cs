@@ -17,6 +17,7 @@ using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Application.UseCases.Auth.EmailVerification;
 using MoviePicker.Api.Application.UseCases.Auth.OAuth;
 using MoviePicker.Api.Application.UseCases.Auth.PasswordReset;
+using MoviePicker.Api.Application.UseCases.Auth.SignInDevices;
 using MoviePicker.Api.Application.UseCases.UsageCounts;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain;
@@ -43,21 +44,25 @@ public sealed class AuthController : ControllerBase
         return new ClaimsPrincipal(identity);
     }
 
-    private static AuthenticationProperties AuthProps(DateTimeOffset now) =>
-        new()
+    private static AuthenticationProperties AuthProps(DateTimeOffset now, string method)
+    {
+        var properties = new AuthenticationProperties
         {
             IsPersistent = true,
             ExpiresUtc = now.Add(AuthConstants.SessionLifetime),
             AllowRefresh = true
         };
+        SignInDeviceCookie.RememberMethod(properties, method);
+        return properties;
+    }
 
-    private Task SignInAsync(string userId, string displayName, TimeProvider clock)
+    private Task SignInAsync(string userId, string displayName, string method, TimeProvider clock)
     {
         var now = clock.GetUtcNow();
         return HttpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
             CreatePrincipal(userId, displayName, now),
-            AuthProps(now));
+            AuthProps(now, method));
     }
 
     private bool IsRecentlyAuthenticated(TimeProvider clock) =>
@@ -88,7 +93,7 @@ public sealed class AuthController : ControllerBase
         CancellationToken ct)
     {
         var result = await handler.HandleAsync(request, ct);
-        await SignInAsync(result.UserId, result.DisplayName, clock);
+        await SignInAsync(result.UserId, result.DisplayName, SignInMethods.Password, clock);
         await usage.RecordAsync(UsageCount.SignedUp(UsageCount.FormMethod, EntryOrigin.Of(request.ReturnTo)), ct);
         return CreatedAtAction(nameof(Me), null, result);
     }
@@ -108,7 +113,7 @@ public sealed class AuthController : ControllerBase
         CancellationToken ct)
     {
         var result = await handler.HandleAsync(request, ct);
-        await SignInAsync(result.UserId, result.DisplayName, clock);
+        await SignInAsync(result.UserId, result.DisplayName, SignInMethods.Password, clock);
         await usage.RecordAsync(UsageCount.LoggedIn(UsageCount.FormMethod, EntryOrigin.Of(request.ReturnTo)), ct);
         return Ok(result);
     }
@@ -236,7 +241,7 @@ public sealed class AuthController : ControllerBase
             return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (FrontRoutes.OAuthErrorQueryParam, errorCode), (FrontRoutes.ReturnToQueryParam, returnTo)));
         }
 
-        await SignInAsync(loginOutcome.User.Id, loginOutcome.User.DisplayName, clock);
+        await SignInAsync(loginOutcome.User.Id, loginOutcome.User.DisplayName, knownProvider, clock);
         await usage.RecordAsync(
             loginOutcome.IsNewAccount
                 ? UsageCount.SignedUp(knownProvider, EntryOrigin.Of(returnTo))

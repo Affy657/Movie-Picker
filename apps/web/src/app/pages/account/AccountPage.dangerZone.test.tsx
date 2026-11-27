@@ -114,6 +114,7 @@ describe('AccountPage — zone de danger (MSW)', () => {
           watchedTitles: [],
           favorites: [],
           titlesAddedToOthersLists: [],
+          knownDevices: [],
         });
       })
     );

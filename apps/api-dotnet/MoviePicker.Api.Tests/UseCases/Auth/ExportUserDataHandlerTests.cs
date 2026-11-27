@@ -40,6 +40,7 @@ public sealed class ExportUserDataHandlerTests
         public InMemoryAvatarPhotoRepository AvatarPhotos { get; } = new();
         public InMemoryBannerPhotoRepository BannerPhotos { get; } = new();
         public InMemoryMovieRepository Movies { get; } = new();
+        public InMemoryKnownDeviceRepository KnownDevices { get; } = new();
         public List<StoredAuthSession> Sessions { get; } = [];
 
         public ExportUserDataHandler CreateHandler() =>
@@ -61,6 +62,7 @@ public sealed class ExportUserDataHandlerTests
                 AvatarPhotos,
                 BannerPhotos,
                 Movies,
+                KnownDevices,
                 SessionDirectory(),
                 new FakeTimeProvider(TestEpoch));
 
@@ -253,6 +255,32 @@ public sealed class ExportUserDataHandlerTests
                 Assert.Null(legacy.UserAgent);
                 Assert.Null(legacy.LastActiveAt);
             });
+    }
+
+    [Fact]
+    public async Task HandleAsync_ExportsTheKnownDevicesWithoutTheirSecret()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User { Email = "devices@example.com", Handle = "devices" });
+        await f.KnownDevices.TryAddAsync(new KnownDevice
+        {
+            UserId = user.Id,
+            TokenHash = "secret-hash",
+            Browser = "Firefox",
+            OperatingSystem = "Linux",
+            Kind = DeviceKind.Desktop,
+            FirstSeenAt = TestEpoch.AddDays(-10),
+            LastSeenAt = TestEpoch.AddDays(-1)
+        });
+
+        var export = await f.CreateHandler().HandleAsync(user.Id);
+
+        var device = Assert.Single(export.KnownDevices);
+        Assert.Equal("Firefox", device.Browser);
+        Assert.Equal("Linux", device.OperatingSystem);
+        Assert.Equal(DeviceKind.Desktop, device.Kind);
+        Assert.Equal(TestEpoch.AddDays(-10), device.FirstSeenAt);
+        Assert.Equal(TestEpoch.AddDays(-1), device.LastSignInAt);
     }
 
     [Fact]
