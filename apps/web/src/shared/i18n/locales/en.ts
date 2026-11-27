@@ -3845,9 +3845,21 @@ export const en: Locale = {
       nextWhen: 'Next',
       nextWhat: 'Coming up',
       nextDetail:
-        'Nothing is queued for now: the next entry will come out of the backlog when real usage calls for it. What brings people into a night comes before new surfaces.',
+        'Twelve entries queued, in the order they will be taken: service reliability and account security first, then the command palette, warnings on movie pages and group life.',
       nextHint:
         'Usage has been measured since 1.16.0: each entry is then judged on what it changes in the numbers.',
+      nextItem1: 'Service status',
+      nextItem2: 'New sign-in alert',
+      nextItem3: 'Two-factor authentication',
+      nextItem4: 'Active sessions',
+      nextItem5: 'Command palette',
+      nextItem6: 'Passkeys',
+      nextItem7: 'Content warnings',
+      nextItem8: 'Trigger warnings',
+      nextItem9: 'A list per group',
+      nextItem10: 'Quick reactions',
+      nextItem11: 'Availability poll',
+      nextItem12: 'Year in review',
       v2When: 'No date announced',
       v2What: 'V2',
       v2Detail:

@@ -34,7 +34,18 @@ Le backlog du projet, en flux continu : ce qui est en cours, ce qui vient ensuit
 
 ## ⏭️ Prochainement
 
-Rien pour l'instant.
+1. `M` **Statut du service** : page publique indiquant si l'API et le site sont opérationnels.
+2. `M` **Alerte nouvelle connexion** : e-mail automatique envoyé à l'utilisateur lors d'une connexion depuis un nouvel appareil ou navigateur.
+3. `M` **Double authentification (2FA/TOTP)** : code à six chiffres généré par une application d'authentification, activable en option dans les paramètres de compte.
+4. `M` **Sessions actives** : liste des appareils et navigateurs connectés dans la section « Connexions », avec révocation individuelle.
+5. `L` **Palette de commandes (Cmd+K)** : accès clavier global aux actions et à la navigation (création de soirée, changement de thème, pages de l'application), dans le même champ que la recherche de la barre de navigation.
+6. `L` **Passkeys (WebAuthn)** : connexion sans mot de passe via biométrie ou PIN de l'appareil, en complément de l'e-mail / mot de passe et des fournisseurs OAuth.
+7. `M` **Avertissements de contenu** : badges violence, horreur et 18+ sur les fiches films ; option hôte « masquer les films 18+ » pour les soirées en famille.
+8. `M` **Trigger warnings sur les fiches films** : avertissements précis (violence sexuelle, mort d'un animal, lumières clignotantes, suicide) tirés d'une base communautaire, sur la fiche et sur la carte du film tiré, masquables par compte. Prolonge les avertissements de contenu.
+9. `M` **Une liste pour chaque groupe** : chaque groupe a sa liste « À voir ensemble », que tous ses membres remplissent. Dans une soirée du groupe, proposer un film et la pioche partent d'abord de cette liste.
+10. `M` **Réactions rapides sur les films** : emojis (❤️ 🔥 😴…) posés sur une carte de film en complément des votes up/down, plus expressif, moins binaire.
+11. `L` **Sondage de disponibilité dans un groupe** : sur la page d'un groupe, un membre propose plusieurs créneaux et chacun coche ceux où il est libre. Le créneau retenu devient une soirée du groupe, annoncée à tous ses membres.
+12. `L` **Bilan de l'année** : en décembre, chaque membre et chaque groupe reçoit une page à partager qui résume son année : films vus ensemble, meilleure et pire note, qui a gagné le plus de tirages, le film qui a le plus divisé.
 
 ---
 
@@ -46,13 +57,10 @@ Rien pour l'instant.
 - `L` **Plateformes de streaming par compte** : chacun renseigne dans son profil ses abonnements, et une soirée marque disponible un film présent sur la plateforme d'au moins un participant. Un panneau de la soirée liste les plateformes retenues, à cocher ou décocher à la main.
 - `M` **Déjà vu automatique en soirée** : dans une soirée, un film qui figure dans les films vus d'un participant est marqué « Déjà vu » pour lui, sans qu'il ait à le faire. Seulement pour qui a rendu ses films vus visibles, pour ne rien dévoiler d'une liste privée.
 - `L` **Thème imposé par l'hôte** : contrainte de proposition posée par l'hôte (genre, décennie, acteur, réalisateur ou classification d'âge maximale) ; les films qui ne la respectent pas sont refusés avec un message explicite, et la contrainte s'affiche en bannière sur la page soirée.
-- `M` **Réactions rapides sur les films** : emojis (❤️ 🔥 😴…) posés sur une carte de film en complément des votes up/down, plus expressif, moins binaire.
 - `M` **Soirée à distance synchronisée** : une fois le film gagnant désigné, la page soirée guide l'hôte pour lancer une session de visionnage synchronisé avec une extension existante (Teleparty, Scener…) et en partage le lien aux participants.
-- `L` **Chat de soirée** : panneau de discussion en temps réel sur la page soirée, latéral sur ordinateur et en onglet sur mobile, pour remplacer les mini-commentaires par film par un seul espace d'échange.
 
 ### Accueil, aide et contact
 
-- `M` **Statut du service** : page publique indiquant si l'API et le site sont opérationnels.
 - `?` **Événements hebdomadaires** : un rendez-vous qui change chaque semaine sur l'accueil, sous une forme à définir : thème à respecter par le film gagnant d'une soirée, événement saisonnier comme Halloween ou Noël.
 
 ### Bibliothèque de films
@@ -61,34 +69,22 @@ Rien pour l'instant.
 
 ### Fiches films
 
-- `M` **Avertissements de contenu** : badges violence, horreur et 18+ sur les fiches films ; option hôte « masquer les films 18+ » pour les soirées en famille.
-- `M` **Trigger warnings sur les fiches films** : avertissements précis (violence sexuelle, mort d'un animal, lumières clignotantes, suicide) tirés d'une base communautaire, sur la fiche et sur la carte du film tiré, masquables par compte. Prolonge les avertissements de contenu.
 - `XL` **Vrai support des séries (progression par épisode)** : suivre la saison et l'épisode en cours d'une série et le prochain à voir, via les endpoints TMDB dédiés. Remplace le traitement actuel d'une série comme un simple film.
 
 ### Profil et social
 
-- `L` **Bilan de l'année** : en décembre, chaque membre et chaque groupe reçoit une page à partager qui résume son année : films vus ensemble, meilleure et pire note, qui a gagné le plus de tirages, le film qui a le plus divisé.
 - `M` **Une liste en vitrine sur le profil** : un membre épingle l'une de ses listes publiques en haut de son profil, avec ses affiches et son nombre de films, pour la montrer à ceux qui le visitent.
 - `M` **Cadres d'avatar à débloquer** : un contour autour de l'avatar, gagné avec la flamme de soirées, le soutien Ko-fi ou un nombre de soirées, que le membre choisit d'afficher et que tous voient, sur son profil comme en soirée.
-- `L` **Sondage de disponibilité dans un groupe** : sur la page d'un groupe, un membre propose plusieurs créneaux et chacun coche ceux où il est libre. Le créneau retenu devient une soirée du groupe, annoncée à tous ses membres.
-- `M` **Une liste pour chaque groupe** : chaque groupe a sa liste « À voir ensemble », que tous ses membres remplissent. Dans une soirée du groupe, proposer un film et la pioche partent d'abord de cette liste.
 - `M` **Compatibilité ciné** : score de compatibilité avec un ami, calculé sur les films « déjà vu » et les notes en commun.
 - `L` **Badges / achievements** : quatre badges (Organisateur, Cinéphile, Faiseur de rois, Juré assidu), dont le code de calcul a été supprimé ; à concevoir avec un design abouti et réimplémenter.
 - `L` **Fil d'actualité** : un fil qui rassemble l'activité des comptes suivis (soirées créées et terminées, films notés, listes publiées) et les soirées publiques à venir. Il prolonge la rangée « Vos amis ont vu » de l'accueil, limitée aux films vus.
+- `L` **Chat de groupe** : discussion en temps réel entre les membres d'un groupe, sur la page du groupe (panneau latéral sur ordinateur, onglet sur mobile), pour parler des films vus et organiser la prochaine soirée sans passer par une autre messagerie.
 - `XL` **Messages privés** : messagerie directe entre deux utilisateurs qui se suivent mutuellement, accessible depuis le profil public ou la liste de follows, pour organiser une soirée en dehors d'une soirée existante.
-
-### Compte et sécurité
-
-- `M` **Sessions actives** : liste des appareils et navigateurs connectés dans la section « Connexions », avec révocation individuelle.
-- `M` **Alerte nouvelle connexion** : e-mail automatique envoyé à l'utilisateur lors d'une connexion depuis un nouvel appareil ou navigateur.
-- `M` **Double authentification (2FA/TOTP)** : code à six chiffres généré par une application d'authentification, activable en option dans les paramètres de compte.
-- `L` **Passkeys (WebAuthn)** : connexion sans mot de passe via biométrie ou PIN de l'appareil, en complément de l'e-mail / mot de passe et des fournisseurs OAuth.
 
 ### Plateforme
 
 - `XL` **Application mobile native** : une vraie application iOS et Android, pleinement intégrée à la plateforme, avec les notifications du système et tout le parcours hors navigateur. Le prototype de cours archivé dans `archive/mobile` n'est pas à reprendre.
 - `M` **Story Instagram en un geste** : depuis l'application mobile, un bouton pose l'image du recap directement dans une story Instagram, avec un lien cliquable qui ramène au recap. Dépend de l'application mobile native.
-- `L` **Palette de commandes (Cmd+K)** : accès clavier global aux actions et à la navigation (création de soirée, changement de thème, pages de l'application), dans le même champ que la recherche de la barre de navigation.
 
 ---
 

@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Changed
+
+- **Le dossier technique montre ce qui vient ensuite** : la frise liste, dans l’ordre, les douze améliorations prévues, du statut du service au bilan de l’année.
+
 ## [1.33.6] - 2026-11-27
 
 ### Fixed
