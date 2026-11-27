@@ -28,7 +28,7 @@ Le backlog du projet, en flux continu : ce qui est en cours, ce qui vient ensuit
 
 ## 🚧 En cours
 
-- `M` **Co-hôte prévenu et notifié** : le participant nommé co-hôte en est prévenu, puis reçoit comme l’hôte les arrivées dans la soirée et le rappel quand elle attend encore son film.
+Rien pour l'instant.
 
 ---
 
