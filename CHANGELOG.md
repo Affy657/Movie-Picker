@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.37.0] - 2026-11-27
+
 ### Added
 
 - **Vos appareils connectés, déconnectables un par un** : Compte et sécurité liste chaque appareil connecté à votre compte, avec son navigateur, son système et sa dernière activité. Vous pouvez en déconnecter un, ou tous sauf celui-ci, et l’export de vos données les inclut.
@@ -1253,7 +1255,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.36.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.37.0...HEAD
+[1.37.0]: https://github.com/Affy657/Movie-Picker/compare/v1.36.0...v1.37.0
 [1.36.0]: https://github.com/Affy657/Movie-Picker/compare/v1.35.0...v1.36.0
 [1.35.0]: https://github.com/Affy657/Movie-Picker/compare/v1.34.0...v1.35.0
 [1.34.0]: https://github.com/Affy657/Movie-Picker/compare/v1.33.6...v1.34.0
