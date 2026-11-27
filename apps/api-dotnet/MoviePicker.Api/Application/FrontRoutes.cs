@@ -70,6 +70,8 @@ public static class FrontRoutes
     public const string OAuthLinkedQueryParam = "oauthLinked";
     public const string OAuthProviderQueryParam = "provider";
     public const string OAuthOutcomeQueryParam = "event";
+    public const string TwoFactorQueryParam = "twoFactor";
+    public const string TwoFactorRequiredValue = "required";
 
     public static string EventDetail(string slug) => Fill(EventDetailPattern, slug);
 

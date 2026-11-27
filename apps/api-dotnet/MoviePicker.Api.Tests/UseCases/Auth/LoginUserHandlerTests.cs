@@ -74,6 +74,35 @@ public sealed class LoginUserHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_AccountWithoutTwoFactor_DoesNotAskForACode()
+    {
+        var result = await SignIn(RightPassword);
+
+        Assert.False(result.TwoFactorRequired);
+        Assert.Equal("u1", result.UserId);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AccountWithTwoFactor_AsksForTheCode()
+    {
+        _users.Setup(x => x.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(SampleUser() with
+        {
+            TwoFactor = new TwoFactorSettings
+            {
+                ProtectedSecret = "sealed",
+                EnabledAt = DateTimeOffset.UtcNow,
+                LastUsedStep = 0,
+                BackupCodeHashes = []
+            }
+        });
+
+        var result = await SignIn(RightPassword);
+
+        Assert.True(result.TwoFactorRequired);
+        Assert.Equal("u1", result.UserId);
+    }
+
+    [Fact]
     public async Task HandleAsync_WrongPassword_ThrowsUnauthorized()
     {
         await Assert.ThrowsAsync<UnauthorizedException>(() => SignIn("wrong"));

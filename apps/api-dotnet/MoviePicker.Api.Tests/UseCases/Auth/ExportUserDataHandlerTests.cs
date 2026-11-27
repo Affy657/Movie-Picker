@@ -126,6 +126,37 @@ public sealed class ExportUserDataHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_WithTwoFactor_ExportsWhenItWasTurnedOnButNoSecret()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User
+        {
+            Email = "totp@example.com",
+            Handle = "totp",
+            TwoFactor = new TwoFactorSettings
+            {
+                ProtectedSecret = "sealed-secret",
+                EnabledAt = TestEpoch,
+                LastUsedStep = 0,
+                BackupCodeHashes = ["hash"]
+            }
+        });
+
+        var profile = (await f.CreateHandler().HandleAsync(user.Id)).Profile;
+
+        Assert.Equal(TestEpoch, profile.TwoFactorEnabledAt);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithoutTwoFactor_ExportsNoTwoFactorDate()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User { Email = "plain@example.com", Handle = "plain" });
+
+        Assert.Null((await f.CreateHandler().HandleAsync(user.Id)).Profile.TwoFactorEnabledAt);
+    }
+
+    [Fact]
     public async Task HandleAsync_UserNotFound_ThrowsNotFound()
     {
         var f = new Fixture();

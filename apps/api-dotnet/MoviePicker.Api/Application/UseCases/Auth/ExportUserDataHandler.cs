@@ -335,6 +335,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         AccentColor = user.AccentColor,
         AvatarId = user.AvatarId,
         HasPassword = !string.IsNullOrEmpty(user.PasswordHash),
+        TwoFactorEnabledAt = user.TwoFactor?.EnabledAt,
         LinkedProviders = user.Identities.Select(i => i.Provider).ToList(),
         NotificationPreferences = user.NotificationPreferences
             .ToDictionary(kv => kv.Key.ToString().ToLowerInvariant(), kv => kv.Value),
