@@ -57,7 +57,7 @@ function reportUnauthorizedResponse(url: string): void {
 export function apiUrl(path: string): string {
   const p = path.startsWith('/') ? path : `/${path}`;
   const base = API_BASE.replace(/\/$/, '');
-  if (p.startsWith('/api/') || p === '/health') {
+  if (p.startsWith('/api/') || p === '/health' || p.startsWith('/health/')) {
     return `${base}${p}`;
   }
   return `${base}${API_VERSION_PREFIX}${p}`;

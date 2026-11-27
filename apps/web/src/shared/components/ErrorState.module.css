@@ -51,3 +51,9 @@
   justify-content: center;
   gap: var(--space-3);
 }
+
+.footnote {
+  margin: var(--space-6) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}

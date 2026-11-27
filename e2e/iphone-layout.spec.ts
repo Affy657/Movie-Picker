@@ -2,7 +2,7 @@ import { devices, expect, test, type Page } from '@playwright/test';
 import { createEvent, registerAccount } from './helpers';
 
 const IPHONES = ['iPhone SE', 'iPhone 12 Mini', 'iPhone 11', 'iPhone X landscape'] as const;
-const PUBLIC_PAGES = ['/', '/decouvrir', '/login', '/register'] as const;
+const PUBLIC_PAGES = ['/', '/decouvrir', '/login', '/register', '/statut'] as const;
 const IOS_ZOOM_FREE_FONT_SIZE_PX = 16;
 
 test.beforeEach(async ({ context }) => {
@@ -51,6 +51,7 @@ for (const iphone of IPHONES) {
           await expect(page.getByTestId('movie-preview-rail').first()).toBeVisible({
             timeout: 20_000,
           });
+        if (path === '/statut') await expect(page.getByText('Tout fonctionne')).toBeVisible();
         expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
       });
 

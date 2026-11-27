@@ -351,10 +351,10 @@ La barre d'avancée fine suivie de son libellé : `value` (de 0 à 100, bornée)
 
 - `PageLayout` : le `<main id="main-content" tabIndex={-1}>`, cible du lien d'évitement ; `ref` transmis.
 - `EmptyState` : `icon`, `title`, `titleTag` `p` / `h1` / `h2`, `message` (facultatif : un titre seul suffit, « Aucun abonné »), `actions`, `compact` (dans une rangée, une liste de modale).
-- `ErrorState` : page entière (`PageLayout`) avec `code`, `title` en `h1`, `message` (`messageRole` `alert` / `status`), `actions`.
+- `ErrorState` : page entière (`PageLayout`) avec `code`, `title` en `h1`, `message` (`messageRole` `alert` / `status`), `actions`, et `footnote` facultatif sous les actions (le lien vers `/statut` de `ServerErrorPage`).
 - `InlineError` : l'erreur d'un bloc dans une page, voir plus haut.
 - `SignedOutState` : `EmptyState` avec connexion et inscription qui reviennent sur `returnTo` ; trace `signed_out_cta_clicked`.
-- `ServerErrorPage` : `ErrorState` 500, `onRetry` optionnel, message d'erreur masqué en production.
+- `ServerErrorPage` : `ErrorState` 500, `onRetry` optionnel, message d'erreur masqué en production, lien vers l'état du service en note.
 - `Skeleton` (`variant` `text` / `circle` / `poster` / `block`, `width`, `height`, `style`) et `SkeletonScreen` (`label`, texte masqué visuellement, `role="status"`, `aria-busy`, `style`).
 - `ErrorBoundary` : attrape les erreurs de rendu et affiche `ServerErrorPage`.
 - `AccountChoiceLinks` : les deux liens d'un visiteur qui doit avoir un compte, « Créer un compte » en `primary` d'abord, « J’ai déjà un compte » en `secondary` ensuite, tous deux avec `returnTo` ; `fullWidth`, `onChoose('register' | 'login')` pour la mesure, `linkClassName` pour les dessiner en simples liens de la liste qui les porte (pied de page, encart « Une soirée ciné à plusieurs ? » de la fiche d'un film). Rendu sans conteneur, l'appelant pose sa rangée. C'est la carte « Rejoindre la soirée », les invitations à une liste ou à un groupe, les Paramètres d'un visiteur, et le pied de page une fois la session vérifiée.
