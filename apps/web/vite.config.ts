@@ -3,31 +3,31 @@ import { defineConfig, loadEnv, type HtmlTagDescriptor, type Plugin } from 'vite
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
-import { browserTargets } from './tooling/browserTargets';
+import { browserTargets } from './tooling/browserTargets.ts';
 import {
   apiPreconnectTags,
   contentSecurityPolicyMeta,
   insertAfterCharset,
-} from './tooling/documentHead';
-import { PRECACHE_IGNORES, chunkFileName } from './tooling/precache';
+} from './tooling/documentHead.ts';
+import { PRECACHE_IGNORES, chunkFileName } from './tooling/precache.ts';
 import {
   COLOR_MIX_FALLBACK_MODULE,
   COLOR_MIX_TOKEN_SHEETS,
   buildColorMixFallback,
   readColorMixTokenSheets,
-} from './tooling/colorMixFallback';
-import { securityTxtPlugin } from './tooling/securityTxt';
-import { invitationDocumentsPlugin } from './tooling/invitationDocuments';
-import { notFoundDocumentPlugin } from './tooling/notFoundDocument';
+} from './tooling/colorMixFallback.ts';
+import { securityTxtPlugin } from './tooling/securityTxt.ts';
+import { invitationDocumentsPlugin } from './tooling/invitationDocuments.ts';
+import { notFoundDocumentPlugin } from './tooling/notFoundDocument.ts';
 import {
   buildContentSecurityPolicy,
   inlineScriptHashes,
   toApiOrigin,
   toSentryIngestOrigin,
-} from './src/shared/utils/contentSecurityPolicy';
+} from './src/shared/utils/contentSecurityPolicy.ts';
 
 const devQuickLoginStub = path.resolve(
-  __dirname,
+  import.meta.dirname,
   'src/features/auth/devQuickLoginCredentials.stub.ts'
 );
 
@@ -74,8 +74,9 @@ function colorMixFallbackPlugin(): Plugin {
     },
     load(id) {
       if (id !== resolvedId) return undefined;
-      for (const sheet of COLOR_MIX_TOKEN_SHEETS) this.addWatchFile(path.resolve(__dirname, sheet));
-      return buildColorMixFallback(readColorMixTokenSheets(__dirname));
+      for (const sheet of COLOR_MIX_TOKEN_SHEETS)
+        this.addWatchFile(path.resolve(import.meta.dirname, sheet));
+      return buildColorMixFallback(readColorMixTokenSheets(import.meta.dirname));
     },
   };
 }
@@ -103,7 +104,7 @@ const CRITICAL_FONT_BASES = [
   'overpass-latin-800-normal',
 ];
 
-const BUILD_TARGETS = browserTargets(__dirname);
+const BUILD_TARGETS = browserTargets(import.meta.dirname);
 
 const APP_SHELL_CHUNK = /(?:^|\/)App-[\w-]+\.js$/;
 const APP_SHELL_STYLES = /(?:^|\/)App-[\w-]+\.css$/;
@@ -358,7 +359,7 @@ function preloadCriticalAssetsPlugin(): Plugin {
 }
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, path.resolve(__dirname));
+  const env = loadEnv(mode, path.resolve(import.meta.dirname));
   const appShellModules = new Set<string>();
   const apiOrigin = toApiOrigin(process.env.VITE_API_URL || env.VITE_API_URL || '');
   const sentryDsn = process.env.VITE_SENTRY_DSN || env.VITE_SENTRY_DSN || '';
@@ -453,7 +454,7 @@ export default defineConfig(({ mode }) => {
               },
             ]
           : []),
-        { find: '@', replacement: path.resolve(__dirname, 'src') },
+        { find: '@', replacement: path.resolve(import.meta.dirname, 'src') },
       ],
     },
     server: {
