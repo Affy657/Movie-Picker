@@ -61,6 +61,14 @@ public sealed record UnlinkedIdentity
     public DateTimeOffset UnlinkedAt { get; init; }
 }
 
+public sealed record TwoFactorSettings
+{
+    public string ProtectedSecret { get; init; } = string.Empty;
+    public DateTimeOffset EnabledAt { get; init; }
+    public long LastUsedStep { get; init; }
+    public IReadOnlyList<string> BackupCodeHashes { get; init; } = Array.Empty<string>();
+}
+
 public sealed record User
 {
     public string Id { get; init; } = string.Empty;
@@ -70,6 +78,7 @@ public sealed record User
     public string DisplayName { get; init; } = string.Empty;
     public IReadOnlyList<LinkedIdentity> Identities { get; init; } = Array.Empty<LinkedIdentity>();
     public IReadOnlyList<UnlinkedIdentity> UnlinkedIdentities { get; init; } = Array.Empty<UnlinkedIdentity>();
+    public TwoFactorSettings? TwoFactor { get; init; }
     public string Handle { get; init; } = string.Empty;
     public string? Bio { get; init; }
     public bool IsProfilePublic { get; init; } = true;

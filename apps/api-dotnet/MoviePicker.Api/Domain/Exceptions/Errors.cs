@@ -323,6 +323,24 @@ public static class Errors
     public static ForbiddenException ReauthenticationRequired() =>
         new("A recent sign-in is required", ErrorCodes.ReauthenticationRequired);
 
+    public static BadRequestException TwoFactorCodeInvalid() =>
+        new("This code does not match", ErrorCodes.TwoFactorCodeInvalid);
+
+    public static BadRequestException TwoFactorChallengeExpired() =>
+        new("The sign-in request expired, sign in again", ErrorCodes.TwoFactorChallengeExpired);
+
+    public static TooManyRequestsException TwoFactorTooManyAttempts() =>
+        new("Too many codes tried, sign in again", ErrorCodes.TwoFactorTooManyAttempts);
+
+    public static ConflictException TwoFactorAlreadyEnabled() =>
+        new("Two-factor authentication is already enabled", ErrorCodes.TwoFactorAlreadyEnabled);
+
+    public static ConflictException TwoFactorNotEnabled() =>
+        new("Two-factor authentication is not enabled", ErrorCodes.TwoFactorNotEnabled);
+
+    public static BadRequestException TwoFactorSetupExpired() =>
+        new("The setup key expired, start again", ErrorCodes.TwoFactorSetupExpired);
+
     public static BadRequestException InvalidParticipant() =>
         new("Invalid participant for this movie night", ErrorCodes.InvalidParticipant);
 
