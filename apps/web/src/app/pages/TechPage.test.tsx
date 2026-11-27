@@ -26,6 +26,7 @@ import { fr } from '@/shared/i18n/locales/fr';
 import { en } from '@/shared/i18n/locales/en';
 import { SITE_URL } from '@/shared/seo/siteMeta';
 import { ROUTES } from '@/app/routes';
+import roadmap from '../../../../../docs/roadmap.md?raw';
 
 function renderTechPage() {
   return render(
@@ -312,6 +313,18 @@ describe('TechPage', () => {
       expect(step.querySelector('h3')).not.toBeNull();
       expect(step.querySelectorAll(':scope > ul > li').length).toBeGreaterThanOrEqual(minimumItems);
     }
+  });
+
+  it('lists every entry of the roadmap Prochainement section in the next milestone', () => {
+    const section = roadmap.split('## ⏭️ Prochainement')[1]?.split('\n---')[0] ?? '';
+    const entries = section.split('\n').filter((line) => /^\d+\. `/.test(line));
+    const { container } = renderTechPage();
+    const next = [...container.querySelectorAll('section#trajectory > ol > li')].find((step) =>
+      step.querySelector('h3')?.textContent?.includes('Prochainement')
+    );
+
+    expect(entries.length).toBeGreaterThan(0);
+    expect(next?.querySelectorAll(':scope > ul > li')).toHaveLength(entries.length);
   });
 
   it('separates the delivered milestones, the current one and those still to do', () => {

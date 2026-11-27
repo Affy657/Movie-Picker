@@ -3889,9 +3889,21 @@ export const fr = {
       nextWhen: 'Ensuite',
       nextWhat: 'Prochainement',
       nextDetail:
-        'Rien n’est en file pour l’instant : la prochaine entrée sortira du backlog quand un retour d’usage la justifiera. Ce qui fait entrer du monde dans une soirée passe avant les nouvelles surfaces.',
+        'Douze entrées en file, dans l’ordre où elles se prennent : la fiabilité du service et la sécurité du compte d’abord, puis la palette de commandes, les avertissements sur les fiches films et la vie des groupes.',
       nextHint:
         'L’usage se mesure depuis la 1.16.0 : chaque entrée se juge ensuite sur ce qu’elle change dans les chiffres.',
+      nextItem1: 'Statut du service',
+      nextItem2: 'Alerte de nouvelle connexion',
+      nextItem3: 'Double authentification',
+      nextItem4: 'Sessions actives',
+      nextItem5: 'Palette de commandes',
+      nextItem6: 'Passkeys',
+      nextItem7: 'Avertissements de contenu',
+      nextItem8: 'Trigger warnings',
+      nextItem9: 'Une liste par groupe',
+      nextItem10: 'Réactions rapides',
+      nextItem11: 'Sondage de disponibilité',
+      nextItem12: 'Bilan de l’année',
       v2When: 'Sans date annoncée',
       v2What: 'V2',
       v2Detail:
