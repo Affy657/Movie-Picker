@@ -5,7 +5,7 @@ import { blobToBase64 } from '@/shared/utils/blobToBase64';
 import { downloadBlob } from '@/shared/utils/downloadBlob';
 import { ApiError } from '@/shared/api/apiError';
 import type { AccentColor, RatingScale, UiThemePreference } from '@/shared/types/theme';
-import type { UserProfile } from '@/features/auth/types';
+import type { ActiveSession, UserProfile } from '@/features/auth/types';
 import { clearSessionHint, hasSessionHint, setSessionHint } from '@/features/auth/session-hint';
 import { currentBrowserPushSubscription } from '@/shared/utils/browserPushSubscription';
 import { preferredLocale } from '@/shared/i18n';
@@ -108,6 +108,21 @@ export function oauthStartUrl(provider: string, returnTo: string): string {
 
 export async function unlinkOAuthProvider(provider: string): Promise<void> {
   await fetchApi(apiPath('auth', 'me', 'identities', provider), { method: 'DELETE' });
+}
+
+export async function fetchActiveSessions(): Promise<ActiveSession[]> {
+  const list = await fetchApi<ApiSchemas['ActiveSessionListResponse']>(
+    apiPath('users', 'me', 'sessions')
+  );
+  return list.items;
+}
+
+export async function revokeSession(sessionId: string): Promise<void> {
+  await fetchApi(apiPath('users', 'me', 'sessions', sessionId), { method: 'DELETE' });
+}
+
+export async function revokeOtherSessions(): Promise<void> {
+  await fetchApi(apiPath('users', 'me', 'sessions', 'others'), { method: 'DELETE' });
 }
 
 export interface ProfilePatch {

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Application.UseCases.Auth.Sessions;
 using MoviePicker.Api.Application.UseCases.AvatarPhotos;
 using MoviePicker.Api.Application.UseCases.EventTemplates;
 using MoviePicker.Api.Application.UseCases.Favorites;
@@ -264,6 +265,48 @@ public sealed class UsersController : ControllerBase
         CancellationToken ct)
     {
         await handler.HandleAsync(userId, templateId, ct);
+        return NoContent();
+    }
+
+    [HttpGet("me/sessions")]
+    [Authorize]
+    [ProducesResponseType(typeof(ActiveSessionListResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ListSessions(
+        [FromServices] IListActiveSessionsHandler handler,
+        [CurrentUserId] string userId,
+        CancellationToken ct)
+    {
+        return Ok(await handler.HandleAsync(userId, AuthSessionKey.Of(HttpContext), ct));
+    }
+
+    [HttpDelete("me/sessions/others")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPatchProfilePolicy)]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> RevokeOtherSessions(
+        [FromServices] IRevokeOtherSessionsHandler handler,
+        [CurrentUserId] string userId,
+        CancellationToken ct)
+    {
+        await handler.HandleAsync(userId, AuthSessionKey.Of(HttpContext), ct);
+        return NoContent();
+    }
+
+    [HttpDelete("me/sessions/{sessionId}")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPatchProfilePolicy)]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RevokeSession(
+        string sessionId,
+        [FromServices] IRevokeSessionHandler handler,
+        [CurrentUserId] string userId,
+        CancellationToken ct)
+    {
+        await handler.HandleAsync(userId, sessionId, AuthSessionKey.Of(HttpContext), ct);
         return NoContent();
     }
 

@@ -7,7 +7,7 @@ import { http, HttpResponse } from 'msw';
 import AccountPage from '@/app/pages/account/AccountPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { buildUserProfile } from '@/test-utils/userProfile';
-import { TEST_API_V1 } from '@/mocks/handlers';
+import { TEST_API_V1, activeSessionsHandler } from '@/mocks/handlers';
 import { apiErrorJson, apiJson } from '@/mocks/apiJson';
 import { clearSessionHint, setSessionHint } from '@/features/auth/session-hint';
 
@@ -49,7 +49,7 @@ function signedInAs(emailVerifiedAt: string | null) {
 }
 
 describe('AccountSecurityPage, address confirmation', () => {
-  const server = setupServer();
+  const server = setupServer(activeSessionsHandler());
 
   beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   beforeEach(() => {

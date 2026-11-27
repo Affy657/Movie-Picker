@@ -90,6 +90,13 @@ public sealed class CachedAuthTicketStore : ITicketStore
         return key;
     }
 
+    public async Task<string> StoreAsync(AuthenticationTicket ticket, HttpContext httpContext, CancellationToken cancellationToken)
+    {
+        var key = await _inner.StoreAsync(ticket, httpContext, cancellationToken);
+        _cache.Set(key, ticket);
+        return key;
+    }
+
     public async Task RenewAsync(string key, AuthenticationTicket ticket)
     {
         await _inner.RenewAsync(key, ticket);

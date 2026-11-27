@@ -10,7 +10,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import AccountPage from '@/app/pages/account/AccountPage';
 import AccountDeletedNotice from '@/app/components/AccountDeletedNotice';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
-import { TEST_API_V1 } from '@/mocks/handlers';
+import { TEST_API_V1, activeSessionsHandler } from '@/mocks/handlers';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { getStoredParticipant, setStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 
@@ -48,7 +48,7 @@ function renderAccount(initialPath = '/settings/securite', client?: QueryClient)
 }
 
 describe('AccountPage — zone de danger (MSW)', () => {
-  const server = setupServer();
+  const server = setupServer(activeSessionsHandler());
 
   beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   beforeEach(() => {

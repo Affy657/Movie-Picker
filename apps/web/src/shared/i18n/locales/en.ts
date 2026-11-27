@@ -642,6 +642,29 @@ export const en: Locale = {
         'You also have a password, you can unlink these accounts without losing access.',
       connectionsLastProviderHint:
         'This is your only sign-in method. Set a password before you can unlink it.',
+      activeSessionsTitle: 'Signed-in devices',
+      activeSessionsCurrentChip: 'This device',
+      activeSessionsDeviceLabel: '{{browser}} on {{os}}',
+      activeSessionsUnknownDevice: 'Unidentified device',
+      activeSessionsActiveNow: 'Active now',
+      activeSessionsActiveAndSignedIn: 'Active {{when}}, signed in on {{date}}',
+      activeSessionsSignedInOn: 'Signed in on {{date}}',
+      activeSessionsRevokeButton: 'Log out',
+      activeSessionsRevokeAriaLabel: 'Log out {{device}}',
+      activeSessionsRevoked: '{{device}} is signed out.',
+      activeSessionsRevokeError:
+        '{{device}} could not be signed out. Check your connection, then try again.',
+      activeSessionsOthersHint:
+        'A device you don’t recognize? Log it out, then change your password.',
+      activeSessionsOthersButton: 'Log out the other devices',
+      activeSessionsOthersConfirmOne: 'Log out the other device? You stay signed in on this one.',
+      activeSessionsOthersConfirmMany:
+        'Log out the {{count}} other devices? You stay signed in on this one.',
+      activeSessionsOthersRevoked: 'The other devices are signed out.',
+      activeSessionsOthersError:
+        'The other devices could not be signed out. Check your connection, then try again.',
+      activeSessionsEmpty: 'No other device is signed in to your account.',
+      activeSessionsLoadError: 'The list of your devices could not be loaded.',
       accentColorProfileLink: 'Change it in my profile',
       accentColorLabel: 'Accent color',
       accentColorHint:
@@ -2644,6 +2667,7 @@ export const en: Locale = {
     watched_title_not_found: 'This film is not in your watched films.',
     seen_mark_not_found: 'Seen mark not found',
     event_template_not_found: 'Movie night template not found',
+    session_not_found: 'This device is already signed out.',
     oauth_provider_not_linked: 'This account is not linked to this provider.',
     event_finished: 'Movie night is over. Read-only.',
     event_closed_participants_locked:

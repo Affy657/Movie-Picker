@@ -9,7 +9,7 @@ import { buildUserProfile } from '@/test-utils/userProfile';
 import type { QueryClient } from '@tanstack/react-query';
 import AccountPage from '@/app/pages/account/AccountPage';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
-import { TEST_API_V1 } from '@/mocks/handlers';
+import { TEST_API_V1, activeSessionsHandler } from '@/mocks/handlers';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { getStoredParticipant, setStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 
@@ -41,7 +41,7 @@ function renderAccount(initialPath = '/settings', client?: QueryClient) {
 }
 
 describe('AccountPage — connexions et compte sans mot de passe (MSW)', () => {
-  const server = setupServer();
+  const server = setupServer(activeSessionsHandler());
 
   beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   beforeEach(() => {

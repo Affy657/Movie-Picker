@@ -9,6 +9,9 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoAuthTicketStore : ITicketStore
 {
+    public const int MaxUserAgentLength = 512;
+    public static readonly TimeSpan LastSeenTouchInterval = TimeSpan.FromHours(1);
+
     private readonly TransactionalCollection<AuthSessionDocument> _collection;
 
     public MongoAuthTicketStore(MongoCollectionFactory collections)
@@ -16,7 +19,12 @@ public sealed class MongoAuthTicketStore : ITicketStore
         _collection = collections.GetCollection<AuthSessionDocument>("auth_sessions");
     }
 
-    public async Task<string> StoreAsync(AuthenticationTicket ticket)
+    public Task<string> StoreAsync(AuthenticationTicket ticket) => StoreAsync(ticket, userAgent: null);
+
+    public Task<string> StoreAsync(AuthenticationTicket ticket, HttpContext httpContext, CancellationToken cancellationToken) =>
+        StoreAsync(ticket, UserAgentOf(httpContext));
+
+    private async Task<string> StoreAsync(AuthenticationTicket ticket, string? userAgent)
     {
         var id = ObjectId.GenerateNewId().ToString();
         var now = DateTime.UtcNow;
@@ -27,7 +35,9 @@ public sealed class MongoAuthTicketStore : ITicketStore
             UserId = ticket.Principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty,
             Claims = ticket.Principal.Claims.Select(c => new StoredClaim { Type = c.Type, Value = c.Value }).ToList(),
             ExpiresAtUtc = expires,
-            CreatedAtUtc = now
+            CreatedAtUtc = now,
+            UserAgent = userAgent,
+            LastSeenAtUtc = userAgent is null ? null : now
         };
         await _collection.InsertOneAsync(doc);
         return id;
@@ -60,6 +70,8 @@ public sealed class MongoAuthTicketStore : ITicketStore
             return null;
         }
 
+        await TouchLastSeenAsync(doc);
+
         var identity = new ClaimsIdentity(
             doc.Claims.Select(c => new Claim(c.Type, c.Value)),
             CookieAuthenticationDefaults.AuthenticationScheme);
@@ -71,6 +83,24 @@ public sealed class MongoAuthTicketStore : ITicketStore
             IssuedUtc = SessionWindow.IssuedAt(createdAt, expiresAt)
         };
         return new AuthenticationTicket(principal, props, CookieAuthenticationDefaults.AuthenticationScheme);
+    }
+
+    private async Task TouchLastSeenAsync(AuthSessionDocument doc)
+    {
+        var now = DateTime.UtcNow;
+        if (doc.LastSeenAtUtc is { } lastSeen && now - lastSeen < LastSeenTouchInterval)
+            return;
+        await _collection.UpdateOneAsync(
+            x => x.Id == doc.Id,
+            Builders<AuthSessionDocument>.Update.Set(x => x.LastSeenAtUtc, now));
+    }
+
+    private static string? UserAgentOf(HttpContext httpContext)
+    {
+        var userAgent = httpContext.Request.Headers.UserAgent.ToString();
+        if (string.IsNullOrWhiteSpace(userAgent))
+            return null;
+        return userAgent.Length <= MaxUserAgentLength ? userAgent : userAgent[..MaxUserAgentLength];
     }
 
     public Task RemoveAsync(string key) =>
