@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Fixed
+
+- **Les sélections de films par thème et par plateforme ne tombent plus en erreur** : quand plusieurs sélections se mettent à jour en même temps, l’API étale ses appels à TMDB au lieu de se faire refuser, et réessaie une fois après un refus.
+
 ## [1.33.5] - 2026-11-26
 
 ### Changed

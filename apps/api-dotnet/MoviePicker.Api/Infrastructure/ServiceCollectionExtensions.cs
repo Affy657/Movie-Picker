@@ -395,7 +395,9 @@ public static class ServiceCollectionExtensions
         }
 
         services.AddTransient<TmdbAuthenticationHandler>();
+        services.AddSingleton(static _ => TmdbRequestBudget.Default());
         services.AddHttpClient(nameof(TmdbMovieSearch), static client => client.Timeout = Timeout.InfiniteTimeSpan)
+            .AddHttpMessageHandler(static sp => new TmdbThrottleHandler(sp.GetRequiredService<TmdbRequestBudget>()))
             .AddHttpMessageHandler(static sp => new RequestTimeoutHandler(TimeSpan.FromSeconds(
                 Math.Clamp(sp.GetRequiredService<IOptions<MoviePickerOptions>>().Value.TmdbHttpTimeoutSeconds, 1, 30))))
             .AddHttpMessageHandler<TmdbAuthenticationHandler>()
