@@ -697,7 +697,7 @@ describe('AuthProvider sign-in measure', () => {
   });
 
   it.each([
-    ['form', 'email'],
+    ['email', 'email'],
     ['google', 'google'],
   ])('counts a sign-in finished with a code under its first step (%s)', async (method, counted) => {
     vi.mocked(postTwoFactorVerify).mockResolvedValueOnce({

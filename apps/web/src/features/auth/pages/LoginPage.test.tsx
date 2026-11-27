@@ -279,7 +279,7 @@ describe('LoginPage (MSW)', () => {
         return apiJson<'TwoFactorLoginResponse'>({
           userId: 'u-login',
           displayName: 'Lee',
-          method: 'form',
+          method: 'email',
           usedBackupCode: false,
           backupCodesRemaining: 10,
         });
@@ -325,7 +325,7 @@ describe('LoginPage (MSW)', () => {
         return apiJson<'TwoFactorLoginResponse'>({
           userId: 'u-login',
           displayName: 'Lee',
-          method: 'form',
+          method: 'email',
           usedBackupCode: true,
           backupCodesRemaining: 2,
         });

@@ -68,8 +68,6 @@ interface TwoFactorCodeEntry {
   returnTo?: string;
 }
 
-const FORM_SIGN_IN_METHOD = 'form';
-
 interface EmailSignUp extends EmailSignIn {
   displayName: string;
 }
@@ -193,7 +191,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     onSuccess: (result, { returnTo }) => {
       setSignOutPending(false);
       track('user_logged_in', {
-        method: result.method === FORM_SIGN_IN_METHOD ? 'email' : result.method,
+        method: result.method,
         origin: entryOriginOf(returnTo),
       });
     },

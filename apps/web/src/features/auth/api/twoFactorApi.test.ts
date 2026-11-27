@@ -32,7 +32,7 @@ describe('twoFactorApi', () => {
     mockFetchApi.mockResolvedValue({
       userId: 'u1',
       displayName: 'Léa',
-      method: 'form',
+      method: 'email',
       usedBackupCode: false,
       backupCodesRemaining: 10,
     });
@@ -44,7 +44,7 @@ describe('twoFactorApi', () => {
       method: 'POST',
       body: { code: '123456' },
     });
-    expect(result.method).toBe('form');
+    expect(result.method).toBe('email');
     expect(hasSessionHint()).toBe(true);
   });
 
