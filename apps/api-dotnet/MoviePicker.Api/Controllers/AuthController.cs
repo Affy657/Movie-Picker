@@ -13,10 +13,12 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Application.UseCases.Auth.EmailVerification;
 using MoviePicker.Api.Application.UseCases.Auth.OAuth;
 using MoviePicker.Api.Application.UseCases.Auth.PasswordReset;
+using MoviePicker.Api.Application.UseCases.Auth.TwoFactor;
 using MoviePicker.Api.Application.UseCases.UsageCounts;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain;
@@ -104,12 +106,42 @@ public sealed class AuthController : ControllerBase
         [FromBody] LoginRequest request,
         [FromServices] ILoginUserHandler handler,
         [FromServices] IUsageRecorder usage,
+        [FromServices] ISecretSealer sealer,
         [FromServices] TimeProvider clock,
         CancellationToken ct)
     {
         var result = await handler.HandleAsync(request, ct);
+        if (result.TwoFactorRequired)
+        {
+            var challenge = TwoFactorChallenge.New(result.UserId, UsageCount.FormMethod, ReturnToPolicy.Sanitize(request.ReturnTo));
+            TwoFactorChallengeCookie.Issue(HttpContext, challenge, sealer, clock.GetUtcNow());
+            return Ok(new LoginResponse { TwoFactorRequired = true });
+        }
+
         await SignInAsync(result.UserId, result.DisplayName, clock);
         await usage.RecordAsync(UsageCount.LoggedIn(UsageCount.FormMethod, EntryOrigin.Of(request.ReturnTo)), ct);
+        return Ok(result);
+    }
+
+    [HttpPost("two-factor/verify")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthLoginPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.AuthLoginPolicy)]
+    [ProducesResponseType(typeof(TwoFactorLoginResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> VerifyTwoFactor(
+        [FromBody] TwoFactorCodeRequest request,
+        [FromServices] IVerifyTwoFactorLoginHandler handler,
+        [FromServices] IUsageRecorder usage,
+        [FromServices] ISecretSealer sealer,
+        [FromServices] TimeProvider clock,
+        CancellationToken ct)
+    {
+        var challenge = TwoFactorChallengeCookie.Read(HttpContext, sealer) ?? throw Errors.TwoFactorChallengeExpired();
+        var result = await handler.HandleAsync(challenge, request.Code, ct);
+        TwoFactorChallengeCookie.Clear(HttpContext);
+        await SignInAsync(result.UserId, result.DisplayName, clock);
+        await usage.RecordAsync(UsageCount.LoggedIn(challenge.Method, EntryOrigin.Of(challenge.ReturnTo)), ct);
         return Ok(result);
     }
 
@@ -176,6 +208,7 @@ public sealed class AuthController : ControllerBase
         [FromServices] IUsageRecorder usage,
         [FromServices] OAuthProviderCatalog catalog,
         [FromServices] IOptions<MoviePickerOptions> options,
+        [FromServices] ISecretSealer sealer,
         [FromServices] TimeProvider clock,
         [FromServices] ILogger<AuthController> logger,
         CancellationToken ct)
@@ -234,6 +267,20 @@ public sealed class AuthController : ControllerBase
                 _ => "email_not_verified"
             };
             return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (FrontRoutes.OAuthErrorQueryParam, errorCode), (FrontRoutes.ReturnToQueryParam, returnTo)));
+        }
+
+        if (loginOutcome.User.TwoFactor is not null)
+        {
+            TwoFactorChallengeCookie.Issue(
+                HttpContext,
+                TwoFactorChallenge.New(loginOutcome.User.Id, knownProvider, returnTo),
+                sealer,
+                clock.GetUtcNow());
+            return Redirect(BuildFrontUrl(
+                webBase,
+                FrontLoginPath,
+                (FrontRoutes.TwoFactorQueryParam, FrontRoutes.TwoFactorRequiredValue),
+                (FrontRoutes.ReturnToQueryParam, returnTo)));
         }
 
         await SignInAsync(loginOutcome.User.Id, loginOutcome.User.DisplayName, clock);

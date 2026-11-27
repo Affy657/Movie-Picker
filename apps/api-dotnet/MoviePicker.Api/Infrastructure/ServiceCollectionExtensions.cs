@@ -12,6 +12,7 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
 using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Application.UseCases.Auth.EmailVerification;
+using MoviePicker.Api.Application.UseCases.Auth.TwoFactor;
 using MoviePicker.Api.Application.UseCases.EventLive;
 using MoviePicker.Api.Application.UseCases.FinishedEvents;
 using MoviePicker.Api.Application.UseCases.FriendGroups;
@@ -100,6 +101,7 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
+        services.AddSingleton<ISecretSealer, DataProtectionSecretSealer>();
         services.AddEmailSender(configuration, environment);
         services
             .AddHttpClient(WebPushSender.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(15))
@@ -457,6 +459,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IWinnerAnnouncer, WinnerAnnouncer>();
         services.AddScoped<IWinnerRuntimes, TmdbWinnerRuntimes>();
         services.AddScoped<IWheelWinnerAnnouncement, WheelWinnerAnnouncement>();
+        services.AddScoped<TwoFactorCodeCheck>();
 
         var handlerNamespace = "MoviePicker.Api.Application.UseCases";
         var types = typeof(ServiceCollectionExtensions).Assembly.GetTypes()
