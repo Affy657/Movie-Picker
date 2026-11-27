@@ -3017,7 +3017,7 @@ export const en: Locale = {
       'Adrien Morand, publisher of Movie Picker, is the controller of your data. You can reach him at {{email}}.',
     privacyDataBody: 'Movie Picker processes four families of data:',
     privacyDataTechnical:
-      'Technical data: IP address, date, requested address and account identifier of each request the API receives, in its logs, and error reports (see “Error tracking”).',
+      'Technical data: IP address, date, requested address and account identifier of each request the API receives, in its logs, error reports (see “Error tracking”) and, for each device signed in to your account, the browser and system reported by that browser, the sign-in date and the last activity, kept until that device is logged out so you can see your signed-in devices.',
     privacyDataAccount:
       'Account: email, nickname, public handle, profile photo if you have one, hashed password, or an identity linked via Google/GitHub.',
     privacyDataUsage:

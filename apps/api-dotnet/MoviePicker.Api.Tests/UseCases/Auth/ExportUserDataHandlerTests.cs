@@ -1,4 +1,7 @@
+using Moq;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Auth;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
@@ -37,6 +40,7 @@ public sealed class ExportUserDataHandlerTests
         public InMemoryAvatarPhotoRepository AvatarPhotos { get; } = new();
         public InMemoryBannerPhotoRepository BannerPhotos { get; } = new();
         public InMemoryMovieRepository Movies { get; } = new();
+        public List<StoredAuthSession> Sessions { get; } = [];
 
         public ExportUserDataHandler CreateHandler() =>
             new(
@@ -57,7 +61,16 @@ public sealed class ExportUserDataHandlerTests
                 AvatarPhotos,
                 BannerPhotos,
                 Movies,
+                SessionDirectory(),
                 new FakeTimeProvider(TestEpoch));
+
+        private IAuthSessionDirectory SessionDirectory()
+        {
+            var directory = new Mock<IAuthSessionDirectory>();
+            directory.Setup(d => d.ListActiveForUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(() => Sessions);
+            return directory.Object;
+        }
     }
 
     [Fact]
@@ -209,6 +222,37 @@ public sealed class ExportUserDataHandlerTests
 
         var push = Assert.Single(export.PushSubscriptions);
         Assert.Equal("https://push.example/abc", push.Endpoint);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ExportsTheSignedInDevices()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User { Email = "devices@example.com", Handle = "devices" });
+        const string iphoneSafari =
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Mobile/15E148 Safari/604.1";
+        f.Sessions.Add(new StoredAuthSession("key-phone", iphoneSafari, TestEpoch.AddDays(-3), TestEpoch.AddHours(-2)));
+        f.Sessions.Add(new StoredAuthSession("key-legacy", null, TestEpoch.AddDays(-40), null));
+
+        var export = await f.CreateHandler().HandleAsync(user.Id);
+
+        Assert.Collection(
+            export.SignedInDevices,
+            phone =>
+            {
+                Assert.Equal("Safari", phone.Browser);
+                Assert.Equal("iOS", phone.OperatingSystem);
+                Assert.Equal(DeviceKind.Phone, phone.DeviceKind);
+                Assert.Equal(iphoneSafari, phone.UserAgent);
+                Assert.Equal(TestEpoch.AddDays(-3), phone.SignedInAt);
+                Assert.Equal(TestEpoch.AddHours(-2), phone.LastActiveAt);
+            },
+            legacy =>
+            {
+                Assert.Equal(DeviceKind.Unknown, legacy.DeviceKind);
+                Assert.Null(legacy.UserAgent);
+                Assert.Null(legacy.LastActiveAt);
+            });
     }
 
     [Fact]

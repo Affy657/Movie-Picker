@@ -3056,7 +3056,7 @@ export const fr = {
       'Adrien Morand, éditeur de Movie Picker, est responsable du traitement de vos données. Vous pouvez le joindre à {{email}}.',
     privacyDataBody: 'Movie Picker traite quatre familles de données :',
     privacyDataTechnical:
-      'Données techniques : adresse IP, date, adresse demandée et identifiant de compte de chaque requête reçue par l’API, dans ses journaux, et rapports d’erreur (voir « Suivi des erreurs »).',
+      'Données techniques : adresse IP, date, adresse demandée et identifiant de compte de chaque requête reçue par l’API, dans ses journaux, rapports d’erreur (voir « Suivi des erreurs ») et, pour chaque appareil connecté à votre compte, le navigateur et le système annoncés par ce navigateur, la date de connexion et la dernière activité, gardés jusqu’à sa déconnexion pour vous montrer vos appareils connectés.',
     privacyDataAccount:
       'Compte : e-mail, nom affiché, pseudo public, photo de profil si vous en avez une, mot de passe (haché) ou identité liée via Google/GitHub.',
     privacyDataUsage:

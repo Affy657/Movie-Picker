@@ -13220,6 +13220,16 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
+        ExportedSignedInDevice: {
+            browser?: string | null;
+            operatingSystem?: string | null;
+            deviceKind: components["schemas"]["DeviceKind"];
+            userAgent?: string | null;
+            /** Format: date-time */
+            signedInAt: string;
+            /** Format: date-time */
+            lastActiveAt?: string | null;
+        };
         ExportedVote: {
             movieId: string;
             /** Format: int32 */
@@ -14562,6 +14572,7 @@ export interface components {
             createdEvents: components["schemas"]["ExportedCreatedEvent"][];
             participations: components["schemas"]["ExportedParticipation"][];
             pushSubscriptions: components["schemas"]["ExportedPushSubscription"][];
+            signedInDevices: components["schemas"]["ExportedSignedInDevice"][];
             watchlist: components["schemas"]["ExportedWatchlistItem"][];
             movieLists: components["schemas"]["ExportedMovieList"][];
             joinedMovieLists: components["schemas"]["ExportedJoinedMovieList"][];

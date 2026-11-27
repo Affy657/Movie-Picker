@@ -1,3 +1,4 @@
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.DTOs;
@@ -12,6 +13,7 @@ public sealed record UserDataExportResponse
     public IReadOnlyList<ExportedCreatedEvent> CreatedEvents { get; init; } = Array.Empty<ExportedCreatedEvent>();
     public IReadOnlyList<ExportedParticipation> Participations { get; init; } = Array.Empty<ExportedParticipation>();
     public IReadOnlyList<ExportedPushSubscription> PushSubscriptions { get; init; } = Array.Empty<ExportedPushSubscription>();
+    public IReadOnlyList<ExportedSignedInDevice> SignedInDevices { get; init; } = Array.Empty<ExportedSignedInDevice>();
     public IReadOnlyList<ExportedWatchlistItem> Watchlist { get; init; } = Array.Empty<ExportedWatchlistItem>();
     public IReadOnlyList<ExportedMovieList> MovieLists { get; init; } = Array.Empty<ExportedMovieList>();
     public IReadOnlyList<ExportedJoinedMovieList> JoinedMovieLists { get; init; } = Array.Empty<ExportedJoinedMovieList>();
@@ -179,6 +181,16 @@ public sealed record ExportedPushSubscription
 {
     public string Endpoint { get; init; } = string.Empty;
     public DateTimeOffset CreatedAt { get; init; }
+}
+
+public sealed record ExportedSignedInDevice
+{
+    public string? Browser { get; init; }
+    public string? OperatingSystem { get; init; }
+    public DeviceKind DeviceKind { get; init; }
+    public string? UserAgent { get; init; }
+    public DateTimeOffset SignedInAt { get; init; }
+    public DateTimeOffset? LastActiveAt { get; init; }
 }
 
 public sealed record ExportedFavorite

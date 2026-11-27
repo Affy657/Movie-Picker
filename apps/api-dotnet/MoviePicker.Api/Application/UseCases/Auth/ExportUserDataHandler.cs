@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -26,6 +27,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
     private readonly IAvatarPhotoRepository _avatarPhotos;
     private readonly IBannerPhotoRepository _bannerPhotos;
     private readonly IMovieRepository _movies;
+    private readonly IAuthSessionDirectory _sessions;
     private readonly TimeProvider _clock;
 
     public ExportUserDataHandler(
@@ -46,6 +48,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         IAvatarPhotoRepository avatarPhotos,
         IBannerPhotoRepository bannerPhotos,
         IMovieRepository movies,
+        IAuthSessionDirectory sessions,
         TimeProvider clock)
     {
         _users = users;
@@ -65,6 +68,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         _avatarPhotos = avatarPhotos;
         _bannerPhotos = bannerPhotos;
         _movies = movies;
+        _sessions = sessions;
         _clock = clock;
     }
 
@@ -87,6 +91,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         var ratings = await _ratings.ListByParticipantIdsAsync(participantIds, ct);
         var proposedMovies = await _movies.ListByParticipantIdsAsync(participantIds, ct);
         var pushSubscriptions = await _pushSubscriptions.ListByUserIdAsync(userId, ct);
+        var sessions = await _sessions.ListActiveForUserAsync(userId, ct);
 
         var participationEventIds = participations.Select(p => p.EventId).Distinct().ToList();
         var participationEvents = await _events.ListByIdsAsync(participationEventIds, ct);
@@ -142,6 +147,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
             PushSubscriptions = pushSubscriptions
                 .Select(s => new ExportedPushSubscription { Endpoint = s.Endpoint, CreatedAt = s.CreatedAt })
                 .ToList(),
+            SignedInDevices = sessions.Select(MapSignedInDevice).ToList(),
             Watchlist = watchlist.Select(MapWatchlistItem).ToList(),
             MovieLists = movieLists.Select(MapMovieList).ToList(),
             JoinedMovieLists = joinedLists
@@ -215,6 +221,20 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         return (await _users.ListCardsByIdsAsync(ids, ct))
             .DistinctBy(card => card.Id, StringComparer.Ordinal)
             .ToDictionary(card => card.Id, card => card.DisplayName, StringComparer.Ordinal);
+    }
+
+    private static ExportedSignedInDevice MapSignedInDevice(StoredAuthSession session)
+    {
+        var device = UserAgentDevice.Parse(session.UserAgent);
+        return new ExportedSignedInDevice
+        {
+            Browser = device.Browser,
+            OperatingSystem = device.OperatingSystem,
+            DeviceKind = device.Kind,
+            UserAgent = session.UserAgent,
+            SignedInAt = session.CreatedAt,
+            LastActiveAt = session.LastSeenAt
+        };
     }
 
     private static ExportedWatchlistItem MapWatchlistItem(WatchlistItem item) => new()
