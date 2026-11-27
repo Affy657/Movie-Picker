@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Double authentification** : dans Réglages, Compte et sécurité, vous pouvez demander un code à six chiffres, généré par une application d’authentification, à chaque nouvelle connexion, avec mot de passe comme avec Google ou GitHub. Dix codes de secours, à usage unique, prennent le relais sans téléphone.
+
 ### Changed
 
 - **Le dossier technique montre ce qui vient ensuite** : la frise liste, dans l’ordre, les douze améliorations prévues, du statut du service au bilan de l’année.

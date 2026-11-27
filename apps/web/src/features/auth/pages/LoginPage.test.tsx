@@ -56,7 +56,11 @@ describe('LoginPage (MSW)', () => {
       ),
       http.post(`${TEST_API_V1}/auth/login`, async () => {
         sessionActive = true;
-        return apiJson<'LoginResponse'>({ userId: 'u1', displayName: 'Alice' });
+        return apiJson<'LoginResponse'>({
+          userId: 'u1',
+          displayName: 'Alice',
+          twoFactorRequired: false,
+        });
       })
     );
 
@@ -89,7 +93,11 @@ describe('LoginPage (MSW)', () => {
       http.post(`${TEST_API_V1}/auth/login`, async ({ request }) => {
         body = await request.json();
         sessionActive = true;
-        return apiJson<'LoginResponse'>({ userId: 'u1', displayName: 'Alice' });
+        return apiJson<'LoginResponse'>({
+          userId: 'u1',
+          displayName: 'Alice',
+          twoFactorRequired: false,
+        });
       })
     );
 
@@ -126,7 +134,11 @@ describe('LoginPage (MSW)', () => {
         expect(body.email).toBe('dev@test.local');
         expect(body.password).toBe('DevTest123!');
         sessionActive = true;
-        return apiJson<'LoginResponse'>({ userId: 'u1', displayName: 'Alice' });
+        return apiJson<'LoginResponse'>({
+          userId: 'u1',
+          displayName: 'Alice',
+          twoFactorRequired: false,
+        });
       })
     );
 
@@ -193,7 +205,10 @@ describe('LoginPage (MSW)', () => {
     server.use(
       http.post(`${TEST_API_V1}/auth/login`, () => {
         loginPosts += 1;
-        return apiJson<'LoginResponse'>({ userId: 'u1', displayName: 'Alice' }, { status: 200 });
+        return apiJson<'LoginResponse'>(
+          { userId: 'u1', displayName: 'Alice', twoFactorRequired: false },
+          { status: 200 }
+        );
       })
     );
     renderLogin();
@@ -228,5 +243,128 @@ describe('LoginPage (MSW)', () => {
     expect(
       await screen.findByText(/adresse e-mail de ce compte n’est pas vérifiée/i)
     ).toBeInTheDocument();
+  });
+  describe('two-factor code step', () => {
+    const signedInProfile = () =>
+      apiJson<'UserProfileResponse'>(buildUserProfile({ userId: 'u-login', displayName: 'Lee' }));
+
+    function serveTwoFactorAccount(verify: Parameters<typeof http.post>[1]) {
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () =>
+          sessionActive ? signedInProfile() : apiErrorJson(401, 'unauthorized')
+        ),
+        http.get(`${TEST_API_V1}/auth/oauth/providers`, () =>
+          apiJson<'OAuthProvidersResponse'>({ providers: [] })
+        ),
+        http.post(`${TEST_API_V1}/auth/login`, () =>
+          apiJson<'LoginResponse'>({ userId: '', displayName: '', twoFactorRequired: true })
+        ),
+        http.post(`${TEST_API_V1}/auth/two-factor/verify`, verify)
+      );
+    }
+
+    async function signInWithPassword(user: ReturnType<typeof userEvent.setup>) {
+      await user.type(screen.getByLabelText(/^e-mail$/i), 'lee@test.local');
+      await user.type(screen.getByLabelText(/^mot de passe$/i), 'abcd1234');
+      await user.click(screen.getByRole('button', { name: /^se connecter$/i }));
+      await screen.findByRole('heading', { name: 'Code de vérification' });
+    }
+
+    it('asks for the app code after the password, then opens the session', async () => {
+      const user = userEvent.setup();
+      let sentCode: unknown;
+      serveTwoFactorAccount(async ({ request }) => {
+        sentCode = ((await request.json()) as { code: string }).code;
+        sessionActive = true;
+        return apiJson<'TwoFactorLoginResponse'>({
+          userId: 'u-login',
+          displayName: 'Lee',
+          method: 'form',
+          usedBackupCode: false,
+          backupCodesRemaining: 10,
+        });
+      });
+      renderLogin('/login?returnTo=%2F');
+
+      await signInWithPassword(user);
+      await user.type(screen.getByLabelText('Code à six chiffres'), '123 456');
+      await user.click(screen.getByRole('button', { name: 'Vérifier' }));
+
+      expect(await screen.findByRole('heading', { name: 'Accueil test' })).toBeInTheDocument();
+      expect(sentCode).toBe('123 456');
+    });
+
+    it('says the code does not match and stays on the code step', async () => {
+      const user = userEvent.setup();
+      serveTwoFactorAccount(() => apiErrorJson(400, 'two_factor_code_invalid'));
+      renderLogin();
+
+      await signInWithPassword(user);
+      await user.type(screen.getByLabelText('Code à six chiffres'), '000000');
+      await user.click(screen.getByRole('button', { name: 'Vérifier' }));
+
+      expect(await screen.findByRole('alert')).toHaveTextContent('Ce code ne correspond pas.');
+      expect(screen.getByLabelText('Code à six chiffres')).toBeInTheDocument();
+    });
+
+    it('asks for the code before sending anything when the field is empty', async () => {
+      const user = userEvent.setup();
+      serveTwoFactorAccount(() => apiErrorJson(500, 'should_not_be_called'));
+      renderLogin();
+
+      await signInWithPassword(user);
+      await user.click(screen.getByRole('button', { name: 'Vérifier' }));
+
+      expect(await screen.findByText('Saisissez le code.')).toBeInTheDocument();
+    });
+
+    it('switches to a backup code and tells how many are left', async () => {
+      const user = userEvent.setup();
+      serveTwoFactorAccount(() => {
+        sessionActive = true;
+        return apiJson<'TwoFactorLoginResponse'>({
+          userId: 'u-login',
+          displayName: 'Lee',
+          method: 'form',
+          usedBackupCode: true,
+          backupCodesRemaining: 2,
+        });
+      });
+      renderLogin('/login?returnTo=%2F');
+
+      await signInWithPassword(user);
+      await user.click(screen.getByRole('button', { name: 'Utiliser un code de secours' }));
+      await user.type(screen.getByLabelText('Code de secours'), '4F7K-9QMB');
+      await user.click(screen.getByRole('button', { name: 'Vérifier' }));
+
+      expect(await screen.findByText(/Il vous reste 2 codes de secours/)).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Continuer' }));
+      expect(await screen.findByRole('heading', { name: 'Accueil test' })).toBeInTheDocument();
+    });
+
+    it('opens on the code step when Google or GitHub sent the visitor back for it', async () => {
+      serveTwoFactorAccount(() => apiErrorJson(500, 'unused'));
+
+      renderLogin('/login?twoFactor=required&returnTo=%2Fe%2Fabc');
+
+      expect(
+        await screen.findByRole('heading', { name: 'Code de vérification' })
+      ).toBeInTheDocument();
+      expect(screen.queryByLabelText(/^mot de passe$/i)).not.toBeInTheDocument();
+    });
+
+    it('leads back to the password once the request has expired', async () => {
+      const user = userEvent.setup();
+      serveTwoFactorAccount(() => apiErrorJson(400, 'two_factor_challenge_expired'));
+      renderLogin();
+
+      await signInWithPassword(user);
+      await user.type(screen.getByLabelText('Code à six chiffres'), '123456');
+      await user.click(screen.getByRole('button', { name: 'Vérifier' }));
+      await screen.findByText(/Le délai est dépassé/);
+      await user.click(screen.getByRole('button', { name: 'Revenir à la connexion' }));
+
+      expect(await screen.findByLabelText(/^mot de passe$/i)).toBeInTheDocument();
+    });
   });
 });

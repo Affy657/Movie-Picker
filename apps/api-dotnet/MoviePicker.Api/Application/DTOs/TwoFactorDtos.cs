@@ -39,6 +39,7 @@ public sealed class TwoFactorLoginResponse
 {
     public string UserId { get; init; } = string.Empty;
     public string DisplayName { get; init; } = string.Empty;
+    public string Method { get; init; } = string.Empty;
     public bool UsedBackupCode { get; init; }
     public int BackupCodesRemaining { get; init; }
 }

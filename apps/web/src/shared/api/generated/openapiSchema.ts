@@ -13412,6 +13412,8 @@ export interface components {
             accentColor: components["schemas"]["AccentColor"];
             avatarId: string;
             hasPassword: boolean;
+            /** Format: date-time */
+            twoFactorEnabledAt?: string | null;
             linkedProviders: ("google" | "github")[];
             notificationPreferences: {
                 [key: string]: boolean;
@@ -14788,6 +14790,7 @@ export interface components {
         TwoFactorLoginResponse: {
             userId: string;
             displayName: string;
+            method: string;
             usedBackupCode: boolean;
             /** Format: int32 */
             backupCodesRemaining: number;

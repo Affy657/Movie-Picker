@@ -23,6 +23,7 @@ public sealed class VerifyTwoFactorLoginHandlerTests
 
         Assert.Equal(TwoFactorTestKit.UserId, result.UserId);
         Assert.Equal("Léa", result.DisplayName);
+        Assert.Equal("form", result.Method);
         Assert.False(result.UsedBackupCode);
         Assert.Equal(Totp.StepAt(_kit.Clock.GetUtcNow()), (await _kit.StoredSettingsAsync())!.LastUsedStep);
         await Assert.ThrowsAsync<BadRequestException>(() => Verify().HandleAsync(Challenge("challenge-2"), _kit.CurrentCode()));
@@ -68,6 +69,7 @@ public sealed class VerifyTwoFactorLoginHandlerTests
         var result = await Verify().HandleAsync(Challenge(), string.Empty);
 
         Assert.Equal(TwoFactorTestKit.UserId, result.UserId);
+        Assert.Equal("form", result.Method);
     }
 
     [Fact]

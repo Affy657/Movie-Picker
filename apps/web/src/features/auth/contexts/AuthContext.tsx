@@ -15,8 +15,10 @@ import {
   postAuthLogin,
   postAuthLogout,
   postAuthRegister,
+  type LoginResult,
   type ProfilePatch,
 } from '@/features/auth/api/authApi';
+import { postTwoFactorVerify, type TwoFactorSignIn } from '@/features/auth/api/twoFactorApi';
 import {
   clearPendingSignOut,
   hasPendingSignOut,
@@ -42,7 +44,8 @@ type AuthContextValue = {
   sessionExpired: boolean;
   dismissSessionExpired: () => void;
   retryAuthCheck: () => void;
-  login: (email: string, password: string, returnTo?: string) => Promise<void>;
+  login: (email: string, password: string, returnTo?: string) => Promise<LoginResult>;
+  verifyTwoFactor: (code: string, returnTo?: string) => Promise<TwoFactorSignIn>;
   register: (
     email: string,
     password: string,
@@ -59,6 +62,13 @@ interface EmailSignIn {
   password: string;
   returnTo?: string;
 }
+
+interface TwoFactorCodeEntry {
+  code: string;
+  returnTo?: string;
+}
+
+const FORM_SIGN_IN_METHOD = 'form';
 
 interface EmailSignUp extends EmailSignIn {
   displayName: string;
@@ -163,12 +173,29 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
 
   const loginMutation = useMutation({
     mutationFn: async ({ email, password, returnTo }: EmailSignIn) => {
-      await postAuthLogin(email, password, returnTo);
-      await invalidateSession();
+      const result = await postAuthLogin(email, password, returnTo);
+      if (!result.twoFactorRequired) await invalidateSession();
+      return result;
     },
-    onSuccess: (_result, { returnTo }) => {
+    onSuccess: (result, { returnTo }) => {
+      if (result.twoFactorRequired) return;
       setSignOutPending(false);
       track('user_logged_in', { method: 'email', origin: entryOriginOf(returnTo) });
+    },
+  });
+
+  const twoFactorMutation = useMutation({
+    mutationFn: async ({ code }: TwoFactorCodeEntry) => {
+      const result = await postTwoFactorVerify(code);
+      await invalidateSession();
+      return result;
+    },
+    onSuccess: (result, { returnTo }) => {
+      setSignOutPending(false);
+      track('user_logged_in', {
+        method: result.method === FORM_SIGN_IN_METHOD ? 'email' : result.method,
+        origin: entryOriginOf(returnTo),
+      });
     },
   });
 
@@ -246,6 +273,11 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     [loginMutation]
   );
 
+  const verifyTwoFactor = useCallback(
+    (code: string, returnTo?: string) => twoFactorMutation.mutateAsync({ code, returnTo }),
+    [twoFactorMutation]
+  );
+
   const register = useCallback(
     (email: string, password: string, displayName: string, returnTo?: string) =>
       registerMutation.mutateAsync({ email, password, displayName, returnTo }),
@@ -269,6 +301,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       dismissSessionExpired,
       retryAuthCheck,
       login,
+      verifyTwoFactor,
       register,
       logout,
       endSession,
@@ -283,6 +316,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       dismissSessionExpired,
       retryAuthCheck,
       login,
+      verifyTwoFactor,
       register,
       logout,
       endSession,

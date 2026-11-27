@@ -31,7 +31,7 @@ public sealed class VerifyTwoFactorLoginHandler : IVerifyTwoFactorLoginHandler
 
         var user = await _users.GetByIdAsync(challenge.UserId, ct) ?? throw Errors.TwoFactorChallengeExpired();
         if (user.TwoFactor is null)
-            return new TwoFactorLoginResponse { UserId = user.Id, DisplayName = user.DisplayName };
+            return new TwoFactorLoginResponse { UserId = user.Id, DisplayName = user.DisplayName, Method = challenge.Method };
 
         var proof = await _codeCheck.RequireAsync(user, code, ct);
         await _users.UpdateAsync(user with { TwoFactor = proof.Settings }, ct);
@@ -39,6 +39,7 @@ public sealed class VerifyTwoFactorLoginHandler : IVerifyTwoFactorLoginHandler
         {
             UserId = user.Id,
             DisplayName = user.DisplayName,
+            Method = challenge.Method,
             UsedBackupCode = proof.UsedBackupCode,
             BackupCodesRemaining = proof.Settings.BackupCodeHashes.Count
         };
