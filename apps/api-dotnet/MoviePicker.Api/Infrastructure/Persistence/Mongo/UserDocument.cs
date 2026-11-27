@@ -33,6 +33,10 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public List<UnlinkedIdentityDocument>? UnlinkedIdentities { get; set; }
 
+    [BsonElement("twoFactor")]
+    [BsonIgnoreIfNull]
+    public TwoFactorDocument? TwoFactor { get; set; }
+
     [BsonElement("handle")]
     [BsonIgnoreIfNull]
     public string? Handle { get; set; }
@@ -302,4 +306,20 @@ public sealed class AvatarPhotoDocument
 
     [BsonElement("updatedAt")]
     public DateTime UpdatedAt { get; set; }
+}
+
+[BsonIgnoreExtraElements]
+public sealed class TwoFactorDocument
+{
+    [BsonElement("secret")]
+    public string ProtectedSecret { get; set; } = string.Empty;
+
+    [BsonElement("enabledAt")]
+    public DateTime EnabledAt { get; set; }
+
+    [BsonElement("lastUsedStep")]
+    public long LastUsedStep { get; set; }
+
+    [BsonElement("backupCodeHashes")]
+    public List<string> BackupCodeHashes { get; set; } = [];
 }

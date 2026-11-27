@@ -83,6 +83,7 @@ public sealed record ExportedProfile
     public AccentColor AccentColor { get; init; }
     public string AvatarId { get; init; } = string.Empty;
     public bool HasPassword { get; init; }
+    public DateTimeOffset? TwoFactorEnabledAt { get; init; }
     public IReadOnlyList<string> LinkedProviders { get; init; } = Array.Empty<string>();
     public IReadOnlyDictionary<string, bool> NotificationPreferences { get; init; } =
         new Dictionary<string, bool>();

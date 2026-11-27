@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -12,12 +13,14 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Application.UseCases.Auth.OAuth;
 using MoviePicker.Api.Application.UseCases.Auth.PasswordReset;
+using MoviePicker.Api.Application.UseCases.Auth.TwoFactor;
 using MoviePicker.Api.Application.UseCases.UsageCounts;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Controllers;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Infrastructure.Security;
 using MoviePicker.Api.Infrastructure.Web;
 using Xunit;
 
@@ -30,6 +33,8 @@ public sealed class AuthControllerTests
     private static readonly DateTimeOffset Now = new(2026, 9, 23, 20, 0, 0, TimeSpan.Zero);
 
     private static readonly TimeProvider Clock = new FixedClock(Now);
+
+    private static readonly DataProtectionSecretSealer Sealer = new(new EphemeralDataProtectionProvider(), Clock);
 
     private sealed class FixedClock(DateTimeOffset now) : TimeProvider
     {
@@ -103,6 +108,7 @@ public sealed class AuthControllerTests
             Mock.Of<IUsageRecorder>(),
             GoogleEnabled(),
             Options(),
+            Sealer,
             Clock,
             NullLogger<AuthController>.Instance,
             CancellationToken.None);
@@ -127,7 +133,7 @@ public sealed class AuthControllerTests
         handler.Setup(h => h.HandleAsync(It.IsAny<LoginRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new LoginResponse { UserId = "u1", DisplayName = "Neo" });
 
-        var result = await Controller(null).Login(new LoginRequest(), handler.Object, Mock.Of<IUsageRecorder>(), Clock, CancellationToken.None);
+        var result = await Controller(null).Login(new LoginRequest(), handler.Object, Mock.Of<IUsageRecorder>(), Sealer, Clock, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
     }
@@ -150,11 +156,45 @@ public sealed class AuthControllerTests
             .Returns(Task.CompletedTask);
         var controller = new AuthController().WithContext(authentication: authentication.Object);
 
-        await controller.Login(new LoginRequest(), handler.Object, Mock.Of<IUsageRecorder>(), Clock, CancellationToken.None);
+        await controller.Login(new LoginRequest(), handler.Object, Mock.Of<IUsageRecorder>(), Sealer, Clock, CancellationToken.None);
 
         Assert.NotNull(signedIn);
         Assert.True(RecentAuthentication.IsRecent(signedIn, Now + RecentAuthentication.Window));
         Assert.False(RecentAuthentication.IsRecent(signedIn, Now + RecentAuthentication.Window + TimeSpan.FromSeconds(1)));
+    }
+
+    [Fact]
+    public async Task Login_AccountWithTwoFactor_SetsAChallengeInsteadOfASession()
+    {
+        var handler = new Mock<ILoginUserHandler>();
+        handler.Setup(h => h.HandleAsync(It.IsAny<LoginRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new LoginResponse { UserId = "u1", DisplayName = "Neo", TwoFactorRequired = true });
+        var authentication = new Mock<IAuthenticationService>();
+        var usage = new Mock<IUsageRecorder>();
+        var controller = new AuthController().WithContext(authentication: authentication.Object);
+
+        var result = await controller.Login(
+            new LoginRequest { ReturnTo = "/e/abc123" }, handler.Object, usage.Object, Sealer, Clock, CancellationToken.None);
+
+        var body = Assert.IsType<LoginResponse>(Assert.IsType<OkObjectResult>(result).Value);
+        Assert.True(body.TwoFactorRequired);
+        Assert.Equal(string.Empty, body.UserId);
+        authentication.Verify(
+            a => a.SignInAsync(It.IsAny<HttpContext>(), It.IsAny<string?>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<AuthenticationProperties?>()),
+            Times.Never);
+        usage.Verify(x => x.RecordAsync(It.IsAny<UsageCount>(), It.IsAny<CancellationToken>()), Times.Never);
+        var challenge = ChallengeSetOn(controller);
+        Assert.Equal(new TwoFactorChallenge(challenge.Id, "u1", UsageCount.FormMethod, "/e/abc123"), challenge);
+    }
+
+    private static TwoFactorChallenge ChallengeSetOn(ControllerBase controller)
+    {
+        var header = controller.HttpContext.Response.Headers.SetCookie.Single(value =>
+            value!.StartsWith(AuthConstants.TwoFactorChallengeCookieName + "=", StringComparison.Ordinal))!;
+        Assert.Contains("httponly", header, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("path=" + TwoFactorChallengeCookie.Path, header, StringComparison.OrdinalIgnoreCase);
+        var value = Uri.UnescapeDataString(header.Split(';')[0][(AuthConstants.TwoFactorChallengeCookieName.Length + 1)..]);
+        return TwoFactorChallenge.TryOpen(Sealer, value)!;
     }
 
     private static void VerifyCounted(Mock<IUsageRecorder> usage, string metric, string variant) =>
@@ -204,7 +244,7 @@ public sealed class AuthControllerTests
         var usage = new Mock<IUsageRecorder>();
 
         await Controller(null).Login(
-            new LoginRequest { ReturnTo = "/r/recap1" }, handler.Object, usage.Object, Clock, CancellationToken.None);
+            new LoginRequest { ReturnTo = "/r/recap1" }, handler.Object, usage.Object, Sealer, Clock, CancellationToken.None);
 
         VerifyCounted(usage, UsageCount.UserLoggedInMetric, "email.recap");
     }
@@ -218,7 +258,7 @@ public sealed class AuthControllerTests
         var usage = new Mock<IUsageRecorder>();
 
         await Assert.ThrowsAsync<UnauthorizedException>(() => Controller(null).Login(
-            new LoginRequest { ReturnTo = "/e/abc123" }, handler.Object, usage.Object, Clock, CancellationToken.None));
+            new LoginRequest { ReturnTo = "/e/abc123" }, handler.Object, usage.Object, Sealer, Clock, CancellationToken.None));
 
         usage.Verify(x => x.RecordAsync(It.IsAny<UsageCount>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -245,6 +285,7 @@ public sealed class AuthControllerTests
                 usage.Object,
                 GoogleAndGitHubEnabled(),
                 Options(),
+                Sealer,
                 Clock,
                 NullLogger<AuthController>.Instance,
                 CancellationToken.None);
@@ -277,6 +318,7 @@ public sealed class AuthControllerTests
                 usage.Object,
                 GoogleAndGitHubEnabled(),
                 Options(),
+                Sealer,
                 Clock,
                 NullLogger<AuthController>.Instance,
                 CancellationToken.None);
@@ -296,6 +338,7 @@ public sealed class AuthControllerTests
             usage.Object,
             GoogleEnabled(),
             Options(),
+            Sealer,
             Clock,
             NullLogger<AuthController>.Instance,
             CancellationToken.None);
@@ -425,6 +468,7 @@ public sealed class AuthControllerTests
                 Mock.Of<IUsageRecorder>(),
                 GoogleAndGitHubEnabled(),
                 Options(),
+                Sealer,
                 Clock,
                 NullLogger<AuthController>.Instance,
                 CancellationToken.None);
@@ -478,6 +522,7 @@ public sealed class AuthControllerTests
             Mock.Of<IUsageRecorder>(),
             GoogleEnabled(),
             Options(),
+            Sealer,
             Clock,
             NullLogger<AuthController>.Instance,
             CancellationToken.None);
@@ -523,6 +568,53 @@ public sealed class AuthControllerTests
 
         var redirect = Assert.IsType<RedirectResult>(result);
         Assert.Equal($"{WebBase}/login?oauthError=identity_unlinked&returnTo=%2F", redirect.Url);
+    }
+
+    [Fact]
+    public async Task OAuthCallback_AccountWithTwoFactor_AsksForTheCodeOnTheLoginPage()
+    {
+        var loginHandler = new Mock<IOAuthLoginHandler>();
+        loginHandler
+            .Setup(h => h.HandleAsync(It.IsAny<ExternalLoginInfo>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OAuthOutcome
+            {
+                Kind = OAuthOutcomeKind.SignedIn,
+                User = new User
+                {
+                    Id = "u1",
+                    Email = "neo@example.test",
+                    DisplayName = "Neo",
+                    TwoFactor = new TwoFactorSettings
+                    {
+                        ProtectedSecret = "sealed",
+                        EnabledAt = Now,
+                        LastUsedStep = 0,
+                        BackupCodeHashes = []
+                    }
+                }
+            });
+        var authentication = ExternalSignIn(returnTo: "/e/abc123");
+        var controller = new AuthController().WithContext(authentication: authentication.Object);
+
+        var result = await controller.OAuthCallback(
+            "google",
+            loginHandler.Object,
+            new Mock<IOAuthLinkHandler>().Object,
+            Mock.Of<IUsageRecorder>(),
+            GoogleEnabled(),
+            Options(),
+            Sealer,
+            Clock,
+            NullLogger<AuthController>.Instance,
+            CancellationToken.None);
+
+        var redirect = Assert.IsType<RedirectResult>(result);
+        Assert.Equal($"{WebBase}/login?twoFactor=required&returnTo=%2Fe%2Fabc123", redirect.Url);
+        authentication.Verify(
+            a => a.SignInAsync(It.IsAny<HttpContext>(), CookieAuthenticationDefaults.AuthenticationScheme, It.IsAny<ClaimsPrincipal>(), It.IsAny<AuthenticationProperties?>()),
+            Times.Never);
+        var challenge = ChallengeSetOn(controller);
+        Assert.Equal(new TwoFactorChallenge(challenge.Id, "u1", OAuthProviders.Google, "/e/abc123"), challenge);
     }
 
     [Fact]

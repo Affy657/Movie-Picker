@@ -34,16 +34,15 @@ Rien pour l'instant.
 
 ## ⏭️ Prochainement
 
-1. `M` **Double authentification (2FA/TOTP)** : code à six chiffres généré par une application d'authentification, activable en option dans les paramètres de compte.
-2. `M` **Sessions actives** : liste des appareils et navigateurs connectés dans la section « Connexions », avec révocation individuelle.
-3. `L` **Palette de commandes (Cmd+K)** : accès clavier global aux actions et à la navigation (création de soirée, changement de thème, pages de l'application), dans le même champ que la recherche de la barre de navigation.
-4. `L` **Passkeys (WebAuthn)** : connexion sans mot de passe via biométrie ou PIN de l'appareil, en complément de l'e-mail / mot de passe et des fournisseurs OAuth.
-5. `M` **Avertissements de contenu** : badges violence, horreur et 18+ sur les fiches films ; option hôte « masquer les films 18+ » pour les soirées en famille.
-6. `M` **Trigger warnings sur les fiches films** : avertissements précis (violence sexuelle, mort d'un animal, lumières clignotantes, suicide) tirés d'une base communautaire, sur la fiche et sur la carte du film tiré, masquables par compte. Prolonge les avertissements de contenu.
-7. `M` **Une liste pour chaque groupe** : chaque groupe a sa liste « À voir ensemble », que tous ses membres remplissent. Dans une soirée du groupe, proposer un film et la pioche partent d'abord de cette liste.
-8. `M` **Réactions rapides sur les films** : emojis (❤️ 🔥 😴…) posés sur une carte de film en complément des votes up/down, plus expressif, moins binaire.
-9. `L` **Sondage de disponibilité dans un groupe** : sur la page d'un groupe, un membre propose plusieurs créneaux et chacun coche ceux où il est libre. Le créneau retenu devient une soirée du groupe, annoncée à tous ses membres.
-10. `L` **Bilan de l'année** : en décembre, chaque membre et chaque groupe reçoit une page à partager qui résume son année : films vus ensemble, meilleure et pire note, qui a gagné le plus de tirages, le film qui a le plus divisé.
+1. `M` **Sessions actives** : liste des appareils et navigateurs connectés dans la section « Connexions », avec révocation individuelle.
+2. `L` **Palette de commandes (Cmd+K)** : accès clavier global aux actions et à la navigation (création de soirée, changement de thème, pages de l'application), dans le même champ que la recherche de la barre de navigation.
+3. `L` **Passkeys (WebAuthn)** : connexion sans mot de passe via biométrie ou PIN de l'appareil, en complément de l'e-mail / mot de passe et des fournisseurs OAuth.
+4. `M` **Avertissements de contenu** : badges violence, horreur et 18+ sur les fiches films ; option hôte « masquer les films 18+ » pour les soirées en famille.
+5. `M` **Trigger warnings sur les fiches films** : avertissements précis (violence sexuelle, mort d'un animal, lumières clignotantes, suicide) tirés d'une base communautaire, sur la fiche et sur la carte du film tiré, masquables par compte. Prolonge les avertissements de contenu.
+6. `M` **Une liste pour chaque groupe** : chaque groupe a sa liste « À voir ensemble », que tous ses membres remplissent. Dans une soirée du groupe, proposer un film et la pioche partent d'abord de cette liste.
+7. `M` **Réactions rapides sur les films** : emojis (❤️ 🔥 😴…) posés sur une carte de film en complément des votes up/down, plus expressif, moins binaire.
+8. `L` **Sondage de disponibilité dans un groupe** : sur la page d'un groupe, un membre propose plusieurs créneaux et chacun coche ceux où il est libre. Le créneau retenu devient une soirée du groupe, annoncée à tous ses membres.
+9. `L` **Bilan de l'année** : en décembre, chaque membre et chaque groupe reçoit une page à partager qui résume son année : films vus ensemble, meilleure et pire note, qui a gagné le plus de tirages, le film qui a le plus divisé.
 
 ---
 

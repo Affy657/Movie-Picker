@@ -7,6 +7,8 @@ import {
   OAUTH_LINKED_QUERY_PARAM,
   OAUTH_OUTCOME_QUERY_PARAM,
   OAUTH_PROVIDER_QUERY_PARAM,
+  TWO_FACTOR_QUERY_PARAM,
+  TWO_FACTOR_REQUIRED_VALUE,
 } from '@/features/auth/oauthQueryParams';
 import { RATE_QUERY_PARAM, ROUTES, withReturnTo } from './routes';
 
@@ -84,6 +86,8 @@ const routesOfTheWebApp = {
   OAuthLinkedQueryParam: OAUTH_LINKED_QUERY_PARAM,
   OAuthProviderQueryParam: OAUTH_PROVIDER_QUERY_PARAM,
   OAuthOutcomeQueryParam: OAUTH_OUTCOME_QUERY_PARAM,
+  TwoFactorQueryParam: TWO_FACTOR_QUERY_PARAM,
+  TwoFactorRequiredValue: TWO_FACTOR_REQUIRED_VALUE,
 };
 
 describe('front routes built by the API', () => {

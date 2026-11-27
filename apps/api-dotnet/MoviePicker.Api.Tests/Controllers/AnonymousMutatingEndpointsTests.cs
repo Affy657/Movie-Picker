@@ -22,7 +22,8 @@ public sealed class AnonymousMutatingEndpointsTests
         "AuthController.Login",
         "AuthController.Register",
         "AuthController.RequestPasswordReset",
-        "AuthController.VerifyPasswordReset"
+        "AuthController.VerifyPasswordReset",
+        "AuthController.VerifyTwoFactor"
     ];
 
     private static readonly string[] HostOnlyActions =

@@ -43,16 +43,20 @@ function boundedReturnTo(returnTo: string | undefined): string | undefined {
   return /[\uD800-\uDBFF]$/.test(bounded) ? bounded.slice(0, -1) : bounded;
 }
 
+export type LoginResult = { twoFactorRequired: boolean };
+
 export async function postAuthLogin(
   email: string,
   password: string,
   returnTo?: string
-): Promise<void> {
-  await fetchApi('/auth/login', {
+): Promise<LoginResult> {
+  const response = await fetchApi<ApiSchemas['LoginResponse'] | undefined>('/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password, returnTo: boundedReturnTo(returnTo) }),
   });
-  setSessionHint();
+  const twoFactorRequired = response?.twoFactorRequired === true;
+  if (!twoFactorRequired) setSessionHint();
+  return { twoFactorRequired };
 }
 
 export async function postAuthRegister(

@@ -153,6 +153,42 @@ public sealed class GetUserProfileHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_TwoFactorOn_SaysSoAndCountsTheBackupCodesLeft()
+    {
+        var user = new User
+        {
+            Id = "id1",
+            Email = "bob@example.com",
+            DisplayName = "Bob",
+            TwoFactor = new TwoFactorSettings
+            {
+                ProtectedSecret = "sealed",
+                EnabledAt = DateTimeOffset.UtcNow,
+                LastUsedStep = 0,
+                BackupCodeHashes = ["a", "b", "c"]
+            }
+        };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("id1", It.IsAny<CancellationToken>())).ReturnsAsync(user);
+
+        var res = await new GetUserProfileHandler(users.Object).HandleAsync("id1");
+
+        Assert.Equal((true, 3), (res.TwoFactorEnabled, res.BackupCodesRemaining));
+    }
+
+    [Fact]
+    public async Task HandleAsync_TwoFactorOff_SaysSoWithNoBackupCodes()
+    {
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("id1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = "id1", Email = "bob@example.com", DisplayName = "Bob" });
+
+        var res = await new GetUserProfileHandler(users.Object).HandleAsync("id1");
+
+        Assert.Equal((false, 0), (res.TwoFactorEnabled, res.BackupCodesRemaining));
+    }
+
+    [Fact]
     public async Task HandleAsync_NoPasswordWithLinkedIdentities_ReturnsHasPasswordFalseAndProviders()
     {
         var user = new User

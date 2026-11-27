@@ -1,0 +1,4 @@
+.codeInput {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-wider);
+}
