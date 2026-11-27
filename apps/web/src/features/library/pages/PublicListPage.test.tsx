@@ -355,7 +355,7 @@ describe('PublicListPage', () => {
     server.use(
       signedIn,
       http.post(`${TEST_API_V1}/auth/login`, () =>
-        apiJson<'LoginResponse'>({ userId: 'u1', displayName: 'Alice' })
+        apiJson<'LoginResponse'>({ userId: 'u1', displayName: 'Alice', twoFactorRequired: false })
       ),
       ...createWatchlistHandlers([]),
       ...createListsHandlers([]),

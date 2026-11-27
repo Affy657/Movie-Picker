@@ -8,8 +8,14 @@ import {
   DEV_QUICK_LOGIN_PASSWORD,
 } from '@/features/auth/devQuickLoginCredentials';
 import OAuthProviderButtons from '@/features/auth/components/OAuthProviderButtons';
+import TwoFactorLoginStep from '@/features/auth/components/TwoFactorLoginStep';
+import TwoFactorSignedInNotice from '@/features/auth/components/TwoFactorSignedInNotice';
 import { resolveOAuthErrorKey } from '@/features/auth/utils/oauthErrors';
-import { OAUTH_ERROR_QUERY_PARAM } from '@/features/auth/oauthQueryParams';
+import {
+  OAUTH_ERROR_QUERY_PARAM,
+  TWO_FACTOR_QUERY_PARAM,
+  TWO_FACTOR_REQUIRED_VALUE,
+} from '@/features/auth/oauthQueryParams';
 import { returnsToEvent } from '@/features/auth/utils/eventReturn';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
@@ -25,14 +31,21 @@ import { looksLikeEmail } from '@/features/auth/utils/authFormValidation';
 
 type LoginSubmitMode = 'form' | 'devQuick';
 
+type LoginStep = 'password' | 'code';
+
 type LoginFieldErrors = { email?: string; password?: string };
 
 export default function LoginPage() {
   const { t } = useTranslation();
   useNoindexPage(pageTitle(t('auth.login.title')), ROUTES.login, t('auth.login.seoDescription'));
   const navigate = useNavigate();
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const returnTo = safeReturnTo(params.get('returnTo'));
+  const [step, setStep] = useState<LoginStep>(() =>
+    params.get(TWO_FACTOR_QUERY_PARAM) === TWO_FACTOR_REQUIRED_VALUE ? 'code' : 'password'
+  );
+  const [verifyingCode, setVerifyingCode] = useState(false);
+  const [backupCodesLeft, setBackupCodesLeft] = useState<number | null>(null);
 
   const { login, user } = useAuth();
   const [email, setEmail] = useState('');
@@ -42,10 +55,13 @@ export default function LoginPage() {
 
   const loginAction = useCallback(
     async (mode: LoginSubmitMode) => {
-      if (mode === 'devQuick') {
-        await login(DEV_QUICK_LOGIN_EMAIL, DEV_QUICK_LOGIN_PASSWORD, returnTo);
-      } else {
-        await login(email.trim(), password, returnTo);
+      const result =
+        mode === 'devQuick'
+          ? await login(DEV_QUICK_LOGIN_EMAIL, DEV_QUICK_LOGIN_PASSWORD, returnTo)
+          : await login(email.trim(), password, returnTo);
+      if (result.twoFactorRequired) {
+        setStep('code');
+        return;
       }
       void navigate(returnTo, { replace: true });
     },
@@ -75,7 +91,44 @@ export default function LoginPage() {
     void submit('devQuick');
   };
 
-  if (user) return <Navigate to={returnTo} replace />;
+  const backToPassword = () => {
+    setStep('password');
+    setVerifyingCode(false);
+    setPassword('');
+    if (params.has(TWO_FACTOR_QUERY_PARAM)) {
+      const next = new URLSearchParams(params);
+      next.delete(TWO_FACTOR_QUERY_PARAM);
+      setParams(next, { replace: true });
+    }
+  };
+
+  const finishSignIn = () => void navigate(returnTo, { replace: true });
+
+  const handleCodeAccepted = (codesLeft: number | null) => {
+    if (codesLeft === null) finishSignIn();
+    else setBackupCodesLeft(codesLeft);
+  };
+
+  if (user && !verifyingCode) return <Navigate to={returnTo} replace />;
+
+  if (step === 'code') {
+    return (
+      <PageLayout className={authPageShellStyles.layout}>
+        <AuthPageShell title={t('auth.twoFactor.loginTitle')} returnTo={returnTo}>
+          {backupCodesLeft === null ? (
+            <TwoFactorLoginStep
+              returnTo={returnTo}
+              onVerifying={() => setVerifyingCode(true)}
+              onSignedIn={handleCodeAccepted}
+              onBack={backToPassword}
+            />
+          ) : (
+            <TwoFactorSignedInNotice codesLeft={backupCodesLeft} onContinue={finishSignIn} />
+          )}
+        </AuthPageShell>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout className={authPageShellStyles.layout}>

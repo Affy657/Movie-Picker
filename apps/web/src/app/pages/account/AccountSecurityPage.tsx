@@ -22,6 +22,7 @@ import Button from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import Field from '@/shared/components/Field';
+import TwoFactorRow from './twoFactor/TwoFactorRow';
 
 const PROVIDER_LABELS: Record<string, string> = { google: 'Google', github: 'GitHub' };
 const POST_PASSWORD_CHANGE_REDIRECT_MS = 4000;
@@ -493,6 +494,7 @@ export default function AccountSecurityPage({ user }: Readonly<{ user: UserProfi
         <EmailRow user={user} />
 
         <PasswordRow user={user} />
+        <TwoFactorRow user={user} />
         <DataExportRow />
         <LogoutRow />
       </Card>

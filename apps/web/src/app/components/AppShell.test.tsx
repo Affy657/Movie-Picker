@@ -164,7 +164,11 @@ describe('AppShell', () => {
       http.post(`${TEST_API_V1}/auth/login`, async ({ request }) => {
         body = await request.json();
         signedIn = true;
-        return apiJson<'LoginResponse'>({ userId: 'u1', displayName: 'Alice' });
+        return apiJson<'LoginResponse'>({
+          userId: 'u1',
+          displayName: 'Alice',
+          twoFactorRequired: false,
+        });
       })
     );
     const user = userEvent.setup();

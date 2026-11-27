@@ -28,6 +28,8 @@ export function buildUserProfile(overrides: Partial<UserProfile> = {}): UserProf
     letterboxdWatchlistCount: 0,
     letterboxdWatchedCount: 0,
     hasPassword: true,
+    twoFactorEnabled: false,
+    backupCodesRemaining: 0,
     linkedProviders: [],
     favorites: [],
     banner: null,
