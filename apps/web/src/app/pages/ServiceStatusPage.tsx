@@ -70,12 +70,13 @@ const COMPONENTS = [
   { key: 'database', Icon: Database },
 ] as const;
 
-function useClockTick(): void {
-  const [, setNow] = useState(() => Date.now());
+function useNow(): number {
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), CLOCK_TICK_MS);
     return () => clearInterval(timer);
   }, []);
+  return now;
 }
 
 function OverallIcon({ overall }: Readonly<{ overall: ServiceOverall }>) {
@@ -86,13 +87,13 @@ function OverallIcon({ overall }: Readonly<{ overall: ServiceOverall }>) {
 
 function useCheckedLabel(checkedAt: number, online: boolean, checking: boolean): string {
   const { t, locale } = useTranslation();
-  useClockTick();
+  const now = useNow();
   if (!checkedAt) {
     return checking && online ? t('serviceStatus.checking') : t('serviceStatus.neverChecked');
   }
   const when = formatRelativeTime(new Date(checkedAt).toISOString(), locale);
   if (!online) return t('serviceStatus.lastCheckedAt', { when });
-  if (Date.now() - checkedAt < JUST_NOW_MS) return t('serviceStatus.checkedJustNow');
+  if (now - checkedAt < JUST_NOW_MS) return t('serviceStatus.checkedJustNow');
   return t('serviceStatus.checkedAt', { when });
 }
 
