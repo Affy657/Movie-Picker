@@ -11,7 +11,7 @@
 #   EMAIL_PROVIDER           (required outside Development, must be "resend")
 #   RESEND_API_KEY           (required outside Development), on GCP: Secret Manager
 #   ASPNETCORE_ENVIRONMENT   (optional, defaults to Production)
-#   PORT                     (Cloud Run injects 8080; Kestrel listens on 8080 through ASPNETCORE_URLS)
+#   PORT                     (Cloud Run injects 8080; Kestrel listens on 8080 through ASPNETCORE_HTTP_PORTS)
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:fe0fd4e93bd2fbb47c883b7a6369e5c8d3db8bf01cdc5981f6ee35fbdf3ff4fb AS build
 WORKDIR /src
@@ -33,7 +33,7 @@ WORKDIR /app
 
 COPY --from=build /app/publish .
 
-ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_HTTP_PORTS=8080
 EXPOSE 8080
 
 USER $APP_UID
