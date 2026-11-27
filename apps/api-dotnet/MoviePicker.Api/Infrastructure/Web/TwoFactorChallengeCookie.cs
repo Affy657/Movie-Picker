@@ -6,28 +6,29 @@ namespace MoviePicker.Api.Infrastructure.Web;
 
 public static class TwoFactorChallengeCookie
 {
-    public const string Path = "/" + ApiRoutePrefix.V1 + "/auth";
+    public const string Path = "/";
 
     public static void Issue(HttpContext context, TwoFactorChallenge challenge, ISecretSealer sealer, DateTimeOffset now) =>
         context.Response.Cookies.Append(
             AuthConstants.TwoFactorChallengeCookieName,
             challenge.Seal(sealer, now),
-            Options(context, now + TwoFactorSealing.ChallengeLifetime));
+            Builder(context).Build(context, now));
 
     public static TwoFactorChallenge? Read(HttpContext context, ISecretSealer sealer) =>
         TwoFactorChallenge.TryOpen(sealer, context.Request.Cookies[AuthConstants.TwoFactorChallengeCookieName]);
 
     public static void Clear(HttpContext context) =>
-        context.Response.Cookies.Delete(AuthConstants.TwoFactorChallengeCookieName, Options(context, null));
+        context.Response.Cookies.Delete(AuthConstants.TwoFactorChallengeCookieName, Builder(context).Build(context));
 
-    private static CookieOptions Options(HttpContext context, DateTimeOffset? expires) =>
+    private static CookieBuilder Builder(HttpContext context) =>
         new()
         {
+            Name = AuthConstants.TwoFactorChallengeCookieName,
             HttpOnly = true,
-            Secure = context.Request.IsHttps || !IsDevelopment(context),
+            SecurePolicy = IsDevelopment(context) ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always,
             SameSite = SameSiteMode.Lax,
             Path = Path,
-            Expires = expires,
+            Expiration = TwoFactorSealing.ChallengeLifetime,
             IsEssential = true
         };
 
