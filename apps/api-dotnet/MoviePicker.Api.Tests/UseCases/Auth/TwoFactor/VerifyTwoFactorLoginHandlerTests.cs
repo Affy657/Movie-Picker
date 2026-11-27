@@ -1,4 +1,5 @@
 using MoviePicker.Api.Application.UseCases.Auth.TwoFactor;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Domain.TwoFactor;
 using Xunit;
@@ -12,7 +13,7 @@ public sealed class VerifyTwoFactorLoginHandlerTests
     private VerifyTwoFactorLoginHandler Verify() => new(_kit.Users, _kit.CodeCheck(), _kit.Counters, _kit.Clock);
 
     private static TwoFactorChallenge Challenge(string id = "challenge-1") =>
-        new(id, TwoFactorTestKit.UserId, "form", "/e/abc");
+        new(id, TwoFactorTestKit.UserId, UsageCount.FormMethod, "/e/abc");
 
     [Fact]
     public async Task HandleAsync_AppCode_SignsInAndBurnsTheStep()
@@ -23,7 +24,7 @@ public sealed class VerifyTwoFactorLoginHandlerTests
 
         Assert.Equal(TwoFactorTestKit.UserId, result.UserId);
         Assert.Equal("Léa", result.DisplayName);
-        Assert.Equal("form", result.Method);
+        Assert.Equal(UsageCount.FormMethod, result.Method);
         Assert.False(result.UsedBackupCode);
         Assert.Equal(Totp.StepAt(_kit.Clock.GetUtcNow()), (await _kit.StoredSettingsAsync())!.LastUsedStep);
         await Assert.ThrowsAsync<BadRequestException>(() => Verify().HandleAsync(Challenge("challenge-2"), _kit.CurrentCode()));
@@ -69,7 +70,7 @@ public sealed class VerifyTwoFactorLoginHandlerTests
         var result = await Verify().HandleAsync(Challenge(), string.Empty);
 
         Assert.Equal(TwoFactorTestKit.UserId, result.UserId);
-        Assert.Equal("form", result.Method);
+        Assert.Equal(UsageCount.FormMethod, result.Method);
     }
 
     [Fact]
