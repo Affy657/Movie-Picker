@@ -184,6 +184,31 @@ public sealed class MongoAuthTicketStoreTests : IClassFixture<MoviePickerApplica
     }
 
     [Fact]
+    public async Task RetrieveFromARequest_GivesASessionOpenedBeforeDevicesWereRecordedItsUserAgent()
+    {
+        var store = Store();
+        var key = await store.StoreAsync(TicketOf(ObjectId.GenerateNewId().ToString()));
+
+        Assert.NotNull(await store.RetrieveAsync(key, RequestFrom("Agent/2.0"), CancellationToken.None));
+
+        var doc = await Sessions().Find(d => d.Id == key).FirstOrDefaultAsync();
+        Assert.Equal("Agent/2.0", doc.UserAgent);
+        Assert.NotNull(doc.LastSeenAtUtc);
+    }
+
+    [Fact]
+    public async Task RetrieveFromARequest_KeepsTheUserAgentRecordedAtSignIn()
+    {
+        var store = Store();
+        var key = await store.StoreAsync(TicketOf(ObjectId.GenerateNewId().ToString()), RequestFrom("Agent/1.0"), CancellationToken.None);
+
+        Assert.NotNull(await store.RetrieveAsync(key, RequestFrom("Other/9.9"), CancellationToken.None));
+
+        var doc = await Sessions().Find(d => d.Id == key).FirstOrDefaultAsync();
+        Assert.Equal("Agent/1.0", doc.UserAgent);
+    }
+
+    [Fact]
     public async Task Retrieve_LeavesARecentLastActivityAlone()
     {
         var store = Store();

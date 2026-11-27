@@ -235,6 +235,16 @@ describe('Active sessions in Compte et sécurité', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps the way to log out when this device is missing from the list', async () => {
+    server.use(signedIn, listing(PHONE));
+
+    renderSecurity();
+    const card = await devicesCard();
+
+    expect(await within(card).findByText('Safari sur iOS')).toBeInTheDocument();
+    expect(within(card).getByRole('button', { name: 'Se déconnecter' })).toBeInTheDocument();
+  });
+
   it('offers a retry when the list does not load, and keeps the way to log out', async () => {
     server.use(
       signedIn,

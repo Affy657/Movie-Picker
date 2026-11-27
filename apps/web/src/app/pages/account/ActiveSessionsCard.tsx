@@ -278,6 +278,7 @@ export default function ActiveSessionsCard() {
 
       {sessionsQuery.isSuccess && (
         <>
+          {!sessions.some((s) => s.current) && <FallbackCurrentDeviceRow />}
           {sessions.map((session) => (
             <SessionRow
               key={session.id}

@@ -56,7 +56,12 @@ public sealed class MongoAuthTicketStore : ITicketStore
                 .Set(x => x.UserId, userId));
     }
 
-    public async Task<AuthenticationTicket?> RetrieveAsync(string key)
+    public Task<AuthenticationTicket?> RetrieveAsync(string key) => RetrieveAsync(key, userAgent: null);
+
+    public Task<AuthenticationTicket?> RetrieveAsync(string key, HttpContext httpContext, CancellationToken cancellationToken) =>
+        RetrieveAsync(key, UserAgentOf(httpContext));
+
+    private async Task<AuthenticationTicket?> RetrieveAsync(string key, string? userAgent)
     {
         var doc = await _collection.Find(x => x.Id == key).FirstOrDefaultAsync();
         if (doc is null)
@@ -70,7 +75,7 @@ public sealed class MongoAuthTicketStore : ITicketStore
             return null;
         }
 
-        await TouchLastSeenAsync(doc);
+        await TouchAsync(doc, userAgent);
 
         var identity = new ClaimsIdentity(
             doc.Claims.Select(c => new Claim(c.Type, c.Value)),
@@ -85,14 +90,18 @@ public sealed class MongoAuthTicketStore : ITicketStore
         return new AuthenticationTicket(principal, props, CookieAuthenticationDefaults.AuthenticationScheme);
     }
 
-    private async Task TouchLastSeenAsync(AuthSessionDocument doc)
+    private async Task TouchAsync(AuthSessionDocument doc, string? userAgent)
     {
         var now = DateTime.UtcNow;
-        if (doc.LastSeenAtUtc is { } lastSeen && now - lastSeen < LastSeenTouchInterval)
+        var update = Builders<AuthSessionDocument>.Update;
+        var changes = new List<UpdateDefinition<AuthSessionDocument>>();
+        if (doc.LastSeenAtUtc is not { } lastSeen || now - lastSeen >= LastSeenTouchInterval)
+            changes.Add(update.Set(x => x.LastSeenAtUtc, now));
+        if (doc.UserAgent is null && userAgent is not null)
+            changes.Add(update.Set(x => x.UserAgent, userAgent));
+        if (changes.Count == 0)
             return;
-        await _collection.UpdateOneAsync(
-            x => x.Id == doc.Id,
-            Builders<AuthSessionDocument>.Update.Set(x => x.LastSeenAtUtc, now));
+        await _collection.UpdateOneAsync(x => x.Id == doc.Id, update.Combine(changes));
     }
 
     private static string? UserAgentOf(HttpContext httpContext)
