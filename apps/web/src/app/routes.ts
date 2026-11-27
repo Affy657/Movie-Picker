@@ -82,6 +82,7 @@ export const ROUTES = {
   donate: '/soutenir',
   tech: '/tech',
   releaseNotes: '/nouveautes',
+  serviceStatus: '/statut',
   notifications: '/notifications',
   howItWorks: '/decouvrir',
 

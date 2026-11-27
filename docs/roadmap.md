@@ -52,7 +52,6 @@ Rien pour l'instant.
 
 ### Accueil, aide et contact
 
-- `M` **Statut du service** : page publique indiquant si l'API et le site sont opérationnels.
 - `?` **Événements hebdomadaires** : un rendez-vous qui change chaque semaine sur l'accueil, sous une forme à définir : thème à respecter par le film gagnant d'une soirée, événement saisonnier comme Halloween ou Noël.
 
 ### Bibliothèque de films

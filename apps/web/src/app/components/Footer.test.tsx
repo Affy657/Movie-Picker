@@ -66,6 +66,17 @@ describe('Footer release notes', () => {
   });
 });
 
+describe('Footer service status', () => {
+  it('links the service status page from the help column, for every visitor', () => {
+    renderFooter();
+
+    expect(screen.getByRole('link', { name: 'État du service' })).toHaveAttribute(
+      'href',
+      '/statut'
+    );
+  });
+});
+
 describe('Footer navigation', () => {
   const member = {
     userId: 'u1',

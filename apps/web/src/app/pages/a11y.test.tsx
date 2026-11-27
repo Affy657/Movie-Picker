@@ -19,6 +19,7 @@ import {
   authMeGuestHandler,
   createUserStatsHandler,
   createWatchlistHandlers,
+  TEST_API_BASE,
   TEST_API_V1,
 } from '@/mocks/handlers';
 import LandingPage from '@/app/pages/LandingPage';
@@ -34,6 +35,7 @@ import MyEventsPage from '@/features/events/pages/MyEventsPage';
 import NotFoundPage from '@/app/pages/NotFoundPage';
 import DonatePage from '@/app/pages/DonatePage';
 import TechPage from '@/app/pages/TechPage';
+import ServiceStatusPage from '@/app/pages/ServiceStatusPage';
 import ProfilePage from '@/features/profile/pages/ProfilePage';
 import ProfileMoviesPage from '@/features/profile/pages/ProfileMoviesPage';
 import WatchlistPage from '@/features/library/pages/WatchlistPage';
@@ -225,6 +227,25 @@ describe('accessibility (axe)', () => {
 
   it("DonatePage n'a pas de violations", async () => {
     const { container, queryClient } = renderPage(<DonatePage />);
+    await assertNoViolations(container, queryClient);
+  });
+
+  it("ServiceStatusPage n'a pas de violations", async () => {
+    server.use(
+      http.get(`${TEST_API_BASE}/health/ready`, () =>
+        apiJson<'HealthReadyResponse'>(
+          {
+            status: 'unavailable',
+            service: 'movie-picker-api',
+            release: 'a58726d3f1c2',
+            dependencies: [{ name: 'mongodb', status: 'unavailable', durationMs: 2000 }],
+          },
+          { status: 503 }
+        )
+      )
+    );
+    const { container, queryClient } = renderPage(<ServiceStatusPage />);
+    await screen.findByText('Service perturbé');
     await assertNoViolations(container, queryClient);
   });
 

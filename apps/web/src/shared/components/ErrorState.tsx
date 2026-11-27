@@ -8,6 +8,7 @@ type ErrorStateProps = {
   title: string;
   message: ReactNode;
   actions: ReactNode;
+  footnote?: ReactNode;
   messageRole?: 'alert' | 'status';
 };
 
@@ -17,6 +18,7 @@ export default function ErrorState({
   title,
   message,
   actions,
+  footnote,
   messageRole,
 }: Readonly<ErrorStateProps>) {
   return (
@@ -30,6 +32,7 @@ export default function ErrorState({
         {message}
       </p>
       <div className={styles.actions}>{actions}</div>
+      {footnote ? <p className={styles.footnote}>{footnote}</p> : null}
     </PageLayout>
   );
 }

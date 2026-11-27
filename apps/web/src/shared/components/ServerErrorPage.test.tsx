@@ -32,6 +32,15 @@ describe('ServerErrorPage', () => {
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
 
+  it('points to the service status page to tell an outage from a one-off error', () => {
+    renderPage(<ServerErrorPage />);
+
+    expect(screen.getByRole('link', { name: 'Voir l’état du service' })).toHaveAttribute(
+      'href',
+      '/statut'
+    );
+  });
+
   it('without an error, falls back to the generic message', () => {
     renderPage(<ServerErrorPage />);
 

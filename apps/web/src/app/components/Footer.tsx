@@ -199,6 +199,11 @@ export default function Footer({ clearMobileNav = false }: Readonly<FooterProps>
                 {t('footer.tech')}
               </Link>
             </li>
+            <li>
+              <Link to={ROUTES.serviceStatus} className={styles.colLink}>
+                {t('footer.serviceStatus')}
+              </Link>
+            </li>
           </ul>
         </div>
 
