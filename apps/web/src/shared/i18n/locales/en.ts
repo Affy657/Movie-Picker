@@ -726,6 +726,29 @@ export const en: Locale = {
         'You also have a password, you can unlink these accounts without losing access.',
       connectionsLastProviderHint:
         'This is your only sign-in method. Set a password before you can unlink it.',
+      activeSessionsTitle: 'Signed-in devices',
+      activeSessionsCurrentChip: 'This device',
+      activeSessionsDeviceLabel: '{{browser}} on {{os}}',
+      activeSessionsUnknownDevice: 'Unidentified device',
+      activeSessionsActiveNow: 'Active now',
+      activeSessionsActiveAndSignedIn: 'Active {{when}}, signed in on {{date}}',
+      activeSessionsSignedInOn: 'Signed in on {{date}}',
+      activeSessionsRevokeButton: 'Log out',
+      activeSessionsRevokeAriaLabel: 'Log out {{device}}',
+      activeSessionsRevoked: '{{device}} is signed out.',
+      activeSessionsRevokeError:
+        '{{device}} could not be signed out. Check your connection, then try again.',
+      activeSessionsOthersHint:
+        'A device you don’t recognize? Log it out, then change your password.',
+      activeSessionsOthersButton: 'Log out the other devices',
+      activeSessionsOthersConfirmOne: 'Log out the other device? You stay signed in on this one.',
+      activeSessionsOthersConfirmMany:
+        'Log out the {{count}} other devices? You stay signed in on this one.',
+      activeSessionsOthersRevoked: 'The other devices are signed out.',
+      activeSessionsOthersError:
+        'The other devices could not be signed out. Check your connection, then try again.',
+      activeSessionsEmpty: 'No other device is signed in to your account.',
+      activeSessionsLoadError: 'The list of your devices could not be loaded.',
       accentColorProfileLink: 'Change it in my profile',
       accentColorLabel: 'Accent color',
       accentColorHint:
@@ -2728,6 +2751,7 @@ export const en: Locale = {
     watched_title_not_found: 'This film is not in your watched films.',
     seen_mark_not_found: 'Seen mark not found',
     event_template_not_found: 'Movie night template not found',
+    session_not_found: 'This device is already signed out.',
     oauth_provider_not_linked: 'This account is not linked to this provider.',
     event_finished: 'Movie night is over. Read-only.',
     event_closed_participants_locked:
@@ -3085,7 +3109,7 @@ export const en: Locale = {
       'Adrien Morand, publisher of Movie Picker, is the controller of your data. You can reach him at {{email}}.',
     privacyDataBody: 'Movie Picker processes four families of data:',
     privacyDataTechnical:
-      'Technical data: IP address, date, requested address and account identifier of each request the API receives, in its logs, and error reports (see “Error tracking”). To warn you by email of a sign-in from an unusual device, a technical cookie recognises each browser you sign in from: Movie Picker keeps the name of the browser and of the system, and the dates of the first and last sign-in, with no IP address or location, then forgets it 400 days after the last sign-in.',
+      'Technical data: IP address, date, requested address and account identifier of each request the API receives, in its logs, and error reports (see “Error tracking”). To warn you by email of a sign-in from an unusual device, a technical cookie recognises each browser you sign in from: Movie Picker keeps the name of the browser and of the system, and the dates of the first and last sign-in, with no IP address or location, then forgets it 400 days after the last sign-in. To show you your signed-in devices, Movie Picker also keeps, for each device signed in to your account, the browser and system reported by that browser, the sign-in date and the last activity, until that device is logged out.',
     privacyDataAccount:
       'Account: email, nickname, public handle, profile photo if you have one, hashed password, or an identity linked via Google/GitHub.',
     privacyDataUsage:
@@ -4001,18 +4025,17 @@ export const en: Locale = {
       nextWhen: 'Next',
       nextWhat: 'Coming up',
       nextDetail:
-        'Nine entries queued, in the order they will be taken: account security first, then the command palette, warnings on movie pages and group life.',
+        'The queued entries, in the order they will be taken: the command palette and passkeys first, then warnings on movie pages and group life.',
       nextHint:
         'Usage has been measured since 1.16.0: each entry is then judged on what it changes in the numbers.',
-      nextItem1: 'Active sessions',
-      nextItem2: 'Command palette',
-      nextItem3: 'Passkeys',
-      nextItem4: 'Content warnings',
-      nextItem5: 'Trigger warnings',
-      nextItem6: 'A list per group',
-      nextItem7: 'Quick reactions',
-      nextItem8: 'Availability poll',
-      nextItem9: 'Year in review',
+      nextItem1: 'Command palette',
+      nextItem2: 'Passkeys',
+      nextItem3: 'Content warnings',
+      nextItem4: 'Trigger warnings',
+      nextItem5: 'A list per group',
+      nextItem6: 'Quick reactions',
+      nextItem7: 'Availability poll',
+      nextItem8: 'Year in review',
       v2When: 'No date announced',
       v2What: 'V2',
       v2Detail:

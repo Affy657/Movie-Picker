@@ -8,6 +8,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Vos appareils connectés, déconnectables un par un** : Compte et sécurité liste chaque appareil connecté à votre compte, avec son navigateur, son système et sa dernière activité. Vous pouvez en déconnecter un, ou tous sauf celui-ci, et l’export de vos données les inclut.
+
 ## [1.36.0] - 2026-11-27
 
 ### Added

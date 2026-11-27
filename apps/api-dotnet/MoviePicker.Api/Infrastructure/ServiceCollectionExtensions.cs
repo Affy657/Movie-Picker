@@ -355,6 +355,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISeenMarkRepository, MongoSeenMarkRepository>();
         services.AddScoped<IMovieRatingRepository, MongoMovieRatingRepository>();
         services.AddScoped<IAuthSessionInvalidator, MongoAuthSessionInvalidator>();
+        services.AddScoped<IAuthSessionDirectory, MongoAuthSessionDirectory>();
         services.AddScoped<IPushSubscriptionRepository, MongoPushSubscriptionRepository>();
         services.AddScoped<IFollowRepository, MongoFollowRepository>();
         services.AddScoped<IWatchlistRepository, MongoWatchlistRepository>();

@@ -90,6 +90,13 @@ public sealed class CachedAuthTicketStore : ITicketStore
         return key;
     }
 
+    public async Task<string> StoreAsync(AuthenticationTicket ticket, HttpContext httpContext, CancellationToken cancellationToken)
+    {
+        var key = await _inner.StoreAsync(ticket, httpContext, cancellationToken);
+        _cache.Set(key, ticket);
+        return key;
+    }
+
     public async Task RenewAsync(string key, AuthenticationTicket ticket)
     {
         await _inner.RenewAsync(key, ticket);
@@ -98,13 +105,16 @@ public sealed class CachedAuthTicketStore : ITicketStore
 
     public async Task<AuthenticationTicket?> RetrieveAsync(string key, HttpContext httpContext, CancellationToken cancellationToken)
     {
-        var ticket = await RetrieveAsync(key);
+        var ticket = await RetrieveAsync(key, () => _inner.RetrieveAsync(key, httpContext, cancellationToken));
         if (ticket is not null)
             AuthSessionKey.Remember(httpContext, key);
         return ticket;
     }
 
-    public async Task<AuthenticationTicket?> RetrieveAsync(string key)
+    public Task<AuthenticationTicket?> RetrieveAsync(string key) =>
+        RetrieveAsync(key, () => _inner.RetrieveAsync(key));
+
+    private async Task<AuthenticationTicket?> RetrieveAsync(string key, Func<Task<AuthenticationTicket?>> load)
     {
         var cached = _cache.TryGet(key);
         if (cached is not null)
@@ -112,7 +122,7 @@ public sealed class CachedAuthTicketStore : ITicketStore
         if (_cache.IsKnownMissing(key))
             return null;
 
-        var ticket = await _inner.RetrieveAsync(key);
+        var ticket = await load();
         if (ticket is not null)
             _cache.Set(key, ticket);
         else

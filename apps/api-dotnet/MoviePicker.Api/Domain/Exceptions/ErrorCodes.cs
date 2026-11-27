@@ -23,6 +23,7 @@ public static class ErrorCodes
     public const string WatchedNotFound = "watched_not_found";
     public const string SeenMarkNotFound = "seen_mark_not_found";
     public const string EventTemplateNotFound = "event_template_not_found";
+    public const string SessionNotFound = "session_not_found";
     public const string ListNotFound = "list_not_found";
     public const string ListInvitationNotFound = "list_invitation_not_found";
     public const string ListInviteLinkInvalid = "list_invite_link_invalid";

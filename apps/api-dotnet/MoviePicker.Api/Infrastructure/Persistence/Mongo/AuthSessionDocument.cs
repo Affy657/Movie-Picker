@@ -19,6 +19,14 @@ public sealed class AuthSessionDocument
 
     [BsonElement("createdAtUtc")]
     public DateTime CreatedAtUtc { get; set; }
+
+    [BsonElement("userAgent")]
+    [BsonIgnoreIfNull]
+    public string? UserAgent { get; set; }
+
+    [BsonElement("lastSeenAtUtc")]
+    [BsonIgnoreIfNull]
+    public DateTime? LastSeenAtUtc { get; set; }
 }
 
 public sealed class StoredClaim

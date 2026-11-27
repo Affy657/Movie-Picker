@@ -22,6 +22,7 @@ public static class InMemoryPersistenceServiceCollectionExtensions
         Replace<ISeenMarkRepository, InMemorySeenMarkRepository>(services);
         Replace<IMovieRatingRepository, InMemoryMovieRatingRepository>(services);
         Replace<IAuthSessionInvalidator, InMemoryAuthSessionInvalidator>(services);
+        Replace<IAuthSessionDirectory, InMemoryAuthSessionDirectory>(services);
         Replace<IPushSubscriptionRepository, InMemoryPushSubscriptionRepository>(services);
         Replace<IFollowRepository, InMemoryFollowRepository>(services);
         Replace<IWatchlistRepository, InMemoryWatchlistRepository>(services);

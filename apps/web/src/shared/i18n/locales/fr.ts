@@ -736,6 +736,30 @@ export const fr = {
         'Vous avez aussi un mot de passe, vous pouvez d\u00e9lier ces comptes sans perdre l\u2019acc\u00e8s.',
       connectionsLastProviderHint:
         'C\u2019est votre seule m\u00e9thode de connexion. D\u00e9finissez un mot de passe avant de pouvoir la d\u00e9lier.',
+      activeSessionsTitle: 'Appareils connectés',
+      activeSessionsCurrentChip: 'Cet appareil',
+      activeSessionsDeviceLabel: '{{browser}} sur {{os}}',
+      activeSessionsUnknownDevice: 'Appareil non identifié',
+      activeSessionsActiveNow: 'Actif maintenant',
+      activeSessionsActiveAndSignedIn: 'Actif {{when}}, connecté le {{date}}',
+      activeSessionsSignedInOn: 'Connecté le {{date}}',
+      activeSessionsRevokeButton: 'Déconnecter',
+      activeSessionsRevokeAriaLabel: 'Déconnecter {{device}}',
+      activeSessionsRevoked: '{{device}} est déconnecté.',
+      activeSessionsRevokeError:
+        '{{device}} n’a pas pu être déconnecté. Vérifiez votre connexion, puis réessayez.',
+      activeSessionsOthersHint:
+        'Un appareil que vous ne reconnaissez pas ? Déconnectez-le, puis changez votre mot de passe.',
+      activeSessionsOthersButton: 'Déconnecter les autres appareils',
+      activeSessionsOthersConfirmOne:
+        'Déconnecter l’autre appareil ? Vous restez connecté sur celui-ci.',
+      activeSessionsOthersConfirmMany:
+        'Déconnecter les {{count}} autres appareils ? Vous restez connecté sur celui-ci.',
+      activeSessionsOthersRevoked: 'Les autres appareils sont déconnectés.',
+      activeSessionsOthersError:
+        'Les autres appareils n’ont pas pu être déconnectés. Vérifiez votre connexion, puis réessayez.',
+      activeSessionsEmpty: 'Aucun autre appareil n’est connecté à votre compte.',
+      activeSessionsLoadError: 'La liste de vos appareils n’a pas pu être chargée.',
       accentColorProfileLink: 'Changer dans mon profil',
       accentColorLabel: 'Couleur d\u2019accent',
       accentColorSaveError:
@@ -2762,6 +2786,7 @@ export const fr = {
     watched_title_not_found: 'Ce film n’est pas dans vos films vus.',
     seen_mark_not_found: 'Marque « déjà vu » introuvable',
     event_template_not_found: 'Modèle de soirée introuvable',
+    session_not_found: 'Cet appareil est déjà déconnecté.',
     oauth_provider_not_linked: 'Ce compte n’est pas lié à ce fournisseur.',
     event_finished: 'Soirée terminée. Lecture seule.',
     event_closed_participants_locked:
@@ -3130,7 +3155,7 @@ export const fr = {
       'Adrien Morand, éditeur de Movie Picker, est responsable du traitement de vos données. Vous pouvez le joindre à {{email}}.',
     privacyDataBody: 'Movie Picker traite quatre familles de données :',
     privacyDataTechnical:
-      'Données techniques : adresse IP, date, adresse demandée et identifiant de compte de chaque requête reçue par l’API, dans ses journaux, et rapports d’erreur (voir « Suivi des erreurs »). Pour vous prévenir par e-mail d’une connexion depuis un appareil inhabituel, un cookie technique reconnaît chaque navigateur où vous vous connectez : Movie Picker en garde le nom du navigateur et du système, et les dates de première et de dernière connexion, sans adresse IP ni localisation, puis l’oublie 400 jours après la dernière connexion.',
+      'Données techniques : adresse IP, date, adresse demandée et identifiant de compte de chaque requête reçue par l’API, dans ses journaux, et rapports d’erreur (voir « Suivi des erreurs »). Pour vous prévenir par e-mail d’une connexion depuis un appareil inhabituel, un cookie technique reconnaît chaque navigateur où vous vous connectez : Movie Picker en garde le nom du navigateur et du système, et les dates de première et de dernière connexion, sans adresse IP ni localisation, puis l’oublie 400 jours après la dernière connexion. Pour vous montrer vos appareils connectés, Movie Picker garde aussi, pour chaque appareil connecté à votre compte, le navigateur et le système annoncés par ce navigateur, la date de connexion et la dernière activité, jusqu’à sa déconnexion.',
     privacyDataAccount:
       'Compte : e-mail, nom affiché, pseudo public, photo de profil si vous en avez une, mot de passe (haché) ou identité liée via Google/GitHub.',
     privacyDataUsage:
@@ -4053,18 +4078,17 @@ export const fr = {
       nextWhen: 'Ensuite',
       nextWhat: 'Prochainement',
       nextDetail:
-        'Neuf entrées en file, dans l’ordre où elles se prennent : la sécurité du compte d’abord, puis la palette de commandes, les avertissements sur les fiches films et la vie des groupes.',
+        'Les entrées en file, dans l’ordre où elles se prennent : la palette de commandes et les passkeys d’abord, puis les avertissements sur les fiches films et la vie des groupes.',
       nextHint:
         'L’usage se mesure depuis la 1.16.0 : chaque entrée se juge ensuite sur ce qu’elle change dans les chiffres.',
-      nextItem1: 'Sessions actives',
-      nextItem2: 'Palette de commandes',
-      nextItem3: 'Passkeys',
-      nextItem4: 'Avertissements de contenu',
-      nextItem5: 'Trigger warnings',
-      nextItem6: 'Une liste par groupe',
-      nextItem7: 'Réactions rapides',
-      nextItem8: 'Sondage de disponibilité',
-      nextItem9: 'Bilan de l’année',
+      nextItem1: 'Palette de commandes',
+      nextItem2: 'Passkeys',
+      nextItem3: 'Avertissements de contenu',
+      nextItem4: 'Trigger warnings',
+      nextItem5: 'Une liste par groupe',
+      nextItem6: 'Réactions rapides',
+      nextItem7: 'Sondage de disponibilité',
+      nextItem8: 'Bilan de l’année',
       v2When: 'Sans date annoncée',
       v2What: 'V2',
       v2Detail:

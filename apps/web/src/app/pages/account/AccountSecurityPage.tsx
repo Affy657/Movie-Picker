@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Download, KeyRound, LogOut, Mail, Trash2, TriangleAlert } from 'lucide-react';
+import { Download, KeyRound, Mail, Trash2, TriangleAlert } from 'lucide-react';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
 import type { TranslationKey } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { ROUTES } from '@/app/routes';
 import { ACCOUNT_DELETED_STATE } from './accountDeletedState';
+import ActiveSessionsCard from './ActiveSessionsCard';
 import {
   deleteAccount,
   downloadMyDataExport,
@@ -337,35 +338,6 @@ function DataExportRow() {
   );
 }
 
-function LogoutRow() {
-  const { t } = useTranslation();
-  const { logout } = useAuth();
-  const logoutAction = useCallback(() => logout(), [logout]);
-  const {
-    run: runLogout,
-    loading: loggingOut,
-    error: logoutError,
-  } = useAsyncAction(logoutAction, t('auth.logout.fallbackError'));
-
-  return (
-    <div className={sharedStyles.row}>
-      <LogOut size={ICON_SIZE.xl} aria-hidden className={sharedStyles.rowIcon} />
-      <div className={sharedStyles.rowMain}>
-        <p className={sharedStyles.rowLabel}>{t('auth.account.sessionRowLabel')}</p>
-        <p className={sharedStyles.rowSub}>{t('auth.account.sessionRowHint')}</p>
-        {logoutError && (
-          <p className="error" role="alert">
-            {logoutError}
-          </p>
-        )}
-      </div>
-      <Button type="button" disabled={loggingOut} onClick={() => void runLogout()}>
-        {loggingOut ? t('auth.logout.submitting') : t('auth.account.logoutButton')}
-      </Button>
-    </div>
-  );
-}
-
 function DeleteAccountZone({ hasPassword }: Readonly<{ hasPassword: boolean }>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -496,8 +468,9 @@ export default function AccountSecurityPage({ user }: Readonly<{ user: UserProfi
         <PasswordRow user={user} />
         <TwoFactorRow user={user} />
         <DataExportRow />
-        <LogoutRow />
       </Card>
+
+      <ActiveSessionsCard />
 
       <DeleteAccountZone hasPassword={user.hasPassword} />
     </>

@@ -2,8 +2,10 @@ using System.Globalization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
+using MongoDB.Driver;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
 using MoviePicker.Api.Infrastructure.Web;
 using Xunit;
@@ -130,5 +132,119 @@ public sealed class MongoAuthTicketStoreTests : IClassFixture<MoviePickerApplica
         Assert.NotNull(await store.RetrieveAsync(current));
         Assert.Null(await store.RetrieveAsync(elsewhere));
         Assert.NotNull(await store.RetrieveAsync(neighbours));
+    }
+
+    private TransactionalCollection<AuthSessionDocument> Sessions() =>
+        _factory.Services.GetRequiredService<MongoCollectionFactory>().GetCollection<AuthSessionDocument>("auth_sessions");
+
+    private static DefaultHttpContext RequestFrom(string userAgent)
+    {
+        var context = new DefaultHttpContext();
+        context.Request.Headers.UserAgent = userAgent;
+        return context;
+    }
+
+    [Fact]
+    public async Task StoreFromARequest_RecordsItsUserAgentAndCountsTheSignInAsActivity()
+    {
+        var store = Store();
+        var before = DateTime.UtcNow.AddSeconds(-1);
+
+        var key = await store.StoreAsync(TicketOf(ObjectId.GenerateNewId().ToString()), RequestFrom("Agent/1.0"), CancellationToken.None);
+
+        var doc = await Sessions().Find(d => d.Id == key).FirstOrDefaultAsync();
+        Assert.Equal("Agent/1.0", doc.UserAgent);
+        Assert.NotNull(doc.LastSeenAtUtc);
+        Assert.True(doc.LastSeenAtUtc >= before);
+    }
+
+    [Fact]
+    public async Task StoreFromARequest_KeepsOnlyTheStartOfAnOversizedUserAgent()
+    {
+        var store = Store();
+
+        var key = await store.StoreAsync(TicketOf(ObjectId.GenerateNewId().ToString()), RequestFrom(new string('a', 2000)), CancellationToken.None);
+
+        var doc = await Sessions().Find(d => d.Id == key).FirstOrDefaultAsync();
+        Assert.Equal(MongoAuthTicketStore.MaxUserAgentLength, doc.UserAgent!.Length);
+    }
+
+    [Fact]
+    public async Task Retrieve_RefreshesALastActivityOlderThanTheTouchInterval()
+    {
+        var store = Store();
+        var key = await store.StoreAsync(TicketOf(ObjectId.GenerateNewId().ToString()), RequestFrom("Agent/1.0"), CancellationToken.None);
+        var stale = DateTime.UtcNow - MongoAuthTicketStore.LastSeenTouchInterval - TimeSpan.FromMinutes(5);
+        await Sessions().UpdateOneAsync(d => d.Id == key, Builders<AuthSessionDocument>.Update.Set(d => d.LastSeenAtUtc, stale));
+
+        Assert.NotNull(await store.RetrieveAsync(key));
+
+        var doc = await Sessions().Find(d => d.Id == key).FirstOrDefaultAsync();
+        Assert.True(doc.LastSeenAtUtc > stale.AddMinutes(30));
+    }
+
+    [Fact]
+    public async Task RetrieveFromARequest_GivesASessionOpenedBeforeDevicesWereRecordedItsUserAgent()
+    {
+        var store = Store();
+        var key = await store.StoreAsync(TicketOf(ObjectId.GenerateNewId().ToString()));
+
+        Assert.NotNull(await store.RetrieveAsync(key, RequestFrom("Agent/2.0"), CancellationToken.None));
+
+        var doc = await Sessions().Find(d => d.Id == key).FirstOrDefaultAsync();
+        Assert.Equal("Agent/2.0", doc.UserAgent);
+        Assert.NotNull(doc.LastSeenAtUtc);
+    }
+
+    [Fact]
+    public async Task RetrieveFromARequest_KeepsTheUserAgentRecordedAtSignIn()
+    {
+        var store = Store();
+        var key = await store.StoreAsync(TicketOf(ObjectId.GenerateNewId().ToString()), RequestFrom("Agent/1.0"), CancellationToken.None);
+
+        Assert.NotNull(await store.RetrieveAsync(key, RequestFrom("Other/9.9"), CancellationToken.None));
+
+        var doc = await Sessions().Find(d => d.Id == key).FirstOrDefaultAsync();
+        Assert.Equal("Agent/1.0", doc.UserAgent);
+    }
+
+    [Fact]
+    public async Task Retrieve_LeavesARecentLastActivityAlone()
+    {
+        var store = Store();
+        var key = await store.StoreAsync(TicketOf(ObjectId.GenerateNewId().ToString()), RequestFrom("Agent/1.0"), CancellationToken.None);
+        var recent = DateTime.UtcNow.AddMinutes(-10);
+        await Sessions().UpdateOneAsync(d => d.Id == key, Builders<AuthSessionDocument>.Update.Set(d => d.LastSeenAtUtc, recent));
+
+        Assert.NotNull(await store.RetrieveAsync(key));
+
+        var doc = await Sessions().Find(d => d.Id == key).FirstOrDefaultAsync();
+        Assert.Equal(recent, doc.LastSeenAtUtc!.Value, TimeSpan.FromMilliseconds(5));
+    }
+
+    [Fact]
+    public async Task SessionDirectory_ListsOnlyTheUsersLiveSessions_AndRevokesOneOfThem()
+    {
+        var store = Store();
+        var user = ObjectId.GenerateNewId().ToString();
+        var past = DateTimeOffset.UtcNow.AddDays(-40);
+        var kept = await store.StoreAsync(TicketOf(user), RequestFrom("Agent/1.0"), CancellationToken.None);
+        var revoked = await store.StoreAsync(TicketOf(user), RequestFrom("Agent/2.0"), CancellationToken.None);
+        await store.StoreAsync(Ticket(past, past.AddDays(30)));
+        var neighbour = await store.StoreAsync(TicketOf(ObjectId.GenerateNewId().ToString()));
+        var directory = new MongoAuthSessionDirectory(
+            _factory.Services.GetRequiredService<MongoCollectionFactory>(),
+            _factory.Services.GetRequiredService<AuthTicketCache>());
+
+        var listed = await directory.ListActiveForUserAsync(user);
+        Assert.Equal([kept, revoked], listed.Select(s => s.Key).Order());
+        Assert.Equal("Agent/2.0", listed.Single(s => s.Key == revoked).UserAgent);
+
+        Assert.False(await directory.RevokeForUserAsync(user, neighbour));
+        Assert.True(await directory.RevokeForUserAsync(user, revoked));
+
+        Assert.Null(await store.RetrieveAsync(revoked));
+        Assert.NotNull(await store.RetrieveAsync(kept));
+        Assert.NotNull(await store.RetrieveAsync(neighbour));
     }
 }

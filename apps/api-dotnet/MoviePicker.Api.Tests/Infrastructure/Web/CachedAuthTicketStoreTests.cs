@@ -133,8 +133,8 @@ public sealed class CachedAuthTicketStoreTests
     public async Task RetrieveAsync_ForARequest_RemembersTheSessionTheRequestIsSignedInWith()
     {
         var (store, inner, _) = Build();
-        inner.Setup(s => s.RetrieveAsync("k1")).ReturnsAsync(Ticket("u1"));
         var request = new DefaultHttpContext();
+        inner.Setup(s => s.RetrieveAsync("k1", request, It.IsAny<CancellationToken>())).ReturnsAsync(Ticket("u1"));
 
         var ticket = await ((ITicketStore)store).RetrieveAsync("k1", request, CancellationToken.None);
 
@@ -143,11 +143,25 @@ public sealed class CachedAuthTicketStoreTests
     }
 
     [Fact]
+    public async Task RetrieveAsync_ForARequest_HandsTheRequestToTheInnerStoreOncePerTtl()
+    {
+        var (store, inner, _) = Build();
+        var request = new DefaultHttpContext();
+        inner.Setup(s => s.RetrieveAsync("k1", request, It.IsAny<CancellationToken>())).ReturnsAsync(Ticket("u1"));
+
+        await ((ITicketStore)store).RetrieveAsync("k1", request, CancellationToken.None);
+        await ((ITicketStore)store).RetrieveAsync("k1", request, CancellationToken.None);
+
+        inner.Verify(s => s.RetrieveAsync("k1", request, It.IsAny<CancellationToken>()), Times.Once);
+        inner.Verify(s => s.RetrieveAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
     public async Task RetrieveAsync_ForARequestOnADeadSession_RemembersNoSession()
     {
         var (store, inner, _) = Build();
-        inner.Setup(s => s.RetrieveAsync("gone")).ReturnsAsync((AuthenticationTicket?)null);
         var request = new DefaultHttpContext();
+        inner.Setup(s => s.RetrieveAsync("gone", request, It.IsAny<CancellationToken>())).ReturnsAsync((AuthenticationTicket?)null);
 
         var ticket = await ((ITicketStore)store).RetrieveAsync("gone", request, CancellationToken.None);
 

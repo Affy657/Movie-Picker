@@ -26,6 +26,22 @@ export const eventLimitsHandler = http.get(`${V1}/events/limits`, () =>
   apiJson<'EventLimitsResponse'>(MOCK_EVENT_LIMITS)
 );
 
+export const MOCK_CURRENT_SESSION: Schemas['ActiveSessionResponse'] = {
+  id: 'current-session',
+  browser: 'Chrome',
+  operatingSystem: 'Windows',
+  deviceKind: 'desktop',
+  signedInAt: MOCK_DATE,
+  lastActiveAt: MOCK_DATE,
+  current: true,
+};
+
+export function activeSessionsHandler(
+  items: Schemas['ActiveSessionResponse'][] = [MOCK_CURRENT_SESSION]
+) {
+  return http.get(`${V1}/users/me/sessions`, () => apiJson<'ActiveSessionListResponse'>({ items }));
+}
+
 type MockTitle<T extends { tmdbId: number; title: string }> = Pick<T, 'tmdbId' | 'title'> &
   Partial<T>;
 

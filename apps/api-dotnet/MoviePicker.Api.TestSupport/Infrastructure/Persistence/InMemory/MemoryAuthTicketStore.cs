@@ -53,4 +53,15 @@ public sealed class MemoryAuthTicketStore : ITicketStore
 
         return removed;
     }
+
+    public IReadOnlyList<(string Key, AuthenticationTicket Ticket)> ListForUser(string userId) =>
+        _tickets
+            .Where(entry => entry.Value.Principal.FindFirstValue(ClaimTypes.NameIdentifier) == userId)
+            .Select(entry => (entry.Key, entry.Value))
+            .ToList();
+
+    public bool RemoveForUser(string userId, string key) =>
+        _tickets.TryGetValue(key, out var ticket)
+        && ticket.Principal.FindFirstValue(ClaimTypes.NameIdentifier) == userId
+        && _tickets.TryRemove(key, out _);
 }

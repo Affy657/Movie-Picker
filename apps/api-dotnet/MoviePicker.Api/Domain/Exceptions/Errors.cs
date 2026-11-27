@@ -38,6 +38,9 @@ public static class Errors
     public static NotFoundException EventTemplateNotFound() =>
         new("Movie night template not found", ErrorCodes.EventTemplateNotFound);
 
+    public static NotFoundException SessionNotFound() =>
+        new("Session not found", ErrorCodes.SessionNotFound);
+
     public static NotFoundException MovieListNotFound() =>
         new("List not found", ErrorCodes.ListNotFound);
 
