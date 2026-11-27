@@ -123,7 +123,6 @@ export default function TwoFactorLoginStep({
                 setCode(e.target.value);
                 setMissingCode(false);
               }}
-              autoFocus
               aria-describedby={describedBy}
               aria-invalid={invalid || error ? true : undefined}
             />
