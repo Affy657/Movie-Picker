@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.34.0] - 2026-11-27
+
 ### Added
 
 - **Une page dit si Movie Picker fonctionne** : la page État du service, dans le pied de page, vérifie en direct toutes les 30 secondes que le site, l’API et la base de données répondent, et l’écran d’erreur y renvoie.
@@ -1235,7 +1237,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.33.6...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.34.0...HEAD
+[1.34.0]: https://github.com/Affy657/Movie-Picker/compare/v1.33.6...v1.34.0
 [1.33.6]: https://github.com/Affy657/Movie-Picker/compare/v1.33.5...v1.33.6
 [1.33.5]: https://github.com/Affy657/Movie-Picker/compare/v1.33.4...v1.33.5
 [1.33.4]: https://github.com/Affy657/Movie-Picker/compare/v1.33.3...v1.33.4
